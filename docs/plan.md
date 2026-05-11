@@ -11,6 +11,7 @@
 | 1     | Repo-Bootstrap (Spec, Plan, README)                  | ✅ erledigt |
 | 2     | Compose-Setup, Caddy, db-init, Operations-Skripte    | ✅ erledigt |
 | 3     | `vereinsheim` CLI + `bootstrap-vps.sh` + Operations-Doc | ✅ erledigt |
+| 3.5   | End-to-End-Test auf lokaler VM                       | ✅ validiert |
 | 4     | App-Repo-Anpassungen (Ringwerk + Treffsicher)        | ⏳ offen    |
 | 5     | VPS-Provisioning (Bestellung, Bootstrap, DNS, Setup) | ⏳ offen    |
 | 6     | Cutover bestehender Daten + Backup-Cron              | ⏳ offen    |
