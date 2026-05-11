@@ -6,10 +6,6 @@
 #   - initialer Cutover von alter Umgebung auf VPS
 #   - Recovery aus einem Backup
 #
-# WICHTIG: Vor dem Aufruf muss die App-Service gestoppt sein, damit
-# keine Connections die Restore blockieren:
-#   docker compose stop app-<app>
-#
 # Postgres wird automatisch hochgefahren, falls nicht aktiv.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -48,6 +44,9 @@ esac
 	echo "Uploads tar not found: $UPLOADS" >&2
 	exit 1
 }
+
+echo "==> Stopping app-${APP} and migrate-${APP} (if running)"
+docker compose stop "app-${APP}" "migrate-${APP}" 2>/dev/null || true
 
 DUMP_ABS="$(realpath "$DUMP")"
 VOLUME_PREFIX="vereinsheim"
