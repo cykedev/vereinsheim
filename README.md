@@ -11,10 +11,9 @@ mit automatischem Let's-Encrypt-TLS.
 
 ## Status
 
-🟢 **MVP komplett — bereit für VPS-Provisioning.**
-Compose-Setup, Caddyfile, db-init, Operations-Skripte, das interaktive
-`vereinsheim`-CLI und das `bootstrap-vps.sh` sind fertig und lokal
-validiert. Was bleibt: VPS bestellen, Bootstrap, DNS, Cutover.
+🟡 **Pre-Production.** Compose-Setup, CLI und Operations-Skripte sind
+fertig und auf lokaler VM end-to-end validiert. VPS-Provisioning
+(Phase 5) und Datenmigration (Phase 6) stehen aus.
 
 Detaillierter Stand und Roadmap: [`docs/plan.md`](docs/plan.md).
 

@@ -12,7 +12,7 @@
 | 2     | Compose-Setup, Caddy, db-init, Operations-Skripte    | ✅ erledigt |
 | 3     | `vereinsheim` CLI + `bootstrap-vps.sh` + Operations-Doc | ✅ erledigt |
 | 3.5   | End-to-End-Test auf lokaler VM                       | ✅ validiert |
-| 4     | App-Repo-Anpassungen (Ringwerk + Treffsicher)        | ⏳ offen    |
+| 4     | App-Repo-Anpassungen (Ringwerk + Treffsicher)        | ✅ erledigt |
 | 5     | VPS-Provisioning (Bestellung, Bootstrap, DNS, Setup) | ⏳ offen    |
 | 6     | Cutover bestehender Daten + Backup-Cron              | ⏳ offen    |
 
@@ -24,22 +24,13 @@ beiden App-Repos.
 
 ## Phase 4 — App-Repo-Anpassungen
 
-**Eigentliche Code-Änderungen sind nicht nötig** — beide Apps lesen alle
-relevanten Schalter bereits aus env vars. Es geht ausschließlich um
-Doku-Hinweise, damit künftige Leser der App-Repos das Reverse-Proxy-Setup
-verstehen.
-
-In **Ringwerk** (`/Users/christian/repos/ringwerk`):
-
-- `feat/proxy-headers-doc`-Branch
-- `.env.example` ergänzen: `AUTH_TRUST_PROXY_HEADERS=true` (mit Kommentar
-  „bei Reverse-Proxy-Deployment, siehe vereinsheim-Repo")
-- README-Sektion „Deployment via vereinsheim" optional
-- Mini-Commit, ff-Merge nach `main`
-
-In **Treffsicher** (`/Users/christian/repos/treffsicher`): analog.
-Vorhandenes `docker-compose.prod.yml` bleibt erhalten als
-Standalone-Variante.
+**Erledigt am 2026-05-11** in beiden App-Repos
+(`a8c03df` in Ringwerk, `3962ddd` in Treffsicher): `.env.example`-
+Eintrag `AUTH_TRUST_PROXY_HEADERS=false` (Default) mit Kommentar zur
+Aktivierung bei Reverse-Proxy-Deployment via vereinsheim. Code-Änderungen
+waren keine nötig — beide Apps lesen den Schalter bereits aus env vars.
+`compose.yml` setzt ihn für beide App-Services auf `"true"`
+([compose.yml:82](../compose.yml), [compose.yml:104](../compose.yml)).
 
 ---
 

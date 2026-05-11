@@ -70,23 +70,15 @@ Volle Liste: `./scripts/vereinsheim help`.
 
 ## Was wahrscheinlich als nächstes gefragt wird
 
-In wahrscheinlicher Reihenfolge:
+Verbleibende Roadmap: siehe [`docs/plan.md`](docs/plan.md). Aktuell
+offen sind Phase 5 (VPS-Provisioning) und Phase 6 (Cutover).
 
-1. **Phase 4** — App-Repo-Anpassungen: `.env.example`-Hinweis auf
-   `AUTH_TRUST_PROXY_HEADERS=true` in Ringwerk und Treffsicher (je
-   eigener `feat/`-Branch, Mini-Commit). Siehe `docs/plan.md` Phase 4.
-2. **Phase 5** — VPS bestellen, `bootstrap-vps.sh` ausführen,
-   `vereinsheim setup` + `vereinsheim cron`, DNS, dann erster
-   `vereinsheim release`. Siehe `docs/plan.md` Phase 5.
-3. **Phase 6** — Cutover bestehender Daten via `pg_dump` + `vereinsheim
-   restore`. Siehe `docs/plan.md` Phase 6 und
-   `docs/operations.md#initial-cutover-alte-umgebung--vps`.
-4. **Tooling-Erweiterungen**, die plausibel kommen können (alle
-   *nicht* im aktuellen Scope):
-   - `vereinsheim rollback` als eigener Subcommand (heute manuell via
-     `setup` → einzelne Werte ändern + `deploy`).
-   - Off-Site-Backup-Subcommand (`vereinsheim backup-offsite`).
-   - CI-Migration → GitHub Actions, würde ADR-006 supersden.
+Plausible Folgearbeiten (alle *nicht* im aktuellen Scope):
+
+- `vereinsheim rollback` als eigener Subcommand (heute manuell via
+  `setup` → einzelne Werte ändern + `deploy`).
+- Off-Site-Backup-Subcommand (`vereinsheim backup-offsite`).
+- CI-Migration → GitHub Actions, würde ADR-006 supersden.
 
 ## Wenn du etwas änderst
 
