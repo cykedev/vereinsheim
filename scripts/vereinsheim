@@ -174,6 +174,8 @@ cmd_help() {
 		  ${GREEN}release${RESET}                 build + ssh-Deploy auf VPS (one-liner)
 		  ${GREEN}ssh${RESET}                     Interaktive SSH-Shell zum VPS
 		  ${GREEN}remote${RESET} <subcommand>     <subcommand> auf dem VPS via SSH ausführen
+		  ${GREEN}upload${RESET} <datei> [...]    Datei(en) auf VPS ~/migration/ übertragen
+		  ${GREEN}download${RESET} [datei] [dir]  Backup vom VPS herunterladen (ohne Arg: Liste)
 
 		${BOLD}VPS-SEITE${RESET} (auf dem Server, nutzt .env)
 		  ${GREEN}setup${RESET}                   Interaktiver .env-Wizard (validiert, generiert Secrets)
@@ -290,6 +292,67 @@ cmd_remote() {
 	fi
 	# shellcheck disable=SC2029
 	exec ssh -t "$VPS_HOST" "cd $VPS_REPO_PATH && ./scripts/vereinsheim $*"
+}
+
+# ---------- upload ----------
+cmd_upload() {
+	require_local_config
+	if [[ $# -eq 0 ]]; then
+		err "Aufruf: vereinsheim upload <datei> [datei2 ...]"
+		echo "  Beispiel: vereinsheim upload ringwerk-2026-05-11.dump uploads-ringwerk-2026-05-11.tar.gz"
+		exit 1
+	fi
+	for f in "$@"; do
+		[[ -f "$f" ]] || { err "Datei nicht gefunden: $f"; exit 1; }
+	done
+	info "Erstelle ~/migration/ auf $VPS_HOST …"
+	ssh "$VPS_HOST" "mkdir -p ~/migration"
+	info "Übertrage $# Datei(en) nach $VPS_HOST:~/migration/ …"
+	scp "$@" "$VPS_HOST:~/migration/"
+	ok "Übertragen. Aktueller Inhalt von ~/migration/:"
+	ssh "$VPS_HOST" "ls -lh ~/migration/ 2>/dev/null | grep -E '\\.dump|\\.tar\\.gz' || echo '  (leer)'"
+}
+
+# ---------- download ----------
+cmd_download() {
+	require_local_config
+	if [[ $# -eq 0 ]]; then
+		info "Backups auf $VPS_HOST"
+		hr
+		echo "  ${BOLD}/var/backups/vereinsheim/${RESET}"
+		ssh "$VPS_HOST" \
+			"ls -lht /var/backups/vereinsheim/ 2>/dev/null \
+			 | grep -E '\\.dump|\\.tar\\.gz' | head -20 \
+			 || echo '  (keine)'" | sed 's/^/  /'
+		echo
+		echo "  ${BOLD}~/migration/${RESET}"
+		ssh "$VPS_HOST" \
+			"ls -lht ~/migration/ 2>/dev/null \
+			 | grep -E '\\.dump|\\.tar\\.gz' | head -10 \
+			 || echo '  (keine)'" | sed 's/^/  /'
+		echo
+		info "Herunterladen mit:  vereinsheim download <dateiname> [zielverzeichnis]"
+		return
+	fi
+	local filename="$1"
+	local target="${2:-.}"
+	local remote_path
+	remote_path=$(ssh "$VPS_HOST" "
+		if [[ -f /var/backups/vereinsheim/$filename ]]; then
+			echo /var/backups/vereinsheim/$filename
+		elif [[ -f ~/migration/$filename ]]; then
+			echo ~/migration/$filename
+		fi
+	")
+	if [[ -z "$remote_path" ]]; then
+		err "Datei nicht gefunden auf VPS: $filename"
+		echo "  Gesucht in /var/backups/vereinsheim/ und ~/migration/"
+		echo "  Liste anzeigen mit:  ./scripts/vereinsheim download"
+		exit 1
+	fi
+	info "Lade $remote_path von $VPS_HOST …"
+	scp "$VPS_HOST:$remote_path" "$target/"
+	ok "Heruntergeladen: ${target%/}/$(basename "$remote_path")"
 }
 
 # ============================================================
@@ -870,15 +933,18 @@ interactive_menu_local() {
 	while :; do
 		echo
 		echo "${BOLD}=== vereinsheim — Lokal-Mode ===${RESET}  ${DIM}(VPS: ${VPS_HOST:-?})${RESET}"
-		echo "   ${BOLD}Lokal:${RESET}"
+		echo "   ${BOLD}Deploy:${RESET}"
 		echo "   1) Build (lokal bauen + push)"
 		echo "   2) ${BOLD}Release${RESET}  ${DIM}(build + push + remote deploy)${RESET}"
 		echo "   3) SSH zum VPS"
 		echo "   4) Remote-Befehl auswählen"
 		echo "   5) local-setup ändern"
-		echo "   ${BOLD}Lokal (dieser Repo-Klon, betrifft nur diese Maschine):${RESET}"
-		echo "   6) Status (lokal)"
-		echo "   7) Setup .env / env-check (z.B. für lokales Testing)"
+		echo "   ${BOLD}Backup-Transfer:${RESET}"
+		echo "   6) Upload   ${DIM}(Datei(en) → VPS ~/migration/)${RESET}"
+		echo "   7) Download ${DIM}(Backup vom VPS herunterladen)${RESET}"
+		echo "   ${BOLD}Sonstiges:${RESET}"
+		echo "   8) Status (lokal)"
+		echo "   9) Setup .env / env-check (z.B. für lokales Testing)"
 		echo "   q) Beenden"
 		read -r -p "  Wahl: " c
 		case "$c" in
@@ -887,8 +953,21 @@ interactive_menu_local() {
 		3) cmd_ssh ;;
 		4) interactive_remote_pick ;;
 		5) cmd_local_setup ;;
-		6) cmd_status ;;
-		7) cmd_setup ;;
+		6)
+			read -r -p "  Datei(en) zum Hochladen (Space-getrennt): " -a files
+			[[ ${#files[@]} -gt 0 ]] && cmd_upload "${files[@]}"
+			;;
+		7)
+			read -r -p "  Dateiname (Enter = Liste anzeigen): " fname
+			if [[ -z "$fname" ]]; then
+				cmd_download
+			else
+				read -r -p "  Zielverzeichnis [.]: " tdir
+				cmd_download "$fname" "${tdir:-.}"
+			fi
+			;;
+		8) cmd_status ;;
+		9) cmd_setup ;;
 		q | Q | "") break ;;
 		*) warn "Ungültige Auswahl" ;;
 		esac
@@ -1005,6 +1084,8 @@ main() {
 	release) cmd_release "$@" ;;
 	ssh) cmd_ssh "$@" ;;
 	remote) cmd_remote "$@" ;;
+	upload) cmd_upload "$@" ;;
+	download) cmd_download "$@" ;;
 	# VPS side
 	setup) cmd_setup "$@" ;;
 	env-check) cmd_env_check "$@" ;;
