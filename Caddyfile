@@ -1,0 +1,23 @@
+# Globale Konfiguration
+{
+	email {$ACME_EMAIL}
+	# Für Erstaufbau / Tests Let's-Encrypt-Staging einkommentieren,
+	# um Rate-Limits zu vermeiden:
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{$RINGWERK_HOST} {
+	encode zstd gzip
+	request_body {
+		max_size 20MB
+	}
+	reverse_proxy app-ringwerk:3000
+}
+
+{$TREFFSICHER_HOST} {
+	encode zstd gzip
+	request_body {
+		max_size 20MB
+	}
+	reverse_proxy app-treffsicher:3000
+}
