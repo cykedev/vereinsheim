@@ -119,6 +119,10 @@ env_keys_from_example() {
 	awk -F= '/^[A-Z][A-Z0-9_]*=/ { print $1 }' "$ENV_EXAMPLE"
 }
 
+is_valid_app() {
+	[[ "${1:-}" =~ ^(ringwerk|treffsicher)$ ]]
+}
+
 # ---------- local config ----------
 # .vereinsheim.local enthält lokale Konfiguration: VPS_HOST, VPS_REPO_PATH,
 # DOCKER_USER. Wird gebraucht für build, release, ssh, remote.
@@ -536,16 +540,17 @@ _local_up_with_restore() {
 	local_compose up -d db
 
 	info "Warte auf DB-Healthcheck …"
+	local max_attempts="${DB_STARTUP_TIMEOUT:-30}"
 	local attempts=0
-	while [[ $attempts -lt 30 ]]; do
+	while [[ $attempts -lt $max_attempts ]]; do
 		if local_compose exec -T db pg_isready -U postgres >/dev/null 2>&1; then
 			break
 		fi
 		attempts=$((attempts + 1))
 		sleep 2
 	done
-	if [[ $attempts -ge 30 ]]; then
-		err "DB nicht healthy nach 60 Sekunden."
+	if [[ $attempts -ge $max_attempts ]]; then
+		err "DB nicht healthy nach $((max_attempts * 2)) Sekunden (DB_STARTUP_TIMEOUT=$max_attempts)."
 		exit 1
 	fi
 	ok "DB healthy."
@@ -827,9 +832,14 @@ setup_edit_single() {
 }
 
 # ---------- env-check ----------
+env_keys_from_file() {
+	# All variable names assigned in .env (ignoring comments and blank lines)
+	awk -F= '/^[[:space:]]*#/ { next } /^[A-Z][A-Z0-9_]*=/ { print $1 }' "$ENV_FILE"
+}
+
 cmd_env_check() {
 	require_env
-	local missing=() weak=() ok_count=0
+	local missing=() weak=() unknown=() ok_count=0
 	while IFS= read -r key; do
 		local val
 		val="$(read_env_var "$key" || echo '')"
@@ -854,6 +864,13 @@ cmd_env_check() {
 		esac
 	done < <(env_keys_from_example)
 
+	# Detect keys in .env that aren't in .env.example (typos, stale vars)
+	local expected_keys
+	expected_keys="$(env_keys_from_example)"
+	while IFS= read -r key; do
+		grep -qxF "$key" <<<"$expected_keys" || unknown+=("$key")
+	done < <(env_keys_from_file)
+
 	echo "${BOLD}=== env-check ===${RESET}"
 	echo "  Datei: $ENV_FILE"
 	echo "  Gesetzt: ${ok_count} / $(env_keys_from_example | wc -l | tr -d ' ')"
@@ -865,7 +882,11 @@ cmd_env_check() {
 		warn "Auffällig (${#weak[@]}):"
 		printf '    - %s\n' "${weak[@]}"
 	fi
-	if [[ ${#missing[@]} -eq 0 && ${#weak[@]} -eq 0 ]]; then
+	if [[ ${#unknown[@]} -gt 0 ]]; then
+		warn "Unbekannt (${#unknown[@]}, evtl. Tippfehler oder veraltet):"
+		printf '    - %s\n' "${unknown[@]}"
+	fi
+	if [[ ${#missing[@]} -eq 0 && ${#weak[@]} -eq 0 && ${#unknown[@]} -eq 0 ]]; then
 		ok "Alles OK."
 	fi
 }
@@ -1052,7 +1073,7 @@ cmd_psql() {
 	require_env
 	require_docker
 	local app="${1:-}"
-	[[ "$app" =~ ^(ringwerk|treffsicher)$ ]] || {
+	is_valid_app "$app" || {
 		err "Aufruf: vereinsheim psql <ringwerk|treffsicher>"
 		return 1
 	}
@@ -1064,7 +1085,7 @@ cmd_migrations() {
 	require_env
 	require_docker
 	local app="${1:-}"
-	if [[ ! "$app" =~ ^(ringwerk|treffsicher)$ ]]; then
+	if ! is_valid_app "$app"; then
 		echo "  Welche App?"
 		echo "    1) ringwerk"
 		echo "    2) treffsicher"
