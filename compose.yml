@@ -78,11 +78,8 @@ services:
       NEXTAUTH_URL: https://${RINGWERK_HOST}
       SEED_ADMIN_EMAIL: ${RINGWERK_SEED_ADMIN_EMAIL}
       SEED_ADMIN_PASSWORD: ${RINGWERK_SEED_ADMIN_PASSWORD}
-      UPLOAD_DIR: /app/uploads
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
-    volumes:
-      - uploads_ringwerk:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -124,5 +121,4 @@ volumes:
   postgres_data:
   caddy_data:
   caddy_config:
-  uploads_ringwerk:
   uploads_treffsicher:
