@@ -221,23 +221,20 @@ docker compose up -d migrate-ringwerk app-ringwerk
 
 ### Backup aus bestehender TrueNAS-Installation erstellen
 
-Beide Apps laufen als Custom Apps (Compose-YAML) auf TrueNAS. Die
-Compose-Verzeichnisse sind `/mnt/dozer/apps/ringwerk/` und
-`/mnt/dozer/apps/treffsicher/`.
+Beide Apps laufen als Custom Apps auf TrueNAS. TrueNAS benennt die Container
+nach dem Schema `ix-<app>-<service>-1` — kein `docker compose` nötig.
 
 **Ringwerk** (kein Uploads-Volume, nur DB):
 
 ```bash
-cd /mnt/dozer/apps/ringwerk
-docker compose exec -T db pg_dump -U ringwerk -Fc ringwerk \
+docker exec ix-ringwerk-db-1 pg_dump -U ringwerk -Fc ringwerk \
   > ~/ringwerk-$(date +%F).dump
 ```
 
 **Treffsicher** (DB + Uploads unter `/mnt/dozer/apps/treffsicher/uploads`):
 
 ```bash
-cd /mnt/dozer/apps/treffsicher
-docker compose exec -T db pg_dump -U treffsicher -Fc treffsicher \
+docker exec ix-treffsicher-db-1 pg_dump -U treffsicher -Fc treffsicher \
   > ~/treffsicher-$(date +%F).dump
 
 tar czf ~/uploads-treffsicher-$(date +%F).tar.gz \
