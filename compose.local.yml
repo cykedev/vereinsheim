@@ -1,0 +1,35 @@
+# Lokales Entwicklungs-Override — kombiniert mit compose.yml via:
+#   docker compose -f compose.yml -f compose.local.yml --env-file .env.local <cmd>
+#
+# Caddy ist deaktiviert (profile-Trick); Apps sind direkt auf Host-Ports erreichbar.
+# Dieses File wird nie alleine verwendet, immer zusammen mit compose.yml.
+services:
+  caddy:
+    profiles:
+      - caddy-local   # nur gestartet wenn --profile caddy-local explizit angegeben
+
+  db:
+    ports:
+      - "5432:5432"   # DB lokal direkt erreichbar (psql, TablePlus, etc.)
+
+  app-ringwerk:
+    pull_policy: missing
+    ports:
+      - "3000:3000"
+    environment:
+      NEXTAUTH_URL: "http://localhost:3000"
+      AUTH_TRUST_PROXY_HEADERS: "false"
+
+  app-treffsicher:
+    pull_policy: missing
+    ports:
+      - "3001:3000"
+    environment:
+      NEXTAUTH_URL: "http://localhost:3001"
+      AUTH_TRUST_PROXY_HEADERS: "false"
+
+  migrate-ringwerk:
+    pull_policy: missing
+
+  migrate-treffsicher:
+    pull_policy: missing
