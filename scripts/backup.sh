@@ -23,11 +23,7 @@ docker compose exec -T db pg_dump -U postgres -Fc treffsicher > "$OUT/treffsiche
 # Volume-Namen werden vom compose-Project-Namen geprefixt (siehe `name:` in compose.yml).
 VOLUME_PREFIX="vereinsheim"
 
-echo "==> Upload archives"
-docker run --rm \
-	-v "${VOLUME_PREFIX}_uploads_ringwerk":/src:ro \
-	-v "$OUT":/out \
-	alpine tar czf "/out/uploads-ringwerk-$TS.tar.gz" -C /src .
+echo "==> Upload archive (treffsicher only — ringwerk has no uploads)"
 docker run --rm \
 	-v "${VOLUME_PREFIX}_uploads_treffsicher":/src:ro \
 	-v "$OUT":/out \

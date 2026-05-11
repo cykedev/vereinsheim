@@ -143,7 +143,7 @@ Detaillierte Restore-Mechanik: [`operations.md`](operations.md#restore).
 3. `dig +short $RINGWERK_HOST $TREFFSICHER_HOST` → VPS-IP.
 4. `curl -vI https://$RINGWERK_HOST/` → 200, gültiges Let's-Encrypt-Cert.
 5. Login mit `RINGWERK_SEED_ADMIN_EMAIL` → Dashboard.
-6. PDF-Upload landet im `uploads_ringwerk`-Volume.
+6. PDF-Upload (Treffsicher) landet im `uploads_treffsicher`-Volume.
 7. **DB-Isolation**: `docker compose exec db psql -U treffsicher -d ringwerk
    -c '\dt'` muss **fehlschlagen** (permission denied).
 8. **Proxy-Headers**: failed login → `LoginRateLimitBucket` zeigt echte

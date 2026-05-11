@@ -609,7 +609,7 @@ cmd_status() {
 
 	hr
 	echo "${BOLD}Volumes${RESET}"
-	for v in postgres_data uploads_ringwerk uploads_treffsicher caddy_data caddy_config; do
+	for v in postgres_data uploads_treffsicher caddy_data caddy_config; do
 		local full="vereinsheim_$v"
 		if docker volume inspect "$full" >/dev/null 2>&1; then
 			# Größe via du im alpine-Container abfragen

@@ -150,13 +150,14 @@ andere App ist davon nicht betroffen (eigener migrate-Container, eigene DB).
 
 ### Was wird gesichert
 
-`scripts/backup.sh` legt 4 Files in `${BACKUP_DIR:-/var/backups/vereinsheim}`
+`scripts/backup.sh` legt 3 Files in `${BACKUP_DIR:-/var/backups/vereinsheim}`
 ab:
 
 - `ringwerk-<TS>.dump` — Postgres custom-format Dump der `ringwerk`-DB
 - `treffsicher-<TS>.dump` — analog
-- `uploads-ringwerk-<TS>.tar.gz` — Inhalt des `uploads_ringwerk`-Volumes
-- `uploads-treffsicher-<TS>.tar.gz` — analog
+- `uploads-treffsicher-<TS>.tar.gz` — Inhalt des `uploads_treffsicher`-Volumes
+
+Ringwerk hat keine persistierten Uploads und wird daher nicht archiviert.
 
 Retention: 14 Tage rolling (`BACKUP_RETAIN_DAYS=14`, überschreibbar).
 

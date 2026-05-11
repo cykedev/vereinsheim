@@ -22,11 +22,11 @@ Deploy und transparenten Backups.
 2. Automatische TLS-Zertifikate (Let's Encrypt), automatische Erneuerung.
 3. Geteilter Postgres-Container, aber **getrennte Datenbanken + getrennte
    User**, damit Cross-DB-Zugriffe technisch unmöglich sind.
-4. Persistente Volumes für Postgres-Daten und User-Uploads beider Apps
-   (Ringwerk: Meyton-PDFs; Treffsicher: Bilder + PDFs).
+4. Persistente Volumes für Postgres-Daten und User-Uploads (Treffsicher:
+   Bilder + PDFs; Ringwerk hat keine persistierten Uploads).
 5. Zero-touch-Deploy: `docker compose pull && docker compose up -d` auf VPS,
    Migrationen laufen automatisch vor App-Start.
-6. Backup beider DBs + beider Upload-Volumes per Cron, 14-Tage-Rolling
+6. Backup beider DBs + Treffsicher-Upload-Volume per Cron, 14-Tage-Rolling
    lokal auf VPS.
 7. Repeatable Restore (für initialen Cutover und Recovery).
 
@@ -100,7 +100,6 @@ Volumes:
   postgres_data        → /var/lib/postgresql/data
   caddy_data           → /data        (LE-Zertifikate – kritisch!)
   caddy_config         → /config
-  uploads_ringwerk     → /app/uploads (im ringwerk-Container)
   uploads_treffsicher  → /app/uploads (im treffsicher-Container)
 ```
 
