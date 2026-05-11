@@ -114,6 +114,18 @@ read_env_var() {
 	' "$ENV_FILE"
 }
 
+write_env_var() {
+	# In-place set <KEY>=<VALUE> in .env. Appends if missing.
+	local key="$1" value="$2"
+	local escaped
+	escaped="$(printf '%s\n' "$value" | sed -e 's/[\/&]/\\&/g')"
+	if grep -q "^${key}=" "$ENV_FILE"; then
+		sed -i.bak "s|^${key}=.*|${key}=${escaped}|" "$ENV_FILE" && rm -f "$ENV_FILE.bak"
+	else
+		echo "${key}=${value}" >>"$ENV_FILE"
+	fi
+}
+
 env_keys_from_example() {
 	# All variable names declared in .env.example
 	awk -F= '/^[A-Z][A-Z0-9_]*=/ { print $1 }' "$ENV_EXAMPLE"
@@ -211,6 +223,7 @@ cmd_help() {
 		${BOLD}── VPS-OPERATIONEN${RESET} ${DIM}(auf dem Server, nutzt .env)${RESET}
 		  ${GREEN}status${RESET}                Services, Volumes, Backups, .env, Cron
 		  ${GREEN}deploy${RESET}                Pre-Backup + Pull + Up
+		  ${GREEN}rollback${RESET}              Auf vorherigen Deploy zurück (aus deploy-history.log)
 		  ${GREEN}backup${RESET}                Backup manuell erstellen
 		  ${GREEN}restore${RESET}               Interaktiver Restore aus Backup
 		  ${GREEN}logs${RESET} [service]        Logs folgen (Default: Apps + caddy)
@@ -819,14 +832,7 @@ setup_edit_single() {
 		info "Keine Änderung."
 		return
 	fi
-	# Update key=value in-place. Escape replacement for sed.
-	local escaped
-	escaped="$(printf '%s\n' "$new_value" | sed -e 's/[\/&]/\\&/g')"
-	if grep -q "^${key}=" "$ENV_FILE"; then
-		sed -i.bak "s|^${key}=.*|${key}=${escaped}|" "$ENV_FILE" && rm -f "$ENV_FILE.bak"
-	else
-		echo "${key}=${new_value}" >>"$ENV_FILE"
-	fi
+	write_env_var "$key" "$new_value"
 	ok "$key aktualisiert."
 	warn "Damit Änderungen wirksam werden:  ./scripts/vereinsheim deploy"
 }
@@ -1010,6 +1016,121 @@ cmd_deploy() {
 		return
 	}
 	exec "$SCRIPT_DIR/deploy.sh"
+}
+
+# ---------- rollback ----------
+HISTORY_FILE="$REPO_DIR/logs/deploy-history.log"
+
+_extract_tag() {
+	# Parse "KEY=VALUE" pair from a history line.
+	local key="$1" line="$2"
+	awk -v k="$key" '{
+		for (i = 1; i <= NF; i++) {
+			if (index($i, k "=") == 1) {
+				sub(/^[^=]*=/, "", $i)
+				print $i
+				exit
+			}
+		}
+	}' <<<"$line"
+}
+
+_rollback_diff_line() {
+	local key="$1" new="$2" current
+	current="$(read_env_var "$key" || echo '')"
+	if [[ "$current" == "$new" ]]; then
+		printf "  %s: %s${DIM} (unverändert)${RESET}\n" "$key" "$new"
+	else
+		printf "  %s: ${DIM}%s${RESET} → ${BOLD}%s${RESET}\n" "$key" "${current:-(leer)}" "$new"
+	fi
+}
+
+cmd_rollback() {
+	require_env
+	require_docker
+	if [[ ! -f "$HISTORY_FILE" ]]; then
+		err "Keine Deploy-History gefunden ($HISTORY_FILE)."
+		info "Manueller Pfad: ./scripts/vereinsheim setup → einzelne Werte bearbeiten,"
+		info "                dann SKIP_BACKUP=1 ./scripts/vereinsheim deploy"
+		return 1
+	fi
+
+	mapfile -t entries < <(tac "$HISTORY_FILE" | head -5)
+	if ((${#entries[@]} < 2)); then
+		err "Nur ${#entries[@]} Deploy-Eintrag in History — kein Rollback-Ziel verfügbar."
+		info "Erst ab dem zweiten Deploy ist ein Rollback möglich."
+		return 1
+	fi
+
+	echo
+	echo "${BOLD}Letzte Deployments${RESET}  ${DIM}(neueste oben, 1 = aktuell)${RESET}"
+	local i=1
+	for entry in "${entries[@]}"; do
+		local ts r_app t_app
+		ts="$(awk '{print $1}' <<<"$entry")"
+		r_app="$(_extract_tag RINGWERK_TAG "$entry")"
+		t_app="$(_extract_tag TREFFSICHER_TAG "$entry")"
+		printf "  %d) %s   ringwerk=%s  treffsicher=%s\n" "$i" "$ts" "${r_app:-?}" "${t_app:-?}"
+		i=$((i + 1))
+	done
+
+	echo
+	local choice
+	read -r -p "  Rollback-Ziel [2]: " choice
+	choice="${choice:-2}"
+	if ! [[ "$choice" =~ ^[0-9]+$ ]]; then
+		err "Ungültige Eingabe."
+		return 1
+	fi
+	if ((choice < 1 || choice > ${#entries[@]})); then
+		err "Außerhalb der Range (1..${#entries[@]})."
+		return 1
+	fi
+	if ((choice == 1)); then
+		warn "Eintrag 1 = aktueller Stand. Kein Rollback nötig."
+		return 0
+	fi
+
+	local target="${entries[$((choice - 1))]}"
+	local new_r_app new_r_mig new_t_app new_t_mig
+	new_r_app="$(_extract_tag RINGWERK_TAG "$target")"
+	new_r_mig="$(_extract_tag RINGWERK_MIGRATOR_TAG "$target")"
+	new_t_app="$(_extract_tag TREFFSICHER_TAG "$target")"
+	new_t_mig="$(_extract_tag TREFFSICHER_MIGRATOR_TAG "$target")"
+
+	if [[ -z "$new_r_app" || -z "$new_r_mig" || -z "$new_t_app" || -z "$new_t_mig" ]]; then
+		err "Eintrag $choice unvollständig — Tag fehlt. History-Datei manuell prüfen:"
+		echo "  $HISTORY_FILE"
+		return 1
+	fi
+
+	echo
+	echo "${BOLD}Änderungen${RESET}"
+	_rollback_diff_line RINGWERK_TAG "$new_r_app"
+	_rollback_diff_line RINGWERK_MIGRATOR_TAG "$new_r_mig"
+	_rollback_diff_line TREFFSICHER_TAG "$new_t_app"
+	_rollback_diff_line TREFFSICHER_MIGRATOR_TAG "$new_t_mig"
+
+	echo
+	warn "Falls die fehlgeschlagene Version eine Migration enthielt, ist die DB"
+	warn "jetzt im Schema-Stand der neueren Version. Reines Tag-Rollback genügt"
+	warn "dann nicht — du brauchst zusätzlich:  ./scripts/vereinsheim restore"
+
+	echo
+	confirm "Tags in .env schreiben und neu deployen?" Y || {
+		info "Abgebrochen."
+		return
+	}
+
+	write_env_var RINGWERK_TAG "$new_r_app"
+	write_env_var RINGWERK_MIGRATOR_TAG "$new_r_mig"
+	write_env_var TREFFSICHER_TAG "$new_t_app"
+	write_env_var TREFFSICHER_MIGRATOR_TAG "$new_t_mig"
+	ok "Tags in .env aktualisiert."
+
+	# Pre-Deploy-Backup überspringen: der Stand, der gleich überschrieben
+	# wird, ist gerade der kaputte — wir wollen kein Backup davon.
+	SKIP_BACKUP=1 exec "$SCRIPT_DIR/deploy.sh"
 }
 
 # ---------- backup ----------
@@ -1346,18 +1467,19 @@ interactive_menu_vps() {
 		echo
 		echo "  ${BOLD}Deploy & Backup${RESET}"
 		echo "  4) deploy     Pre-Backup + Pull + Up"
-		echo "  5) backup     Backup jetzt manuell erstellen"
-		echo "  6) restore    Interaktiver Restore aus Backup"
+		echo "  5) rollback   Auf vorherigen Deploy zurück"
+		echo "  6) backup     Backup jetzt manuell erstellen"
+		echo "  7) restore    Interaktiver Restore aus Backup"
 		echo
 		echo "  ${BOLD}Datenbank${RESET}"
-		echo "  7) psql        DB-Shell"
-		echo "  8) migrations  Migration-Status + Recovery"
+		echo "  8) psql        DB-Shell"
+		echo "  9) migrations  Migration-Status + Recovery"
 		echo
 		echo "  ${BOLD}Infrastruktur${RESET}"
-		echo "  9) setup       .env-Wizard"
-		echo " 10) cron        Backup-Cron installieren/prüfen"
-		echo " 11) shell       Bash-Shell im Container"
-		echo " 12) up/down/restart"
+		echo " 10) setup       .env-Wizard"
+		echo " 11) cron        Backup-Cron installieren/prüfen"
+		echo " 12) shell       Bash-Shell im Container"
+		echo " 13) up/down/restart"
 		echo
 		echo "  q) Beenden  ${DIM}· Lokal-Modus: ./scripts/vereinsheim local-setup${RESET}"
 		read -r -p "  » " c
@@ -1369,17 +1491,18 @@ interactive_menu_vps() {
 			;;
 		3) cmd_env_check ;;
 		4) cmd_deploy ;;
-		5) cmd_backup ;;
-		6) cmd_restore ;;
-		7) cmd_psql_interactive ;;
-		8) cmd_migrations ;;
-		9) cmd_setup ;;
-		10) cmd_cron ;;
-		11)
+		5) cmd_rollback ;;
+		6) cmd_backup ;;
+		7) cmd_restore ;;
+		8) cmd_psql_interactive ;;
+		9) cmd_migrations ;;
+		10) cmd_setup ;;
+		11) cmd_cron ;;
+		12)
 			read -r -p "  Service: " svc
 			[[ -n "$svc" ]] && cmd_shell "$svc"
 			;;
-		12) interactive_service_control ;;
+		13) interactive_service_control ;;
 		q | Q | "") break ;;
 		*) warn "Ungültige Auswahl" ;;
 		esac
@@ -1467,6 +1590,7 @@ main() {
 	env-check) cmd_env_check "$@" ;;
 	status) cmd_status "$@" ;;
 	deploy) cmd_deploy "$@" ;;
+	rollback) cmd_rollback "$@" ;;
 	backup) cmd_backup "$@" ;;
 	restore) cmd_restore "$@" ;;
 	logs) cmd_logs "$@" ;;

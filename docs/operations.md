@@ -460,6 +460,21 @@ Wenn der Bug rein in der App liegt und die Migrations-Tabelle gleich
 geblieben ist:
 
 ```bash
+./scripts/vereinsheim rollback
+```
+
+Das Tool liest `logs/deploy-history.log` (eine Zeile pro
+erfolgreichem Deploy), zeigt die letzten fünf Stände, schlägt den
+vorherigen Eintrag als Ziel vor und schreibt nach Bestätigung die
+vier Image-Tags zurück in die `.env`. Anschließend startet es
+automatisch `deploy.sh` mit `SKIP_BACKUP=1` (der kaputte Stand soll
+kein neues Backup erzeugen). `migrate deploy` ist no-op, da der
+Schema-Stand bereits korrekt ist.
+
+**Fallback** (z.B. wenn die History-Datei fehlt oder du auf einen
+Tag rollen willst, der nicht in der History steht):
+
+```bash
 ./scripts/vereinsheim setup     # Wahl 2: einzelne Werte bearbeiten
 #  → RINGWERK_TAG = <vorherige-sha>
 #  → RINGWERK_MIGRATOR_TAG = <vorherige-sha>-migrator
@@ -468,16 +483,16 @@ SKIP_BACKUP=1 ./scripts/vereinsheim deploy
 
 (Vorherige SHAs findest du in Docker Hub unter
 `<DOCKER_USER>/ringwerk/tags` oder via `git log` im App-Repo.)
-`migrate deploy` ist no-op, da Schema-Stand bereits korrekt.
 
 ### Variante B — Vollständiger Rollback inkl. DB
 
-Wenn die neue Version eine destruktive Migration enthielt:
+Wenn die neue Version eine destruktive Migration enthielt, reicht
+das reine Tag-Rollback nicht — die DB ist schon im neueren
+Schema-Stand. Reihenfolge:
 
 ```bash
 ./scripts/vereinsheim restore       # interaktiv: vorherigen Dump wählen
-./scripts/vereinsheim setup         # Tags auf vorherige SHA zurücksetzen
-SKIP_BACKUP=1 ./scripts/vereinsheim deploy
+./scripts/vereinsheim rollback      # Tags auf vorherigen Stand zurück
 ```
 
 Voraussetzung: Pre-Deploy-Backup hat funktioniert (= Default).

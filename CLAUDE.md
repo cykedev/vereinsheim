@@ -75,8 +75,6 @@ offen sind Phase 5 (VPS-Provisioning) und Phase 6 (Cutover).
 
 Plausible Folgearbeiten (alle *nicht* im aktuellen Scope):
 
-- `vereinsheim rollback` als eigener Subcommand (heute manuell via
-  `setup` → einzelne Werte ändern + `deploy`).
 - Off-Site-Backup-Subcommand (`vereinsheim backup-offsite`).
 - CI-Migration → GitHub Actions, würde ADR-006 supersden.
 

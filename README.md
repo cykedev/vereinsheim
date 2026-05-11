@@ -34,8 +34,8 @@ Ein Werkzeug, zwei Modi: [`./scripts/vereinsheim`](scripts/vereinsheim).
 - **Lokal-Mode** wird aktiviert, sobald `.vereinsheim.local` existiert
   (auf deiner Arbeitsmaschine). Bietet `build`, `release`, `ssh`,
   `remote`, `local-setup`.
-- **VPS-Mode** ist der Default. Bietet `setup`, `deploy`, `backup`,
-  `restore`, `migrations`, `status`, `cron`, `psql`, `logs`, … .
+- **VPS-Mode** ist der Default. Bietet `setup`, `deploy`, `rollback`,
+  `backup`, `restore`, `migrations`, `status`, `cron`, `psql`, `logs`, … .
 
 Ohne Argument startet das passende interaktive Menü, mit Subcommand
 läuft es nicht-interaktiv. `./scripts/vereinsheim help` zeigt die
