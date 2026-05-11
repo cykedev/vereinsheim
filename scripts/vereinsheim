@@ -1,0 +1,1031 @@
+#!/usr/bin/env bash
+# vereinsheim — Operations CLI
+#
+# One tool to drive setup, deploy, backup, restore, and recovery.
+# All subcommands are also reachable via the interactive menu (./scripts/vereinsheim).
+#
+# Subcommands wrap the per-task scripts (deploy.sh, backup.sh, restore.sh)
+# instead of duplicating their logic.
+set -euo pipefail
+
+# ---------- Path setup ----------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "$SCRIPT_DIR")"
+cd "$REPO_DIR"
+
+ENV_FILE="$REPO_DIR/.env"
+ENV_EXAMPLE="$REPO_DIR/.env.example"
+LOCAL_CONFIG="$REPO_DIR/.vereinsheim.local"
+BACKUP_DIR_DEFAULT="/var/backups/vereinsheim"
+
+# ---------- Colors ----------
+if [[ -t 1 ]]; then
+	BOLD=$'\033[1m'
+	RESET=$'\033[0m'
+	RED=$'\033[31m'
+	GREEN=$'\033[32m'
+	YELLOW=$'\033[33m'
+	BLUE=$'\033[34m'
+	DIM=$'\033[2m'
+else
+	BOLD="" RESET="" RED="" GREEN="" YELLOW="" BLUE="" DIM=""
+fi
+
+info() { echo "${BLUE}==>${RESET} $*"; }
+ok() { echo "${GREEN}✓${RESET} $*"; }
+warn() { echo "${YELLOW}!!${RESET} $*" >&2; }
+err() { echo "${RED}✗${RESET} $*" >&2; }
+hr() { echo "${DIM}──────────────────────────────────────────────────${RESET}"; }
+
+# ---------- Prompt helpers ----------
+confirm() {
+	local prompt="${1:-Continue?}" default="${2:-N}"
+	local hint="[y/N]"
+	[[ "$default" == "Y" ]] && hint="[Y/n]"
+	local reply
+	read -r -p "$prompt $hint " reply
+	reply="${reply:-$default}"
+	[[ "$reply" =~ ^[Yy]$ ]]
+}
+
+ask() {
+	local question="$1" default="${2:-}"
+	local reply
+	if [[ -n "$default" ]]; then
+		read -r -p "  $question [${DIM}${default}${RESET}]: " reply
+		echo "${reply:-$default}"
+	else
+		read -r -p "  $question: " reply
+		echo "$reply"
+	fi
+}
+
+ask_secret() {
+	# Asks for a secret. Empty input = generate <len>-byte random base64.
+	local question="$1" len="${2:-32}"
+	local reply
+	read -r -s -p "  $question (Enter = generate): " reply
+	echo >&2
+	if [[ -z "$reply" ]]; then
+		openssl rand -base64 "$len" | tr -d '\n=+/' | cut -c1-"$len"
+	else
+		echo "$reply"
+	fi
+}
+
+ask_validated() {
+	local question="$1" validator="$2" default="${3:-}"
+	local value
+	while :; do
+		value="$(ask "$question" "$default")"
+		if "$validator" "$value"; then
+			echo "$value"
+			return
+		fi
+		warn "Eingabe ungültig — bitte erneut."
+	done
+}
+
+# ---------- Validators ----------
+is_email() { [[ "$1" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]; }
+is_hostname() { [[ "$1" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$ ]]; }
+is_min_chars() { local n="$2"; [[ ${#1} -ge $n ]]; }
+make_min_validator() { local n="$1"; eval "_min_${n}() { is_min_chars \"\$1\" $n; }"; echo "_min_${n}"; }
+
+# ---------- env handling ----------
+require_env() {
+	if [[ ! -f "$ENV_FILE" ]]; then
+		err ".env fehlt im Repo-Root."
+		echo "  → Lege sie an mit:  ./scripts/vereinsheim setup"
+		exit 1
+	fi
+}
+
+read_env_var() {
+	# Print value of <KEY> from .env (ignores comments, allows = in value)
+	local key="$1"
+	[[ -f "$ENV_FILE" ]] || return 1
+	awk -F= -v k="$key" '
+		/^[[:space:]]*#/ { next }
+		$1 == k { sub(/^[^=]*=/, ""); print; exit }
+	' "$ENV_FILE"
+}
+
+env_keys_from_example() {
+	# All variable names declared in .env.example
+	awk -F= '/^[A-Z][A-Z0-9_]*=/ { print $1 }' "$ENV_EXAMPLE"
+}
+
+# ---------- local config ----------
+# .vereinsheim.local enthält lokale Konfiguration: VPS_HOST, VPS_REPO_PATH,
+# DOCKER_USER. Wird gebraucht für build, release, ssh, remote.
+load_local_config() {
+	[[ -f "$LOCAL_CONFIG" ]] || return 1
+	# shellcheck disable=SC1090
+	set -a
+	source "$LOCAL_CONFIG"
+	set +a
+}
+
+require_local_config() {
+	if ! load_local_config; then
+		err ".vereinsheim.local fehlt — bitte einmalig anlegen mit:"
+		echo "    ./scripts/vereinsheim local-setup"
+		exit 1
+	fi
+	: "${VPS_HOST:?VPS_HOST in .vereinsheim.local fehlt}"
+	: "${VPS_REPO_PATH:?VPS_REPO_PATH in .vereinsheim.local fehlt}"
+	: "${DOCKER_USER:?DOCKER_USER in .vereinsheim.local fehlt}"
+}
+
+is_local_mode() { [[ -f "$LOCAL_CONFIG" ]]; }
+
+# ---------- docker helpers ----------
+require_docker() {
+	if ! command -v docker >/dev/null 2>&1; then
+		err "docker nicht gefunden. Installiere Docker zuerst."
+		exit 1
+	fi
+	if ! docker info >/dev/null 2>&1; then
+		err "Docker daemon nicht erreichbar."
+		exit 1
+	fi
+}
+
+db_running() {
+	docker compose ps --status running --services 2>/dev/null | grep -qx db
+}
+
+# ============================================================
+# Commands
+# ============================================================
+
+cmd_help() {
+	cat <<-EOF
+		${BOLD}vereinsheim${RESET} — Operations CLI
+
+		${BOLD}USAGE${RESET}
+		  ./scripts/vereinsheim                   Interaktives Menü
+		  ./scripts/vereinsheim <command> [args]
+
+		${BOLD}LOKAL${RESET} (auf der eigenen Maschine — braucht .vereinsheim.local)
+		  ${GREEN}local-setup${RESET}             Wizard für .vereinsheim.local (VPS_HOST, DOCKER_USER, …)
+		  ${GREEN}build${RESET}                   Beide Apps lokal bauen + nach Docker Hub pushen
+		  ${GREEN}release${RESET}                 build + ssh-Deploy auf VPS (one-liner)
+		  ${GREEN}ssh${RESET}                     Interaktive SSH-Shell zum VPS
+		  ${GREEN}remote${RESET} <subcommand>     <subcommand> auf dem VPS via SSH ausführen
+
+		${BOLD}VPS-SEITE${RESET} (auf dem Server, nutzt .env)
+		  ${GREEN}setup${RESET}                   Interaktiver .env-Wizard (validiert, generiert Secrets)
+		  ${GREEN}env-check${RESET}               Prüft .env auf Vollständigkeit & häufige Fehler
+		  ${GREEN}status${RESET}                  Services, Volumes, Backups, .env, Cron
+		  ${GREEN}deploy${RESET}                  Pre-Backup + Pull + Up (= scripts/deploy.sh)
+		  ${GREEN}backup${RESET}                  Manuelles Backup (= scripts/backup.sh)
+		  ${GREEN}restore${RESET}                 Interaktiver Restore aus Backup
+		  ${GREEN}logs${RESET} [service]          Logs folgen (Default: alle Apps + caddy)
+		  ${GREEN}psql${RESET} <ringwerk|treffsicher>      psql-Shell in der App-DB (App-User)
+		  ${GREEN}migrations${RESET} <ringwerk|treffsicher>  Migration-Status + Recovery-Menü
+		  ${GREEN}shell${RESET} <service>         Bash-Shell im Container
+		  ${GREEN}cron${RESET}                    Backup-Cron installieren/prüfen
+		  ${GREEN}up${RESET}                      Alle Services starten (kein pull)
+		  ${GREEN}down${RESET}                    Alle Services stoppen
+		  ${GREEN}restart${RESET} <service>       Einzelnen Service neustarten
+
+		${GREEN}help${RESET}                      Diese Übersicht
+
+		${BOLD}TIPS${RESET}
+		  - ${YELLOW}vereinsheim release${RESET} ist der Standard-Release-Befehl von der lokalen Maschine aus.
+		  - ${YELLOW}vereinsheim remote status${RESET} zeigt den VPS-Stand ohne ssh-Login.
+		  - ${YELLOW}SKIP_BACKUP=1 vereinsheim deploy${RESET} überspringt das Pre-Deploy-Backup
+		    (z.B. bei Notfall-Redeploy nach gescheiterter Migration).
+		  - Backups landen in ${BACKUP_DIR_DEFAULT} (überschreibbar via BACKUP_DIR).
+	EOF
+}
+
+# ============================================================
+# Local-side commands
+# ============================================================
+
+# ---------- local-setup ----------
+cmd_local_setup() {
+	echo "${BOLD}=== local-setup ===${RESET}"
+	echo "  Schreibt .vereinsheim.local mit lokaler Konfiguration"
+	echo "  (VPS-Host, Repo-Pfad auf VPS, Docker-Hub-User)."
+	echo
+
+	if [[ -f "$LOCAL_CONFIG" ]]; then
+		warn ".vereinsheim.local existiert bereits."
+		load_local_config
+		echo "  Aktuell:"
+		echo "    VPS_HOST       = ${VPS_HOST:-(leer)}"
+		echo "    VPS_REPO_PATH  = ${VPS_REPO_PATH:-(leer)}"
+		echo "    DOCKER_USER    = ${DOCKER_USER:-(leer)}"
+		echo
+		confirm "Überschreiben?" || {
+			info "Abgebrochen."
+			return
+		}
+	fi
+
+	local vps_host vps_repo docker_user
+	vps_host="$(ask 'SSH-Ziel des VPS (z.B. deploy@vps.example.com)' "${VPS_HOST:-deploy@}")"
+	vps_repo="$(ask 'Repo-Pfad auf dem VPS' "${VPS_REPO_PATH:-~/vereinsheim}")"
+	docker_user="$(ask 'Docker-Hub-User' "${DOCKER_USER:-cyke}")"
+
+	cat >"$LOCAL_CONFIG" <<-EOF
+		# vereinsheim — lokale Konfiguration
+		# Generiert am $(date -Iseconds). Wird von vereinsheim build/release/ssh/remote gelesen.
+		# In .gitignore — wird nie committet.
+		VPS_HOST=$vps_host
+		VPS_REPO_PATH=$vps_repo
+		DOCKER_USER=$docker_user
+	EOF
+	chmod 600 "$LOCAL_CONFIG"
+	ok ".vereinsheim.local geschrieben."
+	echo
+	info "Test mit:    ./scripts/vereinsheim ssh"
+	info "Erster Build:    ./scripts/vereinsheim build"
+	info "Volles Release:  ./scripts/vereinsheim release"
+}
+
+# ---------- build ----------
+cmd_build() {
+	require_local_config
+	info "Build + Push beider Apps (target=runner und target=migrator) als $DOCKER_USER"
+	export DOCKER_USER
+	exec "$SCRIPT_DIR/build-and-push.sh" "$@"
+}
+
+# ---------- release ----------
+cmd_release() {
+	require_local_config
+	info "Release: build → push → SSH-Deploy auf $VPS_HOST"
+	echo
+	confirm "Starten?" Y || {
+		info "Abgebrochen."
+		return
+	}
+	export DOCKER_USER
+	"$SCRIPT_DIR/build-and-push.sh"
+	echo
+	info "Triggere Deploy auf $VPS_HOST …"
+	# shellcheck disable=SC2029
+	ssh -t "$VPS_HOST" "cd $VPS_REPO_PATH && ./scripts/vereinsheim deploy"
+}
+
+# ---------- ssh ----------
+cmd_ssh() {
+	require_local_config
+	exec ssh -t "$VPS_HOST" "cd $VPS_REPO_PATH && exec \$SHELL -l"
+}
+
+# ---------- remote ----------
+cmd_remote() {
+	require_local_config
+	if [[ $# -eq 0 ]]; then
+		err "Aufruf: vereinsheim remote <subcommand> [args]"
+		echo "  Beispiel: vereinsheim remote status"
+		echo "            vereinsheim remote logs caddy"
+		exit 1
+	fi
+	# shellcheck disable=SC2029
+	exec ssh -t "$VPS_HOST" "cd $VPS_REPO_PATH && ./scripts/vereinsheim $*"
+}
+
+# ============================================================
+# VPS-side commands
+# ============================================================
+
+# ---------- setup ----------
+cmd_setup() {
+	echo "${BOLD}=== vereinsheim setup ===${RESET}"
+	echo "  Legt .env an oder bearbeitet bestehende Werte."
+	echo
+
+	if [[ -f "$ENV_FILE" ]]; then
+		warn ".env existiert bereits."
+		echo "  1) Komplett neu erstellen (alte wird gesichert als .env.bak)"
+		echo "  2) Einzelne Werte bearbeiten"
+		echo "  3) Abbrechen"
+		local choice
+		read -r -p "  Wahl: " choice
+		case "$choice" in
+		1)
+			cp "$ENV_FILE" "$ENV_FILE.bak"
+			ok "Backup nach .env.bak"
+			;;
+		2)
+			setup_edit_single
+			return
+			;;
+		*)
+			info "Abgebrochen."
+			return
+			;;
+		esac
+	fi
+
+	hr
+	info "Domain & TLS"
+	local DOMAIN RINGWERK_HOST TREFFSICHER_HOST ACME_EMAIL
+	DOMAIN="$(ask_validated 'Basis-Domain (z.B. example.com)' is_hostname)"
+	RINGWERK_HOST="$(ask_validated 'Subdomain für Ringwerk' is_hostname "ringwerk.$DOMAIN")"
+	TREFFSICHER_HOST="$(ask_validated 'Subdomain für Treffsicher' is_hostname "treffsicher.$DOMAIN")"
+	ACME_EMAIL="$(ask_validated 'E-Mail für Let'\''s-Encrypt-Benachrichtigungen' is_email)"
+
+	hr
+	info "Docker Hub"
+	local DOCKER_USER
+	DOCKER_USER="$(ask 'Docker-Hub-User' "cyke")"
+
+	hr
+	info "Postgres-Passwörter (Enter = generieren)"
+	local POSTGRES_PASSWORD RINGWERK_DB_PASSWORD TREFFSICHER_DB_PASSWORD
+	POSTGRES_PASSWORD="$(ask_secret 'Postgres-Superuser-Passwort')"
+	RINGWERK_DB_PASSWORD="$(ask_secret 'Ringwerk-DB-User-Passwort')"
+	TREFFSICHER_DB_PASSWORD="$(ask_secret 'Treffsicher-DB-User-Passwort')"
+
+	hr
+	info "Ringwerk"
+	local RINGWERK_NEXTAUTH_SECRET RINGWERK_SEED_ADMIN_EMAIL RINGWERK_SEED_ADMIN_PASSWORD
+	RINGWERK_NEXTAUTH_SECRET="$(ask_secret 'NEXTAUTH_SECRET (mind. 32 Zeichen)' 48)"
+	RINGWERK_SEED_ADMIN_EMAIL="$(ask_validated 'Initial-Admin E-Mail' is_email "admin@${DOMAIN}")"
+	make_min_validator 12
+	RINGWERK_SEED_ADMIN_PASSWORD="$(ask_validated 'Initial-Admin Passwort (mind. 12 Zeichen)' _min_12)"
+
+	hr
+	info "Treffsicher"
+	local TREFFSICHER_NEXTAUTH_SECRET TREFFSICHER_ADMIN_EMAIL TREFFSICHER_ADMIN_PASSWORD
+	TREFFSICHER_NEXTAUTH_SECRET="$(ask_secret 'NEXTAUTH_SECRET (mind. 32 Zeichen)' 48)"
+	TREFFSICHER_ADMIN_EMAIL="$(ask_validated 'Initial-Admin E-Mail' is_email "admin@${DOMAIN}")"
+	TREFFSICHER_ADMIN_PASSWORD="$(ask_validated 'Initial-Admin Passwort (mind. 12 Zeichen)' _min_12)"
+
+	hr
+	info "Sonstiges"
+	local DISPLAY_TIME_ZONE
+	DISPLAY_TIME_ZONE="$(ask 'Anzeige-Zeitzone' 'Europe/Berlin')"
+
+	hr
+	info "Zusammenfassung"
+	cat <<-EOF
+		  Domain                    : $DOMAIN
+		  Ringwerk Host             : $RINGWERK_HOST
+		  Treffsicher Host          : $TREFFSICHER_HOST
+		  ACME-E-Mail               : $ACME_EMAIL
+		  Docker-Hub-User           : $DOCKER_USER
+		  Image-Tags                : latest / latest-migrator
+		  Postgres-Passwort         : ${DIM}(redacted, ${#POSTGRES_PASSWORD} chars)${RESET}
+		  Ringwerk-DB-Passwort      : ${DIM}(redacted, ${#RINGWERK_DB_PASSWORD} chars)${RESET}
+		  Treffsicher-DB-Passwort   : ${DIM}(redacted, ${#TREFFSICHER_DB_PASSWORD} chars)${RESET}
+		  Ringwerk NEXTAUTH_SECRET  : ${DIM}(${#RINGWERK_NEXTAUTH_SECRET} chars)${RESET}
+		  Ringwerk Seed-Admin       : $RINGWERK_SEED_ADMIN_EMAIL
+		  Treffsicher NEXTAUTH      : ${DIM}(${#TREFFSICHER_NEXTAUTH_SECRET} chars)${RESET}
+		  Treffsicher Admin         : $TREFFSICHER_ADMIN_EMAIL
+		  Zeitzone                  : $DISPLAY_TIME_ZONE
+	EOF
+	echo
+	confirm ".env schreiben?" Y || {
+		info "Abgebrochen — nichts geschrieben."
+		return 1
+	}
+
+	cat >"$ENV_FILE" <<-EOF
+		# Generiert von ./scripts/vereinsheim setup am $(date -Iseconds)
+		# === Domain & TLS ===
+		DOMAIN=$DOMAIN
+		RINGWERK_HOST=$RINGWERK_HOST
+		TREFFSICHER_HOST=$TREFFSICHER_HOST
+		ACME_EMAIL=$ACME_EMAIL
+
+		# === Docker Images ===
+		DOCKER_USER=$DOCKER_USER
+		RINGWERK_TAG=latest
+		RINGWERK_MIGRATOR_TAG=latest-migrator
+		TREFFSICHER_TAG=latest
+		TREFFSICHER_MIGRATOR_TAG=latest-migrator
+
+		# === Postgres ===
+		POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+		RINGWERK_DB_PASSWORD=$RINGWERK_DB_PASSWORD
+		TREFFSICHER_DB_PASSWORD=$TREFFSICHER_DB_PASSWORD
+
+		# === Ringwerk ===
+		RINGWERK_NEXTAUTH_SECRET=$RINGWERK_NEXTAUTH_SECRET
+		RINGWERK_SEED_ADMIN_EMAIL=$RINGWERK_SEED_ADMIN_EMAIL
+		RINGWERK_SEED_ADMIN_PASSWORD=$RINGWERK_SEED_ADMIN_PASSWORD
+
+		# === Treffsicher ===
+		TREFFSICHER_NEXTAUTH_SECRET=$TREFFSICHER_NEXTAUTH_SECRET
+		TREFFSICHER_ADMIN_EMAIL=$TREFFSICHER_ADMIN_EMAIL
+		TREFFSICHER_ADMIN_PASSWORD=$TREFFSICHER_ADMIN_PASSWORD
+
+		# === Beide gemeinsam ===
+		DISPLAY_TIME_ZONE=$DISPLAY_TIME_ZONE
+	EOF
+	chmod 600 "$ENV_FILE"
+	ok ".env geschrieben (chmod 600)."
+	echo
+	info "Nächste Schritte:"
+	echo "  1) DNS-Einträge setzen (A-Record für $RINGWERK_HOST und $TREFFSICHER_HOST → diese VPS-IP)"
+	echo "  2) Image-Build (lokal):  DOCKER_USER=$DOCKER_USER ./scripts/build-and-push.sh"
+	echo "  3) Erster Deploy:        ./scripts/vereinsheim deploy"
+	echo "  4) Backup-Cron:          ./scripts/vereinsheim cron"
+}
+
+setup_edit_single() {
+	require_env
+	echo
+	info "Verfügbare Variablen:"
+	mapfile -t keys < <(env_keys_from_example)
+	local i=1
+	for k in "${keys[@]}"; do
+		printf "  %2d) %s\n" "$i" "$k"
+		i=$((i + 1))
+	done
+	local choice key new_value
+	read -r -p "  Nummer der zu ändernden Variable: " choice
+	if ! [[ "$choice" =~ ^[0-9]+$ ]] || [[ "$choice" -lt 1 ]] || [[ "$choice" -gt ${#keys[@]} ]]; then
+		err "Ungültige Auswahl."
+		return 1
+	fi
+	key="${keys[$((choice - 1))]}"
+	local current
+	current="$(read_env_var "$key" || echo '')"
+	echo "  Aktueller Wert: ${DIM}${current:-(leer)}${RESET}"
+	read -r -p "  Neuer Wert (Enter = unverändert): " new_value
+	if [[ -z "$new_value" ]]; then
+		info "Keine Änderung."
+		return
+	fi
+	# Update key=value in-place. Escape replacement for sed.
+	local escaped
+	escaped="$(printf '%s\n' "$new_value" | sed -e 's/[\/&]/\\&/g')"
+	if grep -q "^${key}=" "$ENV_FILE"; then
+		sed -i.bak "s|^${key}=.*|${key}=${escaped}|" "$ENV_FILE" && rm -f "$ENV_FILE.bak"
+	else
+		echo "${key}=${new_value}" >>"$ENV_FILE"
+	fi
+	ok "$key aktualisiert."
+	warn "Damit Änderungen wirksam werden:  ./scripts/vereinsheim deploy"
+}
+
+# ---------- env-check ----------
+cmd_env_check() {
+	require_env
+	local missing=() weak=() ok_count=0
+	while IFS= read -r key; do
+		local val
+		val="$(read_env_var "$key" || echo '')"
+		if [[ -z "$val" ]]; then
+			missing+=("$key")
+			continue
+		fi
+		ok_count=$((ok_count + 1))
+		case "$key" in
+		*NEXTAUTH_SECRET)
+			[[ ${#val} -lt 32 ]] && weak+=("$key (zu kurz: ${#val} chars, mind. 32 empfohlen)")
+			;;
+		*PASSWORD)
+			[[ ${#val} -lt 12 ]] && weak+=("$key (zu kurz: ${#val} chars, mind. 12 empfohlen)")
+			;;
+		ACME_EMAIL | *_EMAIL)
+			is_email "$val" || weak+=("$key (kein gültiges E-Mail-Format)")
+			;;
+		DOMAIN | *_HOST)
+			is_hostname "$val" || weak+=("$key (kein gültiger Hostname)")
+			;;
+		esac
+	done < <(env_keys_from_example)
+
+	echo "${BOLD}=== env-check ===${RESET}"
+	echo "  Datei: $ENV_FILE"
+	echo "  Gesetzt: ${ok_count} / $(env_keys_from_example | wc -l | tr -d ' ')"
+	if [[ ${#missing[@]} -gt 0 ]]; then
+		err "Fehlend (${#missing[@]}):"
+		printf '    - %s\n' "${missing[@]}"
+	fi
+	if [[ ${#weak[@]} -gt 0 ]]; then
+		warn "Auffällig (${#weak[@]}):"
+		printf '    - %s\n' "${weak[@]}"
+	fi
+	if [[ ${#missing[@]} -eq 0 && ${#weak[@]} -eq 0 ]]; then
+		ok "Alles OK."
+	fi
+}
+
+# ---------- status ----------
+cmd_status() {
+	echo "${BOLD}=== vereinsheim status ===${RESET}"
+	echo "  Repo-Verzeichnis : $REPO_DIR"
+	if [[ -d .git ]]; then
+		echo "  Branch           : $(git rev-parse --abbrev-ref HEAD)"
+		echo "  Letzter Commit   : $(git log -1 --format='%h %s')"
+	fi
+	if [[ -f "$ENV_FILE" ]]; then
+		ok ".env vorhanden ($(stat -c%y "$ENV_FILE" 2>/dev/null || stat -f%Sm "$ENV_FILE"))"
+	else
+		warn ".env fehlt — bitte ./scripts/vereinsheim setup"
+	fi
+
+	hr
+	if ! command -v docker >/dev/null 2>&1; then
+		warn "docker nicht installiert — keine weiteren Checks möglich."
+		return
+	fi
+	if ! docker info >/dev/null 2>&1; then
+		warn "Docker daemon nicht erreichbar."
+		return
+	fi
+
+	echo "${BOLD}Services${RESET}"
+	if [[ -f "$ENV_FILE" ]]; then
+		docker compose ps 2>/dev/null || warn "compose ps fehlgeschlagen"
+	else
+		warn "Ohne .env keine compose-Befehle möglich."
+	fi
+
+	hr
+	echo "${BOLD}Volumes${RESET}"
+	for v in postgres_data uploads_ringwerk uploads_treffsicher caddy_data caddy_config; do
+		local full="vereinsheim_$v"
+		if docker volume inspect "$full" >/dev/null 2>&1; then
+			# Größe via du im alpine-Container abfragen
+			local size
+			size=$(docker run --rm -v "$full:/d:ro" alpine du -sh /d 2>/dev/null | awk '{print $1}')
+			printf "  %-26s %s\n" "$v" "${size:-?}"
+		else
+			printf "  %-26s ${DIM}(noch nicht angelegt)${RESET}\n" "$v"
+		fi
+	done
+
+	hr
+	echo "${BOLD}Backups${RESET}  (${BACKUP_DIR_DEFAULT})"
+	if [[ -d "$BACKUP_DIR_DEFAULT" ]]; then
+		local count
+		count=$(find "$BACKUP_DIR_DEFAULT" -maxdepth 1 -type f \( -name '*.dump' -o -name '*.tar.gz' \) | wc -l | tr -d ' ')
+		echo "  Dateien insgesamt : $count"
+		echo "  Belegt            : $(du -sh "$BACKUP_DIR_DEFAULT" 2>/dev/null | awk '{print $1}')"
+		echo "  Letzte 4:"
+		find "$BACKUP_DIR_DEFAULT" -maxdepth 1 -type f \( -name '*.dump' -o -name '*.tar.gz' \) -printf '%TY-%Tm-%Td %TH:%TM  %s  %f\n' 2>/dev/null |
+			sort -r | head -4 | awk '{ printf "    %s %s  %5.1f MB  %s\n", $1, $2, $3/1024/1024, $4 }' ||
+			ls -lht "$BACKUP_DIR_DEFAULT"/*.dump 2>/dev/null | head -4 || true
+	else
+		warn "Backup-Verzeichnis nicht vorhanden (Cron ggf. noch nicht eingerichtet)"
+	fi
+
+	hr
+	echo "${BOLD}Cron${RESET}"
+	if crontab -l 2>/dev/null | grep -q 'vereinsheim/scripts/backup.sh'; then
+		ok "Backup-Cron registriert"
+		crontab -l 2>/dev/null | grep 'vereinsheim/scripts/backup.sh' | sed 's/^/    /'
+	else
+		warn "Kein Backup-Cron — installieren mit:  ./scripts/vereinsheim cron"
+	fi
+}
+
+# ---------- deploy ----------
+cmd_deploy() {
+	require_env
+	require_docker
+	cmd_env_check
+	echo
+	confirm "Deploy jetzt starten?" Y || {
+		info "Abgebrochen."
+		return
+	}
+	exec "$SCRIPT_DIR/deploy.sh"
+}
+
+# ---------- backup ----------
+cmd_backup() {
+	require_env
+	require_docker
+	exec "$SCRIPT_DIR/backup.sh"
+}
+
+# ---------- restore ----------
+cmd_restore() {
+	require_env
+	require_docker
+	echo "${BOLD}=== restore ===${RESET}"
+	echo "  Welche App?"
+	echo "    1) ringwerk"
+	echo "    2) treffsicher"
+	local choice app
+	read -r -p "  Wahl: " choice
+	case "$choice" in
+	1) app="ringwerk" ;;
+	2) app="treffsicher" ;;
+	*)
+		err "Ungültig."
+		return 1
+		;;
+	esac
+
+	local backup_dir="${BACKUP_DIR:-$BACKUP_DIR_DEFAULT}"
+	if [[ ! -d "$backup_dir" ]]; then
+		err "Backup-Verzeichnis nicht gefunden: $backup_dir"
+		return 1
+	fi
+
+	echo
+	echo "  Verfügbare Dumps für $app (neueste zuerst):"
+	mapfile -t dumps < <(find "$backup_dir" -maxdepth 1 -name "${app}-*.dump" -type f -print0 |
+		xargs -0 -I {} stat -c '%Y %n' {} 2>/dev/null | sort -rn | awk '{print $2}')
+	if [[ ${#dumps[@]} -eq 0 ]]; then
+		err "Keine Dumps gefunden."
+		return 1
+	fi
+	local i=1
+	for d in "${dumps[@]:0:10}"; do
+		local size
+		size=$(du -sh "$d" 2>/dev/null | awk '{print $1}')
+		printf "    %2d) %s  (%s)\n" "$i" "$(basename "$d")" "$size"
+		i=$((i + 1))
+	done
+	local pick
+	read -r -p "  Nummer: " pick
+	if ! [[ "$pick" =~ ^[0-9]+$ ]] || [[ "$pick" -lt 1 ]] || [[ "$pick" -gt ${#dumps[@]} ]]; then
+		err "Ungültige Auswahl."
+		return 1
+	fi
+	local dump="${dumps[$((pick - 1))]}"
+
+	# Passender Uploads-Tar?
+	local stem
+	stem="$(basename "$dump" .dump)"
+	stem="${stem#${app}-}"
+	local uploads="${backup_dir}/uploads-${app}-${stem}.tar.gz"
+	if [[ -f "$uploads" ]]; then
+		echo "  ${GREEN}+${RESET} passender Uploads-Tar: $(basename "$uploads") ($(du -sh "$uploads" | awk '{print $1}'))"
+	else
+		echo "  ${YELLOW}-${RESET} kein passender Uploads-Tar gefunden — nur DB wird restored."
+		uploads=""
+	fi
+
+	echo
+	warn "Folgende Schritte werden ausgeführt:"
+	echo "  1) docker compose stop app-${app} migrate-${app}"
+	echo "  2) restore.sh ${app} $(basename "$dump")"
+	[[ -n "$uploads" ]] && echo "     + Uploads aus $(basename "$uploads")"
+	echo "  3) docker compose up -d migrate-${app} app-${app}"
+	echo
+	confirm "Wirklich restoren?" || {
+		info "Abgebrochen."
+		return
+	}
+	docker compose stop "app-${app}" "migrate-${app}" || true
+	"$SCRIPT_DIR/restore.sh" "$app" "$dump" ${uploads:+"$uploads"}
+	docker compose up -d "migrate-${app}" "app-${app}"
+}
+
+# ---------- logs ----------
+cmd_logs() {
+	require_env
+	local svc="${1:-}"
+	if [[ -z "$svc" ]]; then
+		exec docker compose logs -f --tail=100 app-ringwerk app-treffsicher caddy
+	else
+		exec docker compose logs -f --tail=200 "$svc"
+	fi
+}
+
+# ---------- psql ----------
+cmd_psql() {
+	require_env
+	require_docker
+	local app="${1:-}"
+	[[ "$app" =~ ^(ringwerk|treffsicher)$ ]] || {
+		err "Aufruf: vereinsheim psql <ringwerk|treffsicher>"
+		return 1
+	}
+	exec docker compose exec db psql -U postgres -d "$app"
+}
+
+# ---------- migrations ----------
+cmd_migrations() {
+	require_env
+	require_docker
+	local app="${1:-}"
+	if [[ ! "$app" =~ ^(ringwerk|treffsicher)$ ]]; then
+		echo "  Welche App?"
+		echo "    1) ringwerk"
+		echo "    2) treffsicher"
+		read -r -p "  Wahl: " c
+		case "$c" in 1) app=ringwerk ;; 2) app=treffsicher ;; *)
+			err "Ungültig"
+			return 1
+			;;
+		esac
+	fi
+
+	hr
+	info "Migration-Status für $app"
+	local out
+	out="$(docker compose exec -T db psql -U postgres -d "$app" -At <<-SQL || true
+		SELECT migration_name,
+		       to_char(started_at, 'YYYY-MM-DD HH24:MI'),
+		       CASE WHEN finished_at IS NOT NULL THEN 'applied'
+		            WHEN rolled_back_at IS NOT NULL THEN 'rolled-back'
+		            ELSE 'FAILED' END AS state
+		FROM _prisma_migrations
+		WHERE finished_at IS NULL AND rolled_back_at IS NULL
+		ORDER BY started_at;
+	SQL
+	)"
+	if [[ -z "$out" ]]; then
+		ok "Keine fehlgeschlagenen Migrations für $app."
+		echo
+		echo "  Letzte 5 erfolgreiche Migrations:"
+		docker compose exec -T db psql -U postgres -d "$app" -c \
+			"SELECT migration_name, finished_at FROM _prisma_migrations WHERE finished_at IS NOT NULL ORDER BY finished_at DESC LIMIT 5;" 2>/dev/null || true
+		return
+	fi
+
+	err "Fehlgeschlagene Migrations gefunden:"
+	echo "$out" | while IFS='|' read -r name started state; do
+		printf "    - %s  (started %s, %s)\n" "$name" "$started" "$state"
+	done
+
+	echo
+	echo "${BOLD}Recovery-Optionen:${RESET}"
+	echo "  1) Auto-Recovery erneut versuchen (= migrate-${app} neu starten)"
+	echo "  2) Migration als ${GREEN}applied${RESET} markieren (DDL ist in DB schon vollzogen)"
+	echo "  3) Migration als ${YELLOW}rolled-back${RESET} markieren (läuft beim nächsten Deploy neu)"
+	echo "  4) Migrate-Container-Logs anzeigen"
+	echo "  5) psql in $app öffnen (manuelles Aufräumen)"
+	echo "  q) Zurück"
+	read -r -p "  Wahl: " choice
+	case "$choice" in
+	1)
+		info "Starte migrate-${app} neu …"
+		docker compose up -d --force-recreate "migrate-${app}"
+		docker compose logs -f --tail=50 "migrate-${app}" &
+		local pid=$!
+		sleep 5
+		kill "$pid" 2>/dev/null || true
+		;;
+	2 | 3)
+		local mode
+		[[ "$choice" == 2 ]] && mode="--applied" || mode="--rolled-back"
+		local mig
+		read -r -p "  Migration-Name: " mig
+		[[ -z "$mig" ]] && {
+			err "Abgebrochen."
+			return 1
+		}
+		warn "Setze ${mig} = ${mode}"
+		confirm "Sicher?" || return
+		docker compose run --rm "migrate-${app}" \
+			node /app/node_modules/prisma/build/index.js migrate resolve "$mode" "$mig"
+		;;
+	4)
+		exec docker compose logs --tail=200 "migrate-${app}"
+		;;
+	5)
+		exec docker compose exec db psql -U postgres -d "$app"
+		;;
+	*) ;;
+	esac
+}
+
+# ---------- shell ----------
+cmd_shell() {
+	require_env
+	local svc="${1:-}"
+	[[ -z "$svc" ]] && {
+		err "Aufruf: vereinsheim shell <service>"
+		return 1
+	}
+	exec docker compose exec "$svc" sh
+}
+
+# ---------- cron ----------
+cmd_cron() {
+	local backup_path="$REPO_DIR/scripts/backup.sh"
+	local cron_line="0 3 * * * $backup_path >> /var/log/vereinsheim-backup.log 2>&1"
+	if crontab -l 2>/dev/null | grep -qF "$backup_path"; then
+		ok "Backup-Cron ist bereits eingetragen:"
+		crontab -l 2>/dev/null | grep -F "$backup_path" | sed 's/^/    /'
+		echo
+		confirm "Eintrag entfernen?" && {
+			(crontab -l 2>/dev/null | grep -vF "$backup_path") | crontab -
+			ok "Entfernt."
+		}
+		return
+	fi
+	echo "  Eintrag der gesetzt wird:"
+	echo "    $cron_line"
+	confirm "Eintragen?" Y || {
+		info "Abgebrochen."
+		return
+	}
+	(
+		crontab -l 2>/dev/null
+		echo "$cron_line"
+	) | crontab -
+	ok "Cron eingetragen. Nächster Lauf: 03:00 lokale Zeit."
+	if [[ ! -d /var/backups/vereinsheim ]]; then
+		warn "/var/backups/vereinsheim fehlt — wird beim ersten Lauf angelegt (sofern Schreibrechte)."
+		warn "Bei Permission-Problemen: sudo mkdir -p /var/backups/vereinsheim && sudo chown \$USER /var/backups/vereinsheim"
+	fi
+}
+
+# ---------- service controls ----------
+cmd_up() {
+	require_env
+	require_docker
+	exec docker compose up -d
+}
+cmd_down() {
+	require_env
+	require_docker
+	confirm "Alle Services stoppen?" || return
+	exec docker compose down
+}
+cmd_restart() {
+	require_env
+	require_docker
+	local svc="${1:-}"
+	[[ -z "$svc" ]] && {
+		err "Aufruf: vereinsheim restart <service>"
+		return 1
+	}
+	exec docker compose restart "$svc"
+}
+
+# ============================================================
+# Interactive menu
+# ============================================================
+interactive_menu() {
+	if is_local_mode; then
+		interactive_menu_local
+	else
+		interactive_menu_vps
+	fi
+}
+
+interactive_menu_local() {
+	load_local_config
+	while :; do
+		echo
+		echo "${BOLD}=== vereinsheim — Lokal-Mode ===${RESET}  ${DIM}(VPS: ${VPS_HOST:-?})${RESET}"
+		echo "   ${BOLD}Lokal:${RESET}"
+		echo "   1) Build (lokal bauen + push)"
+		echo "   2) ${BOLD}Release${RESET}  ${DIM}(build + push + remote deploy)${RESET}"
+		echo "   3) SSH zum VPS"
+		echo "   4) Remote-Befehl auswählen"
+		echo "   5) local-setup ändern"
+		echo "   ${BOLD}Lokal (dieser Repo-Klon, betrifft nur diese Maschine):${RESET}"
+		echo "   6) Status (lokal)"
+		echo "   7) Setup .env / env-check (z.B. für lokales Testing)"
+		echo "   q) Beenden"
+		read -r -p "  Wahl: " c
+		case "$c" in
+		1) cmd_build ;;
+		2) cmd_release ;;
+		3) cmd_ssh ;;
+		4) interactive_remote_pick ;;
+		5) cmd_local_setup ;;
+		6) cmd_status ;;
+		7) cmd_setup ;;
+		q | Q | "") break ;;
+		*) warn "Ungültige Auswahl" ;;
+		esac
+	done
+}
+
+interactive_menu_vps() {
+	while :; do
+		echo
+		echo "${BOLD}=== vereinsheim — VPS Mode ===${RESET}"
+		echo "   1) Status"
+		echo "   2) Setup / .env bearbeiten"
+		echo "   3) env-check"
+		echo "   4) Deploy   ${DIM}(pre-backup + pull + up)${RESET}"
+		echo "   5) Backup jetzt"
+		echo "   6) Restore aus Backup"
+		echo "   7) Logs"
+		echo "   8) psql (Datenbank-Shell)"
+		echo "   9) Migration-Recovery"
+		echo "  10) Backup-Cron einrichten"
+		echo "  11) Service-Kontrolle (up/down/restart)"
+		echo "   ${DIM}(kein Lokal-Mode aktiv — für lokale Workflows: ./scripts/vereinsheim local-setup)${RESET}"
+		echo "   q) Beenden"
+		read -r -p "  Wahl: " c
+		case "$c" in
+		1) cmd_status ;;
+		2) cmd_setup ;;
+		3) cmd_env_check ;;
+		4) cmd_deploy ;;
+		5) cmd_backup ;;
+		6) cmd_restore ;;
+		7)
+			read -r -p "  Service (Enter = alle Apps + caddy): " svc
+			cmd_logs "$svc"
+			;;
+		8) cmd_psql_interactive ;;
+		9) cmd_migrations ;;
+		10) cmd_cron ;;
+		11) interactive_service_control ;;
+		q | Q | "") break ;;
+		*) warn "Ungültige Auswahl" ;;
+		esac
+	done
+}
+
+interactive_remote_pick() {
+	echo "  Welcher Remote-Befehl?"
+	echo "    1) status"
+	echo "    2) deploy   ${DIM}(ohne lokales build, nur pull+up am VPS)${RESET}"
+	echo "    3) backup"
+	echo "    4) logs"
+	echo "    5) eigener Befehl"
+	read -r -p "  Wahl: " c
+	case "$c" in
+	1) cmd_remote status ;;
+	2) cmd_remote deploy ;;
+	3) cmd_remote backup ;;
+	4) cmd_remote logs ;;
+	5)
+		read -r -p "  Subcommand mit Args: " sub
+		[[ -n "$sub" ]] && eval cmd_remote "$sub"
+		;;
+	*) warn "Ungültig" ;;
+	esac
+}
+
+cmd_psql_interactive() {
+	echo "  1) ringwerk"
+	echo "  2) treffsicher"
+	read -r -p "  Wahl: " c
+	case "$c" in
+	1) cmd_psql ringwerk ;;
+	2) cmd_psql treffsicher ;;
+	*) warn "Ungültig" ;;
+	esac
+}
+
+interactive_service_control() {
+	echo "  1) up (alle starten)"
+	echo "  2) down (alle stoppen)"
+	echo "  3) restart <service>"
+	read -r -p "  Wahl: " c
+	case "$c" in
+	1) cmd_up ;;
+	2) cmd_down ;;
+	3)
+		read -r -p "  Service: " svc
+		cmd_restart "$svc"
+		;;
+	*) warn "Ungültig" ;;
+	esac
+}
+
+# ============================================================
+# Main dispatch
+# ============================================================
+main() {
+	if [[ $# -eq 0 ]]; then
+		if [[ ! -t 0 ]]; then
+			err "Interaktives Menü braucht ein TTY. Verwende einen Subcommand:"
+			cmd_help
+			exit 1
+		fi
+		interactive_menu
+		return
+	fi
+	local cmd="$1"
+	shift || true
+	case "$cmd" in
+	help | -h | --help) cmd_help ;;
+	# Local side
+	local-setup) cmd_local_setup "$@" ;;
+	build) cmd_build "$@" ;;
+	release) cmd_release "$@" ;;
+	ssh) cmd_ssh "$@" ;;
+	remote) cmd_remote "$@" ;;
+	# VPS side
+	setup) cmd_setup "$@" ;;
+	env-check) cmd_env_check "$@" ;;
+	status) cmd_status "$@" ;;
+	deploy) cmd_deploy "$@" ;;
+	backup) cmd_backup "$@" ;;
+	restore) cmd_restore "$@" ;;
+	logs) cmd_logs "$@" ;;
+	psql) cmd_psql "$@" ;;
+	migrations) cmd_migrations "$@" ;;
+	shell) cmd_shell "$@" ;;
+	cron) cmd_cron "$@" ;;
+	up) cmd_up "$@" ;;
+	down) cmd_down "$@" ;;
+	restart) cmd_restart "$@" ;;
+	*)
+		err "Unbekanntes Kommando: $cmd"
+		cmd_help
+		exit 1
+		;;
+	esac
+}
+
+main "$@"

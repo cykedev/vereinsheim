@@ -1,0 +1,174 @@
+# Plan — vereinsheim
+
+> Living document. **Was ist fertig, was kommt als nächstes.**
+> Architektur und Entscheidungen siehe [`spec.md`](spec.md) und
+> [`decisions.md`](decisions.md). Operations siehe [`operations.md`](operations.md).
+
+## Status
+
+| Phase | Was                                                  | Status      |
+| ----- | ---------------------------------------------------- | ----------- |
+| 1     | Repo-Bootstrap (Spec, Plan, README)                  | ✅ erledigt |
+| 2     | Compose-Setup, Caddy, db-init, Operations-Skripte    | ✅ erledigt |
+| 3     | `vereinsheim` CLI + `bootstrap-vps.sh` + Operations-Doc | ✅ erledigt |
+| 4     | App-Repo-Anpassungen (Ringwerk + Treffsicher)        | ⏳ offen    |
+| 5     | VPS-Provisioning (Bestellung, Bootstrap, DNS, Setup) | ⏳ offen    |
+| 6     | Cutover bestehender Daten + Backup-Cron              | ⏳ offen    |
+
+Das `vereinsheim`-Repo selbst ist **MVP-komplett**. Was bleibt, sind
+operative Schritte am Zielsystem und kleine Hinweis-Anpassungen in den
+beiden App-Repos.
+
+---
+
+## Phase 4 — App-Repo-Anpassungen
+
+**Eigentliche Code-Änderungen sind nicht nötig** — beide Apps lesen alle
+relevanten Schalter bereits aus env vars. Es geht ausschließlich um
+Doku-Hinweise, damit künftige Leser der App-Repos das Reverse-Proxy-Setup
+verstehen.
+
+In **Ringwerk** (`/Users/christian/repos/ringwerk`):
+
+- `feat/proxy-headers-doc`-Branch
+- `.env.example` ergänzen: `AUTH_TRUST_PROXY_HEADERS=true` (mit Kommentar
+  „bei Reverse-Proxy-Deployment, siehe vereinsheim-Repo")
+- README-Sektion „Deployment via vereinsheim" optional
+- Mini-Commit, ff-Merge nach `main`
+
+In **Treffsicher** (`/Users/christian/repos/treffsicher`): analog.
+Vorhandenes `docker-compose.prod.yml` bleibt erhalten als
+Standalone-Variante.
+
+---
+
+## Phase 5 — VPS-Provisioning
+
+### 5.1 — VPS bestellen
+
+- Anbieter: IONOS
+- Tarif: VPS S+/M (2 vCPU, 4 GB RAM, 80 GB SSD) — siehe Sizing in
+  [`spec.md`](spec.md#vps-sizing)
+- OS: Debian 12
+
+### 5.2 — Initial-Bootstrap (als root, 1× pro VPS)
+
+```bash
+ssh root@<vps>
+bash bootstrap-vps.sh \
+  "ssh-ed25519 AAAA... du@workstation" \
+  "https://github.com/<user>/vereinsheim.git"
+```
+
+Das Skript installiert Docker, UFW (22/80/443), legt `deploy`-User mit
+SSH-Key an, klont das Repo nach `~deploy/vereinsheim`,
+provisioniert `/var/backups/vereinsheim` mit Owner `deploy`. Es lässt
+`sshd_config` bewusst unangetastet — du sperrst dich nicht selbst aus.
+Befehl zum nachträglichen root-SSH-Lockdown gibt das Skript am Ende aus.
+
+### 5.3 — Konfiguration (als deploy-User)
+
+```bash
+ssh deploy@<vps>
+cd ~/vereinsheim
+./scripts/vereinsheim setup     # interaktiver .env-Wizard
+./scripts/vereinsheim cron      # Backup-Cron (idempotent)
+```
+
+### 5.4 — DNS-Records
+
+A-Records für `RINGWERK_HOST` und `TREFFSICHER_HOST` (aus `.env`) auf die
+VPS-IP. TTL kurz halten (60 s) während des Cutover-Fensters.
+
+### 5.5 — Lokal-Setup (1× pro lokalem Klon)
+
+```bash
+cd ~/repos/vereinsheim
+./scripts/vereinsheim local-setup    # VPS_HOST, VPS_REPO_PATH, DOCKER_USER
+docker login docker.io               # Docker-Hub-Auth (1× pro Maschine)
+```
+
+### 5.6 — Erster Deploy
+
+Lokal, ein Befehl:
+
+```bash
+./scripts/vereinsheim release
+```
+
+Bei Caddy-LE-Erstaufbau empfehlenswert: zuerst Staging-ACME nutzen
+(siehe Kommentar im [`Caddyfile`](../Caddyfile)), um Rate-Limits zu
+vermeiden. Nach erfolgreichem Staging-Cert auf Produktiv-ACME umstellen,
+`docker compose down caddy && docker volume rm vereinsheim_caddy_data &&
+./scripts/vereinsheim up`.
+
+---
+
+## Phase 6 — Cutover bestehender Daten
+
+Pro App nacheinander, mit Maintenance-Fenster (~30 Min je App).
+
+1. **Quellseite** (alte Umgebung):
+   ```bash
+   docker exec <old-db> pg_dump -U <user> -Fc <db> > ringwerk-$(date +%F).dump
+   tar czf uploads-ringwerk-$(date +%F).tar.gz -C <uploads-mount> .
+   ```
+2. **Transfer**: `scp` zum VPS in `~/migration/`.
+3. **Zielseite** (App noch nicht hochgefahren — nur `db`):
+   ```bash
+   ./scripts/vereinsheim down  # falls schon Apps liefen
+   docker compose up -d db     # nur db
+   ./scripts/vereinsheim restore   # interaktiv: App + Dump-Datei wählen
+   ```
+4. **App starten**:
+   ```bash
+   docker compose up -d migrate-ringwerk app-ringwerk
+   ```
+   Migrate fährt etwaige neuere Migrations nach (= no-op, falls Quelle und
+   Ziel bereits gleichen Migrations-Stand haben).
+5. **Smoke-Test** (siehe [`operations.md`](operations.md#verifikation)).
+6. **DNS umstellen** (A-Record auf VPS-IP).
+7. **Treffsicher analog.**
+8. Alte Instanz **nicht sofort abreißen** — 1 Woche Puffer für Rollback.
+
+Detaillierte Restore-Mechanik: [`operations.md`](operations.md#restore).
+
+---
+
+## Verifikation (End-to-End nach Phase 6)
+
+1. `docker compose config` ohne Fehler.
+2. `caddy validate` (im Caddy-Container) ohne Fehler.
+3. `dig +short $RINGWERK_HOST $TREFFSICHER_HOST` → VPS-IP.
+4. `curl -vI https://$RINGWERK_HOST/` → 200, gültiges Let's-Encrypt-Cert.
+5. Login mit `RINGWERK_SEED_ADMIN_EMAIL` → Dashboard.
+6. PDF-Upload landet im `uploads_ringwerk`-Volume.
+7. **DB-Isolation**: `docker compose exec db psql -U treffsicher -d ringwerk
+   -c '\dt'` muss **fehlschlagen** (permission denied).
+8. **Proxy-Headers**: failed login → `LoginRateLimitBucket` zeigt echte
+   Client-IP, nicht Caddy-Container-IP.
+9. `./scripts/vereinsheim status` zeigt alle Services running, alle
+   Volumes mit Größe, mindestens ein Backup.
+10. Backup-Cron läuft (siehe `grep CRON /var/log/syslog` nach 03:00).
+
+Komplette Liste mit Befehlen: [`operations.md`](operations.md#verifikation).
+
+---
+
+## Aufwand
+
+| Phase | Aufwand |
+| ----- | ------: |
+| 4 App-Repo-Anpassungen | 30 min |
+| 5 VPS-Provisioning | 1.5 h (inkl. DNS-Propagation) |
+| 6 Cutover (beide Apps) | 2 h (mit Maintenance-Fenster) |
+| **Total für Go-Live** | **~4 h** |
+
+---
+
+## Verweise
+
+- [`spec.md`](spec.md) — Anforderungen, Sizing, Architektur
+- [`decisions.md`](decisions.md) — ADRs, Begründungen, verworfene Alternativen
+- [`operations.md`](operations.md) — Daily Ops, Backup, Restore, Migration-Recovery
+- App-Repos: `../ringwerk`, `../treffsicher`

@@ -1,0 +1,22 @@
+# Secrets / lokale Konfiguration
+.env*
+!.env.example
+.vereinsheim.local
+
+# DB-Dumps und Backups
+*.dump
+*.dump.gz
+*.sql.gz
+backups/
+migration/
+
+# Caddy / Docker artefacts (sollten als Volumes leben, nicht im Repo)
+caddy_data/
+caddy_config/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
