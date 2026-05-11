@@ -866,7 +866,9 @@ cmd_shell() {
 # ---------- cron ----------
 cmd_cron() {
 	local backup_path="$REPO_DIR/scripts/backup.sh"
-	local cron_line="0 3 * * * $backup_path >> /var/log/vereinsheim-backup.log 2>&1"
+	local log_dir="$REPO_DIR/logs"
+	local log_file="$log_dir/backup.log"
+	local cron_line="0 3 * * * $backup_path >> $log_file 2>&1"
 	if crontab -l 2>/dev/null | grep -qF "$backup_path"; then
 		ok "Backup-Cron ist bereits eingetragen:"
 		crontab -l 2>/dev/null | grep -F "$backup_path" | sed 's/^/    /'
@@ -883,6 +885,7 @@ cmd_cron() {
 		info "Abgebrochen."
 		return
 	}
+	mkdir -p "$log_dir"
 	(
 		crontab -l 2>/dev/null
 		echo "$cron_line"
