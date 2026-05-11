@@ -962,11 +962,49 @@ cmd_status() {
 }
 
 # ---------- deploy ----------
+_check_image_tags() {
+	# Verifies that all four image-tag vars are set. Returns:
+	#   0 — alles gesetzt
+	#   1 — keiner gesetzt (Erst-Deploy-Szenario, ruft Confirm auf)
+	#   2 — gemischt (Asymmetrie, abort)
+	local r_app r_mig t_app t_mig
+	r_app="$(read_env_var RINGWERK_TAG || true)"
+	r_mig="$(read_env_var RINGWERK_MIGRATOR_TAG || true)"
+	t_app="$(read_env_var TREFFSICHER_TAG || true)"
+	t_mig="$(read_env_var TREFFSICHER_MIGRATOR_TAG || true)"
+	local set_count=0
+	[[ -n "$r_app" ]] && set_count=$((set_count + 1))
+	[[ -n "$r_mig" ]] && set_count=$((set_count + 1))
+	[[ -n "$t_app" ]] && set_count=$((set_count + 1))
+	[[ -n "$t_mig" ]] && set_count=$((set_count + 1))
+	case "$set_count" in
+	4) return 0 ;;
+	0) return 1 ;;
+	*) return 2 ;;
+	esac
+}
+
 cmd_deploy() {
 	require_env
 	require_docker
 	cmd_env_check
 	echo
+	local tag_state=0
+	_check_image_tags || tag_state=$?
+	case "$tag_state" in
+	0) ;;
+	1)
+		warn "Keine Image-Tags in .env gepinnt — compose nutzt die Defaults aus compose.yml (\`:latest\`)."
+		confirm "Trotzdem deployen?" N || {
+			info "Abgebrochen."
+			return
+		}
+		;;
+	2)
+		err "Image-Tags asymmetrisch gesetzt — alle vier (RINGWERK_TAG, RINGWERK_MIGRATOR_TAG, TREFFSICHER_TAG, TREFFSICHER_MIGRATOR_TAG) müssen entweder gemeinsam gesetzt oder gemeinsam leer sein."
+		return 1
+		;;
+	esac
 	confirm "Deploy jetzt starten?" Y || {
 		info "Abgebrochen."
 		return
