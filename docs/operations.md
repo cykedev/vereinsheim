@@ -54,6 +54,9 @@ auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
 - [Deploy](#deploy)
 - [Backup](#backup)
 - [Restore](#restore)
+  - [Backup aus TrueNAS erstellen](#backup-aus-bestehender-truenas-installation-erstellen)
+  - [Initial-Cutover](#initial-cutover-alte-umgebung--vps)
+  - [Restore-Test](#restore-test-regelmäßig-empfohlen)
 - [Recovery von fehlgeschlagenen Migrationen](#recovery-von-fehlgeschlagenen-migrationen)
 - [Rollback](#rollback)
 
@@ -215,17 +218,75 @@ docker compose up -d migrate-ringwerk app-ringwerk
 3. `pg_restore --clean --if-exists --no-owner --role=<app>`
 4. Optional: extrahiert Uploads-Tar ins zugehörige Volume
 
+### Backup aus bestehender TrueNAS-Installation erstellen
+
+Beide Apps laufen als Custom Apps (Compose-YAML) auf TrueNAS. Die
+Compose-Verzeichnisse sind `/mnt/dozer/apps/ringwerk/` und
+`/mnt/dozer/apps/treffsicher/`.
+
+**Ringwerk** (kein Uploads-Volume, nur DB):
+
+```bash
+cd /mnt/dozer/apps/ringwerk
+docker compose exec -T db pg_dump -U ringwerk -Fc ringwerk \
+  > ~/ringwerk-$(date +%F).dump
+```
+
+**Treffsicher** (DB + Uploads unter `/mnt/dozer/apps/treffsicher/uploads`):
+
+```bash
+cd /mnt/dozer/apps/treffsicher
+docker compose exec -T db pg_dump -U treffsicher -Fc treffsicher \
+  > ~/treffsicher-$(date +%F).dump
+
+tar czf ~/uploads-treffsicher-$(date +%F).tar.gz \
+  -C /mnt/dozer/apps/treffsicher/uploads .
+```
+
+**Auf VPS übertragen** (lokal, im vereinsheim-Repo):
+
+```bash
+./scripts/vereinsheim upload \
+  ~/ringwerk-2026-05-11.dump \
+  ~/treffsicher-2026-05-11.dump \
+  ~/uploads-treffsicher-2026-05-11.tar.gz
+```
+
+Die Dateien landen in `~/migration/` auf dem VPS.
+
+**Restore auf VPS** → siehe [Initial-Cutover](#initial-cutover-alte-umgebung--vps) unten.
+
+---
+
 ### Initial-Cutover (alte Umgebung → VPS)
 
 Vollständiger Phasen-Plan: [`plan.md`](plan.md#phase-6--cutover-bestehender-daten).
-Im Kern:
+Im Kern (pro App nacheinander, mit kurzem Maintenance-Fenster):
 
-1. Auf alter Umgebung: `pg_dump -Fc` und `tar czf` der Uploads
-2. `scp` zum VPS in `~/migration/`
-3. Auf VPS: `docker compose up -d db` (nur die DB!)
-4. `./scripts/vereinsheim restore` → App + Dump + Uploads interaktiv wählen
-5. `docker compose up -d migrate-ringwerk app-ringwerk`
-6. Smoke-Test, dann DNS umstellen
+1. **Dumps erstellen** → siehe [Backup aus TrueNAS erstellen](#backup-aus-bestehender-truenas-installation-erstellen)
+2. **Auf VPS übertragen**: `./scripts/vereinsheim upload <dump> [uploads-tar]`
+3. **Auf VPS** — nur DB starten, noch keine Apps:
+   ```bash
+   docker compose up -d db
+   ```
+4. **Restore direkt aufrufen** (Dateien liegen in `~/migration/`, nicht in
+   `/var/backups/`, daher direkter Aufruf statt interaktivem `vereinsheim restore`):
+   ```bash
+   # Ringwerk (kein Uploads-Tar)
+   ./scripts/restore.sh ringwerk ~/migration/ringwerk-2026-05-11.dump
+
+   # Treffsicher (mit Uploads)
+   ./scripts/restore.sh treffsicher \
+     ~/migration/treffsicher-2026-05-11.dump \
+     ~/migration/uploads-treffsicher-2026-05-11.tar.gz
+   ```
+5. **Apps starten**:
+   ```bash
+   docker compose up -d migrate-ringwerk app-ringwerk
+   docker compose up -d migrate-treffsicher app-treffsicher
+   ```
+6. **Smoke-Test** (siehe [Verifikation](../docs/plan.md#verifikation-end-to-end-nach-phase-6))
+7. **DNS umstellen** (A-Records auf VPS-IP, TTL vorher auf 60 s setzen)
 
 ### Restore-Test (regelmäßig empfohlen)
 
