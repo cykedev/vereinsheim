@@ -33,6 +33,15 @@ docker compose pull
 echo "==> docker compose up -d"
 docker compose up -d --remove-orphans
 
+# Deploy-History: eine Zeile pro erfolgreichem Deploy, für `vereinsheim rollback`.
+mkdir -p logs
+{
+	printf '%s' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+	grep -E '^(RINGWERK|TREFFSICHER)_(TAG|MIGRATOR_TAG)=' .env \
+		| awk '{ printf " %s", $0 }'
+	printf '\n'
+} >>logs/deploy-history.log
+
 echo "==> Image prune"
 docker image prune -f
 
