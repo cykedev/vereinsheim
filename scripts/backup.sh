@@ -6,7 +6,7 @@
 #
 # Aufruf vom Repo-Root oder via Cron-Eintrag mit absolutem Pfad:
 #   0 3 * * * /home/deploy/vereinsheim/scripts/backup.sh \
-#       >> /var/log/vereinsheim-backup.log 2>&1
+#       >> /home/deploy/vereinsheim/logs/backup.log 2>&1
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
