@@ -133,32 +133,40 @@ Bewusst minimal — beide Apps lesen alle relevanten Knöpfe schon aus env vars:
 
 ## VPS-Sizing
 
-Verbrauch in Production (Schätzung, niedrig-Traffic-Vereinsbetrieb):
+Verbrauch in Production, basierend auf cgroup-Peak-Messungen vom
+NAS-Staging-Setup (niedrig-Traffic-Vereinsbetrieb):
 
-| Komponente              |     RAM | Disk        |
-| ----------------------- | ------: | ----------- |
-| OS (Debian 12)          |  400 MB | 5 GB        |
-| Docker-Engine + Images  |       — | 1 GB        |
-| Caddy                   |   50 MB | —           |
-| Postgres 15             |  250 MB | 1–2 GB Data |
-| Ringwerk (Next.js prod) |  300 MB | —           |
-| Treffsicher (Next.js)   |  300 MB | —           |
-| Migrations (one-shot)   | ~150 MB peak | —      |
-| Uploads                 |       — | 10–20 GB    |
-| Backups (14-Tage)       |       — | 5–10 GB     |
+| Komponente              |     RAM (peak) | mem_limit | Disk        |
+| ----------------------- | -------------: | --------: | ----------- |
+| OS (Debian 12)          |         400 MB |         — | 5 GB        |
+| Docker-Engine + Images  |              — |         — | 1 GB        |
+| Caddy                   |       ~40 MB   |      64 M | —           |
+| Postgres 15 (shared)    |       ~80 MB[^pg] |    384 M | 1–2 GB Data |
+| Ringwerk (Next.js prod) |        158 MB  |     384 M | —           |
+| Treffsicher (Next.js)   |        131 MB  |     384 M | —           |
+| Migrations (one-shot)   |   ~150 MB peak |     256 M | —           |
+| Uploads                 |              — |         — | 10–20 GB    |
+| Backups (14-Tage)       |              — |         — | 5–10 GB     |
 
-**Steady-State: ~1.3 GB RAM, ~25–40 GB Disk**. Peaks bis ~2 GB RAM.
+[^pg]: Idle ~80 MB. Realistischer Worst-Case mit shared_buffers (128 MB)
++ ~10 MB pro Connection × typisch 10–20 aktive Connections: 250–350 MB.
+
+**Steady-State: ~0.9 GB RAM, ~25–40 GB Disk**. Limits summieren auf
+~1.5 GB, plus OS ~400 MB → ~1.9 GB Spitze. Bei Deploy + 1× Migrate
+kurzzeitig ~1.85 GB.
 
 ### IONOS-Empfehlung
 
 | Tarif        | vCPU | RAM  | SSD    | Eignung                                                |
 | ------------ | ---: | ---- | ------ | ------------------------------------------------------ |
-| VPS S        |    1 | 2 GB | 40 GB  | zu knapp — kein Headroom, Peaks würden swappen         |
-| **VPS S+/M** |    2 | 4 GB | 80 GB  | **empfohlen** — bequem, Reserven für Wachstum          |
+| **VPS S**    |    2 | 2 GB | 80 GB  | **gewählt** — tragfähig dank hard mem_limits in [`compose.yml`](../compose.yml), ~400 MB Burst-Puffer |
+| VPS S+/M     |    2 | 4 GB | 80 GB  | komfortabler, mehr Headroom für Wachstum               |
 | VPS M+/L     |    4 | 8 GB | 160 GB | überdimensioniert, sinnvoll bei 3.+4. App              |
 
 **RAM ist der Engpass**, nicht CPU. Image-Builds laufen lokal — kein
-Build-RAM-Puffer auf VPS nötig.
+Build-RAM-Puffer auf VPS nötig. Die `mem_limit`-Einträge in `compose.yml`
+sind die Schutzschicht gegen Runaway-Prozesse, die sonst den
+geteilten DB-Container OOM-killen würden.
 
 ## Was NICHT im Scope (MVP)
 
