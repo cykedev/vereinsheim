@@ -1,5 +1,11 @@
 name: vereinsheim
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   caddy:
     image: caddy:2-alpine
@@ -22,6 +28,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    logging: *default-logging
     networks:
       - web
 
@@ -42,6 +49,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    logging: *default-logging
     networks:
       - data
 
@@ -56,6 +64,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    logging: *default-logging
     networks:
       - data
 
@@ -70,6 +79,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    logging: *default-logging
     networks:
       - data
 
@@ -90,6 +100,7 @@ services:
         condition: service_healthy
       migrate-ringwerk:
         condition: service_completed_successfully
+    logging: *default-logging
     networks:
       - web
       - data
@@ -114,6 +125,7 @@ services:
         condition: service_healthy
       migrate-treffsicher:
         condition: service_completed_successfully
+    logging: *default-logging
     networks:
       - web
       - data
