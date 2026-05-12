@@ -28,6 +28,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    mem_limit: 64m
     logging: *default-logging
     networks:
       - web
@@ -49,6 +50,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    mem_limit: 384m
     logging: *default-logging
     networks:
       - data
@@ -64,6 +66,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    mem_limit: 256m
     logging: *default-logging
     networks:
       - data
@@ -79,6 +82,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    mem_limit: 256m
     logging: *default-logging
     networks:
       - data
@@ -100,6 +104,7 @@ services:
         condition: service_healthy
       migrate-ringwerk:
         condition: service_completed_successfully
+    mem_limit: 384m
     logging: *default-logging
     networks:
       - web
@@ -125,6 +130,7 @@ services:
         condition: service_healthy
       migrate-treffsicher:
         condition: service_completed_successfully
+    mem_limit: 384m
     logging: *default-logging
     networks:
       - web
