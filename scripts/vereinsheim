@@ -214,6 +214,7 @@ cmd_help() {
 		  ${GREEN}download${RESET} [datei]      Backup ← VPS  (ohne Arg: Liste)
 
 		${BOLD}── LOKALE TESTUMGEBUNG${RESET} ${DIM}(braucht zusätzlich .env.local)${RESET}
+		  ${GREEN}local-build${RESET}               Alle 4 Images lokal bauen (kein Push, native Plattform)
 		  ${GREEN}local-pull${RESET}                Backups + Image-Tags vom VPS holen → ./backups/
 		  ${GREEN}local-up${RESET}                  Lokalen Stack starten (vorhandene Volumes)
 		  ${GREEN}local-up --restore${RESET}         Volumes löschen + aus ./backups/ neu laden
@@ -286,6 +287,61 @@ cmd_local_setup() {
 	info "Test mit:    ./scripts/vereinsheim ssh"
 	info "Erster Build:    ./scripts/vereinsheim build"
 	info "Volles Release:  ./scripts/vereinsheim release"
+}
+
+# ---------- local-build ----------
+# Baut alle 4 Images lokal (--load, kein Push, native Plattform).
+# Im Gegensatz zu build-and-push.sh sind uncommittete Änderungen erlaubt —
+# der Subcommand ist explizit für lokale Testbuilds gedacht.
+_local_build_one() {
+	local app="$1" path="$2" target="$3" suffix="$4"
+	local tag="${DOCKER_USER}/${app}:latest${suffix}"
+	info "Baue ${tag}  (target=${target}) …"
+	docker buildx build \
+		--load \
+		--target "$target" \
+		--tag "$tag" \
+		"$path"
+	ok "${tag} fertig."
+}
+
+cmd_local_build() {
+	require_local_config
+	require_docker
+
+	local ringwerk_path="${RINGWERK_PATH:-$REPO_DIR/../ringwerk}"
+	local treffsicher_path="${TREFFSICHER_PATH:-$REPO_DIR/../treffsicher}"
+
+	[[ -d "$ringwerk_path" ]] || {
+		err "Ringwerk-Repo nicht gefunden: $ringwerk_path"
+		echo "  Tipp: RINGWERK_PATH=/anderer/pfad ./scripts/vereinsheim local-build"
+		exit 1
+	}
+	[[ -d "$treffsicher_path" ]] || {
+		err "Treffsicher-Repo nicht gefunden: $treffsicher_path"
+		echo "  Tipp: TREFFSICHER_PATH=/anderer/pfad ./scripts/vereinsheim local-build"
+		exit 1
+	}
+
+	echo "${BOLD}=== local-build ===${RESET}"
+	echo "  Baut alle 4 Images lokal (--load, kein Push, native Plattform)."
+	echo "  Uncommittete Änderungen sind erlaubt — nur für lokale Tests."
+	echo "  Docker-User : ${DOCKER_USER}"
+	echo "  Ringwerk    : ${ringwerk_path}"
+	echo "  Treffsicher : ${treffsicher_path}"
+	echo
+
+	_local_build_one ringwerk    "$ringwerk_path"    runner   ""
+	_local_build_one ringwerk    "$ringwerk_path"    migrator "-migrator"
+	_local_build_one treffsicher "$treffsicher_path" runner   ""
+	_local_build_one treffsicher "$treffsicher_path" migrator "-migrator"
+
+	echo
+	ok "Alle 4 Images gebaut:"
+	docker images --format "  {{.Repository}}:{{.Tag}}  ({{.Size}})" \
+		| grep -E "${DOCKER_USER}/(ringwerk|treffsicher):(latest|latest-migrator)$" || true
+	echo
+	info "Stack starten:  ./scripts/vereinsheim local-up"
 }
 
 # ---------- build ----------
@@ -1420,10 +1476,11 @@ interactive_menu_local() {
 		echo "  6) download   Backup ← VPS"
 		echo
 		echo "  ${BOLD}Lokale Testumgebung${RESET}"
-		echo "  7) local-pull          Backups + Image-Tags vom VPS holen"
-		echo "  8) local-up            Stack starten  ${DIM}(vorhandene Volumes)${RESET}"
-		echo "  9) local-up --restore  Stack neu aufsetzen  ${DIM}(clean + Produktionsdaten)${RESET}"
-		echo " 10) local-down          Stack stoppen"
+		echo "  7) local-build         Alle 4 Images lokal bauen  ${DIM}(kein Push)${RESET}"
+		echo "  8) local-pull          Backups + Image-Tags vom VPS holen"
+		echo "  9) local-up            Stack starten  ${DIM}(vorhandene Volumes)${RESET}"
+		echo " 10) local-up --restore  Stack neu aufsetzen  ${DIM}(clean + Produktionsdaten)${RESET}"
+		echo " 11) local-down          Stack stoppen"
 		echo
 		echo "  q) Beenden  ${DIM}· local-setup: VPS-Verbindung ändern${RESET}"
 		read -r -p "  » " c
@@ -1445,10 +1502,11 @@ interactive_menu_local() {
 				cmd_download "$fname" "${tdir:-.}"
 			fi
 			;;
-		7) cmd_local_pull ;;
-		8) cmd_local_up ;;
-		9) cmd_local_up --restore ;;
-		10) cmd_local_down ;;
+		7) cmd_local_build ;;
+		8) cmd_local_pull ;;
+		9) cmd_local_up ;;
+		10) cmd_local_up --restore ;;
+		11) cmd_local_down ;;
 		q | Q | "") break ;;
 		*) warn "Ungültige Auswahl" ;;
 		esac
@@ -1582,6 +1640,7 @@ main() {
 	remote) cmd_remote "$@" ;;
 	upload) cmd_upload "$@" ;;
 	download) cmd_download "$@" ;;
+	local-build) cmd_local_build "$@" ;;
 	local-pull) cmd_local_pull "$@" ;;
 	local-up) cmd_local_up "$@" ;;
 	local-down) cmd_local_down "$@" ;;
