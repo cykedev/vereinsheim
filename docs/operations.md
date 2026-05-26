@@ -70,8 +70,9 @@ auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
    bash bootstrap-vps.sh "ssh-ed25519 AAAA... du@workstation" \
        "https://github.com/<user>/vereinsheim.git"
    ```
-   Das Skript installiert Docker, legt UFW (22/80/443) an, erstellt einen
-   `deploy`-User mit deinem SSH-Key, klont das Repo nach `~deploy/vereinsheim`.
+   Das Skript installiert Docker, erstellt einen `deploy`-User mit deinem
+   SSH-Key, klont das Repo nach `~deploy/vereinsheim`. Firewall läuft
+   nicht im OS — siehe ADR-014.
 3. **Optional**: root-Login per SSH deaktivieren (Skript zeigt den Befehl).
 4. Als `deploy`-User weitermachen:
    ```bash

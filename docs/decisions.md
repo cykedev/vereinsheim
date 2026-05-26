@@ -379,8 +379,8 @@ chmod 600), nicht in `.env` mischen.
 
 **Status**: Accepted
 
-**Kontext**: Initial-Setup eines neuen VPS: Docker installieren, Firewall
-konfigurieren, Deploy-User anlegen, Repo klonen. Sollte das Skript auch
+**Kontext**: Initial-Setup eines neuen VPS: Docker installieren,
+Deploy-User anlegen, Repo klonen. Sollte das Skript auch
 gleich `PermitRootLogin no` in `sshd_config` setzen?
 
 **Entscheidung**: **Nein.** Das Skript zeigt am Ende den Befehl zum
@@ -400,9 +400,43 @@ nicht aus.
 
 ---
 
+## ADR-014 — Firewall via IONOS Cloud-Panel, kein UFW im OS
+
+**Status**: Accepted
+
+**Kontext**: Der initial geplante `bootstrap-vps.sh` installierte und
+aktivierte `ufw` mit Regeln für 22/80/443. IONOS VPS bringen jedoch eine
+**externe Firewall** im Cloud-Panel mit, die ausserhalb des OS läuft
+(vor dem Hypervisor). Zwei aktive Firewalls hintereinander bedeuten:
+doppelte Pflegestelle, doppelter Fehlerort beim Debugging, und ein
+fehlkonfiguriertes UFW kann den User aussperren — während die externe
+FW sich nicht in den OS-Stack einbringt.
+
+**Entscheidung**: Firewall **ausschliesslich** im IONOS Cloud-Panel
+konfigurieren. UFW wird nicht installiert. Regelwerk identisch zur
+früheren UFW-Konfig: nur 22/80/443 inbound erlaubt, alles andere
+denied.
+
+**Alternativen**:
+- *UFW zusätzlich zur IONOS-FW*: defense-in-depth, aber für ein
+  Single-VPS-Vereinssetup unverhältnismässig — der Schutz greift erst
+  bei kompromittierter IONOS-Ebene, was ein deutlich grösseres Problem
+  ist als ein offener Port.
+- *Nur UFW, IONOS-FW deaktiviert*: würde funktionieren, vergibt aber
+  den Vorteil eines vor-dem-OS gezogenen Schutzes (DDoS-Mitigation,
+  Schutz auch bei abgestürztem OS).
+
+**Folgen**:
+- `bootstrap-vps.sh` installiert/konfiguriert kein `ufw` mehr.
+- Firewall-Änderungen passieren im IONOS-Panel, nicht via SSH.
+- Bei VPS-Wechsel zu einem Provider ohne externe FW: ADR neu bewerten
+  und UFW-Block ggf. wieder einführen.
+
+---
+
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
 
-Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-014+):
+Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-015+):
 
 - **Off-Site-Backup-Strategie**: rclone → S3-compatible, borg auf NAS,
   IONOS Snapshot. Trade-offs: Kosten, RPO, Restore-Granularität.
