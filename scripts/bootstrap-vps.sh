@@ -5,13 +5,14 @@
 #
 # WAS DIESES SKRIPT MACHT
 #   1) apt update + upgrade
-#   2) Pakete: ufw, ca-certificates, curl, git, gnupg
-#   3) UFW: nur 22/80/443 freigeben
-#   4) Docker Engine + compose-plugin via offiziellem Skript installieren
-#   5) Deploy-User anlegen (sudo, docker-Group), SSH-Key hinterlegen
-#   6) Repo nach /home/<user>/vereinsheim klonen
+#   2) Pakete: ca-certificates, curl, git, gnupg
+#   3) Docker Engine + compose-plugin via offiziellem Skript installieren
+#   4) Deploy-User anlegen (sudo, docker-Group), SSH-Key hinterlegen
+#   5) Repo nach /home/<user>/vereinsheim klonen
 #
 # WAS ES *NICHT* MACHT
+#   - Firewall konfigurieren → übernimmt die externe IONOS-Firewall
+#     (Cloud-Panel), siehe ADR-014.
 #   - SSH-Hardening (root-Login deaktivieren) → mache ich nicht ohne dich,
 #     damit du dich bei einem Fehler nicht aussperrst.
 #   - .env aufsetzen → läuft anschließend per `./scripts/vereinsheim setup`
@@ -55,16 +56,7 @@ apt-get upgrade -y
 
 echo "==> install base packages"
 apt-get install -y \
-	ca-certificates curl git gnupg ufw
-
-echo "==> configure ufw (22/80/443)"
-ufw --force reset
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw --force enable
+	ca-certificates curl git gnupg
 
 echo "==> install docker"
 if ! command -v docker >/dev/null 2>&1; then

@@ -52,11 +52,13 @@ bash bootstrap-vps.sh \
   "https://github.com/<user>/vereinsheim.git"
 ```
 
-Das Skript installiert Docker, UFW (22/80/443), legt `deploy`-User mit
+Das Skript installiert Docker, legt `deploy`-User mit
 SSH-Key an, klont das Repo nach `~deploy/vereinsheim`,
 provisioniert `/var/backups/vereinsheim` mit Owner `deploy`. Es lässt
 `sshd_config` bewusst unangetastet — du sperrst dich nicht selbst aus.
 Befehl zum nachträglichen root-SSH-Lockdown gibt das Skript am Ende aus.
+Firewall wird **nicht** im OS konfiguriert — das übernimmt die externe
+IONOS-Firewall (nur 22/80/443 freigeben), siehe ADR-014.
 
 ### 5.3 — Konfiguration (als deploy-User)
 
