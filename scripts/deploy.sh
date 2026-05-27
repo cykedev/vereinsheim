@@ -3,7 +3,7 @@
 #   - macht ein Pre-Deploy-Backup (Sicherheitsnetz, falls db läuft)
 #   - zieht aktuelle Images aus Docker Hub
 #   - startet/aktualisiert alle Services
-#   - räumt unbenutzte Images auf
+#   - räumt unbenutzte Images auf (dangling sofort; getaggt nach >7 Tagen)
 #
 # Override:
 #   SKIP_BACKUP=1 ./scripts/deploy.sh
@@ -42,8 +42,11 @@ mkdir -p logs
 	printf '\n'
 } >>logs/deploy-history.log
 
-echo "==> Image prune"
+echo "==> Image prune (dangling)"
 docker image prune -f
+
+echo "==> Image prune (getaggt, ungenutzt seit >7 Tagen)"
+docker image prune -a -f --filter "until=168h"
 
 echo
 echo "Deployed. Status:"
