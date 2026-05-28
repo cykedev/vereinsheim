@@ -118,3 +118,11 @@ gepusht wird in **Docker Hub** unter `<DOCKER_USER>/ringwerk` und
 `<DOCKER_USER>/treffsicher`. Pro App zwei Tags pro Build:
 `:<sha>` (App-Image) und `:<sha>-migrator` (Migrations-Image), plus
 `:latest` und `:latest-migrator`.
+
+## Lizenz
+
+Apache License 2.0 — siehe [`LICENSE`](LICENSE).
+
+> Hinweis: Diese Lizenz deckt nur die Deployment-Tooling in diesem Repo
+> (CLI, Compose-Files, Caddy-Konfig, Doku). Die App-Sources in
+> `../ringwerk` und `../treffsicher` haben jeweils ihre eigenen Lizenzen.
