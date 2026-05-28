@@ -59,10 +59,19 @@ archive_uploads() {
 	local final="$OUT/uploads-${app}-$TS.tar.gz"
 	local tmp="${final}.tmp"
 
+	# tar läuft als root im Container, damit es das von der App-UID (1001,
+	# Mode 770) geschriebene Upload-Volume überhaupt lesen kann. Damit die
+	# Ausgabedatei auf dem Host trotzdem deploy gehört, chownen wir sie noch
+	# im Container (vor dem mv) — sonst landet sie als root:root im Host-FS.
+	local tmp_name
+	tmp_name="$(basename "$tmp")"
 	docker run --rm \
 		-v "${volume}":/src:ro \
 		-v "$OUT":/out \
-		alpine tar czf "/out/$(basename "$tmp")" -C /src .
+		-e HOST_UID="$(id -u)" \
+		-e HOST_GID="$(id -g)" \
+		-e TMP_NAME="$tmp_name" \
+		alpine sh -c 'tar czf "/out/$TMP_NAME" -C /src . && chown "$HOST_UID:$HOST_GID" "/out/$TMP_NAME"'
 
 	# tar erzeugt mindestens ~30 Bytes selbst für leere Volumes.
 	local size
