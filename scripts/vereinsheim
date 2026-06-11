@@ -298,6 +298,7 @@ _local_build_one() {
 	local tag="${DOCKER_USER}/${app}:latest${suffix}"
 	info "Baue ${tag}  (target=${target}) …"
 	docker buildx build \
+		--pull \
 		--load \
 		--target "$target" \
 		--tag "$tag" \

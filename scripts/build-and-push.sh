@@ -24,6 +24,7 @@ build_target() {
 	local img="${DOCKER_USER}/${app}"
 	echo "==> Building ${img}:${sha}${suffix}  (target=${target}, platform=${PLATFORM})"
 	docker buildx build \
+		--pull \
 		--platform "$PLATFORM" \
 		--target "$target" \
 		--tag "${img}:${sha}${suffix}" \
