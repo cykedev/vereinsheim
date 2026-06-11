@@ -24,7 +24,9 @@ services:
       TREFFSICHER_HOST: ${TREFFSICHER_HOST}
       ACME_EMAIL: ${ACME_EMAIL}
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:2019/config/"]
+      # 127.0.0.1 statt localhost: busybox-wget löst localhost nach ::1 auf,
+      # das Caddy-Admin-API lauscht aber nur auf IPv4.
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:2019/config/"]
       interval: 30s
       timeout: 5s
       retries: 3
