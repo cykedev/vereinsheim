@@ -11,9 +11,10 @@ mit automatischem Let's-Encrypt-TLS.
 
 ## Status
 
-🟡 **Pre-Production.** Compose-Setup, CLI und Operations-Skripte sind
-fertig und auf lokaler VM end-to-end validiert. VPS-Provisioning
-(Phase 5) und Datenmigration (Phase 6) stehen aus.
+🟢 **Produktiv.** Beide Apps laufen seit Ende Mai 2026 auf dem VPS
+(IONOS, Debian 13) — geteilter Postgres, Caddy mit Let's-Encrypt-TLS,
+täglicher Backup-Cron um 03:00. Alle Roadmap-Phasen (1–6) sind
+abgeschlossen.
 
 Detaillierter Stand und Roadmap: [`docs/plan.md`](docs/plan.md).
 
@@ -53,7 +54,7 @@ Die zwei Konfigurations-Dateien sind beide gitignored:
 ### Erstes Aufsetzen
 
 ```bash
-# 1. VPS bei bestellen (Debian 12, S+/M).
+# 1. VPS bestellen (Debian 13, S+/M).
 # 2. Als root, einmalig:
 bash bootstrap-vps.sh "ssh-ed25519 AAAA... du@workstation" \
   "https://github.com/cykedev/vereinsheim.git"

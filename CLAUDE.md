@@ -70,8 +70,10 @@ Volle Liste: `./scripts/vereinsheim help`.
 
 ## Was wahrscheinlich als nächstes gefragt wird
 
-Verbleibende Roadmap: siehe [`docs/plan.md`](docs/plan.md). Aktuell
-offen sind Phase 5 (VPS-Provisioning) und Phase 6 (Cutover).
+Die Roadmap aus [`docs/plan.md`](docs/plan.md) ist abgeschlossen — alle
+Phasen (1–6) sind erledigt, das System läuft seit Ende Mai 2026 produktiv
+auf dem VPS. Anstehende Arbeit ist damit Betrieb (Deploys, Backups,
+Security-Updates) statt Aufbau.
 
 Plausible Folgearbeiten (alle *nicht* im aktuellen Scope):
 
@@ -94,10 +96,10 @@ Plausible Folgearbeiten (alle *nicht* im aktuellen Scope):
 
 ## Branch-Status (zum Zeitpunkt dieses Stands)
 
-Aktiver Branch: `feat/vereinsheim-bootstrap` mit 4-5 Commits seit `main`.
-Inhaltlich: alles aus Phasen 1-3 inklusive dieser
-Konsolidierungs-/Doku-Welle. Bereit für ff-Merge nach `main`, sobald der
-User OK gibt.
+Aktiver Branch: `main`. Der Bootstrap-Branch `feat/vereinsheim-bootstrap`
+ist längst nach `main` gemerged; der Stand auf dem VPS entspricht
+`origin/main`. Neue Änderungen laufen weiterhin über Feature-Branches
+(`feat/<topic>`) mit ff-only-Merge nach `main` nach User-OK.
 
 Verweis auf den ursprünglichen Plan-File:
 `/Users/christian/.claude/plans/noch-eine-berlegung-ich-frolicking-dahl.md`
