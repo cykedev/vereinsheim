@@ -13,12 +13,14 @@
 | 3     | `vereinsheim` CLI + `bootstrap-vps.sh` + Operations-Doc | ✅ erledigt |
 | 3.5   | End-to-End-Test auf lokaler VM                       | ✅ validiert |
 | 4     | App-Repo-Anpassungen (Ringwerk + Treffsicher)        | ✅ erledigt |
-| 5     | VPS-Provisioning (Bestellung, Bootstrap, DNS, Setup) | ⏳ offen    |
-| 6     | Cutover bestehender Daten + Backup-Cron              | ⏳ offen    |
+| 5     | VPS-Provisioning (Bestellung, Bootstrap, DNS, Setup) | ✅ erledigt |
+| 6     | Cutover bestehender Daten + Backup-Cron              | ✅ erledigt |
 
-Das `vereinsheim`-Repo selbst ist **MVP-komplett**. Was bleibt, sind
-operative Schritte am Zielsystem und kleine Hinweis-Anpassungen in den
-beiden App-Repos.
+**Go-Live: Ende Mai 2026.** Beide Apps laufen seitdem produktiv auf dem
+VPS (IONOS, Debian 13), inklusive täglichem Backup-Cron um 03:00. Die
+Roadmap ist damit abgeschlossen; die Phasen-Abschnitte unten bleiben als
+Referenz für Re-Provisioning bzw. künftige Migrationen stehen. Für den
+laufenden Betrieb siehe [`operations.md`](operations.md).
 
 ---
 
@@ -36,12 +38,17 @@ waren keine nötig — beide Apps lesen den Schalter bereits aus env vars.
 
 ## Phase 5 — VPS-Provisioning
 
+**Erledigt Ende Mai 2026.** VPS bei IONOS provisioniert (Debian 13 statt
+des ursprünglich geplanten Debian 12), Bootstrap, DNS und Setup wie unten
+beschrieben durchgeführt. Die Schritte bleiben als Referenz für ein
+etwaiges Re-Provisioning stehen.
+
 ### 5.1 — VPS bestellen
 
 - Anbieter: IONOS
 - Tarif: VPS S+/M (2 vCPU, 4 GB RAM, 80 GB SSD) — siehe Sizing in
   [`spec.md`](spec.md#vps-sizing)
-- OS: Debian 12
+- OS: Debian 13
 
 ### 5.2 — Initial-Bootstrap (als root, 1× pro VPS)
 
@@ -99,6 +106,10 @@ vermeiden. Nach erfolgreichem Staging-Cert auf Produktiv-ACME umstellen,
 ---
 
 ## Phase 6 — Cutover bestehender Daten
+
+**Erledigt Ende Mai 2026.** Beide Apps mit Bestandsdaten migriert, DNS
+umgestellt, Backup-Cron aktiv. Die Schritte bleiben als Referenz für
+künftige Migrationen stehen.
 
 Pro App nacheinander, mit Maintenance-Fenster (~30 Min je App).
 
