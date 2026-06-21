@@ -26,6 +26,7 @@ MUST_MATCH=(
   src/app/globals.css
   src/app/error.tsx
   "src/app/(app)/error.tsx"
+  src/app/not-found.tsx
   src/components/ui/button.tsx
   src/components/ui/card.tsx
   src/components/ui/sonner.tsx
