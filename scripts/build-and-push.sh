@@ -47,6 +47,9 @@ build_app() {
 	build_target "$app" "$path" migrator "-migrator"
 }
 
+echo "==> Konsistenz-Check (Ringwerk × Treffsicher)"
+RINGWERK_PATH="$RINGWERK_PATH" TREFFSICHER_PATH="$TREFFSICHER_PATH" "$(dirname "$0")/consistency-check.sh"
+
 build_app ringwerk "$RINGWERK_PATH"
 build_app treffsicher "$TREFFSICHER_PATH"
 
