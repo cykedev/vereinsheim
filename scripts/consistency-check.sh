@@ -96,7 +96,9 @@ for repo in "$TS" "$RW"; do
   if [[ "$fb" != "0" ]]; then echo "  WARN $name: 'text-2xl font-bold' in $fb Datei(en) — Kanon ist font-semibold"; warn=1; fi
   el=$(grep -rnE "(Speichern|Löschen|Laden|Wird)\.\.\." "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
   if [[ "$el" != "0" ]]; then echo "  WARN $name: $el ASCII-'...' in Pending-Texten — Unicode '…' nutzen"; warn=1; fi
-  intl=$(grep -rl "new Intl.DateTimeFormat" "$repo/src/app" 2>/dev/null | wc -l | tr -d ' ') || true
+  # Page-/Komponenten-Level inline Intl ist Anti-Pattern; dedizierte Formatter-Module
+  # (PDF-Export, _lib) sind legitim und ausgenommen.
+  intl=$(grep -rl "new Intl.DateTimeFormat" "$repo/src/app" 2>/dev/null | grep -vE "/(_lib|pdf|export)/" | wc -l | tr -d ' ') || true
   if [[ "$intl" != "0" ]]; then echo "  WARN $name: inline Intl.DateTimeFormat in $intl Datei(en) — lib/dateTime nutzen"; warn=1; fi
 done
 
