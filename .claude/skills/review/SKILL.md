@@ -11,6 +11,9 @@ PIV step 4 of 4. Delegate the review to the **`code-reviewer`** sub-agent (in `.
 - It checks correctness, convention adherence, drift between the two apps' shared files, and
   uses the **codegraph** MCP for impact/call-graph. It returns a structured verdict
   (confirmed issues + severity + concrete fixes).
+- **Acting on findings:** verify each against the code before implementing — no performative
+  agreement, and push back with technical reasoning if a finding is wrong for this codebase.
+  Clarify anything ambiguous first; then fix in order **blockers → simple → complex**.
 - Record confirmed findings in **`reports/YYYY-MM-DD-<topic>-review.md`**; address blockers,
   then re-run **/validate** if code changed.
 
