@@ -9,7 +9,7 @@ Self-hosted, Einzelnutzer bis Vereinsbetrieb, ausschliesslich Dark Mode, ausschl
 - Technisch (Infra, Architektur, UI): `docs/technical-constraints.md`
 - Code-Stil, TypeScript, Zod, Testing: `docs/code-conventions.md`
 - Datenmodell, Env-Vars, Disziplinen, Ergebniserfassung: `docs/data-model.md`
-- Deployment: `docs/production-deploy-truenas.md`
+- Deployment: **im Monorepo via `vereinsheim`** (Root-`README.md` / `docs/operations.md`); `docs/production-deploy-truenas.md` ist die historische Standalone-Variante
 - Backlog / nächste Aufgaben: `docs/backlog.md`
 - Status / Roadmap: `docs/implementation-plan.md`
 - App-übergreifende Konsistenz (Ringwerk × Treffsicher): `docs/shared-conventions.md`
@@ -18,26 +18,27 @@ Self-hosted, Einzelnutzer bis Vereinsbetrieb, ausschliesslich Dark Mode, ausschl
 
 ## Commands
 
-```bash
-# Dev starten (DB + App mit Hot-Reload)
-docker compose -f docker-compose.dev.yml up --watch
+> **Monorepo:** Diese App liegt in `apps/treffsicher`; Dev/Build/Gates laufen von
+> der Repo-Wurzel (pnpm + Turborepo). Das frühere per-App `docker-compose.dev.yml`
+> gibt es nicht mehr — Postgres kommt aus der Root-`docker-compose.dev.yml`.
 
-# Vor jedem Commit — alle fünf müssen fehlerfrei sein
-docker compose -f docker-compose.dev.yml run --rm app npm run lint
-docker compose -f docker-compose.dev.yml run --rm app npm run format:check
-docker compose -f docker-compose.dev.yml run --rm app npm run test
-docker compose -f docker-compose.dev.yml run --rm app npx tsc --noEmit
-# next build: fängt Build-only-Fehler ab, die lint/tsc/test NICHT sehen
-# (z.B. "use server"-Dateien dürfen nur async-Funktionen exportieren, keine Re-Exports)
-docker compose -f docker-compose.dev.yml run --rm app npm run build
+```bash
+# Dev: geteilter Postgres (an der Wurzel) + beide Apps (diese auf :3001)
+docker compose -f docker-compose.dev.yml up -d   # an der Repo-Wurzel
+pnpm dev                                          # oder: pnpm dev --filter treffsicher
+
+# Vor jedem Commit — alle fünf Gates (turbo-gecacht über beide Apps)
+pnpm check                                        # lint, format:check, test, tsc, next build
+# next build ist Pflicht-Gate: fängt Build-only-Fehler ab (z.B. "use server"-
+# Re-Export-Regel), die lint/tsc/test NICHT sehen
 
 # Formatierung auto-fix
-docker compose -f docker-compose.dev.yml run --rm app npm run format
+pnpm --filter treffsicher format
 
 # Neue Migration erzeugen (nach Schemaänderung)
-docker compose -f docker-compose.dev.yml run --rm app npx prisma migrate dev --name <name>
+pnpm --filter treffsicher exec prisma migrate dev --name <name>
 
-# DB komplett zurücksetzen (Datenverlust!)
+# Dev-DB komplett zurücksetzen (Datenverlust!) — an der Repo-Wurzel
 docker compose -f docker-compose.dev.yml down -v
 ```
 

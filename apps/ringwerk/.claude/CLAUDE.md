@@ -1,5 +1,7 @@
 # Ringwerk — Claude Configuration
 
+> **Monorepo:** Diese App liegt in `apps/ringwerk` im `vereinsheim`-Monorepo. Dev/Build/Gates laufen von der Repo-Wurzel (pnpm + Turborepo): `pnpm dev --filter ringwerk` (:3000), `pnpm check`. Das frühere per-App `docker-compose.dev.yml` / npm-im-Container gilt nicht mehr.
+
 **Sprache:** Alle Kommunikation mit dem User auf Deutsch. Code, Commit-Messages und Agent-Prompts bleiben auf Englisch.
 
 **App-übergreifende Konsistenz mit Treffsicher:** siehe `docs/shared-conventions.md` (byte-identisch in beiden Repos, vom Drift-Gate in `vereinsheim` erzwungen).
@@ -52,11 +54,10 @@
 ## Project Context
 
 - **Name:** Ringwerk
-- **Quality command:** `/check` — runs via `docker compose -f docker-compose.dev.yml run --rm app`:
-  - `npm run lint`
-  - `npm run format:check`
-  - `npm run test`
-  - `npx tsc --noEmit`
+- **Quality command:** `/check` — im Monorepo via `pnpm check` (turbo, von der
+  Repo-Wurzel): `lint`, `format:check`, `test`, `tsc --noEmit`, `next build`.
+  Das frühere `docker compose -f docker-compose.dev.yml run --rm app` gilt nicht
+  mehr (per-App-File entfernt).
 - **Layer order** (follow when implementing schema changes):
   Schema → Migration → Types → Queries → Actions → Calculate → Components → Page
 

@@ -2,9 +2,18 @@
 
 Trainingsunterstützungs-App für Schiesssportler. Trainingstagebuch, Ergebniserfassung, Mentaltraining und Statistiken in einer Web-App (PWA ist als späterer Schritt geplant).
 
+> **Teil des [`vereinsheim`](../../README.md)-Monorepos.** Dev, Build und Deploy
+> laufen **von der Repo-Wurzel**: `pnpm dev` (diese App auf :3001) gegen den
+> geteilten Dev-Postgres (`docker compose -f docker-compose.dev.yml up -d` **an
+> der Wurzel**); Gates `pnpm check`; Build/Deploy `vereinsheim build` / `release`.
+> **Die Abschnitte unten mit eigenem `docker-compose.dev.yml`, `npm`-im-Container
+> und TrueNAS-Deploy stammen aus der Standalone-Zeit und gelten nicht mehr** (das
+> per-App `docker-compose.dev.yml` wurde entfernt). Kanonisch: Root-[`README.md`](../../README.md);
+> die App-Doku-Konsolidierung folgt in Phase 2.
+
 ---
 
-## Lokale Entwicklung
+## Lokale Entwicklung (historisch — Standalone-Flow)
 
 ### Voraussetzungen
 
@@ -106,27 +115,23 @@ Dabei werden Migrationen angewendet, das Schema synchronisiert (`db push`) und d
 Wenn eine Schemaänderung ins Repository soll, danach eine Migration erzeugen und committen:
 
 ```bash
-docker compose -f docker-compose.dev.yml run --rm app npx prisma migrate dev --name beschreibender-name
+# im Monorepo, von der Wurzel:
+pnpm --filter treffsicher exec prisma migrate dev --name beschreibender-name
 ```
 
 ---
 
 ## Qualitätschecks
 
-Vor jedem Commit müssen diese drei Befehle fehlerfrei durchlaufen.
-Container-basiert (ohne lokales `npm ci`):
+Vor jedem Commit müssen alle Gates fehlerfrei durchlaufen — im Monorepo von der
+Wurzel (turbo-gecacht über beide Apps):
 
 ```bash
-docker compose -f docker-compose.dev.yml run --rm app npm run lint
-docker compose -f docker-compose.dev.yml run --rm app npm run format:check
-docker compose -f docker-compose.dev.yml run --rm app npm run test
+pnpm check                        # lint, format:check, test, tsc, next build
+pnpm test --filter treffsicher    # nur Tests dieser App
 ```
 
-Formatierung automatisch korrigieren:
-
-```bash
-docker compose -f docker-compose.dev.yml run --rm app npm run format
-```
+Formatierung automatisch korrigieren: `pnpm --filter treffsicher format`.
 
 ---
 
