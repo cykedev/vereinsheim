@@ -1,5 +1,6 @@
 # Lokale Entwicklung im Monorepo: EIN geteilter Postgres mit zwei Dev-DBs
-# (liga + treffsicher), isoliert via db-init (ADR-002-Muster). Die Apps selbst
+# (ringwerk + treffsicher, gleiche Namen wie Prod), isoliert via db-init
+# (ADR-002-Muster). Die Apps selbst
 # laufen auf dem HOST via `pnpm dev` (nicht in Docker) — Hot-Reload + ein
 # Befehlssatz von der Wurzel.
 #

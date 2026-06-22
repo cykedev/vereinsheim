@@ -47,7 +47,7 @@ pnpm build    # inkrementeller Build beider Apps
 ```
 
 Echte Prod-Daten kommen wie bisher über `backups/*.dump` (`pg_restore` in die
-Dev-DBs `liga` + `treffsicher`).
+Dev-DBs `ringwerk` + `treffsicher`).
 
 ## Doku
 

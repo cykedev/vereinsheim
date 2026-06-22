@@ -98,7 +98,7 @@ Die `vereinsheim`-CLI (ADR-011) bleibt das Ops-Frontend und wrappt das: `vereins
 
 ## 6. Echte Daten im Dev
 
-Unverändert zum heutigen Mechanismus: gemeinsamer Postgres (zwei DBs `treffsicher`+`liga`, `db-init`
+Unverändert zum heutigen Mechanismus: gemeinsamer Postgres (zwei DBs `treffsicher`+`ringwerk`, `db-init`
 isoliert, ADR-002) im Root-`docker-compose.dev.yml`; `vereinsheim local-up --restore` bzw.
 `db:restore` spielt `backups/*.dump` per `pg_restore` in die Dev-DBs. Ein Kommando → beide Apps lokal
 mit Prod-Daten.
@@ -128,7 +128,7 @@ kann komponentenweise laufen.
 Geliefert: Skelett (`pnpm-workspace.yaml` + Catalog, `package.json`, `turbo.json`, `.npmrc`), beide Apps
 als `apps/*` via `git filter-repo --to-subdirectory-filter` (History erhalten, 316 + 148 Commits,
 Merge mit `--allow-unrelated-histories`, **kein** Subtree-Sync), Catalog-Integration, Root-
-`docker-compose.dev.yml` + `dev/db-init/` (zwei DBs `liga` + `treffsicher`). **Alle 5 Gates grün** für
+`docker-compose.dev.yml` + `dev/db-init/` (zwei DBs `ringwerk` + `treffsicher`). **Alle 5 Gates grün** für
 beide Apps, beide laufen lokal (`pnpm dev` → :3000 / :3001), Deploy-Vertrag bit-gleich.
 
 Schlüsselentscheidungen / bewusste Abweichungen vom wörtlichen Plan:
@@ -141,8 +141,10 @@ Schlüsselentscheidungen / bewusste Abweichungen vom wörtlichen Plan:
   direkt; npm-Hoisting kaschierte das, pnpm-Strenge deckte es auf (genau §9). Fixte `tsc`-TS2307 + einen
   Folge-`implicit-any` in treffsicher. **Einziger** Phantom-Dep — sonst nutzt alles das `radix-ui`-Umbrella.
 - **Host-Dev statt In-Container-Dev**: Apps laufen via `pnpm dev` auf dem Host; `.env.example` zeigt auf
-  `localhost:5432`. `vitest.config.ts` (ringwerk) lädt `.env` (`import "dotenv/config"`), damit die
-  DB-Integrationstests (`publicSlug`) `DATABASE_URL` sehen — früher kam die Env aus dem Container.
+  `localhost:5432`. Dev-DBs heißen `ringwerk` + `treffsicher` — **an Prod angeglichen**, der Alt-Dev-Name
+  `liga` wurde fallengelassen (App hardcodet keinen DB-Namen, nur `DATABASE_URL`). `vitest.config.ts`
+  (ringwerk) lädt `.env` (`import "dotenv/config"`), damit die DB-Integrationstests (`publicSlug`)
+  `DATABASE_URL` sehen — früher kam die Env aus dem Container.
 - **Dev-Postgres = eigenes compose-Projekt** (`name: vereinsheim-dev`, eigenes Volume) → kein Eingriff in
   den Prod-Stack (`compose.yml`).
 - **Dual-Source bis Phase 3**: der Produktions-Build läuft weiter über `../ringwerk` / `../treffsicher`
@@ -159,7 +161,9 @@ Bewusst **nicht** in Phase 1 (Scope-Grenze):
   in Phase 3; isoliert gesetzt würde es den `.next/standalone`-Pfad verschieben und den Build-Vertrag brechen.
   Build bleibt grün (nur Warnung), Prod baut bis dahin aus den Standalone-Repos (dort keine Warnung).
 - App-`CLAUDE.md`/`docs` referenzieren noch npm + In-Container-`/check` (Doc-Sync) → Phase 2.
-- Vestigiale `apps/*/docker-compose.dev.yml` (Single-App-Dev) bleiben vorerst liegen → Phase 3.
+- Per-App `apps/*/docker-compose.dev.yml` (Single-App-Dev-Build) **entfernt** — obsolet durch
+  Root-`docker-compose.dev.yml` + `pnpm dev`. Die App-`.claude`/`docs` referenzieren den alten
+  In-Container-Flow (`docker compose … run app`) noch → Phase-2-Doc-Sync.
 
 ## 9. Risiken & Gotchas
 
