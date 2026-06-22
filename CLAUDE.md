@@ -11,12 +11,16 @@ Treffsicher = Training) auf einem einzelnen VPS, mit geteiltem
 Postgres-Container, Caddy als Reverse Proxy und einem einheitlichen 
 Operations-CLI.
 
-Die App-Source liegt **nicht** hier — sondern in:
-- `../ringwerk`
-- `../treffsicher`
+Seit **Monorepo-Phase 1** liegt der App-Code hier: [`apps/ringwerk`](apps/ringwerk)
+und [`apps/treffsicher`](apps/treffsicher) (via `git filter-repo` integriert,
+History erhalten; pnpm + Turborepo, Catalog für geteilte Versionen). Dev läuft
+auf dem Host: `docker compose -f docker-compose.dev.yml up -d` + `pnpm dev`.
 
-Beide Apps werden lokal gebaut (`docker buildx`) und nach Docker Hub
-gepusht. Der VPS pullt die Images.
+**Achtung Dual-Source bis Phase 3:** der Produktions-Build läuft weiterhin über
+die Standalone-Repos [`../ringwerk`](../ringwerk) / [`../treffsicher`](../treffsicher)
+(`vereinsheim build`, unverändert) — sie bleiben bis Phase 3 die Release-Quelle.
+Beide Apps werden lokal gebaut (`docker buildx`) und nach Docker Hub gepusht;
+der VPS pullt die Images.
 
 ## Lese-Reihenfolge bei Sessionstart
 
@@ -72,12 +76,16 @@ Volle Liste: `./scripts/vereinsheim help`.
 ## Was wahrscheinlich als nächstes gefragt wird
 
 Die ursprüngliche Aufbau-Roadmap ([`docs/plan.md`](docs/plan.md)) ist abgeschlossen; das System läuft
-seit Ende Mai 2026 produktiv. **Das aktive nächste Großvorhaben ist die Monorepo-Migration**
-([`docs/monorepo-plan.md`](docs/monorepo-plan.md), ADR-015–018): treffsicher + ringwerk werden als
-`apps/*` in dieses Repo integriert (pnpm/Turborepo, `turbo prune --docker`), inkl. geteilter
-`packages/*`, Knowledge-Graph (CodeGraph + CLAUDE.md-Hierarchie + Memory-MCP) und Harness (Hooks/PIV).
-**Nächster Schritt: Phase 1** (pnpm/turbo-Skelett + Apps via `git filter-repo` nach `apps/*`, History
-erhalten). Der Deploy-Vertrag bleibt dabei bit-gleich.
+seit Ende Mai 2026 produktiv. **Das aktive Großvorhaben ist die Monorepo-Migration**
+([`docs/monorepo-plan.md`](docs/monorepo-plan.md), ADR-015–018): treffsicher + ringwerk als `apps/*`
+(pnpm/Turborepo, `turbo prune --docker`), inkl. geteilter `packages/*`, Knowledge-Graph (CodeGraph +
+CLAUDE.md-Hierarchie + Memory-MCP) und Harness (Hooks/PIV).
+
+**Phase 1 ist erledigt**: beide Apps via `git filter-repo` nach `apps/*` integriert (History erhalten),
+pnpm-Workspace + Turborepo + Catalog, geteilter Dev-Postgres, alle 5 Gates grün, Deploy-Vertrag
+bit-gleich. **Nächster Schritt: Phase 2** — `packages/config` (Konfig-Duplikate weg) + die
+Knowledge-/Harness-Schichten (ADR-016/017/018). Schlüsselentscheidungen & Scope-Grenze stehen in
+[`docs/monorepo-plan.md`](docs/monorepo-plan.md) §8 („Phase 1 — Umsetzungsnotizen").
 
 Weitere Folgearbeiten (nicht im aktuellen Scope): Off-Site-Backup, CI/Remote-Cache (Phase 5, supersedet
 ADR-006).
