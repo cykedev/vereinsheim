@@ -120,7 +120,7 @@ Der VPS sieht keinen Unterschied. Cutover-Verifikation: gebautes Image gegen akt
 | **2** ✅ | Harness/Knowledge (ADR-019) + `packages/config`: next/eslint/tsconfig-base/prettier/postcss als `@vereinsheim/config` (tailwind-globals → Phase 4) | niedrig | Konfig-Duplikate weg |
 | **3** ✅ | `turbo prune`-Docker-Build; `build-and-push.sh` umgestellt; lokal verifiziert **und auf den VPS deployed** (Juni 2026) | mittel | der schnelle, korrekte Build-/Deploy-Pfad |
 | **4 / Zyklus 1** ✅ | `packages/lib`: `cn`, `forms/fieldErrors`, die zwei Form-Hooks **echt** teilen (`@/lib/*` → `@vereinsheim/lib/*`) → diese drei raus aus dem Drift-Gate | mittel | Tier-1-Ziel anteilig: lib drift-frei |
-| **4 / Zyklus 2** | `packages/ui`: 17 `ui/*` + 4 `shell/*` (+ `globals.css`) **echt** teilen (`@/components/ui` → `@vereinsheim/ui`) → **Drift-Gate entfällt ganz** | mittel | Tier-1-Ziel: Drift strukturell unmöglich |
+| **4 / Zyklus 2** ✅ | `packages/ui`: 17 `ui/*` + 4 `shell/*` + globals.css-Theme-Kern (`theme.css` mit `@source`) **echt** teilen (`@/components/ui` → `@vereinsheim/ui`) → Gate schrumpft auf 5 triviale Next/shadcn-Reste | mittel | Tier-1-Ziel: UI-Drift strukturell unmöglich |
 | **5** (optional, später) | CI (GitHub Actions) + Turbo Remote-Cache → supersedes ADR-006 | niedrig | maschinenübergreifender Cache |
 
 Phase 1+3 liefern bereits „ein Monorepo, viel schnellerer Build". Phase 4 ist der größere Refactor und
