@@ -6,11 +6,11 @@
 ## Context (why)
 
 Der Memory-MCP-Graph (ADR-016 Schicht 3, `@modelcontextprotocol/server-memory`, Store
-`.claude/knowledge-graph.json`) wirkte tot: 24 Entities, seit dem Seed-Commit (`371763c`) nie
-gewachsen, und nie benutzt. **Empirisch belegter Root Cause** (in dieser Session getestet):
+`.claude/knowledge-graph.json`) wirkte tot: 24 Zeilen (21 Entities + 3 Relationen), seit dem
+Seed-Commit (`371763c`) nie gewachsen, und nie benutzt. **Empirisch belegter Root Cause** (in dieser Session getestet):
 
 - `mcp__memory__read_graph` liefert `{entities:[],relations:[]}` — **leer**, obwohl die getrackte
-  Datei 24 Entities hat.
+  Datei 24 Zeilen (21 Entities) hat.
 - `mcp__memory__create_entities` schlägt fehl mit
   `ENOENT: open '/Users/christian/.npm/_npx/…/server-memory/dist/.claude/knowledge-graph.json'`.
 

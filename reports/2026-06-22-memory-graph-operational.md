@@ -37,7 +37,7 @@ Check 6 ist der bestmögliche Pre-Reload-Beweis, dass der Fix die **richtige, be
 
 ## PENDING — Acceptance-Gate (nach Merge + Reload)
 
-Wichtig: Die laufende Session benutzt die **Original-Repo**-Config (alter relativer Pfad, 24-Entity-Seed).
+Wichtig: Die laufende Session benutzt die **Original-Repo**-Config (alter relativer Pfad, 24-Zeilen-Seed = 21 Entities).
 Die Worktree-Artefakte werden **erst nach `ff-merge` nach `main` + Claude-Code-Reload** wirksam (dann liest
 der Memory-Server `…/vereinsheim/.claude/knowledge-graph.json` = re-geseedeter Stand). Akzeptanz-Schritte
 (in `/validate` der Folge-Session oder durch den User):
