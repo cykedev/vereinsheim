@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select"
 import type { ActionResult } from "@/lib/types"
 import type { UserSummary } from "@/lib/users/types"
-import { getFieldError, getGeneralError } from "@/lib/forms/fieldErrors"
+import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { FieldError } from "@/components/ui/field-error"
 
 interface Props {

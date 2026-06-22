@@ -3,7 +3,7 @@
 import { useActionState, useState, useEffect } from "react"
 import { toast } from "sonner"
 import { saveWellbeing, type ActionResult } from "@/lib/sessions/actions"
-import { getGeneralError } from "@/lib/forms/fieldErrors"
+import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { ActionFormFooter } from "@/components/app/sessions/shared/ActionFormFooter"
 import { ActionFormMessages } from "@/components/app/sessions/shared/ActionFormMessages"
 import { ScoreSliderRows } from "@/components/app/sessions/shared/ScoreSliderRows"

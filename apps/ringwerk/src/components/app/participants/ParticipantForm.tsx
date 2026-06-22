@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { ParticipantDetail } from "@/lib/participants/types"
 import type { ActionResult } from "@/lib/types"
-import { getFieldError, getGeneralError } from "@/lib/forms/fieldErrors"
+import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { FieldError } from "@/components/ui/field-error"
 
 interface Props {

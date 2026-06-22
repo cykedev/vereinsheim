@@ -119,7 +119,8 @@ Der VPS sieht keinen Unterschied. Cutover-Verifikation: gebautes Image gegen akt
 | **1** ✅ | pnpm + turbo Skelett; beide Apps **as-is** nach `apps/*` via `git filter-repo` (History erhalten); geteilte Deps heben; Root-`docker-compose.dev.yml` | niedrig | ein Repo, schnelle inkrementelle Builds, ein Dev-Befehl |
 | **2** ✅ | Harness/Knowledge (ADR-019) + `packages/config`: next/eslint/tsconfig-base/prettier/postcss als `@vereinsheim/config` (tailwind-globals → Phase 4) | niedrig | Konfig-Duplikate weg |
 | **3** ✅ | `turbo prune`-Docker-Build; `build-and-push.sh` umgestellt; lokal verifiziert **und auf den VPS deployed** (Juni 2026) | mittel | der schnelle, korrekte Build-/Deploy-Pfad |
-| **4** | `packages/ui` + `packages/lib`: byte-identische Schicht **echt** teilen (Imports `@/components/ui` → `@vereinsheim/ui`, schrittweise) → **Drift-Gate entfällt** | mittel | Tier-1-Ziel: Drift strukturell unmöglich |
+| **4 / Zyklus 1** ✅ | `packages/lib`: `cn`, `forms/fieldErrors`, die zwei Form-Hooks **echt** teilen (`@/lib/*` → `@vereinsheim/lib/*`) → diese drei raus aus dem Drift-Gate | mittel | Tier-1-Ziel anteilig: lib drift-frei |
+| **4 / Zyklus 2** | `packages/ui`: 17 `ui/*` + 4 `shell/*` (+ `globals.css`) **echt** teilen (`@/components/ui` → `@vereinsheim/ui`) → **Drift-Gate entfällt ganz** | mittel | Tier-1-Ziel: Drift strukturell unmöglich |
 | **5** (optional, später) | CI (GitHub Actions) + Turbo Remote-Cache → supersedes ADR-006 | niedrig | maschinenübergreifender Cache |
 
 Phase 1+3 liefern bereits „ein Monorepo, viel schnellerer Build". Phase 4 ist der größere Refactor und
@@ -230,6 +231,21 @@ Geliefert: Produktions-Build aus dem Monorepo via `turbo prune <app> --docker`. 
   (Juni 2026): die Monorepo-Images sind über Docker Hub auf den VPS ausgerollt. Der Deploy-Pfad läuft über
   Image-Push/-Pull (lokaler Build → Docker Hub → VPS pullt), **nicht** über `git push origin` — Letzteres
   steht noch aus (`main` ~28 Commits voraus), ist aber deploy-irrelevant.
+
+### Phase 4 / Zyklus 1 — Umsetzungsnotizen (`packages/lib`, Juni 2026)
+
+Geliefert: `@vereinsheim/lib` — die vier byte-identischen, autarken Module (`cn`/utils, `forms/fieldErrors`,
+`useUnsavedChangesGuard`, `useNavigationConfirm`) echt geteilt; ~59 App-Importe (`@/lib/*` →
+`@vereinsheim/lib/*`) umgestellt, die App-Kopien gelöscht, die drei aus dem Drift-Gate entfernt. Alle 5
+Gates grün, geprunter Docker-Build verifiziert.
+
+- **Just-in-time-Paket**: exportiert TS-Source direkt (kein Build-Step); `transpilePackages` in der
+  `@vereinsheim/config/next`-Factory transpiliert es (gilt für beide Apps). `"use client"` der Hooks bleibt.
+- **Subpath-Exports spiegeln die alten `@/lib/*`-Pfade** → der Rewrite war reine mechanische Präfix-
+  Ersetzung; vorwärtskompatibel zu Zyklus 2 (die ui-Komponenten ziehen `cn` jetzt cross-package).
+- **`react` ist peerDependency** (keine doppelte React-Instanz). Paket hat (noch) **kein** `lint`-Script
+  (`eslint-config-next` passt nicht auf ein Nicht-Next-Paket) → Folgearbeit für Zyklus 2.
+- **`dateTime.ts` bewusst ausgeklammert** (driftet zwischen den Apps) — erst angleichen, dann teilen.
 
 ## 9. Risiken & Gotchas
 

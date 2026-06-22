@@ -4,7 +4,7 @@ import * as React from "react"
 import { Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { cn } from "@vereinsheim/lib/utils"
 
 type SelectableRowProps = {
   selected: boolean

@@ -3,7 +3,7 @@
 import { useActionState, useState, useEffect } from "react"
 import { toast } from "sonner"
 import { saveReflection, type ActionResult } from "@/lib/sessions/actions"
-import { getGeneralError } from "@/lib/forms/fieldErrors"
+import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Label } from "@/components/ui/label"
 import { SelectableRow } from "@/components/ui/selectable-row"
 import { Textarea } from "@/components/ui/textarea"

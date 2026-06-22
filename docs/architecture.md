@@ -11,7 +11,9 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/ringwerk/          Liga & Wettkämpfe (Next.js 16, Prisma 7, NextAuth v4)  → :3000
 ├── apps/treffsicher/       Trainings-App      (Next.js 16, Prisma 7, NextAuth v4)  → :3001
 ├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig/eslint/prettier/
-│                           postcss/next (Phase 2). ui/lib geplant — Phase 4.
+│                           postcss/next (Phase 2).
+├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors,
+│                           useUnsavedChangesGuard, useNavigationConfirm (Phase 4/Zyklus 1). ui → Zyklus 2.
 ├── docs/                   spec, decisions (ADRs), monorepo-plan, operations, plan,
 │                           architecture (dies), shared-conventions, consistency
 ├── .claude/                Harness: settings(+hooks), skills/, agents/, context/, knowledge-graph.json

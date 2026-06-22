@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@vereinsheim/lib/utils"
 import type { PlayoffMatchItem } from "@/lib/playoffs/types"
 import { PlayoffMatchCard } from "../PlayoffMatchCard"
 import type { PlayoffCardConfig } from "../playoff-match-card"

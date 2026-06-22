@@ -24,9 +24,10 @@ warn=0
 
 # Geteilte Dateien, die in BEIDEN Repos byte-identisch sein MÜSSEN.
 # Hinweis: tsconfig/eslint/prettier/postcss/next.config liegen seit Phase 2 in
-# @vereinsheim/config (packages/config) — Drift dort strukturell unmöglich, daher
-# NICHT mehr hier gelistet. components.json + globals.css bleiben app-lokal (Phase 4,
-# shadcn-CLI läuft im App-Kontext).
+# @vereinsheim/config (packages/config); cn (utils), forms/fieldErrors und die beiden
+# Form-Hooks seit Phase 4 / Zyklus 1 in @vereinsheim/lib (packages/lib) — Drift dort
+# strukturell unmöglich, daher NICHT mehr hier gelistet. components.json + globals.css
+# + die ui/- und shell/-Komponenten bleiben app-lokal bis Phase 4 / Zyklus 2 (packages/ui).
 MUST_MATCH=(
   components.json
   src/app/globals.css
@@ -42,9 +43,6 @@ MUST_MATCH=(
   src/components/app/shell/DetailActionBar.tsx
   src/components/app/shell/ConfirmDialog.tsx
   src/components/app/shell/PageHeader.tsx
-  src/lib/hooks/useUnsavedChangesGuard.ts
-  src/lib/hooks/useNavigationConfirm.ts
-  src/lib/forms/fieldErrors.ts
 )
 # Hinweis: docs/shared-conventions.md ist seit der Harness-Konsolidierung EINE
 # Quelle am Root (docs/shared-conventions.md) — nicht mehr pro App dupliziert.

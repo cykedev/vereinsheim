@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { changeOwnPassword } from "@/lib/users/actions"
-import { getFieldError, getGeneralError } from "@/lib/forms/fieldErrors"
+import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { FieldError } from "@/components/ui/field-error"
 
 export function AccountPasswordForm() {

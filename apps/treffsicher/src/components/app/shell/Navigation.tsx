@@ -26,7 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
+import { cn } from "@vereinsheim/lib/utils"
 
 const baseNavLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },

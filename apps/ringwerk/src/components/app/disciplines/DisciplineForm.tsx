@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 import type { ActionResult } from "@/lib/types"
-import { getFieldError, getGeneralError } from "@/lib/forms/fieldErrors"
+import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { FieldError } from "@/components/ui/field-error"
 
 interface Props {
