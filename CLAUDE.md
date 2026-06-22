@@ -140,12 +140,13 @@ ADR-006).
 
 ## Branch-Status (zum Zeitpunkt dieses Stands)
 
-Aktiver Branch: `main`. Monorepo-Phasen 1 + 3 sind nach `main` gemerged
-(lineare History), aber **`main` ist noch nicht nach `origin` gepusht** — der
-VPS läuft weiter mit den alten Images (`origin/main` unverändert). Erster Push +
-Deploy aus dem Monorepo stehen noch aus (user-gated). Neue Änderungen laufen
-weiterhin über Feature-Branches (`feat/<topic>`) mit ff-only-Merge nach `main`
-nach User-OK.
+Aktiver Branch: `main`. Monorepo-Phasen 1 + 2 + 3 sind nach `main` gemerged
+(lineare History). Der **Monorepo-Build ist auf den VPS deployed** (Juni 2026,
+über Docker Hub) — der Deploy-Pfad läuft über Image-Push/-Pull (lokaler Build →
+Docker Hub → VPS pullt), **nicht** über Git. Offen ist nur der **`git push origin
+main`** (Code-Backup nach GitHub, ~28 Commits voraus, deploy-irrelevant; user-gated).
+Neue Änderungen laufen weiterhin über Feature-Branches (`feat/<topic>`) mit
+ff-only-Merge nach `main` nach User-OK.
 
 Verweis auf den ursprünglichen Plan-File:
 `/Users/christian/.claude/plans/noch-eine-berlegung-ich-frolicking-dahl.md`

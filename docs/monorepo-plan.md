@@ -118,7 +118,7 @@ Der VPS sieht keinen Unterschied. Cutover-Verifikation: gebautes Image gegen akt
 | --- | --- | --- | --- |
 | **1** ✅ | pnpm + turbo Skelett; beide Apps **as-is** nach `apps/*` via `git filter-repo` (History erhalten); geteilte Deps heben; Root-`docker-compose.dev.yml` | niedrig | ein Repo, schnelle inkrementelle Builds, ein Dev-Befehl |
 | **2** ✅ | Harness/Knowledge (ADR-019) + `packages/config`: next/eslint/tsconfig-base/prettier/postcss als `@vereinsheim/config` (tailwind-globals → Phase 4) | niedrig | Konfig-Duplikate weg |
-| **3** ✅ (Build) | `turbo prune`-Docker-Build; `build-and-push.sh` umgestellt; lokal verifiziert. **Staging-/VPS-Deploy ausstehend** | mittel | der schnelle, korrekte Build-/Deploy-Pfad |
+| **3** ✅ | `turbo prune`-Docker-Build; `build-and-push.sh` umgestellt; lokal verifiziert **und auf den VPS deployed** (Juni 2026) | mittel | der schnelle, korrekte Build-/Deploy-Pfad |
 | **4** | `packages/ui` + `packages/lib`: byte-identische Schicht **echt** teilen (Imports `@/components/ui` → `@vereinsheim/ui`, schrittweise) → **Drift-Gate entfällt** | mittel | Tier-1-Ziel: Drift strukturell unmöglich |
 | **5** (optional, später) | CI (GitHub Actions) + Turbo Remote-Cache → supersedes ADR-006 | niedrig | maschinenübergreifender Cache |
 
@@ -226,8 +226,10 @@ Geliefert: Produktions-Build aus dem Monorepo via `turbo prune <app> --docker`. 
 - **Image-Größen**: runner ~300 MB (node:24-alpine + Standalone, wie zuvor), migrator ~950 MB (prisma 7
   zieht effect/electric-sql als eigene Deps — vergleichbar zum alten Full-App-Migrator).
 - **Verifikation lokal**: runner serviert (HTTP 200), migrator `migrate deploy` (Exit 0, alle Migrationen),
-  und der **ganze `compose.yml`-Stack** (db-init → migrate → app) kommt sauber hoch. **Offen: echter
-  VPS-/Staging-Deploy** (user-gated).
+  und der **ganze `compose.yml`-Stack** (db-init → migrate → app) kommt sauber hoch. **VPS-Deploy gelaufen**
+  (Juni 2026): die Monorepo-Images sind über Docker Hub auf den VPS ausgerollt. Der Deploy-Pfad läuft über
+  Image-Push/-Pull (lokaler Build → Docker Hub → VPS pullt), **nicht** über `git push origin` — Letzteres
+  steht noch aus (`main` ~28 Commits voraus), ist aber deploy-irrelevant.
 
 ## 9. Risiken & Gotchas
 
