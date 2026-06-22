@@ -53,7 +53,8 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
 - **Skills** (`.claude/skills/`, via `/<name>` oder modellgetriggert): `check`, `test`, `migrate`,
   `db-reset`, `seed`, `commit-msg`, `cleanup-todos`, `consolidate-lessons` (Lessons-Triage
   ENFORCE > DOCUMENT > REMEMBER → Memory-Graph, ADR-017) sowie der PIV-Workflow
-  `plan → implement → validate → review` (Handoff über `plans/` + `reports/`).
+  `plan → implement → validate → review` + `debug` (Root-Cause-Analyse; Handoff über
+  `plans/` + `reports/`).
 - **Hooks** (`.claude/settings.json` + `.claude/hooks/`): **Stop-Gate** blockt das Turn-Ende, bis
   `pnpm check` grün ist; **PostToolUse-Lint** (eslint auf die editierte App-Datei); **PreToolUse-
   Security-Guard** (verweigert echte `.env`/`.vereinsheim.local` + katastrophale `rm -rf`; **nudged**
@@ -85,6 +86,11 @@ Diese gelten zusätzlich zu denen aus
 6. **ADRs respektieren**: wenn ein Vorschlag einer ADR widerspricht, das
    im User-Gespräch explizit benennen ("ADR-X sagt, dass wir Y verworfen
    haben — willst du das wieder aufmachen?"), bevor du es umsetzt.
+7. **PIV ist der Default-Workflow** (nicht pro Prompt mitzugeben): jede
+   nicht-triviale Änderung läuft `/plan → /implement → /validate → /review`
+   (Handoff über `plans/` + `reports/`); den Plan vor der ersten Code-Zeile
+   dem User vorlegen. Bugs zuerst über `/debug` (Root-Cause). Triviale/
+   mechanische Fixes (Typo, One-Liner, reine Doku) dürfen direkt erfolgen.
 
 ## Bedienkonzept (kurz)
 
