@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./tsconfig/nextjs.json": "./tsconfig/nextjs.json"
+    "./tsconfig/nextjs.json": "./tsconfig/nextjs.json",
+    "./eslint": "./eslint/index.mjs"
+  },
+  "dependencies": {
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:"
   }
 }
