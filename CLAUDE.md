@@ -46,6 +46,28 @@ Nur wenn du Code änderst:
 - [`compose.yml`](compose.yml), [`Caddyfile`](Caddyfile),
   [`db-init/01-users-and-dbs.sh`](db-init/01-users-and-dbs.sh)
 
+## Harness, Skills & Knowledge (ADR-016/017/018)
+
+Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
+
+- **Skills** (`.claude/skills/`, via `/<name>` oder modellgetriggert): `check`, `test`, `migrate`,
+  `db-reset`, `seed`, `commit-msg`, `cleanup-todos`, `consolidate-lessons` (Lessons-Triage
+  ENFORCE > DOCUMENT > REMEMBER → Memory-Graph, ADR-017) sowie der PIV-Workflow
+  `plan → implement → validate → review` (Handoff über `plans/` + `reports/`).
+- **Hooks** (`.claude/settings.json` + `.claude/hooks/`): **Stop-Gate** blockt das Turn-Ende, bis
+  `pnpm check` grün ist; **PostToolUse-Lint** (eslint auf die editierte App-Datei); **PreToolUse-
+  Security-Guard** (verweigert echte `.env`/`.vereinsheim.local` + katastrophale `rm -rf`). Greifen ab
+  dem nächsten Claude-Code-Reload.
+- **Sub-Agent** `code-reviewer` (`.claude/agents/`) — von `/review` gegen den Branch-Diff delegiert.
+- **Knowledge-Graph** (`.mcp.json`): **CodeGraph-MCP** (Live-Symbol-/Call-Graph/Routen,
+  `codegraph_explore` — Ground Truth, on-demand statt grep) + **Memory-MCP** (Cross-Session-Gedächtnis,
+  Store `.claude/knowledge-graph.json`, aus ADRs/Konventionen geseedet).
+- **CLAUDE.md-Hierarchie:** diese Datei = universelle Schicht; je App `apps/<app>/CLAUDE.md` +
+  `apps/<app>/docs/` (Claude lädt die nächstgelegene on-demand). Karte + Konventionen werden mitgeladen:
+
+@docs/architecture.md
+@docs/shared-conventions.md
+
 ## Hard Rules (übergeordnet)
 
 Diese gelten zusätzlich zu denen aus
