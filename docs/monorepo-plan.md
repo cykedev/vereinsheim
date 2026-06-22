@@ -157,7 +157,28 @@ in Phase 2 empirisch verifizieren. `next build`/`check` bleiben Pflicht-Gates.
 **ENFORCE > DOCUMENT > REMEMBER** — REMEMBER landet in Schicht 3 (Memory-Graph), ENFORCE wird
 Gate/Lint/Test, DOCUMENT in CLAUDE.md/Konventionen. Ein einziges Skill für beide Apps.
 
-## 11. Offene Folgepunkte (nicht in dieser Migration)
+## 11. Team-Readiness (nicht lokal-only)
+
+Für mehrere parallele Entwickler muss alles **eingecheckt + reproduzierbar** sein, nichts
+maschinengebunden:
+
+- **Eingecheckt (geteilt):** `.claude/` (CLAUDE.md-Hierarchie + Skills), `.mcp.json` (MCP-Server,
+  Project-Scope), `docs/*` (Konventionen, ADRs, `architecture.md`), `turbo.json`,
+  `pnpm-workspace.yaml`, alle Ops-Skripte. **Keine Secrets** in `.mcp.json`.
+- **Bewusst lokal (gitignored, pro Dev):** `.codegraph/`-Index (re-buildbar), `.env*` /
+  `.vereinsheim.local` / `.claude/settings.local.json` (persönlich), `node_modules`.
+- **CodeGraph-Onboarding reproduzierbar:** ein `setup`-Schritt (README / `postinstall` /
+  `vereinsheim setup-dev`) installiert die CLI + `codegraph init`, damit der Graph auf jeder Maschine
+  entsteht — nicht nur lokal.
+- **Memory-Graph (Schicht 3) + parallele Devs:** der eingecheckte `.claude/knowledge-graph.json` ist
+  bei gleichzeitigem Schreiben merge-konflikt-anfällig. Strategie: Einträge additiv/append halten,
+  Konflikte wie Daten zusammenführen (nicht überschreiben); die **autoritative** Wahrheit bleibt in
+  promoteten Docs/ADRs/Gates (ENFORCE/DOCUMENT) — der Graph ist abrufbares Beiwerk, kein
+  Single-Point-of-Truth.
+- **Lessons-System geteilt:** im Monorepo **ein** `/consolidate-lessons` für beide Apps (ADR-017) —
+  löst die heutige ringwerk-only-Asymmetrie.
+
+## 12. Offene Folgepunkte (nicht in dieser Migration)
 
 - ActionResult-Typ-Vereinheitlichung (Treffsicher) — passt gut in `packages/lib`.
 - Env-Var-Angleichung `ADMIN_*` ↔ `SEED_ADMIN_*` (deploy-breaking, separat).
