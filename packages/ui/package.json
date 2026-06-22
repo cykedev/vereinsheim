@@ -1,0 +1,58 @@
+{
+  "name": "@vereinsheim/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./theme.css": "./theme.css",
+    "./alert-dialog": "./src/ui/alert-dialog.tsx",
+    "./badge": "./src/ui/badge.tsx",
+    "./button": "./src/ui/button.tsx",
+    "./card": "./src/ui/card.tsx",
+    "./dialog": "./src/ui/dialog.tsx",
+    "./dropdown-menu": "./src/ui/dropdown-menu.tsx",
+    "./empty-state": "./src/ui/empty-state.tsx",
+    "./field-error": "./src/ui/field-error.tsx",
+    "./input": "./src/ui/input.tsx",
+    "./label": "./src/ui/label.tsx",
+    "./select": "./src/ui/select.tsx",
+    "./selectable-row": "./src/ui/selectable-row.tsx",
+    "./separator": "./src/ui/separator.tsx",
+    "./slider": "./src/ui/slider.tsx",
+    "./sonner": "./src/ui/sonner.tsx",
+    "./tabs": "./src/ui/tabs.tsx",
+    "./textarea": "./src/ui/textarea.tsx",
+    "./shell/ConfirmDialog": "./src/shell/ConfirmDialog.tsx",
+    "./shell/DetailActionBar": "./src/shell/DetailActionBar.tsx",
+    "./shell/PageHeader": "./src/shell/PageHeader.tsx",
+    "./shell/Providers": "./src/shell/Providers.tsx"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "format:check": "prettier --check ."
+  },
+  "prettier": "@vereinsheim/config/prettier",
+  "dependencies": {
+    "@radix-ui/react-slider": "catalog:",
+    "@vereinsheim/lib": "workspace:*",
+    "class-variance-authority": "catalog:",
+    "lucide-react": "catalog:",
+    "next-themes": "catalog:",
+    "radix-ui": "catalog:",
+    "sonner": "catalog:"
+  },
+  "peerDependencies": {
+    "next": "^16.2.6",
+    "next-auth": "^4.24.13",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vereinsheim/config": "workspace:*",
+    "prettier": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
+  }
+}
