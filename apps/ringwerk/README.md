@@ -2,9 +2,18 @@
 
 Vereinsinterne Wettbewerbs-Plattform für Schützenvereine. Ligaverwaltung, Spielplanerstellung, Ergebniserfassung, Tabellenberechnung, Playoffs und Audit-Log in einer Web-App.
 
+> **Teil des [`vereinsheim`](../../README.md)-Monorepos.** Dev, Build und Deploy
+> laufen **von der Repo-Wurzel**: `pnpm dev` (diese App auf :3000) gegen den
+> geteilten Dev-Postgres (`docker compose -f docker-compose.dev.yml up -d` **an
+> der Wurzel**); Gates `pnpm check`; Build/Deploy `vereinsheim build` / `release`.
+> **Die Abschnitte unten mit eigenem `docker-compose.dev.yml`, `npm`-im-Container
+> und TrueNAS-Deploy stammen aus der Standalone-Zeit und gelten nicht mehr** (das
+> per-App `docker-compose.dev.yml` wurde entfernt). Kanonisch: Root-[`README.md`](../../README.md);
+> die App-Doku-Konsolidierung folgt in Phase 2.
+
 ---
 
-## Lokale Entwicklung
+## Lokale Entwicklung (historisch — Standalone-Flow)
 
 ### Voraussetzungen
 
@@ -88,7 +97,8 @@ In der laufenden Entwicklung sind keine manuellen Schritte nötig:
 Wenn eine Schemaänderung ins Repository soll, Migration erzeugen und committen:
 
 ```bash
-docker compose -f docker-compose.dev.yml run --rm app npx prisma migrate dev --name beschreibender-name
+# im Monorepo, von der Wurzel:
+pnpm --filter ringwerk exec prisma migrate dev --name beschreibender-name
 ```
 
 Oder via Claude Code Slash Command:
@@ -101,23 +111,16 @@ Oder via Claude Code Slash Command:
 
 ## Qualitätschecks
 
-Vor jedem Commit müssen alle vier Gates fehlerfrei durchlaufen.
-Container-basiert (ohne lokales `npm ci`):
+Vor jedem Commit müssen alle Gates fehlerfrei durchlaufen — im Monorepo von der
+Wurzel (turbo-gecacht über beide Apps):
 
 ```bash
-docker compose -f docker-compose.dev.yml run --rm app npm run lint
-docker compose -f docker-compose.dev.yml run --rm app npm run format:check
-docker compose -f docker-compose.dev.yml run --rm app npm run test
-docker compose -f docker-compose.dev.yml run --rm app npx tsc --noEmit
+pnpm check                     # lint, format:check, test, tsc, next build
+pnpm test --filter ringwerk    # nur Tests dieser App
 ```
 
-Oder via Slash Command `/check` (führt alle vier in Folge aus).
-
-Formatierung automatisch korrigieren:
-
-```bash
-docker compose -f docker-compose.dev.yml run --rm app npm run format
-```
+Oder via Slash Command `/check`. Formatierung automatisch korrigieren:
+`pnpm --filter ringwerk format`.
 
 ---
 
