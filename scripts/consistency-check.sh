@@ -14,15 +14,17 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-RW="${RINGWERK_PATH:-../ringwerk}"
-TS="${TREFFSICHER_PATH:-../treffsicher}"
+# Monorepo: vergleicht standardmäßig die beiden apps/* (früher die Standalone-Repos).
+# Wird in Phase 4 (packages/ui) überflüssig — dann teilen sich die Apps die Dateien.
+RW="${RINGWERK_PATH:-apps/ringwerk}"
+TS="${TREFFSICHER_PATH:-apps/treffsicher}"
 
 fail=0
 warn=0
 
 # Geteilte Dateien, die in BEIDEN Repos byte-identisch sein MÜSSEN.
 MUST_MATCH=(
-  components.json eslint.config.mjs .prettierrc tsconfig.json postcss.config.mjs next.config.ts Dockerfile
+  components.json eslint.config.mjs .prettierrc tsconfig.json postcss.config.mjs next.config.ts
   src/app/globals.css
   src/app/error.tsx
   "src/app/(app)/error.tsx"

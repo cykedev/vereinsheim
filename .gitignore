@@ -20,6 +20,8 @@ node_modules/
 *.tsbuildinfo
 .pnpm-store/
 pnpm-debug.log*
+# turbo prune Docker-Build-Kontext (transient, von build-and-push.sh erzeugt)
+out/
 
 # Editor / OS
 .DS_Store
