@@ -134,6 +134,9 @@ importers:
       '@react-pdf/renderer':
         specifier: ^4.3.2
         version: 4.5.1(react@19.2.7)
+      '@vereinsheim/lib':
+        specifier: workspace:*
+        version: link:../../packages/lib
       bcryptjs:
         specifier: 'catalog:'
         version: 3.0.3
@@ -246,6 +249,9 @@ importers:
       '@radix-ui/react-slider':
         specifier: 'catalog:'
         version: 1.4.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@vereinsheim/lib':
+        specifier: workspace:*
+        version: link:../../packages/lib
       bcryptjs:
         specifier: 'catalog:'
         version: 3.0.3
