@@ -6,7 +6,12 @@
   "exports": {
     "./tsconfig/nextjs.json": "./tsconfig/nextjs.json",
     "./eslint": "./eslint/index.mjs",
-    "./prettier": "./prettier/index.json"
+    "./prettier": "./prettier/index.json",
+    "./postcss": "./postcss/index.mjs",
+    "./next": {
+      "types": "./next/index.d.ts",
+      "default": "./next/index.mjs"
+    }
   },
   "dependencies": {
     "eslint": "catalog:",
