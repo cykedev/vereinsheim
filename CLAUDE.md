@@ -56,7 +56,8 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
   `plan → implement → validate → review` (Handoff über `plans/` + `reports/`).
 - **Hooks** (`.claude/settings.json` + `.claude/hooks/`): **Stop-Gate** blockt das Turn-Ende, bis
   `pnpm check` grün ist; **PostToolUse-Lint** (eslint auf die editierte App-Datei); **PreToolUse-
-  Security-Guard** (verweigert echte `.env`/`.vereinsheim.local` + katastrophale `rm -rf`). Greifen ab
+  Security-Guard** (verweigert echte `.env`/`.vereinsheim.local` + katastrophale `rm -rf`; **nudged**
+  zudem einmalig pro Session Richtung CodeGraph bei `grep`/`find`-Suchen). Greifen ab
   dem nächsten Claude-Code-Reload.
 - **Sub-Agent** `code-reviewer` (`.claude/agents/`) — von `/review` gegen den Branch-Diff delegiert.
 - **Knowledge-Graph** (`.mcp.json`): **CodeGraph-MCP** (Live-Symbol-/Call-Graph/Routen,
