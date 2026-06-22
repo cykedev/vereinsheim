@@ -192,12 +192,19 @@ if (process.env.NODE_ENV !== "production") {
 
 ## Linting & Formatierung
 
+> **Monorepo (Phase 2):** ESLint-, Prettier-, tsconfig-, PostCSS- und Next-Config liegen in
+> `@vereinsheim/config` (`packages/config`) — die App-Dateien sind nur noch dünne Stubs
+> (`eslint.config.mjs` re-exportiert; Prettier kommt über das `package.json`-Feld `"prettier"`, die
+> `.prettierrc` ist **entfernt**). **Kanonische Quelle ist das Paket**, nicht die App. Die Regeln unten
+> gelten unverändert; die Code-Beispiele sind illustrativ — maßgeblich ist die Config im Paket (deren
+> ESLint-Config nutzt `defineConfig`/`globalIgnores`, nicht mehr `FlatCompat`).
+
 ### Tools
 
-| Tool     | Zweck                        | Konfigurationsdatei |
-| -------- | ---------------------------- | ------------------- |
-| ESLint   | Code-Qualität, Fehler finden | `eslint.config.mjs` |
-| Prettier | Code-Formatierung            | `.prettierrc`       |
+| Tool     | Zweck                        | Konfiguration (Quelle)                                   |
+| -------- | ---------------------------- | -------------------------------------------------------- |
+| ESLint   | Code-Qualität, Fehler finden | `@vereinsheim/config/eslint` (Stub: `eslint.config.mjs`) |
+| Prettier | Code-Formatierung            | `@vereinsheim/config/prettier` (Feld in `package.json`)  |
 
 ### ESLint-Konfiguration
 
