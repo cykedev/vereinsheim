@@ -2,15 +2,25 @@
   "mcpServers": {
     "codegraph": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@colbymchenry/codegraph", "serve", "--mcp"],
-      "env": { "CODEGRAPH_TELEMETRY": "0" }
+      "command": "codegraph",
+      "args": [
+        "serve",
+        "--mcp"
+      ],
+      "env": {
+        "CODEGRAPH_TELEMETRY": "0"
+      }
     },
     "memory": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"],
-      "env": { "MEMORY_FILE_PATH": ".claude/knowledge-graph.json" }
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MEMORY_FILE_PATH": ".claude/knowledge-graph.json"
+      }
     }
   }
 }

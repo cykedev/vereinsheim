@@ -538,6 +538,15 @@ Schicht 1 (CodeGraph) = „was der Code _ist_" (live, auto-aktuell, on-demand ab
   (`.claude/skills/check/SKILL.md`, `invocation: [user, Claude]`).
 - Schichten landen in Phase 1/2 der Migration (siehe `monorepo-plan.md` §10).
 
+**Nachtrag (Juni 2026)**: `.mcp.json` startet den codegraph-Server über das installierte
+`codegraph`-Binary (`codegraph serve --mcp`) statt `npx -y @colbymchenry/codegraph …` — dasselbe
+Paket (`@colbymchenry/codegraph@1.0.1`), aber konsistent mit dem Index-Builder und ohne
+npx-Auflösung pro Start; `CODEGRAPH_TELEMETRY=0` bleibt gesetzt. `codegraph init` pflegt zusätzlich
+einen auto-managed Block in `.claude/CLAUDE.md` + die MCP-Tool-Permissions. Die Index-Existenz wird
+per `SessionStart`-Hook (`.claude/hooks/codegraph-ensure.mjs`, fail-open + detached) automatisch
+sichergestellt (realisiert das reproduzierbare Onboarding aus §11; User-Präferenz „immer
+indizieren, nicht selbst steuern").
+
 ---
 
 ## ADR-017 — Lessons/Wissens-Capture: stärkste Permanenz zuerst
