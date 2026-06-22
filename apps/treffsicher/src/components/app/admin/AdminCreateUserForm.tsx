@@ -4,9 +4,9 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { createUser, type AdminActionResult } from "@/lib/admin/actions"
 import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@vereinsheim/ui/button"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import { MAX_USER_EMAIL_LENGTH } from "@/lib/authValidation"
 import {
   Select,
@@ -14,7 +14,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@vereinsheim/ui/select"
 
 export function AdminCreateUserForm() {
   const [state, formAction, pending] = useActionState<AdminActionResult | null, FormData>(

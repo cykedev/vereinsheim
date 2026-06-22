@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { createParticipant } from "@/lib/participants/actions"
 import { ParticipantForm } from "@/components/app/participants/ParticipantForm"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function NewParticipantPage() {
   const session = await getAuthSession()

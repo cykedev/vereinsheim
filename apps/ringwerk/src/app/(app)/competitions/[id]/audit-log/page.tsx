@@ -5,7 +5,7 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getAuditLogsByCompetition } from "@/lib/auditLog/queries"
 import { AuditLogList } from "@/components/app/auditLog/AuditLogList"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 
 interface Props {
   params: Promise<{ id: string }>

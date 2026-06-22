@@ -3,11 +3,11 @@ import Link from "next/link"
 import { ArrowLeft, Pencil } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getShotRoutineById } from "@/lib/shot-routines/actions"
-import { DetailActionBar } from "@/components/app/shell/DetailActionBar"
+import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
 import { ShotRoutineView } from "@/components/app/shot-routines/ShotRoutineView"
 import { DeleteShotRoutineButton } from "@/components/app/shot-routines/DeleteShotRoutineButton"
 import type { RoutineStep } from "@/lib/shot-routines/actions"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 
 export default async function ShotRoutineDetailPage({
   params,

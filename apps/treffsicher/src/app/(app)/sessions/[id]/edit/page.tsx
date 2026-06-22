@@ -4,7 +4,7 @@ import { getSessionById } from "@/lib/sessions/actions"
 import { getDisciplines } from "@/lib/disciplines/actions"
 import { getGoalsForSelection } from "@/lib/goals/actions"
 import { SessionForm } from "@/components/app/session-form/SessionForm"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function EditSessionPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAuthSession()

@@ -13,10 +13,10 @@ import {
 import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { useUnsavedChangesGuard } from "@vereinsheim/lib/hooks/useUnsavedChangesGuard"
 import { useNavigationConfirm } from "@vereinsheim/lib/hooks/useNavigationConfirm"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import { DiscardChangesDialog } from "@/components/app/shell/DiscardChangesDialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import { ShotRoutineStepCard } from "@/components/app/shot-routines/ShotRoutineStepCard"
 
 interface Props {

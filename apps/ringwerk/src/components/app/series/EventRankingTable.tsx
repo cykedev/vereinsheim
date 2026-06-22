@@ -2,7 +2,7 @@ import type { EventRankedEntry } from "@/lib/scoring/rankEventParticipants"
 import { SCORING_MODE_COLUMN_LABELS } from "@/lib/scoring/labels"
 import { formatRings, formatDecimal1, getEffectiveScoringType } from "@/lib/series/scoring-format"
 import type { ScoringMode, TargetValueType } from "@/generated/prisma/client"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@vereinsheim/ui/badge"
 import { RankBadge } from "@/components/ui/rank-badge"
 
 interface Props {

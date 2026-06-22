@@ -13,8 +13,8 @@ import { SessionSeriesResultCard } from "@/components/app/sessions/SessionSeries
 import { ShotHistogram } from "@/components/app/sessions/ShotHistogram"
 import { WellbeingSection } from "@/components/app/sessions/WellbeingSection"
 import { SessionDetailHeader, SessionDetailSectionCard } from "@/components/app/sessions/detail"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { Separator } from "@vereinsheim/ui/separator"
 
 export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const displayTimeZone = getDisplayTimeZone()

@@ -4,11 +4,11 @@ import { getSessions } from "@/lib/sessions/actions"
 import { getDisplayTimeZone } from "@/lib/dateTime"
 import { BookOpen } from "lucide-react"
 import { SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
-import { EmptyState } from "@/components/ui/empty-state"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { SessionsFilters } from "@/components/app/sessions/SessionsFilters"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
 import { SessionsList } from "@/components/app/sessions/list/SessionsList"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 type SessionsSearchParams = Promise<{
   type?: string | string[]

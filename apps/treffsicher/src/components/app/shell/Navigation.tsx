@@ -18,14 +18,14 @@ import {
   Menu,
   X,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@vereinsheim/ui/dropdown-menu"
 import { cn } from "@vereinsheim/lib/utils"
 
 const baseNavLinks = [

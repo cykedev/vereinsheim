@@ -3,20 +3,20 @@
 import { useActionState, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@vereinsheim/ui/button"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@vereinsheim/ui/select"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 import type { ActionResult } from "@/lib/types"
 import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
-import { FieldError } from "@/components/ui/field-error"
+import { FieldError } from "@vereinsheim/ui/field-error"
 
 interface Props {
   discipline?: SerializableDiscipline

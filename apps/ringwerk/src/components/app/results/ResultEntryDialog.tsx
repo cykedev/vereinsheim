@@ -1,7 +1,7 @@
 "use client"
 
 import { Pencil, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@vereinsheim/ui/dialog"
 import type { MatchResultSummary } from "@/lib/matchups/types"
 import type { ScoringType } from "@/generated/prisma/client"
 import { ResultFields, useResultEntry } from "./result-entry"

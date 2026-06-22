@@ -4,10 +4,10 @@ import { Plus, Archive, Target } from "lucide-react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getDisciplinesForManagement } from "@/lib/disciplines/queries"
 import { DisciplineActions } from "@/components/app/disciplines/DisciplineActions"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { EmptyState } from "@/components/ui/empty-state"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { Button } from "@vereinsheim/ui/button"
+import { Badge } from "@vereinsheim/ui/badge"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function DisciplinesPage() {
   const session = await getAuthSession()

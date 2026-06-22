@@ -1,4 +1,4 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@vereinsheim/ui/tabs"
 import { HitLocationTab } from "@/components/app/statistics-charts/tabs/HitLocationTab"
 import { OverviewTab } from "@/components/app/statistics-charts/tabs/OverviewTab"
 import { QualityTab } from "@/components/app/statistics-charts/tabs/QualityTab"

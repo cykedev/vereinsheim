@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { ArrowLeft, Pencil, Target, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DetailActionBar } from "@/components/app/shell/DetailActionBar"
+import { Button } from "@vereinsheim/ui/button"
+import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@vereinsheim/ui/alert-dialog"
 
 interface Props {
   pending: boolean

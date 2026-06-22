@@ -2,19 +2,19 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { createGoalAndRedirect } from "@/lib/goals/actions"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { Button } from "@vereinsheim/ui/button"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
+import { Textarea } from "@vereinsheim/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+} from "@vereinsheim/ui/select"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function NewGoalPage({
   searchParams,

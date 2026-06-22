@@ -1,7 +1,7 @@
 import type { SessionDetail } from "@/lib/sessions/actions"
 import { parseShotsJson } from "@/lib/sessions/shots"
 import { HitLocationVisualization } from "@/components/app/sessions/HitLocationVisualization"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 
 interface Props {
   session: SessionDetail

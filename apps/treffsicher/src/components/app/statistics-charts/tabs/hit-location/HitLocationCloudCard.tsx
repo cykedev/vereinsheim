@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@vereinsheim/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 import { HitLocationCloudChart } from "@/components/app/statistics-charts/tabs/hit-location/HitLocationCloudChart"
 import { HitLocationCloudMetrics } from "@/components/app/statistics-charts/tabs/hit-location/HitLocationCloudMetrics"
 import type { HitLocationCloudModel } from "@/components/app/statistics-charts/tabs/types"

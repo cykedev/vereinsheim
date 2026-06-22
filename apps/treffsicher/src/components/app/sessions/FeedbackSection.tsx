@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { FeedbackForm } from "@/components/app/sessions/FeedbackForm"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@vereinsheim/ui/button"
+import { Separator } from "@vereinsheim/ui/separator"
 import type { Feedback } from "@/generated/prisma/client"
 
 interface Props {

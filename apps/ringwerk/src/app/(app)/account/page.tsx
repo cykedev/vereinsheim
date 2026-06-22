@@ -1,5 +1,5 @@
 import { AccountPasswordForm } from "@/components/app/account/AccountPasswordForm"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default function AccountPage() {
   return (

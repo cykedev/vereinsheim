@@ -1,6 +1,6 @@
 import type { AdminUserListItem } from "@/lib/admin/actions"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Card, CardContent } from "@vereinsheim/ui/card"
 import { AdminUserActionButtons } from "@/components/app/admin/users-table/AdminUserActionButtons"
 import {
   formatCount,

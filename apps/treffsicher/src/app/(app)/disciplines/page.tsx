@@ -7,11 +7,11 @@ import {
   getFavouriteDisciplineId,
   getHiddenDisciplineIds,
 } from "@/lib/disciplines/actions"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { EmptyState } from "@/components/ui/empty-state"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Card, CardContent } from "@vereinsheim/ui/card"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 const scoringTypeLabel: Record<string, string> = {
   WHOLE: "Ganzringe",

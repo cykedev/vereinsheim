@@ -6,8 +6,8 @@ import { AdminLoginRateLimitInsightsPanel } from "@/components/app/admin/AdminLo
 import { AdminLoginRateLimitTable } from "@/components/app/admin/AdminLoginRateLimitTable"
 import { AdminUsersTable } from "@/components/app/admin/AdminUsersTable"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
-import { PageHeader } from "@/components/app/shell/PageHeader"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 
 export default async function AdminPage() {
   const displayTimeZone = getDisplayTimeZone()

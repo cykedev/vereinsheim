@@ -8,15 +8,15 @@ import {
   getFavouriteDisciplineId,
   getHiddenDisciplineIds,
 } from "@/lib/disciplines/actions"
-import { DetailActionBar } from "@/components/app/shell/DetailActionBar"
+import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
 import { ArchiveDisciplineButton } from "@/components/app/disciplines/ArchiveDisciplineButton"
 import { DeleteDisciplineButton } from "@/components/app/disciplines/DeleteDisciplineButton"
 import { FavouriteDisciplineButton } from "@/components/app/disciplines/FavouriteDisciplineButton"
 import { HideDisciplineButton } from "@/components/app/disciplines/HideDisciplineButton"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Button } from "@vereinsheim/ui/button"
+import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Separator } from "@vereinsheim/ui/separator"
 
 const scoringTypeLabel: Record<string, string> = {
   WHOLE: "Ganzringe",

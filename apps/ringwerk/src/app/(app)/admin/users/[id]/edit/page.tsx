@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { getUserById } from "@/lib/users/queries"
 import { updateUser } from "@/lib/users/actions"
 import { UserEditForm } from "@/components/app/users/UserEditForm"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 import type { ActionResult } from "@/lib/types"
 
 interface Props {

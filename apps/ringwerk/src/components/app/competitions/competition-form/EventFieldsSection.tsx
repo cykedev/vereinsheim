@@ -1,5 +1,5 @@
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@vereinsheim/ui/select"
 import type { CompetitionDetail } from "@/lib/competitions/types"
 import type { CompetitionFormState } from "./useCompetitionFormState"
 import { TARGET_VALUE_TYPE_LABELS } from "./constants"

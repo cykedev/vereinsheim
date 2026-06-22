@@ -5,10 +5,10 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { formatDateOnly, getDisplayTimeZone } from "@/lib/dateTime"
 import { getGoalsWithAssignments } from "@/lib/goals/actions"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
-import { PageHeader } from "@/components/app/shell/PageHeader"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { EmptyState } from "@/components/ui/empty-state"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Card, CardContent } from "@vereinsheim/ui/card"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 
 const goalTypeLabels: Record<string, string> = {
   RESULT: "Ergebnisziel",

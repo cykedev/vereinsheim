@@ -14,10 +14,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+} from "@vereinsheim/ui/alert-dialog"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Button } from "@vereinsheim/ui/button"
+import { Card, CardContent } from "@vereinsheim/ui/card"
 
 interface Props {
   buckets: AdminLoginRateLimitBucket[]

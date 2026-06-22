@@ -1,5 +1,5 @@
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import type { CompetitionDetail } from "@/lib/competitions/types"
 import type { CompetitionFormState } from "./useCompetitionFormState"
 

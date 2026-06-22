@@ -1,5 +1,5 @@
 import { Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import type { PlayoffMatchItem } from "@/lib/playoffs/types"
 import { PlayoffDuelResultDialog } from "../PlayoffDuelResultDialog"
 import type { PlayoffCardConfig } from "./types"

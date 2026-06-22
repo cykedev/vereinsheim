@@ -2,7 +2,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { getAuditLogs } from "@/lib/auditLog/queries"
 import { AuditLogList } from "@/components/app/auditLog/AuditLogList"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 
 export default async function AdminAuditLogPage() {
   const entries = await getAuditLogs()

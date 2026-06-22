@@ -3,14 +3,14 @@
 import { useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@vereinsheim/ui/select"
 
 type TypeOption = {
   value: string

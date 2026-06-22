@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
-import { Providers } from "@/components/app/shell/Providers"
-import { Toaster } from "@/components/ui/sonner"
+import { Providers } from "@vereinsheim/ui/shell/Providers"
+import { Toaster } from "@vereinsheim/ui/sonner"
 import { runStartup } from "@/lib/startup"
 
 const geistSans = Geist({

@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { TabsContent } from "@/components/ui/tabs"
+import { Card, CardContent } from "@vereinsheim/ui/card"
+import { TabsContent } from "@vereinsheim/ui/tabs"
 import { QualityScatterCard } from "@/components/app/statistics-charts/tabs/quality/QualityScatterCard"
 import { ShotDistributionTimelineCard } from "@/components/app/statistics-charts/tabs/quality/ShotDistributionTimelineCard"
 import type { QualityTabModel } from "@/components/app/statistics-charts/tabs/types"

@@ -1,6 +1,6 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
+import { Label } from "@vereinsheim/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { ParticipantOption } from "@/lib/participants/types"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"

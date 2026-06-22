@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { WellbeingForm } from "@/components/app/sessions/WellbeingForm"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import type { Wellbeing } from "@/generated/prisma/client"
 
 interface Props {

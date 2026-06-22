@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { CardTitle } from "@/components/ui/card"
+import { Button } from "@vereinsheim/ui/button"
+import { CardTitle } from "@vereinsheim/ui/card"
 
 interface Props {
   showHitLocationTrendX: boolean

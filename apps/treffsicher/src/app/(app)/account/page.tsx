@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { AccountPasswordForm } from "@/components/app/account/AccountPasswordForm"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function AccountPage() {
   const session = await getAuthSession()

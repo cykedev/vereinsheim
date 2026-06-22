@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { CheckCircle, Archive, ArchiveRestore, RotateCcw } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,7 +12,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@vereinsheim/ui/alert-dialog"
 import { toast } from "sonner"
 import { setCompetitionStatus } from "@/lib/competitions/actions"
 import type { CompetitionListItem } from "@/lib/competitions/types"

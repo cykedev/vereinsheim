@@ -1,7 +1,7 @@
 import { Goal, Target } from "lucide-react"
 import { SESSION_TYPE_BADGE_CLASS, SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
 import type { SessionDetail } from "@/lib/sessions/actions"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@vereinsheim/ui/badge"
 import { SessionDetailHeaderActions } from "@/components/app/sessions/detail/SessionDetailHeaderActions"
 
 interface Props {

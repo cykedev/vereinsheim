@@ -4,11 +4,11 @@ import { Plus, Users } from "lucide-react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getParticipantsForManagement } from "@/lib/participants/queries"
 import { ParticipantRowActions } from "@/components/app/participants/ParticipantRowActions"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { EmptyState } from "@/components/ui/empty-state"
+import { Button } from "@vereinsheim/ui/button"
+import { Badge } from "@vereinsheim/ui/badge"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function ParticipantsPage() {
   const session = await getAuthSession()

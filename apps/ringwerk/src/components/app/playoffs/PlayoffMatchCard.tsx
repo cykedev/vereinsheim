@@ -1,9 +1,9 @@
 "use client"
 
 import { Plus, Trophy } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Button } from "@vereinsheim/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 import type { PlayoffMatchItem } from "@/lib/playoffs/types"
 import {
   DeleteDuelConfirm,

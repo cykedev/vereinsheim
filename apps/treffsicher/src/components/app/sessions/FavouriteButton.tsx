@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { Heart } from "lucide-react"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import { toggleFavourite } from "@/lib/sessions/actions"
 
 interface Props {

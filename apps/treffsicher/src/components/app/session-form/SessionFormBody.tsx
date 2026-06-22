@@ -1,5 +1,5 @@
 import type { FormEventHandler } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/card"
 import { DiscardChangesDialog } from "@/components/app/shell/DiscardChangesDialog"
 import { MeytonImportDialog } from "@/components/app/session-form/MeytonImportDialog"
 import { SessionFormFooter } from "@/components/app/session-form/SessionFormFooter"

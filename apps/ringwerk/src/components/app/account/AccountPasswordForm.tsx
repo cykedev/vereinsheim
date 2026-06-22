@@ -4,12 +4,12 @@ import { useActionState, useEffect, useState } from "react"
 import { signOut } from "next-auth/react"
 import { Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@vereinsheim/ui/button"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import { changeOwnPassword } from "@/lib/users/actions"
 import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
-import { FieldError } from "@/components/ui/field-error"
+import { FieldError } from "@vereinsheim/ui/field-error"
 
 export function AccountPasswordForm() {
   const [state, formAction, isPending] = useActionState(changeOwnPassword, null)

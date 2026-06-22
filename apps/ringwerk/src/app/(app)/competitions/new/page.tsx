@@ -3,7 +3,7 @@ import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getDisciplines } from "@/lib/disciplines/queries"
 import { createCompetition } from "@/lib/competitions/actions"
 import { CompetitionForm } from "@/components/app/competitions/CompetitionForm"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function NewCompetitionPage() {
   const [session, disciplines] = await Promise.all([getAuthSession(), getDisciplines()])

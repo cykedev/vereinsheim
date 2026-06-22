@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 
 interface Props {
   error: Error & { digest?: string }

@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getDisciplineById } from "@/lib/disciplines/actions"
 import { DisciplineForm } from "@/components/app/disciplines/DisciplineForm"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function EditDisciplinePage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAuthSession()

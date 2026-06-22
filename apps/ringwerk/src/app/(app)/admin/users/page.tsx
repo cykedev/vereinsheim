@@ -2,13 +2,13 @@ import Link from "next/link"
 import { Plus, ScrollText } from "lucide-react"
 import { getUsers } from "@/lib/users/queries"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@vereinsheim/ui/button"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 import { UserRowActions } from "@/components/app/users/UserRowActions"
 import { AdminLoginRateLimitTable } from "@/components/app/admin/AdminLoginRateLimitTable"
 import { AdminLoginRateLimitInsightsPanel } from "@/components/app/admin/AdminLoginRateLimitInsights"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function AdminUsersPage() {
   const [users, rateLimitInsights] = await Promise.all([

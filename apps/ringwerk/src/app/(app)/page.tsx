@@ -21,9 +21,9 @@ import { PlayoffBracket } from "@/components/app/playoffs/PlayoffBracket"
 import { EventRankingTable } from "@/components/app/series/EventRankingTable"
 import { EventTeamRankingTable } from "@/components/app/series/EventTeamRankingTable"
 import { SeasonStandingsTable } from "@/components/app/series/SeasonStandingsTable"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Button } from "@vereinsheim/ui/button"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 // ─── DashboardPage ───────────────────────────────────────────────────────────
 
