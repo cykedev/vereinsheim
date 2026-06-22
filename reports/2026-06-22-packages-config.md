@@ -62,9 +62,12 @@ werden weiter geprüft (app-lokal, Phase 4). `bash -n` grün.
 - **Dev-Runtime-`/login`-Render (HTML+CSS):** nicht separat erfasst (der erste Route-Compile-Curl hing und
   trug zum Reboot bei). **Vollständig abgedeckt** durch den Docker-Build (§4), der postcss/Tailwind über
   alle Routen inkl. `/login` ausführt — stärkere Evidenz als ein Dev-Curl.
-- **Test-Flake:** beim ersten `pnpm check` fiel `treffsicher#test` unter Voll-Last (alle 12 turbo-Tasks
-  parallel) aus; in Isolation **614/614 grün**, beim Retry FULL TURBO. Bekanntes Oversubscription-Verhalten
-  (vgl. `vitest.config.ts`-Kommentar), nicht durch diese Änderung verursacht.
+- **Test-Flake:** `treffsicher#test` fiel unter Voll-Last (alle 12 turbo-Tasks parallel) mehrfach aus; in
+  Isolation **307/307 grün** (59 Dateien), bei normaler Last auch im `pnpm check` grün. Bekanntes
+  Oversubscription-Verhalten (vgl. `vitest.config.ts`-Kommentar), nicht durch diese Änderung verursacht.
+  _Korrektur:_ ein Zwischen-Lauf zeigte 614/614 — das war ein **Doppel-Scan** aus einem inzwischen
+  entfernten Duplikat-Tree (vitest in `apps/treffsicher` hat **kein** `exclude` für Worktrees/`node_modules`
+  wie ringwerk; siehe Review-Report-Nebenbefund). Echte Zahl ist 307.
 
 ## 7. Bewusste Abweichung vom Plan (dokumentiert)
 
