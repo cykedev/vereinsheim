@@ -1,0 +1,543 @@
+// Prisma 7: Client lokal generiert (nicht node_modules/@prisma/client)
+// Import im Code: import { ... } from "@/generated/prisma/client"
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// Prisma 7: url nicht im Schema — Verbindung via @prisma/adapter-pg in src/lib/db.ts
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum ScoringType {
+  // Ganzringe: max 10/Schuss → max 100/Seite (10 Schuss)
+  WHOLE
+  // Zehntelringe: max 10.9/Schuss → max 109/Seite (10 Schuss)
+  DECIMAL
+}
+
+enum CompetitionStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum ParticipantStatus {
+  ACTIVE
+  WITHDRAWN
+}
+
+enum MatchStatus {
+  PENDING    // Noch nicht ausgetragen
+  COMPLETED  // Ergebnis eingetragen
+  BYE        // Freilos — kein Gegner (awayParticipantId ist null)
+  WALKOVER   // Kampflos-Sieg — Gegner unangekündigt nicht erschienen
+}
+
+enum Round {
+  FIRST_LEG  // Hinrunde
+  SECOND_LEG // Rückrunde
+}
+
+enum PlayoffRound {
+  EIGHTH_FINAL   // Achtelfinale (16 TN)
+  QUARTER_FINAL  // Viertelfinale (8 TN)
+  SEMI_FINAL     // Halbfinale (4 TN)
+  FINAL          // Finale (2 TN)
+}
+
+enum ImportSource {
+  MANUAL
+  URL
+  PDF
+}
+
+enum CompetitionType {
+  LEAGUE // Liga mit Spielplan, Tabelle, Playoffs
+  EVENT  // Einmaliges Event (Kranzlschiessen)
+  SEASON // Langzeit-Wettbewerb (Jahrespreisschiessen)
+}
+
+enum ScoringMode {
+  RINGTEILER      // MaxRinge - Ringe + (Teiler * Faktor); niedrigster gewinnt
+  RINGS           // Gesamtringe (ganzzahlig); hoechster gewinnt
+  RINGS_DECIMAL   // Gesamtringe (Zehntelwertung); hoechster gewinnt
+  TEILER          // Teiler * Faktor; niedrigster gewinnt
+  DECIMAL_REST    // Nachkommastelle der Ringe summiert; hoechster gewinnt
+  TARGET_ABSOLUTE // Abweichung vom Zielwert; geringste gewinnt (nur EVENT)
+  TARGET_UNDER    // <= Zielwert bevorzugt, dann Abweichung; geringste gewinnt (nur EVENT)
+  TARGET_OVER     // >= Zielwert bevorzugt, dann Abweichung; geringste gewinnt (nur EVENT)
+}
+
+enum TargetValueType {
+  TEILER        // Zielwert bezieht sich auf den (korrigierten) Teiler
+  RINGS         // Zielwert bezieht sich auf Gesamtringe (ganzzahlig)
+  RINGS_DECIMAL // Zielwert bezieht sich auf Gesamtringe (Zehntelwertung)
+}
+
+enum TeamScoring {
+  SUM  // Teamergebnis = Summe der Einzelergebnisse
+  BEST // Teamergebnis = bestes Einzelergebnis im Team
+}
+
+enum LeagueFormat {
+  DOUBLE_ROUND_ROBIN
+  BEST_OF_SINGLE
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// User
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  name           String?
+  email          String   @unique
+  passwordHash   String
+  // sessionVersion steigt bei Passwortwechsel → invalidiert ältere JWT-Sessions
+  sessionVersion Int      @default(0)
+  role           UserRole @default(USER)
+  // Deaktiviert statt gelöscht — bestehende Audit-Einträge bleiben erhalten
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  createdCompetitions        Competition[]
+  createdParticipants        Participant[]
+  recordedResults            Series[]
+  recordedPlayoffDuelResults PlayoffDuelResult[]
+  auditLogs                  AuditLog[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LoginRateLimitBucket (Brute-Force-Schutz)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model LoginRateLimitBucket {
+  // Schlüssel: "email:<normalized>" oder "ip:<normalized>"
+  key             String    @id
+  attempts        Int
+  windowStartedAt DateTime
+  blockedUntil    DateTime?
+  lastAttemptAt   DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([lastAttemptAt])
+  @@index([blockedUntil])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Discipline (Disziplin)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// DESIGN: Disziplinen sind vereinsweit sichtbar — kein userId-Filter nötig.
+// isSystem-Disziplinen (LP, LG, LPA, LGA) werden via startup.ts angelegt,
+// sind nicht editierbar/archivierbar durch reguläre Admins.
+model Discipline {
+  id           String      @id @default(cuid())
+  name         String
+  scoringType  ScoringType
+  // Korrekturfaktor fuer gemischte Wertungen (z.B. LP=0.333, LG=1.0)
+  teilerFaktor Decimal     @db.Decimal(9, 7) @default(1.0)
+  // MaxRinge/Seite wird aus scoringType abgeleitet: WHOLE→100, DECIMAL→109
+  // isSystem: true → von startup.ts angelegt
+  isSystem     Boolean     @default(false)
+  // Archiviert statt gelöscht — bestehende Ergebnisse bleiben lesbar
+  isArchived   Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  competitions             Competition[]
+  competitionParticipants  CompetitionParticipant[]
+  series                   Series[]
+
+  @@index([isArchived])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Competition (Wettbewerb)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// DESIGN: Wettbewerbe sind vereinsweit sichtbar — kein userId-Filter nötig.
+// createdByUserId dient dem Audit, nicht der Isolation.
+// type=LEAGUE: Liga mit Spielplan, Tabelle, Playoffs (wie bisher).
+// type=EVENT: Einmaliges Event (Kranzlschiessen) — Phase 4.
+// type=SEASON: Langzeit-Wettbewerb (Jahrespreisschiessen) — Phase 5.
+model Competition {
+  id   String            @id @default(cuid())
+  name String
+  type CompetitionType   @default(LEAGUE)
+
+  // ── Shared Felder ────────────────────────────────────────────────────────
+  // disciplineId: null = gemischte Disziplinen (Teilnehmer wählen selbst)
+  disciplineId String?
+  discipline   Discipline?  @relation(fields: [disciplineId], references: [id])
+  // Wertungsmodus (wird in Phase 3/6 genutzt)
+  scoringMode    ScoringMode @default(RINGTEILER)
+  shotsPerSeries Int         @default(10)
+
+  status CompetitionStatus @default(ACTIVE)
+
+  // Veröffentlichung: macht eine PDF-Variante unter /api/public/c/<slug>/pdf erreichbar.
+  // Nur eine ACTIVE-Wettbewerb pro Slug zulässig (partial unique index, siehe Migration).
+  isPublic           Boolean @default(false)
+  publicSlug         String?
+  // bcrypt hash, null = kein Passwortschutz. Plaintext wird nie gespeichert.
+  publicPasswordHash String?
+
+  // Audit: wer hat den Wettbewerb angelegt
+  createdByUserId String
+  createdBy       User       @relation(fields: [createdByUserId], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // ── Liga-spezifische Felder (nullable, type=LEAGUE) ─────────────────────
+  // Stichtage optional — Orientierung für Spieler, nicht systemseitig erzwungen
+  hinrundeDeadline  DateTime?
+  rueckrundeDeadline DateTime?
+  // Playoff-Konfiguration
+  playoffBestOf              Int?
+  playoffHasViertelfinale    Boolean  @default(true)
+  playoffHasAchtelfinale     Boolean  @default(false)
+  finalePrimary              ScoringMode  @default(RINGS)
+  // Liga-Format: DOUBLE_ROUND_ROBIN (Standard) oder BEST_OF_SINGLE (Jeder-gegen-Jeden als Best-of-N)
+  leagueFormat               LeagueFormat @default(DOUBLE_ROUND_ROBIN)
+  // N in Best-of-N (ungerade). Default 3 = Best-of-3. Siege benötigt = ceil(N/2).
+  groupBestOf                Int?         @default(3)
+  // Alle N Duelle immer austragen (kein vorzeitiger Abbruch). Standard für BEST_OF_SINGLE.
+  groupPlayAllDuels          Boolean      @default(false)
+  // Optionaler Override: sekundäres Kriterium bei Duel-Wert-Gleichstand statt Stechschuss.
+  groupTiebreaker1           ScoringMode?
+  groupTiebreaker2           ScoringMode?
+  // Paarungs-Gleichstandsauflösung: true = Stechschuss (Standard), false = Wiederholungsduell.
+  groupHasSuddenDeath        Boolean      @default(true)
+  finaleTiebreaker1          ScoringMode?
+  finaleTiebreaker2          ScoringMode?
+  finaleHasSuddenDeath       Boolean?
+
+  // ── Event-spezifische Felder (nullable, type=EVENT) ─────────────────────
+  eventDate    DateTime?
+  allowGuests  Boolean?
+  teamSize     Int?
+  // teamScoring: nur relevant wenn teamSize gesetzt (SUM = Summe, BEST = Bestes Einzelergebnis)
+  teamScoring  TeamScoring?
+  targetValue  Decimal?       @db.Decimal(8, 2)
+  targetValueType TargetValueType?
+
+  // ── Saison-spezifische Felder (nullable, type=SEASON) ───────────────────
+  minSeries   Int?
+  seasonStart DateTime?
+  seasonEnd   DateTime?
+
+  participants   CompetitionParticipant[]
+  matchups       Matchup[]
+  playoffMatches PlayoffMatch[]
+  series         Series[]
+  auditLogs      AuditLog[]
+  eventTeams     EventTeam[]
+
+  @@index([status])
+  @@index([type])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Participant (Teilnehmer)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// DESIGN: Teilnehmer sind vereinsweit sichtbar — kein userId-Filter nötig.
+// Ein Teilnehmer kann in mehreren Wettbewerben eingeschrieben sein (via CompetitionParticipant).
+model Participant {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  contact   String?  @unique
+  // Audit: wer hat den Teilnehmer angelegt
+  createdByUserId String
+  createdBy       User     @relation(fields: [createdByUserId], references: [id])
+  // Deaktiviert statt gelöscht (falls Teilnehmer den Verein verlässt)
+  isActive      Boolean  @default(true)
+  // Stiller Datensatz für Gast-Schützen — nicht in der Teilnehmerverwaltung sichtbar
+  isGuestRecord Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  competitions       CompetitionParticipant[]
+  homeMatchups       Matchup[]               @relation("HomeParticipant")
+  awayMatchups       Matchup[]               @relation("AwayParticipant")
+  series             Series[]
+  playoffMatchesA    PlayoffMatch[]          @relation("ParticipantA")
+  playoffMatchesB    PlayoffMatch[]          @relation("ParticipantB")
+  playoffDuelResults PlayoffDuelResult[]
+
+  @@index([isActive])
+  @@index([lastName])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EventTeam (Team in einem Event-Wettbewerb)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// DESIGN: Nur für type=EVENT mit teamSize >= 2.
+// Kein Teamname — Teams werden mit einer Nummer innerhalb des Events identifiziert.
+// Ein Teilnehmer kann mehrfach eingeschrieben sein (je einmal pro Team, eigene Serie je Team).
+model EventTeam {
+  id            String      @id @default(cuid())
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id])
+  // Fortlaufende Nummer des Teams innerhalb des Wettbewerbs (1, 2, 3, ...)
+  teamNumber    Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  members       CompetitionParticipant[]
+
+  @@unique([competitionId, teamNumber])
+  @@index([competitionId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CompetitionParticipant (Einschreibung Teilnehmer ↔ Wettbewerb)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// DESIGN: Bei Team-Events (teamSize >= 2) kann ein Teilnehmer mehrfach eingeschrieben sein
+// (einmal pro Team, mit eigener Serie). Daher kein globales @@unique([competitionId, participantId]).
+// Stattdessen zwei partielle Unique-Indizes in der Migration:
+//   - Einzel-Events (eventTeamId IS NULL): unique(competitionId, participantId)
+//   - Team-Events (eventTeamId IS NOT NULL): unique(competitionId, participantId, eventTeamId)
+model CompetitionParticipant {
+  id            String            @id @default(cuid())
+  competitionId String
+  competition   Competition       @relation(fields: [competitionId], references: [id])
+  participantId String
+  participant   Participant       @relation(fields: [participantId], references: [id])
+  status        ParticipantStatus @default(ACTIVE)
+  // Startnummer innerhalb dieses Wettbewerbs (optional, manuell vergeben)
+  startNumber   Int?
+  // Zeitpunkt des Rückzugs — für Audit und Nachvollziehbarkeit
+  withdrawnAt   DateTime?
+  // Disziplin-Wahl pro Teilnehmer (für gemischte Events/Saisonen)
+  disciplineId  String?
+  discipline    Discipline?       @relation(fields: [disciplineId], references: [id])
+  // Gast-Schütze (nur für Events relevant)
+  isGuest       Boolean           @default(false)
+  // Team-Zugehörigkeit (nur bei type=EVENT mit teamSize >= 2)
+  eventTeamId   String?
+  eventTeam     EventTeam?        @relation(fields: [eventTeamId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  series        Series[]
+
+  // Kein globales @@unique — partielle Indizes in der Migration (see above)
+  @@index([competitionId])
+  @@index([competitionId, participantId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Matchup (Paarung — Gruppenphase)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Matchup {
+  id                String      @id @default(cuid())
+  competitionId     String
+  competition       Competition @relation(fields: [competitionId], references: [id])
+  homeParticipantId String
+  homeParticipant   Participant @relation("HomeParticipant", fields: [homeParticipantId], references: [id])
+  // Null bei BYE — kein Gegner vorhanden
+  awayParticipantId String?
+  awayParticipant   Participant? @relation("AwayParticipant", fields: [awayParticipantId], references: [id])
+  round             Round
+  // Spieltag-Nummer innerhalb der Runde (1-basiert): z.B. Hinrunde Spieltag 1, 2, 3 ...
+  roundIndex        Int
+  status            MatchStatus @default(PENDING)
+  // Stichtag für diese Paarung (aus Wettbewerb-Stichtag übernommen, editierbar)
+  dueDate           DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  series            Series[]
+
+  @@index([competitionId])
+  @@index([competitionId, homeParticipantId])
+  @@index([competitionId, awayParticipantId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Series (Schiessserie — universell für Liga, Event, Saison)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// LIGA: matchupId gesetzt, je 2 Series pro COMPLETED Matchup (eine pro Schütze).
+//        Bei BYE/WALKOVER: keine Series (Punkte algorithmisch).
+// EVENT/SAISON: matchupId null, beliebig viele Series pro Teilnehmer.
+model Series {
+  id            String      @id @default(cuid())
+  // Liga: matchupId gesetzt. Event/Saison: null.
+  matchupId     String?
+  matchup       Matchup?    @relation(fields: [matchupId], references: [id])
+  // Event/Saison: competitionId gesetzt (direkte Zuordnung ohne Paarung). Liga: null (via matchupId).
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id])
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id])
+  // Disziplin dieser Serie (bei Liga: aus Competition.disciplineId)
+  disciplineId  String
+  discipline    Discipline  @relation(fields: [disciplineId], references: [id])
+  // Anzahl der Schüsse dieser Serie
+  shotCount     Int
+  // Datum der Serie (Liga: aus Matchup.dueDate; Event/Saison: tatsächliches Datum)
+  sessionDate   DateTime
+  // Einzelschüsse als JSON-Array von Strings (exakte Dezimaldarstellung)
+  // z.B. ["9", "10", "8", ...] (WHOLE) oder ["9.5", "10.1", "8.7", ...] (DECIMAL)
+  shots         Json?
+  // Seriensumme — Gesamtringe dieser Serie
+  rings         Decimal      @db.Decimal(5, 1)
+  // Bester Teiler der Serie (kleinster Wert = nächste Scheibenmitte); max 9999.9
+  teiler        Decimal      @db.Decimal(6, 1)
+  // Ringteiler = MaxRinge − rings + (teiler * teilerFaktor) (niedriger gewinnt)
+  // MaxRinge: 100 (WHOLE) oder 109 (DECIMAL), abgeleitet aus Disziplin
+  ringteiler    Decimal      @db.Decimal(7, 1)
+  importSource  ImportSource @default(MANUAL)
+  // Bei type=EVENT mit teamSize: Verknüpfung zur konkreten Einschreibung (Team-spezifisch)
+  // Nullable für Rückwärtskompatibilität (bestehende Serien ohne CP-Referenz)
+  competitionParticipantId String?
+  competitionParticipant   CompetitionParticipant? @relation(fields: [competitionParticipantId], references: [id])
+  // Liga BEST_OF_SINGLE: 1..N Duell-Nummer; Stechschuss-Runden gehen über N hinaus. Sonst 1; Event/Saison: null.
+  duelNumber    Int?
+  // Stechschuss-Schuss (einzelner dezimal-gewerteter Schuss). shots/teiler ungenutzt; Wert in `rings`.
+  isTiebreak    Boolean     @default(false)
+  // Audit: wer hat das Ergebnis erfasst
+  recordedByUserId String
+  recordedBy       User    @relation(fields: [recordedByUserId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Liga: genau eine Serie pro Schütze pro Paarung pro Duell (NULL-Werte sind per SQL-Standard distinct)
+  @@unique([matchupId, participantId, duelNumber])
+  // Event: eine Serie pro CP-Einschreibung (NULL = alte Daten ohne CP-Referenz; NULLs sind distinct)
+  @@unique([competitionParticipantId])
+  @@index([matchupId])
+  @@index([competitionId])
+  @@index([participantId])
+  @@index([disciplineId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PlayoffMatch (Playoff-Paarung, Best-of-Five)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Ob Playoffs gestartet wurden: db.playoffMatch.count({ where: { competitionId } }) > 0
+// Qualifikation: 4–7 TN → Top4 → HF; 8+ TN → Top8 → VF (1vs8, 2vs7, 3vs6, 4vs5)
+model PlayoffMatch {
+  id             String       @id @default(cuid())
+  competitionId  String
+  competition    Competition  @relation(fields: [competitionId], references: [id])
+  round          PlayoffRound
+  participantAId String
+  participantA   Participant  @relation("ParticipantA", fields: [participantAId], references: [id])
+  participantBId String
+  participantB   Participant  @relation("ParticipantB", fields: [participantBId], references: [id])
+  // Siegzähler im Best-of-Five (Gewinner: wer zuerst 3 Siege hat)
+  winsA          Int          @default(0)
+  winsB          Int          @default(0)
+  // Gewinner ableitbar: winsA >= 3 → participantAId, winsB >= 3 → participantBId
+  status         MatchStatus  @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  duels          PlayoffDuel[]
+
+  @@index([competitionId])
+  @@index([competitionId, round])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PlayoffDuel (einzelnes Duell innerhalb eines Best-of-Five)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// duelNumber 1–5 für reguläre Duelle.
+// Finale-Gleichstand (Sudden Death): weitere Duelle mit isSuddenDeath = true
+// (nur im PlayoffRound.FINAL gültig; Schuss für Schuss bis klares Ergebnis)
+model PlayoffDuel {
+  id             String       @id @default(cuid())
+  playoffMatchId String
+  playoffMatch   PlayoffMatch @relation(fields: [playoffMatchId], references: [id])
+  // Laufende Nummer innerhalb des PlayoffMatch (1, 2, 3, ...)
+  duelNumber     Int
+  // true nur bei Finale-Sudden-Death-Duellen (duelNumber > 5)
+  isSuddenDeath  Boolean      @default(false)
+  // Nur PENDING oder COMPLETED — kein BYE/WALKOVER auf Einzel-Duell-Ebene
+  isCompleted    Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  results        PlayoffDuelResult[]
+
+  @@unique([playoffMatchId, duelNumber])
+  @@index([playoffMatchId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PlayoffDuelResult (Ergebnis eines einzelnen Playoff-Duells)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PlayoffDuelResult {
+  id            String      @id @default(cuid())
+  duelId        String
+  duel          PlayoffDuel @relation(fields: [duelId], references: [id])
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id])
+  shots         Json?
+  totalRings    Decimal      @db.Decimal(5, 1)
+  // Finale: Einzelschüsse ohne Teiler → nullable
+  teiler        Decimal?     @db.Decimal(6, 1)
+  // Finale: kein Ringteiler berechnet → nullable
+  ringteiler    Decimal?     @db.Decimal(7, 1)
+  importSource  ImportSource @default(MANUAL)
+  recordedByUserId String
+  recordedBy       User    @relation(fields: [recordedByUserId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([duelId, participantId])
+  @@index([duelId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AuditLog
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Pflicht-Ereignisse: PARTICIPANT_WITHDRAWN, WITHDRAWAL_REVOKED, RESULT_CORRECTED
+model AuditLog {
+  id         String   @id @default(cuid())
+  // Freitext-Enum-Wert: "PARTICIPANT_WITHDRAWN", "WITHDRAWAL_REVOKED", "RESULT_CORRECTED"
+  eventType  String
+  // z.B. "COMPETITION_PARTICIPANT", "MATCHUP", "MATCH_RESULT"
+  entityType String
+  entityId   String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  // Optional: Wettbewerb-Bezug für einfache Filterung
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id])
+  // Details: z.B. { before: {...}, after: {...}, reason: "..." }
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([competitionId])
+  @@index([createdAt])
+}
