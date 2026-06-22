@@ -28,9 +28,10 @@ auf:
 3. [`docs/decisions.md`](docs/decisions.md) — **Wichtig**: alle ADRs mit
    Begründung. Bevor du etwas vorschlägst, das eine ADR berührt: prüfe,
    ob die ADR den Vorschlag schon adressiert.
-4. [`docs/plan.md`](docs/plan.md) — Roadmap: was ist erledigt, was kommt
-   als nächstes.
-5. [`docs/operations.md`](docs/operations.md) — Daily Ops mit dem Tool,
+4. [`docs/monorepo-plan.md`](docs/monorepo-plan.md) — **AKTIVER Plan**: Monorepo-Migration
+   (ADR-015–018), Phasen 1–5. Das nächste große Werk.
+5. [`docs/plan.md`](docs/plan.md) — historische Aufbau-Roadmap (Phasen 1–6 erledigt; Betrieb läuft).
+6. [`docs/operations.md`](docs/operations.md) — Daily Ops mit dem Tool,
    Recovery-Pfade.
 
 Nur wenn du Code änderst:
@@ -70,15 +71,16 @@ Volle Liste: `./scripts/vereinsheim help`.
 
 ## Was wahrscheinlich als nächstes gefragt wird
 
-Die Roadmap aus [`docs/plan.md`](docs/plan.md) ist abgeschlossen — alle
-Phasen (1–6) sind erledigt, das System läuft seit Ende Mai 2026 produktiv
-auf dem VPS. Anstehende Arbeit ist damit Betrieb (Deploys, Backups,
-Security-Updates) statt Aufbau.
+Die ursprüngliche Aufbau-Roadmap ([`docs/plan.md`](docs/plan.md)) ist abgeschlossen; das System läuft
+seit Ende Mai 2026 produktiv. **Das aktive nächste Großvorhaben ist die Monorepo-Migration**
+([`docs/monorepo-plan.md`](docs/monorepo-plan.md), ADR-015–018): treffsicher + ringwerk werden als
+`apps/*` in dieses Repo integriert (pnpm/Turborepo, `turbo prune --docker`), inkl. geteilter
+`packages/*`, Knowledge-Graph (CodeGraph + CLAUDE.md-Hierarchie + Memory-MCP) und Harness (Hooks/PIV).
+**Nächster Schritt: Phase 1** (pnpm/turbo-Skelett + Apps via `git filter-repo` nach `apps/*`, History
+erhalten). Der Deploy-Vertrag bleibt dabei bit-gleich.
 
-Plausible Folgearbeiten (alle *nicht* im aktuellen Scope):
-
-- Off-Site-Backup-Subcommand (`vereinsheim backup-offsite`).
-- CI-Migration → GitHub Actions, würde ADR-006 supersden.
+Weitere Folgearbeiten (nicht im aktuellen Scope): Off-Site-Backup, CI/Remote-Cache (Phase 5, supersedet
+ADR-006).
 
 ## Wenn du etwas änderst
 
