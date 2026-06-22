@@ -290,57 +290,19 @@ cmd_local_setup() {
 }
 
 # ---------- local-build ----------
-# Baut alle 4 Images lokal (--load, kein Push, native Plattform).
-# Im Gegensatz zu build-and-push.sh sind uncommittete Änderungen erlaubt —
+# Baut alle 4 Images lokal aus dem Monorepo (--load, kein Push, native Plattform)
+# via build-and-push.sh im PUSH=0-Modus. Uncommittete Änderungen sind erlaubt —
 # der Subcommand ist explizit für lokale Testbuilds gedacht.
-_local_build_one() {
-	local app="$1" path="$2" target="$3" suffix="$4"
-	local tag="${DOCKER_USER}/${app}:latest${suffix}"
-	info "Baue ${tag}  (target=${target}) …"
-	docker buildx build \
-		--pull \
-		--load \
-		--target "$target" \
-		--tag "$tag" \
-		"$path"
-	ok "${tag} fertig."
-}
-
 cmd_local_build() {
 	require_local_config
 	require_docker
-
-	local ringwerk_path="${RINGWERK_PATH:-$REPO_DIR/../ringwerk}"
-	local treffsicher_path="${TREFFSICHER_PATH:-$REPO_DIR/../treffsicher}"
-
-	[[ -d "$ringwerk_path" ]] || {
-		err "Ringwerk-Repo nicht gefunden: $ringwerk_path"
-		echo "  Tipp: RINGWERK_PATH=/anderer/pfad ./scripts/vereinsheim local-build"
-		exit 1
-	}
-	[[ -d "$treffsicher_path" ]] || {
-		err "Treffsicher-Repo nicht gefunden: $treffsicher_path"
-		echo "  Tipp: TREFFSICHER_PATH=/anderer/pfad ./scripts/vereinsheim local-build"
-		exit 1
-	}
-
 	echo "${BOLD}=== local-build ===${RESET}"
-	echo "  Baut alle 4 Images lokal (--load, kein Push, native Plattform)."
+	echo "  Baut alle 4 Images lokal (--load, kein Push) aus dem Monorepo (turbo prune)."
 	echo "  Uncommittete Änderungen sind erlaubt — nur für lokale Tests."
 	echo "  Docker-User : ${DOCKER_USER}"
-	echo "  Ringwerk    : ${ringwerk_path}"
-	echo "  Treffsicher : ${treffsicher_path}"
 	echo
-
-	_local_build_one ringwerk    "$ringwerk_path"    runner   ""
-	_local_build_one ringwerk    "$ringwerk_path"    migrator "-migrator"
-	_local_build_one treffsicher "$treffsicher_path" runner   ""
-	_local_build_one treffsicher "$treffsicher_path" migrator "-migrator"
-
-	echo
-	ok "Alle 4 Images gebaut:"
-	docker images --format "  {{.Repository}}:{{.Tag}}  ({{.Size}})" \
-		| grep -E "${DOCKER_USER}/(ringwerk|treffsicher):(latest|latest-migrator)$" || true
+	export DOCKER_USER
+	PUSH=0 "$SCRIPT_DIR/build-and-push.sh"
 	echo
 	info "Stack starten:  ./scripts/vereinsheim local-up"
 }
