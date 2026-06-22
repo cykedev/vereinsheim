@@ -195,9 +195,9 @@ if (process.env.NODE_ENV !== "production") {
 > **Monorepo (Phase 2):** ESLint-, Prettier-, tsconfig-, PostCSS- und Next-Config liegen in
 > `@vereinsheim/config` (`packages/config`) — die App-Dateien sind nur noch dünne Stubs
 > (`eslint.config.mjs` re-exportiert; Prettier kommt über das `package.json`-Feld `"prettier"`, die
-> `.prettierrc` ist **entfernt**). **Kanonische Quelle ist das Paket**, nicht die App. Die Regeln unten
-> gelten unverändert; die Code-Beispiele sind illustrativ — maßgeblich ist die Config im Paket (deren
-> ESLint-Config nutzt `defineConfig`/`globalIgnores`, nicht mehr `FlatCompat`).
+> `.prettierrc` ist **entfernt**). **Kanonische Quelle ist das Paket**, nicht die App — Verhalten und
+> Regeln ändert man dort, nicht in den Apps. Die Regeln unten gelten unverändert; die Snippets zeigen
+> den aktuellen Paketstand (`packages/config`).
 
 ### Tools
 
@@ -208,34 +208,49 @@ if (process.env.NODE_ENV !== "production") {
 
 ### ESLint-Konfiguration
 
-ESLint v9 verwendet das neue Flat-Config-Format (`eslint.config.mjs`, kein `.eslintrc.json` mehr).
+ESLint v9 Flat Config. Die geteilte Config liegt in `@vereinsheim/config`
+(`packages/config/eslint/index.mjs`) und nutzt `defineConfig`/`globalIgnores` (kein `.eslintrc.json`,
+kein `FlatCompat` mehr):
 
 ```js
-// eslint.config.mjs
-import { dirname } from "path"
-import { fileURLToPath } from "url"
-import { FlatCompat } from "@eslint/eslintrc"
+// packages/config/eslint/index.mjs — kanonisch; Regeln hier ändern, nicht in der App
+import { defineConfig, globalIgnores } from "eslint/config"
+import nextVitals from "eslint-config-next/core-web-vitals"
+import nextTs from "eslint-config-next/typescript"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const compat = new FlatCompat({ baseDirectory: __dirname })
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
   {
     rules: {
-      "no-unused-vars": "error",
+      // Ungenutzte Variablen sind ein Fehler — verhindert toten Code
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "error",
+      // console.log() ist verboten im Code, console.error/warn erlaubt für Fehlerlogging
       "no-console": ["warn", { allow: ["error", "warn"] }],
+      // any-Typen verbieten — lieber unknown mit expliziter Prüfung
       "@typescript-eslint/no-explicit-any": "error",
     },
   },
-]
+])
 
 export default eslintConfig
 ```
 
+Die App-Datei `eslint.config.mjs` ist nur noch ein Re-Export-Stub:
+
+```js
+// eslint.config.mjs
+export { default } from "@vereinsheim/config/eslint"
+```
+
 ### Prettier-Konfiguration
+
+Die Optionen liegen in `@vereinsheim/config` (`packages/config/prettier/index.json`) und werden über
+das `package.json`-Feld `"prettier": "@vereinsheim/config/prettier"` eingebunden — eine eigene
+`.prettierrc` gibt es in der App **nicht** mehr. Inhalt des Pakets:
 
 ```json
 {
