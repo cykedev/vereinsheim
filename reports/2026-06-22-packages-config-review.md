@@ -17,9 +17,16 @@ Die zentrale Risikofrage (löst die Config-Extraktion unter pnpm-Strenge auf, bl
 | 2 | MINOR | `next/index.d.ts`: `bodySizeLimit`-Literal `"12mb"` vs. `.mjs`-Wert nicht compilergesichert (stiller Drift bei Einzeländerung möglich). | ⏸️ **AKZEPTIERT**: niedriges Risiko (ein Wert, adjazent, in Kommentar + `packages/config/CLAUDE.md` als „in Sync halten" notiert). Der Härtungs-Fix (`.d.ts` leitet aus `.mjs` ab) würde die bewusst vermiedene Cross-Package-`next`-Typauflösung wieder hereinholen. Status quo vertretbar. |
 | 3 | MINOR | `apps/treffsicher/docs/technical-constraints.md` „Linting & Formatierung" nannte noch `.prettierrc` + ein `FlatCompat`-ESLint-Beispiel als Konfig-Quelle (durch diesen Branch veraltet; FlatCompat war schon vorher stale). Außerhalb des Diffs, kein Blocker. | ✅ **TEILFIX** (`6e0b3e1`): Banner + Tools-Tabelle zeigen jetzt auf `@vereinsheim/config` als kanonische Quelle (App-Dateien = Stubs, `.prettierrc` entfernt). 🔵 **Tiefere Modernisierung** (Beispiel-Code auf echte `defineConfig`-Form bringen + Ringwerk-Parität) → separate Aufgabe `task_49111160` (Pre-existing Debt; historische `superpowers/`-Artefakte bewusst ausgelassen). |
 
-## Nebenbefund (aus der Validierung, nicht vom Reviewer)
+## Nebenbefund → Wurzelursache + Fix (vitest)
 
-- **vitest-Config-Drift:** `apps/ringwerk/vitest.config.ts` hat `exclude: [".claude/worktrees/**", "**/node_modules/**"]`, `apps/treffsicher/vitest.config.ts` **nicht**. Folge: treffsichers vitest scannt ggf. Duplikat-Trees (Worktrees) doppelt — Ursache des transienten **614-statt-307**-Testzählers während des Validate-Laufs (echte Zahl: 59 Dateien / 307 Tests, alle grün). **Empfehlung:** treffsichers `exclude` an ringwerk angleichen (Robustheit; kein Merge-Blocker, nicht packages/config-Scope). Nicht in diesem Branch gefixt.
+- **vitest scannte die Build-Ausgabe `.next/standalone/`.** `output:"standalone"` kopiert `src/**` inkl.
+  `*.test.ts` dorthin; **keine** App schloss `.next` aus → vitest lud die Kopien und scheiterte am
+  Modul-Resolve. Das war die **echte, deterministische** Ursache der vermeintlichen `treffsicher#test`-
+  „Flakes" (sichtbar erst bei Cache-Miss nach einem Build; der transiente 614-statt-307-Zähler war derselbe
+  Effekt). **Behoben in beiden Apps** (`fix(test)`-Commit): `exclude: [...configDefaults.exclude,
+  "**/.next/**", ".claude/worktrees/**"]` — angeglichen, Drift weg. Verifiziert mit präsentem
+  `.next/standalone`: treffsicher **307/307**, ringwerk **616/616** grün. (Ringwerks Ausfall im Zwischenlauf
+  war separat die nach dem Reboot abgestürzte Dev-DB — wieder hochgefahren.)
 
 ## Endzustand
 

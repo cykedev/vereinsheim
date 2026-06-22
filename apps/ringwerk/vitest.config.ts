@@ -2,7 +2,7 @@
 // Im Monorepo laufen Tests auf dem Host (statt im Docker-Container, der die Env
 // früher gesetzt hat) → der geteilte Dev-Postgres aus docker-compose.dev.yml.
 import "dotenv/config"
-import { defineConfig } from "vitest/config"
+import { defineConfig, configDefaults } from "vitest/config"
 import path from "path"
 
 export default defineConfig({
@@ -15,8 +15,11 @@ export default defineConfig({
     maxWorkers: "50%",
     // Kein Fehler wenn noch keine Testdateien vorhanden sind (frühe Projektphasen)
     passWithNoTests: true,
-    // Worktrees im .claude-Verzeichnis ausschliessen (werden sonst doppelt gepickt)
-    exclude: [".claude/worktrees/**", "**/node_modules/**"],
+    // Build-Output ausschliessen: next build (output:"standalone") kopiert src
+    // inkl. *.test.ts nach .next/standalone → vitest würde diese Duplikate laden
+    // und am Modul-Resolve scheitern. Plus Worktrees. configDefaults behält die
+    // vitest-Defaults (node_modules/dist/…).
+    exclude: [...configDefaults.exclude, "**/.next/**", ".claude/worktrees/**"],
   },
   resolve: {
     // @-Alias muss hier wiederholt werden, da vitest tsconfig nicht automatisch liest
