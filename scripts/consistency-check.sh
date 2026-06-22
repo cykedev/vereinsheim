@@ -23,8 +23,12 @@ fail=0
 warn=0
 
 # Geteilte Dateien, die in BEIDEN Repos byte-identisch sein MÜSSEN.
+# Hinweis: tsconfig/eslint/prettier/postcss/next.config liegen seit Phase 2 in
+# @vereinsheim/config (packages/config) — Drift dort strukturell unmöglich, daher
+# NICHT mehr hier gelistet. components.json + globals.css bleiben app-lokal (Phase 4,
+# shadcn-CLI läuft im App-Kontext).
 MUST_MATCH=(
-  components.json eslint.config.mjs .prettierrc tsconfig.json postcss.config.mjs next.config.ts
+  components.json
   src/app/globals.css
   src/app/error.tsx
   "src/app/(app)/error.tsx"

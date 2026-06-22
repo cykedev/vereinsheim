@@ -105,12 +105,14 @@ seit Ende Mai 2026 produktiv. **Das aktive Großvorhaben ist die Monorepo-Migrat
 (pnpm/Turborepo, `turbo prune --docker`), inkl. geteilter `packages/*`, Knowledge-Graph (CodeGraph +
 CLAUDE.md-Hierarchie + Memory-MCP) und Harness (Hooks/PIV).
 
-**Phasen 1 + 3 sind erledigt**: Phase 1 = Apps via `git filter-repo` nach `apps/*` (History erhalten),
-pnpm-Workspace + Turborepo + Catalog, geteilter Dev-Postgres. Phase 3 = Produktions-Build aus dem
-Monorepo via `turbo prune` (Deploy-Vertrag bit-gleich, lokal voll verifiziert). Alle 5 Gates grün.
-**Nächster Schritt: Phase 2** — `packages/config` (Konfig-Duplikate weg) + die Knowledge-/Harness-Schichten
-(ADR-016/017/018); danach Phase 4 (`packages/ui`, Drift-Gate entfällt). Schlüsselentscheidungen &
-Scope-Grenzen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md) §8 (Umsetzungsnotizen Phase 1 + 3).
+**Phasen 1 + 2 + 3 sind erledigt**: Phase 1 = Apps via `git filter-repo` nach `apps/*` (History erhalten),
+pnpm-Workspace + Turborepo + Catalog, geteilter Dev-Postgres. Phase 2 = Harness/Knowledge (ADR-016/017/
+018/019) + `packages/config` (tsconfig/eslint/prettier/postcss/next.config als `@vereinsheim/config`,
+Konfig-Duplikate weg). Phase 3 = Produktions-Build aus dem Monorepo via `turbo prune` (Deploy-Vertrag
+bit-gleich, lokal voll verifiziert). Alle 5 Gates grün.
+**Nächster Schritt: Phase 4** — `packages/ui` + `packages/lib` (byte-identische UI/Lib echt teilen →
+Drift-Gate entfällt); `globals.css`/`components.json` ziehen dann mit. Schlüsselentscheidungen &
+Scope-Grenzen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md) §8 (Umsetzungsnotizen Phase 1 + 2 + 3).
 
 Weitere Folgearbeiten (nicht im aktuellen Scope): Off-Site-Backup, CI/Remote-Cache (Phase 5, supersedet
 ADR-006).
