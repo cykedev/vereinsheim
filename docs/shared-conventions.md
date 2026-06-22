@@ -10,16 +10,20 @@
 
 Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichung):
 
-- App-lokale Configs (weiter im Gate): `components.json`, `src/app/globals.css` — bleiben app-lokal bis
-  Phase 4 (shadcn-CLI läuft im App-Kontext).
+- App-lokale Reste (weiter im Gate, Next/shadcn-erzwungen + trivial): `components.json` + der dünne
+  `src/app/globals.css`-Stub (nur die tailwindcss/tw-animate-css/shadcn-Imports + `@vereinsheim/ui/theme.css`;
+  der Theme-Kern liegt im Paket). shadcn-CLI läuft weiter im App-Kontext.
 - **Geteilt via `@vereinsheim/config`** (packages/config, seit Phase 2 — Drift dort **strukturell
   unmöglich**, daher *nicht* mehr im Gate): `tsconfig.json`, `eslint.config.mjs`, `.prettierrc`,
   `postcss.config.mjs`, `next.config.ts`. Die App-Dateien sind nur noch dünne `extends`/Re-Export-Stubs
   (`.prettierrc` → `package.json`-Feld); Verhalten/Regeln ändert man **im Paket**, nicht in den Apps.
 - Error-Boundaries: `src/app/error.tsx`, `src/app/(app)/error.tsx`, `src/app/not-found.tsx`
-- ui-Primitives: alle gemeinsamen `src/components/ui/*` (insb. `button`, `card`, `sonner`,
-  `empty-state`, `field-error`, `dropdown-menu`)
-- Shell: `src/components/app/shell/{DetailActionBar,ConfirmDialog,PageHeader}.tsx`
+- **Geteilt via `@vereinsheim/ui`** (packages/ui, seit Phase 4 / Zyklus 2 — Drift **strukturell
+  unmöglich**, daher *nicht* mehr im Gate): die 17 ui-Primitives (`button`, `card`, `dialog`, …), die
+  4 shell-Komponenten (`ConfirmDialog`, `DetailActionBar`, `PageHeader`, `Providers`) und der
+  Tailwind-Theme-Kern (`@vereinsheim/ui/theme.css`). Import via `@vereinsheim/ui/<name>` bzw.
+  `@vereinsheim/ui/shell/<name>`; Styles/Verhalten ändert man **im Paket**. App-spezifische `ui/*`
+  (chart/form/table, checkbox/rank-badge/skeleton) + `Navigation` bleiben app-lokal (dürfen driften).
 - **Geteilt via `@vereinsheim/lib`** (packages/lib, seit Phase 4 / Zyklus 1 — Drift **strukturell
   unmöglich**, daher *nicht* mehr im Gate): `cn` (`utils`), `forms/fieldErrors`, die Form-Hooks
   `useUnsavedChangesGuard` + `useNavigationConfirm`. Import via `@vereinsheim/lib/<subpath>`; Logik

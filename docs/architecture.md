@@ -13,7 +13,9 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig/eslint/prettier/
 │                           postcss/next (Phase 2).
 ├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors,
-│                           useUnsavedChangesGuard, useNavigationConfirm (Phase 4/Zyklus 1). ui → Zyklus 2.
+│                           useUnsavedChangesGuard, useNavigationConfirm (Phase 4/Zyklus 1).
+├── packages/ui/            @vereinsheim/ui — geteilte UI-Schicht: 17 ui-Primitives + 4 shell/ +
+│                           theme.css (Tailwind-Theme + @source). Phase 4/Zyklus 2 — Drift-Gate ~entfällt.
 ├── docs/                   spec, decisions (ADRs), monorepo-plan, operations, plan,
 │                           architecture (dies), shared-conventions, consistency
 ├── .claude/                Harness: settings(+hooks), skills/, agents/, context/, knowledge-graph.json

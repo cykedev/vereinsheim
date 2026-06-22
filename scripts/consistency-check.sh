@@ -23,26 +23,19 @@ fail=0
 warn=0
 
 # Geteilte Dateien, die in BEIDEN Repos byte-identisch sein MÜSSEN.
-# Hinweis: tsconfig/eslint/prettier/postcss/next.config liegen seit Phase 2 in
-# @vereinsheim/config (packages/config); cn (utils), forms/fieldErrors und die beiden
-# Form-Hooks seit Phase 4 / Zyklus 1 in @vereinsheim/lib (packages/lib) — Drift dort
-# strukturell unmöglich, daher NICHT mehr hier gelistet. components.json + globals.css
-# + die ui/- und shell/-Komponenten bleiben app-lokal bis Phase 4 / Zyklus 2 (packages/ui).
+# Fast die gesamte geteilte Schicht liegt inzwischen in packages/*: tsconfig/eslint/
+# prettier/postcss/next.config in @vereinsheim/config (Phase 2); cn/forms/fieldErrors +
+# Form-Hooks in @vereinsheim/lib (Zyklus 1); die ui/-Primitives, shell/-Komponenten und
+# der globals.css-Theme-Kern (@vereinsheim/ui/theme.css) in @vereinsheim/ui (Zyklus 2) —
+# Drift dort strukturell unmöglich. Hier bleibt nur, was Next/shadcn als app-lokale Dateien
+# erzwingen (alle trivial + byte-identisch): components.json, der dünne globals.css-Stub,
+# die Error-Boundaries + not-found.
 MUST_MATCH=(
   components.json
   src/app/globals.css
   src/app/error.tsx
   "src/app/(app)/error.tsx"
   src/app/not-found.tsx
-  src/components/ui/button.tsx
-  src/components/ui/card.tsx
-  src/components/ui/sonner.tsx
-  src/components/ui/empty-state.tsx
-  src/components/ui/field-error.tsx
-  src/components/ui/dropdown-menu.tsx
-  src/components/app/shell/DetailActionBar.tsx
-  src/components/app/shell/ConfirmDialog.tsx
-  src/components/app/shell/PageHeader.tsx
 )
 # Hinweis: docs/shared-conventions.md ist seit der Harness-Konsolidierung EINE
 # Quelle am Root (docs/shared-conventions.md) — nicht mehr pro App dupliziert.
@@ -62,13 +55,10 @@ for f in "${MUST_MATCH[@]}"; do
   fi
 done
 
-echo "== Gemeinsame ui/-Komponenten =="
-while read -r f; do
-  if ! diff -q "$TS/src/components/ui/$f" "$RW/src/components/ui/$f" >/dev/null; then
-    echo "  DIFF ui/$f"
-    fail=1
-  fi
-done < <(comm -12 <(ls "$TS/src/components/ui" | sort) <(ls "$RW/src/components/ui" | sort))
+# (Die frühere "Gemeinsame ui/-Komponenten"-Diff-Schleife entfällt mit Zyklus 2: die geteilten
+# ui/shell-Komponenten liegen jetzt in @vereinsheim/ui; die verbleibenden src/components/ui/* sind
+# bewusst app-spezifisch — chart/form/table (treffsicher), checkbox/rank-badge/skeleton (ringwerk) —
+# und DÜRFEN abweichen.)
 
 echo "== Gemeinsame Dependency-Versionen =="
 dep_report=$(python3 - "$TS/package.json" "$RW/package.json" <<'PY'
