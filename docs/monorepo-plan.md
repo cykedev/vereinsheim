@@ -291,7 +291,9 @@ maschinengebunden:
   bei gleichzeitigem Schreiben merge-konflikt-anfällig. Strategie: Einträge additiv/append halten,
   Konflikte wie Daten zusammenführen (nicht überschreiben); die **autoritative** Wahrheit bleibt in
   promoteten Docs/ADRs/Gates (ENFORCE/DOCUMENT) — der Graph ist abrufbares Beiwerk, kein
-  Single-Point-of-Truth.
+  Single-Point-of-Truth. _Nachtrag ([ADR-021](decisions.md)): Schicht 3 war bis Juni 2026 ein No-Op
+  (relativer `MEMORY_FILE_PATH` → falscher Pfad, leerer Graph + ENOENT); seit Pfad-Fix +
+  SessionStart-Lese-Hook (`memory-surface.mjs`) funktionsfähig._
 - **Lessons-System geteilt:** im Monorepo **ein** `/consolidate-lessons` für beide Apps (ADR-017) —
   löst die heutige ringwerk-only-Asymmetrie.
 

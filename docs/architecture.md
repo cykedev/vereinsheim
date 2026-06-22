@@ -55,7 +55,8 @@ Beide Apps teilen eine bewusst byte-identische UI-/Pattern-Schicht. **Single Sou
 ## Knowledge & Harness (ADR-016/017/018)
 
 - **CodeGraph-MCP** (`.mcp.json`): Live-Symbol-/Call-Graph/Routen, on-demand (Ground Truth).
-- **Memory-MCP** (`.mcp.json`, Store `.claude/knowledge-graph.json`): Cross-Session-Gedächtnis,
-  aus ADRs/Konventionen geseedet (REMEMBER-Stufe, ADR-017).
+- **Memory-MCP** (`.mcp.json`, Store `.claude/knowledge-graph.json`): Cross-Session-Projektgedächtnis,
+  bei SessionStart via `memory-surface.mjs`-Hook gesurface't, beschrieben über `/consolidate-lessons`
+  REMEMBER (Incident/Provenance/Zustand, ADR-017/021). Maschinen-/ops-lokales → natives Auto-Memory.
 - **CLAUDE.md-Hierarchie:** Root (universelle Regeln, @import) → `apps/<app>/CLAUDE.md` (scope-spezifisch).
 - **Skills/Hooks/Agents** unter `.claude/`: ein Satz für beide Apps; Stop-Gate erzwingt grüne `pnpm check`.
