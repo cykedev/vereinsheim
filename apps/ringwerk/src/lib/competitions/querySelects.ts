@@ -1,0 +1,31 @@
+export const disciplineSelect = {
+  id: true,
+  name: true,
+  scoringType: true,
+  teilerFaktor: true,
+} as const
+
+export const listSelect = {
+  id: true,
+  name: true,
+  type: true,
+  status: true,
+  isPublic: true,
+  publicSlug: true,
+  publicPasswordHash: true,
+  scoringMode: true,
+  shotsPerSeries: true,
+  discipline: { select: { id: true, name: true, scoringType: true } },
+  leagueFormat: true,
+  hinrundeDeadline: true,
+  rueckrundeDeadline: true,
+  eventDate: true,
+  allowGuests: true,
+  teamSize: true,
+  teamScoring: true,
+  targetValueType: true,
+  seasonStart: true,
+  seasonEnd: true,
+  createdAt: true,
+  _count: { select: { participants: true } },
+} as const
