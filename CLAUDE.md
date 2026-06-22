@@ -62,8 +62,10 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
   dem nächsten Claude-Code-Reload.
 - **Sub-Agent** `code-reviewer` (`.claude/agents/`) — von `/review` gegen den Branch-Diff delegiert.
 - **Knowledge-Graph** (`.mcp.json`): **CodeGraph-MCP** (Live-Symbol-/Call-Graph/Routen,
-  `codegraph_explore` — Ground Truth, on-demand statt grep) + **Memory-MCP** (Cross-Session-Gedächtnis,
-  Store `.claude/knowledge-graph.json`, aus ADRs/Konventionen geseedet).
+  `codegraph_explore` — Ground Truth, on-demand statt grep) + **Memory-MCP** (Cross-Session-
+  Projektgedächtnis, Store `.claude/knowledge-graph.json`; SessionStart-Hook `memory-surface.mjs`
+  surface't ihn, `/consolidate-lessons` schreibt REMEMBER-Fakten — **ADR-021**). Abgrenzung zum nativen
+  Auto-Memory: projekt-/via-git-geteiltes → Memory-Graph; maschinen-/ops-lokales → natives Auto-Memory.
 - **CLAUDE.md-Hierarchie:** diese Datei = universelle Schicht; je App `apps/<app>/CLAUDE.md` +
   `apps/<app>/docs/` (Claude lädt die nächstgelegene on-demand). Karte + Konventionen werden mitgeladen:
 

@@ -547,6 +547,12 @@ per `SessionStart`-Hook (`.claude/hooks/codegraph-ensure.mjs`, fail-open + detac
 sichergestellt (realisiert das reproduzierbare Onboarding aus §11; User-Präferenz „immer
 indizieren, nicht selbst steuern").
 
+**Nachtrag (Juni 2026, ADR-021)**: Schicht 3 (Memory-Graph) war faktisch ein **No-Op** —
+`MEMORY_FILE_PATH` in `.mcp.json` war relativ und wurde gegen das npx-dist-Verzeichnis des Servers
+aufgelöst, daher leerer Graph + ENOENT bei Writes. Gefixt (projekt-relativer Pfad), um einen
+SessionStart-**Lese-Hook** (`memory-surface.mjs`) ergänzt und die REMEMBER-Schreibdisziplin geschärft.
+Details + Abgrenzung zum nativen Auto-Memory: **ADR-021**.
+
 ---
 
 ## ADR-017 — Lessons/Wissens-Capture: stärkste Permanenz zuerst
@@ -580,6 +586,11 @@ Permanenzstufe** (prefer enforcement):
 - Der Memory-Graph (ADR-016) ist die REMEMBER-Stufe — er ersetzt den `lessons.md`-Buffer, **nicht** die
   Promotion-Disziplin.
 - Im Monorepo ein einziges `/consolidate-lessons` für beide Apps.
+
+**Nachtrag (Juni 2026, ADR-021)**: Die REMEMBER-Stufe (Schicht-3-Memory-Graph) war wegen eines
+Pfad-Bugs nicht beschreibbar und blieb ungenutzt. Mit dem Fix (ADR-021) ist REMEMBER konkretisiert:
+geschärfter Scope (Incident-Provenance/Zustand/Relationen statt Regeln), echte `mcp__memory__*`-Calls
+und ein Commit-Schritt für den in-repo-Store. Siehe **ADR-021**.
 
 ---
 
@@ -719,6 +730,65 @@ generisch nicht hat.
   Superpowers-Baseline ist abgelöst.
 - Der globale Plugin-Cache (`~/.claude/plugins/`) ist user-/maschinen-weit und bleibt unberührt — bei
   Bedarf separat deinstallierbar.
+
+---
+
+## ADR-021 — Memory-Graph operationalisiert: Pfad-Fix, Lese-Hook, Schreib-Disziplin, Abgrenzung natives Auto-Memory
+
+**Status**: Accepted (Juni 2026)
+
+**Kontext**: ADR-016 Schicht 3 (MCP-Knowledge-Graph, `@modelcontextprotocol/server-memory`, Store
+`.claude/knowledge-graph.json`) war faktisch ein **No-Op seit Tag 1**. Empirisch belegt (Session
+2026-06-22): `read_graph` liefert `{entities:[],relations:[]}` trotz 24 geseedeter Zeilen, und
+`create_entities` scheitert mit `ENOENT: …/server-memory/dist/.claude/knowledge-graph.json`. Ursache:
+`MEMORY_FILE_PATH` in `.mcp.json` war **relativ** und wurde vom Server gegen sein **eigenes
+npx-Installationsverzeichnis** aufgelöst, nicht gegen die Repo-Wurzel → der Server las nie die getrackte
+Datei (leerer Graph) und konnte nie schreiben (ENOENT). Der Seed-Inhalt existierte nur, weil der
+Seed-Commit die Datei direkt schrieb. Sekundär: es fehlte eine **Lese-Seite** (nichts surface'te den
+Graphen) und die **Schreib-Seite** war schwach (REMEMBER, die schwächste Triage-Stufe, kaum gefüttert).
+Der Graph blieb leer *und* ungenutzt.
+
+**Entscheidung**: Den Memory-Graphen funktionsfähig, auffindbar und nicht-redundant machen:
+
+1. **Pfad-Fix** (entscheidend): `MEMORY_FILE_PATH` → `${CLAUDE_PROJECT_DIR:-.}/.claude/knowledge-graph.json`.
+   Claude Code expandiert `${VAR}`/`${VAR:-default}` in `.mcp.json`-`env`; `CLAUDE_PROJECT_DIR` wird im
+   Server-Env gesetzt (projekt-scoped braucht den `:-.`-Fallback). Portabel, kein hartkodierter Pfad.
+2. **Lese-Pfad**: SessionStart-Hook `.claude/hooks/memory-surface.mjs` (fail-open) liest die JSONL-Store-
+   Datei **direkt** (unabhängig vom MCP-Server) und injiziert eine kompakte Übersicht (Entity-Zähler nach
+   Typ + Relationen) + Abfrage-/Capture-Hinweis als `additionalContext` — analog zum CodeGraph-Onboarding.
+   Memory-MCP-Tools (Lesen + additive Writes) sind allowlisted, damit Nutzung ohne Friktion läuft.
+3. **Schreib-Disziplin**: `/consolidate-lessons` REMEMBER konkretisiert — echte `mcp__memory__*`-Calls
+   (Entity + Relation), geschärfter Scope (Incident-Provenance, sich ändernder Zustand, Relationen —
+   **nicht** wiederverwendbare Regeln, die nach DOCUMENT gehen) und der zuvor fehlende **Commit-Schritt**
+   (der in-repo-Store muss committet werden, sonst geht der Write beim nächsten Clone verloren). Beide
+   App-CLAUDE.md verweisen darauf (Session-Start-Abfrage, Session-Ende-Capture).
+4. **Re-Seed** (nicht-redundant): ADR-Backbone aktuell (019–021) + Incident/State-Entities mit Provenance
+   (`stechschuss-modell-flip`, `ruleset-lock-granularity`, `treffsicher-actionresult-migration`) +
+   Relationen — Dinge, die **nicht** in den immer-geladenen Docs stehen.
+5. **Abgrenzung** zum nativen Claude-Code-Auto-Memory (`~/.claude/.../memory/`): **Maschinen-/User-/Ops-
+   lokales** (VPS-Status, Dev-Server-Disziplin) → natives Auto-Memory (persistiert automatisch, nicht via
+   git geteilt). **Projekt-/Domänen-/via-git-geteiltes** (Domänen-Incidents, ADR-Relationen, Architektur-
+   Provenance) → Memory-MCP-Graph (im Repo, jeder Clone bekommt ihn). Code-Struktur → CodeGraph;
+   erzwingbare Regeln → Docs/Gates.
+
+**Alternativen**:
+
+- _Memory-Graph stilllegen, alles aufs native Auto-Memory_: das native System macht den Cross-Session-Job
+  bereits. Verworfen — der User will den geteilten, via-git-versionierten Projekt-Graphen (Clones/Team,
+  abfragbare Relationen). Stattdessen klare Aufgabenteilung (Punkt 5).
+- _Hartkodierter absoluter Pfad_: funktioniert, aber bricht bei `git clone` auf anderer Maschine/Pfad.
+  Verworfen zugunsten der `${CLAUDE_PROJECT_DIR:-.}`-Expansion.
+- _Schreiben per Hook erzwingen_: ein Hook kann semantisches Capture nicht sinnvoll erzeugen. Stattdessen
+  Surface (macht Vernachlässigung sichtbar) + Skill-Disziplin + Checkliste.
+
+**Folgen**:
+
+- `.mcp.json`-Änderungen greifen erst nach Claude-Code-**Reload**; die Round-Trip-Verifikation (liest/
+  schreibt der gefixte MCP die getrackte Datei?) ist ein **Akzeptanz-Gate nach Reload**, nicht im selben
+  Lauf erzwingbar. Der Re-Seed lief daher per direktem JSONL-Edit, nicht via Live-MCP.
+- Schreiben bleibt **modellgetrieben** (kein Hard-Enforcement möglich); der SessionStart-Surface macht
+  einen leeren/vernachlässigten Graphen aber sofort sichtbar.
+- ADR-016 §3 und ADR-017 §3 erhalten Nachtrag-Verweise hierher.
 
 ---
 
