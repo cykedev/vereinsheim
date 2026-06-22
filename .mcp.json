@@ -19,7 +19,7 @@
         "@modelcontextprotocol/server-memory"
       ],
       "env": {
-        "MEMORY_FILE_PATH": ".claude/knowledge-graph.json"
+        "MEMORY_FILE_PATH": "${CLAUDE_PROJECT_DIR:-.}/.claude/knowledge-graph.json"
       }
     }
   }
