@@ -179,6 +179,11 @@ auf der Arbeitsmaschine des Maintainers. Push von dort in Docker Hub.
 - Wenn ein zweiter Maintainer dazukommt, ist CI der nächste logische
   Schritt (siehe „Mögliche Folge-ADRs" am Ende).
 
+**Nachtrag (Phase 3, ADR-015)**: Der lokale Build bleibt (Entscheidung
+unverändert), kommt aber seit Phase 3 **aus dem Monorepo** via `turbo prune`
+statt aus den Standalone-Repos. Uncommitted-Check + `<sha>` beziehen sich jetzt
+auf das Monorepo (beide Apps teilen den SHA).
+
 ---
 
 ## ADR-007 — Separates Migrator-Image pro App (eigener Tag)
@@ -213,6 +218,13 @@ ein Image für beides verwenden.
   (`RINGWERK_TAG` und `RINGWERK_MIGRATOR_TAG`).
 - Falls die App-Repos jemals den Runner so umbauen, dass Prisma-CLI
   enthalten ist, kann diese ADR superseded werden — dann reicht ein Tag.
+
+**Nachtrag (Phase 3, ADR-015)**: Aus den zwei per-App-Dockerfiles wurde **ein
+parametrisiertes Root-`Dockerfile`** (`--build-arg APP`, Targets
+`runner`/`migrator`), gebaut aus dem `turbo prune`-Kontext. Die
+Zwei-Tags-pro-App-Entscheidung ist unverändert; das runner-ohne-Prisma-CLI ist
+jetzt vereinsheims eigene Dockerfile-Entscheidung. Der Migrator installiert
+prisma+pg+dotenv via npm (flaches node_modules; umgeht das pnpm-10-Build-Gate).
 
 ---
 
