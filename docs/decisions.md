@@ -631,7 +631,7 @@ Call-Graph/Routen bereits ab.)
 - Der Stop-Hook ist die Harness-Realisierung von ADR-017 (ENFORCE-first); `next build` bleibt Pflichtgate.
 - Quelle: `coleam00/harness-engineering-demo`.
 
-**Nachtrag (Juni 2026, [ADR-020](decisions.md))**: Das **Superpowers-Plugin** wurde wieder entfernt;
+**Nachtrag (Juni 2026, ADR-020)**: Das **Superpowers-Plugin** wurde wieder entfernt;
 seine wertvollen Disziplinen (brainstorming, TDD, verification-before-completion, receiving-review,
 systematic-debugging) sind **nativ** in die PIV-Skills + ein neues `/debug` geharvestet. Hooks,
 PIV-Workflow, Sub-Agents und On-Demand-Context (Punkte 1–4) bleiben unverändert; nur die
@@ -675,6 +675,10 @@ musste vereinheitlicht werden.
 - Hooks + MCP greifen ab dem nächsten Claude-Code-Reload (Hinweis im Root-`CLAUDE.md`).
 - **Offen** (neue Session, ADR-016 §2): pnpm-Cross-Package-Auflösung empirisch in Phase-2-`packages/config`
   bestätigen.
+
+**Nachtrag (Juni 2026, ADR-020)**: Das in der Entscheidung gelistete **Superpowers-Plugin** ist
+entfernt; der native PIV-Workflow ersetzt es (das App-Root-`.claude`-Layout selbst bleibt unberührt).
+Die datierten `apps/<app>/docs/superpowers/`-Archive bleiben als Historie.
 
 ---
 
@@ -720,7 +724,7 @@ generisch nicht hat.
 
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
 
-Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-019+):
+Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-021+):
 
 - **Off-Site-Backup-Strategie**: rclone → S3-compatible, borg auf NAS,
   IONOS Snapshot. Trade-offs: Kosten, RPO, Restore-Granularität.

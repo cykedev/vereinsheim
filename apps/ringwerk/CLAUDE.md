@@ -27,9 +27,8 @@
 
 ### During implementation
 
-- **Subagents** commit after each task — one small, focused commit per task.
-- **Main agent** commits: checklist/review-plan updates, formatting housekeeping.
-- Every commit that changes behavior must include its tests in the same commit.
+- One small, focused commit per task; every behavior change includes its tests in the same commit.
+- For large, **independent** task sets you may dispatch a subagent per task (opt-in; see `/implement`).
 - Plans must contain explicit test steps (new tests + updates to existing test mocks).
 
 ### Completing a session
