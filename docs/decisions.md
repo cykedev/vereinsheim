@@ -16,7 +16,7 @@ darunter anlegen — keine schweigende Revision.
 
 ## ADR-001 — Eigenes Repo `vereinsheim` für Deployment
 
-**Status**: Accepted
+**Status**: Superseded (durch ADR-015, Juni 2026)
 
 **Kontext**: Das gemeinsame Deployment für Ringwerk + Treffsicher
 braucht Compose-Dateien, Secrets-Templates, Skripte. Wo lebt das?
@@ -434,9 +434,43 @@ denied.
 
 ---
 
+## ADR-015 — Monorepo: Apps in `vereinsheim` integrieren (supersedes ADR-001)
+
+**Status**: Accepted (Juni 2026)
+
+**Kontext**: Ringwerk und Treffsicher teilen eine wachsende, bewusst byte-identische UI-/Lib-Schicht.
+Bei getrennten Repos driftet sie auseinander (nur durch ein Drift-Gate reaktiv gehalten), Build und
+Dev-Workflow sind dupliziert, und jeder Release baut beide Apps komplett neu. Ein Monorepo löst Drift
+strukturell und ermöglicht inkrementelle, gecachte Builds.
+
+**Entscheidung**: Beide Apps werden als `apps/treffsicher` und `apps/ringwerk` in `vereinsheim`
+integriert; geteilter Code wandert nach `packages/{ui,lib,config}`. Werkzeuge: **pnpm Workspaces +
+Turborepo**. Docker-Build pro App via **`turbo prune --docker`**. Git-History beider Apps wird per
+einmaligem `git filter-repo`-Import erhalten (**kein** laufender Subtree-Sync). Der Deploy-Vertrag
+(Image-Namen/Tags, `compose.yml`, Caddy, `db-init`, Backup/Restore, getrennte DBs/Migrations) bleibt
+**unverändert** — die Migration ist rein build-seitig. Umsetzungsplan: `docs/monorepo-plan.md`.
+
+**Alternativen**:
+
+- _Getrennte Repos + Drift-Gate beibehalten (ADR-001)_: hält Konsistenz nur reaktiv, dupliziert
+  Build/Dev, keine geteilten Pakete. Verworfen zugunsten der strukturellen Lösung.
+- _git subtree als laufender Sync_: vom Nutzer explizit verworfen (Sync-Overhead, kein echtes Monorepo).
+- _Nx statt Turborepo_: mächtiger, aber für 2 Apps + wenige Libs Overkill; Turborepo ist einfacher und
+  Next-nah.
+
+**Folgen**:
+
+- ADR-001 abgelöst; `vereinsheim` ist jetzt Deploy- **und** Code-Monorepo.
+- Drift-Gate (`consistency-check.sh`) wird nach Phase 4 (`packages/ui`) überflüssig.
+- Migration npm → pnpm; jede App behält eigenes Prisma-Schema/Migrations/generierten Client.
+- ADR-006 (lokaler Build) bleibt vorerst gültig; CI + Turbo-Remote-Cache ist optionale Folge-ADR.
+- ADR-002/003/004/007/009/010 (DBs, Netze, Caddy, Migrator-Image, Backup/Restore) bleiben unberührt.
+
+---
+
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
 
-Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-015+):
+Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-016+):
 
 - **Off-Site-Backup-Strategie**: rclone → S3-compatible, borg auf NAS,
   IONOS Snapshot. Trade-offs: Kosten, RPO, Restore-Granularität.
