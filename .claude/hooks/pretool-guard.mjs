@@ -41,6 +41,22 @@ if (tool === "Bash") {
     deny(`Gefährliches rekursives Löschen: „${rmSeg.trim().slice(0, 70)}".`)
   }
   if (recursive && mentionsSecret) deny("Rekursives Löschen einer Secret-Datei.")
+
+  // Verwaiste Dev-/Watch-Server verhindern (ADR-018-Härtung, 22.06.2026): ein per
+  // `&` (Job-Control) gebackgroundeter persistenter Server entkoppelt sich vom Harness
+  // (nicht mehr per TaskStop killbar) und kann mit Builds/`pnpm check` die Maschine
+  // überlasten — nutze stattdessen den run_in_background-Modus des Bash-Tools.
+  const bgAmp = /(^|[^&>])&(?![&>])/.test(cmd) // Job-Control-`&`, nicht `&&`/`&>`/`2>&1`
+  const devServer =
+    /\bpnpm\b[^&|;]*\bdev\b/.test(cmd) ||
+    /\bnext\s+dev\b/.test(cmd) ||
+    /\bturbo\s+(run\s+dev|watch)\b/.test(cmd)
+  if (bgAmp && devServer) {
+    deny(
+      "Dev-/Watch-Server via `&` gebackgroundet → Orphan (harness-untrackbar, " +
+        "Überlast-/Reboot-Risiko). Starte ihn im run_in_background-Modus des Bash-Tools.",
+    )
+  }
 }
 
 process.exit(0)
