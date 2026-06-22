@@ -562,9 +562,59 @@ Permanenzstufe** (prefer enforcement):
 
 ---
 
+## ADR-018 — Harness Engineering: Hooks, PIV-Workflow, Sub-Agents
+
+**Status**: Accepted (Juni 2026)
+
+**Kontext**: Erkenntnisse aus `coleam00/harness-engineering-demo`. „Harness Engineering" = Kontext +
+Workflows um den Agenten so bauen, dass er „wie ein weiterer Entwickler im Team" arbeitet — Prozesse
+erzwungen, Standards angewandt. Mehrere Praktiken ergänzen unsere Schichten (ADR-016/017) substanziell.
+(Deren Codebase-Search-MCP ist überflüssig — CodeGraph deckt `where_is`/`find_references`/`outline` +
+Call-Graph/Routen bereits ab.)
+
+**Entscheidung**: Folgende Praktiken übernehmen, auf unseren Stack zugeschnitten:
+
+1. **Hooks (Enforcement auf Harness-Ebene)**, verdrahtet in eingechecktem `.claude/settings.json`:
+   - **Stop-Gate (selbst-validierend)**: blockt das Turn-Ende, bis die Gates grün sind — im Monorepo
+     via `turbo check` (gecacht, billig): lint/format/tsc/test/**`next build`**. Damit wird „ENFORCE"
+     (ADR-017) zur Harness-Ebene: ein Agent **kann nicht** mit rotem/nicht-baubarem Stand aufhören.
+     Adressiert direkt die Lücke dieser Session (vergessenes Gate, Build-only-Fehler). `stop_hook_active`
+     gegen Endlosschleifen.
+   - **PostToolUse-Lint (non-blocking)**: nach Edits eslint/tsc auf die betroffene App, Befund surfacen.
+   - **PreToolUse-Security-Guard**: verweigert Lesen/Schreiben echter `.env`/`.vereinsheim.local` +
+     rekursives Löschen; erlaubt `.env.example`/`.template`. Greift auch unter
+     `--dangerously-skip-permissions` (unbeaufsichtigte/parallele Läufe); fail-open (deny statt Brick).
+2. **PIV-Workflow als Skills**: `/plan → /implement → /validate → /review`, Handoff über `plans/` +
+   `reports/`-Markdown; `/review` delegiert an einen committed `code-reviewer`-Sub-Agenten. Das ist die
+   konkrete, geteilte Dev-Tooling-Baseline (§12) — vereinheitlicht Superpowers (treffschers
+   brainstorm/plan/spec) und gilt für beide Apps.
+3. **Committed Sub-Agents** (`.claude/agents/*.md`): wiederverwendbar/spezialisiert (z.B. code-reviewer,
+   der Diffs gegen Konventionen prüft und CodeGraph für Impact nutzt) — statt ad-hoc.
+4. **On-Demand-Context-Module** (`.claude/context/*.md`, von Skills geladen): token-effizient im großen
+   Monorepo (Ergänzung zu Schicht 2).
+5. **Autonomous-Loop-Driver (Ralph-artig)** mit **Worktree- + DB-Isolation** für parallele/unbeaufsichtigte
+   Läufe (formalisiert das Über-Nacht-Muster; sicher für mehrere parallele Agenten/Devs); Commit-pro-
+   Iteration (reversibel), nie auf `main`.
+
+**Alternativen**:
+
+- _Deren Codebase-Search-MCP übernehmen_: nicht nötig — CodeGraph (ADR-016) deckt es ab + mehr.
+- _Nur Docs/Gates ohne Hooks_: weich; der Stop-Hook ist der Unterschied zwischen „soll `/check` laufen"
+  und „kann nicht rot aufhören".
+
+**Folgen**:
+
+- Der Stop-Gate braucht `turbo check` (gecacht), damit er pro Turn billig ist → landet in Phase 2/3
+  (nach pnpm/turbo). Eine leichte Vorstufe (nur lint/tsc, ohne Docker-Vollgate) ist schon vorher möglich.
+- `.claude/{settings.json,agents,skills,context}` + `plans/`/`reports/` eingecheckt → team-geteilt (§11).
+- Der Stop-Hook ist die Harness-Realisierung von ADR-017 (ENFORCE-first); `next build` bleibt Pflichtgate.
+- Quelle: `coleam00/harness-engineering-demo`.
+
+---
+
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
 
-Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-018+):
+Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-019+):
 
 - **Off-Site-Backup-Strategie**: rclone → S3-compatible, borg auf NAS,
   IONOS Snapshot. Trade-offs: Kosten, RPO, Restore-Granularität.

@@ -189,4 +189,5 @@ maschinengebunden:
   + die neuen Schichten (CodeGraph, Memory-Graph, ENFORCE-Lessons, `/check` + Gates) — und so
   **integrieren, dass sie sich verstärken**: CodeGraph speist Planung/Impact, Lessons speisen den
   Memory-Graph, Gates erzwingen promotete Regeln. Ziel: ein einziges, „supergechargtes" Dev-Setup für
-  beide Apps statt zweier ungleicher.
+  beide Apps statt zweier ungleicher. Konkrete Praktiken dazu: **[ADR-018](decisions.md)** (Hooks/
+  Stop-Gate, PIV-Workflow, Sub-Agents, On-Demand-Context, Ralph-Loop).
