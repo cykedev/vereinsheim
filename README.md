@@ -162,6 +162,7 @@ gepusht wird in **Docker Hub** unter `<DOCKER_USER>/ringwerk` und
 
 Apache License 2.0 — siehe [`LICENSE`](LICENSE).
 
-> Hinweis: Diese Lizenz deckt nur die Deployment-Tooling in diesem Repo
-> (CLI, Compose-Files, Caddy-Konfig, Doku). Die App-Sources in
-> `../ringwerk` und `../treffsicher` haben jeweils ihre eigenen Lizenzen.
+> Hinweis: Diese Lizenz deckt das Deployment-Tooling (CLI, Compose-Files,
+> Caddy-Konfig, Doku). Der App-Code unter [`apps/ringwerk`](apps/ringwerk) /
+> [`apps/treffsicher`](apps/treffsicher) trägt jeweils eine eigene `LICENSE`
+> (beide ebenfalls Apache-2.0).
