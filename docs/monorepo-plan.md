@@ -1,10 +1,11 @@
 # Monorepo-Migration — Plan
 
-> Status: **Phase 1 erledigt** (Juni 2026) — Skelett (pnpm + Turborepo), beide Apps als `apps/*`
-> via `git filter-repo` (Git-History erhalten), Workspace-Integration (Catalog), geteilter
-> Dev-Postgres. Gates grün, beide Apps laufen lokal, Deploy-Vertrag bit-gleich. Phasen 2–5 offen.
-> Verbindliche Entscheidung: [ADR-015](decisions.md). Dieses Dokument ist der Umsetzungsplan;
-> `decisions.md` hält das „Warum".
+> Status: **Phasen 1 + 3 erledigt** (Juni 2026). Phase 1: Skelett (pnpm + Turborepo), beide Apps als
+> `apps/*` via `git filter-repo` (Git-History erhalten), Catalog, geteilter Dev-Postgres. Phase 3:
+> Produktions-Build aus dem Monorepo via `turbo prune` (Image-Namen/Tags + Deploy-Vertrag bit-gleich),
+> lokal voll verifiziert (Runner + Migrator + ganzer `compose.yml`-Stack). Gates grün. **Phasen 2 + 4
+> offen**; der VPS-/Staging-Deploy von Phase 3 ist ausstehend (user-gated). Verbindliche Entscheidung:
+> [ADR-015](decisions.md). Dieses Dokument ist der Umsetzungsplan; `decisions.md` hält das „Warum".
 
 ## 1. Ziel
 
@@ -116,7 +117,7 @@ Der VPS sieht keinen Unterschied. Cutover-Verifikation: gebautes Image gegen akt
 | --- | --- | --- | --- |
 | **1** ✅ | pnpm + turbo Skelett; beide Apps **as-is** nach `apps/*` via `git filter-repo` (History erhalten); geteilte Deps heben; Root-`docker-compose.dev.yml` | niedrig | ein Repo, schnelle inkrementelle Builds, ein Dev-Befehl |
 | **2** | `packages/config` (next/eslint/tsconfig-base/prettier/postcss/tailwind-globals) | niedrig | Konfig-Duplikate weg |
-| **3** | `turbo prune`-Docker-Build; `build-and-push.sh` umstellen; **Staging-Deploy-Test** | mittel | der schnelle, korrekte Build-/Deploy-Pfad |
+| **3** ✅ (Build) | `turbo prune`-Docker-Build; `build-and-push.sh` umgestellt; lokal verifiziert. **Staging-/VPS-Deploy ausstehend** | mittel | der schnelle, korrekte Build-/Deploy-Pfad |
 | **4** | `packages/ui` + `packages/lib`: byte-identische Schicht **echt** teilen (Imports `@/components/ui` → `@vereinsheim/ui`, schrittweise) → **Drift-Gate entfällt** | mittel | Tier-1-Ziel: Drift strukturell unmöglich |
 | **5** (optional, später) | CI (GitHub Actions) + Turbo Remote-Cache → supersedes ADR-006 | niedrig | maschinenübergreifender Cache |
 
@@ -147,23 +148,48 @@ Schlüsselentscheidungen / bewusste Abweichungen vom wörtlichen Plan:
   `DATABASE_URL` sehen — früher kam die Env aus dem Container.
 - **Dev-Postgres = eigenes compose-Projekt** (`name: vereinsheim-dev`, eigenes Volume) → kein Eingriff in
   den Prod-Stack (`compose.yml`).
-- **Dual-Source bis Phase 3**: der Produktions-Build läuft weiter über `../ringwerk` / `../treffsicher`
-  (`build-and-push.sh` unverändert). Bis Phase 3 sind die Standalone-Repos die Release-Quelle — Änderungen
-  fürs Deployment müssen dort landen.
+- **Build-Quelle (Phase 1 → Phase 3)**: in Phase 1 lief der Produktions-Build noch über `../ringwerk` /
+  `../treffsicher`. **Mit Phase 3 baut `build-and-push.sh` aus dem Monorepo** (`turbo prune`) — die
+  Standalone-Repos sind **keine Build-Quelle mehr** (granulare History dort via Tag `pre-monorepo-import`
+  archiviert; sie können archiviert/entfernt werden). Der VPS läuft mit den alten Images bis zum nächsten
+  `vereinsheim release`.
 
 Bewusst **nicht** in Phase 1 (Scope-Grenze):
 
 - ADR-016/017/018-Artefakte (CodeGraph-MCP, Memory-MCP, Hooks/Stop-Gate, PIV-Skills, Sub-Agents) → Phase 2.
 - `packages/config|ui|lib` + Konfig-Hoisting → Phase 2/4. Die Apps tragen noch je eigene Configs.
-- `turbo prune`-Docker-Build + `build-and-push.sh`-Umstellung + Staging-Test → Phase 3. **Bekannt:** der
-  Monorepo-`next build` meldet eine Turbopack-NFT-Warnung („whole project traced") — der Standalone-Output
-  übertract. Fix ist `outputFileTracingRoot` (Monorepo-Wurzel) **zusammen** mit den Dockerfile-COPY-Pfaden
-  in Phase 3; isoliert gesetzt würde es den `.next/standalone`-Pfad verschieben und den Build-Vertrag brechen.
-  Build bleibt grün (nur Warnung), Prod baut bis dahin aus den Standalone-Repos (dort keine Warnung).
+- `turbo prune`-Docker-Build + `build-and-push.sh`-Umstellung → **in Phase 3 erledigt** (Build umgestellt +
+  lokal verifiziert; Staging/VPS-Deploy ausstehend). `outputFileTracingRoot` (Monorepo-Wurzel) gesetzt +
+  Dockerfile-COPY-Pfade an den genesteten Standalone-Output angepasst → NFT-Warnung weg.
 - App-`CLAUDE.md`/`docs` referenzieren noch npm + In-Container-`/check` (Doc-Sync) → Phase 2.
 - Per-App `apps/*/docker-compose.dev.yml` (Single-App-Dev-Build) **entfernt** — obsolet durch
   Root-`docker-compose.dev.yml` + `pnpm dev`. Die App-`.claude`/`docs` referenzieren den alten
   In-Container-Flow (`docker compose … run app`) noch → Phase-2-Doc-Sync.
+
+### Phase 3 — Umsetzungsnotizen (Build erledigt, Juni 2026)
+
+Geliefert: Produktions-Build aus dem Monorepo via `turbo prune <app> --docker`. Image-Namen/Tags +
+`compose.yml`/Caddy/`db-init` unverändert (Deploy-Vertrag gewahrt). Lokal voll verifiziert.
+
+- **Ein parametrisiertes Root-`Dockerfile`** (`--build-arg APP=<app>`, Kontext `out/`): `deps` (pnpm
+  install aus `out/json`, BuildKit-Cache-Mount auf den pnpm-Store) → `builder` (`turbo run build` =
+  prisma generate + next build) → `runner` (Next standalone, `node apps/<app>/server.js`) → `migrator`.
+- **`outputFileTracingRoot` = Repo-Wurzel** → Standalone nestet unter `apps/<app>/.next/standalone/` mit
+  `server.js` unter `apps/<app>/`; runner-COPY-Pfade entsprechend. Generierter Prisma-Client wird in
+  `.next/server` gebündelt (kein separates Kopieren nötig).
+- **Migrator via `npm` (nicht pnpm)**: flacher Install nur von `prisma`+`pg`+`dotenv` → prisma-CLI unter
+  `/app/node_modules/prisma` (vom Recovery-Skript per absolutem Pfad erwartet). pnpm 10 blockierte hier die
+  Engine-Build-Scripts (`ERR_PNPM_IGNORED_BUILDS`; Allowlist griff weder in package.json noch
+  pnpm-workspace.yaml) — npm hat kein solches Gate. Kein `@prisma/client`/`tsx` (Seeding läuft per
+  App-Startup, nicht im Migrator).
+- **`<sha>` = Monorepo-HEAD** (beide Apps teilen ihn); Tag-Schema unverändert. `build-and-push.sh`
+  zentralisiert die Logik; `PUSH=0` → lokale `--load`-Testbuilds (kein Push/Gate), `vereinsheim
+  local-build` ruft genau das.
+- **Image-Größen**: runner ~300 MB (node:24-alpine + Standalone, wie zuvor), migrator ~950 MB (prisma 7
+  zieht effect/electric-sql als eigene Deps — vergleichbar zum alten Full-App-Migrator).
+- **Verifikation lokal**: runner serviert (HTTP 200), migrator `migrate deploy` (Exit 0, alle Migrationen),
+  und der **ganze `compose.yml`-Stack** (db-init → migrate → app) kommt sauber hoch. **Offen: echter
+  VPS-/Staging-Deploy** (user-gated).
 
 ## 9. Risiken & Gotchas
 

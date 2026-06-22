@@ -17,14 +17,14 @@ mit automatischem Let's-Encrypt-TLS.
 täglicher Backup-Cron um 03:00. Alle Roadmap-Phasen (1–6) sind
 abgeschlossen.
 
-🟡 **Monorepo-Migration — Phase 1 erledigt** (Juni 2026): beide Apps sind via
+🟡 **Monorepo-Migration — Phasen 1 + 3 erledigt** (Juni 2026): beide Apps sind via
 `git filter-repo` (Git-History erhalten) als `apps/*` integriert — Workspace
 mit **pnpm + Turborepo**, geteilte Dep-Versionen im pnpm-Catalog, geteilter
 Dev-Postgres ([`docker-compose.dev.yml`](docker-compose.dev.yml)). Der
-**Deploy-Vertrag ist unverändert**: der Produktions-Build läuft bis **Phase 3**
-weiter über die Standalone-Repos `../ringwerk` / `../treffsicher`
-(`vereinsheim build`) — bis dahin sind sie die Quelle für Releases. Plan &
-Phasen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md).
+Produktions-Build kommt jetzt **aus dem Monorepo** via `turbo prune`
+(`vereinsheim build`) — Image-Namen/Tags + `compose.yml` unverändert, lokal voll
+verifiziert. **Offen**: Phasen 2 + 4 sowie der erste echte VPS-Deploy aus dem
+Monorepo. Plan & Phasen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md).
 
 Detaillierter Stand und Roadmap: [`docs/plan.md`](docs/plan.md).
 
@@ -143,12 +143,14 @@ docker login docker.io             # für den Image-Push
 
 ## Verwandte Repos
 
-Seit Monorepo-Phase 1 liegt der App-Code in [`apps/ringwerk`](apps/ringwerk)
-und [`apps/treffsicher`](apps/treffsicher). Die Standalone-Repos bleiben bis
-**Phase 3** die Quelle für Produktions-Builds (`vereinsheim build`):
+Der App-Code liegt im Monorepo unter [`apps/ringwerk`](apps/ringwerk) und
+[`apps/treffsicher`](apps/treffsicher); seit Phase 3 baut `vereinsheim build`
+**aus dem Monorepo** (`turbo prune`). Die Standalone-Repos sind **keine
+Build-Quelle mehr** — ihre granulare History ist via Tag `pre-monorepo-import`
+archiviert; sie können archiviert/entfernt werden:
 
-- [`../ringwerk`](../ringwerk) — Standalone-Repo der Liga-App (Build-Quelle bis Phase 3)
-- [`../treffsicher`](../treffsicher) — Standalone-Repo der Trainingsapp (Build-Quelle bis Phase 3)
+- [`../ringwerk`](../ringwerk) — Standalone-Repo der Liga-App (archiviert, Tag `pre-monorepo-import`)
+- [`../treffsicher`](../treffsicher) — Standalone-Repo der Trainingsapp (archiviert, Tag `pre-monorepo-import`)
 
 Image-Builds laufen lokal (`docker buildx --platform linux/amd64`),
 gepusht wird in **Docker Hub** unter `<DOCKER_USER>/ringwerk` und
