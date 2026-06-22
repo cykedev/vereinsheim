@@ -6,12 +6,12 @@ Module sind nicht mehr im `consistency-check.sh`-Gate).
 
 ## Was hier liegt (Subpath-Exports, spiegeln die alten `@/lib/*`-Pfade)
 
-| Export | Datei | Inhalt |
-| --- | --- | --- |
-| `@vereinsheim/lib/utils` | `src/utils.ts` | `cn()` (clsx + tailwind-merge) |
-| `@vereinsheim/lib/forms/fieldErrors` | `src/forms/fieldErrors.ts` | `getFieldError`, `getGeneralError` |
-| `@vereinsheim/lib/hooks/useUnsavedChangesGuard` | `src/hooks/useUnsavedChangesGuard.ts` | `"use client"` |
-| `@vereinsheim/lib/hooks/useNavigationConfirm` | `src/hooks/useNavigationConfirm.ts` | `"use client"` |
+| Export                                          | Datei                                 | Inhalt                             |
+| ----------------------------------------------- | ------------------------------------- | ---------------------------------- |
+| `@vereinsheim/lib/utils`                        | `src/utils.ts`                        | `cn()` (clsx + tailwind-merge)     |
+| `@vereinsheim/lib/forms/fieldErrors`            | `src/forms/fieldErrors.ts`            | `getFieldError`, `getGeneralError` |
+| `@vereinsheim/lib/hooks/useUnsavedChangesGuard` | `src/hooks/useUnsavedChangesGuard.ts` | `"use client"`                     |
+| `@vereinsheim/lib/hooks/useNavigationConfirm`   | `src/hooks/useNavigationConfirm.ts`   | `"use client"`                     |
 
 ## Regeln
 
