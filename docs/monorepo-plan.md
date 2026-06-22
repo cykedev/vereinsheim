@@ -22,6 +22,7 @@ nach `packages/*`. Ergebnis:
 | Git-History | **erhalten** via einmaligem `git filter-repo`-Import (kein Subtree-Sync) |
 | CI / Remote-Cache | **später** — MVP bleibt lokaler Build (ADR-006); CI/Turbo-Remote-Cache als optionale Phase 5 |
 | Deploy-Vertrag | **unverändert** (Image-Namen/Tags, compose.yml, Caddy, db-init, Backup/Restore) |
+| Knowledge Graph für Claude Code | **3 Schichten**: generierter Projekt-Graph + hierarchische CLAUDE.md + MCP-Memory ([ADR-016](decisions.md)) |
 
 ## 3. Zielstruktur
 
@@ -35,6 +36,10 @@ vereinsheim/
 │   ├── lib/              # cn, dateTime, forms/fieldErrors, ActionResult-Typ — reine Utils (KEIN "use server")
 │   └── config/           # next.config, eslint, tsconfig-base, prettier, postcss, tailwind/globals
 ├── compose.yml, Caddyfile, db-init/, scripts/, backups/   # bestehende Ops, unverändert
+├── CLAUDE.md             # Wurzel-Kontext; je apps/* und packages/* eigene CLAUDE.md (scope-weise)
+├── .mcp.json             # MCP Knowledge-Graph-Memory-Server (project scope, eingecheckt)
+├── .claude/skills/       # Projekt-Skills: check, graph, db-restore, release
+├── docs/architecture.md  # generierter, lesbarer Projekt-Graph (+ architecture.graph.json)
 ├── turbo.json
 ├── pnpm-workspace.yaml
 └── package.json          # geteilte Deps gehoben; app-spezifische bleiben in apps/*
@@ -129,7 +134,26 @@ kann komponentenweise laufen.
 - **shadcn-CLI** läuft weiter im App-Kontext (`components.json` pro App).
 - **VPS-RAM** unangetastet (Runner-Images weiter per-App-standalone; Build lokal, ADR-006).
 
-## 10. Offene Folgepunkte (nicht in dieser Migration)
+## 10. Knowledge Graph für Claude Code (siehe ADR-016)
+
+Drei komplementäre Schichten, in die Migration eingebettet:
+
+| Schicht | Was | Wo | Phase |
+| --- | --- | --- | --- |
+| **1. Generierter Projekt-Graph** | `pnpm graph` → `architecture.graph.json` + `docs/architecture.md` (apps/packages/Routen/Server-Actions/Prisma-Modelle + Kanten); Staleness-Check im `check`-Gate | Turbo-Task + `scripts/` | 2 |
+| **2. Hierarchische CLAUDE.md** | Root + `apps/*/CLAUDE.md` + `packages/*/CLAUDE.md` (on-demand), `@import` auf architecture/conventions/decisions; Skills unter `.claude/skills/` | repo-weit | 1–2 |
+| **3. MCP-Knowledge-Graph** | `@modelcontextprotocol/server-memory` in `.mcp.json` (project, eingecheckt), Store `.claude/knowledge-graph.json`; Seed-Skript aus Schicht 1 + ADRs | `.mcp.json` + `scripts/` | 2 |
+
+**Zusammenspiel**: Schicht 1 = re-ableitbare Faktenstruktur (nie veraltet) → seedet Schicht 3
+(persistentes Gedächtnis); Schicht 2 macht beide für Agenten auffindbar (Claude Code lädt CLAUDE.md
+scope-weise + `@import`). Schicht 1 bleibt die Autorität für Struktur — Schicht 3 ist Gedächtnis und
+wird periodisch aus Schicht 1 re-seedet.
+
+**Wartung/Risiko**: der Generator (Schicht 1) ist der einzige nennenswerte neue Code; Schicht 3 driftet
+als Gedächtnis (daher re-seeden); der Memory-Server ist Dev-Hilfe, keine Build-Abhängigkeit. `next
+build`/`check` bleiben Pflicht-Gates.
+
+## 11. Offene Folgepunkte (nicht in dieser Migration)
 
 - ActionResult-Typ-Vereinheitlichung (Treffsicher) — passt gut in `packages/lib`.
 - Env-Var-Angleichung `ADMIN_*` ↔ `SEED_ADMIN_*` (deploy-breaking, separat).

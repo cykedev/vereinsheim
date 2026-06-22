@@ -468,9 +468,59 @@ einmaligem `git filter-repo`-Import erhalten (**kein** laufender Subtree-Sync). 
 
 ---
 
+## ADR-016 — Knowledge Graph für Claude Code (3 Schichten)
+
+**Status**: Accepted (Juni 2026)
+
+**Kontext**: Im Monorepo (ADR-015) sollen Claude Code und Menschen Struktur, Konventionen und das
+„Warum" schnell und korrekt erfassen, ohne alles neu zu durchsuchen. Drei komplementäre Bedürfnisse:
+(a) immer-aktuelle Faktenstruktur, (b) scope-spezifischer Kontext/Konventionen, (c) dauerhaftes,
+abfragbares Projektgedächtnis über Sessions hinweg.
+
+**Entscheidung**: Drei sich ergänzende Schichten:
+
+1. **Generierter Projekt-Graph (Ground Truth)**: ein `pnpm graph`/Turbo-Task erzeugt
+   `architecture.graph.json` (Knoten: apps, packages, Routen, Server Actions, Prisma-Modelle, geteilte
+   Komponenten; Kanten: depends-on/imports/owns) aus dem pnpm/turbo-Workspace + leichtem AST/Glob-
+   Extractor, plus eine lesbare `docs/architecture.md` (inkl. Mermaid). In `turbo.json` als Output
+   deklariert + Staleness-Check im `check`-Gate → nie veraltet.
+2. **Hierarchische CLAUDE.md (Kontext/Navigation)**: Root-`CLAUDE.md` (universelle Regeln + `@import`
+   von `docs/architecture.md`, `docs/shared-conventions.md`, `docs/decisions.md`); je App
+   (`apps/*/CLAUDE.md`) und je geteiltem Paket (`packages/*/CLAUDE.md`) scope-spezifische Regeln (Claude
+   Code lädt die nächstgelegene on-demand). Projekt-Skills unter `.claude/skills/` (path-scoped) für
+   Monorepo-Aufgaben (`check`, `graph`, `db-restore`, `release`).
+3. **MCP-Knowledge-Graph (persistentes Gedächtnis)**: offizieller `@modelcontextprotocol/server-memory`
+   in `.mcp.json` (Project-Scope, eingecheckt; stdio via `npx`), Store unter
+   `.claude/knowledge-graph.json` (`MEMORY_FILE_PATH`). Ein Seed-Skript speist Schicht 1 + ADRs als
+   Entities/Relations/Observations ein; danach wächst der Graph mit über Sessions aufgezeichneten
+   Entscheidungen/Gotchas.
+
+Schicht 1 ist re-ableitbare Wahrheit und re-seedet Schicht 3 periodisch (Schicht 3 ist Gedächtnis,
+**nicht** Struktur-Autorität). Schicht 2 macht beide auffindbar.
+
+**Alternativen**:
+
+- _Nur CLAUDE.md/Docs_: einfachste Lösung, aber kein maschinenlesbarer Graph und kein
+  Cross-Session-Gedächtnis.
+- _Nur MCP-Memory_: dauerhaft, aber driftet ohne generierte Faktenbasis; Struktur nicht re-ableitbar.
+- _CodeGraph/Neo4j-MCP (indexierter Symbol-/Call-Graph)_: mächtiger für Symbol-Navigation, aber mehr
+  Infra; kann später ergänzt werden, wenn Symbol-Level-Navigation gebraucht wird.
+
+**Folgen**:
+
+- Neuer Code: Graph-Generator + Staleness-Check (Schicht 1) und Seed-Skript (Schicht 3); Schicht 2 ist
+  nur Doku/Config.
+- `.mcp.json` wird eingecheckt (keine Secrets; Memory-Server braucht keine). Der Memory-Server ist
+  Dev-Hilfe, **keine** Build-Abhängigkeit (`npx`; in headless/CI optional).
+- Bestehende `.claude/commands/check.md` wandern auf das neue Skills-Format
+  (`.claude/skills/check/SKILL.md`, `invocation: [user, Claude]`).
+- Schichten landen in Phase 1/2 der Migration (siehe `monorepo-plan.md` §10).
+
+---
+
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
 
-Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-016+):
+Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-017+):
 
 - **Off-Site-Backup-Strategie**: rclone → S3-compatible, borg auf NAS,
   IONOS Snapshot. Trade-offs: Kosten, RPO, Restore-Granularität.
