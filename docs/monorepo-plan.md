@@ -1,7 +1,10 @@
 # Monorepo-Migration — Plan
 
-> Status: **geplant** (noch keine Code-Migration). Verbindliche Entscheidung: [ADR-015](decisions.md).
-> Dieses Dokument ist der Umsetzungsplan; `decisions.md` hält das „Warum".
+> Status: **Phase 1 erledigt** (Juni 2026) — Skelett (pnpm + Turborepo), beide Apps als `apps/*`
+> via `git filter-repo` (Git-History erhalten), Workspace-Integration (Catalog), geteilter
+> Dev-Postgres. Gates grün, beide Apps laufen lokal, Deploy-Vertrag bit-gleich. Phasen 2–5 offen.
+> Verbindliche Entscheidung: [ADR-015](decisions.md). Dieses Dokument ist der Umsetzungsplan;
+> `decisions.md` hält das „Warum".
 
 ## 1. Ziel
 
@@ -111,7 +114,7 @@ Der VPS sieht keinen Unterschied. Cutover-Verifikation: gebautes Image gegen akt
 
 | Phase | Inhalt | Risiko | Gewinn |
 | --- | --- | --- | --- |
-| **1** | pnpm + turbo Skelett; beide Apps **as-is** nach `apps/*` via `git filter-repo` (History erhalten); geteilte Deps heben; Root-`docker-compose.dev.yml` | niedrig | ein Repo, schnelle inkrementelle Builds, ein Dev-Befehl |
+| **1** ✅ | pnpm + turbo Skelett; beide Apps **as-is** nach `apps/*` via `git filter-repo` (History erhalten); geteilte Deps heben; Root-`docker-compose.dev.yml` | niedrig | ein Repo, schnelle inkrementelle Builds, ein Dev-Befehl |
 | **2** | `packages/config` (next/eslint/tsconfig-base/prettier/postcss/tailwind-globals) | niedrig | Konfig-Duplikate weg |
 | **3** | `turbo prune`-Docker-Build; `build-and-push.sh` umstellen; **Staging-Deploy-Test** | mittel | der schnelle, korrekte Build-/Deploy-Pfad |
 | **4** | `packages/ui` + `packages/lib`: byte-identische Schicht **echt** teilen (Imports `@/components/ui` → `@vereinsheim/ui`, schrittweise) → **Drift-Gate entfällt** | mittel | Tier-1-Ziel: Drift strukturell unmöglich |
@@ -119,6 +122,44 @@ Der VPS sieht keinen Unterschied. Cutover-Verifikation: gebautes Image gegen akt
 
 Phase 1+3 liefern bereits „ein Monorepo, viel schnellerer Build". Phase 4 ist der größere Refactor und
 kann komponentenweise laufen.
+
+### Phase 1 — Umsetzungsnotizen (erledigt, Juni 2026)
+
+Geliefert: Skelett (`pnpm-workspace.yaml` + Catalog, `package.json`, `turbo.json`, `.npmrc`), beide Apps
+als `apps/*` via `git filter-repo --to-subdirectory-filter` (History erhalten, 316 + 148 Commits,
+Merge mit `--allow-unrelated-histories`, **kein** Subtree-Sync), Catalog-Integration, Root-
+`docker-compose.dev.yml` + `dev/db-init/` (zwei DBs `liga` + `treffsicher`). **Alle 5 Gates grün** für
+beide Apps, beide laufen lokal (`pnpm dev` → :3000 / :3001), Deploy-Vertrag bit-gleich.
+
+Schlüsselentscheidungen / bewusste Abweichungen vom wörtlichen Plan:
+
+- **„Geteilte Deps heben" = pnpm-Catalog** (in `pnpm-workspace.yaml`), nicht literale Deps in der
+  Root-`package.json`. Grund: pnpm-Strenge — Root-only-Deps wären für die Apps Phantom-Deps. Catalog
+  zentralisiert die Versionen (Drift-Schutz, ADR-015), Apps deklarieren weiter ihre Imports via
+  `catalog:`. App-spezifische Deps bleiben literal in `apps/*`.
+- **`@radix-ui/react-slider` explizit deklariert** (Catalog + beide Apps): `slider.tsx` importiert es
+  direkt; npm-Hoisting kaschierte das, pnpm-Strenge deckte es auf (genau §9). Fixte `tsc`-TS2307 + einen
+  Folge-`implicit-any` in treffsicher. **Einziger** Phantom-Dep — sonst nutzt alles das `radix-ui`-Umbrella.
+- **Host-Dev statt In-Container-Dev**: Apps laufen via `pnpm dev` auf dem Host; `.env.example` zeigt auf
+  `localhost:5432`. `vitest.config.ts` (ringwerk) lädt `.env` (`import "dotenv/config"`), damit die
+  DB-Integrationstests (`publicSlug`) `DATABASE_URL` sehen — früher kam die Env aus dem Container.
+- **Dev-Postgres = eigenes compose-Projekt** (`name: vereinsheim-dev`, eigenes Volume) → kein Eingriff in
+  den Prod-Stack (`compose.yml`).
+- **Dual-Source bis Phase 3**: der Produktions-Build läuft weiter über `../ringwerk` / `../treffsicher`
+  (`build-and-push.sh` unverändert). Bis Phase 3 sind die Standalone-Repos die Release-Quelle — Änderungen
+  fürs Deployment müssen dort landen.
+
+Bewusst **nicht** in Phase 1 (Scope-Grenze):
+
+- ADR-016/017/018-Artefakte (CodeGraph-MCP, Memory-MCP, Hooks/Stop-Gate, PIV-Skills, Sub-Agents) → Phase 2.
+- `packages/config|ui|lib` + Konfig-Hoisting → Phase 2/4. Die Apps tragen noch je eigene Configs.
+- `turbo prune`-Docker-Build + `build-and-push.sh`-Umstellung + Staging-Test → Phase 3. **Bekannt:** der
+  Monorepo-`next build` meldet eine Turbopack-NFT-Warnung („whole project traced") — der Standalone-Output
+  übertract. Fix ist `outputFileTracingRoot` (Monorepo-Wurzel) **zusammen** mit den Dockerfile-COPY-Pfaden
+  in Phase 3; isoliert gesetzt würde es den `.next/standalone`-Pfad verschieben und den Build-Vertrag brechen.
+  Build bleibt grün (nur Warnung), Prod baut bis dahin aus den Standalone-Repos (dort keine Warnung).
+- App-`CLAUDE.md`/`docs` referenzieren noch npm + In-Container-`/check` (Doc-Sync) → Phase 2.
+- Vestigiale `apps/*/docker-compose.dev.yml` (Single-App-Dev) bleiben vorerst liegen → Phase 3.
 
 ## 9. Risiken & Gotchas
 

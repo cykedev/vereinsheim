@@ -1,9 +1,10 @@
 # vereinsheim
 
-Gemeinsames Production-Deployment für die Apps:
+Gemeinsames Repo für zwei Next.js-Apps — **Code-Monorepo** (Entwicklung)
+und **Deployment** (Ops) in einem:
 
-- **Ringwerk** (Liga & Wettkämpfe) — Source: [`../ringwerk`](../ringwerk)
-- **Treffsicher** (Trainingsapp) — Source: [`../treffsicher`](../treffsicher)
+- **Ringwerk** (Liga & Wettkämpfe) — [`apps/ringwerk`](apps/ringwerk)
+- **Treffsicher** (Trainingsapp) — [`apps/treffsicher`](apps/treffsicher)
 
 Beide Apps laufen auf einem einzelnen VPS, geteilter
 Postgres-Container (separate Datenbanken + User), Caddy als Reverse Proxy
@@ -16,7 +17,37 @@ mit automatischem Let's-Encrypt-TLS.
 täglicher Backup-Cron um 03:00. Alle Roadmap-Phasen (1–6) sind
 abgeschlossen.
 
+🟡 **Monorepo-Migration — Phase 1 erledigt** (Juni 2026): beide Apps sind via
+`git filter-repo` (Git-History erhalten) als `apps/*` integriert — Workspace
+mit **pnpm + Turborepo**, geteilte Dep-Versionen im pnpm-Catalog, geteilter
+Dev-Postgres ([`docker-compose.dev.yml`](docker-compose.dev.yml)). Der
+**Deploy-Vertrag ist unverändert**: der Produktions-Build läuft bis **Phase 3**
+weiter über die Standalone-Repos `../ringwerk` / `../treffsicher`
+(`vereinsheim build`) — bis dahin sind sie die Quelle für Releases. Plan &
+Phasen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md).
+
 Detaillierter Stand und Roadmap: [`docs/plan.md`](docs/plan.md).
+
+## Monorepo-Entwicklung (lokal)
+
+Beide Apps werden im Monorepo entwickelt — ein Befehlssatz von der Wurzel,
+turbo-gecacht, Apps laufen auf dem Host:
+
+```bash
+corepack enable                                   # pnpm via packageManager-Pin
+pnpm install                                      # Workspace-Deps (Catalog)
+docker compose -f docker-compose.dev.yml up -d    # geteilter Postgres (2 DBs)
+cp apps/ringwerk/.env.example  apps/ringwerk/.env        # einmalig
+cp apps/treffsicher/.env.example apps/treffsicher/.env   # einmalig
+pnpm --filter ringwerk exec prisma db push        # Schema → Dev-DB (analog treffsicher)
+pnpm dev                                          # beide Apps: :3000 + :3001
+
+pnpm check    # alle 5 Gates (lint, format:check, test, tsc, next build)
+pnpm build    # inkrementeller Build beider Apps
+```
+
+Echte Prod-Daten kommen wie bisher über `backups/*.dump` (`pg_restore` in die
+Dev-DBs `liga` + `treffsicher`).
 
 ## Doku
 
@@ -24,6 +55,7 @@ Detaillierter Stand und Roadmap: [`docs/plan.md`](docs/plan.md).
 | ----------------------------------------- | --------------------------------------------------------------------- |
 | [`docs/spec.md`](docs/spec.md)             | Anforderungen, Zielarchitektur, VPS-Sizing, Out-of-Scope              |
 | [`docs/decisions.md`](docs/decisions.md)   | ADRs — alle Architektur-Entscheidungen mit Begründung & Alternativen |
+| [`docs/monorepo-plan.md`](docs/monorepo-plan.md) | Monorepo-Migration (ADR-015–018): Phasen 1–5, aktiver Plan       |
 | [`docs/plan.md`](docs/plan.md)             | Roadmap: was ist fertig, was kommt als nächstes, Verifikation        |
 | [`docs/operations.md`](docs/operations.md) | Daily Ops: Deploy, Backup, Restore, Migration-Recovery, Rollback      |
 | [`CLAUDE.md`](CLAUDE.md)                   | Onboarding für Folgesessions / Coding-Agenten                         |
@@ -111,8 +143,12 @@ docker login docker.io             # für den Image-Push
 
 ## Verwandte Repos
 
-- [`../ringwerk`](../ringwerk) — Source der Liga-App (Next.js + Prisma)
-- [`../treffsicher`](../treffsicher) — Source der Trainingsapp (Next.js + Prisma)
+Seit Monorepo-Phase 1 liegt der App-Code in [`apps/ringwerk`](apps/ringwerk)
+und [`apps/treffsicher`](apps/treffsicher). Die Standalone-Repos bleiben bis
+**Phase 3** die Quelle für Produktions-Builds (`vereinsheim build`):
+
+- [`../ringwerk`](../ringwerk) — Standalone-Repo der Liga-App (Build-Quelle bis Phase 3)
+- [`../treffsicher`](../treffsicher) — Standalone-Repo der Trainingsapp (Build-Quelle bis Phase 3)
 
 Image-Builds laufen lokal (`docker buildx --platform linux/amd64`),
 gepusht wird in **Docker Hub** unter `<DOCKER_USER>/ringwerk` und
