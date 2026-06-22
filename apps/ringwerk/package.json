@@ -43,6 +43,7 @@
     "@types/pg": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vereinsheim/config": "workspace:*",
     "@vitejs/plugin-react": "catalog:",
     "dotenv": "catalog:",
     "eslint": "catalog:",
