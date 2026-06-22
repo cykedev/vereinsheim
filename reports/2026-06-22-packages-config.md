@@ -62,12 +62,14 @@ werden weiter geprüft (app-lokal, Phase 4). `bash -n` grün.
 - **Dev-Runtime-`/login`-Render (HTML+CSS):** nicht separat erfasst (der erste Route-Compile-Curl hing und
   trug zum Reboot bei). **Vollständig abgedeckt** durch den Docker-Build (§4), der postcss/Tailwind über
   alle Routen inkl. `/login` ausführt — stärkere Evidenz als ein Dev-Curl.
-- **Test-Flake:** `treffsicher#test` fiel unter Voll-Last (alle 12 turbo-Tasks parallel) mehrfach aus; in
-  Isolation **307/307 grün** (59 Dateien), bei normaler Last auch im `pnpm check` grün. Bekanntes
-  Oversubscription-Verhalten (vgl. `vitest.config.ts`-Kommentar), nicht durch diese Änderung verursacht.
-  _Korrektur:_ ein Zwischen-Lauf zeigte 614/614 — das war ein **Doppel-Scan** aus einem inzwischen
-  entfernten Duplikat-Tree (vitest in `apps/treffsicher` hat **kein** `exclude` für Worktrees/`node_modules`
-  wie ringwerk; siehe Review-Report-Nebenbefund). Echte Zahl ist 307.
+- **`treffsicher#test`-Ausfall — echte Wurzel (kein „Flake"):** vitest scannte die `next build`-Ausgabe
+  `.next/standalone/` (die `output:"standalone"` kopiert `src/**` inkl. `*.test.ts` dorthin) und scheiterte
+  am Laden der Kopien (53 Datei-Load-Fehler; die echten 307 Tests bestehen). Trat **deterministisch** auf,
+  sobald `.next/standalone` nach einem Build existierte — die „grünen" Läufe waren Cache-Hits, der Reboot
+  legte nur die parallele Dev-DB lahm. **Behoben** (separater Commit): `.next/**` in **beiden**
+  `vitest.config.ts` ausgeschlossen (`configDefaults.exclude` + `.next` + Worktrees). Echte Zahlen mit
+  präsentem `.next/standalone`: treffsicher 307/307, ringwerk 616/616. Die frühere „Oversubscription"-
+  Vermutung war falsch.
 
 ## 7. Bewusste Abweichung vom Plan (dokumentiert)
 
