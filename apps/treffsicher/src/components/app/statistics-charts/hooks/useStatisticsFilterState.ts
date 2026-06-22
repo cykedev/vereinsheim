@@ -1,0 +1,69 @@
+import { useMemo, useState } from "react"
+import type { DisplayMode } from "@/components/app/statistics-charts/types"
+import { monthsAgo, parseDateInput, today } from "@/components/app/statistics-charts/utils"
+import type { DisciplineForStats } from "@/lib/stats/actions"
+
+export type TypeFilter = "all" | "TRAINING" | "WETTKAMPF"
+
+interface Params {
+  availableDisciplines: DisciplineForStats[]
+}
+
+// Filter-State lebt zentral, damit alle Statistik-Hooks auf denselben Grenzwerten arbeiten.
+export function useStatisticsFilterState({ availableDisciplines }: Params) {
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all")
+  const [from, setFrom] = useState<string>(() => monthsAgo(3))
+  const [to, setTo] = useState<string>(() => today())
+  // Einzige verfügbare Disziplin wird automatisch vorausgewählt.
+  const [disciplineFilter, setDisciplineFilter] = useState<string>(() =>
+    availableDisciplines.length === 1 ? availableDisciplines[0].id : "all"
+  )
+  const [displayMode, setDisplayMode] = useState<DisplayMode>("per_shot")
+
+  const selectedDiscipline = useMemo(
+    () => availableDisciplines.find((discipline) => discipline.id === disciplineFilter) ?? null,
+    [availableDisciplines, disciplineFilter]
+  )
+
+  const effectiveDisplayMode: DisplayMode =
+    // Hochrechnung nur mit expliziter Disziplin erlauben, sonst fehlt der Referenz-Schussumfang.
+    disciplineFilter === "all" || !selectedDiscipline ? "per_shot" : displayMode
+
+  const fromDate = useMemo(() => (from ? parseDateInput(from, false) : null), [from])
+  const toDate = useMemo(() => (to ? parseDateInput(to, true) : null), [to])
+
+  const presetToday = today()
+  const presetFrom6Months = monthsAgo(6)
+  const presetFrom3Months = monthsAgo(3)
+  const presetFrom1Month = monthsAgo(1)
+
+  const activeTimePreset = useMemo(() => {
+    if (!from && !to) return "all" as const
+    if (to === presetToday && from === presetFrom6Months) return "6m" as const
+    if (to === presetToday && from === presetFrom3Months) return "3m" as const
+    if (to === presetToday && from === presetFrom1Month) return "1m" as const
+    return "custom" as const
+  }, [from, to, presetToday, presetFrom6Months, presetFrom3Months, presetFrom1Month])
+
+  return {
+    typeFilter,
+    setTypeFilter,
+    from,
+    setFrom,
+    to,
+    setTo,
+    disciplineFilter,
+    setDisciplineFilter,
+    displayMode,
+    setDisplayMode,
+    selectedDiscipline,
+    effectiveDisplayMode,
+    fromDate,
+    toDate,
+    presetToday,
+    presetFrom6Months,
+    presetFrom3Months,
+    presetFrom1Month,
+    activeTimePreset,
+  }
+}

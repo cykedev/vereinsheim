@@ -1,0 +1,36 @@
+import { notFound, redirect } from "next/navigation"
+import { getAuthSession } from "@/lib/auth-helpers"
+import { getSessionById } from "@/lib/sessions/actions"
+import { getDisciplines } from "@/lib/disciplines/actions"
+import { getGoalsForSelection } from "@/lib/goals/actions"
+import { SessionForm } from "@/components/app/session-form/SessionForm"
+import { PageHeader } from "@/components/app/shell/PageHeader"
+
+export default async function EditSessionPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await getAuthSession()
+  if (!session) redirect("/login")
+
+  const { id } = await params
+  const [sessionRecord, disciplines, goals] = await Promise.all([
+    getSessionById(id),
+    getDisciplines(),
+    getGoalsForSelection(),
+  ])
+
+  if (!sessionRecord) notFound()
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Einheit bearbeiten"
+        description="Typ, Datum, Serien und weitere Angaben anpassen."
+      />
+      <SessionForm
+        disciplines={disciplines}
+        goals={goals}
+        initialData={sessionRecord}
+        sessionId={id}
+      />
+    </div>
+  )
+}
