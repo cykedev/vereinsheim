@@ -102,40 +102,12 @@ Additional task-specific docs are listed in the plan under `## Required Docs`.
 
 ---
 
-## Superpowers Docs Location
+## Workflow
 
-All superpowers artifacts (specs, plans) MUST be saved under `docs/superpowers/`:
-
-- Specs → `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-- Plans → `docs/superpowers/plans/YYYY-MM-DD-<topic>-plan.md`
-
-Never write these to `docs/` at the project root.
-
-Every plan MUST include a `## Required Docs` section listing any task-specific docs subagents need beyond the baseline (e.g. `technical.md` for deployment changes, `worktrees.md` for worktree usage).
-
----
-
-## Superpowers Workflow
-
-Use superpowers skills for all development work:
-
-| Task type                  | Skill sequence                                                                               |
-| -------------------------- | -------------------------------------------------------------------------------------------- |
-| New feature / change       | `brainstorming` → `writing-plans` → **branch + plan-commit** → `subagent-driven-development` |
-| Bug                        | `systematic-debugging`                                                                       |
-| Branch completion          | `finishing-a-development-branch`                                                             |
-| Parallel independent tasks | `dispatching-parallel-agents`                                                                |
-| Requesting review          | `requesting-code-review`                                                                     |
-| Receiving review           | `receiving-code-review`                                                                      |
-
-### MANDATORY GATE before any implementation
-
-**These two steps are REQUIRED between plan approval and the first line of code. "los" or any other confirmation does NOT skip them.**
-
-1. Propose `feat/<topic>` branch name → wait for user confirmation → `git checkout -b feat/<topic>`
-2. Show commit message as fenced code block → user commits spec + plan files as the **first commit on the branch**
-
-Only after both steps: invoke `subagent-driven-development` or `executing-plans`.
+Use the repo-wide **PIV** workflow (root `CLAUDE.md` Hard Rule 7): a non-trivial change runs
+`/plan → /implement → /validate → /review` — the plan is committed first on a `feat/<topic>`
+branch and shown to the user before any code; bugs go through `/debug` (root-cause) first;
+trivial/mechanical fixes go direct. Plans and reports live in the root `plans/` + `reports/`.
 
 ---
 
@@ -150,3 +122,4 @@ Only after both steps: invoke `subagent-driven-development` or `executing-plans`
 | `/db-reset`            | Reset dev database                      |
 | `/commit-msg`          | Generate commit message from diff       |
 | `/consolidate-lessons` | Compress lessons, promote rules to docs |
+| `/debug`               | Root-cause a bug before fixing          |
