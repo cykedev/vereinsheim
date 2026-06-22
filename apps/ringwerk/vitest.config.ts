@@ -1,3 +1,7 @@
+// .env laden, damit DB-Integrationstests (z.B. publicSlug) DATABASE_URL sehen.
+// Im Monorepo laufen Tests auf dem Host (statt im Docker-Container, der die Env
+// früher gesetzt hat) → der geteilte Dev-Postgres aus docker-compose.dev.yml.
+import "dotenv/config"
 import { defineConfig } from "vitest/config"
 import path from "path"
 

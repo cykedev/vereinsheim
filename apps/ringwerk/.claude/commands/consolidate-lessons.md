@@ -10,13 +10,13 @@ lessons.md wächst nach jeder Session. Dieses Command hält die Datei schlank:
 
 ## Kategorien
 
-| Kategorie          | Ziel-Doc                           | Typische Inhalte                                        |
-| ------------------ | ---------------------------------- | ------------------------------------------------------- |
+| Kategorie          | Ziel-Doc                           | Typische Inhalte                                                                   |
+| ------------------ | ---------------------------------- | ---------------------------------------------------------------------------------- |
 | `ENFORCE`          | Gate/Lint/Test/Grep umsetzen       | Build-/Compile-Regeln, Anti-Pattern, fehlende Dateien — alles automatisch Prüfbare |
-| `CODE_CONVENTIONS` | `.claude/docs/code-conventions.md` | Prisma-Patterns, TypeScript/Zod, Tests, Server Actions  |
-| `UI_PATTERNS`      | `.claude/docs/ui-patterns.md`      | shadcn, Mobile/Responsive, CSS, Touch-Targets, React-UI |
-| `REMEMBER` (KEEP)  | lessons.md / Memory-Graph          | Projektspezifisch, Business-Logic, einmalige Incidents  |
-| `ARCHIVE`          | wird gelöscht                      | Bereits in Docs vorhanden, obsolet, oder trivial        |
+| `CODE_CONVENTIONS` | `.claude/docs/code-conventions.md` | Prisma-Patterns, TypeScript/Zod, Tests, Server Actions                             |
+| `UI_PATTERNS`      | `.claude/docs/ui-patterns.md`      | shadcn, Mobile/Responsive, CSS, Touch-Targets, React-UI                            |
+| `REMEMBER` (KEEP)  | lessons.md / Memory-Graph          | Projektspezifisch, Business-Logic, einmalige Incidents                             |
+| `ARCHIVE`          | wird gelöscht                      | Bereits in Docs vorhanden, obsolet, oder trivial                                   |
 
 ## Triage-Prinzip: stärkste verfügbare Permanenz zuerst
 
