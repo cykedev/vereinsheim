@@ -133,9 +133,9 @@ docker login docker.io             # für den Image-Push
 
 - **Keine Secrets im Repo.** Alles Sensible lebt in `.env` (VPS) oder
   `.vereinsheim.local` (lokal). Beide sind in `.gitignore`.
-- **Image-Builds sind reproduzierbar.** `vereinsheim build` weigert sich,
-  zu bauen, wenn das jeweilige App-Repo uncommittete Änderungen hat — der
-  Tag enthält immer eine eindeutige Git-SHA.
+- **Image-Builds sind reproduzierbar.** `vereinsheim build` baut aus dem
+  Monorepo (`turbo prune`) und weigert sich bei uncommitteten Änderungen — der
+  Tag enthält immer die eindeutige Monorepo-Git-SHA (beide Apps teilen sie).
 - **Pre-Deploy-Backup ist Default.** `vereinsheim deploy` macht ein
   Backup direkt vor jedem Pull. Override: `SKIP_BACKUP=1`.
 - **`db` ist nicht im `web`-Netzwerk.** Caddy sieht die Datenbank nicht
