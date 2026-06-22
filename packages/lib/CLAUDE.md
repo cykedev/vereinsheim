@@ -21,5 +21,5 @@ Module sind nicht mehr im `consistency-check.sh`-Gate).
   Hook-Invariants-Crash). Im Paket nur devDependency für das eigene `tsc`/`vitest`.
 - **Kein `"use server"`** (geteilte Dateien dürfen keine Server-Action-Re-Exports sein, monorepo-plan §9).
 - **Verhalten/Logik ändert man HIER**, nicht in App-Kopien — sonst entsteht wieder Drift.
-- `dateTime.ts` bleibt vorerst **app-lokal** (driftet zwischen den Apps) — Angleichung ist Folgearbeit.
+- `dateTime` (server-only) seit Juni 2026 ebenfalls geteilt via `@vereinsheim/lib/dateTime` — das Paket setzt dafür `types: ["node", "react"]` + devDeps `@types/node`/`server-only`.
 - Nach Änderungen: `pnpm check` (alle 5 Gates über beide Apps) muss grün sein.

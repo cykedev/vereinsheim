@@ -3,7 +3,7 @@ import { CalendarDays, Trophy, Users, BarChart2, ListOrdered, CalendarCheck } fr
 import { Badge } from "@vereinsheim/ui/badge"
 import { Card, CardContent } from "@vereinsheim/ui/card"
 import { CompetitionActions } from "@/components/app/competitions/CompetitionActions"
-import { formatDateOnly } from "@/lib/dateTime"
+import { formatDateOnly } from "@vereinsheim/lib/dateTime"
 import type { CompetitionListItem } from "@/lib/competitions/types"
 
 function formatDate(date: Date | null, tz: string): string {

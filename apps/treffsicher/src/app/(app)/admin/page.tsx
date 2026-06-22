@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights, getAdminUsers } from "@/lib/admin/actions"
-import { getDisplayTimeZone } from "@/lib/dateTime"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { AdminLoginRateLimitInsightsPanel } from "@/components/app/admin/AdminLoginRateLimitInsights"
 import { AdminLoginRateLimitTable } from "@/components/app/admin/AdminLoginRateLimitTable"
 import { AdminUsersTable } from "@/components/app/admin/AdminUsersTable"

@@ -13,7 +13,7 @@ import { DeleteEventSeriesButton } from "@/components/app/series/DeleteEventSeri
 import { SeasonParticipantItem } from "@/components/app/series/SeasonParticipantItem"
 import { Button } from "@vereinsheim/ui/button"
 import { Badge } from "@vereinsheim/ui/badge"
-import { formatDateOnly, getDisplayTimeZone } from "@/lib/dateTime"
+import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 interface Props {
   params: Promise<{ id: string }>

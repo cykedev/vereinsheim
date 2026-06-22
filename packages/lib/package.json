@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./utils": "./src/utils.ts",
+    "./dateTime": "./src/dateTime.ts",
     "./forms/fieldErrors": "./src/forms/fieldErrors.ts",
     "./hooks/useUnsavedChangesGuard": "./src/hooks/useUnsavedChangesGuard.ts",
     "./hooks/useNavigationConfirm": "./src/hooks/useNavigationConfirm.ts"
@@ -23,10 +24,12 @@
     "react": "^19.2.6"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@vereinsheim/config": "workspace:*",
     "prettier": "catalog:",
     "react": "catalog:",
+    "server-only": "^0.0.1",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

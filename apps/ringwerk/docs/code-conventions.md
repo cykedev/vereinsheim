@@ -453,7 +453,7 @@ describe("calculateRingteiler", () => {
 **Korrekt: `formatDateOnly` aus `src/lib/dateTime.ts` verwenden**
 
 ```typescript
-import { getDisplayTimeZone, formatDateOnly } from "@/lib/dateTime"
+import { getDisplayTimeZone, formatDateOnly } from "@vereinsheim/lib/dateTime"
 
 // In einer Server Component (einmalig laden):
 const tz = getDisplayTimeZone()
