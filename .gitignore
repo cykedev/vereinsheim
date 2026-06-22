@@ -22,6 +22,9 @@ node_modules/
 pnpm-debug.log*
 # turbo prune Docker-Build-Kontext (transient, von build-and-push.sh erzeugt)
 out/
+# Agent-Harness (ADR-016/018): lokaler CodeGraph-Index (re-buildbar) + Superpowers-Artefakte
+.codegraph/
+.superpowers/
 
 # Editor / OS
 .DS_Store
