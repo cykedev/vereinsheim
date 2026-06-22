@@ -4,7 +4,7 @@
 > `apps/*` via `git filter-repo` (Git-History erhalten), Catalog, geteilter Dev-Postgres. Phase 3:
 > Produktions-Build aus dem Monorepo via `turbo prune` (Image-Namen/Tags + Deploy-Vertrag bit-gleich),
 > lokal voll verifiziert; der erste Monorepo-Deploy auf den VPS ist **gelaufen**. Gates grün.
-> **Phase 2:** Harness/Knowledge (ADR-016/017/018/019) erledigt — `packages/config`-Code offen.
+> **Phase 2:** Harness/Knowledge (ADR-016/017/018/019) **+ `packages/config`** erledigt (Juni 2026).
 > **Phase 4** (packages/ui) offen. Verbindliche Entscheidung:
 > [ADR-015](decisions.md). Dieses Dokument ist der Umsetzungsplan; `decisions.md` hält das „Warum".
 
@@ -117,7 +117,7 @@ Der VPS sieht keinen Unterschied. Cutover-Verifikation: gebautes Image gegen akt
 | Phase | Inhalt | Risiko | Gewinn |
 | --- | --- | --- | --- |
 | **1** ✅ | pnpm + turbo Skelett; beide Apps **as-is** nach `apps/*` via `git filter-repo` (History erhalten); geteilte Deps heben; Root-`docker-compose.dev.yml` | niedrig | ein Repo, schnelle inkrementelle Builds, ein Dev-Befehl |
-| **2** | Harness/Knowledge ✅ (ADR-019) + `packages/config` (next/eslint/tsconfig-base/prettier/postcss/tailwind-globals) | niedrig | Konfig-Duplikate weg |
+| **2** ✅ | Harness/Knowledge (ADR-019) + `packages/config`: next/eslint/tsconfig-base/prettier/postcss als `@vereinsheim/config` (tailwind-globals → Phase 4) | niedrig | Konfig-Duplikate weg |
 | **3** ✅ (Build) | `turbo prune`-Docker-Build; `build-and-push.sh` umgestellt; lokal verifiziert. **Staging-/VPS-Deploy ausstehend** | mittel | der schnelle, korrekte Build-/Deploy-Pfad |
 | **4** | `packages/ui` + `packages/lib`: byte-identische Schicht **echt** teilen (Imports `@/components/ui` → `@vereinsheim/ui`, schrittweise) → **Drift-Gate entfällt** | mittel | Tier-1-Ziel: Drift strukturell unmöglich |
 | **5** (optional, später) | CI (GitHub Actions) + Turbo Remote-Cache → supersedes ADR-006 | niedrig | maschinenübergreifender Cache |
@@ -166,6 +166,43 @@ Bewusst **nicht** in Phase 1 (Scope-Grenze):
 - Per-App `apps/*/docker-compose.dev.yml` (Single-App-Dev-Build) **entfernt** — obsolet durch
   Root-`docker-compose.dev.yml` + `pnpm dev`. Die App-`.claude`/`docs` referenzieren den alten
   In-Container-Flow (`docker compose … run app`) noch → Phase-2-Doc-Sync.
+
+### Phase 2 — Umsetzungsnotizen (packages/config erledigt, Juni 2026)
+
+Geliefert: die fünf byte-identischen Tooling-Configs als geteiltes Paket `@vereinsheim/config`
+(`packages/config`); pro App nur noch dünne Stubs. `globals.css` + `components.json` bleiben app-lokal
+(Phase 4). Alle 5 Gates grün, Docker-Prune-Build geprüft.
+
+- **Empirie-first bestätigt (offener Punkt aus §10):** zuerst nur der tsconfig-Slice
+  (`extends "@vereinsheim/config/tsconfig/nextjs.json"`) + Workspace-Dep `"@vereinsheim/config":
+  "workspace:*"` → `pnpm check-types` grün ⇒ pnpm löst Cross-Package-`extends` unter Strenge auf. Erst
+  danach die übrigen vier.
+- **Nur der *driftende* Kern wandert.** tsconfig: `compilerOptions` ins Paket, aber `paths`/`include`/
+  `exclude` **müssen** im App-Stub bleiben — relative Pfade aus einer extended Config lösen gegen die
+  *definierende* Datei auf (TS ≥5.0), sonst zeigt `@/*` aufs Paket statt auf `apps/<app>/src`.
+- **Pro Config:** eslint/postcss = Re-Export-Stub (`export { default } from "@vereinsheim/config/…"`).
+  prettier = `package.json`-Feld `"prettier": "@vereinsheim/config/prettier"`, `.prettierrc` gelöscht.
+  next.config = `createNextConfig(__dirname)`-Factory; die App liefert `__dirname`, damit
+  `outputFileTracingRoot = join(__dirname, "../../")` **rechnerisch byte-identisch** bleibt
+  (Phase-3-Build-Vertrag gewahrt).
+- **`eslint-config-next` app→Paket:** der Stub importiert es nicht mehr, das Paket hält es als `dependency`
+  (löst transitiv unter pnpm-Strenge). `eslint` (Binary) bleibt in den Apps. `next build` ist grün **ohne**
+  app-lokales `eslint-config-next` (Next 16 linted beim Build nicht).
+- **next-Factory: selbst-enthaltene `.d.ts`** (bewusst **kein** `import from "next"`) → die App-Typprüfung
+  braucht keine Cross-Package-„next"-Auflösung aus dem Paket-Kontext — relevant, weil `next build` die
+  `next.config.ts` (liegt in tsconfig-`include`) mit-typprüft, auch im geprunten Docker-Build.
+  `bodySizeLimit` als Literal `"12mb"` (zuweisbar zu Next's `SizeLimit`, nicht zum breiteren `string`).
+- **vitest unberührt:** beide `vitest.config.ts` redeklarieren den `@`-Alias manuell
+  (`path.resolve(__dirname, "./src")`) — vitest liest tsconfig nicht, also immun gegen die Extraktion.
+- **Docker-Prune-Build:** `turbo prune <app> --docker` zieht `packages/config` über die Workspace-Dep-Kante
+  in `out/json` + `out/full`; in-container `next build` löst tsconfig-`extends`/next.config/postcss auf. Per
+  lokalem `PUSH=0`-Build geprüft (kein Deploy).
+- **Gate/Docs:** die 5 Configs aus `consistency-check.sh` `MUST_MATCH` entfernt (Drift strukturell weg);
+  `components.json` + `globals.css` bleiben. `shared-conventions.md` §1, `architecture.md` und Root-CLAUDE.md
+  nachgezogen.
+
+Bewusst **nicht** in Phase 2 (Scope-Grenze): `globals.css`/`components.json` teilen + `packages/ui|lib`
+(echtes Code-Teilen, danach entfällt das Drift-Gate ganz) → Phase 4.
 
 ### Phase 3 — Umsetzungsnotizen (Build erledigt, Juni 2026)
 
@@ -227,8 +264,9 @@ geseedet, wächst über Sessions). Orthogonal; Schicht 2 (CLAUDE.md, scope-weise
 für Agenten auffindbar.
 
 **Wartung/Risiko**: Schicht 1 ist ein fertiges Tool (kein Eigencode); neuer Eigencode nur das
-Seed-Skript für Schicht 3. CodeGraph ist Dev-Hilfe, keine Build-Abhängigkeit. Offen: pnpm-Cross-Package
-in Phase 2 empirisch verifizieren. `next build`/`check` bleiben Pflicht-Gates.
+Seed-Skript für Schicht 3. CodeGraph ist Dev-Hilfe, keine Build-Abhängigkeit. pnpm-Cross-Package in Phase 2
+empirisch verifiziert (`@vereinsheim/config`: tsconfig-`extends` + Re-Exports unter
+pnpm-Strenge, `pnpm check` grün). `next build`/`check` bleiben Pflicht-Gates.
 
 **Lessons-/Wissens-Capture ([ADR-017](decisions.md))**: `/consolidate-lessons` triagiert Learnings nach
 **ENFORCE > DOCUMENT > REMEMBER** — REMEMBER landet in Schicht 3 (Memory-Graph), ENFORCE wird

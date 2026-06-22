@@ -10,8 +10,12 @@
 
 Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichung):
 
-- Configs: `components.json`, `eslint.config.mjs`, `.prettierrc`, `tsconfig.json`, `postcss.config.mjs`,
-  `next.config.ts`, `Dockerfile`, `src/app/globals.css`
+- App-lokale Configs (weiter im Gate): `components.json`, `src/app/globals.css` — bleiben app-lokal bis
+  Phase 4 (shadcn-CLI läuft im App-Kontext).
+- **Geteilt via `@vereinsheim/config`** (packages/config, seit Phase 2 — Drift dort **strukturell
+  unmöglich**, daher *nicht* mehr im Gate): `tsconfig.json`, `eslint.config.mjs`, `.prettierrc`,
+  `postcss.config.mjs`, `next.config.ts`. Die App-Dateien sind nur noch dünne `extends`/Re-Export-Stubs
+  (`.prettierrc` → `package.json`-Feld); Verhalten/Regeln ändert man **im Paket**, nicht in den Apps.
 - Error-Boundaries: `src/app/error.tsx`, `src/app/(app)/error.tsx`, `src/app/not-found.tsx`
 - ui-Primitives: alle gemeinsamen `src/components/ui/*` (insb. `button`, `card`, `sonner`,
   `empty-state`, `field-error`, `dropdown-menu`)
