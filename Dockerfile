@@ -72,5 +72,7 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-# server.js liegt monorepo-bedingt unter apps/<APP>/ (Shell-Form für $APP).
-CMD node apps/$APP/server.js
+# server.js liegt monorepo-bedingt unter apps/<APP>/. JSON/exec-Form + `exec` →
+# node ersetzt die Shell (wird PID 1) und bekommt SIGTERM direkt → graceful
+# Shutdown bei `docker stop`/Redeploy. $APP wird von sh interpoliert.
+CMD ["sh", "-c", "exec node apps/$APP/server.js"]
