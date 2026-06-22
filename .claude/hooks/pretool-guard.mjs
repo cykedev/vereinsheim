@@ -46,11 +46,18 @@ if (tool === "Bash") {
   // `&` (Job-Control) gebackgroundeter persistenter Server entkoppelt sich vom Harness
   // (nicht mehr per TaskStop killbar) und kann mit Builds/`pnpm check` die Maschine
   // überlasten — nutze stattdessen den run_in_background-Modus des Bash-Tools.
-  const bgAmp = /(^|[^&>])&(?![&>])/.test(cmd) // Job-Control-`&`, nicht `&&`/`&>`/`2>&1`
+  // Heredoc-Bodies + gequotete Strings vorher ausblenden, damit NUR echte Kommandos
+  // zählen (kein Block auf Commit-Messages/echo/Test-Fixtures, die das Pattern bloß
+  // erwähnen). Ein realer, unquoted `pnpm dev &` überlebt diese Reduktion.
+  const code = cmd
+    .replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, " ") // Heredoc <<EOF … EOF
+    .replace(/'[^']*'/g, " ")
+    .replace(/"[^"]*"/g, " ")
+  const bgAmp = /(^|[^&>])&(?![&>])/.test(code) // Job-Control-`&`, nicht `&&`/`&>`/`2>&1`
   const devServer =
-    /\bpnpm\b[^&|;]*\bdev\b/.test(cmd) ||
-    /\bnext\s+dev\b/.test(cmd) ||
-    /\bturbo\s+(run\s+dev|watch)\b/.test(cmd)
+    /\bpnpm\b[^&|;]*\bdev\b/.test(code) ||
+    /\bnext\s+dev\b/.test(code) ||
+    /\bturbo\s+(run\s+dev|watch)\b/.test(code)
   if (bgAmp && devServer) {
     deny(
       "Dev-/Watch-Server via `&` gebackgroundet → Orphan (harness-untrackbar, " +
