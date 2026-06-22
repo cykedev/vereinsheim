@@ -39,7 +39,7 @@ vereinsheim/
 ├── CLAUDE.md             # Wurzel-Kontext; je apps/* und packages/* eigene CLAUDE.md (scope-weise)
 ├── .mcp.json             # MCP Knowledge-Graph-Memory-Server (project scope, eingecheckt)
 ├── .claude/skills/       # Projekt-Skills: check, graph, db-restore, release
-├── docs/architecture.md  # generierter, lesbarer Projekt-Graph (+ architecture.graph.json)
+├── docs/architecture.md  # hand-gepflegte High-Level-Karte (Detail-Graph: CodeGraph MCP, .codegraph/ gitignored)
 ├── turbo.json
 ├── pnpm-workspace.yaml
 └── package.json          # geteilte Deps gehoben; app-spezifische bleiben in apps/*
@@ -140,18 +140,18 @@ Drei komplementäre Schichten, in die Migration eingebettet:
 
 | Schicht | Was | Wo | Phase |
 | --- | --- | --- | --- |
-| **1. Generierter Projekt-Graph** | `pnpm graph` → `architecture.graph.json` + `docs/architecture.md` (apps/packages/Routen/Server-Actions/Prisma-Modelle + Kanten); Staleness-Check im `check`-Gate | Turbo-Task + `scripts/` | 2 |
+| **1. Code-Graph (CodeGraph MCP)** | `@colbymchenry/codegraph` (lokal, SQLite): Symbole/Call-Graph/Referenzen/Routen, auto-aktuell via File-Watcher; Agenten via `codegraph_explore`. `.codegraph/` gitignored, Telemetrie aus. Dazu kleine hand-gepflegte `docs/architecture.md` (High-Level-Karte) | `.mcp.json` | 2 |
 | **2. Hierarchische CLAUDE.md** | Root + `apps/*/CLAUDE.md` + `packages/*/CLAUDE.md` (on-demand), `@import` auf architecture/conventions/decisions; Skills unter `.claude/skills/` | repo-weit | 1–2 |
 | **3. MCP-Knowledge-Graph** | `@modelcontextprotocol/server-memory` in `.mcp.json` (project, eingecheckt), Store `.claude/knowledge-graph.json`; Seed-Skript aus Schicht 1 + ADRs | `.mcp.json` + `scripts/` | 2 |
 
-**Zusammenspiel**: Schicht 1 = re-ableitbare Faktenstruktur (nie veraltet) → seedet Schicht 3
-(persistentes Gedächtnis); Schicht 2 macht beide für Agenten auffindbar (Claude Code lädt CLAUDE.md
-scope-weise + `@import`). Schicht 1 bleibt die Autorität für Struktur — Schicht 3 ist Gedächtnis und
-wird periodisch aus Schicht 1 re-seedet.
+**Zusammenspiel**: Schicht 1 (CodeGraph) = „was der Code _ist_" (live, auto-aktuell, on-demand
+abgefragt). Schicht 3 (Memory) = „was wir _entschieden/gelernt_ haben" (aus ADRs/Konventionen
+geseedet, wächst über Sessions). Orthogonal; Schicht 2 (CLAUDE.md, scope-weise + `@import`) macht beide
+für Agenten auffindbar.
 
-**Wartung/Risiko**: der Generator (Schicht 1) ist der einzige nennenswerte neue Code; Schicht 3 driftet
-als Gedächtnis (daher re-seeden); der Memory-Server ist Dev-Hilfe, keine Build-Abhängigkeit. `next
-build`/`check` bleiben Pflicht-Gates.
+**Wartung/Risiko**: Schicht 1 ist ein fertiges Tool (kein Eigencode); neuer Eigencode nur das
+Seed-Skript für Schicht 3. CodeGraph ist Dev-Hilfe, keine Build-Abhängigkeit. Offen: pnpm-Cross-Package
+in Phase 2 empirisch verifizieren. `next build`/`check` bleiben Pflicht-Gates.
 
 ## 11. Offene Folgepunkte (nicht in dieser Migration)
 

@@ -479,11 +479,15 @@ abfragbares Projektgedächtnis über Sessions hinweg.
 
 **Entscheidung**: Drei sich ergänzende Schichten:
 
-1. **Generierter Projekt-Graph (Ground Truth)**: ein `pnpm graph`/Turbo-Task erzeugt
-   `architecture.graph.json` (Knoten: apps, packages, Routen, Server Actions, Prisma-Modelle, geteilte
-   Komponenten; Kanten: depends-on/imports/owns) aus dem pnpm/turbo-Workspace + leichtem AST/Glob-
-   Extractor, plus eine lesbare `docs/architecture.md` (inkl. Mermaid). In `turbo.json` als Output
-   deklariert + Staleness-Check im `check`-Gate → nie veraltet.
+1. **Code-Graph via CodeGraph MCP (Ground Truth)**: `@colbymchenry/codegraph` läuft als lokaler
+   MCP-Server (SQLite + FTS5) und indexiert Symbole, Call-Graph, Referenzen und Framework-Routen
+   inkrementell (File-Watcher hält ihn aktuell). Agenten nutzen `codegraph_explore`/`codegraph_node`:
+   Entry-Points + Call-Pfade + verbatim Quelle in EINEM Aufruf statt vieler grep/read. Eintrag im
+   eingecheckten `.mcp.json` (Project-Scope, **manuell** — nicht der personal-config-Installer);
+   `.codegraph/`-Index ist gitignored (lokal re-buildbar); Telemetrie aus (`CODEGRAPH_TELEMETRY=0`).
+   Eine kleine, hand-gepflegte `docs/architecture.md` ergänzt das um die High-Level-Karte
+   (apps↔packages). Empirisch auf ringwerk validiert (löst gesplittete Actions, Barrel-Re-Exports und
+   Call-Graph sauber auf).
 2. **Hierarchische CLAUDE.md (Kontext/Navigation)**: Root-`CLAUDE.md` (universelle Regeln + `@import`
    von `docs/architecture.md`, `docs/shared-conventions.md`, `docs/decisions.md`); je App
    (`apps/*/CLAUDE.md`) und je geteiltem Paket (`packages/*/CLAUDE.md`) scope-spezifische Regeln (Claude
@@ -495,23 +499,29 @@ abfragbares Projektgedächtnis über Sessions hinweg.
    Entities/Relations/Observations ein; danach wächst der Graph mit über Sessions aufgezeichneten
    Entscheidungen/Gotchas.
 
-Schicht 1 ist re-ableitbare Wahrheit und re-seedet Schicht 3 periodisch (Schicht 3 ist Gedächtnis,
-**nicht** Struktur-Autorität). Schicht 2 macht beide auffindbar.
+Schicht 1 (CodeGraph) = „was der Code _ist_" (live, auto-aktuell, on-demand abgefragt). Schicht 3 =
+„was wir _entschieden/gelernt_ haben" (aus ADRs/Konventionen geseedet, wächst über Sessions) —
+**nicht** Struktur-Autorität. Beide sind orthogonal; Schicht 2 (CLAUDE.md) macht beide auffindbar.
 
 **Alternativen**:
 
-- _Nur CLAUDE.md/Docs_: einfachste Lösung, aber kein maschinenlesbarer Graph und kein
+- _Eigenbau-Graph-Generator (pnpm/turbo + AST-Extractor)_: ursprünglich geplant; verworfen, da
+  CodeGraph dasselbe reifer, auto-gepflegt und ohne eigenen Wartungscode liefert.
+- _Nur CLAUDE.md/Docs_: einfachste Lösung, aber kein maschinenlesbarer Code-Graph und kein
   Cross-Session-Gedächtnis.
-- _Nur MCP-Memory_: dauerhaft, aber driftet ohne generierte Faktenbasis; Struktur nicht re-ableitbar.
-- _CodeGraph/Neo4j-MCP (indexierter Symbol-/Call-Graph)_: mächtiger für Symbol-Navigation, aber mehr
-  Infra; kann später ergänzt werden, wenn Symbol-Level-Navigation gebraucht wird.
+- _Nur MCP-Memory_: dauerhaft, aber driftet ohne Code-Faktenbasis.
+- _Neo4j / schwerer Graph-DB-MCP_: mächtiger, aber externe Infra; CodeGraphs lokales SQLite reicht.
 
 **Folgen**:
 
-- Neuer Code: Graph-Generator + Staleness-Check (Schicht 1) und Seed-Skript (Schicht 3); Schicht 2 ist
-  nur Doku/Config.
-- `.mcp.json` wird eingecheckt (keine Secrets; Memory-Server braucht keine). Der Memory-Server ist
-  Dev-Hilfe, **keine** Build-Abhängigkeit (`npx`; in headless/CI optional).
+- **Kein** eigener Graph-Generator-Code mehr (Schicht 1 = fertiges Tool). Neuer Eigencode beschränkt
+  sich auf das Seed-Skript für Schicht 3 (Memory aus ADRs/Konventionen) + `docs/architecture.md`.
+- CodeGraph ist Dev-Werkzeug (global via npm bzw. `codegraph install`), lokal, MIT, **keine**
+  Build-Abhängigkeit (meldet sich ohne Index inaktiv; in headless/CI optional).
+- **Offen (Phase 2):** pnpm-Monorepo-Cross-Package-Auflösung empirisch bestätigen (innerhalb eines
+  Repos fehlerfrei getestet).
+- `.mcp.json` und `.claude/knowledge-graph.json` eingecheckt (keine Secrets; Memory-Server braucht
+  keine); `.codegraph/` gitignored.
 - Bestehende `.claude/commands/check.md` wandern auf das neue Skills-Format
   (`.claude/skills/check/SKILL.md`, `invocation: [user, Claude]`).
 - Schichten landen in Phase 1/2 der Migration (siehe `monorepo-plan.md` §10).
