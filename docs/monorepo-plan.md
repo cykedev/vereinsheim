@@ -153,6 +153,10 @@ für Agenten auffindbar.
 Seed-Skript für Schicht 3. CodeGraph ist Dev-Hilfe, keine Build-Abhängigkeit. Offen: pnpm-Cross-Package
 in Phase 2 empirisch verifizieren. `next build`/`check` bleiben Pflicht-Gates.
 
+**Lessons-/Wissens-Capture ([ADR-017](decisions.md))**: `/consolidate-lessons` triagiert Learnings nach
+**ENFORCE > DOCUMENT > REMEMBER** — REMEMBER landet in Schicht 3 (Memory-Graph), ENFORCE wird
+Gate/Lint/Test, DOCUMENT in CLAUDE.md/Konventionen. Ein einziges Skill für beide Apps.
+
 ## 11. Offene Folgepunkte (nicht in dieser Migration)
 
 - ActionResult-Typ-Vereinheitlichung (Treffsicher) — passt gut in `packages/lib`.

@@ -528,9 +528,43 @@ Schicht 1 (CodeGraph) = „was der Code _ist_" (live, auto-aktuell, on-demand ab
 
 ---
 
+## ADR-017 — Lessons/Wissens-Capture: stärkste Permanenz zuerst
+
+**Status**: Accepted (Juni 2026)
+
+**Kontext**: Das bestehende `/consolidate-lessons` (ringwerk) promotet Session-Learnings in Docs. Docs
+sind aber weich (verlassen sich auf Befolgung). Der `"use server"`-Build-Fehler zeigte: die wirksamste
+Form einer Lektion ist ein **erzwungener Check** (Gate/Lint/Test), nicht eine Doku-Zeile.
+
+**Entscheidung**: `/consolidate-lessons` triagiert jede Lektion auf die **höchste erreichbare
+Permanenzstufe** (prefer enforcement):
+
+1. **ENFORCE** (stärkste): automatisierter Check — eslint-Regel, `/check`-Gate (inkl. `next build`),
+   Anti-Pattern-Grep in `consistency-check.sh`, Unit-Test, oder ein Fix, der den Fehlermodus beseitigt.
+   Wird umgesetzt und dem User als **konkrete Aktion** vorgelegt, nie still nur dokumentiert.
+2. **DOCUMENT**: generische Regel in eine immer-geladene Doc (CLAUDE.md/Konventionen/ADR).
+3. **REMEMBER**: projektspezifischer Kontext → abrufbares Gedächtnis (heute `lessons.md`; im Monorepo
+   der Layer-3-Memory-Graph, ADR-016).
+
+**Alternativen**:
+
+- _Nur Docs (Status quo)_: weich; wirksame Lektionen (Build-/Compile-Regeln) bleiben unerzwungen.
+- _Alles in den Memory-Graph_: abfrage-abhängig + mutierbar; harte Regeln gehören in erzwungene
+  Gates/Docs.
+
+**Folgen**:
+
+- `/consolidate-lessons`-Skill um die ENFORCE-Stufe + das Triage-Prinzip erweitert (ringwerk; dient als
+  Monorepo-Vorlage).
+- Der Memory-Graph (ADR-016) ist die REMEMBER-Stufe — er ersetzt den `lessons.md`-Buffer, **nicht** die
+  Promotion-Disziplin.
+- Im Monorepo ein einziges `/consolidate-lessons` für beide Apps.
+
+---
+
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
 
-Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-017+):
+Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-018+):
 
 - **Off-Site-Backup-Strategie**: rclone → S3-compatible, borg auf NAS,
   IONOS Snapshot. Trade-offs: Kosten, RPO, Restore-Granularität.
