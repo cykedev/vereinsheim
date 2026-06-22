@@ -23,6 +23,10 @@ nicht mehr im `consistency-check.sh`-Gate).
   auf die Monorepo-Wurzel (Host + geprunter Docker-Kontext identisch). Die `.d.ts` bleibt selbst-enthalten
   (bewusst **kein** `import from "next"`), damit `next build` die `next.config.ts` ohne Cross-Package-
   „next"-Auflösung typprüfen kann.
+- **next-Factory setzt `transpilePackages`** für die geteilten Source-Pakete (`@vereinsheim/lib`, ab
+  Phase 4 Zyklus 2 auch `@vereinsheim/ui`): sie liefern TS/TSX-Source ohne Build-Step, Next transpiliert
+  sie just-in-time. Neue geteilte Pakete hier eintragen; die `.d.ts` (`transpilePackages: string[]`) in
+  Sync halten.
 - **Kein `"use server"`** in diesem Paket (geteilte Dateien dürfen keine Server-Action-Re-Exports sein,
   monorepo-plan §9).
 - `globals.css` + `components.json` sind **app-lokal** (Phase 4) — gehören NICHT hierher.

@@ -17,6 +17,10 @@ export function createNextConfig(appDir) {
     // Monorepo: Datei-Tracing-Wurzel ist das Repo-Root (zwei Ebenen über
     // apps/<app>), sonst tract Next den Workspace falsch (NFT-Warnung beim Build).
     outputFileTracingRoot: path.join(appDir, "../../"),
+    // Geteilte Workspace-Pakete liefern TS/TSX-Source (kein Build-Step) → Next
+    // muss sie transpilieren; "use client" in @vereinsheim/lib/hooks/* bleibt
+    // erhalten. Phase 4 Zyklus 2 ergänzt "@vereinsheim/ui".
+    transpilePackages: ["@vereinsheim/lib"],
     experimental: {
       serverActions: {
         // Upload-Limit ist 10 MB; hier mit etwas Puffer für Multipart/FormData-Overhead.

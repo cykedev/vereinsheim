@@ -6,6 +6,7 @@
 export declare function createNextConfig(appDir: string): {
   output: "standalone"
   outputFileTracingRoot: string
+  transpilePackages: string[]
   experimental: {
     serverActions: {
       // Literal (nicht `string`) — muss zu Next's `SizeLimit` (Template-Literal
