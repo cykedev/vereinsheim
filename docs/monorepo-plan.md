@@ -298,11 +298,9 @@ maschinengebunden:
 - ActionResult-Typ-Vereinheitlichung (Treffsicher) — passt gut in `packages/lib`.
 - Env-Var-Angleichung `ADMIN_*` ↔ `SEED_ADMIN_*` (deploy-breaking, separat).
 - CI/Remote-Cache (Phase 5).
-- **Dev-Tooling-Baseline vereinheitlichen + „superchargen":** treffsicher nutzt das Superpowers-Plugin
-  (Brainstorm/Plan/Spec-Workflows; `.superpowers/` lokal/gitignored + `docs/superpowers/{plans,specs}/`
-  eingecheckt), ringwerk nicht. Im Monorepo eine **gemeinsame** Tooling-Baseline am Root — Superpowers
-  + die neuen Schichten (CodeGraph, Memory-Graph, ENFORCE-Lessons, `/check` + Gates) — und so
-  **integrieren, dass sie sich verstärken**: CodeGraph speist Planung/Impact, Lessons speisen den
-  Memory-Graph, Gates erzwingen promotete Regeln. Ziel: ein einziges, „supergechargtes" Dev-Setup für
-  beide Apps statt zweier ungleicher. Konkrete Praktiken dazu: **[ADR-018](decisions.md)** (Hooks/
-  Stop-Gate, PIV-Workflow, Sub-Agents, On-Demand-Context, Ralph-Loop).
+- **Dev-Tooling-Baseline vereinheitlicht (erledigt, [ADR-020](decisions.md)):** **ein** Satz am Root für
+  beide Apps — der native **PIV-Workflow** (`/plan → /implement → /validate → /review` + `/debug`) mit
+  den geharvesteten Superpowers-Disziplinen (brainstorming, TDD, evidence-before-claims, receiving-review,
+  systematic-debugging), verzahnt mit den Schichten: CodeGraph speist Planung/Impact, Lessons speisen den
+  Memory-Graph, das Stop-Gate erzwingt promotete Regeln. Das **Superpowers-Plugin ist entfernt** (kein
+  zweiter, abweichender Workflow); die datierten `docs/superpowers/`-Archive bleiben als Historie.
