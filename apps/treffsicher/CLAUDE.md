@@ -46,6 +46,17 @@ Dev-Login: `admin@example.com` / `admin-passwort-12`
 
 ---
 
+## Gedächtnis (Memory-Graph)
+
+Der SessionStart-Hook surface't den geteilten Memory-Graph (Projektgedächtnis,
+Root-`.claude/knowledge-graph.json`). Bei relevantem Vorwissen (Incident/Provenance/Zustand) vor
+breiter Exploration `mcp__memory__search_nodes`/`open_nodes` abfragen. Session-Ende:
+REMEMBER-würdige Projektfakten via `/consolidate-lessons` (Schritt 5) als Entity festhalten und
+`.claude/knowledge-graph.json` mit-committen. Abgrenzung: erzwingbare Regeln → Docs/Gates;
+maschinen-/ops-lokale Fakten → natives Auto-Memory.
+
+---
+
 ## Deployment
 
 Produktions-Deployment auf TrueNAS SCALE via Docker: @docs/production-deploy-truenas.md

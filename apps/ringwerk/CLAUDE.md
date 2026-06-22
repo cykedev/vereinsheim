@@ -36,6 +36,7 @@
 - Run `/check` — all gates must be green.
 - **Write lessons** — before `/consolidate-lessons`, add new entries to `.claude/tasks/lessons.md` for anything surprising, tricky, or worth remembering from this session. Format: `| YYYY-MM-DD | Was schiefgelaufen ist oder aufgefallen ist | Die Regel die es verhindert |`. Minimum 1 Eintrag pro Session — wenn nichts schiefgelaufen ist, dann eine Beobachtung über das Codebase oder einen nicht-offensichtlichen Entscheid.
 - Run `/consolidate-lessons` — promote new learnings to docs.
+- Memory-Graph: REMEMBER-würdige Projektfakten (Incident/Provenance/Zustand) via `mcp__memory__create_entities` festhalten und `.claude/knowledge-graph.json` mit-committen (in-repo, persistiert nicht von selbst).
 - Doc sync: review session changes and update any stale docs in `docs/` (e.g. `features.md`, `data-model.md`, `architecture.md`, `reference-files.md`). Commit updates.
 - Present a summary of all commits on the branch.
 - Merge to `main` with `git merge --ff-only` (no merge commit), then delete the branch with `git branch -d`.
@@ -47,6 +48,7 @@
 1. Read `docs/project-brief.md`
 2. Read last 5 entries of `.claude/tasks/lessons.md`
 3. Brief German onboarding message: "Alles klar" or any relevant context from lessons
+4. Der SessionStart-Hook surface't den Memory-Graph (Projektgedächtnis): bei relevantem Vorwissen (Incident/Provenance/Zustand) vor breiter Exploration `mcp__memory__search_nodes`/`open_nodes` abfragen.
 
 ---
 
