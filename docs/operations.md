@@ -320,7 +320,7 @@ einfaches `migrate deploy` nicht weiter.
 
 ### Eingebauter Recovery-Mechanismus
 
-Die App-Repos enthalten zwei zusammenwirkende Skripte:
+Die Apps enthalten zwei zusammenwirkende Skripte (`apps/<app>/scripts/`):
 
 - `scripts/run-migrations-with-recovery.sh` — versucht `migrate deploy`,
   ruft bei Fehler das Recovery-Skript, dann nochmal `deploy`.
@@ -358,7 +358,7 @@ gut, die App startet automatisch.
 Wenn im Log eine unbekannte Migration als „Manual intervention required"
 steht, du aber WEISST, was das Problem ist:
 
-1. Im jeweiligen App-Repo `scripts/resolve-failed-migrations.mjs` →
+1. In `apps/<app>/scripts/resolve-failed-migrations.mjs` →
    `KNOWN_RECOVERY_HANDLERS`-Objekt erweitern. Modus:
    - `--applied` — DDL ist bereits in der DB vollzogen (z.B. Spalte
      existierte schon, Migration als „erledigt" markieren)
@@ -418,7 +418,7 @@ SKIP_BACKUP=1 ./scripts/deploy.sh
 
 **C) Migrations-SQL selbst ist falsch und muss korrigiert werden:**
 
-1. Im App-Repo Migrations-SQL fixen, committen
+1. In `apps/<app>/prisma/migrations/` die Migrations-SQL fixen, committen
 2. DB-State manuell auf „vor der Migration" zurückbringen
 3. Migration als `--rolled-back` markieren (siehe B, Schritt 2)
 4. Image neu bauen + pushen + deployen → korrigierte SQL läuft
@@ -483,7 +483,7 @@ SKIP_BACKUP=1 ./scripts/vereinsheim deploy
 ```
 
 (Vorherige SHAs findest du in Docker Hub unter
-`<DOCKER_USER>/ringwerk/tags` oder via `git log` im App-Repo.)
+`<DOCKER_USER>/ringwerk/tags` oder via `git log` im Monorepo.)
 
 ### Variante B — Vollständiger Rollback inkl. DB
 
