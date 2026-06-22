@@ -20,10 +20,14 @@ auf der **höchsten** erreichbaren Stufe verankern:
 2. **DOCUMENT** — generische Regel in die passende immer-/on-demand-geladene Doc:
    - app-spezifisch generisch → `apps/<app>/docs/code-conventions.md` bzw. `…/ui-patterns.md`
    - app-übergreifend → `docs/shared-conventions.md` (Single Source, Root)
-3. **REMEMBER** — projektspezifischer Kontext/Incident → **Memory-Graph** (memory-MCP,
-   Store `.claude/knowledge-graph.json`): als Entity/Observation ablegen (`mcp__memory__*`),
-   damit es über Sessions abrufbar bleibt. Der Memory-Graph ersetzt den lessons.md-Buffer als
-   Langzeit-Speicher; in `lessons.md` bleiben nur die letzten ~10 Einträge für Kurzzeit-Gedächtnis.
+3. **REMEMBER** — projektspezifischer Kontext, der **nicht** als Regel taugt → **Memory-Graph**
+   (memory-MCP, Store `.claude/knowledge-graph.json`). Hierher gehört das *Warum/Wann/Was-passiert-ist*:
+   **Incident** mit Provenance (was kippte warum, wer entschied, revidierbar?), sich ändernder
+   **Zustand** (offene Migration, Teil-Stand), **Relationen** zwischen Apps/ADRs/Modulen. **Nicht**
+   hierher: wiederverwendbare Regeln (→ DOCUMENT) und maschinen-/ops-lokale Fakten (→ natives
+   Claude-Code-Auto-Memory, `~/.claude/.../memory/`). Faustregel: die *Regel* einer Lektion → Docs;
+   die *Story/Provenance* → Graph. Der Graph ersetzt den `lessons.md`-Buffer als Langzeit-Speicher;
+   in `lessons.md` bleiben nur die letzten ~10 Einträge fürs Kurzzeit-Gedächtnis.
 4. **ARCHIVE** — bereits abgedeckt, obsolet oder trivial → löschen.
 
 ENFORCE-Funde werden dem User **immer als konkrete Aktion** vorgelegt (welcher Check/Fix),
@@ -55,9 +59,17 @@ nie still nur dokumentiert.
    - **[Regel]**: …
    ```
 
-5. **REMEMBER → Memory-Graph.** Jeden `remember`-Eintrag via memory-MCP als Entity/Observation
-   anlegen (`mcp__memory__create_entities` / `…add_observations`), Typ z.B. `lesson`/`incident`,
-   mit App-Tag. (Fallback ohne MCP: in `lessons.md` als KEEP behalten.)
+5. **REMEMBER → Memory-Graph.** Pro `remember`-Eintrag:
+   a. **Entity anlegen** — `mcp__memory__create_entities` mit sprechendem `name` (kebab-case),
+      `entityType` aus dem Vokabular `incident` | `state` | `decision`, und einer `observations`-Zeile
+      mit Datum + App + Provenance (z.B. `"2026-06-18 (ringwerk): … gekippt, weil …; revidierbar"`).
+      Existiert die Entity schon → `mcp__memory__add_observations` statt Dublette.
+   b. **Verknüpfen** — wo sinnvoll `mcp__memory__create_relations` zur App (`occurred_in`/`applies_to`)
+      oder zu einer ADR (`amends`/`relates_to`), damit der Eintrag auffindbar im Graph hängt.
+   c. **Committen** — `.claude/knowledge-graph.json` ist in-repo (anders als das auto-persistierte
+      native Auto-Memory) → die geänderte Store-Datei in den Session-Commit aufnehmen, sonst geht der
+      Write beim nächsten Clone/Pull verloren.
+   (Fallback ohne MCP: Eintrag in `lessons.md` als KEEP behalten.)
 
 6. **lessons.md neu schreiben:** Original-Header + Datums-Kommentar + alle KEEP/REMEMBER-Einträge
    (die noch NICHT in den Memory-Graph wanderten) + die letzten 10 nach Datum; keine
