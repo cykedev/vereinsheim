@@ -16,11 +16,13 @@ und [`apps/treffsicher`](apps/treffsicher) (via `git filter-repo` integriert,
 History erhalten; pnpm + Turborepo, Catalog für geteilte Versionen). Dev läuft
 auf dem Host: `docker compose -f docker-compose.dev.yml up -d` + `pnpm dev`.
 
-**Achtung Dual-Source bis Phase 3:** der Produktions-Build läuft weiterhin über
-die Standalone-Repos [`../ringwerk`](../ringwerk) / [`../treffsicher`](../treffsicher)
-(`vereinsheim build`, unverändert) — sie bleiben bis Phase 3 die Release-Quelle.
-Beide Apps werden lokal gebaut (`docker buildx`) und nach Docker Hub gepusht;
-der VPS pullt die Images.
+Seit **Phase 3** baut `vereinsheim build` **aus dem Monorepo** (`turbo prune`,
+Root-`Dockerfile`) — Image-Namen/Tags + `compose.yml` unverändert, lokal voll
+verifiziert. Die Standalone-Repos [`../ringwerk`](../ringwerk) /
+[`../treffsicher`](../treffsicher) sind **keine Build-Quelle mehr** (History via
+Tag `pre-monorepo-import` archiviert). Beide Apps werden weiter lokal gebaut
+(`docker buildx`) und nach Docker Hub gepusht; der VPS pullt die Images.
+**Ausstehend:** der erste echte VPS-Deploy aus dem Monorepo (user-gated).
 
 ## Lese-Reihenfolge bei Sessionstart
 
@@ -81,11 +83,12 @@ seit Ende Mai 2026 produktiv. **Das aktive Großvorhaben ist die Monorepo-Migrat
 (pnpm/Turborepo, `turbo prune --docker`), inkl. geteilter `packages/*`, Knowledge-Graph (CodeGraph +
 CLAUDE.md-Hierarchie + Memory-MCP) und Harness (Hooks/PIV).
 
-**Phase 1 ist erledigt**: beide Apps via `git filter-repo` nach `apps/*` integriert (History erhalten),
-pnpm-Workspace + Turborepo + Catalog, geteilter Dev-Postgres, alle 5 Gates grün, Deploy-Vertrag
-bit-gleich. **Nächster Schritt: Phase 2** — `packages/config` (Konfig-Duplikate weg) + die
-Knowledge-/Harness-Schichten (ADR-016/017/018). Schlüsselentscheidungen & Scope-Grenze stehen in
-[`docs/monorepo-plan.md`](docs/monorepo-plan.md) §8 („Phase 1 — Umsetzungsnotizen").
+**Phasen 1 + 3 sind erledigt**: Phase 1 = Apps via `git filter-repo` nach `apps/*` (History erhalten),
+pnpm-Workspace + Turborepo + Catalog, geteilter Dev-Postgres. Phase 3 = Produktions-Build aus dem
+Monorepo via `turbo prune` (Deploy-Vertrag bit-gleich, lokal voll verifiziert). Alle 5 Gates grün.
+**Nächster Schritt: Phase 2** — `packages/config` (Konfig-Duplikate weg) + die Knowledge-/Harness-Schichten
+(ADR-016/017/018); danach Phase 4 (`packages/ui`, Drift-Gate entfällt). Schlüsselentscheidungen &
+Scope-Grenzen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md) §8 (Umsetzungsnotizen Phase 1 + 3).
 
 Weitere Folgearbeiten (nicht im aktuellen Scope): Off-Site-Backup, CI/Remote-Cache (Phase 5, supersedet
 ADR-006).
