@@ -1,6 +1,6 @@
 # Code Conventions – Ringwerk
 
-Verbindlich gleichrangig mit `.claude/docs/technical.md`.
+Verbindlich gleichrangig mit `docs/technical.md`.
 
 ## Index
 
