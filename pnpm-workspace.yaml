@@ -19,6 +19,9 @@ catalog:
   next-themes: "^0.4.6"
   pg: "^8.19.0"
   prisma: "^7.4.1"
+  # slider.tsx importiert dieses Subpaket direkt (sonst nur transitiv über das
+  # radix-ui-Umbrella) → unter pnpm-Strenge explizit als geteilte Dep nötig.
+  "@radix-ui/react-slider": "^1.4.1"
   radix-ui: "^1.4.3"
   react: "^19.2.6"
   react-dom: "^19.2.6"
