@@ -74,10 +74,18 @@ if (tool === "Bash") {
 // Advisory: blockt NICHTS, gibt nur additionalContext aus. Reine Textsuche (Doku/Logs/
 // Strings) bleibt legitim. Marker im OS-Temp pro session_id verhindert Wiederholung +
 // Token-Spam. Fail-open wie der Rest der Datei: IO-Fehler dürfen nie den Call stören.
-const searchesCode =
-  (tool === "Bash" && /\b(rg|ag|ack|fd|grep|egrep|fgrep|find)\b/.test(String(ti.command || ""))) ||
-  tool === "Grep" ||
-  tool === "Glob"
+// Bei Bash zählt nur ein ECHTES Such-Kommando, keine bloße Erwähnung in gequoteten
+// Strings/Heredocs (z.B. `git commit -m "… grep …"`, echo, Test-Fixtures) — gleiche
+// Reduktion wie der Dev-Server-Guard oben (vgl. „real commands, not mentions").
+const bashSearch =
+  tool === "Bash" &&
+  /\b(rg|ag|ack|fd|grep|egrep|fgrep|find)\b/.test(
+    String(ti.command || "")
+      .replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, " ")
+      .replace(/'[^']*'/g, " ")
+      .replace(/"[^"]*"/g, " "),
+  )
+const searchesCode = bashSearch || tool === "Grep" || tool === "Glob"
 
 if (searchesCode) {
   try {
