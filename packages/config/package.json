@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     "./tsconfig/nextjs.json": "./tsconfig/nextjs.json",
-    "./eslint": "./eslint/index.mjs"
+    "./eslint": "./eslint/index.mjs",
+    "./prettier": "./prettier/index.json"
   },
   "dependencies": {
     "eslint": "catalog:",
