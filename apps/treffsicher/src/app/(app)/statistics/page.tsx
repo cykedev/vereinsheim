@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
-import { getDisplayTimeZone } from "@/lib/dateTime"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import {
   getStatsData,
   getWellbeingCorrelationData,

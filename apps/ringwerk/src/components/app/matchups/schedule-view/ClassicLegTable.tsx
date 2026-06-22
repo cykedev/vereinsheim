@@ -1,4 +1,4 @@
-import { formatDateOnly, getDisplayTimeZone } from "@/lib/dateTime"
+import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { determineOutcome } from "@/lib/results/calculateResult"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
 import { ResultEntryDialog } from "@/components/app/results/ResultEntryDialog"

@@ -27,7 +27,7 @@ Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichun
 - **Geteilt via `@vereinsheim/lib`** (packages/lib, seit Phase 4 / Zyklus 1 — Drift **strukturell
   unmöglich**, daher *nicht* mehr im Gate): `cn` (`utils`), `forms/fieldErrors`, die Form-Hooks
   `useUnsavedChangesGuard` + `useNavigationConfirm`. Import via `@vereinsheim/lib/<subpath>`; Logik
-  ändert man **im Paket**, nicht in den Apps. (`dateTime` bleibt vorerst app-lokal — driftet noch.)
+  ändert man **im Paket**, nicht in den Apps. (`dateTime` ist seit Juni 2026 ebenfalls geteilt (server-only).)
 - Diese Datei: `docs/shared-conventions.md`
 
 Regel: Wer eine dieser Dateien ändert, ändert sie in **beiden** Repos gleich. Neue, klar
@@ -76,7 +76,7 @@ Hamburger-Schema in beiden: Desktop `hidden md:flex`-Links + Logo links, Konto a
 
 ## 6. Daten & Formatierung
 
-- Datum/Zeit/Zahl über `src/lib/dateTime.ts` (`formatDateOnly(date, displayTimeZone)` etc.) — **kein**
+- Datum/Zeit/Zahl über `@vereinsheim/lib/dateTime` (`formatDateOnly(date, displayTimeZone)` etc.) — **kein**
   inline `new Intl.DateTimeFormat(...)` in Seiten.
 - Zeitzone-Default: `Europe/Berlin` (beide Apps).
 - **ActionResult-Kanon** (Zielform, Ringwerk-Muster): diskriminierte Union

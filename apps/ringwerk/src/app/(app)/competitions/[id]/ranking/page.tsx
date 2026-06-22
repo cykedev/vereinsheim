@@ -9,7 +9,7 @@ import { EventTeamRankingTable } from "@/components/app/series/EventTeamRankingT
 import { Button } from "@vereinsheim/ui/button"
 import { Badge } from "@vereinsheim/ui/badge"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import { formatDateOnly, getDisplayTimeZone } from "@/lib/dateTime"
+import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { SCORING_MODE_LABELS } from "@/lib/scoring/labels"
 
 interface Props {

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation"
 import { CheckCircle2, Gauge, Heart, MessageSquare, Paperclip } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
-import { getDisplayTimeZone } from "@/lib/dateTime"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { getSessionById } from "@/lib/sessions/actions"
 import { buildSessionDetailViewModel } from "@/lib/sessions/sessionDetailViewModel"
 import { AttachmentSection } from "@/components/app/sessions/AttachmentSection"

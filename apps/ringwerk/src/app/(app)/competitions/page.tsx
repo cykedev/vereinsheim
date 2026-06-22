@@ -9,7 +9,7 @@ import { CompetitionsFilters } from "@/components/app/competitions/CompetitionsF
 import { Button } from "@vereinsheim/ui/button"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
-import { getDisplayTimeZone } from "@/lib/dateTime"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import type { CompetitionListItem } from "@/lib/competitions/types"
 
 const STATUS_OPTIONS = [

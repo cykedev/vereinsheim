@@ -1,7 +1,7 @@
 import { getAuthSession } from "@/lib/auth-helpers"
 import { redirect } from "next/navigation"
 import { getSessions } from "@/lib/sessions/actions"
-import { getDisplayTimeZone } from "@/lib/dateTime"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { BookOpen } from "lucide-react"
 import { SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
