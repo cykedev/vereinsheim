@@ -3,8 +3,9 @@
 > Status: **Phasen 1 + 3 erledigt** (Juni 2026). Phase 1: Skelett (pnpm + Turborepo), beide Apps als
 > `apps/*` via `git filter-repo` (Git-History erhalten), Catalog, geteilter Dev-Postgres. Phase 3:
 > Produktions-Build aus dem Monorepo via `turbo prune` (Image-Namen/Tags + Deploy-Vertrag bit-gleich),
-> lokal voll verifiziert (Runner + Migrator + ganzer `compose.yml`-Stack). Gates grün. **Phasen 2 + 4
-> offen**; der VPS-/Staging-Deploy von Phase 3 ist ausstehend (user-gated). Verbindliche Entscheidung:
+> lokal voll verifiziert; der erste Monorepo-Deploy auf den VPS ist **gelaufen**. Gates grün.
+> **Phase 2:** Harness/Knowledge (ADR-016/017/018/019) erledigt — `packages/config`-Code offen.
+> **Phase 4** (packages/ui) offen. Verbindliche Entscheidung:
 > [ADR-015](decisions.md). Dieses Dokument ist der Umsetzungsplan; `decisions.md` hält das „Warum".
 
 ## 1. Ziel
@@ -116,7 +117,7 @@ Der VPS sieht keinen Unterschied. Cutover-Verifikation: gebautes Image gegen akt
 | Phase | Inhalt | Risiko | Gewinn |
 | --- | --- | --- | --- |
 | **1** ✅ | pnpm + turbo Skelett; beide Apps **as-is** nach `apps/*` via `git filter-repo` (History erhalten); geteilte Deps heben; Root-`docker-compose.dev.yml` | niedrig | ein Repo, schnelle inkrementelle Builds, ein Dev-Befehl |
-| **2** | `packages/config` (next/eslint/tsconfig-base/prettier/postcss/tailwind-globals) | niedrig | Konfig-Duplikate weg |
+| **2** | Harness/Knowledge ✅ (ADR-019) + `packages/config` (next/eslint/tsconfig-base/prettier/postcss/tailwind-globals) | niedrig | Konfig-Duplikate weg |
 | **3** ✅ (Build) | `turbo prune`-Docker-Build; `build-and-push.sh` umgestellt; lokal verifiziert. **Staging-/VPS-Deploy ausstehend** | mittel | der schnelle, korrekte Build-/Deploy-Pfad |
 | **4** | `packages/ui` + `packages/lib`: byte-identische Schicht **echt** teilen (Imports `@/components/ui` → `@vereinsheim/ui`, schrittweise) → **Drift-Gate entfällt** | mittel | Tier-1-Ziel: Drift strukturell unmöglich |
 | **5** (optional, später) | CI (GitHub Actions) + Turbo Remote-Cache → supersedes ADR-006 | niedrig | maschinenübergreifender Cache |
@@ -206,6 +207,11 @@ Geliefert: Produktions-Build aus dem Monorepo via `turbo prune <app> --docker`. 
 - **VPS-RAM** unangetastet (Runner-Images weiter per-App-standalone; Build lokal, ADR-006).
 
 ## 10. Knowledge Graph für Claude Code (siehe ADR-016)
+
+> **Status: implementiert** (Juni 2026, [ADR-019](decisions.md)). Root-`.claude/` (Skills/Hooks/Agents/
+> Context), `.mcp.json` (CodeGraph + Memory), geseedeter `.claude/knowledge-graph.json`,
+> `docs/architecture.md`, CLAUDE.md-Hierarchie (Root @import + `apps/<app>/CLAUDE.md`/`docs/`). Hooks +
+> MCP greifen ab dem nächsten Claude-Code-Reload.
 
 Drei komplementäre Schichten, in die Migration eingebettet:
 

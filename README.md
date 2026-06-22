@@ -23,8 +23,9 @@ mit **pnpm + Turborepo**, geteilte Dep-Versionen im pnpm-Catalog, geteilter
 Dev-Postgres ([`docker-compose.dev.yml`](docker-compose.dev.yml)). Der
 Produktions-Build kommt jetzt **aus dem Monorepo** via `turbo prune`
 (`vereinsheim build`) — Image-Namen/Tags + `compose.yml` unverändert, lokal voll
-verifiziert. **Offen**: Phasen 2 + 4 sowie der erste echte VPS-Deploy aus dem
-Monorepo. Plan & Phasen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md).
+verifiziert, und der erste Monorepo-Deploy auf den VPS ist **gelaufen**.
+**Offen**: Phase 2 (Harness/Knowledge erledigt — `packages/config`-Code offen) +
+Phase 4. Plan & Phasen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md).
 
 Detaillierter Stand und Roadmap: [`docs/plan.md`](docs/plan.md).
 
