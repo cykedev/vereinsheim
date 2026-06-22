@@ -1,0 +1,33 @@
+{
+  "name": "@vereinsheim/lib",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./utils": "./src/utils.ts",
+    "./forms/fieldErrors": "./src/forms/fieldErrors.ts",
+    "./hooks/useUnsavedChangesGuard": "./src/hooks/useUnsavedChangesGuard.ts",
+    "./hooks/useNavigationConfirm": "./src/hooks/useNavigationConfirm.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "format:check": "prettier --check ."
+  },
+  "prettier": "@vereinsheim/config/prettier",
+  "dependencies": {
+    "clsx": "catalog:",
+    "tailwind-merge": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.6"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@vereinsheim/config": "workspace:*",
+    "prettier": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
