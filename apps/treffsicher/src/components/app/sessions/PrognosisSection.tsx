@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { PrognosisForm } from "@/components/app/sessions/PrognosisForm"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@vereinsheim/ui/button"
+import { Separator } from "@vereinsheim/ui/separator"
 import type { SerializedPrognosis } from "@/lib/sessions/actions"
 
 interface Props {

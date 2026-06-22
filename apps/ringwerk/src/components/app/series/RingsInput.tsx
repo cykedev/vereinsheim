@@ -2,7 +2,7 @@
 
 import type { ComponentProps } from "react"
 
-import { Input } from "@/components/ui/input"
+import { Input } from "@vereinsheim/ui/input"
 import type { ScoringType } from "@/generated/prisma/client"
 import { getRingsInputProps } from "@/lib/series/scoring-format"
 

@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@vereinsheim/ui/button"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@vereinsheim/ui/select"
 import type { ParticipantOption } from "@/lib/participants/types"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 import type { EnrollFormState } from "./useEnrollForm"

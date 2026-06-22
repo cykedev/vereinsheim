@@ -1,5 +1,5 @@
 import type { SessionDetail } from "@/lib/sessions/actions"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 
 type ComparisonDimensionKey =
   | "fitness"

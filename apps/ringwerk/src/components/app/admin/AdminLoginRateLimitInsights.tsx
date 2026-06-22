@@ -1,5 +1,5 @@
 import type { AdminLoginRateLimitBucket, AdminLoginRateLimitInsights } from "@/lib/admin/types"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@vereinsheim/ui/badge"
 
 interface Props {
   insights: AdminLoginRateLimitInsights

@@ -2,7 +2,7 @@
 
 import { useState, useActionState } from "react"
 import { Pencil, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -10,9 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@vereinsheim/ui/dialog"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import { RingsInput } from "@/components/app/series/RingsInput"
 import { saveEventSeries } from "@/lib/series/actions"
 import type { ActionResult } from "@/lib/types"

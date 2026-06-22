@@ -6,9 +6,9 @@ import { formatDateOnly, getDisplayTimeZone } from "@/lib/dateTime"
 import { getShotRoutines } from "@/lib/shot-routines/actions"
 import type { RoutineStep } from "@/lib/shot-routines/actions"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
-import { PageHeader } from "@/components/app/shell/PageHeader"
-import { Card, CardContent } from "@/components/ui/card"
-import { EmptyState } from "@/components/ui/empty-state"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { Card, CardContent } from "@vereinsheim/ui/card"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 
 export default async function ShotRoutinesPage() {
   const displayTimeZone = getDisplayTimeZone()

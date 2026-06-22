@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@vereinsheim/ui/badge"
 import {
   AUDIT_EVENT_CATEGORY,
   AUDIT_EVENT_LABELS,

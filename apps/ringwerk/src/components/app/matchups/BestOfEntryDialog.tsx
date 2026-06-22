@@ -1,14 +1,14 @@
 "use client"
 
 import { Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@vereinsheim/ui/dialog"
 import type { MatchResultSummary, MatchupParticipant } from "@/lib/matchups/types"
 import type { ScoringMode, ScoringType } from "@/generated/prisma/client"
 import {

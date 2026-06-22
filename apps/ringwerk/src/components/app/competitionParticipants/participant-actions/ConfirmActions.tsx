@@ -1,5 +1,5 @@
 import { UserCheck, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@vereinsheim/ui/alert-dialog"
 
 interface RevokeProps {
   fullName: string

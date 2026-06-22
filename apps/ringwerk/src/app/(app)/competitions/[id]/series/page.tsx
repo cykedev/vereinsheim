@@ -11,8 +11,8 @@ import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import { EventSeriesDialog } from "@/components/app/series/EventSeriesDialog"
 import { DeleteEventSeriesButton } from "@/components/app/series/DeleteEventSeriesButton"
 import { SeasonParticipantItem } from "@/components/app/series/SeasonParticipantItem"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@vereinsheim/ui/button"
+import { Badge } from "@vereinsheim/ui/badge"
 import { formatDateOnly, getDisplayTimeZone } from "@/lib/dateTime"
 
 interface Props {

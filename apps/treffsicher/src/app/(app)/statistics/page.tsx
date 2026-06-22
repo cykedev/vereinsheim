@@ -10,7 +10,7 @@ import {
 } from "@/lib/stats/actions"
 import { getHiddenDisciplineIds } from "@/lib/disciplines/actions"
 import { StatisticsChartsWrapper } from "@/components/app/statistics-charts/StatisticsChartsWrapper"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function StatisticsPage() {
   const displayTimeZone = getDisplayTimeZone()

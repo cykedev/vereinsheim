@@ -1,15 +1,15 @@
 import type { Discipline } from "@/generated/prisma/client"
 import { needsDisciplineForSessionType, SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+} from "@vereinsheim/ui/select"
+import { Textarea } from "@vereinsheim/ui/textarea"
 import { HitLocationSection } from "@/components/app/session-form/HitLocationSection"
 import type {
   HitLocationSectionActions,

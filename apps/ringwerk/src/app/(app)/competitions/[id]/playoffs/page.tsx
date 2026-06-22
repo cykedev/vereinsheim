@@ -11,7 +11,7 @@ import { PlayoffBracket } from "@/components/app/playoffs/PlayoffBracket"
 import { StartPlayoffsButton } from "@/components/app/playoffs/StartPlayoffsButton"
 import { AdvanceRoundButton } from "@/components/app/playoffs/AdvanceRoundButton"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 
 interface Props {
   params: Promise<{ id: string }>

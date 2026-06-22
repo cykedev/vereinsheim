@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { FileDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 
 interface Props {
   href: string

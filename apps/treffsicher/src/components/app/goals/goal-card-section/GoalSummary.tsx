@@ -1,6 +1,6 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@vereinsheim/ui/badge"
 import type { GoalWithAssignments } from "@/lib/goals/actions"
 import { formatDateOnly, GOAL_TYPE_LABELS } from "@/components/app/goals/goal-card-section/format"
 

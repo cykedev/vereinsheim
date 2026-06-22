@@ -1,20 +1,20 @@
 import { Pencil } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@vereinsheim/ui/dialog"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
+} from "@vereinsheim/ui/select"
+import { Label } from "@vereinsheim/ui/label"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 import type { ParticipantActionsState } from "./useParticipantActions"
 

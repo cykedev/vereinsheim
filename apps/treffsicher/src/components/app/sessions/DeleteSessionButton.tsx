@@ -14,8 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+} from "@vereinsheim/ui/alert-dialog"
+import { Button } from "@vereinsheim/ui/button"
 
 interface Props {
   sessionId: string

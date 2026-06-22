@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { ArrowLeft, Download, Pencil } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DetailActionBar } from "@/components/app/shell/DetailActionBar"
+import { Button } from "@vereinsheim/ui/button"
+import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
 import { DeleteSessionButton } from "@/components/app/sessions/DeleteSessionButton"
 import { FavouriteButton } from "@/components/app/sessions/FavouriteButton"
 

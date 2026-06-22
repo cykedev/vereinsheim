@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@vereinsheim/ui/badge"
 import { SeasonSeriesDialog } from "./SeasonSeriesDialog"
 import { DeleteSeasonSeriesButton } from "./DeleteSeasonSeriesButton"
 import type { ScoringMode, ScoringType } from "@/generated/prisma/client"

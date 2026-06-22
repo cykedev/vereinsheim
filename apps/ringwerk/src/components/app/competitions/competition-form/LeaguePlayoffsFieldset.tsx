@@ -1,5 +1,5 @@
 import { Lock } from "lucide-react"
-import { Label } from "@/components/ui/label"
+import { Label } from "@vereinsheim/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@vereinsheim/ui/select"
 import type { CompetitionFormState } from "./useCompetitionFormState"
 import { SEASON_SCORING_MODE_LABELS } from "./constants"
 

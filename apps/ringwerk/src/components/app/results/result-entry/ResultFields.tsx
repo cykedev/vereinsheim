@@ -1,5 +1,5 @@
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import { RingsInput } from "@/components/app/series/RingsInput"
 import type { ScoringType } from "@/generated/prisma/client"
 

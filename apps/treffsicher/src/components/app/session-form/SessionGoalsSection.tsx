@@ -1,5 +1,5 @@
-import { SelectableRow } from "@/components/ui/selectable-row"
-import { Label } from "@/components/ui/label"
+import { SelectableRow } from "@vereinsheim/ui/selectable-row"
+import { Label } from "@vereinsheim/ui/label"
 import type { GoalForSelection } from "@/lib/goals/actions"
 
 interface Model {

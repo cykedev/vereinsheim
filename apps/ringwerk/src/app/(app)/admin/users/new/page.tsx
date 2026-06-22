@@ -1,5 +1,5 @@
 import { UserCreateForm } from "@/components/app/users/UserCreateForm"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default function NewUserPage() {
   return (

@@ -2,10 +2,10 @@
 
 import { Trash2 } from "lucide-react"
 import type { RoutineStep } from "@/lib/shot-routines/actions"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@vereinsheim/ui/button"
+import { Input } from "@vereinsheim/ui/input"
+import { Textarea } from "@vereinsheim/ui/textarea"
+import { Card, CardContent } from "@vereinsheim/ui/card"
 
 interface Props {
   step: RoutineStep

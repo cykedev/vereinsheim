@@ -1,6 +1,6 @@
 "use client"
 
-import { ConfirmDialog } from "@/components/app/shell/ConfirmDialog"
+import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
 
 interface Props {
   open: boolean

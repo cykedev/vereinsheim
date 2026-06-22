@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Heart, Target } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Card, CardContent } from "@vereinsheim/ui/card"
 import type { SessionWithDiscipline } from "@/lib/sessions/actions"
 import { buildSessionListItemModel } from "@/components/app/sessions/list/sessionListItemModel"
 

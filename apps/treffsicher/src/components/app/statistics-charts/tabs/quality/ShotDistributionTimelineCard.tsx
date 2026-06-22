@@ -1,5 +1,5 @@
 import { Area, AreaChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { shotDistributionBundledColors } from "@/components/app/statistics-charts/constants"
 import type { QualityTabModel } from "@/components/app/statistics-charts/tabs/types"

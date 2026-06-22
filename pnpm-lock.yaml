@@ -128,21 +128,18 @@ importers:
       '@prisma/client':
         specifier: 'catalog:'
         version: 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3)
-      '@radix-ui/react-slider':
-        specifier: 'catalog:'
-        version: 1.4.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@react-pdf/renderer':
         specifier: ^4.3.2
         version: 4.5.1(react@19.2.7)
       '@vereinsheim/lib':
         specifier: workspace:*
         version: link:../../packages/lib
+      '@vereinsheim/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       bcryptjs:
         specifier: 'catalog:'
         version: 3.0.3
-      class-variance-authority:
-        specifier: 'catalog:'
-        version: 0.7.1
       lucide-react:
         specifier: 'catalog:'
         version: 1.21.0(react@19.2.7)
@@ -152,9 +149,6 @@ importers:
       next-auth:
         specifier: 'catalog:'
         version: 4.24.14(next@16.2.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      next-themes:
-        specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       pg:
         specifier: 'catalog:'
         version: 8.22.0
@@ -240,18 +234,15 @@ importers:
       '@prisma/client':
         specifier: 'catalog:'
         version: 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3)
-      '@radix-ui/react-slider':
-        specifier: 'catalog:'
-        version: 1.4.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@vereinsheim/lib':
         specifier: workspace:*
         version: link:../../packages/lib
+      '@vereinsheim/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       bcryptjs:
         specifier: 'catalog:'
         version: 3.0.3
-      class-variance-authority:
-        specifier: 'catalog:'
-        version: 0.7.1
       lucide-react:
         specifier: 'catalog:'
         version: 1.21.0(react@19.2.7)
@@ -261,9 +252,6 @@ importers:
       next-auth:
         specifier: 'catalog:'
         version: 4.24.14(next@16.2.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      next-themes:
-        specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       pg:
         specifier: 'catalog:'
         version: 8.22.0
@@ -380,6 +368,58 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.9(@types/node@24.13.2)(vite@8.0.16(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4))
+
+  packages/ui:
+    dependencies:
+      '@radix-ui/react-slider':
+        specifier: 'catalog:'
+        version: 1.4.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@vereinsheim/lib':
+        specifier: workspace:*
+        version: link:../lib
+      class-variance-authority:
+        specifier: 'catalog:'
+        version: 0.7.1
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.21.0(react@19.2.7)
+      next:
+        specifier: ^16.2.6
+        version: 16.2.9(@babel/core@7.29.7)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next-auth:
+        specifier: ^4.24.13
+        version: 4.24.14(next@16.2.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next-themes:
+        specifier: 'catalog:'
+        version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      radix-ui:
+        specifier: 'catalog:'
+        version: 1.6.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      react-dom:
+        specifier: ^19.2.6
+        version: 19.2.7(react@19.2.7)
+      sonner:
+        specifier: 'catalog:'
+        version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+    devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.3(@types/react@19.2.17)
+      '@vereinsheim/config':
+        specifier: workspace:*
+        version: link:../config
+      prettier:
+        specifier: 'catalog:'
+        version: 3.8.4
+      react:
+        specifier: 'catalog:'
+        version: 19.2.7
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
 
 packages:
 

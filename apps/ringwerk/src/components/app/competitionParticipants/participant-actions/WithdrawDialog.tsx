@@ -1,14 +1,14 @@
 import { UserMinus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@vereinsheim/ui/dialog"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import type { ParticipantActionsState } from "./useParticipantActions"
 
 interface Props {

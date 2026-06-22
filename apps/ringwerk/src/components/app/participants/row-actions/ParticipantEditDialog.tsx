@@ -1,6 +1,6 @@
 import { Pencil } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@vereinsheim/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@vereinsheim/ui/dialog"
 import { updateParticipant } from "@/lib/participants/actions"
 import { ParticipantForm } from "../ParticipantForm"
 

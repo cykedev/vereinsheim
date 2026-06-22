@@ -1,17 +1,17 @@
 "use client"
 
 import type { FormEvent } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@vereinsheim/ui/button"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+} from "@vereinsheim/ui/select"
+import { Textarea } from "@vereinsheim/ui/textarea"
 import type { GoalWithAssignments } from "@/lib/goals/actions"
 import { toDateInputValue } from "@/components/app/goals/goal-card-section/format"
 

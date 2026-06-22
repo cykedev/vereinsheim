@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { TabsContent } from "@/components/ui/tabs"
+import { Card, CardContent } from "@vereinsheim/ui/card"
+import { TabsContent } from "@vereinsheim/ui/tabs"
 import { HitLocationCloudCard } from "@/components/app/statistics-charts/tabs/hit-location/HitLocationCloudCard"
 import { HitLocationTrendCard } from "@/components/app/statistics-charts/tabs/hit-location/HitLocationTrendCard"
 import type { HitLocationTabModel } from "@/components/app/statistics-charts/tabs/types"

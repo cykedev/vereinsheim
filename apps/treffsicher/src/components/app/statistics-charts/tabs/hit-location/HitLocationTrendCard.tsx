@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@vereinsheim/ui/card"
 import { HitLocationTrendChart } from "@/components/app/statistics-charts/tabs/hit-location/HitLocationTrendChart"
 import { HitLocationTrendHeader } from "@/components/app/statistics-charts/tabs/hit-location/HitLocationTrendHeader"
 import type { HitLocationTrendModel } from "@/components/app/statistics-charts/tabs/types"

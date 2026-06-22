@@ -1,8 +1,8 @@
 "use client"
 
 import type { FormEvent } from "react"
-import { Button } from "@/components/ui/button"
-import { SelectableRow } from "@/components/ui/selectable-row"
+import { Button } from "@vereinsheim/ui/button"
+import { SelectableRow } from "@vereinsheim/ui/selectable-row"
 import type { GoalSessionOption } from "@/lib/goals/actions"
 import { SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
 import { formatDateTime } from "@/components/app/goals/goal-card-section/format"

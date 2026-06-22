@@ -1,7 +1,7 @@
 import { getAuthSession } from "@/lib/auth-helpers"
 import { redirect } from "next/navigation"
 import { DisciplineForm } from "@/components/app/disciplines/DisciplineForm"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function NewDisciplinePage() {
   const session = await getAuthSession()

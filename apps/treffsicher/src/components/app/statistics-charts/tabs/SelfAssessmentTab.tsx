@@ -1,6 +1,6 @@
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TabsContent } from "@/components/ui/tabs"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { TabsContent } from "@vereinsheim/ui/tabs"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { radarSeriesConfig } from "@/components/app/statistics-charts/constants"
 import { RadarLegend } from "@/components/app/statistics-charts/RadarLegend"

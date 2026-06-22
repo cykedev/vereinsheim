@@ -1,6 +1,6 @@
 import type { RoutineStep } from "@/lib/shot-routines/actions"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@vereinsheim/ui/badge"
+import { Card, CardContent } from "@vereinsheim/ui/card"
 
 interface Props {
   steps: RoutineStep[]

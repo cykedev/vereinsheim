@@ -1,13 +1,13 @@
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { FieldError } from "@/components/ui/field-error"
+} from "@vereinsheim/ui/select"
+import { FieldError } from "@vereinsheim/ui/field-error"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 import type { CompetitionDetail } from "@/lib/competitions/types"
 import type { CompetitionFormState } from "./useCompetitionFormState"

@@ -6,18 +6,18 @@ import { useEffect } from "react"
 import { toast } from "sonner"
 import { createDiscipline, updateDiscipline, type ActionResult } from "@/lib/disciplines/actions"
 import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
-import { Button } from "@/components/ui/button"
-import { FieldError } from "@/components/ui/field-error"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@vereinsheim/ui/button"
+import { FieldError } from "@vereinsheim/ui/field-error"
+import { Input } from "@vereinsheim/ui/input"
+import { Label } from "@vereinsheim/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
+} from "@vereinsheim/ui/select"
+import { Card, CardContent } from "@vereinsheim/ui/card"
 import type { Discipline } from "@/generated/prisma/client"
 
 interface Props {

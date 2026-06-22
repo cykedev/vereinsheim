@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { TabsContent } from "@/components/ui/tabs"
+import { Card, CardContent } from "@vereinsheim/ui/card"
+import { TabsContent } from "@vereinsheim/ui/tabs"
 import type { OverviewTableGroup } from "@/lib/stats/overview/aggregateOverview"
 import { DisciplineOverviewTable } from "./overview"
 

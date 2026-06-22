@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Pencil, ScrollText, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,10 +13,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@vereinsheim/ui/alert-dialog"
 import { toast } from "sonner"
 import { deleteCompetition } from "@/lib/competitions/actions"
-import { DetailActionBar } from "@/components/app/shell/DetailActionBar"
+import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
 import { CompetitionStatusActions } from "@/components/app/competitions/CompetitionStatusActions"
 import type { CompetitionListItem } from "@/lib/competitions/types"
 

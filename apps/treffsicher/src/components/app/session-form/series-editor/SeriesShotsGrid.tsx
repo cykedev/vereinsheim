@@ -1,4 +1,4 @@
-import { Input } from "@/components/ui/input"
+import { Input } from "@vereinsheim/ui/input"
 import type {
   SeriesEditorCardActions,
   SeriesEditorCardModel,

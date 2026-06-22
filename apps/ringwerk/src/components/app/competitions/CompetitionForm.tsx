@@ -1,10 +1,10 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 import type { CompetitionDetail } from "@/lib/competitions/types"
 import type { ActionResult } from "@/lib/types"
-import { ConfirmDialog } from "@/components/app/shell/ConfirmDialog"
+import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
 import {
   BasicFieldsSection,
   EventFieldsSection,

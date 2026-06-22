@@ -1,5 +1,5 @@
 import { CartesianGrid, Scatter, ScatterChart, XAxis, YAxis } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { formatDisplayScore, renderScatterPoint } from "@/components/app/statistics-charts/utils"
 import type { QualityTabModel } from "@/components/app/statistics-charts/tabs/types"

@@ -12,7 +12,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@vereinsheim/ui/alert-dialog"
 import { AdminUsersTableDesktop, AdminUsersTableMobile } from "@/components/app/admin/users-table"
 
 interface Props {

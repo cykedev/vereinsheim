@@ -2,9 +2,9 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Plus, BookOpen, TrendingUp, Goal, Target, ListChecks } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { Button } from "@vereinsheim/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 const quickActions = [
   {

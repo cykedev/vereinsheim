@@ -1,14 +1,14 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Label } from "@vereinsheim/ui/label"
+import { Input } from "@vereinsheim/ui/input"
+import { Button } from "@vereinsheim/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@vereinsheim/ui/select"
 import type {
   StatisticsFiltersCardActions,
   StatisticsFiltersCardModel,

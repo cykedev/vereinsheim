@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@vereinsheim/ui/alert-dialog"
 import { deleteEventSeries } from "@/lib/series/actions"
 
 interface Props {

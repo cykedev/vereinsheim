@@ -16,7 +16,7 @@ import { ScheduleView } from "@/components/app/matchups/ScheduleView"
 import { StandingsTable } from "@/components/app/standings/StandingsTable"
 import { BestOfStandingsTable } from "@/components/app/standings/BestOfStandingsTable"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 
 interface Props {
   params: Promise<{ id: string }>

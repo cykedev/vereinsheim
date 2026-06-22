@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { ShotRoutineEditor } from "@/components/app/shot-routines/ShotRoutineEditor"
-import { PageHeader } from "@/components/app/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function NeuerShotRoutinesPage() {
   const session = await getAuthSession()

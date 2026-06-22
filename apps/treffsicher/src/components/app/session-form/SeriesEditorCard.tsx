@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/card"
 import { SeriesEditorHeader } from "@/components/app/session-form/series-editor/SeriesEditorHeader"
 import { SeriesShotsGrid } from "@/components/app/session-form/series-editor/SeriesShotsGrid"
 import { SeriesTotalInput } from "@/components/app/session-form/series-editor/SeriesTotalInput"

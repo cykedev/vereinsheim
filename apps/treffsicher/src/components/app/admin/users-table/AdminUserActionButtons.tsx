@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Pencil } from "lucide-react"
 import type { AdminUserListItem } from "@/lib/admin/actions"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 
 interface Props {
   user: AdminUserListItem

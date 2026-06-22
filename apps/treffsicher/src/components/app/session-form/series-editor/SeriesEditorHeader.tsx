@@ -1,7 +1,7 @@
 import { Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { SelectableRow } from "@/components/ui/selectable-row"
+import { Button } from "@vereinsheim/ui/button"
+import { Label } from "@vereinsheim/ui/label"
+import { SelectableRow } from "@vereinsheim/ui/selectable-row"
 import type {
   SeriesEditorCardActions,
   SeriesEditorCardModel,

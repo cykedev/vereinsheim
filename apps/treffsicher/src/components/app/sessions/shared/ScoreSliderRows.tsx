@@ -1,5 +1,5 @@
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
+import { Label } from "@vereinsheim/ui/label"
+import { Slider } from "@vereinsheim/ui/slider"
 
 export interface ScoreSliderRow<Key extends string> {
   id: string
