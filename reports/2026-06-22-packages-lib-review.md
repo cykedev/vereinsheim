@@ -32,7 +32,27 @@ Alle sechs Prüf-Schwerpunkte wurden **real** (mit Befehlsausgabe, nicht nur ged
   Scope-Grenze; Folgearbeit für Zyklus 2 (Nicht-Next-Flat-eslint-Config für `packages/*`) ist bereits im
   Plan §Folgearbeit + `monorepo-plan.md` vermerkt.
 
+## Zweiter, unabhängiger Review (auf `/review`-Wiederholung)
+
+Ein zweiter `code-reviewer`-Durchgang (ohne Kenntnis des ersten Verdicts, mit Fokus auf das, was ein
+erster Durchgang übersieht) bestätigte das saubere Gesamtbild — **keine Blocker, keine Major** — prüfte
+zusätzlich empirisch die Konsumenten-Kontexte (vitest löst `@vereinsheim/lib/*` über den node_modules-
+Symlink auf, obwohl die App-`vitest.config.ts` nur den `@`-Alias kennt; `next build` ohne
+`"use server"`-Verletzung; eine React-Instanz; exports-Map vollständig) und fand **ein echtes Minor**:
+
+### Behobenes Minor — tote direkte Deps `clsx` + `tailwind-merge`
+
+Nach der Extraktion importierte **keine** App-Source mehr `clsx`/`tailwind-merge` direkt (verifiziert:
+`grep` über `apps/*/src` + config/scripts → 0 Treffer); einziger Nutzer ist `cn` in `@vereinsheim/lib`,
+das beide selbst als `dependencies` deklariert. **Fix:** beide aus `apps/ringwerk/package.json` **und**
+`apps/treffsicher/package.json` entfernt (gleichzeitig — keine Cross-App-Asymmetrie), `pnpm install`
+(Lockfile −12 Zeilen). **Re-validate:** `pnpm check` 15/15 grün, `next build` beider Apps grün → `cn`
+löst weiterhin über das Paket auf.
+
+Die beiden Nits (kein `lint`-Script im Paket → dokumentierte Scope-Grenze/Zyklus-2-Folgearbeit;
+`.turbo`-Logs → verifiziert gitignored, 0 getrackt) bleiben ohne Aktion.
+
 ## Konsequenz
 
-Keine Code-Änderung nötig → kein erneutes `/validate`. Branch ist aus Review-Sicht freigegeben; Merge
-nach `main` (`--ff-only`, nach Rebase auf aktuelles `main`) steht auf User-OK.
+Zwei unabhängige Reviews, das eine Minor behoben + re-validiert. Branch ist aus Review-Sicht
+freigegeben; Merge nach `main` (`--ff-only`, nach Rebase auf aktuelles `main`) steht auf User-OK.
