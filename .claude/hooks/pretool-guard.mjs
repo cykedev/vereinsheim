@@ -3,7 +3,9 @@
 // (.env, .env.local, .vereinsheim.local) und katastrophale rekursive Deletes
 // (/, ~, $HOME, ., *, Secrets). Erlaubt *.example / *.template / *.sample.
 // Fail-open: jeder Parse-/Logikfehler -> exit 0 (erlauben, nie bricken).
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
 let input
 try {
@@ -63,6 +65,39 @@ if (tool === "Bash") {
       "Dev-/Watch-Server via `&` gebackgroundet → Orphan (harness-untrackbar, " +
         "Überlast-/Reboot-Risiko). Starte ihn im run_in_background-Modus des Bash-Tools.",
     )
+  }
+}
+
+// ── Advisory-Nudge: CodeGraph statt grep/find/Read (User-Wunsch 22.06.2026) ──────
+// Sanfter, EINMALIGER Reminder pro Session, dass der CodeGraph-Index existiert und für
+// Symbol-/Struktur-/Call-Graph-Fragen die bessere erste Wahl ist als grep/find/Read.
+// Advisory: blockt NICHTS, gibt nur additionalContext aus. Reine Textsuche (Doku/Logs/
+// Strings) bleibt legitim. Marker im OS-Temp pro session_id verhindert Wiederholung +
+// Token-Spam. Fail-open wie der Rest der Datei: IO-Fehler dürfen nie den Call stören.
+const searchesCode =
+  (tool === "Bash" && /\b(rg|ag|ack|fd|grep|egrep|fgrep|find)\b/.test(String(ti.command || ""))) ||
+  tool === "Grep" ||
+  tool === "Glob"
+
+if (searchesCode) {
+  try {
+    const sid = String(input.session_id || "nosession").replace(/[^\w.-]/g, "_")
+    const marker = join(tmpdir(), `vereinsheim-cg-nudge-${sid}`)
+    if (!existsSync(marker)) {
+      writeFileSync(marker, "")
+      const msg =
+        "CodeGraph ist in diesem Repo indiziert (.codegraph/). Für Symbol-, Struktur- " +
+        "oder Call-Graph-Fragen ist codegraph_explore/codegraph_search meist die bessere " +
+        "erste Wahl als grep/find/Read — ein Call statt einer Such-/Lese-Schleife. Reine " +
+        "Textsuche (Doku, Logs, Strings) bleibt ok. (Einmalige Erinnerung pro Session.)"
+      process.stdout.write(
+        JSON.stringify({
+          hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: msg },
+        }),
+      )
+    }
+  } catch {
+    // best-effort: Marker-/IO-Fehler dürfen den Tool-Call nie stören (fail-open).
   }
 }
 
