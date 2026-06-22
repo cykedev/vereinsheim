@@ -22,6 +22,10 @@ Roadmap ist damit abgeschlossen; die Phasen-Abschnitte unten bleiben als
 Referenz für Re-Provisioning bzw. künftige Migrationen stehen. Für den
 laufenden Betrieb siehe [`operations.md`](operations.md).
 
+Das **aktive Folgevorhaben** ist die Monorepo-Migration
+([`monorepo-plan.md`](monorepo-plan.md), ADR-015): Phasen 1 + 3 erledigt (beide
+Apps als `apps/*`, Build aus dem Monorepo), Phasen 2 + 4 offen.
+
 ---
 
 ## Phase 4 — App-Repo-Anpassungen
@@ -176,4 +180,5 @@ Komplette Liste mit Befehlen: [`operations.md`](operations.md#verifikation).
 - [`spec.md`](spec.md) — Anforderungen, Sizing, Architektur
 - [`decisions.md`](decisions.md) — ADRs, Begründungen, verworfene Alternativen
 - [`operations.md`](operations.md) — Daily Ops, Backup, Restore, Migration-Recovery
-- App-Repos: `../ringwerk`, `../treffsicher`
+- [`monorepo-plan.md`](monorepo-plan.md) — Monorepo-Migration (aktiv): Phasen, Umsetzungsnotizen
+- App-Code: [`apps/ringwerk`](../apps/ringwerk), [`apps/treffsicher`](../apps/treffsicher) (Standalone-Repos archiviert, Tag `pre-monorepo-import`)

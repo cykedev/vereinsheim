@@ -2,16 +2,18 @@
 
 ## Hintergrund
 
-Die SG Taufkirchen betreibt zwei eigenständige Web-Apps:
+Die SG Taufkirchen betreibt zwei Web-Apps:
 
 - **Ringwerk** — Liga- und Wettkampf-Verwaltung (Disziplinen, Teilnehmer,
   Matchups, Playoff, Auswertungen, Meyton-PDF-Import).
 - **Treffsicher** — Trainings-App (Sessions, Serien, Reflexionen, Goals,
   Wellbeing-Tracking).
 
-Beide laufen heute getrennt (z.B. auf TrueNAS oder separat). Ziel ist ein
-einzelner VPS, der beide Apps gemeinsam hostet, mit minimaler Reibung beim
-Deploy und transparenten Backups.
+Ziel ist ein einzelner VPS, der beide Apps gemeinsam hostet, mit minimaler
+Reibung beim Deploy und transparenten Backups. Seit der Monorepo-Migration
+(ADR-015, [`monorepo-plan.md`](monorepo-plan.md)) leben beide Apps als `apps/*`
+in diesem Repo; **dieses Spec beschreibt die Deploy-/Laufzeit-Architektur**, die
+durch die Migration bewusst bit-gleich blieb.
 
 ## Anforderungen
 
@@ -43,18 +45,20 @@ Deploy und transparenten Backups.
 ### Image-Build & Distribution
 
 - Images werden **lokal auf der Arbeitsmaschine des Maintainers** mit
-  `docker buildx --platform linux/amd64` gebaut.
+  `docker buildx --platform linux/amd64` gebaut — **aus dem Monorepo** via
+  `turbo prune <app> --docker` + dem parametrisierten Root-`Dockerfile`
+  (Phase 3, ADR-015).
 - Push in **Docker Hub** unter Account `<DOCKER_USER>`, **public** Images
   (Source ist sowieso public, keine Build-Time-Secrets injiziert).
-- **Pro App zwei Images**, weil die `runner`-Stage in beiden App-Dockerfiles
-  bewusst kein Prisma-CLI enthält (nur Next.js standalone). Die Migrations
-  laufen aus der separaten `migrator`-Stage:
-  - `<user>/ringwerk:<git-sha>` + `:latest` (target=runner)
-  - `<user>/ringwerk:<git-sha>-migrator` + `:latest-migrator` (target=migrator)
-  - analog für treffsicher
+- **Pro App zwei Images**, weil die `runner`-Stage bewusst kein Prisma-CLI
+  enthält (nur Next.js standalone). Die Migrations laufen aus der separaten
+  `migrator`-Stage (ADR-007):
+  - `<user>/ringwerk:<sha>` + `:latest` (target=runner)
+  - `<user>/ringwerk:<sha>-migrator` + `:latest-migrator` (target=migrator)
+  - analog für treffsicher; `<sha>` ist der Monorepo-HEAD (beide Apps teilen ihn).
 - Build-Aufruf gekapselt durch `./scripts/vereinsheim build` — exportiert
   `DOCKER_USER` aus `.vereinsheim.local`, ruft `scripts/build-and-push.sh`
-  mit beiden Targets pro App.
+  (prune + beide Targets pro App).
 
 ### Datenmigration
 
@@ -69,7 +73,7 @@ Kurzform:
 
 | Bereich            | Wahl                                                |
 | ------------------ | --------------------------------------------------- |
-| Deployment-Repo    | Eigenes Repo `vereinsheim`                          |
+| Repo-Modell        | Code- + Deployment-Monorepo `vereinsheim` (ADR-015) |
 | Container-Registry | Docker Hub, public Images                           |
 | Reverse Proxy      | Caddy 2 (Caddyfile, kein Web-UI)                    |
 | DB-Isolation       | 1 Postgres-Container, 2 DBs, 2 User                 |
@@ -112,24 +116,16 @@ mehrere Datenbanken in einem Cluster. Zwei Container wären reine
 RAM-Verschwendung (~250 MB extra) für Setup ohne Performance-Bedarf.
 Owner-getrennte User stellen die Isolation sicher.
 
-## App-Repo-Anpassungen
+## App-Integration (Monorepo)
 
-Bewusst minimal — beide Apps lesen alle relevanten Knöpfe schon aus env vars:
-
-### Ringwerk (`/Users/christian/repos/ringwerk`)
-
-- `.env.example` ergänzen: Hinweis auf `AUTH_TRUST_PROXY_HEADERS=true`
-  hinter Reverse Proxy.
-- Optionale README-Sektion „Deployment via vereinsheim".
-- **Kein Code-Patch nötig.**
-
-### Treffsicher (`/Users/christian/repos/treffsicher`)
-
-- Analog: `.env.example`-Hinweis.
-- README-Ergänzung.
-- Vorhandenes `docker-compose.prod.yml` bleibt im Repo als
-  Standalone-Variante erhalten, wird im `vereinsheim`-Setup aber **nicht**
-  verwendet.
+Ursprünglich lagen die Apps in eigenen Repos und brauchten nur minimale
+Deploy-Anpassungen (env-Hinweise wie `AUTH_TRUST_PROXY_HEADERS=true` hinter dem
+Reverse Proxy — beide lesen alle Knöpfe aus env vars, **kein Code-Patch**). Seit
+der Monorepo-Migration (ADR-015) leben sie als [`apps/ringwerk`](../apps/ringwerk)
+/ [`apps/treffsicher`](../apps/treffsicher) in diesem Repo (Git-History via
+`git filter-repo` erhalten). Jede App behält ihr eigenes Prisma-Schema/
+Migrations/`auth.ts`/`db.ts`; geteilte Dep-Versionen liegen im pnpm-Catalog.
+Details & Phasen: [`monorepo-plan.md`](monorepo-plan.md).
 
 ## VPS-Sizing
 
@@ -178,11 +174,9 @@ geteilten DB-Container OOM-killen würden.
 - Staging-Umgebung. Initial nur Prod.
 - WAF / Fail2ban. Caddy + NextAuth-Rate-Limit reichen als Baseline.
 
-## Offene User-Entscheidungen
+## Status
 
-1. **Domain + Subdomains** (z.B. `ringwerk.<domain>`, `training.<domain>`).
-2. **Docker-Hub-User** (vermutlich `christianeiden`).
-3. **VPS-Bestellung** (Empfehlung: IONOS VPS S+/M, Debian 12).
-
-Diese Punkte blocken die Implementierung des Repos **nicht** — werden am
-Schluss in `.env` eingetragen.
+Die ursprünglich offenen Punkte (Domain + Subdomains, Docker-Hub-User,
+VPS-Bestellung) sind **erledigt** — das System läuft seit Ende Mai 2026 produktiv
+(alle Werte in `.env` auf dem VPS). Die laufende Weiterentwicklung (Monorepo)
+steht in [`monorepo-plan.md`](monorepo-plan.md).
