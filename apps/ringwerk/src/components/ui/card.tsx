@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@vereinsheim/lib/utils"
 
 // Card-Subslots standardisieren Abstände/Struktur, damit Feature-Komponenten nur Inhalt liefern müssen.
 function Card({ className, ...props }: React.ComponentProps<"div">) {

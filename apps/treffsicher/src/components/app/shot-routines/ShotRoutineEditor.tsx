@@ -10,9 +10,9 @@ import {
   type ActionResult,
   type RoutineStep,
 } from "@/lib/shot-routines/actions"
-import { getGeneralError } from "@/lib/forms/fieldErrors"
-import { useUnsavedChangesGuard } from "@/lib/hooks/useUnsavedChangesGuard"
-import { useNavigationConfirm } from "@/lib/hooks/useNavigationConfirm"
+import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
+import { useUnsavedChangesGuard } from "@vereinsheim/lib/hooks/useUnsavedChangesGuard"
+import { useNavigationConfirm } from "@vereinsheim/lib/hooks/useNavigationConfirm"
 import { Button } from "@/components/ui/button"
 import { DiscardChangesDialog } from "@/components/app/shell/DiscardChangesDialog"
 import { Input } from "@/components/ui/input"

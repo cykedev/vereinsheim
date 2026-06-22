@@ -20,7 +20,10 @@ Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichun
 - ui-Primitives: alle gemeinsamen `src/components/ui/*` (insb. `button`, `card`, `sonner`,
   `empty-state`, `field-error`, `dropdown-menu`)
 - Shell: `src/components/app/shell/{DetailActionBar,ConfirmDialog,PageHeader}.tsx`
-- Hooks/Forms: `src/lib/hooks/{useUnsavedChangesGuard,useNavigationConfirm}.ts`, `src/lib/forms/fieldErrors.ts`
+- **Geteilt via `@vereinsheim/lib`** (packages/lib, seit Phase 4 / Zyklus 1 — Drift **strukturell
+  unmöglich**, daher *nicht* mehr im Gate): `cn` (`utils`), `forms/fieldErrors`, die Form-Hooks
+  `useUnsavedChangesGuard` + `useNavigationConfirm`. Import via `@vereinsheim/lib/<subpath>`; Logik
+  ändert man **im Paket**, nicht in den Apps. (`dateTime` bleibt vorerst app-lokal — driftet noch.)
 - Diese Datei: `docs/shared-conventions.md`
 
 Regel: Wer eine dieser Dateien ändert, ändert sie in **beiden** Repos gleich. Neue, klar

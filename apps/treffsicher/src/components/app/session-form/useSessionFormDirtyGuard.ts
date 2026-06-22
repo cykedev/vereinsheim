@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useUnsavedChangesGuard } from "@/lib/hooks/useUnsavedChangesGuard"
-import { useNavigationConfirm } from "@/lib/hooks/useNavigationConfirm"
+import { useUnsavedChangesGuard } from "@vereinsheim/lib/hooks/useUnsavedChangesGuard"
+import { useNavigationConfirm } from "@vereinsheim/lib/hooks/useNavigationConfirm"
 
 interface Params {
   // Wird true, während gespeichert wird.

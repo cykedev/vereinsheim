@@ -3,7 +3,7 @@
 import { useActionState, useState, useEffect } from "react"
 import { toast } from "sonner"
 import { savePrognosis, type ActionResult, type SerializedPrognosis } from "@/lib/sessions/actions"
-import { getGeneralError } from "@/lib/forms/fieldErrors"
+import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"

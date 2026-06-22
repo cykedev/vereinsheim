@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@vereinsheim/lib/utils"
 import type { PlayoffMatchItem } from "@/lib/playoffs/types"
 import { SLOT_H, SLOT_W, WINNER_STYLE, type SlotPreview } from "./constants"
 
