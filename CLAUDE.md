@@ -21,8 +21,8 @@ Root-`Dockerfile`) — Image-Namen/Tags + `compose.yml` unverändert, lokal voll
 verifiziert. Die Standalone-Repos [`../ringwerk`](../ringwerk) /
 [`../treffsicher`](../treffsicher) sind **keine Build-Quelle mehr** (History via
 Tag `pre-monorepo-import` archiviert). Beide Apps werden weiter lokal gebaut
-(`docker buildx`) und nach Docker Hub gepusht; der VPS pullt die Images.
-**Ausstehend:** der erste echte VPS-Deploy aus dem Monorepo (user-gated).
+(`docker buildx`) und nach Docker Hub gepusht; der VPS pullt die Images. Der
+erste Monorepo-Deploy auf den VPS ist **gelaufen** (Juni 2026).
 
 ## Lese-Reihenfolge bei Sessionstart
 

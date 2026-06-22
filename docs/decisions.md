@@ -624,6 +624,45 @@ Call-Graph/Routen bereits ab.)
 
 ---
 
+## ADR-019 — App-Root-`.claude`-Layout + geteilte Root-Harness (realisiert ADR-016/017/018)
+
+**Status**: Accepted (Juni 2026)
+
+**Kontext**: Nach dem Monorepo-Import hatten die Apps uneinheitliche Agent-Tooling-Layouts (ringwerk:
+`.claude/CLAUDE.md` + `.claude/docs/` + 8 Commands + `settings.json`; treffsicher: Root-`CLAUDE.md` +
+`docs/` + 3 Commands, kein `settings.json`), und die Repo-Wurzel hatte gar keine Harness. Die
+per-App-Commands referenzierten das in Phase 1 gelöschte per-App `docker-compose.dev.yml` und waren
+**kaputt**. ADR-016/018 verlangen eine hierarchische CLAUDE.md + eine geteilte Harness — das Layout
+musste vereinheitlicht werden.
+
+**Entscheidung**:
+
+- **App-Root-Layout** für beide Apps: `apps/<app>/CLAUDE.md` (scope-spezifische Regeln) +
+  `apps/<app>/docs/` (Domänen-Docs). ringwerks `.claude/CLAUDE.md` + `.claude/docs/*` wandern an die
+  App-Wurzel (`git mv`, History erhalten).
+- **Geteilte Harness am Repo-Root** (`.claude/`): **ein** Satz Skills (`SKILL.md`, pnpm/turbo, app-aware)
+  statt der per-App-Commands; Hooks (Stop-Gate = `pnpm check`, PostToolUse-Lint, PreToolUse-Security-
+  Guard); `code-reviewer`-Sub-Agent; PIV-Skills; Superpowers-Plugin; `.mcp.json` (CodeGraph + Memory).
+- `shared-conventions.md` wird **eine** Quelle am Root (`docs/shared-conventions.md`), nicht mehr pro App
+  dupliziert (raus aus `consistency-check.sh` MUST_MATCH).
+
+**Alternativen**:
+
+- _Alles unter `apps/<app>/.claude/`_ (ringwerk-Layout): verworfen — App-Root-`CLAUDE.md` ist die
+  Claude-Code-Konvention (nächstgelegene Datei wird geladen) und macht Domänen-Docs sichtbar.
+- _Per-App-Commands behalten_: verworfen — sie waren kaputt (gelöschtes dev-compose) und dupliziert.
+
+**Folgen**:
+
+- Realisiert ADR-016 (Hierarchie + Knowledge-Layers), ADR-017 (`consolidate-lessons` app-agnostisch →
+  Memory-Graph) und ADR-018 (Hooks/PIV/Sub-Agents).
+- superpowers-Archive (dated plans/specs) bleiben unverändert in `apps/<app>/docs/superpowers/`.
+- Hooks + MCP greifen ab dem nächsten Claude-Code-Reload (Hinweis im Root-`CLAUDE.md`).
+- **Offen** (neue Session, ADR-016 §2): pnpm-Cross-Package-Auflösung empirisch in Phase-2-`packages/config`
+  bestätigen.
+
+---
+
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
 
 Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-019+):
