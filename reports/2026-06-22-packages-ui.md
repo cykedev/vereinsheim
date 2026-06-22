@@ -1,6 +1,6 @@
 # Validate-Report: Phase 4 / Zyklus 2 — `packages/ui`
 
-> PIV-Schritt 3. Branch `feat/packages-ui` (4 Commits), Plan
+> PIV-Schritt 3. Branch `feat/packages-ui` (5 Commits inkl. dieses Reports), Plan
 > [plans/2026-06-22-packages-ui.md](../plans/2026-06-22-packages-ui.md). Verifiziert im Haupt-Tree
 > (mit `.env` + Dev-Postgres), 22.06.2026. Alle Belege aus diesem Lauf.
 
