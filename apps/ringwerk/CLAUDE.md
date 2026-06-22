@@ -4,7 +4,7 @@
 
 **Sprache:** Alle Kommunikation mit dem User auf Deutsch. Code, Commit-Messages und Agent-Prompts bleiben auf Englisch.
 
-**App-übergreifende Konsistenz mit Treffsicher:** siehe `docs/shared-conventions.md` (byte-identisch in beiden Repos, vom Drift-Gate in `vereinsheim` erzwungen).
+**App-übergreifende Konsistenz mit Treffsicher:** siehe die Root-`docs/shared-conventions.md` (Single Source; UI/Config-Drift zwischen den Apps erzwingt `scripts/consistency-check.sh`).
 
 ## Hard Rules (non-negotiable, always active)
 
@@ -37,7 +37,7 @@
 - Run `/check` — all gates must be green.
 - **Write lessons** — before `/consolidate-lessons`, add new entries to `.claude/tasks/lessons.md` for anything surprising, tricky, or worth remembering from this session. Format: `| YYYY-MM-DD | Was schiefgelaufen ist oder aufgefallen ist | Die Regel die es verhindert |`. Minimum 1 Eintrag pro Session — wenn nichts schiefgelaufen ist, dann eine Beobachtung über das Codebase oder einen nicht-offensichtlichen Entscheid.
 - Run `/consolidate-lessons` — promote new learnings to docs.
-- Doc sync: review session changes and update any stale docs in `.claude/docs/` (e.g. `features.md`, `data-model.md`, `architecture.md`, `reference-files.md`). Commit updates.
+- Doc sync: review session changes and update any stale docs in `docs/` (e.g. `features.md`, `data-model.md`, `architecture.md`, `reference-files.md`). Commit updates.
 - Present a summary of all commits on the branch.
 - Merge to `main` with `git merge --ff-only` (no merge commit), then delete the branch with `git branch -d`.
 
@@ -45,7 +45,7 @@
 
 ## Session Start
 
-1. Read `.claude/docs/project-brief.md`
+1. Read `docs/project-brief.md`
 2. Read last 5 entries of `.claude/tasks/lessons.md`
 3. Brief German onboarding message: "Alles klar" or any relevant context from lessons
 
@@ -73,30 +73,30 @@
 
 ## Docs (load on-demand)
 
-| Key               | Path                               | Load when                   |
-| ----------------- | ---------------------------------- | --------------------------- |
-| `projectBrief`    | `.claude/docs/project-brief.md`    | Session start               |
-| `features`        | `.claude/docs/features.md`         | Clarifying feature scope    |
-| `architecture`    | `.claude/docs/architecture.md`     | Routes, directory structure |
-| `techStack`       | `.claude/docs/technical.md`        | Stack details, deployment   |
-| `domainModel`     | `.claude/docs/data-model.md`       | Business logic, formulas    |
-| `codeConventions` | `.claude/docs/code-conventions.md` | Writing code                |
-| `uiPatterns`      | `.claude/docs/ui-patterns.md`      | Building UI                 |
-| `referenceFiles`  | `.claude/docs/reference-files.md`  | Finding patterns, templates |
-| `worktrees`       | `.claude/docs/worktrees.md`        | Before using git worktrees  |
+| Key               | Path                       | Load when                   |
+| ----------------- | -------------------------- | --------------------------- |
+| `projectBrief`    | `docs/project-brief.md`    | Session start               |
+| `features`        | `docs/features.md`         | Clarifying feature scope    |
+| `architecture`    | `docs/architecture.md`     | Routes, directory structure |
+| `techStack`       | `docs/technical.md`        | Stack details, deployment   |
+| `domainModel`     | `docs/data-model.md`       | Business logic, formulas    |
+| `codeConventions` | `docs/code-conventions.md` | Writing code                |
+| `uiPatterns`      | `docs/ui-patterns.md`      | Building UI                 |
+| `referenceFiles`  | `docs/reference-files.md`  | Finding patterns, templates |
+| `worktrees`       | `docs/worktrees.md`        | Before using git worktrees  |
 
 ### Subagent Required Reading
 
 If you are a subagent implementing a task, read these docs **before writing any code**:
 
-| Doc                                | When                                      |
-| ---------------------------------- | ----------------------------------------- |
-| `.claude/docs/code-conventions.md` | Always                                    |
-| `.claude/docs/reference-files.md`  | Always — find existing patterns first     |
-| `.claude/docs/data-model.md`       | Always — domain understanding             |
-| `.claude/docs/architecture.md`     | Always — layer order, directory structure |
-| `.claude/docs/features.md`         | Always — what features exist and how      |
-| `.claude/docs/ui-patterns.md`      | When creating or editing any `.tsx` file  |
+| Doc                        | When                                      |
+| -------------------------- | ----------------------------------------- |
+| `docs/code-conventions.md` | Always                                    |
+| `docs/reference-files.md`  | Always — find existing patterns first     |
+| `docs/data-model.md`       | Always — domain understanding             |
+| `docs/architecture.md`     | Always — layer order, directory structure |
+| `docs/features.md`         | Always — what features exist and how      |
+| `docs/ui-patterns.md`      | When creating or editing any `.tsx` file  |
 
 Additional task-specific docs are listed in the plan under `## Required Docs`.
 
@@ -104,10 +104,10 @@ Additional task-specific docs are listed in the plan under `## Required Docs`.
 
 ## Superpowers Docs Location
 
-All superpowers artifacts (specs, plans) MUST be saved under `.claude/docs/superpowers/`:
+All superpowers artifacts (specs, plans) MUST be saved under `docs/superpowers/`:
 
-- Specs → `.claude/docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-- Plans → `.claude/docs/superpowers/plans/YYYY-MM-DD-<topic>-plan.md`
+- Specs → `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Plans → `docs/superpowers/plans/YYYY-MM-DD-<topic>-plan.md`
 
 Never write these to `docs/` at the project root.
 

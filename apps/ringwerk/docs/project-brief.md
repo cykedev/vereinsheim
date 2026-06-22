@@ -80,7 +80,7 @@ Ringwerk unterstuetzt drei Wettbewerbstypen, die alle auf einer gemeinsamen Scor
 
 ### NEW_PLANNED -- Known feature
 
-Reference `.claude/docs/features.md` or `.claude/tasks/todo.md`:
+Reference `docs/features.md` or `.claude/tasks/todo.md`:
 
 ```
 "Implement Phase 1 from todo.md."

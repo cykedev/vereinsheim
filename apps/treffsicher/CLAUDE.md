@@ -12,7 +12,7 @@ Self-hosted, Einzelnutzer bis Vereinsbetrieb, ausschliesslich Dark Mode, ausschl
 - Deployment: **im Monorepo via `vereinsheim`** (Root-`README.md` / `docs/operations.md`); `docs/production-deploy-truenas.md` ist die historische Standalone-Variante
 - Backlog / nächste Aufgaben: `docs/backlog.md`
 - Status / Roadmap: `docs/implementation-plan.md`
-- App-übergreifende Konsistenz (Ringwerk × Treffsicher): `docs/shared-conventions.md`
+- App-übergreifende Konsistenz (Ringwerk × Treffsicher): die Root-`docs/shared-conventions.md`
 
 ---
 

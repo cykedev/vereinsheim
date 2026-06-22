@@ -1,6 +1,6 @@
 # Architektur – Ringwerk
 
-Verbindlich gleichrangig mit `.claude/docs/technical.md`. Neue Dateien immer gemäss dieser Struktur anlegen.
+Verbindlich gleichrangig mit `docs/technical.md`. Neue Dateien immer gemäss dieser Struktur anlegen.
 
 ## Index
 

@@ -10,7 +10,7 @@ Stand: 09. März 2026
 | 4   | Einzelschusswerte              | ✅ Geklärt    | Optional; Pflicht: Seriensumme + bester Teiler                                                            |
 | 5   | Erstinstallation Admin-Account | ✅ Geklärt    | Seed beim ersten Start; E-Mail + Passwort aus `.env`                                                      |
 | 6   | Budget / Zeitplan              | ✅ Irrelevant | Privates Projekt                                                                                          |
-| 7   | Initiale Disziplinen           | ✅ Geklärt    | LP, LG, LPA, LGA (siehe `.claude/docs/features.md`)                                                       |
+| 7   | Initiale Disziplinen           | ✅ Geklärt    | LP, LG, LPA, LGA (siehe `docs/features.md`)                                                               |
 | 8   | Unentschieden-Regelung         | ✅ Geklärt    | Sieg = 2 Pkt, Niederl. = 0 Pkt. Bei gleichem RT: 1. bessere Serie, 2. besserer Teiler, 3. je 1 Pkt (DRAW) |
 | 9   | Finale-Modus App-Umfang        | ✅ Geklärt    | Nur Ergebniserfassung (keine Zeitnahme/Ansage)                                                            |
 | 10  | Gleichzeitige Nutzer           | ✅ Geklärt    | Max. 5–10; Rate-Limit-Konfiguration entsprechend                                                          |

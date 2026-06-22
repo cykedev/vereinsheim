@@ -41,8 +41,9 @@ MUST_MATCH=(
   src/lib/hooks/useUnsavedChangesGuard.ts
   src/lib/hooks/useNavigationConfirm.ts
   src/lib/forms/fieldErrors.ts
-  docs/shared-conventions.md
 )
+# Hinweis: docs/shared-conventions.md ist seit der Harness-Konsolidierung EINE
+# Quelle am Root (docs/shared-conventions.md) — nicht mehr pro App dupliziert.
 
 echo "== Byte-identische Shared-Dateien & Configs =="
 for f in "${MUST_MATCH[@]}"; do
