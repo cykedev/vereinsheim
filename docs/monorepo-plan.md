@@ -183,3 +183,10 @@ maschinengebunden:
 - ActionResult-Typ-Vereinheitlichung (Treffsicher) — passt gut in `packages/lib`.
 - Env-Var-Angleichung `ADMIN_*` ↔ `SEED_ADMIN_*` (deploy-breaking, separat).
 - CI/Remote-Cache (Phase 5).
+- **Dev-Tooling-Baseline vereinheitlichen + „superchargen":** treffsicher nutzt das Superpowers-Plugin
+  (Brainstorm/Plan/Spec-Workflows; `.superpowers/` lokal/gitignored + `docs/superpowers/{plans,specs}/`
+  eingecheckt), ringwerk nicht. Im Monorepo eine **gemeinsame** Tooling-Baseline am Root — Superpowers
+  + die neuen Schichten (CodeGraph, Memory-Graph, ENFORCE-Lessons, `/check` + Gates) — und so
+  **integrieren, dass sie sich verstärken**: CodeGraph speist Planung/Impact, Lessons speisen den
+  Memory-Graph, Gates erzwingen promotete Regeln. Ziel: ein einziges, „supergechargtes" Dev-Setup für
+  beide Apps statt zweier ungleicher.
