@@ -53,13 +53,18 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
   `db-reset`, `seed`, `commit-msg`, `cleanup-todos`, `consolidate-lessons` (Lessons-Triage
   ENFORCE > DOCUMENT > REMEMBER → Memory-Graph, ADR-017), `sync-graph` (Doku-Index neu projizieren,
   ADR-022) sowie der PIV-Workflow `plan → implement → validate → review` + `debug` (Root-Cause-Analyse;
-  Handoff über `plans/` + `reports/`).
+  Handoff über `plans/` + `reports/`). **`/implement` läuft autonom-by-default** über den freigegebenen
+  Plan (task-by-task, Circuit-Breaker, Ledger; **ADR-023**) — die Plan-Freigabe ist die einzige
+  Opt-in-Grenze, Merge bleibt user-gated.
 - **Hooks** (`.claude/settings.json` + `.claude/hooks/`): **Stop-Gate** blockt das Turn-Ende, bis
   `pnpm check` grün ist; **Stop-Graph-Sync** (`graph-sync.mjs`, ADR-022) baut den Doku-Index am Turn-Ende
   neu und **blockt** bei invalidem Index, nudged bei Doc-Änderung ohne Manifest-Update Richtung
   `/sync-graph`; **PostToolUse-Lint** (eslint auf die editierte App-Datei); **PreToolUse-Security-Guard**
   (verweigert echte `.env`/`.vereinsheim.local` + katastrophale `rm -rf`; **nudged** zudem einmalig pro
-  Session Richtung CodeGraph bei `grep`/`find`-Suchen). Greifen ab dem nächsten Claude-Code-Reload.
+  Session Richtung CodeGraph bei `grep`/`find`-Suchen); **Autopilot-Guard** (ADR-023, nur aktiv bei Marker
+  `.claude/.autopilot-active`) verweigert im autonomen `/implement` geschützte Pfade (Deploy-Vertrag,
+  Schema/Migrationen, ADRs, Secrets, `.claude/`, `scripts/`) + push/merge/deploy/migrate. Greifen ab dem
+  nächsten Claude-Code-Reload.
 - **Sub-Agent** `code-reviewer` (`.claude/agents/`) — von `/review` gegen den Branch-Diff delegiert.
 - **Knowledge-Graph** (`.mcp.json`): **CodeGraph-MCP** (Live-Symbol-/Call-Graph/Routen,
   `codegraph_explore` — Ground Truth über den Code, on-demand statt grep) + **Memory-MCP = gebauter
@@ -87,6 +92,8 @@ Diese gelten zusätzlich zu denen aus
    ff-only-Merge nach `main` nur mit User-OK.
 3. **Keine `Co-Authored-By`-Trailer** in Commit-Messages.
 4. **Commit-Message als fenced code block** vor dem Commit anzeigen.
+   _Ausnahme: im autonomen `/implement` (ADR-022) entfällt das — die Messages
+   stehen im Ledger + `git log`, vor dem Merge revidierbar._
 5. **Niemals Secrets committen**. `.env` und `.vereinsheim.local` sind
    gitignored.
 6. **ADRs respektieren**: wenn ein Vorschlag einer ADR widerspricht, das
@@ -95,8 +102,10 @@ Diese gelten zusätzlich zu denen aus
 7. **PIV ist der Default-Workflow** (nicht pro Prompt mitzugeben): jede
    nicht-triviale Änderung läuft `/plan → /implement → /validate → /review`
    (Handoff über `plans/` + `reports/`); den Plan vor der ersten Code-Zeile
-   dem User vorlegen. Bugs zuerst über `/debug` (Root-Cause). Triviale/
-   mechanische Fixes (Typo, One-Liner, reine Doku) dürfen direkt erfolgen.
+   dem User vorlegen. Nach der Freigabe läuft `/implement` **autonom** durch
+   (ADR-022) und holt den User nur an Circuit-Breakern + am Merge zurück. Bugs
+   zuerst über `/debug` (Root-Cause). Triviale/mechanische Fixes (Typo,
+   One-Liner, reine Doku) dürfen direkt erfolgen.
 
 ## Bedienkonzept (kurz)
 
