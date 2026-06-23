@@ -18,12 +18,14 @@ Vor dem ersten Task: Plan + dessen `## Required Docs` (App + `docs/shared-conven
 - Plan unter `plans/<…>.md`; **Ledger** `reports/<plan-stem>-autopilot.md` lesen/anlegen (Plan-Pfad,
   Branch, Cap `20`, Iterations-Zähler, Fortschritts-Checkliste, Ereignis-Log).
 - **Marker** `.claude/.autopilot-active` schreiben (außer bei `--step`): aktiviert den
-  `autopilot-guard`-Hook. Bei `--step` keinen Marker setzen.
+  `autopilot-guard`-Hook. Bei `--step` keinen Marker setzen. Existiert beim Start bereits ein Marker,
+  ist das ein Resume — ihn neu schreiben (auffrischen), nicht stehenlassen.
 
 ## Iteration = ein Plan-Task
 
 1. **Nächsten Task** aus dem Ledger wählen (erster nicht-`done`). Keiner offen → **FINALIZE**.
-   Iterations-Zähler `+1`; `> Cap` → **HALT** (Breaker: Cap).
+   Iterations-Zähler `+1`; `> Cap` → **HALT** (Breaker: Cap). Marker auffrischen (`touch`), damit der
+   Guard über lange Läufe nicht via TTL als verwaist gilt.
 2. **Ambiguität (Breaker):** Task nicht konkret umsetzbar (keine klare Datei/Änderung, „TBD", offene
    Designfrage) → **HALT**.
 3. **Scope (Breaker):** Änderung muss in den vom Plan gelisteten, nicht-geschützten Pfaden bleiben.
@@ -48,7 +50,9 @@ Vor dem ersten Task: Plan + dessen `## Required Docs` (App + `docs/shared-conven
 - **Bei jedem HALT:** Marker `.claude/.autopilot-active` **entfernen** (re-armt interaktives Editieren),
   Grund ins Ledger, dem User melden (kurz: welcher Breaker, welcher Task, was er entscheiden muss). Der
   User löst auf / passt den Plan an / überspringt; ein erneutes `/implement` nimmt den Lauf aus dem
-  Ledger wieder auf.
+  Ledger wieder auf. _Bricht ein Lauf abnormal ab (Crash/Kill), bleibt der Marker liegen — manuell
+  `rm .claude/.autopilot-active` (er ist gitignored); der Guard behandelt ihn nach `MARKER_TTL_MS`
+  (8 h) ohnehin als verwaist._
 - **FINALIZE** (Plan abgearbeitet): Marker entfernen, Ledger-Zusammenfassung schreiben + committen,
   dann **/validate**.
 
