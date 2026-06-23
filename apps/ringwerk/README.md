@@ -6,9 +6,9 @@ Vereinsinterne Wettbewerbs-Plattform für Schützenvereine. Ligaverwaltung, Spie
 > laufen **von der Repo-Wurzel**: `pnpm dev` (diese App auf :3000) gegen den
 > geteilten Dev-Postgres (`docker compose -f docker-compose.dev.yml up -d` **an
 > der Wurzel**); Gates `pnpm check`; Build/Deploy `vereinsheim build` / `release`.
-> **Die Abschnitte unten mit eigenem `docker-compose.dev.yml`, `npm`-im-Container
-> und TrueNAS-Deploy stammen aus der Standalone-Zeit und gelten nicht mehr** (das
-> per-App `docker-compose.dev.yml` wurde entfernt). Kanonisch: Root-[`README.md`](../../README.md);
+> **Die Abschnitte unten mit eigenem `docker-compose.dev.yml` und `npm`-im-Container
+> stammen aus der Standalone-Zeit und gelten nicht mehr** (das per-App
+> `docker-compose.dev.yml` wurde entfernt). Kanonisch: Root-[`README.md`](../../README.md);
 > die App-Doku-Konsolidierung folgt in Phase 2.
 
 ---
@@ -166,25 +166,21 @@ cp .env.example .env
 
 ---
 
-## Produktions-Deployment (TrueNAS SCALE)
+## Produktions-Deployment
 
-Die App läuft self-hosted via Docker Compose auf TrueNAS SCALE.
+Deployment läuft über das `vereinsheim`-Monorepo: lokaler Build → Docker Hub → der VPS
+pullt die Images. Bedienung, Backup und Recovery sind zentral in der
+Root-[`README.md`](../../README.md) und [`docs/operations.md`](../../docs/operations.md) beschrieben.
 
-```bash
-docker compose -f docker-compose.prod.yml up -d
-```
+Pro App startet die Root-`compose.yml` auf dem VPS die Services in fester Reihenfolge:
 
-Erfordert eine ausgefüllte `.env`-Datei.
-
-Start-Reihenfolge der Services:
-
-1. `db` — PostgreSQL 15, persistiert in Volume `postgres_data`
-2. `migrate` — führt `prisma migrate deploy` aus (one-shot), mit optionaler Recovery
-3. `app` — Next.js Produktions-Image, startet nach erfolgreichem `migrate`
+1. `db` — PostgreSQL 15, persistiert in einem benannten Volume
+2. `migrate-*` — führt `prisma migrate deploy` aus (one-shot), mit optionaler P3009-Recovery
+3. `app-*` — Next.js Standalone-Image, startet nach erfolgreichem `migrate`
 
 Der erste Admin-Account wird beim ersten Request aus `SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD` angelegt.
 
-**Backup:** TrueNAS-Volume-Snapshots (`postgres_data` + `uploads_data`).
+**Backup:** täglicher Cron auf dem VPS (`vereinsheim backup`) plus Pre-Deploy-Backup vor jedem Pull.
 
 ---
 
@@ -243,16 +239,16 @@ scripts/                   # Docker-Startup- und Migrations-Scripts
 
 ## Tech Stack
 
-| Bereich   | Technologie                 |
-| --------- | --------------------------- |
-| Framework | Next.js 16 (App Router)     |
-| Datenbank | PostgreSQL 15 + Prisma 7    |
-| Auth      | NextAuth.js v4              |
-| UI        | shadcn/ui + Tailwind CSS 4  |
-| Charts    | Recharts                    |
-| Tests     | Vitest                      |
-| Container | Docker + Docker Compose     |
-| Hosting   | TrueNAS SCALE (self-hosted) |
+| Bereich   | Technologie                |
+| --------- | -------------------------- |
+| Framework | Next.js 16 (App Router)    |
+| Datenbank | PostgreSQL 15 + Prisma 7   |
+| Auth      | NextAuth.js v4             |
+| UI        | shadcn/ui + Tailwind CSS 4 |
+| Charts    | Recharts                   |
+| Tests     | Vitest                     |
+| Container | Docker + Docker Compose    |
+| Hosting   | VPS (Docker, self-hosted)  |
 
 ---
 

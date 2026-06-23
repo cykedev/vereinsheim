@@ -4,11 +4,11 @@
 
 ## Zielplattform & Hosting
 
-- Self-hosted auf **TrueNAS SCALE via Docker Compose** – kein Cloud-Dienst
-- Portabilität: kein TrueNAS-spezifischer Code; läuft auf jeder Docker-Compose-Umgebung
+- Self-hosted via **Docker Compose** auf einem VPS – kein Cloud-Dienst
+- Portabilität: kein plattformspezifischer Code; läuft auf jeder Docker-Compose-Umgebung
 - Alle umgebungsabhängigen Werte (DB-URL, Secrets) in `.env` – nie hart im Code
 - Zugriff über Browser (Chrome, Firefox, Safari), Desktop und Smartphone; keine native App
-- **HTTPS in Produktion zwingend** – via Reverse Proxy (Nginx oder Traefik auf TrueNAS)
+- **HTTPS in Produktion zwingend** – via Reverse Proxy (Caddy auf dem VPS)
 
 ---
 
@@ -128,19 +128,18 @@
 
 ---
 
-## Deployment (TrueNAS)
+## Deployment
 
-1. App- und Migrator-Image via `docker buildx build` bauen und in Registry pushen
-2. `.env`-Datei auf TrueNAS mit allen Secrets ablegen
-3. In TrueNAS „Apps → Custom App → Install via YAML": Docker-Compose-YAML mit drei Services:
-   - `migrate` (einmalig, Migrations-Container)
-   - `app` (Next.js)
-   - `db` (PostgreSQL)
-4. Update: neues Image-Tag bauen, im YAML ersetzen, speichern (Redeploy)
-5. Rollback: auf letztes funktionierendes Tag zurücksetzen
+Deployment läuft über das `vereinsheim`-Monorepo: lokaler Build → Docker Hub → der VPS pullt
+die Images. Auf dem VPS startet die Root-`compose.yml` pro App `migrate-*` (one-shot
+`prisma migrate deploy`, mit P3009-Recovery) vor `app-*`; Caddy terminiert TLS.
 
-**Backup:** TrueNAS-Volume-Snapshots (`postgres_data` + `uploads_data`) – kein app-seitiger Backup
-**Restore-Drill:** regelmässig auf Testsystem prüfen (Snapshot einspielen, Login, Datenkonsistenz)
+1. Build + Push: `vereinsheim build` (baut aus dem Monorepo via `turbo prune`, taggt mit der Git-SHA)
+2. Deploy: `vereinsheim deploy` (Pre-Deploy-Backup, Pull, Migrate, Restart)
+3. Rollback: auf das vorherige Image-Tag zurücksetzen
+
+**Backup:** täglicher Cron auf dem VPS (`vereinsheim backup`); Details + Restore-Drill in der
+Root-[`docs/operations.md`](../../../docs/operations.md).
 
 ---
 
