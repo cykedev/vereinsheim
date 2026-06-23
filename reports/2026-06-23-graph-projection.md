@@ -33,19 +33,27 @@ node .claude/doc.mjs apps/ringwerk/docs/features.md#<slug>   → nur dieser Absc
 
 ADR-Pointer sind bereits **fragment-präzise** (22 Stück); der Index ist regenerierbar + selbst-validierend.
 
-## Offen (Tasks 7, 8, 13) — bewusste Curation-Phase
+## Erledigt & verifiziert (Tasks 7, 8) — Curation
 
-- **Task 7 — Fragment-Pointer-Upgrade + Korpus-Erweiterung:** die 47 Topic-Pointer von Datei- auf
-  `#slug`-Granularität heben und den Index auf das **ganze** lebende Doku-Korpus ausweiten (spec,
-  shared-conventions, app code-conventions/ui-patterns/data-model/technical, packages-CLAUDE, README).
-  Beste Umsetzung: via `/sync-graph` (dogfooding), da semantisches Heading-Matching = modellgetrieben.
-- **Task 8 — Relationen anreichern:** `governed_by`/`contrasts_with`/`see_also`/`relates_to` dicht
-  zwischen Topics/ADRs/Conventions/Incidents legen (traversierbares Netz).
-- **Task 13 — `@import` schrumpfen (RISIKO, zuletzt):** kleiner „Rules of the road"-Kern bleibt
+- **Task 7 — Fragment-Pointer + Korpus:** alle Topic-Pointer auf `#slug`-Granularität gehoben
+  (**0 verbleibende Datei-Pointer**, 84 Fragment-Pointer) und der Index aufs ganze lebende Korpus
+  erweitert (+34 Topics: ringwerk/treffsicher-Domäne, architecture, shared-conventions-Kanon, ops,
+  Monorepo-Phasen). Heading-Matching domänenweise via Subagenten, jeder Slug mit `doc.mjs` verifiziert.
+- **Task 8 — Relationen:** +31 laterale Kanten → **vollständig vernetzt, kein isolierter Knoten**.
+  Cross-App-Kontraste (`contrasts_with`: vereinsweites vs. Per-User-Modell), Parallelen (`relates_to`:
+  Meyton/Auth/Server-Actions/Testing), Deploy-/Ops-Cluster, ADR-`governed_by`/`informed_by`.
+
+**Endstand:** 106 Entities / 147 Relationen / 84 Fragment-Pointer. Builder grün + idempotent;
+Live-MCP-Round-Trip bestätigt (`open_nodes` liefert Entities + `contrasts_with`-Kante). `pnpm check`
+17/17 FULL TURBO grün.
+
+## Offen — bewusst separat
+
+- **Task 13 — `@import` schrumpfen (RISIKO, optional):** kleiner „Rules of the road"-Kern bleibt
   always-loaded, architecture/conventions-Detail wandert in den Index. **Einziger Schritt mit echtem
-  Regressionsrisiko** (Konventions-Treue ist nicht gate-erzwingbar) → eigener, explizit abgesegneter Schritt.
+  Regressionsrisiko** (Konventions-Treue ist nicht gate-erzwingbar) → nur mit explizitem OK, isoliert.
 
 ## Empfehlung
 
-Kern ist merge-fähig als eigenständiger Wert (regenerierbarer, validierter Index + ADR-Fragment-Pointer).
-Task 7/8 als fokussierte Curation-Pass über `/sync-graph`; Task 13 separat mit explizitem OK.
+Index ist vollständig + merge-fähig. Task 13 separat mit ausdrücklichem OK — oder bewusst weglassen
+(der Index funktioniert auch neben der bestehenden `@import`-Schicht).
