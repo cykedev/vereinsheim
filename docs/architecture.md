@@ -68,4 +68,5 @@ deckt nur noch triviale Next/shadcn-Reste ([monorepo-plan.md](monorepo-plan.md))
   SessionStart via `memory-surface.mjs` gesurface't. **Store ist Artefakt — nie von Hand editieren.**
   Maschinen-/ops-lokales → natives Auto-Memory.
 - **CLAUDE.md-Hierarchie:** Root (universelle Regeln, @import) → `apps/<app>/CLAUDE.md` (scope-spezifisch).
-- **Skills/Hooks/Agents** unter `.claude/`: ein Satz für beide Apps; Stop-Gate erzwingt grüne `pnpm check`.
+- **Skills/Hooks/Agents** unter `.claude/`: ein Satz für beide Apps; Stop-Gate erzwingt grüne `pnpm check`,
+  Stop-Graph-Sync (`graph-sync.mjs`) baut den Doku-Index am Turn-Ende und blockt bei invalidem Index (ADR-022).
