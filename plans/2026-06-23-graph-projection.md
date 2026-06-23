@@ -1,173 +1,198 @@
-# Plan — Memory-Graph als abgeleitete, regenerierbare Projektion der Dokumentation
+# Plan — Memory-Graph als gebauter, relationenreicher Doku-Index (Fragment-Pointer)
 
 > PIV-Plan (Schritt 1/4). Handoff für `/implement`. Branch: `feat/graph-projection`.
+> Revision 2: erweitert von „Projektion" zu „angereicherter Index über die gesamte Doku" — die
+> eigentliche Nutzen-Idee (schneller, token-sparsamer Einstieg über Graph → Fragment).
 
 ## Context (warum)
 
-Der Memory-Graph (`.claude/knowledge-graph.json`, MCP-Layer-3, ADR-016) wurde bisher **von Hand**
-gepflegt (Live-`mcp__memory__*`-Writes). Das hat drei Probleme, die der User adressiert haben will:
+Der Memory-Graph (`.claude/knowledge-graph.json`, MCP-Layer-3, ADR-016) soll der **kuratierte,
+relationenreiche Index über die gesamte Dokumentation** werden — das symmetrische Gegenstück zu
+CodeGraph (Index über den Code). Arbeitsmuster: erst den Graphen fragen *wo* die Antwort steht
+(Entity-Essenz + präziser Pointer + Relationen zum Weitergehen), dann **nur das kleine Fragment** lesen.
 
-1. **Nicht selbstaktualisierend** — wächst nur, wenn ein Agent dran denkt (ADR-021: Schreiben bleibt
-   modellgetrieben). War deshalb monatelang ein No-Op.
-2. **Doppelpflege/Drift** — Volltext im Graph *und* in den Docs. (In dieser Session bereits auf
-   Essenz+Pointer geschrumpft, aber die Pflege blieb manuell.)
-3. **Nicht reproduzierbar** — der Graph lebte nur im gebauten Artefakt; „löschen + neu bauen" verlor
-   alles.
+Drei Probleme von heute, die das löst:
+1. **Nicht selbstaktualisierend / manuell gepflegt** (ADR-021: modellgetriebenes Schreiben, war No-Op).
+2. **Doppelpflege/Drift** — Volltext im Graph *und* in den Docs.
+3. **Token-Verschwendung beim Einstieg** — Pointer auf ganze Dateien (z.B. `features.md`, 595 Z.) → der
+   Agent liest viel „umsonst".
 
-Ziel: **Docs bleiben die kanonische, reviewbare Wahrheit; der Graph wird ein gebautes Artefakt**, das
-deterministisch aus eingecheckten Quellen regeneriert wird. Genau wie CodeGraph eine Projektion des
-Codes ist, wird der Memory-Graph eine Projektion der Dokumentation.
+**Lösung in zwei Hebeln:**
+- **Präzises Retrieval:** Pointer auf **Fragmente** (`datei.md#überschrift`) + ein Fragment-Reader, der
+  nur den Abschnitt druckt. Docs bleiben ganze, menschenlesbare Dateien (kein Massen-Splitting).
+- **Immer-geladene Schicht schrumpfen:** ein knapper „Rules of the road"-Kern bleibt `@import`; der Rest
+  (architecture/conventions-Detail) wandert in den on-demand-Index.
 
-**Determinismus-Grenze (ehrlich):** Prosa hat keine AST-Struktur. Daher zweistufig:
-`Docs → Manifest` ist **modellgetrieben** (seltener `/sync-graph`-Skill, bei Doc-Änderungen);
-`Manifest+ADRs+Captured → Graph` ist **deterministisch** (häufiger Builder, hook-/CI-fähig, kein Modell).
+**Ehrliche Determinismus-Grenze:** `Docs → Manifest` ist **modellgetrieben** (seltener `/sync-graph`);
+`Manifest+ADRs+Captured → Graph` ist **deterministisch** (Builder, hook-/CI-fähig). Prosa hat keine
+AST-Struktur — voll-automatisches „Doc ändert sich → Graph baut sich ohne Modell neu" ist NICHT drin.
 
-ADR-Bezug: ADR-016 (Graph = Layer 3, *nicht* Struktur-Autorität — bleibt gewahrt). ADR-021 (Pfad-Fix,
-modellgetriebenes Schreiben — dessen *Schreib-Mechanik* wird durch dieses Vorhaben ersetzt → **ADR-022**).
+**Ehrliches Risiko:** immer-geladen = *garantiert*; indiziert = *muss aktiv geholt werden*. Der Stop-Gate
+erzwingt Build-Korrektheit, **nicht** Konventions-Treue. Darum bleibt ein kondensierter Konventions-Kern
+always-loaded; nur das Detail wird indiziert. Der Pointer-Validator schützt den Index vor Verrottung.
+
+ADR-Bezug: ADR-016 (Graph = Layer 3, *nicht* Struktur-Autorität — gewahrt). ADR-021 (dessen
+*Schreib-Mechanik* wird ersetzt → **ADR-022**).
 
 ## Approach
 
-Drei eingecheckte **Quellen** → ein deterministischer **Builder** → das **Artefakt**:
+Drei eingecheckte **Quellen** → deterministischer **Builder** → **Artefakt**; dazu **Reader** + **Surface**:
 
 ```
 docs/decisions.md            ──(deterministisch geparst)──┐
 .claude/graph-projection.mjs ──(Manifest: kuratiert)──────┼─▶ .claude/build-graph.mjs ─▶ .claude/knowledge-graph.json
-.claude/graph-captured.mjs   ──(Session-Provenance)───────┘                                  (MCP-Artefakt, nie von Hand editiert)
-        ▲
-        └──(modellgetrieben: /sync-graph-Skill, bei Doc-Änderungen)── docs/*.md, apps/*/docs/*.md
+.claude/graph-captured.mjs   ──(Session-Provenance)───────┘        │  (validiert Pointer + Integrität)
+        ▲                                                          ▼
+        └─(modellgetrieben: /sync-graph)─ docs/*.md, apps/*/docs/*.md
+.claude/doc.mjs  ── Fragment-Reader: `node .claude/doc.mjs <datei>#<slug>` druckt nur den Abschnitt
+.claude/hooks/memory-surface.mjs ── SessionStart: Landkarte + „so fragst du den Index ab"
 ```
 
-**Strata & Zuständigkeit:**
+### Pointer-Konvention (für Reader + Validator + Autoren identisch)
 
-| Stratum | Quelle | Inhalt | Wer pflegt |
-| --- | --- | --- | --- |
-| ADRs | `docs/decisions.md` (geparst) | `decision`-Entities (Essenz+Pointer) + `supersedes`-Relationen | automatisch beim Build |
-| Projektion | `.claude/graph-projection.mjs` | `project`/`app`/`feature`/`subsystem`/`domain-rule`/`operation`/`ops-constraint` + deren Relationen + kuratierte ADR-Cross-Refs (`amends`) | `/sync-graph` (Modell) bzw. Hand |
-| Captured | `.claude/graph-captured.mjs` | `incident`/`state` + deren Relationen (stehen in **keiner** Doc) | `/consolidate-lessons` REMEMBER |
+- Jede indizierte Entity trägt **mindestens eine** Pointer-Observation der Form `→ <relpfad>#<slug>`
+  (Sentinel `→ ` = U+2192 + Leerzeichen). Mehrere erlaubt (eine Entity kann in mehrere Docs zeigen).
+- **Slug-Regel (GitHub-artig, dokumentiert im Builder-Header):** Überschriftstext → trim →
+  lowercase → alles außer `\p{L}\p{N} _-` entfernen → Leerzeichen/`_` → `-` → Mehrfach-`-` kollabieren.
+  Reader und Validator berechnen denselben Slug; Autoren schreiben den Slug der Ziel-Überschrift.
+- Datei-ohne-`#` bleibt erlaubt (grobe Pointer), löst aber **keine** Fragment-Optimierung aus.
 
-**Builder-Vertrag** (`build-graph.mjs`):
-- Liest die drei Quellen, merged: ADRs (numerisch aufsteigend) → Projektion (Manifest-Reihenfolge) →
-  Captured. Dann alle Relationen (gleiche Gruppenreihenfolge). Stabile Sortierung → saubere Git-Diffs.
-- Serialisiert **kompaktes JSONL** im server-memory-Format: Entity-Zeile
-  `{"type":"entity","name":…,"entityType":…,"observations":[…]}`, Relation-Zeile
-  `{"type":"relation","from":…,"to":…,"relationType":…}`, je `JSON.stringify` (UTF-8 literal — keine
-  `\u`-Escapes; non-ASCII wie `für`/`→`/`✅` bleiben), eine Zeile pro Objekt, **abschließendes `\n`**.
-- **Validiert** (Exit≠0 bei Verstoß): keine doppelten Entity-Namen; jede Relation `from`/`to` referenziert
-  eine existierende Entity (keine Dangling); jede Entity hat ≥1 Observation.
-- Idempotent: zweiter Lauf ohne Quelländerung erzeugt byte-gleiche Datei.
+### Fragment-Reader `.claude/doc.mjs`
 
-**ADR-Parser-Regeln** (deterministisch, aus `decisions.md`):
-- Sektion = `^## ADR-(\d{3}) — (.+)$` → Entity `ADR-NNN`, Titel = Capture-Gruppe.
-- Status = erste `^\*\*Status\*\*: (.+)$` der Sektion.
-- Observations = `["Titel: <titel>", "Status: <status>", "Detail: docs/decisions.md (ADR-NNN)"]`
-  (Essenz+Pointer; gehandcopierte Prosa/Nachträge **nicht** mehr im Graph — kanonisch in decisions.md).
-- `supersedes` = aus Titel-Regex `\(supersedes ADR-(\d+)\)`. (Die feineren `amends`-Cross-Refs
-  [021→016/017, 020→018/019] sind **editorial** → liegen im Manifest, nicht im Parser.)
+- `node .claude/doc.mjs apps/ringwerk/docs/features.md#ringteiler` → druckt ab der Überschrift, deren
+  Slug matcht, bis zur nächsten Überschrift **gleicher oder höherer** Ebene. Exit 1 + stderr, wenn der
+  Slug nicht existiert (Caller merkt es). Reines Lesen, keine Abhängigkeiten.
 
-**Schreib-Mechanik neu (ADR-022):** Neues Projektgedächtnis wird **nicht** mehr per Live-`mcp__memory__`-
-Write erzeugt (das ein Rebuild überschriebe), sondern als Eintrag in die passende Quelle (`graph-captured.mjs`
-für Incidents/State; `graph-projection.mjs` für abgeleitete Fakten) + Rebuild + Commit. Der laufende
-MCP-Server bleibt **lesend** (er liest die Datei pro Operation, ADR-021 — Builds sind also sofort sichtbar).
+### Builder-Vertrag (`build-graph.mjs`)
+
+- Merge in stabiler Reihenfolge: Manifest-Kern (project, apps) → ADRs (numerisch) → Manifest-Topics →
+  Captured; dann alle Relationen gleicher Gruppenfolge. → saubere Git-Diffs, idempotent.
+- Serialisierung: kompaktes JSONL im server-memory-Format (`{"type":"entity",…}` /
+  `{"type":"relation",…}`), `JSON.stringify` (UTF-8 literal, keine `\u`-Escapes), abschließendes `\n`.
+- **Validierung (Exit≠0):** (a) keine doppelten Entity-Namen; (b) keine Dangling-Relation; (c) jede
+  Entity ≥1 Observation; (d) **jeder `→ datei#slug`-Pointer resolved** (Datei existiert, Slug ∈
+  Heading-Slugs der Datei). (d) ist die Index-Korrektheits-Garantie.
+
+### ADR-Parser (deterministisch aus `decisions.md`)
+
+- Sektion `^## ADR-(\d{3}) — (.+)$` → Entity `ADR-NNN`; Status = erste `^\*\*Status\*\*: (.+)$`.
+- Observations = `["Titel: <titel>", "Status: <status>", "→ docs/decisions.md#adr-nnn-<slug>"]`
+  (Essenz + Fragment-Pointer; Prosa/Nachträge kanonisch in decisions.md).
+- `supersedes` aus Titel-Regex `\(supersedes ADR-(\d+)\)`. Feinere `amends`-Cross-Refs → Manifest.
+
+### Schreib-Mechanik neu (ADR-022)
+
+Neues Projektgedächtnis = Eintrag in die passende **Quelle** (`graph-captured.mjs` für Incidents/State;
+`graph-projection.mjs` für abgeleitete Topics) + Rebuild + Commit — **nicht** Live-`mcp__memory__`-Write
+(den ein Rebuild überschriebe). Der MCP-Server bleibt **lesend** (liest die Datei pro Operation, ADR-021).
+
+### Index-Korpus (alle lebenden Docs; `superpowers/`-Archive ausgenommen)
+
+`docs/`: decisions (ADR-Parser), spec, operations, shared-conventions, architecture, monorepo-plan ·
+`apps/ringwerk/docs/`: project-brief, architecture, features, data-model, technical, code-conventions,
+ui-patterns · `apps/treffsicher/docs/`: requirements, data-model, technical-constraints, code-conventions,
+backlog · `packages/*/CLAUDE.md` · `README.md`. Je Topic eine schlanke Entity (Essenz + Fragment-Pointer),
+verbunden mit reichem Relationsvokabular.
+
+### Relationsvokabular (erweitert)
+
+Bestehend: `feature_of`, `subsystem_of`, `operation_of`, `constraint_of`, `part_of`, `applies_to`, `uses`,
+`feeds`, `refined`, `targets`, `supersedes`, `amends`, `occurred_in`, `informed_by`.
+Neu (Navigation): `governed_by` (Topic → ADR/Konvention, die es regelt), `contrasts_with` (z.B.
+ringwerk-Rollen ↔ treffsicher-Per-User), `see_also`, `relates_to`.
 
 ## Files to change / create
 
-**Neu:**
-- `.claude/graph-projection.mjs` — `export default { entities:[…], relations:[…] }` (plain literals, keine
-  Logik). Seed = aktueller Graph **minus** ADRs/Captured: die 2 `app` + 1 `project` + 44
-  feature/subsystem/domain-rule/operation/ops-constraint-Entities + alle ihre Relationen + die 4 kuratierten
-  ADR-`amends`/`supersedes`-Cross-Refs, die nicht aus Titeln folgen (genau: `ADR-021 amends ADR-016`,
-  `ADR-021 amends ADR-017`, `ADR-020 amends ADR-018`, `ADR-020 amends ADR-019`).
-- `.claude/graph-captured.mjs` — `export default { entities:[…], relations:[…] }`. Seed = die 2 `incident`
-  + 1 `state` Entities + alle 6 Relationen mit ≥1 captured-Ende (`occurred_in`×2, `applies_to`×2
-  [`treffsicher-actionresult-migration→treffsicher`, `stechschuss-modell-flip→best-of-single`], `refined`
-  [`ruleset-lock-granularity→phase-locking-and-editability`], `targets`
-  [`treffsicher-actionresult-migration→action-result-convention`]).
-- `.claude/build-graph.mjs` — der deterministische Builder (Vertrag oben).
-- `.claude/skills/sync-graph/SKILL.md` — modellgetriebener Re-Sync (siehe Task 6).
+**Neu:** `.claude/graph-projection.mjs` (Manifest) · `.claude/graph-captured.mjs` (Captured) ·
+`.claude/build-graph.mjs` (Builder+Validator) · `.claude/doc.mjs` (Fragment-Reader) ·
+`.claude/skills/sync-graph/SKILL.md`.
 
-**Geändert:**
-- `.claude/knowledge-graph.json` — wird ab jetzt **gebaut** (Task 4 regeneriert es; Inhalt ≈ heute, ADRs
-  normalisiert).
-- `docs/decisions.md` — **ADR-022** anhängen (Projektionsarchitektur; amendiert ADR-016 §3 + ADR-021-Schreibmechanik).
-- `.claude/skills/consolidate-lessons/SKILL.md` — REMEMBER-Stufe: Eintrag in `graph-captured.mjs` + Rebuild
-  (statt Live-`mcp__memory__`-Writes).
-- `CLAUDE.md` (Root) — Knowledge-Graph-Abschnitt: Projektion + Build-Befehl; **zugleich** den veralteten
-  „Nächster Schritt: Phase 4"-Text fixen (Phase 4 erledigt).
-- `docs/architecture.md` — Knowledge-&-Harness-Abschnitt: Graph = gebaute Projektion (1 Satz + Build-Befehl).
-- `docs/monorepo-plan.md` — Header („Phase 4 offen" → erledigt; §8 ist schon korrekt).
+**Geändert:** `.claude/knowledge-graph.json` (ab jetzt gebaut) · `.claude/hooks/memory-surface.mjs`
+(Landkarte/Anleitung) · `docs/decisions.md` (ADR-022 + Nachtrag-Verweise 016/021) ·
+`.claude/skills/consolidate-lessons/SKILL.md` (REMEMBER → Quelle+Rebuild) · `CLAUDE.md` (Knowledge-Abschnitt
++ kondensierter Konventions-Kern + Phase-4-Stale-Fix) · `docs/architecture.md` · `docs/monorepo-plan.md`
+(Header-Stale-Fix).
 
 ## Tasks (bite-sized, je ein Commit)
 
-1. **Manifest-Quelle anlegen** — `.claude/graph-projection.mjs` aus dem aktuellen Graph extrahieren
-   (Skript: lese `knowledge-graph.json`, filtere Entities mit entityType ∉ {decision,incident,state},
-   plus alle Relationen, deren beide Enden NICHT incident/state sind und die nicht reine ADR-`supersedes`
-   aus Titeln sind → in `export default`). Verifizieren: 47 Entities (1 project + 2 app + 44 domain),
-   plus die 4 kuratierten ADR-Cross-Refs manuell ergänzt.
-2. **Captured-Quelle anlegen** — `.claude/graph-captured.mjs`: 3 Entities (incident×2, state×1) + alle 6
-   Relationen mit ≥1 captured-Ende, aus dem Graph extrahiert (Extraktions-Filter: Relation gehört zu
-   Captured ⟺ `from` oder `to` ∈ {incident,state}-Namen; alle übrigen → Manifest bzw. ADR-Parser).
-3. **Builder schreiben** — `.claude/build-graph.mjs` nach Vertrag. ADR-Parser + Merge + Validierung +
-   JSONL-Serialisierung. `node .claude/build-graph.mjs` schreibt `knowledge-graph.json`.
-4. **Regenerieren + verifizieren** — Builder laufen lassen; gegen den aktuellen Stand prüfen
-   (Test-Schritte unten). Bei Abweichung außer ADR-Normalisierung: Quellen korrigieren, nicht das Artefakt.
-5. **ADR-022** in `docs/decisions.md` — Titel „Memory-Graph als gebaute Projektion (Builder + Manifest +
-   Captured)", Status Accepted (Juni 2026), Kontext/Entscheidung/Alternativen/Folgen; Nachtrag-Verweise in
-   ADR-016 §3 und ADR-021 ergänzen. (ADR-022-Entity erscheint automatisch beim nächsten Build.)
-6. **`/sync-graph`-Skill** — `.claude/skills/sync-graph/SKILL.md` (frontmatter `name`/`description`,
-   `invocation: [user, Claude]`-Stil wie andere Skills): Ablauf = (a) geänderte Docs lesen, (b)
-   betroffene Manifest-Entities auf Essenz+Pointer-Disziplin nachziehen (Captured nie überschreiben),
-   (c) `node .claude/build-graph.mjs`, (d) Validierung grün + MCP-Round-Trip, (e) an Commit erinnern.
-7. **Schreib-Disziplin nachziehen** — `consolidate-lessons/SKILL.md` REMEMBER + Root-`CLAUDE.md` +
-   `apps/*/CLAUDE.md`-Verweise: Capture = Quelle editieren + Rebuild, nicht Live-Write.
-8. **Doc-Sync** — `architecture.md` + `monorepo-plan.md`-Header + Root-`CLAUDE.md` Phase-4-Stale-Fix.
+1. **Fragment-Reader** `.claude/doc.mjs` + Slug-Funktion (geteilt nutzbar). Test: druckt einen bekannten
+   Abschnitt aus `operations.md`; Exit 1 bei Fake-Slug.
+2. **Builder-Grundgerüst** `.claude/build-graph.mjs`: ADR-Parser + Merge + JSONL-Serialisierung +
+   Integritäts-Validierung (Dup/Dangling/leer). Slug-Funktion aus Task 1 wiederverwenden.
+3. **Pointer-Validator** im Builder ergänzen (Datei+Slug resolved). Eigener Task, weil er das ganze
+   Korpus berührt und Autorenfehler früh fängt.
+4. **Manifest-Quelle** `.claude/graph-projection.mjs` aus aktuellem Graph extrahieren (Entities mit
+   entityType ∉ {decision,incident,state} + ihre Relationen + 4 kuratierte ADR-`amends`-Cross-Refs).
+   **Pointer auf Fragment-Granularität heben** (`features.md` → `features.md#<heading>`).
+5. **Captured-Quelle** `.claude/graph-captured.mjs`: incident×2 + state×1 + alle 6 Relationen mit ≥1
+   captured-Ende (`occurred_in`×2, `applies_to`×2, `refined`, `targets`).
+6. **Regenerieren + verifizieren** (Test-Schritte unten). Bei Abweichung außer ADR-Normalisierung:
+   Quellen fixen, nie das Artefakt.
+7. **Index-Korpus erweitern** — Topic-Entities + Fragment-Pointer für die restlichen Docs (Liste oben),
+   inkrementell pro Doc/Doc-Gruppe. Jede neue Entity: Essenz ≤2 Zeilen + `→ datei#slug`.
+8. **Relationen anreichern** — Navigations-Relationen (`governed_by`/`contrasts_with`/`see_also`/
+   `relates_to`) zwischen Topics, ADRs, Conventions, Incidents. Ziel: dichtes, traversierbares Netz.
+9. **SessionStart-Surface** `memory-surface.mjs` aufwerten: kompakte Landkarte (Top-Entities/Typen) +
+   explizite Anleitung „Index zuerst via `mcp__memory__search_nodes`/`open_nodes`; Fragment via
+   `node .claude/doc.mjs datei#slug`". Token-Budget klein halten.
+10. **ADR-022** in `decisions.md` — „Memory-Graph als gebauter Doku-Index (Builder/Manifest/Captured/
+    Fragment-Pointer)", Accepted (Juni 2026); Nachtrag-Verweise in ADR-016 §3 + ADR-021.
+11. **`/sync-graph`-Skill** — modellgetrieben: geänderte Docs lesen → betroffene Manifest-Topics
+    (Essenz+Fragment-Pointer) nachziehen, Captured nie überschreiben → `node .claude/build-graph.mjs` →
+    Validierung grün + Round-Trip → an Commit erinnern.
+12. **Schreib-Disziplin** — `consolidate-lessons` REMEMBER + Root/App-`CLAUDE.md`-Verweise: Capture =
+    Quelle editieren + Rebuild, nicht Live-Write.
+13. **@import schrumpfen (kleiner Kern)** — kondensierten „Rules of the road"+Konventions-Cheatsheet in
+    Root-`CLAUDE.md` belassen; `architecture.md`/`shared-conventions.md`-Detail aus `@import` nehmen und
+    über den Index erreichbar machen (Docs bleiben kanonisch + on-demand). **Zuletzt**, nach bewährtem Index.
+14. **Doc-Sync** — `architecture.md` Knowledge-Abschnitt + `monorepo-plan.md`-Header + Root-`CLAUDE.md`
+    Phase-4-Stale-Fix.
 
 ## Required Docs (vom Implementer zu lesen)
 
-- `docs/decisions.md` — ADR-016 §3, ADR-021 (Mechanik + 06-23-Nachtrag), ADR-Format (für Parser + ADR-022).
-- `.claude/hooks/memory-server.mjs` — wie der Store gelesen wird (absoluter Pfad; Build muss diese Datei treffen).
-- `.claude/skills/consolidate-lessons/SKILL.md` — REMEMBER-Stufe (Task 7).
-- Eine bestehende `SKILL.md` (z.B. `check/` oder `consolidate-lessons/`) als Format-Vorlage (Task 6).
-- `docs/architecture.md` Abschnitt „Knowledge & Harness" + Root-`CLAUDE.md` Abschnitt „Harness, Skills & Knowledge".
+- `docs/decisions.md` — ADR-016 §3, ADR-021, ADR-Format (Parser + ADR-022).
+- `.claude/hooks/memory-server.mjs` + `memory-surface.mjs` — Store-Pfad + bestehender Surface-Hook.
+- `.claude/skills/consolidate-lessons/SKILL.md` + eine `SKILL.md`-Vorlage (Format Task 11/12).
+- Root-`CLAUDE.md` Abschnitt „Harness, Skills & Knowledge" + `docs/architecture.md` „Knowledge & Harness".
 
 ## Test steps (explizit)
 
-Nach Task 4 (Builder):
+Nach Task 1: `node .claude/doc.mjs docs/operations.md#<bekannter-slug>` druckt den Abschnitt; Fake-Slug → Exit 1.
+Nach Task 6 (Build):
 1. `node .claude/build-graph.mjs` → Exit 0, druckt `entities: N, relations: M`.
-2. Zähl-/Integritätscheck:
+2. Integrität (Dup/Dangling/leer):
    ```
-   node -e 'const fs=require("fs");const L=fs.readFileSync(".claude/knowledge-graph.json","utf8").trim().split("\n").map(JSON.parse);const E=L.filter(x=>x.type==="entity"),R=L.filter(x=>x.type==="relation");const N=new Set(E.map(e=>e.name));const dang=R.filter(r=>!N.has(r.from)||!N.has(r.to));const dup=E.length-N.size;console.log("entities",E.length,"relations",R.length,"dangling",dang.length,"dupes",dup);'
+   node -e 'const fs=require("fs");const L=fs.readFileSync(".claude/knowledge-graph.json","utf8").trim().split("\n").map(JSON.parse);const E=L.filter(x=>x.type==="entity"),R=L.filter(x=>x.type==="relation");const N=new Set(E.map(e=>e.name));console.log("entities",E.length,"relations",R.length,"dangling",R.filter(r=>!N.has(r.from)||!N.has(r.to)).length,"dupes",E.length-N.size);'
    ```
-   Erwartung: `entities 71 relations 71 dangling 0 dupes 0`. (71, weil ADR-022 +1 Entity ⇒ falls ADR-022
-   committet ist: 72/72-ff. — Zahl gegen die ADR-Anzahl in decisions.md gegenprüfen, nicht hart 71.)
-3. **Vollständigkeit**: jeder Entity-Name + jede Relation aus dem Pre-Build-Stand ist im Post-Build-Stand
-   vorhanden (Diff der sortierten Namens-/Relationen-Mengen — nur ADR-*-Observations dürfen sich ändern
-   = Normalisierung auf Essenz+Pointer):
-   ```
-   git stash; node -e '…dump sorted names…' > /tmp/before.txt; git stash pop; node .claude/build-graph.mjs; node -e '…dump…' > /tmp/after.txt; diff /tmp/before.txt /tmp/after.txt
-   ```
-   Erwartung: keine fehlenden Namen/Relationen (nur Zugänge wie ADR-022).
-4. **Idempotenz**: Builder zweimal laufen → `git diff --stat .claude/knowledge-graph.json` nach dem 2. Lauf leer.
-5. **MCP-Round-Trip** (in dieser Session, da server-memory pro Operation liest): `mcp__memory__read_graph`
-   liefert die gebauten Entities/Relationen; Stichprobe `scoring-engine` = Essenz+Pointer.
-
-Nach Task 6 (`/sync-graph`): Trockenlauf — kleine, bewusste Manifest-Änderung (1 Observation) →
-`/sync-graph` bzw. Builder → Diff zeigt genau diese eine Zeile; revert.
+   Erwartung: `dangling 0 dupes 0`; Entity-Zahl ≈ ADR-Anzahl(decisions.md) + 47 Domain + Captured 3 + Task-7-Topics.
+3. **Pointer-Resolve**: Builder bricht ab, wenn ein `→ datei#slug` nicht existiert (bewusst einen kaputten
+   Pointer einbauen → Exit≠0 mit Datei+Slug-Meldung; revert).
+4. **Vollständigkeit**: jeder Pre-Build-Entity-Name + jede Relation ist post-Build vorhanden (sortierte
+   Mengen diffen; nur ADR-Observations dürfen sich ändern = Essenz+Pointer-Normalisierung; Topics/Relationen
+   kommen dazu).
+5. **Idempotenz**: zweiter Build → `git diff --stat .claude/knowledge-graph.json` leer.
+6. **MCP-Round-Trip**: `mcp__memory__read_graph` liefert den gebauten Stand; Stichprobe `scoring-engine`
+   trägt einen `→ …#…`-Pointer.
+Nach Task 11: kleine bewusste Manifest-Änderung → `/sync-graph`/Build → Diff zeigt genau diese Zeile; revert.
 
 ## Verification (Done-Kriterien)
 
-- [ ] `knowledge-graph.json` ist vollständig aus den drei Quellen reproduzierbar (Test 3+4 grün).
-- [ ] Keine Dangling-Relationen, keine Dup-Namen, jede Entity ≥1 Observation.
-- [ ] Captured-Stratum (Incidents/State) überlebt einen Rebuild unverändert.
-- [ ] ADR-022 dokumentiert die Architektur; ADR-016/021 haben Nachtrag-Verweise.
-- [ ] `/sync-graph`-Skill + aktualisierte `consolidate-lessons`-REMEMBER-Disziplin eingecheckt.
-- [ ] Stale Phase-4-Doc-Stellen (Root-CLAUDE.md, monorepo-plan-Header) gefixt.
-- [ ] `pnpm check`-Gates unberührt grün (kein App-Code angefasst; reine `.claude/`+`docs/`-Änderung).
+- [ ] Graph vollständig aus den 3 Quellen reproduzierbar; Integrität + Pointer-Resolve grün (Test 2–5).
+- [ ] Fragment-Reader liefert Abschnitte; jeder Index-Pointer ist auflösbar (Build erzwingt es).
+- [ ] Captured-Stratum überlebt Rebuild unverändert.
+- [ ] Index deckt das ganze lebende Doku-Korpus; Relationsnetz dicht + traversierbar.
+- [ ] SessionStart-Surface erklärt Landkarte + Abfrage/Fragment-Reader.
+- [ ] ADR-022 dokumentiert die Architektur; ADR-016/021 Nachtrag-Verweise.
+- [ ] `/sync-graph` + aktualisierte `consolidate-lessons`-Disziplin eingecheckt.
+- [ ] Kleiner always-loaded Kern bleibt; architecture/conventions-Detail indiziert (Docs kanonisch erhalten).
+- [ ] Stale Phase-4-Doc-Stellen gefixt. `pnpm check` unberührt grün (kein App-Code).
 - [ ] Alles auf `feat/graph-projection`, Plan = erster Commit, Rest pro Task ein Commit.
 
 ## Scope-Grenzen (bewusst NICHT)
 
-- Kein Hook/CI, der den Build automatisch erzwingt (Builder bleibt manuell/skill-getrieben; Auto-Build als
-  Pre-Commit-Hook ist optionale Folgearbeit — erst beweisen, dass der Build stabil ist).
-- Keine `.md`-Ablösung — Docs bleiben kanonisch (ADR-016). Die Projektion ist die Voraussetzung dafür,
-  diese Frage *später* überhaupt seriös stellen zu können.
-- Keine Änderung am Deploy-Vertrag/App-Code.
+- Kein erzwingender Auto-Build-Hook/CI (Builder bleibt skill-/manuell-getrieben; Pre-Commit-Auto-Build =
+  optionale Folgearbeit, erst nach bewährter Stabilität).
+- Kein Massen-Splitting der Docs (Heading-Pointer + Reader statt Fragment-Dateien).
+- Keine `.md`-Ablösung — Docs bleiben kanonisch (ADR-016). Der Index ist die Voraussetzung, diese Frage
+  *später* überhaupt seriös stellen zu können.
+- Kein App-Code / Deploy-Vertrag berührt.
