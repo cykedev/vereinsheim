@@ -29,21 +29,38 @@ Phase 4. Plan & Phasen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md).
 
 ## Monorepo-Entwicklung (lokal)
 
-Beide Apps werden im Monorepo entwickelt — ein Befehlssatz von der Wurzel,
-turbo-gecacht, Apps laufen auf dem Host:
+Frische Workstation arbeitsfähig machen — **ein Befehl** (einzige Voraussetzung:
+Node ≥24 und Docker laufen; alles andere richtet das Skript ein, idempotent):
+
+```bash
+./scripts/vereinsheim dev-setup    # oder direkt: bash scripts/bootstrap-dev.sh
+```
+
+Das prüft Node/Docker, aktiviert pnpm via corepack, installiert die Workspace-Deps,
+installiert das gepinnte **codegraph**-Binary (Live-Knowledge-Schicht der Claude-Harness)
+und baut den Index, zieht den Dev-Postgres hoch, legt je App `.env` aus `.env.example`
+an (vorhandene bleiben unberührt) und pusht das Prisma-Schema. Danach:
+
+```bash
+pnpm dev      # beide Apps: ringwerk :3000, treffsicher :3001
+pnpm check    # alle 5 Gates (lint, format:check, test, tsc, next build)
+pnpm build    # inkrementeller Build beider Apps
+```
+
+<details><summary>Was <code>dev-setup</code> intern macht (manuell, als Fallback)</summary>
 
 ```bash
 corepack enable                                   # pnpm via packageManager-Pin
 pnpm install                                      # Workspace-Deps (Catalog)
+npm install -g @colbymchenry/codegraph@1.0.1      # Claude-Knowledge-Schicht (gepinnt)
 docker compose -f docker-compose.dev.yml up -d    # geteilter Postgres (2 DBs)
 cp apps/ringwerk/.env.example  apps/ringwerk/.env        # einmalig
 cp apps/treffsicher/.env.example apps/treffsicher/.env   # einmalig
 pnpm --filter ringwerk exec prisma db push        # Schema → Dev-DB (analog treffsicher)
 pnpm dev                                          # beide Apps: :3000 + :3001
-
-pnpm check    # alle 5 Gates (lint, format:check, test, tsc, next build)
-pnpm build    # inkrementeller Build beider Apps
 ```
+
+</details>
 
 Echte Prod-Daten in die Dev-DBs `ringwerk` + `treffsicher` holen:
 `./scripts/vereinsheim dev-restore` (importiert den neuesten Dump je App aus
@@ -70,8 +87,9 @@ wieder hochfahren.
 Ein Werkzeug, zwei Modi: [`./scripts/vereinsheim`](scripts/vereinsheim).
 
 - **Lokal-Mode** wird aktiviert, sobald `.vereinsheim.local` existiert
-  (auf deiner Arbeitsmaschine). Bietet `build`, `release`, `ssh`,
-  `remote`, `local-setup`.
+  (auf deiner Arbeitsmaschine). Bietet `dev-setup` (Workstation einrichten),
+  `build`, `release`, `ssh`, `remote`, `local-setup`. `dev-setup` läuft auch
+  ohne `.vereinsheim.local` — es ist der allererste Schritt nach dem Clone.
 - **VPS-Mode** ist der Default. Bietet `setup`, `deploy`, `rollback`,
   `backup`, `restore`, `migrations`, `status`, `cron`, `psql`, `logs`, … .
 

@@ -23,7 +23,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── compose.yml + Caddyfile + db-init/        Prod-Deploy-Vertrag (VPS, unverändert)
 ├── docker-compose.dev.yml  geteilter Dev-Postgres (DBs: ringwerk + treffsicher)
 ├── Dockerfile              EIN parametrisiertes Build-File (turbo prune, --build-arg APP)
-└── scripts/vereinsheim     Ops-CLI (build/release/deploy/backup/restore/…)
+├── scripts/bootstrap-dev.sh  Dev-Onboarding: frische Workstation arbeitsfähig (Toolchain, codegraph, Dev-DB, .env, Schema; idempotent)
+└── scripts/vereinsheim     Ops-CLI (dev-setup/build/release/deploy/backup/restore/…)
 ```
 
 ## Build & Deploy (ADR-005/006/007/015)
