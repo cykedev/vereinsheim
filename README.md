@@ -45,8 +45,10 @@ pnpm check    # alle 5 Gates (lint, format:check, test, tsc, next build)
 pnpm build    # inkrementeller Build beider Apps
 ```
 
-Echte Prod-Daten kommen wie bisher über `backups/*.dump` (`pg_restore` in die
-Dev-DBs `ringwerk` + `treffsicher`).
+Echte Prod-Daten in die Dev-DBs `ringwerk` + `treffsicher` holen:
+`./scripts/vereinsheim dev-restore` (importiert den neuesten Dump je App aus
+`backups/`; `dev-restore <app>` für nur eine). Die Dumps vorher per
+`vereinsheim local-pull` vom VPS ziehen.
 
 **Voller Stack lokal** (Produktions-Images, ohne Caddy): `vereinsheim local-up`.
 Er bindet Host-Port 5432 wie der Dev-Postgres und stoppt eine laufende Dev-DB

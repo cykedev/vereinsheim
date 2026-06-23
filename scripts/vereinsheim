@@ -199,6 +199,14 @@ local_compose() {
 		"$@"
 }
 
+# Wrapper: docker compose gegen den Dev-Stack (docker-compose.dev.yml,
+# Projekt vereinsheim-dev). Bewusst getrennt vom Prod-Stack und vom
+# local_compose-Simulator — eigener Container/Volume, DB-User postgres/postgres,
+# Apps laufen auf dem Host via `pnpm dev`.
+dev_compose() {
+	docker compose -f "$DEV_COMPOSE_FILE" "$@"
+}
+
 require_local_env() {
 	if [[ ! -f "$LOCAL_ENV_FILE" ]]; then
 		err ".env.local fehlt — bitte zuerst ausführen:"
@@ -235,6 +243,9 @@ cmd_help() {
 		  ${GREEN}local-up --restore${RESET}         Volumes löschen + aus ./backups/ neu laden
 		  ${GREEN}local-down${RESET}                 Stack stoppen
 		  ${GREEN}local-down --volumes${RESET}       Stack stoppen + alle Volumes löschen
+
+		${BOLD}── HOST-DEV-DATENBANK${RESET} ${DIM}(docker-compose.dev.yml, für pnpm dev)${RESET}
+		  ${GREEN}dev-restore${RESET} [app]         Prod-Dump aus ./backups/ → Dev-DB (Default: beide Apps)
 
 		${BOLD}── VPS-OPERATIONEN${RESET} ${DIM}(auf dem Server, nutzt .env)${RESET}
 		  ${GREEN}status${RESET}                Services, Volumes, Backups, .env, Cron
@@ -701,6 +712,110 @@ cmd_local_down() {
 		local_compose down
 		ok "Stack gestoppt."
 	fi
+}
+
+# ---------- dev-restore ----------
+# Importiert die neuesten Prod-Dumps aus ./backups/ in die lokale DEV-Datenbank
+# (docker-compose.dev.yml). Nur DB — keine Uploads, kein SSH. Pendant zu
+# `local-up --restore`, aber für die Host-Dev-Umgebung (`pnpm dev`) statt den
+# Prod-Stack-Simulator. Quelle der Dumps ist ./backups/ (befüllt von local-pull).
+cmd_dev_restore() {
+	require_docker
+
+	# Ziel-App(s): optionales Argument schränkt auf eine App ein, sonst beide.
+	local apps
+	case "${1:-}" in
+	"") apps=(ringwerk treffsicher) ;;
+	ringwerk | treffsicher) apps=("$1") ;;
+	*)
+		err "Aufruf: vereinsheim dev-restore [ringwerk|treffsicher]"
+		return 1
+		;;
+	esac
+
+	if [[ ! -d "$LOCAL_BACKUP_DIR" ]]; then
+		err "Kein Backup-Ordner: $LOCAL_BACKUP_DIR"
+		echo "  → Erst Backups vom VPS holen:  ./scripts/vereinsheim local-pull"
+		return 1
+	fi
+
+	# Neuesten Dump je Ziel-App ermitteln; fehlende überspringen (|| true, damit
+	# der Leerfall nicht via set -e abbricht, sondern der Check unten greift).
+	local restore_apps=() restore_dumps=()
+	local app dump
+	for app in "${apps[@]}"; do
+		dump=$(ls -t "$LOCAL_BACKUP_DIR/${app}"-*.dump 2>/dev/null | head -1) || true
+		if [[ -z "$dump" ]]; then
+			warn "Kein Dump für $app in $LOCAL_BACKUP_DIR/ gefunden — übersprungen."
+			continue
+		fi
+		restore_apps+=("$app")
+		restore_dumps+=("$dump")
+	done
+
+	if [[ ${#restore_apps[@]} -eq 0 ]]; then
+		err "Keine passenden Dumps in $LOCAL_BACKUP_DIR/ gefunden."
+		echo "  → Erst Backups vom VPS holen:  ./scripts/vereinsheim local-pull"
+		return 1
+	fi
+
+	echo "${BOLD}=== dev-restore ===${RESET}"
+	echo "  Ziel: lokale Dev-DB (docker-compose.dev.yml, Projekt vereinsheim-dev)"
+	local i
+	for i in "${!restore_apps[@]}"; do
+		printf "    %-12s ← %s\n" "${restore_apps[i]}" "$(basename "${restore_dumps[i]}")"
+	done
+	echo
+	warn "Dies überschreibt die Dev-Datenbank(en) ${restore_apps[*]} mit Produktionsdaten."
+	confirm "Wirklich fortfahren?" || {
+		info "Abgebrochen."
+		return
+	}
+
+	# DB hochfahren + auf healthy warten. Beim Erststart (leeres Volume) legt
+	# dev/db-init die Rollen ringwerk/treffsicher an — nötig für --role beim Restore.
+	info "Starte Dev-DB …"
+	dev_compose up -d db
+	info "Warte auf DB-Healthcheck …"
+	local max_attempts="${DB_STARTUP_TIMEOUT:-30}" attempts=0
+	while [[ $attempts -lt $max_attempts ]]; do
+		if dev_compose exec -T db pg_isready -U postgres >/dev/null 2>&1; then
+			break
+		fi
+		attempts=$((attempts + 1))
+		sleep 2
+	done
+	if [[ $attempts -ge $max_attempts ]]; then
+		err "Dev-DB nicht healthy nach $((max_attempts * 2)) s (DB_STARTUP_TIMEOUT=$max_attempts)."
+		return 1
+	fi
+	ok "Dev-DB healthy."
+
+	# Pro App restoren — gleiche Flags wie der Prod-Restore (restore.sh):
+	# --clean --if-exists --no-owner --role=<app>.
+	for i in "${!restore_apps[@]}"; do
+		app="${restore_apps[i]}"
+		dump="${restore_dumps[i]}"
+		info "Restore $app aus $(basename "$dump") …"
+		dev_compose cp "$dump" db:/tmp/restore.dump
+		dev_compose exec -T db pg_restore \
+			-U postgres \
+			-d "$app" \
+			--clean --if-exists \
+			--no-owner \
+			--role="$app" \
+			/tmp/restore.dump
+		dev_compose exec -T db rm -f /tmp/restore.dump
+		ok "$app restored."
+	done
+
+	echo
+	ok "dev-restore abgeschlossen."
+	info "Nächste Schritte:"
+	echo "  • Falls lokale Migrationen neuer sind als der Dump-Stand:"
+	echo "      pnpm --filter <app> exec prisma migrate deploy"
+	echo "  • Login mit einem Prod-Account (alte Sessions sind lokal ungültig)."
+	echo "  • Dev starten:  pnpm dev"
 }
 
 # ============================================================
@@ -1462,6 +1577,9 @@ interactive_menu_local() {
 		echo " 10) local-up --restore  Stack neu aufsetzen  ${DIM}(clean + Produktionsdaten)${RESET}"
 		echo " 11) local-down          Stack stoppen"
 		echo
+		echo "  ${BOLD}Host-Dev-Datenbank${RESET}  ${DIM}(docker-compose.dev.yml)${RESET}"
+		echo " 12) dev-restore         Prod-Dump aus ./backups/ → Dev-DB  ${DIM}(beide Apps)${RESET}"
+		echo
 		echo "  q) Beenden  ${DIM}· local-setup: VPS-Verbindung ändern${RESET}"
 		read -r -p "  » " c
 		case "$c" in
@@ -1487,6 +1605,7 @@ interactive_menu_local() {
 		9) cmd_local_up ;;
 		10) cmd_local_up --restore ;;
 		11) cmd_local_down ;;
+		12) cmd_dev_restore ;;
 		q | Q | "") break ;;
 		*) warn "Ungültige Auswahl" ;;
 		esac
@@ -1624,6 +1743,7 @@ main() {
 	local-pull) cmd_local_pull "$@" ;;
 	local-up) cmd_local_up "$@" ;;
 	local-down) cmd_local_down "$@" ;;
+	dev-restore) cmd_dev_restore "$@" ;;
 	# VPS side
 	setup) cmd_setup "$@" ;;
 	env-check) cmd_env_check "$@" ;;
