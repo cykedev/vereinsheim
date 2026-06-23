@@ -899,6 +899,69 @@ genudged für den Modell-Teil — nichts Automatisches täuscht über die Grenze
 
 ---
 
+## ADR-022 — Implement-Phase autonom-by-default (realisiert ADR-018 §5, schärft ADR-020)
+
+**Status**: Accepted (Juni 2026)
+
+**Kontext**: ADR-018 §5 sah einen „Autonomous-Loop-Driver (Ralph-artig) mit Worktree-Isolation,
+Commit-pro-Iteration, nie auf `main`" vor — bislang unrealisiert. Der klassische Ralph-Loop
+(`while :; do cat PROMPT.md | claude; done`) ist für sich unsicher: nichts stoppt ihn, wenn er Mist
+baut, und sein Gedächtnis ist eine formlose Datei. Dieses Repo hat die Zutaten für eine *sichere*
+Variante aber bereits: das **Stop-Gate** (ADR-018, kann nicht rot „fertig" sein) als Selbstkorrektur-
+Substrat, `plans/` + `reports/` als persistentes Gedächtnis und `/implement` (ADR-020) als Loop-Body —
+heute nur *manuell getaktet*. Der User will den Autopilot-Vorteil **nicht pro Lauf aktiv wählen**
+müssen, sondern **immer** davon profitieren; ein zweites Opt-in-Kommando (`/auto-implement`, `/loop …`)
+wäre eine redundante Entscheidung neben der Plan-Freigabe, die er ohnehin gibt.
+
+**Entscheidung**: Die **`/implement`-Phase wird autonom-by-default** — kein separates Skill, sondern
+das vorhandene `/implement` grindet einen **bereits freigegebenen** Plan task-by-task durch, statt
+zwischen Tasks zu pausieren. Eingebettet in PIV, nicht als Ersatz:
+
+1. **Plan-Freigabe = die einzige Opt-in-Grenze** (Struktur-Invariante): Autonomie greift **nur** über
+   einen per `/plan` freigegebenen Plan (Plan-als-Spec = Sicherheitsfundament; „autonom ohne Plan"
+   gibt es bewusst nicht). **Merge/Push/Deploy nach `main` bleiben user-gated** (Hard Rule 2).
+2. **Eine Iteration = ein Plan-Task**: implementieren → `pnpm check` (Stop-Gate-Kriterium) → ein
+   fokussierter Commit → Ledger-Eintrag (`reports/<plan-stem>-autopilot.md`, der Audit-Trail).
+3. **Fünf Circuit-Breaker → HALT + Meldung an den User**: (a) Task mehrdeutig/unterspezifiziert,
+   (b) Gate nach 3 Selbstheil-Versuchen rot (WIP verwerfen, Branch bleibt grün), (c) geschützter
+   Pfad, (d) Scope über Plan hinaus, (e) Plan abgearbeitet (→ FINALIZE → `/validate`).
+4. **Erzwungene Schutz-Schicht** (`autopilot-guard.mjs`, PreToolUse, ADR-017 ENFORCE > DOCUMENT): nur
+   aktiv bei Marker `.claude/.autopilot-active`, DENY auf geschützte Pfade (Deploy-Vertrag, Schema/
+   Migrationen, ADRs, Secrets, `.claude/`, `scripts/`) + Kommandos (`git push/merge/rebase/reset
+   --hard`, `vereinsheim deploy|build|release|backup|restore`, `docker push`, `prisma migrate`). Eine
+   *weiche* Regel ist genau das, was unter unbeaufsichtigtem Grinden versagt.
+5. **Worktree-Pflicht** (`feat/`-Branch im `.claude/worktrees/`) + **Iterations-Cap 20** (Runaway-
+   Backstop) + Marker entfernen bei jedem HALT/FINALIZE (re-armt interaktives Editieren).
+6. **Hard-Rule-4-Ausnahme im autonomen Modus**: das „Commit-Message als fenced block *vor* dem Commit"
+   entfällt (es würde die Autonomie zunichtemachen); die Messages stehen im Ledger + `git log`, **vor
+   dem Merge revidierbar**. Interaktiv gilt Hard Rule 4 unverändert.
+7. **Escape-Hatch** `/implement --step` für bewussten Task-für-Task-Betrieb (kein Marker → Hook
+   No-Op). Triviale Fixes (Hard Rule 7) laufen wie bisher direkt, ohne Plan/Autopilot.
+
+**Alternativen**:
+
+- _Separates Opt-in-Skill `/auto-implement`_ (erster Planentwurf): verworfen — der User müsste sich pro
+  Lauf „dafür" entscheiden; das widerspricht „immer profitieren". Autonomie als Default von `/implement`
+  nutzt die Plan-Freigabe als ohnehin vorhandene Einwilligung.
+- _Voller Ralph (kein Plan, kein Gate, kein Guard)_: verworfen — unsicher, kein Scope-Anker.
+- _Reines manuelles PIV (Status quo)_: die Fleißarbeit (z.B. ActionResult-Vereinheitlichung) bleibt
+  per-Task-babysittet; genau die Reibung, die der User weghaben will.
+- _Schutz-Schicht nur als Skill-Anweisung (DOCUMENT)_: verworfen — weiche Regeln versagen autonom;
+  ENFORCE via Hook (ADR-017).
+
+**Folgen**:
+
+- `/implement` (`SKILL.md`) überarbeitet (autonom-by-default, 8-Schritt-Iteration, Breaker, Ledger,
+  Cap, Worktree-Pflicht, `--step`); neuer Hook `autopilot-guard.mjs` + Verdrahtung in
+  `.claude/settings.json`; Marker `.claude/.autopilot-active` gitignored.
+- Realisiert ADR-018 §5 (als Default von `/implement` statt separater Driver) und **schärft ADR-020**
+  (PIV-Default): die Implement-Phase pausiert nicht mehr per Default zwischen Tasks.
+- Der built-in `/loop` bleibt unverändert; er ist intern als Pacing-Mechanik für sehr lange Pläne
+  nutzbar, aber **kein vom User getipptes Kommando**.
+- Der Hook ist interaktiv ein No-Op (marker-gated) → keine Regression für normales Arbeiten.
+
+---
+
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
 
 Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-021+):
