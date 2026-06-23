@@ -51,9 +51,9 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
 
 - **Skills** (`.claude/skills/`, via `/<name>` oder modellgetriggert): `check`, `test`, `migrate`,
   `db-reset`, `seed`, `commit-msg`, `cleanup-todos`, `consolidate-lessons` (Lessons-Triage
-  ENFORCE > DOCUMENT > REMEMBER → Memory-Graph, ADR-017) sowie der PIV-Workflow
-  `plan → implement → validate → review` + `debug` (Root-Cause-Analyse; Handoff über
-  `plans/` + `reports/`).
+  ENFORCE > DOCUMENT > REMEMBER → Memory-Graph, ADR-017), `sync-graph` (Doku-Index neu projizieren,
+  ADR-022) sowie der PIV-Workflow `plan → implement → validate → review` + `debug` (Root-Cause-Analyse;
+  Handoff über `plans/` + `reports/`).
 - **Hooks** (`.claude/settings.json` + `.claude/hooks/`): **Stop-Gate** blockt das Turn-Ende, bis
   `pnpm check` grün ist; **PostToolUse-Lint** (eslint auf die editierte App-Datei); **PreToolUse-
   Security-Guard** (verweigert echte `.env`/`.vereinsheim.local` + katastrophale `rm -rf`; **nudged**
@@ -61,10 +61,14 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
   dem nächsten Claude-Code-Reload.
 - **Sub-Agent** `code-reviewer` (`.claude/agents/`) — von `/review` gegen den Branch-Diff delegiert.
 - **Knowledge-Graph** (`.mcp.json`): **CodeGraph-MCP** (Live-Symbol-/Call-Graph/Routen,
-  `codegraph_explore` — Ground Truth, on-demand statt grep) + **Memory-MCP** (Cross-Session-
-  Projektgedächtnis, Store `.claude/knowledge-graph.json`; SessionStart-Hook `memory-surface.mjs`
-  surface't ihn, `/consolidate-lessons` schreibt REMEMBER-Fakten — **ADR-021**). Abgrenzung zum nativen
-  Auto-Memory: projekt-/via-git-geteiltes → Memory-Graph; maschinen-/ops-lokales → natives Auto-Memory.
+  `codegraph_explore` — Ground Truth über den Code, on-demand statt grep) + **Memory-MCP = gebauter
+  Doku-Index** (Store `.claude/knowledge-graph.json`, **ADR-022**): deterministisch via
+  `node .claude/build-graph.mjs` aus `docs/decisions.md` (ADRs geparst) + `.claude/graph-projection.mjs`
+  (Manifest) + `.claude/graph-captured.mjs` (Incidents/State). Jede Entity = Essenz + Fragment-Pointer
+  `→ datei#slug`; gezielt lesen mit `node .claude/doc.mjs datei#slug`. ABFRAGEN (mcp__memory__search_nodes)
+  vor breitem Explorieren; SessionStart-Hook `memory-surface.mjs` surface't den Index. Schreiben: in die
+  **Quelle** + Rebuild (`/sync-graph` bzw. `/consolidate-lessons`), **nie** den Store von Hand. Abgrenzung
+  zum nativen Auto-Memory: projekt-/via-git-geteiltes → Doku-Index; maschinen-/ops-lokales → Auto-Memory.
 - **CLAUDE.md-Hierarchie:** diese Datei = universelle Schicht; je App `apps/<app>/CLAUDE.md` +
   `apps/<app>/docs/` (Claude lädt die nächstgelegene on-demand). Karte + Konventionen werden mitgeladen:
 
@@ -113,14 +117,16 @@ seit Ende Mai 2026 produktiv. **Das aktive Großvorhaben ist die Monorepo-Migrat
 (pnpm/Turborepo, `turbo prune --docker`), inkl. geteilter `packages/*`, Knowledge-Graph (CodeGraph +
 CLAUDE.md-Hierarchie + Memory-MCP) und Harness (Hooks/PIV).
 
-**Phasen 1 + 2 + 3 sind erledigt**: Phase 1 = Apps via `git filter-repo` nach `apps/*` (History erhalten),
+**Phasen 1–4 sind erledigt**: Phase 1 = Apps via `git filter-repo` nach `apps/*` (History erhalten),
 pnpm-Workspace + Turborepo + Catalog, geteilter Dev-Postgres. Phase 2 = Harness/Knowledge (ADR-016/017/
 018/019) + `packages/config` (tsconfig/eslint/prettier/postcss/next.config als `@vereinsheim/config`,
 Konfig-Duplikate weg). Phase 3 = Produktions-Build aus dem Monorepo via `turbo prune` (Deploy-Vertrag
-bit-gleich, lokal voll verifiziert). Alle 5 Gates grün.
-**Nächster Schritt: Phase 4** — `packages/ui` + `packages/lib` (byte-identische UI/Lib echt teilen →
-Drift-Gate entfällt); `globals.css`/`components.json` ziehen dann mit. Schlüsselentscheidungen &
-Scope-Grenzen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md) §8 (Umsetzungsnotizen Phase 1 + 2 + 3).
+bit-gleich, lokal voll verifiziert, auf VPS deployed). Phase 4 = `packages/lib` (Zyklus 1) + `packages/ui`
+(Zyklus 2) echt geteilt (inkl. `theme.css`/`globals.css`) → Drift-Gate auf triviale Next/shadcn-Reste
+geschrumpft. Alle 5 Gates grün.
+**Offen nur Phase 5** (optional) — CI (GitHub Actions) + Turbo-Remote-Cache (supersedet ADR-006).
+Schlüsselentscheidungen & Scope-Grenzen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md) §8
+(Umsetzungsnotizen Phase 1–4).
 
 Weitere Folgearbeiten (nicht im aktuellen Scope): Off-Site-Backup, CI/Remote-Cache (Phase 5, supersedet
 ADR-006).
