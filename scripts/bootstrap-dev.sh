@@ -54,8 +54,8 @@ if ! command -v node >/dev/null 2>&1; then
 	die "node nicht gefunden — Node >=24 nötig. Via nvm: 'nvm install && nvm use' (nutzt die .nvmrc)."
 fi
 node_major="$(node -v | sed -E 's/^v([0-9]+).*/\1/')"
-if [[ -z "$node_major" || "$node_major" -lt 24 ]]; then
-	die "node $(node -v) ist zu alt — Node >=24 nötig. Via nvm: 'nvm install && nvm use' (nutzt die .nvmrc)."
+if [[ ! "$node_major" =~ ^[0-9]+$ || "$node_major" -lt 24 ]]; then
+	die "node $(node -v) ist zu alt oder nicht erkennbar — Node >=24 nötig. Via nvm: 'nvm install && nvm use' (nutzt die .nvmrc)."
 fi
 ok "node $(node -v)"
 
@@ -77,10 +77,11 @@ step "pnpm install (Workspace-Deps)"
 pnpm install
 ok "Deps installiert"
 
-# ---------- 4) codegraph (gepinnte Pflicht-Abhängigkeit) ----------
+# ---------- 4) codegraph (Bootstrap-Pflicht; Laufzeit-Hook fail-open) ----------
 # codegraph ist die Live-Knowledge-Schicht der Claude-Harness (.mcp.json + Hooks).
-# Ohne Binary degradiert sie LAUTLOS (codegraph-ensure.mjs ist fail-open) — daher
-# hier fest installieren statt nur dokumentieren.
+# Der Laufzeit-Hook codegraph-ensure.mjs ist bewusst fail-open ("Dev-Komfort"), d.h.
+# ohne Binary degradiert die Schicht LAUTLOS. Damit das auf einer frischen Workstation
+# nicht passiert, installiert der Bootstrap es hier fest + gepinnt (User-Entscheidung).
 step "codegraph-Binary (${CODEGRAPH_PKG}@${CODEGRAPH_VERSION})"
 current_cg=""
 if command -v codegraph >/dev/null 2>&1; then
@@ -90,7 +91,8 @@ if [[ "$current_cg" == "$CODEGRAPH_VERSION" ]]; then
 	ok "codegraph $current_cg bereits installiert"
 else
 	[[ -n "$current_cg" ]] && warn "codegraph $current_cg gefunden — pinne auf $CODEGRAPH_VERSION"
-	npm install -g "${CODEGRAPH_PKG}@${CODEGRAPH_VERSION}"
+	npm install -g "${CODEGRAPH_PKG}@${CODEGRAPH_VERSION}" ||
+		die "codegraph-Install fehlgeschlagen. Bei EACCES: npm-Prefix auf einen user-schreibbaren Pfad legen (nvm/corepack/brew) statt sudo zu nutzen."
 	ok "codegraph $CODEGRAPH_VERSION installiert"
 fi
 # Index anstoßen, falls noch keiner da ist — im Hintergrund (wie der SessionStart-Hook
@@ -132,6 +134,9 @@ for app in "${APPS[@]}"; do
 done
 
 # ---------- 7) Prisma-Schema je App in die Dev-DB ----------
+# `db push` ist bewusst non-destruktiv (kein --accept-data-loss): gegen eine Dev-DB mit
+# divergentem Schema (z.B. nach pg_restore echter Prod-Daten) bricht der Push kontrolliert
+# ab, statt Daten zu verlieren — dann die Dev-DB erst zurücksetzen.
 step "Prisma-Schema in die Dev-DB pushen"
 for app in "${APPS[@]}"; do
 	echo "    ${DIM}$app …${RESET}"
