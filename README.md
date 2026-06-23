@@ -50,6 +50,11 @@ pnpm build    # inkrementeller Build beider Apps
 Echte Prod-Daten kommen wie bisher über `backups/*.dump` (`pg_restore` in die
 Dev-DBs `ringwerk` + `treffsicher`).
 
+**Voller Stack lokal** (Produktions-Images, ohne Caddy): `vereinsheim local-up`.
+Er bindet Host-Port 5432 wie der Dev-Postgres und stoppt eine laufende Dev-DB
+darum automatisch — danach mit `docker compose -f docker-compose.dev.yml up -d`
+wieder hochfahren.
+
 ## Doku
 
 | Doc                                       | Inhalt                                                                |
