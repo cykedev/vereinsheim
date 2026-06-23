@@ -425,7 +425,7 @@ components/app/<feature>/<module>/
 
 ## Betrieb & Fehlerfälle (verbindlich)
 
-- Betriebsdokumentation liegt in `docs/production-deploy-truenas.md`.
+- Betriebsdokumentation: Deployment/Backup/Restore laufen im Monorepo über `vereinsheim` (siehe Root-`docs/operations.md`).
 - Für kritische Fehlerfälle (DB nicht erreichbar, Migration fehlgeschlagen, Upload-Volume nicht verfügbar, fehlende Secrets) gibt es dokumentierte Diagnose- und Wiederanlauf-Schritte.
 - Nutzer erhalten in der UI klare deutsche Fehlermeldungen; technische Details bleiben im Server-Log.
 - Wiederherstellbarkeit von Datenbank **und** Uploads muss regelmässig praktisch geprüft werden (Restore-Test).
