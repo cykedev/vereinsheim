@@ -110,7 +110,7 @@ shooting clubs); code, identifiers and commit messages are in English.
 ## Auf Deutsch
 
 **Open-Source-Software für Schützenvereine, self-hosted.** Zwei Web-Apps auf einem Server:
-**Ringwerk** (Wettkämpfe & Liga: Spielplan, Tabelle, K.-o.-Playoffs, 7 Wertungsmodi, Event-
+**Ringwerk** (Wettkämpfe & Liga: Spielplan, Tabelle, K.-o.-Playoffs, 8 Wertungsmodi, Event-
 & Saison-Wettbewerbe, öffentliche Ergebnis-PDFs, Meyton-Import) und **Treffsicher**
 (Trainingstagebuch für Sportschützen: Einheiten, Ergebniserfassung, integriertes Mentaltraining,
 Befinden-Tracking, Statistiken). Lokal starten: `./scripts/vereinsheim dev-setup` → `pnpm dev`.

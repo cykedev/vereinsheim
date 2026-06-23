@@ -44,7 +44,7 @@ Ringwerk unterstuetzt drei Wettbewerbstypen, die alle auf einer gemeinsamen Scor
 
 - **Disziplinen** mit konfigurierbarem Teiler-Faktor
 - **Serie** als universelle Ergebniseinheit (Ringe + Teiler + Disziplin + Schusszahl)
-- **Scoring-Engine** mit 7 Wertungsmodi
+- **Scoring-Engine** mit 8 Wertungsmodi
 - **Teilnehmerpool** (Vereinsmitglieder + Gaeste bei Events)
 
 ---
@@ -70,7 +70,7 @@ Ringwerk unterstuetzt drei Wettbewerbstypen, die alle auf einer gemeinsamen Scor
 | ---------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------- |
 | Competition-Abstraktion wird zu generisch            | Viele nullable Felder, unklare Validierung | Typ-spezifische Zod-Schemas (Discriminated Unions), klare Defaults                     |
 | MatchResult → Series Refactoring bricht Liga-Logik   | Tests schlagen fehl                        | Aggressive Testabdeckung vor Refactoring; pre-launch = kein Datenverlust               |
-| Scoring-Engine-Komplexitaet durch 7 Modi             | Schwer testbar, Edge Cases                 | Jeder Modus als eigene Pure Function, parametrisierte Tests                            |
+| Scoring-Engine-Komplexitaet durch 8 Modi             | Schwer testbar, Edge Cases                 | Jeder Modus als eigene Pure Function, parametrisierte Tests                            |
 | Rename League → Competition beruehrt fast jede Datei | Hohes Fehlerrisiko                         | Atomarer Rename in einer dedizierten Phase, danach sofort /check                       |
 | Zielwert + Faktor-Korrektur Interaktion              | Unklare Semantik                           | Faktor auf Rohwert anwenden, Zielwert in korrigiertem Raum — dokumentiert und getestet |
 
