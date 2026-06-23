@@ -1225,6 +1225,161 @@ export default {
       "from": "monorepo-migration-phases",
       "to": "ADR-015",
       "relationType": "governed_by"
+    },
+    {
+      "from": "role-based-access",
+      "to": "treffsicher-access-model",
+      "relationType": "contrasts_with"
+    },
+    {
+      "from": "club-wide-data-rule",
+      "to": "treffsicher-user-isolation",
+      "relationType": "contrasts_with"
+    },
+    {
+      "from": "meyton-import",
+      "to": "treffsicher-meyton-import",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "ringwerk-auth-security",
+      "to": "treffsicher-dos-protection",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "server-action-pattern",
+      "to": "treffsicher-server-actions",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "ringwerk-testing-conventions",
+      "to": "treffsicher-testing-conventions",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "action-result-convention",
+      "to": "data-formatting-rules",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "competition-types",
+      "to": "disciplines-and-factors",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "scoring-engine",
+      "to": "series-unified-model",
+      "relationType": "uses"
+    },
+    {
+      "from": "playoffs-knockout-system",
+      "to": "best-of-single",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "void-match-rendering",
+      "to": "playoffs-knockout-system",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "data-flow-principle",
+      "to": "server-action-pattern",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "feature-module-layout",
+      "to": "data-flow-principle",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "color-semantics",
+      "to": "component-canon",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "row-action-pattern",
+      "to": "component-canon",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "treffsicher-disciplines",
+      "to": "result-recording-validation",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "shot-routines",
+      "to": "training-sessions",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "deploy-flow",
+      "to": "build-deploy-pipeline",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "build-deploy-pipeline",
+      "to": "monorepo-fast-build",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "target-architecture",
+      "to": "network-segmentation",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "target-architecture",
+      "to": "caddy-reverse-proxy",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "target-architecture",
+      "to": "db-isolation-model",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "repo-architecture-map",
+      "to": "monorepo-migration-phases",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "pre-deploy-backup",
+      "to": "deploy-flow",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "failed-migration-recovery",
+      "to": "manual-migration-intervention",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "restore-from-backup",
+      "to": "image-tag-rollback",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "off-site-backup-gap",
+      "to": "nightly-backup-cron",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "build-deploy-pipeline",
+      "to": "ADR-005",
+      "relationType": "governed_by"
+    },
+    {
+      "from": "build-deploy-pipeline",
+      "to": "ADR-006",
+      "relationType": "informed_by"
+    },
+    {
+      "from": "vps-bootstrap-and-setup",
+      "to": "ADR-012",
+      "relationType": "informed_by"
+    },
+    {
+      "from": "vps-bootstrap-and-setup",
+      "to": "ADR-014",
+      "relationType": "informed_by"
     }
   ]
 }
