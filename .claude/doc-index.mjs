@@ -29,6 +29,7 @@ export function slugify(text) {
  */
 export function headingSlugs(markdown) {
   const out = []
+  const seen = new Map() // Basis-Slug → Anzahl bisheriger Vorkommen (GitHub-artige Disambiguierung)
   let fence = null // aktuell offener Code-Fence-Marker (``` oder ~~~), sonst null
   const lines = markdown.split("\n")
   for (let i = 0; i < lines.length; i++) {
@@ -44,7 +45,12 @@ export function headingSlugs(markdown) {
     const h = line.match(/^(#{1,6})\s+(.+?)\s*#*\s*$/)
     if (h) {
       const text = h[2].trim()
-      out.push({ level: h[1].length, text, slug: slugify(text), line: i })
+      const base = slugify(text)
+      // Duplikat-Überschriften eindeutig machen: erstes Vorkommen = base, dann base-1, base-2 …
+      const n = seen.get(base) || 0
+      seen.set(base, n + 1)
+      const slug = n === 0 ? base : `${base}-${n}`
+      out.push({ level: h[1].length, text, slug, line: i })
     }
   }
   return out
