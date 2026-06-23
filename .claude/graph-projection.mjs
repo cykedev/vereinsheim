@@ -678,6 +678,54 @@ export default {
         "Phasenplan der Monorepo-Migration: Phase 1 apps/*, 2 packages/config, 3 Build aus Monorepo, 4 packages/lib+ui; Phase 5 CI/Remote-Cache offen.",
         "docs/monorepo-plan.md#8-migration-in-phasen-jederzeit-lauffähig"
       ]
+    },
+    {
+      "name": "treffsicher-backlog",
+      "entityType": "state",
+      "observations": [
+        "OFFEN: priorisierter Themenkatalog (Code-Review 2026-03-31). P1 String-Längen-Limits Freitext (T-01); P2 React-Error-Boundaries (T-05) + ActionResult-Generic-Typ (T-08, siehe treffsicher-actionresult-migration); P3 Pflicht-Splits >220 Zeilen (T-02 mentalActions, T-03 shared, T-04 StatisticsCharts); P4 PWA (T-06, siehe treffsicher-pwa-offline), maxLength-UI (T-07), Props-Budget GoalAssignmentsForm (T-09), Tippfehler (T-10). Gestrichen/nicht empfohlen: CSV-Export, A11y-Audit, strukturiertes Logging, E2E.",
+        "→ apps/treffsicher/docs/backlog.md#backlog-treffsicher-stand-2026-03-31"
+      ]
+    },
+    {
+      "name": "treffsicher-future-features",
+      "entityType": "state",
+      "observations": [
+        "OFFEN (spätere Phasen, fachlich): Offline-Erfassung am Schießstand (siehe treffsicher-pwa-offline), Trockentraining als vollständig eigener Einheitentyp mit spezifischen Feldern, Mustererkennung/smarte Auswertungen ('wie schieße ich nach schlechtem Schlaf?'), Trainer-Zugang (read-only, eingeschränkt).",
+        "→ apps/treffsicher/docs/requirements.md#offene-punkte-spätere-phasen"
+      ]
+    },
+    {
+      "name": "monorepo-phase-5",
+      "entityType": "state",
+      "observations": [
+        "OFFEN (optional): Phase 5 der Monorepo-Migration — CI via GitHub Actions (baut + pusht, optional Deploy-Trigger via SSH/Webhook) + Turbo-Remote-Cache; macht ADR-006 (lokaler Build/Push) obsolet.",
+        "→ docs/monorepo-plan.md#12-offene-folgepunkte-nicht-in-dieser-migration"
+      ]
+    },
+    {
+      "name": "env-var-alignment-gap",
+      "entityType": "state",
+      "observations": [
+        "OFFEN: Seed-Admin-Env-Vars der beiden Apps angleichen (treffsicher ADMIN_* ↔ ringwerk SEED_ADMIN_*); deploy-breaking, daher als separater Schritt geführt.",
+        "→ docs/monorepo-plan.md#12-offene-folgepunkte-nicht-in-dieser-migration"
+      ]
+    },
+    {
+      "name": "dependency-pin-alignment",
+      "entityType": "state",
+      "observations": [
+        "OFFEN (Drift-Schutz): Dependency-Pins zwischen den Apps angleichen, inkl. TypeScript-Major; Dependency-Drift ist aktuell nur warnend im consistency-check, nicht fatal.",
+        "→ docs/shared-conventions.md#8-drift-schutz-prozess"
+      ]
+    },
+    {
+      "name": "future-adrs",
+      "entityType": "state",
+      "observations": [
+        "VORGESEHEN (out-of-scope, je eigener Folge-ADR ab ADR-021+ wenn aktuell): Monitoring/Alerting (Uptime-Kuma/Prometheus+Grafana), Staging-Umgebung (Schema-Migrationstests vor Prod), WAF/Fail2ban (höhere Exposition), generisches App-Template ab ~3–4 Apps. (Off-Site-Backup → off-site-backup-gap, CI/CD → monorepo-phase-5.)",
+        "→ docs/decisions.md#mögliche-folge-adrs-out-of-scope-aber-vorgesehen"
+      ]
     }
   ],
   "relations": [
@@ -1380,6 +1428,81 @@ export default {
       "from": "vps-bootstrap-and-setup",
       "to": "ADR-014",
       "relationType": "informed_by"
+    },
+    {
+      "from": "treffsicher-backlog",
+      "to": "treffsicher",
+      "relationType": "applies_to"
+    },
+    {
+      "from": "treffsicher-backlog",
+      "to": "treffsicher-actionresult-migration",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "treffsicher-backlog",
+      "to": "treffsicher-pwa-offline",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "treffsicher-future-features",
+      "to": "treffsicher",
+      "relationType": "applies_to"
+    },
+    {
+      "from": "treffsicher-future-features",
+      "to": "treffsicher-pwa-offline",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "monorepo-phase-5",
+      "to": "vereinsheim",
+      "relationType": "applies_to"
+    },
+    {
+      "from": "monorepo-phase-5",
+      "to": "monorepo-migration-phases",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "monorepo-phase-5",
+      "to": "ADR-006",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "env-var-alignment-gap",
+      "to": "vereinsheim",
+      "relationType": "applies_to"
+    },
+    {
+      "from": "env-var-alignment-gap",
+      "to": "ringwerk-auth-security",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "dependency-pin-alignment",
+      "to": "vereinsheim",
+      "relationType": "applies_to"
+    },
+    {
+      "from": "dependency-pin-alignment",
+      "to": "drift-protection",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "future-adrs",
+      "to": "vereinsheim",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "future-adrs",
+      "to": "off-site-backup-gap",
+      "relationType": "relates_to"
+    },
+    {
+      "from": "future-adrs",
+      "to": "monorepo-phase-5",
+      "relationType": "relates_to"
     }
   ]
 }
