@@ -591,5 +591,5 @@ Stammdaten-Änderungen — erscheinen nur im globalen Protokoll (kein competitio
 
 - Personenbezogene Daten nur fuer Vereinsverwaltung
 - Keine Weitergabe an Dritte
-- On-Premise auf TrueNAS, kein Cloud-Dienst
+- On-Premise auf eigenem VPS, kein Cloud-Dienst
 - HTTPS in Produktion zwingend

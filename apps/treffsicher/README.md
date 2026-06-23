@@ -6,9 +6,9 @@ Trainingsunterstützungs-App für Schiesssportler. Trainingstagebuch, Ergebniser
 > laufen **von der Repo-Wurzel**: `pnpm dev` (diese App auf :3001) gegen den
 > geteilten Dev-Postgres (`docker compose -f docker-compose.dev.yml up -d` **an
 > der Wurzel**); Gates `pnpm check`; Build/Deploy `vereinsheim build` / `release`.
-> **Die Abschnitte unten mit eigenem `docker-compose.dev.yml`, `npm`-im-Container
-> und TrueNAS-Deploy stammen aus der Standalone-Zeit und gelten nicht mehr** (das
-> per-App `docker-compose.dev.yml` wurde entfernt). Kanonisch: Root-[`README.md`](../../README.md);
+> **Die Abschnitte unten mit eigenem `docker-compose.dev.yml` und `npm`-im-Container
+> stammen aus der Standalone-Zeit und gelten nicht mehr** (das per-App
+> `docker-compose.dev.yml` wurde entfernt). Kanonisch: Root-[`README.md`](../../README.md);
 > die App-Doku-Konsolidierung folgt in Phase 2.
 
 ---
@@ -183,11 +183,9 @@ Der URL-Import für Meyton-PDFs ist bewusst eingeschränkt:
 
 ## Produktions-Deployment
 
-```bash
-docker compose -f docker-compose.prod.yml up -d
-```
-
-Erfordert eine ausgefüllte `.env`-Datei (siehe Abschnitt oben).
+Deployment läuft über das `vereinsheim`-Monorepo: lokaler Build → Docker Hub → der VPS
+pullt die Images. Bedienung, Backup und Recovery sind zentral in der
+Root-[`README.md`](../../README.md) und [`docs/operations.md`](../../docs/operations.md) beschrieben.
 Migrationen laufen vor dem App-Start im dedizierten `migrate`-Service (`prisma migrate deploy`).
 Wenn `migrate deploy` fehlschlägt und ein P3009-Fall vorliegt, versucht der `migrate`-Service
 eine automatische Recovery für bekannte sichere Migrationsfälle und führt danach `migrate deploy` erneut aus.

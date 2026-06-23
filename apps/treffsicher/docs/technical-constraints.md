@@ -10,7 +10,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 
 ## Index
 
-- **Hosting / Entwicklungsumgebung** — Docker Compose (dev/prod), TrueNAS-portabel, Node.js 24 LTS
+- **Hosting / Entwicklungsumgebung** — Docker Compose (dev/prod), portabel, Node.js 24 LTS
 - **Persistenz** — PostgreSQL + Named Volumes, Upload-Volume `/app/uploads`, Dateinamen als UUID
 - **Datenbank-Migrationen** — Prisma Migrate deploy beim Start, P3009-Recovery-Script, kein Datenverlust
 - **Tech Stack + Prisma 7** — Verbindliche Versionen; Prisma 7 breaking changes (Client-Pfad, Adapter, Config)
@@ -25,8 +25,8 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 
 ## Hosting & Betrieb
 
-- **Zielplattform**: Self-hosted auf TrueNAS via Docker Compose
-- **Portabilität**: Kein TrueNAS-spezifischer Code — die App muss auf jeder Docker-Compose-Umgebung lauffähig sein
+- **Zielplattform**: Self-hosted via Docker Compose (Produktion: VPS, im `vereinsheim`-Monorepo)
+- **Portabilität**: Kein plattformspezifischer Code — die App muss auf jeder Docker-Compose-Umgebung lauffähig sein
 - **Konfiguration**: Alle umgebungsabhängigen Werte (DB-URL, Secrets, Pfade) über Umgebungsvariablen in `.env` — niemals hart im Code verdrahtet
 - **Node.js-Version**: 24 LTS (im Dockerfile: `FROM node:24-alpine`)
 
@@ -162,7 +162,7 @@ if (process.env.NODE_ENV !== "production") {
 - **Passwortwechsel (Self-Service)**: Nur im eingeloggten Zustand mit aktuellem Passwort (`/account`)
 - **Passwort vergessen**: Reset weiterhin nur durch Admin
 - **Session-Invalidierung bei Passwortwechsel**: Passwortwechsel/-Reset erhöht `sessionVersion`; alte JWT-Sessions werden dadurch serverseitig ungültig
-- **HTTPS**: In Produktion zwingend (via Reverse Proxy, z.B. Nginx oder Traefik auf TrueNAS)
+- **HTTPS**: In Produktion zwingend (via Reverse Proxy — Caddy auf dem VPS)
 - **Secrets**: `NEXTAUTH_SECRET` und Datenbank-Credentials nur via Umgebungsvariablen
 
 ### DoS-Schutz (verbindlich)
@@ -418,7 +418,7 @@ components/app/<feature>/<module>/
 
 ## Datensicherung & Import
 
-- **Backup**: TrueNAS-seitig via Volume-Snapshots — kein app-seitiger Mechanismus nötig
+- **Backup**: über das Monorepo-Tooling (`vereinsheim backup`, täglicher Cron auf dem VPS) — kein app-seitiger Mechanismus nötig
 - **Import**: Kein Massenimport von Bestandsdaten; einzige Ausnahme ist der manuelle Meyton-PDF-Import pro einzelner Einheit
 
 ---
