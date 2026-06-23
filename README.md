@@ -1,191 +1,117 @@
 # vereinsheim
 
-Gemeinsames Repo für zwei Next.js-Apps — **Code-Monorepo** (Entwicklung)
-und **Deployment** (Ops) in einem:
+> **Open-source, self-hosted software for sport-shooting clubs.** Two web apps that run
+> side by side on a single server: **Ringwerk** for leagues & competitions, and
+> **Treffsicher** as a training log for individual shooters.
 
-- **Ringwerk** (Liga & Wettkämpfe) — [`apps/ringwerk`](apps/ringwerk)
-- **Treffsicher** (Trainingsapp) — [`apps/treffsicher`](apps/treffsicher)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
+![Self-hosted](https://img.shields.io/badge/self--hosted-Docker-2496ed)
+![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
 
-Beide Apps laufen auf einem einzelnen VPS, geteilter
-Postgres-Container (separate Datenbanken + User), Caddy als Reverse Proxy
-mit automatischem Let's-Encrypt-TLS.
+Sport-shooting clubs are badly served by software — most run on paper, spreadsheets, or
+nothing at all. These two apps cover the whole loop: running club competitions, and helping
+each shooter train. Self-host both on one small VPS; your members' data never leaves your server.
 
-## Status
+<!-- TODO: add a screenshot or GIF here — the single biggest conversion lever.
+     Suggested: a 2-up of the Ringwerk standings/bracket and the Treffsicher statistics page,
+     rendered against anonymous sample data. -->
+<!-- ![Ringwerk & Treffsicher](docs/assets/screenshot.png) -->
 
-🟢 **Produktiv.** Beide Apps laufen seit Ende Mai 2026 auf dem VPS
-(IONOS, Debian 13) — geteilter Postgres, Caddy mit Let's-Encrypt-TLS,
-täglicher Backup-Cron um 03:00. Alle Roadmap-Phasen (1–6) sind
-abgeschlossen.
+**▶ Live demo:** _coming soon_ · **Docs:** [spec](docs/spec.md) · [architecture decisions](docs/decisions.md) · [operations](docs/operations.md)
 
-🟡 **Monorepo-Migration — Phasen 1 + 3 erledigt** (Juni 2026): beide Apps sind via
-`git filter-repo` (Git-History erhalten) als `apps/*` integriert — Workspace
-mit **pnpm + Turborepo**, geteilte Dep-Versionen im pnpm-Catalog, geteilter
-Dev-Postgres ([`docker-compose.dev.yml`](docker-compose.dev.yml)). Der
-Produktions-Build kommt jetzt **aus dem Monorepo** via `turbo prune`
-(`vereinsheim build`) — Image-Namen/Tags + `compose.yml` unverändert, lokal voll
-verifiziert, und der erste Monorepo-Deploy auf den VPS ist **gelaufen**.
-**Offen**: Phase 2 (Harness/Knowledge erledigt — `packages/config`-Code offen) +
-Phase 4. Plan & Phasen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md).
+---
 
-## Monorepo-Entwicklung (lokal)
+## The two apps
 
-Frische Workstation arbeitsfähig machen — **ein Befehl** (einzige Voraussetzung:
-Node ≥24 und Docker laufen; alles andere richtet das Skript ein, idempotent):
+### 🎯 Ringwerk — competitions & leagues
 
-```bash
-./scripts/vereinsheim dev-setup    # oder direkt: bash scripts/bootstrap-dev.sh
-```
+Run your club's entire competitive program from one place.
 
-Das prüft Node/Docker, aktiviert pnpm via corepack, installiert die Workspace-Deps,
-installiert das gepinnte **codegraph**-Binary (Live-Knowledge-Schicht der Claude-Harness)
-und baut den Index, zieht den Dev-Postgres hoch, legt je App `.env` aus `.env.example`
-an (vorhandene bleiben unberührt) und pusht das Prisma-Schema. Danach:
+- **Three formats on one scoring engine:** _League_ (round-robin schedule → standings →
+  knockout playoffs), _Event_ (one-off shoots, ranked), _Season_ (months-long, best individual series)
+- **8 configurable scoring modes** (ring-divisor, rings, target-value, …) with per-discipline
+  correction factors for mixed disciplines
+- **Playoff brackets:** best-of-N, finals with tiebreakers and sudden death
+- Participant pool with guests, roles (admin / manager / viewer), and a full **audit log**
+- **Meyton** electronic-target import (URL & PDF)
+- **Public result PDFs** at a stable URL — link standings straight from your club website
 
-```bash
-pnpm dev      # beide Apps: ringwerk :3000, treffsicher :3001
-pnpm check    # alle 5 Gates (lint, format:check, test, tsc, next build)
-pnpm build    # inkrementeller Build beider Apps
-```
+### 📈 Treffsicher — training log for shooters
 
-<details><summary>Was <code>dev-setup</code> intern macht (manuell, als Fallback)</summary>
+A training diary that takes mental training as seriously as the score.
 
-```bash
-corepack enable                                   # pnpm via packageManager-Pin
-pnpm install                                      # Workspace-Deps (Catalog)
-npm install -g @colbymchenry/codegraph@1.0.1      # Claude-Knowledge-Schicht (gepinnt)
-docker compose -f docker-compose.dev.yml up -d    # geteilter Postgres (2 DBs)
-cp apps/ringwerk/.env.example  apps/ringwerk/.env        # einmalig
-cp apps/treffsicher/.env.example apps/treffsicher/.env   # einmalig
-pnpm --filter ringwerk exec prisma db push        # Schema → Dev-DB (analog treffsicher)
-pnpm dev                                          # beide Apps: :3000 + :3001
-```
+- **Sessions** for training, competition, dry-fire and mental work; log results by series or
+  per shot, with whole-/tenth-ring validation
+- **Integrated mental training:** well-being tracking (sleep / energy / stress / motivation),
+  pre-session forecast vs. post-session feedback on a 7-dimension self-assessment radar
+- **Statistics:** result trends, shot distribution over time, well-being correlations, per-session histograms
+- Season goals, editable shot-routine documents, **Meyton** PDF import
+- Multi-user with strict per-user data isolation; focused dark-mode UI
 
-</details>
+---
 
-Echte Prod-Daten in die Dev-DBs `ringwerk` + `treffsicher` holen:
-`./scripts/vereinsheim dev-restore` (importiert den neuesten Dump je App aus
-`backups/`; `dev-restore <app>` für nur eine). Die Dumps vorher per
-`vereinsheim local-pull` vom VPS ziehen.
+## Try it locally (one command)
 
-**Voller Stack lokal** (Produktions-Images, ohne Caddy): `vereinsheim local-up`.
-Er bindet Host-Port 5432 wie der Dev-Postgres und stoppt eine laufende Dev-DB
-darum automatisch — danach mit `docker compose -f docker-compose.dev.yml up -d`
-wieder hochfahren.
-
-## Doku
-
-| Doc                                       | Inhalt                                                                |
-| ----------------------------------------- | --------------------------------------------------------------------- |
-| [`docs/spec.md`](docs/spec.md)             | Anforderungen, Zielarchitektur, VPS-Sizing, Out-of-Scope              |
-| [`docs/decisions.md`](docs/decisions.md)   | ADRs — alle Architektur-Entscheidungen mit Begründung & Alternativen |
-| [`docs/monorepo-plan.md`](docs/monorepo-plan.md) | Monorepo-Migration (ADR-015–018): Phasen 1–5, aktiver Plan       |
-| [`docs/operations.md`](docs/operations.md) | Daily Ops: Deploy, Backup, Restore, Migration-Recovery, Rollback      |
-| [`CLAUDE.md`](CLAUDE.md)                   | Onboarding für Folgesessions / Coding-Agenten                         |
-
-## Bedienkonzept
-
-Ein Werkzeug, zwei Modi: [`./scripts/vereinsheim`](scripts/vereinsheim).
-
-- **Lokal-Mode** wird aktiviert, sobald `.vereinsheim.local` existiert
-  (auf deiner Arbeitsmaschine). Bietet `dev-setup` (Workstation einrichten),
-  `build`, `release`, `ssh`, `remote`, `local-setup`. `dev-setup` läuft auch
-  ohne `.vereinsheim.local` — es ist der allererste Schritt nach dem Clone.
-- **VPS-Mode** ist der Default. Bietet `setup`, `deploy`, `rollback`,
-  `backup`, `restore`, `migrations`, `status`, `cron`, `psql`, `logs`, … .
-
-Ohne Argument startet das passende interaktive Menü, mit Subcommand
-läuft es nicht-interaktiv. `./scripts/vereinsheim help` zeigt die
-vollständige Liste.
-
-Die zwei Konfigurations-Dateien sind beide gitignored:
-
-| Datei                | Maschine | Inhalt                                                |
-| -------------------- | -------- | ----------------------------------------------------- |
-| `.env`               | VPS      | Postgres-Passwörter, NEXTAUTH_SECRETs, Domain, …      |
-| `.vereinsheim.local` | lokal    | `VPS_HOST`, `VPS_REPO_PATH`, `DOCKER_USER`            |
-
-## Quick Reference
-
-### Erstes Aufsetzen
+Requires Node ≥ 24 and Docker.
 
 ```bash
-# 1. VPS bestellen (Debian 13, S+/M).
-# 2. Als root, einmalig:
-bash bootstrap-vps.sh "ssh-ed25519 AAAA... du@workstation" \
-  "https://github.com/cykedev/vereinsheim.git"
-
-# 3. Als deploy-User:
-ssh deploy@<vps>
-cd ~/vereinsheim
-./scripts/vereinsheim setup        # .env-Wizard
-./scripts/vereinsheim cron         # Backup-Cron
-
-# 4. DNS-A-Records für RINGWERK_HOST und TREFFSICHER_HOST setzen.
-
-# 5. Lokal, einmalig:
-./scripts/vereinsheim local-setup  # VPS_HOST, VPS_REPO_PATH, DOCKER_USER
-docker login docker.io             # für den Image-Push
-
-# 6. Erster Deploy:
-./scripts/vereinsheim release      # build + push + remote deploy
+git clone https://github.com/cykedev/vereinsheim.git
+cd vereinsheim
+./scripts/vereinsheim dev-setup     # toolchain, dev Postgres, env, schema — idempotent
+pnpm dev                            # Ringwerk on :3000, Treffsicher on :3001
 ```
 
-### Daily Ops lokal
+Deploy both to your own VPS (Docker images → single server, Caddy + automatic HTTPS):
+see [docs/operations.md](docs/operations.md).
 
-```bash
-./scripts/vereinsheim release          # build + push + remote deploy
-./scripts/vereinsheim build            # nur Build + Push, kein Deploy
-./scripts/vereinsheim remote deploy    # nur Deploy auf VPS, kein Build
-./scripts/vereinsheim remote status    # VPS-Stand abfragen
-./scripts/vereinsheim ssh              # interaktive Shell auf VPS
-```
+---
 
-### Daily Ops auf dem VPS
+## Under the hood
 
-```bash
-./scripts/vereinsheim                  # interaktives Menü
-./scripts/vereinsheim status
-./scripts/vereinsheim backup
-./scripts/vereinsheim restore
-./scripts/vereinsheim migrations ringwerk
-./scripts/vereinsheim psql ringwerk
-./scripts/vereinsheim logs caddy
-```
+Beyond the apps, this repo is a **real-world reference** for shipping multiple Next.js apps:
 
-## Konventionen
+- **Turborepo monorepo** — two Next.js 16 apps + shared `packages/` (ui, lib, config), pnpm catalog
+- **Single-VPS deploy** — `turbo prune` → Docker images → one server; Caddy reverse proxy with
+  automatic Let's-Encrypt TLS; one Postgres with **two isolated databases** (cross-DB access made
+  technically impossible)
+- **Ops CLI** (`vereinsheim`) — build · release · deploy · backup/restore · migrations, with
+  pre-deploy backups and migration-failure recovery
+- **AI agent harness for Claude Code** — ADR-driven docs, a built knowledge-graph index, hooks
+  (quality gate on every turn, protected-path guard for autonomous runs), reusable skills, and a
+  plan → implement → validate → review workflow
 
-- **Keine Secrets im Repo.** Alles Sensible lebt in `.env` (VPS) oder
-  `.vereinsheim.local` (lokal). Beide sind in `.gitignore`.
-- **Image-Builds sind reproduzierbar.** `vereinsheim build` baut aus dem
-  Monorepo (`turbo prune`) und weigert sich bei uncommitteten Änderungen — der
-  Tag enthält immer die eindeutige Monorepo-Git-SHA (beide Apps teilen sie).
-- **Pre-Deploy-Backup ist Default.** `vereinsheim deploy` macht ein
-  Backup direkt vor jedem Pull. Override: `SKIP_BACKUP=1`.
-- **`db` ist nicht im `web`-Netzwerk.** Caddy sieht die Datenbank nicht
-  (Sicherheit), Apps und Migrate-Container schon.
+| Layer     | Tech                                          |
+| --------- | --------------------------------------------- |
+| Framework | Next.js 16 (App Router), React 19             |
+| Language  | TypeScript (strict)                           |
+| Database  | PostgreSQL 15 + Prisma 7                       |
+| Auth      | NextAuth.js v4                                 |
+| UI        | shadcn/ui + Tailwind CSS 4 · Recharts         |
+| Tooling   | pnpm + Turborepo · Vitest                     |
+| Deploy    | Docker · Caddy · single VPS                    |
 
-## Verwandte Repos
+Development workflow and architecture rationale: [CLAUDE.md](CLAUDE.md) · [docs/decisions.md](docs/decisions.md).
 
-Der App-Code liegt im Monorepo unter [`apps/ringwerk`](apps/ringwerk) und
-[`apps/treffsicher`](apps/treffsicher); seit Phase 3 baut `vereinsheim build`
-**aus dem Monorepo** (`turbo prune`). Die Standalone-Repos sind **keine
-Build-Quelle mehr** — ihre granulare History ist via Tag `pre-monorepo-import`
-archiviert; sie können archiviert/entfernt werden:
+---
 
-- [`../ringwerk`](../ringwerk) — Standalone-Repo der Liga-App (archiviert, Tag `pre-monorepo-import`)
-- [`../treffsicher`](../treffsicher) — Standalone-Repo der Trainingsapp (archiviert, Tag `pre-monorepo-import`)
+## Contributing
 
-Image-Builds laufen lokal (`docker buildx --platform linux/amd64`),
-gepusht wird in **Docker Hub** unter `<DOCKER_USER>/ringwerk` und
-`<DOCKER_USER>/treffsicher`. Pro App zwei Tags pro Build:
-`:<sha>` (App-Image) und `:<sha>-migrator` (Migrations-Image), plus
-`:latest` und `:latest-migrator`.
+Issues and PRs welcome. The apps' UI is in **German** (their user base is German-speaking
+shooting clubs); code, identifiers and commit messages are in English.
 
-## Lizenz
+## License
 
-Apache License 2.0 — siehe [`LICENSE`](LICENSE).
+[Apache-2.0](LICENSE).
 
-> Hinweis: Diese Lizenz deckt das Deployment-Tooling (CLI, Compose-Files,
-> Caddy-Konfig, Doku). Der App-Code unter [`apps/ringwerk`](apps/ringwerk) /
-> [`apps/treffsicher`](apps/treffsicher) trägt jeweils eine eigene `LICENSE`
-> (beide ebenfalls Apache-2.0).
+---
+
+## Auf Deutsch
+
+**Open-Source-Software für Schützenvereine, self-hosted.** Zwei Web-Apps auf einem Server:
+**Ringwerk** (Wettkämpfe & Liga: Spielplan, Tabelle, K.-o.-Playoffs, 7 Wertungsmodi, Event-
+& Saison-Wettbewerbe, öffentliche Ergebnis-PDFs, Meyton-Import) und **Treffsicher**
+(Trainingstagebuch für Sportschützen: Einheiten, Ergebniserfassung, integriertes Mentaltraining,
+Befinden-Tracking, Statistiken). Lokal starten: `./scripts/vereinsheim dev-setup` → `pnpm dev`.
+Deployment & Betrieb: [docs/operations.md](docs/operations.md).
