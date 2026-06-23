@@ -59,17 +59,21 @@ nie still nur dokumentiert.
    - **[Regel]**: …
    ```
 
-5. **REMEMBER → Memory-Graph.** Pro `remember`-Eintrag:
-   a. **Entity anlegen** — `mcp__memory__create_entities` mit sprechendem `name` (kebab-case),
-      `entityType` aus dem Vokabular `incident` | `state` | `decision`, und einer `observations`-Zeile
-      mit Datum + App + Provenance (z.B. `"2026-06-18 (ringwerk): … gekippt, weil …; revidierbar"`).
-      Existiert die Entity schon → `mcp__memory__add_observations` statt Dublette.
-   b. **Verknüpfen** — wo sinnvoll `mcp__memory__create_relations` zur App (`occurred_in`/`applies_to`)
-      oder zu einer ADR (`amends`/`relates_to`), damit der Eintrag auffindbar im Graph hängt.
-   c. **Committen** — `.claude/knowledge-graph.json` ist in-repo (anders als das auto-persistierte
-      native Auto-Memory) → die geänderte Store-Datei in den Session-Commit aufnehmen, sonst geht der
-      Write beim nächsten Clone/Pull verloren.
-   (Fallback ohne MCP: Eintrag in `lessons.md` als KEEP behalten.)
+5. **REMEMBER → Quelle + Rebuild** (ADR-022 — **nicht** per Live-`mcp__memory__`-Write; den überschriebe
+   der nächste Rebuild). Der Store `.claude/knowledge-graph.json` ist ein **gebautes Artefakt**, nie von
+   Hand editieren. Pro `remember`-Eintrag:
+   a. **In die Quelle schreiben** — Incident/State (Provenance, die in **keiner** Doc steht) →
+      `.claude/graph-captured.mjs` (`entityType` `incident`|`state`, `name` kebab-case, eine
+      `observations`-Zeile mit Datum + App + Provenance, z.B. `"2026-06-18 (ringwerk): … gekippt, weil …;
+      revidierbar"`). Abgeleiteter Topic aus einer Doc → `.claude/graph-projection.mjs` (Essenz +
+      `→ datei#slug`-Pointer; Slug via `node .claude/doc.mjs <datei>` prüfen). Existiert die Entity →
+      Observation ergänzen statt Dublette.
+   b. **Verknüpfen** — Relation in **derselben Quelle** ergänzen (`occurred_in`/`applies_to` zur App,
+      `relates_to`/`governed_by` zu ADR/Topic), damit der Eintrag auffindbar im Index hängt.
+   c. **Bauen + committen** — `node .claude/build-graph.mjs` (validiert Integrität **+** jeden Pointer) →
+      die geänderte Quelle **und** das regenerierte `.claude/knowledge-graph.json` in den Session-Commit.
+      Bei größeren Doc-Änderungen stattdessen `/sync-graph`.
+   (Fallback ohne Build: Eintrag in `lessons.md` als KEEP behalten.)
 
 6. **lessons.md neu schreiben:** Original-Header + Datums-Kommentar + alle KEEP/REMEMBER-Einträge
    (die noch NICHT in den Memory-Graph wanderten) + die letzten 10 nach Datum; keine

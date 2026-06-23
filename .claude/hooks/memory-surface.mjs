@@ -49,14 +49,15 @@ try {
     .join(", ")
 
   const msg =
-    `Memory-Graph (Projektgedächtnis, .claude/knowledge-graph.json): ${entities} Entities ` +
-    `(${breakdown}), ${relations} Relationen. ABFRAGEN mit mcp__memory__search_nodes/` +
-    `open_nodes/read_graph, BEVOR du breit explorierst — projektspezifischer Kontext/Incidents/` +
-    `Provenance, der nicht in den immer-geladenen Docs steht. NEUE projektspezifische Fakten ` +
-    `(Incident, Entscheidungs-Provenance, sich ändernder Zustand, Relationen) mit ` +
-    `mcp__memory__create_entities/add_observations festhalten UND .claude/knowledge-graph.json ` +
-    `committen. Abgrenzung: Code-Struktur → CodeGraph; erzwingbare Regeln → docs/Gates; ` +
-    `Maschinen-/Ops-lokales → natives Auto-Memory.`
+    `Memory-Graph = INDEX über die Doku (.claude/knowledge-graph.json, ADR-022): ${entities} Entities ` +
+    `(${breakdown}), ${relations} Relationen. So einsteigen: ABFRAGEN mit mcp__memory__search_nodes/` +
+    `open_nodes/read_graph, BEVOR du breit explorierst; jede Entity trägt Essenz + Fragment-Pointer ` +
+    `\`→ datei#slug\` — den Abschnitt gezielt lesen mit \`node .claude/doc.mjs datei#slug\` (nur der ` +
+    `Abschnitt, nicht die ganze Datei). Relationen (governed_by/contrasts_with/see_also/…) zum Weitergehen ` +
+    `folgen. NEUES Wissen NICHT per Live-mcp__memory__-Write (ein Rebuild überschriebe ihn): in die QUELLE ` +
+    `schreiben (.claude/graph-projection.mjs für abgeleitete Topics, graph-captured.mjs für Incidents/` +
+    `State) → \`node .claude/build-graph.mjs\` → committen. Abgrenzung: Code-Struktur → CodeGraph; ` +
+    `erzwingbare Regeln → docs/Gates; Maschinen-/Ops-lokales → natives Auto-Memory.`
 
   process.stdout.write(
     JSON.stringify({
