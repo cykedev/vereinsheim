@@ -82,15 +82,19 @@ const slugsOf = (file) => {
 let pointerCount = 0
 for (const e of entities) {
   for (const o of e.observations) {
-    const m = o.match(/^→ (\S+?)(?:#(.+))?$/)
+    const m = o.match(/^→ (\S+)$/)
     if (!m) continue
     pointerCount++
-    const [, file, slug] = m
+    const target = m[1]
+    const hashAt = target.indexOf("#")
+    const file = hashAt === -1 ? target : target.slice(0, hashAt)
+    const slug = hashAt === -1 ? null : target.slice(hashAt + 1)
     if (!existsSync(file)) {
       errors.push(`${e.name}: Pointer-Datei fehlt: ${file}`)
       continue
     }
-    if (slug && !slugsOf(file).has(slug)) errors.push(`${e.name}: kein Abschnitt '${slug}' in ${file}`)
+    if (hashAt !== -1 && !slug) errors.push(`${e.name}: leerer Slug im Pointer '${target}'`)
+    else if (slug && !slugsOf(file).has(slug)) errors.push(`${e.name}: kein Abschnitt '${slug}' in ${file}`)
   }
 }
 
