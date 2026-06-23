@@ -882,8 +882,20 @@ hook-/CI-fähig, kein Modell); `Docs → Manifest` ist **modellgetrieben** (`/sy
 - `/consolidate-lessons` REMEMBER schreibt künftig in die Quelle + baut neu (statt Live-Write).
 - Die immer-geladene `@import`-Schicht kann schrumpfen (kleiner „Rules of the road"-Kern bleibt; Detail wird
   indiziert) — separater, letzter Schritt, da Konventions-Treue **nicht** gate-erzwingbar ist.
-- **Out of scope (vorgesehen):** ein Pre-Commit-/CI-Hook, der den Build erzwingt; die spätere Frage, ob der
-  Index immer-geladene Docs ganz ablösen kann.
+- **Out of scope (vorgesehen):** die spätere Frage, ob der Index immer-geladene Docs ganz ablösen kann.
+
+**Nachtrag (Juni 2026) — Stop-Hook erzwingt den Sync am Turn-Ende.** Das oben als out-of-scope notierte
+Build-Enforcement ist umgesetzt: `.claude/hooks/graph-sync.mjs` (Stop-Hook, neben dem `pnpm check`-Stop-Gate)
+synct den Index am Ende jedes Turns — exakt entlang der Determinismus-Grenze:
+1. **Deterministisch erzwungen:** `build-graph.mjs` läuft; schlägt die Validierung fehl (toter Pointer/
+   Dangling/Dup), **blockt** der Hook das Turn-Ende (`exit 2`) — der Index kann nicht invalide aufhören. Der
+   Build hält den Store frisch (idempotent → still bei unveränderten Quellen).
+2. **Modellgetrieben genudged:** wurden indizierte Docs geändert, aber das Manifest nicht, gibt es einen
+   **nicht-blockierenden** Hinweis Richtung `/sync-graph` (ein Hook kann den semantischen Docs→Manifest-Sync
+   nicht selbst erzeugen; ein Hard-Block würde bei Typo-Fixes einsperren). Fail-open bei Infra-Fehlern.
+
+Damit ist „Agenten syncen am Task-Ende" Harness-erzwungen für den deterministischen Teil und sichtbar-
+genudged für den Modell-Teil — nichts Automatisches täuscht über die Grenze hinweg.
 
 ---
 

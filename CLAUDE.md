@@ -55,10 +55,11 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
   ADR-022) sowie der PIV-Workflow `plan → implement → validate → review` + `debug` (Root-Cause-Analyse;
   Handoff über `plans/` + `reports/`).
 - **Hooks** (`.claude/settings.json` + `.claude/hooks/`): **Stop-Gate** blockt das Turn-Ende, bis
-  `pnpm check` grün ist; **PostToolUse-Lint** (eslint auf die editierte App-Datei); **PreToolUse-
-  Security-Guard** (verweigert echte `.env`/`.vereinsheim.local` + katastrophale `rm -rf`; **nudged**
-  zudem einmalig pro Session Richtung CodeGraph bei `grep`/`find`-Suchen). Greifen ab
-  dem nächsten Claude-Code-Reload.
+  `pnpm check` grün ist; **Stop-Graph-Sync** (`graph-sync.mjs`, ADR-022) baut den Doku-Index am Turn-Ende
+  neu und **blockt** bei invalidem Index, nudged bei Doc-Änderung ohne Manifest-Update Richtung
+  `/sync-graph`; **PostToolUse-Lint** (eslint auf die editierte App-Datei); **PreToolUse-Security-Guard**
+  (verweigert echte `.env`/`.vereinsheim.local` + katastrophale `rm -rf`; **nudged** zudem einmalig pro
+  Session Richtung CodeGraph bei `grep`/`find`-Suchen). Greifen ab dem nächsten Claude-Code-Reload.
 - **Sub-Agent** `code-reviewer` (`.claude/agents/`) — von `/review` gegen den Branch-Diff delegiert.
 - **Knowledge-Graph** (`.mcp.json`): **CodeGraph-MCP** (Live-Symbol-/Call-Graph/Routen,
   `codegraph_explore` — Ground Truth über den Code, on-demand statt grep) + **Memory-MCP = gebauter
