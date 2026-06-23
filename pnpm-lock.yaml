@@ -7,109 +7,109 @@ settings:
 catalogs:
   default:
     '@prisma/adapter-pg':
-      specifier: ^7.4.1
+      specifier: 7.8.0
       version: 7.8.0
     '@prisma/client':
-      specifier: ^7.4.1
+      specifier: 7.8.0
       version: 7.8.0
     '@radix-ui/react-slider':
-      specifier: ^1.4.1
+      specifier: 1.4.1
       version: 1.4.1
     '@tailwindcss/postcss':
-      specifier: ^4
+      specifier: 4.3.1
       version: 4.3.1
     '@types/bcryptjs':
-      specifier: ^2.4.6
+      specifier: 2.4.6
       version: 2.4.6
     '@types/node':
-      specifier: ^24.12.4
+      specifier: 24.13.2
       version: 24.13.2
     '@types/pg':
-      specifier: ^8.16.0
+      specifier: 8.20.0
       version: 8.20.0
     '@types/react':
-      specifier: ^19
+      specifier: 19.2.17
       version: 19.2.17
     '@types/react-dom':
-      specifier: ^19
+      specifier: 19.2.3
       version: 19.2.3
     '@vitejs/plugin-react':
-      specifier: ^6
+      specifier: 6.0.2
       version: 6.0.2
     bcryptjs:
-      specifier: ^3.0.3
+      specifier: 3.0.3
       version: 3.0.3
     class-variance-authority:
-      specifier: ^0.7.1
+      specifier: 0.7.1
       version: 0.7.1
     clsx:
-      specifier: ^2.1.1
+      specifier: 2.1.1
       version: 2.1.1
     dotenv:
-      specifier: ^17.3.1
+      specifier: 17.4.2
       version: 17.4.2
     eslint:
-      specifier: ^9
+      specifier: 9.39.4
       version: 9.39.4
     eslint-config-next:
-      specifier: ^16.2.6
+      specifier: 16.2.9
       version: 16.2.9
     lucide-react:
-      specifier: ^1.16.0
+      specifier: 1.21.0
       version: 1.21.0
     next:
-      specifier: ^16.2.6
+      specifier: 16.2.9
       version: 16.2.9
     next-auth:
-      specifier: ^4.24.13
+      specifier: 4.24.14
       version: 4.24.14
     next-themes:
-      specifier: ^0.4.6
+      specifier: 0.4.6
       version: 0.4.6
     pg:
-      specifier: ^8.19.0
+      specifier: 8.22.0
       version: 8.22.0
     prettier:
-      specifier: ^3.8.1
+      specifier: 3.8.4
       version: 3.8.4
     prisma:
-      specifier: ^7.4.1
+      specifier: 7.8.0
       version: 7.8.0
     radix-ui:
-      specifier: ^1.4.3
+      specifier: 1.6.0
       version: 1.6.0
     react:
-      specifier: ^19.2.6
+      specifier: 19.2.7
       version: 19.2.7
     react-dom:
-      specifier: ^19.2.6
+      specifier: 19.2.7
       version: 19.2.7
     shadcn:
-      specifier: ^4.8.1
+      specifier: 4.11.0
       version: 4.11.0
     sonner:
-      specifier: ^2.0.7
+      specifier: 2.0.7
       version: 2.0.7
     tailwind-merge:
-      specifier: ^3.5.0
+      specifier: 3.6.0
       version: 3.6.0
     tailwindcss:
-      specifier: ^4
+      specifier: 4.3.1
       version: 4.3.1
     tsx:
-      specifier: ^4.21.0
+      specifier: 4.22.4
       version: 4.22.4
     tw-animate-css:
-      specifier: ^1.4.0
+      specifier: 1.4.0
       version: 1.4.0
     typescript:
-      specifier: ^6.0.2
+      specifier: 6.0.3
       version: 6.0.3
     vitest:
-      specifier: ^4.0.18
+      specifier: 4.1.9
       version: 4.1.9
     zod:
-      specifier: ^4.3.6
+      specifier: 4.4.3
       version: 4.4.3
 
 importers:
