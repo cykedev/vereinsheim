@@ -111,6 +111,7 @@
 {"type":"entity","name":"stechschuss-modell-flip","entityType":"incident","observations":["2026-06-18 (ringwerk, Best-of-Liga): Das Stechschuss-Modell wurde von 'reiner Match-Entscheid, Satz bleibt 1:1' auf 'Stechschuss-Duell zählt mit, also 2:1' gekippt, nachdem der Domänen-Owner es am echten Datensatz als unintuitiv empfand. Spec-Entscheid, revidierbar. Die Auflösung ist zentral in bestOf.ts gekapselt (stechschussOutcome, eigenes Maß statt league-scoringMode), damit ein erneuter Wechsel nur eine Stelle berührt."]}
 {"type":"entity","name":"ruleset-lock-granularity","entityType":"incident","observations":["2026-06-18 (ringwerk): Das Liga-Regelset wurde komplett gesperrt, sobald Paarungen existierten (rulesetLocked = matchupCount>0) — inklusive der Playoff-Bracket-Wahl, was einen nicht mehr korrigierbaren Deadlock erzeugte. Lösung: Sperr-Granularität an den Wirk-Zeitpunkt koppeln (Gruppenphase/Format ab matchupCount>0; Playoff/Finale erst ab hasPlayoffsStarted)."]}
 {"type":"entity","name":"treffsicher-actionresult-migration","entityType":"state","observations":["Offen: Treffsichers Server-Action-Module sind noch nicht vollständig auf den ActionResult-Kanon migriert (diskriminierte Union, shared-conventions §6, Ringwerk-Muster). Geplanter Folgeschritt."]}
+{"type":"entity","name":"seed-script-orphaned","entityType":"state","observations":["2026-06-17 (ringwerk): prisma.config.ts referenziert 'tsx prisma/seed.ts', aber prisma/seed.ts existiert nicht (weder FS noch git) → /seed bzw. der /db-reset-Seed würde fehlschlagen. Dev-DB-Daten stammen aus manueller App-Eingabe, nicht aus einem Seed-Skript. Vor Verlassen auf /seed prüfen, ob prisma/seed.ts existiert; der Seed-Mechanismus ist aktuell verwaist."]}
 {"type":"relation","from":"ADR-015","to":"ADR-001","relationType":"supersedes"}
 {"type":"relation","from":"ringwerk","to":"vereinsheim","relationType":"part_of"}
 {"type":"relation","from":"treffsicher","to":"vereinsheim","relationType":"part_of"}
@@ -273,3 +274,4 @@
 {"type":"relation","from":"stechschuss-modell-flip","to":"best-of-single","relationType":"applies_to"}
 {"type":"relation","from":"ruleset-lock-granularity","to":"phase-locking-and-editability","relationType":"refined"}
 {"type":"relation","from":"treffsicher-actionresult-migration","to":"action-result-convention","relationType":"targets"}
+{"type":"relation","from":"seed-script-orphaned","to":"ringwerk","relationType":"applies_to"}

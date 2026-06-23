@@ -100,3 +100,13 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   `@vereinsheim/lib`, `@vereinsheim/config`) — Drift ist dort strukturell unmöglich (siehe §1).
 - **Offene Angleichungen:** ActionResult-Vereinheitlichung (Treffsicher), Dependency-Pins
   (inkl. TypeScript-Major).
+
+## 9. Aus Lernlog übernommen
+
+<!-- Zuletzt konsolidiert: 2026-06-23 -->
+
+- **Domänenentscheidungen am echten Datensatz gegenprüfen**: Wertungs-/Domänenentscheidungen vor
+  dem "endgültig"-Status mit dem Domänen-Owner am echten Test-Datensatz gegenprüfen — besonders wenn
+  sie kontraintuitiv wirken könnten. Spec-/Sportleitungs-Entscheidungen sind revidierbar; deshalb die
+  Modell-Logik dafür zentral (eine reine Funktion) halten, damit ein späterer Flip nur eine Stelle
+  berührt.

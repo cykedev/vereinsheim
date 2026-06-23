@@ -536,7 +536,7 @@ export async function createLeague(formData: FormData): Promise<ActionResult>
 
 ## Aus Lernlog übernommen
 
-<!-- Zuletzt konsolidiert: 2026-06-18 -->
+<!-- Zuletzt konsolidiert: 2026-06-23 -->
 
 ### Prisma-Queries (ergänzt)
 
@@ -631,3 +631,8 @@ export async function createLeague(formData: FormData): Promise<ActionResult>
 - **DB-Feldnamenkollisionen vor neuen Feldern prüfen**: Vor dem Einführen eines neuen Schema-Felds oder Props prüfen, ob ein bestehendes Feld auf demselben Model denselben oder semantisch überlappenden Namen hat. Eindeutigen Namen wählen (z.B. `nr` statt `startNumber`), um Verwechslung mit persistierten Anwendungsdaten zu vermeiden.
 - **Dokumentierte Domänen-Wertungsregeln zentral kodieren**: Eine in den Docs beschriebene Berechnungsregel (z.B. "Korrekturfaktor nur bei gemischter Disziplin") in genau einer reinen Helper-Funktion kodieren, durch die alle Persistenz- und Anzeige-Pfade ziehen. Nie je Aufrufer reimplementieren — sonst greift die Regel an manchen Stellen und an anderen nicht. Bei mehreren Auflösungsquellen (z.B. feste Competition-Disziplin vs. per-Teilnehmer) den Kontext aus der maßgeblichen Quelle nehmen (hier: `Competition.disciplineId`).
 - **Invarianten am Code verifizieren, nicht aus Prosa-Docs ableiten**: Bevor man sich auf ein vermeintliches Constraint verlässt (z.B. "Saison ist immer gemischt"), die erzwingende Stelle prüfen — Zod-Schema, Action, DB-Constraint. `features.md`/`data-model.md` beschreiben Konvention und Soll, nicht garantierte Invarianten.
+
+### Refactoring & Workflow
+
+- **Superseded Components im selben Change löschen**: Ersetzte Komponenten/Dateien nicht als "toter, harmloser" Code behalten — besonders wenn sie Domänenlogik einbetten, die mit der Zeit driftet (eine spätere Lesart hält die veraltete Logik sonst für gültig). Vor dem Löschen `rg <Symbol> src/`, um sicherzustellen, dass keine Imports/Verwendungen übrig sind.
+- **Parallele Stränge im selben Bereich erst rebasen, dann bauen**: Laufen Feature und Bugfix gleichzeitig im selben Berechnungs-/Logik-Bereich, zuerst auf den gelandeten Fix rebasen, dann die eigenen Annahmen gegen die korrigierte Logik prüfen, dann weiterbauen — sonst entsteht Code auf veraltetem Stand (Rework).
