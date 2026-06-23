@@ -25,7 +25,7 @@ out/
 # Agent-Harness (ADR-016/018): lokaler CodeGraph-Index (re-buildbar) + Superpowers-Artefakte
 .codegraph/
 .superpowers/
-# Autopilot-Marker (ADR-022): transient, maschinen-lokal — aktiviert den autopilot-guard-Hook
+# Autopilot-Marker (ADR-023): transient, maschinen-lokal — aktiviert den autopilot-guard-Hook
 .claude/.autopilot-active
 
 # Editor / OS

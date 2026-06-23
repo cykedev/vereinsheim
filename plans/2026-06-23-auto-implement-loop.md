@@ -1,4 +1,4 @@
-# Plan: Autonome `/implement`-Phase als Default (ADR-022)
+# Plan: Autonome `/implement`-Phase als Default (ADR-023)
 
 > PIV-Schritt 1. Handoff für `/implement`. Branch: `feat/auto-implement-loop` (im Worktree
 > `.claude/worktrees/ecstatic-benz-466691`). **User-Entscheidung (23.06.2026):** der teilautonome
@@ -138,16 +138,16 @@ Protected-Path-Breaker ein **hartes Gate**, kein Wunsch (ADR-017 ENFORCE).
 - `.claude/settings.json`: den neuen Hook in den vorhandenen `PreToolUse`-Block aufnehmen (zweiter
   `command` neben `pretool-guard.mjs`; Matcher deckt `Edit|Write|…|Bash` bereits ab).
 - `.gitignore`: `.claude/.autopilot-active` (transienter, maschinen-lokaler Marker).
-- `docs/decisions.md`: **ADR-022** (s. Task 1).
+- `docs/decisions.md`: **ADR-023** (s. Task 1).
 - `CLAUDE.md` + `docs/architecture.md`: in der Harness-/PIV-Beschreibung festhalten, dass die
   Implement-Phase **autonom-by-default** ist (Plan-Freigabe = Einwilligungsgrenze, Merge user-gated,
-  Breaker, Verweis ADR-022). Hard-Rule-Block: Notiz zur autonomen Ausnahme von Hard Rule 4.
+  Breaker, Verweis ADR-023). Hard-Rule-Block: Notiz zur autonomen Ausnahme von Hard Rule 4.
 
 ## Dateien (zu ändern/anzulegen)
 
 | Datei | Art | Inhalt |
 | --- | --- | --- |
-| `docs/decisions.md` | edit | ADR-022 (neuer Abschnitt vor „Mögliche Folge-ADRs") |
+| `docs/decisions.md` | edit | ADR-023 (neuer Abschnitt vor „Mögliche Folge-ADRs") |
 | `.claude/hooks/autopilot-guard.mjs` | neu | erzwungene Schutz-Schicht, marker-gated, fail-open |
 | `.claude/settings.json` | edit | Hook in PreToolUse verdrahten |
 | `.claude/skills/implement/SKILL.md` | edit | autonom-by-default: 8-Schritt-Iteration, Breaker, Ledger, Cap, Worktree-Pflicht, Escape-Hatch |
@@ -158,7 +158,7 @@ Protected-Path-Breaker ein **hartes Gate**, kein Wunsch (ADR-017 ENFORCE).
 ## Required Docs (vor dem Coden lesen)
 
 - [`docs/decisions.md`](../docs/decisions.md) — ADR-016/017/018/020/021 (Harness/PIV/ENFORCE-Prinzip),
-  als Vorlage für ADR-022-Format. **ADR-020** (nativer PIV) wird durch ADR-022 ergänzt/nachgeschärft.
+  als Vorlage für ADR-023-Format. **ADR-020** (nativer PIV) wird durch ADR-023 ergänzt/nachgeschärft.
 - [`.claude/hooks/pretool-guard.mjs`](../.claude/hooks/pretool-guard.mjs) — Stil/Fail-open/Heredoc-
   Reduktion, die `autopilot-guard.mjs` spiegeln muss.
 - [`.claude/hooks/stop-gate.mjs`](../.claude/hooks/stop-gate.mjs) — das Gate, das die Iteration als
@@ -170,7 +170,7 @@ Protected-Path-Breaker ein **hartes Gate**, kein Wunsch (ADR-017 ENFORCE).
 
 ## Aufgaben (bite-sized, ein Commit pro Task)
 
-1. **ADR-022 schreiben** (`docs/decisions.md`): Status Accepted (Juni 2026); Kontext (Ralph unsicher,
+1. **ADR-023 schreiben** (`docs/decisions.md`): Status Accepted (Juni 2026); Kontext (Ralph unsicher,
    wir haben die Zutaten; User will Autonomie als Default, nicht als Opt-in); Entscheidung
    (Implement-Phase autonom-by-default; Plan-Freigabe = einzige Opt-in-Grenze; Merge+Push+Deploy
    user-gated; fünf Breaker; erzwungene Schutz-Schicht (Hook); Worktree-Pflicht; Cap=20;
@@ -178,7 +178,7 @@ Protected-Path-Breaker ein **hartes Gate**, kein Wunsch (ADR-017 ENFORCE).
    reines PIV / separates Opt-in-Skill `/auto-implement` — verworfen, weil redundante Entscheidung);
    Folgen (überarbeitetes `/implement` + neuer Hook + Marker + .gitignore + Doku). Verweise auf
    ADR-017/018/020.
-   _Test:_ `grep -c '^## ADR-022' docs/decisions.md` == 1; ADR-022 vor „Mögliche Folge-ADRs".
+   _Test:_ `grep -c '^## ADR-023' docs/decisions.md` == 1; ADR-023 vor „Mögliche Folge-ADRs".
 2. **Hook `autopilot-guard.mjs` + settings-Verdrahtung**: Hook anlegen (marker-gated, geschützte
    Pfade + Kommandos, fail-open), in `.claude/settings.json` PreToolUse ergänzen.
    _Tests (manuell, via stdin-JSON):_
@@ -196,8 +196,8 @@ Protected-Path-Breaker ein **hartes Gate**, kein Wunsch (ADR-017 ENFORCE).
    _Test:_ `node --check`-Äquiv. entfällt (Markdown); Frontmatter `name: implement` unverändert;
    `git check-ignore .claude/.autopilot-active` matcht.
 4. **Doku-Wiring** (`CLAUDE.md`, `docs/architecture.md`): Implement-Phase als autonom-by-default
-   beschreiben (Plan-Freigabe = Grenze, Breaker, Verweis ADR-022); Hard-Rule-4-Ausnahme notieren.
-   _Test:_ `grep -l 'autonom\|autopilot\|ADR-022' CLAUDE.md docs/architecture.md`.
+   beschreiben (Plan-Freigabe = Grenze, Breaker, Verweis ADR-023); Hard-Rule-4-Ausnahme notieren.
+   _Test:_ `grep -l 'autonom\|autopilot\|ADR-023' CLAUDE.md docs/architecture.md`.
 
 ## Verification (nach allen Tasks, vor `/validate`)
 

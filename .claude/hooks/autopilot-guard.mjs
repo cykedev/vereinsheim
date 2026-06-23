@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// PreToolUse Autopilot-Guard (ADR-022, ENFORCE auf Harness-Ebene). Hart erzwungene
+// PreToolUse Autopilot-Guard (ADR-023, ENFORCE auf Harness-Ebene). Hart erzwungene
 // Schutz-Schicht für den autonomen `/implement`-Modus: solange der Marker
 // `.claude/.autopilot-active` existiert, darf der Autopilot NICHT an geschützte Pfade
 // (Deploy-Vertrag, Schema/Migrationen, ADRs, Secrets, die Harness selbst, scripts/)
