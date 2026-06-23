@@ -553,6 +553,11 @@ aufgelöst, daher leerer Graph + ENOENT bei Writes. Gefixt (projekt-relativer Pf
 SessionStart-**Lese-Hook** (`memory-surface.mjs`) ergänzt und die REMEMBER-Schreibdisziplin geschärft.
 Details + Abgrenzung zum nativen Auto-Memory: **ADR-021**.
 
+**Nachtrag (Juni 2026, ADR-022)**: Schicht 3 wird vom Hand-pflege-Modell auf einen **gebauten Doku-Index**
+umgestellt — der Store ist ein deterministisch aus Quellen (`decisions.md` + Manifest + Captured) gebautes
+Artefakt mit Fragment-Pointern (`→ datei#slug`) + Fragment-Reader (`doc.mjs`). Schicht 3 bleibt Layer 3
+(macht Docs auffindbar, ist nicht ihre Wahrheit). Details: **ADR-022**.
+
 ---
 
 ## ADR-017 — Lessons/Wissens-Capture: stärkste Permanenz zuerst
@@ -813,6 +818,72 @@ verworfene Option) und ist damit der eigentliche Pfad-Fix.
 **Verifikation**: anders als der ursprüngliche Fix **ohne Reload bestätigt** — ein direkter MCP-Round-Trip
 gegen den Launcher liefert die 27 Entities / 9 Relationen aus der getrackten Datei (2026-06-23). Die
 *laufende* Session nutzt bis zum Reload weiter den alten Server; der Mechanismus ist aber bewiesen.
+
+**Nachtrag (Juni 2026, ADR-022)**: Die hier etablierte Schreib-Mechanik (Live-`mcp__memory__*`-Writes +
+Commit des Stores) wird durch **ADR-022** abgelöst: der Store ist ab jetzt ein **gebautes Artefakt** aus
+eingecheckten Quellen, neues Wissen wird in die **Quelle** (`graph-projection.mjs`/`graph-captured.mjs`)
+geschrieben + neu gebaut. Der Launcher + die Lese-Seite (`memory-surface.mjs`) bleiben unverändert gültig.
+
+---
+
+## ADR-022 — Memory-Graph als gebauter, relationenreicher Doku-Index (Builder + Manifest + Captured + Fragment-Pointer)
+
+**Status**: Accepted (Juni 2026)
+
+**Kontext**: Der Memory-Graph (ADR-016 Schicht 3, operationalisiert in ADR-021) wurde **von Hand** gepflegt
+(Live-`mcp__memory__*`-Writes). Drei Schwächen: (a) **nicht selbstaktualisierend** — wächst nur, wenn ein
+Agent daran denkt (war faktisch No-Op); (b) **Doppelpflege/Drift** — Volltext im Graphen *und* in den Docs;
+(c) **Token-Verschwendung beim Einstieg** — Pointer zeigten auf ganze Dateien, der Agent las viel „umsonst".
+Gewünscht: ein schneller, token-sparsamer Einstieg, bei dem der Graph als **angereicherter Index über die
+gesamte Dokumentation** dient (das Gegenstück zu CodeGraph für den Code).
+
+**Entscheidung**: Der Store `.claude/knowledge-graph.json` ist **kein handgepflegtes Artefakt mehr**, sondern
+**deterministisch gebaut** aus drei eingecheckten Quellen:
+
+1. **`docs/decisions.md`** → ADR-Entities + `supersedes`-Relationen, **deterministisch geparst**
+   (`## ADR-NNN — Titel`, `**Status**`, `(supersedes ADR-X)`). ADR-Observations = Essenz + Fragment-Pointer.
+2. **`.claude/graph-projection.mjs`** (Manifest) → kuratierte `project`/`app`/`feature`/`subsystem`/
+   `domain-rule`/`operation`/`ops-constraint`-Entities (Essenz + `→ datei#slug`-Pointer) + deren Relationen.
+3. **`.claude/graph-captured.mjs`** → Session-Provenance (`incident`/`state`), die in **keiner** Doc steht
+   und jeden Rebuild **überlebt**.
+
+`.claude/build-graph.mjs` mergt sie und **validiert** Integrität (keine Dup-Namen/Dangling/leere Entities)
+**und jeden `→ datei#slug`-Pointer** (toter Pointer = Build-Fehler → der Index kann nicht still verrotten).
+`.claude/doc.mjs` ist der **Fragment-Reader** (`node .claude/doc.mjs datei#slug` druckt nur den Abschnitt) —
+so wird aus „Pointer auf 600-Zeilen-Datei" „lies 20 Zeilen". Der `/sync-graph`-Skill zieht bei Doc-Änderungen
+das Manifest nach und baut neu (**modellgetrieben**, da Prosa keine AST-Struktur hat).
+
+**Determinismus-Grenze (bewusst):** `Manifest+ADRs+Captured → Graph` ist **deterministisch** (idempotent,
+hook-/CI-fähig, kein Modell); `Docs → Manifest` ist **modellgetrieben** (`/sync-graph`). Voll-automatisches
+„Doc ändert sich → Graph baut sich ohne Modell neu" ist nicht erreichbar und wird nicht versprochen.
+
+**Schreib-Mechanik (löst ADR-021 ab):** neues Projektgedächtnis wird in die passende **Quelle** geschrieben
+(`graph-captured.mjs` für Incidents/State, `graph-projection.mjs` für abgeleitete Topics) + Rebuild + Commit —
+**nicht** mehr als Live-`mcp__memory__*`-Write (den ein Rebuild überschriebe). Der MCP-Server bleibt **lesend**
+(liest die Datei pro Operation, ADR-021 — Builds sind sofort sichtbar).
+
+**Alternativen**:
+
+- _Hand-gepflegter Graph (Status quo, ADR-021)_: nicht selbstaktualisierend, doppelte Pflege, Drift. Verworfen.
+- _Docs in viele Fragment-Dateien splitten_ (für Token-Granularität): zerstückelt die für Menschen lesbare
+  Doku. Verworfen zugunsten **Heading-Pointer + Fragment-Reader** (Docs bleiben ganze Dateien).
+- _Vektor-RAG über Doc-Chunks_: externe Infra, weniger präzise/kuratiert als ein relationenreicher Graph;
+  für dieses Doku-Volumen überdimensioniert. Verworfen.
+- _Pure Determinismus (Docs→Graph ohne Modell)_: bei Prosa nicht erreichbar; ehrlich als modellgetriebene
+  Manifest-Stufe ausgewiesen.
+
+**Folgen**:
+
+- Der Graph wird der **Index über das gesamte lebende Doku-Korpus** (decisions/spec/operations/
+  shared-conventions/architecture/monorepo-plan + `apps/*/docs/*` + `packages/*/CLAUDE.md` + README), mit
+  dichtem Relationsvokabular (`governed_by`/`contrasts_with`/`see_also`/`relates_to` neben den bestehenden).
+- ADR-016 §3 + ADR-021 erhalten Nachtrag-Verweise; ADR-016 (Graph = Layer 3, **nicht** Struktur-Autorität)
+  bleibt gewahrt — der Index macht Docs *auffindbar*, ist nicht ihre Wahrheit.
+- `/consolidate-lessons` REMEMBER schreibt künftig in die Quelle + baut neu (statt Live-Write).
+- Die immer-geladene `@import`-Schicht kann schrumpfen (kleiner „Rules of the road"-Kern bleibt; Detail wird
+  indiziert) — separater, letzter Schritt, da Konventions-Treue **nicht** gate-erzwingbar ist.
+- **Out of scope (vorgesehen):** ein Pre-Commit-/CI-Hook, der den Build erzwingt; die spätere Frage, ob der
+  Index immer-geladene Docs ganz ablösen kann.
 
 ---
 
