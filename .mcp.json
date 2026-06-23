@@ -13,14 +13,10 @@
     },
     "memory": {
       "type": "stdio",
-      "command": "npx",
+      "command": "node",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
-      "env": {
-        "MEMORY_FILE_PATH": "${CLAUDE_PROJECT_DIR:-.}/.claude/knowledge-graph.json"
-      }
+        ".claude/hooks/memory-server.mjs"
+      ]
     }
   }
 }

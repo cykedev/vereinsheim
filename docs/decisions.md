@@ -790,6 +790,30 @@ Der Graph blieb leer *und* ungenutzt.
   einen leeren/vernachlässigten Graphen aber sofort sichtbar.
 - ADR-016 §3 und ADR-017 §3 erhalten Nachtrag-Verweise hierher.
 
+**Nachtrag (2026-06-23) — Pfad-Fix war unzureichend; korrigiert via Launcher-Wrapper**
+
+Das oben als Akzeptanz-Gate vermerkte Round-Trip-nach-Reload wurde am 2026-06-23 gefahren und **schlug
+fehl**: `read_graph` lieferte weiter leer, `create_entities` → `ENOENT:
+…/server-memory/dist/.claude/knowledge-graph.json`. Befund:
+
+- Die Annahme in Punkt 1 (»`CLAUDE_PROJECT_DIR` wird im Server-Env gesetzt«) ist **falsch**: Claude Code
+  expandiert `${CLAUDE_PROJECT_DIR:-.}` zwar, aber die Variable ist im **MCP-Server-Env leer** → Fallback
+  auf `.`. (Im *Hook*-Env ist sie gesetzt — deshalb funktionierte der Surface-Hook, der MCP-Server nicht.)
+- Tiefere Ursache: `server-memory` löst einen **relativen** `MEMORY_FILE_PATH` gegen sein **eigenes
+  dist-Verzeichnis** auf (`import.meta.url`), nicht gegen die CWD. Ein relativer Pfad kann also prinzipiell
+  **nie** auf die Repo-Datei zeigen — nur ein **absoluter** funktioniert.
+
+**Korrektur**: schlanker, committeter Launcher `.claude/hooks/memory-server.mjs`, der den **absoluten**
+Store-Pfad aus seiner eigenen Lage ableitet (`<repo>/.claude/knowledge-graph.json`) und ihn per Env an
+`npx @modelcontextprotocol/server-memory` übergibt (stdio 1:1 durchgereicht). `.mcp.json` ruft jetzt `node
+.claude/hooks/memory-server.mjs` statt `npx …` mit `${CLAUDE_PROJECT_DIR}`-Env. Das vereint **Absolutheit**
+(server-memory-Anforderung) mit **Portabilität** (kein hartkodierter Pfad — die in »Alternativen«
+verworfene Option) und ist damit der eigentliche Pfad-Fix.
+
+**Verifikation**: anders als der ursprüngliche Fix **ohne Reload bestätigt** — ein direkter MCP-Round-Trip
+gegen den Launcher liefert die 27 Entities / 9 Relationen aus der getrackten Datei (2026-06-23). Die
+*laufende* Session nutzt bis zum Reload weiter den alten Server; der Mechanismus ist aber bewiesen.
+
 ---
 
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
