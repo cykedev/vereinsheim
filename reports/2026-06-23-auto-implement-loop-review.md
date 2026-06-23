@@ -1,4 +1,4 @@
-# Review-Report: Autonome `/implement`-Phase (ADR-022)
+# Review-Report: Autonome `/implement`-Phase (ADR-023)
 
 > PIV-Schritt 4. Branch: `feat/auto-implement-loop`. Adversariale Review via `code-reviewer`-Sub-Agent
 > gegen `git diff main...HEAD`. Datum: 2026-06-23. Validate: [`2026-06-23-auto-implement-loop.md`](2026-06-23-auto-implement-loop.md).
@@ -17,7 +17,7 @@ Worktree-`.claude/`-False-Positive **tritt nicht auf** (empirisch bestätigt vom
 | **M1** | Major | **Stale-Marker** bei abnormalem Abbruch (Crash/Kill/Ctrl-C vor HALT): Marker bleibt liegen, ist gitignored (unsichtbar in `git status`) → Guard bleibt scharf, DENYt im nächsten interaktiven Lauf still. | **Behoben** `19b836a` |
 | **m1** | Minor | **Getarnte Kommandos**: `git -C <path> push` (Flag zwischen `git` und `push`) + `docker image push` rutschten durch. | **Behoben** `19b836a` |
 | **m2** | Minor | `prisma migrate` blockt auch read-only `migrate status`/`diff`. | **Bewusst belassen** (konservativer Default; ein HALT ist sicher, nur milde Reibung). |
-| **n1** | Nit | ADR-022 „Folgen" sagte „8-Schritt-Iteration", SKILL hat Preflight + 7 Schritte. | **Behoben** `19b836a` (Wording „Preflight + Task-Iteration"). |
+| **n1** | Nit | ADR-023 „Folgen" sagte „8-Schritt-Iteration", SKILL hat Preflight + 7 Schritte. | **Behoben** `19b836a` (Wording „Preflight + Task-Iteration"). |
 | **n2/n3** | Nit | Doku-Wiring akkurat, `--step`-Semantik kohärent. | Keine Aktion. |
 
 ## Fixes (Commit `19b836a`)

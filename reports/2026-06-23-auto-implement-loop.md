@@ -1,4 +1,4 @@
-# Validate-Report: Autonome `/implement`-Phase (ADR-022)
+# Validate-Report: Autonome `/implement`-Phase (ADR-023)
 
 > PIV-Schritt 3. Branch: `feat/auto-implement-loop`. Plan:
 > [`plans/2026-06-23-auto-implement-loop.md`](../plans/2026-06-23-auto-implement-loop.md).
@@ -9,7 +9,7 @@
 | Commit | Inhalt |
 | --- | --- |
 | `71e6ec0` | Plan (PIV-Schritt 1) |
-| `638f84f` | ADR-022 (`docs/decisions.md`) |
+| `638f84f` | ADR-023 (`docs/decisions.md`) |
 | `0c5544f` | Hook `autopilot-guard.mjs` + `.claude/settings.json`-Verdrahtung |
 | `e751a2e` | `/implement` autonom-by-default umgeschrieben + `.gitignore`-Marker |
 | `3f64e21` | Doku-Wiring (`CLAUDE.md`, `docs/architecture.md`) |
@@ -65,8 +65,8 @@ pretool-guard.mjs + autopilot-guard.mjs
 - **Hard Rule 2/3:** 5 fokussierte Commits auf `feat/auto-implement-loop`, **kein** `Co-Authored-By`
   (`git log … | grep -ci co-authored-by` → `0`); kein Merge/Push (user-gated).
 - **Hard Rule 4:** interaktiv eingehalten (alle Commit-Messages hier vorab als fenced block gezeigt);
-  die *autonome Ausnahme* ist in ADR-022 + `CLAUDE.md` dokumentiert.
-- **Hard Rule 6:** ADR-022 als kanonische Quelle ergänzt (vor „Mögliche Folge-ADRs"); realisiert
+  die *autonome Ausnahme* ist in ADR-023 + `CLAUDE.md` dokumentiert.
+- **Hard Rule 6:** ADR-023 als kanonische Quelle ergänzt (vor „Mögliche Folge-ADRs"); realisiert
   ADR-018 §5, schärft ADR-020.
 
 ## 4) Offen / Caveats (ehrlich)

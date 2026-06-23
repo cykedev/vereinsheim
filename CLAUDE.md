@@ -92,7 +92,7 @@ Diese gelten zusätzlich zu denen aus
    ff-only-Merge nach `main` nur mit User-OK.
 3. **Keine `Co-Authored-By`-Trailer** in Commit-Messages.
 4. **Commit-Message als fenced code block** vor dem Commit anzeigen.
-   _Ausnahme: im autonomen `/implement` (ADR-022) entfällt das — die Messages
+   _Ausnahme: im autonomen `/implement` (ADR-023) entfällt das — die Messages
    stehen im Ledger + `git log`, vor dem Merge revidierbar._
 5. **Niemals Secrets committen**. `.env` und `.vereinsheim.local` sind
    gitignored.
@@ -103,7 +103,7 @@ Diese gelten zusätzlich zu denen aus
    nicht-triviale Änderung läuft `/plan → /implement → /validate → /review`
    (Handoff über `plans/` + `reports/`); den Plan vor der ersten Code-Zeile
    dem User vorlegen. Nach der Freigabe läuft `/implement` **autonom** durch
-   (ADR-022) und holt den User nur an Circuit-Breakern + am Merge zurück. Bugs
+   (ADR-023) und holt den User nur an Circuit-Breakern + am Merge zurück. Bugs
    zuerst über `/debug` (Root-Cause). Triviale/mechanische Fixes (Typo,
    One-Liner, reine Doku) dürfen direkt erfolgen.
 

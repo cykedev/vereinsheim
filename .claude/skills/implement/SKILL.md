@@ -1,9 +1,9 @@
 ---
 name: implement
-description: Execute an approved plan from plans/<...>.md — autonomously by default (ADR-022). Grinds the plan task by task (one focused commit each, pnpm check as gate), halting only at circuit-breakers and the user-gated merge. Use after /plan is approved and the branch + plan-commit exist.
+description: Execute an approved plan from plans/<...>.md — autonomously by default (ADR-023). Grinds the plan task by task (one focused commit each, pnpm check as gate), halting only at circuit-breakers and the user-gated merge. Use after /plan is approved and the branch + plan-commit exist.
 ---
 
-PIV step 2 of 4. **Autonom-by-default (ADR-022):** Plan-Freigabe = die einzige Opt-in-Grenze; danach
+PIV step 2 of 4. **Autonom-by-default (ADR-023):** Plan-Freigabe = die einzige Opt-in-Grenze; danach
 läuft die Umsetzung durch, bis ein Breaker greift oder der Plan fertig ist. Merge/Push/Deploy nach
 `main` bleiben user-gated. Für bewussten Einzelschritt: `/implement --step` (kein Marker → Guard
 No-Op, Halt nach einem Task).
@@ -40,7 +40,7 @@ Vor dem ersten Task: Plan + dessen `## Required Docs` (App + `docs/shared-conven
    weiter rot → WIP verwerfen (`git checkout -- . && git clean -fd`, Branch bleibt grün), Fehlschlag
    ins Ledger → **HALT** (Breaker: Gate rot).
 6. **Commit** — ein kleiner, fokussierter Commit (Conventional Commits, EN; kein `Co-Authored-By`).
-   **Hard-Rule-4-Ausnahme im autonomen Modus** (ADR-022): die Message wird **nicht** vorab als fenced
+   **Hard-Rule-4-Ausnahme im autonomen Modus** (ADR-023): die Message wird **nicht** vorab als fenced
    block gezeigt, sondern ins Ledger + `git log` geschrieben (vor dem Merge revidierbar). Bei `--step`
    gilt Hard Rule 4 normal. Task im Ledger als `done` mit SHA markieren.
 7. **Weiter** (mehr Tasks, Cap nicht erreicht) → nächste Iteration. Bei `--step`: hier HALT.

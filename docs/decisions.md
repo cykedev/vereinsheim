@@ -899,7 +899,7 @@ genudged für den Modell-Teil — nichts Automatisches täuscht über die Grenze
 
 ---
 
-## ADR-022 — Implement-Phase autonom-by-default (realisiert ADR-018 §5, schärft ADR-020)
+## ADR-023 — Implement-Phase autonom-by-default (realisiert ADR-018 §5, schärft ADR-020)
 
 **Status**: Accepted (Juni 2026)
 
