@@ -18,6 +18,7 @@ ENV_EXAMPLE="$REPO_DIR/.env.example"
 LOCAL_CONFIG="$REPO_DIR/.vereinsheim.local"
 LOCAL_ENV_FILE="$REPO_DIR/.env.local"
 LOCAL_COMPOSE_FILE="$REPO_DIR/compose.local.yml"
+DEV_COMPOSE_FILE="$REPO_DIR/docker-compose.dev.yml"
 LOCAL_BACKUP_DIR="$REPO_DIR/backups"
 BACKUP_DIR_DEFAULT="/var/backups/vereinsheim"
 
@@ -173,6 +174,20 @@ require_docker() {
 
 db_running() {
 	docker compose ps --status running --services 2>/dev/null | grep -qx db
+}
+
+# Der geteilte Dev-Postgres (docker-compose.dev.yml, Projekt vereinsheim-dev)
+# und der lokale Test-Stack (compose.yml + compose.local.yml) binden beide
+# Host-Port 5432. Läuft die Dev-DB, scheitert local-up mit "port is already
+# allocated" — daher vorher stoppen (stop, nicht down: Volume + Container
+# bleiben, schnell wieder hochfahrbar).
+stop_dev_db_if_running() {
+	[[ -f "$DEV_COMPOSE_FILE" ]] || return 0
+	if docker compose -f "$DEV_COMPOSE_FILE" ps --status running --services 2>/dev/null | grep -qx db; then
+		info "Dev-Postgres (vereinsheim-dev) belegt Port 5432 — stoppe ihn für den Test-Stack …"
+		docker compose -f "$DEV_COMPOSE_FILE" stop db >/dev/null 2>&1 || true
+		ok "Dev-Postgres gestoppt  ${DIM}(wieder hoch: docker compose -f docker-compose.dev.yml up -d)${RESET}"
+	fi
 }
 
 # Wrapper: docker compose mit lokalem Override und .env.local
@@ -656,6 +671,8 @@ cmd_local_up() {
 		err "compose.local.yml nicht gefunden: $LOCAL_COMPOSE_FILE"
 		exit 1
 	fi
+
+	stop_dev_db_if_running
 
 	if $do_restore; then
 		info "=== local-up --restore: clean slate mit Produktionsdaten ==="
