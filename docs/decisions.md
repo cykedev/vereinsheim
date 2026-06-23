@@ -951,8 +951,8 @@ zwischen Tasks zu pausieren. Eingebettet in PIV, nicht als Ersatz:
 
 **Folgen**:
 
-- `/implement` (`SKILL.md`) überarbeitet (autonom-by-default, 8-Schritt-Iteration, Breaker, Ledger,
-  Cap, Worktree-Pflicht, `--step`); neuer Hook `autopilot-guard.mjs` + Verdrahtung in
+- `/implement` (`SKILL.md`) überarbeitet (autonom-by-default, Preflight + Task-Iteration, Breaker,
+  Ledger, Cap, Worktree-Pflicht, `--step`); neuer Hook `autopilot-guard.mjs` + Verdrahtung in
   `.claude/settings.json`; Marker `.claude/.autopilot-active` gitignored.
 - Realisiert ADR-018 §5 (als Default von `/implement` statt separater Driver) und **schärft ADR-020**
   (PIV-Default): die Implement-Phase pausiert nicht mehr per Default zwischen Tasks.
