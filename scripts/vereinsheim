@@ -227,6 +227,9 @@ cmd_help() {
 		  ./scripts/vereinsheim                 Interaktives Menü
 		  ./scripts/vereinsheim <command>       Direkt ausführen
 
+		${BOLD}── ENTWICKLUNGSUMGEBUNG${RESET} ${DIM}(frische Workstation arbeitsfähig machen)${RESET}
+		  ${GREEN}dev-setup${RESET}             Toolchain + codegraph + Dev-DB + .env + Schema  ${DIM}(idempotent)${RESET}
+
 		${BOLD}── RELEASE-WORKFLOW${RESET} ${DIM}(lokal → VPS, braucht .vereinsheim.local)${RESET}
 		  ${GREEN}local-setup${RESET}           Einmalig: VPS-Verbindung konfigurieren
 		  ${GREEN}build${RESET}                 Beide Apps bauen + nach Docker Hub pushen
@@ -272,6 +275,15 @@ cmd_help() {
 # ============================================================
 # Local-side commands
 # ============================================================
+
+# ---------- dev-setup ----------
+# Dünner Wrapper auf scripts/bootstrap-dev.sh: macht eine frische Workstation
+# arbeitsfähig (Toolchain, codegraph, Dev-DB, .env, Schema). Bewusst OHNE
+# require_local_config — dev-setup läuft auf frischem Clone, bevor die
+# VPS-Verbindung (local-setup) überhaupt existiert.
+cmd_dev_setup() {
+	exec "$SCRIPT_DIR/bootstrap-dev.sh" "$@"
+}
 
 # ---------- local-setup ----------
 cmd_local_setup() {
@@ -1562,6 +1574,9 @@ interactive_menu_local() {
 		echo
 		echo "${BOLD}vereinsheim${RESET}  ${DIM}VPS: ${VPS_HOST:-?}${RESET}"
 		echo
+		echo "  ${BOLD}Entwicklungsumgebung${RESET}"
+		echo "  d) dev-setup  Workstation arbeitsfähig machen  ${DIM}(idempotent)${RESET}"
+		echo
 		echo "  ${BOLD}Release-Workflow${RESET}"
 		echo "  1) build      Beide Apps bauen + pushen"
 		echo "  2) release    build + ssh-Deploy  ${DIM}(Standard-Release)${RESET}"
@@ -1583,6 +1598,7 @@ interactive_menu_local() {
 		echo "  q) Beenden  ${DIM}· local-setup: VPS-Verbindung ändern${RESET}"
 		read -r -p "  » " c
 		case "$c" in
+		d | D) cmd_dev_setup ;;
 		1) cmd_build ;;
 		2) cmd_release ;;
 		3) cmd_ssh ;;
@@ -1732,6 +1748,7 @@ main() {
 	case "$cmd" in
 	help | -h | --help) cmd_help ;;
 	# Local side
+	dev-setup) cmd_dev_setup "$@" ;;
 	local-setup) cmd_local_setup "$@" ;;
 	build) cmd_build "$@" ;;
 	release) cmd_release "$@" ;;
