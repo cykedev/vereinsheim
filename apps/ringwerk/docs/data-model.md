@@ -396,3 +396,11 @@ Nur Teilnehmer mit ≥ minSeries Serien werden gewertet.
 | Mindestserien               | Saison: Anzahl Serien die ein Teilnehmer mindestens geschossen haben muss                                      |
 | Meyton-Import               | Ergebnisübernahme aus Meyton-System via URL oder PDF                                                           |
 | Vorschiessen                | Nicht erlaubt in Liga — beide Schützen müssen gleichzeitig am Stand antreten                                   |
+
+## Aus Lernlog übernommen
+
+<!-- Zuletzt konsolidiert: 2026-06-23 -->
+
+- **Sperr-Granularität an den Wirkungs-Zeitpunkt koppeln**: Eine Einstellung erst ab dem Zeitpunkt sperren, ab dem sie _wirkt_, nicht ab "irgendwelche Daten existieren". Gruppenphase/Format gesperrt ab `matchupCount > 0`; Playoff/Finale-Wahl erst ab `hasPlayoffsStarted` (`playoffMatch.count > 0`). Eine zu grobe Sperre erzeugt Deadlocks (z.B. Bracket-Wahl bei zu wenigen Teilnehmern nicht mehr korrigierbar, Playoffs starten aber auch nicht).
+- **Stechschuss-Tiebreak über eigenes Maß auflösen**: Den Einzelschuss-Stichentscheid immer über `stechschussOutcome(homeShot, awayShot)` (höherer Schusswert gewinnt) auflösen, nie über `duelOutcome(scoringMode)` — im TEILER-Modus (Stechschuss-Teiler = 0) liefert der scoringMode-Weg immer TIE und löst nie auf. Dieselbe Funktion konsistent in Action, Standings und PDF nutzen.
+- **`targetValueType` hat bei TARGET-Modi Vorrang vor der Disziplin**: Bei `scoringMode = TARGET_*` bestimmt `targetValueType` die Eingabe-/Anzeige-Wertung (z.B. Zehntelringe), nicht die Disziplin-Wertungsart. Jeder Effective-Scoring-Aufruf braucht alle drei Inputs: `scoringMode` + `discipline` + `targetValueType`.

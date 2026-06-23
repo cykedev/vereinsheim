@@ -234,7 +234,7 @@ Page-Header-Pattern:
 
 ## Aus Lernlog übernommen
 
-<!-- Zuletzt konsolidiert: 2026-05-23 -->
+<!-- Zuletzt konsolidiert: 2026-06-23 -->
 
 ### Layout & Grid
 
@@ -260,3 +260,7 @@ Page-Header-Pattern:
 ### Forms & State
 
 - **React 19 Forms: Inputs immer controlled mit `useActionState`**: `<form action={fn}>` setzt uncontrolled Inputs (`defaultValue`) nach jedem Submit zurück — auch bei Validation Errors verlieren User ihre Eingaben. Bei Forms mit `useActionState` Inputs IMMER controlled führen (`value` + `onChange` + lokaler State via `useState`), nie `defaultValue`. Initialwerte beim Mount aus Props in den State kopieren.
+
+### Tabellen & Ranking
+
+- **Ranking-Kriterien als sichtbare Spalten, Spaltenreihenfolge = Bewertungsreihenfolge**: Sortierkriterien einer Tabelle so wählen, dass jedes als eigene Spalte sichtbar ist; die Spaltenreihenfolge muss der Bewertungsreihenfolge entsprechen. Ein nicht abbildbares Kriterium (z.B. direkter Vergleich/Head-to-Head) macht die Platzierung für den Leser unüberprüfbar → weglassen oder ans Ende. Sichtbar-begründetes "komisch" schlägt unsichtbar-begründetes.

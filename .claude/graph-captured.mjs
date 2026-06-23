@@ -25,6 +25,13 @@ export default {
       "observations": [
         "Offen: Treffsichers Server-Action-Module sind noch nicht vollständig auf den ActionResult-Kanon migriert (diskriminierte Union, shared-conventions §6, Ringwerk-Muster). Geplanter Folgeschritt."
       ]
+    },
+    {
+      "name": "seed-script-orphaned",
+      "entityType": "state",
+      "observations": [
+        "2026-06-17 (ringwerk): prisma.config.ts referenziert 'tsx prisma/seed.ts', aber prisma/seed.ts existiert nicht (weder FS noch git) → /seed bzw. der /db-reset-Seed würde fehlschlagen. Dev-DB-Daten stammen aus manueller App-Eingabe, nicht aus einem Seed-Skript. Vor Verlassen auf /seed prüfen, ob prisma/seed.ts existiert; der Seed-Mechanismus ist aktuell verwaist."
+      ]
     }
   ],
   "relations": [
@@ -57,6 +64,11 @@ export default {
       "from": "treffsicher-actionresult-migration",
       "to": "action-result-convention",
       "relationType": "targets"
+    },
+    {
+      "from": "seed-script-orphaned",
+      "to": "ringwerk",
+      "relationType": "applies_to"
     }
   ]
 }
