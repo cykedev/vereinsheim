@@ -435,6 +435,16 @@ export default {
       "relationType": "amends"
     },
     {
+      "from": "ADR-022",
+      "to": "ADR-016",
+      "relationType": "amends"
+    },
+    {
+      "from": "ADR-022",
+      "to": "ADR-021",
+      "relationType": "amends"
+    },
+    {
       "from": "competition-types",
       "to": "ringwerk",
       "relationType": "feature_of"
