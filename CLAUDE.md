@@ -36,8 +36,7 @@ auf:
    ob die ADR den Vorschlag schon adressiert.
 4. [`docs/monorepo-plan.md`](docs/monorepo-plan.md) — **AKTIVER Plan**: Monorepo-Migration
    (ADR-015–018), Phasen 1–5. Das nächste große Werk.
-5. [`docs/plan.md`](docs/plan.md) — historische Aufbau-Roadmap (Phasen 1–6 erledigt; Betrieb läuft).
-6. [`docs/operations.md`](docs/operations.md) — Daily Ops mit dem Tool,
+5. [`docs/operations.md`](docs/operations.md) — Daily Ops mit dem Tool,
    Recovery-Pfade.
 
 Nur wenn du Code änderst:
@@ -108,7 +107,7 @@ Volle Liste: `./scripts/vereinsheim help`.
 
 ## Was wahrscheinlich als nächstes gefragt wird
 
-Die ursprüngliche Aufbau-Roadmap ([`docs/plan.md`](docs/plan.md)) ist abgeschlossen; das System läuft
+Die ursprüngliche Aufbau-Roadmap ist abgeschlossen; das System läuft
 seit Ende Mai 2026 produktiv. **Das aktive Großvorhaben ist die Monorepo-Migration**
 ([`docs/monorepo-plan.md`](docs/monorepo-plan.md), ADR-015–018): treffsicher + ringwerk als `apps/*`
 (pnpm/Turborepo, `turbo prune --docker`), inkl. geteilter `packages/*`, Knowledge-Graph (CodeGraph +

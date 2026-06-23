@@ -9,7 +9,7 @@ Self-hosted, Einzelnutzer bis Vereinsbetrieb, ausschliesslich Dark Mode, ausschl
 - Technisch (Infra, Architektur, UI): `docs/technical-constraints.md`
 - Code-Stil, TypeScript, Zod, Testing: `docs/code-conventions.md`
 - Datenmodell, Env-Vars, Disziplinen, Ergebniserfassung: `docs/data-model.md`
-- Deployment: **im Monorepo via `vereinsheim`** (Root-`README.md` / `docs/operations.md`); `docs/production-deploy-truenas.md` ist die historische Standalone-Variante
+- Deployment: **im Monorepo via `vereinsheim`** (Root-`README.md` / `docs/operations.md`)
 - Backlog / nächste Aufgaben: `docs/backlog.md`
 - Status / Roadmap: `docs/implementation-plan.md`
 - App-übergreifende Konsistenz (Ringwerk × Treffsicher): die Root-`docs/shared-conventions.md`
@@ -59,7 +59,8 @@ maschinen-/ops-lokale Fakten → natives Auto-Memory.
 
 ## Deployment
 
-Produktions-Deployment auf TrueNAS SCALE via Docker: @docs/production-deploy-truenas.md
+Produktions-Deployment **im Monorepo via `vereinsheim`** (lokaler Build → Docker Hub → VPS-Pull).
+Bedienung und Recovery: Root-`README.md` und `docs/operations.md`.
 
 ---
 

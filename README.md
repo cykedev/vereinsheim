@@ -27,8 +27,6 @@ verifiziert, und der erste Monorepo-Deploy auf den VPS ist **gelaufen**.
 **Offen**: Phase 2 (Harness/Knowledge erledigt — `packages/config`-Code offen) +
 Phase 4. Plan & Phasen: [`docs/monorepo-plan.md`](docs/monorepo-plan.md).
 
-Detaillierter Stand und Roadmap: [`docs/plan.md`](docs/plan.md).
-
 ## Monorepo-Entwicklung (lokal)
 
 Beide Apps werden im Monorepo entwickelt — ein Befehlssatz von der Wurzel,
@@ -57,7 +55,6 @@ Dev-DBs `ringwerk` + `treffsicher`).
 | [`docs/spec.md`](docs/spec.md)             | Anforderungen, Zielarchitektur, VPS-Sizing, Out-of-Scope              |
 | [`docs/decisions.md`](docs/decisions.md)   | ADRs — alle Architektur-Entscheidungen mit Begründung & Alternativen |
 | [`docs/monorepo-plan.md`](docs/monorepo-plan.md) | Monorepo-Migration (ADR-015–018): Phasen 1–5, aktiver Plan       |
-| [`docs/plan.md`](docs/plan.md)             | Roadmap: was ist fertig, was kommt als nächstes, Verifikation        |
 | [`docs/operations.md`](docs/operations.md) | Daily Ops: Deploy, Backup, Restore, Migration-Recovery, Rollback      |
 | [`CLAUDE.md`](CLAUDE.md)                   | Onboarding für Folgesessions / Coding-Agenten                         |
 

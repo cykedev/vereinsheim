@@ -3,8 +3,6 @@
 > **Lebende Quelle der Wahrheit für app-übergreifende Konsistenz.** Diese Datei ist in beiden Repos
 > **byte-identisch** und wird vom Drift-Gate (`vereinsheim/scripts/consistency-check.sh`) erzwungen.
 > Änderungen hier immer in **beiden** Repos gleich einpflegen.
->
-> Löst die historischen Migrationsdokumente `ui-unification-spec.md` und `baseline-fix-canon.md` ab.
 
 ## 1. Byte-identische Shared-Schicht
 
@@ -98,7 +96,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 - **Gate:** `vereinsheim/scripts/consistency-check.sh` läuft vor jedem Release (in
   `build-and-push.sh`) und ist **fatal** bei Abweichung der Shared-Schicht/Configs, **warnend** bei
   Dependency-Drift und Anti-Pattern.
-- **Geplant (Tier 1):** die Shared-Schicht in ein gemeinsames Paket/Workspace ziehen, damit Drift
-  strukturell unmöglich wird (siehe `vereinsheim/docs/consistency.md`).
+- **Umgesetzt (Tier 1):** die Shared-Schicht liegt in gemeinsamen Paketen (`@vereinsheim/ui`,
+  `@vereinsheim/lib`, `@vereinsheim/config`) — Drift ist dort strukturell unmöglich (siehe §1).
 - **Offene Angleichungen:** ActionResult-Vereinheitlichung (Treffsicher), Dependency-Pins
   (inkl. TypeScript-Major).
