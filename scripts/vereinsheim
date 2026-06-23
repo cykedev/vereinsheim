@@ -1564,6 +1564,12 @@ interactive_menu() {
 	if is_local_mode; then
 		interactive_menu_local
 	else
+		# Frische Workstation (weder Lokal-Config noch VPS-.env)? → auf dev-setup hinweisen,
+		# bevor das VPS-Menü erscheint. Auf einem echten VPS existiert .env → kein Hinweis.
+		if [[ ! -f "$ENV_FILE" ]]; then
+			echo
+			echo "  ${YELLOW}Frische Workstation?${RESET} Richte alles ein mit:  ${BOLD}./scripts/vereinsheim dev-setup${RESET}"
+		fi
 		interactive_menu_vps
 	fi
 }
