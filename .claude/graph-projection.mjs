@@ -355,8 +355,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "bootstrap-vps.sh (root) → setup-Wizard → cron → DNS → release; SSH-Lockdown manuell (ADR-013); .vereinsheim.local lokal (ADR-012).",
-        "→ docs/operations.md#initial-bootstrap-eines-neuen-vps",
-        "→ README.md#erstes-aufsetzen"
+        "→ docs/operations.md#initial-bootstrap-eines-neuen-vps"
       ]
     },
     {
