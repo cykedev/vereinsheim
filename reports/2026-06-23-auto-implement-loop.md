@@ -87,3 +87,17 @@ pretool-guard.mjs + autopilot-guard.mjs
 
 Alle Plan-Verification-Punkte erfüllt, Evidenz frisch. **Merge-reif nach Review** — weiter mit
 `/review` (PIV-Schritt 4). Merge nach `main` bleibt user-gated.
+
+## Nachtrag — Re-Validate nach Review-Fixes (`19b836a`)
+
+Review fand einen Blocker (B1, Pfad-Escape) + Major (M1, Stale-Marker) + Minor (m1); alle behoben
+(s. [`-review.md`](2026-06-23-auto-implement-loop-review.md)). Re-Verifikation:
+
+```
+ Tasks:    17 successful, 17 total
+Cached:    17 cached, 17 total
+  Time:    579ms >>> FULL TURBO
+```
+
+Hook-Re-Tests nach Fix: B1/m1 geschlossen (DENY=2), keine neuen False Positives, TTL-No-Op + fail-open
+intakt (Details im Review-Report). **Gate grün, Review clean.**
