@@ -1,11 +1,12 @@
 # Monorepo-Migration — Plan
 
-> Status: **Phasen 1 + 3 erledigt** (Juni 2026). Phase 1: Skelett (pnpm + Turborepo), beide Apps als
-> `apps/*` via `git filter-repo` (Git-History erhalten), Catalog, geteilter Dev-Postgres. Phase 3:
-> Produktions-Build aus dem Monorepo via `turbo prune` (Image-Namen/Tags + Deploy-Vertrag bit-gleich),
-> lokal voll verifiziert; der erste Monorepo-Deploy auf den VPS ist **gelaufen**. Gates grün.
-> **Phase 2:** Harness/Knowledge (ADR-016/017/018/019) **+ `packages/config`** erledigt (Juni 2026).
-> **Phase 4** (packages/ui) offen. Verbindliche Entscheidung:
+> Status: **Phasen 1–4 erledigt** (Juni 2026). Phase 1: Skelett (pnpm + Turborepo), beide Apps als
+> `apps/*` via `git filter-repo` (Git-History erhalten), Catalog, geteilter Dev-Postgres. Phase 2:
+> Harness/Knowledge (ADR-016/017/018/019) **+ `packages/config`**. Phase 3: Produktions-Build aus dem
+> Monorepo via `turbo prune` (Image-Namen/Tags + Deploy-Vertrag bit-gleich), lokal voll verifiziert; der
+> erste Monorepo-Deploy auf den VPS ist **gelaufen**. Phase 4: `packages/lib` (Zyklus 1) + `packages/ui`
+> (Zyklus 2) echt geteilt → Drift-Gate auf triviale Reste geschrumpft (siehe §8). Gates grün. **Offen nur
+> Phase 5** (CI + Turbo-Remote-Cache, optional). Verbindliche Entscheidung:
 > [ADR-015](decisions.md). Dieses Dokument ist der Umsetzungsplan; `decisions.md` hält das „Warum".
 
 ## 1. Ziel

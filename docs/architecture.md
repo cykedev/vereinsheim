@@ -54,14 +54,18 @@ Detail (Komponenten, lib-Module, Datenfluss): je `apps/<app>/docs/architecture.m
 
 Beide Apps teilen eine bewusst byte-identische UI-/Pattern-Schicht. **Single Source der Konventionen:**
 `docs/shared-conventions.md`. UI-/Config-Drift zwischen den Apps erzwingt `scripts/consistency-check.sh`
-(Release-Gate). Das echte Code-Teilen (`packages/ui`/`lib`, dann entfällt das Gate) ist **Phase 4**
-([monorepo-plan.md](monorepo-plan.md)).
+(Release-Gate). Das echte Code-Teilen (`packages/ui`/`lib`) ist seit **Phase 4** umgesetzt → das Gate
+deckt nur noch triviale Next/shadcn-Reste ([monorepo-plan.md](monorepo-plan.md)).
 
-## Knowledge & Harness (ADR-016/017/018)
+## Knowledge & Harness (ADR-016/017/018/022)
 
-- **CodeGraph-MCP** (`.mcp.json`): Live-Symbol-/Call-Graph/Routen, on-demand (Ground Truth).
-- **Memory-MCP** (`.mcp.json`, Store `.claude/knowledge-graph.json`): Cross-Session-Projektgedächtnis,
-  bei SessionStart via `memory-surface.mjs`-Hook gesurface't, beschrieben über `/consolidate-lessons`
-  REMEMBER (Incident/Provenance/Zustand, ADR-017/021). Maschinen-/ops-lokales → natives Auto-Memory.
+- **CodeGraph-MCP** (`.mcp.json`): Live-Symbol-/Call-Graph/Routen, on-demand (Ground Truth über den Code).
+- **Memory-MCP = gebauter Doku-Index** (`.mcp.json`, Store `.claude/knowledge-graph.json`, **ADR-022**):
+  deterministisch gebaut (`.claude/build-graph.mjs`) aus drei Quellen — `docs/decisions.md` (ADRs geparst),
+  `.claude/graph-projection.mjs` (kuratiertes Manifest), `.claude/graph-captured.mjs` (Incidents/State). Jede
+  Entity = Essenz + Fragment-Pointer `→ datei#slug`; gezieltes Lesen via `node .claude/doc.mjs datei#slug`.
+  Pflege: `/sync-graph` (Docs→Manifest, modellgetrieben) + `/consolidate-lessons` REMEMBER (Captured). Bei
+  SessionStart via `memory-surface.mjs` gesurface't. **Store ist Artefakt — nie von Hand editieren.**
+  Maschinen-/ops-lokales → natives Auto-Memory.
 - **CLAUDE.md-Hierarchie:** Root (universelle Regeln, @import) → `apps/<app>/CLAUDE.md` (scope-spezifisch).
 - **Skills/Hooks/Agents** unter `.claude/`: ein Satz für beide Apps; Stop-Gate erzwingt grüne `pnpm check`.
