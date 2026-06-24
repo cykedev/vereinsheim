@@ -57,7 +57,7 @@ Beide Apps teilen eine bewusst byte-identische UI-/Pattern-Schicht. **Single Sou
 (Release-Gate). Das echte Code-Teilen (`packages/ui`/`lib`) ist seit **Phase 4** umgesetzt → das Gate
 deckt nur noch triviale Next/shadcn-Reste ([monorepo-plan.md](monorepo-plan.md)).
 
-## Knowledge & Harness (ADR-016/017/018/022/023)
+## Knowledge & Harness (ADR-016/017/018/022/023/024)
 
 - **CodeGraph-MCP** (`.mcp.json`): Live-Symbol-/Call-Graph/Routen, on-demand (Ground Truth über den Code).
 - **Memory-MCP = gebauter Doku-Index** (`.mcp.json`, Store `.claude/knowledge-graph.json`, **ADR-022**):
@@ -72,4 +72,6 @@ deckt nur noch triviale Next/shadcn-Reste ([monorepo-plan.md](monorepo-plan.md))
   Stop-Graph-Sync (`graph-sync.mjs`) baut den Doku-Index am Turn-Ende und blockt bei invalidem Index (ADR-022).
   Die PIV-Implement-Phase läuft **autonom-by-default** (ADR-023): `/implement` grindet den freigegebenen
   Plan task-by-task, der marker-gated `autopilot-guard`-Hook erzwingt dabei hart die geschützten
-  Pfade/Kommandos; Plan-Freigabe + Merge bleiben user-gated.
+  Pfade/Kommandos; Plan-Freigabe + Merge bleiben user-gated. Die Worktree-Wahl trifft die **Hauptsession
+  vorab** (ADR-024) — die Skills erstellen/erzwingen keinen Worktree, das Preflight prüft nur den
+  `feat/`-Branch.
