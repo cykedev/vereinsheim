@@ -93,21 +93,21 @@ function resolveTieGroup(group: BestOfStandingRow[], headToHead: HeadToHead): vo
     return
   }
 
-  // 3+-way tie: balance decides; annotate honestly per member.
+  // 3+-way tie: the within-group balance decides the order; annotate honestly per member.
+  // "even" only when the WHOLE group is fully played AND level on one balance (a true wash, e.g. a
+  // 3-cycle A→B→C→A). A split group (different balances coexisting) shows each member's real record,
+  // so the cross-group order (e.g. +1,+1,−1,−1) stays explicable instead of all reading "ausgeglichen".
   const opponentsInGroup = group.length - 1
+  const allPlayed = group.every((m) => stat.get(m.participantId)!.played === opponentsInGroup)
+  const firstBalance = balance(group[0].participantId)
+  const wholeGroupLevel = allPlayed && group.every((m) => balance(m.participantId) === firstBalance)
   for (const m of group) {
     const s = stat.get(m.participantId)!
     if (s.played < opponentsInGroup) {
       // Not all internal matches played yet → comparison incomplete.
       m.directComparison = { kind: "open", opponent: null }
-    } else if (
-      group.some(
-        (o) =>
-          o.participantId !== m.participantId &&
-          balance(o.participantId) === balance(m.participantId)
-      )
-    ) {
-      // Shares its balance with another member → cyclic / level on the direct comparison.
+    } else if (wholeGroupLevel) {
+      // Every member level on the direct comparison (cyclic / equal) → alphabetical, shown as such.
       m.directComparison = { kind: "even" }
     } else {
       m.directComparison = { kind: "record", wins: s.wins, losses: s.losses }
