@@ -40,6 +40,14 @@ export default {
         "2026-06-17 (ringwerk): prisma.config.ts referenziert 'tsx prisma/seed.ts', aber prisma/seed.ts existiert nicht (weder FS noch git) → /seed bzw. der /db-reset-Seed würde fehlschlagen. Dev-DB-Daten stammen aus manueller App-Eingabe, nicht aus einem Seed-Skript. Vor Verlassen auf /seed prüfen, ob prisma/seed.ts existiert; der Seed-Mechanismus ist aktuell verwaist.",
         "Keywords: Seed-Skript, prisma/seed.ts fehlt, verwaister Seed, db-reset, /seed schlägt fehl, seed script missing, technical debt, Dev-DB, Incident."
       ]
+    },
+    {
+      "name": "best-of-standings-direct-comparison-tiebreak",
+      "entityType": "incident",
+      "observations": [
+        "2026-06-24 (ringwerk, Best-of-Liga): Auf Sportleiter-Wunsch ersetzt der DIREKTE VERGLEICH (head-to-head) das bis dahin letzte Tabellen-Kriterium 'bestes Einzelergebnis' (bestRingteiler/bestRings). Neue Sortierkette: 1 Siege, 2 Satzdifferenz, 3 gewonnene Sätze, 4 direkter Vergleich (Mini-Liga-Bilanz in der punktgleichen Gruppe; Match-Sieger via status.winner, inkl. Stechschuss), 5 Nachname. Kann der direkte Vergleich nicht entscheiden (Begegnung noch offen ODER zyklischer N-Gleichstand A schlägt B schlägt C schlägt A), wird alphabetisch gewertet MIT sichtbarer Anmerkung in Tabelle+PDF ('offen' bzw. 'ausgeglichen'). Die letzte Spalte heißt jetzt 'Direktvergleich' (2er: Satz+Gegner, 3er+: Bilanz, sonst Gedankenstrich). bestRingteiler/bestRings bleiben berechnet (revert-fähig), sind aber kein Kriterium mehr. Zentral gekapselt in bestOfStandingsSort.ts (directComparison-Annotation) + formatDirectComparison (Tabelle/PDF byte-identisch). Spec-Entscheid, revidierbar — am echten Datensatz mit dem Sportleiter gegenzuprüfen.",
+        "Keywords: Direktvergleich, direkter Vergleich, head-to-head, Best-of-Liga, Tabellen-Tiebreak, Gleichstand-Sortierung, Sortierkriterium, bestOfStandingsSort, directComparison, formatDirectComparison, offen ausgeglichen, Sportleiter, Spec-Änderung, Nachvollziehbarkeit, Incident."
+      ]
     }
   ],
   "relations": [
@@ -76,6 +84,16 @@ export default {
     {
       "from": "seed-script-orphaned",
       "to": "ringwerk",
+      "relationType": "applies_to"
+    },
+    {
+      "from": "best-of-standings-direct-comparison-tiebreak",
+      "to": "ringwerk",
+      "relationType": "occurred_in"
+    },
+    {
+      "from": "best-of-standings-direct-comparison-tiebreak",
+      "to": "best-of-single",
       "relationType": "applies_to"
     }
   ]
