@@ -962,6 +962,58 @@ zwischen Tasks zu pausieren. Eingebettet in PIV, nicht als Ersatz:
 
 ---
 
+## ADR-024 — Worktree-Wahl ist Hauptsession-Vorab-Entscheidung (schärft ADR-023 §5)
+
+**Status**: Accepted (Juni 2026)
+
+**Kontext**: ADR-023 §5 schrieb eine **Worktree-*Pflicht*** für den autonomen `/implement` fest, und
+das Preflight **HALTET**, wenn es nicht in `/.claude/worktrees/` auf einem `feat/`-Branch läuft. Drei
+Schwächen dieser Pflicht:
+
+1. **Erzeuger-Lücke**: Den Worktree *erstellt* kein Schritt. `/plan` schlägt nur einen `feat/`-Branch
+   vor (keinen Worktree), und der Autopilot kann sich nicht selbst in einen Worktree „umziehen". Die
+   Pflicht prüft also eine Vorbedingung, für deren Herstellung niemand zuständig ist.
+2. **Gate-Konflikt**: Das Autopilot-Gate ist `pnpm check` (inkl. `test`). DB-Tests scheitern im
+   frischen Worktree ohne `.env` (gitignored → nicht mit ausgecheckt) — die Pflicht macht das Gate für
+   DB-nahe Pläne also unerfüllbar, statt zu schützen.
+3. **Falsche Verortung**: Ob isoliert gearbeitet wird, ist eine Umgebungs-/Workflow-Entscheidung, die
+   naturgemäß **vor** dem Lauf fällt — beim Menschen in der Hauptsession, nicht im Autopilot.
+
+**Entscheidung**: Der Worktree ist **keine Pflicht** mehr, sondern eine **Vorab-Entscheidung der
+Hauptsession** — der User entscheidet vor `/implement`, ob isoliert gearbeitet wird. Gewählte Mechanik
+(User, 24.06.2026): **die Skills bleiben worktree-agnostisch**.
+
+1. **Skills erstellen/erzwingen keinen Worktree** und fragen nicht aktiv danach. Wer Isolation will,
+   richtet den Worktree vorab selbst ein (Harness/`git worktree`).
+2. **`/implement`-Preflight prüft nur noch den Branch**: `git branch --show-current` muss mit `feat/`
+   beginnen (nie autonom auf `main`/Default — Hard Rule 2). Sonst **HALT**. Es arbeitet im
+   vorgefundenen Tree — Worktree oder Haupt-Tree, das ist nicht seine Entscheidung.
+3. **Alle übrigen ADR-023-Sicherungen bleiben unverändert**: Plan-Freigabe als einzige Opt-in-Grenze,
+   Merge/Push/Deploy user-gated, `autopilot-guard` (geschützte Pfade/Kommandos), Iterations-Cap 20,
+   Marker. Der Worktree war stets *zusätzliche* Isolation (defense-in-depth), nie die einzige
+   Leitplanke — sein Wegfall als Pflicht senkt das Sicherheitsniveau nicht.
+
+**Alternativen**:
+
+- _`/plan` fragt aktiv „Worktree ja/nein?"_ (geführter Schritt): verworfen — der User will keinen
+  „Magie-Schritt" im Skill, sondern die Wahl selbst in der Hand.
+- _Worktree als abwählbarer Default_: verworfen — behält die Pflicht-Optik; die Skills müssten ihn
+  doch wieder erstellen/prüfen.
+- _Pflicht beibehalten (ADR-023 §5 unverändert)_: verworfen — Erzeuger-Lücke + Gate-Konflikt (s.o.).
+
+**Folgen**:
+
+- `/implement` (`SKILL.md`): Preflight-„Worktree-Pflicht" → reiner `feat/`-Branch-Check. `/plan`
+  (`SKILL.md`): ein Hinweis, dass die Worktree-Wahl beim User liegt (kein aktiver Schritt).
+- `docs/architecture.md`: ADR-Liste um ADR-024 ergänzt.
+- **Relativiert ADR-018 §5** („Autonomous-Loop-Driver … mit Worktree-Isolation"): die Isolation wird
+  von *Pflicht* zu *Option* (ADR-018 bleibt als historische Vision unangetastet).
+- Diese Umsetzung lief bewusst **interaktiv**: sie berührt geschützte Pfade (`.claude/`,
+  `docs/decisions.md`), die der `autopilot-guard` blockt — die Harness ändert ihre eigenen Leitplanken
+  nur unter menschlicher Aufsicht.
+
+---
+
 ## Mögliche Folge-ADRs (out-of-scope, aber vorgesehen)
 
 Wenn eines dieser Themen aktuell wird, neuer ADR (ADR-021+):
