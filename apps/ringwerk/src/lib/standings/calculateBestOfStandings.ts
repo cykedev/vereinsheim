@@ -135,6 +135,8 @@ export function calculateBestOfStandings(
       duelDiff: s.duelsWon - s.duelsLost,
       bestRingteiler,
       bestRings,
+      // Wird in sortStandings je nach Gleichstand gesetzt; null = nicht umkämpft.
+      directComparison: null,
       rank: 0,
     }
   })
