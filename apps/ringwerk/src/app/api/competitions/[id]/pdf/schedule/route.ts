@@ -44,7 +44,6 @@ export async function GET(
     element = createElement(BestOfSchedulePdf, {
       leagueName: competition.name,
       disciplineName,
-      scoringType,
       scoringMode: competition.scoringMode,
       disciplineId: competition.disciplineId,
       groupBestOf: competition.groupBestOf ?? 3,
