@@ -158,4 +158,33 @@ describe("sortStandings — direct comparison (Kriterium 4)", () => {
     expect(sorted[1].directComparison).toEqual({ kind: "open", opponent: null })
     expect(sorted[2].directComparison).toEqual({ kind: "open", opponent: null })
   })
+
+  it("4er-Gleichstand mit gespaltener Bilanz (+1,+1,-1,-1): record statt even, Reihenfolge erklärt", () => {
+    // Alle Begegnungen gespielt. Direktbilanzen: A=+1, B=+1, C=-1, D=-1.
+    //   B>A, A>C, A>D, C>B, B>D, D>C → A 2:1, B 2:1, C 1:2, D 1:2
+    // Da die Gruppe NICHT durchgehend gleichauf ist, zeigt jede Zeile ihre echte Bilanz
+    // (sonst läse alles "ausgeglichen" und die Platzierung A,B vor C,D wäre unbegründet).
+    const rows = [
+      mkRow("C", "Ccc", tied),
+      mkRow("A", "Aaa", tied),
+      mkRow("D", "Ddd", tied),
+      mkRow("B", "Bbb", tied),
+    ]
+    const h2h = mkH2H([
+      { winner: "B", loser: "A", satz: [2, 1] },
+      { winner: "A", loser: "C", satz: [2, 0] },
+      { winner: "A", loser: "D", satz: [2, 0] },
+      { winner: "C", loser: "B", satz: [2, 1] },
+      { winner: "B", loser: "D", satz: [2, 0] },
+      { winner: "D", loser: "C", satz: [2, 1] },
+    ])
+
+    const sorted = sortStandings(rows, h2h)
+
+    expect(sorted.map((r) => r.participantId)).toEqual(["A", "B", "C", "D"])
+    expect(sorted[0].directComparison).toEqual({ kind: "record", wins: 2, losses: 1 })
+    expect(sorted[1].directComparison).toEqual({ kind: "record", wins: 2, losses: 1 })
+    expect(sorted[2].directComparison).toEqual({ kind: "record", wins: 1, losses: 2 })
+    expect(sorted[3].directComparison).toEqual({ kind: "record", wins: 1, losses: 2 })
+  })
 })
