@@ -133,7 +133,7 @@ export default async function CompetitionSchedulePage({ params }: Props) {
         ? bestOfStandings.length > 0 && (
             <div className="space-y-3 pt-2">
               <h2 className="text-base font-semibold">Tabelle</h2>
-              <BestOfStandingsTable rows={bestOfStandings} scoringMode={competition.scoringMode} />
+              <BestOfStandingsTable rows={bestOfStandings} />
             </div>
           )
         : classicStandings.length > 0 && (

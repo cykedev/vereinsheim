@@ -138,10 +138,7 @@ export default async function DashboardPage() {
                 ) : (
                   <div className="space-y-2">
                     {isBestOf ? (
-                      <BestOfStandingsTable
-                        rows={bestOfStandings}
-                        scoringMode={competition.scoringMode}
-                      />
+                      <BestOfStandingsTable rows={bestOfStandings} />
                     ) : (
                       <StandingsTable rows={standings} />
                     )}
