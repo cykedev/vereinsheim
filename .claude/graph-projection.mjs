@@ -1,7 +1,13 @@
 // Manifest: project/app/feature/subsystem/domain-rule/operation/ops-constraint — Quelle für den Doku-Index-Builder (ADR-022).
 // Von Hand bzw. via /sync-graph gepflegt; der Builder (.claude/build-graph.mjs)
 // mergt sie mit den aus decisions.md geparsten ADRs zu knowledge-graph.json.
-// Dieses Artefakt NICHT von Hand editieren.
+// NICHT den generierten Store (.claude/knowledge-graph.json) editieren — immer hier.
+//
+// Jede Entity trägt eine `Keywords: …`-Observation als Retrieval-Hilfe: der Memory-MCP
+// (search_nodes) macht reines Substring-Matching (kein Stemming/keine Synonyme), daher hier
+// die deutschen Synonyme + gängigen englischen Tech-Begriffe listen, die ein Agent real
+// sucht, die aber in der Essenz nicht wörtlich vorkommen. Die Zeile trägt KEINEN
+// `→`-Pointer, damit der Builder sie als Plain-Text behandelt.
 
 export default {
   "entities": [
@@ -10,6 +16,7 @@ export default {
       "entityType": "project",
       "observations": [
         "Code- + Deployment-Monorepo (pnpm + Turborepo) für zwei Next.js-Apps auf einem VPS.",
+        "Keywords: Projektüberblick, Gesamtsystem, Architektur-Überblick, Monorepo, pnpm, Turborepo, zwei Next.js-Apps, VPS, Ringwerk, Treffsicher, project overview, what is this.",
         "Build: turbo prune + Root-Dockerfile → Docker Hub; VPS pullt. Deploy-Vertrag (compose.yml/Caddy/db-init) unverändert.",
         "Migration: Phasen 1+2+3+4 erledigt (Stand Juni 2026). Phase 1 Struktur (apps/* via git filter-repo, pnpm+Turborepo+Catalog), Phase 2 Harness/Knowledge (ADR-016–019) + packages/config, Phase 3 Build aus Monorepo (turbo prune, auf VPS deployed), Phase 4 packages/lib (Zyklus 1) + packages/ui (Zyklus 2) echt geteilt. Offen nur Phase 5 (CI + Turbo-Remote-Cache, optional, supersedet ADR-006).",
         "Geteilte Pakete live: @vereinsheim/config (tsconfig/eslint/prettier/postcss/next), @vereinsheim/lib (cn, forms/fieldErrors, useUnsavedChangesGuard, useNavigationConfirm, dateTime server-only), @vereinsheim/ui (17 ui-Primitives + 4 shell/ + theme.css). Drift ist dort strukturell unmöglich; consistency-check.sh deckt nur noch 5 triviale Next/shadcn-Reste (components.json + globals.css-Stub + Error-Boundaries) ab.",
@@ -22,6 +29,7 @@ export default {
       "entityType": "app",
       "observations": [
         "Liga- & Wettkampf-Verwaltung. apps/ringwerk, Dev-Port 3000.",
+        "Keywords: Ringwerk-App, Ligaverwaltung, Wettkampfverwaltung, Vereinsliga, Schießsport, league app, competition management, Liga-App, Port 3000.",
         "→ docs/architecture.md#routen-überblick"
       ]
     },
@@ -30,6 +38,7 @@ export default {
       "entityType": "app",
       "observations": [
         "Trainings-App (Tagebuch, Ergebnisse, Statistik, Mentaltraining). apps/treffsicher, Dev-Port 3001, Dark-Mode-only.",
+        "Keywords: Treffsicher-App, Trainingsapp, Trainingstagebuch, Schießtraining, Mentaltraining, training app, diary, Port 3001, Dark Mode.",
         "→ docs/architecture.md#routen-überblick"
       ]
     },
@@ -38,6 +47,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Drei Wettbewerbstypen LEAGUE / EVENT / SEASON, teilen die gemeinsame Scoring-Engine; typ-spezifische Flows + Felder.",
+        "Keywords: Wettbewerbstypen, Wettbewerbsarten, Wettkampfformate, Liga Event Saison, competition types, LEAGUE EVENT SEASON, Turnierarten.",
         "→ apps/ringwerk/docs/features.md#überblick",
         "→ apps/ringwerk/docs/data-model.md#competitiontype-neu"
       ]
@@ -47,6 +57,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "7 Wertungsmodi (RINGTEILER/RINGS/RINGS_DECIMAL/TEILER/DECIMAL_REST/TARGET_*) in calculateScore.ts; reine Funktionen, parametrisierte Tests.",
+        "Keywords: Wertungslogik, Punkteberechnung, Scoring, Wertungsmodi, Ringe Teiler Ringteiler, calculateScore, scoring engine, Ergebnisberechnung.",
         "→ apps/ringwerk/docs/features.md#wertungsmodi-scoring-engine"
       ]
     },
@@ -55,6 +66,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Teiler × Disziplin.teilerFaktor — greift NUR bei gemischten Wettbewerben (Competition.disciplineId === null), sonst Faktor 1.0; zentralisiert via effectiveTeilerFaktor(), nicht rückwirkend.",
+        "Keywords: Faktor-Korrektur, Teilerfaktor, Disziplin-Gewichtung, gemischte Wettbewerbe, effectiveTeilerFaktor, scoring factor, Korrekturfaktor.",
         "→ apps/ringwerk/docs/features.md#gemeinsame-konfiguration",
         "→ apps/ringwerk/docs/data-model.md#faktor-korrektur"
       ]
@@ -64,6 +76,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Formate DOUBLE_ROUND_ROBIN oder BEST_OF_SINGLE; Circle-Method-Spielplan (Freilos=2 Pkt), optionale Playoffs.",
+        "Keywords: Liga-Modus, Ligabetrieb, Rundenturnier, Spielplan, Circle-Method, round robin, league mode, Tabellen, Doppelrunde.",
         "→ apps/ringwerk/docs/features.md#liga-modus-league"
       ]
     },
@@ -72,6 +85,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Liga-Gruppenphase mit N Duellen je Begegnung (groupBestOf, default 3); Stechschuss bei Gleichstand (siehe Incident stechschuss-modell-flip).",
+        "Keywords: Best-of-Modus, Best-of-N, Duelle, Gruppenphase, Stechschuss, Gleichstand, tiebreak, best of single, groupBestOf.",
         "→ apps/ringwerk/docs/features.md#liga-modus-best-of-single-implementiert"
       ]
     },
@@ -80,6 +94,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Einmaliges Event; eine Serie je TN; Gastschützen + TARGET-Modi + Team-Events (SUM/BEST) möglich.",
+        "Keywords: Event-Modus, Einzelevent, einmaliges Event, Gastschützen, Team-Events, TARGET-Modi, event mode.",
         "→ apps/ringwerk/docs/features.md#event-modus-event-implementiert-phase-4"
       ]
     },
@@ -88,6 +103,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Langzeit; beste Serien zählen, Mehrfach-Ranking (Ringe/Teiler/Ringteiler), Mindestserien-Gate (minSeries default 20).",
+        "Keywords: Saison-Modus, Langzeitwertung, beste Serien, Mindestserien, Mehrfach-Ranking, season mode, Jahreswertung.",
         "→ apps/ringwerk/docs/features.md#saison-modus-season-implementiert-phase-5"
       ]
     },
@@ -96,6 +112,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "System-Disziplinen LP/LG/LPA/LGA mit teilerFaktor; WHOLE vs. DECIMAL; Archivierung statt Löschen bei vorhandenen Ergebnissen.",
+        "Keywords: Disziplinen, Schießdisziplinen, Luftpistole Luftgewehr, LP LG LPA LGA, teilerFaktor, WHOLE DECIMAL, disciplines, Archivierung.",
         "→ apps/ringwerk/docs/data-model.md#disziplin-discipline",
         "→ apps/ringwerk/docs/features.md#disziplinen"
       ]
@@ -105,6 +122,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Teilnehmerpool + Einschreibung pro Wettbewerb (CompetitionParticipant, Status ACTIVE/WITHDRAWN); Gäste nur bei Events.",
+        "Keywords: Teilnehmer, Teilnehmerverwaltung, Einschreibung, Anmeldung zum Wettbewerb, Mitglieder, participants, enrollment, Gäste, CompetitionParticipant.",
         "→ apps/ringwerk/docs/features.md#teilnehmerverwaltung",
         "→ apps/ringwerk/docs/data-model.md#wettbewerbs-teilnehmer-competitionparticipant-ersetzt-leagueparticipant"
       ]
@@ -114,6 +132,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Universelle Ergebniseinheit (ersetzte MatchResult): rings/teiler/disciplineId/duelNumber/isTiebreak/isGuest, verknüpft via competitionParticipantId + optional matchupId.",
+        "Keywords: Serie, Ergebnis-Datenmodell, Series, Ergebniseinheit, MatchResult, result model, Schussreihe, rings teiler.",
         "→ apps/ringwerk/docs/data-model.md#serie-series-ersetzt-matchresult"
       ]
     },
@@ -122,6 +141,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Liga-K.o. nach Gruppenphase, Best-of-N (playoffBestOf), eigenes Finale-Format; playoffMatch.count>0 sperrt Edits (siehe ruleset-lock-granularity).",
+        "Keywords: Playoffs, K.o.-System, Endrunde, Finale, Knockout, playoff bracket, Ausscheidung, Best-of.",
         "→ apps/ringwerk/docs/features.md#playoff-phase-ko-system"
       ]
     },
@@ -130,6 +150,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Ergebnisübernahme aus Meyton via URL/PDF, nur Liga; textbasiert (kein OCR), DoS-Grenzen (2MB/Stream, 8MB, 10MB/15s URL).",
+        "Keywords: Meyton-Import, Ergebnisimport, PDF-Import, URL-Import, Datenübernahme, import results, Schießstand-Daten.",
         "→ apps/ringwerk/docs/features.md#meyton-import"
       ]
     },
@@ -138,6 +159,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "isPublic→publicSlug für /api/public/c/<slug>/pdf (unauth); partieller Unique-Index, optional bcrypt-PW, 24h-Cache (tagged by slug).",
+        "Keywords: öffentliche PDF, public URL, Veröffentlichung, Webseiten-Verlinkung, publicSlug, öffentlicher Link, PDF-Export, caching, 24h-Cache, bcrypt-Passwort.",
         "→ apps/ringwerk/docs/features.md#öffentliche-pdf-url-website-verlinkung"
       ]
     },
@@ -146,6 +168,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Rollen ADMIN/MANAGER/USER, vereinsweite Sichtbarkeit (KEIN userId-Filter) — Kontrast zu treffsicher (per-User). Auth via proxy.ts + Layout-Guards.",
+        "Keywords: Rollen, Rollenmodell, Zugriffskontrolle, Berechtigungen, rollenbasiert, ADMIN MANAGER USER, access control, permissions, authorization, Autorisierung, vereinsweite Sichtbarkeit.",
         "→ apps/ringwerk/docs/architecture.md#appadminlayouttsx-rollen-guard",
         "→ apps/ringwerk/docs/code-conventions.md#nutzer-rolle"
       ]
@@ -155,6 +178,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Protokolliert Verwaltungsaktionen (USER_/PARTICIPANT_/…/DESTRUCTIVE), competitionId-FK, Details-JSON-Snapshot; macht FORCE_DELETE nachvollziehbar.",
+        "Keywords: Audit-Log, Protokollierung, Nachvollziehbarkeit, Verwaltungsaktionen, audit trail, logging, Historie, Aktionsprotokoll.",
         "→ apps/ringwerk/docs/data-model.md#audit-log",
         "→ apps/ringwerk/docs/features.md#audit-log-protokoll"
       ]
@@ -164,6 +188,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Ringwerk-Kanon (Zielform für treffsicher): { success:true; data?:T } | { error: string|Record<string,string[]> }; Zod + useActionState. Siehe treffsicher-actionresult-migration.",
+        "Keywords: ActionResult, Server-Action-Rückgabe, Fehlerbehandlung, diskriminierte Union, Zod, useActionState, result convention, error handling.",
         "→ docs/shared-conventions.md#6-daten-formatierung",
         "→ apps/ringwerk/docs/code-conventions.md#actionresult"
       ]
@@ -173,6 +198,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Liga-Edits gesperrt ab Spielplan (matchupCount>0); Playoff-Settings bis Playoff-Start (playoffMatch.count>0) — Granularität an Wirk-Zeitpunkt (ruleset-lock-granularity).",
+        "Keywords: Sperrung, Bearbeitungssperre, Edit-Lock, Phasen-Sperre, rulesetLocked, locking, Bearbeitbarkeit, gesperrt, Konfigurationssperre.",
         "→ apps/ringwerk/docs/features.md#konfiguration"
       ]
     },
@@ -181,6 +207,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "NextAuth v4 + bcrypt; Login-Rate-Limit 5/E-Mail, 30/IP, 15min; Seed-Admin via SEED_ADMIN_* (treffsicher: ADMIN_*, Angleichung offen).",
+        "Keywords: Authentifizierung, Anmeldung, Login, Sicherheit, NextAuth, bcrypt, Rate-Limit, Brute-Force-Schutz, authentication, login, security, rate limiting, Passwort, Seed-Admin.",
         "→ apps/ringwerk/docs/technical.md#authentifizierung-sicherheit",
         "→ apps/ringwerk/docs/architecture.md#auth-strategie"
       ]
@@ -190,6 +217,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Session-zentrisch, 4 Typen TRAINING/WETTKAMPF/TROCKENTRAINING/MENTAL; nur TRAINING/WETTKAMPF mit Serien/Anhängen/Mental-Modulen.",
+        "Keywords: Trainingseinheit, Einheit, Trainingssession, Trainingstagebuch, Session, training session, TRAINING WETTKAMPF, Trockentraining.",
         "→ apps/treffsicher/docs/requirements.md#die-einheit-herzstück-des-systems",
         "→ apps/treffsicher/docs/data-model.md#datenmodell-verbindlich"
       ]
@@ -199,6 +227,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Ganzringe 0–10, Zehntelringe 0.0 oder 1.0–10.9 (0.1–0.9 ungültig); Probe zählt nicht; Ausführungsqualität 1–5 je Serie.",
+        "Keywords: Ergebniserfassung, Eingabevalidierung, Ringe-Validierung, Zehntelringe, gültige Werte, result validation, Eingabe, Probe, Ausführungsqualität.",
         "→ apps/treffsicher/docs/requirements.md#validierung-der-eingabewerte"
       ]
     },
@@ -207,6 +236,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Meyton-Import im Einheit-Formular (URL/Datei), textbasiert, ersetzt Formular-Serien; DoS-Härtung (10MB/15s, 2MB/Stream, 8MB, 25k Tokens).",
+        "Keywords: Meyton-Import, Ergebnisimport, PDF-Import, URL-Import, Datenübernahme, import, DoS-Härtung, Einheit-Formular.",
         "→ apps/treffsicher/docs/requirements.md#meyton-pdf-import-trainingwettkampf",
         "→ apps/treffsicher/docs/technical-constraints.md#datei-uploads"
       ]
@@ -216,6 +246,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Befinden vor der Einheit (Schlaf/Energie/Stress/Motivation 0–100), optional; fließt in Statistik-Korrelation.",
+        "Keywords: Befinden, Wohlbefinden, Schlaf Energie Stress Motivation, Tagesform, wellbeing, mood tracking, Selbsteinschätzung.",
         "→ apps/treffsicher/docs/requirements.md#befinden-tracking"
       ]
     },
@@ -224,6 +255,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Reflexion/Prognose/Feedback je Einheit; 7 Dimensionen (Kondition…Material 0–100); nur TRAINING/WETTKAMPF.",
+        "Keywords: Mentaltraining, mentale Module, Reflexion, Prognose, Feedback, mental training, Psychologie, 7 Dimensionen, mentale Stärke.",
         "→ apps/treffsicher/docs/requirements.md#prognose-feedback-wettkampf-und-fokussiertes-training"
       ]
     },
@@ -232,6 +264,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Eigenständiges Routine-Dokument (geordnete Schritte, pro Nutzer, optional Disziplin); Einheiten verknüpfen + Abweichungen notieren.",
+        "Keywords: Schuss-Routine, Schussablauf, Ablauf, Routine, shot routine, Schritte, Pre-Shot, Schussablaufdokument.",
         "→ apps/treffsicher/docs/requirements.md#schuss-ablauf"
       ]
     },
@@ -240,6 +273,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Zeitraum-Ziele (RESULT/PROCESS), frei wählbarer Zeitraum, M:N zu Sessions.",
+        "Keywords: Saisonziele, Ziele, Zielsetzung, RESULT PROCESS, goals, Zeitraum-Ziele, Trainingsziele.",
         "→ apps/treffsicher/docs/requirements.md#saisonziele"
       ]
     },
@@ -248,6 +282,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Konfigurierbare Zeiträume + Filter (nie gemischte Disziplinen); 7 Ansichten inkl. 7D-Radar; Meyton-Farbschema.",
+        "Keywords: Statistik, Auswertung, Visualisierung, Diagramme, Charts, Radar, statistics, analytics, Auswertungen, Zeiträume.",
         "→ apps/treffsicher/docs/requirements.md#statistiken-auswertung"
       ]
     },
@@ -256,6 +291,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Anhänge nur TRAINING/WETTKAMPF, Whitelist JPEG/PNG/WebP/PDF, 10MB, UUID-Dateinamen; einzige persistierten Dateien (Backup-Tar).",
+        "Keywords: Dateianhänge, Anhänge, Uploads, Bilder, PDF, file attachments, Dateien, Whitelist, Upload-Limit.",
         "→ apps/treffsicher/docs/requirements.md#dateien-bilder",
         "→ apps/treffsicher/docs/technical-constraints.md#datei-uploads"
       ]
@@ -265,6 +301,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Ausschließlich Dark Mode, kein Toggle; class=\"dark\" fest auf <html> — bewusste, nicht verhandelbare Design-Entscheidung.",
+        "Keywords: Dark Mode, Dunkelmodus, Theme, kein Toggle, dark mode only, Erscheinungsbild, class dark, Farbschema.",
         "→ apps/treffsicher/docs/technical-constraints.md#design-ui"
       ]
     },
@@ -273,6 +310,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Keine Selbstregistrierung (Rollen ADMIN/USER, kein MANAGER); strikte Per-User-Isolation via userId (Kontrast zu ringwerk); Seed-Admin via ADMIN_*.",
+        "Keywords: Zugriffsmodell, Benutzerverwaltung, Nutzerverwaltung, Per-User-Isolation, keine Selbstregistrierung, Rollen ADMIN USER, access model, Datenisolation, authentication, Anmeldung.",
         "→ apps/treffsicher/docs/requirements.md#nutzerverwaltung-sicherheit",
         "→ apps/treffsicher/docs/technical-constraints.md#authentifizierung-sicherheit"
       ]
@@ -282,6 +320,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Login-Rate-Limit 5/E-Mail+30/IP/15min; FormData-Caps (120 Serien, 16KB/Feld); Statistik-Caps (1200 Sessions, 12000 Punkte).",
+        "Keywords: DoS-Schutz, Rate-Limit, Limits, Obergrenzen, Brute-Force, rate limiting, denial of service, FormData-Caps, Sicherheit, Missbrauchsschutz.",
         "→ apps/treffsicher/docs/technical-constraints.md#dos-schutz-verbindlich"
       ]
     },
@@ -290,6 +329,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "release (lokal) → build-and-push + ssh-deploy; deploy.sh = pre-backup→pull→up -d→prune; migrate-* one-shot VOR app-*; Tags <sha>(+-migrator).",
+        "Keywords: Deployment, Bereitstellung, Deploy-Ablauf, Release, Ausrollen, deploy, deployment, ssh-deploy, Docker Hub, Auslieferung.",
         "→ docs/operations.md#standard-flow",
         "→ docs/monorepo-plan.md#7-deploy-bleibt-vertragsgleich-live-ohne-probleme"
       ]
@@ -299,6 +339,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "Auto-Backup VOR jedem Deploy (außer SKIP_BACKUP=1); sichert beide DB-Dumps + treffsicher-Uploads.",
+        "Keywords: Pre-Deploy-Backup, Datensicherung, Sicherung vor Deploy, automatisches Backup, backup, Absicherung, DB-Dump.",
         "→ docs/operations.md#pre-deploy-backup-eingebaut"
       ]
     },
@@ -307,6 +348,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "./vereinsheim cron, 03:00 UTC, Retention 14 Tage, /var/backups/vereinsheim/; on-VPS (kein Hardware-Schutz).",
+        "Keywords: Nächtliches Backup, Cron, geplante Sicherung, Datensicherung, Retention, nightly backup, automatische Sicherung, 14 Tage.",
         "→ docs/operations.md#wann-läuft-backup"
       ]
     },
@@ -315,6 +357,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "./vereinsheim restore (stop→pg_restore --clean→up); Uploads nur treffsicher. Voll-Rollback: erst restore, dann rollback (Reihenfolge!).",
+        "Keywords: Wiederherstellung, Restore, Backup einspielen, Recovery, Datenrücksicherung, restore, pg_restore, Rollback, Notfall-Wiederherstellung.",
         "→ docs/operations.md#recovery-aus-backup-gleicher-vps"
       ]
     },
@@ -323,6 +366,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "1×/Quartal Backup in Wegwerf-DB restoren + Tabellen zählen — verifiziert, dass Backups funktionieren.",
+        "Keywords: Restore-Test, Wiederherstellungstest, Backup-Verifikation, recovery test, Probe-Restore, Backup prüfen.",
         "→ docs/operations.md#restore-test-regelmäßig-empfohlen"
       ]
     },
@@ -331,6 +375,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "Prisma blockt bis failed-state gelöst; Auto-Recovery known=true/unknown=false (ADR-008); neue Fälle als Handler in KNOWN_RECOVERY_HANDLERS (--applied/--rolled-back).",
+        "Keywords: Migrationsfehler, fehlgeschlagene Migration, Recovery, Auto-Recovery, Prisma migrate, failed migration, Wiederherstellung, KNOWN_RECOVERY_HANDLERS.",
         "→ docs/operations.md#eingebauter-recovery-mechanismus"
       ]
     },
@@ -339,6 +384,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "Diagnose via _prisma_migrations; Pfade A(--applied)/B(--rolled-back)/C(SQL-Fix); Worst-Case = restore aus Pre-Deploy-Backup.",
+        "Keywords: manueller Migrationseingriff, Migrationsproblem, DB-Fix, Prisma migrate, manual intervention, Schema-Reparatur, _prisma_migrations.",
         "→ docs/operations.md#pfad-3-manueller-eingriff-in-der-db"
       ]
     },
@@ -347,6 +393,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "./vereinsheim rollback aus deploy-history.log (Tags→.env), SKIP_BACKUP=1; migrate deploy ist no-op (Schema schon korrekt).",
+        "Keywords: Rollback, Image-Rollback, Zurückrollen, vorherige Version, rollback, deploy-history, Tag-Rollback, Versionswechsel.",
         "→ docs/operations.md#variante-a-image-tag-rollback-schema-unverändert"
       ]
     },
@@ -355,6 +402,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "bootstrap-vps.sh (root) → setup-Wizard → cron → DNS → release; SSH-Lockdown manuell (ADR-013); .vereinsheim.local lokal (ADR-012).",
+        "Keywords: VPS-Einrichtung, Bootstrap, Server-Setup, Provisionierung, Erstinstallation, vps setup, bootstrap, DNS, SSH, Inbetriebnahme.",
         "→ docs/operations.md#initial-bootstrap-eines-neuen-vps"
       ]
     },
@@ -363,6 +411,7 @@ export default {
       "entityType": "operation",
       "observations": [
         "./vereinsheim status/env-check/logs/shell/psql/up|down|restart — Diagnose + Service-Steuerung (Wrapper um docker compose, ADR-011).",
+        "Keywords: Ops-CLI, Kommandozeile, Betriebs-Tool, vereinsheim-Skript, status logs psql, CLI, Diagnose, Werkzeug, docker compose Wrapper.",
         "→ docs/operations.md#das-werkzeug-scriptsvereinsheim"
       ]
     },
@@ -371,6 +420,7 @@ export default {
       "entityType": "ops-constraint",
       "observations": [
         "RAM ist Engpass: ~0.9GB steady, ~1.85GB Deploy-Spitze; IONOS VPS S (2GB) via mem_limits tragbar, S+ (4GB) empfohlen.",
+        "Keywords: Ressourcen, RAM, Sizing, Speicher, VPS-Größe, Arbeitsspeicher, resource sizing, memory, mem_limit, IONOS, Dimensionierung.",
         "→ docs/spec.md#vps-sizing"
       ]
     },
@@ -379,6 +429,7 @@ export default {
       "entityType": "ops-constraint",
       "observations": [
         "14-Tage-Lokal-Backups decken keine Hardware-/VPS-Verluste; Off-Site (rclone/borg/Snapshot) ist offene Folge-ADR.",
+        "Keywords: Off-Site-Backup, externe Sicherung, Datensicherung extern, Disaster Recovery, off-site, Auslagerung, rclone borg, Backup-Lücke.",
         "→ docs/operations.md#was-wird-gesichert",
         "→ docs/decisions.md#mögliche-folge-adrs-out-of-scope-aber-vorgesehen"
       ]
@@ -388,6 +439,7 @@ export default {
       "entityType": "ops-constraint",
       "observations": [
         "caddy_data hält LE-Zertifikate — Verlust = kein Zugang bis Neu-Ausstellung (ACME-Rate-Limit); bei VPS-Neuaufbau Volume kopieren.",
+        "Keywords: TLS-Zertifikate, Caddy, Let's Encrypt, Zertifikat-Volume, HTTPS, caddy_data, certificate, ACME-Rate-Limit, Verschlüsselung.",
         "→ docs/spec.md#zielarchitektur"
       ]
     },
@@ -396,6 +448,7 @@ export default {
       "entityType": "ops-constraint",
       "observations": [
         "UNKNOWN-Auto-Resolve NIE true; Daten-Migrationen gegen restorte Prod-Kopie testen; Handler stets kommentieren.",
+        "Keywords: Migrations-Sicherheit, Migrationskultur, sichere Migrationen, Daten-Migration, migration safety, Vorsicht, restorte Kopie, UNKNOWN.",
         "→ docs/operations.md#operative-empfehlungen"
       ]
     },
@@ -404,6 +457,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Kanonischer Datenfluss: Formular → useActionState → Server Action (Auth→Zod→db→revalidatePath→ActionResult); Lesen via lib/<feature>/queries.ts in Server Components.",
+        "Keywords: Datenfluss, Datenflussprinzip, Architektur, Server Action, useActionState, revalidatePath, data flow, Lesen Schreiben, queries.ts, Mutation.",
         "apps/ringwerk/docs/architecture.md#datenflussprinzip"
       ]
     },
@@ -412,6 +466,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Feature-Modul lib/<feature>/ folgt festem Muster: actions.ts (Server Actions), queries.ts (reine DB-Lesefunktionen), plus Komponenten/Schema je Feature.",
+        "Keywords: Feature-Modul, Verzeichnisstruktur, Modul-Aufbau, actions.ts queries.ts, module layout, Code-Organisation, Ordnerstruktur, lib-Modul.",
         "apps/ringwerk/docs/architecture.md#lib-module",
         "apps/ringwerk/docs/architecture.md#verzeichnisstruktur"
       ]
@@ -421,6 +476,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Server Actions in actions.ts des Feature-Ordners, Aufbau immer Auth → Validierung → DB; Mutationen statt API Routes.",
+        "Keywords: Server Actions, Mutationen, Aktionsmuster, Auth Validierung DB, server action, statt API Routes, actions.ts, Datenfluss.",
         "apps/ringwerk/docs/code-conventions.md#server-actions"
       ]
     },
@@ -429,6 +485,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Prisma-7-Abweichungen: generierter Client unter src/generated/prisma/, kein url-Feld in datasource (prisma.config.ts), DB via @prisma/adapter-pg mit pg.Pool.",
+        "Keywords: Prisma 7, Prisma-Konventionen, generierter Client, prisma.config, adapter-pg, Prisma ORM, Datenbankzugriff, database, ORM.",
         "apps/ringwerk/docs/technical.md#prisma-7-kritische-abweichungen"
       ]
     },
@@ -437,6 +494,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Kein userId-Filter auf Fachdaten — alle Daten vereinsweit sichtbar; Zugangskontrolle ausschließlich über Rolle.",
+        "Keywords: vereinsweite Daten, kein userId-Filter, gemeinsame Sichtbarkeit, Zugriffskontrolle, club-wide, data visibility, Datenzugriff, Sichtbarkeit.",
         "apps/ringwerk/docs/project-brief.md#core-rules-non-negotiable"
       ]
     },
@@ -445,6 +503,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Berechtigungsmatrix pro Aktion über ADMIN/MANAGER/USER; MANAGER darf alles Fachliche, aber kein /admin/* (Nutzerverwaltung nur ADMIN).",
+        "Keywords: Berechtigungen, Berechtigungsmatrix, Rechte, Zugriffsrechte, Rollenrechte, permissions, permission matrix, was darf wer, Autorisierung.",
         "apps/ringwerk/docs/features.md#berechtigungsmatrix"
       ]
     },
@@ -453,6 +512,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Liga-Gruppenphase-Punktevergabe (Sieg 2 / Unentschieden je 1 / Freilos 2) als Basis der Tabellensortierung im DOUBLE_ROUND_ROBIN.",
+        "Keywords: Liga-Punkte, Punktevergabe, Tabellensortierung, Sieg Unentschieden, tiebreak, points, Tabellenstand, Freilos, Wertungspunkte.",
         "apps/ringwerk/docs/data-model.md#liga-spezifisch-punktevergabe-gruppenphase"
       ]
     },
@@ -461,6 +521,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "EventTeam — Team-Klammer in Team-Events (teamNumber, Mitglieder via eventTeamId); nur bei EVENT mit teamSize ≥ 2.",
+        "Keywords: Event-Teams, Mannschaft, Team-Wertung, Teamwettkampf, event teams, teamSize, Mannschaftswertung, EventTeam.",
         "apps/ringwerk/docs/data-model.md#team-im-event-eventteam"
       ]
     },
@@ -469,6 +530,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Farbpalette als Bedeutungsträger: Grün=Sieg/abgeschlossen, Gelb/Silber/Orange=Platz 1/2/3, Amber=Unentschieden, Destructive=Löschen, Muted=neutral.",
+        "Keywords: Farben, Farbsemantik, Farbcodierung, UI-Farben, Bedeutung Grün Gelb, color semantics, Statusfarben, Design, Farbpalette.",
         "apps/ringwerk/docs/ui-patterns.md#farbpalette-bedeutungsträger"
       ]
     },
@@ -477,6 +539,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Listenzeilen mit Inline-Aktions-Buttons (nie Dropdown), AlertDialog statt confirm() für Destruktives, Bearbeiten als Inline-Dialog.",
+        "Keywords: Zeilenaktionen, Listen-Aktionen, Inline-Buttons, AlertDialog, row actions, Tabellen-Aktionen, UI-Muster, kein Dropdown.",
         "apps/ringwerk/docs/ui-patterns.md#listen-mit-zeilenaktionen"
       ]
     },
@@ -485,6 +548,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Void-Matches (Paarung mit zurückgezogenem TN, isVoid) ausgegraut/durchgestrichen gerendert, ohne Ergebnis und ohne Gewinner-Hervorhebung.",
+        "Keywords: Void-Match, ungültige Paarung, Rückzug, ausgegraut, durchgestrichen, void match, zurückgezogener Teilnehmer, Darstellung.",
         "apps/ringwerk/docs/ui-patterns.md#spielplan-void-matches-rückzug"
       ]
     },
@@ -493,6 +557,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Vitest-Tests neben dem Code; Pflicht-Abdeckung primär für Scoring-/Domänenlogik (calculate*), Arrange-Act-Assert.",
+        "Keywords: Tests, Testkonventionen, Vitest, Testabdeckung, Geschäftslogik-Tests, testing, unit tests, Arrange-Act-Assert, Scoring-Tests.",
         "apps/ringwerk/docs/code-conventions.md#testing"
       ]
     },
@@ -501,6 +566,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Vier Einheitentypen TRAINING/WETTKAMPF/TROCKEN/MENTAL; Anhänge, Prognose/Feedback und Ergebniserfassung nur bei TRAINING+WETTKAMPF — serverseitig erzwungen.",
+        "Keywords: Einheitentypen, Trainingstypen, TRAINING WETTKAMPF TROCKEN MENTAL, session types, Typen-Regeln, serverseitig erzwungen, Einheitenarten.",
         "apps/treffsicher/docs/requirements.md#einheitentypen",
         "apps/treffsicher/docs/technical-constraints.md#verbindliche-konsistenzregeln-fachlich-technisch"
       ]
@@ -510,6 +576,7 @@ export default {
       "entityType": "feature",
       "observations": [
         "Frei konfigurierbare Disziplinen je Nutzer (Wertungsart Ganz/Zehntel, Serien-/Schussparameter); Löschverhalten + vorinstallierte Standarddisziplinen.",
+        "Keywords: Treffsicher-Disziplinen, Disziplinen, Wertungsart, Ganz Zehntel, disciplines, konfigurierbar, Standarddisziplinen, Schussparameter.",
         "apps/treffsicher/docs/data-model.md#disziplinen",
         "apps/treffsicher/docs/requirements.md#disziplinen"
       ]
@@ -519,6 +586,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Per-User-Datenisolation: jede Prisma-Query filtert zwingend where:{ userId }; kein direkter Prisma-Zugriff in Komponenten.",
+        "Keywords: Datenisolation, Per-User-Isolation, userId-Filter, Datentrennung, Mandantentrennung, user isolation, Datenschutz, Prisma where, Privatsphäre.",
         "apps/treffsicher/docs/code-conventions.md#datenbankzugriffe-prisma",
         "apps/treffsicher/docs/requirements.md#vereinsbetrieb"
       ]
@@ -528,6 +596,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Server Actions statt API Routes; je Feature actions.ts, strukturierte Fehler-Rückgaben statt throw. Next-Regel: 'use server' exportiert nur direkt deklarierte async-Funktionen.",
+        "Keywords: Server Actions, Aktionen, use server, statt API Routes, server actions, Fehler-Rückgaben, actions.ts, Mutationen.",
         "apps/treffsicher/docs/code-conventions.md#server-actions",
         "apps/treffsicher/docs/technical-constraints.md#daten-und-aktionsarchitektur"
       ]
@@ -537,6 +606,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Dünne Orchestrator-Dateien, 220-Zeilen-Split-Regel, Props-Budget, einheitliche Feature-Struktur, Duplikations-Sicherheitsnetz — verbindlich für neuen/geänderten Code.",
+        "Keywords: Modularität, Wartbarkeit, Datei-Split, 220 Zeilen, Orchestrator, Props-Budget, modularity, Code-Splitting, Duplikation, Refactoring.",
         "apps/treffsicher/docs/technical-constraints.md#modularität-wartbarkeit-verbindlich"
       ]
     },
@@ -545,6 +615,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Vitest-Setup; getestet werden Validierung/Geschäftslogik/Server-Actions (Arrange-Act-Assert), nicht reines UI/Framework.",
+        "Keywords: Tests, Testkonventionen, Vitest, Validierung Geschäftslogik, testing, Server-Actions-Tests, unit tests, Arrange-Act-Assert.",
         "apps/treffsicher/docs/code-conventions.md#testing"
       ]
     },
@@ -553,6 +624,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Stack: Next.js 16, Prisma 7, NextAuth v4, Zod v4, React 19 useActionState; bcrypt; Migrationen via prisma migrate deploy beim App-Start.",
+        "Keywords: Tech-Stack, Technologie, Next.js 16, Prisma 7, NextAuth, Zod, React 19, tech stack, Frameworks, Versionen, bcrypt, Stack.",
         "apps/treffsicher/docs/technical-constraints.md#tech-stack-verbindlich",
         "apps/treffsicher/docs/technical-constraints.md#prisma-7-wichtige-abweichungen-von-früheren-versionen"
       ]
@@ -562,6 +634,7 @@ export default {
       "entityType": "state",
       "observations": [
         "OFFEN (Phase 5.2 / Backlog T-06): kein Service Worker/Manifest; geplant next-pwa, Offline-Fallback, IndexedDB-Sync zum Erfassen ohne Verbindung am Schießstand.",
+        "Keywords: PWA, Offline, Service Worker, IndexedDB, Offline-Erfassung, progressive web app, offline support, Schießstand, next-pwa.",
         "apps/treffsicher/docs/implementation-plan.md#phase-52-pwa-offline-unterstützung-offen",
         "apps/treffsicher/docs/backlog.md#t-06-pwa-offline-unterstützung-phase-52"
       ]
@@ -571,6 +644,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "High-Level-Karte des Monorepos (apps/*, packages/config|lib|ui, docs/, .claude/, compose/Caddy/db-init). Schnelle Orientierung, kein Vollindex.",
+        "Keywords: Architektur-Karte, Repo-Struktur, Überblick, Verzeichnisse, apps packages, architecture map, repo layout, Orientierung, Repo-Karte.",
         "docs/architecture.md#repo-karte"
       ]
     },
@@ -579,6 +653,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Lokaler Build aus dem Monorepo (turbo prune → Root-Dockerfile → Docker Hub), VPS pullt; migrate-* vor app-*; Caddy terminiert TLS, proxyt zwei Subdomains.",
+        "Keywords: Build-Pipeline, Deployment-Pipeline, Bereitstellung, turbo prune, Docker, build deploy, Image-Build, VPS pullt, CI, Auslieferung.",
         "docs/architecture.md#build-deploy-adr-005006007015"
       ]
     },
@@ -587,6 +662,7 @@ export default {
       "entityType": "ops-constraint",
       "observations": [
         "Zwei Docker-Netze web {caddy, app-*} und data {db, app-*, migrate-*}; db NICHT im web-Netz — kein direkter Außenkontakt zur DB.",
+        "Keywords: Netzwerk-Segmentierung, Docker-Netze, Netzwerksicherheit, web data Netz, network segmentation, Isolation, DB nicht exponiert, Netztrennung.",
         "docs/architecture.md#build-deploy-adr-005006007015"
       ]
     },
@@ -595,6 +671,7 @@ export default {
       "entityType": "ops-constraint",
       "observations": [
         "Ein Postgres-Container, zwei DBs + zwei Owner-User (ringwerk, treffsicher); Cross-DB-Zugriff technisch unmöglich.",
+        "Keywords: DB-Isolation, Datenbanktrennung, zwei Datenbanken, getrennte DBs, Postgres, database isolation, Owner-User, Cross-DB, Mandanten.",
         "docs/architecture.md#build-deploy-adr-005006007015"
       ]
     },
@@ -603,6 +680,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Caddy als Reverse Proxy, terminiert TLS (Let's Encrypt, Auto-Renew) und proxyt ringwerk.<domain>/treffsicher.<domain> auf die App-Container.",
+        "Keywords: Caddy, Reverse Proxy, TLS-Terminierung, HTTPS, Subdomain-Routing, reverse proxy, Let's Encrypt, Proxy, Routing.",
         "docs/spec.md#zielarchitektur"
       ]
     },
@@ -611,6 +689,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Zielarchitektur: Container-Topologie, Netze, Volumes (caddy_data/postgres_data/uploads), Subdomain-Routing — das Soll-Bild des Prod-Deploys.",
+        "Keywords: Zielarchitektur, Soll-Architektur, Container-Topologie, Volumes, Netze, target architecture, Prod-Aufbau, Deployment-Architektur, Infrastruktur.",
         "docs/spec.md#zielarchitektur"
       ]
     },
@@ -619,6 +698,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Komponenten-Kanon beider Apps: PageHeader/DetailActionBar (keine Dropdown-Objektaktionen), EmptyState, ConfirmDialog (nie native confirm), FieldError, sonner-Toasts, Unsaved-Changes-Guard.",
+        "Keywords: Komponenten-Kanon, UI-Komponenten, PageHeader EmptyState ConfirmDialog, component canon, gemeinsame Komponenten, Standardkomponenten, shared UI.",
         "docs/shared-conventions.md#2-komponenten-kanon"
       ]
     },
@@ -627,6 +707,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Seitentitel text-2xl font-semibold tracking-tight (nicht bold), Untertitel text-sm muted; Unicode-Ellipsis statt ASCII; App-Shell mx-auto max-w-6xl px-4 py-8.",
+        "Keywords: Typografie, Layout, Schriftgrößen, Seitentitel, Abstände, typography, layout, max-width, Gestaltung, Schrift.",
         "docs/shared-conventions.md#3-typografie-layout"
       ]
     },
@@ -635,6 +716,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Festes lucide-react-Icon-Vokabular (Target=Disziplinen, Pencil=Bearbeiten, Trash2=Löschen …); Marken-Logos: Treffsicher=Crosshair, Ringwerk=CircleDot.",
+        "Keywords: Icons, Icon-Vokabular, lucide-react, Symbole, Icon-Set, icons, Bildsprache, Marken-Logos, Piktogramme.",
         "docs/shared-conventions.md#4-icon-vokabular-lucide-react"
       ]
     },
@@ -643,6 +725,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Hamburger-Schema beider Apps: Desktop hidden md:flex-Links + Logo links, Konto als UserCircle-Dropdown rechts; Mobil border-t md:hidden Nav.",
+        "Keywords: Navigation, Menü, Hamburger-Menü, Navigationsleiste, mobile Navigation, navigation, Nav, Kopfzeile, Menüführung.",
         "docs/shared-conventions.md#5-navigation"
       ]
     },
@@ -651,6 +734,7 @@ export default {
       "entityType": "domain-rule",
       "observations": [
         "Datum/Zeit/Zahl über @vereinsheim/lib/dateTime (kein inline Intl), TZ-Default Europe/Berlin; ActionResult-Kanon als diskriminierte Union (Ringwerk-Muster).",
+        "Keywords: Datenformatierung, Datum Zeit Zahl, Formatierung, Zeitzone, Europe/Berlin, data formatting, Intl, dateTime, Lokalisierung, Zahlenformat.",
         "docs/shared-conventions.md#6-daten-formatierung"
       ]
     },
@@ -659,6 +743,7 @@ export default {
       "entityType": "ops-constraint",
       "observations": [
         "Drift-Schutz: 5 Quality-Gates (lint/format/test/tsc/next build) vor jedem Commit + consistency-check.sh als fatales Release-Gate; Shared-Schicht in @vereinsheim/{ui,lib,config}.",
+        "Keywords: Drift-Schutz, Quality-Gates, Konsistenz, lint format test build, consistency-check, drift protection, Gates, Code-Qualität, Prüfungen, Release-Gate.",
         "docs/shared-conventions.md#8-drift-schutz-prozess"
       ]
     },
@@ -667,6 +752,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Build-Hebel des Monorepos: Turbo-Task-Cache, turbo prune --docker (cache-stabiler Kontext pro App), BuildKit-Cache-Mount auf pnpm-Store, --filter='[HEAD^1]'.",
+        "Keywords: schneller Build, Turbo-Cache, Build-Performance, turbo prune, BuildKit, fast build, caching, Caching, Build-Optimierung.",
         "docs/monorepo-plan.md#4-der-schnelle-build"
       ]
     },
@@ -675,6 +761,7 @@ export default {
       "entityType": "subsystem",
       "observations": [
         "Phasenplan der Monorepo-Migration: Phase 1 apps/*, 2 packages/config, 3 Build aus Monorepo, 4 packages/lib+ui; Phase 5 CI/Remote-Cache offen.",
+        "Keywords: Monorepo-Migration, Migrationsphasen, Phase 1-5, Umbau, monorepo migration, phases, Migrationsplan, Umstellung.",
         "docs/monorepo-plan.md#8-migration-in-phasen-jederzeit-lauffähig"
       ]
     },
@@ -683,6 +770,7 @@ export default {
       "entityType": "state",
       "observations": [
         "OFFEN: priorisierter Themenkatalog (Code-Review 2026-03-31). P1 String-Längen-Limits Freitext (T-01); P2 React-Error-Boundaries (T-05) + ActionResult-Generic-Typ (T-08, siehe treffsicher-actionresult-migration); P3 Pflicht-Splits >220 Zeilen (T-02 mentalActions, T-03 shared, T-04 StatisticsCharts); P4 PWA (T-06, siehe treffsicher-pwa-offline), maxLength-UI (T-07), Props-Budget GoalAssignmentsForm (T-09), Tippfehler (T-10). Gestrichen/nicht empfohlen: CSV-Export, A11y-Audit, strukturiertes Logging, E2E.",
+        "Keywords: Backlog, offene Punkte, Aufgabenliste, Priorisierung, To-Do, backlog, geplante Arbeiten, Code-Review, technische Schuld.",
         "→ apps/treffsicher/docs/backlog.md#backlog-treffsicher-stand-2026-03-31"
       ]
     },
@@ -691,6 +779,7 @@ export default {
       "entityType": "state",
       "observations": [
         "OFFEN (spätere Phasen, fachlich): Offline-Erfassung am Schießstand (siehe treffsicher-pwa-offline), Trockentraining als vollständig eigener Einheitentyp mit spezifischen Feldern, Mustererkennung/smarte Auswertungen ('wie schieße ich nach schlechtem Schlaf?'), Trainer-Zugang (read-only, eingeschränkt).",
+        "Keywords: zukünftige Features, geplante Funktionen, Roadmap, später, future features, Offline, Trainer-Zugang, Ideen, Ausblick.",
         "→ apps/treffsicher/docs/requirements.md#offene-punkte-spätere-phasen"
       ]
     },
@@ -699,6 +788,7 @@ export default {
       "entityType": "state",
       "observations": [
         "OFFEN (optional): Phase 5 der Monorepo-Migration — CI via GitHub Actions (baut + pusht, optional Deploy-Trigger via SSH/Webhook) + Turbo-Remote-Cache; macht ADR-006 (lokaler Build/Push) obsolet.",
+        "Keywords: Phase 5, CI, GitHub Actions, Continuous Integration, Remote-Cache, CI/CD, Pipeline, Automatisierung, offen.",
         "→ docs/monorepo-plan.md#12-offene-folgepunkte-nicht-in-dieser-migration"
       ]
     },
@@ -707,6 +797,7 @@ export default {
       "entityType": "state",
       "observations": [
         "OFFEN: Seed-Admin-Env-Vars der beiden Apps angleichen (treffsicher ADMIN_* ↔ ringwerk SEED_ADMIN_*); deploy-breaking, daher als separater Schritt geführt.",
+        "Keywords: Umgebungsvariablen, Env-Vars, ADMIN_ SEED_ADMIN_, Angleichung, env vars, Konfiguration, Seed-Admin, environment.",
         "→ docs/monorepo-plan.md#12-offene-folgepunkte-nicht-in-dieser-migration"
       ]
     },
@@ -715,6 +806,7 @@ export default {
       "entityType": "state",
       "observations": [
         "OFFEN (Drift-Schutz): Dependency-Pins zwischen den Apps angleichen, inkl. TypeScript-Major; Dependency-Drift ist aktuell nur warnend im consistency-check, nicht fatal.",
+        "Keywords: Abhängigkeiten, Dependency-Pins, Versionen angleichen, Drift, dependencies, dependency alignment, TypeScript-Version, Pakete.",
         "→ docs/shared-conventions.md#8-drift-schutz-prozess"
       ]
     },
@@ -723,6 +815,7 @@ export default {
       "entityType": "state",
       "observations": [
         "VORGESEHEN (out-of-scope, je eigener Folge-ADR ab ADR-021+ wenn aktuell): Monitoring/Alerting (Uptime-Kuma/Prometheus+Grafana), Staging-Umgebung (Schema-Migrationstests vor Prod), WAF/Fail2ban (höhere Exposition), generisches App-Template ab ~3–4 Apps. (Off-Site-Backup → off-site-backup-gap, CI/CD → monorepo-phase-5.)",
+        "Keywords: zukünftige ADRs, geplante Entscheidungen, Monitoring Staging WAF, future ADRs, Folge-ADRs, Roadmap, out of scope, Ausblick.",
         "→ docs/decisions.md#mögliche-folge-adrs-out-of-scope-aber-vorgesehen"
       ]
     }
