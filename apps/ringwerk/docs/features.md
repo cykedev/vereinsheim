@@ -266,15 +266,17 @@ BEST_OF_SINGLE ist ein alternatives Gruppenphase-Format für LEAGUE-Wettbewerbe.
 
 ### Tabelle
 
-Spalten (Reihenfolge = Bewertungsreihenfolge): Pl., Name, Begegn. (gespielt), Siege, Satzdiff. (duelDiff), Satzverhältnis (gewonnene:verlorene Duelle), bestes Erg. (Ringe oder Ringteiler je nach scoringMode)
+Spalten (Reihenfolge = Bewertungsreihenfolge): Pl., Name, Begegn. (gespielt), Siege, Satzdiff. (duelDiff), Satzverhältnis (gewonnene:verlorene Duelle), **Direktvergleich** (head-to-head bei Punktgleichstand)
 
-Sortierung (nur tabellensichtbare Kriterien, kein direkter Vergleich):
+Sortierung (jedes Kriterium ist eine sichtbare Spalte, links→rechts):
 
 1. Siege (absteigend)
 2. Satzdifferenz (absteigend)
 3. Mehr gewonnene Sätze (duelsWon, absteigend)
-4. Bestes Einzelergebnis (RINGS/RINGS_DECIMAL → höchste Ringe; sonst → niedrigster Ringteiler)
-5. Nachname alphabetisch
+4. **Direkter Vergleich** (head-to-head): Mini-Liga-Bilanz innerhalb der punktgleichen Gruppe (Match-Sieger, inkl. Stechschuss). Ersetzt seit 2026-06-24 das frühere „bestes Einzelergebnis" (Sportleiter-Entscheid). Kann er nicht entscheiden (Begegnung noch offen ODER zyklischer N-Gleichstand A→B→C→A), wird alphabetisch gewertet — die Spalte macht das mit „offen"/„ausgeglichen" sichtbar.
+5. Nachname alphabetisch (deterministischer Rest)
+
+Die letzte Spalte „Direktvergleich" zeigt im 2er-Gleichstand das Match-Ergebnis + Gegner (z.B. „2:1 · Müller"), im 3er+-Gleichstand die Direktbilanz („2:0"), sonst „—". Logik zentral in `bestOfStandingsSort.ts` (`directComparison`-Annotation), Anzeige über `formatDirectComparison` (Tabelle + PDF byte-identisch). `bestRingteiler`/`bestRings` werden weiter berechnet, sind aber kein Kriterium mehr (revert-fähig).
 
 Zurückgezogene Teilnehmer erscheinen am Ende (alle Ergebnisse mit ihnen werden ignoriert).
 
