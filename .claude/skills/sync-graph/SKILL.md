@@ -27,6 +27,9 @@ wird aus drei eingecheckten Quellen erzeugt. Dieser Skill ist der **modellgetrie
      kanonisch in der Doc). Mehrere Pointer erlaubt, wenn ein Topic in mehrere Docs zeigt.
    - Den richtigen Slug holen/prüfen: `node .claude/doc.mjs <datei>` listet alle Slugs;
      `node .claude/doc.mjs <datei>#<slug>` druckt den Abschnitt zur Kontrolle.
+   - **`Keywords:`-Zeile (Pflicht, vom Builder erzwungen)** — zusätzlich eine Observation
+     `Keywords: <Synonyme>`: deutsche Synonyme + englische Tech-Begriffe, die ein Agent sucht,
+     die aber in der Essenz fehlen (search_nodes ist Substring-only). Kein `→`-Pointer → Plain-Text.
    - Neue, klar abgrenzbare Doc-Abschnitte → neue Topic-Entity. Relationen dicht halten:
      `feature_of`/`subsystem_of`/`operation_of`/`constraint_of` (Zugehörigkeit), `governed_by`
      (Topic → ADR/Konvention), `contrasts_with`/`see_also`/`relates_to` (Navigation), `informed_by`

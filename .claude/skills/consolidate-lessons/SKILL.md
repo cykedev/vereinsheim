@@ -67,7 +67,8 @@ nie still nur dokumentiert.
       `observations`-Zeile mit Datum + App + Provenance, z.B. `"2026-06-18 (ringwerk): … gekippt, weil …;
       revidierbar"`). Abgeleiteter Topic aus einer Doc → `.claude/graph-projection.mjs` (Essenz +
       `→ datei#slug`-Pointer; Slug via `node .claude/doc.mjs <datei>` prüfen). Existiert die Entity →
-      Observation ergänzen statt Dublette.
+      Observation ergänzen statt Dublette. **Jede Entity braucht zusätzlich eine
+      `Keywords:`-Observation** (Synonyme, die ein Agent sucht; der Builder erzwingt es).
    b. **Verknüpfen** — Relation in **derselben Quelle** ergänzen (`occurred_in`/`applies_to` zur App,
       `relates_to`/`governed_by` zu ADR/Topic), damit der Eintrag auffindbar im Index hängt.
    c. **Bauen + committen** — `node .claude/build-graph.mjs` (validiert Integrität **+** jeden Pointer) →
