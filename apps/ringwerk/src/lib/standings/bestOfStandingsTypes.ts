@@ -40,6 +40,37 @@ export interface BestOfStandingsConfig {
 }
 
 // ---------------------------------------------------------------------------
+// Direct comparison (head-to-head, Kriterium 4)
+// ---------------------------------------------------------------------------
+
+/** Direktes Begegnungsergebnis aus Sicht eines Teilnehmers (calculate → sort). */
+export interface DirectResult {
+  /** eigene Satzsiege in der direkten Begegnung */
+  duelsWon: number
+  /** Satzsiege des Gegners */
+  duelsLost: number
+  /** hat dieser Teilnehmer die Begegnung gewonnen */
+  won: boolean
+}
+
+/** Kopf-an-Kopf-Ergebnisse: Teilnehmer → Gegner → Ergebnis (nur abgeschlossene Begegnungen). */
+export type HeadToHead = Map<string, Map<string, DirectResult>>
+
+/**
+ * Erklärt die Platzierung einer Zeile bei Punktgleichstand (Kriterium 4 = direkter Vergleich),
+ * damit die Tabelle nachvollziehbar bleibt:
+ * - `decided`: 2er-Gleichstand, direkte Begegnung gefallen → Satz aus eigener Sicht + Gegner
+ * - `record`:  3er+-Gleichstand, Mini-Liga-Bilanz innerhalb der Gruppe entscheidet
+ * - `open`:    direkte Begegnung (noch) nicht gespielt → alphabetisch gereiht
+ * - `even`:    gespielt, aber gleich/zyklisch → alphabetisch gereiht
+ */
+export type DirectComparison =
+  | { kind: "decided"; result: "win" | "loss"; satz: [number, number]; opponent: string }
+  | { kind: "record"; wins: number; losses: number }
+  | { kind: "open"; opponent: string | null }
+  | { kind: "even" }
+
+// ---------------------------------------------------------------------------
 // Output type
 // ---------------------------------------------------------------------------
 
@@ -54,8 +85,19 @@ export interface BestOfStandingRow {
   duelsWon: number
   duelsLost: number
   duelDiff: number
+  /**
+   * Bestes Einzelergebnis. Seit 2026-06-24 KEIN Sortier-/Anzeige-Kriterium mehr — der direkte
+   * Vergleich (siehe `directComparison`) ersetzt den Wert als Kriterium 4. Wird weiter berechnet,
+   * damit ein etwaiger Revert nur eine Stelle berührt (vgl. graph-captured
+   * "best-of-standings-direct-comparison-tiebreak").
+   */
   bestRingteiler: number | null
   bestRings: number | null
+  /**
+   * Begründung der Platzierung bei Punktgleichstand (Kriterium 4).
+   * `null` = Zeile ist NICHT in einem umkämpften Gleichstand → Anzeige "—".
+   */
+  directComparison: DirectComparison | null
   rank: number
 }
 
