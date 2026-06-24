@@ -98,6 +98,13 @@ for (const e of entities) {
   }
 }
 
+// Jede kuratierte Entity (projection + captured; ADRs werden auto-geparst) braucht eine
+// `Keywords:`-Observation — Retrieval-Hilfe gegen das reine Substring-Matching von search_nodes.
+for (const e of [...projection.entities, ...captured.entities]) {
+  if (!e.observations?.some((o) => String(o).startsWith("Keywords:")))
+    errors.push(`Entity ohne Keywords-Zeile: ${e.name} (Synonyme als 'Keywords: …'-Observation ergänzen)`)
+}
+
 if (errors.length) {
   process.stderr.write("build-graph: FEHLER\n  " + errors.join("\n  ") + "\n")
   process.exit(1)

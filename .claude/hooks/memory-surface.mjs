@@ -58,7 +58,8 @@ try {
     `Abschnitt, nicht die ganze Datei). Relationen (governed_by/contrasts_with/see_also/…) zum Weitergehen ` +
     `folgen. NEUES Wissen NICHT per Live-mcp__memory__-Write (ein Rebuild überschriebe ihn): in die QUELLE ` +
     `schreiben (.claude/graph-projection.mjs für abgeleitete Topics, graph-captured.mjs für Incidents/` +
-    `State) → \`node .claude/build-graph.mjs\` → committen. Abgrenzung: Code-Struktur → CodeGraph; ` +
+    `State); jede neue Entity MIT \`Keywords:\`-Zeile (Synonyme; der Builder erzwingt es) → ` +
+    `\`node .claude/build-graph.mjs\` → committen. Abgrenzung: Code-Struktur → CodeGraph; ` +
     `erzwingbare Regeln → docs/Gates; Maschinen-/Ops-lokales → natives Auto-Memory.`
 
   process.stdout.write(
