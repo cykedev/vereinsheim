@@ -229,7 +229,6 @@ async function buildScheduleElement(competitionId: string): Promise<ReactElement
     return createElement(BestOfSchedulePdf, {
       leagueName: competition.name,
       disciplineName,
-      scoringType,
       scoringMode: competition.scoringMode,
       disciplineId: competition.disciplineId,
       groupBestOf: competition.groupBestOf ?? 3,

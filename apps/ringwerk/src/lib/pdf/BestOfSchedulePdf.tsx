@@ -1,6 +1,6 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer"
 import type { ReactElement } from "react"
-import type { ScoringMode, ScoringType } from "@/generated/prisma/client"
+import type { ScoringMode } from "@/generated/prisma/client"
 import type { MatchupListItem } from "@/lib/matchups/types"
 import type { BestOfStandingRow } from "@/lib/standings/queries"
 import {
@@ -10,7 +10,7 @@ import {
   resolveBestOf,
 } from "@/lib/scoring/bestOf"
 import type { DuelSeries } from "@/lib/scoring/bestOf"
-import { formatDecimal1, formatRings } from "@/lib/series/scoring-format"
+import { formatDirectComparison } from "@/lib/standings/formatDirectComparison"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -18,7 +18,6 @@ import { styles, PDF_COLORS } from "@/lib/pdf/styles"
 export interface BestOfSchedulePdfProps {
   leagueName: string
   disciplineName: string
-  scoringType: ScoringType
   scoringMode: ScoringMode
   /** null = mixed competition (teilerFaktor applies per series) */
   disciplineId: string | null
@@ -143,15 +142,15 @@ function deriveSatzResult(
 // ─── Spaltenbreiten ───────────────────────────────────────────────────────────
 
 // Standings table widths (A4 portrait, 40pt padding each side → 515pt usable)
-// Pl. · Name · Begegn. · Siege · Satzdiff. · Satzverhältnis · bestes Erg.
+// Pl. · Name · Begegn. · Siege · Satzdiff. · Satzverhältnis · Direktvergleich
 const WS = {
   rank: 30,
-  name: 150,
+  name: 130,
   played: 50,
   wins: 42,
   diff: 55,
   ratio: 98,
-  best: 90,
+  direct: 110,
 }
 
 // Schedule table widths (two participant cells + status, mirrors the classic PDF)
@@ -181,17 +180,7 @@ function PdfHeader({
 
 // ─── Tabelle ──────────────────────────────────────────────────────────────────
 
-function BestOfStandingsSection({
-  rows,
-  scoringMode,
-  scoringType,
-}: {
-  rows: BestOfStandingRow[]
-  scoringMode: ScoringMode
-  scoringType: ScoringType
-}): ReactElement {
-  const showRings = scoringMode === "RINGS" || scoringMode === "RINGS_DECIMAL"
-
+function BestOfStandingsSection({ rows }: { rows: BestOfStandingRow[] }): ReactElement {
   return (
     <View>
       <Text style={styles.sectionTitle}>Tabelle</Text>
@@ -204,9 +193,7 @@ function BestOfStandingsSection({
           <Text style={[styles.tableHeaderCell, { width: WS.wins }]}>Siege</Text>
           <Text style={[styles.tableHeaderCell, { width: WS.diff }]}>Satzdiff.</Text>
           <Text style={[styles.tableHeaderCell, { width: WS.ratio }]}>Satzverhältnis</Text>
-          <Text style={[styles.tableHeaderCell, { width: WS.best }]}>
-            {showRings ? "Best. Ringe" : "Best. RT"}
-          </Text>
+          <Text style={[styles.tableHeaderCell, { width: WS.direct }]}>Direktvergleich</Text>
         </View>
 
         {/* Rows */}
@@ -214,6 +201,7 @@ function BestOfStandingsSection({
           const isAlt = idx % 2 === 1
           const name = `${row.lastName}, ${row.firstName}${row.withdrawn ? " (Zur.)" : ""}`
           const duelDiffLabel = row.duelDiff > 0 ? `+${row.duelDiff}` : String(row.duelDiff)
+          const direct = formatDirectComparison(row.directComparison)
 
           return (
             <View
@@ -247,10 +235,16 @@ function BestOfStandingsSection({
               <Text style={[styles.tableCell, { width: WS.ratio }]}>
                 {row.duelsWon}:{row.duelsLost}
               </Text>
-              <Text style={[styles.tableCell, { width: WS.best }]}>
-                {showRings
-                  ? formatRings(row.bestRings, scoringType)
-                  : formatDecimal1(row.bestRingteiler)}
+              <Text
+                style={[
+                  styles.tableCell,
+                  { width: WS.direct },
+                  direct.tone === "win"
+                    ? { color: "#166534", fontFamily: "Helvetica-Bold" }
+                    : { color: direct.tone === "pending" ? "#888888" : "#777777" },
+                ]}
+              >
+                {direct.text}
               </Text>
             </View>
           )
@@ -421,7 +415,6 @@ function BestOfMatchupsSection({
 export function BestOfSchedulePdf({
   leagueName,
   disciplineName,
-  scoringType,
   scoringMode,
   disciplineId,
   groupBestOf,
@@ -443,13 +436,7 @@ export function BestOfSchedulePdf({
         />
 
         {/* Tabelle */}
-        {standings.length > 0 && (
-          <BestOfStandingsSection
-            rows={standings}
-            scoringMode={scoringMode}
-            scoringType={scoringType}
-          />
-        )}
+        {standings.length > 0 && <BestOfStandingsSection rows={standings} />}
 
         {/* Spielplan */}
         {matchups.length > 0 && (
