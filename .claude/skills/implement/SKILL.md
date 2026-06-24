@@ -12,9 +12,10 @@ Vor dem ersten Task: Plan + dessen `## Required Docs` (App + `docs/shared-conven
 
 ## Preflight (einmal pro Lauf)
 
-- **Worktree-Pflicht:** `git rev-parse --show-toplevel` enthält `/.claude/worktrees/` **und**
-  `git branch --show-current` beginnt mit `feat/`. Sonst **HALT** („Autopilot nur im isolierten
-  Worktree auf `feat/`-Branch").
+- **Branch-Check:** `git branch --show-current` beginnt mit `feat/` (nie autonom auf `main`/Default —
+  Hard Rule 2). Sonst **HALT** („Autopilot nur auf `feat/`-Branch"). **Ob die Umsetzung in einem
+  Worktree läuft, hat die Hauptsession vorab entschieden (ADR-024) — der Autopilot prüft/erzwingt das
+  nicht, er arbeitet im vorgefundenen Tree.**
 - Plan unter `plans/<…>.md`; **Ledger** `reports/<plan-stem>-autopilot.md` lesen/anlegen (Plan-Pfad,
   Branch, Cap `20`, Iterations-Zähler, Fortschritts-Checkliste, Ereignis-Log).
 - **Marker** `.claude/.autopilot-active` schreiben (außer bei `--step`): aktiviert den

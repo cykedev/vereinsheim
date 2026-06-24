@@ -22,3 +22,6 @@ PIV step 1 of 4 (plan → implement → validate → review). For a non-trivial 
    placeholders left? do names/types in later tasks match earlier ones? Fix inline.
 5. Propose a `feat/<topic>` branch and commit the plan as the **first commit** on it
    (project hard rule), then **lay the plan before the user** — before any implementation.
+   Whether implementation runs in an isolated worktree is the **user's call, made up front in the main
+   session** (ADR-024) — the skills neither create nor require one. If isolation is wanted, the user
+   sets up the worktree before `/implement`; otherwise it runs on the `feat/` branch in the current tree.
