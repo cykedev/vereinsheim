@@ -50,8 +50,10 @@ try {
 
   const msg =
     `Memory-Graph = INDEX über die Doku (.claude/knowledge-graph.json, ADR-022): ${entities} Entities ` +
-    `(${breakdown}), ${relations} Relationen. So einsteigen: ABFRAGEN mit mcp__memory__search_nodes/` +
-    `open_nodes/read_graph, BEVOR du breit explorierst; jede Entity trägt Essenz + Fragment-Pointer ` +
+    `(${breakdown}), ${relations} Relationen. So einsteigen — ABFRAGEN, BEVOR du breit explorierst: primär ` +
+    `mcp__memory__search_nodes mit EINEM Stichwort (reines Substring-Matching, kein Stemming/keine Synonyme; eine ` +
+    `natürlichsprachliche PHRASE matcht NICHTS) oder open_nodes mit exaktem Namen; read_graph ist bei ${entities} ` +
+    `Entities ein großer Dump, daher sparsam. Jede Entity trägt Essenz + Fragment-Pointer ` +
     `\`→ datei#slug\` — den Abschnitt gezielt lesen mit \`node .claude/doc.mjs datei#slug\` (nur der ` +
     `Abschnitt, nicht die ganze Datei). Relationen (governed_by/contrasts_with/see_also/…) zum Weitergehen ` +
     `folgen. NEUES Wissen NICHT per Live-mcp__memory__-Write (ein Rebuild überschriebe ihn): in die QUELLE ` +

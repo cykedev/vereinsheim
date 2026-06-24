@@ -71,8 +71,9 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
   Doku-Index** (Store `.claude/knowledge-graph.json`, **ADR-022**): deterministisch via
   `node .claude/build-graph.mjs` aus `docs/decisions.md` (ADRs geparst) + `.claude/graph-projection.mjs`
   (Manifest) + `.claude/graph-captured.mjs` (Incidents/State). Jede Entity = Essenz + Fragment-Pointer
-  `→ datei#slug`; gezielt lesen mit `node .claude/doc.mjs datei#slug`. ABFRAGEN (mcp__memory__search_nodes)
-  vor breitem Explorieren; SessionStart-Hook `memory-surface.mjs` surface't den Index. Schreiben: in die
+  `→ datei#slug`; gezielt lesen mit `node .claude/doc.mjs datei#slug`. ABFRAGEN (mcp__memory__search_nodes
+  mit EINEM Stichwort — reines Substring-Matching, nie eine natürlichsprachliche Phrase) vor breitem
+  Explorieren; SessionStart-Hook `memory-surface.mjs` surface't den Index. Schreiben: in die
   **Quelle** + Rebuild (`/sync-graph` bzw. `/consolidate-lessons`), **nie** den Store von Hand. Abgrenzung
   zum nativen Auto-Memory: projekt-/via-git-geteiltes → Doku-Index; maschinen-/ops-lokales → Auto-Memory.
 - **CLAUDE.md-Hierarchie:** diese Datei = universelle Schicht; je App `apps/<app>/CLAUDE.md` +
