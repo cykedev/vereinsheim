@@ -6,7 +6,7 @@
   "author": "Christian Eiden",
   "prettier": "@vereinsheim/config/prettier",
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev --webpack -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint src",
