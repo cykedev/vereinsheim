@@ -165,8 +165,8 @@ describe("4-participant round robin — clean ranking", () => {
 // ---------------------------------------------------------------------------
 describe("3-way tie on wins — broken by Satzdifferenz", () => {
   // All three end on 1 win / 1 loss (tied on wins). Head-to-head is circular
-  // (A beat B, B beat C, C beat A) and is NOT a ranking criterion — the
-  // Satzdifferenz decides directly.
+  // (A beat B, B beat C, C beat A). It is criterion 4 (after Satzdifferenz), so
+  // here it is never reached — the Satzdifferenz already separates the three.
   //   A vs B: A wins 3:0 · B vs C: B wins 3:0 · C vs A: C wins 2:1
   //   Satzdifferenz: A = +3 −1 = +2 · B = −3 +3 = 0 · C = +2 −3 = −2
   //   Ranking: A(+2) > B(0) > C(−2)
@@ -218,7 +218,7 @@ describe("3-way tie on wins — broken by Satzdifferenz", () => {
   })
 
   it("all tied on 1 win — Satzdifferenz separates them", () => {
-    // Head-to-head is circular and unused; the Satzdifferenz decides:
+    // Head-to-head is circular and never reached here; the Satzdifferenz decides:
     //   A: wins 3 duels vs B, loses 1 duel vs C → 3-1 = +2
     //   B: wins 3 duels vs C, loses 3 duels vs A → 3-3 = 0
     //   C: wins 2 duels vs A, loses 3 duels vs B → 2-4 = -2
@@ -274,11 +274,11 @@ describe("3-way tie on wins — Satzdifferenz values are correct", () => {
 })
 
 // ---------------------------------------------------------------------------
-// Head-to-head is NOT a criterion — Satzdifferenz outranks a direct win
+// Head-to-head is criterion 4 — Satzdifferenz (criterion 2) outranks a direct win
 // ---------------------------------------------------------------------------
 describe("Head-to-head loser ranks higher with better Satzdifferenz", () => {
   // A beats B directly (2:1), but B's overall Satzdifferenz is far better.
-  // Head-to-head is not a ranking criterion, so B ranks above A.
+  // Head-to-head is only criterion 4 (after Satzdifferenz), so B ranks above A here.
   //   A: beat B (2:1), lost to C (0:3), beat D (3:0) → 2 wins, Satzdiff +1
   //   B: lost to A (1:2), beat C (3:0), beat D (3:0) → 2 wins, Satzdiff +5
   //   C: beat A (3:0), lost to B (0:3), beat D (3:0) → 2 wins, Satzdiff +3
@@ -523,23 +523,19 @@ describe("BYE matchup is skipped", () => {
 })
 
 // ---------------------------------------------------------------------------
-// Test 6: RINGS mode — best result is bestRings desc
+// Test 6: 2-way tie, direct match not played → alphabetical + "open" annotation
 // ---------------------------------------------------------------------------
-describe("RINGS mode — bestRings used for tiebreak", () => {
-  // A and B both have 1 win:
-  //   A beats C, B beats D, then A and B haven't played each other.
-  //   But let's use 2 participants: A beats B in one match, B beats A in another (not possible with round-robin once).
-  //
-  // Simpler: 3 participants, 2 have same wins, bestRings decides.
-  //   A: 1 win (beat C), bestRings from those 3 duels = 270 (90+90+90)? No, bestRings = max single series rings.
-  //   Wait: bestRings is max rings over regular series (individual series, not sum).
-  //
-  // A: beats C with rings [95, 90, 88] → bestRings = 95
-  // B: beats C with rings [93, 91, 89] → bestRings = 93
-  // (C loses to both)
-  // Both A and B have 1 win — RINGS mode → A ranks higher (bestRings 95 > 93)
+describe("2-way tie without a direct match — alphabetical, annotated open", () => {
+  // A and B both beat C but never played each other (incomplete round-robin).
+  // They tie on wins/duelDiff/duelsWon; the direct comparison cannot decide →
+  // alphabetical order, each row annotated "open" with the not-yet-played opponent.
+  // RINGS mode — proves the tiebreak no longer depends on the scoring value.
 
-  const participants = [mkParticipant("A"), mkParticipant("B"), mkParticipant("C")]
+  const participants = [
+    mkParticipant("A", "Alice", "Alpha"),
+    mkParticipant("B", "Bob", "Beta"),
+    mkParticipant("C", "Carl", "Gamma"),
+  ]
 
   const config: BestOfStandingsConfig = {
     scoringMode: "RINGS",
@@ -553,94 +549,123 @@ describe("RINGS mode — bestRings used for tiebreak", () => {
   const matchupAC: BestOfStandingsMatchup = {
     homeParticipantId: "A",
     awayParticipantId: "C",
-    series: [
-      mkSeries("A", 1, 95, 0, { ringteiler: 0 }),
-      mkSeries("C", 1, 70, 0, { ringteiler: 0 }),
-      mkSeries("A", 2, 90, 0, { ringteiler: 0 }),
-      mkSeries("C", 2, 70, 0, { ringteiler: 0 }),
-      mkSeries("A", 3, 88, 0, { ringteiler: 0 }),
-      mkSeries("C", 3, 70, 0, { ringteiler: 0 }),
-    ],
+    series: [1, 2, 3].flatMap((n) => [
+      mkSeries("A", n, 95, 0, { ringteiler: 0 }),
+      mkSeries("C", n, 70, 0, { ringteiler: 0 }),
+    ]),
   }
 
   const matchupBC: BestOfStandingsMatchup = {
     homeParticipantId: "B",
     awayParticipantId: "C",
-    series: [
-      mkSeries("B", 1, 93, 0, { ringteiler: 0 }),
-      mkSeries("C", 1, 68, 0, { ringteiler: 0 }),
-      mkSeries("B", 2, 91, 0, { ringteiler: 0 }),
-      mkSeries("C", 2, 68, 0, { ringteiler: 0 }),
-      mkSeries("B", 3, 89, 0, { ringteiler: 0 }),
-      mkSeries("C", 3, 68, 0, { ringteiler: 0 }),
-    ],
+    series: [1, 2, 3].flatMap((n) => [
+      mkSeries("B", n, 93, 0, { ringteiler: 0 }),
+      mkSeries("C", n, 68, 0, { ringteiler: 0 }),
+    ]),
   }
 
   const rows = calculateBestOfStandings(participants, [matchupAC, matchupBC], config)
 
-  it("A and B both have 1 win", () => {
+  it("A and B tie on wins, Satzdifferenz and Satzverhältnis", () => {
     expect(row(rows, "A").wins).toBe(1)
     expect(row(rows, "B").wins).toBe(1)
+    expect(row(rows, "A").duelDiff).toBe(row(rows, "B").duelDiff)
+    expect(row(rows, "A").duelsWon).toBe(row(rows, "B").duelsWon)
   })
 
-  it("A has bestRings=95, B has bestRings=93", () => {
-    expect(row(rows, "A").bestRings).toBe(95)
-    expect(row(rows, "B").bestRings).toBe(93)
-  })
-
-  it("A ranks above B due to higher bestRings in RINGS mode", () => {
+  it("alphabetical order (Alpha before Beta) because the direct comparison is open", () => {
     expect(row(rows, "A").rank).toBe(1)
     expect(row(rows, "B").rank).toBe(2)
+  })
+
+  it("each row is annotated open with the not-yet-played opponent", () => {
+    expect(row(rows, "A").directComparison).toEqual({ kind: "open", opponent: "Beta" })
+    expect(row(rows, "B").directComparison).toEqual({ kind: "open", opponent: "Alpha" })
   })
 })
 
 // ---------------------------------------------------------------------------
-// Test 7: RINGTEILER mode — bestRingteiler asc (lower is better)
+// Test 7: 2-way tie broken by the direct comparison (Kriterium 4)
 // ---------------------------------------------------------------------------
-describe("RINGTEILER mode — bestRingteiler used for tiebreak", () => {
-  // A and B both have 1 win:
-  // A: beats C, bestRingteiler from their series = 5 (min of 5, 10, 8)
-  // B: beats C, bestRingteiler = 7 (min of 7, 12, 9)
-  // A ranks higher (lower ringteiler = better)
+describe("2-way tie broken by the direct comparison", () => {
+  // A and B tie on wins (2), Satzdifferenz (+1) and Satzverhältnis (5:4).
+  // A beat B directly 2:1 → A ranks above B; both rows carry the decided annotation.
+  //   A: beat B 2:1, beat C 3:0, lost to D 0:3
+  //   B: lost to A 1:2, beat C 2:1, beat D 2:1
+  // RINGTEILER mode (lower teiler wins the duel).
 
-  const participants = [mkParticipant("A"), mkParticipant("B"), mkParticipant("C")]
+  const participants = [
+    mkParticipant("A", "Anna", "Alpha"),
+    mkParticipant("B", "Bob", "Beta"),
+    mkParticipant("C", "Carl", "Gamma"),
+    mkParticipant("D", "Dora", "Delta"),
+  ]
 
-  const matchupAC: BestOfStandingsMatchup = {
+  // A beats B 2:1 (A lower teiler in duels 1+2, B lower in duel 3).
+  const matchupAB: BestOfStandingsMatchup = {
     homeParticipantId: "A",
-    awayParticipantId: "C",
+    awayParticipantId: "B",
     series: [
-      mkSeries("A", 1, 90, 5, { ringteiler: 5 }),
-      mkSeries("C", 1, 70, 50, { ringteiler: 50 }),
-      mkSeries("A", 2, 90, 10, { ringteiler: 10 }),
-      mkSeries("C", 2, 70, 50, { ringteiler: 50 }),
-      mkSeries("A", 3, 90, 8, { ringteiler: 8 }),
-      mkSeries("C", 3, 70, 50, { ringteiler: 50 }),
+      mkSeries("A", 1, 90, 10),
+      mkSeries("B", 1, 90, 20),
+      mkSeries("A", 2, 90, 10),
+      mkSeries("B", 2, 90, 20),
+      mkSeries("A", 3, 90, 20),
+      mkSeries("B", 3, 90, 10),
     ],
   }
 
-  const matchupBC: BestOfStandingsMatchup = {
-    homeParticipantId: "B",
-    awayParticipantId: "C",
-    series: [
-      mkSeries("B", 1, 90, 7, { ringteiler: 7 }),
-      mkSeries("C", 1, 70, 50, { ringteiler: 50 }),
-      mkSeries("B", 2, 90, 12, { ringteiler: 12 }),
-      mkSeries("C", 2, 70, 50, { ringteiler: 50 }),
-      mkSeries("B", 3, 90, 9, { ringteiler: 9 }),
-      mkSeries("C", 3, 70, 50, { ringteiler: 50 }),
-    ],
-  }
-
-  const rows = calculateBestOfStandings(participants, [matchupAC, matchupBC], stdConfig)
-
-  it("A bestRingteiler=5, B bestRingteiler=7", () => {
-    expect(row(rows, "A").bestRingteiler).toBe(5)
-    expect(row(rows, "B").bestRingteiler).toBe(7)
+  // home wins 3:0 (home teiler 10, away 20).
+  const win30 = (home: string, away: string): BestOfStandingsMatchup => ({
+    homeParticipantId: home,
+    awayParticipantId: away,
+    series: [1, 2, 3].flatMap((n) => [mkSeries(home, n, 90, 10), mkSeries(away, n, 90, 20)]),
   })
 
-  it("A ranks above B due to lower bestRingteiler in RINGTEILER mode", () => {
+  // home wins 2:1 (home lower in duels 1+2, away lower in duel 3).
+  const win21 = (home: string, away: string): BestOfStandingsMatchup => ({
+    homeParticipantId: home,
+    awayParticipantId: away,
+    series: [
+      mkSeries(home, 1, 90, 10),
+      mkSeries(away, 1, 90, 20),
+      mkSeries(home, 2, 90, 10),
+      mkSeries(away, 2, 90, 20),
+      mkSeries(home, 3, 90, 20),
+      mkSeries(away, 3, 90, 10),
+    ],
+  })
+
+  const matchups = [matchupAB, win30("A", "C"), win30("D", "A"), win21("B", "C"), win21("B", "D")]
+  const rows = calculateBestOfStandings(participants, matchups, stdConfig)
+
+  it("A and B tie on wins (2), Satzdifferenz (+1) and Satzverhältnis (5:4)", () => {
+    expect(row(rows, "A").wins).toBe(2)
+    expect(row(rows, "B").wins).toBe(2)
+    expect(row(rows, "A").duelDiff).toBe(1)
+    expect(row(rows, "B").duelDiff).toBe(1)
+    expect(row(rows, "A").duelsWon).toBe(5)
+    expect(row(rows, "B").duelsWon).toBe(5)
+  })
+
+  it("A ranks above B via the direct win (2:1)", () => {
     expect(row(rows, "A").rank).toBe(1)
     expect(row(rows, "B").rank).toBe(2)
+  })
+
+  it("both rows carry the decided annotation with satz + opponent", () => {
+    expect(row(rows, "A").directComparison).toEqual({
+      kind: "decided",
+      result: "win",
+      satz: [2, 1],
+      opponent: "Beta",
+    })
+    expect(row(rows, "B").directComparison).toEqual({
+      kind: "decided",
+      result: "loss",
+      satz: [1, 2],
+      opponent: "Alpha",
+    })
   })
 })
 

@@ -10,9 +10,15 @@ import type {
   BestOfStandingsMatchup,
   BestOfStandingsConfig,
   BestOfStandingRow,
+  HeadToHead,
   ParticipantStats,
 } from "./bestOfStandingsTypes"
-import { groupByDuelNumber, sortedDuelNumbers, toDuelSeries } from "./bestOfStandingsHelpers"
+import {
+  groupByDuelNumber,
+  setH2H,
+  sortedDuelNumbers,
+  toDuelSeries,
+} from "./bestOfStandingsHelpers"
 import { sortStandings } from "./bestOfStandingsSort"
 
 // Typen werden re-exportiert, damit der Import-Pfad "./calculateBestOfStandings" stabil bleibt.
@@ -30,6 +36,9 @@ export function calculateBestOfStandings(
   config: BestOfStandingsConfig
 ): BestOfStandingRow[] {
   const withdrawnIds = new Set(participants.filter((p) => p.withdrawn).map((p) => p.id))
+
+  // Head-to-head results from completed matches → direct-comparison tiebreaker (Kriterium 4).
+  const headToHead: HeadToHead = new Map()
 
   // Initialise stats for every participant.
   const statsMap = new Map<string, ParticipantStats>()
@@ -108,6 +117,19 @@ export function calculateBestOfStandings(
     awayStats.duelsWon += tally.awayWins
     awayStats.duelsLost += tally.homeWins
 
+    // Record the completed match for the direct comparison (Kriterium 4).
+    const homeWon = status.winner === "A"
+    setH2H(headToHead, homeId, awayId, {
+      duelsWon: tally.homeWins,
+      duelsLost: tally.awayWins,
+      won: homeWon,
+    })
+    setH2H(headToHead, awayId, homeId, {
+      duelsWon: tally.awayWins,
+      duelsLost: tally.homeWins,
+      won: !homeWon,
+    })
+
     // Collect best-result data from each participant's regular series.
     for (const s of regularSeries) {
       const stats = statsMap.get(s.participantId)
@@ -144,7 +166,7 @@ export function calculateBestOfStandings(
   const active = rows.filter((r) => !r.withdrawn)
   const withdrawn = rows.filter((r) => r.withdrawn)
 
-  const sorted = sortStandings(active, config.scoringMode)
+  const sorted = sortStandings(active, headToHead)
 
   sorted.forEach((r, i) => {
     r.rank = i + 1

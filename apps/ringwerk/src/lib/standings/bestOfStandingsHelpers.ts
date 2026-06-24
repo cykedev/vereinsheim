@@ -1,5 +1,5 @@
 import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
-import type { BestOfStandingsSeries } from "./bestOfStandingsTypes"
+import type { BestOfStandingsSeries, DirectResult, HeadToHead } from "./bestOfStandingsTypes"
 
 interface DuelPair {
   home: BestOfStandingsSeries
@@ -48,4 +48,19 @@ export function groupByDuelNumber(
 /** Return duel numbers sorted ascending. */
 export function sortedDuelNumbers(map: Map<number, DuelPair>): number[] {
   return [...map.keys()].sort((a, b) => a - b)
+}
+
+/** Record one participant's direct result vs an opponent into the head-to-head map (Kriterium 4). */
+export function setH2H(
+  h2h: HeadToHead,
+  participantId: string,
+  opponentId: string,
+  result: DirectResult
+): void {
+  let inner = h2h.get(participantId)
+  if (!inner) {
+    inner = new Map()
+    h2h.set(participantId, inner)
+  }
+  inner.set(opponentId, result)
 }
