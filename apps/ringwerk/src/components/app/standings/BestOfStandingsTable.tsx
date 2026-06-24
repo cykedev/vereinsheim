@@ -1,11 +1,12 @@
-import type { ScoringMode } from "@/generated/prisma/client"
 import type { BestOfStandingRow } from "@/lib/standings/queries"
-import { formatDecimal1, formatRings } from "@/lib/series/scoring-format"
+import {
+  formatDirectComparison,
+  type DirectComparisonTone,
+} from "@/lib/standings/formatDirectComparison"
 import { RankBadge } from "@/components/ui/rank-badge"
 
 interface Props {
   rows: BestOfStandingRow[]
-  scoringMode: ScoringMode
 }
 
 const ROW_HIGHLIGHT: Record<number, string> = {
@@ -14,7 +15,15 @@ const ROW_HIGHLIGHT: Record<number, string> = {
   3: "bg-orange-500/5",
 }
 
-export function BestOfStandingsTable({ rows, scoringMode }: Props) {
+// Direktvergleich-Ton (aus formatDirectComparison) → Tailwind-Klassen.
+const DIRECT_TONE_CLASS: Record<DirectComparisonTone, string> = {
+  win: "font-medium text-emerald-600 dark:text-emerald-400",
+  loss: "text-muted-foreground",
+  pending: "italic text-amber-600 dark:text-amber-400",
+  muted: "text-muted-foreground",
+}
+
+export function BestOfStandingsTable({ rows }: Props) {
   if (rows.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-muted-foreground">
@@ -22,12 +31,6 @@ export function BestOfStandingsTable({ rows, scoringMode }: Props) {
       </p>
     )
   }
-
-  // RINGS / RINGS_DECIMAL modes rank by best rings (higher = better); show rings column.
-  // All other modes rank by best Ringteiler (lower = better); show Ringteiler column.
-  const showRings = scoringMode === "RINGS" || scoringMode === "RINGS_DECIMAL"
-  // RINGS_DECIMAL uses decimal display ("96,5"); RINGS uses integer ("96").
-  const scoringType = scoringMode === "RINGS_DECIMAL" ? "DECIMAL" : "WHOLE"
 
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
@@ -53,13 +56,14 @@ export function BestOfStandingsTable({ rows, scoringMode }: Props) {
               Satzverhältnis
             </th>
             <th className="hidden px-4 py-2.5 text-right font-medium text-muted-foreground sm:table-cell">
-              {showRings ? "Best. Ringe" : "Best. RT"}
+              Direktvergleich
             </th>
           </tr>
         </thead>
         <tbody className="divide-y">
           {rows.map((row) => {
             const rowHighlight = row.withdrawn ? "" : (ROW_HIGHLIGHT[row.rank] ?? "")
+            const direct = formatDirectComparison(row.directComparison)
             return (
               <tr
                 key={row.participantId}
@@ -106,10 +110,8 @@ export function BestOfStandingsTable({ rows, scoringMode }: Props) {
                 <td className="hidden px-4 py-3 text-center text-muted-foreground sm:table-cell">
                   {row.duelsWon}:{row.duelsLost}
                 </td>
-                <td className="hidden px-4 py-3 text-right text-muted-foreground sm:table-cell">
-                  {showRings
-                    ? formatRings(row.bestRings, scoringType)
-                    : formatDecimal1(row.bestRingteiler)}
+                <td className="hidden px-4 py-3 text-right sm:table-cell">
+                  <span className={DIRECT_TONE_CLASS[direct.tone]}>{direct.text}</span>
                 </td>
               </tr>
             )
