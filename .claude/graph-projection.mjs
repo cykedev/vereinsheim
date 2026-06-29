@@ -4,10 +4,10 @@
 // NICHT den generierten Store (.claude/knowledge-graph.json) editieren — immer hier.
 //
 // Jede Entity trägt eine `Keywords: …`-Observation als Retrieval-Hilfe: der Memory-MCP
-// (search_nodes) macht reines Substring-Matching (kein Stemming/keine Synonyme), daher hier
+// (search_nodes) rankt per BM25 über Namen/Keywords/Essenz mit Synonym-Expansion, daher hier
 // die deutschen Synonyme + gängigen englischen Tech-Begriffe listen, die ein Agent real
-// sucht, die aber in der Essenz nicht wörtlich vorkommen. Die Zeile trägt KEINEN
-// `→`-Pointer, damit der Builder sie als Plain-Text behandelt.
+// sucht, die aber in der Essenz nicht wörtlich vorkommen — sie heben den Rank. Die Zeile trägt
+// KEINEN `→`-Pointer, damit der Builder sie als Plain-Text behandelt.
 
 export default {
   "entities": [

@@ -72,7 +72,8 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
   `node .claude/build-graph.mjs` aus `docs/decisions.md` (ADRs geparst) + `.claude/graph-projection.mjs`
   (Manifest) + `.claude/graph-captured.mjs` (Incidents/State). Jede Entity = Essenz + Fragment-Pointer
   `→ datei#slug`; gezielt lesen mit `node .claude/doc.mjs datei#slug`. ABFRAGEN (mcp__memory__search_nodes
-  mit EINEM Stichwort — reines Substring-Matching, nie eine natürlichsprachliche Phrase) vor breitem
+  mit einer natürlichsprachlichen Frage, DE oder EN — BM25 über Namen/Keywords/Essenz + Synonym-Expansion,
+  ein voller Satz rankt am besten) vor breitem
   Explorieren; SessionStart-Hook `memory-surface.mjs` surface't den Index. Schreiben: in die
   **Quelle** + Rebuild (`/sync-graph` bzw. `/consolidate-lessons`), **nie** den Store von Hand. Abgrenzung
   zum nativen Auto-Memory: projekt-/via-git-geteiltes → Doku-Index; maschinen-/ops-lokales → Auto-Memory.
