@@ -11,9 +11,11 @@
 // Integrität UND jeden `→ datei#slug`-Pointer (toter Pointer = Build-Fehler, kein
 // stiller Drift). Aufruf: `node .claude/build-graph.mjs`.
 import { readFileSync, writeFileSync, existsSync } from "node:fs"
-import { slugify, headingSlugs } from "./doc-index.mjs"
+import { slugify, headingSlugs, readFragment } from "./doc-index.mjs"
+import { extractKeywords } from "./keyword-extract.mjs"
 
 const STORE = ".claude/knowledge-graph.json"
+const SEARCH_SIDECAR = ".claude/knowledge-graph.search.json"
 const DECISIONS = "docs/decisions.md"
 
 // ── 1. ADRs aus decisions.md parsen ──────────────────────────────────────────
@@ -110,10 +112,42 @@ if (errors.length) {
   process.exit(1)
 }
 
+// ── Auto-Keywords: Sidecar für die Such-Engine ───────────────────────────────
+// Aus dem verlinkten Doku-Abschnitt jeder Entity wird deterministisch ein
+// umfangreicher Keyword-Satz extrahiert und NUR in den Sidecar geschrieben — der
+// Store (read_graph/open_nodes) bleibt schlank. Je besser die Doku, desto besser
+// die Suche, ohne manuelle Pflege.
+const mdCache = new Map()
+const mdOf = (file) => {
+  if (!mdCache.has(file)) mdCache.set(file, existsSync(file) ? readFileSync(file, "utf8") : null)
+  return mdCache.get(file)
+}
+const autokeywords = {}
+for (const e of entities) {
+  const terms = new Set()
+  for (const o of e.observations) {
+    const m = o.match(/^→ (\S+)$/)
+    if (!m) continue
+    const hashAt = m[1].indexOf("#")
+    if (hashAt === -1) continue
+    const md = mdOf(m[1].slice(0, hashAt))
+    if (!md) continue
+    const frag = readFragment(md, m[1].slice(hashAt + 1))
+    if (frag) for (const k of extractKeywords(frag)) terms.add(k)
+  }
+  if (terms.size) autokeywords[e.name] = [...terms].sort().join(" ")
+}
+const sidecar = { autokeywords: {} }
+for (const name of Object.keys(autokeywords).sort()) sidecar.autokeywords[name] = autokeywords[name]
+writeFileSync(SEARCH_SIDECAR, JSON.stringify(sidecar, null, 2) + "\n")
+
 // ── Serialisierung (kompaktes JSONL, UTF-8 literal, trailing \n) ─────────────
 const out = [
   ...entities.map((e) => JSON.stringify({ type: "entity", name: e.name, entityType: e.entityType, observations: e.observations })),
   ...relations.map((r) => JSON.stringify({ type: "relation", from: r.from, to: r.to, relationType: r.relationType })),
 ]
 writeFileSync(STORE, out.join("\n") + "\n")
-console.log(`build-graph: ${entities.length} entities, ${relations.length} relations, ${pointerCount} pointers → ${STORE}`)
+console.log(
+  `build-graph: ${entities.length} entities, ${relations.length} relations, ${pointerCount} pointers, ` +
+    `${Object.keys(autokeywords).length} auto-keyworded → ${STORE} (+ .search.json)`,
+)
