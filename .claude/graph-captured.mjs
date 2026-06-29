@@ -4,8 +4,8 @@
 // NICHT den generierten Store (.claude/knowledge-graph.json) editieren — immer hier.
 //
 // Wie im Manifest trägt jede Entity eine `Keywords: …`-Observation als Retrieval-Hilfe
-// (search_nodes ist reines Substring-Matching): deutsche Synonyme + englische Tech-Begriffe,
-// die ein Agent sucht, die aber im Prosatext fehlen. Kein `→`-Pointer → Plain-Text.
+// (search_nodes rankt per BM25 über Keywords mit Synonym-Expansion): deutsche Synonyme +
+// englische Tech-Begriffe, die ein Agent sucht, die aber im Prosatext fehlen. Kein `→`-Pointer → Plain-Text.
 
 export default {
   "entities": [
