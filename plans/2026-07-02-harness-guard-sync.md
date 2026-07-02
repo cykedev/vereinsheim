@@ -4,7 +4,7 @@
 
 Dieses Repo wurde von der `basic-harness`-Blueprint (neteleven/basic-harness) abgeleitet und
 per `/harness-init` an dieses Projekt gebunden. Seit dem letzten Sync hat der Upstream (lokal
-unter `/Users/christian/repos/basic-harness`, Commits `850772e..ae6774a`) vier real ausnutzbare
+unter `/Users/christian/repos/basic-harness`, Commits `850772e..b96ece5`) sechs real ausnutzbare
 Bypässe in den PreToolUse-Guards geschlossen:
 
 1. **BSD-`-Rf`-Bypass** — die Rekursions-Erkennung verlangte ein lowercase `r`; `rm -Rf /`
@@ -18,10 +18,30 @@ Bypässe in den PreToolUse-Guards geschlossen:
    Basename wurden erkannt; `.env.production` oder ein `config.env`-artiger Name liefen
    bei Read/Edit/Write durch.
 
-**Verifiziert**: Alle vier Bugs reproduzieren sich unabhängig auch in unserer lokalen Kopie
-von `.claude/hooks/pretool-guard.mjs` und `.claude/hooks/autopilot-guard.mjs` — trotz
-struktureller Divergenz vom Blueprint (unsere Dateien sind komplett auf Deutsch neu
-geschrieben, mit eigener Quote-Blanking-Architektur statt Upstreams `bashSegments`-Tokenizer).
+**Nachtrag während der Planungsphase**: ein fünfter und sechster Bug wurden im Upstream mit
+Commit `b96ece5` ("fix(hooks): scope .env-read check to first-word-of-segment, catch
+sudo/doas rm") geschlossen, beide isoliert in `pretool-guard.mjs`:
+
+5. **`.env`-Read-Check war String-weit statt Segment-weit** — `git commit -m "fix: source
+   .env handling"` wurde fälschlich geblockt, weil die Commit-Message zufällig „source .env"
+   enthält. Der Fix scoped den Check wie den rm-Guard auf Segmente, deren erstes echtes Wort
+   ein Read-Verb ist. **Reproduziert unabhängig auch in unserer alten Kopie** (unser
+   `mentionsSecret`/`readsFile`-Check prüft beide Bedingungen unabhängig irgendwo im ganzen
+   Kommando, nicht zusammenhängend im selben Segment — exakt dieselbe Klasse False-Positive).
+6. **`sudo rm -rf /` / `doas rm -rf /` wurden nicht erkannt** — der Tokenizer verlangte, dass
+   `rm` das erste Wort im Segment ist; ein `sudo`/`doas`-Präfix (samt eigener Flags) wird jetzt
+   optional übersprungen. **Kein Bug unserer alten Kopie** (unser bisheriger rm-Check matched
+   `/\brm\b/` als Substring irgendwo im Segment, nicht zwingend als erstes Wort — `sudo rm -rf /`
+   wurde also schon vorher erkannt), **aber** eine Lücke, die die in diesem Plan ohnehin
+   vorgesehene Umstellung auf Upstreams first-word-`bashSegments`-Tokenizer (Task 3) sonst NEU
+   eingeführt hätte. Wird direkt mit der Umstellung mitgezogen, keine Regression.
+
+**Verifiziert**: Bugs 1–5 reproduzieren sich unabhängig auch in unserer lokalen Kopie von
+`.claude/hooks/pretool-guard.mjs` und `.claude/hooks/autopilot-guard.mjs` — trotz struktureller
+Divergenz vom Blueprint (unsere Dateien sind komplett auf Deutsch neu geschrieben, mit eigener
+Quote-Blanking-Architektur statt Upstreams `bashSegments`-Tokenizer). Bug 6 ist keine bestehende
+Lücke, sondern eine Upstream-Erkenntnis, die wir direkt mit übernehmen, um sie nicht selbst neu
+einzuführen.
 
 **Zusätzlich festgestellt** (User-Entscheidung, siehe unten): unsere Kopie hat gegenüber dem
 aktuellen Blueprint-Stand strukturell gefehlt:
@@ -516,13 +536,16 @@ Ersetzt den kompletten Dateiinhalt durch:
 // rekursive Deletes (/, ~, $HOME, ., *, Secrets). Erlaubt *.example / *.template / *.sample.
 // Fail-open: jeder Parse-/Logikfehler -> exit 0 (erlauben, nie bricken).
 //
-// Der rm-Guard ist quote-AWARE, nicht quote-blankend: er nutzt autopilot-guard.mjs's
-// Tokenizer (bashSegments), um die Kommandozeile in Segmente zu splitten, und prüft nur
-// Segmente, deren erstes Wort wörtlich `rm` ist. Das lässt eine Commit-Message, die
-// `rm -rf /` nur ERWÄHNT, passieren (ihr Segment beginnt mit `git`, nicht `rm`), ohne
-// vorher global Quotes zu blanken — was früher auch ein legitim gequotetes Ziel wie
-// `rm -rf "$HOME"` gelöscht hat (bestätigter Bypass). Die .env-Read- und
-// Dev-Server-Checks nutzen weiterhin String-Level-Matching (siehe deren Kommentare).
+// Der rm-Guard und der .env-Read-Guard sind beide quote-AWARE, nicht quote-blankend: sie
+// nutzen autopilot-guard.mjs's Tokenizer (bashSegments), um die Kommandozeile in Segmente
+// zu splitten, und prüfen nur Segmente, deren erstes echtes Wort (nach einem optionalen
+// `sudo`/`doas`-Präfix) wörtlich `rm` bzw. eines der Read-Verben ist. Das lässt eine
+// Commit-Message, die `rm -rf /` oder `source .env` nur ERWÄHNT, passieren (ihr Segment
+// beginnt mit `git`, nicht `rm`/`source`), ohne vorher global Quotes zu blanken — was
+// früher sowohl ein legitim gequotetes Ziel wie `rm -rf "$HOME"` gelöscht hat (bestätigter
+// Bypass) als auch eine Commit-Message wie `git commit -m "fix: source .env handling"`
+// fälschlich geblockt hat. Der Dev-Server-Check nutzt weiterhin String-Level-Quote-Blanking
+// (siehe dessen Kommentar).
 import { existsSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { resolve, join } from "node:path"
@@ -541,12 +564,23 @@ const DEV_SERVER = /\bpnpm\b[^&|;]*\bdev\b|\bnext\s+dev\b|\bturbo\s+(run\s+dev|w
 // auf bereits tokenisierte Wörter an).
 const DANGEROUS_TARGET = /^(\/\*?|~\/?\*?|\$\{?HOME\}?\/?\*?|\.\/?\*?|\*)$/
 
+// Kommandos, die ihr erstes echtes Argument als eigentliches Kommando ausführen, ohne
+// Interpreter-One-Liner-Quoting (bashSegments sieht `rm` also schon als eigenes Wort —
+// nichts auszupacken). Es werden nur DEREN EIGENE Flags übersprungen, nicht das Argument
+// eines wertnehmenden Flags (z.B. `sudo -u root rm ...`) — akzeptierte Restlücke,
+// konsistent mit der "nicht wasserdicht"-Haltung dieser Datei.
+const CMD_WRAPPER = /^(sudo|doas)$/
+
+// Kommandos, deren Non-Flag-Argumente dieser Hook als gelesene/berührte Dateien behandelt.
+const ENV_READ_VERBS = /^(cat|less|more|head|tail|nano|vim|vi|sed|awk|grep|rg|xxd|od|strings|cp|mv|source)$/
+
 // ── Pure, testbare Helper (exportiert für pretool-guard.test.mjs) ────────────
 
 // Jeder `rm`-Aufruf einer Kommandozeile, mit gemergten Flags und Non-Flag-Zielen. Flags
 // werden über ALLE Flag-Wörter eines Segments gesammelt (sodass `rm -r -f /` erkannt
 // wird, nicht nur `rm -rf /`) und case-insensitiv auf Rekursion geprüft (BSD/macOS `-R`
-// zählt, nicht nur GNU `-r`).
+// zählt, nicht nur GNU `-r`). Ein optionaler führender `sudo`/`doas`-Präfix (samt dessen
+// eigenen Flags) wird übersprungen, bevor auf `rm` geprüft wird.
 // Nicht Interpreter-aware: `bash -c "rm -rf /"` ist für bashSegments EIN Wort (das ganze
 // gequotete Script), nie ein eigenes `rm`-Segment — wird hier also nicht erkannt.
 // autopilot-guard.mjs's `interpreterOneLinerViolation` schließt das für geschützte
@@ -554,12 +588,17 @@ const DANGEROUS_TARGET = /^(\/\*?|~\/?\*?|\$\{?HOME\}?\/?\*?|\.\/?\*?|\*)$/
 export function rmInvocations(cmd) {
   const out = []
   for (const seg of bashSegments(cmd)) {
-    const c0 = (seg.words[0] || "").replace(/.*\//, "")
+    let i = 0
+    while (CMD_WRAPPER.test((seg.words[i] || "").replace(/.*\//, ""))) {
+      i++
+      while (i < seg.words.length && seg.words[i].startsWith("-")) i++
+    }
+    const c0 = (seg.words[i] || "").replace(/.*\//, "")
     if (c0 !== "rm") continue
     let recursive = false
     let force = false
     const targets = []
-    for (const w of seg.words.slice(1)) {
+    for (const w of seg.words.slice(i + 1)) {
       if (w === "--recursive") {
         recursive = true
         continue
@@ -584,6 +623,28 @@ export function rmInvocations(cmd) {
 // mindestens ein katastrophal breites Ziel benennt.
 export function isDangerousRm(cmd) {
   return rmInvocations(cmd).some((inv) => inv.recursive && inv.force && inv.targets.some((t) => DANGEROUS_TARGET.test(t)))
+}
+
+// True, wenn das Kommando einen ENV_READ_VERBS-Aufruf mit einem echten .env-artigen
+// Argument enthält. Segment-/Erstes-Wort-basiert wie isDangerousRm, sodass ein gequotetes
+// `cat ".env"` weiterhin erkannt wird (bashSegments entquotet es zu seinem eigenen Wort),
+// während ein Kommando, dessen erstes Wort KEIN Read-Verb ist — z.B.
+// `git commit -m "fix: source .env handling"`, dessen Segment mit `git` beginnt — den
+// Wort-Check gar nicht erst erreicht, egal was der gequotete String zufällig erwähnt.
+// Nutzt isDotenvPath (aus _lib.mjs) pro Wort, deckt also automatisch auch unser
+// projektspezifisches `.vereinsheim.local` ab, ohne eigene Regex dafür.
+export function isEnvReadViolation(cmd) {
+  for (const seg of bashSegments(cmd)) {
+    let i = 0
+    while (CMD_WRAPPER.test((seg.words[i] || "").replace(/.*\//, ""))) {
+      i++
+      while (i < seg.words.length && seg.words[i].startsWith("-")) i++
+    }
+    const c0 = (seg.words[i] || "").replace(/.*\//, "")
+    if (!ENV_READ_VERBS.test(c0)) continue
+    if (seg.words.slice(i + 1).some((w) => isDotenvPath(w))) return true
+  }
+  return false
 }
 
 function block(msg) {
@@ -611,11 +672,7 @@ async function main() {
       // (ein gequoteter Pfad wie `cat ".env"` muss weiterhin erkannt werden).
       const noHeredoc = cmd.replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, "")
 
-      const touchesSecret =
-        /\b(cat|less|more|head|tail|nano|vim|vi|sed|awk|grep|rg|xxd|od|strings|cp|mv|source)\b[^|;&]*(\.env(\b|\.)|\.vereinsheim\.local\b)/.test(
-          noHeredoc,
-        )
-      if (touchesSecret && !/\.(example|sample|template)/.test(noHeredoc)) {
+      if (isEnvReadViolation(noHeredoc)) {
         block("Blocked: das Kommando greift auf eine echte Secret-Datei zu (.env* / .vereinsheim.local). Nutze .env.example oder einen anderen Pfad.")
       }
 
@@ -693,28 +750,45 @@ echo '{"tool_name":"Bash","tool_input":{"command":"echo \".env ist geheim\" && c
 # Narrowed path — darf nicht blocken
 echo '{"tool_name":"Bash","tool_input":{"command":"rm -rf ./build"}}' | node .claude/hooks/pretool-guard.mjs; echo "exit:$?"
 # erwartet: exit:0
+
+# sudo/doas-Bypass (Bug 6) — muss jetzt blocken
+echo '{"tool_name":"Bash","tool_input":{"command":"sudo rm -rf /"}}' | node .claude/hooks/pretool-guard.mjs; echo "exit:$?"
+# erwartet: exit:2
+echo '{"tool_name":"Bash","tool_input":{"command":"doas rm -rf /"}}' | node .claude/hooks/pretool-guard.mjs; echo "exit:$?"
+# erwartet: exit:2
+
+# .env-Read-False-Positive (Bug 5) — darf NICHT mehr blocken
+echo '{"tool_name":"Bash","tool_input":{"command":"git commit -m \"fix: source .env handling\""}}' | node .claude/hooks/pretool-guard.mjs; echo "exit:$?"
+# erwartet: exit:0
+
+# .env-Read echt — muss weiterhin blocken
+echo '{"tool_name":"Bash","tool_input":{"command":"source .env"}}' | node .claude/hooks/pretool-guard.mjs; echo "exit:$?"
+# erwartet: exit:2
 ```
 
-**Commit:** `fix(hooks): rebuild pretool-guard on bashSegments architecture, close rm bypasses`
+**Commit:** `fix(hooks): rebuild pretool-guard on bashSegments architecture, close rm/env-read/sudo bypasses`
 
 ---
 
 ## Task 4 — Testdateien für die zwei Guards
 
-**`.claude/hooks/pretool-guard.test.mjs`** — 1:1 aus dem Blueprint (rein generische
-Pure-Function-Coverage, keine projektspezifischen Bindings):
+**`.claude/hooks/pretool-guard.test.mjs`** — aus dem Blueprint übernommen (inkl. der
+`sudo`/`doas`- und `isEnvReadViolation`-Fälle aus Commit `b96ece5`) **plus zwei zusätzliche
+Tests** für unser projektspezifisches `.vereinsheim.local`:
 
 ```js
-// Regression tests for pretool-guard's rm-guard. Pure-function coverage — no
-// process.exit / stdin side effects. Run:
+// Regression tests for pretool-guard's rm-guard and .env-read guard. Pure-function
+// coverage — no process.exit / stdin side effects. Run:
 // node --test .claude/hooks/pretool-guard.test.mjs
 //
-// These lock in the three confirmed bypasses found in review: a quoted dangerous
-// target ("$HOME"), split flags (-r -f), and BSD/macOS-style -Rf.
+// These lock in the confirmed bypasses found in review: a quoted dangerous target
+// ("$HOME"), split flags (-r -f), BSD/macOS-style -Rf, a `sudo`/`doas` prefix on rm,
+// and a commit message merely mentioning "source .env" false-positiving the
+// .env-read guard.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { isDangerousRm } from './pretool-guard.mjs';
+import { isDangerousRm, isEnvReadViolation } from './pretool-guard.mjs';
 
 // Commands that MUST be blocked.
 const MUST_BLOCK = [
@@ -734,6 +808,9 @@ const MUST_BLOCK = [
 	['star', 'rm -rf *'],
 	['braced HOME', 'rm -rf ${HOME}'],
 	['after &&', 'yarn build && rm -rf /'],
+	['sudo prefix', 'sudo rm -rf /'],
+	['sudo with own flag', 'sudo -n rm -rf /'],
+	['doas prefix', 'doas rm -rf /'],
 ];
 
 for (const [label, cmd] of MUST_BLOCK) {
@@ -753,11 +830,45 @@ const MUST_ALLOW = [
 	['commit message mentions rm -rf /', 'git commit -m "fix: don\'t rm -rf / by accident"'],
 	['commit message mentions -Rf', 'git commit -m "note: -Rf is dangerous"'],
 	['no rm at all', 'echo "$HOME"'],
+	['npm rm is not sudo/doas rm', 'npm rm somepkg'],
 ];
 
 for (const [label, cmd] of MUST_ALLOW) {
 	test(`isDangerousRm allows: ${label}`, () => {
 		assert.ok(!isDangerousRm(cmd), `did not expect ${JSON.stringify(cmd)} to be flagged`);
+	});
+}
+
+// .env-read guard: MUST block real reads (including through sudo/quotes), MUST NOT
+// block a command that merely mentions ".env"/"source" in an unrelated argument.
+const ENV_MUST_BLOCK = [
+	['cat .env', 'cat .env'],
+	['quoted cat .env', 'cat ".env"'],
+	['source .env', 'source .env'],
+	['cat config.env', 'cat config.env'],
+	['mv .env elsewhere', 'mv .env /tmp/backup'],
+	['cp real .env over example', 'cp .env.example .env'],
+	['sudo cat .env', 'sudo cat .env'],
+	['cat .vereinsheim.local (vereinsheim-spezifisch)', 'cat .vereinsheim.local'],
+];
+
+for (const [label, cmd] of ENV_MUST_BLOCK) {
+	test(`isEnvReadViolation blocks: ${label}`, () => {
+		assert.ok(isEnvReadViolation(cmd), `expected ${JSON.stringify(cmd)} to be flagged`);
+	});
+}
+
+const ENV_MUST_ALLOW = [
+	['commit message mentions source .env (regression)', 'git commit -m "fix: source .env handling"'],
+	['commit message mentions cat .env', 'git commit -m "docs: explain cat .env usage"'],
+	['.env.example read', 'cat .env.example'],
+	['unrelated cat', 'cat README.md'],
+	['commit message mentions .vereinsheim.local (vereinsheim-spezifisch)', 'git commit -m "docs: explain .vereinsheim.local usage"'],
+];
+
+for (const [label, cmd] of ENV_MUST_ALLOW) {
+	test(`isEnvReadViolation allows: ${label}`, () => {
+		assert.ok(!isEnvReadViolation(cmd), `did not expect ${JSON.stringify(cmd)} to be flagged`);
 	});
 }
 ```
@@ -1249,13 +1360,15 @@ node --test .claude/hooks/pretool-guard.test.mjs .claude/hooks/autopilot-guard.t
 # Bindungs-Check läuft durch (Befund beobachten, siehe Task 5)
 node .claude/check-bindings.mjs
 
-# Die vier ursprünglichen Bugs erneut end-to-end bestätigen
+# Alle sechs ursprünglichen Bugs erneut end-to-end bestätigen
 echo '{"tool_name":"Bash","tool_input":{"command":"rm -Rf /"}}' | node .claude/hooks/pretool-guard.mjs; echo "Bug1 exit:$?"        # erwartet 2
 echo '{"tool_name":"Bash","tool_input":{"command":"rm -rf \"$HOME\""}}' | node .claude/hooks/pretool-guard.mjs; echo "Bug2 exit:$?"  # erwartet 2
 touch .claude/.autopilot-active
 echo '{"tool_name":"Bash","tool_input":{"command":"bash -c \"git push\""}}' | node .claude/hooks/autopilot-guard.mjs; echo "Bug3 exit:$?"  # erwartet 2
 rm .claude/.autopilot-active
 echo '{"tool_name":"Edit","tool_input":{"file_path":"config.env"}}' | node .claude/hooks/pretool-guard.mjs; echo "Bug4 exit:$?"      # erwartet 2
+echo '{"tool_name":"Bash","tool_input":{"command":"git commit -m \"fix: source .env handling\""}}' | node .claude/hooks/pretool-guard.mjs; echo "Bug5 exit:$?"  # erwartet 0 (kein False-Positive)
+echo '{"tool_name":"Bash","tool_input":{"command":"sudo rm -rf /"}}' | node .claude/hooks/pretool-guard.mjs; echo "Bug6 exit:$?"     # erwartet 2
 
 # Turborepo-Gates unverändert grün (Sanity — .claude/ ist nicht Teil davon, darf also nicht
 # kaputtgehen)
