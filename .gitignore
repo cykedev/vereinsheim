@@ -27,6 +27,9 @@ out/
 .superpowers/
 # Autopilot-Marker (ADR-023): transient, maschinen-lokal — aktiviert den autopilot-guard-Hook
 .claude/.autopilot-active
+# Validate-/Review-Berichte (ADR-018-Nachtrag): lokal-only, nie team-geteilt — siehe decisions.md
+reports/*
+!reports/README.md
 
 # Editor / OS
 .DS_Store
