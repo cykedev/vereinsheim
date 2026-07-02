@@ -970,6 +970,14 @@ zwischen Tasks zu pausieren. Eingebettet in PIV, nicht als Ersatz:
   nutzbar, aber **kein vom User getipptes Kommando**.
 - Der Hook ist interaktiv ein No-Op (marker-gated) → keine Regression für normales Arbeiten.
 
+**Nachtrag (Juli 2026, ADR-018-Nachtrag „reports/ lokal-only")**: Das Ledger
+(`reports/<plan-stem>-autopilot.md`) ist davon **mit erfasst**, nicht ausgenommen — auch das Ledger ist
+jetzt lokal-only, nicht mehr team-geteilt. Die obige „persistentes Gedächtnis"/„Audit-Trail"-Formulierung
+ist entsprechend überholt: der tatsächliche, git-persistente Audit-Trail eines Autopilot-Laufs sind die
+einzelnen fokussierten Task-Commits selbst (Conventional-Commits-Historie), nicht die Ledger-Datei. Das
+Ledger bleibt als **Laufzeit-Zustand** bestehen (Resume nach HALT, Fortschritts-Checkliste innerhalb
+eines laufenden `/implement`), verliert aber seine Rolle als geteiltes Nachschlage-Artefakt danach.
+
 ---
 
 ## ADR-024 — Worktree-Wahl ist Hauptsession-Vorab-Entscheidung (schärft ADR-023 §5)
