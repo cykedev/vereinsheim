@@ -653,6 +653,16 @@ systematic-debugging) sind **nativ** in die PIV-Skills + ein neues `/debug` geha
 PIV-Workflow, Sub-Agents und On-Demand-Context (Punkte 1–4) bleiben unverändert; nur die
 „Superpowers-als-Baseline"-Annahme (Punkt 2 + §12) ist abgelöst.
 
+**Nachtrag (Juli 2026)**: `reports/` ist ab sofort **lokal-only**, nicht mehr team-geteilt — die
+ursprüngliche „`plans/`/`reports/` eingecheckt"-Folge (§11 oben) gilt nur noch für `plans/`.
+Begründung: Validate-/Review-Berichte sind Wegwerf-Artefakte einer einzelnen PIV-Runde (im Gegensatz
+zu `plans/`, das als Umsetzungs-Vertrag/Handoff für `/implement` gebraucht wird); ihr Wert für andere
+Teammitglieder ist gering, ihr Volumen wächst mit jeder `/validate`/`/review`-Runde unkontrolliert im
+Repo. `reports/` steht jetzt in `.gitignore`; bereits eingecheckte Berichte wurden aus dem Git-Tracking
+entfernt (Dateien bleiben lokal liegen). Bereits **gepushte** History (vor Juli 2026) enthält sie
+weiterhin — das wurde bewusst nicht per History-Rewrite/Force-Push bereinigt (separate, deutlich
+invasivere Entscheidung, hier nicht getroffen).
+
 ---
 
 ## ADR-019 — App-Root-`.claude`-Layout + geteilte Root-Harness (realisiert ADR-016/017/018)
