@@ -34,10 +34,14 @@ const DANGEROUS_TARGET = /^(\/\*?|~\/?\*?|\$\{?HOME\}?\/?\*?|\.\/?\*?|\*)$/
 
 // Kommandos, die ihr erstes echtes Argument als eigentliches Kommando ausführen, ohne
 // Interpreter-One-Liner-Quoting (bashSegments sieht `rm` also schon als eigenes Wort —
-// nichts auszupacken). Es werden nur DEREN EIGENE Flags übersprungen, nicht das Argument
-// eines wertnehmenden Flags (z.B. `sudo -u root rm ...`) — akzeptierte Restlücke,
-// konsistent mit der "nicht wasserdicht"-Haltung dieser Datei.
+// nichts auszupacken).
 const CMD_WRAPPER = /^(sudo|doas)$/
+// Wertnehmende sudo/doas-Flags: das Argument NACH diesen Flags gehört noch zum Wrapper,
+// nicht zum eigentlichen Kommando (`sudo -u root rm ...` — ohne diesen Sonderfall würde
+// die Skip-Schleife unten bei "root" hängen bleiben und "rm" nie als c0 sehen; bestätigter
+// Regressions-Fund aus /review, Juli 2026 — der alte String-weite Check hatte das per
+// Zufall via `\brm\b`-Substring-Suche noch erkannt).
+const CMD_WRAPPER_VALUE_FLAG = /^-[ug]$/
 
 // Kommandos, deren Non-Flag-Argumente dieser Hook als gelesene/berührte Dateien behandelt.
 const ENV_READ_VERBS = /^(cat|less|more|head|tail|nano|vim|vi|sed|awk|grep|rg|xxd|od|strings|cp|mv|source)$/
@@ -59,7 +63,11 @@ export function rmInvocations(cmd) {
     let i = 0
     while (CMD_WRAPPER.test((seg.words[i] || "").replace(/.*\//, ""))) {
       i++
-      while (i < seg.words.length && seg.words[i].startsWith("-")) i++
+      while (i < seg.words.length && seg.words[i].startsWith("-")) {
+        const isValueFlag = CMD_WRAPPER_VALUE_FLAG.test(seg.words[i])
+        i++
+        if (isValueFlag) i++ // das Argument des Flags gehört noch zum Wrapper, nicht zum Kommando
+      }
     }
     const c0 = (seg.words[i] || "").replace(/.*\//, "")
     if (c0 !== "rm") continue
@@ -106,7 +114,11 @@ export function isEnvReadViolation(cmd) {
     let i = 0
     while (CMD_WRAPPER.test((seg.words[i] || "").replace(/.*\//, ""))) {
       i++
-      while (i < seg.words.length && seg.words[i].startsWith("-")) i++
+      while (i < seg.words.length && seg.words[i].startsWith("-")) {
+        const isValueFlag = CMD_WRAPPER_VALUE_FLAG.test(seg.words[i])
+        i++
+        if (isValueFlag) i++ // das Argument des Flags gehört noch zum Wrapper, nicht zum Kommando
+      }
     }
     const c0 = (seg.words[i] || "").replace(/.*\//, "")
     if (!ENV_READ_VERBS.test(c0)) continue

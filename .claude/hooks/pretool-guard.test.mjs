@@ -4,8 +4,9 @@
 //
 // These lock in the confirmed bypasses found in review: a quoted dangerous target
 // ("$HOME"), split flags (-r -f), BSD/macOS-style -Rf, a `sudo`/`doas` prefix on rm,
-// and a commit message merely mentioning "source .env" false-positiving the
-// .env-read guard.
+// a commit message merely mentioning "source .env" false-positiving the .env-read
+// guard, and a value-taking `sudo -u`/`-g` flag defeating the wrapper-skip (found in
+// the harness-guard-sync /review pass, Juli 2026).
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
@@ -32,6 +33,9 @@ const MUST_BLOCK = [
 	['sudo prefix', 'sudo rm -rf /'],
 	['sudo with own flag', 'sudo -n rm -rf /'],
 	['doas prefix', 'doas rm -rf /'],
+	['sudo with value-taking -u flag (review fix, Juli 2026)', 'sudo -u root rm -rf /'],
+	['sudo with value-taking -g flag', 'sudo -g wheel rm -rf /'],
+	['double sudo wrapper', 'sudo sudo rm -rf /'],
 ];
 
 for (const [label, cmd] of MUST_BLOCK) {
@@ -52,6 +56,8 @@ const MUST_ALLOW = [
 	['commit message mentions -Rf', 'git commit -m "note: -Rf is dangerous"'],
 	['no rm at all', 'echo "$HOME"'],
 	['npm rm is not sudo/doas rm', 'npm rm somepkg'],
+	['bare sudo, no command (no crash)', 'sudo'],
+	['sudo -n, no command (no crash)', 'sudo -n'],
 ];
 
 for (const [label, cmd] of MUST_ALLOW) {
@@ -70,6 +76,7 @@ const ENV_MUST_BLOCK = [
 	['mv .env elsewhere', 'mv .env /tmp/backup'],
 	['cp real .env over example', 'cp .env.example .env'],
 	['sudo cat .env', 'sudo cat .env'],
+	['sudo with value-taking -u flag (review fix, Juli 2026)', 'sudo -u root cat .env'],
 	['cat .vereinsheim.local (vereinsheim-spezifisch)', 'cat .vereinsheim.local'],
 ];
 

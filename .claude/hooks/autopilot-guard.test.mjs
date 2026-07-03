@@ -132,6 +132,18 @@ test('interpreterOneLinerViolation still catches a protected-path one-liner (no 
 	assert.ok(interpreterOneLinerViolation('python -c "open(\'.claude/settings.json\', \'w\')"'));
 });
 
+// Regression coverage for a confirmed false-positive found in the harness-guard-sync
+// /review pass (Juli 2026): the protected-dir check inside a one-liner blob used a bare
+// substring test, so a script merely containing "scripts/" or ".claude/" as part of a
+// longer identifier (not a real path reference) incorrectly DENYed.
+test('interpreterOneLinerViolation does not flag a directory name merely containing "scripts/" as a substring', () => {
+	assert.equal(interpreterOneLinerViolation('node -e "require(\'myscripts/foo.txt\')"'), null);
+});
+
+test('interpreterOneLinerViolation still catches a genuine scripts/ reference', () => {
+	assert.ok(interpreterOneLinerViolation('node -e "require(\'scripts/vereinsheim\')"'));
+});
+
 test('interpreterOneLinerViolation does not flag a command without -c/-e/-p/-E', () => {
 	assert.equal(interpreterOneLinerViolation('bash script.sh'), null);
 });
