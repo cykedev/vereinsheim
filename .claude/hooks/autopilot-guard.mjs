@@ -34,6 +34,12 @@ const MARKER_TTL_MS = 8 * 60 * 60 * 1000
 
 // harness:protected-dirs — Verzeichnisse, in die kein autonomer Lauf schreiben darf.
 const PROTECTED_DIRS = [".claude/", "scripts/"]
+// Wortgrenzen-bewusste Varianten für den One-Liner-Blob-Check (interpreterOneLinerViolation):
+// ein reiner Substring-Test (`w.includes(d)`) hätte z.B. `myscripts/foo.txt` fälschlich als
+// Referenz auf `scripts/` erkannt (bestätigter False-Positive-Fund aus /review, Juli 2026).
+// Der negative Lookbehind schließt aus, dass das Verzeichnis-Präfix direkt an ein
+// Identifier-Zeichen geklebt ist — analog zur PLACEHOLDER-Regex in check-bindings.mjs.
+const PROTECTED_DIR_RES = PROTECTED_DIRS.map((d) => new RegExp(`(?<![A-Za-z0-9_.])${d.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`))
 
 // harness:protected-files — Datei-MUSTER (nicht: flache Pfadliste), da beide Apps ihr
 // eigenes prisma/schema.prisma unter apps/<app>/ tragen — ein Suffix-/Basename-Match ist
@@ -194,7 +200,7 @@ export function interpreterOneLinerViolation(cmd) {
     if (!INTERPRETERS.test(c0) || !seg.words.some((w) => /^-[a-zA-Z]*[cepE]/.test(w))) continue
     for (const w of seg.words) {
       if (w === MARKER_REL) continue
-      if (PROTECTED_DIRS.some((d) => w.includes(d))) return "interpreter one-liner references a protected directory"
+      if (PROTECTED_DIR_RES.some((re) => re.test(w))) return "interpreter one-liner references a protected directory"
       if (PROTECTED_FILE_PATTERNS.some((fn) => fn(w))) return "interpreter one-liner references a protected file pattern"
       if (isDotenvPath(w)) return "interpreter one-liner references a .env/.vereinsheim.local secret"
       const blankedW = w.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""')
