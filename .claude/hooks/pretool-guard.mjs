@@ -1,112 +1,199 @@
 #!/usr/bin/env node
 // PreToolUse Security-Guard (ADR-018). Verweigert Lesen/Schreiben echter Secrets
-// (.env, .env.local, .vereinsheim.local) und katastrophale rekursive Deletes
-// (/, ~, $HOME, ., *, Secrets). Erlaubt *.example / *.template / *.sample.
+// (.env, .env.local, .vereinsheim.local, generisch .env.* / *.env) und katastrophale
+// rekursive Deletes (/, ~, $HOME, ., *, Secrets). Erlaubt *.example / *.template / *.sample.
 // Fail-open: jeder Parse-/Logikfehler -> exit 0 (erlauben, nie bricken).
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
+//
+// Der rm-Guard und der .env-Read-Guard sind beide quote-AWARE, nicht quote-blankend: sie
+// nutzen autopilot-guard.mjs's Tokenizer (bashSegments), um die Kommandozeile in Segmente
+// zu splitten, und prüfen nur Segmente, deren erstes echtes Wort (nach einem optionalen
+// `sudo`/`doas`-Präfix) wörtlich `rm` bzw. eines der Read-Verben ist. Das lässt eine
+// Commit-Message, die `rm -rf /` oder `source .env` nur ERWÄHNT, passieren (ihr Segment
+// beginnt mit `git`, nicht `rm`/`source`), ohne vorher global Quotes zu blanken — was
+// früher sowohl ein legitim gequotetes Ziel wie `rm -rf "$HOME"` gelöscht hat (bestätigter
+// Bypass) als auch eine Commit-Message wie `git commit -m "fix: source .env handling"`
+// fälschlich geblockt hat. Der Dev-Server-Check nutzt weiterhin String-Level-Quote-Blanking
+// (siehe dessen Kommentar).
+import { existsSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { resolve, join } from "node:path"
+import { fileURLToPath } from "node:url"
+import { readInput, repoRoot, isDotenvPath } from "./_lib.mjs"
+import { bashSegments } from "./autopilot-guard.mjs"
 
-let input
-try {
-  input = JSON.parse(readFileSync(0, "utf8"))
-} catch {
-  process.exit(0)
+// harness:dev-servers — langlaufende Server, die nie mit `&` gebackgrounded werden
+// dürfen (Orphan-Risiko; stattdessen run_in_background des Bash-Tools). Projektspezifisch
+// auf unser pnpm-only-Monorepo zugeschnitten (kein npm/yarn im Einsatz).
+const DEV_SERVER = /\bpnpm\b[^&|;]*\bdev\b|\bnext\s+dev\b|\bturbo\s+(run\s+dev|watch)\b/
+
+// Katastrophal breite rm-Ziele: /, /*, ~, ~/, ~/*, $HOME(/|/*), ${HOME}(/|/*), ., ./, *.
+// Ein eingegrenzter Pfad (./build, /etc/x, node_modules, ~/project) matcht bewusst nicht
+// — jede Alternative matched ein GANZES Ziel-Wort, keinen Substring (Caller wenden das
+// auf bereits tokenisierte Wörter an).
+const DANGEROUS_TARGET = /^(\/\*?|~\/?\*?|\$\{?HOME\}?\/?\*?|\.\/?\*?|\*)$/
+
+// Kommandos, die ihr erstes echtes Argument als eigentliches Kommando ausführen, ohne
+// Interpreter-One-Liner-Quoting (bashSegments sieht `rm` also schon als eigenes Wort —
+// nichts auszupacken). Es werden nur DEREN EIGENE Flags übersprungen, nicht das Argument
+// eines wertnehmenden Flags (z.B. `sudo -u root rm ...`) — akzeptierte Restlücke,
+// konsistent mit der "nicht wasserdicht"-Haltung dieser Datei.
+const CMD_WRAPPER = /^(sudo|doas)$/
+
+// Kommandos, deren Non-Flag-Argumente dieser Hook als gelesene/berührte Dateien behandelt.
+const ENV_READ_VERBS = /^(cat|less|more|head|tail|nano|vim|vi|sed|awk|grep|rg|xxd|od|strings|cp|mv|source)$/
+
+// ── Pure, testbare Helper (exportiert für pretool-guard.test.mjs) ────────────
+
+// Jeder `rm`-Aufruf einer Kommandozeile, mit gemergten Flags und Non-Flag-Zielen. Flags
+// werden über ALLE Flag-Wörter eines Segments gesammelt (sodass `rm -r -f /` erkannt
+// wird, nicht nur `rm -rf /`) und case-insensitiv auf Rekursion geprüft (BSD/macOS `-R`
+// zählt, nicht nur GNU `-r`). Ein optionaler führender `sudo`/`doas`-Präfix (samt dessen
+// eigenen Flags) wird übersprungen, bevor auf `rm` geprüft wird.
+// Nicht Interpreter-aware: `bash -c "rm -rf /"` ist für bashSegments EIN Wort (das ganze
+// gequotete Script), nie ein eigenes `rm`-Segment — wird hier also nicht erkannt.
+// autopilot-guard.mjs's `interpreterOneLinerViolation` schließt das für geschützte
+// Pfade/Kommandos im Autopilot; dieser Hook packt One-Liner grundsätzlich nicht aus.
+export function rmInvocations(cmd) {
+  const out = []
+  for (const seg of bashSegments(cmd)) {
+    let i = 0
+    while (CMD_WRAPPER.test((seg.words[i] || "").replace(/.*\//, ""))) {
+      i++
+      while (i < seg.words.length && seg.words[i].startsWith("-")) i++
+    }
+    const c0 = (seg.words[i] || "").replace(/.*\//, "")
+    if (c0 !== "rm") continue
+    let recursive = false
+    let force = false
+    const targets = []
+    for (const w of seg.words.slice(i + 1)) {
+      if (w === "--recursive") {
+        recursive = true
+        continue
+      }
+      if (w === "--force") {
+        force = true
+        continue
+      }
+      if (/^-[a-zA-Z]+$/.test(w)) {
+        if (/[rR]/.test(w)) recursive = true
+        if (/f/i.test(w)) force = true
+        continue
+      }
+      targets.push(w)
+    }
+    out.push({ recursive, force, targets })
+  }
+  return out
 }
 
-const tool = input.tool_name || ""
-const ti = input.tool_input || {}
-const deny = (r) => {
-  console.error(`[pretool-guard] DENY: ${r}`)
+// True, wenn das Kommando einen `rm`-Aufruf enthält, der rekursiv UND force ist UND
+// mindestens ein katastrophal breites Ziel benennt.
+export function isDangerousRm(cmd) {
+  return rmInvocations(cmd).some((inv) => inv.recursive && inv.force && inv.targets.some((t) => DANGEROUS_TARGET.test(t)))
+}
+
+// True, wenn das Kommando einen ENV_READ_VERBS-Aufruf mit einem echten .env-artigen
+// Argument enthält. Segment-/Erstes-Wort-basiert wie isDangerousRm, sodass ein gequotetes
+// `cat ".env"` weiterhin erkannt wird (bashSegments entquotet es zu seinem eigenen Wort),
+// während ein Kommando, dessen erstes Wort KEIN Read-Verb ist — z.B.
+// `git commit -m "fix: source .env handling"`, dessen Segment mit `git` beginnt — den
+// Wort-Check gar nicht erst erreicht, egal was der gequotete String zufällig erwähnt.
+// Nutzt isDotenvPath (aus _lib.mjs) pro Wort, deckt also automatisch auch unser
+// projektspezifisches `.vereinsheim.local` ab, ohne eigene Regex dafür.
+export function isEnvReadViolation(cmd) {
+  for (const seg of bashSegments(cmd)) {
+    let i = 0
+    while (CMD_WRAPPER.test((seg.words[i] || "").replace(/.*\//, ""))) {
+      i++
+      while (i < seg.words.length && seg.words[i].startsWith("-")) i++
+    }
+    const c0 = (seg.words[i] || "").replace(/.*\//, "")
+    if (!ENV_READ_VERBS.test(c0)) continue
+    if (seg.words.slice(i + 1).some((w) => isDotenvPath(w))) return true
+  }
+  return false
+}
+
+function block(msg) {
+  process.stderr.write(`${msg}\n`)
   process.exit(2)
 }
 
-const secretFile = (p) => {
-  if (!p) return false
-  const base = String(p).split(/[\\/]/).pop()
-  if (/\.(example|template|sample)$/.test(base)) return false
-  return base === ".env" || base === ".env.local" || base === ".vereinsheim.local"
-}
-
-if (["Read", "Edit", "Write", "NotebookEdit"].includes(tool) && secretFile(ti.file_path)) {
-  deny(`Secret-Datei „${ti.file_path}" — nutze die .env.example statt der echten Datei.`)
-}
-
-if (tool === "Bash") {
-  const cmd = String(ti.command || "")
-  const rmSeg = cmd.split(/[\n;|&]+/).find((s) => /\brm\b/.test(s)) || ""
-  const mentionsSecret = /(\.env|\.vereinsheim\.local)\b/.test(cmd) && !/\.(example|template|sample)/.test(cmd)
-  const readsFile = /\b(cat|bat|less|more|head|tail|cp|mv|tee|sed|awk|grep|strings|xxd|od|vi|vim|nano|emacs)\b/.test(cmd)
-  if (mentionsSecret && readsFile) deny("Shell-Zugriff auf eine echte Secret-Datei.")
-  const recursive = /-[a-zA-Z]*r/.test(rmSeg)
-  if (recursive && /(\s|^)(\/|~|\$HOME|\.|\.\/|\*)(\s|$)/.test(rmSeg)) {
-    deny(`Gefährliches rekursives Löschen: „${rmSeg.trim().slice(0, 70)}".`)
-  }
-  if (recursive && mentionsSecret) deny("Rekursives Löschen einer Secret-Datei.")
-
-  // Verwaiste Dev-/Watch-Server verhindern (ADR-018-Härtung, 22.06.2026): ein per
-  // `&` (Job-Control) gebackgroundeter persistenter Server entkoppelt sich vom Harness
-  // (nicht mehr per TaskStop killbar) und kann mit Builds/`pnpm check` die Maschine
-  // überlasten — nutze stattdessen den run_in_background-Modus des Bash-Tools.
-  // Heredoc-Bodies + gequotete Strings vorher ausblenden, damit NUR echte Kommandos
-  // zählen (kein Block auf Commit-Messages/echo/Test-Fixtures, die das Pattern bloß
-  // erwähnen). Ein realer, unquoted `pnpm dev &` überlebt diese Reduktion.
-  const code = cmd
-    .replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, " ") // Heredoc <<EOF … EOF
-    .replace(/'[^']*'/g, " ")
-    .replace(/"[^"]*"/g, " ")
-  const bgAmp = /(^|[^&>])&(?![&>])/.test(code) // Job-Control-`&`, nicht `&&`/`&>`/`2>&1`
-  const devServer =
-    /\bpnpm\b[^&|;]*\bdev\b/.test(code) ||
-    /\bnext\s+dev\b/.test(code) ||
-    /\bturbo\s+(run\s+dev|watch)\b/.test(code)
-  if (bgAmp && devServer) {
-    deny(
-      "Dev-/Watch-Server via `&` gebackgroundet → Orphan (harness-untrackbar, " +
-        "Überlast-/Reboot-Risiko). Starte ihn im run_in_background-Modus des Bash-Tools.",
-    )
-  }
-}
-
-// ── Advisory-Nudge: CodeGraph statt grep/find/Read (User-Wunsch 22.06.2026) ──────
-// Sanfter, EINMALIGER Reminder pro Session, dass der CodeGraph-Index existiert und für
-// Symbol-/Struktur-/Call-Graph-Fragen die bessere erste Wahl ist als grep/find/Read.
-// Advisory: blockt NICHTS, gibt nur additionalContext aus. Reine Textsuche (Doku/Logs/
-// Strings) bleibt legitim. Marker im OS-Temp pro session_id verhindert Wiederholung +
-// Token-Spam. Fail-open wie der Rest der Datei: IO-Fehler dürfen nie den Call stören.
-// Bei Bash zählt nur ein ECHTES Such-Kommando, keine bloße Erwähnung in gequoteten
-// Strings/Heredocs (z.B. `git commit -m "… grep …"`, echo, Test-Fixtures) — gleiche
-// Reduktion wie der Dev-Server-Guard oben (vgl. „real commands, not mentions").
-const bashSearch =
-  tool === "Bash" &&
-  /\b(rg|ag|ack|fd|grep|egrep|fgrep|find)\b/.test(
-    String(ti.command || "")
-      .replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, " ")
-      .replace(/'[^']*'/g, " ")
-      .replace(/"[^"]*"/g, " "),
-  )
-const searchesCode = bashSearch || tool === "Grep" || tool === "Glob"
-
-if (searchesCode) {
+async function main() {
   try {
-    const sid = String(input.session_id || "nosession").replace(/[^\w.-]/g, "_")
-    const marker = join(tmpdir(), `vereinsheim-cg-nudge-${sid}`)
-    if (!existsSync(marker)) {
-      writeFileSync(marker, "")
-      const msg =
-        "CodeGraph ist in diesem Repo indiziert (.codegraph/). Für Symbol-, Struktur- " +
-        "oder Call-Graph-Fragen ist codegraph_explore/codegraph_search meist die bessere " +
-        "erste Wahl als grep/find/Read — ein Call statt einer Such-/Lese-Schleife. Reine " +
-        "Textsuche (Doku, Logs, Strings) bleibt ok. (Einmalige Erinnerung pro Session.)"
-      process.stdout.write(
-        JSON.stringify({
-          hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: msg },
-        }),
+    const input = await readInput()
+    const tool = input.tool_name || ""
+    const ti = input.tool_input || {}
+    const ROOT = repoRoot(import.meta.url)
+
+    if (["Read", "Edit", "Write", "NotebookEdit"].includes(tool)) {
+      const p = ti.file_path || ti.notebook_path || ""
+      if (isDotenvPath(p)) {
+        block(`Blocked: ${p} sieht wie eine echte Secret-Datei aus. Nutze .env.example oder besorge den Wert anders.`)
+      }
+    }
+
+    if (tool === "Bash") {
+      const cmd = String(ti.command || "")
+      // Heredoc-Bodies einmalig entfernen. Quotes bleiben erhalten für den Secret-Check
+      // (ein gequoteter Pfad wie `cat ".env"` muss weiterhin erkannt werden).
+      const noHeredoc = cmd.replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, "")
+
+      if (isEnvReadViolation(noHeredoc)) {
+        block("Blocked: das Kommando greift auf eine echte Secret-Datei zu (.env* / .vereinsheim.local). Nutze .env.example oder einen anderen Pfad.")
+      }
+
+      if (isDangerousRm(noHeredoc)) {
+        block("Blocked: `rm` rekursiv+force auf ein gefährliches Ziel (/, /*, ~, $HOME, *, .). Pfad eingrenzen.")
+      }
+
+      // Backgrounding eines Dev-/Watch-Servers mit einem einzelnen `&` (nicht `&&`, nicht `2>&1`).
+      // Quote-geblankt, damit eine Erwähnung von "&" in einem String nicht triggert.
+      const stripped = noHeredoc.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""')
+      const backgrounded = /(^|[^&>])&(?![&>])/.test(stripped)
+      if (backgrounded && DEV_SERVER.test(stripped)) {
+        block("Blocked: Dev-/Watch-Server nicht mit `&` backgrounden (Orphan-Risiko). Nutze stattdessen run_in_background des Bash-Tools.")
+      }
+    }
+
+    // ── Advisory-Nudge: CodeGraph statt grep/find/Read (User-Wunsch 22.06.2026) ────
+    const bashSearch =
+      tool === "Bash" &&
+      /\b(rg|ag|ack|fd|grep|egrep|fgrep|find)\b/.test(
+        String(ti.command || "")
+          .replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, " ")
+          .replace(/'[^']*'/g, " ")
+          .replace(/"[^"]*"/g, " "),
       )
+    const searchesCode = bashSearch || tool === "Grep" || tool === "Glob"
+
+    if (searchesCode && existsSync(resolve(ROOT, ".codegraph"))) {
+      const sid = String(input.session_id || "nosession").replace(/[^\w.-]/g, "_")
+      const marker = join(tmpdir(), `vereinsheim-cg-nudge-${sid}`)
+      if (!existsSync(marker)) {
+        try {
+          writeFileSync(marker, "")
+        } catch {
+          // best-effort: Marker-/IO-Fehler dürfen den Tool-Call nie stören (fail-open).
+        }
+        const msg =
+          "CodeGraph ist in diesem Repo indiziert (.codegraph/). Für Symbol-, Struktur- " +
+          "oder Call-Graph-Fragen ist codegraph_explore/codegraph_search meist die bessere " +
+          "erste Wahl als grep/find/Read — ein Call statt einer Such-/Lese-Schleife. Reine " +
+          "Textsuche (Doku, Logs, Strings) bleibt ok. (Einmalige Erinnerung pro Session.)"
+        process.stdout.write(
+          JSON.stringify({
+            hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: msg },
+          }),
+        )
+      }
     }
   } catch {
-    // best-effort: Marker-/IO-Fehler dürfen den Tool-Call nie stören (fail-open).
+    // fail-open
   }
+  process.exit(0)
 }
 
-process.exit(0)
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+if (isMain) main()
