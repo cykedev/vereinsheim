@@ -35,9 +35,15 @@ Gemessene Datei-für-Datei-Divergenz der gemeinsamen `.claude/`-Maschinerie:
 Das v3-Vault-System **widerspricht direkt ADR-022** („Memory-Graph als *gebauter* Index;
 Store `.claude/knowledge-graph.json` ist Artefakt, **nie von Hand editieren**"). v3 wirft
 genau das um (Notes live editieren, kein Build). Die Migration legt daher **ADR-025 —
-Memory-Graph als Obsidian-kompatibler Vault-Graph (supersedes ADR-022, schärft
-ADR-016 §3 / ADR-021)** an. Die BM25/EN+DE-Such-**Engine** aus ADR-022 bleibt erhalten;
-nur ihre **Quelle** wechselt von `knowledge-graph.json` auf `vault/`.
+Wissenssystem v3: Obsidian-Vault als einziger Wissensspeicher** an, das zwei zusammengehörige
+Entscheidungen bündelt:
+- **(a) Engine:** vault = Graph, live editiert, kein Build (**supersedes ADR-022**; schärft
+  ADR-016 §3 / ADR-021). Die BM25/EN+DE-Such-**Engine** aus ADR-022 bleibt; nur ihre **Quelle**
+  wechselt von `knowledge-graph.json` auf `vault/`.
+- **(b) Konsolidierung:** Root-`docs/` **und** die App-`docs/`-Schicht werden in **einen**
+  vault überführt (**schärft ADR-019**: die CLAUDE.md-Governance-Hierarchie Root→App bleibt,
+  aber Wissen wird zentral im vault gesucht statt per `@import`/on-demand aus `apps/*/docs/`
+  geladen). App-`CLAUDE.md` verweist künftig auf den vault.
 
 ## Entscheidungen (mit User geklärt)
 
@@ -51,6 +57,23 @@ nur ihre **Quelle** wechselt von `knowledge-graph.json` auf `vault/`.
 3. **Hook-Architektur:** **Composite-Dispatcher** übernehmen (`pretool.mjs`/`stop.mjs`);
    die 4 vereinsheim-Guards auf `evaluate()`-Export refactoren (mit erhaltenem
    `main()`-Standalone).
+4. **Wissensschichten:** **App-`docs/` voll in den vault migrieren** (nicht nur indexieren).
+   Der vault wird der **einzige** Wissensspeicher — Root-`docs/` **und** `apps/*/docs/*.md`
+   werden vault-Notes; danach werden beide Quellen gelöscht, App-`CLAUDE.md` verweist auf den
+   vault. **Konsequenz (Hard Rule #6):** schärft **ADR-019** (App-lokale docs-Schicht) — die
+   CLAUDE.md-Governance-Hierarchie bleibt, aber die docs-Schicht wird zentralisiert. Fließt in
+   ADR-025 ein.
+5. **Wissens-Vollständigkeit (oberste Regel):** **kein Verlust**. Jede gelöschte Quelle
+   (Root- + App-`docs/`, alle 116 Entities) muss **vollständig** im vault repräsentiert sein —
+   **Volltext, nicht auf TL;DR-Stubs verkürzt**. Regeln, Architektur, Entwicklungsstile
+   (`code-conventions`/`ui-patterns`/`shared-conventions`/domain-rules) tragen ihren **vollen**
+   Inhalt. Wo v2-Wissen dünn/implizit ist, **ergänzen** (aus dem Code via CodeGraph, aus den
+   Nachbar-docs). Ein Completeness-Gate (Block K) verifiziert es.
+6. **`.obsidian`:** **nicht** übernehmen, **nicht** in die Historie — `.gitignore`-Eintrag
+   `vault/.obsidian/`. Die `_templates/` bleiben (nutzbar ohne Obsidian-Verdrahtung).
+7. **`superpowers/`-Alt-Pläne** (`apps/*/docs/superpowers/plans|specs/`, ~35 Dateien): erledigte
+   Implementierungspläne (Superpowers per ADR-020 entfernt), **kein** lebendes Wissen →
+   **nicht** migriert, aber auch **nicht** gelöscht (bleiben unter `apps/*/docs/superpowers/`).
 
 ## Ausführungs-Regeln (kritisch)
 
@@ -81,10 +104,15 @@ nur ihre **Quelle** wechselt von `knowledge-graph.json` auf `vault/`.
     `.claude/skills/{sync-graph,plan,ingest,harness-init}/SKILL.md`.
   - Blueprint-Skills bereits exportiert nach
     `…/scratchpad/bp/{check,cleanup-todos,commit-msg,consolidate-lessons,debug,harness-init,implement}.md`.
-- vereinsheim: `docs/decisions.md` (ADR-Quelle), `docs/shared-conventions.md` (@-import),
+- vereinsheim Root: `docs/decisions.md` (ADR-Quelle), `docs/shared-conventions.md` (@-import),
   `docs/{spec,architecture,operations,monorepo-plan}.md`, `.claude/graph-projection.mjs` +
   `.claude/graph-captured.mjs` + `.claude/knowledge-graph.json` (Entity-Quellen),
   `scripts/consistency-check.sh` (referenziert `shared-conventions.md`).
+- vereinsheim App-Wissen (Entscheidung 4, Volltext-Migration): `apps/ringwerk/docs/{architecture,
+  data-model,features,code-conventions,ui-patterns,technical,project-brief,reference-files,
+  worktrees}.md` + `apps/treffsicher/docs/{requirements,code-conventions,data-model,
+  technical-constraints,backlog,implementation-plan}.md` (**NICHT** `superpowers/`); die
+  App-`CLAUDE.md` + `packages/{config,lib,ui}/CLAUDE.md` (Rewire-Ziele).
 
 ## Ziel-vault-Struktur (Topic-Ordner + MOCs)
 
@@ -97,13 +125,18 @@ vault/
 ├── deployment/     compose · caddy · postgres-container · docker-hub-images · migrator · backup/restore
 ├── operations/     operations.md (MOC) · vereinsheim-CLI · daily-ops · recovery-pfade
 ├── monorepo/       turbo/pnpm/catalog · packages-config/lib/ui · drift-gate · dev-postgres
-├── apps/           ringwerk.md (MOC) · treffsicher.md (MOC) + deren feature-Notes (subsystem)
+├── apps/
+│   ├── ringwerk/    ringwerk.md (MOC) · architecture · data-model · features · code-conventions ·
+│   │                ui-patterns · technical · project-brief (Volltext aus apps/ringwerk/docs/*)
+│   └── treffsicher/ treffsicher.md (MOC) · requirements · data-model · code-conventions ·
+│                    technical-constraints · backlog (Volltext aus apps/treffsicher/docs/*)
 ├── harness/        memory-graph · hooks · PIV-workflow · autonomous-implement · sub-agents
-├── domain/         domain-rules (concept): wertungs-/fachlogik
+├── domain/         domain-rules (concept): wertungs-/fachlogik (fette Bodies)
 └── incidents/      captured incidents/state (aus graph-captured.mjs)
 ```
 (Feinzuordnung darf der Implementer je nach Entity anpassen; Regel: 1 Topic-Ordner =
-1 MOC-Hub `guide` + atomare Notes.)
+1 MOC-Hub `guide` + atomare Notes. Die App-Ordner tragen den **Volltext** der App-`docs/`
+als Guides + die feature/subsystem-Notes, die per `documented_in` auf deren Abschnitte zeigen.)
 
 ---
 
@@ -132,9 +165,10 @@ _Test:_ `for f in graph-store memory-server doc-index search-index keyword-extra
 ### Block B — vault/-Gerüst
 
 **B1. Statisches vault-Gerüst aus Blueprint kopieren.**
-`vault/SCHEMA.md`, `vault/_templates/` (alle 7), `vault/.obsidian/`, plus Root-`KNOWLEDGE.md`.
+`vault/SCHEMA.md`, `vault/_templates/` (alle 7), plus Root-`KNOWLEDGE.md`. **`vault/.obsidian/`
+NICHT kopieren** (Entscheidung 6); stattdessen `.gitignore` um `vault/.obsidian/` ergänzen.
 `vault/index.md` als leeres Gerüst anlegen (füllt Task I1).
-_Test:_ `ls vault/_templates/*.md | wc -l` = 7; `test -f vault/SCHEMA.md`.
+_Test:_ `ls vault/_templates/*.md | wc -l` = 7; `test -f vault/SCHEMA.md`; `test ! -e vault/.obsidian`; `git check-ignore vault/.obsidian/` matcht.
 
 ### Block C — Content: ADRs (die 25 decision-Notes)
 
@@ -157,37 +191,60 @@ Reader; `graph-sync`→`vault-lint`; `/sync-graph` + `/consolidate-lessons` schr
 In `adr-022.md` `status: Superseded` + `superseded_by: ["[[adr-025]]"]` setzen.
 _Test:_ `node .claude/vault-lint.mjs` grün für die supersedes-Kette.
 
-### Block D — Content: Guides (Doku-Prosa → Topic-MOCs + Root-Guides)
+### Block D — Content: Guides (Root- + App-Doku als Volltext → Topic-MOCs)
+
+> **Kein Verlust (Entscheidung 5):** Die Guides tragen den **vollständigen** Prosa-Text der
+> Quell-docs, nicht gekürzt. Atomare Notes (Block E) verweisen per
+> `documented_in: ["[[guide#Heading TEXT]]"]` auf deren Abschnitte — so ist der Volltext einmal
+> im Guide (kanonisch), die Note bleibt schlank, nichts wird dupliziert **und** nichts geht verloren.
 
 **D1. Root-Guides.**
-`docs/spec.md`/README-Essenz → `vault/overview.md` (`type: guide`);
-`docs/shared-conventions.md` → `vault/conventions.md` (`type: guide`, wird @-importiert —
-Task H1). Frontmatter `id/type/title` voranstellen.
-_Test:_ `node .claude/vault-lint.mjs` erkennt beide als guide (kein missing title).
+`docs/spec.md` (+ README-Essenz) → `vault/overview.md` (`type: guide`);
+`docs/shared-conventions.md` → `vault/conventions.md` (`type: guide`, **Volltext** — der
+app-übergreifende Stil-/Regel-Kanon; wird @-importiert, Task I1). Frontmatter `id/type/title`.
+_Test:_ `node .claude/vault-lint.mjs` erkennt beide als guide; `wc -l vault/conventions.md` ≈ Quell-Umfang (kein Textverlust).
 
-**D2. Topic-MOCs + Guide-Prosa.**
+**D2. Root-Topic-MOCs + Guide-Prosa.**
 `docs/architecture.md` → `vault/architecture/architecture.md` (MOC);
-`docs/operations.md` → `vault/operations/operations.md` (MOC);
+`docs/operations.md` → `vault/operations/operations.md` (MOC, 430 Zeilen Volltext);
 `docs/monorepo-plan.md` → `vault/monorepo/monorepo.md` (MOC).
-Je MOC `type: guide` + Links auf die atomaren Notes seines Topics (Block E). Prosa bleibt
-im Guide; atomare Notes referenzieren Abschnitte via `documented_in: ["[[guide#Heading TEXT]]"]`.
+Je MOC `type: guide` + Links auf die atomaren Notes seines Topics.
 _Test:_ `node .claude/vault-lint.mjs` — jeder `documented_in`-Anchor trifft eine reale Überschrift.
+
+**D3. App-Guides ringwerk (Volltext aus `apps/ringwerk/docs/*`).**
+`architecture.md`→`vault/apps/ringwerk/architecture.md`; `data-model.md`→`…/data-model.md`;
+`features.md`→`…/features.md`; `code-conventions.md`→`…/code-conventions.md` (**638 Zeilen —
+Entwicklungsstile, Volltext**); `ui-patterns.md`→`…/ui-patterns.md`; `technical.md`,
+`project-brief.md`, `reference-files.md`, `worktrees.md` → passende Notes. `ringwerk.md` als
+MOC (`type: guide`, aus `app`-Entity). Alle `type: guide`, Frontmatter + `keywords`.
+_Test:_ jede Quell-doc hat ein vault-Pendant; `wc -l` je Ziel ≈ Quelle; `vault-lint` grün.
+
+**D4. App-Guides treffsicher (Volltext aus `apps/treffsicher/docs/*`).**
+`requirements.md`→`vault/apps/treffsicher/requirements.md`; `code-conventions.md` (**326 Zeilen,
+Volltext**); `data-model.md`; `technical-constraints.md` (464 Zeilen); `backlog.md`;
+`implementation-plan.md`. `treffsicher.md` als MOC. **`superpowers/` NICHT anfassen** (Entscheidung 7).
+_Test:_ jede Quell-doc (außer superpowers/) hat ein vault-Pendant; `wc -l` je Ziel ≈ Quelle; `vault-lint` grün.
 
 ### Block E — Content: atomare Entities (~92 → Kern-Typen)
 
 **E1. Projizierte Entities → atomare Notes.**
-Quelle: `.claude/graph-projection.mjs` (Essenz + `→ datei#slug`-Pointer + Relationen) +
-`.claude/knowledge-graph.json` (fertige Typ-/Relations-Struktur als Referenz). Pro Entity
-eine Note im passenden Topic-Ordner (Struktur oben), Typ **gemappt** (Entscheidung 2):
+Quelle: `.claude/graph-projection.mjs` (Essenz + **alle** Detail-Observations + `→ datei#slug`
++ Relationen) + `.claude/knowledge-graph.json` (fertige Typ-/Relations-Struktur als Referenz).
+Pro Entity eine Note im passenden Topic-Ordner, Typ **gemappt** (Entscheidung 2):
 `domain-rule`/`ops-constraint`→`concept`, `feature`→`subsystem`, `app`→`guide`,
-`project`→`vault/overview.md`. Jede Note: `**TL;DR**` (= alte Essenz), **echter Body** (die
-Prosa aus dem `→ datei#slug`-Zielabschnitt hereinziehen — **kein** Ein-Zeilen-Stub),
-kuratierte `keywords:`-Zeile (Pflicht für atomare Typen, sonst `vault-lint`-Fehler),
-`tags:` mit dem Ursprungstyp, flache Edges (`part_of` MOC, `governed_by` ADR,
-`documented_in` Guide#Heading, plus `relates_to`/`contrasts_with`/`see_also` aus der
-projection).
+`project`→`vault/overview.md`. Jede Note: `**TL;DR**` (= alte Essenz-Zeile), **echter Body**,
+der **alle** weiteren Observations der Entity aufnimmt (kein Verlust — die projection-Sätze
+sind kuratiertes Wissen, nicht nur Zeile 1), kuratierte `keywords:`-Zeile (aus der
+`Keywords:`-Observation; Pflicht für atomare Typen, sonst `vault-lint`-Fehler), `tags:` mit dem
+Ursprungstyp (Entscheidung 2), flache Edges: `part_of` MOC, `governed_by` ADR, **`documented_in`
+auf den jetzt migrierten Guide** (der v2-Pointer `→ apps/ringwerk/docs/features.md#x` bzw.
+`→ docs/operations.md#y` zeigt jetzt auf `[[features#x]]` bzw. `[[operations#y]]` — Block D2–D4),
+plus `relates_to`/`contrasts_with`/`see_also`/`informed_by` aus der projection.
+_Recherche-Auftrag (Entscheidung 5):_ wo eine Entity-Essenz dünn ist, den Body aus dem
+Guide-Abschnitt + ggf. CodeGraph (`codegraph_explore`) anreichern — nicht als Stub belassen.
 _Test:_ `node .claude/vault-lint.mjs` grün (alle atomaren Notes haben `keywords`, keine
-dangling edges); Stichprobe `mcp__memory__search_nodes` (nach Reload) findet 3 bekannte Entities.
+dangling edges); Entity-Zahl vault ≥ 116 (25 ADR + ~92 projiziert − app/project-Merges);
+Stichprobe `mcp__memory__search_nodes` (nach Reload) findet 3 bekannte Entities.
 
 **E2. `graph-captured.mjs` → `vault/incidents/`.**
 Jede `incident`/`state`-Entity → eine `type: incident`-Note mit `keywords:` + `[[link]]`
@@ -308,11 +365,15 @@ auf `vault/`-Äquivalente. `vault/index.md` mit dem finalen Katalog + Lese-Reihe
 _Test:_ `grep -nE 'docs/|build-graph|knowledge-graph\.json' CLAUDE.md` = nur bewusste
 historische Verweise (in superseded-ADR-Kontext); `@vault/` vorhanden.
 
-**I2. App-`CLAUDE.md` + `.mcp.json`-Check.**
-`apps/ringwerk/CLAUDE.md` + `apps/treffsicher/CLAUDE.md`: Memory-Graph-/Doku-Index-Verweise
-auf das v3-Vault-Modell umbiegen. `.mcp.json` **unverändert** bestätigen (Pfad
-`memory-server.mjs` gleich; nur v3-Server liest jetzt `vault/`).
-_Test:_ `grep -rlE 'build-graph|knowledge-graph\.json|Doku-Index' apps/*/CLAUDE.md` = leer (bzw. auf v3 umformuliert).
+**I2. App-`CLAUDE.md` (Verweise docs→vault) + packages + `.mcp.json`-Check.**
+`apps/ringwerk/CLAUDE.md` + `apps/treffsicher/CLAUDE.md`: (a) Memory-Graph-/Doku-Index-Verweise
+auf das v3-Vault-Modell (ADR-025); (b) **alle Verweise auf `apps/<app>/docs/*` umbiegen auf den
+vault** (`vault/apps/<app>/…` bzw. „such via `search_nodes`") — die App-docs werden in Block J
+gelöscht (ADR-019-Schärfung). Lese-Reihenfolge/`@import` der App-CLAUDE.md entsprechend. Die
+CLAUDE.md-Hierarchie (Root→App) selbst **bleibt**. `packages/{config,lib,ui}/CLAUDE.md` auf
+tote docs-/Index-Verweise prüfen. `.mcp.json` **unverändert** bestätigen (Pfad
+`memory-server.mjs` gleich; nur der v3-Server liest jetzt `vault/`).
+_Test:_ `grep -rnE 'apps/[a-z]+/docs/|build-graph|knowledge-graph\.json|Doku-Index' apps/*/CLAUDE.md packages/*/CLAUDE.md` = leer (bzw. auf v3/vault umformuliert).
 
 **I3. `scripts/consistency-check.sh` + Drift-Gate.**
 Prüfen, ob `shared-conventions.md` als Pfad im Gate steht; auf `vault/conventions.md`
@@ -322,13 +383,17 @@ _Test:_ `bash -n scripts/consistency-check.sh`; grep im Skript nach `shared-conv
 
 ### Block J — v2-Altlasten entfernen (ZULETZT)
 
-**J1. v2-Knowledge-System löschen.**
-`git rm` : `docs/` (komplett — Inhalt ist nach `vault/` migriert), `.claude/build-graph.mjs`,
+**J1. v2-Knowledge-System + migrierte docs löschen (nach Completeness-Check K0).**
+`git rm` : `docs/` (Root, komplett — nach `vault/` migriert); **`apps/ringwerk/docs/*.md` +
+`apps/treffsicher/docs/*.md`** (die Top-Level-App-docs — nach `vault/apps/` migriert), **aber
+`apps/*/docs/superpowers/` NICHT** (Entscheidung 7 — bleibt liegen); `.claude/build-graph.mjs`,
 `.claude/graph-projection.mjs`, `.claude/graph-captured.mjs`, `.claude/knowledge-graph.json`,
 `.claude/knowledge-graph.search.json`. **Behalten:** `.claude/doc.mjs` (v3-Reader),
 `.claude/graph-store.mjs`, `.claude/search-*.mjs`, `.claude/context/dev-workflow.md`.
-**Voraussetzung:** F1 erledigt (graph-sync ruft nicht mehr build-graph), Block C–E fertig.
-_Test:_ `node .claude/vault-lint.mjs` grün; `node .claude/hooks/graph-sync.mjs < /dev/null; echo $?` = 0; kein Import-Fehler.
+**Voraussetzung:** K0-Completeness-Check grün, F1 erledigt (graph-sync ruft nicht mehr
+build-graph), Block C–E fertig.
+_Test:_ `node .claude/vault-lint.mjs` grün; `git status` zeigt `apps/*/docs/superpowers/` unberührt;
+`node .claude/hooks/graph-sync.mjs < /dev/null; echo $?` = 0; kein Import-Fehler.
 
 **J2. Leftover-Sweep.**
 `grep -rInE 'build-graph|graph-projection|graph-captured|knowledge-graph\.json|docs/' --include='*.md' --include='*.mjs' --include='*.json' . ':!vault/decisions'` — jeden Treffer
@@ -337,14 +402,26 @@ _Test:_ Sweep liefert nur bewusste historische Verweise.
 
 ### Block K — Verifikation (PIV-Schritt 3 `/validate`)
 
+**K0. Wissens-Completeness-Gate — läuft VOR dem Löschen (Block J1).** Nachweis, dass jede zu
+löschende Quelle vollständig im vault steht (Entscheidung 5). Für jede Datei in `docs/*.md`
++ `apps/*/docs/*.md` (außer `superpowers/`): (a) existiert ein vault-Guide/Note-Pendant;
+(b) jede H2/H3-Überschrift der Quelle taucht als Überschrift bzw. Note-Thema im vault wieder
+auf; (c) jede der 116 Entities aus `knowledge-graph.json` hat eine vault-Note (Namensabgleich).
+Als Skript in `scratchpad/` (Quell-Headings vs. vault-Headings diffen) + Stichproben-Sichtprüfung
+der drei sensibelsten Quellen: `docs/shared-conventions.md`, `apps/ringwerk/docs/code-conventions.md`,
+`apps/ringwerk/docs/features.md` — Regeln/Stile/Architektur **vollständig** übertragen?
+_Gate:_ 0 unbelegte Quell-Headings, 0 fehlende Entities → erst dann J1.
+
 - `node .claude/vault-lint.mjs` → grün, 0 unerwartete Orphans.
 - `node .claude/check-bindings.mjs; echo $?` → 0.
 - `node --test .claude/hooks/*.test.mjs` → alle grün.
 - `echo '{"tool_name":"Bash","tool_input":{"command":"rm -rf /"}}' | node .claude/hooks/pretool.mjs; echo $?` → **2**.
 - `node .claude/search-selftest.mjs` → grün (nach Anpassung der Cases an die neuen Notes; falls Cases zu stark v2-gebunden, in diesem Block neu schreiben).
+- **`.obsidian` nicht getrackt:** `git ls-files vault/.obsidian | wc -l` → 0.
 - `pnpm check` (5 Gates) → grün (berührt keinen App-Code, sollte unverändert grün sein).
 - **Reload-Probe:** neue Claude-Session starten → SessionStart surft `vault/`;
-  `mcp__memory__search_nodes` beantwortet eine DE-Frage aus dem Vault.
+  `mcp__memory__search_nodes` beantwortet eine DE-Frage aus dem Vault (inkl. einer App-Frage,
+  z.B. „Wertungsmodi" / „code conventions ringwerk").
 
 ## Out of scope
 
@@ -363,9 +440,16 @@ Merge nach `main` (`--ff-only`) erst nach `/validate` + `/review` + **User-OK**.
 
 - Jede Divergenz-Kategorie hat Tasks: identisch (A2), rein-lokal (behalten, H4/H6/G1),
   Upgrade (A2), Konflikt (C/D/F/G/H1–H3/I), vereinsheim-only (H6). ✓
-- ADR-Konsequenz adressiert (C2, in CLAUDE.md I1). ✓
+- **Kein Wissensverlust (Entscheidung 5):** Root-docs Volltext (D1/D2), App-docs Volltext
+  (D3/D4), alle Observations je Entity (E1), fette domain-rules; Completeness-Gate K0 **vor**
+  dem Löschen J1; Recherche-Auftrag bei dünnen Entities (E1). ✓
+- App-Volltext-Migration (Entscheidung 4) hat Tasks (D3/D4), Rewire (I2), Löschung außer
+  `superpowers/` (J1). ✓
+- ADR-Konsequenz adressiert: ADR-025 supersedes ADR-022 **+ schärft ADR-019** (C2, I1). ✓
+- `.obsidian` raus + gitignored (B1, K-Check). ✓
 - Session-Sicherheit als Reihenfolge-Regel + F1/J1-Voraussetzungen kodiert. ✓
 - Autopilot-Konflikt: interaktiv/`--step`, Marker nicht gesetzt. ✓
 - Keine Platzhalter: jede Task nennt Dateien + konkreten Test. ✓
 - Namensträger konsistent: `evaluate()`-Verträge (F2/F3), `vault/decisions/`-Pattern
-  (G1↔G2), `GATE`-Varname (G2), Kern-Typen (E1↔A2 TYPE_WEIGHTS). ✓
+  (G1↔G2), `GATE`-Varname (G2), Kern-Typen (E1↔A2 TYPE_WEIGHTS), `documented_in`→migrierte
+  Guides (E1↔D2–D4). ✓
