@@ -37,3 +37,6 @@ reports/*
 .vscode/
 *.swp
 *~
+
+# Obsidian-Vault: GUI-/Workspace-State ist maschinen-lokal (der Vault selbst ist versioniert; ADR-025)
+vault/.obsidian/

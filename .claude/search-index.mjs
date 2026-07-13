@@ -4,15 +4,14 @@
 // returns the same order. Used by memory-server.mjs (runtime) and search-selftest.mjs.
 //
 // Why no stemmer: a stemmer good for English ("gates"→"gate") corrupts German
-// ("Haus"→"Hau") and still cannot relate "Mitglied"/"Mitglieder" (umlaut/-er) or
-// "Buchung"/"Buchungen" (-en). Instead we keep raw tokens and expand a query term
+// ("Haus"→"Hau") and still cannot relate "Kunde"/"Kunden" (umlaut/-en) or
+// "Rechnung"/"Rechnungen" (-en). Instead we keep raw tokens and expand a query term
 // to every index-vocabulary term it shares a prefix with (min length 4). That
 // relates additive inflections in BOTH languages — gates/gate, tests/testing,
-// verein/vereinsheim, mitglied/mitglieder, buchung/buchungen — deterministically,
-// with no lossy collisions.
+// kunde/kunden, rechnung/rechnungen — deterministically, with no lossy collisions.
 
 // Stopwords carry no retrieval signal. English + German function words only —
-// nothing domain-specific (NOT "build"/"test"/"gate"/"verein": those are queries).
+// nothing domain-specific (NOT "build"/"test"/"gate"/"kunde": those are queries).
 export const STOPWORDS = new Set([
 	// English
 	'a', 'an', 'the', 'and', 'or', 'but', 'if', 'then', 'else', 'of', 'to', 'in',
@@ -41,21 +40,23 @@ export const FIELD_WEIGHTS = {
 	type: 1,
 };
 
-// Per-entityType score multiplier. Provenance/rationale entities are secondary to
-// the living thing they describe: a query about behaviour should surface the
-// feature/subsystem first, with the ADR that decided it (`decision`) or the incident
-// that exercised it (`incident`/`state`) just behind. They stay fully findable —
-// only nudged down, not hidden. Anything not listed scores at 1.0.
+// Per-entityType score multiplier. Provenance/rationale and overview entities are
+// secondary to the living thing they describe: a targeted query should surface the
+// specific subsystem/operation first, with the topic MOC (`guide`), the ADR that
+// decided it (`decision`), or the incident that exercised it (`incident`/`state`) just
+// behind. They stay fully findable — only nudged down, not hidden. Unlisted = 1.0.
 export const TYPE_WEIGHTS = {
+	guide: 0.7,
 	decision: 0.8,
 	incident: 0.75,
+	source: 0.6,
 	state: 0.8,
 };
 
 // Query-term weights by how the term was derived (exact match counts most).
 const W_EXACT = 1.0;
 const W_SYNONYM = 0.85;
-const W_PREFIX = 0.5; // one term is a whole prefix of the other (gates/gate, verein/vereinsheim)
+const W_PREFIX = 0.5; // one term is a whole prefix of the other (gates/gate, kunde/kunden)
 const W_STEM = 0.4; // terms share a long common prefix (verwalten/verwaltung, berechnet/berechnung)
 
 const K1 = 1.5;
