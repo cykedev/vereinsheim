@@ -74,8 +74,8 @@
 
 ## Docs (load on-demand)
 
-| Key               | Path                       | Load when                   |
-| ----------------- | -------------------------- | --------------------------- |
+| Key               | Path                                               | Load when                   |
+| ----------------- | -------------------------------------------------- | --------------------------- |
 | `projectBrief`    | `vault/apps/ringwerk/ringwerk-project-brief.md`    | Session start               |
 | `features`        | `vault/apps/ringwerk/ringwerk-features.md`         | Clarifying feature scope    |
 | `architecture`    | `vault/apps/ringwerk/ringwerk-architecture.md`     | Routes, directory structure |
@@ -90,8 +90,8 @@
 
 If you are a subagent implementing a task, read these docs **before writing any code**:
 
-| Doc                        | When                                      |
-| -------------------------- | ----------------------------------------- |
+| Doc                                                | When                                      |
+| -------------------------------------------------- | ----------------------------------------- |
 | `vault/apps/ringwerk/ringwerk-code-conventions.md` | Always                                    |
 | `vault/apps/ringwerk/ringwerk-reference-files.md`  | Always — find existing patterns first     |
 | `vault/apps/ringwerk/ringwerk-data-model.md`       | Always — domain understanding             |
