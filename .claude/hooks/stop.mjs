@@ -13,9 +13,11 @@ import { evaluate as evaluateKnowledgeCapture } from './knowledge-capture.mjs';
 
 // Pure orchestration (exported for stop.test.mjs): run each check fail-open and
 // ACCUMULATE every block message — both are independent turn-end validations, so the
-// user should see all problems at once, not just the first.
+// user should see all problems at once, not just the first. Non-blocking `note`s (e.g.
+// "gate skipped, DB unreachable") are accumulated too, so a fail-open is never silent.
 export async function dispatch(input, evaluators) {
 	const messages = [];
+	const notes = [];
 	for (const fn of evaluators) {
 		let r;
 		try {
@@ -24,8 +26,9 @@ export async function dispatch(input, evaluators) {
 			r = { block: false }; // a throw in one check never suppresses the others
 		}
 		if (r && r.block) messages.push(r.message || '(stop blocked)');
+		if (r && r.note) notes.push(r.note);
 	}
-	return { block: messages.length > 0, message: messages.join('\n\n') };
+	return { block: messages.length > 0, message: messages.join('\n\n'), notes };
 }
 
 async function main() {
@@ -33,6 +36,7 @@ async function main() {
 		const input = await readInput();
 		if (input.stop_hook_active) process.exit(0); // prevent stop-hook loops
 		const r = await dispatch(input, [evaluateGraphSync, evaluateStopGate, evaluateKnowledgeCapture]);
+		for (const n of r.notes) process.stderr.write(`${n}\n`); // non-blocking (e.g. gate skipped)
 		if (r.block) {
 			process.stderr.write(`${r.message}\n`);
 			process.exit(2);
