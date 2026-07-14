@@ -56,14 +56,14 @@ test('memory-server: handshake, tool list, all seven tools, and flat-note handli
 	const got = await drive([
 		{ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} },
 		{ jsonrpc: '2.0', id: 2, method: 'tools/list' },
-		call(3, 'search_nodes', { query: 'quality gates lint typecheck', limit: 3 }),
-		call(4, 'document_map', { id: 'harness-walkthrough' }),
-		call(5, 'section_read', { id: 'harness-walkthrough', section: 'The four pillars' }),
-		call(6, 'backlinks', { id: 'harness' }),
-		call(7, 'traverse', { id: 'workflow', depth: 1 }),
+		call(3, 'search_nodes', { query: 'Wertungslogik Punkteberechnung Ringe Teiler', limit: 3 }),
+		call(4, 'document_map', { id: 'architecture' }),
+		call(5, 'section_read', { id: 'architecture', section: 'Repo-Karte' }),
+		call(6, 'backlinks', { id: 'overview' }),
+		call(7, 'traverse', { id: 'ringwerk', depth: 1 }),
 		call(8, 'read_graph', {}),
-		call(9, 'document_map', { id: 'knowledge' }),
-		call(10, 'section_read', { id: 'knowledge' }),
+		call(9, 'document_map', { id: 'component-canon' }),
+		call(10, 'section_read', { id: 'component-canon' }),
 	]);
 
 	// initialize
@@ -75,26 +75,26 @@ test('memory-server: handshake, tool list, all seven tools, and flat-note handli
 		assert.ok(tools.includes(t), `tools/list missing ${t}`);
 	}
 
-	// search_nodes → ranked entities, top hit is the gates subsystem
+	// search_nodes → ranked entities, top hit is the scoring subsystem
 	const search = payload(got.get(3));
 	assert.ok(search.entities.length > 0, 'search returned no entities');
-	assert.equal(search.entities[0].name, 'quality-gates');
+	assert.equal(search.entities[0].name, 'scoring-engine');
 
-	// document_map → heading list for a note with headings
+	// document_map → heading list for a note with headings (the architecture guide)
 	const map = payload(got.get(4));
-	assert.ok(map.headings.some((h) => h.text === 'The four pillars'), 'document_map missing headings');
+	assert.ok(map.headings.some((h) => h.text === 'Repo-Karte'), 'document_map missing headings');
 
 	// section_read → just that section
 	const section = payload(got.get(5));
-	assert.match(section.text, /## The four pillars/);
+	assert.match(section.text, /## Repo-Karte/);
 
-	// backlinks → harness has inbound edges from its members
+	// backlinks → overview has inbound edges from its topic MOCs
 	const back = payload(got.get(6));
-	assert.ok(back.backlinks.length > 0, 'harness has no backlinks');
+	assert.ok(back.backlinks.length > 0, 'overview has no backlinks');
 
 	// traverse → reaches at least the start's neighbours
 	const walk = payload(got.get(7));
-	assert.ok(walk.nodes.includes('workflow'), 'traverse dropped the start node');
+	assert.ok(walk.nodes.includes('ringwerk'), 'traverse dropped the start node');
 	assert.ok(walk.edges.length > 0, 'traverse found no edges');
 
 	// read_graph → the whole graph
@@ -111,5 +111,5 @@ test('memory-server: handshake, tool list, all seven tools, and flat-note handli
 
 	// section_read with no section → the whole body
 	const whole = payload(got.get(10));
-	assert.match(whole.text, /knowledge/i, 'no-section read did not return the body');
+	assert.match(whole.text, /Komponenten-Kanon/i, 'no-section read did not return the body');
 });
