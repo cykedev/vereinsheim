@@ -127,79 +127,91 @@ export function isEnvReadViolation(cmd) {
   return false
 }
 
-function block(msg) {
-  process.stderr.write(`${msg}\n`)
-  process.exit(2)
+// Reiner Check (exportiert für pretool.mjs-Dispatcher + pretool-guard.test.mjs). Liefert
+// { deny, reason } bei einer Verletzung, sonst { deny:false } — plus optional
+// { context, contextMarker } für den einmaligen CodeGraph-Nudge (der Aufrufer schreibt den
+// Marker, damit die Prüfung selbst seiteneffektfrei bleibt).
+export function evaluate(input) {
+  const tool = input.tool_name || ""
+  const ti = input.tool_input || {}
+  const ROOT = repoRoot(import.meta.url)
+
+  if (["Read", "Edit", "Write", "NotebookEdit"].includes(tool)) {
+    const p = ti.file_path || ti.notebook_path || ""
+    if (isDotenvPath(p)) {
+      return { deny: true, reason: `Blocked: ${p} sieht wie eine echte Secret-Datei aus. Nutze .env.example oder besorge den Wert anders.` }
+    }
+  }
+
+  if (tool === "Bash") {
+    const cmd = String(ti.command || "")
+    // Heredoc-Bodies einmalig entfernen. Quotes bleiben erhalten für den Secret-Check
+    // (ein gequoteter Pfad wie `cat ".env"` muss weiterhin erkannt werden).
+    const noHeredoc = cmd.replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, "")
+
+    if (isEnvReadViolation(noHeredoc)) {
+      return { deny: true, reason: "Blocked: das Kommando greift auf eine echte Secret-Datei zu (.env* / .vereinsheim.local). Nutze .env.example oder einen anderen Pfad." }
+    }
+    if (isDangerousRm(noHeredoc)) {
+      return { deny: true, reason: "Blocked: `rm` rekursiv+force auf ein gefährliches Ziel (/, /*, ~, $HOME, *, .). Pfad eingrenzen." }
+    }
+
+    // Backgrounding eines Dev-/Watch-Servers mit einem einzelnen `&` (nicht `&&`, nicht `2>&1`).
+    // Quote-geblankt, damit eine Erwähnung von "&" in einem String nicht triggert.
+    const stripped = noHeredoc.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""')
+    const backgrounded = /(^|[^&>])&(?![&>])/.test(stripped)
+    if (backgrounded && DEV_SERVER.test(stripped)) {
+      return { deny: true, reason: "Blocked: Dev-/Watch-Server nicht mit `&` backgrounden (Orphan-Risiko). Nutze stattdessen run_in_background des Bash-Tools." }
+    }
+  }
+
+  // ── Advisory-Nudge: CodeGraph statt grep/find/Read (User-Wunsch 22.06.2026) ────
+  const bashSearch =
+    tool === "Bash" &&
+    /\b(rg|ag|ack|fd|grep|egrep|fgrep|find)\b/.test(
+      String(ti.command || "")
+        .replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, " ")
+        .replace(/'[^']*'/g, " ")
+        .replace(/"[^"]*"/g, " "),
+    )
+  const searchesCode = bashSearch || tool === "Grep" || tool === "Glob"
+
+  if (searchesCode && existsSync(resolve(ROOT, ".codegraph"))) {
+    const sid = String(input.session_id || "nosession").replace(/[^\w.-]/g, "_")
+    const marker = join(tmpdir(), `vereinsheim-cg-nudge-${sid}`)
+    if (!existsSync(marker)) {
+      const msg =
+        "CodeGraph ist in diesem Repo indiziert (.codegraph/). Für Symbol-, Struktur- " +
+        "oder Call-Graph-Fragen ist codegraph_explore/codegraph_search meist die bessere " +
+        "erste Wahl als grep/find/Read — ein Call statt einer Such-/Lese-Schleife. Reine " +
+        "Textsuche (Doku, Logs, Strings) bleibt ok. (Einmalige Erinnerung pro Session.)"
+      return { deny: false, context: msg, contextMarker: marker }
+    }
+  }
+  return { deny: false }
 }
 
 async function main() {
   try {
     const input = await readInput()
-    const tool = input.tool_name || ""
-    const ti = input.tool_input || {}
-    const ROOT = repoRoot(import.meta.url)
-
-    if (["Read", "Edit", "Write", "NotebookEdit"].includes(tool)) {
-      const p = ti.file_path || ti.notebook_path || ""
-      if (isDotenvPath(p)) {
-        block(`Blocked: ${p} sieht wie eine echte Secret-Datei aus. Nutze .env.example oder besorge den Wert anders.`)
-      }
+    const r = evaluate(input)
+    if (r.deny) {
+      process.stderr.write(`${r.reason}\n`)
+      process.exit(2)
     }
-
-    if (tool === "Bash") {
-      const cmd = String(ti.command || "")
-      // Heredoc-Bodies einmalig entfernen. Quotes bleiben erhalten für den Secret-Check
-      // (ein gequoteter Pfad wie `cat ".env"` muss weiterhin erkannt werden).
-      const noHeredoc = cmd.replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, "")
-
-      if (isEnvReadViolation(noHeredoc)) {
-        block("Blocked: das Kommando greift auf eine echte Secret-Datei zu (.env* / .vereinsheim.local). Nutze .env.example oder einen anderen Pfad.")
-      }
-
-      if (isDangerousRm(noHeredoc)) {
-        block("Blocked: `rm` rekursiv+force auf ein gefährliches Ziel (/, /*, ~, $HOME, *, .). Pfad eingrenzen.")
-      }
-
-      // Backgrounding eines Dev-/Watch-Servers mit einem einzelnen `&` (nicht `&&`, nicht `2>&1`).
-      // Quote-geblankt, damit eine Erwähnung von "&" in einem String nicht triggert.
-      const stripped = noHeredoc.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""')
-      const backgrounded = /(^|[^&>])&(?![&>])/.test(stripped)
-      if (backgrounded && DEV_SERVER.test(stripped)) {
-        block("Blocked: Dev-/Watch-Server nicht mit `&` backgrounden (Orphan-Risiko). Nutze stattdessen run_in_background des Bash-Tools.")
-      }
-    }
-
-    // ── Advisory-Nudge: CodeGraph statt grep/find/Read (User-Wunsch 22.06.2026) ────
-    const bashSearch =
-      tool === "Bash" &&
-      /\b(rg|ag|ack|fd|grep|egrep|fgrep|find)\b/.test(
-        String(ti.command || "")
-          .replace(/<<-?\s*(['"]?)(\w+)\1[\s\S]*?^\s*\2\b/gm, " ")
-          .replace(/'[^']*'/g, " ")
-          .replace(/"[^"]*"/g, " "),
-      )
-    const searchesCode = bashSearch || tool === "Grep" || tool === "Glob"
-
-    if (searchesCode && existsSync(resolve(ROOT, ".codegraph"))) {
-      const sid = String(input.session_id || "nosession").replace(/[^\w.-]/g, "_")
-      const marker = join(tmpdir(), `vereinsheim-cg-nudge-${sid}`)
-      if (!existsSync(marker)) {
+    if (r.context) {
+      if (r.contextMarker) {
         try {
-          writeFileSync(marker, "")
+          writeFileSync(r.contextMarker, "")
         } catch {
           // best-effort: Marker-/IO-Fehler dürfen den Tool-Call nie stören (fail-open).
         }
-        const msg =
-          "CodeGraph ist in diesem Repo indiziert (.codegraph/). Für Symbol-, Struktur- " +
-          "oder Call-Graph-Fragen ist codegraph_explore/codegraph_search meist die bessere " +
-          "erste Wahl als grep/find/Read — ein Call statt einer Such-/Lese-Schleife. Reine " +
-          "Textsuche (Doku, Logs, Strings) bleibt ok. (Einmalige Erinnerung pro Session.)"
-        process.stdout.write(
-          JSON.stringify({
-            hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: msg },
-          }),
-        )
       }
+      process.stdout.write(
+        JSON.stringify({
+          hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: r.context },
+        }),
+      )
     }
   } catch {
     // fail-open

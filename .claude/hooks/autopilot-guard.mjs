@@ -212,83 +212,91 @@ export function interpreterOneLinerViolation(cmd) {
   return null
 }
 
-function deny(r) {
-  console.error(
-    `[autopilot-guard] DENY: ${r}\n` +
-      "Geschützter Pfad/Befehl im autonomen Modus — der Autopilot muss hier HALTEN, " +
-      "das Ereignis ins Ledger schreiben und an den User übergeben.",
-  )
-  process.exit(2)
+const denyReason = (r) =>
+  `[autopilot-guard] DENY: ${r}\n` +
+  "Geschützter Pfad/Befehl im autonomen Modus — der Autopilot muss hier HALTEN, " +
+  "das Ereignis ins Ledger schreiben und an den User übergeben."
+
+// Reiner Check (exportiert für den pretool.mjs-Dispatcher + autopilot-guard.test.mjs). Nur
+// aktiv, solange der frische Marker `.claude/.autopilot-active` existiert; sonst { deny:false }
+// (striktes No-Op im interaktiven Betrieb, auch `/implement --step`). Liefert { deny, reason }
+// bei einer Verletzung, optional { note } für den verwaisten-Marker-Hinweis.
+export function evaluate(input) {
+  const ROOT = repoRoot(import.meta.url)
+  const marker = resolve(ROOT, ".claude", ".autopilot-active")
+  if (!existsSync(marker)) return { deny: false }
+  const ageMs = Date.now() - statSync(marker).mtimeMs
+  if (ageMs > MARKER_TTL_MS) {
+    return {
+      deny: false,
+      note:
+        `[autopilot-guard] Marker ist ${Math.round(ageMs / 3600000)}h alt → als verwaist behandelt ` +
+        "(fail-open). Falls kein Autopilot läuft: `rm .claude/.autopilot-active`.",
+    }
+  }
+
+  const tool = input.tool_name || ""
+  const ti = input.tool_input || {}
+
+  // Pfad relativ zur Repo-Wurzel normalisieren (POSIX-Separatoren, kein führendes ./).
+  const relPath = (p) => {
+    if (!p) return ""
+    const r = isAbsolute(String(p)) ? relative(ROOT, String(p)) : String(p)
+    return r.replace(/\\/g, "/").replace(/^\.\//, "")
+  }
+
+  const isProtected = (rel, rawPath) => {
+    if (!rel) return false
+    // Pfad-Escape (`..` / absoluter Eltern-Tree-Pfad): NICHT als "out-of-scope"
+    // durchwinken — die geschützten Ressourcen (.claude/, scripts/, compose.yml, ADRs,
+    // Schema) liegen physisch auch im Eltern-Tree (der Worktree hängt unter
+    // <repo>/.claude/worktrees/, ADR-024). Bei Escape gegen den vollen normalisierten
+    // Pfad prüfen; unverdächtige Außen-Pfade (z.B. /tmp/x) matchen dann einfach nichts.
+    const probe = rel.startsWith("..") ? String(rawPath).replace(/\\/g, "/").replace(/^\.\//, "") : rel
+    if (isDotenvPath(probe)) return true
+    if (PROTECTED_DIRS.some((d) => probe === d.slice(0, -1) || probe.startsWith(d))) return true
+    return PROTECTED_FILE_PATTERNS.some((fn) => fn(probe))
+  }
+
+  // Ein geschriebenes Token, das auf einen geschützten Pfad zeigt (nie der Marker selbst).
+  const hits = (rawPath) => {
+    const rel = relPath(rawPath)
+    if (!rel || rel === MARKER_REL) return false
+    return isProtected(rel, rawPath)
+  }
+
+  if (["Edit", "Write", "NotebookEdit"].includes(tool)) {
+    const raw = ti.file_path || ti.notebook_path || ""
+    if (hits(raw)) return { deny: true, reason: denyReason(`Schreibzugriff auf geschützten Pfad „${relPath(raw)}".`) }
+  }
+
+  if (tool === "Bash") {
+    const cmd = String(ti.command || "")
+    // Geschützte Kommandos: Quotes zuerst blanken, damit ein Verb innerhalb eines
+    // Strings (eine Commit-Message, die "push" erwähnt) nie triggert.
+    const blanked = cmd.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""')
+    for (const [re, label] of PROTECTED_CMDS) {
+      if (re.test(blanked)) return { deny: true, reason: denyReason(`verbotenes Kommando im autonomen Modus: „${label}".`) }
+    }
+    // Direkte Writes: Redirect-Ziele + Datei-Argumente mutierender Kommandos + dd of=.
+    for (const t of writeTargets(cmd)) {
+      if (hits(t)) return { deny: true, reason: denyReason(`Shell-Write auf geschützten Pfad „${relPath(t)}".`) }
+    }
+    // Interpreter-One-Liner (node -e / python -c / bash -c …).
+    const violation = interpreterOneLinerViolation(cmd)
+    if (violation) return { deny: true, reason: denyReason(`${violation}.`) }
+  }
+  return { deny: false }
 }
 
 async function main() {
   try {
-    const ROOT = repoRoot(import.meta.url)
-    const marker = resolve(ROOT, ".claude", ".autopilot-active")
-    if (!existsSync(marker)) process.exit(0)
-    const ageMs = Date.now() - statSync(marker).mtimeMs
-    if (ageMs > MARKER_TTL_MS) {
-      console.error(
-        `[autopilot-guard] Marker ist ${Math.round(ageMs / 3600000)}h alt → als verwaist behandelt ` +
-          "(fail-open). Falls kein Autopilot läuft: `rm .claude/.autopilot-active`.",
-      )
-      process.exit(0)
-    }
-
     const input = await readInput()
-    const tool = input.tool_name || ""
-    const ti = input.tool_input || {}
-
-    // Pfad relativ zur Repo-Wurzel normalisieren (POSIX-Separatoren, kein führendes ./).
-    const relPath = (p) => {
-      if (!p) return ""
-      const r = isAbsolute(String(p)) ? relative(ROOT, String(p)) : String(p)
-      return r.replace(/\\/g, "/").replace(/^\.\//, "")
-    }
-
-    const isProtected = (rel, rawPath) => {
-      if (!rel) return false
-      // Pfad-Escape (`..` / absoluter Eltern-Tree-Pfad): NICHT als "out-of-scope"
-      // durchwinken — die geschützten Ressourcen (.claude/, scripts/, compose.yml, ADRs,
-      // Schema) liegen physisch auch im Eltern-Tree (der Worktree hängt unter
-      // <repo>/.claude/worktrees/, ADR-024). Bei Escape gegen den vollen normalisierten
-      // Pfad prüfen; unverdächtige Außen-Pfade (z.B. /tmp/x) matchen dann einfach nichts.
-      const probe = rel.startsWith("..") ? String(rawPath).replace(/\\/g, "/").replace(/^\.\//, "") : rel
-      if (isDotenvPath(probe)) return true
-      if (PROTECTED_DIRS.some((d) => probe === d.slice(0, -1) || probe.startsWith(d))) return true
-      return PROTECTED_FILE_PATTERNS.some((fn) => fn(probe))
-    }
-
-    // Ein geschriebenes Token, das auf einen geschützten Pfad zeigt (nie der Marker selbst).
-    const hits = (rawPath) => {
-      const rel = relPath(rawPath)
-      if (!rel || rel === MARKER_REL) return false
-      return isProtected(rel, rawPath)
-    }
-
-    if (["Edit", "Write", "NotebookEdit"].includes(tool)) {
-      const raw = ti.file_path || ti.notebook_path || ""
-      if (hits(raw)) deny(`Schreibzugriff auf geschützten Pfad „${relPath(raw)}".`)
-    }
-
-    if (tool === "Bash") {
-      const cmd = String(ti.command || "")
-      // Geschützte Kommandos: Quotes zuerst blanken, damit ein Verb innerhalb eines
-      // Strings (eine Commit-Message, die "push" erwähnt) nie triggert.
-      const blanked = cmd.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""')
-      for (const [re, label] of PROTECTED_CMDS) {
-        if (re.test(blanked)) deny(`verbotenes Kommando im autonomen Modus: „${label}".`)
-      }
-
-      // Direkte Writes: Redirect-Ziele + Datei-Argumente mutierender Kommandos + dd of=.
-      for (const t of writeTargets(cmd)) {
-        if (hits(t)) deny(`Shell-Write auf geschützten Pfad „${relPath(t)}".`)
-      }
-
-      // Interpreter-One-Liner (node -e / python -c / bash -c …) — siehe
-      // interpreterOneLinerViolation für was das abdeckt und warum.
-      const violation = interpreterOneLinerViolation(cmd)
-      if (violation) deny(`${violation}.`)
+    const r = evaluate(input)
+    if (r.note) console.error(r.note)
+    if (r.deny) {
+      process.stderr.write(`${r.reason}\n`)
+      process.exit(2)
     }
   } catch {
     // fail-open
