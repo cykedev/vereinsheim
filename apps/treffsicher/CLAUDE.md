@@ -5,14 +5,14 @@ Self-hosted, Einzelnutzer bis Vereinsbetrieb, ausschliesslich Dark Mode, ausschl
 
 **Verbindliche Referenzdokumente** (bei Widersprüchen: Docs gewinnen):
 
-- Fachlich: `docs/requirements.md`
-- Technisch (Infra, Architektur, UI): `docs/technical-constraints.md`
-- Code-Stil, TypeScript, Zod, Testing: `docs/code-conventions.md`
-- Datenmodell, Env-Vars, Disziplinen, Ergebniserfassung: `docs/data-model.md`
-- Deployment: **im Monorepo via `vereinsheim`** (Root-`README.md` / `docs/operations.md`)
-- Backlog / nächste Aufgaben: `docs/backlog.md`
+- Fachlich: `vault/apps/treffsicher/treffsicher-requirements.md`
+- Technisch (Infra, Architektur, UI): `vault/apps/treffsicher/treffsicher-technical-constraints.md`
+- Code-Stil, TypeScript, Zod, Testing: `vault/apps/treffsicher/treffsicher-code-conventions.md`
+- Datenmodell, Env-Vars, Disziplinen, Ergebniserfassung: `vault/apps/treffsicher/treffsicher-data-model.md`
+- Deployment: **im Monorepo via `vereinsheim`** (Root-`README.md` / `vault/operations/operations.md`)
+- Backlog / nächste Aufgaben: `vault/apps/treffsicher/treffsicher-backlog.md`
 - Status / Roadmap: `docs/implementation-plan.md`
-- App-übergreifende Konsistenz (Ringwerk × Treffsicher): die Root-`docs/shared-conventions.md`
+- App-übergreifende Konsistenz (Ringwerk × Treffsicher): die Root-`vault/conventions.md`
 
 ---
 
@@ -48,19 +48,19 @@ Dev-Login: `admin@example.com` / `admin-passwort-12`
 
 ## Gedächtnis (Memory-Graph)
 
-Der SessionStart-Hook surface't den geteilten Memory-Graph (Projektgedächtnis,
-Root-`.claude/knowledge-graph.json`). Bei relevantem Vorwissen (Incident/Provenance/Zustand) vor
-breiter Exploration `mcp__memory__search_nodes`/`open_nodes` abfragen. Session-Ende:
-REMEMBER-würdige Projektfakten via `/consolidate-lessons` (Schritt 5) als Entity festhalten und
-`.claude/knowledge-graph.json` mit-committen. Abgrenzung: erzwingbare Regeln → Docs/Gates;
-maschinen-/ops-lokale Fakten → natives Auto-Memory.
+Der SessionStart-Hook surface't den geteilten Memory-Graph — den `vault/` (ADR-025; er **ist**
+der Graph, kein gebauter Store). Bei relevantem Vorwissen (Incident/Provenance/Zustand) vor
+breiter Exploration `mcp__memory__search_nodes`/`open_nodes` abfragen (eine deutsche Frage rankt
+am besten). Session-Ende: REMEMBER-würdige Projektfakten via `/consolidate-lessons` (Schritt 5)
+als `vault/incidents/`-Note festhalten (live, kein Rebuild). Abgrenzung: erzwingbare Regeln →
+Gates/`vault/conventions.md`; maschinen-/ops-lokale Fakten → natives Auto-Memory.
 
 ---
 
 ## Deployment
 
 Produktions-Deployment **im Monorepo via `vereinsheim`** (lokaler Build → Docker Hub → VPS-Pull).
-Bedienung und Recovery: Root-`README.md` und `docs/operations.md`.
+Bedienung und Recovery: Root-`README.md` und `vault/operations/operations.md`.
 
 ---
 
@@ -81,7 +81,7 @@ Bedienung und Recovery: Root-`README.md` und `docs/operations.md`.
 
 ## Kritische Prisma-7-Abweichungen
 
-Nie von älteren Versionen ableiten (details: @docs/technical-constraints.md#prisma-7):
+Nie von älteren Versionen ableiten (details: vault/apps/treffsicher/treffsicher-technical-constraints.md#prisma-7):
 
 - Client in `src/generated/prisma/` — Import via `@/generated/prisma/client`
 - Kein `url`-Feld in `datasource db` — stattdessen `prisma.config.ts` im Root
@@ -91,7 +91,7 @@ Nie von älteren Versionen ableiten (details: @docs/technical-constraints.md#pri
 
 ## Architektur-Regeln
 
-Details: @docs/technical-constraints.md#daten--und-aktionsarchitektur
+Details: vault/apps/treffsicher/treffsicher-technical-constraints.md#daten--und-aktionsarchitektur
 
 - **Server Actions** statt API Routes; **Zod** für Validierung; **`useActionState`** in Formularen
 - Fachregeln serverseitig: Attachments + Prognose/Feedback nur bei `TRAINING`/`WETTKAMPF`
@@ -101,7 +101,7 @@ Details: @docs/technical-constraints.md#daten--und-aktionsarchitektur
 
 ## Modularitäts-Regeln
 
-Details: @docs/technical-constraints.md#modularität--wartbarkeit-verbindlich
+Details: vault/apps/treffsicher/treffsicher-technical-constraints.md#modularität--wartbarkeit-verbindlich
 
 - Dateigrösse **< 200 Zeilen** — splitten wenn nötig; Seiten sind dünne Orchestratoren
 - Props-Budget: **max. 6 Top-Level-Props**; wiederholte Logik (≥ 2×) → Helper/Hook extrahieren
@@ -110,7 +110,7 @@ Details: @docs/technical-constraints.md#modularität--wartbarkeit-verbindlich
 
 ## Sprache & Benennung
 
-Details: @docs/technical-constraints.md#sprache
+Details: vault/apps/treffsicher/treffsicher-technical-constraints.md#sprache
 
 | Kontext                                                   | Sprache      |
 | --------------------------------------------------------- | ------------ |
@@ -123,7 +123,7 @@ Keine neuen deutschen Benennungen für interne Bezeichner oder URL-Segmente.
 
 ## UI-Konsistenz
 
-Details: @docs/technical-constraints.md#design--ui
+Details: vault/apps/treffsicher/treffsicher-technical-constraints.md#design--ui
 
 - Nur **shadcn/ui** — kein `alert()`/`confirm()`; Icon-Buttons: `ghost`; destruktive Aktionen: Bestätigungsdialog
 - Listen: ganze Karte klickbar → Detail; Terminologie: **"Probe"** (nicht "Probeschuss")
@@ -134,8 +134,8 @@ Details: @docs/technical-constraints.md#design--ui
 ## Gotchas
 
 - `.env` + Uploads-Verzeichnis niemals einchecken; Migrationsdateien (`prisma/migrations/`) immer einchecken
-- Upload-Whitelist fix: `image/jpeg`, `image/png`, `image/webp`, `application/pdf` (@docs/technical-constraints.md#persistenz)
-- Disziplinen **archivieren, nicht löschen** (@docs/requirements.md#disziplinen)
+- Upload-Whitelist fix: `image/jpeg`, `image/png`, `image/webp`, `application/pdf` (vault/apps/treffsicher/treffsicher-technical-constraints.md#persistenz)
+- Disziplinen **archivieren, nicht löschen** (vault/apps/treffsicher/treffsicher-requirements.md#disziplinen)
 - `NEXTAUTH_SECRET` erzeugen: `openssl rand -base64 48`
-- `next lint` defekt in Next.js 16 — `lint`-Script nutzt `eslint src` (@docs/technical-constraints.md#linting--formatierung)
-- Zod v4: kein `invalid_type_error` → nutze `message` (@docs/code-conventions.md#zod-v4-aktuell-installiert)
+- `next lint` defekt in Next.js 16 — `lint`-Script nutzt `eslint src` (vault/apps/treffsicher/treffsicher-technical-constraints.md#linting--formatierung)
+- Zod v4: kein `invalid_type_error` → nutze `message` (vault/apps/treffsicher/treffsicher-code-conventions.md#zod-v4-aktuell-installiert)

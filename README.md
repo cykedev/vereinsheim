@@ -19,7 +19,7 @@ each shooter train. Self-host both on one small VPS; your members' data never le
      rendered against anonymous sample data. -->
 <!-- ![Ringwerk & Treffsicher](docs/assets/screenshot.png) -->
 
-**▶ Live demo:** _coming soon_ · **Docs:** [spec](docs/spec.md) · [architecture decisions](docs/decisions.md) · [operations](docs/operations.md)
+**▶ Live demo:** _coming soon_ · **Docs:** [spec](vault/overview.md) · [architecture decisions](vault/decisions/decisions.md) · [operations](vault/operations/operations.md)
 
 ---
 
@@ -64,7 +64,7 @@ pnpm dev                            # Ringwerk on :3000, Treffsicher on :3001
 ```
 
 Deploy both to your own VPS (Docker images → single server, Caddy + automatic HTTPS):
-see [docs/operations.md](docs/operations.md).
+see [vault/operations/operations.md](vault/operations/operations.md).
 
 ---
 
@@ -92,7 +92,7 @@ Beyond the apps, this repo is a **real-world reference** for shipping multiple N
 | Tooling   | pnpm + Turborepo · Vitest                     |
 | Deploy    | Docker · Caddy · single VPS                    |
 
-Development workflow and architecture rationale: [CLAUDE.md](CLAUDE.md) · [docs/decisions.md](docs/decisions.md).
+Development workflow and architecture rationale: [CLAUDE.md](CLAUDE.md) · [vault/decisions/decisions.md](vault/decisions/decisions.md).
 
 ---
 
@@ -114,4 +114,4 @@ shooting clubs); code, identifiers and commit messages are in English.
 & Saison-Wettbewerbe, öffentliche Ergebnis-PDFs, Meyton-Import) und **Treffsicher**
 (Trainingstagebuch für Sportschützen: Einheiten, Ergebniserfassung, integriertes Mentaltraining,
 Befinden-Tracking, Statistiken). Lokal starten: `./scripts/vereinsheim dev-setup` → `pnpm dev`.
-Deployment & Betrieb: [docs/operations.md](docs/operations.md).
+Deployment & Betrieb: [vault/operations/operations.md](vault/operations/operations.md).

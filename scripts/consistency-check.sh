@@ -37,8 +37,8 @@ MUST_MATCH=(
   "src/app/(app)/error.tsx"
   src/app/not-found.tsx
 )
-# Hinweis: docs/shared-conventions.md ist seit der Harness-Konsolidierung EINE
-# Quelle am Root (docs/shared-conventions.md) — nicht mehr pro App dupliziert.
+# Hinweis: vault/conventions.md ist seit der Harness-Konsolidierung EINE
+# Quelle am Root (vault/conventions.md) — nicht mehr pro App dupliziert.
 
 echo "== Byte-identische Shared-Dateien & Configs =="
 for f in "${MUST_MATCH[@]}"; do
