@@ -8,7 +8,7 @@ läuft die Umsetzung durch, bis ein Breaker greift oder der Plan fertig ist. Mer
 `main` bleiben user-gated. Für bewussten Einzelschritt: `/implement --step` (kein Marker → Guard
 No-Op, Halt nach einem Task).
 
-Vor dem ersten Task: Plan + dessen `## Required Docs` (App + `docs/shared-conventions.md`) lesen.
+Vor dem ersten Task: Plan + dessen `## Required Docs` (App + `vault/conventions.md`) lesen.
 
 ## Preflight (einmal pro Lauf)
 
@@ -34,7 +34,7 @@ Vor dem ersten Task: Plan + dessen `## Required Docs` (App + `docs/shared-conven
 4. **Implementieren** — genau diesen einen Task. **Test-first (TDD) für Logik, Server-Actions,
    Bugfixes**: failing test → für den richtigen Grund fallen sehen → minimaler Code → grün refactoren.
    Pragmatische Ausnahme: reine UI/Config/Scaffolding bringt Tests im selben Commit. App-Konventionen
-   befolgen (`apps/<app>/docs/code-conventions.md`, `…/ui-patterns.md`, `docs/shared-conventions.md`),
+   befolgen (`vault/apps/<app>/<app>-code-conventions.md`, `…-ui-patterns.md`, `vault/conventions.md`),
    vorhandene Utilities/Patterns wiederverwenden. Byte-identische Shared-Dateien beider Apps synchron
    halten, bis `packages/ui` greift (`consistency-check.sh`).
 5. **Gate:** `pnpm check`. Grün → 6. Rot → self-heal, **max. 3 Versuche** insgesamt für den Task; danach

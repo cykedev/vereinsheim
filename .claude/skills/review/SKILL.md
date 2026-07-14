@@ -6,8 +6,8 @@ description: Run an adversarial code review of the current branch diff by delega
 PIV step 4 of 4. Delegate the review to the **`code-reviewer`** sub-agent (in `.claude/agents/`):
 
 - Launch it via the Agent tool (`subagent_type: code-reviewer`) with the branch diff
-  (`git diff main...HEAD`) and the relevant conventions (`docs/shared-conventions.md`,
-  `apps/<app>/docs/code-conventions.md` + `ui-patterns.md`).
+  (`git diff main...HEAD`) and the relevant conventions (`vault/conventions.md`,
+  `vault/apps/<app>/<app>-code-conventions.md` + `<app>-ui-patterns.md`).
 - It checks correctness, convention adherence, drift between the two apps' shared files, and
   uses the **codegraph** MCP for impact/call-graph. It returns a structured verdict
   (confirmed issues + severity + concrete fixes).

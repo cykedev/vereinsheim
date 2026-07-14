@@ -11,7 +11,7 @@ PIV step 1 of 4 (plan → implement → validate → review). For a non-trivial 
    user's OK **before** writing the plan. Skip only when the scope is already clear.
 1. Clarify intent; explore the relevant code (use the **codegraph** MCP — `codegraph_explore`
    / references / routes — instead of broad grep where possible) and the affected
-   `apps/<app>/docs/*` + `docs/shared-conventions.md`.
+   `vault/apps/<app>/…` + `vault/conventions.md`.
 2. Design the approach (reuse existing utils/patterns; name the critical files). Map the files
    first, then decompose into **bite-sized tasks** (each a few minutes, self-contained).
 3. Write the plan to **`plans/YYYY-MM-DD-<topic>.md`** with: Context (why), Approach, the
