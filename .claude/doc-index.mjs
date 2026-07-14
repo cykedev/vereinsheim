@@ -1,72 +1,72 @@
-// Geteilte Bibliothek für den Doku-Index (ADR-022).
-//
-// Liefert die EINE kanonische Slug-Funktion + Markdown-Heading-Extraktion, die
-// von ALLEN drei Stellen identisch genutzt wird: dem Fragment-Reader (doc.mjs),
-// dem Pointer-Validator (build-graph.mjs) und den Pointer-Autoren (/sync-graph,
-// Hand). Konsistenz hier = die Index-Pointer können nicht auseinanderlaufen.
-//
-// Pointer-Form: `→ <relpfad>#<slug>` (Sentinel U+2192 + Leerzeichen).
+// Shared library for markdown heading addressing: GitHub-compatible slugs, heading
+// extraction (code-fence aware, with duplicate disambiguation), and fragment
+// reading. Used identically by doc.mjs (CLI reader), vault-loader.mjs (document_map /
+// section_read), and vault-lint.mjs (anchor validation) so a heading can never resolve
+// differently across them.
 
-/**
- * Kanonischer Slug einer Überschrift (GitHub-artig, aber Separatoren kollabiert).
- * lowercase → alles außer \p{L}\p{N} _ - entfernen → Whitespace/_ → "-" →
- * Mehrfach-"-" kollabieren → führende/abschließende "-" trimmen.
- * Lossless bzgl. Unicode-Buchstaben (ü/ä/ö bleiben), damit nichts kollidiert.
- */
+// GitHub-style slug: lowercase, strip punctuation but keep unicode letters
+// (so ü/ä/ö survive), then turn each whitespace char into one hyphen (a run of
+// two spaces — e.g. around an em-dash — becomes "--", matching GitHub).
 export function slugify(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s_-]/gu, "")
-    .replace(/[\s_]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "")
+	return String(text)
+		.trim()
+		.toLowerCase()
+		.replace(/[^\p{L}\p{N}\s_-]/gu, '')
+		.replace(/\s/g, '-');
 }
 
-/**
- * Alle ATX-Überschriften eines Markdown-Strings — Codeblöcke (``` / ~~~) werden
- * übersprungen, damit ein "#" in einem Code-Beispiel keine Überschrift ist.
- * @returns {{level:number, text:string, slug:string, line:number}[]}
- */
 export function headingSlugs(markdown) {
-  const out = []
-  const seen = new Map() // Basis-Slug → Anzahl bisheriger Vorkommen (GitHub-artige Disambiguierung)
-  let fence = null // aktuell offener Code-Fence-Marker (``` oder ~~~), sonst null
-  const lines = markdown.split("\n")
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/)
-    if (fenceMatch) {
-      const marker = fenceMatch[1][0]
-      if (fence === null) fence = marker
-      else if (fence === marker) fence = null
-      continue
-    }
-    if (fence !== null) continue
-    const h = line.match(/^(#{1,6})\s+(.+?)\s*#*\s*$/)
-    if (h) {
-      const text = h[2].trim()
-      const base = slugify(text)
-      // Duplikat-Überschriften eindeutig machen: erstes Vorkommen = base, dann base-1, base-2 …
-      const n = seen.get(base) || 0
-      seen.set(base, n + 1)
-      const slug = n === 0 ? base : `${base}-${n}`
-      out.push({ level: h[1].length, text, slug, line: i })
-    }
-  }
-  return out
+	const lines = String(markdown).split('\n');
+	const seen = new Map();
+	const out = [];
+	let inFence = false;
+	let fenceChar = '';
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		const fence = line.match(/^\s*(`{3,}|~{3,})/);
+		if (fence) {
+			const ch = fence[1][0];
+			if (!inFence) {
+				inFence = true;
+				fenceChar = ch;
+			} else if (ch === fenceChar) {
+				inFence = false;
+			}
+			continue;
+		}
+		if (inFence) continue;
+		const m = line.match(/^(#{1,6})\s+(.+?)\s*#*\s*$/);
+		if (!m) continue;
+		const level = m[1].length;
+		const text = m[2].trim();
+		let slug = slugify(text);
+		if (seen.has(slug)) {
+			const n = seen.get(slug) + 1;
+			seen.set(slug, n);
+			slug = `${slug}-${n}`;
+		} else {
+			seen.set(slug, 0);
+		}
+		out.push({ level, text, slug, line: i });
+	}
+	return out;
 }
 
-/**
- * Den Abschnitt unter der Überschrift mit dem gegebenen Slug zurückgeben:
- * von der Überschriftszeile bis (exklusive) zur nächsten Überschrift gleicher
- * oder höherer Ebene. `null`, wenn der Slug nicht existiert.
- */
+// Return the markdown from a heading until the next heading of the same or a
+// higher level (i.e. the whole section). Null if the slug is not found.
 export function readFragment(markdown, slug) {
-  const lines = markdown.split("\n")
-  const headings = headingSlugs(markdown)
-  const start = headings.find((h) => h.slug === slug)
-  if (!start) return null
-  const next = headings.find((h) => h.line > start.line && h.level <= start.level)
-  const end = next ? next.line : lines.length
-  return lines.slice(start.line, end).join("\n").replace(/\s+$/, "") + "\n"
+	const lines = String(markdown).split('\n');
+	const headings = headingSlugs(markdown);
+	const idx = headings.findIndex((h) => h.slug === slug);
+	if (idx === -1) return null;
+	const start = headings[idx].line;
+	const level = headings[idx].level;
+	let end = lines.length;
+	for (let j = idx + 1; j < headings.length; j++) {
+		if (headings[j].level <= level) {
+			end = headings[j].line;
+			break;
+		}
+	}
+	return lines.slice(start, end).join('\n').trim();
 }
