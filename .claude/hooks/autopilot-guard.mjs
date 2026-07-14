@@ -51,7 +51,7 @@ const PROTECTED_FILE_PATTERNS = [
   (rel) => /(^|\/)db-init\//.test(rel),
   (rel) => /(^|\/)prisma\/schema\.prisma$/.test(rel),
   (rel) => /(^|\/)prisma\/migrations\//.test(rel),
-  (rel) => rel === "docs/decisions.md",
+  (rel) => /(^|\/)vault\/decisions\//.test(rel), // ADR-Kanon (ADR-025: von docs/decisions.md hierher gewandert)
 ]
 
 // harness:protected-commands — Kommandos, die auch im Autopilot user-gated bleiben.

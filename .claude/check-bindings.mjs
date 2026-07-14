@@ -28,26 +28,20 @@ import { dirname, resolve } from "node:path"
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 
 // Dateien, die /harness-init füllt bzw. die aus dem Blueprint-Doku-Skelett stammen.
-// Angepasst an unsere tatsächliche Monorepo-Struktur (nicht 1:1 vom Blueprint — der
-// geht von einem Single-App-Projekt mit docs/overview.md, docs/conventions.md und
-// .claude/launch.json aus, die es hier nicht gibt). docs/decisions.md bleibt bewusst
-// ausgeschlossen (Meta-/ADR-Kanon mit literalen Token-Referenzen über die Harness selbst).
+// Angepasst an unsere Monorepo-Struktur + den Vault (ADR-025: docs/ → vault/). Der
+// ADR-Kanon vault/decisions/ bleibt bewusst ausgeschlossen (Meta-Kanon mit literalen
+// Token-Referenzen über die Harness selbst).
 //
-// docs/shared-conventions.md, docs/operations.md, docs/spec.md und
-// .claude/skills/sync-graph/SKILL.md sind EBENFALLS bewusst ausgeschlossen: bei der
-// ersten echten Ausführung dieses Checkers (Juli 2026) haben sie 19 False Positives
-// erzeugt — keine vergessenen /harness-init-Platzhalter, sondern zwei dauerhafte,
-// legitime Doku-Konventionen dieses Projekts, die derselben `<Großbuchstabe>`-Lexik
-// folgen: JSX-Komponenten-Tags in Prosa (`<PageHeader .../>`, `<ConfirmDialog>` in
-// shared-conventions.md) und Runbook-/Instruktions-Substitutionsvariablen (`<TS>`,
-// `<DOCKER_USER>`, `<DOMAIN>` in operations.md/spec.md; `<Synonyme>` als
-// Beispiel-Template in sync-graph/SKILL.md). Diese Dateien werden nie "vollständig
-// gebunden" sein, weil ihr Platzhalter-Gebrauch dauerhaft und beabsichtigt ist — sie
-// hier zu belassen würde den Checker permanent rot und damit wertlos als
-// Regressions-Netz machen.
+// vault/conventions.md, vault/operations/operations.md, vault/overview.md und
+// .claude/skills/sync-graph/SKILL.md sind EBENFALLS bewusst ausgeschlossen: sie tragen
+// dauerhafte, legitime Doku-Konventionen, die derselben `<Großbuchstabe>`-Lexik folgen —
+// JSX-Komponenten-Tags in Prosa (`<PageHeader .../>`, `<ConfirmDialog>` in conventions.md)
+// und Runbook-/Instruktions-Substitutionsvariablen (`<TS>`, `<DOCKER_USER>`, `<DOMAIN>` in
+// operations/overview; `<Synonyme>` als Beispiel-Template in sync-graph). Sie hier zu
+// belassen würde den Checker permanent rot und damit wertlos als Regressions-Netz machen.
 export const FILLABLE = [
   "CLAUDE.md",
-  "docs/architecture.md",
+  "vault/architecture/architecture.md",
   ".claude/skills/plan/SKILL.md",
   ".claude/skills/implement/SKILL.md",
   ".claude/skills/validate/SKILL.md",
@@ -104,8 +98,8 @@ function main() {
 
   const review = []
   const ag = read(".claude/hooks/autopilot-guard.mjs") ?? ""
-  if (/const PROTECTED_FILES = \['docs\/decisions\.md'\];/.test(ag))
-    review.push("autopilot-guard.mjs (harness:protected-files) schützt nur docs/decisions.md — Lockfile/Manifest/Build-Config ergänzen.")
+  if (!/vault\\?\/decisions/.test(ag)) // backslash-tolerant: der Quelltext trägt das Muster als Regex-Literal (vault\/decisions\/)
+    review.push("autopilot-guard.mjs (harness:protected-files) schützt den ADR-Kanon vault/decisions/ nicht mehr — das PROTECTED_FILE_PATTERN wiederherstellen.")
   if (!lintOff && /const LINT_EXT = \[\];/.test(pl))
     review.push("posttool-lint.mjs (harness:lint-ext) ist [] — der Linter läuft auf JEDER editierten Datei.")
 
