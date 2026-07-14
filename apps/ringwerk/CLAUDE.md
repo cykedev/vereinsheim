@@ -4,7 +4,7 @@
 
 **Sprache:** Alle Kommunikation mit dem User auf Deutsch. Code, Commit-Messages und Agent-Prompts bleiben auf Englisch.
 
-**App-übergreifende Konsistenz mit Treffsicher:** siehe die Root-`docs/shared-conventions.md` (Single Source; UI/Config-Drift zwischen den Apps erzwingt `scripts/consistency-check.sh`).
+**App-übergreifende Konsistenz mit Treffsicher:** siehe die Root-`vault/conventions.md` (Single Source; UI/Config-Drift zwischen den Apps erzwingt `scripts/consistency-check.sh`).
 
 ## Hard Rules (non-negotiable, always active)
 
@@ -36,8 +36,8 @@
 - Run `/check` — all gates must be green.
 - **Write lessons** — before `/consolidate-lessons`, add new entries to `.claude/tasks/lessons.md` for anything surprising, tricky, or worth remembering from this session. Format: `| YYYY-MM-DD | Was schiefgelaufen ist oder aufgefallen ist | Die Regel die es verhindert |`. Minimum 1 Eintrag pro Session — wenn nichts schiefgelaufen ist, dann eine Beobachtung über das Codebase oder einen nicht-offensichtlichen Entscheid.
 - Run `/consolidate-lessons` — promote new learnings to docs.
-- Memory-Graph: REMEMBER-würdige Projektfakten (Incident/Provenance/Zustand) via `mcp__memory__create_entities` festhalten und `.claude/knowledge-graph.json` mit-committen (in-repo, persistiert nicht von selbst).
-- Doc sync: review session changes and update any stale docs in `docs/` (e.g. `features.md`, `data-model.md`, `architecture.md`, `reference-files.md`). Commit updates.
+- Memory-Graph (der Vault, ADR-025): REMEMBER-würdige Projektfakten (Incident/Provenance/Zustand) als `vault/incidents/`-Note festhalten (live editiert, kein Rebuild) — via `/consolidate-lessons` REMEMBER; die Note ist sofort im Graph.
+- Doc sync: review session changes and update any stale vault notes for this app (`vault/apps/ringwerk/ringwerk-{features,data-model,architecture,…}.md`) — edit the note live (no rebuild, ADR-025); run `/sync-graph` to close cross-ref gaps. Commit updates.
 - Present a summary of all commits on the branch.
 - Merge to `main` with `git merge --ff-only` (no merge commit), then delete the branch with `git branch -d`.
 
@@ -45,7 +45,7 @@
 
 ## Session Start
 
-1. Read `docs/project-brief.md`
+1. Read `vault/apps/ringwerk/ringwerk-project-brief.md`
 2. Read last 5 entries of `.claude/tasks/lessons.md`
 3. Brief German onboarding message: "Alles klar" or any relevant context from lessons
 4. Der SessionStart-Hook surface't den Memory-Graph (Projektgedächtnis): bei relevantem Vorwissen (Incident/Provenance/Zustand) vor breiter Exploration `mcp__memory__search_nodes`/`open_nodes` abfragen.
@@ -76,15 +76,15 @@
 
 | Key               | Path                       | Load when                   |
 | ----------------- | -------------------------- | --------------------------- |
-| `projectBrief`    | `docs/project-brief.md`    | Session start               |
-| `features`        | `docs/features.md`         | Clarifying feature scope    |
-| `architecture`    | `docs/architecture.md`     | Routes, directory structure |
-| `techStack`       | `docs/technical.md`        | Stack details, deployment   |
-| `domainModel`     | `docs/data-model.md`       | Business logic, formulas    |
-| `codeConventions` | `docs/code-conventions.md` | Writing code                |
-| `uiPatterns`      | `docs/ui-patterns.md`      | Building UI                 |
-| `referenceFiles`  | `docs/reference-files.md`  | Finding patterns, templates |
-| `worktrees`       | `docs/worktrees.md`        | Before using git worktrees  |
+| `projectBrief`    | `vault/apps/ringwerk/ringwerk-project-brief.md`    | Session start               |
+| `features`        | `vault/apps/ringwerk/ringwerk-features.md`         | Clarifying feature scope    |
+| `architecture`    | `vault/apps/ringwerk/ringwerk-architecture.md`     | Routes, directory structure |
+| `techStack`       | `vault/apps/ringwerk/ringwerk-technical.md`        | Stack details, deployment   |
+| `domainModel`     | `vault/apps/ringwerk/ringwerk-data-model.md`       | Business logic, formulas    |
+| `codeConventions` | `vault/apps/ringwerk/ringwerk-code-conventions.md` | Writing code                |
+| `uiPatterns`      | `vault/apps/ringwerk/ringwerk-ui-patterns.md`      | Building UI                 |
+| `referenceFiles`  | `vault/apps/ringwerk/ringwerk-reference-files.md`  | Finding patterns, templates |
+| `worktrees`       | `vault/apps/ringwerk/ringwerk-worktrees.md`        | Before using git worktrees  |
 
 ### Subagent Required Reading
 
@@ -92,12 +92,12 @@ If you are a subagent implementing a task, read these docs **before writing any 
 
 | Doc                        | When                                      |
 | -------------------------- | ----------------------------------------- |
-| `docs/code-conventions.md` | Always                                    |
-| `docs/reference-files.md`  | Always — find existing patterns first     |
-| `docs/data-model.md`       | Always — domain understanding             |
-| `docs/architecture.md`     | Always — layer order, directory structure |
-| `docs/features.md`         | Always — what features exist and how      |
-| `docs/ui-patterns.md`      | When creating or editing any `.tsx` file  |
+| `vault/apps/ringwerk/ringwerk-code-conventions.md` | Always                                    |
+| `vault/apps/ringwerk/ringwerk-reference-files.md`  | Always — find existing patterns first     |
+| `vault/apps/ringwerk/ringwerk-data-model.md`       | Always — domain understanding             |
+| `vault/apps/ringwerk/ringwerk-architecture.md`     | Always — layer order, directory structure |
+| `vault/apps/ringwerk/ringwerk-features.md`         | Always — what features exist and how      |
+| `vault/apps/ringwerk/ringwerk-ui-patterns.md`      | When creating or editing any `.tsx` file  |
 
 Additional task-specific docs are listed in the plan under `## Required Docs`.
 
