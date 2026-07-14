@@ -11,7 +11,7 @@ Self-hosted, Einzelnutzer bis Vereinsbetrieb, ausschliesslich Dark Mode, ausschl
 - Datenmodell, Env-Vars, Disziplinen, Ergebniserfassung: `vault/apps/treffsicher/treffsicher-data-model.md`
 - Deployment: **im Monorepo via `vereinsheim`** (Root-`README.md` / `vault/operations/operations.md`)
 - Backlog / nächste Aufgaben: `vault/apps/treffsicher/treffsicher-backlog.md`
-- Status / Roadmap: `docs/implementation-plan.md`
+- Status / Roadmap: `vault/apps/treffsicher/treffsicher-implementation-plan.md`
 - App-übergreifende Konsistenz (Ringwerk × Treffsicher): die Root-`vault/conventions.md`
 
 ---
