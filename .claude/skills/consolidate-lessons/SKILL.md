@@ -1,6 +1,6 @@
 ---
 name: consolidate-lessons
-description: Triage an app's session lessons (apps/<app>/.claude/tasks/lessons.md) by strongest-permanence-first (ENFORCE > DOCUMENT > REMEMBER), promote reusable rules into docs/gates, and store project-specific context in the Memory-Graph. Use at session end after writing lessons, or whenever lessons.md has grown.
+description: Triage an app's session lessons (apps/<app>/.claude/tasks/lessons.md) by strongest-permanence-first (ENFORCE > DOCUMENT > REMEMBER), promote reusable rules into gates/conventions, and store project-specific context as an incident note in the vault. Use at session end after writing lessons, or whenever lessons.md has grown.
 ---
 
 One skill for **both apps** (ADR-017). Operate on the app you're working in; `<app>` is
@@ -17,11 +17,11 @@ auf der **höchsten** erreichbaren Stufe verankern:
    `scripts/consistency-check.sh` (Drift-Gate), ein Unit-Test, oder ein Fix, der den
    Fehlermodus beseitigt. Den Check **tatsächlich umsetzen** und darauf verweisen.
    (Exemplar: `"use server"`-Re-Export-Lektion → `next build` als Gate, nicht nur Doku.)
-2. **DOCUMENT** — generische Regel in die passende immer-/on-demand-geladene Doc:
-   - app-spezifisch generisch → `apps/<app>/docs/code-conventions.md` bzw. `…/ui-patterns.md`
-   - app-übergreifend → `docs/shared-conventions.md` (Single Source, Root)
-3. **REMEMBER** — projektspezifischer Kontext, der **nicht** als Regel taugt → **Memory-Graph**
-   (memory-MCP, Store `.claude/knowledge-graph.json`). Hierher gehört das *Warum/Wann/Was-passiert-ist*:
+2. **DOCUMENT** — generische Regel in die passende Vault-Guide-Note (live editiert, ADR-025):
+   - app-spezifisch generisch → `vault/apps/<app>/<app>-code-conventions.md` bzw. `…-ui-patterns.md`
+   - app-übergreifend → `vault/conventions.md` (Single Source, @-importiert)
+3. **REMEMBER** — projektspezifischer Kontext, der **nicht** als Regel taugt → **Vault** als
+   `incident`-Note unter `vault/incidents/` (live, kein Build; ADR-025). Hierher gehört das *Warum/Wann/Was-passiert-ist*:
    **Incident** mit Provenance (was kippte warum, wer entschied, revidierbar?), sich ändernder
    **Zustand** (offene Migration, Teil-Stand), **Relationen** zwischen Apps/ADRs/Modulen. **Nicht**
    hierher: wiederverwendbare Regeln (→ DOCUMENT) und maschinen-/ops-lokale Fakten (→ natives
@@ -36,8 +36,8 @@ nie still nur dokumentiert.
 ## Ablauf
 
 1. **Lesen.** `apps/<app>/.claude/tasks/lessons.md` in 50-Zeilen-Chunks (kann groß sein). Lies
-   auch die Ziel-Docs (`apps/<app>/docs/code-conventions.md`, `…/ui-patterns.md`,
-   `docs/shared-conventions.md`), um Duplikate zu vermeiden.
+   auch die Ziel-Guides (`vault/apps/<app>/<app>-code-conventions.md`, `…-ui-patterns.md`,
+   `vault/conventions.md`), um Duplikate zu vermeiden — via `search_nodes`/`section_read`.
 
 2. **Analyse-Agent (model: opus).** Lass einen Sub-Agent jeden Eintrag der **höchsten
    anwendbaren** Kategorie zuordnen (prefer enforcement). Rückgabe:
@@ -59,22 +59,18 @@ nie still nur dokumentiert.
    - **[Regel]**: …
    ```
 
-5. **REMEMBER → Quelle + Rebuild** (ADR-022 — **nicht** per Live-`mcp__memory__`-Write; den überschriebe
-   der nächste Rebuild). Der Store `.claude/knowledge-graph.json` ist ein **gebautes Artefakt**, nie von
-   Hand editieren. Pro `remember`-Eintrag:
-   a. **In die Quelle schreiben** — Incident/State (Provenance, die in **keiner** Doc steht) →
-      `.claude/graph-captured.mjs` (`entityType` `incident`|`state`, `name` kebab-case, eine
-      `observations`-Zeile mit Datum + App + Provenance, z.B. `"2026-06-18 (ringwerk): … gekippt, weil …;
-      revidierbar"`). Abgeleiteter Topic aus einer Doc → `.claude/graph-projection.mjs` (Essenz +
-      `→ datei#slug`-Pointer; Slug via `node .claude/doc.mjs <datei>` prüfen). Existiert die Entity →
-      Observation ergänzen statt Dublette. **Jede Entity braucht zusätzlich eine
-      `Keywords:`-Observation** (Synonyme, die ein Agent sucht; der Builder erzwingt es).
-   b. **Verknüpfen** — Relation in **derselben Quelle** ergänzen (`occurred_in`/`applies_to` zur App,
-      `relates_to`/`governed_by` zu ADR/Topic), damit der Eintrag auffindbar im Index hängt.
-   c. **Bauen + committen** — `node .claude/build-graph.mjs` (validiert Integrität **+** jeden Pointer) →
-      die geänderte Quelle **und** das regenerierte `.claude/knowledge-graph.json` in den Session-Commit.
-      Bei größeren Doc-Änderungen stattdessen `/sync-graph`.
-   (Fallback ohne Build: Eintrag in `lessons.md` als KEEP behalten.)
+5. **REMEMBER → `incident`-Note im Vault** (ADR-025 — kein Build, kein Live-`mcp__memory__`-Write;
+   die Note **ist** der Graph, sobald gespeichert). Pro `remember`-Eintrag:
+   a. **Note anlegen/ergänzen** — `vault/incidents/<name>.md` (aus `vault/_templates/incident.md`;
+      `type: incident`, `id`/Dateiname kebab-case, `**TL;DR**` + Body mit Datum + App + Provenance, z.B.
+      „2026-06-18 (ringwerk): … gekippt, weil …; revidierbar"). **Kuratierte `keywords:`-Zeile**
+      (Synonyme; vault-lint erzwingt sie für atomare Notes). Existiert die Note → Body/Datum ergänzen
+      statt Dublette.
+   b. **Verknüpfen** — typisierte Kante(n) im Frontmatter: `relates_to`/`part_of` zur App
+      (`"[[ringwerk]]"`/`"[[treffsicher]]"`), `governed_by`/`informed_by` zur ADR bzw. zum Topic, damit
+      die Note im Graph hängt (nicht orphan; sonst nur per Suche findbar).
+   c. **Validieren + committen** — `node .claude/vault-lint.mjs` (Schema/Anker/keywords) → die Note in
+      den Session-Commit. Bei Cross-Ref-Aufräumen `/sync-graph`.
 
 6. **lessons.md neu schreiben:** Original-Header + Datums-Kommentar + alle KEEP/REMEMBER-Einträge
    (die noch NICHT in den Memory-Graph wanderten) + die letzten 10 nach Datum; keine
@@ -82,7 +78,7 @@ nie still nur dokumentiert.
 
 7. **Bericht (Deutsch):** verarbeitete Gesamtzahl; **ENFORCE: Liste der umzusetzenden Checks/Fixes**
    (Mechanismus je Eintrag) als konkrete Aktion; X→code-conventions, Y→ui-patterns,
-   Z→shared-conventions, R→Memory-Graph, N archiviert.
+   Z→conventions, R→vault/incidents/, N archiviert.
 
 ## Wichtige Regeln
 
