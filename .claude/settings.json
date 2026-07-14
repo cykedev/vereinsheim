@@ -25,18 +25,14 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pretool-guard.mjs\""
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/autopilot-guard.mjs\""
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pretool.mjs\""
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|NotebookEdit",
         "hooks": [
           {
             "type": "command",
@@ -51,11 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/graph-sync.mjs\""
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-gate.mjs\""
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop.mjs\""
           }
         ]
       }
@@ -74,9 +66,13 @@
       "mcp__memory__read_graph",
       "mcp__memory__search_nodes",
       "mcp__memory__open_nodes",
-      "mcp__memory__create_entities",
-      "mcp__memory__create_relations",
-      "mcp__memory__add_observations"
+      "mcp__memory__document_map",
+      "mcp__memory__section_read",
+      "mcp__memory__backlinks",
+      "mcp__memory__traverse",
+      "Bash(node .claude/vault-lint.mjs)",
+      "Bash(node .claude/check-bindings.mjs)",
+      "Bash(node .claude/doc.mjs:*)"
     ]
   }
 }
