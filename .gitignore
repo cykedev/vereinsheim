@@ -22,6 +22,9 @@ node_modules/
 pnpm-debug.log*
 # turbo prune Docker-Build-Kontext (transient, von build-and-push.sh erzeugt)
 out/
+# Persistenter local-Build-Cache (Plan 2026-07-15-release-cache-eviction): überlebt die Docker-GC-
+# Eviction, hält Release-Builds warm. Re-buildbar, kann groß werden → bei Platzmangel: rm -rf .buildcache
+.buildcache/
 # Agent-Harness (ADR-016/018): lokaler CodeGraph-Index (re-buildbar) + Superpowers-Artefakte
 .codegraph/
 .superpowers/
