@@ -47,8 +47,13 @@ SHA="$(git rev-parse --short HEAD)"
 BUILDER=""
 if [[ "$PUSH" == "1" ]]; then
 	BUILDER="vereinsheim-cache"
-	docker buildx inspect "$BUILDER" >/dev/null 2>&1 ||
+	# Idempotent, aber Driver-bewusst: (neu) anlegen, wenn kein Builder DIESES Namens mit
+	# docker-container-Driver existiert. Ein vorhandener mit falschem Driver (z.B. docker) würde
+	# --cache-to type=local erst zur Build-Zeit scheitern lassen → dann entfernen + frisch anlegen.
+	if ! docker buildx inspect "$BUILDER" 2>/dev/null | grep -q 'Driver:[[:space:]]*docker-container'; then
+		docker buildx rm "$BUILDER" >/dev/null 2>&1 || true
 		docker buildx create --name "$BUILDER" --driver docker-container >/dev/null
+	fi
 fi
 
 build_app() {
