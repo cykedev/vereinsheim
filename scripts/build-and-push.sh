@@ -39,6 +39,18 @@ fi
 
 SHA="$(git rev-parse --short HEAD)"
 
+# Persistenter local-Build-Cache (Plan 2026-07-15-release-cache-eviction): ein dedizierter
+# docker-container-Builder erlaubt --cache-to/--cache-from type=local (der Default-docker-Builder
+# nicht). Der Cache liegt in .buildcache/ (gitignored, AUSSERHALB des Docker-GC-Pools) und übersteht
+# so die LRU-Eviction durch andere Projekte → der Release bleibt warm statt kalt (~1min statt ~5min).
+# Nur im Release-Pfad (PUSH=1, amd64) nötig; PUSH=0-Testbuilds bleiben beim Default-Builder.
+BUILDER=""
+if [[ "$PUSH" == "1" ]]; then
+	BUILDER="vereinsheim-cache"
+	docker buildx inspect "$BUILDER" >/dev/null 2>&1 ||
+		docker buildx create --name "$BUILDER" --driver docker-container >/dev/null
+fi
+
 build_app() {
 	local app="$1"
 	local img="${DOCKER_USER}/${app}"
@@ -55,13 +67,26 @@ build_app() {
 		plat=()
 	fi
 
-	local spec target suffix
+	local spec target suffix cache_dir
+	local cache_args=() builder_args=()
 	for spec in "runner:" "migrator:-migrator"; do
 		target="${spec%%:*}"
 		suffix="${spec#*:}"
+		# Release-Pfad: docker-container-Builder + persistenter local-Cache PRO (app,target). Ein
+		# eigenes Verzeichnis je Ziel — ein gemeinsames würde bei jedem Build vom nächsten überschrieben.
+		# mode=max cacht auch die Zwischenstages (deps/pnpm install, builder/next build) — der Kern.
+		if [[ "$PUSH" == "1" ]]; then
+			cache_dir=".buildcache/${app}-${target}"
+			mkdir -p "$cache_dir"
+			builder_args=(--builder "$BUILDER")
+			cache_args=(--cache-from "type=local,src=${cache_dir}"
+				--cache-to "type=local,dest=${cache_dir},mode=max")
+		fi
 		echo "==> Building ${img}:${SHA}${suffix}  (target=${target}, push=${PUSH})"
 		docker buildx build \
 			--pull \
+			"${builder_args[@]}" \
+			"${cache_args[@]}" \
 			"${plat[@]}" \
 			-f Dockerfile \
 			--build-arg APP="$app" \
