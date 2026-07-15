@@ -28,7 +28,7 @@ const ROOT = repoRoot(import.meta.url);
 const STATE = join(ROOT, '.claude', '.knowledge-nudge');
 
 // Knowledge sinks whose presence in the commit range counts as "captured": a lessons.md
-// row, or any vault/ note (the live memory graph — ADR-011). The vault is live, so
+// row, or any vault/ note (the live memory graph — ADR-025). The vault is live, so
 // editing a note IS the update — there is nothing to build.
 const KNOWLEDGE_FILES = ['.claude/tasks/lessons.md'];
 const isKnowledge = (f) => f.startsWith('vault/') || KNOWLEDGE_FILES.includes(f);
