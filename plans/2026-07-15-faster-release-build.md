@@ -136,6 +136,14 @@ Bewusst außerhalb des freigegebenen Scopes — Analyse für später erhalten:
   Vollbau, Speed als opt-in (`FORCE_ALL=1` erzwingt Vollbau). Portabel ohne `mapfile` (bash 3.2).
   **Nutzen-Grenze:** hilft nur, wenn seit dem letzten Release *ausschließlich eine* App berührt wurde;
   Root-/`packages/*`-Änderungen bauen korrekt-konservativ beide.
+  **Frische-Trade-off (User-Einwand 2026-07-15):** die retaggte App bekommt **kein frisches Base-Image**
+  (keine Alpine-/Node-Patches), bis sie aus anderem Grund neu gebaut wird — Dependency-*Versionen* sind
+  ohnehin lockfile-gepinnt (`--frozen-lockfile`), der Frische-Wert eines Rebuilds ist v.a. das
+  Base-Image. Auflösung: Frische von der Release-Frequenz **entkoppeln** — ein periodischer bzw.
+  CVE-getriggerter `FORCE_ALL=1`-Vollbau **mit `--pull`** baut beide Apps auf frischem Base neu (egal ob
+  Code sich änderte). `--pull` gehört damit an den Vollbau, nicht an jedes inkrementelle Release (= das
+  CI-Muster, Phase 5: nightly/weekly rebuild-all). Vor C also als **Policy** entscheiden: Speed pro
+  Release vs. garantierte Base-Frische pro Release.
 - **D — Kleinkram.** `--pull` 1× statt 4× (mit `--platform "$PLATFORM"` im PUSH=1-Pfad, sonst native
   Base). `.dockerignore` **verworfen** (Build-Kontext `out/` von `turbo prune` enthält nachweislich kein
   `.git`/`node_modules`/`.next` → Repo-Root-`.dockerignore` griffe dort nicht).
