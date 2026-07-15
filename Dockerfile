@@ -29,7 +29,12 @@ ARG APP
 WORKDIR /app
 COPY --from=deps /app/ .
 COPY full/ .
-RUN pnpm exec turbo run build --filter="${APP}"
+# .next/cache über Image-Builds hinweg persistieren (BuildKit-Cache-Mount): macht den
+# next-build inkrementell statt cold. turbo.json hält .next/cache bewusst aus den Task-
+# Outputs heraus; der Mount ist pro App getrennt (id). Beschleunigt v.a. den emulierten
+# amd64-Build auf arm64-Host. Cache liegt außerhalb des Layers → Image-Artefakt unverändert.
+RUN --mount=type=cache,id=next-cache-${APP},target=/app/apps/${APP}/.next/cache \
+    pnpm exec turbo run build --filter="${APP}"
 
 # ── migrator: One-shot Migrations-Job (prisma migrate deploy + Recovery) ──────
 # Das App-Skript run-migrations-with-recovery.sh nutzt absolute /app-Pfade
