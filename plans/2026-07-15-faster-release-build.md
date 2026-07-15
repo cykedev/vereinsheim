@@ -1,5 +1,10 @@
 # Plan: Release-Build beschleunigen — lokale Quick-Wins (A+B)
 
+> ⚠️ **SUPERSEDED** durch [2026-07-15-release-cache-eviction.md](2026-07-15-release-cache-eviction.md).
+> A+B haben sich als **wirkungslos** erwiesen (Rosetta war bereits an; `.next/cache` greift bei Turbopack
+> nicht) und wurden **reverted**. Die echte Ursache war Cache-Eviction. Dieses Dokument bleibt als
+> Historie + die **C/D-Analyse** (unten, „Zurückgestellt") als Referenz für später gültig.
+
 > PIV-Handoff-Artefakt. **Freigegebener Scope: A (Rosetta) + B (`.next/cache`).**
 > C (nur geänderte App bauen) und D (Kleinkram) sind **zurückgestellt** — s. Abschnitt am Ende;
 > Entscheidung über C fällt anhand der gemessenen Zahlen. Kein CI / keine neue Infra / keine ADR
