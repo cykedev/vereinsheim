@@ -10,9 +10,9 @@
 //      `<Satz-Prompts>`. Literale Kleinschreibung wie `feat/<topic>` oder `<file>#<slug>`
 //      ist KEIN Platzhalter und wird bewusst ignoriert.
 //   2. No-op Code-Bindings — die schnelle Gate ist noch `true`, das Lint-Kommando leer.
-//      (Für dieses Projekt strukturell inert: unsere stop-gate.mjs/posttool-lint.mjs
-//      folgen von Anfang an NICHT der Blueprint-Variablennamenskonvention, GATE/LINT
-//      existieren bei uns nicht — dieser Check matcht daher nie, was hier korrekt ist.)
+//      (stop-gate.mjs definiert seit v3 `const GATE` (ADR-025) → der GATE-No-op-Check
+//      unten ist ein LIVE-Regressions-Netz und matcht nur, falls GATE je auf 'true'
+//      zurückfällt. posttool-lint.mjs hat KEIN `const LINT` — der LINT-Check matcht nie.)
 //   3. Stack-gekoppelte Guards noch auf dem Ausliefer-Default — exakt erkennbar, weil
 //      sie Replace-Semantik haben (protected-files schützt nur docs/decisions.md).
 //   4. Advisory — Judgment-Bindings, die der Checker nicht verifizieren kann, weil

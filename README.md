@@ -17,7 +17,7 @@ each shooter train. Self-host both on one small VPS; your members' data never le
 <!-- TODO: add a screenshot or GIF here — the single biggest conversion lever.
      Suggested: a 2-up of the Ringwerk standings/bracket and the Treffsicher statistics page,
      rendered against anonymous sample data. -->
-<!-- ![Ringwerk & Treffsicher](docs/assets/screenshot.png) -->
+<!-- ![Ringwerk & Treffsicher](assets/screenshot.png) -->
 
 **▶ Live demo:** _coming soon_ · **Docs:** [spec](vault/overview.md) · [architecture decisions](vault/decisions/decisions.md) · [operations](vault/operations/operations.md)
 

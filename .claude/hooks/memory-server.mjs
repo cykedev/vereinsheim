@@ -1,15 +1,15 @@
 #!/usr/bin/env node
-// Vendored, zero-dependency MCP server for the memory graph (ADR-011).
+// Vendored, zero-dependency MCP server for the memory graph (ADR-025).
 //
 // Serves the Obsidian-compatible vault (vault/) DIRECTLY — no build step, no store
 // artifact. `vault-loader.mjs` parses the notes into the same entity/relation shape a
-// built store used, so the BM25/EN+DE ranked search (`search-index.mjs`) that ADR-008
+// built store used, so the BM25/EN+DE ranked search (`search-index.mjs`) that ADR-022
 // introduced is reused UNCHANGED. No npm dependency, no LLM, no embeddings: pure Node,
 // fully deterministic.
 //
 // Transport: MCP stdio = newline-delimited JSON-RPC 2.0 over stdin/stdout. We reload
 // the vault fresh on each call so a note edit is picked up without restarting. Existing
-// tool NAMES are unchanged (read_graph / open_nodes / search_nodes); ADR-011 adds the
+// tool NAMES are unchanged (read_graph / open_nodes / search_nodes); ADR-025 adds the
 // heading-addressable read (document_map / section_read) and graph walks
 // (backlinks / traverse).
 //
@@ -58,7 +58,7 @@ function searchNodes(query, limit) {
 	return { entities: hit, relations: relationsAmong(relations, hit.map((e) => e.name)) };
 }
 
-// ADR-011 tools — the heading-addressable read (frugal section retrieval) and graph walks.
+// ADR-025 tools — the heading-addressable read (frugal section retrieval) and graph walks.
 function docMap(id) {
 	const { notes } = loadVault(VAULT);
 	const note = notes.get(id);
