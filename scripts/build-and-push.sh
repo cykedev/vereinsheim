@@ -27,16 +27,6 @@ PUSH="${PUSH:-1}"
 command -v pnpm >/dev/null || { echo "pnpm fehlt — der Monorepo-Build braucht pnpm." >&2; exit 1; }
 pnpm exec turbo --version >/dev/null 2>&1 || { echo "turbo fehlt — erst 'pnpm install' im Repo-Root." >&2; exit 1; }
 
-# Hinweis (nie blockend), wenn amd64 auf arm64-Host ohne aktives Rosetta emuliert wird →
-# die Emulation läuft dann über QEMU (deutlich langsamer als Rosetta). Reiner Preflight-Tipp.
-if [[ "$(uname -m)" == "arm64" && "$PLATFORM" == *amd64* ]]; then
-	rosetta_settings="$HOME/Library/Group Containers/group.com.docker/settings-store.json"
-	if [[ -f "$rosetta_settings" ]] && ! grep -qiE '"useVirtualizationFrameworkRosetta"[[:space:]]*:[[:space:]]*true' "$rosetta_settings"; then
-		echo "HINWEIS: amd64-Build auf arm64-Host ohne aktives Rosetta → Emulation läuft ggf. über QEMU" >&2
-		echo "  (langsam). Docker Desktop → Settings → General → 'Use Rosetta for x86_64/amd64 …' beschleunigt es." >&2
-	fi
-fi
-
 if [[ "$PUSH" == "1" ]]; then
 	if ! git diff --quiet || ! git diff --cached --quiet; then
 		echo "Uncommitted changes — Release-Builds müssen reproduzierbar sein (committe zuerst)." >&2
