@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",
-    "@types/bcryptjs": "catalog:",
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
     "@types/react": "catalog:",
