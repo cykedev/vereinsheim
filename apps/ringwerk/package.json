@@ -19,7 +19,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "catalog:",
     "@prisma/client": "catalog:",
-    "@react-pdf/renderer": "^4.3.2",
+    "@react-pdf/renderer": "^4.6.1",
     "@vereinsheim/lib": "workspace:*",
     "@vereinsheim/ui": "workspace:*",
     "bcryptjs": "catalog:",
