@@ -113,7 +113,15 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 
 ## 9. Aus Lernlog übernommen
 
-<!-- Zuletzt konsolidiert: 2026-06-23 -->
+<!-- Zuletzt konsolidiert: 2026-08-25 -->
+
+- **Bedingt ausgeblendete Formularfelder brauchen im Update Drei-Wege-Semantik**: Ein Feld, das
+  das Formular nur bedingt rendert, fehlt im ausgeblendeten Zustand komplett in der FormData —
+  `formData.get(...)` liefert dann `null`, was **nicht** dasselbe ist wie „vom User geleert". Im
+  `update()` deshalb unterscheiden: Feld fehlt → `undefined` (Spalte nicht anfassen), leer
+  abgeschickt (`""`) → `null` (bewusst geleert), Wert → parsen. Sonst löscht ein Speichern in
+  einem Zustand, in dem das Feld unsichtbar ist, gespeicherte Daten lautlos (siehe
+  [[deadline-wipe-on-hidden-form-fields]]).
 
 - **Domänenentscheidungen am echten Datensatz gegenprüfen**: Wertungs-/Domänenentscheidungen vor
   dem "endgültig"-Status mit dem Domänen-Owner am echten Test-Datensatz gegenprüfen — besonders wenn
