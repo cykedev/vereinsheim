@@ -321,6 +321,82 @@ describe("updateCompetition — Playoff-Konfiguration editierbar bis Playoff-Sta
   })
 })
 
+// ─── updateCompetition — Stichtage ───────────────────────────────────────────
+
+describe("updateCompetition — Stichtage", () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionUpdateMock.mockResolvedValue({})
+    competitionFindUniqueMock.mockResolvedValue({
+      id: "c1",
+      name: "Liga S",
+      type: "LEAGUE",
+      scoringMode: "RINGTEILER",
+      leagueFormat: "DOUBLE_ROUND_ROBIN",
+      status: "ACTIVE",
+      isPublic: false,
+      publicSlug: null,
+      publicPasswordHash: null,
+    })
+    competitionFindFirstMock.mockResolvedValue(null)
+    matchupCountMock.mockResolvedValue(0)
+    playoffMatchCountMock.mockResolvedValue(0)
+    auditLogCreateMock.mockResolvedValue({})
+  })
+
+  it("übernimmt beide Stichtage aus dem Formular", async () => {
+    await updateCompetition(
+      "c1",
+      null,
+      makeFormData({
+        name: "Liga S",
+        scoringMode: "RINGTEILER",
+        hinrundeDeadline: "2027-02-26",
+        rueckrundeDeadline: "2027-06-30",
+      })
+    )
+    const data = competitionUpdateMock.mock.calls[0][0].data
+    expect(data.hinrundeDeadline).toEqual(new Date("2027-02-26"))
+    expect(data.rueckrundeDeadline).toEqual(new Date("2027-06-30"))
+  })
+
+  // Regression: BEST_OF_SINGLE blendet die Stichtag-Felder aus (LeagueFieldsSection),
+  // ausgeblendete Inputs fehlen in der FormData. Ein Speichern in diesem Zustand darf
+  // gespeicherte Stichtage NICHT lautlos löschen → Spalte nicht anfassen (undefined).
+  it("lässt gespeicherte Stichtage unangetastet, wenn die Felder nicht im Formular stehen", async () => {
+    await updateCompetition(
+      "c1",
+      null,
+      makeFormData({
+        name: "Liga S",
+        scoringMode: "RINGTEILER",
+        leagueFormat: "BEST_OF_SINGLE",
+        groupBestOf: "3",
+      })
+    )
+    const data = competitionUpdateMock.mock.calls[0][0].data
+    expect(data.hinrundeDeadline).toBeUndefined()
+    expect(data.rueckrundeDeadline).toBeUndefined()
+  })
+
+  it("leert einen Stichtag, wenn das sichtbare Feld leer abgeschickt wird", async () => {
+    await updateCompetition(
+      "c1",
+      null,
+      makeFormData({
+        name: "Liga S",
+        scoringMode: "RINGTEILER",
+        hinrundeDeadline: "2027-02-26",
+        rueckrundeDeadline: "",
+      })
+    )
+    const data = competitionUpdateMock.mock.calls[0][0].data
+    expect(data.hinrundeDeadline).toEqual(new Date("2027-02-26"))
+    expect(data.rueckrundeDeadline).toBeNull()
+  })
+})
+
 // ─── setCompetitionStatus ─────────────────────────────────────────────────────
 
 describe("setCompetitionStatus", () => {

@@ -5,7 +5,13 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import type { AuditEventType } from "@/lib/auditLog/types"
-import { parseDate, revalidateCompetitionPaths, BaseSchema, revalidatePublicSlug } from "./_shared"
+import {
+  parseDate,
+  parseDateForUpdate,
+  revalidateCompetitionPaths,
+  BaseSchema,
+  revalidatePublicSlug,
+} from "./_shared"
 import { findActiveSlugConflict } from "../publicSlugQueries"
 
 export async function updateCompetition(
@@ -117,8 +123,10 @@ export async function updateCompetition(
       publicPasswordHash: publicPasswordHashUpdate,
       scoringMode: rulesetLocked ? undefined : parsed.data.scoringMode,
       shotsPerSeries: rulesetLocked ? undefined : parsed.data.shotsPerSeries,
-      hinrundeDeadline: parseDate(parsed.data.hinrundeDeadline),
-      rueckrundeDeadline: parseDate(parsed.data.rueckrundeDeadline),
+      // Nicht abgeschickte Stichtag-Felder (Formular blendet sie bei BEST_OF_SINGLE bzw.
+      // für EVENT/SEASON aus) lassen die Spalte unberührt statt sie zu leeren.
+      hinrundeDeadline: parseDateForUpdate(parsed.data.hinrundeDeadline),
+      rueckrundeDeadline: parseDateForUpdate(parsed.data.rueckrundeDeadline),
       eventDate: type === "EVENT" ? parseDate(parsed.data.eventDate) : undefined,
       allowGuests: type === "EVENT" ? parsed.data.allowGuests : undefined,
       teamSize: type === "EVENT" ? (parsed.data.teamSize ?? null) : undefined,
