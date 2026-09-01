@@ -17,6 +17,7 @@ MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Überleben als normale Notes (kei
 - [[dependency-pin-alignment]] — dependency-pin-alignment
 - [[env-var-alignment-gap]] — env-var-alignment-gap
 - [[future-adrs]] — future-adrs
+- [[meyton-pdf-format-change]] — meyton-pdf-format-change
 - [[monorepo-phase-5]] — monorepo-phase-5
 - [[ruleset-lock-granularity]] — ruleset-lock-granularity
 - [[seed-script-orphaned]] — seed-script-orphaned
