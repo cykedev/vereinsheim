@@ -3,10 +3,28 @@ import {
   MAX_EXTRACTED_TEXT_CHARS,
   MAX_PDF_PAGES,
   MAX_PDF_PARSE_MS,
+  MAX_TEXT_ITEMS,
 } from "@/lib/sessions/meyton-import/constants"
+import { MeytonPdfError } from "@/lib/sessions/meyton-import/errors"
 import { buildTextLinesFromItems, type PdfTextItem } from "@/lib/sessions/meyton-import/textLayout"
 
-async function extractItems(buffer: Buffer): Promise<PdfTextItem[]> {
+interface StreamedTextItem {
+  str?: unknown
+  transform?: unknown
+}
+
+function toPdfTextItem(item: StreamedTextItem, page: number): PdfTextItem | null {
+  if (typeof item.str !== "string") return null
+  if (!Array.isArray(item.transform) || item.transform.length < 6) return null
+
+  const x = item.transform[4]
+  const y = item.transform[5]
+  if (typeof x !== "number" || typeof y !== "number") return null
+
+  return { page, str: item.str, x, y }
+}
+
+async function extractItems(buffer: Buffer, startedAt: number): Promise<PdfTextItem[]> {
   // Eigene Kopie: pdf.js uebernimmt das Uint8Array und kann es beim Parsen leeren.
   const pdf = await getDocumentProxy(new Uint8Array(buffer), {
     disableFontFace: true,
@@ -16,21 +34,53 @@ async function extractItems(buffer: Buffer): Promise<PdfTextItem[]> {
   })
 
   try {
+    // Das Laden selbst laesst sich in-process nicht abbrechen: blockiert eine
+    // praeparierte PDF den Event-Loop, feuert kein Timer und auch kein
+    // Promise.race. Wir koennen die Ueberschreitung nur danach feststellen und
+    // die teure Textextraktion gar nicht erst beginnen.
+    if (Date.now() - startedAt > MAX_PDF_PARSE_MS) {
+      throw new MeytonPdfError("Zeitueberschreitung beim Lesen der PDF.")
+    }
+
+    if (pdf.numPages > MAX_PDF_PAGES) {
+      throw new MeytonPdfError(`Die PDF hat mehr als ${MAX_PDF_PAGES} Seiten.`)
+    }
+
     const items: PdfTextItem[] = []
     let totalChars = 0
-    const pageCount = Math.min(pdf.numPages, MAX_PDF_PAGES)
 
-    for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
       const page = await pdf.getPage(pageNumber)
-      const textContent = await page.getTextContent()
 
-      for (const item of textContent.items) {
-        if (!("str" in item) || typeof item.str !== "string") continue
+      // Gestreamt statt getTextContent(): der Cap muss greifen, *bevor* pdf.js die
+      // ganze Seite materialisiert hat.
+      const reader = page.streamTextContent().getReader()
 
-        totalChars += item.str.length
-        if (totalChars > MAX_EXTRACTED_TEXT_CHARS) return items
+      // Bewusst kein reader.cancel() beim Abbruch: mitten im Stream loest das
+      // nicht auf und haengt (gemessen). Das loadingTask.destroy() unten beendet
+      // den Worker-Task sauber (gemessen: 1 ms, "Worker task was terminated").
+      while (true) {
+        // Gegen Date.now() statt gegen einen Timer: bei praeparierten PDFs
+        // blockiert das Parsen den Event-Loop, Timer feuern dann gar nicht.
+        if (Date.now() - startedAt > MAX_PDF_PARSE_MS) {
+          throw new MeytonPdfError("Zeitueberschreitung beim Lesen der PDF.")
+        }
 
-        items.push({ str: item.str, x: item.transform[4], y: item.transform[5] })
+        const { done, value } = await reader.read()
+        if (done) break
+        if (!value?.items) continue
+
+        for (const rawItem of value.items as StreamedTextItem[]) {
+          const item = toPdfTextItem(rawItem, pageNumber)
+          if (!item) continue
+
+          totalChars += item.str.length
+          if (items.length >= MAX_TEXT_ITEMS || totalChars > MAX_EXTRACTED_TEXT_CHARS) {
+            throw new MeytonPdfError("Die PDF enthaelt zu viel Text.")
+          }
+
+          items.push(item)
+        }
       }
     }
 
@@ -49,22 +99,11 @@ async function extractItems(buffer: Buffer): Promise<PdfTextItem[]> {
  * Qt/Type0-Identity-H (Hex-Glyph-IDs). pdf.js dekodiert beides, daher gibt es
  * hier bewusst keine Formatunterscheidung.
  *
- * Wirft bei unlesbarer PDF-Struktur — der Aufrufer uebersetzt das in eine
- * Nutzermeldung, statt still einen leeren Text weiterzureichen.
+ * Wirft bei unlesbarer PDF-Struktur und bei gerissenen Limits, statt still einen
+ * gekuerzten Text weiterzureichen — eine gekuerzte Einheit saehe in der Vorschau
+ * plausibel aus und wuerde so uebernommen.
  */
 export async function extractTextFromPdfBuffer(buffer: Buffer): Promise<string> {
-  let timeoutHandle: NodeJS.Timeout | undefined
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutHandle = setTimeout(
-      () => reject(new Error("Zeitueberschreitung beim Lesen der PDF.")),
-      MAX_PDF_PARSE_MS
-    )
-  })
-
-  try {
-    const items = await Promise.race([extractItems(buffer), timeout])
-    return buildTextLinesFromItems(items).join("\n")
-  } finally {
-    if (timeoutHandle) clearTimeout(timeoutHandle)
-  }
+  const items = await extractItems(buffer, Date.now())
+  return buildTextLinesFromItems(items).join("\n")
 }

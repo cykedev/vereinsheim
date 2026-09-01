@@ -43,12 +43,18 @@ vi.mock("@/lib/sessions/importUrl", () => ({
   normalizeMeytonPdfUrlInput: normalizeMeytonPdfUrlInputMock,
 }))
 
-vi.mock("@/lib/sessions/meytonImport", () => ({
-  extractMeytonDateTime: extractMeytonDateTimeMock,
-  extractMeytonHitLocation: extractMeytonHitLocationMock,
-  extractTextFromPdfBuffer: extractTextFromPdfBufferMock,
-  parseMeytonSeriesFromText: parseMeytonSeriesFromTextMock,
-}))
+vi.mock("@/lib/sessions/meytonImport", async () => {
+  // MeytonPdfError echt durchreichen: die Action prueft per instanceof, ob eine
+  // Fehlermeldung nutzertauglich ist. Ein Stub wuerde diesen Pfad nicht abbilden.
+  const { MeytonPdfError } = await import("@/lib/sessions/meyton-import/errors")
+  return {
+    MeytonPdfError,
+    extractMeytonDateTime: extractMeytonDateTimeMock,
+    extractMeytonHitLocation: extractMeytonHitLocationMock,
+    extractTextFromPdfBuffer: extractTextFromPdfBufferMock,
+    parseMeytonSeriesFromText: parseMeytonSeriesFromTextMock,
+  }
+})
 
 import { previewMeytonImportAction } from "@/lib/sessions/actions/meytonActions"
 
@@ -164,6 +170,31 @@ describe("previewMeytonImportAction", () => {
     expect(result.error).toBe(
       "Die PDF konnte nicht gelesen werden (kein textbasiertes Meyton-PDF oder defekte Datei)."
     )
+  })
+
+  it("reicht eigene Limit-Meldungen an den Nutzer durch", async () => {
+    const { MeytonPdfError } = await import("@/lib/sessions/meyton-import/errors")
+    getAuthSessionMock.mockResolvedValue({ user: { id: "user-1" } })
+    findFirstMock.mockResolvedValue({ id: "disc-1", scoringType: "TENTH" })
+    assertPublicImportTargetMock.mockResolvedValue(undefined)
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(Uint8Array.from([0x25, 0x50, 0x44, 0x46]), {
+          status: 200,
+          headers: { "content-type": "application/pdf", "content-length": "4" },
+        })
+      )
+    )
+    extractTextFromPdfBufferMock.mockRejectedValue(
+      new MeytonPdfError("Die PDF enthaelt zu viel Text.")
+    )
+
+    const formData = buildBaseFormData("URL")
+    formData.set("pdfUrl", "https://example.com/file.pdf")
+    const result = await previewMeytonImportAction(formData)
+
+    expect(result.error).toBe("Die PDF enthaelt zu viel Text.")
   })
 
   it("liefert Fehler wenn keine Serien gefunden werden", async () => {
