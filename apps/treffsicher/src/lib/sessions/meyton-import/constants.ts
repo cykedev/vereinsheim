@@ -11,11 +11,17 @@ export const MAX_INFLATED_STREAM_BYTES = 2 * 1024 * 1024
 export const MAX_TOTAL_INFLATED_BYTES = 8 * 1024 * 1024
 export const MAX_EXTRACTED_TEXT_TOKENS = 25_000
 
+// Beenden den Schussblock einer Serie. "zaehler" und "zähler" stehen beide drin:
+// die PDFs schreiben "Zähler:" mit Umlaut, und diese Zeile besteht ausschliesslich
+// aus Werten im gueltigen Schussbereich (18 16 6 0 0 ...) — ohne Treffer liest der
+// Parser sie als Schuesse ein. "trefferkreis" gibt es nur im neueren Qt-Format.
 export const STOP_KEYWORDS = [
   "trefferlage",
+  "trefferkreis",
   "streuwert",
   "ergebnis",
   "serien:",
+  "zähler",
   "zaehler",
   "innenzehner",
   "weiteste",
