@@ -1,172 +1,70 @@
-import { inflateSync } from "node:zlib"
+import { getDocumentProxy } from "unpdf"
 import {
-  MAX_EXTRACTED_TEXT_TOKENS,
-  MAX_INFLATED_STREAM_BYTES,
-  MAX_TOTAL_INFLATED_BYTES,
+  MAX_EXTRACTED_TEXT_CHARS,
+  MAX_PDF_PAGES,
+  MAX_PDF_PARSE_MS,
 } from "@/lib/sessions/meyton-import/constants"
+import { buildTextLinesFromItems, type PdfTextItem } from "@/lib/sessions/meyton-import/textLayout"
 
-function isOctalDigit(char: string): boolean {
-  return char >= "0" && char <= "7"
-}
+async function extractItems(buffer: Buffer): Promise<PdfTextItem[]> {
+  // Eigene Kopie: pdf.js uebernimmt das Uint8Array und kann es beim Parsen leeren.
+  const pdf = await getDocumentProxy(new Uint8Array(buffer), {
+    disableFontFace: true,
+    useSystemFonts: false,
+    stopAtErrors: false,
+    maxImageSize: 1024 * 1024,
+  })
 
-function decodePdfLiteralString(value: string): string {
-  let result = ""
+  try {
+    const items: PdfTextItem[] = []
+    let totalChars = 0
+    const pageCount = Math.min(pdf.numPages, MAX_PDF_PAGES)
 
-  for (let index = 0; index < value.length; index++) {
-    const char = value[index]
-    if (char !== "\\") {
-      result += char
-      continue
-    }
+    for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
+      const page = await pdf.getPage(pageNumber)
+      const textContent = await page.getTextContent()
 
-    const next = value[index + 1]
-    if (!next) break
+      for (const item of textContent.items) {
+        if (!("str" in item) || typeof item.str !== "string") continue
 
-    if (next === "\n") {
-      index += 1
-      continue
-    }
-    if (next === "\r") {
-      index += 1
-      if (value[index + 1] === "\n") index += 1
-      continue
-    }
+        totalChars += item.str.length
+        if (totalChars > MAX_EXTRACTED_TEXT_CHARS) return items
 
-    if (next === "n") {
-      result += "\n"
-      index += 1
-      continue
-    }
-    if (next === "r") {
-      result += "\r"
-      index += 1
-      continue
-    }
-    if (next === "t") {
-      result += "\t"
-      index += 1
-      continue
-    }
-    if (next === "b") {
-      result += "\b"
-      index += 1
-      continue
-    }
-    if (next === "f") {
-      result += "\f"
-      index += 1
-      continue
-    }
-    if (next === "\\" || next === "(" || next === ")") {
-      result += next
-      index += 1
-      continue
-    }
-
-    if (isOctalDigit(next)) {
-      let octal = next
-      let consumed = 1
-      while (consumed < 3) {
-        const candidate = value[index + 1 + consumed]
-        if (!candidate || !isOctalDigit(candidate)) break
-        octal += candidate
-        consumed += 1
+        items.push({ str: item.str, x: item.transform[4], y: item.transform[5] })
       }
-      result += String.fromCharCode(parseInt(octal, 8))
-      index += consumed
-      continue
     }
 
-    result += next
-    index += 1
+    return items
+  } finally {
+    // destroy() haengt am loadingTask, nicht am Dokument-Proxy — es gibt Worker
+    // und Puffer frei, cleanup() allein wuerde das Dokument offen lassen.
+    await pdf.loadingTask.destroy()
   }
-
-  return result
 }
 
-function extractLiteralStringsFromContent(content: string): string[] {
-  const literals: string[] = []
-
-  const tjRegex = /\(((?:\\.|[^\\()])*)\)\s*Tj/g
-  for (const match of content.matchAll(tjRegex)) {
-    literals.push(decodePdfLiteralString(match[1] ?? ""))
-  }
-
-  const tjArrayRegex = /\[((?:\\.|[^\]])*)\]\s*TJ/g
-  for (const arrayMatch of content.matchAll(tjArrayRegex)) {
-    const arrayContent = arrayMatch[1] ?? ""
-    const innerStringRegex = /\(((?:\\.|[^\\()])*)\)/g
-    for (const innerMatch of arrayContent.matchAll(innerStringRegex)) {
-      literals.push(decodePdfLiteralString(innerMatch[1] ?? ""))
-    }
-  }
-
-  return literals
-}
-
-function extractTextTokensFromPdfBuffer(buffer: Buffer): string[] {
-  const source = buffer.toString("latin1")
-  const tokens: string[] = []
-  let totalInflatedBytes = 0
-
-  let index = 0
-  while (index < source.length) {
-    const streamKeywordIndex = source.indexOf("stream", index)
-    if (streamKeywordIndex === -1) break
-
-    const objectStartIndex = source.lastIndexOf("obj", streamKeywordIndex)
-    const objectChunk =
-      objectStartIndex === -1
-        ? ""
-        : source.slice(Math.max(0, objectStartIndex - 500), streamKeywordIndex)
-
-    if (!/\/Filter\s*(\[\s*)?\/FlateDecode/i.test(objectChunk)) {
-      index = streamKeywordIndex + 6
-      continue
-    }
-
-    let streamStart = streamKeywordIndex + 6
-    if (source[streamStart] === "\r" && source[streamStart + 1] === "\n") {
-      streamStart += 2
-    } else if (source[streamStart] === "\n" || source[streamStart] === "\r") {
-      streamStart += 1
-    }
-
-    const streamEnd = source.indexOf("endstream", streamStart)
-    if (streamEnd === -1) break
-
-    const compressedStream = buffer.slice(streamStart, streamEnd)
-    try {
-      const inflatedBuffer = inflateSync(compressedStream, {
-        maxOutputLength: MAX_INFLATED_STREAM_BYTES,
-      })
-      totalInflatedBytes += inflatedBuffer.length
-      if (totalInflatedBytes > MAX_TOTAL_INFLATED_BYTES) {
-        break
-      }
-
-      const inflated = inflatedBuffer.toString("latin1")
-      const streamTokens = extractLiteralStringsFromContent(inflated)
-      if (streamTokens.length > 0) {
-        const remainingTokenSlots = MAX_EXTRACTED_TEXT_TOKENS - tokens.length
-        if (remainingTokenSlots <= 0) break
-        if (streamTokens.length > remainingTokenSlots) {
-          tokens.push(...streamTokens.slice(0, remainingTokenSlots))
-          break
-        }
-        tokens.push(...streamTokens)
-      }
-    } catch {
-      // Nicht lesbare Streams ignorieren; wir parsen weiter.
-    }
-
-    index = streamEnd + 9
-  }
-
-  return tokens
-}
-
+/**
+ * Extrahiert den Text eines Meyton-PDFs in Lesereihenfolge.
+ *
+ * Deckt beide Meyton-Druckpfade ab: Ghostscript/Type1 (Literal-Strings) und
+ * Qt/Type0-Identity-H (Hex-Glyph-IDs). pdf.js dekodiert beides, daher gibt es
+ * hier bewusst keine Formatunterscheidung.
+ *
+ * Wirft bei unlesbarer PDF-Struktur — der Aufrufer uebersetzt das in eine
+ * Nutzermeldung, statt still einen leeren Text weiterzureichen.
+ */
 export async function extractTextFromPdfBuffer(buffer: Buffer): Promise<string> {
-  const tokens = extractTextTokensFromPdfBuffer(buffer)
-  return tokens.join("\n")
+  let timeoutHandle: NodeJS.Timeout | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(
+      () => reject(new Error("Zeitueberschreitung beim Lesen der PDF.")),
+      MAX_PDF_PARSE_MS
+    )
+  })
+
+  try {
+    const items = await Promise.race([extractItems(buffer), timeout])
+    return buildTextLinesFromItems(items).join("\n")
+  } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle)
+  }
 }
