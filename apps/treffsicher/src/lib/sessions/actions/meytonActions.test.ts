@@ -186,7 +186,37 @@ describe("previewMeytonImportAction", () => {
     formData.set("pdfUrl", "https://example.com/file.pdf")
     const result = await previewMeytonImportAction(formData)
 
-    expect(result).toEqual({ error: "Keine Meyton-Serien im PDF gefunden." })
+    expect(result).toEqual({
+      error: 'Im PDF-Text wurden keine Meyton-Serien ("Serie 1:") gefunden.',
+    })
+  })
+
+  it("meldet leeren PDF-Text getrennt von fehlenden Serien", async () => {
+    getAuthSessionMock.mockResolvedValue({ user: { id: "user-1" } })
+    findFirstMock.mockResolvedValue({ id: "disc-1", scoringType: "TENTH" })
+    assertPublicImportTargetMock.mockResolvedValue(undefined)
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(Uint8Array.from([0x25, 0x50, 0x44, 0x46]), {
+          status: 200,
+          headers: { "content-type": "application/pdf", "content-length": "4" },
+        })
+      )
+    )
+    extractTextFromPdfBufferMock.mockResolvedValue("   ")
+
+    const formData = buildBaseFormData("URL")
+    formData.set("pdfUrl", "https://example.com/file.pdf")
+    const result = await previewMeytonImportAction(formData)
+
+    // Der Zweig muss vor dem Parsen greifen - parseMeytonSeriesFromText ist hier
+    // bewusst nicht gestubbt.
+    expect(result).toEqual({
+      error:
+        "Aus der PDF konnte kein Text gelesen werden (gescanntes Bild-PDF oder unbekanntes Format).",
+    })
+    expect(parseMeytonSeriesFromTextMock).not.toHaveBeenCalled()
   })
 
   it("konvertiert Schuesse disziplinspezifisch und liefert Vorschau", async () => {

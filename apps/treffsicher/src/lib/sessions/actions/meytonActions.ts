@@ -82,9 +82,19 @@ export async function previewMeytonImportAction(
     }
   }
 
+  // Getrennte Meldungen: "kein Text" und "Text ohne Serien" haben verschiedene
+  // Ursachen (Bild-PDF/unbekanntes Format vs. falsches Dokument). Die frueher
+  // gemeinsame Meldung hat die Diagnose eines Formatwechsels verschleiert.
+  if (extractedText.trim().length === 0) {
+    return {
+      error:
+        "Aus der PDF konnte kein Text gelesen werden (gescanntes Bild-PDF oder unbekanntes Format).",
+    }
+  }
+
   const parsedSeries = parseMeytonSeriesFromText(extractedText)
   if (parsedSeries.serien.length === 0) {
-    return { error: "Keine Meyton-Serien im PDF gefunden." }
+    return { error: 'Im PDF-Text wurden keine Meyton-Serien ("Serie 1:") gefunden.' }
   }
 
   // Vorschau zeigt bereits disziplinspezifisch konvertierte Werte.
