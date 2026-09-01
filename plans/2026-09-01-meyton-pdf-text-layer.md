@@ -633,12 +633,22 @@ Danach manuell gegen die laufende App (Dev auf Port 3001):
 - [ ] `meytonFixtures.test.ts` grün — beide Formate, exakte Werte.
 - [ ] Alt-Format liefert **bit-identische** Serienwerte wie vor der Umstellung (Task 6b).
 - [ ] Keine Referenzen mehr auf die entfernten Konstanten / `deflateSync` (grep aus Task 4).
-- [ ] `pnpm --filter treffsicher build` erzeugt einen lauffähigen Standalone-Output **inklusive**
-      unpdf — nach dem Build prüfen:
-      `ls apps/treffsicher/.next/standalone/node_modules/.pnpm | grep unpdf`
-      (Next tract die Dependency über `outputFileTracingRoot`; fehlt sie, muss `unpdf` in
-      `packages/config/next/index.mjs` unter `serverExternalPackages` — dann aber bewusst, weil die
-      Datei von **beiden** Apps geteilt wird).
+- [x] `pnpm --filter treffsicher build` erzeugt einen Standalone-Output **inklusive** unpdf.
+      **Erledigt und korrigiert:** Next *bundelt* unpdf in einen Server-Chunk, statt es nach
+      `node_modules` zu tracen — die ursprünglich hier notierte Prüfung
+      (`ls .next/standalone/node_modules/.pnpm | grep unpdf`) ist deshalb das falsche Kriterium und
+      schlägt fehl, obwohl alles stimmt. Richtig ist:
+
+      ```bash
+      rm -rf apps/treffsicher/.next && pnpm --filter treffsicher build
+      SA=apps/treffsicher/.next/standalone/apps/treffsicher/.next
+      ls $SA/server/chunks/ssr/ | grep unpdf          # 1xa-_unpdf_dist_pdfjs_mjs_*.js, ~1.5 MB
+      grep -rl 'require("unpdf")' $SA/server          # muss leer sein
+      ```
+
+      Das `rm -rf` ist nötig: ohne frisches Build liest man ein turbo-gecachtes `.next` von vor der
+      Dependency. Ergebnis: Chunk vorhanden, kein externer require → `serverExternalPackages` in
+      `packages/config/next/index.mjs` wird **nicht** gebraucht (die Datei teilen sich beide Apps).
 - [ ] Manuelle Schritte 2–5 bestätigt.
 
 ## Offen (nach dem Merge, mit dem User)
