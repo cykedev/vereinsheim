@@ -7,9 +7,14 @@ export const SERIES_HEADER_REGEX = /Serie\s+(\d+)\s*:/i
 export const SERIES_HEADER_GLOBAL_REGEX = /Serie\s+(\d+)\s*:/gi
 export const SHOT_TOKEN_REGEX = /(^|[^0-9])(\d{1,2}(?:\.\d)?)(?:\*|T)?(?!\d)/g
 
-export const MAX_INFLATED_STREAM_BYTES = 2 * 1024 * 1024
-export const MAX_TOTAL_INFLATED_BYTES = 8 * 1024 * 1024
-export const MAX_EXTRACTED_TEXT_TOKENS = 25_000
+// Grenzen gegen praeparierte PDFs. Die frueheren Dekompressions-Caps sind mit
+// pdf.js gegenstandslos — stattdessen begrenzen wir Seiten, Textmenge und Laufzeit.
+export const MAX_PDF_PAGES = 20
+export const MAX_EXTRACTED_TEXT_CHARS = 200_000
+export const MAX_PDF_PARSE_MS = 15_000
+
+// Maximaler y-Versatz, bis zu dem zwei Textitems noch als eine Zeile gelten.
+export const LINE_Y_TOLERANCE = 3
 
 // Beenden den Schussblock einer Serie. "zaehler" und "zähler" stehen beide drin:
 // die PDFs schreiben "Zähler:" mit Umlaut, und diese Zeile besteht ausschliesslich
