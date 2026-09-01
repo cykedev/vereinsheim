@@ -1,68 +1,15 @@
-import { deflateSync } from "node:zlib"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { extractTextFromPdfBuffer } from "@/lib/sessions/meyton-import/pdfText"
 import { MAX_EXTRACTED_TEXT_CHARS, MAX_TEXT_ITEMS } from "@/lib/sessions/meyton-import/constants"
 
+import {
+  buildTestPdf,
+  buildTextBombPdf,
+} from "@/lib/sessions/meyton-import/__fixtures__/buildTestPdf"
+
 const FIXTURES = join(__dirname, "__fixtures__")
-
-/**
- * Baut ein gueltiges PDF, dessen Inhaltsstrom sehr viele einzeln positionierte
- * Textitems erzeugt. Zur Laufzeit gebaut statt als Fixture eingecheckt: die
- * Datei waere mehrere MB gross und ihr einziger Zweck ist dieser eine Test.
- */
-function buildTextBombPdf(itemCount: number): Buffer {
-  const ops = [Buffer.from("BT /F1 8 Tf\n", "latin1")]
-  for (let i = 0; i < itemCount; i++) {
-    const x = 10 + (i % 500) * 1.1
-    const y = 800 - (Math.floor(i / 500) % 700) * 1.1
-    ops.push(Buffer.from(`1 0 0 1 ${x.toFixed(1)} ${y.toFixed(1)} Tm (x) Tj\n`, "latin1"))
-  }
-  ops.push(Buffer.from("ET\n", "latin1"))
-  const compressed = deflateSync(Buffer.concat(ops))
-
-  const objects = [
-    "<</Type/Catalog/Pages 2 0 R>>",
-    "<</Type/Pages/Kids[3 0 R]/Count 1>>",
-    "<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Resources<</Font<</F1 5 0 R>>>>/Contents 4 0 R>>",
-    null, // Stream-Objekt, unten separat zusammengesetzt
-    "<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>",
-  ]
-
-  const chunks: Buffer[] = [Buffer.from("%PDF-1.4\n", "latin1")]
-  const offsets: number[] = []
-  let position = chunks[0].length
-
-  objects.forEach((body, index) => {
-    const number = index + 1
-    const parts =
-      body === null
-        ? [
-            Buffer.from(
-              `${number} 0 obj\n<</Length ${compressed.length}/Filter/FlateDecode>>\nstream\n`,
-              "latin1"
-            ),
-            compressed,
-            Buffer.from("\nendstream\nendobj\n", "latin1"),
-          ]
-        : [Buffer.from(`${number} 0 obj\n${body}\nendobj\n`, "latin1")]
-
-    offsets.push(position)
-    for (const part of parts) {
-      chunks.push(part)
-      position += part.length
-    }
-  })
-
-  const xrefOffset = position
-  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
-  for (const offset of offsets) xref += `${String(offset).padStart(10, "0")} 00000 n \n`
-  xref += `trailer\n<</Size ${objects.length + 1}/Root 1 0 R>>\nstartxref\n${xrefOffset}\n%%EOF\n`
-  chunks.push(Buffer.from(xref, "latin1"))
-
-  return Buffer.concat(chunks)
-}
 
 describe("extractTextFromPdfBuffer", () => {
   it("liest das Qt/Identity-H-Format (Hex-Glyph-IDs)", async () => {
@@ -107,6 +54,26 @@ describe("extractTextFromPdfBuffer", () => {
     )
 
     expect(text.length).toBeLessThan(MAX_EXTRACTED_TEXT_CHARS)
+  })
+
+  it("haelt Serien zweier Seiten mit identischen y-Werten auseinander", async () => {
+    // y-Koordinaten sind seitenlokal und wiederholen sich im Meyton-Template auf
+    // jeder Seite exakt. Bewusst durch echtes pdf.js statt nur ueber die
+    // Layout-Funktion: der Seitenbezug muss die Extraktion ueberleben.
+    const pdf = buildTestPdf([
+      [
+        { str: "Serie 1:", x: 154, y: 584 },
+        { str: "10.0 9.7", x: 199, y: 572 },
+      ],
+      [
+        { str: "Serie 2:", x: 154, y: 584 },
+        { str: "5.1 5.2", x: 199, y: 572 },
+      ],
+    ])
+
+    const text = await extractTextFromPdfBuffer(pdf)
+
+    expect(text.split("\n")).toEqual(["Serie 1:", "10.0 9.7", "Serie 2:", "5.1 5.2"])
   })
 
   it("bricht bei zu vielen Textitems ab statt still zu kuerzen", async () => {
