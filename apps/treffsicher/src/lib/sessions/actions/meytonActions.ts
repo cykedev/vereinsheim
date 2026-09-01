@@ -4,6 +4,7 @@ import {
   extractMeytonDateTime,
   extractMeytonHitLocation,
   extractTextFromPdfBuffer,
+  MeytonPdfError,
   parseMeytonSeriesFromText,
 } from "@/lib/sessions/meytonImport"
 import {
@@ -76,6 +77,11 @@ export async function previewMeytonImportAction(
     extractedText = await extractTextFromPdfBuffer(pdfBuffer)
   } catch (error) {
     console.error("Meyton-Import: PDF-Text konnte nicht extrahiert werden:", error)
+    // Nur eigene Limit-/Formatmeldungen durchreichen, damit der Nutzer erfaehrt,
+    // welche Grenze gerissen hat. pdf.js-Interna aus untrusted Input bleiben drin.
+    if (error instanceof MeytonPdfError) {
+      return { error: error.message }
+    }
     return {
       error:
         "Die PDF konnte nicht gelesen werden (kein textbasiertes Meyton-PDF oder defekte Datei).",
