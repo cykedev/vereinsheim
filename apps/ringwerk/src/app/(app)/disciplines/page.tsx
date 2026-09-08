@@ -41,7 +41,7 @@ export default async function DisciplinesPage() {
       {/* Aktive Disziplinen */}
       {active.length === 0 ? (
         <EmptyState
-          title="Keine Disziplinen vorhanden."
+          title="Keine Disziplinen vorhanden"
           description="Lege deine erste Disziplin an."
           icon={Target}
           actionLabel="Neue Disziplin"

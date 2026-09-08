@@ -34,10 +34,10 @@ export function BestOfMatchupTable({
       <Table>
         <TableHeader>
           <TableRow className="border-b bg-muted/40">
-            <TableHead className="px-2 py-2 text-left font-medium text-muted-foreground sm:px-4">
+            <TableHead className="px-2 py-2 text-left font-medium whitespace-normal text-muted-foreground sm:px-4">
               Teilnehmer A
             </TableHead>
-            <TableHead className="px-2 py-2 text-left font-medium text-muted-foreground sm:px-4">
+            <TableHead className="px-2 py-2 text-left font-medium whitespace-normal text-muted-foreground sm:px-4">
               Teilnehmer B
             </TableHead>
             <TableHead className="w-28 px-2 py-2 text-center font-medium text-muted-foreground sm:px-4">

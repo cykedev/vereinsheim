@@ -41,7 +41,8 @@ export function LoginRateLimitBucketTable({
   return (
     <Table className="min-w-[860px]">
       <TableHeader>
-        <TableRow className="text-muted-foreground">
+        {/* TableHead setzt `text-foreground`; die Kopfzeile bleibt gedaempft. */}
+        <TableRow className="[&>th]:text-muted-foreground">
           <TableHead className="pb-2 pr-4">Typ</TableHead>
           <TableHead className="pb-2 pr-4">Identifikator</TableHead>
           <TableHead className="pb-2 pr-4">Fehlversuche</TableHead>

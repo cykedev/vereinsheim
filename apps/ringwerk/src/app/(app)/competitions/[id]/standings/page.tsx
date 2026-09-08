@@ -58,24 +58,28 @@ export default async function SeasonStandingsPage({ params }: Props) {
           ) : undefined
         }
         actions={
-          canManage ? (
-            <>
-              <DetailNavButton
-                href={`/competitions/${id}/participants`}
-                label="Teilnehmer"
-                icon={Users}
-              />
-              <DetailNavButton
-                href={`/competitions/${id}/series`}
-                label="Serien erfassen"
-                icon={ListOrdered}
-              />
-              <DetailNavButton href={`/competitions/${id}/edit`} label="Bearbeiten" icon={Pencil} />
-              <PdfDownloadButton href={`/api/competitions/${id}/pdf/standings`} />
-            </>
-          ) : (
+          <>
+            {canManage && (
+              <>
+                <DetailNavButton
+                  href={`/competitions/${id}/participants`}
+                  label="Teilnehmer"
+                  icon={Users}
+                />
+                <DetailNavButton
+                  href={`/competitions/${id}/series`}
+                  label="Serien erfassen"
+                  icon={ListOrdered}
+                />
+                <DetailNavButton
+                  href={`/competitions/${id}/edit`}
+                  label="Bearbeiten"
+                  icon={Pencil}
+                />
+              </>
+            )}
             <PdfDownloadButton href={`/api/competitions/${id}/pdf/standings`} />
-          )
+          </>
         }
       />
 

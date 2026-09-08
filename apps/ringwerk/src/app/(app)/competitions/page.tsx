@@ -99,7 +99,7 @@ export default async function CompetitionsPage({ searchParams }: PageProps) {
 
       {filtered.length === 0 && (
         <EmptyState
-          title="Keine Wettbewerbe für die gewählten Filter."
+          title="Keine Wettbewerbe für die gewählten Filter"
           icon={Trophy}
           actionLabel={canManage && all.length === 0 ? "Neuer Wettbewerb" : undefined}
           actionHref={canManage && all.length === 0 ? "/competitions/new" : undefined}

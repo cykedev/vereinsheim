@@ -51,10 +51,10 @@ export function ClassicLegTable({
         <Table>
           <TableHeader>
             <TableRow className="border-b bg-muted/40">
-              <TableHead className="px-2 py-2 text-left font-medium text-muted-foreground sm:px-4">
+              <TableHead className="px-2 py-2 text-left font-medium whitespace-normal text-muted-foreground sm:px-4">
                 Schütze 1
               </TableHead>
-              <TableHead className="px-2 py-2 text-left font-medium text-muted-foreground sm:px-4">
+              <TableHead className="px-2 py-2 text-left font-medium whitespace-normal text-muted-foreground sm:px-4">
                 Schütze 2
               </TableHead>
               <TableHead className="w-10 px-2 py-2 text-center font-medium text-muted-foreground sm:w-24 sm:px-4">
