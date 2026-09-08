@@ -1,6 +1,5 @@
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, CalendarDays, Trophy, Users } from "lucide-react"
+import { CalendarDays, Trophy, Users } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
@@ -11,7 +10,10 @@ import { PlayoffBracket } from "@/components/app/playoffs/PlayoffBracket"
 import { StartPlayoffsButton } from "@/components/app/playoffs/StartPlayoffsButton"
 import { AdvanceRoundButton } from "@/components/app/playoffs/AdvanceRoundButton"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import { Button } from "@vereinsheim/ui/button"
+import {
+  CompetitionDetailHeader,
+  DetailNavButton,
+} from "@/components/app/shell/CompetitionDetailHeader"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -69,38 +71,27 @@ export default async function CompetitionPlayoffsPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-          <Link href="/competitions">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Wettbewerbe
-          </Link>
-        </Button>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">{competition.name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {competition.discipline?.name} · Playoffs
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
+      <CompetitionDetailHeader
+        title={competition.name}
+        subtitle={`${competition.discipline?.name ?? "Gemischt"} · Playoffs`}
+        actions={
+          <>
             {canManage && (
-              <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                <Link href={`/competitions/${id}/participants`} title="Teilnehmer">
-                  <Users className="h-4 w-4" />
-                </Link>
-              </Button>
+              <DetailNavButton
+                href={`/competitions/${id}/participants`}
+                label="Teilnehmer"
+                icon={Users}
+              />
             )}
-            <Button asChild variant="outline" size="icon" className="h-9 w-9">
-              <Link href={`/competitions/${id}/schedule`} title="Spielplan & Tabelle">
-                <CalendarDays className="h-4 w-4" />
-              </Link>
-            </Button>
+            <DetailNavButton
+              href={`/competitions/${id}/schedule`}
+              label="Spielplan & Tabelle"
+              icon={CalendarDays}
+            />
             {playoffsStarted && <PdfDownloadButton href={`/api/competitions/${id}/pdf/playoffs`} />}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Start-Button (nur Admin, wenn noch nicht gestartet) */}
       {canManage && !playoffsStarted && (

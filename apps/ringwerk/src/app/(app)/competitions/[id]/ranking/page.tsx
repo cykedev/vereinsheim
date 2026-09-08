@@ -1,12 +1,14 @@
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, ListOrdered, Pencil, Users } from "lucide-react"
+import { ListOrdered, Pencil, Users } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getEventWithSeries } from "@/lib/competitions/queries"
 import { rankEventParticipants, rankEventTeams } from "@/lib/scoring/rankEventParticipants"
 import { EventRankingTable } from "@/components/app/series/EventRankingTable"
 import { EventTeamRankingTable } from "@/components/app/series/EventTeamRankingTable"
-import { Button } from "@vereinsheim/ui/button"
+import {
+  CompetitionDetailHeader,
+  DetailNavButton,
+} from "@/components/app/shell/CompetitionDetailHeader"
 import { Badge } from "@vereinsheim/ui/badge"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
@@ -44,53 +46,37 @@ export default async function EventRankingPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-          <Link href="/competitions">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Wettbewerbe
-          </Link>
-        </Button>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">{competition.name}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {competition.discipline?.name ?? "Gemischt"} · Rangliste
+      <CompetitionDetailHeader
+        title={competition.name}
+        subtitle={`${competition.discipline?.name ?? "Gemischt"} · Rangliste`}
+        meta={
+          competition.eventDate ? (
+            <p className="text-xs text-muted-foreground">
+              {formatDateOnly(competition.eventDate, tz)}
             </p>
-            {competition.eventDate && (
-              <p className="text-xs text-muted-foreground">
-                {formatDateOnly(competition.eventDate, tz)}
-              </p>
-            )}
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {canManage && (
-              <>
-                <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                  <Link href={`/competitions/${id}/participants`} title="Teilnehmer">
-                    <Users className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                  <Link href={`/competitions/${id}/series`} title="Serien erfassen">
-                    <ListOrdered className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                  <Link href={`/competitions/${id}/edit`} title="Wettbewerb bearbeiten">
-                    <Pencil className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </>
-            )}
-            <PdfDownloadButton
-              href={`/api/competitions/${id}/pdf/ranking`}
-              label="PDF exportieren"
-            />
-          </div>
-        </div>
-      </div>
+          ) : undefined
+        }
+        actions={
+          canManage ? (
+            <>
+              <DetailNavButton
+                href={`/competitions/${id}/participants`}
+                label="Teilnehmer"
+                icon={Users}
+              />
+              <DetailNavButton
+                href={`/competitions/${id}/series`}
+                label="Serien erfassen"
+                icon={ListOrdered}
+              />
+              <DetailNavButton href={`/competitions/${id}/edit`} label="Bearbeiten" icon={Pencil} />
+              <PdfDownloadButton href={`/api/competitions/${id}/pdf/ranking`} />
+            </>
+          ) : (
+            <PdfDownloadButton href={`/api/competitions/${id}/pdf/ranking`} />
+          )
+        }
+      />
 
       {/* Wertungsmodus-Info */}
       <div className="flex flex-wrap gap-2">
