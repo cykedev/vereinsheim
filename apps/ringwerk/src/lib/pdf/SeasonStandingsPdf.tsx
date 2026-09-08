@@ -5,10 +5,12 @@ import { styles, PDF_COLORS } from "@/lib/pdf/styles"
 import { SCORING_MODE_LABELS } from "@/lib/scoring/labels"
 import type { ScoringMode } from "@/lib/scoring/types"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
 export interface SeasonStandingsPdfProps {
+  displayTimeZone: string
   competitionName: string
   disciplineName: string | null
   seasonStart: Date | null
@@ -23,8 +25,8 @@ export interface SeasonStandingsPdfProps {
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
+function formatDate(date: Date, timeZone: string): string {
+  return formatDateOnly(date, timeZone)
 }
 
 function rankBadgeColor(rank: number): string {
@@ -263,13 +265,14 @@ export function SeasonStandingsPdf({
   isMixed,
   entries,
   generatedAt,
+  displayTimeZone,
 }: SeasonStandingsPdfProps): ReactElement {
   const disciplineDisplay = disciplineName ?? "Gemischt"
 
   let seasonRange = ""
   if (seasonStart) {
-    seasonRange = formatDate(seasonStart)
-    if (seasonEnd) seasonRange += ` – ${formatDate(seasonEnd)}`
+    seasonRange = formatDate(seasonStart, displayTimeZone)
+    if (seasonEnd) seasonRange += ` – ${formatDate(seasonEnd, displayTimeZone)}`
   }
 
   return (
@@ -284,7 +287,9 @@ export function SeasonStandingsPdf({
               {seasonRange ? ` · ${seasonRange}` : ""} · Rangliste
             </Text>
           </View>
-          <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt)}</Text>
+          <Text style={styles.headerDate}>
+            Erstellt: {formatDate(generatedAt, displayTimeZone)}
+          </Text>
         </View>
 
         {/* Config-Zeile */}

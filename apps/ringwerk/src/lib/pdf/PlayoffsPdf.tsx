@@ -4,10 +4,12 @@ import type { ScoringType } from "@/generated/prisma/client"
 import type { PlayoffBracketData, PlayoffMatchItem, PlayoffDuelItem } from "@/lib/playoffs/types"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
 export interface PlayoffsPdfProps {
+  displayTimeZone: string
   leagueName: string
   disciplineName: string
   scoringType: ScoringType
@@ -25,8 +27,8 @@ const PAIR_GAP = 12
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
+function formatDate(date: Date, timeZone: string): string {
+  return formatDateOnly(date, timeZone)
 }
 
 function roundLabel(round: string): string {
@@ -80,10 +82,12 @@ function PdfHeader({
   leagueName,
   disciplineName,
   generatedAt,
+  displayTimeZone,
 }: {
   leagueName: string
   disciplineName: string
   generatedAt: Date
+  displayTimeZone: string
 }): ReactElement {
   return (
     <View style={styles.headerBlock}>
@@ -91,7 +95,7 @@ function PdfHeader({
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Playoffs</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt)}</Text>
+      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt, displayTimeZone)}</Text>
     </View>
   )
 }
@@ -596,6 +600,7 @@ export function PlayoffsPdf({
   scoringType,
   bracket,
   generatedAt,
+  displayTimeZone,
 }: PlayoffsPdfProps): ReactElement {
   return (
     <Document title={`${leagueName} – Playoffs`} author="Ringwerk" creator="Ringwerk">
@@ -605,6 +610,7 @@ export function PlayoffsPdf({
           leagueName={leagueName}
           disciplineName={disciplineName}
           generatedAt={generatedAt}
+          displayTimeZone={displayTimeZone}
         />
         <BracketLayout bracket={bracket} />
         <View style={styles.footer} fixed>
@@ -624,6 +630,7 @@ export function PlayoffsPdf({
           leagueName={leagueName}
           disciplineName={disciplineName}
           generatedAt={generatedAt}
+          displayTimeZone={displayTimeZone}
         />
         <DetailSection bracket={bracket} scoringType={scoringType} />
         <View style={styles.footer} fixed>

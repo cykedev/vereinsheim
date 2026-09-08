@@ -5,6 +5,7 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { getSeasonWithSeries } from "@/lib/competitions/queries"
 import { calculateSeasonStandings } from "@/lib/scoring/calculateSeasonStandings"
 import { SeasonStandingsPdf } from "@/lib/pdf/SeasonStandingsPdf"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
   _req: NextRequest,
@@ -45,6 +46,7 @@ export async function GET(
     isMixed: !competition.disciplineId,
     entries: standings,
     generatedAt: new Date(),
+    displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
 
   const buffer = await renderToBuffer(element)

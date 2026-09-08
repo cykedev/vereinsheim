@@ -1,17 +1,14 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer"
 import type { ReactElement, ReactNode } from "react"
 import { styles } from "@/lib/pdf/styles"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 const W = { nr: 30, name: 185, disziplin: 110, einlage: 60, teilnahme: 65, geschossen: 65 }
 const ROW_H = 28
 const EMPTY_ROWS = 10
 
-function formatDateDe(date: Date): string {
-  return date.toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  })
+function formatDateDe(date: Date, timeZone: string): string {
+  return formatDateOnly(date, timeZone)
 }
 
 function Checkbox(): ReactElement {
@@ -50,25 +47,34 @@ function Cell({
 }
 
 interface PdfHeaderProps {
+  displayTimeZone: string
   competitionName: string
   eventDate: Date | null
   generatedAt: Date
 }
 
-function PdfHeader({ competitionName, eventDate, generatedAt }: PdfHeaderProps): ReactElement {
-  const subtitle = eventDate ? `${competitionName} · ${formatDateDe(eventDate)}` : competitionName
+function PdfHeader({
+  competitionName,
+  eventDate,
+  generatedAt,
+  displayTimeZone,
+}: PdfHeaderProps): ReactElement {
+  const subtitle = eventDate
+    ? `${competitionName} · ${formatDateDe(eventDate, displayTimeZone)}`
+    : competitionName
   return (
     <View style={styles.headerBlock}>
       <View style={styles.headerLeft}>
         <Text style={styles.headerTitle}>Starterliste</Text>
         <Text style={styles.headerSubtitle}>{subtitle}</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDateDe(generatedAt)}</Text>
+      <Text style={styles.headerDate}>Erstellt: {formatDateDe(generatedAt, displayTimeZone)}</Text>
     </View>
   )
 }
 
 export interface EventStarterListPdfProps {
+  displayTimeZone: string
   competitionName: string
   eventDate: Date | null
   participants: {
@@ -85,6 +91,7 @@ export function EventStarterListPdf({
   eventDate,
   participants,
   generatedAt,
+  displayTimeZone,
 }: EventStarterListPdfProps): ReactElement {
   return (
     <Document title="Starterliste" author="Ringwerk" creator="Ringwerk">
@@ -93,6 +100,7 @@ export function EventStarterListPdf({
           competitionName={competitionName}
           eventDate={eventDate}
           generatedAt={generatedAt}
+          displayTimeZone={displayTimeZone}
         />
 
         <View style={styles.table}>

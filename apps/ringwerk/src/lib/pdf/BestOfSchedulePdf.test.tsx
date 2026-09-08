@@ -66,6 +66,7 @@ describe("BestOfSchedulePdf — Direktvergleich column", () => {
   const baseProps: BestOfSchedulePdfProps = {
     leagueName: "Bezirksliga 2026",
     disciplineName: "Luftgewehr",
+    displayTimeZone: "Europe/Berlin",
     scoringMode: "RINGTEILER",
     disciplineId: "disc-1",
     groupBestOf: 3,

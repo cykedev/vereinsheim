@@ -6,10 +6,12 @@ import { SCORING_MODE_LABELS, SCORING_MODE_COLUMN_LABELS } from "@/lib/scoring/l
 import type { ScoringMode } from "@/lib/scoring/types"
 import type { TargetValueType } from "@/generated/prisma/client"
 import { formatRings, formatDecimal1, getEffectiveScoringType } from "@/lib/series/scoring-format"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
 export interface EventRankingPdfProps {
+  displayTimeZone: string
   competitionName: string
   disciplineName: string | null
   eventDate: Date | null
@@ -26,8 +28,8 @@ export interface EventRankingPdfProps {
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
+function formatDate(date: Date, timeZone: string): string {
+  return formatDateOnly(date, timeZone)
 }
 
 function rankBadgeColor(rank: number): string {
@@ -216,6 +218,7 @@ export function EventRankingPdf({
   teamEntries,
   teamScoring,
   generatedAt,
+  displayTimeZone,
 }: EventRankingPdfProps): ReactElement {
   const disciplineDisplay = disciplineName ?? "Gemischt"
 
@@ -228,10 +231,12 @@ export function EventRankingPdf({
             <Text style={styles.headerTitle}>{competitionName}</Text>
             <Text style={styles.headerSubtitle}>
               {disciplineDisplay}
-              {eventDate ? ` · ${formatDate(eventDate)}` : ""} · Rangliste
+              {eventDate ? ` · ${formatDate(eventDate, displayTimeZone)}` : ""} · Rangliste
             </Text>
           </View>
-          <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt)}</Text>
+          <Text style={styles.headerDate}>
+            Erstellt: {formatDate(generatedAt, displayTimeZone)}
+          </Text>
         </View>
 
         {/* Config-Zeile */}

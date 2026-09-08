@@ -19,6 +19,10 @@ export default defineConfig({
     // @-Alias muss hier wiederholt werden, da vitest tsconfig nicht automatisch liest
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // `server-only` wirft ausserhalb der react-server-Condition beim Import.
+      // Server-Module (z.B. @vereinsheim/lib/dateTime) sollen trotzdem testbar
+      // sein → im Runner auf einen leeren Stub zeigen.
+      "server-only": path.resolve(__dirname, "./test/server-only-stub.ts"),
     },
   },
 })
