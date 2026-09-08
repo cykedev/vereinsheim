@@ -8,7 +8,7 @@ import {
   TOP_NOISY_WINDOW_HOURS,
 } from "@/lib/admin/actions/shared"
 import type {
-  AdminActionResult,
+  ActionResult,
   AdminLoginRateLimitBucket,
   AdminLoginRateLimitInsights,
 } from "@/lib/admin/types"
@@ -108,9 +108,7 @@ export async function getAdminLoginRateLimitInsightsAction(): Promise<AdminLogin
   }
 }
 
-export async function clearLoginRateLimitBucketAction(
-  bucketKey: string
-): Promise<AdminActionResult> {
+export async function clearLoginRateLimitBucketAction(bucketKey: string): Promise<ActionResult> {
   const admin = await requireAdminSession()
   if (!admin) return { error: "Keine Berechtigung." }
 

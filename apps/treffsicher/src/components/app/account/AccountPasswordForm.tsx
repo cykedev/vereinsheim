@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react"
 import { signOut } from "next-auth/react"
 import { toast } from "sonner"
-import { changeOwnPassword, type AccountActionResult } from "@/lib/account/actions"
+import { changeOwnPassword, type ActionResult } from "@/lib/account/actions"
 import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
@@ -13,19 +13,21 @@ import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@vereinsheim/lib/auth/
 export function AccountPasswordForm() {
   const [showPasswords, setShowPasswords] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
-  const [state, formAction, pending] = useActionState<AccountActionResult | null, FormData>(
+  const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     changeOwnPassword,
     null
   )
 
   const generalError = getGeneralError(state)
 
+  const succeeded = state !== null && "success" in state
+
   useEffect(() => {
     if (generalError) {
       toast.error(generalError)
       return
     }
-    if (!state?.success) return
+    if (!succeeded) return
 
     toast.success("Passwort geändert.")
     let canceled = false
@@ -41,7 +43,7 @@ export function AccountPasswordForm() {
     return () => {
       canceled = true
     }
-  }, [state?.success, generalError])
+  }, [succeeded, generalError])
 
   const isBusy = pending || signingOut
   const inputType = showPasswords ? "text" : "password"
@@ -49,7 +51,7 @@ export function AccountPasswordForm() {
   return (
     <form action={formAction} className="max-w-xl space-y-4">
       {generalError && <p className="text-sm text-destructive">{generalError}</p>}
-      {state?.success && (
+      {succeeded && (
         <p className="text-sm text-muted-foreground">Passwort geändert. Abmeldung läuft…</p>
       )}
 

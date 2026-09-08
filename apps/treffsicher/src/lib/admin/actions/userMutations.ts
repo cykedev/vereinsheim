@@ -7,12 +7,9 @@ import {
   requireAdminSession,
   UpdateUserSchema,
 } from "@/lib/admin/actions/shared"
-import type { AdminActionResult } from "@/lib/admin/types"
+import type { ActionResult } from "@/lib/admin/types"
 
-async function ensureUniqueEmail(
-  email: string,
-  userId?: string
-): Promise<AdminActionResult | null> {
+async function ensureUniqueEmail(email: string, userId?: string): Promise<ActionResult | null> {
   const existing = await db.user.findUnique({
     where: { email },
     select: { id: true },
@@ -28,7 +25,7 @@ async function ensureNotLastActiveAdmin(
   role: "USER" | "ADMIN",
   isActive: boolean,
   changesAdminState: boolean
-): Promise<AdminActionResult | null> {
+): Promise<ActionResult | null> {
   // Guard nur dann ausführen, wenn dieser Datensatz die aktive-Admin-Menge tatsächlich verändern würde.
   if (!(role === "ADMIN" && isActive && changesAdminState)) return null
 
@@ -42,7 +39,7 @@ async function ensureNotLastActiveAdmin(
   return null
 }
 
-function validateOptionalTempPassword(tempPassword: string): AdminActionResult | null {
+function validateOptionalTempPassword(tempPassword: string): ActionResult | null {
   if (tempPassword.length > 0 && tempPassword.length < MIN_PASSWORD_LENGTH) {
     return { error: `Temporäres Passwort muss mindestens ${MIN_PASSWORD_LENGTH} Zeichen haben.` }
   }
@@ -54,9 +51,9 @@ function validateOptionalTempPassword(tempPassword: string): AdminActionResult |
 }
 
 export async function createUserAction(
-  _prevState: AdminActionResult | null,
+  _prevState: ActionResult | null,
   formData: FormData
-): Promise<AdminActionResult> {
+): Promise<ActionResult> {
   const admin = await requireAdminSession()
   if (!admin) return { error: "Keine Berechtigung." }
 
@@ -93,7 +90,7 @@ export async function createUserAction(
 export async function setUserActiveAction(
   userId: string,
   nextIsActive: boolean
-): Promise<AdminActionResult> {
+): Promise<ActionResult> {
   const admin = await requireAdminSession()
   if (!admin) return { error: "Keine Berechtigung." }
 
@@ -127,9 +124,9 @@ export async function setUserActiveAction(
 
 export async function updateUserAction(
   userId: string,
-  _prevState: AdminActionResult | null,
+  _prevState: ActionResult | null,
   formData: FormData
-): Promise<AdminActionResult> {
+): Promise<ActionResult> {
   const admin = await requireAdminSession()
   if (!admin) return { error: "Keine Berechtigung." }
 

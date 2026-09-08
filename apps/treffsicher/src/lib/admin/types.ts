@@ -1,10 +1,8 @@
 import type { ScoringType, UserRole } from "@/generated/prisma/client"
 
 // Eigene Admin-Typen entkoppeln UI von Prisma-Selektdetails.
-export type AdminActionResult = {
-  error?: string
-  success?: boolean
-}
+// Das Aktionsergebnis folgt dem Kanon aus @/lib/types.
+export type { ActionResult } from "@/lib/types"
 
 export type AdminUserSummary = {
   id: string

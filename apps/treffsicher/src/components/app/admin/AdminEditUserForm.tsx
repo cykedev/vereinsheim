@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useActionState, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { updateUser, type AdminActionResult, type AdminUserSummary } from "@/lib/admin/actions"
+import { updateUser, type ActionResult, type AdminUserSummary } from "@/lib/admin/actions"
 import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
@@ -26,12 +26,11 @@ export function AdminEditUserForm({ user }: Props) {
   const router = useRouter()
   const action = updateUser.bind(null, user.id)
   const [showPassword, setShowPassword] = useState(false)
-  const [state, formAction, pending] = useActionState<AdminActionResult | null, FormData>(
-    action,
-    null
-  )
+  const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(action, null)
 
   const generalError = getGeneralError(state)
+
+  const succeeded = state !== null && "success" in state
 
   useEffect(() => {
     if (generalError) {
@@ -39,10 +38,10 @@ export function AdminEditUserForm({ user }: Props) {
       return
     }
     // Nach erfolgreichem Save zurück zur Übersicht, damit Tabelle und Detailzustand sofort konsistent sind.
-    if (!state?.success) return
+    if (!succeeded) return
     toast.success("Nutzer gespeichert.")
     router.push("/admin")
-  }, [state?.success, generalError, router])
+  }, [succeeded, generalError, router])
 
   return (
     <form action={formAction} className="max-w-3xl space-y-4">

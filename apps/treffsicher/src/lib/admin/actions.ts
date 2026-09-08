@@ -13,7 +13,7 @@ import {
   updateUserAction,
 } from "@/lib/admin/actions/userMutations"
 import type {
-  AdminActionResult,
+  ActionResult,
   AdminLoginRateLimitBucket,
   AdminLoginRateLimitInsights,
   AdminSystemDisciplineSummary,
@@ -22,7 +22,7 @@ import type {
 } from "@/lib/admin/types"
 
 export type {
-  AdminActionResult,
+  ActionResult,
   AdminLoginRateLimitBucket,
   AdminLoginRateLimitInsights,
   AdminSystemDisciplineSummary,
@@ -51,28 +51,25 @@ export async function getAdminLoginRateLimitInsights(): Promise<AdminLoginRateLi
   return getAdminLoginRateLimitInsightsAction()
 }
 
-export async function clearLoginRateLimitBucket(bucketKey: string): Promise<AdminActionResult> {
+export async function clearLoginRateLimitBucket(bucketKey: string): Promise<ActionResult> {
   return clearLoginRateLimitBucketAction(bucketKey)
 }
 
 export async function createUser(
-  prevState: AdminActionResult | null,
+  prevState: ActionResult | null,
   formData: FormData
-): Promise<AdminActionResult> {
+): Promise<ActionResult> {
   return createUserAction(prevState, formData)
 }
 
-export async function setUserActive(
-  userId: string,
-  nextIsActive: boolean
-): Promise<AdminActionResult> {
+export async function setUserActive(userId: string, nextIsActive: boolean): Promise<ActionResult> {
   return setUserActiveAction(userId, nextIsActive)
 }
 
 export async function updateUser(
   userId: string,
-  prevState: AdminActionResult | null,
+  prevState: ActionResult | null,
   formData: FormData
-): Promise<AdminActionResult> {
+): Promise<ActionResult> {
   return updateUserAction(userId, prevState, formData)
 }

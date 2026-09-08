@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-import { createUser, type AdminActionResult } from "@/lib/admin/actions"
+import { createUser, type ActionResult } from "@/lib/admin/actions"
 import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
@@ -17,13 +17,14 @@ import {
 } from "@vereinsheim/ui/select"
 
 export function AdminCreateUserForm() {
-  const [state, formAction, pending] = useActionState<AdminActionResult | null, FormData>(
+  const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     createUser,
     null
   )
   const formRef = useRef<HTMLFormElement>(null)
   const [showPassword, setShowPassword] = useState(false)
   const generalError = getGeneralError(state)
+  const succeeded = state !== null && "success" in state
 
   useEffect(() => {
     if (generalError) {
@@ -31,15 +32,15 @@ export function AdminCreateUserForm() {
       return
     }
     // Nach Erfolg Formular resetten, damit ein zweiter Create nicht versehentlich alte Werte recycelt.
-    if (!state?.success || !formRef.current) return
+    if (!succeeded || !formRef.current) return
     toast.success("Nutzer wurde angelegt.")
     formRef.current.reset()
-  }, [state?.success, generalError])
+  }, [succeeded, generalError])
 
   return (
     <form ref={formRef} action={formAction} className="max-w-3xl space-y-4">
       {generalError && <p className="text-sm text-destructive">{generalError}</p>}
-      {state?.success && <p className="text-sm text-success">Nutzer wurde angelegt.</p>}
+      {succeeded && <p className="text-sm text-success">Nutzer wurde angelegt.</p>}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="space-y-2 md:col-span-1">
