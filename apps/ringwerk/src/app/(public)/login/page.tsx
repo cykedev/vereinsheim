@@ -3,7 +3,7 @@
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
-import { Target } from "lucide-react"
+import { CircleDot } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
@@ -49,7 +49,7 @@ export default function LoginPage() {
         {/* App-Logo + Name über dem Card */}
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
-            <Target className="h-6 w-6 text-foreground" />
+            <CircleDot className="h-6 w-6 text-foreground" />
           </div>
           <h1 className="text-xl font-semibold tracking-tight">Ringwerk</h1>
           <p className="text-sm text-muted-foreground">Zugang nur für registrierte Nutzer.</p>
@@ -97,7 +97,7 @@ export default function LoginPage() {
               {error && <p className="text-sm text-destructive">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Anmelden..." : "Anmelden"}
+                {loading ? "Anmelden…" : "Anmelden"}
               </Button>
             </form>
           </CardContent>
