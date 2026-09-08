@@ -4,7 +4,7 @@ import type { BracketLayout } from "./geometry"
 import { Connector, RoundCol } from "./BracketGrid"
 
 const labelClass =
-  "text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
+  "text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground"
 
 interface Props {
   bracket: PlayoffBracketData

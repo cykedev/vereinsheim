@@ -95,7 +95,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
             <div
               key={row.id}
               className={`space-y-2 rounded-lg border border-border/50 p-3 ${
-                row.isPractice ? "text-muted-foreground/80" : ""
+                row.isPractice ? "text-muted-foreground" : ""
               }`}
             >
               <div className="flex items-center justify-between gap-3">
