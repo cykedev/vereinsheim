@@ -4,17 +4,15 @@ import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { validatePasswordChangeInput } from "@vereinsheim/lib/auth/validation"
+import type { ActionResult } from "@/lib/types"
 
-export type AccountActionResult = {
-  error?: string
-  success?: boolean
-}
+export type { ActionResult } from "@/lib/types"
 
 // Passwortwechsel bleibt serverseitig, damit Hash- und Session-Invaliderung atomar erfolgen.
 export async function changeOwnPassword(
-  _prevState: AccountActionResult | null,
+  _prevState: ActionResult | null,
   formData: FormData
-): Promise<AccountActionResult> {
+): Promise<ActionResult> {
   const session = await getAuthSession()
   if (!session) return { error: "Nicht angemeldet." }
 

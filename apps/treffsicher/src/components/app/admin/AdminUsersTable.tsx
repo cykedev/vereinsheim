@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@vereinsheim/ui/alert-dialog"
 import { AdminUsersTableDesktop, AdminUsersTableMobile } from "@/components/app/admin/users-table"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 interface Props {
   users: AdminUserListItem[]
@@ -31,8 +32,9 @@ export function AdminUsersTable({ users, currentAdminId, displayTimeZone }: Prop
     setMessage(null)
     startTransition(async () => {
       const result = await setUserActive(userId, nextIsActive)
-      if (result.error) {
-        setMessage(result.error)
+      const error = getErrorMessage(result)
+      if (error) {
+        setMessage(error)
         return
       }
 
