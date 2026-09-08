@@ -16,6 +16,7 @@ import type { GoalWithAssignments } from "@/lib/goals/actions"
 import { toDateInputValue } from "@/components/app/goals/goal-card-section/format"
 
 interface Props {
+  displayTimeZone: string
   goal: GoalWithAssignments
   message: string | null
   pending: boolean
@@ -24,7 +25,14 @@ interface Props {
 }
 
 // Inline-Edit nutzt eine normale Form, damit dieselbe Server-Validation wie beim Erstellen greift.
-export function GoalEditForm({ goal, message, pending, onSubmit, onCancel }: Props) {
+export function GoalEditForm({
+  goal,
+  message,
+  pending,
+  displayTimeZone,
+  onSubmit,
+  onCancel,
+}: Props) {
   return (
     <form onSubmit={onSubmit} className="space-y-4 rounded-md border p-3">
       {message && <p className="text-sm text-destructive">{message}</p>}
@@ -65,7 +73,7 @@ export function GoalEditForm({ goal, message, pending, onSubmit, onCancel }: Pro
             name="dateFrom"
             type="date"
             required
-            defaultValue={toDateInputValue(goal.dateFrom)}
+            defaultValue={toDateInputValue(goal.dateFrom, displayTimeZone)}
           />
         </div>
         <div className="space-y-1.5">
@@ -75,7 +83,7 @@ export function GoalEditForm({ goal, message, pending, onSubmit, onCancel }: Pro
             name="dateTo"
             type="date"
             required
-            defaultValue={toDateInputValue(goal.dateTo)}
+            defaultValue={toDateInputValue(goal.dateTo, displayTimeZone)}
           />
         </div>
       </div>

@@ -1,46 +1,31 @@
 import type { GoalWithAssignments } from "@/lib/goals/types"
-import type { SessionWithDiscipline } from "@/lib/sessions/actions/types"
 
-const RECENT_SESSION_LIMIT = 5
 const ACTIVE_GOAL_LIMIT = 3
 const RECENT_WINDOW_DAYS = 30
 
-export type DashboardData = {
-  /** Die neuesten Einheiten, absteigend nach Datum. */
-  recentSessions: SessionWithDiscipline[]
-  /** Ziele, deren Zeitraum jetzt läuft — das am nächsten endende zuerst. */
-  activeGoals: GoalWithAssignments[]
-  sessionsLast30Days: number
-  sessionsTotal: number
+/** Anzahl der Einheiten, die das Dashboard als Vorschau zeigt. */
+export const RECENT_SESSION_LIMIT = 5
+
+/**
+ * Beginn des „letzte 30 Tage"-Fensters. Eigene Funktion, damit die Grenze
+ * testbar bleibt — sie geht als `where`-Bedingung in die Zählung ein.
+ */
+export function recentWindowStart(now: Date): Date {
+  const start = new Date(now)
+  start.setDate(start.getDate() - RECENT_WINDOW_DAYS)
+  return start
 }
 
 /**
- * Wählt aus, was das Dashboard zeigt. Reine Funktion: die Seite lädt die
- * vollständigen Listen (die sie ohnehin abfragt) und filtert hier im Speicher,
- * damit die Auswahlregeln testbar bleiben.
+ * Ziele, deren Zeitraum jetzt läuft — das am nächsten endende zuerst, maximal
+ * drei. Grenzen sind inklusiv: ein Ziel gilt an seinem ersten und an seinem
+ * letzten Tag als laufend.
  *
- * `now` wird übergeben statt intern gelesen, damit die Fenstergrenzen prüfbar sind.
+ * `now` wird übergeben statt intern gelesen, damit die Grenzen prüfbar sind.
  */
-export function selectDashboardData(
-  sessions: SessionWithDiscipline[],
-  goals: GoalWithAssignments[],
-  now: Date
-): DashboardData {
-  const byDateDesc = [...sessions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  )
-
-  const windowStart = new Date(now)
-  windowStart.setDate(windowStart.getDate() - RECENT_WINDOW_DAYS)
-
-  const sessionsLast30Days = sessions.filter((session) => {
-    const date = new Date(session.date).getTime()
-    // Zukünftige Einheiten liegen nicht in den "letzten 30 Tagen".
-    return date >= windowStart.getTime() && date <= now.getTime()
-  }).length
-
+export function selectActiveGoals(goals: GoalWithAssignments[], now: Date): GoalWithAssignments[] {
   const nowMs = now.getTime()
-  const activeGoals = goals
+  return goals
     .filter((goal) => {
       const from = new Date(goal.dateFrom).getTime()
       const to = new Date(goal.dateTo).getTime()
@@ -48,11 +33,4 @@ export function selectDashboardData(
     })
     .sort((a, b) => new Date(a.dateTo).getTime() - new Date(b.dateTo).getTime())
     .slice(0, ACTIVE_GOAL_LIMIT)
-
-  return {
-    recentSessions: byDateDesc.slice(0, RECENT_SESSION_LIMIT),
-    activeGoals,
-    sessionsLast30Days,
-    sessionsTotal: sessions.length,
-  }
 }

@@ -125,6 +125,7 @@ export async function previewMeytonImportAction(
   const hitLocation = extractMeytonHitLocation(extractedText)
 
   return {
+    success: true,
     data: {
       date: extractMeytonDateTime(extractedText),
       series: importedSeries,

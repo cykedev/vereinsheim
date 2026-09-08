@@ -99,6 +99,7 @@ export function GoalCardSection({ goal, sessions, backHref, displayTimeZone }: P
         goal={goal}
         message={message}
         pending={pending}
+        displayTimeZone={displayTimeZone}
         onSubmit={handleGoalSubmit}
         onCancel={() => setEditingGoal(false)}
       />

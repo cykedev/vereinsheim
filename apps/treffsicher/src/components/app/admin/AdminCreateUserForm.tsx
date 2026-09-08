@@ -32,10 +32,10 @@ export function AdminCreateUserForm() {
       return
     }
     // Nach Erfolg Formular resetten, damit ein zweiter Create nicht versehentlich alte Werte recycelt.
-    if (!succeeded || !formRef.current) return
+    if (!(state && "success" in state) || !formRef.current) return
     toast.success("Nutzer wurde angelegt.")
     formRef.current.reset()
-  }, [succeeded, generalError])
+  }, [state, generalError])
 
   return (
     <form ref={formRef} action={formAction} className="max-w-3xl space-y-4">

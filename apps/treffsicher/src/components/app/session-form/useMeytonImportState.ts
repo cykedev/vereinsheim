@@ -6,6 +6,7 @@ import type {
   MeytonImportDialogModel,
 } from "@/components/app/session-form/types"
 import { isPdfFile } from "@/components/app/session-form/utils"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 interface Params {
   disciplineId: string
@@ -155,8 +156,8 @@ export function useMeytonImportState({
 
     try {
       const result = await previewMeytonImport(formData)
-      if (result.error || !result.data) {
-        setImportError(result.error ?? "Import fehlgeschlagen.")
+      if ("error" in result || !result.data) {
+        setImportError(getErrorMessage(result) ?? "Import fehlgeschlagen.")
         return
       }
 
