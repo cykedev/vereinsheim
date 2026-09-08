@@ -5,7 +5,7 @@ import { Button } from "@vereinsheim/ui/button"
 import { SelectableRow } from "@vereinsheim/ui/selectable-row"
 import type { GoalSessionOption } from "@/lib/goals/actions"
 import { SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
-import { formatDateTime } from "@/components/app/goals/goal-card-section/format"
+import { formatDateTime } from "@vereinsheim/lib/format"
 
 interface Props {
   sessions: GoalSessionOption[]
@@ -60,7 +60,7 @@ export function GoalAssignmentsForm({
                 <span className="font-medium">{SESSION_TYPE_LABELS[entry.type] ?? entry.type}</span>
                 <span className="text-muted-foreground">
                   {" "}
-                  · {formatDateTime(entry.date, displayTimeZone)}
+                  · {formatDateTime(new Date(entry.date), displayTimeZone)}
                 </span>
                 {entry.disciplineName && (
                   <span className="text-muted-foreground"> · {entry.disciplineName}</span>

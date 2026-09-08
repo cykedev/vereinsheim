@@ -10,6 +10,7 @@ import {
   createTrendBandDistanceOptions,
 } from "@/components/app/statistics-charts/utils"
 import type { DisciplineForStats, StatsSession } from "@/lib/stats/actions"
+import { formatShortDate } from "@vereinsheim/lib/format"
 
 interface Params {
   filteredForTrend: StatsSession[]
@@ -100,13 +101,6 @@ export function useResultTrendChartState({
   }, [displayValuesForTrend, effectiveDisplayMode, movingAvgForTrend, withScoreForTrend])
 
   const lineData = useMemo<LineDataPoint[]>(() => {
-    const formatter = new Intl.DateTimeFormat("de-CH", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "2-digit",
-      timeZone: displayTimeZone,
-    })
-
     return withScore.map((session, i) => {
       // Für Anzeige nehmen wir den aktuellen Filter, Trend/Band aber weiterhin über IDs aus dem Trend-Fenster.
       const trend = movingAvgBySessionId.get(session.id) ?? null
@@ -117,7 +111,7 @@ export function useResultTrendChartState({
 
       return {
         i,
-        datum: formatter.format(new Date(session.date)),
+        datum: formatShortDate(new Date(session.date), displayTimeZone),
         wert: displayValues[i],
         trend,
         trendLow,

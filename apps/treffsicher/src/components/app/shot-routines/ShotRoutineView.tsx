@@ -1,25 +1,17 @@
 import type { RoutineStep } from "@/lib/shot-routines/actions"
 import { Badge } from "@vereinsheim/ui/badge"
 import { Card, CardContent } from "@vereinsheim/ui/card"
+import { formatDateTime } from "@vereinsheim/lib/format"
 
 interface Props {
   steps: RoutineStep[]
   createdAt: Date
   updatedAt: Date
+  displayTimeZone: string
 }
 
 // View sortiert Schritte defensiv, damit Alt-/Importdaten ohne stabile Reihenfolge korrekt erscheinen.
-function formatDateTime(date: Date): string {
-  return new Intl.DateTimeFormat("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date)
-}
-
-export function ShotRoutineView({ steps, createdAt, updatedAt }: Props) {
+export function ShotRoutineView({ steps, createdAt, updatedAt, displayTimeZone }: Props) {
   const sortedSteps = [...steps].sort((a, b) => a.order - b.order)
   const stepCountLabel = `${sortedSteps.length} ${sortedSteps.length === 1 ? "Schritt" : "Schritte"}`
 
@@ -27,8 +19,8 @@ export function ShotRoutineView({ steps, createdAt, updatedAt }: Props) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="outline">{stepCountLabel}</Badge>
-        <span>Erstellt: {formatDateTime(createdAt)}</span>
-        <span>Zuletzt geändert: {formatDateTime(updatedAt)}</span>
+        <span>Erstellt: {formatDateTime(createdAt, displayTimeZone)}</span>
+        <span>Zuletzt geändert: {formatDateTime(updatedAt, displayTimeZone)}</span>
       </div>
 
       {sortedSteps.length === 0 ? (

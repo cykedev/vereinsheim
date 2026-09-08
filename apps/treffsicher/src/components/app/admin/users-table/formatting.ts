@@ -1,3 +1,5 @@
+import { formatDateTime, formatInteger } from "@vereinsheim/lib/format"
+
 import type { AdminUserListItem } from "@/lib/admin/actions"
 
 export function getRoleBadgeClass(role: AdminUserListItem["role"]): string {
@@ -15,14 +17,7 @@ export function getStatusBadgeClass(isActive: boolean): string {
 }
 
 export function formatDate(date: Date, displayTimeZone: string): string {
-  return new Intl.DateTimeFormat("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: displayTimeZone,
-  }).format(new Date(date))
+  return formatDateTime(new Date(date), displayTimeZone)
 }
 
 export function formatOptionalDate(date: Date | null, displayTimeZone: string): string {
@@ -31,5 +26,5 @@ export function formatOptionalDate(date: Date | null, displayTimeZone: string): 
 }
 
 export function formatCount(value: number): string {
-  return new Intl.NumberFormat("de-CH").format(value)
+  return formatInteger(value)
 }

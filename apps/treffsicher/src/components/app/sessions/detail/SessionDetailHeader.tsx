@@ -1,6 +1,7 @@
 import { Goal, Target } from "lucide-react"
 import { SESSION_TYPE_BADGE_CLASS, SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
 import type { SessionDetail } from "@/lib/sessions/actions"
+import { formatLongDateTime } from "@vereinsheim/lib/format"
 import { Badge } from "@vereinsheim/ui/badge"
 import { SessionDetailHeaderActions } from "@/components/app/sessions/detail/SessionDetailHeaderActions"
 
@@ -10,18 +11,6 @@ interface Props {
 }
 
 // Header bündelt Typ/Datum/Meta und hält Aktionen separat, damit Detailseiten oben stabil bleiben.
-function formatDate(date: Date, displayTimeZone: string): string {
-  return new Intl.DateTimeFormat("de-CH", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: displayTimeZone,
-  }).format(date)
-}
-
 export function SessionDetailHeader({ session, displayTimeZone }: Props) {
   return (
     <div className="space-y-3">
@@ -34,7 +23,7 @@ export function SessionDetailHeader({ session, displayTimeZone }: Props) {
 
       <div className="min-w-0 space-y-1.5">
         <h1 className="break-words text-2xl font-semibold tracking-tight">
-          {formatDate(session.date, displayTimeZone)}
+          {formatLongDateTime(session.date, displayTimeZone)}
         </h1>
 
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">

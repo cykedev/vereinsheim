@@ -3,6 +3,7 @@ import { calculateSeriesStats } from "@/lib/stats/calculateSeriesStats"
 import { radarDimensions } from "@/components/app/statistics-charts/constants"
 import { computeStableAxis } from "@/components/app/statistics-charts/utils"
 import type { RadarComparisonSession, StatsSession } from "@/lib/stats/actions"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 interface Params {
   filtered: StatsSession[]
@@ -81,13 +82,10 @@ export function useStatisticsChartSeriesData({
     if (filteredRadarSessions.length === 0) return null
     const first = filteredRadarSessions[0]
     const last = filteredRadarSessions[filteredRadarSessions.length - 1]
-    const format = new Intl.DateTimeFormat("de-CH", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      timeZone: displayTimeZone,
-    })
-    return `${format.format(new Date(first.date))} bis ${format.format(new Date(last.date))}`
+    return `${formatDateOnly(new Date(first.date), displayTimeZone)} bis ${formatDateOnly(
+      new Date(last.date),
+      displayTimeZone
+    )}`
   }, [filteredRadarSessions, displayTimeZone])
 
   return {

@@ -2,7 +2,8 @@
 
 import { Badge } from "@vereinsheim/ui/badge"
 import type { GoalWithAssignments } from "@/lib/goals/actions"
-import { formatDateOnly, GOAL_TYPE_LABELS } from "@/components/app/goals/goal-card-section/format"
+import { formatDateOnly } from "@vereinsheim/lib/format"
+import { GOAL_TYPE_LABELS } from "@/components/app/goals/goal-card-section/format"
 
 interface Props {
   goal: GoalWithAssignments
@@ -17,8 +18,8 @@ export function GoalSummary({ goal, displayTimeZone }: Props) {
         <Badge variant="outline">{GOAL_TYPE_LABELS[goal.type] ?? goal.type}</Badge>
       </div>
       <div className="text-sm text-muted-foreground">
-        Zeitraum: {formatDateOnly(goal.dateFrom, displayTimeZone)} bis{" "}
-        {formatDateOnly(goal.dateTo, displayTimeZone)}
+        Zeitraum: {formatDateOnly(new Date(goal.dateFrom), displayTimeZone)} bis{" "}
+        {formatDateOnly(new Date(goal.dateTo), displayTimeZone)}
       </div>
       <div className="text-sm text-muted-foreground">
         Einheiten, die auf das Ziel einzahlen: {goal.sessionCount}

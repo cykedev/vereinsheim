@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { buildStyledPdf } from "@/lib/exports/simplePdf"
 import { fetchExportTrainingSession } from "./_lib/data"
@@ -18,18 +19,19 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     return new NextResponse("Einheit nicht gefunden", { status: 404 })
   }
 
+  const displayTimeZone = getDisplayTimeZone()
   const displayName = session.user.name ?? session.user.email ?? "-"
   const metaLines = buildPdfMetaLines(trainingSession, displayName)
   const sections = buildPdfSections(trainingSession)
 
   const pdf = buildStyledPdf({
     title: "Treffsicher - Einheitenexport",
-    subtitle: formatDateTime(trainingSession.date),
+    subtitle: formatDateTime(trainingSession.date, displayTimeZone),
     metaLines,
     sections,
   })
 
-  const fileDate = formatDateForFile(trainingSession.date)
+  const fileDate = formatDateForFile(trainingSession.date, displayTimeZone)
   const pdfBytes = new Uint8Array(pdf.length)
   pdfBytes.set(pdf)
 
