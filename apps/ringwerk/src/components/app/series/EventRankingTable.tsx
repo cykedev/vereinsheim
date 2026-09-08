@@ -3,6 +3,7 @@ import { SCORING_MODE_COLUMN_LABELS } from "@/lib/scoring/labels"
 import { formatRings, formatDecimal1, getEffectiveScoringType } from "@/lib/series/scoring-format"
 import type { ScoringMode, TargetValueType } from "@/generated/prisma/client"
 import { Badge } from "@vereinsheim/ui/badge"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
 
 interface Props {
@@ -21,7 +22,7 @@ export function EventRankingTable({
   showTeam = false,
 }: Props) {
   if (entries.length === 0) {
-    return <p className="text-sm text-muted-foreground">Noch keine Ergebnisse erfasst.</p>
+    return <EmptyState title="Noch keine Ergebnisse erfasst" />
   }
 
   const scoreLabel = SCORING_MODE_COLUMN_LABELS[scoringMode] ?? "Score"

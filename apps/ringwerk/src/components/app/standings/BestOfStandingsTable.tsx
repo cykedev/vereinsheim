@@ -3,6 +3,7 @@ import {
   formatDirectComparison,
   type DirectComparisonTone,
 } from "@/lib/standings/formatDirectComparison"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
 
 interface Props {
@@ -25,11 +26,7 @@ const DIRECT_TONE_CLASS: Record<DirectComparisonTone, string> = {
 
 export function BestOfStandingsTable({ rows }: Props) {
   if (rows.length === 0) {
-    return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        Keine Teilnehmer eingeschrieben.
-      </p>
-    )
+    return <EmptyState title="Keine Teilnehmer eingeschrieben" />
   }
 
   return (

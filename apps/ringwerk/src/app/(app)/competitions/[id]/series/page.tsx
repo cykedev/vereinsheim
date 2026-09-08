@@ -13,6 +13,7 @@ import { DeleteEventSeriesButton } from "@/components/app/series/DeleteEventSeri
 import { SeasonParticipantItem } from "@/components/app/series/SeasonParticipantItem"
 import { Button } from "@vereinsheim/ui/button"
 import { Badge } from "@vereinsheim/ui/badge"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 interface Props {
@@ -90,12 +91,13 @@ export default async function SeriesPage({ params }: Props) {
       </div>
 
       {activeParticipants.length === 0 ? (
-        <div className="rounded-lg border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-          Noch keine Teilnehmer eingeschrieben.{" "}
-          <Link href={`/competitions/${id}/participants`} className="underline">
-            Teilnehmer einschreiben
-          </Link>
-        </div>
+        <EmptyState
+          title="Noch keine Teilnehmer eingeschrieben"
+          description="Ohne Teilnehmer gibt es keine Serien zu erfassen."
+          icon={Users}
+          actionLabel="Teilnehmer einschreiben"
+          actionHref={`/competitions/${id}/participants`}
+        />
       ) : (
         <div className="rounded-lg border bg-card">
           <div className="divide-y">
@@ -227,12 +229,13 @@ async function SeasonSeriesPageContent({ id }: { id: string }) {
       </div>
 
       {activeParticipants.length === 0 ? (
-        <div className="rounded-lg border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-          Noch keine Teilnehmer eingeschrieben.{" "}
-          <Link href={`/competitions/${id}/participants`} className="underline">
-            Teilnehmer einschreiben
-          </Link>
-        </div>
+        <EmptyState
+          title="Noch keine Teilnehmer eingeschrieben"
+          description="Ohne Teilnehmer gibt es keine Serien zu erfassen."
+          icon={Users}
+          actionLabel="Teilnehmer einschreiben"
+          actionHref={`/competitions/${id}/participants`}
+        />
       ) : (
         <div className="rounded-lg border bg-card">
           <div className="divide-y">

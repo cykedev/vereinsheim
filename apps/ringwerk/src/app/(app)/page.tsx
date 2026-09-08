@@ -23,6 +23,7 @@ import { EventTeamRankingTable } from "@/components/app/series/EventTeamRankingT
 import { SeasonStandingsTable } from "@/components/app/series/SeasonStandingsTable"
 import { Badge } from "@vereinsheim/ui/badge"
 import { Button } from "@vereinsheim/ui/button"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 // ─── DashboardPage ───────────────────────────────────────────────────────────
@@ -91,9 +92,11 @@ export default async function DashboardPage() {
       <PageHeader title="Dashboard" description="Aktive Wettbewerbe auf einen Blick" />
 
       {active.length === 0 ? (
-        <p className="rounded-lg border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-          Keine aktiven Wettbewerbe vorhanden.
-        </p>
+        <EmptyState
+          title="Keine aktiven Wettbewerbe"
+          description="Aktive Wettbewerbe erscheinen hier mit Tabelle bzw. Rangliste."
+          icon={Trophy}
+        />
       ) : (
         <div className="space-y-10">
           {/* Liga-Wettbewerbe: Tabelle / Playoffs */}

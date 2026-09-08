@@ -1,4 +1,6 @@
+import { ScrollText } from "lucide-react"
 import { Badge } from "@vereinsheim/ui/badge"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import {
   AUDIT_EVENT_CATEGORY,
   AUDIT_EVENT_LABELS,
@@ -39,13 +41,7 @@ interface Props {
 
 export function AuditLogList({ entries, showLeagueName = false }: Props) {
   if (entries.length === 0) {
-    return (
-      <div className="rounded-lg border bg-card">
-        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-          Keine Protokolleinträge vorhanden.
-        </p>
-      </div>
-    )
+    return <EmptyState title="Keine Protokolleinträge vorhanden" icon={ScrollText} />
   }
 
   return (

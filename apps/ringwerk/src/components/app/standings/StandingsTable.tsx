@@ -1,5 +1,6 @@
 import type { StandingRow } from "@/lib/standings/queries"
 import { formatDecimal1 } from "@/lib/series/scoring-format"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
 
 interface Props {
@@ -14,11 +15,7 @@ const ROW_HIGHLIGHT: Record<number, string> = {
 
 export function StandingsTable({ rows }: Props) {
   if (rows.length === 0) {
-    return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        Keine Teilnehmer eingeschrieben.
-      </p>
-    )
+    return <EmptyState title="Keine Teilnehmer eingeschrieben" />
   }
 
   return (
