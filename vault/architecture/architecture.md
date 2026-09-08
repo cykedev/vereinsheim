@@ -23,10 +23,14 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/treffsicher/       Trainings-App      (Next.js 16, Prisma 7, NextAuth v4)  → :3001
 ├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig/eslint/prettier/
 │                           postcss/next (Phase 2).
-├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors,
-│                           useUnsavedChangesGuard, useNavigationConfirm (Phase 4/Zyklus 1).
-├── packages/ui/            @vereinsheim/ui — geteilte UI-Schicht: 17 ui-Primitives + 4 shell/ +
-│                           theme.css (Tailwind-Theme + @source). Phase 4/Zyklus 2 — Drift-Gate ~entfällt.
+├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors
+│                           (+ getErrorMessage), useUnsavedChangesGuard, useNavigationConfirm
+│                           (Phase 4/Zyklus 1); dateTime (server-only) + format (isomorph, Locale de-DE,
+│                           Zeitzone als Parameter) sowie der reine Auth-Kern auth/validation +
+│                           auth/rate-limit/* (September 2026).
+├── packages/ui/            @vereinsheim/ui — geteilte UI-Schicht: ui-Primitives (inkl. table + skeleton)
+│                           + 4 shell/ + admin/ (Login-Rate-Limit-Oberfläche) + theme.css (Tailwind-Theme,
+│                           semantische Tokens success/warning/info/rank-1..3, App-Akzent via data-app).
 ├── docs/                   spec, decisions (ADRs), monorepo-plan, operations, plan,
 │                           architecture (dies), shared-conventions, consistency
 ├── .claude/                Harness: settings(+hooks), skills/, agents/, context/, knowledge-graph.json

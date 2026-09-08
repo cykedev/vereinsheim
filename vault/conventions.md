@@ -27,15 +27,20 @@ Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichun
   (`.prettierrc` → `package.json`-Feld); Verhalten/Regeln ändert man **im Paket**, nicht in den Apps.
 - Error-Boundaries: `src/app/error.tsx`, `src/app/(app)/error.tsx`, `src/app/not-found.tsx`
 - **Geteilt via `@vereinsheim/ui`** (packages/ui, seit Phase 4 / Zyklus 2 — Drift **strukturell
-  unmöglich**, daher *nicht* mehr im Gate): die 17 ui-Primitives (`button`, `card`, `dialog`, …), die
-  4 shell-Komponenten (`ConfirmDialog`, `DetailActionBar`, `PageHeader`, `Providers`) und der
-  Tailwind-Theme-Kern (`@vereinsheim/ui/theme.css`). Import via `@vereinsheim/ui/<name>` bzw.
+  unmöglich**, daher *nicht* mehr im Gate): die ui-Primitives (`button`, `card`, `dialog`, …, seit
+  September 2026 auch `table` + `skeleton`), die 4 shell-Komponenten (`ConfirmDialog`,
+  `DetailActionBar`, `PageHeader`, `Providers`), die Rate-Limit-Admin-Oberfläche
+  (`admin/LoginRateLimitTable`, `admin/LoginRateLimitInsights`) und der Tailwind-Theme-Kern
+  (`@vereinsheim/ui/theme.css`). Import via `@vereinsheim/ui/<name>` bzw.
   `@vereinsheim/ui/shell/<name>`; Styles/Verhalten ändert man **im Paket**. App-spezifische `ui/*`
-  (chart/form/table, checkbox/rank-badge/skeleton) + `Navigation` bleiben app-lokal (dürfen driften).
+  (chart/form in Treffsicher, checkbox/rank-badge in Ringwerk) + `Navigation` bleiben app-lokal.
 - **Geteilt via `@vereinsheim/lib`** (packages/lib, seit Phase 4 / Zyklus 1 — Drift **strukturell
-  unmöglich**, daher *nicht* mehr im Gate): `cn` (`utils`), `forms/fieldErrors`, die Form-Hooks
-  `useUnsavedChangesGuard` + `useNavigationConfirm`. Import via `@vereinsheim/lib/<subpath>`; Logik
-  ändert man **im Paket**, nicht in den Apps. (`dateTime` ist seit Juni 2026 ebenfalls geteilt (server-only).)
+  unmöglich**, daher *nicht* mehr im Gate): `cn` (`utils`), `forms/fieldErrors` (inkl. `getErrorMessage`),
+  die Form-Hooks `useUnsavedChangesGuard` + `useNavigationConfirm`, `dateTime` (server-only, liefert
+  `getDisplayTimeZone`) und seit September 2026 `format` (**isomorphe** Anzeige-Formatierung, auch für
+  Client-Komponenten) sowie der reine Auth-Kern `auth/validation` +
+  `auth/rate-limit/{config,limiter,normalization,types,adminTypes}`. Import via
+  `@vereinsheim/lib/<subpath>`; Logik ändert man **im Paket**, nicht in den Apps.
 - Diese Datei: `docs/shared-conventions.md`
 
 Regel: Wer eine dieser Dateien ändert, ändert sie in **beiden** Repos gleich. Neue, klar
@@ -61,8 +66,12 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 - Seitentitel: `text-2xl font-semibold tracking-tight` (**nicht** `font-bold`).
 - Untertitel: `text-sm text-muted-foreground`.
 - Pending-/Lade-Texte: Unicode-Ellipsis `…` (U+2026), nie ASCII `...`.
-- App-Shell: `mx-auto max-w-6xl px-4 py-8`. Pro-Seiten-`max-w` (z.B. enger für Lesbarkeit) ist
-  erlaubt, aber bewusst zu setzen.
+- App-Shell: `mx-auto max-w-6xl px-4 py-8` — **im Layout, nicht in der Seite**. Eine Seite setzt
+  **keinen** eigenen `px-`/`py-`-Container (sonst doppeltes Padding); ein eigenes `max-w` für
+  Formularseiten (`mx-auto max-w-lg space-y-6`) ist erlaubt und bewusst zu setzen.
+- **Kontrast-Untergrenze:** kein Opazitäts-Modifier auf `text-muted-foreground` (kein `/60`, `/70`,
+  `/80`) und keine Schriftgröße unter `text-xs`. Zurückgenommener Text nutzt die volle
+  `muted-foreground`-Farbe.
 
 ## 4. Icon-Vokabular (lucide-react)
 
@@ -76,20 +85,61 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 
 Marken-Logos (kollisionsfrei, je App eindeutig): **Treffsicher `Crosshair`**, **Ringwerk `CircleDot`**.
 `Target` ist Disziplinen, `Trophy` ist in Ringwerk Wettbewerb/Sieger — **keines davon als Logo**.
+Admin ist `Shield` (letzter Haupt-Nav-Eintrag), PDF/Download ist `Download`.
+
+### Farben: semantische Tokens statt Palette
+
+Farbe trägt Bedeutung und wird über die Tokens aus `@vereinsheim/ui/theme.css` ausgedrückt:
+
+| Token                  | Bedeutung                                     |
+| ---------------------- | --------------------------------------------- |
+| `success`              | Sieg, erledigt, Erfolgsmeldung                |
+| `warning`              | Unentschieden, offen, Hinweis                 |
+| `info`                 | neutral markiert (Typ-Badge, Achtelfinale)    |
+| `destructive`          | Löschen, Fehler, schlechter als Prognose      |
+| `rank-1`/`-2`/`-3`     | Platz 1/2/3 — Gold/Silber/Bronze              |
+| `chart-1` … `chart-5`  | Diagramm-Serien (`chart-1` = App-Akzent)      |
+
+**Keine Tailwind-Palette-Klassen** (`text-emerald-600`, `bg-amber-950`, …) und **keine
+`dark:`-Varianten** — beide Apps laufen fest im Dark Mode, eine `dark:`-Variante ist toter Code.
+Ausnahme: die Hex-Skala der Trefferlage-Charts (`statistics-charts/constants.ts`) — Datenskala,
+keine UI-Semantik.
+
+Die **Akzentfarbe** je App kommt über `data-app` am `<html>`-Element (Ringwerk = Messing,
+Treffsicher = Teal) und überschreibt nur `--primary`, `--primary-foreground`, `--ring`, `--chart-1`.
 
 ## 5. Navigation
 
-Hamburger-Schema in beiden: Desktop `hidden md:flex`-Links + Logo links, Konto als `UserCircle`-
-**Dropdown** rechts („Mein Konto" + Separator + „Abmelden"). Mobil `{mobileOpen && <nav className="border-t md:hidden">}`.
+Ein Schema in beiden Apps (September 2026 angeglichen):
+
+- Kopfzeile `border-b border-border bg-card`.
+- Links das **Logo als Link** auf die Startseite: Marken-Icon `h-5 w-5 text-primary` +
+  `text-lg font-semibold tracking-tight`.
+- Desktop-Links `hidden md:flex`; **Admin ist der letzte Haupt-Nav-Eintrag** (`Shield`), nicht im
+  rechten Bereich.
+- Rechts das Konto-Dropdown (`UserCircle`, „Mein Konto" + Separator + „Abmelden") **nur ab `md`**
+  (`hidden md:block`), daneben der Hamburger `md:hidden`.
+- Mobil `{mobileOpen && <nav className="border-t md:hidden">}` mit Hauptlinks **plus Konto plus
+  Abmelden** — auf dem Telefon ist das Dropdown nicht erreichbar.
+- Aktiv-Erkennung `pathname.startsWith(href)`; für ein Dashboard auf `/` **exakter** Vergleich.
 
 ## 6. Daten & Formatierung
 
-- Datum/Zeit/Zahl über `@vereinsheim/lib/dateTime` (`formatDateOnly(date, displayTimeZone)` etc.) — **kein**
-  inline `new Intl.DateTimeFormat(...)` in Seiten.
-- Zeitzone-Default: `Europe/Berlin` (beide Apps).
+- Datum/Zeit/Zahl über `@vereinsheim/lib/format` — **kein** inline `new Intl.*Format(...)` und kein
+  `toLocale*String()` in Seiten, Komponenten, Hooks, PDF-Renderern. Braucht man ein neues Format,
+  kommt es **ins Paket**, nicht in die Datei.
+- Das Modul ist **isomorph** (kein `server-only`), damit Client-Komponenten und Chart-Hooks es nutzen
+  können. Die **Anzeige-Zeitzone ist immer ein Parameter**; server-seitig kommt sie aus
+  `getDisplayTimeZone()` (`@vereinsheim/lib/dateTime`, liest `DISPLAY_TIME_ZONE`) und wird als Prop
+  durchgereicht. Ein Formatter ohne Zeitzone rendert in der Zone des Containers (UTC) — genau so
+  entstanden die Zeitzonen-Bugs im Protokoll und in den Ringwerk-PDFs.
+- Locale: **`de-DE`** (`APP_LOCALE`). Zeitzone-Default: `Europe/Berlin` (beide Apps).
 - **ActionResult-Kanon** (Zielform, Ringwerk-Muster): diskriminierte Union
-  `{ success: true; data?: T } | { error: string | Record<string, string[] | undefined> }`.
-  _Hinweis: Treffsichers Module sind noch nicht vollständig migriert — geplanter Folgeschritt._
+  `{ success: true; data?: T } | { error: string | Record<string, string[] | undefined> }`,
+  je App in `src/lib/types.ts`. Konsumenten narrowen über `"error" in result` bzw.
+  `"success" in state` — **kein** `state?.success` (die Union hat die Felder nicht optional) und
+  **kein** `success: false`. Einen einzeiligen Fehlertext liefert `getErrorMessage` aus
+  `@vereinsheim/lib/forms/fieldErrors`. _Seit September 2026 in beiden Apps umgesetzt._
 
 ## 7. Listen & Karten
 
@@ -108,8 +158,12 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Dependency-Drift und Anti-Pattern.
 - **Umgesetzt (Tier 1):** die Shared-Schicht liegt in gemeinsamen Paketen (`@vereinsheim/ui`,
   `@vereinsheim/lib`, `@vereinsheim/config`) — Drift ist dort strukturell unmöglich (siehe §1).
-- **Offene Angleichungen:** ActionResult-Vereinheitlichung (Treffsicher), Dependency-Pins
-  (inkl. TypeScript-Major).
+- **Offene Angleichungen:** Dependency-Pins (inkl. TypeScript-Major).
+- **Noch nicht erzwungen:** die Regeln aus §3 (Seiten-Container, Kontrast-Untergrenze), §4
+  (Palette-Klassen) und §6 (inline `Intl`) sind seit September 2026 im Code eingehalten, aber der
+  `consistency-check.sh` prüft sie noch nicht — sie können also zurückdriften. Die Checks dafür
+  nachzuziehen ist der offene Schritt (`scripts/` ist ein user-gated Pfad, siehe
+  [[autopilot-guard-blocks-contract-only-plans]]).
 
 ## 9. Aus Lernlog übernommen
 
