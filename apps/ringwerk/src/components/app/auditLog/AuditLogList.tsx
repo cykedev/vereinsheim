@@ -1,6 +1,7 @@
 import { ScrollText } from "lucide-react"
 import { Badge } from "@vereinsheim/ui/badge"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
+import { formatDateTime } from "@vereinsheim/lib/format"
 import {
   AUDIT_EVENT_CATEGORY,
   AUDIT_EVENT_LABELS,
@@ -18,16 +19,6 @@ const CATEGORY_BADGE_CLASS: Record<AuditEventCategory, string> = {
   admin: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
 }
 
-function formatDateTime(date: Date): string {
-  return new Date(date).toLocaleString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
 type Entry = AuditLogEntry | AuditLogEntryWithCompetition
 
 function hasCompetition(entry: Entry): entry is AuditLogEntryWithCompetition {
@@ -36,10 +27,11 @@ function hasCompetition(entry: Entry): entry is AuditLogEntryWithCompetition {
 
 interface Props {
   entries: Entry[]
+  displayTimeZone: string
   showLeagueName?: boolean
 }
 
-export function AuditLogList({ entries, showLeagueName = false }: Props) {
+export function AuditLogList({ entries, displayTimeZone, showLeagueName = false }: Props) {
   if (entries.length === 0) {
     return <EmptyState title="Keine Protokolleinträge vorhanden" icon={ScrollText} />
   }
@@ -68,7 +60,8 @@ export function AuditLogList({ entries, showLeagueName = false }: Props) {
                   </div>
                   {description && <p className="text-sm font-medium">{description}</p>}
                   <p className="text-xs text-muted-foreground">
-                    {entry.user.name ?? "Unbekannt"} · {formatDateTime(entry.createdAt)}
+                    {entry.user.name ?? "Unbekannt"} ·{" "}
+                    {formatDateTime(entry.createdAt, displayTimeZone)}
                   </p>
                 </div>
                 <span className="mt-0.5 shrink-0 text-xs text-muted-foreground group-open:hidden">

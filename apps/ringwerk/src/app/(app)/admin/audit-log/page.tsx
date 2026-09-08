@@ -3,9 +3,11 @@ import { ArrowLeft } from "lucide-react"
 import { getAuditLogs } from "@/lib/auditLog/queries"
 import { AuditLogList } from "@/components/app/auditLog/AuditLogList"
 import { Button } from "@vereinsheim/ui/button"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export default async function AdminAuditLogPage() {
   const entries = await getAuditLogs()
+  const tz = getDisplayTimeZone()
 
   return (
     <div className="space-y-6">
@@ -22,7 +24,7 @@ export default async function AdminAuditLogPage() {
         </div>
       </div>
 
-      <AuditLogList entries={entries} showLeagueName />
+      <AuditLogList entries={entries} displayTimeZone={tz} showLeagueName />
     </div>
   )
 }

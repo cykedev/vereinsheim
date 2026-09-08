@@ -8,6 +8,7 @@ import {
   CompetitionDetailHeader,
   DetailNavButton,
 } from "@/components/app/shell/CompetitionDetailHeader"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -26,6 +27,8 @@ export default async function CompetitionAuditLogPage({ params }: Props) {
   ])
 
   if (!competition) notFound()
+
+  const tz = getDisplayTimeZone()
 
   return (
     <div className="space-y-6">
@@ -49,7 +52,7 @@ export default async function CompetitionAuditLogPage({ params }: Props) {
         }
       />
 
-      <AuditLogList entries={entries} />
+      <AuditLogList entries={entries} displayTimeZone={tz} />
     </div>
   )
 }
