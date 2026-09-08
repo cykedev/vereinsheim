@@ -25,10 +25,8 @@ export default async function EditDisciplinePage({ params }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
-      <div className="mb-6">
-        <PageHeader title="Disziplin bearbeiten" />
-      </div>
+    <div className="mx-auto max-w-lg space-y-6">
+      <PageHeader title="Disziplin bearbeiten" />
       <DisciplineForm discipline={discipline} action={action} />
     </div>
   )

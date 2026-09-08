@@ -19,7 +19,7 @@ export default async function ParticipantsPage() {
   const inactive = participants.filter((p) => !p.isActive)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="space-y-6">
       <PageHeader
         title="Teilnehmer"
         description="Alle Schützen des Vereins"

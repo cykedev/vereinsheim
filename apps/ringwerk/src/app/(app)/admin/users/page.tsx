@@ -20,7 +20,7 @@ export default async function AdminUsersPage() {
   const inactive = users.filter((u) => !u.isActive)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="space-y-6">
       <PageHeader
         title="Nutzerverwaltung"
         description="App-Zugänge verwalten"

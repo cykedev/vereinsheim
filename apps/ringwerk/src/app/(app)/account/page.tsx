@@ -3,10 +3,8 @@ import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default function AccountPage() {
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
-      <div className="mb-6">
-        <PageHeader title="Mein Konto" description="Passwort ändern" />
-      </div>
+    <div className="mx-auto max-w-lg space-y-6">
+      <PageHeader title="Mein Konto" description="Passwort ändern" />
       <AccountPasswordForm />
     </div>
   )

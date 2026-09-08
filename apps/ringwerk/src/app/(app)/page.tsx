@@ -87,7 +87,7 @@ export default async function DashboardPage() {
   ])
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
+    <div className="space-y-8">
       <PageHeader title="Dashboard" description="Aktive Wettbewerbe auf einen Blick" />
 
       {active.length === 0 ? (

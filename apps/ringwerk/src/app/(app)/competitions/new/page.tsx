@@ -11,10 +11,8 @@ export default async function NewCompetitionPage() {
 
   if (disciplines.length === 0) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-8">
-        <div className="mb-4">
-          <PageHeader title="Neuer Wettbewerb" />
-        </div>
+      <div className="mx-auto max-w-lg space-y-6">
+        <PageHeader title="Neuer Wettbewerb" />
         <p className="text-sm text-muted-foreground">
           Es sind keine Disziplinen vorhanden. Bitte zuerst eine Disziplin anlegen.
         </p>
@@ -23,10 +21,8 @@ export default async function NewCompetitionPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
-      <div className="mb-6">
-        <PageHeader title="Neuer Wettbewerb" />
-      </div>
+    <div className="mx-auto max-w-lg space-y-6">
+      <PageHeader title="Neuer Wettbewerb" />
       <CompetitionForm action={createCompetition} disciplines={disciplines} />
     </div>
   )

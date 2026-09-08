@@ -48,7 +48,7 @@ export default async function CompetitionSchedulePage({ params }: Props) {
   const scoringType = getEffectiveScoringType(competition.scoringMode, competition.discipline)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">

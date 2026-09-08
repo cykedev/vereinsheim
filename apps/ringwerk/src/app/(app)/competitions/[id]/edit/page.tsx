@@ -34,10 +34,8 @@ export default async function EditCompetitionPage({ params }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
-      <div className="mb-6">
-        <PageHeader title="Wettbewerb bearbeiten" />
-      </div>
+    <div className="mx-auto max-w-lg space-y-6">
+      <PageHeader title="Wettbewerb bearbeiten" />
       <CompetitionForm
         competition={competition}
         disciplines={disciplines}
@@ -45,7 +43,7 @@ export default async function EditCompetitionPage({ params }: Props) {
         hasMatchups={hasMatchups}
         playoffsStarted={playoffsStarted}
       />
-      <div className="mt-12">
+      <div className="pt-6">
         <ForceDeleteCompetitionSection competitionId={id} competitionName={competition.name} />
       </div>
     </div>
