@@ -11,14 +11,10 @@ interface SessionResultProps {
 }
 
 function SessionResult({ result, mobile }: SessionResultProps) {
-  const scoreBlockClass = result.isPracticeOnly ? "text-muted-foreground/70" : ""
+  const scoreBlockClass = result.isPracticeOnly ? "text-muted-foreground" : ""
   const scoreValueClass = result.isPracticeOnly ? "text-muted-foreground" : ""
-  const scoreMetaClass = result.isPracticeOnly
-    ? "text-[11px] leading-tight text-muted-foreground/70"
-    : "text-[11px] leading-tight text-muted-foreground/80"
-  const shotCountClass = result.isPracticeOnly
-    ? "text-xs text-muted-foreground/80"
-    : "text-xs text-muted-foreground"
+  const scoreMetaClass = "text-xs leading-tight text-muted-foreground"
+  const shotCountClass = "text-xs text-muted-foreground"
   const wrapperClass = mobile
     ? `shrink-0 text-right sm:hidden ${scoreBlockClass}`
     : `hidden text-right sm:ml-4 sm:block sm:shrink-0 ${scoreBlockClass}`
@@ -72,9 +68,7 @@ export function SessionListItemCard({ session, displayTimeZone }: Props) {
 
             <p className="break-words text-sm text-muted-foreground">
               {model.formattedDate}
-              {model.location && (
-                <span className="text-muted-foreground/60"> · {model.location}</span>
-              )}
+              {model.location && <span className="text-muted-foreground"> · {model.location}</span>}
             </p>
             {model.trainingGoal && (
               <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
@@ -89,7 +83,7 @@ export function SessionListItemCard({ session, displayTimeZone }: Props) {
                   <Badge
                     key={label}
                     variant="outline"
-                    className="h-4 px-1 py-0 text-[9px] leading-none text-muted-foreground/60 border-muted-foreground/20"
+                    className="h-5 border-border px-1.5 py-0 text-xs leading-none text-muted-foreground"
                   >
                     {label}
                   </Badge>

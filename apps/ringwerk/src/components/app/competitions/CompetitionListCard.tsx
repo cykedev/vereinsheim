@@ -63,7 +63,7 @@ function CardMeta({ c, tz }: { c: CompetitionListItem; tz: string }) {
   if (c.type === "EVENT") {
     if (!c.eventDate) return null
     return (
-      <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+      <p className="flex items-center gap-1 text-xs text-muted-foreground">
         <CalendarCheck className="h-3 w-3" />
         {formatDate(c.eventDate, tz)}
       </p>
@@ -72,7 +72,7 @@ function CardMeta({ c, tz }: { c: CompetitionListItem; tz: string }) {
   if (c.type === "SEASON") {
     if (!c.seasonStart) return null
     return (
-      <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+      <p className="flex items-center gap-1 text-xs text-muted-foreground">
         <CalendarCheck className="h-3 w-3" />
         {formatDate(c.seasonStart, tz)}
         {c.seasonEnd && <> – {formatDate(c.seasonEnd, tz)}</>}
@@ -82,7 +82,7 @@ function CardMeta({ c, tz }: { c: CompetitionListItem; tz: string }) {
   // BEST_OF_SINGLE hat keine Hin-/Rückrunde — der einzelne Vergleich wird individuell vereinbart.
   if (c.leagueFormat === "BEST_OF_SINGLE") return null
   return (
-    <p className="text-xs text-muted-foreground/70">
+    <p className="text-xs text-muted-foreground">
       Hinrunde bis {formatDate(c.hinrundeDeadline, tz)} · Rückrunde bis{" "}
       {formatDate(c.rueckrundeDeadline, tz)}
     </p>
