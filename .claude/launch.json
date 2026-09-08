@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ringwerk",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--filter", "ringwerk"],
+      "port": 3000
+    },
+    {
+      "name": "treffsicher",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--filter", "treffsicher"],
+      "port": 3001
+    }
+  ]
+}
