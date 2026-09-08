@@ -35,7 +35,7 @@ export default async function RootLayout({
   await runStartup()
 
   return (
-    <html lang="de" className="dark" suppressHydrationWarning>
+    <html lang="de" className="dark" data-app="treffsicher" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>{children}</Providers>
         <Toaster />
