@@ -6,6 +6,14 @@ import type { SeasonStandingsEntry } from "@/lib/scoring/calculateSeasonStanding
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@vereinsheim/ui/table"
 
 type SortCol = "rings" | "teiler" | "ringteiler"
 
@@ -24,7 +32,7 @@ function SortHeader({
 }) {
   const active = sortCol === col
   return (
-    <th
+    <TableHead
       className={`px-3 py-2 text-right font-medium text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors${active ? " text-foreground" : ""}${className ? ` ${className}` : ""}`}
       onClick={() => setSortCol(col)}
     >
@@ -32,7 +40,7 @@ function SortHeader({
         {label}
         {active && <ChevronUp className="h-3 w-3" />}
       </span>
-    </th>
+    </TableHead>
   )
 }
 
@@ -90,14 +98,16 @@ export function SeasonStandingsTable({
 
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Name</th>
+      <Table>
+        <TableHeader>
+          <TableRow className="border-b bg-muted/50">
+            <TableHead className="px-3 py-2 text-left font-medium text-muted-foreground">
+              Name
+            </TableHead>
             {minSeries !== null && (
-              <th className="px-3 py-2 text-right font-medium text-muted-foreground hidden sm:table-cell">
+              <TableHead className="px-3 py-2 text-right font-medium text-muted-foreground hidden sm:table-cell">
                 Serien
-              </th>
+              </TableHead>
             )}
             <SortHeader col="rings" label="Beste Ringe" sortCol={sortCol} setSortCol={setSortCol} />
             <SortHeader
@@ -113,14 +123,14 @@ export function SeasonStandingsTable({
               sortCol={sortCol}
               setSortCol={setSortCol}
             />
-          </tr>
-        </thead>
-        <tbody className="divide-y">
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {sorted.map((entry, idx) => {
             const qualified = entry.meetsMinSeries
             return (
-              <tr key={entry.participantId} className="hover:bg-muted/30 transition-colors">
-                <td className="px-3 py-2 font-medium">
+              <TableRow key={entry.participantId} className="hover:bg-muted/30 transition-colors">
+                <TableCell className="px-3 py-2 font-medium whitespace-normal">
                   <span className="inline-flex items-center gap-1.5">
                     <RankBadge rank={idx + 1} />
                     <span className={qualified ? "" : "text-muted-foreground"}>
@@ -132,15 +142,15 @@ export function SeasonStandingsTable({
                       )}
                     </span>
                   </span>
-                </td>
+                </TableCell>
                 {minSeries !== null && (
-                  <td className="px-3 py-2 text-right tabular-nums hidden sm:table-cell">
+                  <TableCell className="px-3 py-2 text-right tabular-nums hidden sm:table-cell">
                     <span className={qualified ? "text-success" : "text-destructive"}>
                       {entry.seriesCount}/{minSeries}
                     </span>
-                  </td>
+                  </TableCell>
                 )}
-                <td className="px-3 py-2 tabular-nums">
+                <TableCell className="px-3 py-2 tabular-nums">
                   <div className="flex items-center justify-end gap-1.5">
                     {entry.bestRings !== null ? (
                       <>
@@ -153,8 +163,8 @@ export function SeasonStandingsTable({
                       <span className="text-muted-foreground">–</span>
                     )}
                   </div>
-                </td>
-                <td className="px-3 py-2 tabular-nums hidden sm:table-cell">
+                </TableCell>
+                <TableCell className="px-3 py-2 tabular-nums hidden sm:table-cell">
                   <div className="flex items-center justify-end gap-1.5">
                     {entry.bestCorrectedTeiler !== null ? (
                       <>
@@ -165,8 +175,8 @@ export function SeasonStandingsTable({
                       <span className="text-muted-foreground">–</span>
                     )}
                   </div>
-                </td>
-                <td className="px-3 py-2 tabular-nums font-medium">
+                </TableCell>
+                <TableCell className="px-3 py-2 tabular-nums font-medium">
                   <div className="flex items-center justify-end gap-1.5">
                     {entry.bestRingteiler !== null ? (
                       <>
@@ -177,12 +187,12 @@ export function SeasonStandingsTable({
                       <span className="text-muted-foreground">–</span>
                     )}
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   )
 }

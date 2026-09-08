@@ -5,6 +5,14 @@ import type { ScoringMode, TargetValueType } from "@/generated/prisma/client"
 import { Badge } from "@vereinsheim/ui/badge"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@vereinsheim/ui/table"
 
 interface Props {
   entries: EventRankedEntry[]
@@ -29,28 +37,36 @@ export function EventRankingTable({
 
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="px-3 py-2 text-left font-medium text-muted-foreground w-10">Pl.</th>
-            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Name</th>
-            <th className="px-3 py-2 text-left font-medium text-muted-foreground hidden sm:table-cell">
+      <Table>
+        <TableHeader>
+          <TableRow className="border-b bg-muted/50">
+            <TableHead className="px-3 py-2 text-left font-medium text-muted-foreground w-10">
+              Pl.
+            </TableHead>
+            <TableHead className="px-3 py-2 text-left font-medium text-muted-foreground">
+              Name
+            </TableHead>
+            <TableHead className="px-3 py-2 text-left font-medium text-muted-foreground hidden sm:table-cell">
               Disziplin
-            </th>
-            <th className="px-3 py-2 text-right font-medium text-muted-foreground">Ringe</th>
-            <th className="px-3 py-2 text-right font-medium text-muted-foreground hidden sm:table-cell">
+            </TableHead>
+            <TableHead className="px-3 py-2 text-right font-medium text-muted-foreground">
+              Ringe
+            </TableHead>
+            <TableHead className="px-3 py-2 text-right font-medium text-muted-foreground hidden sm:table-cell">
               {isMixed ? "Teiler korr." : "Teiler"}
-            </th>
-            <th className="px-3 py-2 text-right font-medium text-muted-foreground">{scoreLabel}</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
+            </TableHead>
+            <TableHead className="px-3 py-2 text-right font-medium text-muted-foreground">
+              {scoreLabel}
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {entries.map((entry) => (
-            <tr key={entry.seriesId} className="hover:bg-muted/30 transition-colors">
-              <td className="px-3 py-2">
+            <TableRow key={entry.seriesId} className="hover:bg-muted/30 transition-colors">
+              <TableCell className="px-3 py-2">
                 <RankBadge rank={entry.rank} />
-              </td>
-              <td className="px-3 py-2 font-medium">
+              </TableCell>
+              <TableCell className="px-3 py-2 font-medium whitespace-normal">
                 <span className="flex items-center gap-1.5 flex-wrap">
                   {entry.participantName}
                   {entry.isGuest && (
@@ -64,11 +80,11 @@ export function EventRankingTable({
                     </Badge>
                   )}
                 </span>
-              </td>
-              <td className="px-3 py-2 text-muted-foreground hidden sm:table-cell">
+              </TableCell>
+              <TableCell className="px-3 py-2 text-muted-foreground hidden whitespace-normal sm:table-cell">
                 {entry.disciplineName}
-              </td>
-              <td className="px-3 py-2 text-right tabular-nums">
+              </TableCell>
+              <TableCell className="px-3 py-2 text-right tabular-nums">
                 {formatRings(
                   entry.rings,
                   getEffectiveScoringType(
@@ -77,17 +93,17 @@ export function EventRankingTable({
                     targetValueType
                   )
                 )}
-              </td>
-              <td className="px-3 py-2 text-right tabular-nums text-muted-foreground hidden sm:table-cell">
+              </TableCell>
+              <TableCell className="px-3 py-2 text-right tabular-nums text-muted-foreground hidden sm:table-cell">
                 {formatDecimal1(isMixed ? entry.correctedTeiler : entry.teiler)}
-              </td>
-              <td className="px-3 py-2 text-right tabular-nums font-medium">
+              </TableCell>
+              <TableCell className="px-3 py-2 text-right tabular-nums font-medium">
                 {formatScore(entry.score, scoringMode)}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   )
 }

@@ -2,6 +2,14 @@ import type { EventTeamRankedEntry } from "@/lib/scoring/rankEventParticipants"
 import { SCORING_MODE_COLUMN_LABELS } from "@/lib/scoring/labels"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@vereinsheim/ui/table"
 
 interface Props {
   entries: EventTeamRankedEntry[]
@@ -24,34 +32,40 @@ export function EventTeamRankingTable({ entries, scoringMode, teamScoring }: Pro
         <span className="text-sm font-medium">Team-Rangliste</span>
         <span className="text-xs text-muted-foreground">{teamScoringLabel}</span>
       </div>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="px-3 py-2 text-left font-medium text-muted-foreground w-10">Pl.</th>
-            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Team</th>
-            <th className="px-3 py-2 text-left font-medium text-muted-foreground hidden sm:table-cell">
+      <Table>
+        <TableHeader>
+          <TableRow className="border-b bg-muted/50">
+            <TableHead className="px-3 py-2 text-left font-medium text-muted-foreground w-10">
+              Pl.
+            </TableHead>
+            <TableHead className="px-3 py-2 text-left font-medium text-muted-foreground">
+              Team
+            </TableHead>
+            <TableHead className="px-3 py-2 text-left font-medium text-muted-foreground hidden sm:table-cell">
               Mitglieder
-            </th>
-            <th className="px-3 py-2 text-right font-medium text-muted-foreground">{scoreLabel}</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
+            </TableHead>
+            <TableHead className="px-3 py-2 text-right font-medium text-muted-foreground">
+              {scoreLabel}
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {entries.map((entry) => (
-            <tr key={entry.teamNumber} className="hover:bg-muted/30 transition-colors">
-              <td className="px-3 py-2">
+            <TableRow key={entry.teamNumber} className="hover:bg-muted/30 transition-colors">
+              <TableCell className="px-3 py-2">
                 <RankBadge rank={entry.rank} />
-              </td>
-              <td className="px-3 py-2 font-medium">Team {entry.teamNumber}</td>
-              <td className="px-3 py-2 text-muted-foreground hidden sm:table-cell text-xs">
+              </TableCell>
+              <TableCell className="px-3 py-2 font-medium">Team {entry.teamNumber}</TableCell>
+              <TableCell className="px-3 py-2 text-muted-foreground hidden whitespace-normal sm:table-cell text-xs">
                 {entry.members.map((m) => m.participantName).join(", ")}
-              </td>
-              <td className="px-3 py-2 text-right tabular-nums font-medium">
+              </TableCell>
+              <TableCell className="px-3 py-2 text-right tabular-nums font-medium">
                 {formatTeamScore(entry.teamScore, scoringMode)}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   )
 }

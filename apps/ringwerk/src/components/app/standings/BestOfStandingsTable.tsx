@@ -5,6 +5,14 @@ import {
 } from "@/lib/standings/formatDirectComparison"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@vereinsheim/ui/table"
 
 interface Props {
   rows: BestOfStandingRow[]
@@ -31,51 +39,51 @@ export function BestOfStandingsTable({ rows }: Props) {
 
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/40">
-            <th className="w-10 px-2 py-2.5 text-center font-medium text-muted-foreground sm:px-4">
+      <Table>
+        <TableHeader>
+          <TableRow className="border-b bg-muted/40">
+            <TableHead className="w-10 px-2 py-2.5 text-center font-medium text-muted-foreground sm:px-4">
               Pl.
-            </th>
-            <th className="px-2 py-2.5 text-left font-medium text-muted-foreground sm:px-4">
+            </TableHead>
+            <TableHead className="px-2 py-2.5 text-left font-medium text-muted-foreground sm:px-4">
               Name
-            </th>
-            <th className="hidden px-4 py-2.5 text-center font-medium text-muted-foreground sm:table-cell">
+            </TableHead>
+            <TableHead className="hidden px-4 py-2.5 text-center font-medium text-muted-foreground sm:table-cell">
               Begegn.
-            </th>
-            <th className="px-2 py-2.5 text-center font-medium text-muted-foreground sm:px-4">
+            </TableHead>
+            <TableHead className="px-2 py-2.5 text-center font-medium text-muted-foreground sm:px-4">
               Siege
-            </th>
-            <th className="hidden px-4 py-2.5 text-center font-medium text-muted-foreground sm:table-cell">
+            </TableHead>
+            <TableHead className="hidden px-4 py-2.5 text-center font-medium text-muted-foreground sm:table-cell">
               Satzdiff.
-            </th>
-            <th className="hidden px-4 py-2.5 text-center font-medium text-muted-foreground sm:table-cell">
+            </TableHead>
+            <TableHead className="hidden px-4 py-2.5 text-center font-medium text-muted-foreground sm:table-cell">
               Satzverhältnis
-            </th>
-            <th className="hidden px-4 py-2.5 text-right font-medium text-muted-foreground sm:table-cell">
+            </TableHead>
+            <TableHead className="hidden px-4 py-2.5 text-right font-medium text-muted-foreground sm:table-cell">
               Direktvergleich
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {rows.map((row) => {
             const rowHighlight = row.withdrawn ? "" : (ROW_HIGHLIGHT[row.rank] ?? "")
             const direct = formatDirectComparison(row.directComparison)
             return (
-              <tr
+              <TableRow
                 key={row.participantId}
                 className={`transition-colors ${
                   row.withdrawn ? "opacity-50" : `hover:bg-muted/20 ${rowHighlight}`
                 }`}
               >
-                <td className="px-2 py-3 text-center sm:px-4">
+                <TableCell className="px-2 py-3 text-center sm:px-4">
                   {row.withdrawn ? (
                     <span className="text-muted-foreground">—</span>
                   ) : (
                     <RankBadge rank={row.rank} />
                   )}
-                </td>
-                <td className="px-2 py-3 font-medium sm:px-4">
+                </TableCell>
+                <TableCell className="px-2 py-3 font-medium whitespace-normal sm:px-4">
                   {row.withdrawn ? (
                     <span className="line-through text-muted-foreground">
                       {row.lastName}, {row.firstName}
@@ -86,12 +94,14 @@ export function BestOfStandingsTable({ rows }: Props) {
                       {row.lastName}, {row.firstName}
                     </>
                   )}
-                </td>
-                <td className="hidden px-4 py-3 text-center text-muted-foreground sm:table-cell">
+                </TableCell>
+                <TableCell className="hidden px-4 py-3 text-center text-muted-foreground sm:table-cell">
                   {row.played}
-                </td>
-                <td className="px-2 py-3 text-center font-medium sm:px-4">{row.wins}</td>
-                <td className="hidden px-4 py-3 text-center sm:table-cell">
+                </TableCell>
+                <TableCell className="px-2 py-3 text-center font-medium sm:px-4">
+                  {row.wins}
+                </TableCell>
+                <TableCell className="hidden px-4 py-3 text-center sm:table-cell">
                   <span
                     className={
                       row.duelDiff > 0
@@ -103,18 +113,18 @@ export function BestOfStandingsTable({ rows }: Props) {
                   >
                     {row.duelDiff > 0 ? `+${row.duelDiff}` : row.duelDiff}
                   </span>
-                </td>
-                <td className="hidden px-4 py-3 text-center text-muted-foreground sm:table-cell">
+                </TableCell>
+                <TableCell className="hidden px-4 py-3 text-center text-muted-foreground sm:table-cell">
                   {row.duelsWon}:{row.duelsLost}
-                </td>
-                <td className="hidden px-4 py-3 text-right sm:table-cell">
+                </TableCell>
+                <TableCell className="hidden px-4 py-3 text-right sm:table-cell">
                   <span className={DIRECT_TONE_CLASS[direct.tone]}>{direct.text}</span>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   )
 }
