@@ -1,11 +1,18 @@
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
+
+import type { ActionResult } from "@/lib/types"
+
 interface Props {
-  error?: string
-  success?: boolean
+  // Das rohe Action-Ergebnis; die Komponente leitet Fehler/Erfolg selbst ab.
+  state: ActionResult | null
   showInlineSuccess: boolean
   successMessage: string
 }
 
-export function ActionFormMessages({ error, success, showInlineSuccess, successMessage }: Props) {
+export function ActionFormMessages({ state, showInlineSuccess, successMessage }: Props) {
+  const error = getErrorMessage(state)
+  const success = state !== null && "success" in state
+
   return (
     <>
       {error && <p className="text-sm text-destructive">{error}</p>}

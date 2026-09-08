@@ -50,19 +50,18 @@ export function FeedbackForm({ sessionId, initialData, onCancel, onSuccess }: Pr
 
   useEffect(() => {
     // Callback erst nach bestätigtem Server-Erfolg, damit Wrapper nur bei persistierten Daten schließt.
-    if (state?.success) {
+    if (state && "success" in state) {
       toast.success("Feedback gespeichert.")
       onSuccess?.()
     } else if (generalError) {
       toast.error(generalError)
     }
-  }, [state?.success, generalError, onSuccess])
+  }, [state, generalError, onSuccess])
 
   return (
     <form action={formAction} className="space-y-4">
       <ActionFormMessages
-        error={state?.error}
-        success={state?.success}
+        state={state}
         showInlineSuccess={!onSuccess}
         successMessage="Feedback gespeichert."
       />

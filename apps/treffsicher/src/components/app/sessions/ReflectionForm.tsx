@@ -33,19 +33,18 @@ export function ReflectionForm({ sessionId, initialData, onSuccess, onCancel }: 
 
   // Nach erfolgreichem Speichern Callback aufrufen (für Section-Wrapper)
   useEffect(() => {
-    if (state?.success) {
+    if (state && "success" in state) {
       toast.success("Reflexion gespeichert.")
       onSuccess?.()
     } else if (generalError) {
       toast.error(generalError)
     }
-  }, [state?.success, generalError, onSuccess])
+  }, [state, generalError, onSuccess])
 
   return (
     <form action={formAction} className="space-y-4">
       <ActionFormMessages
-        error={state?.error}
-        success={state?.success}
+        state={state}
         showInlineSuccess={!onSuccess}
         successMessage="Reflexion gespeichert."
       />

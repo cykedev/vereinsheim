@@ -55,10 +55,8 @@ export type SessionDetail = TrainingSession & {
   feedback: Feedback | null
 }
 
-export type ActionResult = {
-  error?: string
-  success?: boolean
-}
+// Kanon liegt in @/lib/types.
+export type { ActionResult } from "@/lib/types"
 
 export type MeytonImportPreviewSeries = {
   nr: number

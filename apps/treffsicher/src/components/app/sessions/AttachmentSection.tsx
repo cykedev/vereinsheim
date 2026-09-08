@@ -16,6 +16,7 @@ import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { Card, CardContent } from "@vereinsheim/ui/card"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 interface AttachmentData {
   id: string
@@ -47,8 +48,9 @@ export function AttachmentSection({ sessionId, attachments }: Props) {
 
     startTransition(async () => {
       const result = await uploadAttachment(sessionId, formData)
-      if (result.error) {
-        setMessage(result.error)
+      const error = getErrorMessage(result)
+      if (error) {
+        setMessage(error)
       } else {
         // Dateiauswahl zurücksetzen
         if (fileInputRef.current) fileInputRef.current.value = ""
@@ -61,8 +63,9 @@ export function AttachmentSection({ sessionId, attachments }: Props) {
     setMessage(null)
     startTransition(async () => {
       const result = await deleteAttachment(deleteCandidate.id)
-      if (result.error) {
-        setMessage(result.error)
+      const error = getErrorMessage(result)
+      if (error) {
+        setMessage(error)
       }
       setDeleteCandidate(null)
     })

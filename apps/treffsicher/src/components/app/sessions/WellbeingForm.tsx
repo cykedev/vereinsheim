@@ -38,19 +38,18 @@ export function WellbeingForm({ sessionId, initialData, onSuccess, onCancel }: P
 
   useEffect(() => {
     // Section-Wrapper soll nur nach persistiertem Save schließen.
-    if (state?.success) {
+    if (state && "success" in state) {
       toast.success("Befinden gespeichert.")
       onSuccess?.()
     } else if (generalError) {
       toast.error(generalError)
     }
-  }, [state?.success, generalError, onSuccess])
+  }, [state, generalError, onSuccess])
 
   return (
     <form action={formAction} className="space-y-4">
       <ActionFormMessages
-        error={state?.error}
-        success={state?.success}
+        state={state}
         showInlineSuccess={!onSuccess}
         successMessage="Befinden gespeichert."
       />

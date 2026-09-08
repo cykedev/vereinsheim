@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@vereinsheim/ui/alert-dialog"
 import { Button } from "@vereinsheim/ui/button"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 interface Props {
   sessionId: string
@@ -33,13 +34,12 @@ export function DeleteSessionButton({ sessionId }: Props) {
     setMessage(null)
     startTransition(async () => {
       const result = await deleteSession(sessionId)
-      if (result.error) {
-        setMessage(result.error)
+      const error = getErrorMessage(result)
+      if (error) {
+        setMessage(error)
         return
       }
-      if (result.success) {
-        router.push("/sessions")
-      }
+      router.push("/sessions")
     })
   }
 
