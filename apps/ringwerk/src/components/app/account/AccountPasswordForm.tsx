@@ -40,7 +40,7 @@ export function AccountPasswordForm() {
   }
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="max-w-xl space-y-4">
       <div className="space-y-2">
         <Label htmlFor="currentPassword">Aktuelles Passwort</Label>
         <div className="relative">
