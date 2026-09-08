@@ -23,10 +23,6 @@ export interface SchedulePdfProps {
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function formatDate(date: Date, timeZone: string): string {
-  return formatDateOnly(date, timeZone)
-}
-
 function rankBadgeColor(rank: number): string {
   if (rank === 1) return "#b8860b"
   if (rank === 2) return "#6b7280"
@@ -53,7 +49,9 @@ function PdfHeader({
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Spielplan &amp; Tabelle</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt, displayTimeZone)}</Text>
+      <Text style={styles.headerDate}>
+        Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
+      </Text>
     </View>
   )
 }
@@ -319,7 +317,9 @@ export function SchedulePdf({
           <MatchupSection
             title="Hinrunde"
             subtitle={
-              firstLegDeadline ? `Abgabe bis ${formatDate(firstLegDeadline, displayTimeZone)}` : ""
+              firstLegDeadline
+                ? `Abgabe bis ${formatDateOnly(firstLegDeadline, displayTimeZone)}`
+                : ""
             }
             matchups={firstLeg}
             scoringType={scoringType}
@@ -332,7 +332,7 @@ export function SchedulePdf({
             title="Rückrunde"
             subtitle={
               secondLegDeadline
-                ? `Abgabe bis ${formatDate(secondLegDeadline, displayTimeZone)}`
+                ? `Abgabe bis ${formatDateOnly(secondLegDeadline, displayTimeZone)}`
                 : ""
             }
             matchups={secondLeg}

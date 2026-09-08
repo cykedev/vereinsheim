@@ -104,3 +104,14 @@ export function formatIsoDate(date: Date, timeZone: string): string {
 export function formatInteger(value: number): string {
   return new Intl.NumberFormat(APP_LOCALE, { maximumFractionDigits: 0 }).format(value)
 }
+
+/**
+ * Zahl mit vorhandenen Dezimalstellen: 1234.5 → "1.234,5".
+ *
+ * Ersetzt `value.toLocaleString()` — das formatiert in der Locale des
+ * *Browsers*, sodass dieselbe Zahl je nach Systemsprache "1,234.5" oder
+ * "1.234,5" anzeigt.
+ */
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat(APP_LOCALE).format(value)
+}

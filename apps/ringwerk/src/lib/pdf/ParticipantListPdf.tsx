@@ -7,10 +7,6 @@ const W = { name: 200, disziplin: 115, einlage: 60, teilnahme: 70, geschossen: 7
 const ROW_H = 28
 const EMPTY_ROWS = 10
 
-function formatDate(date: Date, timeZone: string): string {
-  return formatDateOnly(date, timeZone)
-}
-
 function Checkbox(): ReactElement {
   return <View style={styles.checkbox} />
 }
@@ -59,7 +55,9 @@ function PdfHeader({
         <Text style={styles.headerTitle}>Teilnehmerliste</Text>
         <Text style={styles.headerSubtitle}>Aktive Vereinsmitglieder</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt, displayTimeZone)}</Text>
+      <Text style={styles.headerDate}>
+        Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
+      </Text>
     </View>
   )
 }

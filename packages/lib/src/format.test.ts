@@ -6,6 +6,7 @@ import {
   formatDateTime,
   formatDateTimeSeconds,
   formatInteger,
+  formatNumber,
   formatIsoDate,
   formatLongDateTime,
   formatShortDate,
@@ -93,5 +94,18 @@ describe("formatInteger", () => {
 
   it("rundet auf ganze Zahlen", () => {
     expect(formatInteger(12.6)).toBe("13")
+  })
+})
+
+describe("formatNumber", () => {
+  it("behaelt Dezimalstellen und nutzt deutsche Trenner", () => {
+    expect(formatNumber(1234.5)).toBe("1.234,5")
+    expect(formatNumber(96.3)).toBe("96,3")
+    expect(formatNumber(1000)).toBe("1.000")
+  })
+
+  it("haengt nicht an der Locale des Browsers", () => {
+    // Der Wert ist unabhaengig von navigator.language / System-Locale.
+    expect(formatNumber(1234.5)).not.toBe("1,234.5")
   })
 })

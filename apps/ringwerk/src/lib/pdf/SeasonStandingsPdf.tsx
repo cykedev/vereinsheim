@@ -25,10 +25,6 @@ export interface SeasonStandingsPdfProps {
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function formatDate(date: Date, timeZone: string): string {
-  return formatDateOnly(date, timeZone)
-}
-
 function rankBadgeColor(rank: number): string {
   if (rank === 1) return PDF_COLORS.gold
   if (rank === 2) return PDF_COLORS.silver
@@ -271,8 +267,8 @@ export function SeasonStandingsPdf({
 
   let seasonRange = ""
   if (seasonStart) {
-    seasonRange = formatDate(seasonStart, displayTimeZone)
-    if (seasonEnd) seasonRange += ` – ${formatDate(seasonEnd, displayTimeZone)}`
+    seasonRange = formatDateOnly(seasonStart, displayTimeZone)
+    if (seasonEnd) seasonRange += ` – ${formatDateOnly(seasonEnd, displayTimeZone)}`
   }
 
   return (
@@ -288,7 +284,7 @@ export function SeasonStandingsPdf({
             </Text>
           </View>
           <Text style={styles.headerDate}>
-            Erstellt: {formatDate(generatedAt, displayTimeZone)}
+            Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
           </Text>
         </View>
 

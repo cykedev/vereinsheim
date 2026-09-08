@@ -7,10 +7,6 @@ const W = { nr: 30, name: 185, disziplin: 110, einlage: 60, teilnahme: 65, gesch
 const ROW_H = 28
 const EMPTY_ROWS = 10
 
-function formatDateDe(date: Date, timeZone: string): string {
-  return formatDateOnly(date, timeZone)
-}
-
 function Checkbox(): ReactElement {
   return <View style={styles.checkbox} />
 }
@@ -60,7 +56,7 @@ function PdfHeader({
   displayTimeZone,
 }: PdfHeaderProps): ReactElement {
   const subtitle = eventDate
-    ? `${competitionName} · ${formatDateDe(eventDate, displayTimeZone)}`
+    ? `${competitionName} · ${formatDateOnly(eventDate, displayTimeZone)}`
     : competitionName
   return (
     <View style={styles.headerBlock}>
@@ -68,7 +64,9 @@ function PdfHeader({
         <Text style={styles.headerTitle}>Starterliste</Text>
         <Text style={styles.headerSubtitle}>{subtitle}</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDateDe(generatedAt, displayTimeZone)}</Text>
+      <Text style={styles.headerDate}>
+        Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
+      </Text>
     </View>
   )
 }

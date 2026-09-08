@@ -3,6 +3,7 @@
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
+import { formatNumber } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -248,7 +249,7 @@ function ChartTooltipContent({
                     </div>
                     {item.value !== undefined && item.value !== null && (
                       <span className="text-foreground font-mono font-medium tabular-nums">
-                        {item.value.toLocaleString()}
+                        {formatNumber(Number(item.value))}
                       </span>
                     )}
                   </div>
