@@ -8,7 +8,7 @@ export default async function AdminAuditLogPage() {
   const entries = await getAuditLogs()
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1">

@@ -20,10 +20,8 @@ export default async function EditUserPage({ params }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
-      <div className="mb-6">
-        <PageHeader title="Nutzer bearbeiten" />
-      </div>
+    <div className="mx-auto max-w-lg space-y-6">
+      <PageHeader title="Nutzer bearbeiten" />
       <UserEditForm user={user} action={action} />
     </div>
   )

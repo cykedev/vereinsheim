@@ -20,10 +20,8 @@ export default async function EditParticipantPage({ params }: Props) {
   const action = updateParticipant.bind(null, id)
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
-      <div className="mb-6">
-        <PageHeader title="Teilnehmer bearbeiten" />
-      </div>
+    <div className="mx-auto max-w-lg space-y-6">
+      <PageHeader title="Teilnehmer bearbeiten" />
       <ParticipantForm participant={participant} action={action} />
     </div>
   )

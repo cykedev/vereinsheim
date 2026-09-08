@@ -59,7 +59,7 @@ export default async function SeriesPage({ params }: Props) {
   const isMixed = !competition.disciplineId
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="space-y-6">
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
           <Link href="/competitions">
@@ -196,7 +196,7 @@ async function SeasonSeriesPageContent({ id }: { id: string }) {
   const totalSeries = participants.reduce((sum, p) => sum + p.series.length, 0)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="space-y-6">
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
           <Link href="/competitions">
