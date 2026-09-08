@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { redirect } from "next/navigation"
 import { Trophy } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
@@ -23,9 +22,12 @@ import { EventRankingTable } from "@/components/app/series/EventRankingTable"
 import { EventTeamRankingTable } from "@/components/app/series/EventTeamRankingTable"
 import { SeasonStandingsTable } from "@/components/app/series/SeasonStandingsTable"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Button } from "@vereinsheim/ui/button"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { DashboardCompetitionCard } from "@/components/app/dashboard/DashboardCompetitionCard"
+
+// Vorschau-Länge der Tabellen auf dem Dashboard; der Rest steht auf der Detailseite.
+const PREVIEW_ROWS = 6
 
 // ─── DashboardPage ───────────────────────────────────────────────────────────
 
@@ -103,7 +105,7 @@ export default async function DashboardPage() {
           icon={Trophy}
         />
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-4">
           {/* Liga-Wettbewerbe: Tabelle / Playoffs */}
           {leagueData.map(({ competition, isBestOf, standings, bestOfStandings, bracket }) => {
             const playoffsStarted =
@@ -111,120 +113,110 @@ export default async function DashboardPage() {
                 bracket.quarterFinals.length +
                 bracket.semiFinals.length >
                 0 || bracket.final !== null
+            const rows = isBestOf ? bestOfStandings : standings
 
             return (
-              <div key={competition.id} className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-lg font-semibold">{competition.name}</h2>
-                  <Badge variant="secondary" className="text-xs">
-                    {competition.discipline?.name ?? "Gemischt"}
-                  </Badge>
-                </div>
-
-                {playoffsStarted ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1.5 text-sm font-semibold">
-                      <Trophy className="h-4 w-4 text-muted-foreground" />
-                      Playoffs
-                    </div>
-                    <PlayoffBracket
-                      bracket={bracket}
-                      canManage={false}
-                      compact={true}
-                      scoringType={getEffectiveScoringType(
-                        competition.scoringMode,
-                        competition.discipline
-                      )}
-                      shotsPerSeries={competition.shotsPerSeries}
-                    />
-                    <div className="flex justify-end">
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/competitions/${competition.id}/playoffs`}>Details →</Link>
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {isBestOf ? (
-                      <BestOfStandingsTable rows={bestOfStandings} />
-                    ) : (
-                      <StandingsTable rows={standings} />
+              <DashboardCompetitionCard
+                key={competition.id}
+                title={competition.name}
+                href={`/competitions/${competition.id}/${playoffsStarted ? "playoffs" : "schedule"}`}
+                badges={
+                  <>
+                    <Badge variant="secondary" className="text-xs">
+                      {competition.discipline?.name ?? "Gemischt"}
+                    </Badge>
+                    {playoffsStarted && (
+                      <Badge variant="outline" className="text-xs">
+                        <Trophy className="mr-1 h-3 w-3" />
+                        Playoffs
+                      </Badge>
                     )}
-                    <div className="flex justify-end">
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/competitions/${competition.id}/schedule`}>Details →</Link>
-                      </Button>
-                    </div>
-                  </div>
+                  </>
+                }
+                moreCount={playoffsStarted ? undefined : Math.max(0, rows.length - PREVIEW_ROWS)}
+              >
+                {playoffsStarted ? (
+                  <PlayoffBracket
+                    bracket={bracket}
+                    canManage={false}
+                    compact={true}
+                    scoringType={getEffectiveScoringType(
+                      competition.scoringMode,
+                      competition.discipline
+                    )}
+                    shotsPerSeries={competition.shotsPerSeries}
+                  />
+                ) : isBestOf ? (
+                  <BestOfStandingsTable rows={bestOfStandings.slice(0, PREVIEW_ROWS)} />
+                ) : (
+                  <StandingsTable rows={standings.slice(0, PREVIEW_ROWS)} />
                 )}
-              </div>
+              </DashboardCompetitionCard>
             )
           })}
 
           {/* Events: Rangliste */}
           {eventData.map(({ competition: c, ranked, teamRanked }) => {
             const isTeamEvent = (c.teamSize ?? 0) >= 2
+            const rows = isTeamEvent ? teamRanked : ranked
+
             return (
-              <div key={c.id} className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-lg font-semibold">{c.name}</h2>
-                  <Badge variant="secondary" className="text-xs">
-                    {c.discipline?.name ?? "Gemischt"}
-                  </Badge>
-                  {isTeamEvent && (
-                    <Badge variant="outline" className="text-xs">
-                      Teams
+              <DashboardCompetitionCard
+                key={c.id}
+                title={c.name}
+                href={`/competitions/${c.id}/ranking`}
+                badges={
+                  <>
+                    <Badge variant="secondary" className="text-xs">
+                      {c.discipline?.name ?? "Gemischt"}
                     </Badge>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  {isTeamEvent ? (
-                    <EventTeamRankingTable
-                      entries={teamRanked}
-                      scoringMode={c.scoringMode}
-                      teamScoring={c.teamScoring ?? "SUM"}
-                    />
-                  ) : (
-                    <EventRankingTable
-                      entries={ranked}
-                      scoringMode={c.scoringMode}
-                      targetValueType={c.targetValueType}
-                      isMixed={!c.discipline}
-                    />
-                  )}
-                  <div className="flex justify-end">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/competitions/${c.id}/ranking`}>Rangliste →</Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                    {isTeamEvent && (
+                      <Badge variant="outline" className="text-xs">
+                        Teams
+                      </Badge>
+                    )}
+                  </>
+                }
+                moreCount={Math.max(0, rows.length - PREVIEW_ROWS)}
+              >
+                {isTeamEvent ? (
+                  <EventTeamRankingTable
+                    entries={teamRanked.slice(0, PREVIEW_ROWS)}
+                    scoringMode={c.scoringMode}
+                    teamScoring={c.teamScoring ?? "SUM"}
+                  />
+                ) : (
+                  <EventRankingTable
+                    entries={ranked.slice(0, PREVIEW_ROWS)}
+                    scoringMode={c.scoringMode}
+                    targetValueType={c.targetValueType}
+                    isMixed={!c.discipline}
+                  />
+                )}
+              </DashboardCompetitionCard>
             )
           })}
 
           {/* Saisons: Rangliste */}
           {seasonData.map(({ competition: c, standings, minSeries }) => (
-            <div key={c.id} className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-semibold">{c.name}</h2>
+            <DashboardCompetitionCard
+              key={c.id}
+              title={c.name}
+              href={`/competitions/${c.id}/standings`}
+              badges={
                 <Badge variant="secondary" className="text-xs">
                   {c.discipline?.name ?? "Gemischt"}
                 </Badge>
-              </div>
-              <div className="space-y-2">
-                <SeasonStandingsTable
-                  entries={standings}
-                  minSeries={minSeries}
-                  scoringMode={c.scoringMode}
-                  isMixed={!c.discipline}
-                />
-                <div className="flex justify-end">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/competitions/${c.id}/standings`}>Rangliste →</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
+              }
+              moreCount={Math.max(0, standings.length - PREVIEW_ROWS)}
+            >
+              <SeasonStandingsTable
+                entries={standings.slice(0, PREVIEW_ROWS)}
+                minSeries={minSeries}
+                scoringMode={c.scoringMode}
+                isMixed={!c.discipline}
+              />
+            </DashboardCompetitionCard>
           ))}
         </div>
       )}
