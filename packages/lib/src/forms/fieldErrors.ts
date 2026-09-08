@@ -21,3 +21,18 @@ export function getGeneralError(state: FieldErrorSource): string | undefined {
   if (!state || !("error" in state) || !state.error) return undefined
   return typeof state.error === "string" ? state.error : undefined
 }
+
+/**
+ * Fehlermeldung eines ActionResult als **Text** — für Stellen, die genau eine
+ * Zeile anzeigen (Toast, Inline-Meldung). Ein Feldfehler-Objekt wird auf seinen
+ * ersten Eintrag reduziert; ohne Fehler `undefined`.
+ */
+export function getErrorMessage(
+  state: FieldErrorSource,
+  fallback = "Aktion fehlgeschlagen."
+): string | undefined {
+  if (!state || !("error" in state) || !state.error) return undefined
+  if (typeof state.error === "string") return state.error
+  const firstFieldError = Object.values(state.error).find((messages) => messages?.length)
+  return firstFieldError?.[0] ?? fallback
+}

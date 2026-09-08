@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react"
 import { toast } from "sonner"
 import { createSession, updateSession } from "@/lib/sessions/actions"
 import { toIsoFromDateTimeLocalValue } from "@/components/app/session-form/utils"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 interface Params {
   sessionId?: string
@@ -73,10 +74,11 @@ export function useSessionFormSubmit({
       ? await updateSession(sessionId, formData)
       : await createSession(formData)
 
-    if (result.error) {
+    const error = getErrorMessage(result)
+    if (error) {
       setSubmitted(false)
-      setFormError(result.error)
-      toast.error(result.error)
+      setFormError(error)
+      toast.error(error)
       setPending(false)
       return
     }
