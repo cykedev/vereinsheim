@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     "./theme.css": "./theme.css",
+    "./admin/LoginRateLimitInsights": "./src/admin/LoginRateLimitInsights.tsx",
+    "./admin/LoginRateLimitTable": "./src/admin/LoginRateLimitTable.tsx",
     "./alert-dialog": "./src/ui/alert-dialog.tsx",
     "./badge": "./src/ui/badge.tsx",
     "./button": "./src/ui/button.tsx",

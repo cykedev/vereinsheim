@@ -7,15 +7,18 @@ import { Badge } from "@vereinsheim/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 import { UserRowActions } from "@/components/app/users/UserRowActions"
 import { AdminLoginRateLimitTable } from "@/components/app/admin/AdminLoginRateLimitTable"
-import { AdminLoginRateLimitInsightsPanel } from "@/components/app/admin/AdminLoginRateLimitInsights"
+import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsights"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export default async function AdminUsersPage() {
   const [users, rateLimitInsights] = await Promise.all([
     getUsers(),
     getAdminLoginRateLimitInsights(),
   ])
+
+  const displayTimeZone = getDisplayTimeZone()
 
   const active = users.filter((u) => u.isActive)
   const inactive = users.filter((u) => !u.isActive)
@@ -121,7 +124,10 @@ export default async function AdminUsersPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <AdminLoginRateLimitTable buckets={rateLimitInsights.activeBlockedBuckets} />
+          <AdminLoginRateLimitTable
+            buckets={rateLimitInsights.activeBlockedBuckets}
+            displayTimeZone={displayTimeZone}
+          />
         </CardContent>
       </Card>
 
@@ -130,7 +136,7 @@ export default async function AdminUsersPage() {
           <CardTitle>Login-Rate-Limit Insights</CardTitle>
         </CardHeader>
         <CardContent>
-          <AdminLoginRateLimitInsightsPanel insights={rateLimitInsights} />
+          <LoginRateLimitInsights insights={rateLimitInsights} displayTimeZone={displayTimeZone} />
         </CardContent>
       </Card>
     </div>
