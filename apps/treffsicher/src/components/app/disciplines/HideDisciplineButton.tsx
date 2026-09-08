@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import { toggleHiddenDiscipline } from "@/lib/disciplines/actions"
+import { toast } from "sonner"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 interface Props {
   disciplineId: string
@@ -25,6 +27,7 @@ export function HideDisciplineButton({ disciplineId, initialHidden }: Props) {
       const result = await toggleHiddenDiscipline(disciplineId)
       if ("error" in result) {
         setIsHidden(previous)
+        toast.error(getErrorMessage(result, "Sichtbarkeit konnte nicht geändert werden."))
         return
       }
 

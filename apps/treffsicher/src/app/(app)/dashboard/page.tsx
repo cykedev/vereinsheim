@@ -11,9 +11,7 @@ import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 import { getAuthSession } from "@/lib/auth-helpers"
-import { selectDashboardData } from "@/lib/dashboard/selectDashboardData"
-import { getGoalsWithAssignments } from "@/lib/goals/actions"
-import { getSessions } from "@/lib/sessions/actions"
+import { getDashboardData } from "@/lib/dashboard/queries"
 import { GOAL_TYPE_LABELS } from "@/components/app/goals/goal-card-section/format"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
 import { SessionsList } from "@/components/app/sessions/list/SessionsList"
@@ -43,10 +41,8 @@ export default async function DashboardPage() {
   const displayTimeZone = getDisplayTimeZone()
   const displayName = session.user.name ?? session.user.email
 
-  const [sessions, goals] = await Promise.all([getSessions(), getGoalsWithAssignments()])
-  const { recentSessions, activeGoals, sessionsLast30Days, sessionsTotal } = selectDashboardData(
-    sessions,
-    goals,
+  const { recentSessions, activeGoals, sessionsLast30Days, sessionsTotal } = await getDashboardData(
+    session.user.id,
     new Date()
   )
 

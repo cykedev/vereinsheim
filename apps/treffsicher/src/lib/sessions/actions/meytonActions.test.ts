@@ -167,9 +167,10 @@ describe("previewMeytonImportAction", () => {
     formData.set("pdfUrl", "https://example.com/file.pdf")
     const result = await previewMeytonImportAction(formData)
 
-    expect(result.error).toBe(
-      "Die PDF konnte nicht gelesen werden (kein textbasiertes Meyton-PDF oder defekte Datei)."
-    )
+    expect(result).toEqual({
+      error:
+        "Die PDF konnte nicht gelesen werden (kein textbasiertes Meyton-PDF oder defekte Datei).",
+    })
   })
 
   it("reicht eigene Limit-Meldungen an den Nutzer durch", async () => {
@@ -194,7 +195,7 @@ describe("previewMeytonImportAction", () => {
     formData.set("pdfUrl", "https://example.com/file.pdf")
     const result = await previewMeytonImportAction(formData)
 
-    expect(result.error).toBe("Die PDF enthaelt zu viel Text.")
+    expect(result).toEqual({ error: "Die PDF enthaelt zu viel Text." })
   })
 
   it("liefert Fehler wenn keine Serien gefunden werden", async () => {
@@ -280,6 +281,7 @@ describe("previewMeytonImportAction", () => {
     const result = await previewMeytonImportAction(formData)
 
     expect(result).toEqual({
+      success: true,
       data: {
         date: "2026-03-05T19:20",
         hitLocation: {

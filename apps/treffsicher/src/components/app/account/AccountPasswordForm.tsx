@@ -27,7 +27,7 @@ export function AccountPasswordForm() {
       toast.error(generalError)
       return
     }
-    if (!succeeded) return
+    if (!(state && "success" in state)) return
 
     toast.success("Passwort geändert.")
     let canceled = false
@@ -43,7 +43,7 @@ export function AccountPasswordForm() {
     return () => {
       canceled = true
     }
-  }, [succeeded, generalError])
+  }, [state, generalError])
 
   const isBusy = pending || signingOut
   const inputType = showPasswords ? "text" : "password"

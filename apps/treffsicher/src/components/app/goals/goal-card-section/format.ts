@@ -1,8 +1,12 @@
+import { formatIsoDate } from "@vereinsheim/lib/format"
+
 export const GOAL_TYPE_LABELS: Record<string, string> = {
   RESULT: "Ergebnisziel",
   PROCESS: "Prozessziel",
 }
 
-export function toDateInputValue(date: Date): string {
-  return new Date(date).toISOString().slice(0, 10)
+// `toISOString()` schneidet in UTC: ein auf 22:00 UTC gespeicherter Zielrand
+// erschien im Datumsfeld einen Tag zu frueh.
+export function toDateInputValue(date: Date, displayTimeZone: string): string {
+  return formatIsoDate(new Date(date), displayTimeZone)
 }

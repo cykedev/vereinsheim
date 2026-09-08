@@ -30,18 +30,16 @@ export function AdminEditUserForm({ user }: Props) {
 
   const generalError = getGeneralError(state)
 
-  const succeeded = state !== null && "success" in state
-
   useEffect(() => {
     if (generalError) {
       toast.error(generalError)
       return
     }
     // Nach erfolgreichem Save zurück zur Übersicht, damit Tabelle und Detailzustand sofort konsistent sind.
-    if (!succeeded) return
+    if (!(state && "success" in state)) return
     toast.success("Nutzer gespeichert.")
     router.push("/admin")
-  }, [succeeded, generalError, router])
+  }, [state, generalError, router])
 
   return (
     <form action={formAction} className="max-w-3xl space-y-4">

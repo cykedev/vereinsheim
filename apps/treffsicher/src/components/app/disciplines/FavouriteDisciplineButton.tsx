@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { Star } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import { setFavouriteDiscipline } from "@/lib/disciplines/actions"
+import { toast } from "sonner"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 interface Props {
   disciplineId: string
@@ -25,6 +27,7 @@ export function FavouriteDisciplineButton({ disciplineId, initialFavourite }: Pr
       const result = await setFavouriteDiscipline(disciplineId)
       if ("error" in result) {
         setIsFavourite(previous)
+        toast.error(getErrorMessage(result, "Favorit konnte nicht gesetzt werden."))
         return
       }
 

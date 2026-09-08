@@ -56,7 +56,9 @@ export type SessionDetail = TrainingSession & {
 }
 
 // Kanon liegt in @/lib/types.
-export type { ActionResult } from "@/lib/types"
+import type { ActionResult } from "@/lib/types"
+
+export type { ActionResult }
 
 export type MeytonImportPreviewSeries = {
   nr: number
@@ -77,7 +79,5 @@ export type MeytonImportPreview = {
   hitLocation: MeytonImportPreviewHitLocation | null
 }
 
-export type MeytonImportPreviewResult = {
-  error?: string
-  data?: MeytonImportPreview
-}
+// Auch die Vorschau ist eine Server Action und folgt dem Kanon.
+export type MeytonImportPreviewResult = ActionResult<MeytonImportPreview>
