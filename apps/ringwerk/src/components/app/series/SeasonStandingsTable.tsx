@@ -135,13 +135,7 @@ export function SeasonStandingsTable({
                 </td>
                 {minSeries !== null && (
                   <td className="px-3 py-2 text-right tabular-nums hidden sm:table-cell">
-                    <span
-                      className={
-                        qualified
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-rose-500 dark:text-rose-400"
-                      }
-                    >
+                    <span className={qualified ? "text-success" : "text-destructive"}>
                       {entry.seriesCount}/{minSeries}
                     </span>
                   </td>

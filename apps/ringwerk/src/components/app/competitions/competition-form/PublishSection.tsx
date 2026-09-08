@@ -65,7 +65,7 @@ export function PublishSection({ form, competition }: Props) {
               </p>
             )}
             {isEdit && competition?.publicSlug && competition.publicSlug !== publicSlug && (
-              <p className="text-xs text-amber-700 dark:text-amber-400">
+              <p className="text-xs text-warning">
                 Hinweis: Die bestehende öffentliche URL (/api/public/c/
                 {competition.publicSlug}/pdf) wird ungültig.
               </p>

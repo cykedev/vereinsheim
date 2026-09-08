@@ -39,9 +39,9 @@ function formatCount(value: number): string {
 
 function getTypeBadgeClass(type: AdminLoginRateLimitBucket["type"]): string {
   if (type === "IP") {
-    return "border-amber-800 bg-amber-950 text-amber-300"
+    return "border-warning/40 bg-warning/10 text-warning"
   }
-  return "border-sky-800 bg-sky-950 text-sky-300"
+  return "border-info/40 bg-info/10 text-info"
 }
 
 export function AdminLoginRateLimitTable({ buckets }: Props) {

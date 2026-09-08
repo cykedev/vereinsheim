@@ -20,10 +20,10 @@ export const ROUND_LABEL: Record<string, string> = {
 
 // Gold / Silber / Bronze je nach Runde
 export const WINNER_BADGE: Record<string, string> = {
-  FINAL: "border-yellow-400/60 bg-yellow-400/10 text-yellow-600 dark:text-yellow-400",
-  SEMI_FINAL: "border-slate-400/60 bg-slate-400/10 text-slate-500 dark:text-slate-300",
-  QUARTER_FINAL: "border-orange-500/60 bg-orange-500/10 text-orange-600 dark:text-orange-400",
-  EIGHTH_FINAL: "border-blue-500/60 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  FINAL: "border-rank-1/60 bg-rank-1/10 text-rank-1",
+  SEMI_FINAL: "border-rank-2/60 bg-rank-2/10 text-rank-2",
+  QUARTER_FINAL: "border-rank-3/60 bg-rank-3/10 text-rank-3",
+  EIGHTH_FINAL: "border-info/60 bg-info/10 text-info",
 }
 
 export function finaleHintText(

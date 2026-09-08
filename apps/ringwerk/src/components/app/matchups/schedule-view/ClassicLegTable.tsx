@@ -115,7 +115,7 @@ export function ClassicLegTable({
                   className={`transition-colors ${isVoid ? "opacity-50" : "hover:bg-muted/20"}`}
                 >
                   <td
-                    className={`px-2 py-3 sm:px-4 ${homeOutcome === "WIN" && !isVoid ? "bg-emerald-500/10" : ""}`}
+                    className={`px-2 py-3 sm:px-4 ${homeOutcome === "WIN" && !isVoid ? "bg-success/10" : ""}`}
                   >
                     <ParticipantResult
                       participant={m.homeParticipant}
@@ -125,7 +125,7 @@ export function ClassicLegTable({
                     />
                   </td>
                   <td
-                    className={`px-2 py-3 sm:px-4 ${awayOutcome === "WIN" && !isVoid ? "bg-emerald-500/10" : ""}`}
+                    className={`px-2 py-3 sm:px-4 ${awayOutcome === "WIN" && !isVoid ? "bg-success/10" : ""}`}
                   >
                     {m.awayParticipant ? (
                       <ParticipantResult

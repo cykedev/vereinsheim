@@ -46,7 +46,7 @@ export function ParticipantResult({
 export function StatusBadge({ status }: { status: string }) {
   if (status === "COMPLETED") {
     return (
-      <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+      <span className="inline-flex items-center rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
         ✓
       </span>
     )

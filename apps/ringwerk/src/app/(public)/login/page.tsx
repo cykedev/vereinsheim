@@ -62,7 +62,7 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {passwordChanged && (
-                <p className="text-sm text-emerald-500">
+                <p className="text-sm text-success">
                   Passwort erfolgreich geändert. Bitte mit dem neuen Passwort anmelden.
                 </p>
               )}
