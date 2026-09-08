@@ -45,7 +45,7 @@ export function FavouriteDisciplineButton({ disciplineId, initialFavourite }: Pr
     >
       <Star
         className={`h-4 w-4 transition-colors ${
-          isFavourite ? "text-yellow-500" : "text-muted-foreground"
+          isFavourite ? "text-warning" : "text-muted-foreground"
         }`}
         fill={isFavourite ? "currentColor" : "none"}
       />

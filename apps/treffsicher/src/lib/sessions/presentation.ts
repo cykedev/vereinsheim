@@ -10,10 +10,10 @@ export const SESSION_TYPE_LABELS: Record<SessionType, string> = {
 }
 
 export const SESSION_TYPE_BADGE_CLASS: Record<SessionType, string> = {
-  TRAINING: "border-blue-800   bg-blue-950   text-blue-300",
-  WETTKAMPF: "border-amber-800  bg-amber-950  text-amber-300",
-  TROCKENTRAINING: "border-emerald-800 bg-emerald-950 text-emerald-300",
-  MENTAL: "border-purple-800  bg-purple-950  text-purple-300",
+  TRAINING: "border-info/40 bg-info/10 text-info",
+  WETTKAMPF: "border-warning/40 bg-warning/10 text-warning",
+  TROCKENTRAINING: "border-success/40 bg-success/10 text-success",
+  MENTAL: "border-chart-4/40 bg-chart-4/10 text-chart-4",
 }
 
 export const SESSION_TYPES_WITH_DISCIPLINE: SessionType[] = ["TRAINING", "WETTKAMPF"]

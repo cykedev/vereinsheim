@@ -39,7 +39,7 @@ export function AdminCreateUserForm() {
   return (
     <form ref={formRef} action={formAction} className="max-w-3xl space-y-4">
       {generalError && <p className="text-sm text-destructive">{generalError}</p>}
-      {state?.success && <p className="text-sm text-emerald-500">Nutzer wurde angelegt.</p>}
+      {state?.success && <p className="text-sm text-success">Nutzer wurde angelegt.</p>}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="space-y-2 md:col-span-1">

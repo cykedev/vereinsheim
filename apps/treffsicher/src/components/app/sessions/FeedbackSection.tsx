@@ -104,7 +104,7 @@ export function FeedbackSection({ sessionId, initialData }: Props) {
             <div className="flex items-center gap-2">
               <span
                 className={`inline-block h-2.5 w-2.5 rounded-full ${
-                  initialData.goalAchieved ? "bg-green-500" : "bg-amber-500"
+                  initialData.goalAchieved ? "bg-success" : "bg-warning"
                 }`}
               />
               <span className="text-sm font-medium">

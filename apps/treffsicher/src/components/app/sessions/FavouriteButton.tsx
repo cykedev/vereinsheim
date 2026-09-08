@@ -41,7 +41,7 @@ export function FavouriteButton({ sessionId, initialFavourite }: Props) {
     >
       <Heart
         className={`h-4 w-4 transition-colors ${
-          isFavourite ? "fill-red-500 text-red-500" : "text-muted-foreground"
+          isFavourite ? "fill-destructive text-destructive" : "text-muted-foreground"
         }`}
       />
     </Button>

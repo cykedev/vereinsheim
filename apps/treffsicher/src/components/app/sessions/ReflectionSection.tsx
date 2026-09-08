@@ -89,7 +89,7 @@ export function ReflectionSection({ sessionId, initialData }: Props) {
       <div className="flex items-center gap-2 text-sm">
         <span
           className={`inline-block h-2 w-2 rounded-full ${
-            initialData.routineFollowed !== false ? "bg-green-500" : "bg-amber-500"
+            initialData.routineFollowed !== false ? "bg-success" : "bg-warning"
           }`}
         />
         <span className="text-muted-foreground">
