@@ -21,6 +21,7 @@ import {
   formatSignedMillimeters,
 } from "@/components/app/statistics-charts/utils"
 import type { HitLocationTrendModel } from "@/components/app/statistics-charts/tabs/types"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 interface Props {
   model: HitLocationTrendModel
@@ -72,12 +73,7 @@ export function HitLocationTrendChart({ model }: Props) {
                 const index = Number(payload?.[0]?.payload?.i)
                 const dateValue = hitLocationTrendData[index]?.date
                 if (!dateValue) return ""
-                return new Intl.DateTimeFormat("de-CH", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  timeZone: displayTimeZone,
-                }).format(new Date(dateValue))
+                return formatDateOnly(new Date(dateValue), displayTimeZone)
               }}
               formatter={(value, name) => (
                 <div className="flex w-full items-center justify-between gap-6">

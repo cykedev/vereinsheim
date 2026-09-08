@@ -7,6 +7,7 @@ import {
   computeCenteredAxis,
   createTrendBandDistanceOptions,
 } from "@/components/app/statistics-charts/utils"
+import { formatShortDay } from "@vereinsheim/lib/format"
 
 interface Params {
   filteredHitLocationsForTrend: HitLocationPoint[]
@@ -74,12 +75,6 @@ export function useHitLocationTrendState({
   const hitLocationTrendData = useMemo<HitLocationTrendDataPoint[]>(() => {
     if (filteredHitLocations.length === 0) return []
 
-    const formatter = new Intl.DateTimeFormat("de-CH", {
-      day: "2-digit",
-      month: "2-digit",
-      timeZone: displayTimeZone,
-    })
-
     return filteredHitLocations.map((point, i) => {
       const trendEntry = hitLocationTrendBySessionId.get(point.sessionId)
       const xTrendLow = trendEntry?.xTrendLow ?? null
@@ -90,7 +85,7 @@ export function useHitLocationTrendState({
       return {
         i,
         date: point.date,
-        dateLabel: formatter.format(new Date(point.date)),
+        dateLabel: formatShortDay(new Date(point.date), displayTimeZone),
         x: point.x,
         y: point.y,
         xTrend: trendEntry?.xTrend ?? null,

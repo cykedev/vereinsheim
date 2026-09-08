@@ -1,19 +1,11 @@
-export function formatDateTime(date: Date): string {
-  return new Intl.DateTimeFormat("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date))
+import { formatDateTime as formatDateTimeShared, formatIsoDate } from "@vereinsheim/lib/format"
+
+export function formatDateTime(date: Date, displayTimeZone: string): string {
+  return formatDateTimeShared(new Date(date), displayTimeZone)
 }
 
-export function formatDateForFile(date: Date): string {
-  return new Intl.DateTimeFormat("sv-SE", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(date))
+export function formatDateForFile(date: Date, displayTimeZone: string): string {
+  return formatIsoDate(new Date(date), displayTimeZone)
 }
 
 export function formatScore(score: number | null, isDecimal: boolean): string {

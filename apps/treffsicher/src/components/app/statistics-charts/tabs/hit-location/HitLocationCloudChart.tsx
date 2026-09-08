@@ -17,6 +17,7 @@ import {
   renderScatterPoint,
 } from "@/components/app/statistics-charts/utils"
 import type { HitLocationCloudModel } from "@/components/app/statistics-charts/tabs/types"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 interface Props {
   model: HitLocationCloudModel
@@ -95,12 +96,7 @@ export function HitLocationCloudChart({ model }: Props) {
                   // Tooltip-Datum immer im gleichen Zeitzonenbezug wie die übrigen Statistikachsen anzeigen.
                   const dateValue = payload?.[0]?.payload?.date
                   if (!dateValue) return ""
-                  return new Intl.DateTimeFormat("de-CH", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    timeZone: displayTimeZone,
-                  }).format(new Date(dateValue as Date))
+                  return formatDateOnly(new Date(dateValue as Date), displayTimeZone)
                 }}
                 formatter={(value, name) => (
                   <div className="flex w-full items-center justify-between gap-6">

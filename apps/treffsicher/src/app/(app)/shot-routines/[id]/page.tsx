@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Pencil } from "lucide-react"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getShotRoutineById } from "@/lib/shot-routines/actions"
 import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
@@ -16,6 +17,8 @@ export default async function ShotRoutineDetailPage({
 }) {
   const session = await getAuthSession()
   if (!session) redirect("/login")
+
+  const displayTimeZone = getDisplayTimeZone()
 
   const { id } = await params
   const routine = await getShotRoutineById(id)
@@ -49,7 +52,12 @@ export default async function ShotRoutineDetailPage({
         </div>
       </div>
 
-      <ShotRoutineView steps={steps} createdAt={routine.createdAt} updatedAt={routine.updatedAt} />
+      <ShotRoutineView
+        steps={steps}
+        createdAt={routine.createdAt}
+        updatedAt={routine.updatedAt}
+        displayTimeZone={displayTimeZone}
+      />
     </div>
   )
 }

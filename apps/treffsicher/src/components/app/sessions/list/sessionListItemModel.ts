@@ -2,6 +2,7 @@ import { calculateTotalScore } from "@/lib/sessions/calculateScore"
 import { getSeriesMax, type ScoringType } from "@/lib/sessions/validation"
 import { SESSION_TYPE_BADGE_CLASS, SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
 import type { SessionWithDiscipline } from "@/lib/sessions/actions"
+import { formatDateTime } from "@vereinsheim/lib/format"
 
 type NormalizedSeries = {
   scoreTotal: number | null
@@ -27,17 +28,6 @@ export type SessionListItemModel = {
   trainingGoal: string | null
   mentalLabels: string[]
   result: SessionListResultModel | null
-}
-
-function formatDate(date: Date, displayTimeZone: string): string {
-  return new Intl.DateTimeFormat("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: displayTimeZone,
-  }).format(new Date(date))
 }
 
 function normalizeSeries(
@@ -156,7 +146,7 @@ export function buildSessionListItemModel(
     typeLabel: SESSION_TYPE_LABELS[session.type] ?? session.type,
     typeBadgeClass: SESSION_TYPE_BADGE_CLASS[session.type] ?? "",
     disciplineName: session.discipline?.name ?? null,
-    formattedDate: formatDate(session.date, displayTimeZone),
+    formattedDate: formatDateTime(new Date(session.date), displayTimeZone),
     location: session.location,
     trainingGoal: session.trainingGoal,
     mentalLabels: buildMentalLabels(session),

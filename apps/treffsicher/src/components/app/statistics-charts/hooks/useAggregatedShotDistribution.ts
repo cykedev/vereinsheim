@@ -5,6 +5,7 @@ import {
   getShotDistributionGranularity,
 } from "@/components/app/statistics-charts/utils"
 import type { ShotDistributionPoint } from "@/lib/stats/actions"
+import { formatCompactMonthYear, formatDateOnly, formatShortDay } from "@vereinsheim/lib/format"
 
 interface Params {
   filteredShotDistribution: ShotDistributionPoint[]
@@ -59,23 +60,6 @@ export function useAggregatedShotDistribution({
       byBucket.set(bucketKey, current)
     }
 
-    const shortDayFormatter = new Intl.DateTimeFormat("de-CH", {
-      day: "2-digit",
-      month: "2-digit",
-      timeZone: displayTimeZone,
-    })
-    const monthFormatter = new Intl.DateTimeFormat("de-CH", {
-      month: "2-digit",
-      year: "2-digit",
-      timeZone: displayTimeZone,
-    })
-    const fullDateFormatter = new Intl.DateTimeFormat("de-CH", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      timeZone: displayTimeZone,
-    })
-
     return [...byBucket.values()]
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .map((bucket, index) => {
@@ -88,14 +72,14 @@ export function useAggregatedShotDistribution({
 
         const dateLabel =
           granularity === "month"
-            ? monthFormatter.format(bucket.date)
-            : shortDayFormatter.format(bucket.date)
+            ? formatCompactMonthYear(bucket.date, displayTimeZone)
+            : formatShortDay(bucket.date, displayTimeZone)
         const tooltipLabel =
           granularity === "day"
-            ? fullDateFormatter.format(bucket.date)
+            ? formatDateOnly(bucket.date, displayTimeZone)
             : granularity === "week"
-              ? `Woche ab ${fullDateFormatter.format(bucket.date)}`
-              : `Monat ${monthFormatter.format(bucket.date)}`
+              ? `Woche ab ${formatDateOnly(bucket.date, displayTimeZone)}`
+              : `Monat ${formatCompactMonthYear(bucket.date, displayTimeZone)}`
 
         return {
           i: index,
