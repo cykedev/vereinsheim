@@ -46,6 +46,15 @@ Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichun
 Regel: Wer eine dieser Dateien ändert, ändert sie in **beiden** Repos gleich. Neue, klar
 app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gates ergänzen).
 
+**Offen, noch nicht im Gate** (September 2026 entstanden, byte-identisch in beiden Apps —
+gehören beim nächsten Gate-Update in `MUST_MATCH`, siehe §8):
+
+- `src/components/app/admin/AdminLoginRateLimitTable.tsx` — dünner Wrapper um
+  `@vereinsheim/ui/admin/LoginRateLimitTable`; app-lokal, weil die Server Action nicht aus einer
+  geteilten Datei kommen darf.
+- `test/server-only-stub.ts` + der `server-only`-Alias in `vitest.config.ts` — besser noch:
+  die Vitest-Basiskonfiguration nach `@vereinsheim/config` ziehen, dann entfällt beides.
+
 ## 2. Komponenten-Kanon
 
 - **Seitenkopf:** `<PageHeader title description action />` (`shell/PageHeader.tsx`). Kein inline-h1.
