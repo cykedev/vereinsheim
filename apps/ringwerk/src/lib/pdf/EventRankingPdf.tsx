@@ -28,10 +28,6 @@ export interface EventRankingPdfProps {
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function formatDate(date: Date, timeZone: string): string {
-  return formatDateOnly(date, timeZone)
-}
-
 function rankBadgeColor(rank: number): string {
   if (rank === 1) return PDF_COLORS.gold
   if (rank === 2) return PDF_COLORS.silver
@@ -231,11 +227,11 @@ export function EventRankingPdf({
             <Text style={styles.headerTitle}>{competitionName}</Text>
             <Text style={styles.headerSubtitle}>
               {disciplineDisplay}
-              {eventDate ? ` · ${formatDate(eventDate, displayTimeZone)}` : ""} · Rangliste
+              {eventDate ? ` · ${formatDateOnly(eventDate, displayTimeZone)}` : ""} · Rangliste
             </Text>
           </View>
           <Text style={styles.headerDate}>
-            Erstellt: {formatDate(generatedAt, displayTimeZone)}
+            Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
           </Text>
         </View>
 

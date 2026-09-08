@@ -27,10 +27,6 @@ const PAIR_GAP = 12
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function formatDate(date: Date, timeZone: string): string {
-  return formatDateOnly(date, timeZone)
-}
-
 function roundLabel(round: string): string {
   switch (round) {
     case "EIGHTH_FINAL":
@@ -95,7 +91,9 @@ function PdfHeader({
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Playoffs</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt, displayTimeZone)}</Text>
+      <Text style={styles.headerDate}>
+        Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
+      </Text>
     </View>
   )
 }

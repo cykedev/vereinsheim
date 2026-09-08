@@ -34,10 +34,6 @@ export interface BestOfSchedulePdfProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(date: Date, timeZone: string): string {
-  return formatDateOnly(date, timeZone)
-}
-
 function rankBadgeColor(rank: number): string {
   if (rank === 1) return PDF_COLORS.gold
   if (rank === 2) return PDF_COLORS.silver
@@ -173,7 +169,9 @@ function PdfHeader({
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Spielplan &amp; Tabelle</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt, displayTimeZone)}</Text>
+      <Text style={styles.headerDate}>
+        Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
+      </Text>
     </View>
   )
 }
