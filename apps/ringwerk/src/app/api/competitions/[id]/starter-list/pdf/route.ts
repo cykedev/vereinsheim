@@ -7,6 +7,7 @@ import { getCompetitionById } from "@/lib/competitions/queries"
 import { getCompetitionParticipants } from "@/lib/competitionParticipants/queries"
 import { buildStarterListRows } from "@/lib/pdf/eventStarterList"
 import { EventStarterListPdf } from "@/lib/pdf/EventStarterListPdf"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 function slugify(value: string): string {
   return (
@@ -61,6 +62,7 @@ export async function GET(
     eventDate: competition.eventDate ?? null,
     participants: rows,
     generatedAt: new Date(),
+    displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
 
   const buffer = await renderToBuffer(element)

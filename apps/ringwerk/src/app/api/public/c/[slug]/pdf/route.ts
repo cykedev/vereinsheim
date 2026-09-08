@@ -24,6 +24,7 @@ import { SeasonStandingsPdf } from "@/lib/pdf/SeasonStandingsPdf"
 import { SchedulePdf } from "@/lib/pdf/SchedulePdf"
 import { BestOfSchedulePdf } from "@/lib/pdf/BestOfSchedulePdf"
 import { PlayoffsPdf } from "@/lib/pdf/PlayoffsPdf"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 // The auth check must run on every request, so we cannot use route-level revalidate.
 // The expensive PDF render is cached separately via unstable_cache (see renderPdfBuffer).
@@ -177,6 +178,7 @@ async function buildEventRankingElement(
     teamEntries: isTeamEvent ? teamRanked : undefined,
     teamScoring: isTeamEvent ? teamScoring : undefined,
     generatedAt: new Date(),
+    displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
 }
 
@@ -208,6 +210,7 @@ async function buildSeasonStandingsElement(
     isMixed: !competition.disciplineId,
     entries: standings,
     generatedAt: new Date(),
+    displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
 }
 
@@ -238,6 +241,7 @@ async function buildScheduleElement(competitionId: string): Promise<ReactElement
       standings: standingsBestOf,
       matchups,
       generatedAt: new Date(),
+      displayTimeZone: getDisplayTimeZone(),
     }) as ReactElement<DocumentProps>
   }
 
@@ -250,6 +254,7 @@ async function buildScheduleElement(competitionId: string): Promise<ReactElement
     firstLegDeadline: competition.hinrundeDeadline,
     secondLegDeadline: competition.rueckrundeDeadline,
     generatedAt: new Date(),
+    displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
 }
 
@@ -266,5 +271,6 @@ async function buildPlayoffsElement(competitionId: string): Promise<ReactElement
     scoringType: getEffectiveScoringType(competition.scoringMode, competition.discipline),
     bracket,
     generatedAt: new Date(),
+    displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
 }

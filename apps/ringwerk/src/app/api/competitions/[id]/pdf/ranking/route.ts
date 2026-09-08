@@ -5,6 +5,7 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { getEventWithSeries } from "@/lib/competitions/queries"
 import { rankEventParticipants, rankEventTeams } from "@/lib/scoring/rankEventParticipants"
 import { EventRankingPdf } from "@/lib/pdf/EventRankingPdf"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
   _req: NextRequest,
@@ -49,6 +50,7 @@ export async function GET(
     teamEntries: isTeamEvent ? teamRanked : undefined,
     teamScoring: isTeamEvent ? teamScoring : undefined,
     generatedAt: new Date(),
+    displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
 
   const buffer = await renderToBuffer(element)

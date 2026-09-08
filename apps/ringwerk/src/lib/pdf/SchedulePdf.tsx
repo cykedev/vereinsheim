@@ -5,10 +5,12 @@ import type { MatchupListItem } from "@/lib/matchups/types"
 import type { StandingRow } from "@/lib/standings/calculateStandings"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import { styles } from "@/lib/pdf/styles"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
 export interface SchedulePdfProps {
+  displayTimeZone: string
   leagueName: string
   disciplineName: string
   scoringType: ScoringType
@@ -21,8 +23,8 @@ export interface SchedulePdfProps {
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
+function formatDate(date: Date, timeZone: string): string {
+  return formatDateOnly(date, timeZone)
 }
 
 function rankBadgeColor(rank: number): string {
@@ -38,10 +40,12 @@ function PdfHeader({
   leagueName,
   disciplineName,
   generatedAt,
+  displayTimeZone,
 }: {
   leagueName: string
   disciplineName: string
   generatedAt: Date
+  displayTimeZone: string
 }): ReactElement {
   return (
     <View style={styles.headerBlock}>
@@ -49,7 +53,7 @@ function PdfHeader({
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Spielplan &amp; Tabelle</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt)}</Text>
+      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt, displayTimeZone)}</Text>
     </View>
   )
 }
@@ -291,6 +295,7 @@ export function SchedulePdf({
   firstLegDeadline,
   secondLegDeadline,
   generatedAt,
+  displayTimeZone,
 }: SchedulePdfProps): ReactElement {
   const firstLeg = matchups.filter((m) => m.round === "FIRST_LEG")
   const secondLeg = matchups.filter((m) => m.round === "SECOND_LEG")
@@ -303,6 +308,7 @@ export function SchedulePdf({
           leagueName={leagueName}
           disciplineName={disciplineName}
           generatedAt={generatedAt}
+          displayTimeZone={displayTimeZone}
         />
 
         {/* Tabelle */}
@@ -312,7 +318,9 @@ export function SchedulePdf({
         {firstLeg.length > 0 && (
           <MatchupSection
             title="Hinrunde"
-            subtitle={firstLegDeadline ? `Abgabe bis ${formatDate(firstLegDeadline)}` : ""}
+            subtitle={
+              firstLegDeadline ? `Abgabe bis ${formatDate(firstLegDeadline, displayTimeZone)}` : ""
+            }
             matchups={firstLeg}
             scoringType={scoringType}
           />
@@ -322,7 +330,11 @@ export function SchedulePdf({
         {secondLeg.length > 0 && (
           <MatchupSection
             title="Rückrunde"
-            subtitle={secondLegDeadline ? `Abgabe bis ${formatDate(secondLegDeadline)}` : ""}
+            subtitle={
+              secondLegDeadline
+                ? `Abgabe bis ${formatDate(secondLegDeadline, displayTimeZone)}`
+                : ""
+            }
             matchups={secondLeg}
             scoringType={scoringType}
           />

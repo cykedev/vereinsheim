@@ -4,6 +4,7 @@ import { createElement, type ReactElement } from "react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getParticipants } from "@/lib/participants/queries"
 import { ParticipantListPdf } from "@/lib/pdf/ParticipantListPdf"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(): Promise<NextResponse> {
   const session = await getAuthSession()
@@ -19,6 +20,7 @@ export async function GET(): Promise<NextResponse> {
   const element = createElement(ParticipantListPdf, {
     participants,
     generatedAt: new Date(),
+    displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
 
   const buffer = await renderToBuffer(element)

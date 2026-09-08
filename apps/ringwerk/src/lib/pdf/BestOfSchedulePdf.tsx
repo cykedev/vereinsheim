@@ -12,10 +12,12 @@ import {
 import type { DuelSeries } from "@/lib/scoring/bestOf"
 import { formatDirectComparison } from "@/lib/standings/formatDirectComparison"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface BestOfSchedulePdfProps {
+  displayTimeZone: string
   leagueName: string
   disciplineName: string
   scoringMode: ScoringMode
@@ -32,12 +34,8 @@ export interface BestOfSchedulePdfProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  })
+function formatDate(date: Date, timeZone: string): string {
+  return formatDateOnly(date, timeZone)
 }
 
 function rankBadgeColor(rank: number): string {
@@ -162,10 +160,12 @@ function PdfHeader({
   leagueName,
   disciplineName,
   generatedAt,
+  displayTimeZone,
 }: {
   leagueName: string
   disciplineName: string
   generatedAt: Date
+  displayTimeZone: string
 }): ReactElement {
   return (
     <View style={styles.headerBlock}>
@@ -173,7 +173,7 @@ function PdfHeader({
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Spielplan &amp; Tabelle</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt)}</Text>
+      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt, displayTimeZone)}</Text>
     </View>
   )
 }
@@ -424,6 +424,7 @@ export function BestOfSchedulePdf({
   standings,
   matchups,
   generatedAt,
+  displayTimeZone,
 }: BestOfSchedulePdfProps): ReactElement {
   return (
     <Document title={`${leagueName} – Spielplan`} author="Ringwerk" creator="Ringwerk">
@@ -433,6 +434,7 @@ export function BestOfSchedulePdf({
           leagueName={leagueName}
           disciplineName={disciplineName}
           generatedAt={generatedAt}
+          displayTimeZone={displayTimeZone}
         />
 
         {/* Tabelle */}

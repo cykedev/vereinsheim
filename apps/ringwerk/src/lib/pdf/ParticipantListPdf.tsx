@@ -1,17 +1,14 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer"
 import type { ReactElement, ReactNode } from "react"
 import { styles } from "@/lib/pdf/styles"
+import { formatDateOnly } from "@vereinsheim/lib/format"
 
 const W = { name: 200, disziplin: 115, einlage: 60, teilnahme: 70, geschossen: 70 }
 const ROW_H = 28
 const EMPTY_ROWS = 10
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  })
+function formatDate(date: Date, timeZone: string): string {
+  return formatDateOnly(date, timeZone)
 }
 
 function Checkbox(): ReactElement {
@@ -49,19 +46,26 @@ function Cell({
   )
 }
 
-function PdfHeader({ generatedAt }: { generatedAt: Date }): ReactElement {
+function PdfHeader({
+  generatedAt,
+  displayTimeZone,
+}: {
+  generatedAt: Date
+  displayTimeZone: string
+}): ReactElement {
   return (
     <View style={styles.headerBlock}>
       <View style={styles.headerLeft}>
         <Text style={styles.headerTitle}>Teilnehmerliste</Text>
         <Text style={styles.headerSubtitle}>Aktive Vereinsmitglieder</Text>
       </View>
-      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt)}</Text>
+      <Text style={styles.headerDate}>Erstellt: {formatDate(generatedAt, displayTimeZone)}</Text>
     </View>
   )
 }
 
 export interface ParticipantListPdfProps {
+  displayTimeZone: string
   participants: { firstName: string; lastName: string }[]
   generatedAt: Date
 }
@@ -69,11 +73,12 @@ export interface ParticipantListPdfProps {
 export function ParticipantListPdf({
   participants,
   generatedAt,
+  displayTimeZone,
 }: ParticipantListPdfProps): ReactElement {
   return (
     <Document title="Teilnehmerliste" author="Ringwerk" creator="Ringwerk">
       <Page size="A4" style={styles.page}>
-        <PdfHeader generatedAt={generatedAt} />
+        <PdfHeader generatedAt={generatedAt} displayTimeZone={displayTimeZone} />
 
         <View style={styles.table}>
           {/* Kopfzeile */}

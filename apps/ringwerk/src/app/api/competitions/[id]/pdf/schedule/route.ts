@@ -11,6 +11,7 @@ import {
 import { SchedulePdf } from "@/lib/pdf/SchedulePdf"
 import { BestOfSchedulePdf } from "@/lib/pdf/BestOfSchedulePdf"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
   _req: NextRequest,
@@ -53,6 +54,7 @@ export async function GET(
       standings: standingsBestOf,
       matchups,
       generatedAt: new Date(),
+      displayTimeZone: getDisplayTimeZone(),
     }) as ReactElement<DocumentProps>
   } else {
     element = createElement(SchedulePdf, {
@@ -64,6 +66,7 @@ export async function GET(
       firstLegDeadline: competition.hinrundeDeadline,
       secondLegDeadline: competition.rueckrundeDeadline,
       generatedAt: new Date(),
+      displayTimeZone: getDisplayTimeZone(),
     }) as ReactElement<DocumentProps>
   }
 

@@ -6,6 +6,7 @@ import { getCompetitionById } from "@/lib/competitions/queries"
 import { getPlayoffBracket } from "@/lib/playoffs/queries"
 import { PlayoffsPdf } from "@/lib/pdf/PlayoffsPdf"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
   _req: NextRequest,
@@ -38,6 +39,7 @@ export async function GET(
     scoringType: getEffectiveScoringType(competition.scoringMode, competition.discipline),
     bracket,
     generatedAt: new Date(),
+    displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
 
   const buffer = await renderToBuffer(element)

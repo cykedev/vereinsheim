@@ -54,6 +54,7 @@ describe("EventStarterListPdf", () => {
       { nr: 2, firstName: "Bert", lastName: "Mueller", disciplineName: "Luftgewehr" },
     ],
     generatedAt: new Date("2026-05-24T10:00:00.000Z"),
+    displayTimeZone: "Europe/Berlin",
   }
 
   function render(props: EventStarterListPdfProps) {
@@ -90,5 +91,20 @@ describe("EventStarterListPdf", () => {
     expect(textWithDate).toContain("15.06.2026")
     // Without date: subtitle does NOT contain the event date
     expect(textWithoutDate).not.toContain("15.06.2026")
+  })
+
+  it("formats the event date in the passed display timezone, not the process one", async () => {
+    // 22:30 UTC ist in Europe/Berlin schon der Folgetag. Vorher formatierten die
+    // Renderer ohne Zeitzone, also in der Zone des Containers (UTC) — der Termin
+    // erschien einen Tag zu früh.
+    const crossesMidnight = { ...baseProps, eventDate: new Date("2026-06-15T22:30:00.000Z") }
+
+    const berlin = extractPdfText(
+      await render({ ...crossesMidnight, displayTimeZone: "Europe/Berlin" })
+    )
+    const utc = extractPdfText(await render({ ...crossesMidnight, displayTimeZone: "UTC" }))
+
+    expect(berlin).toContain("16.06.2026")
+    expect(utc).toContain("15.06.2026")
   })
 })
