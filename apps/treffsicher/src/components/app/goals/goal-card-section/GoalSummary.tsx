@@ -14,7 +14,7 @@ export function GoalSummary({ goal, displayTimeZone }: Props) {
   return (
     <div className="min-w-0 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-base font-semibold">{goal.title}</p>
+        <h1 className="break-words text-2xl font-semibold tracking-tight">{goal.title}</h1>
         <Badge variant="outline">{GOAL_TYPE_LABELS[goal.type] ?? goal.type}</Badge>
       </div>
       <div className="text-sm text-muted-foreground">

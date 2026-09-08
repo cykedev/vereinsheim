@@ -24,7 +24,7 @@ export default async function AdminAuditLogPage() {
               Verwaltung
             </Link>
           </Button>
-          <h1 className="text-2xl font-semibold">Protokoll</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Protokoll</h1>
           <p className="mt-1 text-sm text-muted-foreground">Alle administrativen Aktionen</p>
         </div>
       </div>
