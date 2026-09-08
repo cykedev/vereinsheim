@@ -54,6 +54,8 @@ export function Navigation() {
   const mobileLinks = [...navLinks, accountLink]
 
   function linkClass(href: string, layout: "horizontal" | "panel") {
+    // Alle Routen liegen unter einem eigenen Präfix (kein "/"-Dashboard),
+    // deshalb genügt hier startsWith.
     const isActive = pathname.startsWith(href)
     const base =
       layout === "horizontal"
@@ -68,7 +70,7 @@ export function Navigation() {
   }
 
   return (
-    <header className="border-b border-border/50 bg-background">
+    <header className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* App-Name / Logo */}
         <Link
