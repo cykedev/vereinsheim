@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getUserById } from "@/lib/users/queries"
 import { updateUser } from "@/lib/users/actions"
@@ -7,6 +8,10 @@ import type { ActionResult } from "@/lib/types"
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Nutzer bearbeiten",
 }
 
 export default async function EditUserPage({ params }: Props) {

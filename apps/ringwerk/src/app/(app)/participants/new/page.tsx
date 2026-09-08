@@ -1,8 +1,13 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { createParticipant } from "@/lib/participants/actions"
 import { ParticipantForm } from "@/components/app/participants/ParticipantForm"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+
+export const metadata: Metadata = {
+  title: "Neuer Teilnehmer",
+}
 
 export default async function NewParticipantPage() {
   const session = await getAuthSession()

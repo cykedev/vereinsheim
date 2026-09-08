@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Pencil } from "lucide-react"
@@ -9,6 +10,10 @@ import { ShotRoutineView } from "@/components/app/shot-routines/ShotRoutineView"
 import { DeleteShotRoutineButton } from "@/components/app/shot-routines/DeleteShotRoutineButton"
 import type { RoutineStep } from "@/lib/shot-routines/actions"
 import { Button } from "@vereinsheim/ui/button"
+
+export const metadata: Metadata = {
+  title: "Ablauf",
+}
 
 export default async function ShotRoutineDetailPage({
   params,

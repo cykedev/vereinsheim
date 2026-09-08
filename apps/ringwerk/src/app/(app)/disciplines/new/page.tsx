@@ -1,8 +1,13 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { createDiscipline } from "@/lib/disciplines/actions"
 import { DisciplineForm } from "@/components/app/disciplines/DisciplineForm"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+
+export const metadata: Metadata = {
+  title: "Neue Disziplin",
+}
 
 export default async function NewDisciplinePage() {
   const session = await getAuthSession()

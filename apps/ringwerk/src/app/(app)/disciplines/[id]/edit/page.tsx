@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getDisciplineById } from "@/lib/disciplines/queries"
@@ -8,6 +9,10 @@ import type { ActionResult } from "@/lib/types"
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Disziplin bearbeiten",
 }
 
 export default async function EditDisciplinePage({ params }: Props) {

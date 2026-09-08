@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { getAuthSession } from "@/lib/auth-helpers"
@@ -15,6 +16,10 @@ import {
   SelectValue,
 } from "@vereinsheim/ui/select"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+
+export const metadata: Metadata = {
+  title: "Neues Ziel",
+}
 
 export default async function NewGoalPage({
   searchParams,

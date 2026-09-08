@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { BarChart2, CalendarDays, ListOrdered, Trophy, UserMinus, Users } from "lucide-react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
@@ -24,6 +25,10 @@ import type { ActionResult } from "@/lib/types"
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Teilnehmerverwaltung",
 }
 
 export default async function CompetitionParticipantsPage({ params }: Props) {

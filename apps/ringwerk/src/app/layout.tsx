@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Ringwerk",
+  // Seiten setzen nur ihren eigenen Titel; das Template hängt den App-Namen an.
+  title: { default: "Ringwerk", template: "%s · Ringwerk" },
   description: "Vereinsinterne Wettbewerbs-Plattform für Schützenvereine",
 }
 

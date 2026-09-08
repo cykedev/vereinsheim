@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { redirect } from "next/navigation"
 import { getSessions } from "@/lib/sessions/actions"
@@ -23,6 +24,10 @@ function readSearchParam(value: string | string[] | undefined): string {
 
 function formatSessionCount(count: number): string {
   return `${count} Einheit${count !== 1 ? "en" : ""}`
+}
+
+export const metadata: Metadata = {
+  title: "Tagebuch",
 }
 
 export default async function SessionsPage({

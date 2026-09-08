@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Treffsicher",
+  // Seiten setzen nur ihren eigenen Titel; das Template hängt den App-Namen an.
+  title: { default: "Treffsicher", template: "%s · Treffsicher" },
   description: "Trainingsunterstützung für Schiesssportler",
 }
 

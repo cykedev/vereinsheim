@@ -1,7 +1,12 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { AdminCreateUserForm } from "@/components/app/admin/AdminCreateUserForm"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+
+export const metadata: Metadata = {
+  title: "Neuer Nutzer",
+}
 
 export default async function AdminUserCreatePage() {
   const session = await getAuthSession()

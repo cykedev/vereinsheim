@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle2, Gauge, Pencil, Target } from "lucide-react"
@@ -21,6 +22,10 @@ import { Separator } from "@vereinsheim/ui/separator"
 const scoringTypeLabel: Record<string, string> = {
   WHOLE: "Ganzringe",
   TENTH: "Zehntelringe",
+}
+
+export const metadata: Metadata = {
+  title: "Disziplin",
 }
 
 export default async function DisciplineDetailPage({

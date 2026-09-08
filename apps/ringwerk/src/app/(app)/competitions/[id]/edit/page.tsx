@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getDisciplines } from "@/lib/disciplines/queries"
@@ -11,6 +12,10 @@ import type { ActionResult } from "@/lib/types"
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Wettbewerb bearbeiten",
 }
 
 export default async function EditCompetitionPage({ params }: Props) {

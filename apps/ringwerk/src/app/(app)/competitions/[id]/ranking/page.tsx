@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { ListOrdered, Pencil, Users } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
@@ -16,6 +17,10 @@ import { SCORING_MODE_LABELS } from "@/lib/scoring/labels"
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Rangliste",
 }
 
 export default async function EventRankingPage({ params }: Props) {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights, getAdminUsers } from "@/lib/admin/actions"
@@ -8,6 +9,10 @@ import { AdminUsersTable } from "@/components/app/admin/AdminUsersTable"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+
+export const metadata: Metadata = {
+  title: "Nutzerverwaltung",
+}
 
 export default async function AdminPage() {
   const displayTimeZone = getDisplayTimeZone()

@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { Plus, Users } from "lucide-react"
@@ -9,6 +10,10 @@ import { Badge } from "@vereinsheim/ui/badge"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+
+export const metadata: Metadata = {
+  title: "Teilnehmer",
+}
 
 export default async function ParticipantsPage() {
   const session = await getAuthSession()

@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { CheckCircle2, Gauge, Heart, MessageSquare, Paperclip } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
@@ -15,6 +16,10 @@ import { WellbeingSection } from "@/components/app/sessions/WellbeingSection"
 import { SessionDetailHeader, SessionDetailSectionCard } from "@/components/app/sessions/detail"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 import { Separator } from "@vereinsheim/ui/separator"
+
+export const metadata: Metadata = {
+  title: "Einheit",
+}
 
 export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const displayTimeZone = getDisplayTimeZone()
