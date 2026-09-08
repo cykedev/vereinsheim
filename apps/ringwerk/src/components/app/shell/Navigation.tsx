@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   UserCircle,
+  type LucideIcon,
 } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import {
@@ -26,18 +27,33 @@ import {
 } from "@vereinsheim/ui/dropdown-menu"
 import { cn } from "@vereinsheim/lib/utils"
 
-const navItems = [
+interface NavLink {
+  href: string
+  label: string
+  icon: LucideIcon
+  // Praefix fuer die Aktiv-Erkennung, falls es vom Ziel abweicht.
+  activePrefix?: string
+}
+
+const navItems: NavLink[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/competitions", label: "Wettbewerbe", icon: Trophy },
 ]
 
-const manageNavItems = [
+const manageNavItems: NavLink[] = [
   { href: "/participants", label: "Teilnehmer", icon: Users },
   { href: "/disciplines", label: "Disziplinen", icon: Target },
 ]
 
-const adminNavItem = { href: "/admin/users", label: "Admin", icon: Shield }
-const accountLink = { href: "/account", label: "Konto", icon: UserCircle }
+// Ziel ist die Nutzerliste, aktiv ist der Eintrag aber im ganzen /admin-Bereich
+// (Ringwerk hat zusaetzlich /admin/audit-log und keine /admin-Seite).
+const adminNavItem: NavLink = {
+  href: "/admin/users",
+  activePrefix: "/admin",
+  label: "Admin",
+  icon: Shield,
+}
+const accountLink: NavLink = { href: "/account", label: "Konto", icon: UserCircle }
 
 interface Props {
   role: string
@@ -58,10 +74,11 @@ export function Navigation({ role }: Props) {
   // Im Mobil-Panel sind Hauptlinks und Konto gemeinsam sichtbar.
   const mobileLinks = [...navLinks, accountLink]
 
-  function linkClass(href: string, layout: "horizontal" | "panel") {
+  function linkClass(href: string, layout: "horizontal" | "panel", activePrefix?: string) {
     // Das Dashboard liegt auf "/" — dort muss exakt verglichen werden,
     // sonst wäre es auf jeder Seite aktiv.
-    const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href)
+    const prefix = activePrefix ?? href
+    const isActive = prefix === "/" ? pathname === "/" : pathname.startsWith(prefix)
     const base =
       layout === "horizontal"
         ? "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors"
@@ -88,8 +105,8 @@ export function Navigation({ role }: Props) {
 
         {/* Desktop-Navigation */}
         <nav className="hidden items-center gap-1 md:flex">
-          {navLinks.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={linkClass(href, "horizontal")}>
+          {navLinks.map(({ href, label, icon: Icon, activePrefix }) => (
+            <Link key={href} href={href} className={linkClass(href, "horizontal", activePrefix)}>
               <Icon className="h-4 w-4" />
               {label}
             </Link>
@@ -142,12 +159,12 @@ export function Navigation({ role }: Props) {
       {/* Mobile-Menü */}
       {mobileOpen && (
         <nav className="border-t border-border md:hidden">
-          {mobileLinks.map(({ href, label, icon: Icon }) => (
+          {mobileLinks.map(({ href, label, icon: Icon, activePrefix }) => (
             <Link
               key={href}
               href={href}
               onClick={() => setMobileOpen(false)}
-              className={linkClass(href, "panel")}
+              className={linkClass(href, "panel", activePrefix)}
             >
               <Icon className="h-4 w-4" />
               {label}

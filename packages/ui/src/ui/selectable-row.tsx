@@ -43,7 +43,7 @@ export function SelectableRow({
           "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
           selected
             ? "bg-primary text-primary-foreground"
-            : "border border-border/60 bg-background/20 text-muted-foreground/40",
+            : "border border-border/60 bg-background/20 text-muted-foreground",
           indicatorClassName
         )}
       >

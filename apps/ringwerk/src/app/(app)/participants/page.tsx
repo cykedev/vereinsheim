@@ -43,7 +43,7 @@ export default async function ParticipantsPage() {
 
       {active.length === 0 ? (
         <EmptyState
-          title="Keine aktiven Teilnehmer vorhanden."
+          title="Keine aktiven Teilnehmer vorhanden"
           description="Lege deinen ersten Teilnehmer an."
           icon={Users}
           actionLabel="Neuer Teilnehmer"

@@ -26,7 +26,7 @@ export function ValueCells({
         const value = getValue(col)
         if (value === null) {
           return (
-            <TableCell key={i} className={`${BASE} text-muted-foreground/40`}>
+            <TableCell key={i} className={`${BASE} text-muted-foreground`}>
               –
             </TableCell>
           )

@@ -143,7 +143,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
             </thead>
             <tbody className="divide-y divide-border/50">
               {rows.map((row) => (
-                <tr key={row.id} className={row.isPractice ? "text-muted-foreground/40" : ""}>
+                <tr key={row.id} className={row.isPractice ? "text-muted-foreground" : ""}>
                   <td className="py-2 pr-4">
                     {row.seriesLabel}
                     {row.isPractice && <span className="ml-1 text-xs">(P)</span>}

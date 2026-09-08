@@ -20,14 +20,14 @@ export function BracketSlot({
           <div className="flex h-full flex-col divide-y divide-border/50">
             {([preview.nameA, preview.nameB] as const).map((name, i) => (
               <div key={i} className="flex flex-1 items-center px-2.5">
-                <span className="min-w-0 truncate text-xs text-muted-foreground/40 italic">
+                <span className="min-w-0 truncate text-xs text-muted-foreground italic">
                   {name ?? "—"}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-muted-foreground/50">
+          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
             Ausstehend
           </div>
         )}

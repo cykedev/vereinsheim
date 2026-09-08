@@ -39,9 +39,15 @@ export function GenerateScheduleButton({ competitionId, hasSchedule }: Props) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button disabled={isPending} title="Spielplan generieren">
-          <CalendarPlus className="h-4 w-4 md:mr-2" />
-          <span className="hidden md:inline">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="px-2 sm:px-3"
+          disabled={isPending}
+          aria-label="Spielplan generieren"
+        >
+          <CalendarPlus className="h-4 w-4 sm:mr-1.5" />
+          <span className="hidden sm:inline">
             {isPending ? "Generiere…" : "Spielplan generieren"}
           </span>
         </Button>
