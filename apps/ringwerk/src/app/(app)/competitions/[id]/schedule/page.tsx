@@ -1,6 +1,5 @@
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, Trophy, Users } from "lucide-react"
+import { Trophy, Users } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getMatchupsForCompetition, getScheduleStatus } from "@/lib/matchups/queries"
@@ -16,7 +15,10 @@ import { ScheduleView } from "@/components/app/matchups/ScheduleView"
 import { StandingsTable } from "@/components/app/standings/StandingsTable"
 import { BestOfStandingsTable } from "@/components/app/standings/BestOfStandingsTable"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import { Button } from "@vereinsheim/ui/button"
+import {
+  CompetitionDetailHeader,
+  DetailNavButton,
+} from "@/components/app/shell/CompetitionDetailHeader"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -49,43 +51,28 @@ export default async function CompetitionSchedulePage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-          <Link href="/competitions">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Wettbewerbe
-          </Link>
-        </Button>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">{competition.name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {competition.discipline?.name} · Spielplan & Tabelle
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
+      <CompetitionDetailHeader
+        title={competition.name}
+        subtitle={`${competition.discipline?.name ?? "Gemischt"} · Spielplan & Tabelle`}
+        actions={
+          <>
             {canManage && (
-              <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                <Link href={`/competitions/${id}/participants`} title="Teilnehmer">
-                  <Users className="h-4 w-4" />
-                </Link>
-              </Button>
+              <DetailNavButton
+                href={`/competitions/${id}/participants`}
+                label="Teilnehmer"
+                icon={Users}
+              />
             )}
-            <Button asChild variant="outline" size="icon" className="h-9 w-9">
-              <Link href={`/competitions/${id}/playoffs`} title="Playoffs">
-                <Trophy className="h-4 w-4" />
-              </Link>
-            </Button>
+            <DetailNavButton href={`/competitions/${id}/playoffs`} label="Playoffs" icon={Trophy} />
             {scheduleStatus.hasSchedule && (
               <PdfDownloadButton href={`/api/competitions/${id}/pdf/schedule`} />
             )}
             {canManage && competition.status === "ACTIVE" && !scheduleStatus.hasSchedule && (
               <GenerateScheduleButton competitionId={id} hasSchedule={scheduleStatus.hasSchedule} />
             )}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Hinweis bei abgeschlossenen Paarungen */}
       {canManage && scheduleStatus.hasCompletedMatchups && competition.status === "ACTIVE" && (

@@ -1,14 +1,5 @@
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import {
-  ArrowLeft,
-  BarChart2,
-  CalendarDays,
-  ListOrdered,
-  Trophy,
-  UserMinus,
-  Users,
-} from "lucide-react"
+import { BarChart2, CalendarDays, ListOrdered, Trophy, UserMinus, Users } from "lucide-react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getCompetitionParticipants } from "@/lib/competitionParticipants/queries"
@@ -23,7 +14,10 @@ import { hasPlayoffsStarted } from "@/lib/playoffs/queries"
 import { EnrollParticipantForm } from "@/components/app/competitionParticipants/EnrollParticipantForm"
 import { CompetitionParticipantActions } from "@/components/app/competitionParticipants/CompetitionParticipantActions"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Button } from "@vereinsheim/ui/button"
+import {
+  CompetitionDetailHeader,
+  DetailNavButton,
+} from "@/components/app/shell/CompetitionDetailHeader"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
 import type { ActionResult } from "@/lib/types"
@@ -72,69 +66,56 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-          <Link href="/competitions">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Wettbewerbe
-          </Link>
-        </Button>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">{competition.name}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {competition.discipline?.name ?? "Gemischt"} · Teilnehmerverwaltung
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {isEvent ? (
-              <>
-                <PdfDownloadButton
-                  href={`/api/competitions/${id}/starter-list/pdf`}
-                  label="Starterliste drucken"
-                />
-                <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                  <Link href={`/competitions/${id}/series`} title="Serien erfassen">
-                    <ListOrdered className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                  <Link href={`/competitions/${id}/ranking`} title="Rangliste">
-                    <BarChart2 className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </>
-            ) : isSeason ? (
-              <>
-                <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                  <Link href={`/competitions/${id}/series`} title="Serien erfassen">
-                    <ListOrdered className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                  <Link href={`/competitions/${id}/standings`} title="Rangliste">
-                    <BarChart2 className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                  <Link href={`/competitions/${id}/schedule`} title="Spielplan & Tabelle">
-                    <CalendarDays className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="icon" className="h-9 w-9">
-                  <Link href={`/competitions/${id}/playoffs`} title="Playoffs">
-                    <Trophy className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+      <CompetitionDetailHeader
+        title={competition.name}
+        subtitle={`${competition.discipline?.name ?? "Gemischt"} · Teilnehmerverwaltung`}
+        actions={
+          isEvent ? (
+            <>
+              <PdfDownloadButton
+                href={`/api/competitions/${id}/starter-list/pdf`}
+                label="Starterliste drucken"
+              />
+              <DetailNavButton
+                href={`/competitions/${id}/series`}
+                label="Serien erfassen"
+                icon={ListOrdered}
+              />
+              <DetailNavButton
+                href={`/competitions/${id}/ranking`}
+                label="Rangliste"
+                icon={BarChart2}
+              />
+            </>
+          ) : isSeason ? (
+            <>
+              <DetailNavButton
+                href={`/competitions/${id}/series`}
+                label="Serien erfassen"
+                icon={ListOrdered}
+              />
+              <DetailNavButton
+                href={`/competitions/${id}/standings`}
+                label="Rangliste"
+                icon={BarChart2}
+              />
+            </>
+          ) : (
+            <>
+              <DetailNavButton
+                href={`/competitions/${id}/schedule`}
+                label="Spielplan & Tabelle"
+                icon={CalendarDays}
+              />
+              <DetailNavButton
+                href={`/competitions/${id}/playoffs`}
+                label="Playoffs"
+                icon={Trophy}
+              />
+            </>
+          )
+        }
+      />
 
       {/* Einschreiben */}
       {competition.status === "ACTIVE" && (

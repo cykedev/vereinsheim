@@ -1,6 +1,5 @@
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, BarChart2, Users } from "lucide-react"
+import { BarChart2, Users } from "lucide-react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getCompetitionById, getSeasonWithSeries } from "@/lib/competitions/queries"
 import { getCompetitionParticipants } from "@/lib/competitionParticipants/queries"
@@ -11,7 +10,10 @@ import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import { EventSeriesDialog } from "@/components/app/series/EventSeriesDialog"
 import { DeleteEventSeriesButton } from "@/components/app/series/DeleteEventSeriesButton"
 import { SeasonParticipantItem } from "@/components/app/series/SeasonParticipantItem"
-import { Button } from "@vereinsheim/ui/button"
+import {
+  CompetitionDetailHeader,
+  DetailNavButton,
+} from "@/components/app/shell/CompetitionDetailHeader"
 import { Badge } from "@vereinsheim/ui/badge"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
@@ -61,34 +63,24 @@ export default async function SeriesPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-          <Link href="/competitions">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Wettbewerbe
-          </Link>
-        </Button>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">{competition.name}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {competition.discipline?.name ?? "Gemischt"} · Serien erfassen
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button asChild variant="outline" size="icon" className="h-9 w-9">
-              <Link href={`/competitions/${id}/participants`} title="Teilnehmer">
-                <Users className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="icon" className="h-9 w-9">
-              <Link href={`/competitions/${id}/ranking`} title="Rangliste">
-                <BarChart2 className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+      <CompetitionDetailHeader
+        title={competition.name}
+        subtitle={`${competition.discipline?.name ?? "Gemischt"} · Serien erfassen`}
+        actions={
+          <>
+            <DetailNavButton
+              href={`/competitions/${id}/participants`}
+              label="Teilnehmer"
+              icon={Users}
+            />
+            <DetailNavButton
+              href={`/competitions/${id}/ranking`}
+              label="Rangliste"
+              icon={BarChart2}
+            />
+          </>
+        }
+      />
 
       {activeParticipants.length === 0 ? (
         <EmptyState
@@ -199,34 +191,24 @@ async function SeasonSeriesPageContent({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-          <Link href="/competitions">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Wettbewerbe
-          </Link>
-        </Button>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">{competition.name}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {competition.discipline?.name ?? "Gemischt"} · Serien erfassen
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button asChild variant="outline" size="icon" className="h-9 w-9">
-              <Link href={`/competitions/${id}/participants`} title="Teilnehmer">
-                <Users className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="icon" className="h-9 w-9">
-              <Link href={`/competitions/${id}/standings`} title="Rangliste">
-                <BarChart2 className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+      <CompetitionDetailHeader
+        title={competition.name}
+        subtitle={`${competition.discipline?.name ?? "Gemischt"} · Serien erfassen`}
+        actions={
+          <>
+            <DetailNavButton
+              href={`/competitions/${id}/participants`}
+              label="Teilnehmer"
+              icon={Users}
+            />
+            <DetailNavButton
+              href={`/competitions/${id}/standings`}
+              label="Rangliste"
+              icon={BarChart2}
+            />
+          </>
+        }
+      />
 
       {activeParticipants.length === 0 ? (
         <EmptyState

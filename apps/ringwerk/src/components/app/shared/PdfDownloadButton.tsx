@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { FileDown } from "lucide-react"
+import { Download } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
   label?: string
 }
 
+// Inline-ghost-Aktion für die Detail-Aktionsleiste: Icon immer, Label ab sm.
+// Das Icon ist `Download` (Icon-Vokabular §4: PDF/Download).
 export function PdfDownloadButton({ href, label = "PDF exportieren" }: Props) {
   const [loading, setLoading] = useState(false)
 
@@ -20,14 +22,15 @@ export function PdfDownloadButton({ href, label = "PDF exportieren" }: Props) {
 
   return (
     <Button
-      variant="outline"
-      size="icon"
-      className="h-10 w-10"
+      variant="ghost"
+      size="sm"
+      className="px-2 sm:px-3"
       onClick={handleClick}
       disabled={loading}
-      title={loading ? "Erstelle PDF…" : label}
+      aria-label={label}
     >
-      <FileDown className="h-4 w-4" />
+      <Download className="h-4 w-4 sm:mr-1.5" />
+      <span className="hidden sm:inline">{loading ? "Erstelle PDF…" : label}</span>
     </Button>
   )
 }
