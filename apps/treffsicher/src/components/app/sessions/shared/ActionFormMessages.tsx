@@ -9,7 +9,7 @@ export function ActionFormMessages({ error, success, showInlineSuccess, successM
   return (
     <>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {success && showInlineSuccess && <p className="text-sm text-green-600">{successMessage}</p>}
+      {success && showInlineSuccess && <p className="text-sm text-success">{successMessage}</p>}
     </>
   )
 }

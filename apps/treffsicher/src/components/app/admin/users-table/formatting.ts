@@ -4,16 +4,16 @@ import type { AdminUserListItem } from "@/lib/admin/actions"
 
 export function getRoleBadgeClass(role: AdminUserListItem["role"]): string {
   if (role === "ADMIN") {
-    return "border-amber-800 bg-amber-950 text-amber-300"
+    return "border-warning/40 bg-warning/10 text-warning"
   }
-  return "border-sky-800 bg-sky-950 text-sky-300"
+  return "border-info/40 bg-info/10 text-info"
 }
 
 export function getStatusBadgeClass(isActive: boolean): string {
   if (isActive) {
-    return "border-emerald-800 bg-emerald-950 text-emerald-300"
+    return "border-success/40 bg-success/10 text-success"
   }
-  return "border-zinc-700 bg-zinc-900 text-zinc-300"
+  return "border-border bg-muted text-muted-foreground"
 }
 
 export function formatDate(date: Date, displayTimeZone: string): string {

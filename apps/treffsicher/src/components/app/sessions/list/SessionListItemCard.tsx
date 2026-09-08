@@ -54,7 +54,7 @@ export function SessionListItemCard({ session, displayTimeZone }: Props) {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5">
                   {model.isFavourite && (
-                    <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500 shrink-0" />
+                    <Heart className="h-3.5 w-3.5 fill-destructive text-destructive shrink-0" />
                   )}
                   <Badge variant="outline" className={model.typeBadgeClass}>
                     {model.typeLabel}
