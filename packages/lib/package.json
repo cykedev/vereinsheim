@@ -9,7 +9,12 @@
     "./format": "./src/format.ts",
     "./forms/fieldErrors": "./src/forms/fieldErrors.ts",
     "./hooks/useUnsavedChangesGuard": "./src/hooks/useUnsavedChangesGuard.ts",
-    "./hooks/useNavigationConfirm": "./src/hooks/useNavigationConfirm.ts"
+    "./hooks/useNavigationConfirm": "./src/hooks/useNavigationConfirm.ts",
+    "./auth/validation": "./src/auth/validation.ts",
+    "./auth/rate-limit/config": "./src/auth/rate-limit/config.ts",
+    "./auth/rate-limit/limiter": "./src/auth/rate-limit/limiter.ts",
+    "./auth/rate-limit/normalization": "./src/auth/rate-limit/normalization.ts",
+    "./auth/rate-limit/types": "./src/auth/rate-limit/types.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

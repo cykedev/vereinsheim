@@ -5,7 +5,7 @@ import {
   MIN_PASSWORD_LENGTH,
   normalizeLoginEmail,
   validatePasswordChangeInput,
-} from "./authValidation"
+} from "./validation"
 
 describe("normalizeLoginEmail", () => {
   it("normalisiert und trimmt gueltige E-Mails", () => {

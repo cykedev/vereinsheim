@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import type { LoginBucket, LoginRateLimitStore } from "@/lib/auth-rate-limit/types"
+import type { LoginBucket, LoginRateLimitStore } from "@vereinsheim/lib/auth/rate-limit/types"
 
 function toDate(ms: number): Date {
   return new Date(ms)

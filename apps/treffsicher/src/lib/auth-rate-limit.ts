@@ -1,7 +1,7 @@
-import { LOGIN_RATE_LIMIT_CONFIG } from "@/lib/auth-rate-limit/config"
-import { createLoginRateLimitService } from "@/lib/auth-rate-limit/limiter"
+import { LOGIN_RATE_LIMIT_CONFIG } from "@vereinsheim/lib/auth/rate-limit/config"
+import { createLoginRateLimitService } from "@vereinsheim/lib/auth/rate-limit/limiter"
 import { createRateLimitStoreForCurrentEnv } from "@/lib/auth-rate-limit/store"
-import type { LoginRateLimitCheck } from "@/lib/auth-rate-limit/types"
+import type { LoginRateLimitCheck } from "@vereinsheim/lib/auth/rate-limit/types"
 
 const rateLimitStore = createRateLimitStoreForCurrentEnv()
 const rateLimitService = createLoginRateLimitService(rateLimitStore, LOGIN_RATE_LIMIT_CONFIG)

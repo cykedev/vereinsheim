@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  emailKey,
-  ipKey,
-  normalizeEmail,
-  normalizeIpHeaderValue,
-} from "@/lib/auth-rate-limit/normalization"
+import { emailKey, ipKey, normalizeEmail, normalizeIpHeaderValue } from "./normalization"
 
 describe("emailKey", () => {
   it("prefixiert den Key stabil mit 'email:'", () => {

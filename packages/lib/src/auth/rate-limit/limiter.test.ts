@@ -1,12 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { CLEANUP_INTERVAL_MS } from "@/lib/auth-rate-limit/config"
-import { createLoginRateLimitService } from "@/lib/auth-rate-limit/limiter"
-import { emailKey, ipKey } from "@/lib/auth-rate-limit/normalization"
-import type {
-  LoginBucket,
-  LoginRateLimitConfig,
-  LoginRateLimitStore,
-} from "@/lib/auth-rate-limit/types"
+import { CLEANUP_INTERVAL_MS } from "./config"
+import { createLoginRateLimitService } from "./limiter"
+import { emailKey, ipKey } from "./normalization"
+import type { LoginBucket, LoginRateLimitConfig, LoginRateLimitStore } from "./types"
 
 function createTestStore() {
   const buckets = new Map<string, LoginBucket>()

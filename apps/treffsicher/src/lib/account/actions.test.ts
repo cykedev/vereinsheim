@@ -21,7 +21,7 @@ vi.mock("@/lib/auth-helpers", () => ({
   getAuthSession: getAuthSessionMock,
 }))
 
-vi.mock("@/lib/authValidation", () => ({
+vi.mock("@vereinsheim/lib/auth/validation", () => ({
   validatePasswordChangeInput: validationMock,
 }))
 

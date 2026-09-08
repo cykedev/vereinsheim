@@ -3,7 +3,11 @@
 import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { getAuthSession, isAdmin } from "@/lib/auth-helpers"
-import { normalizeLoginEmail, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "@/lib/authValidation"
+import {
+  normalizeLoginEmail,
+  MIN_PASSWORD_LENGTH,
+  MAX_PASSWORD_LENGTH,
+} from "@vereinsheim/lib/auth/validation"
 import type { ActionResult } from "@/lib/types"
 import type { AuditEventType } from "@/lib/auditLog/types"
 import { BCRYPT_COST, CreateUserSchema, UpdateUserSchema, revalidateUserPaths } from "./_shared"

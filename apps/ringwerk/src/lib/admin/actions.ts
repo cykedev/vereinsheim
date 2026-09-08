@@ -5,7 +5,7 @@ import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { db } from "@/lib/db"
 import { getAuthSession } from "@/lib/auth-helpers"
-import { MAX_USER_EMAIL_LENGTH } from "@/lib/authValidation"
+import { MAX_USER_EMAIL_LENGTH } from "@vereinsheim/lib/auth/validation"
 import type { ActionResult } from "@/lib/types"
 import type { AdminLoginRateLimitBucket, AdminLoginRateLimitInsights } from "@/lib/admin/types"
 

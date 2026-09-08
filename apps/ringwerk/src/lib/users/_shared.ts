@@ -4,7 +4,7 @@ import {
   MIN_PASSWORD_LENGTH,
   MAX_PASSWORD_LENGTH,
   MAX_USER_EMAIL_LENGTH,
-} from "@/lib/authValidation"
+} from "@vereinsheim/lib/auth/validation"
 
 export const BCRYPT_COST = 12
 

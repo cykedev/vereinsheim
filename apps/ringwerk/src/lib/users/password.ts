@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { getAuthSession } from "@/lib/auth-helpers"
-import { validatePasswordChangeInput } from "@/lib/authValidation"
+import { validatePasswordChangeInput } from "@vereinsheim/lib/auth/validation"
 import type { ActionResult } from "@/lib/types"
 import { BCRYPT_COST } from "./_shared"
 

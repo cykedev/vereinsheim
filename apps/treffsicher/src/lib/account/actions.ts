@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { getAuthSession } from "@/lib/auth-helpers"
-import { validatePasswordChangeInput } from "@/lib/authValidation"
+import { validatePasswordChangeInput } from "@vereinsheim/lib/auth/validation"
 
 export type AccountActionResult = {
   error?: string

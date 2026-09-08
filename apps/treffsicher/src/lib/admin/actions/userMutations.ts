@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
-import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/lib/authValidation"
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@vereinsheim/lib/auth/validation"
 import {
   CreateUserSchema,
   revalidateAdminPaths,
