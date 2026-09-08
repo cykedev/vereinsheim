@@ -45,7 +45,7 @@ export function DisciplineForm({ initialData, disciplineId, canCreateSystem = fa
 
   // Nach erfolgreicher Erstellung Toast zeigen und zur Disziplin-Liste navigieren.
   useEffect(() => {
-    if (state?.success) {
+    if (state && "success" in state) {
       toast.success(disciplineId ? "Disziplin gespeichert." : "Disziplin angelegt.")
       router.push("/disciplines")
     } else if (generalError) {

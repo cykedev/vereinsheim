@@ -34,14 +34,12 @@ export function DeleteDisciplineButton({ disciplineId, compact = false }: Props)
     setMessage(null)
     startTransition(async () => {
       const result = await deleteDiscipline(disciplineId)
-      if (result.error) {
+      if ("error" in result) {
         setMessage(typeof result.error === "string" ? result.error : "Löschen fehlgeschlagen.")
         setConfirmOpen(false)
         return
       }
-      if (result.success) {
-        router.push("/disciplines")
-      }
+      router.push("/disciplines")
     })
   }
 

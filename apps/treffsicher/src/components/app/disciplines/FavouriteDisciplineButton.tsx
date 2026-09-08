@@ -23,7 +23,7 @@ export function FavouriteDisciplineButton({ disciplineId, initialFavourite }: Pr
 
     startTransition(async () => {
       const result = await setFavouriteDiscipline(disciplineId)
-      if (result.error) {
+      if ("error" in result) {
         setIsFavourite(previous)
         return
       }

@@ -23,7 +23,7 @@ export function HideDisciplineButton({ disciplineId, initialHidden }: Props) {
 
     startTransition(async () => {
       const result = await toggleHiddenDiscipline(disciplineId)
-      if (result.error) {
+      if ("error" in result) {
         setIsHidden(previous)
         return
       }
