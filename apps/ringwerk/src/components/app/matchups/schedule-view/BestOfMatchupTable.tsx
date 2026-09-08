@@ -100,15 +100,15 @@ export function BestOfMatchupTable({
 
             return (
               <tr key={m.id} className="transition-colors hover:bg-muted/20">
-                <td className={`px-2 py-3 sm:px-4 ${winner === "home" ? "bg-emerald-500/10" : ""}`}>
+                <td className={`px-2 py-3 sm:px-4 ${winner === "home" ? "bg-success/10" : ""}`}>
                   <span className="font-medium">{participantName(m.homeParticipant)}</span>
                 </td>
-                <td className={`px-2 py-3 sm:px-4 ${winner === "away" ? "bg-emerald-500/10" : ""}`}>
+                <td className={`px-2 py-3 sm:px-4 ${winner === "away" ? "bg-success/10" : ""}`}>
                   <span className="font-medium">{participantName(m.awayParticipant!)}</span>
                 </td>
                 <td className="px-2 py-3 text-center sm:px-4">
                   {isComplete ? (
-                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    <span className="inline-flex items-center rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
                       {label}
                     </span>
                   ) : hasResults ? (

@@ -41,7 +41,7 @@ export function DuelRows({ match, canManage, config, card }: Props) {
             {duel.isCompleted && duel.resultA && duel.resultB ? (
               <>
                 <span
-                  className={`min-w-0 flex-1 overflow-hidden text-right tabular-nums ${isWinnerA ? "font-semibold text-emerald-600 dark:text-emerald-400" : ""}`}
+                  className={`min-w-0 flex-1 overflow-hidden text-right tabular-nums ${isWinnerA ? "font-semibold text-success" : ""}`}
                 >
                   {isFinal
                     ? `${duel.resultA.totalRings} Ringe`
@@ -60,7 +60,7 @@ export function DuelRows({ match, canManage, config, card }: Props) {
                   )}
                 </span>
                 <span
-                  className={`min-w-0 flex-1 overflow-hidden tabular-nums ${isWinnerB ? "font-semibold text-emerald-600 dark:text-emerald-400" : ""}`}
+                  className={`min-w-0 flex-1 overflow-hidden tabular-nums ${isWinnerB ? "font-semibold text-success" : ""}`}
                 >
                   {isFinal
                     ? `${duel.resultB.totalRings} Ringe`

@@ -11,16 +11,16 @@ interface Props {
 }
 
 const ROW_HIGHLIGHT: Record<number, string> = {
-  1: "bg-yellow-400/5",
-  2: "bg-slate-400/5",
-  3: "bg-orange-500/5",
+  1: "bg-rank-1/10",
+  2: "bg-rank-2/10",
+  3: "bg-rank-3/10",
 }
 
 // Direktvergleich-Ton (aus formatDirectComparison) → Tailwind-Klassen.
 const DIRECT_TONE_CLASS: Record<DirectComparisonTone, string> = {
-  win: "font-medium text-emerald-600 dark:text-emerald-400",
+  win: "font-medium text-success",
   loss: "text-muted-foreground",
-  pending: "italic text-amber-600 dark:text-amber-400",
+  pending: "italic text-warning",
   muted: "text-muted-foreground",
 }
 
@@ -95,7 +95,7 @@ export function BestOfStandingsTable({ rows }: Props) {
                   <span
                     className={
                       row.duelDiff > 0
-                        ? "font-medium text-emerald-600 dark:text-emerald-400"
+                        ? "font-medium text-success"
                         : row.duelDiff < 0
                           ? "text-muted-foreground"
                           : "text-muted-foreground"

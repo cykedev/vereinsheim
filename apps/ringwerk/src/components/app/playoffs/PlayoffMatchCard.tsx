@@ -70,7 +70,7 @@ export function PlayoffMatchCard({ match, canManage, config }: Props) {
           {/* Stand */}
           <div className="flex items-center gap-2">
             <span
-              className={`min-w-0 flex-1 truncate text-sm font-medium ${winnerId === match.participantA.id ? "text-emerald-600 dark:text-emerald-400" : ""}`}
+              className={`min-w-0 flex-1 truncate text-sm font-medium ${winnerId === match.participantA.id ? "text-success" : ""}`}
             >
               {nameA}
             </span>
@@ -78,7 +78,7 @@ export function PlayoffMatchCard({ match, canManage, config }: Props) {
               {match.winsA} : {match.winsB}
             </span>
             <span
-              className={`min-w-0 flex-1 truncate text-right text-sm font-medium ${winnerId === match.participantB.id ? "text-emerald-600 dark:text-emerald-400" : ""}`}
+              className={`min-w-0 flex-1 truncate text-right text-sm font-medium ${winnerId === match.participantB.id ? "text-success" : ""}`}
             >
               {nameB}
             </span>

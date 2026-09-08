@@ -12,11 +12,11 @@ import {
 import type { AuditLogEntry, AuditLogEntryWithCompetition } from "@/lib/auditLog/queries"
 
 const CATEGORY_BADGE_CLASS: Record<AuditEventCategory, string> = {
-  participant: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  result: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  playoff: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-  destructive: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-  admin: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+  participant: "bg-warning/15 text-warning",
+  result: "bg-info/15 text-info",
+  playoff: "bg-chart-4/15 text-chart-4",
+  destructive: "bg-destructive/15 text-destructive",
+  admin: "bg-success/15 text-success",
 }
 
 type Entry = AuditLogEntry | AuditLogEntryWithCompetition

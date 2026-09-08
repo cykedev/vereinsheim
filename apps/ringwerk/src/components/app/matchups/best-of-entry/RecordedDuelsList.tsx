@@ -66,7 +66,7 @@ export function RecordedDuelsList({
             {homeS && awayS ? (
               <>
                 <span
-                  className={`min-w-0 flex-1 overflow-hidden text-right tabular-nums ${outcome === "A" ? "font-semibold text-emerald-600 dark:text-emerald-400" : ""}`}
+                  className={`min-w-0 flex-1 overflow-hidden text-right tabular-nums ${outcome === "A" ? "font-semibold text-success" : ""}`}
                 >
                   {formatRings(homeS.rings, scoringType)}&nbsp;R&nbsp;·&nbsp;
                   {formatDecimal1(homeS.teiler)}&nbsp;T
@@ -75,7 +75,7 @@ export function RecordedDuelsList({
                   {outcome === "A" ? "▸" : outcome === "B" ? "◂" : "="}
                 </span>
                 <span
-                  className={`min-w-0 flex-1 overflow-hidden tabular-nums ${outcome === "B" ? "font-semibold text-emerald-600 dark:text-emerald-400" : ""}`}
+                  className={`min-w-0 flex-1 overflow-hidden tabular-nums ${outcome === "B" ? "font-semibold text-success" : ""}`}
                 >
                   {formatRings(awayS.rings, scoringType)}&nbsp;R&nbsp;·&nbsp;
                   {formatDecimal1(awayS.teiler)}&nbsp;T
@@ -104,7 +104,7 @@ export function RecordedDuelsList({
             {homeS && awayS ? (
               <>
                 <span
-                  className={`min-w-0 flex-1 overflow-hidden text-right tabular-nums ${outcome === "A" ? "font-semibold text-emerald-600 dark:text-emerald-400" : ""}`}
+                  className={`min-w-0 flex-1 overflow-hidden text-right tabular-nums ${outcome === "A" ? "font-semibold text-success" : ""}`}
                 >
                   {homeS.rings.toFixed(1).replace(".", ",")}
                 </span>
@@ -112,7 +112,7 @@ export function RecordedDuelsList({
                   {outcome === "A" ? "▸" : outcome === "B" ? "◂" : "="}
                 </span>
                 <span
-                  className={`min-w-0 flex-1 overflow-hidden tabular-nums ${outcome === "B" ? "font-semibold text-emerald-600 dark:text-emerald-400" : ""}`}
+                  className={`min-w-0 flex-1 overflow-hidden tabular-nums ${outcome === "B" ? "font-semibold text-success" : ""}`}
                 >
                   {awayS.rings.toFixed(1).replace(".", ",")}
                 </span>

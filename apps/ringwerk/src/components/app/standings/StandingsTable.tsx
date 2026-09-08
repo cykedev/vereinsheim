@@ -8,9 +8,9 @@ interface Props {
 }
 
 const ROW_HIGHLIGHT: Record<number, string> = {
-  1: "bg-yellow-400/5",
-  2: "bg-slate-400/5",
-  3: "bg-orange-500/5",
+  1: "bg-rank-1/10",
+  2: "bg-rank-2/10",
+  3: "bg-rank-3/10",
 }
 
 export function StandingsTable({ rows }: Props) {
@@ -79,18 +79,14 @@ export function StandingsTable({ rows }: Props) {
                 </td>
                 <td className="px-2 py-3 text-center sm:px-4">
                   {row.wins > 0 ? (
-                    <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                      {row.wins}
-                    </span>
+                    <span className="font-medium text-success">{row.wins}</span>
                   ) : (
                     <span className="text-muted-foreground">{row.wins}</span>
                   )}
                 </td>
                 <td className="hidden px-4 py-3 text-center sm:table-cell">
                   {row.draws > 0 ? (
-                    <span className="font-medium text-amber-600 dark:text-amber-400">
-                      {row.draws}
-                    </span>
+                    <span className="font-medium text-warning">{row.draws}</span>
                   ) : (
                     <span className="text-muted-foreground">{row.draws}</span>
                   )}
