@@ -104,7 +104,7 @@ export function AdminEditUserForm({ user }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="admin-edit-password">Neues temporaeres Passwort (optional)</Label>
+        <Label htmlFor="admin-edit-password">Neues temporäres Passwort (optional)</Label>
         <Input
           id="admin-edit-password"
           name="tempPassword"

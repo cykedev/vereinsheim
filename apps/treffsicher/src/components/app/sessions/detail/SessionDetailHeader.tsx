@@ -33,7 +33,9 @@ export function SessionDetailHeader({ session, displayTimeZone }: Props) {
       </div>
 
       <div className="min-w-0 space-y-1.5">
-        <h1 className="text-2xl font-bold">{formatDate(session.date, displayTimeZone)}</h1>
+        <h1 className="break-words text-2xl font-semibold tracking-tight">
+          {formatDate(session.date, displayTimeZone)}
+        </h1>
 
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           {session.discipline && <span className="break-words">{session.discipline.name}</span>}
