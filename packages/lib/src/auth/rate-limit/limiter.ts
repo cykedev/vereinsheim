@@ -1,16 +1,11 @@
-import { CLEANUP_INTERVAL_MS } from "@/lib/auth-rate-limit/config"
-import {
-  emailKey,
-  ipKey,
-  normalizeEmail,
-  normalizeIpHeaderValue,
-} from "@/lib/auth-rate-limit/normalization"
+import { CLEANUP_INTERVAL_MS } from "./config"
+import { emailKey, ipKey, normalizeEmail, normalizeIpHeaderValue } from "./normalization"
 import type {
   LoginBucket,
   LoginRateLimitCheck,
   LoginRateLimitConfig,
   LoginRateLimitStore,
-} from "@/lib/auth-rate-limit/types"
+} from "./types"
 
 async function registerFailedAttempt(
   store: LoginRateLimitStore,

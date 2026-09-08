@@ -12,7 +12,7 @@ afterEach(() => {
 })
 
 async function loadConfig() {
-  return import("@/lib/auth-rate-limit/config")
+  return import("./config")
 }
 
 describe("LOGIN_RATE_LIMIT_CONFIG.maxBuckets", () => {

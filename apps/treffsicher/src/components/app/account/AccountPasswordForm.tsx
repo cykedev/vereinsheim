@@ -8,7 +8,7 @@ import { getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
-import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/lib/authValidation"
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@vereinsheim/lib/auth/validation"
 
 export function AccountPasswordForm() {
   const [showPasswords, setShowPasswords] = useState(false)

@@ -8,7 +8,7 @@ import {
   clearSuccessfulLoginAttempts,
   registerFailedLoginAttempt,
 } from "@/lib/auth-rate-limit"
-import { normalizeLoginEmail } from "@/lib/authValidation"
+import { normalizeLoginEmail } from "@vereinsheim/lib/auth/validation"
 
 // CSRF-Schutz: Next.js Server Actions sind durch den Same-Origin-Check des Browsers geschuetzt.
 // NextAuth prueft zusaetzlich den Origin-Header bei POST-Requests. Ein manueller CSRF-Token

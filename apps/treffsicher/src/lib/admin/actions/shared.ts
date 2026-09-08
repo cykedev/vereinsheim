@@ -6,7 +6,7 @@ import {
   MAX_PASSWORD_LENGTH,
   MAX_USER_EMAIL_LENGTH,
   MIN_PASSWORD_LENGTH,
-} from "@/lib/authValidation"
+} from "@vereinsheim/lib/auth/validation"
 import type { AdminLoginRateLimitBucket } from "@/lib/admin/types"
 
 export const TOP_NOISY_WINDOW_HOURS = 24

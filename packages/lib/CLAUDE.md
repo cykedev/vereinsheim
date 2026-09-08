@@ -23,3 +23,11 @@ Module sind nicht mehr im `consistency-check.sh`-Gate).
 - **Verhalten/Logik ändert man HIER**, nicht in App-Kopien — sonst entsteht wieder Drift.
 - `dateTime` (server-only) seit Juni 2026 ebenfalls geteilt via `@vereinsheim/lib/dateTime` — das Paket setzt dafür `types: ["node", "react"]` + devDeps `@types/node`/`server-only`.
 - Nach Änderungen: `pnpm check` (alle 5 Gates über beide Apps) muss grün sein.
+
+## Nachtrag (September 2026)
+
+Zusätzlich hier: `format` (isomorphe Anzeige-Formatierung, **ohne** `server-only` — auch für
+Client-Komponenten; `dateTime` re-exportiert `formatDateOnly` daraus) sowie der **reine Auth-Kern**:
+`auth/validation` (Login-/Passwortregeln) und `auth/rate-limit/{config,limiter,normalization,types}`.
+Am Prisma-Client hängende Teile bleiben app-lokal (`auth-rate-limit/store.ts`, `auth.ts`,
+`auth-helpers.ts`, `startup.ts`) — der Store bekommt seinen Client von der App.

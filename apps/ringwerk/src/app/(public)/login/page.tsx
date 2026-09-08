@@ -8,7 +8,7 @@ import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
-import { MAX_USER_EMAIL_LENGTH } from "@/lib/authValidation"
+import { MAX_USER_EMAIL_LENGTH } from "@vereinsheim/lib/auth/validation"
 
 // Login-Seite: Client-Komponente wegen useState und signIn (Browser-API).
 // Kein Self-Service: Konten werden nur vom Admin angelegt.

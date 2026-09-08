@@ -8,7 +8,7 @@ import {
   clearSuccessfulLoginAttempts,
   registerFailedLoginAttempt,
 } from "@/lib/auth-rate-limit"
-import { normalizeLoginEmail } from "@/lib/authValidation"
+import { normalizeLoginEmail } from "@vereinsheim/lib/auth/validation"
 
 const TRUST_PROXY_HEADERS_FOR_RATE_LIMIT = process.env.AUTH_TRUST_PROXY_HEADERS === "true"
 const MAX_IP_HEADER_LENGTH = 512

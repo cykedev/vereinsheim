@@ -1,6 +1,6 @@
 import { createRateLimitStoreForCurrentEnv } from "@/lib/auth-rate-limit/store"
-import { createLoginRateLimitService } from "@/lib/auth-rate-limit/limiter"
-import { LOGIN_RATE_LIMIT_CONFIG } from "@/lib/auth-rate-limit/config"
+import { createLoginRateLimitService } from "@vereinsheim/lib/auth/rate-limit/limiter"
+import { LOGIN_RATE_LIMIT_CONFIG } from "@vereinsheim/lib/auth/rate-limit/config"
 
 // Singleton: Store und Service einmal pro Prozess erstellen.
 // Bei Hot-Reload bleibt der Modul-Cache erhalten — kein Verbindungsleck.

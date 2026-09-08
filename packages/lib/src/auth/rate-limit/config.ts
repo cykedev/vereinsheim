@@ -1,4 +1,4 @@
-import type { LoginRateLimitConfig } from "@/lib/auth-rate-limit/types"
+import type { LoginRateLimitConfig } from "./types"
 
 const DEFAULT_MAX_RATE_LIMIT_BUCKETS = 10_000
 export const CLEANUP_INTERVAL_MS = 60_000
