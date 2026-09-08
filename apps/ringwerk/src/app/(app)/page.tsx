@@ -134,6 +134,8 @@ export default async function DashboardPage() {
                   </>
                 }
                 moreCount={playoffsStarted ? undefined : Math.max(0, rows.length - PREVIEW_ROWS)}
+                isEmpty={!playoffsStarted && rows.length === 0}
+                emptyText="Noch keine Ergebnisse erfasst"
               >
                 {playoffsStarted ? (
                   <PlayoffBracket
@@ -178,6 +180,8 @@ export default async function DashboardPage() {
                   </>
                 }
                 moreCount={Math.max(0, rows.length - PREVIEW_ROWS)}
+                isEmpty={rows.length === 0}
+                emptyText="Noch keine Ergebnisse erfasst"
               >
                 {isTeamEvent ? (
                   <EventTeamRankingTable
@@ -209,6 +213,8 @@ export default async function DashboardPage() {
                 </Badge>
               }
               moreCount={Math.max(0, standings.length - PREVIEW_ROWS)}
+              isEmpty={standings.length === 0}
+              emptyText="Noch keine Serien erfasst"
             >
               <SeasonStandingsTable
                 entries={standings.slice(0, PREVIEW_ROWS)}
