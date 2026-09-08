@@ -24,6 +24,12 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-rank-1: var(--rank-1);
+  --color-rank-2: var(--rank-2);
+  --color-rank-3: var(--rank-3);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -65,6 +71,15 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  /* Semantische Farben: Bedeutung statt Palette (vault/conventions.md §4).
+     success = Sieg/erledigt, warning = offen/Hinweis, info = neutral markiert,
+     rank-1..3 = Gold/Silber/Bronze. */
+  --success: oklch(0.55 0.15 160);
+  --warning: oklch(0.65 0.16 75);
+  --info: oklch(0.55 0.13 240);
+  --rank-1: oklch(0.72 0.16 90);
+  --rank-2: oklch(0.6 0.02 260);
+  --rank-3: oklch(0.6 0.14 55);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -102,7 +117,14 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --success: oklch(0.74 0.16 160);
+  --warning: oklch(0.82 0.16 80);
+  --info: oklch(0.74 0.12 235);
+  --rank-1: oklch(0.86 0.17 90);
+  --rank-2: oklch(0.82 0.02 260);
+  --rank-3: oklch(0.72 0.14 55);
+  /* 10% Weiss war auf dem dunklen Grund kaum wahrnehmbar. */
+  --border: oklch(1 0 0 / 14%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
@@ -118,6 +140,23 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Akzentfarbe je App. Beide Root-Layouts setzen `data-app` auf <html>; die
+   Palette liegt hier im Paket, weil `src/app/globals.css` byte-identisch
+   bleiben muss (Drift-Gate). Alles ausser Primary/Ring/chart-1 ist geteilt. */
+.dark[data-app="ringwerk"] {
+  --primary: oklch(0.8 0.15 75);
+  --primary-foreground: oklch(0.2 0.03 75);
+  --ring: oklch(0.8 0.15 75 / 60%);
+  --chart-1: oklch(0.8 0.15 75);
+}
+
+.dark[data-app="treffsicher"] {
+  --primary: oklch(0.76 0.12 175);
+  --primary-foreground: oklch(0.18 0.03 175);
+  --ring: oklch(0.76 0.12 175 / 60%);
+  --chart-1: oklch(0.76 0.12 175);
 }
 
 @layer base {
@@ -156,18 +195,4 @@ input[type="datetime-local"]::-webkit-date-and-time-value {
 input[type="date"]::-webkit-datetime-edit,
 input[type="datetime-local"]::-webkit-datetime-edit {
   padding: 0;
-}
-
-/* Recharts-Tooltip: Dark-Mode-Farben erzwingen (CSS-Variablen in Inline-Styles
-   sind manchmal browserabhängig — dieses Override greift zuverlässig) */
-.dark .recharts-default-tooltip {
-  background-color: var(--card) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--card-foreground) !important;
-}
-.dark .recharts-tooltip-label {
-  color: var(--card-foreground) !important;
-}
-.dark .recharts-tooltip-item {
-  color: var(--muted-foreground) !important;
 }
