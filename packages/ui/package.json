@@ -29,7 +29,8 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
   },
   "prettier": "@vereinsheim/config/prettier",
   "dependencies": {

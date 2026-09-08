@@ -1,11 +1,13 @@
 import "server-only"
 
+import { APP_LOCALE } from "./format"
+
 // DB speichert immer UTC. Diese Timezone wird ausschliesslich für die UI-Darstellung verwendet.
 const DEFAULT_DISPLAY_TIME_ZONE = "Europe/Berlin"
 
 function isValidIanaTimeZone(value: string): boolean {
   try {
-    new Intl.DateTimeFormat("de-CH", { timeZone: value })
+    new Intl.DateTimeFormat(APP_LOCALE, { timeZone: value })
     return true
   } catch {
     return false
@@ -24,12 +26,7 @@ export function getDisplayTimeZone(): string {
   return resolveDisplayTimeZone(process.env.DISPLAY_TIME_ZONE)
 }
 
-/** Formatiert ein Datum als "TT.MM.JJJJ" in der konfigurierten Zeitzone. */
-export function formatDateOnly(date: Date, displayTimeZone: string): string {
-  return new Intl.DateTimeFormat("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: displayTimeZone,
-  }).format(date)
-}
+// Die Formatter selbst liegen in `./format` (isomorph, auch für Client-Komponenten).
+// Hier nur re-exportiert, damit bestehende `@vereinsheim/lib/dateTime`-Importe
+// weiter funktionieren; neue Aufrufer importieren direkt aus `@vereinsheim/lib/format`.
+export { formatDateOnly } from "./format"
