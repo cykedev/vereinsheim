@@ -1,98 +1,120 @@
 import type { Metadata } from "next"
-import { getAuthSession } from "@/lib/auth-helpers"
-import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Plus, BookOpen, TrendingUp, Goal, Target, ListChecks } from "lucide-react"
+import { redirect } from "next/navigation"
+import { BookOpen, Goal } from "lucide-react"
+
+import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
+import { Badge } from "@vereinsheim/ui/badge"
 import { Button } from "@vereinsheim/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/card"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
-const quickActions = [
-  {
-    title: "Neue Einheit",
-    description: "Erfasse Training, Wettkampf, Trockentraining oder Mentaltraining.",
-    icon: Plus,
-    href: "/sessions/new",
-    buttonLabel: "Einheit erfassen",
-    buttonVariant: "default" as const,
-  },
-  {
-    title: "Tagebuch",
-    description: "Filtere Einheiten, öffne Details und verfolge deine Entwicklung.",
-    icon: BookOpen,
-    href: "/sessions",
-    buttonLabel: "Zum Tagebuch",
-    buttonVariant: "outline" as const,
-  },
-  {
-    title: "Statistiken",
-    description: "Vergleiche Verläufe, Korrelationen, Schussverteilung und Prognose/Feedback.",
-    icon: TrendingUp,
-    href: "/statistics",
-    buttonLabel: "Statistiken öffnen",
-    buttonVariant: "outline" as const,
-  },
-  {
-    title: "Ziele",
-    description: "Lege Ziele an und markiere Einheiten, die darauf einzahlen.",
-    icon: Goal,
-    href: "/goals",
-    buttonLabel: "Ziele öffnen",
-    buttonVariant: "outline" as const,
-  },
-  {
-    title: "Ablauf",
-    description: "Lege Abläufe mit ihren Schritten an und verfeinere sie laufend.",
-    icon: ListChecks,
-    href: "/shot-routines",
-    buttonLabel: "Ablauf öffnen",
-    buttonVariant: "outline" as const,
-  },
-  {
-    title: "Disziplinen",
-    description:
-      "Pflege System- und eigene Disziplinen, setze Favoriten und archiviere bei Bedarf.",
-    icon: Target,
-    href: "/disciplines",
-    buttonLabel: "Disziplinen öffnen",
-    buttonVariant: "outline" as const,
-  },
-]
+import { getAuthSession } from "@/lib/auth-helpers"
+import { selectDashboardData } from "@/lib/dashboard/selectDashboardData"
+import { getGoalsWithAssignments } from "@/lib/goals/actions"
+import { getSessions } from "@/lib/sessions/actions"
+import { GOAL_TYPE_LABELS } from "@/components/app/goals/goal-card-section/format"
+import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
+import { SessionsList } from "@/components/app/sessions/list/SessionsList"
 
-// Dashboard-Seite: Einstiegspunkt nach dem Login.
 export const metadata: Metadata = {
   title: "Dashboard",
 }
 
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <Card>
+      <CardContent className="space-y-1 py-4">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-2xl font-semibold tabular-nums">{value}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Dashboard-Seite: Einstiegspunkt nach dem Login. Zeigt den eigenen Stand
+// (letzte Einheiten, laufende Ziele, zwei Kennzahlen) statt die Navigation zu
+// wiederholen.
 export default async function DashboardPage() {
   const session = await getAuthSession()
   if (!session) redirect("/login")
 
+  const displayTimeZone = getDisplayTimeZone()
   const displayName = session.user.name ?? session.user.email
+
+  const [sessions, goals] = await Promise.all([getSessions(), getGoalsWithAssignments()])
+  const { recentSessions, activeGoals, sessionsLast30Days, sessionsTotal } = selectDashboardData(
+    sessions,
+    goals,
+    new Date()
+  )
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Dashboard" description={`Willkommen, ${displayName}`} />
+      <PageHeader
+        title="Dashboard"
+        description={`Willkommen, ${displayName}`}
+        action={<CreateItemLinkButton href="/sessions/new" label="Neue Einheit" />}
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {quickActions.map((action) => {
-          const Icon = action.icon
-          return (
-            <Card key={action.href}>
-              <CardHeader>
-                <Icon className="mb-1 h-7 w-7 text-muted-foreground" />
-                <CardTitle className="text-base">{action.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">{action.description}</p>
-                <Button variant={action.buttonVariant} asChild>
-                  <Link href={action.href}>{action.buttonLabel}</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )
-        })}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <StatCard label="Einheiten in den letzten 30 Tagen" value={sessionsLast30Days} />
+        <StatCard label="Einheiten gesamt" value={sessionsTotal} />
       </div>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold tracking-tight">Letzte Einheiten</h2>
+        {recentSessions.length === 0 ? (
+          <EmptyState
+            title="Noch keine Einheiten vorhanden"
+            description="Starte mit deiner ersten Einheit."
+            icon={BookOpen}
+            actionLabel="Neue Einheit"
+            actionHref="/sessions/new"
+          />
+        ) : (
+          <>
+            <SessionsList sessions={recentSessions} displayTimeZone={displayTimeZone} />
+            <div className="flex justify-end">
+              <Button asChild variant="link" className="px-0">
+                <Link href="/sessions">Alle Einheiten</Link>
+              </Button>
+            </div>
+          </>
+        )}
+      </section>
+
+      {activeGoals.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold tracking-tight">Laufende Ziele</h2>
+          <div className="space-y-2">
+            {activeGoals.map((goal) => (
+              // Ganze Karte klickbar wie in den Übersichtslisten.
+              <Link key={goal.id} href={`/goals/${goal.id}`} className="block">
+                <Card className="transition-colors hover:bg-muted/30">
+                  <CardContent className="space-y-2 py-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Goal className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <p className="break-words font-medium">{goal.title}</p>
+                      <Badge variant="outline">{GOAL_TYPE_LABELS[goal.type] ?? goal.type}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Bis {formatDateOnly(new Date(goal.dateTo), displayTimeZone)} ·{" "}
+                      {goal.sessionCount} Einheit{goal.sessionCount === 1 ? "" : "en"} zugeordnet
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <Button asChild variant="link" className="px-0">
+              <Link href="/goals">Alle Ziele</Link>
+            </Button>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
