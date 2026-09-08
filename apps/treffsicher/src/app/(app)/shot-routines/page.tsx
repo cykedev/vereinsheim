@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ListChecks } from "lucide-react"
@@ -9,6 +10,10 @@ import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkBu
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 import { Card, CardContent } from "@vereinsheim/ui/card"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
+
+export const metadata: Metadata = {
+  title: "Schuss-Abläufe",
+}
 
 export default async function ShotRoutinesPage() {
   const displayTimeZone = getDisplayTimeZone()

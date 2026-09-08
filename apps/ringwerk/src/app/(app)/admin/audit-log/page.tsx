@@ -1,9 +1,14 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { getAuditLogs } from "@/lib/auditLog/queries"
 import { AuditLogList } from "@/components/app/auditLog/AuditLogList"
 import { Button } from "@vereinsheim/ui/button"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
+
+export const metadata: Metadata = {
+  title: "Protokoll",
+}
 
 export default async function AdminAuditLogPage() {
   const entries = await getAuditLogs()

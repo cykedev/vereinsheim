@@ -1,9 +1,14 @@
+import type { Metadata } from "next"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { redirect } from "next/navigation"
 import { getDisciplines, getFavouriteDisciplineId } from "@/lib/disciplines/actions"
 import { getGoalsForSelection } from "@/lib/goals/actions"
 import { SessionForm } from "@/components/app/session-form/SessionForm"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+
+export const metadata: Metadata = {
+  title: "Neue Einheit",
+}
 
 export default async function NewSessionPage() {
   const session = await getAuthSession()

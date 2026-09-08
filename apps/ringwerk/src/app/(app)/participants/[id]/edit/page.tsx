@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getParticipantById } from "@/lib/participants/queries"
@@ -7,6 +8,10 @@ import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Teilnehmer bearbeiten",
 }
 
 export default async function EditParticipantPage({ params }: Props) {

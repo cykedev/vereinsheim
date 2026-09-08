@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { CalendarDays, Trophy, Users } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
@@ -12,6 +13,10 @@ import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Protokoll",
 }
 
 export default async function CompetitionAuditLogPage({ params }: Props) {

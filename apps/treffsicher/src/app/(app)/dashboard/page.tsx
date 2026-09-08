@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
@@ -59,6 +60,10 @@ const quickActions = [
 ]
 
 // Dashboard-Seite: Einstiegspunkt nach dem Login.
+export const metadata: Metadata = {
+  title: "Dashboard",
+}
+
 export default async function DashboardPage() {
   const session = await getAuthSession()
   if (!session) redirect("/login")

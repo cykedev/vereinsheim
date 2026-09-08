@@ -1,6 +1,11 @@
+import type { Metadata } from "next"
 import { AccountPasswordForm } from "@/components/app/account/AccountPasswordForm"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+
+export const metadata: Metadata = {
+  title: "Konto",
+}
 
 export default function AccountPage() {
   return (

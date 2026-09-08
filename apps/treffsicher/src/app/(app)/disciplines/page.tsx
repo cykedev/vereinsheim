@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
@@ -16,6 +17,10 @@ import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 const scoringTypeLabel: Record<string, string> = {
   WHOLE: "Ganzringe",
   TENTH: "Zehntelringe",
+}
+
+export const metadata: Metadata = {
+  title: "Disziplinen",
 }
 
 export default async function DisciplinesPage() {

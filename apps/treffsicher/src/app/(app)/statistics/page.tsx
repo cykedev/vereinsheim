@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
@@ -11,6 +12,10 @@ import {
 import { getHiddenDisciplineIds } from "@/lib/disciplines/actions"
 import { StatisticsChartsWrapper } from "@/components/app/statistics-charts/StatisticsChartsWrapper"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+
+export const metadata: Metadata = {
+  title: "Statistiken",
+}
 
 export default async function StatisticsPage() {
   const displayTimeZone = getDisplayTimeZone()

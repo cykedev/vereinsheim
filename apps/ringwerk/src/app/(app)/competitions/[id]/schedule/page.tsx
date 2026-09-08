@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { Trophy, Users } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
@@ -22,6 +23,10 @@ import {
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Spielplan & Tabelle",
 }
 
 export default async function CompetitionSchedulePage({ params }: Props) {

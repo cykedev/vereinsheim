@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Plus, ScrollText, Users } from "lucide-react"
 import { getUsers } from "@/lib/users/queries"
@@ -11,6 +12,10 @@ import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsi
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
+
+export const metadata: Metadata = {
+  title: "Nutzerverwaltung",
+}
 
 export default async function AdminUsersPage() {
   const [users, rateLimitInsights] = await Promise.all([

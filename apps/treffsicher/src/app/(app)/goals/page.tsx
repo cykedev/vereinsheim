@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { Goal } from "lucide-react"
@@ -13,6 +14,10 @@ import { EmptyState } from "@vereinsheim/ui/empty-state"
 const goalTypeLabels: Record<string, string> = {
   RESULT: "Ergebnisziel",
   PROCESS: "Prozessziel",
+}
+
+export const metadata: Metadata = {
+  title: "Saisonziele",
 }
 
 export default async function GoalsPage() {

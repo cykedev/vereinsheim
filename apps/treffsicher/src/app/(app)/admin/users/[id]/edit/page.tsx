@@ -1,8 +1,13 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getAdminUserById } from "@/lib/admin/actions"
 import { AdminEditUserForm } from "@/components/app/admin/AdminEditUserForm"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+
+export const metadata: Metadata = {
+  title: "Nutzer bearbeiten",
+}
 
 export default async function AdminUserEditPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAuthSession()

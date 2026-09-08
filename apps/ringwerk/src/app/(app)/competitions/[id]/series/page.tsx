@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { BarChart2, Users } from "lucide-react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
@@ -20,6 +21,10 @@ import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Serien erfassen",
 }
 
 export default async function SeriesPage({ params }: Props) {

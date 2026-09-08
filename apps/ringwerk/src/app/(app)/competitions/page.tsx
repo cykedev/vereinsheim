@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { Plus, Archive, CheckCircle, Trophy } from "lucide-react"
@@ -42,6 +43,10 @@ function matchesFilters(
     if (c.discipline?.id !== discipline) return false
   }
   return true
+}
+
+export const metadata: Metadata = {
+  title: "Wettbewerbe",
 }
 
 export default async function CompetitionsPage({ searchParams }: PageProps) {
