@@ -6,7 +6,7 @@ import {
   deleteGoal,
   updateGoal,
   updateGoalAssignments,
-  type GoalActionResult,
+  type ActionResult,
   type GoalSessionOption,
   type GoalWithAssignments,
 } from "@/lib/goals/actions"
@@ -14,6 +14,7 @@ import { GoalActions } from "@/components/app/goals/goal-card-section/GoalAction
 import { GoalAssignmentsForm } from "@/components/app/goals/goal-card-section/GoalAssignmentsForm"
 import { GoalEditForm } from "@/components/app/goals/goal-card-section/GoalEditForm"
 import { GoalSummary } from "@/components/app/goals/goal-card-section/GoalSummary"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 interface Props {
   goal: GoalWithAssignments
@@ -51,9 +52,10 @@ export function GoalCardSection({ goal, sessions, backHref, displayTimeZone }: P
     setMessage(null)
 
     startTransition(async () => {
-      const result: GoalActionResult = await updateGoal(goal.id, formData)
-      if (result.error) {
-        setMessage(result.error)
+      const result: ActionResult = await updateGoal(goal.id, formData)
+      const error = getErrorMessage(result)
+      if (error) {
+        setMessage(error)
         return
       }
       setEditingGoal(false)
@@ -67,9 +69,10 @@ export function GoalCardSection({ goal, sessions, backHref, displayTimeZone }: P
     setMessage(null)
 
     startTransition(async () => {
-      const result: GoalActionResult = await updateGoalAssignments(goal.id, formData)
-      if (result.error) {
-        setMessage(result.error)
+      const result: ActionResult = await updateGoalAssignments(goal.id, formData)
+      const error = getErrorMessage(result)
+      if (error) {
+        setMessage(error)
         return
       }
       setEditingAssignments(false)
@@ -80,9 +83,10 @@ export function GoalCardSection({ goal, sessions, backHref, displayTimeZone }: P
   function handleDelete(): void {
     setMessage(null)
     startTransition(async () => {
-      const result: GoalActionResult = await deleteGoal(goal.id)
-      if (result.error) {
-        setMessage(result.error)
+      const result: ActionResult = await deleteGoal(goal.id)
+      const error = getErrorMessage(result)
+      if (error) {
+        setMessage(error)
         return
       }
       router.refresh()

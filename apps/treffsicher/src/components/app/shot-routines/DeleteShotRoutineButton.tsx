@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@vereinsheim/ui/alert-dialog"
 import { Button } from "@vereinsheim/ui/button"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 type Props = {
   routineId: string
@@ -33,8 +34,9 @@ export function DeleteShotRoutineButton({ routineId }: Props) {
     setMessage(null)
     startTransition(async () => {
       const result = await deleteShotRoutine(routineId)
-      if (result.error) {
-        setMessage(result.error)
+      const error = getErrorMessage(result)
+      if (error) {
+        setMessage(error)
         return
       }
       router.push("/shot-routines")

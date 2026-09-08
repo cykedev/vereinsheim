@@ -47,7 +47,7 @@ export function ShotRoutineEditor({ initialName, initialSteps, routineId }: Prop
 
   // Nach erfolgreichem Update Toast zeigen und zur Liste weiterleiten
   useEffect(() => {
-    if (state?.success) {
+    if (state && "success" in state) {
       toast.success(routineId ? "Ablauf gespeichert." : "Ablauf erstellt.")
       router.push("/shot-routines")
     } else if (generalError) {

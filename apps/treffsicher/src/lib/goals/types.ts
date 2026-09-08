@@ -27,7 +27,5 @@ export type GoalForSelection = {
   dateTo: Date
 }
 
-export type GoalActionResult = {
-  error?: string
-  success?: boolean
-}
+// Kanon liegt in @/lib/types — kein eigener Ziel-Ergebnistyp mehr.
+export type { ActionResult } from "@/lib/types"

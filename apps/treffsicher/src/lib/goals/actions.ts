@@ -14,14 +14,14 @@ import {
   updateGoalAssignmentsAction,
 } from "@/lib/goals/actions/mutateGoals"
 import type {
-  GoalActionResult,
+  ActionResult,
   GoalForSelection,
   GoalSessionOption,
   GoalWithAssignments,
 } from "@/lib/goals/types"
 
 export type {
-  GoalActionResult,
+  ActionResult,
   GoalForSelection,
   GoalSessionOption,
   GoalWithAssignments,
@@ -44,7 +44,7 @@ export async function getGoalsForSelection(): Promise<GoalForSelection[]> {
   return getGoalsForSelectionAction()
 }
 
-export async function createGoal(formData: FormData): Promise<GoalActionResult> {
+export async function createGoal(formData: FormData): Promise<ActionResult> {
   return createGoalAction(formData)
 }
 
@@ -52,17 +52,17 @@ export async function createGoalAndRedirect(formData: FormData): Promise<void> {
   return createGoalAndRedirectAction(formData)
 }
 
-export async function updateGoal(goalId: string, formData: FormData): Promise<GoalActionResult> {
+export async function updateGoal(goalId: string, formData: FormData): Promise<ActionResult> {
   return updateGoalAction(goalId, formData)
 }
 
 export async function updateGoalAssignments(
   goalId: string,
   formData: FormData
-): Promise<GoalActionResult> {
+): Promise<ActionResult> {
   return updateGoalAssignmentsAction(goalId, formData)
 }
 
-export async function deleteGoal(goalId: string): Promise<GoalActionResult> {
+export async function deleteGoal(goalId: string): Promise<ActionResult> {
   return deleteGoalAction(goalId)
 }
