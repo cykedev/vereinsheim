@@ -29,13 +29,17 @@ warn=0
 # der globals.css-Theme-Kern (@vereinsheim/ui/theme.css) in @vereinsheim/ui (Zyklus 2) —
 # Drift dort strukturell unmöglich. Hier bleibt nur, was Next/shadcn als app-lokale Dateien
 # erzwingen (alle trivial + byte-identisch): components.json, der dünne globals.css-Stub,
-# die Error-Boundaries + not-found.
+# die Error-Boundaries + not-found. Dazu seit September 2026 der Wrapper um die geteilte
+# Rate-Limit-Oberfläche (app-lokal, weil eine geteilte Datei keine Server Action
+# re-exportieren darf) und der Vitest-Stub für `server-only`.
 MUST_MATCH=(
   components.json
   src/app/globals.css
   src/app/error.tsx
   "src/app/(app)/error.tsx"
   src/app/not-found.tsx
+  src/components/app/admin/AdminLoginRateLimitTable.tsx
+  test/server-only-stub.ts
 )
 # Hinweis: vault/conventions.md ist seit der Harness-Konsolidierung EINE
 # Quelle am Root (vault/conventions.md) — nicht mehr pro App dupliziert.
@@ -56,8 +60,9 @@ for f in "${MUST_MATCH[@]}"; do
 done
 
 # (Die frühere "Gemeinsame ui/-Komponenten"-Diff-Schleife entfällt mit Zyklus 2: die geteilten
-# ui/shell-Komponenten liegen jetzt in @vereinsheim/ui; die verbleibenden src/components/ui/* sind
-# bewusst app-spezifisch — chart/form/table (treffsicher), checkbox/rank-badge/skeleton (ringwerk) —
+# ui/shell-Komponenten liegen jetzt in @vereinsheim/ui — seit September 2026 auch table +
+# skeleton sowie die admin/-Rate-Limit-Oberfläche. Die verbleibenden src/components/ui/* sind
+# bewusst app-spezifisch — chart/form (treffsicher), checkbox/rank-badge (ringwerk) —
 # und DÜRFEN abweichen.)
 
 echo "== Gemeinsame Dependency-Versionen =="
@@ -81,6 +86,82 @@ if [[ "$(echo "$dep_report" | sed -n 's/^__COUNT__ //p')" != "0" ]]; then
   warn=1
 fi
 
+echo "== Konventionen (fatal) =="
+# Diese Regeln stehen in vault/conventions.md §3/§4/§6 und werden seit September
+# 2026 im Code eingehalten. Ohne Gate driften sie zurueck — deshalb fatal.
+#
+# Wichtig bei den Mustern: eng genug halten, damit legitime Faelle nicht
+# anschlagen. Beim Aufsetzen dieser Checks waren genau drei Fehlalarme zu
+# vermeiden (jeweils real im Code): das EmptyState-Icon ist `h-8 w-8` und kein
+# Button; ein "→" steht auch als Inhalt in Protokolltexten ("alt → neu"); und
+# die Hex-Skala der Trefferlage-Charts ist eine Datenskala, keine UI-Semantik.
+conv_fail=0
+report() { echo "  FATAL $1: $2"; conv_fail=1; fail=1; }
+
+for repo in "$TS" "$RW"; do
+  name=$(basename "$repo")
+
+  # §4: Farbe traegt Bedeutung ueber Tokens, nicht ueber die Tailwind-Palette.
+  # Ausgenommen: PDF-Renderer (eigene Hex-Styles), die Trefferlage-Datenskala
+  # und die shadcn-Chart-Generik.
+  hits=$(grep -rnE '\b(text|bg|border|ring|fill|stroke)-(emerald|amber|yellow|orange|sky|blue|green|red|rose|slate|zinc|gray|purple)-[0-9]' \
+    "$repo/src" --include='*.tsx' --include='*.ts' 2>/dev/null \
+    | grep -vE '/pdf/|statistics-charts/constants\.ts|components/ui/chart\.tsx' | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits Palette-Klasse(n) statt semantischem Token (§4)"
+
+  # §4: dark:-Varianten sind toter Code (beide Apps laufen fest im Dark Mode).
+  hits=$(grep -rn 'dark:' "$repo/src" --include='*.tsx' 2>/dev/null \
+    | grep -vE 'components/ui/(chart|checkbox|form|table)\.tsx' | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits dark:-Variante(n) — die Apps sind dark-only (§4)"
+
+  # §3: Kontrast-Untergrenze.
+  hits=$(grep -rnE 'text-muted-foreground/[0-9]+' "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits Opazitaets-Modifier auf text-muted-foreground (§3)"
+  hits=$(grep -rnE 'text-\[[0-9]{1,2}px\]' "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits Schriftgroesse unter text-xs (§3)"
+
+  # §3: Das Layout liefert den Container; eine Seite setzt keinen eigenen.
+  hits=$(grep -rlE 'px-4 py-8' "$repo/src/app" --include='page.tsx' 2>/dev/null | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits Seite(n) mit eigenem px-/py-Container (§3)"
+
+  # §6: Formatierung nur ueber @vereinsheim/lib/format.
+  hits=$(grep -rn 'new Intl\.' "$repo/src" --include='*.ts' --include='*.tsx' 2>/dev/null | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits inline new Intl.* — @vereinsheim/lib/format nutzen (§6)"
+  hits=$(grep -rnE '\.toLocale(Date|Time)?String\(' "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits toLocale*String() — formatiert in der Locale des Browsers (§6)"
+
+  # §3: Unicode-Ellipse in Pending-Texten.
+  hits=$(grep -rnE '(Speichern|Löschen|Laden|Lädt|Wird|Anmelden|Generiere|Erstelle)\.\.\.' "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits ASCII-'...' statt '…' (§3)"
+
+  # §3: Seitentitel sind font-semibold, nicht bold.
+  hits=$(grep -rn 'text-2xl font-bold' "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits 'text-2xl font-bold' — Kanon ist font-semibold (§3)"
+
+  # Compliance-Regel der App: Icon-Buttons mind. h-10 w-10. Nur Buttons pruefen —
+  # `h-8 w-8` an einem Icon (z.B. im EmptyState) ist legitim.
+  hits=$(grep -rn 'h-8 w-8' "$repo/src" --include='*.tsx' 2>/dev/null | grep -iE '<Button|button' | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits Icon-Button unter h-10 w-10"
+
+  # §7: Die Karte bzw. ihr Titel ist der Link — kein zusaetzlicher "Details →".
+  hits=$(grep -rnE '>[^<]*(Details|Rangliste|Mehr)\s*→' "$repo/src" --include='*.tsx' 2>/dev/null | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits '… →'-Button statt klickbarer Karte (§7)"
+
+  # §2: Leerzustaende ueber die gemeinsame Komponente. Ausgenommen sind
+  # (a) EmptyState selbst und seine Props, (b) Dialoge/Formulare/Editoren — dort
+  # ist eine Zeile richtig — und (c) Strings in Anfuehrungszeichen, weil das
+  # PageHeader-Untertitel sind ("Noch keine Einheiten erfasst.") und kein
+  # Leerzustand. Gesucht wird also blanker JSX-Text.
+  hits=$(grep -rnE 'Keine .{0,40}(vorhanden|gefunden|erfasst)|Noch keine ' "$repo/src" --include='*.tsx' 2>/dev/null \
+    | grep -vE 'EmptyState|title=|description=|emptyText|/pdf/|Dialog|Editor|-form/|Form\.tsx' \
+    | grep -vE '"[^"]*(Keine |Noch keine )' | wc -l | tr -d ' ') || true
+  [[ "$hits" != "0" ]] && report "$name" "$hits inline-Leerzustand statt <EmptyState> (§2)"
+done
+
+if [[ "$conv_fail" == "0" ]]; then
+  echo "  ok   alle Konventions-Checks (§2/§3/§4/§6/§7)"
+fi
+
 echo "== Anti-Pattern (Warnungen) =="
 for repo in "$TS" "$RW"; do
   name=$(basename "$repo")
@@ -88,14 +169,6 @@ for repo in "$TS" "$RW"; do
   if [[ "$hits" != "0" ]]; then echo "  WARN $name: $hits native Dialoge (window.alert/confirm/prompt)"; warn=1; fi
   mh=$(grep -rl "MoreHorizontal" "$repo/src/components" 2>/dev/null | wc -l | tr -d ' ') || true
   if [[ "$mh" != "0" ]]; then echo "  WARN $name: MoreHorizontal in $mh Datei(en) — Detail-Aktionen sollen Inline-ghost sein"; warn=1; fi
-  fb=$(grep -rl "text-2xl font-bold" "$repo/src/app" 2>/dev/null | wc -l | tr -d ' ') || true
-  if [[ "$fb" != "0" ]]; then echo "  WARN $name: 'text-2xl font-bold' in $fb Datei(en) — Kanon ist font-semibold"; warn=1; fi
-  el=$(grep -rnE "(Speichern|Löschen|Laden|Wird)\.\.\." "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
-  if [[ "$el" != "0" ]]; then echo "  WARN $name: $el ASCII-'...' in Pending-Texten — Unicode '…' nutzen"; warn=1; fi
-  # Page-/Komponenten-Level inline Intl ist Anti-Pattern; dedizierte Formatter-Module
-  # (PDF-Export, _lib) sind legitim und ausgenommen.
-  intl=$(grep -rl "new Intl.DateTimeFormat" "$repo/src/app" 2>/dev/null | grep -vE "/(_lib|pdf|export)/" | wc -l | tr -d ' ') || true
-  if [[ "$intl" != "0" ]]; then echo "  WARN $name: inline Intl.DateTimeFormat in $intl Datei(en) — lib/dateTime nutzen"; warn=1; fi
 done
 
 echo
