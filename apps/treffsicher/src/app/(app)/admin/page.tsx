@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights, getAdminUsers } from "@/lib/admin/actions"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
-import { AdminLoginRateLimitInsightsPanel } from "@/components/app/admin/AdminLoginRateLimitInsights"
+import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsights"
 import { AdminLoginRateLimitTable } from "@/components/app/admin/AdminLoginRateLimitTable"
 import { AdminUsersTable } from "@/components/app/admin/AdminUsersTable"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
@@ -64,7 +64,7 @@ export default async function AdminPage() {
           <CardTitle>Login-Rate-Limit Insights</CardTitle>
         </CardHeader>
         <CardContent>
-          <AdminLoginRateLimitInsightsPanel insights={rateLimitInsights} />
+          <LoginRateLimitInsights insights={rateLimitInsights} displayTimeZone={displayTimeZone} />
         </CardContent>
       </Card>
     </div>

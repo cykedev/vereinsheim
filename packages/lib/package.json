@@ -14,7 +14,8 @@
     "./auth/rate-limit/config": "./src/auth/rate-limit/config.ts",
     "./auth/rate-limit/limiter": "./src/auth/rate-limit/limiter.ts",
     "./auth/rate-limit/normalization": "./src/auth/rate-limit/normalization.ts",
-    "./auth/rate-limit/types": "./src/auth/rate-limit/types.ts"
+    "./auth/rate-limit/types": "./src/auth/rate-limit/types.ts",
+    "./auth/rate-limit/adminTypes": "./src/auth/rate-limit/adminTypes.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
