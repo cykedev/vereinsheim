@@ -46,14 +46,13 @@ Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichun
 Regel: Wer eine dieser Dateien ändert, ändert sie in **beiden** Repos gleich. Neue, klar
 app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gates ergänzen).
 
-**Offen, noch nicht im Gate** (September 2026 entstanden, byte-identisch in beiden Apps —
-gehören beim nächsten Gate-Update in `MUST_MATCH`, siehe §8):
+**Seit September 2026 zusätzlich in `MUST_MATCH`** (byte-identisch in beiden Apps):
 
 - `src/components/app/admin/AdminLoginRateLimitTable.tsx` — dünner Wrapper um
-  `@vereinsheim/ui/admin/LoginRateLimitTable`; app-lokal, weil die Server Action nicht aus einer
-  geteilten Datei kommen darf.
-- `test/server-only-stub.ts` + der `server-only`-Alias in `vitest.config.ts` — besser noch:
-  die Vitest-Basiskonfiguration nach `@vereinsheim/config` ziehen, dann entfällt beides.
+  `@vereinsheim/ui/admin/LoginRateLimitTable`; app-lokal, weil eine geteilte Datei keine
+  Server Action re-exportieren darf.
+- `test/server-only-stub.ts` — der Vitest-Stub. **Offen:** die Vitest-Basiskonfiguration
+  (inkl. `server-only`-Alias) nach `@vereinsheim/config` ziehen, dann entfallen Stub und Alias.
 
 ## 2. Komponenten-Kanon
 
@@ -168,11 +167,15 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 - **Umgesetzt (Tier 1):** die Shared-Schicht liegt in gemeinsamen Paketen (`@vereinsheim/ui`,
   `@vereinsheim/lib`, `@vereinsheim/config`) — Drift ist dort strukturell unmöglich (siehe §1).
 - **Offene Angleichungen:** Dependency-Pins (inkl. TypeScript-Major).
-- **Noch nicht erzwungen:** die Regeln aus §3 (Seiten-Container, Kontrast-Untergrenze), §4
-  (Palette-Klassen) und §6 (inline `Intl`) sind seit September 2026 im Code eingehalten, aber der
-  `consistency-check.sh` prüft sie noch nicht — sie können also zurückdriften. Die Checks dafür
-  nachzuziehen ist der offene Schritt (`scripts/` ist ein user-gated Pfad, siehe
-  [[autopilot-guard-blocks-contract-only-plans]]).
+- **Erzwungen seit September 2026** (`consistency-check.sh`, Abschnitt „Konventionen (fatal)"):
+  Palette-Klassen und `dark:`-Varianten (§4), Opazitäts-Modifier und Schriftgrößen unter `text-xs`
+  (§3), Seiten-eigene `px-/py-`-Container (§3), inline `new Intl.*` und `toLocale*String()` (§6),
+  ASCII-Ellipsen und `text-2xl font-bold` (§3), Icon-Buttons unter `h-10 w-10`, „… →"-Buttons (§7)
+  und inline-Leerzustände (§2).
+  Die Muster sind bewusst eng: das `EmptyState`-Icon **darf** `h-8 w-8` sein, ein „→" **darf** als
+  Inhalt in Protokolltexten stehen, die Hex-Skala der Trefferlage-Charts **darf** bleiben, und ein
+  `PageHeader`-Untertitel „Noch keine …" ist kein Leerzustand. Wer eine Regel ergänzt, prüft sie
+  gegen eine Probe-Datei mit absichtlichen Verstößen **und** gegen den grünen Ist-Zustand.
 
 ## 9. Aus Lernlog übernommen
 
