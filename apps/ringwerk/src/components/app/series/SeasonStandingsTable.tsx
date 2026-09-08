@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ChevronUp } from "lucide-react"
 import type { SeasonStandingsEntry } from "@/lib/scoring/calculateSeasonStandings"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
 
 type SortCol = "rings" | "teiler" | "ringteiler"
@@ -82,7 +83,7 @@ export function SeasonStandingsTable({
   const [sortCol, setSortCol] = useState<SortCol>(defaultSortCol(scoringMode))
 
   if (entries.length === 0) {
-    return <p className="text-sm text-muted-foreground">Noch keine Serien erfasst.</p>
+    return <EmptyState title="Noch keine Serien erfasst" />
   }
 
   const sorted = sortEntries(entries, sortCol)

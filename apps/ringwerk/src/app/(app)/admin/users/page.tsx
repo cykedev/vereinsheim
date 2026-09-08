@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Plus, ScrollText } from "lucide-react"
+import { Plus, ScrollText, Users } from "lucide-react"
 import { getUsers } from "@/lib/users/queries"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
 import { Button } from "@vereinsheim/ui/button"
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 import { UserRowActions } from "@/components/app/users/UserRowActions"
 import { AdminLoginRateLimitTable } from "@/components/app/admin/AdminLoginRateLimitTable"
 import { AdminLoginRateLimitInsightsPanel } from "@/components/app/admin/AdminLoginRateLimitInsights"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
 export default async function AdminUsersPage() {
@@ -42,12 +43,16 @@ export default async function AdminUsersPage() {
         }
       />
 
-      <div className="rounded-lg border bg-card">
-        {active.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Keine Nutzer vorhanden.
-          </p>
-        ) : (
+      {active.length === 0 ? (
+        <EmptyState
+          title="Keine Nutzer vorhanden"
+          description="Lege den ersten Nutzer an."
+          icon={Users}
+          actionLabel="Neuer Nutzer"
+          actionHref="/admin/users/new"
+        />
+      ) : (
+        <div className="rounded-lg border bg-card">
           <div className="divide-y">
             {active.map((user) => (
               <div key={user.id} className="flex items-center justify-between px-4 py-3">
@@ -73,8 +78,8 @@ export default async function AdminUsersPage() {
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {inactive.length > 0 && (
         <div>

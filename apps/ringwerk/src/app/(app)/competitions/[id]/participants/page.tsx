@@ -1,6 +1,14 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, BarChart2, CalendarDays, ListOrdered, Trophy, UserMinus } from "lucide-react"
+import {
+  ArrowLeft,
+  BarChart2,
+  CalendarDays,
+  ListOrdered,
+  Trophy,
+  UserMinus,
+  Users,
+} from "lucide-react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getCompetitionParticipants } from "@/lib/competitionParticipants/queries"
@@ -16,6 +24,7 @@ import { EnrollParticipantForm } from "@/components/app/competitionParticipants/
 import { CompetitionParticipantActions } from "@/components/app/competitionParticipants/CompetitionParticipantActions"
 import { Badge } from "@vereinsheim/ui/badge"
 import { Button } from "@vereinsheim/ui/button"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
 import type { ActionResult } from "@/lib/types"
 
@@ -143,12 +152,10 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
       {/* Aktive Teilnehmer */}
       <div>
         <h2 className="mb-2 text-sm font-medium">Eingeschrieben ({activeEntries.length})</h2>
-        <div className="rounded-lg border bg-card">
-          {activeEntries.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-              Noch keine Teilnehmer eingeschrieben.
-            </p>
-          ) : (
+        {activeEntries.length === 0 ? (
+          <EmptyState title="Noch keine Teilnehmer eingeschrieben" icon={Users} />
+        ) : (
+          <div className="rounded-lg border bg-card">
             <div className="divide-y">
               {activeEntries.map((cp) => (
                 <div key={cp.id} className="flex items-center justify-between px-4 py-3">
@@ -187,8 +194,8 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Zurückgezogene Teilnehmer */}

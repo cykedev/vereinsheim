@@ -1,5 +1,6 @@
 import type { EventTeamRankedEntry } from "@/lib/scoring/rankEventParticipants"
 import { SCORING_MODE_COLUMN_LABELS } from "@/lib/scoring/labels"
+import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 
 export function EventTeamRankingTable({ entries, scoringMode, teamScoring }: Props) {
   if (entries.length === 0) {
-    return <p className="text-sm text-muted-foreground">Noch keine Team-Ergebnisse erfasst.</p>
+    return <EmptyState title="Noch keine Team-Ergebnisse erfasst" />
   }
 
   const scoreLabel =
