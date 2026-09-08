@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { TableCell, TableRow } from "@/components/ui/table"
+import { TableCell, TableRow } from "@vereinsheim/ui/table"
 import type { OverviewSeriesGroup } from "@/lib/stats/overview/aggregateOverview"
 import { ValueCells, type CellValueGetter } from "./overviewCells"
 import type { OverviewColumn } from "./overviewColumns"

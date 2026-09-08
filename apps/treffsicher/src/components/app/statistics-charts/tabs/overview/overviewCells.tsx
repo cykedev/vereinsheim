@@ -1,4 +1,4 @@
-import { TableCell } from "@/components/ui/table"
+import { TableCell } from "@vereinsheim/ui/table"
 import type { OverviewColumn } from "./overviewColumns"
 import { formatScore } from "./overviewFormatting"
 

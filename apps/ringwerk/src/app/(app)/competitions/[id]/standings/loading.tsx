@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@vereinsheim/ui/skeleton"
 
 export default function StandingsLoading() {
   return (

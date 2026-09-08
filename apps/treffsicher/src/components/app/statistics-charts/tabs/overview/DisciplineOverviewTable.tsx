@@ -3,7 +3,7 @@
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@vereinsheim/ui/table"
 import type { OverviewTableGroup } from "@/lib/stats/overview/aggregateOverview"
 import { buildOverviewColumns, type OverviewColumn } from "./overviewColumns"
 import { formatScore } from "./overviewFormatting"

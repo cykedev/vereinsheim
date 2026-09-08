@@ -18,14 +18,16 @@
     "./select": "./src/ui/select.tsx",
     "./selectable-row": "./src/ui/selectable-row.tsx",
     "./separator": "./src/ui/separator.tsx",
-    "./slider": "./src/ui/slider.tsx",
-    "./sonner": "./src/ui/sonner.tsx",
-    "./tabs": "./src/ui/tabs.tsx",
-    "./textarea": "./src/ui/textarea.tsx",
     "./shell/ConfirmDialog": "./src/shell/ConfirmDialog.tsx",
     "./shell/DetailActionBar": "./src/shell/DetailActionBar.tsx",
     "./shell/PageHeader": "./src/shell/PageHeader.tsx",
-    "./shell/Providers": "./src/shell/Providers.tsx"
+    "./shell/Providers": "./src/shell/Providers.tsx",
+    "./skeleton": "./src/ui/skeleton.tsx",
+    "./slider": "./src/ui/slider.tsx",
+    "./sonner": "./src/ui/sonner.tsx",
+    "./table": "./src/ui/table.tsx",
+    "./tabs": "./src/ui/tabs.tsx",
+    "./textarea": "./src/ui/textarea.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
