@@ -6,11 +6,9 @@ import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { getAuthSession } from "@/lib/auth-helpers"
 import type { ShotRoutine } from "@/generated/prisma/client"
+import type { ActionResult } from "@/lib/types"
 
-export type ActionResult = {
-  error?: string
-  success?: boolean
-}
+export type { ActionResult } from "@/lib/types"
 
 // Ein einzelner Schritt im Ablauf
 export type RoutineStep = {

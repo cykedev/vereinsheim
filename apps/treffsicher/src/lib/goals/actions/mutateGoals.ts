@@ -6,7 +6,7 @@ import {
   requireGoalSession,
   revalidateGoalPaths,
 } from "@/lib/goals/actions/shared"
-import type { GoalActionResult } from "@/lib/goals/types"
+import type { ActionResult } from "@/lib/goals/types"
 
 type GoalMutationResult = { error: string } | { success: true }
 
@@ -28,7 +28,7 @@ async function createGoalForUser(userId: string, formData: FormData): Promise<Go
   return { success: true }
 }
 
-export async function createGoalAction(formData: FormData): Promise<GoalActionResult> {
+export async function createGoalAction(formData: FormData): Promise<ActionResult> {
   const session = await requireGoalSession()
   if (!session) return { error: "Nicht angemeldet" }
 
@@ -53,10 +53,7 @@ export async function createGoalAndRedirectAction(formData: FormData): Promise<v
   redirect("/goals")
 }
 
-export async function updateGoalAction(
-  goalId: string,
-  formData: FormData
-): Promise<GoalActionResult> {
+export async function updateGoalAction(goalId: string, formData: FormData): Promise<ActionResult> {
   const session = await requireGoalSession()
   if (!session) return { error: "Nicht angemeldet" }
 
@@ -84,7 +81,7 @@ export async function updateGoalAction(
 export async function updateGoalAssignmentsAction(
   goalId: string,
   formData: FormData
-): Promise<GoalActionResult> {
+): Promise<ActionResult> {
   const session = await requireGoalSession()
   if (!session) return { error: "Nicht angemeldet" }
 
@@ -127,7 +124,7 @@ export async function updateGoalAssignmentsAction(
   return { success: true }
 }
 
-export async function deleteGoalAction(goalId: string): Promise<GoalActionResult> {
+export async function deleteGoalAction(goalId: string): Promise<ActionResult> {
   const session = await requireGoalSession()
   if (!session) return { error: "Nicht angemeldet" }
 
