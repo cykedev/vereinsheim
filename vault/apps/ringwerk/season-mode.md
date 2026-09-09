@@ -38,6 +38,23 @@ alternierende Reihenfolge für Leser nicht überprüfbar (gleiche Linie wie
 [[best-of-standings-direct-comparison-tiebreak]]). Manuelles Sortieren ist in diesen Modi
 deaktiviert: die Reihenfolge **ist** die Wertung.
 
+## Ränge & Badges
+
+Die drei Metrik-Ränge (`bestRings_rank`, `bestTeiler_rank`, `bestRingteiler_rank`) sind reine
+Anzeigewerte und werden **nur für gewertete Teilnehmer** vergeben — wer `minSeries` nicht erreicht,
+trägt keinen Rang (sein Wert bleibt sichtbar, die Zeile ist ausgegraut). Vorher bekam jeder mit
+mindestens einer Serie Ränge; dann hielt eine ausgegraute Zeile die 1, während die gewerteten
+Zeilen darüber 2, 3, 3 lasen — in der alternierenden Sortierung sofort sichtbar. Rang-Pool und
+Sortier-Pool müssen deshalb deckungsgleich bleiben.
+
+Angezeigt werden Inline-Platzierungen an den Metrik-Werten nur für die **Plätze 1–3** (Tabelle und
+PDF, Regel + Hervorhebung liegen als `isPodiumRank`/`metricAppearance` neben der Sortierfunktion);
+die Gesamtplatzierung am Namen steht auf jeder Zeile. Ein Badge an jedem Wert war unübersichtlich.
+
+Auch mit deckungsgleichen Pools kann die Folge einen **Sprung** zeigen (1, 1, 2, 3): wenn der
+Nächstplatzierte einer Metrik schon über die andere Metrik platziert wurde. Das ist die Folge von
+„jeder Schütze genau einmal" und in den Tests festgehalten, kein Rechenfehler.
+
 Im Formular führt **eine** Auswahl „Wertungsmodus" beide Felder: ein alternierender Eintrag setzt
 `seasonSortMode` **und** `scoringMode = RINGTEILER` — der neutrale Wert, bei dem das
 Ringe-Eingabeformat der Disziplin folgt (`getEffectiveScoringType`). Genau deshalb sind die
