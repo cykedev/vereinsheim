@@ -147,7 +147,9 @@ export function calculateSeasonStandings(
     true // niedriger = besser
   )
 
-  // Endergebnis zusammensetzen — sortiert nach bestRingteiler ASC, dann bestRings DESC
+  // Endergebnis zusammensetzen. Die Reihenfolge hier ist nur eine deterministische
+  // Ausgangsordnung — die ANZEIGEreihenfolge kommt aus sortSeasonStandings (Tabelle, PDF,
+  // Dashboard). Nach Werten, nicht nach Rängen, damit sie auch ohne Ränge stabil bleibt.
   return entries
     .map((e) => ({
       ...e,
@@ -158,12 +160,12 @@ export function calculateSeasonStandings(
     .sort((a, b) => {
       // Qualifizierte zuerst
       if (a.meetsMinSeries !== b.meetsMinSeries) return a.meetsMinSeries ? -1 : 1
-      // Nach Ringteiler-Rang
-      if (a.bestRingteiler_rank !== null && b.bestRingteiler_rank !== null) {
-        return a.bestRingteiler_rank - b.bestRingteiler_rank
+      // Nach Ringteiler-Wert (niedriger gewinnt)
+      if (a.bestRingteiler !== null && b.bestRingteiler !== null) {
+        return a.bestRingteiler - b.bestRingteiler
       }
-      if (a.bestRingteiler_rank !== null) return -1
-      if (b.bestRingteiler_rank !== null) return 1
+      if (a.bestRingteiler !== null) return -1
+      if (b.bestRingteiler !== null) return 1
       // Ohne Serien: alphabetisch
       return a.participantName.localeCompare(b.participantName)
     })

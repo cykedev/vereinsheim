@@ -41,11 +41,35 @@ export function isAlternatingSort(sort: ResolvedSeasonSort): boolean {
 }
 
 /**
+ * Inline-Platzierung an einem Metrik-Wert gibt es nur für die Podiumsplätze — ein Badge an jedem
+ * Wert macht die Rangliste unübersichtlich. Hier und nicht in Tabelle/PDF, damit beide Ansichten
+ * dieselbe Regel benutzen.
+ */
+export const isPodiumRank = (rank: number | null): boolean => rank !== null && rank <= 3
+
+/** Darstellung eines Metrik-Werts: betont, zurückgenommen oder unverändert. */
+export type MetricAppearance = "emphasized" | "muted" | "default"
+
+/**
+ * In den alternierenden Modi trägt genau der Wert die Betonung, der die Zeile auf ihren Platz
+ * gebracht hat; die anderen werden zurückgenommen. Klassisch bleibt es beim Standardbild der
+ * jeweiligen Ansicht.
+ */
+export function metricAppearance(
+  entry: SortedSeasonStandingsEntry,
+  metric: "rings" | "teiler" | "ringteiler"
+): MetricAppearance {
+  if (entry.alternatingBy === null) return "default"
+  return entry.alternatingBy === metric ? "emphasized" : "muted"
+}
+
+/**
  * Bringt die Saison-Rangliste in ihre Anzeigereihenfolge — die einzige Quelle dafür.
  * Tabelle, PDF und Dashboard nutzen dieselbe Funktion, damit sie nie auseinanderlaufen.
  * Die Originalliste wird nicht verändert, die Einzelränge bleiben unangetastet.
  *
- * Klassisch: Qualifizierte zuerst, dann nach dem Wert der Metrik, dann alphabetisch.
+ * Klassisch: Qualifizierte zuerst, dann nach dem Wert der Metrik (bei Gleichheit bleibt die
+ * eingehende Ordnung stehen), Teilnehmer ohne Wert alphabetisch am Ende.
  * Alternierend: je Block (Qualifizierte, Nicht-Qualifizierte) wird zeilenweise zwischen den
  * besten Ringen und dem besten korrigierten Teiler gewechselt; jeder Teilnehmer erscheint
  * genau einmal, Teilnehmer ohne Serie stehen alphabetisch am Ende.
@@ -75,7 +99,11 @@ function sortClassic(
       // Qualifizierte zuerst
       if (a.meetsMinSeries !== b.meetsMinSeries) return a.meetsMinSeries ? -1 : 1
 
-      // Nach Wert sortieren (nicht nach Rang, damit auch Nicht-Qualifizierte sortiert werden)
+      // Nach Wert sortieren (nicht nach Rang, damit auch Nicht-Qualifizierte sortiert werden).
+      // Bei Wertgleichheit liefert der Vergleich 0 → die eingehende Ordnung bleibt stehen
+      // (Array#sort ist stabil). Das ist gewollt: sie kommt aus calculateSeasonStandings
+      // (Ringteiler aufsteigend) und ist damit aussagekräftiger als ein Namens-Tiebreak.
+      // byName greift nur, wenn beide Werte fehlen.
       if (sort === "rings") {
         if (a.bestRings !== null && b.bestRings !== null) return b.bestRings - a.bestRings
         if (a.bestRings !== null) return -1
