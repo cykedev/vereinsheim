@@ -50,7 +50,9 @@ function MetricCell({
   width: number
   muted?: boolean
 }): ReactElement {
-  const showBadge = rank !== null && value !== "–"
+  // Inline-Platzierung nur für die Podiumsplätze — ein Badge an jedem Wert macht die
+  // Tabelle unübersichtlich. Die Gesamtplatzierung steht weiter an jedem Namen.
+  const showBadge = rank !== null && rank <= 3 && value !== "–"
   return (
     <View
       style={{
