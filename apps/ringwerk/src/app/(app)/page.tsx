@@ -228,6 +228,7 @@ export default async function DashboardPage() {
               emptyText="Noch keine Serien erfasst"
             >
               <SeasonStandingsTable
+                key={c.id}
                 entries={standings.slice(0, PREVIEW_ROWS)}
                 minSeries={minSeries}
                 sort={sort}

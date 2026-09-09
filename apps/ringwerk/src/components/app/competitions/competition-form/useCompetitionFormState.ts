@@ -7,7 +7,7 @@ import { slugify } from "@/lib/competitions/publicSlug"
 import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { useUnsavedChangesGuard } from "@vereinsheim/lib/hooks/useUnsavedChangesGuard"
 import { useNavigationConfirm } from "@vereinsheim/lib/hooks/useNavigationConfirm"
-import { BEST_OF_DUEL_MODES, toDateInputValue } from "./constants"
+import { BEST_OF_DUEL_MODES, SEASON_SORT_MODES, toDateInputValue } from "./constants"
 import { useRulesetState } from "./useRulesetState"
 
 interface Args {
@@ -113,7 +113,7 @@ export function useCompetitionFormState({ competition, action }: Args) {
   const seasonWertung = seasonSortMode !== "" ? seasonSortMode : scoringMode
 
   function setSeasonWertung(v: string) {
-    if (v === "ALT_RINGS_FIRST" || v === "ALT_TEILER_FIRST") {
+    if ((SEASON_SORT_MODES as readonly string[]).includes(v)) {
       setSeasonSortMode(v)
       setScoringMode("RINGTEILER")
     } else {
