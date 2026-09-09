@@ -61,6 +61,15 @@ function StaticHead({ label, className }: { label: string; className?: string })
 }
 
 /**
+ * Inline-Platzierung einer Metrik: nur die Podiumsplätze. Ein Badge an jedem Wert macht die
+ * Tabelle unübersichtlich; die Gesamtplatzierung am Namen bleibt für jede Zeile sichtbar.
+ */
+function MetricRank({ rank }: { rank: number | null }) {
+  if (rank === null || rank > 3) return null
+  return <RankBadge rank={rank} />
+}
+
+/**
  * Hebt in den alternierenden Modi den Wert hervor, der die Zeile auf ihren Platz gebracht hat,
  * und nimmt die übrigen zurück. In den klassischen Modi bleibt die Darstellung unverändert.
  */
@@ -174,7 +183,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                           <span className={metricEmphasis(entry, "rings")}>
                             {formatRings(entry.bestRings, entry.bestRingsScoringType ?? "WHOLE")}
                           </span>
-                          <RankBadge rank={entry.bestRings_rank ?? idx + 1} />
+                          <MetricRank rank={entry.bestRings_rank} />
                         </>
                       ) : (
                         <span className="text-muted-foreground">–</span>
@@ -188,7 +197,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                           <span className={metricEmphasis(entry, "teiler")}>
                             {formatDecimal1(entry.bestCorrectedTeiler)}
                           </span>
-                          <RankBadge rank={entry.bestTeiler_rank ?? idx + 1} />
+                          <MetricRank rank={entry.bestTeiler_rank} />
                         </>
                       ) : (
                         <span className="text-muted-foreground">–</span>
@@ -202,7 +211,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                           <span className={metricEmphasis(entry, "ringteiler")}>
                             {formatDecimal1(entry.bestRingteiler)}
                           </span>
-                          <RankBadge rank={entry.bestRingteiler_rank ?? idx + 1} />
+                          <MetricRank rank={entry.bestRingteiler_rank} />
                         </>
                       ) : (
                         <span className="text-muted-foreground">–</span>
