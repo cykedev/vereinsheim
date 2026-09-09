@@ -179,7 +179,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 
 ## 9. Aus Lernlog übernommen
 
-<!-- Zuletzt konsolidiert: 2026-08-25 -->
+<!-- Zuletzt konsolidiert: 2026-09-09 -->
 
 - **Bedingt ausgeblendete Formularfelder brauchen im Update Drei-Wege-Semantik**: Ein Feld, das
   das Formular nur bedingt rendert, fehlt im ausgeblendeten Zustand komplett in der FormData —
@@ -194,3 +194,11 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   sie kontraintuitiv wirken könnten. Spec-/Sportleitungs-Entscheidungen sind revidierbar; deshalb die
   Modell-Logik dafür zentral (eine reine Funktion) halten, damit ein späterer Flip nur eine Stelle
   berührt.
+
+- **Fest breite Elemente in tabellarischen Zellen brauchen einen Platzhalter**: Fällt ein fest
+  breites Element (Badge, Icon, Marker) in einer Zelle bedingt weg, tritt ein gleich breiter,
+  `aria-hidden` Platzhalter an seine Stelle — sonst rutschen die Zahlen der betroffenen Zeilen
+  gegen die übrigen. Die Bedingung dafür gehört als **ein** Prädikat in die geteilte Logik, aus der
+  Bildschirm **und** PDF sie ziehen; zwei Kopien stimmen anfangs überein und laufen später
+  auseinander (siehe [[next-dist-dir-shared-with-dev-server]] für dieselbe Klasse von Problem:
+  zwei Autoritäten für dieselbe Sache).

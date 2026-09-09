@@ -24,3 +24,10 @@ Scope to one app: `pnpm check --filter ringwerk` (or `treffsicher`).
 
 Report concisely: which gates are green, which are red, and — if red — the relevant
 error message(s). Suggest concrete fixes when the cause is clear.
+
+**Dev-Server vorher stoppen.** Das Gate (`next build`) und ein laufender `next dev` teilen sich
+`apps/<app>/.next`; der Build zerlegt dabei `.next/types/validator.ts` und `check-types` wird rot,
+obwohl der Diff sauber ist (`TS2307 './routes.js'`). Nach einem abgebrochenen Build erst `.next`
+räumen — bei **gestopptem** Server, sonst verliert der Dev-Server sein `.next/dev` und antwortet bis
+zum Neustart mit `Cannot read properties of undefined (reading 'call')`.
+Siehe `vault/incidents/next-dist-dir-shared-with-dev-server.md`.

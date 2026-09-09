@@ -647,3 +647,14 @@ export async function createLeague(formData: FormData): Promise<ActionResult>
 
 - **Superseded Components im selben Change löschen**: Ersetzte Komponenten/Dateien nicht als "toter, harmloser" Code behalten — besonders wenn sie Domänenlogik einbetten, die mit der Zeit driftet (eine spätere Lesart hält die veraltete Logik sonst für gültig). Vor dem Löschen `rg <Symbol> src/`, um sicherzustellen, dass keine Imports/Verwendungen übrig sind.
 - **Parallele Stränge im selben Bereich erst rebasen, dann bauen**: Laufen Feature und Bugfix gleichzeitig im selben Berechnungs-/Logik-Bereich, zuerst auf den gelandeten Fix rebasen, dann die eigenen Annahmen gegen die korrigierte Logik prüfen, dann weiterbauen — sonst entsteht Code auf veraltetem Stand (Rework).
+
+### Next.js & Caching
+
+- **Cache-Tags über unveränderliche Schlüssel, nie über umbenennbare**: Ein `unstable_cache`-Tag
+  muss aus einem Wert gebildet werden, der sich nicht ändern kann (Entitäts-ID). Wird er aus einem
+  umbenennbaren Wert (Slug) gebildet, verwaist der Eintrag beim Umbenennen unter dem alten Tag und
+  ist nie mehr invalidierbar (siehe [[public-pdf-cache-tag-orphaning]]).
+- **Cache-behaftete Routen über die Server-Action verifizieren**: Beim Prüfen einer gecachten Route
+  die Datenänderung über die Server-Action fahren, die revalidiert — oder eine `no-store`-Route
+  nehmen. Eine Änderung per SQL umgeht die Invalidierung; die Route liefert dann berechtigt das
+  alte Ergebnis, und man misstraut dem Feature statt der Prüfmethode.

@@ -245,7 +245,7 @@ Page-Header-Pattern:
 
 ## Aus Lernlog übernommen
 
-<!-- Zuletzt konsolidiert: 2026-06-23 -->
+<!-- Zuletzt konsolidiert: 2026-09-09 -->
 
 ### Layout & Grid
 
@@ -273,6 +273,12 @@ Page-Header-Pattern:
 - **React 19 Forms: Inputs immer controlled mit `useActionState`**: `<form action={fn}>` setzt uncontrolled Inputs (`defaultValue`) nach jedem Submit zurück — auch bei Validation Errors verlieren User ihre Eingaben. Bei Forms mit `useActionState` Inputs IMMER controlled führen (`value` + `onChange` + lokaler State via `useState`), nie `defaultValue`. Initialwerte beim Mount aus Props in den State kopieren.
 
 ### Tabellen & Ranking
+
+- **Sortier-Pool und Rang-Pool müssen deckungsgleich sein**: Eine Zeile, die aus der Wertung fällt
+  (z.B. unter den Mindestserien), darf keinen Metrik-Rang tragen, auch wenn sie in der Sortierung
+  noch mitläuft — sonst hält eine ausgegraute Zeile die 1 und die gewerteten Zeilen darüber lesen
+  2, 3, 3. Wer die Reihenfolge ändert, prüft zuerst, welcher Pool die **angezeigten** Ränge speist:
+  eine Beschwerde über die Reihenfolge hat oft ihre Ursache in den Rängen.
 
 - **Ranking-Kriterien als sichtbare Spalten, Spaltenreihenfolge = Bewertungsreihenfolge**: Sortierkriterien einer Tabelle so wählen, dass jedes als eigene Spalte sichtbar ist; die Spaltenreihenfolge muss der Bewertungsreihenfolge entsprechen. Ein nicht abbildbares Kriterium (z.B. direkter Vergleich/Head-to-Head) macht die Platzierung für den Leser unüberprüfbar → weglassen oder ans Ende. Sichtbar-begründetes "komisch" schlägt unsichtbar-begründetes.
   - **Update 2026-06-24:** Ein relationales Kriterium (Head-to-Head) KANN doch sichtbar gemacht werden, wenn es fachlich gefordert ist (Sportleiter-Wunsch): ans Ende stellen UND in der letzten Spalte das konkrete Ergebnis zeigen — im 2er-Gleichstand Match + Gegner, im N-Gleichstand die Direktbilanz, bei Nicht-Entscheidbarkeit ein „offen"/„ausgeglichen"-Hinweis. Siehe Best-of-Tabelle (`directComparison` + `formatDirectComparison`). Dem Weglassen vorzuziehen, sobald das Kriterium verpflichtend ist — die Annotation hält die Platzierung nachvollziehbar.
