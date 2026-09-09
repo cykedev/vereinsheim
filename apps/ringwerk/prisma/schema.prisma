@@ -92,6 +92,13 @@ enum TeamScoring {
   BEST // Teamergebnis = bestes Einzelergebnis im Team
 }
 
+// Alternierende Sortierung der Saison-Rangliste (nur SEASON). Die Rangliste wechselt
+// zeilenweise zwischen der besten Ringzahl und dem besten korrigierten Teiler.
+enum SeasonSortMode {
+  ALT_RINGS_FIRST  // alternierend, beginnend mit den besten Ringen
+  ALT_TEILER_FIRST // alternierend, beginnend mit dem besten (korrigierten) Teiler
+}
+
 enum LeagueFormat {
   DOUBLE_ROUND_ROBIN
   BEST_OF_SINGLE
@@ -241,6 +248,8 @@ model Competition {
   minSeries   Int?
   seasonStart DateTime?
   seasonEnd   DateTime?
+  // null = klassische Sortierung, abgeleitet aus scoringMode (Ringe/Teiler/Ringteiler)
+  seasonSortMode SeasonSortMode?
 
   participants   CompetitionParticipant[]
   matchups       Matchup[]

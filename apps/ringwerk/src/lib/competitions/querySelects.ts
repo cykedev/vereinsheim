@@ -26,6 +26,7 @@ export const listSelect = {
   targetValueType: true,
   seasonStart: true,
   seasonEnd: true,
+  seasonSortMode: true,
   createdAt: true,
   _count: { select: { participants: true } },
 } as const

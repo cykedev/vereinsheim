@@ -7,9 +7,12 @@
 # (nur lokal, nie Prod).
 set -euo pipefail
 
+# CREATEDB ist dev-only und nötig für `prisma migrate dev`: die Schema-Engine legt für jede
+# neue Migration eine temporäre Shadow-DB an. Prod migriert via `migrate deploy` und braucht
+# das nicht — das Prod-db-init (db-init/01-users-and-dbs.sh) vergibt das Recht bewusst NICHT.
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
-	CREATE USER ringwerk    WITH PASSWORD 'ringwerk';
-	CREATE USER treffsicher WITH PASSWORD 'treffsicher';
+	CREATE USER ringwerk    WITH PASSWORD 'ringwerk'    CREATEDB;
+	CREATE USER treffsicher WITH PASSWORD 'treffsicher' CREATEDB;
 	CREATE DATABASE ringwerk    OWNER ringwerk;
 	CREATE DATABASE treffsicher OWNER treffsicher;
 	REVOKE ALL ON DATABASE ringwerk    FROM PUBLIC;
