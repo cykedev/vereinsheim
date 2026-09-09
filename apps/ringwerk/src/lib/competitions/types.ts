@@ -4,6 +4,7 @@ import type {
   LeagueFormat,
   ScoringMode,
   ScoringType,
+  SeasonSortMode,
   TargetValueType,
   TeamScoring,
 } from "@/generated/prisma/client"
@@ -36,6 +37,8 @@ export type CompetitionListItem = {
   // Saison
   seasonStart: Date | null
   seasonEnd: Date | null
+  /** null = klassische Sortierung, abgeleitet aus scoringMode */
+  seasonSortMode: SeasonSortMode | null
   createdAt: Date
   _count: { participants: number }
 }
@@ -86,6 +89,8 @@ export type CompetitionDetail = {
   minSeries: number | null
   seasonStart: Date | null
   seasonEnd: Date | null
+  /** null = klassische Sortierung, abgeleitet aus scoringMode */
+  seasonSortMode: SeasonSortMode | null
   createdAt: Date
   _count: { matchups: number }
 }

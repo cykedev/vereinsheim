@@ -67,6 +67,7 @@ export async function getCompetitionById(id: string): Promise<CompetitionDetail 
       minSeries: true,
       seasonStart: true,
       seasonEnd: true,
+      seasonSortMode: true,
       createdAt: true,
       _count: { select: { matchups: true } },
     },
