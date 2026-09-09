@@ -7,7 +7,6 @@ import { calculateSeasonStandings } from "@/lib/scoring/calculateSeasonStandings
 import {
   isAlternatingSort,
   resolveSeasonSort,
-  SEASON_SORT_LABELS,
   sortSeasonStandings,
 } from "@/lib/scoring/sortSeasonStandings"
 import { SeasonStandingsTable } from "@/components/app/series/SeasonStandingsTable"
@@ -96,13 +95,13 @@ export default async function SeasonStandingsPage({ params }: Props) {
 
       {/* Info-Badges */}
       <div className="flex flex-wrap gap-2">
-        {/* Bei alternierender Sortierung definiert die Reihenfolge die Wertung — der
+        {/* Bei alternierender Sortierung nennt die Tabelle selbst die Reihenfolge; der
             scoringMode trägt dann nur noch das Eingabeformat und wäre hier irreführend. */}
-        <Badge variant="secondary">
-          {isAlternatingSort(sort)
-            ? SEASON_SORT_LABELS[sort]
-            : (SCORING_MODE_LABELS[competition.scoringMode] ?? competition.scoringMode)}
-        </Badge>
+        {!isAlternatingSort(sort) && (
+          <Badge variant="secondary">
+            {SCORING_MODE_LABELS[competition.scoringMode] ?? competition.scoringMode}
+          </Badge>
+        )}
         <Badge variant="secondary">{competition.shotsPerSeries} Schuss</Badge>
         {competition.minSeries !== null && (
           <Badge variant="outline">Mindest: {competition.minSeries} Serien</Badge>
@@ -110,6 +109,9 @@ export default async function SeasonStandingsPage({ params }: Props) {
       </div>
 
       <SeasonStandingsTable
+        // key: sonst ueberlebt die manuell gewaehlte Sortierspalte eine Soft-Navigation
+        // zwischen zwei Saison-Ranglisten und weicht von der PDF-Reihenfolge ab.
+        key={id}
         entries={standings}
         minSeries={competition.minSeries}
         sort={sort}

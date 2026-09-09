@@ -4,8 +4,11 @@ import { useState } from "react"
 import { ChevronUp } from "lucide-react"
 import {
   isAlternatingSort,
+  isPodiumRank,
+  metricAppearance,
   SEASON_SORT_LABELS,
   sortSeasonStandings,
+  type MetricAppearance,
   type ResolvedSeasonSort,
   type SortedSeasonStandingsEntry,
 } from "@/lib/scoring/sortSeasonStandings"
@@ -61,21 +64,19 @@ function StaticHead({ label, className }: { label: string; className?: string })
 }
 
 /**
- * Inline-Platzierung einer Metrik: nur die Podiumsplätze. Ein Badge an jedem Wert macht die
- * Tabelle unübersichtlich; die Gesamtplatzierung am Namen bleibt für jede Zeile sichtbar.
+ * Inline-Platzierung einer Metrik: nur die Podiumsplätze (Regel in sortSeasonStandings, damit
+ * Tabelle und PDF nicht auseinanderlaufen). Ohne Badge bleibt die Breite als Platzhalter stehen,
+ * sonst rutschen die Zahlen der Podiumszeilen gegenüber den übrigen nach links.
  */
 function MetricRank({ rank }: { rank: number | null }) {
-  if (rank === null || rank > 3) return null
-  return <RankBadge rank={rank} />
+  if (!isPodiumRank(rank)) return <span className="w-[1.25rem] shrink-0" aria-hidden />
+  return <RankBadge rank={rank!} />
 }
 
-/**
- * Hebt in den alternierenden Modi den Wert hervor, der die Zeile auf ihren Platz gebracht hat,
- * und nimmt die übrigen zurück. In den klassischen Modi bleibt die Darstellung unverändert.
- */
-function metricEmphasis(entry: SortedSeasonStandingsEntry, metric: SortCol): string {
-  if (entry.alternatingBy === null) return ""
-  return entry.alternatingBy === metric ? "font-medium text-foreground" : "text-muted-foreground"
+const APPEARANCE_CLASS: Record<MetricAppearance, string> = {
+  emphasized: "font-medium text-foreground",
+  muted: "text-muted-foreground",
+  default: "",
 }
 
 interface Props {
@@ -180,7 +181,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                     <div className="flex items-center justify-end gap-1.5">
                       {entry.bestRings !== null ? (
                         <>
-                          <span className={metricEmphasis(entry, "rings")}>
+                          <span className={APPEARANCE_CLASS[metricAppearance(entry, "rings")]}>
                             {formatRings(entry.bestRings, entry.bestRingsScoringType ?? "WHOLE")}
                           </span>
                           <MetricRank rank={entry.bestRings_rank} />
@@ -194,7 +195,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                     <div className="flex items-center justify-end gap-1.5">
                       {entry.bestCorrectedTeiler !== null ? (
                         <>
-                          <span className={metricEmphasis(entry, "teiler")}>
+                          <span className={APPEARANCE_CLASS[metricAppearance(entry, "teiler")]}>
                             {formatDecimal1(entry.bestCorrectedTeiler)}
                           </span>
                           <MetricRank rank={entry.bestTeiler_rank} />
@@ -204,11 +205,13 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="px-3 py-2 tabular-nums font-medium">
+                  <TableCell
+                    className={`px-3 py-2 tabular-nums${alternating ? "" : " font-medium"}`}
+                  >
                     <div className="flex items-center justify-end gap-1.5">
                       {entry.bestRingteiler !== null ? (
                         <>
-                          <span className={metricEmphasis(entry, "ringteiler")}>
+                          <span className={APPEARANCE_CLASS[metricAppearance(entry, "ringteiler")]}>
                             {formatDecimal1(entry.bestRingteiler)}
                           </span>
                           <MetricRank rank={entry.bestRingteiler_rank} />

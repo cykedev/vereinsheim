@@ -2,6 +2,8 @@ import { Document, Page, View, Text } from "@react-pdf/renderer"
 import type { ReactElement } from "react"
 import {
   isAlternatingSort,
+  isPodiumRank,
+  metricAppearance,
   SEASON_SORT_LABELS,
   type ResolvedSeasonSort,
   type SortedSeasonStandingsEntry,
@@ -50,9 +52,8 @@ function MetricCell({
   width: number
   muted?: boolean
 }): ReactElement {
-  // Inline-Platzierung nur für die Podiumsplätze — ein Badge an jedem Wert macht die
-  // Tabelle unübersichtlich. Die Gesamtplatzierung steht weiter an jedem Namen.
-  const showBadge = rank !== null && rank <= 3 && value !== "–"
+  // Podium-Regel und Hervorhebung kommen aus sortSeasonStandings — dieselbe Quelle wie die Tabelle.
+  const showBadge = isPodiumRank(rank) && value !== "–"
   return (
     <View
       style={{
@@ -96,17 +97,16 @@ const W_NO_SERIES = { name: 200, rings: 105, teiler: 105, ringteiler: 105 }
 // ─── Standings-Tabelle ────────────────────────────────────────────────────────
 
 /**
- * In den alternierenden Modi trägt genau der Wert, der die Zeile platziert hat, die dunkle
- * Schrift; die anderen zwei werden zurückgenommen — wie in der Tabelle. Klassisch bleibt es
- * beim bisherigen Bild.
+ * Uebersetzt die geteilte Darstellungsregel in das PDF-Mittel (dunkel vs. grau). `classicMuted`
+ * ist das bisherige Bild der jeweiligen Spalte, das ausserhalb der alternierenden Modi gilt.
  */
 function metricMuted(
   entry: SortedSeasonStandingsEntry,
   metric: "rings" | "teiler" | "ringteiler",
   classicMuted: boolean
 ): boolean {
-  if (entry.alternatingBy === null) return classicMuted
-  return entry.alternatingBy !== metric
+  const appearance = metricAppearance(entry, metric)
+  return appearance === "default" ? classicMuted : appearance === "muted"
 }
 
 function StandingsTable({
