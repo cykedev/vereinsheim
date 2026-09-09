@@ -77,11 +77,15 @@ part_of: ["[[ringwerk]]"]
 
 #### Saison-spezifisch (SEASON)
 
-| Feld        | Typ       | Default | Beschreibung                      |
-| ----------- | --------- | ------- | --------------------------------- |
-| minSeries   | Int?      | 20      | Mindestanzahl Serien fuer Wertung |
-| seasonStart | DateTime? | null    | Saisonbeginn                      |
-| seasonEnd   | DateTime? | null    | Saisonende                        |
+| Feld           | Typ             | Default | Beschreibung                                                              |
+| -------------- | --------------- | ------- | ------------------------------------------------------------------------- |
+| minSeries      | Int?            | 20      | Mindestanzahl Serien fuer Wertung                                         |
+| seasonStart    | DateTime?       | null    | Saisonbeginn                                                              |
+| seasonEnd      | DateTime?       | null    | Saisonende                                                                |
+| seasonSortMode | SeasonSortMode? | null    | Alternierende Sortierung; null = klassisch (Reihenfolge folgt scoringMode) |
+
+`SeasonSortMode`: `ALT_RINGS_FIRST` (beginnt mit den besten Ringen) | `ALT_TEILER_FIRST`
+(beginnt mit dem besten korrigierten Teiler) — siehe [[season-mode]].
 
 ### Wettbewerbs-Teilnehmer (CompetitionParticipant) — ersetzt LeagueParticipant
 
@@ -371,6 +375,11 @@ Pro Teilnehmer werden drei Bestwerte ermittelt (jeweils aus einer einzelnen Seri
 Wichtig: Beste Ringe und bester Teiler können aus **verschiedenen Serien** stammen. Ringteiler muss aus **derselben Serie** stammen (Ringe und Teiler gehören zusammen).
 
 Nur Teilnehmer mit ≥ minSeries Serien werden gewertet.
+
+Die **Anzeigereihenfolge** dieser drei Bestwerte ist eine eigene Entscheidung (`seasonSortMode`):
+klassisch nach einer der Metriken oder **alternierend** zwischen besten Ringen und bestem
+korrigierten Teiler. Eine reine Funktion (`sortSeasonStandings`) liefert sie für Tabelle, beide
+PDFs und das Dashboard — Details in [[season-mode]].
 
 ---
 
