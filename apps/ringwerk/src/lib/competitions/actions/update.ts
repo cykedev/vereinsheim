@@ -64,6 +64,7 @@ export async function updateCompetition(
     minSeries: formData.get("minSeries"),
     seasonStart: formData.get("seasonStart"),
     seasonEnd: formData.get("seasonEnd"),
+    seasonSortMode: formData.get("seasonSortMode"),
     playoffBestOf: formData.get("playoffBestOf"),
     playoffHasViertelfinale: formData.get("playoffHasViertelfinale"),
     playoffHasAchtelfinale: formData.get("playoffHasAchtelfinale"),
@@ -136,6 +137,8 @@ export async function updateCompetition(
       minSeries: type === "SEASON" ? (parsed.data.minSeries ?? null) : undefined,
       seasonStart: type === "SEASON" ? parseDate(parsed.data.seasonStart) : undefined,
       seasonEnd: type === "SEASON" ? parseDate(parsed.data.seasonEnd) : undefined,
+      // SEASON hat keine Matchups → rulesetLocked greift hier nie.
+      seasonSortMode: type === "SEASON" ? (parsed.data.seasonSortMode ?? null) : undefined,
       playoffBestOf:
         type === "LEAGUE" && !playoffsStarted ? (parsed.data.playoffBestOf ?? null) : undefined,
       playoffHasViertelfinale:
@@ -186,6 +189,7 @@ export async function updateCompetition(
         name: parsed.data.name,
         type: competition.type,
         scoringMode: rulesetLocked ? competition.scoringMode : parsed.data.scoringMode,
+        seasonSortMode: type === "SEASON" ? (parsed.data.seasonSortMode ?? null) : null,
       },
     },
   })

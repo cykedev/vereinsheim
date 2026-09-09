@@ -8,6 +8,10 @@ const PLAYOFF_SCORING_MODES = ["RINGTEILER", "RINGS", "RINGS_DECIMAL", "TEILER"]
 // DECIMAL_REST and TARGET_* modes are not defined for head-to-head duels.
 const BEST_OF_SINGLE_SCORING_MODES = ["RINGS", "RINGS_DECIMAL", "TEILER", "RINGTEILER"] as const
 
+// Alternierende Sortierung der Saison-Rangliste. Kein ScoringMode — ein eigenes Feld, das nur
+// die Reihenfolge bestimmt; die Typ-Eingrenzung auf SEASON passiert in create/update.
+const SEASON_SORT_MODES = ["ALT_RINGS_FIRST", "ALT_TEILER_FIRST"] as const
+
 export const BaseSchema = z
   .object({
     name: z.string().min(1, "Name ist erforderlich").max(100, "Name zu lang"),
@@ -85,6 +89,10 @@ export const BaseSchema = z
       .transform((v) => (v && v.trim() !== "" ? parseInt(v, 10) : null)),
     seasonStart: z.string().nullable().optional(),
     seasonEnd: z.string().nullable().optional(),
+    seasonSortMode: z.preprocess(
+      (v) => (!v || v === "" ? null : v),
+      z.enum(SEASON_SORT_MODES).nullable()
+    ),
     // Liga – Regelset
     playoffBestOf: z
       .string()

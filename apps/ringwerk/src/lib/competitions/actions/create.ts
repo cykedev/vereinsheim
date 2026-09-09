@@ -38,6 +38,7 @@ export async function createCompetition(
     minSeries: formData.get("minSeries"),
     seasonStart: formData.get("seasonStart"),
     seasonEnd: formData.get("seasonEnd"),
+    seasonSortMode: formData.get("seasonSortMode"),
     playoffBestOf: formData.get("playoffBestOf"),
     playoffHasViertelfinale: formData.get("playoffHasViertelfinale"),
     playoffHasAchtelfinale: formData.get("playoffHasAchtelfinale"),
@@ -102,6 +103,7 @@ export async function createCompetition(
       minSeries: type === "SEASON" ? (parsed.data.minSeries ?? null) : null,
       seasonStart: type === "SEASON" ? parseDate(parsed.data.seasonStart) : null,
       seasonEnd: type === "SEASON" ? parseDate(parsed.data.seasonEnd) : null,
+      seasonSortMode: type === "SEASON" ? (parsed.data.seasonSortMode ?? null) : null,
       playoffBestOf: type === "LEAGUE" ? (parsed.data.playoffBestOf ?? null) : null,
       playoffHasViertelfinale: type === "LEAGUE" ? parsed.data.playoffHasViertelfinale : undefined,
       playoffHasAchtelfinale: type === "LEAGUE" ? parsed.data.playoffHasAchtelfinale : undefined,
@@ -151,6 +153,7 @@ export async function createCompetition(
         name,
         type,
         scoringMode,
+        seasonSortMode: type === "SEASON" ? (parsed.data.seasonSortMode ?? null) : null,
       },
     },
   })

@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@vereinsheim/ui/select"
 import type { CompetitionFormState } from "./useCompetitionFormState"
-import { SEASON_SCORING_MODE_LABELS } from "./constants"
+import { SERIES_SCORING_MODE_LABELS } from "./constants"
 
 interface Props {
   form: CompetitionFormState
@@ -88,7 +88,7 @@ export function LeaguePlayoffsFieldset({ form, playoffsStarted }: Props) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(SEASON_SCORING_MODE_LABELS).map(([value, label]) => (
+            {Object.entries(SERIES_SCORING_MODE_LABELS).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
               </SelectItem>
@@ -114,7 +114,7 @@ export function LeaguePlayoffsFieldset({ form, playoffsStarted }: Props) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Kein Tiebreaker</SelectItem>
-            {Object.entries(SEASON_SCORING_MODE_LABELS).map(([value, label]) => (
+            {Object.entries(SERIES_SCORING_MODE_LABELS).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
               </SelectItem>
@@ -138,7 +138,7 @@ export function LeaguePlayoffsFieldset({ form, playoffsStarted }: Props) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Kein Tiebreaker</SelectItem>
-            {Object.entries(SEASON_SCORING_MODE_LABELS).map(([value, label]) => (
+            {Object.entries(SERIES_SCORING_MODE_LABELS).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
               </SelectItem>
