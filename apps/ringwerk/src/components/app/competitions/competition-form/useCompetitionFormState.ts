@@ -33,6 +33,8 @@ export function useCompetitionFormState({ competition, action }: Args) {
 
   const [type, setType] = useState<string>(competition?.type ?? "LEAGUE")
   const [scoringMode, setScoringMode] = useState<string>(competition?.scoringMode ?? "RINGTEILER")
+  // Saison-Sortierung: "" = klassisch (Reihenfolge folgt scoringMode), sonst ein ALT_*-Wert.
+  const [seasonSortMode, setSeasonSortMode] = useState<string>(competition?.seasonSortMode ?? "")
   const [allowGuests, setAllowGuests] = useState<boolean>(competition?.allowGuests ?? false)
   const [teamSize, setTeamSize] = useState<string>(String(competition?.teamSize ?? ""))
 
@@ -104,6 +106,22 @@ export function useCompetitionFormState({ competition, action }: Args) {
     scoringMode === "TARGET_UNDER" ||
     scoringMode === "TARGET_OVER"
 
+  // Die Saison-Auswahl „Wertungsmodus" führt zwei Felder in EINEM Select: die vier
+  // Serien-Wertungen und die zwei alternierenden Sortierungen. Ein alternierender Eintrag
+  // setzt scoringMode auf den neutralen Wert RINGTEILER — dort folgt das Ringe-Eingabeformat
+  // der Disziplin, während seasonSortMode die Reihenfolge bestimmt.
+  const seasonWertung = seasonSortMode !== "" ? seasonSortMode : scoringMode
+
+  function setSeasonWertung(v: string) {
+    if (v === "ALT_RINGS_FIRST" || v === "ALT_TEILER_FIRST") {
+      setSeasonSortMode(v)
+      setScoringMode("RINGTEILER")
+    } else {
+      setSeasonSortMode("")
+      setScoringMode(v)
+    }
+  }
+
   // Beim Wechsel auf BEST_OF_SINGLE den Wertungsmodus zurücksetzen, falls
   // er im Direktduell nicht erlaubt ist.
   function onLeagueFormatChange(v: string) {
@@ -128,6 +146,9 @@ export function useCompetitionFormState({ competition, action }: Args) {
     setType,
     scoringMode,
     setScoringMode,
+    seasonSortMode,
+    seasonWertung,
+    setSeasonWertung,
     allowGuests,
     setAllowGuests,
     teamSize,

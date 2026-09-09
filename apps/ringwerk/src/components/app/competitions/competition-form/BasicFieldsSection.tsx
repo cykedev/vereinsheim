@@ -14,7 +14,8 @@ import type { CompetitionFormState } from "./useCompetitionFormState"
 import {
   BEST_OF_SINGLE_SCORING_MODE_LABELS,
   EVENT_SCORING_MODE_LABELS,
-  SEASON_SCORING_MODE_LABELS,
+  SEASON_WERTUNG_LABELS,
+  SERIES_SCORING_MODE_LABELS,
 } from "./constants"
 
 interface Props {
@@ -32,6 +33,9 @@ export function BasicFieldsSection({ form, competition, disciplines, hasMatchups
     setType,
     scoringMode,
     setScoringMode,
+    seasonSortMode,
+    seasonWertung,
+    setSeasonWertung,
     isBestOfSingle,
     name,
     setName,
@@ -42,6 +46,9 @@ export function BasicFieldsSection({ form, competition, disciplines, hasMatchups
     nameError,
     disciplineIdError,
   } = form
+
+  // Beim Anlegen zählt die Typ-Auswahl, beim Bearbeiten der gespeicherte Typ (Typ ist dann fix).
+  const isSeason = isEdit ? competition?.type === "SEASON" : type === "SEASON"
 
   return (
     <>
@@ -84,12 +91,12 @@ export function BasicFieldsSection({ form, competition, disciplines, hasMatchups
         <FieldError id="name-error" message={nameError} />
       </div>
 
-      {/* Wertungsmodus */}
+      {/* Wertungsmodus — bei SEASON führt dieselbe Auswahl auch die alternierenden Sortierungen */}
       <div className="space-y-2">
         <Label htmlFor="scoringMode">Wertungsmodus</Label>
         <Select
-          value={scoringMode}
-          onValueChange={setScoringMode}
+          value={isSeason ? seasonWertung : scoringMode}
+          onValueChange={isSeason ? setSeasonWertung : setScoringMode}
           disabled={
             isPending || (hasMatchups && (type === "LEAGUE" || competition?.type === "LEAGUE"))
           }
@@ -101,9 +108,11 @@ export function BasicFieldsSection({ form, competition, disciplines, hasMatchups
             {Object.entries(
               isBestOfSingle
                 ? BEST_OF_SINGLE_SCORING_MODE_LABELS
-                : type === "SEASON" || type === "LEAGUE"
-                  ? SEASON_SCORING_MODE_LABELS
-                  : EVENT_SCORING_MODE_LABELS
+                : isSeason
+                  ? SEASON_WERTUNG_LABELS
+                  : type === "LEAGUE"
+                    ? SERIES_SCORING_MODE_LABELS
+                    : EVENT_SCORING_MODE_LABELS
             ).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
@@ -115,9 +124,17 @@ export function BasicFieldsSection({ form, competition, disciplines, hasMatchups
             submit its value, but the schema requires it. The action still ignores
             it when the ruleset is locked. */}
         <input type="hidden" name="scoringMode" value={scoringMode} />
+        <input type="hidden" name="seasonSortMode" value={isSeason ? seasonSortMode : ""} />
         {isBestOfSingle && (
           <p className="text-xs text-muted-foreground">
             Im Best-of-Modus nur Ringteiler, Ringe, Zehntelringe oder Teiler erlaubt.
+          </p>
+        )}
+        {isSeason && seasonSortMode !== "" && (
+          <p className="text-xs text-muted-foreground">
+            Die Rangliste wechselt zeilenweise zwischen bestem Teiler und besten Ringen; Tabelle und
+            PDF nutzen dieselbe Reihenfolge, manuelles Sortieren ist deaktiviert. Das Eingabeformat
+            der Ringe folgt der Disziplin.
           </p>
         )}
       </div>

@@ -139,6 +139,9 @@ export function formatAuditDetails(eventType: string, details: unknown): DetailR
       rows.push({ label: "Name", value: str(d.name) })
       rows.push({ label: "Typ", value: str(d.type) })
       rows.push({ label: "Wertungsmodus", value: str(d.scoringMode) })
+      if (d.seasonSortMode != null) {
+        rows.push({ label: "Sortierung", value: str(d.seasonSortMode) })
+      }
       break
 
     case "COMPETITION_STATUS_CHANGED":
