@@ -417,8 +417,14 @@ Ringteiler muss aus **derselben Serie** stammen (Ringe und Teiler gehören zusam
 
 ### Saison-Rangliste (Seiten-UI) ✓
 
-- **Sortierbare Spalten:** Header-Click zum Sortieren nach Platzierung, Name, Ringe, Teiler, Ringteiler
-- **Default-Sortierung:** abhängig vom `scoringMode` (z.B. Ringe für RINGS-Modus)
+- **Sortierbare Spalten:** Header-Click zum Sortieren nach Ringe, Teiler, Ringteiler — **nur in den
+  klassischen Modi**; bei alternierender Sortierung ist die Reihenfolge die Wertung selbst und
+  manuelles Sortieren deaktiviert (siehe [[season-mode]])
+- **Default-Sortierung:** `seasonSortMode` (alternierend) gewinnt, sonst abgeleitet aus `scoringMode`
+  (z.B. Ringe für RINGS-Modus). Eine reine Funktion liefert die Reihenfolge für Tabelle, beide PDFs
+  und das Dashboard
+- **Inline-Platzierungen:** an den Metrik-Werten nur die Plätze 1–3; die Gesamtplatzierung steht an
+  jeder Zeile am Namen
 - **Gemischte Wettbewerbe:** Spalte "Best. Teiler korr." zeigt die mit Faktor korrigierten Teiler-Werte
 - **Zurückgezogene Teilnehmer:** Teilnehmer mit Status "WITHDRAWN" werden ausgeschlossen und erscheinen nicht in der Standingtabelle
 - **Serien-Anzeige:** Pro Teilnehmer können Serien expandiert/collapsiert werden (Chevron-Icon)

@@ -374,7 +374,7 @@ Pro Teilnehmer werden drei Bestwerte ermittelt (jeweils aus einer einzelnen Seri
 
 Wichtig: Beste Ringe und bester Teiler können aus **verschiedenen Serien** stammen. Ringteiler muss aus **derselben Serie** stammen (Ringe und Teiler gehören zusammen).
 
-Nur Teilnehmer mit ≥ minSeries Serien werden gewertet.
+Nur Teilnehmer mit ≥ minSeries Serien werden gewertet — und nur sie tragen Metrik-Ränge.
 
 Die **Anzeigereihenfolge** dieser drei Bestwerte ist eine eigene Entscheidung (`seasonSortMode`):
 klassisch nach einer der Metriken oder **alternierend** zwischen besten Ringen und bestem
