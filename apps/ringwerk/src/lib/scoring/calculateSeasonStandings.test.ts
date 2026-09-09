@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { calculateSeasonStandings } from "./calculateSeasonStandings"
+import { sortSeasonStandings } from "./sortSeasonStandings"
 import type { SeasonSeriesItem } from "@/lib/series/types"
 
 function makeSeries(
@@ -260,12 +261,13 @@ describe("calculateSeasonStandings", () => {
       const p2 = result.find((e) => e.participantId === "p2")!
 
       expect(p1.meetsMinSeries).toBe(false)
-      expect(p1.bestRings_rank).toBe(2) // 96 Ringe → Rang 2
       expect(p2.meetsMinSeries).toBe(false)
-      expect(p2.bestRings_rank).toBe(1) // 98 Ringe → Rang 1
+      // Niemand ist gewertet → niemand traegt einen Metrik-Rang
+      expect(p1.bestRings_rank).toBeNull()
+      expect(p2.bestRings_rank).toBeNull()
     })
 
-    it("gibt Rang an alle Teilnehmer mit Werten, unabhängig von Qualifikation", () => {
+    it("vergibt Metrik-Ränge nur an gewertete Teilnehmer", () => {
       const result = calculateSeasonStandings(
         [
           {
@@ -288,10 +290,16 @@ describe("calculateSeasonStandings", () => {
       const p1 = result.find((e) => e.participantId === "p1")!
       const p2 = result.find((e) => e.participantId === "p2")!
 
+      // p2 hat den besseren Wert (98 > 95), ist aber unter minSeries → kein Rang.
+      // Sonst hielte eine ausgegraute Zeile die 1 und p1 waere trotz Wertung nur Zweiter.
       expect(p1.meetsMinSeries).toBe(true)
-      expect(p1.bestRings_rank).toBe(2) // 95 Ringe → Rang 2 (p2 hat 98)
+      expect(p1.bestRings_rank).toBe(1)
       expect(p2.meetsMinSeries).toBe(false)
-      expect(p2.bestRings_rank).toBe(1) // 98 Ringe → Rang 1 (auch wenn unqualifiziert)
+      expect(p2.bestRings_rank).toBeNull()
+      expect(p2.bestTeiler_rank).toBeNull()
+      expect(p2.bestRingteiler_rank).toBeNull()
+      // Der Wert selbst bleibt sichtbar — nur der Rang faellt weg
+      expect(p2.bestRings).toBe(98)
     })
 
     it("qualifiziert alle wenn minSeries null", () => {
@@ -360,5 +368,76 @@ describe("calculateSeasonStandings – Faktor nur bei gemischt", () => {
       null
     )
     expect(result[0].bestCorrectedTeiler).toBeCloseTo(20)
+  })
+
+  describe("Ablesbarkeit der alternierenden Reihenfolge", () => {
+    // Fixture wie im Validierungs-Datensatz: fuenf gewertete Schuetzen mit disjunkten Bestwerten
+    // plus einer, der die Mindestserien NICHT erreicht, aber die besten Werte hat.
+    function fixture() {
+      const two = (id: string, rings: number, teiler: number, ringteiler: number) => ({
+        participantId: id,
+        participantName: id,
+        series: [
+          makeSeries(id, { rings, teiler, ringteiler }),
+          makeSeries(id, { rings: rings - 12, teiler: teiler + 15, ringteiler: ringteiler + 27 }),
+        ],
+      })
+      return [
+        two("Anton", 98, 12.0, 14.0),
+        two("Berta", 92, 3.5, 11.5),
+        two("Caesar", 96, 7.0, 11.0),
+        two("Dora", 90, 9.5, 19.5),
+        two("Faktor", 104, 7.2, 12.2),
+        // nur eine Serie -> nicht gewertet, obwohl in beiden Metriken top
+        {
+          participantId: "Emil",
+          participantName: "Emil",
+          series: [makeSeries("Emil", { rings: 100, teiler: 0.5, ringteiler: 0.5 })],
+        },
+      ]
+    }
+
+    it("liest sich als bester/bester, zweitbester/zweitbester — Unqualifizierte halten keine Ränge", () => {
+      const sorted = sortSeasonStandings(calculateSeasonStandings(fixture(), 2), "alt-rings")
+
+      expect(sorted.map((e) => e.participantName)).toEqual([
+        "Faktor",
+        "Berta",
+        "Anton",
+        "Caesar",
+        "Dora",
+        "Emil",
+      ])
+      // Der Rang der jeweils maßgeblichen Metrik: 1, 1, 2, 2 — ohne Lücke
+      expect(sorted[0].bestRings_rank).toBe(1)
+      expect(sorted[1].bestTeiler_rank).toBe(1)
+      expect(sorted[2].bestRings_rank).toBe(2)
+      expect(sorted[3].bestTeiler_rank).toBe(2)
+      // Der nicht gewertete Schütze steht hinten und trägt keinen Rang
+      const emil = sorted[5]
+      expect(emil.meetsMinSeries).toBe(false)
+      expect(emil.bestRings_rank).toBeNull()
+      expect(emil.bestTeiler_rank).toBeNull()
+    })
+
+    it("ein Sprung bleibt möglich, wenn der Nächstplatzierte schon über die andere Metrik dran war", () => {
+      // Ohne "Faktor": Caesar ist zweitbeste Ringe UND zweitbester Teiler. Er wird über die Ringe
+      // platziert, also faellt der naechste Teiler-Platz an Dora — Teiler-Rang 3 statt 2.
+      // Folge der Regel "jeder Schuetze genau einmal", kein Rechenfehler.
+      const withoutFaktor = fixture().filter((p) => p.participantId !== "Faktor")
+      const sorted = sortSeasonStandings(calculateSeasonStandings(withoutFaktor, 2), "alt-rings")
+
+      expect(sorted.map((e) => e.participantName)).toEqual([
+        "Anton",
+        "Berta",
+        "Caesar",
+        "Dora",
+        "Emil",
+      ])
+      expect(sorted[0].bestRings_rank).toBe(1)
+      expect(sorted[1].bestTeiler_rank).toBe(1)
+      expect(sorted[2].bestRings_rank).toBe(2)
+      expect(sorted[3].bestTeiler_rank).toBe(3)
+    })
   })
 })

@@ -95,8 +95,11 @@ export function calculateSeasonStandings(
     }
   })
 
-  // Alle Einträge mit Werten für Ränge berücksichtigen (unqualifizierte erhalten ebenfalls Ränge)
-  const allWithValues = entries.filter((e) => e.bestRings !== null)
+  // Metrik-Ränge nur für GEWERTETE Teilnehmer: wer die Mindestserien nicht erreicht, steht nicht
+  // in der Wertung und darf keinen Rang tragen — sonst hält eine ausgegraute Zeile die 1 und die
+  // Rangfolge der gewerteten Zeilen bekommt Lücken (in der alternierenden Sortierung sofort
+  // sichtbar: 1, 2, 3, 3 statt 1, 1, 2, 2). Bei minSeries = null ist jeder qualifiziert.
+  const rankedEntries = entries.filter((e) => e.bestRings !== null && e.meetsMinSeries)
 
   // Rang berechnen: gleiche Werte → gleicher Rang
   function assignRanks(
@@ -125,7 +128,7 @@ export function calculateSeasonStandings(
     return ranks
   }
 
-  const qualifiedIds = allWithValues.map((e) => e.participantId)
+  const qualifiedIds = rankedEntries.map((e) => e.participantId)
   const entryMap = new Map(entries.map((e) => [e.participantId, e]))
 
   const ringsRanks = assignRanks(
