@@ -3,6 +3,8 @@ import type { SeasonStandingsEntry } from "./calculateSeasonStandings"
 import {
   resolveSeasonSort,
   isAlternatingSort,
+  isPodiumRank,
+  metricAppearance,
   sortSeasonStandings,
   type ResolvedSeasonSort,
 } from "./sortSeasonStandings"
@@ -97,6 +99,18 @@ describe("sortSeasonStandings — klassische Modi", () => {
     ]
     expect(names(sortSeasonStandings(entries, "rings"))).toEqual(["Schwach", "Stark"])
     expect(names(sortSeasonStandings(entries, "teiler"))).toEqual(["Schwach", "Stark"])
+  })
+
+  it("lässt bei Wertgleichheit die eingehende Reihenfolge stehen (stabil)", () => {
+    // Anders als der alternierende Zweig greift hier KEIN Namens-Tiebreak: die eingehende
+    // Ordnung kommt aus calculateSeasonStandings (Ringteiler aufsteigend), und dieses
+    // sportliche Kriterium ist bei gleichen Ringen aussagekräftiger als der Nachname.
+    const entries = [
+      makeEntry("Zeta", { rings: 95, teiler: 5.0, ringteiler: 10.0 }),
+      makeEntry("Alpha", { rings: 95, teiler: 5.0, ringteiler: 12.0 }),
+    ]
+    expect(names(sortSeasonStandings(entries, "rings"))).toEqual(["Zeta", "Alpha"])
+    expect(names(sortSeasonStandings(entries, "teiler"))).toEqual(["Zeta", "Alpha"])
   })
 
   it("stellt Teilnehmer ohne Serie ans Ende, alphabetisch", () => {
@@ -214,6 +228,34 @@ describe("sortSeasonStandings — Invarianten", () => {
     for (const entry of sortSeasonStandings(input, sort)) {
       expect(entry.bestRings_rank).toBe(3)
       expect(entry.bestTeiler_rank).toBe(2)
+    }
+  })
+})
+
+describe("Darstellungsregeln (geteilt von Tabelle und PDF)", () => {
+  it("zählt nur die Podiumsplätze als Inline-Platzierung", () => {
+    expect(isPodiumRank(1)).toBe(true)
+    expect(isPodiumRank(3)).toBe(true)
+    expect(isPodiumRank(4)).toBe(false)
+    expect(isPodiumRank(null)).toBe(false)
+  })
+
+  it("betont in den alternierenden Modi genau die maßgebliche Metrik", () => {
+    const [first, second] = sortSeasonStandings(planFixture(), "alt-teiler")
+    expect(first.alternatingBy).toBe("teiler")
+    expect(metricAppearance(first, "teiler")).toBe("emphasized")
+    expect(metricAppearance(first, "rings")).toBe("muted")
+    expect(metricAppearance(first, "ringteiler")).toBe("muted")
+    expect(second.alternatingBy).toBe("rings")
+    expect(metricAppearance(second, "rings")).toBe("emphasized")
+    expect(metricAppearance(second, "teiler")).toBe("muted")
+  })
+
+  it("lässt die Darstellung in den klassischen Modi unverändert", () => {
+    for (const entry of sortSeasonStandings(planFixture(), "ringteiler")) {
+      expect(metricAppearance(entry, "rings")).toBe("default")
+      expect(metricAppearance(entry, "teiler")).toBe("default")
+      expect(metricAppearance(entry, "ringteiler")).toBe("default")
     }
   })
 })
