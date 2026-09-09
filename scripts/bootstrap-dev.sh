@@ -122,6 +122,14 @@ echo
 [[ "$ready" -eq 1 ]] || die "Dev-Postgres wurde nicht rechtzeitig bereit. Prüfe: docker compose -f docker-compose.dev.yml logs db"
 ok "Dev-Postgres bereit (localhost:5432)"
 
+# CREATEDB für die Dev-Rollen: `prisma migrate dev` legt pro Migration eine temporäre
+# Shadow-DB an und scheitert ohne dieses Recht mit P3014. dev/db-init vergibt es beim ERSTEN
+# Start mit — dieser idempotente Nachzug holt bestehende Volumes auf denselben Stand.
+# Prod migriert via `migrate deploy` und braucht keine Shadow-DB (db-init/ bleibt ohne).
+docker compose -f "$DEV_COMPOSE_FILE" exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d postgres \
+	-c 'ALTER ROLE ringwerk CREATEDB;' -c 'ALTER ROLE treffsicher CREATEDB;' >/dev/null
+ok "Dev-Rollen dürfen Shadow-DBs anlegen (prisma migrate dev)"
+
 # ---------- 6) .env je App (nur wenn fehlend — nie überschreiben) ----------
 step ".env je App (aus .env.example, nur wenn fehlend)"
 for app in "${APPS[@]}"; do
