@@ -15,6 +15,7 @@ import { getPlayoffBracket } from "@/lib/playoffs/queries"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
 import { rankEventParticipants, rankEventTeams } from "@/lib/scoring/rankEventParticipants"
 import { calculateSeasonStandings } from "@/lib/scoring/calculateSeasonStandings"
+import { resolveSeasonSort, sortSeasonStandings } from "@/lib/scoring/sortSeasonStandings"
 import { StandingsTable } from "@/components/app/standings/StandingsTable"
 import { BestOfStandingsTable } from "@/components/app/standings/BestOfStandingsTable"
 import { PlayoffBracket } from "@/components/app/playoffs/PlayoffBracket"
@@ -78,18 +79,28 @@ export default async function DashboardPage() {
     Promise.all(
       activeSeasons.map(async (c) => {
         const data = await getSeasonWithSeries(c.id)
+        const sort = resolveSeasonSort(c.scoringMode, c.seasonSortMode)
+        // Erst sortieren, dann in der Karte schneiden — sonst zeigt die Vorschau die falschen Ränge.
         const standings = data
-          ? calculateSeasonStandings(
-              data.participants.map((p) => ({
-                participantId: p.participantId,
-                participantName: `${p.lastName}, ${p.firstName}`,
-                series: p.series,
-              })),
-              data.competition.minSeries,
-              data.competition.disciplineId
+          ? sortSeasonStandings(
+              calculateSeasonStandings(
+                data.participants.map((p) => ({
+                  participantId: p.participantId,
+                  participantName: `${p.lastName}, ${p.firstName}`,
+                  series: p.series,
+                })),
+                data.competition.minSeries,
+                data.competition.disciplineId
+              ),
+              sort
             )
           : []
-        return { competition: c, standings, minSeries: data?.competition.minSeries ?? null }
+        return {
+          competition: c,
+          standings,
+          minSeries: data?.competition.minSeries ?? null,
+          sort,
+        }
       })
     ),
   ])
@@ -202,7 +213,7 @@ export default async function DashboardPage() {
           })}
 
           {/* Saisons: Rangliste */}
-          {seasonData.map(({ competition: c, standings, minSeries }) => (
+          {seasonData.map(({ competition: c, standings, minSeries, sort }) => (
             <DashboardCompetitionCard
               key={c.id}
               title={c.name}
@@ -219,7 +230,7 @@ export default async function DashboardPage() {
               <SeasonStandingsTable
                 entries={standings.slice(0, PREVIEW_ROWS)}
                 minSeries={minSeries}
-                scoringMode={c.scoringMode}
+                sort={sort}
                 isMixed={!c.discipline}
               />
             </DashboardCompetitionCard>
