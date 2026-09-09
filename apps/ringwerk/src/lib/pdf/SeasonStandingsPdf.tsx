@@ -1,6 +1,11 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer"
 import type { ReactElement } from "react"
-import type { SeasonStandingsEntry } from "@/lib/scoring/calculateSeasonStandings"
+import {
+  isAlternatingSort,
+  SEASON_SORT_LABELS,
+  type ResolvedSeasonSort,
+  type SortedSeasonStandingsEntry,
+} from "@/lib/scoring/sortSeasonStandings"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
 import { SCORING_MODE_LABELS } from "@/lib/scoring/labels"
 import type { ScoringMode } from "@/lib/scoring/types"
@@ -19,7 +24,9 @@ export interface SeasonStandingsPdfProps {
   shotsPerSeries: number
   minSeries: number | null
   isMixed: boolean
-  entries: SeasonStandingsEntry[]
+  entries: SortedSeasonStandingsEntry[]
+  /** Aufgelöste Sortierung — dieselbe Quelle wie in der Tabelle (sortSeasonStandings). */
+  sort: ResolvedSeasonSort
   generatedAt: Date
 }
 
@@ -86,12 +93,26 @@ const W_NO_SERIES = { name: 200, rings: 105, teiler: 105, ringteiler: 105 }
 
 // ─── Standings-Tabelle ────────────────────────────────────────────────────────
 
+/**
+ * In den alternierenden Modi trägt genau der Wert, der die Zeile platziert hat, die dunkle
+ * Schrift; die anderen zwei werden zurückgenommen — wie in der Tabelle. Klassisch bleibt es
+ * beim bisherigen Bild.
+ */
+function metricMuted(
+  entry: SortedSeasonStandingsEntry,
+  metric: "rings" | "teiler" | "ringteiler",
+  classicMuted: boolean
+): boolean {
+  if (entry.alternatingBy === null) return classicMuted
+  return entry.alternatingBy !== metric
+}
+
 function StandingsTable({
   entries,
   minSeries,
   isMixed,
 }: {
-  entries: SeasonStandingsEntry[]
+  entries: SortedSeasonStandingsEntry[]
   minSeries: number | null
   isMixed: boolean
 }): ReactElement {
@@ -178,17 +199,19 @@ function StandingsTable({
                 value={formatRings(entry.bestRings, entry.bestRingsScoringType ?? "WHOLE")}
                 rank={entry.bestRings_rank}
                 width={W_WITH_SERIES.rings}
+                muted={metricMuted(entry, "rings", false)}
               />
               <MetricCell
                 value={formatDecimal1(entry.bestCorrectedTeiler)}
                 rank={entry.bestTeiler_rank}
                 width={W_WITH_SERIES.teiler}
-                muted
+                muted={metricMuted(entry, "teiler", true)}
               />
               <MetricCell
                 value={formatDecimal1(entry.bestRingteiler)}
                 rank={entry.bestRingteiler_rank}
                 width={W_WITH_SERIES.ringteiler}
+                muted={metricMuted(entry, "ringteiler", false)}
               />
             </View>
           )
@@ -229,17 +252,19 @@ function StandingsTable({
               value={formatRings(entry.bestRings, entry.bestRingsScoringType ?? "WHOLE")}
               rank={entry.bestRings_rank}
               width={W_NO_SERIES.rings}
+              muted={metricMuted(entry, "rings", false)}
             />
             <MetricCell
               value={formatDecimal1(entry.bestCorrectedTeiler)}
               rank={entry.bestTeiler_rank}
               width={W_NO_SERIES.teiler}
-              muted
+              muted={metricMuted(entry, "teiler", true)}
             />
             <MetricCell
               value={formatDecimal1(entry.bestRingteiler)}
               rank={entry.bestRingteiler_rank}
               width={W_NO_SERIES.ringteiler}
+              muted={metricMuted(entry, "ringteiler", false)}
             />
           </View>
         )
@@ -260,10 +285,12 @@ export function SeasonStandingsPdf({
   minSeries,
   isMixed,
   entries,
+  sort,
   generatedAt,
   displayTimeZone,
 }: SeasonStandingsPdfProps): ReactElement {
   const disciplineDisplay = disciplineName ?? "Gemischt"
+  const alternating = isAlternatingSort(sort)
 
   let seasonRange = ""
   if (seasonStart) {
@@ -288,10 +315,13 @@ export function SeasonStandingsPdf({
           </Text>
         </View>
 
-        {/* Config-Zeile */}
-        <View style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
+        {/* Config-Zeile — bei alternierender Sortierung definiert die Reihenfolge die Wertung,
+            der scoringMode trägt dann nur das Eingabeformat und wäre hier irreführend. */}
+        <View style={{ flexDirection: "row", gap: 12, marginBottom: alternating ? 4 : 12 }}>
           <Text style={{ fontSize: 9, color: PDF_COLORS.muted }}>
-            {SCORING_MODE_LABELS[scoringMode] ?? scoringMode}
+            {alternating
+              ? SEASON_SORT_LABELS[sort]
+              : (SCORING_MODE_LABELS[scoringMode] ?? scoringMode)}
           </Text>
           <Text style={{ fontSize: 9, color: PDF_COLORS.muted }}>{shotsPerSeries} Schuss</Text>
           {minSeries !== null && (
@@ -300,6 +330,13 @@ export function SeasonStandingsPdf({
             </Text>
           )}
         </View>
+
+        {/* Legende zur alternierenden Sortierung */}
+        {alternating && (
+          <Text style={{ fontSize: 9, color: PDF_COLORS.muted, marginBottom: 12 }}>
+            Hervorgehoben ist der Wert, der den Platz ergeben hat.
+          </Text>
+        )}
 
         {/* Rangliste */}
         {entries.length === 0 ? (

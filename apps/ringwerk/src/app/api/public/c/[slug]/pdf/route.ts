@@ -18,6 +18,7 @@ import {
 } from "@/lib/standings/queries"
 import { rankEventParticipants, rankEventTeams } from "@/lib/scoring/rankEventParticipants"
 import { calculateSeasonStandings } from "@/lib/scoring/calculateSeasonStandings"
+import { resolveSeasonSort, sortSeasonStandings } from "@/lib/scoring/sortSeasonStandings"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
 import { EventRankingPdf } from "@/lib/pdf/EventRankingPdf"
 import { SeasonStandingsPdf } from "@/lib/pdf/SeasonStandingsPdf"
@@ -189,14 +190,19 @@ async function buildSeasonStandingsElement(
   if (!data) throw new Error("Competition not found while rendering public PDF")
   const { competition, participants } = data
 
-  const standings = calculateSeasonStandings(
-    participants.map((p) => ({
-      participantId: p.participantId,
-      participantName: `${p.lastName}, ${p.firstName}`,
-      series: p.series,
-    })),
-    competition.minSeries,
-    competition.disciplineId
+  // Gleiche Sortierquelle wie die Tabelle, damit PDF und Bildschirm nie auseinanderlaufen.
+  const sort = resolveSeasonSort(competition.scoringMode, competition.seasonSortMode)
+  const standings = sortSeasonStandings(
+    calculateSeasonStandings(
+      participants.map((p) => ({
+        participantId: p.participantId,
+        participantName: `${p.lastName}, ${p.firstName}`,
+        series: p.series,
+      })),
+      competition.minSeries,
+      competition.disciplineId
+    ),
+    sort
   )
 
   return createElement(SeasonStandingsPdf, {
@@ -209,6 +215,7 @@ async function buildSeasonStandingsElement(
     minSeries: competition.minSeries,
     isMixed: !competition.disciplineId,
     entries: standings,
+    sort,
     generatedAt: new Date(),
     displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>

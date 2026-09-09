@@ -4,6 +4,7 @@ import { createElement, type ReactElement } from "react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getSeasonWithSeries } from "@/lib/competitions/queries"
 import { calculateSeasonStandings } from "@/lib/scoring/calculateSeasonStandings"
+import { resolveSeasonSort, sortSeasonStandings } from "@/lib/scoring/sortSeasonStandings"
 import { SeasonStandingsPdf } from "@/lib/pdf/SeasonStandingsPdf"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
@@ -25,14 +26,19 @@ export async function GET(
 
   const { competition, participants } = data
 
-  const standings = calculateSeasonStandings(
-    participants.map((p) => ({
-      participantId: p.participantId,
-      participantName: `${p.lastName}, ${p.firstName}`,
-      series: p.series,
-    })),
-    competition.minSeries,
-    competition.disciplineId
+  // Gleiche Sortierquelle wie die Tabelle, damit PDF und Bildschirm nie auseinanderlaufen.
+  const sort = resolveSeasonSort(competition.scoringMode, competition.seasonSortMode)
+  const standings = sortSeasonStandings(
+    calculateSeasonStandings(
+      participants.map((p) => ({
+        participantId: p.participantId,
+        participantName: `${p.lastName}, ${p.firstName}`,
+        series: p.series,
+      })),
+      competition.minSeries,
+      competition.disciplineId
+    ),
+    sort
   )
 
   const element = createElement(SeasonStandingsPdf, {
@@ -45,6 +51,7 @@ export async function GET(
     minSeries: competition.minSeries,
     isMixed: !competition.disciplineId,
     entries: standings,
+    sort,
     generatedAt: new Date(),
     displayTimeZone: getDisplayTimeZone(),
   }) as ReactElement<DocumentProps>
