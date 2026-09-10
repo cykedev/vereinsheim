@@ -5,6 +5,7 @@ import { createElement, type ReactElement } from "react"
 import bcrypt from "bcryptjs"
 import { SLUG_REGEX } from "@/lib/competitions/publicSlug"
 import { resolveSlug } from "@/lib/competitions/publicSlugQueries"
+import { publicPdfCacheTag } from "@/lib/competitions/publicPdfCache"
 import { hasPlayoffsStarted, getPlayoffBracket } from "@/lib/playoffs/queries"
 import {
   getCompetitionById,
@@ -76,7 +77,7 @@ export async function GET(
     return new NextResponse("Not Found", { status: 404 })
   }
 
-  const buffer = await renderPdfBuffer(competition.id, phaseTag, slug)
+  const buffer = await renderPdfBuffer(competition.id, phaseTag)
 
   // Wrap in Uint8Array via .buffer slice so the typing matches BodyInit.
   return new NextResponse(new Uint8Array(buffer), {
@@ -113,24 +114,25 @@ function escapeRealm(name: string): string {
 }
 
 // === PDF buffer cache ========================================================
-// Key: (competitionId, phaseTag). Tagged so server actions can revalidate per slug.
+// Key: (competitionId, phaseTag). Tagged by competition id — the slug is renamable, the id is
+// not, so key and tag hang on the same identity. A slug-derived tag orphaned the entry on every
+// rename (see vault/incidents/public-pdf-cache-tag-orphaning.md).
 //
 // IMPORTANT: unstable_cache serialises return values (JSON for the persistent cache),
 // so a raw Buffer would deserialise as `{ type: "Buffer", data: [...] }` on cache hit
 // and turn into an empty Uint8Array. We cache base64 instead and decode here.
 
-async function renderPdfBuffer(
-  competitionId: string,
-  phaseTag: PhaseTag,
-  slug: string
-): Promise<Buffer> {
+async function renderPdfBuffer(competitionId: string, phaseTag: PhaseTag): Promise<Buffer> {
   const cached = unstable_cache(
     async () => {
       const buf = await buildAndRenderBuffer(competitionId, phaseTag)
       return buf.toString("base64")
     },
-    ["public-pdf-buffer", competitionId, phaseTag],
-    { revalidate: 86400, tags: [`public-pdf:${slug}`] }
+    // "-v2": the key prefix moved along with the tag. Next stores the tags WITH the entry, so
+    // entries written before this change would survive under the old slug tag and stay
+    // uninvalidatable for up to their 24h window.
+    ["public-pdf-buffer-v2", competitionId, phaseTag],
+    { revalidate: 86400, tags: [publicPdfCacheTag(competitionId)] }
   )
   const b64 = await cached()
   // Buffer is a Uint8Array subclass and is accepted as BodyInit by Next's Response.
