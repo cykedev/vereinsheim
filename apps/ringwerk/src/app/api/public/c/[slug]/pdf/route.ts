@@ -128,10 +128,7 @@ async function renderPdfBuffer(competitionId: string, phaseTag: PhaseTag): Promi
       const buf = await buildAndRenderBuffer(competitionId, phaseTag)
       return buf.toString("base64")
     },
-    // "-v2": the key prefix moved along with the tag. Next stores the tags WITH the entry, so
-    // entries written before this change would survive under the old slug tag and stay
-    // uninvalidatable for up to their 24h window.
-    ["public-pdf-buffer-v2", competitionId, phaseTag],
+    ["public-pdf-buffer", competitionId, phaseTag],
     { revalidate: 86400, tags: [publicPdfCacheTag(competitionId)] }
   )
   const b64 = await cached()
