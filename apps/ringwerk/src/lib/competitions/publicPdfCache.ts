@@ -28,6 +28,10 @@ export function publicPdfCacheTag(competitionId: string): string {
  * Genau deshalb ist die frühere DB-Auflösung des Slugs entfallen.
  */
 export function revalidatePublicPdf(competitionId: string): void {
-  // "max"-Profil: alle Einträge mit diesem Tag sofort verwerfen
+  // Das "max"-Profil ist stale-while-revalidate, NICHT "sofort verwerfen" (der frühere Kommentar
+  // an dieser Stelle behauptete das Gegenteil): der erste Leser nach der Änderung bekommt noch
+  // das alte PDF, erst der nächste das neue. Verifiziert am 2026-09-10, siehe
+  // reports/2026-09-10-public-pdf-cache-tag-by-id.md. Für read-your-own-writes wäre `updateTag`
+  // das richtige Mittel — eigener Change, weil es das Verhalten für alle Leser ändert.
   revalidateTag(publicPdfCacheTag(competitionId), "max")
 }
