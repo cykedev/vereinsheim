@@ -51,9 +51,20 @@ vi.mock("@react-pdf/renderer", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@react-pdf/renderer")>()
   return { ...actual, renderToBuffer: renderToBufferMock }
 })
-// unstable_cache: identity wrapper so the inner function is invoked directly per request
+// unstable_cache: identity wrapper so the inner function is invoked directly per request.
+// Key parts and options are recorded so tests can assert on the cache tag.
+const { cacheCalls } = vi.hoisted(() => ({
+  cacheCalls: [] as { keyParts: unknown; options: { tags?: string[] } | undefined }[],
+}))
 vi.mock("next/cache", () => ({
-  unstable_cache: <T extends (...args: never[]) => unknown>(fn: T) => fn,
+  unstable_cache: <T extends (...args: never[]) => unknown>(
+    fn: T,
+    keyParts?: unknown,
+    options?: { tags?: string[] }
+  ) => {
+    cacheCalls.push({ keyParts, options })
+    return fn
+  },
 }))
 // Stub the heavy ranking modules — they're imported but only their builder functions run,
 // and those flow into renderToBuffer which is mocked.
@@ -109,6 +120,7 @@ const eventCompetitionWithSeries = {
 
 beforeEach(() => {
   vi.resetAllMocks()
+  cacheCalls.length = 0 // resetAllMocks does not touch the recorded cache calls
   renderToBufferMock.mockResolvedValue(Buffer.from("fake-pdf"))
   // Default builder query mocks return safe shapes for the EVENT path
   getEventWithSeriesMock.mockResolvedValue(eventCompetitionWithSeries)
@@ -211,6 +223,43 @@ describe("public PDF route — Cache-Control", () => {
     const res = await callRoute("test-slug")
     expect(res.status).toBe(200)
     expect(res.headers.get("Cache-Control")).toBe("private, max-age=0, must-revalidate")
+  })
+})
+
+describe("public PDF route — render cache identity", () => {
+  it("tags the render cache with the competition id, not with the slug", async () => {
+    resolveSlugMock.mockResolvedValue({ ...baseCompetition, publicPasswordHash: null })
+    await callRoute("alter-slug")
+
+    expect(cacheCalls).toHaveLength(1)
+    expect(cacheCalls[0].options?.tags).toEqual(["public-pdf:comp1"])
+    expect(cacheCalls[0].options?.tags?.[0]).not.toContain("alter-slug")
+  })
+
+  it("stays invalidatable under the same tag after a slug rename", async () => {
+    // Same competition, new slug — the tag must not move, otherwise the entry orphans
+    // under the old tag and no revalidateTag call can ever reach it again
+    // (vault/incidents/public-pdf-cache-tag-orphaning.md).
+    resolveSlugMock.mockResolvedValue({ ...baseCompetition, publicPasswordHash: null })
+    await callRoute("alter-slug")
+    await callRoute("neuer-slug")
+
+    expect(cacheCalls).toHaveLength(2)
+    expect(cacheCalls[1].options?.tags).toEqual(cacheCalls[0].options?.tags)
+    // The key hangs on the id too — key and tag share one identity.
+    expect(cacheCalls[1].keyParts).toEqual(cacheCalls[0].keyParts)
+  })
+
+  it("separates the cache entries of the four PDF phases", async () => {
+    resolveSlugMock.mockResolvedValue({ ...baseCompetition, type: "EVENT" })
+    await callRoute("test-slug")
+    resolveSlugMock.mockResolvedValue({ ...baseCompetition, type: "SEASON" })
+    await callRoute("test-slug")
+
+    expect(cacheCalls).toHaveLength(2)
+    expect(cacheCalls[1].keyParts).not.toEqual(cacheCalls[0].keyParts)
+    // ... but both hang on the one tag, so one revalidation clears every phase.
+    expect(cacheCalls[1].options?.tags).toEqual(cacheCalls[0].options?.tags)
   })
 })
 
