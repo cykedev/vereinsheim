@@ -5,14 +5,9 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import type { AuditEventType } from "@/lib/auditLog/types"
-import {
-  parseDate,
-  parseDateForUpdate,
-  revalidateCompetitionPaths,
-  BaseSchema,
-  revalidatePublicSlug,
-} from "./_shared"
+import { parseDate, parseDateForUpdate, revalidateCompetitionPaths, BaseSchema } from "./_shared"
 import { findActiveSlugConflict } from "../publicSlugQueries"
+import { revalidatePublicPdf } from "../publicPdfCache"
 
 export async function updateCompetition(
   id: string,
@@ -194,15 +189,9 @@ export async function updateCompetition(
     },
   })
 
-  // Conservatively invalidate the cache for any slug touched by this update — the previous one
-  // (slug changed, publishing turned off) and the next one (data behind the slug is now stale).
-  // Set deduplicates the no-op case where both are equal.
-  const slugsToInvalidate = new Set<string>()
-  if (competition.publicSlug) slugsToInvalidate.add(competition.publicSlug)
-  if (nextSlug) slugsToInvalidate.add(nextSlug)
-  for (const slug of slugsToInvalidate) {
-    revalidatePublicSlug(slug)
-  }
+  // The tag hangs on the id, not on the slug, so one call covers a rename, a publish and an
+  // unpublish alike. The old two-slug dance was only a workaround for the orphaning bug.
+  revalidatePublicPdf(id)
 
   revalidateCompetitionPaths()
   return { success: true }

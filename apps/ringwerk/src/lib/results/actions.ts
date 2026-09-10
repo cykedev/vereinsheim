@@ -7,7 +7,7 @@ import type { ActionResult } from "@/lib/types"
 import type { SaveMatchResultInput } from "./types"
 import { calculateRingteiler, MAX_RINGS } from "./calculateResult"
 import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
-import { revalidatePublicSlugForCompetition } from "@/lib/competitions/actions/_shared"
+import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 
 /**
  * Speichert das Ergebnis einer Paarung (beide Schützen).
@@ -201,7 +201,7 @@ export async function saveMatchResult(
 
   revalidatePath(`/competitions/${matchup.competitionId}/schedule`)
   revalidatePath(`/competitions/${matchup.competitionId}/standings`)
-  await revalidatePublicSlugForCompetition(matchup.competitionId)
+  revalidatePublicPdf(matchup.competitionId)
 
   return { success: true }
 }

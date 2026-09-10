@@ -6,7 +6,7 @@ import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { calculateRingteiler, MAX_RINGS } from "../calculateResult"
 import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
-import { revalidatePublicSlugForCompetition } from "@/lib/competitions/actions/_shared"
+import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import type { SaveBestOfDuelInput, PlainSeries } from "./types"
 import { loadMatchup, resolveDisciplines, evaluateMatchState, toPlain } from "./shared"
 import { persistSeriesPair } from "./persistSeriesPair"
@@ -153,7 +153,7 @@ export async function saveBestOfDuel(input: SaveBestOfDuelInput): Promise<Action
 
   revalidatePath(`/competitions/${matchup.competitionId}/schedule`)
   revalidatePath(`/competitions/${matchup.competitionId}/standings`)
-  await revalidatePublicSlugForCompetition(matchup.competitionId)
+  revalidatePublicPdf(matchup.competitionId)
 
   return { success: true }
 }

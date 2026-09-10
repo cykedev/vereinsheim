@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const {
   getAuthSessionMock,
   revalidatePathMock,
+  revalidateTagMock,
   competitionFindUniqueMock,
   competitionParticipantFindUniqueMock,
   competitionParticipantCreateMock,
@@ -19,6 +20,7 @@ const {
 } = vi.hoisted(() => ({
   getAuthSessionMock: vi.fn(),
   revalidatePathMock: vi.fn(),
+  revalidateTagMock: vi.fn(),
   competitionFindUniqueMock: vi.fn(),
   competitionParticipantFindUniqueMock: vi.fn(),
   competitionParticipantCreateMock: vi.fn(),
@@ -38,7 +40,10 @@ vi.mock("@/lib/auth-helpers", () => ({
   getAuthSession: getAuthSessionMock,
   canManage: (role: string) => role === "ADMIN" || role === "MANAGER",
 }))
-vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }))
+vi.mock("next/cache", () => ({
+  revalidatePath: revalidatePathMock,
+  revalidateTag: revalidateTagMock,
+}))
 vi.mock("@/lib/db", () => ({
   db: {
     competition: { findUnique: competitionFindUniqueMock },

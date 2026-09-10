@@ -131,7 +131,7 @@ export async function saveEventSeries(
     },
   })
 
-  await revalidateEventPaths(competitionId)
+  revalidateEventPaths(competitionId)
   return { success: true }
 }
 
@@ -174,6 +174,6 @@ export async function deleteEventSeries(
     },
   })
 
-  await revalidateEventPaths(competitionId)
+  revalidateEventPaths(competitionId)
   return { success: true }
 }

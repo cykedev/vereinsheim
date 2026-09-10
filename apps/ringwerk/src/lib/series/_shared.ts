@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 import { calculateRingteiler } from "@/lib/results/calculateResult"
 import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import { getEffectiveScoringType, getMaxRings } from "@/lib/series/scoring-format"
-import { revalidatePublicSlugForCompetition } from "@/lib/competitions/actions/_shared"
+import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import type { ScoringMode, ScoringType, TargetValueType } from "@/generated/prisma/client"
 
 export const SeriesSchema = z.object({
@@ -33,16 +33,16 @@ export const SeasonSeriesSchema = SeriesSchema.extend({
     .transform((v) => v || null),
 })
 
-export async function revalidateEventPaths(competitionId: string): Promise<void> {
+export function revalidateEventPaths(competitionId: string): void {
   revalidatePath(`/competitions/${competitionId}/series`)
   revalidatePath(`/competitions/${competitionId}/ranking`)
-  await revalidatePublicSlugForCompetition(competitionId)
+  revalidatePublicPdf(competitionId)
 }
 
-export async function revalidateSeasonPaths(competitionId: string): Promise<void> {
+export function revalidateSeasonPaths(competitionId: string): void {
   revalidatePath(`/competitions/${competitionId}/series`)
   revalidatePath(`/competitions/${competitionId}/standings`)
-  await revalidatePublicSlugForCompetition(competitionId)
+  revalidatePublicPdf(competitionId)
 }
 
 /** Minimaler Wettbewerbs-Kontext für die Ringteiler-Berechnung. */

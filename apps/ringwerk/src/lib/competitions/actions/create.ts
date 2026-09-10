@@ -6,8 +6,9 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import type { AuditEventType } from "@/lib/auditLog/types"
-import { parseDate, revalidateCompetitionPaths, revalidatePublicSlug, BaseSchema } from "./_shared"
+import { parseDate, revalidateCompetitionPaths, BaseSchema } from "./_shared"
 import { findActiveSlugConflict } from "../publicSlugQueries"
+import { revalidatePublicPdf } from "../publicPdfCache"
 
 const CreateSchema = BaseSchema.extend({
   type: z.enum(["LEAGUE", "EVENT", "SEASON"], { message: "Ungültiger Wettbewerbstyp" }),
@@ -158,9 +159,9 @@ export async function createCompetition(
     },
   })
 
-  if (parsed.data.isPublic && parsed.data.publicSlug) {
-    revalidatePublicSlug(parsed.data.publicSlug)
-  }
+  // No isPublic gate needed: a competition created just now cannot have a cached PDF, so the
+  // call is a no-op. The tag hangs on the id, so it is correct either way.
+  revalidatePublicPdf(competition.id)
   revalidateCompetitionPaths()
   return { success: true, data: { id: competition.id } }
 }

@@ -6,7 +6,7 @@ import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { getStandingsForCompetition } from "@/lib/standings/queries"
 import { createFirstRoundMatchups } from "../calculatePlayoffs"
-import { revalidatePublicSlug } from "@/lib/competitions/actions/_shared"
+import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 
 /**
  * Startet die Playoff-Phase für eine Liga.
@@ -31,8 +31,6 @@ export async function startPlayoffs(competitionId: string): Promise<ActionResult
       playoffBestOf: true,
       playoffHasViertelfinale: true,
       playoffHasAchtelfinale: true,
-      isPublic: true,
-      publicSlug: true,
     },
   })
   if (!competition) return { error: "Meisterschaft nicht gefunden." }
@@ -91,7 +89,7 @@ export async function startPlayoffs(competitionId: string): Promise<ActionResult
   }
 
   // Invalidate the public PDF cache — the Liga PDF switches from Spielplan to Playoffs view
-  revalidatePublicSlug(competition.publicSlug)
+  revalidatePublicPdf(competitionId)
 
   revalidatePath(`/competitions/${competitionId}/playoffs`)
   return { success: true }

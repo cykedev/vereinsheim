@@ -201,6 +201,6 @@ export async function enrollParticipant(
     })
   }
 
-  await revalidateCompetitionParticipantPaths(competitionId)
+  revalidateCompetitionParticipantPaths(competitionId)
   return { success: true }
 }
