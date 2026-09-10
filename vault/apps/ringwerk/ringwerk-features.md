@@ -512,7 +512,7 @@ Wettbewerbe können mit `isPublic = true` und einem `publicSlug` markiert werden
 - **Stabile URL über Jahre:** Beispiel Jahrespreisschiessen → jährlich neuer Wettbewerb übernimmt denselben Slug, die Website-URL bleibt gleich.
 - **Lookup-Reihenfolge:** ACTIVE-Claimant zuerst, sonst jüngster (createdAt DESC) COMPLETED/ARCHIVED-Holder.
 - **Optionaler Passwortschutz:** Pro Wettbewerb kann ein bcrypt-gehashtes Passwort gesetzt werden. Browser zeigt nativen HTTP-Basic-Auth-Dialog. Benutzername wird ignoriert (geteiltes Passwort pro Wettbewerb).
-- **Cache:** PDF-Buffer 24h via `unstable_cache` (keyed by competitionId + phaseTag, tagged `public-pdf:<slug>`); Auth-Check läuft auf jeder Anfrage. Invalidierung via `revalidateTag` in update/status/startPlayoffs Actions.
+- **Cache:** PDF-Buffer 24h via `unstable_cache` (keyed by competitionId + phaseTag, getaggt über `publicPdfCacheTag(competitionId)` — die **ID**, nicht den umbenennbaren Slug); Auth-Check läuft auf jeder Anfrage. Invalidierung via `revalidatePublicPdf(competitionId)` aus **jeder** schreibenden Action, die Daten im PDF verändert (Ergebnisse, Serien, Playoff-Duelle, Teilnehmer, Wettbewerb/Status). Warum die ID: [[public-pdf-cache-tag-orphaning]].
 - **Berechtigung:** Schalter im Edit-Formular für ADMIN/MANAGER. Öffentliche Route ist unauthentisiert (außer optional via Basic-Auth-Passwort).
 - **UI-Indikator:** Wettbewerbe mit `isPublic = true` erhalten in der Competitions-Liste (ACTIVE, DRAFT) ein "Öffentlich"-Badge.
 

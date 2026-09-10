@@ -28,7 +28,6 @@ export async function updateCompetition(
         leagueFormat: true,
         status: true,
         isPublic: true,
-        publicSlug: true,
         publicPasswordHash: true,
       },
     }),

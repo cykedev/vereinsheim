@@ -110,6 +110,9 @@ describe("saveMatchResult", () => {
         data: expect.objectContaining({ eventType: "RESULT_ENTERED" }),
       })
     )
+    // A result appears in the public PDF, so the action must invalidate it by competition id.
+    // Without this assertion a dropped revalidatePublicPdf call passes every test.
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-pdf:c1", "max")
   })
 
   it("liefert Fehler wenn Matchup nicht gefunden", async () => {

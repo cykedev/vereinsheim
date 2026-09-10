@@ -564,6 +564,9 @@ describe("updateParticipantDiscipline", () => {
     })
     expect(revalidatePathMock).toHaveBeenCalledWith("/competitions/c1/participants")
     expect(revalidatePathMock).toHaveBeenCalledWith("/competitions")
+    // Enrolment data appears in the public PDF, so the action must invalidate it by competition
+    // id. Without this assertion a dropped revalidatePublicPdf call passes every test.
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-pdf:c1", "max")
   })
 
   it("erlaubt MANAGER die Änderung", async () => {

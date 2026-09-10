@@ -36,10 +36,15 @@ Wettbewerbs-ID, also aus derselben Identität wie der Cache-Key.
   synchron (die Slug-Query war ihr einziges `await`).
 - `update.ts` braucht das konservative Revalidieren von altem **und** neuem Slug nicht mehr — das
   war nur der Workaround für genau diesen Bug.
-- Der Cache-**Key**-Präfix wurde einmalig mitgezogen (`public-pdf-buffer` → `…-v2`). Next speichert
-  die Tags **mit** dem Eintrag: ohne Key-Bump hätten die vor dem Deploy geschriebenen Einträge den
-  restlichen 24h-Lauf unter dem alten Slug-Tag überlebt und wären in dieser Zeit weiter nicht
-  invalidierbar gewesen — der Bug hätte sich also über den Fix hinweg selbst verlängert.
+- **Kein** Key-Bump nötig — im Review korrigiert. Ein zwischenzeitliches `…-v2` beruhte auf der
+  Annahme, Next prüfe die **mit dem Eintrag gespeicherten** Tags; das ist falsch. Für
+  `unstable_cache`-Einträge (Kind `FETCH`) bildet Next `combinedTags` aus `ctx.tags`/`ctx.softTags`,
+  also den **zur Lesezeit** übergebenen Tags (`incremental-cache/index.js` und
+  `file-system-cache.js`). Ein vor dem Deploy geschriebener Eintrag wird deshalb gegen den *neuen*
+  ID-Tag geprüft und ist normal invalidierbar. In Produktion überlebt ohnehin nichts: `app-ringwerk`
+  hat in `compose.yml` kein Volume, `.next/cache` und das In-Memory-`tagsManifest` sterben mit dem
+  Container beim Deploy. Der Key bleibt daher `public-pdf-buffer` — ein Bump hätte nur einen
+  kalten Render pro Wettbewerb erzwungen, ohne Gegenwert.
 - Kein zusätzliches `revalidatePath` nötig: die Route ist `dynamic = "force-dynamic"` (die
   Passwortprüfung muss pro Request laufen), es gibt also keinen Full-Route-/ISR-Cache über den
   Slug-Pfad. Der Tag deckt den einzigen vorhandenen Cache vollständig ab.
@@ -70,6 +75,18 @@ Am 2026-09-10 im Dev-Server A/B gemessen (Details in
 | -------- | ------------------------ | -------- |
 | `revalidateTag(tag, "max")` (Ist-Stand) | alter Stand (22 ms, Cache-Treffer) | neuer Stand |
 | `updateTag(tag)` | **neuer Stand** (118 ms, Neu-Render) | neuer Stand |
+
+### Weitere Invalidierungs-Lücken (im Review gefunden, bewusst nicht in diesem Change)
+
+Zwei schreibende Pfade verändern Inhalte des öffentlichen PDFs, ohne es zu invalidieren — beide
+**vor** diesem Change schon so, deshalb eigener Fix:
+
+- `lib/matchups/actions.ts` `generateCompetitionSchedule` löscht und erzeugt die PENDING-Paarungen
+  neu und revalidiert nur `/schedule` + `/participants`. Das Liga-PDF **ist** Spielplan + Tabelle,
+  ein neu erzeugter Spielplan bleibt also bis zu 24 h öffentlich alt. Die `competitionId` liegt
+  vor, der Fix ist ein `revalidatePublicPdf(competitionId)` neben den beiden `revalidatePath`.
+- `lib/participants/crud.ts` `updateParticipant` benennt einen Schützen um, dessen Name in **jedem**
+  öffentlichen PDF steht. Hier bräuchte es zuerst eine Abfrage der betroffenen Wettbewerbe.
 
 **Offen:** ob `revalidatePublicPdf` auf `updateTag` umgestellt wird. Dagegen spricht nichts
 Technisches (alle Aufrufer sind Server Actions), aber es ändert das Verhalten für **alle** Leser

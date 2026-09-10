@@ -65,6 +65,9 @@ vi.mock("next/cache", () => ({
     cacheCalls.push({ keyParts, options })
     return fn
   },
+  // The route never calls this, but publicPdfCache is in its import graph — without the export
+  // the day something does call it, the failure is a confusing "not defined on the mock".
+  revalidateTag: vi.fn(),
 }))
 // Stub the heavy ranking modules — they're imported but only their builder functions run,
 // and those flow into renderToBuffer which is mocked.
@@ -250,16 +253,18 @@ describe("public PDF route — render cache identity", () => {
     expect(cacheCalls[1].keyParts).toEqual(cacheCalls[0].keyParts)
   })
 
-  it("separates the cache entries of the four PDF phases", async () => {
+  it("gives each PDF phase its own key but hangs them all on the one tag", async () => {
     resolveSlugMock.mockResolvedValue({ ...baseCompetition, type: "EVENT" })
     await callRoute("test-slug")
     resolveSlugMock.mockResolvedValue({ ...baseCompetition, type: "SEASON" })
     await callRoute("test-slug")
 
     expect(cacheCalls).toHaveLength(2)
-    expect(cacheCalls[1].keyParts).not.toEqual(cacheCalls[0].keyParts)
-    // ... but both hang on the one tag, so one revalidation clears every phase.
-    expect(cacheCalls[1].options?.tags).toEqual(cacheCalls[0].options?.tags)
+    expect(cacheCalls[0].keyParts).toEqual(["public-pdf-buffer", "comp1", "ranking"])
+    expect(cacheCalls[1].keyParts).toEqual(["public-pdf-buffer", "comp1", "standings"])
+    // Separate keys, one tag — so a single revalidation clears every phase at once.
+    expect(cacheCalls[0].options?.tags).toEqual(["public-pdf:comp1"])
+    expect(cacheCalls[1].options?.tags).toEqual(["public-pdf:comp1"])
   })
 })
 

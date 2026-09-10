@@ -195,6 +195,9 @@ describe("saveEventSeries", () => {
     seriesFindUniqueMock.mockResolvedValue(null)
     const result = await saveEventSeries("c1", "cp1", null, validFormData)
     expect(result).toEqual({ success: true })
+    // A series appears in the public PDF, so the action must invalidate it by competition id.
+    // Without this assertion a dropped revalidatePublicPdf call passes every test.
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-pdf:c1", "max")
     expect(seriesCreateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ rings: 95, teiler: 123.4, competitionId: "c1" }),
