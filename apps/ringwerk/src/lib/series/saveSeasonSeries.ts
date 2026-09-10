@@ -105,6 +105,6 @@ export async function saveSeasonSeries(
     },
   })
 
-  await revalidateSeasonPaths(competitionId)
+  revalidateSeasonPaths(competitionId)
   return { success: true }
 }

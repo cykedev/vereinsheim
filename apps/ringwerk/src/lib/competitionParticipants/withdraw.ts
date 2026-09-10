@@ -64,7 +64,7 @@ export async function withdrawParticipant(
     }),
   ])
 
-  await revalidateCompetitionParticipantPaths(cp.competitionId)
+  revalidateCompetitionParticipantPaths(cp.competitionId)
   return { success: true }
 }
 
@@ -113,6 +113,6 @@ export async function revokeWithdrawal(competitionParticipantId: string): Promis
     }),
   ])
 
-  await revalidateCompetitionParticipantPaths(cp.competitionId)
+  revalidateCompetitionParticipantPaths(cp.competitionId)
   return { success: true }
 }

@@ -24,7 +24,7 @@ export async function updateStartNumber(
     data: { startNumber },
   })
 
-  await revalidateCompetitionParticipantPaths(cp.competitionId)
+  revalidateCompetitionParticipantPaths(cp.competitionId)
   return { success: true }
 }
 
@@ -68,6 +68,6 @@ export async function updateParticipantDiscipline(
     data: { disciplineId },
   })
 
-  await revalidateCompetitionParticipantPaths(cp.competitionId)
+  revalidateCompetitionParticipantPaths(cp.competitionId)
   return { success: true }
 }

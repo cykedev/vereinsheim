@@ -69,6 +69,6 @@ export async function unenrollParticipant(competitionParticipantId: string): Pro
     await db.competitionParticipant.delete({ where: { id: competitionParticipantId } })
   }
 
-  await revalidateCompetitionParticipantPaths(cp.competitionId)
+  revalidateCompetitionParticipantPaths(cp.competitionId)
   return { success: true }
 }

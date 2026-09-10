@@ -46,6 +46,6 @@ export async function deleteSeasonSeries(
     },
   })
 
-  await revalidateSeasonPaths(competitionId)
+  revalidateSeasonPaths(competitionId)
   return { success: true }
 }

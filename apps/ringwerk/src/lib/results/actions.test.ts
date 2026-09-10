@@ -5,7 +5,6 @@ const {
   revalidatePathMock,
   revalidateTagMock,
   matchupFindUniqueMock,
-  competitionFindUniqueMock,
   competitionParticipantFindFirstMock,
   transactionMock,
   auditLogCreateMock,
@@ -14,7 +13,6 @@ const {
   revalidatePathMock: vi.fn(),
   revalidateTagMock: vi.fn(),
   matchupFindUniqueMock: vi.fn(),
-  competitionFindUniqueMock: vi.fn(),
   competitionParticipantFindFirstMock: vi.fn(),
   transactionMock: vi.fn(),
   auditLogCreateMock: vi.fn(),
@@ -31,7 +29,6 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     matchup: { findUnique: matchupFindUniqueMock },
-    competition: { findUnique: competitionFindUniqueMock },
     competitionParticipant: { findFirst: competitionParticipantFindFirstMock },
     auditLog: { create: auditLogCreateMock },
     $transaction: transactionMock,
@@ -86,8 +83,6 @@ describe("saveMatchResult", () => {
   beforeEach(() => {
     vi.resetAllMocks()
     matchupFindUniqueMock.mockResolvedValue(matchupBase)
-    // Default: competition is not public — revalidatePublicSlugForCompetition no-ops
-    competitionFindUniqueMock.mockResolvedValue({ isPublic: false, publicSlug: null })
     transactionMock.mockImplementation(makeTransactionMock())
     auditLogCreateMock.mockResolvedValue({})
   })

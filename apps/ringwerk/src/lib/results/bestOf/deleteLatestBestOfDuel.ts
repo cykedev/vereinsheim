@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
-import { revalidatePublicSlugForCompetition } from "@/lib/competitions/actions/_shared"
+import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import { loadMatchup } from "./shared"
 
 /**
@@ -74,7 +74,7 @@ export async function deleteLatestBestOfDuel(matchupId: string): Promise<ActionR
 
   revalidatePath(`/competitions/${matchup.competitionId}/schedule`)
   revalidatePath(`/competitions/${matchup.competitionId}/standings`)
-  await revalidatePublicSlugForCompetition(matchup.competitionId)
+  revalidatePublicPdf(matchup.competitionId)
 
   return { success: true }
 }

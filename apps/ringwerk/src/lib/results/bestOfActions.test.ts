@@ -7,7 +7,6 @@ const {
   revalidatePathMock,
   revalidateTagMock,
   matchupFindUniqueMock,
-  competitionFindUniqueMock,
   competitionParticipantFindFirstMock,
   seriesDeleteManyMock,
   transactionMock,
@@ -17,7 +16,6 @@ const {
   revalidatePathMock: vi.fn(),
   revalidateTagMock: vi.fn(),
   matchupFindUniqueMock: vi.fn(),
-  competitionFindUniqueMock: vi.fn(),
   competitionParticipantFindFirstMock: vi.fn(),
   seriesDeleteManyMock: vi.fn(),
   transactionMock: vi.fn(),
@@ -35,7 +33,6 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     matchup: { findUnique: matchupFindUniqueMock },
-    competition: { findUnique: competitionFindUniqueMock },
     competitionParticipant: { findFirst: competitionParticipantFindFirstMock },
     series: { deleteMany: seriesDeleteManyMock },
     auditLog: { create: auditLogCreateMock },
@@ -141,7 +138,6 @@ describe("saveBestOfDuel", () => {
   beforeEach(() => {
     vi.resetAllMocks()
     matchupFindUniqueMock.mockResolvedValue(makeMatchup({ series: [] }))
-    competitionFindUniqueMock.mockResolvedValue({ isPublic: false, publicSlug: null })
     transactionMock.mockImplementation(makeTransactionMock())
     auditLogCreateMock.mockResolvedValue({})
   })
@@ -473,7 +469,6 @@ describe("saveStechschuss", () => {
 
   beforeEach(() => {
     vi.resetAllMocks()
-    competitionFindUniqueMock.mockResolvedValue({ isPublic: false, publicSlug: null })
     transactionMock.mockImplementation(makeTransactionMock())
     auditLogCreateMock.mockResolvedValue({})
   })
@@ -652,7 +647,6 @@ describe("saveStechschuss", () => {
 describe("deleteLatestBestOfDuel", () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    competitionFindUniqueMock.mockResolvedValue({ isPublic: false, publicSlug: null })
     transactionMock.mockImplementation(makeTransactionMock())
     auditLogCreateMock.mockResolvedValue({})
   })
@@ -810,7 +804,6 @@ describe("TEILER-mode: evaluateMatchState uses corrected teiler (bug fix)", () =
 
   beforeEach(() => {
     vi.resetAllMocks()
-    competitionFindUniqueMock.mockResolvedValue({ isPublic: false, publicSlug: null })
     auditLogCreateMock.mockResolvedValue({})
     // p1 has factor=2, p2 has factor=1
     competitionParticipantFindFirstMock
@@ -895,7 +888,6 @@ describe("TEILER-mode Stechschuss via saveStechschuss (bug fix)", () => {
 
   beforeEach(() => {
     vi.resetAllMocks()
-    competitionFindUniqueMock.mockResolvedValue({ isPublic: false, publicSlug: null })
     transactionMock.mockImplementation(makeTransactionMock())
     auditLogCreateMock.mockResolvedValue({})
   })

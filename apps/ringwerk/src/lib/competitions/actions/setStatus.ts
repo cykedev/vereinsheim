@@ -5,8 +5,9 @@ import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import type { CompetitionStatus } from "@/generated/prisma/client"
 import type { AuditEventType } from "@/lib/auditLog/types"
-import { revalidateCompetitionPaths, revalidatePublicSlug } from "./_shared"
+import { revalidateCompetitionPaths } from "./_shared"
 import { findActiveSlugConflict } from "../publicSlugQueries"
+import { revalidatePublicPdf } from "../publicPdfCache"
 
 /** Erlaubte Statusübergänge */
 const ALLOWED_TRANSITIONS: Record<CompetitionStatus, CompetitionStatus[]> = {
@@ -64,9 +65,7 @@ export async function setCompetitionStatus(
   })
 
   // Invalidate the public PDF cache when the competition's visibility changes
-  if (competition.publicSlug) {
-    revalidatePublicSlug(competition.publicSlug)
-  }
+  revalidatePublicPdf(id)
 
   revalidateCompetitionPaths()
   return { success: true }

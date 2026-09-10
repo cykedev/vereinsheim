@@ -5,7 +5,7 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { getStandingsForCompetition } from "@/lib/standings/queries"
-import { revalidatePublicSlugForCompetition } from "@/lib/competitions/actions/_shared"
+import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import { createNextRoundMatchups, getNextRound } from "../calculatePlayoffs"
 import type { PlayoffRound } from "../types"
 
@@ -58,7 +58,7 @@ export async function advanceRound(competitionId: string): Promise<ActionResult>
   await handleMatchCompletion(currentRoundMatches[0].id, competitionId, roundToAdvance)
 
   revalidatePath(`/competitions/${competitionId}/playoffs`)
-  await revalidatePublicSlugForCompetition(competitionId)
+  revalidatePublicPdf(competitionId)
   return { success: true }
 }
 

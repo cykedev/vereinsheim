@@ -118,6 +118,6 @@ export async function updateSeasonSeries(
     },
   })
 
-  await revalidateSeasonPaths(competitionId)
+  revalidateSeasonPaths(competitionId)
   return { success: true }
 }

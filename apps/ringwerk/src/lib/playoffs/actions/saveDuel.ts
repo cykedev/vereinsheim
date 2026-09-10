@@ -3,7 +3,7 @@
 import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
-import { revalidatePublicSlugForCompetition } from "@/lib/competitions/actions/_shared"
+import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import {
   finaleNeedsTeiler,
   isPlayoffMatchComplete,
@@ -206,6 +206,6 @@ export async function savePlayoffDuelResult(
 
   // The playoffs route is refreshed client-side via router.refresh(); only the
   // public slug is revalidated here (a separate route, no refresh conflict).
-  await revalidatePublicSlugForCompetition(match.competitionId)
+  revalidatePublicPdf(match.competitionId)
   return { success: true }
 }
