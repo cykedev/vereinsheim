@@ -2,7 +2,7 @@
 id: public-pdf-cache-tag-orphaning
 type: incident
 title: "Öffentliches PDF: Cache-Tag am Slug verwaist bei Umbenennung"
-keywords: [unstable_cache, revalidateTag, Cache-Tag, verwaist, orphaned tag, stale PDF, öffentlicher Slug, publicPdfCacheTag, publicPdfCache, revalidatePublicPdf, revalidatePublicSlug, SQL am Cache vorbei, no-store]
+keywords: [unstable_cache, revalidateTag, updateTag, stale-while-revalidate, max-Profil, Cache-Tag, verwaist, orphaned tag, stale PDF, öffentlicher Slug, publicPdfCacheTag, publicPdfCache, revalidatePublicPdf, revalidatePublicSlug, SQL am Cache vorbei, no-store]
 tags: [incident, ringwerk]
 relates_to: ["[[ringwerk]]", "[[pdf-public-urls]]", "[[ringwerk-code-conventions]]"]
 part_of: ["[[incidents]]"]
@@ -52,3 +52,27 @@ Wettbewerbs-ID, also aus derselben Identität wie der Cache-Key.
 die `no-store`-Route verifizieren, nicht per `psql`") steht in [[ringwerk-code-conventions]] — sie
 war hier der eigentliche Stolperstein, weil sie einen intakten Feature-Stand wie einen Fehler
 aussehen ließ.
+
+## Beim Verifizieren zusätzlich gefunden: `"max"` ist stale-while-revalidate
+
+Der Kommentar im Altcode („`max`-Profil: alle Einträge mit diesem Tag **sofort** verwerfen") war
+falsch, und die Fehlannahme steckt in `revalidateTag(tag, "max")` selbst. Next 16 behandelt das
+zweite Argument als `cacheLife`-Profil; `"max"` ist die **längste** Lebensdauer. Der Effekt ist
+stale-while-revalidate: der **erste** Leser nach einer Änderung bekommt noch das alte PDF, erst der
+nächste das neue. Nur `updateTag(tag)` expiriert sofort (Next-Quelle:
+`updateTag uses immediate expiration (no profile)`), gilt aber ausschließlich innerhalb einer
+Server Action — in einem Route Handler wirft es.
+
+Am 2026-09-10 im Dev-Server A/B gemessen (Details in
+`reports/2026-09-10-public-pdf-cache-tag-by-id.md`):
+
+| Variante | 1. Abruf nach der Action | 2. Abruf |
+| -------- | ------------------------ | -------- |
+| `revalidateTag(tag, "max")` (Ist-Stand) | alter Stand (22 ms, Cache-Treffer) | neuer Stand |
+| `updateTag(tag)` | **neuer Stand** (118 ms, Neu-Render) | neuer Stand |
+
+**Offen:** ob `revalidatePublicPdf` auf `updateTag` umgestellt wird. Dagegen spricht nichts
+Technisches (alle Aufrufer sind Server Actions), aber es ändert das Verhalten für **alle** Leser
+der öffentlichen URL und ist damit ein eigener Change, keine Beigabe zum Tag-Umbau. Bis dahin
+gilt: eine Änderung ist ab dem **zweiten** Abruf öffentlich sichtbar. Wer das prüft und nur einmal
+abruft, hält den intakten Zustand für kaputt — dieselbe Falle wie bei Punkt 1, eine Ebene tiefer.
