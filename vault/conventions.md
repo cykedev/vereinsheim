@@ -202,3 +202,12 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Bildschirm **und** PDF sie ziehen; zwei Kopien stimmen anfangs überein und laufen später
   auseinander (siehe [[next-dist-dir-shared-with-dev-server]] für dieselbe Klasse von Problem:
   zwei Autoritäten für dieselbe Sache).
+
+- **Markup ist auch ohne jsdom testbar**: Beide Apps testen in `environment: "node"` ohne jsdom
+  oder testing-library — für alles, was am gerenderten Markup hängt (`class`-Attribute,
+  bedingt gerenderte Spalten, Hervorhebungen), genügt trotzdem
+  `renderToStaticMarkup(createElement(Komponente, props))` aus `react-dom/server` in einer
+  `.test.tsx`. Eine responsive Regel wie „diese Spalte klappt mobil weg" ist damit prüfbar, ohne
+  neue Test-Infrastruktur einzuführen und ohne Screenshot (Beispiel:
+  `apps/ringwerk/src/components/app/series/SeasonStandingsTable.test.tsx`). Interaktion —
+  Klicks, State-Wechsel — braucht weiterhin jsdom und bleibt eine eigene Entscheidung.
