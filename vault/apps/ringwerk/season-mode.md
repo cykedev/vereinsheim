@@ -38,6 +38,13 @@ alternierende Reihenfolge für Leser nicht überprüfbar (gleiche Linie wie
 [[best-of-standings-direct-comparison-tiebreak]]). Manuelles Sortieren ist in diesen Modi
 deaktiviert: die Reihenfolge **ist** die Wertung.
 
+Auf schmalen Geräten ist neben dem Namen Platz für zwei Zahlenspalten. Sichtbar bleibt, was die
+Reihenfolge bestimmt: in den alternierenden Modi **Ringe und Teiler** (der Ringteiler klappt weg),
+klassisch die sortierte Spalte. Vorher war „Best. Teiler" unter `sm` generell ausgeblendet — in
+`alt-teiler` stand damit jede zweite Zeile mit ihrem maßgeblichen Wert in einer unsichtbaren
+Spalte, während der unbeteiligte Ringteiler sichtbar blieb. Gepinnt in
+`SeasonStandingsTable.test.tsx`.
+
 ## Ränge & Badges
 
 Die drei Metrik-Ränge (`bestRings_rank`, `bestTeiler_rank`, `bestRingteiler_rank`) sind reine
