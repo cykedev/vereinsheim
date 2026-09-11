@@ -13,6 +13,7 @@ import {
   type SortedSeasonStandingsEntry,
 } from "@/lib/scoring/sortSeasonStandings"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
+import { cn } from "@vereinsheim/lib/utils"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
 import {
@@ -101,6 +102,15 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
   const sorted = alternating ? entries : sortSeasonStandings(entries, sortCol)
   const teilerLabel = isMixed ? "Best. Teiler korr." : "Best. Teiler"
 
+  // Auf dem Telefon ist neben dem Namen Platz für ZWEI Zahlenspalten. Sichtbar bleiben muss die,
+  // die die Reihenfolge bestimmt: bei alternierender Sortierung Ringe UND Teiler, bei klassischer
+  // Teiler-Wertung der Teiler. Die jeweils unbeteiligte Spalte klappt weg — sonst stünde der
+  // maßgebliche Wert mobil in einer unsichtbaren Spalte.
+  const teilerMatters = alternating || sortCol === "teiler"
+  const HIDE_ON_MOBILE = "hidden sm:table-cell"
+  const teilerHidden = teilerMatters ? undefined : HIDE_ON_MOBILE
+  const ringteilerHidden = teilerMatters ? HIDE_ON_MOBILE : undefined
+
   return (
     <div className="space-y-2">
       {alternating && (
@@ -124,8 +134,8 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
               {alternating ? (
                 <>
                   <StaticHead label="Beste Ringe" />
-                  <StaticHead label={teilerLabel} className="hidden sm:table-cell" />
-                  <StaticHead label="Best. Ringteiler" />
+                  <StaticHead label={teilerLabel} className={teilerHidden} />
+                  <StaticHead label="Best. Ringteiler" className={ringteilerHidden} />
                 </>
               ) : (
                 <>
@@ -138,13 +148,14 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                   <SortHeader
                     col="teiler"
                     label={teilerLabel}
-                    className="hidden sm:table-cell"
+                    className={teilerHidden}
                     sortCol={sortCol}
                     setSortCol={setSortCol}
                   />
                   <SortHeader
                     col="ringteiler"
                     label="Best. Ringteiler"
+                    className={ringteilerHidden}
                     sortCol={sortCol}
                     setSortCol={setSortCol}
                   />
@@ -191,7 +202,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="px-3 py-2 tabular-nums hidden sm:table-cell">
+                  <TableCell className={cn("px-3 py-2 tabular-nums", teilerHidden)}>
                     <div className="flex items-center justify-end gap-1.5">
                       {entry.bestCorrectedTeiler !== null ? (
                         <>
@@ -206,7 +217,11 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                     </div>
                   </TableCell>
                   <TableCell
-                    className={`px-3 py-2 tabular-nums${alternating ? "" : " font-medium"}`}
+                    className={cn(
+                      "px-3 py-2 tabular-nums",
+                      !alternating && "font-medium",
+                      ringteilerHidden
+                    )}
                   >
                     <div className="flex items-center justify-end gap-1.5">
                       {entry.bestRingteiler !== null ? (
