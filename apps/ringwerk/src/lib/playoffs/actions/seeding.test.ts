@@ -484,6 +484,25 @@ describe.each(["DOUBLE_ROUND_ROBIN", "BEST_OF_SINGLE"] as const)(
       expect(createdPairs()).toEqual(["P01–P04", "P02–P03"])
     })
 
+    it("Viertelfinale mit Überraschungssiegern: neu gesetzt nach Gruppenplatz der Sieger", async () => {
+      // P07 schlägt P02, P05 schlägt P04 → Sieger P01, P03, P05, P07 → 1–7, 3–5
+      const ids = players(8)
+      league(ids, { format, playoffHasViertelfinale: true })
+      const qf = wonBySeed("QUARTER_FINAL", [
+        [ids[0], ids[7]],
+        [ids[1], ids[6]],
+        [ids[2], ids[5]],
+        [ids[3], ids[4]],
+      ])
+      qf[1].winsA = 1
+      qf[1].winsB = 3
+      qf[3].winsA = 1
+      qf[3].winsB = 3
+      existingPlayoffs(qf)
+      expect(await advanceRound("c1")).toEqual({ success: true })
+      expect(createdPairs()).toEqual(["P01–P07", "P03–P05"])
+    })
+
     it("Achtelfinale → Viertelfinale: 1–8, 2–7, 3–6, 4–5", async () => {
       const ids = players(16)
       league(ids, { format, playoffHasAchtelfinale: true })
@@ -532,3 +551,54 @@ describe.each(["DOUBLE_ROUND_ROBIN", "BEST_OF_SINGLE"] as const)(
     })
   }
 )
+
+describe("advanceRound — Best-of, Problemfälle", () => {
+  const format = "BEST_OF_SINGLE" as const
+  const pattern = "strongLosesDuelOne" as const
+
+  it("Viertelfinale → Halbfinale: 1–4, 2–3 nach der Best-of-Tabelle", async () => {
+    const ids = players(8)
+    league(ids, { format, pattern, playoffHasViertelfinale: true })
+    existingPlayoffs(
+      wonBySeed("QUARTER_FINAL", [
+        [ids[0], ids[7]],
+        [ids[1], ids[6]],
+        [ids[2], ids[5]],
+        [ids[3], ids[4]],
+      ])
+    )
+    expect(await advanceRound("c1")).toEqual({ success: true })
+    expect(createdPairs()).toEqual(["P01–P04", "P02–P03"])
+  })
+
+  it("Viertelfinale mit Überraschungssiegern", async () => {
+    const ids = players(8)
+    league(ids, { format, pattern, playoffHasViertelfinale: true })
+    const qf = wonBySeed("QUARTER_FINAL", [
+      [ids[0], ids[7]],
+      [ids[1], ids[6]],
+      [ids[2], ids[5]],
+      [ids[3], ids[4]],
+    ])
+    qf[1].winsA = 1
+    qf[1].winsB = 3
+    qf[3].winsA = 1
+    qf[3].winsB = 3
+    existingPlayoffs(qf)
+    expect(await advanceRound("c1")).toEqual({ success: true })
+    expect(createdPairs()).toEqual(["P01–P07", "P03–P05"])
+  })
+
+  it("Achtelfinale → Viertelfinale", async () => {
+    const ids = players(16)
+    league(ids, { format, pattern, playoffHasAchtelfinale: true })
+    existingPlayoffs(
+      wonBySeed(
+        "EIGHTH_FINAL",
+        ids.slice(0, 8).map((s, i) => [s, ids[15 - i]] as [string, string])
+      )
+    )
+    expect(await advanceRound("c1")).toEqual({ success: true })
+    expect(createdPairs()).toEqual(seededPairs(ids.slice(0, 8)))
+  })
+})
