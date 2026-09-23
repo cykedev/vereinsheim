@@ -89,3 +89,24 @@ describe("rankByScore – Randzustände", () => {
     expect(ranked[0].rank).toBe(1)
   })
 })
+
+describe("rankByScore – geteilte Plätze", () => {
+  it("gleicher Score teilt den Platz, der nächste zählt die geteilten mit", () => {
+    const ranked = rankByScore(
+      [entry("A", 95), entry("B", 97), entry("C", 95), entry("D", 90)],
+      "RINGS"
+    )
+    expect(ranked.map((r) => r.rank)).toEqual([1, 2, 2, 4])
+  })
+
+  it("bei gleichem Score bleibt die eingehende Reihenfolge stehen", () => {
+    const ranked = rankByScore([entry("X", 95), entry("Y", 95), entry("Z", 95)], "RINGS")
+    expect(ranked.map((r) => r.participantId)).toEqual(["X", "Y", "Z"])
+    expect(ranked.map((r) => r.rank)).toEqual([1, 1, 1])
+  })
+
+  it("Float-Summen gleicher Nachkommareste gelten als gleich", () => {
+    const ranked = rankByScore([entry("A", 0.1 + 0.2), entry("B", 0.3)], "DECIMAL_REST")
+    expect(ranked.map((r) => r.rank)).toEqual([1, 1])
+  })
+})

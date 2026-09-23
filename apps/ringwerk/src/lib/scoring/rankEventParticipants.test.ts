@@ -381,3 +381,53 @@ describe("rankEventParticipants – Faktor nur bei gemischt", () => {
     expect(result[0].correctedTeiler).toBeCloseTo(20)
   })
 })
+
+describe("geteilte Plätze", () => {
+  it("gleiche Ringe: nach Nachnamen sortiert, gleicher Platz", () => {
+    const series = [
+      makeSeries({
+        participantId: "Z",
+        rings: 95,
+        teiler: 5.0,
+        participant: { id: "Z", firstName: "Zora", lastName: "Zimmer" },
+      }),
+      makeSeries({
+        participantId: "A",
+        rings: 95,
+        teiler: 9.0,
+        participant: { id: "A", firstName: "Anton", lastName: "Adler" },
+      }),
+    ]
+    const result = rankEventParticipants(series, { ...BASE_CONFIG, scoringMode: "RINGS" })
+    expect(result.map((r) => r.participantId)).toEqual(["A", "Z"])
+    expect(result.map((r) => r.rank)).toEqual([1, 1])
+  })
+})
+
+describe("rankEventTeams – geteilte Plätze", () => {
+  it("gleicher Teamscore: nach Teamnummer sortiert, gleicher Platz", () => {
+    const member = (teamNumber: number, participantId: string, score: number) => ({
+      rank: 1,
+      seriesId: participantId + "-series",
+      competitionParticipantId: null,
+      participantId,
+      participantName: participantId,
+      disciplineName: "LG",
+      disciplineScoringType: "WHOLE" as const,
+      isGuest: false,
+      teamNumber,
+      rings: 90,
+      teiler: score,
+      correctedTeiler: score,
+      ringteiler: score,
+      score,
+    })
+    const result = rankEventTeams(
+      [member(2, "C", 10), member(2, "D", 10), member(1, "A", 12), member(1, "B", 8)],
+      "SUM",
+      "RINGTEILER"
+    )
+    expect(result.map((t) => t.teamNumber)).toEqual([1, 2])
+    expect(result.map((t) => t.rank)).toEqual([1, 1])
+  })
+})
