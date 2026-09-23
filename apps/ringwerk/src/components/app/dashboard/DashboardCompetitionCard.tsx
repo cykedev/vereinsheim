@@ -1,59 +1,35 @@
-import type { ReactNode } from "react"
 import Link from "next/link"
+import { Badge } from "@vereinsheim/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import {
+  CompetitionPreviewBadges,
+  CompetitionPreviewSection,
+} from "@/components/app/competitions/CompetitionPreview"
+import type { CompetitionPreview } from "@/lib/competitions/previewModel"
 
 interface Props {
-  title: string
-  // Kanonische Detailseite des Wettbewerbs — der Titel ist der Link (§7:
-  // keine zusätzlichen "Details →"-Buttons).
-  href: string
-  badges?: ReactNode
-  children: ReactNode
-  // Anzahl der Zeilen, die die Vorschau nicht zeigt.
-  moreCount?: number
-  /**
-   * Text, wenn es nichts zu zeigen gibt. Bewusst eine Zeile und keine
-   * `EmptyState`-Karte: die stünde als Rahmen im Rahmen dieser Karte.
-   */
-  emptyText?: string
-  isEmpty?: boolean
+  preview: CompetitionPreview
 }
 
-// Ein aktiver Wettbewerb auf dem Dashboard: Kopf mit verlinktem Namen,
-// darunter eine gekürzte Tabelle bzw. das Playoff-Bracket.
-export function DashboardCompetitionCard({
-  title,
-  href,
-  badges,
-  children,
-  moreCount,
-  emptyText,
-  isEmpty = false,
-}: Props) {
+// Ein aktiver Wettbewerb auf dem Dashboard: Kopf mit verlinktem Namen (§7: keine zusätzlichen
+// "Details →"-Buttons), darunter eine gekürzte Tabelle bzw. das Playoff-Bracket.
+export function DashboardCompetitionCard({ preview }: Props) {
+  const c = preview.competition
   return (
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-center gap-2">
         <CardTitle className="text-lg">
-          <Link href={href} className="hover:underline">
-            {title}
+          <Link href={preview.href} className="hover:underline">
+            {c.name}
           </Link>
         </CardTitle>
-        {badges}
+        <Badge variant="secondary" className="text-xs">
+          {c.discipline?.name ?? "Gemischt"}
+        </Badge>
+        <CompetitionPreviewBadges preview={preview} />
       </CardHeader>
-      <CardContent className="space-y-2">
-        {isEmpty && emptyText ? (
-          <p className="py-2 text-sm text-muted-foreground">{emptyText}</p>
-        ) : (
-          children
-        )}
-        {moreCount != null && moreCount > 0 && (
-          <p className="text-sm text-muted-foreground">
-            + {moreCount} weitere{" "}
-            <Link href={href} className="underline hover:no-underline">
-              anzeigen
-            </Link>
-          </p>
-        )}
+      <CardContent>
+        <CompetitionPreviewSection preview={preview} />
       </CardContent>
     </Card>
   )
