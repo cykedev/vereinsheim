@@ -389,6 +389,14 @@ describe("getSeedingStandings — eine Quelle für die Setzliste", () => {
     expect(rows.map((r) => r.points)).toEqual([12, 8, 4, 0])
   })
 
+  it("Wettbewerb nicht gefunden: Rundenturnier-Rechnung wie bisher, kein Absturz", async () => {
+    league(["A", "B", "C", "D"], { format: "DOUBLE_ROUND_ROBIN" })
+    m.competitionFindUnique.mockResolvedValue(null)
+    const rows = (await getSeedingStandings("c1")) as StandingRow[]
+    expect(rows.map((r) => r.participantId)).toEqual(["A", "B", "C", "D"])
+    expect(rows.map((r) => r.points)).toEqual([12, 8, 4, 0])
+  })
+
   it("geteilter Platz: Reihenfolge eindeutig, Platz geteilt — gesetzt wird nach Position", async () => {
     league(["A", "B", "C", "D"], {
       format: "BEST_OF_SINGLE",
