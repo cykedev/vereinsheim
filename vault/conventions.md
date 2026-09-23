@@ -211,3 +211,9 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   neue Test-Infrastruktur einzuführen und ohne Screenshot (Beispiel:
   `apps/ringwerk/src/components/app/series/SeasonStandingsTable.test.tsx`). Interaktion —
   Klicks, State-Wechsel — braucht weiterhin jsdom und bleibt eine eigene Entscheidung.
+
+- **Datenlage vor der Sichtprüfung abgleichen**: Bevor eine Änderung im Browser als geprüft gilt,
+  die vorhandenen Dev-Daten gegen die zu prüfenden Zustände halten (z.B. „abgeschlossener
+  Wettbewerb", „Liga mit Ergebnissen", „mehr Zeilen als die Vorschau"). Was die Daten nicht
+  hergeben, steht im Validierungsbericht ausdrücklich als **„nicht belegt"** — mit dem Test, der den
+  Pfad stattdessen abdeckt — und zählt nicht stillschweigend als geprüft.

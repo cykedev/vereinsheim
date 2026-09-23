@@ -245,7 +245,7 @@ Page-Header-Pattern:
 
 ## Aus Lernlog übernommen
 
-<!-- Zuletzt konsolidiert: 2026-09-09 -->
+<!-- Zuletzt konsolidiert: 2026-09-23 -->
 
 ### Layout & Grid
 
@@ -273,6 +273,18 @@ Page-Header-Pattern:
 - **React 19 Forms: Inputs immer controlled mit `useActionState`**: `<form action={fn}>` setzt uncontrolled Inputs (`defaultValue`) nach jedem Submit zurück — auch bei Validation Errors verlieren User ihre Eingaben. Bei Forms mit `useActionState` Inputs IMMER controlled führen (`value` + `onChange` + lokaler State via `useState`), nie `defaultValue`. Initialwerte beim Mount aus Props in den State kopieren.
 
 ### Tabellen & Ranking
+
+- **Sichtbar bleibt, was die Reihenfolge bestimmt — in jedem Modus und jeder Breite**: Blendet eine
+  Tabelle Spalten mobil aus (`hidden sm:table-cell`) und hängt die Sortierung von einem Modus ab
+  (klassisch/alternierend, gewählte Spalte), dann jede Breite gegen jeden Modus prüfen: die Spalte,
+  die den Platz ergibt, darf nie die ausgeblendete sein. Als Markup-Test festhalten
+  (`renderToStaticMarkup`, siehe `SeasonStandingsTable.test.tsx`), nicht als Screenshot.
+
+- **Geteilter Platz nur, wo nur noch der Name trennt; Podiumsfarben nur mit Ergebnis**: Zeilen, die
+  in jedem Wertungskriterium gleich sind, tragen denselben Platz („1, 1, 3", `assignSharedRanks`).
+  Gold/Silber/Bronze bekommt nur eine Zeile mit Ergebnis — sonst ist vor dem ersten Schuss die ganze
+  Tabelle gold. Das Ergebnis-Prädikat liegt je Tabellentyp neben der Sortierung und speist Tabelle
+  **und** PDF (`hasLeagueResult`, `hasBestOfResult`, `hasSeasonResult`).
 
 - **Sortier-Pool und Rang-Pool müssen deckungsgleich sein**: Eine Zeile, die aus der Wertung fällt
   (z.B. unter den Mindestserien), darf keinen Metrik-Rang tragen, auch wenn sie in der Sortierung

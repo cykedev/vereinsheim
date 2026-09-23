@@ -5,16 +5,11 @@ Format: Datum | Fehler | Regel die ihn verhindert
 
 ---
 
-<!-- Zuletzt konsolidiert: 2026-09-09 -->
+<!-- Zuletzt konsolidiert: 2026-09-23 -->
+<!-- 2026-09-23: 5 Einträge konsolidiert — Responsive-je-Modus + geteilte Plätze/Podium → ringwerk-ui-patterns (Tabellen & Ranking); Fließkomma-Gleichheit (sameScore) → ringwerk-code-conventions (Wertung & Ranking), per Test erzwungen; Datenlage vor Sichtprüfung → vault/conventions.md §9; jsdom-Eintrag archiviert (steht in §9); docker-exec-stdin → natives Auto-Memory. ENFORCE-Vorschlag (/validate-Skill: Datenlage-Schritt) liegt beim User. -->
 <!-- 2026-09-09: 5 Einträge (Saison-Sortierung) konsolidiert — Regeln → vault/conventions.md §9, ringwerk-code-conventions (Next.js & Caching), ringwerk-ui-patterns (Tabellen & Ranking); Provenance → vault/incidents/{dev-shadow-db-createdb, public-pdf-cache-tag-orphaning, next-dist-dir-shared-with-dev-server}; zwei ENFORCE-Vorschläge liegen beim User. -->
 <!-- Alle bisherigen Einträge konsolidiert: Regeln → docs/ (code-conventions, ui-patterns, data-model, shared-conventions); Incidents/State → Memory-Graph (.claude/graph-captured.mjs); ops-lokales → natives Auto-Memory. Langzeit-Gedächtnis ist der Memory-Graph, nicht dieser Buffer. -->
 
-## Offen (2026-09-11)
-
-| 2026-09-11 | Eine responsive Regel war ungeprüft: „Best. Teiler" hatte `hidden sm:table-cell`, in der alternierenden Sortierung stand damit mobil jede zweite Zeile mit ihrem maßgeblichen Wert in einer unsichtbaren Spalte. Am Desktop war alles korrekt, die Sichtprüfung lief nur dort. | Wenn eine Darstellung von einem Modus abhängt, jede Breite gegen jeden Modus prüfen — und die Regel „sichtbar bleibt, was die Reihenfolge bestimmt" als Test festhalten, nicht als Screenshot. |
-| 2026-09-11 | Ich hatte Component-Markup-Tests als „bräuchte erst jsdom + testing-library" abgetan (und ein Review-Agent bestätigte das). Falsch: `renderToStaticMarkup` aus `react-dom/server` läuft im Node-Environment und reicht für alles, was am `class`-Attribut hängt. | Vor dem Urteil „dafür fehlt die Infrastruktur" den billigsten Pfad ausprobieren — hier: 20 Zeilen `.test.tsx` statt einer Infrastruktur-Entscheidung. |
-| 2026-09-11 | `docker exec` ohne `-i` leitet stdin nicht weiter: ein psql-Heredoc lief ins Nichts, ohne Ausgabe und ohne Fehler — es sah aus, als hätte das DELETE nichts getroffen. | Bei `docker exec` mit Heredoc/Pipe immer `-i`; und das Ergebnis einer Mutation an gezählten Zeilen prüfen, nicht am fehlenden Fehler. |
-| 2026-09-23 | Geteilte Plätze in der Saison hingen an `===` auf dem korrigierten Teiler — der ist `teiler × faktor` und ungerundet (8,2 × 1,5 = 12.299999999999999 ≠ 12,3). Zwei Zeilen, die beide „12,3" anzeigen, bekamen verschiedene Plätze, und der Ringteiler-Tiebreak wurde übersprungen. Erst das Review fand es; das Event hatte schon ein Epsilon. | Gleichheit von Wertungszahlen nie mit `===` prüfen, sondern mit `sameScore` (`lib/scoring/sharedRanks.ts`) — in Sortier-Comparator **und** Gleichstandsprüfung dieselbe Gleichheit, sonst liegen Gleichstände nicht nebeneinander. |
-| 2026-09-23 | Die Sichtprüfung der neuen Wettbewerbsliste lief gegen eine Dev-DB ohne abgeschlossene Wettbewerbe und ohne Liga mit Ergebnissen — diese Pfade waren im Browser nicht belegbar, nur durch Unit-Tests. | Vor der Sichtprüfung die Datenlage gegen die zu prüfenden Zustände abgleichen und fehlende Zustände im Bericht ausdrücklich als „nicht belegt" führen, statt sie stillschweigend als geprüft zu zählen. |
+## Offen
 
 ## Abgeschlossen
