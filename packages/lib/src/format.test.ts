@@ -10,7 +10,6 @@ import {
   formatIsoDate,
   formatLongDateTime,
   formatShortDate,
-  formatCompactMonthYear,
   formatShortDay,
 } from "./format"
 
@@ -69,12 +68,6 @@ describe("formatShortDay", () => {
 describe("formatShortDate", () => {
   it("kuerzt das Jahr fuer Diagramm-Achsen", () => {
     expect(formatShortDate(CROSSES_MIDNIGHT, "Europe/Berlin")).toBe("09.09.26")
-  })
-})
-
-describe("formatCompactMonthYear", () => {
-  it("gibt Monat und Kurzjahr", () => {
-    expect(formatCompactMonthYear(new Date("2026-09-15T12:00:00Z"), "Europe/Berlin")).toBe("09.26")
   })
 })
 

@@ -75,20 +75,6 @@ export function formatShortDate(date: Date, timeZone: string): string {
   )
 }
 
-/**
- * "09.26" — Diagramm-Achse mit Monatsauflösung.
- *
- * Aus Teilen zusammengesetzt statt direkt formatiert: `de-DE` setzt bei
- * Monat+Jahr einen Schrägstrich ("09/26"), `de-CH` einen Punkt. Die Achse soll
- * unabhängig von der Locale wie das Tagesformat aussehen.
- */
-export function formatCompactMonthYear(date: Date, timeZone: string): string {
-  const parts = dateTimeFormat({ month: "2-digit", year: "2-digit" }, timeZone).formatToParts(date)
-  const part = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)?.value ?? ""
-  return `${part("month")}.${part("year")}`
-}
-
 /** "2026-09-09" — sortierbar, für Dateinamen. */
 export function formatIsoDate(date: Date, timeZone: string): string {
   const parts = dateTimeFormat(
