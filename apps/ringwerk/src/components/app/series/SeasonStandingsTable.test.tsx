@@ -151,4 +151,15 @@ describe("SeasonStandingsTable — geteilte Plätze", () => {
     expect(badges.map((m) => m[1])).toEqual(["1", "1"])
     expect(html).not.toContain("bg-rank-1/20")
   })
+
+  it("gibt einer Zeile mit Serie auf Platz 1 die Podiumsfarbe", () => {
+    const html = renderToStaticMarkup(
+      createElement(SeasonStandingsTable, {
+        entries: [makeEntry("Anton", 98, 12.0, 14.0, null)],
+        minSeries: 2,
+        sort: "ringteiler",
+      })
+    )
+    expect(html).toContain("bg-rank-1/20")
+  })
 })
