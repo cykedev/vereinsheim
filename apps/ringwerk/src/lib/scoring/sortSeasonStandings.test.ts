@@ -3,8 +3,10 @@ import type { SeasonStandingsEntry } from "./calculateSeasonStandings"
 import {
   resolveSeasonSort,
   isAlternatingSort,
+  hasSeasonResult,
   isPodiumRank,
   metricAppearance,
+  seasonPositions,
   sortSeasonStandings,
   type ResolvedSeasonSort,
 } from "./sortSeasonStandings"
@@ -101,13 +103,12 @@ describe("sortSeasonStandings — klassische Modi", () => {
     expect(names(sortSeasonStandings(entries, "teiler"))).toEqual(["Schwach", "Stark"])
   })
 
-  it("lässt bei Wertgleichheit die eingehende Reihenfolge stehen (stabil)", () => {
-    // Anders als der alternierende Zweig greift hier KEIN Namens-Tiebreak: die eingehende
-    // Ordnung kommt aus calculateSeasonStandings (Ringteiler aufsteigend), und dieses
-    // sportliche Kriterium ist bei gleichen Ringen aussagekräftiger als der Nachname.
+  it("entscheidet bei Wertgleichheit der Ringteiler, nicht der Name", () => {
+    // Das sportliche Kriterium ist bei gleichen Ringen aussagekräftiger als der Nachname; die
+    // Eingangsreihenfolge (Alpha zuerst) zeigt, dass der Ringteiler explizit entscheidet.
     const entries = [
-      makeEntry("Zeta", { rings: 95, teiler: 5.0, ringteiler: 10.0 }),
       makeEntry("Alpha", { rings: 95, teiler: 5.0, ringteiler: 12.0 }),
+      makeEntry("Zeta", { rings: 95, teiler: 5.0, ringteiler: 10.0 }),
     ]
     expect(names(sortSeasonStandings(entries, "rings"))).toEqual(["Zeta", "Alpha"])
     expect(names(sortSeasonStandings(entries, "teiler"))).toEqual(["Zeta", "Alpha"])
@@ -257,5 +258,54 @@ describe("Darstellungsregeln (geteilt von Tabelle und PDF)", () => {
       expect(metricAppearance(entry, "teiler")).toBe("default")
       expect(metricAppearance(entry, "ringteiler")).toBe("default")
     }
+  })
+})
+
+describe("seasonPositions — geteilte Plätze", () => {
+  const positions = (entries: SeasonStandingsEntry[], sort: ResolvedSeasonSort) =>
+    seasonPositions(sortSeasonStandings(entries, sort), sort)
+
+  it("klassisch: gleicher Wert und gleicher Ringteiler teilen den Platz, alphabetisch", () => {
+    const entries = [
+      makeEntry("Zeta", { rings: 90, teiler: 5.0, ringteiler: 12.5 }),
+      makeEntry("Best", { rings: 95, teiler: 3.0, ringteiler: 10.0 }),
+      makeEntry("Alpha", { rings: 90, teiler: 5.0, ringteiler: 12.5 }),
+    ]
+    expect(names(sortSeasonStandings(entries, "ringteiler"))).toEqual(["Best", "Alpha", "Zeta"])
+    expect(positions(entries, "ringteiler")).toEqual([1, 2, 2])
+  })
+
+  it("Teilnehmer ohne Serie teilen sich den Platz nach den Gewerteten", () => {
+    const entries = [
+      makeEntry("Ohne1"),
+      makeEntry("A", { rings: 95, teiler: 3.0, ringteiler: 8.0 }),
+      makeEntry("Ohne2"),
+      makeEntry("B", { rings: 90, teiler: 5.0, ringteiler: 15.0 }),
+      makeEntry("Ohne3"),
+    ]
+    expect(positions(entries, "ringteiler")).toEqual([1, 2, 3, 3, 3])
+  })
+
+  it("hat noch niemand eine Serie, stehen alle auf Platz 1", () => {
+    const entries = [makeEntry("Zeta"), makeEntry("Alpha"), makeEntry("Mitte")]
+    expect(positions(entries, "rings")).toEqual([1, 1, 1])
+  })
+
+  it("klassisch Ringe: gleiche Ringe, verschiedener Ringteiler trennt die Plätze", () => {
+    const entries = [
+      makeEntry("Alpha", { rings: 95, teiler: 5.0, ringteiler: 12.0 }),
+      makeEntry("Zeta", { rings: 95, teiler: 5.0, ringteiler: 10.0 }),
+    ]
+    expect(positions(entries, "rings")).toEqual([1, 2])
+  })
+
+  it("alternierend: gewertete Plätze einzeln, der Block ohne Serie teilt einen Platz", () => {
+    const entries = [...planFixture(), makeEntry("Ohne1"), makeEntry("Ohne2")]
+    expect(positions(entries, "alt-rings")).toEqual([1, 2, 3, 4, 5, 5])
+  })
+
+  it("hasSeasonResult zählt nur Zeilen mit mindestens einer Serie", () => {
+    expect(hasSeasonResult({ seriesCount: 0 })).toBe(false)
+    expect(hasSeasonResult({ seriesCount: 1 })).toBe(true)
   })
 })

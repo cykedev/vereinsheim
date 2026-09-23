@@ -3,10 +3,12 @@
 import { useState } from "react"
 import { ChevronUp } from "lucide-react"
 import {
+  hasSeasonResult,
   isAlternatingSort,
   isPodiumRank,
   metricAppearance,
   SEASON_SORT_LABELS,
+  seasonPositions,
   sortSeasonStandings,
   type MetricAppearance,
   type ResolvedSeasonSort,
@@ -100,6 +102,8 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
 
   // Alternierend: die Reihenfolge kommt aus der Wertung selbst und bleibt wie geliefert.
   const sorted = alternating ? entries : sortSeasonStandings(entries, sortCol)
+  // Geteilter Platz, wo nur noch der Name trennt — dieselbe Quelle wie im PDF.
+  const positions = seasonPositions(sorted, alternating ? sort : sortCol)
   const teilerLabel = isMixed ? "Best. Teiler korr." : "Best. Teiler"
 
   // Auf dem Telefon ist neben dem Namen Platz für ZWEI Zahlenspalten. Sichtbar bleiben muss die,
@@ -170,7 +174,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                 <TableRow key={entry.participantId} className="hover:bg-muted/30 transition-colors">
                   <TableCell className="px-3 py-2 font-medium whitespace-normal">
                     <span className="inline-flex items-center gap-1.5">
-                      <RankBadge rank={idx + 1} />
+                      <RankBadge rank={positions[idx]} podium={hasSeasonResult(entry)} />
                       <span className={qualified ? "" : "text-muted-foreground"}>
                         {entry.participantName}
                         {!qualified && minSeries !== null && (

@@ -1,5 +1,6 @@
 import type { ScoringMode, SeasonSortMode } from "@/generated/prisma/client"
 import type { SeasonStandingsEntry } from "./calculateSeasonStandings"
+import { assignSharedRanks } from "./sharedRanks"
 
 /**
  * Die Metrik, die eine Zeile auf ihren Platz gebracht hat.
@@ -47,6 +48,10 @@ export function isAlternatingSort(sort: ResolvedSeasonSort): boolean {
  */
 export const isPodiumRank = (rank: number | null): boolean => rank !== null && rank <= 3
 
+/** Eine Zeile mit mindestens einer Serie — nur sie trägt Podiumsfarben (Tabelle und PDF). */
+export const hasSeasonResult = (e: Pick<SeasonStandingsEntry, "seriesCount">): boolean =>
+  e.seriesCount > 0
+
 /** Darstellung eines Metrik-Werts: betont, zurückgenommen oder unverändert. */
 export type MetricAppearance = "emphasized" | "muted" | "default"
 
@@ -68,8 +73,8 @@ export function metricAppearance(
  * Tabelle, PDF und Dashboard nutzen dieselbe Funktion, damit sie nie auseinanderlaufen.
  * Die Originalliste wird nicht verändert, die Einzelränge bleiben unangetastet.
  *
- * Klassisch: Qualifizierte zuerst, dann nach dem Wert der Metrik (bei Gleichheit bleibt die
- * eingehende Ordnung stehen), Teilnehmer ohne Wert alphabetisch am Ende.
+ * Klassisch: Qualifizierte zuerst, dann nach dem Wert der Metrik, bei Gleichheit nach dem
+ * Ringteiler, dann alphabetisch; Teilnehmer ohne Wert alphabetisch am Ende.
  * Alternierend: je Block (Qualifizierte, Nicht-Qualifizierte) wird zeilenweise zwischen den
  * besten Ringen und dem besten korrigierten Teiler gewechselt; jeder Teilnehmer erscheint
  * genau einmal, Teilnehmer ohne Serie stehen alphabetisch am Ende.
@@ -100,28 +105,53 @@ function sortClassic(
       if (a.meetsMinSeries !== b.meetsMinSeries) return a.meetsMinSeries ? -1 : 1
 
       // Nach Wert sortieren (nicht nach Rang, damit auch Nicht-Qualifizierte sortiert werden).
-      // Bei Wertgleichheit liefert der Vergleich 0 → die eingehende Ordnung bleibt stehen
-      // (Array#sort ist stabil). Das ist gewollt: sie kommt aus calculateSeasonStandings
-      // (Ringteiler aufsteigend) und ist damit aussagekräftiger als ein Namens-Tiebreak.
-      // byName greift nur, wenn beide Werte fehlen.
-      if (sort === "rings") {
-        if (a.bestRings !== null && b.bestRings !== null) return b.bestRings - a.bestRings
-        if (a.bestRings !== null) return -1
-        if (b.bestRings !== null) return 1
-      } else if (sort === "teiler") {
-        if (a.bestCorrectedTeiler !== null && b.bestCorrectedTeiler !== null)
-          return a.bestCorrectedTeiler - b.bestCorrectedTeiler
-        if (a.bestCorrectedTeiler !== null) return -1
-        if (b.bestCorrectedTeiler !== null) return 1
-      } else {
-        if (a.bestRingteiler !== null && b.bestRingteiler !== null)
-          return a.bestRingteiler - b.bestRingteiler
-        if (a.bestRingteiler !== null) return -1
-        if (b.bestRingteiler !== null) return 1
-      }
+      // Bei Wertgleichheit entscheidet der Ringteiler — das sportliche Kriterium ist
+      // aussagekräftiger als der Nachname —, erst danach der Name. Wer erst am Namen hängt,
+      // teilt sich den Platz (seasonPositions).
+      const byValue =
+        sort === "rings"
+          ? compareNullsLast(a.bestRings, b.bestRings, "desc")
+          : sort === "teiler"
+            ? compareNullsLast(a.bestCorrectedTeiler, b.bestCorrectedTeiler, "asc")
+            : 0
+      if (byValue !== 0) return byValue
+      const byRingteiler = compareNullsLast(a.bestRingteiler, b.bestRingteiler, "asc")
+      if (byRingteiler !== 0) return byRingteiler
       return byName(a, b)
     })
     .map((e) => ({ ...e, alternatingBy: null }))
+}
+
+/** Vergleicht zwei Werte in der gegebenen Richtung; fehlende Werte stehen immer hinten. */
+function compareNullsLast(a: number | null, b: number | null, direction: "asc" | "desc"): number {
+  if (a !== null && b !== null) return direction === "asc" ? a - b : b - a
+  if (a !== null) return -1
+  if (b !== null) return 1
+  return 0
+}
+
+/**
+ * Platz je Zeile der Anzeigereihenfolge — die einzige Quelle für Tabelle, PDF und Dashboard.
+ * Klassisch teilen Zeilen den Platz, die im Block, in der Metrik UND im Ringteiler gleich sind
+ * (also nur noch alphabetisch geordnet). Alternierend vergibt die Folge jeden Platz einzeln;
+ * geteilt wird nur im Block ohne Serie.
+ */
+export function seasonPositions(
+  sorted: readonly SortedSeasonStandingsEntry[],
+  sort: ResolvedSeasonSort
+): number[] {
+  if (isAlternatingSort(sort)) {
+    return assignSharedRanks(sorted, (a, b) => !hasSeasonResult(a) && !hasSeasonResult(b))
+  }
+  const value = (e: SeasonStandingsEntry) =>
+    sort === "rings" ? e.bestRings : sort === "teiler" ? e.bestCorrectedTeiler : e.bestRingteiler
+  return assignSharedRanks(
+    sorted,
+    (a, b) =>
+      a.meetsMinSeries === b.meetsMinSeries &&
+      value(a) === value(b) &&
+      a.bestRingteiler === b.bestRingteiler
+  )
 }
 
 function sortAlternating(

@@ -1,10 +1,12 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer"
 import type { ReactElement } from "react"
 import {
+  hasSeasonResult,
   isAlternatingSort,
   isPodiumRank,
   metricAppearance,
   SEASON_SORT_LABELS,
+  seasonPositions,
   type ResolvedSeasonSort,
   type SortedSeasonStandingsEntry,
 } from "@/lib/scoring/sortSeasonStandings"
@@ -113,12 +115,16 @@ function StandingsTable({
   entries,
   minSeries,
   isMixed,
+  sort,
 }: {
   entries: SortedSeasonStandingsEntry[]
   minSeries: number | null
   isMixed: boolean
+  sort: ResolvedSeasonSort
 }): ReactElement {
   const hasSeries = minSeries !== null
+  // Geteilter Platz, wo nur noch der Name trennt — dieselbe Quelle wie die Tabelle.
+  const positions = seasonPositions(entries, sort)
   const teilerLabel = isMixed ? "Best. Teiler korr." : "Best. Teiler"
 
   return (
@@ -156,6 +162,9 @@ function StandingsTable({
       {/* Zeilen */}
       {entries.map((entry, idx) => {
         const isAlt = idx % 2 === 1
+        const position = positions[idx]
+        // Podiumsfarbe nur mit Ergebnis (0 = neutrales Grau), wie in der Tabelle.
+        const badgeColor = rankBadgeColor(hasSeasonResult(entry) ? position : 0)
         const qualified = entry.meetsMinSeries
 
         const seriesText =
@@ -180,7 +189,7 @@ function StandingsTable({
               >
                 <View
                   style={{
-                    backgroundColor: rankBadgeColor(idx + 1),
+                    backgroundColor: badgeColor,
                     borderRadius: 3,
                     paddingHorizontal: 4,
                     paddingVertical: 1,
@@ -188,7 +197,7 @@ function StandingsTable({
                     alignItems: "center",
                   }}
                 >
-                  <Text style={{ fontSize: 8, color: "white" }}>{idx + 1}</Text>
+                  <Text style={{ fontSize: 8, color: "white" }}>{position}</Text>
                 </View>
                 <Text style={{ fontSize: 10, color: PDF_COLORS.dark, flex: 1 }}>
                   {entry.participantName}
@@ -236,7 +245,7 @@ function StandingsTable({
             >
               <View
                 style={{
-                  backgroundColor: rankBadgeColor(idx + 1),
+                  backgroundColor: badgeColor,
                   borderRadius: 3,
                   paddingHorizontal: 4,
                   paddingVertical: 1,
@@ -244,7 +253,7 @@ function StandingsTable({
                   alignItems: "center",
                 }}
               >
-                <Text style={{ fontSize: 8, color: "white" }}>{idx + 1}</Text>
+                <Text style={{ fontSize: 8, color: "white" }}>{position}</Text>
               </View>
               <Text style={{ fontSize: 10, color: PDF_COLORS.dark, flex: 1 }}>
                 {entry.participantName}
@@ -346,7 +355,7 @@ export function SeasonStandingsPdf({
             Noch keine Ergebnisse erfasst.
           </Text>
         ) : (
-          <StandingsTable entries={entries} minSeries={minSeries} isMixed={isMixed} />
+          <StandingsTable entries={entries} minSeries={minSeries} isMixed={isMixed} sort={sort} />
         )}
 
         {/* Fußzeile */}
