@@ -36,7 +36,9 @@ export interface SeasonStandingsPdfProps {
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function rankBadgeColor(rank: number): string {
+/** Podiumsfarbe für Platz 1–3; `podium = false` (Zeile ohne Serie) bleibt neutral grau. */
+function rankBadgeColor(rank: number, podium = true): string {
+  if (!podium) return "#9ca3af"
   if (rank === 1) return PDF_COLORS.gold
   if (rank === 2) return PDF_COLORS.silver
   if (rank === 3) return PDF_COLORS.orange
@@ -163,8 +165,8 @@ function StandingsTable({
       {entries.map((entry, idx) => {
         const isAlt = idx % 2 === 1
         const position = positions[idx]
-        // Podiumsfarbe nur mit Ergebnis (0 = neutrales Grau), wie in der Tabelle.
-        const badgeColor = rankBadgeColor(hasSeasonResult(entry) ? position : 0)
+        // Podiumsfarbe nur mit Ergebnis, wie in der Tabelle.
+        const badgeColor = rankBadgeColor(position, hasSeasonResult(entry))
         const qualified = entry.meetsMinSeries
 
         const seriesText =

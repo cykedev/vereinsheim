@@ -35,7 +35,9 @@ export interface BestOfSchedulePdfProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function rankBadgeColor(rank: number): string {
+/** Podiumsfarbe für Platz 1–3; `podium = false` (Zeile ohne Ergebnis) bleibt neutral grau. */
+function rankBadgeColor(rank: number, podium: boolean): string {
+  if (!podium) return "#9ca3af"
   if (rank === 1) return PDF_COLORS.gold
   if (rank === 2) return PDF_COLORS.silver
   if (rank === 3) return PDF_COLORS.orange
@@ -218,8 +220,8 @@ function BestOfStandingsSection({ rows }: { rows: BestOfStandingRow[] }): ReactE
                   <View
                     style={[
                       styles.rankBadge,
-                      // Podiumsfarbe nur mit Ergebnis (0 = neutrales Grau), wie in der Tabelle.
-                      { backgroundColor: rankBadgeColor(hasBestOfResult(row) ? row.rank : 0) },
+                      // Podiumsfarbe nur mit Ergebnis, wie in der Tabelle.
+                      { backgroundColor: rankBadgeColor(row.rank, hasBestOfResult(row)) },
                     ]}
                   >
                     <Text style={styles.rankBadgeText}>{row.rank}</Text>
