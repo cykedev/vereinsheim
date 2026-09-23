@@ -7,7 +7,7 @@ import type {
 } from "@/components/app/statistics-charts/filterTypes"
 import type { StatisticsChartsTabsModel } from "@/components/app/statistics-charts/tabs/types"
 import type {
-  AggregatedShotDistributionPoint,
+  ShotDistributionTimelinePoint,
   DisplayMode,
   HitLocationPathPoint,
 } from "@/components/app/statistics-charts/types"
@@ -102,7 +102,7 @@ export interface TabsParams {
   qualityYAxis: { domain: [number, number]; ticks: number[] }
   qualityScoreLabel: string
   qualityDisplayData: Array<{ quality: number; displayScore: number }>
-  aggregatedShotDistribution: AggregatedShotDistributionPoint[]
+  aggregatedShotDistribution: ShotDistributionTimelinePoint[]
   shotDistributionChartConfig: ChartConfig
   shotDistributionTicks: number[]
 }

@@ -37,10 +37,9 @@ export type HitLocationCurvePoint = {
   y: number
 }
 
-export type ShotDistributionGranularity = "day" | "week" | "month"
-
-export type AggregatedShotDistributionPoint = {
+export type ShotDistributionTimelinePoint = {
   i: number
+  sessionId: string
   date: Date
   dateLabel: string
   tooltipLabel: string

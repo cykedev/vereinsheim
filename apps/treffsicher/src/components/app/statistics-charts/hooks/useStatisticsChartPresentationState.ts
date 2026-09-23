@@ -3,7 +3,7 @@ import type { ChartConfig } from "@/components/ui/chart"
 import { radarSeriesConfig } from "@/components/app/statistics-charts/constants"
 import type { HitLocationTrendDataPoint } from "@/components/app/statistics-charts/tabs/types"
 import type {
-  AggregatedShotDistributionPoint,
+  ShotDistributionTimelinePoint,
   RadarLegendItem,
   RadarSeriesKey,
 } from "@/components/app/statistics-charts/types"
@@ -15,7 +15,7 @@ import { useStatisticsChartSeriesData } from "./useStatisticsChartSeriesData"
 interface Params {
   filtered: StatsSession[]
   filteredRadarSessions: RadarComparisonSession[]
-  aggregatedShotDistribution: AggregatedShotDistributionPoint[]
+  aggregatedShotDistribution: ShotDistributionTimelinePoint[]
   hitLocationTrendData: HitLocationTrendDataPoint[]
   metricLabel: string
   wellbeingScoreLabel: string
