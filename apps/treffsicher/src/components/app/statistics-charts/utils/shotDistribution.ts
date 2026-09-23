@@ -1,46 +1,39 @@
 import type { ShotDistributionPoint } from "@/lib/stats/actions"
-import type { ShotDistributionGranularity } from "@/components/app/statistics-charts/types"
+import type { ShotDistributionTimelinePoint } from "@/components/app/statistics-charts/types"
+import { formatDateTime, formatShortDate } from "@vereinsheim/lib/format"
 
-export function getShotDistributionGranularity(
-  points: ShotDistributionPoint[]
-): ShotDistributionGranularity {
-  if (points.length <= 1) return "day"
+const round1 = (value: number) => Math.round(value * 10) / 10
 
-  let min = Number.POSITIVE_INFINITY
-  let max = Number.NEGATIVE_INFINITY
-
-  for (const point of points) {
-    const time = new Date(point.date).getTime()
-    if (!Number.isFinite(time)) continue
-    min = Math.min(min, time)
-    max = Math.max(max, time)
-  }
-
-  if (!Number.isFinite(min) || !Number.isFinite(max)) return "day"
-  const spanDays = (max - min) / (24 * 60 * 60 * 1000)
-  // Granularität dynamisch wählen, damit Timeline bei langen Zeiträumen nicht unlesbar wird.
-  if (points.length <= 45 || spanDays <= 140) return "day"
-  if (spanDays <= 500) return "week"
-  return "month"
-}
-
-export function getShotDistributionBucketStart(
-  dateValue: Date,
-  granularity: ShotDistributionGranularity
-): Date {
-  const date = new Date(dateValue)
-  date.setHours(0, 0, 0, 0)
-
-  if (granularity === "month") {
-    date.setDate(1)
-    return date
-  }
-
-  if (granularity === "week") {
-    const weekday = date.getDay()
-    const distanceToMonday = (weekday + 6) % 7
-    date.setDate(date.getDate() - distanceToMonday)
-  }
-
-  return date
+/**
+ * Ein Punkt je Einheit, chronologisch — bewusst ohne zeitliche Bündelung, damit Veränderungen
+ * von Einheit zu Einheit sichtbar bleiben. Gebündelt wird nur der Ringbereich 0–6.
+ */
+export function buildShotDistributionTimeline(
+  points: ShotDistributionPoint[],
+  displayTimeZone: string
+): ShotDistributionTimelinePoint[] {
+  return points
+    .filter((point) => point.totalShots > 0)
+    .map((point) => ({ point, date: new Date(point.date) }))
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map(({ point, date }, index) => {
+      const r7 = round1(point.r7)
+      const r8 = round1(point.r8)
+      const r9 = round1(point.r9)
+      const r10 = round1(point.r10)
+      return {
+        i: index,
+        sessionId: point.sessionId,
+        date,
+        dateLabel: formatShortDate(date, displayTimeZone),
+        tooltipLabel: `${formatDateTime(date, displayTimeZone)} · ${point.totalShots} Schuss`,
+        totalShots: point.totalShots,
+        // Rest auf 100 %, damit der Stapel trotz Rundung genau voll ist.
+        r0to6: round1(Math.max(0, 100 - r7 - r8 - r9 - r10)),
+        r7,
+        r8,
+        r9,
+        r10,
+      }
+    })
 }

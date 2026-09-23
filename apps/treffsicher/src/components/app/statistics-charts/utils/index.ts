@@ -13,7 +13,7 @@ export {
   formatSignedMillimeters,
   mapSessionToHitLocationPoint,
 } from "./hitLocation"
-export { getShotDistributionBucketStart, getShotDistributionGranularity } from "./shotDistribution"
+export { buildShotDistributionTimeline } from "./shotDistribution"
 export { buildIndexTicks } from "./ticks"
 export {
   calculateTrend,

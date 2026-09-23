@@ -1,6 +1,6 @@
 import type { ChartConfig } from "@/components/ui/chart"
 import type {
-  AggregatedShotDistributionPoint,
+  ShotDistributionTimelinePoint,
   DisplayMode,
   HitLocationPathPoint,
   RadarLegendItem,
@@ -148,7 +148,7 @@ export interface QualityTabModel {
     selectedDiscipline: DisciplineForStats | null
   }
   distribution: {
-    aggregatedShotDistribution: AggregatedShotDistributionPoint[]
+    aggregatedShotDistribution: ShotDistributionTimelinePoint[]
     shotDistributionChartConfig: ChartConfig
     shotDistributionTicks: number[]
   }
