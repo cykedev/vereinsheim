@@ -121,3 +121,34 @@ describe("SeasonStandingsTable — manuelles Sortieren", () => {
     expect(render("ringteiler")).not.toContain("Sortierung:")
   })
 })
+
+describe("SeasonStandingsTable — geteilte Plätze", () => {
+  it("zeigt Teilnehmern ohne Serie denselben Platz, ohne Podiumsfarbe", () => {
+    const withoutSeries = (name: string): SortedSeasonStandingsEntry => ({
+      participantId: name,
+      participantName: name,
+      seriesCount: 0,
+      meetsMinSeries: false,
+      bestRings: null,
+      bestRingsScoringType: null,
+      bestRings_rank: null,
+      bestCorrectedTeiler: null,
+      bestTeiler_rank: null,
+      bestRingteiler: null,
+      bestRingteiler_rank: null,
+      alternatingBy: null,
+    })
+    const html = renderToStaticMarkup(
+      createElement(SeasonStandingsTable, {
+        entries: [withoutSeries("Anton"), withoutSeries("Berta")],
+        minSeries: 2,
+        sort: "ringteiler",
+      })
+    )
+    const badges = [
+      ...html.matchAll(/<span class="inline-flex w-\[1\.25rem\][^"]*">(\d+)<\/span>/g),
+    ]
+    expect(badges.map((m) => m[1])).toEqual(["1", "1"])
+    expect(html).not.toContain("bg-rank-1/20")
+  })
+})
