@@ -55,7 +55,12 @@ export function ShotDistributionTimelineCard({ model }: Props) {
               tickLine={false}
             />
             <YAxis
+              // Feste Skala: die gerundeten Anteile summieren sich im Fließkomma gelegentlich
+              // knapp über 100 — ohne allowDataOverflow und feste Ticks dehnt Recharts die Achse
+              // dann auf "100.00000000000001%".
               domain={[0, 100]}
+              allowDataOverflow
+              ticks={[0, 25, 50, 75, 100]}
               tickFormatter={(value: number) => `${value}%`}
               tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
               axisLine={false}
