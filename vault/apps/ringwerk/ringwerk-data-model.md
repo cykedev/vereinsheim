@@ -335,6 +335,8 @@ Ergebnis: Wer unter dem Ziel liegt, kommt immer nach allen die drüber oder glei
 1. Punkte (absteigend)
 2. Direkter Vergleich bei Punktgleichstand
 3. Bestes individuelles Ergebnis (niedrigster Ringteiler aus allen Gruppenspielen)
+4. Nachname, dann Vorname — wer erst hier getrennt wird, **teilt sich den Platz** („1, 1, 3";
+   siehe [[ringwerk-features]] „Geteilte Plätze")
 
 ### Liga-spezifisch: BEST_OF_SINGLE — Duel-Auflösung
 
@@ -354,15 +356,17 @@ Ergebnis ist immer A, B oder TIE. Bei TIE zählt das Duell für keinen Seite. Ke
 
 ### Liga-spezifisch: BEST_OF_SINGLE — Tabellensortierung
 
-Nur tabellensichtbare Kriterien (kein direkter Vergleich), Spaltenreihenfolge = Bewertungsreihenfolge:
+Jedes Kriterium ist eine sichtbare Spalte, Spaltenreihenfolge = Bewertungsreihenfolge:
 
 1. Siege (Begegnungssiege, absteigend)
 2. Satzdifferenz (duelsWon − duelsLost, absteigend)
 3. Mehr gewonnene Sätze (duelsWon, absteigend)
-4. Bestes Einzelergebnis (bei RINGS/RINGS_DECIMAL: höchste Ringe; sonst: niedrigster Ringteiler)
-5. Nachname (Stabilisierung)
+4. Direkter Vergleich (Mini-Liga-Bilanz der Gleichstandsgruppe; seit 2026-06-24 statt „bestes
+   Einzelergebnis", siehe [[best-of-standings-direct-comparison-tiebreak]])
+5. Nachname, dann Vorname — wer erst hier getrennt wird, **teilt sich den Platz** (offener
+   2er-Gleichstand z. B. 1, 1)
 
-Ein per Stechschuss entschiedenes Gleichstands-Duell zählt für den Stechschuss-Sieger (Best-of-3 endet so z. B. 2:1, nicht 1:1). 5. Nachname alphabetisch (de)
+Ein per Stechschuss entschiedenes Gleichstands-Duell zählt für den Stechschuss-Sieger (Best-of-3 endet so z. B. 2:1, nicht 1:1).
 
 ### Saison-spezifisch: Mehrfach-Wertung
 
