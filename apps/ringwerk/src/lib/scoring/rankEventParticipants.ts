@@ -58,7 +58,14 @@ export function rankEventParticipants(
 ): EventRankedEntry[] {
   if (series.length === 0) return []
 
-  const entries = series.map((s) => {
+  // Vorsortierung nach Name: bei gleichem Score bleibt diese Ordnung stehen (Platz geteilt).
+  const byName = [...series].sort(
+    (a, b) =>
+      a.participant.lastName.localeCompare(b.participant.lastName, "de") ||
+      a.participant.firstName.localeCompare(b.participant.firstName, "de")
+  )
+
+  const entries = byName.map((s) => {
     const faktor = effectiveTeilerFaktor(config.competitionDisciplineId, s.discipline.teilerFaktor)
     // Use per-series scoringType so mixed events correctly use 109 for DECIMAL disciplines.
     const maxRings = getMaxRings(s.discipline.scoringType, s.shotCount)
@@ -145,6 +152,9 @@ export function rankEventTeams(
       })),
     }
   })
+
+  // Vorsortierung nach Teamnummer: bei gleichem Teamscore bleibt diese Ordnung stehen.
+  teamEntries.sort((a, b) => a.teamNumber - b.teamNumber)
 
   const ranked = rankByScore(
     teamEntries.map((t) => ({ participantId: String(t.teamNumber), score: t.teamScore })),
