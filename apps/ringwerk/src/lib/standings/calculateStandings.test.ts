@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { calculateStandings } from "./calculateStandings"
+import { hasLeagueResult } from "./standingsSort"
 import type { StandingsParticipant, StandingsMatchup } from "./calculateStandings"
 
 // Hilfsfunktion: Ergebnis für einen Teilnehmer
@@ -282,5 +283,80 @@ describe("calculateStandings – scoringMode RINGS", () => {
     const rows = calculateStandings([pA, pB, pC], matchups, "RINGS")
     expect(rows[0].participantId).toBe("A")
     expect(rows[1].participantId).toBe("B")
+  })
+})
+
+describe("calculateStandings – geteilte Plätze", () => {
+  const zeta: StandingsParticipant = {
+    id: "Z",
+    firstName: "Zoe",
+    lastName: "Zeta",
+    withdrawn: false,
+  }
+  const alpha: StandingsParticipant = {
+    id: "AL",
+    firstName: "Ali",
+    lastName: "Alpha",
+    withdrawn: false,
+  }
+  const mitte: StandingsParticipant = {
+    id: "MI",
+    firstName: "Mia",
+    lastName: "Mitte",
+    withdrawn: false,
+  }
+
+  it("ohne gespieltes Duell stehen alle alphabetisch auf Platz 1", () => {
+    const rows = calculateStandings([zeta, alpha, mitte], [])
+    expect(rows.map((r) => r.lastName)).toEqual(["Alpha", "Mitte", "Zeta"])
+    expect(rows.map((r) => r.rank)).toEqual([1, 1, 1])
+  })
+
+  it("nur Zeilen, die erst der Name trennt, teilen den Platz", () => {
+    // A schlägt B; C (Klein) und E (Adler) haben noch kein Duell.
+    const pE: StandingsParticipant = {
+      id: "E",
+      firstName: "Eva",
+      lastName: "Adler",
+      withdrawn: false,
+    }
+    const matchups: StandingsMatchup[] = [
+      {
+        id: "m1",
+        status: "COMPLETED",
+        homeParticipantId: "A",
+        awayParticipantId: "B",
+        results: [makeResult("A", 96, 3.7, 7.7), makeResult("B", 94, 5.0, 11.0)],
+      },
+    ]
+    const rows = calculateStandings([pA, pB, pC, pE], matchups)
+    expect(rows.map((r) => r.participantId)).toEqual(["A", "B", "E", "C"])
+    expect(rows.map((r) => r.rank)).toEqual([1, 2, 3, 3])
+  })
+
+  it("bei gleichem Nachnamen entscheidet der Vorname die Reihenfolge, der Platz bleibt geteilt", () => {
+    const karl: StandingsParticipant = {
+      id: "K",
+      firstName: "Karl",
+      lastName: "Meier",
+      withdrawn: false,
+    }
+    const anna: StandingsParticipant = {
+      id: "N",
+      firstName: "Anna",
+      lastName: "Meier",
+      withdrawn: false,
+    }
+    const rows = calculateStandings([karl, anna], [])
+    expect(rows.map((r) => r.firstName)).toEqual(["Anna", "Karl"])
+    expect(rows.map((r) => r.rank)).toEqual([1, 1])
+  })
+})
+
+describe("hasLeagueResult", () => {
+  it("zählt gespielte Duelle und Freilose als Ergebnis", () => {
+    expect(hasLeagueResult({ played: 0, byes: 0 })).toBe(false)
+    expect(hasLeagueResult({ played: 0, byes: 1 })).toBe(true)
+    expect(hasLeagueResult({ played: 2, byes: 0 })).toBe(true)
   })
 })

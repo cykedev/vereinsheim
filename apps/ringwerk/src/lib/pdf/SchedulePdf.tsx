@@ -3,6 +3,7 @@ import type { ReactElement } from "react"
 import type { ScoringType } from "@/generated/prisma/client"
 import type { MatchupListItem } from "@/lib/matchups/types"
 import type { StandingRow } from "@/lib/standings/calculateStandings"
+import { hasLeagueResult } from "@/lib/standings/standingsSort"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import { styles } from "@/lib/pdf/styles"
 import { formatDateOnly } from "@vereinsheim/lib/format"
@@ -94,7 +95,13 @@ function StandingsSection({ rows }: { rows: StandingRow[] }): ReactElement {
               {/* Rang-Abzeichen */}
               <View style={{ width: W.rank, alignItems: "center" }}>
                 {!row.withdrawn && (
-                  <View style={[styles.rankBadge, { backgroundColor: rankBadgeColor(row.rank) }]}>
+                  <View
+                    style={[
+                      styles.rankBadge,
+                      // Podiumsfarbe nur mit Ergebnis (0 = neutrales Grau), wie in der Tabelle.
+                      { backgroundColor: rankBadgeColor(hasLeagueResult(row) ? row.rank : 0) },
+                    ]}
+                  >
                     <Text style={styles.rankBadgeText}>{row.rank}</Text>
                   </View>
                 )}
