@@ -2,7 +2,7 @@
 id: season-mode
 type: subsystem
 title: "season-mode"
-keywords: [Saison-Modus, Langzeitwertung, beste Serien, Mindestserien, Mehrfach-Ranking, season mode, Jahreswertung, alternierende Sortierung, Ringe/Teiler alternierend, Teiler/Ringe alternierend, seasonSortMode, sortSeasonStandings, Anzeigereihenfolge, Rangliste sortieren]
+keywords: [Saison-Modus, Langzeitwertung, beste Serien, Mindestserien, Mehrfach-Ranking, season mode, Jahreswertung, alternierende Sortierung, Ringe/Teiler alternierend, Teiler/Ringe alternierend, seasonSortMode, sortSeasonStandings, Anzeigereihenfolge, Rangliste sortieren, geteilte Plätze, seasonPositions, Gleichstand]
 tags: [feature]
 feature_of: ["[[ringwerk]]"]
 documented_in: ["[[ringwerk-features#Saison-Modus (SEASON) ✓ IMPLEMENTIERT (Phase 5)]]"]
@@ -53,6 +53,14 @@ trägt keinen Rang (sein Wert bleibt sichtbar, die Zeile ist ausgegraut). Vorher
 mindestens einer Serie Ränge; dann hielt eine ausgegraute Zeile die 1, während die gewerteten
 Zeilen darüber 2, 3, 3 lasen — in der alternierenden Sortierung sofort sichtbar. Rang-Pool und
 Sortier-Pool müssen deshalb deckungsgleich bleiben.
+
+Die **Gesamtplatzierung** am Namen kommt aus `seasonPositions(sorted, sort)` — der einzigen Quelle
+für Tabelle, PDF und Dashboard (September 2026; vorher `idx + 1`). Klassisch teilen Zeilen den
+Platz, die im Block, in der Metrik **und** im Ringteiler gleich sind — der Ringteiler ist bei
+gleichem Metrik-Wert der explizite Tiebreak, erst danach der Name. Teilnehmer ohne Serie stehen
+also gemeinsam auf einem Platz; hat noch niemand eine Serie, alle auf 1. Alternierend vergibt die
+Folge jeden Platz einzeln, geteilt wird nur im Block ohne Serie. Podiumsfarben trägt nur eine Zeile
+mit mindestens einer Serie (`hasSeasonResult`). Siehe [[ringwerk-features]] („Geteilte Plätze").
 
 Angezeigt werden Inline-Platzierungen an den Metrik-Werten nur für die **Plätze 1–3** (Tabelle und
 PDF, Regel + Hervorhebung liegen als `isPodiumRank`/`metricAppearance` neben der Sortierfunktion);
