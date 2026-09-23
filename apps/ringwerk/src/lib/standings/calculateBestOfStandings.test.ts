@@ -573,9 +573,12 @@ describe("2-way tie without a direct match — alphabetical, annotated open", ()
     expect(row(rows, "A").duelsWon).toBe(row(rows, "B").duelsWon)
   })
 
-  it("alphabetical order (Alpha before Beta) because the direct comparison is open", () => {
+  it("alphabetical order (Alpha before Beta), sharing the place, because the direct comparison is open", () => {
+    expect(rows.map((r) => r.participantId).indexOf("A")).toBeLessThan(
+      rows.map((r) => r.participantId).indexOf("B")
+    )
     expect(row(rows, "A").rank).toBe(1)
-    expect(row(rows, "B").rank).toBe(2)
+    expect(row(rows, "B").rank).toBe(1)
   })
 
   it("each row is annotated open with the not-yet-played opponent", () => {

@@ -1,4 +1,5 @@
 import type { BestOfStandingRow } from "@/lib/standings/queries"
+import { hasBestOfResult } from "@/lib/standings/bestOfStandingsSort"
 import {
   formatDirectComparison,
   type DirectComparisonTone,
@@ -67,7 +68,9 @@ export function BestOfStandingsTable({ rows }: Props) {
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
-            const rowHighlight = row.withdrawn ? "" : (ROW_HIGHLIGHT[row.rank] ?? "")
+            // Podiumsfarben nur mit Ergebnis — sonst wäre vor der ersten Begegnung alles gold.
+            const podium = hasBestOfResult(row)
+            const rowHighlight = row.withdrawn || !podium ? "" : (ROW_HIGHLIGHT[row.rank] ?? "")
             const direct = formatDirectComparison(row.directComparison)
             return (
               <TableRow
@@ -80,7 +83,7 @@ export function BestOfStandingsTable({ rows }: Props) {
                   {row.withdrawn ? (
                     <span className="text-muted-foreground">—</span>
                   ) : (
-                    <RankBadge rank={row.rank} />
+                    <RankBadge rank={row.rank} podium={podium} />
                   )}
                 </TableCell>
                 <TableCell className="px-2 py-3 font-medium whitespace-normal sm:px-4">
