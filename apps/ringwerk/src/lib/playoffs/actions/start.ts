@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
-import { getStandingsForCompetition } from "@/lib/standings/queries"
+import { getSeedingStandings } from "@/lib/playoffs/queries"
 import { createFirstRoundMatchups } from "../calculatePlayoffs"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 
@@ -45,7 +45,8 @@ export async function startPlayoffs(competitionId: string): Promise<ActionResult
   if (existingCount > 0) return { error: "Playoffs wurden bereits gestartet." }
   if (pendingCount > 0) return { error: "Es gibt noch ausstehende Paarungen in der Gruppenphase." }
 
-  const standings = await getStandingsForCompetition(competitionId)
+  // Gruppentabelle des Liga-Formats (Best-of: Best-of-Tabelle), gesetzt nach Position.
+  const standings = await getSeedingStandings(competitionId)
   const activeStandings = standings.filter((r) => !r.withdrawn)
 
   const minRequired = competition.playoffHasAchtelfinale

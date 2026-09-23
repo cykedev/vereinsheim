@@ -39,6 +39,8 @@ vi.mock("@/lib/db", () => ({
 
 import { startPlayoffs } from "./start"
 import { advanceRound } from "./match"
+import { getSeedingStandings } from "../queries"
+import type { BestOfStandingRow, StandingRow } from "@/lib/standings/queries"
 
 // ─── Fixture ─────────────────────────────────────────────────────────────────
 
@@ -306,6 +308,95 @@ describe("startPlayoffs — Best-of, geteilter Platz", () => {
     })
     expect(await startPlayoffs("c1")).toEqual({ success: true })
     expect(createdPairs()).toEqual(["C–D", "B–A"])
+  })
+})
+
+// ─── Problemfälle Best-of: vor dem Fix las die Setzung die Rundenturnier-Tabelle ─
+
+describe("startPlayoffs — Best-of, Problemfälle", () => {
+  const format = "BEST_OF_SINGLE" as const
+  const pattern = "strongLosesDuelOne" as const
+
+  it("Halbfinale mit 4: gesetzt nach Match-Siegen, nicht nach Duell 1", async () => {
+    league(["A", "B", "C", "D"], { format, pattern })
+    expect(await startPlayoffs("c1")).toEqual({ success: true })
+    expect(createdPairs()).toEqual(["A–D", "B–C"])
+  })
+
+  it("Halbfinale mit 6: die wirklich besten 4 qualifizieren sich", async () => {
+    league(players(6), { format, pattern })
+    expect(await startPlayoffs("c1")).toEqual({ success: true })
+    expect(createdPairs()).toEqual(["P01–P04", "P02–P03"])
+  })
+
+  it("Viertelfinale mit 8", async () => {
+    league(players(8), { format, pattern, playoffHasViertelfinale: true })
+    expect(await startPlayoffs("c1")).toEqual({ success: true })
+    expect(createdPairs()).toEqual(seededPairs(players(8)))
+  })
+
+  it("Achtelfinale mit 16", async () => {
+    league(players(16), { format, pattern, playoffHasAchtelfinale: true })
+    expect(await startPlayoffs("c1")).toEqual({ success: true })
+    expect(createdPairs()).toEqual(seededPairs(players(16)))
+  })
+
+  it("mit Freilosen und Rückzug", async () => {
+    league(["A", "B", "C", "D", "E", "F", "G"], { format, pattern, withdrawn: ["B"] })
+    expect(await startPlayoffs("c1")).toEqual({ success: true })
+    expect(createdPairs()).toEqual(["A–E", "C–D"])
+  })
+
+  it("Stechschuss entscheidet die Begegnung — er zählt, Duell 1 nicht", async () => {
+    // Sonst Normalfall; nur A gegen B: B gewinnt Duell 1, A Duell 2, Duell 3 gleich (1:1),
+    // A gewinnt den Stechschuss (10,5 gegen 9,8) → A gewinnt die Begegnung 2:1 n. St.
+    league(["A", "B", "C", "D"], {
+      format,
+      override: {
+        "A-B": [
+          series("B", 1, 5),
+          series("A", 1, 9),
+          series("A", 2, 5),
+          series("B", 2, 9),
+          series("A", 3, 7),
+          series("B", 3, 7),
+          series("A", 4, 0, { isTiebreak: true, rings: 10.5 }),
+          series("B", 4, 0, { isTiebreak: true, rings: 9.8 }),
+        ],
+      },
+    })
+    expect(await startPlayoffs("c1")).toEqual({ success: true })
+    expect(createdPairs()).toEqual(["A–D", "B–C"])
+  })
+})
+
+describe("getSeedingStandings — eine Quelle für die Setzliste", () => {
+  it("Best-of-Liga: Best-of-Tabelle (Match-Siege), nicht die Rundenturnier-Rechnung", async () => {
+    league(["A", "B", "C", "D"], { format: "BEST_OF_SINGLE", pattern: "strongLosesDuelOne" })
+    const rows = (await getSeedingStandings("c1")) as BestOfStandingRow[]
+    expect(rows.map((r) => r.participantId)).toEqual(["A", "B", "C", "D"])
+    expect(rows.map((r) => r.wins)).toEqual([3, 2, 1, 0])
+    expect(m.competitionFindUnique).toHaveBeenCalledWith({
+      where: { id: "c1" },
+      select: { leagueFormat: true },
+    })
+  })
+
+  it("Doppelrunden-Liga: Punkte-Tabelle wie bisher", async () => {
+    league(["A", "B", "C", "D"], { format: "DOUBLE_ROUND_ROBIN" })
+    const rows = (await getSeedingStandings("c1")) as StandingRow[]
+    expect(rows.map((r) => r.participantId)).toEqual(["A", "B", "C", "D"])
+    expect(rows.map((r) => r.points)).toEqual([12, 8, 4, 0])
+  })
+
+  it("geteilter Platz: Reihenfolge eindeutig, Platz geteilt — gesetzt wird nach Position", async () => {
+    league(["A", "B", "C", "D"], {
+      format: "BEST_OF_SINGLE",
+      override: { "A-C": bestOfSeries("C", "A", "normal") },
+    })
+    const rows = (await getSeedingStandings("c1")) as BestOfStandingRow[]
+    expect(rows.map((r) => r.participantId)).toEqual(["C", "B", "A", "D"])
+    expect(rows.map((r) => r.rank)).toEqual([1, 1, 1, 4])
   })
 })
 

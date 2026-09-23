@@ -3,6 +3,12 @@ import type { StandingRow } from "@/lib/standings/calculateStandings"
 import type { PlayoffRuleset } from "./playoffRuleset"
 
 /**
+ * Was die Setzung von einer Tabellenzeile braucht. Rundenturnier- und Best-of-Zeilen erfüllen es;
+ * der Setzplatz ist die Position in der Liste (nicht `rank` — der kann geteilt sein).
+ */
+export type SeedingRow = Pick<StandingRow, "participantId" | "withdrawn">
+
+/**
  * Erstellt die Paarungen der ersten Playoff-Runde anhand der Gruppenphase-Standings.
  * Nur aktive (nicht zurückgezogene) Teilnehmer qualifizieren sich.
  *
@@ -11,7 +17,7 @@ import type { PlayoffRuleset } from "./playoffRuleset"
  * sonst → SEMI_FINAL: Top 4, 1v4, 2v3
  */
 export function createFirstRoundMatchups(
-  standings: StandingRow[],
+  standings: SeedingRow[],
   ruleset?: Pick<PlayoffRuleset, "playoffHasViertelfinale" | "playoffHasAchtelfinale"> | null
 ): { participantAId: string; participantBId: string; round: PlayoffRound }[] {
   const hasAF = ruleset?.playoffHasAchtelfinale ?? false
