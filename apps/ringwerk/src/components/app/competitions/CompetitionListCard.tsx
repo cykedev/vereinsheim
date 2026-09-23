@@ -3,8 +3,13 @@ import { CalendarDays, Trophy, Users, BarChart2, ListOrdered, CalendarCheck } fr
 import { Badge } from "@vereinsheim/ui/badge"
 import { Card, CardContent } from "@vereinsheim/ui/card"
 import { CompetitionActions } from "@/components/app/competitions/CompetitionActions"
+import {
+  CompetitionPreviewBadges,
+  CompetitionPreviewSection,
+} from "@/components/app/competitions/CompetitionPreview"
 import { formatDateOnly } from "@vereinsheim/lib/dateTime"
 import type { CompetitionListItem } from "@/lib/competitions/types"
+import type { CompetitionPreview } from "@/lib/competitions/previewModel"
 
 function formatDate(date: Date | null, tz: string): string {
   if (!date) return "—"
@@ -111,6 +116,8 @@ interface Props {
   tz: string
   showMeta?: boolean
   cardClassName?: string
+  /** Tabellen-Vorschau wie im Dashboard (aktive + abgeschlossene Wettbewerbe). */
+  preview?: CompetitionPreview
 }
 
 // Einheitliche Wettbewerbskarte. Der Name verlinkt auf die kanonische Detailseite;
@@ -121,6 +128,7 @@ export function CompetitionListCard({
   tz,
   showMeta = false,
   cardClassName,
+  preview,
 }: Props) {
   return (
     <Card className={cardClassName ?? "transition-colors hover:bg-muted/20"}>
@@ -133,6 +141,7 @@ export function CompetitionListCard({
           <Badge variant="secondary" className="text-xs">
             {c.discipline ? c.discipline.name : "Gemischt"}
           </Badge>
+          {preview && <CompetitionPreviewBadges preview={preview} />}
           {c.isPublic && (
             <Badge variant="outline" className="text-xs">
               Öffentlich
@@ -143,6 +152,7 @@ export function CompetitionListCard({
           <CardLinks c={c} canManage={canManage} />
         </div>
         {showMeta && <CardMeta c={c} tz={tz} />}
+        {preview && <CompetitionPreviewSection preview={preview} />}
         {canManage && (
           <div className="flex justify-end border-t border-border/50 pt-3">
             <CompetitionActions competition={c} />

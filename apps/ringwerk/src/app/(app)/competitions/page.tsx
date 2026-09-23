@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { Plus, Archive, CheckCircle, Trophy } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionsForManagement } from "@/lib/competitions/queries"
+import { loadCompetitionPreview } from "@/lib/competitions/preview"
 import { getDisciplinesForManagement } from "@/lib/disciplines/queries"
 import { CompetitionListCard } from "@/components/app/competitions/CompetitionListCard"
 import { CompetitionsFilters } from "@/components/app/competitions/CompetitionsFilters"
@@ -71,6 +72,15 @@ export default async function CompetitionsPage({ searchParams }: PageProps) {
   const completed = filtered.filter((c) => c.status === "COMPLETED")
   const archived = filtered.filter((c) => c.status === "ARCHIVED")
 
+  // Tabellen-Vorschau wie im Dashboard: nur aktive und abgeschlossene — Entwürfe haben noch keine
+  // Ergebnisse, das Archiv bleibt kompakt.
+  const previews = new Map(
+    (await Promise.all([...active, ...completed].map(loadCompetitionPreview))).map((p) => [
+      p.competition.id,
+      p,
+    ])
+  )
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -132,6 +142,7 @@ export default async function CompetitionsPage({ searchParams }: PageProps) {
               canManage={canManage}
               tz={tz}
               showMeta
+              preview={previews.get(c.id)}
             />
           ))}
         </div>
@@ -144,9 +155,16 @@ export default async function CompetitionsPage({ searchParams }: PageProps) {
             <CheckCircle className="h-4 w-4" />
             Abgeschlossen ({completed.length})
           </div>
-          <div className="space-y-2 opacity-70">
+          {/* Ohne Opazität: Tabellen dahinter unterschritten die Kontrast-Untergrenze (conventions §3). */}
+          <div className="space-y-3">
             {completed.map((c) => (
-              <CompetitionListCard key={c.id} competition={c} canManage={canManage} tz={tz} />
+              <CompetitionListCard
+                key={c.id}
+                competition={c}
+                canManage={canManage}
+                tz={tz}
+                preview={previews.get(c.id)}
+              />
             ))}
           </div>
         </div>
