@@ -5,6 +5,7 @@ import { Plus, Archive, CheckCircle, Trophy } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionsForManagement } from "@/lib/competitions/queries"
 import { loadCompetitionPreview } from "@/lib/competitions/preview"
+import type { CompetitionPreview } from "@/lib/competitions/previewModel"
 import { getDisciplinesForManagement } from "@/lib/disciplines/queries"
 import { CompetitionListCard } from "@/components/app/competitions/CompetitionListCard"
 import { CompetitionsFilters } from "@/components/app/competitions/CompetitionsFilters"
@@ -73,13 +74,16 @@ export default async function CompetitionsPage({ searchParams }: PageProps) {
   const archived = filtered.filter((c) => c.status === "ARCHIVED")
 
   // Tabellen-Vorschau wie im Dashboard: nur aktive und abgeschlossene — Entwürfe haben noch keine
-  // Ergebnisse, das Archiv bleibt kompakt.
-  const previews = new Map(
-    (await Promise.all([...active, ...completed].map(loadCompetitionPreview))).map((p) => [
-      p.competition.id,
-      p,
-    ])
-  )
+  // Ergebnisse, das Archiv bleibt kompakt. Scheitert eine Vorschau, bleibt die Seite (Status,
+  // Löschen) bedienbar: die Karte erscheint dann ohne Tabelle.
+  const previews = new Map<string, CompetitionPreview>()
+  const withPreview = [...active, ...completed]
+  const results = await Promise.allSettled(withPreview.map(loadCompetitionPreview))
+  results.forEach((result, i) => {
+    if (result.status === "fulfilled") previews.set(result.value.competition.id, result.value)
+    else
+      console.error(`Vorschau für Wettbewerb ${withPreview[i].id} fehlgeschlagen:`, result.reason)
+  })
 
   return (
     <div className="space-y-6">
