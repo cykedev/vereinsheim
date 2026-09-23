@@ -309,3 +309,25 @@ describe("seasonPositions — geteilte Plätze", () => {
     expect(hasSeasonResult({ seriesCount: 1 })).toBe(true)
   })
 })
+
+describe("seasonPositions — Fließkomma-Rauschen", () => {
+  it("korrigierte Teiler, die nur im Fließkomma abweichen, gelten als gleich", () => {
+    // 8,2 × 1,5 = 12.299999999999999 — angezeigt wird für beide „12,3".
+    const entries = [
+      makeEntry("Zeta", { rings: 90, teiler: 8.2 * 1.5, ringteiler: 17.3 }),
+      makeEntry("Alpha", { rings: 90, teiler: 12.3 * 1.0, ringteiler: 17.3 }),
+    ]
+    expect(names(sortSeasonStandings(entries, "teiler"))).toEqual(["Alpha", "Zeta"])
+    expect(seasonPositions(sortSeasonStandings(entries, "teiler"), "teiler")).toEqual([1, 1])
+  })
+
+  it("letzter Qualifizierter und erster Nicht-Qualifizierter teilen nie den Platz", () => {
+    const entries = [
+      makeEntry("Quali", { rings: 90, teiler: 5.0, ringteiler: 15.0 }),
+      makeEntry("Ohne", { rings: 90, teiler: 5.0, ringteiler: 15.0, meetsMinSeries: false }),
+    ]
+    expect(seasonPositions(sortSeasonStandings(entries, "ringteiler"), "ringteiler")).toEqual([
+      1, 2,
+    ])
+  })
+})

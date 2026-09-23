@@ -1,10 +1,7 @@
 import type { ScoringMode } from "@/generated/prisma/client"
 import type { RankableEntry, RankedEntry } from "./types"
 import { SCORE_DIRECTION } from "./types"
-import { assignSharedRanks } from "./sharedRanks"
-
-/** Scores gelten unterhalb dieser Differenz als gleich (Summen von Nachkommaresten sind Floats). */
-const SCORE_EPSILON = 1e-9
+import { assignSharedRanks, sameScore } from "./sharedRanks"
 
 /**
  * Sortiert eine Liste von Einträgen nach dem Score des gegebenen Wertungsmodus
@@ -18,11 +15,11 @@ const SCORE_EPSILON = 1e-9
 export function rankByScore(entries: RankableEntry[], mode: ScoringMode): RankedEntry[] {
   const direction = SCORE_DIRECTION[mode]
   const sorted = [...entries].sort((a, b) => {
-    const diff = direction === "asc" ? a.score - b.score : b.score - a.score
-    return Math.abs(diff) < SCORE_EPSILON ? 0 : diff
+    if (sameScore(a.score, b.score)) return 0
+    return direction === "asc" ? a.score - b.score : b.score - a.score
   })
   // Bei gleichem Score bleibt die eingehende Ordnung stehen (Array#sort ist stabil) — der
   // Aufrufer sortiert vorher nach Namen bzw. Teamnummer.
-  const ranks = assignSharedRanks(sorted, (a, b) => Math.abs(a.score - b.score) < SCORE_EPSILON)
+  const ranks = assignSharedRanks(sorted, (a, b) => sameScore(a.score, b.score))
   return sorted.map((entry, index) => ({ ...entry, rank: ranks[index] }))
 }
