@@ -212,6 +212,13 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   `apps/ringwerk/src/components/app/series/SeasonStandingsTable.test.tsx`). Interaktion —
   Klicks, State-Wechsel — braucht weiterhin jsdom und bleibt eine eigene Entscheidung.
 
+- **Charakterisierungstests müssen die falsche Quelle erkennen können**: Wer vor einem Umbau das
+  heutige Verhalten per Test festhält, baut die Fixtures so, dass „keine Information" ein anderes
+  Ergebnis ergibt als das erwartete — z.B. Namen **gegen** die Stärke sortiert, damit eine Tabelle,
+  die nichts wertet und nur alphabetisch ordnet, sofort rot wird. Danach per Gegenprobe (Quelle
+  testweise vertauschen) belegen, dass die Tests wirklich fallen (Beispiel:
+  `apps/ringwerk/src/lib/playoffs/actions/seeding.test.ts`).
+
 - **Datenlage vor der Sichtprüfung abgleichen**: Bevor eine Änderung im Browser als geprüft gilt,
   die vorhandenen Dev-Daten gegen die zu prüfenden Zustände halten (z.B. „abgeschlossener
   Wettbewerb", „Liga mit Ergebnissen", „mehr Zeilen als die Vorschau"). Was die Daten nicht
