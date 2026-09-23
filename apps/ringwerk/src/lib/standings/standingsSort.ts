@@ -1,10 +1,21 @@
 import type { ScoringMode } from "@/generated/prisma/client"
 import { determineOutcome } from "@/lib/results/calculateResult"
+import { assignSharedRanks } from "@/lib/scoring/sharedRanks"
 import type { StandingRow, StandingsMatchup } from "./standingsTypes"
 
 /**
- * Sortiert eine Gruppe aktiver Teilnehmer unter Berücksichtigung des direkten Vergleichs.
- * Bei Punktgleichstand werden Kopf-an-Kopf-Punkte innerhalb der Gruppe berechnet.
+ * Eine Zeile mit mindestens einem Ergebnis (Duell oder Freilos) — nur sie trägt Podiumsfarben.
+ * Tabelle und PDF nutzen dieses eine Prädikat.
+ */
+export function hasLeagueResult(row: Pick<StandingRow, "played" | "byes">): boolean {
+  return row.played + row.byes > 0
+}
+
+/**
+ * Sortiert die aktiven Teilnehmer unter Berücksichtigung des direkten Vergleichs und vergibt die
+ * Plätze. Bei Punktgleichstand werden Kopf-an-Kopf-Punkte innerhalb der Gruppe berechnet.
+ * Zeilen, die in Punkten, Direktpunkten und Bestwert gleich sind (nur der Name trennt sie),
+ * teilen sich den Platz.
  */
 export function sortWithDirectComparison(
   rows: StandingRow[],
@@ -20,7 +31,13 @@ export function sortWithDirectComparison(
     pointGroups.set(row.points, group)
   }
 
+  const isRingsMode = scoringMode === "RINGS" || scoringMode === "RINGS_DECIMAL"
+  // Der Bestwert, nach dem innerhalb einer Gruppe sortiert wird — spiegelt den Sortierzweig unten.
+  const tieValue = (r: StandingRow) => (isRingsMode ? r.bestRings : r.bestRingteiler)
+
   const result: StandingRow[] = []
+  // Direktpunkte über alle Gruppen; Einzelgruppen bleiben bei 0 (dort trennen schon die Punkte).
+  const directPoints = new Map<string, number>()
   const sortedPoints = [...pointGroups.keys()].sort((a, b) => b - a)
 
   for (const points of sortedPoints) {
@@ -33,7 +50,6 @@ export function sortWithDirectComparison(
 
     // Direkter Vergleich: Punkte aus Duellen nur zwischen Teilnehmern dieser Gruppe
     const groupIds = new Set(group.map((r) => r.participantId))
-    const directPoints = new Map<string, number>()
 
     for (const row of group) {
       let dp = 0
@@ -70,7 +86,7 @@ export function sortWithDirectComparison(
         (directPoints.get(b.participantId) ?? 0) - (directPoints.get(a.participantId) ?? 0)
       if (dpDiff !== 0) return dpDiff
 
-      if (scoringMode === "RINGS" || scoringMode === "RINGS_DECIMAL") {
+      if (isRingsMode) {
         // Höhere Ringe gewinnen (absteigend)
         const ringsA = a.bestRings ?? -Infinity
         const ringsB = b.bestRings ?? -Infinity
@@ -82,11 +98,24 @@ export function sortWithDirectComparison(
         if (rtA !== rtB) return rtA - rtB
       }
 
-      return a.lastName.localeCompare(b.lastName, "de")
+      return (
+        a.lastName.localeCompare(b.lastName, "de") || a.firstName.localeCompare(b.firstName, "de")
+      )
     })
 
     result.push(...group)
   }
+
+  const ranks = assignSharedRanks(
+    result,
+    (a, b) =>
+      a.points === b.points &&
+      (directPoints.get(a.participantId) ?? 0) === (directPoints.get(b.participantId) ?? 0) &&
+      tieValue(a) === tieValue(b)
+  )
+  result.forEach((r, i) => {
+    r.rank = ranks[i]
+  })
 
   return result
 }

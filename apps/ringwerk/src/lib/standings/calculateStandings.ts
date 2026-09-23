@@ -23,7 +23,7 @@ export type {
  *   2. Punkte absteigend (Sieg=2, Unentschieden=1, Freilos=2)
  *   3. Direkter Vergleich (Punkte aus Kopf-an-Kopf-Duellen der Gruppe)
  *   4. Bester Ringteiler (niedrigster Wert) aufsteigend
- *   5. Nachname alphabetisch (Stabilisierung)
+ *   5. Nachname, dann Vorname alphabetisch — wer erst hier getrennt wird, teilt sich den Platz
  *
  * Matchups mit mindestens einem zurückgezogenen Teilnehmer werden nicht gewertet.
  */
@@ -122,11 +122,9 @@ export function calculateStandings(
   const active = rows.filter((r) => !r.withdrawn)
   const withdrawn = rows.filter((r) => r.withdrawn)
 
+  // Vergibt auch die Plätze (geteilt, wenn nur der Name trennt).
   const sorted = sortWithDirectComparison(active, matchups, withdrawnIds, scoringMode)
 
-  sorted.forEach((r, i) => {
-    r.rank = i + 1
-  })
   withdrawn.forEach((r) => {
     r.rank = sorted.length + 1
   })

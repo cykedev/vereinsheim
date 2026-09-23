@@ -1,4 +1,5 @@
 import type { StandingRow } from "@/lib/standings/queries"
+import { hasLeagueResult } from "@/lib/standings/standingsSort"
 import { formatDecimal1 } from "@/lib/series/scoring-format"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
@@ -57,7 +58,10 @@ export function StandingsTable({ rows }: Props) {
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
-            const rowHighlight = row.withdrawn ? "" : (ROW_HIGHLIGHT[row.rank ?? 0] ?? "")
+            // Podiumsfarben nur mit Ergebnis — sonst wäre vor dem ersten Duell die ganze Tabelle gold.
+            const podium = hasLeagueResult(row)
+            const rowHighlight =
+              row.withdrawn || !podium ? "" : (ROW_HIGHLIGHT[row.rank ?? 0] ?? "")
             return (
               <TableRow
                 key={row.participantId}
@@ -69,7 +73,7 @@ export function StandingsTable({ rows }: Props) {
                   {row.withdrawn || row.rank === null ? (
                     <span className="text-muted-foreground">—</span>
                   ) : (
-                    <RankBadge rank={row.rank} />
+                    <RankBadge rank={row.rank} podium={podium} />
                   )}
                 </TableCell>
                 <TableCell className="px-2 py-3 font-medium whitespace-normal sm:px-4">
