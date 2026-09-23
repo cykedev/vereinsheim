@@ -209,6 +209,11 @@ Zurückgezogene Teilnehmer → Tabellenende mit Vermerk
 
 Seeding: 1 vs. letzter, 2 vs. vorletzter, usw.
 
+Setzliste ist die **Gruppentabelle des Liga-Formats** (Doppelrunde: Punkte-Tabelle; BEST_OF_SINGLE:
+Best-of-Tabelle), gesetzt nach **Position** — nicht nach dem ggf. geteilten Platz. Eine Quelle für
+Start, Neu-Setzung und Playoff-Seite: `getSeedingStandings` (`lib/playoffs/queries.ts`); gepinnt für
+beide Formate in `lib/playoffs/actions/seeding.test.ts`.
+
 #### Start-Voraussetzungen
 
 - Wettbewerb muss ACTIVE sein
@@ -310,6 +315,12 @@ Sortierung (jedes Kriterium ist eine sichtbare Spalte, links→rechts):
 Die letzte Spalte „Direktvergleich" zeigt im 2er-Gleichstand das Match-Ergebnis + Gegner (z.B. „2:1 · Müller"), im 3er+-Gleichstand die Direktbilanz („2:0"), sonst „—". Logik zentral in `bestOfStandingsSort.ts` (`directComparison`-Annotation), Anzeige über `formatDirectComparison` (Tabelle + PDF byte-identisch). `bestRingteiler`/`bestRings` werden weiter berechnet, sind aber kein Kriterium mehr (revert-fähig).
 
 Zurückgezogene Teilnehmer erscheinen am Ende (alle Ergebnisse mit ihnen werden ignoriert).
+
+### Playoffs
+
+Optional wie bei der Doppelrunde (`playoffBestOf`, Viertel-/Achtelfinale). Setzung aus der
+Best-of-Tabelle (Spec 2026-06-17 §9; umgesetzt 2026-09-23 — vorher las die Setzung die
+Rundenturnier-Tabelle, siehe [[best-of-playoff-seeding-round-robin-table]]).
 
 ### PDF
 
