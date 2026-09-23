@@ -1,5 +1,10 @@
 import { db } from "@/lib/db"
+import {
+  getBestOfStandingsForCompetition,
+  getStandingsForCompetition,
+} from "@/lib/standings/queries"
 import { determineFinaleRoundWinner, determinePlayoffDuelWinner } from "./calculatePlayoffs"
+import type { SeedingRow } from "./bracketSeeding"
 import type { PlayoffBracketData, PlayoffDuelItem, PlayoffMatchItem, PlayoffRound } from "./types"
 
 function mapDuelItem(
@@ -178,4 +183,19 @@ export async function getPlayoffBracket(competitionId: string): Promise<PlayoffB
 export async function hasPlayoffsStarted(competitionId: string): Promise<boolean> {
   const count = await db.playoffMatch.count({ where: { competitionId } })
   return count > 0
+}
+
+/**
+ * Die Gruppentabelle in Setzreihenfolge — je nach Liga-Format die Rundenturnier- oder die
+ * Best-of-Tabelle, also genau die Tabelle, die Spielplan-Seite und PDF zeigen. Setzplatz ist die
+ * Position in der Liste, nicht `rank` (der ist bei Gleichstand geteilt).
+ */
+export async function getSeedingStandings(competitionId: string): Promise<SeedingRow[]> {
+  const competition = await db.competition.findUnique({
+    where: { id: competitionId },
+    select: { leagueFormat: true },
+  })
+  return competition?.leagueFormat === "BEST_OF_SINGLE"
+    ? getBestOfStandingsForCompetition(competitionId)
+    : getStandingsForCompetition(competitionId)
 }
