@@ -24,7 +24,9 @@ export interface SchedulePdfProps {
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-function rankBadgeColor(rank: number): string {
+/** Podiumsfarbe für Platz 1–3; `podium = false` (Zeile ohne Ergebnis) bleibt neutral grau. */
+function rankBadgeColor(rank: number, podium: boolean): string {
+  if (!podium) return "#9ca3af"
   if (rank === 1) return "#b8860b"
   if (rank === 2) return "#6b7280"
   if (rank === 3) return "#c2410c"
@@ -98,8 +100,8 @@ function StandingsSection({ rows }: { rows: StandingRow[] }): ReactElement {
                   <View
                     style={[
                       styles.rankBadge,
-                      // Podiumsfarbe nur mit Ergebnis (0 = neutrales Grau), wie in der Tabelle.
-                      { backgroundColor: rankBadgeColor(hasLeagueResult(row) ? row.rank : 0) },
+                      // Podiumsfarbe nur mit Ergebnis, wie in der Tabelle.
+                      { backgroundColor: rankBadgeColor(row.rank, hasLeagueResult(row)) },
                     ]}
                   >
                     <Text style={styles.rankBadgeText}>{row.rank}</Text>
