@@ -3,7 +3,7 @@ id: ringwerk-features
 type: guide
 title: "Ringwerk — Funktionale Anforderungen – Ringwerk"
 aliases: ["Funktionale Anforderungen – Ringwerk"]
-keywords: [ringwerk, funktionale, anforderungen, ringwerk]
+keywords: [ringwerk, funktionale, anforderungen, geteilte Plätze, Gleichstand, gleicher Platz, Podiumsfarben, Wettbewerbsliste, Tabellen-Vorschau]
 part_of: ["[[ringwerk]]"]
 ---
 
@@ -171,6 +171,26 @@ Sortierung absteigend:
 1. Punkte
 2. Direkter Vergleich (bei Punktgleichstand)
 3. Bestes individuelles Ergebnis (niedrigster Ringteiler)
+4. Nachname, dann Vorname alphabetisch — wer erst hier getrennt wird, **teilt sich den Platz**
+
+#### Geteilte Plätze (September 2026, alle Tabellen)
+
+Zeilen, die in **jedem** Wertungskriterium gleich sind und nur noch alphabetisch geordnet werden,
+tragen **denselben Platz**; der nächste zählt die geteilten mit („1, 1, 3", Wettkampf-Rangfolge).
+Hat noch niemand geschossen, stehen also alle auf Platz 1, sortiert nach Namen. Echte Tiebreaks
+trennen weiter (entschiedener Direktvergleich, Bestwert, Ringteiler in der Saison). Gilt für Liga,
+Best-of, Event (gleicher Score; nach Nachname/Vorname, Teams nach Teamnummer) und Saison — in
+Tabelle, Dashboard und PDF. Zentral: `assignSharedRanks` (`lib/scoring/sharedRanks.ts`), aufgerufen
+aus `sortWithDirectComparison`, `sortStandings` (Best-of), `rankByScore` und `seasonPositions`.
+
+**Podiumsfarben nur mit Ergebnis:** Gold/Silber/Bronze (Badge und Zeilenhintergrund) bekommt nur
+eine Zeile mit mindestens einem Ergebnis — sonst wäre vor dem ersten Schuss die ganze Tabelle gold.
+Ein Prädikat je Tabellentyp für Bildschirm **und** PDF: `hasLeagueResult` (Duell oder Freilos),
+`hasBestOfResult` (gespielte Begegnung), `hasSeasonResult` (mindestens eine Serie); ein
+Event-Eintrag hat immer ein Ergebnis. `RankBadge` hat dafür `podium={false}`.
+
+Die **Playoff-Setzung** liest die Tabellen**position**, nicht den (ggf. geteilten) Platz
+(`playoffs/actions/match.ts`) — sonst wäre sie bei Gleichstand nicht eindeutig.
 
 Anzeigespalten: Pl., Name, Spiele, Siege, Niederlagen, Punkte, bestes Ergebnis
 Zurückgezogene Teilnehmer → Tabellenende mit Vermerk
@@ -285,7 +305,7 @@ Sortierung (jedes Kriterium ist eine sichtbare Spalte, links→rechts):
 2. Satzdifferenz (absteigend)
 3. Mehr gewonnene Sätze (duelsWon, absteigend)
 4. **Direkter Vergleich** (head-to-head): Mini-Liga-Bilanz innerhalb der punktgleichen Gruppe (Match-Sieger, inkl. Stechschuss). Ersetzt seit 2026-06-24 das frühere „bestes Einzelergebnis" (Sportleiter-Entscheid). Kann er nicht entscheiden (Begegnung noch offen ODER zyklischer N-Gleichstand A→B→C→A), wird alphabetisch gewertet — die Spalte macht das mit „offen"/„ausgeglichen" sichtbar.
-5. Nachname alphabetisch (deterministischer Rest)
+5. Nachname, dann Vorname alphabetisch (deterministischer Rest) — wer erst hier getrennt wird, teilt sich den Platz (siehe „Geteilte Plätze"); ein offener 2er-Gleichstand steht also z.B. auf 1, 1
 
 Die letzte Spalte „Direktvergleich" zeigt im 2er-Gleichstand das Match-Ergebnis + Gegner (z.B. „2:1 · Müller"), im 3er+-Gleichstand die Direktbilanz („2:0"), sonst „—". Logik zentral in `bestOfStandingsSort.ts` (`directComparison`-Annotation), Anzeige über `formatDirectComparison` (Tabelle + PDF byte-identisch). `bestRingteiler`/`bestRings` werden weiter berechnet, sind aber kein Kriterium mehr (revert-fähig).
 
@@ -336,6 +356,7 @@ Alle Teilnehmer schiessen, eine Rangliste wird erstellt.
 
 - Berechnung gemaess scoringMode mit Faktor-Korrektur (bei gemischten Disziplinen)
 - Anzeige: Platzierung, Name, Disziplin, Ringe, Teiler (korrigiert), Ergebniswert
+- Gleicher Ergebniswert → gleicher Platz, sortiert nach Nachname/Vorname (Teams nach Teamnummer)
 - Bei gemischten Wettbewerben: Spalte "Teiler korr." zeigt die mit Faktor korrigierten Teiler-Werte
 - Gastteilnehmer erhalten Badge "Gast" neben dem Namen
 - **Zurückgezogene Teilnehmer:** Teilnehmer mit Status "WITHDRAWN" werden ausgeschlossen und erscheinen nicht in der Rangliste
@@ -489,11 +510,21 @@ Das Haupt-Dashboard unterteilt aktive Wettbewerbe nach Typ:
 
 ### Wettbewerbs-Listenansicht
 
-Die Seite `/competitions` zeigt Wettbewerbe in Karten mit:
+Die Seite `/competitions` zeigt Wettbewerbe in Karten, gruppiert nach Status (Entwurf, aktiv,
+abgeschlossen, archiviert) und filterbar nach Status, Typ und Disziplin. Jede Karte trägt:
 
-- **Wettbewerbstyp-Badge:** "Liga", "Event", "Saison"
-- **Saison-Typen:** zusätzlich Saisonzeitraum (seasonStart – seasonEnd)
-- **Navigation:** Links zu /series (Serien-Erfassung) und /standings (Saison-Rangliste) für Saison-Wettbewerbe
+- **Name als Link** auf die kanonische Detailseite, **Badges** (Typ, Disziplin, „Playoffs"/„Teams",
+  „Öffentlich")
+- **Navigation:** Teilnehmer, Serien bzw. Spielplan & Tabelle, Rangliste, Playoffs (typabhängig)
+- **Termine** (aktive): Event-Datum, Saisonzeitraum, Hin-/Rückrunden-Frist
+- **Aktionen** (MANAGER/ADMIN): Protokoll, Bearbeiten, Status, Löschen
+
+**Aktive und abgeschlossene** Karten zeigen zusätzlich die **Tabellen-Vorschau wie im Dashboard**
+(6 Zeilen bzw. das Playoff-Bracket, „+ N weitere anzeigen"; September 2026). Entwürfe (noch keine
+Ergebnisse) und das Archiv bleiben kompakt. Dashboard und Liste teilen sich Laden und Darstellung
+der Vorschau: `loadCompetitionPreview` (`lib/competitions/preview.ts`), das reine Modell
+`previewModel.ts` und `CompetitionPreviewSection`/`CompetitionPreviewBadges`. Abgeschlossene Karten
+tragen keine Opazität mehr — Tabellen dahinter unterschritten die Kontrast-Untergrenze.
 
 ### Auswertungen pro Typ
 

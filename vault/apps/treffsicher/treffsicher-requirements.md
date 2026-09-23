@@ -3,7 +3,7 @@ id: treffsicher-requirements
 type: guide
 title: "Treffsicher — Fachliche Anforderungen"
 aliases: ["Fachliche Anforderungen — Schiesstraining App"]
-keywords: [treffsicher, fachliche, anforderungen, schiesstraining]
+keywords: [treffsicher, fachliche, anforderungen, schiesstraining, Schussverteilung, Zeitverlauf je Einheit]
 part_of: ["[[treffsicher]]"]
 ---
 
@@ -288,7 +288,7 @@ Da Einheiten mit unterschiedlicher Schussanzahl (z.B. 2 statt 4 Serien) vorkomme
 - **Befinden-Korrelation**: Schlaf / Energie / Stress / Motivation vs. normalisiertem Ergebnis (Ringe/Schuss)
 - **Selbsteinschätzung (7 Dimensionen)**: Radarchart über Zeit (Prognose vs. Feedback)
 - **Schussqualität vs. Ringe**: Ausführungsqualität (1–5) vs. normalisiertem Serienergebnis (Ringe/Schuss)
-- **Schussverteilung im Zeitverlauf**: Anteil der Treffer je Ringwert (0–10) als gestapeltes Flächendiagramm, normalisiert auf Prozent — vergleichbar über Einheiten mit unterschiedlicher Schussanzahl. Nur sichtbar wenn Einzelschüsse erfasst wurden. 10er oben im Stack, 0er unten. Legende und Tooltip absteigend (10 → 0).
+- **Schussverteilung im Zeitverlauf**: Anteil der Treffer je Ringwert (0–10) als gestapeltes Flächendiagramm, normalisiert auf Prozent — vergleichbar über Einheiten mit unterschiedlicher Schussanzahl. Nur sichtbar wenn Einzelschüsse erfasst wurden. 10er oben im Stack, 0er unten. Legende und Tooltip absteigend (10 → 0). **Ein Punkt je Einheit, keine zeitliche Bündelung** (seit September 2026 — vorher je nach Zeitraum zu Tagen/Wochen/Monaten gemittelt, was Veränderungen glättete); gebündelt wird nur der Ringbereich 0–6 zu einem Band. Achse `08.09.26`, Tooltip mit Datum, Uhrzeit und Schusszahl, damit zwei Einheiten am selben Tag unterscheidbar sind (`buildShotDistributionTimeline`).
 
 ### Einheits-Detailansicht — Schuss-Histogramm
 
