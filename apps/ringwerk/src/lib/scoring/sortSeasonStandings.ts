@@ -1,6 +1,6 @@
 import type { ScoringMode, SeasonSortMode } from "@/generated/prisma/client"
 import type { SeasonStandingsEntry } from "./calculateSeasonStandings"
-import { assignSharedRanks } from "./sharedRanks"
+import { assignSharedRanks, sameScore } from "./sharedRanks"
 
 /**
  * Die Metrik, die eine Zeile auf ihren Platz gebracht hat.
@@ -122,8 +122,12 @@ function sortClassic(
     .map((e) => ({ ...e, alternatingBy: null }))
 }
 
-/** Vergleicht zwei Werte in der gegebenen Richtung; fehlende Werte stehen immer hinten. */
+/**
+ * Vergleicht zwei Werte in der gegebenen Richtung; fehlende Werte stehen immer hinten.
+ * Fließkomma-Rauschen gilt als gleich (sameScore) — dieselbe Gleichheit wie in seasonPositions.
+ */
 function compareNullsLast(a: number | null, b: number | null, direction: "asc" | "desc"): number {
+  if (sameScore(a, b)) return 0
   if (a !== null && b !== null) return direction === "asc" ? a - b : b - a
   if (a !== null) return -1
   if (b !== null) return 1
@@ -149,8 +153,8 @@ export function seasonPositions(
     sorted,
     (a, b) =>
       a.meetsMinSeries === b.meetsMinSeries &&
-      value(a) === value(b) &&
-      a.bestRingteiler === b.bestRingteiler
+      sameScore(value(a), value(b)) &&
+      sameScore(a.bestRingteiler, b.bestRingteiler)
   )
 }
 
