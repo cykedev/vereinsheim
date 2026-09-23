@@ -353,6 +353,33 @@ describe("calculateStandings – geteilte Plätze", () => {
   })
 })
 
+describe("calculateStandings – Direktpunkte trennen den Platz", () => {
+  it("gleiche Punkte und gleicher Bestwert, aber direkter Sieg: getrennte Plätze", () => {
+    // A schlägt B (A 7.7), B schlägt C (B 7.7) → A und B je 2 Punkte, Bestwert beide 7.7;
+    // nur der direkte Vergleich trennt sie.
+    const matchups: StandingsMatchup[] = [
+      {
+        id: "m-AB",
+        status: "COMPLETED",
+        homeParticipantId: "A",
+        awayParticipantId: "B",
+        results: [makeResult("A", 96, 3.7, 7.7), makeResult("B", 94, 5.0, 9.0)],
+      },
+      {
+        id: "m-BC",
+        status: "COMPLETED",
+        homeParticipantId: "B",
+        awayParticipantId: "C",
+        results: [makeResult("B", 96, 3.7, 7.7), makeResult("C", 90, 8.0, 18.0)],
+      },
+    ]
+    const rows = calculateStandings([pA, pB, pC], matchups)
+    expect(rows.map((r) => r.participantId)).toEqual(["A", "B", "C"])
+    expect(rows.map((r) => r.bestRingteiler)).toEqual([7.7, 7.7, 18.0])
+    expect(rows.map((r) => r.rank)).toEqual([1, 2, 3])
+  })
+})
+
 describe("hasLeagueResult", () => {
   it("zählt gespielte Duelle und Freilose als Ergebnis", () => {
     expect(hasLeagueResult({ played: 0, byes: 0 })).toBe(false)
