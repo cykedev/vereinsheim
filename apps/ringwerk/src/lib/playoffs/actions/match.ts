@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
-import { getStandingsForCompetition } from "@/lib/standings/queries"
+import { getSeedingStandings } from "@/lib/playoffs/queries"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import { createNextRoundMatchups, getNextRound } from "../calculatePlayoffs"
 import type { PlayoffRound } from "../types"
@@ -107,9 +107,10 @@ async function handleMatchCompletion(
     return
   }
 
-  // Re-Seeding nach Original-Gruppenrang — nach Tabellenposition, nicht nach dem (ggf. geteilten)
-  // Platz, sonst wäre die Setzung bei Gleichstand nicht eindeutig.
-  const standings = await getStandingsForCompetition(competitionId)
+  // Re-Seeding nach Original-Gruppenrang — Gruppentabelle des Liga-Formats (Best-of: Best-of-
+  // Tabelle), nach Tabellenposition, nicht nach dem (ggf. geteilten) Platz, sonst wäre die Setzung
+  // bei Gleichstand nicht eindeutig.
+  const standings = await getSeedingStandings(competitionId)
   const rankMap = new Map(standings.map((s, i) => [s.participantId, i + 1]))
   const nextMatchups = createNextRoundMatchups(winners, rankMap)
 
