@@ -166,11 +166,9 @@ export function calculateBestOfStandings(
   const active = rows.filter((r) => !r.withdrawn)
   const withdrawn = rows.filter((r) => r.withdrawn)
 
+  // Vergibt auch die Plätze (geteilt, wenn nur der Name trennt).
   const sorted = sortStandings(active, headToHead)
 
-  sorted.forEach((r, i) => {
-    r.rank = i + 1
-  })
   withdrawn.forEach((r) => {
     r.rank = sorted.length + 1
   })

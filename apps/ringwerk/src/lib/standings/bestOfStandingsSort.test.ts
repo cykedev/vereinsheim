@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { sortStandings } from "./bestOfStandingsSort"
+import { hasBestOfResult, sortStandings } from "./bestOfStandingsSort"
 import type { BestOfStandingRow, DirectResult, HeadToHead } from "./bestOfStandingsTypes"
 
 // ---------------------------------------------------------------------------
@@ -186,5 +186,63 @@ describe("sortStandings — direct comparison (Kriterium 4)", () => {
     expect(sorted[1].directComparison).toEqual({ kind: "record", wins: 2, losses: 1 })
     expect(sorted[2].directComparison).toEqual({ kind: "record", wins: 1, losses: 2 })
     expect(sorted[3].directComparison).toEqual({ kind: "record", wins: 1, losses: 2 })
+  })
+})
+
+describe("sortStandings — geteilte Plätze", () => {
+  it("ohne Begegnung: alphabetisch, alle auf Platz 1", () => {
+    const rows = [mkRow("Z", "Zeta"), mkRow("A", "Alpha"), mkRow("M", "Mitte")]
+
+    const sorted = sortStandings(rows, new Map())
+
+    expect(sorted.map((r) => r.lastName)).toEqual(["Alpha", "Mitte", "Zeta"])
+    expect(sorted.map((r) => r.rank)).toEqual([1, 1, 1])
+  })
+
+  it("2er-Gleichstand mit gespieltem Direktvergleich: getrennte Plätze", () => {
+    const rows = [mkRow("L", "Alpha", tied), mkRow("W", "Zeta", tied)]
+    const h2h = mkH2H([{ winner: "W", loser: "L", satz: [2, 1] }])
+
+    const sorted = sortStandings(rows, h2h)
+
+    expect(sorted.map((r) => r.rank)).toEqual([1, 2])
+  })
+
+  it("4er-Gleichstand mit Bilanz +1,+1,-1,-1: Plätze 1, 1, 3, 3", () => {
+    const rows = [
+      mkRow("C", "Ccc", tied),
+      mkRow("A", "Aaa", tied),
+      mkRow("D", "Ddd", tied),
+      mkRow("B", "Bbb", tied),
+    ]
+    const h2h = mkH2H([
+      { winner: "B", loser: "A", satz: [2, 1] },
+      { winner: "A", loser: "C", satz: [2, 0] },
+      { winner: "A", loser: "D", satz: [2, 0] },
+      { winner: "C", loser: "B", satz: [2, 1] },
+      { winner: "B", loser: "D", satz: [2, 0] },
+      { winner: "D", loser: "C", satz: [2, 1] },
+    ])
+
+    const sorted = sortStandings(rows, h2h)
+
+    expect(sorted.map((r) => r.participantId)).toEqual(["A", "B", "C", "D"])
+    expect(sorted.map((r) => r.rank)).toEqual([1, 1, 3, 3])
+  })
+
+  it("verschiedene Siege: fortlaufende Plätze", () => {
+    const rows = [mkRow("B", "Bbb", { wins: 1 }), mkRow("A", "Aaa", { wins: 2 })]
+
+    const sorted = sortStandings(rows, new Map())
+
+    expect(sorted.map((r) => r.participantId)).toEqual(["A", "B"])
+    expect(sorted.map((r) => r.rank)).toEqual([1, 2])
+  })
+})
+
+describe("hasBestOfResult", () => {
+  it("zählt nur gespielte Begegnungen als Ergebnis", () => {
+    expect(hasBestOfResult({ played: 0 })).toBe(false)
+    expect(hasBestOfResult({ played: 1 })).toBe(true)
   })
 })

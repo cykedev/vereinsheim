@@ -1,4 +1,13 @@
+import { assignSharedRanks } from "@/lib/scoring/sharedRanks"
 import type { BestOfStandingRow, HeadToHead } from "./bestOfStandingsTypes"
+
+/**
+ * Eine Zeile mit mindestens einer gespielten Begegnung — nur sie trägt Podiumsfarben.
+ * Tabelle und PDF nutzen dieses eine Prädikat.
+ */
+export function hasBestOfResult(row: Pick<BestOfStandingRow, "played">): boolean {
+  return row.played > 0
+}
 
 /**
  * Sorts active rows. Criteria, in order (the table columns mirror them left→right):
@@ -7,7 +16,10 @@ import type { BestOfStandingRow, HeadToHead } from "./bestOfStandingsTypes"
  *   3. duelsWon desc (mehr gewonnene Sätze / Satzverhältnis)
  *   4. direct comparison (head-to-head) within the points-tied group — replaces the old "best value"
  *      (Sportleiter-Entscheid 2026-06-24); uses the MATCH winner, so it is mode-independent
- *   5. lastName localeCompare "de" (deterministic fallback)
+ *   5. lastName, then firstName localeCompare "de" (deterministic fallback)
+ *
+ * Also sets `row.rank`: rows equal on criteria 1–4 (only the name separates them) share the place
+ * ("1, 1, 3"), e.g. before anyone has played or while a tied pair's direct match is still open.
  *
  * Also sets `row.directComparison` on every row so table/PDF can show WHY tied rows are ordered:
  *   - null               → row is alone on (wins, duelDiff, duelsWon); placement is visible from the left columns
@@ -28,6 +40,8 @@ export function sortStandings(
 
   // Partition into maximal runs equal on (wins, duelDiff, duelsWon); resolve each by head-to-head.
   const result: BestOfStandingRow[] = []
+  // Direct balance per row; singletons stay at 0 (criteria 1–3 already separate them).
+  const balances = new Map<string, number>()
   let i = 0
   while (i < base.length) {
     let j = i + 1
@@ -43,20 +57,33 @@ export function sortStandings(
     if (group.length === 1) {
       group[0].directComparison = null
     } else {
-      resolveTieGroup(group, headToHead)
+      for (const [id, balance] of resolveTieGroup(group, headToHead)) balances.set(id, balance)
     }
     result.push(...group)
     i = j
   }
+
+  const ranks = assignSharedRanks(
+    result,
+    (a, b) =>
+      a.wins === b.wins &&
+      a.duelDiff === b.duelDiff &&
+      a.duelsWon === b.duelsWon &&
+      (balances.get(a.participantId) ?? 0) === (balances.get(b.participantId) ?? 0)
+  )
+  result.forEach((r, k) => {
+    r.rank = ranks[k]
+  })
   return result
 }
 
 /**
  * Orders a points-tied group by the direct comparison (Kriterium 4) and annotates each row.
  * Each member's direct balance counts only completed matches against the OTHER group members.
- * Mutates `group` in place (reorders) and sets `directComparison`.
+ * Mutates `group` in place (reorders) and sets `directComparison`. Returns each member's direct
+ * balance, so the caller can tell which rows only the name separates.
  */
-function resolveTieGroup(group: BestOfStandingRow[], headToHead: HeadToHead): void {
+function resolveTieGroup(group: BestOfStandingRow[], headToHead: HeadToHead): Map<string, number> {
   const stat = new Map<string, { wins: number; losses: number; played: number }>()
   for (const m of group) {
     let wins = 0
@@ -83,14 +110,18 @@ function resolveTieGroup(group: BestOfStandingRow[], headToHead: HeadToHead): vo
   group.sort((a, b) => {
     const d = balance(b.participantId) - balance(a.participantId)
     if (d !== 0) return d
-    return a.lastName.localeCompare(b.lastName, "de")
+    return (
+      a.lastName.localeCompare(b.lastName, "de") || a.firstName.localeCompare(b.firstName, "de")
+    )
   })
+
+  const balances = new Map(group.map((m) => [m.participantId, balance(m.participantId)]))
 
   // 2-way tie (the common case): a single direct match decides — or is still open.
   if (group.length === 2) {
     annotatePair(group[0], group[1], headToHead)
     annotatePair(group[1], group[0], headToHead)
-    return
+    return balances
   }
 
   // 3+-way tie: the within-group balance decides the order; annotate honestly per member.
@@ -113,6 +144,7 @@ function resolveTieGroup(group: BestOfStandingRow[], headToHead: HeadToHead): vo
       m.directComparison = { kind: "record", wins: s.wins, losses: s.losses }
     }
   }
+  return balances
 }
 
 /** Annotate `row`'s directComparison for a 2-way tie against `other`. */

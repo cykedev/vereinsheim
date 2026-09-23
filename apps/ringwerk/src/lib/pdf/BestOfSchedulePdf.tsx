@@ -11,6 +11,7 @@ import {
 } from "@/lib/scoring/bestOf"
 import type { DuelSeries } from "@/lib/scoring/bestOf"
 import { formatDirectComparison } from "@/lib/standings/formatDirectComparison"
+import { hasBestOfResult } from "@/lib/standings/bestOfStandingsSort"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
 import { formatDateOnly } from "@vereinsheim/lib/format"
 
@@ -214,7 +215,13 @@ function BestOfStandingsSection({ rows }: { rows: BestOfStandingRow[] }): ReactE
               {/* Rang-Abzeichen */}
               <View style={{ width: WS.rank, alignItems: "center" }}>
                 {!row.withdrawn && (
-                  <View style={[styles.rankBadge, { backgroundColor: rankBadgeColor(row.rank) }]}>
+                  <View
+                    style={[
+                      styles.rankBadge,
+                      // Podiumsfarbe nur mit Ergebnis (0 = neutrales Grau), wie in der Tabelle.
+                      { backgroundColor: rankBadgeColor(hasBestOfResult(row) ? row.rank : 0) },
+                    ]}
+                  >
                     <Text style={styles.rankBadgeText}>{row.rank}</Text>
                   </View>
                 )}
