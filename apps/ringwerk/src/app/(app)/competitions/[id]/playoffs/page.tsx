@@ -4,8 +4,7 @@ import { CalendarDays, Trophy, Users } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
-import { getPlayoffBracket } from "@/lib/playoffs/queries"
-import { getStandingsForCompetition } from "@/lib/standings/queries"
+import { getPlayoffBracket, getSeedingStandings } from "@/lib/playoffs/queries"
 import { db } from "@/lib/db"
 import { PlayoffBracket } from "@/components/app/playoffs/PlayoffBracket"
 import { StartPlayoffsButton } from "@/components/app/playoffs/StartPlayoffsButton"
@@ -33,7 +32,8 @@ export default async function CompetitionPlayoffsPage({ params }: Props) {
   const [competition, bracket, standings, pendingCount] = await Promise.all([
     getCompetitionById(id),
     getPlayoffBracket(id),
-    getStandingsForCompetition(id),
+    // Dieselbe Tabelle, aus der der Start setzt (Best-of: Best-of-Tabelle).
+    getSeedingStandings(id),
     db.matchup.count({ where: { competitionId: id, status: "PENDING" } }),
   ])
 
