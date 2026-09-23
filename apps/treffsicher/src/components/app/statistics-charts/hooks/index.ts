@@ -1,4 +1,4 @@
-export { useAggregatedShotDistribution } from "@/components/app/statistics-charts/hooks/useAggregatedShotDistribution"
+export { useShotDistributionTimeline } from "@/components/app/statistics-charts/hooks/useShotDistributionTimeline"
 export { useHitLocationChartState } from "@/components/app/statistics-charts/hooks/useHitLocationChartState"
 export { useResultTrendChartState } from "@/components/app/statistics-charts/hooks/useResultTrendChartState"
 export { useStatisticsFilteredData } from "@/components/app/statistics-charts/hooks/useStatisticsFilteredData"

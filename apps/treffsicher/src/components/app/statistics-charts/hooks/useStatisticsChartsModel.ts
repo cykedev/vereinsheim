@@ -27,7 +27,7 @@ export function useStatisticsChartsModel({ data, hiddenDisciplineIds, displayTim
   const {
     filterState,
     filteredData,
-    aggregatedShotDistribution,
+    shotDistributionTimeline,
     hitLocationState,
     resultTrendState,
     wellbeingQualityState,
@@ -106,7 +106,7 @@ export function useStatisticsChartsModel({ data, hiddenDisciplineIds, displayTim
     qualityYAxis: wellbeingQualityState.qualityYAxis,
     qualityScoreLabel: wellbeingQualityState.qualityScoreLabel,
     qualityDisplayData: wellbeingQualityState.qualityDisplayData,
-    aggregatedShotDistribution,
+    shotDistributionTimeline,
     shotDistributionChartConfig: presentationState.shotDistributionChartConfig,
     shotDistributionTicks: presentationState.shotDistributionTicks,
   })

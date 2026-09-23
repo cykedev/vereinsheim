@@ -102,7 +102,7 @@ export interface TabsParams {
   qualityYAxis: { domain: [number, number]; ticks: number[] }
   qualityScoreLabel: string
   qualityDisplayData: Array<{ quality: number; displayScore: number }>
-  aggregatedShotDistribution: ShotDistributionTimelinePoint[]
+  shotDistributionTimeline: ShotDistributionTimelinePoint[]
   shotDistributionChartConfig: ChartConfig
   shotDistributionTicks: number[]
 }

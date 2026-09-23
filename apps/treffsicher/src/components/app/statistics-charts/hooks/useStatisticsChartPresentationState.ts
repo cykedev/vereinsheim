@@ -15,7 +15,7 @@ import { useStatisticsChartSeriesData } from "./useStatisticsChartSeriesData"
 interface Params {
   filtered: StatsSession[]
   filteredRadarSessions: RadarComparisonSession[]
-  aggregatedShotDistribution: ShotDistributionTimelinePoint[]
+  shotDistributionTimeline: ShotDistributionTimelinePoint[]
   hitLocationTrendData: HitLocationTrendDataPoint[]
   metricLabel: string
   wellbeingScoreLabel: string
@@ -27,7 +27,7 @@ interface Params {
 export function useStatisticsChartPresentationState({
   filtered,
   filteredRadarSessions,
-  aggregatedShotDistribution,
+  shotDistributionTimeline,
   hitLocationTrendData,
   metricLabel,
   wellbeingScoreLabel,
@@ -57,8 +57,8 @@ export function useStatisticsChartPresentationState({
     [hitLocationTrendData.length, maxTicks]
   )
   const shotDistributionTicks = useMemo(
-    () => buildIndexTicks(aggregatedShotDistribution.length, maxTicks),
-    [aggregatedShotDistribution.length, maxTicks]
+    () => buildIndexTicks(shotDistributionTimeline.length, maxTicks),
+    [shotDistributionTimeline.length, maxTicks]
   )
 
   const seriesData = useStatisticsChartSeriesData({
