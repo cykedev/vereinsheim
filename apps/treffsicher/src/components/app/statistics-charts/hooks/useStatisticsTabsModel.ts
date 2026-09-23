@@ -56,7 +56,7 @@ export function useStatisticsTabsModel(params: TabsParams): StatisticsTabsState 
     qualityYAxis,
     qualityScoreLabel,
     qualityDisplayData,
-    aggregatedShotDistribution,
+    shotDistributionTimeline,
     shotDistributionChartConfig,
     shotDistributionTicks,
   } = params
@@ -143,7 +143,7 @@ export function useStatisticsTabsModel(params: TabsParams): StatisticsTabsState 
           selectedDiscipline,
         },
         distribution: {
-          aggregatedShotDistribution,
+          shotDistributionTimeline,
           shotDistributionChartConfig,
           shotDistributionTicks,
         },
@@ -151,7 +151,7 @@ export function useStatisticsTabsModel(params: TabsParams): StatisticsTabsState 
     }
   }, [
     overviewGroups,
-    aggregatedShotDistribution,
+    shotDistributionTimeline,
     barData,
     disciplineFilter,
     displayTimeZone,

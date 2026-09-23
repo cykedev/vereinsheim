@@ -148,7 +148,7 @@ export interface QualityTabModel {
     selectedDiscipline: DisciplineForStats | null
   }
   distribution: {
-    aggregatedShotDistribution: ShotDistributionTimelinePoint[]
+    shotDistributionTimeline: ShotDistributionTimelinePoint[]
     shotDistributionChartConfig: ChartConfig
     shotDistributionTicks: number[]
   }

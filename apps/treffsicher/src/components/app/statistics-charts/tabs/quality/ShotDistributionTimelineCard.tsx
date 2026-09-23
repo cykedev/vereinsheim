@@ -25,9 +25,9 @@ function formatRingLabel(value: string): string {
 }
 
 export function ShotDistributionTimelineCard({ model }: Props) {
-  const { aggregatedShotDistribution, shotDistributionChartConfig, shotDistributionTicks } = model
+  const { shotDistributionTimeline, shotDistributionChartConfig, shotDistributionTicks } = model
 
-  if (aggregatedShotDistribution.length === 0) return null
+  if (shotDistributionTimeline.length === 0) return null
 
   return (
     <Card>
@@ -35,21 +35,21 @@ export function ShotDistributionTimelineCard({ model }: Props) {
         <CardTitle className="flex items-baseline gap-2">
           Schussverteilung im Zeitverlauf
           <span className="text-base font-normal text-muted-foreground">
-            Anteil je Ringwert in % · aggregiert & gebündelt
+            Anteil je Ringwert in % · je Einheit, 0–6 gebündelt
           </span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={shotDistributionChartConfig} className="h-[300px] w-full">
           <AreaChart
-            data={aggregatedShotDistribution}
+            data={shotDistributionTimeline}
             margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
           >
             <CartesianGrid stroke="var(--border)" strokeOpacity={0.4} vertical={false} />
             <XAxis
               dataKey="i"
               ticks={shotDistributionTicks}
-              tickFormatter={(index: number) => aggregatedShotDistribution[index]?.dateLabel ?? ""}
+              tickFormatter={(index: number) => shotDistributionTimeline[index]?.dateLabel ?? ""}
               tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}

@@ -8,7 +8,7 @@ interface Params {
   displayTimeZone: string
 }
 
-export function useAggregatedShotDistribution({
+export function useShotDistributionTimeline({
   filteredShotDistribution,
   displayTimeZone,
 }: Params): ShotDistributionTimelinePoint[] {

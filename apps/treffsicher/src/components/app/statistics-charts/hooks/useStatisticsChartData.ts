@@ -1,6 +1,6 @@
 import { CHART_TIME_AXIS_MAX_TICKS } from "@/components/app/statistics-charts/constants"
 import {
-  useAggregatedShotDistribution,
+  useShotDistributionTimeline,
   useHitLocationChartState,
   useResultTrendChartState,
   useStatisticsChartPresentationState,
@@ -62,10 +62,10 @@ export function useStatisticsChartData({
     filteredRadarSessions,
   } = filteredData
 
-  // Aggregation vor der Praesentation:
-  // Die Tabs brauchen bereits verdichtete Reihen, damit die Komponenten keine
-  // doppelte Transform-Logik enthalten.
-  const aggregatedShotDistribution = useAggregatedShotDistribution({
+  // Aufbereitung vor der Praesentation:
+  // Die Tabs bekommen fertige Reihen (ein Punkt je Einheit), damit die
+  // Komponenten keine doppelte Transform-Logik enthalten.
+  const shotDistributionTimeline = useShotDistributionTimeline({
     filteredShotDistribution,
     displayTimeZone,
   })
@@ -100,7 +100,7 @@ export function useStatisticsChartData({
   const presentationState = useStatisticsChartPresentationState({
     filtered,
     filteredRadarSessions,
-    aggregatedShotDistribution,
+    shotDistributionTimeline,
     hitLocationTrendData: hitLocationState.hitLocationTrendData,
     metricLabel,
     wellbeingScoreLabel: wellbeingQualityState.wellbeingScoreLabel,
@@ -112,7 +112,7 @@ export function useStatisticsChartData({
   return {
     filterState,
     filteredData,
-    aggregatedShotDistribution,
+    shotDistributionTimeline,
     hitLocationState,
     resultTrendState,
     wellbeingQualityState,
