@@ -2,7 +2,7 @@
 id: pdf-public-urls
 type: subsystem
 title: "pdf-public-urls"
-keywords: [öffentliche PDF, public URL, Veröffentlichung, Webseiten-Verlinkung, publicSlug, öffentlicher Link, PDF-Export, caching, 24h-Cache, Cache-Tag, publicPdfCache, revalidatePublicPdf, bcrypt-Passwort, QR-Code, Aushang, Zugangscode, publicAccessToken, Passwort-Bypass]
+keywords: [öffentliche PDF, public URL, Veröffentlichung, Webseiten-Verlinkung, publicSlug, öffentlicher Link, PDF-Export, caching, 24h-Cache, Cache-Tag, publicPdfCache, revalidatePublicPdf, bcrypt-Passwort, QR-Code, Aushang, Zugangscode, publicAccessToken, Passwort-Bypass, Kopf auf jeder Seite, fixed]
 tags: [feature]
 feature_of: ["[[ringwerk]]"]
 documented_in: ["[[ringwerk-features#Öffentliche PDF-URL (Website-Verlinkung)]]"]
@@ -22,9 +22,9 @@ Full-Route-Cache, den ein `revalidatePath` treffen könnte.
 
 Die **intern** heruntergeladenen Haupt-PDFs (`/api/competitions/[id]/pdf/{schedule,playoffs,ranking,
 standings}`) eines veröffentlichten Wettbewerbs tragen rechts im Seitenkopf einen QR-Code und die
-öffentliche URL. Der Kopf wiederholt sich seit 2026-10-03 auf **jeder** Seite (react-pdf `fixed`,
-auch in den öffentlichen PDFs, dort ohne QR-Code), weil Aushänge oft nur einzelne Seiten zeigen.
-Die Playoff-Detailseiten tragen den Code seither ebenfalls. Gedacht ist das für Aushänge im Vereinsheim. Die Kopfspalte rendert
+öffentliche URL. Gedacht ist das für Aushänge im Vereinsheim. Weil dort oft nur einzelne Seiten
+hängen, wiederholt sich der ganze Kopf auf **jeder** Seite (react-pdf `fixed`; auch in den
+öffentlichen PDFs, dort ohne QR-Code), Playoff-Detailseiten eingeschlossen. Die Kopfspalte rendert
 `lib/pdf/HeaderMeta.tsx`, den Vektorpfad (waagerechte Läufe, keine Einzelquadrate) erzeugt
 `lib/pdf/qrMatrix.ts`. Den Link bauen die reinen Helfer in `lib/competitions/publicPdfLink.ts`, die
 DB-Abfrage steckt in `publicPdfLinkQueries.ts`.

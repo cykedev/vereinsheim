@@ -555,7 +555,7 @@ export async function createLeague(formData: FormData): Promise<ActionResult>
   Block ändert, rendert den ungünstigsten Fall: größtes Bracket (Achtelfinale), längster Titel,
   60-Zeichen-Slug. Die Seitenzahl wird per Test festgehalten (Beispiel `PlayoffsPdf.test.tsx`).
   Das Achtelfinal-Bracket füllt die Querformat-Höhe fast ganz aus. Schon ein paar Punkt mehr
-  Kopfhöhe schieben es auf eine eigene, kopflose Seite.
+  Kopfhöhe schieben es auf eine eigene Seite.
 - **react-pdf bricht Wörter ohne Leerzeichen nicht um**: Eine URL oder ein Slug läuft sonst über
   den Rand bzw. in den Nachbarblock. Solche Tokens selbst in Zeilen schneiden (`splitDisplayUrl`
   in `lib/pdf/HeaderMeta.tsx`), der Spalte eine feste Breite geben und die Silbentrennung
