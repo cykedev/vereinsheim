@@ -23,6 +23,11 @@ export function PublishSection({ form, competition }: Props) {
     removePublicPassword,
     setRemovePublicPassword,
     hasExistingPassword,
+    publicQrBypass,
+    setPublicQrBypass,
+    rotatePublicAccessToken,
+    setRotatePublicAccessToken,
+    hasExistingAccessToken,
   } = form
 
   return (
@@ -103,6 +108,42 @@ export function PublishSection({ form, competition }: Props) {
                 />
                 <Label htmlFor="removePublicPassword" className="text-sm font-normal">
                   Passwort entfernen
+                </Label>
+              </div>
+            )}
+          </div>
+
+          {/* Marker: dieser Block wurde gerendert — sonst darf das Update das Token nicht anfassen */}
+          <input type="hidden" name="publicAccessFields" value="1" />
+          <div className="space-y-2">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="publicQrBypass"
+                name="publicQrBypass"
+                checked={publicQrBypass}
+                onCheckedChange={(v) => setPublicQrBypass(v === true)}
+                disabled={isPending}
+              />
+              <div className="space-y-1">
+                <Label htmlFor="publicQrBypass">QR-Code auf Ausdrucken öffnet ohne Passwort</Label>
+                <p className="text-xs text-muted-foreground">
+                  Intern heruntergeladene PDFs tragen einen QR-Code zum öffentlichen PDF. Ist diese
+                  Option aktiv, enthält er einen geheimen Zugangscode. Wer den Ausdruck sieht, kommt
+                  ohne Passwort hinein. Wirkt nur, wenn ein Passwort gesetzt ist.
+                </p>
+              </div>
+            </div>
+            {publicQrBypass && hasExistingAccessToken && (
+              <div className="flex items-center gap-2 pl-7">
+                <Checkbox
+                  id="rotatePublicAccessToken"
+                  name="rotatePublicAccessToken"
+                  checked={rotatePublicAccessToken}
+                  onCheckedChange={(v) => setRotatePublicAccessToken(v === true)}
+                  disabled={isPending}
+                />
+                <Label htmlFor="rotatePublicAccessToken" className="text-sm font-normal">
+                  Neuen Zugangscode erzeugen (bisherige Ausdrucke öffnen dann wieder mit Passwort)
                 </Label>
               </div>
             )}

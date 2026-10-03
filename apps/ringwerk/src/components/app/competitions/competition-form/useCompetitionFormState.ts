@@ -70,6 +70,12 @@ export function useCompetitionFormState({ competition, action }: Args) {
 
   const hasExistingPassword = competition?.hasPublicPassword ?? false
 
+  const [publicQrBypass, setPublicQrBypass] = useState<boolean>(
+    competition?.hasPublicAccessToken ?? false
+  )
+  const [rotatePublicAccessToken, setRotatePublicAccessToken] = useState<boolean>(false)
+  const hasExistingAccessToken = competition?.hasPublicAccessToken ?? false
+
   useEffect(() => {
     if (state && "success" in state && state.success) {
       toast.success("Wettbewerb gespeichert.")
@@ -186,6 +192,11 @@ export function useCompetitionFormState({ competition, action }: Args) {
     removePublicPassword,
     setRemovePublicPassword,
     hasExistingPassword,
+    publicQrBypass,
+    setPublicQrBypass,
+    rotatePublicAccessToken,
+    setRotatePublicAccessToken,
+    hasExistingAccessToken,
     nameError,
     disciplineIdError,
     generalError,
