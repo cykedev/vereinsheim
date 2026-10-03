@@ -557,6 +557,7 @@ Wettbewerbe können mit `isPublic = true` und einem `publicSlug` markiert werden
 - **Cache:** PDF-Buffer 24h via `unstable_cache` (keyed by competitionId + phaseTag, getaggt über `publicPdfCacheTag(competitionId)` — die **ID**, nicht den umbenennbaren Slug); Auth-Check läuft auf jeder Anfrage. Invalidierung via `revalidatePublicPdf(competitionId)` aus **jeder** schreibenden Action, die Daten im PDF verändert (Ergebnisse, Serien, Playoff-Duelle, Teilnehmer, Wettbewerb/Status). Warum die ID: [[public-pdf-cache-tag-orphaning]].
 - **Berechtigung:** Schalter im Edit-Formular für ADMIN/MANAGER. Öffentliche Route ist unauthentisiert (außer optional via Basic-Auth-Passwort).
 - **UI-Indikator:** Wettbewerbe mit `isPublic = true` erhalten in der Competitions-Liste (ACTIVE, DRAFT) ein "Öffentlich"-Badge.
+- **QR-Code auf internen Exporten:** Intern heruntergeladene Haupt-PDFs eines veröffentlichten Wettbewerbs tragen QR-Code + öffentliche URL (Domain aus dem Request), öffentlich ausgelieferte PDFs nie. Optional öffnet der QR-Code über ein geheimes Zugangs-Token (`?k=`) ohne Passwort, rotierbar im Formular. Details: [[pdf-public-urls]].
 
 ---
 
