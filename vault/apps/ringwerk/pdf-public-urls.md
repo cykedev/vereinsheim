@@ -21,8 +21,10 @@ Full-Route-Cache, den ein `revalidatePath` treffen könnte.
 ## QR-Code auf internen Exporten (seit 2026-10-03)
 
 Die **intern** heruntergeladenen Haupt-PDFs (`/api/competitions/[id]/pdf/{schedule,playoffs,ranking,
-standings}`) eines veröffentlichten Wettbewerbs tragen rechts im Seitenkopf (Seite 1) einen QR-Code
-und die öffentliche URL. Gedacht ist das für Aushänge im Vereinsheim. Die Kopfspalte rendert
+standings}`) eines veröffentlichten Wettbewerbs tragen rechts im Seitenkopf einen QR-Code und die
+öffentliche URL. Der Kopf wiederholt sich seit 2026-10-03 auf **jeder** Seite (react-pdf `fixed`,
+auch in den öffentlichen PDFs, dort ohne QR-Code), weil Aushänge oft nur einzelne Seiten zeigen.
+Die Playoff-Detailseiten tragen den Code seither ebenfalls. Gedacht ist das für Aushänge im Vereinsheim. Die Kopfspalte rendert
 `lib/pdf/HeaderMeta.tsx`, den Vektorpfad (waagerechte Läufe, keine Einzelquadrate) erzeugt
 `lib/pdf/qrMatrix.ts`. Den Link bauen die reinen Helfer in `lib/competitions/publicPdfLink.ts`, die
 DB-Abfrage steckt in `publicPdfLinkQueries.ts`.
