@@ -44,7 +44,9 @@ DB-Abfrage steckt in `publicPdfLinkQueries.ts`.
   (`hasValidAccessToken`, `timingSafeEqual`) die Basic-Auth weg. Ein falsches oder fehlendes Token
   führt in den normalen 401-Pfad. Klartext, weil der Export das Token in den QR-Code schreiben
   muss. Es geht nie an den Client (`CompetitionDetail.hasPublicAccessToken`). „Neuen Zugangscode
-  erzeugen“ rotiert es und macht alte Ausdrucke wirkungslos.
+  erzeugen“ rotiert es und macht alte Ausdrucke wirkungslos. **Passwort entfernen löscht das Token mit**
+  (User-Entscheid 2026-10-03): sonst machte ein später neu gesetztes Passwort alte Ausdrucke still
+  wieder wirksam. Das Formular weist darauf hin.
 - **Gedruckter Text = URL ohne Token**, nur der QR-Code trägt es.
 - **Öffentliche PDFs tragen nie einen QR-Code.** Die Builder der öffentlichen Route übergeben kein
   `publicLink` (für alle vier Phasen getestet). Deshalb hängen Cache-Key und Tag weder vom Host noch
