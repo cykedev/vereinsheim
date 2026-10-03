@@ -150,14 +150,16 @@ async function createTestCompetition(
     createdAt: Date
   }>
 ) {
-  // Find or create a test user to satisfy createdByUserId
+  // Find or create a test user to satisfy createdByUserId. Role USER on purpose: the startup seed
+  // only creates the SEED_ADMIN account while no ADMIN exists — a leftover test admin in a fresh
+  // dev DB would silently suppress it.
   const user =
     (await db.user.findFirst()) ??
     (await db.user.create({
       data: {
         email: `test-${Date.now()}@example.com`,
         name: "Test",
-        role: "ADMIN",
+        role: "USER",
         // bcrypt hash for "password" — only used in tests, never validated
         passwordHash: "$2b$10$placeholder.hash.for.tests.only",
       },
