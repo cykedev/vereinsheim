@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs"
 import { SLUG_REGEX } from "@/lib/competitions/publicSlug"
 import { resolveSlug } from "@/lib/competitions/publicSlugQueries"
 import { publicPdfCacheTag } from "@/lib/competitions/publicPdfCache"
+import { hasValidAccessToken } from "@/lib/competitions/publicAccess"
 import { hasPlayoffsStarted, getPlayoffBracket } from "@/lib/playoffs/queries"
 import {
   getCompetitionById,
@@ -51,7 +52,13 @@ export async function GET(
   }
 
   // === Password check ===================================================
-  if (competition.publicPasswordHash) {
+  // The QR code on an internally exported PDF may carry `?k=<token>` — a valid token replaces
+  // the password prompt. A wrong or missing token falls through to Basic auth unchanged.
+  const viaToken = hasValidAccessToken(
+    new URL(req.url).searchParams.get("k"),
+    competition.publicAccessToken
+  )
+  if (competition.publicPasswordHash && !viaToken) {
     const authHeader = req.headers.get("authorization")
     const provided = parseBasicAuthPassword(authHeader)
     const ok = provided != null && (await bcrypt.compare(provided, competition.publicPasswordHash))
