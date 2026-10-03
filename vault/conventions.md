@@ -179,7 +179,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 
 ## 9. Aus Lernlog übernommen
 
-<!-- Zuletzt konsolidiert: 2026-09-09 -->
+<!-- Zuletzt konsolidiert: 2026-10-03 -->
 
 - **Bedingt ausgeblendete Formularfelder brauchen im Update Drei-Wege-Semantik**: Ein Feld, das
   das Formular nur bedingt rendert, fehlt im ausgeblendeten Zustand komplett in der FormData —
@@ -224,3 +224,9 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Wettbewerb", „Liga mit Ergebnissen", „mehr Zeilen als die Vorschau"). Was die Daten nicht
   hergeben, steht im Validierungsbericht ausdrücklich als **„nicht belegt"** — mit dem Test, der den
   Pfad stattdessen abdeckt — und zählt nicht stillschweigend als geprüft.
+
+- **Nach `pnpm add` in einer App `pnpm install --frozen-lockfile`**: `pnpm --filter <app> add`
+  kann Peer-Varianten neu auflösen, ohne die `node_modules`-Links der **anderen** App
+  nachzuziehen. Deren Gate fällt dann mit `Cannot find package …` aus, obwohl der Diff sauber ist.
+  Ein `pnpm install --frozen-lockfile` verlinkt neu. Den Lockfile-Diff auf Änderungen in fremden
+  Importern prüfen: Sie invalidieren deren Image-Build-Cache.
