@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import type { MatchupListItem, MatchupParticipant, ScheduleStatus } from "./types"
+import { scheduleRegenerationBlocker, type ScheduleResultCounts } from "./regeneration"
 
 // Rohtyp aus Prisma-Select (inkl. verschachteltem LP-Status und Disziplin)
 type RawParticipant = {
@@ -87,15 +88,28 @@ export async function getMatchupsForCompetition(competitionId: string): Promise<
   }))
 }
 
-export async function getScheduleStatus(competitionId: string): Promise<ScheduleStatus> {
-  const [total, completed] = await Promise.all([
-    db.matchup.count({ where: { competitionId } }),
+/** Erfasste Ergebnisse einer Liga — Grundlage der Sperre für „Spielplan neu generieren“. */
+export async function getScheduleResultCounts(
+  competitionId: string
+): Promise<ScheduleResultCounts> {
+  const [completed, walkover, series, playoffs] = await Promise.all([
     db.matchup.count({ where: { competitionId, status: "COMPLETED" } }),
+    db.matchup.count({ where: { competitionId, status: "WALKOVER" } }),
+    db.series.count({ where: { matchup: { competitionId } } }),
+    db.playoffMatch.count({ where: { competitionId } }),
+  ])
+  return { completed, walkover, series, playoffs }
+}
+
+export async function getScheduleStatus(competitionId: string): Promise<ScheduleStatus> {
+  const [total, counts] = await Promise.all([
+    db.matchup.count({ where: { competitionId } }),
+    getScheduleResultCounts(competitionId),
   ])
 
   return {
     hasSchedule: total > 0,
-    hasCompletedMatchups: completed > 0,
     totalMatchups: total,
+    regenerationBlocker: scheduleRegenerationBlocker(counts),
   }
 }

@@ -79,13 +79,13 @@ export default async function CompetitionSchedulePage({ params }: Props) {
         }
       />
 
-      {/* Hinweis bei abgeschlossenen Paarungen */}
-      {canManage && scheduleStatus.hasCompletedMatchups && competition.status === "ACTIVE" && (
-        <p className="text-sm text-muted-foreground">
-          Der Spielplan kann nicht mehr neu generiert werden, da bereits{" "}
-          {scheduleStatus.totalMatchups} Paarung(en) abgeschlossen sind.
-        </p>
-      )}
+      {/* Hinweis, warum der Spielplan nicht mehr neu generiert werden kann */}
+      {canManage &&
+        competition.status === "ACTIVE" &&
+        scheduleStatus.hasSchedule &&
+        scheduleStatus.regenerationBlocker && (
+          <p className="text-sm text-muted-foreground">{scheduleStatus.regenerationBlocker}</p>
+        )}
 
       {/* Spielplan */}
       <ScheduleView

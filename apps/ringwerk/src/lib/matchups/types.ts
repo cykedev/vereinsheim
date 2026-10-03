@@ -37,6 +37,7 @@ export interface MatchupListItem {
 
 export interface ScheduleStatus {
   hasSchedule: boolean
-  hasCompletedMatchups: boolean
   totalMatchups: number
+  /** Warum (neu) generieren gesperrt ist — null, solange noch kein Ergebnis erfasst ist. */
+  regenerationBlocker: string | null
 }
