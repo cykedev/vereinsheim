@@ -225,6 +225,16 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   hergeben, steht im Validierungsbericht ausdrücklich als **„nicht belegt"** — mit dem Test, der den
   Pfad stattdessen abdeckt — und zählt nicht stillschweigend als geprüft.
 
+- **Eigenschaftstests per Mutation gegenprüfen**: Ein Test auf eine Eigenschaft („ausgeglichen“)
+  kann auch von einer schlechteren Variante erfüllt werden. Den Kern der Logik testweise
+  vereinfachen (z.B. eine Paritätsregel durch `true` ersetzen) und prüfen, ob ein Test rot wird.
+  Bleibt alles grün, fehlt die Eigenschaft, die die Regel eigentlich liefert (Beispiel:
+  `apps/ringwerk/src/lib/matchups/roundRobin.test.ts`, Seitenwechsel statt nur Bilanz).
+
+- **Aussagen über UI-Pfade an der UI prüfen, nicht an der Action**: Was eine Server-Action erlaubt,
+  muss die Oberfläche nicht anbieten. Bevor Doku oder eine Antwort an den User sagt „das geht
+  über X“, den Render-Pfad prüfen (Bedingung, unter der der Button erscheint).
+
 - **Nach `pnpm add` in einer App `pnpm install --frozen-lockfile`**: `pnpm --filter <app> add`
   kann Peer-Varianten neu auflösen, ohne die `node_modules`-Links der **anderen** App
   nachzuziehen. Deren Gate fällt dann mit `Cannot find package …` aus, obwohl der Diff sauber ist.
