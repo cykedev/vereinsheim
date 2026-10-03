@@ -121,7 +121,11 @@ export function PublishSection({ form, competition }: Props) {
                 id="publicQrBypass"
                 name="publicQrBypass"
                 checked={publicQrBypass}
-                onCheckedChange={(v) => setPublicQrBypass(v === true)}
+                onCheckedChange={(v) => {
+                  setPublicQrBypass(v === true)
+                  // Ein vergessener Rotations-Haken soll beim Wiedereinschalten nicht still mitlaufen.
+                  if (v !== true) setRotatePublicAccessToken(false)
+                }}
                 disabled={isPending}
               />
               <div className="space-y-1">
