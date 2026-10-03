@@ -235,6 +235,14 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   muss die Oberfläche nicht anbieten. Bevor Doku oder eine Antwort an den User sagt „das geht
   über X“, den Render-Pfad prüfen (Bedingung, unter der der Button erscheint).
 
+- **Prüfen und Löschen gehören in dieselbe Transaktion**: Eine Sperre („erst löschen, wenn noch kein
+  Ergebnis existiert“) außerhalb der Transaktion lässt ein Zeitfenster offen. Prüfung, Löschen und
+  Neuanlage laufen deshalb in **einer** interaktiven Transaktion (bei Konfliktgefahr
+  `isolationLevel: "Serializable"`), und der Löschbefehl trägt die Bedingung zusätzlich selbst
+  (z.B. `series: { none: {} }`). Vorher den Fremdschlüssel prüfen: Ein `ON DELETE SET NULL` lässt
+  abhängige Daten still verwaisen, statt zu scheitern (Beispiel:
+  `apps/ringwerk/src/lib/matchups/actions.ts`).
+
 - **Nach `pnpm add` in einer App `pnpm install --frozen-lockfile`**: `pnpm --filter <app> add`
   kann Peer-Varianten neu auflösen, ohne die `node_modules`-Links der **anderen** App
   nachzuziehen. Deren Gate fällt dann mit `Cannot find package …` aus, obwohl der Diff sauber ist.
