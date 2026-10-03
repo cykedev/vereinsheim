@@ -2,7 +2,7 @@
 id: league-mode
 type: subsystem
 title: "league-mode"
-keywords: [Liga-Modus, Ligabetrieb, Rundenturnier, Spielplan, Circle-Method, round robin, league mode, Tabellen, Doppelrunde, Heimrecht, Seitenverteilung, Berger-Tabelle, A/B-Ausgleich]
+keywords: [Liga-Modus, Ligabetrieb, Rundenturnier, Spielplan, Circle-Method, round robin, league mode, Tabellen, Doppelrunde, Heimrecht, Seitenverteilung, Berger-Tabelle, A/B-Ausgleich, Spielplan neu generieren, Regenerierung]
 tags: [feature]
 feature_of: ["[[ringwerk]]"]
 documented_in: ["[[ringwerk-features#Liga-Modus (LEAGUE)]]"]
@@ -26,10 +26,12 @@ bleiben).
   Runde links, er war also immer A. Gemeldet am 2026-10-02 an einer Best-of-Liga mit 5 Schützen.
 - **Für die Wertung ist A/B bedeutungslos** (`scoring/bestOf.ts` ist symmetrisch). Der Ausgleich
   betrifft nur Darstellung und Vereinsgepflogenheit.
-- **Bestehende Spielpläne bleiben unverändert.** Wirksam wird der Ausgleich nur bei neu
-  generierten Spielplänen. Die UI bietet „Spielplan generieren“ nur an, solange die Liga **gar
-  keine** Paarungen hat (`getScheduleStatus().hasSchedule`). Ein bestehender Plan lässt sich dort
-  also nicht neu generieren. Die Action selbst erlaubt es, solange nichts abgeschlossen ist, und
-  löscht dabei seit 2026-10-03 auch die alten Freilose (vorher blieben BYE-Zeilen stehen, und
-  jeder hatte danach zwei Freilose je Runde).
-
+- **Neu generieren (seit 2026-10-03):** Auf der Spielplan-Seite erscheint „Spielplan neu
+  generieren“, solange in der Liga noch **kein Ergebnis** erfasst ist. Gesperrt ist es bei einer
+  entschiedenen Paarung (`COMPLETED`/`WALKOVER`), bei einer Serie an irgendeiner Paarung und bei
+  gestarteten Playoffs. Die Regel steht einmal in `lib/matchups/regeneration.ts`, Seite und Action
+  nutzen beide sie. Die Serien-Prüfung ist nötig, weil eine Best-of-Paarung `PENDING` bleibt,
+  bis alle Duelle entschieden sind, und `Series.matchupId` auf `ON DELETE SET NULL` steht. Ein
+  Löschen ließe erfasste Duelle still verwaisen. Beim Neu-Generieren werden offene Paarungen und
+  Freilose gelöscht, Spieltage und Gegner ändern sich, das öffentliche PDF wird invalidiert
+  (`revalidatePublicPdf`, stale-while-revalidate: der erste Abruf danach kann noch alt sein).
