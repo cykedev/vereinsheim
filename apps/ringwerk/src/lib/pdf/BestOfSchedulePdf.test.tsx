@@ -5,6 +5,32 @@ import { createElement, type ReactElement } from "react"
 import { BestOfSchedulePdf, type BestOfSchedulePdfProps } from "@/lib/pdf/BestOfSchedulePdf"
 import type { BestOfStandingRow } from "@/lib/standings/queries"
 
+const LINK = {
+  displayUrl: "https://ringwerk.example.org/api/public/c/liga-2026/pdf",
+  qrUrl: "https://ringwerk.example.org/api/public/c/liga-2026/pdf",
+}
+
+function pageCount(buffer: Buffer): number {
+  return buffer.toString("latin1").match(/\/Type\s*\/Page(?!s)/g)?.length ?? 0
+}
+
+function occurrences(text: string, needle: string): number {
+  return text.split(needle).length - 1
+}
+
+/** 60 open pairings across 12 participants — enough for several pages. */
+function manyMatchups(round: string) {
+  return Array.from({ length: 60 }, (_, i) => ({
+    id: `m${i}`,
+    round,
+    roundIndex: Math.floor(i / 6) + 1,
+    status: "PENDING",
+    homeParticipant: { id: `h${i}`, firstName: "Anna", lastName: `Huber-${i}`, withdrawn: false },
+    awayParticipant: { id: `a${i}`, firstName: "Bert", lastName: `Schmidt-${i}`, withdrawn: false },
+    results: [],
+  }))
+}
+
 /**
  * Extract readable text from a PDF buffer.
  * Decompresses FlateDecode streams and decodes hex-encoded text in TJ operators.
@@ -147,5 +173,33 @@ describe("BestOfSchedulePdf — Direktvergleich column", () => {
   it("prints no public URL without a public link", async () => {
     const text = extractPdfText(await render(baseProps))
     expect(text).not.toContain("/api/public/c/")
+  })
+})
+
+describe("header on every page", () => {
+  // Printouts are hung up page by page — every page needs title, date, QR code and URL.
+  it("repeats the header with the public link on every page", async () => {
+    const buffer = await renderToBuffer(
+      createElement(BestOfSchedulePdf, {
+        leagueName: "Bezirksliga 2026",
+        disciplineName: "Luftgewehr",
+        displayTimeZone: "Europe/Berlin",
+        scoringMode: "RINGTEILER",
+        disciplineId: "disc-1",
+        groupBestOf: 3,
+        groupPlayAllDuels: true,
+        groupTiebreaker1: null,
+        groupTiebreaker2: null,
+        standings: [],
+        matchups: manyMatchups("FIRST_LEG") as unknown as BestOfSchedulePdfProps["matchups"],
+        generatedAt: new Date("2026-10-03T10:00:00.000Z"),
+        publicLink: LINK,
+      }) as ReactElement<DocumentProps>
+    )
+    const pages = pageCount(buffer)
+    const text = extractPdfText(buffer)
+    expect(pages).toBeGreaterThanOrEqual(2)
+    expect(occurrences(text, "Erstellt:")).toBe(pages)
+    expect(occurrences(text, "api/public/c/liga-2026/pdf")).toBe(pages)
   })
 })
