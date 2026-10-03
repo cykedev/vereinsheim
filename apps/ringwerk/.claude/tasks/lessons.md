@@ -13,6 +13,7 @@ Format: Datum | Fehler | Regel die ihn verhindert
 
 ## Offen
 
+<!-- 2026-10-03 (A/B-Ausgleich): 2 Einträge direkt nach vault/conventions.md §9 (Mutation gegen Eigenschaftstests; UI-Pfade an der UI prüfen). -->
 <!-- 2026-10-03: 4 Einträge konsolidiert (1 ENFORCE-Fix publicSlug.test.ts, 2 → ringwerk-code-conventions, 1 → vault/conventions.md §9). -->
 
 ## Abgeschlossen
