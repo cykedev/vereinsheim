@@ -13,7 +13,8 @@ import type { DuelSeries } from "@/lib/scoring/bestOf"
 import { formatDirectComparison } from "@/lib/standings/formatDirectComparison"
 import { hasBestOfResult } from "@/lib/standings/bestOfStandingsSort"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
-import { formatDateOnly } from "@vereinsheim/lib/format"
+import { HeaderMeta } from "@/lib/pdf/HeaderMeta"
+import type { PublicPdfLink } from "@/lib/competitions/publicPdfLink"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,8 @@ export interface BestOfSchedulePdfProps {
   standings: BestOfStandingRow[]
   matchups: MatchupListItem[]
   generatedAt: Date
+  /** Nur interne Exporte (nie die öffentliche Route): QR-Code zum öffentlichen PDF. */
+  publicLink?: PublicPdfLink | null
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -160,11 +163,13 @@ function PdfHeader({
   disciplineName,
   generatedAt,
   displayTimeZone,
+  publicLink,
 }: {
   leagueName: string
   disciplineName: string
   generatedAt: Date
   displayTimeZone: string
+  publicLink?: PublicPdfLink | null
 }): ReactElement {
   return (
     <View style={styles.headerBlock}>
@@ -172,9 +177,11 @@ function PdfHeader({
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Spielplan &amp; Tabelle</Text>
       </View>
-      <Text style={styles.headerDate}>
-        Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
-      </Text>
+      <HeaderMeta
+        generatedAt={generatedAt}
+        displayTimeZone={displayTimeZone}
+        publicLink={publicLink}
+      />
     </View>
   )
 }
@@ -432,6 +439,7 @@ export function BestOfSchedulePdf({
   matchups,
   generatedAt,
   displayTimeZone,
+  publicLink,
 }: BestOfSchedulePdfProps): ReactElement {
   return (
     <Document title={`${leagueName} – Spielplan`} author="Ringwerk" creator="Ringwerk">
@@ -442,6 +450,7 @@ export function BestOfSchedulePdf({
           disciplineName={disciplineName}
           generatedAt={generatedAt}
           displayTimeZone={displayTimeZone}
+          publicLink={publicLink}
         />
 
         {/* Tabelle */}

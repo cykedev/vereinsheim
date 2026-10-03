@@ -131,4 +131,19 @@ describe("BestOfSchedulePdf — Direktvergleich column", () => {
     expect(text).toContain("Direktvergleich")
     expect(text).toContain("offen")
   })
+
+  it("prints the public URL but never the access token when a public link is given", async () => {
+    const token = "0b6f0f8e-4d3a-4c5b-9a1e-2f7d8c9b0a12"
+    const displayUrl = "https://ringwerk.example.org/api/public/c/liga-2026/pdf"
+    const text = extractPdfText(
+      await render({ ...baseProps, publicLink: { displayUrl, qrUrl: `${displayUrl}?k=${token}` } })
+    )
+    expect(text).toContain(displayUrl)
+    expect(text).not.toContain(token)
+  })
+
+  it("prints no public URL without a public link", async () => {
+    const text = extractPdfText(await render(baseProps))
+    expect(text).not.toContain("/api/public/c/")
+  })
 })
