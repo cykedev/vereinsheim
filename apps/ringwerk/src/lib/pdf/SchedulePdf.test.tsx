@@ -1,62 +1,14 @@
 import { describe, expect, it } from "vitest"
-import { inflateSync } from "node:zlib"
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer"
 import { createElement, type ReactElement } from "react"
+import {
+  extractPdfText,
+  manyMatchups,
+  occurrences,
+  pageCount,
+  TEST_PUBLIC_LINK,
+} from "./pdfTestUtils"
 import { SchedulePdf, type SchedulePdfProps } from "@/lib/pdf/SchedulePdf"
-
-const LINK = {
-  displayUrl: "https://ringwerk.example.org/api/public/c/liga-2026/pdf",
-  qrUrl: "https://ringwerk.example.org/api/public/c/liga-2026/pdf",
-}
-
-function pageCount(buffer: Buffer): number {
-  return buffer.toString("latin1").match(/\/Type\s*\/Page(?!s)/g)?.length ?? 0
-}
-
-function occurrences(text: string, needle: string): number {
-  return text.split(needle).length - 1
-}
-
-/** 60 open pairings across 12 participants — enough for several pages. */
-function manyMatchups(round: string) {
-  return Array.from({ length: 60 }, (_, i) => ({
-    id: `m${i}`,
-    round,
-    roundIndex: Math.floor(i / 6) + 1,
-    status: "PENDING",
-    homeParticipant: { id: `h${i}`, firstName: "Anna", lastName: `Huber-${i}`, withdrawn: false },
-    awayParticipant: { id: `a${i}`, firstName: "Bert", lastName: `Schmidt-${i}`, withdrawn: false },
-    results: [],
-  }))
-}
-
-// Wie in EventStarterListPdf.test.tsx: FlateDecode-Streams entpacken und
-// Hex-Text aus TJ-Arrays dekodieren.
-function extractPdfText(buffer: Buffer): string {
-  const raw = buffer.toString("binary")
-  const parts: string[] = [raw]
-  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g
-  let match: RegExpExecArray | null
-  while ((match = streamRegex.exec(raw)) !== null) {
-    try {
-      const decompressed = inflateSync(Buffer.from(match[1], "binary")).toString("latin1")
-      parts.push(
-        decompressed.replace(/\[([^\]]*)\] TJ/g, (_m, content: string) => {
-          const texts: string[] = []
-          const hexRegex = /<([0-9a-fA-F]+)>/g
-          let hexMatch: RegExpExecArray | null
-          while ((hexMatch = hexRegex.exec(content)) !== null) {
-            texts.push(Buffer.from(hexMatch[1], "hex").toString("latin1"))
-          }
-          return texts.join("") + " "
-        })
-      )
-    } catch {
-      // nicht komprimiert
-    }
-  }
-  return parts.join("\n")
-}
 
 describe("SchedulePdf — Abgabefristen", () => {
   // Mitternacht Europe/Berlin am 16.06. ist 22:00 UTC am 15.06. Ohne
@@ -132,7 +84,7 @@ describe("header on every page", () => {
         secondLegDeadline: null,
         generatedAt: new Date("2026-10-03T10:00:00.000Z"),
         displayTimeZone: "Europe/Berlin",
-        publicLink: LINK,
+        publicLink: TEST_PUBLIC_LINK,
       }) as ReactElement<DocumentProps>
     )
     const pages = pageCount(buffer)

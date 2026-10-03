@@ -1,70 +1,15 @@
 import { describe, expect, it } from "vitest"
-import { inflateSync } from "node:zlib"
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer"
 import { createElement, type ReactElement } from "react"
+import {
+  extractPdfText,
+  manyMatchups,
+  occurrences,
+  pageCount,
+  TEST_PUBLIC_LINK,
+} from "./pdfTestUtils"
 import { BestOfSchedulePdf, type BestOfSchedulePdfProps } from "@/lib/pdf/BestOfSchedulePdf"
 import type { BestOfStandingRow } from "@/lib/standings/queries"
-
-const LINK = {
-  displayUrl: "https://ringwerk.example.org/api/public/c/liga-2026/pdf",
-  qrUrl: "https://ringwerk.example.org/api/public/c/liga-2026/pdf",
-}
-
-function pageCount(buffer: Buffer): number {
-  return buffer.toString("latin1").match(/\/Type\s*\/Page(?!s)/g)?.length ?? 0
-}
-
-function occurrences(text: string, needle: string): number {
-  return text.split(needle).length - 1
-}
-
-/** 60 open pairings across 12 participants — enough for several pages. */
-function manyMatchups(round: string) {
-  return Array.from({ length: 60 }, (_, i) => ({
-    id: `m${i}`,
-    round,
-    roundIndex: Math.floor(i / 6) + 1,
-    status: "PENDING",
-    homeParticipant: { id: `h${i}`, firstName: "Anna", lastName: `Huber-${i}`, withdrawn: false },
-    awayParticipant: { id: `a${i}`, firstName: "Bert", lastName: `Schmidt-${i}`, withdrawn: false },
-    results: [],
-  }))
-}
-
-/**
- * Extract readable text from a PDF buffer.
- * Decompresses FlateDecode streams and decodes hex-encoded text in TJ operators.
- */
-function extractPdfText(buffer: Buffer): string {
-  const raw = buffer.toString("binary")
-  const parts: string[] = [raw]
-
-  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g
-  let match: RegExpExecArray | null
-  while ((match = streamRegex.exec(raw)) !== null) {
-    try {
-      const streamBytes = Buffer.from(match[1], "binary")
-      const decompressed = inflateSync(streamBytes).toString("latin1")
-      const decoded = decompressed.replace(/\[([^\]]*)\] TJ/g, (_m, content: string) => {
-        const texts: string[] = []
-        const hexRegex = /<([0-9a-fA-F]+)>/g
-        let hexMatch: RegExpExecArray | null
-        while ((hexMatch = hexRegex.exec(content)) !== null) {
-          try {
-            texts.push(Buffer.from(hexMatch[1], "hex").toString("latin1"))
-          } catch {
-            // skip
-          }
-        }
-        return texts.join("") + " "
-      })
-      parts.push(decoded)
-    } catch {
-      // not a compressed stream — skip
-    }
-  }
-  return parts.join("\n")
-}
 
 /** Build a standings row; only the fields the PDF reads matter. */
 function mkRow(
@@ -193,7 +138,7 @@ describe("header on every page", () => {
         standings: [],
         matchups: manyMatchups("FIRST_LEG") as unknown as BestOfSchedulePdfProps["matchups"],
         generatedAt: new Date("2026-10-03T10:00:00.000Z"),
-        publicLink: LINK,
+        publicLink: TEST_PUBLIC_LINK,
       }) as ReactElement<DocumentProps>
     )
     const pages = pageCount(buffer)

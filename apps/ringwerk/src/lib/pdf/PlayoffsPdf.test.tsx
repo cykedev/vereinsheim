@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { inflateSync } from "node:zlib"
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer"
 import { createElement, type ReactElement } from "react"
+import { extractPdfText, occurrences, pageCount } from "./pdfTestUtils"
 import { PlayoffsPdf, type PlayoffsPdfProps } from "@/lib/pdf/PlayoffsPdf"
 import type { PlayoffMatchItem } from "@/lib/playoffs/types"
 import { splitDisplayUrl, URL_LINE_MAX_CHARS } from "@/lib/pdf/HeaderMeta"
@@ -20,36 +20,18 @@ function mkMatch(i: number): PlayoffMatchItem {
   }
 }
 
-// Wie in EventStarterListPdf.test.tsx: FlateDecode-Streams entpacken und
-// Hex-Text aus TJ-Arrays dekodieren.
-function extractPdfText(buffer: Buffer): string {
-  const raw = buffer.toString("binary")
-  const parts: string[] = [raw]
-  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g
-  let match: RegExpExecArray | null
-  while ((match = streamRegex.exec(raw)) !== null) {
-    try {
-      const decompressed = inflateSync(Buffer.from(match[1], "binary")).toString("latin1")
-      parts.push(
-        decompressed.replace(/\[([^\]]*)\] TJ/g, (_m, content: string) => {
-          const texts: string[] = []
-          const hexRegex = /<([0-9a-fA-F]+)>/g
-          let hexMatch: RegExpExecArray | null
-          while ((hexMatch = hexRegex.exec(content)) !== null) {
-            texts.push(Buffer.from(hexMatch[1], "hex").toString("latin1"))
-          }
-          return texts.join("") + " "
-        })
-      )
-    } catch {
-      // nicht komprimiert
-    }
-  }
-  return parts.join("\n")
-}
-
-function pageCount(buffer: Buffer): number {
-  return buffer.toString("latin1").match(/\/Type\s*\/Page(?!s)/g)?.length ?? 0
+/** A decided match: A wins 3 duels — fills the detail pages with result rows. */
+function playedMatch(round: PlayoffMatchItem["round"], i: number): PlayoffMatchItem {
+  const duels = [1, 2, 3].map((duelNumber) => ({
+    id: `${round}-${i}-d${duelNumber}`,
+    duelNumber,
+    isSuddenDeath: false,
+    isCompleted: true,
+    resultA: { totalRings: 96, teiler: 120.5, ringteiler: 124.5 },
+    resultB: { totalRings: 94, teiler: 230.1, ringteiler: 236.1 },
+    winnerId: `a${i}`,
+  }))
+  return { ...mkMatch(i), id: `${round}-${i}`, round, winsA: 3, status: "COMPLETED", duels }
 }
 
 describe("PlayoffsPdf — header with QR code", () => {
@@ -84,14 +66,26 @@ describe("PlayoffsPdf — header with QR code", () => {
   })
 
   it("repeats the header with the public link on every page, detail pages included", async () => {
-    // Printouts are hung up page by page — the detail pages need the QR code too.
+    // Printouts are hung up page by page. A fully played bracket overflows the detail page, so
+    // only a repeated (fixed) header puts title, date and QR code on the overflow pages too.
     const displayUrl = "https://ringwerk.example.org/api/public/c/kreisliga-2026/pdf"
-    const buffer = await render({ ...baseProps, publicLink: { displayUrl, qrUrl: displayUrl } })
+    const buffer = await render({
+      ...baseProps,
+      bracket: {
+        competitionId: "c1",
+        eighthFinals: Array.from({ length: 8 }, (_, i) => playedMatch("EIGHTH_FINAL", i)),
+        quarterFinals: Array.from({ length: 4 }, (_, i) => playedMatch("QUARTER_FINAL", i)),
+        semiFinals: Array.from({ length: 2 }, (_, i) => playedMatch("SEMI_FINAL", i)),
+        final: playedMatch("FINAL", 0),
+      },
+      publicLink: { displayUrl, qrUrl: displayUrl },
+    })
     const pages = pageCount(buffer)
     const text = extractPdfText(buffer)
-    expect(pages).toBeGreaterThanOrEqual(2)
-    expect(text.split("Erstellt:").length - 1).toBe(pages)
-    expect(text.split("api/public/c/kreisliga-2026/pdf").length - 1).toBe(pages)
+    // more pages than <Page> elements (2) — otherwise the test could not see a missing `fixed`
+    expect(pages).toBeGreaterThanOrEqual(3)
+    expect(occurrences(text, "Erstellt:")).toBe(pages)
+    expect(occurrences(text, "api/public/c/kreisliga-2026/pdf")).toBe(pages)
   })
 })
 
