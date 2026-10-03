@@ -14,7 +14,7 @@ import { generateBestOfSchedule } from "./generateBestOfSchedule"
  * - Mindestens 4 aktive Teilnehmer eingeschrieben
  * - Keine bereits abgeschlossenen Paarungen vorhanden
  *
- * Bestehende PENDING-Paarungen werden gelöscht und neu generiert.
+ * Bestehende offene Paarungen (PENDING) und Freilose (BYE) werden gelöscht und neu generiert.
  */
 export async function generateCompetitionSchedule(competitionId: string): Promise<ActionResult> {
   const session = await getAuthSession()
@@ -101,9 +101,10 @@ export async function generateCompetitionSchedule(competitionId: string): Promis
     }))
   }
 
-  // Transaktional: PENDING-Paarungen löschen + neue anlegen
+  // Transaktional: offene Paarungen und Freilose löschen + neue anlegen. Freilose (BYE) gehören
+  // zum alten Plan — blieben sie stehen, hätte jeder Teilnehmer danach zwei je Runde.
   await db.$transaction([
-    db.matchup.deleteMany({ where: { competitionId, status: "PENDING" } }),
+    db.matchup.deleteMany({ where: { competitionId, status: { in: ["PENDING", "BYE"] } } }),
     db.matchup.createMany({ data: matchupData }),
   ])
 

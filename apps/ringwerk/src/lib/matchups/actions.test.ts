@@ -236,6 +236,14 @@ describe("generateCompetitionSchedule — BEST_OF_SINGLE", () => {
     expect(byes.every((r) => r.round === "FIRST_LEG")).toBe(true)
   })
 
+  it("löscht beim Neu-Generieren auch alte Freilose, nicht nur offene Paarungen", async () => {
+    // Sonst bleiben BYE-Zeilen stehen und jeder Teilnehmer hat danach zwei Freilose je Runde.
+    await generateCompetitionSchedule("c1")
+    expect(matchupDeleteManyMock).toHaveBeenCalledWith({
+      where: { competitionId: "c1", status: { in: ["PENDING", "BYE"] } },
+    })
+  })
+
   it("revalidatePath wird für schedule und participants aufgerufen", async () => {
     await generateCompetitionSchedule("c1")
     expect(revalidatePathMock).toHaveBeenCalledWith("/competitions/c1/schedule")
