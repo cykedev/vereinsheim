@@ -62,6 +62,28 @@ describe("roundRobinRounds", () => {
     }
   })
 
+  it.each(SIZES)("%i participants: sides alternate (minimal runs of the same side)", (n) => {
+    // Balance alone is not enough — "first half A, second half B" is balanced too. The parity
+    // rule keeps a participant from standing on the same side twice in a row (odd field) and
+    // limits that to the theoretical minimum of n-2 such repeats overall (even field, de Werra).
+    const s = roundRobinRounds(ids(n))
+      .filter((m) => m.awayId !== null)
+      .sort((a, b) => a.roundIndex - b.roundIndex)
+    let repeats = 0
+    for (const id of ids(n)) {
+      const sides = s
+        .filter((m) => m.homeId === id || m.awayId === id)
+        .map((m) => (m.homeId === id ? "A" : "B"))
+      let run = 1
+      for (let k = 1; k < sides.length; k++) {
+        run = sides[k] === sides[k - 1] ? run + 1 : 1
+        if (run > 1) repeats++
+        expect(run).toBeLessThanOrEqual(2)
+      }
+    }
+    expect(repeats).toBe(n % 2 === 1 ? 0 : n - 2)
+  })
+
   it("never puts one participant on side A in all duels (the reported 5-player case)", () => {
     const s = roundRobinRounds(ids(5)).filter((m) => m.awayId !== null)
     for (const id of ids(5)) {

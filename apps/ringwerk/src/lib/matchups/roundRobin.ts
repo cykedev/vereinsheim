@@ -9,6 +9,10 @@
  *
  * Ergebnis: bei ungerader Teilnehmerzahl ist jeder genau gleich oft A wie B, bei gerader
  * höchstens einmal öfter (mehr geht nicht — jeder hat dann `n-1`, also ungerade viele Begegnungen).
+ * Die Paritätsregel (A wechselt mit `i`) sorgt zusätzlich dafür, dass die Seiten abwechseln: nie
+ * zweimal hintereinander dieselbe Seite bei ungerader Zahl, insgesamt nur das Minimum von `n-2`
+ * Wiederholungen bei gerader (de Werra). „Immer `r+i` ist A“ wäre ebenfalls ausgeglichen, stellte
+ * aber z.B. bei 16 Teilnehmern jemanden 8× in Folge auf A — die Regel nicht „vereinfachen“.
  * Die frühere Circle-Method hielt den festen Teilnehmer in jeder Runde links, er war also immer A.
  *
  * Bei ungerader Teilnehmerzahl ist `∞` ein Dummy; seine Begegnung ist das Freilos
@@ -40,6 +44,7 @@ export function roundRobinRounds(participantIds: string[]): RoundRobinMatch[] {
   for (let r = 0; r < m; r++) {
     const roundIndex = r + 1
 
+    // `null` steht nur auf Index `m` (fester Platz); die Kreisindizes sind `mod m` → nie `null`.
     const opponent = ids[r] as string
     if (fixed === null) {
       result.push({ homeId: opponent, awayId: null, roundIndex })
