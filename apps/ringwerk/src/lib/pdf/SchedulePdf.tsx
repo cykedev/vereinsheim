@@ -6,6 +6,8 @@ import type { StandingRow } from "@/lib/standings/calculateStandings"
 import { hasLeagueResult } from "@/lib/standings/standingsSort"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import { styles } from "@/lib/pdf/styles"
+import { HeaderMeta } from "@/lib/pdf/HeaderMeta"
+import type { PublicPdfLink } from "@/lib/competitions/publicPdfLink"
 import { formatDateOnly } from "@vereinsheim/lib/format"
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
@@ -20,6 +22,8 @@ export interface SchedulePdfProps {
   firstLegDeadline: Date | null
   secondLegDeadline: Date | null
   generatedAt: Date
+  /** Nur interne Exporte (nie die öffentliche Route): QR-Code zum öffentlichen PDF. */
+  publicLink?: PublicPdfLink | null
 }
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
@@ -40,11 +44,13 @@ function PdfHeader({
   disciplineName,
   generatedAt,
   displayTimeZone,
+  publicLink,
 }: {
   leagueName: string
   disciplineName: string
   generatedAt: Date
   displayTimeZone: string
+  publicLink?: PublicPdfLink | null
 }): ReactElement {
   return (
     <View style={styles.headerBlock}>
@@ -52,9 +58,11 @@ function PdfHeader({
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Spielplan &amp; Tabelle</Text>
       </View>
-      <Text style={styles.headerDate}>
-        Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
-      </Text>
+      <HeaderMeta
+        generatedAt={generatedAt}
+        displayTimeZone={displayTimeZone}
+        publicLink={publicLink}
+      />
     </View>
   )
 }
@@ -303,6 +311,7 @@ export function SchedulePdf({
   secondLegDeadline,
   generatedAt,
   displayTimeZone,
+  publicLink,
 }: SchedulePdfProps): ReactElement {
   const firstLeg = matchups.filter((m) => m.round === "FIRST_LEG")
   const secondLeg = matchups.filter((m) => m.round === "SECOND_LEG")
@@ -316,6 +325,7 @@ export function SchedulePdf({
           disciplineName={disciplineName}
           generatedAt={generatedAt}
           displayTimeZone={displayTimeZone}
+          publicLink={publicLink}
         />
 
         {/* Tabelle */}

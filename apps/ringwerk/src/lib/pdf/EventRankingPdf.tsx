@@ -2,6 +2,8 @@ import { Document, Page, View, Text } from "@react-pdf/renderer"
 import type { ReactElement } from "react"
 import type { EventRankedEntry, EventTeamRankedEntry } from "@/lib/scoring/rankEventParticipants"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
+import { HeaderMeta } from "@/lib/pdf/HeaderMeta"
+import type { PublicPdfLink } from "@/lib/competitions/publicPdfLink"
 import { SCORING_MODE_LABELS, SCORING_MODE_COLUMN_LABELS } from "@/lib/scoring/labels"
 import type { ScoringMode } from "@/lib/scoring/types"
 import type { TargetValueType } from "@/generated/prisma/client"
@@ -24,6 +26,8 @@ export interface EventRankingPdfProps {
   teamEntries?: EventTeamRankedEntry[]
   teamScoring?: "SUM" | "BEST" | null
   generatedAt: Date
+  /** Nur interne Exporte (nie die öffentliche Route): QR-Code zum öffentlichen PDF. */
+  publicLink?: PublicPdfLink | null
 }
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
@@ -215,6 +219,7 @@ export function EventRankingPdf({
   teamScoring,
   generatedAt,
   displayTimeZone,
+  publicLink,
 }: EventRankingPdfProps): ReactElement {
   const disciplineDisplay = disciplineName ?? "Gemischt"
 
@@ -230,9 +235,11 @@ export function EventRankingPdf({
               {eventDate ? ` · ${formatDateOnly(eventDate, displayTimeZone)}` : ""} · Rangliste
             </Text>
           </View>
-          <Text style={styles.headerDate}>
-            Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
-          </Text>
+          <HeaderMeta
+            generatedAt={generatedAt}
+            displayTimeZone={displayTimeZone}
+            publicLink={publicLink}
+          />
         </View>
 
         {/* Config-Zeile */}

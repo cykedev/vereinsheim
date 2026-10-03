@@ -11,6 +11,8 @@ import {
   type SortedSeasonStandingsEntry,
 } from "@/lib/scoring/sortSeasonStandings"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
+import { HeaderMeta } from "@/lib/pdf/HeaderMeta"
+import type { PublicPdfLink } from "@/lib/competitions/publicPdfLink"
 import { SCORING_MODE_LABELS } from "@/lib/scoring/labels"
 import type { ScoringMode } from "@/lib/scoring/types"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
@@ -32,6 +34,8 @@ export interface SeasonStandingsPdfProps {
   /** Aufgelöste Sortierung — dieselbe Quelle wie in der Tabelle (sortSeasonStandings). */
   sort: ResolvedSeasonSort
   generatedAt: Date
+  /** Nur interne Exporte (nie die öffentliche Route): QR-Code zum öffentlichen PDF. */
+  publicLink?: PublicPdfLink | null
 }
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
@@ -301,6 +305,7 @@ export function SeasonStandingsPdf({
   sort,
   generatedAt,
   displayTimeZone,
+  publicLink,
 }: SeasonStandingsPdfProps): ReactElement {
   const disciplineDisplay = disciplineName ?? "Gemischt"
   const alternating = isAlternatingSort(sort)
@@ -323,9 +328,11 @@ export function SeasonStandingsPdf({
               {seasonRange ? ` · ${seasonRange}` : ""} · Rangliste
             </Text>
           </View>
-          <Text style={styles.headerDate}>
-            Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
-          </Text>
+          <HeaderMeta
+            generatedAt={generatedAt}
+            displayTimeZone={displayTimeZone}
+            publicLink={publicLink}
+          />
         </View>
 
         {/* Config-Zeile — bei alternierender Sortierung definiert die Reihenfolge die Wertung,

@@ -4,7 +4,8 @@ import type { ScoringType } from "@/generated/prisma/client"
 import type { PlayoffBracketData, PlayoffMatchItem, PlayoffDuelItem } from "@/lib/playoffs/types"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
-import { formatDateOnly } from "@vereinsheim/lib/format"
+import { HeaderMeta } from "@/lib/pdf/HeaderMeta"
+import type { PublicPdfLink } from "@/lib/competitions/publicPdfLink"
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,8 @@ export interface PlayoffsPdfProps {
   scoringType: ScoringType
   bracket: PlayoffBracketData
   generatedAt: Date
+  /** Nur interne Exporte (nie die öffentliche Route): QR-Code zum öffentlichen PDF. */
+  publicLink?: PublicPdfLink | null
 }
 
 // ─── Bracket-Koordinaten (kompakt für A4 Landscape: 769pt Breite, ~446pt Höhe verfügbar) ──
@@ -79,11 +82,13 @@ function PdfHeader({
   disciplineName,
   generatedAt,
   displayTimeZone,
+  publicLink,
 }: {
   leagueName: string
   disciplineName: string
   generatedAt: Date
   displayTimeZone: string
+  publicLink?: PublicPdfLink | null
 }): ReactElement {
   return (
     <View style={styles.headerBlock}>
@@ -91,9 +96,11 @@ function PdfHeader({
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Playoffs</Text>
       </View>
-      <Text style={styles.headerDate}>
-        Erstellt: {formatDateOnly(generatedAt, displayTimeZone)}
-      </Text>
+      <HeaderMeta
+        generatedAt={generatedAt}
+        displayTimeZone={displayTimeZone}
+        publicLink={publicLink}
+      />
     </View>
   )
 }
@@ -599,6 +606,7 @@ export function PlayoffsPdf({
   bracket,
   generatedAt,
   displayTimeZone,
+  publicLink,
 }: PlayoffsPdfProps): ReactElement {
   return (
     <Document title={`${leagueName} – Playoffs`} author="Ringwerk" creator="Ringwerk">
@@ -609,6 +617,7 @@ export function PlayoffsPdf({
           disciplineName={disciplineName}
           generatedAt={generatedAt}
           displayTimeZone={displayTimeZone}
+          publicLink={publicLink}
         />
         <BracketLayout bracket={bracket} />
         <View style={styles.footer} fixed>
