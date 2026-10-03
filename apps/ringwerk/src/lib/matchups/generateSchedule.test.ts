@@ -123,6 +123,23 @@ describe("generateSchedule", () => {
     })
   })
 
+  describe("A/B-Ausgleich je Runde", () => {
+    const ids = ["a", "b", "c", "d", "e"]
+    const schedule = generateSchedule(ids)
+
+    it.each(["FIRST_LEG", "SECOND_LEG"] as const)(
+      "%s: jeder Teilnehmer ist in genau 2 von 4 Duellen A",
+      (round) => {
+        // Gemeldeter Fall: die alte Circle-Method hielt den Erstgemeldeten die ganze Hinrunde auf A.
+        const duels = schedule.filter((m) => m.round === round && m.awayId !== null)
+        for (const id of ids) {
+          expect(duels.filter((m) => m.homeId === id)).toHaveLength(2)
+          expect(duels.filter((m) => m.awayId === id)).toHaveLength(2)
+        }
+      }
+    )
+  })
+
   describe("2 Teilnehmer (Sonderfall)", () => {
     const ids = ["a", "b"]
     const result = generateSchedule(ids)
