@@ -953,6 +953,105 @@ describe("updateCompetition — public password", () => {
   })
 })
 
+// ─── QR access token (password bypass) ───────────────────────────────────────
+
+describe("updateCompetition — QR access token", () => {
+  const existingToken = "0b6f0f8e-4d3a-4c5b-9a1e-2f7d8c9b0a12"
+  const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+  const baseFields = {
+    name: "Qr Target",
+    scoringMode: "RINGS",
+    shotsPerSeries: "10",
+    isPublic: "on",
+    publicSlug: "qr-target",
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionFindUniqueMock.mockResolvedValue({
+      id: "c1",
+      name: "Qr Target",
+      type: "EVENT",
+      scoringMode: "RINGS",
+      status: "ACTIVE",
+      isPublic: true,
+      publicSlug: "qr-target",
+      publicPasswordHash: "$2a$12$existinghash",
+      publicAccessToken: existingToken,
+    })
+    competitionUpdateMock.mockResolvedValue({})
+    competitionFindFirstMock.mockResolvedValue(null)
+    auditLogCreateMock.mockResolvedValue({})
+  })
+
+  async function updateWith(fields: Record<string, string>) {
+    await updateCompetition("c1", null, makeFormData({ ...baseFields, ...fields }))
+    return competitionUpdateMock.mock.calls[0][0].data.publicAccessToken
+  }
+
+  it("keeps the existing token while the bypass stays on", async () => {
+    expect(await updateWith({ publicAccessFields: "1", publicQrBypass: "on" })).toBeUndefined()
+  })
+
+  it("clears the token when the bypass checkbox is unchecked", async () => {
+    expect(await updateWith({ publicAccessFields: "1" })).toBeNull()
+  })
+
+  it("leaves the token alone when the publish block was not submitted", async () => {
+    // No marker = the isPublic block was hidden; an absent checkbox must not wipe the token.
+    expect(await updateWith({})).toBeUndefined()
+  })
+
+  it("issues a new token on rotation", async () => {
+    const next = await updateWith({
+      publicAccessFields: "1",
+      publicQrBypass: "on",
+      rotatePublicAccessToken: "on",
+    })
+    expect(next).toMatch(UUID_V4)
+    expect(next).not.toBe(existingToken)
+  })
+})
+
+describe("createCompetition — QR access token", () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionCreateMock.mockResolvedValue({ id: "new-id" })
+    competitionFindFirstMock.mockResolvedValue(null)
+    auditLogCreateMock.mockResolvedValue({})
+  })
+
+  async function createWith(fields: Record<string, string>) {
+    await createCompetition(
+      null,
+      makeFormData({
+        name: "Qr New",
+        type: "EVENT",
+        scoringMode: "RINGS",
+        shotsPerSeries: "10",
+        isPublic: "on",
+        publicSlug: "qr-new",
+        publicPassword: "geheim",
+        publicAccessFields: "1",
+        ...fields,
+      })
+    )
+    return competitionCreateMock.mock.calls[0][0].data.publicAccessToken
+  }
+
+  it("issues a token when the bypass is on", async () => {
+    expect(await createWith({ publicQrBypass: "on" })).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+    )
+  })
+
+  it("stores no token when the bypass is off", async () => {
+    expect(await createWith({})).toBeNull()
+  })
+})
+
 // ─── BEST_OF_SINGLE — createCompetition ──────────────────────────────────────
 
 describe("createCompetition — BEST_OF_SINGLE", () => {

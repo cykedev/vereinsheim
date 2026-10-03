@@ -51,6 +51,7 @@ export type CompetitionDetail = {
   isPublic: boolean
   publicSlug: string | null
   hasPublicPassword: boolean // derived: true if publicPasswordHash is set; hash itself is never exposed to client
+  hasPublicAccessToken: boolean // derived: QR password bypass is on; the token itself is never exposed to client
   scoringMode: ScoringMode
   shotsPerSeries: number
   disciplineId: string | null
