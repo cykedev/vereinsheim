@@ -72,10 +72,11 @@ export default async function CompetitionSchedulePage({ params }: Props) {
             {scheduleStatus.hasSchedule && (
               <PdfDownloadButton href={`/api/competitions/${id}/pdf/schedule`} />
             )}
-            {/* Neu generieren nur, solange noch kein Ergebnis erfasst ist (lib/matchups/regeneration.ts) */}
+            {/* (Neu) generieren nur, solange noch kein Ergebnis erfasst ist (lib/matchups/regeneration.ts);
+                ohne Paarungen gibt es per Definition keins */}
             {canManage &&
               competition.status === "ACTIVE" &&
-              (!scheduleStatus.hasSchedule || scheduleStatus.regenerationBlocker === null) && (
+              scheduleStatus.regenerationBlocker === null && (
                 <GenerateScheduleButton
                   competitionId={id}
                   hasSchedule={scheduleStatus.hasSchedule}

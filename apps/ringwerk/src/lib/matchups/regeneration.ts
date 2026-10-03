@@ -23,7 +23,7 @@ export interface ScheduleResultCounts {
  */
 export function scheduleRegenerationBlocker(c: ScheduleResultCounts): string | null {
   if (c.playoffs > 0) {
-    return "Spielplan kann nicht neu generiert werden — die Playoffs laufen bereits."
+    return "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet."
   }
   const decided = c.completed + c.walkover
   if (decided > 0) {
@@ -45,7 +45,7 @@ export function scheduleDialogText(input: { hasSchedule: boolean; leagueFormat: 
     return {
       title: "Spielplan neu generieren?",
       description:
-        "Der bestehende Spielplan wird gelöscht und neu erstellt. Spieltage und Gegner ändern sich dabei. Bereits verteilte oder ausgedruckte Spielpläne sind danach veraltet.",
+        "Der bestehende Spielplan wird gelöscht und für alle aktiven Teilnehmer neu erstellt. Spieltage und Gegner ändern sich dabei. Bereits verteilte oder ausgedruckte Spielpläne sind danach veraltet.",
       confirmLabel: "Neu generieren",
     }
   }
