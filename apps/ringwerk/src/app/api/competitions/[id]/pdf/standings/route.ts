@@ -6,10 +6,11 @@ import { getSeasonWithSeries } from "@/lib/competitions/queries"
 import { calculateSeasonStandings } from "@/lib/scoring/calculateSeasonStandings"
 import { resolveSeasonSort, sortSeasonStandings } from "@/lib/scoring/sortSeasonStandings"
 import { SeasonStandingsPdf } from "@/lib/pdf/SeasonStandingsPdf"
+import { getPublicPdfLink } from "@/lib/competitions/publicPdfLink"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const session = await getAuthSession()
@@ -25,6 +26,9 @@ export async function GET(
   }
 
   const { competition, participants } = data
+
+  // Nur der interne Export trägt den QR-Code zum öffentlichen PDF (nie die öffentliche Route).
+  const publicLink = await getPublicPdfLink(req, id)
 
   // Gleiche Sortierquelle wie die Tabelle, damit PDF und Bildschirm nie auseinanderlaufen.
   const sort = resolveSeasonSort(competition.scoringMode, competition.seasonSortMode)
@@ -54,6 +58,7 @@ export async function GET(
     sort,
     generatedAt: new Date(),
     displayTimeZone: getDisplayTimeZone(),
+    publicLink,
   }) as ReactElement<DocumentProps>
 
   const buffer = await renderToBuffer(element)
