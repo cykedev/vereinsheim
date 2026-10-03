@@ -53,6 +53,9 @@ export const styles = StyleSheet.create({
   },
   headerLeft: {
     flexDirection: "column",
+    // Lange Titel brechen um, statt in die rechte Kopfspalte (QR-Code/URL) zu laufen.
+    flex: 1,
+    paddingRight: 12,
   },
   headerTitle: {
     fontSize: 20,

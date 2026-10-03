@@ -80,7 +80,9 @@ describe("SchedulePdf — Abgabefristen", () => {
     const text = extractPdfText(
       await render({ ...baseProps, publicLink: { displayUrl, qrUrl: `${displayUrl}?k=${token}` } })
     )
-    expect(text).toContain(displayUrl)
+    // printed in two lines (see splitDisplayUrl); react-pdf emits the leading "/" as its own run
+    expect(text).toContain("https://ringwerk.example.org")
+    expect(text).toContain("api/public/c/liga-2026/pdf")
     expect(text).not.toContain(token)
   })
 
