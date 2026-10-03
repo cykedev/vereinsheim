@@ -187,9 +187,10 @@ src/
     matchups/
       actions.ts              ← Spielplan generieren (Round-Robin + Best-of-Single)
       queries.ts              ← Paarungen laden, Schedule-Status
-      generateSchedule.ts     ← Circle-Method-Algorithmus DOUBLE_ROUND_ROBIN (testpflichtig)
+      generateSchedule.ts     ← DOUBLE_ROUND_ROBIN: Hinrunde aus roundRobin.ts, Rückrunde gespiegelt (testpflichtig)
       generateSchedule.test.ts
-      generateBestOfSchedule.ts ← Circle-Method-Algorithmus BEST_OF_SINGLE (einfache Runde; kein Heimrecht-Tausch)
+      generateBestOfSchedule.ts ← BEST_OF_SINGLE: einfache Runde aus roundRobin.ts (Berger-Tabelle, A/B ausgeglichen)
+      roundRobin.ts           ← Einfachrunde nach Berger-Tabelle, A/B ausgeglichen (beide Formate)
       types.ts
     results/
       actions.ts              ← Ergebnis eintragen/korrigieren (DOUBLE_ROUND_ROBIN)
