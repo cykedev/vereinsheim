@@ -136,7 +136,7 @@ Das Regelset wird **phasenweise gesperrt**: Gruppenphase/Format (Format, Wertung
 - Rückrunde spiegelt Hinrunde (Heimrecht getauscht)
 - Ungerade Teilnehmerzahl → jeder bekommt einmal Freilos (2 Punkte)
 - Mindest-Teilnehmerzahl: 4
-- Regenerierung möglich solange keine abgeschlossenen Paarungen
+- Regenerierung möglich, solange kein Ergebnis erfasst ist (keine entschiedene Paarung, keine Serie, keine Playoffs) — siehe [[league-mode]]
 - **Non-LEAGUE-Navigierung:** Wenn auf `/competitions/[id]/schedule` mit Event/Saison zugegriffen wird → Automatisches Redirect zu `/competitions/[id]/ranking`
 
 ### Heimrecht
