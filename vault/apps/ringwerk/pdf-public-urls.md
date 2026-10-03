@@ -23,8 +23,17 @@ Full-Route-Cache, den ein `revalidatePath` treffen könnte.
 Die **intern** heruntergeladenen Haupt-PDFs (`/api/competitions/[id]/pdf/{schedule,playoffs,ranking,
 standings}`) eines veröffentlichten Wettbewerbs tragen rechts im Seitenkopf (Seite 1) einen QR-Code
 und die öffentliche URL. Gedacht ist das für Aushänge im Vereinsheim. Die Kopfspalte rendert
-`lib/pdf/HeaderMeta.tsx`, den Vektorpfad erzeugt `lib/pdf/qrMatrix.ts`, den Link baut
-`lib/competitions/publicPdfLink.ts`.
+`lib/pdf/HeaderMeta.tsx`, den Vektorpfad (waagerechte Läufe, keine Einzelquadrate) erzeugt
+`lib/pdf/qrMatrix.ts`. Den Link bauen die reinen Helfer in `lib/competitions/publicPdfLink.ts`, die
+DB-Abfrage steckt in `publicPdfLinkQueries.ts`.
+
+- **Layout:** Der QR-Code steht **neben** URL und Datum, nicht darüber, damit der Kopf kaum höher
+  wird. Er ist 64 pt groß, auf der Playoff-Bracket-Seite 48 pt. Das Achtelfinal-Bracket nutzt die
+  Querformat-Höhe fast ganz aus, ein höherer Kopf schob es auf eine eigene Seite (Review
+  2026-10-03). Die URL bricht `splitDisplayUrl` selbst in Zeilen von höchstens 40 Zeichen um,
+  getrennt an `/`, `-` oder `.`. react-pdf bricht ein Wort ohne Leerzeichen nicht um, ein langer
+  Slug lief sonst in den QR-Code. Die Titelspalte (`styles.headerLeft`) hat `flex: 1`, damit lange
+  Titel umbrechen.
 
 - **Domain aus dem Request** (`x-forwarded-host`/`host`, `x-forwarded-proto`, Host-Regex). Ein
   unplausibler Host bedeutet: kein QR-Code.
