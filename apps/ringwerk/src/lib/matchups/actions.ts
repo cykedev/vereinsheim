@@ -53,12 +53,6 @@ export async function generateCompetitionSchedule(competitionId: string): Promis
     }
   }
 
-  // Neu generieren nur ohne jedes Ergebnis — eine Best-of-Paarung bleibt PENDING, bis alle Duelle
-  // entschieden sind, und Series.matchupId steht auf ON DELETE SET NULL: ein Löschen ließe
-  // erfasste Serien still verwaisen.
-  const blocker = scheduleRegenerationBlocker(await getScheduleResultCounts(competitionId))
-  if (blocker) return { error: blocker }
-
   // Spielplan berechnen
   const participantIds = enrollments.map((e) => e.participantId)
 
@@ -100,12 +94,32 @@ export async function generateCompetitionSchedule(competitionId: string): Promis
     }))
   }
 
-  // Transaktional: offene Paarungen und Freilose löschen + neue anlegen. Freilose (BYE) gehören
-  // zum alten Plan — blieben sie stehen, hätte jeder Teilnehmer danach zwei je Runde.
-  await db.$transaction([
-    db.matchup.deleteMany({ where: { competitionId, status: { in: ["PENDING", "BYE"] } } }),
-    db.matchup.createMany({ data: matchupData }),
-  ])
+  // Sperre, Löschen und Anlegen in EINER serialisierbaren Transaktion. Neu generieren nur ohne
+  // jedes Ergebnis: eine Best-of-Paarung bleibt PENDING, bis alle Duelle entschieden sind, und
+  // Series.matchupId steht auf ON DELETE SET NULL — ein Löschen ließe erfasste Serien still
+  // verwaisen. `series: { none: {} }` sichert das zusätzlich am Löschbefehl selbst ab; ein parallel
+  // gespeichertes Ergebnis führt zum Serialisierungsfehler statt zu Datenverlust.
+  let blocker: string | null
+  try {
+    blocker = await db.$transaction(
+      async (tx) => {
+        const reason = scheduleRegenerationBlocker(await getScheduleResultCounts(competitionId, tx))
+        if (reason) return reason
+        // Offene Paarungen und Freilose (BYE) gehören zum alten Plan — blieben Freilose stehen,
+        // hätte jeder Teilnehmer danach zwei je Runde.
+        await tx.matchup.deleteMany({
+          where: { competitionId, status: { in: ["PENDING", "BYE"] }, series: { none: {} } },
+        })
+        await tx.matchup.createMany({ data: matchupData })
+        return null
+      },
+      { isolationLevel: "Serializable" }
+    )
+  } catch (error) {
+    console.error("Spielplan-Generierung fehlgeschlagen:", error)
+    return { error: "Spielplan konnte nicht generiert werden. Bitte erneut versuchen." }
+  }
+  if (blocker) return { error: blocker }
 
   revalidatePath(`/competitions/${competitionId}/schedule`)
   revalidatePath(`/competitions/${competitionId}/participants`)
