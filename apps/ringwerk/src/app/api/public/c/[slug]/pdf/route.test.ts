@@ -87,10 +87,12 @@ import { GET } from "./route"
 // ─── Helpers ────────────────────────────────────────────────────────────────
 // The route only reads `req.headers.get("authorization")` — a plain Request is sufficient
 // behaviour-wise. We cast to NextRequest to satisfy the route signature.
-function makeRequest(authHeader?: string): NextRequest {
+function makeRequest(authHeader?: string, query = ""): NextRequest {
   const headers = new Headers()
   if (authHeader) headers.set("authorization", authHeader)
-  return new Request("https://example.com/api/public/c/slug/pdf", { headers }) as NextRequest
+  return new Request(`https://example.com/api/public/c/slug/pdf${query}`, {
+    headers,
+  }) as NextRequest
 }
 
 function basicAuth(password: string, user = ""): string {
@@ -102,6 +104,7 @@ const baseCompetition = {
   name: "Test Competition",
   type: "EVENT" as const,
   publicPasswordHash: null as string | null,
+  publicAccessToken: null as string | null,
 }
 
 const eventCompetitionWithSeries = {
@@ -154,8 +157,8 @@ beforeEach(() => {
   getPlayoffBracketMock.mockResolvedValue([])
 })
 
-async function callRoute(slug: string, init?: { authHeader?: string }) {
-  return GET(makeRequest(init?.authHeader), { params: Promise.resolve({ slug }) })
+async function callRoute(slug: string, init?: { authHeader?: string; query?: string }) {
+  return GET(makeRequest(init?.authHeader, init?.query), { params: Promise.resolve({ slug }) })
 }
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
@@ -306,5 +309,68 @@ describe("public PDF route — phase selection", () => {
     resolveSlugMock.mockResolvedValue({ ...baseCompetition, type: "WAT" as unknown as "EVENT" })
     const res = await callRoute("test-slug")
     expect(res.status).toBe(404)
+  })
+})
+
+describe("public PDF route — QR access token", () => {
+  const token = "0b6f0f8e-4d3a-4c5b-9a1e-2f7d8c9b0a12"
+
+  it("serves the PDF without a password prompt for the right token", async () => {
+    resolveSlugMock.mockResolvedValue({
+      ...baseCompetition,
+      publicPasswordHash: "hash",
+      publicAccessToken: token,
+    })
+    const res = await callRoute("test-slug", { query: `?k=${token}` })
+    expect(res.status).toBe(200)
+    expect(bcryptCompareMock).not.toHaveBeenCalled()
+  })
+
+  it("falls back to the password prompt for a wrong token", async () => {
+    resolveSlugMock.mockResolvedValue({
+      ...baseCompetition,
+      publicPasswordHash: "hash",
+      publicAccessToken: token,
+    })
+    const res = await callRoute("test-slug", { query: `?k=${token.replace(/.$/, "3")}` })
+    expect(res.status).toBe(401)
+    expect(res.headers.get("WWW-Authenticate")).toMatch(/^Basic realm=/)
+  })
+
+  it("ignores a token when the bypass is off", async () => {
+    resolveSlugMock.mockResolvedValue({ ...baseCompetition, publicPasswordHash: "hash" })
+    const res = await callRoute("test-slug", { query: `?k=${token}` })
+    expect(res.status).toBe(401)
+  })
+
+  it("lets the right token win over a wrong Basic password", async () => {
+    resolveSlugMock.mockResolvedValue({
+      ...baseCompetition,
+      publicPasswordHash: "hash",
+      publicAccessToken: token,
+    })
+    bcryptCompareMock.mockResolvedValue(false)
+    const res = await callRoute("test-slug", { query: `?k=${token}`, authHeader: basicAuth("x") })
+    expect(res.status).toBe(200)
+  })
+})
+
+describe("public PDF route — never carries the QR code", () => {
+  // The QR code (and with it the access token) belongs on internal exports only. The public
+  // builders must not pass a publicLink — for every phase the route can render.
+  const cases: [string, Record<string, unknown>, boolean][] = [
+    ["ranking", { type: "EVENT" }, false],
+    ["standings", { type: "SEASON" }, false],
+    ["schedule", { type: "LEAGUE" }, false],
+    ["playoffs", { type: "LEAGUE" }, true],
+  ]
+
+  it.each(cases)("renders the %s PDF without publicLink", async (_phase, over, playoffs) => {
+    resolveSlugMock.mockResolvedValue({ ...baseCompetition, ...over })
+    hasPlayoffsStartedMock.mockResolvedValue(playoffs)
+    const res = await callRoute("test-slug")
+    expect(res.status).toBe(200)
+    const element = renderToBufferMock.mock.calls[0][0] as { props: Record<string, unknown> }
+    expect(element.props).not.toHaveProperty("publicLink")
   })
 })
