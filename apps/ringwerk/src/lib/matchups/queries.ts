@@ -88,15 +88,20 @@ export async function getMatchupsForCompetition(competitionId: string): Promise<
   }))
 }
 
-/** Erfasste Ergebnisse einer Liga — Grundlage der Sperre für „Spielplan neu generieren“. */
+/**
+ * Erfasste Ergebnisse einer Liga — Grundlage der Sperre für „Spielplan neu generieren“.
+ * `client` erlaubt den Aufruf innerhalb der Transaktion, die danach löscht und neu anlegt.
+ */
 export async function getScheduleResultCounts(
-  competitionId: string
+  competitionId: string,
+  client: Pick<typeof db, "matchup" | "series" | "playoffMatch"> = db
 ): Promise<ScheduleResultCounts> {
   const [completed, walkover, series, playoffs] = await Promise.all([
-    db.matchup.count({ where: { competitionId, status: "COMPLETED" } }),
-    db.matchup.count({ where: { competitionId, status: "WALKOVER" } }),
-    db.series.count({ where: { matchup: { competitionId } } }),
-    db.playoffMatch.count({ where: { competitionId } }),
+    client.matchup.count({ where: { competitionId, status: "COMPLETED" } }),
+    client.matchup.count({ where: { competitionId, status: "WALKOVER" } }),
+    // über die Paarung, nicht über Series.competitionId — das ist bei Liga-Serien null
+    client.series.count({ where: { matchup: { competitionId } } }),
+    client.playoffMatch.count({ where: { competitionId } }),
   ])
   return { completed, walkover, series, playoffs }
 }
@@ -109,7 +114,6 @@ export async function getScheduleStatus(competitionId: string): Promise<Schedule
 
   return {
     hasSchedule: total > 0,
-    totalMatchups: total,
     regenerationBlocker: scheduleRegenerationBlocker(counts),
   }
 }
