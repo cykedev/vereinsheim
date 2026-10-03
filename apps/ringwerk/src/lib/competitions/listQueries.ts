@@ -39,6 +39,7 @@ export async function getCompetitionById(id: string): Promise<CompetitionDetail 
       isPublic: true,
       publicSlug: true,
       publicPasswordHash: true,
+      publicAccessToken: true,
       scoringMode: true,
       shotsPerSeries: true,
       disciplineId: true,
@@ -73,10 +74,11 @@ export async function getCompetitionById(id: string): Promise<CompetitionDetail 
     },
   })
   if (!row) return null
-  const { publicPasswordHash, ...rest } = row
+  const { publicPasswordHash, publicAccessToken, ...rest } = row
   return {
     ...rest,
     hasPublicPassword: publicPasswordHash != null,
+    hasPublicAccessToken: publicAccessToken != null,
     discipline: row.discipline
       ? { ...row.discipline, teilerFaktor: row.discipline.teilerFaktor.toNumber() }
       : null,

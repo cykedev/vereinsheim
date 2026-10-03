@@ -9,6 +9,7 @@ import type { AuditEventType } from "@/lib/auditLog/types"
 import { parseDate, revalidateCompetitionPaths, BaseSchema } from "./_shared"
 import { findActiveSlugConflict } from "../publicSlugQueries"
 import { revalidatePublicPdf } from "../publicPdfCache"
+import { resolveAccessTokenUpdate } from "../publicAccess"
 
 const CreateSchema = BaseSchema.extend({
   type: z.enum(["LEAGUE", "EVENT", "SEASON"], { message: "Ungültiger Wettbewerbstyp" }),
@@ -57,6 +58,9 @@ export async function createCompetition(
     publicSlug: formData.get("publicSlug"),
     publicPassword: formData.get("publicPassword"),
     removePublicPassword: formData.get("removePublicPassword"),
+    publicAccessFields: formData.get("publicAccessFields"),
+    publicQrBypass: formData.get("publicQrBypass"),
+    rotatePublicAccessToken: formData.get("rotatePublicAccessToken"),
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
 
@@ -138,6 +142,13 @@ export async function createCompetition(
       isPublic: parsed.data.isPublic ?? false,
       publicSlug: parsed.data.publicSlug,
       publicPasswordHash,
+      publicAccessToken:
+        resolveAccessTokenUpdate({
+          fieldsPresent: parsed.data.publicAccessFields,
+          bypass: parsed.data.publicQrBypass,
+          rotate: false,
+          existing: null,
+        }) ?? null,
       createdByUserId: session.user.id,
     },
     select: { id: true },

@@ -8,6 +8,7 @@ import type { AuditEventType } from "@/lib/auditLog/types"
 import { parseDate, parseDateForUpdate, revalidateCompetitionPaths, BaseSchema } from "./_shared"
 import { findActiveSlugConflict } from "../publicSlugQueries"
 import { revalidatePublicPdf } from "../publicPdfCache"
+import { resolveAccessTokenUpdate } from "../publicAccess"
 
 export async function updateCompetition(
   id: string,
@@ -29,6 +30,7 @@ export async function updateCompetition(
         status: true,
         isPublic: true,
         publicPasswordHash: true,
+        publicAccessToken: true,
       },
     }),
     db.matchup.count({ where: { competitionId: id } }),
@@ -66,6 +68,9 @@ export async function updateCompetition(
     publicSlug: formData.get("publicSlug"),
     publicPassword: formData.get("publicPassword"),
     removePublicPassword: formData.get("removePublicPassword"),
+    publicAccessFields: formData.get("publicAccessFields"),
+    publicQrBypass: formData.get("publicQrBypass"),
+    rotatePublicAccessToken: formData.get("rotatePublicAccessToken"),
     finalePrimary: formData.get("finalePrimary"),
     finaleTiebreaker1: formData.get("finaleTiebreaker1"),
     finaleTiebreaker2: formData.get("finaleTiebreaker2"),
@@ -116,6 +121,13 @@ export async function updateCompetition(
       isPublic: parsed.data.isPublic ?? false,
       publicSlug: parsed.data.publicSlug,
       publicPasswordHash: publicPasswordHashUpdate,
+      // Rotieren/Ausschalten ändert den Inhalt des öffentlichen PDFs nicht → kein Cache-Revalidate.
+      publicAccessToken: resolveAccessTokenUpdate({
+        fieldsPresent: parsed.data.publicAccessFields,
+        bypass: parsed.data.publicQrBypass,
+        rotate: parsed.data.rotatePublicAccessToken,
+        existing: competition.publicAccessToken,
+      }),
       scoringMode: rulesetLocked ? undefined : parsed.data.scoringMode,
       shotsPerSeries: rulesetLocked ? undefined : parsed.data.shotsPerSeries,
       // Nicht abgeschickte Stichtag-Felder (Formular blendet sie bei BEST_OF_SINGLE bzw.

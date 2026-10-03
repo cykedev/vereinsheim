@@ -51,6 +51,24 @@ export const BaseSchema = z
       .nullable()
       .optional()
       .transform((v) => v === "true" || v === "on"),
+    // Hidden-Marker: der isPublic-Block wurde gerendert (Drei-Wege-Semantik, Konvention §9)
+    publicAccessFields: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => v === "1"),
+    // „QR-Code öffnet ohne Passwort"
+    publicQrBypass: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => v === "true" || v === "on"),
+    // „Neuen Zugangscode erzeugen" — macht bisherige Ausdrucke ungültig
+    rotatePublicAccessToken: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => v === "true" || v === "on"),
     // Liga
     hinrundeDeadline: z.string().nullable().optional(),
     rueckrundeDeadline: z.string().nullable().optional(),
