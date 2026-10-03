@@ -4,7 +4,7 @@ import type { ScoringType } from "@/generated/prisma/client"
 import type { PlayoffBracketData, PlayoffMatchItem, PlayoffDuelItem } from "@/lib/playoffs/types"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import { styles, PDF_COLORS } from "@/lib/pdf/styles"
-import { HeaderMeta } from "@/lib/pdf/HeaderMeta"
+import { HeaderMeta, QR_SIZE_COMPACT_PT } from "@/lib/pdf/HeaderMeta"
 import type { PublicPdfLink } from "@/lib/competitions/publicPdfLink"
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
@@ -83,12 +83,14 @@ function PdfHeader({
   generatedAt,
   displayTimeZone,
   publicLink,
+  qrSize,
 }: {
   leagueName: string
   disciplineName: string
   generatedAt: Date
   displayTimeZone: string
   publicLink?: PublicPdfLink | null
+  qrSize?: number
 }): ReactElement {
   return (
     <View style={styles.headerBlock}>
@@ -100,6 +102,7 @@ function PdfHeader({
         generatedAt={generatedAt}
         displayTimeZone={displayTimeZone}
         publicLink={publicLink}
+        qrSize={qrSize}
       />
     </View>
   )
@@ -618,6 +621,8 @@ export function PlayoffsPdf({
           generatedAt={generatedAt}
           displayTimeZone={displayTimeZone}
           publicLink={publicLink}
+          // Das Achtelfinal-Bracket reizt die Querformat-Höhe aus (s. Bracket-Koordinaten).
+          qrSize={QR_SIZE_COMPACT_PT}
         />
         <BracketLayout bracket={bracket} />
         <View style={styles.footer} fixed>
