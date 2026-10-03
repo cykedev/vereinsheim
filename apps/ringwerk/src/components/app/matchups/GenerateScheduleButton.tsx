@@ -1,71 +1,63 @@
 "use client"
 
-import { useTransition } from "react"
-import { CalendarPlus } from "lucide-react"
+import { useState, useTransition } from "react"
+import { CalendarPlus, RefreshCw } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@vereinsheim/ui/alert-dialog"
+import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { toast } from "sonner"
+import type { LeagueFormat } from "@/generated/prisma/client"
 import { generateCompetitionSchedule } from "@/lib/matchups/actions"
+import { scheduleDialogText } from "@/lib/matchups/regeneration"
 
 interface Props {
   competitionId: string
+  /** Es gibt schon einen Spielplan → „neu generieren“ (die Seite zeigt den Button nur ohne Ergebnisse) */
   hasSchedule: boolean
+  leagueFormat: LeagueFormat
 }
 
-export function GenerateScheduleButton({ competitionId, hasSchedule }: Props) {
+export function GenerateScheduleButton({ competitionId, hasSchedule, leagueFormat }: Props) {
+  const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const text = scheduleDialogText({ hasSchedule, leagueFormat })
+  const label = hasSchedule ? "Spielplan neu generieren" : "Spielplan generieren"
+  const Icon = hasSchedule ? RefreshCw : CalendarPlus
 
   function handleConfirm() {
+    setOpen(false)
     startTransition(async () => {
       const result = await generateCompetitionSchedule(competitionId)
       if ("error" in result) {
-        toast.error(
-          typeof result.error === "string" ? result.error : "Fehler bei der Spielplan-Generierung."
-        )
+        toast.error(getErrorMessage(result, "Fehler bei der Spielplan-Generierung."))
+        return
       }
+      toast.success(hasSchedule ? "Spielplan neu generiert." : "Spielplan generiert.")
     })
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="px-2 sm:px-3"
-          disabled={isPending}
-          aria-label="Spielplan generieren"
-        >
-          <CalendarPlus className="h-4 w-4 sm:mr-1.5" />
-          <span className="hidden sm:inline">
-            {isPending ? "Generiere…" : "Spielplan generieren"}
-          </span>
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Spielplan generieren?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {hasSchedule
-              ? "Es existiert bereits ein Spielplan. Alle offenen Paarungen werden gelöscht und neu generiert. Bereits abgeschlossene Paarungen bleiben erhalten (Abbruch wenn vorhanden)."
-              : "Es wird ein Doppelrunden-Spielplan (Hin- und Rückrunde) für alle aktiven Teilnehmer generiert."}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm}>Generieren</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="px-2 sm:px-3"
+        disabled={isPending}
+        aria-label={label}
+        onClick={() => setOpen(true)}
+      >
+        <Icon className="h-4 w-4 sm:mr-1.5" />
+        <span className="hidden sm:inline">{isPending ? "Generiere…" : label}</span>
+      </Button>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={text.title}
+        description={text.description}
+        confirmLabel={text.confirmLabel}
+        destructive={hasSchedule}
+        onConfirm={handleConfirm}
+      />
+    </>
   )
 }

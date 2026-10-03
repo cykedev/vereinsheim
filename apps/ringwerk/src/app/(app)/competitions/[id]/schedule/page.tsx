@@ -72,9 +72,16 @@ export default async function CompetitionSchedulePage({ params }: Props) {
             {scheduleStatus.hasSchedule && (
               <PdfDownloadButton href={`/api/competitions/${id}/pdf/schedule`} />
             )}
-            {canManage && competition.status === "ACTIVE" && !scheduleStatus.hasSchedule && (
-              <GenerateScheduleButton competitionId={id} hasSchedule={scheduleStatus.hasSchedule} />
-            )}
+            {/* Neu generieren nur, solange noch kein Ergebnis erfasst ist (lib/matchups/regeneration.ts) */}
+            {canManage &&
+              competition.status === "ACTIVE" &&
+              (!scheduleStatus.hasSchedule || scheduleStatus.regenerationBlocker === null) && (
+                <GenerateScheduleButton
+                  competitionId={id}
+                  hasSchedule={scheduleStatus.hasSchedule}
+                  leagueFormat={competition.leagueFormat}
+                />
+              )}
           </>
         }
       />
