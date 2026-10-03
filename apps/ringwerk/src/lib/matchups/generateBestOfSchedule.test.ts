@@ -28,4 +28,14 @@ describe("generateBestOfSchedule", () => {
     expect(rounds[0]).toBe(1)
     expect(rounds).toEqual(Array.from({ length: rounds.length }, (_, i) => i + 1))
   })
+
+  it("5 players: everyone is side A in exactly two of four duels", () => {
+    // Reported case: the old circle method kept the first-enrolled player on side A throughout.
+    const ids = ["a", "b", "c", "d", "e"]
+    const duels = generateBestOfSchedule(ids).filter((m) => m.awayId !== null)
+    for (const id of ids) {
+      expect(duels.filter((m) => m.homeId === id)).toHaveLength(2)
+      expect(duels.filter((m) => m.awayId === id)).toHaveLength(2)
+    }
+  })
 })
