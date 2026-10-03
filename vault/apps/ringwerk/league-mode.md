@@ -30,7 +30,8 @@ bleiben).
   generieren“, solange in der Liga noch **kein Ergebnis** erfasst ist. Gesperrt ist es bei einer
   entschiedenen Paarung (`COMPLETED`/`WALKOVER`), bei einer Serie an irgendeiner Paarung und bei
   gestarteten Playoffs. Die Regel steht einmal in `lib/matchups/regeneration.ts`, Seite und Action
-  nutzen beide sie. Die Serien-Prüfung ist nötig, weil eine Best-of-Paarung `PENDING` bleibt,
+  nutzen beide sie. Die Action prüft sie in derselben serialisierbaren Transaktion, die löscht und
+  neu anlegt, und löscht nur Paarungen ohne Serie (`series: { none: {} }`). Die Serien-Prüfung ist nötig, weil eine Best-of-Paarung `PENDING` bleibt,
   bis alle Duelle entschieden sind, und `Series.matchupId` auf `ON DELETE SET NULL` steht. Ein
   Löschen ließe erfasste Duelle still verwaisen. Beim Neu-Generieren werden offene Paarungen und
   Freilose gelöscht, Spieltage und Gegner ändern sich, das öffentliche PDF wird invalidiert

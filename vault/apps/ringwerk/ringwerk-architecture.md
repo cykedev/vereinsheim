@@ -191,6 +191,7 @@ src/
       generateSchedule.test.ts
       generateBestOfSchedule.ts ← BEST_OF_SINGLE: einfache Runde aus roundRobin.ts (Berger-Tabelle, A/B ausgeglichen)
       roundRobin.ts           ← Einfachrunde nach Berger-Tabelle, A/B ausgeglichen (beide Formate)
+      regeneration.ts         ← Sperre + Dialogtexte für (Neu-)Generierung (testpflichtig)
       types.ts
     results/
       actions.ts              ← Ergebnis eintragen/korrigieren (DOUBLE_ROUND_ROBIN)
