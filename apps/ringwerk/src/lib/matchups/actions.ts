@@ -6,13 +6,16 @@ import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { generateSchedule } from "./generateSchedule"
 import { generateBestOfSchedule } from "./generateBestOfSchedule"
+import { getScheduleResultCounts } from "./queries"
+import { scheduleRegenerationBlocker } from "./regeneration"
+import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 
 /**
  * Generiert den Spielplan für einen aktiven Wettkampf.
  * Voraussetzungen:
  * - Wettkampf muss ACTIVE sein
  * - Mindestens 4 aktive Teilnehmer eingeschrieben
- * - Keine bereits abgeschlossenen Paarungen vorhanden
+ * - Noch kein Ergebnis erfasst (keine entschiedene Paarung, keine Serie, keine Playoffs)
  *
  * Bestehende offene Paarungen (PENDING) und Freilose (BYE) werden gelöscht und neu generiert.
  */
@@ -50,15 +53,11 @@ export async function generateCompetitionSchedule(competitionId: string): Promis
     }
   }
 
-  // Abgeschlossene Paarungen prüfen → Regenerierung verhindern
-  const completedCount = await db.matchup.count({
-    where: { competitionId, status: "COMPLETED" },
-  })
-  if (completedCount > 0) {
-    return {
-      error: `Spielplan kann nicht neu generiert werden — ${completedCount} Paarung(en) bereits abgeschlossen.`,
-    }
-  }
+  // Neu generieren nur ohne jedes Ergebnis — eine Best-of-Paarung bleibt PENDING, bis alle Duelle
+  // entschieden sind, und Series.matchupId steht auf ON DELETE SET NULL: ein Löschen ließe
+  // erfasste Serien still verwaisen.
+  const blocker = scheduleRegenerationBlocker(await getScheduleResultCounts(competitionId))
+  if (blocker) return { error: blocker }
 
   // Spielplan berechnen
   const participantIds = enrollments.map((e) => e.participantId)
@@ -110,6 +109,7 @@ export async function generateCompetitionSchedule(competitionId: string): Promis
 
   revalidatePath(`/competitions/${competitionId}/schedule`)
   revalidatePath(`/competitions/${competitionId}/participants`)
+  revalidatePublicPdf(competitionId)
 
   return { success: true }
 }

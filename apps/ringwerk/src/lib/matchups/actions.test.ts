@@ -9,6 +9,9 @@ const {
   matchupDeleteManyMock,
   matchupCreateManyMock,
   transactionMock,
+  seriesCountMock,
+  playoffMatchCountMock,
+  revalidatePublicPdfMock,
 } = vi.hoisted(() => ({
   getAuthSessionMock: vi.fn(),
   revalidatePathMock: vi.fn(),
@@ -18,6 +21,9 @@ const {
   matchupDeleteManyMock: vi.fn(),
   matchupCreateManyMock: vi.fn(),
   transactionMock: vi.fn(),
+  seriesCountMock: vi.fn(),
+  playoffMatchCountMock: vi.fn(),
+  revalidatePublicPdfMock: vi.fn(),
 }))
 
 vi.mock("@/lib/auth-helpers", () => ({
@@ -26,6 +32,9 @@ vi.mock("@/lib/auth-helpers", () => ({
 }))
 vi.mock("next/cache", () => ({
   revalidatePath: revalidatePathMock,
+}))
+vi.mock("@/lib/competitions/publicPdfCache", () => ({
+  revalidatePublicPdf: revalidatePublicPdfMock,
 }))
 vi.mock("@/lib/db", () => ({
   db: {
@@ -36,6 +45,8 @@ vi.mock("@/lib/db", () => ({
       deleteMany: matchupDeleteManyMock,
       createMany: matchupCreateManyMock,
     },
+    series: { count: seriesCountMock },
+    playoffMatch: { count: playoffMatchCountMock },
     $transaction: transactionMock,
   },
 }))
@@ -56,6 +67,13 @@ function captureCreateManyData(): { data: unknown[] } | undefined {
   const calls = matchupCreateManyMock.mock.calls
   if (calls.length === 0) return undefined
   return calls[0][0] as { data: unknown[] }
+}
+
+/** No results recorded anywhere — the precondition for (re)generating. */
+function noResults() {
+  matchupCountMock.mockResolvedValue(0)
+  seriesCountMock.mockResolvedValue(0)
+  playoffMatchCountMock.mockResolvedValue(0)
 }
 
 function setupTransaction() {
@@ -120,7 +138,7 @@ describe("generateCompetitionSchedule — auth guards", () => {
       { participantId: "p2" },
       { participantId: "p3" },
     ])
-    matchupCountMock.mockResolvedValue(0)
+    noResults()
     const result = await generateCompetitionSchedule("c1")
     expect(result).toMatchObject({ error: expect.stringContaining("4") })
     expect(transactionMock).not.toHaveBeenCalled()
@@ -136,9 +154,14 @@ describe("generateCompetitionSchedule — auth guards", () => {
       rueckrundeDeadline: null,
     })
     competitionParticipantFindManyMock.mockResolvedValue(FOUR_PARTICIPANTS)
-    matchupCountMock.mockResolvedValue(2)
+    noResults()
+    matchupCountMock.mockImplementation(async ({ where }: { where: { status?: string } }) =>
+      where.status === "COMPLETED" ? 2 : 0
+    )
     const result = await generateCompetitionSchedule("c1")
-    expect(result).toMatchObject({ error: expect.stringContaining("2 Paarung") })
+    expect(result).toMatchObject({
+      error: expect.stringContaining("2 Paarung(en) bereits entschieden"),
+    })
     expect(transactionMock).not.toHaveBeenCalled()
   })
 })
@@ -157,7 +180,7 @@ describe("generateCompetitionSchedule — BEST_OF_SINGLE", () => {
       rueckrundeDeadline: null,
     })
     competitionParticipantFindManyMock.mockResolvedValue(FOUR_PARTICIPANTS)
-    matchupCountMock.mockResolvedValue(0)
+    noResults()
     setupTransaction()
   })
 
@@ -244,6 +267,36 @@ describe("generateCompetitionSchedule — BEST_OF_SINGLE", () => {
     })
   })
 
+  it("bricht ab, wenn an einer offenen Paarung schon Duelle eingetragen sind", async () => {
+    // Best-of-Paarungen bleiben PENDING, bis alle Duelle entschieden sind. Series.matchupId steht
+    // auf ON DELETE SET NULL — ein Löschen ließe die erfassten Serien still verwaisen.
+    seriesCountMock.mockResolvedValue(2)
+    const result = await generateCompetitionSchedule("c1")
+    expect(result).toMatchObject({ error: expect.stringContaining("Ergebnisse erfasst") })
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it("bricht bei einem Kampflos-Sieg ab", async () => {
+    matchupCountMock.mockImplementation(async ({ where }: { where: { status?: string } }) =>
+      where.status === "WALKOVER" ? 1 : 0
+    )
+    const result = await generateCompetitionSchedule("c1")
+    expect(result).toMatchObject({ error: expect.stringContaining("bereits entschieden") })
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it("bricht ab, wenn die Playoffs laufen", async () => {
+    playoffMatchCountMock.mockResolvedValue(2)
+    const result = await generateCompetitionSchedule("c1")
+    expect(result).toMatchObject({ error: expect.stringContaining("Playoffs") })
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it("invalidiert das öffentliche PDF", async () => {
+    await generateCompetitionSchedule("c1")
+    expect(revalidatePublicPdfMock).toHaveBeenCalledWith("c1")
+  })
+
   it("revalidatePath wird für schedule und participants aufgerufen", async () => {
     await generateCompetitionSchedule("c1")
     expect(revalidatePathMock).toHaveBeenCalledWith("/competitions/c1/schedule")
@@ -265,7 +318,7 @@ describe("generateCompetitionSchedule — DOUBLE_ROUND_ROBIN regression", () => 
       rueckrundeDeadline: null,
     })
     competitionParticipantFindManyMock.mockResolvedValue(FOUR_PARTICIPANTS)
-    matchupCountMock.mockResolvedValue(0)
+    noResults()
     setupTransaction()
   })
 
