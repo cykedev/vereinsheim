@@ -6,7 +6,7 @@ import { getSeasonWithSeries } from "@/lib/competitions/queries"
 import { calculateSeasonStandings } from "@/lib/scoring/calculateSeasonStandings"
 import { resolveSeasonSort, sortSeasonStandings } from "@/lib/scoring/sortSeasonStandings"
 import { SeasonStandingsPdf } from "@/lib/pdf/SeasonStandingsPdf"
-import { getPublicPdfLink } from "@/lib/competitions/publicPdfLink"
+import { getPublicPdfLink } from "@/lib/competitions/publicPdfLinkQueries"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(

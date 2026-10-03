@@ -6,7 +6,7 @@ import { getCompetitionById } from "@/lib/competitions/queries"
 import { getPlayoffBracket } from "@/lib/playoffs/queries"
 import { PlayoffsPdf } from "@/lib/pdf/PlayoffsPdf"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
-import { getPublicPdfLink } from "@/lib/competitions/publicPdfLink"
+import { getPublicPdfLink } from "@/lib/competitions/publicPdfLinkQueries"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
