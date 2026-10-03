@@ -29,6 +29,18 @@ describe("hasValidAccessToken", () => {
 describe("resolveAccessTokenUpdate", () => {
   const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 
+  it("clears the token when the password is removed, even with the bypass on", () => {
+    expect(
+      resolveAccessTokenUpdate({
+        fieldsPresent: true,
+        bypass: true,
+        rotate: false,
+        existing: TOKEN,
+        passwordRemoved: true,
+      })
+    ).toBeNull()
+  })
+
   it("leaves the column alone when the publish block was not rendered", () => {
     expect(
       resolveAccessTokenUpdate({

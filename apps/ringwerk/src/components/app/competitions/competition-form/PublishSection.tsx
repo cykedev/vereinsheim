@@ -111,6 +111,11 @@ export function PublishSection({ form, competition }: Props) {
                 </Label>
               </div>
             )}
+            {removePublicPassword && hasExistingAccessToken && (
+              <p className="text-xs text-warning">
+                Der Zugangscode im QR-Code wird dabei ebenfalls gelöscht.
+              </p>
+            )}
           </div>
 
           {/* Marker: dieser Block wurde gerendert — sonst darf das Update das Token nicht anfassen */}
