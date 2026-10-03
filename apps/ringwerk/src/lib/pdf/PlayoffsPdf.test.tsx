@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { inflateSync } from "node:zlib"
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer"
 import { createElement, type ReactElement } from "react"
 import { PlayoffsPdf, type PlayoffsPdfProps } from "@/lib/pdf/PlayoffsPdf"
@@ -17,6 +18,34 @@ function mkMatch(i: number): PlayoffMatchItem {
     duels: [],
     canCorrect: false,
   }
+}
+
+// Wie in EventStarterListPdf.test.tsx: FlateDecode-Streams entpacken und
+// Hex-Text aus TJ-Arrays dekodieren.
+function extractPdfText(buffer: Buffer): string {
+  const raw = buffer.toString("binary")
+  const parts: string[] = [raw]
+  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g
+  let match: RegExpExecArray | null
+  while ((match = streamRegex.exec(raw)) !== null) {
+    try {
+      const decompressed = inflateSync(Buffer.from(match[1], "binary")).toString("latin1")
+      parts.push(
+        decompressed.replace(/\[([^\]]*)\] TJ/g, (_m, content: string) => {
+          const texts: string[] = []
+          const hexRegex = /<([0-9a-fA-F]+)>/g
+          let hexMatch: RegExpExecArray | null
+          while ((hexMatch = hexRegex.exec(content)) !== null) {
+            texts.push(Buffer.from(hexMatch[1], "hex").toString("latin1"))
+          }
+          return texts.join("") + " "
+        })
+      )
+    } catch {
+      // nicht komprimiert
+    }
+  }
+  return parts.join("\n")
 }
 
 function pageCount(buffer: Buffer): number {
@@ -52,6 +81,17 @@ describe("PlayoffsPdf — header with QR code", () => {
       await render({ ...baseProps, publicLink: { displayUrl, qrUrl: displayUrl } })
     )
     expect(withQr).toBe(withoutQr)
+  })
+
+  it("repeats the header with the public link on every page, detail pages included", async () => {
+    // Printouts are hung up page by page — the detail pages need the QR code too.
+    const displayUrl = "https://ringwerk.example.org/api/public/c/kreisliga-2026/pdf"
+    const buffer = await render({ ...baseProps, publicLink: { displayUrl, qrUrl: displayUrl } })
+    const pages = pageCount(buffer)
+    const text = extractPdfText(buffer)
+    expect(pages).toBeGreaterThanOrEqual(2)
+    expect(text.split("Erstellt:").length - 1).toBe(pages)
+    expect(text.split("api/public/c/kreisliga-2026/pdf").length - 1).toBe(pages)
   })
 })
 

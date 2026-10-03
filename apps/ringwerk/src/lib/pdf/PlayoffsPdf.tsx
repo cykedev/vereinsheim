@@ -92,8 +92,9 @@ function PdfHeader({
   publicLink?: PublicPdfLink | null
   qrSize?: number
 }): ReactElement {
+  // fixed: Kopf (inkl. QR-Code) auf jeder Seite — Aushänge hängen nicht immer alle Seiten auf
   return (
-    <View style={styles.headerBlock}>
+    <View style={styles.headerBlock} fixed>
       <View style={styles.headerLeft}>
         <Text style={styles.headerTitle}>{leagueName}</Text>
         <Text style={styles.headerSubtitle}>{disciplineName} · Playoffs</Text>
@@ -643,6 +644,7 @@ export function PlayoffsPdf({
           disciplineName={disciplineName}
           generatedAt={generatedAt}
           displayTimeZone={displayTimeZone}
+          publicLink={publicLink}
         />
         <DetailSection bracket={bracket} scoringType={scoringType} />
         <View style={styles.footer} fixed>

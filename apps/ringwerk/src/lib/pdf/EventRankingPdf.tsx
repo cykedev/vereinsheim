@@ -227,7 +227,8 @@ export function EventRankingPdf({
     <Document title={`${competitionName} – Rangliste`} author="Ringwerk" creator="Ringwerk">
       <Page size="A4" style={styles.page}>
         {/* Kopfzeile */}
-        <View style={styles.headerBlock}>
+        {/* fixed: Kopf (inkl. QR-Code) auf jeder Seite — Aushänge hängen nicht immer alle Seiten auf */}
+        <View style={styles.headerBlock} fixed>
           <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>{competitionName}</Text>
             <Text style={styles.headerSubtitle}>
