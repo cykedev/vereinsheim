@@ -204,6 +204,10 @@ model Competition {
   publicSlug         String?
   // bcrypt hash, null = kein Passwortschutz. Plaintext wird nie gespeichert.
   publicPasswordHash String?
+  // Geheimes Zugangs-Token für den QR-Code auf intern exportierten PDFs: umgeht die
+  // Passwortabfrage. null = kein Bypass. Klartext, weil der Export es in den QR-Code schreibt;
+  // geht nie an den Client (nur hasPublicAccessToken).
+  publicAccessToken  String? @unique
 
   // Audit: wer hat den Wettbewerb angelegt
   createdByUserId String
