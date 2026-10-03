@@ -5,7 +5,7 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { getEventWithSeries } from "@/lib/competitions/queries"
 import { rankEventParticipants, rankEventTeams } from "@/lib/scoring/rankEventParticipants"
 import { EventRankingPdf } from "@/lib/pdf/EventRankingPdf"
-import { getPublicPdfLink } from "@/lib/competitions/publicPdfLink"
+import { getPublicPdfLink } from "@/lib/competitions/publicPdfLinkQueries"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(

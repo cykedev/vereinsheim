@@ -11,7 +11,7 @@ import {
 import { SchedulePdf } from "@/lib/pdf/SchedulePdf"
 import { BestOfSchedulePdf } from "@/lib/pdf/BestOfSchedulePdf"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
-import { getPublicPdfLink } from "@/lib/competitions/publicPdfLink"
+import { getPublicPdfLink } from "@/lib/competitions/publicPdfLinkQueries"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
