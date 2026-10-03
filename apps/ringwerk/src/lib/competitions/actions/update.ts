@@ -127,6 +127,7 @@ export async function updateCompetition(
         bypass: parsed.data.publicQrBypass,
         rotate: parsed.data.rotatePublicAccessToken,
         existing: competition.publicAccessToken,
+        passwordRemoved: parsed.data.removePublicPassword,
       }),
       scoringMode: rulesetLocked ? undefined : parsed.data.scoringMode,
       shotsPerSeries: rulesetLocked ? undefined : parsed.data.shotsPerSeries,

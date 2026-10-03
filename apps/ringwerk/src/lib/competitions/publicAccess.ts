@@ -13,17 +13,21 @@ export function hasValidAccessToken(provided: string | null, stored: string | nu
 
 /**
  * Drei-Wege-Update für `publicAccessToken`:
- * Block nicht gerendert → undefined (Spalte nicht anfassen); Bypass aus → null;
- * Bypass an → bestehendes Token behalten, außer es fehlt oder soll rotiert werden.
+ * Block nicht gerendert → undefined (Spalte nicht anfassen); Passwort entfernt oder Bypass aus →
+ * null; Bypass an → bestehendes Token behalten, außer es fehlt oder soll rotiert werden.
+ *
+ * Das Entfernen des Passworts löscht das Token mit: sonst machte ein später neu gesetztes Passwort
+ * alle Ausdrucke mit dem alten Code still wieder wirksam.
  */
 export function resolveAccessTokenUpdate(input: {
   fieldsPresent: boolean
   bypass: boolean
   rotate: boolean
   existing: string | null
+  passwordRemoved?: boolean
 }): string | null | undefined {
   if (!input.fieldsPresent) return undefined
-  if (!input.bypass) return null
+  if (input.passwordRemoved || !input.bypass) return null
   if (input.existing && !input.rotate) return undefined
   return randomUUID()
 }

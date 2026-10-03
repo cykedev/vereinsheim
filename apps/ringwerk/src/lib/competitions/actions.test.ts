@@ -1003,6 +1003,17 @@ describe("updateCompetition — QR access token", () => {
     expect(await updateWith({})).toBeUndefined()
   })
 
+  it("clears the token together with the password", async () => {
+    // Otherwise a later new password would silently revive every printout of the old code.
+    expect(
+      await updateWith({
+        publicAccessFields: "1",
+        publicQrBypass: "on",
+        removePublicPassword: "on",
+      })
+    ).toBeNull()
+  })
+
   it("issues a new token on rotation", async () => {
     const next = await updateWith({
       publicAccessFields: "1",
