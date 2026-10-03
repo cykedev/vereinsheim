@@ -6,10 +6,11 @@ import { getCompetitionById } from "@/lib/competitions/queries"
 import { getPlayoffBracket } from "@/lib/playoffs/queries"
 import { PlayoffsPdf } from "@/lib/pdf/PlayoffsPdf"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
+import { getPublicPdfLink } from "@/lib/competitions/publicPdfLink"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const session = await getAuthSession()
@@ -33,6 +34,9 @@ export async function GET(
     return new NextResponse("Playoffs noch nicht gestartet", { status: 404 })
   }
 
+  // Nur der interne Export trägt den QR-Code zum öffentlichen PDF (nie die öffentliche Route).
+  const publicLink = await getPublicPdfLink(req, id)
+
   const element = createElement(PlayoffsPdf, {
     leagueName: competition.name,
     disciplineName: competition.discipline?.name ?? "Gemischt",
@@ -40,6 +44,7 @@ export async function GET(
     bracket,
     generatedAt: new Date(),
     displayTimeZone: getDisplayTimeZone(),
+    publicLink,
   }) as ReactElement<DocumentProps>
 
   const buffer = await renderToBuffer(element)

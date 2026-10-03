@@ -5,10 +5,11 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { getEventWithSeries } from "@/lib/competitions/queries"
 import { rankEventParticipants, rankEventTeams } from "@/lib/scoring/rankEventParticipants"
 import { EventRankingPdf } from "@/lib/pdf/EventRankingPdf"
+import { getPublicPdfLink } from "@/lib/competitions/publicPdfLink"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const session = await getAuthSession()
@@ -24,6 +25,9 @@ export async function GET(
   }
 
   const { competition, series } = data
+
+  // Nur der interne Export trägt den QR-Code zum öffentlichen PDF (nie die öffentliche Route).
+  const publicLink = await getPublicPdfLink(req, id)
 
   const ranked = rankEventParticipants(series, {
     scoringMode: competition.scoringMode,
@@ -51,6 +55,7 @@ export async function GET(
     teamScoring: isTeamEvent ? teamScoring : undefined,
     generatedAt: new Date(),
     displayTimeZone: getDisplayTimeZone(),
+    publicLink,
   }) as ReactElement<DocumentProps>
 
   const buffer = await renderToBuffer(element)

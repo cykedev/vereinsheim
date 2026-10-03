@@ -11,10 +11,11 @@ import {
 import { SchedulePdf } from "@/lib/pdf/SchedulePdf"
 import { BestOfSchedulePdf } from "@/lib/pdf/BestOfSchedulePdf"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
+import { getPublicPdfLink } from "@/lib/competitions/publicPdfLink"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const session = await getAuthSession()
@@ -30,6 +31,9 @@ export async function GET(
   }
 
   const isBestOf = competition.leagueFormat === "BEST_OF_SINGLE"
+
+  // Nur der interne Export trägt den QR-Code zum öffentlichen PDF (nie die öffentliche Route).
+  const publicLink = await getPublicPdfLink(req, id)
 
   const [standingsClassic, standingsBestOf, matchups] = await Promise.all([
     isBestOf ? Promise.resolve([]) : getStandingsForCompetition(id),
@@ -55,6 +59,7 @@ export async function GET(
       matchups,
       generatedAt: new Date(),
       displayTimeZone: getDisplayTimeZone(),
+      publicLink,
     }) as ReactElement<DocumentProps>
   } else {
     element = createElement(SchedulePdf, {
@@ -67,6 +72,7 @@ export async function GET(
       secondLegDeadline: competition.rueckrundeDeadline,
       generatedAt: new Date(),
       displayTimeZone: getDisplayTimeZone(),
+      publicLink,
     }) as ReactElement<DocumentProps>
   }
 
