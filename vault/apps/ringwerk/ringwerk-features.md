@@ -289,7 +289,7 @@ BEST_OF_SINGLE ist ein alternatives Gruppenphase-Format für LEAGUE-Wettbewerbe.
 
 - Single Round-Robin: Jeder gegen jeden einmal (Berger-Tabelle mit ausgeglichener A/B-Verteilung, wie DOUBLE_ROUND_ROBIN ohne Rückrunde; siehe [[league-mode]])
 - Ungerade Teilnehmerzahl → Freilos-Matchup (awayParticipantId = null)
-- Spieltage (roundIndex) entsprechen dem Doppelrunden-Format: n-1 Spieltage für n Teilnehmer
+- Spieltage (roundIndex) entsprechen dem Doppelrunden-Format: n-1 Spieltage bei gerader, n bei ungerader Teilnehmerzahl
 
 ### Ergebniserfassung
 
