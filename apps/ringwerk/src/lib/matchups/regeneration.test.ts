@@ -49,6 +49,7 @@ describe("scheduleDialogText", () => {
       expect(t.title).toBe("Spielplan neu generieren?")
       expect(t.confirmLabel).toBe("Neu generieren")
       expect(t.description).toContain("Gegner ändern sich")
+      expect(t.description).toContain("aktiven Teilnehmer")
       expect(t.description).not.toContain("bleiben erhalten")
     }
   })
