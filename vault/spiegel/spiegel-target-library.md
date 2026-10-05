@@ -3,10 +3,10 @@ id: spiegel-target-library
 type: concept
 title: "Spiegel — Scheibenbilder, Disziplinen und Wertung"
 aliases: [scheibenbilder, scheiben-setups, target-library, wertungsformel]
-keywords: [scheibenbild, scheibe, ringdurchmesser, ringabstand, spiegel, innenzehner, kaliber, messlehre, zehntelwertung, abschneiden, teiler, disziplinid, regelnummer, dsb-sportordnung, issf, luftgewehr, luftpistole, kk, zimmerstutzen, 25m pistole, duell, schnellfeuer, gegenprobe, preisscheibe]
+keywords: [scheibenbild, scheibe, ringdurchmesser, ringabstand, spiegel, innenzehner, kaliber, messlehre, zehntelwertung, abschneiden, teiler, disziplinid, regelnummer, dsb-sportordnung, issf, luftgewehr, luftpistole, kk, zimmerstutzen, 25m pistole, duell, schnellfeuer, gegenprobe, preisscheibe, disziplin-familie, neu werten, falsche disziplin, scheibenbild erkennen, offene schusszahl]
 part_of: ["[[spiegel]]"]
 documented_in: ["[[src-meyton-recherche-2026-10]]", "[[src-meyton-live-display]]"]
-relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-data-model]]"]
+relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-data-model]]", "[[spiegel-edge-cases]]"]
 ---
 
 **TL;DR** Jede Disziplin braucht ein Scheibenbild als reine Daten (Ringe, Spiegel, Innenzehner, Ringabstand, Kaliber). Die Kette lautet DisziplinID → Regelnummer → Disziplin → Scheibenbild je Stellung. Mit Scheibenbild und Kaliber rechnet Spiegel jeden Zehntelwert aus x/y nach; am echten Meyton-Ausdruck stimmen alle geprüften Werte.
@@ -49,8 +49,10 @@ Gezeichnet wird daraus eine SVG-Scheibe (Papier, Spiegel, Ringlinien, Ringzahlen
 - Die achtstellige DisziplinID kodiert Entfernung, Regelnummer und Schusszahl ([[meyton-ssmdb2]]). Beispiele: LG 40 = `10110040`, LP 40 = `10210040`, KK 60 liegend = `40180060`, ZS 30 = `20130030`.
 - Die Ziffern 2–5 sind nur bei DSB-Disziplinen die DSB-Regel. Training, Liga und ISSF nutzen Meyton-eigene Nummern (zum Beispiel `11010010` „LG Probe + 10 Wertung“, `10510040` „LG Liga“). Der Regelkatalog kennt beide Arten.
 - **Je Stellung ein Scheibenbild:** bei der 25-m-Pistole ist Stellung 1 die Präzisions-, Stellung 2 die Duellscheibe.
-- Die SSMDB2 enthält keine Geometrie; auch Meyton rät zu einer eigenen Tabelle. Für eigene Disziplin-Varianten des Vereins (zum Beispiel „LP 40 alt“) greift ein Rückfall: Entfernung 10 m plus Namensanfang LG oder LP. Für alles andere, etwa Preisscheiben, ordnet ein Admin den Disziplinnamen einem Scheibenbild zu.
-- Ob ganz oder zehntel gewertet wird, steht je Treffer im Feld `Wertung` (seit ShootMaster 5.2).
+- Die SSMDB2 enthält keine Geometrie; auch Meyton rät zu einer eigenen Tabelle. Für eigene Disziplin-Varianten des Vereins (zum Beispiel „LP 40 alt“) greift ein Rückfall: Entfernung 10 m plus Namensanfang LG oder LP. Für alles andere schlägt Spiegel das Scheibenbild per Gegenprobe vor: Es nimmt das Bild aus der Bibliothek, das alle amtlichen Zehntelwerte reproduziert, und ein Admin bestätigt. Bis dahin zeigt Spiegel die Treffer auf einem neutralen Raster mit dem Merkmal `disziplin-unbekannt` (SF-17).
+- Die Schusszahl in der DisziplinID ist nur ein Hinweis, nie die Bedingung für „fertig“; `000` steht vermutlich für offenes Training (SF-09).
+- **Familien:** Jede Disziplin gehört zu einer Familie, in der Verläufe zusammen laufen (LG oder LP, Freihand oder Auflage). Spiegel schlägt sie aus dem Namen vor, der Admin bestätigt (SF-64).
+- Ob ganz oder zehntel gewertet wird, steht je Treffer im Feld `Wertung` (seit ShootMaster 5.2). Zehntel rechnet Spiegel immer, auch bei Ganzring-Disziplinen; Ringe und Zehntel sind getrennte Kennzahlen (SF-18).
 
 ## Wertung
 
@@ -61,6 +63,8 @@ Meyton wertet über den inneren Trefferrand, rechnet auf 1/100 mm und schneidet 
 Bei Luftgewehr, Luftpistole und KK ergibt Zehnerradius plus halbes Kaliber genau einen Ringabstand (Luftpistole 5,75 + 2,25 = 8 mm); dann vereinfacht sich die Formel zu „11 − Abstand ÷ Ringabstand“. Innenzehner ist ein Schuss bis Innenzehnerradius plus halbes Kaliber (Luftpistole 2,5 + 2,25 = 4,75 mm, also ab 10,4).
 
 Der **Teiler** ist der Abstand Schussmitte zu Scheibenmitte in 1/100 mm. Einen Teilerfaktor für die Luftpistole kennt die Sportordnung nicht; er steht in der jeweiligen Ausschreibung (üblich: LP-Teiler ÷ 2,6 bis 3,0). Spiegel speichert den rohen Teiler und rechnet Faktoren nur in der Ansicht.
+
+**Neu werten:** Die Lage x/y hängt nicht vom Scheibenbild ab. War am Stand die falsche Disziplin gewählt, wertet Spiegel die Scheibe mit dem richtigen Bild neu; die Werte sind dann nicht amtlich und tragen das Merkmal `neu-gewertet` (SF-16).
 
 ## Gegenprobe
 

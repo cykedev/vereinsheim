@@ -3,7 +3,7 @@ id: spiegel-open-questions
 type: guide
 title: "Spiegel — Offene Fragen und Antworten"
 aliases: [spiegel-fragen, spiegel-faq]
-keywords: [offene fragen, antworten, entscheidungen, fragenkatalog, klärung, phase 0]
+keywords: [offene fragen, antworten, entscheidungen, fragenkatalog, klärung, phase 0, sonderfälle, netztrennung, gäste-lan, probe-puffer]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-roadmap]]"]
 ---
@@ -21,6 +21,8 @@ relates_to: ["[[spiegel-roadmap]]"]
 - **Landen Trainings ohne Starter in der SSMDB2?** *(Architektur)* → unbekannt, SP-0.1.
 - **Zeigt Meyton den QR auch ohne Starter? Was steht in Link und PDF?** *(Architektur)* → ja, den QR gibt es immer, er gehört zum Ausdruck. Link auf ein PDF bei Meyton (HTTP, feste IP, zufälliger Name), im PDF Stand, Zeiten, Name mit #Nummer und eine ID ([[meyton-printout]]).
 - **Router mit Internet und Gerät mit fester IP im Meyton-Netz?** *(Architektur)* → ja.
+- **Wie sind die Netze getrennt?** *(Architektur)* → Die Schützen sind im Gäste-LAN, Meyton-Anlage und Brücke in einem eigenen Gerätenetz. Kein Problem, eher ein Gewinn: Alles läuft über Spiegel im Internet, und die SSMDB2 bleibt für Handys unerreichbar. Die Fundbüro-Seite auf der Brücke entfällt, gekoppelt wird per Code bei der Installation ([[spiegel-bridge]]).
+- **Hat das Gerätenetz ausgehend Internet, und wer betreut Router und Firewall?** *(Architektur)* → offen (SP-0.1). Vermutlich ja, weil Meyton die PDFs für den QR-Code hochlädt; sonst LTE.
 - **Standard-Zugang zur SSMDB2 nutzen?** → ja (ein eigener Lese-Benutzer ist nicht vorgesehen).
 - **Läuft die Anlage dauerhaft?** *(Architektur)* → nein: Meyton-Anlage und Brücke werden nach jedem Trainingsabend ausgeschaltet ([[spiegel-bridge]]).
 - **Wie wird ausgeschaltet: Herunterfahren oder Strom aus?** *(Architektur)* → Strom aus, also hart. Die Brücke muss jeden Stromverlust ohne Schaden überstehen ([[spiegel-bridge]]).
@@ -39,6 +41,19 @@ relates_to: ["[[spiegel-roadmap]]"]
 - **Frist für Fundsachen?** → sieben Tage.
 - **Wie viele aktive Schützen?** → etwa 10 bis 15.
 - **Gäste und Jugendliche?** → vorerst keine Unterstützung; Konten nur für erwachsene Mitglieder.
+
+## Sonderfälle (Review vom 5. Oktober 2026)
+
+Der Katalog steht in [[spiegel-edge-cases]].
+
+- **Probe aller Scheiben auf der Brücke puffern (sieben Tage), damit auch QR-Abholungen ihre Probe behalten?** *(Architektur)* → offen; Empfehlung ja. Nötig nur, wenn Meyton die Probe wirklich verwirft (SP-0.1).
+- **Die erste automatisch zugeordnete Scheibe vom Schützen bestätigen lassen?** → offen; Empfehlung ja.
+- **Wie oft wird nur auf Probe trainiert oder die Umschaltung auf Wertung vergessen?** → offen; Spiegel behandelt beides als vollwertiges Training.
+- **Lässt sich an unserer Anlage von Wertung zurück auf Probe schalten?** → offen (SP-0.1).
+- **Welche Disziplin-Varianten gibt es, und welche zählen zusammen?** → offen (SP-0.1); der Admin pflegt die Familien.
+- **Wird in der Probe das Visier verstellt, und soll Spiegel ein Ereignis „Visier verstellt“ anbieten?** → offen.
+- **Macht die Standaufsicht einen Abend lang das Schießprotokoll mit?** → offen (SP-0.6).
+- **Darf die Brücke bei einer QR-Anfrage zuerst nur eine Vorschau liefern und die ganze Scheibe erst nach der Gegenprobe?** → Empfehlung ja; das hält die Brücke dumm und lässt bei einer falschen ID nichts Fremdes hinaus ([[spiegel-assignment]]).
 
 ## Produkt
 
@@ -61,7 +76,7 @@ relates_to: ["[[spiegel-roadmap]]"]
 ## Design
 
 - **Was heißt „moderner“?** → Die Vorschau trifft es; Design und Funktionen gefallen ([[spiegel-ui-design]]).
-- **Nur dunkel oder hell und dunkel?** → offen; Vorschlag beides.
+- **Nur dunkel oder hell und dunkel?** → offen. Neuer Vorschlag nach dem Review: Phase 1 nur dunkel, Tokens von Anfang an für beide. [[adr-030]] begründet den Hellmodus mit der Sonne am 50-m-Stand, den der Verein nicht hat, und ohne ihn halbiert sich die Sichtprüfung in SP-1.8.
 - **Ringwert-Farben wie im Prototyp oder Meyton-Schema?** → offen.
 - **Design 2 später für alle Apps?** → offen ([[adr-030]]).
 

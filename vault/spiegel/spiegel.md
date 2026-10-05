@@ -3,23 +3,23 @@ id: spiegel
 type: guide
 title: "Spiegel — Schussrohdaten aus der Meyton-Anlage"
 aliases: [Spiegel, spiegel-app, Schussdaten-App]
-keywords: [spiegel, schussdaten, rohdaten, meyton, ssmdb2, trefferbild, schussbild, streukreis, schwerpunkt, dritte app, großvorhaben, plan, wegweiser]
+keywords: [spiegel, schussdaten, rohdaten, meyton, ssmdb2, trefferbild, schussbild, streukreis, schwerpunkt, dritte app, großvorhaben, plan, wegweiser, sonderfälle]
 part_of: ["[[overview]]"]
 governed_by: ["[[adr-026]]"]
 ---
 
-**TL;DR** Spiegel ist die geplante dritte Vereinsheim-App: Sie übernimmt über eine lokale Brücke die Rohdaten jeder Meyton-Scheibe (Trefferlage auf 1/100 mm, Ring, Zehntel, Teiler, Zeit auf die Millisekunde) und macht daraus Schussbild, Wiedergabe, Serien, Verläufe und direkte Vergleiche. Zugeordnet wird per Meyton-QR samt Original-PDF. Open Source unter Apache-2.0, eine Installation je Verein.
+**TL;DR** Spiegel ist die geplante dritte Vereinsheim-App: Sie übernimmt über eine lokale Brücke die Rohdaten jeder Meyton-Scheibe (Trefferlage auf 1/100 mm, Ring, Zehntel, Teiler, Zeit auf die Millisekunde) und macht daraus Schussbild, Wiedergabe, Serien, Verläufe und direkte Vergleiche. Zugeordnet wird automatisch per Sportpass-Opt-in, sonst per Meyton-QR samt Original-PDF. Open Source unter Apache-2.0, eine Installation je Verein.
 
 # Spiegel — Plan und Wegweiser
 
-> **Status (5. Oktober 2026):** Konzept und Grundsatzentscheidungen stehen ([[adr-026]] bis [[adr-030]]). Als Nächstes: Phase 0 (Erkundung vor Ort) und parallel die ersten reinen Fachkern-Features. Gearbeitet wird Feature für Feature nach der [[spiegel-roadmap]].
+> **Status (5. Oktober 2026):** Konzept und Grundsatzentscheidungen stehen ([[adr-026]] bis [[adr-030]]); ein kritisches Review hat die Sonderfälle als Katalog mit Testfällen festgehalten ([[spiegel-edge-cases]]). Als Nächstes: Phase 0 (Erkundung vor Ort) und parallel die ersten reinen Fachkern-Features. Gearbeitet wird Feature für Feature nach der [[spiegel-roadmap]].
 >
-> **Rahmen:** nur 10-m-Stände (Luftgewehr, Luftpistole, Auflage), etwa 10 bis 15 Nutzer, keine Gäste und Jugendlichen, der VPS bleibt bei 2 GB.
+> **Rahmen:** nur 10-m-Stände (Luftgewehr, Luftpistole, Auflage), etwa 10 bis 15 Nutzer, keine Gäste und Jugendlichen, der VPS bleibt bei 2 GB. Schützen im Gäste-LAN, Anlage und Brücke im Gerätenetz; beide werden nach dem Training hart ausgeschaltet.
 
 ## So arbeiten wir mit diesem Plan
 
 1. In der [[spiegel-roadmap]] das nächste offene Feature wählen, dessen Abhängigkeiten erledigt sind.
-2. `/plan` mit Verweis auf den Feature-Abschnitt; der Plan landet in `plans/<datum>-spiegel-<feature>.md`.
+2. `/plan` mit Verweis auf den Feature-Abschnitt und die dort genannten Sonderfälle (SF-IDs aus [[spiegel-edge-cases]]); der Plan landet in `plans/<datum>-spiegel-<feature>.md`.
 3. `/implement` → `/validate` → `/review`, Merge nach `main` nur mit OK.
 4. Status des Features in der Roadmap nachziehen. Neue Entscheidungen werden ADRs, neues Wissen kommt in die passende Note dieses Ordners.
 
@@ -32,9 +32,10 @@ Features, die Deploy-Vertrag, Schema oder ADRs berühren, laufen interaktiv stat
 3. [[spiegel-bridge]] und [[spiegel-ingest-pipeline]] — der Weg der Daten aus dem Schützenhaus.
 4. [[spiegel-assignment]] — wem eine Scheibe gehört und wann das feststeht.
 5. [[spiegel-data-model]], [[spiegel-target-library]], [[spiegel-metrics]] — der Fachkern.
-6. [[spiegel-ui-design]] — Design 2, Navigation, Bildschirme, Farben.
-7. [[spiegel-privacy]] — Datenschutz, Rollen, verdeckte Wertung.
-8. [[spiegel-roadmap]] und [[spiegel-open-questions]] — was wir wann bauen und was noch offen ist.
+6. [[spiegel-edge-cases]] — Sonderfälle und Fallstricke mit IDs (SF-xx), Grundlage der Testdaten und Abnahmen.
+7. [[spiegel-ui-design]] — Design 2, Navigation, Bildschirme, Farben.
+8. [[spiegel-privacy]] — Datenschutz, Rollen, verdeckte Wertung.
+9. [[spiegel-roadmap]] und [[spiegel-open-questions]] — was wir wann bauen und was noch offen ist.
 
 ## Domänenwissen
 

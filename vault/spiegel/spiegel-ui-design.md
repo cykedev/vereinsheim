@@ -3,10 +3,10 @@ id: spiegel-ui-design
 type: concept
 title: "Spiegel — Design 2 und Bildschirme"
 aliases: [spiegel-design, design-2, spiegel-ui]
-keywords: [design, ui, ux, design 2, modern, prototyp, bottom navigation, untere navigation, scannen, session-detail, trefferbild, wiedergabe, replay, serien, kacheln, hell, dunkel, farbskala, ringwert-farben, farbenblind, archivo, geist, typografie, pwa, mobil, desktop]
+keywords: [design, ui, ux, design 2, modern, prototyp, bottom navigation, untere navigation, scannen, session-detail, trefferbild, wiedergabe, replay, serien, kacheln, hell, dunkel, farbskala, ringwert-farben, farbenblind, archivo, geist, typografie, pwa, mobil, desktop, sonderfälle, probe-blöcke, merkmale, als wertung zählen, nicht meine, trainingsabend]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
-relates_to: ["[[component-canon]]", "[[navigation-pattern]]", "[[spiegel-metrics]]"]
+relates_to: ["[[component-canon]]", "[[navigation-pattern]]", "[[spiegel-metrics]]", "[[spiegel-edge-cases]]"]
 ---
 
 **TL;DR** Spiegel ist modern, ruhig und datengetrieben: die Scheibe ist der Held, die Oberfläche bleibt kühl-neutral, Farbe kommt aus den Daten, hell und dunkel. Auf dem Handy gibt es eine untere Navigation mit zentraler Scan-Aktion, auf dem Desktop eine Analysezentrale. Der klickbare Prototyp liegt in `vault/_attachments/spiegel-konzept.html` und hat dem User gefallen.
@@ -17,7 +17,7 @@ relates_to: ["[[component-canon]]", "[[navigation-pattern]]", "[[spiegel-metrics
 - **Farbe kommt aus den Daten.** Die Oberfläche bleibt kühl-neutral (Blaugrau), damit Ringwerte, Serien und Vergleiche leuchten.
 - **Daumenzone ohne Verdecken.** Navigation unten, Inhalte enden davor (die ShotsApp verdeckt dort Serienwerte).
 - **Bewegung mit Bedeutung:** Wiedergabe in echter Reihenfolge, Zoom auf die Gruppe, weiche Übergänge von der Liste in die Scheibe; mit „Bewegung reduzieren“ springt alles.
-- **Hell und dunkel:** dunkel für die Halle am Abend, hell für den 50-m-Stand in der Sonne.
+- **Hell und dunkel:** dunkel für die Halle am Abend, hell für Tageslicht. Der Verein schießt nur in der 10-m-Halle; ob Phase 1 nur dunkel startet, ist offen ([[spiegel-open-questions]]).
 - **Desktop ist die Analysezentrale:** Scheibe links, Kennzahlen rechts, Vergleiche nebeneinander.
 - **Zahlen in Worten:** die wichtigste Beobachtung als Satz ([[spiegel-metrics]]).
 
@@ -36,6 +36,17 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 | Fortschritt | Verlauf jeder Kennzahl, Rekorde, Kalender |
 | Profil | Zuordnung (Sportpass), Freigaben, Export, Löschen |
 | Admin | Anlagen, Brücken-Status, Zuordnungen, Scheibenbilder, Nutzer |
+
+## Sonderfälle in der Oberfläche
+
+Aus dem Sonderfall-Katalog ([[spiegel-edge-cases]]):
+
+- **Probe beliebig lang:** gegliedert in Zehnerblöcke P1…Pn. Eine Scheibe nur mit Probe zeigt die volle Analyse ohne Ergebnis. Der Prototyp nimmt fünf Probeschüsse vor der Wertung an; das ist ein Beispiel, kein Modell (SF-02).
+- **Merkmale als ruhige Hinweise** an der Scheibe (unvollständig, korrigiert, nur PDF, neu gewertet), Erklärung auf Antippen.
+- **Aktionen an der Scheibe:** „Als Wertung zählen“ für eine vergessene Umschaltung (SF-05), „Disziplin korrigieren“, „Nicht meine“, „Aus Verläufen ausnehmen“, „An Schuss n teilen“.
+- **Liste nach Trainingsabend:** kleine Scheiben (Aufwärmen, Abbruch) eingeklappt unter dem Abend (SF-11).
+- **Wiedergabe mit Tempo-Wahl,** damit 100 Schuss nicht minutenlang dauern.
+- **Leere Werte:** Eine Kennzahl ohne Wert zeigt „–“ mit Grund („zu wenige Schüsse“), nie 0.
 
 ## Farben und Schrift (aus dem Prototyp)
 

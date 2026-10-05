@@ -3,10 +3,10 @@ id: spiegel-assignment
 type: concept
 title: "Spiegel — Zuordnung von Scheiben zu Schützen"
 aliases: [zuordnung, claim, scheibe-holen, fundbüro]
-keywords: [zuordnung, claim, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts]
+keywords: [zuordnung, claim, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts, erste scheibe bestätigen, nicht meine, mehrdeutige sportpassid, überlauf, zwischenstand, gäste-lan]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-028]]"]
-relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]"]
+relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]"]
 ---
 
 **TL;DR** Meyton kennt Schützen über Namen, SportpassID und Startnummer, Spiegel kennt Konten. Standard ist das **Opt-in per Sportpass**: Wer seine Sportpassnummer einmal verknüpft und zustimmt, dessen Scheiben lädt die Brücke noch am Trainingsabend automatisch hoch. Für alles andere gibt es den **QR-Code des Meyton-Ausdrucks** (ID im PDF → genau diese Scheibe) und **„Scheibe holen“**. Hochgeladen wird erst, wenn ein Besitzer feststeht. An jeder Scheibe steht, auf welchem Weg sie zum Konto kam.
@@ -24,18 +24,22 @@ Frei getippte Namen (bei euch neben der Schützenliste üblich) ergeben nur **Vo
 
 ## Opt-in per Sportpass
 
-- Der Schütze trägt im Profil seine Sportpassnummer ein und stimmt dem automatischen Hochladen zu; ein Admin bestätigt die Verknüpfung einmal.
+- Der Schütze trägt im Profil seine Sportpassnummer ein und stimmt dem automatischen Hochladen zu; ein Admin bestätigt die Verknüpfung einmal. Dabei sieht er, unter welchem Namen die SportpassID in der SSMDB2 vorkommt; eine Nummer von einem liegengelassenen Ausdruck reicht damit nicht (SF-34).
 - Spiegel gibt der Brücke eine Liste gehashter SportpassIDs der Zustimmenden. Jede Scheibe mit passender SportpassID lädt die Brücke **während des Abends** hoch, Probe eingeschlossen, ohne dass jemand etwas tun muss.
-- Rückwirkend: Nach der Verknüpfung lädt die Brücke beim nächsten Einschalten ältere Scheiben mit dieser SportpassID nach, soweit die SSMDB2 sie hat.
+- Rückwirkend (SP-2.5): Nach der Verknüpfung lädt die Brücke ältere Scheiben mit dieser SportpassID nach, nach einer Vorschau. Meyton kopiert die SportpassID beim Schießen in die Scheibe; eine später nachgepflegte Nummer steht deshalb nicht in alten Scheiben. Die schlägt Spiegel über den Namen vor, und der Schütze bestätigt (SF-36).
 - Voraussetzung ist, dass der Name am Stand aus der Schützenliste gewählt wird. Frei getippte Namen tragen keine SportpassID; dann hilft der QR.
 - Das Original-PDF fehlt auf diesem Weg, solange es nicht auch auf der Meyton-Freigabe liegt (Phase 0). Wer es haben will, scannt den QR; Spiegel hängt es an die vorhandene Scheibe.
+- **Erste Scheibe bestätigen:** Die erste automatisch zugeordnete Scheibe legt Spiegel dem Schützen vor („Dienstag, Stand 6, 19:12, deine?“). Erst danach läuft das Opt-in ohne Rückfrage. So fällt eine vertippte oder vertauschte SportpassID auf, bevor fremde Scheiben im Konto landen (SF-34).
+- **Keine Automatik bei mehrdeutiger SportpassID:** Kommt eine SportpassID in der SSMDB2 mit verschiedenen Namen vor (Tippfehler in der Schützenverwaltung oder Überlauf langer Nummern im Feld `int(11)`), ordnet Spiegel sie nicht automatisch zu und meldet es dem Admin. Gesperrt sind außerdem 0, leer und 2147483647; vor dem Hashen wird die Nummer normalisiert (SF-35).
+- **„Nicht meine“:** Wählt jemand am Stand den falschen Namen, landet seine Scheibe automatisch im fremden Konto. Ein Tipp auf „Nicht meine“ nimmt sie sofort heraus und legt sie dem Admin vor; findet sich kein Besitzer, wird sie gelöscht und bekommt einen Grabstein, den auch die Brücke kennt, damit der nächste Abgleich sie nicht wieder hochlädt (SF-28, SF-37).
+- Ein Konto kann mehrere SportpassIDs haben, etwa nach einem neuen Ausweis (SF-39).
 
 ## Der QR-Weg im Detail
 
-1. Scan in Spiegel (Kamera) oder Link einfügen. Erlaubt sind nur die bekannten Meyton-Adressen (Hostname `qrcode.meyton.eu` und die IP im QR), nur PDF, ohne Weiterleitungen, mit Größen- und Zeitgrenzen. Das Format beschreibt [[meyton-printout]].
+1. Scan in Spiegel (Kamera) oder Link einfügen. Erlaubt sind nur die in der Konfiguration hinterlegten Meyton-Adressen (heute `qrcode.meyton.eu` und eine feste IP), nie private Netze, nur PDF, ohne Weiterleitungen (SF-47). Die Größengrenze ist eng: Ein Ausdruck hat rund 40 KB, und in Treffsicher hat ein 3,2-MB-PDF schon 665 MB Speicher belegt (SF-48). Das Format beschreibt [[meyton-printout]].
 2. Spiegel speichert das PDF sofort (Meyton hält es nur eine Woche) und liest Kopf und Fuß: ID, Stand, Zeiten, Werte, #Nummer.
-3. Die ID im Fuß wird als vorzeichenbehaftete 32-Bit-Zahl dekodiert (`ff914420` → −7257056) und als Auftrag an die Brücke gegeben ([[spiegel-bridge]]).
-4. Gegenprobe: Werte im PDF gegen die Scheibe aus der SSMDB2. Der Link ist nur HTTP, deshalb ist das Pflicht.
+3. Die ID im Fuß wird als vorzeichenbehaftete 32-Bit-Zahl dekodiert (`ff914420` → −7257056) und als Auftrag an die Brücke gegeben ([[spiegel-bridge]]). Die Brücke liefert zuerst nur eine Vorschau: Stand, Beginn, Disziplin, Schusszahl und Zehntelwerte, ohne Namen und ohne Lage.
+4. Gegenprobe: Werte im PDF gegen die Vorschau. Erst wenn sie passen, holt Spiegel die ganze Scheibe; so verlassen bei einer falschen ID oder alten Epoche keine fremden Rohdaten das Schützenhaus (SF-41). Der Link ist nur HTTP, deshalb ist das Pflicht. Ein Ausdruck kann ein Zwischenstand sein; dann müssen die PDF-Werte den Anfang der Scheibe treffen, nicht die ganze (SF-42). Mehrere Ausdrucke derselben Scheibe hängen alle an ihr (SF-43).
 5. Vorschau mit PDF, Bestätigen. Steht im PDF eine #Nummer, die zu einem anderen Konto gehört, geht die Anfrage an den Admin.
 
 Ohne bestätigte ID (offen bis SP-0.2) sucht die Brücke über Uhrzeit, Stand und Schussfolge; das ist praktisch ebenso eindeutig.
@@ -48,7 +52,7 @@ Auswärts, ohne Brücke, legt derselbe Scan ein **Ergebnis ohne Rohdaten** aus d
 
 Scheiben ohne bekannten Besitzer bleiben im Schützenhaus, bis jemand sie abholt. Abgeholt wird über „Scheibe holen“ in Spiegel: Spiegel fragt die Brücke, die nur Vorschau-Angaben (Stand, Uhrzeit, Disziplin, Ergebnis, kleines Trefferbild, keine Namen) zurückgibt; die Schüsse kommen erst nach der Bestätigung. Das **braucht kein Display und kein Tablet** am Stand, geht aber nur, **solange die Brücke läuft**, also am Trainingsabend. Danach bleibt der QR-Weg.
 
-Optional kann die Brücke dieselbe Liste als Seite im Vereins-WLAN anbieten, die man auf dem eigenen Handy öffnet (fester QR-Aufkleber mit der Adresse der Brücke) und dort antippt. Das ist nur sinnvoll, wenn der Weg über Spiegel nicht reicht.
+Eine Fundbüro-Seite auf der Brücke selbst entfällt: Die Schützen sind im Gäste-LAN und erreichen das Gerätenetz mit Anlage und Brücke nicht (Stand 5. Oktober 2026, [[spiegel-bridge]]).
 
 Den QR gibt es laut Verein immer, auch ohne Starter. Das Fundbüro ist deshalb nur ein seltener Rückfall (QR verloren, Link abgelaufen), ohne Tablet, Frist sieben Tage. Offen ist nur, ob Trainings ohne Starter überhaupt in der SSMDB2 landen (Phase 0); sonst gibt es für sie nur das Ergebnis aus dem PDF.
 
@@ -69,4 +73,5 @@ Ein Check-in gilt, bis man sich abmeldet, jemand anderes am selben Stand einchec
 - Frist: sieben Tage nach dem letzten Schuss (einstellbar). Danach bleibt die Scheibe nur in der SSMDB2.
 - Wer zuerst bestätigt, bekommt die Scheibe; ein zweiter Anspruch geht an den Admin.
 - Abholen ist umkehrbar; jede Zuordnung wird protokolliert.
-- Haben zwei Schützen nacheinander auf derselben Scheibe geschossen, lässt sie sich an einer Schussnummer teilen.
+- Haben zwei Schützen nacheinander auf derselben Scheibe geschossen, lässt sie sich an einer Schussnummer teilen (SF-12).
+- Wer den QR hat, kann die Scheibe holen, wie mit einem Papierausdruck. Dagegen helfen Protokoll, Umkehr und „Das war ich“ (SF-40).

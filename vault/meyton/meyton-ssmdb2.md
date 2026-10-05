@@ -3,7 +3,7 @@ id: meyton-ssmdb2
 type: concept
 title: "Meyton SSMDB2 — die Scheibenablage in MySQL"
 aliases: [ssmdb2, scheibenablage, small shootmaster database, meyton-db]
-keywords: [ssmdb2, mysql, scheibenablage, scheiben, serien, treffer, scheibenid, stellung, probe, disziplinid, regelnummer, wertungsmodus, verdeckte wertung, ring01, teiler01, teiler001, zeitstempel, millisekunden, sportpassid, starterliste, status, rwk, liga, kontrollzentrum, odbc, read only, erkundung]
+keywords: [ssmdb2, mysql, scheibenablage, scheiben, serien, treffer, scheibenid, stellung, probe, disziplinid, regelnummer, wertungsmodus, verdeckte wertung, ring01, teiler01, teiler001, zeitstempel, millisekunden, sportpassid, starterliste, status, rwk, liga, kontrollzentrum, odbc, read only, erkundung, index, explain, show create table, timestamp, sitzungs-zeitzone, nur probe, versuche am stand, sportpass überlauf]
 part_of: ["[[meyton]]"]
 documented_in: ["[[src-meyton-ssmdb2-handbuch]]", "[[src-meyton-live-display]]", "[[src-meyton-recherche-2026-10]]"]
 relates_to: ["[[spiegel-bridge]]", "[[spiegel-ingest-pipeline]]"]
@@ -54,16 +54,23 @@ Achtstellig: 1. Ziffer Entfernung (1 = 10 m, 2 = 15 m, 3 = 25 m, 4 = 50 m, 5 = 1
 | `Startzeit` oft `0000-00-00` | Beginn aus dem ersten Treffer |
 | Zeiten sind Ortszeit ohne Zone | Zeitzone der Anlage, Rohwert behalten, Uhrabweichung messen |
 | `ScheibenID` vorzeichenbehaftet 32 Bit, oft negativ, nur je Instanz eindeutig | Schlüssel Quelle + Epoche + ScheibenID |
-| Platzhalter `--frei--` für freie Stände | filtern |
+| Platzhalter `--frei--` für freie Stände; womöglich heißen so auch Trainings ohne Starter | nur Scheiben ohne Treffer weglassen, nie nach dem Namen filtern |
 | keine Standbelegung in der DB | für Live optional LANA ([[meyton-interfaces]]) |
 | Korrekturen und Löschungen ändern Zeilen nachträglich | Snapshots mit Revision, Abgleich der letzten Tage |
-| Probeschüsse laut Release-Notiz nur bis zum ersten Wertungsschuss gespeichert | während des Schießens mitlesen |
-| `SportpassID` ist `int(11)`, Sportpassnummern dürfen 12 Stellen haben | vor Ort prüfen |
+| Probeschüsse laut Release-Notiz nur bis zum ersten Wertungsschuss gespeichert; unklar, ob sie dann gelöscht oder nur nicht mehr geschrieben werden | während des Schießens mitlesen und auf der Brücke puffern; Versuch in Phase 0 |
+| `SportpassID` ist `int(11)` (höchstens 2147483647), Sportpassnummern dürfen 12 Stellen haben; je nach MySQL-Modus wird gekappt, dann teilen sich viele Schützen eine ID | vor Ort prüfen; mehrdeutige IDs nie automatisch zuordnen ([[spiegel-assignment]]) |
 | im Training oft frei getippte Namen | Zuordnung nicht über Namen ([[spiegel-assignment]]) |
+| Indizes unbekannt; eine Abfrage ohne Index liest bei jedem Takt die ganze Tabelle, während geschossen wird | `SHOW INDEX` und `EXPLAIN` vor dem ersten Polling |
+| Ist `Zeitstempel` ein `TIMESTAMP`, rechnet MySQL ihn in die Sitzungs-Zeitzone um | Spaltentyp prüfen, Sitzungs-Zeitzone fest setzen und mitsenden |
+| Ob `Scheiben.Zeitstempel` bei Probeschüssen steigt, ist offen | Versuch in Phase 0; davon hängt die Änderungserkennung ab |
+| `Zeitstempel + Millisekunden` rechnet MySQL als Zahl; spätere Schüsse wirken dann älter | als Paar vergleichen |
+| Engine unbekannt: MyISAM sperrt beim Lesen die Tabelle und kann nach hartem Stromaus beschädigt sein; InnoDB zeigt einer lang offenen Transaktion keine neuen Zeilen | kurze Abfragen, Fehler nie als Löschung werten, `SHOW TABLE STATUS` |
+| Wertungsmodus `0` (unbekannt), womöglich bei Probe oder Altdaten | Admin gibt Modus 0 je Disziplin frei, Zähler im Heartbeat |
+| Die SportpassID steht als Kopie in jeder Scheibe; eine später nachgepflegte Nummer fehlt in alten Scheiben | rückwirkend nur mit Namensvorschlag und Bestätigung |
 
 ## Erkundung vor Ort
 
-Nur lesen, Ergebnisse mit Namen nicht weitergeben. Feste IP aus dem Workstation-Bereich (.10.201–239).
+Nur lesen, Ergebnisse mit Namen nicht weitergeben. Feste IP aus dem Workstation-Bereich (.10.201–239). Die Abfragen vor oder nach dem Training ausführen, nicht während geschossen wird: Einige lesen ganze Tabellen.
 
 ```sql
 SET SESSION TRANSACTION READ ONLY;
@@ -85,7 +92,49 @@ FROM Serien s JOIN Treffer t ON t.ScheibenID = s.ScheibenID AND t.Stellung = s.S
 WHERE s.ScheibenID = 12345 GROUP BY s.Stellung, s.Serie, s.Ring, s.Ring01;
 -- ID aus dem Ausdruck (siehe meyton-printout)
 SELECT ScheibenID, StandNr, Disziplin, TotalRing, TotalRing01, Zeitstempel FROM Scheiben WHERE ScheibenID = -7257056;
-SELECT NOW();
+SELECT NOW(), @@session.time_zone, @@global.time_zone, @@system_time_zone;
+-- Struktur, Engine, Spaltentypen und Indizes
+SHOW TABLE STATUS;
+SHOW CREATE TABLE Scheiben;
+SHOW CREATE TABLE Serien;
+SHOW CREATE TABLE Treffer;
+SHOW INDEX FROM Scheiben;
+SHOW INDEX FROM Treffer;
+-- Kosten der Änderungserkennung (type = ALL heißt: ganze Tabelle)
+EXPLAIN SELECT ScheibenID, Zeitstempel, Trefferzahl FROM Scheiben WHERE Zeitstempel >= NOW() - INTERVAL 2 MINUTE;
+EXPLAIN SELECT MAX(Zeitstempel) FROM Treffer;
+EXPLAIN SELECT * FROM Treffer WHERE ScheibenID = -7257056;
+-- Sonderfälle in der Ablage
+SELECT COUNT(*) AS nur_probe FROM Scheiben s
+WHERE NOT EXISTS (SELECT 1 FROM Treffer t WHERE t.ScheibenID = s.ScheibenID AND t.Stellung > 0);
+SELECT DisziplinID, Trefferzahl, COUNT(*) AS anzahl FROM Scheiben GROUP BY DisziplinID, Trefferzahl ORDER BY DisziplinID, Trefferzahl;
+SELECT DisziplinID, COUNT(DISTINCT Disziplin) AS namen FROM Scheiben GROUP BY DisziplinID HAVING namen > 1;
+SELECT SportpassID, COUNT(DISTINCT Nachname, Vorname) AS namen FROM Scheiben
+WHERE SportpassID > 0 GROUP BY SportpassID HAVING namen > 1;
+SELECT Serie, COUNT(*) AS anzahl FROM Treffer WHERE Stellung = 0 GROUP BY Serie;
+SELECT COUNT(*) AS ohne_lage FROM Treffer WHERE x = 0 AND y = 0;
+SELECT Ring, COUNT(*) AS anzahl FROM Treffer WHERE Ring <= 1 GROUP BY Ring;
+SELECT COUNT(*) AS mit_text FROM Treffer WHERE Text <> '';
+SELECT s.DisziplinID, t.Stellung, t.Wertung, COUNT(*) AS anzahl FROM Treffer t
+JOIN Scheiben s ON s.ScheibenID = t.ScheibenID GROUP BY s.DisziplinID, t.Stellung, t.Wertung;
+SELECT COUNT(*) AS frei_mit_treffern FROM Scheiben s WHERE TRIM(s.Nachname) = '--frei--'
+AND EXISTS (SELECT 1 FROM Treffer t WHERE t.ScheibenID = s.ScheibenID);
 ```
 
-Dazu am Stand: einen Probeschuss bewusst hoch rechts setzen (sind x und y positiv, zeigt y nach oben) und die Zeit bis zur neuen Zeile in `Treffer` stoppen.
+## Schießprotokoll
+
+Diese Versuche schießen wir mit der Standaufsicht an einem Abend, während ein kleines Skript wie die Brücke mitliest und jeden Zustand mit Zeit festhält (SP-0.6 der [[spiegel-roadmap]]). Die Fälle stehen mit IDs in [[spiegel-edge-cases]].
+
+1. **Achsen und Latenz:** einen Probeschuss bewusst hoch rechts setzen; sind x und y positiv, zeigt y nach oben. Zeit bis zur neuen Zeile stoppen.
+2. **Probe und Zeitstempel:** Steigt `Scheiben.Zeitstempel` bei einem Probeschuss?
+3. **Probe → Wertung → Probe:** 3 Probe, 2 Wertung, zurück auf Probe, 2 Probe, 2 Wertung; nach jeder Stufe abfragen. Bleibt die Probe stehen? Lässt sich zurückschalten, und mit welcher Nummer landet der Schuss?
+4. **Lange Probe:** LP 40 mit 15 Probeschüssen. Was zählt `Trefferzahl`, und hält Meyton die Scheibe für fertig?
+5. **Nur Probe:** eine Scheibe nur mit Probe beenden. Steht sie in `Scheiben`, mit welcher `Trefferzahl`?
+6. **Abbruch:** eine Scheibe nach drei Wertungsschüssen beenden. Welcher `Status`, welche Zahlen?
+7. **Ohne Starter:** ohne gewählten Namen schießen und ausdrucken. Landet die Scheibe in der Ablage, und unter welchem Namen (`--frei--`)?
+8. **Zwischen- und Doppelausdruck:** nach fünf Schuss drucken, weiterschießen, erneut drucken, dann noch einmal. Tragen alle Ausdrucke dieselbe ID?
+9. **Korrektur:** Die Aufsicht löscht einen Schuss und korrigiert einen Wert, soweit die Anlage das erlaubt. Rücken die Nummern nach, ändert sich `Text`?
+10. **Falsche Disziplin:** ein paar Schuss mit dem Luftgewehr auf einer Luftpistolen-Disziplin. Was steht in `Ring01`?
+11. **Verdeckte Wertung:** wenn die Aufsicht es einrichten kann, zwei Schuss im Modus 10. Was zeigen `Treffer` und `TotalRing`?
+
+Fehlschüsse schießen wir nicht absichtlich; die SQL-Checkliste sucht sie in der Historie (`Ring <= 1`).

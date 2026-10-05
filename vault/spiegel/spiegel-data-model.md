@@ -3,9 +3,9 @@ id: spiegel-data-model
 type: concept
 title: "Spiegel — Kanonisches Datenmodell"
 aliases: [datenmodell, spiegel-schema, kanonisches-modell]
-keywords: [datenmodell, schema, entitäten, prisma, anlage, quelle, epoche, brücke, stand, schützen-identität, konto, zuordnung, rohdatensatz, scheibe, stellung, serie, schuss, disziplin, scheibenbild, kennzahlwert, notiz, tag, ausrüstung, mikrometer, einheiten, revision]
+keywords: [datenmodell, schema, entitäten, prisma, anlage, quelle, epoche, brücke, stand, schützen-identität, konto, zuordnung, rohdatensatz, scheibe, stellung, serie, schuss, disziplin, scheibenbild, kennzahlwert, notiz, tag, ausrüstung, mikrometer, einheiten, revision, merkmale, zustand, disziplin-familie, ereignis, nur pdf]
 part_of: ["[[spiegel]]"]
-relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spiegel-metrics]]"]
+relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spiegel-metrics]]", "[[spiegel-edge-cases]]"]
 ---
 
 **TL;DR** Ein quellen-neutrales Modell: Rohdatensätze bleiben unverändert, daraus entsteht die kanonische Scheibe mit Stellungen, Serien und Schüssen; Kennzahlwerte sind eine neu berechenbare Projektion. Koordinaten in Mikrometern, amtliche Werte so wie die Quelle sie liefert, Zeit in UTC mit Millisekunden.
@@ -20,30 +20,35 @@ relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spi
 | Stand | StandNr oder StandNrText (zum Beispiel „H“ im Finale) | Anlage + Nr |
 | Schützen-Identität | wie Meyton den Schützen kennt | SportpassID, sonst Name + Verein |
 | Konto, Zuordnung | Spiegel-Nutzer und sein Weg zu Identität oder Scheibe, mit Status und Protokoll | id |
-| Rohdatensatz | unveränderter Snapshot | Quelle + ScheibenID + Prüfsumme |
-| Scheibe | ein Durchgang: Disziplin, Stand, Beginn, Ende, Status, Revision, Herkunft (Rohdaten oder nur PDF) | Quelle + Epoche + ScheibenID |
+| Rohdatensatz | Snapshot als Liste von Zeilenversionen, mit Folgenummer der Brücke ([[spiegel-ingest-pipeline]]) | Quelle + ScheibenID + Prüfsumme |
+| Grabstein | abgelehnte oder gelöschte Scheibe, die nicht wiederkommen darf; auch die Brücke kennt sie | Quelle + Epoche + ScheibenID |
+| Scheibe | ein Durchgang: Disziplin, Stand, Beginn, Ende, Status, Zustand (offen, ruhend, endgültig), Merkmale, Revision, Herkunft (Rohdaten oder nur PDF) | Quelle + Epoche + ScheibenID |
 | Stellung, Serie | Gliederung mit amtlichen Summen | Scheibe + Stellung + Serie |
-| Schuss | Lage, amtliche Werte, Zeit | Scheibe + Stellung + Treffer |
+| Schuss | Lage, amtliche Werte, Zeit | Scheibe + Stellung + Treffer je Revision; über Revisionen hinweg ein Fingerabdruck aus Zeit, Millisekunden und Lage |
 | Ausdruck | gespeichertes Meyton-PDF mit gelesenen Kopf- und Fußdaten | Scheibe + Datei |
-| Disziplin | Regelnummer, Schusszahl, Serienlänge, Stellungen | Regelnummer |
+| Disziplin | Meyton-Disziplin: DisziplinID und Name, Regelnummer, Schusszahl (`000` vermutlich offen), Serienlänge, Stellungen, Familie | Anlage + DisziplinID + Name (Vereinsvarianten können dieselbe ID tragen) |
+| Disziplin-Familie | was in Verläufen zusammen zählt, zum Beispiel LP Freihand (LP 40, LP 40 alt, LP Training); Auflage getrennt | id |
 | Scheibenbild | Geometrie je Stellung, versioniert ([[spiegel-target-library]]) | id + Version |
-| Kennzahlwert | berechneter Wert je Ebene ([[spiegel-metrics]]) | Scheibe + Ebene + Kennzahl + Version |
-| Notiz, Tag, Ausrüstung | Kontext für Vergleiche (Munitionslos, Griff, Brille) | id |
+| Kennzahlwert | berechneter Wert je Ebene ([[spiegel-metrics]]) | Scheibe + Revision + Ebene + Kennzahl + Version |
+| Einheit | ein Schütze an einem Tag mit seinen zusammenhängenden Scheiben (Aufwärmen, Abbruch, Disziplinwechsel) | Konto + Tag |
+| Notiz, Tag, Ausrüstung, Ereignis | Kontext für Vergleiche (Munitionslos, Griff, Brille); ein Ereignis wie „Visier verstellt“ an einem Schuss teilt die Gruppe | id; an Schüssen über die Schusszeit verankert |
 
 ## Schuss
 
 ```ts
 type Shot = {
-  seq: number                     // Reihenfolge über die ganze Scheibe, Probe zuerst
+  seq: number                     // Abgabefolge: je Stellung nach Treffer, Probe/Wertung nach Zeit
   position: number                // Stellung, 0 = Probe
   series: number | null           // Serie laut Meyton
-  xUm: number; yUm: number        // Mikrometer, x nach rechts, y nach oben
+  xUm: number | null              // Mikrometer, x nach rechts; null bei Ergebnissen nur aus dem PDF
+  yUm: number | null              // Mikrometer, y nach oben
   ring: number | null             // amtlich, ganze Ringe
   decimalTenths: number | null    // amtlich, 94 = 9,4
   teilerHundredths: number | null // amtlich; Einheit am echten Datensatz prüfen
   innerTen: boolean
   scoringMode: number             // Meyton-Wertungsmodus 0–12
-  firedAt: string                 // UTC mit ms, aus Ortszeit + Zone der Anlage
+  firedAt: string | null          // UTC mit ms, aus Ortszeit + Zone der Anlage; null nur aus dem PDF
+  flags: string[]                 // zum Beispiel fehlschuss, verdaechtig
   source: { sourceId: string; scheibenId: number; stellung: number; treffer: number }
 }
 ```
@@ -55,4 +60,6 @@ type Shot = {
 - **Zeit** in UTC mit Millisekunden; der Rohwert (Ortszeit ohne Zone) bleibt im Rohdatensatz.
 - **Revisionen:** Korrekturen erzeugen eine neue Revision; die vorige bleibt nachvollziehbar.
 - **Herkunft:** Eine Scheibe kann zuerst nur aus dem PDF bestehen (QR-Scan, Brücke gerade aus oder fremde Anlage) und später um Rohdaten ergänzt werden.
+- **Nur aus dem PDF:** Solche Ergebnisse haben Werte je Schuss, aber keine Lage und keine Zeit; Kennzahlen, die eine Lage brauchen, entfallen dort.
+- **Merkmale und Zustand** einer Scheibe sowie die Regeln für Probe, Reihenfolge und Löschungen stehen in [[spiegel-edge-cases]].
 - **Keine Mandanten:** eine Installation je Verein ([[adr-029]]); eine Anlage reicht im Normalfall, mehrere sind möglich (zum Beispiel 10 m und 50 m mit getrennten Servern).
