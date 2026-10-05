@@ -6,7 +6,7 @@ keywords: [adr, decisions, entscheidungen, architektur-entscheidungen, begründu
 part_of: ["[[overview]]"]
 ---
 
-**TL;DR** Der ADR-Kanon von vereinsheim — 25 Entscheidungen mit Begründung. Vor architektur-berührenden Vorschlägen die betroffene ADR prüfen.
+**TL;DR** Der ADR-Kanon von vereinsheim — 30 Entscheidungen mit Begründung. Vor architektur-berührenden Vorschlägen die betroffene ADR prüfen.
 
 Kanonische Entscheidungshistorie. `supersedes`/`refines`-Kanten verbinden abgelöste und verfeinerte ADRs.
 
@@ -37,3 +37,8 @@ Kanonische Entscheidungshistorie. `supersedes`/`refines`-Kanten verbinden abgel�
 - [[adr-023]] — ADR-023 — Implement-Phase autonom-by-default (realisiert ADR-018 §5, schärft ADR-020)
 - [[adr-024]] — ADR-024 — Worktree-Wahl ist Hauptsession-Vorab-Entscheidung (schärft ADR-023 §5)
 - [[adr-025]] — ADR-025 — Wissenssystem v3: Obsidian-Vault als einziger Wissensspeicher
+- [[adr-026]] — ADR-026 — Spiegel: dritte App für Schussrohdaten aus der Meyton-Anlage
+- [[adr-027]] — ADR-027 — Brücke: lokaler Lese-Agent im Meyton-Netz
+- [[adr-028]] — ADR-028 — Zuordnung per Sportpass-Opt-in und Meyton-QR mit Original-PDF
+- [[adr-029]] — ADR-029 — Apache-2.0 für das ganze Monorepo, Spiegel als selbst gehostete Open-Source-Software
+- [[adr-030]] — ADR-030 — Design 2: Spiegel als Pilot einer neuen UI-Generation _(Proposed)_

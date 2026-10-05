@@ -18,6 +18,8 @@ Die Schützenverein betreibt zwei Web-Apps:
   Matchups, Playoff, Auswertungen, Meyton-PDF-Import).
 - **Treffsicher** — Trainings-App (Sessions, Serien, Reflexionen, Goals,
   Wellbeing-Tracking).
+- **Spiegel** (geplant, Oktober 2026) — Schussrohdaten aus der Meyton-Anlage:
+  Schussbild, Serien, Verläufe, Vergleiche ([[spiegel]], ADR-026).
 
 Ziel ist ein einzelner VPS, der beide Apps gemeinsam hostet, mit minimaler
 Reibung beim Deploy und transparenten Backups. Seit der Monorepo-Migration

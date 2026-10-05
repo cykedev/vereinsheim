@@ -1,0 +1,2470 @@
+<title>Spiegel Schussdaten-Konzept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap">
+<style>
+/* Layout: Inhaltsverzeichnis links (sticky), breite Hauptspalte; Fließtext auf 46rem begrenzt,
+   Prototyp und Diagramme nutzen die volle Spalte. Dunkel zuerst (Schießhalle am Abend),
+   hell für den 50-m-Stand in der Sonne. Farbe kommt aus den Daten, die Oberfläche bleibt kühl-neutral. */
+:root {
+  color-scheme: dark;
+  --bg: #0d121a;
+  --surface: #141b26;
+  --surface-2: #1a2330;
+  --surface-3: #222d3c;
+  --line: rgba(205, 220, 245, 0.10);
+  --line-strong: rgba(205, 220, 245, 0.20);
+  --fg: #eef2f8;
+  --fg-2: #c3cddb;
+  --muted: #8f9bb0;
+  --accent: #9ccaff;
+  --accent-ink: #0d121a;
+  --accent-wash: rgba(156, 202, 255, 0.11);
+  --pos: #5ccf95;
+  --neg: #ff8a80;
+  --warn-wash: rgba(233, 177, 12, 0.10);
+  --cmp-a: #3987e5;
+  --cmp-b: #d95926;
+  /* Die Scheibe ist ein physisches Objekt: gleiche Farben in beiden Themes. */
+  --paper: #f2f2ee;
+  --paper-line: #1c1c1c;
+  --spiegel: #151515;
+  --spiegel-line: #e6e6e1;
+  --shot-edge: rgba(0, 0, 0, 0.62);
+  --halo: rgba(0, 0, 0, 0.55);
+  --sec-line: #ffffff;
+  --sec-fill: rgba(255, 255, 255, 0.13);
+  --ink-on-light: #111111;
+  --ink-on-dark: #ffffff;
+  /* Ringwert-Skala, farbenblind geprüft (all pairs, CVD ΔE ≥ 13): 10 rot, 9 gold, 8 türkis, ≤ 7 violett */
+  --s10: #e5484d;
+  --s9: #e9b10c;
+  --s8: #1fa3c8;
+  --s7: #7c5cd6;
+  --font-display: "Archivo", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 16px;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f1f3f7;
+    --surface: #ffffff;
+    --surface-2: #f4f6fa;
+    --surface-3: #e9edf3;
+    --line: rgba(16, 28, 48, 0.10);
+    --line-strong: rgba(16, 28, 48, 0.20);
+    --fg: #0e1622;
+    --fg-2: #2e3a4b;
+    --muted: #59667a;
+    --accent: #1f5fd1;
+    --accent-ink: #ffffff;
+    --accent-wash: rgba(31, 95, 209, 0.08);
+    --pos: #0f7a43;
+    --neg: #b8352a;
+    --warn-wash: rgba(233, 177, 12, 0.14);
+    --cmp-a: #2a78d6;
+    --cmp-b: #eb6834;
+    --shadow: 0 1px 2px rgba(16, 28, 48, 0.06), 0 16px 36px -24px rgba(16, 28, 48, 0.28);
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f1f3f7;
+  --surface: #ffffff;
+  --surface-2: #f4f6fa;
+  --surface-3: #e9edf3;
+  --line: rgba(16, 28, 48, 0.10);
+  --line-strong: rgba(16, 28, 48, 0.20);
+  --fg: #0e1622;
+  --fg-2: #2e3a4b;
+  --muted: #59667a;
+  --accent: #1f5fd1;
+  --accent-ink: #ffffff;
+  --accent-wash: rgba(31, 95, 209, 0.08);
+  --pos: #0f7a43;
+  --neg: #b8352a;
+  --warn-wash: rgba(233, 177, 12, 0.14);
+  --cmp-a: #2a78d6;
+  --cmp-b: #eb6834;
+  --shadow: 0 1px 2px rgba(16, 28, 48, 0.06), 0 16px 36px -24px rgba(16, 28, 48, 0.28);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg-2);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+button, select { font: inherit; color: inherit; }
+code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
+code { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0.05em 0.35em; color: var(--fg); }
+strong { color: var(--fg); font-weight: 600; }
+
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-inline: 28px;
+  display: grid;
+  grid-template-columns: 12.5rem minmax(0, 1fr);
+  gap: 56px;
+}
+@media (max-width: 1060px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 0; padding-inline: 16px; }
+  .toc { display: none; }
+}
+
+.toc {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 24px);
+  align-self: start;
+  padding-block: 44px 24px;
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+.toc .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; color: var(--fg); font-family: var(--font-display); font-stretch: 112%; font-weight: 700; font-size: 17px; }
+.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.toc a { display: grid; grid-template-columns: 1.9rem 1fr; padding: 6px 8px; border-radius: 8px; color: var(--muted); text-decoration: none; }
+.toc a span:first-child { font-family: var(--font-mono); font-size: 11.5px; padding-top: 1px; }
+.toc a:hover { color: var(--fg); background: var(--surface); }
+.toc a.is-active { color: var(--fg); background: var(--surface-2); }
+
+main { min-width: 0; padding-block: 36px 110px; }
+.prose { max-width: 46rem; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+h1, h2, h3, h4 { font-family: var(--font-display); color: var(--fg); text-wrap: balance; font-stretch: 112%; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2.35rem, 5.2vw, 3.9rem); line-height: 1.03; font-weight: 740; margin: 0 0 22px; }
+h2 { font-size: clamp(1.55rem, 2.6vw, 2.05rem); line-height: 1.14; font-weight: 690; margin: 0 0 18px; }
+h3 { font-size: 1.14rem; line-height: 1.3; font-weight: 660; margin: 34px 0 10px; }
+h4 { font-size: 1rem; line-height: 1.3; font-weight: 660; margin: 0; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 16px; padding-left: 1.2rem; }
+li { margin: 4px 0; }
+.lead { font-size: 1.15rem; line-height: 1.6; color: var(--fg-2); max-width: 41rem; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+
+section { padding-block: 64px 8px; border-top: 1px solid var(--line); scroll-margin-top: 12px; }
+
+/* Hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: 40px; align-items: center; padding-block: 18px 30px; }
+.hero-note { font-size: 14px; color: var(--muted); max-width: 38rem; }
+.hero-fig { margin: 0; justify-self: center; width: 100%; max-width: 360px; }
+.hero-fig .tbox { border-radius: 22px; padding: 14px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.hero-fig figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; text-align: center; }
+@media (max-width: 760px) { .hero { grid-template-columns: minmax(0, 1fr); } .hero-fig { max-width: 300px; } }
+
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin: 8px 0 26px; }
+.fact { background: var(--surface); padding: 18px 18px 16px; }
+.fact b { display: block; font-family: var(--font-display); font-stretch: 115%; font-weight: 700; font-size: 1.85rem; color: var(--fg); line-height: 1.1; margin-bottom: 6px; }
+.fact span { font-size: 13.5px; color: var(--muted); line-height: 1.4; display: block; }
+@media (max-width: 760px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.toc-mobile { display: none; margin: 0 0 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.toc-mobile summary { cursor: pointer; padding: 12px 16px; color: var(--fg); font-weight: 600; }
+.toc-mobile ol { margin: 0; padding: 0 16px 14px 36px; font-size: 14.5px; }
+@media (max-width: 1060px) { .toc-mobile { display: block; } }
+
+/* Kurzfassung */
+.summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 8px; }
+.sum { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+.sum h4 { margin-bottom: 8px; font-size: 1.02rem; }
+.sum p { margin: 0; font-size: 15px; }
+.sum.wide { grid-column: 1 / -1; background: var(--accent-wash); border-color: transparent; }
+@media (max-width: 760px) { .summary { grid-template-columns: minmax(0, 1fr); } }
+
+/* Tabellen */
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+table.doc { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.45; }
+table.doc th { text-align: left; font-weight: 600; color: var(--fg); padding: 11px 14px; border-bottom: 1px solid var(--line-strong); background: var(--surface-2); white-space: nowrap; }
+table.doc td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.doc tr:last-child td { border-bottom: 0; }
+table.doc td:first-child { color: var(--fg); font-weight: 550; }
+table.doc .yes { color: var(--pos); font-weight: 600; }
+table.doc .no { color: var(--neg); font-weight: 600; }
+table.doc th.rec, table.doc td.rec { background: var(--accent-wash); }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 999px; background: var(--surface-3); color: var(--fg-2); white-space: nowrap; vertical-align: 1px; }
+.tag.crit { background: var(--warn-wash); color: var(--fg); }
+
+/* Kästen */
+.callout { border-radius: var(--radius); padding: 20px 22px; margin: 18px 0 22px; background: var(--surface); border: 1px solid var(--line); }
+.callout.rec { background: var(--accent-wash); border-color: transparent; }
+.callout.warn { background: var(--warn-wash); border-color: transparent; }
+.callout h4 { margin-bottom: 8px; }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.label-line { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+
+/* Code */
+pre { margin: 14px 0 20px; padding: 16px 18px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; color: var(--fg); }
+pre .c { color: var(--muted); }
+.codehead { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; }
+.copy { border: 1px solid var(--line-strong); background: var(--surface-2); border-radius: 8px; padding: 5px 12px; font-size: 13px; cursor: pointer; }
+.copy:hover { background: var(--surface-3); }
+
+/* DisziplinID-Anatomie */
+.code-anatomy { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 22px; }
+.ca-part { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; flex: 1 1 150px; }
+.ca-part b { display: block; font-family: var(--font-mono); font-size: 1.6rem; font-weight: 600; color: var(--fg); letter-spacing: 0.06em; }
+.ca-part span { font-size: 13.5px; color: var(--muted); }
+
+/* Fluss */
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 16px 0 10px; }
+.flow .step { flex: 1 1 140px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.flow .step b { display: block; color: var(--fg); font-size: 14.5px; }
+.flow .step span { font-size: 13px; color: var(--muted); line-height: 1.4; display: block; margin-top: 2px; }
+.flow .arrow { align-self: center; color: var(--muted); font-size: 18px; }
+@media (max-width: 760px) { .flow .arrow { display: none; } }
+
+/* Diagramme */
+figure.dg { margin: 18px 0 26px; }
+figure.dg .scroll { padding: 10px; }
+figure.dg svg { display: block; width: 100%; min-width: 720px; height: auto; color: var(--fg); }
+figure.dg figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; max-width: 46rem; }
+.dg-zone { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: 1; }
+.dg-box { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.2; }
+.dg-box.inner { fill: var(--surface-2); }
+.dg-box.key { stroke: var(--accent); stroke-width: 2; }
+.dg-t { fill: var(--fg); font-family: var(--font-body); font-size: 13px; font-weight: 600; }
+.dg-s { fill: var(--muted); font-family: var(--font-body); font-size: 11.5px; }
+.dg-z { fill: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; }
+.dg-l { fill: var(--fg-2); font-family: var(--font-body); font-size: 11.5px; }
+.dg-edge { stroke: currentColor; stroke-opacity: 0.55; stroke-width: 1.4; fill: none; }
+.dg-edge.key { stroke: var(--accent); stroke-opacity: 1; stroke-width: 2.4; }
+.dg-edge.ret { stroke-dasharray: 5 4; }
+.dg-life { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 2 5; }
+.dg-head { fill: currentColor; fill-opacity: 0.7; }
+.dg-head.key { fill: var(--accent); fill-opacity: 1; }
+.dg-note { fill: var(--accent-wash); stroke: var(--accent); stroke-width: 1; }
+
+/* Karten-Raster (Szenarien, Fragen) */
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 16px 0 22px; }
+@media (max-width: 760px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; min-width: 0; }
+.card h4 { margin-bottom: 8px; }
+.card p { font-size: 15px; margin-bottom: 8px; }
+.card .needs { font-size: 14px; color: var(--muted); margin: 0; }
+.card .needs b { color: var(--fg-2); font-weight: 600; }
+
+.qgroup { margin: 22px 0 6px; }
+.qlist { list-style: none; padding: 0; margin: 10px 0 18px; display: grid; gap: 8px; counter-reset: q; }
+.qlist li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin: 0; display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 4px 6px; }
+.qlist li::before { counter-increment: q; content: counter(q); font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-top: 3px; }
+.qlist li > div { min-width: 0; }
+.qlist .q { color: var(--fg); font-weight: 550; }
+.qlist .why { font-size: 14px; color: var(--muted); display: block; margin-top: 2px; }
+
+.phases { display: grid; gap: 12px; margin: 16px 0 20px; }
+.phase { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) minmax(0, 15rem); gap: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+.phase .ph { font-family: var(--font-display); font-stretch: 112%; font-weight: 700; color: var(--fg); font-size: 1.05rem; line-height: 1.25; }
+.phase .ph span { display: block; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; text-transform: uppercase; margin-bottom: 4px; }
+.phase ul { margin: 0; font-size: 15px; }
+.phase .out { font-size: 14px; color: var(--fg-2); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; align-self: start; }
+.phase .out b { display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; font-weight: 500; margin-bottom: 3px; }
+@media (max-width: 860px) { .phase { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
+
+.decided { margin: 4px 0 24px; }
+.decided .scroll { margin-top: 6px; }
+.qlist li.done .q { color: var(--fg-2); }
+.ans { display: block; margin-top: 5px; font-size: 14px; color: var(--fg); }
+.ans::before { content: "Antwort · "; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pos); }
+.sources { font-size: 14px; color: var(--muted); }
+.sources li { margin: 6px 0; overflow-wrap: anywhere; }
+footer { margin-top: 60px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--muted); }
+
+/* ===== Prototyp ===== */
+.proto { margin: 22px 0 30px; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow); padding: 22px; }
+@media (max-width: 600px) { .proto { padding: 14px; border-radius: 20px; } }
+.proto-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 14px 24px; padding: 2px 2px 18px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-2); background: var(--surface-3); border-radius: 999px; padding: 3px 9px; margin-bottom: 8px; }
+.pb-title { font-family: var(--font-display); font-stretch: 112%; font-size: 1.55rem; font-weight: 720; color: var(--fg); line-height: 1.1; }
+.pb-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
+.pb-score { display: flex; align-items: baseline; gap: 14px; }
+.pb-dec { font-family: var(--font-display); font-stretch: 115%; font-weight: 760; font-size: clamp(2.6rem, 6vw, 3.6rem); line-height: 1; color: var(--fg); letter-spacing: -0.02em; }
+.pb-ring { font-family: var(--font-display); font-stretch: 112%; font-weight: 600; font-size: 1.3rem; color: var(--muted); }
+.pb-ring small { font-size: 0.7em; font-weight: 500; }
+
+.proto-grid { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr); gap: 22px; }
+@media (max-width: 920px) { .proto-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; }
+.seg button { border: 0; background: transparent; padding: 7px 12px; border-radius: 9px; font-size: 14px; font-weight: 550; color: var(--muted); cursor: pointer; min-height: 34px; }
+.seg button:hover { color: var(--fg); }
+.seg button[aria-selected="true"], .seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 0 var(--line-strong), 0 2px 8px -4px rgba(0, 0, 0, 0.5); }
+.seg.small button { padding: 5px 10px; font-size: 13px; min-height: 30px; }
+
+.tcard { position: relative; margin-top: 12px; border-radius: 22px; background: var(--surface-2); border: 1px solid var(--line); padding: 12px; }
+svg.target { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; max-width: 100%; touch-action: manipulation; }
+.chips { position: absolute; left: 0; right: 0; bottom: 22px; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; pointer-events: none; padding-inline: 12px; }
+.chip { font-family: var(--font-body); font-size: 13.5px; font-weight: 600; color: #f4f6fa; background: rgba(20, 26, 36, 0.78); border-radius: 999px; padding: 4px 11px; font-variant-numeric: tabular-nums; backdrop-filter: blur(6px); }
+.ttip { position: absolute; z-index: 4; pointer-events: none; background: var(--surface-3); border: 1px solid var(--line-strong); border-radius: 12px; padding: 9px 11px; font-size: 13px; line-height: 1.45; min-width: 150px; box-shadow: var(--shadow); color: var(--fg-2); }
+.ttip strong { font-size: 15px; }
+.hud { position: absolute; left: 22px; right: 22px; top: 20px; display: grid; gap: 6px; pointer-events: none; }
+.hud-row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; color: #f4f6fa; font-variant-numeric: tabular-nums; }
+.hud-row span { background: rgba(20, 26, 36, 0.78); border-radius: 999px; padding: 3px 10px; backdrop-filter: blur(6px); }
+.hud-bar { height: 4px; border-radius: 4px; background: rgba(20, 26, 36, 0.55); overflow: hidden; }
+.hud-bar i { display: block; height: 100%; width: 0; background: #ffffff; border-radius: 4px; }
+
+.tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 12px; }
+.tg { border: 1px solid var(--line-strong); background: transparent; padding: 6px 12px; border-radius: 999px; font-size: 13.5px; font-weight: 550; cursor: pointer; color: var(--muted); min-height: 34px; }
+.tg[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn-play { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; border: 0; background: var(--fg); color: var(--bg); padding: 8px 16px 8px 13px; border-radius: 999px; font-size: 14px; font-weight: 650; cursor: pointer; min-height: 36px; }
+.btn-play svg { width: 14px; height: 14px; fill: currentColor; }
+@media (max-width: 520px) { .btn-play { margin-left: 0; } }
+
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px 12px; min-width: 0; }
+.kpi-label { font-size: 13px; color: var(--muted); }
+.kpi-value { font-family: var(--font-display); font-stretch: 112%; font-weight: 700; font-size: 1.6rem; color: var(--fg); line-height: 1.2; margin-top: 2px; }
+.kpi-value small { font-size: 0.6em; font-weight: 600; color: var(--muted); margin-left: 3px; }
+.kpi-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+.kpi-sub.pos { color: var(--pos); }
+.kpi-sub.neg { color: var(--neg); }
+.insight { font-size: 15px; color: var(--fg-2); margin: 14px 2px 4px; }
+.insight b { color: var(--fg); }
+.insight .auto { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 2px; }
+
+.strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.strip button { border: 1px solid var(--line); background: var(--surface-2); border-radius: 14px; padding: 7px 6px 8px; cursor: pointer; text-align: center; min-width: 0; }
+.strip button[aria-pressed="true"] { border-color: var(--fg-2); background: var(--surface-3); }
+.strip svg { width: 100%; height: auto; aspect-ratio: 1 / 1; display: block; border-radius: 9px; }
+.strip .st-n { display: block; font-size: 12px; color: var(--muted); margin-top: 5px; font-weight: 600; }
+.strip .st-v { display: block; font-size: 14px; color: var(--fg); font-weight: 650; font-variant-numeric: tabular-nums; }
+@media (max-width: 420px) { .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.pcard { margin-top: 18px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 18px; padding: 16px 16px 14px; min-width: 0; }
+.pcard-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); margin: 0 2px 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lk-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.lk-line { width: 16px; height: 2px; border-radius: 2px; display: inline-block; }
+.lk-ring { width: 9px; height: 9px; border-radius: 50%; display: inline-block; border: 2px solid var(--fg); }
+.chart { position: relative; min-height: 200px; border-radius: 10px; }
+.chart:focus-visible { outline-offset: 4px; }
+.chart-svg { display: block; overflow: visible; }
+.c-grid { stroke: var(--line); stroke-width: 1; }
+.c-axis { stroke: var(--line-strong); stroke-width: 1; }
+.c-tick { fill: var(--muted); font-family: var(--font-mono); font-size: 11.5px; }
+.c-sep { stroke: var(--line-strong); stroke-width: 1; }
+.c-seplabel { fill: var(--muted); font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; }
+.c-line { fill: none; stroke: var(--fg-2); stroke-opacity: 0.4; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.c-avg { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.c-dot { stroke: var(--surface-2); stroke-width: 2; }
+.c-dot.n { fill: var(--fg-2); }
+.c-dot.wk { fill: var(--surface-2); stroke: var(--fg); stroke-width: 2; }
+.c-dot.is-hot { stroke: var(--fg); }
+.c-cross { stroke: var(--fg-2); stroke-width: 1; }
+.c-hit { fill: transparent; cursor: crosshair; }
+.c-end { fill: var(--fg); font-family: var(--font-body); font-size: 12.5px; font-weight: 650; }
+.c-tip { position: absolute; z-index: 3; top: 8px; pointer-events: none; background: var(--surface-3); border: 1px solid var(--line-strong); border-radius: 10px; padding: 8px 10px; font-size: 13px; line-height: 1.45; min-width: 150px; box-shadow: var(--shadow); color: var(--fg-2); }
+.tip-row { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.tip-row strong { font-variant-numeric: tabular-nums; }
+.tip-row.head { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
+.tip-key { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+
+.tablewrap { max-height: 360px; overflow: auto; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+table.shots { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+table.shots th { position: sticky; top: 0; z-index: 1; background: var(--surface); text-align: left; font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 9px 10px; border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+table.shots td { padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.shots .num { text-align: right; }
+table.shots tr.is-hot td { background: var(--accent-wash); }
+table.shots td.dec { color: var(--fg); font-weight: 650; }
+.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; vertical-align: -1px; box-shadow: 0 0 0 1px var(--shot-edge) inset; }
+svg.dir { width: 16px; height: 16px; vertical-align: -3px; }
+svg.dir path { fill: none; stroke: var(--fg-2); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.pgrid2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+.cmp-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.cmp-controls label { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--muted); }
+.sw { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+select { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; padding: 6px 10px; font-size: 14px; color: var(--fg); min-height: 34px; max-width: 100%; }
+.cmp-body { display: grid; grid-template-columns: minmax(0, 18rem) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 640px) { .cmp-body { grid-template-columns: minmax(0, 1fr); } .cmp-body .tbox { max-width: 18rem; } }
+.cmp-body .tbox { border-radius: 16px; background: var(--surface); border: 1px solid var(--line); padding: 8px; }
+table.cmp { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+table.cmp th { text-align: right; font-size: 11.5px; color: var(--muted); font-weight: 600; padding: 6px 6px; border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+table.cmp th:first-child, table.cmp td:first-child { text-align: left; }
+table.cmp td { text-align: right; padding: 7px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.cmp td:first-child { color: var(--fg-2); white-space: normal; min-width: 7.5rem; }
+table.cmp td.pos { color: var(--pos); font-weight: 600; }
+table.cmp td.neg { color: var(--neg); font-weight: 600; }
+.hint { font-size: 13px; color: var(--muted); margin: 8px 2px 0; }
+
+/* SVG-Scheibe */
+.t-paper { fill: var(--paper); }
+.t-probe { fill: var(--spiegel); }
+.t-black { fill: var(--spiegel); }
+.t-line { fill: none; stroke: var(--paper-line); stroke-width: 0.28; }
+.t-line-in { fill: none; stroke: var(--spiegel-line); stroke-width: 0.28; }
+.t-num { font-family: var(--font-mono); font-size: 4.1px; font-weight: 600; fill: var(--paper-line); }
+.t-num-in { font-family: var(--font-mono); font-size: 4.1px; font-weight: 600; fill: var(--spiegel-line); }
+.t-shot { stroke: var(--shot-edge); stroke-width: 0.32; }
+.t-shot.is-hot { stroke: var(--sec-line); stroke-width: 0.8; }
+.t-shot.is-new { stroke: var(--sec-line); stroke-width: 0.6; }
+.t-hit { fill: transparent; cursor: pointer; }
+.r10 { fill: var(--s10); } .r9 { fill: var(--s9); } .r8 { fill: var(--s8); } .r7 { fill: var(--s7); }
+.ca { fill: var(--cmp-a); } .cb { fill: var(--cmp-b); }
+.t-sn { font-family: var(--font-mono); font-size: 2.3px; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.t-sn.dark { fill: var(--ink-on-light); } .t-sn.light { fill: var(--ink-on-dark); }
+.t-sec-halo { fill: none; stroke: var(--halo); stroke-width: 1.1; }
+.t-sec { fill: var(--sec-fill); stroke: var(--sec-line); stroke-width: 0.5; }
+.t-sec.la { fill: none; stroke: var(--cmp-a); stroke-width: 0.7; }
+.t-sec.lb { fill: none; stroke: var(--cmp-b); stroke-width: 0.7; }
+.mpi-halo { stroke: var(--halo); stroke-width: 1.7; stroke-linecap: round; fill: none; }
+.mpi-core { stroke: var(--sec-line); stroke-width: 0.75; stroke-linecap: round; fill: none; }
+.mpi-core.la { stroke: var(--cmp-a); stroke-width: 0.9; }
+.mpi-core.lb { stroke: var(--cmp-b); stroke-width: 0.9; }
+.t-pulse { fill: none; stroke: var(--sec-line); stroke-width: 0.5; transform-box: fill-box; transform-origin: center; animation: pulse 0.8s ease-out forwards; }
+@keyframes pulse { from { transform: scale(1); opacity: 1; } to { transform: scale(3.4); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .t-pulse { animation: none; opacity: 0; } }
+</style>
+
+<div class="wrap" lang="de">
+  <nav class="toc" aria-label="Inhalt">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="11" cy="11" r="5.5" fill="currentColor"/><circle cx="12.6" cy="9.6" r="1.6" fill="var(--s10)"/></svg>
+      Spiegel
+    </div>
+    <ol>
+      <li><a href="#ueberblick"><span>01</span><span>Auf einen Blick</span></a></li>
+      <li><a href="#meyton"><span>02</span><span>Was Meyton liefert</span></a></li>
+      <li><a href="#entscheidung"><span>03</span><span>Treffsicher oder eigene App</span></a></li>
+      <li><a href="#architektur"><span>04</span><span>Architektur</span></a></li>
+      <li><a href="#bruecke"><span>05</span><span>Die Brücke</span></a></li>
+      <li><a href="#identitaet"><span>06</span><span>Zuordnung &amp; Datenschutz</span></a></li>
+      <li><a href="#datenmodell"><span>07</span><span>Datenmodell &amp; Scheiben</span></a></li>
+      <li><a href="#auswertung"><span>08</span><span>Kennzahlen &amp; Vergleiche</span></a></li>
+      <li><a href="#vorschau"><span>09</span><span>Design-Vorschau</span></a></li>
+      <li><a href="#shotsapp"><span>10</span><span>Vergleich ShotsApp</span></a></li>
+      <li><a href="#szenarien"><span>11</span><span>Szenarien</span></a></li>
+      <li><a href="#fragen"><span>12</span><span>Offene Fragen</span></a></li>
+      <li><a href="#fahrplan"><span>13</span><span>Fahrplan</span></a></li>
+      <li><a href="#anhang"><span>14</span><span>Anhang: Erkundung</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Konzeptentwurf · 5. Oktober 2026 · Arbeitstitel „Spiegel“</p>
+        <h1>Jeder Schuss, so wie er gefallen ist.</h1>
+        <p class="lead">Eine eigene Vereinsheim-App, die die Rohdaten jeder Meyton-Scheibe übernimmt: Trefferlage auf einen hundertstel Millimeter, Ring, Zehntel, Teiler und Zeitpunkt auf die Millisekunde. Daraus werden Schussbild, Wiedergabe, Schwerpunkt, Streukreis, Serien, Verläufe und direkte Vergleiche. Dieses Papier hält fest, was wir über die Datenquelle wissen, schlägt eine Architektur vor und sammelt die Fragen, die vor dem Bau geklärt sein sollten.</p>
+        <p class="hero-note">Der Name ist ein Vorschlag: Der Spiegel ist der schwarze Zielbereich der Scheibe, und ein Spiegel zeigt dir, wie du schießt.</p>
+      </div>
+      <figure class="hero-fig">
+        <div class="tbox"><svg id="hero-target" class="target" viewBox="-40 -40 80 80" role="img" aria-label="Beispielscheibe Luftpistole mit 40 Treffern, Schwerpunkt und Streukreis"></svg></div>
+        <figcaption>Beispieldaten: 40 Schuss Luftpistole, Schwerpunkt (×) und Streukreis.</figcaption>
+      </figure>
+    </header>
+
+    <div class="facts">
+      <div class="fact"><b>3</b><span>Tabellen in der SSMDB2: Scheiben, Serien, Treffer</span></div>
+      <div class="fact"><b>0,01&nbsp;mm</b><span>Auflösung der Trefferkoordinaten</span></div>
+      <div class="fact"><b>1&nbsp;ms</b><span>Zeitstempel je Schuss</span></div>
+      <div class="fact"><b>0</b><span>Installationen für Schützen. Die Brücke richtet der Verein einmal ein.</span></div>
+    </div>
+
+    <div class="decided" id="stand">
+      <span class="label-line">Stand der Entscheidungen · 5. Oktober 2026</span>
+      <p class="small muted" style="margin:4px 0 0">Der Plan lebt jetzt im Repo: <code>vault/spiegel/spiegel.md</code> mit Roadmap (Features SP-x.y) und ADR-026 bis ADR-030. Bei Abweichungen gilt der Vault.</p>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Frage</th><th>Antwort</th><th>Folge für das Konzept</th></tr></thead>
+          <tbody>
+            <tr><td>Wie wird zugeordnet?</td><td>Opt-in per Sportpass automatisch, sonst Meyton-QR mit Original-PDF</td><td>Opt-in-Scheiben lädt die Brücke am Abend selbst hoch; der QR deckt alles andere ab und sichert das PDF, das Meyton nur eine Woche bereithält.</td></tr>
+            <tr><td>Läuft die Anlage dauerhaft?</td><td>Nein, Anlage und Brücke werden nach dem Training ausgeschaltet</td><td>Die Brücke muss Stromverlust aushalten. Ein QR-Scan von zu Hause liefert sofort das PDF-Ergebnis, die Rohdaten folgen beim nächsten Einschalten.</td></tr>
+            <tr><td>Was steckt hinter dem QR?</td><td>Ein PDF bei Meyton (nur HTTP, feste IP, zufälliger Dateiname), im Fuß eine ID</td><td>Ist die ID die ScheibenID, wird die Zuordnung exakt. Eine Abfrage in Phase&nbsp;0 klärt das.</td></tr>
+            <tr><td>Gerät im Meyton-Netz, Router mit Internet?</td><td>Ja</td><td>Brücke als Raspberry Pi oder Mini-PC mit fester IP</td></tr>
+            <tr><td>Wie melden sich Schützen an?</td><td>Schützenliste oder frei, kein LANA</td><td>Sportpass ordnet automatisch zu; frei getippte Namen nur als Vorschlag</td></tr>
+            <tr><td>Für wen?</td><td>Erst für euch, als Open Source</td><td>Eine Installation je Verein, eine Lizenz, ein Compose-Beispiel für andere Vereine</td></tr>
+            <tr><td>Design und Funktionen</td><td>Die Vorschau trifft es</td><td>Richtung für Design&nbsp;2</td></tr>
+            <tr><td>Eigene App oder Treffsicher?</td><td>Eigene App, Name Spiegel</td><td>Spiegel als dritte App mit Brücke zu Treffsicher</td></tr>
+            <tr><td>Lizenz?</td><td>Apache-2.0 für das ganze Repo (gilt seit Mai 2026)</td><td>Spiegel, Brücke und alle Pakete unter derselben Lizenz</td></tr>
+            <tr><td>Technik der Brücke?</td><td>Am liebsten ein Binary ohne Docker und Node</td><td>Kandidat Go; entschieden wird in Phase&nbsp;0</td></tr>
+            <tr><td>Landen Trainings ohne Starter in der SSMDB2?</td><td>Offen</td><td>Prüfen wir in Phase&nbsp;0; davon hängt das Fundbüro ab</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <details class="toc-mobile">
+      <summary>Inhalt</summary>
+      <ol>
+        <li><a href="#ueberblick">Auf einen Blick</a></li>
+        <li><a href="#meyton">Was Meyton liefert</a></li>
+        <li><a href="#entscheidung">Treffsicher oder eigene App</a></li>
+        <li><a href="#architektur">Architektur</a></li>
+        <li><a href="#bruecke">Die Brücke</a></li>
+        <li><a href="#identitaet">Zuordnung &amp; Datenschutz</a></li>
+        <li><a href="#datenmodell">Datenmodell &amp; Scheiben</a></li>
+        <li><a href="#auswertung">Kennzahlen &amp; Vergleiche</a></li>
+        <li><a href="#vorschau">Design-Vorschau</a></li>
+        <li><a href="#shotsapp">Vergleich ShotsApp</a></li>
+        <li><a href="#szenarien">Szenarien</a></li>
+        <li><a href="#fragen">Offene Fragen</a></li>
+        <li><a href="#fahrplan">Fahrplan</a></li>
+        <li><a href="#anhang">Anhang: Erkundung</a></li>
+      </ol>
+    </details>
+
+    <!-- 01 -->
+    <section id="ueberblick">
+      <p class="eyebrow">01 · Auf einen Blick</p>
+      <h2>Die Daten sind da. Die Frage ist, wie wir sie sauber abholen.</h2>
+      <div class="summary">
+        <div class="sum"><h4>Datenquelle</h4><p>Die SSMDB2 enthält alles, was du willst: MySQL auf dem Meyton-Server, Koordinaten in 1/100&nbsp;mm, Zeit je Schuss auf die Millisekunde, Wertung und Probe. Ihr nutzt ShootMaster&nbsp;6.0.2, das alle nötigen Felder mitbringt. Dazu gibt es einen Live-Export (SDF) und eine Abfrage der Standbelegung (LANA).</p></div>
+        <div class="sum"><h4>Treffsicher oder eigene App</h4><p>Eine eigene App. Treffsicher bleibt das Tagebuch und holt Ergebnisse künftig aus Spiegel statt aus Meyton-PDFs. Ob Spiegel Treffsicher später ablöst, entscheiden wir, wenn Spiegel läuft. Die Architektur hält beide Wege offen.</p></div>
+        <div class="sum"><h4>Der lokale Teil</h4><p>Eine „Brücke“: ein kleines Gerät im Meyton-Netz, das der Verein einmal einrichtet. Sie liest nur, verbindet sich nur nach außen und lädt nur Daten von Schützen hoch, die zugestimmt haben. Schützen installieren nichts. DISAG macht es mit M-Qnect für die ShotsApp genauso.</p></div>
+        <div class="sum"><h4>Zuordnung</h4><p>Über den QR-Code, den Meyton nach dem Schießen für den Ausdruck zeigt: scannen, Spiegel findet die passende Scheibe in der SSMDB2 und hebt das Original-PDF mit auf. Sportpassnummern aus der Schützenliste ordnen automatisch zu; was übrig bleibt, wartet im „Fundbüro“.</p></div>
+        <div class="sum"><h4>Auswertung</h4><p>Jede Kennzahl ist einmal als reine Funktion definiert und steht dann überall bereit: in der Session, je Serie, als Verlauf über Monate und im direkten Vergleich.</p></div>
+        <div class="sum"><h4>Design</h4><p>Spiegel wird der Pilot für ein neues Vereinsheim-Design: ruhige, neutrale Oberfläche, die Farbe kommt aus den Daten, hell und dunkel. Ringwerk und Treffsicher können später folgen.</p></div>
+        <div class="sum wide"><h4>Nächster Schritt</h4><p>Ein Abend im Schützenhaus mit Laptop und Zugang zur SSMDB2, um die echten Daten anzusehen. Die Abfragen dafür stehen im <a href="#anhang">Anhang</a>. Dabei schlagen wir die ID aus deinem Ausdruck vom 2. Oktober in der SSMDB2 nach und prüfen, ob Meyton den QR auch ohne Starter zeigt. Am selben Abend lohnt ein Test von DISAG M-Qnect mit der ShotsApp: Das zeigt, ob Trainings in der Ablage landen, und setzt die Messlatte (<a href="#shotsapp">Abschnitt 10</a>). Danach beantworten wir die markierten <a href="#fragen">Fragen</a> und halten die Entscheidungen als ADRs fest.</p></div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="meyton">
+      <div class="prose">
+        <p class="eyebrow">02 · Was die Meyton-Anlage liefert</p>
+        <h2>Drei Tabellen, die fast alles enthalten</h2>
+        <p>Laut Meyton-Handbuch (Datenbankversion 9, Stand 23.02.2026) schreibt die Meyton-Software Ergebnisse <strong>in Echtzeit oder auf Knopfdruck</strong> in die MySQL-Datenbank SSMDB2 („Small ShootMaster DataBase&nbsp;2“) auf dem Meyton-Server. Den Dienst schaltet man im Kontrollzentrum unter „SSMDB2“ ein. Auch das Preisschießen (accmanII), die Wettkampfsteuerung (masterII) und die Auswertung (ranklistII) können die Ablage füllen. Zugriff geht per Netzwerk, auch über ODBC.</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Tabelle</th><th>Schlüssel</th><th>Was drinsteht</th></tr></thead>
+          <tbody>
+            <tr><td>Scheiben</td><td class="mono">ScheibenID</td><td>Schütze (Name, Geschlecht, Land, SportpassID, Verein, Klasse, Mannschaft), Stand, Disziplin + DisziplinID, Starterliste, Rangliste, Gruppe, Status, Trefferzahl, Gesamt ganz und zehntel, bester Teiler, Zeitstempel der letzten Änderung</td></tr>
+            <tr><td>Serien</td><td class="mono">ScheibenID, Stellung, Serie</td><td>Serienergebnis in ganzen Ringen und Zehnteln</td></tr>
+            <tr><td>Treffer</td><td class="mono">ScheibenID, Stellung, Treffer</td><td>Serie, x/y in 1/100&nbsp;mm ab Scheibenmitte, Innenzehner, Wertungsmodus, Text, Ring, Zehntel, Teiler (zehntel und hundertstel), Zeitstempel plus Millisekunden. <strong>Stellung&nbsp;0 ist die Probe.</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <h3>Die DisziplinID trägt die Regel in sich</h3>
+        <p>Die achtstellige ID ist kein Zufallswert. Das Handbuch erklärt sie am Beispiel „KK 60 liegend“:</p>
+      </div>
+      <div class="code-anatomy" aria-label="Aufbau der DisziplinID 40180060">
+        <div class="ca-part"><b>4</b><span>Entfernung: 1&nbsp;=&nbsp;10&nbsp;m, 2&nbsp;=&nbsp;15&nbsp;m, 3&nbsp;=&nbsp;25&nbsp;m, 4&nbsp;=&nbsp;50&nbsp;m, 5&nbsp;=&nbsp;100&nbsp;m, 6&nbsp;=&nbsp;300&nbsp;m</span></div>
+        <div class="ca-part"><b>0180</b><span>DSB-Regelnummer 1.80, KK liegend. Daraus folgen Scheibe und Kaliber.</span></div>
+        <div class="ca-part"><b>060</b><span>Anzahl der Wertungsschüsse</span></div>
+      </div>
+      <div class="prose">
+        <p>Damit lässt sich das Scheibenbild aus der Regel ableiten statt aus dem Namen. Luftgewehr 40 Schuss ist <code>10110040</code>, Luftpistole 40 Schuss <code>10210040</code>. Die Ziffern 2–5 sind aber nur bei DSB-Disziplinen die DSB-Regel. Training, Liga und ISSF nutzen Meyton-eigene Nummern, etwa <code>11010010</code> für „LG Probe + 10 Wertung“ oder <code>10510040</code> für „LG Liga“. Unsere Zuordnungstabelle muss beide Arten kennen.</p>
+
+        <h3>Verdeckte Wertung ist Teil der Daten</h3>
+        <p>Jeder Treffer trägt einen Wertungsmodus (0–12): Zehntel, ganze Ringe, Teiler, Trefferumkreis, Schweizer 100er, Nachkommastelle und zwei verdeckte Modi. <strong>Modus 5</strong> verbirgt Wert und Lage, <strong>Modus 10</strong> nur den Wert. Bei Preis- und Königsschießen bleibt das Ergebnis damit bis zur Siegerehrung geheim. Spiegel darf diese Werte nicht zeigen, auch nicht dem Schützen selbst.</p>
+
+        <h3>Die ShootMaster-Version zählt</h3>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Version</th><th>Datum</th><th>Was sich für uns ändert</th></tr></thead>
+          <tbody>
+            <tr><td>5.2</td><td>06/2023</td><td>Feld <code>Treffer.Wertung</code> kommt hinzu; vorher ist unklar, ob ganz oder zehntel gewertet wurde</td></tr>
+            <tr><td>5.3</td><td>06/2024</td><td>Haupt-DB für Externe gesperrt, kein root mehr; nur die SSMDB2 bleibt lesbar</td></tr>
+            <tr><td>5.4</td><td>09/2025</td><td><strong>Probeschüsse</strong> (Stellung&nbsp;0) und die Serie je Treffer landen in der SSMDB2. Laut Release-Notiz bis zum ersten Wertungsschuss; ob sie danach bleiben, ist offen</td></tr>
+            <tr><td>6.0.2</td><td>07/2026</td><td>Feld <code>BesterTeiler001</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p><strong>Ihr nutzt 6.0.2</strong>, habt also alles aus dieser Tabelle.</p>
+        <p>Daneben gibt es weitere Wege aus der Anlage: den XML-Live-Export SDF, CSV-Dateien je Scheibe auf der Freigabe <code>ERGEBNIS\WM-Shot</code> und den QR-Code am Stand, hinter dem der Ergebnisausdruck als PDF eine Woche lang auf <code>qrcode.meyton.eu</code> liegt. Den nutzt heute vermutlich die URL-Variante des Treffsicher-Imports. Eine REST-API oder eine Analyse-App von Meyton gibt es nicht.</p>
+        <p>Meyton hat mit ESTANX eine neue Gerätelinie (zusammen mit SIUS, Ergebnisse über shootingsportscloud.com). Ob es dort eine SSMDB2 gibt, ist offen. Für die bisherigen Messrahmen sagt Meyton mindestens 15&nbsp;Jahre Pflege zu. Ein Wechsel des Vereins hieße für Spiegel: ein neuer Adapter, kein neues System.</p>
+
+        <h3>Was andere schon gebaut haben</h3>
+        <p>Mehrere Projekte lesen die SSMDB2 im Vereinsnetz. Die meisten zeigen Scheiben live an; keines verbindet langes Archiv, Konten, Auswertung über Einheiten und Vereins-Apps. Ihre Erfahrungen sparen uns aber Lehrgeld.</p>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <h4>DISAG M-Qnect</h4>
+          <p>Ein Android-Tablet mit fester IP im Meyton-Netz fragt die SSMDB2 alle 30&nbsp;s ab und erzeugt QR-Codes für die DISAG ShotsApp. Kostenlos.</p>
+          <p class="needs"><b>Für uns:</b> Bestätigt das Brücken-Prinzip. Und es ist die Messlatte, an der sich Spiegel messen muss.</p>
+        </div>
+        <div class="card">
+          <h4>Meyton-Live-Display</h4>
+          <p>Python, SQLite, SSE, Caddy, Docker. Nutzt SSMDB2, den SDF-Live-Export und die LANA-Belegung. Sehr gute technische Doku, zuletzt geändert am 4.&nbsp;Oktober 2026.</p>
+          <p class="needs"><b>Lizenz:</b> Apache-2.0. Übernahme von Ideen und Code ist mit Namensnennung erlaubt.</p>
+        </div>
+        <div class="card">
+          <h4>meyton-scheibenanzeige</h4>
+          <p>TypeScript, React, Node und Electron (AppImage). Live-Board, Trefferprotokoll, Auswertung, Urkunden. Fragt die SSMDB2 alle 2,5&nbsp;s ab.</p>
+          <p class="needs"><b>Lizenz:</b> keine angegeben. Wir dürfen daraus lernen, aber keinen Code übernehmen.</p>
+        </div>
+        <div class="card">
+          <h4>ShootingTicker und SV-WebApp</h4>
+          <p>ShootingTicker (2016) lädt lokal gelesene Ergebnisse in einen Online-Ticker hoch, im Aufbau wie unsere Brücke. Die SV-WebApp (2022) gleicht per VPN über die Fritzbox des Vereins ab und wurde im Forum kritisiert, weil Mitglieder nicht aktiv zustimmen.</p>
+          <p class="needs"><b>Für uns:</b> Kein VPN ins Vereinsnetz, Zustimmung vor jedem Upload.</p>
+        </div>
+      </div>
+      <div class="prose">
+        <h3>Stolperfallen, die wir einplanen</h3>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Befund</th><th>Was Spiegel daraus macht</th><th>Quelle</th></tr></thead>
+          <tbody>
+            <tr><td>Ring-Felder sind nicht einheitlich skaliert (Serien in ganzen Ringen, Gesamt- und Zehntelwerte ×10)</td><td>Skala je Feld in einer Tabelle, per Test am echten Datensatz festgenagelt</td><td>Meral-IT</td></tr>
+            <tr><td><code>Startzeit</code> ist oft <code>0000-00-00</code></td><td>Beginn aus dem ersten Treffer, Ende aus dem letzten</td><td>ferdifighter</td></tr>
+            <tr><td>Zeiten sind Ortszeit ohne Zone; SDF hängt ein „Z“ an, obwohl es Ortszeit ist</td><td>Umrechnung mit der Zeitzone der Anlage, Rohwert bleibt erhalten, Uhrabweichung der Anlage wird gemessen</td><td>Meral-IT</td></tr>
+            <tr><td><code>ScheibenID</code> kann negativ sein (vorzeichenbehaftete 32&nbsp;Bit) und gilt nur innerhalb einer DB-Instanz</td><td>Schlüssel ist Quelle + Epoche + ScheibenID; ein neuer Meyton-Server beginnt eine neue Epoche</td><td>beide</td></tr>
+            <tr><td>Freie Stände tragen Platzhalter wie <code>--frei--</code></td><td>Filter in der Brücke</td><td>ferdifighter</td></tr>
+            <tr><td>Die SSMDB2 weiß nicht, welcher Stand gerade belegt ist</td><td>Für Live-Funktionen optional LANA (WebSocket, nur der Lesebefehl <code>GetLaneInfo</code>)</td><td>Meral-IT</td></tr>
+            <tr><td>Korrekturen und Löschungen in der DB sind maßgeblich</td><td>Jede Änderung kommt als neuer vollständiger Snapshot mit Revision</td><td>Meral-IT</td></tr>
+            <tr><td>Der Disziplinname ist kein verlässlicher Schlüssel; die 25-m-Pistole nutzt je Stellung eine andere Scheibe</td><td>Scheibenbild aus der Regelnummer, je Stellung; Name nur als Admin-Ausnahme für Preisscheiben</td><td>Meral-IT</td></tr>
+            <tr><td>Probeschüsse stehen erst ab 5.4 in der Ablage und bleiben dort vielleicht nicht</td><td>Die Brücke schneidet während des Schießens laufend mit, statt nur nachträglich abzuholen</td><td>Release-Notiz 5.4</td></tr>
+            <tr><td>Im freien Training tippen Schützen ihren Namen oft frei ein; Schreibweisen weichen ab</td><td>Zuordnung über Sportpass, Starterkarte (LANA) oder Stand-QR statt über Namensvergleich</td><td>Meyton-Forum</td></tr>
+            <tr><td>Sportpassnummern dürfen seit 5.3 zwölf Stellen haben, <code>SportpassID</code> ist aber <code>int(11)</code></td><td>Vor Ort prüfen, ob lange Nummern abgeschnitten oder überlaufen</td><td>Release-Notiz 5.3</td></tr>
+            <tr><td>Ein eigener Lese-Benutzer ist auf dem Meyton-Server nicht vorgesehen; der Standard-Zugang ist auf allen Anlagen gleich</td><td>Die Brücke öffnet jede Verbindung als Read-only-Transaktion und sendet nur feste SELECTs</td><td>Meyton-Forum</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <span class="label-line">Vor Ort prüfen</span>
+        <ul>
+          <li>Ist der SSMDB2-Dienst im Kontrollzentrum aktiv, und landen auch Trainings ohne Starter in der Ablage?</li>
+          <li>Wie gut sind Name und SportpassID gefüllt, und wie melden sich Schützen im Training an?</li>
+          <li>Zeigt y nach oben? Stimmen <code>Teiler01</code> und <code>Teiler001</code> mit dem Abstand aus x/y überein?</li>
+          <li>Wie weit reicht die Historie zurück, und bleiben Probeschüsse nach der Wertung erhalten?</li>
+          <li>Gibt es einen dauerhaft laufenden PC im Meyton-Netz, und gibt es einen Router mit Internet?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="entscheidung">
+      <div class="prose">
+        <p class="eyebrow">03 · Die große Frage</p>
+        <h2>Treffsicher erweitern oder eine eigene App?</h2>
+        <p>Die Frage lässt sich an der Sache entscheiden. Treffsicher ist ein Tagebuch: Absicht, Ergebnis, Reflexion, Befinden. Spiegel ist ein Messinstrument: Maschinen liefern Daten, die sich nicht mehr ändern, in großer Menge, und mehrere Apps wollen sie lesen. Der Unterschied zeigt sich daran, wo die Brücke schreibt.</p>
+      </div>
+      <figure class="dg">
+        <div class="scroll">
+          <svg viewBox="0 0 960 250" role="img" aria-label="Vergleich: In Variante A schreibt die Brücke in Treffsicher, und Ringwerk müsste dort lesen. In Variante B schreibt die Brücke in Spiegel, und Treffsicher und Ringwerk lesen über dieselbe API.">
+            <defs>
+              <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head"/></marker>
+              <marker id="ah1k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head key"/></marker>
+            </defs>
+            <rect x="8" y="10" width="452" height="230" rx="14" class="dg-zone"/>
+            <text x="28" y="38" class="dg-z">A · MODUL IN TREFFSICHER</text>
+            <rect x="28" y="98" width="110" height="48" rx="10" class="dg-box"/>
+            <text x="83" y="126" class="dg-t" text-anchor="middle">Brücke</text>
+            <rect x="190" y="82" width="150" height="80" rx="10" class="dg-box"/>
+            <text x="265" y="116" class="dg-t" text-anchor="middle">Treffsicher</text>
+            <text x="265" y="134" class="dg-s" text-anchor="middle">Tagebuch + Messdaten</text>
+            <rect x="190" y="186" width="150" height="38" rx="8" class="dg-box inner"/>
+            <text x="265" y="209" class="dg-s" text-anchor="middle">DB treffsicher</text>
+            <rect x="372" y="98" width="76" height="48" rx="10" class="dg-box"/>
+            <text x="410" y="126" class="dg-t" text-anchor="middle">Ringwerk</text>
+            <line x1="138" y1="122" x2="186" y2="122" class="dg-edge" marker-end="url(#ah1)"/>
+            <text x="162" y="113" class="dg-l" text-anchor="middle">schreibt</text>
+            <line x1="372" y1="122" x2="344" y2="122" class="dg-edge" marker-end="url(#ah1)"/>
+            <text x="410" y="166" class="dg-l" text-anchor="middle">müsste bei</text>
+            <text x="410" y="181" class="dg-l" text-anchor="middle">Treffsicher lesen</text>
+            <line x1="265" y1="162" x2="265" y2="184" class="dg-edge" marker-end="url(#ah1)"/>
+
+            <rect x="500" y="10" width="452" height="230" rx="14" class="dg-zone"/>
+            <text x="520" y="38" class="dg-z">B · EIGENE APP (EMPFEHLUNG)</text>
+            <rect x="520" y="98" width="100" height="48" rx="10" class="dg-box"/>
+            <text x="570" y="126" class="dg-t" text-anchor="middle">Brücke</text>
+            <rect x="668" y="82" width="130" height="80" rx="10" class="dg-box key"/>
+            <text x="733" y="116" class="dg-t" text-anchor="middle">Spiegel</text>
+            <text x="733" y="134" class="dg-s" text-anchor="middle">Messdaten</text>
+            <rect x="668" y="186" width="130" height="38" rx="8" class="dg-box inner"/>
+            <text x="733" y="209" class="dg-s" text-anchor="middle">DB spiegel</text>
+            <rect x="836" y="64" width="104" height="42" rx="10" class="dg-box"/>
+            <text x="888" y="90" class="dg-t" text-anchor="middle">Treffsicher</text>
+            <rect x="836" y="138" width="104" height="42" rx="10" class="dg-box"/>
+            <text x="888" y="164" class="dg-t" text-anchor="middle">Ringwerk</text>
+            <line x1="620" y1="122" x2="664" y2="122" class="dg-edge key" marker-end="url(#ah1k)"/>
+            <text x="642" y="113" class="dg-l" text-anchor="middle">schreibt</text>
+            <line x1="836" y1="90" x2="802" y2="106" class="dg-edge" marker-end="url(#ah1)"/>
+            <line x1="836" y1="156" x2="802" y2="140" class="dg-edge" marker-end="url(#ah1)"/>
+            <text x="888" y="126" class="dg-l" text-anchor="middle">API</text>
+            <line x1="733" y1="162" x2="733" y2="184" class="dg-edge" marker-end="url(#ah1)"/>
+          </svg>
+        </div>
+        <figcaption>In B besitzt genau eine App die Messdaten. Treffsicher und Ringwerk lesen über dieselbe API, keine App greift in eine fremde Datenbank (ADR-002).</figcaption>
+      </figure>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Kriterium</th><th>A · Modul in Treffsicher</th><th class="rec">B · Eigene App + Brücke zu Treffsicher</th><th>C · Eigene App ersetzt Treffsicher sofort</th></tr></thead>
+          <tbody>
+            <tr><td>Bedienung</td><td>Ein Login, eine App</td><td class="rec">Zwei Apps, verknüpft; später eine Anmeldung</td><td>Eine App, aber erst nach Nachbau des Tagebuchs</td></tr>
+            <tr><td>Fachlicher Schnitt</td><td>Messdaten und Tagebuch vermischt</td><td class="rec">Messen und Reflektieren sauber getrennt</td><td>Sauber, aber alles auf einmal</td></tr>
+            <tr><td>Angriffsfläche</td><td>Geräte-API in Treffsicher</td><td class="rec">Geräte-API isoliert in Spiegel</td><td>Isoliert</td></tr>
+            <tr><td>Weitere Nutzer der Daten</td><td>Ringwerk müsste Treffsicher fragen</td><td class="rec">Ringwerk und Treffsicher fragen Spiegel</td><td>Ringwerk fragt Spiegel</td></tr>
+            <tr><td>Neues Design</td><td>Nur mit Umbau von Treffsicher</td><td class="rec">Frei, ohne Treffsicher anzufassen</td><td>Frei</td></tr>
+            <tr><td>Aufwand bis zum ersten Nutzen</td><td>Am geringsten</td><td class="rec">Mittel</td><td>Am höchsten</td></tr>
+            <tr><td>Betrieb</td><td>Kein neuer Container</td><td class="rec">+1 App, +1 DB, etwa +300&nbsp;MB RAM</td><td>Wie B, später −1 App</td></tr>
+            <tr><td>Umkehrbarkeit</td><td>Später schwer herauszulösen</td><td class="rec">Hoch</td><td>Gering</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout rec">
+        <span class="label-line">Empfehlung</span>
+        <h4>B, so gebaut, dass C später ein kleiner Schritt ist</h4>
+        <ul>
+          <li><strong>Eigenes Gebiet.</strong> Messdaten haben einen eigenen Lebenszyklus: maschinell erzeugt, unveränderlich, viele Leser. Das gehört nicht in ein Tagebuch.</li>
+          <li><strong>Freies Design.</strong> Das moderne Design kann neu beginnen, ohne Treffsicher mitzuschleppen.</li>
+          <li><strong>Umkehrbar.</strong> Die Fachlogik liegt in geteilten Paketen. Treffsicher zeigt das Trefferbild mit derselben Komponente. Löst Spiegel Treffsicher später ab, zieht das Tagebuch als Modul um und die Treffsicher-Daten wandern über die API. Der Kern bleibt unangetastet.</li>
+        </ul>
+        <p class="small">Der größte Nachteil von B ist ein zweites Login. Gegenmittel sind eine Konto-Verknüpfung (Phase 3) oder eine gemeinsame Anmeldung für das ganze Vereinsheim (eigene ADR). Wenn du am Ende nur das Trefferbild in Treffsicher willst und keine eigenen Verläufe oder Vergleiche, ist A billiger. Und es gibt eine vierte Möglichkeit: nichts bauen und DISAG M-Qnect mit der ShotsApp nutzen (<a href="#shotsapp">Abschnitt 10</a>). Spiegel lohnt sich, wenn dir eigene Daten, Vergleiche und die Verbindung zu Treffsicher und Ringwerk diesen Aufwand wert sind.</p>
+      </div>
+      <div class="prose">
+        <h3>Was Treffsicher konkret bekommt</h3>
+        <ul>
+          <li><strong>„Aus Spiegel übernehmen“ ersetzt den Meyton-PDF-Import.</strong> Serien, Einzelschüsse, Datum und Trefferlage kommen exakt statt geparst. Der PDF-Parser ist am 1.&nbsp;September an einem geänderten Meyton-Druckpfad zerbrochen; strukturierte Daten beenden diese Klasse von Fehlern.</li>
+          <li>Eine Treffsicher-Einheit verweist auf eine oder mehrere Spiegel-Scheiben und zeigt das Trefferbild mit derselben Komponente.</li>
+          <li>Die heute manuell erfasste Trefferlage (mm links/rechts, hoch/tief) entsteht automatisch aus dem Schwerpunkt.</li>
+          <li>Später: Befinden und Prognose neben echten Kennzahlen. Das ist die „Mustererkennung“, die in den Treffsicher-Anforderungen noch offen ist („Wie schieße ich nach schlechtem Schlaf?“).</li>
+          <li>Der Meyton-PDF-Parser aus Treffsicher (und der aus Ringwerk) zieht in ein geteiltes Paket. Spiegel braucht ihn für den QR-Weg und für Ergebnisse von fremden Anlagen; Treffsicher und Ringwerk nutzen ihn weiter als Rückfall.</li>
+        </ul>
+      </div>
+      <div class="callout warn">
+        <span class="label-line">Berührte Entscheidungen</span>
+        <ul>
+          <li><strong>ADR-002</strong> legt einen Postgres mit zwei Datenbanken und zwei Usern fest. Spiegel bräuchte eine dritte DB mit eigenem Owner. Das Prinzip (eine DB je App, kein Cross-DB) bleibt. <code>db-init</code> läuft nur beim ersten Start, auf dem laufenden VPS braucht es daher einen einmaligen, idempotenten Anlage-Schritt.</li>
+          <li><strong>ADR-004</strong>: Caddy bekommt eine dritte Subdomain und einen öffentlichen Ingest-Endpunkt für die Brücke.</li>
+          <li><strong>ADR-009/010</strong>: Backup und Pre-Deploy-Backup müssen die dritte DB einschließen.</li>
+          <li><strong>ADR-011</strong>: Das CLI baut und deployt drei Apps und zusätzlich das Brücken-Image.</li>
+          <li><strong>ADR-005/006</strong>: Das Brücken-Image wird lokal als Multi-Arch-Image gebaut (arm64 + amd64) und öffentlich auf Docker Hub gelegt. Es enthält keine Geheimnisse.</li>
+          <li><strong>Konventionen</strong>: Die byte-identische UI-Schicht und „fest dunkel“ gelten für Ringwerk und Treffsicher. Spiegel nimmt am Drift-Gate erst teil, wenn Design&nbsp;2 auch dort ankommt (siehe <a href="#vorschau">Abschnitt 09</a>).</li>
+          <li><strong>VPS-Größe</strong>: Laut Sizing-Notiz läuft der VPS bei ~0,9&nbsp;GB im Betrieb und ~1,85&nbsp;GB in der Deploy-Spitze; 4&nbsp;GB sind empfohlen. Eine dritte App macht das Upgrade praktisch nötig.</li>
+          <li><strong>Open Source</strong>: Die Repos sind öffentlich, aber ohne Lizenz. Eine Lizenz ist eine neue Entscheidung; ADR-015 (Monorepo) bleibt gültig.</li>
+          <li><strong>Neue ADRs</strong>: „Spiegel als dritte App“, „Brücke: Datenfluss und Datensparsamkeit“, „Lizenz und Open Source“, gegebenenfalls „Gemeinsame Anmeldung“.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="architektur">
+      <div class="prose">
+        <p class="eyebrow">04 · Architektur</p>
+        <h2>Ein Weg hinaus, viele Wege hinein</h2>
+        <p>Zwischen Schützenhaus und Internet gibt es genau eine Verbindung: eine ausgehende HTTPS-Verbindung der Brücke. Auf dem VPS ist Spiegel die einzige App mit Messdaten; alle anderen lesen über ihre API.</p>
+      </div>
+      <figure class="dg">
+        <div class="scroll">
+          <svg viewBox="0 0 960 456" role="img" aria-label="Systemübersicht: Die Brücke liest im Schützenhaus die SSMDB2 auf dem Meyton-Server und sendet per ausgehendem HTTPS an Caddy auf dem VPS. Caddy leitet an Spiegel weiter, Spiegel nutzt eine eigene Postgres-Datenbank. Treffsicher und Ringwerk lesen über die API von Spiegel.">
+            <defs>
+              <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head"/></marker>
+              <marker id="ah2k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head key"/></marker>
+            </defs>
+            <rect x="12" y="20" width="412" height="390" rx="16" class="dg-zone"/>
+            <text x="32" y="48" class="dg-z">SCHÜTZENHAUS · MEYTON-NETZ</text>
+            <rect x="32" y="84" width="112" height="52" rx="10" class="dg-box"/>
+            <text x="88" y="106" class="dg-t" text-anchor="middle">Stände</text>
+            <text x="88" y="124" class="dg-s" text-anchor="middle">1 … n</text>
+            <rect x="196" y="70" width="208" height="206" rx="12" class="dg-box"/>
+            <text x="214" y="96" class="dg-t">Meyton-Server</text>
+            <text x="214" y="113" class="dg-s">ShootMaster, Kontrollzentrum</text>
+            <rect x="214" y="128" width="172" height="38" rx="8" class="dg-box inner"/>
+            <text x="228" y="152" class="dg-t">SSMDB2</text><text x="292" y="152" class="dg-s">MySQL, Archiv</text>
+            <rect x="214" y="174" width="172" height="38" rx="8" class="dg-box inner"/>
+            <text x="228" y="198" class="dg-t">SDF</text><text x="266" y="198" class="dg-s">Live-XML, optional</text>
+            <rect x="214" y="220" width="172" height="38" rx="8" class="dg-box inner"/>
+            <text x="228" y="244" class="dg-t">LANA</text><text x="272" y="244" class="dg-s">Belegung, optional</text>
+            <line x1="144" y1="110" x2="192" y2="110" class="dg-edge" marker-end="url(#ah2)"/>
+            <text x="168" y="101" class="dg-l" text-anchor="middle">Schüsse</text>
+            <rect x="196" y="322" width="208" height="64" rx="12" class="dg-box key"/>
+            <text x="300" y="349" class="dg-t" text-anchor="middle">Brücke</text>
+            <text x="300" y="367" class="dg-s" text-anchor="middle">Mini-PC · Docker · Warteschlange</text>
+            <line x1="300" y1="276" x2="300" y2="318" class="dg-edge" marker-end="url(#ah2)"/>
+            <text x="310" y="302" class="dg-l">nur lesend</text>
+
+            <line x1="404" y1="354" x2="572" y2="354" class="dg-edge key" marker-end="url(#ah2k)"/>
+            <text x="488" y="342" class="dg-l" text-anchor="middle">HTTPS, nur ausgehend</text>
+            <text x="488" y="374" class="dg-s" text-anchor="middle">Snapshots, Heartbeat,</text>
+            <text x="488" y="389" class="dg-s" text-anchor="middle">Aufträge abholen</text>
+
+            <rect x="540" y="20" width="408" height="390" rx="16" class="dg-zone"/>
+            <text x="560" y="48" class="dg-z">VPS · DOCKER</text>
+            <rect x="576" y="76" width="150" height="50" rx="10" class="dg-box"/>
+            <text x="651" y="98" class="dg-t" text-anchor="middle">Treffsicher</text>
+            <text x="651" y="115" class="dg-s" text-anchor="middle">Tagebuch</text>
+            <rect x="776" y="76" width="150" height="50" rx="10" class="dg-box"/>
+            <text x="851" y="98" class="dg-t" text-anchor="middle">Ringwerk</text>
+            <text x="851" y="115" class="dg-s" text-anchor="middle">Liga</text>
+            <rect x="654" y="186" width="196" height="62" rx="12" class="dg-box key"/>
+            <text x="752" y="212" class="dg-t" text-anchor="middle">Spiegel</text>
+            <text x="752" y="230" class="dg-s" text-anchor="middle">Next.js · Ingest-API · Ansichten</text>
+            <rect x="576" y="322" width="150" height="64" rx="10" class="dg-box"/>
+            <text x="651" y="349" class="dg-t" text-anchor="middle">Caddy</text>
+            <text x="651" y="367" class="dg-s" text-anchor="middle">TLS · Subdomains</text>
+            <rect x="776" y="322" width="150" height="64" rx="10" class="dg-box"/>
+            <text x="851" y="349" class="dg-t" text-anchor="middle">Postgres</text>
+            <text x="851" y="367" class="dg-s" text-anchor="middle">DB spiegel, eigener Owner</text>
+            <line x1="651" y1="126" x2="700" y2="182" class="dg-edge" marker-end="url(#ah2)"/>
+            <text x="636" y="160" class="dg-l" text-anchor="end">API</text>
+            <line x1="851" y1="126" x2="804" y2="182" class="dg-edge" marker-end="url(#ah2)"/>
+            <text x="866" y="160" class="dg-l">später</text>
+            <line x1="651" y1="322" x2="700" y2="252" class="dg-edge" marker-end="url(#ah2)"/>
+            <text x="636" y="292" class="dg-l" text-anchor="end">leitet weiter</text>
+            <line x1="804" y1="252" x2="851" y2="318" class="dg-edge" marker-end="url(#ah2)"/>
+            <text x="866" y="292" class="dg-l">eigene DB</text>
+
+            <rect x="430" y="404" width="104" height="40" rx="10" class="dg-box"/>
+            <text x="482" y="429" class="dg-t" text-anchor="middle">Handy</text>
+            <line x1="534" y1="420" x2="600" y2="390" class="dg-edge" marker-end="url(#ah2)"/>
+          </svg>
+        </div>
+        <figcaption>Das Schützenhaus öffnet keinen Port. Die Brücke holt sich Aufträge selbst ab (zum Beispiel „Stand 6 holen“), statt angerufen zu werden.</figcaption>
+      </figure>
+      <div class="prose">
+        <h3>Vom Rohdatensatz zur Ansicht</h3>
+      </div>
+      <div class="flow" aria-label="Datenfluss">
+        <div class="step"><b>Rohdaten</b><span>vollständiger Snapshot je Scheibe, unverändert, mit Prüfsumme</span></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Normalisierung</b><span>Adapter <span class="mono">meyton-ssmdb2@9</span>: Skalen, Zeitzone, Reihenfolge</span></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Kanonisches Modell</b><span>Scheibe, Stellung, Serie, Schuss</span></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Kennzahlen</b><span>Registry reiner Funktionen, versioniert</span></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Ansichten</b><span>Session, Serie, Verlauf, Vergleich, Live</span></div>
+      </div>
+      <div class="prose">
+        <p class="small muted">Alles rechts der Rohdaten lässt sich jederzeit neu berechnen: Ein Fehler in der Normalisierung oder eine neue Kennzahl kostet einen Durchlauf, keine Datenrettung.</p>
+        <h3>Wo der Code liegt</h3>
+      </div>
+<pre><span class="c"># Monorepo (pnpm + Turborepo, wie heute)</span>
+apps/spiegel/                Next.js-App: Konten, Ansichten, Ingest-API, Admin
+apps/spiegel-bridge/         Brücke fürs Schützenhaus (Node, Docker arm64 + amd64)
+packages/shot-core/          @vereinsheim/shot-core: Scheibenbilder, Wertung, Geometrie,
+                             Kennzahlen-Registry. Isomorph, rein, gut getestet
+packages/shot-ui/            @vereinsheim/shot-ui: Scheibe (SVG), Overlays, Wiedergabe,
+                             Diagramme. Auch in Treffsicher nutzbar
+packages/ingest-contract/    versionierter Vertrag Brücke ↔ Spiegel (zod), von beiden Seiten importiert
+packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heute in Treffsicher und
+                             Ringwerk), für den QR-Weg und für fremde Anlagen</pre>
+      <div class="prose">
+        <h3>Open Source von Anfang an</h3>
+        <p>Die Repos vereinsheim, treffsicher und ringwerk sind auf GitHub schon öffentlich, aber ohne Lizenz. Ohne Lizenz darf niemand den Code rechtlich nutzen oder verändern; Open Source wird er erst mit einer Lizenz. Für Spiegel braucht es deshalb vor allem diese Entscheidung, keinen neuen Ort: Spiegel kann im öffentlichen Monorepo entstehen, ADR-015 bleibt gültig. Weil Spiegel die geteilten Pakete <code>@vereinsheim/ui</code>, <code>lib</code> und <code>config</code> nutzt, brauchen diese dieselbe Lizenz.</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Lizenz</th><th>Bedeutet</th><th>Passt, wenn</th></tr></thead>
+          <tbody>
+            <tr><td>Apache-2.0 <span class="tag">Vorschlag</span></td><td>Frei nutzbar, auch kommerziell, mit Patentklausel; Hinweise bleiben erhalten</td><td>möglichst viele Vereine es einfach nutzen sollen; gleiche Lizenz wie Meyton-Live-Display</td></tr>
+            <tr><td>AGPL-3.0</td><td>Wer Spiegel verändert als Dienst anbietet, muss seine Änderungen offenlegen</td><td>niemand eine geschlossene Bezahlversion daraus machen soll</td></tr>
+            <tr><td>MIT</td><td>Wie Apache-2.0, kürzer, ohne Patentklausel</td><td>Einfachheit vor allem anderen zählt</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p>Was Open Source für die Architektur heißt:</p>
+        <ul>
+          <li><strong>Eine Installation je Verein.</strong> Jeder Verein betreibt Spiegel und seine Brücke selbst. Mandanten innerhalb einer Installation brauchen wir nicht; das hält das Datenmodell einfach.</li>
+          <li><strong>Spiegel läuft auch ohne das Vereinsheim:</strong> ein eigenes Compose-Beispiel (App, Postgres, Brücke), Konfiguration nur über Umgebungsvariablen, Vereinsname und Logo einstellbar.</li>
+          <li><strong>Nichts Vereinsspezifisches im Code:</strong> keine IPs, Namen oder Zugangsdaten. Die Meyton-Standardzugangsdaten stehen nur als Verweis auf das Handbuch in der Doku.</li>
+          <li><strong>Sicherheit hängt nie am Verstecken.</strong> Geräte-Token, Ratenbegrenzung und Größenlimits schützen die Ingest-API auch dann, wenn jeder den Code kennt.</li>
+          <li><strong>Fremdcode nur mit passender Lizenz.</strong> Meyton-Live-Display (Apache-2.0) mit Namensnennung, meyton-scheibenanzeige nicht.</li>
+          <li><strong>Herstellernamen nur beschreibend.</strong> Meyton, ShootMaster und DISAG nennen wir, um zu sagen, womit Spiegel arbeitet; kein Logo, kein Anschein einer Partnerschaft.</li>
+          <li><strong>Den Namen vor der Veröffentlichung prüfen.</strong> „Spiegel“ allein liegt nah an DER SPIEGEL. Eindeutiger wären etwa „Ringspiegel“ oder „Trefferbild“.</li>
+        </ul>
+      </div>
+      <div class="prose">
+        <h3>Leitplanken</h3>
+        <ul>
+          <li><strong>Rohdaten bleiben unverändert.</strong> Alles andere ist daraus abgeleitet.</li>
+          <li><strong>Meyton-Werte sind amtlich.</strong> Ring, Zehntel und Teiler zeigen wir so, wie Meyton sie gewertet hat. Eigene Rechnung nur für Geometrie (Abstand, Schwerpunkt, Streuung) und als Gegenprobe.</li>
+          <li><strong>Quellen-neutral.</strong> Meyton ist der erste Adapter. DISAG, SIUS oder Handeingabe wären weitere, ohne das Modell zu ändern.</li>
+          <li><strong>Datensparsamkeit beginnt in der Brücke.</strong> Was keinem zustimmenden Schützen gehört, verlässt das Schützenhaus nicht.</li>
+          <li><strong>Verdeckt bleibt verdeckt.</strong> Im Zweifel zeigen wir nichts.</li>
+          <li><strong>Zeit hat immer eine Zone.</strong> Die Zeitzonen-Fehler in Treffsicher und den Ringwerk-PDFs sind die Lehre.</li>
+          <li><strong>Live ist nur schneller.</strong> Die Live-Ansicht liest denselben Datenstrom, es gibt kein zweites System.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section id="bruecke">
+      <div class="prose">
+        <p class="eyebrow">05 · Der lokale Teil</p>
+        <h2>Die Brücke im Schützenhaus</h2>
+        <p>Die Brücke ist der einzige Teil, der im Vereinsnetz läuft. Sie soll für den Verein so einfach sein wie ein Router: einstecken, koppeln, vergessen. Schützen merken nur, dass ihre Scheiben von selbst erscheinen.</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Wo sie läuft</th><th>Vorteile</th><th>Nachteile</th></tr></thead>
+          <tbody>
+            <tr><td>Raspberry Pi oder Mini-PC <span class="tag">empfohlen</span></td><td>Eigenes Gerät, unabhängig von Meyton, wenig Strom, zwei Netzanschlüsse möglich; kann das Fundbüro als Webseite anbieten</td><td>Einmalig ca. 80–150&nbsp;€, ein Gerät mehr</td></tr>
+            <tr><td>Vorhandener PC im Meyton-Netz</td><td>Keine Hardware nötig</td><td>Läuft nicht immer, Windows-Updates, gemeinsam genutzt</td></tr>
+            <tr><td>Meyton-Server selbst</td><td>Kein Netzwerkthema</td><td>Herstellergerät; Eingriff gefährdet Support und Stabilität. Nicht empfohlen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <h3>Netz</h3>
+        <p>Die Brücke hängt per Kabel im Meyton-Netz und erreicht das Internet über WLAN oder LTE. Sie leitet keinen Verkehr zwischen beiden Netzen weiter und öffnet keinen Port. Für die Meyton-Anlage ist sie ein zusätzlicher Leser, wie ein Auswertungs-PC.</p>
+        <p>Meyton sperrt bei der Installation jeden Internetzugang; Internet gibt es nur über einen eigenen Router, den viele Vereine für die Fernwartung ohnehin haben. Laut Meyton-IP-Plan liegt der Server auf 192.168.10.200, weitere Workstations auf .10.201–239, die Messrahmen in 192.168.11.x. Eine feste Adresse aus dem Workstation-Bereich bietet sich für die Brücke an, abgestimmt mit dem, der die Anlage betreut.</p>
+        <h3>Einrichten in fünf Schritten</h3>
+        <ol>
+          <li>Gerät ans Meyton-Netz und ans WLAN anschließen.</li>
+          <li>Container starten (ein Befehl) oder ein fertiges SD-Karten-Image verwenden.</li>
+          <li>In Spiegel unter „Admin → Anlagen“ auf „Brücke koppeln“ klicken; die Brücke zeigt auf ihrer Statusseite einen sechsstelligen Code.</li>
+          <li>Der Assistent testet den Zugang zur SSMDB2 (Standard-Zugang aus dem Handbuch) und zeigt die letzten Scheiben ohne Namen.</li>
+          <li>Fertig. Spiegel zeigt „Anlage online, letzter Schuss vor 2 Minuten“.</li>
+        </ol>
+        <h3>Wie sie arbeitet</h3>
+        <ul>
+          <li><strong>Abfragen:</strong> jede Sekunde, solange geschossen wird, sonst alle 30&nbsp;s. Neue und geänderte Scheiben erkennt sie über <code>Scheiben.Zeitstempel</code> und den letzten Treffer, mit Überlappungsfenster. Weil Probeschüsse womöglich nur bis zur Wertung in der Ablage stehen, schneidet sie laufend mit.</li>
+          <li><strong>Nur lesen, auch technisch:</strong> Einen eigenen Lese-Benutzer sieht Meyton nicht vor. Die Brücke nutzt deshalb den Standard-Zugang, öffnet jede Verbindung als Read-only-Transaktion und kennt nur feste SELECT-Abfragen.</li>
+          <li><strong>Snapshots:</strong> Sie schickt immer den vollständigen Stand einer Scheibe (Scheibe, Serien, Treffer) mit Prüfsumme. Doppelte Lieferungen sind harmlos.</li>
+          <li><strong>Abschluss:</strong> Eine Scheibe gilt als fertig, wenn die Schusszahl aus der DisziplinID erreicht ist oder zehn Minuten nichts passiert. Spätere Korrekturen kommen als neue Revision.</li>
+          <li><strong>Warteschlange:</strong> SQLite auf dem Gerät. Ohne Internet wird gepuffert und später in Reihenfolge nachgeliefert.</li>
+          <li><strong>Heartbeat:</strong> jede Minute Version, Rückstau, letzter DB-Kontakt und Uhrabweichung der Anlage.</li>
+          <li><strong>Aufträge:</strong> nur feste Typen (Stand holen, Zeitraum nachladen, Diagnose senden). Kein freies SQL.</li>
+          <li><strong>Updates:</strong> neues Image-Tag; die Brücke zieht es nachts selbst oder per Knopf im Admin.</li>
+          <li><strong>Eigene Webseite:</strong> eine Statusseite für den Admin und das <a href="#fundbuero">Fundbüro</a> für alle im Vereins-WLAN, nur lesend, ohne Namen, mit QR-Abholscheinen. Aus dem Internet ist sie nicht erreichbar.</li>
+        </ul>
+        <p><strong>Was sie nie tut:</strong> in Meyton schreiben, einen Port öffnen, Daten ohne Zustimmung hochladen, Daten nach der Bestätigung behalten.</p>
+        <p><strong>Technik:</strong> TypeScript im Monorepo, damit Brücke und Server denselben Vertrag und dieselben Parser für DisziplinID, Skalen und Zeitzone teilen. Go wäre schlanker, kostet aber genau diese geteilten Typen. Ausgeliefert als Docker-Image für arm64 und amd64; für Windows-PCs ließe sich später ein Einzelprogramm bauen.</p>
+        <h3>Zuordnen per Meyton-QR</h3>
+        <p>Meyton zeigt am Stand keinen QR-Code für Rohdaten, aber einen für den Ergebnisausdruck. Dein Beispiel vom 2. Oktober zeigt, was dahintersteckt: ein Link der Form <code>http://195.201.88.185/print_&lt;UUID&gt;.pdf</code>. Die IP gehört zu qrcode.meyton.eu, der Dateiname ist zufällig, und es gibt nur HTTP. Im Fuß des PDFs steht <code>ID: ff914420</code>. Meral-IT hat für den XML-Export festgestellt, dass dessen Hex-ID die ScheibenID als vorzeichenbehaftete 32-Bit-Zahl ist. Die ID im Ausdruck sieht genauso aus; hier wäre das −7257056. Bestätigt eine Abfrage vor Ort das, ist die Zuordnung exakt.</p>
+        <p>Der Ablauf: Du scannst den QR in Spiegel. Spiegel lädt und sichert das PDF, liest ID, Stand und Werte und lässt die Brücke genau diese Scheibe aus der SSMDB2 holen. Uhrzeit, Stand und Schusswerte dienen als Gegenprobe; weil der Link unverschlüsselt ist, vergleicht Spiegel die PDF-Werte immer mit der Datenbank. Geladen wird nur von den erlaubten Meyton-Adressen (Hostname und IP), ohne Weiterleitungen und mit Größen- und Zeitgrenzen, wie der Treffsicher-Import heute.</p>
+      </div>
+      <figure class="dg">
+        <div class="scroll">
+          <svg viewBox="0 0 960 556" role="img" aria-label="Ablauf Zuordnen per Meyton-QR: Der Schütze scannt den QR-Code des Ausdrucks. Spiegel lädt das PDF von qrcode.meyton.eu, sichert es und liest Uhrzeit und Schussfolge. Die Brücke holt den Auftrag ab, liest die Scheibe mit der ID aus dem Ausdruck aus der SSMDB2 und lädt sie hoch. Spiegel zeigt die Vorschau mit PDF, der Schütze bestätigt.">
+            <defs>
+              <marker id="ah5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head"/></marker>
+              <marker id="ah5k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head key"/></marker>
+            </defs>
+            <rect x="15" y="16" width="150" height="44" rx="10" class="dg-box"/><text x="90" y="43" class="dg-t" text-anchor="middle">Schütze (Handy)</text>
+            <rect x="215" y="16" width="150" height="44" rx="10" class="dg-box key"/><text x="290" y="43" class="dg-t" text-anchor="middle">Spiegel</text>
+            <rect x="415" y="16" width="150" height="44" rx="10" class="dg-box"/><text x="490" y="43" class="dg-t" text-anchor="middle">qrcode.meyton.eu</text>
+            <rect x="615" y="16" width="150" height="44" rx="10" class="dg-box"/><text x="690" y="43" class="dg-t" text-anchor="middle">Brücke</text>
+            <rect x="795" y="16" width="150" height="44" rx="10" class="dg-box"/><text x="870" y="43" class="dg-t" text-anchor="middle">SSMDB2</text>
+            <line x1="90" y1="60" x2="90" y2="544" class="dg-life"/>
+            <line x1="290" y1="60" x2="290" y2="544" class="dg-life"/>
+            <line x1="490" y1="60" x2="490" y2="544" class="dg-life"/>
+            <line x1="690" y1="60" x2="690" y2="544" class="dg-life"/>
+            <line x1="870" y1="60" x2="870" y2="544" class="dg-life"/>
+
+            <line x1="90" y1="100" x2="286" y2="100" class="dg-edge key" marker-end="url(#ah5k)"/>
+            <text x="188" y="91" class="dg-l" text-anchor="middle">Meyton-QR scannen</text>
+            <line x1="290" y1="144" x2="486" y2="144" class="dg-edge" marker-end="url(#ah5)"/>
+            <text x="388" y="135" class="dg-l" text-anchor="middle">PDF laden</text>
+            <line x1="490" y1="172" x2="294" y2="172" class="dg-edge ret" marker-end="url(#ah5)"/>
+            <text x="392" y="163" class="dg-l" text-anchor="middle">Original-PDF</text>
+            <rect x="300" y="188" width="180" height="44" rx="8" class="dg-note"/>
+            <text x="390" y="206" class="dg-l" text-anchor="middle">ID, Stand, Werte lesen</text>
+            <text x="390" y="222" class="dg-l" text-anchor="middle">PDF sichern</text>
+            <line x1="690" y1="262" x2="294" y2="262" class="dg-edge" marker-end="url(#ah5)"/>
+            <text x="492" y="253" class="dg-l" text-anchor="middle">Aufträge abfragen (alle 2 s)</text>
+            <line x1="290" y1="290" x2="686" y2="290" class="dg-edge ret" marker-end="url(#ah5)"/>
+            <text x="488" y="281" class="dg-l" text-anchor="middle">Scheibe ff914420 holen</text>
+            <line x1="690" y1="334" x2="866" y2="334" class="dg-edge" marker-end="url(#ah5)"/>
+            <text x="780" y="325" class="dg-l" text-anchor="middle">ScheibenID −7257056</text>
+            <line x1="870" y1="362" x2="694" y2="362" class="dg-edge ret" marker-end="url(#ah5)"/>
+            <text x="782" y="353" class="dg-l" text-anchor="middle">Scheibe, Serien, Treffer</text>
+            <line x1="690" y1="406" x2="294" y2="406" class="dg-edge" marker-end="url(#ah5)"/>
+            <text x="492" y="397" class="dg-l" text-anchor="middle">Scheibe hochladen</text>
+            <line x1="290" y1="450" x2="94" y2="450" class="dg-edge" marker-end="url(#ah5)"/>
+            <text x="192" y="441" class="dg-l" text-anchor="middle">Vorschau: LP 40 · 367,6</text>
+            <line x1="90" y1="494" x2="286" y2="494" class="dg-edge key" marker-end="url(#ah5k)"/>
+            <text x="188" y="485" class="dg-l" text-anchor="middle">„Das bin ich“</text>
+            <rect x="300" y="508" width="210" height="30" rx="8" class="dg-note"/>
+            <text x="405" y="528" class="dg-l" text-anchor="middle">Scheibe und PDF in deinem Konto</text>
+          </svg>
+        </div>
+        <figcaption>Durchgezogen sind Anfragen, gestrichelt Antworten. Spiegel erkennt die Scheibe an der ID im Fuß des Ausdrucks; Uhrzeit, Stand und Schusswerte prüfen gegen. Ohne ID bliebe die Suche über Uhrzeit und Schussfolge, die praktisch ebenso eindeutig ist. Auswärts, ohne Brücke, endet der Ablauf nach dem PDF mit einem Ergebnis ohne Rohdaten. Das Original-PDF bleibt in beiden Fällen erhalten, auch wenn Meyton es nach einer Woche löscht.</figcaption>
+      </figure>
+      <div class="prose">
+        <h3>Was im Meyton-Ausdruck steht</h3>
+        <p>Am Beispiel vom 2. Oktober (Luftpistole, Stand 8):</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Bereich</th><th>Inhalt</th><th>Nutzen für Spiegel</th></tr></thead>
+          <tbody>
+            <tr><td>Kopf</td><td>Disziplin „LP 40 alt“, Klasse, StartNr, StandNr 8, Wertung 02.10.2026 19:51, Name mit #Nummer, Verein</td><td>Gegenprobe; die #Nummer ist vermutlich die SportpassID und zeigt, wem die Scheibe gehört</td></tr>
+            <tr><td>Fuß</td><td>initialisiert 19:21, gedruckt 19:52, <code>ID: ff914420</code></td><td>Beginn der Scheibe, Druckzeit, vermutlich die ScheibenID</td></tr>
+            <tr><td>Ergebnis</td><td>352 (371,4), Serien …, Zähler …, Innenzehner 2</td><td>Gegenprobe; auf fremden Anlagen das Ergebnis selbst</td></tr>
+            <tr><td>Teiler</td><td>die drei besten und die drei weitesten, je mit Schussnummer</td><td>Gegenprobe der Teiler und der Formel</td></tr>
+            <tr><td>Streuung</td><td>Trefferkreis …&nbsp;mm, Trefferlage 2,30&nbsp;mm links, 3,96&nbsp;mm hoch; dasselbe je Serie</td><td>Meytons eigene Streumaße; Spiegel zeigt sie neben seinen</td></tr>
+            <tr><td>Je Schuss</td><td>Zehntelwert, Stern für Innenzehner, Richtungspfeil</td><td>Gegenprobe Schuss für Schuss</td></tr>
+            <tr><td>Grafik</td><td>kleine Scheiben mit nummerierten Treffern, als Vektorgrafik</td><td>ließe sich später für fremde Anlagen in Koordinaten zurückrechnen</td></tr>
+            <tr><td>Metadaten</td><td>erzeugt mit Qt 5.12.8, erstellt 02.10.2026 19:52:12 +02:00</td><td>Druckpfad erkennen, Zeit mit Zone</td></tr>
+            <tr><td>Fehlt</td><td>x/y-Koordinaten, Zeit je Schuss</td><td>kommt nur aus der SSMDB2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p class="small muted">Der Trefferkreis von Serie&nbsp;3 ist mit 66,93&nbsp;mm genauso groß wie der der ganzen Scheibe; ihn bestimmen also zwei Treffer aus Serie&nbsp;3. Ob Meyton damit den kleinsten Kreis um alle Treffer oder den größten Abstand zweier Treffer meint, zeigen die Rohdaten.</p>
+      </div>
+      <div class="prose"><h3>Störfälle</h3></div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Was passiert</th><th>Wie Spiegel reagiert</th></tr></thead>
+          <tbody>
+            <tr><td>Internet im Schützenhaus fällt aus</td><td>Warteschlange puffert, Nachlieferung in Reihenfolge, Status „verzögert“</td></tr>
+            <tr><td>Meyton-Server ist aus</td><td>Wiederholung mit Pause, Status „Anlage nicht erreichbar“; keine Daten gehen verloren, solange die SSMDB2 sie hat</td></tr>
+            <tr><td>Neuer Meyton-Server, IDs beginnen neu</td><td>Gleiche ID mit anderem Inhalt startet eine neue Epoche; Admin-Hinweis, alte Scheiben bleiben unberührt</td></tr>
+            <tr><td>Uhr der Anlage geht falsch</td><td>Abweichung steht im Heartbeat und wird in der Normalisierung ausgeglichen</td></tr>
+            <tr><td>Standaufsicht korrigiert einen Wert</td><td>Neuer Snapshot, neue Revision, Kennzahlen neu, Hinweis „korrigiert“ an der Scheibe</td></tr>
+            <tr><td>Scheibe wird in Meyton gelöscht</td><td>Abgleich der letzten 30 Tage, Markierung „an der Quelle entfernt“</td></tr>
+            <tr><td>Meyton ändert das PDF-Format (wie am 1. September)</td><td>Die Zuordnung fällt auf Uhrzeit und Stand zurück, die Rohdaten kommen weiter aus der SSMDB2; der Test mit echten PDFs schlägt Alarm</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="identitaet">
+      <div class="prose">
+        <p class="eyebrow">06 · Zuordnung und Datenschutz</p>
+        <h2>Wem gehört welche Scheibe?</h2>
+        <p>Meyton kennt Schützen über Namen, SportpassID, Verein und Startnummer. Spiegel kennt Konten. Dazwischen liegt eine Zuordnung, die wir sichtbar machen: An jeder Scheibe steht, auf welchem Weg sie zu dir kam.</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Weg</th><th>Wann</th><th>Ablauf</th><th>Sicherheit</th></tr></thead>
+          <tbody>
+            <tr><td>Meyton-QR</td><td>Nach jeder Scheibe, bis eine Woche später</td><td>QR-Code des Ausdrucks in Spiegel scannen; Spiegel sichert das PDF und findet die Scheibe über Uhrzeit und Schussfolge; du bestätigst</td><td>hoch</td></tr>
+            <tr><td>Opt-in per Sportpass <span class="tag">Standard</span></td><td>Starter aus der Schützenliste mit SportpassID; lädt am Abend automatisch hoch</td><td>Einmal im Profil eintragen, Admin bestätigt; danach automatisch, auch rückwirkend</td><td>hoch</td></tr>
+            <tr><td>Fundbüro</td><td>Kein QR zur Hand oder Link abgelaufen</td><td>„Scheibe holen“ in Spiegel, solange die Brücke läuft</td><td>mittel, mit Protokoll</td></tr>
+            <tr><td>Admin</td><td>Korrekturen</td><td>Zuweisen und umhängen, mit Protokoll</td><td>hoch</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p>Bei euch wählen Schützen ihren Namen aus der Schützenliste oder tippen ihn frei; LANA nutzt ihr nicht. Frei getippte Namen weichen in der Schreibweise ab, deshalb nutzt Spiegel sie nur als Vorschlag, nie als automatische Zuordnung. Kommt später die LANA-Standbelegung mit Starterkarten dazu, wird daraus ein weiterer automatischer Weg.</p>
+
+        <h3 id="fundbuero">Scheiben ohne Starter: das Fundbüro</h3>
+        <p>Ihr trainiert manchmal, ohne dass ein Starter zugewiesen ist. Solche Scheiben gehören erst einmal niemandem. Spiegel behandelt sie wie Fundsachen: Sie bleiben im Schützenhaus, bis jemand sie abholt, und verlassen es sonst nie. Der Meyton-QR ist der schnellste Weg, eine Fundsache abzuholen. Das Fundbüro selbst brauchen wir für alles ohne QR: abgelaufene Links, vergessene Scheiben und Trainings, für die Meyton keinen Ausdruck erzeugt. Ob solche Trainings überhaupt in der SSMDB2 landen, zeigt die Erkundung.</p>
+        <p>Deine Idee mit einer Weboberfläche auf dem Raspberry Pi bleibt dafür der Kern. Eine Hürde gibt es: Der Pi weiß nicht, wer du bist, und ein Login auf einem Gerät, das allen im Vereins-WLAN offensteht, wollen wir nicht. Die Lösung ist ein <strong>Abholschein</strong>: Der Pi zeigt zu jeder Fundsache einen QR-Code mit einem Einmal-Schlüssel. Du scannst ihn mit dem Handy, Spiegel erkennt dich an deinem Login und zeigt die Vorschau. Erst nach deiner Bestätigung lädt die Brücke die Scheibe hoch.</p>
+      </div>
+      <figure class="dg">
+        <div class="scroll">
+          <svg viewBox="0 0 960 330" role="img" aria-label="Lebenslauf einer Scheibe: Sie läuft, wird abgeschlossen, und dann wird geprüft, ob ein Besitzer bekannt ist. Bekannt durch Check-in vorher oder durch Sportpass, Starterkarte oder LANA während: Sie wird hochgeladen. Unbekannt: Sie bleibt im Fundbüro im Schützenhaus, bis jemand sie per QR bestätigt, sonst verfällt sie nach der Frist und bleibt nur in der SSMDB2. Verknüpft jemand später seine Sportpassnummer, wird nachgeladen.">
+            <defs>
+              <marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head"/></marker>
+              <marker id="ah4k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head key"/></marker>
+            </defs>
+            <rect x="40" y="16" width="210" height="48" rx="10" class="dg-box"/>
+            <text x="145" y="37" class="dg-t" text-anchor="middle">Check-in am Stand</text>
+            <text x="145" y="54" class="dg-s" text-anchor="middle">vorher</text>
+            <rect x="290" y="16" width="240" height="48" rx="10" class="dg-box"/>
+            <text x="410" y="37" class="dg-t" text-anchor="middle">Sportpass, Starterkarte, LANA</text>
+            <text x="410" y="54" class="dg-s" text-anchor="middle">während</text>
+            <rect x="40" y="132" width="150" height="56" rx="10" class="dg-box"/>
+            <text x="115" y="156" class="dg-t" text-anchor="middle">Scheibe läuft</text>
+            <text x="115" y="173" class="dg-s" text-anchor="middle">Schüsse kommen an</text>
+            <rect x="230" y="132" width="150" height="56" rx="10" class="dg-box"/>
+            <text x="305" y="156" class="dg-t" text-anchor="middle">abgeschlossen</text>
+            <text x="305" y="173" class="dg-s" text-anchor="middle">Schusszahl oder Ruhe</text>
+            <polygon points="470,120 532,160 470,200 408,160" class="dg-box"/>
+            <text x="470" y="156" class="dg-t" text-anchor="middle">Besitzer</text>
+            <text x="470" y="172" class="dg-t" text-anchor="middle">bekannt?</text>
+            <rect x="600" y="36" width="200" height="56" rx="10" class="dg-box key"/>
+            <text x="700" y="60" class="dg-t" text-anchor="middle">hochgeladen</text>
+            <text x="700" y="77" class="dg-s" text-anchor="middle">gehört dir</text>
+            <rect x="600" y="232" width="200" height="56" rx="10" class="dg-box"/>
+            <text x="700" y="256" class="dg-t" text-anchor="middle">Fundbüro</text>
+            <text x="700" y="273" class="dg-s" text-anchor="middle">bleibt im Schützenhaus</text>
+            <rect x="836" y="232" width="112" height="56" rx="10" class="dg-box inner"/>
+            <text x="892" y="256" class="dg-t" text-anchor="middle">Frist vorbei</text>
+            <text x="892" y="273" class="dg-s" text-anchor="middle">nur in SSMDB2</text>
+            <line x1="125" y1="64" x2="117" y2="128" class="dg-edge" marker-end="url(#ah4)"/>
+            <line x1="432" y1="64" x2="465" y2="116" class="dg-edge" marker-end="url(#ah4)"/>
+            <line x1="190" y1="160" x2="226" y2="160" class="dg-edge" marker-end="url(#ah4)"/>
+            <line x1="380" y1="160" x2="404" y2="160" class="dg-edge" marker-end="url(#ah4)"/>
+            <path d="M532 160 H 562 V 64 H 596" class="dg-edge key" marker-end="url(#ah4k)"/>
+            <text x="570" y="116" class="dg-l">ja</text>
+            <path d="M470 200 V 260 H 596" class="dg-edge" marker-end="url(#ah4)"/>
+            <text x="478" y="240" class="dg-l">nein</text>
+            <line x1="700" y1="232" x2="700" y2="96" class="dg-edge key" marker-end="url(#ah4k)"/>
+            <text x="710" y="184" class="dg-l">per QR bestätigt</text>
+            <line x1="800" y1="260" x2="832" y2="260" class="dg-edge" marker-end="url(#ah4)"/>
+            <text x="816" y="250" class="dg-l" text-anchor="middle">Frist</text>
+            <path d="M892 232 V 64 H 804" class="dg-edge ret" marker-end="url(#ah4)"/>
+            <text x="884" y="128" class="dg-l" text-anchor="end">später</text>
+            <text x="884" y="143" class="dg-l" text-anchor="end">verknüpft</text>
+          </svg>
+        </div>
+        <figcaption>Zugeordnet wird zu vier Zeitpunkten: vorher per Check-in, während durch Meyton-Stammdaten, danach im Fundbüro und später, wenn jemand seine Sportpassnummer verknüpft. Hochgeladen wird erst, wenn ein Besitzer feststeht.</figcaption>
+      </figure>
+      <div class="prose"><h3>Wann wird zugeordnet?</h3></div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Zeitpunkt</th><th>Wie</th><th>Aufwand für dich</th><th>Live möglich</th></tr></thead>
+          <tbody>
+            <tr><td>Vorher</td><td>Check-in: Stand-Aufkleber scannen („ich schieße jetzt auf Stand 6“) oder ein Belegungsplan der Trainerin für den Abend</td><td>ein Scan</td><td class="yes">ja</td></tr>
+            <tr><td>Während</td><td>Meyton kennt dich: Sportpass aus der Schützenliste (Starterkarte und LANA, falls später genutzt)</td><td>keiner</td><td class="yes">ja</td></tr>
+            <tr><td>Danach</td><td>Meyton-QR direkt nach dem Schießen; sonst Fundbüro (Abholschein am Tablet oder „Scheibe holen“ in Spiegel), innerhalb der Frist</td><td>ein Scan, eine Bestätigung</td><td>nein</td></tr>
+            <tr><td>Später</td><td>Du verknüpfst deine Sportpassnummer; Spiegel lädt ältere Scheiben nach, soweit die SSMDB2 sie hat</td><td>einmalig</td><td>nein</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p>Euer Weg: „während“ über die Sportpassnummer, sonst „danach“ per Meyton-QR. Fundbüro und Check-in kommen dazu, wenn die Erkundung zeigt, dass Trainings ohne Starter in der Ablage landen. Der Check-in ist außerdem die Voraussetzung für Live-Ansichten ohne Meyton-Anmeldung. Ein Check-in gilt, bis du dich abmeldest, jemand anderes am selben Stand eincheckt oder drei Stunden vorbei sind. Steht in Meyton ein Name, der zu einem anderen Konto gehört, gewinnt Meyton.</p>
+        <h3>Drei Wege zur eigenen Scheibe</h3>
+        <ul>
+          <li><strong>Meyton-QR.</strong> Den QR-Code zum PDF-Ausdruck gibt es bei euch schon. Scannst du ihn in Spiegel oder fügst den Link ein, liest Spiegel das PDF wie heute der Treffsicher-Import, sichert es und sucht über Uhrzeit und Schussfolge die passende Scheibe in der SSMDB2. Der Link gilt eine Woche.</li>
+          <li><strong>Opt-in per Sportpass.</strong> Wer zugestimmt hat, muss nichts abholen: Die Brücke lädt seine Scheiben am Abend selbst hoch, Probe eingeschlossen. Ein Display oder Tablet braucht es dafür nicht.</li>
+          <li><strong>In Spiegel.</strong> Unter „Scheibe holen“ wählst du Stand und Zeitraum. Spiegel fragt die Brücke, die Liste kommt in Sekunden. Das geht nur, solange die Brücke läuft, also am Trainingsabend. Dabei verlassen nur die Vorschau-Angaben das Schützenhaus, die Schüsse erst nach deiner Bestätigung.</li>
+        </ul>
+        <h3>Regeln fürs Abholen</h3>
+        <ul>
+          <li>Abholen geht nur bei Scheiben ohne bekannten Besitzer. Gehört eine Scheibe schon jemandem, gibt es „Das war ich“ als Anfrage an Besitzer oder Admin.</li>
+          <li>Frist: bis sieben Tage nach dem letzten Schuss, einstellbar. Danach bleibt die Scheibe nur in der SSMDB2.</li>
+          <li>Wer zuerst bestätigt, bekommt die Scheibe; ein zweiter Anspruch geht an den Admin.</li>
+          <li>Abholen lässt sich rückgängig machen, und an der Scheibe steht, wie sie zu dir kam.</li>
+          <li>Das Fundbüro zeigt keine Namen. Erkannt wird die Scheibe an Stand, Uhrzeit, Ergebnis und Trefferbild.</li>
+          <li>Haben zwei Schützen nacheinander auf derselben Scheibe geschossen, lässt sie sich an einer Schussnummer teilen.</li>
+        </ul>
+        <h3>Datenschutz</h3>
+        <ul>
+          <li>Einwilligung vor dem ersten Upload, jederzeit widerrufbar.</li>
+          <li>Verantwortlich ist der Verein; mit dem Hoster braucht es einen Vertrag zur Auftragsverarbeitung.</li>
+          <li>Daten ohne Zuordnung verlassen das Schützenhaus nicht. Die Brücke kennt dafür nur gehashte Kennungen der zustimmenden Schützen.</li>
+          <li>Privat ist Standard. Trainer sehen nur, was du freigibst. Admins sehen Betrieb und Zuordnungen, aber keine Schussbilder.</li>
+          <li>Export (JSON, CSV) und Löschen auf Knopfdruck.</li>
+          <li>Für Jugendliche willigen die Erziehungsberechtigten ein.</li>
+        </ul>
+        <p class="small muted">Das ist eine technische Sicht, keine Rechtsberatung. Den Einwilligungstext sollte der Vorstand mit der verantwortlichen Person für Datenschutz abstimmen.</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Rolle</th><th>Sieht</th><th>Darf</th></tr></thead>
+          <tbody>
+            <tr><td>Schütze</td><td>Eigene Scheiben, Verläufe, Vergleiche</td><td>Zuordnen, Notizen, Freigaben, Export, Löschen</td></tr>
+            <tr><td>Trainer</td><td>Was Schützen freigegeben haben, auch live</td><td>Kommentieren, Gruppen vergleichen</td></tr>
+            <tr><td>Vereinsadmin</td><td>Anlagen, Brücken-Status, Zuordnungen</td><td>Koppeln, Zuordnungen bestätigen, Scheibenbilder pflegen</td></tr>
+            <tr><td>Gast ohne Konto</td><td>Nichts</td><td>Mit Konto über den Stand-QR einsteigen</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="datenmodell">
+      <div class="prose">
+        <p class="eyebrow">07 · Datenmodell und Scheibenbilder</p>
+        <h2>Ein Modell, das jede Quelle aufnehmen kann</h2>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Entität</th><th>Wozu</th><th>Schlüssel</th></tr></thead>
+          <tbody>
+            <tr><td>Anlage</td><td>Schießstand eines Vereins mit Zeitzone</td><td class="mono">id</td></tr>
+            <tr><td>Quelle</td><td>Eine SSMDB2-Instanz mit Epoche</td><td class="mono">Anlage + Epoche</td></tr>
+            <tr><td>Brücke</td><td>Gekoppeltes Gerät mit Token</td><td class="mono">id</td></tr>
+            <tr><td>Stand</td><td>StandNr oder StandNrText (zum Beispiel „H“ im Finale)</td><td class="mono">Anlage + Nr</td></tr>
+            <tr><td>Schützen-Identität</td><td>Wie Meyton den Schützen kennt</td><td class="mono">SportpassID oder Name + Verein</td></tr>
+            <tr><td>Konto, Zuordnung</td><td>Spiegel-Nutzer und sein Weg zur Identität, mit Status</td><td class="mono">id</td></tr>
+            <tr><td>Rohdatensatz</td><td>Unveränderter Snapshot</td><td class="mono">Quelle + ScheibenID + Prüfsumme</td></tr>
+            <tr><td>Scheibe</td><td>Ein Durchgang: Schütze, Disziplin, Stand, Zeit, Status, Revision</td><td class="mono">Quelle + Epoche + ScheibenID</td></tr>
+            <tr><td>Stellung, Serie</td><td>Gliederung mit amtlichen Summen</td><td class="mono">Scheibe + Stellung + Serie</td></tr>
+            <tr><td>Schuss</td><td>Lage, Werte, Zeit</td><td class="mono">Scheibe + Stellung + Treffer</td></tr>
+            <tr><td>Disziplin</td><td>Regelnummer, Schusszahl, Serienlänge, Stellungen</td><td class="mono">Regelnummer</td></tr>
+            <tr><td>Scheibenbild</td><td>Geometrie je Stellung, versioniert</td><td class="mono">id + Version</td></tr>
+            <tr><td>Kennzahlwert</td><td>Berechneter Wert je Ebene</td><td class="mono">Scheibe + Ebene + Kennzahl + Version</td></tr>
+            <tr><td>Notiz, Tag, Ausrüstung</td><td>Kontext für Vergleiche (Munitionslos, Griff, Brille)</td><td class="mono">id</td></tr>
+          </tbody>
+        </table>
+      </div>
+<pre><span class="c">// Ein Schuss im kanonischen Modell</span>
+type Shot = {
+  seq: number                     <span class="c">// Reihenfolge über die ganze Scheibe, Probe zuerst</span>
+  position: number                <span class="c">// Stellung, 0 = Probe</span>
+  series: number | null           <span class="c">// Serie laut Meyton</span>
+  xUm: number; yUm: number        <span class="c">// Mikrometer, x nach rechts, y nach oben</span>
+  ring: number | null             <span class="c">// amtlich, ganze Ringe</span>
+  decimalTenths: number | null    <span class="c">// amtlich, 94 = 9,4</span>
+  teilerHundredths: number | null <span class="c">// amtlich; Einheit am echten Datensatz prüfen</span>
+  innerTen: boolean
+  scoringMode: number             <span class="c">// Meyton-Wertungsmodus 0–12</span>
+  firedAt: string                 <span class="c">// UTC mit ms, aus Ortszeit + Zone der Anlage</span>
+  source: { sourceId: string; scheibenId: number; stellung: number; treffer: number }
+}</pre>
+      <div class="prose">
+        <h3>Scheibenbilder</h3>
+        <p>Jede Disziplin braucht ein Scheibenbild, damit Spiegel sie richtig zeichnet. Die Maße stehen bei Meyton im Handbuch „ShootMaster II – Disziplin erstellen“. Ein Scheibenbild ist reine Daten:</p>
+      </div>
+<pre>{
+  "id": "issf-10m-luftpistole", "version": 1,
+  "ringDiametersMm": [155.5, 139.5, 123.5, 107.5, 91.5, 75.5, 59.5, 43.5, 27.5, 11.5],
+  "innerTenDiameterMm": 5.0,
+  "blackFromRing": 7,
+  "ringWidthMm": 8.0,
+  "gaugeMm": 4.5,
+  "decimal": { "max": 10.9, "rounding": "truncate" },
+  "labels": { "rings": [1, 2, 3, 4, 5, 6, 7, 8] }
+}</pre>
+      <div class="prose">
+        <p>Die Kette lautet: DisziplinID → Regelnummer (DSB oder Meyton-eigen) → Disziplin (Schusszahl, Serienlänge, Probe) → Scheibenbild je Stellung. Bei der 25-m-Pistole ist Stellung&nbsp;1 die Präzisions-, Stellung&nbsp;2 die Duellscheibe. Die SSMDB2 enthält keine Geometrie; auch Meyton rät zu einer eigenen Tabelle. Für Preisscheiben ordnet ein Admin den Namen zu.</p>
+        <p>Die Bibliothek für Version&nbsp;1 (Maße in mm nach DSB-Sportordnung 2026, Anhang 0.20, gleich ISSF 2026; die Ringe haben gleiche Abstände):</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Scheibe</th><th>Ø 10</th><th>Innenzehner</th><th>Ringabstand</th><th>Ø außen</th><th>Spiegel</th><th>Kaliber</th></tr></thead>
+          <tbody>
+            <tr><td>Luftgewehr 10&nbsp;m</td><td>0,5 (Punkt)</td><td>Punkt weg (≥&nbsp;10,2)</td><td>2,5</td><td>45,5</td><td>30,5 (Ringe 4–9)</td><td>4,5</td></tr>
+            <tr><td>Luftpistole 10&nbsp;m</td><td>11,5</td><td>5,0</td><td>8,0</td><td>155,5</td><td>59,5 (7–10)</td><td>4,5</td></tr>
+            <tr><td>KK 50&nbsp;m</td><td>10,4</td><td>5,0</td><td>8,0</td><td>154,4</td><td>112,4 (in Ring 3)</td><td>5,6</td></tr>
+            <tr><td>Zimmerstutzen 15&nbsp;m</td><td>4,5</td><td>–</td><td>4,5</td><td>85,5</td><td>40,5 (6–10)</td><td>4,65</td></tr>
+            <tr><td>25&nbsp;m Präzision, 50&nbsp;m Pistole, 100&nbsp;m</td><td>50</td><td>25</td><td>25</td><td>500</td><td>200 (7–10)</td><td>je Waffe</td></tr>
+            <tr><td>25&nbsp;m Duell, Schnellfeuer</td><td>100</td><td>50</td><td>40</td><td>500 (Ring 5)</td><td>nur Ringe 5–10</td><td>je Waffe</td></tr>
+            <tr><td>300&nbsp;m Gewehr</td><td>100</td><td>50</td><td>50</td><td>1000</td><td>600 (5–10)</td><td>je Patrone</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <h3>Die Gegenprobe prüft jedes Scheibenbild an echten Daten</h3>
+        <p>Mit Scheibenbild und Kaliber rechnet Spiegel den Zehntelwert jedes Schusses aus x/y nach. Weicht er vom Meyton-Wert ab, ist das Scheibenbild falsch oder die Achsen sind vertauscht. Meyton wertet über den inneren Trefferrand, rechnet auf 1/100&nbsp;mm genau und schneidet Nachkommastellen zugunsten des Schützen ab. Daraus folgt:</p>
+        <p style="font-family: var(--font-mono); color: var(--fg); font-size: 15px;">Zehntel = 10 + (Zehnerradius + halbes Kaliber − Abstand) ÷ Ringabstand, auf eine Stelle abgeschnitten, höchstens 10,9</p>
+        <p>Bei Luftgewehr, Luftpistole und KK ergibt Zehnerradius plus halbes Kaliber genau einen Ringabstand (Luftpistole 5,75&nbsp;+&nbsp;2,25&nbsp;=&nbsp;8&nbsp;mm). Dann vereinfacht sich die Formel zu „11 − Abstand ÷ Ringabstand“. Geprüft an deinen ShotsApp-Screenshots (Luftpistole, Serie&nbsp;1):</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Schuss</th><th>Teiler laut App</th><th>Abstand</th><th>11 − Abstand ÷ 8</th><th>Zehntel laut App</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>1264,3</td><td>12,643&nbsp;mm</td><td>9,42</td><td class="yes">9,4 ✓</td></tr>
+            <tr><td>2</td><td>1182,3</td><td>11,823&nbsp;mm</td><td>9,52</td><td class="yes">9,5 ✓</td></tr>
+            <tr><td>3</td><td>1856,1</td><td>18,561&nbsp;mm</td><td>8,68</td><td class="yes">8,6 ✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose"><p>Und am Meyton-Ausdruck vom 2. Oktober, mit allen sechs Teilern, die dort mit Schussnummer stehen:</p></div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Schuss</th><th>Teiler im Ausdruck</th><th>Abstand</th><th>11 − Abstand ÷ 8</th><th>Wert im Ausdruck</th></tr></thead>
+          <tbody>
+            <tr><td>8</td><td>331,8</td><td>3,318&nbsp;mm</td><td>10,585</td><td class="yes">10,5* ✓</td></tr>
+            <tr><td>2</td><td>396,4</td><td>3,964&nbsp;mm</td><td>10,505</td><td class="yes">10,5* ✓</td></tr>
+            <tr><td>15</td><td>547,4</td><td>5,474&nbsp;mm</td><td>10,316</td><td class="yes">10,3 ✓</td></tr>
+            <tr><td>23</td><td>2656</td><td>26,56&nbsp;mm</td><td>7,680</td><td class="yes">7,6 ✓</td></tr>
+            <tr><td>5</td><td>3369</td><td>33,69&nbsp;mm</td><td>6,789</td><td class="yes">6,7 ✓</td></tr>
+            <tr><td>27</td><td>3831</td><td>38,31&nbsp;mm</td><td>6,211</td><td class="yes">6,2 ✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose"><p class="small muted">Alle sechs stimmen, auch die Sterne: Innenzehner ist ein Schuss bis 4,75&nbsp;mm Abstand (halber Innenzehner 2,5&nbsp;mm plus halbes Kaliber 2,25&nbsp;mm), also ab 10,4. Der Teiler ist der Abstand der Schussmitte zur Scheibenmitte in 1/100&nbsp;mm; Meyton speichert ihn als Zehntel- und Hundertstelteiler. Einen Teilerfaktor für die Luftpistole kennt die Sportordnung nicht, er steht in der jeweiligen Ausschreibung (üblich ist LP-Teiler ÷ 2,6 bis 3,0). Spiegel speichert den rohen Teiler und rechnet Faktoren nur in der Ansicht.</p></div>
+    </section>
+
+    <!-- 08 -->
+    <section id="auswertung">
+      <div class="prose">
+        <p class="eyebrow">08 · Kennzahlen, Verläufe, Vergleiche</p>
+        <h2>Einmal definieren, überall auswerten</h2>
+        <p>Jede Kennzahl ist eine reine Funktion mit Einheit, Richtung (besser höher oder niedriger), Ebenen (Schuss, Serie, Scheibe) und Version. Daraus ergeben sich ohne weiteren Code: die Kachel in der Session, die Spalte im Serienvergleich, der Verlauf über Monate, der direkte Vergleich und der Rekord. Eine neue Kennzahl ist eine Funktion plus Test. Ändert sich eine Formel, steigt die Version und Spiegel rechnet die gespeicherten Werte neu.</p>
+      </div>
+<pre>export const streukreis = defineMetric({
+  key: "group.enclosingDiameter",
+  label: "Streukreis",
+  unit: "mm",
+  scopes: ["series", "card"],
+  better: "lower",
+  version: 1,
+  compute: (shots) => 2 * smallestEnclosingCircle(shots).radiusMm,
+})</pre>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>Gruppe</th><th>Kennzahlen für den Anfang</th></tr></thead>
+          <tbody>
+            <tr><td>Ergebnis</td><td>Ringe, Zehntel, Ø je Schuss, Zehner, Innenzehner, bester Teiler, Streuung der Serienergebnisse</td></tr>
+            <tr><td>Trefferbild</td><td>Schwerpunkt x/y, Schwerpunkt-Abstand, Streukreis (kleinster Kreis um alle Treffer), mittlerer Radius, Streuung x/y, Streu-Ellipse (Achsen, Winkel)</td></tr>
+            <tr><td>Zeit</td><td>Dauer, Ø Intervall, Tempo-Konstanz, längste Pause, Zeit bis zum ersten Wertungsschuss</td></tr>
+            <tr><td>Verlauf in der Einheit</td><td>Ermüdung (letzte gegen erste zehn), erster Wertungsschuss nach der Probe, Wanderung des Schwerpunkts zwischen den Serien</td></tr>
+            <tr><td>Probe gegen Wertung</td><td>Versatz der Schwerpunkte, Zahl der Probeschüsse</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <h3>Details einer Session</h3>
+        <ul>
+          <li><strong>Trefferbild</strong> mit Schaltern für Schwerpunkt, Streukreis, Ellipse, Nummern und Probe; Zoom von der ganzen Scheibe auf die Gruppe.</li>
+          <li><strong>Wiedergabe</strong> in echter Reihenfolge mit der echten Zeitachse, beschleunigt, mit Pausen dort, wo du Pausen gemacht hast.</li>
+          <li><strong>Serien</strong> als kleine Scheiben nebeneinander (gleicher Maßstab) und einzeln zum Durchwischen.</li>
+          <li><strong>Schuss für Schuss</strong>: Wert und Tempo als Verlauf mit gleitendem Schnitt, dazu die Tabelle mit Teiler, Richtung und Intervall.</li>
+          <li><strong>Verteilung</strong> der Zehntel als Histogramm, Richtungen als Uhr.</li>
+        </ul>
+        <h3>Verläufe</h3>
+        <p>Jede Kennzahl lässt sich über die Zeit zeigen. Die Disziplin ist Pflichtfilter, wie in Treffsicher (nie gemischte Disziplinen). Dazu Zeitraum, Training oder Wettkampf, Wert je Scheibe, Woche oder Monat, gleitender Schnitt und Marker für Ereignisse wie „neuer Griff“. Rekorde fallen nebenbei ab.</p>
+        <h3>Direkte Vergleiche</h3>
+        <ul>
+          <li><strong>Serie gegen Serie:</strong> „Warum fällt Serie 4 ab?“</li>
+          <li><strong>Scheibe gegen Scheibe:</strong> „Heute gegen meinen besten Wettkampf.“</li>
+          <li><strong>Zeitraum gegen Zeitraum:</strong> „Oktober gegen September.“</li>
+          <li><strong>Merkmal A gegen B:</strong> „Munitionslos 4711 gegen 4712“, „mit und ohne Schießbrille“. Braucht Tags.</li>
+          <li><strong>Gegen den eigenen Schnitt:</strong> „0,12 je Schuss über deinem 30-Tage-Schnitt.“</li>
+          <li><strong>Schütze gegen Schütze</strong> nur mit beidseitiger Freigabe, etwa im Training mit dem Trainer.</li>
+        </ul>
+        <p>Wo ein Satz reicht, schreibt Spiegel den Satz über das Diagramm: „Serie 4 streut 21&nbsp;% weiter als Serie 3.“ Vergleiche achten auf gleiche Schusszahlen, denn ein Streukreis über 40 Schuss ist immer größer als einer über 10.</p>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="vorschau">
+      <div class="prose">
+        <p class="eyebrow">09 · Design-Vorschau</p>
+        <h2>So könnte sich eine Session anfühlen</h2>
+        <p>Ein klickbarer Entwurf mit erfundenen Beispieldaten (40 Schuss Luftpistole plus Probe). Alle Werte rechnet die Seite live aus den Koordinaten, mit denselben Formeln, die später im Paket liegen. Probier die Serien, die Schalter, die Wiedergabe, den Vergleich und den Verlauf.</p>
+      </div>
+
+      <div class="proto" id="proto">
+        <div class="proto-bar">
+          <div>
+            <span class="pill">Beispieldaten</span>
+            <div class="pb-title" id="p-title">Luftpistole · 40 Schuss</div>
+            <div class="pb-sub" id="p-sub">Training · Stand 6</div>
+          </div>
+          <div class="pb-score" aria-live="polite"><span class="pb-dec" id="p-dec">–</span><span class="pb-ring" id="p-ring">–</span></div>
+        </div>
+        <div class="proto-grid">
+          <div>
+            <div class="seg" id="p-sel" role="tablist" aria-label="Auswahl">
+              <button type="button" role="tab" data-sel="all" aria-selected="true">Gesamt</button>
+              <button type="button" role="tab" data-sel="s1" aria-selected="false">S1</button>
+              <button type="button" role="tab" data-sel="s2" aria-selected="false">S2</button>
+              <button type="button" role="tab" data-sel="s3" aria-selected="false">S3</button>
+              <button type="button" role="tab" data-sel="s4" aria-selected="false">S4</button>
+              <button type="button" role="tab" data-sel="probe" aria-selected="false">Probe</button>
+            </div>
+            <div class="tcard" id="p-tcard">
+              <svg id="p-target" class="target" viewBox="-40 -40 80 80" role="img" aria-label="Scheibe mit den Treffern der Auswahl"></svg>
+              <div class="chips" id="p-chips"></div>
+              <div class="hud" id="p-hud" hidden>
+                <div class="hud-row"><span id="p-hud-l">–</span><span id="p-hud-r">120× schneller</span></div>
+                <div class="hud-bar"><i id="p-hud-bar"></i></div>
+              </div>
+              <div class="ttip" id="p-tip" hidden></div>
+            </div>
+            <div class="tools">
+              <button type="button" class="tg" data-tg="mpi" aria-pressed="true">Schwerpunkt</button>
+              <button type="button" class="tg" data-tg="circle" aria-pressed="true">Streukreis</button>
+              <button type="button" class="tg" data-tg="nums" aria-pressed="false">Nummern</button>
+              <div class="seg small" id="p-zoom" role="group" aria-label="Zoom">
+                <button type="button" data-zoom="group" aria-pressed="true">Gruppe</button>
+                <button type="button" data-zoom="full" aria-pressed="false">Scheibe</button>
+              </div>
+              <button type="button" class="btn-play" id="p-play"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5 L12 7 L3 12.5 Z"/></svg><span>Wiedergabe</span></button>
+            </div>
+          </div>
+          <div>
+            <div class="kpis" id="p-kpis"></div>
+            <p class="insight" id="p-insight"></p>
+            <div class="strip" id="p-strip" role="group" aria-label="Serien im Überblick"></div>
+          </div>
+        </div>
+
+        <div class="pcard">
+          <div class="pcard-head">
+            <h4>Schuss für Schuss</h4>
+            <div class="seg small" id="p-mode" role="group" aria-label="Kennzahl im Verlauf">
+              <button type="button" data-mode="value" aria-pressed="true">Wert</button>
+              <button type="button" data-mode="tempo" aria-pressed="false">Tempo</button>
+            </div>
+          </div>
+          <div class="legend" id="p-legend"></div>
+          <div class="chart" id="p-chart" aria-label="Verlauf je Schuss; mit Pfeiltasten durchgehen"></div>
+        </div>
+
+        <div class="pcard">
+          <div class="pcard-head"><h4>Schüsse</h4><span class="muted small" id="p-count"></span></div>
+          <div class="tablewrap">
+            <table class="shots">
+              <thead><tr><th>Nr</th><th>Serie</th><th></th><th class="num">Zehntel</th><th class="num">Ring</th><th class="num">Teiler</th><th>Richtung</th><th class="num">Zeit</th><th class="num">Intervall</th></tr></thead>
+              <tbody id="p-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pgrid2">
+          <div class="pcard">
+            <div class="pcard-head"><h4>Direkter Vergleich</h4></div>
+            <div class="cmp-controls">
+              <label for="cmp-a"><span class="sw ca-sw" style="background: var(--cmp-a)"></span>A <select id="cmp-a"></select></label>
+              <label for="cmp-b"><span class="sw cb-sw" style="background: var(--cmp-b)"></span>B <select id="cmp-b"></select></label>
+            </div>
+            <div class="cmp-body">
+              <div class="tbox"><svg id="cmp-target" class="target" viewBox="-40 -40 80 80" role="img" aria-label="Beide Auswahlen übereinander, A blau, B orange"></svg></div>
+              <table class="cmp" id="cmp-table"></table>
+            </div>
+            <p class="insight" id="cmp-insight"></p>
+            <p class="hint" id="cmp-hint" hidden></p>
+          </div>
+          <div class="pcard">
+            <div class="pcard-head"><h4>Verlauf einer Kennzahl</h4><label class="small muted" for="tr-metric">Kennzahl <select id="tr-metric"></select></label></div>
+            <div class="legend" id="tr-legend"></div>
+            <div class="chart" id="tr-chart" aria-label="Verlauf über Einheiten; mit Pfeiltasten durchgehen"></div>
+            <p class="insight" id="tr-insight"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3>Design 2: modern, ohne Mode</h3>
+        <ul>
+          <li><strong>Die Scheibe ist der Held.</strong> Ergebnis groß daneben, Analyse darunter, Details auf Antippen.</li>
+          <li><strong>Farbe kommt aus den Daten.</strong> Die Oberfläche bleibt kühl-neutral, damit Ringwerte, Serien und Vergleiche leuchten. Die Ringwert-Skala (10 rot, 9 gold, 8 türkis, ≤&nbsp;7 violett) ist farbenblind geprüft; jede Farbe hat zusätzlich Zahl und Tabelle.</li>
+          <li><strong>Daumenzone ohne Verdecken.</strong> Auf dem Handy liegt die Navigation unten, mit „Scannen“ für den Meyton-QR in der Mitte. Inhalte enden davor.</li>
+          <li><strong>Bewegung mit Bedeutung.</strong> Wiedergabe, Zoom auf die Gruppe, weiche Übergänge von der Liste in die Scheibe. Mit „Bewegung reduzieren“ springt alles.</li>
+          <li><strong>Hell und dunkel.</strong> Dunkel für die Halle am Abend, hell für den 50-m-Stand in der Sonne.</li>
+          <li><strong>Desktop ist die Analysezentrale.</strong> Scheibe links, Kennzahlen rechts, Vergleiche nebeneinander.</li>
+          <li><strong>Zahlen in Worten.</strong> Die wichtigste Beobachtung steht als Satz über den Diagrammen.</li>
+        </ul>
+        <p>Technisch wird Spiegel der Pilot einer zweiten Generation von <code>@vereinsheim/ui</code>: neue Tokens (getönte Neutraltöne, Tiefe, größere Radien, eine Display-Schrift für Zahlen, ein heller Modus) und neue Bausteine (untere Navigation, Kennzahl-Kachel, Segment-Umschalter, Bottom-Sheet, Scheibe). Die Bausteine kommen zusätzlich ins Paket; Ringwerk und Treffsicher bleiben unverändert, bis wir sie bewusst umziehen. So bleibt das Vereinsheim langfristig aus einem Guss.</p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="shotsapp">
+      <div class="prose">
+        <p class="eyebrow">10 · Vergleich</p>
+        <h2>DISAG ShotsApp und Spiegel</h2>
+        <p>Die ShotsApp setzt den Maßstab für das Schussbild auf dem Handy. Ihr Prinzip „Schießen. Scannen. Fertig.“ ist genau die Einfachheit, die Spiegel braucht. Grundlage sind <a href="https://www.shotsapp.de" rel="noopener">shotsapp.de</a>, die M-Qnect-Doku von DISAG und deine Screenshots.</p>
+      </div>
+      <div class="callout warn">
+        <span class="label-line">Wichtig für die Entscheidung</span>
+        <h4>Die ShotsApp funktioniert schon heute mit Meyton</h4>
+        <p>Mit DISAG M-Qnect (kostenlos, ein Android-Tablet im Meyton-Netz) liest DISAG die SSMDB2 alle 30&nbsp;s und zeigt QR-Codes für die ShotsApp an. Wer nur das DISAG-Erlebnis will, bekommt es also ohne eigene Software, mit Premium für 2,49&nbsp;€ im Monat.</p>
+        <p>Spiegel lohnt sich deshalb nur für das, was M-Qnect nicht liefert: die eigenen Daten auf dem Vereinsserver, Verläufe jeder Kennzahl und direkte Vergleiche ohne Abo, Desktop-Analyse, Trainer- und Vereinsfunktionen, die Brücke zu Treffsicher und Ringwerk, eigene Scheibenbilder und automatische Übernahme ohne Scannen. Ein Test von M-Qnect in Phase&nbsp;0 zeigt schnell, wie groß dieser Abstand für euch ist.</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th></th><th>DISAG ShotsApp</th><th class="rec">Spiegel (geplant)</th></tr></thead>
+          <tbody>
+            <tr><td>Datenquelle</td><td>DISAG OpticScore; Meyton über M-Qnect (Tablet im Meyton-Netz)</td><td class="rec">Meyton über SSMDB2; weitere Quellen als Adapter</td></tr>
+            <tr><td>Übertragung</td><td>QR-Code nach dem letzten Schuss scannen; ältere Ergebnisse per QR-Ausdruck</td><td class="rec">Automatisch über die Brücke; „Scheibe holen“ per Stand-QR, wenn die Zuordnung fehlt</td></tr>
+            <tr><td>Probeschüsse</td><td>Auf der Website nicht beschrieben</td><td class="rec">Ja, getrennt von der Wertung (ab ShootMaster&nbsp;5.4)</td></tr>
+            <tr><td>Plattform</td><td>iOS, Android</td><td class="rec">Web-App für Handy und Desktop, installierbar</td></tr>
+            <tr><td>Schussbild, Wiedergabe</td><td>Ja, Wiedergabe im Premium-Abo</td><td class="rec">Ja, mit echter Zeitachse</td></tr>
+            <tr><td>Schwerpunkt, Streukreis</td><td>Ja, im Premium-Abo</td><td class="rec">Ja, mehrere Streumaße, auch je Serie</td></tr>
+            <tr><td>Serien</td><td>Ja, zum Durchwischen</td><td class="rec">Ja, nebeneinander im gleichen Maßstab und einzeln</td></tr>
+            <tr><td>Zeitverlauf in der Einheit</td><td>Schüsse über Zeit, Ringe je Schuss, Ringaufteilung</td><td class="rec">Wert und Tempo mit gleitendem Schnitt, Ermüdung, Verteilung</td></tr>
+            <tr><td>Verläufe über Monate</td><td>Aktivität, Bestleistungen</td><td class="rec">Jede Kennzahl als Verlauf, dazu Rekorde</td></tr>
+            <tr><td>Direkte Vergleiche</td><td>Auf der Website nicht beschrieben</td><td class="rec">Serie, Scheibe, Zeitraum, Merkmal, eigener Schnitt</td></tr>
+            <tr><td>Kontext</td><td>Auf der Website nicht beschrieben</td><td class="rec">Notizen, Tags, Ausrüstung; Tagebuch über Treffsicher</td></tr>
+            <tr><td>Verein und Trainer</td><td>Auf der Website nicht beschrieben</td><td class="rec">Trainer-Freigabe, später Liga-Ergebnisse für Ringwerk</td></tr>
+            <tr><td>Kosten</td><td>Basis kostenlos, Premium 2,49&nbsp;€ im Monat; M-Qnect kostenlos, Tablet nötig</td><td class="rec">Kein Abo; einmalig das Gerät für die Brücke</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <h4>Das übernehmen wir</h4>
+          <ul>
+            <li>Die Scheibe als großes Bild ganz oben, Ergebnis daneben.</li>
+            <li>Serien zum Durchwischen mit Punkten als Position.</li>
+            <li>Schussliste mit Farbpunkt, Ring, Zehntel, Teiler und Richtungspfeil.</li>
+            <li>Kleine Chips direkt an der Scheibe für Schwerpunkt-Versatz und Streukreis.</li>
+            <li>Eine zentrale Scan-Aktion in der Navigation; bei uns für den Meyton-QR.</li>
+            <li>Bestleistungen mit Datum.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Das machen wir anders</h4>
+          <ul>
+            <li>Die Navigation verdeckt nie Werte. In deinen Screenshots liegen Serienwerte unter dem Scan-Knopf.</li>
+            <li>Die Ringaufteilung als Histogramm statt als Torte mit vielen Stücken.</li>
+            <li>Training oder Wettkampf kommt automatisch aus Meyton (Status, Starterliste). In der ShotsApp stehen 4 Einheiten, aber 0 Training und 0 Wettkampf.</li>
+            <li>Die Zeitachse läuft von links nach rechts. In der Aktivität steht OKT … DEZ.</li>
+            <li>Eine farbenblind geprüfte Skala statt Rot und Grün nebeneinander.</li>
+            <li>Alles, was berechnet wird, gibt es auch als Verlauf und Vergleich, ohne Abo.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section id="szenarien">
+      <div class="prose">
+        <p class="eyebrow">11 · Szenarien</p>
+        <h2>Sechzehn Situationen, die das System aushalten muss</h2>
+      </div>
+      <div class="cards">
+        <div class="card"><h4>Dienstagstraining mit Sportpass</h4><p>Du wählst dich am Stand aus der Schützenliste und schießt 40 Schuss. Kurz nach dem letzten Schuss liegt die Scheibe in Spiegel.</p><p class="needs"><b>Braucht:</b> Sportpass-Zuordnung, Brücke im Dauerbetrieb, Abschlusserkennung.</p></div>
+        <div class="card"><h4>Training ohne Starter</h4><p>Niemand hat einen Starter zugewiesen. Du scannst den Meyton-QR, und Spiegel findet die Scheibe über Uhrzeit und Schussfolge. Ohne QR hilft das Fundbüro.</p><p class="needs"><b>Braucht:</b> PDF-Parser, Suchauftrag an die Brücke, Fundbüro mit Frist, Vorschau ohne Namen, Protokoll.</p></div>
+        <div class="card"><h4>Rundenwettkampf</h4><p>Status RWK, Liga, Heim oder Gast markiert die Scheibe als Wettkampf.</p><p class="needs"><b>Braucht:</b> Kategorie aus Status und Starterliste; später Übergabe an Ringwerk.</p></div>
+        <div class="card"><h4>Königsschießen mit verdeckter Wertung</h4><p>Wertungsmodus 5 oder 10. Niemand soll vor der Proklamation etwas sehen.</p><p class="needs"><b>Braucht:</b> Die Brücke lädt Werte (bei Modus 5 auch die Lage) nicht hoch; nach dem Fest kann ein Admin freigeben.</p></div>
+        <div class="card"><h4>Falscher Name am Stand</h4><p>Du hast unter dem Namen deines Vereinskollegen geschossen.</p><p class="needs"><b>Braucht:</b> „Das war ich nicht“, Umhängen mit Zustimmung beider oder durch den Admin.</p></div>
+        <div class="card"><h4>Die Standaufsicht korrigiert</h4><p>Ein Schuss wird nachträglich anders gewertet oder annulliert.</p><p class="needs"><b>Braucht:</b> neuer Snapshot, Revision, Kennzahlen neu, sichtbarer Hinweis.</p></div>
+        <div class="card"><h4>Internet weg</h4><p>Das WLAN im Schützenhaus fällt den ganzen Abend aus.</p><p class="needs"><b>Braucht:</b> Warteschlange, Nachlieferung in Reihenfolge, Status „verzögert“.</p></div>
+        <div class="card"><h4>Neuer Meyton-Server</h4><p>Nach dem Tausch beginnen die ScheibenIDs wieder klein.</p><p class="needs"><b>Braucht:</b> Epochen-Erkennung, Admin-Hinweis, kein Überschreiben.</p></div>
+        <div class="card"><h4>Die Trainerin schaut live zu</h4><p>Vier Stände auf dem Tablet, Schuss für Schuss.</p><p class="needs"><b>Braucht:</b> Freigabe der Schützen, Live-Kanal (Server-Sent Events), kurze Abfrageintervalle oder SDF.</p></div>
+        <div class="card"><h4>Auswärts auf fremder Anlage</h4><p>Kreismeisterschaft im Nachbarverein, dort gibt es keine Brücke. Du scannst den Meyton-QR wie zu Hause.</p><p class="needs"><b>Braucht:</b> „Ergebnis ohne Rohdaten“ aus dem PDF (Serien, Schusswerte, Trefferlage); das PDF selbst bleibt dabei.</p></div>
+        <div class="card"><h4>Munitionstest im KK</h4><p>Zwei Lose im Vergleich, je dreimal zehn Schuss liegend.</p><p class="needs"><b>Braucht:</b> Tags an Serien, Vergleich nach Merkmal, Streukreis bei gleicher Schusszahl.</p></div>
+        <div class="card"><h4>Neues Mitglied mit Vergangenheit</h4><p>Nach der Zuordnung lädt Spiegel die letzten Jahre aus der SSMDB2 nach.</p><p class="needs"><b>Braucht:</b> Nachlade-Auftrag, gedrosselt, nur nach Einwilligung.</p></div>
+        <div class="card"><h4>Konto löschen</h4><p>Du trittst aus und willst, dass alles weg ist.</p><p class="needs"><b>Braucht:</b> Export vorher, Löschen von Rohdaten und Ableitungen, die Brücke vergisst die Zuordnung.</p></div>
+        <div class="card"><h4>Ein zweiter Verein will mitmachen</h4><p>Der Nachbarverein hat auch Meyton und findet Spiegel gut.</p><p class="needs"><b>Braucht:</b> Verein als Mandant im Modell, Admins je Verein, Schützen in mehreren Vereinen.</p></div>
+        <div class="card"><h4>Liga-Abend mit Live-Ticker</h4><p>Heim gegen Gast; Zuschauer verfolgen die Serienergebnisse auf dem Handy, Ringwerk trägt das Ergebnis danach selbst ein.</p><p class="needs"><b>Braucht:</b> öffentliche Ansicht nur mit Summen (keine Trefferlage), Freigabe durch die Liga, Übergabe an Ringwerk.</p></div>
+        <div class="card"><h4>Der Verein rüstet auf ESTANX um</h4><p>In ein paar Jahren kommen neue Meyton-Messrahmen, die ihre Ergebnisse vielleicht nur noch über die Cloud des Herstellers liefern.</p><p class="needs"><b>Braucht:</b> einen neuen Quell-Adapter; Modell, Kennzahlen und Oberfläche bleiben, die alten Scheiben auch.</p></div>
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section id="fragen">
+      <div class="prose">
+        <p class="eyebrow">12 · Offene Fragen</p>
+        <h2>Was wir klären sollten</h2>
+        <p>Fragen mit <span class="tag crit">entscheidet Architektur</span> verändern das Konzept, die anderen nur die Reihenfolge. Beantwortete Fragen tragen deine Antwort.</p>
+      </div>
+      <div class="prose qgroup"><h3>Anlage und Netz</h3></div>
+      <ol class="qlist">
+        <li><div><span class="q">Ist der SSMDB2-Dienst im Kontrollzentrum aktiv (Echtzeit)?</span><span class="why">Ohne Dienst keine Daten. Mit ShootMaster 6.0.2 bringt das Schema alles mit: Probe, Wertungsmodus, BesterTeiler001.</span></div></li>
+        <li class="done"><div><span class="q">Landen Trainings ohne Starter in der SSMDB2? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Entscheidet, ob das Fundbüro gebraucht wird und ob Spiegel den Trainingsalltag abdeckt.</span><span class="ans">Unbekannt; prüfen wir in Phase 0.</span></div></li>
+        <li class="done"><div><span class="q">Zeigt Meyton den QR-Code auch bei Trainings ohne Starter, und was steht in Link und PDF (Stand, Uhrzeit, Name)? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Davon hängt ab, wie sicher der QR-Weg die richtige Scheibe findet.</span><span class="ans">Teilweise: Link auf ein PDF bei Meyton; im PDF Stand, Zeiten, Name mit Nummer und eine ID. Offen ist, ob es den QR auch ohne Starter gibt.</span></div></li>
+        <li class="done"><div><span class="q">Hat das Meyton-Netz einen Router mit Internet, und darf dort ein Gerät mit fester IP hängen? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, wo und wie die Brücke läuft.</span><span class="ans">Ja, beides geht.</span></div></li>
+        <li class="done"><div><span class="q">Dürfen wir den Standard-Zugang zur SSMDB2 nutzen?</span><span class="why">Einen eigenen Lese-Benutzer sieht Meyton nicht vor.</span><span class="ans">Ja.</span></div></li>
+        <li><div><span class="q">Welche Stände und Disziplinen gibt es (10&nbsp;m, 25&nbsp;m, 50&nbsp;m, Auflage, Preisscheiben)?</span><span class="why">Bestimmt die Scheibenbilder für Version&nbsp;1.</span></div></li>
+        <li class="done"><div><span class="q">Ist der SDF-Export aktiv, ist LANA erreichbar?</span><span class="why">Nur für Live-Funktionen nötig.</span><span class="ans">LANA nutzt ihr nicht; SDF ist offen.</span></div></li>
+        <li><div><span class="q">Ist ein Umstieg auf die neue Meyton-Linie ESTANX geplant?</span><span class="why">Ob es dort eine SSMDB2 gibt, ist offen; dann bräuchte Spiegel einen zweiten Adapter.</span></div></li>
+      </ol>
+      <div class="prose qgroup"><h3>Schützen und Zuordnung</h3></div>
+      <ol class="qlist" style="counter-reset: q 8">
+        <li class="done"><div><span class="q">Wie melden sich Schützen am Stand an? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, wie viel die automatische Zuordnung leistet.</span><span class="ans">Schützenliste oder frei zugewiesen, kein LANA.</span></div></li>
+        <li><div><span class="q">Ist die SportpassID in der Schützenliste gepflegt?</span><span class="why">Der Schlüssel für die Automatik.</span></div></li>
+        <li><div><span class="q">Wie viele aktive Schützen würden Spiegel nutzen?</span><span class="why">Last, Speicher und Priorität.</span></div></li>
+        <li><div><span class="q">Wie gehen wir mit Gästen und Jugendlichen um?</span><span class="why">Einwilligung, gegebenenfalls der Eltern.</span></div></li>
+        <li class="done"><div><span class="q">Wann soll zugeordnet werden? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, was die Brücke vorhalten muss.</span><span class="ans">Über den Meyton-QR, mit Original-PDF.</span></div></li>
+        <li><div><span class="q">Soll das Fundbüro als Tablet am Stand hängen, oder reicht „Scheibe holen“ in Spiegel?</span><span class="why">Hängt davon ab, ob Trainings ohne Starter in der Ablage landen und ob es für sie einen QR gibt.</span></div></li>
+        <li><div><span class="q">Wie lange darf eine Fundsache abgeholt werden?</span><span class="why">Vorschlag: sieben Tage. Danach bleibt sie nur in der SSMDB2.</span></div></li>
+      </ol>
+      <div class="prose qgroup"><h3>Produkt</h3></div>
+      <ol class="qlist" style="counter-reset: q 15">
+        <li><div><span class="q">Testen wir in Phase&nbsp;0 DISAG M-Qnect mit der ShotsApp als Vergleich?</span><span class="why">Zeigt sofort, ob Trainings in der Ablage landen, und setzt die Messlatte für Spiegel.</span></div></li>
+        <li class="done"><div><span class="q">Nur unser Verein, oder später auch andere Vereine? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Mandanten im Datenmodell kosten jetzt wenig und später viel.</span><span class="ans">Erst einmal für euch, als Open Source. Andere Vereine betreiben eine eigene Installation.</span></div></li>
+        <li><div><span class="q">Eigene App mit Brücke zu Treffsicher, und später vielleicht die Ablösung?</span><span class="why">Reihenfolge der Arbeit; die Empfehlung steht in Abschnitt 03.</span></div></li>
+        <li><div><span class="q">Was ist das eine Highlight für Version&nbsp;1: Session-Details, Verläufe, Vergleiche oder Live?</span><span class="why">Fokus für die erste Phase.</span></div></li>
+        <li><div><span class="q">Wie wichtig ist Live (Trainer am Tablet, Liga-Ticker)?</span><span class="why">SDF ja oder nein.</span></div></li>
+        <li><div><span class="q">Soll Ringwerk Liga-Ergebnisse aus Spiegel bekommen?</span><span class="why">Ersetzt dort ebenfalls den PDF-Import; braucht Regeln, welche Daten fließen.</span></div></li>
+        <li><div><span class="q">Brauchen wir Notizen, Tags und Ausrüstung schon in Version&nbsp;1?</span><span class="why">Vergleiche nach Merkmal hängen daran.</span></div></li>
+        <li><div><span class="q">Wer darf als Trainer wessen Daten sehen?</span><span class="why">Freigabemodell.</span></div></li>
+        <li><div><span class="q">Soll man ein Ergebnis per Link teilen können (Familie, Social Media)?</span><span class="why">Öffentliche Ansichten sind neue Angriffsfläche.</span></div></li>
+      </ol>
+      <div class="prose qgroup"><h3>Open Source</h3></div>
+      <ol class="qlist" style="counter-reset: q 24">
+        <li><div><span class="q">Welche Lizenz: Apache-2.0, AGPL-3.0 oder MIT? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Ohne Lizenz ist öffentlicher Code nicht nutzbar. Vorschlag: Apache-2.0.</span></div></li>
+        <li><div><span class="q">Gilt die Lizenz für das ganze Monorepo oder nur für Spiegel und die geteilten Pakete?</span><span class="why">Spiegel braucht @vereinsheim/ui, lib und config unter derselben Lizenz.</span></div></li>
+        <li><div><span class="q">Bleibt der Name Spiegel, oder wählen wir vor der Veröffentlichung einen eindeutigeren?</span><span class="why">Ordnername, Subdomain, Logo und Auffindbarkeit.</span></div></li>
+      </ol>
+      <div class="prose qgroup"><h3>Design</h3></div>
+      <ol class="qlist" style="counter-reset: q 27">
+        <li class="done"><div><span class="q">Was heißt „moderner“ für dich?</span><span class="why">Richtung für Design&nbsp;2.</span><span class="ans">Die Vorschau trifft es, Design und Funktionen gefallen.</span></div></li>
+        <li><div><span class="q">Nur dunkel wie die anderen Apps, oder hell und dunkel?</span><span class="why">Sonne am 50-m-Stand.</span></div></li>
+        <li><div><span class="q">Ringwert-Farben wie in der Vorschau, oder das Meyton-Schema der Treffsicher-Statistik (10 rot, 9 gelb, Rest grau)?</span><span class="why">Wiedererkennung gegen Lesbarkeit auf dem schwarzen Spiegel.</span></div></li>
+        <li><div><span class="q">Soll Design&nbsp;2 später auch Ringwerk und Treffsicher erreichen?</span><span class="why">Bestimmt, ob Spiegel sich vom Drift-Gate verabschiedet oder es anführt.</span></div></li>
+      </ol>
+      <div class="prose qgroup"><h3>Betrieb und Recht</h3></div>
+      <ol class="qlist" style="counter-reset: q 31">
+        <li><div><span class="q">VPS auf 4&nbsp;GB hochstufen?</span><span class="why">Die dritte App braucht Speicher.</span></div></li>
+        <li><div><span class="q">Wer formuliert und verantwortet die Einwilligung im Verein?</span><span class="why">Vor dem ersten Upload nötig.</span></div></li>
+        <li><div><span class="q">Wie lange bewahren wir Daten auf, und wie weit zurück laden wir aus der SSMDB2 nach?</span><span class="why">Speicher und Datenschutz.</span></div></li>
+        <li><div><span class="q">Eine gemeinsame Anmeldung für alle Vereinsheim-Apps?</span><span class="why">Mit Spiegel wären es drei Logins.</span></div></li>
+      </ol>
+    </section>
+
+    <!-- 13 -->
+    <section id="fahrplan">
+      <div class="prose">
+        <p class="eyebrow">13 · Fahrplan</p>
+        <h2>In fünf Schritten zu etwas, das man anfassen kann</h2>
+        <p>Jede Phase läuft im gewohnten Ablauf <code>/plan → /implement → /validate → /review</code>. Deploy-Vertrag, Schema und ADRs bleiben bei dir.</p>
+      </div>
+      <div class="phases">
+        <div class="phase"><div class="ph"><span>Phase 0</span>Erkundung</div><ul><li>Ein Abend im Schützenhaus mit der SQL-Checkliste aus dem Anhang</li><li>Die ID aus dem Ausdruck in der SSMDB2 nachschlagen (Abfrage im Anhang); prüfen, ob Meyton den QR auch ohne Starter zeigt</li><li>DISAG M-Qnect mit der ShotsApp als Messlatte ausprobieren</li><li>Lizenz festlegen; ADRs: Spiegel als dritte App, Brücke und Datensparsamkeit, Lizenz</li></ul><div class="out"><b>Ergebnis</b>Wir wissen, was in unserer SSMDB2 steht.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 1</span>Fundament</div><ul><li><code>shot-core</code>: Scheibenbilder LG, LP, KK; Wertung, Geometrie, erste Kennzahlen, Gegenprobe</li><li>Brücke v1: SSMDB2 lesen, Warteschlange, Upload, Heartbeat</li><li>Spiegel v1: Konten, Ingest, Liste, Scheibe mit Serien und Wiedergabe</li><li>Zuordnung per Meyton-QR mit Original-PDF, dazu über Sportpass und Admin; der Meyton-PDF-Parser zieht dafür in ein geteiltes Paket</li><li>Deploy mit dritter DB und ein eigenes Compose-Beispiel für andere Vereine</li></ul><div class="out"><b>Ergebnis</b>Du scannst den Meyton-QR, und deine Scheibe liegt mit allen Schüssen und dem PDF in Spiegel.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 2</span>Auswertung</div><ul><li>Verläufe über die Registry, direkte Vergleiche, Rekorde</li><li>Fundbüro mit Abholschein und „Scheibe holen“, Check-in am Stand, falls Trainings ohne Starter in der Ablage landen</li><li>Installierbar auf dem Handy; Historie nachladen</li></ul><div class="out"><b>Ergebnis</b>Du siehst, wie sich dein Streukreis seit Juni entwickelt hat.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 3</span>Vernetzung</div><ul><li>Treffsicher übernimmt Ergebnisse aus Spiegel</li><li>Trainer-Freigabe und Live-Ansicht</li><li>Liga-Ergebnisse für Ringwerk</li></ul><div class="out"><b>Ergebnis</b>Kein Meyton-PDF-Import mehr, weder in Treffsicher noch in Ringwerk.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 4</span>Weichen stellen</div><ul><li>Treffsicher ablösen oder als Tagebuch behalten</li><li>Gemeinsame Anmeldung</li><li>Weitere Vereine, weitere Quellen</li></ul><div class="out"><b>Ergebnis</b>Eine Entscheidung auf Basis echter Nutzung.</div></div>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section id="anhang">
+      <div class="prose">
+        <p class="eyebrow">14 · Anhang</p>
+        <h2>Erkundung vor Ort</h2>
+        <p>Diese Abfragen lesen nur. Sie laufen mit jedem MySQL-Client von einem Laptop im Meyton-Netz (feste Adresse aus dem Workstation-Bereich). Die Zugangsdaten stehen im Meyton-Handbuch; einen eigenen Lese-Benutzer sieht Meyton nicht vor, deshalb schaltet die erste Zeile die Sitzung auf „nur lesen“. Ergebnisse mit Namen bitte nicht weitergeben oder vorher kürzen.</p>
+      </div>
+      <div class="codehead"><span class="label-line" style="margin:0">SQL, nur SELECT</span><button type="button" class="copy" id="copy-sql">Kopieren</button></div>
+<pre id="sql"><span class="c">-- Sitzung auf nur lesen schalten</span>
+SET SESSION TRANSACTION READ ONLY;
+
+<span class="c">-- Schema-Version (Tabelle laut Community-Projekt vorhanden)</span>
+SELECT * FROM Version;
+
+<span class="c">-- Umfang und Zeitraum der Ablage</span>
+SELECT COUNT(*) AS scheiben, MIN(Zeitstempel) AS erste, MAX(Zeitstempel) AS letzte FROM Scheiben;
+SELECT COUNT(*) AS treffer FROM Treffer;
+
+<span class="c">-- Welche Disziplinen? (DisziplinID = Entfernung · Regel · Schusszahl)</span>
+SELECT DisziplinID, Disziplin, COUNT(*) AS anzahl
+FROM Scheiben GROUP BY DisziplinID, Disziplin ORDER BY anzahl DESC;
+
+<span class="c">-- Landen Trainings in der Ablage? Woher kommen die Scheiben?</span>
+SELECT Starterliste, Rangliste, Status, COUNT(*) AS anzahl
+FROM Scheiben GROUP BY Starterliste, Rangliste, Status ORDER BY anzahl DESC LIMIT 40;
+
+<span class="c">-- Wie gut ist die Identität gepflegt? (MAX zeigt, ob lange Sportpassnummern überlaufen)</span>
+SELECT COUNT(*) AS gesamt,
+       SUM(SportpassID > 0) AS mit_sportpass,
+       SUM(TRIM(Nachname) IN ('', '--frei--')) AS ohne_namen,
+       MAX(SportpassID) AS max_sportpass
+FROM Scheiben;
+
+<span class="c">-- Gibt es Probeschüsse, und bleiben sie nach der Wertung erhalten?</span>
+SELECT COUNT(*) AS probeschuesse, MIN(Zeitstempel) AS erster, MAX(Zeitstempel) AS letzter
+FROM Treffer WHERE Stellung = 0;
+
+<span class="c">-- Startzeit gefüllt? Negative IDs?</span>
+SELECT SUM(Startzeit IS NULL OR Startzeit &lt; '1971-01-01') AS ohne_startzeit,
+       MIN(ScheibenID) AS min_id, MAX(ScheibenID) AS max_id
+FROM Scheiben;
+
+<span class="c">-- Wertungsmodi (5 und 10 sind verdeckt)</span>
+SELECT Wertung, COUNT(*) AS anzahl FROM Treffer GROUP BY Wertung;
+
+<span class="c">-- Skalen und Teiler an einer Scheibe prüfen (ID aus der Liste oben einsetzen)</span>
+SELECT Stellung, Treffer, Serie, x, y,
+       ROUND(SQRT(x*x + y*y)) AS abstand_hundertstel_mm,
+       Ring, Ring01, Teiler01, Teiler001, Innenzehner, Wertung,
+       Zeitstempel, Millisekunden
+FROM Treffer WHERE ScheibenID = 12345 ORDER BY Stellung, Treffer;
+
+<span class="c">-- Serienwerte gegen die Summe der Treffer</span>
+SELECT s.Stellung, s.Serie, s.Ring, s.Ring01,
+       SUM(t.Ring) AS summe_ring, SUM(t.Ring01) AS summe_ring01
+FROM Serien s
+JOIN Treffer t ON t.ScheibenID = s.ScheibenID AND t.Stellung = s.Stellung AND t.Serie = s.Serie
+WHERE s.ScheibenID = 12345
+GROUP BY s.Stellung, s.Serie, s.Ring, s.Ring01;
+
+<span class="c">-- Ist die ID im Fuß des Ausdrucks die ScheibenID?</span>
+<span class="c">-- Hex-IDs ab 80000000 sind negativ: ff914420 ergibt -7257056</span>
+SELECT CAST(CONV('ff914420', 16, 10) AS SIGNED) - 4294967296 AS scheiben_id;
+SELECT ScheibenID, StandNr, Disziplin, TotalRing, TotalRing01, Zeitstempel
+FROM Scheiben WHERE ScheibenID = -7257056;
+
+<span class="c">-- Uhr der Anlage (mit der Handy-Uhr vergleichen)</span>
+SELECT NOW();</pre>
+      <div class="prose">
+        <h3>Zwei Handgriffe am Stand</h3>
+        <ul>
+          <li><strong>Achsen prüfen:</strong> In der Probe einen Schuss bewusst hoch rechts setzen. Sind x und y danach positiv, zeigt y nach oben.</li>
+          <li><strong>Latenz schätzen:</strong> Einen Schuss abgeben und die Zeit bis zur neuen Zeile in <code>Treffer</code> stoppen.</li>
+        </ul>
+        <h3>Quellen</h3>
+        <ul class="sources">
+          <li>Meyton: <a href="https://software.meyton.info/wp-content/uploads/Upload/Manuals/DE/SSMDB2/Scheibenablage_SSMDB2_V9_de.pdf" rel="noopener">Beschreibung der Scheibenablage in der Meyton-DB (SSMDB2), Version 9</a></li>
+          <li>Meyton: <a href="https://software.meyton.info/wp-content/uploads/Upload/Manuals/DE/Schnittstellen/Schnittstelle_-_Shooting_Data_Feed.pdf" rel="noopener">Schnittstelle Shooting Data Feed (SDF)</a></li>
+          <li>Meyton: <a href="https://software.meyton.info/wp-content/uploads/Upload/Manuals/DE/ShootMaster/ShootMasterII_-_Disziplin_erstellen.pdf" rel="noopener">ShootMaster II – Disziplin erstellen (Scheibenmaße)</a></li>
+          <li>Meyton: Release-Notizen <a href="https://software.meyton.info/shootmaster-5-3/" rel="noopener">ShootMaster 5.3</a>, <a href="https://software.meyton.info/shootmaster-5-4/" rel="noopener">5.4</a>, <a href="https://software.meyton.info/shootmaster-6-0/" rel="noopener">6.0</a>; <a href="https://support.meyton.info/files/de-DE/43185163357127179.html" rel="noopener">IP-Plan</a>; <a href="https://forum.meyton.info/viewtopic.php?t=1946" rel="noopener">Forum zu eigenen DB-Benutzern</a>; <a href="https://forum.meyton.info/viewtopic.php?t=2107" rel="noopener">Forum zu Probeschüssen in der SSMDB2</a>; <a href="https://www.meyton.eu/en/produkt-estanx-10-50" rel="noopener">ESTANX</a></li>
+          <li>DISAG: <a href="https://mqnect.disag.de/" rel="noopener">M-Qnect</a></li>
+          <li>DSB-Sportordnung, Stand 01.01.2026, Teil 0 (§&nbsp;0.11.3, Anhang 0.20 und 0.21); ISSF Rule Book 2026, 6.3</li>
+          <li><a href="https://github.com/Meral-IT/Meyton-Live-Display" rel="noopener">Meral-IT/Meyton-Live-Display</a> (Apache-2.0), insbesondere die technische Referenz</li>
+          <li><a href="https://github.com/janxb/ShootingTicker" rel="noopener">janxb/ShootingTicker</a>; Forumsthread zur <a href="https://meisterschuetzen.org/forum/thread/11152-web-app-mit-automatischer-synchronisierung-von-meyton-anlagen/" rel="noopener">SV-WebApp</a></li>
+          <li><a href="https://github.com/ferdifighter/meyton-scheibenanzeige" rel="noopener">ferdifighter/meyton-scheibenanzeige</a> (ohne Lizenzangabe)</li>
+          <li><a href="https://www.shotsapp.de" rel="noopener">DISAG ShotsApp</a> und deine Screenshots vom 29.04.2026</li>
+          <li>Vereinsheim-Vault: ADR-002 bis ADR-025, Treffsicher-Anforderungen, Meyton-Import, Sizing-Notiz</li>
+        </ul>
+      </div>
+      <footer>Entwurf zur Diskussion. Die Beispieldaten in der Vorschau sind erfunden; alle Fakten zur SSMDB2 stammen aus den genannten Quellen und werden bei der Erkundung gegen unsere Anlage geprüft.</footer>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const TZ = "Europe/Berlin";
+  const NF = [0, 1, 2].map((d) => new Intl.NumberFormat("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d }));
+  const fmt = (v, d = 1) => (v == null || !isFinite(v) ? "–" : NF[d].format(v));
+  const NF_TEILER = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false });
+  const fmtTeiler = (v) => (v == null || !isFinite(v) ? "–" : NF_TEILER.format(v));
+  const fmtTime = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: TZ });
+  const fmtHM = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+  const fmtDay = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", timeZone: TZ });
+  const fmtShort = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", timeZone: TZ });
+  const fmtMonth = new Intl.DateTimeFormat("de-DE", { month: "short", timeZone: TZ });
+
+  /* ---------- Scheibenbild und Wertung (wie im geplanten Paket shot-core) ---------- */
+  const LP = {
+    diameters: [155.5, 139.5, 123.5, 107.5, 91.5, 75.5, 59.5, 43.5, 27.5, 11.5],
+    innerTen: 5.0, blackFromRing: 7, ringWidth: 8, gauge: 4.5, labelRings: [1, 2, 3, 4, 5, 6, 7, 8],
+  };
+  function scoreShot(x, y) {
+    const d = Math.hypot(x, y);
+    let decT = Math.floor((11 - d / LP.ringWidth) * 10 + 1e-9);
+    if (decT > 109) decT = 109;
+    if (decT < 10) decT = 0;
+    return { d, decT, ring: Math.floor(decT / 10), inner: d <= (LP.innerTen + LP.gauge) / 2, teiler: Math.round(d * 1000) / 10 };
+  }
+  const ringCls = (s) => (s.ring >= 10 ? "r10" : s.ring === 9 ? "r9" : s.ring === 8 ? "r8" : "r7");
+
+  /* ---------- Beispieldaten ---------- */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function gauss(r) { let u = 0, v = 0; while (u === 0) u = r(); while (v === 0) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+  function makeSession(o) {
+    const r = mulberry32(o.seed);
+    const shots = [];
+    let t = o.start.getTime() + 140000;
+    let prev = null, seq = 0;
+    const add = (g, pos, series, n) => {
+      for (let i = 0; i < n; i++) {
+        if (prev !== null) t += Math.max(18, o.pace + gauss(r) * o.paceSd) * 1000;
+        const x = g.mx + gauss(r) * g.sd;
+        const y = g.my + gauss(r) * g.sd * (g.ky || 1.12);
+        shots.push(Object.assign({ seq: ++seq, pos, series, x, y, time: new Date(t), dt: prev === null ? null : (t - prev) / 1000 }, scoreShot(x, y)));
+        prev = t;
+      }
+    };
+    add(o.sighter, 0, null, 5);
+    t += 70000;
+    o.groups.forEach((g, gi) => { if (gi > 0) t += 25000; add(g, 1, gi + 1, 10); });
+    return { id: o.id, label: o.label, type: o.type, start: o.start, end: new Date(t), shots };
+  }
+
+  const TODAY = makeSession({
+    id: "heute", label: "Heute", type: "Training", seed: 20260929, start: new Date("2026-09-29T18:12:00Z"), pace: 52, paceSd: 12,
+    sighter: { mx: 4.2, my: -6.0, sd: 12.5 },
+    groups: [{ mx: 3.2, my: -4.6, sd: 12.4 }, { mx: 1.3, my: -2.1, sd: 11.6 }, { mx: 0.4, my: 0.3, sd: 10.4 }, { mx: -0.9, my: -2.7, sd: 13.4, ky: 1.2 }],
+  });
+
+  const HISTORY = (() => {
+    const r = mulberry32(4242);
+    const days = ["2026-06-09", "2026-06-16", "2026-06-23", "2026-06-30", "2026-07-07", "2026-07-14", "2026-07-21", "2026-07-28", "2026-08-04", "2026-08-11", "2026-08-18", "2026-08-25", "2026-09-01", "2026-09-08", "2026-09-15", "2026-09-22"];
+    const list = days.map((d, i) => {
+      const k = i / (days.length - 1);
+      const sd = 14.4 - 2.6 * k + (r() - 0.5) * 1.4;
+      const bx = 2.6 - 1.8 * k + (r() - 0.5) * 2.4, by = -3.4 + 1.6 * k + (r() - 0.5) * 2.4;
+      const groups = [0, 1, 2, 3].map((g) => ({ mx: bx + (r() - 0.5) * 2.2, my: by + (r() - 0.5) * 2.2, sd: sd + (g === 3 ? 0.9 : 0) + (r() - 0.5) * 0.8 }));
+      return makeSession({ id: "h" + i, label: "Training", type: "Training", seed: 1000 + i * 17, start: new Date(d + "T17:30:00Z"), pace: 50 + (r() - 0.5) * 10, paceSd: 12, sighter: { mx: bx + 1, my: by - 1, sd: sd + 1 }, groups });
+    });
+    list.push(makeSession({
+      id: "wk", label: "Wettkampf 12.09.", type: "Wettkampf", seed: 912, start: new Date("2026-09-12T08:00:00Z"), pace: 58, paceSd: 14,
+      sighter: { mx: 1.5, my: -2.0, sd: 11.5 },
+      groups: [{ mx: 0.8, my: -1.2, sd: 10.6 }, { mx: 0.2, my: -0.6, sd: 10.2 }, { mx: -0.4, my: -1.0, sd: 10.8 }, { mx: 0.6, my: -1.8, sd: 11.2 }],
+    }));
+    return list.sort((a, b) => a.start - b.start);
+  })();
+  const SESSIONS = HISTORY.concat([TODAY]);
+  const WK = HISTORY.find((s) => s.id === "wk");
+
+  /* ---------- Geometrie ---------- */
+  const mean = (a) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : NaN);
+  const mpi = (sh) => ({ x: mean(sh.map((s) => s.x)), y: mean(sh.map((s) => s.y)) });
+  function sec(sh) {
+    const P = sh.map((s) => ({ x: s.x, y: s.y }));
+    if (!P.length) return { x: 0, y: 0, r: 0 };
+    const r = mulberry32(P.length * 7919 + 13);
+    for (let i = P.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const tmp = P[i]; P[i] = P[j]; P[j] = tmp; }
+    const inside = (c, p) => Math.hypot(p.x - c.x, p.y - c.y) <= c.r + 1e-7;
+    const two = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, r: Math.hypot(a.x - b.x, a.y - b.y) / 2 });
+    const three = (a, b, c) => {
+      const d = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+      if (Math.abs(d) < 1e-12) return [two(a, b), two(a, c), two(b, c)].sort((p, q) => q.r - p.r)[0];
+      const a2 = a.x * a.x + a.y * a.y, b2 = b.x * b.x + b.y * b.y, c2 = c.x * c.x + c.y * c.y;
+      const ux = (a2 * (b.y - c.y) + b2 * (c.y - a.y) + c2 * (a.y - b.y)) / d;
+      const uy = (a2 * (c.x - b.x) + b2 * (a.x - c.x) + c2 * (b.x - a.x)) / d;
+      return { x: ux, y: uy, r: Math.hypot(a.x - ux, a.y - uy) };
+    };
+    let c = null;
+    for (let i = 0; i < P.length; i++) {
+      if (c && inside(c, P[i])) continue;
+      c = { x: P[i].x, y: P[i].y, r: 0 };
+      for (let j = 0; j < i; j++) {
+        if (inside(c, P[j])) continue;
+        c = two(P[i], P[j]);
+        for (let k = 0; k < j; k++) if (!inside(c, P[k])) c = three(P[i], P[j], P[k]);
+      }
+    }
+    return c;
+  }
+
+  /* ---------- Kennzahlen-Registry ---------- */
+  const METRICS = [
+    { key: "sumDec", label: "Zehntel gesamt", unit: "", d: 1, better: "higher", f: (sh) => sh.reduce((a, s) => a + s.decT, 0) / 10 },
+    { key: "avgDec", label: "Ø je Schuss", unit: "", d: 2, better: "higher", f: (sh) => sh.reduce((a, s) => a + s.decT, 0) / 10 / sh.length },
+    { key: "groupDia", label: "Streukreis", unit: "mm", d: 1, better: "lower", f: (sh) => 2 * sec(sh).r },
+    { key: "meanRadius", label: "Mittlerer Radius", unit: "mm", d: 1, better: "lower", f: (sh) => { const c = mpi(sh); return mean(sh.map((s) => Math.hypot(s.x - c.x, s.y - c.y))); } },
+    { key: "mpiDist", label: "Schwerpunkt-Abstand", unit: "mm", d: 1, better: "lower", f: (sh) => { const c = mpi(sh); return Math.hypot(c.x, c.y); } },
+    { key: "tens", label: "Zehner", unit: "", d: 0, better: "higher", f: (sh) => sh.filter((s) => s.ring === 10).length },
+    { key: "innerTens", label: "Innenzehner", unit: "", d: 0, better: "higher", f: (sh) => sh.filter((s) => s.inner).length },
+    { key: "bestTeiler", label: "Bester Teiler", unit: "", d: 1, better: "lower", f: (sh) => Math.min.apply(null, sh.map((s) => s.teiler)) },
+    { key: "avgInterval", label: "Ø Intervall", unit: "s", d: 0, better: null, f: (sh) => mean(sh.filter((s) => s.dt != null).map((s) => s.dt)) },
+  ];
+  const M = Object.fromEntries(METRICS.map((m) => [m.key, m]));
+
+  function sel(session, key) {
+    if (key === "probe") return session.shots.filter((s) => s.pos === 0);
+    if (key === "all") return session.shots.filter((s) => s.pos > 0);
+    const n = Number(key.slice(1));
+    return session.shots.filter((s) => s.series === n);
+  }
+  const cache = new Map();
+  function val(session, key, metric) {
+    const ck = session.id + "|" + key + "|" + metric;
+    if (!cache.has(ck)) { const sh = sel(session, key); cache.set(ck, sh.length ? M[metric].f(sh) : NaN); }
+    return cache.get(ck);
+  }
+  function baseline(metric, scope) {
+    const ref = HISTORY.filter((s) => TODAY.start - s.start <= 30 * 864e5);
+    const vals = [];
+    ref.forEach((s) => { if (scope === "all") vals.push(val(s, "all", metric)); else [1, 2, 3, 4].forEach((n) => vals.push(val(s, "s" + n, metric))); });
+    return mean(vals);
+  }
+  const unitStr = (m) => (m.unit ? " " + m.unit : "");
+  function dirWords(m) {
+    const h = Math.abs(m.x) < 0.5 ? "" : m.x > 0 ? "rechts" : "links";
+    const v = Math.abs(m.y) < 0.5 ? "" : m.y > 0 ? "hoch" : "tief";
+    return [h, v].filter(Boolean).join(" ") || "mittig";
+  }
+
+  /* ---------- SVG-Helfer ---------- */
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+  function drawFace(svg, opts) {
+    const half = LP.diameters[0] / 2 + 6;
+    el("rect", { x: -half, y: -half, width: 2 * half, height: 2 * half, rx: 6, class: "t-paper" }, svg);
+    if (opts.probe) el("path", { d: "M " + (half - 24) + " " + -half + " L " + half + " " + -half + " L " + half + " " + (-half + 24) + " Z", class: "t-probe" }, svg);
+    el("circle", { cx: 0, cy: 0, r: LP.diameters[LP.blackFromRing - 1] / 2, class: "t-black" }, svg);
+    LP.diameters.forEach((dia, i) => {
+      const ring = i + 1;
+      if (ring === LP.blackFromRing) return;
+      el("circle", { cx: 0, cy: 0, r: dia / 2, class: ring > LP.blackFromRing ? "t-line-in" : "t-line" }, svg);
+    });
+    el("circle", { cx: 0, cy: 0, r: LP.innerTen / 2, class: "t-line-in" }, svg);
+    if (opts.labels !== false) {
+      LP.labelRings.forEach((n) => {
+        const rm = (LP.diameters[n - 1] / 2 + LP.diameters[n] / 2) / 2;
+        const cls = n >= LP.blackFromRing ? "t-num-in" : "t-num";
+        [[rm, 0], [-rm, 0], [0, rm], [0, -rm]].forEach((p) => {
+          const t = el("text", { x: p[0], y: p[1], class: cls, "text-anchor": "middle", "dominant-baseline": "central" }, svg);
+          t.textContent = n;
+        });
+      });
+    }
+  }
+  function drawOverlay(svg, shots, o) {
+    if (!shots.length) return;
+    if (o.circle && shots.length > 1) {
+      const c = sec(shots);
+      el("circle", { cx: c.x, cy: -c.y, r: c.r, class: "t-sec-halo" }, svg);
+      el("circle", { cx: c.x, cy: -c.y, r: c.r, class: "t-sec" + (o.line ? " " + o.line : "") }, svg);
+    }
+    if (o.mpi) {
+      const m = mpi(shots), k = o.k || 2.6;
+      const d = "M " + (m.x - k) + " " + (-m.y - k) + " L " + (m.x + k) + " " + (-m.y + k) + " M " + (m.x - k) + " " + (-m.y + k) + " L " + (m.x + k) + " " + (-m.y - k);
+      el("path", { d, class: "mpi-halo" }, svg);
+      el("path", { d, class: "mpi-core" + (o.line ? " " + o.line : "") }, svg);
+    }
+  }
+  function drawShots(svg, shots, o) {
+    const g = el("g", null, svg);
+    shots.forEach((s, i) => {
+      const cls = o.cls ? o.cls(s) : ringCls(s);
+      const c = el("circle", { cx: s.x, cy: -s.y, r: LP.gauge / 2, class: "t-shot " + cls + (o.newest && i === shots.length - 1 ? " is-new" : "") }, g);
+      c.dataset.seq = s.seq;
+      if (o.nums) {
+        const t = el("text", { x: s.x, y: -s.y, class: "t-sn " + (cls === "r9" || cls === "r8" ? "dark" : "light") }, g);
+        t.textContent = o.numLabel ? o.numLabel(s, i) : i + 1;
+      }
+    });
+    if (o.newest && shots.length && !reduceMotion) {
+      const s = shots[shots.length - 1];
+      el("circle", { cx: s.x, cy: -s.y, r: LP.gauge / 2, class: "t-pulse" }, g);
+    }
+    return g;
+  }
+  function groupBox(shots, minR) {
+    if (!shots.length) return [-40, -40, 80, 80];
+    const c = sec(shots);
+    const r = Math.max(c.r + 7, minR || 22);
+    return [c.x - r, -c.y - r, 2 * r, 2 * r];
+  }
+  const FULL = [-84, -84, 168, 168];
+  function setVB(svg, target, animate) {
+    const from = svg._vb || target;
+    const apply = (v) => { svg.setAttribute("viewBox", v.map((n) => n.toFixed(2)).join(" ")); svg._vb = v; };
+    if (!animate || reduceMotion) { apply(target); return; }
+    if (svg._raf) cancelAnimationFrame(svg._raf);
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / 420), e = 1 - Math.pow(1 - k, 3);
+      apply(from.map((f, i) => f + (target[i] - f) * e));
+      if (k < 1) svg._raf = requestAnimationFrame(step);
+    };
+    svg._raf = requestAnimationFrame(step);
+  }
+
+  /* ---------- Hero ---------- */
+  (function hero() {
+    const svg = document.getElementById("hero-target");
+    const shots = sel(TODAY, "all");
+    drawFace(svg, {});
+    drawShots(svg, shots, {});
+    drawOverlay(svg, shots, { mpi: true, circle: true });
+    setVB(svg, groupBox(shots, 30), false);
+  })();
+
+  /* ---------- Prototyp ---------- */
+  const $ = (id) => document.getElementById(id);
+  const state = { sel: "all", mpi: true, circle: true, nums: false, zoom: "group", mode: "value", replay: null, hot: null };
+  const SERIES_KEYS = ["s1", "s2", "s3", "s4"];
+  const SEL_LABEL = { all: "Gesamt", s1: "Serie 1", s2: "Serie 2", s3: "Serie 3", s4: "Serie 4", probe: "Probe" };
+
+  const pTarget = $("p-target"), pTip = $("p-tip"), pCard = $("p-tcard");
+  const currentShots = () => sel(TODAY, state.sel);
+
+  function header() {
+    $("p-sub").textContent = TODAY.type + " · Stand 6 · " + fmtDay.format(TODAY.start) + ", " + fmtHM.format(TODAY.shots[0].time) + "–" + fmtHM.format(TODAY.end);
+    const sh = currentShots();
+    const dec = sh.reduce((a, s) => a + s.decT, 0) / 10, ring = sh.reduce((a, s) => a + s.ring, 0);
+    $("p-dec").textContent = fmt(dec, 1);
+    const ringEl = $("p-ring");
+    clear(ringEl);
+    ringEl.appendChild(document.createTextNode(fmt(ring, 0) + " "));
+    const sm = document.createElement("small");
+    sm.textContent = state.sel === "probe" ? "Ringe · zählt nicht" : "Ringe";
+    ringEl.appendChild(sm);
+  }
+
+  function renderTarget(animateZoom) {
+    clear(pTarget);
+    const all = currentShots();
+    const n = state.replay ? state.replay.n : all.length;
+    const vis = all.slice(0, n);
+    drawFace(pTarget, { probe: state.sel === "probe" });
+    drawOverlay(pTarget, vis, { mpi: state.mpi && vis.length > 0, circle: state.circle });
+    const g = drawShots(pTarget, vis, { nums: state.nums, newest: !!state.replay, numLabel: (s) => (state.sel === "all" ? s.seq - 5 : state.sel === "probe" ? "P" + s.seq : (s.seq - 6) % 10 + 1) });
+    // grosse Trefferflaechen fuer Hover und Antippen
+    vis.forEach((s) => {
+      const h = el("circle", { cx: s.x, cy: -s.y, r: 4.2, class: "t-hit", tabindex: "0", role: "button", "aria-label": "Schuss " + shotNo(s) + ", " + fmt(s.decT / 10, 1) }, g);
+      h.addEventListener("pointerenter", () => showShotTip(s, h));
+      h.addEventListener("pointerdown", () => showShotTip(s, h));
+      h.addEventListener("focus", () => showShotTip(s, h));
+      h.addEventListener("pointerleave", hideShotTip);
+      h.addEventListener("blur", hideShotTip);
+    });
+    if (state.hot != null) markHot(state.hot);
+    setVB(pTarget, state.zoom === "full" ? FULL : groupBox(all, 24), animateZoom);
+    chips(vis);
+  }
+  function shotNo(s) { return s.pos === 0 ? "P" + s.seq : String(s.seq - 5); }
+  function chips(vis) {
+    const box = $("p-chips");
+    clear(box);
+    if (!vis.length) return;
+    const m = mpi(vis);
+    const add = (txt) => { const c = document.createElement("span"); c.className = "chip"; c.textContent = txt; box.appendChild(c); };
+    if (state.mpi) {
+      add((m.x >= 0 ? "→ " : "← ") + fmt(Math.abs(m.x), 1) + " mm");
+      add((m.y >= 0 ? "↑ " : "↓ ") + fmt(Math.abs(m.y), 1) + " mm");
+    }
+    if (state.circle && vis.length > 1) add("Ø " + fmt(2 * sec(vis).r, 1) + " mm");
+  }
+  function showShotTip(s, node) {
+    clear(pTip);
+    const head = document.createElement("div");
+    head.className = "muted";
+    head.textContent = s.pos === 0 ? "Probeschuss " + s.seq : "Schuss " + (s.seq - 5) + " · Serie " + s.series;
+    const v = document.createElement("div");
+    const st = document.createElement("strong"); st.textContent = fmt(s.decT / 10, 1);
+    v.appendChild(st); v.appendChild(document.createTextNode("  Teiler " + fmtTeiler(s.teiler)));
+    const t = document.createElement("div");
+    t.textContent = fmtTime.format(s.time) + (s.dt != null ? " · +" + fmt(s.dt, 0) + " s" : "");
+    pTip.appendChild(head); pTip.appendChild(v); pTip.appendChild(t);
+    pTip.hidden = false;
+    const cr = pCard.getBoundingClientRect(), nr = node.getBoundingClientRect();
+    let left = nr.left - cr.left + nr.width / 2 + 14, top = nr.top - cr.top - 10;
+    if (left + pTip.offsetWidth > cr.width - 8) left = nr.left - cr.left - pTip.offsetWidth - 10;
+    pTip.style.left = Math.max(8, left) + "px";
+    pTip.style.top = Math.max(8, top) + "px";
+    markHot(s.seq);
+  }
+  function hideShotTip() { pTip.hidden = true; markHot(null); }
+  function markHot(seq) {
+    state.hot = seq;
+    pTarget.querySelectorAll(".t-shot.is-hot").forEach((n) => n.classList.remove("is-hot"));
+    document.querySelectorAll("#p-tbody tr.is-hot").forEach((n) => n.classList.remove("is-hot"));
+    document.querySelectorAll("#p-chart .c-dot.is-hot").forEach((n) => n.classList.remove("is-hot"));
+    if (seq == null) return;
+    const c = pTarget.querySelector('.t-shot[data-seq="' + seq + '"]');
+    if (c) c.classList.add("is-hot");
+    const row = document.querySelector('#p-tbody tr[data-seq="' + seq + '"]');
+    if (row) row.classList.add("is-hot");
+    const dot = document.querySelector('#p-chart .c-dot[data-seq="' + seq + '"]');
+    if (dot) dot.classList.add("is-hot");
+  }
+
+  function kpis() {
+    const box = $("p-kpis");
+    clear(box);
+    const sh = currentShots();
+    const scope = state.sel === "all" ? "all" : state.sel === "probe" ? null : "series";
+    const v = (k) => (sh.length ? M[k].f(sh) : NaN);
+    const tile = (label, value, unit, sub, subCls) => {
+      const d = document.createElement("div"); d.className = "kpi";
+      const l = document.createElement("div"); l.className = "kpi-label"; l.textContent = label;
+      const val = document.createElement("div"); val.className = "kpi-value"; val.textContent = value;
+      if (unit) { const u = document.createElement("small"); u.textContent = unit; val.appendChild(u); }
+      const s = document.createElement("div"); s.className = "kpi-sub" + (subCls ? " " + subCls : ""); s.textContent = sub;
+      d.appendChild(l); d.appendChild(val); d.appendChild(s); box.appendChild(d);
+    };
+    const delta = (k) => {
+      if (!scope) return ["Probe zählt nicht", ""];
+      const m = M[k], cur = v(k), base = baseline(k, scope);
+      const diff = cur - base;
+      if (!isFinite(diff)) return ["", ""];
+      const good = m.better == null ? null : (m.better === "higher" ? diff > 0 : diff < 0);
+      const arrow = diff >= 0 ? "▲ " : "▼ ";
+      const txt = arrow + fmt(Math.abs(diff), m.d) + unitStr(m) + " zum 30-Tage-Schnitt";
+      return [txt, good == null ? "" : good ? "pos" : "neg"];
+    };
+    const m = sh.length ? mpi(sh) : { x: 0, y: 0 };
+    let a = delta("avgDec"); tile("Ø je Schuss", fmt(v("avgDec"), 2), "", a[0], a[1]);
+    a = delta("groupDia"); tile("Streukreis", fmt(v("groupDia"), 1), "mm", a[0], a[1]);
+    a = delta("meanRadius"); tile("Mittlerer Radius", fmt(v("meanRadius"), 1), "mm", a[0], a[1]);
+    tile("Schwerpunkt-Abstand", fmt(v("mpiDist"), 1), "mm", fmt(Math.abs(m.x), 1) + (m.x >= 0 ? " rechts" : " links") + " · " + fmt(Math.abs(m.y), 1) + (m.y >= 0 ? " hoch" : " tief"), "");
+    tile("Zehner", fmt(v("tens"), 0), "", "davon " + fmt(v("innerTens"), 0) + " Innenzehner · bester Teiler " + fmtTeiler(v("bestTeiler")), "");
+    const dur = sh.length ? (sh[sh.length - 1].time - sh[0].time) / 60000 : 0;
+    tile("Ø Intervall", fmt(v("avgInterval"), 0), "s", "Dauer " + fmt(dur, 0) + " min für " + sh.length + " Schuss", "");
+  }
+
+  function insight() {
+    const p = $("p-insight");
+    clear(p);
+    const tag = document.createElement("span"); tag.className = "auto"; tag.textContent = "Beobachtung, automatisch formuliert";
+    p.appendChild(tag);
+    let text;
+    if (state.sel === "all") {
+      const ser = [1, 2, 3, 4].map((n) => ({ n, dia: val(TODAY, "s" + n, "groupDia"), m: mpi(sel(TODAY, "s" + n)) }));
+      const best = ser.reduce((x, y) => (y.dia < x.dia ? y : x));
+      const worst = ser.reduce((x, y) => (y.dia > x.dia ? y : x));
+      text = "Serie " + best.n + " war deine engste (Streukreis " + fmt(best.dia, 1) + " mm). Serie " + worst.n + " streut " + fmt((worst.dia / best.dia - 1) * 100, 0) + " % weiter; ihr Schwerpunkt liegt " + fmt(Math.hypot(worst.m.x, worst.m.y), 1) + " mm " + dirWords(worst.m) + ".";
+    } else if (state.sel === "probe") {
+      const mp = mpi(currentShots()), mw = mpi(sel(TODAY, "all"));
+      text = "Der Schwerpunkt der Probe liegt " + fmt(Math.hypot(mp.x, mp.y), 1) + " mm " + dirWords(mp) + ". In der Wertung waren es " + fmt(Math.hypot(mw.x, mw.y), 1) + " mm " + dirWords(mw) + ".";
+    } else {
+      const n = state.sel.slice(1), sh = currentShots(), m = mpi(sh);
+      const avgSeries = mean(SERIES_KEYS.map((k) => val(TODAY, k, "groupDia")));
+      const dia = val(TODAY, state.sel, "groupDia");
+      text = "Serie " + n + ": " + fmt(M.avgDec.f(sh), 2) + " je Schuss, Schwerpunkt " + fmt(Math.hypot(m.x, m.y), 1) + " mm " + dirWords(m) + ". Der Streukreis ist " + fmt(Math.abs(dia / avgSeries - 1) * 100, 0) + " % " + (dia <= avgSeries ? "enger" : "weiter") + " als im Schnitt deiner Serien heute.";
+    }
+    p.appendChild(document.createTextNode(text));
+  }
+
+  function strip() {
+    const box = $("p-strip");
+    clear(box);
+    SERIES_KEYS.concat(["probe"]).forEach((k) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.sel === k));
+      const sh = sel(TODAY, k);
+      const svg = el("svg", { viewBox: "-42 -42 84 84", "aria-hidden": "true" }, b);
+      drawFace(svg, { labels: false, probe: k === "probe" });
+      drawShots(svg, sh, {});
+      drawOverlay(svg, sh, { mpi: true, circle: false, k: 3 });
+      const nm = document.createElement("span"); nm.className = "st-n"; nm.textContent = k === "probe" ? "Probe" : "Serie " + k.slice(1);
+      const vv = document.createElement("span"); vv.className = "st-v"; vv.textContent = k === "probe" ? sh.length + " Schuss" : fmt(val(TODAY, k, "sumDec"), 1);
+      b.appendChild(nm); b.appendChild(vv);
+      b.setAttribute("aria-label", nm.textContent + ", " + vv.textContent + ", anzeigen");
+      b.addEventListener("click", () => select(state.sel === k ? "all" : k));
+      box.appendChild(b);
+    });
+  }
+
+  function table() {
+    const tb = $("p-tbody");
+    clear(tb);
+    const sh = currentShots();
+    $("p-count").textContent = sh.length + " Schuss · " + SEL_LABEL[state.sel];
+    sh.forEach((s) => {
+      const tr = document.createElement("tr");
+      tr.dataset.seq = s.seq;
+      const td = (txt, cls) => { const c = document.createElement("td"); if (cls) c.className = cls; c.textContent = txt; tr.appendChild(c); return c; };
+      td(shotNo(s));
+      td(s.pos === 0 ? "P" : String(s.series));
+      const dc = td(""); const dot = document.createElement("span"); dot.className = "dot"; dot.style.background = "var(--s" + (s.ring >= 10 ? 10 : s.ring === 9 ? 9 : s.ring === 8 ? 8 : 7) + ")"; dc.appendChild(dot);
+      td(fmt(s.decT / 10, 1), "num dec");
+      td(String(s.ring), "num");
+      td(fmtTeiler(s.teiler), "num");
+      const deg = (Math.atan2(s.y, s.x) * 180) / Math.PI;
+      const clock = Math.round((((90 - deg) % 360 + 360) % 360) / 30) || 12;
+      const dirCell = td("");
+      const svg = el("svg", { viewBox: "-8 -8 16 16", class: "dir", role: "img", "aria-label": "Richtung " + clock + " Uhr" }, dirCell);
+      const g = el("g", { transform: "rotate(" + (-deg).toFixed(1) + ")" }, svg);
+      el("path", { d: "M -5 0 H 5 M 1.5 -3.5 L 5 0 L 1.5 3.5" }, g);
+      dirCell.appendChild(document.createTextNode(" " + clock + " Uhr"));
+      td(fmtTime.format(s.time), "num");
+      td(s.dt == null ? "–" : "+" + fmt(s.dt, 0) + " s", "num");
+      tr.addEventListener("pointerenter", () => markHot(s.seq));
+      tr.addEventListener("pointerleave", () => markHot(null));
+      tb.appendChild(tr);
+    });
+  }
+
+  /* ---------- Diagramm-Helfer ---------- */
+  function niceTicks(lo, hi, count) {
+    const span = hi - lo || 1, step0 = span / (count || 4), mag = Math.pow(10, Math.floor(Math.log10(step0))), err = step0 / mag;
+    const step = (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1) * mag;
+    const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step, ticks = [];
+    for (let v = a; v <= b + step * 1e-6; v += step) ticks.push(Number(v.toFixed(10)));
+    return { ticks, lo: a, hi: b, step };
+  }
+  function fillTip(tip, rows) {
+    clear(tip);
+    rows.forEach((r) => {
+      const row = document.createElement("div"); row.className = "tip-row" + (r.head ? " head" : "");
+      if (r.key) { const k = document.createElement("span"); k.className = "tip-key"; k.style.background = r.key; row.appendChild(k); }
+      if (r.value != null) { const v = document.createElement(r.head ? "span" : "strong"); v.textContent = r.value; row.appendChild(v); }
+      if (r.label) { const l = document.createElement("span"); l.textContent = r.label; row.appendChild(l); }
+      tip.appendChild(row);
+    });
+  }
+  function renderChart(host, cfg) {
+    host._cfg = cfg;
+    clear(host);
+    const W = Math.max(260, host.clientWidth || 600), H = cfg.height || 220;
+    const P = Object.assign({ l: 42, r: 16, t: 22, b: 30 }, cfg.pad || {});
+    const x0 = cfg.xDomain[0], x1 = cfg.xDomain[1], y0 = cfg.yDomain[0], y1 = cfg.yDomain[1];
+    const X = (v) => P.l + ((v - x0) / (x1 - x0 || 1)) * (W - P.l - P.r);
+    const Y = (v) => H - P.b - ((v - y0) / (y1 - y0 || 1)) * (H - P.t - P.b);
+    const svg = el("svg", { width: W, height: H, viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img", "aria-label": cfg.aria || "" });
+    host.appendChild(svg);
+    cfg.yTicks.forEach((v) => {
+      el("line", { x1: P.l, x2: W - P.r, y1: Y(v), y2: Y(v), class: "c-grid" }, svg);
+      const t = el("text", { x: P.l - 8, y: Y(v), class: "c-tick", "text-anchor": "end", "dominant-baseline": "central" }, svg);
+      t.textContent = cfg.yFmt(v);
+    });
+    el("line", { x1: P.l, x2: W - P.r, y1: H - P.b, y2: H - P.b, class: "c-axis" }, svg);
+    (cfg.xTicks || []).forEach((tk) => { const t = el("text", { x: X(tk.x), y: H - P.b + 18, class: "c-tick", "text-anchor": "middle" }, svg); t.textContent = tk.label; });
+    (cfg.separators || []).forEach((sp) => {
+      if (sp.line) el("line", { x1: X(sp.x), x2: X(sp.x), y1: P.t - 6, y2: H - P.b, class: "c-sep" }, svg);
+      if (sp.label) { const t = el("text", { x: X(sp.x) + (sp.line ? 6 : 0), y: P.t - 10, class: "c-seplabel", "dominant-baseline": "middle" }, svg); t.textContent = sp.label; }
+    });
+    cfg.series.forEach((s) => {
+      if (s.kind === "line") {
+        let d = "", pen = false;
+        s.values.forEach((v, i) => { if (v == null || !isFinite(v)) { pen = false; return; } d += (pen ? "L" : "M") + X(cfg.xs[i]).toFixed(1) + " " + Y(v).toFixed(1) + " "; pen = true; });
+        if (d) el("path", { d, class: s.cls }, svg);
+      } else {
+        s.values.forEach((v, i) => {
+          if (v == null || !isFinite(v)) return;
+          const last = s.emphasizeLast && i === s.values.length - 1;
+          const c = el("circle", { cx: X(cfg.xs[i]), cy: Y(v), r: last ? 6 : s.r || 4.5, class: "c-dot " + (s.dotCls ? s.dotCls(i) : "n") }, svg);
+          if (s.dataSeq) c.dataset.seq = s.dataSeq(i);
+        });
+      }
+    });
+    if (cfg.endLabel) {
+      const i = cfg.xs.length - 1, v = cfg.endLabel.value;
+      const t = el("text", { x: X(cfg.xs[i]) + 12, y: Y(v), class: "c-end", "text-anchor": "start", "dominant-baseline": "central" }, svg);
+      t.textContent = cfg.endLabel.text;
+    }
+    const cross = el("line", { y1: P.t, y2: H - P.b, class: "c-cross", visibility: "hidden" }, svg);
+    const hit = el("rect", { x: P.l, y: 0, width: W - P.l - P.r, height: H - P.b, class: "c-hit" }, svg);
+    const tip = document.createElement("div"); tip.className = "c-tip"; tip.hidden = true; host.appendChild(tip);
+    let cur = null;
+    const show = (i) => {
+      cur = i;
+      const x = X(cfg.xs[i]);
+      cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("visibility", "visible");
+      fillTip(tip, cfg.tip(i));
+      tip.hidden = false;
+      let left = x + 14;
+      if (left + tip.offsetWidth > W - 4) left = x - 14 - tip.offsetWidth;
+      tip.style.left = Math.max(0, left) + "px";
+      if (cfg.onHover) cfg.onHover(i);
+    };
+    const hide = () => { cur = null; cross.setAttribute("visibility", "hidden"); tip.hidden = true; if (cfg.onHover) cfg.onHover(null); };
+    const nearest = (ev) => {
+      const r = svg.getBoundingClientRect(), px = ev.clientX - r.left;
+      let best = 0, bd = Infinity;
+      cfg.xs.forEach((xv, i) => { const d = Math.abs(X(xv) - px); if (d < bd) { bd = d; best = i; } });
+      return best;
+    };
+    hit.addEventListener("pointermove", (ev) => show(nearest(ev)));
+    hit.addEventListener("pointerdown", (ev) => show(nearest(ev)));
+    hit.addEventListener("pointerleave", hide);
+    host.tabIndex = 0;
+    host.onkeydown = (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const n = cfg.xs.length;
+      show(cur == null ? (e.key === "ArrowRight" ? 0 : n - 1) : Math.max(0, Math.min(n - 1, cur + (e.key === "ArrowRight" ? 1 : -1))));
+    };
+    host.onblur = hide;
+  }
+  function legend(box, items) {
+    clear(box);
+    items.forEach((it) => {
+      const s = document.createElement("span");
+      const k = document.createElement("i");
+      k.className = it.kind === "line" ? "lk-line" : it.kind === "ring" ? "lk-ring" : "lk-dot";
+      if (it.color) k.style.background = it.color;
+      s.appendChild(k); s.appendChild(document.createTextNode(it.label)); box.appendChild(s);
+    });
+  }
+  const trailing = (vals, w) => vals.map((_, i) => { const win = vals.slice(Math.max(0, i - w + 1), i + 1).filter((v) => v != null && isFinite(v)); return i < w - 1 || !win.length ? null : mean(win); });
+
+  function shotChart() {
+    const host = $("p-chart"), sh = currentShots();
+    const xs = sh.map((_, i) => i + 1);
+    const tempo = state.mode === "tempo";
+    const vals = sh.map((s) => (tempo ? s.dt : s.decT / 10));
+    const finite = vals.filter((v) => v != null);
+    let yDomain, yTicks, yFmt;
+    if (tempo) { const nt = niceTicks(0, Math.max.apply(null, finite.concat([60])), 4); yDomain = [0, nt.hi]; yTicks = nt.ticks; yFmt = (v) => fmt(v, 0) + " s"; }
+    else { const lo = Math.min(7, Math.floor(Math.min.apply(null, finite))); yDomain = [lo, 11]; yTicks = []; for (let v = lo; v <= 10; v++) yTicks.push(v); yFmt = (v) => fmt(v, 0); }
+    const separators = [];
+    if (state.sel === "all") [0, 10, 20, 30].forEach((o, i) => separators.push({ x: o + 0.5, line: o > 0, label: "S" + (i + 1) }));
+    const xTicks = xs.filter((x) => x === 1 || x % 5 === 0).map((x) => ({ x, label: String(x) }));
+    legend($("p-legend"), tempo
+      ? [{ kind: "dot", color: "var(--fg-2)", label: "Sekunden seit dem vorigen Schuss (Farbe = Ring)" }, { kind: "line", color: "var(--accent)", label: "Schnitt über 5 Schuss" }]
+      : [{ kind: "dot", color: "var(--s10)", label: "Zehntelwert (Farbe = Ring)" }, { kind: "line", color: "var(--accent)", label: "Schnitt über 5 Schuss" }]);
+    renderChart(host, {
+      height: 230, xs, xDomain: [0.5, xs.length + 0.5], yDomain, yTicks, yFmt, xTicks, separators,
+      aria: tempo ? "Abstand zwischen den Schüssen in Sekunden" : "Zehntelwert je Schuss",
+      series: [
+        { kind: "line", values: vals, cls: "c-line" },
+        { kind: "line", values: trailing(vals, 5), cls: "c-avg" },
+        { kind: "dots", values: vals, dotCls: (i) => ringCls(sh[i]), dataSeq: (i) => sh[i].seq },
+      ],
+      tip: (i) => {
+        const s = sh[i];
+        return [
+          { head: true, value: s.pos === 0 ? "Probeschuss " + s.seq : "Schuss " + (s.seq - 5) + " · Serie " + s.series },
+          { key: "var(--s" + (s.ring >= 10 ? 10 : s.ring === 9 ? 9 : s.ring === 8 ? 8 : 7) + ")", value: fmt(s.decT / 10, 1), label: "Zehntel · Teiler " + fmtTeiler(s.teiler) },
+          { value: s.dt == null ? "–" : "+" + fmt(s.dt, 0) + " s", label: fmtTime.format(s.time) },
+        ];
+      },
+      onHover: (i) => markHot(i == null ? null : sh[i].seq),
+    });
+  }
+
+  /* ---------- Vergleich ---------- */
+  const CMP_OPTIONS = [
+    { id: "s1", label: "Serie 1 heute", get: () => sel(TODAY, "s1") },
+    { id: "s2", label: "Serie 2 heute", get: () => sel(TODAY, "s2") },
+    { id: "s3", label: "Serie 3 heute", get: () => sel(TODAY, "s3") },
+    { id: "s4", label: "Serie 4 heute", get: () => sel(TODAY, "s4") },
+    { id: "all", label: "Heute gesamt", get: () => sel(TODAY, "all") },
+    { id: "wk", label: "Wettkampf 12.09.", get: () => sel(WK, "all") },
+  ];
+  function fillSelect(s, value) {
+    CMP_OPTIONS.forEach((o) => { const op = document.createElement("option"); op.value = o.id; op.textContent = o.label; s.appendChild(op); });
+    s.value = value;
+  }
+  function compare() {
+    const a = CMP_OPTIONS.find((o) => o.id === $("cmp-a").value), b = CMP_OPTIONS.find((o) => o.id === $("cmp-b").value);
+    const A = a.get(), B = b.get();
+    const svg = $("cmp-target");
+    clear(svg);
+    drawFace(svg, { labels: false });
+    drawOverlay(svg, A, { mpi: true, circle: true, line: "la" });
+    drawOverlay(svg, B, { mpi: true, circle: true, line: "lb" });
+    drawShots(svg, A, { cls: () => "ca" });
+    drawShots(svg, B, { cls: () => "cb" });
+    setVB(svg, groupBox(A.concat(B), 26), false);
+    const tbl = $("cmp-table");
+    clear(tbl);
+    const thead = document.createElement("thead"), hr = document.createElement("tr");
+    ["Kennzahl", "A", "B", "B − A"].forEach((h) => { const th = document.createElement("th"); th.textContent = h; hr.appendChild(th); });
+    thead.appendChild(hr); tbl.appendChild(thead);
+    const tb = document.createElement("tbody");
+    ["avgDec", "groupDia", "meanRadius", "mpiDist", "tens", "avgInterval"].forEach((k) => {
+      const m = M[k], va = m.f(A), vb = m.f(B), diff = vb - va;
+      const good = m.better == null || Math.abs(diff) < 1e-9 ? null : m.better === "higher" ? diff > 0 : diff < 0;
+      const tr = document.createElement("tr");
+      const c0 = document.createElement("td"); c0.textContent = m.label + (m.unit ? " (" + m.unit + ")" : ""); tr.appendChild(c0);
+      [va, vb].forEach((v) => { const c = document.createElement("td"); c.textContent = fmt(v, m.d); tr.appendChild(c); });
+      const cd = document.createElement("td");
+      cd.textContent = (diff > 0 ? "+" : diff < 0 ? "−" : "±") + fmt(Math.abs(diff), m.d) + (good == null ? "" : good ? " besser" : " schlechter");
+      if (good != null) cd.className = good ? "pos" : "neg";
+      tr.appendChild(cd); tb.appendChild(tr);
+    });
+    tbl.appendChild(tb);
+    const mA = M.mpiDist.f(A), mB = M.mpiDist.f(B), gA = M.groupDia.f(A), gB = M.groupDia.f(B);
+    const p = $("cmp-insight");
+    clear(p);
+    const tag = document.createElement("span"); tag.className = "auto"; tag.textContent = "Beobachtung, automatisch formuliert"; p.appendChild(tag);
+    const near = mB < mA ? "liegt " + fmt(mA - mB, 1) + " mm näher an der Mitte" : "liegt " + fmt(mB - mA, 1) + " mm weiter von der Mitte weg";
+    const spread = gB < gA ? "streut " + fmt((1 - gB / gA) * 100, 0) + " % enger" : "streut " + fmt((gB / gA - 1) * 100, 0) + " % weiter";
+    p.appendChild(document.createTextNode(b.label + " " + near + " und " + spread + " als " + a.label + "."));
+    const hint = $("cmp-hint");
+    hint.hidden = A.length === B.length;
+    hint.textContent = "Hinweis: A hat " + A.length + ", B " + B.length + " Schuss. Der Streukreis wächst mit der Schusszahl; für einen fairen Vergleich gleich große Gruppen wählen.";
+  }
+
+  /* ---------- Verlauf ---------- */
+  function trend() {
+    const key = $("tr-metric").value, m = M[key];
+    const xs = SESSIONS.map((s) => s.start.getTime());
+    const vals = SESSIONS.map((s) => val(s, "all", key));
+    const lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), pad = (hi - lo) * 0.15 || 1;
+    const nt = niceTicks(lo - pad, hi + pad, 4);
+    const dec = nt.step < 0.1 ? 2 : nt.step < 1 ? 1 : 0;
+    const months = [];
+    for (let mo = 5; mo <= 8; mo++) months.push({ x: Date.UTC(2026, mo, 1), label: fmtMonth.format(new Date(Date.UTC(2026, mo, 1, 12))) });
+    legend($("tr-legend"), [
+      { kind: "dot", color: "var(--fg-2)", label: "Training" },
+      { kind: "ring", label: "Wettkampf" },
+      { kind: "line", color: "var(--accent)", label: "Schnitt über 3 Einheiten" },
+    ]);
+    renderChart($("tr-chart"), {
+      height: 230, xs, xDomain: [xs[0] - 4 * 864e5, xs[xs.length - 1] + 3 * 864e5], yDomain: [nt.lo, nt.hi], yTicks: nt.ticks,
+      yFmt: (v) => fmt(v, dec), xTicks: months, pad: { r: 96, l: 46 },
+      aria: "Verlauf von " + m.label + " über " + SESSIONS.length + " Einheiten",
+      series: [
+        { kind: "line", values: vals, cls: "c-line" },
+        { kind: "line", values: trailing(vals, 3), cls: "c-avg" },
+        { kind: "dots", values: vals, emphasizeLast: true, dotCls: (i) => (SESSIONS[i].type === "Wettkampf" ? "wk" : "n") },
+      ],
+      endLabel: { value: vals[vals.length - 1], text: "Heute " + fmt(vals[vals.length - 1], m.d) + unitStr(m) },
+      tip: (i) => [
+        { head: true, value: fmtDay.format(SESSIONS[i].start) + " · " + SESSIONS[i].type },
+        { value: fmt(vals[i], m.d) + unitStr(m), label: m.label },
+      ],
+    });
+    const first = mean(vals.slice(0, 4)), last = mean(vals.slice(-4));
+    const better = m.better == null ? null : m.better === "higher" ? last > first : last < first;
+    const p = $("tr-insight");
+    clear(p);
+    const tag = document.createElement("span"); tag.className = "auto"; tag.textContent = "Beobachtung, automatisch formuliert"; p.appendChild(tag);
+    p.appendChild(document.createTextNode(m.label + ": im Juni Ø " + fmt(first, m.d) + unitStr(m) + ", in den letzten vier Einheiten Ø " + fmt(last, m.d) + unitStr(m) + (better == null ? "." : better ? ". Das ist eine Verbesserung." : ". Das ist ein Rückschritt.")));
+  }
+
+  /* ---------- Wiedergabe ---------- */
+  function stopReplay(render) {
+    if (state.replay && state.replay.timer) clearTimeout(state.replay.timer);
+    state.replay = null;
+    $("p-hud").hidden = true;
+    $("p-play").lastChild.textContent = "Wiedergabe";
+    if (render !== false) renderTarget(false);
+  }
+  function startReplay() {
+    const sh = currentShots();
+    state.replay = { n: 0, timer: null };
+    $("p-play").lastChild.textContent = "Stopp";
+    $("p-hud").hidden = false;
+    const tick = () => {
+      if (!state.replay) return;
+      state.replay.n++;
+      const n = state.replay.n, s = sh[n - 1];
+      renderTarget(false);
+      $("p-hud-l").textContent = "Schuss " + n + " / " + sh.length + " · " + fmtTime.format(s.time) + (s.dt != null && n > 1 ? " · +" + fmt(s.dt, 0) + " s" : "");
+      $("p-hud-bar").style.width = ((s.time - sh[0].time) / Math.max(1, sh[sh.length - 1].time - sh[0].time)) * 100 + "%";
+      if (n >= sh.length) { state.replay.timer = setTimeout(() => stopReplay(), 1600); return; }
+      const next = sh[n].dt || 40;
+      state.replay.timer = setTimeout(tick, reduceMotion ? 300 : Math.min(950, Math.max(140, (next * 1000) / 120)));
+    };
+    tick();
+  }
+
+  /* ---------- Steuerung ---------- */
+  function select(k) {
+    if (state.replay) stopReplay(false);
+    state.sel = k;
+    document.querySelectorAll("#p-sel button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.sel === k)));
+    renderAll(true);
+  }
+  function renderAll(animateZoom) { header(); renderTarget(animateZoom); kpis(); insight(); strip(); table(); shotChart(); }
+
+  document.querySelectorAll("#p-sel button").forEach((b) => b.addEventListener("click", () => select(b.dataset.sel)));
+  document.querySelectorAll(".tg").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.tg;
+    state[k] = !state[k];
+    b.setAttribute("aria-pressed", String(state[k]));
+    renderTarget(false);
+  }));
+  document.querySelectorAll("#p-zoom button").forEach((b) => b.addEventListener("click", () => {
+    state.zoom = b.dataset.zoom;
+    document.querySelectorAll("#p-zoom button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    renderTarget(true);
+  }));
+  document.querySelectorAll("#p-mode button").forEach((b) => b.addEventListener("click", () => {
+    state.mode = b.dataset.mode;
+    document.querySelectorAll("#p-mode button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    shotChart();
+  }));
+  $("p-play").addEventListener("click", () => (state.replay ? stopReplay() : startReplay()));
+  document.addEventListener("pointerdown", (e) => { if (!pTarget.contains(e.target)) { pTip.hidden = true; } });
+
+  fillSelect($("cmp-a"), "s3");
+  fillSelect($("cmp-b"), "s4");
+  $("cmp-a").addEventListener("change", compare);
+  $("cmp-b").addEventListener("change", compare);
+  METRICS.forEach((m) => { const op = document.createElement("option"); op.value = m.key; op.textContent = m.label; $("tr-metric").appendChild(op); });
+  $("tr-metric").value = "groupDia";
+  $("tr-metric").addEventListener("change", trend);
+
+  renderAll(false);
+  compare();
+  trend();
+
+  if ("ResizeObserver" in window) {
+    const ro = new ResizeObserver((entries) => {
+      entries.forEach((en) => {
+        const host = en.target;
+        const w = Math.round(en.contentRect.width);
+        if (host._w === w) return;
+        host._w = w;
+        if (host._cfg) renderChart(host, host._cfg);
+      });
+    });
+    ro.observe($("p-chart"));
+    ro.observe($("tr-chart"));
+  }
+
+  /* ---------- SQL kopieren ---------- */
+  $("copy-sql").addEventListener("click", () => {
+    const pre = $("sql"), btn = $("copy-sql");
+    const done = () => { btn.textContent = "Kopiert"; setTimeout(() => (btn.textContent = "Kopieren"), 1600); };
+    const fallback = () => {
+      const r = document.createRange(); r.selectNodeContents(pre);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = "Markiert, jetzt kopieren";
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(pre.textContent).then(done, fallback);
+      else fallback();
+    } catch (e) { fallback(); }
+  });
+
+  /* ---------- Inhaltsverzeichnis ---------- */
+  const links = Array.from(document.querySelectorAll(".toc a"));
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        links.forEach((a) => a.classList.toggle("is-active", a.getAttribute("href") === "#" + en.target.id));
+      });
+    }, { rootMargin: "-20% 0px -70% 0px" });
+    document.querySelectorAll("main section[id]").forEach((s) => io.observe(s));
+  }
+})();
+</script>

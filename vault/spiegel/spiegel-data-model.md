@@ -1,0 +1,58 @@
+---
+id: spiegel-data-model
+type: concept
+title: "Spiegel — Kanonisches Datenmodell"
+aliases: [datenmodell, spiegel-schema, kanonisches-modell]
+keywords: [datenmodell, schema, entitäten, prisma, anlage, quelle, epoche, brücke, stand, schützen-identität, konto, zuordnung, rohdatensatz, scheibe, stellung, serie, schuss, disziplin, scheibenbild, kennzahlwert, notiz, tag, ausrüstung, mikrometer, einheiten, revision]
+part_of: ["[[spiegel]]"]
+relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spiegel-metrics]]"]
+---
+
+**TL;DR** Ein quellen-neutrales Modell: Rohdatensätze bleiben unverändert, daraus entsteht die kanonische Scheibe mit Stellungen, Serien und Schüssen; Kennzahlwerte sind eine neu berechenbare Projektion. Koordinaten in Mikrometern, amtliche Werte so wie die Quelle sie liefert, Zeit in UTC mit Millisekunden.
+
+## Entitäten
+
+| Entität | Wozu | Schlüssel |
+|---|---|---|
+| Anlage | Schießstand eines Vereins mit Zeitzone | id |
+| Quelle | eine SSMDB2-Instanz mit Epoche | Anlage + Epoche |
+| Brücke | gekoppeltes Gerät mit Token, Version, letztem Kontakt | id |
+| Stand | StandNr oder StandNrText (zum Beispiel „H“ im Finale) | Anlage + Nr |
+| Schützen-Identität | wie Meyton den Schützen kennt | SportpassID, sonst Name + Verein |
+| Konto, Zuordnung | Spiegel-Nutzer und sein Weg zu Identität oder Scheibe, mit Status und Protokoll | id |
+| Rohdatensatz | unveränderter Snapshot | Quelle + ScheibenID + Prüfsumme |
+| Scheibe | ein Durchgang: Disziplin, Stand, Beginn, Ende, Status, Revision, Herkunft (Rohdaten oder nur PDF) | Quelle + Epoche + ScheibenID |
+| Stellung, Serie | Gliederung mit amtlichen Summen | Scheibe + Stellung + Serie |
+| Schuss | Lage, amtliche Werte, Zeit | Scheibe + Stellung + Treffer |
+| Ausdruck | gespeichertes Meyton-PDF mit gelesenen Kopf- und Fußdaten | Scheibe + Datei |
+| Disziplin | Regelnummer, Schusszahl, Serienlänge, Stellungen | Regelnummer |
+| Scheibenbild | Geometrie je Stellung, versioniert ([[spiegel-target-library]]) | id + Version |
+| Kennzahlwert | berechneter Wert je Ebene ([[spiegel-metrics]]) | Scheibe + Ebene + Kennzahl + Version |
+| Notiz, Tag, Ausrüstung | Kontext für Vergleiche (Munitionslos, Griff, Brille) | id |
+
+## Schuss
+
+```ts
+type Shot = {
+  seq: number                     // Reihenfolge über die ganze Scheibe, Probe zuerst
+  position: number                // Stellung, 0 = Probe
+  series: number | null           // Serie laut Meyton
+  xUm: number; yUm: number        // Mikrometer, x nach rechts, y nach oben
+  ring: number | null             // amtlich, ganze Ringe
+  decimalTenths: number | null    // amtlich, 94 = 9,4
+  teilerHundredths: number | null // amtlich; Einheit am echten Datensatz prüfen
+  innerTen: boolean
+  scoringMode: number             // Meyton-Wertungsmodus 0–12
+  firedAt: string                 // UTC mit ms, aus Ortszeit + Zone der Anlage
+  source: { sourceId: string; scheibenId: number; stellung: number; treffer: number }
+}
+```
+
+## Einheiten und Regeln
+
+- **Koordinaten** intern in Mikrometern als Ganzzahl. Aus der SSMDB2 (1/100 mm) mal 10. Achsen: x rechts, y oben (in Phase 0 zu bestätigen).
+- **Amtliche Werte** (Ring, Zehntel, Teiler, Innenzehner) so, wie die Quelle sie liefert; die Skala je Quellfeld steht im Adapter ([[spiegel-ingest-pipeline]]).
+- **Zeit** in UTC mit Millisekunden; der Rohwert (Ortszeit ohne Zone) bleibt im Rohdatensatz.
+- **Revisionen:** Korrekturen erzeugen eine neue Revision; die vorige bleibt nachvollziehbar.
+- **Herkunft:** Eine Scheibe kann zuerst nur aus dem PDF bestehen (QR-Scan, Brücke gerade aus oder fremde Anlage) und später um Rohdaten ergänzt werden.
+- **Keine Mandanten:** eine Installation je Verein ([[adr-029]]); eine Anlage reicht im Normalfall, mehrere sind möglich (zum Beispiel 10 m und 50 m mit getrennten Servern).

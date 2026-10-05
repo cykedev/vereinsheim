@@ -32,7 +32,7 @@ Onboarding in dieser Reihenfolge:
 
 1. [`README.md`](README.md) — Status, Bedienkonzept, Quick Reference
 2. [`vault/overview.md`](vault/overview.md) — Anforderungen, Zielarchitektur, Sizing
-3. [`vault/decisions/`](vault/decisions) — **Wichtig**: alle ADRs (adr-001…adr-025) mit
+3. [`vault/decisions/`](vault/decisions) — **Wichtig**: alle ADRs (adr-001…adr-030) mit
    Begründung ([`decisions.md`](vault/decisions/decisions.md) als MOC). Bevor du etwas
    vorschlägst, das eine ADR berührt: prüfe, ob die ADR den Vorschlag schon adressiert.
 4. [`vault/monorepo/monorepo.md`](vault/monorepo/monorepo.md) — Monorepo-Migration
@@ -148,6 +148,13 @@ Schlüsselentscheidungen & Scope-Grenzen: [`vault/monorepo/monorepo.md`](vault/m
 
 Weitere Folgearbeiten (nicht im aktuellen Scope): Off-Site-Backup, CI/Remote-Cache (Phase 5, supersedet
 ADR-006).
+
+**Neues Großvorhaben (Oktober 2026): Spiegel** — dritte App für Schussrohdaten aus der Meyton-Anlage
+(SSMDB2) über eine lokale Brücke; Zuordnung per Sportpass-Opt-in und Meyton-QR mit Original-PDF; Open
+Source (Apache-2.0). Einstieg: [`vault/spiegel/spiegel.md`](vault/spiegel/spiegel.md) (Plan,
+Lesereihenfolge). Gebaut wird **ein Feature pro Session** aus
+[`vault/spiegel/spiegel-roadmap.md`](vault/spiegel/spiegel-roadmap.md) (IDs `SP-x.y`, je über `/plan`).
+Entscheidungen ADR-026–030, Meyton-Wissen unter [`vault/meyton/`](vault/meyton). Noch kein Code.
 
 ## Wenn du etwas änderst
 
