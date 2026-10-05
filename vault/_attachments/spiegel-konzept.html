@@ -94,6 +94,7 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+.print-only { display: none; }
 body {
   margin: 0;
   background: var(--bg);
@@ -426,6 +427,45 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
 .t-pulse { fill: none; stroke: var(--sec-line); stroke-width: 0.5; transform-box: fill-box; transform-origin: center; animation: pulse 0.8s ease-out forwards; }
 @keyframes pulse { from { transform: scale(1); opacity: 1; } to { transform: scale(3.4); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .t-pulse { animation: none; opacity: 0; } }
+
+/* Druckfassung: immer hell, ohne Navigation, Diagramme und Tabellen vollständig */
+@page { size: A4; margin: 14mm 12mm 16mm; }
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    color-scheme: light;
+    --bg: #ffffff; --surface: #ffffff; --surface-2: #f4f6fa; --surface-3: #e9edf3;
+    --line: rgba(16, 28, 48, 0.14); --line-strong: rgba(16, 28, 48, 0.26);
+    --fg: #0e1622; --fg-2: #2e3a4b; --muted: #59667a;
+    --accent: #1f5fd1; --accent-ink: #ffffff; --accent-wash: rgba(31, 95, 209, 0.07);
+    --pos: #0f7a43; --neg: #b8352a; --warn-wash: rgba(233, 177, 12, 0.14);
+    --cmp-a: #2a78d6; --cmp-b: #eb6834; --shadow: none;
+  }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-size: 12.5px; line-height: 1.5; }
+  .wrap { display: block; max-width: none; padding-inline: 0; }
+  .toc, .toc-mobile, .copy, .btn-play, .hud, .ttip, .c-tip { display: none !important; }
+  main { padding-block: 0; }
+  section { padding-block: 20px 4px; }
+  h1 { font-size: 30px; }
+  h2 { font-size: 21px; }
+  h2, h3, h4, .eyebrow, .label-line { break-after: avoid; }
+  section > .prose:first-child { break-inside: avoid; }
+  .hero { grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr); gap: 20px; padding-block: 0 10px; }
+  .facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .summary, .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .phase { grid-template-columns: 6.5rem minmax(0, 1fr) minmax(0, 11rem); gap: 12px; }
+  .card, .callout, .sum, .phase, .fact, .kpi, figure.dg, .qlist li, .ca-part, .flow .step, tr { break-inside: avoid; }
+  .scroll { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  figure.dg svg { min-width: 0; }
+  .pcard { break-inside: avoid; }
+  .print-only { display: inline !important; }
+  .tablewrap { max-height: none; overflow: visible; }
+  .chart-svg { width: 100% !important; height: auto !important; }
+  .proto { box-shadow: none; padding: 14px; }
+  .proto-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  a { color: inherit; text-decoration: none; }
+  pre { white-space: pre-wrap; word-break: break-word; font-size: 10.5px; }
+}
 </style>
 
 <div class="wrap" lang="de">
@@ -455,10 +495,10 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
   <main>
     <header class="hero">
       <div>
-        <p class="eyebrow">Konzeptentwurf · 5. Oktober 2026 · Arbeitstitel „Spiegel“</p>
+        <p class="eyebrow">Konzept · Stand 5. Oktober 2026 · Spiegel</p>
         <h1>Jeder Schuss, so wie er gefallen ist.</h1>
         <p class="lead">Eine eigene Vereinsheim-App, die die Rohdaten jeder Meyton-Scheibe übernimmt: Trefferlage auf einen hundertstel Millimeter, Ring, Zehntel, Teiler und Zeitpunkt auf die Millisekunde. Daraus werden Schussbild, Wiedergabe, Schwerpunkt, Streukreis, Serien, Verläufe und direkte Vergleiche. Dieses Papier hält fest, was wir über die Datenquelle wissen, schlägt eine Architektur vor und sammelt die Fragen, die vor dem Bau geklärt sein sollten.</p>
-        <p class="hero-note">Der Name ist ein Vorschlag: Der Spiegel ist der schwarze Zielbereich der Scheibe, und ein Spiegel zeigt dir, wie du schießt.</p>
+        <p class="hero-note">Zum Namen: Der Spiegel ist der schwarze Zielbereich der Scheibe, und ein Spiegel zeigt dir, wie du schießt.</p>
       </div>
       <figure class="hero-fig">
         <div class="tbox"><svg id="hero-target" class="target" viewBox="-40 -40 80 80" role="img" aria-label="Beispielscheibe Luftpistole mit 40 Treffern, Schwerpunkt und Streukreis"></svg></div>
@@ -475,22 +515,26 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
 
     <div class="decided" id="stand">
       <span class="label-line">Stand der Entscheidungen · 5. Oktober 2026</span>
-      <p class="small muted" style="margin:4px 0 0">Der Plan lebt jetzt im Repo: <code>vault/spiegel/spiegel.md</code> mit Roadmap (Features SP-x.y) und ADR-026 bis ADR-030. Bei Abweichungen gilt der Vault.</p>
+      <p class="small muted" style="margin:4px 0 0">Der Plan liegt im Repo unter <code>vault/spiegel/spiegel.md</code>, mit Roadmap (Features SP-x.y) und ADR-026 bis ADR-030. Diese Seite fasst ihn zusammen.</p>
       <div class="scroll">
         <table class="doc">
-          <thead><tr><th>Frage</th><th>Antwort</th><th>Folge für das Konzept</th></tr></thead>
+          <thead><tr><th>Thema</th><th>Antwort</th><th>Folge für das Konzept</th></tr></thead>
           <tbody>
-            <tr><td>Wie wird zugeordnet?</td><td>Opt-in per Sportpass automatisch, sonst Meyton-QR mit Original-PDF</td><td>Opt-in-Scheiben lädt die Brücke am Abend selbst hoch; der QR deckt alles andere ab und sichert das PDF, das Meyton nur eine Woche bereithält.</td></tr>
-            <tr><td>Läuft die Anlage dauerhaft?</td><td>Nein, Anlage und Brücke werden nach dem Training ausgeschaltet</td><td>Die Brücke muss Stromverlust aushalten. Ein QR-Scan von zu Hause liefert sofort das PDF-Ergebnis, die Rohdaten folgen beim nächsten Einschalten.</td></tr>
-            <tr><td>Was steckt hinter dem QR?</td><td>Ein PDF bei Meyton (nur HTTP, feste IP, zufälliger Dateiname), im Fuß eine ID</td><td>Ist die ID die ScheibenID, wird die Zuordnung exakt. Eine Abfrage in Phase&nbsp;0 klärt das.</td></tr>
-            <tr><td>Gerät im Meyton-Netz, Router mit Internet?</td><td>Ja</td><td>Brücke als Raspberry Pi oder Mini-PC mit fester IP</td></tr>
-            <tr><td>Wie melden sich Schützen an?</td><td>Schützenliste oder frei, kein LANA</td><td>Sportpass ordnet automatisch zu; frei getippte Namen nur als Vorschlag</td></tr>
-            <tr><td>Für wen?</td><td>Erst für euch, als Open Source</td><td>Eine Installation je Verein, eine Lizenz, ein Compose-Beispiel für andere Vereine</td></tr>
-            <tr><td>Design und Funktionen</td><td>Die Vorschau trifft es</td><td>Richtung für Design&nbsp;2</td></tr>
-            <tr><td>Eigene App oder Treffsicher?</td><td>Eigene App, Name Spiegel</td><td>Spiegel als dritte App mit Brücke zu Treffsicher</td></tr>
-            <tr><td>Lizenz?</td><td>Apache-2.0 für das ganze Repo (gilt seit Mai 2026)</td><td>Spiegel, Brücke und alle Pakete unter derselben Lizenz</td></tr>
-            <tr><td>Technik der Brücke?</td><td>Am liebsten ein Binary ohne Docker und Node</td><td>Kandidat Go; entschieden wird in Phase&nbsp;0</td></tr>
-            <tr><td>Landen Trainings ohne Starter in der SSMDB2?</td><td>Offen</td><td>Prüfen wir in Phase&nbsp;0; davon hängt das Fundbüro ab</td></tr>
+            <tr><td>Eigene App oder Treffsicher?</td><td>Eigene App „Spiegel“</td><td>Dritte App mit eigener DB; Treffsicher übernimmt später über die API (ADR-026)</td></tr>
+            <tr><td>Wie wird zugeordnet?</td><td>Opt-in per Sportpass automatisch, sonst Meyton-QR mit Original-PDF</td><td>Opt-in-Scheiben lädt die Brücke am Abend selbst hoch; der QR deckt alles andere ab und sichert das PDF (ADR-028)</td></tr>
+            <tr><td>Gibt es den QR immer?</td><td>Ja, er gehört zu jedem Ausdruck</td><td>Das Fundbüro ist nur ein seltener Rückfall, ohne Tablet, Frist sieben Tage</td></tr>
+            <tr><td>Was steckt hinter dem QR?</td><td>Ein PDF bei Meyton (nur HTTP, feste IP, zufälliger Dateiname), im Fuß eine ID</td><td>Ist die ID die ScheibenID, wird die Zuordnung exakt; eine Abfrage in Phase&nbsp;0 klärt das</td></tr>
+            <tr><td>Wie läuft die Anlage?</td><td>ShootMaster 6.0.2, SSMDB2-Dienst aktiv; nach dem Training Strom aus</td><td>Die Brücke muss harten Stromverlust überstehen; ein QR-Scan von zu Hause liefert sofort das PDF-Ergebnis, die Rohdaten beim nächsten Einschalten</td></tr>
+            <tr><td>Stände und Disziplinen</td><td>Nur 10 m: Luftgewehr, Luftpistole, jeweils mit Auflage</td><td>Version&nbsp;1 braucht zwei Scheibenbilder</td></tr>
+            <tr><td>Gerät im Meyton-Netz, Router mit Internet?</td><td>Ja</td><td>Brücke als Mini-PC oder Raspberry Pi mit SSD und fester IP</td></tr>
+            <tr><td>Technik der Brücke?</td><td>Am liebsten ein Binary ohne Docker und Node</td><td>Kandidat Go; entschieden wird in Phase&nbsp;0 (ADR-027)</td></tr>
+            <tr><td>Anmeldung am Stand</td><td>Schützenliste oder frei, kein LANA; SportpassID nicht bei allen gepflegt</td><td>Für Interessierte wird die SportpassID nachgepflegt; frei getippte Namen nur als Vorschlag</td></tr>
+            <tr><td>Für wen?</td><td>Erst für euch, etwa 10–15 Schützen, nur erwachsene Mitglieder</td><td>Keine Gäste und Jugendlichen in Version&nbsp;1</td></tr>
+            <tr><td>Lizenz</td><td>Apache-2.0 für das ganze Repo (gilt seit Mai 2026)</td><td>Open Source; andere Vereine betreiben eine eigene Installation (ADR-029)</td></tr>
+            <tr><td>VPS</td><td>Bleibt, wie er ist (2 GB); gemessen 948 MiB verfügbar</td><td>Spiegel mit 256 MiB Limit, ohne Hintergrunddienste, Deploys nacheinander</td></tr>
+            <tr><td>Design</td><td>Die Vorschau trifft es</td><td>Richtung für Design&nbsp;2 (ADR-030, vorgeschlagen)</td></tr>
+            <tr><td>Landen Trainings ohne Starter in der SSMDB2?</td><td>Offen</td><td>Prüfen wir in Phase&nbsp;0; sonst gibt es für sie nur das PDF-Ergebnis</td></tr>
+            <tr><td>Umstieg auf ESTANX?</td><td>Nicht bekannt</td><td>Bleibt ein Risiko für später; dann bräuchte Spiegel einen zweiten Adapter</td></tr>
           </tbody>
         </table>
       </div>
@@ -522,12 +566,12 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
       <h2>Die Daten sind da. Die Frage ist, wie wir sie sauber abholen.</h2>
       <div class="summary">
         <div class="sum"><h4>Datenquelle</h4><p>Die SSMDB2 enthält alles, was du willst: MySQL auf dem Meyton-Server, Koordinaten in 1/100&nbsp;mm, Zeit je Schuss auf die Millisekunde, Wertung und Probe. Ihr nutzt ShootMaster&nbsp;6.0.2, das alle nötigen Felder mitbringt. Dazu gibt es einen Live-Export (SDF) und eine Abfrage der Standbelegung (LANA).</p></div>
-        <div class="sum"><h4>Treffsicher oder eigene App</h4><p>Eine eigene App. Treffsicher bleibt das Tagebuch und holt Ergebnisse künftig aus Spiegel statt aus Meyton-PDFs. Ob Spiegel Treffsicher später ablöst, entscheiden wir, wenn Spiegel läuft. Die Architektur hält beide Wege offen.</p></div>
-        <div class="sum"><h4>Der lokale Teil</h4><p>Eine „Brücke“: ein kleines Gerät im Meyton-Netz, das der Verein einmal einrichtet. Sie liest nur, verbindet sich nur nach außen und lädt nur Daten von Schützen hoch, die zugestimmt haben. Schützen installieren nichts. DISAG macht es mit M-Qnect für die ShotsApp genauso.</p></div>
-        <div class="sum"><h4>Zuordnung</h4><p>Über den QR-Code, den Meyton nach dem Schießen für den Ausdruck zeigt: scannen, Spiegel findet die passende Scheibe in der SSMDB2 und hebt das Original-PDF mit auf. Sportpassnummern aus der Schützenliste ordnen automatisch zu; was übrig bleibt, wartet im „Fundbüro“.</p></div>
+        <div class="sum"><h4>Treffsicher oder eigene App</h4><p>Entschieden: eine eigene App. Treffsicher bleibt das Tagebuch und holt Ergebnisse später aus Spiegel statt aus Meyton-PDFs. Ob Spiegel Treffsicher irgendwann ablöst, entscheiden wir, wenn Spiegel läuft.</p></div>
+        <div class="sum"><h4>Der lokale Teil</h4><p>Eine „Brücke“: ein kleines Gerät mit SSD im Meyton-Netz, am liebsten ein einzelnes Programm ohne Docker. Sie liest nur, verbindet sich nur nach außen, läuft nur am Trainingsabend und übersteht das harte Abschalten. Schützen installieren nichts.</p></div>
+        <div class="sum"><h4>Zuordnung</h4><p>Standard ist das Opt-in per Sportpass: Wer zustimmt, dessen Scheiben gehen am Abend automatisch hoch. Alles andere geht über den QR-Code des Meyton-Ausdrucks, den es immer gibt; Spiegel hebt das Original-PDF mit auf.</p></div>
         <div class="sum"><h4>Auswertung</h4><p>Jede Kennzahl ist einmal als reine Funktion definiert und steht dann überall bereit: in der Session, je Serie, als Verlauf über Monate und im direkten Vergleich.</p></div>
         <div class="sum"><h4>Design</h4><p>Spiegel wird der Pilot für ein neues Vereinsheim-Design: ruhige, neutrale Oberfläche, die Farbe kommt aus den Daten, hell und dunkel. Ringwerk und Treffsicher können später folgen.</p></div>
-        <div class="sum wide"><h4>Nächster Schritt</h4><p>Ein Abend im Schützenhaus mit Laptop und Zugang zur SSMDB2, um die echten Daten anzusehen. Die Abfragen dafür stehen im <a href="#anhang">Anhang</a>. Dabei schlagen wir die ID aus deinem Ausdruck vom 2. Oktober in der SSMDB2 nach und prüfen, ob Meyton den QR auch ohne Starter zeigt. Am selben Abend lohnt ein Test von DISAG M-Qnect mit der ShotsApp: Das zeigt, ob Trainings in der Ablage landen, und setzt die Messlatte (<a href="#shotsapp">Abschnitt 10</a>). Danach beantworten wir die markierten <a href="#fragen">Fragen</a> und halten die Entscheidungen als ADRs fest.</p></div>
+        <div class="sum wide"><h4>Nächster Schritt</h4><p>Phase&nbsp;0 an einem Trainingsabend: die SQL-Checkliste aus dem <a href="#anhang">Anhang</a> durchgehen und die ID aus dem Ausdruck vom 2. Oktober in der SSMDB2 nachschlagen. Ohne Anlage startbar sind die ersten Fachkern-Features (SP-1.1 Scheibenbilder und Wertung, SP-1.3 Meyton-PDF-Paket). Die ganze Reihenfolge steht im <a href="#fahrplan">Fahrplan</a>.</p></div>
       </div>
     </section>
 
@@ -622,20 +666,20 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
             <tr><td>Korrekturen und Löschungen in der DB sind maßgeblich</td><td>Jede Änderung kommt als neuer vollständiger Snapshot mit Revision</td><td>Meral-IT</td></tr>
             <tr><td>Der Disziplinname ist kein verlässlicher Schlüssel; die 25-m-Pistole nutzt je Stellung eine andere Scheibe</td><td>Scheibenbild aus der Regelnummer, je Stellung; Name nur als Admin-Ausnahme für Preisscheiben</td><td>Meral-IT</td></tr>
             <tr><td>Probeschüsse stehen erst ab 5.4 in der Ablage und bleiben dort vielleicht nicht</td><td>Die Brücke schneidet während des Schießens laufend mit, statt nur nachträglich abzuholen</td><td>Release-Notiz 5.4</td></tr>
-            <tr><td>Im freien Training tippen Schützen ihren Namen oft frei ein; Schreibweisen weichen ab</td><td>Zuordnung über Sportpass, Starterkarte (LANA) oder Stand-QR statt über Namensvergleich</td><td>Meyton-Forum</td></tr>
+            <tr><td>Im freien Training tippen Schützen ihren Namen oft frei ein; Schreibweisen weichen ab</td><td>Zuordnung über Opt-in per Sportpass oder Meyton-QR statt über Namensvergleich</td><td>Meyton-Forum</td></tr>
             <tr><td>Sportpassnummern dürfen seit 5.3 zwölf Stellen haben, <code>SportpassID</code> ist aber <code>int(11)</code></td><td>Vor Ort prüfen, ob lange Nummern abgeschnitten oder überlaufen</td><td>Release-Notiz 5.3</td></tr>
             <tr><td>Ein eigener Lese-Benutzer ist auf dem Meyton-Server nicht vorgesehen; der Standard-Zugang ist auf allen Anlagen gleich</td><td>Die Brücke öffnet jede Verbindung als Read-only-Transaktion und sendet nur feste SELECTs</td><td>Meyton-Forum</td></tr>
           </tbody>
         </table>
       </div>
       <div class="callout">
-        <span class="label-line">Vor Ort prüfen</span>
+        <span class="label-line">Vor Ort prüfen (Phase 0)</span>
         <ul>
-          <li>Ist der SSMDB2-Dienst im Kontrollzentrum aktiv, und landen auch Trainings ohne Starter in der Ablage?</li>
-          <li>Wie gut sind Name und SportpassID gefüllt, und wie melden sich Schützen im Training an?</li>
-          <li>Zeigt y nach oben? Stimmen <code>Teiler01</code> und <code>Teiler001</code> mit dem Abstand aus x/y überein?</li>
+          <li>Landen Trainings ohne Starter in der Ablage? (Der SSMDB2-Dienst ist aktiv.)</li>
+          <li>Ist die ID im Fuß des Ausdrucks die ScheibenID (<code>ff914420</code> → −7257056)?</li>
+          <li>Zeigt y nach oben? Stimmen <code>Teiler01</code> und <code>Teiler001</code> mit dem Abstand aus x/y überein? Wie sind die Ring-Felder skaliert?</li>
           <li>Wie weit reicht die Historie zurück, und bleiben Probeschüsse nach der Wertung erhalten?</li>
-          <li>Gibt es einen dauerhaft laufenden PC im Meyton-Netz, und gibt es einen Router mit Internet?</li>
+          <li>Liegen die PDF-Ausdrucke auch auf der Freigabe <code>ERGEBNIS</code>? Dann bekäme der Opt-in-Weg das PDF automatisch.</li>
         </ul>
       </div>
     </section>
@@ -705,13 +749,13 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
             <tr><td>Weitere Nutzer der Daten</td><td>Ringwerk müsste Treffsicher fragen</td><td class="rec">Ringwerk und Treffsicher fragen Spiegel</td><td>Ringwerk fragt Spiegel</td></tr>
             <tr><td>Neues Design</td><td>Nur mit Umbau von Treffsicher</td><td class="rec">Frei, ohne Treffsicher anzufassen</td><td>Frei</td></tr>
             <tr><td>Aufwand bis zum ersten Nutzen</td><td>Am geringsten</td><td class="rec">Mittel</td><td>Am höchsten</td></tr>
-            <tr><td>Betrieb</td><td>Kein neuer Container</td><td class="rec">+1 App, +1 DB, etwa +300&nbsp;MB RAM</td><td>Wie B, später −1 App</td></tr>
+            <tr><td>Betrieb</td><td>Kein neuer Container</td><td class="rec">+1 App, +1 DB; die Apps brauchen gemessen 105–144&nbsp;MiB, passt auf 2&nbsp;GB</td><td>Wie B, später −1 App</td></tr>
             <tr><td>Umkehrbarkeit</td><td>Später schwer herauszulösen</td><td class="rec">Hoch</td><td>Gering</td></tr>
           </tbody>
         </table>
       </div>
       <div class="callout rec">
-        <span class="label-line">Empfehlung</span>
+        <span class="label-line">Entschieden (ADR-026)</span>
         <h4>B, so gebaut, dass C später ein kleiner Schritt ist</h4>
         <ul>
           <li><strong>Eigenes Gebiet.</strong> Messdaten haben einen eigenen Lebenszyklus: maschinell erzeugt, unveränderlich, viele Leser. Das gehört nicht in ein Tagebuch.</li>
@@ -733,15 +777,14 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
       <div class="callout warn">
         <span class="label-line">Berührte Entscheidungen</span>
         <ul>
-          <li><strong>ADR-002</strong> legt einen Postgres mit zwei Datenbanken und zwei Usern fest. Spiegel bräuchte eine dritte DB mit eigenem Owner. Das Prinzip (eine DB je App, kein Cross-DB) bleibt. <code>db-init</code> läuft nur beim ersten Start, auf dem laufenden VPS braucht es daher einen einmaligen, idempotenten Anlage-Schritt.</li>
+          <li><strong>ADR-002</strong>: Spiegel bekommt eine dritte DB mit eigenem Owner; das Prinzip (eine DB je App, kein Cross-DB) bleibt. <code>db-init</code> läuft nur beim ersten Start, auf dem laufenden VPS braucht es einen einmaligen, idempotenten Anlage-Schritt.</li>
           <li><strong>ADR-004</strong>: Caddy bekommt eine dritte Subdomain und einen öffentlichen Ingest-Endpunkt für die Brücke.</li>
-          <li><strong>ADR-009/010</strong>: Backup und Pre-Deploy-Backup müssen die dritte DB einschließen.</li>
-          <li><strong>ADR-011</strong>: Das CLI baut und deployt drei Apps und zusätzlich das Brücken-Image.</li>
-          <li><strong>ADR-005/006</strong>: Das Brücken-Image wird lokal als Multi-Arch-Image gebaut (arm64 + amd64) und öffentlich auf Docker Hub gelegt. Es enthält keine Geheimnisse.</li>
+          <li><strong>ADR-009/010</strong>: Backup und Pre-Deploy-Backup schließen die dritte DB und den PDF-Speicher ein.</li>
+          <li><strong>ADR-011</strong>: Das CLI baut und deployt drei Apps.</li>
+          <li><strong>ADR-005/006</strong>: Gebaut wird weiter lokal. Wird die Brücke ein Binary, kommt sie als Datei-Release statt als Docker-Image.</li>
           <li><strong>Konventionen</strong>: Die byte-identische UI-Schicht und „fest dunkel“ gelten für Ringwerk und Treffsicher. Spiegel nimmt am Drift-Gate erst teil, wenn Design&nbsp;2 auch dort ankommt (siehe <a href="#vorschau">Abschnitt 09</a>).</li>
-          <li><strong>VPS-Größe</strong>: Laut Sizing-Notiz läuft der VPS bei ~0,9&nbsp;GB im Betrieb und ~1,85&nbsp;GB in der Deploy-Spitze; 4&nbsp;GB sind empfohlen. Eine dritte App macht das Upgrade praktisch nötig.</li>
-          <li><strong>Open Source</strong>: Die Repos sind öffentlich, aber ohne Lizenz. Eine Lizenz ist eine neue Entscheidung; ADR-015 (Monorepo) bleibt gültig.</li>
-          <li><strong>Neue ADRs</strong>: „Spiegel als dritte App“, „Brücke: Datenfluss und Datensparsamkeit“, „Lizenz und Open Source“, gegebenenfalls „Gemeinsame Anmeldung“.</li>
+          <li><strong>VPS</strong>: bleibt bei 2&nbsp;GB. Gemessen am 5. Oktober: 948&nbsp;MiB verfügbar, kein Swap, keine Speicherabstürze in 60 Tagen. Spiegel bekommt 256&nbsp;MiB Limit; eine Swap-Datei bleibt ein optionales Sicherheitsnetz.</li>
+          <li><strong>Festgehalten</strong> als ADR-026 (dritte App), ADR-027 (Brücke), ADR-028 (Zuordnung), ADR-029 (Apache-2.0 für alles) und ADR-030 (Design&nbsp;2, vorgeschlagen).</li>
         </ul>
       </div>
     </section>
@@ -778,7 +821,7 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
             <text x="168" y="101" class="dg-l" text-anchor="middle">Schüsse</text>
             <rect x="196" y="322" width="208" height="64" rx="12" class="dg-box key"/>
             <text x="300" y="349" class="dg-t" text-anchor="middle">Brücke</text>
-            <text x="300" y="367" class="dg-s" text-anchor="middle">Mini-PC · Docker · Warteschlange</text>
+            <text x="300" y="367" class="dg-s" text-anchor="middle">Mini-PC · SSD · Warteschlange</text>
             <line x1="300" y1="276" x2="300" y2="318" class="dg-edge" marker-end="url(#ah2)"/>
             <text x="310" y="302" class="dg-l">nur lesend</text>
 
@@ -840,7 +883,7 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
       </div>
 <pre><span class="c"># Monorepo (pnpm + Turborepo, wie heute)</span>
 apps/spiegel/                Next.js-App: Konten, Ansichten, Ingest-API, Admin
-apps/spiegel-bridge/         Brücke fürs Schützenhaus (Node, Docker arm64 + amd64)
+apps/spiegel-bridge/         Brücke fürs Schützenhaus (einzelnes Programm, Technik in Phase 0)
 packages/shot-core/          @vereinsheim/shot-core: Scheibenbilder, Wertung, Geometrie,
                              Kennzahlen-Registry. Isomorph, rein, gut getestet
 packages/shot-ui/            @vereinsheim/shot-ui: Scheibe (SVG), Overlays, Wiedergabe,
@@ -849,29 +892,16 @@ packages/ingest-contract/    versionierter Vertrag Brücke ↔ Spiegel (zod), vo
 packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heute in Treffsicher und
                              Ringwerk), für den QR-Weg und für fremde Anlagen</pre>
       <div class="prose">
-        <h3>Open Source von Anfang an</h3>
-        <p>Die Repos vereinsheim, treffsicher und ringwerk sind auf GitHub schon öffentlich, aber ohne Lizenz. Ohne Lizenz darf niemand den Code rechtlich nutzen oder verändern; Open Source wird er erst mit einer Lizenz. Für Spiegel braucht es deshalb vor allem diese Entscheidung, keinen neuen Ort: Spiegel kann im öffentlichen Monorepo entstehen, ADR-015 bleibt gültig. Weil Spiegel die geteilten Pakete <code>@vereinsheim/ui</code>, <code>lib</code> und <code>config</code> nutzt, brauchen diese dieselbe Lizenz.</p>
-      </div>
-      <div class="scroll">
-        <table class="doc">
-          <thead><tr><th>Lizenz</th><th>Bedeutet</th><th>Passt, wenn</th></tr></thead>
-          <tbody>
-            <tr><td>Apache-2.0 <span class="tag">Vorschlag</span></td><td>Frei nutzbar, auch kommerziell, mit Patentklausel; Hinweise bleiben erhalten</td><td>möglichst viele Vereine es einfach nutzen sollen; gleiche Lizenz wie Meyton-Live-Display</td></tr>
-            <tr><td>AGPL-3.0</td><td>Wer Spiegel verändert als Dienst anbietet, muss seine Änderungen offenlegen</td><td>niemand eine geschlossene Bezahlversion daraus machen soll</td></tr>
-            <tr><td>MIT</td><td>Wie Apache-2.0, kürzer, ohne Patentklausel</td><td>Einfachheit vor allem anderen zählt</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="prose">
-        <p>Was Open Source für die Architektur heißt:</p>
+        <h3>Open Source unter Apache-2.0</h3>
+        <p>Das Monorepo steht seit Mai 2026 unter Apache-2.0, und das gilt für alles: Spiegel, die Brücke und alle Pakete (ADR-029). Spiegel entsteht im öffentlichen Monorepo; ADR-015 bleibt gültig. Was das für die Architektur heißt:</p>
         <ul>
           <li><strong>Eine Installation je Verein.</strong> Jeder Verein betreibt Spiegel und seine Brücke selbst. Mandanten innerhalb einer Installation brauchen wir nicht; das hält das Datenmodell einfach.</li>
-          <li><strong>Spiegel läuft auch ohne das Vereinsheim:</strong> ein eigenes Compose-Beispiel (App, Postgres, Brücke), Konfiguration nur über Umgebungsvariablen, Vereinsname und Logo einstellbar.</li>
+          <li><strong>Spiegel läuft auch ohne das Vereinsheim:</strong> ein eigenes Compose-Beispiel (App, Postgres) plus Brücke, Konfiguration nur über Umgebungsvariablen, Vereinsname und Logo einstellbar.</li>
           <li><strong>Nichts Vereinsspezifisches im Code:</strong> keine IPs, Namen oder Zugangsdaten. Die Meyton-Standardzugangsdaten stehen nur als Verweis auf das Handbuch in der Doku.</li>
+          <li><strong>Keine echten personenbezogenen Daten im Repo:</strong> Test-PDFs und Beispieldaten anonymisiert oder synthetisch.</li>
           <li><strong>Sicherheit hängt nie am Verstecken.</strong> Geräte-Token, Ratenbegrenzung und Größenlimits schützen die Ingest-API auch dann, wenn jeder den Code kennt.</li>
           <li><strong>Fremdcode nur mit passender Lizenz.</strong> Meyton-Live-Display (Apache-2.0) mit Namensnennung, meyton-scheibenanzeige nicht.</li>
           <li><strong>Herstellernamen nur beschreibend.</strong> Meyton, ShootMaster und DISAG nennen wir, um zu sagen, womit Spiegel arbeitet; kein Logo, kein Anschein einer Partnerschaft.</li>
-          <li><strong>Den Namen vor der Veröffentlichung prüfen.</strong> „Spiegel“ allein liegt nah an DER SPIEGEL. Eindeutiger wären etwa „Ringspiegel“ oder „Trefferbild“.</li>
         </ul>
       </div>
       <div class="prose">
@@ -899,7 +929,7 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
         <table class="doc">
           <thead><tr><th>Wo sie läuft</th><th>Vorteile</th><th>Nachteile</th></tr></thead>
           <tbody>
-            <tr><td>Raspberry Pi oder Mini-PC <span class="tag">empfohlen</span></td><td>Eigenes Gerät, unabhängig von Meyton, wenig Strom, zwei Netzanschlüsse möglich; kann das Fundbüro als Webseite anbieten</td><td>Einmalig ca. 80–150&nbsp;€, ein Gerät mehr</td></tr>
+            <tr><td>Mini-PC oder Raspberry Pi mit SSD <span class="tag">empfohlen</span></td><td>Eigenes Gerät, unabhängig von Meyton, wenig Strom, zwei Netzanschlüsse möglich, kein Display nötig; die SSD übersteht das harte Abschalten besser als eine SD-Karte</td><td>Einmalig ca. 80–150&nbsp;€, ein Gerät mehr</td></tr>
             <tr><td>Vorhandener PC im Meyton-Netz</td><td>Keine Hardware nötig</td><td>Läuft nicht immer, Windows-Updates, gemeinsam genutzt</td></tr>
             <tr><td>Meyton-Server selbst</td><td>Kein Netzwerkthema</td><td>Herstellergerät; Eingriff gefährdet Support und Stabilität. Nicht empfohlen.</td></tr>
           </tbody>
@@ -912,25 +942,35 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
         <h3>Einrichten in fünf Schritten</h3>
         <ol>
           <li>Gerät ans Meyton-Netz und ans WLAN anschließen.</li>
-          <li>Container starten (ein Befehl) oder ein fertiges SD-Karten-Image verwenden.</li>
+          <li>Die Brücke installieren: ein einzelnes Programm, das als Dienst startet, sobald Strom da ist.</li>
           <li>In Spiegel unter „Admin → Anlagen“ auf „Brücke koppeln“ klicken; die Brücke zeigt auf ihrer Statusseite einen sechsstelligen Code.</li>
           <li>Der Assistent testet den Zugang zur SSMDB2 (Standard-Zugang aus dem Handbuch) und zeigt die letzten Scheiben ohne Namen.</li>
           <li>Fertig. Spiegel zeigt „Anlage online, letzter Schuss vor 2 Minuten“.</li>
         </ol>
         <h3>Wie sie arbeitet</h3>
         <ul>
-          <li><strong>Abfragen:</strong> jede Sekunde, solange geschossen wird, sonst alle 30&nbsp;s. Neue und geänderte Scheiben erkennt sie über <code>Scheiben.Zeitstempel</code> und den letzten Treffer, mit Überlappungsfenster. Weil Probeschüsse womöglich nur bis zur Wertung in der Ablage stehen, schneidet sie laufend mit.</li>
+          <li><strong>Abfragen:</strong> jede Sekunde, solange geschossen wird, sonst alle 30&nbsp;s. Neue und geänderte Scheiben erkennt sie über <code>Scheiben.Zeitstempel</code> und den letzten Treffer, mit Überlappungsfenster. Probeschüsse stehen womöglich nur bis zur Wertung in der Ablage, deshalb liest sie laufend mit.</li>
+          <li><strong>Opt-in live:</strong> Scheiben von Schützen mit Opt-in (gehashte SportpassIDs) lädt sie sofort hoch, Probe eingeschlossen. Alles andere bleibt im Schützenhaus, bis es jemand per QR abholt.</li>
           <li><strong>Nur lesen, auch technisch:</strong> Einen eigenen Lese-Benutzer sieht Meyton nicht vor. Die Brücke nutzt deshalb den Standard-Zugang, öffnet jede Verbindung als Read-only-Transaktion und kennt nur feste SELECT-Abfragen.</li>
           <li><strong>Snapshots:</strong> Sie schickt immer den vollständigen Stand einer Scheibe (Scheibe, Serien, Treffer) mit Prüfsumme. Doppelte Lieferungen sind harmlos.</li>
           <li><strong>Abschluss:</strong> Eine Scheibe gilt als fertig, wenn die Schusszahl aus der DisziplinID erreicht ist oder zehn Minuten nichts passiert. Spätere Korrekturen kommen als neue Revision.</li>
           <li><strong>Warteschlange:</strong> SQLite auf dem Gerät. Ohne Internet wird gepuffert und später in Reihenfolge nachgeliefert.</li>
           <li><strong>Heartbeat:</strong> jede Minute Version, Rückstau, letzter DB-Kontakt und Uhrabweichung der Anlage.</li>
-          <li><strong>Aufträge:</strong> nur feste Typen (Stand holen, Zeitraum nachladen, Diagnose senden). Kein freies SQL.</li>
-          <li><strong>Updates:</strong> neues Image-Tag; die Brücke zieht es nachts selbst oder per Knopf im Admin.</li>
-          <li><strong>Eigene Webseite:</strong> eine Statusseite für den Admin und das <a href="#fundbuero">Fundbüro</a> für alle im Vereins-WLAN, nur lesend, ohne Namen, mit QR-Abholscheinen. Aus dem Internet ist sie nicht erreichbar.</li>
+          <li><strong>Aufträge:</strong> nur feste Typen (Scheibe per ID holen, Zeitraum nachladen, Diagnose senden). Kein freies SQL. Aufträge, die eintreffen, während die Brücke aus ist, führt sie beim nächsten Start aus.</li>
+          <li><strong>Updates:</strong> neue Version als Datei; die Brücke holt sie beim Start selbst oder per Knopf im Admin.</li>
+          <li><strong>Eigene Webseite:</strong> eine Statusseite für den Admin im Vereins-WLAN. Ein Display braucht die Brücke nicht.</li>
         </ul>
         <p><strong>Was sie nie tut:</strong> in Meyton schreiben, einen Port öffnen, Daten ohne Zustimmung hochladen, Daten nach der Bestätigung behalten.</p>
-        <p><strong>Technik:</strong> TypeScript im Monorepo, damit Brücke und Server denselben Vertrag und dieselben Parser für DisziplinID, Skalen und Zeitzone teilen. Go wäre schlanker, kostet aber genau diese geteilten Typen. Ausgeliefert als Docker-Image für arm64 und amd64; für Windows-PCs ließe sich später ein Einzelprogramm bauen.</p>
+        <p><strong>Technik (Phase&nbsp;0):</strong> Gewünscht ist ein einzelnes Binary ohne Docker und Node. Weil die Brücke die Rohdaten unverändert weitergibt und alle Deutung in Spiegel passiert, trägt sie kaum Fachlogik. Das spricht für Go: ein statisches Programm für Raspberry Pi und Windows mit wenig Speicher. Der Vertrag zu Spiegel liegt dann als JSON-Schema mit gemeinsamen Beispieldateien vor, die beide Seiten testen.</p>
+        <h3>Strom aus nach dem Training</h3>
+        <p>Anlage und Brücke werden nach jedem Trainingsabend hart über den Strom ausgeschaltet. Die Brücke ist deshalb nur am Abend online und muss das jedes Mal schadlos überstehen:</p>
+        <ul>
+          <li>schreibgeschütztes System-Dateisystem, Daten auf einer eigenen Partition oder SSD, Protokolle im RAM;</li>
+          <li>Warteschlange in SQLite mit WAL und vollem Sync, jede Übertragung idempotent;</li>
+          <li>beim Start nachholen: offene Aufträge, Nachladen nach neuen Opt-ins, Abgleich seit dem letzten Lauf; die SSMDB2 behält die Daten;</li>
+          <li>geduldig warten, bis der Meyton-Server antwortet, und erst nach der Zeitsynchronisierung übertragen;</li>
+          <li>in Spiegel ist „aus, zuletzt online Di 22:14“ der Normalfall, kein Alarm.</li>
+        </ul>
         <h3>Zuordnen per Meyton-QR</h3>
         <p>Meyton zeigt am Stand keinen QR-Code für Rohdaten, aber einen für den Ergebnisausdruck. Dein Beispiel vom 2. Oktober zeigt, was dahintersteckt: ein Link der Form <code>http://195.201.88.185/print_&lt;UUID&gt;.pdf</code>. Die IP gehört zu qrcode.meyton.eu, der Dateiname ist zufällig, und es gibt nur HTTP. Im Fuß des PDFs steht <code>ID: ff914420</code>. Meral-IT hat für den XML-Export festgestellt, dass dessen Hex-ID die ScheibenID als vorzeichenbehaftete 32-Bit-Zahl ist. Die ID im Ausdruck sieht genauso aus; hier wäre das −7257056. Bestätigt eine Abfrage vor Ort das, ist die Zuordnung exakt.</p>
         <p>Der Ablauf: Du scannst den QR in Spiegel. Spiegel lädt und sichert das PDF, liest ID, Stand und Werte und lässt die Brücke genau diese Scheibe aus der SSMDB2 holen. Uhrzeit, Stand und Schusswerte dienen als Gegenprobe; weil der Link unverschlüsselt ist, vergleicht Spiegel die PDF-Werte immer mit der Datenbank. Geladen wird nur von den erlaubten Meyton-Adressen (Hostname und IP), ohne Weiterleitungen und mit Größen- und Zeitgrenzen, wie der Treffsicher-Import heute.</p>
@@ -1010,6 +1050,7 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
         <table class="doc">
           <thead><tr><th>Was passiert</th><th>Wie Spiegel reagiert</th></tr></thead>
           <tbody>
+            <tr><td>Strom aus nach dem Training (Normalfall)</td><td>Warteschlange übersteht den Stromverlust, Nachlieferung und offene Aufträge beim nächsten Start</td></tr>
             <tr><td>Internet im Schützenhaus fällt aus</td><td>Warteschlange puffert, Nachlieferung in Reihenfolge, Status „verzögert“</td></tr>
             <tr><td>Meyton-Server ist aus</td><td>Wiederholung mit Pause, Status „Anlage nicht erreichbar“; keine Daten gehen verloren, solange die SSMDB2 sie hat</td></tr>
             <tr><td>Neuer Meyton-Server, IDs beginnen neu</td><td>Gleiche ID mit anderem Inhalt startet eine neue Epoche; Admin-Hinweis, alte Scheiben bleiben unberührt</td></tr>
@@ -1044,12 +1085,11 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
         <p>Bei euch wählen Schützen ihren Namen aus der Schützenliste oder tippen ihn frei; LANA nutzt ihr nicht. Frei getippte Namen weichen in der Schreibweise ab, deshalb nutzt Spiegel sie nur als Vorschlag, nie als automatische Zuordnung. Kommt später die LANA-Standbelegung mit Starterkarten dazu, wird daraus ein weiterer automatischer Weg.</p>
 
         <h3 id="fundbuero">Scheiben ohne Starter: das Fundbüro</h3>
-        <p>Ihr trainiert manchmal, ohne dass ein Starter zugewiesen ist. Solche Scheiben gehören erst einmal niemandem. Spiegel behandelt sie wie Fundsachen: Sie bleiben im Schützenhaus, bis jemand sie abholt, und verlassen es sonst nie. Der Meyton-QR ist der schnellste Weg, eine Fundsache abzuholen. Das Fundbüro selbst brauchen wir für alles ohne QR: abgelaufene Links, vergessene Scheiben und Trainings, für die Meyton keinen Ausdruck erzeugt. Ob solche Trainings überhaupt in der SSMDB2 landen, zeigt die Erkundung.</p>
-        <p>Deine Idee mit einer Weboberfläche auf dem Raspberry Pi bleibt dafür der Kern. Eine Hürde gibt es: Der Pi weiß nicht, wer du bist, und ein Login auf einem Gerät, das allen im Vereins-WLAN offensteht, wollen wir nicht. Die Lösung ist ein <strong>Abholschein</strong>: Der Pi zeigt zu jeder Fundsache einen QR-Code mit einem Einmal-Schlüssel. Du scannst ihn mit dem Handy, Spiegel erkennt dich an deinem Login und zeigt die Vorschau. Erst nach deiner Bestätigung lädt die Brücke die Scheibe hoch.</p>
+        <p>Ihr trainiert manchmal, ohne dass ein Starter zugewiesen ist. Solche Scheiben gehören erst einmal niemandem und bleiben im Schützenhaus, bis jemand sie abholt. Weil es den QR-Code zu jedem Ausdruck gibt, holt man sie fast immer per QR. Das Fundbüro ist nur der Rückfall, wenn der QR verloren oder der Link abgelaufen ist: „Scheibe holen“ in Spiegel, solange die Brücke läuft, ohne Tablet und ohne Display, Frist sieben Tage. Ob Trainings ohne Starter überhaupt in der SSMDB2 landen, zeigt die Erkundung; sonst gibt es für sie nur das Ergebnis aus dem PDF.</p>
       </div>
       <figure class="dg">
         <div class="scroll">
-          <svg viewBox="0 0 960 330" role="img" aria-label="Lebenslauf einer Scheibe: Sie läuft, wird abgeschlossen, und dann wird geprüft, ob ein Besitzer bekannt ist. Bekannt durch Check-in vorher oder durch Sportpass, Starterkarte oder LANA während: Sie wird hochgeladen. Unbekannt: Sie bleibt im Fundbüro im Schützenhaus, bis jemand sie per QR bestätigt, sonst verfällt sie nach der Frist und bleibt nur in der SSMDB2. Verknüpft jemand später seine Sportpassnummer, wird nachgeladen.">
+          <svg viewBox="0 0 960 330" role="img" aria-label="Lebenslauf einer Scheibe: Sie läuft, wird abgeschlossen, und dann wird geprüft, ob ein Besitzer bekannt ist. Bekannt durch einen Check-in vorher oder durch das Opt-in per Sportpass während: Sie wird hochgeladen. Unbekannt: Sie bleibt im Fundbüro im Schützenhaus, bis jemand sie per QR bestätigt, sonst verfällt sie nach der Frist und bleibt nur in der SSMDB2. Verknüpft jemand später seine Sportpassnummer, wird nachgeladen.">
             <defs>
               <marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head"/></marker>
               <marker id="ah4k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head key"/></marker>
@@ -1058,7 +1098,7 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
             <text x="145" y="37" class="dg-t" text-anchor="middle">Check-in am Stand</text>
             <text x="145" y="54" class="dg-s" text-anchor="middle">vorher</text>
             <rect x="290" y="16" width="240" height="48" rx="10" class="dg-box"/>
-            <text x="410" y="37" class="dg-t" text-anchor="middle">Sportpass, Starterkarte, LANA</text>
+            <text x="410" y="37" class="dg-t" text-anchor="middle">Opt-in per Sportpass</text>
             <text x="410" y="54" class="dg-s" text-anchor="middle">während</text>
             <rect x="40" y="132" width="150" height="56" rx="10" class="dg-box"/>
             <text x="115" y="156" class="dg-t" text-anchor="middle">Scheibe läuft</text>
@@ -1104,13 +1144,13 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
           <tbody>
             <tr><td>Vorher</td><td>Check-in: Stand-Aufkleber scannen („ich schieße jetzt auf Stand 6“) oder ein Belegungsplan der Trainerin für den Abend</td><td>ein Scan</td><td class="yes">ja</td></tr>
             <tr><td>Während</td><td>Meyton kennt dich: Sportpass aus der Schützenliste (Starterkarte und LANA, falls später genutzt)</td><td>keiner</td><td class="yes">ja</td></tr>
-            <tr><td>Danach</td><td>Meyton-QR direkt nach dem Schießen; sonst Fundbüro (Abholschein am Tablet oder „Scheibe holen“ in Spiegel), innerhalb der Frist</td><td>ein Scan, eine Bestätigung</td><td>nein</td></tr>
+            <tr><td>Danach</td><td>Meyton-QR, die Rohdaten kommen sofort oder beim nächsten Einschalten; am Abend auch „Scheibe holen“, innerhalb der Frist</td><td>ein Scan, eine Bestätigung</td><td>nein</td></tr>
             <tr><td>Später</td><td>Du verknüpfst deine Sportpassnummer; Spiegel lädt ältere Scheiben nach, soweit die SSMDB2 sie hat</td><td>einmalig</td><td>nein</td></tr>
           </tbody>
         </table>
       </div>
       <div class="prose">
-        <p>Euer Weg: „während“ über die Sportpassnummer, sonst „danach“ per Meyton-QR. Fundbüro und Check-in kommen dazu, wenn die Erkundung zeigt, dass Trainings ohne Starter in der Ablage landen. Der Check-in ist außerdem die Voraussetzung für Live-Ansichten ohne Meyton-Anmeldung. Ein Check-in gilt, bis du dich abmeldest, jemand anderes am selben Stand eincheckt oder drei Stunden vorbei sind. Steht in Meyton ein Name, der zu einem anderen Konto gehört, gewinnt Meyton.</p>
+        <p>Euer Weg: „während“ über das Opt-in per Sportpass, sonst „danach“ per Meyton-QR. Ein Check-in ist optional und nur für Live-Ansichten ohne Meyton-Anmeldung nötig. Er gilt, bis man sich abmeldet, jemand anderes am selben Stand eincheckt oder drei Stunden vorbei sind. Steht in Meyton ein Name, der zu einem anderen Konto gehört, gewinnt Meyton.</p>
         <h3>Drei Wege zur eigenen Scheibe</h3>
         <ul>
           <li><strong>Meyton-QR.</strong> Den QR-Code zum PDF-Ausdruck gibt es bei euch schon. Scannst du ihn in Spiegel oder fügst den Link ein, liest Spiegel das PDF wie heute der Treffsicher-Import, sichert es und sucht über Uhrzeit und Schussfolge die passende Scheibe in der SSMDB2. Der Link gilt eine Woche.</li>
@@ -1128,12 +1168,12 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
         </ul>
         <h3>Datenschutz</h3>
         <ul>
-          <li>Einwilligung vor dem ersten Upload, jederzeit widerrufbar.</li>
+          <li>Einwilligung vor dem ersten Upload, jederzeit widerrufbar. Das Opt-in per Sportpass ist genau diese Einwilligung.</li>
           <li>Verantwortlich ist der Verein; mit dem Hoster braucht es einen Vertrag zur Auftragsverarbeitung.</li>
           <li>Daten ohne Zuordnung verlassen das Schützenhaus nicht. Die Brücke kennt dafür nur gehashte Kennungen der zustimmenden Schützen.</li>
           <li>Privat ist Standard. Trainer sehen nur, was du freigibst. Admins sehen Betrieb und Zuordnungen, aber keine Schussbilder.</li>
           <li>Export (JSON, CSV) und Löschen auf Knopfdruck.</li>
-          <li>Für Jugendliche willigen die Erziehungsberechtigten ein.</li>
+          <li>Gäste und Jugendliche unterstützt Spiegel vorerst nicht; Konten gibt es nur für erwachsene Mitglieder.</li>
         </ul>
         <p class="small muted">Das ist eine technische Sicht, keine Rechtsberatung. Den Einwilligungstext sollte der Vorstand mit der verantwortlichen Person für Datenschutz abstimmen.</p>
       </div>
@@ -1144,7 +1184,7 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
             <tr><td>Schütze</td><td>Eigene Scheiben, Verläufe, Vergleiche</td><td>Zuordnen, Notizen, Freigaben, Export, Löschen</td></tr>
             <tr><td>Trainer</td><td>Was Schützen freigegeben haben, auch live</td><td>Kommentieren, Gruppen vergleichen</td></tr>
             <tr><td>Vereinsadmin</td><td>Anlagen, Brücken-Status, Zuordnungen</td><td>Koppeln, Zuordnungen bestätigen, Scheibenbilder pflegen</td></tr>
-            <tr><td>Gast ohne Konto</td><td>Nichts</td><td>Mit Konto über den Stand-QR einsteigen</td></tr>
+            <tr><td>Gast ohne Konto</td><td>Nichts</td><td>vorerst nicht vorgesehen</td></tr>
           </tbody>
         </table>
       </div>
@@ -1207,7 +1247,7 @@ type Shot = {
 }</pre>
       <div class="prose">
         <p>Die Kette lautet: DisziplinID → Regelnummer (DSB oder Meyton-eigen) → Disziplin (Schusszahl, Serienlänge, Probe) → Scheibenbild je Stellung. Bei der 25-m-Pistole ist Stellung&nbsp;1 die Präzisions-, Stellung&nbsp;2 die Duellscheibe. Die SSMDB2 enthält keine Geometrie; auch Meyton rät zu einer eigenen Tabelle. Für Preisscheiben ordnet ein Admin den Namen zu.</p>
-        <p>Die Bibliothek für Version&nbsp;1 (Maße in mm nach DSB-Sportordnung 2026, Anhang 0.20, gleich ISSF 2026; die Ringe haben gleiche Abstände):</p>
+        <p>Die Bibliothek der Scheibenbilder (Maße in mm nach DSB-Sportordnung 2026, Anhang 0.20, gleich ISSF 2026; die Ringe haben gleiche Abstände). Euer Verein hat nur 10-m-Stände, Version&nbsp;1 braucht deshalb nur Luftgewehr und Luftpistole; Auflage nutzt dieselben Scheiben, und eigene Disziplin-Varianten wie „LP 40 alt“ erkennt Spiegel über Entfernung und Namensanfang. Der Rest ist Referenz für später und für andere Vereine:</p>
       </div>
       <div class="scroll">
         <table class="doc">
@@ -1313,7 +1353,7 @@ type Shot = {
       <div class="prose">
         <p class="eyebrow">09 · Design-Vorschau</p>
         <h2>So könnte sich eine Session anfühlen</h2>
-        <p>Ein klickbarer Entwurf mit erfundenen Beispieldaten (40 Schuss Luftpistole plus Probe). Alle Werte rechnet die Seite live aus den Koordinaten, mit denselben Formeln, die später im Paket liegen. Probier die Serien, die Schalter, die Wiedergabe, den Vergleich und den Verlauf.</p>
+        <p>Ein klickbarer Entwurf mit erfundenen Beispieldaten (40 Schuss Luftpistole plus Probe). Alle Werte rechnet die Seite live aus den Koordinaten, mit denselben Formeln, die später im Paket liegen. Probier die Serien, die Schalter, die Wiedergabe, den Vergleich und den Verlauf.<span class="print-only"> In dieser PDF-Fassung ist die Vorschau eine Momentaufnahme; klickbar ist sie in der HTML-Fassung.</span></p>
       </div>
 
       <div class="proto" id="proto">
@@ -1441,7 +1481,7 @@ type Shot = {
           <tbody>
             <tr><td>Datenquelle</td><td>DISAG OpticScore; Meyton über M-Qnect (Tablet im Meyton-Netz)</td><td class="rec">Meyton über SSMDB2; weitere Quellen als Adapter</td></tr>
             <tr><td>Übertragung</td><td>QR-Code nach dem letzten Schuss scannen; ältere Ergebnisse per QR-Ausdruck</td><td class="rec">Automatisch über die Brücke; „Scheibe holen“ per Stand-QR, wenn die Zuordnung fehlt</td></tr>
-            <tr><td>Probeschüsse</td><td>Auf der Website nicht beschrieben</td><td class="rec">Ja, getrennt von der Wertung (ab ShootMaster&nbsp;5.4)</td></tr>
+            <tr><td>Probeschüsse</td><td>Auf der Website nicht beschrieben</td><td class="rec">Ja, getrennt von der Wertung (bei euch mit ShootMaster&nbsp;6.0.2 vorhanden)</td></tr>
             <tr><td>Plattform</td><td>iOS, Android</td><td class="rec">Web-App für Handy und Desktop, installierbar</td></tr>
             <tr><td>Schussbild, Wiedergabe</td><td>Ja, Wiedergabe im Premium-Abo</td><td class="rec">Ja, mit echter Zeitachse</td></tr>
             <tr><td>Schwerpunkt, Streukreis</td><td>Ja, im Premium-Abo</td><td class="rec">Ja, mehrere Streumaße, auch je Serie</td></tr>
@@ -1494,14 +1534,14 @@ type Shot = {
         <div class="card"><h4>Königsschießen mit verdeckter Wertung</h4><p>Wertungsmodus 5 oder 10. Niemand soll vor der Proklamation etwas sehen.</p><p class="needs"><b>Braucht:</b> Die Brücke lädt Werte (bei Modus 5 auch die Lage) nicht hoch; nach dem Fest kann ein Admin freigeben.</p></div>
         <div class="card"><h4>Falscher Name am Stand</h4><p>Du hast unter dem Namen deines Vereinskollegen geschossen.</p><p class="needs"><b>Braucht:</b> „Das war ich nicht“, Umhängen mit Zustimmung beider oder durch den Admin.</p></div>
         <div class="card"><h4>Die Standaufsicht korrigiert</h4><p>Ein Schuss wird nachträglich anders gewertet oder annulliert.</p><p class="needs"><b>Braucht:</b> neuer Snapshot, Revision, Kennzahlen neu, sichtbarer Hinweis.</p></div>
-        <div class="card"><h4>Internet weg</h4><p>Das WLAN im Schützenhaus fällt den ganzen Abend aus.</p><p class="needs"><b>Braucht:</b> Warteschlange, Nachlieferung in Reihenfolge, Status „verzögert“.</p></div>
+        <div class="card"><h4>Strom aus, Internet weg</h4><p>Nach dem Training wird der Strom abgeschaltet, manchmal fällt vorher schon das WLAN aus.</p><p class="needs"><b>Braucht:</b> Warteschlange, die Stromverlust übersteht, Nachlieferung und offene Aufträge beim nächsten Start, Status „aus“ statt Alarm.</p></div>
         <div class="card"><h4>Neuer Meyton-Server</h4><p>Nach dem Tausch beginnen die ScheibenIDs wieder klein.</p><p class="needs"><b>Braucht:</b> Epochen-Erkennung, Admin-Hinweis, kein Überschreiben.</p></div>
         <div class="card"><h4>Die Trainerin schaut live zu</h4><p>Vier Stände auf dem Tablet, Schuss für Schuss.</p><p class="needs"><b>Braucht:</b> Freigabe der Schützen, Live-Kanal (Server-Sent Events), kurze Abfrageintervalle oder SDF.</p></div>
         <div class="card"><h4>Auswärts auf fremder Anlage</h4><p>Kreismeisterschaft im Nachbarverein, dort gibt es keine Brücke. Du scannst den Meyton-QR wie zu Hause.</p><p class="needs"><b>Braucht:</b> „Ergebnis ohne Rohdaten“ aus dem PDF (Serien, Schusswerte, Trefferlage); das PDF selbst bleibt dabei.</p></div>
         <div class="card"><h4>Munitionstest im KK</h4><p>Zwei Lose im Vergleich, je dreimal zehn Schuss liegend.</p><p class="needs"><b>Braucht:</b> Tags an Serien, Vergleich nach Merkmal, Streukreis bei gleicher Schusszahl.</p></div>
         <div class="card"><h4>Neues Mitglied mit Vergangenheit</h4><p>Nach der Zuordnung lädt Spiegel die letzten Jahre aus der SSMDB2 nach.</p><p class="needs"><b>Braucht:</b> Nachlade-Auftrag, gedrosselt, nur nach Einwilligung.</p></div>
         <div class="card"><h4>Konto löschen</h4><p>Du trittst aus und willst, dass alles weg ist.</p><p class="needs"><b>Braucht:</b> Export vorher, Löschen von Rohdaten und Ableitungen, die Brücke vergisst die Zuordnung.</p></div>
-        <div class="card"><h4>Ein zweiter Verein will mitmachen</h4><p>Der Nachbarverein hat auch Meyton und findet Spiegel gut.</p><p class="needs"><b>Braucht:</b> Verein als Mandant im Modell, Admins je Verein, Schützen in mehreren Vereinen.</p></div>
+        <div class="card"><h4>Ein zweiter Verein will mitmachen</h4><p>Der Nachbarverein hat auch Meyton und findet Spiegel gut.</p><p class="needs"><b>Braucht:</b> eine eigene Installation mit eigener Brücke (Open Source, Compose-Beispiel), keine Mandanten in unserer Instanz.</p></div>
         <div class="card"><h4>Liga-Abend mit Live-Ticker</h4><p>Heim gegen Gast; Zuschauer verfolgen die Serienergebnisse auf dem Handy, Ringwerk trägt das Ergebnis danach selbst ein.</p><p class="needs"><b>Braucht:</b> öffentliche Ansicht nur mit Summen (keine Trefferlage), Freigabe durch die Liga, Übergabe an Ringwerk.</p></div>
         <div class="card"><h4>Der Verein rüstet auf ESTANX um</h4><p>In ein paar Jahren kommen neue Meyton-Messrahmen, die ihre Ergebnisse vielleicht nur noch über die Cloud des Herstellers liefern.</p><p class="needs"><b>Braucht:</b> einen neuen Quell-Adapter; Modell, Kennzahlen und Oberfläche bleiben, die alten Scheiben auch.</p></div>
       </div>
@@ -1516,55 +1556,59 @@ type Shot = {
       </div>
       <div class="prose qgroup"><h3>Anlage und Netz</h3></div>
       <ol class="qlist">
-        <li><div><span class="q">Ist der SSMDB2-Dienst im Kontrollzentrum aktiv (Echtzeit)?</span><span class="why">Ohne Dienst keine Daten. Mit ShootMaster 6.0.2 bringt das Schema alles mit: Probe, Wertungsmodus, BesterTeiler001.</span></div></li>
-        <li class="done"><div><span class="q">Landen Trainings ohne Starter in der SSMDB2? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Entscheidet, ob das Fundbüro gebraucht wird und ob Spiegel den Trainingsalltag abdeckt.</span><span class="ans">Unbekannt; prüfen wir in Phase 0.</span></div></li>
-        <li class="done"><div><span class="q">Zeigt Meyton den QR-Code auch bei Trainings ohne Starter, und was steht in Link und PDF (Stand, Uhrzeit, Name)? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Davon hängt ab, wie sicher der QR-Weg die richtige Scheibe findet.</span><span class="ans">Teilweise: Link auf ein PDF bei Meyton; im PDF Stand, Zeiten, Name mit Nummer und eine ID. Offen ist, ob es den QR auch ohne Starter gibt.</span></div></li>
+        <li class="done"><div><span class="q">Ist der SSMDB2-Dienst im Kontrollzentrum aktiv (Echtzeit)?</span><span class="why">Ohne Dienst keine Daten. ShootMaster 6.0.2 bringt alle nötigen Felder mit.</span><span class="ans">Ja, ist aktiviert.</span></div></li>
+        <li><div><span class="q">Landen Trainings ohne Starter in der SSMDB2? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Ohne Ablage gibt es für sie nur das Ergebnis aus dem PDF. Wird in Phase 0 geprüft.</span></div></li>
+        <li class="done"><div><span class="q">Gibt es den QR auch ohne Starter, und was steht in Link und PDF? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Davon hängt ab, wie sicher der QR-Weg die richtige Scheibe findet.</span><span class="ans">Den QR gibt es immer, er gehört zum Ausdruck. Link auf ein PDF bei Meyton; im PDF Stand, Zeiten, Name mit Nummer und eine ID.</span></div></li>
+        <li class="done"><div><span class="q">Wie wird die Anlage ausgeschaltet: Herunterfahren oder Strom aus? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, wie robust die Brücke sein muss.</span><span class="ans">Strom aus, also hart. Die Brücke muss das jedes Mal schadlos überstehen.</span></div></li>
         <li class="done"><div><span class="q">Hat das Meyton-Netz einen Router mit Internet, und darf dort ein Gerät mit fester IP hängen? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, wo und wie die Brücke läuft.</span><span class="ans">Ja, beides geht.</span></div></li>
         <li class="done"><div><span class="q">Dürfen wir den Standard-Zugang zur SSMDB2 nutzen?</span><span class="why">Einen eigenen Lese-Benutzer sieht Meyton nicht vor.</span><span class="ans">Ja.</span></div></li>
-        <li><div><span class="q">Welche Stände und Disziplinen gibt es (10&nbsp;m, 25&nbsp;m, 50&nbsp;m, Auflage, Preisscheiben)?</span><span class="why">Bestimmt die Scheibenbilder für Version&nbsp;1.</span></div></li>
+        <li class="done"><div><span class="q">Welche Stände und Disziplinen gibt es?</span><span class="why">Bestimmt die Scheibenbilder für Version&nbsp;1.</span><span class="ans">Nur 10-m-Stände: Luftpistole und Luftgewehr, jeweils mit Auflage, dazu eigene Disziplin-Varianten.</span></div></li>
+        <li><div><span class="q">Liegen die PDF-Ausdrucke auch auf der Meyton-Freigabe <code>ERGEBNIS</code>?</span><span class="why">Dann bekäme auch der Opt-in-Weg das Original-PDF automatisch. Wird in Phase 0 geprüft.</span></div></li>
         <li class="done"><div><span class="q">Ist der SDF-Export aktiv, ist LANA erreichbar?</span><span class="why">Nur für Live-Funktionen nötig.</span><span class="ans">LANA nutzt ihr nicht; SDF ist offen.</span></div></li>
-        <li><div><span class="q">Ist ein Umstieg auf die neue Meyton-Linie ESTANX geplant?</span><span class="why">Ob es dort eine SSMDB2 gibt, ist offen; dann bräuchte Spiegel einen zweiten Adapter.</span></div></li>
+        <li class="done"><div><span class="q">Ist ein Umstieg auf die neue Meyton-Linie ESTANX geplant?</span><span class="why">Ob es dort eine SSMDB2 gibt, ist offen.</span><span class="ans">Nicht bekannt; bleibt ein Risiko für später.</span></div></li>
       </ol>
       <div class="prose qgroup"><h3>Schützen und Zuordnung</h3></div>
-      <ol class="qlist" style="counter-reset: q 8">
+      <ol class="qlist" style="counter-reset: q 10">
         <li class="done"><div><span class="q">Wie melden sich Schützen am Stand an? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, wie viel die automatische Zuordnung leistet.</span><span class="ans">Schützenliste oder frei zugewiesen, kein LANA.</span></div></li>
-        <li><div><span class="q">Ist die SportpassID in der Schützenliste gepflegt?</span><span class="why">Der Schlüssel für die Automatik.</span></div></li>
-        <li><div><span class="q">Wie viele aktive Schützen würden Spiegel nutzen?</span><span class="why">Last, Speicher und Priorität.</span></div></li>
-        <li><div><span class="q">Wie gehen wir mit Gästen und Jugendlichen um?</span><span class="why">Einwilligung, gegebenenfalls der Eltern.</span></div></li>
-        <li class="done"><div><span class="q">Wann soll zugeordnet werden? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, was die Brücke vorhalten muss.</span><span class="ans">Über den Meyton-QR, mit Original-PDF.</span></div></li>
-        <li><div><span class="q">Soll das Fundbüro als Tablet am Stand hängen, oder reicht „Scheibe holen“ in Spiegel?</span><span class="why">Hängt davon ab, ob Trainings ohne Starter in der Ablage landen und ob es für sie einen QR gibt.</span></div></li>
-        <li><div><span class="q">Wie lange darf eine Fundsache abgeholt werden?</span><span class="why">Vorschlag: sieben Tage. Danach bleibt sie nur in der SSMDB2.</span></div></li>
+        <li class="done"><div><span class="q">Wie wird zugeordnet? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, was die Brücke vorhalten muss.</span><span class="ans">Opt-in per Sportpass als Standard, sonst Meyton-QR mit Original-PDF.</span></div></li>
+        <li class="done"><div><span class="q">Ist die SportpassID in der Schützenliste gepflegt?</span><span class="why">Voraussetzung für das Opt-in.</span><span class="ans">Nicht bei allen; für Interessierte wird sie nachgepflegt.</span></div></li>
+        <li class="done"><div><span class="q">Wie viele aktive Schützen würden Spiegel nutzen?</span><span class="why">Last, Speicher und Priorität.</span><span class="ans">Etwa 10 bis 15.</span></div></li>
+        <li class="done"><div><span class="q">Wie gehen wir mit Gästen und Jugendlichen um?</span><span class="why">Einwilligung, gegebenenfalls der Eltern.</span><span class="ans">Vorerst keine Unterstützung; Konten nur für erwachsene Mitglieder.</span></div></li>
+        <li class="done"><div><span class="q">Fundbüro am Stand mit Tablet, oder reicht „Scheibe holen“ in Spiegel?</span><span class="why">Ein Tablet braucht Halterung, Strom und WLAN.</span><span class="ans">Kein Tablet. Weil es den QR immer gibt, reicht „Scheibe holen“ als seltener Rückfall.</span></div></li>
+        <li class="done"><div><span class="q">Wie lange darf eine Fundsache abgeholt werden?</span><span class="why">Danach bleibt sie nur in der SSMDB2.</span><span class="ans">Sieben Tage.</span></div></li>
+        <li><div><span class="q">Sollen Scheiben ohne Besitzer vorsorglich hochgeladen werden, damit „Scheibe holen“ auch von zu Hause geht?</span><span class="why">Bequemer, verlässt aber den Grundsatz „bleibt im Schützenhaus“. Empfehlung: nein.</span></div></li>
       </ol>
       <div class="prose qgroup"><h3>Produkt</h3></div>
-      <ol class="qlist" style="counter-reset: q 15">
-        <li><div><span class="q">Testen wir in Phase&nbsp;0 DISAG M-Qnect mit der ShotsApp als Vergleich?</span><span class="why">Zeigt sofort, ob Trainings in der Ablage landen, und setzt die Messlatte für Spiegel.</span></div></li>
-        <li class="done"><div><span class="q">Nur unser Verein, oder später auch andere Vereine? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Mandanten im Datenmodell kosten jetzt wenig und später viel.</span><span class="ans">Erst einmal für euch, als Open Source. Andere Vereine betreiben eine eigene Installation.</span></div></li>
-        <li><div><span class="q">Eigene App mit Brücke zu Treffsicher, und später vielleicht die Ablösung?</span><span class="why">Reihenfolge der Arbeit; die Empfehlung steht in Abschnitt 03.</span></div></li>
-        <li><div><span class="q">Was ist das eine Highlight für Version&nbsp;1: Session-Details, Verläufe, Vergleiche oder Live?</span><span class="why">Fokus für die erste Phase.</span></div></li>
+      <ol class="qlist" style="counter-reset: q 18">
+        <li class="done"><div><span class="q">Eigene App oder Modul in Treffsicher? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Reihenfolge der Arbeit und Schnitt der Daten.</span><span class="ans">Eigene App „Spiegel“, Treffsicher bekommt eine Brücke.</span></div></li>
+        <li class="done"><div><span class="q">Nur unser Verein, oder später auch andere Vereine? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Mandanten im Datenmodell kosten jetzt wenig und später viel.</span><span class="ans">Erst für euch, als Open Source. Andere Vereine betreiben eine eigene Installation.</span></div></li>
+        <li><div><span class="q">Testen wir DISAG M-Qnect mit der ShotsApp als Vergleich?</span><span class="why">Setzt die Messlatte für Spiegel.</span></div></li>
+        <li><div><span class="q">Was ist das eine Highlight für Version&nbsp;1?</span><span class="why">Fokus für die erste Phase. Vorschlag: das Session-Detail.</span></div></li>
         <li><div><span class="q">Wie wichtig ist Live (Trainer am Tablet, Liga-Ticker)?</span><span class="why">SDF ja oder nein.</span></div></li>
-        <li><div><span class="q">Soll Ringwerk Liga-Ergebnisse aus Spiegel bekommen?</span><span class="why">Ersetzt dort ebenfalls den PDF-Import; braucht Regeln, welche Daten fließen.</span></div></li>
+        <li><div><span class="q">Soll Ringwerk Liga-Ergebnisse aus Spiegel bekommen?</span><span class="why">Ersetzt dort ebenfalls den PDF-Import.</span></div></li>
         <li><div><span class="q">Brauchen wir Notizen, Tags und Ausrüstung schon in Version&nbsp;1?</span><span class="why">Vergleiche nach Merkmal hängen daran.</span></div></li>
         <li><div><span class="q">Wer darf als Trainer wessen Daten sehen?</span><span class="why">Freigabemodell.</span></div></li>
-        <li><div><span class="q">Soll man ein Ergebnis per Link teilen können (Familie, Social Media)?</span><span class="why">Öffentliche Ansichten sind neue Angriffsfläche.</span></div></li>
+        <li><div><span class="q">Soll man ein Ergebnis per Link teilen können?</span><span class="why">Öffentliche Ansichten sind neue Angriffsfläche.</span></div></li>
       </ol>
       <div class="prose qgroup"><h3>Open Source</h3></div>
-      <ol class="qlist" style="counter-reset: q 24">
-        <li><div><span class="q">Welche Lizenz: Apache-2.0, AGPL-3.0 oder MIT? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Ohne Lizenz ist öffentlicher Code nicht nutzbar. Vorschlag: Apache-2.0.</span></div></li>
-        <li><div><span class="q">Gilt die Lizenz für das ganze Monorepo oder nur für Spiegel und die geteilten Pakete?</span><span class="why">Spiegel braucht @vereinsheim/ui, lib und config unter derselben Lizenz.</span></div></li>
-        <li><div><span class="q">Bleibt der Name Spiegel, oder wählen wir vor der Veröffentlichung einen eindeutigeren?</span><span class="why">Ordnername, Subdomain, Logo und Auffindbarkeit.</span></div></li>
+      <ol class="qlist" style="counter-reset: q 27">
+        <li class="done"><div><span class="q">Welche Lizenz? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Ohne Lizenz ist öffentlicher Code nicht nutzbar.</span><span class="ans">Apache-2.0 für das ganze Repo, wie seit Mai 2026.</span></div></li>
+        <li class="done"><div><span class="q">Bleibt der Name Spiegel?</span><span class="why">Ordnername, Subdomain, Logo.</span><span class="ans">Ja.</span></div></li>
       </ol>
       <div class="prose qgroup"><h3>Design</h3></div>
-      <ol class="qlist" style="counter-reset: q 27">
-        <li class="done"><div><span class="q">Was heißt „moderner“ für dich?</span><span class="why">Richtung für Design&nbsp;2.</span><span class="ans">Die Vorschau trifft es, Design und Funktionen gefallen.</span></div></li>
-        <li><div><span class="q">Nur dunkel wie die anderen Apps, oder hell und dunkel?</span><span class="why">Sonne am 50-m-Stand.</span></div></li>
-        <li><div><span class="q">Ringwert-Farben wie in der Vorschau, oder das Meyton-Schema der Treffsicher-Statistik (10 rot, 9 gelb, Rest grau)?</span><span class="why">Wiedererkennung gegen Lesbarkeit auf dem schwarzen Spiegel.</span></div></li>
+      <ol class="qlist" style="counter-reset: q 29">
+        <li class="done"><div><span class="q">Was heißt „moderner“?</span><span class="why">Richtung für Design&nbsp;2.</span><span class="ans">Die Vorschau trifft es; Design und Funktionen gefallen.</span></div></li>
+        <li><div><span class="q">Nur dunkel wie die anderen Apps, oder hell und dunkel?</span><span class="why">Sonne am 50-m-Stand. Vorschlag: beides.</span></div></li>
+        <li><div><span class="q">Ringwert-Farben wie in der Vorschau, oder das Meyton-Schema der Treffsicher-Statistik?</span><span class="why">Wiedererkennung gegen Lesbarkeit auf dem schwarzen Spiegel.</span></div></li>
         <li><div><span class="q">Soll Design&nbsp;2 später auch Ringwerk und Treffsicher erreichen?</span><span class="why">Bestimmt, ob Spiegel sich vom Drift-Gate verabschiedet oder es anführt.</span></div></li>
       </ol>
       <div class="prose qgroup"><h3>Betrieb und Recht</h3></div>
-      <ol class="qlist" style="counter-reset: q 31">
-        <li><div><span class="q">VPS auf 4&nbsp;GB hochstufen?</span><span class="why">Die dritte App braucht Speicher.</span></div></li>
+      <ol class="qlist" style="counter-reset: q 33">
+        <li class="done"><div><span class="q">VPS auf 4&nbsp;GB hochstufen? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Die dritte App braucht Speicher.</span><span class="ans">Nein, der VPS bleibt bei 2&nbsp;GB. Gemessen: 948&nbsp;MiB verfügbar; Spiegel passt mit 256&nbsp;MiB Limit.</span></div></li>
+        <li><div><span class="q">Swap-Datei als Sicherheitsnetz auf dem VPS?</span><span class="why">Kostet nichts, ist aber eine Änderung am VPS.</span></div></li>
+        <li class="done"><div><span class="q">Brücke als einzelnes Binary ohne Docker und Node?</span><span class="why">Bestimmt Sprache und Auslieferung.</span><span class="ans">Gewünscht; entschieden wird in Phase 0 (Kandidat Go).</span></div></li>
         <li><div><span class="q">Wer formuliert und verantwortet die Einwilligung im Verein?</span><span class="why">Vor dem ersten Upload nötig.</span></div></li>
-        <li><div><span class="q">Wie lange bewahren wir Daten auf, und wie weit zurück laden wir aus der SSMDB2 nach?</span><span class="why">Speicher und Datenschutz.</span></div></li>
+        <li><div><span class="q">Wie lange bewahren wir Daten auf, und wie weit zurück laden wir nach?</span><span class="why">Speicher und Datenschutz.</span></div></li>
         <li><div><span class="q">Eine gemeinsame Anmeldung für alle Vereinsheim-Apps?</span><span class="why">Mit Spiegel wären es drei Logins.</span></div></li>
       </ol>
     </section>
@@ -1574,14 +1618,14 @@ type Shot = {
       <div class="prose">
         <p class="eyebrow">13 · Fahrplan</p>
         <h2>In fünf Schritten zu etwas, das man anfassen kann</h2>
-        <p>Jede Phase läuft im gewohnten Ablauf <code>/plan → /implement → /validate → /review</code>. Deploy-Vertrag, Schema und ADRs bleiben bei dir.</p>
+        <p>Jedes Feature (SP-x.y) ist so geschnitten, dass es in einer Session im gewohnten Ablauf <code>/plan → /implement → /validate → /review</code> umgesetzt werden kann; Ziel, Umfang, Abnahme und Abhängigkeiten stehen in <code>vault/spiegel/spiegel-roadmap.md</code>. Ohne Anlage startbar sind SP-1.1, SP-1.2 und SP-1.3.</p>
       </div>
       <div class="phases">
-        <div class="phase"><div class="ph"><span>Phase 0</span>Erkundung</div><ul><li>Ein Abend im Schützenhaus mit der SQL-Checkliste aus dem Anhang</li><li>Die ID aus dem Ausdruck in der SSMDB2 nachschlagen (Abfrage im Anhang); prüfen, ob Meyton den QR auch ohne Starter zeigt</li><li>DISAG M-Qnect mit der ShotsApp als Messlatte ausprobieren</li><li>Lizenz festlegen; ADRs: Spiegel als dritte App, Brücke und Datensparsamkeit, Lizenz</li></ul><div class="out"><b>Ergebnis</b>Wir wissen, was in unserer SSMDB2 steht.</div></div>
-        <div class="phase"><div class="ph"><span>Phase 1</span>Fundament</div><ul><li><code>shot-core</code>: Scheibenbilder LG, LP, KK; Wertung, Geometrie, erste Kennzahlen, Gegenprobe</li><li>Brücke v1: SSMDB2 lesen, Warteschlange, Upload, Heartbeat</li><li>Spiegel v1: Konten, Ingest, Liste, Scheibe mit Serien und Wiedergabe</li><li>Zuordnung per Meyton-QR mit Original-PDF, dazu über Sportpass und Admin; der Meyton-PDF-Parser zieht dafür in ein geteiltes Paket</li><li>Deploy mit dritter DB und ein eigenes Compose-Beispiel für andere Vereine</li></ul><div class="out"><b>Ergebnis</b>Du scannst den Meyton-QR, und deine Scheibe liegt mit allen Schüssen und dem PDF in Spiegel.</div></div>
-        <div class="phase"><div class="ph"><span>Phase 2</span>Auswertung</div><ul><li>Verläufe über die Registry, direkte Vergleiche, Rekorde</li><li>Fundbüro mit Abholschein und „Scheibe holen“, Check-in am Stand, falls Trainings ohne Starter in der Ablage landen</li><li>Installierbar auf dem Handy; Historie nachladen</li></ul><div class="out"><b>Ergebnis</b>Du siehst, wie sich dein Streukreis seit Juni entwickelt hat.</div></div>
-        <div class="phase"><div class="ph"><span>Phase 3</span>Vernetzung</div><ul><li>Treffsicher übernimmt Ergebnisse aus Spiegel</li><li>Trainer-Freigabe und Live-Ansicht</li><li>Liga-Ergebnisse für Ringwerk</li></ul><div class="out"><b>Ergebnis</b>Kein Meyton-PDF-Import mehr, weder in Treffsicher noch in Ringwerk.</div></div>
-        <div class="phase"><div class="ph"><span>Phase 4</span>Weichen stellen</div><ul><li>Treffsicher ablösen oder als Tagebuch behalten</li><li>Gemeinsame Anmeldung</li><li>Weitere Vereine, weitere Quellen</li></ul><div class="out"><b>Ergebnis</b>Eine Entscheidung auf Basis echter Nutzung.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 0</span>Erkundung</div><ul><li><b>SP-0.1</b> SSMDB2 vor Ort erkunden (SQL-Checkliste im Anhang)</li><li><b>SP-0.2</b> ID im Ausdruck als ScheibenID bestätigen</li><li><b>SP-0.3</b> DISAG M-Qnect als Messlatte (optional)</li><li><b>SP-0.4</b> Technik der Brücke entscheiden</li><li><b>SP-0.5</b> Einwilligungstext mit dem Vorstand</li></ul><div class="out"><b>Ergebnis</b>Wir wissen, was in unserer SSMDB2 steht, und können loslegen.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 1</span>Fundament</div><ul><li><b>SP-1.1</b> Scheibenbilder LG/LP und Wertung · <b>SP-1.2</b> Geometrie und Kennzahlen-Registry · <b>SP-1.3</b> Meyton-PDF-Paket</li><li><b>SP-1.4</b> Brücke: lesen, puffern, hochladen, Strom aus überstehen · <b>SP-1.5</b> Opt-in, Aufträge, verdeckte Wertung</li><li><b>SP-1.6</b> App-Skelett, Ingest-API, Normalisierung · <b>SP-1.7</b> Zuordnung per Opt-in, QR und Admin · <b>SP-1.8</b> Liste und Session-Detail</li><li><b>SP-1.9</b> Deploy mit dritter DB, 256&nbsp;MiB Limit, Compose-Beispiel für andere Vereine</li></ul><div class="out"><b>Ergebnis</b>Mit Opt-in erscheint die Scheibe von selbst, sonst reicht der QR, beide Male mit allen Schüssen.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 2</span>Auswertung</div><ul><li><b>SP-2.1</b> Verläufe und Rekorde · <b>SP-2.2</b> direkte Vergleiche und Beobachtungen</li><li><b>SP-2.3</b> Notizen, Tags, Ausrüstung · <b>SP-2.4</b> Fundbüro als seltener Rückfall</li><li><b>SP-2.5</b> installierbar, Historie nachladen · <b>SP-2.6</b> Ergebnisse von fremden Anlagen aus dem PDF</li></ul><div class="out"><b>Ergebnis</b>Du siehst, wie sich dein Streukreis seit Juni entwickelt hat.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 3</span>Vernetzung</div><ul><li><b>SP-3.1</b> Treffsicher übernimmt aus Spiegel</li><li><b>SP-3.2</b> Trainer-Freigabe und Live</li><li><b>SP-3.3</b> Liga-Ergebnisse für Ringwerk</li></ul><div class="out"><b>Ergebnis</b>Kein Meyton-PDF-Import mehr, weder in Treffsicher noch in Ringwerk.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 4</span>Weichen stellen</div><ul><li><b>SP-4.1</b> Treffsicher ablösen oder behalten · <b>SP-4.2</b> gemeinsame Anmeldung</li><li><b>SP-4.3</b> Design&nbsp;2 für alle Apps · <b>SP-4.4</b> weitere Quellen</li></ul><div class="out"><b>Ergebnis</b>Eine Entscheidung auf Basis echter Nutzung.</div></div>
       </div>
     </section>
 
@@ -1674,7 +1718,7 @@ SELECT NOW();</pre>
           <li>Vereinsheim-Vault: ADR-002 bis ADR-025, Treffsicher-Anforderungen, Meyton-Import, Sizing-Notiz</li>
         </ul>
       </div>
-      <footer>Entwurf zur Diskussion. Die Beispieldaten in der Vorschau sind erfunden; alle Fakten zur SSMDB2 stammen aus den genannten Quellen und werden bei der Erkundung gegen unsere Anlage geprüft.</footer>
+      <footer>Stand 5. Oktober 2026. Maßgeblich ist der Plan im Repo unter <code>vault/spiegel/</code> mit ADR-026 bis ADR-030. Die Beispieldaten in der Vorschau sind erfunden; Fakten zur SSMDB2 stammen aus den genannten Quellen und werden in Phase&nbsp;0 an der eigenen Anlage geprüft.</footer>
     </section>
   </main>
 </div>
