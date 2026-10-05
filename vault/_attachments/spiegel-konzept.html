@@ -5,7 +5,7 @@
 <style>
 /* Layout: Inhaltsverzeichnis links (sticky), breite Hauptspalte; Fließtext auf 46rem begrenzt,
    Prototyp und Diagramme nutzen die volle Spalte. Dunkel zuerst (Schießhalle am Abend),
-   hell für den 50-m-Stand in der Sonne. Farbe kommt aus den Daten, die Oberfläche bleibt kühl-neutral. */
+   hell für Tageslicht. Farbe kommt aus den Daten, die Oberfläche bleibt kühl-neutral. */
 :root {
   color-scheme: dark;
   --bg: #0d121a;
@@ -194,6 +194,7 @@ table.doc td:first-child { color: var(--fg); font-weight: 550; }
 table.doc .yes { color: var(--pos); font-weight: 600; }
 table.doc .no { color: var(--neg); font-weight: 600; }
 table.doc th.rec, table.doc td.rec { background: var(--accent-wash); }
+table.doc code, table.doc td.sfid { white-space: nowrap; }
 .tag { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 999px; background: var(--surface-3); color: var(--fg-2); white-space: nowrap; vertical-align: 1px; }
 .tag.crit { background: var(--warn-wash); color: var(--fg); }
 
@@ -485,7 +486,7 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
       <li><a href="#auswertung"><span>08</span><span>Kennzahlen &amp; Vergleiche</span></a></li>
       <li><a href="#vorschau"><span>09</span><span>Design-Vorschau</span></a></li>
       <li><a href="#shotsapp"><span>10</span><span>Vergleich ShotsApp</span></a></li>
-      <li><a href="#szenarien"><span>11</span><span>Szenarien</span></a></li>
+      <li><a href="#szenarien"><span>11</span><span>Szenarien &amp; Sonderfälle</span></a></li>
       <li><a href="#fragen"><span>12</span><span>Offene Fragen</span></a></li>
       <li><a href="#fahrplan"><span>13</span><span>Fahrplan</span></a></li>
       <li><a href="#anhang"><span>14</span><span>Anhang: Erkundung</span></a></li>
@@ -495,9 +496,9 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
   <main>
     <header class="hero">
       <div>
-        <p class="eyebrow">Konzept · Stand 5. Oktober 2026 · Spiegel</p>
+        <p class="eyebrow">Konzept · Stand 5. Oktober 2026, mit Sonderfall-Review · Spiegel</p>
         <h1>Jeder Schuss, so wie er gefallen ist.</h1>
-        <p class="lead">Eine eigene Vereinsheim-App, die die Rohdaten jeder Meyton-Scheibe übernimmt: Trefferlage auf einen hundertstel Millimeter, Ring, Zehntel, Teiler und Zeitpunkt auf die Millisekunde. Daraus werden Schussbild, Wiedergabe, Schwerpunkt, Streukreis, Serien, Verläufe und direkte Vergleiche. Dieses Papier hält fest, was wir über die Datenquelle wissen, schlägt eine Architektur vor und sammelt die Fragen, die vor dem Bau geklärt sein sollten.</p>
+        <p class="lead">Eine eigene Vereinsheim-App, die die Rohdaten jeder Meyton-Scheibe übernimmt: Trefferlage auf einen hundertstel Millimeter, Ring, Zehntel, Teiler und Zeitpunkt auf die Millisekunde. Daraus werden Schussbild, Wiedergabe, Schwerpunkt, Streukreis, Serien, Verläufe und direkte Vergleiche. Dieses Papier hält fest, was wir über die Datenquelle wissen, schlägt eine Architektur vor, sammelt die Sonderfälle, gegen die sich Spiegel absichert, und die Fragen, die vor dem Bau geklärt sein sollten.</p>
         <p class="hero-note">Zum Namen: Der Spiegel ist der schwarze Zielbereich der Scheibe, und ein Spiegel zeigt dir, wie du schießt.</p>
       </div>
       <figure class="hero-fig">
@@ -515,7 +516,7 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
 
     <div class="decided" id="stand">
       <span class="label-line">Stand der Entscheidungen · 5. Oktober 2026</span>
-      <p class="small muted" style="margin:4px 0 0">Der Plan liegt im Repo unter <code>vault/spiegel/spiegel.md</code>, mit Roadmap (Features SP-x.y) und ADR-026 bis ADR-030. Diese Seite fasst ihn zusammen.</p>
+      <p class="small muted" style="margin:4px 0 0">Der Plan liegt im Repo unter <code>vault/spiegel/spiegel.md</code>, mit Roadmap (Features SP-x.y), ADR-026 bis ADR-030 und dem Sonderfall-Katalog <code>spiegel-edge-cases.md</code>. Diese Seite fasst ihn zusammen.</p>
       <div class="scroll">
         <table class="doc">
           <thead><tr><th>Thema</th><th>Antwort</th><th>Folge für das Konzept</th></tr></thead>
@@ -527,12 +528,14 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
             <tr><td>Wie läuft die Anlage?</td><td>ShootMaster 6.0.2, SSMDB2-Dienst aktiv; nach dem Training Strom aus</td><td>Die Brücke muss harten Stromverlust überstehen; ein QR-Scan von zu Hause liefert sofort das PDF-Ergebnis, die Rohdaten beim nächsten Einschalten</td></tr>
             <tr><td>Stände und Disziplinen</td><td>Nur 10 m: Luftgewehr, Luftpistole, jeweils mit Auflage</td><td>Version&nbsp;1 braucht zwei Scheibenbilder</td></tr>
             <tr><td>Gerät im Meyton-Netz, Router mit Internet?</td><td>Ja</td><td>Brücke als Mini-PC oder Raspberry Pi mit SSD und fester IP</td></tr>
+            <tr><td>Wie sind die Netze getrennt?</td><td>Schützen im Gäste-LAN, Anlage und Brücke im Gerätenetz</td><td>Kein Handy muss die Brücke erreichen; Kopplung per Code bei der Installation, keine Fundbüro-Seite auf der Brücke</td></tr>
             <tr><td>Technik der Brücke?</td><td>Am liebsten ein Binary ohne Docker und Node</td><td>Kandidat Go; entschieden wird in Phase&nbsp;0 (ADR-027)</td></tr>
             <tr><td>Anmeldung am Stand</td><td>Schützenliste oder frei, kein LANA; SportpassID nicht bei allen gepflegt</td><td>Für Interessierte wird die SportpassID nachgepflegt; frei getippte Namen nur als Vorschlag</td></tr>
             <tr><td>Für wen?</td><td>Erst für euch, etwa 10–15 Schützen, nur erwachsene Mitglieder</td><td>Keine Gäste und Jugendlichen in Version&nbsp;1</td></tr>
             <tr><td>Lizenz</td><td>Apache-2.0 für das ganze Repo (gilt seit Mai 2026)</td><td>Open Source; andere Vereine betreiben eine eigene Installation (ADR-029)</td></tr>
             <tr><td>VPS</td><td>Bleibt, wie er ist (2 GB); gemessen 948 MiB verfügbar</td><td>Spiegel mit 256 MiB Limit, ohne Hintergrunddienste, Deploys nacheinander</td></tr>
             <tr><td>Design</td><td>Die Vorschau trifft es</td><td>Richtung für Design&nbsp;2 (ADR-030, vorgeschlagen)</td></tr>
+            <tr><td>Sonderfälle</td><td>Kritisches Review am 5. Oktober, mit unabhängigem Gegenleser</td><td>69 Fälle mit festen IDs (SF-01 bis SF-69); jede Abnahme im Fahrplan nennt ihre Fälle, Testdaten gibt es je Fall (<a href="#szenarien">Kapitel&nbsp;11</a>)</td></tr>
             <tr><td>Landen Trainings ohne Starter in der SSMDB2?</td><td>Offen</td><td>Prüfen wir in Phase&nbsp;0; sonst gibt es für sie nur das PDF-Ergebnis</td></tr>
             <tr><td>Umstieg auf ESTANX?</td><td>Nicht bekannt</td><td>Bleibt ein Risiko für später; dann bräuchte Spiegel einen zweiten Adapter</td></tr>
           </tbody>
@@ -553,7 +556,7 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
         <li><a href="#auswertung">Kennzahlen &amp; Vergleiche</a></li>
         <li><a href="#vorschau">Design-Vorschau</a></li>
         <li><a href="#shotsapp">Vergleich ShotsApp</a></li>
-        <li><a href="#szenarien">Szenarien</a></li>
+        <li><a href="#szenarien">Szenarien &amp; Sonderfälle</a></li>
         <li><a href="#fragen">Offene Fragen</a></li>
         <li><a href="#fahrplan">Fahrplan</a></li>
         <li><a href="#anhang">Anhang: Erkundung</a></li>
@@ -570,8 +573,9 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
         <div class="sum"><h4>Der lokale Teil</h4><p>Eine „Brücke“: ein kleines Gerät mit SSD im Meyton-Netz, am liebsten ein einzelnes Programm ohne Docker. Sie liest nur, verbindet sich nur nach außen, läuft nur am Trainingsabend und übersteht das harte Abschalten. Schützen installieren nichts.</p></div>
         <div class="sum"><h4>Zuordnung</h4><p>Standard ist das Opt-in per Sportpass: Wer zustimmt, dessen Scheiben gehen am Abend automatisch hoch. Alles andere geht über den QR-Code des Meyton-Ausdrucks, den es immer gibt; Spiegel hebt das Original-PDF mit auf.</p></div>
         <div class="sum"><h4>Auswertung</h4><p>Jede Kennzahl ist einmal als reine Funktion definiert und steht dann überall bereit: in der Session, je Serie, als Verlauf über Monate und im direkten Vergleich.</p></div>
-        <div class="sum"><h4>Design</h4><p>Spiegel wird der Pilot für ein neues Vereinsheim-Design: ruhige, neutrale Oberfläche, die Farbe kommt aus den Daten, hell und dunkel. Ringwerk und Treffsicher können später folgen.</p></div>
-        <div class="sum wide"><h4>Nächster Schritt</h4><p>Phase&nbsp;0 an einem Trainingsabend: die SQL-Checkliste aus dem <a href="#anhang">Anhang</a> durchgehen und die ID aus dem Ausdruck vom 2. Oktober in der SSMDB2 nachschlagen. Ohne Anlage startbar sind die ersten Fachkern-Features (SP-1.1 Scheibenbilder und Wertung, SP-1.3 Meyton-PDF-Paket). Die ganze Reihenfolge steht im <a href="#fahrplan">Fahrplan</a>.</p></div>
+        <div class="sum"><h4>Design</h4><p>Spiegel wird der Pilot für ein neues Vereinsheim-Design: ruhige, neutrale Oberfläche, die Farbe kommt aus den Daten, dunkel zuerst und hell später. Ringwerk und Treffsicher können folgen.</p></div>
+        <div class="sum wide"><h4>Sonderfälle</h4><p>Nur Probe, LP&nbsp;40 mit 60 Probeschüssen, Abbruch, Korrekturen, verdeckte Wertung, falscher Name am Stand: Ein kritisches Review hat 69 Sonderfälle mit festen IDs gesammelt, jeder mit Absicherung und Testfall. Die Leitlinie: Ausgewertet wird jeder Schuss, auch ohne Wertung, und nichts verlässt das Schützenhaus ungeprüft (<a href="#szenarien">Kapitel&nbsp;11</a>).</p></div>
+        <div class="sum wide"><h4>Nächster Schritt</h4><p>Phase&nbsp;0 an einem Trainingsabend: die SQL-Checkliste und das Schießprotokoll mit der Standaufsicht aus dem <a href="#anhang">Anhang</a>, dazu die ID aus dem Ausdruck vom 2. Oktober in der SSMDB2 nachschlagen. Ohne Anlage startbar sind SP-1.0 bis SP-1.3, allen voran SP-1.1 Scheibenbilder und Wertung. Die ganze Reihenfolge steht im <a href="#fahrplan">Fahrplan</a>.</p></div>
       </div>
     </section>
 
@@ -660,15 +664,19 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
             <tr><td>Ring-Felder sind nicht einheitlich skaliert (Serien in ganzen Ringen, Gesamt- und Zehntelwerte ×10)</td><td>Skala je Feld in einer Tabelle, per Test am echten Datensatz festgenagelt</td><td>Meral-IT</td></tr>
             <tr><td><code>Startzeit</code> ist oft <code>0000-00-00</code></td><td>Beginn aus dem ersten Treffer, Ende aus dem letzten</td><td>ferdifighter</td></tr>
             <tr><td>Zeiten sind Ortszeit ohne Zone; SDF hängt ein „Z“ an, obwohl es Ortszeit ist</td><td>Umrechnung mit der Zeitzone der Anlage, Rohwert bleibt erhalten, Uhrabweichung der Anlage wird gemessen</td><td>Meral-IT</td></tr>
-            <tr><td><code>ScheibenID</code> kann negativ sein (vorzeichenbehaftete 32&nbsp;Bit) und gilt nur innerhalb einer DB-Instanz</td><td>Schlüssel ist Quelle + Epoche + ScheibenID; ein neuer Meyton-Server beginnt eine neue Epoche</td><td>beide</td></tr>
-            <tr><td>Freie Stände tragen Platzhalter wie <code>--frei--</code></td><td>Filter in der Brücke</td><td>ferdifighter</td></tr>
+            <tr><td><code>ScheibenID</code> kann negativ sein (vorzeichenbehaftete 32&nbsp;Bit) und gilt nur innerhalb einer DB-Instanz</td><td>Schlüssel ist Quelle + Epoche + ScheibenID; eine neue Epoche erkennt die Brücke an der ganzen Quelle, der Admin bestätigt sie</td><td>beide</td></tr>
+            <tr><td>Freie Stände tragen Platzhalter wie <code>--frei--</code>; womöglich heißen so auch Trainings ohne Starter</td><td>Nur Scheiben ohne Treffer weglassen, nie nach dem Namen filtern (SF-13)</td><td>ferdifighter, Review</td></tr>
             <tr><td>Die SSMDB2 weiß nicht, welcher Stand gerade belegt ist</td><td>Für Live-Funktionen optional LANA (WebSocket, nur der Lesebefehl <code>GetLaneInfo</code>)</td><td>Meral-IT</td></tr>
             <tr><td>Korrekturen und Löschungen in der DB sind maßgeblich</td><td>Jede Änderung kommt als neuer vollständiger Snapshot mit Revision</td><td>Meral-IT</td></tr>
             <tr><td>Der Disziplinname ist kein verlässlicher Schlüssel; die 25-m-Pistole nutzt je Stellung eine andere Scheibe</td><td>Scheibenbild aus der Regelnummer, je Stellung; Name nur als Admin-Ausnahme für Preisscheiben</td><td>Meral-IT</td></tr>
-            <tr><td>Probeschüsse stehen erst ab 5.4 in der Ablage und bleiben dort vielleicht nicht</td><td>Die Brücke schneidet während des Schießens laufend mit, statt nur nachträglich abzuholen</td><td>Release-Notiz 5.4</td></tr>
+            <tr><td>Probeschüsse stehen erst ab 5.4 in der Ablage und bleiben dort vielleicht nicht</td><td>Die Brücke liest laufend mit und hält die Probe aller Scheiben sieben Tage lokal fest (SF-03)</td><td>Release-Notiz 5.4</td></tr>
             <tr><td>Im freien Training tippen Schützen ihren Namen oft frei ein; Schreibweisen weichen ab</td><td>Zuordnung über Opt-in per Sportpass oder Meyton-QR statt über Namensvergleich</td><td>Meyton-Forum</td></tr>
-            <tr><td>Sportpassnummern dürfen seit 5.3 zwölf Stellen haben, <code>SportpassID</code> ist aber <code>int(11)</code></td><td>Vor Ort prüfen, ob lange Nummern abgeschnitten oder überlaufen</td><td>Release-Notiz 5.3</td></tr>
-            <tr><td>Ein eigener Lese-Benutzer ist auf dem Meyton-Server nicht vorgesehen; der Standard-Zugang ist auf allen Anlagen gleich</td><td>Die Brücke öffnet jede Verbindung als Read-only-Transaktion und sendet nur feste SELECTs</td><td>Meyton-Forum</td></tr>
+            <tr><td>Sportpassnummern dürfen seit 5.3 zwölf Stellen haben, <code>SportpassID</code> ist aber <code>int(11)</code></td><td>Vor Ort prüfen; eine SportpassID mit mehreren Namen oder dem Höchstwert 2147483647 wird nie automatisch zugeordnet (SF-35)</td><td>Release-Notiz 5.3</td></tr>
+            <tr><td>Ein eigener Lese-Benutzer ist auf dem Meyton-Server nicht vorgesehen; der Standard-Zugang ist auf allen Anlagen gleich</td><td>Die Brücke liest in kurzen Read-only-Transaktionen und sendet nur feste SELECTs</td><td>Meyton-Forum</td></tr>
+            <tr><td><code>Zeitstempel + Millisekunden</code> rechnet MySQL als Zahl; spätere Schüsse wirken dann älter</td><td>Zeitstempel und Millisekunden als Paar vergleichen (SF-32)</td><td>Review</td></tr>
+            <tr><td>Die Engine ist unbekannt: MyISAM sperrt beim Lesen und kann nach hartem Stromaus beschädigt sein, InnoDB zeigt langen Transaktionen keine neuen Zeilen</td><td>Kurze Abfragen mit Zeitbudget; ein Fehler oder ein leeres Ergebnis gilt nie als Löschung (SF-24, SF-51)</td><td>Review</td></tr>
+            <tr><td>Wertungsmodus 0 heißt „unbekannt“ und steckt womöglich in Probe und Altdaten</td><td>Der Admin gibt Modus&nbsp;0 je Disziplin frei, statt dass still alles liegen bleibt (SF-20)</td><td>Review</td></tr>
+            <tr><td>Die SportpassID steht als Kopie in jeder Scheibe; eine später nachgepflegte Nummer fehlt in alten Scheiben</td><td>Rückwirkend nur über Namensvorschläge mit Bestätigung (SF-36)</td><td>Review</td></tr>
           </tbody>
         </table>
       </div>
@@ -679,6 +687,8 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
           <li>Ist die ID im Fuß des Ausdrucks die ScheibenID (<code>ff914420</code> → −7257056)?</li>
           <li>Zeigt y nach oben? Stimmen <code>Teiler01</code> und <code>Teiler001</code> mit dem Abstand aus x/y überein? Wie sind die Ring-Felder skaliert?</li>
           <li>Wie weit reicht die Historie zurück, und bleiben Probeschüsse nach der Wertung erhalten?</li>
+          <li>Welche Engine, welche Indizes, was kosten die Abfragen der Brücke (<code>SHOW TABLE STATUS</code>, <code>EXPLAIN</code>)? Steigt <code>Scheiben.Zeitstempel</code> auch bei Probeschüssen?</li>
+          <li>Welche Wertungsmodi tragen Probe und Training? Hat das Gerätenetz ausgehend Internet?</li>
           <li>Liegen die PDF-Ausdrucke auch auf der Freigabe <code>ERGEBNIS</code>? Dann bekäme der Opt-in-Weg das PDF automatisch.</li>
         </ul>
       </div>
@@ -937,30 +947,33 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
       </div>
       <div class="prose">
         <h3>Netz</h3>
-        <p>Die Brücke hängt per Kabel im Meyton-Netz und erreicht das Internet über WLAN oder LTE. Sie leitet keinen Verkehr zwischen beiden Netzen weiter und öffnet keinen Port. Für die Meyton-Anlage ist sie ein zusätzlicher Leser, wie ein Auswertungs-PC.</p>
+        <p>Bei euch sind die Schützen im Gäste-LAN, Meyton-Anlage und Brücke in einem eigenen Gerätenetz. Das passt gut: Kein Handy muss die Brücke erreichen, alles läuft über Spiegel im Internet. Und der Meyton-Server, dessen Standard-Zugang auf allen Anlagen gleich ist und im Handbuch steht, bleibt für die Handys unerreichbar. Die Brücke braucht nur ausgehend DNS, HTTPS zu Spiegel und NTP. Hat das Gerätenetz Internet, reicht ein Kabel, sonst LTE. Sie leitet keinen Verkehr zwischen Netzen weiter und öffnet keinen Port. Für die Meyton-Anlage ist sie ein zusätzlicher Leser, wie ein Auswertungs-PC.</p>
         <p>Meyton sperrt bei der Installation jeden Internetzugang; Internet gibt es nur über einen eigenen Router, den viele Vereine für die Fernwartung ohnehin haben. Laut Meyton-IP-Plan liegt der Server auf 192.168.10.200, weitere Workstations auf .10.201–239, die Messrahmen in 192.168.11.x. Eine feste Adresse aus dem Workstation-Bereich bietet sich für die Brücke an, abgestimmt mit dem, der die Anlage betreut.</p>
         <h3>Einrichten in fünf Schritten</h3>
         <ol>
-          <li>Gerät ans Meyton-Netz und ans WLAN anschließen.</li>
-          <li>Die Brücke installieren: ein einzelnes Programm, das als Dienst startet, sobald Strom da ist.</li>
-          <li>In Spiegel unter „Admin → Anlagen“ auf „Brücke koppeln“ klicken; die Brücke zeigt auf ihrer Statusseite einen sechsstelligen Code.</li>
-          <li>Der Assistent testet den Zugang zur SSMDB2 (Standard-Zugang aus dem Handbuch) und zeigt die letzten Scheiben ohne Namen.</li>
+          <li>Gerät ans Gerätenetz anschließen, in dem auch die Meyton-Anlage hängt.</li>
+          <li>In Spiegel unter „Admin → Anlagen“ auf „Brücke koppeln“ klicken; Spiegel zeigt einen einmaligen Kopplungscode.</li>
+          <li>Die Brücke installieren, ein einzelnes Programm, das als Dienst startet, sobald Strom da ist, und dabei Spiegel-Adresse und Kopplungscode eintragen. Eine Statusseite braucht es dafür nicht.</li>
+          <li>Der Assistent in Spiegel testet über die Brücke den Zugang zur SSMDB2 (Standard-Zugang aus dem Handbuch) und zeigt die letzten Scheiben ohne Namen.</li>
           <li>Fertig. Spiegel zeigt „Anlage online, letzter Schuss vor 2 Minuten“.</li>
         </ol>
         <h3>Wie sie arbeitet</h3>
         <ul>
-          <li><strong>Abfragen:</strong> jede Sekunde, solange geschossen wird, sonst alle 30&nbsp;s. Neue und geänderte Scheiben erkennt sie über <code>Scheiben.Zeitstempel</code> und den letzten Treffer, mit Überlappungsfenster. Probeschüsse stehen womöglich nur bis zur Wertung in der Ablage, deshalb liest sie laufend mit.</li>
-          <li><strong>Opt-in live:</strong> Scheiben von Schützen mit Opt-in (gehashte SportpassIDs) lädt sie sofort hoch, Probe eingeschlossen. Alles andere bleibt im Schützenhaus, bis es jemand per QR abholt.</li>
-          <li><strong>Nur lesen, auch technisch:</strong> Einen eigenen Lese-Benutzer sieht Meyton nicht vor. Die Brücke nutzt deshalb den Standard-Zugang, öffnet jede Verbindung als Read-only-Transaktion und kennt nur feste SELECT-Abfragen.</li>
-          <li><strong>Snapshots:</strong> Sie schickt immer den vollständigen Stand einer Scheibe (Scheibe, Serien, Treffer) mit Prüfsumme. Doppelte Lieferungen sind harmlos.</li>
-          <li><strong>Abschluss:</strong> Eine Scheibe gilt als fertig, wenn die Schusszahl aus der DisziplinID erreicht ist oder zehn Minuten nichts passiert. Spätere Korrekturen kommen als neue Revision.</li>
-          <li><strong>Warteschlange:</strong> SQLite auf dem Gerät. Ohne Internet wird gepuffert und später in Reihenfolge nachgeliefert.</li>
-          <li><strong>Heartbeat:</strong> jede Minute Version, Rückstau, letzter DB-Kontakt und Uhrabweichung der Anlage.</li>
-          <li><strong>Aufträge:</strong> nur feste Typen (Scheibe per ID holen, Zeitraum nachladen, Diagnose senden). Kein freies SQL. Aufträge, die eintreffen, während die Brücke aus ist, führt sie beim nächsten Start aus.</li>
-          <li><strong>Updates:</strong> neue Version als Datei; die Brücke holt sie beim Start selbst oder per Knopf im Admin.</li>
-          <li><strong>Eigene Webseite:</strong> eine Statusseite für den Admin im Vereins-WLAN. Ein Display braucht die Brücke nicht.</li>
+          <li><strong>Nur lesen, auch technisch:</strong> Einen eigenen Lese-Benutzer sieht Meyton nicht vor. Die Brücke nutzt den Standard-Zugang, kennt nur feste SELECT-Abfragen und liest jeden Durchgang in einer kurzen Read-only-Transaktion, nie in einer lang offenen.</li>
+          <li><strong>Änderungen erkennen:</strong> zuerst die kleine Tabelle <code>Scheiben</code> über ihren Zeitstempel, dann die Treffer der geänderten Scheiben über ihren Schlüssel. Zeitstempel und Millisekunden vergleicht sie als Paar, nie als Summe.</li>
+          <li><strong>Takt:</strong> jede Sekunde, solange geschossen wird, sonst alle 30&nbsp;s. Jede Abfrage hat ein Zeitbudget; wird es überschritten, streckt die Brücke den Takt. Ältere Scheiben lädt sie nur nach, wenn gerade niemand schießt.</li>
+          <li><strong>Probe sichern:</strong> Probeschüsse stehen womöglich nur bis zum ersten Wertungsschuss in der Ablage. Die Brücke hält deshalb die Probe aller Scheiben sieben Tage lokal fest, damit auch QR-Abholungen ihre Probe haben. An der Scheibe steht, ob die Probe vollständig ist.</li>
+          <li><strong>Opt-in live:</strong> Scheiben von Schützen mit Opt-in (gehashte SportpassIDs) lädt sie sofort hoch, Probe eingeschlossen. Die Liste lädt sie bei jedem Start neu; abgelehnte oder gelöschte Scheiben kennt sie als Sperrmarke und lädt sie nie wieder hoch. Alles andere bleibt im Schützenhaus, bis es jemand per QR abholt.</li>
+          <li><strong>Snapshots:</strong> Sie schickt immer den vollständigen Stand einer Scheibe (Scheibe, Serien, Treffer) mit Prüfsumme und Folgenummer. Doppelte Lieferungen sind harmlos, und ein älterer Stand überholt nie einen neueren.</li>
+          <li><strong>Zustand statt Abschluss:</strong> Eine Scheibe ist offen, solange Schüsse kommen, ruhend nach zehn Minuten Ruhe und endgültig erst, wenn die Anlage dazwischen aus war. Gegen die Schusszahl der Disziplin zählen nur Wertungsschüsse; sonst wäre LP&nbsp;40 mit 60 Probeschüssen vor dem ersten Wertungsschuss „fertig“.</li>
+          <li><strong>Verdeckte Wertung:</strong> Ab dem ersten verdeckten Schuss verlässt von dieser Scheibe nichts mehr das Gerät, auch nicht die Kopfzeile mit ihren Summen. Wertungsmodus&nbsp;0 („unbekannt“) gibt der Admin je Disziplin frei.</li>
+          <li><strong>Warteschlange:</strong> SQLite auf dem Gerät. Ohne Internet wird gepuffert und später in kleinen Stapeln und in Reihenfolge nachgeliefert.</li>
+          <li><strong>Heartbeat:</strong> jede Minute Version, Rückstau, letzter DB-Kontakt, Dauer der Abfragen, Uhrabweichung der Anlage, zurückgehaltene Scheiben je Wertungsmodus und ein Fingerabdruck der Quelle.</li>
+          <li><strong>Aufträge:</strong> nur feste Typen (Vorschau einer Scheibe per ID, ganze Scheibe nach der Gegenprobe, Zeitraum nachladen, Diagnose ohne Personenfelder). Kein freies SQL. Aufträge, die eintreffen, während die Brücke aus ist, führt sie beim nächsten Start aus.</li>
+          <li><strong>Updates:</strong> neue Version als Datei, atomar getauscht; die vorige bleibt als Rückfall. Die Brücke holt sie beim Start selbst oder per Knopf im Admin.</li>
+          <li><strong>Statusseite:</strong> nur im Gerätenetz, für die Fehlersuche; im Alltag zeigt Spiegel den Status. Ein Display braucht die Brücke nicht.</li>
         </ul>
-        <p><strong>Was sie nie tut:</strong> in Meyton schreiben, einen Port öffnen, Daten ohne Zustimmung hochladen, Daten nach der Bestätigung behalten.</p>
+        <p><strong>Was sie nie tut:</strong> in Meyton schreiben, einen Port öffnen, Daten ohne Zustimmung hochladen, Daten nach der Bestätigung behalten, gepufferte Probe länger als sieben Tage aufheben, Namen in Protokolle schreiben.</p>
         <p><strong>Technik (Phase&nbsp;0):</strong> Gewünscht ist ein einzelnes Binary ohne Docker und Node. Weil die Brücke die Rohdaten unverändert weitergibt und alle Deutung in Spiegel passiert, trägt sie kaum Fachlogik. Das spricht für Go: ein statisches Programm für Raspberry Pi und Windows mit wenig Speicher. Der Vertrag zu Spiegel liegt dann als JSON-Schema mit gemeinsamen Beispieldateien vor, die beide Seiten testen.</p>
         <h3>Strom aus nach dem Training</h3>
         <p>Anlage und Brücke werden nach jedem Trainingsabend hart über den Strom ausgeschaltet. Die Brücke ist deshalb nur am Abend online und muss das jedes Mal schadlos überstehen:</p>
@@ -968,16 +981,17 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
           <li>schreibgeschütztes System-Dateisystem, Daten auf einer eigenen Partition oder SSD, Protokolle im RAM;</li>
           <li>Warteschlange in SQLite mit WAL und vollem Sync, jede Übertragung idempotent;</li>
           <li>beim Start nachholen: offene Aufträge, Nachladen nach neuen Opt-ins, Abgleich seit dem letzten Lauf; die SSMDB2 behält die Daten;</li>
-          <li>geduldig warten, bis der Meyton-Server antwortet, und erst nach der Zeitsynchronisierung übertragen;</li>
-          <li>in Spiegel ist „aus, zuletzt online Di 22:14“ der Normalfall, kein Alarm.</li>
+          <li>geduldig warten, bis der Meyton-Server antwortet, und erst nach der Zeitsynchronisierung übertragen; ist NTP gesperrt, stellt sie die Uhr grob nach der Anlage;</li>
+          <li>Spiegel kennt den letzten bestätigten Stand; eine getauschte Brücke holt ab dort nach;</li>
+          <li>in Spiegel ist „aus, zuletzt online Di 22:14“ der Normalfall, kein Alarm. Kommt aber ein QR-Scan von einem Abend, an dem die Brücke keinen Kontakt hatte, warnt Spiegel den Admin.</li>
         </ul>
         <h3>Zuordnen per Meyton-QR</h3>
         <p>Meyton zeigt am Stand keinen QR-Code für Rohdaten, aber einen für den Ergebnisausdruck. Dein Beispiel vom 2. Oktober zeigt, was dahintersteckt: ein Link der Form <code>http://195.201.88.185/print_&lt;UUID&gt;.pdf</code>. Die IP gehört zu qrcode.meyton.eu, der Dateiname ist zufällig, und es gibt nur HTTP. Im Fuß des PDFs steht <code>ID: ff914420</code>. Meral-IT hat für den XML-Export festgestellt, dass dessen Hex-ID die ScheibenID als vorzeichenbehaftete 32-Bit-Zahl ist. Die ID im Ausdruck sieht genauso aus; hier wäre das −7257056. Bestätigt eine Abfrage vor Ort das, ist die Zuordnung exakt.</p>
-        <p>Der Ablauf: Du scannst den QR in Spiegel. Spiegel lädt und sichert das PDF, liest ID, Stand und Werte und lässt die Brücke genau diese Scheibe aus der SSMDB2 holen. Uhrzeit, Stand und Schusswerte dienen als Gegenprobe; weil der Link unverschlüsselt ist, vergleicht Spiegel die PDF-Werte immer mit der Datenbank. Geladen wird nur von den erlaubten Meyton-Adressen (Hostname und IP), ohne Weiterleitungen und mit Größen- und Zeitgrenzen, wie der Treffsicher-Import heute.</p>
+        <p>Der Ablauf: Du scannst den QR in Spiegel. Spiegel lädt und sichert das PDF und liest ID, Stand und Werte. Die Brücke liefert zu dieser ID zuerst nur eine Vorschau ohne Namen und ohne Lage. Spiegel vergleicht sie mit dem PDF, und erst wenn die Werte passen, holt Spiegel die ganze Scheibe. So verlassen bei einer falschen ID keine fremden Rohdaten das Schützenhaus, und weil der Link unverschlüsselt ist, wird immer verglichen. Ein Zwischenausdruck zählt, wenn er den Anfang der Scheibe trifft. Geladen wird nur von den konfigurierten Meyton-Adressen, nie aus privaten Netzen, ohne Weiterleitungen und mit enger Größengrenze: Ein Ausdruck hat rund 40&nbsp;KB, und in Treffsicher hat ein 3,2-MB-PDF schon 665&nbsp;MB Speicher belegt.</p>
       </div>
       <figure class="dg">
         <div class="scroll">
-          <svg viewBox="0 0 960 556" role="img" aria-label="Ablauf Zuordnen per Meyton-QR: Der Schütze scannt den QR-Code des Ausdrucks. Spiegel lädt das PDF von qrcode.meyton.eu, sichert es und liest Uhrzeit und Schussfolge. Die Brücke holt den Auftrag ab, liest die Scheibe mit der ID aus dem Ausdruck aus der SSMDB2 und lädt sie hoch. Spiegel zeigt die Vorschau mit PDF, der Schütze bestätigt.">
+          <svg viewBox="0 0 960 700" role="img" aria-label="Ablauf Zuordnen per Meyton-QR: Der Schütze scannt den QR-Code des Ausdrucks. Spiegel lädt das PDF von qrcode.meyton.eu, sichert es und liest ID, Stand und Werte. Die Brücke holt den Auftrag ab, liest die Scheibe mit der ID aus dem Ausdruck aus der SSMDB2 und liefert zuerst eine Vorschau ohne Namen und Lage. Spiegel vergleicht sie mit dem PDF; erst wenn sie passt, lädt die Brücke die ganze Scheibe hoch. Spiegel zeigt die Vorschau mit PDF, der Schütze bestätigt.">
             <defs>
               <marker id="ah5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head"/></marker>
               <marker id="ah5k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="dg-head key"/></marker>
@@ -987,11 +1001,11 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
             <rect x="415" y="16" width="150" height="44" rx="10" class="dg-box"/><text x="490" y="43" class="dg-t" text-anchor="middle">qrcode.meyton.eu</text>
             <rect x="615" y="16" width="150" height="44" rx="10" class="dg-box"/><text x="690" y="43" class="dg-t" text-anchor="middle">Brücke</text>
             <rect x="795" y="16" width="150" height="44" rx="10" class="dg-box"/><text x="870" y="43" class="dg-t" text-anchor="middle">SSMDB2</text>
-            <line x1="90" y1="60" x2="90" y2="544" class="dg-life"/>
-            <line x1="290" y1="60" x2="290" y2="544" class="dg-life"/>
-            <line x1="490" y1="60" x2="490" y2="544" class="dg-life"/>
-            <line x1="690" y1="60" x2="690" y2="544" class="dg-life"/>
-            <line x1="870" y1="60" x2="870" y2="544" class="dg-life"/>
+            <line x1="90" y1="60" x2="90" y2="688" class="dg-life"/>
+            <line x1="290" y1="60" x2="290" y2="688" class="dg-life"/>
+            <line x1="490" y1="60" x2="490" y2="688" class="dg-life"/>
+            <line x1="690" y1="60" x2="690" y2="688" class="dg-life"/>
+            <line x1="870" y1="60" x2="870" y2="688" class="dg-life"/>
 
             <line x1="90" y1="100" x2="286" y2="100" class="dg-edge key" marker-end="url(#ah5k)"/>
             <text x="188" y="91" class="dg-l" text-anchor="middle">Meyton-QR scannen</text>
@@ -1005,22 +1019,29 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
             <line x1="690" y1="262" x2="294" y2="262" class="dg-edge" marker-end="url(#ah5)"/>
             <text x="492" y="253" class="dg-l" text-anchor="middle">Aufträge abfragen (alle 2 s)</text>
             <line x1="290" y1="290" x2="686" y2="290" class="dg-edge ret" marker-end="url(#ah5)"/>
-            <text x="488" y="281" class="dg-l" text-anchor="middle">Scheibe ff914420 holen</text>
+            <text x="488" y="281" class="dg-l" text-anchor="middle">Vorschau zu ff914420</text>
             <line x1="690" y1="334" x2="866" y2="334" class="dg-edge" marker-end="url(#ah5)"/>
             <text x="780" y="325" class="dg-l" text-anchor="middle">ScheibenID −7257056</text>
             <line x1="870" y1="362" x2="694" y2="362" class="dg-edge ret" marker-end="url(#ah5)"/>
             <text x="782" y="353" class="dg-l" text-anchor="middle">Scheibe, Serien, Treffer</text>
             <line x1="690" y1="406" x2="294" y2="406" class="dg-edge" marker-end="url(#ah5)"/>
-            <text x="492" y="397" class="dg-l" text-anchor="middle">Scheibe hochladen</text>
-            <line x1="290" y1="450" x2="94" y2="450" class="dg-edge" marker-end="url(#ah5)"/>
-            <text x="192" y="441" class="dg-l" text-anchor="middle">Vorschau: LP 40 · 367,6</text>
-            <line x1="90" y1="494" x2="286" y2="494" class="dg-edge key" marker-end="url(#ah5k)"/>
-            <text x="188" y="485" class="dg-l" text-anchor="middle">„Das bin ich“</text>
-            <rect x="300" y="508" width="210" height="30" rx="8" class="dg-note"/>
-            <text x="405" y="528" class="dg-l" text-anchor="middle">Scheibe und PDF in deinem Konto</text>
+            <text x="492" y="397" class="dg-l" text-anchor="middle">Vorschau ohne Namen und Lage</text>
+            <rect x="300" y="422" width="180" height="44" rx="8" class="dg-note"/>
+            <text x="390" y="440" class="dg-l" text-anchor="middle">Gegenprobe mit dem PDF</text>
+            <text x="390" y="456" class="dg-l" text-anchor="middle">passt bis zur Druckzeit</text>
+            <line x1="290" y1="494" x2="686" y2="494" class="dg-edge ret" marker-end="url(#ah5)"/>
+            <text x="488" y="485" class="dg-l" text-anchor="middle">ganze Scheibe holen</text>
+            <line x1="690" y1="538" x2="294" y2="538" class="dg-edge" marker-end="url(#ah5)"/>
+            <text x="492" y="529" class="dg-l" text-anchor="middle">Scheibe hochladen</text>
+            <line x1="290" y1="582" x2="94" y2="582" class="dg-edge" marker-end="url(#ah5)"/>
+            <text x="192" y="573" class="dg-l" text-anchor="middle">Vorschau: LP 40 · 367,6</text>
+            <line x1="90" y1="626" x2="286" y2="626" class="dg-edge key" marker-end="url(#ah5k)"/>
+            <text x="188" y="617" class="dg-l" text-anchor="middle">„Das bin ich“</text>
+            <rect x="300" y="640" width="210" height="30" rx="8" class="dg-note"/>
+            <text x="405" y="660" class="dg-l" text-anchor="middle">Scheibe und PDF in deinem Konto</text>
           </svg>
         </div>
-        <figcaption>Durchgezogen sind Anfragen, gestrichelt Antworten. Spiegel erkennt die Scheibe an der ID im Fuß des Ausdrucks; Uhrzeit, Stand und Schusswerte prüfen gegen. Ohne ID bliebe die Suche über Uhrzeit und Schussfolge, die praktisch ebenso eindeutig ist. Auswärts, ohne Brücke, endet der Ablauf nach dem PDF mit einem Ergebnis ohne Rohdaten. Das Original-PDF bleibt in beiden Fällen erhalten, auch wenn Meyton es nach einer Woche löscht.</figcaption>
+        <figcaption>Durchgezogen sind Anfragen, gestrichelt Antworten. Spiegel erkennt die Scheibe an der ID im Fuß des Ausdrucks. Die ganze Scheibe kommt erst, wenn die Vorschau zum PDF passt; bis dahin verlässt nichts mit Namen oder Trefferlage das Schützenhaus. Ohne ID bliebe die Suche über Uhrzeit und Schussfolge, die praktisch ebenso eindeutig ist. Auswärts, ohne Brücke, endet der Ablauf nach dem PDF mit einem Ergebnis ohne Rohdaten. Das Original-PDF bleibt in beiden Fällen erhalten, auch wenn Meyton es nach einer Woche löscht.</figcaption>
       </figure>
       <div class="prose">
         <h3>Was im Meyton-Ausdruck steht</h3>
@@ -1053,10 +1074,12 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
             <tr><td>Strom aus nach dem Training (Normalfall)</td><td>Warteschlange übersteht den Stromverlust, Nachlieferung und offene Aufträge beim nächsten Start</td></tr>
             <tr><td>Internet im Schützenhaus fällt aus</td><td>Warteschlange puffert, Nachlieferung in Reihenfolge, Status „verzögert“</td></tr>
             <tr><td>Meyton-Server ist aus</td><td>Wiederholung mit Pause, Status „Anlage nicht erreichbar“; keine Daten gehen verloren, solange die SSMDB2 sie hat</td></tr>
-            <tr><td>Neuer Meyton-Server, IDs beginnen neu</td><td>Gleiche ID mit anderem Inhalt startet eine neue Epoche; Admin-Hinweis, alte Scheiben bleiben unberührt</td></tr>
-            <tr><td>Uhr der Anlage geht falsch</td><td>Abweichung steht im Heartbeat und wird in der Normalisierung ausgeglichen</td></tr>
+            <tr><td>Ablage geleert oder neuer Meyton-Server</td><td>Der Fingerabdruck der Quelle ändert sich, oder viele Scheiben fehlen auf einmal: Die Brücke hält Löschmeldungen zurück, der Admin bestätigt die neue Epoche; alte Scheiben bleiben unberührt</td></tr>
+            <tr><td>Abfrage scheitert oder liefert nichts, etwa bei einer nach dem Stromaus beschädigten Tabelle</td><td>Nie als Löschung werten; wiederholen, Status „Anlage meldet Fehler“</td></tr>
+            <tr><td>Uhr der Anlage geht falsch</td><td>Abweichung steht mit Messzeitpunkt im Heartbeat und wird ab fünf Minuten in der Normalisierung ausgeglichen</td></tr>
             <tr><td>Standaufsicht korrigiert einen Wert</td><td>Neuer Snapshot, neue Revision, Kennzahlen neu, Hinweis „korrigiert“ an der Scheibe</td></tr>
-            <tr><td>Scheibe wird in Meyton gelöscht</td><td>Abgleich der letzten 30 Tage, Markierung „an der Quelle entfernt“</td></tr>
+            <tr><td>Einzelne Scheibe wird in Meyton gelöscht</td><td>Abgleich der letzten 30 Tage, Markierung „an der Quelle entfernt“, nie Löschen in Spiegel</td></tr>
+            <tr><td>Meyton-Update ändert das Schema</td><td>Die Brücke liest alle Spalten und meldet die Version; fehlt eine erwartete Spalte, hält Spiegel die Rohdaten zurück, bis ein Adapter sie kennt</td></tr>
             <tr><td>Meyton ändert das PDF-Format (wie am 1. September)</td><td>Die Zuordnung fällt auf Uhrzeit und Stand zurück, die Rohdaten kommen weiter aus der SSMDB2; der Test mit echten PDFs schlägt Alarm</td></tr>
           </tbody>
         </table>
@@ -1074,8 +1097,8 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
         <table class="doc">
           <thead><tr><th>Weg</th><th>Wann</th><th>Ablauf</th><th>Sicherheit</th></tr></thead>
           <tbody>
-            <tr><td>Meyton-QR</td><td>Nach jeder Scheibe, bis eine Woche später</td><td>QR-Code des Ausdrucks in Spiegel scannen; Spiegel sichert das PDF und findet die Scheibe über Uhrzeit und Schussfolge; du bestätigst</td><td>hoch</td></tr>
-            <tr><td>Opt-in per Sportpass <span class="tag">Standard</span></td><td>Starter aus der Schützenliste mit SportpassID; lädt am Abend automatisch hoch</td><td>Einmal im Profil eintragen, Admin bestätigt; danach automatisch, auch rückwirkend</td><td>hoch</td></tr>
+            <tr><td>Meyton-QR</td><td>Nach jeder Scheibe, bis eine Woche später</td><td>QR-Code des Ausdrucks in Spiegel scannen; Spiegel sichert das PDF, die Brücke liefert zur ID eine Vorschau, nach der Gegenprobe kommt die Scheibe; du bestätigst</td><td>hoch</td></tr>
+            <tr><td>Opt-in per Sportpass <span class="tag">Standard</span></td><td>Starter aus der Schützenliste mit SportpassID; lädt am Abend automatisch hoch</td><td>Einmal im Profil eintragen; der Admin bestätigt mit Blick auf den Meyton-Namen, du bestätigst deine erste Scheibe; danach automatisch</td><td>hoch</td></tr>
             <tr><td>Fundbüro</td><td>Kein QR zur Hand oder Link abgelaufen</td><td>„Scheibe holen“ in Spiegel, solange die Brücke läuft</td><td>mittel, mit Protokoll</td></tr>
             <tr><td>Admin</td><td>Korrekturen</td><td>Zuweisen und umhängen, mit Protokoll</td><td>hoch</td></tr>
           </tbody>
@@ -1105,7 +1128,7 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
             <text x="115" y="173" class="dg-s" text-anchor="middle">Schüsse kommen an</text>
             <rect x="230" y="132" width="150" height="56" rx="10" class="dg-box"/>
             <text x="305" y="156" class="dg-t" text-anchor="middle">abgeschlossen</text>
-            <text x="305" y="173" class="dg-s" text-anchor="middle">Schusszahl oder Ruhe</text>
+            <text x="305" y="173" class="dg-s" text-anchor="middle">ruhend, Abend vorbei</text>
             <polygon points="470,120 532,160 470,200 408,160" class="dg-box"/>
             <text x="470" y="156" class="dg-t" text-anchor="middle">Besitzer</text>
             <text x="470" y="172" class="dg-t" text-anchor="middle">bekannt?</text>
@@ -1145,7 +1168,7 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
             <tr><td>Vorher</td><td>Check-in: Stand-Aufkleber scannen („ich schieße jetzt auf Stand 6“) oder ein Belegungsplan der Trainerin für den Abend</td><td>ein Scan</td><td class="yes">ja</td></tr>
             <tr><td>Während</td><td>Meyton kennt dich: Sportpass aus der Schützenliste (Starterkarte und LANA, falls später genutzt)</td><td>keiner</td><td class="yes">ja</td></tr>
             <tr><td>Danach</td><td>Meyton-QR, die Rohdaten kommen sofort oder beim nächsten Einschalten; am Abend auch „Scheibe holen“, innerhalb der Frist</td><td>ein Scan, eine Bestätigung</td><td>nein</td></tr>
-            <tr><td>Später</td><td>Du verknüpfst deine Sportpassnummer; Spiegel lädt ältere Scheiben nach, soweit die SSMDB2 sie hat</td><td>einmalig</td><td>nein</td></tr>
+            <tr><td>Später</td><td>Du verknüpfst deine Sportpassnummer; Spiegel lädt ältere Scheiben nach, soweit die SSMDB2 sie hat und die Nummer damals schon darin stand; ältere schlägt Spiegel über den Namen vor</td><td>einmalig</td><td>nein</td></tr>
           </tbody>
         </table>
       </div>
@@ -1153,8 +1176,8 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
         <p>Euer Weg: „während“ über das Opt-in per Sportpass, sonst „danach“ per Meyton-QR. Ein Check-in ist optional und nur für Live-Ansichten ohne Meyton-Anmeldung nötig. Er gilt, bis man sich abmeldet, jemand anderes am selben Stand eincheckt oder drei Stunden vorbei sind. Steht in Meyton ein Name, der zu einem anderen Konto gehört, gewinnt Meyton.</p>
         <h3>Drei Wege zur eigenen Scheibe</h3>
         <ul>
-          <li><strong>Meyton-QR.</strong> Den QR-Code zum PDF-Ausdruck gibt es bei euch schon. Scannst du ihn in Spiegel oder fügst den Link ein, liest Spiegel das PDF wie heute der Treffsicher-Import, sichert es und sucht über Uhrzeit und Schussfolge die passende Scheibe in der SSMDB2. Der Link gilt eine Woche.</li>
-          <li><strong>Opt-in per Sportpass.</strong> Wer zugestimmt hat, muss nichts abholen: Die Brücke lädt seine Scheiben am Abend selbst hoch, Probe eingeschlossen. Ein Display oder Tablet braucht es dafür nicht.</li>
+          <li><strong>Meyton-QR.</strong> Den QR-Code zum PDF-Ausdruck gibt es bei euch schon. Scannst du ihn in Spiegel oder fügst den Link ein, liest Spiegel das PDF wie heute der Treffsicher-Import, sichert es, nimmt die ID im Fuß und holt die Scheibe, sobald die Vorschau der Brücke zum PDF passt. Der Link gilt eine Woche.</li>
+          <li><strong>Opt-in per Sportpass.</strong> Wer zugestimmt hat, muss nichts abholen: Die Brücke lädt seine Scheiben am Abend selbst hoch, Probe eingeschlossen. Die erste davon bestätigst du einmal; so fällt eine vertippte Nummer auf, bevor fremde Scheiben in deinem Konto landen. Ein Display oder Tablet braucht es dafür nicht.</li>
           <li><strong>In Spiegel.</strong> Unter „Scheibe holen“ wählst du Stand und Zeitraum. Spiegel fragt die Brücke, die Liste kommt in Sekunden. Das geht nur, solange die Brücke läuft, also am Trainingsabend. Dabei verlassen nur die Vorschau-Angaben das Schützenhaus, die Schüsse erst nach deiner Bestätigung.</li>
         </ul>
         <h3>Regeln fürs Abholen</h3>
@@ -1164,15 +1187,20 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
           <li>Wer zuerst bestätigt, bekommt die Scheibe; ein zweiter Anspruch geht an den Admin.</li>
           <li>Abholen lässt sich rückgängig machen, und an der Scheibe steht, wie sie zu dir kam.</li>
           <li>Das Fundbüro zeigt keine Namen. Erkannt wird die Scheibe an Stand, Uhrzeit, Ergebnis und Trefferbild.</li>
-          <li>Haben zwei Schützen nacheinander auf derselben Scheibe geschossen, lässt sie sich an einer Schussnummer teilen.</li>
+          <li>Haben zwei Schützen nacheinander auf derselben Scheibe geschossen, lässt sie sich an einem Schuss teilen.</li>
+          <li>„Nicht meine“ nimmt eine automatisch zugeordnete Scheibe sofort aus dem Konto, etwa wenn jemand am Stand deinen Namen gewählt hat. Findet sich kein Besitzer, wird sie gelöscht und bekommt eine Sperrmarke, damit der nächste Abgleich sie nicht wieder hochlädt.</li>
+          <li>Eine SportpassID, die in Meyton unter mehreren Namen vorkommt, ordnet Spiegel nie automatisch zu.</li>
+          <li>Wer den QR hat, kann die Scheibe holen, wie mit einem Papierausdruck. Deshalb gibt es Protokoll, Umkehr und „Das war ich“.</li>
         </ul>
         <h3>Datenschutz</h3>
         <ul>
           <li>Einwilligung vor dem ersten Upload, jederzeit widerrufbar. Das Opt-in per Sportpass ist genau diese Einwilligung.</li>
           <li>Verantwortlich ist der Verein; mit dem Hoster braucht es einen Vertrag zur Auftragsverarbeitung.</li>
-          <li>Daten ohne Zuordnung verlassen das Schützenhaus nicht. Die Brücke kennt dafür nur gehashte Kennungen der zustimmenden Schützen.</li>
+          <li>Daten ohne Zuordnung verlassen das Schützenhaus nicht. Die Brücke kennt dafür nur gehashte Kennungen der zustimmenden Schützen. Die Probe aller Scheiben hält sie dort bis zu sieben Tage fest, weil Meyton sie womöglich mit dem ersten Wertungsschuss verwirft.</li>
+          <li>Doppelt geprüft: Auch Spiegel nimmt nur Scheiben an, die zu einem Opt-in oder einem offenen Auftrag passen. Protokolle enthalten keine Namen.</li>
+          <li>Die Handys sind im Gäste-LAN, Anlage und Brücke im Gerätenetz; so bleibt der überall gleiche Standard-Zugang zur SSMDB2 von den Handys fern.</li>
           <li>Privat ist Standard. Trainer sehen nur, was du freigibst. Admins sehen Betrieb und Zuordnungen, aber keine Schussbilder.</li>
-          <li>Export (JSON, CSV) und Löschen auf Knopfdruck.</li>
+          <li>Export (JSON, CSV) und Löschen auf Knopfdruck; Löschen setzt Sperrmarken, damit nichts wiederkommt.</li>
           <li>Gäste und Jugendliche unterstützt Spiegel vorerst nicht; Konten gibt es nur für erwachsene Mitglieder.</li>
         </ul>
         <p class="small muted">Das ist eine technische Sicht, keine Rechtsberatung. Den Einwilligungstext sollte der Vorstand mit der verantwortlichen Person für Datenschutz abstimmen.</p>
@@ -1206,29 +1234,34 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
             <tr><td>Stand</td><td>StandNr oder StandNrText (zum Beispiel „H“ im Finale)</td><td class="mono">Anlage + Nr</td></tr>
             <tr><td>Schützen-Identität</td><td>Wie Meyton den Schützen kennt</td><td class="mono">SportpassID oder Name + Verein</td></tr>
             <tr><td>Konto, Zuordnung</td><td>Spiegel-Nutzer und sein Weg zur Identität, mit Status</td><td class="mono">id</td></tr>
-            <tr><td>Rohdatensatz</td><td>Unveränderter Snapshot</td><td class="mono">Quelle + ScheibenID + Prüfsumme</td></tr>
-            <tr><td>Scheibe</td><td>Ein Durchgang: Schütze, Disziplin, Stand, Zeit, Status, Revision</td><td class="mono">Quelle + Epoche + ScheibenID</td></tr>
+            <tr><td>Rohdatensatz</td><td>Snapshot, gespeichert als Zeilenversionen (jede Zeile nur, wenn sie neu ist oder sich ändert)</td><td class="mono">Quelle + ScheibenID + Prüfsumme</td></tr>
+            <tr><td>Sperrmarke („Grabstein“)</td><td>Abgelehnte oder gelöschte Scheibe, die nicht wiederkommen darf; auch die Brücke kennt sie</td><td class="mono">Quelle + Epoche + ScheibenID</td></tr>
+            <tr><td>Scheibe</td><td>Ein Durchgang: Schütze, Disziplin, Stand, Zeit, Status, Zustand (offen, ruhend, endgültig), Merkmale, Revision</td><td class="mono">Quelle + Epoche + ScheibenID</td></tr>
             <tr><td>Stellung, Serie</td><td>Gliederung mit amtlichen Summen</td><td class="mono">Scheibe + Stellung + Serie</td></tr>
-            <tr><td>Schuss</td><td>Lage, Werte, Zeit</td><td class="mono">Scheibe + Stellung + Treffer</td></tr>
-            <tr><td>Disziplin</td><td>Regelnummer, Schusszahl, Serienlänge, Stellungen</td><td class="mono">Regelnummer</td></tr>
+            <tr><td>Schuss</td><td>Lage, Werte, Zeit; über Revisionen hinweg erkannt an Zeit und Lage, nicht an der Nummer</td><td class="mono">Scheibe + Stellung + Treffer je Revision</td></tr>
+            <tr><td>Disziplin</td><td>DisziplinID und Name, Regelnummer, Schusszahl, Serienlänge, Stellungen, Familie</td><td class="mono">Anlage + DisziplinID + Name</td></tr>
+            <tr><td>Disziplin-Familie</td><td>Was in Verläufen zusammen zählt, etwa LP Freihand („LP 40“, „LP 40 alt“); Auflage getrennt</td><td class="mono">id</td></tr>
             <tr><td>Scheibenbild</td><td>Geometrie je Stellung, versioniert</td><td class="mono">id + Version</td></tr>
-            <tr><td>Kennzahlwert</td><td>Berechneter Wert je Ebene</td><td class="mono">Scheibe + Ebene + Kennzahl + Version</td></tr>
-            <tr><td>Notiz, Tag, Ausrüstung</td><td>Kontext für Vergleiche (Munitionslos, Griff, Brille)</td><td class="mono">id</td></tr>
+            <tr><td>Kennzahlwert</td><td>Berechneter Wert je Ebene</td><td class="mono">Scheibe + Revision + Ebene + Kennzahl + Version</td></tr>
+            <tr><td>Einheit</td><td>Ein Schütze an einem Tag mit seinen zusammenhängenden Scheiben (Aufwärmen, Abbruch, Disziplinwechsel)</td><td class="mono">Konto + Tag</td></tr>
+            <tr><td>Notiz, Tag, Ausrüstung, Ereignis</td><td>Kontext für Vergleiche (Munitionslos, Griff, Brille); ein Ereignis wie „Visier verstellt“ teilt die Gruppe</td><td class="mono">id</td></tr>
           </tbody>
         </table>
       </div>
 <pre><span class="c">// Ein Schuss im kanonischen Modell</span>
 type Shot = {
-  seq: number                     <span class="c">// Reihenfolge über die ganze Scheibe, Probe zuerst</span>
+  seq: number                     <span class="c">// Abgabefolge: je Stellung nach Treffer, Probe/Wertung nach Zeit</span>
   position: number                <span class="c">// Stellung, 0 = Probe</span>
   series: number | null           <span class="c">// Serie laut Meyton</span>
-  xUm: number; yUm: number        <span class="c">// Mikrometer, x nach rechts, y nach oben</span>
+  xUm: number | null              <span class="c">// Mikrometer, x nach rechts; null nur aus dem PDF</span>
+  yUm: number | null              <span class="c">// Mikrometer, y nach oben</span>
   ring: number | null             <span class="c">// amtlich, ganze Ringe</span>
   decimalTenths: number | null    <span class="c">// amtlich, 94 = 9,4</span>
   teilerHundredths: number | null <span class="c">// amtlich; Einheit am echten Datensatz prüfen</span>
   innerTen: boolean
   scoringMode: number             <span class="c">// Meyton-Wertungsmodus 0–12</span>
-  firedAt: string                 <span class="c">// UTC mit ms, aus Ortszeit + Zone der Anlage</span>
+  firedAt: string | null          <span class="c">// UTC mit ms, aus Ortszeit + Zone der Anlage</span>
+  flags: string[]                 <span class="c">// zum Beispiel fehlschuss, verdaechtig</span>
   source: { sourceId: string; scheibenId: number; stellung: number; treffer: number }
 }</pre>
       <div class="prose">
@@ -1246,7 +1279,7 @@ type Shot = {
   "labels": { "rings": [1, 2, 3, 4, 5, 6, 7, 8] }
 }</pre>
       <div class="prose">
-        <p>Die Kette lautet: DisziplinID → Regelnummer (DSB oder Meyton-eigen) → Disziplin (Schusszahl, Serienlänge, Probe) → Scheibenbild je Stellung. Bei der 25-m-Pistole ist Stellung&nbsp;1 die Präzisions-, Stellung&nbsp;2 die Duellscheibe. Die SSMDB2 enthält keine Geometrie; auch Meyton rät zu einer eigenen Tabelle. Für Preisscheiben ordnet ein Admin den Namen zu.</p>
+        <p>Die Kette lautet: DisziplinID → Regelnummer (DSB oder Meyton-eigen) → Disziplin (Schusszahl, Serienlänge, Probe) → Scheibenbild je Stellung. Bei der 25-m-Pistole ist Stellung&nbsp;1 die Präzisions-, Stellung&nbsp;2 die Duellscheibe. Die SSMDB2 enthält keine Geometrie; auch Meyton rät zu einer eigenen Tabelle. Für unbekannte Disziplinen schlägt Spiegel das Scheibenbild vor, das alle amtlichen Zehntelwerte reproduziert, und ein Admin bestätigt. Die Schusszahl in der DisziplinID ist nur ein Hinweis, nie die Bedingung für „fertig“.</p>
         <p>Die Bibliothek der Scheibenbilder (Maße in mm nach DSB-Sportordnung 2026, Anhang 0.20, gleich ISSF 2026; die Ringe haben gleiche Abstände). Euer Verein hat nur 10-m-Stände, Version&nbsp;1 braucht deshalb nur Luftgewehr und Luftpistole; Auflage nutzt dieselben Scheiben, und eigene Disziplin-Varianten wie „LP 40 alt“ erkennt Spiegel über Entfernung und Namensanfang. Der Rest ist Referenz für später und für andere Vereine:</p>
       </div>
       <div class="scroll">
@@ -1293,7 +1326,8 @@ type Shot = {
           </tbody>
         </table>
       </div>
-      <div class="prose"><p class="small muted">Alle sechs stimmen, auch die Sterne: Innenzehner ist ein Schuss bis 4,75&nbsp;mm Abstand (halber Innenzehner 2,5&nbsp;mm plus halbes Kaliber 2,25&nbsp;mm), also ab 10,4. Der Teiler ist der Abstand der Schussmitte zur Scheibenmitte in 1/100&nbsp;mm; Meyton speichert ihn als Zehntel- und Hundertstelteiler. Einen Teilerfaktor für die Luftpistole kennt die Sportordnung nicht, er steht in der jeweiligen Ausschreibung (üblich ist LP-Teiler ÷ 2,6 bis 3,0). Spiegel speichert den rohen Teiler und rechnet Faktoren nur in der Ansicht.</p></div>
+      <div class="prose"><p class="small muted">Alle sechs stimmen, auch die Sterne: Innenzehner ist ein Schuss bis 4,75&nbsp;mm Abstand (halber Innenzehner 2,5&nbsp;mm plus halbes Kaliber 2,25&nbsp;mm), also ab 10,4. Der Teiler ist der Abstand der Schussmitte zur Scheibenmitte in 1/100&nbsp;mm; Meyton speichert ihn als Zehntel- und Hundertstelteiler. Einen Teilerfaktor für die Luftpistole kennt die Sportordnung nicht, er steht in der jeweiligen Ausschreibung (üblich ist LP-Teiler ÷ 2,6 bis 3,0). Spiegel speichert den rohen Teiler und rechnet Faktoren nur in der Ansicht.</p>
+        <p class="small muted">Weil die Lage x/y nicht vom Scheibenbild abhängt, kann Spiegel eine Scheibe mit dem richtigen Bild neu werten, wenn am Stand die falsche Disziplin gewählt war; die Werte sind dann gekennzeichnet und nicht amtlich. Weicht nur ein einzelner Schuss ab, ist er verdächtig, etwa ein Platzhalter bei einem Fehler; er wird markiert statt gezeichnet und zählt für keinen Rekord.</p></div>
     </section>
 
     <!-- 08 -->
@@ -1310,6 +1344,9 @@ type Shot = {
   scopes: ["series", "card"],
   better: "lower",
   version: 1,
+  appliesTo: ["match", "probe"],  <span class="c">// Ringe nur "match"</span>
+  minShots: 3,                    <span class="c">// darunter kein Wert</span>
+  nSensitive: true,               <span class="c">// wächst mit der Schusszahl</span>
   compute: (shots) => 2 * smallestEnclosingCircle(shots).radiusMm,
 })</pre>
       <div class="scroll">
@@ -1334,7 +1371,7 @@ type Shot = {
           <li><strong>Verteilung</strong> der Zehntel als Histogramm, Richtungen als Uhr.</li>
         </ul>
         <h3>Verläufe</h3>
-        <p>Jede Kennzahl lässt sich über die Zeit zeigen. Die Disziplin ist Pflichtfilter, wie in Treffsicher (nie gemischte Disziplinen). Dazu Zeitraum, Training oder Wettkampf, Wert je Scheibe, Woche oder Monat, gleitender Schnitt und Marker für Ereignisse wie „neuer Griff“. Rekorde fallen nebenbei ab.</p>
+        <p>Jede Kennzahl lässt sich über die Zeit zeigen. Die Disziplin-Familie ist Pflichtfilter, wie in Treffsicher nie gemischte Disziplinen; „LP 40“ und „LP 40 alt“ zählen zusammen, Auflage bleibt getrennt. Dazu Zeitraum, Training oder Wettkampf, Wert je Scheibe, Woche oder Monat, gleitender Schnitt und Marker für Ereignisse wie „neuer Griff“. Rekorde fallen nebenbei ab.</p>
         <h3>Direkte Vergleiche</h3>
         <ul>
           <li><strong>Serie gegen Serie:</strong> „Warum fällt Serie 4 ab?“</li>
@@ -1344,7 +1381,16 @@ type Shot = {
           <li><strong>Gegen den eigenen Schnitt:</strong> „0,12 je Schuss über deinem 30-Tage-Schnitt.“</li>
           <li><strong>Schütze gegen Schütze</strong> nur mit beidseitiger Freigabe, etwa im Training mit dem Trainer.</li>
         </ul>
-        <p>Wo ein Satz reicht, schreibt Spiegel den Satz über das Diagramm: „Serie 4 streut 21&nbsp;% weiter als Serie 3.“ Vergleiche achten auf gleiche Schusszahlen, denn ein Streukreis über 40 Schuss ist immer größer als einer über 10.</p>
+        <p>Wo ein Satz reicht, schreibt Spiegel den Satz über das Diagramm: „Serie 4 streut 21&nbsp;% weiter als Serie 3.“ Vergleiche achten auf gleiche Schusszahlen, denn ein Streukreis über 40 Schuss ist fast immer größer als einer über 10.</p>
+        <h3>Vergleichbar und robust</h3>
+        <ul>
+          <li><strong>Probe zählt, wo es Sinn ergibt.</strong> Eine Scheibe nur mit Probe bekommt alle Kennzahlen zu Lage und Tempo, nur kein Ergebnis; Verläufe zeigen sie mit dem Schalter „Probe einbeziehen“.</li>
+          <li><strong>Je Schuss statt Summe.</strong> Ringe laufen im Verlauf als Ø je Schuss; Summen und Rekorde nur aus vollständigen Wertungsserien.</li>
+          <li><strong>Streumaße, die kaum von der Schusszahl abhängen:</strong> mittlerer Radius, der Radius um die Hälfte der Treffer (R50) oder der Median der Serien-Streukreise.</li>
+          <li><strong>Mindestzahl:</strong> Unter drei Schüssen gibt es keinen Streukreis, sondern „–“ mit Grund, nie 0. Fehlschüsse sind markiert; robuste Maße lassen sie weg.</li>
+          <li><strong>Visier verstellt:</strong> Ein Schwerpunkt-Sprung in der Probe kann Absicht sein. Der Versatz Probe → Wertung zählt deshalb nur die letzten fünf Probeschüsse, und ein Ereignis „Visier verstellt“ teilt die Gruppe.</li>
+          <li><strong>Tempo:</strong> Median der Intervalle; Pausen über drei Minuten zählen getrennt.</li>
+        </ul>
       </div>
     </section>
 
@@ -1454,7 +1500,7 @@ type Shot = {
           <li><strong>Farbe kommt aus den Daten.</strong> Die Oberfläche bleibt kühl-neutral, damit Ringwerte, Serien und Vergleiche leuchten. Die Ringwert-Skala (10 rot, 9 gold, 8 türkis, ≤&nbsp;7 violett) ist farbenblind geprüft; jede Farbe hat zusätzlich Zahl und Tabelle.</li>
           <li><strong>Daumenzone ohne Verdecken.</strong> Auf dem Handy liegt die Navigation unten, mit „Scannen“ für den Meyton-QR in der Mitte. Inhalte enden davor.</li>
           <li><strong>Bewegung mit Bedeutung.</strong> Wiedergabe, Zoom auf die Gruppe, weiche Übergänge von der Liste in die Scheibe. Mit „Bewegung reduzieren“ springt alles.</li>
-          <li><strong>Hell und dunkel.</strong> Dunkel für die Halle am Abend, hell für den 50-m-Stand in der Sonne.</li>
+          <li><strong>Dunkel zuerst.</strong> Dunkel für die Halle am Abend, hell für Tageslicht und andere Vereine. Ihr schießt nur in der 10-m-Halle; ob Phase&nbsp;1 nur dunkel startet, ist offen.</li>
           <li><strong>Desktop ist die Analysezentrale.</strong> Scheibe links, Kennzahlen rechts, Vergleiche nebeneinander.</li>
           <li><strong>Zahlen in Worten.</strong> Die wichtigste Beobachtung steht als Satz über den Diagrammen.</li>
         </ul>
@@ -1480,8 +1526,8 @@ type Shot = {
           <thead><tr><th></th><th>DISAG ShotsApp</th><th class="rec">Spiegel (geplant)</th></tr></thead>
           <tbody>
             <tr><td>Datenquelle</td><td>DISAG OpticScore; Meyton über M-Qnect (Tablet im Meyton-Netz)</td><td class="rec">Meyton über SSMDB2; weitere Quellen als Adapter</td></tr>
-            <tr><td>Übertragung</td><td>QR-Code nach dem letzten Schuss scannen; ältere Ergebnisse per QR-Ausdruck</td><td class="rec">Automatisch über die Brücke; „Scheibe holen“ per Stand-QR, wenn die Zuordnung fehlt</td></tr>
-            <tr><td>Probeschüsse</td><td>Auf der Website nicht beschrieben</td><td class="rec">Ja, getrennt von der Wertung (bei euch mit ShootMaster&nbsp;6.0.2 vorhanden)</td></tr>
+            <tr><td>Übertragung</td><td>QR-Code nach dem letzten Schuss scannen; ältere Ergebnisse per QR-Ausdruck</td><td class="rec">Automatisch über die Brücke mit Opt-in; sonst der QR-Code des Meyton-Ausdrucks</td></tr>
+            <tr><td>Probeschüsse</td><td>Auf der Website nicht beschrieben</td><td class="rec">Ja, getrennt von der Wertung, auch reine Probe-Trainings und lange Probe (bei euch mit ShootMaster&nbsp;6.0.2 vorhanden)</td></tr>
             <tr><td>Plattform</td><td>iOS, Android</td><td class="rec">Web-App für Handy und Desktop, installierbar</td></tr>
             <tr><td>Schussbild, Wiedergabe</td><td>Ja, Wiedergabe im Premium-Abo</td><td class="rec">Ja, mit echter Zeitachse</td></tr>
             <tr><td>Schwerpunkt, Streukreis</td><td>Ja, im Premium-Abo</td><td class="rec">Ja, mehrere Streumaße, auch je Serie</td></tr>
@@ -1524,26 +1570,69 @@ type Shot = {
     <!-- 11 -->
     <section id="szenarien">
       <div class="prose">
-        <p class="eyebrow">11 · Szenarien</p>
-        <h2>Sechzehn Situationen, die das System aushalten muss</h2>
+        <p class="eyebrow">11 · Szenarien und Sonderfälle</p>
+        <h2>Was das System aushalten muss</h2>
+        <p>Erst sechzehn Situationen aus dem Alltag, dann die Sonderfälle aus dem kritischen Review vom 5. Oktober. Den vollständigen Katalog mit 69 Fällen (SF-01 bis SF-69) gibt es im Repo unter <code>vault/spiegel/spiegel-edge-cases.md</code>. Jeder Fall wird ein Testfall, und jede Abnahme im <a href="#fahrplan">Fahrplan</a> nennt ihre Fälle.</p>
+        <h3>Sechzehn Situationen aus dem Alltag</h3>
       </div>
       <div class="cards">
-        <div class="card"><h4>Dienstagstraining mit Sportpass</h4><p>Du wählst dich am Stand aus der Schützenliste und schießt 40 Schuss. Kurz nach dem letzten Schuss liegt die Scheibe in Spiegel.</p><p class="needs"><b>Braucht:</b> Sportpass-Zuordnung, Brücke im Dauerbetrieb, Abschlusserkennung.</p></div>
-        <div class="card"><h4>Training ohne Starter</h4><p>Niemand hat einen Starter zugewiesen. Du scannst den Meyton-QR, und Spiegel findet die Scheibe über Uhrzeit und Schussfolge. Ohne QR hilft das Fundbüro.</p><p class="needs"><b>Braucht:</b> PDF-Parser, Suchauftrag an die Brücke, Fundbüro mit Frist, Vorschau ohne Namen, Protokoll.</p></div>
+        <div class="card"><h4>Dienstagstraining mit Sportpass</h4><p>Du wählst dich am Stand aus der Schützenliste und schießt 40 Schuss. Kurz nach dem letzten Schuss liegt die Scheibe in Spiegel.</p><p class="needs"><b>Braucht:</b> Sportpass-Zuordnung, Brücke am Abend, Zustand statt Abschluss.</p></div>
+        <div class="card"><h4>Training ohne Starter</h4><p>Niemand hat einen Starter zugewiesen. Du scannst den Meyton-QR, und Spiegel findet die Scheibe über die ID im Ausdruck. Ohne QR hilft das Fundbüro.</p><p class="needs"><b>Braucht:</b> PDF-Parser, Vorschau und Gegenprobe vor dem Upload, kein Filter auf <code>--frei--</code>, Fundbüro mit Frist, Protokoll.</p></div>
         <div class="card"><h4>Rundenwettkampf</h4><p>Status RWK, Liga, Heim oder Gast markiert die Scheibe als Wettkampf.</p><p class="needs"><b>Braucht:</b> Kategorie aus Status und Starterliste; später Übergabe an Ringwerk.</p></div>
-        <div class="card"><h4>Königsschießen mit verdeckter Wertung</h4><p>Wertungsmodus 5 oder 10. Niemand soll vor der Proklamation etwas sehen.</p><p class="needs"><b>Braucht:</b> Die Brücke lädt Werte (bei Modus 5 auch die Lage) nicht hoch; nach dem Fest kann ein Admin freigeben.</p></div>
-        <div class="card"><h4>Falscher Name am Stand</h4><p>Du hast unter dem Namen deines Vereinskollegen geschossen.</p><p class="needs"><b>Braucht:</b> „Das war ich nicht“, Umhängen mit Zustimmung beider oder durch den Admin.</p></div>
+        <div class="card"><h4>Königsschießen mit verdeckter Wertung</h4><p>Wertungsmodus 5 oder 10. Niemand soll vor der Proklamation etwas sehen.</p><p class="needs"><b>Braucht:</b> Ab dem ersten verdeckten Schuss bleibt die ganze Scheibe samt Kopfzeile in der Brücke, auch wenn die Probe sichtbar war; nach dem Fest kann ein Admin freigeben.</p></div>
+        <div class="card"><h4>Falscher Name am Stand</h4><p>Du hast unter dem Namen deines Vereinskollegen geschossen.</p><p class="needs"><b>Braucht:</b> „Nicht meine“, Umhängen durch den Admin, Sperrmarke, wenn sich kein Besitzer findet.</p></div>
         <div class="card"><h4>Die Standaufsicht korrigiert</h4><p>Ein Schuss wird nachträglich anders gewertet oder annulliert.</p><p class="needs"><b>Braucht:</b> neuer Snapshot, Revision, Kennzahlen neu, sichtbarer Hinweis.</p></div>
         <div class="card"><h4>Strom aus, Internet weg</h4><p>Nach dem Training wird der Strom abgeschaltet, manchmal fällt vorher schon das WLAN aus.</p><p class="needs"><b>Braucht:</b> Warteschlange, die Stromverlust übersteht, Nachlieferung und offene Aufträge beim nächsten Start, Status „aus“ statt Alarm.</p></div>
-        <div class="card"><h4>Neuer Meyton-Server</h4><p>Nach dem Tausch beginnen die ScheibenIDs wieder klein.</p><p class="needs"><b>Braucht:</b> Epochen-Erkennung, Admin-Hinweis, kein Überschreiben.</p></div>
+        <div class="card"><h4>Neuer Meyton-Server</h4><p>Nach dem Tausch beginnen die ScheibenIDs wieder klein.</p><p class="needs"><b>Braucht:</b> Fingerabdruck der Quelle, Bestätigung durch den Admin, kein Überschreiben und kein Massenlöschen.</p></div>
         <div class="card"><h4>Die Trainerin schaut live zu</h4><p>Vier Stände auf dem Tablet, Schuss für Schuss.</p><p class="needs"><b>Braucht:</b> Freigabe der Schützen, Live-Kanal (Server-Sent Events), kurze Abfrageintervalle oder SDF.</p></div>
         <div class="card"><h4>Auswärts auf fremder Anlage</h4><p>Kreismeisterschaft im Nachbarverein, dort gibt es keine Brücke. Du scannst den Meyton-QR wie zu Hause.</p><p class="needs"><b>Braucht:</b> „Ergebnis ohne Rohdaten“ aus dem PDF (Serien, Schusswerte, Trefferlage); das PDF selbst bleibt dabei.</p></div>
         <div class="card"><h4>Munitionstest im KK</h4><p>Zwei Lose im Vergleich, je dreimal zehn Schuss liegend.</p><p class="needs"><b>Braucht:</b> Tags an Serien, Vergleich nach Merkmal, Streukreis bei gleicher Schusszahl.</p></div>
-        <div class="card"><h4>Neues Mitglied mit Vergangenheit</h4><p>Nach der Zuordnung lädt Spiegel die letzten Jahre aus der SSMDB2 nach.</p><p class="needs"><b>Braucht:</b> Nachlade-Auftrag, gedrosselt, nur nach Einwilligung.</p></div>
-        <div class="card"><h4>Konto löschen</h4><p>Du trittst aus und willst, dass alles weg ist.</p><p class="needs"><b>Braucht:</b> Export vorher, Löschen von Rohdaten und Ableitungen, die Brücke vergisst die Zuordnung.</p></div>
+        <div class="card"><h4>Neues Mitglied mit Vergangenheit</h4><p>Nach der Zuordnung lädt Spiegel die letzten Jahre aus der SSMDB2 nach.</p><p class="needs"><b>Braucht:</b> Nachlade-Auftrag, gedrosselt, nur nach Einwilligung und nur, wenn gerade niemand schießt; ältere Scheiben ohne SportpassID über Namensvorschläge.</p></div>
+        <div class="card"><h4>Konto löschen</h4><p>Du trittst aus und willst, dass alles weg ist.</p><p class="needs"><b>Braucht:</b> Export vorher, Löschen von Rohdaten und Ableitungen, Sperrmarken, damit die Brücke nichts wieder hochlädt.</p></div>
         <div class="card"><h4>Ein zweiter Verein will mitmachen</h4><p>Der Nachbarverein hat auch Meyton und findet Spiegel gut.</p><p class="needs"><b>Braucht:</b> eine eigene Installation mit eigener Brücke (Open Source, Compose-Beispiel), keine Mandanten in unserer Instanz.</p></div>
         <div class="card"><h4>Liga-Abend mit Live-Ticker</h4><p>Heim gegen Gast; Zuschauer verfolgen die Serienergebnisse auf dem Handy, Ringwerk trägt das Ergebnis danach selbst ein.</p><p class="needs"><b>Braucht:</b> öffentliche Ansicht nur mit Summen (keine Trefferlage), Freigabe durch die Liga, Übergabe an Ringwerk.</p></div>
         <div class="card"><h4>Der Verein rüstet auf ESTANX um</h4><p>In ein paar Jahren kommen neue Meyton-Messrahmen, die ihre Ergebnisse vielleicht nur noch über die Cloud des Herstellers liefern.</p><p class="needs"><b>Braucht:</b> einen neuen Quell-Adapter; Modell, Kennzahlen und Oberfläche bleiben, die alten Scheiben auch.</p></div>
+      </div>
+      <div class="prose">
+        <h3>Leitregeln aus dem Review</h3>
+        <ol>
+          <li><strong>Ausgewertet wird jeder Schuss, nicht nur die Wertung.</strong> Eine Scheibe nur mit Probe ist vollwertiges Training, nur ohne amtliches Ergebnis.</li>
+          <li><strong>Reihenfolge je Stellung nach Nummer, zwischen Probe und Wertung nach Zeit.</strong> Zeit ist das Paar aus Zeitstempel und Millisekunden, nie die Summe.</li>
+          <li><strong>Probe wird gesammelt, Wertung folgt dem neuesten Stand.</strong> Verschwundene Probe bleibt erhalten, Korrekturen an der Wertung greifen.</li>
+          <li><strong>Fehlen ist keine Löschung.</strong> Fehler, leere Ergebnisse und massenhaftes Verschwinden ändern nichts.</li>
+          <li><strong>Vollständig ist ein Zustand:</strong> offen, ruhend, endgültig. Gegen die Schusszahl zählen nur Wertungsschüsse.</li>
+          <li><strong>Nichts verlässt das Schützenhaus ungeprüft:</strong> erst Vorschau und Gegenprobe, verdeckte Wertung samt Kopfzeile zurück, Zustimmung doppelt geprüft.</li>
+          <li><strong>Im Zweifel keine automatische Zuordnung.</strong> Mehrdeutiges geht an den Admin, „Nicht meine“ setzt eine Sperrmarke.</li>
+          <li><strong>Vergleichbar machen:</strong> je Schuss, gleiche Schusszahl oder robuste Maße, Disziplin-Familien.</li>
+          <li><strong>Die Anlage hat Vorrang:</strong> kurze Abfragen über Indizes mit Zeitbudget, Nachladen nur, wenn niemand schießt.</li>
+          <li><strong>Unbekanntes sichtbar machen,</strong> nie still deuten und nie verwerfen.</li>
+          <li><strong>Jeder Fall hat einen Testfall.</strong></li>
+        </ol>
+        <h3>Die wichtigsten Sonderfälle</h3>
+        <p>Eine Auswahl aus dem Katalog, darunter deine Beispiele. Vieles davon beruht auf Vermutungen über die Anlage; das Schießprotokoll im <a href="#anhang">Anhang</a> klärt sie an einem Abend.</p>
+      </div>
+      <div class="scroll">
+        <table class="doc">
+          <thead><tr><th>ID</th><th>Sonderfall</th><th>Was schiefginge</th><th>Absicherung</th></tr></thead>
+          <tbody>
+            <tr><td class="mono sfid">SF-01</td><td>Nur auf Probe trainiert</td><td>Ein Filter auf die Trefferzahl verschluckt das Training; „0 Ringe“ im Verlauf</td><td>Volle Analyse ohne Ergebnis, Merkmal „nur Probe“, Schalter „Probe einbeziehen“</td></tr>
+            <tr><td class="mono sfid">SF-02</td><td>LP&nbsp;40, aber 60 Probeschüsse</td><td>Die Scheibe gilt vor dem ersten Wertungsschuss als fertig</td><td>Gegen die Schusszahl zählen nur Wertungsschüsse; Probe in Zehnerblöcken P1…Pn</td></tr>
+            <tr><td class="mono sfid">SF-03</td><td>Probe fehlt nach dem ersten Wertungsschuss</td><td>QR-Abholungen haben keine Probe; ein Snapshot ohne Probe sieht aus wie eine Korrektur</td><td>Probe-Puffer auf der Brücke, Vereinigung über alle Snapshots, Merkmal „Probe unvollständig“</td></tr>
+            <tr><td class="mono sfid">SF-04</td><td>Zurück von Wertung auf Probe</td><td>„Probe zuerst“ verdreht Wiedergabe und Intervalle</td><td>Reihenfolge nach Zeit zwischen den Stellungen</td></tr>
+            <tr><td class="mono sfid">SF-05</td><td>Umschalten auf Wertung vergessen</td><td>Das Training fehlt in den Verläufen</td><td>„Als Wertung zählen“, gekennzeichnet und nicht amtlich</td></tr>
+            <tr><td class="mono sfid">SF-07</td><td>Abbruch nach 23 von 40</td><td>Summe 200 statt rund 360 verzerrt Verläufe und Rekorde</td><td>Merkmal „unvollständig“, Werte je Schuss</td></tr>
+            <tr><td class="mono sfid">SF-13</td><td>Training ohne Starter heißt <code>--frei--</code></td><td>Der Filter auf den Platzhalter verwirft genau diese Trainings</td><td>Nur Scheiben ohne Treffer weglassen</td></tr>
+            <tr><td class="mono sfid">SF-19</td><td>Königsschießen: Probe sichtbar, Wertung verdeckt</td><td>Die Summe in der Kopfzeile verrät das Ergebnis</td><td>Ab dem ersten verdeckten Schuss bleibt die ganze Scheibe zurück</td></tr>
+            <tr><td class="mono sfid">SF-20</td><td>Wertungsmodus 0 („unbekannt“)</td><td>„Unbekannt nie hochladen“ blockiert still alles</td><td>Freigabe je Disziplin, Zähler im Heartbeat</td></tr>
+            <tr><td class="mono sfid">SF-24</td><td>Beschädigte Tabelle nach dem Stromaus</td><td>Der Abgleich hält alles für gelöscht</td><td>Fehler und leere Ergebnisse sind nie Löschungen</td></tr>
+            <tr><td class="mono sfid">SF-32</td><td><code>Zeitstempel + Millisekunden</code> in SQL</td><td>Spätere Schüsse wirken älter und werden übersehen</td><td>Vergleich als Paar</td></tr>
+            <tr><td class="mono sfid">SF-34</td><td>SportpassID vertippt oder vertauscht</td><td>Fremde Scheiben samt Historie im Konto, eine Datenpanne</td><td>Admin sieht den Meyton-Namen, du bestätigst die erste Scheibe</td></tr>
+            <tr><td class="mono sfid">SF-37</td><td>Falscher Name am Stand gewählt</td><td>Die Scheibe landet automatisch beim Falschen</td><td>„Nicht meine“ mit Sperrmarke</td></tr>
+            <tr><td class="mono sfid">SF-41</td><td>QR mit falscher ID</td><td>Fremde Rohdaten verlassen das Schützenhaus</td><td>Erst Vorschau und Gegenprobe, dann die Scheibe</td></tr>
+            <tr><td class="mono sfid">SF-60</td><td>Streukreise über 20 und 40 Schuss im selben Verlauf</td><td>Der Verlauf misst die Schusszahl, nicht die Leistung</td><td>Robuste Maße, Vergleiche bei gleicher Schusszahl</td></tr>
+            <tr><td class="mono sfid">SF-67</td><td>Ein voller Snapshot je Schuss</td><td>Rohdaten wachsen quadratisch, rund 2&nbsp;GB im Jahr</td><td>Zeilenversionen statt Kopien</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -1561,6 +1650,8 @@ type Shot = {
         <li class="done"><div><span class="q">Gibt es den QR auch ohne Starter, und was steht in Link und PDF? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Davon hängt ab, wie sicher der QR-Weg die richtige Scheibe findet.</span><span class="ans">Den QR gibt es immer, er gehört zum Ausdruck. Link auf ein PDF bei Meyton; im PDF Stand, Zeiten, Name mit Nummer und eine ID.</span></div></li>
         <li class="done"><div><span class="q">Wie wird die Anlage ausgeschaltet: Herunterfahren oder Strom aus? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, wie robust die Brücke sein muss.</span><span class="ans">Strom aus, also hart. Die Brücke muss das jedes Mal schadlos überstehen.</span></div></li>
         <li class="done"><div><span class="q">Hat das Meyton-Netz einen Router mit Internet, und darf dort ein Gerät mit fester IP hängen? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, wo und wie die Brücke läuft.</span><span class="ans">Ja, beides geht.</span></div></li>
+        <li class="done"><div><span class="q">Wie sind die Netze getrennt? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, wer die Brücke erreichen muss.</span><span class="ans">Schützen im Gäste-LAN, Anlage und Brücke im Gerätenetz. Kein Problem: Alles läuft über Spiegel im Internet, gekoppelt wird per Code bei der Installation.</span></div></li>
+        <li><div><span class="q">Hat das Gerätenetz ausgehend Internet, und wer betreut Router und Firewall? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Vermutlich ja, weil Meyton die PDFs für den QR-Code hochlädt; sonst braucht die Brücke LTE.</span></div></li>
         <li class="done"><div><span class="q">Dürfen wir den Standard-Zugang zur SSMDB2 nutzen?</span><span class="why">Einen eigenen Lese-Benutzer sieht Meyton nicht vor.</span><span class="ans">Ja.</span></div></li>
         <li class="done"><div><span class="q">Welche Stände und Disziplinen gibt es?</span><span class="why">Bestimmt die Scheibenbilder für Version&nbsp;1.</span><span class="ans">Nur 10-m-Stände: Luftpistole und Luftgewehr, jeweils mit Auflage, dazu eigene Disziplin-Varianten.</span></div></li>
         <li><div><span class="q">Liegen die PDF-Ausdrucke auch auf der Meyton-Freigabe <code>ERGEBNIS</code>?</span><span class="why">Dann bekäme auch der Opt-in-Weg das Original-PDF automatisch. Wird in Phase 0 geprüft.</span></div></li>
@@ -1568,7 +1659,7 @@ type Shot = {
         <li class="done"><div><span class="q">Ist ein Umstieg auf die neue Meyton-Linie ESTANX geplant?</span><span class="why">Ob es dort eine SSMDB2 gibt, ist offen.</span><span class="ans">Nicht bekannt; bleibt ein Risiko für später.</span></div></li>
       </ol>
       <div class="prose qgroup"><h3>Schützen und Zuordnung</h3></div>
-      <ol class="qlist" style="counter-reset: q 10">
+      <ol class="qlist" style="counter-reset: q 12">
         <li class="done"><div><span class="q">Wie melden sich Schützen am Stand an? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, wie viel die automatische Zuordnung leistet.</span><span class="ans">Schützenliste oder frei zugewiesen, kein LANA.</span></div></li>
         <li class="done"><div><span class="q">Wie wird zugeordnet? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Bestimmt, was die Brücke vorhalten muss.</span><span class="ans">Opt-in per Sportpass als Standard, sonst Meyton-QR mit Original-PDF.</span></div></li>
         <li class="done"><div><span class="q">Ist die SportpassID in der Schützenliste gepflegt?</span><span class="why">Voraussetzung für das Opt-in.</span><span class="ans">Nicht bei allen; für Interessierte wird sie nachgepflegt.</span></div></li>
@@ -1578,8 +1669,18 @@ type Shot = {
         <li class="done"><div><span class="q">Wie lange darf eine Fundsache abgeholt werden?</span><span class="why">Danach bleibt sie nur in der SSMDB2.</span><span class="ans">Sieben Tage.</span></div></li>
         <li><div><span class="q">Sollen Scheiben ohne Besitzer vorsorglich hochgeladen werden, damit „Scheibe holen“ auch von zu Hause geht?</span><span class="why">Bequemer, verlässt aber den Grundsatz „bleibt im Schützenhaus“. Empfehlung: nein.</span></div></li>
       </ol>
+      <div class="prose qgroup"><h3>Sonderfälle</h3></div>
+      <ol class="qlist" style="counter-reset: q 20">
+        <li><div><span class="q">Soll die Brücke die Probe aller Scheiben sieben Tage lokal puffern? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Sonst haben QR-Abholungen keine Probe, falls Meyton sie verwirft. Neue Speicherung personenbezogener Daten, aber nur im Schützenhaus. Empfehlung: ja, wenn Phase&nbsp;0 das Verwerfen bestätigt.</span></div></li>
+        <li><div><span class="q">Bestätigt jeder Schütze seine erste automatisch zugeordnete Scheibe?</span><span class="why">Ein Klick, der vertippte SportpassIDs abfängt. Empfehlung: ja.</span></div></li>
+        <li><div><span class="q">Wie oft wird nur auf Probe trainiert oder das Umschalten auf Wertung vergessen?</span><span class="why">Spiegel behandelt beides als vollwertiges Training; die Häufigkeit bestimmt, wie prominent das in der Oberfläche wird.</span></div></li>
+        <li><div><span class="q">Lässt sich an eurer Anlage von Wertung zurück auf Probe schalten?</span><span class="why">Prüft das Schießprotokoll in Phase&nbsp;0.</span></div></li>
+        <li><div><span class="q">Welche Disziplin-Varianten gibt es, und welche zählen in Verläufen zusammen?</span><span class="why">Der Admin pflegt die Familien; die SQL-Checkliste zeigt die Varianten.</span></div></li>
+        <li><div><span class="q">Wird in der Probe das Visier verstellt, und soll Spiegel ein Ereignis „Visier verstellt“ anbieten?</span><span class="why">Sonst wirkt ein gewollter Sprung des Schwerpunkts wie Streuung.</span></div></li>
+        <li><div><span class="q">Macht die Standaufsicht einen Abend lang das Schießprotokoll mit?</span><span class="why">Klärt die meisten Vermutungen auf einmal (SP-0.6).</span></div></li>
+      </ol>
       <div class="prose qgroup"><h3>Produkt</h3></div>
-      <ol class="qlist" style="counter-reset: q 18">
+      <ol class="qlist" style="counter-reset: q 27">
         <li class="done"><div><span class="q">Eigene App oder Modul in Treffsicher? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Reihenfolge der Arbeit und Schnitt der Daten.</span><span class="ans">Eigene App „Spiegel“, Treffsicher bekommt eine Brücke.</span></div></li>
         <li class="done"><div><span class="q">Nur unser Verein, oder später auch andere Vereine? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Mandanten im Datenmodell kosten jetzt wenig und später viel.</span><span class="ans">Erst für euch, als Open Source. Andere Vereine betreiben eine eigene Installation.</span></div></li>
         <li><div><span class="q">Testen wir DISAG M-Qnect mit der ShotsApp als Vergleich?</span><span class="why">Setzt die Messlatte für Spiegel.</span></div></li>
@@ -1591,19 +1692,19 @@ type Shot = {
         <li><div><span class="q">Soll man ein Ergebnis per Link teilen können?</span><span class="why">Öffentliche Ansichten sind neue Angriffsfläche.</span></div></li>
       </ol>
       <div class="prose qgroup"><h3>Open Source</h3></div>
-      <ol class="qlist" style="counter-reset: q 27">
+      <ol class="qlist" style="counter-reset: q 36">
         <li class="done"><div><span class="q">Welche Lizenz? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Ohne Lizenz ist öffentlicher Code nicht nutzbar.</span><span class="ans">Apache-2.0 für das ganze Repo, wie seit Mai 2026.</span></div></li>
         <li class="done"><div><span class="q">Bleibt der Name Spiegel?</span><span class="why">Ordnername, Subdomain, Logo.</span><span class="ans">Ja.</span></div></li>
       </ol>
       <div class="prose qgroup"><h3>Design</h3></div>
-      <ol class="qlist" style="counter-reset: q 29">
+      <ol class="qlist" style="counter-reset: q 38">
         <li class="done"><div><span class="q">Was heißt „moderner“?</span><span class="why">Richtung für Design&nbsp;2.</span><span class="ans">Die Vorschau trifft es; Design und Funktionen gefallen.</span></div></li>
-        <li><div><span class="q">Nur dunkel wie die anderen Apps, oder hell und dunkel?</span><span class="why">Sonne am 50-m-Stand. Vorschlag: beides.</span></div></li>
+        <li><div><span class="q">Nur dunkel wie die anderen Apps, oder hell und dunkel?</span><span class="why">ADR-030 begründet den Hellmodus mit der Sonne am 50-m-Stand, den ihr nicht habt. Vorschlag nach dem Review: Phase&nbsp;1 nur dunkel, Tokens für beide, hell später.</span></div></li>
         <li><div><span class="q">Ringwert-Farben wie in der Vorschau, oder das Meyton-Schema der Treffsicher-Statistik?</span><span class="why">Wiedererkennung gegen Lesbarkeit auf dem schwarzen Spiegel.</span></div></li>
         <li><div><span class="q">Soll Design&nbsp;2 später auch Ringwerk und Treffsicher erreichen?</span><span class="why">Bestimmt, ob Spiegel sich vom Drift-Gate verabschiedet oder es anführt.</span></div></li>
       </ol>
       <div class="prose qgroup"><h3>Betrieb und Recht</h3></div>
-      <ol class="qlist" style="counter-reset: q 33">
+      <ol class="qlist" style="counter-reset: q 42">
         <li class="done"><div><span class="q">VPS auf 4&nbsp;GB hochstufen? <span class="tag crit">entscheidet Architektur</span></span><span class="why">Die dritte App braucht Speicher.</span><span class="ans">Nein, der VPS bleibt bei 2&nbsp;GB. Gemessen: 948&nbsp;MiB verfügbar; Spiegel passt mit 256&nbsp;MiB Limit.</span></div></li>
         <li><div><span class="q">Swap-Datei als Sicherheitsnetz auf dem VPS?</span><span class="why">Kostet nichts, ist aber eine Änderung am VPS.</span></div></li>
         <li class="done"><div><span class="q">Brücke als einzelnes Binary ohne Docker und Node?</span><span class="why">Bestimmt Sprache und Auslieferung.</span><span class="ans">Gewünscht; entschieden wird in Phase 0 (Kandidat Go).</span></div></li>
@@ -1618,11 +1719,11 @@ type Shot = {
       <div class="prose">
         <p class="eyebrow">13 · Fahrplan</p>
         <h2>In fünf Schritten zu etwas, das man anfassen kann</h2>
-        <p>Jedes Feature (SP-x.y) ist so geschnitten, dass es in einer Session im gewohnten Ablauf <code>/plan → /implement → /validate → /review</code> umgesetzt werden kann; Ziel, Umfang, Abnahme und Abhängigkeiten stehen in <code>vault/spiegel/spiegel-roadmap.md</code>. Ohne Anlage startbar sind SP-1.1, SP-1.2 und SP-1.3.</p>
+        <p>Jedes Feature (SP-x.y) ist so geschnitten, dass es in einer Session im gewohnten Ablauf <code>/plan → /implement → /validate → /review</code> umgesetzt werden kann; Ziel, Umfang, Abnahme und Abhängigkeiten stehen in <code>vault/spiegel/spiegel-roadmap.md</code>. Ohne Anlage startbar sind SP-1.0 bis SP-1.3. Jede Abnahme nennt die Sonderfälle (SF-xx), die das Feature abdecken muss; SP-1.4, SP-1.6 und SP-1.7 laufen in Teil-Plänen.</p>
       </div>
       <div class="phases">
-        <div class="phase"><div class="ph"><span>Phase 0</span>Erkundung</div><ul><li><b>SP-0.1</b> SSMDB2 vor Ort erkunden (SQL-Checkliste im Anhang)</li><li><b>SP-0.2</b> ID im Ausdruck als ScheibenID bestätigen</li><li><b>SP-0.3</b> DISAG M-Qnect als Messlatte (optional)</li><li><b>SP-0.4</b> Technik der Brücke entscheiden</li><li><b>SP-0.5</b> Einwilligungstext mit dem Vorstand</li></ul><div class="out"><b>Ergebnis</b>Wir wissen, was in unserer SSMDB2 steht, und können loslegen.</div></div>
-        <div class="phase"><div class="ph"><span>Phase 1</span>Fundament</div><ul><li><b>SP-1.1</b> Scheibenbilder LG/LP und Wertung · <b>SP-1.2</b> Geometrie und Kennzahlen-Registry · <b>SP-1.3</b> Meyton-PDF-Paket</li><li><b>SP-1.4</b> Brücke: lesen, puffern, hochladen, Strom aus überstehen · <b>SP-1.5</b> Opt-in, Aufträge, verdeckte Wertung</li><li><b>SP-1.6</b> App-Skelett, Ingest-API, Normalisierung · <b>SP-1.7</b> Zuordnung per Opt-in, QR und Admin · <b>SP-1.8</b> Liste und Session-Detail</li><li><b>SP-1.9</b> Deploy mit dritter DB, 256&nbsp;MiB Limit, Compose-Beispiel für andere Vereine</li></ul><div class="out"><b>Ergebnis</b>Mit Opt-in erscheint die Scheibe von selbst, sonst reicht der QR, beide Male mit allen Schüssen.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 0</span>Erkundung</div><ul><li><b>SP-0.1</b> SSMDB2 vor Ort erkunden (SQL-Checkliste im Anhang)</li><li><b>SP-0.2</b> ID im Ausdruck als ScheibenID bestätigen</li><li><b>SP-0.3</b> DISAG M-Qnect als Messlatte (optional)</li><li><b>SP-0.4</b> Technik der Brücke entscheiden</li><li><b>SP-0.5</b> Einwilligungstext mit dem Vorstand</li><li><b>SP-0.6</b> Schießprotokoll mit der Standaufsicht, ein Skript liest mit</li></ul><div class="out"><b>Ergebnis</b>Wir wissen, was in unserer SSMDB2 steht, und können loslegen.</div></div>
+        <div class="phase"><div class="ph"><span>Phase 1</span>Fundament</div><ul><li><b>SP-1.0</b> Vertrag und Sonderfall-Testdaten · <b>Meilenstein Durchstich:</b> eine echte Scheibe läuft roh durch, bevor Zuordnung und Oberfläche entstehen</li><li><b>SP-1.1</b> Scheibenbilder LG/LP und Wertung · <b>SP-1.2</b> Geometrie und Kennzahlen-Registry · <b>SP-1.3</b> Meyton-PDF-Paket</li><li><b>SP-1.4</b> Brücke: lesen, puffern, hochladen, Strom aus überstehen · <b>SP-1.5</b> Opt-in, Aufträge, verdeckte Wertung</li><li><b>SP-1.6</b> App-Skelett, Ingest-API, Normalisierung · <b>SP-1.7</b> Zuordnung per Opt-in, QR und Admin · <b>SP-1.8</b> Liste und Session-Detail</li><li><b>SP-1.9</b> Deploy mit dritter DB, 256&nbsp;MiB Limit, Compose-Beispiel für andere Vereine</li></ul><div class="out"><b>Ergebnis</b>Mit Opt-in erscheint die Scheibe von selbst, sonst reicht der QR, beide Male mit allen Schüssen, die Probe eingeschlossen, sofern die Brücke beim Schießen lief.</div></div>
         <div class="phase"><div class="ph"><span>Phase 2</span>Auswertung</div><ul><li><b>SP-2.1</b> Verläufe und Rekorde · <b>SP-2.2</b> direkte Vergleiche und Beobachtungen</li><li><b>SP-2.3</b> Notizen, Tags, Ausrüstung · <b>SP-2.4</b> Fundbüro als seltener Rückfall</li><li><b>SP-2.5</b> installierbar, Historie nachladen · <b>SP-2.6</b> Ergebnisse von fremden Anlagen aus dem PDF</li></ul><div class="out"><b>Ergebnis</b>Du siehst, wie sich dein Streukreis seit Juni entwickelt hat.</div></div>
         <div class="phase"><div class="ph"><span>Phase 3</span>Vernetzung</div><ul><li><b>SP-3.1</b> Treffsicher übernimmt aus Spiegel</li><li><b>SP-3.2</b> Trainer-Freigabe und Live</li><li><b>SP-3.3</b> Liga-Ergebnisse für Ringwerk</li></ul><div class="out"><b>Ergebnis</b>Kein Meyton-PDF-Import mehr, weder in Treffsicher noch in Ringwerk.</div></div>
         <div class="phase"><div class="ph"><span>Phase 4</span>Weichen stellen</div><ul><li><b>SP-4.1</b> Treffsicher ablösen oder behalten · <b>SP-4.2</b> gemeinsame Anmeldung</li><li><b>SP-4.3</b> Design&nbsp;2 für alle Apps · <b>SP-4.4</b> weitere Quellen</li></ul><div class="out"><b>Ergebnis</b>Eine Entscheidung auf Basis echter Nutzung.</div></div>
@@ -1634,7 +1735,7 @@ type Shot = {
       <div class="prose">
         <p class="eyebrow">14 · Anhang</p>
         <h2>Erkundung vor Ort</h2>
-        <p>Diese Abfragen lesen nur. Sie laufen mit jedem MySQL-Client von einem Laptop im Meyton-Netz (feste Adresse aus dem Workstation-Bereich). Die Zugangsdaten stehen im Meyton-Handbuch; einen eigenen Lese-Benutzer sieht Meyton nicht vor, deshalb schaltet die erste Zeile die Sitzung auf „nur lesen“. Ergebnisse mit Namen bitte nicht weitergeben oder vorher kürzen.</p>
+        <p>Diese Abfragen lesen nur. Sie laufen mit jedem MySQL-Client von einem Laptop im Meyton-Netz (feste Adresse aus dem Workstation-Bereich). Die Zugangsdaten stehen im Meyton-Handbuch; einen eigenen Lese-Benutzer sieht Meyton nicht vor, deshalb schaltet die erste Zeile die Sitzung auf „nur lesen“. Ergebnisse mit Namen bitte nicht weitergeben oder vorher kürzen. Die Abfragen vor oder nach dem Training ausführen, nicht während geschossen wird: Einige lesen ganze Tabellen.</p>
       </div>
       <div class="codehead"><span class="label-line" style="margin:0">SQL, nur SELECT</span><button type="button" class="copy" id="copy-sql">Kopieren</button></div>
 <pre id="sql"><span class="c">-- Sitzung auf nur lesen schalten</span>
@@ -1695,14 +1796,61 @@ SELECT CAST(CONV('ff914420', 16, 10) AS SIGNED) - 4294967296 AS scheiben_id;
 SELECT ScheibenID, StandNr, Disziplin, TotalRing, TotalRing01, Zeitstempel
 FROM Scheiben WHERE ScheibenID = -7257056;
 
-<span class="c">-- Uhr der Anlage (mit der Handy-Uhr vergleichen)</span>
-SELECT NOW();</pre>
+<span class="c">-- Uhr der Anlage (mit der Handy-Uhr vergleichen) und Zeitzonen der Sitzung</span>
+SELECT NOW(), @@session.time_zone, @@global.time_zone, @@system_time_zone;
+
+<span class="c">-- Struktur, Engine, Spaltentypen und Indizes</span>
+SHOW TABLE STATUS;
+SHOW CREATE TABLE Scheiben;
+SHOW CREATE TABLE Serien;
+SHOW CREATE TABLE Treffer;
+SHOW INDEX FROM Scheiben;
+SHOW INDEX FROM Treffer;
+
+<span class="c">-- Kosten der Abfragen der Brücke (type = ALL heißt: ganze Tabelle)</span>
+EXPLAIN SELECT ScheibenID, Zeitstempel, Trefferzahl FROM Scheiben
+WHERE Zeitstempel &gt;= NOW() - INTERVAL 2 MINUTE;
+EXPLAIN SELECT MAX(Zeitstempel) FROM Treffer;
+EXPLAIN SELECT * FROM Treffer WHERE ScheibenID = -7257056;
+
+<span class="c">-- Sonderfälle: nur Probe, Schusszahlen, Varianten, mehrdeutige SportpassIDs</span>
+SELECT COUNT(*) AS nur_probe FROM Scheiben s
+WHERE NOT EXISTS (SELECT 1 FROM Treffer t WHERE t.ScheibenID = s.ScheibenID AND t.Stellung &gt; 0);
+SELECT DisziplinID, Trefferzahl, COUNT(*) AS anzahl FROM Scheiben
+GROUP BY DisziplinID, Trefferzahl ORDER BY DisziplinID, Trefferzahl;
+SELECT DisziplinID, COUNT(DISTINCT Disziplin) AS namen FROM Scheiben
+GROUP BY DisziplinID HAVING namen &gt; 1;
+SELECT SportpassID, COUNT(DISTINCT Nachname, Vorname) AS namen FROM Scheiben
+WHERE SportpassID &gt; 0 GROUP BY SportpassID HAVING namen &gt; 1;
+
+<span class="c">-- Wertungsmodi je Disziplin und Stellung (0 = unbekannt)</span>
+SELECT s.DisziplinID, t.Stellung, t.Wertung, COUNT(*) AS anzahl FROM Treffer t
+JOIN Scheiben s ON s.ScheibenID = t.ScheibenID GROUP BY s.DisziplinID, t.Stellung, t.Wertung;
+
+<span class="c">-- Probe-Serien, Platzhalter, Fehlschüsse, Handeinträge, --frei-- mit Treffern</span>
+SELECT Serie, COUNT(*) AS anzahl FROM Treffer WHERE Stellung = 0 GROUP BY Serie;
+SELECT COUNT(*) AS ohne_lage FROM Treffer WHERE x = 0 AND y = 0;
+SELECT Ring, COUNT(*) AS anzahl FROM Treffer WHERE Ring &lt;= 1 GROUP BY Ring;
+SELECT COUNT(*) AS mit_text FROM Treffer WHERE Text &lt;&gt; '';
+SELECT COUNT(*) AS frei_mit_treffern FROM Scheiben s WHERE TRIM(s.Nachname) = '--frei--'
+AND EXISTS (SELECT 1 FROM Treffer t WHERE t.ScheibenID = s.ScheibenID);</pre>
       <div class="prose">
-        <h3>Zwei Handgriffe am Stand</h3>
-        <ul>
-          <li><strong>Achsen prüfen:</strong> In der Probe einen Schuss bewusst hoch rechts setzen. Sind x und y danach positiv, zeigt y nach oben.</li>
-          <li><strong>Latenz schätzen:</strong> Einen Schuss abgeben und die Zeit bis zur neuen Zeile in <code>Treffer</code> stoppen.</li>
-        </ul>
+        <h3>Schießprotokoll mit der Standaufsicht</h3>
+        <p>An einem Abend, während ein kleines Skript wie die Brücke mitliest und jeden Zustand mit Zeit festhält (SP-0.6). Namen ersetzt es schon beim Mitschreiben.</p>
+        <ol>
+          <li><strong>Achsen und Latenz:</strong> einen Probeschuss bewusst hoch rechts setzen; sind x und y positiv, zeigt y nach oben. Zeit bis zur neuen Zeile stoppen.</li>
+          <li><strong>Probe und Zeitstempel:</strong> Steigt <code>Scheiben.Zeitstempel</code> bei einem Probeschuss?</li>
+          <li><strong>Probe → Wertung → Probe:</strong> 3 Probe, 2 Wertung, zurück auf Probe, 2 Probe, 2 Wertung; nach jeder Stufe abfragen. Bleibt die Probe stehen? Mit welcher Nummer landet der Schuss nach dem Zurückschalten?</li>
+          <li><strong>Lange Probe:</strong> LP&nbsp;40 mit 15 Probeschüssen. Was zählt <code>Trefferzahl</code>, und hält Meyton die Scheibe für fertig?</li>
+          <li><strong>Nur Probe:</strong> eine Scheibe nur mit Probe beenden. Steht sie in <code>Scheiben</code>?</li>
+          <li><strong>Abbruch:</strong> nach drei Wertungsschüssen beenden. Welcher Status, welche Zahlen?</li>
+          <li><strong>Ohne Starter:</strong> ohne gewählten Namen schießen und ausdrucken. Landet die Scheibe in der Ablage, und heißt sie <code>--frei--</code>?</li>
+          <li><strong>Zwischen- und Doppelausdruck:</strong> nach fünf Schuss drucken, weiterschießen, zweimal drucken. Tragen alle Ausdrucke dieselbe ID?</li>
+          <li><strong>Korrektur:</strong> Die Aufsicht löscht einen Schuss und korrigiert einen Wert. Rücken die Nummern nach?</li>
+          <li><strong>Falsche Disziplin:</strong> ein paar Schuss mit dem Luftgewehr auf einer Luftpistolen-Disziplin. Was steht in <code>Ring01</code>?</li>
+          <li><strong>Verdeckte Wertung:</strong> wenn die Aufsicht es einrichten kann, zwei Schuss im Modus&nbsp;10. Was zeigen <code>Treffer</code> und <code>TotalRing</code>?</li>
+        </ol>
+        <p class="small muted">Fehlschüsse schießen wir nicht absichtlich; die Abfragen oben suchen sie in der Historie.</p>
         <h3>Quellen</h3>
         <ul class="sources">
           <li>Meyton: <a href="https://software.meyton.info/wp-content/uploads/Upload/Manuals/DE/SSMDB2/Scheibenablage_SSMDB2_V9_de.pdf" rel="noopener">Beschreibung der Scheibenablage in der Meyton-DB (SSMDB2), Version 9</a></li>
@@ -1715,10 +1863,10 @@ SELECT NOW();</pre>
           <li><a href="https://github.com/janxb/ShootingTicker" rel="noopener">janxb/ShootingTicker</a>; Forumsthread zur <a href="https://meisterschuetzen.org/forum/thread/11152-web-app-mit-automatischer-synchronisierung-von-meyton-anlagen/" rel="noopener">SV-WebApp</a></li>
           <li><a href="https://github.com/ferdifighter/meyton-scheibenanzeige" rel="noopener">ferdifighter/meyton-scheibenanzeige</a> (ohne Lizenzangabe)</li>
           <li><a href="https://www.shotsapp.de" rel="noopener">DISAG ShotsApp</a> und deine Screenshots vom 29.04.2026</li>
-          <li>Vereinsheim-Vault: ADR-002 bis ADR-025, Treffsicher-Anforderungen, Meyton-Import, Sizing-Notiz</li>
+          <li>Vereinsheim-Vault: ADR-002 bis ADR-030, Treffsicher-Anforderungen, Meyton-Import, Sizing-Notiz, Sonderfall-Katalog <code>spiegel-edge-cases.md</code> (Review vom 5. Oktober 2026)</li>
         </ul>
       </div>
-      <footer>Stand 5. Oktober 2026. Maßgeblich ist der Plan im Repo unter <code>vault/spiegel/</code> mit ADR-026 bis ADR-030. Die Beispieldaten in der Vorschau sind erfunden; Fakten zur SSMDB2 stammen aus den genannten Quellen und werden in Phase&nbsp;0 an der eigenen Anlage geprüft.</footer>
+      <footer>Stand 5. Oktober 2026, nach dem Sonderfall-Review. Maßgeblich ist der Plan im Repo unter <code>vault/spiegel/</code> mit ADR-026 bis ADR-030 und dem Sonderfall-Katalog. Die Beispieldaten in der Vorschau sind erfunden; Fakten zur SSMDB2 stammen aus den genannten Quellen und werden in Phase&nbsp;0 an der eigenen Anlage geprüft.</footer>
     </section>
   </main>
 </div>
@@ -1768,12 +1916,14 @@ SELECT NOW();</pre>
     const shots = [];
     let t = o.start.getTime() + 140000;
     let prev = null, seq = 0;
+    const counts = {};
     const add = (g, pos, series, n) => {
       for (let i = 0; i < n; i++) {
         if (prev !== null) t += Math.max(18, o.pace + gauss(r) * o.paceSd) * 1000;
         const x = g.mx + gauss(r) * g.sd;
         const y = g.my + gauss(r) * g.sd * (g.ky || 1.12);
-        shots.push(Object.assign({ seq: ++seq, pos, series, x, y, time: new Date(t), dt: prev === null ? null : (t - prev) / 1000 }, scoreShot(x, y)));
+        counts[pos] = (counts[pos] || 0) + 1;
+        shots.push(Object.assign({ seq: ++seq, no: counts[pos], pos, series, x, y, time: new Date(t), dt: prev === null ? null : (t - prev) / 1000 }, scoreShot(x, y)));
         prev = t;
       }
     };
@@ -2002,7 +2152,7 @@ SELECT NOW();</pre>
     const vis = all.slice(0, n);
     drawFace(pTarget, { probe: state.sel === "probe" });
     drawOverlay(pTarget, vis, { mpi: state.mpi && vis.length > 0, circle: state.circle });
-    const g = drawShots(pTarget, vis, { nums: state.nums, newest: !!state.replay, numLabel: (s) => (state.sel === "all" ? s.seq - 5 : state.sel === "probe" ? "P" + s.seq : (s.seq - 6) % 10 + 1) });
+    const g = drawShots(pTarget, vis, { nums: state.nums, newest: !!state.replay, numLabel: (s) => (state.sel === "all" ? s.no : state.sel === "probe" ? "P" + s.no : (s.no - 1) % 10 + 1) });
     // grosse Trefferflaechen fuer Hover und Antippen
     vis.forEach((s) => {
       const h = el("circle", { cx: s.x, cy: -s.y, r: 4.2, class: "t-hit", tabindex: "0", role: "button", "aria-label": "Schuss " + shotNo(s) + ", " + fmt(s.decT / 10, 1) }, g);
@@ -2016,7 +2166,7 @@ SELECT NOW();</pre>
     setVB(pTarget, state.zoom === "full" ? FULL : groupBox(all, 24), animateZoom);
     chips(vis);
   }
-  function shotNo(s) { return s.pos === 0 ? "P" + s.seq : String(s.seq - 5); }
+  function shotNo(s) { return s.pos === 0 ? "P" + s.no : String(s.no); }
   function chips(vis) {
     const box = $("p-chips");
     clear(box);
@@ -2033,7 +2183,7 @@ SELECT NOW();</pre>
     clear(pTip);
     const head = document.createElement("div");
     head.className = "muted";
-    head.textContent = s.pos === 0 ? "Probeschuss " + s.seq : "Schuss " + (s.seq - 5) + " · Serie " + s.series;
+    head.textContent = s.pos === 0 ? "Probeschuss " + s.no : "Schuss " + s.no + " · Serie " + s.series;
     const v = document.createElement("div");
     const st = document.createElement("strong"); st.textContent = fmt(s.decT / 10, 1);
     v.appendChild(st); v.appendChild(document.createTextNode("  Teiler " + fmtTeiler(s.teiler)));
@@ -2301,7 +2451,7 @@ SELECT NOW();</pre>
       tip: (i) => {
         const s = sh[i];
         return [
-          { head: true, value: s.pos === 0 ? "Probeschuss " + s.seq : "Schuss " + (s.seq - 5) + " · Serie " + s.series },
+          { head: true, value: s.pos === 0 ? "Probeschuss " + s.no : "Schuss " + s.no + " · Serie " + s.series },
           { key: "var(--s" + (s.ring >= 10 ? 10 : s.ring === 9 ? 9 : s.ring === 8 ? 8 : 7) + ")", value: fmt(s.decT / 10, 1), label: "Zehntel · Teiler " + fmtTeiler(s.teiler) },
           { value: s.dt == null ? "–" : "+" + fmt(s.dt, 0) + " s", label: fmtTime.format(s.time) },
         ];
