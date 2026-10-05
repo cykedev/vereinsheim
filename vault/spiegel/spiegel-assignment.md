@@ -15,9 +15,9 @@ relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]"]
 
 | Weg | Wann | Ablauf | Sicherheit |
 |---|---|---|---|
-| Opt-in per Sportpass (Standard) | Starter aus der Schützenliste mit SportpassID | einmal im Profil eintragen und zustimmen, Admin bestätigt; die Brücke lädt jede passende Scheibe live am Abend hoch, auch rückwirkend | hoch |
-| Meyton-QR | ohne Sportpass, Training ohne Starter, Gäste, auswärts; bis eine Woche danach | Meyton zeigt den QR am Stand; in Spiegel scannen oder Link einfügen; Spiegel lädt und speichert das PDF, liest die ID, die Brücke holt die Scheibe; Vorschau, bestätigen. Bei einer schon vorhandenen Scheibe hängt der Scan nur das PDF an | hoch |
-| „Scheibe holen“ (Fundbüro) | kein QR zur Hand, Link abgelaufen, Training ohne Starter | Stand und Zeitraum wählen; Spiegel fragt die Brücke nach Scheiben ohne Besitzer; Vorschau, bestätigen | mittel, mit Protokoll |
+| Opt-in per Sportpass (Standard) | Starter aus der Schützenliste mit SportpassID (nicht bei allen gepflegt; für Interessierte pflegt der Admin sie in der Meyton-Schützenverwaltung nach) | einmal im Profil eintragen und zustimmen, Admin bestätigt; die Brücke lädt jede passende Scheibe live am Abend hoch, auch rückwirkend | hoch |
+| Meyton-QR | ohne Sportpass, Training ohne Starter, auswärts; bis eine Woche danach. Den QR gibt es zu jedem Ausdruck | Meyton zeigt den QR am Stand; in Spiegel scannen oder Link einfügen; Spiegel lädt und speichert das PDF, liest die ID, die Brücke holt die Scheibe; Vorschau, bestätigen. Bei einer schon vorhandenen Scheibe hängt der Scan nur das PDF an | hoch |
+| „Scheibe holen“ (Fundbüro) | QR verloren oder Link abgelaufen (selten) | Stand und Zeitraum wählen; Spiegel fragt die Brücke nach Scheiben ohne Besitzer; Vorschau, bestätigen | mittel, mit Protokoll |
 | Admin | Korrekturen, Sammelzuweisung nach dem Training | zuweisen und umhängen, mit Protokoll | hoch |
 
 Frei getippte Namen (bei euch neben der Schützenliste üblich) ergeben nur **Vorschläge**, nie eine automatische Zuordnung. LANA mit Starterkarten nutzt ihr nicht; käme es dazu, wäre es ein weiterer automatischer Weg.
@@ -50,7 +50,7 @@ Scheiben ohne bekannten Besitzer bleiben im Schützenhaus, bis jemand sie abholt
 
 Optional kann die Brücke dieselbe Liste als Seite im Vereins-WLAN anbieten, die man auf dem eigenen Handy öffnet (fester QR-Aufkleber mit der Adresse der Brücke) und dort antippt. Das ist nur sinnvoll, wenn der Weg über Spiegel nicht reicht.
 
-Ob das Fundbüro überhaupt nötig ist, zeigt Phase 0: Landen Trainings ohne Starter in der SSMDB2, und zeigt Meyton auch dafür einen QR?
+Den QR gibt es laut Verein immer, auch ohne Starter. Das Fundbüro ist deshalb nur ein seltener Rückfall (QR verloren, Link abgelaufen), ohne Tablet, Frist sieben Tage. Offen ist nur, ob Trainings ohne Starter überhaupt in der SSMDB2 landen (Phase 0); sonst gibt es für sie nur das Ergebnis aus dem PDF.
 
 ## Wann zugeordnet wird
 

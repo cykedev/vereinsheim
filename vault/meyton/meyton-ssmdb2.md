@@ -15,6 +15,7 @@ relates_to: ["[[spiegel-bridge]]", "[[spiegel-ingest-pipeline]]"]
 
 - MySQL auf dem Meyton-Server (Standard 192.168.10.200), Datenbank `SSMDB2`, Standard-Zugang laut Handbuch (auf allen Anlagen gleich). Auch über ODBC.
 - Seit ShootMaster 5.3 gibt es keinen root-Zugang mehr, die Haupt-DB ist für Externe gesperrt; ein eigener Lese-Benutzer ist nicht vorgesehen. Wer liest, schützt sich selbst: Read-only-Transaktionen, nur SELECT.
+- Beim Verein ist der Dienst aktiviert (Stand 5. Oktober 2026); es gibt nur 10-m-Stände.
 - Befüllt wird die Ablage vom Dienst im Kontrollzentrum (Bereich SSMDB2) oder manuell aus Preisschießen (accmanII), Wettkampfsteuerung (masterII) und Auswertung (ranklistII). Eine automatische Löschung ist nicht dokumentiert; manuelles Leeren ist möglich.
 
 ## Tabellen

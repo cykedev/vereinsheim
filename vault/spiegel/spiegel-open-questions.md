@@ -17,28 +17,28 @@ relates_to: ["[[spiegel-roadmap]]"]
 ## Anlage und Netz
 
 - **ShootMaster-Version?** → 6.0.2. Das Schema bringt alles mit (Probe, Wertungsmodus, BesterTeiler001).
-- **Ist der SSMDB2-Dienst im Kontrollzentrum aktiv (Echtzeit)?** → offen (SP-0.1).
+- **Ist der SSMDB2-Dienst im Kontrollzentrum aktiv (Echtzeit)?** → ja, ist aktiviert.
 - **Landen Trainings ohne Starter in der SSMDB2?** *(Architektur)* → unbekannt, SP-0.1.
-- **Zeigt Meyton den QR auch ohne Starter? Was steht in Link und PDF?** *(Architektur)* → teilweise: Link auf ein PDF bei Meyton (HTTP, feste IP, zufälliger Name), im PDF Stand, Zeiten, Name mit #Nummer und eine ID ([[meyton-printout]]). Offen: QR ohne Starter (SP-0.2).
+- **Zeigt Meyton den QR auch ohne Starter? Was steht in Link und PDF?** *(Architektur)* → ja, den QR gibt es immer, er gehört zum Ausdruck. Link auf ein PDF bei Meyton (HTTP, feste IP, zufälliger Name), im PDF Stand, Zeiten, Name mit #Nummer und eine ID ([[meyton-printout]]).
 - **Router mit Internet und Gerät mit fester IP im Meyton-Netz?** *(Architektur)* → ja.
 - **Standard-Zugang zur SSMDB2 nutzen?** → ja (ein eigener Lese-Benutzer ist nicht vorgesehen).
 - **Läuft die Anlage dauerhaft?** *(Architektur)* → nein: Meyton-Anlage und Brücke werden nach jedem Trainingsabend ausgeschaltet ([[spiegel-bridge]]).
-- **Wie wird ausgeschaltet: Herunterfahren oder Strom aus?** → offen; bestimmt, wie robust das Dateisystem der Brücke sein muss.
+- **Wie wird ausgeschaltet: Herunterfahren oder Strom aus?** *(Architektur)* → Strom aus, also hart. Die Brücke muss jeden Stromverlust ohne Schaden überstehen ([[spiegel-bridge]]).
 - **Liegen die PDF-Ausdrucke auch auf der Meyton-Freigabe `ERGEBNIS`?** → offen (SP-0.1); dann bekäme auch der Opt-in-Weg das Original-PDF automatisch.
-- **Welche Stände und Disziplinen gibt es?** → offen; bestimmt die Scheibenbilder für Version 1.
+- **Welche Stände und Disziplinen gibt es?** → nur 10-m-Stände: Luftpistole und Luftgewehr, jeweils auch Auflage, dazu eigene Disziplin-Varianten (zum Beispiel „LP 40 alt“).
 - **SDF und LANA?** → LANA nutzt ihr nicht; SDF offen (nur für Live).
-- **Umstieg auf die neue Meyton-Linie ESTANX geplant?** → offen; bräuchte einen zweiten Adapter.
+- **Umstieg auf die neue Meyton-Linie ESTANX geplant?** → nicht bekannt; bleibt ein Risiko für später.
 
 ## Schützen und Zuordnung
 
 - **Wie melden sich Schützen am Stand an?** *(Architektur)* → Schützenliste oder frei zugewiesen, kein LANA.
 - **Wie wird zugeordnet?** *(Architektur)* → Opt-in per Sportpass als Standard („automatisch hochladen“), Meyton-QR mit Original-PDF für alles andere ([[adr-028]]).
-- **Ist die SportpassID in der Schützenliste gepflegt?** → offen; Voraussetzung für das Opt-in.
+- **Ist die SportpassID in der Schützenliste gepflegt?** → nicht bei allen; für Interessierte wird sie in der Meyton-Schützenverwaltung nachgepflegt.
 - **Sollen Scheiben ohne Besitzer vorsorglich hochgeladen werden, damit „Scheibe holen“ auch von zu Hause geht?** → offen; Empfehlung nein ([[spiegel-privacy]]).
-- **Fundbüro am Stand?** → kein Tablet und kein Display; „Scheibe holen“ in Spiegel am Abend reicht, falls überhaupt nötig.
-- **Frist für Fundsachen?** → Vorschlag sieben Tage.
-- **Wie viele aktive Schützen?** → offen.
-- **Gäste und Jugendliche?** → offen (Einwilligung der Eltern).
+- **Fundbüro am Stand?** → kein Tablet. Weil es den QR immer gibt, ist ein Fundbüro kaum nötig; als Rückfall reicht „Scheibe holen“ in Spiegel am Abend.
+- **Frist für Fundsachen?** → sieben Tage.
+- **Wie viele aktive Schützen?** → etwa 10 bis 15.
+- **Gäste und Jugendliche?** → vorerst keine Unterstützung; Konten nur für erwachsene Mitglieder.
 
 ## Produkt
 
@@ -67,7 +67,7 @@ relates_to: ["[[spiegel-roadmap]]"]
 
 ## Betrieb und Recht
 
-- **VPS auf 4 GB?** → offen.
+- **VPS auf 4 GB?** *(Architektur)* → nein, der VPS bleibt, wie er ist (VPS S, 2 GB). Spiegel muss ins bestehende Speicherbudget passen ([[spiegel-architecture]]).
 - **Wer verantwortet die Einwilligung?** → offen (SP-0.5).
 - **Aufbewahrung und Nachladen der Historie?** → offen.
 - **Gemeinsame Anmeldung für alle Apps?** → offen (SP-4.2).

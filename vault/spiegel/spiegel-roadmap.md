@@ -26,13 +26,13 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 
 ### SP-0.1 SSMDB2 vor Ort erkunden
 - **Ziel:** wissen, was in unserer Ablage steht.
-- **Umfang:** SQL-Checkliste aus [[meyton-ssmdb2]] an einem Trainingsabend; dazu zwei Handgriffe (einen Schuss bewusst hoch rechts setzen, Latenz bis zur neuen Zeile stoppen). Fragen: Landen Trainings ohne Starter in der Ablage? Skalen der Ring-Felder? Achsenrichtung? Teiler-Einheiten? Wie weit reicht die Historie? Bleiben Probeschüsse nach der Wertung? Größte SportpassID (Überlauf)? Uhrabweichung? Liegen die PDF-Ausdrucke auch auf der Freigabe `ERGEBNIS`?
+- **Umfang:** SQL-Checkliste aus [[meyton-ssmdb2]] an einem Trainingsabend; dazu zwei Handgriffe (einen Schuss bewusst hoch rechts setzen, Latenz bis zur neuen Zeile stoppen). Der SSMDB2-Dienst ist aktiv. Fragen: Landen Trainings ohne Starter in der Ablage (den QR gibt es immer, ohne Ablage gäbe es aber nur das PDF-Ergebnis)? Skalen der Ring-Felder? Achsenrichtung? Teiler-Einheiten? Wie weit reicht die Historie? Bleiben Probeschüsse nach der Wertung? Größte SportpassID (Überlauf)? Uhrabweichung? Liegen die PDF-Ausdrucke auch auf der Freigabe `ERGEBNIS`?
 - **Abnahme:** Antworten (ohne Namen) in [[meyton-ssmdb2]] und [[spiegel-open-questions]] eingetragen.
 - **Hängt ab von:** nichts. **Status:** offen.
 
 ### SP-0.2 QR-ID prüfen
-- **Ziel:** bestätigen, dass die ID im Fuß des Ausdrucks die ScheibenID ist; prüfen, ob Meyton den QR auch ohne Starter zeigt.
-- **Umfang:** Abfrage aus [[meyton-printout]] mit `ff914420` → −7257056; ein Training ohne Starter schießen und auf den QR achten.
+- **Ziel:** bestätigen, dass die ID im Fuß des Ausdrucks die ScheibenID ist (den QR gibt es laut Verein immer).
+- **Umfang:** Abfrage aus [[meyton-printout]] mit `ff914420` → −7257056; dazu eine Scheibe ohne Starter schießen, ihren QR scannen und die ID nachschlagen.
 - **Abnahme:** [[adr-028]] bestätigt oder angepasst.
 - **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** offen.
 
@@ -48,7 +48,7 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 
 ### SP-0.5 Einwilligung und Datenschutz
 - **Ziel:** rechtlich sauberer Start.
-- **Umfang:** Einwilligungstext (Opt-in per Sportpass), Verantwortlicher, Auftragsverarbeitung mit dem Hoster, Regel für Jugendliche ([[spiegel-privacy]]).
+- **Umfang:** Einwilligungstext (Opt-in per Sportpass), Verantwortlicher, Auftragsverarbeitung mit dem Hoster; vorerst nur erwachsene Mitglieder, keine Gäste ([[spiegel-privacy]]).
 - **Abnahme:** Text vom Vorstand abgestimmt. **Status:** offen.
 
 ## Phase 1 · Fundament
@@ -57,7 +57,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-1.1 Fachkern: Scheibenbilder und Wertung
 - **Ziel:** Scheiben korrekt zeichnen und werten.
-- **Umfang:** `packages/shot-core`: Datenformat Scheibenbild, Bibliothek LG, LP, KK, ZS, 25 m Präzision und Duell; Regelkatalog DisziplinID → Regel (DSB und Meyton-eigen) → Scheibenbild je Stellung; Wertungsformel mit Innenzehner ([[spiegel-target-library]]).
+- **Umfang:** `packages/shot-core`: Datenformat Scheibenbild; Bibliothek für eure 10-m-Stände, also Luftgewehr und Luftpistole (Auflage nutzt dieselben Scheiben), weitere Scheiben erst bei Bedarf; Regelkatalog DisziplinID → Regel (DSB und Meyton-eigen) → Scheibenbild, mit Rückfall über Entfernung 10 m plus Namensanfang LG/LP und sonst Admin-Zuordnung; Wertungsformel mit Innenzehner ([[spiegel-target-library]]).
 - **Abnahme:** Gegenprobe reproduziert alle bekannten Meyton-Werte; Mutationsprobe nach [[conventions]] §9.
 - **Hängt ab von:** nichts. **Status:** offen.
 
@@ -76,7 +76,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ### SP-1.4 Brücke v1: lesen, puffern, hochladen
 - **Ziel:** Rohdaten kommen verlässlich aus dem Schützenhaus.
 - **Umfang:** `apps/spiegel-bridge` nach [[spiegel-bridge]]: Kopplung, Leser mit Read-only-Transaktionen, Änderungserkennung, Snapshots mit Prüfsumme, Warteschlange, Upload, Heartbeat, Statusseite; Betrieb mit Abschalten nach dem Training (Stromverlust, Nachholen beim Start).
-- **Abnahme:** gegen eine lokale MySQL mit SSMDB2-Schema und Testdaten, Ausfalltests (Netz weg, DB weg, Strom weg), einmal an der echten Anlage.
+- **Abnahme:** gegen eine lokale MySQL mit SSMDB2-Schema und Testdaten, Ausfalltests (Netz weg, DB weg, wiederholt Stecker ziehen während Upload und Schreiben), einmal an der echten Anlage.
 - **Hängt ab von:** SP-0.4, Vertrag aus SP-1.6. **Status:** offen.
 
 ### SP-1.5 Brücke v1: Opt-in, Aufträge, verdeckte Wertung
@@ -93,7 +93,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-1.7 Zuordnung: Opt-in per Sportpass, Meyton-QR, Admin
 - **Ziel:** jede Scheibe findet ihren Besitzer ([[spiegel-assignment]]).
-- **Umfang:** Profil mit Sportpass-Opt-in und Admin-Bestätigung; QR-Scan (Kamera) oder Link; PDF von erlaubten Adressen laden und speichern; ID dekodieren; Auftrag an die Brücke, auch zurückgestellt, wenn sie aus ist; Gegenprobe; Vorschau; PDF an vorhandene Scheiben hängen; Admin-Zuweisung; Protokoll.
+- **Umfang:** Profil mit Sportpass-Opt-in und Admin-Bestätigung (die SportpassID pflegt der Admin bei Interessierten vorher in der Meyton-Schützenverwaltung nach); QR-Scan (Kamera) oder Link; PDF von erlaubten Adressen laden und speichern; ID dekodieren; Auftrag an die Brücke, auch zurückgestellt, wenn sie aus ist; Gegenprobe; Vorschau; PDF an vorhandene Scheiben hängen; Admin-Zuweisung; Protokoll.
 - **Abnahme:** Opt-in-Scheibe erscheint ohne Zutun; QR-Weg mit einem anonymisierten Ausdruck lokal und an der Anlage; QR-Scan bei ausgeschalteter Brücke ergibt ein PDF-Ergebnis, das beim nächsten Start vollständig wird.
 - **Hängt ab von:** SP-1.3, SP-1.5, SP-1.6. **Status:** offen.
 
@@ -105,8 +105,8 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-1.9 Betrieb: Deploy und Selbst-Hosting
 - **Ziel:** Spiegel läuft auf dem VPS und ist für andere Vereine betreibbar.
-- **Umfang:** dritte DB und Owner mit idempotentem Anlage-Schritt, `app-spiegel` und `migrate-spiegel` in `compose.yml`, Caddy-Subdomain und Ingest-Endpunkt, Backups inklusive PDF-Speicher, CLI, VPS auf 4 GB ([[adr-026]]); Compose-Beispiel und Doku für Selbst-Hoster ([[adr-029]]).
-- **Abnahme:** Deploy auf dem VPS, Restore-Probe, Selbst-Hosting-Beispiel startet lokal.
+- **Umfang:** dritte DB und Owner mit idempotentem Anlage-Schritt, `app-spiegel` und `migrate-spiegel` in `compose.yml`, Caddy-Subdomain und Ingest-Endpunkt, Backups inklusive PDF-Speicher, CLI; ohne VPS-Upgrade: `mem_limit` für Spiegel (Ziel 256 MB), Deploys nacheinander, Messung von Ruhe- und Deploy-Spitze auf dem VPS S mit 2 GB ([[adr-026]]); Compose-Beispiel und Doku für Selbst-Hoster ([[adr-029]]).
+- **Abnahme:** Deploy auf dem VPS, Speicher bleibt in Ruhe und beim Deploy unter der Grenze, Restore-Probe, Selbst-Hosting-Beispiel startet lokal.
 - **Hängt ab von:** SP-1.6. Geschützte Pfade, interaktiv. **Status:** offen.
 
 ## Phase 2 · Auswertung
@@ -121,7 +121,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** Kontext an Scheibe und Serie, Grundlage für Vergleiche nach Merkmal (Munitionslos, Griff). **Hängt ab von:** SP-1.8. **Status:** offen.
 
 ### SP-2.4 Fundbüro und Check-in (bedingt)
-- **Umfang:** „Scheibe holen“ am Abend, optional Check-in per Stand-Aufkleber; nur, wenn SP-0.1/0.2 zeigen, dass Trainings ohne Starter in der Ablage landen und der QR nicht reicht ([[spiegel-assignment]]). **Hängt ab von:** SP-1.7. **Status:** offen.
+- **Umfang:** „Scheibe holen“ am Abend als Rückfall für verlorene oder abgelaufene QR-Links, Frist sieben Tage, kein Tablet; optional Check-in per Stand-Aufkleber. Weil es den QR immer gibt, wahrscheinlich nur in kleinem Umfang nötig ([[spiegel-assignment]]). **Hängt ab von:** SP-1.7. **Status:** offen.
 
 ### SP-2.5 Installierbar und Historie nachladen
 - **Umfang:** PWA mit Scan-Aktion; Nachladen der Historie nach einem Opt-in, gedrosselt. **Hängt ab von:** SP-1.7. **Status:** offen.

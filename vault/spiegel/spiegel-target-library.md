@@ -13,7 +13,7 @@ relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-data-model]]"]
 
 ## Bibliothek für Version 1
 
-Maße in mm nach DSB-Sportordnung 2026 (Teil 0, Anhang 0.20), gleich ISSF 2026. Die Ringe haben gleiche Abstände: Ø(n) = Ø10 + 2 · Ringabstand · (10 − n).
+Der Verein hat nur 10-m-Stände (Luftgewehr und Luftpistole, jeweils auch Auflage); Version 1 braucht deshalb nur die ersten beiden Zeilen, der Rest ist Referenz für später und für andere Vereine. Maße in mm nach DSB-Sportordnung 2026 (Teil 0, Anhang 0.20), gleich ISSF 2026. Die Ringe haben gleiche Abstände: Ø(n) = Ø10 + 2 · Ringabstand · (10 − n).
 
 | Scheibe | Ø 10 | Innenzehner | Ringabstand | Ø außen | Spiegel (schwarz) | Kaliber |
 |---|---|---|---|---|---|---|
@@ -49,7 +49,7 @@ Gezeichnet wird daraus eine SVG-Scheibe (Papier, Spiegel, Ringlinien, Ringzahlen
 - Die achtstellige DisziplinID kodiert Entfernung, Regelnummer und Schusszahl ([[meyton-ssmdb2]]). Beispiele: LG 40 = `10110040`, LP 40 = `10210040`, KK 60 liegend = `40180060`, ZS 30 = `20130030`.
 - Die Ziffern 2–5 sind nur bei DSB-Disziplinen die DSB-Regel. Training, Liga und ISSF nutzen Meyton-eigene Nummern (zum Beispiel `11010010` „LG Probe + 10 Wertung“, `10510040` „LG Liga“). Der Regelkatalog kennt beide Arten.
 - **Je Stellung ein Scheibenbild:** bei der 25-m-Pistole ist Stellung 1 die Präzisions-, Stellung 2 die Duellscheibe.
-- Die SSMDB2 enthält keine Geometrie; auch Meyton rät zu einer eigenen Tabelle. Für Preisscheiben ordnet ein Admin den Disziplinnamen einem Scheibenbild zu.
+- Die SSMDB2 enthält keine Geometrie; auch Meyton rät zu einer eigenen Tabelle. Für eigene Disziplin-Varianten des Vereins (zum Beispiel „LP 40 alt“) greift ein Rückfall: Entfernung 10 m plus Namensanfang LG oder LP. Für alles andere, etwa Preisscheiben, ordnet ein Admin den Disziplinnamen einem Scheibenbild zu.
 - Ob ganz oder zehntel gewertet wird, steht je Treffer im Feld `Wertung` (seit ShootMaster 5.2).
 
 ## Wertung

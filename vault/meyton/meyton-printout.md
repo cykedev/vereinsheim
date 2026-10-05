@@ -18,6 +18,7 @@ Beobachtet am Beispiel vom 2. Oktober 2026 (abgerufen am 5. Oktober):
 - **Nur HTTP**, HTTPS antwortet nicht; Server lighttpd 1.4.63.
 - Die IP gehört zu `qrcode.meyton.eu` (CNAME `data.vse.meyton.de`, Rückwärtsauflösung `qrcode.vse.meyton.de`).
 - `Last-Modified` entspricht der Druckzeit; der Ausdruck ist eine Woche abrufbar.
+- Den QR gibt es laut Verein zu jedem Ausdruck, also auch bei Trainings ohne Starter.
 
 ## Inhalt
 

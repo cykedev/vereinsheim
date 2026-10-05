@@ -48,11 +48,11 @@ relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-ingest-pipeline]]", "[[spiegel-assi
 
 ## Betrieb: aus nach dem Training
 
-Meyton-Anlage und Brücke werden nach jedem Trainingsabend ausgeschaltet, vermutlich hart über den Strom. Daraus folgt:
+Meyton-Anlage und Brücke werden nach jedem Trainingsabend ausgeschaltet, und zwar hart über den Strom (bestätigt am 5. Oktober 2026). Daraus folgt:
 
-- **Online nur am Abend.** Alles Wichtige passiert, solange geschossen wird: Opt-in-Scheiben gehen live hoch, Probe eingeschlossen. Was beim Abschalten noch in der Warteschlange liegt, geht beim nächsten Start raus.
+- **Online nur am Abend.** Alles Wichtige passiert, solange geschossen wird: Opt-in-Scheiben gehen live hoch, Probe eingeschlossen, damit beim Abschalten möglichst wenig wartet. Was noch in der Warteschlange liegt, geht beim nächsten Start raus.
 - **Nachholen beim Start:** offene Aufträge (zum Beispiel ein QR-Scan von zu Hause), Nachladen nach neuen Opt-ins, Abgleich seit dem letzten Lauf. Die SSMDB2 behält die Daten.
-- **Stromverlust aushalten:** schreibgeschütztes System-Dateisystem, Daten auf einer eigenen Partition oder SSD, SQLite mit WAL und vollem Sync, jede Übertragung idempotent. Ein Mini-PC mit SSD verträgt das besser als eine SD-Karte.
+- **Stromverlust aushalten (Pflicht):** schreibgeschütztes System-Dateisystem (zum Beispiel Overlay-Root), Daten auf einer eigenen Partition oder SSD, Protokolle im RAM statt auf der Karte, SQLite mit WAL und vollem Sync, jede Übertragung idempotent. Hardware-Empfehlung deshalb: Mini-PC mit SSD oder Raspberry Pi mit SSD statt SD-Karte. Abnahme in SP-1.4 mit wiederholtem Ziehen des Steckers während Upload und Schreiben.
 - **Startreihenfolge:** Die Brücke ist meist schneller wach als der Meyton-Server und wartet geduldig, bis MySQL antwortet.
 - **Uhrzeit:** Ein Raspberry Pi ohne Echtzeituhr kennt die Zeit erst nach der Synchronisierung; vorher keine Übertragung (TLS braucht die Zeit). Schusszeiten kommen ohnehin von Meyton.
 - **Status in Spiegel:** „aus, zuletzt online Di 22:14“ ist der Normalfall, kein Alarm.

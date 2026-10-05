@@ -28,7 +28,7 @@ relates_to: ["[[treffsicher-requirements]]", "[[meyton-interfaces]]"]
 
 ## Zielgruppen
 
-- **Ambitionierte Schützen** — Auswertung, Verläufe, Vergleiche.
+- **Ambitionierte Schützen** — Auswertung, Verläufe, Vergleiche; im Verein etwa 10 bis 15. Gäste und Jugendliche unterstützt Spiegel vorerst nicht.
 - **Trainer** — sehen, was ihre Schützen freigeben, später auch live.
 - **Verein** — betreibt Spiegel selbst, auf eigener Hardware und eigenem Server.
 - **Andere Vereine mit Meyton** — betreiben eine eigene Installation (Open Source, [[adr-029]]).

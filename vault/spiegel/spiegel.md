@@ -13,6 +13,8 @@ governed_by: ["[[adr-026]]"]
 # Spiegel — Plan und Wegweiser
 
 > **Status (5. Oktober 2026):** Konzept und Grundsatzentscheidungen stehen ([[adr-026]] bis [[adr-030]]). Als Nächstes: Phase 0 (Erkundung vor Ort) und parallel die ersten reinen Fachkern-Features. Gearbeitet wird Feature für Feature nach der [[spiegel-roadmap]].
+>
+> **Rahmen:** nur 10-m-Stände (Luftgewehr, Luftpistole, Auflage), etwa 10 bis 15 Nutzer, keine Gäste und Jugendlichen, der VPS bleibt bei 2 GB.
 
 ## So arbeiten wir mit diesem Plan
 

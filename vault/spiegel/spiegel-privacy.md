@@ -12,7 +12,7 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
 
 ## Grundsätze
 
-- **Einwilligung vor dem ersten Upload**, jederzeit widerrufbar. Das Opt-in per Sportpass ist genau diese Einwilligung: Wer seine Sportpassnummer verknüpft und zustimmt, dessen Scheiben werden automatisch hochgeladen; ohne Opt-in nur, was jemand selbst per QR abholt. Für Jugendliche willigen die Erziehungsberechtigten ein.
+- **Einwilligung vor dem ersten Upload**, jederzeit widerrufbar. Das Opt-in per Sportpass ist genau diese Einwilligung: Wer seine Sportpassnummer verknüpft und zustimmt, dessen Scheiben werden automatisch hochgeladen; ohne Opt-in nur, was jemand selbst per QR abholt. Gäste und Jugendliche unterstützt Spiegel vorerst nicht; Konten gibt es nur für erwachsene Mitglieder.
 - **Verantwortlich ist der Verein.** Mit dem Hoster des VPS braucht es einen Vertrag zur Auftragsverarbeitung.
 - **Datensparsamkeit in der Brücke:** Scheiben ohne zugestimmten Besitzer bleiben im Schützenhaus; die Brücke kennt dafür nur gehashte Kennungen ([[spiegel-bridge]]).
 - **Verdeckte Wertung** (Meyton-Modus 5: Wert und Lage verdeckt, Modus 10: Wert verdeckt, unbekannte Modi) wird nie hochgeladen. Nach einem Preis- oder Königsschießen kann ein Admin freigeben.
@@ -27,7 +27,7 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
 | Schütze | eigene Scheiben, Verläufe, Vergleiche | zuordnen, Notizen, Freigaben, Export, Löschen |
 | Trainer | was Schützen freigegeben haben, später auch live | kommentieren, Gruppen vergleichen |
 | Vereinsadmin | Anlagen, Brücken-Status, Zuordnungen | koppeln, Zuordnungen bestätigen, Scheibenbilder pflegen; keine Schussbilder ohne Freigabe |
-| Gast ohne Konto | nichts | mit Konto über den Meyton-QR einsteigen |
+| Gast ohne Konto | nichts | vorerst nicht vorgesehen |
 
 ## Offene Abwägung
 
