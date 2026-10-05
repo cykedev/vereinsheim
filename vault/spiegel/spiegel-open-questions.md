@@ -67,7 +67,8 @@ relates_to: ["[[spiegel-roadmap]]"]
 
 ## Betrieb und Recht
 
-- **VPS auf 4 GB?** *(Architektur)* → nein, der VPS bleibt, wie er ist (VPS S, 2 GB). Spiegel muss ins bestehende Speicherbudget passen ([[spiegel-architecture]]).
+- **VPS auf 4 GB?** *(Architektur)* → nein, der VPS bleibt, wie er ist (VPS S, 2 GB). Spiegel muss ins bestehende Speicherbudget passen; laut Messung vom 5. Oktober (948 MiB verfügbar) tut es das ([[spiegel-architecture]]).
+- **Swap-Datei als Sicherheitsnetz auf dem VPS?** → offen; kostet nichts, ist aber eine Änderung am VPS.
 - **Wer verantwortet die Einwilligung?** → offen (SP-0.5).
 - **Aufbewahrung und Nachladen der Historie?** → offen.
 - **Gemeinsame Anmeldung für alle Apps?** → offen (SP-4.2).

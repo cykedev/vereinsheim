@@ -51,7 +51,7 @@ packages/ingest-contract/   versionierter Vertrag Brücke ↔ Spiegel
 - **Deploy-Vertrag:** `compose.yml` bekommt `app-spiegel` und `migrate-spiegel` (Muster [[build-deploy-pipeline]]), Caddy eine Subdomain und den Ingest-Endpunkt, `db-init` eine dritte DB samt idempotentem Anlage-Schritt für den laufenden VPS ([[adr-026]]).
 - **Netze** wie in [[target-architecture]]: Spiegel in `web` und `data`, Postgres nur in `data`.
 - **Backups und CLI** schließen die dritte DB und den PDF-Speicher ein.
-- **VPS bleibt, wie er ist** (VPS S, 2 GB RAM, heute etwa 400 MB Puffer, [[vps-resource-sizing]]). Spiegel bekommt ein festes `mem_limit` (Ziel 256 MB), läuft ohne eigene Hintergrunddienste (Normalisierung im Request), und Deploys laufen nacheinander, damit nie zwei Migratoren gleichzeitig Speicher brauchen. Bei 10 bis 15 Nutzern ist die Last klein, der Grundbedarf eines Next.js-Servers ist der Engpass. Eine Swap-Datei wäre ein kostenloses Sicherheitsnetz, ist aber eine Änderung am VPS und nur eine Option. Gemessen wird in SP-1.9.
+- **VPS bleibt, wie er ist** (VPS S, 2 GB RAM, [[vps-resource-sizing]]). Gemessen am 5. Oktober 2026: 948 MiB verfügbar, Ringwerk 144 MiB, Treffsicher 105 MiB, kein Swap, keine Speicherabstürze in 60 Tagen. Spiegel bekommt ein festes `mem_limit` (Ziel 256 MB), läuft ohne eigene Hintergrunddienste (Normalisierung im Request), und Deploys laufen nacheinander, damit nie zwei Migratoren gleichzeitig Speicher brauchen. Bei 10 bis 15 Nutzern ist die Last klein, der Grundbedarf eines Next.js-Servers ist der Engpass. Eine Swap-Datei wäre ein kostenloses Sicherheitsnetz, ist aber eine Änderung am VPS und nur eine Option. Gemessen wird in SP-1.9.
 
 ## Open-Source-Betrieb
 

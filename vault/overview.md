@@ -172,7 +172,26 @@ kurzzeitig ~1.85 GB.
 | VPS M+/L     |    4 | 8 GB | 160 GB | überdimensioniert, sinnvoll bei 3.+4. App              |
 
 **RAM ist der Engpass**, nicht CPU. Image-Builds laufen lokal — kein
-Build-RAM-Puffer auf VPS nötig. Die `mem_limit`-Einträge in `compose.yml`
+Build-RAM-Puffer auf VPS nötig.
+
+### Messung 5. Oktober 2026
+
+Auf dem produktiven VPS S, beide Apps seit zwei Tagen in Betrieb:
+
+| Wert | Ergebnis |
+| ---- | -------- |
+| RAM gesamt / belegt / verfügbar | 1,8 GiB / 922 MiB / **948 MiB** |
+| Ringwerk / Treffsicher | 144 MiB / 105 MiB (Limit je 384 MiB) |
+| Caddy / Postgres | 36 MiB / 33 MiB |
+| Swap | keiner |
+| OOM-Kills (60 Tage) | keine |
+| Platte | 79 GB, davon 69 GB frei |
+
+Die Apps liegen weit unter ihren Limits. Der VPS bleibt bei 2 GB (Vorgabe); eine
+dritte App (Spiegel, ADR-026) wird mit 256 MiB Limit geplant und braucht realistisch
+110–160 MiB. Nur die Summe aller Limits plus Migrator plus OS überschreitet im
+theoretischen Worst Case den RAM; eine Swap-Datei wäre das kostenlose
+Sicherheitsnetz dagegen. Die `mem_limit`-Einträge in `compose.yml`
 sind die Schutzschicht gegen Runaway-Prozesse, die sonst den
 geteilten DB-Container OOM-killen würden.
 
