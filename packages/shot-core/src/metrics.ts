@@ -243,19 +243,33 @@ export const shotDistanceUm = (shot: MetricShot) =>
     ? (shot.distanceUm as number)
     : Math.hypot(shot.xUm as number, shot.yUm as number)
 const seconds = (ms: number | null) => (ms === null ? null : ms / 1000)
-/** Zeiten in Abgabefolge; springt `seq`, fehlt dazwischen ein Schuss, und der Abstand zählt nicht. */
-function pace(shots: readonly MetricShot[]) {
+export interface ShotStep {
+  shot: MetricShot
+  /** davor fehlt ein Schuss: `seq` springt (SF-30) */
+  gapBefore: boolean
+}
+
+/** Schüsse in Abgabefolge mit der Markierung, wo ein Schuss fehlt; Grundlage aller Zeit-Auswertungen */
+export function shotSteps(shots: readonly MetricShot[]): ShotStep[] {
   const ordered = inShotOrder(shots)
   const withSeq = ordered.every((shot) => finite(shot.seq))
-  const times: (number | null)[] = []
-  ordered.forEach((shot, i) => {
-    if (withSeq && i > 0 && (shot.seq as number) - (ordered[i - 1].seq as number) > 1) {
-      times.push(null)
-    }
-    times.push(shot.firedAtMs as number)
-  })
-  return tempo(times)
+  return ordered.map((shot, i) => ({
+    shot,
+    gapBefore: withSeq && i > 0 && (shot.seq as number) - (ordered[i - 1].seq as number) > 1,
+  }))
 }
+
+/** Zeiten in Abgabefolge für `tempo()`: `null` dort, wo ein Schuss fehlt oder keine gültige Zeit hat */
+export function timesWithGaps(shots: readonly MetricShot[]): (number | null)[] {
+  const times: (number | null)[] = []
+  for (const step of shotSteps(shots)) {
+    if (step.gapBefore) times.push(null)
+    times.push(finite(step.shot.firedAtMs) ? step.shot.firedAtMs : null)
+  }
+  return times
+}
+
+const pace = (shots: readonly MetricShot[]) => tempo(timesWithGaps(shots))
 
 const BOTH: readonly ShotKind[] = ["match", "probe"]
 const MATCH_ONLY: readonly ShotKind[] = ["match"]
