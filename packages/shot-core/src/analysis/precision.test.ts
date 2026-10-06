@@ -95,7 +95,8 @@ describe("Ausreißer (V6, V7)", () => {
       ring: Math.floor(decimalTenths / 10),
       firedAtMs: i * 1000,
     }))
-    expect(outlierLoss(shots)).toEqual({ n: 10, count: 1, loss: 4.4 })
-    expect(outlierLoss(shots.slice(0, 9))).toBeNull()
+    expect(outlierLoss(shots, "decimal")).toEqual({ n: 10, count: 1, loss: 4.4 })
+    expect(outlierLoss(shots, "rings")).toEqual({ n: 10, count: 1, loss: 4 })
+    expect(outlierLoss(shots.slice(0, 9), "decimal")).toBeNull()
   })
 })

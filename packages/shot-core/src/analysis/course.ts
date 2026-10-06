@@ -1,56 +1,56 @@
 // Verlauf in der Einheit: Serienkurve, Ermüdung, Trend in der Scheibe, gleitender Schnitt, Streuung und
 // Schwerpunkt je Serie, längste Folge über einer Schwelle (Katalog I1–I6, I10). Grundlage sind die
-// Wertungsschüsse in Abgabefolge. Einzelne Scheiben sind verrauscht: Ermüdung und Trend sagen erst als
-// Muster über mehrere Scheiben etwas, der Trend nur „klar“, wenn sein Intervall die 0 ausschließt.
+// Wertungsschüsse in Abgabefolge, Werte in der gewählten Wertung. Einzelne Scheiben sind verrauscht:
+// Ermüdung und Trend sagen erst als Muster über mehrere Scheiben etwas, der Trend nur „klar“, wenn sein
+// Intervall die 0 ausschließt.
 
 import { centroid, r50, type Point } from "../geometry"
-import { inShotOrder, selectShots, type MetricShot, type ShotKind } from "../metrics"
+import { inShotOrder, selectShots, type MetricShot, type Scoring, type ShotKind } from "../metrics"
 import { theilSen } from "../stats"
+import { valueNeed, valueRings, valueTenths } from "./values"
 
 const MATCH: readonly ShotKind[] = ["match"]
 
-const valued = (shots: readonly MetricShot[]) =>
-  inShotOrder(selectShots(shots, { kinds: MATCH, need: "decimal" }))
+const valued = (shots: readonly MetricShot[], scoring: Scoring) =>
+  inShotOrder(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) }))
 const point = (shot: MetricShot): Point => ({ xUm: shot.xUm as number, yUm: shot.yUm as number })
 const meanOf = (values: readonly number[]) => values.reduce((s, v) => s + v, 0) / values.length
 
 export interface SeriesPoint {
   series: number
   shots: number
-  /** Summe der Zehntelwerte (1050 = 105,0) */
-  tenths: number
-  rings: number
+  /** Summe in Ringen, in der gewählten Wertung (105,0 bzw. 100) */
+  total: number
 }
 
 /** Serienergebnisse in Reihenfolge (I1) */
-export function seriesCurve(shots: readonly MetricShot[]): SeriesPoint[] {
-  const bySeries = new Map<number, SeriesPoint>()
-  for (const shot of valued(shots)) {
+export function seriesCurve(shots: readonly MetricShot[], scoring: Scoring): SeriesPoint[] {
+  // in Zehnteln summiert, damit 0,1 + 0,2 genau bleibt
+  const bySeries = new Map<number, { series: number; shots: number; tenths: number }>()
+  for (const shot of valued(shots, scoring)) {
     if (shot.series === null) continue
-    const tenths = shot.decimalTenths as number
-    const entry = bySeries.get(shot.series) ?? {
-      series: shot.series,
-      shots: 0,
-      tenths: 0,
-      rings: 0,
-    }
+    const entry = bySeries.get(shot.series) ?? { series: shot.series, shots: 0, tenths: 0 }
     entry.shots++
-    entry.tenths += tenths
-    entry.rings += shot.ring ?? Math.floor(tenths / 10)
+    entry.tenths += valueTenths(shot, scoring)
     bySeries.set(shot.series, entry)
   }
-  return [...bySeries.values()].sort((a, b) => a.series - b.series)
+  return [...bySeries.values()]
+    .sort((a, b) => a.series - b.series)
+    .map(({ series, shots: count, tenths }) => ({ series, shots: count, total: tenths / 10 }))
 }
 
 /** Ermüdung (I2): Ø der letzten zehn minus der ersten zehn, R50 ebenso; ab 20 Wertungsschüssen */
-export function fatigue(shots: readonly MetricShot[]): {
+export function fatigue(
+  shots: readonly MetricShot[],
+  scoring: Scoring
+): {
   n: number
   firstMeanRings: number
   lastMeanRings: number
   deltaRings: number
   deltaR50Um: number | null
 } | null {
-  const values = valued(shots).map((shot) => (shot.decimalTenths as number) / 10)
+  const values = valued(shots, scoring).map((shot) => valueRings(shot, scoring))
   if (values.length < 20) return null
   const firstMeanRings = meanOf(values.slice(0, 10))
   const lastMeanRings = meanOf(values.slice(-10))
@@ -72,9 +72,10 @@ export function fatigue(shots: readonly MetricShot[]): {
 
 /** Trend in der Scheibe (I3): Theil-Sen-Steigung je zehn Schuss mit 95-%-Intervall; ab 10 Schuss */
 export function cardTrend(
-  shots: readonly MetricShot[]
+  shots: readonly MetricShot[],
+  scoring: Scoring
 ): { n: number; perTenShots: number; low: number; high: number; clear: boolean } | null {
-  const values = valued(shots).map((shot) => (shot.decimalTenths as number) / 10)
+  const values = valued(shots, scoring).map((shot) => valueRings(shot, scoring))
   if (values.length < 10) return null
   const fit = theilSen(
     values.map((_, i) => i + 1),
@@ -93,14 +94,15 @@ export function cardTrend(
 /** Gleitender Schnitt (I4): je Schuss Ø der letzten bis zu `window`, am Anfang als Teilfenster */
 export function movingAverage(
   shots: readonly MetricShot[],
+  scoring: Scoring,
   window = 10
-): { number: number; decimalTenths: number; meanRings: number; partial: boolean }[] {
-  const values = valued(shots).map((shot) => shot.decimalTenths as number)
-  return values.map((decimalTenths, i) => {
+): { number: number; value: number; meanRings: number; partial: boolean }[] {
+  const values = valued(shots, scoring).map((shot) => valueTenths(shot, scoring))
+  return values.map((tenths, i) => {
     const slice = values.slice(Math.max(0, i - window + 1), i + 1)
     return {
       number: i + 1,
-      decimalTenths,
+      value: tenths / 10,
       meanRings: meanOf(slice) / 10,
       partial: slice.length < window,
     }
@@ -151,15 +153,19 @@ export function mpiPath(
   })
 }
 
-/** Längste Folge von Wertungsschüssen ab einem Zehntelwert (I10), mit Nummer des ersten */
+/**
+ * Längste Folge von Wertungsschüssen ab einer Schwelle in Zehnteln (I10), mit Nummer des ersten. In
+ * ganzen Ringen zählt der Ring (siehe `shareAtLeast`).
+ */
 export function longestRun(
   shots: readonly MetricShot[],
+  scoring: Scoring,
   tenths: number
 ): { length: number; start: number | null } {
   let best = { length: 0, start: null as number | null }
   let current = 0
-  valued(shots).forEach((shot, i) => {
-    if ((shot.decimalTenths as number) >= tenths) {
+  valued(shots, scoring).forEach((shot, i) => {
+    if (valueTenths(shot, scoring) >= tenths) {
       current++
       if (current > best.length) best = { length: current, start: i - current + 2 }
     } else {

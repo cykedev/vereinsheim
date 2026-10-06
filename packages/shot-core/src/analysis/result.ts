@@ -1,6 +1,7 @@
 // Auswertungen zum Ergebnis: Ringverteilung und Zehntelverteilung, bester und schwächster Schuss,
 // Teiler, Ringverlust, Konstanz der Serien und Quoten (Katalog V1, V2, E4, E6–E11). Grundlage sind
-// die Wertungsschüsse; verdächtige Schüsse zählen nur mit ihrem Wert (SF-15).
+// die Wertungsschüsse; verdächtige Schüsse zählen nur mit ihrem Wert (SF-15). Was vom Wert abhängt,
+// rechnet in der gewählten Wertung (ganze Ringe oder Zehntel).
 
 import { standardDeviation } from "../geometry"
 import {
@@ -8,11 +9,14 @@ import {
   selectShots,
   shotDistanceUm,
   type MetricShot,
+  type Scoring,
   type ShotKind,
 } from "../metrics"
 import { teilerFromDistanceUm } from "../scoring"
 import { mad, wilson } from "../stats"
 import { MAX_DECIMAL_TENTHS } from "../targets"
+import { seriesCurve, type SeriesPoint } from "./course"
+import { valueNeed, valueRings, valueTenths } from "./values"
 
 const MATCH: readonly ShotKind[] = ["match"]
 
@@ -48,7 +52,8 @@ function matchNumbers(shots: readonly MetricShot[]): Map<MetricShot, number> {
 
 export interface ShotRef {
   number: number
-  decimalTenths: number
+  /** Wert in Ringen, in der gewählten Wertung */
+  value: number
 }
 
 export interface TeilerRef {
@@ -66,17 +71,16 @@ export interface ShotExtremes {
 }
 
 /** Bei gleichem Wert zählt der frühere Schuss. */
-export function shotExtremes(shots: readonly MetricShot[]): ShotExtremes | null {
+export function shotExtremes(shots: readonly MetricShot[], scoring: Scoring): ShotExtremes | null {
   const numbers = matchNumbers(shots)
-  const valued = selectShots(shots, { kinds: MATCH, need: "decimal" })
-    .map((shot) => ({
-      number: numbers.get(shot) as number,
-      decimalTenths: shot.decimalTenths as number,
-    }))
+  const valued = selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })
+    .map((shot) => ({ number: numbers.get(shot) as number, tenths: valueTenths(shot, scoring) }))
     .sort((a, b) => a.number - b.number)
   if (valued.length === 0) return null
-  const best = valued.reduce((top, shot) => (shot.decimalTenths > top.decimalTenths ? shot : top))
-  const worst = valued.reduce((low, shot) => (shot.decimalTenths < low.decimalTenths ? shot : low))
+  const top = valued.reduce((high, shot) => (shot.tenths > high.tenths ? shot : high))
+  const low = valued.reduce((min, shot) => (shot.tenths < min.tenths ? shot : min))
+  const best = { number: top.number, value: top.tenths / 10 }
+  const worst = { number: low.number, value: low.tenths / 10 }
   const teiler = selectShots(shots, { kinds: MATCH, need: "distance" })
     .map((shot) => ({
       number: numbers.get(shot) as number,
@@ -130,18 +134,11 @@ export function ringLoss(
   return { n: valued.length, loss: (valued.length * MAX_DECIMAL_TENTHS - tenths) / 10 }
 }
 
-export interface SeriesTotal {
-  series: number
-  shots: number
-  /** Summe der Zehntelwerte (1000 = 100,0) */
-  tenths: number
-}
-
 export interface SeriesConsistency {
-  series: SeriesTotal[]
+  series: SeriesPoint[]
   /** Zahl der verglichenen Serien: die mit der häufigsten Länge */
   compared: number
-  /** Standardabweichung und Spanne der verglichenen Serien in Ringen (Zehntelwertung) */
+  /** Standardabweichung und Spanne der verglichenen Serien in Ringen */
   sd: number | null
   range: number | null
   /** MAD der einzelnen Schusswerte in Ringen */
@@ -149,38 +146,37 @@ export interface SeriesConsistency {
 }
 
 /** Konstanz: nur Serien gleicher Länge sind vergleichbar; eine kurze Restserie zählt nicht mit. */
-export function seriesConsistency(shots: readonly MetricShot[]): SeriesConsistency | null {
-  const valued = selectShots(shots, { kinds: MATCH, need: "decimal" })
-  const bySeries = new Map<number, SeriesTotal>()
-  for (const shot of valued) {
-    if (shot.series === null) continue
-    const total = bySeries.get(shot.series) ?? { series: shot.series, shots: 0, tenths: 0 }
-    total.shots++
-    total.tenths += shot.decimalTenths as number
-    bySeries.set(shot.series, total)
-  }
-  if (bySeries.size === 0) return null
-  const series = [...bySeries.values()].sort((a, b) => a.series - b.series)
+export function seriesConsistency(
+  shots: readonly MetricShot[],
+  scoring: Scoring
+): SeriesConsistency | null {
+  const series = seriesCurve(shots, scoring)
+  if (series.length === 0) return null
   const lengths = new Map<number, number>()
   for (const s of series) lengths.set(s.shots, (lengths.get(s.shots) ?? 0) + 1)
   const modal = [...lengths].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0]
-  const totals = series.filter((s) => s.shots === modal).map((s) => s.tenths / 10)
+  const totals = series.filter((s) => s.shots === modal).map((s) => s.total)
+  const valued = selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })
   return {
     series,
     compared: totals.length,
     sd: totals.length >= 2 ? standardDeviation(totals) : null,
     range: totals.length >= 2 ? Math.max(...totals) - Math.min(...totals) : null,
-    mad: mad(valued.map((shot) => (shot.decimalTenths as number) / 10)),
+    mad: mad(valued.map((shot) => valueRings(shot, scoring))),
   }
 }
 
-/** Anteil der Wertungsschüsse ab einem Zehntelwert, mit Wilson-Intervall (E4 mit 100, E11) */
+/**
+ * Anteil der Wertungsschüsse ab einer Schwelle in Zehnteln, mit Wilson-Intervall (E4 mit 100, E11).
+ * In ganzen Ringen zählt der Ring: 10,0 heißt Ring 10, eine Schwelle wie 10,5 erreicht keiner.
+ */
 export function shareAtLeast(
   shots: readonly MetricShot[],
+  scoring: Scoring,
   tenths: number
 ): { n: number; count: number; rate: number; low: number; high: number } | null {
-  const valued = selectShots(shots, { kinds: MATCH, need: "decimal" })
-  const count = valued.filter((shot) => (shot.decimalTenths as number) >= tenths).length
+  const valued = selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })
+  const count = valued.filter((shot) => valueTenths(shot, scoring) >= tenths).length
   const interval = wilson(count, valued.length)
   if (interval === null) return null
   return { n: valued.length, count, rate: count / valued.length, ...interval }

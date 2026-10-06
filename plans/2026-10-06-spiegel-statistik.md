@@ -224,3 +224,15 @@ Commit `docs(spiegel): document the analysis of a card`.
 3. Spielwiese: Bereich „Analyse“ mit Beispielscheiben (LG 40, LP 40, je mit Probe und Pause) und
    Probe-Modus; Skriptprüfung der Werte gegen `shot-core`; Sichtprüfung hell, dunkel, 390 px.
 4. `git diff` nur `packages/shot-core`, Vault-Notizen, Plan.
+
+## Nachtrag 1: Wertung in den Auswertungen (Validierung, 6. Oktober 2026)
+
+Beim Einbau in die Spielwiese fiel auf, dass elf Auswertungen nur in Zehnteln rechneten; die Vorgabe
+„ganze Ringe und Zehntel immer umschaltbar“ galt bisher nur für die Registry. Seitdem nehmen
+`shotExtremes`, `seriesConsistency`, `shareAtLeast`, `outlierLoss`, `seriesCurve`, `fatigue`,
+`cardTrend`, `movingAverage`, `longestRun`, `pauseRecovery` und `sighterComparison` die Wertung als
+Pflichtparameter (`analysis/values.ts`). Schwellen bleiben in Zehnteln; in ganzen Ringen zählt Ring 10
+als 100, eine Schwelle zwischen zwei Ringen erreicht keiner. Ohne Zehntel (SF-18) gibt es die
+Auswertung nur in ganzen Ringen. Die Ergebnisse heißen wertungsneutral (`value`, `total` in Ringen).
+Ein Test hält fest, dass derselbe Anstieg in ganzen Ringen zur Stufe wird und der Trend dann nicht
+mehr „klar“ ist.

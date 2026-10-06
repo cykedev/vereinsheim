@@ -4,9 +4,10 @@
 // Lage nicht (SF-15).
 
 import { centroid, covarianceEllipse, distancesTo, meanRadius, r50, type Point } from "../geometry"
-import { inShotOrder, selectShots, type MetricShot, type ShotKind } from "../metrics"
+import { inShotOrder, selectShots, type MetricShot, type Scoring, type ShotKind } from "../metrics"
 import { c4, chiSquareQuantileEven, median, quantile } from "../stats"
 import type { TargetImage } from "../targets"
+import { valueNeed, valueTenths } from "./values"
 
 const positioned = (shots: readonly MetricShot[]): Point[] =>
   selectShots(shots, { need: "position" }).map((shot) => ({
@@ -109,12 +110,16 @@ export function outliers(
 
 const MATCH: readonly ShotKind[] = ["match"]
 
-/** Ringverlust durch Ausreißer: Σ (Median − Wert) über die schwächsten 10 % der Wertung, ab 10 Schuss */
+/**
+ * Ringverlust durch Ausreißer: Σ (Median − Wert) über die schwächsten 10 % der Wertung, ab 10 Schuss,
+ * in der gewählten Wertung
+ */
 export function outlierLoss(
-  shots: readonly MetricShot[]
+  shots: readonly MetricShot[],
+  scoring: Scoring
 ): { n: number; count: number; loss: number } | null {
-  const values = inShotOrder(selectShots(shots, { kinds: MATCH, need: "decimal" })).map(
-    (shot) => shot.decimalTenths as number
+  const values = inShotOrder(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })).map(
+    (shot) => valueTenths(shot, scoring)
   )
   if (values.length < 10) return null
   const center = median(values) as number

@@ -28,6 +28,9 @@ const WITH_SHORT_SERIES = [
   ...Array.from({ length: 5 }, (_, i) => ({ ...FOUR_SERIES[0], seq: 41 + i, series: 5 })),
 ]
 
+// Die Wertung des Ausdrucks nur in ganzen Ringen, ohne Zehntel (SF-18)
+const RINGS_ONLY: MetricShot[] = CARD.map((shot) => ({ ...shot, decimalTenths: null }))
+
 describe("Ringverteilung und Zehntelverteilung (V1, V2)", () => {
   it("zählt die Wertung des Ausdrucks", () => {
     const distribution = ringDistribution(CARD)
@@ -44,9 +47,9 @@ describe("Ringverteilung und Zehntelverteilung (V1, V2)", () => {
 
 describe("Extreme und Teiler (E6, E7, E8)", () => {
   it("bester und schwächster Schuss mit Nummer, die drei besten und weitesten Teiler", () => {
-    const extremes = shotExtremes(CARD)
-    expect(extremes?.best).toEqual({ number: 1, decimalTenths: 105 })
-    expect(extremes?.worst).toEqual({ number: 6, decimalTenths: 62 })
+    const extremes = shotExtremes(CARD, "decimal")
+    expect(extremes?.best).toEqual({ number: 1, value: 10.5 })
+    expect(extremes?.worst).toEqual({ number: 6, value: 6.2 })
     expect(extremes?.bestTeiler.map((t) => [t.number, t.teiler])).toEqual([
       [1, 331.8],
       [2, 396.4],
@@ -59,6 +62,15 @@ describe("Extreme und Teiler (E6, E7, E8)", () => {
     ])
   })
 
+  it("in ganzen Ringen: gleiche Ringe, der frühere zählt; ohne Zehntel nur in ganzen Ringen", () => {
+    // 6,7 und 6,2 sind beide Ring 6: der schwächste ist dann Schuss 5, nicht 6
+    const extremes = shotExtremes(CARD, "rings")
+    expect(extremes?.best).toEqual({ number: 1, value: 10 })
+    expect(extremes?.worst).toEqual({ number: 5, value: 6 })
+    expect(shotExtremes(RINGS_ONLY, "rings")?.worst).toEqual({ number: 5, value: 6 })
+    expect(shotExtremes(RINGS_ONLY, "decimal")).toBeNull()
+  })
+
   it("Teiler-Schnitt und -Median", () => {
     const stats = teilerStats(CARD)
     expect(stats?.n).toBe(6)
@@ -67,7 +79,12 @@ describe("Extreme und Teiler (E6, E7, E8)", () => {
   })
 
   it("ohne Wertung keine Extreme", () => {
-    expect(shotExtremes(CARD.filter((shot) => shot.kind === "probe"))).toBeNull()
+    expect(
+      shotExtremes(
+        CARD.filter((shot) => shot.kind === "probe"),
+        "decimal"
+      )
+    ).toBeNull()
     expect(teilerStats([])).toBeNull()
   })
 })
@@ -79,13 +96,13 @@ describe("Ringverlust, Konstanz und Quoten (E9, E10, E4, E11)", () => {
   })
 
   it("Konstanz über Serien gleicher Länge; eine kurze Serie zählt nicht mit", () => {
-    const consistency = seriesConsistency(WITH_SHORT_SERIES)
-    expect(consistency?.series.map((s) => [s.series, s.shots, s.tenths])).toEqual([
-      [1, 10, 1000],
-      [2, 10, 1020],
-      [3, 10, 980],
-      [4, 10, 1010],
-      [5, 5, 500],
+    const consistency = seriesConsistency(WITH_SHORT_SERIES, "decimal")
+    expect(consistency?.series.map((s) => [s.series, s.shots, s.total])).toEqual([
+      [1, 10, 100],
+      [2, 10, 102],
+      [3, 10, 98],
+      [4, 10, 101],
+      [5, 5, 50],
     ])
     expect(consistency?.compared).toBe(4)
     expect(consistency?.sd).toBeCloseTo(Math.sqrt(8.75 / 3), 9)
@@ -93,11 +110,26 @@ describe("Ringverlust, Konstanz und Quoten (E9, E10, E4, E11)", () => {
     expect(consistency?.mad).toBeCloseTo(0.1, 9)
   })
 
+  it("Konstanz in ganzen Ringen: 9,8 zählt 9", () => {
+    const consistency = seriesConsistency(WITH_SHORT_SERIES, "rings")
+    expect(consistency?.series.map((s) => s.total)).toEqual([100, 100, 90, 100, 50])
+    expect(consistency?.sd).toBe(5)
+    expect(consistency?.range).toBe(10)
+    expect(consistency?.mad).toBe(0)
+  })
+
   it("Quote über Schwelle mit Wilson-Intervall", () => {
-    const tens = shareAtLeast(CARD, 100)
+    const tens = shareAtLeast(CARD, "decimal", 100)
     expect(tens).toMatchObject({ n: 6, count: 3, rate: 0.5 })
     expect(tens?.low).toBeCloseTo(0.1876, 4)
     expect(tens?.high).toBeCloseTo(0.8124, 4)
-    expect(shareAtLeast([], 100)).toBeNull()
+    expect(shareAtLeast(CARD, "decimal", 105)?.count).toBe(2)
+    expect(shareAtLeast([], "decimal", 100)).toBeNull()
+  })
+
+  it("Quote in ganzen Ringen: eine Schwelle zwischen zwei Ringen erreicht keiner", () => {
+    expect(shareAtLeast(RINGS_ONLY, "rings", 100)).toMatchObject({ n: 6, count: 3 })
+    expect(shareAtLeast(CARD, "rings", 105)?.count).toBe(0)
+    expect(shareAtLeast(RINGS_ONLY, "decimal", 100)).toBeNull()
   })
 })

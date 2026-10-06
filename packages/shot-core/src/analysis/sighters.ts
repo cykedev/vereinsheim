@@ -3,8 +3,9 @@
 // (SF-63).
 
 import { r50, segmentGroups, type Point } from "../geometry"
-import { inShotOrder, selectShots, type MetricShot } from "../metrics"
+import { inShotOrder, selectShots, type MetricShot, type Scoring } from "../metrics"
 import { mpiConfidence } from "./position"
+import { valueNeed, valueTenths } from "./values"
 
 /** Probeschüsse vor dem ersten Wertungsschuss, in Abgabefolge */
 function sightersBeforeMatch(shots: readonly MetricShot[]): MetricShot[] {
@@ -39,13 +40,16 @@ export function sighterSummary(shots: readonly MetricShot[]): {
 
 export interface GroupSide {
   n: number
+  /** Ø je Schuss in Ringen der gewählten Wertung */
   meanRings: number | null
   /** R50 ohne Fehlschüsse, ab fünf Schuss */
   r50Um: number | null
 }
 
-function side(shots: readonly MetricShot[]): GroupSide {
-  const values = selectShots(shots, { need: "decimal" }).map((s) => s.decimalTenths as number)
+function side(shots: readonly MetricShot[], scoring: Scoring): GroupSide {
+  const values = selectShots(shots, { need: valueNeed(scoring) }).map((s) =>
+    valueTenths(s, scoring)
+  )
   const points: Point[] = selectShots(shots, { need: "position", excludeMisses: true }).map(
     (s) => ({ xUm: s.xUm as number, yUm: s.yUm as number })
   )
@@ -62,13 +66,14 @@ function side(shots: readonly MetricShot[]): GroupSide {
  */
 export function sighterComparison(
   shots: readonly MetricShot[],
+  scoring: Scoring,
   options: { adjustAfter?: readonly number[] } = {}
 ): { probe: GroupSide; match: GroupSide } | null {
   const sighters = sightersBeforeMatch(shots)
   const match = shots.filter((shot) => shot.kind === "match")
   if (sighters.length === 0 || match.length === 0) return null
   const groups = segmentGroups(sighters, options.adjustAfter ?? [])
-  return { probe: side(groups[groups.length - 1]), match: side(match) }
+  return { probe: side(groups[groups.length - 1], scoring), match: side(match, scoring) }
 }
 
 /** Eingeschossen? (S4): Lage der letzten fünf Probeschüsse vor der Wertung mit Vertrauensbereich */

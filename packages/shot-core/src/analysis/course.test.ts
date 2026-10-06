@@ -51,11 +51,21 @@ const TIRED: MetricShot[] = Array.from({ length: 20 }, (_, i) => {
 })
 
 describe("Serienkurve, Streuung und Schwerpunkt je Serie (I1, I5, I6)", () => {
-  it("Serien in Reihenfolge mit Summen in Zehnteln und Ringen", () => {
-    expect(seriesCurve(TIRED)).toEqual([
-      { series: 1, shots: 10, tenths: 1050, rings: 100 },
-      { series: 2, shots: 10, tenths: 1010, rings: 100 },
+  it("Serien in Reihenfolge, in Zehnteln und in ganzen Ringen", () => {
+    expect(seriesCurve(TIRED, "decimal")).toEqual([
+      { series: 1, shots: 10, total: 105 },
+      { series: 2, shots: 10, total: 101 },
     ])
+    expect(seriesCurve(TIRED, "rings")).toEqual([
+      { series: 1, shots: 10, total: 100 },
+      { series: 2, shots: 10, total: 100 },
+    ])
+  })
+
+  it("ohne Zehntel gibt es die Kurve nur in ganzen Ringen (SF-18)", () => {
+    const ringsOnly = TIRED.map((s) => ({ ...s, decimalTenths: null }))
+    expect(seriesCurve(ringsOnly, "decimal")).toEqual([])
+    expect(seriesCurve(ringsOnly, "rings").map((s) => s.total)).toEqual([100, 100])
   })
 
   it("R50 je Serie", () => {
@@ -78,38 +88,70 @@ describe("Serienkurve, Streuung und Schwerpunkt je Serie (I1, I5, I6)", () => {
 
 describe("Ermüdung und Trend (I2, I3)", () => {
   it("letzte zehn minus erste zehn, im Wert und im R50", () => {
-    const tired = fatigue(TIRED)
+    const tired = fatigue(TIRED, "decimal")
     expect(tired?.deltaRings).toBeCloseTo(-0.4, 9)
     const firstTen = TIRED.slice(0, 10).map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
     const lastTen = TIRED.slice(10).map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
     expect(tired?.deltaR50Um).toBeCloseTo((r50(lastTen) as number) - (r50(firstTen) as number), 9)
-    expect(fatigue(TIRED.slice(0, 19))).toBeNull()
+    expect(fatigue(TIRED.slice(0, 19), "decimal")).toBeNull()
+  })
+
+  it("in ganzen Ringen sind 10,5 und 10,1 beide eine 10", () => {
+    const tired = fatigue(TIRED, "rings")
+    expect(tired?.firstMeanRings).toBe(10)
+    expect(tired?.deltaRings).toBe(0)
   })
 
   it("Trend je zehn Schuss: klar nur, wenn das Intervall die 0 ausschließt", () => {
     const rising = Array.from({ length: 20 }, (_, i) => shot(i, 90 + i))
-    const trend = cardTrend(rising)
+    const trend = cardTrend(rising, "decimal")
     expect(trend?.perTenShots).toBeCloseTo(1, 9)
     expect(trend?.clear).toBe(true)
     const noisy = [104, 101, 106, 102, 105, 103, 106, 101, 104, 102].map((v, i) => shot(i, v))
-    expect(cardTrend(noisy)?.clear).toBe(false)
-    expect(cardTrend(noisy.slice(0, 9))).toBeNull()
+    expect(cardTrend(noisy, "decimal")?.clear).toBe(false)
+    expect(cardTrend(noisy.slice(0, 9), "decimal")).toBeNull()
+  })
+
+  it("in ganzen Ringen wird derselbe Anstieg zur Stufe und ist nicht mehr klar", () => {
+    // 9,0 … 10,9: zehnmal Ring 9, dann zehnmal Ring 10. Theil-Sen: 90 Steigungen 0 in den Hälften,
+    // 100 positive dazwischen; der Median ist die fünft- und sechstkleinste positive, 1/17 je Schuss.
+    const rising = Array.from({ length: 20 }, (_, i) => shot(i, 90 + i))
+    const trend = cardTrend(rising, "rings")
+    expect(trend?.perTenShots).toBeCloseTo(10 / 17, 9)
+    expect(trend?.low).toBe(0)
+    expect(trend?.clear).toBe(false)
   })
 })
 
 describe("Gleitender Schnitt und längste Folge (I4, I10)", () => {
   it("Ø der letzten bis zu zehn, am Anfang als Teilfenster gekennzeichnet", () => {
-    const values = Array.from({ length: 12 }, (_, i) => shot(i, 100 + i))
-    const average = movingAverage(values, 10)
-    expect(average[0]).toEqual({ number: 1, decimalTenths: 100, meanRings: 10, partial: true })
+    const values = Array.from({ length: 12 }, (_, i) => shot(i, 98 + i))
+    const average = movingAverage(values, "decimal", 10)
+    expect(average[0]).toEqual({ number: 1, value: 9.8, meanRings: 9.8, partial: true })
     expect(average[9]).toMatchObject({ number: 10, partial: false })
-    expect(average[9].meanRings).toBeCloseTo(10.45, 9)
-    expect(average[11].meanRings).toBeCloseTo(10.65, 9)
+    expect(average[9].meanRings).toBeCloseTo(10.25, 9)
+    expect(average[11].meanRings).toBeCloseTo(10.45, 9)
+  })
+
+  it("gleitender Schnitt in ganzen Ringen", () => {
+    const values = Array.from({ length: 12 }, (_, i) => shot(i, 98 + i))
+    const average = movingAverage(values, "rings", 10)
+    expect(average[0]).toEqual({ number: 1, value: 9, meanRings: 9, partial: true })
+    expect(average[9].meanRings).toBeCloseTo(9.8, 9)
+    expect(average[11].meanRings).toBe(10)
   })
 
   it("längste Folge ab einer Schwelle, mit Start", () => {
     const values = [101, 102, 99, 100, 103, 104, 98].map((v, i) => shot(i, v))
-    expect(longestRun(values, 100)).toEqual({ length: 3, start: 4 })
-    expect(longestRun(values, 110)).toEqual({ length: 0, start: null })
+    expect(longestRun(values, "decimal", 100)).toEqual({ length: 3, start: 4 })
+    expect(longestRun(values, "decimal", 102)).toEqual({ length: 2, start: 5 })
+    expect(longestRun(values, "decimal", 110)).toEqual({ length: 0, start: null })
+  })
+
+  it("längste Folge in ganzen Ringen: 10,1 und 10,2 sind beide eine 10", () => {
+    const values = [101, 102, 99, 100, 103, 104, 98].map((v, i) => shot(i, v))
+    expect(longestRun(values, "rings", 100)).toEqual({ length: 3, start: 4 })
+    expect(longestRun(values, "rings", 102)).toEqual({ length: 0, start: null })
+    expect(longestRun(values, "rings", 90)).toEqual({ length: 7, start: 1 })
   })
 })

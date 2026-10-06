@@ -55,7 +55,9 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - **Ganze Ringe und Zehntel sind immer umschaltbar.** Jede wertbasierte Kennzahl gibt es in beiden
   Wertungen (`scoring` + `counterpart`, gleiche Regeln), `inScoring` wählt; ein Registry-Test erzwingt
   das Paar. Ausnahme sind nur Zehner und Innenzehner, die in beiden Wertungen gleich sind. Ganze Ringe
-  brauchen nur `ring` (`needs: "ring"`), Zehntel den Zehntelwert (SF-18).
+  brauchen nur `ring` (`needs: "ring"`), Zehntel den Zehntelwert (SF-18). Wertbasierte Auswertungen in
+  `analysis/*` nehmen `scoring` als Pflichtparameter (`analysis/values.ts`); Schwellen stehen in
+  Zehnteln (100 = 10,0). Nur die Zehntelverteilung gibt es allein in Zehnteln.
 - **Auswertungen wählen wie die Registry.** `analysis/*` nutzt `selectShots` und `shotSteps`/
   `timesWithGaps`, keine eigene Filter- oder Lückenlogik; welche Schüsse gemeint sind (Wertung, eine
   Serie, die Probe), wählt der Aufrufer.

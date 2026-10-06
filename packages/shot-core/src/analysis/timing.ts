@@ -2,9 +2,17 @@
 // Rhythmus-Profil über die Schussnummer (Katalog Z2–Z5). Zeiten in Abgabefolge; fehlt ein Schuss oder
 // springt die Uhr zurück, zählt der Abstand nicht (SF-30). Intervalle über drei Minuten sind Pausen.
 
-import { selectShots, shotSteps, timesWithGaps, type MetricShot, type ShotKind } from "../metrics"
+import {
+  selectShots,
+  shotSteps,
+  timesWithGaps,
+  type MetricShot,
+  type Scoring,
+  type ShotKind,
+} from "../metrics"
 import { iqr, median } from "../stats"
 import { PAUSE_THRESHOLD_MS, tempo } from "../time"
+import { valueNeed, valueTenths } from "./values"
 
 const MATCH: readonly ShotKind[] = ["match"]
 
@@ -67,23 +75,27 @@ export function shootingTime(
 export interface PauseEffect {
   /** Nummer des ersten Wertungsschusses nach der Pause */
   afterShot: number
-  /** Ø der bis zu drei Schüsse danach minus Scheiben-Ø, in Ringen */
+  /** Ø der bis zu drei Schüsse danach minus Scheiben-Ø, in Ringen der gewählten Wertung */
   deltaRings: number
 }
 
 /** Pausen und Wiedereinstieg (Z4), über die Wertungsschüsse mit Zeit und Wert */
-export function pauseRecovery(shots: readonly MetricShot[]): {
+export function pauseRecovery(
+  shots: readonly MetricShot[],
+  scoring: Scoring
+): {
   pauses: number
   totalPauseMs: number
   effects: PauseEffect[]
   meanDelta: number | null
 } | null {
+  const withValue = new Set(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) }))
   const selected = selectShots(shots, { kinds: MATCH, need: "time" }).filter((shot) =>
-    Number.isFinite(shot.decimalTenths)
+    withValue.has(shot)
   )
   if (selected.length === 0) return null
   const steps = intervals(selected)
-  const values = steps.map((step) => step.shot.decimalTenths as number)
+  const values = steps.map((step) => valueTenths(step.shot, scoring))
   const mean = values.reduce((sum, v) => sum + v, 0) / values.length
   const effects: PauseEffect[] = []
   let totalPauseMs = 0

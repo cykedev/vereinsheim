@@ -59,14 +59,20 @@ describe("Probe-Umfang (S2)", () => {
 
 describe("Probe gegen Wertung (S3)", () => {
   it("ohne Verstellung zählt die ganze Probe", () => {
-    const comparison = sighterComparison(CARD_WITH_ADJUSTMENT)
+    const comparison = sighterComparison(CARD_WITH_ADJUSTMENT, "decimal")
     expect(comparison?.probe.n).toBe(8)
     expect(comparison?.probe.meanRings).toBeCloseTo(10.1, 9)
     expect(comparison?.match.meanRings).toBeCloseTo(10.3, 9)
   })
 
+  it("in ganzen Ringen: 9,6 zählt 9, 10,4 und 10,3 zählen 10", () => {
+    const comparison = sighterComparison(CARD_WITH_ADJUSTMENT, "rings")
+    expect(comparison?.probe.meanRings).toBeCloseTo(77 / 8, 9)
+    expect(comparison?.match.meanRings).toBe(10)
+  })
+
   it("nach der letzten Verstellung zählt nur die Probe danach", () => {
-    const comparison = sighterComparison(CARD_WITH_ADJUSTMENT, { adjustAfter: [3] })
+    const comparison = sighterComparison(CARD_WITH_ADJUSTMENT, "decimal", { adjustAfter: [3] })
     expect(comparison?.probe.n).toBe(5)
     expect(comparison?.probe.meanRings).toBeCloseTo(10.4, 9)
     expect(comparison?.probe.r50Um).toBeCloseTo(100, 9)
@@ -74,7 +80,7 @@ describe("Probe gegen Wertung (S3)", () => {
   })
 
   it("ohne Wertung kein Vergleich", () => {
-    expect(sighterComparison(SIGHTERS)).toBeNull()
+    expect(sighterComparison(SIGHTERS, "decimal")).toBeNull()
   })
 })
 

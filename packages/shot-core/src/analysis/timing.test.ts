@@ -43,16 +43,26 @@ describe("Tempo-Konstanz und Schießzeit (Z2, Z3)", () => {
 
 describe("Pausen und Rhythmus (Z4, Z5)", () => {
   it("Wiedereinstieg: Ø der drei Schüsse nach der Pause gegen den Scheiben-Ø", () => {
-    const recovery = pauseRecovery(EVENING)
+    const recovery = pauseRecovery(EVENING, "decimal")
     expect(recovery?.pauses).toBe(1)
     expect(recovery?.totalPauseMs).toBe(300_000)
     expect(recovery?.effects).toEqual([{ afterShot: 7, deltaRings: -0.4 }])
     expect(recovery?.meanDelta).toBeCloseTo(-0.4, 9)
   })
 
+  it("Wiedereinstieg in ganzen Ringen: dreimal 9 gegen Ø 9,7", () => {
+    const recovery = pauseRecovery(EVENING, "rings")
+    expect(recovery?.effects).toHaveLength(1)
+    expect(recovery?.effects[0].afterShot).toBe(7)
+    expect(recovery?.effects[0].deltaRings).toBeCloseTo(-0.7, 9)
+    const ringsOnly = EVENING.map((shot) => ({ ...shot, decimalTenths: null }))
+    expect(pauseRecovery(ringsOnly, "rings")?.pauses).toBe(1)
+    expect(pauseRecovery(ringsOnly, "decimal")).toBeNull()
+  })
+
   it("ohne Pause keine Effekte", () => {
-    expect(pauseRecovery(EVENING.slice(0, 5))?.effects).toEqual([])
-    expect(pauseRecovery([])).toBeNull()
+    expect(pauseRecovery(EVENING.slice(0, 5), "decimal")?.effects).toEqual([])
+    expect(pauseRecovery([], "decimal")).toBeNull()
   })
 
   it("gleitender Median der Intervalle; eine Pause zählt nicht hinein", () => {
