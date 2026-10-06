@@ -75,6 +75,18 @@ describe("Höhe, Breite und Form (P7, P8, P9)", () => {
     expect(round?.showAngle).toBe(false)
   })
 
+  it("gestreckt, aber unter zehn Schuss: kein Winkel", () => {
+    // acht Schuss, a/b = 6: W = 4 · 36 / 37² = 0,105 unter der Grenze 0,05^(1/3) = 0,368
+    const eight = Array.from({ length: 8 }, (_, k) => ({
+      ...SPREAD[0],
+      xUm: Math.round(3000 * Math.cos((k * Math.PI) / 4)),
+      yUm: Math.round(500 * Math.sin((k * Math.PI) / 4)),
+    }))
+    const shape = groupShape(eight)
+    expect(shape?.elongated).toBe(true)
+    expect(shape?.showAngle).toBe(false)
+  })
+
   it("auf einer Linie maximal gestreckt; ohne Ausdehnung keine Form", () => {
     const line = Array.from({ length: 10 }, (_, i) => ({
       ...SPREAD[0],

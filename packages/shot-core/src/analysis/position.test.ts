@@ -103,6 +103,24 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     expect(ringLossSplit([], LP_10M)).toBeNull()
   })
 
+  it("Gewinn durchs Zentrieren, aber Lage nicht echt: nicht belastbar", () => {
+    // LP, zehn Schuss im Kreis von 6 mm um (1,5 | 0) mm: T² 1,1 unter 10,03. Ist 101,6, zentriert
+    // 102,0 (alle 10,2), in ganzen Ringen beide Male 100.
+    const wide = Array.from({ length: 10 }, (_, k) =>
+      at(
+        1500 + Math.round(6000 * Math.cos((k * Math.PI) / 5)),
+        Math.round(6000 * Math.sin((k * Math.PI) / 5)),
+        k
+      )
+    )
+    expect(mpiConfidence(wide)?.real).toBe(false)
+    const split = ringLossSplit(wide, LP_10M)
+    expect(split?.actual.decimal).toBeCloseTo(101.6, 9)
+    expect(split?.centered.decimal).toBeCloseTo(102, 9)
+    expect(split?.positionLoss.rings).toBe(0)
+    expect(split?.reliable).toBe(false)
+  })
+
   it("schiefe Gruppe: Verschieben um den Schwerpunkt kostet Zehntel, dann nicht belastbar", () => {
     // LP: 20 Schuss in der Mitte (10,9), 10 bei 9 mm rechts (9,8); Schwerpunkt (3 | 0) mm, echt.
     // Zentriert: 20 × 10,6 und 10 × 10,2 = 314,0 statt 316,0; in ganzen Ringen 300 statt 290.
