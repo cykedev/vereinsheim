@@ -2,23 +2,25 @@
 
 Fachkern von Spiegel (SP-1.1, Oktober 2026): Scheibenbilder als Daten, Wertung wie Meyton,
 Meyton-Disziplinen und die Gegenprobe; seit SP-1.2 auch Geometrie, Tempo und die
-Kennzahlen-Registry. Reine Funktionen ohne Dependencies, isomorph (Server und Client). Noch hängt
+Kennzahlen-Registry, seit SP-1.10 die Analyse einer Scheibe (`stats`, `analysis`). Reine Funktionen ohne Dependencies, isomorph (Server und Client). Noch hängt
 keine App daran; der Spiegel-Ingest (SP-1.6) und die Ansichten (SP-1.8) bauen darauf auf.
 Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-metrics.md`,
-Sonderfälle: `vault/spiegel/spiegel-edge-cases.md`.
+`vault/spiegel/spiegel-statistics.md` (Katalog), Sonderfälle: `vault/spiegel/spiegel-edge-cases.md`.
 
 ## Exporte
 
-| Export                              | Datei               | Inhalt                                                                                                           |
-| ----------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `@vereinsheim/shot-core/units`      | `src/units.ts`      | `mmToUm` (ganze µm oder Fehler)                                                                                  |
-| `@vereinsheim/shot-core/targets`    | `src/targets.ts`    | `defineTarget`, `LG_10M`, `LP_10M`, `TARGETS`, `MAX_DECIMAL_TENTHS`                                              |
-| `@vereinsheim/shot-core/scoring`    | `src/scoring.ts`    | `scoreFromCoordinates`, `scoreFromDistance`, `distanceUm`, Teiler                                                |
-| `@vereinsheim/shot-core/discipline` | `src/discipline.ts` | `parseDisciplineId`, `resolveTarget`, `suggestFamily`, Vollständigkeit                                           |
-| `@vereinsheim/shot-core/verify`     | `src/verify.ts`     | `checkShot`, `verifyCard`, `suggestTargets`, `rescore` (Neu-Wertung)                                             |
-| `@vereinsheim/shot-core/geometry`   | `src/geometry.ts`   | Schwerpunkt, Streukreis, `extremeSpread`, Radien, Streuung, Ellipse                                              |
-| `@vereinsheim/shot-core/time`       | `src/time.ts`       | `tempo` in Abgabefolge: Intervalle, Pausen über 180 s, Lücken, Uhrsprünge                                        |
-| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `METRICS`, `metricByKey`, `computeMetric`, `eligibleShots`, `inScoring`, `inShotOrder`, `FLAG_*` |
+| Export                              | Datei               | Inhalt                                                                                                                        |
+| ----------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `@vereinsheim/shot-core/units`      | `src/units.ts`      | `mmToUm` (ganze µm oder Fehler)                                                                                               |
+| `@vereinsheim/shot-core/targets`    | `src/targets.ts`    | `defineTarget`, `LG_10M`, `LP_10M`, `TARGETS`, `MAX_DECIMAL_TENTHS`                                                           |
+| `@vereinsheim/shot-core/scoring`    | `src/scoring.ts`    | `scoreFromCoordinates`, `scoreFromDistance`, `distanceUm`, Teiler                                                             |
+| `@vereinsheim/shot-core/discipline` | `src/discipline.ts` | `parseDisciplineId`, `resolveTarget`, `suggestFamily`, Vollständigkeit                                                        |
+| `@vereinsheim/shot-core/verify`     | `src/verify.ts`     | `checkShot`, `verifyCard`, `suggestTargets`, `rescore` (Neu-Wertung)                                                          |
+| `@vereinsheim/shot-core/geometry`   | `src/geometry.ts`   | Schwerpunkt, Streukreis, `extremeSpread`, Radien, Streuung, Ellipse                                                           |
+| `@vereinsheim/shot-core/time`       | `src/time.ts`       | `tempo` in Abgabefolge: Intervalle, Pausen über 180 s, Lücken, Uhrsprünge                                                     |
+| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `METRICS`, `computeMetric`, `eligibleShots`, `selectShots`, `inScoring`, `inShotOrder`, `shotSteps`, `FLAG_*` |
+| `@vereinsheim/shot-core/stats`      | `src/stats.ts`      | Quantil, Median, MAD, IQR, Wilson, lnΓ, c4, χ²- und F-Quantile, Theil-Sen                                                     |
+| `@vereinsheim/shot-core/analysis`   | `src/analysis/*.ts` | Analyse einer Scheibe: Ergebnis, Präzision, Lage, Zeit, Verlauf, Probe, Datenlage (Katalog-IDs in den Kommentaren)            |
 
 ## Regeln
 
@@ -54,4 +56,12 @@ Sonderfälle: `vault/spiegel/spiegel-edge-cases.md`.
   Wertungen (`scoring` + `counterpart`, gleiche Regeln), `inScoring` wählt; ein Registry-Test erzwingt
   das Paar. Ausnahme sind nur Zehner und Innenzehner, die in beiden Wertungen gleich sind. Ganze Ringe
   brauchen nur `ring` (`needs: "ring"`), Zehntel den Zehntelwert (SF-18).
+- **Auswertungen wählen wie die Registry.** `analysis/*` nutzt `selectShots` und `shotSteps`/
+  `timesWithGaps`, keine eigene Filter- oder Lückenlogik; welche Schüsse gemeint sind (Wertung, eine
+  Serie, die Probe), wählt der Aufrufer.
+- **Ehrlich statt scheingenau.** Unsicherheit dort, wo sie exakt rechenbar ist (Wilson, χ², Hotelling
+  mit F(2, n − 2), Theil-Sen mit Sen-Intervall); Aussagen wie „echt“ oder „klar“ nur über der Grenze,
+  sonst kein Urteil. Unter der Mindestzahl `null`. Testwerte aus Tabellen oder Hand-Rechnung, nicht aus
+  der eigenen Implementierung; Testdaten symmetrisch und ganzzahlig, wenn sie einen Schwerpunkt in der
+  Mitte brauchen (`Math.round` rundet −x,5 anders als x,5).
 - Nach Änderungen: `pnpm check`; `format:check` prüft auch diese Datei.

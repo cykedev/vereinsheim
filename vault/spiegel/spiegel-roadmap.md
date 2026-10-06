@@ -133,7 +133,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Ziel:** alles, was eine einzelne Scheibe hergibt, als Profi-Analyse rechnen, ohne Datenbank und ohne Historie ([[spiegel-statistics]]).
 - **Umfang:** `shot-core` bekommt Statistik-Hilfen (`stats`: Quantile, MAD, Wilson, χ²- und F-Quantile, c4, Theil-Sen) und das Modul `analysis`: Ergebnis (Ringverteilung, Zehntelverteilung, bester und schwächster Schuss, Teiler-Schnitt und -Listen, Ringverlust, Konstanz, Quoten), Präzision (Rayleigh-σ mit Vertrauensbereich, Höhe und Breite, Form, Ringbreiten, Ausreißer), Lage (Hotelling-Test „ist die Lage echt?“, Ringverlust durch Lage gegen Streuung, Lageanteil, Richtungsuhr, Drift), Zeit (Tempo-Konstanz, Netto-Schießzeit, Wiedereinstieg nach Pausen, Rhythmus-Profil), Verlauf (Serienkurve, Ermüdung, Trend in der Scheibe, gleitender Schnitt, Streuung und Schwerpunkt je Serie, längste Folge), Probe (Umfang, Qualität, „eingeschossen?“) und Datenlage; neue Kennzahlen in der Registry (σ̂, Höhe, Breite, Zehnerquote, Tempo-Streuung, Dauer).
 - **Abnahme:** feste Erwartungswerte aus Tabellen und Hand-Rechnung, Mutationsprobe nach [[conventions]] §9; Spielwiese mit Beispielscheiben zeigt alles; Sonderfälle SF-01, SF-14, SF-15, SF-30, SF-60, SF-61, SF-63.
-- **Hängt ab von:** SP-1.2. **Status:** offen.
+- **Hängt ab von:** SP-1.2. **Status:** erledigt (Oktober 2026, `packages/shot-core`: `stats`, `analysis`, sechs neue Kennzahlen; Spielwiese mit Bereich „Analyse“).
 
 ## Phase 2 · Auswertung
 

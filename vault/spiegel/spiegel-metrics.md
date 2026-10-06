@@ -3,7 +3,7 @@ id: spiegel-metrics
 type: concept
 title: "Spiegel — Kennzahlen, Verläufe und Vergleiche"
 aliases: [kennzahlen, metrics, kennzahlen-registry, verläufe, vergleiche]
-keywords: [kennzahl, metric, registry, eligibleshots, inshotorder, onmissing, abgabefolge, platzhalter, inscoring, counterpart, ganze ringe, zehntel, umschalten, metricshot, computemetric, extremespread, segmentgroups, definemetric, schwerpunkt, mpi, streukreis, kleinster kreis, welzl, mittlerer radius, streuung, ellipse, teiler, intervall, tempo, ermüdung, verlauf, trend, rekord, bestleistung, vergleich, baseline, 30-tage-schnitt, beobachtung, insight, trefferkreis, trefferlage, nur probe, je schuss, r50, median, mindestzahl, ausreißer, visier verstellt, disziplin-familie]
+keywords: [kennzahl, metric, registry, selectshots, shotsteps, sigma, zehnerquote, höhe, breite, tempo-streuung, dauer, eligibleshots, inshotorder, onmissing, abgabefolge, platzhalter, inscoring, counterpart, ganze ringe, zehntel, umschalten, metricshot, computemetric, extremespread, segmentgroups, definemetric, schwerpunkt, mpi, streukreis, kleinster kreis, welzl, mittlerer radius, streuung, ellipse, teiler, intervall, tempo, ermüdung, verlauf, trend, rekord, bestleistung, vergleich, baseline, 30-tage-schnitt, beobachtung, insight, trefferkreis, trefferlage, nur probe, je schuss, r50, median, mindestzahl, ausreißer, visier verstellt, disziplin-familie]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[statistics-visualization]]", "[[spiegel-data-model]]", "[[spiegel-ui-design]]", "[[spiegel-edge-cases]]"]
 ---
@@ -87,7 +87,7 @@ Wo ein Satz reicht, steht er über dem Diagramm: „Serie 3 war deine engste (St
 
 ## Umsetzung
 
-`packages/shot-core` (SP-1.2, Oktober 2026) setzt die Registry und die ersten 16 Kennzahlen um (`geometry`, `time`, `metrics`):
+`packages/shot-core` (SP-1.2, Oktober 2026) setzt die Registry und die ersten Kennzahlen um (`geometry`, `time`, `metrics`); SP-1.10 ergänzt sechs weitere und die Analyse einer Scheibe (`stats`, `analysis`, Katalog [[spiegel-statistics]]). Heute 22 Kennzahlen:
 
 - **Eingabe** ist ein schlanker `MetricShot` (Abgabefolge, Lage, Wert, Ring, Innenzehner, Abstand, Zeit, Probe oder Wertung, Serie, Merkmale). Schüsse ohne gültige Lage zählen bei Lage-Kennzahlen nicht mit, ohne Wert nicht beim Ergebnis, ohne Zeit nicht beim Tempo; ungültige Zahlen (NaN, unendlich, negativer Abstand) gelten als fehlend. `eligibleShots` nennt die Schüsse, über die eine Kennzahl rechnet.
 - **Streukreis** ist der kleinste Kreis um die Trefferzentren, Mitte zu Mitte, deterministisch nach Welzl berechnet und gegen Brute Force getestet. Daneben gibt es den größten Abstand zweier Treffer (`extremeSpread`), bis SP-0.6 klärt, welches der beiden Meytons „Trefferkreis“ ist.
@@ -95,4 +95,4 @@ Wo ein Satz reicht, steht er über dem Diagramm: „Serie 3 war deine engste (St
 - **Tempo:** Median der Intervalle; Intervalle über 180 s sind Pausen und zählen getrennt. Die Zeiten kommen in Abgabefolge; ein Rücksprung der Uhr oder ein fehlender Schuss (Sprung in `seq`) trennt die Folge, statt eine falsche Pause zu erzeugen.
 - **Versatz Probe → Wertung** nimmt die letzten fünf Probeschüsse vor dem ersten Wertungsschuss; `segmentGroups` teilt eine Gruppe an einem Schuss, nach dem das Visier verstellt wurde.
 - **Wertung:** Wertbasierte Kennzahlen tragen `scoring` (ganze Ringe oder Zehntel) und ihr Gegenstück (`counterpart`); `inScoring` wählt die passende. Ganze Ringe brauchen nur den Ring, Zehntel den Zehntelwert; die Einheit ist in beiden Fällen „Ringe“. Gleich in beiden Wertungen sind nur Zehner und Innenzehner.
-- **Kennzahlen:** Ergebnis und Ø je Schuss (je in ganzen Ringen und in Zehnteln), Zehner, Innenzehner, bester Teiler, Schwerpunkt-Abstand, Streukreis, mittlerer Radius, R50, Streuung x und y, Tempo, längste Pause, Versatz Probe → Wertung. Die übrigen Kennzahlen der Tabelle oben (Ermüdung, Wanderung, Tempo-Konstanz, …) kommen über dieselbe Registry dazu, sobald eine Ansicht sie braucht.
+- **Kennzahlen:** Ergebnis und Ø je Schuss (je in ganzen Ringen und in Zehnteln), Zehner, Zehnerquote, Innenzehner, bester Teiler, Schwerpunkt-Abstand, Streukreis, mittlerer Radius, R50, Präzision σ (Rayleigh-σ̂, kaum n-abhängig, für Verläufe über verschiedene Schusszahlen), Streuung x und y, Höhe, Breite, Tempo, Tempo-Streuung, längste Pause, Dauer, Versatz Probe → Wertung. Mittlerer Radius und R50 gelten als n-abhängig: Sie schrumpfen bei kleinem n mit √((n − 1)/n). Die übrigen Kennzahlen der Tabelle oben (Ermüdung, Wanderung, Tempo-Konstanz, …) kommen über dieselbe Registry dazu, sobald eine Ansicht sie braucht.
