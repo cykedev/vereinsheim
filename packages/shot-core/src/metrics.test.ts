@@ -83,6 +83,19 @@ describe("Ergebnis-Kennzahlen", () => {
     expect(value("group.enclosingDiameter", pdfOnly)).toBeNull()
     expect(value("result.bestTeiler", pdfOnly)).toBeNull()
   })
+
+  it("der beste Teiler nimmt den gemessenen Abstand vor der Lage, auch ohne Lage", () => {
+    // Lage (0 | 3318) ergäbe 331,8; gemessen sind 3317 µm.
+    const measured = MATCH.map((shot, i) => ({ ...shot, distanceUm: i === 0 ? 3317 : null }))
+    expect(value("result.bestTeiler", measured)).toBeCloseTo(331.7, 9)
+    const teilerOnly = MATCH.map((shot) => ({
+      ...shot,
+      xUm: null,
+      yUm: null,
+      distanceUm: Math.hypot(shot.xUm ?? 0, shot.yUm ?? 0),
+    }))
+    expect(value("result.bestTeiler", teilerOnly)).toBeCloseTo(331.8, 9)
+  })
 })
 
 describe("Trefferbild-Kennzahlen", () => {
@@ -96,7 +109,17 @@ describe("Trefferbild-Kennzahlen", () => {
   it("R50 lässt markierte Ausreißer weg, der Streukreis zeigt sie (SF-14)", () => {
     const group = PROBE
     const outlier: MetricShot = { ...PROBE[0], xUm: 60_000, yUm: 60_000, flags: ["fehlschuss"] }
+    const suspicious: MetricShot = {
+      ...PROBE[1],
+      xUm: -60_000,
+      yUm: 60_000,
+      flags: ["verdaechtig"],
+    }
     expect(value("group.r50", [...group, outlier])).toBeCloseTo(
+      value("group.r50", group) ?? Number.NaN,
+      9
+    )
+    expect(value("group.r50", [...group, suspicious])).toBeCloseTo(
       value("group.r50", group) ?? Number.NaN,
       9
     )
@@ -164,6 +187,10 @@ describe("Tempo und Probe", () => {
     expect(
       value("sighter.offset", [...beforeAdjustment, ...afterAdjustment, ...match])
     ).toBeCloseTo(0, 9)
+    // Es zählt die Abgabezeit, nicht die Reihenfolge der Liste.
+    expect(
+      value("sighter.offset", [...match, ...afterAdjustment, ...beforeAdjustment])
+    ).toBeCloseTo(0, 9)
     // Ohne die Schüsse nach der Verstellung zählt der alte Schwerpunkt bei (5 | 5) mm.
     expect(value("sighter.offset", [...beforeAdjustment, ...match])).toBeCloseTo(
       Math.hypot(5, 5),
@@ -186,6 +213,7 @@ describe("Registry", () => {
       expect(metricByKey(metric.key)).toBe(metric)
       expect(Object.isFrozen(metric)).toBe(true)
       expect(Object.isFrozen(metric.appliesTo)).toBe(true)
+      expect(Object.isFrozen(metric.scopes)).toBe(true)
     }
     expect(metricByKey("gibt.es.nicht")).toBeUndefined()
   })
@@ -195,5 +223,6 @@ describe("Registry", () => {
     expect(() => defineMetric({ ...base, version: 0 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, minShots: 0 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, appliesTo: [] })).toThrow(RangeError)
+    expect(() => defineMetric({ ...base, scopes: [] })).toThrow(RangeError)
   })
 })

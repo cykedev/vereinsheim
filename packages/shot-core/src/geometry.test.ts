@@ -169,6 +169,15 @@ describe("Radien und Streuung", () => {
       )
     )
     expect(covarianceEllipse(rotated)?.angleRad).toBeCloseTo(Math.PI / 4, 9)
+    // Um 135° gedreht: der Winkel bleibt in [0, π), nicht −45°.
+    const back = (3 * Math.PI) / 4
+    const steep = stretched.map((p) =>
+      pt(
+        p.xUm * Math.cos(back) - p.yUm * Math.sin(back),
+        p.xUm * Math.sin(back) + p.yUm * Math.cos(back)
+      )
+    )
+    expect(covarianceEllipse(steep)?.angleRad).toBeCloseTo(back, 9)
     expect(covarianceEllipse([pt(0, 0)])).toBeNull()
   })
 })
@@ -184,5 +193,9 @@ describe("segmentGroups (Visier verstellt, SF-63)", () => {
   it("ohne Verstellung oder mit Nummern am Rand bleibt es eine Gruppe", () => {
     expect(segmentGroups(shots, [])).toEqual([shots])
     expect(segmentGroups(shots, [0, 10, 10])).toEqual([shots])
+  })
+
+  it("eine doppelt gemeldete Verstellung teilt nur einmal", () => {
+    expect(segmentGroups(shots, [4, 4]).map((g) => g.length)).toEqual([4, 6])
   })
 })
