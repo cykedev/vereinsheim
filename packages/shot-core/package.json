@@ -1,0 +1,26 @@
+{
+  "name": "@vereinsheim/shot-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./units": "./src/units.ts",
+    "./targets": "./src/targets.ts",
+    "./scoring": "./src/scoring.ts",
+    "./discipline": "./src/discipline.ts",
+    "./verify": "./src/verify.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "prettier": "@vereinsheim/config/prettier",
+  "devDependencies": {
+    "@vereinsheim/config": "workspace:*",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
