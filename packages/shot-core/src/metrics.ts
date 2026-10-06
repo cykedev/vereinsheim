@@ -2,10 +2,17 @@
 // Regeln dafür, welche Schüsse zählen. Daraus entstehen später ohne weiteren Code die Kachel in der
 // Session, die Spalte im Serienvergleich, der Verlauf und der Vergleich (vault/spiegel/spiegel-metrics.md).
 //
-// Regeln aus dem Sonderfall-Katalog: Ergebnis-Kennzahlen gelten nur für Wertungsschüsse, Lage und
-// Tempo auch für die Probe (SF-01); unter der Mindestzahl gibt es keinen Wert statt 0 (SF-61);
-// robuste Maße lassen markierte Schüsse weg (SF-14); `nSensitive` kennzeichnet Maße, die mit der
-// Schusszahl wachsen, damit Vergleiche nur bei gleichem n laufen (SF-60).
+// Regeln aus dem Sonderfall-Katalog:
+// - Ergebnis-Kennzahlen gelten nur für Wertungsschüsse, Lage und Tempo auch für die Probe (SF-01).
+//   Welche Schüsse gemeint sind (Wertung, eine Serie, ein Probe-Block), wählt der Aufrufer.
+// - Unter der Mindestzahl gibt es keinen Wert statt 0 (SF-61).
+// - Fehlt einem Schuss die nötige Angabe, fällt er weg. Summen und Zählungen geben dann keinen Wert,
+//   denn eine Summe über einen Teil der Schüsse ist kein Ergebnis (`onMissing`).
+// - Fehlschüsse lassen nur robuste Maße weg (SF-14). Verdächtige Schüsse (Platzhalter, Handeintrag)
+//   zählen nur mit ihrem amtlichen Wert, nie mit Lage, Abstand oder Zeit (SF-15).
+// - `nSensitive` kennzeichnet Maße, die von der Schusszahl abhängen: Vergleiche nur bei gleichem n
+//   (SF-60); das n liefert `eligibleShots`.
+// - Die Reihenfolge ist die Abgabefolge `seq`, nicht die Uhr (SF-30).
 //
 // Wertung: Jede wertbasierte Kennzahl gibt es in ganzen Ringen und in Zehnteln (`scoring` und
 // `counterpart`); `inScoring` wählt die passende, damit sich überall umschalten lässt. Ganze Ringe
@@ -25,12 +32,19 @@ import { teilerFromDistanceUm } from "./scoring"
 import { tempo } from "./time"
 
 export type ShotKind = "match" | "probe"
-export type MetricUnit = "Ringe" | "Zehntel" | "Teiler" | "mm" | "s" | "Schuss"
+export type MetricUnit = "Ringe" | "Teiler" | "mm" | "s" | "Schuss"
 export type MetricScope = "series" | "card"
 export type MetricNeed = "ring" | "decimal" | "position" | "distance" | "time"
 export type Scoring = "rings" | "decimal"
 
+/** Fehlschuss (Nuller, Treffer weit außen): robuste Maße lassen ihn weg (SF-14) */
+export const FLAG_MISS = "fehlschuss"
+/** Verdächtiger Schuss (Platzhalter, Handeintrag): nur sein amtlicher Wert zählt (SF-15) */
+export const FLAG_SUSPICIOUS = "verdaechtig"
+
 export interface MetricShot {
+  /** Abgabefolge (SF-30); fehlt sie, ordnet die Zeit, sonst die Liste */
+  seq?: number | null
   /** Lage in µm; null bei Ergebnissen nur aus dem PDF */
   xUm: number | null
   yUm: number | null
@@ -44,7 +58,7 @@ export interface MetricShot {
   firedAtMs: number | null
   kind: ShotKind
   series: number | null
-  /** etwa "fehlschuss", "verdaechtig" (SF-14, SF-15) */
+  /** Merkmale; für Kennzahlen zählen FLAG_MISS und FLAG_SUSPICIOUS */
   flags?: readonly string[]
 }
 
@@ -60,27 +74,38 @@ export interface MetricDefinition {
   appliesTo: readonly ShotKind[]
   /** darunter kein Wert, nicht 0 (SF-61) */
   minShots: number
-  /** wächst mit der Schusszahl: Vergleiche nur bei gleichem n (SF-60) */
+  /** hängt von der Schusszahl ab: Vergleiche nur bei gleichem n (SF-60); ein Hinweis für Aufrufer */
   nSensitive: boolean
-  /** markierte Schüsse weglassen (robuste Maße, SF-14) */
-  excludeFlagged: boolean
+  /** robustes Maß: lässt Fehlschüsse weg (SF-14) */
+  excludeMisses: boolean
   /** welche Angabe die Schüsse brauchen */
   needs: MetricNeed
+  /** fehlt einem zählenden Schuss die Angabe: ihn weglassen oder gar kein Wert (Summen, Zählungen) */
+  onMissing: "drop" | "null"
   /** nur wertbasierte Kennzahlen: die Wertung und das Gegenstück in der anderen Wertung */
   scoring?: Scoring
   counterpart?: string
+  /**
+   * Die Formel. Sie rechnet nur über `computeMetric` richtig: Erst das filtert die Schüsse und
+   * garantiert die Angaben, die `needs` verlangt.
+   */
   compute: (shots: readonly MetricShot[]) => number | null
 }
 
-/** Merkmale, die einen Schuss für robuste Maße ausschließen */
-const OUTLIER_FLAGS = ["fehlschuss", "verdaechtig"]
+const KEY = /^[a-z][a-zA-Z]*(\.[a-z][a-zA-Z0-9]*)+$/
 
 export function defineMetric(def: MetricDefinition): Readonly<MetricDefinition> {
+  if (!KEY.test(def.key)) {
+    throw new RangeError(`"${def.key}": Schlüssel wie "group.r50"`)
+  }
   if (!Number.isInteger(def.version) || def.version < 1) {
     throw new RangeError(`${def.key}: Version muss eine ganze Zahl ab 1 sein`)
   }
   if (!Number.isInteger(def.minShots) || def.minShots < 1) {
     throw new RangeError(`${def.key}: Mindestzahl muss ab 1 sein`)
+  }
+  if (!Number.isInteger(def.decimals) || def.decimals < 0 || def.decimals > 3) {
+    throw new RangeError(`${def.key}: Nachkommastellen 0 bis 3`)
   }
   if (def.appliesTo.length === 0 || def.scopes.length === 0) {
     throw new RangeError(`${def.key}: appliesTo und scopes dürfen nicht leer sein`)
@@ -98,37 +123,74 @@ export function defineMetric(def: MetricDefinition): Readonly<MetricDefinition> 
   })
 }
 
-function hasPosition(shot: MetricShot): boolean {
-  return shot.xUm !== null && shot.yUm !== null
-}
+const finite = (value: number | null | undefined): value is number =>
+  typeof value === "number" && Number.isFinite(value)
 
+const hasPosition = (shot: MetricShot) => finite(shot.xUm) && finite(shot.yUm)
+const hasDistance = (shot: MetricShot) => finite(shot.distanceUm) && shot.distanceUm >= 0
+
+/** Gültig sind endliche Zahlen, ein Abstand nicht negativ; alles andere gilt als fehlend. */
 function satisfies(shot: MetricShot, need: MetricNeed): boolean {
   switch (need) {
     case "ring":
-      return shot.ring !== null
+      return finite(shot.ring)
     case "decimal":
-      return shot.decimalTenths !== null
+      return finite(shot.decimalTenths)
     case "position":
       return hasPosition(shot)
     case "distance":
-      return (shot.distanceUm ?? null) !== null || hasPosition(shot)
+      return hasDistance(shot) || hasPosition(shot)
     case "time":
-      return shot.firedAtMs !== null
+      return finite(shot.firedAtMs)
   }
 }
 
+/** Zählt der Schuss für die Kennzahl, ob ihm eine Angabe fehlt oder nicht? */
+function counts(metric: MetricDefinition, shot: MetricShot): boolean {
+  if (!metric.appliesTo.includes(shot.kind)) return false
+  const flags = shot.flags ?? []
+  const valueOnly = metric.needs === "ring" || metric.needs === "decimal"
+  if (!valueOnly && flags.includes(FLAG_SUSPICIOUS)) return false
+  return !(metric.excludeMisses && flags.includes(FLAG_MISS))
+}
+
+/** Die Schüsse, über die eine Kennzahl rechnet; ihre Zahl ist das n für Vergleiche (SF-60). */
+export function eligibleShots(
+  metric: MetricDefinition,
+  shots: readonly MetricShot[]
+): MetricShot[] {
+  return shots.filter((shot) => counts(metric, shot) && satisfies(shot, metric.needs))
+}
+
+/**
+ * Wert der Kennzahl für die gewählten Schüsse. Die Auswahl (Wertung, eine Serie, ein Probe-Block)
+ * trifft der Aufrufer; `appliesTo` schließt nur aus, was für die Kennzahl nie zählt.
+ */
 export function computeMetric(
   metric: MetricDefinition,
   shots: readonly MetricShot[]
 ): number | null {
-  const eligible = shots.filter(
-    (shot) =>
-      metric.appliesTo.includes(shot.kind) &&
-      satisfies(shot, metric.needs) &&
-      !(metric.excludeFlagged && shot.flags?.some((flag) => OUTLIER_FLAGS.includes(flag)))
-  )
+  const counting = shots.filter((shot) => counts(metric, shot))
+  const eligible = counting.filter((shot) => satisfies(shot, metric.needs))
+  if (metric.onMissing === "null" && eligible.length < counting.length) return null
   if (eligible.length < metric.minShots) return null
   return metric.compute(eligible)
+}
+
+/**
+ * In Abgabefolge: nach `seq`, wenn alle eine haben (SF-30); sonst nach der Zeit, wenn alle eine
+ * haben; sonst wie gegeben. Gleiche Werte behalten die Reihenfolge der Liste.
+ */
+export function inShotOrder<T extends Pick<MetricShot, "seq" | "firedAtMs">>(
+  shots: readonly T[]
+): T[] {
+  if (shots.every((shot) => finite(shot.seq))) {
+    return [...shots].sort((a, b) => (a.seq as number) - (b.seq as number))
+  }
+  if (shots.every((shot) => finite(shot.firedAtMs))) {
+    return [...shots].sort((a, b) => (a.firedAtMs as number) - (b.firedAtMs as number))
+  }
+  return [...shots]
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -142,15 +204,12 @@ const sumTenths = (shots: readonly MetricShot[]) =>
 const sumRings = (shots: readonly MetricShot[]) =>
   shots.reduce((sum, shot) => sum + (shot.ring as number), 0)
 const distanceOf = (shot: MetricShot) =>
-  shot.distanceUm ?? Math.hypot(shot.xUm as number, shot.yUm as number)
+  hasDistance(shot)
+    ? (shot.distanceUm as number)
+    : Math.hypot(shot.xUm as number, shot.yUm as number)
 const seconds = (ms: number | null) => (ms === null ? null : ms / 1000)
-
-/** zeitlich geordnet, wenn alle Zeiten bekannt sind; sonst in der gegebenen Folge */
-function chronological(shots: readonly MetricShot[]): MetricShot[] {
-  return shots.every((shot) => shot.firedAtMs !== null)
-    ? [...shots].sort((a, b) => (a.firedAtMs as number) - (b.firedAtMs as number))
-    : [...shots]
-}
+const pace = (shots: readonly MetricShot[]) =>
+  tempo(inShotOrder(shots).map((shot) => shot.firedAtMs as number))
 
 const BOTH: readonly ShotKind[] = ["match", "probe"]
 const MATCH_ONLY: readonly ShotKind[] = ["match"]
@@ -159,7 +218,7 @@ const SERIES_AND_CARD: readonly MetricScope[] = ["series", "card"]
 /** So viele Probeschüsse zählen für den Versatz Probe → Wertung (SF-63). */
 const SIGHTER_TAIL = 5
 
-export const METRICS: readonly Readonly<MetricDefinition>[] = [
+export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   defineMetric({
     key: "result.rings",
     label: "Ergebnis",
@@ -171,8 +230,9 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: MATCH_ONLY,
     minShots: 1,
     nSensitive: true,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "ring",
+    onMissing: "null",
     scoring: "rings",
     counterpart: "result.decimal",
     compute: sumRings,
@@ -180,7 +240,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
   defineMetric({
     key: "result.decimal",
     label: "Ergebnis",
-    unit: "Zehntel",
+    unit: "Ringe",
     decimals: 1,
     scopes: SERIES_AND_CARD,
     better: "higher",
@@ -188,8 +248,9 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: MATCH_ONLY,
     minShots: 1,
     nSensitive: true,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "decimal",
+    onMissing: "null",
     scoring: "decimal",
     counterpart: "result.rings",
     compute: (shots) => sumTenths(shots) / 10,
@@ -197,7 +258,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
   defineMetric({
     key: "result.decimalMean",
     label: "Ø je Schuss",
-    unit: "Zehntel",
+    unit: "Ringe",
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "higher",
@@ -205,8 +266,9 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: MATCH_ONLY,
     minShots: 1,
     nSensitive: false,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "decimal",
+    onMissing: "drop",
     scoring: "decimal",
     counterpart: "result.ringsMean",
     compute: (shots) => sumTenths(shots) / 10 / shots.length,
@@ -222,8 +284,9 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: MATCH_ONLY,
     minShots: 1,
     nSensitive: false,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "ring",
+    onMissing: "drop",
     scoring: "rings",
     counterpart: "result.decimalMean",
     compute: (shots) => sumRings(shots) / shots.length,
@@ -239,8 +302,9 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: MATCH_ONLY,
     minShots: 1,
     nSensitive: true,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "ring",
+    onMissing: "null",
     compute: (shots) => shots.filter((shot) => (shot.ring as number) >= 10).length,
   }),
   defineMetric({
@@ -254,8 +318,9 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: MATCH_ONLY,
     minShots: 1,
     nSensitive: true,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "ring",
+    onMissing: "null",
     compute: (shots) => shots.filter((shot) => shot.innerTen).length,
   }),
   defineMetric({
@@ -269,23 +334,26 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: MATCH_ONLY,
     minShots: 1,
     nSensitive: true,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "distance",
+    onMissing: "drop",
     compute: (shots) => teilerFromDistanceUm(Math.min(...shots.map(distanceOf))),
   }),
   defineMetric({
     key: "group.mpiDistance",
     label: "Schwerpunkt-Abstand",
     unit: "mm",
-    decimals: 1,
+    decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
     version: 1,
     appliesTo: BOTH,
     minShots: 2,
-    nSensitive: false,
-    excludeFlagged: false,
+    // Bei wenigen Schüssen streut der Schwerpunkt selbst: Der Abstand hängt von n ab.
+    nSensitive: true,
+    excludeMisses: false,
     needs: "position",
+    onMissing: "drop",
     compute: (shots) => {
       const center = centroid(points(shots))
       return center === null ? null : Math.hypot(center.xUm, center.yUm) / 1000
@@ -302,8 +370,9 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: true,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "position",
+    onMissing: "drop",
     compute: (shots) => {
       const circle = smallestEnclosingCircle(points(shots))
       return circle === null ? null : (2 * circle.radiusUm) / 1000
@@ -313,60 +382,64 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     key: "group.meanRadius",
     label: "mittlerer Radius",
     unit: "mm",
-    decimals: 1,
+    decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
     version: 1,
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: false,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "position",
+    onMissing: "drop",
     compute: (shots) => toMm(meanRadius(points(shots))),
   }),
   defineMetric({
     key: "group.r50",
     label: "R50",
     unit: "mm",
-    decimals: 1,
+    decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
     version: 1,
     appliesTo: BOTH,
     minShots: 5,
     nSensitive: false,
-    excludeFlagged: true,
+    excludeMisses: true,
     needs: "position",
+    onMissing: "drop",
     compute: (shots) => toMm(r50(points(shots))),
   }),
   defineMetric({
     key: "group.sdX",
     label: "Streuung x",
     unit: "mm",
-    decimals: 1,
+    decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
     version: 1,
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: false,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "position",
+    onMissing: "drop",
     compute: (shots) => toMm(standardDeviation(shots.map((shot) => shot.xUm as number))),
   }),
   defineMetric({
     key: "group.sdY",
     label: "Streuung y",
     unit: "mm",
-    decimals: 1,
+    decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
     version: 1,
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: false,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "position",
+    onMissing: "drop",
     compute: (shots) => toMm(standardDeviation(shots.map((shot) => shot.yUm as number))),
   }),
   defineMetric({
@@ -380,10 +453,10 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: false,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "time",
-    compute: (shots) =>
-      seconds(tempo(shots.map((shot) => shot.firedAtMs as number)).medianIntervalMs),
+    onMissing: "drop",
+    compute: (shots) => seconds(pace(shots).medianIntervalMs),
   }),
   defineMetric({
     key: "time.longestPause",
@@ -396,38 +469,41 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     appliesTo: BOTH,
     minShots: 2,
     nSensitive: true,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "time",
-    compute: (shots) =>
-      seconds(tempo(shots.map((shot) => shot.firedAtMs as number)).longestPauseMs),
+    onMissing: "drop",
+    compute: (shots) => seconds(pace(shots).longestPauseMs),
   }),
   defineMetric({
     key: "sighter.offset",
     label: "Versatz Probe → Wertung",
     unit: "mm",
-    decimals: 1,
+    decimals: 2,
     scopes: ["card"],
     better: "lower",
     version: 1,
     appliesTo: BOTH,
     minShots: 6,
     nSensitive: false,
-    excludeFlagged: false,
+    excludeMisses: false,
     needs: "position",
+    onMissing: "drop",
     compute: (shots) => {
-      // Nur die letzten fünf Probeschüsse: Wer in der Probe das Visier verstellt, will den
-      // Schwerpunkt nach der Verstellung sehen (SF-63).
-      const sighters = chronological(shots.filter((shot) => shot.kind === "probe")).slice(
-        -SIGHTER_TAIL
-      )
-      const match = shots.filter((shot) => shot.kind === "match")
+      // Die letzten fünf Probeschüsse vor dem ersten Wertungsschuss: Wer in der Probe das Visier
+      // verstellt, will den Schwerpunkt nach der Verstellung sehen (SF-63); Probe nach Beginn der
+      // Wertung zählt nicht.
+      const ordered = inShotOrder(shots)
+      const firstMatch = ordered.findIndex((shot) => shot.kind === "match")
+      if (firstMatch < 0) return null
+      const sighters = ordered.slice(0, firstMatch).slice(-SIGHTER_TAIL)
+      const match = ordered.filter((shot) => shot.kind === "match")
       if (sighters.length < 3 || match.length < 3) return null
       const a = centroid(points(sighters))
       const b = centroid(points(match))
       return a === null || b === null ? null : Math.hypot(a.xUm - b.xUm, a.yUm - b.yUm) / 1000
     },
   }),
-]
+])
 
 const BY_KEY = new Map(METRICS.map((metric) => [metric.key, metric]))
 

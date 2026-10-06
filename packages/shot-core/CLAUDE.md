@@ -9,16 +9,16 @@ Sonderfälle: `vault/spiegel/spiegel-edge-cases.md`.
 
 ## Exporte
 
-| Export                              | Datei               | Inhalt                                                                 |
-| ----------------------------------- | ------------------- | ---------------------------------------------------------------------- |
-| `@vereinsheim/shot-core/units`      | `src/units.ts`      | `mmToUm` (ganze µm oder Fehler)                                        |
-| `@vereinsheim/shot-core/targets`    | `src/targets.ts`    | `defineTarget`, `LG_10M`, `LP_10M`, `TARGETS`, `MAX_DECIMAL_TENTHS`    |
-| `@vereinsheim/shot-core/scoring`    | `src/scoring.ts`    | `scoreFromCoordinates`, `scoreFromDistance`, `distanceUm`, Teiler      |
-| `@vereinsheim/shot-core/discipline` | `src/discipline.ts` | `parseDisciplineId`, `resolveTarget`, `suggestFamily`, Vollständigkeit |
-| `@vereinsheim/shot-core/verify`     | `src/verify.ts`     | `checkShot`, `verifyCard`, `suggestTargets`, `rescore` (Neu-Wertung)   |
-| `@vereinsheim/shot-core/geometry`   | `src/geometry.ts`   | Schwerpunkt, Streukreis, `extremeSpread`, Radien, Streuung, Ellipse    |
-| `@vereinsheim/shot-core/time`       | `src/time.ts`       | `tempo`: Intervalle, Pausen über 180 s, Dauer                          |
-| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `computeMetric`, `METRICS`, `metricByKey`, `inScoring` |
+| Export                              | Datei               | Inhalt                                                                  |
+| ----------------------------------- | ------------------- | ----------------------------------------------------------------------- |
+| `@vereinsheim/shot-core/units`      | `src/units.ts`      | `mmToUm` (ganze µm oder Fehler)                                         |
+| `@vereinsheim/shot-core/targets`    | `src/targets.ts`    | `defineTarget`, `LG_10M`, `LP_10M`, `TARGETS`, `MAX_DECIMAL_TENTHS`     |
+| `@vereinsheim/shot-core/scoring`    | `src/scoring.ts`    | `scoreFromCoordinates`, `scoreFromDistance`, `distanceUm`, Teiler       |
+| `@vereinsheim/shot-core/discipline` | `src/discipline.ts` | `parseDisciplineId`, `resolveTarget`, `suggestFamily`, Vollständigkeit  |
+| `@vereinsheim/shot-core/verify`     | `src/verify.ts`     | `checkShot`, `verifyCard`, `suggestTargets`, `rescore` (Neu-Wertung)    |
+| `@vereinsheim/shot-core/geometry`   | `src/geometry.ts`   | Schwerpunkt, Streukreis, `extremeSpread`, Radien, Streuung, Ellipse     |
+| `@vereinsheim/shot-core/time`       | `src/time.ts`       | `tempo` in Abgabefolge: Intervalle, Pausen über 180 s, Uhrsprünge       |
+| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `computeMetric`, `eligibleShots`, `inShotOrder`, `inScoring`, `METRICS` |
 
 ## Regeln
 
@@ -39,10 +39,16 @@ Sonderfälle: `vault/spiegel/spiegel-edge-cases.md`.
   unbekannt, bis die Bibliothek ihre Scheibe kennt.
 - Was nicht hier liegt: Zeichnen (`shot-ui`, SP-1.8), die Skalen der SSMDB2-Felder (Adapter in
   SP-1.6).
-- **Kennzahlen nur über `defineMetric`**, mit Test. Ändert sich eine Formel, steigt ihre `version`.
-  `appliesTo`, `minShots`, `nSensitive`, `excludeFlagged` und `needs` setzen die Regeln aus dem
-  Sonderfall-Katalog um (SF-01, SF-14, SF-60, SF-61); `computeMetric` wendet sie an, `compute` sieht
-  nur passende Schüsse.
+- **Kennzahlen nur über `defineMetric`**, mit Test und festem Erwartungswert (nicht nur „nicht null“).
+  Ändert sich eine Formel, steigt ihre `version`. `computeMetric` wendet die Regeln aus dem
+  Sonderfall-Katalog an: `appliesTo` (SF-01), `needs` mit gültigen, endlichen Angaben, `onMissing`
+  („null“ für Summen und Zählungen, SF-07), `minShots` (SF-61), Fehlschüsse nur bei `excludeMisses`
+  (SF-14), verdächtige Schüsse nur mit ihrem Wert (SF-15). `nSensitive` ist ein Hinweis für Vergleiche
+  (SF-60), das n liefert `eligibleShots`. `compute` nie direkt aufrufen.
+- **Reihenfolge ist die Abgabefolge** (`seq`, SF-30): `inShotOrder`; `tempo` erwartet die Zeiten in
+  Abgabefolge und zählt einen Rücksprung der Uhr weder als Intervall noch als Pause.
+- **`toBeCloseTo` nimmt null als 0.** Wo eine Kennzahl 0 ergeben soll, erst `not.toBeNull()` prüfen
+  (Helfer `expectNear` in `metrics.test.ts`).
 - **Ganze Ringe und Zehntel sind immer umschaltbar.** Jede wertbasierte Kennzahl gibt es in beiden
   Wertungen (`scoring` + `counterpart`, gleiche Regeln), `inScoring` wählt; ein Registry-Test erzwingt
   das Paar. Ganze Ringe brauchen nur `ring` (`needs: "ring"`), Zehntel den Zehntelwert (SF-18).

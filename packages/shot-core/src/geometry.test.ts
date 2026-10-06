@@ -149,6 +149,21 @@ describe("Radien und Streuung", () => {
     expect(meanRadius(points)).toBeCloseTo(1131.3708, 3)
   })
 
+  it("R50 bei gerader Zahl: das Mittel der beiden mittleren Abstände", () => {
+    // Abstände 1, 1, 2, 3, 3, 4 mm um (0 | 0): Median 2,5, Mittel 2,33, Streukreis-Radius 3,5.
+    const points = [
+      pt(4000, 0),
+      pt(-1000, 0),
+      pt(-3000, 0),
+      pt(0, 3000),
+      pt(0, -1000),
+      pt(0, -2000),
+    ]
+    expect(r50(points)).toBeCloseTo(2500, 6)
+    expect(meanRadius(points)).toBeCloseTo(14000 / 6, 6)
+    expect(smallestEnclosingCircle(points)).toEqual({ xUm: 500, yUm: 0, radiusUm: 3500 })
+  })
+
   it("Streuung mit n − 1", () => {
     expect(standardDeviation([-1000, 0, 1000])).toBe(1000)
     expect(standardDeviation([500])).toBeNull()

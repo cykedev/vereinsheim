@@ -45,7 +45,10 @@ function circleThrough2(a: Point, b: Point): Circle {
   }
 }
 
-/** Umkreis dreier Punkte; liegen sie auf einer Linie, der Kreis über die beiden äußeren. */
+/**
+ * Umkreis dreier Punkte. Der Rückfall auf den Kreis über die beiden äußeren schützt nur vor Rundung:
+ * In exakter Rechnung liegen die drei Randpunkte des Verfahrens nie auf einer Linie.
+ */
 function circleThrough3(a: Point, b: Point, c: Point): Circle {
   const bx = b.xUm - a.xUm
   const by = b.yUm - a.yUm
@@ -117,7 +120,10 @@ export function meanRadius(points: readonly Point[]): number | null {
   return distances.reduce((sum, d) => sum + d, 0) / distances.length
 }
 
-/** Median der Abstände zum Schwerpunkt: robust gegen einzelne Ausreißer */
+/**
+ * Median der Abstände zum Schwerpunkt. Robuster als der mittlere Radius, aber der Schwerpunkt selbst
+ * ist ein Mittel, den ein ferner Ausreißer verschiebt; die Kennzahl R50 lässt Fehlschüsse deshalb weg.
+ */
 export function r50(points: readonly Point[]): number | null {
   const center = centroid(points)
   if (!center) return null
@@ -138,7 +144,8 @@ export function standardDeviation(values: readonly number[]): number | null {
 
 /**
  * Streu-Ellipse aus der Kovarianzmatrix (n − 1): Halbachsen sind die Wurzeln der Eigenwerte (1 σ),
- * der Winkel zeigt die große Achse, gemessen von der x-Achse, in [0, π).
+ * der Winkel zeigt die große Achse, von der x-Achse gegen den Uhrzeigersinn (y nach oben), in [0, π).
+ * In SVG mit y nach unten ist er −θ.
  */
 export function covarianceEllipse(
   points: readonly Point[]

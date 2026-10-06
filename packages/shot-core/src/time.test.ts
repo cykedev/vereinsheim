@@ -9,6 +9,7 @@ describe("tempo", () => {
     expect(tempo([0, s(50), s(105), s(400), s(452)])).toEqual({
       intervalsMs: [s(50), s(55), s(52)],
       pausesMs: [s(295)],
+      clockJumps: 0,
       medianIntervalMs: s(52),
       longestPauseMs: s(295),
       durationMs: s(452),
@@ -29,6 +30,7 @@ describe("tempo", () => {
     expect(tempo([s(10)])).toEqual({
       intervalsMs: [],
       pausesMs: [],
+      clockJumps: 0,
       medianIntervalMs: null,
       longestPauseMs: null,
       durationMs: 0,
@@ -36,9 +38,16 @@ describe("tempo", () => {
     expect(tempo([]).durationMs).toBeNull()
   })
 
-  it("sortiert die Zeiten selbst", () => {
-    expect(tempo([s(105), 0, s(452), s(50), s(400)])).toEqual(
-      tempo([0, s(50), s(105), s(400), s(452)])
-    )
+  it("bei gerader Zahl ist der Median das Mittel der beiden mittleren Intervalle", () => {
+    expect(tempo([0, s(10), s(30), s(60), s(100)]).medianIntervalMs).toBe(s(25))
+  })
+
+  it("nimmt die Abgabefolge; springt die Uhr zurück, zählt der Abstand nicht (SF-30)", () => {
+    const hour = 3_600_000
+    const pace = tempo([0, s(50), s(100), s(100) - hour, s(150) - hour])
+    expect(pace.intervalsMs).toEqual([s(50), s(50), s(50)])
+    expect(pace.pausesMs).toEqual([])
+    expect(pace.clockJumps).toBe(1)
+    expect(pace.medianIntervalMs).toBe(s(50))
   })
 })
