@@ -11,7 +11,8 @@
 // - Fehlschüsse lassen nur robuste Maße weg (SF-14). Verdächtige Schüsse (Platzhalter, Handeintrag)
 //   zählen nur mit ihrem amtlichen Wert, nie mit Lage, Abstand oder Zeit (SF-15).
 // - `nSensitive` kennzeichnet Maße, die von der Schusszahl abhängen: Vergleiche nur bei gleichem n
-//   (SF-60); das n liefert `eligibleShots`.
+//   (SF-60); das n liefert `eligibleShots`. Auch mittlerer Radius und R50 schrumpfen bei kleinem n mit
+//   √((n − 1)/n); für Verläufe über verschiedene Schusszahlen taugt `group.sigma`.
 // - Die Reihenfolge ist die Abgabefolge `seq`, nicht die Uhr (SF-30).
 //
 // Wertung: Jede wertbasierte Kennzahl gibt es in ganzen Ringen und in Zehnteln (`scoring` und
@@ -22,6 +23,7 @@
 
 import {
   centroid,
+  distancesTo,
   meanRadius,
   r50,
   smallestEnclosingCircle,
@@ -29,10 +31,11 @@ import {
   type Point,
 } from "./geometry"
 import { teilerFromDistanceUm } from "./scoring"
+import { c4, iqr } from "./stats"
 import { tempo } from "./time"
 
 export type ShotKind = "match" | "probe"
-export type MetricUnit = "Ringe" | "Teiler" | "mm" | "s" | "Schuss"
+export type MetricUnit = "Ringe" | "Teiler" | "mm" | "s" | "Schuss" | "%"
 export type MetricScope = "series" | "card"
 export type MetricNeed = "ring" | "decimal" | "position" | "distance" | "time"
 export type Scoring = "rings" | "decimal"
@@ -384,6 +387,23 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     compute: (shots) => shots.filter((shot) => shot.innerTen).length,
   }),
   defineMetric({
+    key: "result.tensRate",
+    label: "Zehnerquote",
+    unit: "%",
+    decimals: 0,
+    scopes: SERIES_AND_CARD,
+    better: "higher",
+    version: 1,
+    appliesTo: MATCH_ONLY,
+    minShots: 1,
+    nSensitive: false,
+    excludeMisses: false,
+    needs: "ring",
+    onMissing: "drop",
+    compute: (shots) =>
+      (shots.filter((shot) => (shot.ring as number) >= 10).length / shots.length) * 100,
+  }),
+  defineMetric({
     key: "result.bestTeiler",
     label: "bester Teiler",
     unit: "Teiler",
@@ -448,7 +468,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     version: 1,
     appliesTo: BOTH,
     minShots: 3,
-    nSensitive: false,
+    nSensitive: true,
     excludeMisses: false,
     needs: "position",
     onMissing: "drop",
@@ -464,11 +484,33 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     version: 1,
     appliesTo: BOTH,
     minShots: 5,
-    nSensitive: false,
+    nSensitive: true,
     excludeMisses: true,
     needs: "position",
     onMissing: "drop",
     compute: (shots) => toMm(r50(points(shots))),
+  }),
+  defineMetric({
+    key: "group.sigma",
+    label: "Präzision σ",
+    unit: "mm",
+    decimals: 2,
+    scopes: SERIES_AND_CARD,
+    better: "lower",
+    version: 1,
+    appliesTo: BOTH,
+    minShots: 3,
+    // Rayleigh-σ, erwartungstreu: σ̂ = Sa / c4(2n − 1), kaum von n abhängig (Katalog P5).
+    nSensitive: false,
+    excludeMisses: false,
+    needs: "position",
+    onMissing: "drop",
+    compute: (shots) => {
+      const all = points(shots)
+      const center = centroid(all) as Point
+      const sumSquares = distancesTo(all, center).reduce((sum, r) => sum + r * r, 0)
+      return Math.sqrt(sumSquares / (2 * (all.length - 1))) / c4(2 * all.length - 1) / 1000
+    },
   }),
   defineMetric({
     key: "group.sdX",
@@ -503,6 +545,44 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     compute: (shots) => toMm(standardDeviation(shots.map((shot) => shot.yUm as number))),
   }),
   defineMetric({
+    key: "group.height",
+    label: "Höhe",
+    unit: "mm",
+    decimals: 1,
+    scopes: SERIES_AND_CARD,
+    better: "lower",
+    version: 1,
+    appliesTo: BOTH,
+    minShots: 3,
+    nSensitive: true,
+    excludeMisses: false,
+    needs: "position",
+    onMissing: "drop",
+    compute: (shots) => {
+      const ys = shots.map((shot) => shot.yUm as number)
+      return (Math.max(...ys) - Math.min(...ys)) / 1000
+    },
+  }),
+  defineMetric({
+    key: "group.width",
+    label: "Breite",
+    unit: "mm",
+    decimals: 1,
+    scopes: SERIES_AND_CARD,
+    better: "lower",
+    version: 1,
+    appliesTo: BOTH,
+    minShots: 3,
+    nSensitive: true,
+    excludeMisses: false,
+    needs: "position",
+    onMissing: "drop",
+    compute: (shots) => {
+      const xs = shots.map((shot) => shot.xUm as number)
+      return (Math.max(...xs) - Math.min(...xs)) / 1000
+    },
+  }),
+  defineMetric({
     key: "time.intervalMedian",
     label: "Tempo (Median)",
     unit: "s",
@@ -519,6 +599,26 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     compute: (shots) => seconds(pace(shots).medianIntervalMs),
   }),
   defineMetric({
+    key: "time.tempoSpread",
+    label: "Tempo-Streuung",
+    unit: "s",
+    decimals: 0,
+    scopes: SERIES_AND_CARD,
+    // konstanter ist nicht automatisch besser (Katalog Z2)
+    better: "none",
+    version: 1,
+    appliesTo: BOTH,
+    minShots: 4,
+    nSensitive: false,
+    excludeMisses: false,
+    needs: "time",
+    onMissing: "drop",
+    compute: (shots) => {
+      const intervals = pace(shots).intervalsMs
+      return intervals.length >= 3 ? seconds(iqr(intervals)) : null
+    },
+  }),
+  defineMetric({
     key: "time.longestPause",
     label: "längste Pause",
     unit: "s",
@@ -533,6 +633,22 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     needs: "time",
     onMissing: "drop",
     compute: (shots) => seconds(pace(shots).longestPauseMs),
+  }),
+  defineMetric({
+    key: "time.duration",
+    label: "Dauer",
+    unit: "s",
+    decimals: 0,
+    scopes: ["card"],
+    better: "none",
+    version: 1,
+    appliesTo: BOTH,
+    minShots: 2,
+    nSensitive: true,
+    excludeMisses: false,
+    needs: "time",
+    onMissing: "drop",
+    compute: (shots) => seconds(pace(shots).durationMs),
   }),
   defineMetric({
     key: "sighter.offset",

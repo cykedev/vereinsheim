@@ -150,6 +150,22 @@ describe("Trefferbild-Kennzahlen", () => {
     expect(value("group.enclosingDiameter", PROBE)).toBeCloseTo(0.3676955, 6)
   })
 
+  it("neue Kennzahlen aus SP-1.10 mit festen Werten", () => {
+    // SPREAD: Sa = 2,0 mm, σ̂ = Sa / c4(11); Höhe 5 mm, Breite 7 mm.
+    expect(value("group.sigma", SPREAD)).toBeCloseTo(2.0505458, 6)
+    expect(value("group.height", SPREAD)).toBe(5)
+    expect(value("group.width", SPREAD)).toBe(7)
+    expect(value("result.tensRate", CARD)).toBe(50)
+    expect(value("time.duration", MATCH)).toBe(250)
+    const paced = [0, 40, 85, 125, 170, 210].map((s, i) => ({
+      ...MATCH[0],
+      seq: i + 1,
+      firedAtMs: s * 1000,
+    }))
+    expect(value("time.tempoSpread", paced)).toBe(5)
+    expectNear(value("time.tempoSpread", MATCH), 0)
+  })
+
   it("zu wenige Schüsse ergeben keinen Wert, nicht 0 (SF-61)", () => {
     expect(value("group.enclosingDiameter", MATCH.slice(0, 2))).toBeNull()
     expect(value("group.enclosingDiameter", MATCH.slice(0, 3))).not.toBeNull()
@@ -181,17 +197,28 @@ describe("Trefferbild-Kennzahlen", () => {
 
   it("markiert, welche Maße von der Schusszahl abhängen (SF-60)", () => {
     const sensitive = METRICS.filter((m) => m.nSensitive).map((m) => m.key)
+    // Mittlerer Radius und R50 schrumpfen bei kleinem n mit √((n − 1)/n); σ̂ gleicht das aus.
     for (const key of [
       "group.enclosingDiameter",
       "group.mpiDistance",
+      "group.meanRadius",
+      "group.r50",
+      "group.height",
+      "group.width",
       "result.rings",
       "result.decimal",
       "result.tens",
       "result.innerTens",
+      "time.duration",
     ]) {
       expect(sensitive).toContain(key)
     }
-    for (const key of ["group.meanRadius", "group.r50", "result.decimalMean"]) {
+    for (const key of [
+      "group.sigma",
+      "result.decimalMean",
+      "result.tensRate",
+      "time.tempoSpread",
+    ]) {
       expect(sensitive).not.toContain(key)
     }
     expect(value("group.enclosingDiameter", MATCH)).toBeGreaterThanOrEqual(
@@ -308,7 +335,7 @@ describe("Tempo, Reihenfolge und Probe", () => {
 })
 
 // Kennzahlen, die in beiden Wertungen gleich sind: Ein Zehner bleibt ein Zehner.
-const SCORING_FREE = ["result.tens", "result.innerTens"]
+const SCORING_FREE = ["result.tens", "result.innerTens", "result.tensRate"]
 
 describe("selectShots", () => {
   it("wählt nach denselben Regeln wie die Registry", () => {
