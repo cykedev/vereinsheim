@@ -27,7 +27,8 @@ export function decodePrintoutId(hex: string): number {
 export function findPrintoutId(pageTexts: readonly string[]): PrintoutIdResult {
   const pagesByHex = new Map<string, Set<number>>()
   pageTexts.forEach((text, index) => {
-    for (const match of text.matchAll(PRINTOUT_ID)) {
+    // Leerraum zusammenfassen: pdf.js setzt Lücken zwischen einzelnen Glyphen als eigene Stücke.
+    for (const match of text.replace(/\s+/g, " ").matchAll(PRINTOUT_ID)) {
       const hex = match[1].replace(/\s/g, "").toLowerCase()
       const pages = pagesByHex.get(hex) ?? new Set<number>()
       pages.add(index + 1)

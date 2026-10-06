@@ -46,6 +46,13 @@ describe("findPrintoutId", () => {
     })
   })
 
+  it("mehrere Leerzeichen zwischen den Glyphen (pdf.js setzt Lücken als eigene Stücke)", () => {
+    expect(findPrintoutId(["I   D   :   f   f   9   1   4   4   2   0   -   S"])).toMatchObject({
+      kind: "found",
+      hex: "ff914420",
+    })
+  })
+
   it("sucht auf allen Seiten (SF-44)", () => {
     const footer = "ID: ff914420 - Seite: "
     expect(findPrintoutId([`${footer}1`, `${footer}2`, `${footer}3`])).toMatchObject({
