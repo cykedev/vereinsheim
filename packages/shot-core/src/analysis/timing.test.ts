@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { MATCH } from "../__fixtures__/cards"
-import type { MetricShot } from "../metrics"
+import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
 import { pauseRecovery, rhythmProfile, shootingTime, tempoSpread } from "./timing"
 
 // Zehn Wertungsschüsse; Abstände 40, 45, 40, 45, 40 s, dann 300 s Pause, dann 50, 55, 50 s.
@@ -15,6 +15,10 @@ const EVENING: MetricShot[] = SECONDS.map((s, i) => ({
   decimalTenths: VALUES[i],
   ring: Math.floor(VALUES[i] / 10),
 }))
+// Schuss 3 ist ein Platzhalter: seine Zeit zählt nicht (SF-15), der Abstand vor Schuss 4 fehlt.
+const WITH_PLACEHOLDER = EVENING.map((shot, i) =>
+  i === 2 ? { ...shot, flags: [FLAG_SUSPICIOUS] } : shot
+)
 
 describe("Tempo-Konstanz und Schießzeit (Z2, Z3)", () => {
   it("IQR der Intervalle ohne Pause, auch relativ zum Median", () => {
@@ -29,7 +33,13 @@ describe("Tempo-Konstanz und Schießzeit (Z2, Z3)", () => {
     const time = shootingTime(EVENING)
     expect(time?.durationMs).toBe(665_000)
     expect(time?.netMs).toBe(365_000)
-    expect(time?.shotsPerHour).toBeCloseTo(10 / (365 / 3600), 9)
+    // acht Abstände ohne Pause in 365 s
+    expect(time?.shotsPerHour).toBeCloseTo(8 / (365 / 3600), 9)
+    // zwei Schuss im Abstand von 60 s: einer je Minute, 60 je Stunde
+    expect(
+      shootingTime(EVENING.slice(0, 2).map((s, i) => ({ ...s, firedAtMs: i * 60_000 })))
+        ?.shotsPerHour
+    ).toBeCloseTo(60, 9)
   })
 
   it("nach einem Sprung der Uhr keine Dauer", () => {
@@ -42,19 +52,26 @@ describe("Tempo-Konstanz und Schießzeit (Z2, Z3)", () => {
 })
 
 describe("Pausen und Rhythmus (Z4, Z5)", () => {
-  it("Wiedereinstieg: Ø der drei Schüsse nach der Pause gegen den Scheiben-Ø", () => {
+  it("Wiedereinstieg: Ø der drei Schüsse nach der Pause gegen die übrigen", () => {
+    // nach der Pause 9,5 · 9,7 · 9,9 (Ø 9,7) gegen die übrigen sieben (Ø 719/70): −4/7 Ringe
     const recovery = pauseRecovery(EVENING, "decimal")
     expect(recovery?.pauses).toBe(1)
     expect(recovery?.totalPauseMs).toBe(300_000)
-    expect(recovery?.effects).toEqual([{ afterShot: 7, deltaRings: -0.4 }])
-    expect(recovery?.meanDelta).toBeCloseTo(-0.4, 9)
+    expect(recovery?.effects).toHaveLength(1)
+    expect(recovery?.effects[0].afterShot).toBe(7)
+    expect(recovery?.effects[0].deltaRings).toBeCloseTo(-4 / 7, 9)
+    expect(recovery?.meanDelta).toBeCloseTo(-4 / 7, 9)
   })
 
-  it("Wiedereinstieg in ganzen Ringen: dreimal 9 gegen Ø 9,7", () => {
+  it("die Pause behält ihre Schussnummer, auch wenn davor ein Platzhalter liegt", () => {
+    expect(pauseRecovery(WITH_PLACEHOLDER, "decimal")?.effects[0].afterShot).toBe(7)
+  })
+
+  it("Wiedereinstieg in ganzen Ringen: dreimal 9 gegen sonst nur 10", () => {
     const recovery = pauseRecovery(EVENING, "rings")
     expect(recovery?.effects).toHaveLength(1)
     expect(recovery?.effects[0].afterShot).toBe(7)
-    expect(recovery?.effects[0].deltaRings).toBeCloseTo(-0.7, 9)
+    expect(recovery?.effects[0].deltaRings).toBe(-1)
     const ringsOnly = EVENING.map((shot) => ({ ...shot, decimalTenths: null }))
     expect(pauseRecovery(ringsOnly, "rings")?.pauses).toBe(1)
     expect(pauseRecovery(ringsOnly, "decimal")).toBeNull()
@@ -77,5 +94,12 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
       medianMs: 40_000,
     })
     expect(profile[7].medianMs).toBe(45_000)
+  })
+
+  it("Rhythmus: Nummern sind Schussnummern, über eine Lücke gibt es keinen Abstand", () => {
+    const profile = rhythmProfile(WITH_PLACEHOLDER, 5)
+    expect(profile.map((p) => p.number)).toEqual([1, 2, 4, 5, 6, 7, 8, 9, 10])
+    expect(profile[2]).toMatchObject({ number: 4, kind: "match", intervalMs: null })
+    expect(() => rhythmProfile(EVENING, 0)).toThrow(RangeError)
   })
 })

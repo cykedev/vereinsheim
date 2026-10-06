@@ -4,6 +4,7 @@
 
 import {
   selectShots,
+  shotNumbers,
   shotSteps,
   timesWithGaps,
   type MetricShot,
@@ -18,13 +19,13 @@ const MATCH: readonly ShotKind[] = ["match"]
 
 interface Interval {
   shot: MetricShot
-  /** Nummer in der Abgabefolge der ausgewählten Schüsse, ab 1 */
+  /** Nummer in der Abgabefolge seiner Art über alle gegebenen Schüsse (`shotNumbers`) */
   number: number
   /** Abstand zum vorigen Schuss; null beim ersten, nach einer Lücke oder einem Rücksprung der Uhr */
   intervalMs: number | null
 }
 
-function intervals(shots: readonly MetricShot[]): Interval[] {
+function intervals(shots: readonly MetricShot[], numbers: Map<MetricShot, number>): Interval[] {
   const steps = shotSteps(shots)
   return steps.map((step, i) => {
     const before = steps[i - 1]?.shot
@@ -34,7 +35,11 @@ function intervals(shots: readonly MetricShot[]): Interval[] {
       !step.gapBefore && Number.isFinite(now) && Number.isFinite(then)
         ? (now as number) - (then as number)
         : Number.NaN
-    return { shot: step.shot, number: i + 1, intervalMs: gap >= 0 ? gap : null }
+    return {
+      shot: step.shot,
+      number: numbers.get(step.shot) as number,
+      intervalMs: gap >= 0 ? gap : null,
+    }
   })
 }
 
@@ -56,7 +61,10 @@ export function tempoSpread(
   }
 }
 
-/** Dauer (null nach einem Sprung der Uhr), Netto-Zeit ohne Pausen und Schüsse je Netto-Stunde */
+/**
+ * Dauer (null nach einem Sprung der Uhr), Netto-Zeit ohne Pausen und Schüsse je Netto-Stunde: die
+ * Abstände ohne Pausen je Stunde ihrer Summe (zwei Schuss im Abstand von 60 s sind 60 je Stunde)
+ */
 export function shootingTime(
   shots: readonly MetricShot[]
 ): { n: number; durationMs: number | null; netMs: number; shotsPerHour: number | null } | null {
@@ -68,18 +76,24 @@ export function shootingTime(
     n: selected.length,
     durationMs: pace.durationMs,
     netMs,
-    shotsPerHour: netMs > 0 ? selected.length / (netMs / 3_600_000) : null,
+    shotsPerHour: netMs > 0 ? pace.intervalsMs.length / (netMs / 3_600_000) : null,
   }
 }
 
 export interface PauseEffect {
   /** Nummer des ersten Wertungsschusses nach der Pause */
   afterShot: number
-  /** Ø der bis zu drei Schüsse danach minus Scheiben-Ø, in Ringen der gewählten Wertung */
-  deltaRings: number
+  /**
+   * Ø der bis zu drei Schüsse danach minus Ø der übrigen Schüsse, in Ringen der gewählten Wertung;
+   * null, wenn es keine übrigen gibt
+   */
+  deltaRings: number | null
 }
 
-/** Pausen und Wiedereinstieg (Z4), über die Wertungsschüsse mit Zeit und Wert */
+/**
+ * Pausen und Wiedereinstieg (Z4), über die Wertungsschüsse mit Zeit und Wert. Verglichen wird mit den
+ * übrigen Schüssen, nicht mit der ganzen Scheibe, die die Schüsse nach der Pause selbst enthielte.
+ */
 export function pauseRecovery(
   shots: readonly MetricShot[],
   scoring: Scoring
@@ -94,30 +108,34 @@ export function pauseRecovery(
     withValue.has(shot)
   )
   if (selected.length === 0) return null
-  const steps = intervals(selected)
+  const steps = intervals(selected, shotNumbers(shots))
   const values = steps.map((step) => valueTenths(step.shot, scoring))
-  const mean = values.reduce((sum, v) => sum + v, 0) / values.length
+  const meanOf = (list: readonly number[]) => list.reduce((sum, v) => sum + v, 0) / list.length
   const effects: PauseEffect[] = []
   let totalPauseMs = 0
   steps.forEach((step, i) => {
     if (step.intervalMs === null || step.intervalMs <= PAUSE_THRESHOLD_MS) return
     totalPauseMs += step.intervalMs
     const next = values.slice(i, i + 3)
-    const nextMean = next.reduce((sum, v) => sum + v, 0) / next.length
-    effects.push({ afterShot: step.number, deltaRings: (nextMean - mean) / 10 })
+    const rest = [...values.slice(0, i), ...values.slice(i + 3)]
+    effects.push({
+      afterShot: step.number,
+      deltaRings: rest.length ? (meanOf(next) - meanOf(rest)) / 10 : null,
+    })
   })
+  const deltas = effects.flatMap((e) => (e.deltaRings === null ? [] : [e.deltaRings]))
   return {
     pauses: effects.length,
     totalPauseMs,
     effects,
-    meanDelta: effects.length
-      ? effects.reduce((sum, e) => sum + e.deltaRings, 0) / effects.length
-      : null,
+    meanDelta: deltas.length ? meanOf(deltas) : null,
   }
 }
 
 export interface RhythmPoint {
+  /** Nummer in der Abgabefolge seiner Art (`shotNumbers`) */
   number: number
+  kind: ShotKind
   intervalMs: number | null
   pause: boolean
   /** Median der letzten bis zu `window` Intervalle ohne Pausen bis zu diesem Schuss */
@@ -126,13 +144,22 @@ export interface RhythmPoint {
 
 /** Rhythmus-Profil über die Schussnummer (Z5) */
 export function rhythmProfile(shots: readonly MetricShot[], window = 5): RhythmPoint[] {
+  if (!(Number.isInteger(window) && window >= 1)) {
+    throw new RangeError(`Fenster ${window} ist keine ganze Zahl ab 1`)
+  }
   const recent: number[] = []
-  return intervals(timed(shots)).map((step) => {
+  return intervals(timed(shots), shotNumbers(shots)).map((step) => {
     const pause = step.intervalMs !== null && step.intervalMs > PAUSE_THRESHOLD_MS
     if (step.intervalMs !== null && !pause) {
       recent.push(step.intervalMs)
       if (recent.length > window) recent.shift()
     }
-    return { number: step.number, intervalMs: step.intervalMs, pause, medianMs: median(recent) }
+    return {
+      number: step.number,
+      kind: step.shot.kind,
+      intervalMs: step.intervalMs,
+      pause,
+      medianMs: median(recent),
+    }
   })
 }
