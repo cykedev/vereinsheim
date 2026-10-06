@@ -3,10 +3,11 @@
 // springt die Uhr zurück, zählt der Abstand nicht (SF-30). Intervalle über drei Minuten sind Pausen.
 
 import {
+  inShotOrder,
   selectShots,
   shotNumbers,
-  shotSteps,
-  timesWithGaps,
+  stepsInOrder,
+  timesInOrder,
   type MetricShot,
   type Scoring,
   type ShotKind,
@@ -25,8 +26,9 @@ interface Interval {
   intervalMs: number | null
 }
 
-function intervals(shots: readonly MetricShot[], numbers: Map<MetricShot, number>): Interval[] {
-  const steps = shotSteps(shots)
+/** Abstände über Schüsse, die schon in Abgabefolge der ganzen Karte stehen */
+function intervals(ordered: readonly MetricShot[], numbers: Map<MetricShot, number>): Interval[] {
+  const steps = stepsInOrder(ordered)
   return steps.map((step, i) => {
     const before = steps[i - 1]?.shot
     const now = step.shot.firedAtMs
@@ -43,13 +45,14 @@ function intervals(shots: readonly MetricShot[], numbers: Map<MetricShot, number
   })
 }
 
-const timed = (shots: readonly MetricShot[]) => selectShots(shots, { need: "time" })
+// Erst die ganze Karte ordnen, dann auswählen: dieselbe Reihenfolge wie `shotNumbers`
+const timed = (shots: readonly MetricShot[]) => selectShots(inShotOrder(shots), { need: "time" })
 
 /** Streuung des Tempos: IQR der Intervalle ohne Pausen, auch relativ zum Median; ab drei Intervallen */
 export function tempoSpread(
   shots: readonly MetricShot[]
 ): { n: number; iqrMs: number; medianMs: number; relative: number | null } | null {
-  const pace = tempo(timesWithGaps(timed(shots)))
+  const pace = tempo(timesInOrder(timed(shots)))
   if (pace.intervalsMs.length < 3) return null
   const spread = iqr(pace.intervalsMs) as number
   const center = median(pace.intervalsMs) as number
@@ -70,7 +73,7 @@ export function shootingTime(
 ): { n: number; durationMs: number | null; netMs: number; shotsPerHour: number | null } | null {
   const selected = timed(shots)
   if (selected.length < 2) return null
-  const pace = tempo(timesWithGaps(selected))
+  const pace = tempo(timesInOrder(selected))
   const netMs = pace.intervalsMs.reduce((sum, ms) => sum + ms, 0)
   return {
     n: selected.length,
@@ -104,7 +107,7 @@ export function pauseRecovery(
   meanDelta: number | null
 } | null {
   const withValue = new Set(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) }))
-  const selected = selectShots(shots, { kinds: MATCH, need: "time" }).filter((shot) =>
+  const selected = selectShots(inShotOrder(shots), { kinds: MATCH, need: "time" }).filter((shot) =>
     withValue.has(shot)
   )
   if (selected.length === 0) return null

@@ -267,7 +267,16 @@ export interface ShotStep {
 
 /** Schüsse in Abgabefolge mit der Markierung, wo ein Schuss fehlt; Grundlage aller Zeit-Auswertungen */
 export function shotSteps(shots: readonly MetricShot[]): ShotStep[] {
-  const ordered = inShotOrder(shots)
+  return stepsInOrder(inShotOrder(shots))
+}
+
+/**
+ * Wie `shotSteps`, für Schüsse, die schon in Abgabefolge stehen, etwa eine Auswahl aus `inShotOrder`
+ * aller Schüsse einer Karte; ordnet nicht neu. So folgen die Auswertungen derselben Reihenfolge wie
+ * `shotNumbers`, auch wenn einem Schuss Abgabefolge und Zeit fehlen und die Karte nur nach der Liste
+ * geordnet werden kann.
+ */
+export function stepsInOrder(ordered: readonly MetricShot[]): ShotStep[] {
   const withSeq = ordered.every((shot) => finite(shot.seq))
   return ordered.map((shot, i) => ({
     shot,
@@ -275,14 +284,23 @@ export function shotSteps(shots: readonly MetricShot[]): ShotStep[] {
   }))
 }
 
-/** Zeiten in Abgabefolge für `tempo()`: `null` dort, wo ein Schuss fehlt oder keine gültige Zeit hat */
-export function timesWithGaps(shots: readonly MetricShot[]): (number | null)[] {
+function timesOf(steps: readonly ShotStep[]): (number | null)[] {
   const times: (number | null)[] = []
-  for (const step of shotSteps(shots)) {
+  for (const step of steps) {
     if (step.gapBefore) times.push(null)
     times.push(finite(step.shot.firedAtMs) ? step.shot.firedAtMs : null)
   }
   return times
+}
+
+/** Zeiten in Abgabefolge für `tempo()`: `null` dort, wo ein Schuss fehlt oder keine gültige Zeit hat */
+export function timesWithGaps(shots: readonly MetricShot[]): (number | null)[] {
+  return timesOf(shotSteps(shots))
+}
+
+/** Wie `timesWithGaps`, für Schüsse, die schon in Abgabefolge stehen (siehe `stepsInOrder`) */
+export function timesInOrder(ordered: readonly MetricShot[]): (number | null)[] {
+  return timesOf(stepsInOrder(ordered))
 }
 
 const pace = (shots: readonly MetricShot[]) => tempo(timesWithGaps(shots))

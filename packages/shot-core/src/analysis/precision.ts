@@ -24,7 +24,7 @@ const positioned = (shots: readonly MetricShot[]): Point[] =>
 
 export interface SigmaEstimate {
   n: number
-  /** Sa = √(Σr² / (2(n − 1))), Meytons „Sa“ */
+  /** Sa = √(Σr² / (2(n − 1))); laut Handbuch Meytons „Sa“, gegen echte Werte noch nicht geprüft (SP-0.6) */
   sa: number
   /** σ̂ = Sa / c4(2n − 1), erwartungstreu und kaum von n abhängig */
   sigma: number
@@ -124,9 +124,11 @@ export interface Outlier {
  * Ausreißer (V6): jeder Schuss gegen die übrigen. d ist sein Abstand zum Schwerpunkt der übrigen, S²
  * deren Streuung um ihren Schwerpunkt, Σr²/(2(n − 2)). Bei einer runden Normalgruppe ist
  * T = d² / (2 S² (1 + 1/(n − 1))) exakt F(2, 2(n − 2))-verteilt; Ausreißer ist, wer über dem
- * (1 − 0,05/n)-Quantil liegt (Bonferroni). So meldet die Regel in einer normalen Gruppe in höchstens
- * 5 % der Scheiben einen Ausreißer (simuliert: 5,0 %); Q3 + 1,5 · IQR auf den Radien täte es in bis zu
- * 47 %. Zwei gleich weite Ausreißer verdecken sich bei wenigen Schuss gegenseitig. Kein Schuss fällt
+ * (1 − 0,05/n)-Quantil liegt (Bonferroni). So meldet die Regel in einer runden normalen Gruppe in
+ * höchstens 5 % der Scheiben einen Ausreißer (simuliert: 5,0 %); Q3 + 1,5 · IQR auf den Radien täte es
+ * in bis zu 47 %. Bei gestreckten Gruppen steigt die Rate (simuliert für 10 bis 60 Schuss: a/b 1,5 etwa
+ * 8–11 %, a/b 2 etwa 11–19 %, a/b 3 etwa 17–29 %). Zwei gleich weite Ausreißer verdecken sich bei
+ * wenigen Schuss gegenseitig. Kein Schuss fällt
  * aus der Wertung. Dazu MR/R50: bei einer runden Normalgruppe etwa 1,06, deutlich mehr heißt, wenige
  * weite Schüsse dominieren. Ab fünf Schuss.
  */
@@ -166,7 +168,7 @@ export function outlierLoss(
   shots: readonly MetricShot[],
   scoring: Scoring
 ): { n: number; count: number; loss: number } | null {
-  const values = inShotOrder(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })).map(
+  const values = selectShots(inShotOrder(shots), { kinds: MATCH, need: valueNeed(scoring) }).map(
     (shot) => valueTenths(shot, scoring)
   )
   if (values.length < 10) return null

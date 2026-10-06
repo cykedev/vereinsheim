@@ -9,7 +9,7 @@ import {
   standardDeviation,
   type Point,
 } from "../geometry"
-import { selectShots, shotSteps, type MetricShot, type ShotKind } from "../metrics"
+import { inShotOrder, selectShots, stepsInOrder, type MetricShot, type ShotKind } from "../metrics"
 import { scoreFromCoordinates } from "../scoring"
 import { fQuantile2 } from "../stats"
 import type { TargetImage } from "../targets"
@@ -199,7 +199,7 @@ export function directionClock(
 export function drift(
   shots: readonly MetricShot[]
 ): { n: number; meanJumpUm: number; maxJumpUm: number; vonNeumann: number } | null {
-  const steps = shotSteps(selectShots(shots, { need: "position" }))
+  const steps = stepsInOrder(selectShots(inShotOrder(shots), { need: "position" }))
   if (steps.length < 3) return null
   const points = steps.map(({ shot }) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
   const jumps: number[] = []

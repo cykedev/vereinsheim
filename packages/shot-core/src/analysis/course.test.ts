@@ -166,6 +166,18 @@ describe("Gleitender Schnitt und längste Folge (I4, I10)", () => {
     expect(() => movingAverage(values, "decimal", 0)).toThrow(RangeError)
   })
 
+  it("fehlen einem Schuss Abgabefolge und Zeit, folgen Reihenfolge und Nummern beide der Liste", () => {
+    // Handeintrag ohne seq, Zeit und Wert vorn, dann zwölf Schuss mit seq 12 … 1: Die Karte lässt sich
+    // nur nach der Liste ordnen; die Auswahl darf nicht nach seq umsortieren.
+    const hand: MetricShot = { ...shot(0, 100), seq: null, firedAtMs: null, decimalTenths: null }
+    const twelve = Array.from({ length: 12 }, (_, i) => ({
+      ...shot(i, 100 + (i % 3)),
+      seq: 12 - i,
+    }))
+    const numbers = movingAverage([hand, ...twelve], "decimal", 10).map((p) => p.number)
+    expect(numbers).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
+  })
+
   it("gleitender Schnitt in ganzen Ringen", () => {
     const values = Array.from({ length: 12 }, (_, i) => shot(i, 98 + i))
     const average = movingAverage(values, "rings", 10)

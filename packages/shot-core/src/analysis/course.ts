@@ -18,8 +18,9 @@ import { valueNeed, valueRings, valueTenths } from "./values"
 
 const MATCH: readonly ShotKind[] = ["match"]
 
+// Erst die ganze Karte ordnen, dann auswählen: dieselbe Reihenfolge wie `shotNumbers`
 const valued = (shots: readonly MetricShot[], scoring: Scoring) =>
-  inShotOrder(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) }))
+  selectShots(inShotOrder(shots), { kinds: MATCH, need: valueNeed(scoring) })
 const point = (shot: MetricShot): Point => ({ xUm: shot.xUm as number, yUm: shot.yUm as number })
 const meanOf = (values: readonly number[]) => values.reduce((s, v) => s + v, 0) / values.length
 
@@ -72,9 +73,11 @@ export function fatigue(
   if (values.length < 20) return null
   const firstMeanRings = meanOf(values.slice(0, 10))
   const lastMeanRings = meanOf(values.slice(-10))
-  const positioned = inShotOrder(
-    selectShots(shots, { kinds: MATCH, need: "position", excludeMisses: true })
-  ).map(point)
+  const positioned = selectShots(inShotOrder(shots), {
+    kinds: MATCH,
+    need: "position",
+    excludeMisses: true,
+  }).map(point)
   const deltaR50Um =
     positioned.length >= 20
       ? (r50(positioned.slice(-10)) as number) - (r50(positioned.slice(0, 10)) as number)

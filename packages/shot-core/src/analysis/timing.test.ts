@@ -96,6 +96,15 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     expect(profile[7].medianMs).toBe(45_000)
   })
 
+  it("Rhythmus in derselben Reihenfolge wie die Nummern, auch ohne Abgabefolge für alle", () => {
+    // Handeintrag ohne seq und Zeit vorn; danach zehn Schuss mit seq 10 … 1, zeitlich aufsteigend
+    const hand: MetricShot = { ...EVENING[0], seq: null, firedAtMs: null }
+    const reversed = EVENING.map((shot, i) => ({ ...shot, seq: 10 - i }))
+    const profile = rhythmProfile([hand, ...reversed], 5)
+    expect(profile.map((p) => p.number)).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    expect(profile[1].intervalMs).toBe(40_000)
+  })
+
   it("Rhythmus: Nummern sind Schussnummern, über eine Lücke gibt es keinen Abstand", () => {
     const profile = rhythmProfile(WITH_PLACEHOLDER, 5)
     expect(profile.map((p) => p.number)).toEqual([1, 2, 4, 5, 6, 7, 8, 9, 10])

@@ -3,7 +3,7 @@
 // (SF-63).
 
 import { r50, segmentGroups, type Point } from "../geometry"
-import { inShotOrder, selectShots, timesWithGaps, type MetricShot, type Scoring } from "../metrics"
+import { inShotOrder, selectShots, timesInOrder, type MetricShot, type Scoring } from "../metrics"
 import { tempo } from "../time"
 import { mpiConfidence, type MpiConfidence } from "./position"
 import { sigmaEstimate } from "./precision"
@@ -25,15 +25,19 @@ function lastSighterGroup(
   return groups[groups.length - 1]
 }
 
-/** Zeit des ersten Schusses mit gültiger Zeit; Platzhalter bringen keine mit (SF-15) */
-const firstTime = (shots: readonly MetricShot[]) => {
-  const timed = selectShots(shots, { need: "time" })
-  return timed.length ? (inShotOrder(timed)[0].firedAtMs as number) : null
+/**
+ * Zeit des ersten Schusses mit gültiger Zeit in Schüssen, die schon in Abgabefolge stehen; Platzhalter
+ * bringen keine mit (SF-15)
+ */
+const firstTime = (ordered: readonly MetricShot[]) => {
+  const timed = selectShots(ordered, { need: "time" })
+  return timed.length ? (timed[0].firedAtMs as number) : null
 }
 
 /**
  * Umfang der Probe (S2): Zahl, Blöcke à zehn, Dauer und Zeit bis zum ersten Wertungsschuss. Gezählt
- * wird die Probe bis zum ersten Wertungsschuss; Zeiten nur gültige, ohne Platzhalter. Springt die Uhr
+ * wird die Probe bis zum ersten Wertungsschuss; Zeiten nur gültige, ohne Platzhalter: Ist der erste
+ * Wertungsschuss ein Platzhalter, misst `untilMatchMs` bis zum ersten mit gültiger Zeit. Springt die Uhr
  * zurück, gibt es keine Dauer (SF-30), und ein negativer Abstand zur Wertung ist keiner.
  */
 export function sighterSummary(shots: readonly MetricShot[]): {
@@ -46,12 +50,12 @@ export function sighterSummary(shots: readonly MetricShot[]): {
   if (sighters.length === 0) return null
   const timed = selectShots(sighters, { need: "time" })
   const start = firstTime(sighters)
-  const match = firstTime(shots.filter((shot) => shot.kind === "match"))
+  const match = firstTime(inShotOrder(shots).filter((shot) => shot.kind === "match"))
   const until = start !== null && match !== null ? match - start : null
   return {
     count: sighters.length,
     blocks: Math.ceil(sighters.length / 10),
-    durationMs: timed.length ? tempo(timesWithGaps(timed)).durationMs : null,
+    durationMs: timed.length ? tempo(timesInOrder(timed)).durationMs : null,
     untilMatchMs: until !== null && until >= 0 ? until : null,
   }
 }
