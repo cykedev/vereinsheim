@@ -232,7 +232,7 @@ Beim Einbau in die Spielwiese fiel auf, dass elf Auswertungen nur in Zehnteln re
 `shotExtremes`, `seriesConsistency`, `shareAtLeast`, `outlierLoss`, `seriesCurve`, `fatigue`,
 `cardTrend`, `movingAverage`, `longestRun`, `pauseRecovery` und `sighterComparison` die Wertung als
 Pflichtparameter (`analysis/values.ts`). Schwellen bleiben in Zehnteln; in ganzen Ringen zählt Ring 10
-als 100, eine Schwelle zwischen zwei Ringen erreicht keiner. Ohne Zehntel (SF-18) gibt es die
+als 100: Eine Schwelle über 10,0 erreicht dann keiner, 9,5 erreicht jede 10. Ohne Zehntel (SF-18) gibt es die
 Auswertung nur in ganzen Ringen. Die Ergebnisse heißen wertungsneutral (`value`, `total` in Ringen).
 Ein Test hält fest, dass derselbe Anstieg in ganzen Ringen zur Stufe wird und der Trend dann nicht
 mehr „klar“ ist.

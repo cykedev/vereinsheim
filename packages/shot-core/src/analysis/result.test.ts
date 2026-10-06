@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { CARD, MATCH } from "../__fixtures__/cards"
-import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
+import { computeMetric, FLAG_SUSPICIOUS, metricByKey, type MetricShot } from "../metrics"
 import {
   decimalHistogram,
   ringDistribution,
@@ -164,9 +164,28 @@ describe("Ringverlust, Konstanz und Quoten (E9, E10, E4, E11)", () => {
     expect(shareAtLeast([], "decimal", 100)).toBeNull()
   })
 
-  it("Quote in ganzen Ringen: eine Schwelle zwischen zwei Ringen erreicht keiner", () => {
+  it("ein Platzhalter zählt mit seinem amtlichen Wert, wie in der Registry (SF-15)", () => {
+    const placeholder: MetricShot = {
+      ...MATCH[2],
+      firedAtMs: 900_000,
+      decimalTenths: 109,
+      ring: 10,
+      flags: [FLAG_SUSPICIOUS],
+    }
+    const card = [...CARD, placeholder]
+    const share = shareAtLeast(card, "decimal", 100)
+    expect(share).toMatchObject({ n: 7, count: 4 })
+    const tensRate = metricByKey("result.tensRate")
+    if (!tensRate) throw new Error("result.tensRate fehlt")
+    const rate = computeMetric(tensRate, card)
+    expect(rate).not.toBeNull()
+    expect(rate).toBeCloseTo(((share?.count as number) / 7) * 100, 9)
+  })
+
+  it("Quote in ganzen Ringen: eine Schwelle über 10,0 erreicht keiner, 9,5 erreicht jede 10", () => {
     expect(shareAtLeast(RINGS_ONLY, "rings", 100)).toMatchObject({ n: 6, count: 3 })
     expect(shareAtLeast(CARD, "rings", 105)?.count).toBe(0)
+    expect(shareAtLeast(CARD, "rings", 95)?.count).toBe(3)
     expect(shareAtLeast(RINGS_ONLY, "decimal", 100)).toBeNull()
   })
 })
