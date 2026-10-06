@@ -37,6 +37,10 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           noch von keiner App genutzt.
 ├── packages/meyton-pdf/    @vereinsheim/meyton-pdf — liest aus Meyton-Ausdrucken (PDF) nur ID im Fuß und
 │                           Erstellzeit, ohne Layout-Wissen (SP-1.3, Oktober 2026); noch von keiner App genutzt.
+├── packages/shot-help/     @vereinsheim/shot-help — Hilfe zu jeder Kennzahl und Auswertung in
+│                           einfacher Sprache (Themen, Einstieg, Glossar, Fehlschlüsse); Quelle für App
+│                           und Vault-Leitfaden, den `pnpm --filter @vereinsheim/shot-help docs` erzeugt
+│                           (SP-1.11); noch von keiner App genutzt.
 ├── docs/                   spec, decisions (ADRs), monorepo-plan, operations, plan,
 │                           architecture (dies), shared-conventions, consistency
 ├── .claude/                Harness: settings(+hooks), skills/, agents/, context/, knowledge-graph.json

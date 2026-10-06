@@ -49,12 +49,12 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 
 ## Hilfe und Erklärungen
 
-- **Jede Zahl ist erklärt.** An jeder Kachel und jeder Karte sitzt ein „?“; es öffnet die Erklärung aus [[spiegel-statistics-help]]: was die Zahl misst, wie man sie liest, was man tun kann, wo man sich täuscht. Auf dem Handy als Blatt von unten, auf dem Desktop als Karte daneben, nie nur als Tooltip.
+- **Jede Zahl ist erklärt.** An jeder Kachel und jeder Karte sitzt ein „?“; es öffnet die Erklärung aus `@vereinsheim/shot-help` (nachzulesen in [[spiegel-statistics-help]]): was die Zahl misst, wie man sie liest, was man tun kann, wo man sich täuscht. Auf dem Handy als Blatt von unten, auf dem Desktop als Karte daneben, nie nur als Tooltip.
 - **Erst Worte, dann Formel.** Die Formel steht aufklappbar für Profis darunter, nie davor.
 - **Auch „–“ und „unklar“ erklären:** „ab 10 Schuss“ sagt, warum ein Wert fehlt; „unklar“ sagt, was mehr Schüsse klären würden.
 - **Einmal oben erklärt:** Ein Einstieg „So liest du die Analyse“ erklärt n, 95-%-Bereich, „echt“ und „unklar“ und die Wertung, damit die Karten kurz bleiben.
 - **Ein Glossar** für die Begriffe (σ, R50, Median, Hotelling …), aus jeder Erklärung verlinkt.
-- **Eine Quelle:** App und Doku zeigen dieselben Texte (SP-1.11).
+- **Eine Quelle:** App und Doku zeigen dieselben Texte aus `@vereinsheim/shot-help` (SP-1.11). Eine Kachel holt ihr Thema mit `helpForMetric(key)`, eine Karte mit `helpTopic(id)`, eine Auswertung über ihre Katalog-ID mit `helpForCatalog(id)`. `short` ist der Satz für Kachel und Tooltip, `what`, `read`, `act`, `caution` und `minimum` sind die Erklärung, `formula` das Aufklappbare. [[spiegel-statistics-help]] wird daraus erzeugt.
 
 ## Zeichnen der Scheibe
 
