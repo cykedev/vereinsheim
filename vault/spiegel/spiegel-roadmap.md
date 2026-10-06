@@ -81,8 +81,8 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ### SP-1.2 Fachkern: Geometrie und Kennzahlen-Registry
 - **Ziel:** die Rechenbasis für alle Auswertungen.
 - **Umfang:** Schwerpunkt, kleinster Kreis, mittlerer Radius, Streuung, Intervalle; `defineMetric` mit Version und Ebenen; die ersten rund zehn Kennzahlen ([[spiegel-metrics]]).
-- **Abnahme:** Eigenschafts- und Mutationstests; isomorph (Server und Client); Sonderfälle SF-01, SF-60, SF-61, SF-62, SF-63.
-- **Hängt ab von:** SP-1.1. **Status:** offen.
+- **Abnahme:** Eigenschafts- und Mutationstests; isomorph (Server und Client); Sonderfälle SF-01, SF-14, SF-60, SF-61, SF-62, SF-63.
+- **Hängt ab von:** SP-1.1. **Status:** erledigt (Oktober 2026, `packages/shot-core`: `geometry`, `time`, `metrics`).
 
 ### SP-1.3 Meyton-PDF: ID und Druckzeit
 - **Ziel:** QR-Zuordnung ohne Abhängigkeit vom Layout des Ausdrucks ([[adr-028]], Änderung vom 6. Oktober 2026).

@@ -3,7 +3,7 @@ id: spiegel-metrics
 type: concept
 title: "Spiegel — Kennzahlen, Verläufe und Vergleiche"
 aliases: [kennzahlen, metrics, kennzahlen-registry, verläufe, vergleiche]
-keywords: [kennzahl, metric, registry, definemetric, schwerpunkt, mpi, streukreis, kleinster kreis, welzl, mittlerer radius, streuung, ellipse, teiler, intervall, tempo, ermüdung, verlauf, trend, rekord, bestleistung, vergleich, baseline, 30-tage-schnitt, beobachtung, insight, trefferkreis, trefferlage, nur probe, je schuss, r50, median, mindestzahl, ausreißer, visier verstellt, disziplin-familie]
+keywords: [kennzahl, metric, registry, metricshot, computemetric, extremespread, segmentgroups, definemetric, schwerpunkt, mpi, streukreis, kleinster kreis, welzl, mittlerer radius, streuung, ellipse, teiler, intervall, tempo, ermüdung, verlauf, trend, rekord, bestleistung, vergleich, baseline, 30-tage-schnitt, beobachtung, insight, trefferkreis, trefferlage, nur probe, je schuss, r50, median, mindestzahl, ausreißer, visier verstellt, disziplin-familie]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[statistics-visualization]]", "[[spiegel-data-model]]", "[[spiegel-ui-design]]", "[[spiegel-edge-cases]]"]
 ---
@@ -73,3 +73,14 @@ Die Regeln aus dem Sonderfall-Katalog ([[spiegel-edge-cases]]), die jede Kennzah
 ## Beobachtungen in Worten
 
 Wo ein Satz reicht, steht er über dem Diagramm: „Serie 3 war deine engste (Streukreis 38,2 mm). Serie 4 streut 21 % weiter.“ Die Sätze entstehen aus denselben Kennzahlen, nicht aus Freitext.
+
+## Umsetzung
+
+`packages/shot-core` (SP-1.2, Oktober 2026) setzt die Registry und die ersten 15 Kennzahlen um (`geometry`, `time`, `metrics`):
+
+- **Eingabe** ist ein schlanker `MetricShot` (Lage, Wert, Ring, Innenzehner, Abstand, Zeit, Probe oder Wertung, Serie, Merkmale). Schüsse ohne Lage zählen bei Lage-Kennzahlen nicht mit, ohne Wert nicht beim Ergebnis, ohne Zeit nicht beim Tempo.
+- **Streukreis** ist der kleinste Kreis um die Trefferzentren, Mitte zu Mitte, deterministisch nach Welzl berechnet und gegen Brute Force getestet. Daneben gibt es den größten Abstand zweier Treffer (`extremeSpread`), bis SP-0.6 klärt, welches der beiden Meytons „Trefferkreis“ ist.
+- **Radien und Streuung:** mittlerer Radius (Mittel der Abstände zum Schwerpunkt), R50 (ihr Median, ohne markierte Ausreißer), Streuung x/y mit n − 1, Streu-Ellipse aus der Kovarianz.
+- **Tempo:** Median der Intervalle; Intervalle über 180 s sind Pausen und zählen getrennt.
+- **Versatz Probe → Wertung** nimmt die letzten fünf Probeschüsse; `segmentGroups` teilt eine Gruppe an einem Schuss, nach dem das Visier verstellt wurde.
+- **Kennzahlen:** Ringe, Zehntel, Ø je Schuss, Zehner, Innenzehner, bester Teiler, Schwerpunkt-Abstand, Streukreis, mittlerer Radius, R50, Streuung x und y, Tempo, längste Pause, Versatz Probe → Wertung. Die übrigen Kennzahlen der Tabelle oben (Ermüdung, Wanderung, Tempo-Konstanz, …) kommen über dieselbe Registry dazu, sobald eine Ansicht sie braucht.
