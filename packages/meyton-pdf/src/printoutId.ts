@@ -9,11 +9,13 @@ export type PrintoutIdResult =
   | { kind: "conflict"; hexes: string[] }
 
 /**
- * `ID:` ohne Buchstabe oder Ziffer davor (sonst träfe `DisziplinID:`), dann genau acht Hex-Zeichen,
- * danach kein Buchstabe und keine Ziffer. Zwischen den Zeichen ist je ein Leerzeichen erlaubt: Qt setzt
- * jedes Glyph einzeln, und pdf.js fasst sie nicht immer zusammen.
+ * `ID:` ohne Buchstabe oder Ziffer davor (auch keine Umlaute; sonst träfe `DisziplinID:`), dann genau
+ * acht Hex-Zeichen am Stück, danach kein Buchstabe und keine Ziffer. Zweite Form: jedes Zeichen einzeln
+ * mit genau einem Leerzeichen dazwischen (`I D : f f 9 1 …`), wie pdf.js einzeln gesetzte Qt-Glyphen
+ * liefert. Unregelmäßige Lücken ergeben „keine ID“, nie eine aus getrennten Wörtern gebaute.
  */
-const PRINTOUT_ID = /(?<![0-9A-Za-z])I\s?D\s?:\s*((?:[0-9A-Fa-f]\s?){7}[0-9A-Fa-f])(?![0-9A-Za-z])/g
+const PRINTOUT_ID =
+  /(?<![\p{L}\p{N}])(?:ID: ?([0-9A-Fa-f]{8})|I D : ((?:[0-9A-Fa-f] ){7}[0-9A-Fa-f]))(?![\p{L}\p{N}])/gu
 const HEX_ID = /^[0-9A-Fa-f]{8}$/
 
 /** acht Hex-Zeichen als vorzeichenbehaftete 32-Bit-Zahl */
@@ -29,7 +31,7 @@ export function findPrintoutId(pageTexts: readonly string[]): PrintoutIdResult {
   pageTexts.forEach((text, index) => {
     // Leerraum zusammenfassen: pdf.js setzt Lücken zwischen einzelnen Glyphen als eigene Stücke.
     for (const match of text.replace(/\s+/g, " ").matchAll(PRINTOUT_ID)) {
-      const hex = match[1].replace(/\s/g, "").toLowerCase()
+      const hex = (match[1] ?? match[2]).replace(/\s/g, "").toLowerCase()
       const pages = pagesByHex.get(hex) ?? new Set<number>()
       pages.add(index + 1)
       pagesByHex.set(hex, pages)

@@ -148,6 +148,53 @@ describe("readPrintout: mehrseitig (SF-44)", () => {
   })
 })
 
+describe("readPrintout: Metadaten im Einzelnen", () => {
+  it("unlesbares Info-Datum: XMP springt ein", async () => {
+    const pdf = await buildPdf({
+      pages: [card("ff914420")],
+      info: { CreationDate: "Meyton" },
+      xmpCreateDate: "2026-08-11T18:29:54+02:00",
+    })
+    expect((await readPrintout(pdf)).createdAt?.source).toBe("xmp")
+  })
+
+  it("Info ohne Zeitzone, XMP mit: XMP gewinnt", async () => {
+    const pdf = await buildPdf({
+      pages: [card("ff914420")],
+      info: { CreationDate: "D:20261002195212" },
+      xmpCreateDate: "2026-10-02T19:52:12+02:00",
+    })
+    expect((await readPrintout(pdf)).createdAt).toMatchObject({
+      offsetMinutes: 120,
+      epochMs: 1790963532000,
+      source: "xmp",
+    })
+  })
+
+  it("älteres XMP-Präfix xap", async () => {
+    const pdf = await buildPdf({
+      pages: [card("ff914420")],
+      info: null,
+      xmpCreateDate: "2026-08-11T18:29:54+02:00",
+      xmpPrefix: "xap",
+    })
+    expect((await readPrintout(pdf)).createdAt).toMatchObject({
+      source: "xmp",
+      epochMs: 1786465794000,
+    })
+  })
+
+  it("Druckweg ohne Leerraum am Rand und höchstens 200 Zeichen", async () => {
+    const pdf = await buildPdf({
+      pages: [card("ff914420")],
+      info: { Producer: "  Qt 5.12.8  ", Creator: "x".repeat(300) },
+    })
+    const printout = await readPrintout(pdf)
+    expect(printout.producer).toBe("Qt 5.12.8")
+    expect(printout.creator).toHaveLength(200)
+  })
+})
+
 describe("readPrintout: fehlende Angaben sind kein Fehler", () => {
   it("ohne ID: missing, die Zeit bleibt", async () => {
     const printout = await readPrintout(await buildPdf({ pages: [header], info: QT_INFO }))
@@ -182,6 +229,18 @@ describe("readPrintout: Grenzen (SF-48)", () => {
     const big = new Uint8Array(1024 * 1024 + 1)
     big.set(new TextEncoder().encode("%PDF-1.4\n"))
     await expect(readPrintout(big)).rejects.toThrow(/größer als 1 MB/)
+  })
+
+  it("Kopf: bis Byte 1019 geduldet wie in pdf.js, ab Byte 1020 kein PDF", async () => {
+    const pdf = await buildPdf({ pages: [card("ff914420")], info: QT_INFO })
+    const withJunk = (length: number) => {
+      const bytes = new Uint8Array(length + pdf.length)
+      bytes.fill(0x20, 0, length)
+      bytes.set(pdf, length)
+      return bytes
+    }
+    expect((await readPrintout(withJunk(1019))).id).toMatchObject({ kind: "found" })
+    await expect(readPrintout(withJunk(1020))).rejects.toThrow(/keine PDF-Datei/)
   })
 
   it("kein PDF", async () => {
@@ -236,6 +295,8 @@ describe("readPrintout: Grenzen (SF-48)", () => {
     const error = await readPrintout(broken).catch((caught: unknown) => caught)
     expect(error).toBeInstanceOf(MeytonPdfError)
     expect((error as Error).message).toMatch(/beschädigt oder nicht lesbar/)
+    // Die Ursache bleibt für das Server-Log erhalten, die Meldung bleibt zeigbar.
+    expect((error as Error).cause).toBeInstanceOf(Error)
   })
 
   it("der übergebene Puffer bleibt unverändert", async () => {

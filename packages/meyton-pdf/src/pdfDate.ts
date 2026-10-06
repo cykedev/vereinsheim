@@ -1,7 +1,7 @@
 // Datum aus den Metadaten eines PDFs: im Info-Dict nach der PDF-Norm (D:YYYYMMDDHHmmSSOHH'mm') und
-// als xmp:CreateDate (ISO 8601). Ohne Zeitzone gibt es keinen absoluten Zeitpunkt; dann entscheidet
-// der Aufrufer, etwa mit der Zeitzone des Vereins. Ungültige Angaben ergeben keine Zeit statt einer
-// falschen.
+// als xmp:CreateDate (ISO 8601). Ohne Uhrzeit oder ohne Zeitzone gibt es keinen absoluten Zeitpunkt;
+// dann entscheidet der Aufrufer, etwa mit der Zeitzone des Vereins. Ungültige Angaben (auch Jahre vor
+// 1970) ergeben keine Zeit statt einer falschen.
 
 export interface PdfDate {
   /** Ortszeit wie im PDF: "2026-10-02T19:52:12" */
@@ -20,13 +20,18 @@ interface DateParts {
   minute: number
   second: number
   offsetMinutes: number | null
+  /** ohne Uhrzeit kein Versatz: Mitternacht wäre geraten */
+  hasTime: boolean
 }
 
 const PDF_DATE =
   /^(?:D:)?(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?(?:([Zz+-])(?:(\d{2})'?(?:(\d{2})'?)?)?)?$/
+/** Die Zeitzone gilt nur zusammen mit einer Uhrzeit. */
 const XMP_DATE =
-  /^(\d{4})(?:-(\d{2})(?:-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?)?)?(Z|[+-]\d{2}:\d{2})?$/
+  /^(\d{4})(?:-(\d{2})(?:-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?)?)?$/
 
+/** Vor 1970 gab es keine PDFs; Date.UTC deutet die Jahre 0–99 zudem als 19xx. */
+const MIN_YEAR = 1970
 /** Versätze reichen von −12:00 bis +14:00. */
 const MIN_OFFSET = -12 * 60
 const MAX_OFFSET = 14 * 60
@@ -37,7 +42,9 @@ const number = (digits: string | undefined, fallback: number) =>
 const daysInMonth = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate()
 
 function toPdfDate(parts: DateParts): PdfDate | null {
-  const { year, month, day, hour, minute, second, offsetMinutes } = parts
+  const { year, month, day, hour, minute, second, hasTime } = parts
+  const offsetMinutes = hasTime ? parts.offsetMinutes : null
+  if (year < MIN_YEAR) return null
   if (month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month)) return null
   if (hour > 23 || minute > 59 || second > 59) return null
   if (offsetMinutes !== null && (offsetMinutes < MIN_OFFSET || offsetMinutes > MAX_OFFSET)) {
@@ -54,7 +61,9 @@ function toPdfDate(parts: DateParts): PdfDate | null {
 /** Versatz aus Vorzeichen, Stunden und Minuten; null ohne Angabe, NaN bei ungültiger */
 function offsetFrom(sign: string | undefined, hours?: string, minutes?: string): number | null {
   if (sign === undefined) return null
-  if (sign === "Z" || sign === "z") return 0
+  // Z ist UTC; ein Versatz dahinter ist nur als 00'00' zulässig.
+  if (sign === "Z" || sign === "z")
+    return number(hours, 0) === 0 && number(minutes, 0) === 0 ? 0 : Number.NaN
   if (hours === undefined) return Number.NaN
   const mins = number(minutes, 0)
   if (mins > 59) return Number.NaN
@@ -75,6 +84,7 @@ export function parsePdfDate(raw: string): PdfDate | null {
     minute: number(match[5], 0),
     second: number(match[6], 0),
     offsetMinutes,
+    hasTime: match[4] !== undefined,
   })
 }
 
@@ -95,5 +105,6 @@ export function parseXmpDate(raw: string): PdfDate | null {
     minute: number(match[5], 0),
     second: number(match[6], 0),
     offsetMinutes,
+    hasTime: match[4] !== undefined,
   })
 }

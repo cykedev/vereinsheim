@@ -79,6 +79,24 @@ describe("findPrintoutId", () => {
     expect(findPrintoutId([])).toEqual({ kind: "missing" })
   })
 
+  it("fügt keine getrennten Wörter zu einer ID zusammen", () => {
+    for (const text of [
+      "Verein-ID: 123 Bad 45",
+      "ID: ab cd ef 12",
+      "ID: ff9144 20",
+      "ÄID: ff914420",
+    ]) {
+      expect(findPrintoutId([text]), text).toEqual({ kind: "missing" })
+    }
+  })
+
+  it("kennt keine Beschriftungen: Disziplin-ID zählt als ID (Vorschau und Bestätigung schützen, SF-41)", () => {
+    expect(findPrintoutId(["Disziplin-ID: 19210040"])).toMatchObject({
+      kind: "found",
+      hex: "19210040",
+    })
+  })
+
   it("ein Trennzeichen davor stört nicht", () => {
     expect(findPrintoutId(["Ausdruck-ID: 46a13c20"])).toMatchObject({
       kind: "found",

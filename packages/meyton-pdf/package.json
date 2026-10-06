@@ -6,7 +6,9 @@
   "exports": {
     "./printout": "./src/printout.ts",
     "./printout-id": "./src/printoutId.ts",
-    "./pdf-date": "./src/pdfDate.ts"
+    "./pdf-date": "./src/pdfDate.ts",
+    "./limits": "./src/limits.ts",
+    "./errors": "./src/errors.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

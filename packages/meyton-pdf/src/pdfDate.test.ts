@@ -48,6 +48,23 @@ describe("parsePdfDate (Info-Dict)", () => {
     expect(parsePdfDate("D:202610021952")?.local).toBe("2026-10-02T19:52:00")
   })
 
+  it("ohne Uhrzeit kein Versatz und kein absoluter Zeitpunkt", () => {
+    expect(parsePdfDate("D:2026Z")).toEqual({
+      local: "2026-01-01T00:00:00",
+      offsetMinutes: null,
+      epochMs: null,
+    })
+    expect(parsePdfDate("D:20261002+02'00'")?.epochMs).toBeNull()
+  })
+
+  it("Jahre vor 1970 gibt es nicht; Z mit Versatz ist ein Widerspruch", () => {
+    expect(parsePdfDate("D:00991231120000Z")).toBeNull()
+    expect(parsePdfDate("D:19691231235959Z")).toBeNull()
+    expect(parsePdfDate("D:19700101000000Z")?.epochMs).toBe(0)
+    expect(parsePdfDate("D:20261002195212Z05'00'")).toBeNull()
+    expect(parsePdfDate("D:20261002195212Z00'00'")?.offsetMinutes).toBe(0)
+  })
+
   it("Schaltjahr: der 29. Februar 2024 gilt", () => {
     expect(parsePdfDate("D:20240229120000Z")?.local).toBe("2024-02-29T12:00:00")
   })
@@ -93,6 +110,10 @@ describe("parseXmpDate (xmp:CreateDate)", () => {
       offsetMinutes: null,
       epochMs: null,
     })
+  })
+
+  it("eine Zeitzone gilt nur mit Uhrzeit", () => {
+    expect(parseXmpDate("2026-08-11+02:00")).toBeNull()
   })
 
   it("Uhrzeit ohne Sekunden", () => {

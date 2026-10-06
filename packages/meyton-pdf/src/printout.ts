@@ -28,7 +28,7 @@ export interface Printout {
 
 export interface ReadOptions {
   limits?: Partial<PrintoutLimits>
-  /** Uhr in ms; für Tests ersetzbar */
+  /** monotone Uhr in ms; für Tests ersetzbar */
   now?: () => number
 }
 
@@ -55,18 +55,27 @@ function sizeLabel(bytes: number): string {
 const shortText = (value: unknown): string | null =>
   typeof value === "string" && value.trim() !== "" ? value.trim().slice(0, 200) : null
 
-function creationDate(info: Record<string, unknown>, metadata: unknown): Printout["createdAt"] {
-  if (typeof info.CreationDate === "string") {
-    const date = parsePdfDate(info.CreationDate)
-    if (date) return { ...date, source: "info" }
-  }
-  // Qt schreibt kein XMP; dann ist `metadata` ein leeres Objekt ohne `get`.
+function xmpCreateDate(metadata: unknown): PdfDate | null {
+  // Qt schreibt kein XMP; dann ist `metadata` ein leeres Objekt ohne `get`. pdf.js schlüsselt nach dem
+  // wörtlichen Präfix, ältere Erzeuger schreiben `xap:` statt `xmp:`.
   const get = (metadata as { get?: unknown } | null)?.get
-  if (typeof get === "function") {
-    const raw: unknown = get.call(metadata, "xmp:createdate")
+  if (typeof get !== "function") return null
+  for (const key of ["xmp:createdate", "xap:createdate"]) {
+    const raw: unknown = get.call(metadata, key)
     const date = typeof raw === "string" ? parseXmpDate(raw) : null
-    if (date) return { ...date, source: "xmp" }
+    if (date) return date
   }
+  return null
+}
+
+/** Info vor XMP, aber ein Datum mit Zeitzone vor einem ohne. */
+function creationDate(info: Record<string, unknown>, metadata: unknown): Printout["createdAt"] {
+  const fromInfo = typeof info.CreationDate === "string" ? parsePdfDate(info.CreationDate) : null
+  const fromXmp = xmpCreateDate(metadata)
+  if (fromInfo && fromInfo.offsetMinutes !== null) return { ...fromInfo, source: "info" }
+  if (fromXmp && fromXmp.offsetMinutes !== null) return { ...fromXmp, source: "xmp" }
+  if (fromInfo) return { ...fromInfo, source: "info" }
+  if (fromXmp) return { ...fromXmp, source: "xmp" }
   return null
 }
 
@@ -75,7 +84,7 @@ export async function readPrintout(
   options: ReadOptions = {}
 ): Promise<Printout> {
   const limits: PrintoutLimits = { ...DEFAULT_LIMITS, ...options.limits }
-  const now = options.now ?? Date.now
+  const now = options.now ?? (() => performance.now())
   const startedAt = now()
   const checkTime = () => {
     if (now() - startedAt > limits.maxParseMs) {
@@ -96,9 +105,11 @@ export async function readPrintout(
       useSystemFonts: false,
       stopAtErrors: false,
       maxImageSize: 1024 * 1024,
+      // Keine Warnungen ins Log: ein präpariertes PDF könnte es fluten.
+      verbosity: 0,
     })
-  } catch {
-    throw new MeytonPdfError(UNREADABLE)
+  } catch (error) {
+    throw new MeytonPdfError(UNREADABLE, { cause: error })
   }
 
   try {
@@ -146,9 +157,10 @@ export async function readPrintout(
     }
   } catch (error) {
     if (error instanceof MeytonPdfError) throw error
-    throw new MeytonPdfError(UNREADABLE)
+    throw new MeytonPdfError(UNREADABLE, { cause: error })
   } finally {
-    // destroy() hängt am loadingTask: Es gibt Worker und Puffer frei.
-    await pdf.loadingTask.destroy()
+    // destroy() hängt am loadingTask: Es gibt Worker und Puffer frei. Ein Fehler hier darf den
+    // eigentlichen nicht verdecken.
+    await pdf.loadingTask.destroy().catch(() => {})
   }
 }

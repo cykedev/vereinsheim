@@ -20,6 +20,8 @@ export interface TestPdf {
   info?: Record<string, string> | null
   /** XMP-Strom mit <xmp:CreateDate> als Element */
   xmpCreateDate?: string
+  /** Präfix im XMP; ältere Erzeuger schreiben "xap" */
+  xmpPrefix?: "xmp" | "xap"
 }
 
 const encoder = new TextEncoder()
@@ -91,14 +93,14 @@ function toUnicodeCMap(cids: Map<string, number>): Uint8Array {
   )
 }
 
-function xmpPacket(createDate: string): Uint8Array {
+function xmpPacket(createDate: string, prefix: "xmp" | "xap"): Uint8Array {
   return encoder.encode(
     [
       '<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>',
       '<x:xmpmeta xmlns:x="adobe:ns:meta/">',
       '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">',
-      '<rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/">',
-      `<xmp:CreateDate>${createDate}</xmp:CreateDate>`,
+      `<rdf:Description rdf:about="" xmlns:${prefix}="http://ns.adobe.com/xap/1.0/">`,
+      `<${prefix}:CreateDate>${createDate}</${prefix}:CreateDate>`,
       "</rdf:Description>",
       "</rdf:RDF>",
       "</x:xmpmeta>",
@@ -181,7 +183,12 @@ export async function buildPdf(spec: TestPdf): Promise<Uint8Array> {
   const metadata =
     spec.xmpCreateDate === undefined
       ? null
-      : add(stream("/Type/Metadata/Subtype/XML", xmpPacket(spec.xmpCreateDate)))
+      : add(
+          stream(
+            "/Type/Metadata/Subtype/XML",
+            xmpPacket(spec.xmpCreateDate, spec.xmpPrefix ?? "xmp")
+          )
+        )
   fill(
     catalog,
     `<</Type/Catalog/Pages ${pagesTree} 0 R${metadata === null ? "" : `/Metadata ${metadata} 0 R`}>>`

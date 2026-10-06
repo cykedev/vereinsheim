@@ -4,8 +4,9 @@
  * Internes nach außen gelangt.
  */
 export class MeytonPdfError extends Error {
-  constructor(message: string) {
-    super(message)
+  /** `cause` behält den ursprünglichen Fehler fürs Server-Log; die Meldung bleibt zeigbar. */
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options)
     this.name = "MeytonPdfError"
   }
 }
