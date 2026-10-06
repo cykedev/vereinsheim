@@ -108,6 +108,15 @@ describe("Wertung aus Koordinaten", () => {
     expect(scoreFromCoordinates(LP_10M, -5678, 1234)).toEqual(expected)
   })
 
+  it("absurde Abstände enden als Fehlschuss statt in einer Endlosschleife", () => {
+    expect(scoreFromDistance(LP_10M, 1e300).miss).toBe(true)
+    expect(scoreFromDistance(LP_10M, Number.MAX_VALUE).miss).toBe(true)
+  })
+
+  it("lehnt Koordinaten jenseits sicherer Ganzzahlen ab", () => {
+    expect(() => scoreFromCoordinates(LP_10M, 1e200, 0)).toThrow(RangeError)
+  })
+
   it("lehnt ungültige Eingaben ab", () => {
     expect(() => scoreFromCoordinates(LP_10M, 0.5, 0)).toThrow(RangeError)
     expect(() => scoreFromDistance(LP_10M, -1)).toThrow(RangeError)

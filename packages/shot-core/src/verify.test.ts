@@ -66,6 +66,16 @@ describe("verifyCard", () => {
     })
   })
 
+  it("zwei von vier Abweichungen sind verdächtige Schüsse, zwei von drei ein falsches Bild", () => {
+    const placeholder = at(0, 0, 87)
+    expect(verifyCard(LP_10M, [PRINTOUT[0], PRINTOUT[1], placeholder, placeholder]).verdict).toBe(
+      "suspicious-shots"
+    )
+    expect(verifyCard(LP_10M, [PRINTOUT[0], placeholder, placeholder]).verdict).toBe(
+      "target-mismatch"
+    )
+  })
+
   it("ohne amtliche Werte oder Lage ist nichts prüfbar", () => {
     const unknown: ShotEvidence[] = [at(0, 3000, null), { officialDecimalTenths: 95 }]
     expect(unknown.map((shot) => checkShot(LP_10M, shot))).toEqual(["unchecked", "unchecked"])
@@ -76,6 +86,10 @@ describe("verifyCard", () => {
 describe("suggestTargets (SF-17)", () => {
   it("schlägt für den Ausdruck nur die Luftpistole vor", () => {
     expect(suggestTargets(PRINTOUT)).toEqual(["lp-10m"])
+  })
+
+  it("ein einzelner Platzhalter verhindert den Vorschlag nicht (SF-15 mit SF-17)", () => {
+    expect(suggestTargets([...PRINTOUT, at(0, 0, 87)])).toEqual(["lp-10m"])
   })
 
   it("schlägt für die Luftgewehr-Fixture nur das Luftgewehr vor", () => {
@@ -100,6 +114,46 @@ describe("checkShot an der Messauflösung", () => {
     })
     expect(checkShot(LP_10M, shot(4750, 104))).toBe("boundary")
     expect(checkShot(LP_10M, shot(4000, 105))).toBe("mismatch")
+  })
+
+  it("ein Innenzehner knapp jenseits der Grenze ist ein Grenzfall", () => {
+    const shot: ShotEvidence = {
+      distance: { um: 4750.4, resolutionUm: 1 },
+      officialDecimalTenths: 104,
+      officialInnerTen: true,
+    }
+    expect(checkShot(LP_10M, shot)).toBe("boundary")
+  })
+
+  it("Wert und Innenzehner müssen zusammen erreichbar sein", () => {
+    // Luftgewehr: 10,2 heißt immer Innenzehner; „10,2 ohne Stern“ gibt es nicht.
+    const shot: ShotEvidence = {
+      distance: { um: 2000, resolutionUm: 1 },
+      officialDecimalTenths: 102,
+      officialInnerTen: false,
+    }
+    expect(checkShot(LG_10M, shot)).toBe("mismatch")
+  })
+
+  it("misst zuerst über den Abstand aus dem Teiler, der genauer ist als die Lage", () => {
+    const shot: ShotEvidence = {
+      distance: { um: 3207, resolutionUm: 1 },
+      position: { xUm: 0, yUm: 3200, resolutionUm: 10 },
+      officialDecimalTenths: 105,
+    }
+    expect(checkShot(LP_10M, shot)).toBe("match")
+    expect(rescore(LP_10M, shot)?.decimalTenths).toBe(105)
+  })
+
+  it("Ganzring-Wertung: ohne Zehntel wird der amtliche Ring geprüft (SF-18)", () => {
+    const ring = (officialRing: number): ShotEvidence => ({
+      distance: { um: 16000, resolutionUm: 1 },
+      officialDecimalTenths: null,
+      officialRing,
+    })
+    expect(checkShot(LP_10M, ring(9))).toBe("match")
+    expect(checkShot(LP_10M, ring(8))).toBe("boundary")
+    expect(checkShot(LP_10M, ring(7))).toBe("mismatch")
   })
 })
 

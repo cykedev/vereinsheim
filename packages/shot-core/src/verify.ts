@@ -2,7 +2,9 @@
 //
 // Gemessen wird über den Abstand (aus dem Teiler, genauer) oder über die Lage (SSMDB2: 1/100 mm).
 // Weicht ein amtlicher Wert ab, ist er ein Grenzfall, wenn er innerhalb der Messauflösung erreichbar
-// ist: Die Wertung an den Rändern von [d − ε, d + ε] umschließt ihn. Sonst ist er eine Abweichung.
+// ist: Wert und Innenzehner treten zusammen an einem Rand von [d − ε, d + ε] auf, oder der Wert liegt
+// zwischen beiden Rändern. Sonst ist er eine Abweichung. Ohne Zehntel (Ganzring-Wertung) wird der
+// amtliche Ring geprüft (SF-18).
 //
 // Urteil über eine Scheibe: keine Abweichung → ok; mindestens drei geprüfte Schüsse und mehr als die
 // Hälfte weicht ab → das Scheibenbild passt nicht; sonst sind einzelne Schüsse verdächtig, etwa ein
@@ -18,6 +20,8 @@ export interface ShotEvidence {
   /** Abstand in µm, etwa aus dem Teiler (Teiler01: Auflösung 1 µm) */
   distance?: { um: number; resolutionUm: number } | null
   officialDecimalTenths: number | null
+  /** amtlicher ganzer Ring, wenn Meyton keine Zehntel liefert (Ganzring-Wertung) */
+  officialRing?: number | null
   officialInnerTen?: boolean | null
 }
 
@@ -48,35 +52,37 @@ function measure(target: TargetImage, shot: ShotEvidence): Measurement | null {
     return {
       score: scoreFromCoordinates(target, xUm, yUm),
       distanceUm: Math.hypot(xUm, yUm),
-      toleranceUm: resolutionUm * Math.SQRT1_2,
+      // Die Lage ist auf die Auflösung gerundet oder abgeschnitten; √2 · Auflösung deckt beides ab.
+      toleranceUm: resolutionUm * Math.SQRT2,
     }
   }
   return null
 }
 
 export function checkShot(target: TargetImage, shot: ShotEvidence): ShotCheck {
-  const official = shot.officialDecimalTenths
+  const officialTenths = shot.officialDecimalTenths
+  const official = officialTenths ?? shot.officialRing ?? null
   if (official === null) return "unchecked"
   const measured = measure(target, shot)
   if (!measured) return "unchecked"
 
   const officialInnerTen = shot.officialInnerTen ?? null
+  const value = (score: Score) => (officialTenths !== null ? score.decimalTenths : score.ring)
+  const fits = (score: Score) =>
+    value(score) === official && (officialInnerTen === null || score.innerTen === officialInnerTen)
+
   const { score, distanceUm, toleranceUm } = measured
-  if (
-    score.decimalTenths === official &&
-    (officialInnerTen === null || officialInnerTen === score.innerTen)
-  ) {
-    return "match"
-  }
+  if (fits(score)) return "match"
 
   const near = scoreFromDistance(target, Math.max(0, distanceUm - toleranceUm))
   const far = scoreFromDistance(target, distanceUm + toleranceUm)
-  const tenthsReachable = far.decimalTenths <= official && official <= near.decimalTenths
-  const innerTenReachable =
-    officialInnerTen === null ||
-    officialInnerTen === near.innerTen ||
-    officialInnerTen === far.innerTen
-  return tenthsReachable && innerTenReachable ? "boundary" : "mismatch"
+  const strictlyBetween =
+    value(far) < official &&
+    official < value(near) &&
+    (officialInnerTen === null ||
+      officialInnerTen === near.innerTen ||
+      officialInnerTen === far.innerTen)
+  return fits(near) || fits(far) || strictlyBetween ? "boundary" : "mismatch"
 }
 
 export function verifyCard(target: TargetImage, shots: readonly ShotEvidence[]): CardCheck {
@@ -93,14 +99,19 @@ export function verifyCard(target: TargetImage, shots: readonly ShotEvidence[]):
   return { verdict, checks, checked, mismatches }
 }
 
-/** Scheibenbilder, die alle prüfbaren amtlichen Werte erklären (SF-17); der Admin bestätigt. */
+/**
+ * Scheibenbilder, die die amtlichen Werte erklären, einzelne verdächtige Schüsse wie Platzhalter
+ * ausgenommen (SF-15), sortiert nach Abweichungen (SF-17). Der Admin bestätigt den Vorschlag.
+ */
 export function suggestTargets(
   shots: readonly ShotEvidence[],
   candidates: readonly TargetImage[] = Object.values(TARGETS)
 ): TargetId[] {
   return candidates
-    .filter((target) => verifyCard(target, shots).verdict === "ok")
-    .map((target) => target.id)
+    .map((target) => ({ target, check: verifyCard(target, shots) }))
+    .filter(({ check }) => check.verdict === "ok" || check.verdict === "suspicious-shots")
+    .sort((a, b) => a.check.mismatches - b.check.mismatches)
+    .map(({ target }) => target.id)
 }
 
 /** Neu-Wertung mit einem anderen Scheibenbild; das Ergebnis ist nicht amtlich (SF-16). */

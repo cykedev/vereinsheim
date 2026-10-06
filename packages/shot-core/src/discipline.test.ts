@@ -82,9 +82,27 @@ describe("resolveTarget", () => {
     expect(resolve(10100040, "Pistolet air 40")).toEqual({ targetId: null, source: "unknown" })
   })
 
+  it("Meyton-Disziplinen mit eigener Scheibe fallen nicht über den Namen auf die Standardscheibe", () => {
+    for (const [id, name] of [
+      [11062040, "LG Kyffhäuser 40"],
+      [11064040, "LG 12er 40"],
+      [17401115, "LG Löwenbräu Finale"],
+      [17402115, "LP Löwenbräu Finale"],
+      [10216040, "LP5 40"],
+    ] as const) {
+      expect(resolve(id, name)).toEqual({ targetId: null, source: "unknown" })
+    }
+  })
+
+  it("auch eine französische Luftpistole mit Liga-ähnlicher Nummer bleibt unbekannt", () => {
+    expect(resolve(10516140, "Pistolet air 5 40")).toEqual({ targetId: null, source: "unknown" })
+  })
+
   it("fällt auf den Namen zurück, wenn der Katalog die ID nicht kennt", () => {
     expect(resolve(7, "LP 40 alt")).toEqual({ targetId: "lp-10m", source: "name" })
     expect(resolve(18311030, "BdHDS LG Auflage")).toEqual({ targetId: "lg-10m", source: "name" })
+    expect(resolve(7, "Luftgewehrauflage")).toEqual({ targetId: "lg-10m", source: "name" })
+    expect(resolve(7, "Luftpistolen-Pokal")).toEqual({ targetId: "lp-10m", source: "name" })
     expect(resolve(7, "Luftpistole Vereinsmeister")).toEqual({
       targetId: "lp-10m",
       source: "name",
@@ -95,6 +113,8 @@ describe("resolveTarget", () => {
     expect(resolve(7, "LG/LP Mix")).toEqual({ targetId: null, source: "unknown" })
     expect(resolve(40180060, "KK 60 liegend")).toEqual({ targetId: null, source: "unknown" })
     expect(resolve(7, "Schach 10")).toEqual({ targetId: null, source: "unknown" })
+    // Andere Entfernung: kein Namens-Rückfall, auch wenn „LG“ im Namen steht.
+    expect(resolve(40110040, "LG 40")).toEqual({ targetId: null, source: "unknown" })
   })
 
   it("die Admin-Zuordnung gewinnt, Name ohne Rücksicht auf Groß- und Leerschreibung", () => {
@@ -120,6 +140,18 @@ describe("suggestFamily", () => {
     expect(
       suggestFamily({ targetId: "lp-10m", disciplineId: 10211030, name: "LP Auflage 30" })
     ).toBe("lp-auflage")
+  })
+
+  it("Auflage kommt auch allein aus der Regel, und Abkürzungen im Namen zählen", () => {
+    expect(
+      suggestFamily({ targetId: "lg-10m", disciplineId: 10111030, name: "Vereinsmeister" })
+    ).toBe("lg-auflage")
+    expect(suggestFamily({ targetId: "lg-10m", disciplineId: 7, name: "LG Aufl. 30" })).toBe(
+      "lg-auflage"
+    )
+    expect(suggestFamily({ targetId: "lg-10m", disciplineId: 7, name: "Luftgewehrauflage" })).toBe(
+      "lg-auflage"
+    )
   })
 
   it("Varianten wie „LP 40 alt“ zählen zur selben Familie wie „LP 40“", () => {

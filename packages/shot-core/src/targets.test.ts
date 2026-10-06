@@ -68,6 +68,21 @@ describe("defineTarget", () => {
     expect(() => defineTarget({ ...base, tenDiameterMm: 0.0005 })).toThrow(RangeError)
   })
 
+  it("lehnt Zehner und Kaliber ab, deren Hälfte kein ganzes µm ist", () => {
+    expect(() => defineTarget({ ...base, tenDiameterMm: 11.501 })).toThrow(RangeError)
+    expect(() => defineTarget({ ...base, caliberMm: 4.501 })).toThrow(RangeError)
+  })
+
+  it("lehnt einen Innenzehner ab, der über die Zehn hinausreicht", () => {
+    expect(() => defineTarget({ ...base, innerTen: { kind: "touch", diameterMm: 20 } })).toThrow(
+      RangeError
+    )
+  })
+
+  it("friert auch die Innenzehner-Regel ein", () => {
+    expect(Object.isFrozen(defineTarget(base).innerTen)).toBe(true)
+  })
+
   it("lehnt einen Spiegel ab, der auf keinem Ring endet", () => {
     expect(() => defineTarget({ ...base, blackDiameterMm: 31 })).toThrow(RangeError)
   })

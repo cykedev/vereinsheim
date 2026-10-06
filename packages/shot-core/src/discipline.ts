@@ -1,8 +1,9 @@
 // Meyton-Disziplinen: DisziplinID zerlegen, Scheibenbild auflösen, Familie vorschlagen.
 //
 // Die DisziplinID ist achtstellig: Entfernung (1 = 10 m), Regelnummer (Ziffern 2–5), Schusscode
-// (Ziffern 6–8). Der Schusscode ist nur ein Hinweis (SF-09): 000 heißt offen, über 100 nutzt Meyton
-// Varianten-Codes (220 Finale, 240 Liga Bayern, 130 „LP5 (S)“).
+// (Ziffern 6–8). Der Schusscode ist nur ein Hinweis (SF-09): 000 heißt offen. Über 100 stehen bei 10 m
+// Varianten-Codes (220 Finale, 240 Liga Bayern, 130 „LP5 (S)“), anderswo auch echte Zahlen (120 bei
+// ISSF 3x40 Gewehr); über 100 gibt es deshalb keinen verlässlichen Hinweis.
 //
 // Die Regelnummer allein ist NICHT eindeutig (SF-70): 0610 ist „LP Liga“ (10610040) und
 // „ISSF AR Men Final“ (10610220); 0100 ist die französische „Pistolet air“, obwohl DSB-Regeln 01.xx
@@ -11,7 +12,11 @@
 //
 // Quelle: Meyton, „ShootMaster II – Disziplin erstellen“ (Stand 06.12.2017), Abschnitte 19.3,
 // 19.4.5 und 19.5.1. Aufgenommen sind nur belegte 10-m-Disziplinen für Luftgewehr und Luftpistole,
-// als Regeln, nicht als Abschrift der Liste.
+// als Regeln, nicht als Abschrift der Liste. Bekannte 10-m-Disziplinen mit eigener Scheibe stehen mit
+// `target: null` im Katalog, damit der Name sie nicht auf die Standardscheibe zieht: Kyffhäuser (1062),
+// 12-kreisig (1064), Löwenbräu-Finale (7401, 7402) und LP5 (0216, DSB 2.16 mit Fallscheibe).
+// Offen (SP-0.6): ob „LG/LP Training Spiegel“ (19110000, 19210000) in Ringen wertet oder mit
+// Meytons Trainingsscheibe nur Treffer zählt; bis dahin gilt die Standardscheibe.
 
 import { TARGETS, type TargetId, type Weapon } from "./targets"
 
@@ -49,7 +54,8 @@ interface CatalogEntry {
   rules: readonly string[]
   /** Nur dieser Schusscode; ohne Angabe jeder. */
   shotCode?: number
-  target: TargetId
+  /** null: bekannte Disziplin mit eigener Scheibe, die die Bibliothek noch nicht kennt */
+  target: TargetId | null
   anschlag?: "auflage"
 }
 
@@ -59,6 +65,7 @@ function ruleRange(from: number, to: number): string[] {
 
 // Reihenfolge zählt: Die ISSF-Finale (0610 mit 220) stehen vor der allgemeinen Zeile mit 0610.
 const CATALOG: readonly CatalogEntry[] = [
+  { rules: ["1062", "1064", "7401", "7402", "0216"], target: null },
   { rules: ["0610", "0612", "0614", "0616"], shotCode: 220, target: "lg-10m" },
   { rules: ["0611", "0613", "0615", "0617"], shotCode: 220, target: "lp-10m" },
   {
@@ -84,7 +91,6 @@ const CATALOG: readonly CatalogEntry[] = [
   {
     rules: [
       "0210",
-      "0216",
       "0610",
       "0620",
       "0630",
@@ -140,9 +146,11 @@ function normalizeName(name: string): string {
 }
 
 // Wortgrenzen ohne \b, damit Umlaute nicht als Wortgrenze gelten.
-const LG_WORD = /(^|[^a-z0-9äöüß])(lg|luftgewehr)(?=$|[^a-z0-9äöüß])/
-const LP_WORD = /(^|[^a-z0-9äöüß])(lp|lp5|luftpistole)(?=$|[^a-z0-9äöüß])/
-const AUFLAGE_WORD = /(^|[^a-zäöüß])(auflage|aufgelegt)/
+// Kurzformen als ganzes Wort, Langformen auch als Wortanfang („Luftgewehrauflage“, „Luftpistolen-Pokal“).
+const LG_WORD = /(^|[^a-z0-9äöüß])(lg(?=$|[^a-z0-9äöüß])|luftgewehr)/
+const LP_WORD = /(^|[^a-z0-9äöüß])(lp5?(?=$|[^a-z0-9äöüß])|luftpistole)/
+// „Auflage“ auch in Zusammensetzungen, die Abkürzung „Aufl.“ als eigenes Wort.
+const AUFLAGE_WORD = /auflage|aufgelegt|(^|[^a-zäöüß])aufl(?=$|[^a-zäöüß])/
 
 function weaponFromName(name: string): Weapon | null {
   const lower = name.toLowerCase()
@@ -153,6 +161,7 @@ function weaponFromName(name: string): Weapon | null {
 }
 
 const TARGET_BY_WEAPON: Readonly<Record<Weapon, TargetId>> = { lg: "lg-10m", lp: "lp-10m" }
+const UNKNOWN = { targetId: null, source: "unknown" } as const
 
 export function resolveTarget(input: {
   disciplineId: number
@@ -167,13 +176,16 @@ export function resolveTarget(input: {
 
   const parsed = parseDisciplineId(input.disciplineId)
   const entry = catalogEntry(parsed)
-  if (entry) return { targetId: entry.target, source: "catalog" }
+  if (entry) {
+    // Eine bekannte Disziplin mit eigener Scheibe fällt nicht auf den Namen zurück.
+    return entry.target ? { targetId: entry.target, source: "catalog" } : UNKNOWN
+  }
 
   if (parsed.distanceCode === null || parsed.distanceCode === 1) {
     const weapon = weaponFromName(input.name)
     if (weapon) return { targetId: TARGET_BY_WEAPON[weapon], source: "name" }
   }
-  return { targetId: null, source: "unknown" }
+  return UNKNOWN
 }
 
 /** Vorschlag; der Admin bestätigt die Familie (SF-64, SF-65). */

@@ -69,6 +69,10 @@ export function defineTarget(spec: TargetSpec): TargetImage {
     spec.innerTen.kind === "touch" ? innerRadiusUm + halfCaliberUm : halfCaliberUm - innerRadiusUm,
     "Innenzehner-Grenze"
   )
+  const scoringRadiusUm = tenRadiusUm + halfCaliberUm
+  if (innerTenMaxDistanceUm > scoringRadiusUm) {
+    throw new RangeError("Der Innenzehner reicht über die Zehn hinaus")
+  }
 
   const blackDiameterUm = mmToUm(spec.blackDiameterMm)
   const blackIndex = ringRadiiUm.findIndex((radius) => radius * 2 === blackDiameterUm)
@@ -78,11 +82,12 @@ export function defineTarget(spec: TargetSpec): TargetImage {
 
   return Object.freeze({
     ...spec,
+    innerTen: Object.freeze({ ...spec.innerTen }),
     labelRings: Object.freeze([...spec.labelRings]),
     ringRadiiUm: Object.freeze(ringRadiiUm),
     ringWidthUm,
     caliberUm,
-    scoringRadiusUm: tenRadiusUm + halfCaliberUm,
+    scoringRadiusUm,
     innerTenMaxDistanceUm,
     blackFromRing: blackIndex + 1,
   })

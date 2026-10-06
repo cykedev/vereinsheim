@@ -37,9 +37,14 @@ function scoreWith(
   approxDistanceUm: number,
   within: (limitUm: number) => boolean
 ): Score {
-  let k = Math.min(
-    MAX_DECIMAL_TENTHS,
-    100 + Math.floor(((target.scoringRadiusUm - approxDistanceUm) * 10) / target.ringWidthUm)
+  // Startwert zwischen 9 (sicher Fehlschuss) und 10,9: Bei absurd großen Abständen bleibt k sonst
+  // jenseits von 2^53 stehen, und die Schleifen enden nie.
+  let k = Math.max(
+    9,
+    Math.min(
+      MAX_DECIMAL_TENTHS,
+      100 + Math.floor(((target.scoringRadiusUm - approxDistanceUm) * 10) / target.ringWidthUm)
+    )
   )
   // Der Gleitkomma-Startwert darf um eins danebenliegen; exakt nachziehen.
   while (k < MAX_DECIMAL_TENTHS && within(boundaryUm(target, k + 1))) k++
@@ -55,7 +60,7 @@ function scoreWith(
 
 /** Wertung aus der Lage in ganzen µm (SSMDB2: 1/100 mm × 10). */
 export function scoreFromCoordinates(target: TargetImage, xUm: number, yUm: number): Score {
-  if (!Number.isInteger(xUm) || !Number.isInteger(yUm)) {
+  if (!Number.isSafeInteger(xUm) || !Number.isSafeInteger(yUm)) {
     throw new RangeError(`Koordinaten in ganzen µm erwartet, nicht (${xUm}, ${yUm})`)
   }
   const squared = xUm * xUm + yUm * yUm
