@@ -88,7 +88,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Ziel:** QR-Zuordnung ohne Abhängigkeit vom Layout des Ausdrucks ([[adr-028]], Änderung vom 6. Oktober 2026).
 - **Umfang:** `packages/meyton-pdf`, zunächst klein: aus einem PDF (Bytes) die ID im Fuß (`ID:` und acht Hex-Zeichen, auf allen Seiten, dekodiert als vorzeichenbehaftete 32-Bit-Zahl) und die Erstellzeit aus den Metadaten (mit Zeitzone) lesen; DoS-Grenzen für Größe und Seiten. Test-PDFs synthetisch, ohne Namen, auch mit abgewandeltem Layout.
 - **Abnahme:** ID und Erstellzeit aus dem Beispiel-Format und aus abgewandelten PDFs (anderes Layout, mehrseitig, Probe-Ausdruck) gelesen; ohne ID oder Metadaten ein sauberes „nicht gefunden“; Sonderfälle SF-44, SF-46, SF-48.
-- **Hängt ab von:** nichts. **Status:** offen.
+- **Hängt ab von:** nichts. **Status:** erledigt (Oktober 2026, `packages/meyton-pdf`).
 
 ### SP-1.4 Brücke v1: lesen, puffern, hochladen
 - **Ziel:** Rohdaten kommen verlässlich aus dem Schützenhaus.

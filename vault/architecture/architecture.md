@@ -32,7 +32,10 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           + 4 shell/ + admin/ (Login-Rate-Limit-Oberfläche) + theme.css (Tailwind-Theme,
 │                           semantische Tokens success/warning/info/rank-1..3, App-Akzent via data-app).
 ├── packages/shot-core/     @vereinsheim/shot-core — Spiegel-Fachkern: Scheibenbilder, Wertung wie Meyton,
-│                           Disziplinen, Gegenprobe (SP-1.1, Oktober 2026); noch von keiner App genutzt.
+│                           Disziplinen, Gegenprobe (SP-1.1), Geometrie und Kennzahlen-Registry (SP-1.2);
+│                           noch von keiner App genutzt.
+├── packages/meyton-pdf/    @vereinsheim/meyton-pdf — liest aus Meyton-Ausdrucken (PDF) nur ID im Fuß und
+│                           Erstellzeit, ohne Layout-Wissen (SP-1.3, Oktober 2026); noch von keiner App genutzt.
 ├── docs/                   spec, decisions (ADRs), monorepo-plan, operations, plan,
 │                           architecture (dies), shared-conventions, consistency
 ├── .claude/                Harness: settings(+hooks), skills/, agents/, context/, knowledge-graph.json

@@ -3,7 +3,7 @@ id: meyton-printout
 type: concept
 title: "Meyton-Ergebnisausdruck und QR-Code"
 aliases: [meyton-ausdruck, meyton-qr, print-pdf, qrcode-meyton]
-keywords: [ausdruck, ergebnisausdruck, pdf, qr-code, qrcode.meyton.eu, 195.201.88.185, http, lighttpd, uuid, id im fuß, scheibenid, hex, vorzeichenbehaftet, qt 5.12.8, trefferkreis, trefferlage, zähler, innenzehner, beste teiler, weiteste, startnr, standnr]
+keywords: [ausdruck, ergebnisausdruck, pdf, qr-code, meyton-pdf, readprintout, creationdate, erstellzeit, druckzeit, xmp, pdf.js, unpdf, identity-h, ghostscript, qrcode.meyton.eu, 195.201.88.185, http, lighttpd, uuid, id im fuß, scheibenid, hex, vorzeichenbehaftet, qt 5.12.8, trefferkreis, trefferlage, zähler, innenzehner, beste teiler, weiteste, startnr, standnr]
 part_of: ["[[meyton]]"]
 relates_to: ["[[treffsicher-meyton-import]]", "[[meyton-pdf-format-change]]", "[[spiegel-assignment]]"]
 ---
@@ -44,6 +44,27 @@ Meral-IT hat für den XML-Export festgestellt, dass dessen hexadezimale ID die S
 SELECT CAST(CONV('ff914420', 16, 10) AS SIGNED) - 4294967296 AS scheiben_id;  -- nur bei Werten ab 80000000 abziehen
 SELECT ScheibenID, StandNr, Disziplin, TotalRing, TotalRing01 FROM Scheiben WHERE ScheibenID = -7257056;
 ```
+
+## Lesen in Spiegel
+
+`packages/meyton-pdf` (SP-1.3, Oktober 2026) liest aus dem PDF nur die ID und die Erstellzeit, ohne
+Layout-Wissen ([[adr-028]]). Befund an drei echten PDFs (zwei Treffsicher-Fixtures, der Ausdruck vom
+2. Oktober; nur lokal geprüft):
+
+| PDF | Fußzeile, wie pdf.js sie liefert | Info `CreationDate` | XMP `xmp:CreateDate` |
+|---|---|---|---|
+| Qt 5.12.8 | ein Textstück `ID: 46a13c20 - Seite: 1` | `D:20260828181127+02'00'` | keins |
+| Ghostscript 9.55 | ein Textstück `ID: ed850812 − Seite: 1` (echtes Minus) | `D:20260811182954+02'00'` | `2026-08-11T18:29:54+02:00` |
+| Ausdruck 2. Oktober (Qt) | ein Textstück `ID: ff914420 - Seite: 1` | `D:20261002195212+02'00'` | keins |
+
+- **ID:** `ID:` ohne Buchstabe davor (`DisziplinID:` trifft nicht), genau acht Hex-Zeichen, danach
+  kein Buchstabe und keine Ziffer; auf allen Seiten gesucht (SF-44). Leerraum wird vorher
+  zusammengefasst, weil pdf.js einzeln gesetzte Glyphen mit Lücken als eigene Stücke liefert.
+  Ergebnis `found` (mit Seiten), `missing` oder `conflict` bei verschiedenen IDs, nie geraten.
+- **Erstellzeit:** `CreationDate` aus dem Info-Dict, sonst `xmp:CreateDate`; `ModDate` zählt nicht (beim
+  Qt-Fixture später als die Erstellung). Ohne Zeitzone gibt es keinen absoluten Zeitpunkt.
+- **Grenzen:** 1 MB, 10 Seiten, 20 000 Textstücke, 100 000 Zeichen, 5 s, während des Lesens geprüft
+  (SF-48). pdf.js bekommt eine Kopie des Puffers, weil es ihn leert.
 
 ## Datenschutz
 
