@@ -121,6 +121,31 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     expect(split?.reliable).toBe(false)
   })
 
+  it("Zehntel gewonnen, aber ein Ring verloren: nicht belastbar", () => {
+    // LP, 14 Schuss, Lage echt; zentriert +3,0 in Zehnteln, aber −1 in ganzen Ringen
+    const mixed = [
+      [10820, 8613],
+      [2935, -2276],
+      [4222, -5660],
+      [2891, -9019],
+      [2446, -6638],
+      [4618, 3801],
+      [4258, 1264],
+      [-5192, 470],
+      [5715, 7656],
+      [3937, 12561],
+      [12202, 4921],
+      [2192, 7184],
+      [4187, 4943],
+      [5073, 4707],
+    ].map(([x, y], i) => at(x, y, i))
+    expect(mpiConfidence(mixed)?.real).toBe(true)
+    const split = ringLossSplit(mixed, LP_10M)
+    expect(split?.positionLoss.decimal).toBeCloseTo(3, 9)
+    expect(split?.positionLoss.rings).toBe(-1)
+    expect(split?.reliable).toBe(false)
+  })
+
   it("schiefe Gruppe: Verschieben um den Schwerpunkt kostet Zehntel, dann nicht belastbar", () => {
     // LP: 20 Schuss in der Mitte (10,9), 10 bei 9 mm rechts (9,8); Schwerpunkt (3 | 0) mm, echt.
     // Zentriert: 20 × 10,6 und 10 × 10,2 = 314,0 statt 316,0; in ganzen Ringen 300 statt 290.
@@ -161,6 +186,7 @@ describe("Lageanteil, Richtungsuhr und Drift (L5, L6, L8)", () => {
     expect(directionClock(SPREAD).reliable).toBe(false)
     const thirty = Array.from({ length: 30 }, (_, i) => at(1000 + i, 500 - i, i))
     expect(directionClock(thirty).reliable).toBe(true)
+    expect(directionClock(thirty.slice(0, 29)).reliable).toBe(false)
   })
 
   it("Drift: Sprünge und von-Neumann-Verhältnis in Abgabefolge", () => {

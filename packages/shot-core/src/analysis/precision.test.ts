@@ -87,6 +87,19 @@ describe("Höhe, Breite und Form (P7, P8, P9)", () => {
     expect(shape?.showAngle).toBe(false)
   })
 
+  it("die Mauchly-Grenze ist 0,05^(2/(n − 2)), nicht strenger und nicht weiter", () => {
+    const ellipse = (a: number, b: number) =>
+      Array.from({ length: 12 }, (_, k) => ({
+        ...SPREAD[0],
+        xUm: Math.round(a * Math.cos((k * Math.PI) / 6)),
+        yUm: Math.round(b * Math.sin((k * Math.PI) / 6)),
+      }))
+    // W = 0,565 knapp über der Grenze 0,5493 (mit 2/(n − 1) läge sie bei 0,5806)
+    expect(groupShape(ellipse(2208, 1000))?.elongated).toBe(false)
+    // W = 0,449 unter der Grenze (mit α = 0,01 läge sie bei 0,398)
+    expect(groupShape(ellipse(2600, 1000))?.elongated).toBe(true)
+  })
+
   it("auf einer Linie maximal gestreckt; ohne Ausdehnung keine Form", () => {
     const line = Array.from({ length: 10 }, (_, i) => ({
       ...SPREAD[0],
@@ -132,6 +145,22 @@ describe("Ausreißer (V6, V7)", () => {
     const result = outliers(withTest(3300))
     expect(result?.flagged.map((f) => f.number)).toEqual([9])
     expect(result?.flagged[0].shot.xUm).toBe(3300)
+  })
+
+  it("die Grenze nutzt 2(n − 2) Freiheitsgrade", () => {
+    // 3,1 mm: T 7,48 unter der Grenze 7,70; mit 2(n − 1) Freiheitsgraden läge sie bei 7,31
+    expect(outliers(withTest(3100))?.flagged).toEqual([])
+  })
+
+  it("sind die übrigen alle an einer Stelle, ist jeder Abstand auffällig", () => {
+    const same = Array.from({ length: 4 }, (_, i) => ({
+      ...MATCH[0],
+      xUm: 0,
+      yUm: 0,
+      firedAtMs: i * 1000,
+    }))
+    const card = [...same, { ...MATCH[0], xUm: 1000, yUm: 0, firedAtMs: 9000 }]
+    expect(outliers(card)?.flagged.map((f) => f.number)).toEqual([5])
   })
 
   it("die Nummer zählt alle Schüsse der Art, auch Platzhalter ohne Lage", () => {
