@@ -87,6 +87,30 @@ describe("Höhe, Breite und Form (P7, P8, P9)", () => {
     expect(shape?.showAngle).toBe(false)
   })
 
+  it("nennt das a/b, ab dem die Gruppe bei dieser Schusszahl als gestreckt gilt", () => {
+    // W(r) = 4r²/(1 + r²)² = 0,05^(2/(n − 2)) nach r aufgelöst: n = 12 → 2,2551, n = 40 → 1,4953
+    const ring = (n: number, a: number, b: number) =>
+      Array.from({ length: n }, (_, k) => ({
+        ...SPREAD[0],
+        xUm: Math.round(a * Math.cos((2 * k * Math.PI) / n)),
+        yUm: Math.round(b * Math.sin((2 * k * Math.PI) / n)),
+      }))
+    expect(groupShape(ring(12, 1500, 1000))?.ratioLimit).toBeCloseTo(2.255133, 5)
+    expect(groupShape(ring(40, 1500, 1000))?.ratioLimit).toBeCloseTo(1.495281, 5)
+    // gestreckt heißt genau: a/b über dieser Grenze
+    for (const [n, a] of [
+      [12, 2300],
+      [12, 2200],
+      [40, 1520],
+      [40, 1470],
+    ]) {
+      const shape = groupShape(ring(n, a, 1000))
+      expect(shape?.elongated, `${n} ${a}`).toBe(
+        (shape?.ratio as number) > (shape?.ratioLimit as number)
+      )
+    }
+  })
+
   it("die Mauchly-Grenze ist 0,05^(2/(n − 2)), nicht strenger und nicht weiter", () => {
     const ellipse = (a: number, b: number) =>
       Array.from({ length: 12 }, (_, k) => ({

@@ -79,6 +79,12 @@ export interface GroupShape {
   sphericity: number
   /** mit 95 % gestreckt, nicht nur zufällig unrund */
   elongated: boolean
+  /**
+   * a/b, ab dem die Gruppe bei dieser Schusszahl als gestreckt gilt (die Mauchly-Grenze nach a/b
+   * aufgelöst): bei 12 Schuss 2,26, bei 40 Schuss 1,50. Eine runde Gruppe sieht zufällig gestreckt aus,
+   * bei 40 Schuss im Median a/b 1,2; erst über viele Schüsse wird eine leichte Streckung sichtbar.
+   */
+  ratioLimit: number
   showAngle: boolean
 }
 
@@ -97,13 +103,17 @@ export function groupShape(shots: readonly MetricShot[]): GroupShape | null {
   const a2 = ellipse.majorUm ** 2
   const b2 = ellipse.minorUm ** 2
   const sphericity = (4 * a2 * b2) / (a2 + b2) ** 2
-  const elongated = sphericity < SHAPE_ALPHA ** (2 / (n - 2))
+  const limit = SHAPE_ALPHA ** (2 / (n - 2))
+  const elongated = sphericity < limit
+  // W(r) = 4r²/(1 + r²)² fällt für r ≥ 1; W(r) = limit nach r² aufgelöst
+  const ratioLimit = Math.sqrt((2 - limit + 2 * Math.sqrt(1 - limit)) / limit)
   return {
     n,
     ...ellipse,
     ratio: ellipse.minorUm > 0 ? ellipse.majorUm / ellipse.minorUm : Number.POSITIVE_INFINITY,
     sphericity,
     elongated,
+    ratioLimit,
     showAngle: elongated && n >= SHAPE_MIN_SHOTS,
   }
 }
