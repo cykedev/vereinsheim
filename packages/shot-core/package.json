@@ -8,7 +8,8 @@
     "./targets": "./src/targets.ts",
     "./scoring": "./src/scoring.ts",
     "./discipline": "./src/discipline.ts",
-    "./verify": "./src/verify.ts"
+    "./verify": "./src/verify.ts",
+    "./geometry": "./src/geometry.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
