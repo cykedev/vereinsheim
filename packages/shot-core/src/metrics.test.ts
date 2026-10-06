@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   computeMetric,
   defineMetric,
+  selectShots,
   eligibleShots,
   inScoring,
   inShotOrder,
@@ -11,62 +12,8 @@ import {
   type MetricDefinition,
   type MetricShot,
 } from "./metrics"
+import { CARD, MATCH, PROBE, SPREAD } from "./__fixtures__/cards"
 
-// Die sechs Wertungsschüsse vom Ausdruck des 2. Oktober 2026, auf die Achsen gelegt wie in der
-// Spielwiese, im Abstand von 50 s; davor fünf Probeschüsse um (1000, −1000) µm.
-const MATCH: MetricShot[] = (
-  [
-    [0, 3318, 105, true],
-    [-3964, 0, 105, true],
-    [5474, 0, 103, false],
-    [0, -26560, 76, false],
-    [33690, 0, 67, false],
-    [-38310, 0, 62, false],
-  ] as const
-).map(([xUm, yUm, decimalTenths, innerTen], i) => ({
-  xUm,
-  yUm,
-  decimalTenths,
-  ring: Math.floor(decimalTenths / 10),
-  innerTen,
-  firedAtMs: 300_000 + i * 50_000,
-  kind: "match",
-  series: 1,
-}))
-
-const PROBE: MetricShot[] = (
-  [
-    [1000, -1000],
-    [1200, -900],
-    [900, -1100],
-    [1100, -1000],
-    [1000, -1200],
-  ] as const
-).map(([xUm, yUm], i) => ({
-  xUm,
-  yUm,
-  decimalTenths: 104,
-  ring: 10,
-  innerTen: false,
-  firedAtMs: i * 50_000,
-  kind: "probe",
-  series: null,
-}))
-
-// Sechs Schuss um (0 | 0), in x weiter gestreut als in y, gerade Zahl: Abstände 1, 1, 2, 3, 3, 4 mm
-// (Median 2,5, Mittel 2,33); der Streukreis spannt sich über (4 | 0) und (−3 | 0), also 7 mm.
-const SPREAD: MetricShot[] = (
-  [
-    [4000, 0],
-    [-1000, 0],
-    [-3000, 0],
-    [0, 3000],
-    [0, -1000],
-    [0, -2000],
-  ] as const
-).map(([xUm, yUm], i) => ({ ...MATCH[0], xUm, yUm, firedAtMs: i * 10_000 }))
-
-const CARD = [...PROBE, ...MATCH]
 const def = (key: string) => {
   const metric = metricByKey(key)
   if (!metric) throw new Error(`Kennzahl ${key} fehlt`)
@@ -362,6 +309,36 @@ describe("Tempo, Reihenfolge und Probe", () => {
 
 // Kennzahlen, die in beiden Wertungen gleich sind: Ein Zehner bleibt ein Zehner.
 const SCORING_FREE = ["result.tens", "result.innerTens"]
+
+describe("selectShots", () => {
+  it("wählt nach denselben Regeln wie die Registry", () => {
+    const miss: MetricShot = { ...PROBE[0], xUm: 60_000, yUm: 60_000, flags: ["fehlschuss"] }
+    const placeholder: MetricShot = {
+      ...MATCH[0],
+      xUm: 0,
+      yUm: 0,
+      distanceUm: 0,
+      firedAtMs: 10_000_000,
+      flags: ["verdaechtig"],
+    }
+    const card = [...CARD, miss, placeholder]
+    for (const metric of METRICS) {
+      expect(
+        selectShots(card, {
+          kinds: metric.appliesTo,
+          need: metric.needs,
+          excludeMisses: metric.excludeMisses,
+        }),
+        metric.key
+      ).toEqual(eligibleShots(metric, card))
+    }
+  })
+
+  it("ohne Angabe der Art zählen Probe und Wertung", () => {
+    expect(selectShots(CARD, { need: "position" })).toHaveLength(CARD.length)
+    expect(selectShots(CARD, { need: "position", kinds: ["match"] })).toHaveLength(MATCH.length)
+  })
+})
 
 describe("Registry", () => {
   it("Schlüssel sind eindeutig, Versionen ab 1, alles auffindbar und eingefroren", () => {

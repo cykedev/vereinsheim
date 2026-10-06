@@ -149,12 +149,37 @@ function satisfies(shot: MetricShot, need: MetricNeed): boolean {
 }
 
 /** Zählt der Schuss für die Kennzahl, ob ihm eine Angabe fehlt oder nicht? */
-function counts(metric: MetricDefinition, shot: MetricShot): boolean {
-  if (!metric.appliesTo.includes(shot.kind)) return false
+export interface ShotFilter {
+  /** welche Schüsse; ohne Angabe Probe und Wertung */
+  kinds?: readonly ShotKind[]
+  /** welche Angabe gültig sein muss */
+  need: MetricNeed
+  /** Fehlschüsse weglassen (robuste Maße, SF-14) */
+  excludeMisses?: boolean
+}
+
+/** Zählt der Schuss für die Auswahl, ob ihm eine Angabe fehlt oder nicht? */
+function allowed(shot: MetricShot, filter: ShotFilter): boolean {
+  if (!(filter.kinds ?? BOTH).includes(shot.kind)) return false
   const flags = shot.flags ?? []
-  const valueOnly = metric.needs === "ring" || metric.needs === "decimal"
+  const valueOnly = filter.need === "ring" || filter.need === "decimal"
   if (!valueOnly && flags.includes(FLAG_SUSPICIOUS)) return false
-  return !(metric.excludeMisses && flags.includes(FLAG_MISS))
+  return !(filter.excludeMisses && flags.includes(FLAG_MISS))
+}
+
+const counts = (metric: MetricDefinition, shot: MetricShot) =>
+  allowed(shot, {
+    kinds: metric.appliesTo,
+    need: metric.needs,
+    excludeMisses: metric.excludeMisses,
+  })
+
+/**
+ * Schüsse nach denselben Regeln wie die Registry: Art, verdächtige nur mit ihrem Wert (SF-15),
+ * Fehlschüsse auf Wunsch weg (SF-14), gültige Angabe. Für Auswertungen, die keine Kennzahl sind.
+ */
+export function selectShots(shots: readonly MetricShot[], filter: ShotFilter): MetricShot[] {
+  return shots.filter((shot) => allowed(shot, filter) && satisfies(shot, filter.need))
 }
 
 /** Zählende Schüsse und die davon, die auch die nötige Angabe haben */
@@ -212,7 +237,8 @@ const sumTenths = (shots: readonly MetricShot[]) =>
   shots.reduce((sum, shot) => sum + (shot.decimalTenths as number), 0)
 const sumRings = (shots: readonly MetricShot[]) =>
   shots.reduce((sum, shot) => sum + (shot.ring as number), 0)
-const distanceOf = (shot: MetricShot) =>
+/** Abstand zur Mitte in µm: der gemessene, wenn gültig, sonst aus der Lage */
+export const shotDistanceUm = (shot: MetricShot) =>
   hasDistance(shot)
     ? (shot.distanceUm as number)
     : Math.hypot(shot.xUm as number, shot.yUm as number)
@@ -357,7 +383,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     excludeMisses: false,
     needs: "distance",
     onMissing: "drop",
-    compute: (shots) => teilerFromDistanceUm(Math.min(...shots.map(distanceOf))),
+    compute: (shots) => teilerFromDistanceUm(Math.min(...shots.map(shotDistanceUm))),
   }),
   defineMetric({
     key: "group.mpiDistance",
