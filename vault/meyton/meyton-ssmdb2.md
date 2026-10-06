@@ -5,7 +5,7 @@ title: "Meyton SSMDB2 — die Scheibenablage in MySQL"
 aliases: [ssmdb2, scheibenablage, small shootmaster database, meyton-db]
 keywords: [ssmdb2, mysql, scheibenablage, scheiben, serien, treffer, scheibenid, stellung, probe, disziplinid, regelnummer, wertungsmodus, verdeckte wertung, ring01, teiler01, teiler001, zeitstempel, millisekunden, sportpassid, starterliste, status, rwk, liga, kontrollzentrum, odbc, read only, erkundung, index, explain, show create table, timestamp, sitzungs-zeitzone, nur probe, versuche am stand, sportpass überlauf]
 part_of: ["[[meyton]]"]
-documented_in: ["[[src-meyton-ssmdb2-handbuch]]", "[[src-meyton-live-display]]", "[[src-meyton-recherche-2026-10]]"]
+documented_in: ["[[src-meyton-ssmdb2-handbuch]]", "[[src-meyton-live-display]]", "[[src-meyton-recherche-2026-10]]", "[[src-meyton-disziplin-erstellen]]"]
 relates_to: ["[[spiegel-bridge]]", "[[spiegel-ingest-pipeline]]"]
 ---
 
@@ -31,6 +31,8 @@ Laut Community-Projekt gibt es zusätzlich eine Tabelle `Version` mit der Schema
 ## DisziplinID
 
 Achtstellig: 1. Ziffer Entfernung (1 = 10 m, 2 = 15 m, 3 = 25 m, 4 = 50 m, 5 = 100 m, 6 = 300 m, 7 = sonstige), Ziffern 2–5 Regelnummer, letzte drei Ziffern Zahl der Wertungsschüsse. Beispiel `40180060` = 50 m, Regel 1.80 (KK liegend), 60 Schuss. Nur bei DSB-Disziplinen sind die Ziffern 2–5 die DSB-Regel; Training, Liga und ISSF nutzen Meyton-eigene Nummern ([[spiegel-target-library]]).
+
+Meytons Standardlisten stehen im Handbuch „Disziplin erstellen“ ([[src-meyton-disziplin-erstellen]]). Daraus: Die Regelnummer ist nicht eindeutig (`10610040` „LP Liga“ gegen `10610220` „ISSF AR Men Final“, `10100040` französische Luftpistole), die letzten drei Ziffern sind über 100 Varianten-Codes (220 Finale, 240 Liga Bayern) und bei `000` offen („LG/LP Training Spiegel“). Vereinseigene Disziplinen haben teils kurze, nicht achtstellige IDs.
 
 ## Status und Wertungsmodus
 

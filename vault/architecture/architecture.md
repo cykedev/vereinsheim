@@ -31,6 +31,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── packages/ui/            @vereinsheim/ui — geteilte UI-Schicht: ui-Primitives (inkl. table + skeleton)
 │                           + 4 shell/ + admin/ (Login-Rate-Limit-Oberfläche) + theme.css (Tailwind-Theme,
 │                           semantische Tokens success/warning/info/rank-1..3, App-Akzent via data-app).
+├── packages/shot-core/     @vereinsheim/shot-core — Spiegel-Fachkern: Scheibenbilder, Wertung wie Meyton,
+│                           Disziplinen, Gegenprobe (SP-1.1, Oktober 2026); noch von keiner App genutzt.
 ├── docs/                   spec, decisions (ADRs), monorepo-plan, operations, plan,
 │                           architecture (dies), shared-conventions, consistency
 ├── .claude/                Harness: settings(+hooks), skills/, agents/, context/, knowledge-graph.json

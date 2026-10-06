@@ -23,6 +23,7 @@ relates_to: ["[[spiegel]]"]
 - [[src-meyton-ssmdb2-handbuch]] — Meyton-Handbuch zur Scheibenablage, Datenbankversion 9.
 - [[src-meyton-live-display]] — technische Referenz des Projekts Meyton-Live-Display (Apache-2.0).
 - [[src-meyton-recherche-2026-10]] — Recherche in Meyton-Support, Forum, Release-Notizen, DSB-Sportordnung und ISSF-Regeln.
+- [[src-meyton-disziplin-erstellen]] — Meyton-Anleitung „Disziplin erstellen“: Aufbau der DisziplinID, Standardlisten, Kollisionen der Regelnummern.
 
 ## Wer das Wissen nutzt
 

@@ -3,13 +3,13 @@ id: spiegel-target-library
 type: concept
 title: "Spiegel — Scheibenbilder, Disziplinen und Wertung"
 aliases: [scheibenbilder, scheiben-setups, target-library, wertungsformel]
-keywords: [scheibenbild, scheibe, ringdurchmesser, ringabstand, spiegel, innenzehner, kaliber, messlehre, zehntelwertung, abschneiden, teiler, disziplinid, regelnummer, dsb-sportordnung, issf, luftgewehr, luftpistole, kk, zimmerstutzen, 25m pistole, duell, schnellfeuer, gegenprobe, preisscheibe, disziplin-familie, neu werten, falsche disziplin, scheibenbild erkennen, offene schusszahl]
+keywords: [scheibenbild, scheibe, ringdurchmesser, ringabstand, spiegel, innenzehner, kaliber, messlehre, zehntelwertung, abschneiden, teiler, disziplinid, regelnummer, dsb-sportordnung, issf, luftgewehr, luftpistole, kk, zimmerstutzen, 25m pistole, duell, schnellfeuer, gegenprobe, preisscheibe, shot-core, katalog, regelkollision, schusscode, disziplin-familie, neu werten, falsche disziplin, scheibenbild erkennen, offene schusszahl]
 part_of: ["[[spiegel]]"]
-documented_in: ["[[src-meyton-recherche-2026-10]]", "[[src-meyton-live-display]]"]
+documented_in: ["[[src-meyton-recherche-2026-10]]", "[[src-meyton-live-display]]", "[[src-meyton-disziplin-erstellen]]"]
 relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-data-model]]", "[[spiegel-edge-cases]]"]
 ---
 
-**TL;DR** Jede Disziplin braucht ein Scheibenbild als reine Daten (Ringe, Spiegel, Innenzehner, Ringabstand, Kaliber). Die Kette lautet DisziplinID → Regelnummer → Disziplin → Scheibenbild je Stellung. Mit Scheibenbild und Kaliber rechnet Spiegel jeden Zehntelwert aus x/y nach; am echten Meyton-Ausdruck stimmen alle geprüften Werte.
+**TL;DR** Jede Disziplin braucht ein Scheibenbild als reine Daten (Ringe, Spiegel, Innenzehner, Ringabstand, Kaliber). Die Kette lautet DisziplinID (Regelnummer und Schusscode) → Scheibenbild, mit Admin-Zuordnung vorneweg und dem Namen als Rückfall. Mit Scheibenbild und Kaliber rechnet Spiegel jeden Zehntelwert aus x/y nach; am echten Meyton-Ausdruck stimmen alle geprüften Werte.
 
 ## Bibliothek für Version 1
 
@@ -46,12 +46,16 @@ Gezeichnet wird daraus eine SVG-Scheibe (Papier, Spiegel, Ringlinien, Ringzahlen
 
 ## Von der DisziplinID zum Scheibenbild
 
-- Die achtstellige DisziplinID kodiert Entfernung, Regelnummer und Schusszahl ([[meyton-ssmdb2]]). Beispiele: LG 40 = `10110040`, LP 40 = `10210040`, KK 60 liegend = `40180060`, ZS 30 = `20130030`.
-- Die Ziffern 2–5 sind nur bei DSB-Disziplinen die DSB-Regel. Training, Liga und ISSF nutzen Meyton-eigene Nummern (zum Beispiel `11010010` „LG Probe + 10 Wertung“, `10510040` „LG Liga“). Der Regelkatalog kennt beide Arten.
-- **Je Stellung ein Scheibenbild:** bei der 25-m-Pistole ist Stellung 1 die Präzisions-, Stellung 2 die Duellscheibe.
-- Die SSMDB2 enthält keine Geometrie; auch Meyton rät zu einer eigenen Tabelle. Für eigene Disziplin-Varianten des Vereins (zum Beispiel „LP 40 alt“) greift ein Rückfall: Entfernung 10 m plus Namensanfang LG oder LP. Für alles andere schlägt Spiegel das Scheibenbild per Gegenprobe vor: Es nimmt das Bild aus der Bibliothek, das alle amtlichen Zehntelwerte reproduziert, und ein Admin bestätigt. Bis dahin zeigt Spiegel die Treffer auf einem neutralen Raster mit dem Merkmal `disziplin-unbekannt` (SF-17).
-- Die Schusszahl in der DisziplinID ist nur ein Hinweis, nie die Bedingung für „fertig“; `000` steht vermutlich für offenes Training (SF-09).
-- **Familien:** Jede Disziplin gehört zu einer Familie, in der Verläufe zusammen laufen (LG oder LP, Freihand oder Auflage). Spiegel schlägt sie aus dem Namen vor, der Admin bestätigt (SF-64).
+- Die achtstellige DisziplinID kodiert Entfernung, Regelnummer und Schusscode ([[meyton-ssmdb2]]). Beispiele: LG 40 = `10110040`, LP 40 = `10210040`, „LP 40 alt“ = `19210040`, KK 60 liegend = `40180060`. Meytons Standardlisten stehen im Handbuch „Disziplin erstellen“ ([[src-meyton-disziplin-erstellen]]).
+- **Die Regelnummer allein ist nicht eindeutig (SF-70):** `10610040` ist „LP Liga“, `10610220` „ISSF AR Men Final“; `10100040` ist die französische Luftpistole, obwohl DSB-Regeln 01.xx Gewehre sind. Spiegel prüft deshalb Regelnummer **und** Schusscode und nie Regelbereiche allein.
+- **Auflösung in fester Reihenfolge:**
+  1. Admin-Zuordnung für DisziplinID und Name der Anlage.
+  2. Katalog für 10 m, Luftgewehr: 0110, 0111 (Auflage), 0120, 0193–0195, 0510–0550 (Liga), 0710–0713, 1009–1018 (Training), 9110 (alt); Luftpistole: 0210, 0211 (Auflage), 0216, 0610–0650 (Liga), 0810–0813, 1109–1117, 9210; ISSF-Finale 0610–0617 nur mit Schusscode 220 (gerade Luftgewehr, ungerade Luftpistole).
+  3. Name: ganzes Wort LG oder Luftgewehr bzw. LP, LP5 oder Luftpistole; kommt beides oder keines vor, bleibt es offen. Kein Namens-Rückfall, wenn die ID eine andere Entfernung nennt.
+  4. Unbekannt: Spiegel schlägt das Scheibenbild vor, das alle amtlichen Zehntelwerte erklärt, und ein Admin bestätigt. Bis dahin zeigt Spiegel die Treffer auf einem neutralen Raster mit dem Merkmal `disziplin-unbekannt` (SF-17).
+- **Je Stellung ein Scheibenbild:** bei der 25-m-Pistole ist Stellung 1 die Präzisions-, Stellung 2 die Duellscheibe. Für 10 m gilt dasselbe Bild für alle Stellungen.
+- **Der Schusscode ist nur ein Hinweis (SF-09):** `000` heißt offen (Meytons „LG/LP Training Spiegel“), `001`–`100` sind geplante Wertungsschüsse, über 100 nutzt Meyton Varianten-Codes (220 Finale, 240 Liga Bayern). Gegen die Schusszahl zählen nur Wertungsschüsse.
+- **Familien:** Jede Disziplin gehört zu einer Familie, in der Verläufe zusammen laufen (LG oder LP, Freihand oder Auflage). Auflage kommt aus der Regel (0111, 0211) oder dem Namen; Spiegel schlägt vor, der Admin bestätigt (SF-64).
 - Ob ganz oder zehntel gewertet wird, steht je Treffer im Feld `Wertung` (seit ShootMaster 5.2). Zehntel rechnet Spiegel immer, auch bei Ganzring-Disziplinen; Ringe und Zehntel sind getrennte Kennzahlen (SF-18).
 
 ## Wertung
@@ -80,3 +84,7 @@ Spiegel rechnet den Zehntelwert jedes Schusses aus x/y nach. Weicht er vom Meyto
 | 27 | 3831 | 6,211 | 6,2 ✓ |
 
 Diese Werte sind die ersten Testfälle für `packages/shot-core` (SP-1.1).
+
+## Umsetzung
+
+`packages/shot-core` (SP-1.1, Oktober 2026) setzt diese Note um: Scheibenbilder über `defineTarget` in ganzen µm, die Wertung aus Lage oder Abstand, die Auflösung der DisziplinID und die Gegenprobe. Gerechnet wird exakt und ganzzahlig: Die Zehntelgrenzen b(k) = R − (k − 100) · W ÷ 10 liegen auf ganzen µm. Die naive Gleitkomma-Formel `floor((11 − d ÷ W) · 10)` liegt an neun Grenzen je Scheibe einen Zehntel zu tief, etwa bei d = 63,2 mm auf der Luftpistole. Die Gegenprobe zählt einen Nachbarwert als Grenzfall, wenn er innerhalb der Messauflösung erreichbar ist (Lage 1/100 mm, Teiler 1/10 davon).

@@ -3,7 +3,7 @@ id: spiegel-edge-cases
 type: concept
 title: "Spiegel — Sonderfälle und Fallstricke"
 aliases: [sonderfälle, edge-cases, fallstricke, sonderfall-katalog, testmatrix]
-keywords: [sonderfall, edge case, fallstrick, nur probe, probeschüsse, lange probe, wertung vergessen, schusszahl, abgebrochen, unvollständig, zustand, fehlschuss, platzhalter, handeintrag, falsche disziplin, verdeckte wertung, modus 0, querschuss, korrektur, umnummerierung, fingerabdruck, massenlöschung, reset, epoche, grabstein, zeitstempel, millisekunden, uhr, sportpass, überlauf, nicht meine, zwischenstand, vorschau, ssrf, polling, index, lesesperre, myisam, stromausfall, netztrennung, gäste-lan, r50, visier, disziplin-familie, rekorde, zeilenversionen, testdaten, schießprotokoll, merkmale]
+keywords: [sonderfall, edge case, regelnummer, regelkollision, fallstrick, nur probe, probeschüsse, lange probe, wertung vergessen, schusszahl, abgebrochen, unvollständig, zustand, fehlschuss, platzhalter, handeintrag, falsche disziplin, verdeckte wertung, modus 0, querschuss, korrektur, umnummerierung, fingerabdruck, massenlöschung, reset, epoche, grabstein, zeitstempel, millisekunden, uhr, sportpass, überlauf, nicht meine, zwischenstand, vorschau, ssrf, polling, index, lesesperre, myisam, stromausfall, netztrennung, gäste-lan, r50, visier, disziplin-familie, rekorde, zeilenversionen, testdaten, schießprotokoll, merkmale]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-bridge]]", "[[spiegel-metrics]]", "[[spiegel-assignment]]", "[[spiegel-roadmap]]", "[[meyton-ssmdb2]]"]
 ---
@@ -53,7 +53,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 |---|---|---|---|---|
 | SF-07 | Abgebrochene Scheibe (23 von 40) | Summe 200 statt rund 360 verzerrt Verläufe und Rekorde | Merkmal `unvollstaendig`; Summen nur für vollständige Scheiben, sonst Werte je Schuss | Schießprotokoll, Fixture |
 | SF-08 | Mehr Wertungsschüsse, als die DisziplinID sagt | Abschluss und Serienzählung brechen | Merkmal `ueber-soll`; Abschluss nie allein über die Schusszahl | Fixture |
-| SF-09 | Schusszahl `000` oder Vereinsvariante mit beliebiger Endziffer | Die Scheibe schließt sofort oder nie | Schusszahl nur als Hinweis; Zustand statt Abschluss | SQL-Checkliste |
+| SF-09 | Schusszahl `000` oder Vereinsvariante mit beliebiger Endziffer | Die Scheibe schließt sofort oder nie | Schusszahl nur als Hinweis; Zustand statt Abschluss | SQL-Checkliste; belegt: Meytons „LG/LP Training Spiegel“ (19110000, 19210000) |
 | SF-10 | Lange Pause mitten im Training | Scheibe gilt zu früh als fertig | Ruhend nach zehn Minuten, ein neuer Schuss öffnet sie wieder | Fixture |
 | SF-11 | Mehrere Scheiben an einem Abend (Aufwärmen, Neustart, „LG Probe + 10 Wertung“) | Der Schütze denkt in Abenden, sieht aber viele kleine Scheiben | Einheit = Schütze und Tag; Liste nach Abend gruppiert | Fixture |
 | SF-12 | Zwei Schützen nacheinander auf einer Scheibe | Mischdaten | Teilen an einem Schuss, verankert über den Fingerabdruck, nicht die Nummer | Fixture |
@@ -71,6 +71,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-19 | Preis- oder Königsschießen: Probe sichtbar, Wertung verdeckt; gemischte Modi | Werte vorzeitig sichtbar; `TotalRing` in der Kopfzeile verrät Modus 10 | Ab dem ersten verdeckten Schuss bleibt die ganze Scheibe samt Kopfzeile in der Brücke; Freigabe durch den Admin | Schießprotokoll, Fixture |
 | SF-20 | Wertungsmodus 0 (unbekannt), etwa bei Probe oder Altdaten | „Unbekannt nie hochladen“ hält still alles zurück | Admin gibt Modus 0 je Disziplin frei; Heartbeat und Statusseite zählen Zurückgehaltenes je Modus | SQL-Checkliste |
 | SF-21 | Querschuss, Korrektur durch die Standaufsicht | Treffer verschwindet oder ändert sich | Wertung folgt dem neuesten Snapshot; Merkmal `korrigiert` | Schießprotokoll, Fixture |
+| SF-70 | Regelnummer nicht eindeutig: 0610 ist „LP Liga“ (10610040) und ISSF-Luftgewehr-Finale (10610220), 0100 die französische Luftpistole | Ein Rückfall über die Regelnummer wählt das falsche Scheibenbild | Katalog über Regelnummer und Schusscode, Regelbereiche nie allein; danach Name, dann Admin | Test (SP-1.1) |
 
 ### Korrekturen, Löschungen, Schema
 

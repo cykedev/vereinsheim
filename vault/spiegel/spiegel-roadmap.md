@@ -75,8 +75,8 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ### SP-1.1 Fachkern: Scheibenbilder und Wertung
 - **Ziel:** Scheiben korrekt zeichnen und werten.
 - **Umfang:** `packages/shot-core`: Datenformat Scheibenbild; Bibliothek für eure 10-m-Stände, also Luftgewehr und Luftpistole (Auflage nutzt dieselben Scheiben), weitere Scheiben erst bei Bedarf; Regelkatalog DisziplinID → Regel (DSB und Meyton-eigen) → Scheibenbild, mit Rückfall über Entfernung 10 m plus Namensanfang LG/LP, sonst Vorschlag per Gegenprobe mit Admin-Bestätigung; Disziplin-Familien; Neu-Wertung mit anderem Scheibenbild; Wertungsformel mit Innenzehner ([[spiegel-target-library]]).
-- **Abnahme:** Gegenprobe reproduziert alle bekannten Meyton-Werte; Mutationsprobe nach [[conventions]] §9; Sonderfälle SF-09, SF-14, SF-16, SF-17, SF-18.
-- **Hängt ab von:** nichts. **Status:** offen.
+- **Abnahme:** Gegenprobe reproduziert alle bekannten Meyton-Werte; Mutationsprobe nach [[conventions]] §9; Sonderfälle SF-09, SF-14, SF-16, SF-17, SF-18, SF-70.
+- **Hängt ab von:** nichts. **Status:** erledigt (Oktober 2026, `packages/shot-core`).
 
 ### SP-1.2 Fachkern: Geometrie und Kennzahlen-Registry
 - **Ziel:** die Rechenbasis für alle Auswertungen.
