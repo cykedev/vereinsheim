@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   computeMetric,
   defineMetric,
+  inScoring,
   METRICS,
   metricByKey,
   type MetricDefinition,
@@ -62,6 +63,7 @@ describe("Ergebnis-Kennzahlen", () => {
     expect(value("result.rings", CARD)).toBe(49)
     expect(value("result.decimal", CARD)).toBeCloseTo(51.8, 9)
     expect(value("result.decimalMean", CARD)).toBeCloseTo(8.6333, 4)
+    expect(value("result.ringsMean", CARD)).toBeCloseTo(49 / 6, 9)
     expect(value("result.tens", CARD)).toBe(3)
     expect(value("result.innerTens", CARD)).toBe(2)
     expect(value("result.bestTeiler", CARD)).toBeCloseTo(331.8, 9)
@@ -75,6 +77,15 @@ describe("Ergebnis-Kennzahlen", () => {
     expect(value("group.enclosingDiameter", probeOnly)).not.toBeNull()
     expect(value("group.meanRadius", probeOnly)).not.toBeNull()
     expect(value("time.intervalMedian", probeOnly)).toBe(50)
+  })
+
+  it("ohne Zehntel (Ganzring-Ausdruck): ganze Ringe ja, Zehntel nein (SF-18)", () => {
+    const ringsOnly = MATCH.map((shot) => ({ ...shot, decimalTenths: null, xUm: null, yUm: null }))
+    expect(value("result.rings", ringsOnly)).toBe(49)
+    expect(value("result.ringsMean", ringsOnly)).toBeCloseTo(49 / 6, 9)
+    expect(value("result.tens", ringsOnly)).toBe(3)
+    expect(value("result.decimal", ringsOnly)).toBeNull()
+    expect(value("result.decimalMean", ringsOnly)).toBeNull()
   })
 
   it("ohne Lage (Ergebnis nur aus dem PDF): Ergebnis ja, Trefferbild nein", () => {
@@ -218,11 +229,52 @@ describe("Registry", () => {
     expect(metricByKey("gibt.es.nicht")).toBeUndefined()
   })
 
+  it("jede Kennzahl mit Zehnteln hat ein Gegenstück in ganzen Ringen, und umgekehrt", () => {
+    for (const metric of METRICS) {
+      if (metric.needs === "decimal") expect(metric.scoring).toBe("decimal")
+      if (metric.scoring === undefined) {
+        expect(metric.counterpart).toBeUndefined()
+        continue
+      }
+      const other = metricByKey(metric.counterpart ?? "")
+      expect(other, metric.key).toBeDefined()
+      if (!other) continue
+      expect(other.scoring).toBe(metric.scoring === "rings" ? "decimal" : "rings")
+      expect(other.counterpart).toBe(metric.key)
+      for (const field of [
+        "label",
+        "scopes",
+        "better",
+        "appliesTo",
+        "minShots",
+        "nSensitive",
+        "excludeFlagged",
+      ] as const) {
+        expect(other[field], `${metric.key}.${field}`).toEqual(metric[field])
+      }
+    }
+  })
+
+  it("inScoring wählt das Gegenstück, Kennzahlen ohne Wertung bleiben", () => {
+    const rings = metricByKey("result.rings")
+    const decimal = metricByKey("result.decimal")
+    const r50 = metricByKey("group.r50")
+    if (!rings || !decimal || !r50) throw new Error("Kennzahl fehlt")
+    expect(inScoring(decimal, "rings")).toBe(rings)
+    expect(inScoring(rings, "decimal")).toBe(decimal)
+    expect(inScoring(rings, "rings")).toBe(rings)
+    expect(inScoring(r50, "rings")).toBe(r50)
+    expect(inScoring(r50, "decimal")).toBe(r50)
+  })
+
   it("defineMetric lehnt unvollständige Definitionen ab", () => {
     const base = METRICS[0] as MetricDefinition
     expect(() => defineMetric({ ...base, version: 0 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, minShots: 0 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, appliesTo: [] })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, scopes: [] })).toThrow(RangeError)
+    expect(() => defineMetric({ ...base, counterpart: undefined })).toThrow(RangeError)
+    expect(() => defineMetric({ ...base, scoring: undefined })).toThrow(RangeError)
+    expect(() => defineMetric({ ...base, counterpart: base.key })).toThrow(RangeError)
   })
 })

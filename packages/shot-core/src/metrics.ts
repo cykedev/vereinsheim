@@ -7,6 +7,10 @@
 // robuste Maße lassen markierte Schüsse weg (SF-14); `nSensitive` kennzeichnet Maße, die mit der
 // Schusszahl wachsen, damit Vergleiche nur bei gleichem n laufen (SF-60).
 //
+// Wertung: Jede wertbasierte Kennzahl gibt es in ganzen Ringen und in Zehnteln (`scoring` und
+// `counterpart`); `inScoring` wählt die passende, damit sich überall umschalten lässt. Ganze Ringe
+// brauchen nur den Ring, Zehntel den Zehntelwert: Fehlen die Zehntel, bleibt die Ringwertung (SF-18).
+//
 // Ändert sich eine Formel, steigt ihre Version, und gespeicherte Werte werden neu berechnet.
 
 import {
@@ -23,7 +27,8 @@ import { tempo } from "./time"
 export type ShotKind = "match" | "probe"
 export type MetricUnit = "Ringe" | "Zehntel" | "Teiler" | "mm" | "s" | "Schuss"
 export type MetricScope = "series" | "card"
-export type MetricNeed = "value" | "position" | "distance" | "time"
+export type MetricNeed = "ring" | "decimal" | "position" | "distance" | "time"
+export type Scoring = "rings" | "decimal"
 
 export interface MetricShot {
   /** Lage in µm; null bei Ergebnissen nur aus dem PDF */
@@ -61,6 +66,9 @@ export interface MetricDefinition {
   excludeFlagged: boolean
   /** welche Angabe die Schüsse brauchen */
   needs: MetricNeed
+  /** nur wertbasierte Kennzahlen: die Wertung und das Gegenstück in der anderen Wertung */
+  scoring?: Scoring
+  counterpart?: string
   compute: (shots: readonly MetricShot[]) => number | null
 }
 
@@ -77,6 +85,12 @@ export function defineMetric(def: MetricDefinition): Readonly<MetricDefinition> 
   if (def.appliesTo.length === 0 || def.scopes.length === 0) {
     throw new RangeError(`${def.key}: appliesTo und scopes dürfen nicht leer sein`)
   }
+  if (
+    (def.scoring === undefined) !== (def.counterpart === undefined) ||
+    def.counterpart === def.key
+  ) {
+    throw new RangeError(`${def.key}: scoring und counterpart nur zusammen, mit fremdem Schlüssel`)
+  }
   return Object.freeze({
     ...def,
     scopes: Object.freeze([...def.scopes]),
@@ -90,8 +104,10 @@ function hasPosition(shot: MetricShot): boolean {
 
 function satisfies(shot: MetricShot, need: MetricNeed): boolean {
   switch (need) {
-    case "value":
-      return shot.decimalTenths !== null && shot.ring !== null
+    case "ring":
+      return shot.ring !== null
+    case "decimal":
+      return shot.decimalTenths !== null
     case "position":
       return hasPosition(shot)
     case "distance":
@@ -123,6 +139,8 @@ const points = (shots: readonly MetricShot[]): Point[] =>
 const toMm = (um: number | null) => (um === null ? null : um / 1000)
 const sumTenths = (shots: readonly MetricShot[]) =>
   shots.reduce((sum, shot) => sum + (shot.decimalTenths as number), 0)
+const sumRings = (shots: readonly MetricShot[]) =>
+  shots.reduce((sum, shot) => sum + (shot.ring as number), 0)
 const distanceOf = (shot: MetricShot) =>
   shot.distanceUm ?? Math.hypot(shot.xUm as number, shot.yUm as number)
 const seconds = (ms: number | null) => (ms === null ? null : ms / 1000)
@@ -144,7 +162,7 @@ const SIGHTER_TAIL = 5
 export const METRICS: readonly Readonly<MetricDefinition>[] = [
   defineMetric({
     key: "result.rings",
-    label: "Ringe",
+    label: "Ergebnis",
     unit: "Ringe",
     decimals: 0,
     scopes: SERIES_AND_CARD,
@@ -154,12 +172,14 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     minShots: 1,
     nSensitive: true,
     excludeFlagged: false,
-    needs: "value",
-    compute: (shots) => shots.reduce((sum, shot) => sum + (shot.ring as number), 0),
+    needs: "ring",
+    scoring: "rings",
+    counterpart: "result.decimal",
+    compute: sumRings,
   }),
   defineMetric({
     key: "result.decimal",
-    label: "Zehntel",
+    label: "Ergebnis",
     unit: "Zehntel",
     decimals: 1,
     scopes: SERIES_AND_CARD,
@@ -169,7 +189,9 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     minShots: 1,
     nSensitive: true,
     excludeFlagged: false,
-    needs: "value",
+    needs: "decimal",
+    scoring: "decimal",
+    counterpart: "result.rings",
     compute: (shots) => sumTenths(shots) / 10,
   }),
   defineMetric({
@@ -184,8 +206,27 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     minShots: 1,
     nSensitive: false,
     excludeFlagged: false,
-    needs: "value",
+    needs: "decimal",
+    scoring: "decimal",
+    counterpart: "result.ringsMean",
     compute: (shots) => sumTenths(shots) / 10 / shots.length,
+  }),
+  defineMetric({
+    key: "result.ringsMean",
+    label: "Ø je Schuss",
+    unit: "Ringe",
+    decimals: 2,
+    scopes: SERIES_AND_CARD,
+    better: "higher",
+    version: 1,
+    appliesTo: MATCH_ONLY,
+    minShots: 1,
+    nSensitive: false,
+    excludeFlagged: false,
+    needs: "ring",
+    scoring: "rings",
+    counterpart: "result.decimalMean",
+    compute: (shots) => sumRings(shots) / shots.length,
   }),
   defineMetric({
     key: "result.tens",
@@ -199,7 +240,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     minShots: 1,
     nSensitive: true,
     excludeFlagged: false,
-    needs: "value",
+    needs: "ring",
     compute: (shots) => shots.filter((shot) => (shot.ring as number) >= 10).length,
   }),
   defineMetric({
@@ -214,7 +255,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = [
     minShots: 1,
     nSensitive: true,
     excludeFlagged: false,
-    needs: "value",
+    needs: "ring",
     compute: (shots) => shots.filter((shot) => shot.innerTen).length,
   }),
   defineMetric({
@@ -392,4 +433,19 @@ const BY_KEY = new Map(METRICS.map((metric) => [metric.key, metric]))
 
 export function metricByKey(key: string): Readonly<MetricDefinition> | undefined {
   return BY_KEY.get(key)
+}
+
+/**
+ * Die Kennzahl in der gewählten Wertung: ihr Gegenstück, wenn sie in der anderen rechnet. Kennzahlen
+ * ohne Wertung (Lage, Tempo, Teiler, Zehner) bleiben, wie sie sind.
+ */
+export function inScoring(
+  metric: Readonly<MetricDefinition>,
+  scoring: Scoring
+): Readonly<MetricDefinition> {
+  if (metric.scoring === undefined || metric.scoring === scoring) return metric
+  const other = metric.counterpart === undefined ? undefined : BY_KEY.get(metric.counterpart)
+  if (!other)
+    throw new Error(`${metric.key}: Gegenstück ${metric.counterpart} fehlt in der Registry`)
+  return other
 }

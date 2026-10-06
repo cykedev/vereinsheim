@@ -259,3 +259,23 @@ Commit: `docs(spiegel): document the metric registry`.
 3. Spielwiese: Schwerpunkt, Streukreis und die Kennzahlen dort einbauen und einmal ansehen (nicht im
    Repo).
 4. `git diff main --stat`: nur `packages/shot-core`, die zwei Vault-Notizen, der Plan.
+
+## 6. Nachtrag (6. Oktober 2026): Wertung umschaltbar
+
+**Anlass:** Der User will überall zwischen ganzzahliger und Zehntel-Wertung umschalten können. Die
+Registry muss das tragen, sonst fehlt der Ansicht (SP-1.8) zu manchen Kennzahlen das Gegenstück.
+
+**Änderung (Task 5, nach FINALIZE interaktiv umgesetzt):**
+
+- `MetricNeed` `"value"` aufgeteilt in `"ring"` und `"decimal"`: Ganze Ringe brauchen nur den Ring,
+  Zehntel den Zehntelwert. Ein Ganzring-Ausdruck ohne Zehntel liefert so das Ergebnis in Ringen und
+  in Zehnteln „kein Wert“ (SF-18); vorher fiel er ganz heraus.
+- `MetricDefinition` um `scoring` (`"rings" | "decimal"`) und `counterpart` ergänzt; `defineMetric`
+  verlangt beide zusammen und einen fremden Schlüssel.
+- Neue Kennzahl `result.ringsMean` (Ø je Schuss in Ringen) als Gegenstück zu `result.decimalMean`;
+  `result.rings`/`result.decimal` heißen beide „Ergebnis“, die Schnitte beide „Ø je Schuss“.
+- `inScoring(metric, scoring)` wählt das Gegenstück; Kennzahlen ohne Wertung bleiben.
+- Tests: Ganzring ohne Zehntel; Registry-Test „jede Zehntel-Kennzahl hat ein Ringe-Gegenstück mit
+  gleichen Regeln, und umgekehrt“; `inScoring`; `defineMetric` lehnt halbe Paare ab.
+- Mutationsprobe um N1–N4 erweitert (inScoring, Ringe-Schnitt, Bedarf „ring“, Paarprüfung).
+
