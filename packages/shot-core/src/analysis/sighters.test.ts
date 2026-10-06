@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 
 import { MATCH, PROBE } from "../__fixtures__/cards"
-import type { MetricShot } from "../metrics"
+import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
+import { c4 } from "../stats"
 import { sighterComparison, sighterSummary, sighterZeroed } from "./sighters"
 
 const shot = (
@@ -55,6 +56,34 @@ describe("Probe-Umfang (S2)", () => {
     })
     expect(sighterSummary(MATCHES)).toBeNull()
   })
+
+  it("ein Platzhalter bringt keine Zeit mit (SF-15)", () => {
+    const card = CARD_WITH_ADJUSTMENT.map((shot, i) =>
+      i === 0 ? { ...shot, firedAtMs: -600_000, flags: [FLAG_SUSPICIOUS] } : shot
+    )
+    const summary = sighterSummary(card)
+    expect(summary?.count).toBe(8)
+    // von Probe 2 (30 s) bis Probe 8 (210 s), bis zur Wertung (240 s)
+    expect(summary?.durationMs).toBe(180_000)
+    expect(summary?.untilMatchMs).toBe(210_000)
+  })
+
+  it("Probe nach Beginn der Wertung zählt nicht", () => {
+    const late = [8, 9, 10].map((i) => shot("probe", 20 + i, 0, 0))
+    const summary = sighterSummary([...CARD_WITH_ADJUSTMENT, ...late])
+    expect(summary?.count).toBe(8)
+    expect(summary?.durationMs).toBe(7 * 30_000)
+  })
+
+  it("springt die Uhr zurück, gibt es keine Dauer und keinen negativen Abstand", () => {
+    const jumped = CARD_WITH_ADJUSTMENT.map((shot, i) =>
+      i >= 2 ? { ...shot, firedAtMs: (shot.firedAtMs as number) - 3_600_000 } : shot
+    )
+    const summary = sighterSummary(jumped)
+    expect(summary?.count).toBe(8)
+    expect(summary?.durationMs).toBeNull()
+    expect(summary?.untilMatchMs).toBeNull()
+  })
 })
 
 describe("Probe gegen Wertung (S3)", () => {
@@ -77,6 +106,22 @@ describe("Probe gegen Wertung (S3)", () => {
     expect(comparison?.probe.meanRings).toBeCloseTo(10.4, 9)
     expect(comparison?.probe.r50Um).toBeCloseTo(100, 9)
     expect(comparison?.match.r50Um).toBeCloseTo(Math.hypot(150, 150), 6)
+    // σ̂ hängt kaum von n ab und taugt für Probe (5) gegen Wertung (10): Σr² = 40 000 µm²
+    expect(comparison?.probe.sigmaUm).toBeCloseTo(Math.sqrt(40_000 / 8) / c4(9), 6)
+    expect(comparison?.match.sigmaUm).toBeCloseTo(Math.sqrt((10 * 2 * 150 ** 2) / 18) / c4(19), 6)
+  })
+
+  it("n je Maß: ein Platzhalter zählt mit seinem Wert, nicht mit seiner Lage", () => {
+    const placeholder = { ...shot("probe", 8, 0, 0, 109), flags: [FLAG_SUSPICIOUS] }
+    const card = [
+      ...SIGHTERS,
+      placeholder,
+      ...MATCHES.map((m) => ({ ...m, seq: (m.seq as number) + 1 })),
+    ]
+    const comparison = sighterComparison(card, "decimal", { adjustAfter: [3] })
+    expect(comparison?.probe.n).toBe(6)
+    expect(comparison?.probe.valued).toBe(6)
+    expect(comparison?.probe.positioned).toBe(5)
   })
 
   it("ohne Wertung kein Vergleich", () => {
@@ -89,6 +134,20 @@ describe("Eingeschossen? (S4)", () => {
     const zeroed = sighterZeroed(CARD_WITH_ADJUSTMENT)
     expect(zeroed?.n).toBe(5)
     expect(zeroed?.real).toBe(false)
+  })
+
+  it("erst die Schüsse mit Lage, dann die letzten fünf nach der letzten Verstellung", () => {
+    const placeholder = { ...shot("probe", 8, 0, 0), flags: [FLAG_SUSPICIOUS] }
+    const card = [
+      ...SIGHTERS,
+      placeholder,
+      ...MATCHES.map((m) => ({ ...m, seq: (m.seq as number) + 1 })),
+    ]
+    expect(sighterZeroed(card)?.n).toBe(5)
+    expect(sighterZeroed(CARD_WITH_ADJUSTMENT, { adjustAfter: [3] })?.n).toBe(5)
+    // nach Probe 6 verstellt: nur noch zwei Schuss, zu wenig für ein Urteil
+    expect(sighterZeroed(CARD_WITH_ADJUSTMENT, { adjustAfter: [6] })).toBeNull()
+    expect(sighterZeroed(CARD_WITH_ADJUSTMENT)?.ellipse.majorUm).toBeGreaterThan(0)
   })
 
   it("eine enge Probe neben der Mitte: echt versetzt", () => {

@@ -3,8 +3,10 @@
 // (SF-63).
 
 import { r50, segmentGroups, type Point } from "../geometry"
-import { inShotOrder, selectShots, type MetricShot, type Scoring } from "../metrics"
-import { mpiConfidence } from "./position"
+import { inShotOrder, selectShots, timesWithGaps, type MetricShot, type Scoring } from "../metrics"
+import { tempo } from "../time"
+import { mpiConfidence, type MpiConfidence } from "./position"
+import { sigmaEstimate } from "./precision"
 import { valueNeed, valueTenths } from "./values"
 
 /** Probeschüsse vor dem ersten Wertungsschuss, in Abgabefolge */
@@ -14,54 +16,81 @@ function sightersBeforeMatch(shots: readonly MetricShot[]): MetricShot[] {
   return (first < 0 ? ordered : ordered.slice(0, first)).filter((shot) => shot.kind === "probe")
 }
 
-const finiteTime = (shot: MetricShot | undefined) =>
-  shot !== undefined && Number.isFinite(shot.firedAtMs) ? (shot.firedAtMs as number) : null
+/** Probe nach der letzten Visierverstellung (SF-63); `adjustAfter` nennt Probeschüsse ab 1 */
+function lastSighterGroup(
+  shots: readonly MetricShot[],
+  adjustAfter: readonly number[] = []
+): MetricShot[] {
+  const groups = segmentGroups(sightersBeforeMatch(shots), adjustAfter)
+  return groups[groups.length - 1]
+}
 
-/** Umfang der Probe (S2): Zahl, Blöcke à zehn, Dauer, Zeit bis zum ersten Wertungsschuss */
+/** Zeit des ersten Schusses mit gültiger Zeit; Platzhalter bringen keine mit (SF-15) */
+const firstTime = (shots: readonly MetricShot[]) => {
+  const timed = selectShots(shots, { need: "time" })
+  return timed.length ? (inShotOrder(timed)[0].firedAtMs as number) : null
+}
+
+/**
+ * Umfang der Probe (S2): Zahl, Blöcke à zehn, Dauer und Zeit bis zum ersten Wertungsschuss. Gezählt
+ * wird die Probe bis zum ersten Wertungsschuss; Zeiten nur gültige, ohne Platzhalter. Springt die Uhr
+ * zurück, gibt es keine Dauer (SF-30), und ein negativer Abstand zur Wertung ist keiner.
+ */
 export function sighterSummary(shots: readonly MetricShot[]): {
   count: number
   blocks: number
   durationMs: number | null
   untilMatchMs: number | null
 } | null {
-  const ordered = inShotOrder(shots)
-  const probe = ordered.filter((shot) => shot.kind === "probe")
-  if (probe.length === 0) return null
-  const first = finiteTime(probe[0])
-  const last = finiteTime(probe[probe.length - 1])
-  const match = finiteTime(ordered.find((shot) => shot.kind === "match"))
+  const sighters = sightersBeforeMatch(shots)
+  if (sighters.length === 0) return null
+  const timed = selectShots(sighters, { need: "time" })
+  const start = firstTime(sighters)
+  const match = firstTime(shots.filter((shot) => shot.kind === "match"))
+  const until = start !== null && match !== null ? match - start : null
   return {
-    count: probe.length,
-    blocks: Math.ceil(probe.length / 10),
-    durationMs: first !== null && last !== null ? last - first : null,
-    untilMatchMs: first !== null && match !== null ? match - first : null,
+    count: sighters.length,
+    blocks: Math.ceil(sighters.length / 10),
+    durationMs: timed.length ? tempo(timesWithGaps(timed)).durationMs : null,
+    untilMatchMs: until !== null && until >= 0 ? until : null,
   }
 }
 
 export interface GroupSide {
+  /** alle Schüsse der Seite */
   n: number
+  /** davon mit Wert in der gewählten Wertung (Platzhalter zählen mit ihrem Wert) */
+  valued: number
+  /** davon mit gültiger Lage (ohne Platzhalter) */
+  positioned: number
   /** Ø je Schuss in Ringen der gewählten Wertung */
   meanRings: number | null
-  /** R50 ohne Fehlschüsse, ab fünf Schuss */
+  /** R50 ohne Fehlschüsse, ab fünf Schuss; hängt von n ab */
   r50Um: number | null
+  /** σ̂ ab drei Schuss; hängt kaum von n ab und taugt für Probe gegen Wertung */
+  sigmaUm: number | null
 }
 
 function side(shots: readonly MetricShot[], scoring: Scoring): GroupSide {
   const values = selectShots(shots, { need: valueNeed(scoring) }).map((s) =>
     valueTenths(s, scoring)
   )
+  const positioned = selectShots(shots, { need: "position" })
   const points: Point[] = selectShots(shots, { need: "position", excludeMisses: true }).map(
     (s) => ({ xUm: s.xUm as number, yUm: s.yUm as number })
   )
   return {
     n: shots.length,
+    valued: values.length,
+    positioned: positioned.length,
     meanRings: values.length ? values.reduce((s, v) => s + v, 0) / values.length / 10 : null,
     r50Um: points.length >= 5 ? r50(points) : null,
+    sigmaUm: sigmaEstimate(shots)?.sigma ?? null,
   }
 }
 
 /**
- * Probe gegen Wertung (S3): Ø je Schuss und R50. `adjustAfter` nennt die Probeschüsse (ab 1), nach
+ * Probe gegen Wertung (S3): Ø je Schuss, R50 und σ̂. `adjustAfter` nennt die Probeschüsse (ab 1), nach
  * denen das Visier verstellt wurde; dann zählt nur die Probe nach der letzten Verstellung.
  */
 export function sighterComparison(
@@ -69,23 +98,37 @@ export function sighterComparison(
   scoring: Scoring,
   options: { adjustAfter?: readonly number[] } = {}
 ): { probe: GroupSide; match: GroupSide } | null {
-  const sighters = sightersBeforeMatch(shots)
+  const probe = lastSighterGroup(shots, options.adjustAfter)
   const match = shots.filter((shot) => shot.kind === "match")
-  if (sighters.length === 0 || match.length === 0) return null
-  const groups = segmentGroups(sighters, options.adjustAfter ?? [])
-  return { probe: side(groups[groups.length - 1], scoring), match: side(match, scoring) }
+  if (sightersBeforeMatch(shots).length === 0 || match.length === 0) return null
+  return { probe: side(probe, scoring), match: side(match, scoring) }
 }
 
-/** Eingeschossen? (S4): Lage der letzten fünf Probeschüsse vor der Wertung mit Vertrauensbereich */
+/**
+ * Eingeschossen? (S4): Lage der letzten fünf Probeschüsse mit Lage vor der Wertung, nach der letzten
+ * Visierverstellung, mit Vertrauensbereich. `real: false` heißt „kein Versatz nachweisbar“, nicht
+ * „eingeschossen“: Fünf Schuss erkennen nur einen deutlichen Versatz.
+ */
 export function sighterZeroed(
-  shots: readonly MetricShot[]
-): { n: number; real: boolean; center: Point; offsetUm: number } | null {
-  const confidence = mpiConfidence(sightersBeforeMatch(shots).slice(-5))
+  shots: readonly MetricShot[],
+  options: { adjustAfter?: readonly number[] } = {}
+): {
+  n: number
+  real: boolean
+  center: Point
+  offsetUm: number
+  ellipse: MpiConfidence["ellipse"]
+} | null {
+  const positioned = selectShots(lastSighterGroup(shots, options.adjustAfter), {
+    need: "position",
+  })
+  const confidence = mpiConfidence(positioned.slice(-5))
   if (!confidence) return null
   return {
     n: confidence.n,
     real: confidence.real,
     center: confidence.center,
     offsetUm: Math.hypot(confidence.center.xUm, confidence.center.yUm),
+    ellipse: confidence.ellipse,
   }
 }
