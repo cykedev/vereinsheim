@@ -13,11 +13,12 @@ import {
 } from "./precision"
 
 describe("Rayleigh-σ (P5)", () => {
-  it("Sa, σ̂ mit c4 und 95-%-Bereich über χ²", () => {
-    // SPREAD: Σr² = 40 mm², 2(n − 1) = 10 Freiheitsgrade.
+  it("σ̂ mit c4 und 95-%-Bereich über χ², ohne den Wert vor der Korrektur", () => {
+    // SPREAD: Σr² = 40 mm², 2(n − 1) = 10 Freiheitsgrade, √(40/10) = 2 mm vor der Korrektur.
+    // Meytons „Sa“ (eben dieser Wert) zeigt Spiegel nicht: kein Vorteil gegenüber σ̂ (Oktober 2026).
     const sigma = sigmaEstimate(SPREAD)
+    expect(Object.keys(sigma ?? {}).sort()).toEqual(["high", "low", "n", "sigma"])
     expect(sigma?.n).toBe(6)
-    expect(sigma?.sa).toBeCloseTo(2000, 6)
     expect(sigma?.sigma).toBeCloseTo(2050.5458, 3)
     expect(sigma?.low).toBeCloseTo(1397.4341, 3)
     expect(sigma?.high).toBeCloseTo(3509.8671, 3)

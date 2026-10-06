@@ -24,9 +24,11 @@ const positioned = (shots: readonly MetricShot[]): Point[] =>
 
 export interface SigmaEstimate {
   n: number
-  /** Sa = √(Σr² / (2(n − 1))); laut Handbuch Meytons „Sa“, gegen echte Werte noch nicht geprüft (SP-0.6) */
-  sa: number
-  /** σ̂ = Sa / c4(2n − 1), erwartungstreu und kaum von n abhängig */
+  /**
+   * σ̂ = √(Σr² / (2(n − 1))) / c4(2n − 1), erwartungstreu und kaum von n abhängig. Den Wert vor der
+   * Korrektur nennt Meytons Ballistic Manager „Sa“; Spiegel zeigt ihn nicht, er ist bei 10 Schuss nur
+   * 1,4 % kleiner und trägt keine eigene Information (Entscheidung des Users, Oktober 2026).
+   */
   sigma: number
   /** 95-%-Bereich für σ über χ² mit 2(n − 1) Freiheitsgraden */
   low: number
@@ -40,11 +42,9 @@ export function sigmaEstimate(shots: readonly MetricShot[]): SigmaEstimate | nul
   const center = centroid(points) as Point
   const sumSquares = distancesTo(points, center).reduce((sum, r) => sum + r * r, 0)
   const df = 2 * (n - 1)
-  const sa = Math.sqrt(sumSquares / df)
   return {
     n,
-    sa,
-    sigma: sa / c4(2 * n - 1),
+    sigma: Math.sqrt(sumSquares / df) / c4(2 * n - 1),
     low: Math.sqrt(sumSquares / chiSquareQuantileEven(0.975, df)),
     high: Math.sqrt(sumSquares / chiSquareQuantileEven(0.025, df)),
   }

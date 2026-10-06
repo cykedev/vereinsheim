@@ -100,10 +100,10 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Wie stark deine Treffer um ihren eigenen Schwerpunkt streuen, als eine Zahl in mm. Bei einer runden Gruppe liegen etwa 39 % der Treffer innerhalb von σ um den Schwerpunkt und 86 % innerhalb von 2σ.",
     read: "Kleiner ist besser. σ hängt kaum von der Schusszahl ab und ist deshalb das richtige Maß, um einen Abend mit 20 Schuss mit einem mit 40 zu vergleichen. In Ringbreiten (Luftgewehr 2,5 mm, Luftpistole 8 mm) heißt 0,5: Ein Treffer liegt im Mittel eine halbe Ringbreite vom Schwerpunkt. So lassen sich Gewehr und Pistole grob vergleichen.",
     caution:
-      "Sa ist dieselbe Größe ohne die kleine Korrektur, so wie Meyton sie nennt; gegen echte Meyton-Werte ist die Formel noch nicht geprüft. Bei 10 Schuss reicht der 95-%-Bereich von etwa einem Viertel darunter bis knapp die Hälfte darüber.",
+      "Bei 10 Schuss reicht der 95-%-Bereich von etwa einem Viertel darunter bis knapp die Hälfte darüber.",
     minimum: "Ab 3 Schuss.",
     formula:
-      "Sa = √(Σ rᵢ² / (2(n − 1))); σ̂ = Sa / c4(2n − 1); 95-%-Bereich über χ² mit 2(n − 1) Freiheitsgraden; in Ringbreiten: Ø Abstand / W",
+      "σ̂ = √(Σ rᵢ² / (2(n − 1))) / c4(2n − 1); 95-%-Bereich über χ² mit 2(n − 1) Freiheitsgraden; in Ringbreiten: Ø Abstand / W",
   },
   {
     id: "masse-der-gruppe",

@@ -152,7 +152,7 @@ describe("Trefferbild-Kennzahlen", () => {
   })
 
   it("neue Kennzahlen aus SP-1.10 mit festen Werten", () => {
-    // SPREAD: Sa = 2,0 mm, σ̂ = Sa / c4(11); Höhe 5 mm, Breite 7 mm.
+    // SPREAD: √(Σr² / (2(n − 1))) = 2,0 mm, σ̂ = 2,0 mm / c4(11); Höhe 5 mm, Breite 7 mm.
     expect(value("group.sigma", SPREAD)).toBeCloseTo(2.0505458, 6)
     expect(value("group.height", SPREAD)).toBe(5)
     expect(value("group.width", SPREAD)).toBe(7)

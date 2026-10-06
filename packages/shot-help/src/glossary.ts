@@ -12,7 +12,6 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
     term: "σ (Sigma)",
     text: "Typische Streuung um den Schwerpunkt in mm, kaum von der Schusszahl abhängig.",
   },
-  { term: "Sa", text: "σ ohne die kleine Korrektur, wie Meyton es nennt." },
   { term: "R50", text: "Radius um den Schwerpunkt, in dem die Hälfte der Treffer liegt." },
   { term: "Teiler", text: "Abstand des Treffers zur Mitte in 1/100 mm." },
   {

@@ -531,7 +531,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     version: 1,
     appliesTo: BOTH,
     minShots: 3,
-    // Rayleigh-σ, erwartungstreu: σ̂ = Sa / c4(2n − 1), kaum von n abhängig (Katalog P5).
+    // Rayleigh-σ, erwartungstreu: σ̂ = √(Σr² / (2(n − 1))) / c4(2n − 1), kaum von n abhängig (Katalog P5).
     nSensitive: false,
     excludeMisses: false,
     needs: "position",

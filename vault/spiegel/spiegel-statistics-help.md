@@ -3,7 +3,7 @@ id: spiegel-statistics-help
 type: guide
 title: "Spiegel — Statistik verstehen (Hilfe)"
 aliases: [statistik-hilfe, hilfe, erklärungen, statistik verstehen, glossar]
-keywords: [hilfe, erklärung, erklären, verstehen, einfache sprache, glossar, so liest du, was heißt das, 95 prozent, vertrauensbereich, unsicherheit, echt, unklar, mindestzahl, sigma, sa, r50, streukreis, mittlerer radius, ringbreiten, form, ellipse, ausreißer, schwerpunkt, lage, hotelling, vertrauensellipse, ringverlust, lageanteil, richtungsuhr, drift, von neumann, tempo, rhythmus, pause, wiedereinstieg, ermüdung, trend, theil-sen, gleitender schnitt, serien, konstanz, quote, wilson, zehnerquote, innenzehner, teiler, median, iqr, mad, probe, eingeschossen, fehlschlüsse, regression zur mitte]
+keywords: [hilfe, erklärung, erklären, verstehen, einfache sprache, glossar, so liest du, was heißt das, 95 prozent, vertrauensbereich, unsicherheit, echt, unklar, mindestzahl, sigma, r50, streukreis, mittlerer radius, ringbreiten, form, ellipse, ausreißer, schwerpunkt, lage, hotelling, vertrauensellipse, ringverlust, lageanteil, richtungsuhr, drift, von neumann, tempo, rhythmus, pause, wiedereinstieg, ermüdung, trend, theil-sen, gleitender schnitt, serien, konstanz, quote, wilson, zehnerquote, innenzehner, teiler, median, iqr, mad, probe, eingeschossen, fehlschlüsse, regression zur mitte]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-statistics]]", "[[spiegel-ui-design]]", "[[spiegel-metrics]]", "[[spiegel-vision]]"]
 ---
@@ -116,11 +116,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   richtige Maß, um einen Abend mit 20 Schuss mit einem mit 40 zu vergleichen. In Ringbreiten
   (Luftgewehr 2,5 mm, Luftpistole 8 mm) heißt 0,5: Ein Treffer liegt im Mittel eine halbe Ringbreite
   vom Schwerpunkt. So lassen sich Gewehr und Pistole grob vergleichen.
-- *Vorsicht:* Sa ist dieselbe Größe ohne die kleine Korrektur, so wie Meyton sie nennt; gegen echte
-  Meyton-Werte ist die Formel noch nicht geprüft. Bei 10 Schuss reicht der 95-%-Bereich von etwa
-  einem Viertel darunter bis knapp die Hälfte darüber.
+- *Vorsicht:* Bei 10 Schuss reicht der 95-%-Bereich von etwa einem Viertel darunter bis knapp die
+  Hälfte darüber.
 - *Mindestzahl:* Ab 3 Schuss.
-- *Formel:* `Sa = √(Σ rᵢ² / (2(n − 1))); σ̂ = Sa / c4(2n − 1); 95-%-Bereich über χ² mit 2(n − 1)
+- *Formel:* `σ̂ = √(Σ rᵢ² / (2(n − 1))) / c4(2n − 1); 95-%-Bereich über χ² mit 2(n − 1)
   Freiheitsgraden; in Ringbreiten: Ø Abstand / W`
 
 **Maße der Gruppe (P1, P3, P4, P6, P7)**
@@ -305,7 +304,6 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - **Schwerpunkt:** Mittelpunkt aller Treffer (Meyton: Trefferlage).
 - **Streukreis:** Kleinster Kreis um alle Trefferzentren, Mitte zu Mitte (Meyton: Trefferkreis).
 - **σ (Sigma):** Typische Streuung um den Schwerpunkt in mm, kaum von der Schusszahl abhängig.
-- **Sa:** σ ohne die kleine Korrektur, wie Meyton es nennt.
 - **R50:** Radius um den Schwerpunkt, in dem die Hälfte der Treffer liegt.
 - **Teiler:** Abstand des Treffers zur Mitte in 1/100 mm.
 - **Innenzehner:** Beim Luftgewehr ist der 0,5-mm-Punkt in der Mitte ganz weggeschossen, bei der
