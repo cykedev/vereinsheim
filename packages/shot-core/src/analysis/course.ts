@@ -5,7 +5,14 @@
 // Intervall die 0 ausschließt.
 
 import { centroid, r50, type Point } from "../geometry"
-import { inShotOrder, selectShots, type MetricShot, type Scoring, type ShotKind } from "../metrics"
+import {
+  inShotOrder,
+  selectShots,
+  shotNumbers,
+  type MetricShot,
+  type Scoring,
+  type ShotKind,
+} from "../metrics"
 import { theilSen } from "../stats"
 import { valueNeed, valueRings, valueTenths } from "./values"
 
@@ -18,25 +25,36 @@ const meanOf = (values: readonly number[]) => values.reduce((s, v) => s + v, 0) 
 
 export interface SeriesPoint {
   series: number
+  /** alle Wertungsschüsse der Serie, auch die ohne Wert */
   shots: number
-  /** Summe in Ringen, in der gewählten Wertung (105,0 bzw. 100) */
-  total: number
+  /** Summe in Ringen, in der gewählten Wertung (105,0 bzw. 100); null, wenn einem Schuss der Wert fehlt */
+  total: number | null
 }
 
-/** Serienergebnisse in Reihenfolge (I1) */
+/** Serienergebnisse in Reihenfolge (I1); eine Summe nur, wenn alle Schüsse der Serie einen Wert haben */
 export function seriesCurve(shots: readonly MetricShot[], scoring: Scoring): SeriesPoint[] {
+  const withValue = new Set(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) }))
   // in Zehnteln summiert, damit 0,1 + 0,2 genau bleibt
-  const bySeries = new Map<number, { series: number; shots: number; tenths: number }>()
-  for (const shot of valued(shots, scoring)) {
-    if (shot.series === null) continue
-    const entry = bySeries.get(shot.series) ?? { series: shot.series, shots: 0, tenths: 0 }
+  const bySeries = new Map<
+    number,
+    { series: number; shots: number; tenths: number; complete: boolean }
+  >()
+  for (const shot of shots) {
+    if (shot.kind !== "match" || shot.series === null) continue
+    const entry = bySeries.get(shot.series) ?? {
+      series: shot.series,
+      shots: 0,
+      tenths: 0,
+      complete: true,
+    }
     entry.shots++
-    entry.tenths += valueTenths(shot, scoring)
+    if (withValue.has(shot)) entry.tenths += valueTenths(shot, scoring)
+    else entry.complete = false
     bySeries.set(shot.series, entry)
   }
   return [...bySeries.values()]
     .sort((a, b) => a.series - b.series)
-    .map(({ series, shots: count, tenths }) => ({ series, shots: count, total: tenths / 10 }))
+    .map((e) => ({ series: e.series, shots: e.shots, total: e.complete ? e.tenths / 10 : null }))
 }
 
 /** Ermüdung (I2): Ø der letzten zehn minus der ersten zehn, R50 ebenso; ab 20 Wertungsschüssen */
@@ -70,20 +88,24 @@ export function fatigue(
   }
 }
 
-/** Trend in der Scheibe (I3): Theil-Sen-Steigung je zehn Schuss mit 95-%-Intervall; ab 10 Schuss */
+/**
+ * Trend in der Scheibe (I3): Theil-Sen-Steigung je zehn Schuss mit 95-%-Intervall; ab 10 Schuss. Die
+ * x-Werte sind die Schussnummern, damit ein Schuss ohne Wert die Steigung nicht verbiegt.
+ */
 export function cardTrend(
   shots: readonly MetricShot[],
   scoring: Scoring
 ): { n: number; perTenShots: number; low: number; high: number; clear: boolean } | null {
-  const values = valued(shots, scoring).map((shot) => valueRings(shot, scoring))
-  if (values.length < 10) return null
+  const numbers = shotNumbers(shots)
+  const ordered = valued(shots, scoring)
+  if (ordered.length < 10) return null
   const fit = theilSen(
-    values.map((_, i) => i + 1),
-    values
+    ordered.map((shot) => numbers.get(shot) as number),
+    ordered.map((shot) => valueRings(shot, scoring))
   )
   if (!fit) return null
   return {
-    n: values.length,
+    n: ordered.length,
     perTenShots: fit.slope * 10,
     low: fit.low * 10,
     high: fit.high * 10,
@@ -91,17 +113,25 @@ export function cardTrend(
   }
 }
 
-/** Gleitender Schnitt (I4): je Schuss Ø der letzten bis zu `window`, am Anfang als Teilfenster */
+/**
+ * Gleitender Schnitt (I4): je Schuss mit Wert Ø der letzten bis zu `window` Werte, am Anfang als
+ * Teilfenster gekennzeichnet; `number` ist die Schussnummer.
+ */
 export function movingAverage(
   shots: readonly MetricShot[],
   scoring: Scoring,
   window = 10
 ): { number: number; value: number; meanRings: number; partial: boolean }[] {
-  const values = valued(shots, scoring).map((shot) => valueTenths(shot, scoring))
+  if (!(Number.isInteger(window) && window >= 1)) {
+    throw new RangeError(`Fenster ${window} ist keine ganze Zahl ab 1`)
+  }
+  const numbers = shotNumbers(shots)
+  const ordered = valued(shots, scoring)
+  const values = ordered.map((shot) => valueTenths(shot, scoring))
   return values.map((tenths, i) => {
     const slice = values.slice(Math.max(0, i - window + 1), i + 1)
     return {
-      number: i + 1,
+      number: numbers.get(ordered[i]) as number,
       value: tenths / 10,
       meanRings: meanOf(slice) / 10,
       partial: slice.length < window,
@@ -155,22 +185,29 @@ export function mpiPath(
 
 /**
  * Längste Folge von Wertungsschüssen ab einer Schwelle in Zehnteln (I10), mit Nummer des ersten. In
- * ganzen Ringen zählt der Ring (siehe `shareAtLeast`).
+ * ganzen Ringen zählt der Ring (siehe `shareAtLeast`). Ein Schuss ohne Wert unterbricht die Folge.
  */
 export function longestRun(
   shots: readonly MetricShot[],
   scoring: Scoring,
   tenths: number
 ): { length: number; start: number | null } {
+  const withValue = new Set(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) }))
+  const numbers = shotNumbers(shots)
+  const match = shots
+    .filter((shot) => shot.kind === "match")
+    .sort((a, b) => (numbers.get(a) as number) - (numbers.get(b) as number))
   let best = { length: 0, start: null as number | null }
   let current = 0
-  valued(shots, scoring).forEach((shot, i) => {
-    if (valueTenths(shot, scoring) >= tenths) {
+  let start = 0
+  for (const shot of match) {
+    if (withValue.has(shot) && valueTenths(shot, scoring) >= tenths) {
+      if (current === 0) start = numbers.get(shot) as number
       current++
-      if (current > best.length) best = { length: current, start: i - current + 2 }
+      if (current > best.length) best = { length: current, start }
     } else {
       current = 0
     }
-  })
+  }
   return best
 }

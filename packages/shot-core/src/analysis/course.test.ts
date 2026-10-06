@@ -62,10 +62,21 @@ describe("Serienkurve, Streuung und Schwerpunkt je Serie (I1, I5, I6)", () => {
     ])
   })
 
-  it("ohne Zehntel gibt es die Kurve nur in ganzen Ringen (SF-18)", () => {
+  it("ohne Zehntel gibt es die Summen nur in ganzen Ringen (SF-18)", () => {
     const ringsOnly = TIRED.map((s) => ({ ...s, decimalTenths: null }))
-    expect(seriesCurve(ringsOnly, "decimal")).toEqual([])
+    expect(seriesCurve(ringsOnly, "decimal")).toEqual([
+      { series: 1, shots: 10, total: null },
+      { series: 2, shots: 10, total: null },
+    ])
     expect(seriesCurve(ringsOnly, "rings").map((s) => s.total)).toEqual([100, 100])
+  })
+
+  it("fehlt einem Schuss der Wert, hat seine Serie keine Summe, wie das Ergebnis", () => {
+    const gap = TIRED.map((s, i) => (i === 4 ? { ...s, decimalTenths: null } : s))
+    expect(seriesCurve(gap, "decimal")).toEqual([
+      { series: 1, shots: 10, total: null },
+      { series: 2, shots: 10, total: 101 },
+    ])
   })
 
   it("R50 je Serie", () => {
@@ -112,6 +123,18 @@ describe("Ermüdung und Trend (I2, I3)", () => {
     expect(cardTrend(noisy.slice(0, 9), "decimal")).toBeNull()
   })
 
+  it("der Trend rechnet auf den echten Schussnummern, auch wenn ein Wert fehlt", () => {
+    // 20 Schuss steigen um 0,1 je Schuss; Schuss 10 hat keinen Wert. Auf Positionen statt Nummern
+    // wäre die Steigung über der Lücke größer.
+    const rising = Array.from({ length: 20 }, (_, i) => shot(i, 90 + i)).map((s, i) =>
+      i === 9 ? { ...s, decimalTenths: null } : s
+    )
+    const trend = cardTrend(rising, "decimal")
+    expect(trend?.n).toBe(19)
+    expect(trend?.perTenShots).toBeCloseTo(1, 9)
+    expect(trend?.low).toBeCloseTo(1, 9)
+  })
+
   it("in ganzen Ringen wird derselbe Anstieg zur Stufe und ist nicht mehr klar", () => {
     // 9,0 … 10,9: zehnmal Ring 9, dann zehnmal Ring 10. Theil-Sen: 90 Steigungen 0 in den Hälften,
     // 100 positive dazwischen; der Median ist die fünft- und sechstkleinste positive, 1/17 je Schuss.
@@ -133,6 +156,16 @@ describe("Gleitender Schnitt und längste Folge (I4, I10)", () => {
     expect(average[11].meanRings).toBeCloseTo(10.45, 9)
   })
 
+  it("Nummern bleiben die Schussnummern, auch wenn ein Wert fehlt", () => {
+    const values = Array.from({ length: 10 }, (_, i) => shot(i, 100)).map((s, i) =>
+      i === 2 ? { ...s, decimalTenths: null } : s
+    )
+    expect(movingAverage(values, "decimal", 10).map((p) => p.number)).toEqual([
+      1, 2, 4, 5, 6, 7, 8, 9, 10,
+    ])
+    expect(() => movingAverage(values, "decimal", 0)).toThrow(RangeError)
+  })
+
   it("gleitender Schnitt in ganzen Ringen", () => {
     const values = Array.from({ length: 12 }, (_, i) => shot(i, 98 + i))
     const average = movingAverage(values, "rings", 10)
@@ -146,6 +179,13 @@ describe("Gleitender Schnitt und längste Folge (I4, I10)", () => {
     expect(longestRun(values, "decimal", 100)).toEqual({ length: 3, start: 4 })
     expect(longestRun(values, "decimal", 102)).toEqual({ length: 2, start: 5 })
     expect(longestRun(values, "decimal", 110)).toEqual({ length: 0, start: null })
+  })
+
+  it("ein Schuss ohne Wert unterbricht die Folge; der Start ist die Schussnummer", () => {
+    const values = [101, 102, 103, 104, 105, 98]
+      .map((v, i) => shot(i, v))
+      .map((s, i) => (i === 1 ? { ...s, decimalTenths: null } : s))
+    expect(longestRun(values, "decimal", 100)).toEqual({ length: 3, start: 3 })
   })
 
   it("längste Folge in ganzen Ringen: 10,1 und 10,2 sind beide eine 10", () => {

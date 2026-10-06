@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { CARD, MATCH } from "../__fixtures__/cards"
-import type { MetricShot } from "../metrics"
+import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
 import {
   decimalHistogram,
   ringDistribution,
@@ -71,6 +71,30 @@ describe("Extreme und Teiler (E6, E7, E8)", () => {
     expect(shotExtremes(RINGS_ONLY, "decimal")).toBeNull()
   })
 
+  it("ein Platzhalter ist nie bester oder schwächster Schuss, zählt aber für die Nummern", () => {
+    const placeholder: MetricShot = {
+      ...MATCH[2],
+      firedAtMs: 310_000,
+      decimalTenths: 109,
+      ring: 10,
+      flags: [FLAG_SUSPICIOUS],
+    }
+    const extremes = shotExtremes([...CARD, placeholder], "decimal")
+    expect(extremes?.best).toEqual({ number: 1, value: 10.5 })
+    // der Platzhalter liegt zeitlich zwischen Schuss 1 und 2: der schwächste ist jetzt Schuss 7
+    expect(extremes?.worst).toEqual({ number: 7, value: 6.2 })
+  })
+
+  it("gleich weite Teiler: der frühere Schuss zuerst", () => {
+    const twin: MetricShot = { ...MATCH[5], firedAtMs: 900_000 }
+    const extremes = shotExtremes([...CARD, twin], "decimal")
+    expect(extremes?.widestTeiler.map((t) => [t.number, t.teiler])).toEqual([
+      [6, 3831],
+      [7, 3831],
+      [5, 3369],
+    ])
+  })
+
   it("Teiler-Schnitt und -Median", () => {
     const stats = teilerStats(CARD)
     expect(stats?.n).toBe(6)
@@ -108,6 +132,19 @@ describe("Ringverlust, Konstanz und Quoten (E9, E10, E4, E11)", () => {
     expect(consistency?.sd).toBeCloseTo(Math.sqrt(8.75 / 3), 9)
     expect(consistency?.range).toBeCloseTo(4, 9)
     expect(consistency?.mad).toBeCloseTo(0.1, 9)
+  })
+
+  it("eine Serie mit fehlendem Wert hat keine Summe und zählt nicht für die Konstanz", () => {
+    const gap = WITH_SHORT_SERIES.map((shot) =>
+      shot.seq === 15 ? { ...shot, decimalTenths: null } : shot
+    )
+    const consistency = seriesConsistency(gap, "decimal")
+    expect(consistency?.series[1]).toEqual({ series: 2, shots: 10, total: null })
+    expect(consistency?.compared).toBe(3)
+    // Serien 1, 3, 4: 100, 98, 101
+    expect(consistency?.sd).toBeCloseTo(Math.sqrt(14 / 6), 9)
+    // in ganzen Ringen ist der Ring bekannt, die Serie also vollständig
+    expect(seriesConsistency(gap, "rings")?.compared).toBe(4)
   })
 
   it("Konstanz in ganzen Ringen: 9,8 zählt 9", () => {

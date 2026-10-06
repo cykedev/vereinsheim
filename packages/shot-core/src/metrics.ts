@@ -230,6 +230,19 @@ export function inShotOrder<T extends Pick<MetricShot, "seq" | "firedAtMs">>(
   return [...shots]
 }
 
+/**
+ * Nummer jedes Schusses in der Abgabefolge seiner Art, ab 1 (Wertung 1, 2, …; Probe 1, 2, …), über
+ * alle gegebenen Schüsse und unabhängig davon, welche Angaben ihm fehlen: Schuss 8 bleibt Schuss 8,
+ * auch wenn Schuss 3 ein Platzhalter ist oder keinen Wert hat (SF-15, SF-30). Alle Nummern der
+ * Auswertungen kommen hierher.
+ */
+export function shotNumbers(shots: readonly MetricShot[]): Map<MetricShot, number> {
+  const numbers = new Map<MetricShot, number>()
+  const next: Record<ShotKind, number> = { match: 0, probe: 0 }
+  for (const shot of inShotOrder(shots)) numbers.set(shot, ++next[shot.kind])
+  return numbers
+}
+
 // ---------------------------------------------------------------------------------------------
 // Hilfen für die Definitionen. Die Filter in computeMetric garantieren die nötigen Angaben.
 

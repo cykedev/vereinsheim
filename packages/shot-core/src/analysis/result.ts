@@ -5,15 +5,16 @@
 
 import { standardDeviation } from "../geometry"
 import {
-  inShotOrder,
+  FLAG_SUSPICIOUS,
   selectShots,
   shotDistanceUm,
+  shotNumbers,
   type MetricShot,
   type Scoring,
   type ShotKind,
 } from "../metrics"
 import { teilerFromDistanceUm } from "../scoring"
-import { mad, wilson } from "../stats"
+import { mad, median, wilson } from "../stats"
 import { MAX_DECIMAL_TENTHS } from "../targets"
 import { seriesCurve, type SeriesPoint } from "./course"
 import { valueNeed, valueRings, valueTenths } from "./values"
@@ -44,12 +45,6 @@ export function decimalHistogram(shots: readonly MetricShot[]): { n: number; cou
   return { n: counted.length, counts }
 }
 
-/** Nummer eines Wertungsschusses in der Abgabefolge, ab 1 */
-function matchNumbers(shots: readonly MetricShot[]): Map<MetricShot, number> {
-  const match = inShotOrder(shots.filter((shot) => shot.kind === "match"))
-  return new Map(match.map((shot, i) => [shot, i + 1]))
-}
-
 export interface ShotRef {
   number: number
   /** Wert in Ringen, in der gewählten Wertung */
@@ -70,10 +65,14 @@ export interface ShotExtremes {
   widestTeiler: TeilerRef[]
 }
 
-/** Bei gleichem Wert zählt der frühere Schuss. */
+/**
+ * Bei gleichem Wert zählt der frühere Schuss. Ein verdächtiger Schuss (Platzhalter) ist nie bester oder
+ * schwächster: Er trägt nur den amtlichen Wert, nicht die Leistung (SF-15, Katalog E6).
+ */
 export function shotExtremes(shots: readonly MetricShot[], scoring: Scoring): ShotExtremes | null {
-  const numbers = matchNumbers(shots)
+  const numbers = shotNumbers(shots)
   const valued = selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })
+    .filter((shot) => !(shot.flags ?? []).includes(FLAG_SUSPICIOUS))
     .map((shot) => ({ number: numbers.get(shot) as number, tenths: valueTenths(shot, scoring) }))
     .sort((a, b) => a.number - b.number)
   if (valued.length === 0) return null
@@ -81,17 +80,17 @@ export function shotExtremes(shots: readonly MetricShot[], scoring: Scoring): Sh
   const low = valued.reduce((min, shot) => (shot.tenths < min.tenths ? shot : min))
   const best = { number: top.number, value: top.tenths / 10 }
   const worst = { number: low.number, value: low.tenths / 10 }
-  const teiler = selectShots(shots, { kinds: MATCH, need: "distance" })
-    .map((shot) => ({
-      number: numbers.get(shot) as number,
-      teiler: teilerFromDistanceUm(shotDistanceUm(shot)),
-    }))
-    .sort((a, b) => a.teiler - b.teiler || a.number - b.number)
+  const teiler = selectShots(shots, { kinds: MATCH, need: "distance" }).map((shot) => ({
+    number: numbers.get(shot) as number,
+    teiler: teilerFromDistanceUm(shotDistanceUm(shot)),
+  }))
   return {
     best,
     worst,
-    bestTeiler: teiler.slice(0, 3),
-    widestTeiler: teiler.slice(-3).reverse(),
+    bestTeiler: [...teiler].sort((a, b) => a.teiler - b.teiler || a.number - b.number).slice(0, 3),
+    widestTeiler: [...teiler]
+      .sort((a, b) => b.teiler - a.teiler || a.number - b.number)
+      .slice(0, 3),
   }
 }
 
@@ -102,13 +101,10 @@ export function teilerStats(
     teilerFromDistanceUm(shotDistanceUm(shot))
   )
   if (values.length === 0) return null
-  const ordered = [...values].sort((a, b) => a - b)
-  const middle = Math.floor(ordered.length / 2)
   return {
     n: values.length,
     mean: values.reduce((sum, v) => sum + v, 0) / values.length,
-    median:
-      ordered.length % 2 === 1 ? ordered[middle] : (ordered[middle - 1] + ordered[middle]) / 2,
+    median: median(values) as number,
   }
 }
 
@@ -118,20 +114,14 @@ export function teilerStats(
  */
 export function ringLoss(
   shots: readonly MetricShot[],
-  scoring: "rings" | "decimal"
+  scoring: Scoring
 ): { n: number; loss: number } | null {
-  const need = scoring === "rings" ? "ring" : "decimal"
   const counting = shots.filter((shot) => shot.kind === "match")
-  const valued = selectShots(shots, { kinds: MATCH, need })
+  const valued = selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })
   if (valued.length === 0 || valued.length < counting.length) return null
-  if (scoring === "rings") {
-    return {
-      n: valued.length,
-      loss: valued.length * 10 - valued.reduce((s, x) => s + (x.ring as number), 0),
-    }
-  }
-  const tenths = valued.reduce((s, x) => s + (x.decimalTenths as number), 0)
-  return { n: valued.length, loss: (valued.length * MAX_DECIMAL_TENTHS - tenths) / 10 }
+  const best = scoring === "rings" ? 100 : MAX_DECIMAL_TENTHS
+  const sum = valued.reduce((s, shot) => s + valueTenths(shot, scoring), 0)
+  return { n: valued.length, loss: (valued.length * best - sum) / 10 }
 }
 
 export interface SeriesConsistency {
@@ -145,7 +135,10 @@ export interface SeriesConsistency {
   mad: number | null
 }
 
-/** Konstanz: nur Serien gleicher Länge sind vergleichbar; eine kurze Restserie zählt nicht mit. */
+/**
+ * Konstanz: nur Serien gleicher Länge sind vergleichbar; eine kurze Restserie zählt nicht mit, eine
+ * Serie ohne Summe (einem Schuss fehlt der Wert) auch nicht.
+ */
 export function seriesConsistency(
   shots: readonly MetricShot[],
   scoring: Scoring
@@ -155,7 +148,7 @@ export function seriesConsistency(
   const lengths = new Map<number, number>()
   for (const s of series) lengths.set(s.shots, (lengths.get(s.shots) ?? 0) + 1)
   const modal = [...lengths].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0]
-  const totals = series.filter((s) => s.shots === modal).map((s) => s.total)
+  const totals = series.flatMap((s) => (s.shots === modal && s.total !== null ? [s.total] : []))
   const valued = selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })
   return {
     series,

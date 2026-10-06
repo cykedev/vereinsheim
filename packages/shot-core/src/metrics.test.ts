@@ -9,6 +9,7 @@ import {
   inShotOrder,
   METRICS,
   metricByKey,
+  shotNumbers,
   type MetricDefinition,
   type MetricShot,
 } from "./metrics"
@@ -364,6 +365,26 @@ describe("selectShots", () => {
   it("ohne Angabe der Art zählen Probe und Wertung", () => {
     expect(selectShots(CARD, { need: "position" })).toHaveLength(CARD.length)
     expect(selectShots(CARD, { need: "position", kinds: ["match"] })).toHaveLength(MATCH.length)
+  })
+})
+
+describe("shotNumbers", () => {
+  it("nummeriert je Art in Abgabefolge, unabhängig von fehlenden Angaben", () => {
+    // Liste absichtlich gemischt; Schuss 3 der Wertung ist ein Platzhalter ohne Lage und Wert
+    const third: MetricShot = {
+      ...MATCH[2],
+      xUm: null,
+      yUm: null,
+      decimalTenths: null,
+      flags: ["verdaechtig"],
+    }
+    const card = [MATCH[5], PROBE[1], MATCH[0], third, PROBE[0], MATCH[1], MATCH[3], MATCH[4]]
+    const numbers = shotNumbers(card)
+    expect(MATCH.map((shot) => numbers.get(shot === MATCH[2] ? third : shot))).toEqual([
+      1, 2, 3, 4, 5, 6,
+    ])
+    expect(numbers.get(PROBE[0])).toBe(1)
+    expect(numbers.get(PROBE[1])).toBe(2)
   })
 })
 
