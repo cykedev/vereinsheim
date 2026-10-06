@@ -10,7 +10,8 @@
     "./discipline": "./src/discipline.ts",
     "./verify": "./src/verify.ts",
     "./geometry": "./src/geometry.ts",
-    "./time": "./src/time.ts"
+    "./time": "./src/time.ts",
+    "./metrics": "./src/metrics.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
