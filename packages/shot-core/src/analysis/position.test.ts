@@ -45,6 +45,26 @@ describe("Ist die Lage echt? (L3, Hotelling-T²)", () => {
     expect(result?.real).toBe(false)
   })
 
+  it("schräg gestreckte Gruppe quer versetzt: die Kovarianz zählt", () => {
+    const slanted = [
+      [-1520, -1308],
+      [-1732, -1096],
+      [-813, -601],
+      [-1025, -389],
+      [-106, 106],
+      [-318, 318],
+      [601, 813],
+      [389, 1025],
+      [1308, 1520],
+      [1096, 1732],
+    ].map(([x, y], i) => at(x, y, i))
+    const result = mpiConfidence(slanted)
+    // ohne Kovarianz wären es nur 0,8 (zufällig); kritisch 10,03
+    expect(result?.t2).toBeCloseTo(36, 6)
+    expect(result?.critical).toBeCloseTo(10.0327, 4)
+    expect(result?.real).toBe(true)
+  })
+
   it("zehn enge Schuss um (5 | 0) mm: echt", () => {
     expect(mpiConfidence(TIGHT_RIGHT)?.real).toBe(true)
     expect(mpiConfidence(SPREAD.slice(0, 2))).toBeNull()
@@ -64,8 +84,10 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     expect(split?.reliable).toBe(true)
   })
 
-  it("unter zehn Schuss nicht belastbar", () => {
+  it("unter zehn Schuss oder ohne echte Lage nicht belastbar", () => {
     expect(ringLossSplit(TIGHT_RIGHT.slice(0, 9), LP_10M)?.reliable).toBe(false)
+    const centered = OFFSETS.map(([dx, dy], i) => at(dx, dy, i))
+    expect(ringLossSplit(centered, LP_10M)?.reliable).toBe(false)
     expect(ringLossSplit([], LP_10M)).toBeNull()
   })
 })

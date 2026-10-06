@@ -69,6 +69,24 @@ describe("Ausreißer (V6, V7)", () => {
     expect(outliers(PROBE.slice(0, 4))).toBeNull()
   })
 
+  it("ein mäßiger Ausreißer fällt auf, die Gruppe mit verschiedenen Radien nicht", () => {
+    const base = [
+      [800, 0],
+      [-800, 0],
+      [0, 1000],
+      [0, -1000],
+      [1100, 0],
+      [-1100, 0],
+      [0, 1300],
+      [0, -1300],
+      [900, 900],
+      [-900, -900],
+    ].map(([xUm, yUm]) => ({ ...PROBE[0], xUm, yUm }))
+    expect(outliers(base)?.indices).toEqual([])
+    // 2,6 mm: über Q3 + 1,5 · IQR (1,78 mm), aber kein extremer Treffer
+    expect(outliers([...base, { ...PROBE[0], xUm: 2600, yUm: 0 }])?.indices).toEqual([10])
+  })
+
   it("Ringverlust durch die schwächsten 10 %", () => {
     const values = [105, 104, 103, 105, 104, 103, 105, 104, 103, 60]
     const shots = values.map((decimalTenths, i) => ({
