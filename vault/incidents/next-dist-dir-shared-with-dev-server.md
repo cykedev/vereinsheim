@@ -2,7 +2,7 @@
 id: next-dist-dir-shared-with-dev-server
 type: incident
 title: "Gate und next dev teilen .next — check-types rot ohne Diff"
-keywords: [distDir, .next, NEXT_DIST_DIR, next dev, pnpm check, TS2307, routes.js, validator.ts, Gate rot ohne Diff, Dev-Server, Fast Refresh]
+keywords: [distDir, .next, NEXT_DIST_DIR, next dev, pnpm check, TS2307, routes.js, validator.ts, Gate rot ohne Diff, Dev-Server, Fast Refresh, --force, ungecacht, Wettrennen, concurrency]
 tags: [incident, gates]
 relates_to: ["[[monorepo]]", "[[ringwerk]]", "[[treffsicher]]"]
 part_of: ["[[incidents]]"]
@@ -18,6 +18,13 @@ Zweiter Effekt derselben Kollision: ein `rm -rf .next` bei **laufendem** Dev-Ser
 `.next/dev`; die App antwortet dann bis zum Neustart auf jeder Seite mit
 `Cannot read properties of undefined (reading 'call')`. In dieser Session hat genau das eine
 laufende Sitzung des Users abgeschossen.
+
+Dritter Effekt, ohne Dev-Server (2026-10-06): Im **ungecachten** Lauf (`pnpm check --force`) laufen
+`next build` und `check-types` derselben App gleichzeitig; der Build schreibt `.next/types` neu,
+während `tsc` sie liest. Zweimal derselbe `TS2307` in `ringwerk#check-types`, ohne Änderung unter
+`apps/`; allein und mit `--filter=ringwerk` grün, nacheinander (`--concurrency=1`) grün. Im normalen
+Lauf sind die App-Tasks gecacht, dann tritt es nicht auf; rot wird es erst, wenn eine App sich ändert
+und beide Tasks unter Last zusammenfallen.
 
 **Sofort-Regel:** Dev-Server vor einem Gate-Lauf stoppen; nach einem abgebrochenen Build erst
 `.next` räumen (Server gestoppt), dann Server neu starten. Steht auch in den Skills `/check` und
