@@ -119,7 +119,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-1.8 Scheiben-Liste und Session-Detail
 - **Ziel:** das, was der Prototyp verspricht.
-- **Umfang:** Liste nach Trainingsabend; Session-Detail mit Trefferbild (Overlays, Zoom), Serien und Probe-Blöcken als kleine Scheiben, Schusstabelle, Wiedergabe, Kennzahl-Kacheln, Beobachtung, Original-PDF, Merkmalen und Aktionen an der Scheibe ([[spiegel-ui-design]]); Umschalter ganze Ringe/Zehntel überall; Zeichenregeln aus „Zeichnen der Scheibe“; `packages/shot-ui`.
+- **Umfang:** Liste nach Trainingsabend; Session-Detail mit Trefferbild (Overlays, Zoom), Serien und Probe-Blöcken als kleine Scheiben, Schusstabelle, Wiedergabe, Kennzahl-Kacheln, Bereich „Analyse“ mit den Auswertungen aus SP-1.10, Beobachtung, Original-PDF, Merkmalen und Aktionen an der Scheibe ([[spiegel-ui-design]]); Umschalter ganze Ringe/Zehntel überall; Zeichenregeln aus „Zeichnen der Scheibe“; `packages/shot-ui`.
 - **Abnahme:** Sichtprüfung gegen `vault/_attachments/spiegel-konzept.html` auf Handy und Desktop, dunkel und, falls der Hellmodus in Phase 1 kommt, hell ([[spiegel-open-questions]]); Markup-Tests; Sonderfälle SF-01, SF-02, SF-05, SF-07, SF-11, SF-16, SF-18, SF-61.
 - **Hängt ab von:** SP-1.2, SP-1.6. **Status:** offen.
 
@@ -129,13 +129,19 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Abnahme:** Deploy auf dem VPS, Speicher bleibt in Ruhe und beim Deploy unter der Grenze, Restore-Probe, Selbst-Hosting-Beispiel startet lokal; Sonderfälle SF-67, SF-68.
 - **Hängt ab von:** SP-1.6. Geschützte Pfade, interaktiv. **Status:** offen.
 
+### SP-1.10 Fachkern: Analyse einer Scheibe
+- **Ziel:** alles, was eine einzelne Scheibe hergibt, als Profi-Analyse rechnen, ohne Datenbank und ohne Historie ([[spiegel-statistics]]).
+- **Umfang:** `shot-core` bekommt Statistik-Hilfen (`stats`: Quantile, MAD, Wilson, χ²- und F-Quantile, c4, Theil-Sen) und das Modul `analysis`: Ergebnis (Ringverteilung, Zehntelverteilung, bester und schwächster Schuss, Teiler-Schnitt und -Listen, Ringverlust, Konstanz, Quoten), Präzision (Rayleigh-σ mit Vertrauensbereich, Höhe und Breite, Form, Ringbreiten, Ausreißer), Lage (Hotelling-Test „ist die Lage echt?“, Ringverlust durch Lage gegen Streuung, Lageanteil, Richtungsuhr, Drift), Zeit (Tempo-Konstanz, Netto-Schießzeit, Wiedereinstieg nach Pausen, Rhythmus-Profil), Verlauf (Serienkurve, Ermüdung, Trend in der Scheibe, gleitender Schnitt, Streuung und Schwerpunkt je Serie, längste Folge), Probe (Umfang, Qualität, „eingeschossen?“) und Datenlage; neue Kennzahlen in der Registry (σ̂, Höhe, Breite, Zehnerquote, Tempo-Streuung, Dauer).
+- **Abnahme:** feste Erwartungswerte aus Tabellen und Hand-Rechnung, Mutationsprobe nach [[conventions]] §9; Spielwiese mit Beispielscheiben zeigt alles; Sonderfälle SF-01, SF-14, SF-15, SF-30, SF-60, SF-61, SF-63.
+- **Hängt ab von:** SP-1.2. **Status:** offen.
+
 ## Phase 2 · Auswertung
 
 ### SP-2.1 Verläufe und Rekorde
-- **Umfang:** Verlauf jeder Kennzahl je Disziplin-Familie mit Filtern und gleitendem Schnitt, Rekorde je Wertung (ganze Ringe, Zehntel), Kalender ([[spiegel-metrics]]); Sonderfälle SF-60, SF-64, SF-65, SF-66. **Hängt ab von:** SP-1.2, SP-1.8. **Status:** offen.
+- **Umfang:** Verlauf jeder Kennzahl je Disziplin-Familie mit Filtern und gleitendem Schnitt, Rekorde je Wertung (ganze Ringe, Zehntel), Kalender ([[spiegel-metrics]]); aus dem Katalog ([[spiegel-statistics]]) T1, T2, T5–T7, R1–R8, V3–V5; für Verläufe über unterschiedliche Schusszahlen σ̂ statt Streukreis; Sonderfälle SF-60, SF-64, SF-65, SF-66. **Hängt ab von:** SP-1.2, SP-1.8, SP-1.10. **Status:** offen.
 
 ### SP-2.2 Direkte Vergleiche und Beobachtungen
-- **Umfang:** Serie, Scheibe, Zeitraum, Merkmal, Baseline; Sätze aus Kennzahlen. **Hängt ab von:** SP-2.1. **Status:** offen.
+- **Umfang:** Serie, Scheibe, Zeitraum, Merkmal, Baseline; Sätze aus Kennzahlen nach den Regeln für ehrliche Zahlen; aus dem Katalog C1–C6 (C5 und C6 nach SP-2.3) und die Beobachtungen in Worten ([[spiegel-statistics]]). **Hängt ab von:** SP-2.1. **Status:** offen.
 
 ### SP-2.3 Notizen, Tags, Ausrüstung
 - **Umfang:** Kontext an Scheibe und Serie, Grundlage für Vergleiche nach Merkmal (Munitionslos, Griff). **Hängt ab von:** SP-1.8. **Status:** offen.
@@ -148,6 +154,12 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-2.6 Ergebnisse von fremden Anlagen
 - **Umfang:** vollständiger Parser in `packages/meyton-pdf`, konsolidiert aus Treffsicher ([[treffsicher-meyton-import]]) und Ringwerk ([[meyton-import]]) mit allen DoS-Grenzen und um Kopf und Fuß erweitert ([[meyton-printout]]); Meyton-QR ohne Brücke → Ergebnis ohne Rohdaten aus dem PDF als Versuch, sonst nur das PDF; später Trefferlage aus der PDF-Grafik zurückrechnen. Bestehende Import-Tests beider Apps bleiben grün; Sonderfälle SF-06, SF-44. **Hängt ab von:** SP-1.3, SP-1.7. **Status:** offen.
+
+### SP-2.7 Erkenntnisse über Zeiträume
+- **Umfang:** Profi-Analysen, die viele Scheiben brauchen ([[spiegel-statistics]]): Schussposition in der Serie (I7), Reaktion nach schwachem Schuss (I8), erster Wertungsschuss (I9), Tempo gegen Wert (Z6, Z7), Ausreißerrichtung (L7), Langzeit-Trefferbild und Lage über Zeit (L9, L10), Bedeutsamkeit und Trendsteigung (T3, T4), Munitionslos und Ausrüstung, Tageszeit, Pause, Stand (K1–K5), Wettkampf gegen Training (W1–W4). Jede Aussage mit Mindestzahl, Unsicherheit und „unklar“, wenn die Daten nicht reichen. **Hängt ab von:** SP-2.1, SP-2.3. **Status:** offen.
+
+### SP-2.8 Training mit Messdaten
+- **Umfang:** systematisch trainieren mit messbaren Übungen: „Bleib drüber“ (Schwelle halten), Zehntel-Ziel, längste Folge, Soll-Schnitt zum Ziel (W5), Zielwahrscheinlichkeit (W6), Erfolgsserien und Meilensteine (T8, R9), Auswertung je Übung über die Zeit. Ziele, Absicht und Reflexion bleiben laut [[adr-026]] in Treffsicher; Spiegel liefert Messung und Kriterium (Verknüpfung über SP-3.1). **Hängt ab von:** SP-2.1. **Status:** offen.
 
 ## Phase 3 · Vernetzung
 

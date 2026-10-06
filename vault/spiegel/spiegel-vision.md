@@ -3,7 +3,7 @@ id: spiegel-vision
 type: guide
 title: "Spiegel — Vision und Abgrenzung"
 aliases: [spiegel-ziel, spiegel-produktvision]
-keywords: [vision, ziel, zielgruppe, abgrenzung, leitprinzipien, nicht-ziele, shotsapp, disag, m-qnect, treffsicher, ringwerk, ambitionierte schützen, trainer]
+keywords: [vision, ziel, leitbild, profi-werkzeug, systematisch trainieren, analysieren, zielgruppe, abgrenzung, leitprinzipien, nicht-ziele, shotsapp, disag, m-qnect, treffsicher, ringwerk, ambitionierte schützen, trainer]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[treffsicher-requirements]]", "[[meyton-interfaces]]"]
 ---
@@ -19,6 +19,8 @@ relates_to: ["[[treffsicher-requirements]]", "[[meyton-interfaces]]"]
 - **Details einer Session:** Trefferbild mit Schwerpunkt und Streukreis, Wiedergabe in echter Reihenfolge, Serien einzeln und nebeneinander, Schuss für Schuss mit Teiler, Richtung und Intervall.
 - **Verläufe jeder Kennzahl** über Wochen und Monate, mit Rekorden.
 - **Direkte Vergleiche:** Serie gegen Serie, Scheibe gegen Scheibe, Zeitraum gegen Zeitraum, Merkmal gegen Merkmal, gegen den eigenen Schnitt.
+
+**Leitbild (Oktober 2026):** ein Profi-Werkzeug, „das mir viele gute Informationen zeigt, mit denen ich systematisch trainieren kann und mit dem ich analysieren kann“ (der User). Spiegel zeigt deshalb viele Statistiken, geordnet und ehrlich, mit Unsicherheit und „unklar“, wo die Daten nicht reichen, und so handlungsnah wie möglich ([[spiegel-statistics]]). Systematisches Training stützt Spiegel mit Messung, Auswertung und Übungen mit messbarem Kriterium; Ziele und Absicht bleiben im Tagebuch.
 
 ## Warum
 
