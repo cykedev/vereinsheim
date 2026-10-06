@@ -279,3 +279,23 @@ Registry muss das tragen, sonst fehlt der Ansicht (SP-1.8) zu manchen Kennzahlen
   gleichen Regeln, und umgekehrt“; `inScoring`; `defineMetric` lehnt halbe Paare ab.
 - Mutationsprobe um N1–N4 erweitert (inScoring, Ringe-Schnitt, Bedarf „ring“, Paarprüfung).
 
+## 7. Nachtrag (6. Oktober 2026): Abweichungen und Review
+
+**Abweichungen vom Plan:** `needs: "distance"` für den besten Teiler (gemessener Abstand vor der Lage,
+statt „braucht Lage“ in E7); Zahl der Pausen und Dauer liefert `tempo()`, sie sind keine Kennzahlen
+der Registry (E5); die Eigenschaftstests nutzen 3–25 statt 3–60 Punkte.
+
+**Review-Fixes** (Bericht `reports/2026-10-06-spiegel-metrics-review.md`):
+
+- Verdächtige Schüsse (SF-15) zählen nur mit ihrem Wert, nie mit Lage, Abstand oder Zeit; `FLAG_MISS`
+  und `FLAG_SUSPICIOUS` getrennt, `excludeFlagged` heißt jetzt `excludeMisses`.
+- `onMissing: "drop" | "null"`: Summen und Zählungen ohne vollständige Angaben geben keinen Wert;
+  `eligibleShots` liefert das n für Vergleiche (SF-60).
+- Gültig sind nur endliche Zahlen, ein Abstand nicht negativ.
+- Abgabefolge `seq` (SF-30): `inShotOrder`; `tempo()` nimmt die Zeiten in Abgabefolge und zählt
+  Rücksprünge der Uhr nicht; der Versatz nimmt nur Probeschüsse vor dem ersten Wertungsschuss.
+- Einheit „Ringe“ für beide Wertungen; Schwerpunkt-Abstand `nSensitive`; Radien und Streuung mit zwei
+  Nachkommastellen; `METRICS` eingefroren; `defineMetric` prüft Schlüssel und Nachkommastellen.
+- Tests mit festen Werten für jede Gruppen-Kennzahl (Fixture mit verschiedener Streuung in x und y und
+  geradem n), Paar-Test mit Liste der wertungsfreien Kennzahlen, `expectNear` gegen null-als-0.
+

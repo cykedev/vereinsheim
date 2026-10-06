@@ -225,6 +225,11 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   hergeben, steht im Validierungsbericht ausdrücklich als **„nicht belegt"** — mit dem Test, der den
   Pfad stattdessen abdeckt — und zählt nicht stillschweigend als geprüft.
 
+- **`toBeCloseTo` nimmt `null` als 0**: In vitest besteht `expect(null).toBeCloseTo(0)`. Wo eine
+  Funktion `null` liefern kann („kein Wert“) und der erwartete Wert 0 ist, vorher
+  `expect(x).not.toBeNull()` prüfen, sonst geht „kein Wert“ als 0 durch (Beispiel: `expectNear` in
+  `packages/shot-core/src/metrics.test.ts`; aufgefallen, weil eine Mutation grün blieb).
+
 - **Eigenschaftstests per Mutation gegenprüfen**: Ein Test auf eine Eigenschaft („ausgeglichen“)
   kann auch von einer schlechteren Variante erfüllt werden. Den Kern der Logik testweise
   vereinfachen (z.B. eine Paritätsregel durch `true` ersetzen) und prüfen, ob ein Test rot wird.
