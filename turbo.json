@@ -15,7 +15,7 @@
       "dependsOn": ["db:generate"]
     },
     "check-types": {
-      "dependsOn": ["db:generate"]
+      "dependsOn": ["db:generate", "build"]
     },
     "test": {
       "dependsOn": ["db:generate"]

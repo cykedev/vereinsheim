@@ -26,6 +26,14 @@ während `tsc` sie liest. Zweimal derselbe `TS2307` in `ringwerk#check-types`, o
 Lauf sind die App-Tasks gecacht, dann tritt es nicht auf; rot wird es erst, wenn eine App sich ändert
 und beide Tasks unter Last zusammenfallen.
 
+**Behoben (2026-10-06, `turbo.json`):** `check-types` hängt am `build` derselben App
+(`"dependsOn": ["db:generate", "build"]`), `tsc` liest also nur fertige Typen. Belegt: Ein Beobachter auf
+`.next/types` sah `routes.d.ts` und `validator.ts` beim Build 0,57 s nach dem Start für 60–70 ms fehlen,
+genau das Fenster für `TS2307`. `next-env.d.ts` importiert diese Dateien, deshalb kann `tsc` sie nicht
+einfach auslassen. Der Docker-Build (`turbo run build`) enthält `check-types` nicht und bleibt gleich;
+Pakete ohne `build` warten auf nichts. Danach fünf ungecachte Läufe grün, zwei davon unter CPU-Last,
+ohne messbaren Zeitverlust (10,6–11,1 s gegen vorher 10,8–12,3 s). Der Dev-Server-Fall oben bleibt.
+
 **Sofort-Regel:** Dev-Server vor einem Gate-Lauf stoppen; nach einem abgebrochenen Build erst
 `.next` räumen (Server gestoppt), dann Server neu starten. Steht auch in den Skills `/check` und
 `/validate`.

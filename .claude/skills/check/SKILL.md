@@ -10,7 +10,8 @@ pnpm check
 ```
 
 Per app this runs: `lint` (eslint src), `format:check` (prettier), `test` (vitest),
-`check-types` (`tsc --noEmit`), `build` (`next build`). **`next build` is mandatory** —
+`check-types` (`tsc --noEmit`, in apps after that app's `build`, which regenerates the `.next/types`
+that `tsc` reads), `build` (`next build`). **`next build` is mandatory** —
 it catches build-only errors (e.g. the Next rule that a `"use server"` file may only
 export directly-declared async functions) that lint/tsc/test do **not** see.
 
