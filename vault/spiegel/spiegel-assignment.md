@@ -3,7 +3,7 @@ id: spiegel-assignment
 type: concept
 title: "Spiegel — Zuordnung von Scheiben zu Schützen"
 aliases: [zuordnung, claim, scheibe-holen, fundbüro]
-keywords: [zuordnung, claim, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts, erste scheibe bestätigen, nicht meine, mehrdeutige sportpassid, überlauf, zwischenstand, gäste-lan]
+keywords: [zuordnung, claim, kamera-scan, teilen, druckzeit, metadaten, layout-unabhängig, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts, erste scheibe bestätigen, nicht meine, mehrdeutige sportpassid, überlauf, zwischenstand, gäste-lan]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-028]]"]
 relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]"]
@@ -36,17 +36,19 @@ Frei getippte Namen (bei euch neben der Schützenliste üblich) ergeben nur **Vo
 
 ## Der QR-Weg im Detail
 
-1. Scan in Spiegel (Kamera) oder Link einfügen. Erlaubt sind nur die in der Konfiguration hinterlegten Meyton-Adressen (heute `qrcode.meyton.eu` und eine feste IP), nie private Netze, nur PDF, ohne Weiterleitungen (SF-47). Die Größengrenze ist eng: Ein Ausdruck hat rund 40 KB, und in Treffsicher hat ein 3,2-MB-PDF schon 665 MB Speicher belegt (SF-48). Das Format beschreibt [[meyton-printout]].
-2. Spiegel speichert das PDF sofort (Meyton hält es nur eine Woche) und liest Kopf und Fuß: ID, Stand, Zeiten, Werte, #Nummer.
-3. Die ID im Fuß wird als vorzeichenbehaftete 32-Bit-Zahl dekodiert (`ff914420` → −7257056) und als Auftrag an die Brücke gegeben ([[spiegel-bridge]]). Die Brücke liefert zuerst nur eine Vorschau: Stand, Beginn, Disziplin, Schusszahl und Zehntelwerte, ohne Namen und ohne Lage.
-4. Gegenprobe: Werte im PDF gegen die Vorschau. Erst wenn sie passen, holt Spiegel die ganze Scheibe; so verlassen bei einer falschen ID oder alten Epoche keine fremden Rohdaten das Schützenhaus (SF-41). Der Link ist nur HTTP, deshalb ist das Pflicht. Ein Ausdruck kann ein Zwischenstand sein; dann müssen die PDF-Werte den Anfang der Scheibe treffen, nicht die ganze (SF-42). Mehrere Ausdrucke derselben Scheibe hängen alle an ihr (SF-43).
-5. Vorschau mit PDF, Bestätigen. Steht im PDF eine #Nummer, die zu einem anderen Konto gehört, geht die Anfrage an den Admin.
+Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung vom 6. Oktober 2026).
 
-Ohne bestätigte ID (offen bis SP-0.2) sucht die Brücke über Uhrzeit, Stand und Schussfolge; das ist praktisch ebenso eindeutig.
+1. **QR erfassen:** Kamera-Scan in Spiegel (Browser-Kamera auf iPhone und Android, auch als installierte App), Link einfügen oder auf Android „Teilen → Spiegel“. Erlaubt sind nur die in der Konfiguration hinterlegten Meyton-Adressen (heute `qrcode.meyton.eu` und eine feste IP), nie private Netze, nur PDF, ohne Weiterleitungen (SF-47). Die Größengrenze ist eng: Ein Ausdruck hat rund 40 KB, und in Treffsicher hat ein 3,2-MB-PDF schon 665 MB Speicher belegt (SF-48). Das Format beschreibt [[meyton-printout]].
+2. **Speichern und zwei Dinge lesen:** Spiegel speichert das PDF sofort als Original (Meyton hält es nur eine Woche). Daraus liest es nur die ID im Fuß (`ID:` und acht Hex-Zeichen, auf jeder Seite) und die Erstellzeit aus den Metadaten. Ändert Meyton das Layout, ändert sich daran nichts (SF-46).
+3. **Vorschau:** Die ID wird als vorzeichenbehaftete 32-Bit-Zahl dekodiert (`ff914420` → −7257056) und als Auftrag an die Brücke gegeben ([[spiegel-bridge]]). Die Brücke liefert eine Vorschau ohne Namen und ohne Lage: Stand, Beginn, Disziplin, Schusszahl, Ergebnis, kleines Trefferbild.
+4. **Plausibilität:** Die Scheibe muss zur Druckzeit passen: gleicher Abend, ihr erster Schuss vor dem Druck. Bei einem Zwischenausdruck hat die Scheibe danach mehr Schüsse; die Vorschau zeigt beides (SF-42). Passt sie nicht, holt Spiegel nichts, sondern fragt nach (SF-41).
+5. **Bestätigen:** Erst danach holt Spiegel die ganze Scheibe. Werte und Identität kommen aus der SSMDB2; gehört die Scheibe laut SportpassID einem anderen Konto, geht die Anfrage an den Admin. Mehrere Ausdrucke derselben Scheibe hängen alle an ihr (SF-43).
 
-**Brücke aus:** Anlage und Brücke werden nach dem Training ausgeschaltet. Scannst du den QR später, zum Beispiel zu Hause, legt Spiegel sofort ein Ergebnis aus dem PDF an und stellt den Auftrag zurück; beim nächsten Einschalten holt die Brücke die Rohdaten nach, und die Scheibe wird vollständig.
+**Ohne lesbare ID** (oder solange SP-0.2 die ID nicht bestätigt hat) zeigt Spiegel die Scheiben, die zur Druckzeit auf der Anlage liefen, und du wählst. Fehlen auch die Metadaten, hilft die Auswahl über Stand und Zeitraum wie im Fundbüro.
 
-Auswärts, ohne Brücke, legt derselbe Scan ein **Ergebnis ohne Rohdaten** aus dem PDF an (Serien, Schusswerte, Teiler, Trefferlage); das PDF bleibt dabei.
+**Brücke aus:** Anlage und Brücke werden nach dem Training ausgeschaltet. Scannst du den QR später, zum Beispiel zu Hause, liegt das PDF sofort in Spiegel und lässt sich ansehen; Vorschau und Bestätigung folgen beim nächsten Einschalten, und Spiegel meldet sich dann.
+
+**Auswärts,** ohne Brücke, liest Spiegel das ganze PDF, soweit der vollständige Parser das Layout kennt, und legt ein **Ergebnis ohne Rohdaten** an (Serien, Schusswerte, Teiler, Trefferlage). Klappt das nicht, bleibt das PDF ohne Werte angehängt (SP-2.6).
 
 ## Fundbüro: Scheiben ohne Besitzer
 

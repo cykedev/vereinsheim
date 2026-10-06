@@ -84,10 +84,10 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Abnahme:** Eigenschafts- und Mutationstests; isomorph (Server und Client); Sonderfälle SF-01, SF-60, SF-61, SF-62, SF-63.
 - **Hängt ab von:** SP-1.1. **Status:** offen.
 
-### SP-1.3 Meyton-PDF-Paket
-- **Ziel:** ein Parser für alle Apps.
-- **Umfang:** `packages/meyton-pdf` aus dem Treffsicher-Parser ([[treffsicher-meyton-import]]) mit allen DoS-Grenzen; Ringwerk-Parser ([[meyton-import]]) konsolidieren; erweitern um Kopf und Fuß (Stand, StartNr, Zeiten, ID, #Nummer, Zähler, Teiler, Trefferkreis, Trefferlage) laut [[meyton-printout]]. Test-PDFs ohne echte Namen.
-- **Abnahme:** alle bestehenden Import-Tests grün in beiden Apps; neue Felder getestet; Sonderfälle SF-06, SF-42, SF-44, SF-46, SF-48.
+### SP-1.3 Meyton-PDF: ID und Druckzeit
+- **Ziel:** QR-Zuordnung ohne Abhängigkeit vom Layout des Ausdrucks ([[adr-028]], Änderung vom 6. Oktober 2026).
+- **Umfang:** `packages/meyton-pdf`, zunächst klein: aus einem PDF (Bytes) die ID im Fuß (`ID:` und acht Hex-Zeichen, auf allen Seiten, dekodiert als vorzeichenbehaftete 32-Bit-Zahl) und die Erstellzeit aus den Metadaten (mit Zeitzone) lesen; DoS-Grenzen für Größe und Seiten. Test-PDFs synthetisch, ohne Namen, auch mit abgewandeltem Layout.
+- **Abnahme:** ID und Erstellzeit aus dem Beispiel-Format und aus abgewandelten PDFs (anderes Layout, mehrseitig, Probe-Ausdruck) gelesen; ohne ID oder Metadaten ein sauberes „nicht gefunden“; Sonderfälle SF-44, SF-46, SF-48.
 - **Hängt ab von:** nichts. **Status:** offen.
 
 ### SP-1.4 Brücke v1: lesen, puffern, hochladen
@@ -112,8 +112,8 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-1.7 Zuordnung: Opt-in per Sportpass, Meyton-QR, Admin
 - **Ziel:** jede Scheibe findet ihren Besitzer ([[spiegel-assignment]]).
-- **Umfang:** Profil mit Sportpass-Opt-in, Admin-Bestätigung und Bestätigung der ersten Scheibe (die SportpassID pflegt der Admin bei Interessierten vorher in der Meyton-Schützenverwaltung nach); QR-Scan (Kamera) oder Link; PDF von erlaubten Adressen laden und speichern; ID dekodieren; Auftrag an die Brücke, auch zurückgestellt, wenn sie aus ist; Gegenprobe; Vorschau; PDF an vorhandene Scheiben hängen; Admin-Zuweisung; „Nicht meine“; Protokoll.
-- **Schnitt:** a) Opt-in mit erster Bestätigung; b) QR-Weg mit PDF, Auftrag und Gegenprobe; c) Admin-Zuweisung, „Nicht meine“, Teilen und Protokoll.
+- **Umfang:** Profil mit Sportpass-Opt-in, Admin-Bestätigung und Bestätigung der ersten Scheibe (die SportpassID pflegt der Admin bei Interessierten vorher in der Meyton-Schützenverwaltung nach); QR erfassen (Kamera im Browser, Link, „Teilen“ auf Android); PDF von erlaubten Adressen laden und als Original speichern; ID und Druckzeit lesen (SP-1.3); Auftrag an die Brücke, auch zurückgestellt, wenn sie aus ist; Vorschau mit Druckzeit-Plausibilität und Bestätigung; Auswahl nach Druckzeit ohne ID; PDF an vorhandene Scheiben hängen; Admin-Zuweisung; „Nicht meine“; Protokoll.
+- **Schnitt:** a) Opt-in mit erster Bestätigung; b) QR-Weg mit PDF, Auftrag, Vorschau und Bestätigung; c) Admin-Zuweisung, „Nicht meine“, Teilen und Protokoll.
 - **Abnahme:** Opt-in-Scheibe erscheint ohne Zutun; QR-Weg mit einem anonymisierten Ausdruck lokal und an der Anlage; QR-Scan bei ausgeschalteter Brücke ergibt ein PDF-Ergebnis, das beim nächsten Start vollständig wird; Sonderfälle SF-12, SF-28, SF-34, SF-35, SF-37, SF-38, SF-39, SF-40, SF-41, SF-42, SF-43, SF-45, SF-47, SF-48, SF-56.
 - **Hängt ab von:** SP-1.3, SP-1.5, SP-1.6. **Status:** offen.
 
@@ -147,7 +147,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** PWA mit Scan-Aktion; Nachladen der Historie nach einem Opt-in, gedrosselt, nach einer Vorschau und nur, wenn gerade niemand schießt; ältere Scheiben ohne SportpassID über Namensvorschläge (SF-36, SF-52). **Hängt ab von:** SP-1.7. **Status:** offen.
 
 ### SP-2.6 Ergebnisse von fremden Anlagen
-- **Umfang:** Meyton-QR ohne Brücke → Ergebnis ohne Rohdaten aus dem PDF, später Trefferlage aus der PDF-Grafik zurückrechnen. **Hängt ab von:** SP-1.3, SP-1.7. **Status:** offen.
+- **Umfang:** vollständiger Parser in `packages/meyton-pdf`, konsolidiert aus Treffsicher ([[treffsicher-meyton-import]]) und Ringwerk ([[meyton-import]]) mit allen DoS-Grenzen und um Kopf und Fuß erweitert ([[meyton-printout]]); Meyton-QR ohne Brücke → Ergebnis ohne Rohdaten aus dem PDF als Versuch, sonst nur das PDF; später Trefferlage aus der PDF-Grafik zurückrechnen. Bestehende Import-Tests beider Apps bleiben grün; Sonderfälle SF-06, SF-44. **Hängt ab von:** SP-1.3, SP-1.7. **Status:** offen.
 
 ## Phase 3 · Vernetzung
 

@@ -3,7 +3,7 @@ id: spiegel-edge-cases
 type: concept
 title: "Spiegel — Sonderfälle und Fallstricke"
 aliases: [sonderfälle, edge-cases, fallstricke, sonderfall-katalog, testmatrix]
-keywords: [sonderfall, edge case, regelnummer, regelkollision, fallstrick, nur probe, probeschüsse, lange probe, wertung vergessen, schusszahl, abgebrochen, unvollständig, zustand, fehlschuss, platzhalter, handeintrag, falsche disziplin, verdeckte wertung, modus 0, querschuss, korrektur, umnummerierung, fingerabdruck, massenlöschung, reset, epoche, grabstein, zeitstempel, millisekunden, uhr, sportpass, überlauf, nicht meine, zwischenstand, vorschau, ssrf, polling, index, lesesperre, myisam, stromausfall, netztrennung, gäste-lan, r50, visier, disziplin-familie, rekorde, zeilenversionen, testdaten, schießprotokoll, merkmale]
+keywords: [sonderfall, edge case, druckzeit, pdf-metadaten, regelnummer, regelkollision, fallstrick, nur probe, probeschüsse, lange probe, wertung vergessen, schusszahl, abgebrochen, unvollständig, zustand, fehlschuss, platzhalter, handeintrag, falsche disziplin, verdeckte wertung, modus 0, querschuss, korrektur, umnummerierung, fingerabdruck, massenlöschung, reset, epoche, grabstein, zeitstempel, millisekunden, uhr, sportpass, überlauf, nicht meine, zwischenstand, vorschau, ssrf, polling, index, lesesperre, myisam, stromausfall, netztrennung, gäste-lan, r50, visier, disziplin-familie, rekorde, zeilenversionen, testdaten, schießprotokoll, merkmale]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-bridge]]", "[[spiegel-metrics]]", "[[spiegel-assignment]]", "[[spiegel-roadmap]]", "[[meyton-ssmdb2]]"]
 ---
@@ -45,7 +45,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-03 | Probe fehlt nach dem ersten Wertungsschuss | Zwei Lesarten der Release-Notiz: gelöscht oder ab dann nicht mehr geschrieben. Ein Snapshot ohne Probe sieht aus wie eine Korrektur; QR und Nachladen kommen zu spät; ohne `Startzeit` verschiebt sich der Beginn | Brücke puffert die Probe aller Scheiben sieben Tage lokal; Spiegel vereinigt die Probe über alle Snapshots; Merkmal `probe-unvollstaendig`; Epoche nie aus dem Beginn | Schießprotokoll: 3 Probe → 2 Wertung → Probe → 2 Probe → 2 Wertung, nach jeder Stufe abfragen |
 | SF-04 | Zurück von Wertung auf Probe | „Probe zuerst“ verdreht Wiedergabe, Intervalle und Pausen | Leitregel 2 | Schießprotokoll, Fixture |
 | SF-05 | Umschalten vergessen: 40 „Probeschüsse“ sind das eigentliche Training | Das Training fehlt in den Ergebnis-Verläufen | Aktion „Als Wertung zählen“, Merkmal `als-wertung-gezaehlt`, nicht amtlich | Fixture |
-| SF-06 | Ausdruck einer reinen Probe | Der heutige Parser bricht womöglich ohne Serien ab oder hält Probe für Wertung | `meyton-pdf` erkennt „Probe“ im Kopf und kommt ohne Serien aus | Fixture |
+| SF-06 | Ausdruck einer reinen Probe | Betrifft nur fremde Anlagen (SP-2.6): Der volle Parser bricht womöglich ohne Serien ab oder hält Probe für Wertung | `meyton-pdf` erkennt „Probe“ im Kopf und kommt ohne Serien aus; für die Zuordnung zählen nur ID und Druckzeit | Fixture (SP-2.6) |
 
 ### Schusszahl, Vollständigkeit, Einheit
 
@@ -111,12 +111,12 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 
 | ID | Sonderfall | Risiko | Absicherung | Prüfen |
 |---|---|---|---|---|
-| SF-41 | QR mit falscher ID, alter Epoche oder Dekodierfehler | Die Brücke lädt eine fremde Scheibe hoch, bevor verglichen wird | Erst Vorschau ohne Namen und Lage, Gegenprobe in Spiegel, dann die ganze Scheibe | Test |
-| SF-42 | Ausdruck vor dem Ende | Die Gegenprobe meldet einen Widerspruch | Vergleich nur bis zur Druckzeit; Merkmal `pdf-zwischenstand` | Schießprotokoll, Fixture |
+| SF-41 | QR mit falscher ID, alter Epoche oder Dekodierfehler | Die Brücke lädt eine fremde Scheibe hoch, bevor jemand prüft | Erst Vorschau ohne Namen und Lage, Plausibilität über die Druckzeit, Bestätigung durch den Schützen, dann die ganze Scheibe | Test |
+| SF-42 | Ausdruck vor dem Ende (Zwischenstand) | Die Scheibe hat beim Holen mehr Schüsse als der Ausdruck | Druckzeit aus den Metadaten; die Vorschau zeigt den Stand beim Druck und den aktuellen; Merkmal `pdf-zwischenstand` | Schießprotokoll, Fixture |
 | SF-43 | Dieselbe Scheibe mehrfach gedruckt | Doppelte Scheiben | Gleiche ID ist gleiche Scheibe, mehrere PDFs daran | Schießprotokoll |
-| SF-44 | Mehrseitiger Ausdruck | Der Parser liest nur Seite 1 | Seitenbewusst wie in Treffsicher; gleiche ID auf jeder Seite prüfen | Fixture |
+| SF-44 | Mehrseitiger Ausdruck | Die ID steht nur auf einer Seite oder der volle Parser liest nur Seite 1 | ID auf allen Seiten suchen; seitenbewusster Parser wie in Treffsicher für fremde Anlagen | Fixture |
 | SF-45 | Link abgelaufen oder Meyton-Server nicht erreichbar | Keine Zuordnung per QR | „Scheibe holen“ am Abend; klarer Hinweis | Test |
-| SF-46 | Meyton ändert das PDF-Format (wie am 1. September) | Der Parser liefert nichts | ID im Fuß getrennt und robust suchen; PDF trotzdem speichern und manuell zuordnen | Fixture |
+| SF-46 | Meyton ändert das PDF-Format (wie am 1. September) | Ein Layout-Parser liefert nichts, die Zuordnung bricht | Für die Zuordnung nur ID und Erstellzeit, unabhängig vom Layout; ohne ID Auswahl nach Druckzeit; den vollen Parser braucht nur das Ergebnis fremder Anlagen | Fixture |
 | SF-47 | Beliebige Adresse im QR oder im eingefügten Link | Spiegel ruft interne Adressen ab (SSRF) | Nur konfigurierte Ziele, private Netze gesperrt, keine Weiterleitungen | Test |
 | SF-48 | Großes PDF | Bei 256 MB Speichergrenze stürzt Spiegel ab; in Treffsicher belegte ein 3,2-MB-PDF 665 MB | Enge Grenze (ein Ausdruck hat rund 40 KB), Streaming, Seitenlimit | Test |
 

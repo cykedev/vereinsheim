@@ -8,7 +8,7 @@ part_of: ["[[meyton]]"]
 relates_to: ["[[treffsicher-meyton-import]]", "[[meyton-pdf-format-change]]", "[[spiegel-assignment]]"]
 ---
 
-**TL;DR** Der QR-Code am Meyton-Stand führt per HTTP auf ein PDF bei Meyton (`http://195.201.88.185/print_<UUID>.pdf`, eine Woche abrufbar). Das PDF enthält Stand, Zeiten, Name mit #Nummer, alle Werte, Teiler, Trefferkreis und Trefferlage, aber keine Koordinaten. Im Fuß steht eine Hex-ID, vermutlich die ScheibenID, die Spiegel für die exakte Zuordnung nutzt.
+**TL;DR** Der QR-Code am Meyton-Stand führt per HTTP auf ein PDF bei Meyton (`http://195.201.88.185/print_<UUID>.pdf`, eine Woche abrufbar). Das PDF enthält Stand, Zeiten, Name mit #Nummer, alle Werte, Teiler, Trefferkreis und Trefferlage, aber keine Koordinaten. Im Fuß steht eine Hex-ID, vermutlich die ScheibenID, die Spiegel für die exakte Zuordnung nutzt. Für die Zuordnung liest Spiegel nur diese ID und die Erstellzeit aus den Metadaten, unabhängig vom Layout ([[adr-028]]).
 
 ## Link
 
