@@ -1,0 +1,32 @@
+{
+  "name": "@vereinsheim/shot-help",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./types": "./src/types.ts",
+    "./topics": "./src/topics.ts",
+    "./guide": "./src/guide.ts",
+    "./glossary": "./src/glossary.ts",
+    "./lookup": "./src/lookup.ts",
+    "./markdown": "./src/markdown.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "docs": "tsx scripts/write-guide.ts"
+  },
+  "prettier": "@vereinsheim/config/prettier",
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@vereinsheim/config": "workspace:*",
+    "@vereinsheim/shot-core": "workspace:*",
+    "prettier": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
