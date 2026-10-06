@@ -236,3 +236,50 @@ als 100, eine Schwelle zwischen zwei Ringen erreicht keiner. Ohne Zehntel (SF-18
 Auswertung nur in ganzen Ringen. Die Ergebnisse heißen wertungsneutral (`value`, `total` in Ringen).
 Ein Test hält fest, dass derselbe Anstieg in ganzen Ringen zur Stufe wird und der Trend dann nicht
 mehr „klar“ ist.
+
+## Nachtrag 2: Review-Befunde, Hilfe und Doku (6. Oktober 2026)
+
+Review: `reports/2026-10-06-spiegel-statistik-review.md` (neun Major, elf Minor). Der statistische
+Kern ist bestätigt; die Fixes betreffen Auswahl, Nummern, zwei Kennzahlen, die Formanzeige und Tests.
+Signaturen danach (alle in `packages/shot-core`, test-first, je Befund ein Test, der ohne den Fix rot
+ist):
+
+- `shotNumbers(shots)` (neu, `metrics.ts`): Nummer jedes Schusses in der Abgabefolge seiner Art
+  (Wertung ab 1, Probe ab 1) über alle gegebenen Schüsse, unabhängig von fehlenden Angaben. Alle
+  Nummern in `analysis/*` kommen daher: `shotExtremes`, `movingAverage`, `longestRun`, `cardTrend`
+  (x-Werte), `pauseRecovery.afterShot`, `rhythmProfile` (mit `kind`), `outliers`.
+- `shotExtremes(shots, scoring)`: bester und schwächster ohne verdächtige Schüsse (SF-15, E6); bei
+  gleichem weitestem Teiler der frühere zuerst.
+- `seriesCurve(shots, scoring)` → `{ series, shots, total: number | null }`: `shots` zählt alle
+  Wertungsschüsse der Serie, `total` ist null, wenn einem der Wert fehlt (wie `result.*`).
+  `seriesConsistency` vergleicht nur vollständige Serien der häufigsten Länge.
+- `outliers(shots)` → `{ n, flagged: { shot, number }[], ratio }`, ab 5 Schuss: jeder Schuss gegen den
+  Schwerpunkt der übrigen, T = d²/(2S²(1 + 1/(n − 1))) gegen F₀,₉₅(2, 2(n − 2)) mit Bonferroni über n
+  (simuliert: Fehlalarm 5 %, 5σ-Schuss zu 89–100 % erkannt). Ersetzt Q3 + 1,5 · IQR (Fehlalarm bis
+  47 %).
+- `groupShape(shots)` → zusätzlich `sphericity` (Mauchly, W = 4a²b²/(a² + b²)²) und `elongated`
+  (W < 0,05^(2/(n − 2)), exakt); `showAngle = elongated && n ≥ 10`; ohne Ausdehnung null.
+- `heightWidth` ab 3 Schuss wie die Registry.
+- `mpiConfidence`: kollinear auch mit Rundungsrest (relative Schwelle) → null.
+- `ringLossSplit`: Summen `{ decimal, rings }`; `reliable` nur mit Lagegewinn > 0.
+- `directionClock` → zusätzlich `reliable` (ab 30 Schuss, Katalog L6).
+- `drift`: von Neumann je Sprung normiert, (Σ Sprung²/k)/(Σ r²/(n − 1)); Lücken über `shotSteps`.
+- `shootingTime.shotsPerHour` = Intervalle je Netto-Stunde.
+- `pauseRecovery(shots, scoring)`: Wiedereinstieg gegen den Ø der übrigen Schüsse.
+- `sighterSummary`: Probe nur bis zum ersten Wertungsschuss, Zeiten über `selectShots`, Dauer über
+  `tempo` (null nach Uhrsprung), negative Abstände null.
+- `sighterComparison` → je Seite `n`, `valued`, `positioned`, `meanRings`, `r50Um`, `sigmaUm`.
+- `sighterZeroed(shots, { adjustAfter })`: erst Lage auswählen, dann die letzten fünf nach der letzten
+  Verstellung; mit Ellipse.
+- `stats`: nicht endliche Werte → RangeError; Theil-Sen ohne 95-%-Bereich (n < 5) → null; Fenster ab 1.
+
+**Hilfe und Doku** (Wunsch des Users: „ich verstehe nicht alle, gute Dokumentation und Hilfe, auch in
+der Anwendung, das ist wichtig“):
+
+- Vault-Leitfaden `vault/spiegel/spiegel-statistics-help.md`: jede Auswertung in einfacher Sprache
+  (was sie misst, wie man sie liest, was man tun kann, typische Fehlschlüsse), dazu „So liest du die
+  Zahlen“ (n, 95 %, echt/unklar, ganze Ringe/Zehntel).
+- Roadmap: neues Feature **SP-1.11 Hilfe und Erklärungen** (Erklärtexte als eine Quelle für App und
+  Doku, „?“ an jeder Zahl, Glossar, Einstieg); SP-1.8 hängt davon ab. `spiegel-ui-design` bekommt den
+  Abschnitt „Hilfe und Erklärungen“.
+- Spielwiese: „Was heißt das?“ an jeder Analyse-Karte, Karte „So liest du die Analyse“ im Überblick.
