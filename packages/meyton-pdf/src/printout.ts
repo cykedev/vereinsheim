@@ -2,8 +2,9 @@
 // und die Erstellzeit aus den Metadaten. Dazu Seitenzahl und Druckweg (Producer, Creator) als Hinweis.
 //
 // pdf.js liest fremde Dateien. Deshalb gelten Grenzen für Größe, Seiten, Textmenge und Zeit (SF-48),
-// geprüft während des Lesens gegen eine Uhr: Ein präpariertes PDF blockiert den Event-Loop, ein Timer
-// feuerte dann nicht. Nach außen gehen nur eigene Meldungen (MeytonPdfError), nie pdf.js-Interna.
+// geprüft zwischen den Schritten von pdf.js. Gegen ein präpariertes PDF schützen sie nicht: Das muss der
+// Aufrufer in einem kurzlebigen Kindprozess lesen (siehe limits.ts). Nach außen gehen nur eigene
+// Meldungen (MeytonPdfError), die Ursache steht in `cause`.
 
 import { getDocumentProxy, getMeta } from "unpdf"
 
@@ -127,7 +128,7 @@ export async function readPrintout(
     for (let number = 1; number <= pdf.numPages; number++) {
       checkTime()
       const page = await pdf.getPage(number)
-      // Gestreamt statt getTextContent(): Die Grenzen greifen, bevor pdf.js die Seite ganz aufbaut.
+      // Gestreamt statt getTextContent(): Die Grenzen greifen zwischen den Stücken einer Seite.
       // Kein reader.cancel() beim Abbruch, das hängt mitten im Strom; destroy() unten räumt auf.
       const reader = page.streamTextContent().getReader()
       const parts: string[] = []

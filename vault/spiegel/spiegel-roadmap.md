@@ -34,7 +34,7 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 
 ### SP-0.2 QR-ID prüfen
 - **Ziel:** bestätigen, dass die ID im Fuß des Ausdrucks die ScheibenID ist (den QR gibt es laut Verein immer).
-- **Umfang:** Abfrage aus [[meyton-printout]] mit `ff914420` → −7257056; dazu eine Scheibe ohne Starter schießen, ihren QR scannen und die ID nachschlagen.
+- **Umfang:** Abfrage aus [[meyton-printout]] mit `ff914420` → −7257056; dazu eine Scheibe ohne Starter schießen, ihren QR scannen und die ID nachschlagen. Prüfen, ob Meyton kleine IDs mit führenden Nullen auf acht Zeichen füllt (alle drei bekannten liegen über 0x10000000; sonst wären sie für das Muster unsichtbar).
 - **Abnahme:** [[adr-028]] bestätigt oder angepasst.
 - **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** offen.
 
@@ -88,7 +88,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Ziel:** QR-Zuordnung ohne Abhängigkeit vom Layout des Ausdrucks ([[adr-028]], Änderung vom 6. Oktober 2026).
 - **Umfang:** `packages/meyton-pdf`, zunächst klein: aus einem PDF (Bytes) die ID im Fuß (`ID:` und acht Hex-Zeichen, auf allen Seiten, dekodiert als vorzeichenbehaftete 32-Bit-Zahl) und die Erstellzeit aus den Metadaten (mit Zeitzone) lesen; DoS-Grenzen für Größe und Seiten. Test-PDFs synthetisch, ohne Namen, auch mit abgewandeltem Layout.
 - **Abnahme:** ID und Erstellzeit aus dem Beispiel-Format und aus abgewandelten PDFs (anderes Layout, mehrseitig, Probe-Ausdruck) gelesen; ohne ID oder Metadaten ein sauberes „nicht gefunden“; Sonderfälle SF-44, SF-46, SF-48.
-- **Hängt ab von:** nichts. **Status:** erledigt (Oktober 2026, `packages/meyton-pdf`).
+- **Hängt ab von:** nichts. **Status:** erledigt (Oktober 2026, `packages/meyton-pdf`); die Grenzen greifen nur zwischen den Schritten von pdf.js, den Schutz gegen präparierte PDFs bringt der Kindprozess in SP-1.7.
 
 ### SP-1.4 Brücke v1: lesen, puffern, hochladen
 - **Ziel:** Rohdaten kommen verlässlich aus dem Schützenhaus.
@@ -114,7 +114,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Ziel:** jede Scheibe findet ihren Besitzer ([[spiegel-assignment]]).
 - **Umfang:** Profil mit Sportpass-Opt-in, Admin-Bestätigung und Bestätigung der ersten Scheibe (die SportpassID pflegt der Admin bei Interessierten vorher in der Meyton-Schützenverwaltung nach); QR erfassen (Kamera im Browser, Link, „Teilen“ auf Android); PDF von erlaubten Adressen laden und als Original speichern; ID und Druckzeit lesen (SP-1.3); Auftrag an die Brücke, auch zurückgestellt, wenn sie aus ist; Vorschau mit Druckzeit-Plausibilität und Bestätigung; Auswahl nach Druckzeit ohne ID; PDF an vorhandene Scheiben hängen; Admin-Zuweisung; „Nicht meine“; Protokoll.
 - **Schnitt:** a) Opt-in mit erster Bestätigung; b) QR-Weg mit PDF, Auftrag, Vorschau und Bestätigung; c) Admin-Zuweisung, „Nicht meine“, Teilen und Protokoll.
-- **Abnahme:** Opt-in-Scheibe erscheint ohne Zutun; QR-Weg mit einem anonymisierten Ausdruck lokal und an der Anlage; QR-Scan bei ausgeschalteter Brücke ergibt ein PDF-Ergebnis, das beim nächsten Start vollständig wird; Sonderfälle SF-12, SF-28, SF-34, SF-35, SF-37, SF-38, SF-39, SF-40, SF-41, SF-42, SF-43, SF-45, SF-47, SF-48, SF-56.
+- **Abnahme:** Opt-in-Scheibe erscheint ohne Zutun; QR-Weg mit einem anonymisierten Ausdruck lokal und an der Anlage; QR-Scan bei ausgeschalteter Brücke ergibt ein PDF-Ergebnis, das beim nächsten Start vollständig wird; PDFs liest der Server nur in einem kurzlebigen Kindprozess mit Speichergrenze und hartem Abbruch, die präparierten PDFs aus dem SP-1.3-Review bringen ihn nicht zu Fall; Sonderfälle SF-12, SF-28, SF-34, SF-35, SF-37, SF-38, SF-39, SF-40, SF-41, SF-42, SF-43, SF-45, SF-47, SF-48, SF-56.
 - **Hängt ab von:** SP-1.3, SP-1.5, SP-1.6. **Status:** offen.
 
 ### SP-1.8 Scheiben-Liste und Session-Detail

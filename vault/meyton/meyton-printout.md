@@ -57,14 +57,20 @@ Layout-Wissen ([[adr-028]]). Befund an drei echten PDFs (zwei Treffsicher-Fixtur
 | Ghostscript 9.55 | ein Textstück `ID: ed850812 − Seite: 1` (echtes Minus) | `D:20260811182954+02'00'` | `2026-08-11T18:29:54+02:00` |
 | Ausdruck 2. Oktober (Qt) | ein Textstück `ID: ff914420 - Seite: 1` | `D:20261002195212+02'00'` | keins |
 
-- **ID:** `ID:` ohne Buchstabe davor (`DisziplinID:` trifft nicht), genau acht Hex-Zeichen, danach
-  kein Buchstabe und keine Ziffer; auf allen Seiten gesucht (SF-44). Leerraum wird vorher
-  zusammengefasst, weil pdf.js einzeln gesetzte Glyphen mit Lücken als eigene Stücke liefert.
+- **ID:** `ID:` ohne Buchstabe oder Ziffer davor (auch keine Umlaute; `DisziplinID:` trifft nicht),
+  genau acht Hex-Zeichen am Stück, danach kein Buchstabe und keine Ziffer; auf allen Seiten gesucht
+  (SF-44). Einzeln gesetzte Glyphen (`I D : f f 9 1 …`, nach dem Zusammenfassen des Leerraums) gelten
+  auch; unregelmäßige Lücken ergeben „keine ID“, nie eine aus getrennten Wörtern gebaute. Beschriftungen
+  kennt das Muster nicht: `Disziplin-ID: 19210040` zählt als ID, Vorschau und Bestätigung schützen (SF-41).
   Ergebnis `found` (mit Seiten), `missing` oder `conflict` bei verschiedenen IDs, nie geraten.
-- **Erstellzeit:** `CreationDate` aus dem Info-Dict, sonst `xmp:CreateDate`; `ModDate` zählt nicht (beim
-  Qt-Fixture später als die Erstellung). Ohne Zeitzone gibt es keinen absoluten Zeitpunkt.
-- **Grenzen:** 1 MB, 10 Seiten, 20 000 Textstücke, 100 000 Zeichen, 5 s, während des Lesens geprüft
-  (SF-48). pdf.js bekommt eine Kopie des Puffers, weil es ihn leert.
+- **Erstellzeit:** `CreationDate` aus dem Info-Dict, sonst `xmp:CreateDate` (auch `xap:`); ein Datum mit
+  Zeitzone geht vor. `ModDate` zählt nicht (beim Qt-Fixture später als die Erstellung). Ohne Uhrzeit
+  oder Zeitzone gibt es keinen absoluten Zeitpunkt, Jahre vor 1970 gelten nicht.
+- **Grenzen:** 1 MB, 10 Seiten, 20 000 Textstücke, 100 000 Zeichen, 5 s, geprüft zwischen den Schritten
+  von pdf.js. Gegen präparierte PDFs schützen sie **nicht**: Im Review brachte ein 3-KB-PDF pdf.js auf
+  294 MB, ein 128-KB-XMP auf 1,36 GB, eine Operator-Bombe lief 21 s. Der Server liest fremde PDFs
+  deshalb in einem kurzlebigen Kindprozess mit Speichergrenze, der nach 5 s hart beendet wird (SF-48,
+  SP-1.7); ein Worker-Thread reicht nicht. pdf.js bekommt eine Kopie des Puffers, weil es ihn leert.
 
 ## Datenschutz
 

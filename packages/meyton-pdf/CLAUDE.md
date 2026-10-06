@@ -23,9 +23,16 @@ Fachwissen: `vault/meyton/meyton-printout.md`, Sonderfälle SF-41 bis SF-48 in
   Spalten oder Beschriftungen auswerten (SF-46).
 - **Nie raten.** Mehrere verschiedene IDs ergeben `conflict`, keine ID `missing`, ein Datum ohne
   Zeitzone keinen absoluten Zeitpunkt. Fehlende Angaben sind kein Fehler.
-- **Grenzen während des Lesens** (`limits.ts`, SF-48): Größe, Seiten, Textstücke, Zeichen, Zeit.
-  Text gestreamt, Zeit gegen eine Uhr geprüft (ein präpariertes PDF blockiert den Event-Loop), am
-  Ende `loadingTask.destroy()`. pdf.js bekommt eine **Kopie** des Puffers, es leert ihn sonst.
+- **Grenzen zwischen den Schritten** (`limits.ts`, SF-48): Größe, Seiten, Textstücke, Zeichen, Zeit.
+  Text gestreamt, Zeit gegen eine monotone Uhr geprüft, am Ende `loadingTask.destroy()`. pdf.js
+  bekommt eine **Kopie** des Puffers, es leert ihn sonst.
+- **Kein Schutz gegen präparierte PDFs im selben Prozess.** Dekomprimieren, XMP und Glyphen laufen in
+  pdf.js ohne Prüfung dazwischen (Review: 3-KB-PDF → 294 MB, 128-KB-XMP → 1,36 GB, Operatoren → 21 s).
+  Ein Server liest fremde PDFs deshalb nur in einem **kurzlebigen Kindprozess** (`--max-old-space-size`,
+  harter Abbruch nach `maxParseMs`, ein Lesevorgang zur Zeit); ein Worker-Thread reicht nicht (SP-1.7).
+- Kein `server-only`, kein `"use server"`; Just-in-time wie `packages/shot-core`. Eine Next-App, die das
+  Paket nutzt, braucht es in `transpilePackages` (`packages/config/next/index.mjs`). `./printout-id`,
+  `./pdf-date`, `./limits` und `./errors` laufen ohne pdf.js, auch im Browser.
 - **Fehler nach außen** nur als `MeytonPdfError` mit zeigbarer Meldung, nie pdf.js-Interna.
 - **Keine echten Ausdrucke im Paket** (Namen, #Nummer; ADR-029). Tests bauen ihre PDFs mit
   `src/__fixtures__/buildPdf.ts` (Ghostscript-Weg: Type1 mit Literal-Strings; Qt-Weg: Type0/Identity-H

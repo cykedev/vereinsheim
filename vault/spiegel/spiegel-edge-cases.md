@@ -118,7 +118,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-45 | Link abgelaufen oder Meyton-Server nicht erreichbar | Keine Zuordnung per QR | „Scheibe holen“ am Abend; klarer Hinweis | Test |
 | SF-46 | Meyton ändert das PDF-Format (wie am 1. September) | Ein Layout-Parser liefert nichts, die Zuordnung bricht | Für die Zuordnung nur ID und Erstellzeit, unabhängig vom Layout; ohne ID Auswahl nach Druckzeit; den vollen Parser braucht nur das Ergebnis fremder Anlagen | Fixture |
 | SF-47 | Beliebige Adresse im QR oder im eingefügten Link | Spiegel ruft interne Adressen ab (SSRF) | Nur konfigurierte Ziele, private Netze gesperrt, keine Weiterleitungen | Test |
-| SF-48 | Großes PDF | Bei 256 MB Speichergrenze stürzt Spiegel ab; in Treffsicher belegte ein 3,2-MB-PDF 665 MB | Enge Grenze (ein Ausdruck hat rund 40 KB), Streaming, Seitenlimit | Test |
+| SF-48 | Großes oder präpariertes PDF | Bei 256 MB Speichergrenze stürzt Spiegel ab; in Treffsicher belegte ein 3,2-MB-PDF 665 MB, im Review ein 3-KB-PDF 294 MB und ein 128-KB-XMP 1,36 GB | Enge Grenzen (ein Ausdruck hat rund 40 KB), Streaming, Seitenlimit; auf dem Server lesen nur in einem kurzlebigen Kindprozess mit Speichergrenze, harter Abbruch nach der Zeitgrenze, ein Lesevorgang zur Zeit (Worker-Thread reicht nicht) | Test |
 
 ### Brücke und Anlage
 

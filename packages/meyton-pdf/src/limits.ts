@@ -1,6 +1,11 @@
-// Grenzen gegen präparierte PDFs (SF-48). Ein Meyton-Ausdruck hat rund 40 KB und ein bis drei Seiten;
-// in Treffsicher belegte ein 3,2-MB-PDF 665 MB Speicher. Alle Grenzen greifen während des Parsens:
-// Ein präpariertes PDF blockiert den Event-Loop, ein Timer würde dann gar nicht feuern.
+// Grenzen für das Lesen (SF-48). Ein Meyton-Ausdruck hat rund 40 KB und ein bis drei Seiten. Geprüft wird
+// zwischen den Schritten von pdf.js gegen eine Uhr; einen Timer gäbe es während eines Schritts nicht.
+//
+// Was sie NICHT leisten: Dekomprimieren, Metadaten und Glyphen baut pdf.js im selben Prozess, ohne dass
+// eine Prüfung dazwischenkommt. Gemessen im Review (Oktober 2026): ein 3-KB-PDF mit einem riesigen Tj
+// 294 MB, ein 128-KB-XMP 1,36 GB, 256 KB Operatoren 21,5 s, ohne dass eine Grenze anschlug. Gegen
+// präparierte PDFs hilft nur ein kurzlebiger Kindprozess mit Speichergrenze, der nach der Zeitgrenze
+// hart beendet wird; den braucht der Server (SP-1.7). Ein Worker-Thread reicht nicht.
 
 export interface PrintoutLimits {
   maxBytes: number
