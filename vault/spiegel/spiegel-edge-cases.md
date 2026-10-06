@@ -140,7 +140,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 
 | ID | Sonderfall | Risiko | Absicherung | Prüfen |
 |---|---|---|---|---|
-| SF-60 | Streukreise über 20 und über 40 Schuss im selben Verlauf | Der Verlauf misst die Schusszahl, nicht die Leistung | Mittlerer Radius, R50 oder Median der Serien-Streukreise; `nSensitive` in der Registry | Eigenschaftstest |
+| SF-60 | Streukreise über 20 und über 40 Schuss im selben Verlauf | Der Verlauf misst die Schusszahl, nicht die Leistung | σ̂ (Rayleigh-σ, kaum n-abhängig); Streukreis, mittlerer Radius und R50 nur bei gleichem n; `nSensitive` in der Registry | Eigenschaftstest |
 | SF-61 | Ein oder zwei Schüsse | Streukreis oder Ellipse ohne Sinn, „0“ in der Kachel | `minShots`; darunter „–“ mit Grund | Test |
 | SF-62 | Lange Pausen beim Tempo | Ø Intervall verzerrt | Median; Pausen über drei Minuten getrennt | Fixture |
 | SF-63 | Visier in der Probe oder zwischen Serien verstellt | Der Schwerpunkt springt mit Absicht; der Versatz Probe → Wertung wird sinnlos | Versatz aus den letzten fünf Probeschüssen; Ereignis „Visier verstellt“ teilt die Gruppe | Fixture |
