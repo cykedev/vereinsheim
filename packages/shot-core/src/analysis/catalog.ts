@@ -1,0 +1,45 @@
+// Welche Katalog-IDs (vault/spiegel/spiegel-statistics.md) hinter jeder Auswertung stehen. Die Hilfe
+// (`@vereinsheim/shot-help`) erzwingt damit für jede ID eine Erklärung; ein Test hier hält die Liste
+// vollständig: Jede exportierte Funktion aus `./analysis` steht darin.
+
+export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  // Ergebnis
+  ringDistribution: ["V1"],
+  decimalHistogram: ["V2"],
+  shotExtremes: ["E6", "E8"],
+  teilerStats: ["E7"],
+  ringLoss: ["E9"],
+  seriesConsistency: ["E10"],
+  shareAtLeast: ["E4", "E11"],
+  // Präzision
+  sigmaEstimate: ["P5"],
+  heightWidth: ["P7"],
+  groupShape: ["P8"],
+  ringWidths: ["P9"],
+  outliers: ["V6"],
+  outlierLoss: ["V7"],
+  // Lage
+  mpiConfidence: ["L1", "L3"],
+  ringLossSplit: ["L4"],
+  positionShare: ["L5"],
+  directionClock: ["L6"],
+  drift: ["L8"],
+  // Zeit
+  tempoSpread: ["Z2"],
+  shootingTime: ["Z3"],
+  pauseRecovery: ["Z4"],
+  rhythmProfile: ["Z5"],
+  // Verlauf
+  seriesCurve: ["I1"],
+  fatigue: ["I2"],
+  cardTrend: ["I3"],
+  movingAverage: ["I4"],
+  seriesSpread: ["I5"],
+  mpiPath: ["I6"],
+  longestRun: ["I10"],
+  // Probe und Datenlage
+  sighterSummary: ["S2"],
+  sighterComparison: ["S3"],
+  sighterZeroed: ["S4"],
+  dataCoverage: ["Q1"],
+})
