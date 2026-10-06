@@ -1,26 +1,34 @@
 // Statistik-Hilfen für die Auswertungen: robuste Lage- und Streumaße, Quoten mit Wilson-Intervall,
 // Quantile der χ²- und F-Verteilung in den Fällen mit geschlossener Verteilungsfunktion und eine robuste
-// Trendgerade. Rein und ohne Abhängigkeiten; Werte unter der nötigen Zahl ergeben null statt einer Zahl.
+// Trendgerade. Rein und ohne Abhängigkeiten; Werte unter der nötigen Zahl ergeben null statt einer Zahl,
+// nicht endliche Werte (NaN, unendlich) sind ein Fehler statt eines stillen Ergebnisses.
 
 /** z für ein zweiseitiges 95-%-Intervall */
 export const Z95 = 1.959963984540054
 
 const sorted = (values: readonly number[]) => [...values].sort((a, b) => a - b)
 
+function assertFinite(values: readonly number[]) {
+  if (!values.every((v) => Number.isFinite(v))) {
+    throw new RangeError("Statistik nur über endliche Werte")
+  }
+}
+
 /** Quantil nach Typ 7 (linear zwischen den Rängen, wie R und NumPy) */
 export function quantile(values: readonly number[], p: number): number | null {
   if (!(p >= 0 && p <= 1)) throw new RangeError(`Quantil ${p} liegt nicht zwischen 0 und 1`)
   if (values.length === 0) return null
+  assertFinite(values)
   const xs = sorted(values)
   const h = (xs.length - 1) * p
   const lower = Math.floor(h)
-  const upper = Math.min(lower + 1, xs.length - 1)
-  return xs[lower] + (h - lower) * (xs[upper] - xs[lower])
+  if (h === lower) return xs[lower]
+  return xs[lower] + (h - lower) * (xs[lower + 1] - xs[lower])
 }
 
 export const median = (values: readonly number[]) => quantile(values, 0.5)
 
-/** mittlere absolute Abweichung vom Median, ungewichtet */
+/** Median der absoluten Abweichungen vom Median (MAD), ohne Skalierungsfaktor */
 export function mad(values: readonly number[]): number | null {
   const center = median(values)
   return center === null ? null : median(values.map((v) => Math.abs(v - center)))
@@ -122,7 +130,8 @@ export function fQuantile2(p: number, nu: number): number {
 /**
  * Robuste Trendgerade nach Theil-Sen: Steigung = Median aller paarweisen Steigungen, Achsenabschnitt =
  * Median von y − Steigung · x. Intervall nach Sen über die Varianz von Kendalls S (ohne Bindungen):
- * die Steigungen mit den Rängen (N − C)/2 und (N + C)/2 + 1, C = z · √(n(n − 1)(2n + 5)/18).
+ * die Steigungen mit den Rängen (N − C)/2 und (N + C)/2 + 1, C = z · √(n(n − 1)(2n + 5)/18). Liegt
+ * (N − C)/2 unter 1, gibt es keinen solchen Bereich (bei z = 1,96 unter sechs Punkten): dann null.
  */
 export function theilSen(
   xs: readonly number[],
@@ -130,6 +139,8 @@ export function theilSen(
   z = Z95
 ): { slope: number; intercept: number; low: number; high: number } | null {
   if (xs.length !== ys.length) throw new RangeError("x und y brauchen gleich viele Werte")
+  assertFinite(xs)
+  assertFinite(ys)
   const n = xs.length
   if (n < 3) return null
   const slopes: number[] = []
@@ -144,7 +155,8 @@ export function theilSen(
   const intercept = median(ys.map((y, i) => y - slope * xs[i])) as number
   const spread = z * Math.sqrt((n * (n - 1) * (2 * n + 5)) / 18)
   const count = ordered.length
-  const lowRank = Math.min(count, Math.max(1, Math.round((count - spread) / 2)))
-  const highRank = Math.min(count, Math.max(1, Math.round((count + spread) / 2) + 1))
+  if ((count - spread) / 2 < 1) return null
+  const lowRank = Math.round((count - spread) / 2)
+  const highRank = Math.min(count, Math.round((count + spread) / 2) + 1)
   return { slope, intercept, low: ordered[lowRank - 1], high: ordered[highRank - 1] }
 }

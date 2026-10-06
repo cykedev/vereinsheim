@@ -34,6 +34,13 @@ describe("Lage- und Streumaße", () => {
     expect(mad([])).toBeNull()
     expect(iqr([])).toBeNull()
   })
+
+  it("nur endliche Werte: NaN und unendlich sind ein Fehler, kein stilles Ergebnis", () => {
+    expect(() => quantile([1, 2, Number.POSITIVE_INFINITY], 0.5)).toThrow(RangeError)
+    expect(() => median([3, 1, Number.NaN, 2])).toThrow(RangeError)
+    expect(() => mad([1, Number.NEGATIVE_INFINITY])).toThrow(RangeError)
+    expect(() => iqr([Number.NaN])).toThrow(RangeError)
+  })
 })
 
 describe("Quote mit Wilson-Intervall", () => {
@@ -129,9 +136,31 @@ describe("Theil-Sen", () => {
     expect(fit?.high).toBeGreaterThan(0)
   })
 
+  it("Sen-Intervall mit den Rängen (N − C)/2 und (N + C)/2 + 1, von Hand mit Brüchen gerechnet", () => {
+    // 45 Steigungen, C = 1,96 · √(10 · 9 · 25 / 18) = 21,91: Ränge 12 und 34. Die Nachbarränge sind
+    // −9/40 und −3/20 bzw. 11/70 und 1/5; ein Rangfehler fällt also auf.
+    const ys = [10.7, 9.6, 9.7, 10.7, 10.4, 9.5, 9.9, 10.7, 9.5, 10.8]
+    const fit = theilSen(xs, ys)
+    expect(fit).not.toBeNull()
+    expect(fit?.slope).toBeCloseTo(0, 12)
+    expect(fit?.low).toBeCloseTo(-1 / 5, 12)
+    expect(fit?.high).toBeCloseTo(11 / 60, 12)
+  })
+
   it("zu wenige oder gleiche x: keine Gerade", () => {
     expect(theilSen([0, 1], [1, 2])).toBeNull()
     expect(theilSen([1, 1, 1], [1, 2, 3])).toBeNull()
     expect(() => theilSen([1, 2, 3], [1, 2])).toThrow(RangeError)
+  })
+
+  it("unter sechs Punkten gibt es keinen 95-%-Bereich und deshalb keine Gerade", () => {
+    // n = 5: (N − C)/2 = (10 − 8,0017)/2 < 1, der untere Rang läge unter dem kleinsten Wert
+    expect(theilSen([0, 1, 2, 3, 4], [1, 3, 2, 5, 4])).toBeNull()
+    expect(theilSen([0, 1, 2, 3, 4, 5], [1, 3, 2, 5, 4, 6])).not.toBeNull()
+  })
+
+  it("nicht endliche Werte sind ein Fehler", () => {
+    expect(() => theilSen([0, 1, 2], [1, Number.NaN, 3])).toThrow(RangeError)
+    expect(() => theilSen([0, Number.POSITIVE_INFINITY, 2], [1, 2, 3])).toThrow(RangeError)
   })
 })
