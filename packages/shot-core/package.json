@@ -12,7 +12,8 @@
     "./verify": "./src/verify.ts",
     "./geometry": "./src/geometry.ts",
     "./time": "./src/time.ts",
-    "./metrics": "./src/metrics.ts"
+    "./metrics": "./src/metrics.ts",
+    "./stats": "./src/stats.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
