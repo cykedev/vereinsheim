@@ -215,6 +215,22 @@ describe("readPrintout: Grenzen (SF-48)", () => {
     )
   })
 
+  it("zu viele Zeichen", async () => {
+    const pdf = await buildPdf({ pages: [[{ str: "x".repeat(60), x: 40, y: 400 }]], info: QT_INFO })
+    await expect(readPrintout(pdf, { limits: { maxChars: 20 } })).rejects.toThrow(/zu viel Text/)
+  })
+
+  it("Zeitüberschreitung auch mitten im Lesen der Seiten", async () => {
+    // Jede Abfrage der Uhr kostet eine Sekunde: Laden und Metadaten bleiben unter 5 s, erst das
+    // Lesen der Seiten reißt die Grenze.
+    let clock = -1000
+    const pages = Array.from({ length: 4 }, (_, i) => footer("ff914420", i + 1))
+    const pdf = await buildPdf({ pages, info: QT_INFO })
+    await expect(readPrintout(pdf, { now: () => (clock += 1000) })).rejects.toThrow(
+      /Zeitüberschreitung/
+    )
+  })
+
   it("beschädigt: sauberer Fehler statt pdf.js-Interna", async () => {
     const broken = new TextEncoder().encode("%PDF-1.4\n" + "Datenmüll ".repeat(200))
     const error = await readPrintout(broken).catch((caught: unknown) => caught)
