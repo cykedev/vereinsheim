@@ -115,7 +115,8 @@ Formeln stehen im Katalog [[spiegel-statistics]]; diese Seite erklärt, ohne For
 
 **Ausreißer (V6)**
 - *Was:* Schüsse, die nicht zur Gruppe passen. Spiegel prüft jeden Schuss gegen die übrigen; bei einer
-  ganz normalen Gruppe meldet die Regel nur in 5 % der Scheiben fälschlich einen Ausreißer.
+  ganz normalen, runden Gruppe meldet die Regel nur in 5 % der Scheiben fälschlich einen Ausreißer. Ist
+  die Gruppe deutlich gestreckt (a/b um 2), passiert das öfter, in etwa 11 bis 19 % der Scheiben.
 - *So liest du es:* Ein markierter Schuss ist ein Kandidat für die Frage „Was war da los?“. Er bleibt in
   der Wertung. Ø Abstand durch R50 liegt bei einer normalen Gruppe um 1,06; deutlich darüber heißt:
   wenige weite Schüsse prägen die Gruppe.
@@ -212,7 +213,7 @@ Formeln stehen im Katalog [[spiegel-statistics]]; diese Seite erklärt, ohne For
 **Probe gegen Wertung (S3)**
 - *Was:* Durchschnitt, R50 und σ der Probe nach der letzten Visierverstellung gegen die Wertung.
 - *So liest du es:* σ ist der faire Vergleich, denn R50 hängt von der Schusszahl ab und die Probe hat
-  meist weniger Schüsse.
+  meist weniger Schüsse. Ein Fehlschuss zählt bei σ mit und bläht es auf; R50 lässt ihn weg.
 
 **Eingeschossen? (S1, S4)**
 - *Was:* ein Test der letzten fünf Probeschüsse: Lagen sie echt neben der Mitte? Dazu der Abstand

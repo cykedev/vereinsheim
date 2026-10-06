@@ -90,7 +90,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | V3 | Abstandskurve | Anteil der Schüsse mit Teiler ≤ t | Zeitraum | B | SP-2.1 |
 | V4 | Verteilung der Serien | Quartile der Serienergebnisse je Monat | Zeitraum | B | SP-2.1 |
 | V5 | Ringanteile im Zeitverlauf | Anteil je Ring je Scheibe, gestapelt | Zeitraum | B | SP-2.1 |
-| V6 | Ausreißer | jeder Schuss gegen die übrigen: T = d²/(2S²(1 + 1/(n−1))) gegen F(2, 2(n−2)) mit Bonferroni, in einer normalen Gruppe 5 % Fehlalarm je Scheibe (Q3 + 1,5·IQR auf den Radien wären bis 47 %); Verhältnis MR/R50 (≈ 1,06 bei runder Gruppe) | Scheibe, Zeitraum | B | SP-1.10 |
+| V6 | Ausreißer | jeder Schuss gegen die übrigen: T = d²/(2S²(1 + 1/(n−1))) gegen F(2, 2(n−2)) mit Bonferroni, in einer runden Normalgruppe 5 % Fehlalarm je Scheibe (Q3 + 1,5·IQR auf den Radien wären bis 47 %), bei gestreckten mehr (a/b 2: etwa 11–19 %; ein affiner Test für gestreckte Gruppen ist offen); Verhältnis MR/R50 (≈ 1,06 bei runder Gruppe) | Scheibe, Zeitraum | B | SP-1.10 |
 | V7 | Ringverlust durch Ausreißer | Σ(Median − vᵢ) über die schwächsten 10 % | Scheibe, Zeitraum | B | SP-1.10 |
 
 ### 5 Zeit und Rhythmus

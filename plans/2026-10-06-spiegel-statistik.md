@@ -254,14 +254,15 @@ ist):
   Wertungsschüsse der Serie, `total` ist null, wenn einem der Wert fehlt (wie `result.*`).
   `seriesConsistency` vergleicht nur vollständige Serien der häufigsten Länge.
 - `outliers(shots)` → `{ n, flagged: { shot, number }[], ratio }`, ab 5 Schuss: jeder Schuss gegen den
-  Schwerpunkt der übrigen, T = d²/(2S²(1 + 1/(n − 1))) gegen F₀,₉₅(2, 2(n − 2)) mit Bonferroni über n
+  Schwerpunkt der übrigen, T = d²/(2S²(1 + 1/(n − 1))) gegen das (1 − 0,05/n)-Quantil von F(2, 2(n − 2)) (Bonferroni)
   (simuliert: Fehlalarm 5 %, 5σ-Schuss zu 89–100 % erkannt). Ersetzt Q3 + 1,5 · IQR (Fehlalarm bis
   47 %).
 - `groupShape(shots)` → zusätzlich `sphericity` (Mauchly, W = 4a²b²/(a² + b²)²) und `elongated`
   (W < 0,05^(2/(n − 2)), exakt); `showAngle = elongated && n ≥ 10`; ohne Ausdehnung null.
 - `heightWidth` ab 3 Schuss wie die Registry.
 - `mpiConfidence`: kollinear auch mit Rundungsrest (relative Schwelle) → null.
-- `ringLossSplit`: Summen `{ decimal, rings }`; `reliable` nur mit Lagegewinn > 0.
+- `ringLossSplit`: Summen `{ decimal, rings }`; `reliable` nur mit Lagegewinn > 0 in Zehnteln und ≥ 0 in
+  ganzen Ringen.
 - `directionClock` → zusätzlich `reliable` (ab 30 Schuss, Katalog L6).
 - `drift`: von Neumann je Sprung normiert, (Σ Sprung²/k)/(Σ r²/(n − 1)); Lücken über `shotSteps`.
 - `shootingTime.shotsPerHour` = Intervalle je Netto-Stunde.
@@ -271,7 +272,8 @@ ist):
 - `sighterComparison` → je Seite `n`, `valued`, `positioned`, `meanRings`, `r50Um`, `sigmaUm`.
 - `sighterZeroed(shots, { adjustAfter })`: erst Lage auswählen, dann die letzten fünf nach der letzten
   Verstellung; mit Ellipse.
-- `stats`: nicht endliche Werte → RangeError; Theil-Sen ohne 95-%-Bereich (n < 5) → null; Fenster ab 1.
+- `stats`: nicht endliche Werte → RangeError; Theil-Sen ohne 95-%-Bereich (unter sechs Punkten) → null;
+  Fenster ab 1.
 
 **Hilfe und Doku** (Wunsch des Users: „ich verstehe nicht alle, gute Dokumentation und Hilfe, auch in
 der Anwendung, das ist wichtig“):
@@ -283,3 +285,20 @@ der Anwendung, das ist wichtig“):
   Doku, „?“ an jeder Zahl, Glossar, Einstieg); SP-1.8 hängt davon ab. `spiegel-ui-design` bekommt den
   Abschnitt „Hilfe und Erklärungen“.
 - Spielwiese: „Was heißt das?“ an jeder Analyse-Karte, Karte „So liest du die Analyse“ im Überblick.
+
+## Nachtrag 3: Nachprüfung des Reviews (6. Oktober 2026)
+
+Der Reviewer hat die Fixes nachgerechnet (Fuzz über 4000 Zufallskarten ohne Ausnahme, Registry und
+Analyse stimmen überein) und hält den Branch für merge-reif. Drei neue Minor-Punkte, alle umgesetzt:
+
+- **N1 Reihenfolge und Nummern:** Fehlen einem Schuss Abgabefolge und Zeit, ordnet `shotNumbers` die
+  Karte nach der Liste, die Auswertungen ordneten ihre Auswahl aber nach `seq`. Jetzt ordnen alle
+  Auswertungen erst die ganze Karte und wählen dann aus; Abstände kommen aus `stepsInOrder` und
+  `timesInOrder` (neu in `metrics.ts`, ohne neues Sortieren). Die Registry bleibt, wie sie ist, sie nennt
+  keine Nummern.
+- **N2 Ausreißer bei gestreckten Gruppen:** Die 5 % Fehlalarm gelten für runde Gruppen; bei gestreckten
+  steigt die Rate (eigene Simulation: a/b 1,5 etwa 8–11 %, a/b 2 etwa 11–19 %, a/b 3 etwa 17–29 %). In
+  Code-Kommentar, Katalog V6, Hilfe und Spielwiese benannt; ein affiner Test für gestreckte Gruppen ist
+  als Verbesserung vermerkt.
+- **N3 sechs Tests** für die Grenzen (F-Freiheitsgrade, Zweig ohne Streuung der übrigen, Mauchly-Exponent
+  und -Irrtum, Ringe in der Belastbarkeit, Schwelle der Richtungsuhr). Mutationsprobe danach 71 von 71.
