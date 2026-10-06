@@ -43,7 +43,10 @@ export const FLAG_MISS = "fehlschuss"
 export const FLAG_SUSPICIOUS = "verdaechtig"
 
 export interface MetricShot {
-  /** Abgabefolge (SF-30); fehlt sie, ordnet die Zeit, sonst die Liste */
+  /**
+   * Abgabefolge (SF-30), eindeutig über die ganze Scheibe (Probe und Wertung in einer Folge). Fehlt
+   * sie, ordnet die Zeit, sonst die Liste; ohne sie lässt sich ein fehlender Schuss nicht erkennen.
+   */
   seq?: number | null
   /** Lage in µm; null bei Ergebnissen nur aus dem PDF */
   xUm: number | null
@@ -154,12 +157,19 @@ function counts(metric: MetricDefinition, shot: MetricShot): boolean {
   return !(metric.excludeMisses && flags.includes(FLAG_MISS))
 }
 
+/** Zählende Schüsse und die davon, die auch die nötige Angabe haben */
+function partition(metric: MetricDefinition, shots: readonly MetricShot[]) {
+  const counting = shots.filter((shot) => counts(metric, shot))
+  const eligible = counting.filter((shot) => satisfies(shot, metric.needs))
+  return { counting, eligible }
+}
+
 /** Die Schüsse, über die eine Kennzahl rechnet; ihre Zahl ist das n für Vergleiche (SF-60). */
 export function eligibleShots(
   metric: MetricDefinition,
   shots: readonly MetricShot[]
 ): MetricShot[] {
-  return shots.filter((shot) => counts(metric, shot) && satisfies(shot, metric.needs))
+  return partition(metric, shots).eligible
 }
 
 /**
@@ -170,8 +180,7 @@ export function computeMetric(
   metric: MetricDefinition,
   shots: readonly MetricShot[]
 ): number | null {
-  const counting = shots.filter((shot) => counts(metric, shot))
-  const eligible = counting.filter((shot) => satisfies(shot, metric.needs))
+  const { counting, eligible } = partition(metric, shots)
   if (metric.onMissing === "null" && eligible.length < counting.length) return null
   if (eligible.length < metric.minShots) return null
   return metric.compute(eligible)
@@ -208,8 +217,19 @@ const distanceOf = (shot: MetricShot) =>
     ? (shot.distanceUm as number)
     : Math.hypot(shot.xUm as number, shot.yUm as number)
 const seconds = (ms: number | null) => (ms === null ? null : ms / 1000)
-const pace = (shots: readonly MetricShot[]) =>
-  tempo(inShotOrder(shots).map((shot) => shot.firedAtMs as number))
+/** Zeiten in Abgabefolge; springt `seq`, fehlt dazwischen ein Schuss, und der Abstand zählt nicht. */
+function pace(shots: readonly MetricShot[]) {
+  const ordered = inShotOrder(shots)
+  const withSeq = ordered.every((shot) => finite(shot.seq))
+  const times: (number | null)[] = []
+  ordered.forEach((shot, i) => {
+    if (withSeq && i > 0 && (shot.seq as number) - (ordered[i - 1].seq as number) > 1) {
+      times.push(null)
+    }
+    times.push(shot.firedAtMs as number)
+  })
+  return tempo(times)
+}
 
 const BOTH: readonly ShotKind[] = ["match", "probe"]
 const MATCH_ONLY: readonly ShotKind[] = ["match"]

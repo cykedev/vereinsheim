@@ -49,5 +49,15 @@ describe("tempo", () => {
     expect(pace.pausesMs).toEqual([])
     expect(pace.clockJumps).toBe(1)
     expect(pace.medianIntervalMs).toBe(s(50))
+    // Über einen Sprung der Uhr hinweg ist die Dauer unbekannt.
+    expect(pace.durationMs).toBeNull()
+  })
+
+  it("eine Lücke (null) trennt die Folge: Die Abstände daneben zählen nicht", () => {
+    const pace = tempo([0, s(100), null, s(300), s(400)])
+    expect(pace.intervalsMs).toEqual([s(100), s(100)])
+    expect(pace.pausesMs).toEqual([])
+    expect(pace.durationMs).toBe(s(400))
+    expect(tempo([0, Number.NaN, s(50)]).intervalsMs).toEqual([])
   })
 })

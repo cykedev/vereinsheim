@@ -179,7 +179,13 @@ describe("Ergebnis-Kennzahlen", () => {
     )
     expect(value("result.bestTeiler", at0({ distanceUm: -500 }))).toBeCloseTo(331.8, 9)
     expect(value("result.rings", at0({ ring: Number.NaN }))).toBeNull()
-    expect(value("time.intervalMedian", at0({ firedAtMs: Number.NaN }))).toBe(50)
+    expect(value("result.decimal", at0({ decimalTenths: Number.NaN }))).toBeNull()
+    expect(eligibleShots(def("time.intervalMedian"), at0({ firedAtMs: Number.NaN }))).toHaveLength(
+      5
+    )
+    // Teiler 0 ohne Lage ist ein Treffer genau in der Mitte, kein fehlender Wert.
+    const center: MetricShot = { ...MATCH[0], xUm: null, yUm: null, distanceUm: 0 }
+    expectNear(value("result.bestTeiler", [center]), 0)
   })
 })
 
@@ -193,6 +199,8 @@ describe("Trefferbild-Kennzahlen", () => {
     expectNear(value("group.mpiDistance", SPREAD), 0)
     expect(value("group.mpiDistance", PROBE)).toBeCloseTo(Math.hypot(1.04, -1.04), 9)
     expect(value("group.sdX", PROBE)).toBeCloseTo(0.1140175, 6)
+    // Hier unterscheiden sich Streukreis und größter Abstand (0,3606 mm), offen bis SP-0.6.
+    expect(value("group.enclosingDiameter", PROBE)).toBeCloseTo(0.3676955, 6)
   })
 
   it("zu wenige Schüsse ergeben keinen Wert, nicht 0 (SF-61)", () => {
@@ -284,6 +292,10 @@ describe("Tempo, Reihenfolge und Probe", () => {
     const e = { firedAtMs: null }
     const f = { firedAtMs: 5 }
     expect(inShotOrder([e, f])).toEqual([e, f])
+    // Nur ein Teil hat seq: dann die Zeit.
+    const g = { seq: 1, firedAtMs: 300 }
+    const h = { seq: null, firedAtMs: 100 }
+    expect(inShotOrder([g, h])).toEqual([h, g])
   })
 
   it("der Versatz Probe → Wertung zählt nur die letzten fünf Probeschüsse (SF-63)", () => {
@@ -313,6 +325,17 @@ describe("Tempo, Reihenfolge und Probe", () => {
       Math.hypot(5, 5),
       9
     )
+  })
+
+  it("fehlt ein Schuss mitten in der Folge, entsteht daraus keine Pause", () => {
+    // Sechs Schuss im Abstand von 100 s; der vierte ist ein Platzhalter oder ohne Zeit.
+    const steady = MATCH.map((shot, i) => ({ ...shot, seq: i + 1, firedAtMs: i * 100_000 }))
+    const flagged = steady.map((shot, i) => (i === 3 ? { ...shot, flags: ["verdaechtig"] } : shot))
+    const untimed = steady.map((shot, i) => (i === 3 ? { ...shot, firedAtMs: null } : shot))
+    for (const shots of [flagged, untimed]) {
+      expect(value("time.longestPause", shots)).toBe(0)
+      expect(value("time.intervalMedian", shots)).toBe(100)
+    }
   })
 
   it("Probe nach Beginn der Wertung zählt nicht zum Versatz", () => {
@@ -410,5 +433,6 @@ describe("Registry", () => {
     expect(() => defineMetric({ ...base, key: "ringe" })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, decimals: 1.5 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, decimals: -1 })).toThrow(RangeError)
+    expect(() => defineMetric({ ...base, decimals: 4 })).toThrow(RangeError)
   })
 })
