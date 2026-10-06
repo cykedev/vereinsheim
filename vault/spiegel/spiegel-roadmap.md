@@ -121,7 +121,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Ziel:** das, was der Prototyp verspricht.
 - **Umfang:** Liste nach Trainingsabend; Session-Detail mit Trefferbild (Overlays, Zoom), Serien und Probe-Blöcken als kleine Scheiben, Schusstabelle, Wiedergabe, Kennzahl-Kacheln, Bereich „Analyse“ mit den Auswertungen aus SP-1.10, Beobachtung, Original-PDF, Merkmalen und Aktionen an der Scheibe ([[spiegel-ui-design]]); Umschalter ganze Ringe/Zehntel überall; Zeichenregeln aus „Zeichnen der Scheibe“; `packages/shot-ui`.
 - **Abnahme:** Sichtprüfung gegen `vault/_attachments/spiegel-konzept.html` auf Handy und Desktop, dunkel und, falls der Hellmodus in Phase 1 kommt, hell ([[spiegel-open-questions]]); Markup-Tests; Sonderfälle SF-01, SF-02, SF-05, SF-07, SF-11, SF-16, SF-18, SF-61.
-- **Hängt ab von:** SP-1.2, SP-1.6. **Status:** offen.
+- **Hängt ab von:** SP-1.2, SP-1.6, SP-1.11 (Hilfe an jeder Zahl). **Status:** offen.
 
 ### SP-1.9 Betrieb: Deploy und Selbst-Hosting
 - **Ziel:** Spiegel läuft auf dem VPS und ist für andere Vereine betreibbar.
@@ -134,6 +134,12 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** `shot-core` bekommt Statistik-Hilfen (`stats`: Quantile, MAD, Wilson, χ²- und F-Quantile, c4, Theil-Sen) und das Modul `analysis`: Ergebnis (Ringverteilung, Zehntelverteilung, bester und schwächster Schuss, Teiler-Schnitt und -Listen, Ringverlust, Konstanz, Quoten), Präzision (Rayleigh-σ mit Vertrauensbereich, Höhe und Breite, Form, Ringbreiten, Ausreißer), Lage (Hotelling-Test „ist die Lage echt?“, Ringverlust durch Lage gegen Streuung, Lageanteil, Richtungsuhr, Drift), Zeit (Tempo-Konstanz, Netto-Schießzeit, Wiedereinstieg nach Pausen, Rhythmus-Profil), Verlauf (Serienkurve, Ermüdung, Trend in der Scheibe, gleitender Schnitt, Streuung und Schwerpunkt je Serie, längste Folge), Probe (Umfang, Qualität, „eingeschossen?“) und Datenlage; neue Kennzahlen in der Registry (σ̂, Höhe, Breite, Zehnerquote, Tempo-Streuung, Dauer).
 - **Abnahme:** feste Erwartungswerte aus Tabellen und Hand-Rechnung, Mutationsprobe nach [[conventions]] §9; Spielwiese mit Beispielscheiben zeigt alles; Sonderfälle SF-01, SF-14, SF-15, SF-30, SF-60, SF-61, SF-63.
 - **Hängt ab von:** SP-1.2. **Status:** erledigt (Oktober 2026, `packages/shot-core`: `stats`, `analysis`, sechs neue Kennzahlen; Spielwiese mit Bereich „Analyse“). Nach dem Review: Ausreißer per F-Test gegen die übrigen mit Bonferroni, Form per Mauchly, alle Nummern über `shotNumbers`, jede wertbasierte Auswertung in beiden Wertungen.
+
+### SP-1.11 Hilfe und Erklärungen
+- **Ziel:** Jede Zahl in Spiegel ist erklärt, für Einsteiger wie für Profis. Wunsch des Users: „ich verstehe nicht alle … gute Dokumentation und Hilfe, auch in der Anwendung, das ist wichtig“.
+- **Umfang:** Erklärtexte als Daten aus **einer** Quelle für App und Doku, neben Kennzahlen und Auswertungen (Ort im `/plan` entscheiden: Feld an `defineMetric` plus Katalog für `analysis`, oder ein eigenes Paket): je Eintrag ein Satz für die Kachel, die Erklärung „Was / So liest du es / Was du tun kannst / Vorsicht“ und auf Wunsch die Formel. Dazu Glossar, Einstieg „So liest du die Analyse“ (n, 95-%-Bereich, echt/unklar, ganze Ringe/Zehntel) und typische Fehlschlüsse. In der Oberfläche ein „?“ an jeder Kachel und Karte, Erklärung auch bei „–“ (Mindestzahl) und „unklar“ ([[spiegel-ui-design]]). Die Texte stehen vorbereitet in [[spiegel-statistics-help]]; die Spielwiese zeigt sie hinter „Was heißt das?“.
+- **Abnahme:** Ein Test erzwingt für jede Kennzahl der Registry und jede Auswertung einen Hilfetext (wie der Paar-Test der Wertungen); Sichtprüfung auf Handy und Desktop; Leseprobe mit dem User, der die Statistik nicht im Detail kennt.
+- **Hängt ab von:** SP-1.10. **Status:** offen (Texte im Vault, Spielwiese mit Hilfe).
 
 ## Phase 2 · Auswertung
 
