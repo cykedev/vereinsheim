@@ -62,6 +62,7 @@ Die Optik ist dem User besonders wichtig: minimal, scharf, nichts Klobiges, auch
 
 - **Haarlinien, die nicht mitwachsen:** Ringlinien, Trefferränder und Streukreis sind 1 px breit und bleiben es in jeder Zoomstufe (`vector-effect: non-scaling-stroke`). Keine Schatten, kein Glühen, keine dicken Ränder.
 - **Treffer** in Kalibergröße, gefüllt mit der Ringwert-Farbe, mit 1-px-Rand; der Rand trennt überlappende Treffer.
+- **Alles, was etwas zeigt, liegt über den Treffern:** Streukreis, Vertrauensellipse, Markierungen und der Schwerpunkt (ganz oben). Unter den Treffern verschwänden sie gerade dort, wo die Gruppe dicht ist. Ihre Linien tragen einen schmalen hellen Saum, damit sie auf farbigen Treffern lesbar bleiben (Wunsch des Users, Oktober 2026).
 - **Schwerpunkt:** ein kleiner, schwarz-weiß geviertelter Kreis (vier Segmente im Wechsel), kleiner als ein Treffer (Radius 5–8 px) und **immer ganz oben** über allen Treffern. Eine 1-px-Kontur mit 1 px hellem Saum hält ihn auf Papier, Spiegel und Treffern lesbar.
 - **Streukreis:** ein 1-px-Ring in einer Farbe, die keine Ringwert-Farbe ist (Blau), **um** die Treffer gezeichnet: der Kreis durch die Zentren plus ein halbes Kaliber und 2 px Luft. Durch die Zentren gezeichnet verschwände er bei einer engen Gruppe unter den Treffern; die Zahl dazu misst weiter Mitte zu Mitte. Er erscheint ab derselben Schusszahl, ab der die Kennzahl gilt.
 - **Ringzahlen** in fester Bildschirmgröße (höchstens 12 px, nie größer als der Ring); sie wachsen beim Zoomen nicht mit.

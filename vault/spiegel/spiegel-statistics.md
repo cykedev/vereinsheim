@@ -61,7 +61,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | P5 | Rayleigh-σ (Meyton: Sa) | Sa = √(Σrᵢ²/(2(n−1))), σ̂ = Sa/c4(2n−1), 95-%-Bereich über χ² mit 2(n−1) Freiheitsgraden; kaum n-abhängig. Dass Meytons Sa genau diese Formel ist, steht im Handbuch des Ballistic Managers, gegen echte Werte ist es noch nicht geprüft (SP-0.6) | Scheibe, Zeitraum | B | SP-1.10 |
 | P6 | Streuung x und y | Sx und Sy | Serie, Scheibe, Zeitraum | A | vorhanden |
 | P7 | Höhe und Breite | max − min in y und x, dazu (H + B)/2 | Serie, Scheibe | B | SP-1.10 |
-| P8 | Form der Gruppe | Halbachsen und Winkel der Kovarianz-Ellipse, Verhältnis a/b; gestreckt nur, wenn Mauchlys Test es mit 95 % zeigt (W = 4a²b²/(a²+b²)² unter 0,05^(2/(n−2)), für zwei Dimensionen exakt); Winkel erst ab 10 Schuss | Scheibe, Zeitraum | B | SP-1.10 |
+| P8 | Form der Gruppe | Halbachsen und Winkel der Kovarianz-Ellipse, Verhältnis a/b; gestreckt nur, wenn Mauchlys Test es mit 95 % zeigt (W = 4a²b²/(a²+b²)² unter 0,05^(2/(n−2)), für zwei Dimensionen exakt); dazu das a/b, ab dem das bei dieser Schusszahl gilt (12 Schuss 2,26, 20 Schuss 1,81, 40 Schuss 1,50, 120 Schuss 1,25). Eine runde Gruppe zeigt zufällig im Median a/b 1,32 bei 20 und 1,21 bei 40 Schuss; eine echte Streckung von 1,3 erkennt eine Scheibe mit 40 Schuss nur in 28 % der Fälle, über 120 Schuss in 72 % (Simulation). Winkel erst ab 10 Schuss | Scheibe, Zeitraum | B | SP-1.10 |
 | P9 | Streuung in Ringbreiten | MR / W | Scheibe, Zeitraum | B | SP-1.10 |
 | P10 | Erwartete Zehnerquote | P(d ≤ W) für eine Normalgruppe mit σ̂ und m (Modell) | Scheibe, Zeitraum | C | später |
 
@@ -77,7 +77,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | L6 | Richtungsuhr | Anteil je Uhrzeit (30°-Sektor) um die Mitte oder um m; aussagekräftig ab 30 Schuss, darunter nur ein Bild | Scheibe, Zeitraum | B | SP-1.10 |
 | L7 | Ausreißerrichtung | Richtungsuhr der schwächsten 10 % relativ zu m | Zeitraum | B | SP-2.7 |
 | L8 | Drift in der Abgabefolge | Ø und größter Sprung, von-Neumann-Verhältnis je Sprung normiert (≈ 2 unabhängig, < 2 Wandern); ohne Urteil, weil es bei kleinem n stark streut | Scheibe | C | SP-1.10 |
-| L9 | Langzeit-Trefferbild | alle Schüsse eines Zeitraums als Dichte, je Familie | Zeitraum | B | SP-2.7 |
+| L9 | Langzeit-Trefferbild | alle Schüsse eines Zeitraums als Dichte, je Familie; dazu die Form über mehrere Scheiben (Kovarianz je Scheibe um ihren eigenen Schwerpunkt, gepoolt), die eine leichte Streckung (a/b 1,2–1,3) erst sichtbar macht | Zeitraum | B | SP-2.7 |
 | L10 | Lage über Zeit | Schwerpunkt je Scheibe als Wolke mit Pfad, nach n gewichtet | Zeitraum | B | SP-2.7 |
 | L11 | Visierkorrektur in Klicks | −m / Klickweg; nur wenn L3 „echt“ sagt | Scheibe | C | SP-2.3 (Ausrüstung) |
 

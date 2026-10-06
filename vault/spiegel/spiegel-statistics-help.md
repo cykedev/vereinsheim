@@ -108,10 +108,12 @@ Formeln stehen im Katalog [[spiegel-statistics]]; diese Seite erklärt, ohne For
 **Form der Gruppe (P8)**
 - *Was:* die Streuung als Ellipse; das Verhältnis a/b sagt, wie gestreckt sie ist, der Winkel, in welche
   Richtung.
-- *So liest du es:* „Gestreckt“ steht nur, wenn ein Test zeigt, dass es kein Zufall ist. Den Winkel
-  zeigt Spiegel erst ab 10 Schuss.
-- *Vorsicht:* Jede Gruppe sieht etwas unrund aus. Bei 12 Schuss ist selbst a/b = 1,4 noch im Rahmen des
-  Zufalls.
+- *So liest du es:* „Gestreckt“ steht nur, wenn ein Test zeigt, dass es kein Zufall ist. Daneben steht,
+  ab welchem a/b das bei deiner Schusszahl gilt: bei 20 Schuss ab 1,81, bei 40 ab 1,50, bei 120 ab 1,25.
+  So siehst du, wie nah du an der Grenze bist. Den Winkel zeigt Spiegel erst ab 10 Schuss.
+- *Vorsicht:* Jede Gruppe sieht etwas unrund aus, auch eine vollkommen runde: Bei 20 Schuss zeigt sie im
+  Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung (a/b 1,3) zeigt eine einzelne Scheibe
+  deshalb selten; sichtbar wird sie über mehrere Scheiben.
 
 **Ausreißer (V6)**
 - *Was:* Schüsse, die nicht zur Gruppe passen. Spiegel prüft jeden Schuss gegen die übrigen; bei einer

@@ -302,3 +302,18 @@ Analyse stimmen überein) und hält den Branch für merge-reif. Drei neue Minor-
   als Verbesserung vermerkt.
 - **N3 sechs Tests** für die Grenzen (F-Freiheitsgrade, Zweig ohne Streuung der übrigen, Mauchly-Exponent
   und -Irrtum, Ringe in der Belastbarkeit, Schwelle der Richtungsuhr). Mutationsprobe danach 71 von 71.
+
+## Nachtrag 4: Rückmeldung des Users nach dem Merge (6. Oktober 2026)
+
+- **„Gestreckt tritt erst sehr spät auf“:** Simulation (je 20 000 Läufe) bestätigt den Test: Eine runde
+  Gruppe zeigt zufällig a/b 1,32 (20 Schuss) bzw. 1,21 (40 Schuss); die 95-%-Grenze liegt bei 1,81 bzw.
+  1,50; eine echte Streckung von 1,3 erkennt eine Scheibe mit 40 Schuss in 28 %, über 120 Schuss in 72 %.
+  Neu: `groupShape` nennt `ratioLimit`, das a/b, ab dem die Gruppe bei dieser Schusszahl gestreckt ist,
+  damit die Oberfläche „a/b 1,35 · gestreckt ab 1,50“ zeigen kann. Die Form über mehrere Scheiben geht
+  nach SP-2.7 (L9). Die Beispielscheibe der Spielwiese war rund erzeugt und bekommt eine realistische
+  senkrechte Streckung.
+- **„Ausreißer nicht mehr als rote Punkte“:** richtig so, die Beispielscheiben enthalten keinen echten
+  Ausreißer (die alte Regel markierte zwei fälschlich). Die Luftpistolen-Scheibe der Spielwiese bekommt
+  einen echten Abreißer.
+- **Overlays über den Treffern:** Streukreis, Vertrauensellipse und Schwerpunkt liegen über den Schüssen,
+  mit hellem Saum (Zeichenregel in `spiegel-ui-design`).
