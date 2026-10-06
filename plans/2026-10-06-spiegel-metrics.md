@@ -298,4 +298,8 @@ der Registry (E5); die Eigenschaftstests nutzen 3–25 statt 3–60 Punkte.
   Nachkommastellen; `METRICS` eingefroren; `defineMetric` prüft Schlüssel und Nachkommastellen.
 - Tests mit festen Werten für jede Gruppen-Kennzahl (Fixture mit verschiedener Streuung in x und y und
   geradem n), Paar-Test mit Liste der wertungsfreien Kennzahlen, `expectNear` gegen null-als-0.
+- Nachprüfung (Durchgang 2, merge-reif): Lücken in der Abgabefolge trennen das Tempo (`tempo()` nimmt
+  `null` als Lücke, `pace` setzt sie bei Sprüngen in `seq`), keine Dauer über einen Uhrsprung,
+  `computeMetric` und `eligibleShots` teilen dieselbe Auswahl, Streukreis gegen größten Abstand
+  festgenagelt, weitere Randfälle getestet. Mutationsprobe: 49, davon 48 rot.
 
