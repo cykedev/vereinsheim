@@ -98,7 +98,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     short:
       "Wie stark deine Treffer um ihren Schwerpunkt streuen, kaum abhängig von der Schusszahl.",
     what: "Wie stark deine Treffer um ihren eigenen Schwerpunkt streuen, als eine Zahl in mm. Bei einer runden Gruppe liegen etwa 39 % der Treffer innerhalb von σ um den Schwerpunkt und 86 % innerhalb von 2σ.",
-    read: "Kleiner ist besser. σ hängt kaum von der Schusszahl ab und ist deshalb das richtige Maß, um einen Abend mit 20 Schuss mit einem mit 40 zu vergleichen. In Ringbreiten heißt 0,5: Ein Treffer liegt im Mittel eine halbe Ringbreite vom Schwerpunkt.",
+    read: "Kleiner ist besser. σ hängt kaum von der Schusszahl ab und ist deshalb das richtige Maß, um einen Abend mit 20 Schuss mit einem mit 40 zu vergleichen. In Ringbreiten (Luftgewehr 2,5 mm, Luftpistole 8 mm) heißt 0,5: Ein Treffer liegt im Mittel eine halbe Ringbreite vom Schwerpunkt. So lassen sich Gewehr und Pistole grob vergleichen.",
     caution:
       "Sa ist dieselbe Größe ohne die kleine Korrektur, so wie Meyton sie nennt; gegen echte Meyton-Werte ist die Formel noch nicht geprüft. Bei 10 Schuss reicht der 95-%-Bereich von etwa einem Viertel darunter bis knapp die Hälfte darüber.",
     minimum: "Ab 3 Schuss.",
@@ -167,7 +167,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: ["group.mpiDistance"],
     short: "Wo dein Schwerpunkt liegt und ob der Versatz mehr als Zufall ist.",
     what: "Der Schwerpunkt ist der Mittelpunkt aller Treffer, auf der Scheibe der kleine schwarz-weiß geviertelte Kreis. Ein Test (Hotelling) prüft, ob sein Versatz zur Mitte mehr als Zufall ist; er berücksichtigt Streuung und Schusszahl.",
-    read: "„Echt versetzt“: Eine Korrektur an Visier oder Anschlag kann sich lohnen. „Vom Zufall nicht zu unterscheiden“: nicht am Visier drehen, auch wenn der Schwerpunkt neben der Mitte liegt.",
+    read: "Die Lage steht als Richtung und Abstand zur Mitte da, etwa 0,6 mm rechts und 0,4 mm tief. „Echt versetzt“: Eine Korrektur an Visier oder Anschlag kann sich lohnen. „Vom Zufall nicht zu unterscheiden“: nicht am Visier drehen, auch wenn der Schwerpunkt neben der Mitte liegt.",
     act: "Die Vertrauensellipse auf der Scheibe zeigt, wo der wahre Schwerpunkt mit 95 % liegt. Liegt die Mitte darin, ist der Versatz nicht belegt.",
     minimum: "Schwerpunkt ab 2 Schuss, der Test ab 3.",
     formula: "T² = n · m′ S⁻¹ m gegen 2(n − 1)/(n − 2) · F₀,₉₅(2, n − 2)",

@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest"
 
-import { renderGuideMarkdown, renderTopic, wrapText } from "./markdown"
+import {
+  GUIDE_END,
+  GUIDE_START,
+  guideSection,
+  renderGuideMarkdown,
+  renderTopic,
+  replaceGuideSection,
+  wrapText,
+} from "./markdown"
 import type { HelpTopic } from "./types"
 
 describe("wrapText", () => {
@@ -84,5 +92,49 @@ describe("renderGuideMarkdown", () => {
 
   it("gleiche Daten, gleicher Text", () => {
     expect(renderGuideMarkdown()).toBe(guide)
+  })
+})
+
+describe("Abschnitt zwischen den Markern", () => {
+  const note = [
+    "---",
+    "id: x",
+    "---",
+    "",
+    "Vorspann.",
+    "",
+    GUIDE_START,
+    "",
+    "alt",
+    "",
+    GUIDE_END,
+    "",
+    "Nachsatz.",
+  ].join("\n")
+
+  it("liest den Abschnitt ohne die Leerzeilen an den Markern", () => {
+    expect(guideSection(note)).toBe("alt")
+  })
+
+  it("ersetzt nur den Abschnitt; Vorspann, Marker und Nachsatz bleiben", () => {
+    const next = replaceGuideSection(note, "## Neu\n\nText.")
+    expect(next).toBe(note.replace("alt", "## Neu\n\nText."))
+    expect(guideSection(next)).toBe("## Neu\n\nText.")
+    // zweimal geschrieben ist dasselbe wie einmal
+    expect(replaceGuideSection(next, "## Neu\n\nText.")).toBe(next)
+  })
+
+  it("ohne beide Marker, mit vertauschten oder doppelten Markern gibt es keinen Abschnitt", () => {
+    const broken = [
+      "Kein Marker.",
+      `${GUIDE_START}\nnur Anfang`,
+      `nur Ende\n${GUIDE_END}`,
+      `${GUIDE_END}\nvertauscht\n${GUIDE_START}`,
+      `${GUIDE_START}\na\n${GUIDE_END}\n${GUIDE_START}\nb\n${GUIDE_END}`,
+    ]
+    for (const text of broken) {
+      expect(guideSection(text), text).toBeNull()
+      expect(() => replaceGuideSection(text, "neu"), text).toThrow(/Marker/)
+    }
   })
 })

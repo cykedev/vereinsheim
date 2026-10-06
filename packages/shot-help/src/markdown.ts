@@ -87,3 +87,31 @@ export function renderGuideMarkdown(): string {
   )
   return parts.join("\n\n")
 }
+
+/** der Leitfaden im Vault, relativ zur Wurzel des Repos */
+export const GUIDE_FILE = "vault/spiegel/spiegel-statistics-help.md"
+export const GUIDE_START =
+  "<!-- shot-help:start · erzeugt aus packages/shot-help (pnpm --filter @vereinsheim/shot-help docs), nicht von Hand ändern -->"
+export const GUIDE_END = "<!-- shot-help:end -->"
+
+/** Lage des Abschnitts: genau ein Anfangs- und ein Endmarker, in dieser Reihenfolge */
+function sectionBounds(note: string): { from: number; to: number } | null {
+  const start = note.indexOf(GUIDE_START)
+  const end = note.indexOf(GUIDE_END)
+  const single = note.lastIndexOf(GUIDE_START) === start && note.lastIndexOf(GUIDE_END) === end
+  if (start < 0 || end < start || !single) return null
+  return { from: start + GUIDE_START.length, to: end }
+}
+
+/** der erzeugte Abschnitt einer Note ohne die Leerzeilen an den Markern; `null` ohne gültige Marker */
+export function guideSection(note: string): string | null {
+  const bounds = sectionBounds(note)
+  return bounds && note.slice(bounds.from, bounds.to).replace(/^\n+|\n+$/g, "")
+}
+
+/** die Note mit `section` zwischen den Markern, alles andere unverändert */
+export function replaceGuideSection(note: string, section: string): string {
+  const bounds = sectionBounds(note)
+  if (!bounds) throw new Error(`Marker fehlen oder sind doppelt: ${GUIDE_START} … ${GUIDE_END}`)
+  return `${note.slice(0, bounds.from)}\n\n${section}\n\n${note.slice(bounds.to)}`
+}
