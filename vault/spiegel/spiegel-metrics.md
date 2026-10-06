@@ -3,7 +3,7 @@ id: spiegel-metrics
 type: concept
 title: "Spiegel — Kennzahlen, Verläufe und Vergleiche"
 aliases: [kennzahlen, metrics, kennzahlen-registry, verläufe, vergleiche]
-keywords: [kennzahl, metric, registry, metricshot, computemetric, extremespread, segmentgroups, definemetric, schwerpunkt, mpi, streukreis, kleinster kreis, welzl, mittlerer radius, streuung, ellipse, teiler, intervall, tempo, ermüdung, verlauf, trend, rekord, bestleistung, vergleich, baseline, 30-tage-schnitt, beobachtung, insight, trefferkreis, trefferlage, nur probe, je schuss, r50, median, mindestzahl, ausreißer, visier verstellt, disziplin-familie]
+keywords: [kennzahl, metric, registry, inscoring, counterpart, ganze ringe, zehntel, umschalten, metricshot, computemetric, extremespread, segmentgroups, definemetric, schwerpunkt, mpi, streukreis, kleinster kreis, welzl, mittlerer radius, streuung, ellipse, teiler, intervall, tempo, ermüdung, verlauf, trend, rekord, bestleistung, vergleich, baseline, 30-tage-schnitt, beobachtung, insight, trefferkreis, trefferlage, nur probe, je schuss, r50, median, mindestzahl, ausreißer, visier verstellt, disziplin-familie]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[statistics-visualization]]", "[[spiegel-data-model]]", "[[spiegel-ui-design]]", "[[spiegel-edge-cases]]"]
 ---
@@ -68,7 +68,8 @@ Die Regeln aus dem Sonderfall-Katalog ([[spiegel-edge-cases]]), die jede Kennzah
 - **Tempo:** Median der Intervalle; Pausen über drei Minuten zählen getrennt (SF-62).
 - **Freihand und Auflage** bleiben getrennte Familien (SF-65).
 - **Merkmale filtern:** Neu gewertete, nur aus dem PDF stammende und ausgenommene Scheiben zählen nicht für Rekorde, ebenso Status `I` (ungültig) und Sonderwertungen wie Preisschießen.
-- **Ganzring-Disziplinen:** Liefert Meyton keine Zehntel, rechnet Spiegel sie aus x/y und kennzeichnet sie als eigene Kennzahl (SF-18).
+- **Ganzring-Disziplinen:** Liefert Meyton keine Zehntel, rechnet Spiegel sie aus x/y und kennzeichnet sie als eigene Kennzahl (SF-18). Fehlen Lage und Zehntel, bleibt die Wertung in ganzen Ringen; in Zehnteln gibt es dann keinen Wert.
+- **Ganze Ringe oder Zehntel:** Jede wertbasierte Kennzahl gibt es in beiden Wertungen, damit die Oberfläche überall umschalten kann ([[spiegel-ui-design]]). Rekorde und Verläufe laufen je Wertung getrennt.
 
 ## Beobachtungen in Worten
 
@@ -76,11 +77,12 @@ Wo ein Satz reicht, steht er über dem Diagramm: „Serie 3 war deine engste (St
 
 ## Umsetzung
 
-`packages/shot-core` (SP-1.2, Oktober 2026) setzt die Registry und die ersten 15 Kennzahlen um (`geometry`, `time`, `metrics`):
+`packages/shot-core` (SP-1.2, Oktober 2026) setzt die Registry und die ersten 16 Kennzahlen um (`geometry`, `time`, `metrics`):
 
 - **Eingabe** ist ein schlanker `MetricShot` (Lage, Wert, Ring, Innenzehner, Abstand, Zeit, Probe oder Wertung, Serie, Merkmale). Schüsse ohne Lage zählen bei Lage-Kennzahlen nicht mit, ohne Wert nicht beim Ergebnis, ohne Zeit nicht beim Tempo.
 - **Streukreis** ist der kleinste Kreis um die Trefferzentren, Mitte zu Mitte, deterministisch nach Welzl berechnet und gegen Brute Force getestet. Daneben gibt es den größten Abstand zweier Treffer (`extremeSpread`), bis SP-0.6 klärt, welches der beiden Meytons „Trefferkreis“ ist.
 - **Radien und Streuung:** mittlerer Radius (Mittel der Abstände zum Schwerpunkt), R50 (ihr Median, ohne markierte Ausreißer), Streuung x/y mit n − 1, Streu-Ellipse aus der Kovarianz.
 - **Tempo:** Median der Intervalle; Intervalle über 180 s sind Pausen und zählen getrennt.
 - **Versatz Probe → Wertung** nimmt die letzten fünf Probeschüsse; `segmentGroups` teilt eine Gruppe an einem Schuss, nach dem das Visier verstellt wurde.
-- **Kennzahlen:** Ringe, Zehntel, Ø je Schuss, Zehner, Innenzehner, bester Teiler, Schwerpunkt-Abstand, Streukreis, mittlerer Radius, R50, Streuung x und y, Tempo, längste Pause, Versatz Probe → Wertung. Die übrigen Kennzahlen der Tabelle oben (Ermüdung, Wanderung, Tempo-Konstanz, …) kommen über dieselbe Registry dazu, sobald eine Ansicht sie braucht.
+- **Wertung:** Wertbasierte Kennzahlen tragen `scoring` (ganze Ringe oder Zehntel) und ihr Gegenstück (`counterpart`); `inScoring` wählt die passende. Ganze Ringe brauchen nur den Ring, Zehntel den Zehntelwert.
+- **Kennzahlen:** Ergebnis und Ø je Schuss (je in ganzen Ringen und in Zehnteln), Zehner, Innenzehner, bester Teiler, Schwerpunkt-Abstand, Streukreis, mittlerer Radius, R50, Streuung x und y, Tempo, längste Pause, Versatz Probe → Wertung. Die übrigen Kennzahlen der Tabelle oben (Ermüdung, Wanderung, Tempo-Konstanz, …) kommen über dieselbe Registry dazu, sobald eine Ansicht sie braucht.

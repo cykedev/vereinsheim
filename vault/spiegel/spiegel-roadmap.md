@@ -119,8 +119,8 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-1.8 Scheiben-Liste und Session-Detail
 - **Ziel:** das, was der Prototyp verspricht.
-- **Umfang:** Liste nach Trainingsabend; Session-Detail mit Trefferbild (Overlays, Zoom), Serien und Probe-Blöcken als kleine Scheiben, Schusstabelle, Wiedergabe, Kennzahl-Kacheln, Beobachtung, Original-PDF, Merkmalen und Aktionen an der Scheibe ([[spiegel-ui-design]]); `packages/shot-ui`.
-- **Abnahme:** Sichtprüfung gegen `vault/_attachments/spiegel-konzept.html` auf Handy und Desktop, dunkel und, falls der Hellmodus in Phase 1 kommt, hell ([[spiegel-open-questions]]); Markup-Tests; Sonderfälle SF-01, SF-02, SF-05, SF-07, SF-11, SF-16, SF-61.
+- **Umfang:** Liste nach Trainingsabend; Session-Detail mit Trefferbild (Overlays, Zoom), Serien und Probe-Blöcken als kleine Scheiben, Schusstabelle, Wiedergabe, Kennzahl-Kacheln, Beobachtung, Original-PDF, Merkmalen und Aktionen an der Scheibe ([[spiegel-ui-design]]); Umschalter ganze Ringe/Zehntel überall; Zeichenregeln aus „Zeichnen der Scheibe“; `packages/shot-ui`.
+- **Abnahme:** Sichtprüfung gegen `vault/_attachments/spiegel-konzept.html` auf Handy und Desktop, dunkel und, falls der Hellmodus in Phase 1 kommt, hell ([[spiegel-open-questions]]); Markup-Tests; Sonderfälle SF-01, SF-02, SF-05, SF-07, SF-11, SF-16, SF-18, SF-61.
 - **Hängt ab von:** SP-1.2, SP-1.6. **Status:** offen.
 
 ### SP-1.9 Betrieb: Deploy und Selbst-Hosting
@@ -132,7 +132,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ## Phase 2 · Auswertung
 
 ### SP-2.1 Verläufe und Rekorde
-- **Umfang:** Verlauf jeder Kennzahl je Disziplin-Familie mit Filtern und gleitendem Schnitt, Rekorde, Kalender ([[spiegel-metrics]]); Sonderfälle SF-60, SF-64, SF-65, SF-66. **Hängt ab von:** SP-1.2, SP-1.8. **Status:** offen.
+- **Umfang:** Verlauf jeder Kennzahl je Disziplin-Familie mit Filtern und gleitendem Schnitt, Rekorde je Wertung (ganze Ringe, Zehntel), Kalender ([[spiegel-metrics]]); Sonderfälle SF-60, SF-64, SF-65, SF-66. **Hängt ab von:** SP-1.2, SP-1.8. **Status:** offen.
 
 ### SP-2.2 Direkte Vergleiche und Beobachtungen
 - **Umfang:** Serie, Scheibe, Zeitraum, Merkmal, Baseline; Sätze aus Kennzahlen. **Hängt ab von:** SP-2.1. **Status:** offen.
