@@ -154,7 +154,8 @@ ADR-006).
 Source (Apache-2.0). Einstieg: [`vault/spiegel/spiegel.md`](vault/spiegel/spiegel.md) (Plan,
 Lesereihenfolge). Gebaut wird **ein Feature pro Session** aus
 [`vault/spiegel/spiegel-roadmap.md`](vault/spiegel/spiegel-roadmap.md) (IDs `SP-x.y`, je über `/plan`).
-Entscheidungen ADR-026–030, Meyton-Wissen unter [`vault/meyton/`](vault/meyton). Noch kein Code.
+Entscheidungen ADR-026–030, Meyton-Wissen unter [`vault/meyton/`](vault/meyton). Erster Code: der Fachkern
+[`packages/shot-core`](packages/shot-core) (SP-1.1: Scheibenbilder, Wertung, Disziplinen, Gegenprobe).
 
 ## Wenn du etwas änderst
 

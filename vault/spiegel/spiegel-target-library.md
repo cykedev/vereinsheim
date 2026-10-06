@@ -50,17 +50,17 @@ Gezeichnet wird daraus eine SVG-Scheibe (Papier, Spiegel, Ringlinien, Ringzahlen
 - **Die Regelnummer allein ist nicht eindeutig (SF-70):** `10610040` ist „LP Liga“, `10610220` „ISSF AR Men Final“; `10100040` ist die französische Luftpistole, obwohl DSB-Regeln 01.xx Gewehre sind. Spiegel prüft deshalb Regelnummer **und** Schusscode und nie Regelbereiche allein.
 - **Auflösung in fester Reihenfolge:**
   1. Admin-Zuordnung für DisziplinID und Name der Anlage.
-  2. Katalog für 10 m, Luftgewehr: 0110, 0111 (Auflage), 0120, 0193–0195, 0510–0550 (Liga), 0710–0713, 1009–1018 (Training), 9110 (alt); Luftpistole: 0210, 0211 (Auflage), 0216, 0610–0650 (Liga), 0810–0813, 1109–1117, 9210; ISSF-Finale 0610–0617 nur mit Schusscode 220 (gerade Luftgewehr, ungerade Luftpistole).
+  2. Katalog für 10 m (genaue Nummern, keine Bereiche). Luftgewehr: 0110, 0111 (Auflage), 0120, 0193, 0194, 0195, Liga 0510, 0520, 0530, 0531, 0540, 0550, ISSF 0710–0713, Training 1009–1018 (mit den Teiler- und verdeckten Varianten), alt 9110. Luftpistole: 0210, 0211 (Auflage), Liga 0610, 0620, 0630, 0631, 0640, 0650, ISSF 0810–0813, Training 1109–1117, alt 9210. ISSF-Finale: 0610–0617 nur mit Schusscode 220 (gerade Luftgewehr, ungerade Luftpistole). Bekannte Disziplinen mit eigener Scheibe bleiben unbekannt, statt über den Namen auf die Standardscheibe zu fallen: Kyffhäuser (1062), 12-kreisig (1064), Löwenbräu-Finale (7401, 7402) und LP5 (0216, DSB 2.16 mit Fallscheibe).
   3. Name: ganzes Wort LG oder Luftgewehr bzw. LP, LP5 oder Luftpistole; kommt beides oder keines vor, bleibt es offen. Kein Namens-Rückfall, wenn die ID eine andere Entfernung nennt.
   4. Unbekannt: Spiegel schlägt das Scheibenbild vor, das alle amtlichen Zehntelwerte erklärt, und ein Admin bestätigt. Bis dahin zeigt Spiegel die Treffer auf einem neutralen Raster mit dem Merkmal `disziplin-unbekannt` (SF-17).
 - **Je Stellung ein Scheibenbild:** bei der 25-m-Pistole ist Stellung 1 die Präzisions-, Stellung 2 die Duellscheibe. Für 10 m gilt dasselbe Bild für alle Stellungen.
-- **Der Schusscode ist nur ein Hinweis (SF-09):** `000` heißt offen (Meytons „LG/LP Training Spiegel“), `001`–`100` sind geplante Wertungsschüsse, über 100 nutzt Meyton Varianten-Codes (220 Finale, 240 Liga Bayern). Gegen die Schusszahl zählen nur Wertungsschüsse.
+- **Der Schusscode ist nur ein Hinweis (SF-09):** `000` heißt offen (Meytons „LG/LP Training Spiegel“), `001`–`100` sind geplante Wertungsschüsse. Über 100 gibt es keinen verlässlichen Hinweis: Bei 10 m stehen dort Varianten-Codes (220 Finale, 240 Liga Bayern), anderswo auch echte Zahlen (120 bei ISSF 3x40). Gegen die Schusszahl zählen nur Wertungsschüsse. Offen (SP-0.6): ob „Training Spiegel“ in Ringen wertet oder mit Meytons Trainingsscheibe nur Treffer zählt; bis dahin zeichnet Spiegel sie auf der Standardscheibe.
 - **Familien:** Jede Disziplin gehört zu einer Familie, in der Verläufe zusammen laufen (LG oder LP, Freihand oder Auflage). Auflage kommt aus der Regel (0111, 0211) oder dem Namen; Spiegel schlägt vor, der Admin bestätigt (SF-64).
 - Ob ganz oder zehntel gewertet wird, steht je Treffer im Feld `Wertung` (seit ShootMaster 5.2). Zehntel rechnet Spiegel immer, auch bei Ganzring-Disziplinen; Ringe und Zehntel sind getrennte Kennzahlen (SF-18).
 
 ## Wertung
 
-Meyton wertet über den inneren Trefferrand, rechnet auf 1/100 mm und schneidet Nachkommastellen zugunsten des Schützen ab:
+Meyton wertet über den inneren Trefferrand und schneidet Nachkommastellen zugunsten des Schützen ab. Laut eigener Angabe misst Meyton auf 1/100 mm; der Teiler hat aber eine bzw. zwei Nachkommastellen davon. Ob die Wertung den genaueren Abstand oder die gerundete Lage nutzt, prüft SP-0.6 an Schüssen nahe einer Grenze; davon hängt die Auflösung ab, die die Gegenprobe ansetzt.
 
 > Zehntel = 10 + (Zehnerradius + halbes Kaliber − Abstand) ÷ Ringabstand, auf eine Stelle abgeschnitten, höchstens 10,9. Ganzring = abgeschnittener Zehntelwert; unter 1 ist ein Fehlschuss.
 
@@ -68,7 +68,7 @@ Bei Luftgewehr, Luftpistole und KK ergibt Zehnerradius plus halbes Kaliber genau
 
 Der **Teiler** ist der Abstand Schussmitte zu Scheibenmitte in 1/100 mm. Einen Teilerfaktor für die Luftpistole kennt die Sportordnung nicht; er steht in der jeweiligen Ausschreibung (üblich: LP-Teiler ÷ 2,6 bis 3,0). Spiegel speichert den rohen Teiler und rechnet Faktoren nur in der Ansicht.
 
-**Neu werten:** Die Lage x/y hängt nicht vom Scheibenbild ab. War am Stand die falsche Disziplin gewählt, wertet Spiegel die Scheibe mit dem richtigen Bild neu; die Werte sind dann nicht amtlich und tragen das Merkmal `neu-gewertet` (SF-16).
+**Neu werten:** Lage und Abstand hängen nicht vom Scheibenbild ab; Spiegel nimmt den genaueren Abstand aus dem Teiler, sonst die Lage. War am Stand die falsche Disziplin gewählt, wertet Spiegel die Scheibe mit dem richtigen Bild neu; die Werte sind dann nicht amtlich und tragen das Merkmal `neu-gewertet` (SF-16).
 
 ## Gegenprobe
 

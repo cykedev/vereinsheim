@@ -71,7 +71,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-19 | Preis- oder Königsschießen: Probe sichtbar, Wertung verdeckt; gemischte Modi | Werte vorzeitig sichtbar; `TotalRing` in der Kopfzeile verrät Modus 10 | Ab dem ersten verdeckten Schuss bleibt die ganze Scheibe samt Kopfzeile in der Brücke; Freigabe durch den Admin | Schießprotokoll, Fixture |
 | SF-20 | Wertungsmodus 0 (unbekannt), etwa bei Probe oder Altdaten | „Unbekannt nie hochladen“ hält still alles zurück | Admin gibt Modus 0 je Disziplin frei; Heartbeat und Statusseite zählen Zurückgehaltenes je Modus | SQL-Checkliste |
 | SF-21 | Querschuss, Korrektur durch die Standaufsicht | Treffer verschwindet oder ändert sich | Wertung folgt dem neuesten Snapshot; Merkmal `korrigiert` | Schießprotokoll, Fixture |
-| SF-70 | Regelnummer nicht eindeutig: 0610 ist „LP Liga“ (10610040) und ISSF-Luftgewehr-Finale (10610220), 0100 die französische Luftpistole | Ein Rückfall über die Regelnummer wählt das falsche Scheibenbild | Katalog über Regelnummer und Schusscode, Regelbereiche nie allein; danach Name, dann Admin | Test (SP-1.1) |
+| SF-70 | Regelnummer nicht eindeutig: 0610 ist „LP Liga“ (10610040) und ISSF-Luftgewehr-Finale (10610220), 0100 die französische Luftpistole; Disziplinen wie Kyffhäuser, 12-kreisig, Löwenbräu oder LP5 tragen „LG“/„LP“ im Namen, nutzen aber eine eigene Scheibe | Ein Rückfall über Regelbereiche oder den Namen wählt das falsche Scheibenbild | Admin-Zuordnung, dann Katalog über Regelnummer und Schusscode mit Nullzeilen für Disziplinen mit eigener Scheibe, dann Name; sonst Vorschlag mit Admin-Bestätigung | Test (SP-1.1) |
 
 ### Korrekturen, Löschungen, Schema
 

@@ -53,6 +53,8 @@ Der Katalog steht in [[spiegel-edge-cases]].
 - **Welche Disziplin-Varianten gibt es, und welche zählen zusammen?** → offen (SP-0.1); der Admin pflegt die Familien.
 - **Wird in der Probe das Visier verstellt, und soll Spiegel ein Ereignis „Visier verstellt“ anbieten?** → offen.
 - **Macht die Standaufsicht einen Abend lang das Schießprotokoll mit?** → offen (SP-0.6).
+- **Wertet „LG/LP Training Spiegel“ in Ringen oder zählt es mit Meytons Trainingsscheibe nur Treffer?** → offen (SP-0.6); bis dahin gilt die Standardscheibe ([[spiegel-target-library]]).
+- **Nutzt Meytons Wertung den genauen Abstand (Teiler) oder die auf 1/100 mm gerundete Lage?** → offen (SP-0.6, Schüsse nahe einer Grenze); davon hängt die Auflösung der Gegenprobe ab.
 - **Darf die Brücke bei einer QR-Anfrage zuerst nur eine Vorschau liefern und die ganze Scheibe erst nach der Gegenprobe?** → Empfehlung ja; das hält die Brücke dumm und lässt bei einer falschen ID nichts Fremdes hinaus ([[spiegel-assignment]]).
 
 ## Produkt
