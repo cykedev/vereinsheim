@@ -69,17 +69,29 @@ describe("Ist die Lage echt? (L3, Hotelling-T²)", () => {
     expect(mpiConfidence(TIGHT_RIGHT)?.real).toBe(true)
     expect(mpiConfidence(SPREAD.slice(0, 2))).toBeNull()
   })
+
+  it("alle Treffer auf einer Linie: kein Urteil, auch wenn die Rundung einen Rest lässt", () => {
+    // exakt kollinear (Richtung 1000 | 1333), der Schwerpunkt ist aber nicht ganzzahlig
+    const line = [
+      [123, 456],
+      [1123, 1789],
+      [3123, 4455],
+      [10123, 13786],
+    ].map(([x, y], i) => at(x, y, i))
+    expect(mpiConfidence(line)).toBeNull()
+  })
 })
 
 describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
   it("LP, eng um (5 | 0) mm: 10,3 statt 10,9, in ganzen Ringen kein Verlust", () => {
     const split = ringLossSplit(TIGHT_RIGHT, LP_10M)
     expect(split?.n).toBe(10)
-    expect(split?.actual).toEqual({ tenths: 103, rings: 100 })
-    expect(split?.centered).toEqual({ tenths: 109, rings: 100 })
-    expect(split?.positionLoss.tenths).toBeCloseTo(6, 9)
+    expect(split?.actual).toEqual({ decimal: 103, rings: 100 })
+    expect(split?.centered).toEqual({ decimal: 109, rings: 100 })
+    expect(split?.positionLoss.decimal).toBeCloseTo(6, 9)
     expect(split?.positionLoss.rings).toBe(0)
-    expect(split?.spreadLoss.tenths).toBeCloseTo(0, 9)
+    expect(split?.spreadLoss.decimal).not.toBeNull()
+    expect(split?.spreadLoss.decimal).toBeCloseTo(0, 9)
     expect(split?.spreadLoss.rings).toBe(0)
     expect(split?.reliable).toBe(true)
   })
@@ -90,11 +102,31 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     expect(ringLossSplit(centered, LP_10M)?.reliable).toBe(false)
     expect(ringLossSplit([], LP_10M)).toBeNull()
   })
+
+  it("schiefe Gruppe: Verschieben um den Schwerpunkt kostet Zehntel, dann nicht belastbar", () => {
+    // LP: 20 Schuss in der Mitte (10,9), 10 bei 9 mm rechts (9,8); Schwerpunkt (3 | 0) mm, echt.
+    // Zentriert: 20 × 10,6 und 10 × 10,2 = 314,0 statt 316,0; in ganzen Ringen 300 statt 290.
+    const skewed = Array.from({ length: 30 }, (_, i) =>
+      at(i < 20 ? 0 : 9000, i % 2 === 0 ? 200 : -200, i)
+    )
+    expect(mpiConfidence(skewed)?.real).toBe(true)
+    const split = ringLossSplit(skewed, LP_10M)
+    expect(split?.actual).toEqual({ decimal: 316, rings: 290 })
+    expect(split?.centered).toEqual({ decimal: 314, rings: 300 })
+    expect(split?.positionLoss.decimal).toBeCloseTo(-2, 9)
+    expect(split?.positionLoss.rings).toBe(10)
+    expect(split?.reliable).toBe(false)
+  })
 })
 
 describe("Lageanteil, Richtungsuhr und Drift (L5, L6, L8)", () => {
   it("Lageanteil: 0 bei zentrierter Gruppe, fast alles bei enger versetzter", () => {
-    expect(positionShare(SPREAD)).toBeCloseTo(0, 9)
+    const share = positionShare(SPREAD)
+    expect(share).not.toBeNull()
+    expect(share).toBeCloseTo(0, 9)
+    // ab drei Schuss
+    expect(positionShare(SPREAD.slice(0, 3))).not.toBeNull()
+    expect(positionShare(SPREAD.slice(0, 2))).toBeNull()
     expect(positionShare(TIGHT_RIGHT)).toBeCloseTo((25e6 - 120000 / 9 / 10) / 25_012_000, 9)
   })
 
@@ -107,10 +139,26 @@ describe("Lageanteil, Richtungsuhr und Drift (L5, L6, L8)", () => {
     expect(directionClock(TIGHT_RIGHT, { xUm: 5000, yUm: 0 }).n).toBe(8)
   })
 
+  it("Richtungsuhr: aussagekräftig erst ab 30 Schuss (L6)", () => {
+    expect(directionClock(SPREAD).reliable).toBe(false)
+    const thirty = Array.from({ length: 30 }, (_, i) => at(1000 + i, 500 - i, i))
+    expect(directionClock(thirty).reliable).toBe(true)
+  })
+
   it("Drift: Sprünge und von-Neumann-Verhältnis in Abgabefolge", () => {
     const result = drift(SPREAD)
     expect(result?.vonNeumann).toBeCloseTo(1.6, 9)
     expect(result?.meanJumpUm).toBeCloseTo((5000 + 2000 + Math.sqrt(18e6) + 4000 + 1000) / 5, 6)
+    expect(result?.maxJumpUm).toBe(5000)
+  })
+
+  it("Drift mit Lücke: der Sprung über die Lücke fehlt, das Verhältnis bleibt je Sprung normiert", () => {
+    // seq 1, 2, 3, 5, 6, 7: der Sprung von Schuss 3 zu 4 (18 mm²) zählt nicht.
+    // (Σ Sprung² / 4) / (Σ r² / 5) = (46 / 4) / (40 / 5) = 1,4375; ohne Normierung wären es 1,15.
+    const gapped = SPREAD.map((shot, i) => ({ ...shot, seq: i < 3 ? i + 1 : i + 2 }))
+    const result = drift(gapped)
+    expect(result?.vonNeumann).toBeCloseTo(1.4375, 9)
+    expect(result?.meanJumpUm).toBeCloseTo(3000, 6)
     expect(result?.maxJumpUm).toBe(5000)
   })
 })
