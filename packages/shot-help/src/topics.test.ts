@@ -56,6 +56,11 @@ describe("HELP_TOPICS: Bezüge und Ordnung", () => {
     }
   })
 
+  it("24 Themen nach dem Aufräumen (SP-1.12: ohne Lageanteil)", () => {
+    expect(HELP_TOPICS).toHaveLength(24)
+    expect(HELP_TOPICS.some((topic) => topic.id === "lageanteil")).toBe(false)
+  })
+
   it("jedes Thema deckt mindestens eine Kennzahl oder Katalog-ID ab", () => {
     for (const topic of HELP_TOPICS) {
       expect(topic.metrics.length + topic.catalog.length, topic.id).toBeGreaterThan(0)

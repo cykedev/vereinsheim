@@ -3,7 +3,7 @@ id: spiegel-statistics-help
 type: guide
 title: "Spiegel — Statistik verstehen (Hilfe)"
 aliases: [statistik-hilfe, hilfe, erklärungen, statistik verstehen, glossar]
-keywords: [hilfe, erklärung, erklären, verstehen, einfache sprache, glossar, so liest du, was heißt das, 95 prozent, vertrauensbereich, unsicherheit, echt, unklar, mindestzahl, sigma, r50, streukreis, mittlerer radius, ringbreiten, form, ellipse, ausreißer, schwerpunkt, lage, hotelling, vertrauensellipse, ringverlust, lageanteil, richtungsuhr, drift, von neumann, tempo, rhythmus, pause, wiedereinstieg, ermüdung, trend, theil-sen, gleitender schnitt, serien, konstanz, quote, wilson, zehnerquote, innenzehner, teiler, median, iqr, mad, probe, eingeschossen, fehlschlüsse, regression zur mitte]
+keywords: [hilfe, erklärung, erklären, verstehen, einfache sprache, glossar, so liest du, was heißt das, 95 prozent, vertrauensbereich, unsicherheit, echt, unklar, mindestzahl, sigma, r50, streukreis, ringbreiten, form, ellipse, ausreißer, schwerpunkt, lage, hotelling, vertrauensellipse, ringverlust, richtungsuhr, drift, von neumann, tempo, rhythmus, pause, wiedereinstieg, ermüdung, trend, gleitender schnitt, serien, konstanz, quote, wilson, zehnerquote, innenzehner, teiler, median, iqr, mad, probe, eingeschossen, fehlschlüsse, regression zur mitte, mann-kendall, trefferbild, fehlschuss, verdächtiger schuss, leave-one-out]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-statistics]]", "[[spiegel-ui-design]]", "[[spiegel-metrics]]", "[[spiegel-vision]]"]
 ---
@@ -22,20 +22,26 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 ## So liest du die Zahlen
 
-- **Schusszahl n.** Jede Zahl steht auf einer Grundlage, die Zeile „Grundlage“ unter der Analyse
+- **Schusszahl n.** Jede Zahl steht auf einer Grundlage, die Zeile „Datenlage“ unter der Analyse
   nennt sie. Reicht die Schusszahl nicht, steht „–“ mit dem Grund („ab 10 Schuss“), nie eine 0.
-- **95-%-Bereich.** „σ 1,12 mm, 95 %: 0,96 bis 1,36 mm“ heißt: Mit dieser Schusszahl liegt dein
-  wahrer Wert mit großer Sicherheit in diesem Bereich. Mehr Schüsse machen ihn schmaler. Bei 10
-  Schuss reicht er für σ von etwa einem Viertel darunter bis knapp die Hälfte darüber, erst bei rund
-  120 Schuss auf etwa ±10 %.
-- **„Echt“ und „unklar“.** „Echt“ heißt: mit 95 % kein Zufall. „Unklar“ heißt nicht „gibt es nicht“,
-  sondern: Diese Schüsse reichen nicht, um es zu zeigen. Mehr Schüsse oder mehrere Scheiben klären
-  es. „Unklar“ ist ein ehrliches Ergebnis, kein Fehler.
-- **Ganze Ringe oder Zehntel.** Oben umschalten; jede Auswertung über Werte gibt es in beiden. In
-  ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10), deshalb ist ein Trend
-  dort seltener „klar“. Gleich bleiben Zehner, Innenzehner und Zehnerquote.
+- **95-%-Bereich.** „σ 1,12 mm, 95 %: 0,94 bis 1,36 mm“ heißt bei 30 Schuss: Dein wahrer Wert liegt
+  mit großer Sicherheit in diesem Bereich. Mehr Schüsse machen ihn schmaler. Bei 10 Schuss reicht er
+  für σ von etwa einem Viertel darunter bis knapp die Hälfte darüber, erst bei rund 120 Schuss auf
+  etwa ±10 %.
+- **„Echt“ und „unklar“.** „Echt“ heißt: Reiner Zufall brächte ein so deutliches Ergebnis nur in 5
+  von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede fünfte ganz
+  normale Scheibe irgendwo ein „echt“, „gestreckt“, „klar“ oder einen Ausreißer. „Unklar“ heißt
+  nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht, um es zu zeigen oder auszuschließen.
+  Mehr Schüsse oder mehrere Scheiben klären es. Auf den Karten heißt das auch „nicht klar“, „vom
+  Zufall nicht zu unterscheiden“ oder „kein Versatz nachweisbar“; es ist ein ehrliches Ergebnis,
+  kein Fehler.
+- **Ganze Ringe oder Zehntel.** Oben umschalten; jede Auswertung über Werte gibt es in beiden, nur
+  die Zehntelverteilung allein in Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und
+  10,9 sind beide eine 10), deshalb ist ein Trend dort etwas seltener „klar“. Gleich bleiben Zehner,
+  Innenzehner und Zehnerquote.
 - **Probe und Wertung.** Lage, Streuung und Tempo der Analyse rechnen über die Wertung. Die Probe
-  hat einen eigenen Reiter; nach einer Visierverstellung zählt nur die Probe danach.
+  hat einen eigenen Reiter. Nach einer Visierverstellung zählt bei „Probe gegen Wertung“ und
+  „Eingeschossen?“ nur die Probe danach; der Umfang der Probe zählt alle Probeschüsse.
 - **Nummern.** Wertungsschüsse heißen 1, 2, 3 …, Probeschüsse P1, P2 …, in der Reihenfolge der
   Abgabe. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.
 - **Median statt Durchschnitt.** Wo „Median“ steht, zählt der mittlere Wert: Die Hälfte liegt
@@ -47,15 +53,15 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 ## Ergebnis
 
 **Ergebnis und Ø je Schuss (E1, E2)**
-- *Was:* Das Ergebnis ist die Summe aller Wertungsschüsse, der Ø teilt sie durch die Schusszahl.
+- *Was:* Das Ergebnis ist die Summe aller Wertungsschüsse, der Ø der Durchschnitt je Schuss.
   Probeschüsse zählen nicht mit.
 - *So liest du es:* Der Ø je Schuss vergleicht Scheiben mit verschiedener Schusszahl fair, das
   Ergebnis nur Scheiben mit gleich vielen Schüssen. Oben schaltest du zwischen ganzen Ringen und
-  Zehnteln um.
+  Zehnteln um. Was dir zum Höchstwert fehlt, zeigt „Ringverlust nach Ursache“.
 - *Vorsicht:* Fehlt einem Schuss der Wert, gibt es kein Ergebnis: Eine Summe über einen Teil der
-  Schüsse wäre keins.
+  Schüsse wäre keins. Den Ø gibt es trotzdem, über die Schüsse mit Wert.
 - *Mindestzahl:* Ab 1 Schuss.
-- *Formel:* `Ergebnis = Σ vᵢ (Zehntel) bzw. Σ Ringᵢ; Ø = Ergebnis / n`
+- *Formel:* `Ergebnis = Σ vᵢ (Zehntel) bzw. Σ Ringᵢ; Ø = Σ vᵢ / n über die Schüsse mit Wert`
 
 **Ringverteilung (V1)**
 - *Was:* Wie viele Schüsse in jedem Ring liegen, dazu die Innenzehner.
@@ -71,69 +77,78 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Zehntelwertung.
 - *So liest du es:* Sie zeigt, wo innerhalb der Ringe deine Schüsse liegen. Viele Werte knapp unter
   einer Ringgrenze (9,8, 9,9) kosten in ganzen Ringen jeweils einen Ring.
+- *Vorsicht:* Einzelne Säulen sind bei einer Scheibe Zufall; aussagekräftig ist die Gesamtform, etwa
+  viele Werte knapp unter einer Ringgrenze.
 - *Mindestzahl:* Ab 1 Schuss.
 - *Formel:* `Anzahl je Zehntelwert 0,0 … 10,9`
 
-**Bester und schwächster Schuss (E8)**
-- *Was:* Höchster und niedrigster Wert mit Schussnummer, die drei besten und die drei weitesten
-  Teiler wie auf dem Meyton-Ausdruck, dazu Durchschnitt und Median der Teiler.
-- *So liest du es:* Der Median-Teiler ist dein typischer Treffer, der Durchschnitt wird von weiten
-  Schüssen nach oben gezogen. Bei gleichem Wert nennt Spiegel den früheren Schuss.
-- *Vorsicht:* Ein Platzhalter zählt nie als bester oder schwächster Schuss: Er trägt nur den
-  amtlichen Wert, nicht deine Leistung.
-- *Mindestzahl:* Ab 1 Schuss.
+**Beste und weiteste Teiler (E8)**
+- *Was:* Die drei kleinsten und die drei größten Teiler mit Schussnummer, wie auf dem
+  Meyton-Ausdruck. Der kleinste Teiler ist dein bester Schuss, der größte dein schwächster.
+- *So liest du es:* Der Teiler misst feiner als der Wert: Zwei Schüsse mit 10,9 unterscheiden sich
+  im Teiler noch. Bei gleichem Teiler nennt Spiegel den früheren Schuss.
+- *Vorsicht:* Ein verdächtiger Schuss (Platzhalter, Handeintrag) zählt hier nicht: Er trägt nur den
+  amtlichen Wert, nicht deine Leistung. Der beste Teiler wird mit mehr Schüssen besser; vergleiche
+  ihn nur bei gleicher Schusszahl.
+- *Mindestzahl:* Ab 1 Schuss mit Lage.
 - *Formel:* `Teiler = Abstand zur Mitte in 1/100 mm`
 
-**Serien und Konstanz (E9, E10, I1)**
+**Serien und Konstanz (E10, I1)**
 - *Was:* Das Ergebnis jeder Serie, wie stark die Serien schwanken (Standardabweichung, Spanne) und
-  wie stark ein einzelner Schuss typischerweise schwankt (MAD). Dazu der Ringverlust zum Höchstwert.
-- *So liest du es:* Kleine Spanne heißt gleichmäßig. Verglichen werden nur Serien gleicher Länge;
-  fehlt einem Schuss der Wert, hat seine Serie keine Summe. Der Ringverlust ist die Zahl, die du
-  kleiner machen willst.
-- *Was du tun kannst:* Fällt eine Serie ab, im Reiter Zeit & Verlauf nachsehen, ob davor eine Pause
-  lag oder ob es zum Ende hin nachlässt.
+  wie stark ein einzelner Schuss typischerweise schwankt (MAD).
+- *So liest du es:* Kleine Spanne heißt gleichmäßig. Die Spanne wächst aber mit der Zahl der Serien;
+  Scheiben mit verschieden vielen Serien vergleichst du über die Standardabweichung. Verglichen
+  werden nur Serien der häufigsten Länge; fehlt einem Schuss der Wert, hat seine Serie keine Summe.
+- *Was du tun kannst:* Fällt eine Serie ab, sieh im Reiter „Zeit und Verlauf“ nach, ob davor eine
+  Pause lag („Pausen und Wiedereinstieg“) oder ob es zum Ende hin nachlässt („Ermüdung“).
+- *Vorsicht:* Wie gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.
 - *Mindestzahl:* Ab 1 Schuss, die Schwankung ab 2 Serien gleicher Länge.
-- *Formel:* `Ringverlust = n · 10 − Σ Ringᵢ bzw. n · 10,9 − Σ vᵢ; SD und Spanne der Serien gleicher
-  Länge; MAD = Median |vᵢ − Median v|`
+- *Formel:* `SD und Spanne der Serien gleicher Länge; MAD = Median |vᵢ − Median v|`
 
 **Quoten mit Unsicherheit (E4, E5, E11, I10)**
-- *Was:* Der Anteil deiner Schüsse ab einer Schwelle (Zehner, ab 9,0, ab 10,5) und der Innenzehner,
-  jeweils mit 95-%-Bereich. Dazu die längste Folge ab 10,0.
+- *Was:* Der Anteil deiner Schüsse ab einer Schwelle (Zehner, ab 9,0, ab 10,5) mit 95-%-Bereich,
+  dazu die Zahl deiner Zehner und Innenzehner und die längste Folge ab 10,0.
 - *So liest du es:* Der Punkt ist gemessen, der Balken zeigt, wo dein wahrer Anteil wahrscheinlich
-  liegt. Bei 40 Schuss ist er noch breit.
-- *Vorsicht:* Überlappen sich die Balken zweier Abende, ist der Unterschied nicht sicher. In ganzen
-  Ringen erreicht eine Schwelle über 10,0 keiner.
+  liegt. Bei 40 Schuss ist er noch breit: Bei 20 Treffern von 40 reicht er etwa von 35 % bis 65 %.
+- *Vorsicht:* Liegen die Balken zweier Abende nicht übereinander, ist der Unterschied echt.
+  Überlappen sie sich nur ein Stück, kann er trotzdem echt sein; liegt der Punkt des einen Abends im
+  Balken des anderen, ist er nicht belegt. Innenzehner von Gewehr und Pistole sind nicht
+  vergleichbar, und die längste Folge wird mit mehr Schüssen länger. In ganzen Ringen erreicht eine
+  Schwelle über 10,0 keiner.
 - *Mindestzahl:* Ab 1 Schuss.
 - *Formel:* `Anteil = Anzahl ab Schwelle / n; 95-%-Bereich nach Wilson`
 
 ## Präzision
 
-**Präzision σ (P5, P9)**
+**Präzision σ (P5)**
 - *Was:* Wie stark deine Treffer um ihren eigenen Schwerpunkt streuen, als eine Zahl in mm. Bei
   einer runden Gruppe liegen etwa 39 % der Treffer innerhalb von σ um den Schwerpunkt und 86 %
   innerhalb von 2σ.
 - *So liest du es:* Kleiner ist besser. σ hängt kaum von der Schusszahl ab und ist deshalb das
-  richtige Maß, um einen Abend mit 20 Schuss mit einem mit 40 zu vergleichen. In Ringbreiten
-  (Luftgewehr 2,5 mm, Luftpistole 8 mm) heißt 0,5: Ein Treffer liegt im Mittel eine halbe Ringbreite
-  vom Schwerpunkt. So lassen sich Gewehr und Pistole grob vergleichen.
+  richtige Maß, um einen Abend mit 20 Schuss mit einem mit 40 zu vergleichen.
 - *Vorsicht:* Bei 10 Schuss reicht der 95-%-Bereich von etwa einem Viertel darunter bis knapp die
-  Hälfte darüber.
+  Hälfte darüber; bei stark gestreckten Gruppen ist er etwas zu schmal. Ein Fehlschuss zählt bei σ
+  mit und kann es vervielfachen; R50 lässt ihn weg.
 - *Mindestzahl:* Ab 3 Schuss.
 - *Formel:* `σ̂ = √(Σ rᵢ² / (2(n − 1))) / c4(2n − 1); 95-%-Bereich über χ² mit 2(n − 1)
-  Freiheitsgraden; in Ringbreiten: Ø Abstand / W`
+  Freiheitsgraden`
 
-**Maße der Gruppe (P1, P4, P6)**
-- *Was:* Der Streukreis ist der kleinste Kreis um alle Trefferzentren, Mitte zu Mitte. Der Ø Abstand
-  ist der durchschnittliche Abstand zum Schwerpunkt, R50 der Abstand, innerhalb dessen die Hälfte
-  der Treffer liegt. Streuung x und y, Höhe und Breite messen die Gruppe waagrecht und senkrecht.
-- *So liest du es:* R50 stören einzelne weite Schüsse kaum. Ist die Höhe deutlich größer als die
-  Breite, streust du vor allem senkrecht; ob das mehr als Zufall ist, sagt die Karte „Form der
-  Gruppe“.
-- *Vorsicht:* Der Streukreis wächst mit jedem Schuss, Ø Abstand und R50 schrumpfen bei wenigen
-  Schüssen leicht. Abende mit unterschiedlicher Schusszahl vergleichst du über σ.
+**Maße der Gruppe (P1, P4, P6, P9)**
+- *Was:* Der Streukreis ist der kleinste Kreis um alle Trefferzentren, Mitte zu Mitte; die Zahl ist
+  sein Durchmesser. R50 ist der Radius um den Schwerpunkt, in dem die Hälfte der Treffer liegt, ohne
+  Fehlschüsse. Streuung x und y sind die typischen Abweichungen waagrecht und senkrecht.
+- *So liest du es:* R50 stören einzelne weite Schüsse kaum. In Ringbreiten (Luftgewehr 2,5 mm,
+  Luftpistole 8 mm) heißt ein R50 von 0,5: Die Hälfte deiner Treffer liegt innerhalb einer halben
+  Ringbreite um den Schwerpunkt; so lassen sich Gewehr und Pistole grob vergleichen. Ist die
+  Streuung y deutlich größer als x, streust du vor allem senkrecht; ob das mehr als Zufall ist, sagt
+  die Karte „Form der Gruppe“.
+- *Vorsicht:* Der Streukreis wird mit jedem weiteren Schuss größer oder bleibt gleich: Über 40
+  Schuss ist er bei gleicher Präzision im Mittel rund 30 % größer als über 10. R50 fällt bei wenigen
+  Schüssen etwas zu klein aus, bei 10 Schuss um etwa 4 %. Ein Fehlschuss bläht Streukreis und
+  Streuung auf, R50 nicht. Abende mit unterschiedlicher Schusszahl vergleichst du über σ.
 - *Mindestzahl:* Ab 3 Schuss, R50 ab 5.
-- *Formel:* `Streukreis: kleinster umschließender Kreis (Welzl); Ø Abstand = Σ rᵢ / n; R50 = Median
-  der rᵢ; Streuung mit n − 1`
+- *Formel:* `Streukreis = Durchmesser des kleinsten umschließenden Kreises (Welzl); R50 = Median der
+  rᵢ ohne Fehlschüsse; Streuung mit n − 1; in Ringbreiten: R50 / W`
 
 **Form der Gruppe (P8)**
 - *Was:* Die Streuung als Ellipse: Das Verhältnis a/b sagt, wie gestreckt sie ist, der Winkel, in
@@ -144,77 +159,102 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Vorsicht:* Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im
   Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe
   deshalb selten; sichtbar wird sie über mehrere Scheiben.
-- *Mindestzahl:* Ab 3 Schuss, den Winkel ab 10.
+- *Mindestzahl:* Ab 3 Schuss; den Winkel zeigt Spiegel nur bei einer gestreckten Gruppe ab 10
+  Schuss.
 - *Formel:* `Halbachsen a, b aus der Kovarianz; gestreckt, wenn W = 4a²b² / (a² + b²)² < 0,05^(2/(n
   − 2)) (Mauchly, exakt)`
 
 **Ausreißer (V6, V7)**
-- *Was:* Spiegel prüft jeden Schuss gegen die übrigen. Bei einer ganz normalen, runden Gruppe meldet
-  die Regel nur in 5 % der Scheiben fälschlich einen Ausreißer; ist die Gruppe deutlich gestreckt
-  (a/b um 2), passiert das öfter, in etwa 11 bis 19 % der Scheiben.
+- *Was:* Spiegel prüft die Lage jedes Treffers gegen die übrigen: Liegt er weiter von ihrem
+  Schwerpunkt weg, als ihre Streuung erwarten lässt? Bei einer ganz normalen, runden Gruppe meldet
+  die Regel nur in 5 % der Scheiben fälschlich einen Ausreißer. Ist die Gruppe deutlich gestreckt
+  (a/b um 2), passiert das öfter, umso öfter, je mehr Schüsse die Scheibe hat: bei 10 Schuss in etwa
+  10 %, bei 60 Schuss in etwa 20 % der Scheiben.
 - *So liest du es:* Ein markierter Schuss ist ein Kandidat für die Frage „Was war da los?“ und
-  bleibt in der Wertung. Ø Abstand durch R50 liegt bei einer normalen Gruppe um 1,06; deutlich
-  darüber heißt: Wenige weite Schüsse prägen die Gruppe.
-- *Was du tun kannst:* Ist der Verlust der schwächsten 10 % groß, kosten dich einzelne Fehler viel.
-  Dann lohnt die Arbeit an einem gleichmäßigen Ablauf mehr als an der Präzision.
-- *Vorsicht:* Zwei gleich weite Ausreißer können sich bei wenigen Schüssen gegenseitig verdecken.
-- *Mindestzahl:* Ab 5 Schuss, der Verlust der schwächsten 10 % ab 10.
+  bleibt in der Wertung. Darunter steht, wie viele Ringe die markierten Schüsse gegenüber deinem
+  typischen Schuss (Median) gekostet haben.
+- *Was du tun kannst:* Kosten dich Ausreißer über mehrere Scheiben viele Ringe, lohnt die Arbeit an
+  einem gleichmäßigen Ablauf mehr als an der Präzision.
+- *Vorsicht:* Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt
+  die Gruppe neben der Mitte, kann er sogar Ringe bringen. Zwei gleich weite Ausreißer können sich
+  bei wenigen Schüssen gegenseitig verdecken: Bei 10 Schuss findet die Regel einen einzelnen sehr
+  weiten Schuss fast immer, von zwei gleich weiten meist keinen.
+- *Mindestzahl:* Ab 5 Schuss mit Lage.
 - *Formel:* `T = d² / (2S² (1 + 1/(n − 1))) gegen das (1 − 0,05/n)-Quantil von F(2, 2(n − 2));
-  Verlust = Σ (Median − vᵢ) über die schwächsten 10 %`
+  Kosten = Σ (Median der übrigen − vᵢ) über die markierten Schüsse`
 
 ## Lage
 
 **Ist die Lage echt? (L1, L2, L3)**
 - *Was:* Der Schwerpunkt ist der Mittelpunkt aller Treffer, auf der Scheibe der kleine schwarz-weiß
-  geviertelte Kreis. Ein Test (Hotelling) prüft, ob sein Versatz zur Mitte mehr als Zufall ist; er
-  berücksichtigt Streuung und Schusszahl.
-- *So liest du es:* Die Lage steht als Richtung und Abstand zur Mitte da, etwa 0,6 mm rechts und 0,4
-  mm tief. „Echt versetzt“: Eine Korrektur an Visier oder Anschlag kann sich lohnen. „Vom Zufall
-  nicht zu unterscheiden“: nicht am Visier drehen, auch wenn der Schwerpunkt neben der Mitte liegt.
-- *Was du tun kannst:* Die Vertrauensellipse auf der Scheibe zeigt, wo der wahre Schwerpunkt mit 95
-  % liegt. Liegt die Mitte darin, ist der Versatz nicht belegt.
+  geviertelte Kreis. Er ist selbst nur geschätzt: Die Vertrauensellipse zeigt, wo dein wahrer
+  Schwerpunkt mit großer Sicherheit liegt. Ein Test (Hotelling) prüft, ob der Versatz zur Mitte mehr
+  als Zufall ist; er sagt dasselbe wie die Ellipse: Liegt die Mitte darin, ist der Versatz nicht
+  belegt.
+- *So liest du es:* Die Lage steht als Abstand und Richtung zur Mitte da, etwa 0,72 mm, davon 0,6 mm
+  rechts und 0,4 mm tief. „Echt versetzt“: Eine Korrektur an Visier oder Anschlag kann sich lohnen.
+  „Vom Zufall nicht zu unterscheiden“: nicht am Visier drehen, auch wenn der Schwerpunkt neben der
+  Mitte liegt. Die Ellipse hat die Form deiner Gruppe und schrumpft mit der Schusszahl: Ihre
+  Halbachse ist bei 10 Schuss etwa so groß wie deine Streuung σ, bei 40 Schuss etwa 0,4 σ. Sie zeigt
+  nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.
+- *Was du tun kannst:* Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele Ringe
+  eine Korrektur etwa bringt.
 - *Mindestzahl:* Schwerpunkt ab 2 Schuss, der Test ab 3.
 - *Formel:* `T² = n · m′ S⁻¹ m gegen 2(n − 1)/(n − 2) · F₀,₉₅(2, n − 2)`
 
-**Ringverlust nach Ursache (L4)**
-- *Was:* Spiegel schiebt deine Treffer so, dass der Schwerpunkt in der Mitte liegt, und wertet sie
-  neu. Der Unterschied ist der Verlust durch die Lage, der Rest zum Höchstwert der Verlust durch die
+**Ringverlust nach Ursache (E9, L4)**
+- *Was:* Dein Ringverlust ist, was dir zum Höchstwert fehlt (10 je Schuss, in Zehnteln 10,9).
+  Spiegel teilt ihn auf: Jeder Treffer wird um den Schwerpunkt der übrigen Schüsse verschoben und
+  neu gewertet. Was das bringt, ist der Verlust durch die Lage, der Rest der Verlust durch die
   Streuung.
 - *So liest du es:* Großer Lage-Anteil: Visier oder Anschlag. Großer Streuungs-Anteil: Präzision.
-- *Vorsicht:* Belastbar erst ab 10 Schuss, wenn die Lage echt ist und das Verschieben etwas bringt;
-  bei schiefen Gruppen kann es sogar kosten. Nie amtlich.
-- *Mindestzahl:* Ab 1 Schuss, belastbar ab 10.
-- *Formel:* `Lage = zentriert − Ist; Streuung = Höchstwert − zentriert`
+  Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der Schusszahl.
+- *Vorsicht:* Ohne echten Versatz ist der Lage-Anteil meist leicht negativ: Eine Korrektur würde
+  dann Ringe kosten. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Korrektur etwas
+  bringt. Gerechnet wird nur mit Schüssen mit Lage, aus der Lage neu gewertet; die Summe kann
+  deshalb vom Ergebnis abweichen. Nie amtlich.
+- *Mindestzahl:* Ab 2 Schuss mit Lage, belastbar ab 10.
+- *Formel:* `Ringverlust = n · 10,9 − Σ vᵢ bzw. n · 10 − Σ Ringᵢ; zentriert: (pᵢ − m) · n/(n − 1),
+  jeder Treffer um den Schwerpunkt der übrigen verschoben; Lage = zentriert − Ist; Streuung =
+  Höchstwert − zentriert`
 
 **Richtungsuhr (L6)**
 - *Was:* Wie viele Treffer in welche Richtung gehen, 12 Uhr ist oben, um die Mitte oder um den
   Schwerpunkt.
-- *So liest du es:* Um den Schwerpunkt zeigt sie, wohin deine weiten Schüsse gehen. Die Fläche eines
-  Keils wächst mit der Zahl der Treffer.
-- *Vorsicht:* Aussagekräftig erst ab 30 Schuss; darunter ist sie ein Bild, kein Befund.
+- *So liest du es:* Um die Mitte zeigt sie, wohin deine Treffer gehen; um den Schwerpunkt, in welche
+  Richtungen deine Gruppe streut, etwa vor allem nach oben und unten. Jeder Treffer zählt gleich,
+  ein weiter so viel wie ein naher.
+- *Vorsicht:* Erst ab 30 Schuss mehr als ein Bild, und auch dann schwankt sie stark: Bei 30 Schuss
+  hat der stärkste Keil zufällig meist doppelt so viele Treffer wie der Schnitt. Ein Befund ist
+  erst, was sich über mehrere Scheiben wiederholt.
 - *Mindestzahl:* Ab 1 Schuss, aussagekräftig ab 30.
 - *Formel:* `Anzahl je 30°-Sektor um die Mitte oder um m`
 
 **Drift und Wanderung (L8, I6)**
-- *Was:* Wie stark die Treffer von Schuss zu Schuss springen (von-Neumann-Verhältnis) und wie der
-  Schwerpunkt von Serie zu Serie wandert.
-- *So liest du es:* Um 2 sind die Schüsse unabhängig voneinander. Deutlich darunter wandert die
-  Gruppe langsam, etwa weil sich der Anschlag im Lauf des Abends verändert.
-- *Vorsicht:* Spiegel urteilt hier nicht: Bei wenigen Schüssen schwankt die Zahl stark.
-- *Mindestzahl:* Ab 3 Schuss, die Wanderung ab 2 Serien.
-- *Formel:* `von Neumann = (Σ Sprung² / k) / (Σ rᵢ² / (n − 1)); um 2 unabhängig`
+- *Was:* Ob die Sprünge von Schuss zu Schuss zu deiner Streuung passen (von-Neumann-Verhältnis) und
+  wie der Schwerpunkt von Serie zu Serie wandert.
+- *So liest du es:* Sind deine Schüsse unabhängig voneinander, liegt die Zahl um 2. Deutlich
+  darunter wandert die Gruppe langsam, etwa weil sich der Anschlag im Lauf des Abends verändert.
+- *Vorsicht:* Spiegel urteilt hier nicht: Auch ohne jedes Wandern liegt die Zahl zufällig bei 10
+  Schuss etwa zwischen 1,2 und 2,8 und bei 40 Schuss zwischen 1,6 und 2,4.
+- *Mindestzahl:* Ab 3 Schuss mit Lage, die Wanderung ab 2 Serien mit je 2 Schuss mit Lage.
+- *Formel:* `von Neumann = (Σ Sprung² / k) / (Σ rᵢ² / (n − 1)) mit k Sprüngen; um 2 bei unabhängigen
+  Schüssen`
 
 ## Zeit und Verlauf
 
 **Verlauf je Schuss und Trend (I3, I4)**
 - *Was:* Jeder Punkt ist ein Schuss, die Linie der Schnitt der letzten zehn (gestrichelt, solange es
-  noch keine zehn sind). Der Trend ist eine robuste Gerade durch alle Schüsse.
-- *So liest du es:* „Klar fallend“ heißt: Mit 95 % wirst du über die Scheibe schwächer. Sonst ist
-  der Trend „nicht klar“, auch wenn die Linie etwas fällt.
-- *Vorsicht:* In ganzen Ringen ist ein Trend seltener klar, weil Feinheiten verloren gehen.
-- *Mindestzahl:* Ab 2 Schuss, der Trend ab 10.
-- *Formel:* `gleitender Schnitt über die letzten 10; Trend: Theil-Sen-Steigung je 10 Schuss mit
-  Sen-Intervall`
+  noch keine zehn sind). Der Trend ist eine Ausgleichsgerade durch alle Schüsse; die Zahl sagt, wie
+  viele Ringe du je 10 Schuss zulegst oder verlierst.
+- *So liest du es:* „Klar fallend“ heißt: Ein so deutlicher Abfall entstünde durch Zufall allein
+  höchstens in 5 von 100 Scheiben; „klar steigend“ gilt ebenso nach oben. Sonst ist der Trend „nicht
+  klar“, auch wenn die Linie etwas fällt oder steigt.
+- *Vorsicht:* Selbst ein deutliches Nachlassen zeigt eine einzelne Scheibe selten als „klar“. In
+  ganzen Ringen ist ein Trend etwas seltener klar, weil Feinheiten verloren gehen.
+- *Mindestzahl:* Ab 1 Schuss, der Trend ab 10.
+- *Formel:* `gleitender Schnitt über die letzten 10; Trend: Steigung der Ausgleichsgeraden je 10
+  Schuss; „klar“ nach Mann-Kendall mit Korrektur für gleiche Werte (95 %)`
 
 **Rhythmus (Z5)**
 - *Was:* Jede Säule ist der Abstand zum vorigen Schuss, die Linie der Median der letzten fünf
@@ -227,62 +267,74 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Tempo und Dauer (Z1, Z2, Z3)**
 - *Was:* Das Tempo ist der Median der Abstände zwischen zwei Schüssen; Pausen über drei Minuten
   zählen nicht. Die Tempo-Streuung sagt, wie gleichmäßig das ist: Die mittlere Hälfte deiner
-  Abstände liegt in einem Fenster dieser Breite. Dazu Dauer, Netto-Zeit ohne Pausen und Schüsse je
-  Stunde reiner Schießzeit.
+  Abstände liegt in einem Fenster dieser Breite. Dazu die Dauer vom ersten bis zum letzten Schuss.
 - *Vorsicht:* Gleichmäßiger ist nicht automatisch besser. Die Streuung ist ein Merkmal, das du mit
   deinem Ergebnis vergleichen kannst.
 - *Mindestzahl:* Tempo ab 3 Schuss, Tempo-Streuung ab 4, Dauer ab 2.
-- *Formel:* `Tempo = Median der Abstände ohne Pausen über 180 s; IQR = Q3 − Q1; Schüsse je Stunde =
-  Abstände / Netto-Stunden`
+- *Formel:* `Tempo = Median der Abstände ohne Pausen über 180 s; Tempo-Streuung = Q3 − Q1 der
+  Abstände; Dauer = letzter − erster Schuss`
 
 **Pausen und Wiedereinstieg (Z4)**
-- *Was:* Jede Pause über drei Minuten, die längste, und wie die drei Schüsse danach im Vergleich zu
-  deinen übrigen Schüssen lagen.
-- *Vorsicht:* Drei Schüsse sind wenig. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere
-  Abende.
+- *Was:* Jede Pause über drei Minuten und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr
+  oder weniger Ringe brachten als deine übrigen Schüsse.
+- *Vorsicht:* Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis
+  zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je
+  Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.
 - *Mindestzahl:* Ab 2 Schuss mit Zeit.
-- *Formel:* `Pause = Abstand über 180 s; Wiedereinstieg = Ø der 3 Schüsse danach − Ø der übrigen`
+- *Formel:* `Pause = Abstand über 180 s; Wiedereinstieg = Ø der bis zu 3 Schüsse danach − Ø der
+  übrigen`
 
 **Ermüdung (I2)**
 - *Was:* Die letzten zehn Schuss gegen die ersten zehn, im Wert und in der Streuung (R50).
-- *Vorsicht:* Eine einzelne Scheibe ist verrauscht. Ein Muster wird es erst, wenn es auf mehreren
-  Scheiben so ist.
-- *Mindestzahl:* Ab 20 Wertungsschüssen.
+- *So liest du es:* Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer.
+- *Vorsicht:* Eine einzelne Scheibe ist verrauscht: Auch ohne jede Ermüdung unterscheiden sich die
+  ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm)
+  bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Ein Muster wird es erst, wenn es
+  auf mehreren Scheiben so ist.
+- *Mindestzahl:* Ab 20 Wertungsschüssen mit Wert, R50 ab 20 mit Lage ohne Fehlschüsse.
 - *Formel:* `Ø der letzten 10 − Ø der ersten 10; ebenso R50`
 
 **Serien im Vergleich (I1, I5, I6)**
 - *Was:* Je Serie das Ergebnis, die Streuung (R50) und wie weit ihr Schwerpunkt vom Schwerpunkt der
   ganzen Scheibe liegt.
-- *So liest du es:* Wandert der Versatz von Serie zu Serie in eine Richtung, ändert sich etwas im
-  Anschlag.
-- *Mindestzahl:* R50 ab 5 Schuss in der Serie.
+- *So liest du es:* Wandert der Schwerpunkt der Serien deutlich in eine Richtung, ändert sich etwas
+  im Anschlag.
+- *Vorsicht:* Auch ohne jede Veränderung liegt der Schwerpunkt einer Zehnerserie im Mittel etwa ein
+  Drittel σ neben dem der Scheibe, und R50 einer Serie schwankt stark.
+- *Mindestzahl:* R50 ab 5 Schuss in der Serie, der Versatz ab 2.
 - *Formel:* `Versatz = |Schwerpunkt der Serie − Schwerpunkt der Scheibe|`
 
 ## Probe
 
 **Umfang der Probe (S2)**
-- *Was:* Wie viele Probeschüsse du vor dem ersten Wertungsschuss abgegeben hast, wie lange die Probe
-  dauerte und wie viel Zeit bis zum ersten Wertungsschuss verging.
+- *Was:* Wie viele Probeschüsse du vor dem ersten Wertungsschuss abgegeben hast, auch in Blöcken zu
+  zehn, wie lange die Probe dauerte und wie viel Zeit vom ersten Probeschuss bis zum ersten
+  Wertungsschuss verging.
 - *Vorsicht:* Probe nach Beginn der Wertung zählt hier nicht, und Platzhalter bringen keine Zeit
   mit.
 - *Mindestzahl:* Ab 1 Probeschuss.
 
 **Probe gegen Wertung (S3)**
 - *Was:* Durchschnitt, R50 und σ der Probe nach der letzten Visierverstellung gegen die Wertung.
-- *So liest du es:* σ ist der faire Vergleich: R50 hängt von der Schusszahl ab, und die Probe hat
-  meist weniger Schüsse.
-- *Vorsicht:* Ein Fehlschuss zählt bei σ mit und bläht es auf; R50 lässt ihn weg.
+- *So liest du es:* σ ist der fairere Vergleich: R50 fällt bei wenigen Schüssen etwas zu klein aus,
+  und die Probe hat meist weniger Schüsse.
+- *Vorsicht:* Ein Fehlschuss zählt bei σ mit und bläht es auf; R50 lässt ihn weg. Mit wenigen
+  Probeschüssen ist auch σ unsicher: Bei gleicher Präzision liegt σ aus fünf Probeschüssen zufällig
+  zwischen etwa der Hälfte und dem Anderthalbfachen von σ der Wertung.
 - *Mindestzahl:* σ ab 3, R50 ab 5 Schuss je Seite.
 
 **Eingeschossen? (S1, S4)**
-- *Was:* Ein Test der letzten fünf Probeschüsse vor der Wertung: Lagen sie echt neben der Mitte?
-  Dazu der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.
+- *Was:* Ein Test deiner letzten fünf Probeschüsse vor der Wertung, nach der letzten
+  Visierverstellung: Lagen sie echt neben der Mitte? Dazu der Abstand zwischen ihrem Schwerpunkt und
+  dem der Wertung.
 - *So liest du es:* „Echt neben der Mitte“: Die Wertung begann mit einem Versatz.
 - *Vorsicht:* „Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur
-  einen deutlichen Versatz.
-- *Mindestzahl:* Der Test ab 3 Probeschüssen mit Lage, der Versatz ab 3 Probe- und 3
-  Wertungsschüssen.
-- *Formel:* `Hotelling-T² über die letzten fünf Probeschüsse; Versatz = |m Probe − m Wertung|`
+  einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in
+  knapp zwei von drei Fällen auf.
+- *Mindestzahl:* Ab 3 Probeschüssen mit Lage nach der letzten Visierverstellung, der Abstand zur
+  Wertung zusätzlich ab 3 Wertungsschüssen mit Lage.
+- *Formel:* `Hotelling-T² über die letzten fünf Probeschüsse nach der letzten Verstellung; Versatz =
+  |m Probe − m Wertung|`
 
 ## Datenlage
 
@@ -290,14 +342,26 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Wie viele Wertungs- und Probeschüsse die Analyse hat, wie vielen Lage, Zeit oder Wert
   fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig).
 - *So liest du es:* Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei
-  Streuung und Lage, ohne Zeit beim Tempo, ohne Wert beim Ergebnis.
+  Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es
+  kein Ergebnis und keine Summe seiner Serie; Ø und Quoten rechnen ohne ihn. Ein verdächtiger Schuss
+  zählt nur mit seinem Wert, auch wenn er eine Lage oder Zeit hat.
+- *Vorsicht:* In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat.
 
 ## Glossar
 
 - **Schwerpunkt:** Mittelpunkt aller Treffer (Meyton: Trefferlage).
-- **Streukreis:** Kleinster Kreis um alle Trefferzentren, Mitte zu Mitte (Meyton: Trefferkreis).
+- **Streukreis:** Kleinster Kreis um alle Trefferzentren, Mitte zu Mitte; die Zahl ist sein
+  Durchmesser. Meyton druckt einen „Trefferkreis“; ob er genau dasselbe misst, prüft Spiegel noch an
+  Rohdaten.
+- **Vertrauensellipse:** Bereich um den gemessenen Schwerpunkt, in dem der wahre Schwerpunkt mit
+  großer Sicherheit (95 %) liegt. Liegt die Scheibenmitte darin, ist ein Versatz nicht belegt. Sie
+  schrumpft mit der Schusszahl, die Gruppe nicht.
 - **σ (Sigma):** Typische Streuung um den Schwerpunkt in mm, kaum von der Schusszahl abhängig.
-- **R50:** Radius um den Schwerpunkt, in dem die Hälfte der Treffer liegt.
+- **R50:** Radius um den Schwerpunkt, in dem die Hälfte der Treffer liegt, ohne Fehlschüsse.
+- **Fehlschuss:** Ein Nuller oder ein Treffer weit außen, in den Daten markiert; R50 lässt ihn weg,
+  die übrigen Maße zählen ihn mit.
+- **Verdächtiger Schuss:** Platzhalter oder Handeintrag; er zählt nur mit seinem amtlichen Wert, nie
+  mit Lage, Teiler oder Zeit.
 - **Teiler:** Abstand des Treffers zur Mitte in 1/100 mm.
 - **Innenzehner:** Beim Luftgewehr ist der 0,5-mm-Punkt in der Mitte ganz weggeschossen, bei der
   Luftpistole berührt der Treffer den inneren Ring von 5 mm.
@@ -308,23 +372,26 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - **95-%-Bereich:** Wo der wahre Wert bei dieser Schusszahl mit großer Sicherheit liegt.
 - **Hotelling-Test:** Prüft, ob ein Versatz des Schwerpunkts mehr als Zufall ist.
 - **Wilson-Bereich:** Der 95-%-Bereich einer Quote, auch bei 0 oder 100 % sinnvoll.
-- **Theil-Sen:** Robuste Trendgerade, die sich von einzelnen Ausreißern nicht verbiegen lässt.
+- **Mann-Kendall-Test:** Prüft, ob die Werte über die Scheibe eher steigen oder fallen, und kommt
+  mit vielen gleichen Werten zurecht.
 - **Mauchly-Test:** Prüft, ob eine Gruppe wirklich gestreckt ist oder nur zufällig unrund aussieht.
 - **Bonferroni:** Wer viele Schüsse prüft, findet zufällig einen auffälligen; die Grenze wird
   deshalb mit der Schusszahl strenger.
-- **von-Neumann-Verhältnis:** Vergleicht die Sprünge von Schuss zu Schuss mit der Streuung; um 2
-  heißt unabhängig.
+- **von-Neumann-Verhältnis:** Vergleicht die Sprünge von Schuss zu Schuss mit der Streuung; bei
+  unabhängigen Schüssen liegt es um 2.
 
 ## Typische Fehlschlüsse
 
-1. **Eine Scheibe ist kein Muster.** Ermüdung, Pausen und Trends zeigen sich erst über mehrere
-   Scheiben.
-2. **Mehr Schüsse, größerer Streukreis.** Wer 40 Schuss mit 10 Schuss vergleicht, vergleicht die
-   Schusszahl. Für Vergleiche σ nehmen.
-3. **„Unklar“ ist ein Ergebnis.** Es sagt: noch nicht genug Daten. Wer trotzdem am Visier dreht,
-   korrigiert oft den Zufall.
-4. **Nach einem Rekord kommt meist eine schwächere Scheibe.** Das ist Statistik (Regression zur
-   Mitte), kein Formverlust.
+1. **Eine Scheibe ist kein Muster.** Was eine Scheibe zeigt, gilt für diesen Abend. Ob Ermüdung,
+   Pausen oder ein Abfall dich regelmäßig betreffen, zeigt erst der Vergleich über mehrere Scheiben.
+2. **Mehr Schüsse, größerer Streukreis.** Bei gleicher Präzision ist der Streukreis über 40 Schuss
+   im Mittel rund 30 % größer als über 10. Wer so vergleicht, vergleicht vor allem die Schusszahl.
+   Für Vergleiche σ nehmen.
+3. **„Unklar“ ist ein Ergebnis.** Es sagt: Diese Schüsse zeigen nichts, was über den Zufall
+   hinausgeht. Vielleicht gibt es nichts, vielleicht ist es für diese Schusszahl zu klein. Wer
+   trotzdem am Visier dreht, korrigiert oft den Zufall und verliert dabei im Mittel Ringe.
+4. **Nach einem Rekord kommt meist eine schwächere Scheibe.** Das ist meist Statistik (Regression
+   zur Mitte) und für sich kein Zeichen von Formverlust.
 5. **Ganze Ringe verstecken Feinheiten.** 10,0 und 10,9 sind beide eine 10; für die Analyse sind
    Zehntel genauer.
 
