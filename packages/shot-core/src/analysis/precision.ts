@@ -3,7 +3,7 @@
 // Schüsse gemeint sind (Wertung, Serie, Probe), wählt der Aufrufer; verdächtige Schüsse zählen ohne
 // Lage nicht (SF-15).
 
-import { centroid, covarianceEllipse, distancesTo, meanRadius, r50, type Point } from "../geometry"
+import { centroid, covarianceEllipse, distancesTo, type Point } from "../geometry"
 import {
   inShotOrder,
   selectShots,
@@ -138,13 +138,9 @@ export interface Outlier {
  * höchstens 5 % der Scheiben einen Ausreißer (simuliert: 5,0 %); Q3 + 1,5 · IQR auf den Radien täte es
  * in bis zu 47 %. Bei gestreckten Gruppen steigt die Rate (simuliert für 10 bis 60 Schuss: a/b 1,5 etwa
  * 8–11 %, a/b 2 etwa 11–19 %, a/b 3 etwa 17–29 %). Zwei gleich weite Ausreißer verdecken sich bei
- * wenigen Schuss gegenseitig. Kein Schuss fällt
- * aus der Wertung. Dazu MR/R50: bei einer runden Normalgruppe etwa 1,06, deutlich mehr heißt, wenige
- * weite Schüsse dominieren. Ab fünf Schuss.
+ * wenigen Schuss gegenseitig. Kein Schuss fällt aus der Wertung. Ab fünf Schuss.
  */
-export function outliers(
-  shots: readonly MetricShot[]
-): { n: number; flagged: Outlier[]; ratio: number | null } | null {
+export function outliers(shots: readonly MetricShot[]): { n: number; flagged: Outlier[] } | null {
   const selected = selectShots(shots, { need: "position" })
   const n = selected.length
   if (n < 5) return null
@@ -160,34 +156,36 @@ export function outliers(
     const out = s2 > 0 ? d2 / (2 * s2 * (1 + 1 / (n - 1))) > critical : d2 > 0
     if (out) flagged.push({ shot: selected[i], number: numbers.get(selected[i]) as number })
   })
-  const robust = r50(points) as number
-  return {
-    n,
-    flagged,
-    ratio: robust > 0 ? (meanRadius(points) as number) / robust : null,
-  }
+  return { n, flagged }
 }
 
 const MATCH: readonly ShotKind[] = ["match"]
 
 /**
- * Ringverlust durch Ausreißer: Σ (Median − Wert) über die schwächsten 10 % der Wertung, ab 10 Schuss,
- * in der gewählten Wertung
+ * Was die markierten Ausreißer kosten (V7): Σ (Median der übrigen Wertungswerte − Wert) über die von
+ * `outliers` markierten Wertungsschüsse mit Wert, in Ringen der gewählten Wertung. Negativ, wenn ein
+ * Ausreißer zur Mitte hin liegt und Ringe bringt. Ohne markierten Schuss 0. Ohne Urteil über Ausreißer
+ * (unter fünf Wertungsschüssen mit Lage) oder ohne einen übrigen Wert als Vergleich null. Die schwächsten 10 % zählen nicht mehr: Einen großen
+ * Verlust dort hat jede normale Gruppe, er wächst mit Streuung und Schusszahl.
  */
 export function outlierLoss(
   shots: readonly MetricShot[],
   scoring: Scoring
 ): { n: number; count: number; loss: number } | null {
-  const values = selectShots(inShotOrder(shots), { kinds: MATCH, need: valueNeed(scoring) }).map(
-    (shot) => valueTenths(shot, scoring)
-  )
-  if (values.length < 10) return null
-  const center = median(values) as number
-  const count = Math.max(1, Math.round(values.length / 10))
-  const weakest = [...values].sort((a, b) => a - b).slice(0, count)
+  const match = shots.filter((shot) => shot.kind === "match")
+  const verdict = outliers(match)
+  if (!verdict) return null
+  const flagged = new Set(verdict.flagged.map((outlier) => outlier.shot))
+  const valued = selectShots(inShotOrder(match), { kinds: MATCH, need: valueNeed(scoring) })
+  const marked = valued.filter((shot) => flagged.has(shot))
+  const others = valued.filter((shot) => !flagged.has(shot)).map((s) => valueTenths(s, scoring))
+  if (marked.length === 0) return { n: valued.length, count: 0, loss: 0 }
+  // alle markiert: kein typischer Schuss als Vergleich
+  if (others.length === 0) return null
+  const center = median(others) as number
   return {
-    n: values.length,
-    count,
-    loss: weakest.reduce((sum, v) => sum + (center - v), 0) / 10,
+    n: valued.length,
+    count: marked.length,
+    loss: marked.reduce((sum, shot) => sum + (center - valueTenths(shot, scoring)), 0) / 10,
   }
 }

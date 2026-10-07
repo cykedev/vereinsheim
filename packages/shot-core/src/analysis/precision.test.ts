@@ -155,10 +155,10 @@ describe("Ausreißer (V6, V7)", () => {
   }))
   const withTest = (d: number) => [...ring8, { ...MATCH[0], xUm: d, yUm: 0, firedAtMs: 9000 }]
 
-  it("SPREAD hat keine; MR/R50 wie gerechnet", () => {
+  it("SPREAD hat keine; kein Verhältnis Ø Abstand durch R50 mehr", () => {
     const result = outliers(SPREAD)
     expect(result?.flagged).toEqual([])
-    expect(result?.ratio).toBeCloseTo(14 / 6 / 2.5, 9)
+    expect(Object.keys(result ?? {}).sort()).toEqual(["flagged", "n"])
   })
 
   it("jeder gegen die übrigen mit F(2, 2(n − 2)) und Bonferroni", () => {
@@ -206,28 +206,37 @@ describe("Ausreißer (V6, V7)", () => {
     expect(outliers(PROBE.slice(0, 4))).toBeNull()
   })
 
-  it("Ringverlust durch die schwächsten 10 %", () => {
-    const values = [105, 104, 103, 105, 104, 103, 105, 104, 103, 60]
-    const shots = values.map((decimalTenths, i) => ({
-      ...MATCH[0],
-      decimalTenths,
-      ring: Math.floor(decimalTenths / 10),
-      firedAtMs: i * 1000,
+  // Werte unabhängig von der Lage: der Kreis mit 10,4, der Testschuss mit eigenem Wert
+  const valued = (shot: MetricShot, decimalTenths: number): MetricShot => ({
+    ...shot,
+    decimalTenths,
+    ring: Math.floor(decimalTenths / 10),
+  })
+  const priced = (d: number, testTenths: number, dx = 0) =>
+    withTest(d).map((shot, i) => ({
+      ...valued(shot, i < 8 ? 104 : testTenths),
+      xUm: (shot.xUm as number) + dx,
     }))
-    expect(outlierLoss(shots, "decimal")).toEqual({ n: 10, count: 1, loss: 4.4 })
-    expect(outlierLoss(shots, "rings")).toEqual({ n: 10, count: 1, loss: 4 })
-    expect(outlierLoss(shots.slice(0, 9), "decimal")).toBeNull()
+
+  it("Kosten der markierten Ausreißer gegen den Median der übrigen", () => {
+    // 3,3 mm weit draußen mit 9,2: 10,4 − 9,2 = 1,2 Ringe, in ganzen Ringen 10 − 9 = 1
+    expect(outlierLoss(priced(3300, 92), "decimal")).toEqual({ n: 9, count: 1, loss: 1.2 })
+    expect(outlierLoss(priced(3300, 92), "rings")).toEqual({ n: 9, count: 1, loss: 1 })
   })
 
-  it("10 % gerundet: bei 15 Schuss die schwächsten zwei", () => {
-    const values = [...Array.from({ length: 13 }, () => 105), 80, 60]
-    const shots = values.map((decimalTenths, i) => ({
-      ...MATCH[0],
-      decimalTenths,
-      ring: Math.floor(decimalTenths / 10),
-      firedAtMs: i * 1000,
-    }))
-    // Median 10,5; (10,5 − 6,0) + (10,5 − 8,0) = 7,0
-    expect(outlierLoss(shots, "decimal")).toEqual({ n: 15, count: 2, loss: 7 })
+  it("ohne markierten Schuss kosten Ausreißer nichts, auch wenn ein Schuss schwach ist", () => {
+    // 2,8 mm ist kein Ausreißer; sein schwacher Wert zählt hier nicht (früher: schwächste 10 %)
+    expect(outlierLoss(priced(2800, 80), "decimal")).toEqual({ n: 9, count: 0, loss: 0 })
+  })
+
+  it("ein Ausreißer zur Mitte hin bringt Ringe: die Kosten sind negativ", () => {
+    // Gruppe 5 mm rechts mit 10,4, der markierte Schuss liegt 3,3 mm links von ihr und hat 10,7
+    expect(outlierLoss(priced(-3300, 107, 5000), "decimal")?.loss).toBeCloseTo(-0.3, 9)
+  })
+
+  it("nur Wertungsschüsse; unter fünf Schuss mit Lage kein Urteil", () => {
+    const far: MetricShot = { ...valued(PROBE[0], 60), xUm: 9000, yUm: 9000, firedAtMs: 300_000 }
+    expect(outlierLoss([...priced(2800, 104), far], "decimal")).toEqual({ n: 9, count: 0, loss: 0 })
+    expect(outlierLoss(priced(3300, 92).slice(0, 4), "decimal")).toBeNull()
   })
 })
