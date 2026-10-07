@@ -1,0 +1,1031 @@
+{
+  "contractVersion": 1,
+  "description": "Testvektoren für die Prüfsumme (SF-27). checksum = \"sha256:\" + hex(SHA-256(UTF-8(canonical))); canonical = RFC 8785 über data, die Zeilen jeder Tabelle nach ihrer kanonischen Form sortiert (UTF-16-Codeeinheiten). Erzeugt von einer unabhängigen Python-Implementierung; bestehende Vektoren nie ändern, nur neue anhängen.",
+  "vectors": [
+    {
+      "name": "grundfall",
+      "description": "Eine Scheibe mit Probe und zwei Serien; negative ScheibenID, Startzeit 0000-00-00 als Text.",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": "2026-10-06 19:02:11"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:c8317af4b686a70d01ece822109d52a8a350d4c29f03a04b5381c9941f57c8e3"
+    },
+    {
+      "name": "zeilen-vertauscht",
+      "description": "Wie grundfall, Zeilen in anderer Reihenfolge: gleiche Prüfsumme.",
+      "sameChecksumAs": "grundfall",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": "2026-10-06 19:02:11"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:c8317af4b686a70d01ece822109d52a8a350d4c29f03a04b5381c9941f57c8e3"
+    },
+    {
+      "name": "spalten-vertauscht",
+      "description": "Wie grundfall, Spalten und Tabellen in anderer Reihenfolge: gleiche Prüfsumme.",
+      "sameChecksumAs": "grundfall",
+      "data": {
+        "treffer": {
+          "columns": {
+            "Zeitstempel": "datetime",
+            "Ring01": "int(11)",
+            "y": "int(11)",
+            "x": "int(11)",
+            "Treffer": "int(11)",
+            "Stellung": "int(11)",
+            "ScheibenID": "int(11)"
+          },
+          "rows": [
+            {
+              "Zeitstempel": "2026-10-06 19:02:11",
+              "Ring01": "98",
+              "y": "87",
+              "x": "-112",
+              "Treffer": "1",
+              "Stellung": "0",
+              "ScheibenID": "-7257056"
+            },
+            {
+              "Zeitstempel": "2026-10-06 19:04:40",
+              "Ring01": "104",
+              "y": "-41",
+              "x": "23",
+              "Treffer": "1",
+              "Stellung": "1",
+              "ScheibenID": "-7257056"
+            },
+            {
+              "Zeitstempel": "2026-10-06 19:05:02",
+              "Ring01": "99",
+              "y": "12",
+              "x": "-305",
+              "Treffer": "2",
+              "Stellung": "1",
+              "ScheibenID": "-7257056"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "Ring01": "int(11)",
+            "Serie": "int(11)",
+            "Stellung": "int(11)",
+            "ScheibenID": "int(11)"
+          },
+          "rows": [
+            {
+              "Ring01": "1021",
+              "Serie": "1",
+              "Stellung": "1",
+              "ScheibenID": "-7257056"
+            },
+            {
+              "Ring01": "1013",
+              "Serie": "2",
+              "Stellung": "1",
+              "ScheibenID": "-7257056"
+            }
+          ]
+        },
+        "scheiben": {
+          "columns": {
+            "TotalRing01": "int(11)",
+            "Startzeit": "datetime",
+            "Nachname": "varchar(30)",
+            "ScheibenID": "int(11)"
+          },
+          "rows": [
+            {
+              "TotalRing01": "2034",
+              "Startzeit": "0000-00-00 00:00:00",
+              "Nachname": "Muster",
+              "ScheibenID": "-7257056"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:c8317af4b686a70d01ece822109d52a8a350d4c29f03a04b5381c9941f57c8e3"
+    },
+    {
+      "name": "null-wert",
+      "description": "Ein Zellwert ist NULL: andere Prüfsumme als der leere Text.",
+      "differentChecksumFrom": "grundfall",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": null
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":null,\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:c45c62d849a3f4a7f3a77d0f9018cec604d206e973f5c0e113260592775af940"
+    },
+    {
+      "name": "leerer-text",
+      "description": "Ein Zellwert ist der leere Text.",
+      "differentChecksumFrom": "null-wert",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": ""
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:0bb9bba6e8954fed0a5bf3212ed9c3b43d9539b2a5d2ea43ae0eb101690acb9a"
+    },
+    {
+      "name": "umlaute",
+      "description": "Umlaute und ß bleiben roh (UTF-8), nicht escapet.",
+      "differentChecksumFrom": "grundfall",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Müßig-Öztürk",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": "2026-10-06 19:02:11"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Müßig-Öztürk\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:36616a85b6361c7771d7f891562cbcd15eae5440fbe78cde398ae71865f3fc82"
+    },
+    {
+      "name": "utf16-sortierung",
+      "description": "Spaltennamen und Werte mit U+1F3AF und U+FB01: sortiert wird nach UTF-16-Codeeinheiten (U+1F3AF zuerst), nicht nach Codepoints.",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime",
+            "Text": "varchar(20)",
+            "Text🎯": "varchar(20)",
+            "Textﬁ": "varchar(20)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": "2026-10-06 19:02:11",
+              "Text": null,
+              "Text🎯": null,
+              "Textﬁ": null
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "3",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40",
+              "Text": "ﬁ",
+              "Text🎯": null,
+              "Textﬁ": null
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40",
+              "Text": "🎯",
+              "Text🎯": null,
+              "Textﬁ": null
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02",
+              "Text": null,
+              "Text🎯": null,
+              "Textﬁ": null
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Text\":\"varchar(20)\",\"Text🎯\":\"varchar(20)\",\"Textﬁ\":\"varchar(20)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Text\":\"🎯\",\"Text🎯\":null,\"Textﬁ\":null,\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Text\":\"ﬁ\",\"Text🎯\":null,\"Textﬁ\":null,\"Treffer\":\"3\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Text\":null,\"Text🎯\":null,\"Textﬁ\":null,\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Text\":null,\"Text🎯\":null,\"Textﬁ\":null,\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:2772026bff04cae4681c7485ba4c25294e7e15690f4cb904acee472bf459f9a8"
+    },
+    {
+      "name": "escapes",
+      "description": "Escapet werden nur \", Backslash und Steuerzeichen unter U+0020 (\\n, \\t, \\u001f); / , U+2028 und U+007F bleiben roh.",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "a\"b\\c\nd\u001fe/f g\th",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": "2026-10-06 19:02:11"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"a\\\"b\\\\c\\nd\\u001fe/f g\\th\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:56f3d6c3efcb3117af58e2dff710d7277bc5967be501981348ad6128a299859e"
+    },
+    {
+      "name": "ohne-serien-und-treffer",
+      "description": "Nur die Scheiben-Zeile, Serien und Treffer leer.",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": []
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": []
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[]}}",
+      "checksum": "sha256:4a1b129ea663caff767ce4f59f326c8092aec967de0561d2267f6ea7a5829f5c"
+    },
+    {
+      "name": "zusatzspalte",
+      "description": "Eine neue Spalte (neue Meyton-Version, SF-25): andere Prüfsumme.",
+      "differentChecksumFrom": "grundfall",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)",
+            "Neu": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034",
+              "Neu": "1"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": "2026-10-06 19:02:11"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"Neu\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"Neu\":\"1\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:051f5bf1034bedd6b3c1f3e53bc15866fd4321e9917245b8cf6744f09e704630"
+    },
+    {
+      "name": "wert-geaendert",
+      "description": "Ein Ring-Wert korrigiert: andere Prüfsumme.",
+      "differentChecksumFrom": "grundfall",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": "2026-10-06 19:02:11"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "100",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"100\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"},{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"}]}}",
+      "checksum": "sha256:f8526ea94ff5bb9e073918f2af5aadb296dac8ddd00857b920e4c32651d2955d"
+    },
+    {
+      "name": "typ-geaendert",
+      "description": "Ein Spaltentyp geändert (datetime zu timestamp, SF-31): andere Prüfsumme.",
+      "differentChecksumFrom": "grundfall",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "timestamp"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": "2026-10-06 19:02:11"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"timestamp\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:3dd4d0f4c923498cbcbd9abfeaa955b9eb405ff8fa9d78d5c68b5957780a217b"
+    }
+  ]
+}

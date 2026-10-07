@@ -5,7 +5,11 @@
   "license": "Apache-2.0",
   "type": "module",
   "exports": {
-    "./canonical": "./src/canonical.ts"
+    "./canonical": "./src/canonical.ts",
+    "./checksum": "./src/checksum.ts",
+    "./snapshot": "./src/v1/snapshot.ts",
+    "./limits": "./src/limits.ts",
+    "./versions": "./src/versions.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -20,5 +24,8 @@
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "dependencies": {
+    "zod": "catalog:"
   }
 }
