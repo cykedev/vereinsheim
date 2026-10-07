@@ -1,0 +1,24 @@
+{
+  "name": "@vereinsheim/ingest-contract",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./canonical": "./src/canonical.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "prettier": "@vereinsheim/config/prettier",
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@vereinsheim/config": "workspace:*",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
