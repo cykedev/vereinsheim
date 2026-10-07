@@ -45,7 +45,7 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 
 ### SP-0.4 Technik der Brücke entscheiden
 - **Ziel:** Sprache und Auslieferung festlegen.
-- **Umfang:** Go-Binary gegen Bun- oder Deno-Binary gegen Docker mit Node; Kriterien: eine Datei ohne Laufzeit, Raspberry Pi und Windows, Stromverlust, Selbst-Update, geteilter Vertrag. Empfehlung: Go mit „dummer“ Brücke ([[spiegel-bridge]]).
+- **Umfang:** Go-Binary gegen Bun- oder Deno-Binary gegen Docker mit Node; Kriterien: eine Datei ohne Laufzeit, Raspberry Pi und Windows, Stromverlust, Selbst-Update, geteilter Vertrag. Empfehlung: Go mit „dummer“ Brücke ([[spiegel-bridge]]). Dazu der Ort: eigenes Gerät (ADR-027) oder, als Wunsch des Users, direkt auf dem Meyton-Rechner unter SUSE Linux ([[spiegel-open-questions]]).
 - **Abnahme:** Ergänzung in [[adr-027]]. **Status:** offen.
 
 ### SP-0.5 Einwilligung und Datenschutz

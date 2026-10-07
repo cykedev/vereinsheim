@@ -17,7 +17,7 @@ relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-ingest-contract]]", "[[spiegel-inge
 |---|---|---|
 | Raspberry Pi oder Mini-PC (empfohlen) | eigenes Gerät, wenig Strom, zwei Netzanschlüsse möglich, kein Display nötig | einmalig ca. 80–150 €, ein Gerät mehr |
 | Vorhandener PC im Meyton-Netz | keine Hardware | läuft nicht immer, Windows-Updates, gemeinsam genutzt |
-| Meyton-Server selbst | kein Netzthema | Herstellergerät; nicht empfohlen |
+| Meyton-Server selbst (SUSE Linux) | kein Netzthema, kein Gerät mehr | Herstellergerät; laut [[adr-027]] verworfen, als Wunsch des Users wieder offen ([[spiegel-open-questions]], SP-0.4) |
 
 ## Netz
 
