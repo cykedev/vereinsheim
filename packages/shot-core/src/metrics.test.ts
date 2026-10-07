@@ -44,7 +44,7 @@ describe("Ergebnis-Kennzahlen", () => {
       expect(value(key, probeOnly)).toBeNull()
     }
     expect(value("group.enclosingDiameter", probeOnly)).not.toBeNull()
-    expect(value("group.meanRadius", probeOnly)).not.toBeNull()
+    expect(value("group.sigma", probeOnly)).not.toBeNull()
     expect(value("time.intervalMedian", probeOnly)).toBe(50)
   })
 
@@ -104,10 +104,10 @@ describe("Ergebnis-Kennzahlen", () => {
     }
     const card = [...MATCH, placeholder]
     expect(value("result.bestTeiler", card)).toBeCloseTo(331.8, 9)
-    for (const key of ["group.enclosingDiameter", "group.mpiDistance", "group.meanRadius"]) {
+    for (const key of ["group.enclosingDiameter", "group.mpiDistance", "group.sigma"]) {
       expect(value(key, card)).toBeCloseTo(value(key, MATCH) ?? Number.NaN, 9)
     }
-    expect(value("time.longestPause", card)).toBe(0)
+    expect(value("time.intervalMedian", card)).toBe(value("time.intervalMedian", MATCH))
     expect(value("result.decimal", card)).toBeCloseTo(51.8 + 8.7, 9)
     expect(value("result.rings", card)).toBe(57)
   })
@@ -115,9 +115,9 @@ describe("Ergebnis-Kennzahlen", () => {
   it("ungültige Angaben gelten als fehlend, nicht als Zahl", () => {
     const at0 = (patch: Partial<MetricShot>) =>
       MATCH.map((shot, i) => (i === 0 ? { ...shot, ...patch } : shot))
-    expect(eligibleShots(def("group.meanRadius"), at0({ xUm: Number.NaN }))).toHaveLength(5)
-    expect(value("group.meanRadius", at0({ xUm: Number.NaN }))).toBeCloseTo(
-      value("group.meanRadius", MATCH.slice(1)) ?? Number.NaN,
+    expect(eligibleShots(def("group.sigma"), at0({ xUm: Number.NaN }))).toHaveLength(5)
+    expect(value("group.sigma", at0({ xUm: Number.NaN }))).toBeCloseTo(
+      value("group.sigma", MATCH.slice(1)) ?? Number.NaN,
       9
     )
     // Ein unmöglicher Abstand fällt auf die Lage zurück.
@@ -140,7 +140,6 @@ describe("Ergebnis-Kennzahlen", () => {
 describe("Trefferbild-Kennzahlen", () => {
   it("jede Kennzahl mit festem Wert, in mm", () => {
     expect(value("group.enclosingDiameter", SPREAD)).toBeCloseTo(7, 9)
-    expect(value("group.meanRadius", SPREAD)).toBeCloseTo(14 / 6, 9)
     expect(value("group.r50", SPREAD)).toBeCloseTo(2.5, 9)
     expect(value("group.sdX", SPREAD)).toBeCloseTo(Math.sqrt(26 / 5), 9)
     expect(value("group.sdY", SPREAD)).toBeCloseTo(Math.sqrt(14 / 5), 9)
@@ -152,10 +151,8 @@ describe("Trefferbild-Kennzahlen", () => {
   })
 
   it("neue Kennzahlen aus SP-1.10 mit festen Werten", () => {
-    // SPREAD: √(Σr² / (2(n − 1))) = 2,0 mm, σ̂ = 2,0 mm / c4(11); Höhe 5 mm, Breite 7 mm.
+    // SPREAD: √(Σr² / (2(n − 1))) = 2,0 mm, σ̂ = 2,0 mm / c4(11)
     expect(value("group.sigma", SPREAD)).toBeCloseTo(2.0505458, 6)
-    expect(value("group.height", SPREAD)).toBe(5)
-    expect(value("group.width", SPREAD)).toBe(7)
     expect(value("result.tensRate", CARD)).toBe(50)
     expect(value("time.duration", MATCH)).toBe(250)
     // nach einem Sprung der Uhr keine Dauer (SF-30), früher in `shootingTime` geprüft
@@ -205,14 +202,11 @@ describe("Trefferbild-Kennzahlen", () => {
 
   it("markiert, welche Maße von der Schusszahl abhängen (SF-60)", () => {
     const sensitive = METRICS.filter((m) => m.nSensitive).map((m) => m.key)
-    // Mittlerer Radius und R50 schrumpfen bei kleinem n mit √((n − 1)/n); σ̂ gleicht das aus.
+    // R50 fällt bei kleinem n etwas zu klein aus, der Streukreis wächst mit n; σ̂ gleicht das aus.
     for (const key of [
       "group.enclosingDiameter",
       "group.mpiDistance",
-      "group.meanRadius",
       "group.r50",
-      "group.height",
-      "group.width",
       "result.rings",
       "result.decimal",
       "result.tens",
@@ -247,8 +241,6 @@ describe("Tempo, Reihenfolge und Probe", () => {
       firedAtMs: (shot.firedAtMs ?? 0) + (i >= 3 ? 300_000 : 0),
     }))
     expect(value("time.intervalMedian", withPause)).toBe(50)
-    expect(value("time.longestPause", withPause)).toBe(350)
-    expect(value("time.longestPause", MATCH)).toBe(0)
   })
 
   it("die Abgabefolge zählt, nicht die Uhr (SF-30)", () => {
@@ -259,9 +251,8 @@ describe("Tempo, Reihenfolge und Probe", () => {
       firedAtMs: (shot.firedAtMs ?? 0) - (i >= 3 ? 3_600_000 : 0),
     }))
     expect(value("time.intervalMedian", jumped)).toBe(50)
-    expect(value("time.longestPause", jumped)).toBe(0)
     // Die Liste darf in beliebiger Reihenfolge kommen.
-    expect(value("time.longestPause", [...jumped].reverse())).toBe(0)
+    expect(value("time.intervalMedian", [...jumped].reverse())).toBe(50)
   })
 
   it("inShotOrder: erst seq, dann die Zeit, sonst die Liste", () => {
@@ -280,65 +271,14 @@ describe("Tempo, Reihenfolge und Probe", () => {
     expect(inShotOrder([g, h])).toEqual([h, g])
   })
 
-  it("der Versatz Probe → Wertung zählt nur die letzten fünf Probeschüsse (SF-63)", () => {
-    const beforeAdjustment: MetricShot[] = Array.from({ length: 10 }, (_, i) => ({
-      ...PROBE[0],
-      xUm: 5000,
-      yUm: 5000,
-      firedAtMs: i * 30_000,
-    }))
-    const afterAdjustment: MetricShot[] = Array.from({ length: 5 }, (_, i) => ({
-      ...PROBE[0],
-      xUm: 0,
-      yUm: 0,
-      firedAtMs: 300_000 + i * 30_000,
-    }))
-    const match: MetricShot[] = [
-      [500, 0],
-      [-500, 0],
-      [0, 500],
-      [0, -500],
-    ].map(([xUm, yUm], i) => ({ ...MATCH[0], xUm, yUm, firedAtMs: 600_000 + i * 50_000 }))
-    expectNear(value("sighter.offset", [...beforeAdjustment, ...afterAdjustment, ...match]), 0)
-    // Es zählt die Abgabefolge, nicht die Reihenfolge der Liste.
-    expectNear(value("sighter.offset", [...match, ...afterAdjustment, ...beforeAdjustment]), 0)
-    // Ohne die Schüsse nach der Verstellung zählt der alte Schwerpunkt bei (5 | 5) mm.
-    expect(value("sighter.offset", [...beforeAdjustment, ...match])).toBeCloseTo(
-      Math.hypot(5, 5),
-      9
-    )
-  })
-
   it("fehlt ein Schuss mitten in der Folge, entsteht daraus keine Pause", () => {
     // Sechs Schuss im Abstand von 100 s; der vierte ist ein Platzhalter oder ohne Zeit.
     const steady = MATCH.map((shot, i) => ({ ...shot, seq: i + 1, firedAtMs: i * 100_000 }))
     const flagged = steady.map((shot, i) => (i === 3 ? { ...shot, flags: ["verdaechtig"] } : shot))
     const untimed = steady.map((shot, i) => (i === 3 ? { ...shot, firedAtMs: null } : shot))
     for (const shots of [flagged, untimed]) {
-      expect(value("time.longestPause", shots)).toBe(0)
       expect(value("time.intervalMedian", shots)).toBe(100)
     }
-  })
-
-  it("Probe nach Beginn der Wertung zählt nicht zum Versatz", () => {
-    const at = (kind: MetricShot["kind"], xUm: number, i: number): MetricShot => ({
-      ...MATCH[0],
-      kind,
-      xUm,
-      yUm: 0,
-      firedAtMs: i * 30_000,
-    })
-    const shots = [
-      ...[0, 1, 2, 3, 4].map((i) => at("probe", 0, i)),
-      ...[5, 6, 7, 8].map((i) => at("match", 0, i)),
-      ...[9, 10, 11].map((i) => at("probe", 9000, i)),
-    ]
-    expectNear(value("sighter.offset", shots), 0)
-  })
-
-  it("ohne genug Probe- oder Wertungsschüsse kein Versatz", () => {
-    expect(value("sighter.offset", [...PROBE.slice(0, 2), ...MATCH])).toBeNull()
-    expect(value("sighter.offset", [...PROBE, ...MATCH.slice(0, 2)])).toBeNull()
   })
 })
 
@@ -483,18 +423,13 @@ describe("Registry", () => {
       "result.bestTeiler": "E8",
       "group.mpiDistance": "L2",
       "group.enclosingDiameter": "P1",
-      "group.meanRadius": "P3",
       "group.r50": "P4",
       "group.sigma": "P5",
       "group.sdX": "P6",
       "group.sdY": "P6",
-      "group.height": "P7",
-      "group.width": "P7",
       "time.intervalMedian": "Z1",
       "time.tempoSpread": "Z2",
-      "time.longestPause": "Z4",
       "time.duration": "Z3",
-      "sighter.offset": "S1",
     })
   })
 })

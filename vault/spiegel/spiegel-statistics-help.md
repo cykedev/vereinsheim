@@ -122,7 +122,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Formel:* `σ̂ = √(Σ rᵢ² / (2(n − 1))) / c4(2n − 1); 95-%-Bereich über χ² mit 2(n − 1)
   Freiheitsgraden; in Ringbreiten: Ø Abstand / W`
 
-**Maße der Gruppe (P1, P3, P4, P6, P7)**
+**Maße der Gruppe (P1, P4, P6)**
 - *Was:* Der Streukreis ist der kleinste Kreis um alle Trefferzentren, Mitte zu Mitte. Der Ø Abstand
   ist der durchschnittliche Abstand zum Schwerpunkt, R50 der Abstand, innerhalb dessen die Hälfte
   der Treffer liegt. Streuung x und y, Höhe und Breite messen die Gruppe waagrecht und senkrecht.

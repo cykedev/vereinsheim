@@ -24,7 +24,6 @@
 import {
   centroid,
   distancesTo,
-  meanRadius,
   r50,
   smallestEnclosingCircle,
   standardDeviation,
@@ -315,9 +314,6 @@ const BOTH: readonly ShotKind[] = ["match", "probe"]
 const MATCH_ONLY: readonly ShotKind[] = ["match"]
 const SERIES_AND_CARD: readonly MetricScope[] = ["series", "card"]
 
-/** So viele Probeschüsse zählen für den Versatz Probe → Wertung (SF-63). */
-const SIGHTER_TAIL = 5
-
 export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   defineMetric({
     key: "result.rings",
@@ -506,23 +502,6 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     },
   }),
   defineMetric({
-    key: "group.meanRadius",
-    catalogId: "P3",
-    label: "mittlerer Radius",
-    unit: "mm",
-    decimals: 2,
-    scopes: SERIES_AND_CARD,
-    better: "lower",
-    version: 1,
-    appliesTo: BOTH,
-    minShots: 3,
-    nSensitive: true,
-    excludeMisses: false,
-    needs: "position",
-    onMissing: "drop",
-    compute: (shots) => toMm(meanRadius(points(shots))),
-  }),
-  defineMetric({
     key: "group.r50",
     catalogId: "P4",
     label: "R50",
@@ -597,46 +576,6 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     compute: (shots) => toMm(standardDeviation(shots.map((shot) => shot.yUm as number))),
   }),
   defineMetric({
-    key: "group.height",
-    catalogId: "P7",
-    label: "Höhe",
-    unit: "mm",
-    decimals: 1,
-    scopes: SERIES_AND_CARD,
-    better: "lower",
-    version: 1,
-    appliesTo: BOTH,
-    minShots: 3,
-    nSensitive: true,
-    excludeMisses: false,
-    needs: "position",
-    onMissing: "drop",
-    compute: (shots) => {
-      const ys = shots.map((shot) => shot.yUm as number)
-      return (Math.max(...ys) - Math.min(...ys)) / 1000
-    },
-  }),
-  defineMetric({
-    key: "group.width",
-    catalogId: "P7",
-    label: "Breite",
-    unit: "mm",
-    decimals: 1,
-    scopes: SERIES_AND_CARD,
-    better: "lower",
-    version: 1,
-    appliesTo: BOTH,
-    minShots: 3,
-    nSensitive: true,
-    excludeMisses: false,
-    needs: "position",
-    onMissing: "drop",
-    compute: (shots) => {
-      const xs = shots.map((shot) => shot.xUm as number)
-      return (Math.max(...xs) - Math.min(...xs)) / 1000
-    },
-  }),
-  defineMetric({
     key: "time.intervalMedian",
     catalogId: "Z1",
     label: "Tempo (Median)",
@@ -675,23 +614,6 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     },
   }),
   defineMetric({
-    key: "time.longestPause",
-    catalogId: "Z4",
-    label: "längste Pause",
-    unit: "s",
-    decimals: 0,
-    scopes: SERIES_AND_CARD,
-    better: "none",
-    version: 1,
-    appliesTo: BOTH,
-    minShots: 2,
-    nSensitive: true,
-    excludeMisses: false,
-    needs: "time",
-    onMissing: "drop",
-    compute: (shots) => seconds(pace(shots).longestPauseMs),
-  }),
-  defineMetric({
     key: "time.duration",
     catalogId: "Z3",
     label: "Dauer",
@@ -707,36 +629,6 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     needs: "time",
     onMissing: "drop",
     compute: (shots) => seconds(pace(shots).durationMs),
-  }),
-  defineMetric({
-    key: "sighter.offset",
-    catalogId: "S1",
-    label: "Versatz Probe → Wertung",
-    unit: "mm",
-    decimals: 2,
-    scopes: ["card"],
-    better: "lower",
-    version: 1,
-    appliesTo: BOTH,
-    minShots: 6,
-    nSensitive: false,
-    excludeMisses: false,
-    needs: "position",
-    onMissing: "drop",
-    compute: (shots) => {
-      // Die letzten fünf Probeschüsse vor dem ersten Wertungsschuss: Wer in der Probe das Visier
-      // verstellt, will den Schwerpunkt nach der Verstellung sehen (SF-63); Probe nach Beginn der
-      // Wertung zählt nicht.
-      const ordered = inShotOrder(shots)
-      const firstMatch = ordered.findIndex((shot) => shot.kind === "match")
-      if (firstMatch < 0) return null
-      const sighters = ordered.slice(0, firstMatch).slice(-SIGHTER_TAIL)
-      const match = ordered.filter((shot) => shot.kind === "match")
-      if (sighters.length < 3 || match.length < 3) return null
-      const a = centroid(points(sighters))
-      const b = centroid(points(match))
-      return a === null || b === null ? null : Math.hypot(a.xUm - b.xUm, a.yUm - b.yUm) / 1000
-    },
   }),
 ])
 
