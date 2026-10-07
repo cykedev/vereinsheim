@@ -3,14 +3,7 @@ import { describe, expect, it } from "vitest"
 import { MATCH, PROBE, SPREAD } from "../__fixtures__/cards"
 import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
 import { LG_10M } from "../targets"
-import {
-  groupShape,
-  heightWidth,
-  outlierLoss,
-  outliers,
-  ringWidths,
-  sigmaEstimate,
-} from "./precision"
+import { groupShape, outlierLoss, outliers, ringWidths, sigmaEstimate } from "./precision"
 
 describe("Rayleigh-σ (P5)", () => {
   it("σ̂ mit c4 und 95-%-Bereich über χ², ohne den Wert vor der Korrektur", () => {
@@ -31,14 +24,7 @@ describe("Rayleigh-σ (P5)", () => {
   })
 })
 
-describe("Höhe, Breite und Form (P7, P8, P9)", () => {
-  it("Höhe, Breite und ihr Mittel", () => {
-    expect(heightWidth(SPREAD)).toEqual({ n: 6, height: 5000, width: 7000, figureOfMerit: 6000 })
-    // ab drei Schuss wie group.height und group.width (SF-61)
-    expect(heightWidth(SPREAD.slice(0, 2))).toBeNull()
-    expect(heightWidth(SPREAD.slice(0, 3))).not.toBeNull()
-  })
-
+describe("Form und Ringbreiten (P8, P9)", () => {
   it("Form: Halbachsen, Verhältnis, Winkel; den Winkel erst ab zehn Schuss zeigen", () => {
     const shape = groupShape(SPREAD)
     expect(shape?.majorUm).toBeCloseTo(Math.sqrt(5.2e6), 6)

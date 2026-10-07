@@ -1,5 +1,5 @@
-// Präzision einer Gruppe: Rayleigh-σ mit Vertrauensbereich, Höhe und Breite, Form, Streuung in
-// Ringbreiten, Ausreißer und ihr Ringverlust (Katalog P5, P7, P8, P9, V6, V7). Lagen in µm. Welche
+// Präzision einer Gruppe: Rayleigh-σ mit Vertrauensbereich, Form, Streuung in Ringbreiten, Ausreißer
+// und was sie kosten (Katalog P5, P8, P9, V6, V7). Lagen in µm. Welche
 // Schüsse gemeint sind (Wertung, Serie, Probe), wählt der Aufrufer; verdächtige Schüsse zählen ohne
 // Lage nicht (SF-15).
 
@@ -48,19 +48,6 @@ export function sigmaEstimate(shots: readonly MetricShot[]): SigmaEstimate | nul
     low: Math.sqrt(sumSquares / chiSquareQuantileEven(0.975, df)),
     high: Math.sqrt(sumSquares / chiSquareQuantileEven(0.025, df)),
   }
-}
-
-/** Höhe und Breite (P7), ab drei Schuss wie `group.height` und `group.width` (SF-61) */
-export function heightWidth(
-  shots: readonly MetricShot[]
-): { n: number; height: number; width: number; figureOfMerit: number } | null {
-  const points = positioned(shots)
-  if (points.length < 3) return null
-  const xs = points.map((p) => p.xUm)
-  const ys = points.map((p) => p.yUm)
-  const height = Math.max(...ys) - Math.min(...ys)
-  const width = Math.max(...xs) - Math.min(...xs)
-  return { n: points.length, height, width, figureOfMerit: (height + width) / 2 }
 }
 
 /** Den Winkel einer gestreckten Gruppe zeigt die Oberfläche erst ab so vielen Schüssen. */

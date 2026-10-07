@@ -4,7 +4,7 @@ import { MATCH, SPREAD } from "../__fixtures__/cards"
 import type { MetricShot } from "../metrics"
 import { scoreFromCoordinates } from "../scoring"
 import { LG_10M, LP_10M } from "../targets"
-import { directionClock, drift, mpiConfidence, positionShare, ringLossSplit } from "./position"
+import { directionClock, drift, mpiConfidence, ringLossSplit } from "./position"
 
 const at = (xUm: number, yUm: number, i: number): MetricShot => ({
   ...MATCH[0],
@@ -236,17 +236,7 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
   })
 })
 
-describe("Lageanteil, Richtungsuhr und Drift (L5, L6, L8)", () => {
-  it("Lageanteil: 0 bei zentrierter Gruppe, fast alles bei enger versetzter", () => {
-    const share = positionShare(SPREAD)
-    expect(share).not.toBeNull()
-    expect(share).toBeCloseTo(0, 9)
-    // ab drei Schuss
-    expect(positionShare(SPREAD.slice(0, 3))).not.toBeNull()
-    expect(positionShare(SPREAD.slice(0, 2))).toBeNull()
-    expect(positionShare(TIGHT_RIGHT)).toBeCloseTo((25e6 - 120000 / 9 / 10) / 25_012_000, 9)
-  })
-
+describe("Richtungsuhr und Drift (L6, L8)", () => {
   it("Richtungsuhr: 12 oben, 3 rechts, im Uhrzeigersinn", () => {
     const clock = directionClock(SPREAD)
     expect(clock.n).toBe(6)
@@ -263,11 +253,10 @@ describe("Lageanteil, Richtungsuhr und Drift (L5, L6, L8)", () => {
     expect(directionClock(thirty.slice(0, 29)).reliable).toBe(false)
   })
 
-  it("Drift: Sprünge und von-Neumann-Verhältnis in Abgabefolge", () => {
+  it("Drift: von-Neumann-Verhältnis in Abgabefolge, ohne Ø und größten Sprung", () => {
     const result = drift(SPREAD)
     expect(result?.vonNeumann).toBeCloseTo(1.6, 9)
-    expect(result?.meanJumpUm).toBeCloseTo((5000 + 2000 + Math.sqrt(18e6) + 4000 + 1000) / 5, 6)
-    expect(result?.maxJumpUm).toBe(5000)
+    expect(Object.keys(result ?? {}).sort()).toEqual(["n", "vonNeumann"])
   })
 
   it("Drift mit Lücke: der Sprung über die Lücke fehlt, das Verhältnis bleibt je Sprung normiert", () => {
@@ -276,7 +265,5 @@ describe("Lageanteil, Richtungsuhr und Drift (L5, L6, L8)", () => {
     const gapped = SPREAD.map((shot, i) => ({ ...shot, seq: i < 3 ? i + 1 : i + 2 }))
     const result = drift(gapped)
     expect(result?.vonNeumann).toBeCloseTo(1.4375, 9)
-    expect(result?.meanJumpUm).toBeCloseTo(3000, 6)
-    expect(result?.maxJumpUm).toBe(5000)
   })
 })

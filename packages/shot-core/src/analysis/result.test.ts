@@ -8,7 +8,6 @@ import {
   seriesConsistency,
   shareAtLeast,
   shotExtremes,
-  teilerStats,
 } from "./result"
 
 // Vier Serien à zehn Schuss mit festen Werten (10,0 · 10,2 · 9,8 · 10,1) und eine kurze fünfte Serie.
@@ -44,11 +43,10 @@ describe("Ringverteilung und Zehntelverteilung (V1, V2)", () => {
   })
 })
 
-describe("Extreme und Teiler (E6, E7, E8)", () => {
-  it("bester und schwächster Schuss mit Nummer, die drei besten und weitesten Teiler", () => {
-    const extremes = shotExtremes(CARD, "decimal")
-    expect(extremes?.best).toEqual({ number: 1, value: 10.5 })
-    expect(extremes?.worst).toEqual({ number: 6, value: 6.2 })
+describe("Beste und weiteste Teiler (E8)", () => {
+  it("die drei besten und weitesten Teiler mit Nummer, ohne eigene Angabe über den Wert", () => {
+    const extremes = shotExtremes(CARD)
+    expect(Object.keys(extremes ?? {}).sort()).toEqual(["bestTeiler", "widestTeiler"])
     expect(extremes?.bestTeiler.map((t) => [t.number, t.teiler])).toEqual([
       [1, 331.8],
       [2, 396.4],
@@ -61,16 +59,7 @@ describe("Extreme und Teiler (E6, E7, E8)", () => {
     ])
   })
 
-  it("in ganzen Ringen: gleiche Ringe, der frühere zählt; ohne Zehntel nur in ganzen Ringen", () => {
-    // 6,7 und 6,2 sind beide Ring 6: der schwächste ist dann Schuss 5, nicht 6
-    const extremes = shotExtremes(CARD, "rings")
-    expect(extremes?.best).toEqual({ number: 1, value: 10 })
-    expect(extremes?.worst).toEqual({ number: 5, value: 6 })
-    expect(shotExtremes(RINGS_ONLY, "rings")?.worst).toEqual({ number: 5, value: 6 })
-    expect(shotExtremes(RINGS_ONLY, "decimal")).toBeNull()
-  })
-
-  it("ein Platzhalter ist nie bester oder schwächster Schuss, zählt aber für die Nummern", () => {
+  it("ein Platzhalter zählt nicht bei den Teilern, aber für die Nummern", () => {
     const placeholder: MetricShot = {
       ...MATCH[2],
       firedAtMs: 310_000,
@@ -78,15 +67,15 @@ describe("Extreme und Teiler (E6, E7, E8)", () => {
       ring: 10,
       flags: [FLAG_SUSPICIOUS],
     }
-    const extremes = shotExtremes([...CARD, placeholder], "decimal")
-    expect(extremes?.best).toEqual({ number: 1, value: 10.5 })
-    // der Platzhalter liegt zeitlich zwischen Schuss 1 und 2: der schwächste ist jetzt Schuss 7
-    expect(extremes?.worst).toEqual({ number: 7, value: 6.2 })
+    const extremes = shotExtremes([...CARD, placeholder])
+    // der Platzhalter liegt zeitlich zwischen Schuss 1 und 2: die späteren rücken um eins
+    expect(extremes?.bestTeiler.map((t) => t.number)).toEqual([1, 3, 4])
+    expect(extremes?.widestTeiler.map((t) => t.number)).toEqual([7, 6, 5])
   })
 
   it("gleich weite Teiler: der frühere Schuss zuerst", () => {
     const twin: MetricShot = { ...MATCH[5], firedAtMs: 900_000 }
-    const extremes = shotExtremes([...CARD, twin], "decimal")
+    const extremes = shotExtremes([...CARD, twin])
     expect(extremes?.widestTeiler.map((t) => [t.number, t.teiler])).toEqual([
       [6, 3831],
       [7, 3831],
@@ -94,25 +83,12 @@ describe("Extreme und Teiler (E6, E7, E8)", () => {
     ])
   })
 
-  it("Teiler-Schnitt und -Median", () => {
-    const stats = teilerStats(CARD)
-    expect(stats?.n).toBe(6)
-    expect(stats?.mean).toBeCloseTo(11131.6 / 6, 9)
-    expect(stats?.median).toBeCloseTo((547.4 + 2656) / 2, 9)
-  })
-
   it("ohne Wertung keine Extreme", () => {
-    expect(
-      shotExtremes(
-        CARD.filter((shot) => shot.kind === "probe"),
-        "decimal"
-      )
-    ).toBeNull()
-    expect(teilerStats([])).toBeNull()
+    expect(shotExtremes(CARD.filter((shot) => shot.kind === "probe"))).toBeNull()
   })
 })
 
-describe("Ringverlust, Konstanz und Quoten (E9, E10, E4, E11)", () => {
+describe("Konstanz und Quoten (E10, E4, E11)", () => {
   it("Konstanz über Serien gleicher Länge; eine kurze Serie zählt nicht mit", () => {
     const consistency = seriesConsistency(WITH_SHORT_SERIES, "decimal")
     expect(consistency?.series.map((s) => [s.series, s.shots, s.total])).toEqual([

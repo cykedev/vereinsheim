@@ -6,13 +6,11 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   // Ergebnis
   ringDistribution: ["V1"],
   decimalHistogram: ["V2"],
-  shotExtremes: ["E6", "E8"],
-  teilerStats: ["E7"],
+  shotExtremes: ["E8"],
   seriesConsistency: ["E10"],
   shareAtLeast: ["E4", "E11"],
   // Präzision
   sigmaEstimate: ["P5"],
-  heightWidth: ["P7"],
   groupShape: ["P8"],
   ringWidths: ["P9"],
   outliers: ["V6"],
@@ -20,12 +18,10 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   // Lage
   mpiConfidence: ["L1", "L3"],
   ringLossSplit: ["E9", "L4"],
-  positionShare: ["L5"],
   directionClock: ["L6"],
   drift: ["L8"],
   // Zeit
   tempoSpread: ["Z2"],
-  shootingTime: ["Z3"],
   pauseRecovery: ["Z4"],
   rhythmProfile: ["Z5"],
   // Verlauf

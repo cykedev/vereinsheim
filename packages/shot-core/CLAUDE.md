@@ -19,7 +19,7 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 | `@vereinsheim/shot-core/geometry`   | `src/geometry.ts`   | Schwerpunkt, Streukreis, `extremeSpread`, Radien, Streuung, Ellipse                                                                                                                                                            |
 | `@vereinsheim/shot-core/time`       | `src/time.ts`       | `tempo` in Abgabefolge: Intervalle, Pausen über 180 s, Lücken, Uhrsprünge                                                                                                                                                      |
 | `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `METRICS`, `metricByKey`, `computeMetric`, `eligibleShots`, `selectShots`, `inScoring`, `inShotOrder`, `shotNumbers`, `shotSteps`, `stepsInOrder`, `timesWithGaps`, `timesInOrder`, `shotDistanceUm`, `FLAG_*` |
-| `@vereinsheim/shot-core/stats`      | `src/stats.ts`      | Quantil, Median, MAD, IQR, Wilson, lnΓ, c4, χ²- und F-Quantile, Theil-Sen                                                                                                                                                      |
+| `@vereinsheim/shot-core/stats`      | `src/stats.ts`      | Quantil, Median, MAD, IQR, Wilson, lnΓ, c4, χ²- und F-Quantile, Theil-Sen, Mann-Kendall, Ausgleichsgerade                                                                                                                      |
 | `@vereinsheim/shot-core/analysis`   | `src/analysis/*.ts` | Analyse einer Scheibe: Ergebnis, Präzision, Lage, Zeit, Verlauf, Probe, Datenlage; `ANALYSIS_CATALOG` (Funktion → Katalog-IDs)                                                                                                 |
 
 ## Regeln
@@ -41,7 +41,8 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   unbekannt, bis die Bibliothek ihre Scheibe kennt.
 - Was nicht hier liegt: Zeichnen (`shot-ui`, SP-1.8), die Skalen der SSMDB2-Felder (Adapter in
   SP-1.6).
-- **Kennzahlen nur über `defineMetric`**, mit Test und festem Erwartungswert (nicht nur „nicht null“).
+- **Kennzahlen nur über `defineMetric`**, mit Katalog-ID (`catalogId`), Test und festem Erwartungswert
+  (nicht nur „nicht null“).
   Ändert sich eine Formel, steigt ihre `version`. `computeMetric` wendet die Regeln aus dem
   Sonderfall-Katalog an: `appliesTo` (SF-01), `needs` mit gültigen, endlichen Angaben, `onMissing`
   („null“ für Summen und Zählungen, SF-07), `minShots` (SF-61), Fehlschüsse nur bei `excludeMisses`
@@ -64,11 +65,17 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   alle gegebenen Schüsse), nie aus Positionen in einer gefilterten Liste. Erst die ganze Karte ordnen
   (`inShotOrder`), dann auswählen, und Abstände über `stepsInOrder`/`timesInOrder`: So folgen
   Reihenfolge und Nummern derselben Ordnung, auch wenn einem Schuss Abgabefolge und Zeit fehlen.
+- **Keine Zahl, die aus einer anderen folgt** (Oktober 2026, Maßstab Sa): Eine Kennzahl oder Auswertung
+  bleibt nur, wenn sie eine eigene Frage beantwortet. Was sich aus einer anderen ergibt (Sa aus σ, Ringverlust
+  aus dem Ergebnis, Netto-Zeit aus den Abständen, bester Schuss aus dem besten Teiler), fällt weg. Im Katalog
+  bleibt die Zeile mit „entfernt“ und Grund; IDs werden nie wiederverwendet. Ein Wert, den eine Stichprobe
+  an sich selbst misst (Lage-Verlust), wird außerhalb der Stichprobe geschätzt (Leave-one-out).
 - **Neue Auswertung, neuer Katalog-Eintrag:** Jede exportierte Funktion aus `./analysis` steht mit ihren
   Katalog-IDs in `ANALYSIS_CATALOG` (Test erzwingt das), und `@vereinsheim/shot-help` braucht für jede
   dieser IDs eine Erklärung (Test dort). Ohne Erklärung bleibt das Gate rot.
 - **Ehrlich statt scheingenau.** Unsicherheit dort, wo sie exakt rechenbar ist (Wilson, χ², Hotelling
-  mit F(2, n − 2), Theil-Sen mit Sen-Intervall, Ausreißer gegen die übrigen mit F(2, 2(n − 2)) und
+  mit F(2, n − 2), Trend nach Mann-Kendall mit Bindungskorrektur, Ausreißer gegen die übrigen mit
+  F(2, 2(n − 2)) und
   Bonferroni, Form mit Mauchly); Aussagen wie „echt“ oder „klar“ nur über der Grenze,
   sonst kein Urteil. Unter der Mindestzahl `null`. Testwerte aus Tabellen oder Hand-Rechnung, nicht aus
   der eigenen Implementierung; Testdaten symmetrisch und ganzzahlig, wenn sie einen Schwerpunkt in der

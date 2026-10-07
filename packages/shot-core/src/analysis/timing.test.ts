@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { MATCH } from "../__fixtures__/cards"
 import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
-import { pauseRecovery, rhythmProfile, shootingTime, tempoSpread } from "./timing"
+import { pauseRecovery, rhythmProfile, tempoSpread } from "./timing"
 
 // Zehn Wertungsschüsse; Abstände 40, 45, 40, 45, 40 s, dann 300 s Pause, dann 50, 55, 50 s.
 // Nach der Pause fallen die Werte ab (9,5 · 9,7 · 9,9).
@@ -27,27 +27,6 @@ describe("Tempo-Konstanz und Schießzeit (Z2, Z3)", () => {
     expect(spread?.iqrMs).toBe(10_000)
     expect(spread?.medianMs).toBe(45_000)
     expect(spread?.relative).toBeCloseTo(10 / 45, 9)
-  })
-
-  it("Dauer, Netto-Zeit ohne Pause, Schüsse je Stunde", () => {
-    const time = shootingTime(EVENING)
-    expect(time?.durationMs).toBe(665_000)
-    expect(time?.netMs).toBe(365_000)
-    // acht Abstände ohne Pause in 365 s
-    expect(time?.shotsPerHour).toBeCloseTo(8 / (365 / 3600), 9)
-    // zwei Schuss im Abstand von 60 s: einer je Minute, 60 je Stunde
-    expect(
-      shootingTime(EVENING.slice(0, 2).map((s, i) => ({ ...s, firedAtMs: i * 60_000 })))
-        ?.shotsPerHour
-    ).toBeCloseTo(60, 9)
-  })
-
-  it("nach einem Sprung der Uhr keine Dauer", () => {
-    const jumped = EVENING.map((shot, i) => ({
-      ...shot,
-      firedAtMs: (shot.firedAtMs as number) - (i >= 5 ? 3_600_000 : 0),
-    }))
-    expect(shootingTime(jumped)?.durationMs).toBeNull()
   })
 })
 

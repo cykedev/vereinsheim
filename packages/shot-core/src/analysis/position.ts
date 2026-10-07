@@ -1,14 +1,8 @@
 // Lage und Systematik: Ist der Versatz echt oder Zufall (Hotelling-T²), wie viele Ringe kostet die Lage
-// gegen die Streuung, wie groß ist ihr Anteil am Fehler, in welche Richtungen gehen die Treffer und
-// wandert die Gruppe (Katalog L3–L6, L8). Lagen in µm, Mitte (0 | 0), x rechts, y oben.
+// gegen die Streuung, in welche Richtungen gehen die Treffer und wandert die Gruppe (Katalog L3, L4, L6,
+// L8, dazu der Ringverlust E9). Lagen in µm, Mitte (0 | 0), x rechts, y oben.
 
-import {
-  centroid,
-  covarianceEllipse,
-  distancesTo,
-  standardDeviation,
-  type Point,
-} from "../geometry"
+import { centroid, covarianceEllipse, distancesTo, type Point } from "../geometry"
 import { inShotOrder, selectShots, stepsInOrder, type MetricShot, type ShotKind } from "../metrics"
 import { scoreFromCoordinates } from "../scoring"
 import { fQuantile2 } from "../stats"
@@ -160,23 +154,6 @@ export function ringLossSplit(
   }
 }
 
-/**
- * Lageanteil am Fehler: (1/n) Σ dᵢ² = |m|² + (1/n) Σ rᵢ². Anteil = max(0, |m|² − (Sx² + Sy²)/n) durch
- * (1/n) Σ dᵢ²; der abgezogene Term nimmt das Schätzrauschen des Schwerpunkts heraus. Ab drei Schuss.
- */
-export function positionShare(shots: readonly MetricShot[]): number | null {
-  const points = positioned(shots)
-  const n = points.length
-  if (n < 3) return null
-  const center = centroid(points) as Point
-  const meanSquare = points.reduce((sum, p) => sum + p.xUm ** 2 + p.yUm ** 2, 0) / n
-  if (meanSquare === 0) return 0
-  const sx = standardDeviation(points.map((p) => p.xUm)) as number
-  const sy = standardDeviation(points.map((p) => p.yUm)) as number
-  const bias = Math.max(0, center.xUm ** 2 + center.yUm ** 2 - (sx * sx + sy * sy) / n)
-  return bias / meanSquare
-}
-
 /** Ab so vielen Treffern sagt die Richtungsuhr etwas (Katalog L6) */
 const CLOCK_MIN_SHOTS = 30
 
@@ -203,15 +180,14 @@ export function directionClock(
 }
 
 /**
- * Drift in der Abgabefolge: Sprünge von Treffer zu Treffer und das von-Neumann-Verhältnis, je Sprung
- * und je Freiheitsgrad normiert: (Σ Sprung²/k) / (Σ rᵢ²/(n − 1)). Um 2 heißt unabhängig, deutlich
- * darunter wandert die Gruppe; ein Urteil gibt es nicht, weil die Streuung bei kleinem n groß ist.
+ * Drift in der Abgabefolge: das von-Neumann-Verhältnis, je Sprung und je Freiheitsgrad normiert:
+ * (Σ Sprung²/k) / (Σ rᵢ²/(n − 1)). Um 2 bei unabhängigen Schüssen, deutlich darunter wandert die Gruppe;
+ * ein Urteil gibt es nicht, weil die Zahl bei kleinem n stark schwankt. Ø und größter Sprung entfallen
+ * (Oktober 2026): Im Mittel sind sie nur √π · σ.
  * Fehlt ein Schuss (Sprung in `seq`, SF-30), zählt der Sprung darüber nicht, und die Normierung je
  * Sprung hält das Verhältnis trotzdem bei 2. Ab drei Schuss.
  */
-export function drift(
-  shots: readonly MetricShot[]
-): { n: number; meanJumpUm: number; maxJumpUm: number; vonNeumann: number } | null {
+export function drift(shots: readonly MetricShot[]): { n: number; vonNeumann: number } | null {
   const steps = stepsInOrder(selectShots(inShotOrder(shots), { need: "position" }))
   if (steps.length < 3) return null
   const points = steps.map(({ shot }) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
@@ -225,8 +201,6 @@ export function drift(
   const n = points.length
   return {
     n,
-    meanJumpUm: jumps.reduce((s, j) => s + j, 0) / jumps.length,
-    maxJumpUm: Math.max(...jumps),
     vonNeumann: jumps.reduce((s, j) => s + j * j, 0) / jumps.length / (sumSquares / (n - 1)),
   }
 }

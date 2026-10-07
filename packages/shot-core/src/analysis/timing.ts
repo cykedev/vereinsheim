@@ -1,5 +1,5 @@
-// Zeit und Rhythmus: Tempo-Konstanz, Dauer und Netto-Schießzeit, Wiedereinstieg nach Pausen und ein
-// Rhythmus-Profil über die Schussnummer (Katalog Z2–Z5). Zeiten in Abgabefolge; fehlt ein Schuss oder
+// Zeit und Rhythmus: Tempo-Konstanz, Wiedereinstieg nach Pausen und ein Rhythmus-Profil über die
+// Schussnummer (Katalog Z2, Z4, Z5); die Dauer (Z3) liefert die Registry (`time.duration`). Zeiten in Abgabefolge; fehlt ein Schuss oder
 // springt die Uhr zurück, zählt der Abstand nicht (SF-30). Intervalle über drei Minuten sind Pausen.
 
 import {
@@ -61,25 +61,6 @@ export function tempoSpread(
     iqrMs: spread,
     medianMs: center,
     relative: center > 0 ? spread / center : null,
-  }
-}
-
-/**
- * Dauer (null nach einem Sprung der Uhr), Netto-Zeit ohne Pausen und Schüsse je Netto-Stunde: die
- * Abstände ohne Pausen je Stunde ihrer Summe (zwei Schuss im Abstand von 60 s sind 60 je Stunde)
- */
-export function shootingTime(
-  shots: readonly MetricShot[]
-): { n: number; durationMs: number | null; netMs: number; shotsPerHour: number | null } | null {
-  const selected = timed(shots)
-  if (selected.length < 2) return null
-  const pace = tempo(timesInOrder(selected))
-  const netMs = pace.intervalsMs.reduce((sum, ms) => sum + ms, 0)
-  return {
-    n: selected.length,
-    durationMs: pace.durationMs,
-    netMs,
-    shotsPerHour: netMs > 0 ? pace.intervalsMs.length / (netMs / 3_600_000) : null,
   }
 }
 

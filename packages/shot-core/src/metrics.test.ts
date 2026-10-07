@@ -158,6 +158,13 @@ describe("Trefferbild-Kennzahlen", () => {
     expect(value("group.width", SPREAD)).toBe(7)
     expect(value("result.tensRate", CARD)).toBe(50)
     expect(value("time.duration", MATCH)).toBe(250)
+    // nach einem Sprung der Uhr keine Dauer (SF-30), früher in `shootingTime` geprüft
+    const jumped = MATCH.map((shot, i) => ({
+      ...shot,
+      seq: i + 1,
+      firedAtMs: (shot.firedAtMs as number) - (i >= 3 ? 3_600_000 : 0),
+    }))
+    expect(value("time.duration", jumped)).toBeNull()
     const paced = [0, 40, 85, 125, 170, 210].map((s, i) => ({
       ...MATCH[0],
       seq: i + 1,

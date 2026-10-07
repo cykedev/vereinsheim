@@ -74,7 +74,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Mindestzahl:* Ab 1 Schuss.
 - *Formel:* `Anzahl je Zehntelwert 0,0 … 10,9`
 
-**Bester und schwächster Schuss (E6, E7, E8)**
+**Bester und schwächster Schuss (E8)**
 - *Was:* Höchster und niedrigster Wert mit Schussnummer, die drei besten und die drei weitesten
   Teiler wie auf dem Meyton-Ausdruck, dazu Durchschnitt und Median der Teiler.
 - *So liest du es:* Der Median-Teiler ist dein typischer Treffer, der Durchschnitt wird von weiten
@@ -185,13 +185,6 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   bei schiefen Gruppen kann es sogar kosten. Nie amtlich.
 - *Mindestzahl:* Ab 1 Schuss, belastbar ab 10.
 - *Formel:* `Lage = zentriert − Ist; Streuung = Höchstwert − zentriert`
-
-**Lageanteil am Fehler (L5)**
-- *Was:* Welcher Teil deines Abstands zur Mitte vom Versatz des Schwerpunkts kommt; der Rest ist
-  Streuung.
-- *So liest du es:* 10 %: Die Lage ist kein Thema. 50 %: Die Hälfte deines Fehlers ist Lage.
-- *Mindestzahl:* Ab 3 Schuss.
-- *Formel:* `max(0, |m|² − (Sx² + Sy²)/n) / (Σ dᵢ² / n)`
 
 **Richtungsuhr (L6)**
 - *Was:* Wie viele Treffer in welche Richtung gehen, 12 Uhr ist oben, um die Mitte oder um den

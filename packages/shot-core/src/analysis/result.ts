@@ -1,12 +1,11 @@
-// Auswertungen zum Ergebnis: Ringverteilung und Zehntelverteilung, bester und schwächster Schuss,
-// Teiler, Konstanz der Serien und Quoten (Katalog V1, V2, E4, E6–E8, E10, E11); den Ringverlust (E9)
-// liefert `ringLossSplit` als Summe aus Lage und Streuung. Grundlage sind
+// Auswertungen zum Ergebnis: Ringverteilung und Zehntelverteilung, beste und weiteste Teiler, Konstanz
+// der Serien und Quoten (Katalog V1, V2, E4, E8, E10, E11); den Ringverlust (E9) liefert `ringLossSplit`
+// als Summe aus Lage und Streuung. Grundlage sind
 // die Wertungsschüsse; verdächtige Schüsse zählen nur mit ihrem Wert (SF-15). Was vom Wert abhängt,
 // rechnet in der gewählten Wertung (ganze Ringe oder Zehntel).
 
 import { standardDeviation } from "../geometry"
 import {
-  FLAG_SUSPICIOUS,
   selectShots,
   shotDistanceUm,
   shotNumbers,
@@ -15,7 +14,7 @@ import {
   type ShotKind,
 } from "../metrics"
 import { teilerFromDistanceUm } from "../scoring"
-import { mad, median, wilson } from "../stats"
+import { mad, wilson } from "../stats"
 import { MAX_DECIMAL_TENTHS } from "../targets"
 import { seriesCurve, type SeriesPoint } from "./course"
 import { valueNeed, valueRings, valueTenths } from "./values"
@@ -46,66 +45,36 @@ export function decimalHistogram(shots: readonly MetricShot[]): { n: number; cou
   return { n: counted.length, counts }
 }
 
-export interface ShotRef {
-  number: number
-  /** Wert in Ringen, in der gewählten Wertung */
-  value: number
-}
-
 export interface TeilerRef {
   number: number
   teiler: number
 }
 
 export interface ShotExtremes {
-  best: ShotRef
-  worst: ShotRef
-  /** die drei kleinsten Teiler, aufsteigend */
+  /** die drei kleinsten Teiler, aufsteigend; der kleinste ist der beste Schuss */
   bestTeiler: TeilerRef[]
-  /** die drei größten Teiler, absteigend */
+  /** die drei größten Teiler, absteigend; der größte ist der schwächste Schuss */
   widestTeiler: TeilerRef[]
 }
 
 /**
- * Bei gleichem Wert zählt der frühere Schuss. Ein verdächtiger Schuss (Platzhalter) ist nie bester oder
- * schwächster: Er trägt nur den amtlichen Wert, nicht die Leistung (SF-15, Katalog E6).
+ * Beste und weiteste Teiler (E8), wie auf dem Meyton-Ausdruck; bei gleichem Teiler zuerst der frühere
+ * Schuss. Verdächtige Schüsse (Platzhalter) haben keinen gültigen Abstand und zählen nicht (SF-15). Der
+ * kleinste Teiler ist zugleich der beste Schuss, der größte der schwächste: Eine eigene Angabe über den
+ * Wert (E6) und Teiler-Schnitt und -Median (E7) gibt es deshalb nicht mehr (Oktober 2026).
  */
-export function shotExtremes(shots: readonly MetricShot[], scoring: Scoring): ShotExtremes | null {
+export function shotExtremes(shots: readonly MetricShot[]): ShotExtremes | null {
   const numbers = shotNumbers(shots)
-  const valued = selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })
-    .filter((shot) => !(shot.flags ?? []).includes(FLAG_SUSPICIOUS))
-    .map((shot) => ({ number: numbers.get(shot) as number, tenths: valueTenths(shot, scoring) }))
-    .sort((a, b) => a.number - b.number)
-  if (valued.length === 0) return null
-  const top = valued.reduce((high, shot) => (shot.tenths > high.tenths ? shot : high))
-  const low = valued.reduce((min, shot) => (shot.tenths < min.tenths ? shot : min))
-  const best = { number: top.number, value: top.tenths / 10 }
-  const worst = { number: low.number, value: low.tenths / 10 }
   const teiler = selectShots(shots, { kinds: MATCH, need: "distance" }).map((shot) => ({
     number: numbers.get(shot) as number,
     teiler: teilerFromDistanceUm(shotDistanceUm(shot)),
   }))
+  if (teiler.length === 0) return null
   return {
-    best,
-    worst,
     bestTeiler: [...teiler].sort((a, b) => a.teiler - b.teiler || a.number - b.number).slice(0, 3),
     widestTeiler: [...teiler]
       .sort((a, b) => b.teiler - a.teiler || a.number - b.number)
       .slice(0, 3),
-  }
-}
-
-export function teilerStats(
-  shots: readonly MetricShot[]
-): { n: number; mean: number; median: number } | null {
-  const values = selectShots(shots, { kinds: MATCH, need: "distance" }).map((shot) =>
-    teilerFromDistanceUm(shotDistanceUm(shot))
-  )
-  if (values.length === 0) return null
-  return {
-    n: values.length,
-    mean: values.reduce((sum, v) => sum + v, 0) / values.length,
-    median: median(values) as number,
   }
 }
 
