@@ -37,6 +37,9 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           noch von keiner App genutzt.
 ├── packages/meyton-pdf/    @vereinsheim/meyton-pdf — liest aus Meyton-Ausdrucken (PDF) nur ID im Fuß und
 │                           Erstellzeit, ohne Layout-Wissen (SP-1.3, Oktober 2026); noch von keiner App genutzt.
+├── packages/ingest-contract/ @vereinsheim/ingest-contract — Vertrag Brücke ↔ Spiegel: Snapshot v1
+│                           (Zod, daraus JSON-Schema), Prüfsumme über RFC 8785, Testvektoren und
+│                           eingefrorene Beispiele (SP-1.0a); noch von keiner App genutzt.
 ├── packages/shot-help/     @vereinsheim/shot-help — Hilfe zu jeder Kennzahl und Auswertung in
 │                           einfacher Sprache (Themen, Einstieg, Glossar, Fehlschlüsse); Quelle für App
 │                           und Vault-Leitfaden, den `pnpm --filter @vereinsheim/shot-help docs` erzeugt

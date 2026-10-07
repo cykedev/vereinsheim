@@ -6,7 +6,7 @@ aliases: [ingest, ingest-api, normalisierung, rohdaten-pipeline]
 keywords: [ingest, api, endpunkt, geräte-token, device token, idempotenz, snapshot, rohdatensatz, raw store, normalisierung, adapter, meyton-ssmdb2, skalen, zeitzone, epoche, revision, projektion, neu berechnen, vertrag, contract, json schema, folgenummer, kompaktierung, probe sammeln, merkmale, zustimmung, vertragsversion]
 subsystem_of: ["[[spiegel-architecture]]"]
 governed_by: ["[[adr-027]]"]
-relates_to: ["[[spiegel-bridge]]", "[[spiegel-data-model]]", "[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]"]
+relates_to: ["[[spiegel-ingest-contract]]", "[[spiegel-bridge]]", "[[spiegel-data-model]]", "[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]"]
 ---
 
 **TL;DR** Die Brücke liefert Snapshots an eine kleine, gesicherte Ingest-API. Spiegel speichert sie unverändert als Rohdatensatz, deutet sie mit einem versionierten Adapter (`meyton-ssmdb2@9`) ins kanonische Modell und berechnet die Kennzahlen. Jeder Schritt rechts der Rohdaten ist wiederholbar.
@@ -35,7 +35,7 @@ Jeder Snapshot bleibt inhaltlich unverändert erhalten, mit Prüfsumme, Empfangs
 
 **Zeilenversionen statt Kopien:** Live kommt mit jedem Schuss ein voller Snapshot; bei 90 Schuss wären das rund 4.000 Trefferzeilen und 90-mal der Name. Spiegel speichert deshalb jede Zeile (Scheibe, Serie, Treffer) nur, wenn sie neu ist oder sich ändert, und ein Snapshot ist eine Liste von Verweisen. Der Speicher wächst linear mit den Schüssen, und auch verschwundene Zeilen bleiben belegt. Ein Snapshot, der nur Zeilen anhängt, bleibt in derselben Revision; erst eine geänderte oder fehlende Wertungszeile ergibt eine neue (SF-67).
 
-**Prüfsumme** über eine kanonische Serialisierung, die Brücke und Spiegel gleich berechnen, auch in verschiedenen Sprachen; der Vertrag enthält Testvektoren (SF-27).
+**Prüfsumme** über eine kanonische Serialisierung, die Brücke und Spiegel gleich berechnen, auch in verschiedenen Sprachen; der Vertrag enthält Testvektoren (SF-27). Format, kanonische Form und Versionsregel: [[spiegel-ingest-contract]].
 
 ## Normalisierung (Adapter `meyton-ssmdb2@9`)
 

@@ -82,7 +82,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-24 | Abfrage scheitert oder ist leer, etwa bei einer nach dem Stromaus beschädigten Tabelle | Der Abgleich markiert alles als „an der Quelle entfernt“ | Fehler und leere Ergebnisse sind nie Löschungen | Test |
 | SF-25 | Meyton-Update ändert das Schema | Feste Abfragen brechen oder verschlucken neue Spalten; der alte Adapter deutet falsch | `SELECT *` mit Spaltenliste; Schema-Fingerabdruck aus `Version` und `information_schema`; fehlt eine Spalte, Quarantäne | Fixture mit Zusatzspalte und fehlender Spalte |
 | SF-26 | Snapshots kommen in falscher Reihenfolge an | Ein älterer Stand überschreibt einen neueren | Folgenummer und Beobachtungszeit; nur Neueres zählt | Test |
-| SF-27 | Prüfsumme in Brücke und Spiegel verschieden berechnet | Jede Lieferung wirkt neu; Revisionen ohne Änderung | Kanonische Serialisierung mit Testvektoren im Vertrag; neue Revision nur bei inhaltlicher Änderung | Test |
+| SF-27 | Prüfsumme in Brücke und Spiegel verschieden berechnet | Jede Lieferung wirkt neu; Revisionen ohne Änderung | Kanonische Serialisierung mit Testvektoren im Vertrag; neue Revision nur bei inhaltlicher Änderung | Test: Vektoren in `packages/ingest-contract` ([[spiegel-ingest-contract]]) |
 | SF-28 | Abgelehnte, gelöschte oder fremde Scheibe | Der nächste Abgleich lädt sie wieder hoch | Grabstein in Spiegel, an die Brücke verteilt | Test |
 
 ### Zeit
@@ -134,7 +134,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-56 | Brücke still defekt, während „aus“ der Normalfall ist | Niemand merkt es | Warnung, wenn QR-Scans von einem Abend ohne Brücken-Kontakt kommen | Test |
 | SF-57 | Schützen im Gäste-LAN, Geräte im Gerätenetz; Gerätenetz womöglich ohne Internet | Keine Verbindung zu Spiegel | Nur ausgehend DNS, HTTPS und NTP; sonst LTE oder Client im Gäste-WLAN; Kopplung per Code bei der Installation | SQL-Checkliste (Netzfrage) |
 | SF-58 | Großer Rückstau nach langer Pause | Ratenbegrenzung und 256 MB Speicher | Kleine Stapel; warten, so lange Spiegel vorgibt | Test |
-| SF-59 | Diagnose oder Fehlermeldung enthält Namen | Personenbezogene Daten in Logs | Diagnose als feste Liste ohne Personenfelder; Logs ohne Inhalt; Test auf `Nachname` | Test |
+| SF-59 | Diagnose oder Fehlermeldung enthält Namen | Personenbezogene Daten in Logs | Diagnose als feste Liste ohne Personenfelder; Logs ohne Inhalt; Test auf `Nachname` | Test: Vertragsfehler ohne Inhalt in `packages/ingest-contract`; Logs der API in SP-1.6b |
 
 ### Kennzahlen und Verläufe
 
@@ -154,7 +154,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 |---|---|---|---|---|
 | SF-67 | Ein voller Snapshot je Schuss | Rohdaten wachsen quadratisch (rund 2 GB JSON im Jahr); Löschen muss jede Kopie finden | Zeilenversionen statt Kopien; Anhängen und Korrigieren getrennt | Test: Speicher wächst linear |
 | SF-68 | Kennzahl-Version steigt, ohne Hintergrunddienst | Alte Werte bleiben stehen | Versionsprüfung beim Lesen; CLI-Befehl nach dem Deploy | Test |
-| SF-69 | Brücken im Feld mit älterem Vertrag | Lieferungen werden abgelehnt | Spiegel nimmt mindestens die Vorversion an; Änderungen nur additiv | Test |
+| SF-69 | Brücken im Feld mit älterem Vertrag | Lieferungen werden abgelehnt | Spiegel nimmt mindestens die Vorversion an; Änderungen nur additiv | Test: eingefrorene Beispiele in `packages/ingest-contract` |
 
 ## Pflege
 

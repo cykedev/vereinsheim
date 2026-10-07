@@ -70,7 +70,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** `packages/ingest-contract` mit JSON-Schema, kanonischer Serialisierung und Testvektoren für die Prüfsumme sowie Beispiel-Snapshots; dazu MySQL im Docker mit dem Schema aus SP-0.6 (bis dahin nach Handbuch) und ein Generator, der je SF-ID Zeilen erzeugt, auch als Abfolge von Zuständen (Probe verschwindet, Korrektur, Reset). Dieselben Fälle dienen als Snapshots für Ingest-Tests und als kanonische Scheiben für die Oberfläche ([[spiegel-edge-cases]]). Nur synthetische Daten.
 - **Schnitt:** a) Vertrag mit Testvektoren; b) Generator und MySQL-Fälle.
 - **Abnahme:** Brücke und Spiegel rechnen dieselben Prüfsummen; jede SF-ID mit Datenbezug hat einen Fall; Sonderfälle SF-27, SF-69.
-- **Hängt ab von:** nichts (Schema aus SP-0.6 später nachziehen). **Status:** offen.
+- **Hängt ab von:** nichts (Schema aus SP-0.6 später nachziehen). **Status:** in Arbeit. a) erledigt (Oktober 2026, `packages/ingest-contract`, [[spiegel-ingest-contract]]): Snapshot v1 mit Zellwerten als Text, Prüfsumme nach RFC 8785 mit sortierten Zeilen, Testvektoren aus einer unabhängigen Python-Implementierung, Fehler ohne Inhalt (SF-59 für den Vertrag), eingefrorene Beispiele. b) offen.
 
 ### SP-1.1 Fachkern: Scheibenbilder und Wertung
 - **Ziel:** Scheiben korrekt zeichnen und werten.

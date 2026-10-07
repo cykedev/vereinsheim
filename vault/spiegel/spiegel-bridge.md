@@ -6,7 +6,7 @@ aliases: [brücke, bridge, spiegel-bridge, meyton-bridge, lokaler-agent]
 keywords: [brücke, bridge, agent, raspberry pi, mini-pc, meyton-netz, ip-plan, workstation, router, read-only, select, polling, änderungserkennung, snapshot, prüfsumme, warteschlange, outbox, heartbeat, kopplung, pairing, auftragskanal, fundbüro-seite, go binary, single binary, systemd, gäste-lan, gerätenetz, netztrennung, kopplungscode, probe-puffer, zustand, massenlöschung, fingerabdruck, selbst-update]
 subsystem_of: ["[[spiegel-architecture]]"]
 governed_by: ["[[adr-027]]"]
-relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-ingest-pipeline]]", "[[spiegel-assignment]]", "[[spiegel-edge-cases]]"]
+relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-ingest-contract]]", "[[spiegel-ingest-pipeline]]", "[[spiegel-assignment]]", "[[spiegel-edge-cases]]"]
 ---
 
 **TL;DR** Ein kleines Gerät im Meyton-Netz liest die SSMDB2 nur lesend, schickt vollständige Snapshots je Scheibe unverändert per HTTPS an Spiegel, puffert bei Internetausfall und holt sich feste Aufträge selbst ab. Schützen installieren nichts; der Verein richtet die Brücke einmal ein.
