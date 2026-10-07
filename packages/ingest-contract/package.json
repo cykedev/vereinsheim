@@ -9,7 +9,8 @@
     "./checksum": "./src/checksum.ts",
     "./snapshot": "./src/v1/snapshot.ts",
     "./limits": "./src/limits.ts",
-    "./versions": "./src/versions.ts"
+    "./versions": "./src/versions.ts",
+    "./parse": "./src/parse.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

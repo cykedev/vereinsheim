@@ -19,4 +19,6 @@ export const LIMITS = {
   maxBatchSnapshots: 50,
   /** Zeichen für kurze Hüllenfelder (`sessionTimeZone`, `sourceVersion`). */
   maxShortTextLength: 64,
+  /** Gemeldete Fehler je Prüfung; ein kaputter Stapel soll kein Log fluten. */
+  maxReportedIssues: 20,
 } as const

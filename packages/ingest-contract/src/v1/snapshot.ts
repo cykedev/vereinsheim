@@ -12,6 +12,7 @@ import { LIMITS } from "../limits"
 export const CONTRACT_ISSUE = {
   malformedString: "malformed-string",
   rowColumnsMismatch: "row-columns-mismatch",
+  columnCount: "column-count",
   checksumMismatch: "checksum-mismatch",
   unsupportedVersion: "unsupported-contract-version",
 } as const
@@ -31,8 +32,13 @@ const columnName = wellFormed(z.string().min(1).max(LIMITS.maxColumnNameLength))
 /** Spaltenliste von `SELECT *` mit dem Typ aus `information_schema.COLUMNS.COLUMN_TYPE`. */
 const columns = z
   .record(columnName, wellFormed(z.string().min(1).max(LIMITS.maxColumnTypeLength)))
-  .refine((value) => Object.keys(value).length >= 1, { abort: true })
-  .refine((value) => Object.keys(value).length <= LIMITS.maxColumns, { abort: true })
+  .refine(
+    (value) => {
+      const count = Object.keys(value).length
+      return count >= 1 && count <= LIMITS.maxColumns
+    },
+    { abort: true, params: { contractCode: CONTRACT_ISSUE.columnCount } }
+  )
   .meta({ minProperties: 1, maxProperties: LIMITS.maxColumns })
 
 /** Eine Zeile: genau die Spalten aus `columns`, je Wert Text oder `null`. */

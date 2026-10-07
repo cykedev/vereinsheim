@@ -1,0 +1,1939 @@
+{
+  "contractVersion": 1,
+  "description": "Snapshots, die Vertrag v1 ablehnen muss. expect nennt den ersten erwarteten Fehler (Pfad ohne Inhalte, Code). Jeder Fall enth\u00e4lt den Namen Mustermann; er darf in keiner Fehlermeldung auftauchen (SF-59).",
+  "cases": [
+    {
+      "name": "zelle-als-zahl",
+      "description": "Zellwerte sind Text oder null, nie Zahlen.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": 23,
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.treffer.rows[1]",
+        "code": "invalid_type"
+      }
+    },
+    {
+      "name": "zeile-ohne-spalte",
+      "description": "Eine Zeile ohne eine Spalte aus columns.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.treffer.rows[0]",
+        "code": "row-columns-mismatch"
+      }
+    },
+    {
+      "name": "zeile-mit-fremder-spalte",
+      "description": "Eine Zeile mit einer Spalte, die nicht in columns steht.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02",
+                "Nachname": "Mustermann"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.treffer.rows[2]",
+        "code": "row-columns-mismatch"
+      }
+    },
+    {
+      "name": "zwei-scheiben-zeilen",
+      "description": "scheiben hat genau eine Zeile.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.scheiben.rows",
+        "code": "too_big"
+      }
+    },
+    {
+      "name": "keine-scheiben-zeile",
+      "description": "scheiben hat genau eine Zeile.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": []
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)",
+              "Nachname": "varchar(30)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021",
+                "Nachname": "Mustermann"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013",
+                "Nachname": "Mustermann"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.scheiben.rows",
+        "code": "too_small"
+      }
+    },
+    {
+      "name": "leere-spaltenliste",
+      "description": "Jede Tabelle hat mindestens eine Spalte.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {},
+            "rows": []
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.serien.columns",
+        "code": "column-count"
+      }
+    },
+    {
+      "name": "tabelle-fehlt",
+      "description": "Alle drei Tabellen sind Pflicht, auch leer.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.treffer",
+        "code": "invalid_type"
+      }
+    },
+    {
+      "name": "zelle-zu-lang",
+      "description": "Ein Zellwert hat h\u00f6chstens 4096 Zeichen.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermannxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.scheiben.rows[0]",
+        "code": "too_big"
+      }
+    },
+    {
+      "name": "einzelnes-surrogat",
+      "description": "Strings sind wohlgeformtes Unicode, ohne einzelne Surrogate.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann\ud83d",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.scheiben.rows[0]",
+        "code": "malformed-string"
+      }
+    },
+    {
+      "name": "falsche-pruefsumme",
+      "description": "Die Pr\u00fcfsumme passt nicht zu data.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expect": {
+        "path": "checksum",
+        "code": "checksum-mismatch"
+      }
+    },
+    {
+      "name": "data-nach-pruefsumme-geaendert",
+      "description": "data ge\u00e4ndert, Pr\u00fcfsumme vom alten Stand.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2035"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "checksum",
+        "code": "checksum-mismatch"
+      }
+    },
+    {
+      "name": "pruefsumme-ohne-praefix",
+      "description": "Die Pr\u00fcfsumme beginnt mit sha256: und hat 64 Hex-Zeichen.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "c8317af4"
+      },
+      "expect": {
+        "path": "checksum",
+        "code": "invalid_format"
+      }
+    },
+    {
+      "name": "unbekanntes-huellenfeld",
+      "description": "Unbekannte Felder werden abgelehnt (Spiegel ist nie \u00e4lter als die Br\u00fccke).",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa",
+        "bemerkung": "Mustermann"
+      },
+      "expect": {
+        "path": "",
+        "code": "unrecognized_keys"
+      }
+    },
+    {
+      "name": "vertragsversion-2",
+      "description": "Eine Version, die Spiegel noch nicht kennt.",
+      "snapshot": {
+        "contractVersion": 2,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "contractVersion",
+        "code": "unsupported-contract-version"
+      }
+    },
+    {
+      "name": "vertragsversion-fehlt",
+      "description": "Ohne Vertragsversion.",
+      "snapshot": {
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "contractVersion",
+        "code": "unsupported-contract-version"
+      }
+    },
+    {
+      "name": "scheibenid-ueberlauf",
+      "description": "Die ScheibenID ist vorzeichenbehaftet 32 Bit.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": 2147483648,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "scheibenId",
+        "code": "too_big"
+      }
+    },
+    {
+      "name": "folgenummer-null",
+      "description": "Die Folgenummer beginnt bei 1.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 0,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "sequence",
+        "code": "too_small"
+      }
+    },
+    {
+      "name": "beobachtungszeit-mit-versatz",
+      "description": "Die Beobachtungszeit ist UTC mit Z.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T19:05:03.250+02:00",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "observedAt",
+        "code": "invalid_format"
+      }
+    },
+    {
+      "name": "beobachtungszeit-ohne-millisekunden",
+      "description": "Die Beobachtungszeit hat Millisekunden.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "observedAt",
+        "code": "invalid_format"
+      }
+    },
+    {
+      "name": "unbekannte-quelle",
+      "description": "Vertrag v1 kennt nur meyton-ssmdb2.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "disag",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "source",
+        "code": "invalid_value"
+      }
+    },
+    {
+      "name": "kein-objekt",
+      "description": "Ein Snapshot ist ein JSON-Objekt.",
+      "snapshot": ["Mustermann"],
+      "expect": {
+        "path": "",
+        "code": "invalid_type"
+      }
+    }
+  ]
+}
