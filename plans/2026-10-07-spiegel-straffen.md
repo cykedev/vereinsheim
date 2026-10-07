@@ -84,6 +84,10 @@ in SP-1.8; der Code bleibt ohnehin für die Verläufe.
   „Belege aus Simulationen“ mit Methode und Werten; die Texte zitieren nur dort stehende Zahlen.
 - **E12 Benennung:** Die Zeile unter der Analyse heißt überall „Datenlage“ (bisher in der Spielwiese
   „Grundlage“); der Reiter heißt „Zeit und Verlauf“.
+- **E13 Trefferbild erklärt:** Neue Oberflächen-Hilfe `trefferbild` (`VIEW_HELP`) für die Scheibe, ihre Farben
+  und Schalter (Schwerpunkt, Streukreis, Vertrauensellipse, Nummern, Ausschnitt), Glossar-Eintrag
+  „Vertrauensellipse“, die Ellipse im Hauptteil von „Ist die Lage echt?“ samt Größenregel (Beleg B16). Anlass:
+  Frage des Users am 7. Oktober, die Ellipse stand nur versteckt unter „Was du tun kannst“.
 
 ## 3. Dateien
 
@@ -194,7 +198,7 @@ Laufzeit unter zwei Minuten (Wiederholungen je Fall 5 000, beim Mehrfachtest 20 
 ### Task 9: Hilfetexte
 
 Nach Anhang A: Themen `zehntelverteilung` und `lageanteil` entfernen (23 Themen), Zuordnungen nach E2/E3/E8,
-alle Textkorrekturen; Werte aus Task 8 einsetzen (Mehrfachtest: Anteil p → „etwa jede k. ganz normale
+alle Textkorrekturen, `VIEW_HELP` `trefferbild` und Glossar „Vertrauensellipse“ (E13); Werte aus Task 8 einsetzen (Mehrfachtest: Anteil p → „etwa jede k. ganz normale
 Scheibe“ mit k = Rundung von 1/p). Tests: Themenzahl, Lookup (`helpForMetric("group.meanRadius")` jetzt
 `undefined`), Rückwärtstest grün. Leitfaden neu erzeugen. Commit `fix(shot-help): correct the explanations
 after the review`.
@@ -222,7 +226,7 @@ Commit `docs(spiegel): record what the statistics review removed and why`.
 2. Mutationsprobe wie Test step 2.
 3. Spielwiese: entfernte Karten und Zeilen weg, Trend mit Richtung ohne Intervall, Ringverlust aus
    `ringLossSplit.total`, Ausreißer-Kosten, Probe-Versatz aus S4, R50 in Ringbreiten, keine Innenzehner-Quote,
-   „Datenlage“; Skriptprüfung angepasst und grün, Gegenprobe der Skriptprüfung, Sichtprüfung dunkel und 390 px.
+   „Datenlage“, „Was heißt das?“ unter den Schaltern der Scheibe (`trefferbild`); Skriptprüfung angepasst und grün, Gegenprobe der Skriptprüfung, Sichtprüfung dunkel und 390 px.
 4. Keine Datei außerhalb der Tabelle in §3 geändert (`git diff --stat`).
 5. Abnahme: Leseprobe durch den User.
 
@@ -303,11 +307,15 @@ fast immer, von zwei gleich weiten meist keinen.“ `minimum`: „Ab 5 Schuss mi
 (1 + 1/(n − 1))) gegen das (1 − 0,05/n)-Quantil von F(2, 2(n − 2)); Kosten = Σ (Median der übrigen − vᵢ) über
 die markierten Schüsse“.
 
-**lage-echt** — `read`: „Die Lage steht als Abstand und Richtung zur Mitte da, etwa 0,72 mm, davon 0,6 mm
-rechts und 0,4 mm tief. „Echt versetzt“: Eine Korrektur an Visier oder Anschlag kann sich lohnen. „Vom Zufall
-nicht zu unterscheiden“: nicht am Visier drehen, auch wenn der Schwerpunkt neben der Mitte liegt. Die
-Vertrauensellipse auf der Scheibe zeigt, wo der wahre Schwerpunkt mit 95 % liegt; liegt die Mitte darin, ist
-der Versatz nicht belegt.“ `act`: „Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele
+**lage-echt** — `what`: „Der Schwerpunkt ist der Mittelpunkt aller Treffer, auf der Scheibe der kleine schwarz-weiß
+geviertelte Kreis. Er ist selbst nur geschätzt: Die Vertrauensellipse zeigt, wo dein wahrer Schwerpunkt mit großer
+Sicherheit liegt. Ein Test (Hotelling) prüft, ob der Versatz zur Mitte mehr als Zufall ist; er sagt dasselbe wie die
+Ellipse: Liegt die Mitte darin, ist der Versatz nicht belegt.“ `read`: „Die Lage steht als Abstand und Richtung zur
+Mitte da, etwa 0,72 mm, davon 0,6 mm rechts und 0,4 mm tief. „Echt versetzt“: Eine Korrektur an Visier oder Anschlag
+kann sich lohnen. „Vom Zufall nicht zu unterscheiden“: nicht am Visier drehen, auch wenn der Schwerpunkt neben der
+Mitte liegt. Die Ellipse hat die Form deiner Gruppe und schrumpft mit der Schusszahl: Ihre Halbachse ist bei 10
+Schuss etwa so groß wie deine Streuung σ, bei 40 Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur
+wo ihr Mittelpunkt liegen kann.“ `act`: „Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele
 Ringe eine Korrektur etwa bringt.“
 
 **ringverlust-nach-ursache** — `catalog` E9, L4. `short`: „Wie viele Ringe dir zum Höchstwert fehlen und wie
@@ -405,6 +413,14 @@ der Analyse rechnen über die Wertung. Die Probe hat einen eigenen Reiter. Nach 
 bei „Probe gegen Wertung“ und „Eingeschossen?“ nur die Probe danach; der Umfang der Probe zählt alle
 Probeschüsse.“
 
+**Trefferbild** (neu, `VIEW_HELP`, id `trefferbild`) — `what`: „Jeder Treffer in Kalibergröße, gefärbt nach seinem Ring:
+10 rot, 9 gold, 8 türkis, 7 und weniger violett. Probeschüsse sind hohl. Die Treffer sind leicht durchscheinend,
+damit du siehst, wo sie sich überlagern.“ `read`: „Die Schalter blenden ein: den Schwerpunkt (kleiner schwarz-weiß
+geviertelter Kreis, der Mittelpunkt deiner Treffer), den Streukreis (blauer Ring um alle Treffer; seine Zahl misst
+Mitte zu Mitte), die Vertrauensellipse (gestrichelt: wo dein wahrer Schwerpunkt mit großer Sicherheit liegt; liegt
+die Mitte darin, ist ein Versatz nicht belegt) und die Schussnummern. „Gruppe“ zoomt auf deine Treffer, „Scheibe“
+zeigt die ganze Scheibe.“
+
 **Beobachtungen in Worten** — `read`: „„Echt“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall
 brächte das nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil mehrere
 Tests laufen, trifft es bei etwa jeder {B1}. ganz normalen Scheibe einmal zufällig zu.“
@@ -422,7 +438,9 @@ Mitte) und für sich kein Zeichen von Formverlust.“
 Durchmesser. Meyton druckt einen „Trefferkreis“; ob er genau dasselbe misst, prüft Spiegel noch an
 Rohdaten.“ R50: „… ohne Fehlschüsse.“ von-Neumann-Verhältnis: „Vergleicht die Sprünge von Schuss zu Schuss mit
 der Streuung; bei unabhängigen Schüssen liegt es um 2.“ Theil-Sen entfällt (nicht mehr auf der Scheibe). Neu:
-„Mann-Kendall-Test: Prüft, ob die Werte über die Scheibe eher steigen oder fallen, und kommt mit vielen
+„Vertrauensellipse: Bereich um den gemessenen Schwerpunkt, in dem der wahre Schwerpunkt mit großer Sicherheit (95 %)
+liegt. Liegt die Scheibenmitte darin, ist ein Versatz nicht belegt. Sie schrumpft mit der Schusszahl, die Gruppe
+nicht.“ „Mann-Kendall-Test: Prüft, ob die Werte über die Scheibe eher steigen oder fallen, und kommt mit vielen
 gleichen Werten zurecht.“ „Fehlschuss: Ein Nuller oder ein Treffer weit außen, in den Daten markiert; R50 lässt
 ihn weg, die übrigen Maße zählen ihn mit.“ „Verdächtiger Schuss: Platzhalter oder Handeintrag; er zählt nur mit
 seinem amtlichen Wert, nie mit Lage, Teiler oder Zeit.“
@@ -445,6 +463,7 @@ seinem amtlichen Wert, nie mit Lage, Teiler oder Zeit.“
 | B12 | Versatz des Schwerpunkts einer Zehnerserie zur Scheibe, 40 Schuss, ohne Drift | 0,34σ |
 | B13 | Richtungsuhr um den Schwerpunkt, 30 Schuss: stärkster Keil im Median gegen den Schnitt | ×2,0 |
 | B14 | Ausreißer bei 10 Schuss: ein Schuss bei 5σ erkannt; von zwei bei 5σ mindestens einer | 88,8 %; 13,9 % |
+| B16 | deterministisch aus `mpiConfidence`: Halbachse der Vertrauensellipse relativ zur Streuung je Richtung bei 5/10/20/40/60 Schuss | 2,26 / 1,00 / 0,61 / 0,41 / 0,33 |
 | B15 | deterministisch: Wilson 20/40; σ-Bereich bei 10, 30 (σ̂ 1,12 mm), 120 Schuss | 35,2–64,8 %; −25,5/+45,8 %; 0,94–1,36 mm; −8,3/+9,8 % |
 
 Die Texte runden die erzeugten Werte („etwa“, „rund“); weicht ein Wert spürbar von der Erwartung ab,
