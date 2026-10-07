@@ -75,6 +75,7 @@ describe("renderGuideMarkdown", () => {
     const headings = guide.split("\n").filter((line) => line.startsWith("## "))
     expect(headings).toEqual([
       "## So liest du die Zahlen",
+      "## Auf dem Bildschirm",
       "## Ergebnis",
       "## Präzision",
       "## Lage",
@@ -84,6 +85,11 @@ describe("renderGuideMarkdown", () => {
       "## Glossar",
       "## Typische Fehlschlüsse",
     ])
+  })
+
+  it("die Erklärungen zur Oberfläche stehen im Leitfaden, etwa das Trefferbild", () => {
+    expect(guide).toContain("**Trefferbild**\n- *Was:* Jeder Treffer in Kalibergröße")
+    expect(guide).toContain("**Beobachtungen in Worten**")
   })
 
   it("keine Zeile länger als 100 Zeichen", () => {

@@ -2,9 +2,9 @@
 // deterministisch und mit Umbruch bei 100 Zeichen wie die übrigen Notizen.
 
 import { GLOSSARY } from "./glossary"
-import { FALLACIES, READING_GUIDE } from "./guide"
+import { FALLACIES, READING_GUIDE, VIEW_HELP } from "./guide"
 import { HELP_TOPICS } from "./topics"
-import type { HelpTheme, HelpTopic } from "./types"
+import type { HelpTheme, HelpTopic, ViewHelp } from "./types"
 
 const WIDTH = 100
 
@@ -65,13 +65,22 @@ export function renderTopic(topic: HelpTopic): string {
   return lines.join("\n")
 }
 
-/** Hauptteil des Leitfadens: Einstieg, die Themen je Reiter, Glossar, Fehlschlüsse */
+/** Eine Erklärung zur Oberfläche (Trefferbild, Beobachtungen, Probe auf der Scheibe) als Block */
+function renderView(view: ViewHelp): string {
+  const lines = [`**${view.title}**`, wrapText(`- *Was:* ${view.what}`, WIDTH, "  ")]
+  if (view.read) lines.push(wrapText(`- *So liest du es:* ${view.read}`, WIDTH, "  "))
+  return lines.join("\n")
+}
+
+/** Hauptteil des Leitfadens: Einstieg, Oberfläche, die Themen je Reiter, Glossar, Fehlschlüsse */
 export function renderGuideMarkdown(): string {
   const parts = [
     "## So liest du die Zahlen",
     READING_GUIDE.map((item) => wrapText(`- **${item.title}.** ${item.text}`, WIDTH, "  ")).join(
       "\n"
     ),
+    "## Auf dem Bildschirm",
+    VIEW_HELP.map(renderView).join("\n\n"),
   ]
   for (const theme of THEME_ORDER) {
     const topics = HELP_TOPICS.filter((topic) => topic.theme === theme)

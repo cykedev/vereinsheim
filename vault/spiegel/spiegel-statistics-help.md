@@ -50,6 +50,29 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - **Millimeter statt Teiler.** Der Teiler ist der Abstand zur Mitte in 1/100 mm. Für Gruppen rechnet
   Spiegel in Millimetern um ihren eigenen Schwerpunkt.
 
+## Auf dem Bildschirm
+
+**Trefferbild**
+- *Was:* Jeder Treffer in Kalibergröße, gefärbt nach seinem Ring: 10 rot, 9 gold, 8 türkis, 7 und
+  weniger violett. Probeschüsse sind hohl. Die Treffer sind leicht durchscheinend, damit du siehst,
+  wo sie sich überlagern.
+- *So liest du es:* Die Schalter blenden ein: den Schwerpunkt (kleiner schwarz-weiß geviertelter
+  Kreis, der Mittelpunkt deiner Treffer), den Streukreis (blauer Ring um alle Treffer; seine Zahl
+  misst Mitte zu Mitte), die Vertrauensellipse (gestrichelt: wo dein wahrer Schwerpunkt mit großer
+  Sicherheit liegt; liegt die Mitte darin, ist ein Versatz nicht belegt) und die Schussnummern.
+  „Gruppe“ zoomt auf deine Treffer, „Scheibe“ zeigt die ganze Scheibe.
+
+**Beobachtungen in Worten**
+- *Was:* Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die
+  Karten.
+- *So liest du es:* „Echt“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall brächte das
+  nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil mehrere
+  Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.
+
+**Probe auf der Scheibe**
+- *Was:* Die Probeschüsse um die Mitte, vor der Visierverstellung gestrichelt, dazu der Schwerpunkt
+  der Wertung als kleiner geviertelter Kreis.
+
 ## Ergebnis
 
 **Ergebnis und Ø je Schuss (E1, E2)**
