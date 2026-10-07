@@ -6,8 +6,10 @@ import {
   chiSquareQuantileEven,
   fQuantile2,
   iqr,
+  leastSquaresSlope,
   logGamma,
   mad,
+  mannKendall,
   median,
   quantile,
   theilSen,
@@ -162,5 +164,44 @@ describe("Theil-Sen", () => {
   it("nicht endliche Werte sind ein Fehler", () => {
     expect(() => theilSen([0, 1, 2], [1, Number.NaN, 3])).toThrow(RangeError)
     expect(() => theilSen([0, Number.POSITIVE_INFINITY, 2], [1, 2, 3])).toThrow(RangeError)
+  })
+})
+
+describe("Mann-Kendall und Ausgleichsgerade", () => {
+  it("S, Varianz mit Bindungskorrektur und z mit Stetigkeitskorrektur (von Hand)", () => {
+    // [1, 2, 3]: drei Paare steigen, Var = 3 · 2 · 11 / 18
+    const plain = mannKendall([1, 2, 3])
+    expect(plain?.s).toBe(3)
+    expect(plain?.variance).toBeCloseTo(66 / 18, 12)
+    expect(plain?.z).toBeCloseTo(2 / Math.sqrt(66 / 18), 12)
+    // [1, 1, 2, 2]: vier Paare steigen, zwei sind gleich; Var = (4 · 3 · 13 − 2 · 2 · 1 · 9) / 18
+    const tied = mannKendall([1, 1, 2, 2])
+    expect(tied?.s).toBe(4)
+    expect(tied?.variance).toBeCloseTo(120 / 18, 12)
+    expect(tied?.z).toBeCloseTo(3 / Math.sqrt(120 / 18), 12)
+    expect(mannKendall([2, 2, 1, 1])?.z).toBeCloseTo(-3 / Math.sqrt(120 / 18), 12)
+  })
+
+  it("die Stufe zehnmal 9, dann zehnmal 10: S 100, Varianz 700", () => {
+    const step = [...Array<number>(10).fill(9), ...Array<number>(10).fill(10)]
+    const fit = mannKendall(step)
+    expect(fit?.s).toBe(100)
+    expect(fit?.variance).toBeCloseTo(700, 9)
+    expect(fit?.z).toBeCloseTo(99 / Math.sqrt(700), 12)
+  })
+
+  it("alle Werte gleich: kein Trend; unter drei Werten nichts", () => {
+    expect(mannKendall([5, 5, 5, 5])).toEqual({ s: 0, variance: 0, z: 0 })
+    expect(mannKendall([1, 2])).toBeNull()
+    expect(() => mannKendall([1, Number.NaN, 3])).toThrow(RangeError)
+  })
+
+  it("Ausgleichsgerade: Steigung nach kleinsten Quadraten", () => {
+    expect(leastSquaresSlope([0, 1, 2], [1, 3, 5])).toBeCloseTo(2, 12)
+    // x̄ 1,5, ȳ 2: Σ(x − x̄)(y − ȳ) = 3, Σ(x − x̄)² = 5
+    expect(leastSquaresSlope([0, 1, 2, 3], [1, 2, 2, 3])).toBeCloseTo(0.6, 12)
+    expect(leastSquaresSlope([1, 1, 1], [1, 2, 3])).toBeNull()
+    expect(leastSquaresSlope([1], [1])).toBeNull()
+    expect(() => leastSquaresSlope([1, 2, 3], [1, 2])).toThrow(RangeError)
   })
 })

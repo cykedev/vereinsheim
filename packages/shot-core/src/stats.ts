@@ -1,6 +1,6 @@
 // Statistik-Hilfen für die Auswertungen: robuste Lage- und Streumaße, Quoten mit Wilson-Intervall,
-// Quantile der χ²- und F-Verteilung in den Fällen mit geschlossener Verteilungsfunktion und eine robuste
-// Trendgerade. Rein und ohne Abhängigkeiten; Werte unter der nötigen Zahl ergeben null statt einer Zahl,
+// Quantile der χ²- und F-Verteilung in den Fällen mit geschlossener Verteilungsfunktion, eine robuste
+// Trendgerade, der Trendtest nach Mann-Kendall und die Ausgleichsgerade. Rein und ohne Abhängigkeiten; Werte unter der nötigen Zahl ergeben null statt einer Zahl,
 // nicht endliche Werte (NaN, unendlich) sind ein Fehler statt eines stillen Ergebnisses.
 
 /** z für ein zweiseitiges 95-%-Intervall */
@@ -159,4 +159,48 @@ export function theilSen(
   const lowRank = Math.round((count - spread) / 2)
   const highRank = Math.min(count, Math.round((count + spread) / 2) + 1)
   return { slope, intercept, low: ordered[lowRank - 1], high: ordered[highRank - 1] }
+}
+
+/**
+ * Trendtest nach Mann-Kendall über Werte in ihrer Reihenfolge: S = Σ sign(yⱼ − yᵢ) über alle Paare
+ * i < j, Varianz mit Korrektur für gleiche Werte [n(n − 1)(2n + 5) − Σ t(t − 1)(2t + 5)] / 18 (t je
+ * Gruppe gleicher Werte), z = (S − sign S) / √Var mit Stetigkeitskorrektur, bei Varianz 0 (alle gleich)
+ * z = 0. Anders als das Sen-Intervall kommt er mit vielen gleichen Werten zurecht (ganze Ringe). Unter
+ * drei Werten null.
+ */
+export function mannKendall(
+  ys: readonly number[]
+): { s: number; variance: number; z: number } | null {
+  assertFinite(ys)
+  const n = ys.length
+  if (n < 3) return null
+  let s = 0
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) s += Math.sign(ys[j] - ys[i])
+  }
+  const groups = new Map<number, number>()
+  for (const y of ys) groups.set(y, (groups.get(y) ?? 0) + 1)
+  let ties = 0
+  for (const t of groups.values()) ties += t * (t - 1) * (2 * t + 5)
+  const variance = (n * (n - 1) * (2 * n + 5) - ties) / 18
+  const z = variance > 0 && s !== 0 ? (s - Math.sign(s)) / Math.sqrt(variance) : 0
+  return { s, variance, z }
+}
+
+/** Steigung der Ausgleichsgeraden nach kleinsten Quadraten; ohne Streuung in x (oder unter zwei Punkten) null */
+export function leastSquaresSlope(xs: readonly number[], ys: readonly number[]): number | null {
+  if (xs.length !== ys.length) throw new RangeError("x und y brauchen gleich viele Werte")
+  assertFinite(xs)
+  assertFinite(ys)
+  const n = xs.length
+  if (n < 2) return null
+  const mx = xs.reduce((sum, x) => sum + x, 0) / n
+  const my = ys.reduce((sum, y) => sum + y, 0) / n
+  let sxy = 0
+  let sxx = 0
+  for (let i = 0; i < n; i++) {
+    sxy += (xs[i] - mx) * (ys[i] - my)
+    sxx += (xs[i] - mx) ** 2
+  }
+  return sxx > 0 ? sxy / sxx : null
 }

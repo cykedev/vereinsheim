@@ -113,13 +113,14 @@ describe("Ermüdung und Trend (I2, I3)", () => {
     expect(tired?.deltaRings).toBe(0)
   })
 
-  it("Trend je zehn Schuss: klar nur, wenn das Intervall die 0 ausschließt", () => {
+  it("Trend je zehn Schuss: Ausgleichsgerade, klar nach Mann-Kendall, ohne Intervall", () => {
     const rising = Array.from({ length: 20 }, (_, i) => shot(i, 90 + i))
     const trend = cardTrend(rising, "decimal")
     expect(trend?.perTenShots).toBeCloseTo(1, 9)
-    expect(trend?.clear).toBe(true)
+    expect(trend).toMatchObject({ clear: true, direction: "up" })
+    expect(Object.keys(trend ?? {}).sort()).toEqual(["clear", "direction", "n", "perTenShots"])
     const noisy = [104, 101, 106, 102, 105, 103, 106, 101, 104, 102].map((v, i) => shot(i, v))
-    expect(cardTrend(noisy, "decimal")?.clear).toBe(false)
+    expect(cardTrend(noisy, "decimal")).toMatchObject({ clear: false, direction: null })
     expect(cardTrend(noisy.slice(0, 9), "decimal")).toBeNull()
   })
 
@@ -132,17 +133,36 @@ describe("Ermüdung und Trend (I2, I3)", () => {
     const trend = cardTrend(rising, "decimal")
     expect(trend?.n).toBe(19)
     expect(trend?.perTenShots).toBeCloseTo(1, 9)
-    expect(trend?.low).toBeCloseTo(1, 9)
+    expect(trend?.direction).toBe("up")
   })
 
-  it("in ganzen Ringen wird derselbe Anstieg zur Stufe und ist nicht mehr klar", () => {
-    // 9,0 … 10,9: zehnmal Ring 9, dann zehnmal Ring 10. Theil-Sen: 90 Steigungen 0 in den Hälften,
-    // 100 positive dazwischen; der Median ist die fünft- und sechstkleinste positive, 1/17 je Schuss.
+  it("in ganzen Ringen ist die Stufe von 9 auf 10 klar steigend, auch mit vielen gleichen Werten", () => {
+    // 9,0 … 10,9: zehnmal Ring 9, dann zehnmal Ring 10, die stärkste mögliche Anordnung
+    // (1/C(20, 10)). Mann-Kendall mit Bindungen: S 100, Var 700, z = 99/√700 ≈ 3,74. Das frühere
+    // Sen-Intervall lag hier bei [0; 0,83] und hieß „nicht klar“.
     const rising = Array.from({ length: 20 }, (_, i) => shot(i, 90 + i))
-    const trend = cardTrend(rising, "rings")
-    expect(trend?.perTenShots).toBeCloseTo(10 / 17, 9)
-    expect(trend?.low).toBe(0)
-    expect(trend?.clear).toBe(false)
+    const rings = cardTrend(rising, "rings")
+    expect(rings).toMatchObject({ clear: true, direction: "up" })
+    // Ausgleichsgerade durch zehnmal 9 und zehnmal 10: Σ(x − x̄)(y − ȳ) = 50, Σ(x − x̄)² = 665
+    expect(rings?.perTenShots).toBeCloseTo(500 / 665, 9)
+    const falling = Array.from({ length: 20 }, (_, i) => shot(i, 109 - i))
+    expect(cardTrend(falling, "rings")).toMatchObject({ clear: true, direction: "down" })
+  })
+
+  it("lauter gleiche Werte sind kein Trend; ein einzelner Nuller am Ende ist nicht klar", () => {
+    const flat = Array.from({ length: 20 }, (_, i) => shot(i, 100))
+    expect(cardTrend(flat, "rings")).toEqual({
+      n: 20,
+      perTenShots: 0,
+      clear: false,
+      direction: null,
+    })
+    // 19 Zehner und am Ende ein Nuller: S −19, Var (17100 − 14706)/18 = 133, z = −18/√133 ≈ −1,56
+    const lastMiss = Array.from({ length: 20 }, (_, i) => shot(i, i === 19 ? 0 : 100))
+    const trend = cardTrend(lastMiss, "rings")
+    expect(trend).toMatchObject({ clear: false, direction: null })
+    // die Steigung zeigt den Nuller trotzdem: Σ(x − x̄)(y − ȳ) = −95, Σ(x − x̄)² = 665
+    expect(trend?.perTenShots).toBeCloseTo(-950 / 665, 9)
   })
 })
 

@@ -13,7 +13,7 @@ import {
   type Scoring,
   type ShotKind,
 } from "../metrics"
-import { theilSen } from "../stats"
+import { leastSquaresSlope, mannKendall, Z95 } from "../stats"
 import { valueNeed, valueRings, valueTenths } from "./values"
 
 const MATCH: readonly ShotKind[] = ["match"]
@@ -92,27 +92,32 @@ export function fatigue(
 }
 
 /**
- * Trend in der Scheibe (I3): Theil-Sen-Steigung je zehn Schuss mit 95-%-Intervall; ab 10 Schuss. Die
- * x-Werte sind die Schussnummern, damit ein Schuss ohne Wert die Steigung nicht verbiegt.
+ * Trend in der Scheibe (I3): Steigung der Ausgleichsgeraden je zehn Schuss; „klar“ nach Mann-Kendall mit
+ * Korrektur für gleiche Werte (zweiseitig, 95 %), dann mit Richtung. Ab 10 Schuss. Die x-Werte sind die
+ * Schussnummern, damit ein Schuss ohne Wert die Steigung nicht verbiegt. Ein Sen-Intervall gibt es nicht
+ * mehr: Bei vielen gleichen Werten (ganze Ringe) lag seine Grenze auf 0, und selbst die stärkste Stufe
+ * hieß „nicht klar“.
  */
 export function cardTrend(
   shots: readonly MetricShot[],
   scoring: Scoring
-): { n: number; perTenShots: number; low: number; high: number; clear: boolean } | null {
+): { n: number; perTenShots: number; clear: boolean; direction: "up" | "down" | null } | null {
   const numbers = shotNumbers(shots)
   const ordered = valued(shots, scoring)
   if (ordered.length < 10) return null
-  const fit = theilSen(
+  const ys = ordered.map((shot) => valueRings(shot, scoring))
+  const slope = leastSquaresSlope(
     ordered.map((shot) => numbers.get(shot) as number),
-    ordered.map((shot) => valueRings(shot, scoring))
+    ys
   )
-  if (!fit) return null
+  const test = mannKendall(ys)
+  if (slope === null || test === null) return null
+  const clear = Math.abs(test.z) > Z95
   return {
     n: ordered.length,
-    perTenShots: fit.slope * 10,
-    low: fit.low * 10,
-    high: fit.high * 10,
-    clear: fit.low > 0 || fit.high < 0,
+    perTenShots: slope * 10,
+    clear,
+    direction: clear ? (test.s > 0 ? "up" : "down") : null,
   }
 }
 
