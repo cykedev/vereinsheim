@@ -2,7 +2,7 @@
 // Probe zählt bis zum ersten Wertungsschuss; nach einer Visierverstellung zählt nur der Teil danach
 // (SF-63).
 
-import { r50, segmentGroups, type Point } from "../geometry"
+import { centroid, r50, segmentGroups, type Point } from "../geometry"
 import { inShotOrder, selectShots, timesInOrder, type MetricShot, type Scoring } from "../metrics"
 import { tempo } from "../time"
 import { mpiConfidence, type MpiConfidence } from "./position"
@@ -111,7 +111,10 @@ export function sighterComparison(
 /**
  * Eingeschossen? (S4): Lage der letzten fünf Probeschüsse mit Lage vor der Wertung, nach der letzten
  * Visierverstellung, mit Vertrauensbereich. `real: false` heißt „kein Versatz nachweisbar“, nicht
- * „eingeschossen“: Fünf Schuss erkennen nur einen deutlichen Versatz.
+ * „eingeschossen“: Fünf Schuss erkennen nur einen deutlichen Versatz. Dazu der Versatz Probe → Wertung
+ * (S1): Abstand zwischen dem Schwerpunkt dieser Probeschüsse und dem der Wertung, ab drei
+ * Wertungsschüssen mit Lage. Er zählt dieselben Probeschüsse wie der Test, also nur die nach der letzten
+ * Verstellung.
  */
 export function sighterZeroed(
   shots: readonly MetricShot[],
@@ -122,17 +125,26 @@ export function sighterZeroed(
   center: Point
   offsetUm: number
   ellipse: MpiConfidence["ellipse"]
+  matchOffsetUm: number | null
 } | null {
   const positioned = selectShots(lastSighterGroup(shots, options.adjustAfter), {
     need: "position",
   })
   const confidence = mpiConfidence(positioned.slice(-5))
   if (!confidence) return null
+  const match = selectShots(
+    shots.filter((shot) => shot.kind === "match"),
+    { need: "position" }
+  ).map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
+  const matchCenter = match.length >= 3 ? (centroid(match) as Point) : null
   return {
     n: confidence.n,
     real: confidence.real,
     center: confidence.center,
     offsetUm: Math.hypot(confidence.center.xUm, confidence.center.yUm),
     ellipse: confidence.ellipse,
+    matchOffsetUm: matchCenter
+      ? Math.hypot(confidence.center.xUm - matchCenter.xUm, confidence.center.yUm - matchCenter.yUm)
+      : null,
   }
 }

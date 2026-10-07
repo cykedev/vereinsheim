@@ -156,3 +156,52 @@ describe("Eingeschossen? (S4)", () => {
     expect(sighterZeroed([...offCenter, ...match])?.real).toBe(true)
   })
 })
+
+describe("Versatz Probe → Wertung (S1, in S4)", () => {
+  // P1–P5 um (3 | 0) mm, nach P5 verstellt, P6–P8 um die Mitte (nicht auf einer Linie); Wertung um die
+  // Mitte. Ohne die Verstellung mischen die letzten fünf beide Lagen: Schwerpunkt (1,2 | −0,02) mm.
+  const BEFORE = [
+    [3100, 0],
+    [2900, 0],
+    [3000, 100],
+    [3000, -100],
+    [3000, 0],
+  ]
+  const AFTER = [
+    [100, 0],
+    [-50, 87],
+    [-50, -87],
+  ]
+  const ADJUSTED = [
+    ...BEFORE.map(([x, y], i) => shot("probe", i, x, y)),
+    ...AFTER.map(([x, y], i) => shot("probe", 5 + i, x, y)),
+    ...MATCHES,
+  ]
+
+  it("der Versatz zählt die Probe nach der letzten Verstellung, wie der Test", () => {
+    const zeroed = sighterZeroed(ADJUSTED, { adjustAfter: [5] })
+    expect(zeroed?.n).toBe(3)
+    expect(zeroed?.matchOffsetUm).toEqual(expect.any(Number))
+    expect(zeroed?.matchOffsetUm).toBeCloseTo(0, 9)
+    // ohne Angabe der Verstellung: die letzten fünf über die Verstellung hinweg
+    expect(sighterZeroed(ADJUSTED)?.matchOffsetUm).toBeCloseTo(Math.hypot(1200, 20), 6)
+  })
+
+  it("die Reihenfolge der Liste zählt nicht, nur die Abgabefolge", () => {
+    const shuffled = [...MATCHES, ...ADJUSTED.slice(5, 8), ...ADJUSTED.slice(0, 5)]
+    expect(sighterZeroed(shuffled, { adjustAfter: [5] })?.matchOffsetUm).toBeCloseTo(0, 9)
+  })
+
+  it("Probe nach Beginn der Wertung zählt nicht zum Versatz", () => {
+    const late = [9, 10, 11].map((i) => shot("probe", 10 + i, 9000, 0))
+    const zeroed = sighterZeroed([...SIGHTERS, ...MATCHES, ...late])
+    expect(zeroed?.matchOffsetUm).toEqual(expect.any(Number))
+    expect(zeroed?.matchOffsetUm).toBeCloseTo(0, 9)
+  })
+
+  it("unter drei Wertungsschüssen mit Lage kein Versatz, der Test bleibt", () => {
+    const zeroed = sighterZeroed([...SIGHTERS, ...MATCHES.slice(0, 2)])
+    expect(zeroed?.n).toBe(5)
+    expect(zeroed?.matchOffsetUm).toBeNull()
+  })
+})

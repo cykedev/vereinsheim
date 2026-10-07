@@ -39,6 +39,6 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   // Probe und Datenlage
   sighterSummary: ["S2"],
   sighterComparison: ["S3"],
-  sighterZeroed: ["S4"],
+  sighterZeroed: ["S1", "S4"],
   dataCoverage: ["Q1"],
 })
