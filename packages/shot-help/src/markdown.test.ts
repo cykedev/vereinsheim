@@ -96,6 +96,14 @@ describe("renderGuideMarkdown", () => {
     for (const line of guide.split("\n")) expect(line.length, line).toBeLessThanOrEqual(100)
   })
 
+  it("keine umbrochene Zeile beginnt wie ein Listenpunkt oder eine Überschrift", () => {
+    // eingerückt hinter einem Listenpunkt würde „- …“, „1. …“ oder „# …“ zu einer neuen Liste
+    const continued = guide.split("\n").filter((line) => /^\s+\S/.test(line))
+    expect(continued.length).toBeGreaterThan(0)
+    for (const line of continued)
+      expect(line.trimStart(), line).not.toMatch(/^([-*+]\s|\d+[.)]\s|#)/)
+  })
+
   it("gleiche Daten, gleicher Text", () => {
     expect(renderGuideMarkdown()).toBe(guide)
   })

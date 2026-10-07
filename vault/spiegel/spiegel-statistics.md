@@ -8,7 +8,7 @@ part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-metrics]]", "[[spiegel-ui-design]]", "[[spiegel-edge-cases]]", "[[spiegel-vision]]", "[[statistics-visualization]]", "[[meyton-printout]]"]
 ---
 
-**TL;DR** Alle Statistiken, die Spiegel mit Meyton-Rohdaten sinnvoll zeigen kann: 99 Kennzahlen in 13 Themen, je mit Definition, Priorität und Platz in der Roadmap. Was eine einzelne Scheibe hergibt, rechnet der Fachkern seit SP-1.10; Verläufe, Rekorde und Vergleiche über Zeiträume folgen in Phase 2. Leitbild ist ein Profi-Werkzeug zum systematischen Trainieren und Analysieren, das jede Zahl ehrlich zeigt: mit n, Unsicherheit und dem Hinweis „unklar“, wenn die Daten nicht reichen.
+**TL;DR** Alle Statistiken, die Spiegel mit Meyton-Rohdaten sinnvoll zeigen kann: 99 Katalog-IDs in 13 Themen (5 davon entfernt), je mit Definition, Priorität und Platz in der Roadmap. Was eine einzelne Scheibe hergibt, rechnet der Fachkern seit SP-1.10; Verläufe, Rekorde und Vergleiche über Zeiträume folgen in Phase 2. Leitbild ist ein Profi-Werkzeug zum systematischen Trainieren und Analysieren, das jede Zahl ehrlich zeigt: mit n, Unsicherheit und dem Hinweis „unklar“, wenn die Daten nicht reichen.
 
 # Spiegel — Statistik-Katalog
 
@@ -46,7 +46,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | E6 | Bester und schwächster Schuss | **entfernt (Oktober 2026):** folgt aus E8, der kleinste Teiler ist der beste Schuss, der größte der schwächste | – | – | entfernt (SP-1.12) |
 | E7 | Teiler-Schnitt und -Median | **entfernt (Oktober 2026):** läuft mit dem Ø je Schuss (E2) zu r = −0,998, weil der Zehntelwert linear im Abstand ist | – | – | entfernt (SP-1.12) |
 | E8 | Beste und weiteste Teiler | je drei mit Schussnummer, wie auf dem Ausdruck | Serie, Scheibe | B | SP-1.10 |
-| E9 | Ringverlust | n·10 − ΣRing bzw. n·10,9 − Σvᵢ; seit Oktober 2026 als `total` in L4 (Lage + Streuung), keine eigene Auswertung mehr | Serie, Scheibe | B | SP-1.10, SP-1.12 |
+| E9 | Ringverlust | n·10 − ΣRing bzw. n·10,9 − Σvᵢ; seit Oktober 2026 als `total` in L4 (Lage + Streuung), keine eigene Auswertung mehr; nur, wenn jeder Wertungsschuss eine Lage hat und keiner verdächtig ist, sonst wäre es eine Teilsumme (SF-07) | Serie, Scheibe | B | SP-1.10, SP-1.12 |
 | E10 | Konstanz | SD und Spanne der Serien gleicher Länge, MAD der vᵢ | Scheibe, Zeitraum | A | SP-1.10 |
 | E11 | Anteil über Schwelle | Anteil vᵢ ≥ s mit Wilson-Intervall | Serie, Scheibe, Zeitraum | B | SP-1.10 |
 
@@ -61,7 +61,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | P5 | Rayleigh-σ | σ̂ = √(Σrᵢ²/(2(n−1)))/c4(2n−1), 95-%-Bereich über χ² mit 2(n−1) Freiheitsgraden; kaum n-abhängig. Den Wert vor der Korrektur nennt Meytons Ballistic Manager „Sa“ (bei 10 Schuss 1,4 % kleiner, bei 40 Schuss 0,3 %). Spiegel zeigt ihn nicht: kein Vorteil gegenüber σ̂, gegen Meyton nicht prüfbar (ESTA 5 und der Ausdruck nennen ihn nicht), zwei fast gleiche Zahlen verwirren (Entscheidung des Users, Oktober 2026) | Scheibe, Zeitraum | B | SP-1.10 |
 | P6 | Streuung x und y | Sx und Sy | Serie, Scheibe, Zeitraum | A | vorhanden |
 | P7 | Höhe und Breite | **entfernt (Oktober 2026):** Effizienz 0,23–0,43 gegenüber σ̂, ein Ausreißer macht die Breite 59–87 % größer; „senkrecht oder waagrecht?“ beantworten P6 und P8 | – | – | entfernt (SP-1.12) |
-| P8 | Form der Gruppe | Halbachsen und Winkel der Kovarianz-Ellipse, Verhältnis a/b; gestreckt nur, wenn Mauchlys Test es mit 95 % zeigt (W = 4a²b²/(a²+b²)² unter 0,05^(2/(n−2)), für zwei Dimensionen exakt); dazu das a/b, ab dem das bei dieser Schusszahl gilt (12 Schuss 2,26, 20 Schuss 1,81, 40 Schuss 1,50, 120 Schuss 1,25). Eine runde Gruppe zeigt zufällig im Median a/b 1,32 bei 20 und 1,21 bei 40 Schuss; eine echte Streckung von 1,3 erkennt eine Scheibe mit 40 Schuss nur in 28 % der Fälle, über 120 Schuss in 72 % (Simulation). Winkel erst ab 10 Schuss | Scheibe, Zeitraum | B | SP-1.10 |
+| P8 | Form der Gruppe | Halbachsen und Winkel der Kovarianz-Ellipse, Verhältnis a/b; gestreckt nur, wenn Mauchlys Test es mit 95 % zeigt (W = 4a²b²/(a²+b²)² unter 0,05^(2/(n−2)), für zwei Dimensionen exakt); dazu das a/b, ab dem das bei dieser Schusszahl gilt (12 Schuss 2,26, 20 Schuss 1,81, 40 Schuss 1,50, 120 Schuss 1,25). Eine runde Gruppe zeigt zufällig im Median a/b 1,33 bei 20 und 1,21 bei 40 Schuss; eine echte Streckung von 1,3 erkennt eine Scheibe mit 40 Schuss nur in 28 % der Fälle, über 120 Schuss in 72 % (B17). Winkel erst ab 10 Schuss | Scheibe, Zeitraum | B | SP-1.10 |
 | P9 | Streuung in Ringbreiten | R50 / W (bis Oktober 2026 MR / W) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
 | P10 | Erwartete Zehnerquote | P(d ≤ W) für eine Normalgruppe mit σ̂ und m (Modell) | Scheibe, Zeitraum | C | später |
 
@@ -90,8 +90,8 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | V3 | Abstandskurve | Anteil der Schüsse mit Teiler ≤ t | Zeitraum | B | SP-2.1 |
 | V4 | Verteilung der Serien | Quartile der Serienergebnisse je Monat | Zeitraum | B | SP-2.1 |
 | V5 | Ringanteile im Zeitverlauf | Anteil je Ring je Scheibe, gestapelt | Zeitraum | B | SP-2.1 |
-| V6 | Ausreißer | jeder Schuss gegen die übrigen: T = d²/(2S²(1 + 1/(n−1))) gegen F(2, 2(n−2)) mit Bonferroni, in einer runden Normalgruppe 5 % Fehlalarm je Scheibe (Q3 + 1,5·IQR auf den Radien wären bis 47 %), bei gestreckten mehr (a/b 2: etwa 11–19 %; ein affiner Test für gestreckte Gruppen ist offen); Verhältnis MR/R50 (≈ 1,06 bei runder Gruppe) | Scheibe, Zeitraum | B | SP-1.10 |
-| V7 | Ringverlust durch Ausreißer | Σ(Median der übrigen − vᵢ) über die von V6 markierten Schüsse, negativ möglich. Bis Oktober 2026 über die schwächsten 10 %: Den großen Verlust dort hat jede normale Gruppe (LG σ 1,5 mm, 40 Schuss etwa 3 Ringe) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
+| V6 | Ausreißer | jeder Schuss gegen die übrigen: T = d²/(2S²(1 + 1/(n−1))) gegen F(2, 2(n−2)) mit Bonferroni, in einer runden Normalgruppe 5 % Fehlalarm je Scheibe (Q3 + 1,5·IQR auf den Radien wären bis 47 %), bei gestreckten mehr (a/b 2: etwa 10–20 %, B2; ein affiner Test für gestreckte Gruppen ist offen). Das Verhältnis Ø Abstand/R50 entfällt (Oktober 2026): ohne Grenze, und es zählt Fehlschüsse anders als R50 | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
+| V7 | Ringverlust durch Ausreißer | Σ(Median der übrigen − vᵢ) über die von V6 markierten Schüsse, negativ möglich; unbekannt, wenn einem markierten Schuss der Wert fehlt (SF-07). Bis Oktober 2026 über die schwächsten 10 %: Den großen Verlust dort hat jede normale Gruppe (LG σ 1,5 mm, 40 Schuss etwa 3 Ringe) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
 
 ### 5 Zeit und Rhythmus
 
@@ -112,7 +112,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 |---|---|---|---|---|---|
 | I1 | Serienkurve | Serienergebnisse in Reihenfolge; im Zeitraum Min/Max/Ø je Position | Scheibe, Zeitraum | A | SP-1.10 |
 | I2 | Ermüdung | Ø der letzten zehn minus der ersten zehn, R50 ebenso; als Muster erst über mehrere Scheiben | Scheibe, Zeitraum | A | SP-1.10 |
-| I3 | Trend in der Scheibe | Steigung der Ausgleichsgeraden je zehn Schuss; „klar“ nach Mann-Kendall mit Bindungs- und Stetigkeitskorrektur (95 %), mit Richtung (B6). Bis Oktober 2026 Theil-Sen mit Sen-Intervall: Bei gleichen Werten lag die Grenze auf 0, selbst die Stufe zehnmal 9, zehnmal 10 hieß „nicht klar“ | Scheibe | B | SP-1.10, SP-1.12 |
+| I3 | Trend in der Scheibe | Steigung der Ausgleichsgeraden je zehn Schuss; „klar“ nach Mann-Kendall mit Bindungs- und Stetigkeitskorrektur (95 %), mit Richtung (B6), und nur, wenn die Gerade dieselbe Richtung zeigt: Ein sehr schwacher Schuss am Rand kann sie kippen, dann stünde „klar steigend“ neben einer fallenden Zahl. Bis Oktober 2026 Theil-Sen mit Sen-Intervall: Bei gleichen Werten lag die Grenze auf 0, selbst die Stufe zehnmal 9, zehnmal 10 hieß „nicht klar“ | Scheibe | B | SP-1.10, SP-1.12 |
 | I4 | Gleitender Schnitt | Ø der letzten bis zu zehn Schüsse | Scheibe | A | SP-1.10 |
 | I5 | Streuung im Verlauf | R50 je Serie | Scheibe | B | SP-1.10 |
 | I6 | Schwerpunkt-Wanderung | Schwerpunkt je Serie und Abstand zum Scheiben-Schwerpunkt | Scheibe | B | SP-1.10 |
@@ -270,6 +270,8 @@ B15  σ-Bereich 10 Schuss: -25,5 % bis +45,8 %
 B15  σ-Bereich 30 Schuss: -15,7 % bis +21,7 %, bei σ̂ 1,12 mm: 0,94 bis 1,36 mm
 B15  σ-Bereich 120 Schuss: -8,3 % bis +9,8 %
 B16  Halbachse der Vertrauensellipse in σ: 5: 2,26, 10: 1,00, 20: 0,61, 40: 0,41, 60: 0,33
+B17  runde Gruppe, Median a/b: 20 Schuss 1,33, 40 Schuss 1,21
+B17  echte Streckung a/b 1,3 als gestreckt erkannt: 40 Schuss 27,6 %, 120 Schuss 72,3 %
 ```
 
 Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3, Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.

@@ -18,11 +18,11 @@ export const READING_GUIDE: readonly GuideItem[] = [
   },
   {
     title: "Ganze Ringe oder Zehntel",
-    text: "Oben umschalten; jede Auswertung über Werte gibt es in beiden, nur die Zehntelverteilung allein in Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10), deshalb ist ein Trend dort etwas seltener „klar“. Gleich bleiben Zehner, Innenzehner und Zehnerquote.",
+    text: "Oben umschalten; jede Auswertung über Werte gibt es in beiden, nur die Zehntelverteilung allein in Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10); beim Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich bleiben Zehner, Innenzehner und Zehnerquote.",
   },
   {
     title: "Probe und Wertung",
-    text: "Lage, Streuung und Tempo der Analyse rechnen über die Wertung. Die Probe hat einen eigenen Reiter. Nach einer Visierverstellung zählt bei „Probe gegen Wertung“ und „Eingeschossen?“ nur die Probe danach; der Umfang der Probe zählt alle Probeschüsse.",
+    text: "Lage, Streuung und Tempo der Analyse rechnen über die Wertung. Die Probe hat einen eigenen Reiter. Nach einer Visierverstellung zählt bei „Probe gegen Wertung“ und „Eingeschossen?“ nur die Probe danach; der Umfang der Probe zählt alle Probeschüsse vor der Wertung.",
   },
   {
     title: "Nummern",

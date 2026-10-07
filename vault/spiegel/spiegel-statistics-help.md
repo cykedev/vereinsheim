@@ -37,11 +37,12 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   kein Fehler.
 - **Ganze Ringe oder Zehntel.** Oben umschalten; jede Auswertung über Werte gibt es in beiden, nur
   die Zehntelverteilung allein in Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und
-  10,9 sind beide eine 10), deshalb ist ein Trend dort etwas seltener „klar“. Gleich bleiben Zehner,
-  Innenzehner und Zehnerquote.
+  10,9 sind beide eine 10); beim Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich
+  bleiben Zehner, Innenzehner und Zehnerquote.
 - **Probe und Wertung.** Lage, Streuung und Tempo der Analyse rechnen über die Wertung. Die Probe
   hat einen eigenen Reiter. Nach einer Visierverstellung zählt bei „Probe gegen Wertung“ und
-  „Eingeschossen?“ nur die Probe danach; der Umfang der Probe zählt alle Probeschüsse.
+  „Eingeschossen?“ nur die Probe danach; der Umfang der Probe zählt alle Probeschüsse vor der
+  Wertung.
 - **Nummern.** Wertungsschüsse heißen 1, 2, 3 …, Probeschüsse P1, P2 …, in der Reihenfolge der
   Abgabe. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.
 - **Median statt Durchschnitt.** Wo „Median“ steht, zählt der mittlere Wert: Die Hälfte liegt
@@ -180,7 +181,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   steht, ab welchem a/b das bei deiner Schusszahl gilt: bei 20 Schuss ab 1,81, bei 40 ab 1,50, bei
   120 ab 1,25.
 - *Vorsicht:* Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im
-  Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe
+  Median a/b 1,33, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe
   deshalb selten; sichtbar wird sie über mehrere Scheiben.
 - *Mindestzahl:* Ab 3 Schuss; den Winkel zeigt Spiegel nur bei einer gestreckten Gruppe ab 10
   Schuss.
@@ -201,7 +202,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Vorsicht:* Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt
   die Gruppe neben der Mitte, kann er sogar Ringe bringen. Zwei gleich weite Ausreißer können sich
   bei wenigen Schüssen gegenseitig verdecken: Bei 10 Schuss findet die Regel einen einzelnen sehr
-  weiten Schuss fast immer, von zwei gleich weiten meist keinen.
+  weiten Schuss in etwa neun von zehn Fällen, von zwei gleich weiten meist keinen.
 - *Mindestzahl:* Ab 5 Schuss mit Lage.
 - *Formel:* `T = d² / (2S² (1 + 1/(n − 1))) gegen das (1 − 0,05/n)-Quantil von F(2, 2(n − 2));
   Kosten = Σ (Median der übrigen − vᵢ) über die markierten Schüsse`
@@ -234,9 +235,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der Schusszahl.
 - *Vorsicht:* Ohne echten Versatz ist der Lage-Anteil meist leicht negativ: Eine Korrektur würde
   dann Ringe kosten. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Korrektur etwas
-  bringt. Gerechnet wird nur mit Schüssen mit Lage, aus der Lage neu gewertet; die Summe kann
-  deshalb vom Ergebnis abweichen. Nie amtlich.
-- *Mindestzahl:* Ab 2 Schuss mit Lage, belastbar ab 10.
+  bringt. Gewertet wird aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig,
+  gibt es keinen Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.
+- *Mindestzahl:* Ab 2 Schuss mit Lage, belastbar ab 10; den Ringverlust gibt es nur, wenn jeder
+  Wertungsschuss eine Lage hat.
 - *Formel:* `Ringverlust = n · 10,9 − Σ vᵢ bzw. n · 10 − Σ Ringᵢ; zentriert: (pᵢ − m) · n/(n − 1),
   jeder Treffer um den Schwerpunkt der übrigen verschoben; Lage = zentriert − Ist; Streuung =
   Höchstwert − zentriert`
@@ -273,11 +275,14 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *So liest du es:* „Klar fallend“ heißt: Ein so deutlicher Abfall entstünde durch Zufall allein
   höchstens in 5 von 100 Scheiben; „klar steigend“ gilt ebenso nach oben. Sonst ist der Trend „nicht
   klar“, auch wenn die Linie etwas fällt oder steigt.
-- *Vorsicht:* Selbst ein deutliches Nachlassen zeigt eine einzelne Scheibe selten als „klar“. In
-  ganzen Ringen ist ein Trend etwas seltener klar, weil Feinheiten verloren gehen.
+- *Vorsicht:* Selbst ein deutliches Nachlassen zeigt eine einzelne Scheibe selten als „klar“. Beim
+  Luftgewehr, wo fast alle Schüsse 9 oder 10 sind, ist ein Trend in ganzen Ringen etwas seltener
+  klar. Zeigen Test und Gerade in verschiedene Richtungen (etwa wegen eines sehr schwachen letzten
+  Schusses), gibt es kein Urteil.
 - *Mindestzahl:* Ab 1 Schuss, der Trend ab 10.
 - *Formel:* `gleitender Schnitt über die letzten 10; Trend: Steigung der Ausgleichsgeraden je 10
-  Schuss; „klar“ nach Mann-Kendall mit Korrektur für gleiche Werte (95 %)`
+  Schuss; „klar“ nach Mann-Kendall mit Korrektur für gleiche Werte (95 %), wenn die Gerade dieselbe
+  Richtung zeigt`
 
 **Rhythmus (Z5)**
 - *Was:* Jede Säule ist der Abstand zum vorigen Schuss, die Linie der Median der letzten fünf
@@ -303,7 +308,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Vorsicht:* Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis
   zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je
   Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.
-- *Mindestzahl:* Ab 2 Schuss mit Zeit.
+- *Mindestzahl:* Ab 2 Wertungsschüssen mit Zeit und Wert.
 - *Formel:* `Pause = Abstand über 180 s; Wiedereinstieg = Ø der bis zu 3 Schüsse danach − Ø der
   übrigen`
 
@@ -350,7 +355,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Ein Test deiner letzten fünf Probeschüsse vor der Wertung, nach der letzten
   Visierverstellung: Lagen sie echt neben der Mitte? Dazu der Abstand zwischen ihrem Schwerpunkt und
   dem der Wertung.
-- *So liest du es:* „Echt neben der Mitte“: Die Wertung begann mit einem Versatz.
+- *So liest du es:* „Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Hast du danach
+  nicht mehr verstellt, begann die Wertung mit diesem Versatz; der Abstand zur Wertung zeigt, ob er
+  blieb.
 - *Vorsicht:* „Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur
   einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in
   knapp zwei von drei Fällen auf.
@@ -366,8 +373,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig).
 - *So liest du es:* Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei
   Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es
-  kein Ergebnis und keine Summe seiner Serie; Ø und Quoten rechnen ohne ihn. Ein verdächtiger Schuss
-  zählt nur mit seinem Wert, auch wenn er eine Lage oder Zeit hat.
+  kein Ergebnis, keine Zahl der Zehner und Innenzehner und keine Summe seiner Serie; Ø und Quoten
+  rechnen ohne ihn. Ein verdächtiger Schuss zählt nur mit seinem Wert, auch wenn er eine Lage oder
+  Zeit hat.
 - *Vorsicht:* In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat.
 
 ## Glossar

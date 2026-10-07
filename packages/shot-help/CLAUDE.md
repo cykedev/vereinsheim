@@ -14,7 +14,7 @@ dokumentation und hilfe, auch in der anwendung, das ist wichtig“. Plan:
 | `@vereinsheim/shot-help/guide`    | `src/guide.ts`    | `READING_GUIDE`, `VIEW_HELP`, `FALLACIES`                          |
 | `@vereinsheim/shot-help/glossary` | `src/glossary.ts` | `GLOSSARY`                                                         |
 | `@vereinsheim/shot-help/lookup`   | `src/lookup.ts`   | `helpTopic`, `helpForMetric`, `helpForCatalog`                     |
-| `@vereinsheim/shot-help/markdown` | `src/markdown.ts` | `renderGuideMarkdown`, `wrapText`                                  |
+| `@vereinsheim/shot-help/markdown` | `src/markdown.ts` | `renderGuideMarkdown`, `wrapText`, `THEME_ORDER`, `THEME_TITLES`   |
 
 ## Regeln
 
@@ -30,6 +30,13 @@ dokumentation und hilfe, auch in der anwendung, das ist wichtig“. Plan:
 - Rein und isomorph: kein `server-only`, keine Node-APIs in `src/` außer in Tests;
   `@vereinsheim/shot-core` nur als `devDependency` für die Prüfungen. Eine Next-App, die das Paket nutzt,
   braucht es in `transpilePackages` (`packages/config/next/index.mjs`).
-- Der Test `test` liest den Vault-Leitfaden; `turbo.json` des Pakets nimmt ihn deshalb in die Eingaben
-  (`$TURBO_ROOT$`), damit eine Änderung dort den Cache ungültig macht.
+- Der Test `test` liest den Vault-Leitfaden und prüft gegen `@vereinsheim/shot-core`. `turbo.json` des
+  Pakets nimmt den Leitfaden deshalb in die Eingaben (`$TURBO_ROOT$`) und hängt `test` an `^build`:
+  `shot-core` hat kein Build-Skript, der Schritt ist leer, aber sein Hash folgt dem Quellcode. Ohne ihn
+  liefe `test` nach einer Änderung in `shot-core` aus dem Cache, und eine neue Auswertung ohne Erklärung
+  bliebe grün.
+- **Belege nachrechnen:** Eine Zahl aus einer Simulation steht nur in einem Text, wenn
+  `pnpm --filter @vereinsheim/shot-help simulate` sie ausgibt (Katalog, „Belege aus Simulationen“).
+  Ändert sich eine Auswertung in `shot-core` oder ein Text mit Zahl, das Skript neu laufen lassen und
+  Block und Texte angleichen; das Gate prüft das nicht.
 - Nach Änderungen: `pnpm check`; `format:check` prüft auch diese Datei.

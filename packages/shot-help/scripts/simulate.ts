@@ -1,8 +1,9 @@
 // Belege für die Zahlen in den Hilfetexten (SP-1.12): jede Simulation läuft über die echten Funktionen
-// aus @vereinsheim/shot-core, mit festem Seed je Fall, Lagen auf ganze µm und Wertung wie Meyton.
-// Aufruf: pnpm --filter @vereinsheim/shot-help simulate (nicht im Gate, Laufzeit etwa eine Minute).
+// aus @vereinsheim/shot-core, mit festem Seed je Fall (als Zahl ausgeschrieben, damit eine neue
+// Beschriftung keine Zahl ändert), Lagen auf ganze µm und Wertung wie Meyton.
+// Aufruf: pnpm --filter @vereinsheim/shot-help simulate (nicht im Gate, Laufzeit etwa zehn Sekunden).
 // Die Werte stehen im Katalog unter „Belege aus Simulationen“ (vault/spiegel/spiegel-statistics.md);
-// ein Hilfetext nennt nur dort belegte Zahlen.
+// ein Hilfetext nennt nur dort belegte Zahlen. Ändert sich eine Auswertung, läuft das Skript neu.
 
 import {
   cardTrend,
@@ -181,12 +182,12 @@ for (const [label, sx, sy] of [
 // B5: Lage-Verlust (Leave-one-out) ohne Versatz; mit Versatz 0,5σ angezeigt gegen den Gewinn auf einer
 // neuen Scheibe nach der Korrektur um den gemessenen Schwerpunkt
 {
-  for (const [label, base] of [
-    ["LG σ 1,5 mm", LG],
-    ["LP σ 15 mm", LP],
+  for (const [label, base, seed] of [
+    ["LG σ 1,5 mm", LG, 550],
+    ["LP σ 15 mm", LP, 500],
   ] as const) {
     const losses: number[] = []
-    repeat(5_000, label.length * 50, (rand) => {
+    repeat(5_000, seed, (rand) => {
       losses.push(
         ringLossSplit(card(rand, { ...base, n: 40 }), base.target)?.positionLoss.decimal ?? 0
       )
@@ -221,13 +222,13 @@ for (const [label, sx, sy] of [
 }
 
 // B6: Trend (Mann-Kendall): Fehlalarm ohne Trend, Trennschärfe bei Nachlassen (σ wächst um 60 %)
-for (const [label, base] of [
-  ["LG σ 1,5 mm", LG],
-  ["LP σ 15 mm", LP],
+for (const [label, base, seed] of [
+  ["LG σ 1,5 mm", LG, 6011],
+  ["LP σ 15 mm", LP, 6010],
 ] as const) {
   for (const n of [20, 40]) {
     const counts = { decimal: [0, 0], rings: [0, 0] }
-    repeat(5_000, 6000 + n + label.length, (rand) => {
+    repeat(5_000, seed + n, (rand) => {
       const steady = card(rand, { ...base, n })
       const tiring = card(rand, { ...base, n, scale: (i) => 1 + (0.6 * i) / (n - 1) })
       for (const scoring of ["decimal", "rings"] as const) {
@@ -266,13 +267,13 @@ for (const n of [10, 40]) {
 }
 
 // B9: Ermüdung ohne Effekt (40 Schuss), 95-%-Spanne von Δ Ø und Δ R50 (relativ zum Grenzwert von R50)
-for (const [label, base] of [
-  ["LG σ 1,5 mm", LG],
-  ["LP σ 15 mm", LP],
+for (const [label, base, seed] of [
+  ["LG σ 1,5 mm", LG, 9011],
+  ["LP σ 15 mm", LP, 9010],
 ] as const) {
   const delta: number[] = []
   const r50: number[] = []
-  repeat(5_000, 9000 + label.length, (rand) => {
+  repeat(5_000, seed, (rand) => {
     const result = fatigue(card(rand, { ...base, n: 40 }), "decimal")
     if (!result) return
     delta.push(result.deltaRings)
@@ -287,12 +288,12 @@ for (const [label, base] of [
 }
 
 // B10: Wiedereinstieg ohne Effekt: 40 Schuss, Pause von fünf Minuten nach Schuss 20
-for (const [label, base] of [
-  ["LG σ 1,5 mm", LG],
-  ["LP σ 15 mm", LP],
+for (const [label, base, seed] of [
+  ["LG σ 1,5 mm", LG, 10_011],
+  ["LP σ 15 mm", LP, 10_010],
 ] as const) {
   const deltas: number[] = []
-  repeat(5_000, 10_000 + label.length, (rand) => {
+  repeat(5_000, seed, (rand) => {
     const shots = card(rand, { ...base, n: 40 }).map((s, i) =>
       i >= 20 ? { ...s, firedAtMs: (s.firedAtMs as number) + 300_000 } : s
     )
@@ -381,6 +382,28 @@ for (const far of [1, 2]) {
     return `${n}: ${num(Math.sqrt(critical / n))}`
   })
   out("B16", `Halbachse der Vertrauensellipse in σ: ${parts.join(", ")}`)
+}
+
+// B17: Form der Gruppe: Median von a/b einer runden Gruppe (auch sie ist selten rund) und wie oft
+// Mauchlys Test eine echte Streckung a/b 1,3 als „gestreckt“ erkennt
+{
+  const round = [20, 40].map((n) => {
+    const ratios: number[] = []
+    repeat(5_000, 17_000 + n, (rand) => {
+      const shape = groupShape(card(rand, { ...LG, n }))
+      if (shape) ratios.push(shape.ratio)
+    })
+    return `${n} Schuss ${num(quantile(ratios, 0.5))}`
+  })
+  out("B17", `runde Gruppe, Median a/b: ${round.join(", ")}`)
+  const found = [40, 120].map((n) => {
+    let hits = 0
+    repeat(5_000, 17_500 + n, (rand) => {
+      if (groupShape(card(rand, { target: LG_10M, n, sx: 1950, sy: 1500 }))?.elongated) hits++
+    })
+    return `${n} Schuss ${share(hits, 5_000)}`
+  })
+  out("B17", `echte Streckung a/b 1,3 als gestreckt erkannt: ${found.join(", ")}`)
 }
 
 console.log(lines.join("\n"))

@@ -133,7 +133,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Die Streuung als Ellipse: Das Verhältnis a/b sagt, wie gestreckt sie ist, der Winkel, in welche Richtung.",
     read: "„Gestreckt“ steht nur, wenn ein Test zeigt, dass es kein Zufall ist. Daneben steht, ab welchem a/b das bei deiner Schusszahl gilt: bei 20 Schuss ab 1,81, bei 40 ab 1,50, bei 120 ab 1,25.",
     caution:
-      "Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe deshalb selten; sichtbar wird sie über mehrere Scheiben.",
+      "Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im Median a/b 1,33, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe deshalb selten; sichtbar wird sie über mehrere Scheiben.",
     minimum: "Ab 3 Schuss; den Winkel zeigt Spiegel nur bei einer gestreckten Gruppe ab 10 Schuss.",
     formula:
       "Halbachsen a, b aus der Kovarianz; gestreckt, wenn W = 4a²b² / (a² + b²)² < 0,05^(2/(n − 2)) (Mauchly, exakt)",
@@ -149,7 +149,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     read: "Ein markierter Schuss ist ein Kandidat für die Frage „Was war da los?“ und bleibt in der Wertung. Darunter steht, wie viele Ringe die markierten Schüsse gegenüber deinem typischen Schuss (Median) gekostet haben.",
     act: "Kosten dich Ausreißer über mehrere Scheiben viele Ringe, lohnt die Arbeit an einem gleichmäßigen Ablauf mehr als an der Präzision.",
     caution:
-      "Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt die Gruppe neben der Mitte, kann er sogar Ringe bringen. Zwei gleich weite Ausreißer können sich bei wenigen Schüssen gegenseitig verdecken: Bei 10 Schuss findet die Regel einen einzelnen sehr weiten Schuss fast immer, von zwei gleich weiten meist keinen.",
+      "Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt die Gruppe neben der Mitte, kann er sogar Ringe bringen. Zwei gleich weite Ausreißer können sich bei wenigen Schüssen gegenseitig verdecken: Bei 10 Schuss findet die Regel einen einzelnen sehr weiten Schuss in etwa neun von zehn Fällen, von zwei gleich weiten meist keinen.",
     minimum: "Ab 5 Schuss mit Lage.",
     formula:
       "T = d² / (2S² (1 + 1/(n − 1))) gegen das (1 − 0,05/n)-Quantil von F(2, 2(n − 2)); Kosten = Σ (Median der übrigen − vᵢ) über die markierten Schüsse",
@@ -179,8 +179,9 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Dein Ringverlust ist, was dir zum Höchstwert fehlt (10 je Schuss, in Zehnteln 10,9). Spiegel teilt ihn auf: Jeder Treffer wird um den Schwerpunkt der übrigen Schüsse verschoben und neu gewertet. Was das bringt, ist der Verlust durch die Lage, der Rest der Verlust durch die Streuung.",
     read: "Großer Lage-Anteil: Visier oder Anschlag. Großer Streuungs-Anteil: Präzision. Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der Schusszahl.",
     caution:
-      "Ohne echten Versatz ist der Lage-Anteil meist leicht negativ: Eine Korrektur würde dann Ringe kosten. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Korrektur etwas bringt. Gerechnet wird nur mit Schüssen mit Lage, aus der Lage neu gewertet; die Summe kann deshalb vom Ergebnis abweichen. Nie amtlich.",
-    minimum: "Ab 2 Schuss mit Lage, belastbar ab 10.",
+      "Ohne echten Versatz ist der Lage-Anteil meist leicht negativ: Eine Korrektur würde dann Ringe kosten. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Korrektur etwas bringt. Gewertet wird aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig, gibt es keinen Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.",
+    minimum:
+      "Ab 2 Schuss mit Lage, belastbar ab 10; den Ringverlust gibt es nur, wenn jeder Wertungsschuss eine Lage hat.",
     formula:
       "Ringverlust = n · 10,9 − Σ vᵢ bzw. n · 10 − Σ Ringᵢ; zentriert: (pᵢ − m) · n/(n − 1), jeder Treffer um den Schwerpunkt der übrigen verschoben; Lage = zentriert − Ist; Streuung = Höchstwert − zentriert",
   },
@@ -224,10 +225,10 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Jeder Punkt ist ein Schuss, die Linie der Schnitt der letzten zehn (gestrichelt, solange es noch keine zehn sind). Der Trend ist eine Ausgleichsgerade durch alle Schüsse; die Zahl sagt, wie viele Ringe du je 10 Schuss zulegst oder verlierst.",
     read: "„Klar fallend“ heißt: Ein so deutlicher Abfall entstünde durch Zufall allein höchstens in 5 von 100 Scheiben; „klar steigend“ gilt ebenso nach oben. Sonst ist der Trend „nicht klar“, auch wenn die Linie etwas fällt oder steigt.",
     caution:
-      "Selbst ein deutliches Nachlassen zeigt eine einzelne Scheibe selten als „klar“. In ganzen Ringen ist ein Trend etwas seltener klar, weil Feinheiten verloren gehen.",
+      "Selbst ein deutliches Nachlassen zeigt eine einzelne Scheibe selten als „klar“. Beim Luftgewehr, wo fast alle Schüsse 9 oder 10 sind, ist ein Trend in ganzen Ringen etwas seltener klar. Zeigen Test und Gerade in verschiedene Richtungen (etwa wegen eines sehr schwachen letzten Schusses), gibt es kein Urteil.",
     minimum: "Ab 1 Schuss, der Trend ab 10.",
     formula:
-      "gleitender Schnitt über die letzten 10; Trend: Steigung der Ausgleichsgeraden je 10 Schuss; „klar“ nach Mann-Kendall mit Korrektur für gleiche Werte (95 %)",
+      "gleitender Schnitt über die letzten 10; Trend: Steigung der Ausgleichsgeraden je 10 Schuss; „klar“ nach Mann-Kendall mit Korrektur für gleiche Werte (95 %), wenn die Gerade dieselbe Richtung zeigt",
   },
   {
     id: "rhythmus",
@@ -265,7 +266,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Jede Pause über drei Minuten und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr oder weniger Ringe brachten als deine übrigen Schüsse.",
     caution:
       "Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.",
-    minimum: "Ab 2 Schuss mit Zeit.",
+    minimum: "Ab 2 Wertungsschüssen mit Zeit und Wert.",
     formula:
       "Pause = Abstand über 180 s; Wiedereinstieg = Ø der bis zu 3 Schüsse danach − Ø der übrigen",
   },
@@ -331,7 +332,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob deine letzten Probeschüsse neben der Mitte lagen.",
     what: "Ein Test deiner letzten fünf Probeschüsse vor der Wertung, nach der letzten Visierverstellung: Lagen sie echt neben der Mitte? Dazu der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.",
-    read: "„Echt neben der Mitte“: Die Wertung begann mit einem Versatz.",
+    read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Hast du danach nicht mehr verstellt, begann die Wertung mit diesem Versatz; der Abstand zur Wertung zeigt, ob er blieb.",
     caution:
       "„Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in knapp zwei von drei Fällen auf.",
     minimum:
@@ -348,7 +349,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Auf welcher Grundlage die Zahlen stehen.",
     what: "Wie viele Wertungs- und Probeschüsse die Analyse hat, wie vielen Lage, Zeit oder Wert fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig).",
-    read: "Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es kein Ergebnis und keine Summe seiner Serie; Ø und Quoten rechnen ohne ihn. Ein verdächtiger Schuss zählt nur mit seinem Wert, auch wenn er eine Lage oder Zeit hat.",
+    read: "Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es kein Ergebnis, keine Zahl der Zehner und Innenzehner und keine Summe seiner Serie; Ø und Quoten rechnen ohne ihn. Ein verdächtiger Schuss zählt nur mit seinem Wert, auch wenn er eine Lage oder Zeit hat.",
     caution: "In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat.",
   },
 ]

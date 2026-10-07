@@ -2,18 +2,10 @@ import { ANALYSIS_CATALOG } from "@vereinsheim/shot-core/analysis"
 import { METRICS } from "@vereinsheim/shot-core/metrics"
 import { describe, expect, it } from "vitest"
 
+import { helpForCatalog, helpForMetric } from "./lookup"
+import { THEME_ORDER } from "./markdown"
 import { HELP_TOPICS } from "./topics"
-import type { HelpTheme } from "./types"
 
-/** Reihenfolge der Themen in der Oberfläche */
-const THEMES: readonly HelpTheme[] = [
-  "result",
-  "precision",
-  "position",
-  "time",
-  "sighters",
-  "coverage",
-]
 const CATALOG_ID = /^[EPLVZISTRCKWQ]\d+$/
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
@@ -25,6 +17,16 @@ describe("HELP_TOPICS: nichts fehlt", () => {
         owners.map((topic) => topic.id),
         metric.key
       ).toHaveLength(1)
+    }
+  })
+
+  it("das Thema einer Kennzahl nennt ihre Katalog-ID, sonst fände die Suche nach der ID es nicht", () => {
+    for (const metric of METRICS) {
+      expect(helpForMetric(metric.key)?.catalog, metric.key).toContain(metric.catalogId)
+      expect(
+        helpForCatalog(metric.catalogId).map((topic) => topic.id),
+        metric.key
+      ).toContain(helpForMetric(metric.key)?.id)
     }
   })
 
@@ -75,9 +77,9 @@ describe("HELP_TOPICS: Bezüge und Ordnung", () => {
   })
 
   it("nach Thema gruppiert, in der Reihenfolge der Oberfläche", () => {
-    const order = HELP_TOPICS.map((topic) => THEMES.indexOf(topic.theme))
+    const order = HELP_TOPICS.map((topic) => THEME_ORDER.indexOf(topic.theme))
     expect(order.every((value) => value >= 0)).toBe(true)
     expect(order.every((value, i) => i === 0 || value >= order[i - 1])).toBe(true)
-    expect(new Set(order).size).toBe(THEMES.length)
+    expect(new Set(order).size).toBe(THEME_ORDER.length)
   })
 })
