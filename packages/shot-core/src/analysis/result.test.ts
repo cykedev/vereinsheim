@@ -5,7 +5,6 @@ import { computeMetric, FLAG_SUSPICIOUS, metricByKey, type MetricShot } from "..
 import {
   decimalHistogram,
   ringDistribution,
-  ringLoss,
   seriesConsistency,
   shareAtLeast,
   shotExtremes,
@@ -114,11 +113,6 @@ describe("Extreme und Teiler (E6, E7, E8)", () => {
 })
 
 describe("Ringverlust, Konstanz und Quoten (E9, E10, E4, E11)", () => {
-  it("Ringverlust in ganzen Ringen und in Zehnteln", () => {
-    expect(ringLoss(CARD, "rings")).toEqual({ n: 6, loss: 11 })
-    expect(ringLoss(CARD, "decimal")?.loss).toBeCloseTo(13.6, 9)
-  })
-
   it("Konstanz über Serien gleicher Länge; eine kurze Serie zählt nicht mit", () => {
     const consistency = seriesConsistency(WITH_SHORT_SERIES, "decimal")
     expect(consistency?.series.map((s) => [s.series, s.shots, s.total])).toEqual([

@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import { MATCH, SPREAD } from "../__fixtures__/cards"
 import type { MetricShot } from "../metrics"
-import { LP_10M } from "../targets"
+import { scoreFromCoordinates } from "../scoring"
+import { LG_10M, LP_10M } from "../targets"
 import { directionClock, drift, mpiConfidence, positionShare, ringLossSplit } from "./position"
 
 const at = (xUm: number, yUm: number, i: number): MetricShot => ({
@@ -103,9 +104,10 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     expect(ringLossSplit([], LP_10M)).toBeNull()
   })
 
-  it("Gewinn durchs Zentrieren, aber Lage nicht echt: nicht belastbar", () => {
-    // LP, zehn Schuss im Kreis von 6 mm um (1,5 | 0) mm: T² 1,1 unter 10,03. Ist 101,6, zentriert
-    // 102,0 (alle 10,2), in ganzen Ringen beide Male 100.
+  it("Lage nicht echt: die Korrektur kostet, nicht belastbar", () => {
+    // LP, zehn Schuss im Kreis von 6 mm um (1,5 | 0) mm: T² 1,1 unter 10,03. Ist 101,6. Jeder Treffer um
+    // den Schwerpunkt der übrigen verschoben liegt 6 mm · 10/9 = 6,67 mm von der Mitte: alle 10,1, also
+    // 101,0 (in der Stichprobe zentriert wären es scheinbar 102,0); in ganzen Ringen beide Male 100.
     const wide = Array.from({ length: 10 }, (_, k) =>
       at(
         1500 + Math.round(6000 * Math.cos((k * Math.PI) / 5)),
@@ -116,13 +118,15 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     expect(mpiConfidence(wide)?.real).toBe(false)
     const split = ringLossSplit(wide, LP_10M)
     expect(split?.actual.decimal).toBeCloseTo(101.6, 9)
-    expect(split?.centered.decimal).toBeCloseTo(102, 9)
+    expect(split?.centered.decimal).toBeCloseTo(101, 9)
+    expect(split?.positionLoss.decimal).toBeCloseTo(-0.6, 9)
     expect(split?.positionLoss.rings).toBe(0)
     expect(split?.reliable).toBe(false)
   })
 
   it("Zehntel gewonnen, aber ein Ring verloren: nicht belastbar", () => {
-    // LP, 14 Schuss, Lage echt; zentriert +3,0 in Zehnteln, aber −1 in ganzen Ringen
+    // LP, 14 Schuss, Lage echt; um den Schwerpunkt der übrigen verschoben +1,9 in Zehnteln, aber −2 in
+    // ganzen Ringen (Ist 139,2 und 135, zentriert 141,1 und 133; nachgerechnet unabhängig vom Code)
     const mixed = [
       [10820, 8613],
       [2935, -2276],
@@ -141,8 +145,8 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     ].map(([x, y], i) => at(x, y, i))
     expect(mpiConfidence(mixed)?.real).toBe(true)
     const split = ringLossSplit(mixed, LP_10M)
-    expect(split?.positionLoss.decimal).toBeCloseTo(3, 9)
-    expect(split?.positionLoss.rings).toBe(-1)
+    expect(split?.positionLoss.decimal).toBeCloseTo(1.9, 9)
+    expect(split?.positionLoss.rings).toBe(-2)
     expect(split?.reliable).toBe(false)
   })
 
@@ -159,6 +163,76 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     expect(split?.positionLoss.decimal).toBeCloseTo(-2, 9)
     expect(split?.positionLoss.rings).toBe(10)
     expect(split?.reliable).toBe(false)
+  })
+
+  it("jeder Treffer um den Schwerpunkt der übrigen: zwei Schuss liegen danach beide bei 2 mm", () => {
+    // LG, Treffer bei (1 | 0) und (3 | 0) mm: Der Schwerpunkt der jeweils anderen ist (3 | 0) bzw.
+    // (1 | 0), also landen beide 2 mm von der Mitte, pᵢ − m₋ᵢ = (pᵢ − m) · n/(n − 1).
+    const pair = [at(1000, 0, 0), at(3000, 0, 1)]
+    const split = ringLossSplit(pair, LG_10M)
+    const near = scoreFromCoordinates(LG_10M, 1000, 0)
+    const far = scoreFromCoordinates(LG_10M, 3000, 0)
+    const moved = scoreFromCoordinates(LG_10M, 2000, 0)
+    expect(split?.actual).toEqual({
+      decimal: (near.decimalTenths + far.decimalTenths) / 10,
+      rings: near.ring + far.ring,
+    })
+    expect(split?.centered).toEqual({
+      decimal: (2 * moved.decimalTenths) / 10,
+      rings: 2 * moved.ring,
+    })
+    expect(ringLossSplit([at(1000, 0, 0)], LG_10M)).toBeNull()
+  })
+
+  it("der Ringverlust ist die Summe aus Lage und Streuung", () => {
+    const wide = Array.from({ length: 10 }, (_, k) =>
+      at(
+        1500 + Math.round(6000 * Math.cos((k * Math.PI) / 5)),
+        Math.round(6000 * Math.sin((k * Math.PI) / 5)),
+        k
+      )
+    )
+    for (const card of [TIGHT_RIGHT, wide]) {
+      const split = ringLossSplit(card, LP_10M)
+      expect(split).not.toBeNull()
+      if (!split) continue
+      expect(split.total.decimal).toBeCloseTo(split.n * 10.9 - split.actual.decimal, 9)
+      expect(split.total.rings).toBe(split.n * 10 - split.actual.rings)
+      expect(split.positionLoss.decimal + split.spreadLoss.decimal).toBeCloseTo(
+        split.total.decimal,
+        9
+      )
+      expect(split.positionLoss.rings + split.spreadLoss.rings).toBe(split.total.rings)
+    }
+  })
+
+  it("eine um die Mitte symmetrische Gruppe: die Korrektur bringt nichts", () => {
+    const centered = OFFSETS.map(([dx, dy], i) => at(dx, dy, i))
+    const split = ringLossSplit(centered, LP_10M)
+    expect(split?.positionLoss.decimal).toBeLessThanOrEqual(0)
+    expect(split?.positionLoss.rings).toBeLessThanOrEqual(0)
+  })
+
+  it("ohne echten Versatz kostet die Korrektur im Mittel Ringe (Simulation, fester Seed)", () => {
+    // 300 Karten zu 40 Schuss, Luftgewehr, Streuung 1,5 mm je Richtung um die Mitte. In der Stichprobe
+    // zentriert zeigte der Lage-Verlust hier im Mittel etwa +0,4 Ringe Gewinn, den es nicht gibt.
+    let seed = 20261007
+    const rand = () => {
+      seed = (seed + 0x6d2b79f5) | 0
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    }
+    const gauss = () => Math.sqrt(-2 * Math.log(1 - rand())) * Math.cos(2 * Math.PI * rand())
+    let sum = 0
+    for (let card = 0; card < 300; card++) {
+      const shots = Array.from({ length: 40 }, (_, i) =>
+        at(Math.round(1500 * gauss()), Math.round(1500 * gauss()), i)
+      )
+      sum += (ringLossSplit(shots, LG_10M) as { positionLoss: { decimal: number } }).positionLoss
+        .decimal
+    }
+    expect(sum / 300).toBeLessThan(0)
   })
 })
 

@@ -88,9 +88,15 @@ interface Totals {
 export interface RingLossSplit {
   n: number
   actual: Totals
-  /** dieselben Treffer um den Schwerpunkt in die Mitte verschoben und neu gewertet */
+  /**
+   * jeder Treffer um den Schwerpunkt der übrigen verschoben (Leave-one-out) und neu gewertet: schätzt,
+   * was eine Korrektur um den gemessenen Versatz auf neuen Schüssen bringt. In der Stichprobe zentriert
+   * wäre das zu optimistisch, weil der Schwerpunkt aus denselben Schüssen stammt.
+   */
   centered: Totals
-  /** zentriert minus Ist; bei schiefen Gruppen auch negativ */
+  /** Ringverlust zum Höchstwert (Katalog E9): Lage plus Streuung */
+  total: Totals
+  /** zentriert minus Ist; ohne echten Versatz meist leicht negativ, bei schiefen Gruppen auch deutlich */
   positionLoss: Totals
   spreadLoss: Totals
   /**
@@ -121,14 +127,20 @@ export function ringLossSplit(
 ): RingLossSplit | null {
   const match = selectShots(shots, { kinds: MATCH, need: "position" })
   const points = match.map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
-  if (points.length === 0) return null
+  const n = points.length
+  if (n < 2) return null
   const center = centroid(points) as Point
   const actual = score(target, points)
+  // pᵢ − m₋ᵢ = (pᵢ − m) · n/(n − 1): der Schwerpunkt der übrigen, ohne n Schwerpunkte zu rechnen
+  const stretch = n / (n - 1)
   const centered = score(
     target,
-    points.map((p) => ({ xUm: p.xUm - center.xUm, yUm: p.yUm - center.yUm }))
+    points.map((p) => ({
+      xUm: (p.xUm - center.xUm) * stretch,
+      yUm: (p.yUm - center.yUm) * stretch,
+    }))
   )
-  const n = points.length
+  const best = { decimal: (n * 109) / 10, rings: n * 10 }
   const positionLoss = {
     decimal: centered.decimal - actual.decimal,
     rings: centered.rings - actual.rings,
@@ -137,8 +149,9 @@ export function ringLossSplit(
     n,
     actual,
     centered,
+    total: { decimal: best.decimal - actual.decimal, rings: best.rings - actual.rings },
     positionLoss,
-    spreadLoss: { decimal: (n * 109) / 10 - centered.decimal, rings: n * 10 - centered.rings },
+    spreadLoss: { decimal: best.decimal - centered.decimal, rings: best.rings - centered.rings },
     reliable:
       n >= 10 &&
       mpiConfidence(match)?.real === true &&

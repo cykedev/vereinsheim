@@ -8,7 +8,6 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   decimalHistogram: ["V2"],
   shotExtremes: ["E6", "E8"],
   teilerStats: ["E7"],
-  ringLoss: ["E9"],
   seriesConsistency: ["E10"],
   shareAtLeast: ["E4", "E11"],
   // Präzision
@@ -20,7 +19,7 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   outlierLoss: ["V7"],
   // Lage
   mpiConfidence: ["L1", "L3"],
-  ringLossSplit: ["L4"],
+  ringLossSplit: ["E9", "L4"],
   positionShare: ["L5"],
   directionClock: ["L6"],
   drift: ["L8"],

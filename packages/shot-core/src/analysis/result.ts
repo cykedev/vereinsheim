@@ -1,5 +1,6 @@
 // Auswertungen zum Ergebnis: Ringverteilung und Zehntelverteilung, bester und schwächster Schuss,
-// Teiler, Ringverlust, Konstanz der Serien und Quoten (Katalog V1, V2, E4, E6–E11). Grundlage sind
+// Teiler, Konstanz der Serien und Quoten (Katalog V1, V2, E4, E6–E8, E10, E11); den Ringverlust (E9)
+// liefert `ringLossSplit` als Summe aus Lage und Streuung. Grundlage sind
 // die Wertungsschüsse; verdächtige Schüsse zählen nur mit ihrem Wert (SF-15). Was vom Wert abhängt,
 // rechnet in der gewählten Wertung (ganze Ringe oder Zehntel).
 
@@ -106,22 +107,6 @@ export function teilerStats(
     mean: values.reduce((sum, v) => sum + v, 0) / values.length,
     median: median(values) as number,
   }
-}
-
-/**
- * Ringverlust: n · 10 − Σ Ring bzw. n · 10,9 − Σ Wert. Wie eine Summe nur, wenn allen Wertungsschüssen
- * der Wert bekannt ist; sonst kein Wert.
- */
-export function ringLoss(
-  shots: readonly MetricShot[],
-  scoring: Scoring
-): { n: number; loss: number } | null {
-  const counting = shots.filter((shot) => shot.kind === "match")
-  const valued = selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })
-  if (valued.length === 0 || valued.length < counting.length) return null
-  const best = scoring === "rings" ? 100 : MAX_DECIMAL_TENTHS
-  const sum = valued.reduce((s, shot) => s + valueTenths(shot, scoring), 0)
-  return { n: valued.length, loss: (valued.length * best - sum) / 10 }
 }
 
 export interface SeriesConsistency {
