@@ -1026,6 +1026,95 @@
       },
       "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"timestamp\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
       "checksum": "sha256:3dd4d0f4c923498cbcbd9abfeaa955b9eb405ff8fa9d78d5c68b5957780a217b"
+    },
+    {
+      "name": "escapes-html-und-steuerzeichen",
+      "description": "<, >, & und U+2029 bleiben roh (Go escapet sie mit encoding/json); \\b, \\f, \\r als Kurzform, U+0000 als \\u0000; in Spaltenname und Wert.",
+      "differentChecksumFrom": "grundfall",
+      "data": {
+        "scheiben": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Nachname": "varchar(30)",
+            "Startzeit": "datetime",
+            "TotalRing01": "int(11)",
+            "Verein<>& \b\f\r\u0000🎯": "varchar(50)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Nachname": "Muster",
+              "Startzeit": "0000-00-00 00:00:00",
+              "TotalRing01": "2034",
+              "Verein<>& \b\f\r\u0000🎯": "SV <Ring> & Co.<>& \b\f\r\u0000🎯"
+            }
+          ]
+        },
+        "serien": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Serie": "int(11)",
+            "Ring01": "int(11)"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "1",
+              "Ring01": "1021"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Serie": "2",
+              "Ring01": "1013"
+            }
+          ]
+        },
+        "treffer": {
+          "columns": {
+            "ScheibenID": "int(11)",
+            "Stellung": "int(11)",
+            "Treffer": "int(11)",
+            "x": "int(11)",
+            "y": "int(11)",
+            "Ring01": "int(11)",
+            "Zeitstempel": "datetime"
+          },
+          "rows": [
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "0",
+              "Treffer": "1",
+              "x": "-112",
+              "y": "87",
+              "Ring01": "98",
+              "Zeitstempel": "2026-10-06 19:02:11"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "1",
+              "x": "23",
+              "y": "-41",
+              "Ring01": "104",
+              "Zeitstempel": "2026-10-06 19:04:40"
+            },
+            {
+              "ScheibenID": "-7257056",
+              "Stellung": "1",
+              "Treffer": "2",
+              "x": "-305",
+              "y": "12",
+              "Ring01": "99",
+              "Zeitstempel": "2026-10-06 19:05:02"
+            }
+          ]
+        }
+      },
+      "canonical": "{\"scheiben\":{\"columns\":{\"Nachname\":\"varchar(30)\",\"ScheibenID\":\"int(11)\",\"Startzeit\":\"datetime\",\"TotalRing01\":\"int(11)\",\"Verein<>& \\b\\f\\r\\u0000🎯\":\"varchar(50)\"},\"rows\":[{\"Nachname\":\"Muster\",\"ScheibenID\":\"-7257056\",\"Startzeit\":\"0000-00-00 00:00:00\",\"TotalRing01\":\"2034\",\"Verein<>& \\b\\f\\r\\u0000🎯\":\"SV <Ring> & Co.<>& \\b\\f\\r\\u0000🎯\"}]},\"serien\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Serie\":\"int(11)\",\"Stellung\":\"int(11)\"},\"rows\":[{\"Ring01\":\"1013\",\"ScheibenID\":\"-7257056\",\"Serie\":\"2\",\"Stellung\":\"1\"},{\"Ring01\":\"1021\",\"ScheibenID\":\"-7257056\",\"Serie\":\"1\",\"Stellung\":\"1\"}]},\"treffer\":{\"columns\":{\"Ring01\":\"int(11)\",\"ScheibenID\":\"int(11)\",\"Stellung\":\"int(11)\",\"Treffer\":\"int(11)\",\"Zeitstempel\":\"datetime\",\"x\":\"int(11)\",\"y\":\"int(11)\"},\"rows\":[{\"Ring01\":\"104\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:04:40\",\"x\":\"23\",\"y\":\"-41\"},{\"Ring01\":\"98\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"0\",\"Treffer\":\"1\",\"Zeitstempel\":\"2026-10-06 19:02:11\",\"x\":\"-112\",\"y\":\"87\"},{\"Ring01\":\"99\",\"ScheibenID\":\"-7257056\",\"Stellung\":\"1\",\"Treffer\":\"2\",\"Zeitstempel\":\"2026-10-06 19:05:02\",\"x\":\"-305\",\"y\":\"12\"}]}}",
+      "checksum": "sha256:80053ed17ae52ce6086249af49dc48a9bf5f5ca3c411bff829ec82362612f1ce"
     }
   ]
 }

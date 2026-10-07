@@ -14,6 +14,7 @@ export const CONTRACT_ISSUE = {
   rowColumnsMismatch: "row-columns-mismatch",
   columnCount: "column-count",
   checksumMismatch: "checksum-mismatch",
+  forbiddenKey: "forbidden-key",
   unsupportedVersion: "unsupported-contract-version",
 } as const
 
@@ -105,7 +106,8 @@ export const snapshotV1 = z
     description:
       "Vollständiger Stand einer Scheibe aus der SSMDB2. Nicht im Schema ausdrückbar und trotzdem Pflicht: " +
       "jede Zeile hat genau die Schlüssel aus columns; alle Strings sind wohlgeformtes Unicode " +
-      "(keine einzelnen Surrogate); checksum = sha256 über die kanonische Form (RFC 8785) von data mit " +
+      "(keine einzelnen Surrogate); kein Schlüssel heißt __proto__; Längen zählen in UTF-16-Codeeinheiten, " +
+      "nicht in Codepoints; checksum = sha256 über die kanonische Form (RFC 8785) von data mit " +
       "nach ihrer kanonischen Form sortierten Zeilen. Siehe vault/spiegel/spiegel-ingest-contract.md.",
   })
 

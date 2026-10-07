@@ -211,5 +211,5 @@
   ],
   "additionalProperties": false,
   "title": "Spiegel-Snapshot v1",
-  "description": "Vollständiger Stand einer Scheibe aus der SSMDB2. Nicht im Schema ausdrückbar und trotzdem Pflicht: jede Zeile hat genau die Schlüssel aus columns; alle Strings sind wohlgeformtes Unicode (keine einzelnen Surrogate); checksum = sha256 über die kanonische Form (RFC 8785) von data mit nach ihrer kanonischen Form sortierten Zeilen. Siehe vault/spiegel/spiegel-ingest-contract.md."
+  "description": "Vollständiger Stand einer Scheibe aus der SSMDB2. Nicht im Schema ausdrückbar und trotzdem Pflicht: jede Zeile hat genau die Schlüssel aus columns; alle Strings sind wohlgeformtes Unicode (keine einzelnen Surrogate); kein Schlüssel heißt __proto__; Längen zählen in UTF-16-Codeeinheiten, nicht in Codepoints; checksum = sha256 über die kanonische Form (RFC 8785) von data mit nach ihrer kanonischen Form sortierten Zeilen. Siehe vault/spiegel/spiegel-ingest-contract.md."
 }

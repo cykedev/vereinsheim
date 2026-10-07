@@ -62,9 +62,20 @@ Stapel  = { snapshots: [Snapshot, …] }   1 bis 50
   sichtbar (SF-25, SF-31).
 - **Strikt:** unbekannte Felder in Hülle, `data` und Tabellen werden abgelehnt. Spiegel ist nie älter
   als die Brücke, deshalb ist das sicher.
-- **Grenzen:** 200 Spalten je Tabelle, Spaltenname und Typ je 64 Zeichen, Zellwert 4096 Zeichen,
-  `sessionTimeZone` und `sourceVersion` je 64 Zeichen. Die Bytegrenze je Anfrage setzt die Ingest-API.
-- Alle Strings sind **wohlgeformtes Unicode** (keine einzelnen Surrogate).
+- **Grenzen:** 200 Spalten je Tabelle, Spaltenname und Typ je 64, Zellwert 4096, `sessionTimeZone` und
+  `sourceVersion` je 64. Längen zählen in **UTF-16-Codeeinheiten** (wie JavaScript `length`), nicht in
+  Codepoints wie `maxLength` im JSON-Schema: Ein Zeichen über U+FFFF zählt doppelt. In Go:
+  `len(utf16.Encode([]rune(s)))`. Wer nur gegen das JSON-Schema prüft, kann knapp zu lange Werte
+  schicken (Fall `zelle-zu-lang-utf16`).
+- **Speicher begrenzt erst die Bytegrenze der Ingest-API** (SP-1.6b): Zod parst ein Array ganz, bevor es
+  die Zeilenzahl prüft, und innerhalb der Grenzen oben wäre ein Snapshot rechnerisch über 1 GB groß.
+- Alle Strings sind **wohlgeformtes Unicode** (keine einzelnen Surrogate). Die Brücke liest mit
+  `charset=utf8mb4`; ungültige Bytes aus der Ablage ersetzt sie nicht still (Go `encoding/json` machte
+  U+FFFD daraus), sondern meldet die Scheibe im Heartbeat und schickt sie nicht.
+- **Der Schlüssel `__proto__` ist überall verboten** (Hülle, `data`, Tabellen, Spalten, Zeilen; Code
+  `forbidden-key`). `JSON.parse` legt ihn als normalen Schlüssel an, Zod verwirft ihn still; sonst
+  passierte eine Zeile mit ihm die Spaltenprüfung, und Brücke und Spiegel rechneten verschiedene
+  Prüfsummen.
 
 **Der Vertrag kennt keine Meyton-Spalten.** Er prüft nur die Form. Ob `ScheibenID` in den Zeilen zur
 Hülle passt, ob Primärschlüssel eindeutig sind oder eine erwartete Spalte fehlt, prüft der Adapter und
@@ -97,35 +108,41 @@ richtig, in Go ein Vergleich über `utf16.Encode([]rune(s))`.
 
 **Falle Escapes:** Go `encoding/json` escapet U+2028 und U+2029 immer und `<`, `>`, `&` ohne
 `SetEscapeHTML(false)`; Python escapet ohne `ensure_ascii=False` alles Nicht-ASCII. Die Strings brauchen
-deshalb eine eigene kleine Serialisierung nach Schritt 1 (Vektor `escapes`).
+deshalb eine eigene kleine Serialisierung nach Schritt 1 (Vektoren `escapes` und
+`escapes-html-und-steuerzeichen`; mit `json.Marshal` fallen beide durch, gemessen).
 
 ## Testvektoren
 
 `test-vectors/checksum-v1.json` enthält je Vektor `data`, die erwartete kanonische Form `canonical` und
 `checksum`, dazu `sameChecksumAs` bzw. `differentChecksumFrom`. Abgedeckt: Grundfall (negative
 ScheibenID, `0000-00-00` als Text), Zeilen und Spalten vertauscht, `null` gegen leeren Text, Umlaute,
-UTF-16-Sortierung in Spaltennamen und Zeilen, Escapes, leere Serien und Treffer, Zusatzspalte,
-geänderter Wert, geänderter Typ. Erzeugt wurden sie von einer **unabhängigen** Python-Implementierung,
+UTF-16-Sortierung in Spaltennamen und Zeilen, Escapes (auch `<>&`, U+2029, `\b`, `\f`, `\r`, U+0000),
+leere Serien und Treffer, Zusatzspalte, geänderter Wert, geänderter Typ. Erzeugt wurden sie von einer **unabhängigen** Python-Implementierung,
 nicht vom TypeScript-Code; die TS-Implementierung reproduziert sie (Test `checksum.test.ts`).
 **Bestehende Vektoren werden nie geändert, nur neue angehängt.** Eine neue Implementierung (die Brücke)
 liest dieselbe Datei in ihren Tests.
 
 `test-vectors/invalid-v1.json` listet Snapshots, die abgelehnt werden müssen, je mit dem erwarteten
 ersten Fehler: Zahl statt Text, fehlende oder fremde Spalte in einer Zeile, keine oder zwei
-Scheiben-Zeilen, leere Spaltenliste, fehlende Tabelle, zu langer Wert, einzelnes Surrogat, falsche oder
-veraltete Prüfsumme, unbekanntes Hüllenfeld, Version 2 oder keine, ScheibenID-Überlauf, Folgenummer 0,
-Zeit mit Versatz oder ohne Millisekunden, unbekannte Quelle, kein Objekt.
+Scheiben-Zeilen, leere Spaltenliste, fehlende Tabelle, zu langer Wert (auch in UTF-16 gezählt),
+einzelnes Surrogat, falsche oder veraltete Prüfsumme, unbekanntes Hüllenfeld, Version 2 oder keine,
+ScheibenID-Überlauf, Folgenummer 0, Zeit mit Versatz oder ohne Millisekunden, unbekannte Quelle, kein
+Objekt, Zeile mit umbenanntem Schlüssel, zu langer Spaltentyp, leerer Spaltenname, `__proto__` in Zeile,
+Hülle, Tabelle und als Spalte. Der Fall `einzelnes-surrogat` steht als `\ud83d` in der Datei; strenge
+Parser (`jq`) lehnen schon das JSON ab, `JSON.parse` nimmt es an, dann der Vertrag nicht.
 
 ## Annehmen in Spiegel
 
 `parseSnapshot` und `parseSnapshotBatch` liefern `{ ok: true, value }` oder `{ ok: false, issues }`.
-Ablauf: Objekt? → Vertragsversion unterstützt? → Schema der Version → Prüfsumme nachrechnen. Ein Stapel
+Ablauf: Objekt? → Vertragsversion unterstützt? → `__proto__` irgendwo? → Schema der Version →
+Prüfsumme nachrechnen. Spiegel nimmt Snapshots nur über `parseSnapshot` an, nie direkt über das
+Zod-Schema (dem fehlen die Prüfungen davor und danach). Ein Stapel
 ist nur als Ganzes gültig; Fehler nennen den Index (`snapshots[1].checksum`).
 
 **Fehler ohne Inhalt (SF-59):** Ein Fehler ist nur `{ path, code }`. Pfade enden an `columns` und an
 `rows[i]`, Spaltennamen und Werte stehen nie darin; höchstens 20 Fehler je Prüfung. Codes sind die von
 Zod (`invalid_type`, `too_big`, `unrecognized_keys`, …) oder eigene: `row-columns-mismatch`,
-`column-count`, `malformed-string`, `checksum-mismatch`, `unsupported-contract-version`. Ein Test schickt
+`column-count`, `malformed-string`, `forbidden-key`, `checksum-mismatch`, `unsupported-contract-version`. Ein Test schickt
 den Namen `Mustermann` durch jede Fehlerart und prüft, dass er nirgends auftaucht. Dass die Logs der
 Ingest-API selbst keinen Inhalt schreiben, prüft SP-1.6b.
 

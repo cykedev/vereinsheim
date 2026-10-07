@@ -29,6 +29,9 @@ SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
   Prüfsumme an der Zahlenformatierung der jeweiligen Sprache.
 - **Der Vertrag kennt keine Meyton-Spalten.** Spaltenprüfungen gehören in den Adapter (SP-1.6b), der in
   Quarantäne legt statt abzulehnen (SF-25).
+- **Annehmen nur über `parseSnapshot`/`parseSnapshotBatch`**, nie direkt über `snapshotV1`: Davor
+  liegen Versionsprüfung und das Verbot von `__proto__` (Zod verwirft den Schlüssel still), danach die
+  Prüfsumme. Längen zählen in UTF-16-Codeeinheiten (Zod), nicht in Codepoints (JSON-Schema).
 - **Fehler ohne Inhalt** (SF-59): `ContractIssue` ist nur `{ path, code }`, Pfade enden an `columns` und
   `rows[i]`. Zod-Meldungen nie nach außen geben.
 - **JSON-Schema wird erzeugt**, nie von Hand editiert: `pnpm --filter @vereinsheim/ingest-contract

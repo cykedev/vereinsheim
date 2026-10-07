@@ -1934,6 +1934,807 @@
         "path": "",
         "code": "invalid_type"
       }
+    },
+    {
+      "name": "zeile-mit-vertauschter-spalte",
+      "description": "Gleiche Zahl an Schl\u00fcsseln, aber einer hei\u00dft anders als in columns.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11",
+                "z": "87"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.treffer.rows[0]",
+        "code": "row-columns-mismatch"
+      }
+    },
+    {
+      "name": "spaltentyp-zu-lang",
+      "description": "Ein Spaltentyp hat h\u00f6chstens 64 Zeichen; der Fehlerpfad endet an columns (SF-59).",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.scheiben.columns",
+        "code": "too_big"
+      }
+    },
+    {
+      "name": "spaltenname-leer",
+      "description": "Ein Spaltenname ist nicht leer; der Fehlerpfad endet an columns (SF-59).",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)",
+              "": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021",
+                "": "1"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013",
+                "": "1"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.serien.columns",
+        "code": "invalid_key"
+      }
+    },
+    {
+      "name": "zelle-zu-lang-utf16",
+      "description": "L\u00e4ngen z\u00e4hlen in UTF-16-Codeeinheiten: 4098 Einheiten, aber nur 2054 Codepoints.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf\ud83c\udfaf",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.scheiben.rows[0]",
+        "code": "too_big"
+      }
+    },
+    {
+      "name": "proto-in-zeile",
+      "description": "Der Schl\u00fcssel __proto__ ist \u00fcberall verboten (Zod verwirft ihn sonst still).",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "__proto__": null,
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.treffer.rows[0]",
+        "code": "forbidden-key"
+      }
+    },
+    {
+      "name": "proto-in-huelle",
+      "description": "Der Schl\u00fcssel __proto__ ist \u00fcberall verboten, auch in der H\u00fclle.",
+      "snapshot": {
+        "__proto__": {
+          "polluted": "yes"
+        },
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "",
+        "code": "forbidden-key"
+      }
+    },
+    {
+      "name": "proto-in-tabelle",
+      "description": "Der Schl\u00fcssel __proto__ ist \u00fcberall verboten, auch in einer Tabelle.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "__proto__": {},
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.treffer",
+        "code": "forbidden-key"
+      }
+    },
+    {
+      "name": "proto-als-spalte",
+      "description": "Auch als Spaltenname; der Pfad endet an columns.",
+      "snapshot": {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "6.0.2",
+        "epoch": 1,
+        "scheibenId": -7257056,
+        "sequence": 7,
+        "observedAt": "2026-10-06T17:05:03.250Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "__proto__": "int(11)",
+              "ScheibenID": "int(11)",
+              "Nachname": "varchar(30)",
+              "Startzeit": "datetime",
+              "TotalRing01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Nachname": "Mustermann",
+                "Startzeit": "0000-00-00 00:00:00",
+                "TotalRing01": "2034"
+              }
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Serie": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "1",
+                "Ring01": "1021"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Serie": "2",
+                "Ring01": "1013"
+              }
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "int(11)",
+              "Treffer": "int(11)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Ring01": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "0",
+                "Treffer": "1",
+                "x": "-112",
+                "y": "87",
+                "Ring01": "98",
+                "Zeitstempel": "2026-10-06 19:02:11"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "1",
+                "x": "23",
+                "y": "-41",
+                "Ring01": "104",
+                "Zeitstempel": "2026-10-06 19:04:40"
+              },
+              {
+                "ScheibenID": "-7257056",
+                "Stellung": "1",
+                "Treffer": "2",
+                "x": "-305",
+                "y": "12",
+                "Ring01": "99",
+                "Zeitstempel": "2026-10-06 19:05:02"
+              }
+            ]
+          }
+        },
+        "checksum": "sha256:557499ec4ea041de146557382745aa3527e6efb7235f4300f9b54dd828c238aa"
+      },
+      "expect": {
+        "path": "data.scheiben.columns",
+        "code": "forbidden-key"
+      }
     }
   ]
 }

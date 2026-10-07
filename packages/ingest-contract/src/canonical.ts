@@ -43,7 +43,8 @@ export function canonicalize(value: unknown): string {
       return serializeString(value)
     case "object":
       if (Array.isArray(value)) {
-        return `[${value.map(canonicalize).join(",")}]`
+        // Array.from macht Lücken zu undefined, das wirft; map würde sie überspringen.
+        return `[${Array.from(value, canonicalize).join(",")}]`
       }
       if (!isPlainObject(value)) {
         throw new TypeError("Nur einfache Objekte sind kanonisierbar")

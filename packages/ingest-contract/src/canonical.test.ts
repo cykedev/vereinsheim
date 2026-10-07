@@ -69,6 +69,7 @@ describe("canonicalize (RFC 8785)", () => {
     ["BigInt", BigInt(1)],
     ["Date", new Date(0)],
     ["Map", new Map()],
+    ["dünnes Array", [, 1]],
   ])("lehnt %s ab", (_name, value) => {
     expect(() => canonicalize(value)).toThrow(TypeError)
   })

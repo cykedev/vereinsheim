@@ -44,8 +44,7 @@ function issueCode(issue: z.core.$ZodIssue): string {
 
 function toIssues(error: z.ZodError, prefix: string): ContractIssue[] {
   return error.issues.map((issue) => {
-    const path = safePath(issue.path)
-    return { path: prefix && path ? `${prefix}.${path}` : prefix || path, code: issueCode(issue) }
+    return { path: withPrefix(prefix, safePath(issue.path)), code: issueCode(issue) }
   })
 }
 
@@ -53,13 +52,47 @@ function limited(issues: ContractIssue[]): ContractIssue[] {
   return issues.slice(0, LIMITS.maxReportedIssues)
 }
 
+/** Tiefer als Hülle → data → Tabelle → rows → Zeile geht kein gültiger Snapshot; Zod lehnt das ab. */
+const MAX_WALK_DEPTH = 6
+
+/**
+ * Sucht einen eigenen Schlüssel `__proto__`. `JSON.parse` legt ihn als normalen Schlüssel an, Zod
+ * verwirft ihn still statt ihn abzulehnen; eine Zeile mit ihm passierte sonst die Spaltenprüfung,
+ * und die Prüfsumme der Brücke schlösse ihn ein. Liefert den Pfad bis zum Objekt, das ihn trägt.
+ */
+function findForbiddenKey(value: unknown, path: PropertyKey[]): PropertyKey[] | null {
+  if (path.length > MAX_WALK_DEPTH || typeof value !== "object" || value === null) return null
+  if (Array.isArray(value)) {
+    for (const [index, item] of value.entries()) {
+      const hit = findForbiddenKey(item, [...path, index])
+      if (hit) return hit
+    }
+    return null
+  }
+  if (Object.hasOwn(value, "__proto__")) return path
+  for (const [key, item] of Object.entries(value)) {
+    const hit = findForbiddenKey(item, [...path, key])
+    if (hit) return hit
+  }
+  return null
+}
+
+function withPrefix(prefix: string, path: string): string {
+  return prefix && path ? `${prefix}.${path}` : prefix || path
+}
+
 function checkSnapshot(input: unknown, prefix: string): ParseResult<Snapshot> {
   if (!isPlainObject(input)) {
     return { ok: false, issues: [{ path: prefix, code: "invalid_type" }] }
   }
   if (!isSupportedContractVersion(input.contractVersion)) {
-    const path = prefix ? `${prefix}.contractVersion` : "contractVersion"
+    const path = withPrefix(prefix, "contractVersion")
     return { ok: false, issues: [{ path, code: CONTRACT_ISSUE.unsupportedVersion }] }
+  }
+  const forbidden = findForbiddenKey(input, [])
+  if (forbidden) {
+    const path = withPrefix(prefix, safePath(forbidden))
+    return { ok: false, issues: [{ path, code: CONTRACT_ISSUE.forbiddenKey }] }
   }
   // Nur v1 bisher; eine v2 bekommt hier ihren Zweig, v1 bleibt mindestens eine Version lang.
   const parsed = snapshotV1.safeParse(input)
@@ -67,7 +100,7 @@ function checkSnapshot(input: unknown, prefix: string): ParseResult<Snapshot> {
     return { ok: false, issues: toIssues(parsed.error, prefix) }
   }
   if (computeChecksum(parsed.data.data) !== parsed.data.checksum) {
-    const path = prefix ? `${prefix}.checksum` : "checksum"
+    const path = withPrefix(prefix, "checksum")
     return { ok: false, issues: [{ path, code: CONTRACT_ISSUE.checksumMismatch }] }
   }
   return { ok: true, value: parsed.data }
@@ -78,7 +111,11 @@ export function parseSnapshot(input: unknown): ParseResult<Snapshot> {
   return result.ok ? result : { ok: false, issues: limited(result.issues) }
 }
 
-/** Ein Stapel ist nur als Ganzes gültig; die Fehler nennen den betroffenen Snapshot. */
+/**
+ * Ein Stapel ist nur als Ganzes gültig; die Fehler nennen den betroffenen Snapshot. Die Form prüft
+ * diese Funktion selbst, damit jeder Snapshot durch `checkSnapshot` läuft (Version, `__proto__`,
+ * Prüfsumme); `snapshotBatchV1` beschreibt dieselbe Form für das JSON-Schema. Beide gleich halten.
+ */
 export function parseSnapshotBatch(input: unknown): ParseResult<{ snapshots: Snapshot[] }> {
   if (!isPlainObject(input)) {
     return { ok: false, issues: [{ path: "", code: "invalid_type" }] }
