@@ -15,7 +15,7 @@ relates_to: ["[[spiegel-open-questions]]", "[[spiegel-edge-cases]]"]
 ## So nutzen wir diese Roadmap
 
 - **Ein Feature pro Session** (große Features in mehrere Pläne geteilt). Vor dem Start prüfen, ob die Abhängigkeiten erledigt sind.
-- `/plan` bekommt den Feature-Abschnitt als Auftrag; der Plan verweist zurück auf die Feature-ID.
+- `/plan` bekommt den Feature-Abschnitt als Auftrag; der Plan verweist zurück auf die Feature-ID. Entscheidungen im Plan heißen D1, D2, …; E1, P3 und Co. sind Katalog-IDs ([[spiegel-statistics]]), sonst ist „E9“ doppeldeutig.
 - Nach dem Merge den **Status** hier nachziehen (offen → in Arbeit → erledigt) und Erkenntnisse in die Fach-Notes schreiben ([[spiegel]]).
 - Features mit Deploy-Vertrag, Schema oder ADRs laufen interaktiv ([[autopilot-guard-blocks-contract-only-plans]]).
 - **Früh startbar ohne Erkundung:** SP-1.0, SP-1.1, SP-1.2 und SP-1.3 sind reine Paketarbeit und hängen nicht an der Anlage.
@@ -156,7 +156,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** Serie, Scheibe, Zeitraum, Merkmal, Baseline; Sätze aus Kennzahlen nach den Regeln für ehrliche Zahlen; aus dem Katalog C1–C6 (C5 und C6 nach SP-2.3) und die Beobachtungen in Worten ([[spiegel-statistics]]). **Hängt ab von:** SP-2.1. **Status:** offen.
 
 ### SP-2.3 Notizen, Tags, Ausrüstung
-- **Umfang:** Kontext an Scheibe und Serie, Grundlage für Vergleiche nach Merkmal (Munitionslos, Griff). Dazu das Ereignis „Visier verstellt“: Spiegel schlägt es bei einem Lagesprung in der Probe vor (Test, Bestätigung per Tipp), von Hand setzbar und entfernbar ([[spiegel-open-questions]]); S3, S4 und der Probe-Versatz rechnen dann nach der letzten Verstellung. **Hängt ab von:** SP-1.8. **Status:** offen.
+- **Umfang:** Kontext an Scheibe und Serie, Grundlage für Vergleiche nach Merkmal (Munitionslos, Griff). Dazu das Ereignis „Visier verstellt“: Spiegel schlägt es bei einem Lagesprung in der Probe vor (Test, Bestätigung per Tipp), von Hand setzbar und entfernbar ([[spiegel-open-questions]]); S1, S3 und S4 rechnen dann nach der letzten Verstellung. **Hängt ab von:** SP-1.8. **Status:** offen.
 
 ### SP-2.4 Fundbüro und Check-in (bedingt)
 - **Umfang:** „Scheibe holen“ am Abend als Rückfall für verlorene oder abgelaufene QR-Links, Frist sieben Tage, kein Tablet; optional Check-in per Stand-Aufkleber. Weil es den QR immer gibt, wahrscheinlich nur in kleinem Umfang nötig ([[spiegel-assignment]]). **Hängt ab von:** SP-1.7. **Status:** offen.
