@@ -16,13 +16,15 @@
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "format:check": "prettier --check .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "schema": "tsx tools/write-schema.ts && prettier --write schema"
   },
   "prettier": "@vereinsheim/config/prettier",
   "devDependencies": {
     "@types/node": "catalog:",
     "@vereinsheim/config": "workspace:*",
     "prettier": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

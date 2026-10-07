@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "snapshots": {
+      "minItems": 1,
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "contractVersion": {
+            "type": "number",
+            "const": 1
+          },
+          "source": {
+            "type": "string",
+            "const": "meyton-ssmdb2"
+          },
+          "sourceVersion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "scheibenId": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+          },
+          "sessionTimeZone": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "scheiben": {
+                "type": "object",
+                "properties": {
+                  "columns": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "minProperties": 1,
+                    "maxProperties": 200
+                  },
+                  "rows": {
+                    "minItems": 1,
+                    "maxItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 4096
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "required": ["columns", "rows"],
+                "additionalProperties": false
+              },
+              "serien": {
+                "type": "object",
+                "properties": {
+                  "columns": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "minProperties": 1,
+                    "maxProperties": 200
+                  },
+                  "rows": {
+                    "minItems": 0,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 4096
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "required": ["columns", "rows"],
+                "additionalProperties": false
+              },
+              "treffer": {
+                "type": "object",
+                "properties": {
+                  "columns": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "minProperties": 1,
+                    "maxProperties": 200
+                  },
+                  "rows": {
+                    "minItems": 0,
+                    "maxItems": 2000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 4096
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "required": ["columns", "rows"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["scheiben", "serien", "treffer"],
+            "additionalProperties": false
+          },
+          "checksum": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "contractVersion",
+          "source",
+          "sourceVersion",
+          "epoch",
+          "scheibenId",
+          "sequence",
+          "observedAt",
+          "sessionTimeZone",
+          "data",
+          "checksum"
+        ],
+        "additionalProperties": false,
+        "title": "Spiegel-Snapshot v1",
+        "description": "Vollständiger Stand einer Scheibe aus der SSMDB2. Nicht im Schema ausdrückbar und trotzdem Pflicht: jede Zeile hat genau die Schlüssel aus columns; alle Strings sind wohlgeformtes Unicode (keine einzelnen Surrogate); checksum = sha256 über die kanonische Form (RFC 8785) von data mit nach ihrer kanonischen Form sortierten Zeilen. Siehe vault/spiegel/spiegel-ingest-contract.md."
+      }
+    }
+  },
+  "required": ["snapshots"],
+  "additionalProperties": false,
+  "title": "Spiegel-Snapshot-Stapel v1"
+}
