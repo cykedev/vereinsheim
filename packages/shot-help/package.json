@@ -17,7 +17,8 @@
     "test": "vitest run",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "docs": "tsx scripts/write-guide.ts"
+    "docs": "tsx scripts/write-guide.ts",
+    "simulate": "tsx scripts/simulate.ts"
   },
   "prettier": "@vereinsheim/config/prettier",
   "devDependencies": {
