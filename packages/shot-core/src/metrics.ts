@@ -70,6 +70,8 @@ export interface MetricShot {
 
 export interface MetricDefinition {
   key: string
+  /** Katalog-ID aus vault/spiegel/spiegel-statistics.md, etwa "P5"; die Hilfe erklärt sie (shot-help) */
+  catalogId: string
   label: string
   unit: MetricUnit
   decimals: number
@@ -99,10 +101,14 @@ export interface MetricDefinition {
 }
 
 const KEY = /^[a-z][a-zA-Z]*(\.[a-z][a-zA-Z0-9]*)+$/
+const CATALOG_ID = /^[EPLVZISTRCKWQ]\d+$/
 
 export function defineMetric(def: MetricDefinition): Readonly<MetricDefinition> {
   if (!KEY.test(def.key)) {
     throw new RangeError(`"${def.key}": Schlüssel wie "group.r50"`)
+  }
+  if (!CATALOG_ID.test(def.catalogId)) {
+    throw new RangeError(`${def.key}: Katalog-ID wie "P5", nicht "${def.catalogId}"`)
   }
   if (!Number.isInteger(def.version) || def.version < 1) {
     throw new RangeError(`${def.key}: Version muss eine ganze Zahl ab 1 sein`)
@@ -315,6 +321,7 @@ const SIGHTER_TAIL = 5
 export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   defineMetric({
     key: "result.rings",
+    catalogId: "E1",
     label: "Ergebnis",
     unit: "Ringe",
     decimals: 0,
@@ -333,6 +340,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.decimal",
+    catalogId: "E1",
     label: "Ergebnis",
     unit: "Ringe",
     decimals: 1,
@@ -351,6 +359,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.decimalMean",
+    catalogId: "E2",
     label: "Ø je Schuss",
     unit: "Ringe",
     decimals: 2,
@@ -369,6 +378,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.ringsMean",
+    catalogId: "E2",
     label: "Ø je Schuss",
     unit: "Ringe",
     decimals: 2,
@@ -387,6 +397,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.tens",
+    catalogId: "E4",
     label: "Zehner",
     unit: "Schuss",
     decimals: 0,
@@ -403,6 +414,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.innerTens",
+    catalogId: "E5",
     label: "Innenzehner",
     unit: "Schuss",
     decimals: 0,
@@ -419,6 +431,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.tensRate",
+    catalogId: "E4",
     label: "Zehnerquote",
     unit: "%",
     decimals: 0,
@@ -436,6 +449,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.bestTeiler",
+    catalogId: "E8",
     label: "bester Teiler",
     unit: "Teiler",
     decimals: 1,
@@ -452,6 +466,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.mpiDistance",
+    catalogId: "L2",
     label: "Schwerpunkt-Abstand",
     unit: "mm",
     decimals: 2,
@@ -472,6 +487,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.enclosingDiameter",
+    catalogId: "P1",
     label: "Streukreis",
     unit: "mm",
     decimals: 1,
@@ -491,6 +507,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.meanRadius",
+    catalogId: "P3",
     label: "mittlerer Radius",
     unit: "mm",
     decimals: 2,
@@ -507,6 +524,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.r50",
+    catalogId: "P4",
     label: "R50",
     unit: "mm",
     decimals: 2,
@@ -523,6 +541,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.sigma",
+    catalogId: "P5",
     label: "Präzision σ",
     unit: "mm",
     decimals: 2,
@@ -545,6 +564,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.sdX",
+    catalogId: "P6",
     label: "Streuung x",
     unit: "mm",
     decimals: 2,
@@ -561,6 +581,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.sdY",
+    catalogId: "P6",
     label: "Streuung y",
     unit: "mm",
     decimals: 2,
@@ -577,6 +598,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.height",
+    catalogId: "P7",
     label: "Höhe",
     unit: "mm",
     decimals: 1,
@@ -596,6 +618,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.width",
+    catalogId: "P7",
     label: "Breite",
     unit: "mm",
     decimals: 1,
@@ -615,6 +638,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "time.intervalMedian",
+    catalogId: "Z1",
     label: "Tempo (Median)",
     unit: "s",
     decimals: 0,
@@ -631,6 +655,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "time.tempoSpread",
+    catalogId: "Z2",
     label: "Tempo-Streuung",
     unit: "s",
     decimals: 0,
@@ -651,6 +676,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "time.longestPause",
+    catalogId: "Z4",
     label: "längste Pause",
     unit: "s",
     decimals: 0,
@@ -667,6 +693,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "time.duration",
+    catalogId: "Z3",
     label: "Dauer",
     unit: "s",
     decimals: 0,
@@ -683,6 +710,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "sighter.offset",
+    catalogId: "S1",
     label: "Versatz Probe → Wertung",
     unit: "mm",
     decimals: 2,

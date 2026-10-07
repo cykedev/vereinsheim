@@ -459,5 +459,35 @@ describe("Registry", () => {
     expect(() => defineMetric({ ...base, decimals: 1.5 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, decimals: -1 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, decimals: 4 })).toThrow(RangeError)
+    expect(() => defineMetric({ ...base, catalogId: "" })).toThrow(RangeError)
+    expect(() => defineMetric({ ...base, catalogId: "e1" })).toThrow(RangeError)
+    expect(() => defineMetric({ ...base, catalogId: "X1" })).toThrow(RangeError)
+  })
+
+  it("jede Kennzahl trägt ihre Katalog-ID (vault/spiegel/spiegel-statistics.md)", () => {
+    expect(Object.fromEntries(METRICS.map((metric) => [metric.key, metric.catalogId]))).toEqual({
+      "result.rings": "E1",
+      "result.decimal": "E1",
+      "result.decimalMean": "E2",
+      "result.ringsMean": "E2",
+      "result.tens": "E4",
+      "result.innerTens": "E5",
+      "result.tensRate": "E4",
+      "result.bestTeiler": "E8",
+      "group.mpiDistance": "L2",
+      "group.enclosingDiameter": "P1",
+      "group.meanRadius": "P3",
+      "group.r50": "P4",
+      "group.sigma": "P5",
+      "group.sdX": "P6",
+      "group.sdY": "P6",
+      "group.height": "P7",
+      "group.width": "P7",
+      "time.intervalMedian": "Z1",
+      "time.tempoSpread": "Z2",
+      "time.longestPause": "Z4",
+      "time.duration": "Z3",
+      "sighter.offset": "S1",
+    })
   })
 })

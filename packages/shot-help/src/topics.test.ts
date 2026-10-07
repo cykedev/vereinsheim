@@ -45,6 +45,17 @@ describe("HELP_TOPICS: Bezüge und Ordnung", () => {
     }
   })
 
+  it("jede Katalog-ID eines Themas gehört zu einer Auswertung oder Kennzahl", () => {
+    // fällt eine Auswertung oder Kennzahl weg, darf keine Erklärung mehr auf ihre ID zeigen
+    const live = new Set([
+      ...Object.values(ANALYSIS_CATALOG).flat(),
+      ...METRICS.map((metric) => metric.catalogId),
+    ])
+    for (const topic of HELP_TOPICS) {
+      for (const id of topic.catalog) expect(live.has(id), `${topic.id}: ${id}`).toBe(true)
+    }
+  })
+
   it("jedes Thema deckt mindestens eine Kennzahl oder Katalog-ID ab", () => {
     for (const topic of HELP_TOPICS) {
       expect(topic.metrics.length + topic.catalog.length, topic.id).toBeGreaterThan(0)
