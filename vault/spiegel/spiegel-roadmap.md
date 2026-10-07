@@ -156,7 +156,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** Serie, Scheibe, Zeitraum, Merkmal, Baseline; Sätze aus Kennzahlen nach den Regeln für ehrliche Zahlen; aus dem Katalog C1–C6 (C5 und C6 nach SP-2.3) und die Beobachtungen in Worten ([[spiegel-statistics]]). **Hängt ab von:** SP-2.1. **Status:** offen.
 
 ### SP-2.3 Notizen, Tags, Ausrüstung
-- **Umfang:** Kontext an Scheibe und Serie, Grundlage für Vergleiche nach Merkmal (Munitionslos, Griff). **Hängt ab von:** SP-1.8. **Status:** offen.
+- **Umfang:** Kontext an Scheibe und Serie, Grundlage für Vergleiche nach Merkmal (Munitionslos, Griff). Dazu das Ereignis „Visier verstellt“: Spiegel schlägt es bei einem Lagesprung in der Probe vor (Test, Bestätigung per Tipp), von Hand setzbar und entfernbar ([[spiegel-open-questions]]); S3, S4 und der Probe-Versatz rechnen dann nach der letzten Verstellung. **Hängt ab von:** SP-1.8. **Status:** offen.
 
 ### SP-2.4 Fundbüro und Check-in (bedingt)
 - **Umfang:** „Scheibe holen“ am Abend als Rückfall für verlorene oder abgelaufene QR-Links, Frist sieben Tage, kein Tablet; optional Check-in per Stand-Aufkleber. Weil es den QR immer gibt, wahrscheinlich nur in kleinem Umfang nötig ([[spiegel-assignment]]). **Hängt ab von:** SP-1.7. **Status:** offen.
