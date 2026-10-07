@@ -11,8 +11,8 @@
 // - Fehlschüsse lassen nur robuste Maße weg (SF-14). Verdächtige Schüsse (Platzhalter, Handeintrag)
 //   zählen nur mit ihrem amtlichen Wert, nie mit Lage, Abstand oder Zeit (SF-15).
 // - `nSensitive` kennzeichnet Maße, die von der Schusszahl abhängen: Vergleiche nur bei gleichem n
-//   (SF-60); das n liefert `eligibleShots`. Auch mittlerer Radius und R50 schrumpfen bei kleinem n mit
-//   √((n − 1)/n); für Verläufe über verschiedene Schusszahlen taugt `group.sigma`.
+//   (SF-60); das n liefert `eligibleShots`. Auch R50 fällt bei kleinem n leicht zu klein aus (bei
+//   10 Schuss etwa 4 %); für Verläufe über verschiedene Schusszahlen taugt `group.sigma`.
 // - Die Reihenfolge ist die Abgabefolge `seq`, nicht die Uhr (SF-30).
 //
 // Wertung: Jede wertbasierte Kennzahl gibt es in ganzen Ringen und in Zehnteln (`scoring` und

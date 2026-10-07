@@ -16,7 +16,7 @@ relates_to: ["[[spiegel-metrics]]", "[[spiegel-ui-design]]", "[[spiegel-edge-cas
 
 Der User will ein Profi-Werkzeug, „das mir viele gute Informationen zeigt, mit denen ich systematisch trainieren kann und mit dem ich analysieren kann“ (6. Oktober 2026). Daraus folgt:
 
-- **Viel, aber geordnet:** Statistiken nach Themen, das Wichtigste (Priorität A) zuerst, der Rest auf Antippen.
+- **Viel, aber geordnet, und nichts doppelt:** Statistiken nach Themen, das Wichtigste (Priorität A) zuerst, der Rest auf Antippen. Eine Zahl, die aus einer anderen folgt oder dasselbe nur verrauschter misst, fällt weg (Oktober 2026, Maßstab Sa); die Zeile bleibt mit Grund, die ID wird nie wiederverwendet.
 - **Ehrlich:** Jede Zahl steht auf einer sichtbaren Grundlage (n, Zeitraum, Filter). Unter der Mindestzahl steht „–“ mit Grund, Unsicherheit wird gezeigt, und „unklar“ ist ein normales Ergebnis.
 - **Handlungsnah:** Wo es geht, sagt die Statistik, was zu tun ist („Lage echt, zentriert wären es 2,4 Ringe mehr“) statt nur Zahlen zu liefern.
 - **Messdaten, kein Tagebuch:** Ziele, Absicht, Reflexion und Befinden bleiben laut [[adr-026]] in Treffsicher. Spiegel liefert die Messung, Übungen mit messbarem Kriterium und die Auswertung.
@@ -27,7 +27,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 ## Was es schon gibt
 
-- **Spiegel** (`packages/shot-core`): die Registry aus [[spiegel-metrics]] mit Ergebnis und Ø je Schuss (ganze Ringe und Zehntel), Zehnern, Innenzehnern, bestem Teiler, Schwerpunkt-Abstand, Streukreis, mittlerem Radius, R50, Streuung x/y, Tempo, längster Pause und Versatz Probe → Wertung.
+- **Spiegel** (`packages/shot-core`): die Registry aus [[spiegel-metrics]] mit Ergebnis und Ø je Schuss (ganze Ringe und Zehntel), Zehnern, Innenzehnern, bestem Teiler, Schwerpunkt-Abstand, Streukreis, R50, Präzision σ, Streuung x/y, Tempo, Tempo-Streuung und Dauer, jede mit ihrer Katalog-ID.
 - **Treffsicher** ([[statistics-visualization]]): Übersicht je Disziplin, Ergebnisverlauf mit gleitendem Schnitt und Band, Min/Max/Ø je Serienposition, Trefferlage je Einheit (aus dem PDF) als Wolke und Verlauf, Ringverteilung, Befinden-Korrelation, Prognose und Feedback.
 - **Meyton:** der Ausdruck ([[meyton-printout]]: Zähler, Innenzehner, beste und weiteste Teiler, Trefferkreis, Trefferlage, je Schuss Wert und Richtungspfeil). Die Treffer-Statistik in ESTA 5 nennt Schwerpunkt, Trefferkreis („der kleinste Kreis, der alle Treffer einschließt“) samt Mittelpunkt, Höhe und Breite, Ø Entfernung zur Mitte und Abstände von Treffer zu Treffer; der Ballistic Manager zusätzlich Sx, Sy, Sa (Rayleigh-σ), den Abstand aufeinanderfolgender Treffer und die Wanderung des Schwerpunkts.
 - **Fremde Werkzeuge:** DISAG ShotsApp (Umkreis und Mittelpunkt je Serie, Rhythmus-Grafik „Schüsse über Zeit“), Kongsberg (MPI, Extreme Spread, kleinster Kreis und kleinstes Rechteck), SIUS BTS (MPI, Höhe/Breite), SCATT (Intervalle, nur der Teil ohne Zielverlauf), ShotAnalyzer (Munitionstest, Spiele wie „Bleib drüber“ und Soll-Schnitt), Ring Reader (CEP50, korrigiertes Ergebnis, Erkenntnisse wie Schussposition, Reaktion nach Fehler, Training gegen Wettkampf, Ausreißerrichtungen, Bedingungen), TargetScan (Ringverlust durch Lage gegen Gruppengröße), Ballistic X (MR, CEP, Korrektur auf Null).
@@ -42,11 +42,11 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | E2 | Ø je Schuss | Σ vᵢ / n, in beiden Wertungen | Serie, Scheibe, Zeitraum | A | vorhanden |
 | E3 | Hochrechnung | Ø je Schuss × Soll-Schusszahl; nie als Rekord (SF-09) | Scheibe | B | SP-1.8 |
 | E4 | Zehner und Zehnerquote | Anzahl Ring 10; Quote mit Wilson-Intervall | Serie, Scheibe, Zeitraum | A | vorhanden (Anzahl), SP-1.10 (Quote) |
-| E5 | Innenzehner und Quote | LG und LP nicht vergleichbar | Serie, Scheibe, Zeitraum | A | vorhanden |
-| E6 | Bester und schwächster Schuss | max/min vᵢ mit Schussnummer, ohne verdächtige | Serie, Scheibe | A | SP-1.10 |
-| E7 | Teiler-Schnitt und -Median | Mittel und Median der dᵢ | Serie, Scheibe, Zeitraum | B | SP-1.10 |
+| E5 | Innenzehner | Anzahl; LG und LP nicht vergleichbar. Die Quote mit Wilson-Intervall entfällt (Oktober 2026): Sie rechnete nur die Spielwiese selbst, und die Anzahl steht wie auf dem Ausdruck | Serie, Scheibe, Zeitraum | A | vorhanden |
+| E6 | Bester und schwächster Schuss | **entfernt (Oktober 2026):** folgt aus E8, der kleinste Teiler ist der beste Schuss, der größte der schwächste | – | – | entfernt (SP-1.12) |
+| E7 | Teiler-Schnitt und -Median | **entfernt (Oktober 2026):** läuft mit dem Ø je Schuss (E2) zu r = −0,998, weil der Zehntelwert linear im Abstand ist | – | – | entfernt (SP-1.12) |
 | E8 | Beste und weiteste Teiler | je drei mit Schussnummer, wie auf dem Ausdruck | Serie, Scheibe | B | SP-1.10 |
-| E9 | Ringverlust | n·10 − ΣRing bzw. n·10,9 − Σvᵢ | Serie, Scheibe | B | SP-1.10 |
+| E9 | Ringverlust | n·10 − ΣRing bzw. n·10,9 − Σvᵢ; seit Oktober 2026 als `total` in L4 (Lage + Streuung), keine eigene Auswertung mehr | Serie, Scheibe | B | SP-1.10, SP-1.12 |
 | E10 | Konstanz | SD und Spanne der Serien gleicher Länge, MAD der vᵢ | Scheibe, Zeitraum | A | SP-1.10 |
 | E11 | Anteil über Schwelle | Anteil vᵢ ≥ s mit Wilson-Intervall | Serie, Scheibe, Zeitraum | B | SP-1.10 |
 
@@ -56,13 +56,13 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 |---|---|---|---|---|---|
 | P1 | Streukreis (Meyton: Trefferkreis) | kleinster Kreis um alle Trefferzentren; wächst mit n | Serie, Scheibe | A | vorhanden |
 | P2 | Extreme Spread | größter Abstand zweier Treffer | Serie, Scheibe | C | Funktion `extremeSpread` |
-| P3 | Mittlerer Radius | (1/n) Σrᵢ; Erwartungswert wächst mit √((n−1)/n) | Serie, Scheibe, Zeitraum | A | vorhanden |
+| P3 | Mittlerer Radius | **entfernt (Oktober 2026):** ≈ 1,24 · σ̂ mit mehr Rauschen (Effizienz 0,92), weder robust noch auf dem Ausdruck | – | – | entfernt (SP-1.12) |
 | P4 | R50 (≈ CEP50) | Median der rᵢ ohne Fehlschüsse | Serie, Scheibe, Zeitraum | A | vorhanden |
 | P5 | Rayleigh-σ | σ̂ = √(Σrᵢ²/(2(n−1)))/c4(2n−1), 95-%-Bereich über χ² mit 2(n−1) Freiheitsgraden; kaum n-abhängig. Den Wert vor der Korrektur nennt Meytons Ballistic Manager „Sa“ (bei 10 Schuss 1,4 % kleiner, bei 40 Schuss 0,3 %). Spiegel zeigt ihn nicht: kein Vorteil gegenüber σ̂, gegen Meyton nicht prüfbar (ESTA 5 und der Ausdruck nennen ihn nicht), zwei fast gleiche Zahlen verwirren (Entscheidung des Users, Oktober 2026) | Scheibe, Zeitraum | B | SP-1.10 |
 | P6 | Streuung x und y | Sx und Sy | Serie, Scheibe, Zeitraum | A | vorhanden |
-| P7 | Höhe und Breite | max − min in y und x, dazu (H + B)/2 | Serie, Scheibe | B | SP-1.10 |
+| P7 | Höhe und Breite | **entfernt (Oktober 2026):** Effizienz 0,23–0,43 gegenüber σ̂, ein Ausreißer macht die Breite 59–87 % größer; „senkrecht oder waagrecht?“ beantworten P6 und P8 | – | – | entfernt (SP-1.12) |
 | P8 | Form der Gruppe | Halbachsen und Winkel der Kovarianz-Ellipse, Verhältnis a/b; gestreckt nur, wenn Mauchlys Test es mit 95 % zeigt (W = 4a²b²/(a²+b²)² unter 0,05^(2/(n−2)), für zwei Dimensionen exakt); dazu das a/b, ab dem das bei dieser Schusszahl gilt (12 Schuss 2,26, 20 Schuss 1,81, 40 Schuss 1,50, 120 Schuss 1,25). Eine runde Gruppe zeigt zufällig im Median a/b 1,32 bei 20 und 1,21 bei 40 Schuss; eine echte Streckung von 1,3 erkennt eine Scheibe mit 40 Schuss nur in 28 % der Fälle, über 120 Schuss in 72 % (Simulation). Winkel erst ab 10 Schuss | Scheibe, Zeitraum | B | SP-1.10 |
-| P9 | Streuung in Ringbreiten | MR / W | Scheibe, Zeitraum | B | SP-1.10 |
+| P9 | Streuung in Ringbreiten | R50 / W (bis Oktober 2026 MR / W) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
 | P10 | Erwartete Zehnerquote | P(d ≤ W) für eine Normalgruppe mit σ̂ und m (Modell) | Scheibe, Zeitraum | C | später |
 
 ### 3 Lage und Systematik
@@ -72,11 +72,11 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | L1 | Schwerpunkt (Meyton: Trefferlage) | m mit Richtung; nach „Visier verstellt“ getrennt (SF-63) | Serie, Scheibe, Zeitraum | A | SP-1.10 (Schwerpunkt), Trennung mit dem Ereignis aus SP-2.3 |
 | L2 | Schwerpunkt-Abstand | |m|; der Schwerpunkt selbst ist unsicher (aus 10 Schuss ≈ 0,4σ) | Serie, Scheibe, Zeitraum | A | vorhanden |
 | L3 | Ist die Lage echt? | Hotelling-T² gegen F(2, n−2), 95-%-Ellipse um m | Scheibe, Zeitraum | A | SP-1.10 |
-| L4 | Ringe durch Lage gegen Streuung | Lagen um −m verschieben und neu werten: Lage- und Streuungsverlust; erst ab 10 Schuss, wenn L3 „echt“ sagt und das Zentrieren gewinnt (bei schiefen Gruppen kann es kosten); nie amtlich | Serie, Scheibe, Zeitraum | A | SP-1.10 |
-| L5 | Lageanteil am Fehler | Anteil von |m|² am mittleren quadratischen Abstand, Schätzrauschen abgezogen | Scheibe, Zeitraum | B | SP-1.10 |
+| L4 | Ringe durch Lage gegen Streuung | jeder Treffer um den Schwerpunkt der übrigen verschoben (Leave-one-out, (pᵢ − m) · n/(n − 1)) und neu gewertet: Lage- und Streuungsverlust, zusammen E9. Schätzt, was eine Korrektur auf neuen Schüssen bringt (B5); in der Stichprobe zentriert zeigte er ohne jeden Versatz im Mittel +0,38 Ringe Scheingewinn (LG σ 1,5 mm). Erst ab 10 Schuss, wenn L3 „echt“ sagt und die Korrektur gewinnt; nie amtlich | Serie, Scheibe, Zeitraum | A | SP-1.10, SP-1.12 |
+| L5 | Lageanteil am Fehler | **entfernt (Oktober 2026):** dieselbe Aussage wie der Lage-Verlust aus L4, nur in Prozent vom Quadrat; die Lesehilfe „10 %: kein Thema“ widersprach L3 | – | – | entfernt (SP-1.12) |
 | L6 | Richtungsuhr | Anteil je Uhrzeit (30°-Sektor) um die Mitte oder um m; aussagekräftig ab 30 Schuss, darunter nur ein Bild | Scheibe, Zeitraum | B | SP-1.10 |
 | L7 | Ausreißerrichtung | Richtungsuhr der schwächsten 10 % relativ zu m | Zeitraum | B | SP-2.7 |
-| L8 | Drift in der Abgabefolge | Ø und größter Sprung, von-Neumann-Verhältnis je Sprung normiert (≈ 2 unabhängig, < 2 Wandern); ohne Urteil, weil es bei kleinem n stark streut | Scheibe | C | SP-1.10 |
+| L8 | Drift in der Abgabefolge | von-Neumann-Verhältnis je Sprung normiert (≈ 2 unabhängig, < 2 Wandern); ohne Urteil, weil es bei kleinem n stark streut (B8). Ø und größter Sprung entfallen (Oktober 2026, im Mittel √π · σ) | Scheibe | C | SP-1.10 |
 | L9 | Langzeit-Trefferbild | alle Schüsse eines Zeitraums als Dichte, je Familie; dazu die Form über mehrere Scheiben (Kovarianz je Scheibe um ihren eigenen Schwerpunkt, gepoolt), die eine leichte Streckung (a/b 1,2–1,3) erst sichtbar macht | Zeitraum | B | SP-2.7 |
 | L10 | Lage über Zeit | Schwerpunkt je Scheibe als Wolke mit Pfad, nach n gewichtet | Zeitraum | B | SP-2.7 |
 | L11 | Visierkorrektur in Klicks | −m / Klickweg; nur wenn L3 „echt“ sagt | Scheibe | C | SP-2.3 (Ausrüstung) |
@@ -86,12 +86,12 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
 | V1 | Ringverteilung (Zähler) | Anzahl je Ring 10…0 plus Innenzehner; Histogramm, keine Torte | Serie, Scheibe, Zeitraum | A | SP-1.10 |
-| V2 | Zehntelverteilung | Histogramm der vᵢ in 0,1-Klassen | Scheibe, Zeitraum | B | SP-1.10 |
+| V2 | Zehntelverteilung | Histogramm der vᵢ in 0,1-Klassen; geprüft Oktober 2026, bleibt (Wunsch des Users); auf einer Scheibe zählt die Gesamtform, nicht die einzelne Säule | Scheibe, Zeitraum | B | SP-1.10 |
 | V3 | Abstandskurve | Anteil der Schüsse mit Teiler ≤ t | Zeitraum | B | SP-2.1 |
 | V4 | Verteilung der Serien | Quartile der Serienergebnisse je Monat | Zeitraum | B | SP-2.1 |
 | V5 | Ringanteile im Zeitverlauf | Anteil je Ring je Scheibe, gestapelt | Zeitraum | B | SP-2.1 |
 | V6 | Ausreißer | jeder Schuss gegen die übrigen: T = d²/(2S²(1 + 1/(n−1))) gegen F(2, 2(n−2)) mit Bonferroni, in einer runden Normalgruppe 5 % Fehlalarm je Scheibe (Q3 + 1,5·IQR auf den Radien wären bis 47 %), bei gestreckten mehr (a/b 2: etwa 11–19 %; ein affiner Test für gestreckte Gruppen ist offen); Verhältnis MR/R50 (≈ 1,06 bei runder Gruppe) | Scheibe, Zeitraum | B | SP-1.10 |
-| V7 | Ringverlust durch Ausreißer | Σ(Median − vᵢ) über die schwächsten 10 % | Scheibe, Zeitraum | B | SP-1.10 |
+| V7 | Ringverlust durch Ausreißer | Σ(Median der übrigen − vᵢ) über die von V6 markierten Schüsse, negativ möglich. Bis Oktober 2026 über die schwächsten 10 %: Den großen Verlust dort hat jede normale Gruppe (LG σ 1,5 mm, 40 Schuss etwa 3 Ringe) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
 
 ### 5 Zeit und Rhythmus
 
@@ -99,8 +99,8 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 |---|---|---|---|---|---|
 | Z1 | Tempo | Median der Intervalle ohne Pausen | Serie, Scheibe, Zeitraum | A | vorhanden |
 | Z2 | Tempo-Konstanz | IQR der Intervalle, auch relativ zum Median; konstanter ist nicht automatisch besser | Scheibe, Zeitraum | A | SP-1.10 |
-| Z3 | Dauer und Netto-Schießzeit | erster bis letzter Schuss; netto ohne Pausen; Schüsse je Stunde (Abstände je Netto-Stunde) | Scheibe, Zeitraum | A | SP-1.10 |
-| Z4 | Pausen und Wiedereinstieg | Anzahl, Summe, längste; Ø der drei Schüsse nach einer Pause gegen den Ø der übrigen | Scheibe, Zeitraum | A | vorhanden (längste), SP-1.10 |
+| Z3 | Dauer | erster bis letzter Schuss (`time.duration`); Netto-Zeit und Schüsse je Stunde entfernt (Oktober 2026): Σ Abstände und 3600 / Ø Abstand | Scheibe, Zeitraum | A | SP-1.10 |
+| Z4 | Pausen und Wiedereinstieg | Anzahl und Summe; Ø der bis zu drei Schüsse nach einer Pause gegen den Ø der übrigen (B10). Die längste Pause als Kennzahl entfällt (Oktober 2026) | Scheibe, Zeitraum | A | SP-1.10 |
 | Z5 | Rhythmus-Profil | gleitender Median der Intervalle über die Schussnummer | Scheibe | B | SP-1.10 |
 | Z6 | Tempo und Wert | Ø vᵢ je Klasse des Intervalls davor; einige hundert Schuss | Zeitraum | B | SP-2.7 |
 | Z7 | Tempo nach schwachem Schuss | Intervall nach schwachen gegen nach übrigen Schüssen | Zeitraum | C | SP-2.7 |
@@ -112,7 +112,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 |---|---|---|---|---|---|
 | I1 | Serienkurve | Serienergebnisse in Reihenfolge; im Zeitraum Min/Max/Ø je Position | Scheibe, Zeitraum | A | SP-1.10 |
 | I2 | Ermüdung | Ø der letzten zehn minus der ersten zehn, R50 ebenso; als Muster erst über mehrere Scheiben | Scheibe, Zeitraum | A | SP-1.10 |
-| I3 | Trend in der Scheibe | Theil-Sen-Steigung je zehn Schuss mit Intervall; „klar“ nur ohne 0 im Intervall | Scheibe | B | SP-1.10 |
+| I3 | Trend in der Scheibe | Steigung der Ausgleichsgeraden je zehn Schuss; „klar“ nach Mann-Kendall mit Bindungs- und Stetigkeitskorrektur (95 %), mit Richtung (B6). Bis Oktober 2026 Theil-Sen mit Sen-Intervall: Bei gleichen Werten lag die Grenze auf 0, selbst die Stufe zehnmal 9, zehnmal 10 hieß „nicht klar“ | Scheibe | B | SP-1.10, SP-1.12 |
 | I4 | Gleitender Schnitt | Ø der letzten bis zu zehn Schüsse | Scheibe | A | SP-1.10 |
 | I5 | Streuung im Verlauf | R50 je Serie | Scheibe | B | SP-1.10 |
 | I6 | Schwerpunkt-Wanderung | Schwerpunkt je Serie und Abstand zum Scheiben-Schwerpunkt | Scheibe | B | SP-1.10 |
@@ -125,7 +125,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| S1 | Versatz Probe → Wertung | letzte fünf Probeschüsse vor der Wertung gegen die Wertung | Scheibe | A | vorhanden |
+| S1 | Versatz Probe → Wertung | Schwerpunkt der letzten fünf Probeschüsse nach der letzten Verstellung gegen die Wertung, in S4 (`matchOffsetUm`); bis Oktober 2026 eine eigene Registry-Kennzahl ohne Rücksicht auf die Verstellung | Scheibe | A | SP-1.12 |
 | S2 | Probe-Umfang | Zahl bis zum ersten Wertungsschuss, Blöcke à zehn, Dauer, Zeit bis zum ersten Wertungsschuss | Scheibe, Zeitraum | A | SP-1.10 |
 | S3 | Probe-Qualität | Ø, R50 und σ̂ der Probe (nach der letzten Verstellung) gegen die Wertung; R50 hängt an n, σ̂ kaum | Scheibe, Zeitraum | B | SP-1.10 |
 | S4 | Eingeschossen? | Lage der letzten fünf Probeschüsse mit Lage nach der letzten Verstellung, Vertrauensbereich wie L3; „kein Versatz nachweisbar“ heißt nicht „eingeschossen“ | Scheibe | C | SP-1.10 |
@@ -212,25 +212,67 @@ Nur endgültige, vollständige Wertung, ohne die Merkmale verdächtig, nur-pdf, 
 
 ## Ehrliche Zahlen
 
-- **Mindestzahl, sonst „–“** (SF-61): Streukreis und mittlerer Radius ab 3, aussagekräftig ab 10; R50 ab 5; Form ab 3, ihr Winkel ab 10; Richtungsuhr ab 30; Erkenntnisse über Zeiträume (Schussposition, Reaktion nach Fehler, Tempo gegen Wert) erst ab einigen hundert Schuss oder 20 Ereignissen.
-- **Unsicherheit zeigen:** σ über χ², Lage über Hotelling, Quoten über Wilson, Trends über Theil-Sen. Bei 10 Schuss reicht der 95-%-Bereich für σ von −26 % bis +46 %, ist also gut zwei Drittel so breit wie σ selbst; ±10 % erreicht er erst bei rund 120 Schuss.
-- **Gleiches n:** Streukreis, Extreme Spread, Höhe/Breite, bester Teiler und längste Folge wachsen mit n; mittlerer Radius und R50 schrumpfen leicht bei kleinem n (Faktor √((n − 1)/n)). σ̂ ist das stabilste Maß für Verläufe über unterschiedliche Schusszahlen.
+- **Mindestzahl, sonst „–“** (SF-61): Streukreis ab 3, aussagekräftig ab 10; R50 ab 5; Form ab 3, ihr Winkel nur bei gestreckter Gruppe ab 10; Richtungsuhr ab 30; Erkenntnisse über Zeiträume (Schussposition, Reaktion nach Fehler, Tempo gegen Wert) erst ab einigen hundert Schuss oder 20 Ereignissen.
+- **Unsicherheit zeigen:** σ über χ², Lage über Hotelling, Quoten über Wilson, Trends über Mann-Kendall. Bei 10 Schuss reicht der 95-%-Bereich für σ von −26 % bis +46 %, ist also gut zwei Drittel so breit wie σ selbst; ±10 % erreicht er erst bei rund 120 Schuss.
+- **Gleiches n:** Streukreis, Extreme Spread, bester Teiler und längste Folge wachsen mit n (Streukreis über 40 gegen 10 Schuss +32 %, B3); R50 fällt bei kleinem n leicht zu klein aus (bei 10 Schuss −4 %, B4; der Faktor √((n − 1)/n) gilt genau nur für den mittleren Radius). σ̂ ist das stabilste Maß für Verläufe über unterschiedliche Schusszahlen.
 - **Robust als Standard in Verläufen:** Median, R50, MAD, Quantilbänder.
 - **Nur Gleiches vergleichen:** gleiche Familie, gleiche Wertung; mm-Werte von LG und LP nie.
-- **Viele Vergleiche erzeugen Zufallstreffer:** Mindest-n, Korrektur (Holm oder Benjamini-Hochberg) oder nur als Hinweis formulieren.
+- **Viele Vergleiche erzeugen Zufallstreffer:** Mindest-n, Korrektur (Holm oder Benjamini-Hochberg) oder nur als Hinweis formulieren. Auf einer Scheibe laufen fünf Tests (Lage, Form, Ausreißer, Trend, Probe): Etwa jede fünfte ganz normale Scheibe zeigt irgendwo einen Befund (B1).
 - **Regression zur Mitte und Auswahl:** Nach einem Rekord ist die nächste Scheibe meist schwächer; „beste Serie“ und korrigiertes Ergebnis sind aus denselben Daten gewählt und optimistisch.
 - **Bedeutsamkeit statt Signifikanz:** lohnend ab 0,3 × der typischen Schwankung (Hopkins); „unklar“ ist ehrlich.
 - **Transparenz:** jede Zahl mit n, Zeitraum, Filter und Kennzahl-Version; Modellwerte als Modell gekennzeichnet.
 
 ## Beobachtungen in Worten (Beispiele)
 
-1. „Serie 3 war deine engste (R50 1,9 mm), Serie 4 streut 34 % weiter.“ — nur bei gleicher Schusszahl und mindestens 20 % Unterschied.
-2. „Dein Schwerpunkt liegt 1,8 mm links, bei 40 Schuss ist das kein Zufall. Zentriert wären es rund 2,4 Ringe mehr gewesen.“ — nur wenn L3 „echt“ sagt und n ≥ 10.
+1. „Serie 3 war deine engste (R50 1,9 mm), Serie 4 streut 34 % weiter.“ — nur bei gleicher Schusszahl und wenn ein Test den Unterschied zeigt; 20 % Unterschied erreichen zwei gleich gute Zehnerserien oft zufällig (Nutzen-Prüfung, Oktober 2026).
+2. „Dein Schwerpunkt liegt 1,8 mm links, bei 40 Schuss ist das kein Zufall. Mit korrigiertem Visier brächten die nächsten Schüsse etwa 2,4 Ringe mehr.“ — nur wenn L3 „echt“ sagt und n ≥ 10 (L4, Leave-one-out).
 3. „Die letzten zehn Schuss waren je Schuss 0,21 schwächer als die ersten zehn, in 6 deiner letzten 8 Trainings war das so.“ — als Muster erst ab fünf Scheiben.
 4. „Drei Abreißer nach rechts unten kosteten dich 2,1 Ringe.“
 5. „Deine Probe war enger als die Wertung (R50 1,6 gegen 2,3 mm).“ — gleiches n.
 6. „Diese Scheibe ist besser als 85 % deiner letzten 50.“ — ab 20 Vergleichsscheiben.
-7. „Seit dem neuen Munitionslos ist dein mittlerer Radius 0,2 mm kleiner, das liegt noch in der normalen Schwankung.“
+7. „Seit dem neuen Munitionslos ist dein σ 0,2 mm kleiner, das liegt noch in der normalen Schwankung.“
+
+## Belege aus Simulationen
+
+Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. Stand nach SP-1.12 (7. Oktober 2026):
+
+```
+B0   innerhalb σ 39,3 %, innerhalb 2σ 86,5 %
+B1   20 Schuss: 22,1 % mit Befund, also etwa jede 5.
+B1   40 Schuss: 22,1 % mit Befund, also etwa jede 5.
+B1   60 Schuss: 22,8 % mit Befund, also etwa jede 4.
+B2   Ausreißer-Fehlalarm rund: 10: 5,2 %, 20: 4,9 %, 40: 4,8 %, 60: 5,0 %
+B2   Ausreißer-Fehlalarm a/b 2: 10: 10,5 %, 20: 14,7 %, 40: 17,2 %, 60: 19,7 %
+B3   Streukreis 40 gegen 10 Schuss: +32 %
+B4   R50 bei 10 Schuss: -4,3 % gegen den Grenzwert
+B5   LG σ 1,5 mm, 40 Schuss, ohne Versatz: Lage-Verlust im Mittel -0,38 Ringe
+B5   LP σ 15 mm, 40 Schuss, ohne Versatz: Lage-Verlust im Mittel -1,20 Ringe
+B5   LG, Versatz 0,5σ, 40 Schuss: angezeigt 1,45, Gewinn auf neuer Scheibe 1,47
+B6   LG σ 1,5 mm, 20 Schuss: Fehlalarm Zehntel 3,8 %, ganze Ringe 3,7 %; Nachlassen erkannt Zehntel 15,6 %, ganze Ringe 14,4 %
+B6   LG σ 1,5 mm, 40 Schuss: Fehlalarm Zehntel 4,7 %, ganze Ringe 4,8 %; Nachlassen erkannt Zehntel 29,6 %, ganze Ringe 27,3 %
+B6   LP σ 15 mm, 20 Schuss: Fehlalarm Zehntel 4,6 %, ganze Ringe 4,7 %; Nachlassen erkannt Zehntel 15,9 %, ganze Ringe 16,6 %
+B6   LP σ 15 mm, 40 Schuss: Fehlalarm Zehntel 5,0 %, ganze Ringe 4,9 %; Nachlassen erkannt Zehntel 30,9 %, ganze Ringe 30,2 %
+B7   5 Probeschüsse, Versatz 1σ: echt in 21,8 %
+B7   5 Probeschüsse, Versatz 2σ: echt in 62,9 %
+B8   von Neumann, 10 Schuss: 1,15 bis 2,80
+B8   von Neumann, 40 Schuss: 1,57 bis 2,41
+B9   Ermüdung LG σ 1,5 mm: Δ Ø -0,34 bis 0,35 Ringe, Δ R50 -57 bis 57 %
+B9   Ermüdung LP σ 15 mm: Δ Ø -1,07 bis 1,11 Ringe, Δ R50 -59 bis 57 %
+B10  Wiedereinstieg LG σ 1,5 mm: -0,49 bis 0,42 Ringe
+B10  Wiedereinstieg LP σ 15 mm: -1,52 bis 1,32 Ringe
+B11  σ Probe/Wertung (5 gegen 40): 0,54 bis 1,57
+B12  Serien-Versatz zur Scheibe: im Mittel 0,35 σ
+B13  Richtungsuhr, 30 Schuss: stärkster Keil im Median ×2,0
+B14  10 Schuss, 1 bei 5σ: mindestens einer erkannt in 89,2 %
+B14  10 Schuss, 2 bei 5σ: mindestens einer erkannt in 13,7 %
+B15  Wilson 20/40: 35,2 bis 64,8 %
+B15  σ-Bereich 10 Schuss: -25,5 % bis +45,8 %
+B15  σ-Bereich 30 Schuss: -15,7 % bis +21,7 %, bei σ̂ 1,12 mm: 0,94 bis 1,36 mm
+B15  σ-Bereich 120 Schuss: -8,3 % bis +9,8 %
+B16  Halbachse der Vertrauensellipse in σ: 5: 2,26, 10: 1,00, 20: 0,61, 40: 0,41, 60: 0,33
+```
+
+Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3, Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.
 
 ## Quellen
 
