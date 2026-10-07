@@ -47,7 +47,8 @@ in SP-1.8; der Code bleibt ohnehin für die Verläufe.
   - P7 `heightWidth`, `group.height`, `group.width` entfallen (Effizienz 0,23–0,43, ein Ausreißer macht die
     Breite 59–87 % größer; die Frage „senkrecht oder waagrecht?“ beantworten P6 und P8).
   - L5 `positionShare` entfällt (dieselbe Aussage wie der Lage-Verlust aus L4, nur in Prozent vom Quadrat).
-  - V2 `decimalHistogram` entfällt (40 Schuss auf rund 17 Zehntelwerte: Rauschen).
+  - V2 `decimalHistogram` **bleibt** (Wunsch des Users, 7. Oktober); die Karte bekommt den Hinweis, dass
+    einzelne Säulen bei einer Scheibe Zufall sind (Einwand der Nutzen-Prüfung: 40 Schuss auf viele Werte).
   - `time.longestPause` entfällt (die Pausen stehen in Z4 und im Rhythmus).
   - L8 `drift`: Ø und größter Sprung entfallen (im Mittel √π · σ), es bleibt das von-Neumann-Verhältnis.
   - V6 `outliers`: das Verhältnis Ø Abstand/R50 entfällt (ohne Grenze, zählt Fehlschüsse anders als R50).
@@ -97,7 +98,7 @@ in SP-1.8; der Code bleibt ohnehin für die Verläufe.
 | `packages/shot-core/src/stats.ts`, `stats.test.ts` | `mannKendall`, `leastSquaresSlope` neu |
 | `packages/shot-core/src/analysis/course.ts`, `course.test.ts` | `cardTrend` nach E4 |
 | `packages/shot-core/src/analysis/position.ts`, `position.test.ts` | `ringLossSplit` nach E5; `positionShare` entfernt; `drift` ohne Sprünge |
-| `packages/shot-core/src/analysis/result.ts`, `result.test.ts` | `ringLoss`, `teilerStats`, `decimalHistogram` entfernt; `shotExtremes` ohne best/worst |
+| `packages/shot-core/src/analysis/result.ts`, `result.test.ts` | `ringLoss`, `teilerStats` entfernt; `shotExtremes` ohne best/worst |
 | `packages/shot-core/src/analysis/precision.ts`, `precision.test.ts` | `heightWidth` entfernt; `outliers` ohne `ratio`; `outlierLoss` nach E6 |
 | `packages/shot-core/src/analysis/timing.ts`, `timing.test.ts` | `shootingTime` entfernt |
 | `packages/shot-core/src/analysis/sighters.ts`, `sighters.test.ts` | `sighterZeroed.matchOffsetUm` |
@@ -170,11 +171,11 @@ Commit `feat(shot-core): measure the sighter offset after the last adjustment`.
 
 ### Task 6: Entfernen in den Auswertungen
 
-`decimalHistogram`, `teilerStats`, best/worst aus `shotExtremes` (ohne `scoring`), `shootingTime`,
+`teilerStats`, best/worst aus `shotExtremes` (ohne `scoring`), `shootingTime`,
 `positionShare`, `heightWidth`, Sprünge aus `drift`. Tests der Funktionen löschen bzw. anpassen; Katalog
 (`shotExtremes: ["E8"]`, Zeilen der entfernten Funktionen weg); `catalog.test.ts` hält die Menge gleich.
-Damit Rückwärtstest und Synchron-Test grün bleiben, im selben Commit die Zuordnung in `shot-help`: Themen
-`zehntelverteilung` und `lageanteil` entfernen, `extreme-und-teiler` auf `catalog: ["E8"]`; Leitfaden neu
+Damit Rückwärtstest und Synchron-Test grün bleiben, im selben Commit die Zuordnung in `shot-help`: Thema
+`lageanteil` entfernen, `extreme-und-teiler` auf `catalog: ["E8"]`; Leitfaden neu
 erzeugen (die Texte folgen in Task 9). `shot-core/CLAUDE.md`: Exporttabelle, Regel aus E1. Commit `refactor(shot-core): drop analyses that repeat
 other numbers`.
 
@@ -197,7 +198,7 @@ Laufzeit unter zwei Minuten (Wiederholungen je Fall 5 000, beim Mehrfachtest 20 
 
 ### Task 9: Hilfetexte
 
-Nach Anhang A: Themen `zehntelverteilung` und `lageanteil` entfernen (23 Themen), Zuordnungen nach E2/E3/E8,
+Nach Anhang A: Thema `lageanteil` entfernen (24 Themen), Zuordnungen nach E2/E3/E8,
 alle Textkorrekturen, `VIEW_HELP` `trefferbild` und Glossar „Vertrauensellipse“ (E13); Werte aus Task 8 einsetzen (Mehrfachtest: Anteil p → „etwa jede k. ganz normale
 Scheibe“ mit k = Rundung von 1/p). Tests: Themenzahl, Lookup (`helpForMetric("group.meanRadius")` jetzt
 `undefined`), Rückwärtstest grün. Leitfaden neu erzeugen. Commit `fix(shot-help): correct the explanations
@@ -205,7 +206,8 @@ after the review`.
 
 ### Task 10: Katalog und Doku
 
-`spiegel-statistics.md`: Zeilen E5, E6, E7, E9, P3, P7, P9, L4, L5, L8, V2, V7, Z3, Z4, I3, S1 nach E1–E9;
+`spiegel-statistics.md`: Zeilen E5, E6, E7, E9, P3, P7, P9, L4, L5, L8, V7, Z3, Z4, I3, S1 nach E1–E9, V2 mit
+„geprüft, bleibt (Wunsch des Users)“;
 Abschnitt „Belege aus Simulationen“ (Methode, Werte aus Task 8, Aufruf); Leitbild „Viel, aber geordnet“ um
 „und nichts doppelt“ ergänzen. `spiegel-metrics.md` (Registry-Liste, Feld `catalog`), `spiegel-edge-cases.md`
 (SF-60, SF-63 auf die neuen Stellen), Roadmap SP-1.12 (Ziel, Umfang, Abnahme, Status). `vault-lint`.
@@ -239,6 +241,9 @@ Probeschüsse zählen nicht mit.“ `read`: bisheriger Text + „Was dir zum Hö
 „Ringverlust nach Ursache“.“ `caution`: „Fehlt einem Schuss der Wert, gibt es kein Ergebnis: Eine Summe über
 einen Teil der Schüsse wäre keins. Den Ø gibt es trotzdem, über die Schüsse mit Wert.“ `formula`:
 „Ergebnis = Σ vᵢ (Zehntel) bzw. Σ Ringᵢ; Ø = Σ vᵢ / n über die Schüsse mit Wert“.
+
+**zehntelverteilung** (bleibt) — `caution` neu: „Einzelne Säulen sind bei einer Scheibe Zufall; aussagekräftig ist die
+Gesamtform, etwa viele Werte knapp unter einer Ringgrenze.“
 
 **extreme-und-teiler** — `title` „Beste und weiteste Teiler“, `catalog` E8. `short`: „Deine drei besten und
 drei weitesten Treffer, gemessen am Teiler.“ `what`: „Die drei kleinsten und die drei größten Teiler mit
@@ -408,7 +413,9 @@ etwa jede {B1}. ganz normale Scheibe irgendwo ein „echt“, „gestreckt“, �
 heißt nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht, um es zu zeigen oder auszuschließen. Mehr
 Schüsse oder mehrere Scheiben klären es. Auf den Karten heißt das auch „nicht klar“, „vom Zufall nicht zu
 unterscheiden“ oder „kein Versatz nachweisbar“; es ist ein ehrliches Ergebnis, kein Fehler.“ „Ganze Ringe oder
-Zehntel“: „… deshalb ist ein Trend dort etwas seltener „klar“ …“. „Probe und Wertung“: „Lage, Streuung und Tempo
+Zehntel“: „Oben umschalten; jede Auswertung über Werte gibt es in beiden, nur die Zehntelverteilung allein in
+Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10), deshalb ist ein Trend
+dort etwas seltener „klar“. Gleich bleiben Zehner, Innenzehner und Zehnerquote.“ „Probe und Wertung“: „Lage, Streuung und Tempo
 der Analyse rechnen über die Wertung. Die Probe hat einen eigenen Reiter. Nach einer Visierverstellung zählt
 bei „Probe gegen Wertung“ und „Eingeschossen?“ nur die Probe danach; der Umfang der Probe zählt alle
 Probeschüsse.“
