@@ -1,8 +1,9 @@
-// Verlauf in der Einheit: Serienkurve, Ermüdung, Trend in der Scheibe, gleitender Schnitt, Streuung und
-// Schwerpunkt je Serie, längste Folge über einer Schwelle (Katalog I1–I6, I10). Grundlage sind die
-// Wertungsschüsse in Abgabefolge, Werte in der gewählten Wertung. Einzelne Scheiben sind verrauscht:
-// Ermüdung und Trend sagen erst als Muster über mehrere Scheiben etwas, der Trend nur „klar“, wenn sein
-// Intervall die 0 ausschließt.
+// Verlauf in der Einheit: Serienkurve, Ermüdung, Trend in der Scheibe, gleitender Schnitt, Streuung
+// und Schwerpunkt je Serie, längste Folge über einer Schwelle (Katalog I1–I6, I10). Grundlage sind
+// die Wertungsschüsse in Abgabefolge, Werte in der gewählten Wertung. Einzelne Scheiben sind
+// verrauscht: Ermüdung und Trend sagen erst als Muster über mehrere Scheiben etwas. Der Trend heißt
+// nur „klar“, wenn Mann-Kendall (zweiseitig, 95 %) eine Richtung zeigt und die Ausgleichsgerade ihr
+// folgt.
 
 import { centroid, r50, type Point } from "../geometry"
 import {
@@ -92,11 +93,13 @@ export function fatigue(
 }
 
 /**
- * Trend in der Scheibe (I3): Steigung der Ausgleichsgeraden je zehn Schuss; „klar“ nach Mann-Kendall mit
- * Korrektur für gleiche Werte (zweiseitig, 95 %), dann mit Richtung. Ab 10 Schuss. Die x-Werte sind die
- * Schussnummern, damit ein Schuss ohne Wert die Steigung nicht verbiegt. Ein Sen-Intervall gibt es nicht
- * mehr: Bei vielen gleichen Werten (ganze Ringe) lag seine Grenze auf 0, und selbst die stärkste Stufe
- * hieß „nicht klar“.
+ * Trend in der Scheibe (I3): Steigung der Ausgleichsgeraden je zehn Schuss; „klar“ nach
+ * Mann-Kendall mit Korrektur für gleiche Werte (zweiseitig, 95 %), dann mit Richtung. Zeigt die
+ * Gerade in die andere Richtung als der Test (ein sehr schwacher Schuss am Rand kann sie kippen),
+ * gibt es kein Urteil: Neben „klar steigend“ stünde sonst eine fallende Zahl. Ab 10 Schuss. Die
+ * x-Werte sind die Schussnummern, damit ein Schuss ohne Wert die Steigung nicht verbiegt. Ein
+ * Sen-Intervall gibt es nicht mehr: Bei vielen gleichen Werten (ganze Ringe) lag seine Grenze auf
+ * 0, und selbst die stärkste Stufe hieß „nicht klar“.
  */
 export function cardTrend(
   shots: readonly MetricShot[],
@@ -112,7 +115,7 @@ export function cardTrend(
   )
   const test = mannKendall(ys)
   if (slope === null || test === null) return null
-  const clear = Math.abs(test.z) > Z95
+  const clear = Math.abs(test.z) > Z95 && Math.sign(slope) === Math.sign(test.s)
   return {
     n: ordered.length,
     perTenShots: slope * 10,

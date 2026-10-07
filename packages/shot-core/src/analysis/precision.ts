@@ -149,11 +149,13 @@ export function outliers(shots: readonly MetricShot[]): { n: number; flagged: Ou
 const MATCH: readonly ShotKind[] = ["match"]
 
 /**
- * Was die markierten Ausreißer kosten (V7): Σ (Median der übrigen Wertungswerte − Wert) über die von
- * `outliers` markierten Wertungsschüsse mit Wert, in Ringen der gewählten Wertung. Negativ, wenn ein
- * Ausreißer zur Mitte hin liegt und Ringe bringt. Ohne markierten Schuss 0. Ohne Urteil über Ausreißer
- * (unter fünf Wertungsschüssen mit Lage) oder ohne einen übrigen Wert als Vergleich null. Die schwächsten 10 % zählen nicht mehr: Einen großen
- * Verlust dort hat jede normale Gruppe, er wächst mit Streuung und Schusszahl.
+ * Was die markierten Ausreißer kosten (V7): Σ (Median der übrigen Wertungswerte − Wert) über die
+ * von `outliers` markierten Wertungsschüsse, in Ringen der gewählten Wertung. Negativ, wenn ein
+ * Ausreißer zur Mitte hin liegt und Ringe bringt; ohne markierten Schuss 0. Null ohne Urteil über
+ * Ausreißer (unter fünf Wertungsschüssen mit Lage), ohne Wert in der gewählten Wertung, wenn einem
+ * markierten Schuss der Wert fehlt (dann sind die Kosten unbekannt, SF-07) und wenn kein übriger
+ * Wert als Vergleich bleibt. Die schwächsten 10 % zählen nicht mehr: Einen großen Verlust dort hat
+ * jede normale Gruppe, er wächst mit Streuung und Schusszahl.
  */
 export function outlierLoss(
   shots: readonly MetricShot[],
@@ -164,7 +166,9 @@ export function outlierLoss(
   if (!verdict) return null
   const flagged = new Set(verdict.flagged.map((outlier) => outlier.shot))
   const valued = selectShots(inShotOrder(match), { kinds: MATCH, need: valueNeed(scoring) })
+  if (valued.length === 0) return null
   const marked = valued.filter((shot) => flagged.has(shot))
+  if (marked.length < flagged.size) return null
   const others = valued.filter((shot) => !flagged.has(shot)).map((s) => valueTenths(s, scoring))
   if (marked.length === 0) return { n: valued.length, count: 0, loss: 0 }
   // alle markiert: kein typischer Schuss als Vergleich

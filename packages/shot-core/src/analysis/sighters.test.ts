@@ -189,7 +189,22 @@ describe("Versatz Probe → Wertung (S1, in S4)", () => {
 
   it("die Reihenfolge der Liste zählt nicht, nur die Abgabefolge", () => {
     const shuffled = [...MATCHES, ...ADJUSTED.slice(5, 8), ...ADJUSTED.slice(0, 5)]
-    expect(sighterZeroed(shuffled, { adjustAfter: [5] })?.matchOffsetUm).toBeCloseTo(0, 9)
+    const zeroed = sighterZeroed(shuffled, { adjustAfter: [5] })
+    expect(zeroed?.matchOffsetUm).toEqual(expect.any(Number))
+    expect(zeroed?.matchOffsetUm).toBeCloseTo(0, 9)
+  })
+
+  it("der Versatz misst gegen den Schwerpunkt der Wertung, nicht gegen die Mitte", () => {
+    // Probe nach der Verstellung um die Mitte, die Wertung 2 mm rechts davon
+    const shifted = [
+      ...ADJUSTED.slice(0, 8),
+      ...MATCHES.map((m) => ({ ...m, xUm: (m.xUm as number) + 2000 })),
+    ]
+    const zeroed = sighterZeroed(shifted, { adjustAfter: [5] })
+    expect(zeroed?.offsetUm).toEqual(expect.any(Number))
+    expect(zeroed?.offsetUm).toBeCloseTo(0, 9)
+    expect(zeroed?.matchOffsetUm).toEqual(expect.any(Number))
+    expect(zeroed?.matchOffsetUm).toBeCloseTo(2000, 9)
   })
 
   it("Probe nach Beginn der Wertung zählt nicht zum Versatz", () => {

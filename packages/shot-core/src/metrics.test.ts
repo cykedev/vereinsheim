@@ -10,10 +10,12 @@ import {
   METRICS,
   metricByKey,
   shotNumbers,
+  timesInOrder,
   type MetricDefinition,
   type MetricShot,
 } from "./metrics"
 import { CARD, MATCH, PROBE, SPREAD } from "./__fixtures__/cards"
+import { tempo } from "./time"
 
 const def = (key: string) => {
   const metric = metricByKey(key)
@@ -108,6 +110,8 @@ describe("Ergebnis-Kennzahlen", () => {
       expect(value(key, card)).toBeCloseTo(value(key, MATCH) ?? Number.NaN, 9)
     }
     expect(value("time.intervalMedian", card)).toBe(value("time.intervalMedian", MATCH))
+    // zählte seine Zeit, dauerte die Karte bis zum Platzhalter
+    expect(value("time.duration", card)).toBe(250)
     expect(value("result.decimal", card)).toBeCloseTo(51.8 + 8.7, 9)
     expect(value("result.rings", card)).toBe(57)
   })
@@ -278,6 +282,9 @@ describe("Tempo, Reihenfolge und Probe", () => {
     const untimed = steady.map((shot, i) => (i === 3 ? { ...shot, firedAtMs: null } : shot))
     for (const shots of [flagged, untimed]) {
       expect(value("time.intervalMedian", shots)).toBe(100)
+      // ohne die Lücke wären die 200 s über den fehlenden Schuss hinweg eine Pause
+      const times = timesInOrder(selectShots(inShotOrder(shots), { need: "time" }))
+      expect(tempo(times).pausesMs).toEqual([])
     }
   })
 })

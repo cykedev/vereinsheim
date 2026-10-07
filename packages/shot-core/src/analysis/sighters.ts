@@ -1,4 +1,4 @@
-// Probe und Wertung: Umfang der Probe, Probe gegen Wertung und „eingeschossen?“ (Katalog S2–S4). Die
+// Probe und Wertung: Umfang der Probe, Probe gegen Wertung und „eingeschossen?“ (Katalog S1–S4). Die
 // Probe zählt bis zum ersten Wertungsschuss; nach einer Visierverstellung zählt nur der Teil danach
 // (SF-63).
 

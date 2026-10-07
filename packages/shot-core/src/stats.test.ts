@@ -201,6 +201,9 @@ describe("Mann-Kendall und Ausgleichsgerade", () => {
     // x̄ 1,5, ȳ 2: Σ(x − x̄)(y − ȳ) = 3, Σ(x − x̄)² = 5
     expect(leastSquaresSlope([0, 1, 2, 3], [1, 2, 2, 3])).toBeCloseTo(0.6, 12)
     expect(leastSquaresSlope([1, 1, 1], [1, 2, 3])).toBeNull()
+    // 0,1 ist binär nicht exakt: Der Mittelwert weicht im letzten Bit ab, Σ(x − x̄)² wäre nicht 0
+    const ys = [20.6, 11.3, 2.1, 16.5, 7.2, 21.6, 12.4]
+    expect(leastSquaresSlope(Array<number>(7).fill(0.1), ys)).toBeNull()
     expect(leastSquaresSlope([1], [1])).toBeNull()
     expect(() => leastSquaresSlope([1, 2, 3], [1, 2])).toThrow(RangeError)
   })

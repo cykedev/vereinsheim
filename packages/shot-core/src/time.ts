@@ -15,7 +15,10 @@ export interface Tempo {
   /** negative Abstände: Rücksprünge der Uhr (SF-30) */
   clockJumps: number
   medianIntervalMs: number | null
-  /** 0, wenn es keine Pause gab; null unter zwei Schüssen */
+  /**
+   * 0, wenn es keine Pause gab; null unter zwei Schüssen. Keine Kennzahl mehr (Oktober 2026): Die
+   * Pausen zeigt Z4 einzeln.
+   */
   longestPauseMs: number | null
   /** vom frühesten bis zum spätesten Schuss; null ohne Schuss oder nach einem Sprung der Uhr */
   durationMs: number | null

@@ -20,7 +20,7 @@ const WITH_PLACEHOLDER = EVENING.map((shot, i) =>
   i === 2 ? { ...shot, flags: [FLAG_SUSPICIOUS] } : shot
 )
 
-describe("Tempo-Konstanz und Schießzeit (Z2, Z3)", () => {
+describe("Tempo-Konstanz (Z2)", () => {
   it("IQR der Intervalle ohne Pause, auch relativ zum Median", () => {
     const spread = tempoSpread(EVENING)
     expect(spread?.n).toBe(8)

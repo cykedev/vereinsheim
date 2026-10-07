@@ -1,6 +1,7 @@
 // Zeit und Rhythmus: Tempo-Konstanz, Wiedereinstieg nach Pausen und ein Rhythmus-Profil über die
-// Schussnummer (Katalog Z2, Z4, Z5); die Dauer (Z3) liefert die Registry (`time.duration`). Zeiten in Abgabefolge; fehlt ein Schuss oder
-// springt die Uhr zurück, zählt der Abstand nicht (SF-30). Intervalle über drei Minuten sind Pausen.
+// Schussnummer (Katalog Z2, Z4, Z5); die Dauer (Z3) liefert die Registry (`time.duration`). Zeiten
+// in Abgabefolge; fehlt ein Schuss oder springt die Uhr zurück, zählt der Abstand nicht (SF-30).
+// Intervalle über drei Minuten sind Pausen.
 
 import {
   inShotOrder,

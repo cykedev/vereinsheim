@@ -221,8 +221,36 @@ describe("Ausreißer (V6, V7)", () => {
   })
 
   it("nur Wertungsschüsse; unter fünf Schuss mit Lage kein Urteil", () => {
+    // Zählte der weite Probeschuss mit, wäre er der Ausreißer, und der Wertungsschuss bei 3,3 mm fiele in
+    // der breiteren Gruppe nicht mehr auf
     const far: MetricShot = { ...valued(PROBE[0], 60), xUm: 9000, yUm: 9000, firedAtMs: 300_000 }
-    expect(outlierLoss([...priced(2800, 104), far], "decimal")).toEqual({ n: 9, count: 0, loss: 0 })
+    expect(outlierLoss([...priced(3300, 92), far], "decimal")).toEqual({
+      n: 9,
+      count: 1,
+      loss: 1.2,
+    })
     expect(outlierLoss(priced(3300, 92).slice(0, 4), "decimal")).toBeNull()
+  })
+
+  it("fehlt einem markierten Schuss der Wert, sind die Kosten unbekannt", () => {
+    // Der Ausreißer hat nur einen ganzen Ring: in Zehnteln kein Ergebnis (SF-07), in Ringen 10 − 9 = 1
+    const noTenths = priced(3300, 92).map((shot, i) =>
+      i === 8 ? { ...shot, decimalTenths: null } : shot
+    )
+    expect(outlierLoss(noTenths, "decimal")).toBeNull()
+    expect(outlierLoss(noTenths, "rings")).toEqual({ n: 9, count: 1, loss: 1 })
+  })
+
+  it("ohne einen Wert in der gewählten Wertung keine Kosten, auch ohne Ausreißer", () => {
+    const ringsOnly = priced(2800, 104).map((shot) => ({ ...shot, decimalTenths: null }))
+    expect(outlierLoss(ringsOnly, "decimal")).toBeNull()
+    expect(outlierLoss(ringsOnly, "rings")).toEqual({ n: 9, count: 0, loss: 0 })
+  })
+
+  it("hat nur der markierte Schuss einen Wert, fehlt der Vergleich", () => {
+    const onlyOutlier = priced(3300, 92).map((shot, i) =>
+      i < 8 ? { ...shot, decimalTenths: null } : shot
+    )
+    expect(outlierLoss(onlyOutlier, "decimal")).toBeNull()
   })
 })

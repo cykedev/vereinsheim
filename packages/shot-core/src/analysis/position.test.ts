@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { MATCH, SPREAD } from "../__fixtures__/cards"
-import type { MetricShot } from "../metrics"
+import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
 import { scoreFromCoordinates } from "../scoring"
 import { LG_10M, LP_10M } from "../targets"
 import { directionClock, drift, mpiConfidence, ringLossSplit } from "./position"
@@ -124,7 +124,7 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     expect(split?.reliable).toBe(false)
   })
 
-  it("Zehntel gewonnen, aber ein Ring verloren: nicht belastbar", () => {
+  it("Zehntel gewonnen, aber zwei Ringe verloren: nicht belastbar", () => {
     // LP, 14 Schuss, Lage echt; um den Schwerpunkt der übrigen verschoben +1,9 in Zehnteln, aber −2 in
     // ganzen Ringen (Ist 139,2 und 135, zentriert 141,1 und 133; nachgerechnet unabhängig vom Code)
     const mixed = [
@@ -194,16 +194,37 @@ describe("Ringverlust durch Lage gegen Streuung (L4)", () => {
     )
     for (const card of [TIGHT_RIGHT, wide]) {
       const split = ringLossSplit(card, LP_10M)
-      expect(split).not.toBeNull()
-      if (!split) continue
-      expect(split.total.decimal).toBeCloseTo(split.n * 10.9 - split.actual.decimal, 9)
-      expect(split.total.rings).toBe(split.n * 10 - split.actual.rings)
-      expect(split.positionLoss.decimal + split.spreadLoss.decimal).toBeCloseTo(
-        split.total.decimal,
-        9
-      )
-      expect(split.positionLoss.rings + split.spreadLoss.rings).toBe(split.total.rings)
+      const total = split?.total
+      expect(total).toEqual({ decimal: expect.any(Number), rings: expect.any(Number) })
+      if (!split || !total) continue
+      expect(total.decimal).toBeCloseTo(split.n * 10.9 - split.actual.decimal, 9)
+      expect(total.rings).toBe(split.n * 10 - split.actual.rings)
+      expect(split.positionLoss.decimal + split.spreadLoss.decimal).toBeCloseTo(total.decimal, 9)
+      expect(split.positionLoss.rings + split.spreadLoss.rings).toBe(total.rings)
     }
+    // in Zehnteln gerechnet: kein Rest wie 4,200000000000003
+    expect(ringLossSplit(wide, LP_10M)?.total?.decimal).toBe(7.4)
+  })
+
+  it("fehlt einem Wertungsschuss die Lage oder ist er verdächtig, gibt es keinen Ringverlust", () => {
+    // Die Aufteilung wertet die Lage neu und kennt nur Schüsse mit Lage. Eine Summe über einen Teil der
+    // Schüsse ist kein Ringverlust der Scheibe (SF-07); Lage und Streuung bleiben eine Schätzung.
+    const handEntry: MetricShot = {
+      ...MATCH[0],
+      xUm: null,
+      yUm: null,
+      decimalTenths: 73,
+      ring: 7,
+      firedAtMs: 200_000,
+      flags: [FLAG_SUSPICIOUS],
+    }
+    const split = ringLossSplit([...TIGHT_RIGHT, handEntry], LP_10M)
+    expect(split?.n).toBe(10)
+    expect(split?.total).toBeNull()
+    expect(split?.positionLoss.decimal).toBeCloseTo(6, 9)
+    const suspicious = { ...TIGHT_RIGHT[0], flags: [FLAG_SUSPICIOUS] }
+    expect(ringLossSplit([suspicious, ...TIGHT_RIGHT.slice(1)], LP_10M)?.total).toBeNull()
+    expect(ringLossSplit(TIGHT_RIGHT, LP_10M)?.total).toEqual({ decimal: 6, rings: 0 })
   })
 
   it("eine um die Mitte symmetrische Gruppe: die Korrektur bringt nichts", () => {

@@ -164,6 +164,19 @@ describe("Ermüdung und Trend (I2, I3)", () => {
     // die Steigung zeigt den Nuller trotzdem: Σ(x − x̄)(y − ȳ) = −95, Σ(x − x̄)² = 665
     expect(trend?.perTenShots).toBeCloseTo(-950 / 665, 9)
   })
+
+  it("widersprechen sich Rangtest und Gerade, gibt es kein Urteil", () => {
+    // Fünfmal 8, sechsmal 9, achtmal 10, dann ein Fehlschuss: Fast jeder spätere Schuss ist besser
+    // (S 99, Var 15114/18, z ≈ 3,38), der Nuller am Ende zieht die Gerade aber ins Minus:
+    // Σ(x − x̄)(y − ȳ) = −8, Σ(x − x̄)² = 665. „Klar steigend“ neben einer fallenden Zahl wäre falsch.
+    const rings = [...Array(5).fill(80), ...Array(6).fill(90), ...Array(8).fill(100), 0]
+    const trend = cardTrend(
+      rings.map((v, i) => shot(i, v)),
+      "rings"
+    )
+    expect(trend?.perTenShots).toBeCloseTo(-80 / 665, 9)
+    expect(trend).toMatchObject({ clear: false, direction: null })
+  })
 })
 
 describe("Gleitender Schnitt und längste Folge (I4, I10)", () => {

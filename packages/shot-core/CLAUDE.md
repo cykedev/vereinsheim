@@ -73,11 +73,16 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - **Neue Auswertung, neuer Katalog-Eintrag:** Jede exportierte Funktion aus `./analysis` steht mit ihren
   Katalog-IDs in `ANALYSIS_CATALOG` (Test erzwingt das), und `@vereinsheim/shot-help` braucht für jede
   dieser IDs eine Erklärung (Test dort). Ohne Erklärung bleibt das Gate rot.
-- **Ehrlich statt scheingenau.** Unsicherheit dort, wo sie exakt rechenbar ist (Wilson, χ², Hotelling
-  mit F(2, n − 2), Trend nach Mann-Kendall mit Bindungskorrektur, Ausreißer gegen die übrigen mit
-  F(2, 2(n − 2)) und
-  Bonferroni, Form mit Mauchly); Aussagen wie „echt“ oder „klar“ nur über der Grenze,
-  sonst kein Urteil. Unter der Mindestzahl `null`. Testwerte aus Tabellen oder Hand-Rechnung, nicht aus
-  der eigenen Implementierung; Testdaten symmetrisch und ganzzahlig, wenn sie einen Schwerpunkt in der
-  Mitte brauchen (`Math.round` rundet −x,5 anders als x,5).
+- **Simulation nachziehen:** Ändert sich eine Auswertung, die eine Zahl in einem Hilfetext belegt
+  (Trend, Ringverlust, Ausreißer, Form, σ, Probe), `pnpm --filter @vereinsheim/shot-help simulate`
+  laufen lassen und den Block „Belege aus Simulationen“ in `vault/spiegel/spiegel-statistics.md` samt den
+  zitierenden Texten angleichen. Das Gate prüft das nicht (Laufzeit, Zufallszahlen).
+- **Ehrlich statt scheingenau.** Unsicherheit nur mit einem anerkannten Verfahren (Wilson, χ²,
+  Hotelling mit F(2, n − 2), Mann-Kendall mit Bindungskorrektur über die Normalnäherung, Ausreißer
+  gegen die übrigen mit F(2, 2(n − 2)) und Bonferroni, Form mit Mauchly); Aussagen wie „echt“ oder
+  „klar“ nur über der Grenze, sonst kein Urteil. Ein Urteil und die Zahl daneben dürfen sich nicht
+  widersprechen (der Trend ist nur „klar“, wenn die Gerade dieselbe Richtung zeigt wie der Test). Unter
+  der Mindestzahl `null`. Testwerte aus Tabellen oder Hand-Rechnung, nicht aus der eigenen
+  Implementierung; Testdaten symmetrisch und ganzzahlig, wenn sie einen Schwerpunkt in der Mitte
+  brauchen (`Math.round` rundet −x,5 anders als x,5).
 - Nach Änderungen: `pnpm check`; `format:check` prüft auch diese Datei.

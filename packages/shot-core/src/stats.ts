@@ -1,7 +1,8 @@
 // Statistik-Hilfen für die Auswertungen: robuste Lage- und Streumaße, Quoten mit Wilson-Intervall,
-// Quantile der χ²- und F-Verteilung in den Fällen mit geschlossener Verteilungsfunktion, eine robuste
-// Trendgerade, der Trendtest nach Mann-Kendall und die Ausgleichsgerade. Rein und ohne Abhängigkeiten; Werte unter der nötigen Zahl ergeben null statt einer Zahl,
-// nicht endliche Werte (NaN, unendlich) sind ein Fehler statt eines stillen Ergebnisses.
+// Quantile der χ²- und F-Verteilung in den Fällen mit geschlossener Verteilungsfunktion, eine
+// robuste Trendgerade, der Trendtest nach Mann-Kendall und die Ausgleichsgerade. Rein und ohne
+// Abhängigkeiten; Werte unter der nötigen Zahl ergeben null statt einer Zahl, nicht endliche Werte
+// (NaN, unendlich) sind ein Fehler statt eines stillen Ergebnisses.
 
 /** z für ein zweiseitiges 95-%-Intervall */
 export const Z95 = 1.959963984540054
@@ -187,13 +188,17 @@ export function mannKendall(
   return { s, variance, z }
 }
 
-/** Steigung der Ausgleichsgeraden nach kleinsten Quadraten; ohne Streuung in x (oder unter zwei Punkten) null */
+/**
+ * Steigung der Ausgleichsgeraden nach kleinsten Quadraten; ohne Streuung in x (oder unter zwei
+ * Punkten) null. Gleiche x erkennt der Vergleich, nicht Σ(x − x̄)²: Bei Werten wie 0,1 bliebe dort
+ * ein Rest.
+ */
 export function leastSquaresSlope(xs: readonly number[], ys: readonly number[]): number | null {
   if (xs.length !== ys.length) throw new RangeError("x und y brauchen gleich viele Werte")
   assertFinite(xs)
   assertFinite(ys)
   const n = xs.length
-  if (n < 2) return null
+  if (n < 2 || xs.every((x) => x === xs[0])) return null
   const mx = xs.reduce((sum, x) => sum + x, 0) / n
   const my = ys.reduce((sum, y) => sum + y, 0) / n
   let sxy = 0

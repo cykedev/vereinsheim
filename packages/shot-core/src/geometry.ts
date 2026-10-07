@@ -112,7 +112,10 @@ export function extremeSpread(points: readonly Point[]): number | null {
   return widest
 }
 
-/** Mittel der Abstände zum Schwerpunkt */
+/**
+ * Mittel der Abstände zum Schwerpunkt. Keine Kennzahl mehr (P3 entfiel im Oktober 2026, ≈ 1,24 · σ̂);
+ * bleibt als Baustein, etwa für Vergleiche mit Literatur, die den mittleren Radius angibt.
+ */
 export function meanRadius(points: readonly Point[]): number | null {
   const center = centroid(points)
   if (!center) return null

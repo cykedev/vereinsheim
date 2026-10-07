@@ -80,16 +80,23 @@ interface Totals {
 }
 
 export interface RingLossSplit {
+  /** Wertungsschüsse mit Lage, aus ihr neu gewertet; verdächtige zählen nicht (SF-15) */
   n: number
   actual: Totals
   /**
-   * jeder Treffer um den Schwerpunkt der übrigen verschoben (Leave-one-out) und neu gewertet: schätzt,
-   * was eine Korrektur um den gemessenen Versatz auf neuen Schüssen bringt. In der Stichprobe zentriert
-   * wäre das zu optimistisch, weil der Schwerpunkt aus denselben Schüssen stammt.
+   * jeder Treffer um den Schwerpunkt der übrigen verschoben (Leave-one-out) und neu gewertet:
+   * schätzt, was eine Korrektur um den gemessenen Versatz auf neuen Schüssen bringt. In der
+   * Stichprobe zentriert wäre das zu optimistisch, weil der Schwerpunkt aus denselben Schüssen
+   * stammt.
    */
   centered: Totals
-  /** Ringverlust zum Höchstwert (Katalog E9): Lage plus Streuung */
-  total: Totals
+  /**
+   * Ringverlust zum Höchstwert (Katalog E9): Lage plus Streuung. Nur, wenn jeder Wertungsschuss
+   * darin steckt; fehlt einem die Lage oder ist er verdächtig, null: Eine Summe über einen Teil der
+   * Schüsse ist kein Ringverlust der Scheibe (SF-07). Lage und Streuung bleiben dann eine Schätzung
+   * über die übrigen.
+   */
+  total: Totals | null
   /** zentriert minus Ist; ohne echten Versatz meist leicht negativ, bei schiefen Gruppen auch deutlich */
   positionLoss: Totals
   spreadLoss: Totals
@@ -103,7 +110,12 @@ export interface RingLossSplit {
 
 const MATCH: readonly ShotKind[] = ["match"]
 
-function score(target: TargetImage, points: readonly Point[]): Totals {
+interface Score {
+  tenths: number
+  rings: number
+}
+
+function score(target: TargetImage, points: readonly Point[]): Score {
   let tenths = 0
   let rings = 0
   for (const p of points) {
@@ -111,10 +123,21 @@ function score(target: TargetImage, points: readonly Point[]): Totals {
     tenths += s.decimalTenths
     rings += s.ring
   }
-  return { decimal: tenths / 10, rings }
+  return { tenths, rings }
 }
 
-/** Ringverlust nach Ursache: Lage (Versatz des Schwerpunkts) gegen Streuung (Gruppe um ihn), L4 */
+// in Zehnteln gerechnet und erst am Ende geteilt: 7,4 statt 7,400000000000006
+const totals = (s: Score): Totals => ({ decimal: s.tenths / 10, rings: s.rings })
+const minus = (a: Score, b: Score): Totals => ({
+  decimal: (a.tenths - b.tenths) / 10,
+  rings: a.rings - b.rings,
+})
+
+/**
+ * Ringverlust nach Ursache: Lage (Versatz des Schwerpunkts) gegen Streuung (Gruppe um ihn), L4.
+ * Gewertet wird aus der Lage, nur mit den Wertungsschüssen mit Lage; den Ringverlust der Scheibe
+ * (`total`) gibt es nur, wenn das alle sind.
+ */
 export function ringLossSplit(
   shots: readonly MetricShot[],
   target: TargetImage
@@ -134,18 +157,16 @@ export function ringLossSplit(
       yUm: (p.yUm - center.yUm) * stretch,
     }))
   )
-  const best = { decimal: (n * 109) / 10, rings: n * 10 }
-  const positionLoss = {
-    decimal: centered.decimal - actual.decimal,
-    rings: centered.rings - actual.rings,
-  }
+  const best = { tenths: n * 109, rings: n * 10 }
+  const positionLoss = minus(centered, actual)
+  const complete = shots.filter((shot) => shot.kind === "match").length === n
   return {
     n,
-    actual,
-    centered,
-    total: { decimal: best.decimal - actual.decimal, rings: best.rings - actual.rings },
+    actual: totals(actual),
+    centered: totals(centered),
+    total: complete ? minus(best, actual) : null,
     positionLoss,
-    spreadLoss: { decimal: best.decimal - centered.decimal, rings: best.rings - centered.rings },
+    spreadLoss: minus(best, centered),
     reliable:
       n >= 10 &&
       mpiConfidence(match)?.real === true &&
@@ -180,12 +201,12 @@ export function directionClock(
 }
 
 /**
- * Drift in der Abgabefolge: das von-Neumann-Verhältnis, je Sprung und je Freiheitsgrad normiert:
- * (Σ Sprung²/k) / (Σ rᵢ²/(n − 1)). Um 2 bei unabhängigen Schüssen, deutlich darunter wandert die Gruppe;
- * ein Urteil gibt es nicht, weil die Zahl bei kleinem n stark schwankt. Ø und größter Sprung entfallen
- * (Oktober 2026): Im Mittel sind sie nur √π · σ.
- * Fehlt ein Schuss (Sprung in `seq`, SF-30), zählt der Sprung darüber nicht, und die Normierung je
- * Sprung hält das Verhältnis trotzdem bei 2. Ab drei Schuss.
+ * Drift in der Abgabefolge: das von-Neumann-Verhältnis, je Sprung und je Freiheitsgrad normiert: (Σ
+ * Sprung²/k) / (Σ rᵢ²/(n − 1)). Um 2 bei unabhängigen Schüssen, deutlich darunter wandert die
+ * Gruppe; ein Urteil gibt es nicht, weil die Zahl bei kleinem n stark schwankt. Ø und größter
+ * Sprung entfallen (Oktober 2026): Der Ø Sprung ist im Mittel √π · σ, sagt also nichts Neues, und
+ * der größte wächst mit der Schusszahl. Fehlt ein Schuss (Sprung in `seq`, SF-30), zählt der Sprung
+ * darüber nicht, und die Normierung je Sprung hält das Verhältnis trotzdem bei 2. Ab drei Schuss.
  */
 export function drift(shots: readonly MetricShot[]): { n: number; vonNeumann: number } | null {
   const steps = stepsInOrder(selectShots(inShotOrder(shots), { need: "position" }))
