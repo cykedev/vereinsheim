@@ -14,7 +14,7 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
 
 - **Einwilligung vor dem ersten Upload**, jederzeit widerrufbar. Das Opt-in per Sportpass ist genau diese Einwilligung: Wer seine Sportpassnummer verknüpft und zustimmt, dessen Scheiben werden automatisch hochgeladen; ohne Opt-in nur, was jemand selbst per QR abholt. Gäste und Jugendliche unterstützt Spiegel vorerst nicht; Konten gibt es nur für erwachsene Mitglieder.
 - **Verantwortlich ist der Verein.** Mit dem Hoster des VPS braucht es einen Vertrag zur Auftragsverarbeitung.
-- **Datensparsamkeit in der Brücke:** Scheiben ohne zugestimmten Besitzer bleiben im Schützenhaus; die Brücke kennt dafür nur gehashte Kennungen ([[spiegel-bridge]]). Die Probe aller Scheiben puffert sie dort bis zu sieben Tage, weil Meyton sie womöglich mit dem ersten Wertungsschuss verwirft; hinaus geht sie nur mit Opt-in oder Abholung.
+- **Datensparsamkeit in der Brücke:** Scheiben ohne zugestimmten Besitzer bleiben im Schützenhaus; die Brücke kennt dafür nur gehashte Kennungen ([[spiegel-bridge]]). Sie hält keinen eigenen Zustand; die Probe fremder Scheiben höchstens begrenzt im Arbeitsspeicher, bis zum Ausschalten. Hinaus geht sie nur mit Opt-in oder Abholung.
 - **Doppelt geprüft:** Spiegel nimmt nur Scheiben an, die zu einem Opt-in oder einem offenen Auftrag passen ([[spiegel-ingest-pipeline]]).
 - **Falsche Zuordnung:** Wählt jemand am Stand einen fremden Namen, landet seine Scheibe beim Falschen. „Nicht meine“ nimmt sie sofort heraus; ohne Besitzer wird sie gelöscht ([[spiegel-assignment]]).
 - **Grabsteine:** Gelöschte und abgelehnte Scheiben merken sich Spiegel und Brücke als Grabstein, damit der nächste Abgleich sie nicht wieder hochlädt.

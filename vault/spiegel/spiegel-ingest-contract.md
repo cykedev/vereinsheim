@@ -38,7 +38,7 @@ Snapshot {
   sourceVersion: string | null          Inhalt der Tabelle `Version`, falls lesbar
   epoch: Ganzzahl ≥ 1                    Epoche der Quelle (SF-23)
   scheibenId: Ganzzahl, 32 Bit mit Vorzeichen
-  sequence: Ganzzahl ≥ 1                 Folgenummer der Brücke, streng steigend (SF-26)
+  sequence: Ganzzahl ≥ 1                 Folgenummer, streng steigend (SF-26); ohne Zustand: ms seit 1970
   observedAt: "YYYY-MM-DDTHH:mm:ss.sssZ" Beobachtungszeit in UTC
   sessionTimeZone: string                @@session.time_zone beim Lesen (SF-31)
   data: {

@@ -92,9 +92,9 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-1.4 Brücke v1: lesen, puffern, hochladen
 - **Ziel:** Rohdaten kommen verlässlich aus dem Schützenhaus.
-- **Umfang:** `apps/spiegel-bridge` nach [[spiegel-bridge]]: Kopplung, Leser mit Read-only-Transaktionen, Änderungserkennung, Probe-Puffer, Snapshots mit Prüfsumme, Warteschlange, Upload, Heartbeat, Statusseite; Betrieb mit Abschalten nach dem Training (Stromverlust, Nachholen beim Start).
-- **Schnitt:** a) Leser, Änderungserkennung, Probe-Puffer, Snapshots und Warteschlange, nur lokal; b) Kopplung, Upload und Heartbeat; c) Härtung für Stromverlust und Selbst-Update, Statusseite.
-- **Abnahme:** gegen eine lokale MySQL mit SSMDB2-Schema und den Fällen aus SP-1.0, Ausfalltests (Netz weg, DB weg, wiederholt Stecker ziehen während Upload, Schreiben und Update), einmal an der echten Anlage; Sonderfälle SF-02, SF-03, SF-07, SF-08, SF-10, SF-23, SF-24, SF-25, SF-26, SF-31, SF-32, SF-33, SF-49, SF-50, SF-51, SF-52, SF-53, SF-54, SF-55, SF-57, SF-58.
+- **Umfang:** `apps/spiegel-bridge` nach [[spiegel-bridge]], ohne eigenen Zustand ([[adr-027]], Änderung vom 8. Oktober 2026): Kopplung, Leser mit Read-only-Transaktionen, Änderungserkennung, Snapshots mit Prüfsumme, Upload mit Wiederholung statt Warteschlange, Heartbeat, Statusseite; Probe höchstens im Arbeitsspeicher (nach SP-0.6); Betrieb mit Abschalten nach dem Training (Nachholen beim Start ab dem Wasserstand in Spiegel).
+- **Schnitt:** a) Leser, Änderungserkennung und Snapshots, nur lokal; b) Kopplung, Upload und Heartbeat; c) Nachholen beim Start, Updates, Statusseite.
+- **Abnahme:** gegen eine lokale MySQL mit SSMDB2-Schema und den Fällen aus SP-1.0, Ausfalltests (Netz weg, DB weg, Stecker ziehen während des Uploads; danach nichts auf der Platte außer der Konfiguration), einmal an der echten Anlage; Sonderfälle SF-02, SF-03, SF-07, SF-08, SF-10, SF-23, SF-24, SF-25, SF-26, SF-31, SF-32, SF-33, SF-49, SF-50, SF-51, SF-52, SF-53, SF-54, SF-55, SF-57, SF-58.
 - **Hängt ab von:** SP-0.4, SP-1.0. **Status:** offen.
 
 ### SP-1.5 Brücke v1: Opt-in, Aufträge, verdeckte Wertung
