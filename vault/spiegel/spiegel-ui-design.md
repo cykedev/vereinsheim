@@ -76,8 +76,12 @@ Oktober 2026), im Labor unter den Kacheln.
 - **Diagramme** als SVG in Bildschirm-Pixeln (Breite gemessen, ohne Messung 600 px), Schrift 12 px, Farben aus
   den Design-2-Tokens. Punkte tragen einen dunklen Rand, Ausreißer zusätzlich einen Ring (nicht nur Rot). Das
   Schwerpunkt-Zeichen ist dasselbe wie auf der Scheibe.
+- **Lineal** (Oktober 2026, [[spiegel-mobile]]): Verlauf, Rhythmus und Zehntel-Säulen liest man per Antippen oder
+  Ziehen ab; die Werte stehen in einer Zeile über dem Diagramm, eine senkrechte Linie markiert die Stelle.
+  Darunter „Werte als Tabelle“, auch bei der Richtungsuhr.
 - **Kopplung an die Scheibe:** Der Knopf „Vertrauensellipse auf der Scheibe“ in „Lage echt?“ schaltet die Ebene
-  der Scheibe. Der Bezug der Richtungsuhr (Mitte oder Schwerpunkt) gehört der Karte.
+  der Scheibe. Der Bezug der Richtungsuhr (Mitte oder Schwerpunkt) gehört der Karte. „Auf der Scheibe“ im Lineal
+  von Verlauf und Rhythmus wählt den Schuss dort; ein auf der Scheibe gewählter Schuss steht im Lineal.
 - **Probe ohne Visier:** „Probe gegen Wertung“ nimmt die ganze Probe vor der Wertung, „Eingeschossen?“ die
   letzten fünf Probeschüsse mit Lage; das Probe-Diagramm zeichnet sie in Abgabefolge.
 - **Hilfe an jeder Karte:** Titel, Katalog-IDs und Kurzsatz aus dem Thema, im Kopf ein „?“, das die Erklärung als

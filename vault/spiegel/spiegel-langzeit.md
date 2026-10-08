@@ -9,7 +9,7 @@ governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]"]
 ---
 
-**TL;DR** Die Seite eines Zeitraums ist für den Schützen selbst gebaut wie die Seite einer Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, statt des Schusses wird eine Scheibe abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten Zeitraum ist eingebaut und urteilt nur mit Test. Entwurf vom 8. Oktober 2026; Grundentscheidungen und Vorgaben hat der User getroffen, als Nächstes kommt L1, das Diagramm-Lineal.
+**TL;DR** Die Seite eines Zeitraums ist für den Schützen selbst gebaut wie die Seite einer Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, statt des Schusses wird eine Scheibe abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten Zeitraum ist eingebaut und urteilt nur mit Test. Entwurf vom 8. Oktober 2026; Grundentscheidungen und Vorgaben hat der User getroffen, L1, das Diagramm-Lineal, ist erledigt; als Nächstes kommt L2, der Fachkern für Zeiträume.
 
 ## Entschieden mit dem User (8. Oktober 2026)
 
@@ -159,7 +159,7 @@ Wie auf der Scheibe:
 
 | Schritt | Inhalt | Roadmap |
 |---|---|---|
-| L1 | Diagramm-Lineal: Werte per Antippen, Kopplung an die Auswahl | SP-1.8, Schritt 5 |
+| L1 | Diagramm-Lineal: Werte per Antippen, Kopplung an die Auswahl (erledigt, 8. Oktober 2026) | SP-1.8, Schritt 5 |
 | L2 | Fachkern: Werte je Scheibe → Verlauf, gleitender Schnitt, Formband, Boden und Decke, Vergleich zweier Zeiträume mit Test und Bedeutsamkeit, Rekorde; mit Simulationen | SP-2.1, SP-2.2 |
 | L3 | Bausteine: Zeitraum-Wähler, Verlauf-Diagramm, Ablesung einer Scheibe, Liste der Scheiben, Kacheln mit Vergleich, Seite eines Zeitraums. Im Labor eine erfundene Saison (etwa 80 Scheiben über sechs Monate mit Formknick und Munitionswechsel) | SP-2.1 |
 | L4 | Langzeit-Trefferbild mit Form, Lage und Dichte | SP-2.7 |

@@ -68,8 +68,9 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 - **Karten und Diagramme der Analyse:** schmale Karten im Raster aus Zeilen, zu zweit erst ab 820 px Breite
   des Kartenbereichs (Container, gleich hoch, jeder Abstand 16 px), keine CSS-Spalten. In der Seite aus
   `CardPage` steht die Analyse ab 768 px in voller Breite unter der Scheibe (`below`). Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
-  (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`
-  ohne Grund (Antippen statt Hover ist offen, `vault/spiegel/spiegel-mobile.md`).
+  (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`: Einzelwerte liest das
+  Lineal (`analysis/charts/ChartRuler.tsx`: `useRuler`, Zeile über dem Diagramm, „Werte als Tabelle“), reine
+  Hilfen in `analysis/charts/ruler.ts`. Ziehen ändert die Scheibe nicht, „Auf der Scheibe“ springt zu ihr.
 - **Seite aus `CardPage`:** Kopf (`CardHeader`), Sprungleiste (`SectionNav` mit `useActiveSection`), Scheibe,
   unter ihr die Serien (`under`), rechts daneben was zu ihr gehört (`result`: das Ergebnis als Box, auf dem Telefon im Kopf; `aside`: Ablesung; `beside`:
   Schüsse, füllen die Höhe), darunter in voller Breite, was Platz braucht (`below`: Zahlen, Analyse). Der Kasten

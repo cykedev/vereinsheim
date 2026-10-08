@@ -9,7 +9,7 @@ governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics-help]]"]
 ---
 
-**TL;DR** Jede Zahl von Spiegel soll auf dem Telefon erreichbar sein: ohne seitliches Scrollen, ohne Hover, mit einer Hand, das Häufigste zuerst. Gemessen am 8. Oktober 2026 mit den echten Bausteinen bei 375 × 812 px. Umgesetzt sind die kleinen Korrekturen (Schritt 3) und der Seitenaufbau mit Sprungleiste, Hilfe als Blatt und Rücksprung (Schritt 4, [[spiegel-ui-design]]). Offen ist nur das Diagramm-Lineal (Schritt 5).
+**TL;DR** Jede Zahl von Spiegel soll auf dem Telefon erreichbar sein: ohne seitliches Scrollen, ohne Hover, mit einer Hand, das Häufigste zuerst. Gemessen am 8. Oktober 2026 mit den echten Bausteinen bei 375 × 812 px. Umgesetzt sind die kleinen Korrekturen (Schritt 3) und der Seitenaufbau mit Sprungleiste, Hilfe als Blatt und Rücksprung (Schritt 4, [[spiegel-ui-design]]). Seit dem 8. Oktober 2026 gibt es auch das Diagramm-Lineal (Schritt 5).
 
 ## Nutzungssituationen
 
@@ -100,6 +100,17 @@ Grund misst die Sprungleiste den aktiven Abschnitt beim Scrollen statt über ein
 
 ## Offen
 
-- **Diagramm-Lineal** (Schritt 5): Werte per Antippen oder Ziehen, fest über dem Diagramm, Kopplung an die
-  Scheibe; Kernaussage als Label und „Werte als Tabelle“ für Screenreader.
 - Test mit VoiceOver.
+
+## Diagramm-Lineal (Schritt 5, erledigt am 8. Oktober 2026)
+
+Plan `plans/2026-10-08-spiegel-diagramm-lineal.md`:
+
+- **Umfang:** Verlauf, Rhythmus und Zehntel-Säulen bekommen ein Lineal, diese drei und die Richtungsuhr
+  „Werte als Tabelle“ (zugeklappt, auch für Screenreader). Kein Wert steht mehr nur im SVG-`<title>`.
+- **Bedienung:** Tippen wählt den nächsten Wert, waagrechtes Ziehen wandert mit, senkrecht scrollt die Seite
+  weiter (`touch-action: pan-y`), ein zweites Tippen hebt auf. Mit der Tastatur Pfeile, Pos1, Ende, Escape.
+- **Werte fest über dem Diagramm** in einer Zeile mit fester Höhe, ohne Wahl ein Hinweis.
+- **Kopplung:** Ziehen ändert die Scheibe nicht, sonst spränge die Seite bei jeder Bewegung. Der Knopf „Auf
+  der Scheibe“ wählt den Schuss dort und springt mit Rücksprung; ein auf der Scheibe gewählter Schuss steht
+  schon im Lineal.
