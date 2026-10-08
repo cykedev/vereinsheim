@@ -25,13 +25,15 @@ Dazu kommen Entscheidungen dieser Session:
 
 ## Entscheidungen
 
-- **D1 Die Analyse rechnet über die Wertung der ganzen Scheibe**, wie in der Spielwiese und wie der Einstieg in
-  `shot-help` es sagt („Lage, Streuung und Tempo der Analyse rechnen über die Wertung. Die Probe hat einen
-  eigenen Reiter.“). Sie folgt weder einer gewählten Serie noch der Wahl „Alle“: Diese gelten für die Scheibe,
-  Kacheln und Tabelle. Der Kopf der Analyse sagt „über die Wertung der ganzen Scheibe“. Eine Karte nur mit
-  Probe ist nach `probeOnlyAsMatch` Wertung und bekommt alles.
+- **D1 Die Analyse rechnet über alle Schüsse ohne Probe** (die Wertung der ganzen Scheibe), wie in der Spielwiese
+  und im Einstieg von `shot-help` („Lage, Streuung und Tempo der Analyse rechnen über die Wertung. Die Probe hat
+  einen eigenen Reiter.“). **Gibt es nur Probe, rechnet sie über alle Probeschüsse** (User, 8. Oktober 2026).
+  `analysisInput` legt das selbst fest (`base` = Wertung, ohne Wertung die Probe), unabhängig davon, ob die
+  Seite `probeOnlyAsMatch` angewendet hat. Sie folgt weder einer gewählten Serie noch der Wahl „Alle“: Diese
+  gelten für Scheibe, Kacheln und Tabelle. Der Kopf der Analyse nennt die Grundlage („über alle Schüsse ohne
+  Probe“ bzw. „über alle Probeschüsse“).
 - **D2 Aufbau:** reine Modelle, getrennt von React, im Ordner `packages/shot-ui/src/analysis/`:
-  - `input.ts`: `analysisInput(shots, scoring, target)` → `{ all, match, scoring, target }`.
+  - `input.ts`: `analysisInput(shots, scoring, target)` → `{ all, base, scoring, target }` (`base` nach D1).
   - `overview.ts`: `overviewTiles(input)` (acht Kacheln: Wert, Einheit, Angabe, Hilfe-Id, ohne Wert der Grund).
   - `observations.ts`: `observations(input)` (Sätze mit Symbol, in fester Reihenfolge, nur mit Wert).
   - Karten je Reiter als Komponenten in `analysis/tabs/*.tsx`, Diagramme in `analysis/charts/*.tsx`, gemeinsame
@@ -114,8 +116,9 @@ steht in `packages/shot-core/CLAUDE.md` und an den Aufrufen in `analysis/*.ts`.
    `IntervalBar({ value, low, high, min, max, label })`, `ScaleBar({ spanMm, pxPerMm })` (erster Wert aus
    0,1 … 50 mm ≥ Spanne/4). `MpiMark` aus `TargetView` als eigene Datei, `TargetView` nutzt sie. Tests:
    Markup je Teil, IDs mit „ · “, Kurzsatz gleich `helpTopic(id).short`, Maßstab für 20 mm Spanne = 5 mm.
-4. **Eingabe und Rahmen (test-first).** `input.ts` und `AnalysisPanel({ shots, state, target, tab, onTab,
-   explain, onToggleLayer })`: Reiter „Thema“ (sechs Segmente), Kopf „über die Wertung der ganzen Scheibe“,
+4. **Eingabe und Rahmen (test-first).** `input.ts` (Test: Wertung ohne Probe; nur Probe → alle Probeschüsse,
+   auch ohne `probeOnlyAsMatch`) und `AnalysisPanel({ shots, state, target, tab, onTab, explain,
+   onToggleLayer })`: Reiter „Thema“ (sechs Segmente), Kopf mit der Grundlage nach D1,
    Raster (`wide` allein, schmale in `md:grid-cols-2`), darunter Datenlage aus `dataCoverage(all)` („Datenlage:
    40 Wertung · 9 Probe · alle mit Lage, Zeit und Wert · Wertung in Zehnteln“, Flags als Wort: „verdächtig“) mit
    `HelpDetails("datenlage")`, Glossar (20 Einträge) und Fehlschlüsse (5) aus dem Paket; ohne Schüsse eine
@@ -185,7 +188,8 @@ steht in `packages/shot-core/CLAUDE.md` und an den Aufrufen in `analysis/*.ts`.
 ## Test steps
 
 - `pnpm check` grün nach jedem Task.
-- Gegenproben: Analyse über die Auswahl statt die Wertung → Überblick-Test rot; Kachel „Ergebnis“ über alle
+- Gegenproben: Analyse über die Auswahl statt die Wertung → Überblick-Test rot; nur Probe ohne Rückfall auf die Probe →
+  Eingabe-Test rot; Kachel „Ergebnis“ über alle
   Schüsse mit Probe → rot; Zehntel-Säulen auch für leere Zehntel → Säulen-Test rot; Probe-Diagramm nach
   Listenplatz → Reihenfolge-Test rot; Pause ohne Wert als „im Schnitt“ → Satz-Test rot; Hilfetext gekürzt →
   Hilfe-Test rot.
