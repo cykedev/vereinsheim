@@ -108,8 +108,11 @@ export function groupShape(shots: readonly MetricShot[]): GroupShape | null {
 /** Streuung in Ringbreiten: Maß in µm geteilt durch den Ringabstand der Scheibe */
 export const ringWidths = (spreadUm: number, target: TargetImage) => spreadUm / target.ringWidthUm
 
-/** Irrtum des Ausreißer-Tests über die ganze Gruppe */
-const OUTLIER_ALPHA = 0.05
+/** Irrtum des Ausreißer-Tests je Schritt: 0,04, damit der Fehlalarm über alle Schritte bei etwa 5 % bleibt */
+const OUTLIER_ALPHA = 0.04
+
+/** höchstens so viele Schritte: unter 10 Schuss einer, sonst jeder zehnte Schuss, mindestens zwei */
+const outlierSteps = (n: number) => (n < 10 ? 1 : Math.max(2, Math.floor(n / 10)))
 
 export interface Outlier {
   shot: MetricShot
@@ -117,33 +120,60 @@ export interface Outlier {
   number: number
 }
 
+/** der Schuss, der am weitesten von den übrigen liegt, gemessen an ihrer Streuung: Index und T */
+function strongest(points: readonly Point[]): { index: number; t: number } {
+  const m = points.length
+  let best = { index: 0, t: -1 }
+  points.forEach((p, i) => {
+    const others = points.filter((_, j) => j !== i)
+    const center = centroid(others) as Point
+    const s2 = distancesTo(others, center).reduce((sum, r) => sum + r * r, 0) / (2 * (m - 2))
+    const d2 = (p.xUm - center.xUm) ** 2 + (p.yUm - center.yUm) ** 2
+    const t = s2 > 0 ? d2 / (2 * s2 * (1 + 1 / (m - 1))) : d2 > 0 ? Number.POSITIVE_INFINITY : 0
+    if (t > best.t) best = { index: i, t }
+  })
+  return best
+}
+
 /**
- * Ausreißer (V6): jeder Schuss gegen die übrigen. d ist sein Abstand zum Schwerpunkt der übrigen, S²
- * deren Streuung um ihren Schwerpunkt, Σr²/(2(n − 2)). Bei einer runden Normalgruppe ist
- * T = d² / (2 S² (1 + 1/(n − 1))) exakt F(2, 2(n − 2))-verteilt; Ausreißer ist, wer über dem
- * (1 − 0,05/n)-Quantil liegt (Bonferroni). So meldet die Regel in einer runden normalen Gruppe in
- * höchstens 5 % der Scheiben einen Ausreißer (simuliert: 5,0 %); Q3 + 1,5 · IQR auf den Radien täte es
- * in bis zu 47 %. Bei gestreckten Gruppen steigt die Rate (simuliert für 10 bis 60 Schuss: a/b 1,5 etwa
- * 8–11 %, a/b 2 etwa 11–19 %, a/b 3 etwa 17–29 %). Zwei gleich weite Ausreißer verdecken sich bei
- * wenigen Schuss gegenseitig. Kein Schuss fällt aus der Wertung. Ab fünf Schuss.
+ * Ausreißer (V6), schrittweise (verallgemeinerter ESD nach Rosner, in der Ebene): Von den m übrigen Schüssen
+ * wird der weiteste gegen die anderen geprüft, d sein Abstand zu ihrem Schwerpunkt, S² ihre Streuung um
+ * ihn, Σr²/(2(m − 2)). Bei einer runden Normalgruppe ist T = d² / (2 S² (1 + 1/(m − 1))) exakt
+ * F(2, 2(m − 2))-verteilt; die Grenze ist das (1 − 0,04/m)-Quantil (Bonferroni). Dann wird er beiseitegelegt
+ * und mit den übrigen weitergeprüft, höchstens `outlierSteps(n)` Schritte und solange fünf Schuss übrig sind.
+ * Ausreißer sind alle beiseitegelegten bis zum letzten Schritt über seiner Grenze, auch wenn ein früherer
+ * darunter blieb: So verdecken sich zwei nahe Abreißer nicht mehr gegenseitig (bis Oktober 2026 wurde jeder
+ * Schuss einzeln geprüft; zwei gleich weite bei 10 Schuss fand die Regel dann nur in 13,7 % überhaupt). Unter
+ * 10 Schuss bleibt es bei einem Schritt. α 0,04 statt 0,05 hält den Fehlalarm in einer runden normalen Gruppe
+ * bei höchstens etwa 5 % der Scheiben (Simulation B2); bei gestreckten Gruppen steigt die Rate. Kein Schuss
+ * fällt aus der Wertung. Ab fünf Schuss.
  */
 export function outliers(shots: readonly MetricShot[]): { n: number; flagged: Outlier[] } | null {
   const selected = selectShots(shots, { need: "position" })
   const n = selected.length
   if (n < 5) return null
   const numbers = shotNumbers(shots)
-  const points = selected.map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
-  const critical = fQuantile2(1 - OUTLIER_ALPHA / n, 2 * (n - 2))
-  const flagged: Outlier[] = []
-  points.forEach((p, i) => {
-    const others = points.filter((_, j) => j !== i)
-    const center = centroid(others) as Point
-    const s2 = distancesTo(others, center).reduce((sum, r) => sum + r * r, 0) / (2 * (n - 2))
-    const d2 = (p.xUm - center.xUm) ** 2 + (p.yUm - center.yUm) ** 2
-    const out = s2 > 0 ? d2 / (2 * s2 * (1 + 1 / (n - 1))) > critical : d2 > 0
-    if (out) flagged.push({ shot: selected[i], number: numbers.get(selected[i]) as number })
-  })
-  return { n, flagged }
+  let rest = selected.map((shot) => ({
+    shot,
+    point: { xUm: shot.xUm as number, yUm: shot.yUm as number },
+  }))
+  const removed: MetricShot[] = []
+  let count = 0
+  for (let step = 1; step <= outlierSteps(n) && rest.length >= 5; step++) {
+    const m = rest.length
+    const { index, t } = strongest(rest.map((r) => r.point))
+    // der letzte Schritt über seiner Grenze zählt, auch wenn ein früherer darunter blieb (Maskierung)
+    if (t > fQuantile2(1 - OUTLIER_ALPHA / m, 2 * (m - 2))) count = step
+    removed.push(rest[index].shot)
+    rest = rest.filter((_, j) => j !== index)
+  }
+  const out = new Set(removed.slice(0, count))
+  return {
+    n,
+    flagged: selected
+      .filter((shot) => out.has(shot))
+      .map((shot) => ({ shot, number: numbers.get(shot) as number })),
+  }
 }
 
 const MATCH: readonly ShotKind[] = ["match"]

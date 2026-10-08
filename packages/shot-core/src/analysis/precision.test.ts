@@ -132,7 +132,8 @@ describe("Form und Ringbreiten (P8, P9)", () => {
 
 describe("Ausreißer (V6, V7)", () => {
   // Acht Schuss im Kreis von 1 mm um die Mitte, dazu ein Testschuss auf der x-Achse. Gegen die übrigen
-  // acht: S² = Σr²/14, T = D² / (2 S² · 9/8), Grenze F(2, 14) beim Quantil 1 − 0,05/9 = 7,6987.
+  // acht: S² = Σr²/14, T = D² / (2 S² · 9/8) = D²/1 285 714, Grenze F(2, 14) beim Quantil 1 − 0,04/9 = 8,1748
+  // (F(2, ν) beim Quantil 1 − q: (ν/2)·(q^(−2/ν) − 1)).
   const ring8 = [0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => ({
     ...MATCH[0],
     xUm: Math.round(1000 * Math.cos((deg * Math.PI) / 180)),
@@ -147,20 +148,49 @@ describe("Ausreißer (V6, V7)", () => {
     expect(Object.keys(result ?? {}).sort()).toEqual(["flagged", "n"])
   })
 
-  it("jeder gegen die übrigen mit F(2, 2(n − 2)) und Bonferroni", () => {
-    // 2,8 mm: T 6,10; ohne Bonferroni (Grenze 3,74) wäre es ein Ausreißer
+  it("der weiteste gegen die übrigen mit F(2, 2(m − 2)), Bonferroni und α 0,04", () => {
+    // 2,8 mm: T 6,10; ohne Bonferroni (Grenze 4,09) wäre es ein Ausreißer
     expect(outliers(withTest(2800))?.flagged).toEqual([])
-    // 3,05 mm: T 7,24 knapp unter der Grenze; ohne (1 + 1/(n − 1)) oder mit 2(n − 1) wäre er drüber
-    expect(outliers(withTest(3050))?.flagged).toEqual([])
+    // 3,2 mm: T 7,96 unter der Grenze; mit α 0,05 (Grenze 7,70), mit 2(n − 1) Freiheitsgraden (7,74) oder
+    // ohne (1 + 1/(n − 1)) (T 8,96) wäre er drüber
+    expect(outliers(withTest(3200))?.flagged).toEqual([])
     // 3,3 mm: T 8,47 über der Grenze, und nur er
     const result = outliers(withTest(3300))
     expect(result?.flagged.map((f) => f.number)).toEqual([9])
     expect(result?.flagged[0].shot.xUm).toBe(3300)
   })
 
-  it("die Grenze nutzt 2(n − 2) Freiheitsgrade", () => {
-    // 3,1 mm: T 7,48 unter der Grenze 7,70; mit 2(n − 1) Freiheitsgraden läge sie bei 7,31
-    expect(outliers(withTest(3100))?.flagged).toEqual([])
+  // zwei Abreißer nah beieinander, 4 mm von der Mitte
+  const pair = [
+    { ...MATCH[0], xUm: 4000, yUm: 0, firedAtMs: 9000 },
+    { ...MATCH[0], xUm: 4000, yUm: 400, firedAtMs: 10_000 },
+  ]
+
+  it("zwei nahe Abreißer verdecken sich nicht mehr: Schritt 2 zählt, auch wenn Schritt 1 darunter bleibt", () => {
+    // Einzeln gegen die übrigen T 4,07 und 4,15 (bis Oktober 2026 keiner, Grenze 7,51). Schritt 1 (m = 10):
+    // T 4,148 bei Grenze 7,9526; Schritt 2 gegen die acht im Kreis (m = 9): T 12,446 bei Grenze 8,1748
+    expect(outliers([...ring8, ...pair])?.flagged.map((f) => f.number)).toEqual([9, 10])
+  })
+
+  it("unter 10 Schuss nur ein Schritt", () => {
+    const ring7 = [0, 1, 2, 3, 4, 5, 6].map((k, i) => ({
+      ...MATCH[0],
+      xUm: Math.round(1000 * Math.cos((2 * Math.PI * k) / 7)),
+      yUm: Math.round(1000 * Math.sin((2 * Math.PI * k) / 7)),
+      firedAtMs: i * 1000,
+    }))
+    // n = 9: T 3,61 und 3,68 bei Grenze 8,17; einen zweiten Schritt gibt es nicht
+    expect(outliers([...ring7, ...pair])?.flagged).toEqual([])
+  })
+
+  it("ein weiter Schuss reißt keinen normalen mit", () => {
+    const card = [
+      ...ring8,
+      { ...MATCH[0], xUm: 0, yUm: 0, firedAtMs: 9000 },
+      { ...MATCH[0], xUm: 4000, yUm: 0, firedAtMs: 10_000 },
+    ]
+    // Schritt 1 (m = 10): T 14,4 bei Grenze 7,95; Schritt 2 (m = 9): T 1,15 bei Grenze 8,17
+    expect(outliers(card)?.flagged.map((f) => f.number)).toEqual([10])
   })
 
   it("sind die übrigen alle an einer Stelle, ist jeder Abstand auffällig", () => {
