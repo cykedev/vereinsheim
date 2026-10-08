@@ -150,7 +150,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ## Phase 2 · Auswertung
 
 ### SP-2.1 Verläufe und Rekorde
-- **Umfang:** Verlauf jeder Kennzahl je Disziplin-Familie mit Filtern und gleitendem Schnitt, Rekorde je Wertung (ganze Ringe, Zehntel), Kalender ([[spiegel-metrics]]); aus dem Katalog ([[spiegel-statistics]]) T1, T2, T5–T7, R1–R8, V3–V5; für Verläufe über unterschiedliche Schusszahlen σ̂ statt Streukreis; Sonderfälle SF-60, SF-64, SF-65, SF-66. **Hängt ab von:** SP-1.2, SP-1.8, SP-1.10. **Status:** offen.
+- **Umfang:** Verlauf jeder Kennzahl je Disziplin-Familie mit Filtern und gleitendem Schnitt, Rekorde je Wertung (ganze Ringe, Zehntel), Kalender ([[spiegel-metrics]]); aus dem Katalog ([[spiegel-statistics]]) T1, T2, T5–T7, R1–R8, V3–V5; für Verläufe über unterschiedliche Schusszahlen σ̂ statt Streukreis; Sonderfälle SF-60, SF-64, SF-65, SF-66. Seite und Bedienung: [[spiegel-langzeit]] (Entwurf, Oktober 2026). **Hängt ab von:** SP-1.2, SP-1.8, SP-1.10. **Status:** offen.
 
 ### SP-2.2 Direkte Vergleiche und Beobachtungen
 - **Umfang:** Serie, Scheibe, Zeitraum, Merkmal, Baseline; Sätze aus Kennzahlen nach den Regeln für ehrliche Zahlen; aus dem Katalog C1–C6 (C5 und C6 nach SP-2.3) und die Beobachtungen in Worten ([[spiegel-statistics]]). **Hängt ab von:** SP-2.1. **Status:** offen.

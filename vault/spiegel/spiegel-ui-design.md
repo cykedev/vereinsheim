@@ -33,8 +33,8 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 | Start | letzte Scheibe groß, neu seit dem letzten Besuch, Aktivität, gebrochene Rekorde |
 | Scheiben | Liste nach Tagen, Filter nach Disziplin und Art |
 | Scheibe (Session-Detail) | Kopf mit Disziplin, Stand, Zeit, Ergebnis; Trefferbild mit Schaltern (Schwerpunkt, Streukreis, Nummern, Probe), Zoom Gruppe/Scheibe, Wiedergabe; Wertung ganze Ringe/Zehntel; Kennzahl-Kacheln mit Abstand zum 30-Tage-Schnitt; Beobachtung; Serien als kleine Scheiben im gleichen Maßstab; Schuss für Schuss (Wert, Tempo); Schusstabelle; Original-PDF |
-| Vergleich | zwei Auswahlen auf einer Scheibe, Tabelle mit Differenz |
-| Fortschritt | Verlauf jeder Kennzahl, Rekorde, Kalender |
+| Vergleich | zwei Auswahlen auf einer Scheibe, Tabelle mit Differenz; laut [[spiegel-langzeit]] eingebaut in die Seite eines Zeitraums |
+| Fortschritt | Seite eines Zeitraums wie die einer Scheibe: Verlauf, Liste der Scheiben, Zahlen, Analyse, Rekorde, Kalender ([[spiegel-langzeit]]) |
 | Profil | Zuordnung (Sportpass), Freigaben, Export, Löschen |
 | Admin | Anlagen, Brücken-Status, Zuordnungen, Scheibenbilder, Nutzer |
 
