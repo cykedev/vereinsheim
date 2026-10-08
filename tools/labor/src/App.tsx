@@ -106,7 +106,7 @@ export function App({ commit }: { commit: string }) {
   const shots = useMemo(() => cardShots(targetId, raw), [targetId, raw])
   const samples = SAMPLES[targetId]
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0]
-  useEffect(() => exposeForTest(shots, state), [shots, state])
+  useEffect(() => exposeForTest(shots, state, target), [shots, state, target])
 
   const load = (nextTarget: TargetId, nextSample: SampleId) => {
     const available = SAMPLES[nextTarget]

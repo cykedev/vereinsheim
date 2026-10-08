@@ -8,7 +8,11 @@ import {
   metricByKey,
   type MetricShot,
 } from "@vereinsheim/shot-core/metrics"
-import { helpForMetric } from "@vereinsheim/shot-help/lookup"
+import type { TargetImage } from "@vereinsheim/shot-core/targets"
+import { FALLACIES, READING_GUIDE, VIEW_HELP } from "@vereinsheim/shot-help/guide"
+import { GLOSSARY } from "@vereinsheim/shot-help/glossary"
+import { helpForMetric, helpTopic } from "@vereinsheim/shot-help/lookup"
+import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
 import { observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { overviewTiles } from "@vereinsheim/shot-ui/analysis/overview"
@@ -32,11 +36,19 @@ const TOOLS = {
   analysisInput,
   overviewTiles,
   observations,
+  // Hilfe aus dem Paket, gegen die die Prüfung Texte und Plätze vergleicht
+  helpTopic,
+  HELP_TOPICS,
+  VIEW_HELP,
+  READING_GUIDE,
+  GLOSSARY,
+  FALLACIES,
 }
 
 export interface LaborHook {
   shots: readonly MetricShot[]
   state: ViewState
+  target: TargetImage
   tools: typeof TOOLS
 }
 
@@ -50,6 +62,6 @@ declare global {
 export const underTest = () => typeof location !== "undefined" && location.hash === "#pruefen"
 
 /** den aktuellen Stand für die Skriptprüfung ablegen; außerhalb von #pruefen nichts */
-export function exposeForTest(shots: readonly MetricShot[], state: ViewState) {
-  if (underTest()) window.__labor = { shots, state, tools: TOOLS }
+export function exposeForTest(shots: readonly MetricShot[], state: ViewState, target: TargetImage) {
+  if (underTest()) window.__labor = { shots, state, target, tools: TOOLS }
 }

@@ -756,6 +756,398 @@ addEventListener("load", async () => {
     await wait(100)
     check("Tipp neben das Blatt schließt es", !sheet().open)
 
+    // ---------- Analyse (Schritt 3): jede Zahl gegen den Fachkern, Hilfe, Abstände
+    // Text der Seite ohne Skripte und Styles (die Prüfung steht selbst als Skript in der Seite)
+    const pageText = () => {
+      const copy = document.body.cloneNode(true)
+      for (const el of copy.querySelectorAll("script, style")) el.remove()
+      return copy.textContent
+    }
+    const TABS = ["Überblick", "Ergebnis", "Präzision", "Lage", "Zeit und Verlauf", "Probe"]
+    await click(button("Luftpistole"), 150)
+    await click(button("40 Schuss mit Probe"), 150)
+    await click(button("Zehntel"), 100)
+    const A = () => $('section[aria-label="Analyse"]')
+    const tabBar = () => $('[role="radiogroup"][aria-label="Thema"]', A())
+    const tab = (label) => click(button(label, tabBar()), 120)
+    const card = (id) => $(`[data-card="${id}"]`, A())
+    const ctext = (id) => txt(card(id)).replace(/\s+/g, " ")
+    const T = () => L().tools
+    const S = () => T().analysis
+    const input = () => T().analysisInput(L().shots, L().state.scoring, L().target)
+    const base = () => input().base
+    const nf = (v, d) => T().formatValue(v, d)
+    const ovTile = (label) => $(`[data-tile="${label}"]`, A())
+    const ovValue = (label) => txt(ovTile(label).children[1].childNodes[0])
+    const ovHint = (label) => txt(ovTile(label).children[2])
+    check(
+      "Analyse: sechs Reiter in der Reihenfolge der Spielwiese",
+      $$('[role="radio"]', tabBar())
+        .map((b) => txt(b))
+        .join() === TABS.join()
+    )
+
+    await tab("Überblick")
+    const ovTiles = T().overviewTiles(input())
+    const shownTiles = $$("[data-tile]", A())
+    check(
+      "Überblick: acht Kacheln, Werte und Angaben wie im Fachkern",
+      shownTiles.length === 8 &&
+        ovTiles.every((t) => ovValue(t.label) === (t.value ?? "–") && ovHint(t.label) === t.hint),
+      ovTiles
+        .filter((t) => ovValue(t.label) !== (t.value ?? "–"))
+        .map((t) => t.label)
+        .join(", ")
+    )
+    const sentences = $$("[data-observation]", A()).map((li) => txt(li).trim())
+    const model = T().observations(input())
+    check(
+      "Beobachtungen: mindestens fünf Sätze, gleich dem Modell",
+      sentences.length >= 5 && model.every((o, i) => sentences[i] === o.text),
+      `${sentences.length} Sätze`
+    )
+    const conf = S().mpiConfidence(base())
+    check(
+      "Beobachtungen: Lage-Satz passt zu Hotelling",
+      sentences[0].includes(conf.real ? "echt" : "Zufall"),
+      sentences[0]
+    )
+    check(
+      "Beobachtungen: Pause vor Schuss 21 erkannt",
+      sentences.some((s) => s.includes("Pause vor Schuss 21"))
+    )
+    check(
+      "Datenlage-Zeile",
+      txt($("[data-coverage] p", A())).startsWith(
+        "Datenlage: 40 Wertung · 9 Probe · alle mit Lage, Zeit und Wert"
+      ),
+      txt($("[data-coverage] p", A()))
+    )
+
+    await tab("Ergebnis")
+    const dist = S().ringDistribution(base())
+    const ringRows = $$("[data-ring-row]", A())
+    check(
+      "Ergebnis: Ringbalken je Ring, die Zehn zuerst",
+      ringRows.length >= 3 &&
+        ringRows[0].dataset.ringRow === "10" &&
+        txt(ringRows[0]).includes(String(dist.counts[10]))
+    )
+    const hist = S().decimalHistogram(base())
+    check(
+      "Ergebnis: Zehntel-Säulen = belegte Zehntel",
+      $$("[data-tenth]", A()).length === hist.counts.filter(Boolean).length
+    )
+    const histSvg = $("[data-tenth]", A()).closest("svg")
+    check(
+      "Ergebnis: Diagramm in Pixelbreite",
+      Number(histSvg.getAttribute("width")) ===
+        Math.round(histSvg.parentElement.getBoundingClientRect().width),
+      `${histSvg.getAttribute("width")} / ${histSvg.parentElement.getBoundingClientRect().width}`
+    )
+    check("Ergebnis: Serienkurve mit vier Serien", $$("[data-series-point]", A()).length === 4)
+    check(
+      "Ergebnis: zwei Quoten mit 95-%-Bereich",
+      $$("[data-share]", A()).length === 2 && $$("[data-share] [data-range]", A()).length === 2
+    )
+
+    await click(button("Ganze Ringe"), 120)
+    check(
+      "Ringe: Zehntelverteilung nur als Hinweis",
+      $$("[data-tenth]", A()).length === 0 &&
+        ctext("zehntelverteilung").includes("Gibt es nur in der Zehntelwertung")
+    )
+    await tab("Überblick")
+    const ringsTotal = T().computeMetric(
+      T().inScoring(T().metricByKey("result.decimal"), "rings"),
+      base()
+    )
+    check(
+      "Ringe: Ergebnis ganzzahlig",
+      ovValue("Ergebnis") === nf(ringsTotal, 0),
+      ovValue("Ergebnis")
+    )
+    check(
+      "Ringe: Datenlage nennt die Wertung",
+      txt($("[data-coverage] p", A())).includes("in ganzen Ringen")
+    )
+    await click(button("Zehntel"), 120)
+
+    await tab("Präzision")
+    const sigma = S().sigmaEstimate(base())
+    check("Präzision: σ groß", ctext("praezision-sigma").includes(`${nf(sigma.sigma / 1000, 2)}mm`))
+    check("Präzision: R50 in Ringbreiten", ctext("masse-der-gruppe").includes("R50 in Ringbreiten"))
+    const outlierLoss = S().outlierLoss(base(), "decimal")
+    check(
+      "Präzision: Kosten der Ausreißer",
+      !outlierLoss ||
+        outlierLoss.count === 0 ||
+        ctext("ausreisser").includes(`Kosten${nf(outlierLoss.loss, 1)} Ringe`),
+      outlierLoss ? `${outlierLoss.count} markiert, ${outlierLoss.loss}` : "unbekannt"
+    )
+    const shapeSvg = $('svg[role="img"]', card("form-der-gruppe"))
+    const shapeKids = [...shapeSvg.children]
+    const shapeEllipses = $$("ellipse", shapeSvg)
+    const groupPoints = $$("[data-group-point]", shapeSvg)
+    check(
+      "Präzision: Ellipse als Fläche unter und als Linie über den Punkten",
+      shapeEllipses.length === 2 &&
+        shapeKids.indexOf(shapeEllipses[0]) < shapeKids.indexOf(groupPoints[0]) &&
+        shapeKids.indexOf(shapeEllipses[1]) > shapeKids.indexOf(groupPoints.at(-1))
+    )
+    const flaggedShots = S().outliers(base()).flagged
+    const redDots = $$('[data-outlier="true"]', shapeSvg)
+    check(
+      "Präzision: Abreißer rot und mit Ring",
+      flaggedShots.length >= 1 &&
+        redDots.length === flaggedShots.length &&
+        redDots.every((c) => c.getAttribute("fill") === "var(--destructive)") &&
+        $$("[data-outlier-ring]", shapeSvg).length === flaggedShots.length,
+      flaggedShots.map((f) => f.number).join(", ")
+    )
+
+    await tab("Lage")
+    check(
+      "Lage: ein Keil je besetzter Stunde",
+      $$("[data-hour]", card("richtungsuhr")).length ===
+        S().directionClock(base()).counts.filter(Boolean).length
+    )
+    await click(button("um den Schwerpunkt", card("richtungsuhr")), 120)
+    const aroundMpi = S().directionClock(base(), conf.center)
+    check(
+      "Lage: Uhr um den Schwerpunkt",
+      button("um den Schwerpunkt", card("richtungsuhr")).getAttribute("aria-checked") === "true" &&
+        $$("[data-hour]", card("richtungsuhr")).length === aroundMpi.counts.filter(Boolean).length
+    )
+    const ellipseShown = () => !!$('[data-overlay="ellipse"]', svg())
+    const ellipseButton = () =>
+      $$("button", card("lage-echt")).find((b) => txt(b).includes("Vertrauensellipse"))
+    const ellipseBefore = ellipseShown()
+    await click(ellipseButton(), 120)
+    check(
+      "Lage: Knopf schaltet die Ellipse auf der Scheibe",
+      ellipseShown() !== ellipseBefore &&
+        ellipseButton().getAttribute("aria-pressed") === String(!ellipseBefore)
+    )
+    await click(ellipseButton(), 120)
+    check("Lage: und schaltet sie zurück", ellipseShown() === ellipseBefore)
+    check(
+      "Lage: von Neumann",
+      ctext("drift-und-wanderung").includes(nf(S().drift(base()).vonNeumann, 2))
+    )
+
+    await tab("Zeit und Verlauf")
+    check(
+      "Zeit: Verlauf mit 40 Punkten und einer Pause",
+      $$("[data-course-point]", A()).length === 40 && $$("[data-pause-line]", A()).length === 1
+    )
+    check(
+      "Zeit: Rhythmus mit 39 Abständen, eine Pause",
+      $$("[data-interval]", A()).length === 39 &&
+        $$('[data-interval][data-pause="true"]', A()).length === 1
+    )
+    check("Zeit: Serien-Tabelle mit 4 Zeilen", $$("[data-series-row]", A()).length === 4)
+    const tired = S().fatigue(base(), "decimal")
+    check("Zeit: Ermüdung", ctext("ermuedung").includes(`Ø ${nf(tired.lastMeanRings, 2)}`))
+
+    await tab("Probe")
+    check("Probe: Umfang 9", ctext("probe-umfang").includes("9 (1 Block à zehn)"))
+    const zeroed = S().sighterZeroed(L().shots)
+    check(
+      "Probe: „Eingeschossen?“ über die letzten fünf",
+      zeroed.n === 5 &&
+        ctext("eingeschossen").includes(
+          `Versatz Probe → Wertung${nf(zeroed.matchOffsetUm / 1000, 2)} mm`
+        )
+    )
+    check(
+      "Probe: auf der Scheibe in Abgabefolge",
+      $$("[data-sighter]", A())
+        .map((g) => g.dataset.sighter)
+        .join() === "P1,P2,P3,P4,P5,P6,P7,P8,P9"
+    )
+    check("keine Visierverstellung auf der Seite", !/Verstellung|verstellt/.test(pageText()))
+
+    // Abstände: zwischen Blöcken und Karten 16 px, Karten einer Zeile mit gleicher Unterkante
+    const BOXES =
+      'article, details[data-glossary], details[data-fallacies], [data-coverage], div:has(> [data-tile]), section[aria-label="Analyse"] > div:first-child'
+    const gapProblems = () => {
+      const boxes = $$(BOXES, A())
+        .filter((e) => e.offsetParent !== null)
+        .map((e) => ({ e, r: e.getBoundingClientRect() }))
+      const name = (b) => b.e.dataset.card ?? b.e.tagName.toLowerCase()
+      const out = []
+      for (const a of boxes) {
+        const below = boxes
+          .filter(
+            (b) =>
+              b !== a &&
+              b.r.top >= a.r.bottom - 1 &&
+              b.r.left < a.r.right - 1 &&
+              b.r.right > a.r.left + 1 &&
+              !a.e.contains(b.e) &&
+              !b.e.contains(a.e)
+          )
+          .sort((x, y) => x.r.top - y.r.top)
+        if (below.length && !near(below[0].r.top - a.r.bottom, 16, 0.6)) {
+          out.push(`${name(a)} → ${name(below[0])}: ${(below[0].r.top - a.r.bottom).toFixed(1)}`)
+        }
+        const beside = boxes.filter(
+          (b) => b.e.tagName === "ARTICLE" && b.r.left >= a.r.right - 1 && near(b.r.top, a.r.top, 1)
+        )
+        for (const b of a.e.tagName === "ARTICLE" ? beside : []) {
+          if (!near(b.r.left - a.r.right, 16, 0.6) || !near(b.r.bottom, a.r.bottom, 0.6)) {
+            out.push(`${name(a)} ↔ ${name(b)}`)
+          }
+        }
+      }
+      return out
+    }
+    const gapReport = []
+    for (const label of TABS) {
+      await tab(label)
+      const bad = gapProblems()
+      if (bad.length) gapReport.push(`${label}: ${bad.join("; ")}`)
+    }
+    check(
+      "Abstände: überall 16 px, Karten einer Zeile bündig",
+      gapReport.length === 0,
+      gapReport.join(" | ")
+    )
+
+    // Hilfe in der Analyse: jede Karte erklärt sich, jedes Thema hat seinen Platz, Texte aus dem Paket
+    const seenHelp = new Set()
+    const withoutHelp = []
+    const helpTextProblems = []
+    const headProblems = []
+    for (const label of TABS) {
+      await tab(label)
+      for (const art of $$("article", A())) {
+        const details = $("details[data-help]", art)
+        const heading = txt($("h3", art))
+        if (!details) {
+          if (!heading.startsWith("So liest du")) withoutHelp.push(`${label}: ${heading}`)
+          continue
+        }
+        const id = details.dataset.help
+        const topic = T().helpTopic(id)
+        const entry = topic ?? T().VIEW_HELP.find((v) => v.id === id)
+        if (!entry || !txt(details).includes(entry.what)) helpTextProblems.push(id)
+        if (topic && ($("h3", art).title !== topic.short || !heading.startsWith(topic.title))) {
+          headProblems.push(id)
+        }
+      }
+      for (const d of $$("details[data-help]", A())) seenHelp.add(d.dataset.help)
+    }
+    check(
+      "Hilfe: jede Karte hat „Was heißt das?“",
+      withoutHelp.length === 0,
+      withoutHelp.join(", ")
+    )
+    const wantedHelp = [
+      ...T().HELP_TOPICS.map((t) => t.id),
+      "beobachtungen",
+      "probe-auf-der-scheibe",
+    ]
+    check(
+      "Hilfe: jedes Thema hat seinen Platz",
+      wantedHelp.every((id) => seenHelp.has(id)),
+      wantedHelp.filter((id) => !seenHelp.has(id)).join(", ")
+    )
+    check("Hilfe: Texte aus dem Paket", helpTextProblems.length === 0, helpTextProblems.join(", "))
+    check(
+      "Hilfe: Kartenkopf und Kurzsatz aus dem Thema",
+      headProblems.length === 0,
+      headProblems.join(", ")
+    )
+    await tab("Überblick")
+    check(
+      "Hilfe: Einstieg, Glossar und Fehlschlüsse aus dem Paket",
+      $$("[data-guide]", A()).length === T().READING_GUIDE.length + 1 &&
+        $$("[data-term]", A()).length === T().GLOSSARY.length &&
+        $$("[data-fallacy]", A()).length === T().FALLACIES.length
+    )
+    check(
+      "Hilfe: anfangs zu",
+      $$("details", A()).every((d) => !d.open)
+    )
+    await click(button("Erklärungen"), 120)
+    check(
+      "Hilfe: Schalter öffnet alle, Kurzsätze an den acht Kacheln",
+      $$("details[data-help], details[data-glossary], details[data-fallacies]", A()).every(
+        (d) => d.open
+      ) && $$("[data-tile] [data-short]", A()).length === 8
+    )
+    await tab("Lage")
+    check(
+      "Hilfe: bleibt beim Reiterwechsel offen, die Formel bleibt zu",
+      $$("details[data-help]", A()).every((d) => d.open) &&
+        $$("details[data-help] details", A()).length > 0 &&
+        $$("details[data-help] details", A()).every((d) => !d.open)
+    )
+    await click(button("Erklärungen"), 120)
+    check(
+      "Hilfe: Schalter schließt alle",
+      $$("details[data-help]", A()).every((d) => !d.open)
+    )
+
+    // die übrigen Beispiele
+    await click(button("60 Probe"), 200)
+    await tab("Ergebnis")
+    check(
+      "60 Probe: volle Analyse über die Probe, sechs Serien",
+      txt($("p", A())).includes("über alle Probeschüsse") &&
+        ctext("ergebnis").includes("Schuss60") &&
+        $$("[data-series-point]", A()).length === 6,
+      txt($("p", A()))
+    )
+    await click(button("Ausdruck vom 2. Oktober"), 200)
+    await tab("Überblick")
+    check(
+      "Ausdruck: Trend erst ab 10 Schuss",
+      ovValue("Trend") === "–" && ovHint("Trend") === "ab 10 Schuss",
+      `${ovValue("Trend")} ${ovHint("Trend")}`
+    )
+    await click(button("Leer"), 200)
+    check("Leer: die Analyse sagt, was fehlt", txt(A()).includes("Noch keine Schüsse"))
+    await click(button("Luftgewehr"), 200)
+    await click(button("40 Schuss mit Probe"), 200)
+    await tab("Ergebnis")
+    check(
+      "LG: Quoten ab 10,0 und ab 10,5",
+      $$("[data-share]", A())
+        .map((e) => e.dataset.share)
+        .join() === "ab 10,0,ab 10,5"
+    )
+    await click(button("Luftpistole"), 200)
+    await click(button("40 Schuss mit Probe"), 200)
+    await tab("Überblick")
+
+    // Analyse auf dem Telefon: keine Seite breiter als der Bildschirm, die Reiter in einer Zeile, der gewählte
+    // Reiter im Bild
+    const phoneAnalysis = async (doc, win, width) => {
+      const bar = doc.querySelector(
+        'section[aria-label="Analyse"] [role="radiogroup"][aria-label="Thema"]'
+      )
+      if (!bar) return ["keine Reiterleiste"]
+      const problems = []
+      const barHeight = bar.getBoundingClientRect().height
+      if (barHeight > 45) problems.push(`Leiste ${barHeight.toFixed(0)} px hoch`)
+      for (const label of TABS) {
+        const b = [...bar.querySelectorAll("button")].find((x) => txt(x).trim() === label)
+        b.dispatchEvent(new win.MouseEvent("click", { bubbles: true }))
+        await wait(150)
+        const r = b.getBoundingClientRect()
+        const c = bar.getBoundingClientRect()
+        if (doc.documentElement.scrollWidth > width) {
+          problems.push(`${label}: Seite ${doc.documentElement.scrollWidth} px`)
+        }
+        if (r.left < c.left - 1 || r.right > c.right + 1)
+          problems.push(`${label}: Reiter nicht im Bild`)
+      }
+      return problems
+    }
+
     // ---------- Handy: 390 px ohne seitliches Scrollen
     const frame = document.createElement("iframe")
     frame.style.cssText = "width:390px;height:900px;border:0;position:absolute;left:-9999px"
@@ -786,6 +1178,12 @@ addEventListener("load", async () => {
       !!doc && doc.documentElement.scrollWidth <= 390,
       doc ? `${doc.documentElement.scrollWidth} ${wide.join(" | ")}` : "kein Zugriff"
     )
+    const phone390 = doc ? await phoneAnalysis(doc, frame.contentWindow, 390) : ["kein Zugriff"]
+    check(
+      "Handy 390 px: jeder Reiter der Analyse passt",
+      phone390.length === 0,
+      phone390.join(" | ")
+    )
     const phoneHelp = doc?.querySelector(
       '[data-metric="group.r50"] button[aria-label^="Erklärung"]'
     )
@@ -804,6 +1202,29 @@ addEventListener("load", async () => {
         : "kein Blatt"
     )
     frame.remove()
+
+    // ---------- Handy: 375 px (kleinstes übliches Telefon)
+    const small = document.createElement("iframe")
+    small.style.cssText = "width:375px;height:812px;border:0;position:absolute;left:-9999px"
+    small.src = location.href.split("#")[0]
+    document.body.appendChild(small)
+    await new Promise((resolve) => small.addEventListener("load", resolve, { once: true }))
+    await wait(500)
+    const smallDoc = small.contentDocument
+    check(
+      "Handy 375 px: kein seitliches Scrollen",
+      !!smallDoc && smallDoc.documentElement.scrollWidth <= 375,
+      smallDoc ? String(smallDoc.documentElement.scrollWidth) : "kein Zugriff"
+    )
+    const phone375 = smallDoc
+      ? await phoneAnalysis(smallDoc, small.contentWindow, 375)
+      : ["kein Zugriff"]
+    check(
+      "Handy 375 px: jeder Reiter der Analyse passt",
+      phone375.length === 0,
+      phone375.join(" | ")
+    )
+    small.remove()
 
     check("Keine Skriptfehler", window.__errors.length === 0, window.__errors.join(" | "))
   } catch (error) {
