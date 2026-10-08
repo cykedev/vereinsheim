@@ -24,6 +24,10 @@ dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/table/ShotTable`           | `src/table/ShotTable.tsx`          | Schusstabelle: neuester oben, folgt der Auswahl, Zeile wählt den Schuss (Weg per Tastatur), Intervalle mit Lücke und Pause                                                                         |
 | `@vereinsheim/shot-ui/controls/ScoringSwitch`    | `src/controls/ScoringSwitch.tsx`   | Wertung Zehntel/ganze Ringe, die amtliche als Hinweis                                                                                                                                              |
 | `@vereinsheim/shot-ui/controls/SightAdjust`      | `src/controls/SightAdjust.tsx`     | „Visier verstellt nach“ P1 … P(n−1), ab zwei Probeschüssen                                                                                                                                         |
+| `@vereinsheim/shot-ui/help/HelpBody`             | `src/help/HelpBody.tsx`            | Erklärung aus `shot-help`: Felder in der Reihenfolge des Leitfadens (`HELP_FIELDS`), Formel zugeklappt                                                                                             |
+| `@vereinsheim/shot-ui/help/HelpDetails`          | `src/help/HelpDetails.tsx`         | „Was heißt das?“ unter einer Karte, `helpEntry(id)` (Thema oder Oberfläche)                                                                                                                        |
+| `@vereinsheim/shot-ui/help/HelpButton`           | `src/help/HelpButton.tsx`          | „?“-Knopf mit Namen, `HelpIcon`                                                                                                                                                                    |
+| `@vereinsheim/shot-ui/help/HelpSheet`            | `src/help/HelpSheet.tsx`           | Erklärung einer Kennzahl als Blatt (`Sheet` aus `@vereinsheim/ui/design2`)                                                                                                                         |
 
 ## Regeln
 

@@ -48,6 +48,7 @@
   --color-mpi-light: var(--mpi-light);
   --color-mpi-dark: var(--mpi-dark);
   --color-mpi-halo: var(--mpi-halo);
+  --color-scrim: var(--scrim);
   --color-score-10: var(--score-10);
   --color-score-9: var(--score-9);
   --color-score-8: var(--score-8);
@@ -113,6 +114,8 @@
   --mpi-light: #ffffff;
   --mpi-dark: #0b0b0b;
   --mpi-halo: rgba(255, 255, 255, 0.9);
+  /* Hintergrund hinter einem Blatt: dunkelt in beiden Themes ab */
+  --scrim: rgba(8, 12, 20, 0.45);
   /* Ringwert-Skala, farbenblind geprüft: 10 rot, 9 gold, 8 türkis, ≤ 7 violett */
   --score-10: #e5484d;
   --score-9: #e9b10c;

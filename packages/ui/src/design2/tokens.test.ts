@@ -76,6 +76,7 @@ describe("Design-2-Tokens", () => {
       "mpi-light",
       "mpi-dark",
       "mpi-halo",
+      "scrim",
     ]) {
       expect(root.has(name), `--${name}`).toBe(true)
       expect(dark.has(name), `--${name}`).toBe(false)
