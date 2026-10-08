@@ -76,7 +76,8 @@ export function TargetView({
   const group = useMemo(() => groupShots(shots, state.selection), [shots, state.selection])
   const groupPoints = useMemo(() => group.map(point), [group])
   const wanted = state.view === "group" ? groupView(target, groupPoints) : targetView(target)
-  const view = useAnimatedViewBox(wanted)
+  // eine andere Scheibe steht sofort, ein anderer Ausschnitt derselben Scheibe gleitet
+  const view = useAnimatedViewBox(wanted, target.id)
   const sizes = screenSizes(target, unitsPerPixel(view, width))
   const calR = caliberRadius(target)
   const labels = useMemo(() => shotLabels(shots), [shots])

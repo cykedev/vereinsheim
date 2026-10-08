@@ -14,10 +14,18 @@ const reducedMotion = () =>
 /**
  * Weicher Übergang zum gewünschten Ausschnitt (340 ms, ease-out); bei „Bewegung reduzieren“ ein Sprung.
  * Zeichnet der Browser gerade keine Bilder (Hintergrund, Vorschau), steht der Ausschnitt trotzdem am Ziel.
+ * Ändert sich `instantKey` (eine andere Scheibe), steht der neue Ausschnitt sofort, ohne Gleiten.
  */
-export function useAnimatedViewBox(wanted: ViewBox): ViewBox {
+export function useAnimatedViewBox(wanted: ViewBox, instantKey = ""): ViewBox {
   const [current, setCurrent] = useState(wanted)
+  const [shownKey, setShownKey] = useState(instantKey)
   const shown = useRef(wanted)
+  if (shownKey !== instantKey) {
+    // im selben Rendern umstellen, damit kein Bild mit dem alten Ausschnitt erscheint
+    shown.current = wanted
+    setShownKey(instantKey)
+    setCurrent(wanted)
+  }
   useEffect(() => {
     const from = shown.current
     if (from.x === wanted.x && from.y === wanted.y && from.w === wanted.w) return
