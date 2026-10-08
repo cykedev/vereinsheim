@@ -15,6 +15,9 @@ durch ein Schießprotokoll, das man allein schießen kann, während es jede Seku
    tools/ssmdb2-erkunden/test/selbsttest.sh
    ```
 
+   Zwischendurch laufen Abschnitte von bis zu einer Minute ohne Ausgabe; der Test sagt sie an. Am Ende
+   steht „Selbsttest bestanden“. Mit `BEHALTEN=1` davor bleibt die Ausgabe zum Ansehen liegen.
+
 3. Den Standard-Zugang bereithalten: Benutzer `meyton` (das Skript schlägt ihn vor), das Passwort
    steht im Meyton-Handbuch zur SSMDB2 auf Seite 3 („Scheibenablage SSMDB2“, Datenbankversion 9). Es
    wird nur abgefragt und nie gespeichert, auch nicht im Repo.

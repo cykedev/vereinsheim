@@ -134,6 +134,7 @@ export ERKUNDEN_AUTO_PDF_IDS="ff914420 kaputt"
 export ERKUNDEN_AUTO_WARTEN=3
 # Zeitstempel zwei Stunden hinter der Server-Uhr (Zeitzonen-Durcheinander, Review B2, SF-29/SF-31).
 export SIM_VERSATZ_STUNDEN=-2
+echo "Schießprotokoll simulieren (etwa eine Minute ohne Ausgabe) …"
 erkunden protokoll abschluss 2>"$AUSGABE/protokoll-stderr.txt" || echo "Protokoll-Lauf mit Exit $?" >&2
 
 # Im Protokoll muss die Probe von 1001 erst da sein und später fehlen, während Wertung da ist (SF-03).
@@ -173,6 +174,7 @@ pruefe "kein Testname im Bericht" kein_testname_im_bericht
 
 # Anderes Schema (Review B3, S1): Der Lauf bricht nicht ab, meldet Lücken und gibt keine Entwarnung.
 ANDERS="$AUSGABE/anders"
+echo "Lauf gegen ein abweichendes Schema (etwa 20 Sekunden) …"
 if ZIEL="$ANDERS" ERKUNDEN_AUTO_UEBERSPRINGEN="2 3 4 5 6 7 8 9 10 11" ERKUNDEN_AUTO_HOOK="" \
   erkunden --db SSMDB2ALT verbinden checkliste dump protokoll abschluss 2>"$AUSGABE/anders-stderr.txt"; then
   RC_ANDERS=0
@@ -192,6 +194,7 @@ pruefe "anders: Schritte trotzdem durchgegangen" grep -q '| 1 | Achsen und Laten
 # Interaktiver Pfad, wie am Abend: Antworten über stdin statt --auto. Der Mitschnitt läuft dabei
 # im Hintergrund und darf keine Eingaben verbrauchen (docker exec -i hatte das getan).
 INTERAKTIV="$AUSGABE/interaktiv"
+echo "Interaktiver Lauf mit Eingaben über stdin (etwa 30 Sekunden) …"
 printf '%s\n' "$ERKUNDEN_USER" "$ERKUNDEN_PASSWORT" j '' 'Achse oben rechts positiv' s '' '' '' '' '' '' \
   'ID: FF914420' '' q n |
   env -u ERKUNDEN_USER -u ERKUNDEN_PASSWORT -u ERKUNDEN_AUTO_HOOK "${ERKUNDEN_BASH:-bash}" "$WERKZEUG/erkunden.sh" \
