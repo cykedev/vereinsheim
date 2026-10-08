@@ -9,6 +9,7 @@ import { overviewCards } from "./OverviewTab"
 import { positionCards } from "./PositionTab"
 import { precisionCards } from "./PrecisionTab"
 import { resultCards } from "./ResultTab"
+import { timeCards } from "./TimeTab"
 
 export type AnalysisTab = "overview" | "result" | "precision" | "position" | "time" | "sighters"
 
@@ -36,6 +37,6 @@ export const TAB_CARDS: Record<AnalysisTab, TabCards> = {
   result: resultCards,
   precision: precisionCards,
   position: positionCards,
-  time: () => [],
+  time: timeCards,
   sighters: () => [],
 }
