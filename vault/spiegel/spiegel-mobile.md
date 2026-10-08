@@ -57,7 +57,7 @@ Reihenfolge auf dem Telefon: Kopf mit Ergebnis, Scheibe mit Ablesezeile, Serien 
 
 **Diagramme:** Ablesen durch Antippen oder Ziehen (Lineal), die Werte stehen fest über dem Diagramm, im Verlauf wählt das zugleich den Schuss auf der Scheibe. Jedes Diagramm bekommt seine Kernaussage als Label und „Werte als Tabelle“.
 
-**Tablet und Desktop:** Ab 768 px steht die Scheibe links fest, rechts daneben Schuss, Serien, Übersicht und Schüsse; Kacheln und Analyse folgen in voller Breite darunter (siehe unten).
+**Tablet und Desktop:** Ab 768 px links die Scheibe mit den Serien darunter, rechts daneben Schuss, Übersicht und Schüsse; Kacheln und Analyse folgen in voller Breite darunter (siehe unten).
 
 ## Entschieden mit dem Plan für Schritt 4 (8. Oktober 2026)
 
@@ -85,6 +85,10 @@ Grund misst die Sprungleiste den aktiven Abschnitt beim Scrollen statt über ein
   Knöpfe in den Ecken der Scheibe, wie an einer DISAG-Anzeige (Vorschlag des Users), „Übrige blass/aus“ als
   einer davon; die Labor-Schalter (Ansehen/Setzen) stehen im Labor-Kopf, die App hat sie nicht. Die
   Reiterleiste hat in voller Breite Platz. Auf dem Telefon teilt die Sprungleiste die Breite in vier Felder.
+- **Serien unter der Scheibe** (User): links Scheibe und Serien, zusammen so groß, dass beide ins Fenster passen;
+  die Scheibe wird dafür kleiner, aber nicht unter 280 px (bei 1280 × 900 rund 560 px, bei 1024 × 768 knapp
+  450 px; bei 1024 × 600 passt nur die Scheibe allein). Rechts reicht die Schusstabelle bis zur Unterkante der
+  Serien und scrollt in sich, so steht die obere Hälfte der Seite wie ein Bildschirm da.
 - **Aktiver Abschnitt an der Leiste:** Mit 45 % der Fensterhöhe galt nach einem Sprung zu den kurzen Zahlen
   schon die Analyse als aktiv. Es zählt jetzt der Abschnitt, dessen Anfang die Leiste erreicht hat.
 

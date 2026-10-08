@@ -104,10 +104,12 @@ Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` 
 - **Telefon:** eine Spalte. Kopf und Scheibe (Ablesezeile `ShotLine` statt Ablese-Karte) passen auf den ersten
   Bildschirm, die Serien folgen direkt; dann Übersicht, Schüsse, Zahlen, Analyse. Die Schusstabelle zeigt die
   zehn neuesten Schüsse und „Alle 40 zeigen“, der gewählte bleibt sichtbar.
-- **Ab 768 px** (`CardPage`): links die Scheibe fest unter der Leiste, höchstens so groß, dass sie samt Karte ins
-  Fenster passt; rechts daneben, was man beim Blick auf die Scheibe braucht: Ablese-Karte, Serien, Übersicht,
-  Schusstabelle. Zahlen und Analyse folgen darunter in voller Breite, die Scheibe scrollt dort mit weg (User,
-  8. Oktober 2026: Bereiche, die neben der Scheibe bleiben, und Bereiche, die unten mehr Platz brauchen). Die
+- **Ab 768 px** (`CardPage`): links die Scheibe, darunter die Serien (User, 8. Oktober 2026), zusammen so groß,
+  dass beide unter der Leiste ins Fenster passen (`useTargetFit` misst die Spalte; bleibt für die Scheibe weniger
+  als 280 px, passt sie allein ins Fenster und die Serien folgen darunter). Rechts daneben Ablese-Karte, Übersicht
+  und Schusstabelle; die Tabelle reicht bis zur Unterkante der Serien und scrollt in sich. Zahlen und Analyse
+  folgen darunter in voller Breite, die Scheibe scrollt dort mit weg (User, 8. Oktober 2026: Bereiche, die neben
+  der Scheibe bleiben, und Bereiche, die unten mehr Platz brauchen). Die
   Kacheln stehen zu fünf, die Karten der Analyse zu zweit; ihre Spalten richten sich nach der Breite des
   Bereichs, nicht des Fensters. Auch im Querformat am Telefon passt die Scheibe in die Höhe.
 - **Sprung zur Scheibe mit Rücksprung:** Schaltet der Knopf „Vertrauensellipse“ in der Analyse oder eine Zeile der
