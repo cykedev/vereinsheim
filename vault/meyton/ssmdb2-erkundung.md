@@ -49,7 +49,7 @@ Anleitung für den Abend: `tools/ssmdb2-erkunden/README.md`. Plan: `plans/2026-1
 `tools/ssmdb2-erkunden/test/selbsttest.sh` startet `mariadb:11` mit einem geschätzten Schema (MyISAM,
 Spalten wie die Vertrags-Beispiele) und Testdaten mit erfundenen Namen, lässt alle Phasen mit `--auto`
 laufen und simuliert das Schießen je Schritt, darunter die ungünstige Lesart von SF-03 (die Probe
-verschwindet mit dem ersten Wertungsschuss). 33 Prüfungen, unter anderem: Kopie einspielbar mit
+verschwindet mit dem ersten Wertungsschuss). Dazu ein Lauf ohne `--auto` mit Antworten über stdin, wie am Abend: Er fand, dass `docker exec -i` Eingaben des Users verbrauchte, während der Mitschnitt lief; Abfragen laufen seitdem ohne stdin. 39 Prüfungen, unter anderem: Kopie einspielbar mit
 gleichen Zeilen, keine Testnamen und kein Passwort in der Ausgabe, verschwindende Probe im Protokoll
 sichtbar, `ff914420` → −7257056. Läuft auch mit der macOS-Bash 3.2 (`ERKUNDEN_BASH=/bin/bash`).
 
