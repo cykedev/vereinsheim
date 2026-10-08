@@ -1,4 +1,9 @@
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
+import {
+  AnalysisPanel,
+  ANALYSIS_TABS,
+  type AnalysisTab,
+} from "@vereinsheim/shot-ui/analysis/AnalysisPanel"
 import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { HelpDetails } from "@vereinsheim/shot-ui/help/HelpDetails"
@@ -75,6 +80,10 @@ export function App({ commit }: { commit: string }) {
   const [theme, setTheme] = useState<Theme>(() => (store.get("theme") as Theme | null) ?? "system")
   const [explain, setExplain] = useState(() => store.get("help") === "1")
   const [helpKey, setHelpKey] = useState<string | null>(null)
+  const [tab, setTab] = useState<AnalysisTab>(() => {
+    const saved = store.get("tab")
+    return ANALYSIS_TABS.find((t) => t.value === saved)?.value ?? "overview"
+  })
   const [state, dispatch] = useReducer(viewReducer, undefined, () => {
     // Grundauswahl der ersten Karte: ohne Probe, wenn es Probe und Wertung gibt
     const home = defaultWhole(cardShots("lp-10m", rawSample("lp-10m", "forty")))
@@ -134,6 +143,11 @@ export function App({ commit }: { commit: string }) {
 
   const choose = (index: number, series: SeriesKey | null) =>
     dispatch({ type: "choose", shot: index, series })
+
+  const changeTab = (next: AnalysisTab) => {
+    store.set("tab", next)
+    setTab(next)
+  }
 
   return (
     <div className="mx-auto grid max-w-6xl gap-7 px-4 pt-7 pb-14">
@@ -318,6 +332,15 @@ export function App({ commit }: { commit: string }) {
             Erklärungen
           </ToggleChip>
         }
+      />
+      <AnalysisPanel
+        shots={shots}
+        state={state}
+        target={target}
+        tab={tab}
+        onTab={changeTab}
+        explain={explain}
+        onToggleLayer={toggle}
       />
       <HelpSheet metricKey={helpKey} onClose={() => setHelpKey(null)} />
     </div>

@@ -704,7 +704,7 @@ addEventListener("load", async () => {
     check(
       "Erklärungen an: alles offen, Kurzsätze sichtbar an jeder Kachel",
       targetHelp().open &&
-        $$("[data-short]").length === 10 &&
+        $$("[data-metric] [data-short]").length === 10 &&
         $$("[data-metric]").every(
           (t) => txt($("[data-short]", t)) === L().tools.helpForMetric(t.dataset.metric).short
         )
