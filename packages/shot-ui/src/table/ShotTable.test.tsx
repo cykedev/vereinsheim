@@ -94,6 +94,22 @@ describe("ShotTable", () => {
     expect(r[0][3]).toBe("–")
   })
 
+  it("Teiler wie der Fachkern: gemessener Abstand vor der Lage, ohne Lage auch, verdächtig keiner", () => {
+    const measured = { ...CARD[2], distanceUm: 3317, xUm: 0, yUm: 3318 }
+    const pdfOnly = { ...CARD[3], xUm: null, yUm: null, distanceUm: 5000 }
+    const placeholder = { ...CARD[4], xUm: 0, yUm: 0, flags: ["verdaechtig"] }
+    const html = renderToStaticMarkup(
+      createElement(ShotTable, {
+        shots: [CARD[0], CARD[1], measured, pdfOnly, placeholder],
+        state: initialViewState(),
+      })
+    )
+    const teiler = Object.fromEntries(rows(html).map((r) => [r[0], r[3]]))
+    expect(teiler["1"]).toBe("331,7")
+    expect(teiler["2"]).toBe("500,0")
+    expect(teiler["3"]).toBe("–")
+  })
+
   it("Intervalle in Sekunden, über drei Minuten als Pause in Minuten, nach einer Lücke keins", () => {
     const r = rows(render())
     expect(r.map((row) => row[4])).toEqual(["52 s", "4 min", "–", "45 s", "50 s", "50 s", "–"])

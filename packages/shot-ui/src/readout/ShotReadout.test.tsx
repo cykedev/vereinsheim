@@ -77,6 +77,20 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
     expect(text(render({ chosen: { index: 1, series: 1 } }))).toContain("x / y +14,00 mm / 0,00 mm")
   })
 
+  it("Teiler und Abstand wie der Fachkern: gemessen vor der Lage, verdächtig ohne Angaben", () => {
+    const measured = { ...CARD[3], xUm: 0, yUm: 3318, distanceUm: 3317 }
+    const t = text(render({}, [CARD[0], measured]))
+    expect(t).toContain("Teiler 331,7")
+    expect(t).toContain("Abstand zur Mitte 3,32 mm")
+    expect(t).toContain("x / y 0,00 mm / +3,32 mm")
+    const pdfOnly = text(render({}, [{ ...CARD[3], xUm: null, yUm: null, distanceUm: 5000 }]))
+    expect(pdfOnly).toContain("Teiler 500,0")
+    expect(pdfOnly).not.toContain("x / y")
+    const placeholder = text(render({}, [{ ...CARD[3], xUm: 0, yUm: 0, flags: ["verdaechtig"] }]))
+    expect(placeholder).not.toContain("Teiler")
+    expect(placeholder).not.toContain("x / y")
+  })
+
   it("ohne Lage keine Angaben zur Lage", () => {
     const t = text(render({ chosen: { index: 2, series: 1 } }))
     expect(t).not.toContain("Teiler")

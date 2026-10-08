@@ -1,14 +1,14 @@
 "use client"
 
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
-import { distanceUm } from "@vereinsheim/shot-core/scoring"
+import { teilerFromDistanceUm } from "@vereinsheim/shot-core/scoring"
 import { PAUSE_THRESHOLD_MS } from "@vereinsheim/shot-core/time"
 import { cn } from "@vereinsheim/lib/utils"
 import { useMemo } from "react"
 
 import { formatValue } from "../format"
 import { scoreColor } from "../geometry"
-import { formatScore, hasPosition, seriesKeyOf, shotIntervals, shotLabels } from "../shots"
+import { formatScore, seriesKeyOf, shotDistance, shotIntervals, shotLabels } from "../shots"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
 
@@ -27,6 +27,12 @@ function intervalText(ms: number | null): string {
   return ms > PAUSE_THRESHOLD_MS
     ? `${formatValue(ms / 60_000, 0)} min`
     : `${formatValue(ms / 1000, 0)} s`
+}
+
+/** Teiler wie im Fachkern und auf dem Ausdruck; ohne gültigen Abstand ein Strich */
+function teilerText(shot: MetricShot): string {
+  const distance = shotDistance(shot)
+  return distance === null ? "–" : formatValue(teilerFromDistanceUm(distance), 1)
 }
 
 /**
@@ -115,11 +121,7 @@ export function ShotTable({ shots, state, onChoose, className }: ShotTableProps)
                   {formatScore(shot, state.scoring)}
                 </td>
                 <td className="px-2 py-1.5 text-center">{shot.innerTen ? "★" : ""}</td>
-                <td className="px-2 py-1.5 text-right">
-                  {hasPosition(shot)
-                    ? formatValue(distanceUm(shot.xUm as number, shot.yUm as number) / 10, 1)
-                    : "–"}
-                </td>
+                <td className="px-2 py-1.5 text-right">{teilerText(shot)}</td>
                 <td className="px-2 py-1.5 text-right text-muted-foreground">
                   {intervalText(intervals[i])}
                 </td>

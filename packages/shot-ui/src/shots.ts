@@ -3,6 +3,7 @@
 
 import {
   selectShots,
+  shotDistanceUm,
   shotNumbers,
   stepsInOrder,
   type MetricShot,
@@ -39,6 +40,18 @@ export function formatTotal(total: number | null, scoring: Scoring): string {
 
 export const hasPosition = (shot: MetricShot) =>
   shot.xUm !== null && shot.yUm !== null && Number.isFinite(shot.xUm) && Number.isFinite(shot.yUm)
+
+/**
+ * Abstand zur Mitte in µm wie im Fachkern (`shotDistanceUm`): der gemessene vor dem aus der Lage, auch ohne
+ * Lage (nur vom Ausdruck); ein verdächtiger Schuss hat keinen gültigen Abstand (SF-15), dann null.
+ */
+export function shotDistance(shot: MetricShot): number | null {
+  return selectShots([shot], { need: "distance" }).length ? shotDistanceUm(shot) : null
+}
+
+/** Lage zum Ablesen: nur eine gültige, ein verdächtiger Platzhalter nicht (SF-15) */
+export const hasValidPosition = (shot: MetricShot) =>
+  selectShots([shot], { need: "position" }).length > 0
 
 /**
  * Letzte Visierverstellung als Nummer des Probeschusses davor; 0 ohne Verstellung. Eine Verstellung

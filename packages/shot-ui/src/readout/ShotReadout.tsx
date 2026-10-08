@@ -1,12 +1,12 @@
 "use client"
 
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
-import { distanceUm } from "@vereinsheim/shot-core/scoring"
+import { teilerFromDistanceUm } from "@vereinsheim/shot-core/scoring"
 import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue } from "../format"
 import { scoreColor } from "../geometry"
-import { formatScore, hasPosition, shotLabels } from "../shots"
+import { formatScore, hasValidPosition, shotDistance, shotLabels } from "../shots"
 import type { ViewState } from "../view-state"
 
 export interface ShotReadoutProps {
@@ -40,7 +40,7 @@ function detail(shot: MetricShot, scoring: ViewState["scoring"]): string {
 
 /**
  * Ablesung (spiegel-ui-design): der angetippte oder letzte Schuss mit Wert in seiner Ringwert-Farbe, der
- * anderen Wertung klein darunter und, wenn die Lage bekannt ist, Teiler, Abstand zur Mitte und x/y.
+ * anderen Wertung klein darunter, Teiler und Abstand zur Mitte (gemessen vor der Lage) und x/y.
  * Ein Wechsel wird Screenreadern gemeldet.
  */
 export function ShotReadout({ shots, state, className }: ShotReadoutProps) {
@@ -54,6 +54,9 @@ export function ShotReadout({ shots, state, className }: ShotReadoutProps) {
   }
   const { shot, index, chosen } = shown
   const label = shotLabels(shots)[index]
+  // wie im Fachkern: gemessener Abstand vor der Lage, verdächtige Schüsse ohne Abstand und Lage (SF-15)
+  const distance = shotDistance(shot)
+  const placed = hasValidPosition(shot)
   return (
     <section aria-live="polite" aria-label="Ablesung" className={cn("grid gap-3", className)}>
       <p className="text-[13px] text-muted-foreground">
@@ -66,20 +69,26 @@ export function ShotReadout({ shots, state, className }: ShotReadoutProps) {
         {formatScore(shot, state.scoring)}
       </p>
       <p className="text-[13px] text-foreground-2">{detail(shot, state.scoring)}</p>
-      {hasPosition(shot) && (
+      {(distance !== null || placed) && (
         <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-[13px]">
-          <dt className="text-muted-foreground">Teiler</dt>
-          <dd className="font-semibold tabular-nums">
-            {formatValue(distanceUm(shot.xUm as number, shot.yUm as number) / 10, 1)}
-          </dd>
-          <dt className="text-muted-foreground">Abstand zur Mitte</dt>
-          <dd className="font-semibold tabular-nums">
-            {mm(distanceUm(shot.xUm as number, shot.yUm as number))}
-          </dd>
-          <dt className="text-muted-foreground">x / y</dt>
-          <dd className="font-semibold tabular-nums">
-            {`${signedMm(shot.xUm as number)} / ${signedMm(shot.yUm as number)}`}
-          </dd>
+          {distance !== null && (
+            <>
+              <dt className="text-muted-foreground">Teiler</dt>
+              <dd className="font-semibold tabular-nums">
+                {formatValue(teilerFromDistanceUm(distance), 1)}
+              </dd>
+              <dt className="text-muted-foreground">Abstand zur Mitte</dt>
+              <dd className="font-semibold tabular-nums">{mm(distance)}</dd>
+            </>
+          )}
+          {placed && (
+            <>
+              <dt className="text-muted-foreground">x / y</dt>
+              <dd className="font-semibold tabular-nums">
+                {`${signedMm(shot.xUm as number)} / ${signedMm(shot.yUm as number)}`}
+              </dd>
+            </>
+          )}
         </dl>
       )}
     </section>
