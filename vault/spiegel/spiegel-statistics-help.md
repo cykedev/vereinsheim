@@ -39,10 +39,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   die Zehntelverteilung allein in Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und
   10,9 sind beide eine 10); beim Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich
   bleiben Zehner, Innenzehner und Zehnerquote.
-- **Probe und Wertung.** Lage, Streuung und Tempo der Analyse rechnen über die Wertung. Die Probe
-  hat einen eigenen Reiter. Nach einer Visierverstellung zählt bei „Probe gegen Wertung“ und
-  „Eingeschossen?“ nur die Probe danach; der Umfang der Probe zählt alle Probeschüsse vor der
-  Wertung.
+- **Probe und Wertung.** Lage, Streuung und Tempo der Analyse rechnen über die Wertung, ohne Probe;
+  gibt es nur Probe, über die Probe. Die Probe hat einen eigenen Reiter: „Probe gegen Wertung“ nimmt
+  die ganze Probe vor der Wertung, „Eingeschossen?“ ihre letzten fünf Schüsse.
 - **Nummern.** Wertungsschüsse heißen 1, 2, 3 …, Probeschüsse P1, P2 …, in der Reihenfolge der
   Abgabe. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.
 - **Median statt Durchschnitt.** Wo „Median“ steht, zählt der mittlere Wert: Die Hälfte liegt
@@ -71,8 +70,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.
 
 **Probe auf der Scheibe**
-- *Was:* Die Probeschüsse um die Mitte, vor der Visierverstellung gestrichelt, dazu der Schwerpunkt
-  der Wertung als kleiner geviertelter Kreis.
+- *Was:* Die Probeschüsse um die Mitte, hohl gezeichnet, dazu der Schwerpunkt der Wertung als
+  kleiner geviertelter Kreis.
 
 ## Ergebnis
 
@@ -343,7 +342,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Mindestzahl:* Ab 1 Probeschuss.
 
 **Probe gegen Wertung (S3)**
-- *Was:* Durchschnitt, R50 und σ der Probe nach der letzten Visierverstellung gegen die Wertung.
+- *Was:* Durchschnitt, R50 und σ der ganzen Probe vor der Wertung gegen die Wertung.
 - *So liest du es:* σ ist der fairere Vergleich: R50 fällt bei wenigen Schüssen etwas zu klein aus,
   und die Probe hat meist weniger Schüsse.
 - *Vorsicht:* Ein Fehlschuss zählt bei σ mit und bläht es auf; R50 lässt ihn weg. Mit wenigen
@@ -352,19 +351,18 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Mindestzahl:* σ ab 3, R50 ab 5 Schuss je Seite.
 
 **Eingeschossen? (S1, S4)**
-- *Was:* Ein Test deiner letzten fünf Probeschüsse vor der Wertung, nach der letzten
-  Visierverstellung: Lagen sie echt neben der Mitte? Dazu der Abstand zwischen ihrem Schwerpunkt und
-  dem der Wertung.
+- *Was:* Ein Test deiner letzten fünf Probeschüsse vor der Wertung: Lagen sie echt neben der Mitte?
+  Dazu der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.
 - *So liest du es:* „Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Hast du danach
   nicht mehr verstellt, begann die Wertung mit diesem Versatz; der Abstand zur Wertung zeigt, ob er
   blieb.
 - *Vorsicht:* „Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur
   einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in
   knapp zwei von drei Fällen auf.
-- *Mindestzahl:* Ab 3 Probeschüssen mit Lage nach der letzten Visierverstellung, der Abstand zur
-  Wertung zusätzlich ab 3 Wertungsschüssen mit Lage.
-- *Formel:* `Hotelling-T² über die letzten fünf Probeschüsse nach der letzten Verstellung; Versatz =
-  |m Probe − m Wertung|`
+- *Mindestzahl:* Ab 3 Probeschüssen mit Lage, der Abstand zur Wertung zusätzlich ab 3
+  Wertungsschüssen mit Lage.
+- *Formel:* `Hotelling-T² über die letzten fünf Probeschüsse mit Lage; Versatz = |m Probe − m
+  Wertung|`
 
 ## Datenlage
 

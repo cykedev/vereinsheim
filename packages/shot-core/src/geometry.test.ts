@@ -6,7 +6,6 @@ import {
   extremeSpread,
   meanRadius,
   r50,
-  segmentGroups,
   smallestEnclosingCircle,
   standardDeviation,
   type Circle,
@@ -194,23 +193,5 @@ describe("Radien und Streuung", () => {
     )
     expect(covarianceEllipse(steep)?.angleRad).toBeCloseTo(back, 9)
     expect(covarianceEllipse([pt(0, 0)])).toBeNull()
-  })
-})
-
-describe("segmentGroups (Visier verstellt, SF-63)", () => {
-  const shots = Array.from({ length: 10 }, (_, i) => i + 1)
-
-  it("teilt nach den angegebenen Schussnummern", () => {
-    expect(segmentGroups(shots, [4]).map((g) => g.length)).toEqual([4, 6])
-    expect(segmentGroups(shots, [7, 2]).map((g) => g.length)).toEqual([2, 5, 3])
-  })
-
-  it("ohne Verstellung oder mit Nummern am Rand bleibt es eine Gruppe", () => {
-    expect(segmentGroups(shots, [])).toEqual([shots])
-    expect(segmentGroups(shots, [0, 10, 10])).toEqual([shots])
-  })
-
-  it("eine doppelt gemeldete Verstellung teilt nur einmal", () => {
-    expect(segmentGroups(shots, [4, 4]).map((g) => g.length)).toEqual([4, 6])
   })
 })

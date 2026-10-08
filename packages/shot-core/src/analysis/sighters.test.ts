@@ -23,8 +23,9 @@ const shot = (
   series: kind === "match" ? 1 : null,
 })
 
-// Acht Probeschüsse: drei um (3 | 3) mm, nach Schuss 3 Visier verstellt, fünf um die Mitte;
-// dann zehn Wertungsschüsse auf (±0,15 | ±0,15) mm, je fünf oben und unten.
+// Acht Probeschüsse: die ersten drei um (3 | 3) mm, dann fünf um die Mitte; dann zehn Wertungsschüsse auf
+// (±0,15 | ±0,15) mm, je fünf oben und unten. Spiegel fragt keine Visierverstellung ab (User, 8. Oktober
+// 2026): Die Probe zählt immer ganz (S3) bzw. mit ihren letzten fünf (S1, S4).
 const FAR = [
   [100, 0],
   [-100, 0],
@@ -44,11 +45,14 @@ const SIGHTERS = [
 const MATCHES = Array.from({ length: 10 }, (_, i) =>
   shot("match", 8 + i, i % 2 === 0 ? 150 : -150, i < 5 ? 150 : -150, 103)
 )
-const CARD_WITH_ADJUSTMENT = [...SIGHTERS, ...MATCHES]
+const CARD_FAR_FIRST = [...SIGHTERS, ...MATCHES]
+// nur die fünf Probeschüsse um die Mitte, dann die Wertung
+const NEAR_SIGHTERS = SIGHTERS.slice(3).map((s, i) => ({ ...s, seq: i + 1 }))
+const CARD_NEAR = [...NEAR_SIGHTERS, ...MATCHES.map((m, i) => ({ ...m, seq: 6 + i }))]
 
 describe("Probe-Umfang (S2)", () => {
   it("Zahl, Blöcke, Dauer und Zeit bis zum ersten Wertungsschuss", () => {
-    expect(sighterSummary(CARD_WITH_ADJUSTMENT)).toEqual({
+    expect(sighterSummary(CARD_FAR_FIRST)).toEqual({
       count: 8,
       blocks: 1,
       durationMs: 7 * 30_000,
@@ -58,7 +62,7 @@ describe("Probe-Umfang (S2)", () => {
   })
 
   it("ein Platzhalter bringt keine Zeit mit (SF-15)", () => {
-    const card = CARD_WITH_ADJUSTMENT.map((shot, i) =>
+    const card = CARD_FAR_FIRST.map((shot, i) =>
       i === 0 ? { ...shot, firedAtMs: -600_000, flags: [FLAG_SUSPICIOUS] } : shot
     )
     const summary = sighterSummary(card)
@@ -70,13 +74,13 @@ describe("Probe-Umfang (S2)", () => {
 
   it("Probe nach Beginn der Wertung zählt nicht", () => {
     const late = [8, 9, 10].map((i) => shot("probe", 20 + i, 0, 0))
-    const summary = sighterSummary([...CARD_WITH_ADJUSTMENT, ...late])
+    const summary = sighterSummary([...CARD_FAR_FIRST, ...late])
     expect(summary?.count).toBe(8)
     expect(summary?.durationMs).toBe(7 * 30_000)
   })
 
   it("springt die Uhr zurück, gibt es keine Dauer und keinen negativen Abstand", () => {
-    const jumped = CARD_WITH_ADJUSTMENT.map((shot, i) =>
+    const jumped = CARD_FAR_FIRST.map((shot, i) =>
       i >= 2 ? { ...shot, firedAtMs: (shot.firedAtMs as number) - 3_600_000 } : shot
     )
     const summary = sighterSummary(jumped)
@@ -87,21 +91,21 @@ describe("Probe-Umfang (S2)", () => {
 })
 
 describe("Probe gegen Wertung (S3)", () => {
-  it("ohne Verstellung zählt die ganze Probe", () => {
-    const comparison = sighterComparison(CARD_WITH_ADJUSTMENT, "decimal")
+  it("die ganze Probe vor der Wertung zählt, auch frühe Schüsse weit daneben", () => {
+    const comparison = sighterComparison(CARD_FAR_FIRST, "decimal")
     expect(comparison?.probe.n).toBe(8)
     expect(comparison?.probe.meanRings).toBeCloseTo(10.1, 9)
     expect(comparison?.match.meanRings).toBeCloseTo(10.3, 9)
   })
 
   it("in ganzen Ringen: 9,6 zählt 9, 10,4 und 10,3 zählen 10", () => {
-    const comparison = sighterComparison(CARD_WITH_ADJUSTMENT, "rings")
+    const comparison = sighterComparison(CARD_FAR_FIRST, "rings")
     expect(comparison?.probe.meanRings).toBeCloseTo(77 / 8, 9)
     expect(comparison?.match.meanRings).toBe(10)
   })
 
-  it("nach der letzten Verstellung zählt nur die Probe danach", () => {
-    const comparison = sighterComparison(CARD_WITH_ADJUSTMENT, "decimal", { adjustAfter: [3] })
+  it("Maße der Probe: Ø, R50 und σ̂ nach Handwerten", () => {
+    const comparison = sighterComparison(CARD_NEAR, "decimal")
     expect(comparison?.probe.n).toBe(5)
     expect(comparison?.probe.meanRings).toBeCloseTo(10.4, 9)
     expect(comparison?.probe.r50Um).toBeCloseTo(100, 9)
@@ -112,13 +116,9 @@ describe("Probe gegen Wertung (S3)", () => {
   })
 
   it("n je Maß: ein Platzhalter zählt mit seinem Wert, nicht mit seiner Lage", () => {
-    const placeholder = { ...shot("probe", 8, 0, 0, 109), flags: [FLAG_SUSPICIOUS] }
-    const card = [
-      ...SIGHTERS,
-      placeholder,
-      ...MATCHES.map((m) => ({ ...m, seq: (m.seq as number) + 1 })),
-    ]
-    const comparison = sighterComparison(card, "decimal", { adjustAfter: [3] })
+    const placeholder = { ...shot("probe", 5, 0, 0, 109), flags: [FLAG_SUSPICIOUS] }
+    const card = [...NEAR_SIGHTERS, placeholder, ...MATCHES.map((m, i) => ({ ...m, seq: 7 + i }))]
+    const comparison = sighterComparison(card, "decimal")
     expect(comparison?.probe.n).toBe(6)
     expect(comparison?.probe.valued).toBe(6)
     expect(comparison?.probe.positioned).toBe(5)
@@ -131,12 +131,12 @@ describe("Probe gegen Wertung (S3)", () => {
 
 describe("Eingeschossen? (S4)", () => {
   it("die letzten fünf Probeschüsse um die Mitte: Lage nicht echt versetzt", () => {
-    const zeroed = sighterZeroed(CARD_WITH_ADJUSTMENT)
+    const zeroed = sighterZeroed(CARD_FAR_FIRST)
     expect(zeroed?.n).toBe(5)
     expect(zeroed?.real).toBe(false)
   })
 
-  it("erst die Schüsse mit Lage, dann die letzten fünf nach der letzten Verstellung", () => {
+  it("erst die Schüsse mit Lage, dann die letzten fünf", () => {
     const placeholder = { ...shot("probe", 8, 0, 0), flags: [FLAG_SUSPICIOUS] }
     const card = [
       ...SIGHTERS,
@@ -144,10 +144,9 @@ describe("Eingeschossen? (S4)", () => {
       ...MATCHES.map((m) => ({ ...m, seq: (m.seq as number) + 1 })),
     ]
     expect(sighterZeroed(card)?.n).toBe(5)
-    expect(sighterZeroed(CARD_WITH_ADJUSTMENT, { adjustAfter: [3] })?.n).toBe(5)
-    // nach Probe 6 verstellt: nur noch zwei Schuss, zu wenig für ein Urteil
-    expect(sighterZeroed(CARD_WITH_ADJUSTMENT, { adjustAfter: [6] })).toBeNull()
-    expect(sighterZeroed(CARD_WITH_ADJUSTMENT)?.ellipse.majorUm).toBeGreaterThan(0)
+    expect(sighterZeroed(CARD_FAR_FIRST)?.ellipse.majorUm).toBeGreaterThan(0)
+    // unter drei Probeschüssen mit Lage kein Urteil
+    expect(sighterZeroed([...SIGHTERS.slice(0, 2), ...MATCHES])).toBeNull()
   })
 
   it("eine enge Probe neben der Mitte: echt versetzt", () => {
@@ -158,8 +157,8 @@ describe("Eingeschossen? (S4)", () => {
 })
 
 describe("Versatz Probe → Wertung (S1, in S4)", () => {
-  // P1–P5 um (3 | 0) mm, nach P5 verstellt, P6–P8 um die Mitte (nicht auf einer Linie); Wertung um die
-  // Mitte. Ohne die Verstellung mischen die letzten fünf beide Lagen: Schwerpunkt (1,2 | −0,02) mm.
+  // P1–P5 um (3 | 0) mm, P6–P8 um die Mitte (nicht auf einer Linie); Wertung um die Mitte. Die letzten fünf
+  // mischen beide Lagen: Schwerpunkt (1,2 | −0,02) mm. Eine Verstellung nach P5 kennt Spiegel nicht.
   const BEFORE = [
     [3100, 0],
     [2900, 0],
@@ -172,35 +171,33 @@ describe("Versatz Probe → Wertung (S1, in S4)", () => {
     [-50, 87],
     [-50, -87],
   ]
-  const ADJUSTED = [
+  const MIXED = [
     ...BEFORE.map(([x, y], i) => shot("probe", i, x, y)),
     ...AFTER.map(([x, y], i) => shot("probe", 5 + i, x, y)),
     ...MATCHES,
   ]
 
-  it("der Versatz zählt die Probe nach der letzten Verstellung, wie der Test", () => {
-    const zeroed = sighterZeroed(ADJUSTED, { adjustAfter: [5] })
-    expect(zeroed?.n).toBe(3)
+  it("der Versatz zählt die letzten fünf Probeschüsse, wie der Test", () => {
+    const zeroed = sighterZeroed(MIXED)
+    expect(zeroed?.n).toBe(5)
     expect(zeroed?.matchOffsetUm).toEqual(expect.any(Number))
-    expect(zeroed?.matchOffsetUm).toBeCloseTo(0, 9)
-    // ohne Angabe der Verstellung: die letzten fünf über die Verstellung hinweg
-    expect(sighterZeroed(ADJUSTED)?.matchOffsetUm).toBeCloseTo(Math.hypot(1200, 20), 6)
+    expect(zeroed?.matchOffsetUm).toBeCloseTo(Math.hypot(1200, 20), 6)
   })
 
   it("die Reihenfolge der Liste zählt nicht, nur die Abgabefolge", () => {
-    const shuffled = [...MATCHES, ...ADJUSTED.slice(5, 8), ...ADJUSTED.slice(0, 5)]
-    const zeroed = sighterZeroed(shuffled, { adjustAfter: [5] })
+    const shuffled = [...MATCHES, ...MIXED.slice(5, 8), ...MIXED.slice(0, 5)]
+    const zeroed = sighterZeroed(shuffled)
     expect(zeroed?.matchOffsetUm).toEqual(expect.any(Number))
-    expect(zeroed?.matchOffsetUm).toBeCloseTo(0, 9)
+    expect(zeroed?.matchOffsetUm).toBeCloseTo(Math.hypot(1200, 20), 6)
   })
 
   it("der Versatz misst gegen den Schwerpunkt der Wertung, nicht gegen die Mitte", () => {
-    // Probe nach der Verstellung um die Mitte, die Wertung 2 mm rechts davon
+    // die Probe um die Mitte, die Wertung 2 mm rechts davon
     const shifted = [
-      ...ADJUSTED.slice(0, 8),
-      ...MATCHES.map((m) => ({ ...m, xUm: (m.xUm as number) + 2000 })),
+      ...NEAR_SIGHTERS,
+      ...MATCHES.map((m, i) => ({ ...m, seq: 6 + i, xUm: (m.xUm as number) + 2000 })),
     ]
-    const zeroed = sighterZeroed(shifted, { adjustAfter: [5] })
+    const zeroed = sighterZeroed(shifted)
     expect(zeroed?.offsetUm).toEqual(expect.any(Number))
     expect(zeroed?.offsetUm).toBeCloseTo(0, 9)
     expect(zeroed?.matchOffsetUm).toEqual(expect.any(Number))

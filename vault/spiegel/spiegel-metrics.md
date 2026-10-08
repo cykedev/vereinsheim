@@ -74,7 +74,7 @@ Die Regeln aus dem Sonderfall-Katalog ([[spiegel-edge-cases]]), die jede Kennzah
 - **Verdächtige Schüsse** (Platzhalter, Handeintrag) zählen nur mit ihrem amtlichen Wert zum Ergebnis. In Lage, Abstand und Tempo fehlen sie, sie geben keinen Teiler-Rekord und werden nicht gezeichnet (SF-15). Ob eine Scheibe mit Platzhalter für Scheiben-Rekorde zählt, entscheidet SP-2.1.
 - **Fehlende Angaben:** Ein Schuss ohne die nötige Angabe fällt weg. Summen und Zählungen geben dann keinen Wert, denn eine Summe über einen Teil der Schüsse ist kein Ergebnis.
 - **Reihenfolge:** Es zählt die Abgabefolge, nicht die Uhr; springt die Uhr zurück oder fehlt ein Schuss mitten in der Folge, zählt der Abstand daneben nicht als Tempo (SF-30).
-- **Visier verstellt:** Verstellt jemand in der Probe oder zwischen Serien das Visier, springt der Schwerpunkt mit Absicht. Der Versatz Probe → Wertung zählt deshalb die letzten fünf Probeschüsse (S4, `sighterZeroed`, SF-63). Spiegel fragt Verstellungen nicht ab (User, 8. Oktober 2026); den optionalen Parameter `adjustAfter` in `sighters.ts` setzt niemand mehr, er fällt mit der Analyse-Verdrahtung weg.
+- **Visier verstellt:** Verstellt jemand in der Probe oder zwischen Serien das Visier, springt der Schwerpunkt mit Absicht. Der Versatz Probe → Wertung zählt deshalb die letzten fünf Probeschüsse (S4, `sighterZeroed`, SF-63). Spiegel fragt Verstellungen nicht ab (User, 8. Oktober 2026).
 - **Tempo:** Median der Intervalle; Pausen über drei Minuten zählen getrennt (SF-62).
 - **Freihand und Auflage** bleiben getrennte Familien (SF-65).
 - **Merkmale filtern:** Neu gewertete, nur aus dem PDF stammende und ausgenommene Scheiben zählen nicht für Rekorde, ebenso Status `I` (ungültig) und Sonderwertungen wie Preisschießen.

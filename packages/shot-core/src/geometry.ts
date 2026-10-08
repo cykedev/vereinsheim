@@ -179,21 +179,3 @@ export function covarianceEllipse(
     angleRad: angle,
   }
 }
-
-/**
- * Teilt eine Schussfolge nach den Schussnummern (1-basiert), nach denen das Visier verstellt wurde
- * (SF-63). Nummern am Rand oder doppelt zählen nicht.
- */
-export function segmentGroups<T>(shots: readonly T[], adjustAfter: readonly number[]): T[][] {
-  const cuts = [...new Set(adjustAfter)]
-    .filter((n) => Number.isInteger(n) && n >= 1 && n < shots.length)
-    .sort((a, b) => a - b)
-  const groups: T[][] = []
-  let start = 0
-  for (const cut of cuts) {
-    groups.push(shots.slice(start, cut))
-    start = cut
-  }
-  groups.push(shots.slice(start))
-  return groups
-}

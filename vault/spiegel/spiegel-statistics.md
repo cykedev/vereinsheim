@@ -8,7 +8,7 @@ part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-metrics]]", "[[spiegel-ui-design]]", "[[spiegel-edge-cases]]", "[[spiegel-vision]]", "[[statistics-visualization]]", "[[meyton-printout]]"]
 ---
 
-**TL;DR** Alle Statistiken, die Spiegel mit Meyton-Rohdaten sinnvoll zeigen kann: 99 Katalog-IDs in 13 Themen (5 davon entfernt), je mit Definition, Priorität und Platz in der Roadmap. Was eine einzelne Scheibe hergibt, rechnet der Fachkern seit SP-1.10; Verläufe, Rekorde und Vergleiche über Zeiträume folgen in Phase 2. Leitbild ist ein Profi-Werkzeug zum systematischen Trainieren und Analysieren, das jede Zahl ehrlich zeigt: mit n, Unsicherheit und dem Hinweis „unklar“, wenn die Daten nicht reichen.
+**TL;DR** Alle Statistiken, die Spiegel mit Meyton-Rohdaten sinnvoll zeigen kann: 99 Katalog-IDs in 13 Themen (6 davon entfernt), je mit Definition, Priorität und Platz in der Roadmap. Was eine einzelne Scheibe hergibt, rechnet der Fachkern seit SP-1.10; Verläufe, Rekorde und Vergleiche über Zeiträume folgen in Phase 2. Leitbild ist ein Profi-Werkzeug zum systematischen Trainieren und Analysieren, das jede Zahl ehrlich zeigt: mit n, Unsicherheit und dem Hinweis „unklar“, wenn die Daten nicht reichen.
 
 # Spiegel — Statistik-Katalog
 
@@ -69,7 +69,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| L1 | Schwerpunkt (Meyton: Trefferlage) | m mit Richtung; nach „Visier verstellt“ getrennt (SF-63) | Serie, Scheibe, Zeitraum | A | SP-1.10 (Schwerpunkt), Trennung mit dem Ereignis aus SP-2.3 |
+| L1 | Schwerpunkt (Meyton: Trefferlage) | m mit Richtung; ohne Trennung nach Visierverstellungen, die Spiegel nicht abfragt (SF-63) | Serie, Scheibe, Zeitraum | A | SP-1.10 |
 | L2 | Schwerpunkt-Abstand | |m|; der Schwerpunkt selbst ist unsicher (aus 10 Schuss ≈ 0,4σ) | Serie, Scheibe, Zeitraum | A | vorhanden |
 | L3 | Ist die Lage echt? | Hotelling-T² gegen F(2, n−2), 95-%-Ellipse um m | Scheibe, Zeitraum | A | SP-1.10 |
 | L4 | Ringe durch Lage gegen Streuung | jeder Treffer um den Schwerpunkt der übrigen verschoben (Leave-one-out, (pᵢ − m) · n/(n − 1)) und neu gewertet: Lage- und Streuungsverlust, zusammen E9. Schätzt, was eine Korrektur auf neuen Schüssen bringt (B5); in der Stichprobe zentriert zeigte er ohne jeden Versatz im Mittel +0,38 Ringe Scheingewinn (LG σ 1,5 mm). Erst ab 10 Schuss, wenn L3 „echt“ sagt und die Korrektur gewinnt; nie amtlich | Serie, Scheibe, Zeitraum | A | SP-1.10, SP-1.12 |
@@ -125,11 +125,11 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| S1 | Versatz Probe → Wertung | Schwerpunkt der letzten fünf Probeschüsse nach der letzten Verstellung gegen die Wertung, in S4 (`matchOffsetUm`); bis Oktober 2026 eine eigene Registry-Kennzahl ohne Rücksicht auf die Verstellung | Scheibe | A | SP-1.12 |
+| S1 | Versatz Probe → Wertung | Schwerpunkt der letzten fünf Probeschüsse mit Lage gegen die Wertung, in S4 (`matchOffsetUm`); bis Oktober 2026 eine eigene Registry-Kennzahl | Scheibe | A | SP-1.12 |
 | S2 | Probe-Umfang | Zahl bis zum ersten Wertungsschuss, Blöcke à zehn, Dauer, Zeit bis zum ersten Wertungsschuss | Scheibe, Zeitraum | A | SP-1.10 |
-| S3 | Probe-Qualität | Ø, R50 und σ̂ der Probe (nach der letzten Verstellung) gegen die Wertung; R50 hängt an n, σ̂ kaum | Scheibe, Zeitraum | B | SP-1.10 |
-| S4 | Eingeschossen? | Lage der letzten fünf Probeschüsse mit Lage nach der letzten Verstellung, Vertrauensbereich wie L3; „kein Versatz nachweisbar“ heißt nicht „eingeschossen“ | Scheibe | C | SP-1.10 |
-| S5 | Visierverstellungen | Anzahl und Lagesprung je Verstellung (`segmentGroups`) | Scheibe, Zeitraum | C | SP-2.3 |
+| S3 | Probe-Qualität | Ø, R50 und σ̂ der ganzen Probe vor der Wertung gegen die Wertung; R50 hängt an n, σ̂ kaum | Scheibe, Zeitraum | B | SP-1.10 |
+| S4 | Eingeschossen? | Lage der letzten fünf Probeschüsse mit Lage, Vertrauensbereich wie L3; „kein Versatz nachweisbar“ heißt nicht „eingeschossen“ | Scheibe | C | SP-1.10 |
+| S5 | Visierverstellungen | **entfernt (Oktober 2026):** Spiegel fragt keine Visierverstellung ab, das ist zu viel Komplexität für ihren Nutzen (User, 8. Oktober 2026) | – | – | entfernt (SP-1.8) |
 
 ### 8 Langzeit und Trend
 

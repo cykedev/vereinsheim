@@ -318,7 +318,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["S3"],
     metrics: [],
     short: "Ob deine Probe so gut war wie die Wertung.",
-    what: "Durchschnitt, R50 und σ der Probe nach der letzten Visierverstellung gegen die Wertung.",
+    what: "Durchschnitt, R50 und σ der ganzen Probe vor der Wertung gegen die Wertung.",
     read: "σ ist der fairere Vergleich: R50 fällt bei wenigen Schüssen etwas zu klein aus, und die Probe hat meist weniger Schüsse.",
     caution:
       "Ein Fehlschuss zählt bei σ mit und bläht es auf; R50 lässt ihn weg. Mit wenigen Probeschüssen ist auch σ unsicher: Bei gleicher Präzision liegt σ aus fünf Probeschüssen zufällig zwischen etwa der Hälfte und dem Anderthalbfachen von σ der Wertung.",
@@ -331,14 +331,14 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["S1", "S4"],
     metrics: [],
     short: "Ob deine letzten Probeschüsse neben der Mitte lagen.",
-    what: "Ein Test deiner letzten fünf Probeschüsse vor der Wertung, nach der letzten Visierverstellung: Lagen sie echt neben der Mitte? Dazu der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.",
+    what: "Ein Test deiner letzten fünf Probeschüsse vor der Wertung: Lagen sie echt neben der Mitte? Dazu der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.",
     read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Hast du danach nicht mehr verstellt, begann die Wertung mit diesem Versatz; der Abstand zur Wertung zeigt, ob er blieb.",
     caution:
       "„Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in knapp zwei von drei Fällen auf.",
     minimum:
-      "Ab 3 Probeschüssen mit Lage nach der letzten Visierverstellung, der Abstand zur Wertung zusätzlich ab 3 Wertungsschüssen mit Lage.",
+      "Ab 3 Probeschüssen mit Lage, der Abstand zur Wertung zusätzlich ab 3 Wertungsschüssen mit Lage.",
     formula:
-      "Hotelling-T² über die letzten fünf Probeschüsse nach der letzten Verstellung; Versatz = |m Probe − m Wertung|",
+      "Hotelling-T² über die letzten fünf Probeschüsse mit Lage; Versatz = |m Probe − m Wertung|",
   },
   // ---------- Datenlage
   {

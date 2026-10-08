@@ -1,8 +1,8 @@
 // Probe und Wertung: Umfang der Probe, Probe gegen Wertung und „eingeschossen?“ (Katalog S1–S4). Die
-// Probe zählt bis zum ersten Wertungsschuss; nach einer Visierverstellung zählt nur der Teil danach
-// (SF-63).
+// Probe zählt bis zum ersten Wertungsschuss. Eine Visierverstellung fragt Spiegel nicht ab (User, 8. Oktober
+// 2026): „Probe gegen Wertung“ nimmt die ganze Probe, „eingeschossen?“ ihre letzten fünf Schüsse (SF-63).
 
-import { centroid, r50, segmentGroups, type Point } from "../geometry"
+import { centroid, r50, type Point } from "../geometry"
 import { inShotOrder, selectShots, timesInOrder, type MetricShot, type Scoring } from "../metrics"
 import { tempo } from "../time"
 import { mpiConfidence, type MpiConfidence } from "./position"
@@ -14,15 +14,6 @@ function sightersBeforeMatch(shots: readonly MetricShot[]): MetricShot[] {
   const ordered = inShotOrder(shots)
   const first = ordered.findIndex((shot) => shot.kind === "match")
   return (first < 0 ? ordered : ordered.slice(0, first)).filter((shot) => shot.kind === "probe")
-}
-
-/** Probe nach der letzten Visierverstellung (SF-63); `adjustAfter` nennt Probeschüsse ab 1 */
-function lastSighterGroup(
-  shots: readonly MetricShot[],
-  adjustAfter: readonly number[] = []
-): MetricShot[] {
-  const groups = segmentGroups(sightersBeforeMatch(shots), adjustAfter)
-  return groups[groups.length - 1]
 }
 
 /**
@@ -93,33 +84,25 @@ function side(shots: readonly MetricShot[], scoring: Scoring): GroupSide {
   }
 }
 
-/**
- * Probe gegen Wertung (S3): Ø je Schuss, R50 und σ̂. `adjustAfter` nennt die Probeschüsse (ab 1), nach
- * denen das Visier verstellt wurde; dann zählt nur die Probe nach der letzten Verstellung.
- */
+/** Probe gegen Wertung (S3): Ø je Schuss, R50 und σ̂ der ganzen Probe vor der Wertung gegen die Wertung */
 export function sighterComparison(
   shots: readonly MetricShot[],
-  scoring: Scoring,
-  options: { adjustAfter?: readonly number[] } = {}
+  scoring: Scoring
 ): { probe: GroupSide; match: GroupSide } | null {
-  const probe = lastSighterGroup(shots, options.adjustAfter)
+  const probe = sightersBeforeMatch(shots)
   const match = shots.filter((shot) => shot.kind === "match")
-  if (sightersBeforeMatch(shots).length === 0 || match.length === 0) return null
+  if (probe.length === 0 || match.length === 0) return null
   return { probe: side(probe, scoring), match: side(match, scoring) }
 }
 
 /**
- * Eingeschossen? (S4): Lage der letzten fünf Probeschüsse mit Lage vor der Wertung, nach der letzten
- * Visierverstellung, mit Vertrauensbereich. `real: false` heißt „kein Versatz nachweisbar“, nicht
- * „eingeschossen“: Fünf Schuss erkennen nur einen deutlichen Versatz. Dazu der Versatz Probe → Wertung
- * (S1): Abstand zwischen dem Schwerpunkt dieser Probeschüsse und dem der Wertung, ab drei
- * Wertungsschüssen mit Lage. Er zählt dieselben Probeschüsse wie der Test, also nur die nach der letzten
- * Verstellung.
+ * Eingeschossen? (S4): Lage der letzten fünf Probeschüsse mit Lage vor der Wertung, mit Vertrauensbereich.
+ * `real: false` heißt „kein Versatz nachweisbar“, nicht „eingeschossen“: Fünf Schuss erkennen nur einen
+ * deutlichen Versatz. Dazu der Versatz Probe → Wertung (S1): Abstand zwischen dem Schwerpunkt dieser
+ * Probeschüsse und dem der Wertung, ab drei Wertungsschüssen mit Lage; er zählt dieselben Probeschüsse wie
+ * der Test.
  */
-export function sighterZeroed(
-  shots: readonly MetricShot[],
-  options: { adjustAfter?: readonly number[] } = {}
-): {
+export function sighterZeroed(shots: readonly MetricShot[]): {
   n: number
   real: boolean
   center: Point
@@ -127,9 +110,7 @@ export function sighterZeroed(
   ellipse: MpiConfidence["ellipse"]
   matchOffsetUm: number | null
 } | null {
-  const positioned = selectShots(lastSighterGroup(shots, options.adjustAfter), {
-    need: "position",
-  })
+  const positioned = selectShots(sightersBeforeMatch(shots), { need: "position" })
   const confidence = mpiConfidence(positioned.slice(-5))
   if (!confidence) return null
   const match = selectShots(

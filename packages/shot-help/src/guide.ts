@@ -22,7 +22,7 @@ export const READING_GUIDE: readonly GuideItem[] = [
   },
   {
     title: "Probe und Wertung",
-    text: "Lage, Streuung und Tempo der Analyse rechnen über die Wertung. Die Probe hat einen eigenen Reiter. Nach einer Visierverstellung zählt bei „Probe gegen Wertung“ und „Eingeschossen?“ nur die Probe danach; der Umfang der Probe zählt alle Probeschüsse vor der Wertung.",
+    text: "Lage, Streuung und Tempo der Analyse rechnen über die Wertung, ohne Probe; gibt es nur Probe, über die Probe. Die Probe hat einen eigenen Reiter: „Probe gegen Wertung“ nimmt die ganze Probe vor der Wertung, „Eingeschossen?“ ihre letzten fünf Schüsse.",
   },
   {
     title: "Nummern",
@@ -55,7 +55,7 @@ export const VIEW_HELP: readonly ViewHelp[] = [
   {
     id: "probe-auf-der-scheibe",
     title: "Probe auf der Scheibe",
-    what: "Die Probeschüsse um die Mitte, vor der Visierverstellung gestrichelt, dazu der Schwerpunkt der Wertung als kleiner geviertelter Kreis.",
+    what: "Die Probeschüsse um die Mitte, hohl gezeichnet, dazu der Schwerpunkt der Wertung als kleiner geviertelter Kreis.",
   },
 ]
 
