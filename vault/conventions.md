@@ -253,3 +253,17 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   nachzuziehen. Deren Gate fällt dann mit `Cannot find package …` aus, obwohl der Diff sauber ist.
   Ein `pnpm install --frozen-lockfile` verlinkt neu. Den Lockfile-Diff auf Änderungen in fremden
   Importern prüfen: Sie invalidieren deren Image-Build-Cache.
+
+## 10. Design 2 (nur Spiegel, ADR-030)
+
+- **Tokens aus `@vereinsheim/ui/design2.css`** statt `theme.css`: dieselben Namen, die die
+  ui-Primitives nutzen, dazu Design-2-eigene (`surface-2`, `line-strong`, `foreground-2`, `*-wash`,
+  `paper`, `spiegel`, `score-10` … `score-7`, `overlay`). Hell auf `:root`, dunkel unter `.dark`
+  (Klassen-Strategie); jede Farbe, die wechselt, steht in beiden Blöcken (Test `tokens.test.ts`). Die
+  Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich.
+- Auch in Design 2 **keine Palette-Klassen und keine `dark:`-Varianten**: Farbe kommt aus den Tokens.
+- **Allgemeine Bausteine** unter `@vereinsheim/ui/design2/*` (Segment-Umschalter, Schalter-Chip); was
+  den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, erprobt im Labor (`tools/labor`,
+  Skriptprüfung `pnpm --filter @vereinsheim/labor pruefen`).
+- Ringwerk und Treffsicher bleiben auf `theme.css` und ihrem Drift-Gate; Spiegel ist davon
+  ausgenommen, bis beide Apps auf Design 2 umziehen.

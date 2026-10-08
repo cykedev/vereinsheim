@@ -120,8 +120,8 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ### SP-1.8 Scheiben-Liste und Session-Detail
 - **Ziel:** das, was der Prototyp verspricht.
 - **Umfang:** Liste nach Trainingsabend; Session-Detail mit Trefferbild (Overlays, Zoom), Serien und Probe-Blöcken als kleine Scheiben, Schusstabelle, Wiedergabe, Kennzahl-Kacheln, Bereich „Analyse“ mit den Auswertungen aus SP-1.10, Beobachtung, Original-PDF, Merkmalen und Aktionen an der Scheibe ([[spiegel-ui-design]]); Umschalter ganze Ringe/Zehntel überall; Zeichenregeln aus „Zeichnen der Scheibe“; `packages/shot-ui`.
-- **Abnahme:** Sichtprüfung gegen `vault/_attachments/spiegel-konzept.html` auf Handy und Desktop, dunkel und, falls der Hellmodus in Phase 1 kommt, hell ([[spiegel-open-questions]]); Markup-Tests; Sonderfälle SF-01, SF-02, SF-05, SF-07, SF-11, SF-16, SF-18, SF-61.
-- **Hängt ab von:** SP-1.2, SP-1.6, SP-1.11 (Hilfe an jeder Zahl). **Status:** offen.
+- **Abnahme:** Sichtprüfung gegen das Labor (`tools/labor`) und die Spielwiese, für Bildschirme ohne Vorbild dort gegen `vault/_attachments/spiegel-konzept.html`, auf Handy und Desktop, dunkel und, falls der Hellmodus in Phase 1 kommt, hell ([[spiegel-open-questions]]); Markup-Tests; Skriptprüfung des Labors grün; Sonderfälle SF-01, SF-02, SF-05, SF-07, SF-11, SF-16, SF-18, SF-61.
+- **Hängt ab von:** SP-1.2, SP-1.6, SP-1.11 (Hilfe an jeder Zahl). **Status:** in Arbeit (Oktober 2026): Die Bausteine entstehen schon jetzt in `packages/shot-ui` und werden im Labor erprobt, ein Plan je Schritt. Schritt 1 (Design-2-Tokens, Scheibe mit Nummern in Ebenen und Auswahl, Serien als Schalter, Zustand, Labor) ist erledigt; es folgen Kacheln, Schusstabelle, Wertung, Visier und Hilfe, dann Analyse, Zoom, Wiedergabe und Vergleiche. Die App-Seiten mit echten Daten kommen nach SP-1.6.
 
 ### SP-1.9 Betrieb: Deploy und Selbst-Hosting
 - **Ziel:** Spiegel läuft auf dem VPS und ist für andere Vereine betreibbar.
