@@ -64,7 +64,7 @@ zugang_schreiben() {
   )
 }
 
-# Startet im Docker-Fall einen Client-Container, in den jede Abfrage per `docker exec -i` geht.
+# Startet im Docker-Fall einen Client-Container, in den jede Abfrage per `docker exec` geht.
 client_starten() {
   [ "$CLIENT_MODUS" = docker ] || return 0
   local netz=""
@@ -85,8 +85,20 @@ _cnf_pfad() {
   if [ "$CLIENT_MODUS" = docker ]; then echo /zugang/zugang.cnf; else echo "$ZUGANG_DIR/zugang.cnf"; fi
 }
 
-# Führt den Client mit Zugangsdatei aus; stdin wird durchgereicht.
+# Führt den Client mit Zugangsdatei aus, OHNE stdin: `docker exec -i` würde sonst Eingaben des Users
+# verbrauchen, auch aus dem Mitschnitt im Hintergrund, während er eine Notiz tippt.
 _client() {
+  local bin=$1
+  shift
+  if [ "$CLIENT_MODUS" = docker ]; then
+    docker exec "$DOCKER_CLIENT" "$bin" --defaults-extra-file="$(_cnf_pfad)" "$@" </dev/null
+  else
+    "$bin" --defaults-extra-file="$(_cnf_pfad)" "$@" </dev/null
+  fi
+}
+
+# Wie _client, aber stdin wird durchgereicht (nur mit Umleitung aus einer Datei aufrufen).
+_client_stdin() {
   local bin=$1
   shift
   if [ "$CLIENT_MODUS" = docker ]; then
@@ -104,6 +116,14 @@ _mysql() {
   fi
 }
 
+_mysql_stdin() {
+  if [ -n "$RO_INIT" ]; then
+    _client_stdin "$MYSQL_BIN" --connect-timeout=5 --init-command="$RO_INIT" --database="$DB" "$@"
+  else
+    _client_stdin "$MYSQL_BIN" --connect-timeout=5 --database="$DB" "$@"
+  fi
+}
+
 # Eine Abfrage, Ergebnis tab-getrennt mit Kopfzeile (NULL wörtlich, Sonderzeichen escapet).
 sql_text() {
   _mysql --batch -e "$1"
@@ -117,7 +137,7 @@ sql_tabelle() {
 # Eine SQL-Datei als lesbare Tabellen, jede Abfrage mit ihrem Text (für den Bericht). Scheitert eine
 # Abfrage (etwa weil das echte Schema anders aussieht), laufen die übrigen weiter (--force).
 sql_datei_tabelle() {
-  _mysql --table -vvv --force <"$1" 2>&1 | sed '/^Bye$/d'
+  _mysql_stdin --table -vvv --force <"$1" 2>&1 | sed '/^Bye$/d'
 }
 
 # Dump über den passenden Dump-Client; Argumente werden angehängt, Ausgabe auf stdout.

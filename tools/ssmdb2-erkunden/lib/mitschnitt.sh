@@ -107,7 +107,8 @@ mitschnitt_starten() {
   seit=$(sql_text "SELECT NOW() - INTERVAL 10 MINUTE AS seit" | sed -n 2p)
   MITSCHNITT_BASIS_MS=$(_grundlast_messen)
   mitschnitt_ereignis "start seit=$seit basis_ms=$MITSCHNITT_BASIS_MS"
-  _mitschnitt_schleife "$seit" &
+  # Ohne stdin: Der Mitschnitt darf nie Eingaben des Users lesen.
+  _mitschnitt_schleife "$seit" </dev/null &
   MITSCHNITT_PID=$!
 }
 

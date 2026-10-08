@@ -140,4 +140,18 @@ pruefe "Namensliste wieder gelöscht" sh -c "! ls '$AUSGABE/privat/' | grep -q n
 pruefe "kein Passwort in der Ausgabe" kein_passwort_in_ausgabe
 pruefe "kein Testname im Bericht" kein_testname_im_bericht
 
+# Interaktiver Pfad, wie am Abend: Antworten über stdin statt --auto. Der Mitschnitt läuft dabei
+# im Hintergrund und darf keine Eingaben verbrauchen (docker exec -i hatte das getan).
+INTERAKTIV="$AUSGABE/interaktiv"
+printf '%s\n' "$ERKUNDEN_USER" "$ERKUNDEN_PASSWORT" j '' 'Achse oben rechts positiv' s '' '' q n |
+  env -u ERKUNDEN_USER -u ERKUNDEN_PASSWORT -u ERKUNDEN_AUTO_HOOK "${ERKUNDEN_BASH:-bash}" "$WERKZEUG/erkunden.sh" \
+    --host "$ANLAGE" --docker --docker-netz "$NETZ" --ausgabe "$INTERAKTIV" verbinden protokoll abschluss \
+    >/dev/null 2>&1 || true
+pruefe "interaktiv: Protokoll gestartet" test -s "$INTERAKTIV/bericht/schritte.md"
+pruefe "interaktiv: Notiz zu Schritt 1" grep -q '| 1 | Achsen und Latenz | erledigt | .* | Achse oben rechts positiv |' "$INTERAKTIV/bericht/schritte.md"
+pruefe "interaktiv: Schritt 2 übersprungen" grep -q '| 2 | .* | übersprungen |' "$INTERAKTIV/bericht/schritte.md"
+pruefe "interaktiv: q beendet bei Schritt 4" grep -q '| 4 | Abbruch | abgebrochen |' "$INTERAKTIV/bericht/schritte.md"
+pruefe "interaktiv: keine Schritte nach dem Abbruch" sh -c "! grep -q '^| 5 ' '$INTERAKTIV/bericht/schritte.md'"
+pruefe "interaktiv: LIESMICH geschrieben" test -s "$INTERAKTIV/bericht/LIESMICH.md"
+
 if [ "$FEHLER" = 0 ]; then echo "Selbsttest bestanden"; else echo "Selbsttest NICHT bestanden"; exit 1; fi
