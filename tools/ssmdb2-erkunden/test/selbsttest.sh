@@ -57,7 +57,7 @@ anlage_sql() {
 }
 
 erkunden() {
-  bash "$WERKZEUG/erkunden.sh" --host "$ANLAGE" --docker --docker-netz "$NETZ" --auto \
+  "${ERKUNDEN_BASH:-bash}" "$WERKZEUG/erkunden.sh" --host "$ANLAGE" --docker --docker-netz "$NETZ" --auto \
     --ausgabe "$AUSGABE" "$@"
 }
 
@@ -106,7 +106,7 @@ export ERKUNDEN_AUTO_HOOK="$HIER/simuliere-schiessen.sh"
 export ERKUNDEN_AUTO_UEBERSPRINGEN="7 8 9 10 11"
 export ERKUNDEN_AUTO_PDF_IDS="ff914420 kaputt"
 export ERKUNDEN_AUTO_WARTEN=3
-erkunden protokoll 2>/dev/null
+erkunden protokoll abschluss 2>/dev/null
 
 # Im Protokoll muss die Probe von 1001 erst da sein und später fehlen, während Wertung da ist (SF-03).
 probe_verschwindet() {
@@ -134,6 +134,9 @@ pruefe "verschwindende Probe sichtbar (SF-03)" probe_verschwindet
 pruefe "Namen im Rohprotokoll (privat)" grep -q 'Prüfling' "$AUSGABE/privat/protokoll-roh.tsv"
 pruefe "Pseudonyme im Bericht" grep -q '	P1	' "$PROTOKOLL"
 pruefe "--frei-- bleibt stehen" grep -q '	--frei--	' "$PROTOKOLL"
+pruefe "zweite Checkliste geschrieben" test -s "$AUSGABE/bericht/antworten-danach.md"
+pruefe "LIESMICH mit Namensprüfung ohne Treffer" grep -q "Namensprüfung: keine Treffer" "$AUSGABE/bericht/LIESMICH.md"
+pruefe "Namensliste wieder gelöscht" sh -c "! ls '$AUSGABE/privat/' | grep -q namen"
 pruefe "kein Passwort in der Ausgabe" kein_passwort_in_ausgabe
 pruefe "kein Testname im Bericht" kein_testname_im_bericht
 

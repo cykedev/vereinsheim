@@ -31,7 +31,7 @@ AUSGABE=""
 AUTO=0
 DOCKER_ERZWINGEN=0
 VERBUNDEN=0
-ALLE_PHASEN="selbsttest verbinden checkliste dump protokoll"
+ALLE_PHASEN="selbsttest verbinden checkliste dump protokoll abschluss"
 
 info() { printf '\033[1m==>\033[0m %s\n' "$*" >&2; }
 warnung() { printf '\033[33m!!\033[0m %s\n' "$*" >&2; }
@@ -316,6 +316,65 @@ phase_protokoll() {
   info "Protokoll geschrieben: $AUSGABE/bericht/schritte.md, $AUSGABE/bericht/protokoll.tsv"
 }
 
+# ---------------------------------------------------------------- Phase abschluss
+
+# Sucht Namen und Sportpassnummern aus der Ablage als ganze Wörter in bericht/. Meldet nur Anzahlen
+# je Datei, nie den Namen. Die Liste liegt nur kurz in privat/.
+namen_pruefen() {
+  local liste datei treffer gesamt=0
+  liste=$(mktemp "$AUSGABE/privat/.namen.XXXXXX")
+  sql_text "SELECT DISTINCT Nachname AS n FROM Scheiben WHERE CHAR_LENGTH(TRIM(Nachname)) >= 3
+      UNION SELECT DISTINCT Vorname FROM Scheiben WHERE CHAR_LENGTH(TRIM(Vorname)) >= 3
+      UNION SELECT DISTINCT CAST(SportpassID AS CHAR) FROM Scheiben WHERE SportpassID > 0" |
+    sed 1d | grep -v -x -e '--frei--' -e 'NULL' >"$liste" || true
+  if [ ! -s "$liste" ]; then
+    rm -f "$liste"
+    echo "Namensprüfung: keine Namen in der Ablage"
+    return 0
+  fi
+  for datei in "$AUSGABE"/bericht/*; do
+    treffer=$(grep -c -w -F -f "$liste" "$datei" || true)
+    if [ "$treffer" -gt 0 ]; then
+      echo "Namensprüfung: $(basename "$datei"): $treffer Zeilen mit einem Namen oder einer Sportpassnummer"
+      gesamt=$((gesamt + treffer))
+    fi
+  done
+  rm -f "$liste"
+  if [ "$gesamt" = 0 ]; then echo "Namensprüfung: keine Treffer in bericht/"; fi
+}
+
+phase_abschluss() {
+  verbindung_sicherstellen
+  local liesmich="$AUSGABE/bericht/LIESMICH.md" pruefung
+  if frage_ja "Schießt niemand mehr? Checkliste ein zweites Mal ausführen (mit den Scheiben von heute)?"; then
+    checkliste_schreiben "$AUSGABE/bericht/antworten-danach.md"
+  fi
+  pruefung=$(namen_pruefen)
+  {
+    echo "# SSMDB2-Erkundung $(date '+%Y-%m-%d')"
+    echo
+    echo "Dieser Ordner (bericht/) enthält keine Namen und Sportpassnummern und darf weitergegeben werden."
+    echo "Der Ordner privat/ daneben enthält die vollständige Kopie mit Namen und bleibt auf diesem Rechner."
+    echo
+    echo "| Datei | Inhalt |"
+    echo "|---|---|"
+    echo "| umgebung.md | Server, Uhr, Zeitzonen, Zeichensatz, Netz |"
+    echo "| antworten.md | SQL-Checkliste vor dem Schießen |"
+    echo "| antworten-danach.md | dieselbe Checkliste danach |"
+    echo "| schema.sql | Tabellen ohne Daten |"
+    echo "| dump.md | Größe der Kopie, Zeilen je Tabelle |"
+    echo "| schritte.md | geführte Schritte mit Zeit, Notizen, IDs der Ausdrucke |"
+    echo "| protokoll.tsv | Mitschnitt jeder Änderung (Namen als P1, P2 …, Sportpass als S1, S2 …) |"
+    echo
+    echo "## Prüfung"
+    echo
+    # shellcheck disable=SC2001  # Präfix für jede Zeile einer mehrzeiligen Ausgabe
+    echo "$pruefung" | sed 's/^/- /'
+  } >"$liesmich"
+  echo "$pruefung" >&2
+  info "Fertig. Weitergeben: $AUSGABE/bericht — privat/ bleibt hier."
+}
+
 # ---------------------------------------------------------------- Ablauf
 
 for phase in $PHASEN; do
@@ -325,6 +384,7 @@ for phase in $PHASEN; do
     checkliste) phase_checkliste ;;
     dump) phase_dump ;;
     protokoll) phase_protokoll ;;
+    abschluss) phase_abschluss ;;
     *) fehler "unbekannte Phase: $phase (bekannt: $ALLE_PHASEN)" ;;
   esac
 done
