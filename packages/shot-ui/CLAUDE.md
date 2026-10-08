@@ -7,9 +7,10 @@ dieselben Bausteine mit echten Daten ein.
 
 ## Exporte
 
-| Export                       | Datei          | Inhalt                              |
-| ---------------------------- | -------------- | ----------------------------------- |
-| `@vereinsheim/shot-ui/types` | `src/types.ts` | `SeriesKey`, `Selection`, `ViewBox` |
+| Export                          | Datei             | Inhalt                                                                                                |
+| ------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `@vereinsheim/shot-ui/types`    | `src/types.ts`    | `SeriesKey`, `Selection`, `ViewBox`                                                                   |
+| `@vereinsheim/shot-ui/geometry` | `src/geometry.ts` | Ausschnitte (`targetView`, `groupView`, `seriesTileView`), `screenSizes`, `scoreColor`, `tileColumns` |
 
 ## Regeln
 
