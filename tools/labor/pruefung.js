@@ -967,7 +967,8 @@ addEventListener("load", async () => {
       pairFlagged.join() === "9,10" &&
         pairLoss?.count === 2 &&
         near(pairLoss.loss, 4.5, 1e-9) &&
-        ctext("ausreisser").includes("Schuss 9, Schuss 10"),
+        ctext("ausreisser").includes("Schuss 9, Schuss 10") &&
+        ctext("ausreisser").includes(`Kosten${nf(4.5, 1)} Ringe`),
       `${pairFlagged.join()} · ${pairLoss?.loss}`
     )
     const pairShape = $('svg[role="img"]', card("form-der-gruppe"))

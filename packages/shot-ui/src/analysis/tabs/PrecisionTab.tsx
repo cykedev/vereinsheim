@@ -195,10 +195,10 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
                 ]}
               />
               <Note>
-                Schrittweise geprüft: der weiteste gegen die übrigen, dann ohne ihn der nächste
-                (F-Test mit Bonferroni). In einer runden normalen Gruppe meldet die Regel höchstens
-                in 5 % der Scheiben einen Ausreißer, bei gestreckten Gruppen öfter. Kein Schuss
-                fällt aus der Wertung.
+                Schrittweise geprüft: der weiteste gegen die übrigen, ab 10 Schuss dann ohne ihn der
+                nächste (F-Test mit Bonferroni). In einer runden normalen Gruppe meldet die Regel in
+                höchstens etwa 5 % der Scheiben einen Ausreißer, bei gestreckten Gruppen öfter. Kein
+                Schuss fällt aus der Wertung.
               </Note>
             </>
           ) : (

@@ -145,7 +145,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["V6", "V7"],
     metrics: [],
     short: "Schüsse, die nicht zur Gruppe passen, und was sie dich kosten.",
-    what: "Spiegel prüft die Treffer Schritt für Schritt: zuerst den, der am weitesten von den übrigen liegt, gemessen an ihrer Streuung, dann ohne ihn den nächsten, ab 10 Schuss bis zu jedem zehnten Schuss. So verdecken sich zwei nahe Ausreißer nicht gegenseitig. Bei einer ganz normalen, runden Gruppe meldet die Regel höchstens in 5 % der Scheiben fälschlich einen Ausreißer. Ist die Gruppe deutlich gestreckt (a/b um 2), passiert das öfter, umso öfter, je mehr Schüsse die Scheibe hat: bei 10 Schuss in etwa 11 %, bei 60 Schuss in etwa 18 % der Scheiben.",
+    what: "Spiegel prüft die Treffer Schritt für Schritt: zuerst den, der am weitesten von den übrigen liegt, gemessen an ihrer Streuung. Ab 10 Schuss prüft es danach ohne ihn den nächsten, bis zu zwei Schüsse, ab 30 Schuss bis zu jedem zehnten. So verdecken sich zwei nahe Ausreißer nicht gegenseitig. Bei einer ganz normalen, runden Gruppe meldet die Regel in höchstens etwa 5 % der Scheiben fälschlich einen Ausreißer. Ist die Gruppe deutlich gestreckt (a/b um 2), passiert das öfter, umso öfter, je mehr Schüsse die Scheibe hat: bei 10 Schuss in etwa 11 %, bei 60 Schuss in etwa 18 % der Scheiben.",
     read: "Ein markierter Schuss ist ein Kandidat für die Frage „Was war da los?“ und bleibt in der Wertung. Darunter steht, wie viele Ringe die markierten Schüsse gegenüber deinem typischen Schuss (Median) gekostet haben.",
     act: "Kosten dich Ausreißer über mehrere Scheiben viele Ringe, lohnt die Arbeit an einem gleichmäßigen Ablauf mehr als an der Präzision.",
     caution:

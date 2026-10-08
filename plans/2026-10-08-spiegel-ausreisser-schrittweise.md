@@ -72,8 +72,10 @@ Beobachtungen arbeiten unverändert mit `flagged`.
 - **D4 Labor:** ein neues Beispiel beim Luftgewehr, „Zwei Abreißer“, das zeigt, was sich ändert. Die
   Zehnerserie bekommt als Schuss 9 und 10 die zwei nahen Abreißer von oben (8,3 und 8,0 Ringe). Heute findet
   die Regel keinen, künftig beide (Schritt 1: T 5,84 bei Grenze 7,95; Schritt 2: T 21,71 bei Grenze 8,17).
-- **D5 Spielwiese** (`tools/spielwiese/template.html`, eigene Kopie der Regel im Prototyp) bleibt unverändert;
-  sie ist Referenz bis zur Portierung. Ihr Hinweistext nennt weiter die alte Regel.
+- **D5 Spielwiese** (`tools/spielwiese/template.html`): bleibt unverändert, sie ist Referenz bis zur Portierung.
+  _Berichtigt im Review:_ Eine eigene Kopie der Regel hat sie nicht. `entry.ts` bindet `shot-core/analysis` ein,
+  sie rechnet also schrittweise. Nur ihr Hinweis unter der Karte nannte die alte Regel; er ist auf den Text
+  der Präzisionskarte gezogen.
 
 ## Dateien
 

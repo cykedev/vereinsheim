@@ -263,8 +263,8 @@ B10  Wiedereinstieg LP σ 15 mm: -1,52 bis 1,32 Ringe
 B11  σ Probe/Wertung (5 gegen 40): 0,54 bis 1,57
 B12  Serien-Versatz zur Scheibe: im Mittel 0,35 σ
 B13  Richtungsuhr, 30 Schuss: stärkster Keil im Median ×2,0
-B14  10 Schuss, 1 bei 5σ: mindestens einer erkannt in 86,0 %
-B14  10 Schuss, 2 bei 5σ: mindestens einer erkannt in 77,7 %, beide in 77,2 %
+B14  10 Schuss, 1 bei 5σ: mindestens einer erkannt in 86,2 %
+B14  10 Schuss, 2 bei 5σ: mindestens einer erkannt in 76,9 %, beide in 76,1 %
 B14  10 Schuss, 2 bei 5σ nah beieinander: mindestens einer erkannt in 81,8 %, beide in 81,8 %
 B15  Wilson 20/40: 35,2 bis 64,8 %
 B15  σ-Bereich 10 Schuss: -25,5 % bis +45,8 %
@@ -275,7 +275,7 @@ B17  runde Gruppe, Median a/b: 20 Schuss 1,33, 40 Schuss 1,21
 B17  echte Streckung a/b 1,3 als gestreckt erkannt: 40 Schuss 27,6 %, 120 Schuss 72,3 %
 ```
 
-Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3, Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.
+Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05, bis Oktober 2026), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.
 
 ## Quellen
 

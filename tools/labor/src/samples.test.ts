@@ -1,3 +1,4 @@
+import { outliers } from "@vereinsheim/shot-core/analysis"
 import { distanceUm } from "@vereinsheim/shot-core/scoring"
 import { LG_10M, LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
@@ -63,8 +64,10 @@ describe("Beispielscheiben wie in der Spielwiese", () => {
       [5200, 4300],
       [5600, 4700],
     ])
-    const values = toMetricShots(LG_10M, pair).map((s) => s.decimalTenths)
-    expect(values.slice(8)).toEqual([83, 80])
+    const shots = toMetricShots(LG_10M, pair)
+    expect(shots.slice(8).map((s) => s.decimalTenths)).toEqual([83, 80])
+    // der Zweck des Beispiels auch im Gate: schrittweise geprüft fallen beide auf
+    expect(outliers(shots)?.flagged.map((f) => f.number)).toEqual([9, 10])
   })
 
   it("Training nur mit Probe: 60 Probeschüsse, nach Schuss 30 eine Pause, immer gleich", () => {

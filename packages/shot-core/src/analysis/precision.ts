@@ -138,19 +138,21 @@ function strongest(points: readonly Point[]): { index: number; t: number } {
 /**
  * Ausreißer (V6), schrittweise (verallgemeinerter ESD nach Rosner, in der Ebene): Von den m übrigen Schüssen
  * wird der weiteste gegen die anderen geprüft, d sein Abstand zu ihrem Schwerpunkt, S² ihre Streuung um
- * ihn, Σr²/(2(m − 2)). Bei einer runden Normalgruppe ist T = d² / (2 S² (1 + 1/(m − 1))) exakt
- * F(2, 2(m − 2))-verteilt; die Grenze ist das (1 − 0,04/m)-Quantil (Bonferroni). Dann wird er beiseitegelegt
- * und mit den übrigen weitergeprüft, höchstens `outlierSteps(n)` Schritte und solange fünf Schuss übrig sind.
- * Ausreißer sind alle beiseitegelegten bis zum letzten Schritt über seiner Grenze, auch wenn ein früherer
- * darunter blieb: So verdecken sich zwei nahe Abreißer nicht mehr gegenseitig (bis Oktober 2026 wurde jeder
- * Schuss einzeln geprüft; zwei gleich weite bei 10 Schuss fand die Regel dann nur in 13,7 % überhaupt). Unter
- * 10 Schuss bleibt es bei einem Schritt. α 0,04 statt 0,05 hält den Fehlalarm in einer runden normalen Gruppe
- * bei höchstens etwa 5 % der Scheiben (Simulation B2: 4,1–4,7 % bei 10 bis 60 Schuss); bei gestreckten
- * Gruppen steigt die Rate (a/b 2: 10,9–17,5 %). Zwei nahe Abreißer bei 10 Schuss findet sie in 81,8 % beide
- * (B14). Kein Schuss fällt aus der Wertung. Ab fünf Schuss.
+ * ihn, Σr²/(2(m − 2)), und T = d² / (2 S² (1 + 1/(m − 1))). Für einen vorab gewählten Schuss einer runden
+ * Normalgruppe wäre T exakt F(2, 2(m − 2))-verteilt; für den weitesten ist das (1 − 0,04/m)-Quantil eine
+ * Bonferroni-Schranke, ab Schritt 2 eine Näherung, belegt durch die Simulation. Dann wird er beiseitegelegt
+ * und mit den übrigen weitergeprüft, höchstens `outlierSteps(n)` Schritte. Ausreißer sind alle
+ * beiseitegelegten bis zum letzten Schritt über seiner Grenze, auch wenn ein früherer darunter blieb: So
+ * verdecken sich zwei nahe Abreißer ab 10 Schuss nicht mehr gegenseitig (bis Oktober 2026 wurde jeder Schuss
+ * einzeln geprüft; zwei gleich weite bei 10 Schuss fand die Regel dann nur in 13,7 % überhaupt). Unter 10 Schuss
+ * bleibt es bei einem Schritt. α 0,04 statt 0,05 hält den Fehlalarm in einer runden normalen Gruppe bei
+ * höchstens etwa 5 % der Scheiben (Simulation B2: 4,1–4,7 % bei 10 bis 60 Schuss); bei gestreckten Gruppen
+ * steigt die Rate (a/b 2: 10,9–17,5 %). Zwei nahe Abreißer bei 10 Schuss findet sie in 81,8 % beide (B14).
+ * Die Markierten stehen in Abgabefolge. Kein Schuss fällt aus der Wertung. Ab fünf Schuss.
  */
 export function outliers(shots: readonly MetricShot[]): { n: number; flagged: Outlier[] } | null {
-  const selected = selectShots(shots, { need: "position" })
+  // erst ordnen, dann auswählen: die Markierten stehen in Abgabefolge, auch wenn die Eingabe es nicht tut
+  const selected = selectShots(inShotOrder(shots), { need: "position" })
   const n = selected.length
   if (n < 5) return null
   const numbers = shotNumbers(shots)
@@ -160,6 +162,7 @@ export function outliers(shots: readonly MetricShot[]): { n: number; flagged: Ou
   }))
   const removed: MetricShot[] = []
   let count = 0
+  // `rest.length >= 5` sichert nur ab: Mit `outlierSteps` bleiben ohnehin mindestens neun übrig
   for (let step = 1; step <= outlierSteps(n) && rest.length >= 5; step++) {
     const m = rest.length
     const { index, t } = strongest(rest.map((r) => r.point))

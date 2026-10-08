@@ -132,7 +132,8 @@ describe("Form und Ringbreiten (P8, P9)", () => {
 
 describe("Ausreißer (V6, V7)", () => {
   // Acht Schuss im Kreis von 1 mm um die Mitte, dazu ein Testschuss auf der x-Achse. Gegen die übrigen
-  // acht: S² = Σr²/14, T = D² / (2 S² · 9/8) = D²/1 285 714, Grenze F(2, 14) beim Quantil 1 − 0,04/9 = 8,1748
+  // acht: S² = Σr²/14, T = D² / (2 S² · 9/8) ≈ D²/1 285 520 (Kreispunkte auf ganze µm, Σr² = 7 998 792),
+  // Grenze F(2, 14) beim Quantil 1 − 0,04/9 = 8,1748
   // (F(2, ν) beim Quantil 1 − q: (ν/2)·(q^(−2/ν) − 1)).
   const ring8 = [0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => ({
     ...MATCH[0],
@@ -151,7 +152,7 @@ describe("Ausreißer (V6, V7)", () => {
   it("der weiteste gegen die übrigen mit F(2, 2(m − 2)), Bonferroni und α 0,04", () => {
     // 2,8 mm: T 6,10; ohne Bonferroni (Grenze 4,09) wäre es ein Ausreißer
     expect(outliers(withTest(2800))?.flagged).toEqual([])
-    // 3,2 mm: T 7,96 unter der Grenze; mit α 0,05 (Grenze 7,70), mit 2(n − 1) Freiheitsgraden (7,74) oder
+    // 3,2 mm: T 7,97 unter der Grenze; mit α 0,05 (Grenze 7,70), mit 2(n − 1) Freiheitsgraden (7,74) oder
     // ohne (1 + 1/(n − 1)) (T 8,96) wäre er drüber
     expect(outliers(withTest(3200))?.flagged).toEqual([])
     // 3,3 mm: T 8,47 über der Grenze, und nur er
@@ -181,6 +182,53 @@ describe("Ausreißer (V6, V7)", () => {
     }))
     // n = 9: T 3,61 und 3,68 bei Grenze 8,17; einen zweiten Schritt gibt es nicht
     expect(outliers([...ring7, ...pair])?.flagged).toEqual([])
+  })
+
+  it("die Grenze gilt für die übrigen m, nicht für alle n", () => {
+    const card = [
+      ...ring8,
+      { ...MATCH[0], xUm: 3220, yUm: 0, firedAtMs: 9000 },
+      { ...MATCH[0], xUm: 20_000, yUm: 0, firedAtMs: 10_000 },
+    ]
+    // Schritt 1 (m = 10): T 161,4; Schritt 2 (m = 9): T 8,066 bei Grenze 8,1748. Mit n = 10 läge sie bei
+    // 7,9526, dann käme auch Schuss 9 dazu; ebenso mit F(2, 2(n − 2)) statt F(2, 2(m − 2))
+    expect(outliers(card)?.flagged.map((f) => f.number)).toEqual([10])
+  })
+
+  it("der letzte Schritt über der Grenze zählt, nicht der erste", () => {
+    const card = [
+      ...ring8,
+      { ...MATCH[0], xUm: 0, yUm: 6000, firedAtMs: 9000 },
+      { ...MATCH[0], xUm: 0, yUm: -6000, firedAtMs: 10_000 },
+    ]
+    // Schritt 1: T 8,00 bei Grenze 7,95; Schritt 2: T 28,0 bei Grenze 8,17; beide Schritte über der Grenze
+    expect(outliers(card)?.flagged.map((f) => f.number)).toEqual([9, 10])
+  })
+
+  it("ab 30 Schuss bis zu jedem zehnten", () => {
+    // 27 in drei Kreisen (1, 2 und 3 mm, je neun, je Kreis um 0,3 rad gedreht), dazu drei Abreißer
+    const rings = [1, 2, 3].flatMap((radius, s) =>
+      Array.from({ length: 9 }, (_, k) => {
+        const angle = (2 * Math.PI * k) / 9 + s * 0.3
+        return {
+          ...MATCH[0],
+          xUm: Math.round(radius * 1000 * Math.cos(angle)),
+          yUm: Math.round(radius * 1000 * Math.sin(angle)),
+          firedAtMs: (s * 9 + k) * 1000,
+        }
+      })
+    )
+    const flyers = [
+      [12_000, 0],
+      [-6000, 10_400],
+      [-6000, -10_400],
+    ].map(([xUm, yUm], i) => ({ ...MATCH[0], xUm, yUm, firedAtMs: (27 + i) * 1000 }))
+    // Schritte: T 10,2, 14,7 und 28,7 gegen Grenzen um 7,46; mit nur zwei Schritten blieben es 29 und 30
+    expect(outliers([...rings, ...flyers])?.flagged.map((f) => f.number)).toEqual([28, 29, 30])
+  })
+
+  it("die Markierten in Abgabefolge, auch wenn die Eingabe es nicht ist", () => {
+    expect(outliers([...ring8, pair[1], pair[0]])?.flagged.map((f) => f.number)).toEqual([9, 10])
   })
 
   it("ein weiter Schuss reißt keinen normalen mit", () => {

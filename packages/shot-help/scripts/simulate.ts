@@ -350,7 +350,8 @@ for (const [far, near, seed] of [
   let one = 0
   let all = 0
   repeat(5_000, seed, (rand) => {
-    const base = 2 * Math.PI * rand.uniform()
+    // nur im Fall „nah beieinander“ ziehen, sonst bleibt der Zufallsstrom der übrigen Fälle wie vorher
+    const base = near ? 2 * Math.PI * rand.uniform() : 0
     const shots = card(rand, { ...LG, n: 10 }).map((s, i) => {
       if (i < 10 - far) return s
       const angle = near ? base + 0.15 * (i - (10 - far)) : 2 * Math.PI * rand.uniform()
