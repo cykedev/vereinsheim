@@ -33,7 +33,7 @@ Features, die Deploy-Vertrag, Schema oder ADRs berühren, laufen interaktiv stat
 4. [[spiegel-assignment]] — wem eine Scheibe gehört und wann das feststeht.
 5. [[spiegel-data-model]], [[spiegel-target-library]], [[spiegel-metrics]] — der Fachkern; [[spiegel-statistics]] — der Statistik-Katalog (was Spiegel auswertet und wann); [[spiegel-statistics-help]] — jede Auswertung in einfacher Sprache erklärt, Quelle der Hilfe in der App.
 6. [[spiegel-edge-cases]] — Sonderfälle und Fallstricke mit IDs (SF-xx), Grundlage der Testdaten und Abnahmen.
-7. [[spiegel-ui-design]] — Design 2, Navigation, Bildschirme, Farben.
+7. [[spiegel-ui-design]] — Design 2, Navigation, Bildschirme, Farben; [[spiegel-mobile]] — Spiegel auf dem Telefon (Entwurf).
 8. [[spiegel-privacy]] — Datenschutz, Rollen, verdeckte Wertung.
 9. [[spiegel-roadmap]] und [[spiegel-open-questions]] — was wir wann bauen und was noch offen ist.
 

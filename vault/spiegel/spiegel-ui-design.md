@@ -6,7 +6,7 @@ aliases: [spiegel-design, design-2, spiegel-ui]
 keywords: [design, ui, ux, design 2, modern, zeichnen, haarlinie, non-scaling-stroke, zoom, schwerpunkt-symbol, geviertelt, streukreis-ring, ganze ringe, zehntel, zehntelwertung, ganzringwertung, umschalten, wertung umschalten, prototyp, bottom navigation, untere navigation, scannen, session-detail, trefferbild, wiedergabe, replay, serien, kacheln, hell, dunkel, farbskala, ringwert-farben, farbenblind, archivo, geist, typografie, pwa, mobil, desktop, sonderfälle, probe-blöcke, merkmale, als wertung zählen, nicht meine, trainingsabend]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
-relates_to: ["[[component-canon]]", "[[navigation-pattern]]", "[[spiegel-metrics]]", "[[spiegel-edge-cases]]", "[[spiegel-target-library]]"]
+relates_to: ["[[component-canon]]", "[[navigation-pattern]]", "[[spiegel-metrics]]", "[[spiegel-edge-cases]]", "[[spiegel-target-library]]", "[[spiegel-mobile]]"]
 ---
 
 **TL;DR** Spiegel ist modern, ruhig und datengetrieben: die Scheibe ist der Held, die Oberfläche bleibt kühl-neutral, Farbe kommt aus den Daten, hell und dunkel. Auf dem Handy gibt es eine untere Navigation mit zentraler Scan-Aktion, auf dem Desktop eine Analysezentrale. Der klickbare Prototyp liegt in `vault/_attachments/spiegel-konzept.html` und hat dem User gefallen.
@@ -56,6 +56,31 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 - **Einmal oben erklärt:** Ein Einstieg „So liest du die Analyse“ erklärt n, 95-%-Bereich, „echt“ und „unklar“ und die Wertung, damit die Karten kurz bleiben.
 - **Ein Glossar** für die Begriffe (σ, R50, Median, Hotelling …), aus jeder Erklärung verlinkt.
 - **Eine Quelle:** App und Doku zeigen dieselben Texte aus `@vereinsheim/shot-help` (SP-1.11). Eine Kachel holt ihr Thema mit `helpForMetric(key)`, eine Karte mit `helpTopic(id)`, eine Auswertung über ihre Katalog-ID mit `helpForCatalog(id)`. `short` ist der Satz für Kachel und Tooltip, `what`, `read`, `act`, `caution` und `minimum` sind die Erklärung, `formula` das Aufklappbare. [[spiegel-statistics-help]] wird daraus erzeugt.
+
+## Analyse einer Scheibe
+
+Die Auswertungen aus SP-1.10 als Bausteine (`@vereinsheim/shot-ui/analysis/AnalysisPanel`, Schritt 3 von SP-1.8,
+Oktober 2026), im Labor unter den Kacheln.
+
+- **Grundlage:** Die Analyse rechnet über alle Schüsse ohne Probe; gibt es nur Probe, über alle Probeschüsse
+  (`analysisInput`, User, 8. Oktober 2026). Sie folgt nicht der Auswahl an der Scheibe; der Kopf nennt die
+  Grundlage („Analyse über alle Schüsse ohne Probe“). Der Reiter Probe rechnet über die ganze Karte.
+- **Sechs Reiter** wie in der Spielwiese: Überblick (acht Kacheln, Beobachtungen in Worten, Einstieg), Ergebnis,
+  Präzision, Lage, Zeit und Verlauf, Probe. Darunter die Zeile „Datenlage“, Glossar und typische Fehlschlüsse.
+  Auf schmalen Bildschirmen bleibt die Reiterleiste eine Zeile und scrollt seitlich in sich ([[spiegel-mobile]]).
+- **Karten im Raster:** breite Karten allein, schmale ab 861 px zu zweit in Zeilen, beide Karten einer Zeile
+  gleich hoch, „Was heißt das?“ unten bündig, eine einzelne letzte Karte über die volle Breite; jeder Abstand
+  16 px. CSS-Spalten ließen Lücken unter der kürzeren Spalte und verschluckten Ränder (User, 8. Oktober 2026).
+- **Diagramme** als SVG in Bildschirm-Pixeln (Breite gemessen, ohne Messung 600 px), Schrift 12 px, Farben aus
+  den Design-2-Tokens. Punkte tragen einen dunklen Rand, Ausreißer zusätzlich einen Ring (nicht nur Rot). Das
+  Schwerpunkt-Zeichen ist dasselbe wie auf der Scheibe.
+- **Kopplung an die Scheibe:** Der Knopf „Vertrauensellipse auf der Scheibe“ in „Lage echt?“ schaltet die Ebene
+  der Scheibe. Der Bezug der Richtungsuhr (Mitte oder Schwerpunkt) gehört der Karte.
+- **Probe ohne Visier:** „Probe gegen Wertung“ nimmt die ganze Probe vor der Wertung, „Eingeschossen?“ die
+  letzten fünf Probeschüsse mit Lage; das Probe-Diagramm zeichnet sie in Abgabefolge.
+- **Hilfe an jeder Karte:** Titel, Katalog-IDs und Kurzsatz aus dem Thema, darunter „Was heißt das?“; der
+  Schalter „Erklärungen“ öffnet alles, auch an den Kacheln. Ob die Hilfe auf dem Telefon als Blatt kommt, ist
+  offen ([[spiegel-mobile]]).
 
 ## Zeichnen der Scheibe
 

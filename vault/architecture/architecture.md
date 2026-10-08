@@ -47,8 +47,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── packages/shot-ui/       @vereinsheim/shot-ui — Bausteine von Spiegel als React-Komponenten: Scheibe
 │                           (Nummern in Ebenen, Auswahl), Serien als kleine Scheiben, Kennzahl-Kacheln,
 │                           Ablesung, Übersicht, Schusstabelle, Wertung, Hilfe (Blatt), Zustand der
-│                           Ansicht; Design 2 (ADR-030, Oktober 2026); im Labor erprobt, noch von keiner App
-│                           genutzt.
+│                           Ansicht, Analyse einer Scheibe in sechs Reitern mit Diagrammen; Design 2 (ADR-030,
+│                           Oktober 2026); im Labor erprobt, noch von keiner App genutzt.
 ├── tools/labor/            Labor: eine Seite aus den echten Bausteinen mit Beispielscheiben, gebaut zu einer
 │                           HTML-Datei (Artifact), Skriptprüfung in Headless-Chrome (`pruefen`).
 ├── tools/spielwiese/       Vorlage und Skriptprüfung der Spielwiese (Prototyp, Referenz bis zur Portierung).

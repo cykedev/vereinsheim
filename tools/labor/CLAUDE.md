@@ -24,7 +24,12 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   nicht und eine synthetische Taste löst keine Aktion aus (Tastatur nur über echte, fokussierbare Knöpfe
   prüfen); das `close`-Ereignis eines `<dialog>` kommt spät oder gar nicht (nie darauf warten; Escape-Weg
   über `requestClose()`, das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
-  `window.__labor` (Prüfhaken) liefert Schüsse, Zustand und die Funktionen des Fachkerns zum Nachrechnen.
+  `window.__labor` (Prüfhaken) liefert Schüsse, Zustand, Scheibe, die Funktionen des Fachkerns (auch die
+  Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen.
+- **Analyse** steht unter den Kacheln (`AnalysisPanel`, Reiter in `localStorage` als `labor.tab`, „Erklärungen“
+  geteilt). Die Prüfung misst dort auch die Abstände (16 px, Karten einer Zeile bündig) und das Telefon bei
+  390 und 375 px. Der Hell/Dunkel-Umschalter heißt „Darstellung“, damit die Reiterleiste die einzige „Thema“
+  ist.
 - **Artifact neu veröffentlichen** aus `dist/labor.html` nach einem direkten `pnpm --filter @vereinsheim/labor
 build` (ohne Turbo-Cache, sonst kann der Stand-Stempel von einem älteren Commit stammen), unter derselben
   Adresse, damit der User den

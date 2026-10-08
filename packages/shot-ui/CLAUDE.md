@@ -50,6 +50,14 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 - **Client-Komponenten** mit `"use client"`, Daten kommen als Props; kein Laden von Daten im Baustein.
 - **Nur Probe ist Training:** Die Seite gibt die Schüsse einmal durch `probeOnlyAsMatch`, bevor sie die
   Bausteine füttert; eine Karte ohne Wertung erscheint dann wie Wertung. Die Bausteine prüfen das nicht selbst.
+- **Die Analyse rechnet über `analysisInput`:** alle Schüsse ohne Probe, bei nur Probe die Probe; nicht über
+  die Auswahl an der Scheibe. Nur der Reiter Probe nimmt die ganze Karte.
+- **Karten und Diagramme der Analyse:** schmale Karten im Raster aus Zeilen (ab 861 px zu zweit, gleich hoch,
+  jeder Abstand 16 px), keine CSS-Spalten. Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
+  (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`
+  ohne Grund (Antippen statt Hover ist offen, `vault/spiegel/spiegel-mobile.md`).
+- **Auf dem Telefon dieselbe Optik wie am Desktop:** keine 44-px-Mindesthöhe an Umschaltern und Chips
+  (User, 8. Oktober 2026); was zu breit ist, scrollt in sich (Reiterleiste), die Seite nie.
 - **Farben nur aus den Design-2-Tokens** (`@vereinsheim/ui/design2.css`), keine Palette-Klassen, keine
   `dark:`-Varianten; die Scheibe ist in beiden Themes gleich.
 - Markup-Tests mit `renderToStaticMarkup` in der Node-Umgebung; Bedienung prüft die Skriptprüfung des
