@@ -94,3 +94,35 @@ export function tileColumns(count: number, widthPx: number): number {
   const rows = Math.ceil(count / most)
   return Math.max(1, Math.ceil(count / rows))
 }
+
+/** Reichweite eines Tipps in Bildschirm-Pixeln: etwa eine Fingerkuppe */
+export const TAP_REACH_PX = 20
+
+export interface TapTarget {
+  index: number
+  x: number
+  y: number
+}
+
+/**
+ * Antippen (spiegel-ui-design): der Treffer, dessen Mitte dem Tipp am nächsten liegt, sofern sie höchstens
+ * `reach` entfernt ist (gleiche Einheit wie die Lagen). Auf dem Handy misst ein Treffer auf der ganzen
+ * Scheibe nur wenige Pixel, so muss man ihn nicht genau treffen. Bei gleichem Abstand gewinnt der spätere,
+ * also der oben gezeichnete; die Treffer kommen in Zeichenreihenfolge.
+ */
+export function nearestShot(
+  targets: readonly TapTarget[],
+  tap: { x: number; y: number },
+  reach: number
+): number | null {
+  let best: number | null = null
+  let bestDistance = Infinity
+  for (const target of targets) {
+    const distance = Math.hypot(target.x - tap.x, target.y - tap.y)
+    if (distance <= reach && distance <= bestDistance) {
+      best = target.index
+      bestDistance = distance
+    }
+  }
+  return best
+}

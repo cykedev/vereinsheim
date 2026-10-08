@@ -43,6 +43,38 @@ addEventListener("load", async () => {
     }
     const near = (a, b, tolerance) => Math.abs(a - b) <= tolerance
 
+    // Tippen an eine Stelle: die Scheibe wählt den nächsten Treffer der Auswahl (bis 20 px daneben)
+    const toScreen = (x, y) => new DOMPoint(x, y).matrixTransform(svg().getScreenCTM())
+    const tapCenters = () =>
+      hits()
+        .filter((g) => !g.dataset.faded)
+        .map((g) => ({ label: g.dataset.shot, p: toScreen(...center(circleOf(g))) }))
+    const ranked = ([x, y]) =>
+      tapCenters()
+        .map((c) => ({ label: c.label, d: Math.hypot(c.p.x - x, c.p.y - y) }))
+        .sort((a, b) => a.d - b.d)
+    const tapAt = async ([x, y], ms = 60) => {
+      svg().dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: x, clientY: y }))
+      await wait(ms)
+    }
+    const centerOf = (label) => {
+      const p = toScreen(...center(circleOf(hits().find((g) => g.dataset.shot === label))))
+      return [p.x, p.y]
+    }
+    // eine Stelle `dist` px neben der Mitte von `label`, an der dieser Treffer klar der nächste ist
+    const beside = (label, dist) => {
+      const [cx, cy] = centerOf(label)
+      for (let k = 0; k < 16; k++) {
+        const at = [
+          cx + dist * Math.cos((k * Math.PI) / 8),
+          cy + dist * Math.sin((k * Math.PI) / 8),
+        ]
+        const [first, second] = ranked(at)
+        if (first?.label === label && (!second || second.d - first.d > 3)) return at
+      }
+      return null
+    }
+
     // Prüfhaken des Labors (#pruefen): Schüsse, Zustand und die Funktionen des Fachkerns
     const L = () => window.__labor
     const tileKeys = () => $$("[data-metric]").map((t) => t.dataset.metric)
@@ -216,24 +248,34 @@ addEventListener("load", async () => {
     )
 
     // ---------- Antippen
-    // ein hohler Probeschuss ist auf der ganzen Fläche antippbar, nicht nur am Rand: der Browser muss an
-    // seiner Mitte den Schuss treffen (echte Trefferprüfung, nicht nur ein Ereignis am Element)
-    const p1 = hits().find((g) => g.dataset.shot === "P1")
-    const p1Mid = new DOMPoint(...center(circleOf(p1))).matrixTransform(svg().getScreenCTM())
-    const atMid = document.elementFromPoint(p1Mid.x, p1Mid.y)
+    // Ein Tipp wählt den nächsten Treffer der Auswahl, bis 20 px neben seiner Mitte: Auf dem Handy misst ein
+    // Treffer auf der ganzen Scheibe nur wenige Pixel. Chrome kürzt synthetische Koordinaten auf ganze Pixel.
+    await tapAt(centerOf("P1"))
     check(
-      "Probe in der Mitte antippbar, nicht nur am Rand",
-      atMid?.closest("g[data-shot]")?.dataset.shot === "P1",
-      atMid ? `${atMid.tagName} ${atMid.closest("g[data-shot]")?.dataset.shot ?? "–"}` : "nichts"
-    )
-    if (atMid) await click(atMid)
-    check(
-      "angetippte Probe in der Ablesung",
+      "Tipp auf die Mitte eines hohlen Probeschusses wählt ihn",
       txt($("#readout")).includes("Probe P1 · angetippt"),
       txt($("#readout")).slice(0, 40)
     )
-    if (atMid) await click(atMid)
-    await click(hits().find((g) => g.dataset.shot === "14"))
+    await tapAt(centerOf("P1"))
+    const nextToP1 = beside("P1", 14)
+    if (nextToP1) await tapAt(nextToP1)
+    check(
+      "Tipp 14 px neben einen Treffer wählt ihn",
+      !!nextToP1 && txt($("#readout")).includes("Probe P1 · angetippt"),
+      nextToP1 ? txt($("#readout")).slice(0, 40) : "keine freie Stelle neben P1"
+    )
+    if (nextToP1) await tapAt(nextToP1)
+    const [vx, vy] = view()
+    const far = toScreen(vx + 2, vy + 2)
+    await tapAt([far.x, far.y])
+    check(
+      "Tipp weit weg von jedem Treffer wählt nichts",
+      ranked([far.x, far.y])[0].d > 30 &&
+        !$("[data-chosen]", svg()) &&
+        txt($("#readout")).includes("letzter Schuss"),
+      `${ranked([far.x, far.y])[0].d.toFixed(0)} px zum nächsten`
+    )
+    await tapAt(centerOf("14"))
     check(
       "Antippen hebt den Schuss ganz nach oben, mit Ring",
       hits().at(-1).dataset.shot === "14" &&
@@ -244,7 +286,7 @@ addEventListener("load", async () => {
       "Ablesung zeigt den angetippten Schuss",
       txt($("#readout")).includes("Schuss 14 · angetippt")
     )
-    await click(hits().find((g) => g.dataset.shot === "14"))
+    await tapAt(centerOf("14"))
     check(
       "zweites Antippen nimmt ihn zurück",
       !$("[data-chosen]", svg()) && txt($("#readout")).includes("letzter Schuss")
@@ -265,6 +307,17 @@ addEventListener("load", async () => {
         hits()
           .filter((g) => g.dataset.faded)
           .every((g) => g.getAttribute("opacity") === "0.18")
+    )
+    // ein blasser Schuss, neben dem kein Schuss der Auswahl liegt: ein Tipp darauf wählt nichts
+    const lonelyFaded = hits()
+      .filter((g) => g.dataset.faded)
+      .map((g) => g.dataset.shot)
+      .find((label) => ranked(centerOf(label))[0].d > 30)
+    if (lonelyFaded) await tapAt(centerOf(lonelyFaded))
+    check(
+      "Tipp auf einen blassen Schuss wählt nichts",
+      !!lonelyFaded && !$("[data-chosen]", svg()),
+      lonelyFaded ?? "kein blasser Schuss abseits der Auswahl"
     )
     check(
       "Nummern nur auf der Auswahl, Nummern der ganzen Scheibe",
@@ -473,6 +526,18 @@ addEventListener("load", async () => {
       "Zehnerserie: zehn Treffer, keine Probe",
       hits().length === 10 && !$("[data-series='probe']")
     )
+    // gezoomt ist ein Treffer größer als 20 px: Ein Tipp in ihn hinein zählt bis an seinen Rand
+    await click(button("Gruppe"), 700)
+    const calPx = Number(circleOf(hits()[0]).getAttribute("r")) * pxPerMm()
+    const inside = calPx > 30 ? beside("5", calPx * 0.8) : null
+    if (inside) await tapAt(inside)
+    check(
+      "gezoomt: ein Tipp innen am Rand eines großen Treffers wählt ihn",
+      !!inside && txt($("#readout")).includes("Schuss 5 · angetippt"),
+      `Treffer ${calPx.toFixed(0)} px, ${inside ? txt($("#readout")).slice(0, 30) : "keine freie Stelle"}`
+    )
+    if (inside) await tapAt(inside)
+    await click(button("Scheibe"), 700)
     await click(button("Luftpistole"), 60)
     // eine andere Karte derselben Scheibe steht ebenso sofort: aus der Gruppe direkt auf die ganze Scheibe
     await click(button("Gruppe"), 700)

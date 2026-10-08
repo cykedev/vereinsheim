@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest"
 
 import {
   groupView,
+  nearestShot,
   scoreColor,
   screenSizes,
   seriesTileView,
   targetView,
+  TAP_REACH_PX,
   tileColumns,
   unitsPerPixel,
 } from "./geometry"
@@ -126,5 +128,36 @@ describe("Serien als kleine Scheiben", () => {
     // ohne Breite eine Spalte, ohne Kacheln auch
     expect(tileColumns(5, 0)).toBe(1)
     expect(tileColumns(0, 300)).toBe(1)
+  })
+})
+
+describe("Antippen: der Treffer mit der nächsten Mitte", () => {
+  // drei Treffer in Bildschirm-Einheiten; 3 und 7 liegen dicht beieinander
+  const shots = [
+    { index: 3, x: 0, y: 0 },
+    { index: 7, x: 10, y: 0 },
+    { index: 9, x: 100, y: 100 },
+  ]
+
+  it("wählt die nächste Mitte, auch neben dem Treffer", () => {
+    expect(nearestShot(shots, { x: 4, y: 3 }, 20)).toBe(3)
+    expect(nearestShot(shots, { x: 6, y: -3 }, 20)).toBe(7)
+    expect(nearestShot(shots, { x: 90, y: 112 }, 20)).toBe(9)
+  })
+
+  it("weiter als die Reichweite entfernt: keiner", () => {
+    expect(nearestShot(shots, { x: 50, y: 50 }, 20)).toBeNull()
+    // genau auf der Grenze zählt noch
+    expect(nearestShot(shots, { x: 0, y: -20 }, 20)).toBe(3)
+    expect(nearestShot([], { x: 0, y: 0 }, 20)).toBeNull()
+  })
+
+  it("bei gleichem Abstand der obere, also der später gezeichnete", () => {
+    expect(nearestShot(shots, { x: 5, y: 0 }, 20)).toBe(7)
+    expect(nearestShot([shots[1], shots[0]], { x: 5, y: 0 }, 20)).toBe(3)
+  })
+
+  it("Reichweite 20 px wie ein Finger", () => {
+    expect(TAP_REACH_PX).toBe(20)
   })
 })

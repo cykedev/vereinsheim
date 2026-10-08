@@ -4,13 +4,15 @@ import { mpiConfidence } from "@vereinsheim/shot-core/analysis"
 import { centroid, smallestEnclosingCircle, type Point } from "@vereinsheim/shot-core/geometry"
 import { metricByKey, type MetricShot } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
-import { useMemo } from "react"
+import { useMemo, type MouseEvent } from "react"
 
 import {
   caliberRadius,
   groupView,
+  nearestShot,
   scoreColor,
   screenSizes,
+  TAP_REACH_PX,
   targetView,
   unitsPerPixel,
 } from "../geometry"
@@ -32,7 +34,10 @@ export interface TargetViewProps {
   /** alle Schüsse der Scheibe in Abgabefolge (`inShotOrder`), Probe und Wertung */
   shots: readonly MetricShot[]
   state: ViewState
-  /** Antippen eines Treffers der Auswahl; `series` null für einen Wertungsschuss ohne Serie */
+  /**
+   * Antippen: der Treffer der Auswahl mit der nächsten Mitte, bis 20 px daneben (`nearestShot`);
+   * `series` null für einen Wertungsschuss ohne Serie
+   */
   onChoose?: (index: number, series: SeriesKey | null) => void
   /** Schüsse außerhalb der Auswahl: blass (Standard) oder ausgeblendet */
   others?: "dim" | "hide"
@@ -111,6 +116,28 @@ export function TargetView({
   const ringW = mm(target.ringWidthUm)
   const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
 
+  // Ein Tipp gilt dem nächsten Treffer der Auswahl: bis 20 px neben seiner Mitte, gezoomt bis an seinen
+  // Rand. Auf dem Handy misst ein Treffer auf der ganzen Scheibe nur wenige Pixel.
+  const tap = onChoose
+    ? (event: MouseEvent<SVGSVGElement>) => {
+        const matrix = event.currentTarget.getScreenCTM()
+        if (!matrix || !matrix.a) return
+        const at = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse())
+        const index = nearestShot(
+          order
+            .filter((i) => selectedAt(i))
+            .map((i) => ({
+              index: i,
+              x: mm(shots[i].xUm as number),
+              y: -mm(shots[i].yUm as number),
+            })),
+          { x: at.x, y: at.y },
+          Math.max(calR, TAP_REACH_PX / matrix.a)
+        )
+        if (index !== null) onChoose(index, seriesKeyOf(shots[index]))
+      }
+    : undefined
+
   return (
     <svg
       ref={measure}
@@ -118,6 +145,7 @@ export function TargetView({
       aria-label={label}
       viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
       className={className}
+      onClick={tap}
     >
       <style>{`
         .shot-ui-pop { animation: shot-ui-pop 260ms ease-out; transform-box: fill-box; transform-origin: center; }
@@ -195,7 +223,7 @@ export function TargetView({
           const y = -mm(shot.yUm as number)
           const color = shot.ring === null ? "var(--paper-line)" : scoreColor(shot.ring)
           const before = beforeAdjust.has(shot)
-          // ein hohler Kreis (fill="none") wäre sonst nur am Rand antippbar; blasse bleiben ganz aus
+          // auch in einem hohlen Kreis (fill="none") zeigt der Mauszeiger die Hand; blasse bleiben ganz aus
           const hitArea = faded ? undefined : "visible"
           return (
             <g
@@ -206,7 +234,6 @@ export function TargetView({
               opacity={faded ? FADED_OPACITY : undefined}
               pointerEvents={faded ? "none" : undefined}
               style={onChoose && !faded ? { cursor: "pointer" } : undefined}
-              onClick={onChoose && !faded ? () => onChoose(i, seriesKeyOf(shot)) : undefined}
             >
               <title>{`${probe ? "Probe" : "Schuss"} ${labels[i]}: ${formatScore(shot, state.scoring)}`}</title>
               {probe ? (

@@ -142,8 +142,8 @@ describe("TargetView: Auswahl und Antippen", () => {
     expect([...html.matchAll(/data-number="([^"]+)"/g)].map((m) => m[1])).toEqual(["2"])
   })
 
-  it("hohle Treffer sind auf der ganzen Fläche antippbar, blasse gar nicht", () => {
-    // fill="none" nimmt sonst nur den Rand als Trefferfläche
+  it("hohle Treffer zeigen auf der ganzen Fläche die Hand, blasse gar nicht", () => {
+    // fill="none" nimmt sonst nur den Rand als Fläche für den Mauszeiger; gewählt wird über nearestShot
     const html = render({ selection: "probe" })
     expect(html).toMatch(
       /<g data-shot="P1"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*fill="none"[^>]*pointer-events="visible"/
