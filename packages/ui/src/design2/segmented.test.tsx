@@ -59,6 +59,19 @@ describe("Segmented", () => {
     for (const button of html.match(/<button[^>]*>/g)!) expect(button).not.toContain("min-h-11")
   })
 
+  it("verweist auf den Bereich, den sie steuert (aria-controls)", () => {
+    const html = renderToStaticMarkup(
+      createElement(Segmented, {
+        label: "Thema",
+        value: "a",
+        options: [{ value: "a", label: "A" }],
+        onChange: () => {},
+        controls: "karten",
+      })
+    )
+    expect(html).toMatch(/role="radiogroup"[^>]*aria-controls="karten"/)
+  })
+
   it("eine Klasse von außen reicht bis an die Leiste, etwa zum Umbrechen", () => {
     const wrapped = renderToStaticMarkup(
       createElement(Segmented, {

@@ -34,12 +34,25 @@ describe("Analyse auf dem Telefon", () => {
     expect(overview).toMatch(/role="radiogroup" aria-label="Thema"[^>]*class="[^"]*max-w-full/)
   })
 
-  it("zwei Kartenspalten erst ab 861 px wie D3, als Raster in Zeilen", () => {
-    expect(result).toContain("min-[861px]:grid-cols-2")
-    // Spalten (columns) ließen unter der kürzeren Spalte Lücken und verschluckten Ränder am Spaltenende
-    expect(result).not.toMatch(/columns-2/)
+  it("zwei Kartenspalten nach der Breite des Containers (ab 820 px), als Raster in Zeilen", () => {
+    expect(result).toContain("@container")
+    expect(result).toContain("@min-[820px]:grid-cols-2")
+    expect(result).not.toMatch(/columns-2|min-\[861px\]/)
     // eine einzelne Karte in der letzten Zeile über die volle Breite, kein Loch daneben
-    expect(result).toContain("min-[861px]:[&amp;&gt;:last-child:nth-child(odd)]:col-span-2")
+    expect(result).toContain("@min-[820px]:[&amp;&gt;:last-child:nth-child(odd)]:col-span-2")
+  })
+
+  it("Reiterleiste als eigener Streifen: auf dem Telefon über der Sprungleiste, ab 768 px darunter", () => {
+    expect(result).toMatch(
+      /<div[^>]*class="[^"]*sticky top-0 z-30[^"]*md:top-14[^"]*"[^>]*><div role="radiogroup" aria-label="Thema"/
+    )
+  })
+
+  it("die Reiterleiste verweist auf den Bereich der Karten, benannt nach dem Reiter", () => {
+    const controls = result.match(
+      /role="radiogroup" aria-label="Thema" aria-controls="([^"]+)"/
+    )![1]
+    expect(result).toContain(`<div id="${controls}" role="region" aria-label="Thema Ergebnis"`)
   })
 
   it("Glossar und Fehlschlüsse auf dem Telefon so knapp wie am Desktop", () => {

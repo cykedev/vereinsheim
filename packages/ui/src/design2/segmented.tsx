@@ -15,6 +15,8 @@ interface SegmentedProps<T extends string> {
   options: readonly SegmentOption<T>[]
   value: T
   onChange: (value: T) => void
+  /** Id des Bereichs, den die Wahl steuert (`aria-controls`), etwa die Karten eines Reiters */
+  controls?: string
   className?: string
 }
 
@@ -37,6 +39,7 @@ export function Segmented<T extends string>({
   options,
   value,
   onChange,
+  controls,
   className,
 }: SegmentedProps<T>) {
   const bar = useRef<HTMLDivElement>(null)
@@ -69,6 +72,7 @@ export function Segmented<T extends string>({
       ref={bar}
       role="radiogroup"
       aria-label={label}
+      aria-controls={controls}
       onKeyDown={onKeyDown}
       className={cn(
         "inline-flex rounded-full border border-border bg-surface-2 p-[3px]",

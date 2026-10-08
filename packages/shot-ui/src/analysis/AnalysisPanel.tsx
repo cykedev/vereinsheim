@@ -7,7 +7,7 @@ import { FALLACIES } from "@vereinsheim/shot-help/guide"
 import { GLOSSARY } from "@vereinsheim/shot-help/glossary"
 import { cn } from "@vereinsheim/lib/utils"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
-import type { ReactNode } from "react"
+import { useId, useMemo, type ReactNode } from "react"
 
 import { HelpIcon } from "../help/HelpButton"
 import { HelpButton } from "../help/HelpButton"
@@ -61,10 +61,11 @@ function coverageText(shots: readonly MetricShot[], scoring: ViewState["scoring"
 }
 
 /**
- * Breite Karten allein, Folgen schmaler Karten im Raster: ab 861 px zwei Spalten in Zeilen, beide Karten
- * einer Zeile gleich hoch, eine einzelne Karte in der letzten Zeile über die volle Breite. Jeder Abstand ist
- * 16 px; Spalten wie in der Spielwiese ließen unter der kürzeren Spalte bis zu 360 px frei (User, 8. Oktober
- * 2026).
+ * Breite Karten allein, Folgen schmaler Karten im Raster: zwei Spalten in Zeilen, sobald der Bereich der
+ * Karten 820 px breit ist (Container, nicht Fenster: am Desktop steht die Analyse rechts neben der Scheibe),
+ * beide Karten einer Zeile gleich hoch, eine einzelne Karte in der letzten Zeile über die volle Breite. Jeder
+ * Abstand ist 16 px; Spalten wie in der Spielwiese ließen unter der kürzeren Spalte bis zu 360 px frei (User,
+ * 8. Oktober 2026).
  */
 function layout(cards: readonly CardSpec[]): ReactNode[] {
   const blocks: ReactNode[] = []
@@ -74,7 +75,7 @@ function layout(cards: readonly CardSpec[]): ReactNode[] {
     blocks.push(
       <div
         key={`run:${run[0].key}`}
-        className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[861px]:grid-cols-2 min-[861px]:[&>:last-child:nth-child(odd)]:col-span-2"
+        className="grid grid-cols-[minmax(0,1fr)] gap-4 @min-[820px]:grid-cols-2 @min-[820px]:[&>:last-child:nth-child(odd)]:col-span-2"
       >
         {run.map((card) => (
           <div key={card.key} className="grid min-w-0">
@@ -127,38 +128,58 @@ export function AnalysisPanel({
   onHelp,
   className,
 }: AnalysisPanelProps) {
-  const input = analysisInput(shots, state.scoring, target)
-  const cards = shots.length
-    ? TAB_CARDS[tab]({ input, explain, layers: state.layers, onToggleLayer, onHelp })
-    : [
-        {
-          key: "empty",
-          wide: true,
-          element: (
-            <AnalysisCard title="Noch keine Schüsse" explain={explain}>
-              <Note>Noch keine Schüsse auf dieser Scheibe.</Note>
-            </AnalysisCard>
-          ),
-        },
-      ]
+  const regionId = useId()
+  const input = useMemo(
+    () => analysisInput(shots, state.scoring, target),
+    [shots, state.scoring, target]
+  )
+  // ein angetippter Schuss ändert den Zustand, nicht die Analyse: die Karten nur neu, wenn sich ihre
+  // Eingaben ändern (die Seite reicht stabile Rückrufe)
+  const cards = useMemo(
+    () =>
+      shots.length
+        ? TAB_CARDS[tab]({ input, explain, layers: state.layers, onToggleLayer, onHelp })
+        : [
+            {
+              key: "empty",
+              wide: true,
+              element: (
+                <AnalysisCard title="Noch keine Schüsse" explain={explain}>
+                  <Note>Noch keine Schüsse auf dieser Scheibe.</Note>
+                </AnalysisCard>
+              ),
+            },
+          ],
+    [shots.length, tab, input, explain, state.layers, onToggleLayer, onHelp]
+  )
+  const tabLabel = ANALYSIS_TABS.find((t) => t.value === tab)?.label ?? ""
 
   return (
     <section aria-label="Analyse" className={cn("grid grid-cols-[minmax(0,1fr)] gap-4", className)}>
-      <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
-        <div className="grid gap-1">
-          <h2 className="font-display text-xl font-bold tracking-tight">Was diese Scheibe zeigt</h2>
-          <p className="text-[13px] text-muted-foreground">{`Analyse ${BASIS_TEXT[input.basis]}`}</p>
-        </div>
-        {/* auf dem Telefon eine Zeile, die in sich seitlich scrollt, statt die Seite zu verbreitern */}
+      <div className="grid min-w-0 gap-1">
+        <h2 className="font-display text-xl font-bold tracking-tight">Was diese Scheibe zeigt</h2>
+        <p className="text-[13px] text-muted-foreground">{`Analyse ${BASIS_TEXT[input.basis]}`}</p>
+      </div>
+      {/* Streifen, der klebt: auf dem Telefon über der Sprungleiste (nie zwei Leisten), ab 768 px unter ihr;
+          die Leiste ist eine Zeile, die in sich seitlich scrollt, statt die Seite zu verbreitern */}
+      <div className="sticky top-0 z-30 flex h-14 items-center bg-background max-md:-mx-4 max-md:px-4 md:top-14 md:z-10">
         <Segmented
           label="Thema"
           value={tab}
           options={ANALYSIS_TABS}
           onChange={onTab}
+          controls={regionId}
           className="max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:shrink-0 [&>button]:whitespace-nowrap"
         />
       </div>
-      {layout(cards)}
+      <div
+        id={regionId}
+        role="region"
+        aria-label={`Thema ${tabLabel}`}
+        className="@container grid gap-4"
+      >
+        {layout(cards)}
+      </div>
       {/* ohne Schüsse keine Datenlage: sie behauptete sonst „alle mit Lage, Zeit und Wert“ */}
       {shots.length > 0 && (
         <div data-coverage="true" className="flex items-start justify-between gap-2">
