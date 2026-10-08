@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { card, DAY } from "../__fixtures__/period"
 import { metricByKey } from "../metrics"
-import { cardValues, periodTrend, type CardValue } from "./period"
+import { cardValues, periodBuckets, periodTrend, trainingVolume, type CardValue } from "./period"
 
 const values = (list: readonly number[]): CardValue[] =>
   list.map((value, i) => ({ id: `s${i + 1}`, atMs: i * DAY, value, n: 40 }))
@@ -74,5 +74,44 @@ describe("Verlauf mit gleitendem Schnitt und Formband (T1, T2)", () => {
     const { points, spread } = periodTrend(values([9, 10, 8, 10, 9, 11, 9, 10, 8]))
     expect(spread).toBeNull()
     expect(points.every((p) => p.band === null)).toBe(true)
+  })
+})
+
+describe("Boden und Decke je Abschnitt, Trainingsumfang (T5, T6)", () => {
+  const week = (ms: number) => String(Math.floor(ms / (7 * DAY)))
+  const at = (day: number, value: number, id = `d${day}`): CardValue => ({
+    id,
+    atMs: day * DAY,
+    value,
+    n: 40,
+  })
+
+  it("Median, P10 und P90 je Woche, Wochen in der Folge ihres ersten Werts", () => {
+    // Typ 7: P10 bei h = 5 · 0,1 = 0,5 → 1 + 0,5 · (2 − 1) = 1,5; P90 bei h = 4,5 → 5,5
+    const values = [8, 9, 10]
+      .map((v, i) => at(i, v))
+      .concat([1, 2, 3, 4, 5, 6].map((v, i) => at(7 + i, v)))
+    const buckets = periodBuckets(values, week)
+    expect(buckets.map((b) => b.key)).toEqual(["0", "1"])
+    expect(buckets[1]).toEqual({ key: "1", n: 6, median: 3.5, p10: 1.5, p90: 5.5 })
+  })
+
+  it("unter fünf Werten nur der Median", () => {
+    const buckets = periodBuckets([at(0, 8), at(1, 9), at(2, 10)], week)
+    expect(buckets).toEqual([{ key: "0", n: 3, median: 9, p10: null, p90: null }])
+  })
+
+  it("Umfang: Schüsse mit Probe, Scheiben und Tage je Woche", () => {
+    const cards = [
+      card("a", 1, [100, 100], { shot: (i) => (i === 0 ? { kind: "probe", series: null } : {}) }),
+      card("b", 1, [90, 92, 95]),
+      card("c", 3, [95]),
+      card("d", 8, [95, 96]),
+    ]
+    const day = (ms: number) => String(Math.floor(ms / DAY))
+    expect(trainingVolume(cards, week, day)).toEqual([
+      { key: "0", shots: 6, cards: 3, days: 2 },
+      { key: "1", shots: 2, cards: 1, days: 1 },
+    ])
   })
 })

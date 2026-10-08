@@ -1,5 +1,5 @@
 // Auswertungen über viele Scheiben (Plan L2, vault/spiegel/spiegel-langzeit.md): Werte je Scheibe, Verlauf
-// mit gleitendem Schnitt und Formband (Katalog T1, T2). Die Disziplin-Familie wählt der Aufrufer; Wochen,
+// mit gleitendem Schnitt und Formband, Boden und Decke je Abschnitt, Trainingsumfang (Katalog T1, T2, T5, T6). Die Disziplin-Familie wählt der Aufrufer; Wochen,
 // Monate und Tage ordnet er zu, denn die Anzeige-Zeitzone liegt in der App (D1).
 
 import {
@@ -10,13 +10,15 @@ import {
   type MetricShot,
   type Scoring,
 } from "../metrics"
-import { mad } from "../stats"
+import { mad, median, quantile } from "../stats"
 import { byStart, cardShots } from "./card-shots"
 
 /** Faktor, der den MAD bei normalverteilten Werten zur Standardabweichung macht */
 const MAD_TO_SD = 1.4826
 /** ab so vielen Scheiben ein Formband (D3) */
 const MIN_BAND_CARDS = 10
+/** ab so vielen Scheiben in einem Abschnitt Boden und Decke (D4) */
+const MIN_BUCKET_SPREAD = 5
 
 export interface PeriodCard {
   /** stabile Kennung der Scheibe (Rekord und Weg zur Scheibe) */
@@ -97,4 +99,72 @@ export function periodTrend(
     return { ...v, mean: means[i], partial, band }
   })
   return { points, spread }
+}
+
+/** Gruppen in der Folge ihres ersten Elements */
+function groupBy<T>(items: readonly T[], keyOf: (item: T) => string): Map<string, T[]> {
+  const groups = new Map<string, T[]>()
+  for (const item of items) {
+    const key = keyOf(item)
+    const group = groups.get(key)
+    if (group) group.push(item)
+    else groups.set(key, [item])
+  }
+  return groups
+}
+
+export interface PeriodBucket {
+  key: string
+  n: number
+  median: number
+  /** Boden und Decke: P10 und P90 der Scheibenwerte; null unter fünf Scheiben im Abschnitt */
+  p10: number | null
+  p90: number | null
+}
+
+/**
+ * Boden und Decke je Abschnitt (T5, D4): Zahl, Median, P10 und P90 der Scheibenwerte. Den Abschnitt
+ * (Woche, Monat) bestimmt `bucketOf`; Abschnitte in der Folge ihres ersten Werts.
+ */
+export function periodBuckets(
+  values: readonly CardValue[],
+  bucketOf: (atMs: number) => string
+): PeriodBucket[] {
+  return [...groupBy(values, (v) => bucketOf(v.atMs))].map(([key, group]) => {
+    const xs = group.map((v) => v.value)
+    const spread = xs.length >= MIN_BUCKET_SPREAD
+    return {
+      key,
+      n: xs.length,
+      median: median(xs) as number,
+      p10: spread ? quantile(xs, 0.1) : null,
+      p90: spread ? quantile(xs, 0.9) : null,
+    }
+  })
+}
+
+export interface VolumeBucket {
+  key: string
+  /** alle Schüsse, Probe und Wertung */
+  shots: number
+  cards: number
+  /** Tage mit mindestens einer Scheibe (`dayOf`) */
+  days: number
+}
+
+/**
+ * Trainingsumfang je Abschnitt (T6, D9): Schüsse mit Probe, Scheiben und Tage. Keine Netto-Zeit, sie folgt
+ * aus den Abständen. Abschnitte in der Folge ihrer ersten Scheibe.
+ */
+export function trainingVolume(
+  cards: readonly PeriodCard[],
+  bucketOf: (atMs: number) => string,
+  dayOf: (atMs: number) => string
+): VolumeBucket[] {
+  return [...groupBy(byStart(cards), (card) => bucketOf(card.startedAtMs))].map(([key, group]) => ({
+    key,
+    shots: group.reduce((sum, card) => sum + card.shots.length, 0),
+    cards: group.length,
+    days: new Set(group.map((card) => dayOf(card.startedAtMs))).size,
+  }))
 }
