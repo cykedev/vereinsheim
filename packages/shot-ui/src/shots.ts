@@ -15,6 +15,25 @@ import { formatValue } from "./format"
 import type { SeriesKey, Selection } from "./types"
 import { isSelected } from "./view-state"
 
+/** Schüsse je Serie, wenn eine Karte nur Probe hat */
+const SERIES_SIZE = 10
+
+/**
+ * Eine Karte nur mit Probe ist Training (User, 8. Oktober 2026): Sie verhält sich genau wie Wertung, auch
+ * optisch. Jeder Probeschuss wird Wertungsschuss, in Serien zu zehn nach der Abgabefolge (`inShotOrder`);
+ * Reihenfolge der Liste und alle übrigen Angaben bleiben. Folgt Wertung, bleibt die Probe Probe und die
+ * Karte unverändert. Die Seite wendet das einmal an, bevor sie die Bausteine füttert.
+ */
+export function probeOnlyAsMatch(shots: readonly MetricShot[]): readonly MetricShot[] {
+  if (!shots.length || shots.some((shot) => shot.kind !== "probe")) return shots
+  const position = new Map(inShotOrder(shots).map((shot, i) => [shot, i]))
+  return shots.map((shot) => ({
+    ...shot,
+    kind: "match" as const,
+    series: Math.floor((position.get(shot) as number) / SERIES_SIZE) + 1,
+  }))
+}
+
 /**
  * Serie eines Schusses: die Probe oder die Nummer der Serie. Ein Wertungsschuss ohne Serie gehört zu
  * keiner (null) und zählt nur bei „alle“, wie im Fachkern, wo `seriesCurve` ihn auslässt.

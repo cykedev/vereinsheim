@@ -5,6 +5,7 @@ import {
   formatScore,
   groupShots,
   hasPosition,
+  probeOnlyAsMatch,
   selectionShots,
   seriesKeyOf,
   shotLabels,
@@ -79,5 +80,26 @@ describe("Schüsse für die Bausteine", () => {
     expect(selectionShots(card, "all")).toEqual([CARD[2], CARD[3], CARD[4], noPosition])
     expect(selectionShots(card, 1)).toEqual([CARD[2], CARD[3], noPosition])
     expect(selectionShots(card, "probe")).toEqual([CARD[0], CARD[1]])
+  })
+
+  it("nur Probe (Training): wie Wertung, Serien zu zehn in Abgabefolge", () => {
+    // zwölf Probeschüsse, in der Liste vertauscht: Serien und Nummern folgen der Abgabefolge (seq)
+    const probes = Array.from({ length: 12 }, (_, i) => ({
+      ...shot("probe", null, i * 100, 100),
+      seq: i + 1,
+    }))
+    const shuffled = [...probes].reverse()
+    const card = probeOnlyAsMatch(shuffled)
+    expect(card.every((s: MetricShot) => s.kind === "match")).toBe(true)
+    // gleiche Reihenfolge wie die Eingabe, nur Art und Serie neu
+    expect(card.map((s: MetricShot) => s.seq)).toEqual(shuffled.map((s) => s.seq))
+    expect(card.map((s: MetricShot) => s.series)).toEqual([2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    expect(shotLabels(probeOnlyAsMatch(probes))).toEqual(probes.map((_, i) => String(i + 1)))
+    expect(card.map((s: MetricShot) => s.xUm)).toEqual(shuffled.map((s) => s.xUm))
+  })
+
+  it("folgt Wertung, bleibt die Probe Probe; ohne Schüsse nichts", () => {
+    expect(probeOnlyAsMatch(CARD)).toBe(CARD)
+    expect(probeOnlyAsMatch([])).toEqual([])
   })
 })

@@ -85,7 +85,8 @@ Die Optik ist dem User besonders wichtig: minimal, scharf, nichts Klobiges, auch
 
 Aus dem Sonderfall-Katalog ([[spiegel-edge-cases]]):
 
-- **Probe beliebig lang:** gegliedert in Zehnerblöcke P1…Pn. Eine Scheibe nur mit Probe zeigt die volle Analyse ohne Ergebnis. Der Prototyp nimmt fünf Probeschüsse vor der Wertung an; das ist ein Beispiel, kein Modell (SF-02).
+- **Nur Probe ist Training** (User, 8. Oktober 2026): Eine Scheibe ohne Wertungsschuss verhält sich genau wie Wertung, auch optisch: Schüsse 1…n gefüllt, Serien zu zehn als kleine Scheiben mit Ergebnis, Trenner in der Tabelle. Die Unterscheidung brächte hier nichts. Erst wenn nach der Probe Wertung folgt, zeigt Spiegel die Probe hohl und als P1…Pn. Umgesetzt als eine reine Funktion an der Datengrenze (`probeOnlyAsMatch`).
+- **Probe beliebig lang:** gegliedert in Zehnerblöcke P1…Pn. Der Prototyp nimmt fünf Probeschüsse vor der Wertung an; das ist ein Beispiel, kein Modell (SF-02).
 - **Merkmale als ruhige Hinweise** an der Scheibe (unvollständig, korrigiert, nur PDF, neu gewertet), Erklärung auf Antippen.
 - **Aktionen an der Scheibe:** „Als Wertung zählen“ für eine vergessene Umschaltung (SF-05), „Disziplin korrigieren“, „Nicht meine“, „Aus Verläufen ausnehmen“, „An Schuss n teilen“.
 - **Liste nach Trainingsabend:** kleine Scheiben (Aufwärmen, Abbruch) eingeklappt unter dem Abend (SF-11).

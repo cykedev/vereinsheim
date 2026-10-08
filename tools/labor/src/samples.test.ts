@@ -44,8 +44,16 @@ describe("Beispielscheiben wie in der Spielwiese", () => {
   })
 
   it("je Scheibe die passenden Beispiele", () => {
-    expect(SAMPLES["lp-10m"].map((s) => s.id)).toEqual(["forty", "printout", "empty"])
-    expect(SAMPLES["lg-10m"].map((s) => s.id)).toEqual(["forty", "series", "empty"])
+    expect(SAMPLES["lp-10m"].map((s) => s.id)).toEqual(["forty", "printout", "training", "empty"])
+    expect(SAMPLES["lg-10m"].map((s) => s.id)).toEqual(["forty", "series", "training", "empty"])
     expect(rawSample("lp-10m", "empty")).toEqual([])
+  })
+
+  it("Training nur mit Probe: 60 Probeschüsse, nach Schuss 30 eine Pause, immer gleich", () => {
+    const raw = rawSample("lp-10m", "training")
+    expect(raw).toEqual(rawSample("lp-10m", "training"))
+    expect(raw).toHaveLength(60)
+    expect(raw.every((s) => s.kind === "probe")).toBe(true)
+    expect(raw[30].firedAtMs - raw[29].firedAtMs).toBe(200_000)
   })
 })

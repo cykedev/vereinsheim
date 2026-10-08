@@ -8,6 +8,7 @@ import { CardSummary } from "@vereinsheim/shot-ui/readout/CardSummary"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
+import { probeOnlyAsMatch } from "@vereinsheim/shot-ui/shots"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import type { SeriesKey } from "@vereinsheim/shot-ui/types"
 import { initialViewState, viewReducer, type Layer } from "@vereinsheim/shot-ui/view-state"
@@ -84,7 +85,8 @@ export function App({ commit }: { commit: string }) {
   useTheme(theme)
 
   const target = TARGETS[targetId]
-  const shots = useMemo(() => toMetricShots(target, raw), [target, raw])
+  // nur Probe ist Training und zeigt sich wie Wertung; erst mit Wertung trennt sich die Probe ab
+  const shots = useMemo(() => probeOnlyAsMatch(toMetricShots(target, raw)), [target, raw])
   const samples = SAMPLES[targetId]
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0]
   useEffect(() => exposeForTest(shots, state), [shots, state])

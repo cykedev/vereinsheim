@@ -66,7 +66,7 @@ Meyton druckt eigene Streumaße: **Trefferkreis** und **Trefferlage**, gesamt un
 
 Die Regeln aus dem Sonderfall-Katalog ([[spiegel-edge-cases]]), die jede Kennzahl beachten muss:
 
-- **Probe zählt, wo es Sinn ergibt.** Eine Scheibe nur mit Probe bekommt alle Kennzahlen zu Lage und Tempo, nur kein Ergebnis. Verläufe zeigen sie mit dem Schalter „Probe einbeziehen“ (SF-01).
+- **Probe zählt, wo es Sinn ergibt.** Eine Scheibe nur mit Probe rechnet auf der Scheibe wie Wertung, auch mit Ergebnis je Serie und gesamt (`probeOnlyAsMatch` in `shot-ui`, User, 8. Oktober 2026). Verläufe und Rekorde zeigen sie nur mit dem Schalter „Probe einbeziehen“ (SF-01).
 - **Je Schuss statt Summe:** Ringe und Zehntel laufen im Verlauf als Ø je Schuss; Summen nur für vollständige Scheiben (SF-07).
 - **Streumaße hängen an der Schusszahl.** Der Streukreis wird mit jedem Schuss größer oder bleibt gleich, R50 fällt bei kleinem n leicht zu klein aus (bei 10 Schuss etwa 4 %). Für Verläufe über unterschiedliche Schusszahlen zählt deshalb σ̂ (Rayleigh-σ, kaum n-abhängig); die anderen nur bei gleichem n (SF-60).
 - **Mindestzahl:** Jede Kennzahl nennt, ab wie vielen Schüssen sie gilt (Streukreis ab 3, Form ab 3 und ihr Winkel ab 10, R50 ab 5). Darunter steht kein Wert, nicht 0 (SF-61).

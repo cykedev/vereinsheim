@@ -14,7 +14,7 @@ relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-bridge]]", "[[spiegel-met
 
 ## Leitregeln
 
-1. **Auswertung ist schussbasiert, nicht wertungsbasiert.** Eine Scheibe nur mit Probe ist vollwertiges Training: Trefferbild, Schwerpunkt, Streuung und Tempo gibt es genauso, nur kein amtliches Ergebnis.
+1. **Auswertung ist schussbasiert, nicht wertungsbasiert.** Eine Scheibe nur mit Probe ist vollwertiges Training: Auf der Scheibe zeigt Spiegel sie genau wie Wertung, mit Schüssen 1…n, Serien zu zehn und Ergebnis (User, 8. Oktober 2026); erst wenn Wertung folgt, trennt es Probe und Wertung. Ein amtliches Ergebnis ist es trotzdem nicht: Rekorde und Verläufe nehmen es nur mit „Probe einbeziehen“ (SF-01).
 2. **Reihenfolge je Stellung nach Nummer, zwischen Probe und Wertung nach Zeit.** Zeit ist immer das Paar aus Zeitstempel und Millisekunden, nie deren Summe.
 3. **Probe wird gesammelt, Wertung folgt dem neuesten Stand.** Was in einem späteren Snapshot fehlt, bleibt bei der Probe erhalten; bei der Wertung greift die Korrektur. Wie vollständig die Probe erfasst ist, steht ehrlich an der Scheibe.
 4. **Fehlen ist keine Löschung.** Fehler, leere Ergebnisse und massenhaftes Verschwinden ändern nichts; einzelne Löschungen werden markiert, neue Epochen bestätigt der Admin.

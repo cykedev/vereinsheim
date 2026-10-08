@@ -13,7 +13,7 @@ export interface RawShot {
   kind: "probe" | "match"
 }
 
-export type SampleId = "forty" | "printout" | "series" | "empty"
+export type SampleId = "forty" | "training" | "printout" | "series" | "empty"
 
 export interface Sample {
   id: SampleId
@@ -30,6 +30,12 @@ const FORTY: Sample = {
   official: "decimal",
 }
 
+const TRAINING: Sample = {
+  id: "training",
+  label: "60 Probe",
+  hint: "Erfundenes Training nur mit Probe: 60 Probeschüsse, nach Schuss 30 eine Pause. Ohne Wertung zeigt Spiegel die Probe wie Wertung, in Serien zu zehn; setzt du eine Wertung dazu, trennt es wieder.",
+}
+
 const EMPTY: Sample = {
   id: "empty",
   label: "Leer",
@@ -44,11 +50,13 @@ export const SAMPLES: Readonly<Record<TargetId, readonly Sample[]>> = {
       label: "Ausdruck vom 2. Oktober",
       hint: "Die sechs Teiler vom Ausdruck des 2. Oktober, auf die Achsen gelegt.",
     },
+    TRAINING,
     EMPTY,
   ],
   "lg-10m": [
     FORTY,
     { id: "series", label: "Zehnerserie", hint: "Eine erfundene Zehnerserie." },
+    TRAINING,
     EMPTY,
   ],
 }
@@ -112,6 +120,27 @@ function forty(targetId: TargetId): RawShot[] {
   return shots
 }
 
+/** Training nur mit Probe: 60 Probeschüsse ohne Wertung, nach Schuss 30 gut drei Minuten Pause */
+function training(targetId: TargetId): RawShot[] {
+  const lg = targetId === "lg-10m"
+  const rand = mulberry32(lg ? 20261009 : 20261008)
+  const spread = lg ? 1700 : 9000
+  const [mx, my] = lg ? [-300, 500] : [1500, -2500]
+  const pace = (lg ? 40 : 50) * 1000
+  const shots: RawShot[] = []
+  let t = START_MS
+  for (let i = 0; i < 60; i++) {
+    shots.push({
+      xUm: Math.round((mx + spread * gauss(rand)) / 10) * 10,
+      yUm: Math.round((my + spread * gauss(rand)) / 10) * 10,
+      firedAtMs: Math.round(t),
+      kind: "probe",
+    })
+    t += i === 29 ? 200_000 : pace * Math.exp(0.2 * gauss(rand))
+  }
+  return shots
+}
+
 const LG_SERIES = [
   [320, 450],
   [-610, 880],
@@ -131,6 +160,7 @@ const PRINTOUT_ANGLES = [90, 180, 0, 270, 0, 180]
 
 export function rawSample(targetId: TargetId, id: SampleId): RawShot[] {
   if (id === "forty") return forty(targetId)
+  if (id === "training") return training(targetId)
   if (id === "empty") return []
   const points =
     id === "series"

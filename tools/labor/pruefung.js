@@ -507,6 +507,46 @@ addEventListener("load", async () => {
     await click(button("Ansehen"))
     await click(button("40 Schuss mit Probe"), 100)
 
+    // ---------- nur Probe (Training): wie Wertung, bis eine Wertung dazukommt
+    await click(button("60 Probe"), 100)
+    check(
+      "Nur Probe: Schüsse 1 bis 60, gefüllt wie Wertung",
+      labelsOf(hits()).join() === Array.from({ length: 60 }, (_, i) => `${i + 1}`).join() &&
+        hits().every((g) => circleOf(g).getAttribute("fill") !== "none")
+    )
+    check(
+      "Nur Probe: sechs Serien zu zehn ohne Probe-Kachel, Übersicht mit Ergebnis",
+      $$("[data-series]")
+        .map((t) => t.dataset.series)
+        .join() === "1,2,3,4,5,6" &&
+        /Wertung\s*60 Schuss(?! \+)/.test(txt($("#summary"))) &&
+        /Ergebnis\s*\d+,\d/.test(txt($("#summary"))),
+      txt($("#summary")).slice(0, 80)
+    )
+    check(
+      "Nur Probe: Tabelle mit Trennern je Serie und der Pause",
+      groupTitles().join() === "Serie 6,Serie 5,Serie 4,Serie 3,Serie 2,Serie 1" &&
+        tableRows().some((tr) => txt(tr.lastElementChild).includes("min")),
+      groupTitles().join(" | ")
+    )
+    // eine Wertung dazu: Ab jetzt trennt Spiegel Probe und Wertung
+    await click(button("Setzen"))
+    await click(button("Wertung"))
+    await setAt(0, 0)
+    check(
+      "Nur Probe plus eine Wertung: Probe P1 bis P60, Wertung 1",
+      hits().filter((g) => g.dataset.shot.startsWith("P")).length === 60 &&
+        !!hits().find((g) => g.dataset.shot === "1") &&
+        $$("[data-series]")
+          .map((t) => t.dataset.series)
+          .join() === "probe,1",
+      $$("[data-series]")
+        .map((t) => t.dataset.series)
+        .join()
+    )
+    await click(button("Ansehen"))
+    await click(button("40 Schuss mit Probe"), 100)
+
     // ---------- Wertung, Scheibe, Thema
     await click(button("Ganze Ringe"))
     const seriesValues = $$("[data-series] b")
