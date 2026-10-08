@@ -4,7 +4,7 @@ import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { teilerFromDistanceUm } from "@vereinsheim/shot-core/scoring"
 import { PAUSE_THRESHOLD_MS } from "@vereinsheim/shot-core/time"
 import { cn } from "@vereinsheim/lib/utils"
-import { useMemo, useState } from "react"
+import { useId, useMemo, useState } from "react"
 
 import { formatValue } from "../format"
 import { scoreColor } from "../geometry"
@@ -55,6 +55,7 @@ export function ShotTable({
   className,
 }: ShotTableProps) {
   const [expanded, setExpanded] = useState(false)
+  const tableId = useId()
   const labels = useMemo(() => shotLabels(shots), [shots])
   const intervals = useMemo(() => shotIntervals(shots), [shots])
   const indices = shots
@@ -81,7 +82,7 @@ export function ShotTable({
 
   return (
     <div className={cn("overflow-auto", className)}>
-      <table className="w-full border-collapse text-[13px] tabular-nums">
+      <table id={tableId} className="w-full border-collapse text-[13px] tabular-nums">
         <caption className="sr-only">Schüsse, neuester zuerst</caption>
         <thead className="sticky top-0 bg-card text-xs text-muted-foreground">
           <tr>
@@ -185,7 +186,13 @@ export function ShotTable({
         <button
           type="button"
           aria-expanded={expanded}
-          onClick={() => setExpanded(!expanded)}
+          aria-controls={tableId}
+          onClick={(event) => {
+            const button = event.currentTarget
+            setExpanded(!expanded)
+            // beim Zuklappen verschwinden Zeilen über dem Knopf: ihn im Bild halten (Safari verankert nicht)
+            if (expanded) requestAnimationFrame(() => button.scrollIntoView({ block: "nearest" }))
+          }}
           className="mt-1 w-full cursor-pointer rounded-lg px-2 py-2 text-[13px] font-semibold text-primary hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring md:hidden"
         >
           {expanded ? "Weniger zeigen" : `Alle ${indices.length} zeigen`}

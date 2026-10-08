@@ -208,6 +208,33 @@ describe("Schusstabelle auf dem Telefon (Plan Schritt 4, D8)", () => {
     expect(hiddenRows(table({ chosen: { index: 0, series: 1 } }))).toEqual(["5", "4", "3", "2"])
   })
 
+  it("der Knopf verweist auf die Tabelle", () => {
+    const html = table()
+    const controls = html.match(/<button[^>]*aria-controls="([^"]+)"[^>]*>Alle 15 zeigen/)![1]
+    expect(html).toContain(`<table id="${controls}"`)
+  })
+
+  it("der Kopf einer ganz zugeklappten Serie ist mit versteckt, außer der gewählte Schuss liegt darin", () => {
+    // Serie 1 mit sechs, Serie 2 mit zwölf Schüssen: die zehn neuesten sind alle aus Serie 2
+    const two: MetricShot[] = [
+      ...many.slice(0, 6).map((s) => ({ ...s, series: 1 })),
+      ...Array.from({ length: 12 }, (_, i) => ({
+        ...many[0],
+        xUm: i * 50,
+        firedAtMs: (10 + i) * 60_000,
+        series: 2,
+      })),
+    ]
+    const header = (html: string, name: string) =>
+      html.match(new RegExp(`<tr( class="[^"]*")?><th scope="rowgroup"[^>]*>${name}</th>`))![1] ??
+      ""
+    expect(header(table({}, two), "Serie 1")).toContain("max-md:hidden")
+    expect(header(table({}, two), "Serie 2")).not.toContain("max-md:hidden")
+    expect(header(table({ chosen: { index: 0, series: 1 } }, two), "Serie 1")).not.toContain(
+      "max-md:hidden"
+    )
+  })
+
   it("bei zehn oder weniger Zeilen kein Knopf und nichts versteckt", () => {
     const html = table({}, many.slice(0, 10))
     expect(hiddenRows(html)).toEqual([])

@@ -1457,6 +1457,8 @@ addEventListener("load", async () => {
     const smallEllipse = [...sd.querySelectorAll('[data-card="lage-echt"] button')].find((b) =>
       txt(b).includes("Vertrauensellipse")
     )
+    // echter Fokus auf dem Knopf: nach dem Rücksprung muss er dorthin zurück
+    smallEllipse.focus()
     await frameClick(small, smallEllipse, 1500)
     const pillButton = () =>
       [...sd.querySelectorAll("button")].find((b) => txt(b).startsWith("Zurück zu"))
@@ -1471,6 +1473,12 @@ addEventListener("load", async () => {
       "Handy 375 px: die Pille bringt zurück und verschwindet",
       near(sw.scrollY, origin, 60) && !pillButton(),
       `${sw.scrollY.toFixed(0)} statt ${origin.toFixed(0)}`
+    )
+    check(
+      "Handy 375 px: nach dem Rücksprung liegt der Fokus wieder auf dem Knopf, der Sprung war angesagt",
+      sd.activeElement === smallEllipse &&
+        !!sd.querySelector('[role="status"][aria-live="polite"].sr-only'),
+      sd.activeElement?.textContent?.slice(0, 30) ?? ""
     )
     small.remove()
 

@@ -9,11 +9,14 @@ import { isOutOfView, shouldDismiss, type ReturnState } from "./jump"
  * Element außer Sicht ist, merkt die Ausgangsstelle und zeigt die Pille; `back` scrollt zurück. Die Pille
  * verschwindet auch, wenn man selbst zurückscrollt. Gesprungen wird sofort, wie bei den Ankern der
  * Sprungleiste: Glattes Scrollen über Tausende Pixel läuft in einem verborgenen Fenster verspätet und in der
- * Skriptprüfung gar nicht; die Pille gibt die Orientierung.
+ * Skriptprüfung gar nicht; die Pille gibt die Orientierung. Der Fokus bleibt beim auslösenden Knopf: `back`
+ * und `close` geben ihn dorthin zurück (sonst fiele er beim Ausblenden der Pille auf `<body>`); `hide`
+ * blendet die Pille ohne Fokuswechsel aus, etwa beim Wechsel der Karte.
  */
 export function useReturnJump(topInset = 56) {
   const [pill, setPill] = useState<{ label: string; origin: number } | null>(null)
   const state = useRef<ReturnState | null>(null)
+  const trigger = useRef<HTMLElement | null>(null)
 
   const jumpTo = useCallback(
     (element: Element | null, label: string) => {
@@ -21,21 +24,29 @@ export function useReturnJump(topInset = 56) {
       if (!isOutOfView(element.getBoundingClientRect(), window.innerHeight, topInset)) return
       const origin = window.scrollY
       state.current = { origin, away: false }
+      const focused = document.activeElement
+      trigger.current = focused instanceof HTMLElement && focused !== document.body ? focused : null
       element.scrollIntoView({ block: "start" })
       setPill({ label, origin })
     },
     [topInset]
   )
 
-  const dismiss = useCallback(() => {
+  const hide = useCallback(() => {
     state.current = null
     setPill(null)
   }, [])
 
+  const close = useCallback(() => {
+    trigger.current?.focus({ preventScroll: true })
+    hide()
+  }, [hide])
+
   const back = useCallback(() => {
     if (pill) window.scrollTo({ top: pill.origin })
-    dismiss()
-  }, [pill, dismiss])
+    trigger.current?.focus({ preventScroll: true })
+    hide()
+  }, [pill, hide])
 
   useEffect(() => {
     if (!pill) return
@@ -43,11 +54,11 @@ export function useReturnJump(topInset = 56) {
       if (!state.current) return
       const next = shouldDismiss(state.current, window.scrollY)
       state.current = { ...state.current, away: next.away }
-      if (next.dismiss) dismiss()
+      if (next.dismiss) hide()
     }
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
-  }, [pill, dismiss])
+  }, [pill, hide])
 
-  return { pill, jumpTo, back, dismiss }
+  return { pill, jumpTo, back, close, hide }
 }

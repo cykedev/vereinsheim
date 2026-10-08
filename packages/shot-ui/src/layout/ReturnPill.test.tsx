@@ -40,10 +40,20 @@ describe("Rücksprung-Pille", () => {
     createElement(ReturnPill, { label: "Lage", onReturn: () => {}, onDismiss: () => {} })
   )
 
-  it("unten mittig, über dem sicheren Rand, mit Text und Schließen", () => {
+  it("unten mittig, über dem sicheren Rand, mit Text und Schließen in 40 px", () => {
     expect(html).toMatch(/class="[^"]*fixed inset-x-0 bottom-0[^"]*"/)
     expect(html).toContain("env(safe-area-inset-bottom)")
     expect(html).toMatch(/<button type="button"[^>]*>Zurück zu „Lage“<\/button>/)
-    expect(html).toMatch(/<button type="button" aria-label="Schließen"/)
+    expect(html).toMatch(/<button type="button" aria-label="Schließen"[^>]*class="[^"]*size-10/)
+  })
+
+  it("ein Bereich für Screenreader ist immer da und sagt den Sprung an", () => {
+    const quiet = renderToStaticMarkup(
+      createElement(ReturnPill, { label: null, onReturn: () => {}, onDismiss: () => {} })
+    )
+    expect(quiet).toMatch(/^<div role="status" aria-live="polite" class="sr-only"><\/div>$/)
+    expect(html).toMatch(
+      /<div role="status" aria-live="polite" class="sr-only">Zur Scheibe gesprungen\. „Zurück zu „Lage““ steht unten\.<\/div>/
+    )
   })
 })

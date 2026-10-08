@@ -129,7 +129,7 @@ export function App({ commit }: { commit: string }) {
   })
   useTheme(theme)
   const active = useActiveSection()
-  const { pill, jumpTo, back, dismiss } = useReturnJump()
+  const { pill, jumpTo, back, close, hide } = useReturnJump()
 
   const target = TARGETS[targetId]
   // nur Probe ist Training und zeigt sich wie Wertung; erst mit Wertung trennt sich die Probe ab
@@ -165,6 +165,7 @@ export function App({ commit }: { commit: string }) {
     const nextRaw = rawSample(nextTarget, chosen.id)
     setRaw(nextRaw)
     setPop(null)
+    hide()
     dispatch({ type: "reset", home: defaultWhole(cardShots(nextTarget, nextRaw)) })
   }
 
@@ -441,6 +442,7 @@ export function App({ commit }: { commit: string }) {
             node: (
               <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
                 <ShotTable
+                  key={`${targetId}:${sample.id}`}
                   className="md:max-h-80"
                   shots={shots}
                   state={state}
@@ -467,7 +469,7 @@ export function App({ commit }: { commit: string }) {
         ]}
       />
       <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />
-      {pill && <ReturnPill label={pill.label} onReturn={back} onDismiss={dismiss} />}
+      <ReturnPill label={pill?.label ?? null} onReturn={back} onDismiss={close} />
     </div>
   )
 }
