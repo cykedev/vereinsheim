@@ -1359,7 +1359,10 @@ addEventListener("load", async () => {
     }
     check("Hilfe: jede Karte hat ihr „?“", withoutHelp.length === 0, withoutHelp.join(", "))
     const wantedHelp = [
-      ...T().HELP_TOPICS.map((t) => t.id),
+      // die Themen über viele Scheiben gehören auf die Seite eines Zeitraums (L3)
+      ...T()
+        .HELP_TOPICS.filter((t) => t.theme !== "period")
+        .map((t) => t.id),
       "beobachtungen",
       "probe-auf-der-scheibe",
     ]

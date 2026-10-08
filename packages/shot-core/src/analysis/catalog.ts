@@ -38,4 +38,13 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   sighterComparison: ["S3"],
   sighterZeroed: ["S1", "S4"],
   dataCoverage: ["Q1"],
+  // Über viele Scheiben (Plan L2)
+  cardValues: ["T1"],
+  periodTrend: ["T1", "T2"],
+  periodBuckets: ["T5"],
+  trainingVolume: ["T6"],
+  comparePeriods: ["C3", "T3"],
+  againstOwnAverage: ["C4"],
+  recordEligible: ["R1"],
+  periodRecords: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"],
 })

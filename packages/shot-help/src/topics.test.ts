@@ -58,8 +58,9 @@ describe("HELP_TOPICS: Bezüge und Ordnung", () => {
     }
   })
 
-  it("24 Themen nach dem Aufräumen (SP-1.12: ohne Lageanteil)", () => {
-    expect(HELP_TOPICS).toHaveLength(24)
+  it("29 Themen: 24 einer Scheibe (SP-1.12: ohne Lageanteil) und 5 über viele Scheiben (L2)", () => {
+    expect(HELP_TOPICS).toHaveLength(29)
+    expect(HELP_TOPICS.filter((topic) => topic.theme === "period")).toHaveLength(5)
     expect(HELP_TOPICS.some((topic) => topic.id === "lageanteil")).toBe(false)
   })
 

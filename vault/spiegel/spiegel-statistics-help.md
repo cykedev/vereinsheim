@@ -386,6 +386,80 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Zeit hat.
 - *Vorsicht:* In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat.
 
+## Über viele Scheiben
+
+**Verlauf und Form (T1, T2, T5)**
+- *Was:* Jeder Punkt ist eine Scheibe, mit dem Wert der gewählten Zahl über ihre Wertungsschüsse.
+  Die Linie ist der Schnitt der letzten fünf Scheiben (gestrichelt, solange es noch keine fünf
+  sind). Das Formband um die Linie zeigt, wie weit deine Scheiben üblicherweise um diesen Schnitt
+  schwanken. Je Monat zeigt Spiegel dazu Boden und Decke: den Wert, den du an einem schwachen Tag
+  hältst, den mittleren und den, den du an einem guten Tag erreichst.
+- *So liest du es:* Liegt eine Scheibe im Band, war sie für deine Form normal: Bei einem
+  gleichbleibenden Schützen liegen etwa zwei von drei Scheiben darin. Steigt der Boden über die
+  Monate, werden deine schwachen Tage besser, auch wenn die Decke gleich bleibt.
+- *Vorsicht:* Vergleiche nur Scheiben derselben Disziplin. Zahlen, die an der Schusszahl hängen
+  (Ergebnis, Streukreis), passen nur bei gleicher Schusszahl zusammen; für die Streuung über
+  verschiedene Schusszahlen nimm σ. Eine einzelne Scheibe außerhalb des Bands ist noch kein
+  Formknick.
+- *Mindestzahl:* Ab 1 Scheibe, das Formband ab 10 Scheiben, Boden und Decke ab 5 Scheiben im Monat.
+- *Formel:* `Schnitt über die letzten 5 Scheiben; Formband = Schnitt ± 1,4826 · MAD der Abweichungen
+  der Scheiben vom vollen Schnitt; Boden und Decke = P10 und P90 der Scheibenwerte je Monat, dazu
+  der Median`
+
+**Trainingsumfang (T6)**
+- *Was:* Je Woche die Zahl deiner Schüsse (Probe und Wertung), deiner Scheiben und der Tage, an
+  denen du geschossen hast.
+- *So liest du es:* Der Umfang sagt nichts über die Güte. Leg ihn neben den Verlauf: Fällt dein
+  Boden in Wochen mit sehr vielen Schüssen, kann das Ermüdung sein.
+- *Vorsicht:* Eine Netto-Zeit zeigt Spiegel hier nicht: Sie folgt aus den Abständen zwischen den
+  Schüssen, die du auf jeder Scheibe siehst.
+- *Mindestzahl:* Ab 1 Scheibe.
+
+**Zwei Zeiträume im Vergleich (C3, T3)**
+- *Was:* Spiegel vergleicht die Werte deiner Scheiben aus zwei Zeiträumen, etwa vor und nach einem
+  neuen Abzug. Jede Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die
+  Differenz der Mittel.
+- *So liest du es:* „Höher“ oder „tiefer“ heißt: Ein so deutlicher Unterschied entstünde durch
+  Zufall allein in höchstens 5 von 100 Vergleichen. Ob höher besser ist, hängt von der Zahl ab; beim
+  Streukreis ist kleiner besser. Sonst ist das Urteil „unklar“. „Bedeutsam“ heißt: Der Unterschied
+  ist mindestens knapp ein Drittel deiner typischen Schwankung von Scheibe zu Scheibe, also groß
+  genug, um im Training etwas auszumachen.
+- *Vorsicht:* „Bedeutsam“ zählt nur zusammen mit einem Urteil: Auch ohne jede Veränderung ist der
+  Unterschied bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen so groß. Bei gleicher Form gibt
+  Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein Urteil. Kleine Veränderungen brauchen
+  viele Scheiben: Wird deine Streuung beim Luftgewehr von 1,5 auf 1,3 mm enger (40 Schuss je
+  Scheibe), erkennt Spiegel das bei 5 gegen 5 Scheiben in gut der Hälfte der Fälle, bei 10 gegen 10
+  in gut neun von zehn. Zeigen Test und Mittel in verschiedene Richtungen, gibt es kein Urteil.
+- *Mindestzahl:* Ein Urteil ab 5 Scheiben je Seite.
+- *Formel:* `Mann-Whitney über die Scheibenwerte, zweiseitig, α 0,05; bis 20 Scheiben je Seite genau
+  ausgezählt, darüber Normalnäherung mit Korrektur für gleiche Werte; Δ = Mittel b − Mittel a;
+  bedeutsam, wenn |Δ| ≥ 0,3 · gepoolte Standardabweichung der Scheibenwerte`
+
+**Gegen deinen Schnitt (C4)**
+- *Was:* Deine letzte Scheibe gegen den Schnitt deiner Scheiben aus den 30 Tagen davor, dazu ihr
+  Platz unter deinen letzten 50 Scheiben.
+- *So liest du es:* Der Platz ist ein Perzentil: Bei 70 % hatten 70 von 100 deiner letzten Scheiben
+  einen kleineren Wert, gleiche zählen zur Hälfte. Ob kleiner besser ist, hängt von der Zahl ab.
+- *Vorsicht:* Eine Scheibe ist eine Scheibe: Ein Abstand zum Schnitt, der in deinem Formband bleibt,
+  ist normal.
+- *Mindestzahl:* Der Schnitt ab 3 Scheiben in den 30 Tagen davor, der Platz ab 10 Scheiben.
+- *Formel:* `Δ = Wert der letzten Scheibe − Mittel der Scheiben aus den 30 Tagen davor; Perzentil =
+  (kleinere + ½ · gleiche) / Zahl der letzten 50, die letzte Scheibe eingeschlossen`
+
+**Rekorde (R1, R2, R3, R4, R5, R6, R7, R8)**
+- *Was:* Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe,
+  meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner, längste Folge von Zehnern und deine
+  beste Form: der höchste Schnitt je Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe
+  und die Zählungen führt Spiegel je Schusszahl, denn 40 und 60 Schuss sind nicht vergleichbar.
+- *So liest du es:* Bei Gleichstand bleibt der frühere Rekord, denn er hat ihn zuerst gesetzt.
+  Rekorde gibt es je Wertung (Zehntel oder ganze Ringe) und wahlweise nur für Training oder nur für
+  Wettkampf.
+- *Vorsicht:* Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem
+  Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss. Eine
+  Trainingsscheibe nur mit Probe zählt nur, wenn du das einschaltest; dann gilt ihre Probe wie
+  Wertung, in Serien zu zehn.
+- *Mindestzahl:* Ab 1 Scheibe, die beste Form ab 5 Scheiben.
+
 ## Glossar
 
 - **Schwerpunkt:** Mittelpunkt aller Treffer (Meyton: Trefferlage).

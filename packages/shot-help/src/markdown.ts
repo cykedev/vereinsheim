@@ -16,6 +16,7 @@ export const THEME_TITLES: Readonly<Record<HelpTheme, string>> = Object.freeze({
   time: "Zeit und Verlauf",
   sighters: "Probe",
   coverage: "Datenlage",
+  period: "Über viele Scheiben",
 })
 export const THEME_ORDER: readonly HelpTheme[] = [
   "result",
@@ -24,6 +25,7 @@ export const THEME_ORDER: readonly HelpTheme[] = [
   "time",
   "sighters",
   "coverage",
+  "period",
 ]
 
 /**

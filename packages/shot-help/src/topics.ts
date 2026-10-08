@@ -353,4 +353,75 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     read: "Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es kein Ergebnis, keine Zahl der Zehner und Innenzehner und keine Summe seiner Serie; Ø und Quoten rechnen ohne ihn. Ein verdächtiger Schuss zählt nur mit seinem Wert, auch wenn er eine Lage oder Zeit hat.",
     caution: "In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat.",
   },
+  {
+    id: "verlauf-und-form",
+    title: "Verlauf und Form",
+    theme: "period",
+    catalog: ["T1", "T2", "T5"],
+    metrics: [],
+    short: "Wie sich eine Zahl von Scheibe zu Scheibe entwickelt, mit deiner typischen Schwankung.",
+    what: "Jeder Punkt ist eine Scheibe, mit dem Wert der gewählten Zahl über ihre Wertungsschüsse. Die Linie ist der Schnitt der letzten fünf Scheiben (gestrichelt, solange es noch keine fünf sind). Das Formband um die Linie zeigt, wie weit deine Scheiben üblicherweise um diesen Schnitt schwanken. Je Monat zeigt Spiegel dazu Boden und Decke: den Wert, den du an einem schwachen Tag hältst, den mittleren und den, den du an einem guten Tag erreichst.",
+    read: "Liegt eine Scheibe im Band, war sie für deine Form normal: Bei einem gleichbleibenden Schützen liegen etwa zwei von drei Scheiben darin. Steigt der Boden über die Monate, werden deine schwachen Tage besser, auch wenn die Decke gleich bleibt.",
+    caution:
+      "Vergleiche nur Scheiben derselben Disziplin. Zahlen, die an der Schusszahl hängen (Ergebnis, Streukreis), passen nur bei gleicher Schusszahl zusammen; für die Streuung über verschiedene Schusszahlen nimm σ. Eine einzelne Scheibe außerhalb des Bands ist noch kein Formknick.",
+    minimum: "Ab 1 Scheibe, das Formband ab 10 Scheiben, Boden und Decke ab 5 Scheiben im Monat.",
+    formula:
+      "Schnitt über die letzten 5 Scheiben; Formband = Schnitt ± 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt; Boden und Decke = P10 und P90 der Scheibenwerte je Monat, dazu der Median",
+  },
+  {
+    id: "trainingsumfang",
+    title: "Trainingsumfang",
+    theme: "period",
+    catalog: ["T6"],
+    metrics: [],
+    short: "Wie viel du trainierst: Schüsse, Scheiben und Tage je Woche.",
+    what: "Je Woche die Zahl deiner Schüsse (Probe und Wertung), deiner Scheiben und der Tage, an denen du geschossen hast.",
+    read: "Der Umfang sagt nichts über die Güte. Leg ihn neben den Verlauf: Fällt dein Boden in Wochen mit sehr vielen Schüssen, kann das Ermüdung sein.",
+    caution:
+      "Eine Netto-Zeit zeigt Spiegel hier nicht: Sie folgt aus den Abständen zwischen den Schüssen, die du auf jeder Scheibe siehst.",
+    minimum: "Ab 1 Scheibe.",
+  },
+  {
+    id: "zeitraum-vergleich",
+    title: "Zwei Zeiträume im Vergleich",
+    theme: "period",
+    catalog: ["C3", "T3"],
+    metrics: [],
+    short: "Ob sich eine Zahl zwischen zwei Zeiträumen wirklich verändert hat.",
+    what: "Spiegel vergleicht die Werte deiner Scheiben aus zwei Zeiträumen, etwa vor und nach einem neuen Abzug. Jede Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die Differenz der Mittel.",
+    read: "„Höher“ oder „tiefer“ heißt: Ein so deutlicher Unterschied entstünde durch Zufall allein in höchstens 5 von 100 Vergleichen. Ob höher besser ist, hängt von der Zahl ab; beim Streukreis ist kleiner besser. Sonst ist das Urteil „unklar“. „Bedeutsam“ heißt: Der Unterschied ist mindestens knapp ein Drittel deiner typischen Schwankung von Scheibe zu Scheibe, also groß genug, um im Training etwas auszumachen.",
+    caution:
+      "„Bedeutsam“ zählt nur zusammen mit einem Urteil: Auch ohne jede Veränderung ist der Unterschied bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen so groß. Bei gleicher Form gibt Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein Urteil. Kleine Veränderungen brauchen viele Scheiben: Wird deine Streuung beim Luftgewehr von 1,5 auf 1,3 mm enger (40 Schuss je Scheibe), erkennt Spiegel das bei 5 gegen 5 Scheiben in gut der Hälfte der Fälle, bei 10 gegen 10 in gut neun von zehn. Zeigen Test und Mittel in verschiedene Richtungen, gibt es kein Urteil.",
+    minimum: "Ein Urteil ab 5 Scheiben je Seite.",
+    formula:
+      "Mann-Whitney über die Scheibenwerte, zweiseitig, α 0,05; bis 20 Scheiben je Seite genau ausgezählt, darüber Normalnäherung mit Korrektur für gleiche Werte; Δ = Mittel b − Mittel a; bedeutsam, wenn |Δ| ≥ 0,3 · gepoolte Standardabweichung der Scheibenwerte",
+  },
+  {
+    id: "gegen-den-schnitt",
+    title: "Gegen deinen Schnitt",
+    theme: "period",
+    catalog: ["C4"],
+    metrics: [],
+    short: "Wie deine letzte Scheibe zu deinen letzten Wochen passt.",
+    what: "Deine letzte Scheibe gegen den Schnitt deiner Scheiben aus den 30 Tagen davor, dazu ihr Platz unter deinen letzten 50 Scheiben.",
+    read: "Der Platz ist ein Perzentil: Bei 70 % hatten 70 von 100 deiner letzten Scheiben einen kleineren Wert, gleiche zählen zur Hälfte. Ob kleiner besser ist, hängt von der Zahl ab.",
+    caution:
+      "Eine Scheibe ist eine Scheibe: Ein Abstand zum Schnitt, der in deinem Formband bleibt, ist normal.",
+    minimum: "Der Schnitt ab 3 Scheiben in den 30 Tagen davor, der Platz ab 10 Scheiben.",
+    formula:
+      "Δ = Wert der letzten Scheibe − Mittel der Scheiben aus den 30 Tagen davor; Perzentil = (kleinere + ½ · gleiche) / Zahl der letzten 50, die letzte Scheibe eingeschlossen",
+  },
+  {
+    id: "rekorde",
+    title: "Rekorde",
+    theme: "period",
+    catalog: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"],
+    metrics: [],
+    short: "Deine Bestwerte über alle Scheiben, die zählen.",
+    what: "Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe, meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner, längste Folge von Zehnern und deine beste Form: der höchste Schnitt je Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe und die Zählungen führt Spiegel je Schusszahl, denn 40 und 60 Schuss sind nicht vergleichbar.",
+    read: "Bei Gleichstand bleibt der frühere Rekord, denn er hat ihn zuerst gesetzt. Rekorde gibt es je Wertung (Zehntel oder ganze Ringe) und wahlweise nur für Training oder nur für Wettkampf.",
+    caution:
+      "Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss. Eine Trainingsscheibe nur mit Probe zählt nur, wenn du das einschaltest; dann gilt ihre Probe wie Wertung, in Serien zu zehn.",
+    minimum: "Ab 1 Scheibe, die beste Form ab 5 Scheiben.",
+  },
 ]

@@ -15,8 +15,9 @@ describe("Hilfe in der Analyse", () => {
   )
   const count = (id: string) => buttons.filter((b) => b === id).length
 
-  it("jedes Thema genau ein „?“, die Datenlage in jedem Reiter", () => {
-    for (const topic of HELP_TOPICS.filter((t) => t.id !== "datenlage")) {
+  it("jedes Thema einer Scheibe genau ein „?“, die Datenlage in jedem Reiter", () => {
+    // die Themen über viele Scheiben gehören auf die Seite eines Zeitraums (L3)
+    for (const topic of HELP_TOPICS.filter((t) => t.id !== "datenlage" && t.theme !== "period")) {
       expect(count(topic.id), topic.id).toBe(1)
     }
     expect(count("datenlage")).toBe(ANALYSIS_TABS.length)
