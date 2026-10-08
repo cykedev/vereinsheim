@@ -976,6 +976,26 @@ addEventListener("load", async () => {
       "Zwei Abreißer: zwei rote Punkte im Diagramm der Form",
       $$('[data-outlier="true"]', pairShape).length === 2
     )
+    const pairForm = S().groupShape(base())
+    check(
+      "Zwei Abreißer: die Form rechnet ohne sie",
+      pairForm.n === 8 &&
+        pairForm.without.join() === "9,10" &&
+        !pairForm.elongated &&
+        ctext("form-der-gruppe").includes("(ohne Ausreißer 9, 10)") &&
+        ctext("form-der-gruppe").includes("nicht nachweisbar"),
+      `${pairForm.n} · ${pairForm.without.join()} · ${pairForm.elongated}`
+    )
+    const ellipseCx = Number($("ellipse", pairShape).getAttribute("cx"))
+    const groupCx = $$("[data-group-point]:not([data-outlier])", pairShape).map((c) =>
+      Number(c.getAttribute("cx"))
+    )
+    const groupMean = groupCx.reduce((sum, x) => sum + x, 0) / groupCx.length
+    check(
+      "Zwei Abreißer: die Ellipse sitzt auf der Gruppe",
+      groupCx.length === 8 && near(groupMean, ellipseCx, 0.5),
+      `${groupMean.toFixed(1)} / ${ellipseCx.toFixed(1)}`
+    )
     await tab("Überblick")
     check(
       "Zwei Abreißer: die Beobachtung nennt beide",
