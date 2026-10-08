@@ -160,6 +160,18 @@ describe("Vergleich zweier Zeiträume (C3, T3)", () => {
     expect(comparePeriods([], values([1, 2, 3, 4, 5]))).toBeNull()
   })
 
+  it("Einheit ist die Scheibe: zwei Scheiben mit vielen Schüssen geben kein Urteil", () => {
+    const many = values([9.2, 9.3]).map((v) => ({ ...v, n: 60 }))
+    const few = values([9.8, 9.9, 10, 10.1, 10.2, 9.7, 9.9, 10, 10.1, 10]).map((v) => ({
+      ...v,
+      n: 5,
+    }))
+    const result = comparePeriods(many, few)
+    expect(result?.a.n).toBe(2)
+    expect(result?.test).toBeNull()
+    expect(result?.verdict).toBe("unclear")
+  })
+
   it("kleiner, aber klarer Unterschied: höher und bedeutsam (s = 0,0059)", () => {
     const a = values(Array.from({ length: 20 }, (_, i) => 9.5 + 0.001 * i))
     const b = values(a.map((v) => v.value + 0.05))
