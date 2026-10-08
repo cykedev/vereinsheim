@@ -35,7 +35,8 @@ describe("Kopf der Scheibe (D2)", () => {
     expect(render()).toMatch(/<h1[^>]*>Luftpistole 10 m<\/h1>/)
     expect(t).toContain("40 Schuss mit Probe · 2. Oktober")
     expect(t).toContain(`${formatValue(result("decimal"), 1)} Ringe`)
-    expect(t).toContain("40 Schuss")
+    // die Schusszahl unter dem Ergebnis, nicht die Metazeile „40 Schuss mit Probe“
+    expect(render()).toMatch(/<p class="[^"]*">40 Schuss<\/p>/)
     expect(t).toContain("UMSCHALTER")
     expect(t).toContain("Die Lage ist echt.")
   })

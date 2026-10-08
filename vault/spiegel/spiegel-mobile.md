@@ -47,7 +47,7 @@ relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statisti
 
 - **Optik wie am Desktop:** Bedienelemente behalten auf dem Telefon ihre Desktop-Höhe (rund 30 px, WCAG-AA 24 px erfüllt), auch „Was heißt das?“ bekommt keine größere Tippfläche. Die zuerst eingebauten 44 px Mindesthöhe und die umgebrochene Reiterleiste wirkten zu hoch.
 - **Reiter in einer Zeile:** Auf schmalen Bildschirmen scrollt die Reiterleiste seitlich in sich, der gewählte Reiter rückt ins Bild.
-- **Karten im Raster aus Zeilen:** ab 861 px zwei Spalten, beide Karten einer Zeile gleich hoch, „Was heißt das?“ unten bündig, eine einzelne letzte Karte über die volle Breite; jeder Abstand 16 px. Die Skriptprüfung des Labors misst das.
+- **Karten im Raster aus Zeilen:** zwei Spalten erst, wenn der Kartenbereich 820 px breit ist (beide Karten einer Zeile gleich hoch, eine einzelne letzte Karte über die volle Breite); jeder Abstand 16 px, die Skriptprüfung des Labors misst das. Seit dem Seitenaufbau (Schritt 4) steht die Analyse ab 768 px rechts neben der Scheibe, der Bereich ist dort schmaler: Auf der Seite stehen die Karten in jeder Größe in einer Spalte.
 
 ## Empfehlung für den Seitenaufbau
 

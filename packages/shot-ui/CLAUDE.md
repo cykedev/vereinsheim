@@ -62,8 +62,10 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Bausteine füttert; eine Karte ohne Wertung erscheint dann wie Wertung. Die Bausteine prüfen das nicht selbst.
 - **Die Analyse rechnet über `analysisInput`:** alle Schüsse ohne Probe, bei nur Probe die Probe; nicht über
   die Auswahl an der Scheibe. Nur der Reiter Probe nimmt die ganze Karte.
-- **Karten und Diagramme der Analyse:** schmale Karten im Raster aus Zeilen (ab 861 px zu zweit, gleich hoch,
-  jeder Abstand 16 px), keine CSS-Spalten. Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
+- **Karten und Diagramme der Analyse:** schmale Karten im Raster aus Zeilen, zu zweit erst ab 820 px Breite
+  des Kartenbereichs (Container, gleich hoch, jeder Abstand 16 px), keine CSS-Spalten. In der Seite aus
+  `CardPage` ist der Bereich schmaler (rechts neben der Scheibe, auf dem Telefon die volle Breite): Dort stehen
+  die Karten in einer Spalte. Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
   (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`
   ohne Grund (Antippen statt Hover ist offen, `vault/spiegel/spiegel-mobile.md`).
 - **Seite aus `CardPage`:** Kopf (`CardHeader`), Sprungleiste (`SectionNav` mit `useActiveSection`), Scheibe,

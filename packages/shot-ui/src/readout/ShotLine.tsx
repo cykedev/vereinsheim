@@ -11,8 +11,8 @@ import { readoutModel, readoutValue } from "./readout"
 
 /**
  * Ablesezeile (Plan Schritt 4, D2): auf dem Telefon unter der Scheibe statt der Ablese-Karte, eine Zeile
- * „Schuss 23 · 9,7 · Teiler 312,4 · 4,2 mm rechts und 1,1 mm tief“. Dieselben Werte wie die Karte; ein
- * Wechsel wird Screenreadern gemeldet.
+ * „Schuss 23 · 9,7 · Teiler 312,4 · 4,2 mm rechts und 1,1 mm tief“, dazu Fehlschuss und Innenzehner.
+ * Dieselben Werte wie die Karte; ein Wechsel wird Screenreadern gemeldet (`role="status"`).
  */
 export function ShotLine({
   shots,
@@ -32,10 +32,14 @@ export function ShotLine({
         model.placed
           ? directionWords({ xUm: model.shot.xUm as number, yUm: model.shot.yUm as number })
           : null,
+        // wie die Ablese-Karte: Fehlschuss und Innenzehner
+        model.shot.ring === 0 ? "Fehlschuss" : null,
+        model.shot.innerTen ? "Innenzehner" : null,
       ].filter((part): part is string => part !== null)
     : []
   return (
-    <p
+    <div
+      role="status"
       aria-live="polite"
       aria-label="Ablesung"
       className={cn(
@@ -62,6 +66,6 @@ export function ShotLine({
             </Fragment>
           ))
         : "Noch kein Schuss."}
-    </p>
+    </div>
   )
 }

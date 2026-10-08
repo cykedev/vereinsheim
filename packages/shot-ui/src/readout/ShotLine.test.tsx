@@ -67,14 +67,19 @@ describe("Ablesezeile (D2)", () => {
 
   it("in ganzen Ringen der Ring, ohne Lage nur Nummer und Wert", () => {
     expect(line({ scoring: "rings" })).toMatch(/^Schuss 3 · 8 · Teiler/)
-    expect(line({ chosen: { index: 2, series: 1 } })).toBe("Schuss 2 · 0,0")
+    expect(line({ chosen: { index: 2, series: 1 } })).toBe("Schuss 2 · 0,0 · Fehlschuss")
+  })
+
+  it("Innenzehner wie auf der Karte", () => {
+    const inner = [...CARD.slice(0, 3), { ...shot("match", -300, -400, 109), innerTen: true }]
+    expect(line({}, inner)).toMatch(/^Schuss 3 · 10,9 · Teiler [\d,]+ · .* · Innenzehner$/)
   })
 
   it("ohne Schuss ein Satz, für Screenreader angesagt", () => {
     expect(line({}, [])).toBe("Noch kein Schuss.")
     expect(
       renderToStaticMarkup(createElement(ShotLine, { shots: CARD, state: initialViewState() }))
-    ).toContain('aria-live="polite"')
+    ).toMatch(/^<div role="status" aria-live="polite" aria-label="Ablesung"/)
   })
 
   it("ein Modell für Karte und Zeile", () => {

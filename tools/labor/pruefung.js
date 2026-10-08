@@ -1045,7 +1045,8 @@ addEventListener("load", async () => {
       if (bad.length) gapReport.push(`${label}: ${bad.join("; ")}`)
     }
     check(
-      "Abstände: überall 16 px, Karten einer Zeile bündig",
+      // auf der Seite einspaltig: der Kartenbereich neben der Scheibe ist schmaler als 820 px
+      "Abstände: überall 16 px zwischen Blöcken und Karten",
       gapReport.length === 0,
       gapReport.join(" | ")
     )
