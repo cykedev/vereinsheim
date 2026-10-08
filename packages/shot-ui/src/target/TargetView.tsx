@@ -4,7 +4,7 @@ import { mpiConfidence } from "@vereinsheim/shot-core/analysis"
 import { centroid, smallestEnclosingCircle, type Point } from "@vereinsheim/shot-core/geometry"
 import { metricByKey, type MetricShot } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
-import { useMemo, useRef } from "react"
+import { useMemo } from "react"
 
 import {
   caliberRadius,
@@ -38,6 +38,11 @@ export interface TargetViewProps {
   others?: "dim" | "hide"
   /** ein eben gesetzter Schuss ploppt kurz auf */
   popIndex?: number | null
+  /**
+   * Schlüssel der Karte (etwa die Id der Session): Wechselt er, steht der neue Ausschnitt sofort, statt
+   * vom alten herüberzugleiten. Ohne Angabe gilt das Scheibenbild als Karte.
+   */
+  viewKey?: string
   className?: string
 }
 
@@ -68,15 +73,15 @@ export function TargetView({
   onChoose,
   others = "dim",
   popIndex = null,
+  viewKey,
   className,
 }: TargetViewProps) {
-  const svg = useRef<SVGSVGElement>(null)
-  const width = useElementWidth(svg)
+  const [width, measure] = useElementWidth()
   const group = useMemo(() => groupShots(shots, state.selection), [shots, state.selection])
   const groupPoints = useMemo(() => group.map(point), [group])
   const wanted = state.view === "group" ? groupView(target, groupPoints) : targetView(target)
-  // eine andere Scheibe steht sofort, ein anderer Ausschnitt derselben Scheibe gleitet
-  const view = useAnimatedViewBox(wanted, target.id)
+  // eine andere Karte steht sofort, ein anderer Ausschnitt derselben Karte gleitet
+  const view = useAnimatedViewBox(wanted, viewKey ?? target.id)
   const sizes = screenSizes(target, unitsPerPixel(view, width))
   const calR = caliberRadius(target)
   const labels = useMemo(() => shotLabels(shots), [shots])
@@ -109,7 +114,7 @@ export function TargetView({
 
   return (
     <svg
-      ref={svg}
+      ref={measure}
       role="img"
       aria-label={label}
       viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}

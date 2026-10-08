@@ -44,8 +44,9 @@ describe("Beispielscheiben wie in der Spielwiese", () => {
   })
 
   it("je Scheibe die passenden Beispiele, Visier im Beispiel nach P4 verstellt", () => {
-    expect(SAMPLES["lp-10m"].map((s) => s.id)).toEqual(["forty", "printout"])
-    expect(SAMPLES["lg-10m"].map((s) => s.id)).toEqual(["forty", "series"])
+    expect(SAMPLES["lp-10m"].map((s) => s.id)).toEqual(["forty", "printout", "empty"])
+    expect(SAMPLES["lg-10m"].map((s) => s.id)).toEqual(["forty", "series", "empty"])
+    expect(rawSample("lp-10m", "empty")).toEqual([])
     expect(SAMPLES["lp-10m"][0].adjustAfter).toEqual([4])
   })
 })

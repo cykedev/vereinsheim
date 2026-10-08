@@ -13,7 +13,7 @@ export interface RawShot {
   kind: "probe" | "match"
 }
 
-export type SampleId = "forty" | "printout" | "series"
+export type SampleId = "forty" | "printout" | "series" | "empty"
 
 export interface Sample {
   id: SampleId
@@ -30,6 +30,13 @@ const FORTY: Sample = {
   adjustAfter: [4],
 }
 
+const EMPTY: Sample = {
+  id: "empty",
+  label: "Leer",
+  hint: "Eine leere Scheibe: Im Modus „Setzen“ entsteht sie Schuss für Schuss.",
+  adjustAfter: [],
+}
+
 export const SAMPLES: Readonly<Record<TargetId, readonly Sample[]>> = {
   "lp-10m": [
     FORTY,
@@ -39,10 +46,12 @@ export const SAMPLES: Readonly<Record<TargetId, readonly Sample[]>> = {
       hint: "Die sechs Teiler vom Ausdruck des 2. Oktober, auf die Achsen gelegt.",
       adjustAfter: [],
     },
+    EMPTY,
   ],
   "lg-10m": [
     FORTY,
     { id: "series", label: "Zehnerserie", hint: "Eine erfundene Zehnerserie.", adjustAfter: [] },
+    EMPTY,
   ],
 }
 
@@ -124,6 +133,7 @@ const PRINTOUT_ANGLES = [90, 180, 0, 270, 0, 180]
 
 export function rawSample(targetId: TargetId, id: SampleId): RawShot[] {
   if (id === "forty") return forty(targetId)
+  if (id === "empty") return []
   const points =
     id === "series"
       ? LG_SERIES

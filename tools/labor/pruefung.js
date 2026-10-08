@@ -271,6 +271,36 @@ addEventListener("load", async () => {
   )
   await click(button("Ansehen"))
 
+  // ---------- leere Scheibe Schuss für Schuss: die Serienleiste erscheint erst mit dem ersten Schuss und
+  // misst dann ihre Breite (sonst stünden die Kacheln in schmalen Zeilen für 300 px)
+  await click(button("Leer"), 100)
+  check(
+    "Leer: keine Treffer, keine Serien, Ablesung wartet",
+    hits().length === 0 &&
+      $$("[data-series]").length === 0 &&
+      txt($("#readout")).includes("Noch kein Schuss")
+  )
+  await click(button("Setzen"))
+  const setAt = async (x, y) => {
+    const p = new DOMPoint(x, y).matrixTransform(svg().getScreenCTM())
+    svg().dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: p.x, clientY: p.y }))
+    await wait(30)
+  }
+  await click(button("Probe"))
+  await setAt(4, -4)
+  await click(button("Wertung"))
+  for (let i = 0; i < 31; i++) await setAt(((i % 7) - 3) * 2, (Math.floor(i / 7) - 2) * 2)
+  await wait(200)
+  const fresh = $$("[data-series]")
+  const freshRows = new Set(fresh.map((t) => Math.round(t.getBoundingClientRect().top)))
+  check(
+    "Leer gesetzt: Probe und vier Serien in einer Zeile",
+    fresh.map((t) => t.dataset.series).join() === "probe,1,2,3,4" && freshRows.size === 1,
+    `${fresh.length} Kacheln, ${freshRows.size} Zeilen`
+  )
+  await click(button("Ansehen"))
+  await click(button("40 Schuss mit Probe"), 100)
+
   // ---------- Wertung, Scheibe, Thema
   await click(button("Ganze Ringe"))
   const seriesValues = $$("[data-series] b")
@@ -296,6 +326,17 @@ addEventListener("load", async () => {
     hits().length === 10 && !$("[data-series='probe']")
   )
   await click(button("Luftpistole"), 60)
+  // eine andere Karte derselben Scheibe steht ebenso sofort: aus der Gruppe direkt auf die ganze Scheibe
+  await click(button("Gruppe"), 700)
+  const [, , wGroup] = view()
+  await click(button("Ausdruck vom 2. Oktober"), 60)
+  const [, , wNext] = view()
+  check(
+    "andere Karte derselben Scheibe: sofort im neuen Ausschnitt",
+    wGroup < 171 && near(wNext, 171.05, 1e-6),
+    `${wGroup.toFixed(2)} → ${wNext}`
+  )
+  await click(button("40 Schuss mit Probe"), 60)
   await click(button("Dunkel"))
   check("Thema dunkel", document.documentElement.classList.contains("dark"))
   await click(button("Hell"))

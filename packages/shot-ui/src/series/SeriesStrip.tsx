@@ -4,7 +4,7 @@ import { seriesCurve } from "@vereinsheim/shot-core/analysis"
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { cn } from "@vereinsheim/lib/utils"
-import { useMemo, useRef } from "react"
+import { useMemo } from "react"
 
 import { caliberRadius, scoreColor, seriesTileView, tileColumns } from "../geometry"
 import { formatTotal, hasPosition, seriesKeyOf, sightAdjustCut } from "../shots"
@@ -48,8 +48,7 @@ export function SeriesStrip({
   onSelectAll,
   className,
 }: SeriesStripProps) {
-  const grid = useRef<HTMLDivElement>(null)
-  const width = useElementWidth(grid)
+  const [width, measure] = useElementWidth()
   const cut = sightAdjustCut(shots, state.adjustAfter)
 
   const blocks = useMemo<Block[]>(() => {
@@ -115,7 +114,7 @@ export function SeriesStrip({
         </button>
       </div>
       <div
-        ref={grid}
+        ref={measure}
         className="grid gap-2.5"
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 104px))` }}
       >

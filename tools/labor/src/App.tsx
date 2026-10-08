@@ -247,6 +247,7 @@ export function App({ commit }: { commit: string }) {
                 state={state}
                 others={others}
                 popIndex={pop}
+                viewKey={`${targetId}:${sample.id}`}
                 onChoose={
                   mode === "view"
                     ? (index, series) => dispatch({ type: "choose", shot: index, series })
@@ -357,7 +358,9 @@ export function App({ commit }: { commit: string }) {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-3.5">
+          {/* je Karte eine neue Leiste, wie in der App beim Wechsel der Session */}
           <SeriesStrip
+            key={`${targetId}:${sample.id}`}
             target={target}
             shots={shots}
             state={state}
