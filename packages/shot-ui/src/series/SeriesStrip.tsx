@@ -7,7 +7,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import { useMemo } from "react"
 
 import { caliberRadius, scoreColor, seriesTileView, tileColumns } from "../geometry"
-import { formatTotal, hasPosition, seriesKeyOf, sightAdjustCut } from "../shots"
+import { formatTotal, hasPosition, probesBeforeAdjust, seriesKeyOf, sightAdjustCut } from "../shots"
 import { useElementWidth } from "../target/useAnimatedViewBox"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
@@ -71,9 +71,7 @@ export function SeriesStrip({
         value: formatTotal(point.total, state.scoring),
         unit: "",
         sub: point.shots < 10 ? `${point.shots} von 10 Schuss` : "",
-        indices: shots.flatMap((shot, i) =>
-          shot.kind === "match" && shot.series === point.series ? [i] : []
-        ),
+        indices: shots.flatMap((shot, i) => (seriesKeyOf(shot) === point.series ? [i] : [])),
       })
     }
     return result
@@ -97,8 +95,7 @@ export function SeriesStrip({
   const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
   const columns = tileColumns(blocks.length, width || 300)
   const all = state.selection === "all"
-  let probeNumber = 0
-  const probeNumbers = shots.map((shot) => (shot.kind === "probe" ? ++probeNumber : 0))
+  const beforeAdjust = probesBeforeAdjust(shots, state.adjustAfter)
 
   return (
     <div className={cn("grid gap-2.5", className)}>
@@ -182,7 +179,7 @@ export function SeriesStrip({
                         fill="none"
                         stroke={color}
                         strokeWidth={1.25}
-                        strokeDasharray={probeNumbers[i] <= cut ? "2 2" : undefined}
+                        strokeDasharray={beforeAdjust.has(shot) ? "2 2" : undefined}
                         {...HAIR}
                       />
                     ) : (

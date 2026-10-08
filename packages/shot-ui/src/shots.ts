@@ -11,9 +11,12 @@ import {
 import type { SeriesKey, Selection } from "./types"
 import { isSelected } from "./view-state"
 
-/** Serie eines Schusses: die Probe oder die Nummer der Serie (ohne Angabe Serie 1) */
-export const seriesKeyOf = (shot: MetricShot): SeriesKey =>
-  shot.kind === "probe" ? "probe" : (shot.series ?? 1)
+/**
+ * Serie eines Schusses: die Probe oder die Nummer der Serie. Ein Wertungsschuss ohne Serie gehört zu
+ * keiner (null) und zählt nur bei „alle“, wie im Fachkern, wo `seriesCurve` ihn auslässt.
+ */
+export const seriesKeyOf = (shot: MetricShot): SeriesKey | null =>
+  shot.kind === "probe" ? "probe" : shot.series
 
 /** Beschriftung je Schuss: Probe „P1“, „P2“ …, Wertung „1“, „2“ …, in Abgabefolge je Art */
 export function shotLabels(shots: readonly MetricShot[]): string[] {
@@ -46,6 +49,21 @@ export function sightAdjustCut(
 ): number {
   const probes = shots.filter((shot) => shot.kind === "probe").length
   return Math.max(0, ...adjustAfter.filter((n) => n < probes))
+}
+
+/**
+ * Probeschüsse vor der letzten Visierverstellung, nach ihrer Nummer aus `shotNumbers` wie die Beschriftung
+ * (nicht nach dem Platz in der Liste); werden gestrichelt gezeichnet.
+ */
+export function probesBeforeAdjust(
+  shots: readonly MetricShot[],
+  adjustAfter: readonly number[]
+): ReadonlySet<MetricShot> {
+  const cut = sightAdjustCut(shots, adjustAfter)
+  const numbers = shotNumbers(shots)
+  return new Set(
+    shots.filter((shot) => shot.kind === "probe" && (numbers.get(shot) ?? Infinity) <= cut)
+  )
 }
 
 /**

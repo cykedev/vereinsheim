@@ -29,6 +29,9 @@ describe("Auswahl: eine Serie oder alle (Wunsch des Users, 8. Oktober 2026)", ()
     expect(isSelected(2, 2)).toBe(true)
     expect(isSelected(2, 3)).toBe(false)
     expect(isSelected(2, "probe")).toBe(false)
+    // Wertung ohne Serie: nur in „alle“
+    expect(isSelected("all", null)).toBe(true)
+    expect(isSelected(1, null)).toBe(false)
   })
 })
 

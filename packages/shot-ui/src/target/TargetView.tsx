@@ -19,9 +19,9 @@ import {
   formatScore,
   groupShots,
   hasPosition,
+  probesBeforeAdjust,
   seriesKeyOf,
   shotLabels,
-  sightAdjustCut,
 } from "../shots"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
@@ -32,8 +32,8 @@ export interface TargetViewProps {
   /** alle Schüsse der Scheibe in Abgabefolge (`inShotOrder`), Probe und Wertung */
   shots: readonly MetricShot[]
   state: ViewState
-  /** Antippen eines Treffers der Auswahl */
-  onChoose?: (index: number, series: SeriesKey) => void
+  /** Antippen eines Treffers der Auswahl; `series` null für einen Wertungsschuss ohne Serie */
+  onChoose?: (index: number, series: SeriesKey | null) => void
   /** Schüsse außerhalb der Auswahl: blass (Standard) oder ausgeblendet */
   others?: "dim" | "hide"
   /** ein eben gesetzter Schuss ploppt kurz auf */
@@ -85,11 +85,10 @@ export function TargetView({
   const sizes = screenSizes(target, unitsPerPixel(view, width))
   const calR = caliberRadius(target)
   const labels = useMemo(() => shotLabels(shots), [shots])
-  const cut = sightAdjustCut(shots, state.adjustAfter)
-  const probeNumber = useMemo(() => {
-    let n = 0
-    return shots.map((shot) => (shot.kind === "probe" ? ++n : 0))
-  }, [shots])
+  const beforeAdjust = useMemo(
+    () => probesBeforeAdjust(shots, state.adjustAfter),
+    [shots, state.adjustAfter]
+  )
   const selectedAt = (i: number) => isSelected(state.selection, seriesKeyOf(shots[i]))
   const chosen = state.chosen?.index ?? null
   const order = layerOrder(shots, { chosen, selected: selectedAt }).filter(
@@ -195,7 +194,7 @@ export function TargetView({
           const x = mm(shot.xUm as number)
           const y = -mm(shot.yUm as number)
           const color = shot.ring === null ? "var(--paper-line)" : scoreColor(shot.ring)
-          const before = probe && probeNumber[i] <= cut
+          const before = beforeAdjust.has(shot)
           return (
             <g
               key={i}
@@ -234,7 +233,8 @@ export function TargetView({
                   {...HAIR}
                 />
               )}
-              {state.layers.numbers && !faded && (
+              {/* der angetippte Schuss zeigt seine Nummer immer, die übrigen mit der Ebene */}
+              {(state.layers.numbers || isChosen) && !faded && (
                 <text
                   data-number={labels[i]}
                   x={x}

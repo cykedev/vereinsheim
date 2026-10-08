@@ -1,9 +1,11 @@
+import { smallestEnclosingCircle } from "@vereinsheim/shot-core/geometry"
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { LG_10M, LP_10M } from "@vereinsheim/shot-core/targets"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { caliberRadius, screenSizes, targetView, unitsPerPixel } from "../geometry"
 import { initialViewState, type ViewState } from "../view-state"
 import { TargetView } from "./TargetView"
 
@@ -97,6 +99,23 @@ describe("TargetView: Auswahl und Antippen", () => {
     expect(html).toContain('data-number="4"')
   })
 
+  it("blasse Schüsse liegen unter der Auswahl, auch wenn sie später kamen", () => {
+    // Serie 1 gewählt: die blassen Schüsse 4 und 5 von Serie 2 rutschen unter 1 bis 3
+    expect(shotOrder(render({ selection: 1 }))).toEqual(["P1", "P2", "4", "5", "1", "2", "3"])
+  })
+
+  it("Streukreis um die Treffer: durch die Zentren plus halbes Kaliber und 2 px Luft", () => {
+    // ohne Messung (Server) rechnet die Scheibe mit 600 px Breite
+    const view = targetView(LP_10M)
+    const gap = screenSizes(LP_10M, unitsPerPixel(view, 0)).spreadGap
+    const centers = smallestEnclosingCircle(
+      CARD.filter((s) => s.kind === "match").map((s) => ({ xUm: s.xUm!, yUm: s.yUm! }))
+    )
+    const r = Number(/data-overlay="spread"[^>]*r="([^"]+)"/.exec(render())?.[1])
+    expect(centers).not.toBeNull()
+    expect(r).toBeCloseTo(centers!.radiusUm / 1000 + caliberRadius(LP_10M) + gap, 9)
+  })
+
   it("Streukreis und Schwerpunkt rechnen über die Auswahl", () => {
     // Serie 2: Schwerpunkt (2,75 | −1,75) mm, in SVG y nach unten also 1,75
     const html = render({ selection: 2 })
@@ -113,6 +132,25 @@ describe("TargetView: Auswahl und Antippen", () => {
     expect(shotOrder(html).at(-1)).toBe("2")
     expect(html).toMatch(/<g data-shot="2" data-chosen="true"/)
     expect(html).toContain('data-ring="chosen"')
+  })
+
+  it("der angetippte Schuss trägt seine Nummer auch ohne die Ebene „Nummern“", () => {
+    const html = render({
+      chosen: { index: 3, series: 1 },
+      layers: { mpi: true, circle: true, numbers: false, ellipse: false },
+    })
+    expect([...html.matchAll(/data-number="([^"]+)"/g)].map((m) => m[1])).toEqual(["2"])
+  })
+
+  it("ein Wertungsschuss ohne Serie gehört zu keiner gewählten Serie", () => {
+    const html = renderToStaticMarkup(
+      createElement(TargetView, {
+        target: LP_10M,
+        shots: [...CARD, shot("match", null, 500, 500, 104)],
+        state: initialViewState({ selection: 1 }),
+      })
+    )
+    expect(html).toMatch(/<g data-shot="6" data-faded="true"/)
   })
 })
 

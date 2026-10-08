@@ -4,8 +4,9 @@ import { describe, expect, it } from "vitest"
 import {
   formatScore,
   groupShots,
-  selectionShots,
   hasPosition,
+  probesBeforeAdjust,
+  selectionShots,
   seriesKeyOf,
   shotLabels,
   sightAdjustCut,
@@ -37,8 +38,18 @@ const CARD = [
 ]
 
 describe("Schüsse für die Bausteine", () => {
-  it("Serie eines Schusses: Probe oder die Seriennummer", () => {
+  it("Serie eines Schusses: Probe oder die Seriennummer, ohne Nummer keine Serie", () => {
     expect(CARD.map(seriesKeyOf)).toEqual(["probe", "probe", 1, 1, 2])
+    expect(seriesKeyOf(shot("match", null, 0, 100))).toBeNull()
+  })
+
+  it("Schüsse ohne Serie zählen nur bei „alle“, wie im Fachkern (seriesCurve)", () => {
+    const loose = shot("match", null, 500, 100)
+    const card = [...CARD, loose]
+    expect(groupShots(card, "all")).toContain(loose)
+    expect(groupShots(card, 1)).not.toContain(loose)
+    expect(selectionShots(card, "all")).toContain(loose)
+    expect(selectionShots(card, 1)).not.toContain(loose)
   })
 
   it("Beschriftung je Art in Abgabefolge: Probe P1, P2, Wertung 1, 2, 3", () => {
@@ -62,6 +73,14 @@ describe("Schüsse für die Bausteine", () => {
     // nach dem letzten Probeschuss gibt es keine Probe danach: zählt nicht
     expect(sightAdjustCut(CARD, [2])).toBe(0)
     expect(sightAdjustCut(CARD, [])).toBe(0)
+  })
+
+  it("Probe vor der Verstellung nach derselben Nummer wie die Beschriftung", () => {
+    const card = [...CARD.slice(0, 2), shot("probe", null, 0, 100), ...CARD.slice(2)]
+    const labels = shotLabels(card)
+    const before = probesBeforeAdjust(card, [2])
+    expect(card.flatMap((s, i) => (before.has(s) ? [labels[i]] : []))).toEqual(["P1", "P2"])
+    expect(probesBeforeAdjust(CARD, []).size).toBe(0)
   })
 
   it("Gruppe der Auswahl: deren Wertungsschüsse mit Lage, ohne Wertung die gewählte Probe", () => {

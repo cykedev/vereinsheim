@@ -10,8 +10,8 @@ export type Layer = "mpi" | "circle" | "numbers" | "ellipse"
 export interface ViewState {
   /** „all“ oder genau eine Serie bzw. die Probe */
   selection: Selection
-  /** der angetippte Schuss mit seiner Serie, damit er mit der Auswahl wegfallen kann */
-  chosen: { index: number; series: SeriesKey } | null
+  /** der angetippte Schuss mit seiner Serie (null: ohne Serie), damit er mit der Auswahl wegfallen kann */
+  chosen: { index: number; series: SeriesKey | null } | null
   view: "target" | "group"
   layers: Readonly<Record<Layer, boolean>>
   scoring: Scoring
@@ -22,7 +22,7 @@ export interface ViewState {
 export type ViewAction =
   | { type: "select"; series: SeriesKey }
   | { type: "selectAll" }
-  | { type: "choose"; shot: number; series: SeriesKey }
+  | { type: "choose"; shot: number; series: SeriesKey | null }
   | { type: "setView"; view: ViewState["view"] }
   | { type: "toggle"; layer: Layer }
   | { type: "setScoring"; scoring: Scoring }
@@ -43,7 +43,8 @@ export function initialViewState(overrides: Partial<ViewState> = {}): ViewState 
   }
 }
 
-export const isSelected = (selection: Selection, key: SeriesKey) =>
+/** gehört eine Serie zur Auswahl? Ein Schuss ohne Serie (null) nur bei „alle“ */
+export const isSelected = (selection: Selection, key: SeriesKey | null) =>
   selection === "all" || selection === key
 
 export function viewReducer(state: ViewState, action: ViewAction): ViewState {
