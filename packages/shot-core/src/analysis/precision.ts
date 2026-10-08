@@ -145,8 +145,9 @@ function strongest(points: readonly Point[]): { index: number; t: number } {
  * darunter blieb: So verdecken sich zwei nahe Abreißer nicht mehr gegenseitig (bis Oktober 2026 wurde jeder
  * Schuss einzeln geprüft; zwei gleich weite bei 10 Schuss fand die Regel dann nur in 13,7 % überhaupt). Unter
  * 10 Schuss bleibt es bei einem Schritt. α 0,04 statt 0,05 hält den Fehlalarm in einer runden normalen Gruppe
- * bei höchstens etwa 5 % der Scheiben (Simulation B2); bei gestreckten Gruppen steigt die Rate. Kein Schuss
- * fällt aus der Wertung. Ab fünf Schuss.
+ * bei höchstens etwa 5 % der Scheiben (Simulation B2: 4,1–4,7 % bei 10 bis 60 Schuss); bei gestreckten
+ * Gruppen steigt die Rate (a/b 2: 10,9–17,5 %). Zwei nahe Abreißer bei 10 Schuss findet sie in 81,8 % beide
+ * (B14). Kein Schuss fällt aus der Wertung. Ab fünf Schuss.
  */
 export function outliers(shots: readonly MetricShot[]): { n: number; flagged: Outlier[] } | null {
   const selected = selectShots(shots, { need: "position" })

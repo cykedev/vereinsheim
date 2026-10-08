@@ -190,23 +190,27 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   − 2)) (Mauchly, exakt)`
 
 **Ausreißer (V6, V7)**
-- *Was:* Spiegel prüft die Lage jedes Treffers gegen die übrigen: Liegt er weiter von ihrem
-  Schwerpunkt weg, als ihre Streuung erwarten lässt? Bei einer ganz normalen, runden Gruppe meldet
-  die Regel nur in 5 % der Scheiben fälschlich einen Ausreißer. Ist die Gruppe deutlich gestreckt
-  (a/b um 2), passiert das öfter, umso öfter, je mehr Schüsse die Scheibe hat: bei 10 Schuss in etwa
-  10 %, bei 60 Schuss in etwa 20 % der Scheiben.
+- *Was:* Spiegel prüft die Treffer Schritt für Schritt: zuerst den, der am weitesten von den übrigen
+  liegt, gemessen an ihrer Streuung, dann ohne ihn den nächsten, ab 10 Schuss bis zu jedem zehnten
+  Schuss. So verdecken sich zwei nahe Ausreißer nicht gegenseitig. Bei einer ganz normalen, runden
+  Gruppe meldet die Regel höchstens in 5 % der Scheiben fälschlich einen Ausreißer. Ist die Gruppe
+  deutlich gestreckt (a/b um 2), passiert das öfter, umso öfter, je mehr Schüsse die Scheibe hat:
+  bei 10 Schuss in etwa 11 %, bei 60 Schuss in etwa 18 % der Scheiben.
 - *So liest du es:* Ein markierter Schuss ist ein Kandidat für die Frage „Was war da los?“ und
   bleibt in der Wertung. Darunter steht, wie viele Ringe die markierten Schüsse gegenüber deinem
   typischen Schuss (Median) gekostet haben.
 - *Was du tun kannst:* Kosten dich Ausreißer über mehrere Scheiben viele Ringe, lohnt die Arbeit an
   einem gleichmäßigen Ablauf mehr als an der Präzision.
 - *Vorsicht:* Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt
-  die Gruppe neben der Mitte, kann er sogar Ringe bringen. Zwei gleich weite Ausreißer können sich
-  bei wenigen Schüssen gegenseitig verdecken: Bei 10 Schuss findet die Regel einen einzelnen sehr
-  weiten Schuss in etwa neun von zehn Fällen, von zwei gleich weiten meist keinen.
+  die Gruppe neben der Mitte, kann er sogar Ringe bringen. Unter 10 Schuss prüft Spiegel nur einen
+  Schritt, dort können sich zwei gleich weite Ausreißer noch verdecken. Bei 10 Schuss findet die
+  Regel einen einzelnen sehr weiten Schuss in etwa neun von zehn Fällen, von zwei nah beieinander in
+  etwa acht von zehn Fällen beide.
 - *Mindestzahl:* Ab 5 Schuss mit Lage.
-- *Formel:* `T = d² / (2S² (1 + 1/(n − 1))) gegen das (1 − 0,05/n)-Quantil von F(2, 2(n − 2));
-  Kosten = Σ (Median der übrigen − vᵢ) über die markierten Schüsse`
+- *Formel:* `Schritt für Schritt mit den m übrigen Schüssen: T = d² / (2S² (1 + 1/(m − 1))) für den
+  weitesten gegen das (1 − 0,04/m)-Quantil von F(2, 2(m − 2)), dann ohne ihn weiter; höchstens
+  max(2, ⌊n/10⌋) Schritte ab 10 Schuss, darunter einer; Ausreißer sind alle bis zum letzten Schritt
+  über seiner Grenze; Kosten = Σ (Median der übrigen − vᵢ) über die markierten Schüsse`
 
 ## Lage
 

@@ -90,7 +90,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | V3 | Abstandskurve | Anteil der Schüsse mit Teiler ≤ t | Zeitraum | B | SP-2.1 |
 | V4 | Verteilung der Serien | Quartile der Serienergebnisse je Monat | Zeitraum | B | SP-2.1 |
 | V5 | Ringanteile im Zeitverlauf | Anteil je Ring je Scheibe, gestapelt | Zeitraum | B | SP-2.1 |
-| V6 | Ausreißer | jeder Schuss gegen die übrigen: T = d²/(2S²(1 + 1/(n−1))) gegen F(2, 2(n−2)) mit Bonferroni, in einer runden Normalgruppe 5 % Fehlalarm je Scheibe (Q3 + 1,5·IQR auf den Radien wären bis 47 %), bei gestreckten mehr (a/b 2: etwa 10–20 %, B2; ein affiner Test für gestreckte Gruppen ist offen). Das Verhältnis Ø Abstand/R50 entfällt (Oktober 2026): ohne Grenze, und es zählt Fehlschüsse anders als R50 | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
+| V6 | Ausreißer | schrittweise (verallgemeinerter ESD nach Rosner, in der Ebene): der weiteste Schuss gegen die übrigen m, T = d²/(2S²(1 + 1/(m−1))) gegen F(2, 2(m−2)) beim Quantil 1 − 0,04/m, dann ohne ihn weiter; höchstens max(2, ⌊n/10⌋) Schritte ab 10 Schuss, darunter einer; Ausreißer sind die bis zum letzten Schritt über seiner Grenze. Fehlalarm in einer runden Normalgruppe etwa 4 bis 5 % je Scheibe (Q3 + 1,5·IQR auf den Radien wären bis 47 %), bei gestreckten mehr (a/b 2: etwa 11–18 %, B2; ein affiner Test für gestreckte Gruppen ist offen). Zwei nahe Abreißer verdecken sich ab 10 Schuss nicht mehr (B14). Bis Oktober 2026 jeder Schuss einzeln mit α 0,05 (zwei gleich weite bei 10 Schuss: einer in 13,7 %). Das Verhältnis Ø Abstand/R50 entfällt (Oktober 2026): ohne Grenze, und es zählt Fehlschüsse anders als R50 | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
 | V7 | Ringverlust durch Ausreißer | Σ(Median der übrigen − vᵢ) über die von V6 markierten Schüsse, negativ möglich; unbekannt, wenn einem markierten Schuss der Wert fehlt (SF-07). Bis Oktober 2026 über die schwächsten 10 %: Den großen Verlust dort hat jede normale Gruppe (LG σ 1,5 mm, 40 Schuss etwa 3 Ringe) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
 
 ### 5 Zeit und Rhythmus
@@ -234,15 +234,15 @@ Nur endgültige, vollständige Wertung, ohne die Merkmale verdächtig, nur-pdf, 
 
 ## Belege aus Simulationen
 
-Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. Stand nach SP-1.12 (7. Oktober 2026):
+Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise (8. Oktober 2026):
 
 ```
 B0   innerhalb σ 39,3 %, innerhalb 2σ 86,5 %
-B1   20 Schuss: 22,1 % mit Befund, also etwa jede 5.
-B1   40 Schuss: 22,1 % mit Befund, also etwa jede 5.
-B1   60 Schuss: 22,8 % mit Befund, also etwa jede 4.
-B2   Ausreißer-Fehlalarm rund: 10: 5,2 %, 20: 4,9 %, 40: 4,8 %, 60: 5,0 %
-B2   Ausreißer-Fehlalarm a/b 2: 10: 10,5 %, 20: 14,7 %, 40: 17,2 %, 60: 19,7 %
+B1   20 Schuss: 21,6 % mit Befund, also etwa jede 5.
+B1   40 Schuss: 21,4 % mit Befund, also etwa jede 5.
+B1   60 Schuss: 22,0 % mit Befund, also etwa jede 5.
+B2   Ausreißer-Fehlalarm rund: 10: 4,7 %, 20: 4,1 %, 40: 4,2 %, 60: 4,1 %
+B2   Ausreißer-Fehlalarm a/b 2: 10: 10,9 %, 20: 14,1 %, 40: 15,5 %, 60: 17,5 %
 B3   Streukreis 40 gegen 10 Schuss: +32 %
 B4   R50 bei 10 Schuss: -4,3 % gegen den Grenzwert
 B5   LG σ 1,5 mm, 40 Schuss, ohne Versatz: Lage-Verlust im Mittel -0,38 Ringe
@@ -263,8 +263,9 @@ B10  Wiedereinstieg LP σ 15 mm: -1,52 bis 1,32 Ringe
 B11  σ Probe/Wertung (5 gegen 40): 0,54 bis 1,57
 B12  Serien-Versatz zur Scheibe: im Mittel 0,35 σ
 B13  Richtungsuhr, 30 Schuss: stärkster Keil im Median ×2,0
-B14  10 Schuss, 1 bei 5σ: mindestens einer erkannt in 89,2 %
-B14  10 Schuss, 2 bei 5σ: mindestens einer erkannt in 13,7 %
+B14  10 Schuss, 1 bei 5σ: mindestens einer erkannt in 86,0 %
+B14  10 Schuss, 2 bei 5σ: mindestens einer erkannt in 77,7 %, beide in 77,2 %
+B14  10 Schuss, 2 bei 5σ nah beieinander: mindestens einer erkannt in 81,8 %, beide in 81,8 %
 B15  Wilson 20/40: 35,2 bis 64,8 %
 B15  σ-Bereich 10 Schuss: -25,5 % bis +45,8 %
 B15  σ-Bereich 30 Schuss: -15,7 % bis +21,7 %, bei σ̂ 1,12 mm: 0,94 bis 1,36 mm
