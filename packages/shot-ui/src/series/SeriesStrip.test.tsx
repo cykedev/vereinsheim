@@ -4,7 +4,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { formatTotal } from "../shots"
+import { formatTotal, probeOnlyAsMatch } from "../shots"
 import { initialViewState, type ViewState } from "../view-state"
 import { SeriesStrip } from "./SeriesStrip"
 
@@ -94,6 +94,23 @@ describe("SeriesStrip", () => {
     const probe = html.split('data-series="1"')[0]
     expect(probe).toContain("data-probe-corner")
     expect(html.slice(html.indexOf('data-series="1"'))).not.toContain("data-probe-corner")
+  })
+
+  it("Trainingskarte (nur Probe, wie Wertung): jede Serie trägt das Probe-Eck", () => {
+    const probes = Array.from({ length: 23 }, (_, i) => ({
+      ...shot("probe", null, i * 100, 100),
+      seq: i + 1,
+    }))
+    const html = renderToStaticMarkup(
+      createElement(SeriesStrip, {
+        target: LP_10M,
+        shots: probeOnlyAsMatch(probes),
+        state: initialViewState(),
+      })
+    )
+    const tiles = [...html.matchAll(/<button[^>]*data-series="(\d+)"[\s\S]*?<\/button>/g)]
+    expect(tiles.map((m) => m[1])).toEqual(["1", "2", "3"])
+    expect(tiles.every((m) => m[0].includes("data-probe-corner"))).toBe(true)
   })
 
   it("Probe hohl und durchgezogen", () => {

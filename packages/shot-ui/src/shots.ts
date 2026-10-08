@@ -21,8 +21,9 @@ const SERIES_SIZE = 10
 /**
  * Eine Karte nur mit Probe ist Training (User, 8. Oktober 2026): Sie verhält sich genau wie Wertung, auch
  * optisch. Jeder Probeschuss wird Wertungsschuss, in Serien zu zehn nach der Abgabefolge (`inShotOrder`);
- * Reihenfolge der Liste und alle übrigen Angaben bleiben. Folgt Wertung, bleibt die Probe Probe und die
- * Karte unverändert. Die Seite wendet das einmal an, bevor sie die Bausteine füttert.
+ * Reihenfolge der Liste und alle übrigen Angaben bleiben; `fromProbe` merkt sich die Herkunft (nur für das
+ * Probe-Eck, der Fachkern kennt das Feld nicht). Folgt Wertung, bleibt die Probe Probe und die Karte
+ * unverändert. Die Seite wendet das einmal an, bevor sie die Bausteine füttert.
  */
 export function probeOnlyAsMatch(shots: readonly MetricShot[]): readonly MetricShot[] {
   if (!shots.length || shots.some((shot) => shot.kind !== "probe")) return shots
@@ -31,8 +32,13 @@ export function probeOnlyAsMatch(shots: readonly MetricShot[]): readonly MetricS
     ...shot,
     kind: "match" as const,
     series: Math.floor((position.get(shot) as number) / SERIES_SIZE) + 1,
+    fromProbe: true,
   }))
 }
+
+/** ein Probeschuss, auch einer, den `probeOnlyAsMatch` als Training wie Wertung zeigt (für das Probe-Eck) */
+export const isProbeShot = (shot: MetricShot) =>
+  shot.kind === "probe" || (shot as { fromProbe?: boolean }).fromProbe === true
 
 /**
  * Serie eines Schusses: die Probe oder die Nummer der Serie. Ein Wertungsschuss ohne Serie gehört zu

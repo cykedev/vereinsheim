@@ -7,7 +7,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import { useMemo } from "react"
 
 import { caliberRadius, probeCorner, scoreColor, seriesTileView, tileColumns } from "../geometry"
-import { formatTotal, hasPosition, seriesKeyOf } from "../shots"
+import { formatTotal, hasPosition, isProbeShot, seriesKeyOf } from "../shots"
 import { useElementWidth } from "../target/useAnimatedViewBox"
 import type { SeriesKey, Whole } from "../types"
 import { isSelected, type ViewState } from "../view-state"
@@ -152,7 +152,9 @@ export function SeriesStrip({
                 )}
               >
                 <rect x={view.x} y={view.y} width={view.w} height={view.w} fill="var(--paper)" />
-                {block.key === "probe" && (
+                {(block.key === "probe" ||
+                  (block.indices.length > 0 &&
+                    block.indices.every((i) => isProbeShot(shots[i])))) && (
                   <polygon
                     data-probe-corner="true"
                     points={probeCorner(view)}

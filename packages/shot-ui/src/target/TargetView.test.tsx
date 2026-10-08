@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { caliberRadius, screenSizes, targetView, unitsPerPixel } from "../geometry"
+import { probeOnlyAsMatch } from "../shots"
 import { initialViewState, type ViewState } from "../view-state"
 import { TargetView } from "./TargetView"
 
@@ -188,6 +189,15 @@ describe("TargetView: Probe und Scheibe", () => {
       })
     )
     expect(onlyProbe).toContain("data-probe-corner")
+    // eine Trainingskarte (nur Probe, wie Wertung gezeigt) trägt das Eck trotzdem
+    const training = renderToStaticMarkup(
+      createElement(TargetView, {
+        target: LP_10M,
+        shots: probeOnlyAsMatch(CARD.filter((s) => s.kind === "probe")),
+        state: initialViewState(),
+      })
+    )
+    expect(training).toContain("data-probe-corner")
     // ohne Schüsse kein Eck
     expect(
       renderToStaticMarkup(

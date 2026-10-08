@@ -563,10 +563,11 @@ addEventListener("load", async () => {
     // ---------- nur Probe (Training): wie Wertung, bis eine Wertung dazukommt
     await click(button("60 Probe"), 100)
     check(
-      "Nur Probe: Schüsse 1 bis 60, gefüllt wie Wertung, ohne Probe-Eck",
+      "Nur Probe: Schüsse 1 bis 60, gefüllt wie Wertung, mit Probe-Eck auf Scheibe und Serien",
       labelsOf(hits()).join() === Array.from({ length: 60 }, (_, i) => `${i + 1}`).join() &&
         hits().every((g) => circleOf(g).getAttribute("fill") !== "none") &&
-        !$("[data-probe-corner]", svg())
+        !!$("[data-probe-corner]", svg()) &&
+        $$("[data-series]").every((t) => !!$("[data-probe-corner]", t))
     )
     check(
       "Nur Probe: sechs Serien zu zehn ohne Probe-Kachel, Übersicht mit Ergebnis",

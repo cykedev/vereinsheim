@@ -6,6 +6,7 @@ import {
   formatScore,
   groupShots,
   hasPosition,
+  isProbeShot,
   probeOnlyAsMatch,
   selectionShots,
   seriesKeyOf,
@@ -97,6 +98,16 @@ describe("Schüsse für die Bausteine", () => {
     expect(card.map((s: MetricShot) => s.series)).toEqual([2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
     expect(shotLabels(probeOnlyAsMatch(probes))).toEqual(probes.map((_, i) => String(i + 1)))
     expect(card.map((s: MetricShot) => s.xUm)).toEqual(shuffled.map((s) => s.xUm))
+  })
+
+  it("ein umgedeuteter Schuss bleibt als Probe erkennbar (für das Probe-Eck)", () => {
+    const probes = Array.from({ length: 3 }, (_, i) => ({
+      ...shot("probe", null, i, 100),
+      seq: i + 1,
+    }))
+    expect(probeOnlyAsMatch(probes).every(isProbeShot)).toBe(true)
+    expect(isProbeShot(CARD[0])).toBe(true)
+    expect(isProbeShot(CARD[2])).toBe(false)
   })
 
   it("folgt Wertung, bleibt die Probe Probe; ohne Schüsse nichts", () => {

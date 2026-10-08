@@ -18,7 +18,14 @@ import {
   unitsPerPixel,
 } from "../geometry"
 import { layerOrder } from "../layers"
-import { formatScore, groupShots, hasPosition, seriesKeyOf, shotLabels } from "../shots"
+import {
+  formatScore,
+  groupShots,
+  hasPosition,
+  isProbeShot,
+  seriesKeyOf,
+  shotLabels,
+} from "../shots"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
 import { useAnimatedViewBox, useElementWidth } from "./useAnimatedViewBox"
@@ -104,9 +111,10 @@ export function TargetView({
     probeCount ? `, ${probeCount} Probeschüsse` : ""
   }${selectionText(state)}`
 
-  // die Scheibe zeigt Probe, wenn alle Schüsse der Auswahl Probeschüsse sind (etwa die Probe gewählt)
+  // die Scheibe zeigt Probe, wenn alle Schüsse der Auswahl Probeschüsse sind (etwa die Probe gewählt oder
+  // eine Trainingskarte nur mit Probe)
   const shown = shots.filter((_, i) => selectedAt(i))
-  const showsProbe = shown.length > 0 && shown.every((shot) => shot.kind === "probe")
+  const showsProbe = shown.length > 0 && shown.every(isProbeShot)
 
   const ringW = mm(target.ringWidthUm)
   const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
