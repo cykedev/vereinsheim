@@ -1,14 +1,7 @@
-import {
-  computeMetric,
-  inScoring,
-  metricByKey,
-  type MetricShot,
-} from "@vereinsheim/shot-core/metrics"
-import { distanceUm } from "@vereinsheim/shot-core/scoring"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
-import { scoreColor } from "@vereinsheim/shot-ui/geometry"
+import { CardSummary } from "@vereinsheim/shot-ui/readout/CardSummary"
+import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
-import { formatScore, shotLabels } from "@vereinsheim/shot-ui/shots"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import { initialViewState, viewReducer, type Layer } from "@vereinsheim/shot-ui/view-state"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
@@ -33,12 +26,6 @@ const store = {
     }
   },
 }
-
-/** Zahl mit fester Zahl an Nachkommastellen, Komma und echtem Minus */
-const fixed = (value: number, digits: number) =>
-  `${value < 0 ? "−" : ""}${Math.abs(value).toFixed(digits).replace(".", ",")}`
-const mmText = (um: number) => `${fixed(um / 1000, 2)} mm`
-const signedMm = (um: number) => `${um >= 0 ? "+" : ""}${mmText(um)}`
 
 type Theme = "system" | "light" | "dark"
 type Mode = "view" | "set"
@@ -89,7 +76,6 @@ export function App({ commit }: { commit: string }) {
 
   const target = TARGETS[targetId]
   const shots = useMemo(() => toMetricShots(target, raw), [target, raw])
-  const labels = useMemo(() => shotLabels(shots), [shots])
   const samples = SAMPLES[targetId]
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0]
 
@@ -124,22 +110,6 @@ export function App({ commit }: { commit: string }) {
     store.set(layer, state.layers[layer] ? "0" : "1")
     dispatch({ type: "toggle", layer })
   }
-
-  const shown: { shot: MetricShot; index: number; chosen: boolean } | null =
-    state.chosen !== null
-      ? { shot: shots[state.chosen.index], index: state.chosen.index, chosen: true }
-      : shots.length
-        ? { shot: shots[shots.length - 1], index: shots.length - 1, chosen: false }
-        : null
-
-  const match = shots.filter((shot) => shot.kind === "match")
-  const metric = (key: string) => {
-    const definition = metricByKey(key)
-    return definition ? computeMetric(inScoring(definition, state.scoring), shots) : null
-  }
-  const total = metric("result.decimal")
-  const tens = metric("result.tens")
-  const bestTeiler = metric("result.bestTeiler")
 
   return (
     <div className="mx-auto grid max-w-6xl gap-7 px-4 pt-7 pb-14">
@@ -290,70 +260,12 @@ export function App({ commit }: { commit: string }) {
           </div>
 
           <aside className="grid content-start gap-4">
-            <div className="grid gap-3 rounded-2xl border border-border bg-card p-4" id="readout">
-              {shown ? (
-                <>
-                  <p className="text-[13px] text-muted-foreground">
-                    {shown.shot.kind === "probe" ? "Probe" : "Schuss"} {labels[shown.index]}
-                    {shown.chosen ? " · angetippt" : " · letzter Schuss"}
-                  </p>
-                  <p
-                    className="font-display text-5xl leading-none font-bold tabular-nums"
-                    style={{
-                      color: shown.shot.ring === null ? undefined : scoreColor(shown.shot.ring),
-                    }}
-                  >
-                    {formatScore(shown.shot, state.scoring)}
-                  </p>
-                  <p className="text-[13px] text-foreground-2">
-                    {shown.shot.ring === 0
-                      ? "Fehlschuss"
-                      : state.scoring === "rings"
-                        ? `${formatScore(shown.shot, "decimal")} in Zehnteln`
-                        : `Ring ${shown.shot.ring ?? "–"}`}
-                    {shown.shot.innerTen ? " · Innenzehner ★" : ""}
-                  </p>
-                  {shown.shot.xUm !== null && shown.shot.yUm !== null && (
-                    <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-[13px]">
-                      <dt className="text-muted-foreground">Teiler</dt>
-                      <dd className="font-semibold tabular-nums">
-                        {fixed(distanceUm(shown.shot.xUm, shown.shot.yUm) / 10, 1)}
-                      </dd>
-                      <dt className="text-muted-foreground">Abstand zur Mitte</dt>
-                      <dd className="font-semibold tabular-nums">
-                        {mmText(distanceUm(shown.shot.xUm, shown.shot.yUm))}
-                      </dd>
-                      <dt className="text-muted-foreground">x / y</dt>
-                      <dd className="font-semibold tabular-nums">
-                        {signedMm(shown.shot.xUm)} / {signedMm(shown.shot.yUm)}
-                      </dd>
-                    </dl>
-                  )}
-                </>
-              ) : (
-                <p className="text-muted-foreground">Noch kein Schuss.</p>
-              )}
+            <div id="readout" className="rounded-2xl border border-border bg-card p-4">
+              <ShotReadout shots={shots} state={state} />
             </div>
-            <dl
-              className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1.5 rounded-2xl border border-border bg-card p-4 text-[13px]"
-              id="summary"
-            >
-              <dt className="text-muted-foreground">Wertung</dt>
-              <dd className="font-semibold tabular-nums">
-                {match.length} Schuss
-                {shots.length > match.length ? ` + ${shots.length - match.length} Probe` : ""}
-              </dd>
-              <dt className="text-muted-foreground">Ergebnis</dt>
-              <dd className="font-semibold tabular-nums">
-                {total === null ? "–" : fixed(total, state.scoring === "rings" ? 0 : 1)}
-              </dd>
-              <dt className="text-muted-foreground">Zehner</dt>
-              <dd className="font-semibold tabular-nums">{tens ?? "–"}</dd>
-              <dt className="text-muted-foreground">bester Teiler</dt>
-              <dd className="font-semibold tabular-nums">
-                {bestTeiler === null ? "–" : fixed(bestTeiler, 1)}
-              </dd>
-            </dl>
+            <div id="summary" className="rounded-2xl border border-border bg-card p-4">
+              <CardSummary shots={shots} state={state} />
+            </div>
           </aside>
         </div>
 

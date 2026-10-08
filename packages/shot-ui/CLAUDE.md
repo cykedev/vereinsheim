@@ -19,6 +19,8 @@ dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/series/SeriesStrip`        | `src/series/SeriesStrip.tsx`       | Serien als kleine Scheiben im gleichen Ausschnitt, Serienergebnis, als Schalter für die Auswahl, dazu „Alle“                                                                      |
 | `@vereinsheim/shot-ui/format`                    | `src/format.ts`                    | `formatValue`, `formatSigned`, `unitText`, `directionText`: feste Stellen, Komma, echtes Minus, ohne `Intl`                                                                       |
 | `@vereinsheim/shot-ui/metrics/MetricTiles`       | `src/metrics/MetricTiles.tsx`      | Kacheln „Trefferbild in Zahlen“ über die Auswahl: Wert, Einheit, kurze Angabe, Kurzsatz als Titel, optional „?“                                                                   |
+| `@vereinsheim/shot-ui/readout/ShotReadout`       | `src/readout/ShotReadout.tsx`      | Ablesung: angetippter oder letzter Schuss, Wert in Ringwert-Farbe, andere Wertung, Teiler, Abstand, x/y                                                                           |
+| `@vereinsheim/shot-ui/readout/CardSummary`       | `src/readout/CardSummary.tsx`      | Übersicht der ganzen Scheibe: Schüsse, Ergebnis, Zehner, Innenzehner, bester Teiler                                                                                               |
 
 ## Regeln
 

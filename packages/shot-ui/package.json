@@ -14,7 +14,9 @@
     "./target/useAnimatedViewBox": "./src/target/useAnimatedViewBox.ts",
     "./series/SeriesStrip": "./src/series/SeriesStrip.tsx",
     "./format": "./src/format.ts",
-    "./metrics/MetricTiles": "./src/metrics/MetricTiles.tsx"
+    "./metrics/MetricTiles": "./src/metrics/MetricTiles.tsx",
+    "./readout/ShotReadout": "./src/readout/ShotReadout.tsx",
+    "./readout/CardSummary": "./src/readout/CardSummary.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
