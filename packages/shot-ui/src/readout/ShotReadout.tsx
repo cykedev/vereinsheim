@@ -39,7 +39,7 @@ function detail(shot: MetricShot, scoring: ViewState["scoring"]): string {
 }
 
 /**
- * Ablesung (spiegel-ui-design): der angetippte oder letzte Schuss mit Wert in seiner Ringwert-Farbe, der
+ * Ablesung (spiegel-ui-design): der angetippte oder letzte Schuss mit Wert und Ringwert-Farbe als Punkt, der
  * anderen Wertung klein darunter, Teiler und Abstand zur Mitte (gemessen vor der Lage) und x/y.
  * Ein Wechsel wird Screenreadern gemeldet.
  */
@@ -62,11 +62,23 @@ export function ShotReadout({ shots, state, className }: ShotReadoutProps) {
       <p className="text-[13px] text-muted-foreground">
         {`${shot.kind === "probe" ? "Probe" : "Schuss"} ${label} · ${chosen ? "angetippt" : "letzter Schuss"}`}
       </p>
-      <p
-        className="font-display text-5xl leading-none font-bold tabular-nums"
-        style={{ color: shot.ring === null ? undefined : scoreColor(shot.ring) }}
-      >
-        {formatScore(shot, state.scoring)}
+      {/* Wert in Schriftfarbe, die Ringwert-Farbe als Punkt davor: Gold und Türkis hätten als Schrift auf
+          Weiß zu wenig Kontrast; die Probe hohl wie auf der Scheibe */}
+      <p className="flex items-center gap-3">
+        {shot.ring !== null && (
+          <span
+            aria-hidden="true"
+            className="inline-block size-4 shrink-0 rounded-full"
+            style={
+              shot.kind === "probe"
+                ? { boxShadow: `inset 0 0 0 2px ${scoreColor(shot.ring)}` }
+                : { background: scoreColor(shot.ring) }
+            }
+          />
+        )}
+        <span className="font-display text-5xl leading-none font-bold tabular-nums">
+          {formatScore(shot, state.scoring)}
+        </span>
       </p>
       <p className="text-[13px] text-foreground-2">{detail(shot, state.scoring)}</p>
       {(distance !== null || placed) && (

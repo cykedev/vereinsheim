@@ -36,7 +36,7 @@ export function HelpButton({ label, onClick, className }: HelpButtonProps) {
       aria-label={`Erklärung: ${label}`}
       onClick={onClick}
       className={cn(
-        "-m-1 inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
+        "-m-2.5 inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
         className
       )}
     >

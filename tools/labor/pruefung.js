@@ -622,8 +622,8 @@ addEventListener("load", async () => {
     const rect = sheet().getBoundingClientRect()
     check(
       "Desktop: Blatt als Karte am rechten Rand",
-      near(rect.right, innerWidth - 16, 2) && near(rect.width, 416, 2),
-      `${rect.left.toFixed(0)}–${rect.right.toFixed(0)} von ${innerWidth}`
+      near(rect.right, document.documentElement.clientWidth - 16, 2) && near(rect.width, 416, 2),
+      `${rect.left.toFixed(0)}–${rect.right.toFixed(0)} von ${document.documentElement.clientWidth}`
     )
     await click($('button[aria-label="Schließen"]', sheet()), 100)
     check(

@@ -67,6 +67,10 @@ describe("Intervalle aus dem Fachkern", () => {
   it("Abstand zum vorigen Schuss der Karte; der erste und nach einer Lücke keiner", () => {
     expect(shotIntervals(CARD)).toEqual([null, 50_000, 50_000, 45_000, null, 240_000, 52_000])
   })
+
+  it("in Abgabefolge, auch wenn die Liste anders steht", () => {
+    expect(shotIntervals([...CARD].reverse())).toEqual(shotIntervals(CARD).reverse())
+  })
 })
 
 describe("ShotTable", () => {
@@ -113,6 +117,29 @@ describe("ShotTable", () => {
   it("Intervalle in Sekunden, über drei Minuten als Pause in Minuten, nach einer Lücke keins", () => {
     const r = rows(render())
     expect(r.map((row) => row[4])).toEqual(["52 s", "4 min", "–", "45 s", "50 s", "50 s", "–"])
+  })
+
+  it("Pause erst über drei Minuten: genau 180 s bleibt in Sekunden", () => {
+    const html = renderToStaticMarkup(
+      createElement(ShotTable, {
+        shots: [
+          shot(1, "match", 1, 0, 100, 0),
+          shot(2, "match", 1, 0, 100, 180),
+          shot(3, "match", 1, 0, 100, 360.001),
+        ],
+        state: initialViewState(),
+      })
+    )
+    expect(rows(html).map((r) => r[4])).toEqual(["3 min", "180 s", "–"])
+  })
+
+  it("der Stern hat einen Text für Screenreader", () => {
+    // in der Zeile des Innenzehners, nicht im Spaltenkopf
+    const html = render()
+    const row = html.slice(html.indexOf('<tr data-row="1"'))
+    expect(row.slice(0, row.indexOf("</tr>"))).toMatch(
+      /<span class="sr-only">Innenzehner<\/span><span aria-hidden="true">★<\/span>/
+    )
   })
 
   it("jede Zeile ist ein Knopf; der angetippte Schuss ist gedrückt und hervorgehoben", () => {

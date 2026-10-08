@@ -74,10 +74,11 @@ describe("HelpDetails", () => {
 })
 
 describe("HelpButton und HelpSheet", () => {
-  it("„?“ als Knopf mit Namen", () => {
+  it("„?“ als Knopf mit Namen, groß genug zum Tippen (40 px)", () => {
     const html = render(createElement(HelpButton, { label: "Streukreis", onClick: () => {} }))
     expect(html).toMatch(/^<button type="button" aria-label="Erklärung: Streukreis"/)
     expect(html).toContain('aria-hidden="true"')
+    expect(html).toMatch(/class="[^"]*\bsize-10\b/)
   })
 
   it("das Blatt zeigt die Erklärung der Kennzahl unter dem Titel ihres Themas", () => {

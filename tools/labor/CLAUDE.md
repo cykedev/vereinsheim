@@ -25,7 +25,9 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   prüfen); das `close`-Ereignis eines `<dialog>` kommt spät oder gar nicht (nie darauf warten; Escape-Weg
   über `requestClose()`, das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
   `window.__labor` (Prüfhaken) liefert Schüsse, Zustand und die Funktionen des Fachkerns zum Nachrechnen.
-- **Artifact neu veröffentlichen** aus `dist/labor.html`, unter derselben Adresse, damit der User den
+- **Artifact neu veröffentlichen** aus `dist/labor.html` nach einem direkten `pnpm --filter @vereinsheim/labor
+build` (ohne Turbo-Cache, sonst kann der Stand-Stempel von einem älteren Commit stammen), unter derselben
+  Adresse, damit der User den
   Stand auf dem Handy sieht.
 - **Beispiele** (`src/samples.ts`) mit festem Seed und festem Beginn, Lagen auf 1/100 mm; kein echter
   Ausdruck (ADR-029). Die Seeds sind die der Spielwiese, damit beide dasselbe zeigen.

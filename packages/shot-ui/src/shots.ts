@@ -2,6 +2,7 @@
 // den Fachkern (`shotNumbers`, `selectShots`), keine eigene Filterlogik.
 
 import {
+  inShotOrder,
   selectShots,
   shotDistanceUm,
   shotNumbers,
@@ -102,11 +103,12 @@ export function selectionShots(shots: readonly MetricShot[], selection: Selectio
 
 /**
  * Abstand jedes Schusses zum vorigen der Karte in ms, über `stepsInOrder` wie `analysis/timing`: null beim
- * ersten, nach einer Lücke in der Abgabefolge, ohne Zeit und bei einem Rücksprung der Uhr. Die Schüsse
- * stehen in Abgabefolge (`inShotOrder`); der Abstand gilt zum vorigen Schuss der Karte, auch bei Auswahl.
+ * ersten, nach einer Lücke in der Abgabefolge, ohne Zeit und bei einem Rücksprung der Uhr. Geordnet wird
+ * selbst (`inShotOrder`); der Abstand gilt zum vorigen Schuss der Karte, auch bei Auswahl.
  */
 export function shotIntervals(shots: readonly MetricShot[]): (number | null)[] {
-  const steps = stepsInOrder(shots)
+  // erst in Abgabefolge ordnen; das Ergebnis gehört je Schuss, also gilt es für jede Reihenfolge der Liste
+  const steps = stepsInOrder(inShotOrder(shots))
   const byShot = new Map<MetricShot, number | null>()
   steps.forEach((step, i) => {
     const now = step.shot.firedAtMs

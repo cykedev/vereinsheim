@@ -120,7 +120,14 @@ export function ShotTable({ shots, state, onChoose, className }: ShotTableProps)
                   />
                   {formatScore(shot, state.scoring)}
                 </td>
-                <td className="px-2 py-1.5 text-center">{shot.innerTen ? "★" : ""}</td>
+                <td className="px-2 py-1.5 text-center">
+                  {shot.innerTen && (
+                    <>
+                      <span className="sr-only">Innenzehner</span>
+                      <span aria-hidden="true">★</span>
+                    </>
+                  )}
+                </td>
                 <td className="px-2 py-1.5 text-right">{teilerText(shot)}</td>
                 <td className="px-2 py-1.5 text-right text-muted-foreground">
                   {intervalText(intervals[i])}

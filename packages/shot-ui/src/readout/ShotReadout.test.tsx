@@ -45,10 +45,18 @@ const text = (html: string) =>
     .trim()
 
 describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
-  it("ohne Antippen der letzte Schuss, mit Wert in seiner Ringwert-Farbe", () => {
+  it("ohne Antippen der letzte Schuss; der Wert in Schriftfarbe, die Ringwert-Farbe als Punkt", () => {
     const html = render()
     expect(text(html)).toContain("Schuss 3 · letzter Schuss")
-    expect(html).toMatch(/style="color:var\(--score-10\)"[^>]*>10,9</)
+    // Gold und Türkis hätten als Schrift auf Weiß zu wenig Kontrast
+    expect(html).toMatch(
+      /<span aria-hidden="true"[^>]*style="background:var\(--score-10\)"[\s\S]*?>10,9</
+    )
+    expect(html).not.toContain("color:var(--score")
+    // die Probe hohl wie auf der Scheibe
+    expect(render({ chosen: { index: 0, series: "probe" } })).toContain(
+      "box-shadow:inset 0 0 0 2px var(--score-10)"
+    )
   })
 
   it("angetippt: dieser Schuss, Probe mit P", () => {
