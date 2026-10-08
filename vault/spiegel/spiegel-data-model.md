@@ -31,7 +31,7 @@ relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spi
 | Scheibenbild | Geometrie je Stellung, versioniert ([[spiegel-target-library]]) | id + Version |
 | Kennzahlwert | berechneter Wert je Ebene ([[spiegel-metrics]]) | Scheibe + Revision + Ebene + Kennzahl + Version |
 | Einheit | ein Schütze an einem Tag mit seinen zusammenhängenden Scheiben (Aufwärmen, Abbruch, Disziplinwechsel) | Konto + Tag |
-| Notiz, Tag, Ausrüstung, Ereignis | Kontext für Vergleiche (Munitionslos, Griff, Brille); ein Ereignis wie „Visier verstellt“ an einem Schuss teilt die Gruppe | id; an Schüssen über die Schusszeit verankert |
+| Notiz, Tag, Ausrüstung, Ereignis | Kontext für Vergleiche (Munitionslos, Griff, Brille); ein Ereignis „Visier verstellt“ gibt es nicht (User, 8. Oktober 2026) | id; an Schüssen über die Schusszeit verankert |
 
 ## Schuss
 

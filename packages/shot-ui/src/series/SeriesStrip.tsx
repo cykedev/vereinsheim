@@ -7,7 +7,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import { useMemo } from "react"
 
 import { caliberRadius, scoreColor, seriesTileView, tileColumns } from "../geometry"
-import { formatTotal, hasPosition, probesBeforeAdjust, seriesKeyOf, sightAdjustCut } from "../shots"
+import { formatTotal, hasPosition, seriesKeyOf } from "../shots"
 import { useElementWidth } from "../target/useAnimatedViewBox"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
@@ -49,7 +49,6 @@ export function SeriesStrip({
   className,
 }: SeriesStripProps) {
   const [width, measure] = useElementWidth()
-  const cut = sightAdjustCut(shots, state.adjustAfter)
 
   const blocks = useMemo<Block[]>(() => {
     const result: Block[] = []
@@ -60,7 +59,7 @@ export function SeriesStrip({
         title: "Probe",
         value: String(probes.length),
         unit: "Schuss",
-        sub: cut ? `${probes.length - cut} nach der Verstellung` : "",
+        sub: "",
         indices: probes,
       })
     }
@@ -75,7 +74,7 @@ export function SeriesStrip({
       })
     }
     return result
-  }, [shots, state.scoring, cut])
+  }, [shots, state.scoring])
 
   const view = useMemo(
     () =>
@@ -95,7 +94,6 @@ export function SeriesStrip({
   const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
   const columns = tileColumns(blocks.length, width || 300)
   const all = state.selection === "all"
-  const beforeAdjust = probesBeforeAdjust(shots, state.adjustAfter)
 
   return (
     <div className={cn("grid gap-2.5", className)}>
@@ -182,7 +180,6 @@ export function SeriesStrip({
                         fill="none"
                         stroke={color}
                         strokeWidth={1.25}
-                        strokeDasharray={beforeAdjust.has(shot) ? "2 2" : undefined}
                         {...HAIR}
                       />
                     ) : (

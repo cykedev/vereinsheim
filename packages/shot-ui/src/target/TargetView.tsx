@@ -17,14 +17,7 @@ import {
   unitsPerPixel,
 } from "../geometry"
 import { layerOrder } from "../layers"
-import {
-  formatScore,
-  groupShots,
-  hasPosition,
-  probesBeforeAdjust,
-  seriesKeyOf,
-  shotLabels,
-} from "../shots"
+import { formatScore, groupShots, hasPosition, seriesKeyOf, shotLabels } from "../shots"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
 import { useAnimatedViewBox, useElementWidth } from "./useAnimatedViewBox"
@@ -90,10 +83,6 @@ export function TargetView({
   const sizes = screenSizes(target, unitsPerPixel(view, width))
   const calR = caliberRadius(target)
   const labels = useMemo(() => shotLabels(shots), [shots])
-  const beforeAdjust = useMemo(
-    () => probesBeforeAdjust(shots, state.adjustAfter),
-    [shots, state.adjustAfter]
-  )
   const selectedAt = (i: number) => isSelected(state.selection, seriesKeyOf(shots[i]))
   const chosen = state.chosen?.index ?? null
   const order = layerOrder(shots, { chosen, selected: selectedAt }).filter(
@@ -222,7 +211,6 @@ export function TargetView({
           const x = mm(shot.xUm as number)
           const y = -mm(shot.yUm as number)
           const color = shot.ring === null ? "var(--paper-line)" : scoreColor(shot.ring)
-          const before = beforeAdjust.has(shot)
           // auch in einem hohlen Kreis (fill="none") zeigt der Mauszeiger die Hand; blasse bleiben ganz aus
           const hitArea = faded ? undefined : "visible"
           return (
@@ -244,7 +232,6 @@ export function TargetView({
                   fill="none"
                   stroke={color}
                   strokeWidth={1.5}
-                  strokeDasharray={before ? "2 2" : undefined}
                   pointerEvents={hitArea}
                   className={i === popIndex ? "shot-ui-pop" : undefined}
                   {...HAIR}

@@ -55,7 +55,7 @@ describe("Antippen eines Schusses", () => {
   })
 })
 
-describe("Ausschnitt, Ebenen, Wertung, Visier", () => {
+describe("Ausschnitt, Ebenen, Wertung", () => {
   it("Schalter wirken nur auf ihre Ebene", () => {
     const s = viewReducer(start, { type: "toggle", layer: "numbers" })
     expect(s.layers).toEqual({ ...start.layers, numbers: !start.layers.numbers })
@@ -66,23 +66,14 @@ describe("Ausschnitt, Ebenen, Wertung, Visier", () => {
     expect(viewReducer(start, { type: "setScoring", scoring: "rings" }).scoring).toBe("rings")
   })
 
-  it("Visier verstellt nach einem Probeschuss: an und aus, aufsteigend", () => {
-    let s = viewReducer(start, { type: "toggleAdjust", after: 6 })
-    s = viewReducer(s, { type: "toggleAdjust", after: 4 })
-    expect(s.adjustAfter).toEqual([4, 6])
-    s = viewReducer(s, { type: "toggleAdjust", after: 6 })
-    expect(s.adjustAfter).toEqual([4])
-  })
-
-  it("neue Scheibe: alles zurück bis auf Wertung und Ebenen, Verstellungen aus den Daten", () => {
+  it("neue Scheibe: alles zurück bis auf Wertung und Ebenen", () => {
     let s: ViewState = viewReducer(start, { type: "select", series: 2 })
     s = viewReducer(s, { type: "setScoring", scoring: "rings" })
     s = viewReducer(s, { type: "toggle", layer: "numbers" })
-    s = viewReducer(s, { type: "reset", adjustAfter: [4] })
+    s = viewReducer(s, { type: "reset" })
     expect(s.selection).toBe("all")
     expect(s.chosen).toBeNull()
     expect(s.view).toBe("target")
-    expect(s.adjustAfter).toEqual([4])
     expect(s.scoring).toBe("rings")
     expect(s.layers.numbers).toBe(!start.layers.numbers)
   })
@@ -90,7 +81,7 @@ describe("Ausschnitt, Ebenen, Wertung, Visier", () => {
   it("verändert den alten Zustand nicht", () => {
     const before = JSON.stringify(start)
     viewReducer(start, { type: "select", series: 1 })
-    viewReducer(start, { type: "toggleAdjust", after: 2 })
+    viewReducer(start, { type: "toggle", layer: "mpi" })
     expect(JSON.stringify(start)).toBe(before)
   })
 })

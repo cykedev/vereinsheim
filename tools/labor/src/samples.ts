@@ -19,8 +19,6 @@ export interface Sample {
   id: SampleId
   label: string
   hint: string
-  /** Visierverstellungen der Beispielscheibe (Nummern der Probeschüsse davor) */
-  adjustAfter: readonly number[]
   /** amtliche Wertung, wenn das Beispiel eine hat (erfunden; beim Ausdruck unbekannt) */
   official?: Scoring
 }
@@ -28,8 +26,7 @@ export interface Sample {
 const FORTY: Sample = {
   id: "forty",
   label: "40 Schuss mit Probe",
-  hint: "Erfundene Scheibe: neun Probeschüsse (Visier nach dem vierten verstellt), 40 Wertungsschüsse, nach Schuss 20 eine Pause; bei der Luftpistole senkrecht gestreckt und mit einem Abreißer (Schuss 27). Als amtliche Wertung angenommen: Zehntel.",
-  adjustAfter: [4],
+  hint: "Erfundene Scheibe: neun Probeschüsse (die ersten vier weit daneben), 40 Wertungsschüsse, nach Schuss 20 eine Pause; bei der Luftpistole senkrecht gestreckt und mit einem Abreißer (Schuss 27). Als amtliche Wertung angenommen: Zehntel.",
   official: "decimal",
 }
 
@@ -37,7 +34,6 @@ const EMPTY: Sample = {
   id: "empty",
   label: "Leer",
   hint: "Eine leere Scheibe: Im Modus „Setzen“ entsteht sie Schuss für Schuss.",
-  adjustAfter: [],
 }
 
 export const SAMPLES: Readonly<Record<TargetId, readonly Sample[]>> = {
@@ -47,13 +43,12 @@ export const SAMPLES: Readonly<Record<TargetId, readonly Sample[]>> = {
       id: "printout",
       label: "Ausdruck vom 2. Oktober",
       hint: "Die sechs Teiler vom Ausdruck des 2. Oktober, auf die Achsen gelegt.",
-      adjustAfter: [],
     },
     EMPTY,
   ],
   "lg-10m": [
     FORTY,
-    { id: "series", label: "Zehnerserie", hint: "Eine erfundene Zehnerserie.", adjustAfter: [] },
+    { id: "series", label: "Zehnerserie", hint: "Eine erfundene Zehnerserie." },
     EMPTY,
   ],
 }
@@ -79,7 +74,7 @@ function gauss(rand: () => number) {
 }
 
 /**
- * 40 Schuss mit Probe: neun Probeschüsse (die ersten vier vor der Visierverstellung weit daneben), 40
+ * 40 Schuss mit Probe: neun Probeschüsse (die ersten vier weit daneben), 40
  * Wertungsschüsse in vier Serien, nach Schuss 20 vier Minuten Pause, in der letzten Serie etwas mehr
  * Streuung. LP senkrecht gestreckt (σx 8 mm, σy 12,8 mm) mit einem Abreißer (Schuss 27), LG rund.
  */

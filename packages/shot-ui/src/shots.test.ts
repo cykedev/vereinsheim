@@ -5,11 +5,9 @@ import {
   formatScore,
   groupShots,
   hasPosition,
-  probesBeforeAdjust,
   selectionShots,
   seriesKeyOf,
   shotLabels,
-  sightAdjustCut,
 } from "./shots"
 
 const shot = (
@@ -66,21 +64,6 @@ describe("Schüsse für die Bausteine", () => {
   it("Lage vorhanden?", () => {
     expect(hasPosition(CARD[0])).toBe(true)
     expect(hasPosition(shot("match", 1, null, 100))).toBe(false)
-  })
-
-  it("Visier verstellt: Probeschüsse bis einschließlich dieser Nummer liegen davor", () => {
-    expect(sightAdjustCut(CARD, [1])).toBe(1)
-    // nach dem letzten Probeschuss gibt es keine Probe danach: zählt nicht
-    expect(sightAdjustCut(CARD, [2])).toBe(0)
-    expect(sightAdjustCut(CARD, [])).toBe(0)
-  })
-
-  it("Probe vor der Verstellung nach derselben Nummer wie die Beschriftung", () => {
-    const card = [...CARD.slice(0, 2), shot("probe", null, 0, 100), ...CARD.slice(2)]
-    const labels = shotLabels(card)
-    const before = probesBeforeAdjust(card, [2])
-    expect(card.flatMap((s, i) => (before.has(s) ? [labels[i]] : []))).toEqual(["P1", "P2"])
-    expect(probesBeforeAdjust(CARD, []).size).toBe(0)
   })
 
   it("Gruppe der Auswahl: deren Wertungsschüsse mit Lage, ohne Wertung die gewählte Probe", () => {

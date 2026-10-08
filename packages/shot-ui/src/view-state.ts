@@ -15,8 +15,6 @@ export interface ViewState {
   view: "target" | "group"
   layers: Readonly<Record<Layer, boolean>>
   scoring: Scoring
-  /** Nummern der Probeschüsse, nach denen das Visier verstellt wurde, aufsteigend */
-  adjustAfter: readonly number[]
 }
 
 export type ViewAction =
@@ -26,9 +24,8 @@ export type ViewAction =
   | { type: "setView"; view: ViewState["view"] }
   | { type: "toggle"; layer: Layer }
   | { type: "setScoring"; scoring: Scoring }
-  | { type: "toggleAdjust"; after: number }
   /** neue Scheibe: Auswahl, Schuss und Ausschnitt zurück; Wertung und Ebenen bleiben */
-  | { type: "reset"; adjustAfter?: readonly number[] }
+  | { type: "reset" }
 
 /** Ebenen wie in der Spielwiese: Schwerpunkt und Streukreis an, Nummern und Ellipse aus */
 export function initialViewState(overrides: Partial<ViewState> = {}): ViewState {
@@ -38,7 +35,6 @@ export function initialViewState(overrides: Partial<ViewState> = {}): ViewState 
     view: "target",
     layers: { mpi: true, circle: true, numbers: false, ellipse: false },
     scoring: "decimal",
-    adjustAfter: [],
     ...overrides,
   }
 }
@@ -72,20 +68,12 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return { ...state, layers: { ...state.layers, [action.layer]: !state.layers[action.layer] } }
     case "setScoring":
       return { ...state, scoring: action.scoring }
-    case "toggleAdjust": {
-      const has = state.adjustAfter.includes(action.after)
-      const adjustAfter = has
-        ? state.adjustAfter.filter((n) => n !== action.after)
-        : [...state.adjustAfter, action.after].sort((a, b) => a - b)
-      return { ...state, adjustAfter }
-    }
     case "reset":
       return {
         ...state,
         selection: "all",
         chosen: null,
         view: "target",
-        adjustAfter: action.adjustAfter ?? [],
       }
   }
 }

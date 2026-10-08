@@ -1,6 +1,5 @@
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
-import { SightAdjust } from "@vereinsheim/shot-ui/controls/SightAdjust"
 import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { HelpDetails } from "@vereinsheim/shot-ui/help/HelpDetails"
 import { HelpSheet } from "@vereinsheim/shot-ui/help/HelpSheet"
@@ -74,7 +73,6 @@ export function App({ commit }: { commit: string }) {
   const [state, dispatch] = useReducer(viewReducer, undefined, () =>
     initialViewState({
       scoring: store.get("scoring") === "rings" ? "rings" : "decimal",
-      adjustAfter: SAMPLES["lp-10m"][0].adjustAfter,
       layers: {
         mpi: store.get("mpi") !== "0",
         circle: store.get("circle") !== "0",
@@ -98,7 +96,7 @@ export function App({ commit }: { commit: string }) {
     setSampleId(chosen.id)
     setRaw(rawSample(nextTarget, chosen.id))
     setPop(null)
-    dispatch({ type: "reset", adjustAfter: chosen.adjustAfter })
+    dispatch({ type: "reset" })
   }
 
   const place = (event: MouseEvent<HTMLDivElement>) => {
@@ -283,11 +281,6 @@ export function App({ commit }: { commit: string }) {
                 state={state}
                 onSelect={(series) => dispatch({ type: "select", series })}
                 onSelectAll={() => dispatch({ type: "selectAll" })}
-              />
-              <SightAdjust
-                shots={shots}
-                adjustAfter={state.adjustAfter}
-                onToggle={(after) => dispatch({ type: "toggleAdjust", after })}
               />
             </div>
             <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">

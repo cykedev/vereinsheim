@@ -52,12 +52,11 @@ describe("Summen in der gewählten Wertung", () => {
 
 describe("SeriesStrip", () => {
   it("Probe zuerst, dann die Serien mit Ergebnis; die laufende Serie mit Zahl der Schüsse", () => {
-    const html = render({ adjustAfter: [1] })
+    const html = render()
     const titles = [...html.matchAll(/<span data-title="true"[^>]*>([^<]+)<\/span>/g)].map(
       (m) => m[1]
     )
     expect(titles).toEqual(["Probe", "Serie 1", "Serie 2"])
-    expect(html).toContain("2 nach der Verstellung")
     expect(html).toMatch(/Serie 1[\s\S]*?105,0/)
     expect(html).toMatch(/Serie 2[\s\S]*?70,0[\s\S]*?7 von 10 Schuss/)
   })
@@ -90,15 +89,18 @@ describe("SeriesStrip", () => {
     expect(html).toMatch(/data-series="1"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
   })
 
-  it("Probe vor der Verstellung gestrichelt, danach durchgezogen", () => {
-    const probe = render({ adjustAfter: [1] }).split('data-series="1"')[0]
-    expect([...probe.matchAll(/stroke-dasharray="2 2"/g)]).toHaveLength(1)
+  it("Probe hohl und durchgezogen", () => {
+    const probe = render().split('data-series="1"')[0]
+    expect(probe).not.toContain("stroke-dasharray")
+    expect([
+      ...probe.matchAll(/<circle[^>]*fill="none"[^>]*stroke="var\(--score-9\)"/g),
+    ]).toHaveLength(3)
   })
 
   it("jede Kachel hat einen Satz für Screenreader, das Bild darin schweigt", () => {
-    const html = render({ adjustAfter: [1] })
+    const html = render()
     expect(html).toMatch(
-      /<button[^>]*aria-label="Probe: 3 Schuss, 2 nach der Verstellung"[^>]*>\s*<svg[^>]*aria-hidden="true"/
+      /<button[^>]*aria-label="Probe: 3 Schuss"[^>]*>\s*<svg[^>]*aria-hidden="true"/
     )
     expect(render()).toMatch(/<button[^>]*aria-label="Serie 2: 70,0, 7 von 10 Schuss"/)
     expect(html).not.toContain('role="img"')

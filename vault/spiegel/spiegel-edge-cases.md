@@ -143,7 +143,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-60 | Streukreise über 20 und über 40 Schuss im selben Verlauf | Der Verlauf misst die Schusszahl, nicht die Leistung | σ̂ (Rayleigh-σ, kaum n-abhängig); Streukreis und R50 nur bei gleichem n; `nSensitive` in der Registry | Eigenschaftstest |
 | SF-61 | Ein oder zwei Schüsse | Streukreis oder Ellipse ohne Sinn, „0“ in der Kachel | `minShots`; darunter „–“ mit Grund | Test |
 | SF-62 | Lange Pausen beim Tempo | Ø Intervall verzerrt | Median; Pausen über drei Minuten getrennt | Fixture |
-| SF-63 | Visier in der Probe oder zwischen Serien verstellt | Der Schwerpunkt springt mit Absicht; der Versatz Probe → Wertung wird sinnlos | Versatz aus den letzten fünf Probeschüssen nach der letzten Verstellung (S4); Ereignis „Visier verstellt“ teilt die Gruppe | Fixture |
+| SF-63 | Visier in der Probe oder zwischen Serien verstellt | Der Schwerpunkt springt mit Absicht; der Versatz Probe → Wertung wird sinnlos | Versatz aus den letzten fünf Probeschüssen (S4); ein Ereignis „Visier verstellt“ gibt es nicht (User, 8. Oktober 2026) | Fixture |
 | SF-64 | „LP 40“, „LP 40 alt“, „LP Training“ | Verläufe zerfallen | Disziplin-Familien, vom Admin gepflegt | SQL-Checkliste |
 | SF-65 | Freihand und Auflage auf derselben Scheibe | Unfaire Vergleiche | Familien trennen den Anschlag | Fixture |
 | SF-66 | Rekorde aus unvollständigen Serien, Probe, Status `I` oder Sonderwertungen | Falsche Bestwerte | Rekorde nur aus vollständigen Wertungsserien, erst bei endgültig | Fixture |

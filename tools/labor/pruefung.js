@@ -122,9 +122,8 @@ addEventListener("load", async () => {
       probes.every((g) => circleOf(g).getAttribute("fill") === "none")
     )
     check(
-      "Probe vor der Verstellung (nach P4) gestrichelt",
-      labelsOf(probes.filter((g) => circleOf(g).getAttribute("stroke-dasharray"))).join() ===
-        "P1,P2,P3,P4"
+      "Probe durchgezogen, nie gestrichelt",
+      probes.every((g) => !circleOf(g).getAttribute("stroke-dasharray"))
     )
     const matchCircle = circleOf(hits().find((g) => g.dataset.shot === "1"))
     check(
@@ -450,8 +449,8 @@ addEventListener("load", async () => {
       counts.join("+")
     )
     check(
-      "Serien: Probe mit Zahl nach der Verstellung",
-      txt(tile("probe")).includes("5 nach der Verstellung")
+      "Serien: Probe mit Zahl der Schüsse, ohne Verstellung",
+      txt(tile("probe")).includes("9 Schuss") && !txt(tile("probe")).includes("Verstellung")
     )
 
     // ---------- Setzen
@@ -593,38 +592,6 @@ addEventListener("load", async () => {
       `${page().backgroundColor} / ${tokenColor("background")}`
     )
     await click(button("System"))
-
-    // ---------- Visier verstellt
-    const sightGroup = () => $('#series [role="group"]')
-    const sightButtons = () => $$("button", sightGroup())
-    const dashed = () =>
-      labelsOf(
-        hits().filter(
-          (g) => g.dataset.shot.startsWith("P") && circleOf(g).getAttribute("stroke-dasharray")
-        )
-      ).join()
-    check(
-      "Visier: Schalter P1 bis P8, nach P4 gedrückt",
-      sightButtons()
-        .map((b) => txt(b))
-        .join() === "P1,P2,P3,P4,P5,P6,P7,P8" &&
-        sightButtons()
-          .filter((b) => b.getAttribute("aria-pressed") === "true")
-          .map((b) => txt(b))
-          .join() === "P4"
-    )
-    await click(button("P4", sightGroup()))
-    await click(button("P2", sightGroup()))
-    const stripDashed = $$('[data-series="probe"] circle[stroke-dasharray]').length
-    check(
-      "Visier nach P2: P1 und P2 gestrichelt, auf der Scheibe und in den Serien",
-      dashed() === "P1,P2" &&
-        stripDashed === 2 &&
-        txt($('[data-series="probe"]')).includes("7 nach der Verstellung"),
-      `${dashed()} / ${stripDashed}`
-    )
-    await click(button("P2", sightGroup()))
-    await click(button("P4", sightGroup()))
 
     // ---------- Hilfe
     const targetHelp = () => $('details[data-help="trefferbild"]')

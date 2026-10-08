@@ -167,14 +167,15 @@ describe("TargetView: Auswahl und Antippen", () => {
 })
 
 describe("TargetView: Probe und Scheibe", () => {
-  it("Probe hohl; vor der Visierverstellung gestrichelt", () => {
-    const html = render({ adjustAfter: [1] })
-    expect(html).toMatch(
-      /<g data-shot="P1"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*fill="none"[^>]*stroke-dasharray="2 2"/
-    )
-    expect(html).toMatch(
-      /<g data-shot="P2"[^>]*>(?:<title>[^<]*<\/title>)?<circle(?![^>]*stroke-dasharray)[^>]*fill="none"/
-    )
+  it("Probe hohl und durchgezogen", () => {
+    const html = render()
+    for (const label of ["P1", "P2"]) {
+      expect(html).toMatch(
+        new RegExp(
+          `<g data-shot="${label}"[^>]*>(?:<title>[^<]*<\\/title>)?<circle(?![^>]*stroke-dasharray)[^>]*fill="none"`
+        )
+      )
+    }
   })
 
   it("Wertung gefüllt in der Ringwert-Farbe, leicht durchscheinend, Rand als Haarlinie", () => {

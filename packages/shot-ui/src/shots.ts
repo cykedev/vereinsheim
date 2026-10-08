@@ -55,33 +55,6 @@ export const hasValidPosition = (shot: MetricShot) =>
   selectShots([shot], { need: "position" }).length > 0
 
 /**
- * Letzte Visierverstellung als Nummer des Probeschusses davor; 0 ohne Verstellung. Eine Verstellung
- * nach dem letzten Probeschuss zählt nicht, weil danach keine Probe mehr kommt.
- */
-export function sightAdjustCut(
-  shots: readonly MetricShot[],
-  adjustAfter: readonly number[]
-): number {
-  const probes = shots.filter((shot) => shot.kind === "probe").length
-  return Math.max(0, ...adjustAfter.filter((n) => n < probes))
-}
-
-/**
- * Probeschüsse vor der letzten Visierverstellung, nach ihrer Nummer aus `shotNumbers` wie die Beschriftung
- * (nicht nach dem Platz in der Liste); werden gestrichelt gezeichnet.
- */
-export function probesBeforeAdjust(
-  shots: readonly MetricShot[],
-  adjustAfter: readonly number[]
-): ReadonlySet<MetricShot> {
-  const cut = sightAdjustCut(shots, adjustAfter)
-  const numbers = shotNumbers(shots)
-  return new Set(
-    shots.filter((shot) => shot.kind === "probe" && (numbers.get(shot) ?? Infinity) <= cut)
-  )
-}
-
-/**
  * Die Gruppe für Streukreis, Ellipse, Schwerpunkt und den Ausschnitt „Gruppe“: die Wertungsschüsse der
  * Auswahl mit Lage, ohne Wertung in der Auswahl deren Probeschüsse.
  */

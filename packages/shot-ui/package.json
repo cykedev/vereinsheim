@@ -19,7 +19,6 @@
     "./readout/CardSummary": "./src/readout/CardSummary.tsx",
     "./table/ShotTable": "./src/table/ShotTable.tsx",
     "./controls/ScoringSwitch": "./src/controls/ScoringSwitch.tsx",
-    "./controls/SightAdjust": "./src/controls/SightAdjust.tsx",
     "./help/HelpBody": "./src/help/HelpBody.tsx",
     "./help/HelpButton": "./src/help/HelpButton.tsx",
     "./help/HelpDetails": "./src/help/HelpDetails.tsx",
