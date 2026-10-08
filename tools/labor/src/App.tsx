@@ -1,17 +1,23 @@
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import { SightAdjust } from "@vereinsheim/shot-ui/controls/SightAdjust"
+import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
+import { HelpDetails } from "@vereinsheim/shot-ui/help/HelpDetails"
+import { HelpSheet } from "@vereinsheim/shot-ui/help/HelpSheet"
+import { MetricTiles } from "@vereinsheim/shot-ui/metrics/MetricTiles"
 import { CardSummary } from "@vereinsheim/shot-ui/readout/CardSummary"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
+import type { SeriesKey } from "@vereinsheim/shot-ui/types"
 import { initialViewState, viewReducer, type Layer } from "@vereinsheim/shot-ui/view-state"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 import { useEffect, useMemo, useReducer, useState, type MouseEvent } from "react"
 
 import { rawSample, SAMPLES, toMetricShots, type RawShot, type SampleId } from "./samples"
+import { exposeForTest } from "./testHook"
 
 const store = {
   get(key: string): string | null {
@@ -63,6 +69,8 @@ export function App({ commit }: { commit: string }) {
   const [others, setOthers] = useState<"dim" | "hide">("dim")
   const [pop, setPop] = useState<number | null>(null)
   const [theme, setTheme] = useState<Theme>(() => (store.get("theme") as Theme | null) ?? "system")
+  const [explain, setExplain] = useState(() => store.get("help") === "1")
+  const [helpKey, setHelpKey] = useState<string | null>(null)
   const [state, dispatch] = useReducer(viewReducer, undefined, () =>
     initialViewState({
       scoring: store.get("scoring") === "rings" ? "rings" : "decimal",
@@ -81,6 +89,7 @@ export function App({ commit }: { commit: string }) {
   const shots = useMemo(() => toMetricShots(target, raw), [target, raw])
   const samples = SAMPLES[targetId]
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0]
+  useEffect(() => exposeForTest(shots, state), [shots, state])
 
   const load = (nextTarget: TargetId, nextSample: SampleId) => {
     const available = SAMPLES[nextTarget]
@@ -114,6 +123,9 @@ export function App({ commit }: { commit: string }) {
     dispatch({ type: "toggle", layer })
   }
 
+  const choose = (index: number, series: SeriesKey | null) =>
+    dispatch({ type: "choose", shot: index, series })
+
   return (
     <div className="mx-auto grid max-w-6xl gap-7 px-4 pt-7 pb-14">
       <header className="grid gap-2.5">
@@ -124,10 +136,10 @@ export function App({ commit }: { commit: string }) {
           Die Bausteine im Einsatz
         </h1>
         <p className="max-w-[46rem] text-foreground-2">
-          Die Scheibe und die Serien hier sind die echten Bausteine aus{" "}
-          <code>packages/shot-ui</code>, mit dem Fachkern gerechnet. Tippe auf eine Serie, um nur
-          sie zu sehen, auf einen Treffer, um ihn abzulesen, oder setze im Modus „Setzen“ eigene
-          Schüsse.
+          Alles hier sind die echten Bausteine aus <code>packages/shot-ui</code>, mit dem Fachkern
+          gerechnet. Tippe auf eine Serie, um nur sie zu sehen, auf einen Treffer oder eine Zeile
+          der Tabelle, um ihn abzulesen, oder setze im Modus „Setzen“ eigene Schüsse. Das „?“ an
+          einer Kachel erklärt die Zahl.
         </p>
         <div className="flex flex-wrap gap-2">
           <span className="rounded-full border border-line-strong px-2.5 py-1 font-mono text-xs">
@@ -155,14 +167,6 @@ export function App({ commit }: { commit: string }) {
             value={sample.id}
             options={samples.map((s) => ({ value: s.id, label: s.label }))}
             onChange={(id) => load(targetId, id)}
-          />
-          <ScoringSwitch
-            scoring={state.scoring}
-            official={sample.official}
-            onChange={(scoring) => {
-              store.set("scoring", scoring)
-              dispatch({ type: "setScoring", scoring })
-            }}
           />
           <Segmented
             label="Thema"
@@ -217,11 +221,7 @@ export function App({ commit }: { commit: string }) {
                 others={others}
                 popIndex={pop}
                 viewKey={`${targetId}:${sample.id}`}
-                onChoose={
-                  mode === "view"
-                    ? (index, series) => dispatch({ type: "choose", shot: index, series })
-                    : undefined
-                }
+                onChoose={mode === "view" ? choose : undefined}
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -256,43 +256,66 @@ export function App({ commit }: { commit: string }) {
               />
             </div>
             <p className="text-[13px] text-muted-foreground">{sample.hint}</p>
+            <HelpDetails id="trefferbild" open={explain} />
           </div>
 
           <aside className="grid content-start gap-4">
             <div id="readout" className="rounded-2xl border border-border bg-card p-4">
               <ShotReadout shots={shots} state={state} />
             </div>
-            <div id="summary" className="rounded-2xl border border-border bg-card p-4">
+            <div id="summary" className="grid gap-3 rounded-2xl border border-border bg-card p-4">
+              <ScoringSwitch
+                scoring={state.scoring}
+                official={sample.official}
+                onChange={(scoring) => {
+                  store.set("scoring", scoring)
+                  dispatch({ type: "setScoring", scoring })
+                }}
+              />
               <CardSummary shots={shots} state={state} />
             </div>
-            <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
-              <ShotTable
-                className="max-h-80"
+            <div id="series" className="grid gap-4 rounded-2xl border border-border bg-card p-3.5">
+              {/* je Karte eine neue Leiste, wie in der App beim Wechsel der Session */}
+              <SeriesStrip
+                key={`${targetId}:${sample.id}`}
+                target={target}
                 shots={shots}
                 state={state}
-                onChoose={(index, series) => dispatch({ type: "choose", shot: index, series })}
+                onSelect={(series) => dispatch({ type: "select", series })}
+                onSelectAll={() => dispatch({ type: "selectAll" })}
               />
+              <SightAdjust
+                shots={shots}
+                adjustAfter={state.adjustAfter}
+                onToggle={(after) => dispatch({ type: "toggleAdjust", after })}
+              />
+            </div>
+            <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
+              <ShotTable className="max-h-80" shots={shots} state={state} onChoose={choose} />
             </div>
           </aside>
         </div>
-
-        <div className="grid gap-4 rounded-2xl border border-border bg-card p-3.5">
-          {/* je Karte eine neue Leiste, wie in der App beim Wechsel der Session */}
-          <SeriesStrip
-            key={`${targetId}:${sample.id}`}
-            target={target}
-            shots={shots}
-            state={state}
-            onSelect={(series) => dispatch({ type: "select", series })}
-            onSelectAll={() => dispatch({ type: "selectAll" })}
-          />
-          <SightAdjust
-            shots={shots}
-            adjustAfter={state.adjustAfter}
-            onToggle={(after) => dispatch({ type: "toggleAdjust", after })}
-          />
-        </div>
       </section>
+
+      <MetricTiles
+        shots={shots}
+        state={state}
+        explain={explain}
+        onHelp={setHelpKey}
+        action={
+          <ToggleChip
+            pressed={explain}
+            icon={<HelpIcon />}
+            onPressedChange={(next) => {
+              store.set("help", next ? "1" : "0")
+              setExplain(next)
+            }}
+          >
+            Erklärungen
+          </ToggleChip>
+        }
+      />
+      <HelpSheet metricKey={helpKey} onClose={() => setHelpKey(null)} />
     </div>
   )
 }

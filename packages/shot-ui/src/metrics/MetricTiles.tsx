@@ -76,6 +76,10 @@ export interface MetricTilesProps {
   keys?: readonly string[]
   /** „?“ an einer Kachel: Erklärung öffnen; ohne Handler kein Knopf */
   onHelp?: (key: string) => void
+  /** Schalter „Erklärungen“: der Kurzsatz steht sichtbar an jeder Kachel, nicht nur als Tooltip */
+  explain?: boolean
+  /** etwas im Kopf rechts, etwa der Schalter „Erklärungen“ */
+  action?: ReactNode
   className?: string
 }
 
@@ -89,6 +93,8 @@ export function MetricTiles({
   state,
   keys = TILE_KEYS,
   onHelp,
+  explain = false,
+  action,
   className,
 }: MetricTilesProps) {
   const selected = selectionShots(shots, state.selection)
@@ -113,7 +119,10 @@ export function MetricTiles({
     <section className={cn("grid gap-3", className)} aria-label="Trefferbild in Zahlen">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-xl font-bold tracking-tight">Trefferbild in Zahlen</h2>
-        <span className="text-[13px] text-muted-foreground">{scope}</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-[13px] text-muted-foreground">{scope}</span>
+          {action}
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">
         {keys.map((key) => {
@@ -123,6 +132,7 @@ export function MetricTiles({
           const value = computeMetric(metric, selected)
           const label = key === "group.mpiDistance" ? "Schwerpunkt" : metric.label
           const unit = unitText(metric.unit)
+          const short = helpForMetric(key)?.short
           const why =
             value === null
               ? `ab ${metric.minShots} Schuss`
@@ -131,7 +141,7 @@ export function MetricTiles({
             <div
               key={key}
               data-metric={key}
-              title={helpForMetric(key)?.short}
+              title={short}
               className="grid min-w-0 content-start gap-1 bg-card px-4 py-3.5"
             >
               <div className="flex items-start justify-between gap-2">
@@ -154,6 +164,11 @@ export function MetricTiles({
                 )}
               </span>
               <span className="text-[12.5px] leading-snug text-muted-foreground">{why}</span>
+              {explain && short && (
+                <span data-short className="text-[12.5px] leading-snug text-foreground-2">
+                  {short}
+                </span>
+              )}
             </div>
           )
         })}

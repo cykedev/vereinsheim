@@ -561,6 +561,9 @@ importers:
       '@vereinsheim/shot-core':
         specifier: workspace:*
         version: link:../../packages/shot-core
+      '@vereinsheim/shot-help':
+        specifier: workspace:*
+        version: link:../../packages/shot-help
       '@vereinsheim/shot-ui':
         specifier: workspace:*
         version: link:../../packages/shot-ui

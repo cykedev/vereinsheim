@@ -51,8 +51,9 @@ const render = (state: Partial<ViewState> = {}, onHelp?: (key: string) => void) 
 
 /** Text einer Kachel (data-metric) ohne Markup */
 const tileText = (html: string, key: string) => {
-  const start = html.indexOf(`data-metric="${key}"`)
-  const end = html.indexOf("data-metric=", start + 1)
+  // erst nach dem öffnenden Tag: Attribute wie title zählen nicht als sichtbarer Text
+  const start = html.indexOf(">", html.indexOf(`data-metric="${key}"`)) + 1
+  const end = html.indexOf("data-metric=", start)
   return html
     .slice(start, end < 0 ? undefined : end)
     .replace(/<[^>]+>/g, " ")
@@ -124,5 +125,28 @@ describe("Kacheln „Trefferbild in Zahlen“", () => {
     const html = render({}, () => {})
     expect([...html.matchAll(/<button[^>]*aria-label="Erklärung: [^"]+"/g)]).toHaveLength(10)
     expect(render()).not.toContain("Erklärung:")
+  })
+
+  it("mit „Erklärungen“ steht der Kurzsatz sichtbar an der Kachel, nicht nur als Tooltip", () => {
+    const html = renderToStaticMarkup(
+      createElement(MetricTiles, { shots: CARD, state: initialViewState(), explain: true })
+    )
+    for (const key of TILE_KEYS) {
+      expect(tileText(html, key), key).toContain(helpForMetric(key)!.short)
+    }
+    expect(render()).not.toContain("data-short")
+  })
+
+  it("ein Schalter im Kopf, rechts neben der Auswahl", () => {
+    const html = renderToStaticMarkup(
+      createElement(MetricTiles, {
+        shots: CARD,
+        state: initialViewState(),
+        action: createElement("button", { type: "button" }, "Erklärungen"),
+      })
+    )
+    expect(html).toMatch(
+      /<\/h2>[\s\S]*alle Wertungsschüsse[\s\S]*>Erklärungen<\/button>[\s\S]*data-metric=/
+    )
   })
 })

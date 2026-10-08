@@ -15,6 +15,7 @@
   "prettier": "@vereinsheim/config/prettier",
   "dependencies": {
     "@vereinsheim/shot-core": "workspace:*",
+    "@vereinsheim/shot-help": "workspace:*",
     "@vereinsheim/shot-ui": "workspace:*",
     "@vereinsheim/ui": "workspace:*",
     "react": "catalog:",
