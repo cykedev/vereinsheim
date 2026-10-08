@@ -134,6 +134,15 @@ dump_zusatz() {
   case "$hilfe" in *set-gtid-purged*) printf '%s\n' --set-gtid-purged=OFF ;; esac
 }
 
+# Beginn einer konsistenten Lese-Transaktion; ohne READ ONLY, wenn der Server es nicht kennt.
+tx_start() {
+  if [ -n "$RO_INIT" ]; then
+    echo "START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY"
+  else
+    echo "START TRANSACTION WITH CONSISTENT SNAPSHOT"
+  fi
+}
+
 # Zeit des Macs in Millisekunden.
 jetzt_ms() {
   perl -MTime::HiRes=time -e 'printf "%d\n", time * 1000'

@@ -100,6 +100,40 @@ pruefe "privat/ nur für den Besitzer" sh -c "ls -ld '$AUSGABE/privat' | grep -q
 pruefe "Kopie einspielbar mit gleichen Zeilen" dump_einspielbar
 pruefe "Schema ohne Daten im Bericht" sh -c "grep -q 'CREATE TABLE \`Treffer\`' '$AUSGABE/bericht/schema.sql' && ! grep -q 'INSERT' '$AUSGABE/bericht/schema.sql'"
 pruefe "Zeilenzahlen in dump.md" grep -q "Treffer: 6" "$AUSGABE/bericht/dump.md"
+# Zweiter Aufruf in denselben Ausgabeordner: das Protokoll verändert die Testanlage.
+export ANLAGE
+export ERKUNDEN_AUTO_HOOK="$HIER/simuliere-schiessen.sh"
+export ERKUNDEN_AUTO_UEBERSPRINGEN="7 8 9 10 11"
+export ERKUNDEN_AUTO_PDF_IDS="ff914420 kaputt"
+export ERKUNDEN_AUTO_WARTEN=3
+erkunden protokoll 2>/dev/null
+
+# Im Protokoll muss die Probe von 1001 erst da sein und später fehlen, während Wertung da ist (SF-03).
+probe_verschwindet() {
+  awk -F'\t' '
+    /^# stand/ { if (w && !p && sah_probe) weg = 1; if (p) sah_probe = 1; p = 0; w = 0; abschnitt = ""; next }
+    /^#Treffer/ { abschnitt = "treffer"; next }
+    /^#/ { abschnitt = ""; next }
+    abschnitt == "treffer" && $1 == "1001" && $2 == "0" { p = 1 }
+    abschnitt == "treffer" && $1 == "1001" && $2 == "1" { w = 1 }
+    END { if (w && !p && sah_probe) weg = 1; exit !weg }
+  ' "$AUSGABE/bericht/protokoll.tsv"
+}
+SCHRITTE="$AUSGABE/bericht/schritte.md"
+PROTOKOLL="$AUSGABE/bericht/protokoll.tsv"
+pruefe "schritte.md mit allen elf Schritten" test "$(grep -c '^| [0-9]' "$SCHRITTE")" = 11
+pruefe "Schritte 7 bis 11 übersprungen" test "$(grep -c '| übersprungen |' "$SCHRITTE")" = 5
+pruefe "PDF-ID ff914420 als -7257056 gefunden" grep -q 'ff914420` → ScheibenID -7257056' "$SCHRITTE"
+pruefe "ungültige ID gemeldet" grep -q 'kaputt`: keine gültige ID' "$SCHRITTE"
+pruefe "Protokoll mit Ständen" grep -q '^# stand mac_ms=' "$PROTOKOLL"
+pruefe "Grundlast gemessen" grep -q '^# start seit=.* basis_ms=[0-9]' "$PROTOKOLL"
+pruefe "Takt nicht wegen Client-Aufwand verlangsamt" sh -c "! grep -q '^# takt' '$PROTOKOLL'"
+pruefe "Marker der Schritte im Protokoll" grep -q '^# schritt 2 erledigt' "$PROTOKOLL"
+pruefe "Scheiben aus Schritt 3 bis 6 mitgeschnitten" sh -c "grep -q '^1003	' '$PROTOKOLL' && grep -q '^1004	' '$PROTOKOLL' && grep -q '^1005	' '$PROTOKOLL' && grep -q '^-7300000	' '$PROTOKOLL'"
+pruefe "verschwindende Probe sichtbar (SF-03)" probe_verschwindet
+pruefe "Namen im Rohprotokoll (privat)" grep -q 'Prüfling' "$AUSGABE/privat/protokoll-roh.tsv"
+pruefe "Pseudonyme im Bericht" grep -q '	P1	' "$PROTOKOLL"
+pruefe "--frei-- bleibt stehen" grep -q '	--frei--	' "$PROTOKOLL"
 pruefe "kein Passwort in der Ausgabe" kein_passwort_in_ausgabe
 pruefe "kein Testname im Bericht" kein_testname_im_bericht
 

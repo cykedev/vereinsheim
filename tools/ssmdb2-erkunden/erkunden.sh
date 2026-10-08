@@ -18,6 +18,10 @@ set -euo pipefail
 HIER=$(cd "$(dirname "$0")" && pwd)
 # shellcheck source=lib/client.sh
 . "$HIER/lib/client.sh"
+# shellcheck source=lib/mitschnitt.sh
+. "$HIER/lib/mitschnitt.sh"
+# shellcheck source=lib/protokoll.sh
+. "$HIER/lib/protokoll.sh"
 
 HOST=192.168.10.200
 PORT=3306
@@ -27,7 +31,7 @@ AUSGABE=""
 AUTO=0
 DOCKER_ERZWINGEN=0
 VERBUNDEN=0
-ALLE_PHASEN="selbsttest verbinden checkliste dump"
+ALLE_PHASEN="selbsttest verbinden checkliste dump protokoll"
 
 info() { printf '\033[1m==>\033[0m %s\n' "$*" >&2; }
 warnung() { printf '\033[33m!!\033[0m %s\n' "$*" >&2; }
@@ -45,6 +49,11 @@ frage_ja() {
 }
 
 aufraeumen() {
+  # Reihenfolge: erst den Mitschnitt stoppen und das Protokoll sichern, dann den Client entfernen.
+  if [ -n "$MITSCHNITT_PID" ]; then
+    mitschnitt_stoppen
+    protokoll_anonymisieren
+  fi
   client_aufraeumen
 }
 trap aufraeumen EXIT
@@ -280,6 +289,33 @@ phase_dump() {
   info "Kopie geschrieben: $roh ($dauer ms)"
 }
 
+# ---------------------------------------------------------------- Phase protokoll
+
+# Rohprotokoll (mit Namen) -> bericht/protokoll.tsv mit stabilen Pseudonymen.
+protokoll_anonymisieren() {
+  local roh="$AUSGABE/privat/protokoll-roh.tsv"
+  [ -f "$roh" ] || return 0
+  chmod 600 "$roh"
+  awk -f "$HIER/lib/anonym.awk" "$roh" >"$AUSGABE/bericht/protokoll.tsv"
+}
+
+phase_protokoll() {
+  verbindung_sicherstellen
+  info "Schießprotokoll: Das Skript liest jede Sekunde mit, während du die Schritte schießt."
+  info "Jeder Schritt lässt sich mit s überspringen, q beendet das Protokoll."
+  frage_ja "Bereit? Mitschnitt jetzt starten?" || {
+    warnung "Protokoll übersprungen"
+    return 0
+  }
+  mitschnitt_starten
+  protokoll_schiessen
+  info "Letzte Änderungen abwarten …"
+  sleep 3
+  mitschnitt_stoppen
+  protokoll_anonymisieren
+  info "Protokoll geschrieben: $AUSGABE/bericht/schritte.md, $AUSGABE/bericht/protokoll.tsv"
+}
+
 # ---------------------------------------------------------------- Ablauf
 
 for phase in $PHASEN; do
@@ -288,6 +324,7 @@ for phase in $PHASEN; do
     verbinden) phase_verbinden ;;
     checkliste) phase_checkliste ;;
     dump) phase_dump ;;
+    protokoll) phase_protokoll ;;
     *) fehler "unbekannte Phase: $phase (bekannt: $ALLE_PHASEN)" ;;
   esac
 done
