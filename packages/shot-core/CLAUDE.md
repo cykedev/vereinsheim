@@ -79,8 +79,9 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   zitierenden Texten angleichen. Das Gate prüft das nicht (Laufzeit, Zufallszahlen).
 - **Ehrlich statt scheingenau.** Unsicherheit nur mit einem anerkannten Verfahren (Wilson, χ²,
   Hotelling mit F(2, n − 2), Mann-Kendall mit Bindungskorrektur über die Normalnäherung, Ausreißer
-  gegen die übrigen mit F(2, 2(n − 2)) und Bonferroni, Form mit Mauchly); Aussagen wie „echt“ oder
-  „klar“ nur über der Grenze, sonst kein Urteil. Ein Urteil und die Zahl daneben dürfen sich nicht
+  schrittweise als verallgemeinerter ESD nach Rosner, je Schritt der weiteste gegen die übrigen mit
+  F(2, 2(m − 2)), Bonferroni und α 0,04, Form mit Mauchly); Aussagen wie „echt“ oder „klar“ nur über der
+  Grenze, sonst kein Urteil. Ein Urteil und die Zahl daneben dürfen sich nicht
   widersprechen (der Trend ist nur „klar“, wenn die Gerade dieselbe Richtung zeigt wie der Test). Unter
   der Mindestzahl `null`. Testwerte aus Tabellen oder Hand-Rechnung, nicht aus der eigenen
   Implementierung; Testdaten symmetrisch und ganzzahlig, wenn sie einen Schwerpunkt in der Mitte
