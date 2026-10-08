@@ -1,12 +1,15 @@
 // Belege für die Zahlen in den Hilfetexten (SP-1.12): jede Simulation läuft über die echten Funktionen
 // aus @vereinsheim/shot-core, mit festem Seed je Fall (als Zahl ausgeschrieben, damit eine neue
 // Beschriftung keine Zahl ändert), Lagen auf ganze µm und Wertung wie Meyton.
-// Aufruf: pnpm --filter @vereinsheim/shot-help simulate (nicht im Gate, Laufzeit etwa zehn Sekunden).
+// Aufruf: pnpm --filter @vereinsheim/shot-help simulate (nicht im Gate, Laufzeit etwa eine Minute, das
+// meiste für den Vergleich zweier Zeiträume B19).
 // Die Werte stehen im Katalog unter „Belege aus Simulationen“ (vault/spiegel/spiegel-statistics.md);
 // ein Hilfetext nennt nur dort belegte Zahlen. Ändert sich eine Auswertung, läuft das Skript neu.
 
 import {
   cardTrend,
+  cardValues,
+  comparePeriods,
   directionClock,
   drift,
   fatigue,
@@ -15,9 +18,11 @@ import {
   mpiPath,
   outliers,
   pauseRecovery,
+  periodTrend,
   ringLossSplit,
   sighterZeroed,
   sigmaEstimate,
+  type PeriodCard,
 } from "@vereinsheim/shot-core/analysis"
 import { centroid, covarianceEllipse } from "@vereinsheim/shot-core/geometry"
 import { computeMetric, metricByKey, type MetricShot } from "@vereinsheim/shot-core/metrics"
@@ -468,6 +473,62 @@ for (const [far, near, seed] of [
     })
     out("B18", `als gestreckt gemeldet, ${label} (alt → ohne Ausreißer): ${parts.join(", ")}`)
   }
+}
+
+// Scheiben eines Zeitraums: je Scheibe 40 Schuss Luftgewehr mit der Streuung `sx`, eine Scheibe am Tag
+const periodCards = (rand: Random, count: number, sx: number, firstDay = 0): PeriodCard[] =>
+  Array.from({ length: count }, (_, i) => ({
+    id: String(firstDay + i),
+    startedAtMs: (firstDay + i) * 86_400_000,
+    kind: "training" as const,
+    complete: true,
+    shots: card(rand, { target: LG_10M, n: 40, sx }),
+  }))
+const perShot = metric("result.decimalMean")
+
+// B19: Vergleich zweier Zeiträume über Ø je Schuss (Mann-Whitney über die Scheiben, D5): Fehlalarm bei
+// gleicher Streuung, Trennschärfe bei σ 1,5 → 1,3 mm auf Seite b; dazu der Anteil „bedeutsam“
+{
+  const cases = [
+    ["gleich", 1500, 19_000],
+    ["σ 1,5 → 1,3 mm", 1300, 19_500],
+  ] as const
+  for (const [label, sxB, seed] of cases) {
+    const parts = [5, 10, 20, 30].map((n) => {
+      let judged = 0
+      let higher = 0
+      let meaningful = 0
+      repeat(2_000, seed + n, (rand) => {
+        const a = cardValues(periodCards(rand, n, 1500), perShot, "decimal")
+        const b = cardValues(periodCards(rand, n, sxB, n), perShot, "decimal")
+        const result = comparePeriods(a, b)
+        if (result?.verdict !== "unclear") judged++
+        if (result?.verdict === "higher") higher++
+        if (result?.meaningful) meaningful++
+      })
+      const verdict = sxB === 1500 ? share(judged, 2_000) : share(higher, 2_000)
+      return `${n}/${n} ${verdict} (bedeutsam ${share(meaningful, 2_000)})`
+    })
+    const what = sxB === 1500 ? "Urteil trotz gleicher Streuung" : "„höher“ erkannt"
+    out("B19", `${label}, ${what}: ${parts.join(", ")}`)
+  }
+}
+
+// B20: Formband eines gleichbleibenden Schützen über 60 Scheiben: Anteil der Scheiben ab der zehnten im
+// Band (Median und 95-%-Spanne über die Wiederholungen)
+{
+  const inside: number[] = []
+  repeat(2_000, 20_000, (rand) => {
+    const { points } = periodTrend(cardValues(periodCards(rand, 60, 1500), perShot, "decimal"))
+    const checked = points.slice(9).filter((p) => p.band !== null)
+    const hits = checked.filter((p) => p.value >= p.band!.low && p.value <= p.band!.high).length
+    inside.push(hits / checked.length)
+  })
+  const pct = (v: number) => `${num(100 * v, 1)} %`
+  out(
+    "B20",
+    `Scheiben im Formband (60 Scheiben, ab der zehnten): Median ${pct(quantile(inside, 0.5))}, 95 % zwischen ${pct(quantile(inside, 0.025))} und ${pct(quantile(inside, 0.975))}`
+  )
 }
 
 console.log(lines.join("\n"))
