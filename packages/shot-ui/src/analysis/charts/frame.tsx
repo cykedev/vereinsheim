@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import type { ReactNode, SVGProps } from "react"
 
 import { useElementWidth } from "../../target/useAnimatedViewBox"
 
@@ -37,20 +37,23 @@ export function ChartSlot({
   )
 }
 
-/** SVG eines Diagramms: Einheit = Pixel, Achsenschrift aus den Tokens */
+/** SVG eines Diagramms: Einheit = Pixel, Achsenschrift aus den Tokens; `svgProps` etwa für das Lineal */
 export function ChartSvg({
   width,
   height,
   label,
+  svgProps,
   children,
 }: {
   width: number
   height: number
   label: string
+  svgProps?: SVGProps<SVGSVGElement>
   children: ReactNode
 }) {
   return (
     <svg
+      {...svgProps}
       viewBox={`0 0 ${width} ${height}`}
       width={width}
       height={height}

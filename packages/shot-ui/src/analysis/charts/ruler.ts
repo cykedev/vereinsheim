@@ -1,5 +1,5 @@
 // Reine Hilfen des Diagramm-Lineals (Plan L1): welcher Wert einer x-Position am nächsten liegt, Schritte mit
-// der Tastatur und die Umrechnung vom Bildschirm ins SVG. Das Lineal selbst steht in `Ruler.tsx`.
+// der Tastatur und die Umrechnung vom Bildschirm ins SVG. Das Lineal selbst steht in `ChartRuler.tsx`.
 
 /** Index des nächsten Werts zu einer x-Position (Pixel im SVG); bei Gleichstand der frühere; leer: null */
 export function nearestIndex(xs: readonly number[], x: number): number | null {
