@@ -15,20 +15,26 @@ durch ein Schießprotokoll, das man allein schießen kann, während es jede Seku
    tools/ssmdb2-erkunden/test/selbsttest.sh
    ```
 
-3. Den Standard-Zugang zur SSMDB2 aus dem Meyton-Handbuch bereithalten. Er wird nur abgefragt, nie
-   gespeichert.
+3. Den Standard-Zugang bereithalten: Benutzer `meyton` (das Skript schlägt ihn vor), das Passwort
+   steht im Meyton-Handbuch zur SSMDB2 auf Seite 3 („Scheibenablage SSMDB2“, Datenbankversion 9). Es
+   wird nur abgefragt und nie gespeichert, auch nicht im Repo.
+4. Mac ans Netzteil: Das Skript hält ihn wach (`caffeinate`), auf Akku kann er trotzdem schlafen.
 
 ## Im Schützenheim
 
-1. Mac per Kabel ins Meyton-Gerätenetz, feste IP aus dem Workstation-Bereich (192.168.10.201 bis .239,
-   Maske 255.255.255.0). **WLAN aus**, damit der Internet-Test das Gerätenetz prüft und nicht das WLAN.
+1. Mac per Kabel ins Meyton-Gerätenetz mit fester IP **außerhalb** der Meyton-Bereiche, etwa
+   `192.168.20.50`, Maske **255.255.0.0** (das Meyton-Netz ist ein /16), kein Gateway. Nicht
+   .200–.239 nehmen: Das sind Server und Meyton-Clients, an der IP erkennt Meyton die Rolle einer
+   Workstation. Vorher in der Geräteübersicht prüfen, dass die Adresse frei ist. **WLAN aus**, damit der
+   Internet-Test das Gerätenetz prüft und nicht das WLAN.
 2. Docker Desktop starten, dann:
 
    ```bash
    tools/ssmdb2-erkunden/erkunden.sh
    ```
 
-   Andere Adresse: `--host 192.168.10.x`. Einzelne Phasen: `erkunden.sh checkliste dump` usw.; mit
+   Der Meyton-Server hat laut Handbuch `192.168.10.200`, Port 3306, Datenbank `SSMDB2`; andere
+   Adresse: `--host 192.168.10.x`. Einzelne Phasen: `erkunden.sh checkliste dump` usw.; mit
    `--ausgabe <Ordner>` landen weitere Läufe im selben Ordner.
 3. Die Phasen nacheinander, jede fragt vorher nach:
    - **verbinden**: Version, Uhr und Zeitzonen der Anlage, Zeichensatz, Internet, Freigaben.
@@ -50,19 +56,26 @@ Alles unter `~/ssmdb2-erkundung/<Datum_Zeit>/`:
 | `bericht/` | Antworten, Schema, Schritte, Mitschnitt mit Pseudonymen (`P1`, `S1` …), `LIESMICH.md` | ja |
 | `privat/` | vollständige Kopie `ssmdb2.sql.gz`, Rohprotokoll mit Namen | **nein**, bleibt auf dem Mac |
 
-Die Kopie lässt sich später in eine lokale Entwicklungs-Datenbank einspielen. Sie gehört nie ins Repo
-(ADR-029).
+Die Kopie lässt sich später in eine lokale Entwicklungs-Datenbank einspielen, mit einem
+MariaDB-Client (der Dump beginnt mit einer Zeile, die ein Oracle-`mysql` nicht kennt). Sie gehört nie
+ins Repo (ADR-029).
 
 ## Was das Skript nie tut
 
-In die Anlage schreiben (jede Sitzung ist read-only, gesendet werden nur `SELECT`, `SHOW`, `EXPLAIN`),
-Tabellen sperren (die Kopie läuft ohne `LOCK TABLES`), das Passwort speichern oder Namen in `bericht/`
-schreiben.
+In die Anlage schreiben: Abfragen laufen in Read-only-Sitzungen und senden nur `SELECT`, `SHOW`,
+`EXPLAIN`; die Kopie (`mariadb-dump`) sendet dazu nur Sitzungsbefehle (`SET`, `START TRANSACTION`,
+`SAVEPOINT`), kein `LOCK TABLES`. Lange Abfragen der Checkliste brechen nach 60 s ab. Außerdem nie:
+das Passwort speichern oder Namen in `bericht/` schreiben (eine Namensprüfung am Ende meldet Treffer).
 
 ## Wenn etwas nicht klappt
 
-- **Verbindung scheitert:** IP und Maske prüfen, `ping 192.168.10.200`; Port 3306 erreichbar?
-  Benutzer und Passwort laut Handbuch.
-- **Kein MySQL-Client:** Docker Desktop läuft nicht, oder das Image fehlt (`erkunden.sh selbsttest`).
+- **Verbindung scheitert:** IP und Maske (255.255.0.0) prüfen, `ping 192.168.10.200`; Port 3306
+  erreichbar (`nc -z 192.168.10.200 3306`)? Benutzer und Passwort laut Handbuch.
+- **Docker Desktop läuft nicht** oder das Image fehlt: `erkunden.sh selbsttest` sagt, was fehlt.
+- **„Mitschnitt sieht keine Scheibe“** nach Schritt 1: Ist der SSMDB2-Dienst im Kontrollzentrum auf
+  Echtzeit gestellt? Stimmt die Uhr (`umgebung.md`)? Der Mitschnitt liest ab dem jüngsten Eintrag der
+  Ablage, ein Zeitzonenversatz allein stört ihn nicht.
+- **Ein Lauf bricht ab:** Das Skript nennt den Ordner und wie es weitergeht, etwa
+  `erkunden.sh --ausgabe ~/ssmdb2-erkundung/<Ordner> protokoll abschluss`.
 - **Der Mitschnitt wird langsamer** (`# takt` im Protokoll): Die Abfragen dauern länger als 300 ms über
   der Grundlast; das Skript schont damit den Rechner, der live wertet. Das ist ein Befund, kein Fehler.

@@ -28,30 +28,52 @@ Anleitung für den Abend: `tools/ssmdb2-erkunden/README.md`. Plan: `plans/2026-1
 
 ## Regeln
 
-- **Nur lesen:** jede Sitzung `SET SESSION TRANSACTION READ ONLY` (sonst Rückfrage), nur `SELECT`, `SHOW`,
-  `EXPLAIN`; die Kopie mit `--single-transaction --skip-lock-tables` (unter MyISAM würde `LOCK TABLES`
-  ShootMaster blockieren, SF-51).
-- **Zugang** nur abgefragt, in einer temporären Datei mit Rechten 600 an den Client gegeben und beim
-  Beenden gelöscht; nie auf der Kommandozeile.
+- **Nur lesen:** Abfragen in Read-only-Sitzungen (`SET SESSION TRANSACTION READ ONLY`, sonst Rückfrage)
+  mit nur `SELECT`, `SHOW`, `EXPLAIN`; im General Log einer Testanlage nachgeprüft. Die Kopie
+  (`mariadb-dump --single-transaction --skip-lock-tables --force`) sendet dazu nur Sitzungsbefehle, nie
+  `LOCK TABLES` (unter MyISAM würde das ShootMaster blockieren, SF-51). Die Checkliste bricht jede
+  Abfrage nach 60 s ab (`max_statement_time` bzw. `max_execution_time`).
+- **Zugang:** Benutzer `meyton` wird vorgeschlagen, das Passwort steht im Handbuch und wird nur
+  abgefragt; es geht über eine temporäre Datei (Rechte 600, beim Beenden gelöscht) an den Client, nie
+  über die Kommandozeile und nie ins Repo. Dieselbe Datei schaltet die Zertifikatsprüfung des
+  MariaDB-11-Clients ab, der sonst einen Server ohne TLS ganz verweigert.
+- **Nicht abbrechen:** Fehlt eine Tabelle, eine Spalte, `NOW(3)` oder das Recht auf eine View, steht der
+  Fehler im Bericht und der Lauf geht weiter; bricht er doch ab, nennt das Skript Ordner und Fortsetzung.
 - **Keine Namen im Bericht** ([[adr-029]]): Die Checkliste fragt Personenbezüge nur als Anzahlen ab. Der
   Mitschnitt trägt in `bericht/protokoll.tsv` stabile Pseudonyme (`P1` für Namen, `S1` für
-  Sportpassnummern; gleicher Wert, gleiches Pseudonym), `--frei--` bleibt stehen (SF-13). Das
-  Rohprotokoll mit Namen liegt in `privat/`. Am Ende sucht die Namensprüfung alle Namen und Nummern der
-  Ablage als ganze Wörter im Bericht und meldet nur Anzahlen.
+  Sportpassnummern; Spalten ohne Groß-/Kleinschreibung erkannt), `--frei--` bleibt stehen (SF-13). Das
+  Rohprotokoll mit Namen liegt in `privat/`. Am Ende sucht die Namensprüfung alle Namen und
+  Sportpassnummern (ab fünf Stellen) der Ablage als ganze Wörter im Bericht und meldet nur Anzahlen;
+  ist sie nicht möglich, gibt `LIESMICH.md` keine Entwarnung.
 - **Mitschnitt** wie die Brücke: je Durchgang eine Read-only-Transaktion über Scheiben, Serien und
-  Treffer der Scheiben ab Start minus zehn Minuten, alle zehn Durchgänge zusätzlich über
-  `Treffer.Zeitstempel` (SF-50). Geschrieben wird nur bei Änderung, mit Mac-Zeit, Anlagenzeit und
-  Dauer. Die Grundlast des Clients (im Docker-Fall vor allem `docker exec`, etwa 200 ms) wird zu Beginn
-  gemessen; nur was darüber liegt, zählt als Abfragekosten und kann den Takt verlangsamen (SF-49).
+  Treffer der betroffenen Scheiben. Das Zeitfenster kommt aus den Daten (jüngster Eintrag oder
+  Server-Uhr, was früher ist, minus zehn Minuten), damit ein Versatz zwischen Server-Uhr und
+  Zeitstempeln nicht stört (SF-29, SF-31). Vor Schritt 1 laufen alle Abfragen einmal im Vordergrund;
+  nach jedem Schritt zeigt das Skript, wie viele Stände es gesehen hat, und warnt rot, wenn es keine
+  sind. Das Netz über `Treffer.Zeitstempel` (SF-50) läuft alle 10 s, bei einem Vollscan laut `EXPLAIN`
+  nur alle 60 s. Nur der Mitschnitt schreibt ins Rohprotokoll; Marker der Schritte übernimmt er aus
+  einer eigenen Datei. Gemessen wird die Stand-Abfrage allein; die Grundlast des Clients (`SELECT 1`, im
+  Docker-Fall vor allem `docker exec`, gemessen 85 bis 240 ms) zieht er ab. Liegt eine Abfrage mehr als
+  300 ms darüber, verdoppelt er den Takt (SF-49), nach zehn schnellen halbiert er ihn wieder.
+- Der Mac bleibt wach (`caffeinate`); `smbutil` fragt nie nach einem Passwort.
 
 ## Selbsttest
 
-`tools/ssmdb2-erkunden/test/selbsttest.sh` startet `mariadb:11` mit einem geschätzten Schema (MyISAM,
-Spalten wie die Vertrags-Beispiele) und Testdaten mit erfundenen Namen, lässt alle Phasen mit `--auto`
-laufen und simuliert das Schießen je Schritt, darunter die ungünstige Lesart von SF-03 (die Probe
-verschwindet mit dem ersten Wertungsschuss). Dazu ein Lauf ohne `--auto` mit Antworten über stdin, wie am Abend: Er fand, dass `docker exec -i` Eingaben des Users verbrauchte, während der Mitschnitt lief; Abfragen laufen seitdem ohne stdin. 39 Prüfungen, unter anderem: Kopie einspielbar mit
-gleichen Zeilen, keine Testnamen und kein Passwort in der Ausgabe, verschwindende Probe im Protokoll
-sichtbar, `ff914420` → −7257056. Läuft auch mit der macOS-Bash 3.2 (`ERKUNDEN_BASH=/bin/bash`).
+`tools/ssmdb2-erkunden/test/selbsttest.sh` startet `mariadb:11` **ohne TLS**, mit einem Benutzer, der
+nur lesen darf, dem Schema nach Handbuch V9 (MyISAM) und Testdaten mit erfundenen Namen. Er läuft:
+
+- alle Phasen mit `--auto`; der Simulator schießt je Schritt mit Zeitstempeln zwei Stunden hinter der
+  Server-Uhr, darunter die ungünstige Lesart von SF-03 (die Probe verschwindet mit dem ersten
+  Wertungsschuss);
+- eine zweite Datenbank mit anderem Schema (Tabellen klein geschrieben, ohne `Version`, eine Spalte
+  `Name`, eine View): kein Abbruch, Kopie als unvollständig gemeldet, Namensprüfung „nicht möglich“;
+- einen Lauf ohne `--auto` mit Antworten über stdin, wie am Abend (er fand, dass `docker exec -i`
+  Eingaben des Users verbrauchte), mit der ID so getippt, wie sie gedruckt ist (`ID: FF914420`).
+
+51 Prüfungen, unter anderem: Kopie einspielbar mit gleichen Zeilen, keine Testnamen und kein Passwort in
+der Ausgabe, Zugangsdateien gelöscht, verschwindende Probe im Protokoll sichtbar, `ff914420` → −7257056
+samt Tabellenzeile. Gegenproben: ohne gelöschte Probe und mit einer Abfrage, die Namen ausgibt, werden
+die zugehörigen Prüfungen rot. Läuft auch mit der macOS-Bash 3.2 (`ERKUNDEN_BASH=/bin/bash`).
 
 ## Danach
 

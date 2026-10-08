@@ -25,6 +25,7 @@ relates_to: ["[[spiegel]]"]
 - [[src-meyton-live-display]] — technische Referenz des Projekts Meyton-Live-Display (Apache-2.0).
 - [[src-meyton-recherche-2026-10]] — Recherche in Meyton-Support, Forum, Release-Notizen, DSB-Sportordnung und ISSF-Regeln.
 - [[src-meyton-disziplin-erstellen]] — Meyton-Anleitung „Disziplin erstellen“: Aufbau der DisziplinID, Standardlisten, Kollisionen der Regelnummern.
+- [[src-ssmdb2-zugang-recherche]] — Recherche vom 8. Oktober 2026: Zugang, Port, MariaDB, IP-Plan, Freigaben, Community-Projekte.
 
 ## Wer das Wissen nutzt
 

@@ -1,5 +1,6 @@
 -- Nachgebaute SSMDB2 für den Selbsttest. Spalten nach vault/meyton/meyton-ssmdb2.md (Version 6.0.2),
--- Typen nach Handbuch geschätzt; das echte Schema liefert erst der Abend im Schützenheim.
+-- Typen soweit bekannt nach dem Meyton-Handbuch V9 (SportpassID bigint seit V7, StandNrText, Serie,
+-- Millisekunden), sonst geschätzt; das echte Schema liefert erst der Abend im Schützenheim.
 -- MyISAM, weil das der ungünstigste Fall für Sperren ist (SF-51).
 
 CREATE TABLE Version (
@@ -16,9 +17,9 @@ CREATE TABLE Scheiben (
   Vorname varchar(30) DEFAULT NULL,
   Geschlecht char(1) DEFAULT NULL,
   Land varchar(3) DEFAULT NULL,
-  SportpassID int(11) DEFAULT NULL,
+  SportpassID bigint(20) DEFAULT NULL,
   StandNr int(11) DEFAULT NULL,
-  StandNrText varchar(10) DEFAULT NULL,
+  StandNrText varchar(36) DEFAULT NULL,
   Disziplin varchar(50) DEFAULT NULL,
   DisziplinID int(11) DEFAULT NULL,
   Klasse varchar(50) DEFAULT NULL,
@@ -54,7 +55,7 @@ CREATE TABLE Treffer (
   ScheibenID int(11) NOT NULL,
   Stellung int(11) NOT NULL,
   Treffer int(11) NOT NULL,
-  Serie int(11) DEFAULT NULL,
+  Serie smallint(6) DEFAULT NULL,
   x int(11) DEFAULT NULL,
   y int(11) DEFAULT NULL,
   Innenzehner tinyint(1) DEFAULT NULL,
@@ -65,6 +66,6 @@ CREATE TABLE Treffer (
   Teiler01 int(11) DEFAULT NULL,
   Teiler001 int(11) DEFAULT NULL,
   Zeitstempel datetime DEFAULT NULL,
-  Millisekunden int(11) DEFAULT NULL,
+  Millisekunden smallint(6) DEFAULT NULL,
   PRIMARY KEY (ScheibenID, Stellung, Treffer)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;

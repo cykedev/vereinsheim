@@ -5,7 +5,7 @@ title: "Meyton SSMDB2 — die Scheibenablage in MySQL"
 aliases: [ssmdb2, scheibenablage, small shootmaster database, meyton-db]
 keywords: [ssmdb2, mysql, scheibenablage, scheiben, serien, treffer, scheibenid, stellung, probe, disziplinid, regelnummer, wertungsmodus, verdeckte wertung, ring01, teiler01, teiler001, zeitstempel, millisekunden, sportpassid, starterliste, status, rwk, liga, kontrollzentrum, odbc, read only, erkundung, index, explain, show create table, timestamp, sitzungs-zeitzone, nur probe, versuche am stand, sportpass überlauf]
 part_of: ["[[meyton]]"]
-documented_in: ["[[src-meyton-ssmdb2-handbuch]]", "[[src-meyton-live-display]]", "[[src-meyton-recherche-2026-10]]", "[[src-meyton-disziplin-erstellen]]"]
+documented_in: ["[[src-meyton-ssmdb2-handbuch]]", "[[src-meyton-live-display]]", "[[src-meyton-recherche-2026-10]]", "[[src-meyton-disziplin-erstellen]]", "[[src-ssmdb2-zugang-recherche]]"]
 relates_to: ["[[spiegel-bridge]]", "[[spiegel-ingest-pipeline]]"]
 ---
 
@@ -13,10 +13,13 @@ relates_to: ["[[spiegel-bridge]]", "[[spiegel-ingest-pipeline]]"]
 
 ## Zugang
 
-- MySQL auf dem Meyton-Server (Standard 192.168.10.200), Datenbank `SSMDB2`, Standard-Zugang laut Handbuch (auf allen Anlagen gleich). Auch über ODBC.
+- Datenbank `SSMDB2` auf dem Meyton-Server (Standard 192.168.10.200), „per Netzwerk erreichbar“ ohne weitere Einstellung; Benutzer `meyton`, das Passwort steht im Handbuch auf Seite 3 und ist in V5, V7 und V9 gleich (auf allen Anlagen gleich; **nicht ins Repo**). Port 3306 nutzen alle Community-Projekte, das Handbuch nennt keinen. Auch über ODBC (bei Architekturfehlern Connector/ODBC 3.5.1) ([[src-ssmdb2-zugang-recherche]]).
+- Der Hersteller schreibt „MySQL“; laut Meyton-Forum ist es MariaDB. ShootMaster 6.0 setzt openSUSE Leap 15.3 bis 15.6 voraus, Leap 15.6 bringt MariaDB 10.11 mit; die Version ist unbelegt und wird vor Ort gelesen ([[ssmdb2-erkundung]]). Ein MariaDB-Client ab 11.4 verlangt TLS und verweigert einen Server ohne TLS, wenn man die Prüfung nicht abschaltet.
 - Seit ShootMaster 5.3 gibt es keinen root-Zugang mehr, die Haupt-DB ist für Externe gesperrt; ein eigener Lese-Benutzer ist nicht vorgesehen. Wer liest, schützt sich selbst: Read-only-Transaktionen, nur SELECT.
 - Beim Verein ist der Dienst aktiviert (Stand 5. Oktober 2026); es gibt nur 10-m-Stände.
-- Befüllt wird die Ablage vom Dienst im Kontrollzentrum (Bereich SSMDB2) oder manuell aus Preisschießen (accmanII), Wettkampfsteuerung (masterII) und Auswertung (ranklistII). Eine automatische Löschung ist nicht dokumentiert; manuelles Leeren ist möglich.
+- Befüllt wird die Ablage vom Dienst im Kontrollzentrum (Bereich SSMDB2, in Echtzeit oder nachträglich) oder manuell aus Preisschießen (accmanII), Wettkampfsteuerung (masterII) und Auswertung (ranklistII). Eine automatische Löschung ist nicht dokumentiert; „alle Ergebnisse aus SSMDB2 löschen“ im Kontrollzentrum leert immer die ganze Ablage (SF-23), die zentrale DB bleibt.
+- **Netz** laut Meyton-IP-Plan, alle Masken 255.255.0.0, kein Standard-Gateway: Messrahmen 192.168.11.1–159, Steuer-PCs 192.168.10.1–159, ESTA-Show .160–179, Netzteile .180–199, Server .200, Meyton-Clients .201–239, Drucker .240–250, Switches .251–254, WLAN 192.168.2.x. An der IP erkennt Meyton die Rolle einer Workstation; ein fremdes Gerät gehört deshalb **nicht** in .200–.239, sondern auf eine freie Adresse im /16 (etwa 192.168.20.x). Für den QR-Code braucht die Anlage einen Router mit DHCP und Internet.
+- **Freigaben** per Samba, meist als Gast: `\\192.168.10.200\ERGEBNIS` (`/var/ShootMasterII/ERGEBNIS`, darin `WM-Shot` und `XML` für den SDF-Export, der standardmäßig aus ist). Dass Ausdrucke als PDF auf einer Freigabe landen, belegt keine Quelle. Der QR-Code zeigt vermutlich auf Meytons Dienst `qrcode.meyton.eu` (nur HTTP), nicht auf einen Server im Vereinsnetz; am echten QR prüfen ([[meyton-printout]]).
 
 ## Tabellen
 
@@ -48,6 +51,8 @@ Meytons Standardlisten stehen im Handbuch „Disziplin erstellen“ ([[src-meyto
 | 5.4 | 09/2025 | Probeschüsse (Stellung 0) und Serie je Treffer in der Ablage |
 | 6.0.2 | 07/2026 | Feld `BesterTeiler001`; **der Verein nutzt diese Version** |
 
+Handbuchstände: V5 (08/2023) → V7 (03/2024): `SportpassID` von `int(11)` auf `bigint(20)`. V7 → V9 (Datenbankversion 9, zu ShootMaster 6.0): neu `Scheiben.StandNrText varchar(36)`, `Scheiben.BesterTeiler001 int(11)`, `Treffer.Serie smallint(6)`; `Treffer.Stellung` 0 heißt Probe. `Startzeit` und beide `Zeitstempel` sind `datetime`, `Millisekunden` ist `smallint`. Die Tabelle `Version` steht in keinem Handbuch; Community-Projekte lesen daraus die Schema-Version (v8 ≈ 5.4, v9 ≈ 6.0, nicht belegt).
+
 ## Stolperfallen
 
 | Befund | Umgang |
@@ -60,10 +65,10 @@ Meytons Standardlisten stehen im Handbuch „Disziplin erstellen“ ([[src-meyto
 | keine Standbelegung in der DB | für Live optional LANA ([[meyton-interfaces]]) |
 | Korrekturen und Löschungen ändern Zeilen nachträglich | Snapshots mit Revision, Abgleich der letzten Tage |
 | Probeschüsse laut Release-Notiz nur bis zum ersten Wertungsschuss gespeichert; unklar, ob sie dann gelöscht oder nur nicht mehr geschrieben werden | während des Schießens mitlesen und auf der Brücke puffern; Versuch in Phase 0 |
-| `SportpassID` ist `int(11)` (höchstens 2147483647), Sportpassnummern dürfen 12 Stellen haben; je nach MySQL-Modus wird gekappt, dann teilen sich viele Schützen eine ID | vor Ort prüfen; mehrdeutige IDs nie automatisch zuordnen ([[spiegel-assignment]]) |
+| `SportpassID` war bis Handbuch V5 `int(11)` (höchstens 2147483647), Sportpassnummern dürfen 12 Stellen haben; seit V7 `bigint(20)`. Ältere Einträge können gekappt sein, dann teilen sich viele Schützen eine ID | Typ und Spitzenwerte vor Ort prüfen; mehrdeutige IDs nie automatisch zuordnen ([[spiegel-assignment]]) |
 | im Training oft frei getippte Namen | Zuordnung nicht über Namen ([[spiegel-assignment]]) |
 | Indizes unbekannt; eine Abfrage ohne Index liest bei jedem Takt die ganze Tabelle, während geschossen wird | `SHOW INDEX` und `EXPLAIN` vor dem ersten Polling |
-| Ist `Zeitstempel` ein `TIMESTAMP`, rechnet MySQL ihn in die Sitzungs-Zeitzone um | Spaltentyp prüfen, Sitzungs-Zeitzone fest setzen und mitsenden |
+| Ist `Zeitstempel` ein `TIMESTAMP`, rechnet MySQL ihn in die Sitzungs-Zeitzone um; laut Handbuch V9 ist es `datetime` (Ortszeit ohne Zone, Community bestätigt) | Spaltentyp vor Ort bestätigen, Sitzungs-Zeitzone trotzdem fest setzen und mitsenden |
 | Ob `Scheiben.Zeitstempel` bei Probeschüssen steigt, ist offen | Versuch in Phase 0; davon hängt die Änderungserkennung ab |
 | `Zeitstempel + Millisekunden` rechnet MySQL als Zahl; spätere Schüsse wirken dann älter | als Paar vergleichen |
 | Engine unbekannt: MyISAM sperrt beim Lesen die Tabelle und kann nach hartem Stromaus beschädigt sein; InnoDB zeigt einer lang offenen Transaktion keine neuen Zeilen | kurze Abfragen, Fehler nie als Löschung werten, `SHOW TABLE STATUS` |
