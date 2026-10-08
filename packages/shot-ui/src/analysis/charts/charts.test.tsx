@@ -5,6 +5,8 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { IntervalBar } from "../parts"
+import { RULER_HINT } from "./ChartRuler"
+import { CourseChart } from "./CourseChart"
 import { PathChart } from "./PathChart"
 import { SeriesChart } from "./SeriesChart"
 
@@ -70,5 +72,50 @@ describe("Intervallbalken", () => {
       createElement(IntervalBar, { value: 0, low: 0, high: 0, min: 0, max: 0, label: "σ 0 mm" })
     )
     expect(html).not.toContain("NaN")
+  })
+})
+
+/** zwölf Wertungsschüsse mit Zehntelwerten 95, 96, … und Zeit, eine Serie */
+const twelve: MetricShot[] = Array.from({ length: 12 }, (_, i) => ({
+  seq: i + 1,
+  xUm: 100 * i,
+  yUm: 0,
+  decimalTenths: 95 + (i % 7),
+  ring: 9 + Math.floor((95 + (i % 7)) / 100),
+  innerTen: false,
+  firedAtMs: i * 50_000,
+  kind: "match",
+  series: 1,
+}))
+
+describe("Verlauf mit Lineal", () => {
+  const course = (props: Partial<Parameters<typeof CourseChart>[0]> = {}) =>
+    renderToStaticMarkup(
+      createElement(CourseChart, { width: 600, shots: twelve, scoring: "decimal", ...props })
+    )
+
+  it("ohne Wahl der Hinweis, kein Lineal, kein Wert nur im <title>", () => {
+    const html = course()
+    expect(html).toContain(RULER_HINT)
+    expect(html).not.toContain("data-ruler")
+    expect(html).not.toContain("<title>")
+    expect(html).toContain("touch-action:pan-y")
+  })
+
+  it("der auf der Scheibe gewählte Schuss steht im Lineal, die Zeile nennt Wert und Schnitt", () => {
+    const html = course({ chosenNumber: 5, onShow: () => {} })
+    expect(html).toMatch(/data-course-point="5" data-chosen="true"[^>]*r="5.5"/)
+    expect([...html.matchAll(/data-chosen="true"/g)]).toHaveLength(1)
+    expect(html).toContain("data-ruler")
+    // Schuss 5 hat 99 Zehntel, der Schnitt bisher (noch keine zehn): (95 + 96 + 97 + 98 + 99) / 5 = 97
+    expect(html).toContain("Schuss 5 · 9,9 · Schnitt bisher 9,70")
+    expect(html).toMatch(/<button type="button"[^>]*>Auf der Scheibe<\/button>/)
+  })
+
+  it("ohne Aktion kein Knopf; die Tabelle hat eine Zeile je Schuss", () => {
+    const html = course({ chosenNumber: 12 })
+    expect(html).not.toContain(">Auf der Scheibe<")
+    expect(html).toContain("Schnitt der letzten zehn")
+    expect([...html.matchAll(/<tr class="border-t/g)]).toHaveLength(12)
   })
 })
