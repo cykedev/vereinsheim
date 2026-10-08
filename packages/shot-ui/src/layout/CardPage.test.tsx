@@ -3,12 +3,14 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { CardPage } from "./CardPage"
+import { MIN_TARGET_PX, targetRoom } from "./useTargetFit"
 
 const html = renderToStaticMarkup(
   h(CardPage, {
     header: h("p", null, "KOPF"),
     nav: h("nav", null, "LEISTE"),
     target: h("p", null, "SCHEIBE"),
+    under: h("p", null, "SERIEN"),
     aside: h("p", null, "SEITE"),
     beside: [{ id: "schuesse", node: h("p", null, "SCHÜSSE") }],
     below: [
@@ -19,10 +21,17 @@ const html = renderToStaticMarkup(
 )
 
 describe("Rahmen der Seite (D2, D5)", () => {
-  it("auf dem Telefon eine Spalte: Kopf, Leiste, Scheibe, Seite, Abschnitte", () => {
-    const order = ["KOPF", "LEISTE", "SCHEIBE", "SEITE", "SCHÜSSE", "ZAHLEN", "ANALYSE"].map((t) =>
-      html.indexOf(t)
-    )
+  it("auf dem Telefon eine Spalte: Kopf, Leiste, Scheibe, Serien, Seite, Abschnitte", () => {
+    const order = [
+      "KOPF",
+      "LEISTE",
+      "SCHEIBE",
+      "SERIEN",
+      "SEITE",
+      "SCHÜSSE",
+      "ZAHLEN",
+      "ANALYSE",
+    ].map((t) => html.indexOf(t))
     expect(order.every((i) => i >= 0)).toBe(true)
     expect([...order].sort((a, b) => a - b)).toEqual(order)
   })
@@ -53,5 +62,32 @@ describe("Rahmen der Seite (D2, D5)", () => {
     // ab dem Anker der Scheibe (ihr <div fehlt) bis in den Block der Zahlen (sein <div zählt): ausgeglichen
     // heißt, die Zahlen sind Geschwister des Rasters und nicht in der rechten Spalte
     expect(opens).toBe(closes)
+  })
+
+  it("die Serien in der Spalte der Scheibe, die Schüsse rechts füllen die Höhe", () => {
+    // die Spalte der Scheibe schließt erst nach den Serien
+    const column = html.slice(html.indexOf('data-section="scheibe"'), html.indexOf("SEITE"))
+    expect(column).toContain("SERIEN")
+    expect(column.match(/<\/div>/g)).toHaveLength(1)
+    expect(html).toMatch(
+      /id="schuesse" data-section="schuesse" class="[^"]*md:flex-1[^"]*md:\[contain:size\]/
+    )
+    expect(html).not.toMatch(/id="zahlen"[^>]*md:flex-1/)
+  })
+})
+
+describe("Platz für die Scheibe (useTargetFit)", () => {
+  it("Fenster minus Leiste, Luft und alles außer der Scheibe in ihrer Spalte", () => {
+    // 900 px Fenster, Spalte 900 px hoch mit 640 px Scheibe: 260 px Rahmen und Serien
+    expect(targetRoom(900, 900, 640)).toBe(900 - 56 - 16 - 260)
+    // der Wert hängt nicht an der gerade gezeichneten Größe der Scheibe
+    expect(targetRoom(900, 828, 568)).toBe(targetRoom(900, 900, 640))
+  })
+
+  it("unter 280 px keine Begrenzung: dann bleibt die Scheibe allein im Fenster", () => {
+    expect(targetRoom(600, 540, 300)).toBe(MIN_TARGET_PX + 8)
+    expect(targetRoom(600, 548, 300)).toBe(MIN_TARGET_PX)
+    expect(targetRoom(600, 549, 300)).toBeNull()
+    expect(targetRoom(375, 470, 271)).toBeNull()
   })
 })

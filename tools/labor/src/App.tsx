@@ -317,11 +317,12 @@ export function App({ commit }: { commit: string }) {
         nav={<SectionNav active={active} />}
         target={
           <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5">
-            {/* höchstens so groß, dass die Scheibe samt Karte unter der Leiste ins Fenster passt (D5, D9): 3,5rem
-                Leiste, 1,875rem Rahmen der Karte, etwas Luft; die Schalter liegen in den Ecken */}
+            {/* höchstens so groß, dass sie mit den Serien darunter ins Fenster passt (`--target-max` aus CardPage),
+                sonst wenigstens allein: 3,5rem Leiste, 1,875rem Rahmen der Karte, etwas Luft (D5, D9) */}
             <div
               id="target-box"
-              className="relative mx-auto aspect-square w-full max-w-[calc(100svh-6.5rem)] overflow-hidden rounded-xl bg-surface-2"
+              data-target-box
+              className="relative mx-auto aspect-square w-full max-w-[var(--target-max,calc(100svh-6.5rem))] overflow-hidden rounded-xl bg-surface-2"
               style={{ cursor: mode === "set" ? "crosshair" : undefined }}
               onClick={place}
             >
@@ -347,25 +348,27 @@ export function App({ commit }: { commit: string }) {
             <ShotLine className="md:hidden" shots={shots} state={state} />
           </div>
         }
+        under={
+          <div id="series" className="grid gap-4 rounded-2xl border border-border bg-card p-3.5">
+            {/* je Karte eine neue Leiste, wie in der App beim Wechsel der Session */}
+            <SeriesStrip
+              key={`${targetId}:${sample.id}`}
+              target={target}
+              shots={shots}
+              state={state}
+              onSelect={(series) => dispatch({ type: "select", series })}
+              onSelectWhole={(whole) => dispatch({ type: "selectWhole", whole })}
+            />
+          </div>
+        }
         aside={
           <>
-            {/* Telefon: Serien gleich unter der Scheibe (D2); die Ablesung als Karte erst ab 768 px */}
+            {/* die Ablesung als Karte erst ab 768 px, auf dem Telefon die Ablesezeile an der Scheibe */}
             <div
               id="readout"
               className="rounded-2xl border border-border bg-card p-4 max-md:hidden"
             >
               <ShotReadout shots={shots} state={state} />
-            </div>
-            <div id="series" className="grid gap-4 rounded-2xl border border-border bg-card p-3.5">
-              {/* je Karte eine neue Leiste, wie in der App beim Wechsel der Session */}
-              <SeriesStrip
-                key={`${targetId}:${sample.id}`}
-                target={target}
-                shots={shots}
-                state={state}
-                onSelect={(series) => dispatch({ type: "select", series })}
-                onSelectWhole={(whole) => dispatch({ type: "selectWhole", whole })}
-              />
             </div>
             <div id="summary" className="rounded-2xl border border-border bg-card p-4">
               <CardSummary shots={shots} state={state} />
@@ -376,10 +379,14 @@ export function App({ commit }: { commit: string }) {
           {
             id: "schuesse",
             node: (
-              <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
+              <div
+                id="shot-table"
+                className="rounded-2xl border border-border bg-card p-2 md:h-full"
+              >
+                {/* ab 768 px so hoch wie Scheibe und Serien links, scrollt in sich */}
                 <ShotTable
                   key={`${targetId}:${sample.id}`}
-                  className="md:max-h-80"
+                  className="md:h-full"
                   shots={shots}
                   state={state}
                   onChoose={chooseFromTable}

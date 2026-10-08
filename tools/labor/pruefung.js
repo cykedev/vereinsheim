@@ -1209,15 +1209,10 @@ addEventListener("load", async () => {
       await wait(600)
       return f
     }
-    // scrollt in den Bereich, in dem die Scheibe klebt (Anteil 0 bis 1 seiner Länge); liefert die Länge
-    const scrollWhileStuck = (w, share) => {
-      const d = w.document
-      const region = d.getElementById("scheibe")
-      const card = d.querySelector('[data-section="scheibe"]')
-      const start = region.getBoundingClientRect().top + w.scrollY - 56
-      const room = region.offsetHeight - card.offsetHeight
-      w.scrollTo(0, start + Math.max(0, room) * share)
-      return room
+    // scrollt so, dass das Raster mit Scheibe und Serien direkt unter der Leiste beginnt
+    const scrollToRegion = (w) => {
+      const region = w.document.getElementById("scheibe")
+      w.scrollTo(0, region.getBoundingClientRect().top + w.scrollY - 56)
     }
     const frameClick = async (f, el, ms = 150) => {
       el.dispatchEvent(new f.contentWindow.MouseEvent("click", { bubbles: true }))
@@ -1264,31 +1259,33 @@ addEventListener("load", async () => {
         near(sectionNav.getBoundingClientRect().top, 0, 1),
       strip.getBoundingClientRect().top.toFixed(0)
     )
-    const stuckRoom = scrollWhileStuck(dw, 0.1)
-    await wait(80)
-    const stuck1 = dd.getElementById("target-box").getBoundingClientRect().top
-    scrollWhileStuck(dw, 0.9)
-    await wait(80)
-    const stuck2 = dd.getElementById("target-box").getBoundingClientRect().top
+    scrollToRegion(dw)
+    await wait(100)
+    const deskRect = (id) => dd.getElementById(id).getBoundingClientRect()
+    const [deskBox, deskSeries, deskTable] = ["target-box", "series", "shot-table"].map(deskRect)
+    const tableScroller = dd.querySelector("#shot-table > div")
     check(
-      "Desktop: die Scheibe bleibt stehen, solange rechts daneben gescrollt wird",
-      stuckRoom > 200 && near(stuck1, stuck2, 1) && stuck1 > 56 && stuck1 < 200,
-      `${stuckRoom} px · ${stuck1.toFixed(0)} / ${stuck2.toFixed(0)}`
+      "Desktop: Scheibe und Serien passen zusammen ins Fenster, die Schüsse enden mit den Serien",
+      deskSeries.top > deskBox.bottom &&
+        deskSeries.bottom <= 900 - 15 &&
+        deskBox.width >= 500 &&
+        near(deskTable.bottom, deskSeries.bottom, 1) &&
+        tableScroller.scrollHeight > tableScroller.clientHeight,
+      `Scheibe ${deskBox.width.toFixed(0)} px · Serien bis ${deskSeries.bottom.toFixed(0)} · Schüsse bis ${deskTable.bottom.toFixed(0)}`
     )
-    // neben der Scheibe Schuss, Serien und Schüsse; Zahlen und Analyse darunter über die ganze Breite
-    const regionBox = dd.getElementById("scheibe").getBoundingClientRect()
+    // links Scheibe und Serien, rechts Schuss, Übersicht und Schüsse; Zahlen und Analyse darunter über die
+    // ganze Breite
+    const regionBox = deskRect("scheibe")
     const fullWidth = ["zahlen", "analyse"].every((id) => {
-      const r = dd.getElementById(id).getBoundingClientRect()
+      const r = deskRect(id)
       return near(r.left, regionBox.left, 1) && near(r.width, regionBox.width, 1)
     })
-    const besideTarget = ["readout", "series", "shot-table"].every(
-      (id) =>
-        dd.getElementById(id).getBoundingClientRect().left >
-        dd.getElementById("target-box").getBoundingClientRect().right
+    const besideTarget = ["readout", "summary", "shot-table"].every(
+      (id) => deskRect(id).left > deskBox.right
     )
     check(
-      "Desktop: Schuss, Serien und Schüsse neben der Scheibe, Zahlen und Analyse darunter in voller Breite",
-      fullWidth && besideTarget,
+      "Desktop: Serien unter der Scheibe, Schuss, Übersicht und Schüsse daneben, Zahlen und Analyse darunter in voller Breite",
+      fullWidth && besideTarget && deskSeries.right < deskRect("readout").left,
       `${regionBox.width.toFixed(0)} px`
     )
     dd.getElementById("analyse").scrollIntoView()
@@ -1386,19 +1383,25 @@ addEventListener("load", async () => {
     anchored.remove()
 
     // feste Scheibe ab 768 px: beim Kleben passt sie samt Leiste ins Fenster, auch flach (D5, D9)
-    for (const [width, height] of [
-      [812, 375],
-      [1024, 600],
+    // flach passt die Scheibe allein ins Fenster, mit genug Höhe samt Serien (ab 280 px Scheibe)
+    for (const [width, height, withSeries] of [
+      [812, 375, false],
+      [1024, 600, false],
+      [1024, 768, true],
     ]) {
       const flat = await openFrame(width, height)
       const fd = flat.contentDocument
-      scrollWhileStuck(flat.contentWindow, 0.5)
+      scrollToRegion(flat.contentWindow)
       await wait(100)
-      const card = fd.querySelector('[data-section="scheibe"]').getBoundingClientRect()
+      const flatBox = fd.getElementById("target-box").getBoundingClientRect()
+      const flatSeries = fd.getElementById("series").getBoundingClientRect()
       check(
-        `${width} × ${height}: kein seitliches Scrollen, die feste Scheibe endet über dem Fensterrand`,
-        fd.documentElement.scrollWidth <= width && card.bottom <= height && near(card.top, 56, 1),
-        `${fd.documentElement.scrollWidth} · ${card.top.toFixed(0)}–${card.bottom.toFixed(0)} von ${height}`
+        `${width} × ${height}: kein seitliches Scrollen, die Scheibe passt unter die Leiste${withSeries ? ", die Serien darunter auch" : ""}`,
+        fd.documentElement.scrollWidth <= width &&
+          near(flatBox.top - 15, 56, 1) &&
+          flatBox.bottom <= height &&
+          flatSeries.bottom <= height === withSeries,
+        `${fd.documentElement.scrollWidth} · Scheibe ${flatBox.top.toFixed(0)}–${flatBox.bottom.toFixed(0)}, Serien bis ${flatSeries.bottom.toFixed(0)} von ${height}`
       )
       flat.remove()
     }

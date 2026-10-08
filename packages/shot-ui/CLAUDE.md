@@ -37,7 +37,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/layout/sections`           | `src/layout/sections.ts`           | Abschnitte der Seite und Anker (`#lage` …): `PAGE_SECTIONS`, `TAB_ANCHORS`, `parseHash`, `hashFor`                                                                                                                                                          |
 | `@vereinsheim/shot-ui/layout/SectionNav`         | `src/layout/SectionNav.tsx`        | Sprungleiste „Scheibe · Schüsse · Zahlen · Analyse“, klebt oben, aktiver Abschnitt hervorgehoben, auf dem Telefon vier gleiche Felder                                                                                                                       |
 | `@vereinsheim/shot-ui/layout/useActiveSection`   | `src/layout/useActiveSection.ts`   | aktiver Abschnitt beim Scrollen gemessen, `activeSection` (spätester, dessen Anfang die Leiste erreicht hat)                                                                                                                                                |
-| `@vereinsheim/shot-ui/layout/CardPage`           | `src/layout/CardPage.tsx`          | Rahmen der Seite: Telefon eine Spalte; ab 768 px Scheibe links fest, daneben `aside` und `beside`, darunter `below` in voller Breite                                                                                                                        |
+| `@vereinsheim/shot-ui/layout/CardPage`           | `src/layout/CardPage.tsx`          | Rahmen der Seite: Telefon eine Spalte; ab 768 px links Scheibe und `under` (Serien) passend ins Fenster (`useTargetFit`), rechts `aside` und `beside`, darunter `below` in voller Breite                                                                    |
 | `@vereinsheim/shot-ui/layout/jump`               | `src/layout/jump.ts`               | `isOutOfView`, `shouldDismiss`: wann zur Scheibe springen, wann die Pille verschwindet                                                                                                                                                                      |
 | `@vereinsheim/shot-ui/layout/useReturnJump`      | `src/layout/useReturnJump.ts`      | Sprung zur Scheibe mit Rücksprung (sofort, ohne Gleiten)                                                                                                                                                                                                    |
 | `@vereinsheim/shot-ui/layout/ReturnPill`         | `src/layout/ReturnPill.tsx`        | Pille „Zurück zu „Lage““ unten mittig                                                                                                                                                                                                                       |
@@ -69,8 +69,9 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`
   ohne Grund (Antippen statt Hover ist offen, `vault/spiegel/spiegel-mobile.md`).
 - **Seite aus `CardPage`:** Kopf (`CardHeader`), Sprungleiste (`SectionNav` mit `useActiveSection`), Scheibe,
-  daneben was zu ihr gehört (`aside`: Ablesung, Serien, Übersicht; `beside`: Schüsse), darunter in voller Breite,
-  was Platz braucht (`below`: Zahlen, Analyse). Die Scheibe trägt selbst `data-section`, die Abschnitte haben
+  unter ihr die Serien (`under`), rechts daneben was zu ihr gehört (`aside`: Ablesung, Übersicht; `beside`:
+  Schüsse, füllen die Höhe), darunter in voller Breite, was Platz braucht (`below`: Zahlen, Analyse). Der Kasten
+  der Scheibe trägt `data-target-box` und begrenzt sich mit `max-w-[var(--target-max,…)]`. Die Scheibe trägt selbst `data-section`, die Abschnitte haben
   `scroll-mt-14` für die 56 px hohe Leiste. Was außerhalb der Scheibe die Scheibe ändert, springt über
   `useReturnJump` zu ihr. Die Schalter der Scheibe liegen in ihren Ecken (`TargetControls`), nicht als Leiste.
 - **Erklärungen als Blatt:** Karten der Analyse, Kacheln und die Scheibe tragen ein „?“ (`HelpButton` mit
