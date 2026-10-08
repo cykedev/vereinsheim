@@ -214,7 +214,25 @@ describe("Kacheln „Trefferbild in Zahlen“", () => {
       })
     )
     expect(html).toMatch(
-      /<\/h2>[\s\S]*alle Schüsse mit Probe[\s\S]*>Erklärungen<\/button>[\s\S]*data-metric=/
+      /<\/h2>[\s\S]*über alle Schüsse mit Probe[\s\S]*>Erklärungen<\/button>[\s\S]*data-metric=/
     )
+  })
+
+  it("der Kopf nennt die Grundlage wie die Analyse: „über …“ (Plan Schritt 4, D4)", () => {
+    const scope = (html: string) =>
+      html.match(/<span class="text-\[13px\] text-muted-foreground">([^<]+)<\/span>/)![1]
+    expect(scope(render())).toBe("über alle Schüsse mit Probe")
+    expect(scope(render({ selection: "match" }))).toBe("über alle Schüsse ohne Probe")
+    expect(scope(render({ selection: "probe" }))).toBe("über die Probe")
+    expect(scope(render({ selection: 2 }))).toBe("über Serie 2")
+    expect(
+      scope(
+        render(
+          {},
+          undefined,
+          CARD.filter((s) => s.kind === "match")
+        )
+      )
+    ).toBe("über alle Schüsse")
   })
 })

@@ -152,16 +152,17 @@ export function MetricTiles({
     scoring: state.scoring,
   }
   const mixed = shots.some((s) => s.kind === "probe") && shots.some((s) => s.kind !== "probe")
+  // worüber die Kacheln rechnen, in derselben Form wie der Kopf der Analyse („über …“, Plan Schritt 4 D4)
   const scope =
     state.selection === "all"
       ? mixed
-        ? "alle Schüsse mit Probe"
-        : "alle Schüsse"
+        ? "über alle Schüsse mit Probe"
+        : "über alle Schüsse"
       : state.selection === "match"
-        ? "ohne Probe"
+        ? "über alle Schüsse ohne Probe"
         : state.selection === "probe"
-          ? "Probe"
-          : `Serie ${state.selection}`
+          ? "über die Probe"
+          : `über Serie ${state.selection}`
 
   return (
     <section className={cn("grid gap-3", className)} aria-label="Trefferbild in Zahlen">
