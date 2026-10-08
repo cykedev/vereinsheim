@@ -124,7 +124,8 @@ export function MetricTiles({
           {action}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">
+      {/* zehn Kacheln füllen 2 oder 5 Spalten ganz; bei 4 bliebe eine Lücke */}
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-5">
         {keys.map((key) => {
           const definition = metricByKey(key)
           if (!definition) return null

@@ -144,6 +144,20 @@ addEventListener("load", async () => {
       $$("[data-metric]").every((t) => t.title === L().tools.helpForMetric(t.dataset.metric).short)
     )
 
+    const tileRows = (root) => {
+      const rows = new Map()
+      for (const t of $$("[data-metric]", root)) {
+        const top = Math.round(t.getBoundingClientRect().top)
+        rows.set(top, (rows.get(top) ?? 0) + 1)
+      }
+      return [...rows.values()]
+    }
+    check(
+      "Kacheln: volle Zeilen, keine Lücke (Desktop 5 je Zeile)",
+      tileRows(document).every((n) => n === 5),
+      tileRows(document).join("+")
+    )
+
     // ---------- Schusstabelle
     const labelsAll = L().tools.shotLabels(L().shots)
     const intervalsAll = L().tools.shotIntervals(L().shots)
@@ -576,6 +590,11 @@ addEventListener("load", async () => {
     await new Promise((resolve) => frame.addEventListener("load", resolve, { once: true }))
     await wait(500)
     const doc = frame.contentDocument
+    check(
+      "Handy: Kacheln in vollen Zeilen zu zwei",
+      !!doc && tileRows(doc).length === 5 && tileRows(doc).every((n) => n === 2),
+      doc ? tileRows(doc).join("+") : "kein Zugriff"
+    )
     // die breitesten Ausreißer benennen, damit ein Fehlschlag sagt, wo es klemmt
     const wide = doc
       ? [...doc.body.querySelectorAll("*")]
