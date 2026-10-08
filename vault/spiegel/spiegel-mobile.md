@@ -89,6 +89,12 @@ Grund misst die Sprungleiste den aktiven Abschnitt beim Scrollen statt über ein
   die Scheibe wird dafür kleiner, aber nicht unter 280 px (bei 1280 × 900 rund 560 px, bei 1024 × 768 knapp
   450 px; bei 1024 × 600 passt nur die Scheibe allein). Rechts reicht die Schusstabelle bis zur Unterkante der
   Serien und scrollt in sich, so steht die obere Hälfte der Seite wie ein Bildschirm da.
+- **Ergebnis als Box, Kopf im Raster:** Ab 768 px steht das Ergebnis (mit Wertung, Probe, Zehnern, Innenzehnern,
+  bestem Teiler) als Box rechts über der Ablesung, der Kopf mit Titel und Satz über der Scheibe; die Übersicht
+  als eigene Karte ist darin aufgegangen, die Ablesung ist eine Zeile ohne x/y. Auf dem Telefon bleibt das
+  Ergebnis im Kopf, damit es auf dem ersten Bildschirm steht.
+- **Keine leeren Gerüste:** Ohne Schüsse nur die Scheibe und „Noch kein Schuss“; die Schusstabelle wird nur so
+  hoch wie ihre Zeilen.
 - **Aktiver Abschnitt an der Leiste:** Mit 45 % der Fensterhöhe galt nach einem Sprung zu den kurzen Zahlen
   schon die Analyse als aktiv. Es zählt jetzt der Abschnitt, dessen Anfang die Leiste erreicht hat.
 

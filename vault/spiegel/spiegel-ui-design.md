@@ -89,10 +89,12 @@ Oktober 2026), im Labor unter den Kacheln.
 Die Seite einer Scheibe für Telefon, Tablet und Desktop (Schritt 4 von SP-1.8, Oktober 2026; Begründung und
 Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` und `readout/*`.
 
-- **Kopf** (`CardHeader`): Scheibe und Metazeile, das Ergebnis groß mit Wertungsschüssen und Probe („40 Schuss
-  + 9 Probe“), darunter Zehner, Innenzehner und bester Teiler, daneben die Wertung ganze Ringe/Zehntel, darunter
-  ein Satz (der erste Satz der ersten Beobachtung). Alles über die ganze Scheibe; die frühere Übersicht als
-  eigene Karte wiederholte Ergebnis und Schusszahl und ist im Kopf aufgegangen (User, 8. Oktober 2026).
+- **Kopf** (`CardHeader`): Scheibe und Metazeile, darunter ein Satz (der erste Satz der ersten Beobachtung); ab
+  768 px im Raster der Seite über der Scheibe (`PAGE_COLUMNS`).
+- **Ergebnis** (`CardResult`): groß mit Wertungsschüssen und Probe („40 Schuss + 9 Probe“), darunter Zehner,
+  Innenzehner und bester Teiler, dazu die Wertung ganze Ringe/Zehntel; alles über die ganze Scheibe. Auf dem
+  Telefon im Kopf (erster Bildschirm), ab 768 px als Box rechts über der Ablesung. Die frühere Übersicht als
+  eigene Karte wiederholte Ergebnis und Schusszahl und ist darin aufgegangen (User, 8. Oktober 2026).
 - **Sprungleiste** (`SectionNav`) unter dem Kopf, klebt oben: „Scheibe · Schüsse · Zahlen · Analyse“ als Anker,
   auf dem Telefon vier gleich breite Felder, nie angeschnitten. Aktiv ist der späteste Abschnitt, dessen Anfang
   die Leiste erreicht hat (bis 40 px darunter, beim Scrollen gemessen); so ist nach einem Sprung genau dieser
@@ -108,12 +110,16 @@ Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` 
   zehn neuesten Schüsse und „Alle 40 zeigen“, der gewählte bleibt sichtbar.
 - **Ab 768 px** (`CardPage`): links die Scheibe, darunter die Serien (User, 8. Oktober 2026), zusammen so groß,
   dass beide unter der Leiste ins Fenster passen (`useTargetFit` misst die Spalte; bleibt für die Scheibe weniger
-  als 280 px, passt sie allein ins Fenster und die Serien folgen darunter). Rechts daneben Ablese-Karte und
-  Schusstabelle; die Tabelle reicht bis zur Unterkante der Serien und scrollt in sich. Zahlen und Analyse
+  als 280 px, passt sie allein ins Fenster und die Serien folgen darunter). Rechts daneben Ergebnis, Ablese-Karte
+  und Schusstabelle; die Tabelle reicht höchstens bis zur Unterkante der Serien und scrollt dann in sich, mit
+  wenigen Schüssen ist sie nur so hoch wie ihre Zeilen. Zahlen und Analyse
   folgen darunter in voller Breite, die Scheibe scrollt dort mit weg (User, 8. Oktober 2026: Bereiche, die neben
   der Scheibe bleiben, und Bereiche, die unten mehr Platz brauchen). Die
   Kacheln stehen zu fünf, die Karten der Analyse zu zweit; ihre Spalten richten sich nach der Breite des
   Bereichs, nicht des Fensters. Auch im Querformat am Telefon passt die Scheibe in die Höhe.
+- **Ohne Schüsse** (`NoShots`): nur Kopf, Scheibe und daneben „Noch kein Schuss“ mit einem Satz, was hier
+  erscheint; keine Sprungleiste, keine leeren Kästen, keine Kacheln voller Striche (User, 8. Oktober 2026).
+  Mit dem ersten Schuss erscheint die ganze Seite.
 - **Sprung zur Scheibe mit Rücksprung:** Schaltet der Knopf „Vertrauensellipse“ in der Analyse oder eine Zeile der
   Schusstabelle die Scheibe und ist sie außer Sicht, springt die Seite zu ihr und zeigt die Pille
   „Zurück zu „Lage““. Gesprungen wird sofort wie bei Ankern, nicht gleitend.
