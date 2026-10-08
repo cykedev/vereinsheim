@@ -2,6 +2,7 @@ import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { CardSummary } from "@vereinsheim/shot-ui/readout/CardSummary"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
+import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import { initialViewState, viewReducer, type Layer } from "@vereinsheim/shot-ui/view-state"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
@@ -265,6 +266,14 @@ export function App({ commit }: { commit: string }) {
             </div>
             <div id="summary" className="rounded-2xl border border-border bg-card p-4">
               <CardSummary shots={shots} state={state} />
+            </div>
+            <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
+              <ShotTable
+                className="max-h-80"
+                shots={shots}
+                state={state}
+                onChoose={(index, series) => dispatch({ type: "choose", shot: index, series })}
+              />
             </div>
           </aside>
         </div>

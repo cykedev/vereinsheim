@@ -4,6 +4,7 @@
 import {
   selectShots,
   shotNumbers,
+  stepsInOrder,
   type MetricShot,
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
@@ -84,4 +85,24 @@ export function selectionShots(shots: readonly MetricShot[], selection: Selectio
   const chosen = shots.filter((shot) => isSelected(selection, seriesKeyOf(shot)))
   const match = chosen.filter((shot) => shot.kind === "match")
   return match.length ? match : chosen.filter((shot) => shot.kind === "probe")
+}
+
+/**
+ * Abstand jedes Schusses zum vorigen der Karte in ms, über `stepsInOrder` wie `analysis/timing`: null beim
+ * ersten, nach einer Lücke in der Abgabefolge, ohne Zeit und bei einem Rücksprung der Uhr. Die Schüsse
+ * stehen in Abgabefolge (`inShotOrder`); der Abstand gilt zum vorigen Schuss der Karte, auch bei Auswahl.
+ */
+export function shotIntervals(shots: readonly MetricShot[]): (number | null)[] {
+  const steps = stepsInOrder(shots)
+  const byShot = new Map<MetricShot, number | null>()
+  steps.forEach((step, i) => {
+    const now = step.shot.firedAtMs
+    const then = steps[i - 1]?.shot.firedAtMs
+    const gap =
+      !step.gapBefore && Number.isFinite(now) && Number.isFinite(then)
+        ? (now as number) - (then as number)
+        : Number.NaN
+    byShot.set(step.shot, gap >= 0 ? gap : null)
+  })
+  return shots.map((shot) => byShot.get(shot) ?? null)
 }

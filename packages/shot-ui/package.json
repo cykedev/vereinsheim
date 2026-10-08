@@ -16,7 +16,8 @@
     "./format": "./src/format.ts",
     "./metrics/MetricTiles": "./src/metrics/MetricTiles.tsx",
     "./readout/ShotReadout": "./src/readout/ShotReadout.tsx",
-    "./readout/CardSummary": "./src/readout/CardSummary.tsx"
+    "./readout/CardSummary": "./src/readout/CardSummary.tsx",
+    "./table/ShotTable": "./src/table/ShotTable.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
