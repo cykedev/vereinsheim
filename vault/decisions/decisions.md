@@ -41,4 +41,4 @@ Kanonische Entscheidungshistorie. `supersedes`/`refines`-Kanten verbinden abgel�
 - [[adr-027]] — ADR-027 — Brücke: lokaler Lese-Agent im Meyton-Netz
 - [[adr-028]] — ADR-028 — Zuordnung per Sportpass-Opt-in und Meyton-QR mit Original-PDF
 - [[adr-029]] — ADR-029 — Apache-2.0 für das ganze Monorepo, Spiegel als selbst gehostete Open-Source-Software
-- [[adr-030]] — ADR-030 — Design 2: Spiegel als Pilot einer neuen UI-Generation _(Proposed)_
+- [[adr-030]] — ADR-030 — Design 2: Spiegel als Pilot einer neuen UI-Generation _(Accepted)_

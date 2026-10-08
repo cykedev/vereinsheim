@@ -47,7 +47,7 @@ Alles über die Meyton-Anlage steht im Thema [[meyton]]: die Datenbank [[meyton-
 - [[adr-027]] — Brücke als lokaler Lese-Agent: nur lesend, nur ausgehend, Rohdaten unverändert.
 - [[adr-028]] — Zuordnung per Meyton-QR mit Original-PDF, Sportpass automatisch, Fundbüro als Rückfall.
 - [[adr-029]] — Apache-2.0 für das ganze Monorepo, Spiegel als selbst gehostete Software je Verein.
-- [[adr-030]] — Design 2 mit Spiegel als Pilot (vorgeschlagen).
+- [[adr-030]] — Design 2 mit Spiegel als Pilot (angenommen am 8. Oktober 2026).
 
 ## Material
 
