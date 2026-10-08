@@ -20,8 +20,11 @@ interface SheetProps {
  */
 export function Sheet({ open, onClose, title, children, className }: SheetProps) {
   const dialog = useRef<HTMLDialogElement>(null)
+  // ob der Zustand das Blatt offen will: ein „close“, das unser eigenes Schließen nachmeldet, zählt nicht
+  const wantsOpen = useRef(open)
   const titleId = useId()
   useEffect(() => {
+    wantsOpen.current = open
     const node = dialog.current
     if (!node) return
     if (open && !node.open) node.showModal()
@@ -37,10 +40,10 @@ export function Sheet({ open, onClose, title, children, className }: SheetProps)
         event.preventDefault()
         onClose()
       }}
-      // ein spätes „close“ eines früheren Schließens trifft ein schon wieder offenes Blatt: nur zählen, wenn
-      // der Dialog wirklich zu ist (etwa nach Escape ohne „cancel“)
+      // „close“ meldet nur, was der Browser selbst geschlossen hat (etwa Escape ohne „cancel“): nicht unser
+      // eigenes Schließen noch einmal (onClose genau einmal) und nicht ein spätes, wenn es schon wieder offen ist
       onClose={(event) => {
-        if (!event.currentTarget.open) onClose()
+        if (!event.currentTarget.open && wantsOpen.current) onClose()
       }}
       // ein Tipp auf den Hintergrund trifft das <dialog> selbst, nicht seinen Inhalt
       onClick={(event) => {

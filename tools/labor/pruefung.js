@@ -643,6 +643,9 @@ addEventListener("load", async () => {
     }
     await click(sigmaHelp(), 100)
     check("nach dem Schließen öffnet das „?“ wieder", sheet().open)
+    $("h2", sheet()).dispatchEvent(new MouseEvent("click", { bubbles: true }))
+    await wait(100)
+    check("ein Tipp in das Blatt hinein lässt es offen", sheet().open)
     sheet().dispatchEvent(new MouseEvent("click", { bubbles: true }))
     await wait(100)
     check("Tipp neben das Blatt schließt es", !sheet().open)
