@@ -29,7 +29,8 @@ export function nextIndex(current: number, key: string, count: number): number |
 
 /**
  * Segment-Umschalter (Design 2): eine Wahl aus wenigen Möglichkeiten, etwa Scheibe/Gruppe oder ganze
- * Ringe/Zehntel. Pfeiltasten wechseln die Wahl; nur der gewählte Knopf ist mit Tab erreichbar.
+ * Ringe/Zehntel. Pfeiltasten wechseln die Wahl; nur der gewählte Knopf ist mit Tab erreichbar. Weil die
+ * Pfeiltasten wählen, ist es für Screenreader eine Radiogruppe (`radiogroup`/`radio`/`aria-checked`).
  */
 export function Segmented<T extends string>({
   label,
@@ -39,9 +40,13 @@ export function Segmented<T extends string>({
   className,
 }: SegmentedProps<T>) {
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
+  // ohne passende Wahl bleibt der erste Knopf der Tab-Halt
+  const current = Math.max(
+    0,
+    options.findIndex((option) => option.value === value)
+  )
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const current = options.findIndex((option) => option.value === value)
-    const next = nextIndex(Math.max(0, current), event.key, options.length)
+    const next = nextIndex(current, event.key, options.length)
     if (next === null) return
     event.preventDefault()
     onChange(options[next].value)
@@ -49,7 +54,7 @@ export function Segmented<T extends string>({
   }
   return (
     <div
-      role="group"
+      role="radiogroup"
       aria-label={label}
       onKeyDown={onKeyDown}
       className={cn(
@@ -64,10 +69,11 @@ export function Segmented<T extends string>({
             buttons.current[i] = node
           }}
           type="button"
-          aria-pressed={option.value === value}
-          tabIndex={option.value === value ? 0 : -1}
+          role="radio"
+          aria-checked={option.value === value}
+          tabIndex={i === current ? 0 : -1}
           onClick={() => onChange(option.value)}
-          className="cursor-pointer rounded-full px-3.5 py-2 text-[13px] leading-none font-semibold text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+          className="cursor-pointer rounded-full px-3.5 py-2 text-[13px] leading-none font-semibold text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-checked:bg-primary aria-checked:text-primary-foreground"
         >
           {option.label}
         </button>

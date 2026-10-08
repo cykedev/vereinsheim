@@ -22,23 +22,26 @@ describe("nextIndex: Pfeiltasten im Segment-Umschalter", () => {
 })
 
 describe("Segmented", () => {
-  const html = renderToStaticMarkup(
-    createElement(Segmented, {
-      label: "Ausschnitt",
-      value: "group",
-      options: [
-        { value: "target", label: "Scheibe" },
-        { value: "group", label: "Gruppe" },
-      ],
-      onChange: () => {},
-    })
-  )
+  const segmented = (value: string) =>
+    renderToStaticMarkup(
+      createElement(Segmented, {
+        label: "Ausschnitt",
+        value,
+        options: [
+          { value: "target", label: "Scheibe" },
+          { value: "group", label: "Gruppe" },
+        ],
+        onChange: () => {},
+      })
+    )
+  const html = segmented("group")
 
-  it("eine benannte Gruppe aus Knöpfen, der gewählte gedrückt", () => {
-    expect(html).toContain('role="group"')
+  it("eine benannte Radiogruppe: Pfeiltasten wählen, darum radio statt Schalter", () => {
+    expect(html).toContain('role="radiogroup"')
     expect(html).toContain('aria-label="Ausschnitt"')
-    expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Scheibe<\/button>/)
-    expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*>Gruppe<\/button>/)
+    expect(html).toMatch(/<button[^>]*role="radio"[^>]*aria-checked="false"[^>]*>Scheibe<\/button>/)
+    expect(html).toMatch(/<button[^>]*role="radio"[^>]*aria-checked="true"[^>]*>Gruppe<\/button>/)
+    expect(html).not.toContain("aria-pressed=")
   })
 
   it("nur der gewählte Knopf ist mit Tab erreichbar", () => {
@@ -46,8 +49,14 @@ describe("Segmented", () => {
     expect(html).toMatch(/<button[^>]*tabindex="0"[^>]*>Gruppe/)
   })
 
+  it("ohne passende Wahl bleibt der erste Knopf mit Tab erreichbar", () => {
+    const none = segmented("other")
+    expect(none).toMatch(/<button[^>]*tabindex="0"[^>]*>Scheibe/)
+    expect(none).toMatch(/<button[^>]*tabindex="-1"[^>]*>Gruppe/)
+  })
+
   it("Farben nur aus Tokens", () => {
-    expect(html).toContain("aria-pressed:bg-primary")
+    expect(html).toContain("aria-checked:bg-primary")
     expect(html).not.toMatch(/(?:bg|text)-(?:red|blue|gray|slate|zinc|emerald|amber)-\d/)
   })
 })
