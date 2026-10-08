@@ -64,8 +64,13 @@ hinzu, mit Tests nach Handwerten, Simulationen für jede Zahl in einem Hilfetext
     nicht vergleichbar.
   - **R5:** nur noch „meiste 10,9“. Der beste Schuss ist der beste Teiler (R3), nach der Regel „keine Zahl,
     die aus einer anderen folgt“.
-- **D8 Nur Probe (SF-01):** Eine Scheibe nur mit Probe zählt in Verläufen und Vergleichen nur mit der Option
-  `includeProbeOnly`, dann über ihre Probeschüsse. Für Rekorde zählt sie nie.
+- **D8 Nur Probe (SF-01):**
+  - Eine Scheibe nur mit Probe zählt nur mit der Option `includeProbeOnly`, dann aber in Verläufen,
+    Vergleichen **und Rekorden**. Geändert auf Einwand des Users, 8. Oktober 2026: Auch im Training kann ein
+    Rekord fallen.
+  - Sie rechnet dann über ihre Probeschüsse wie Wertung: in Abgabefolge, in Serien zu zehn, wie
+    `probeOnlyAsMatch` auf der Seite einer Scheibe.
+  - Ohne die Option zählt sie nirgends.
 - **D9 Trainingsumfang (T6):** Schüsse, Scheiben und Tage je Woche. Keine Netto-Zeit: Sie folgt aus den
   Abständen (Regel in `packages/shot-core/CLAUDE.md`).
 
@@ -302,7 +307,7 @@ export interface PeriodRecords {
 export function periodRecords(
   cards: readonly PeriodCard[],
   scoring: Scoring,
-  options?: { kind?: PeriodCard["kind"] }
+  options?: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean }
 ): PeriodRecords
 ```
 
@@ -320,6 +325,8 @@ export function periodRecords(
   - R7 über zwei Scheiben, die längere Folge.
   - R8 erst ab fünf Scheiben.
   - `kind: "competition"` filtert.
+  - Eine Trainingsscheibe nur mit Probe zählt ohne die Option nicht. Mit `includeProbeOnly` setzt sie den
+    besten Teiler, und ihre zweite Zehnergruppe gilt als Serie 2.
   - Alle Erwartungen sind aus kleinen, von Hand gebauten Scheiben abgeleitet.
 
 ### Task 6: Export und Katalog
