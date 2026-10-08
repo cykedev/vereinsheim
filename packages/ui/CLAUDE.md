@@ -11,6 +11,7 @@ globals.css-Theme-Kern — Drift damit **strukturell unmöglich**.
 | `@vereinsheim/ui/<name>`       | `src/ui/<name>.tsx` — 17 shadcn-Primitives (button, card, dialog, …)                                     |
 | `@vereinsheim/ui/shell/<name>` | `src/shell/<name>.tsx` — ConfirmDialog, DetailActionBar, PageHeader, Providers                           |
 | `@vereinsheim/ui/theme.css`    | `theme.css` — Tailwind-Theme-Kern (@custom-variant, @theme, :root, .dark, @layer) + `@source` aufs Paket |
+| `@vereinsheim/ui/design2.css`  | `design2.css` — Design 2 für Spiegel (ADR-030): eigene Tokens, hell auf `:root`, dunkel unter `.dark`    |
 
 ## Regeln
 
@@ -24,4 +25,7 @@ globals.css-Theme-Kern — Drift damit **strukturell unmöglich**.
 - **Kein `"use server"`**; **shadcn-CLI** läuft weiter im App-Kontext (`components.json` + der
   `globals.css`-Stub bleiben app-lokal).
 - Cross-Importe paket-intern **relativ** (`./button`, `../ui/alert-dialog`) — nicht über `@vereinsheim/ui`.
+- **Design 2** (`design2.css`, `src/design2/`) gilt nur für Spiegel; Ringwerk und Treffsicher importieren
+  weiter `theme.css`. Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken; die
+  Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich (Test `tokens.test.ts`).
 - Verhalten/Styles ändert man **hier**, nicht in den Apps. Nach Änderungen: `pnpm check` grün.

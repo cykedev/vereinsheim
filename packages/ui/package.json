@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     "./theme.css": "./theme.css",
+    "./design2.css": "./design2.css",
     "./admin/LoginRateLimitInsights": "./src/admin/LoginRateLimitInsights.tsx",
     "./admin/LoginRateLimitTable": "./src/admin/LoginRateLimitTable.tsx",
     "./alert-dialog": "./src/ui/alert-dialog.tsx",
@@ -34,6 +35,7 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
+    "test": "vitest run",
     "format:check": "prettier --check .",
     "format": "prettier --write ."
   },
@@ -54,11 +56,14 @@
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vereinsheim/config": "workspace:*",
     "prettier": "catalog:",
     "react": "catalog:",
-    "typescript": "catalog:"
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
