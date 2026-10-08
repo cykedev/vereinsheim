@@ -130,13 +130,13 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["P8"],
     metrics: [],
     short: "Ob deine Gruppe rund ist oder in eine Richtung gestreckt.",
-    what: "Die Streuung als Ellipse: Das Verhältnis a/b sagt, wie gestreckt sie ist, der Winkel, in welche Richtung.",
+    what: "Die Streuung als Ellipse, ohne die Ausreißer: Das Verhältnis a/b sagt, wie gestreckt sie ist, der Winkel, in welche Richtung. Ein einzelner Abreißer zöge die Ellipse sonst in seine Richtung.",
     read: "„Gestreckt“ steht nur, wenn ein Test zeigt, dass es kein Zufall ist. Daneben steht, ab welchem a/b das bei deiner Schusszahl gilt: bei 20 Schuss ab 1,81, bei 40 ab 1,50, bei 120 ab 1,25.",
     caution:
-      "Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im Median a/b 1,33, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe deshalb selten; sichtbar wird sie über mehrere Scheiben.",
+      "Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe deshalb selten; sichtbar wird sie über mehrere Scheiben.",
     minimum: "Ab 3 Schuss; den Winkel zeigt Spiegel nur bei einer gestreckten Gruppe ab 10 Schuss.",
     formula:
-      "Halbachsen a, b aus der Kovarianz; gestreckt, wenn W = 4a²b² / (a² + b²)² < 0,05^(2/(n − 2)) (Mauchly, exakt)",
+      "Halbachsen a, b aus der Kovarianz der Schüsse ohne Ausreißer; gestreckt, wenn W = 4a²b² / (a² + b²)² < 0,05^(2/(n − 2)) (Mauchly, exakt)",
   },
   {
     id: "ausreisser",

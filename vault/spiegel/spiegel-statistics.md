@@ -61,7 +61,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | P5 | Rayleigh-σ | σ̂ = √(Σrᵢ²/(2(n−1)))/c4(2n−1), 95-%-Bereich über χ² mit 2(n−1) Freiheitsgraden; kaum n-abhängig. Den Wert vor der Korrektur nennt Meytons Ballistic Manager „Sa“ (bei 10 Schuss 1,4 % kleiner, bei 40 Schuss 0,3 %). Spiegel zeigt ihn nicht: kein Vorteil gegenüber σ̂, gegen Meyton nicht prüfbar (ESTA 5 und der Ausdruck nennen ihn nicht), zwei fast gleiche Zahlen verwirren (Entscheidung des Users, Oktober 2026) | Scheibe, Zeitraum | B | SP-1.10 |
 | P6 | Streuung x und y | Sx und Sy | Serie, Scheibe, Zeitraum | A | vorhanden |
 | P7 | Höhe und Breite | **entfernt (Oktober 2026):** Effizienz 0,23–0,43 gegenüber σ̂, ein Ausreißer macht die Breite 59–87 % größer; „senkrecht oder waagrecht?“ beantworten P6 und P8 | – | – | entfernt (SP-1.12) |
-| P8 | Form der Gruppe | Halbachsen und Winkel der Kovarianz-Ellipse, Verhältnis a/b; gestreckt nur, wenn Mauchlys Test es mit 95 % zeigt (W = 4a²b²/(a²+b²)² unter 0,05^(2/(n−2)), für zwei Dimensionen exakt); dazu das a/b, ab dem das bei dieser Schusszahl gilt (12 Schuss 2,26, 20 Schuss 1,81, 40 Schuss 1,50, 120 Schuss 1,25). Eine runde Gruppe zeigt zufällig im Median a/b 1,33 bei 20 und 1,21 bei 40 Schuss; eine echte Streckung von 1,3 erkennt eine Scheibe mit 40 Schuss nur in 28 % der Fälle, über 120 Schuss in 72 % (B17). Winkel erst ab 10 Schuss | Scheibe, Zeitraum | B | SP-1.10 |
+| P8 | Form der Gruppe | Halbachsen und Winkel der Kovarianz-Ellipse ohne die von V6 markierten Ausreißer (seit Oktober 2026; vorher streckte ein Abreißer die Ellipse in seine Richtung), Verhältnis a/b; gestreckt nur, wenn Mauchlys Test es mit 95 % zeigt (W = 4a²b²/(a²+b²)² unter 0,05^(2/(n−2)), für zwei Dimensionen exakt); dazu das a/b, ab dem das bei dieser Schusszahl gilt (12 Schuss 2,26, 20 Schuss 1,81, 40 Schuss 1,50, 120 Schuss 1,25). Eine runde Gruppe zeigt zufällig im Median a/b 1,32 bei 20 und 1,21 bei 40 Schuss; eine echte Streckung von 1,3 erkennt eine Scheibe mit 40 Schuss nur in 26 % der Fälle, über 120 Schuss in 71 % (B17; mit Ausreißern 28 und 72 %: Der Ausreißer-Test nimmt in gestreckten Gruppen manchmal einen Spitzenschuss heraus). Winkel erst ab 10 Schuss | Scheibe, Zeitraum | B | SP-1.10 |
 | P9 | Streuung in Ringbreiten | R50 / W (bis Oktober 2026 MR / W) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
 | P10 | Erwartete Zehnerquote | P(d ≤ W) für eine Normalgruppe mit σ̂ und m (Modell) | Scheibe, Zeitraum | C | später |
 
@@ -234,7 +234,7 @@ Nur endgültige, vollständige Wertung, ohne die Merkmale verdächtig, nur-pdf, 
 
 ## Belege aus Simulationen
 
-Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise (8. Oktober 2026):
+Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer (8. Oktober 2026):
 
 ```
 B0   innerhalb σ 39,3 %, innerhalb 2σ 86,5 %
@@ -271,8 +271,8 @@ B15  σ-Bereich 10 Schuss: -25,5 % bis +45,8 %
 B15  σ-Bereich 30 Schuss: -15,7 % bis +21,7 %, bei σ̂ 1,12 mm: 0,94 bis 1,36 mm
 B15  σ-Bereich 120 Schuss: -8,3 % bis +9,8 %
 B16  Halbachse der Vertrauensellipse in σ: 5: 2,26, 10: 1,00, 20: 0,61, 40: 0,41, 60: 0,33
-B17  runde Gruppe, Median a/b: 20 Schuss 1,33, 40 Schuss 1,21
-B17  echte Streckung a/b 1,3 als gestreckt erkannt: 40 Schuss 27,6 %, 120 Schuss 72,3 %
+B17  runde Gruppe, Median a/b: 20 Schuss 1,32, 40 Schuss 1,21
+B17  echte Streckung a/b 1,3 als gestreckt erkannt: 40 Schuss 25,8 %, 120 Schuss 71,0 %
 ```
 
 Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05, bis Oktober 2026), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.
