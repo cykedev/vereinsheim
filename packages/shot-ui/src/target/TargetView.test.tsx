@@ -167,6 +167,32 @@ describe("TargetView: Auswahl und Antippen", () => {
 })
 
 describe("TargetView: Probe und Scheibe", () => {
+  it("zeigt die Scheibe Probe, trägt sie das schwarze Eck oben rechts, unter den Treffern", () => {
+    const probe = render({ selection: "probe" })
+    expect(probe).toMatch(
+      /data-layer="target"[\s\S]*?<polygon data-probe-corner="true"[^>]*fill="var\(--spiegel\)"/
+    )
+    // das Eck gehört zur Scheibe, die Treffer liegen darüber
+    expect(probe.indexOf("data-probe-corner")).toBeLessThan(probe.indexOf('data-layer="shots"'))
+    // Probe und Wertung zusammen: kein Eck
+    expect(render()).not.toContain("data-probe-corner")
+    // eine Karte nur mit Probe, die niemand als Training umgedeutet hat: Eck
+    const onlyProbe = renderToStaticMarkup(
+      createElement(TargetView, {
+        target: LP_10M,
+        shots: CARD.filter((s) => s.kind === "probe"),
+        state: initialViewState(),
+      })
+    )
+    expect(onlyProbe).toContain("data-probe-corner")
+    // ohne Schüsse kein Eck
+    expect(
+      renderToStaticMarkup(
+        createElement(TargetView, { target: LP_10M, shots: [], state: initialViewState() })
+      )
+    ).not.toContain("data-probe-corner")
+  })
+
   it("Probe hohl und durchgezogen", () => {
     const html = render()
     for (const label of ["P1", "P2"]) {

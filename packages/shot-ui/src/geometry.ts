@@ -126,3 +126,17 @@ export function nearestShot(
   }
   return best
 }
+
+/** Schenkel des Probe-Ecks als Anteil der Breite des Ausschnitts */
+const PROBE_CORNER = 0.12
+
+/**
+ * Probe-Eck (Konvention der Probescheibe): ein schwarzes Dreieck oben rechts im Ausschnitt, als Punkte
+ * für ein SVG-Polygon. Es hängt am Ausschnitt, nicht an der Scheibe, damit es auch gezoomt oben rechts
+ * sitzt und auf dem Schirm gleich groß bleibt.
+ */
+export function probeCorner(view: ViewBox): string {
+  const leg = view.w * PROBE_CORNER
+  const right = view.x + view.w
+  return `${right - leg},${view.y} ${right},${view.y} ${right},${view.y + leg}`
+}

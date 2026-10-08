@@ -10,6 +10,7 @@ import {
   caliberRadius,
   groupView,
   nearestShot,
+  probeCorner,
   scoreColor,
   screenSizes,
   TAP_REACH_PX,
@@ -102,6 +103,10 @@ export function TargetView({
     probeCount ? `, ${probeCount} Probeschüsse` : ""
   }${selectionText(state)}`
 
+  // die Scheibe zeigt Probe, wenn alle Schüsse der Auswahl Probeschüsse sind (etwa die Probe gewählt)
+  const shown = shots.filter((_, i) => selectedAt(i))
+  const showsProbe = shown.length > 0 && shown.every((shot) => shot.kind === "probe")
+
   const ringW = mm(target.ringWidthUm)
   const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
 
@@ -143,6 +148,9 @@ export function TargetView({
       `}</style>
       <g data-layer="target">
         <rect x={-500} y={-500} width={1000} height={1000} fill="var(--paper)" />
+        {showsProbe && (
+          <polygon data-probe-corner="true" points={probeCorner(view)} fill="var(--spiegel)" />
+        )}
         <circle cx={0} cy={0} r={blackR} fill="var(--spiegel)" />
         {target.ringRadiiUm.map((radiusUm, i) => {
           const ring = i + 1

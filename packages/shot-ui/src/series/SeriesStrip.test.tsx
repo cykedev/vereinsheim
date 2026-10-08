@@ -89,6 +89,13 @@ describe("SeriesStrip", () => {
     expect(html).toMatch(/data-series="1"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
   })
 
+  it("die kleine Scheibe der Probe trägt das Probe-Eck, die Serien nicht", () => {
+    const html = render()
+    const probe = html.split('data-series="1"')[0]
+    expect(probe).toContain("data-probe-corner")
+    expect(html.slice(html.indexOf('data-series="1"'))).not.toContain("data-probe-corner")
+  })
+
   it("Probe hohl und durchgezogen", () => {
     const probe = render().split('data-series="1"')[0]
     expect(probe).not.toContain("stroke-dasharray")

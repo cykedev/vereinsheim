@@ -6,7 +6,7 @@ import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { cn } from "@vereinsheim/lib/utils"
 import { useMemo } from "react"
 
-import { caliberRadius, scoreColor, seriesTileView, tileColumns } from "../geometry"
+import { caliberRadius, probeCorner, scoreColor, seriesTileView, tileColumns } from "../geometry"
 import { formatTotal, hasPosition, seriesKeyOf } from "../shots"
 import { useElementWidth } from "../target/useAnimatedViewBox"
 import type { SeriesKey } from "../types"
@@ -143,6 +143,13 @@ export function SeriesStrip({
                 )}
               >
                 <rect x={view.x} y={view.y} width={view.w} height={view.w} fill="var(--paper)" />
+                {block.key === "probe" && (
+                  <polygon
+                    data-probe-corner="true"
+                    points={probeCorner(view)}
+                    fill="var(--spiegel)"
+                  />
+                )}
                 <circle r={blackR} fill="var(--spiegel)" />
                 {target.weapon === "lg" && (
                   <circle r={mm(target.ringRadiiUm[9])} fill="var(--paper)" />

@@ -437,6 +437,29 @@ addEventListener("load", async () => {
     )
     const boxes = new Set(tiles.map((t) => $("svg", t).getAttribute("viewBox")))
     check("Serien: alle im selben Ausschnitt", boxes.size === 1)
+    // Probescheibe: das schwarze Eck oben rechts, wie es Konvention ist
+    check(
+      "Probe-Eck: die kleine Scheibe der Probe hat es, die Serien nicht",
+      !!$('[data-series="probe"] [data-probe-corner]') &&
+        tiles.slice(1).every((t) => !$("[data-probe-corner]", t))
+    )
+    check(
+      "Probe-Eck: Probe und Wertung zusammen auf der Scheibe ohne",
+      !$("[data-probe-corner]", svg())
+    )
+    await click(tile("probe"))
+    const corner = $("[data-probe-corner]", svg())
+    const cornerBox = corner?.getBoundingClientRect()
+    const svgBox = svg().getBoundingClientRect()
+    check(
+      "Probe-Eck: Probe gewählt, Eck oben rechts auf der Scheibe",
+      !!corner &&
+        near(cornerBox.right, svgBox.right, 1) &&
+        near(cornerBox.top, svgBox.top, 1) &&
+        corner.getAttribute("fill") === "var(--spiegel)",
+      corner ? `${cornerBox.right.toFixed(0)}/${svgBox.right.toFixed(0)}` : "kein Eck"
+    )
+    await click(button("Alle"))
     const rows = new Map()
     for (const t of tiles) {
       const top = Math.round(t.getBoundingClientRect().top)
@@ -510,9 +533,10 @@ addEventListener("load", async () => {
     // ---------- nur Probe (Training): wie Wertung, bis eine Wertung dazukommt
     await click(button("60 Probe"), 100)
     check(
-      "Nur Probe: Schüsse 1 bis 60, gefüllt wie Wertung",
+      "Nur Probe: Schüsse 1 bis 60, gefüllt wie Wertung, ohne Probe-Eck",
       labelsOf(hits()).join() === Array.from({ length: 60 }, (_, i) => `${i + 1}`).join() &&
-        hits().every((g) => circleOf(g).getAttribute("fill") !== "none")
+        hits().every((g) => circleOf(g).getAttribute("fill") !== "none") &&
+        !$("[data-probe-corner]", svg())
     )
     check(
       "Nur Probe: sechs Serien zu zehn ohne Probe-Kachel, Übersicht mit Ergebnis",

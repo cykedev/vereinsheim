@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import {
   groupView,
   nearestShot,
+  probeCorner,
   scoreColor,
   screenSizes,
   seriesTileView,
@@ -159,5 +160,12 @@ describe("Antippen: der Treffer mit der nächsten Mitte", () => {
 
   it("Reichweite 20 px wie ein Finger", () => {
     expect(TAP_REACH_PX).toBe(20)
+  })
+})
+
+describe("Probe-Eck", () => {
+  it("schwarzes Dreieck oben rechts im Ausschnitt, Schenkel 12 % der Breite", () => {
+    // Ausschnitt x −10 … 90, y −10 … 90 (SVG: y nach unten): Ecke oben rechts bei (90 | −10)
+    expect(probeCorner({ x: -10, y: -10, w: 100 })).toBe("78,-10 90,-10 90,2")
   })
 })
