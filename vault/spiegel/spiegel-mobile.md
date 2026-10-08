@@ -57,7 +57,7 @@ Reihenfolge auf dem Telefon: Kopf mit Ergebnis, Scheibe mit Ablesezeile, Serien 
 
 **Diagramme:** Ablesen durch Antippen oder Ziehen (Lineal), die Werte stehen fest über dem Diagramm, im Verlauf wählt das zugleich den Schuss auf der Scheibe. Jedes Diagramm bekommt seine Kernaussage als Label und „Werte als Tabelle“.
 
-**Tablet und Desktop:** Ab 768 px links die Scheibe mit den Serien darunter, rechts daneben Schuss, Übersicht und Schüsse; Kacheln und Analyse folgen in voller Breite darunter (siehe unten).
+**Tablet und Desktop:** Ab 768 px links die Scheibe mit den Serien darunter, rechts daneben Schuss und Schüsse; Kacheln und Analyse folgen in voller Breite darunter (siehe unten).
 
 ## Entschieden mit dem Plan für Schritt 4 (8. Oktober 2026)
 

@@ -89,8 +89,10 @@ Oktober 2026), im Labor unter den Kacheln.
 Die Seite einer Scheibe für Telefon, Tablet und Desktop (Schritt 4 von SP-1.8, Oktober 2026; Begründung und
 Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` und `readout/*`.
 
-- **Kopf** (`CardHeader`): Scheibe und Metazeile, das Ergebnis groß mit Schusszahl, die Wertung ganze
-  Ringe/Zehntel, darunter ein Satz (der erste Satz der ersten Beobachtung).
+- **Kopf** (`CardHeader`): Scheibe und Metazeile, das Ergebnis groß mit Wertungsschüssen und Probe („40 Schuss
+  + 9 Probe“), darunter Zehner, Innenzehner und bester Teiler, daneben die Wertung ganze Ringe/Zehntel, darunter
+  ein Satz (der erste Satz der ersten Beobachtung). Alles über die ganze Scheibe; die frühere Übersicht als
+  eigene Karte wiederholte Ergebnis und Schusszahl und ist im Kopf aufgegangen (User, 8. Oktober 2026).
 - **Sprungleiste** (`SectionNav`) unter dem Kopf, klebt oben: „Scheibe · Schüsse · Zahlen · Analyse“ als Anker,
   auf dem Telefon vier gleich breite Felder, nie angeschnitten. Aktiv ist der späteste Abschnitt, dessen Anfang
   die Leiste erreicht hat (bis 40 px darunter, beim Scrollen gemessen); so ist nach einem Sprung genau dieser
@@ -102,12 +104,12 @@ Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` 
   Name als Tooltip und für Screenreader. Eine Leiste über der Scheibe brach in schmalen Spalten um oder wurde
   angeschnitten und kostete Höhe. Im Ausschnitt „Scheibe“ bleibt der äußere Ring ab 290 px Kastenbreite frei.
 - **Telefon:** eine Spalte. Kopf und Scheibe (Ablesezeile `ShotLine` statt Ablese-Karte) passen auf den ersten
-  Bildschirm, die Serien folgen direkt; dann Übersicht, Schüsse, Zahlen, Analyse. Die Schusstabelle zeigt die
+  Bildschirm, die Serien folgen direkt; dann Schüsse, Zahlen, Analyse. Die Schusstabelle zeigt die
   zehn neuesten Schüsse und „Alle 40 zeigen“, der gewählte bleibt sichtbar.
 - **Ab 768 px** (`CardPage`): links die Scheibe, darunter die Serien (User, 8. Oktober 2026), zusammen so groß,
   dass beide unter der Leiste ins Fenster passen (`useTargetFit` misst die Spalte; bleibt für die Scheibe weniger
-  als 280 px, passt sie allein ins Fenster und die Serien folgen darunter). Rechts daneben Ablese-Karte, Übersicht
-  und Schusstabelle; die Tabelle reicht bis zur Unterkante der Serien und scrollt in sich. Zahlen und Analyse
+  als 280 px, passt sie allein ins Fenster und die Serien folgen darunter). Rechts daneben Ablese-Karte und
+  Schusstabelle; die Tabelle reicht bis zur Unterkante der Serien und scrollt in sich. Zahlen und Analyse
   folgen darunter in voller Breite, die Scheibe scrollt dort mit weg (User, 8. Oktober 2026: Bereiche, die neben
   der Scheibe bleiben, und Bereiche, die unten mehr Platz brauchen). Die
   Kacheln stehen zu fünf, die Karten der Analyse zu zweit; ihre Spalten richten sich nach der Breite des
@@ -133,18 +135,18 @@ Die Optik ist dem User besonders wichtig: minimal, scharf, nichts Klobiges, auch
 - **Probe-Eck** (Konvention der Probescheibe, User, 8. Oktober 2026): Zeigt die Scheibe Probe, weil alle gezeigten Schüsse Probeschüsse sind (etwa die Probe gewählt), trägt sie das schwarze Eck oben rechts; die kleine Scheibe der Probe immer. Es hängt am Ausschnitt (Schenkel 12 % der Breite), liegt unter den Treffern und fehlt, wenn Probe und Wertung zusammen zu sehen sind. Auch eine Karte nur mit Probe, die als Training wie Wertung erscheint, trägt es auf der Scheibe und an jeder Serie (User, 8. Oktober 2026).
 - **Ringzahlen** in fester Bildschirmgröße (höchstens 12 px, nie größer als der Ring); sie wachsen beim Zoomen nicht mit.
 - **Serien als kleine Scheiben** bei den Treffern, über der Schusstabelle: je Serie und für die Probe eine kleine Scheibe, alle im **gleichen Ausschnitt um die Mitte**, damit Lage und Streuung der Serien vergleichbar sind. Darunter das Serienergebnis in der gewählten Wertung (I1), bei der laufenden Serie „7 von 10 Schuss“; die Probe hohl, mit der Zahl der Probeschüsse. Die Kacheln (60–104 px) verteilen sich gleichmäßig auf die Zeilen, keine steht allein (Wunsch des Users, Oktober 2026).
-- **Ablesung:** der Wert groß in Schriftfarbe, davor ein Punkt in der Ringwert-Farbe (Probe hohl). Gold und Türkis hätten als Schrift auf hellem Grund zu wenig Kontrast (Review, 8. Oktober 2026). Teiler und Abstand wie im Fachkern: gemessen vor der Lage, auch ohne Lage; ein verdächtiger Platzhalter ohne beides (SF-15).
+- **Ablesung:** kompakt in einer Zeile, der Wert groß in Schriftfarbe, davor ein Punkt in der Ringwert-Farbe (Probe hohl), daneben die andere Wertung, Teiler und Abstand zur Mitte; kein x/y, Abstand und Teiler sagen es lesbarer (User, 8. Oktober 2026). Gold und Türkis hätten als Schrift auf hellem Grund zu wenig Kontrast (Review, 8. Oktober 2026). Teiler und Abstand wie im Fachkern: gemessen vor der Lage, auch ohne Lage; ein verdächtiger Platzhalter ohne beides (SF-15).
 - **Kein Dauer-Ring um den letzten Schuss:** In einer engen Gruppe verwirrt er. Ein neuer Schuss ploppt beim Setzen kurz auf; Ablesung und Liste nennen ihn.
 - **Antippen** eines Treffers wählt ihn. Getroffen ist der Treffer der Auswahl mit der nächsten Mitte, bis 20 px daneben (gezoomt bis an seinen Rand, wenn er größer ist); blasse Schüsse nie. Auf dem Handy misst ein Treffer auf der ganzen Scheibe nur gut 8 px, so muss man ihn nicht genau treffen (User, 8. Oktober 2026). Der gewählte Treffer liegt mit Nummer und einem Haarlinien-Ring (Blau mit hellem Saum) ganz oben, die Ablesung zeigt ihn statt des letzten Schusses, ein zweites Tippen nimmt ihn zurück. In der App setzt Tippen keinen Schuss; das Labor hat dafür einen eigenen Modus.
-- **Alle oder ohne Probe** (User, 8. Oktober 2026, „für korrekte Zahlen“): Die ganze Scheibe ist wählbar mit Probe („Alle“) oder ohne („Ohne Probe“, nur Wertung); Streukreis, Ellipse, Schwerpunkt, Kacheln und Tabelle rechnen danach. Grundeinstellung ist „Ohne Probe“, wenn es Probe und Wertung gibt, sonst „Alle“ (`defaultWhole`); „Ohne Probe“ erscheint nur, wenn es beides gibt. Die Übersicht bleibt die amtliche der Wertung.
+- **Alle oder ohne Probe** (User, 8. Oktober 2026, „für korrekte Zahlen“): Die ganze Scheibe ist wählbar mit Probe („Alle“) oder ohne („Ohne Probe“, nur Wertung); Streukreis, Ellipse, Schwerpunkt, Kacheln und Tabelle rechnen danach. Grundeinstellung ist „Ohne Probe“, wenn es Probe und Wertung gibt, sonst „Alle“ (`defaultWhole`); „Ohne Probe“ erscheint nur, wenn es beides gibt. Der Kopf bleibt die amtliche Wertung.
 - **Serien wählen: eine oder die ganze Scheibe.** Tippen auf eine kleine Scheibe zeigt nur diese Serie kräftig, eine andere wechselt, dieselbe noch einmal führt zur Grundeinstellung zurück; die Probe ist wählbar wie eine Serie. Mehrere Serien zugleich sind bewusst nicht wählbar, das ist einfacher zu bedienen (User, 8. Oktober 2026); Serien vergleichen wird eine eigene Ansicht. Die übrigen Schüsse liegen blass darunter oder sind ausgeblendet (beides im Labor zum Vergleich). Blass heißt grau statt Ringwert-Farbe (Token `--shot-faded`, Deckkraft 0,55, ohne Rand, ohne Nummer, nicht antippbar): Nur die Auswahl trägt Farbe. Mit Ringwert-Farbe und Deckkraft 0,18 gruppierte das Auge weiter nach Farbe, und die Auswahl war schwer zu unterscheiden (User, 8. Oktober 2026). Streukreis, Ellipse, Schwerpunkt und der Ausschnitt „Gruppe“ rechnen über die Auswahl, die Nummern bleiben die der ganzen Scheibe (Wunsch des Users, 8. Oktober 2026).
 - **Eine andere Scheibe** steht sofort in ihrem Ausschnitt; nur ein neuer Ausschnitt derselben Scheibe gleitet (340 ms, bei „Bewegung reduzieren“ ein Sprung). Das gilt auch für eine andere Karte auf derselben Scheibe (Schlüssel der Karte, etwa die Session).
 - **Hohle Treffer** (Probe, Wertung ohne Wert) sind wie alle über ihre Mitte antippbar, nicht nur am Rand; der Mauszeiger zeigt auch in ihnen die Hand (User, 8. Oktober 2026).
-- **Kacheln folgen der Auswahl** wie Streukreis und Schwerpunkt: Sie rechnen über die Schüsse der Auswahl, auch die ohne Lage (jede Kennzahl wählt selbst, was sie braucht), und der Kopf nennt die Auswahl („Serie 2“). Die **Übersicht** (Ergebnis, Zehner, Innenzehner, bester Teiler) bleibt die der ganzen Scheibe, weil sie deren Ergebnis zeigt.
+- **Kacheln folgen der Auswahl** wie Streukreis und Schwerpunkt: Sie rechnen über die Schüsse der Auswahl, auch die ohne Lage (jede Kennzahl wählt selbst, was sie braucht), und der Kopf nennt die Auswahl („Serie 2“). Der **Kopf** (Ergebnis, Schüsse und Probe, Zehner, Innenzehner, bester Teiler) bleibt der der ganzen Scheibe, weil er deren Ergebnis zeigt; bis Oktober 2026 stand das als eigene Übersicht daneben.
 - **Schusstabelle:** neuester Schuss oben, nur die Schüsse der Auswahl; Nummer, Wert mit Farbpunkt (Probe hohl), Innenzehner, Teiler und der Abstand zum vorigen Schuss der Karte (nach einer Lücke in der Abgabefolge keiner, über drei Minuten als Pause in Minuten). Jede Zeile wählt ihren Schuss wie das Antippen; der Knopf in der ersten Zelle ist der Weg per Tastatur und Screenreader, denn die Treffer auf der Scheibe sind nur zum Antippen.
 - **Wertung:** Der Wertungsschalter zeigt die amtliche Wertung als Hinweis daneben.
 - **Kein „Visier verstellt“** (User, 8. Oktober 2026): Eine Angabe, nach welchem Probeschuss das Visier verstellt wurde, ist zu viel Komplexität für ihren Nutzen. Spiegel fragt sie weder ab noch schlägt sie vor; die Probe wird nicht gestrichelt. „Probe gegen Wertung“ nimmt die ganze Probe vor der Wertung, „Eingeschossen?“ und der Versatz Probe → Wertung ihre letzten fünf Schüsse mit Lage (SF-63).
-- Die Spielwiese zeigte diese Regeln zuerst; seit Oktober 2026 sind Scheibe, Serien, Kacheln, Ablesung, Übersicht, Schusstabelle, Wertung und Hilfe echte Bausteine in `packages/shot-ui` mit den Design-2-Tokens ([[adr-030]]), zu sehen und zu prüfen im Labor (`tools/labor`, Artifact „Spiegel-Labor“). SP-1.8 setzt dieselben Bausteine mit echten Daten ein.
+- Die Spielwiese zeigte diese Regeln zuerst; seit Oktober 2026 sind Scheibe, Serien, Kacheln, Ablesung, Kopf, Schusstabelle, Wertung und Hilfe echte Bausteine in `packages/shot-ui` mit den Design-2-Tokens ([[adr-030]]), zu sehen und zu prüfen im Labor (`tools/labor`, Artifact „Spiegel-Labor“). SP-1.8 setzt dieselben Bausteine mit echten Daten ein.
 
 ## Sonderfälle in der Oberfläche
 
