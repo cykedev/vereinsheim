@@ -2,7 +2,7 @@
 // erfunden, mit festem Seed, Lagen auf 1/100 mm wie bei Meyton. Der Ausdruck vom 2. Oktober steht als
 // Teiler ohne Namen auch in den Fixtures von shot-core.
 
-import type { MetricShot } from "@vereinsheim/shot-core/metrics"
+import type { MetricShot, Scoring } from "@vereinsheim/shot-core/metrics"
 import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import type { TargetId, TargetImage } from "@vereinsheim/shot-core/targets"
 
@@ -21,13 +21,16 @@ export interface Sample {
   hint: string
   /** Visierverstellungen der Beispielscheibe (Nummern der Probeschüsse davor) */
   adjustAfter: readonly number[]
+  /** amtliche Wertung, wenn das Beispiel eine hat (erfunden; beim Ausdruck unbekannt) */
+  official?: Scoring
 }
 
 const FORTY: Sample = {
   id: "forty",
   label: "40 Schuss mit Probe",
-  hint: "Erfundene Scheibe: neun Probeschüsse (Visier nach dem vierten verstellt), 40 Wertungsschüsse, nach Schuss 20 eine Pause; bei der Luftpistole senkrecht gestreckt und mit einem Abreißer (Schuss 27).",
+  hint: "Erfundene Scheibe: neun Probeschüsse (Visier nach dem vierten verstellt), 40 Wertungsschüsse, nach Schuss 20 eine Pause; bei der Luftpistole senkrecht gestreckt und mit einem Abreißer (Schuss 27). Als amtliche Wertung angenommen: Zehntel.",
   adjustAfter: [4],
+  official: "decimal",
 }
 
 const EMPTY: Sample = {

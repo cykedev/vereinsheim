@@ -22,11 +22,15 @@ dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/readout/ShotReadout`       | `src/readout/ShotReadout.tsx`      | Ablesung: angetippter oder letzter Schuss, Wert in Ringwert-Farbe, andere Wertung, Teiler, Abstand, x/y                                                                                            |
 | `@vereinsheim/shot-ui/readout/CardSummary`       | `src/readout/CardSummary.tsx`      | Übersicht der ganzen Scheibe: Schüsse, Ergebnis, Zehner, Innenzehner, bester Teiler                                                                                                                |
 | `@vereinsheim/shot-ui/table/ShotTable`           | `src/table/ShotTable.tsx`          | Schusstabelle: neuester oben, folgt der Auswahl, Zeile wählt den Schuss (Weg per Tastatur), Intervalle mit Lücke und Pause                                                                         |
+| `@vereinsheim/shot-ui/controls/ScoringSwitch`    | `src/controls/ScoringSwitch.tsx`   | Wertung Zehntel/ganze Ringe, die amtliche als Hinweis                                                                                                                                              |
+| `@vereinsheim/shot-ui/controls/SightAdjust`      | `src/controls/SightAdjust.tsx`     | „Visier verstellt nach“ P1 … P(n−1), ab zwei Probeschüssen                                                                                                                                         |
 
 ## Regeln
 
 - **Reine Funktionen getrennt von React:** Geometrie, Ebenen und Zustand sind Funktionen mit Tests nach
   Handwerten; Komponenten zeichnen nur, was diese liefern.
+- **Design-2-Bausteine aus `@vereinsheim/ui/design2`** (Segment-Umschalter, Schalter-Chip, Blatt), nicht
+  nachbauen.
 - **Zahlen nur aus dem Fachkern** (`@vereinsheim/shot-core`), Texte nur aus `@vereinsheim/shot-help`.
   Keine eigene Statistik im Baustein.
 - **Zahlen formatiert `./format`** (feste Stellen, Komma, echtes Minus, ohne `Intl`, wie auf dem

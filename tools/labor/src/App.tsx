@@ -1,4 +1,6 @@
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
+import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
+import { SightAdjust } from "@vereinsheim/shot-ui/controls/SightAdjust"
 import { CardSummary } from "@vereinsheim/shot-ui/readout/CardSummary"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
@@ -154,13 +156,9 @@ export function App({ commit }: { commit: string }) {
             options={samples.map((s) => ({ value: s.id, label: s.label }))}
             onChange={(id) => load(targetId, id)}
           />
-          <Segmented
-            label="Wertung"
-            value={state.scoring}
-            options={[
-              { value: "decimal", label: "Zehntel" },
-              { value: "rings", label: "Ganze Ringe" },
-            ]}
+          <ScoringSwitch
+            scoring={state.scoring}
+            official={sample.official}
             onChange={(scoring) => {
               store.set("scoring", scoring)
               dispatch({ type: "setScoring", scoring })
@@ -278,7 +276,7 @@ export function App({ commit }: { commit: string }) {
           </aside>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-3.5">
+        <div className="grid gap-4 rounded-2xl border border-border bg-card p-3.5">
           {/* je Karte eine neue Leiste, wie in der App beim Wechsel der Session */}
           <SeriesStrip
             key={`${targetId}:${sample.id}`}
@@ -287,6 +285,11 @@ export function App({ commit }: { commit: string }) {
             state={state}
             onSelect={(series) => dispatch({ type: "select", series })}
             onSelectAll={() => dispatch({ type: "selectAll" })}
+          />
+          <SightAdjust
+            shots={shots}
+            adjustAfter={state.adjustAfter}
+            onToggle={(after) => dispatch({ type: "toggleAdjust", after })}
           />
         </div>
       </section>

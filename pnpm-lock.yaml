@@ -469,6 +469,9 @@ importers:
       '@vereinsheim/shot-help':
         specifier: workspace:*
         version: link:../shot-help
+      '@vereinsheim/ui':
+        specifier: workspace:*
+        version: link:../ui
     devDependencies:
       '@types/react':
         specifier: 'catalog:'

@@ -17,7 +17,9 @@
     "./metrics/MetricTiles": "./src/metrics/MetricTiles.tsx",
     "./readout/ShotReadout": "./src/readout/ShotReadout.tsx",
     "./readout/CardSummary": "./src/readout/CardSummary.tsx",
-    "./table/ShotTable": "./src/table/ShotTable.tsx"
+    "./table/ShotTable": "./src/table/ShotTable.tsx",
+    "./controls/ScoringSwitch": "./src/controls/ScoringSwitch.tsx",
+    "./controls/SightAdjust": "./src/controls/SightAdjust.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -29,7 +31,8 @@
   "dependencies": {
     "@vereinsheim/lib": "workspace:*",
     "@vereinsheim/shot-core": "workspace:*",
-    "@vereinsheim/shot-help": "workspace:*"
+    "@vereinsheim/shot-help": "workspace:*",
+    "@vereinsheim/ui": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.2.6",
