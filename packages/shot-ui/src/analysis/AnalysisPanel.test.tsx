@@ -130,13 +130,16 @@ describe("AnalysisPanel", () => {
     expect(text).toContain("Datenlage: 0 Wertung · 2 Probe")
   })
 
-  it("Glossar und typische Fehlschlüsse aus dem Paket, mit dem Schalter offen", () => {
+  it("Glossar und typische Fehlschlüsse aus dem Paket, aufklappbar, auch mit „Erklärungen“ zu", () => {
     const html = render(CARD)
     expect([...html.matchAll(/<dt[^>]*data-term="true"[^>]*>/g)]).toHaveLength(GLOSSARY.length)
     for (const entry of GLOSSARY) expect(html).toContain(entry.term)
     expect([...html.matchAll(/<li[^>]*data-fallacy="true"/g)]).toHaveLength(FALLACIES.length)
     expect(html).toMatch(/<details data-glossary="true"(?! open)/)
-    expect(render(CARD, { explain: true })).toMatch(/<details data-glossary="true" open=""/)
+    // „Erklärungen“ zeigt nur Kurzsätze; die Nachschlage-Listen bleiben zu (Plan Schritt 4, D3)
+    expect(render(CARD, { explain: true })).not.toMatch(
+      /<details data-(glossary|fallacies)="true" open/
+    )
   })
 
   it("ohne Schüsse eine Karte, die sagt, was fehlt", () => {

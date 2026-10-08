@@ -5,24 +5,32 @@ import { describe, expect, it } from "vitest"
 import { ANALYSIS_TABS } from "../AnalysisPanel"
 import { renderTab } from "../testPanel"
 
-// D4: Jedes Thema der Hilfe und die Oberflächen-Hilfen der Analyse haben ihren Platz, jedes genau einmal.
+// Plan Schritt 4, D3: Jedes Thema der Hilfe hat genau ein „?“ (Knopf mit data-help) über alle Reiter, die
+// Datenlage eins in jedem Reiter, dazu die Oberflächen-Hilfen der Analyse; keine Karte doppelt.
 describe("Hilfe in der Analyse", () => {
   const pages = ANALYSIS_TABS.map((tab) => renderTab(tab.value))
   const cards = pages.flatMap((html) => [...html.matchAll(/data-card="([^"]+)"/g)].map((m) => m[1]))
-  const helps = new Set(
-    pages.flatMap((html) => [...html.matchAll(/data-help="([^"]+)"/g)].map((m) => m[1]))
+  const buttons = pages.flatMap((html) =>
+    [...html.matchAll(/<button[^>]*data-help="([^"]+)"/g)].map((m) => m[1])
   )
+  const count = (id: string) => buttons.filter((b) => b === id).length
 
-  it("jedes Thema als Karte oder als Hilfe der Datenlage, keine Karte doppelt", () => {
-    for (const topic of HELP_TOPICS) expect(helps, topic.id).toContain(topic.id)
-    expect(new Set(cards).size).toBe(cards.length)
-    expect(HELP_TOPICS.filter((t) => !cards.includes(t.id)).map((t) => t.id)).toEqual(["datenlage"])
+  it("jedes Thema genau ein „?“, die Datenlage in jedem Reiter", () => {
+    for (const topic of HELP_TOPICS.filter((t) => t.id !== "datenlage")) {
+      expect(count(topic.id), topic.id).toBe(1)
+    }
+    expect(count("datenlage")).toBe(ANALYSIS_TABS.length)
   })
 
-  it("die Oberflächen-Hilfen Beobachtungen und Probe auf der Scheibe", () => {
+  it("die Oberflächen-Hilfen Beobachtungen und Probe auf der Scheibe mit ihrem „?“", () => {
     for (const id of ["beobachtungen", "probe-auf-der-scheibe"]) {
       expect(VIEW_HELP.map((v) => v.id)).toContain(id)
-      expect(cards).toContain(id)
+      expect(count(id), id).toBe(1)
     }
+  })
+
+  it("keine Karte doppelt, kein „Was heißt das?“ mehr in der Analyse", () => {
+    expect(new Set(cards).size).toBe(cards.length)
+    for (const html of pages) expect(html).not.toContain("<details data-help")
   })
 })

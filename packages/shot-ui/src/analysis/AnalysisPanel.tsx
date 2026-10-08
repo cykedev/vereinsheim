@@ -168,11 +168,7 @@ export function AnalysisPanel({
           )}
         </div>
       )}
-      <details
-        data-glossary="true"
-        open={explain}
-        className="rounded-2xl border border-border bg-card p-4"
-      >
+      <details data-glossary="true" className="rounded-2xl border border-border bg-card p-4">
         <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
           <HelpIcon />
           Glossar: die Begriffe kurz erklärt
@@ -188,11 +184,7 @@ export function AnalysisPanel({
           ])}
         </dl>
       </details>
-      <details
-        data-fallacies="true"
-        open={explain}
-        className="rounded-2xl border border-border bg-card p-4"
-      >
+      <details data-fallacies="true" className="rounded-2xl border border-border bg-card p-4">
         <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
           <HelpIcon />
           Typische Fehlschlüsse
