@@ -27,7 +27,7 @@ AUSGABE=""
 AUTO=0
 DOCKER_ERZWINGEN=0
 VERBUNDEN=0
-ALLE_PHASEN="selbsttest verbinden"
+ALLE_PHASEN="selbsttest verbinden checkliste"
 
 info() { printf '\033[1m==>\033[0m %s\n' "$*" >&2; }
 warnung() { printf '\033[33m!!\033[0m %s\n' "$*" >&2; }
@@ -207,12 +207,50 @@ netz_pruefen() {
   fi
 }
 
+# ---------------------------------------------------------------- Phase checkliste
+
+# Führt alle Dateien aus abfragen/ aus und schreibt Fragen, Belege und Ergebnisse als Markdown.
+checkliste_schreiben() {
+  local datei=$1 sql thema start
+  {
+    echo "# Antworten aus der SQL-Checkliste"
+    echo
+    echo "- Stand: $(date '+%Y-%m-%d %H:%M:%S %z') (Mac), Server $HOST, Datenbank $DB"
+    echo "- Personenbezüge nur als Anzahlen; Abfragen: tools/ssmdb2-erkunden/abfragen/"
+    echo
+    for sql in "$HIER"/abfragen/*.sql; do
+      thema=$(sed -n 's/^-- Thema: //p' "$sql")
+      echo "## $(basename "$sql" .sql): $thema"
+      echo
+      sed -n -e 's/^-- Frage: /- Frage: /p' -e 's/^-- Belegt: /- Belegt: /p' "$sql"
+      echo
+      start=$(jetzt_ms)
+      sql_datei_tabelle "$sql" | md_code
+      echo
+      echo "Dauer: $(($(jetzt_ms) - start)) ms"
+      echo
+    done
+  } >"$datei"
+}
+
+phase_checkliste() {
+  verbindung_sicherstellen
+  info "SQL-Checkliste: liest ganze Tabellen. Nur ausführen, wenn gerade niemand schießt."
+  frage_ja "Schießt gerade niemand? Checkliste jetzt ausführen?" || {
+    warnung "Checkliste übersprungen"
+    return 0
+  }
+  checkliste_schreiben "$AUSGABE/bericht/antworten.md"
+  info "Checkliste geschrieben: $AUSGABE/bericht/antworten.md"
+}
+
 # ---------------------------------------------------------------- Ablauf
 
 for phase in $PHASEN; do
   case "$phase" in
     selbsttest) phase_selbsttest ;;
     verbinden) phase_verbinden ;;
+    checkliste) phase_checkliste ;;
     *) fehler "unbekannte Phase: $phase (bekannt: $ALLE_PHASEN)" ;;
   esac
 done

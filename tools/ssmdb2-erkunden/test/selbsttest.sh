@@ -72,12 +72,18 @@ kein_passwort_in_ausgabe() {
 echo "Testanlage starten ($IMAGE)"
 anlage_starten
 
-erkunden selbsttest verbinden
+erkunden selbsttest verbinden checkliste
 pruefe "umgebung.md geschrieben" test -s "$AUSGABE/bericht/umgebung.md"
 pruefe "Server-Version im Bericht" grep -q "MariaDB" "$AUSGABE/bericht/umgebung.md"
 pruefe "Tabelle Version gelesen" grep -q "6.0.2" "$AUSGABE/bericht/umgebung.md"
 pruefe "Uhrabweichung berechnet" grep -q "Uhr der Anlage minus Uhr des Macs" "$AUSGABE/bericht/umgebung.md"
 pruefe "Sitzung read-only" grep -q "Read-only laut Server: 1" "$AUSGABE/bericht/umgebung.md"
+ANTWORTEN="$AUSGABE/bericht/antworten.md"
+pruefe "antworten.md geschrieben" test -s "$ANTWORTEN"
+pruefe "alle zehn Themen im Bericht" test "$(grep -c '^## [0-9][0-9]-' "$ANTWORTEN")" = 10
+pruefe "keine SQL-Fehler gegen die Testanlage" sh -c "! grep -q '^ERROR' '$ANTWORTEN'"
+pruefe "Skalen-Abfrage gelaufen" grep -q "ring01_gleich_summe" "$ANTWORTEN"
+pruefe "Handeintrag gefunden" grep -q "Hand" "$ANTWORTEN"
 pruefe "kein Passwort in der Ausgabe" kein_passwort_in_ausgabe
 pruefe "kein Testname im Bericht" kein_testname_im_bericht
 

@@ -114,9 +114,10 @@ sql_tabelle() {
   _mysql --table -vvv -e "$1" | sed '/^Bye$/d'
 }
 
-# Eine SQL-Datei als lesbare Tabellen, jede Abfrage mit ihrem Text (für den Bericht).
+# Eine SQL-Datei als lesbare Tabellen, jede Abfrage mit ihrem Text (für den Bericht). Scheitert eine
+# Abfrage (etwa weil das echte Schema anders aussieht), laufen die übrigen weiter (--force).
 sql_datei_tabelle() {
-  _mysql --table -vvv <"$1" | sed '/^Bye$/d'
+  _mysql --table -vvv --force <"$1" 2>&1 | sed '/^Bye$/d'
 }
 
 # Dump über den passenden Dump-Client; Argumente werden angehängt, Ausgabe auf stdout.
