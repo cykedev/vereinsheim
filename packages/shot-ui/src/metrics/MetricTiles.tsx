@@ -3,9 +3,13 @@
 import { centroid } from "@vereinsheim/shot-core/geometry"
 import {
   computeMetric,
+  eligibleShots,
   inScoring,
+  inShotOrder,
   metricByKey,
-  timesWithGaps,
+  selectShots,
+  timesInOrder,
+  type MetricNeed,
   type MetricShot,
 } from "@vereinsheim/shot-core/metrics"
 import { tempo } from "@vereinsheim/shot-core/time"
@@ -15,7 +19,7 @@ import type { ReactNode } from "react"
 
 import { directionText, formatValue, unitText } from "../format"
 import { HelpButton } from "../help/HelpButton"
-import { hasPosition, selectionShots } from "../shots"
+import { groupShots, selectionShots } from "../shots"
 import type { ViewState } from "../view-state"
 
 /** die zehn Kacheln an der Scheibe, wie in der Spielwiese nach SP-1.12 */
@@ -54,6 +58,45 @@ const HINTS: Readonly<Record<string, (c: HintContext) => string>> = {
   "result.tensRate": () => "Anteil der Zehner",
   "time.tempoSpread": () => "IQR der Intervalle",
 }
+
+/** was einem Schuss für eine Kennzahl fehlen kann: wie es heißt und wie es mit „nur n …“ klingt */
+const NEEDS: Readonly<Record<MetricNeed, { without: string; with: string }>> = {
+  time: { without: "ohne Zeiten", with: "mit Zeit" },
+  position: { without: "ohne Lage", with: "mit Lage" },
+  distance: { without: "ohne Teiler", with: "mit Teiler" },
+  decimal: { without: "ohne Zehntel · auf ganze Ringe schalten", with: "mit Zehntel" },
+  ring: { without: "ohne Ringwert", with: "mit Ringwert" },
+}
+
+type Metric = NonNullable<ReturnType<typeof metricByKey>>
+
+/**
+ * Warum es keinen Wert gibt (spiegel-ui-design „Auch – erklären“): zu wenige Schüsse, oder es fehlen
+ * Daten wie Zeiten, Lage oder Zehntel (SF-18, SF-61); „ab n Schuss“ nur, wenn es wirklich an der Zahl liegt.
+ */
+function missingReason(metric: Metric, selected: readonly MetricShot[]): string {
+  if (selected.length < metric.minShots) return `ab ${metric.minShots} Schuss`
+  const needs = ([] as MetricNeed[]).concat(metric.needs ?? [])
+  const short = needs
+    .map((need) => ({ need, n: selectShots(selected, { need }).length }))
+    .sort((a, b) => a.n - b.n)[0]
+  if (short && short.n < metric.minShots) {
+    const text = NEEDS[short.need]
+    return short.n === 0 ? text.without : `nur ${short.n} ${text.with}, ab ${metric.minShots}`
+  }
+  const eligible = eligibleShots(metric, selected).length
+  return eligible < metric.minShots
+    ? `nur ${eligible} zählen, ab ${metric.minShots} Schuss`
+    : "kein Wert für diese Schüsse"
+}
+
+/** Spalten ab 768 px, die die Kacheln ganz füllen (5, 4 oder 3), sonst 5; Klassen fest für Tailwind */
+const COLUMNS: Readonly<Record<number, string>> = {
+  5: "md:grid-cols-5",
+  4: "md:grid-cols-4",
+  3: "md:grid-cols-3",
+}
+const columnsFor = (count: number) => COLUMNS[[5, 4, 3].find((n) => count % n === 0) ?? 5]
 
 /** σ bleibt σ: In der Großschrift der Beschriftung würde es sonst zu Σ */
 function labelNode(label: string): ReactNode {
@@ -98,12 +141,14 @@ export function MetricTiles({
   className,
 }: MetricTilesProps) {
   const selected = selectionShots(shots, state.selection)
+  // dieselben Schüsse wie der Schwerpunkt auf der Scheibe und die Zeiten wie im Fachkern (ohne Platzhalter)
   const center = centroid(
-    selected.filter(hasPosition).map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
+    groupShots(shots, state.selection).map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
   )
   const context: HintContext = {
     center,
-    pauses: tempo(timesWithGaps(selected)).pausesMs.length,
+    pauses: tempo(timesInOrder(selectShots(inShotOrder(selected), { need: "time" }))).pausesMs
+      .length,
     scoring: state.scoring,
   }
   const scope =
@@ -124,8 +169,13 @@ export function MetricTiles({
           {action}
         </div>
       </div>
-      {/* zehn Kacheln füllen 2 oder 5 Spalten ganz; bei 4 bliebe eine Lücke */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-5">
+      {/* Spalten so, dass die Kacheln jede Zeile ganz füllen (zehn: 2 und 5); sonst bliebe eine Lücke */}
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border",
+          columnsFor(keys.length)
+        )}
+      >
         {keys.map((key) => {
           const definition = metricByKey(key)
           if (!definition) return null
@@ -136,7 +186,7 @@ export function MetricTiles({
           const short = helpForMetric(key)?.short
           const why =
             value === null
-              ? `ab ${metric.minShots} Schuss`
+              ? missingReason(metric, selected)
               : `${HINTS[key]?.(context) ?? ""}${metric.nSensitive ? " · abhängig von der Schusszahl" : ""}`
           return (
             <div

@@ -35,8 +35,10 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Handwerten; Komponenten zeichnen nur, was diese liefern.
 - **Design-2-Bausteine aus `@vereinsheim/ui/design2`** (Segment-Umschalter, Schalter-Chip, Blatt), nicht
   nachbauen.
-- **Zahlen nur aus dem Fachkern** (`@vereinsheim/shot-core`), Texte nur aus `@vereinsheim/shot-help`.
-  Keine eigene Statistik im Baustein.
+- **Zahlen nur aus dem Fachkern** (`@vereinsheim/shot-core`), Erklärungen nur aus `@vereinsheim/shot-help`.
+  Kurze Angaben unter einem Wert (wie gemessen, warum es keinen gibt) stehen im Baustein. Keine eigene
+  Statistik im Baustein: Auch Hinweise rechnen über dieselben Schüsse wie der Wert (Platzhalter nach SF-15
+  nicht mit Lage, Zeit oder Abstand).
 - **Zahlen formatiert `./format`** (feste Stellen, Komma, echtes Minus, ohne `Intl`, wie auf dem
   Ausdruck); kein `toFixed(…).replace(…)` in Komponenten. Datum und Uhrzeit über `@vereinsheim/lib/format`
   mit der Zeitzone als Parameter.

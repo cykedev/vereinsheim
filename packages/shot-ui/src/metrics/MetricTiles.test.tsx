@@ -44,9 +44,13 @@ const CARD = [
   shot("match", 2, 10000, -3000, 97),
 ]
 
-const render = (state: Partial<ViewState> = {}, onHelp?: (key: string) => void) =>
+const render = (
+  state: Partial<ViewState> = {},
+  onHelp?: (key: string) => void,
+  shots: readonly MetricShot[] = CARD
+) =>
   renderToStaticMarkup(
-    createElement(MetricTiles, { shots: CARD, state: { ...initialViewState(), ...state }, onHelp })
+    createElement(MetricTiles, { shots, state: { ...initialViewState(), ...state }, onHelp })
   )
 
 /** Text einer Kachel (data-metric) ohne Markup */
@@ -96,11 +100,58 @@ describe("Kacheln „Trefferbild in Zahlen“", () => {
     expect(html).toMatch(/<h2[^>]*>Trefferbild in Zahlen<\/h2>[\s\S]*?Serie 2/)
   })
 
-  it("ohne Wert ein Strich und die Mindestzahl", () => {
-    // Serie 2 hat keine Zeiten: kein Tempo
-    const text = tileText(render({ selection: 2 }), "time.intervalMedian")
+  it("ohne Wert ein Strich und der Grund: zu wenige Schüsse", () => {
+    // die Probe hat zwei Schuss, R50 gibt es erst ab mehr
+    const text = tileText(render({ selection: "probe" }), "group.r50")
     expect(text).toContain("–")
-    expect(text).toContain(`ab ${metricByKey("time.intervalMedian")!.minShots} Schuss`)
+    expect(text).toContain(`ab ${metricByKey("group.r50")!.minShots} Schuss`)
+  })
+
+  it("ohne Wert ein Strich und der Grund: es fehlen Daten, nicht Schüsse", () => {
+    // Serie 2 hat drei Schuss, aber keine Zeiten
+    const tempo = tileText(render({ selection: 2 }), "time.intervalMedian")
+    expect(tempo).toContain("–")
+    expect(tempo).toContain("ohne Zeiten")
+    expect(tempo).not.toContain("ab ")
+    // ein Ausdruck in ganzen Ringen hat keine Zehntel (SF-18)
+    const ringsOnly = CARD.map((s) => ({ ...s, decimalTenths: null }))
+    const mean = tileText(render({}, undefined, ringsOnly), "result.decimalMean")
+    expect(mean).toContain("–")
+    expect(mean).toContain("ohne Zehntel")
+    expect(
+      tileText(render({ scoring: "rings" }, undefined, ringsOnly), "result.decimalMean")
+    ).not.toContain("–")
+  })
+
+  it("abhängig von der Schusszahl genau bei den Kennzahlen, die es sind", () => {
+    const html = render()
+    for (const key of TILE_KEYS) {
+      expect(tileText(html, key).includes("abhängig von der Schusszahl"), key).toBe(
+        !!metricByKey(key)!.nSensitive &&
+          expected(key, selectionShots(CARD, "all"), "decimal") !== "–"
+      )
+    }
+  })
+
+  it("Pausen über drei Minuten stehen beim Tempo", () => {
+    const paused = [...CARD.slice(0, 5), shot("match", 1, 500, 500, 104, 85_000 + 240_000)]
+    expect(tileText(render({ selection: 1 }, undefined, paused), "time.intervalMedian")).toContain(
+      "1 Pause über 3 min nicht gezählt"
+    )
+    expect(tileText(render({ selection: 1 }), "time.intervalMedian")).not.toContain("Pause")
+  })
+
+  it("ein verdächtiger Platzhalter verschiebt weder Richtung noch Pausen (SF-15)", () => {
+    const placeholder = {
+      ...shot("match", 1, 0, 0, 109, 10_000_000),
+      flags: ["verdaechtig"],
+    }
+    const withPlaceholder = render({ selection: 1 }, undefined, [...CARD, placeholder])
+    const without = render({ selection: 1 })
+    expect(tileText(withPlaceholder, "group.mpiDistance")).toBe(
+      tileText(without, "group.mpiDistance")
+    )
+    expect(tileText(withPlaceholder, "time.intervalMedian")).not.toContain("Pause")
   })
 
   it("der Kurzsatz aus shot-help steht als Titel an jeder Kachel", () => {
@@ -125,6 +176,23 @@ describe("Kacheln „Trefferbild in Zahlen“", () => {
     const html = render({}, () => {})
     expect([...html.matchAll(/<button[^>]*aria-label="Erklärung: [^"]+"/g)]).toHaveLength(10)
     expect(render()).not.toContain("Erklärung:")
+  })
+
+  it("volle Zeilen: so viele Spalten, wie die Kacheln ganz füllen", () => {
+    const columns = (count: number) =>
+      /md:grid-cols-(\d)/.exec(
+        renderToStaticMarkup(
+          createElement(MetricTiles, {
+            shots: CARD,
+            state: initialViewState(),
+            keys: TILE_KEYS.slice(0, count),
+          })
+        )
+      )?.[1]
+    expect(columns(10)).toBe("5")
+    expect(columns(8)).toBe("4")
+    expect(columns(6)).toBe("3")
+    expect(columns(9)).toBe("3")
   })
 
   it("mit „Erklärungen“ steht der Kurzsatz sichtbar an der Kachel, nicht nur als Tooltip", () => {
