@@ -173,7 +173,8 @@ pruefe "kein Testname im Bericht" kein_testname_im_bericht
 
 # Anderes Schema (Review B3, S1): Der Lauf bricht nicht ab, meldet Lücken und gibt keine Entwarnung.
 ANDERS="$AUSGABE/anders"
-if ZIEL="$ANDERS" erkunden --db SSMDB2ALT verbinden checkliste dump abschluss 2>/dev/null; then
+if ZIEL="$ANDERS" ERKUNDEN_AUTO_UEBERSPRINGEN="2 3 4 5 6 7 8 9 10 11" ERKUNDEN_AUTO_HOOK="" \
+  erkunden --db SSMDB2ALT verbinden checkliste dump protokoll abschluss 2>"$AUSGABE/anders-stderr.txt"; then
   RC_ANDERS=0
 else
   RC_ANDERS=$?
@@ -185,6 +186,8 @@ pruefe "anders: Kopie als unvollständig gemeldet" grep -q "unvollständig" "$AN
 pruefe "anders: Namensprüfung nicht möglich" grep -q "Namensprüfung nicht möglich" "$ANDERS/bericht/LIESMICH.md"
 pruefe "anders: keine Entwarnung im LIESMICH" sh -c "! grep -q 'enthält keine Namen' '$ANDERS/bericht/LIESMICH.md'"
 pruefe "anders: kein Name im Bericht" sh -c "! grep -r -q 'Geheimname' '$ANDERS/bericht'"
+pruefe "anders: Vorprüfung meldet, dass der Mitschnitt nicht lesen kann" grep -q "Der Mitschnitt kann nicht lesen: .*ERROR" "$AUSGABE/anders-stderr.txt"
+pruefe "anders: Schritte trotzdem durchgegangen" grep -q '| 1 | Achsen und Latenz | erledigt |' "$ANDERS/bericht/schritte.md"
 
 # Interaktiver Pfad, wie am Abend: Antworten über stdin statt --auto. Der Mitschnitt läuft dabei
 # im Hintergrund und darf keine Eingaben verbrauchen (docker exec -i hatte das getan).

@@ -3,6 +3,7 @@
 # Kompatibel mit macOS-Bash 3.2: keine assoziativen Arrays, keine leeren Arrays unter `set -u`.
 
 CLIENT_MODUS=""                        # lokal | docker
+# shellcheck disable=SC2034  # gelesen in erkunden.sh
 DOCKER_LAEUFT_NICHT=0
 MYSQL_BIN=""
 DUMP_BIN=""
@@ -11,6 +12,7 @@ DOCKER_CLIENT="ssmdb2-erkunden-client-$$"
 DOCKER_NETZ=""                         # nur für den Selbsttest
 ZUGANG_DIR=""
 RO_INIT="SET SESSION TRANSACTION READ ONLY"
+# shellcheck disable=SC2034  # gelesen in mitschnitt.sh, protokoll.sh, erkunden.sh
 JETZT_SQL="NOW()"                      # NOW(3), wenn der Server Millisekunden kann (verbinden prüft das)
 ZEITGRENZE_SQL=""                      # Zeitgrenze je Abfrage der Checkliste, je nach Server
 
@@ -30,6 +32,7 @@ client_finden() {
     fi
   fi
   if command -v docker >/dev/null 2>&1 && ! docker info >/dev/null 2>&1; then
+    # shellcheck disable=SC2034  # gelesen in erkunden.sh
     DOCKER_LAEUFT_NICHT=1
     return 1
   fi
@@ -68,9 +71,10 @@ zugang_schreiben() {
       echo "user=\"$(_cnf_escape "$3")\""
       echo "password=\"$(_cnf_escape "$4")\""
       # Der MariaDB-Client ab 11.4 verlangt sonst TLS mit gültigem Zertifikat und verweigert einen
-      # Server ohne TLS ganz (Review B1). Die Verbindung bleibt im lokalen Gerätenetz. Nur
-      # MariaDB-Clients lesen diese Gruppe; ein Oracle-mysql ignoriert sie.
+      # Server ohne TLS ganz (Review B1); ohne TLS auch kein Scheitern an alten TLS-Versionen. Die
+      # Verbindung bleibt im lokalen Gerätenetz. Nur MariaDB-Clients lesen diese Gruppe.
       echo "[client-mariadb]"
+      echo "skip-ssl"
       echo "skip-ssl-verify-server-cert"
     } >"$ZUGANG_DIR/zugang.cnf"
   )
@@ -182,6 +186,7 @@ tx_start() {
 # Erkennt, was der Server kann: Millisekunden in NOW() und eine Zeitgrenze je Abfrage.
 server_faehigkeiten() {
   local version
+  # shellcheck disable=SC2034  # gelesen in mitschnitt.sh, protokoll.sh, erkunden.sh
   if sql_text "SELECT NOW(3)" >/dev/null 2>&1; then JETZT_SQL="NOW(3)"; else JETZT_SQL="NOW()"; fi
   version=$(sql_text "SELECT VERSION() AS v" 2>/dev/null | sed -n 2p || true)
   case "$version" in

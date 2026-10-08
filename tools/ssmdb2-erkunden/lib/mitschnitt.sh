@@ -22,6 +22,11 @@ MITSCHNITT_LANGSAM_MS=300
 MITSCHNITT_BASIS_MS=0
 MITSCHNITT_NETZ_S=10        # Abstand des Netzes über Treffer.Zeitstempel; 60 bei Vollscan, 0 = aus
 
+# Die Fehlerzeile einer Client-Ausgabe: Der MariaDB-Client schreibt zuerst die Anweisung, dann ERROR.
+_fehlerzeile() {
+  printf '%s\n' "$1" | grep -m1 '^ERROR' || printf '%s\n' "$1" | tail -1
+}
+
 # Ereigniszeile direkt ins Rohprotokoll (nur, wenn der Mitschnitt nicht läuft, oder aus ihm selbst).
 mitschnitt_ereignis() {
   printf '# %s mac_ms=%s\n' "$*" "$(jetzt_ms)" >>"$MITSCHNITT_DATEI"
@@ -74,7 +79,7 @@ _mitschnitt_schleife() {
   while [ ! -f "$MITSCHNITT_STOP" ]; do
     marker=$(_marker_uebernehmen "$marker")
     if ! neu=$(sql_text "SELECT ScheibenID FROM Scheiben WHERE Zeitstempel >= '$seit'" 2>&1); then
-      mitschnitt_ereignis "fehler $(printf '%s' "$neu" | head -1)"
+      mitschnitt_ereignis "fehler $(_fehlerzeile "$neu")"
       sleep "$takt"
       continue
     fi
@@ -117,7 +122,7 @@ _mitschnitt_schleife() {
           fi
         fi
       else
-        mitschnitt_ereignis "fehler $(printf '%s' "$stand" | head -1)"
+        mitschnitt_ereignis "fehler $(_fehlerzeile "$stand")"
       fi
     fi
     sleep "$takt"
@@ -164,8 +169,8 @@ mitschnitt_vorpruefen() {
   typ=$(_explain_typ "SELECT DISTINCT ScheibenID FROM Treffer WHERE Zeitstempel >= '$MITSCHNITT_SEIT'")
   case "$typ" in
     "") MITSCHNITT_NETZ_S=0 ;;
-    ALL) MITSCHNITT_NETZ_S=60 ;;
-    *) MITSCHNITT_NETZ_S=10 ;;
+    range | ref | eq_ref | const | system) MITSCHNITT_NETZ_S=10 ;;
+    *) MITSCHNITT_NETZ_S=60 ;;  # ALL und index lesen die ganze Tabelle bzw. den ganzen Index
   esac
   info "Mitschnitt liest ab $MITSCHNITT_SEIT (Anlagenzeit); Netz über Treffer alle ${MITSCHNITT_NETZ_S}s (EXPLAIN: ${typ:-nicht lesbar})"
   return 0
@@ -188,8 +193,9 @@ mitschnitt_starten() {
 # Eine Zeile zum Stand des Mitschnitts für den User; Rückgabe 1, wenn er noch nichts gesehen hat.
 mitschnitt_status() {
   local staende fehler lauf="läuft"
-  staende=$(grep -c '^# stand ' "$MITSCHNITT_DATEI" 2>/dev/null || true)
-  fehler=$(grep '^# fehler ' "$MITSCHNITT_DATEI" 2>/dev/null | tail -1 | cut -c3-120 || true)
+  # Nur ab dem letzten Start zählen: Ein fortgesetzter Lauf schreibt in dieselbe Datei.
+  staende=$(awk '/^# start / { n = 0 } /^# stand / { n++ } END { print n + 0 }' "$MITSCHNITT_DATEI" 2>/dev/null || echo 0)
+  fehler=$(awk '/^# start / { f = "" } /^# fehler / { f = substr($0, 3, 118) } END { print f }' "$MITSCHNITT_DATEI" 2>/dev/null || true)
   if [ -n "$MITSCHNITT_PID" ] && ! kill -0 "$MITSCHNITT_PID" 2>/dev/null; then lauf="STEHT"; fi
   info "Mitschnitt: ${staende:-0} Stände, $lauf${fehler:+, zuletzt: $fehler}"
   [ "${staende:-0}" -gt 0 ]

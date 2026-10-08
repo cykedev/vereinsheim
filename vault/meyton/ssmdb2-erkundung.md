@@ -66,11 +66,12 @@ nur lesen darf, dem Schema nach Handbuch V9 (MyISAM) und Testdaten mit erfundene
   Server-Uhr, darunter die ungünstige Lesart von SF-03 (die Probe verschwindet mit dem ersten
   Wertungsschuss);
 - eine zweite Datenbank mit anderem Schema (Tabellen klein geschrieben, ohne `Version`, eine Spalte
-  `Name`, eine View): kein Abbruch, Kopie als unvollständig gemeldet, Namensprüfung „nicht möglich“;
+  `Name`, eine View): kein Abbruch, Kopie als unvollständig gemeldet, Namensprüfung „nicht möglich“,
+  der Mitschnitt meldet in der Vorprüfung, dass er nicht lesen kann, die Schritte laufen trotzdem;
 - einen Lauf ohne `--auto` mit Antworten über stdin, wie am Abend (er fand, dass `docker exec -i`
   Eingaben des Users verbrauchte), mit der ID so getippt, wie sie gedruckt ist (`ID: FF914420`).
 
-51 Prüfungen, unter anderem: Kopie einspielbar mit gleichen Zeilen, keine Testnamen und kein Passwort in
+53 Prüfungen, unter anderem: Kopie einspielbar mit gleichen Zeilen, keine Testnamen und kein Passwort in
 der Ausgabe, Zugangsdateien gelöscht, verschwindende Probe im Protokoll sichtbar, `ff914420` → −7257056
 samt Tabellenzeile. Gegenproben: ohne gelöschte Probe und mit einer Abfrage, die Namen ausgibt, werden
 die zugehörigen Prüfungen rot. Läuft auch mit der macOS-Bash 3.2 (`ERKUNDEN_BASH=/bin/bash`).

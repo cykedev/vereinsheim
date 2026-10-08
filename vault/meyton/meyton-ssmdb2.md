@@ -79,7 +79,7 @@ Handbuchstände: V5 (08/2023) → V7 (03/2024): `SportpassID` von `int(11)` auf 
 
 Das Werkzeug dafür ist `tools/ssmdb2-erkunden/erkunden.sh` ([[ssmdb2-erkundung]]); es führt diese Abfragen aus, ergänzt um Skalen, Zeittypen und die Grenzen des Vertrags.
 
-Nur lesen, Ergebnisse mit Namen nicht weitergeben. Feste IP aus dem Workstation-Bereich (.10.201–239). Die Abfragen vor oder nach dem Training ausführen, nicht während geschossen wird: Einige lesen ganze Tabellen.
+Nur lesen, Ergebnisse mit Namen nicht weitergeben. Feste IP außerhalb der Meyton-Bereiche, etwa 192.168.20.50 mit Maske 255.255.0.0 (nicht .200–.239, siehe Zugang). Die Abfragen vor oder nach dem Training ausführen, nicht während geschossen wird: Einige lesen ganze Tabellen.
 
 ```sql
 SET SESSION TRANSACTION READ ONLY;
