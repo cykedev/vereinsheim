@@ -8,6 +8,7 @@ import { directionWords, formatValue } from "../../format"
 import { ChartSlot } from "../charts/frame"
 import { PathChart } from "../charts/PathChart"
 import { AnalysisCard, KeyValues, Note, Verdict } from "../parts"
+import { ClockCard } from "./ClockCard"
 import type { CardContext, CardSpec } from "./index"
 
 const Muted = ({ children }: { children: ReactNode }) => (
@@ -90,6 +91,10 @@ export function positionCards({ input, explain, layers, onToggleLayer }: CardCon
           )}
         </AnalysisCard>
       ),
+    },
+    {
+      key: "richtungsuhr",
+      element: <ClockCard shots={base} explain={explain} />,
     },
     {
       key: "drift-und-wanderung",
