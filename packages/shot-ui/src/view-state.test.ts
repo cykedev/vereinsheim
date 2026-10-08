@@ -4,23 +4,18 @@ import { initialViewState, isSelected, viewReducer, type ViewState } from "./vie
 
 const start = initialViewState()
 
-describe("Auswahl von Serien und Probe", () => {
-  it("aus „alle“ wird die eine Serie, weitere kommen dazu, die letzte heraus heißt wieder „alle“", () => {
+describe("Auswahl: eine Serie oder alle (Wunsch des Users, 8. Oktober 2026)", () => {
+  it("Tippen wählt genau diese Serie, eine andere wechselt, dieselbe noch einmal heißt wieder „alle“", () => {
     let s = viewReducer(start, { type: "select", series: 2 })
-    expect(s.selection).toEqual([2])
+    expect(s.selection).toBe(2)
     s = viewReducer(s, { type: "select", series: 3 })
-    expect(s.selection).toEqual([2, 3])
-    s = viewReducer(s, { type: "select", series: 2 })
-    expect(s.selection).toEqual([3])
+    expect(s.selection).toBe(3)
     s = viewReducer(s, { type: "select", series: 3 })
     expect(s.selection).toBe("all")
   })
 
-  it("feste Reihenfolge: Probe zuerst, dann die Serien aufsteigend", () => {
-    let s = viewReducer(start, { type: "select", series: 4 })
-    s = viewReducer(s, { type: "select", series: "probe" })
-    s = viewReducer(s, { type: "select", series: 1 })
-    expect(s.selection).toEqual(["probe", 1, 4])
+  it("die Probe ist wählbar wie eine Serie", () => {
+    expect(viewReducer(start, { type: "select", series: "probe" }).selection).toBe("probe")
   })
 
   it("„Alle“ setzt zurück", () => {
@@ -28,11 +23,12 @@ describe("Auswahl von Serien und Probe", () => {
     expect(s.selection).toBe("all")
   })
 
-  it("isSelected: „alle“ enthält jede Serie und die Probe", () => {
+  it("isSelected: „alle“ enthält jede Serie und die Probe, sonst nur die gewählte", () => {
     expect(isSelected("all", 3)).toBe(true)
     expect(isSelected("all", "probe")).toBe(true)
-    expect(isSelected([1, 2], 2)).toBe(true)
-    expect(isSelected([1, 2], "probe")).toBe(false)
+    expect(isSelected(2, 2)).toBe(true)
+    expect(isSelected(2, 3)).toBe(false)
+    expect(isSelected(2, "probe")).toBe(false)
   })
 })
 
@@ -49,12 +45,10 @@ describe("Antippen eines Schusses", () => {
   it("fällt der Schuss aus der Auswahl, ist er nicht mehr gewählt", () => {
     const chosen = viewReducer(start, { type: "choose", shot: 5, series: 2 })
     expect(viewReducer(chosen, { type: "select", series: 3 }).chosen).toBeNull()
-    const kept = viewReducer(viewReducer(chosen, { type: "select", series: 2 }), {
-      type: "select",
-      series: 3,
-    })
-    expect(kept.selection).toEqual([2, 3])
-    expect(kept.chosen).toEqual({ index: 5, series: 2 })
+    // seine eigene Serie gewählt: er bleibt, und mit „alle“ ebenso
+    const own = viewReducer(chosen, { type: "select", series: 2 })
+    expect(own.chosen).toEqual({ index: 5, series: 2 })
+    expect(viewReducer(own, { type: "selectAll" }).chosen).toEqual({ index: 5, series: 2 })
   })
 })
 

@@ -52,8 +52,7 @@ const mm = (um: number) => um / 1000
 
 function selectionText(state: ViewState): string {
   if (state.selection === "all") return ""
-  const names = state.selection.map((key) => (key === "probe" ? "Probe" : `Serie ${key}`))
-  return `, gewählt: ${names.join(", ")}`
+  return `, gewählt: ${state.selection === "probe" ? "Probe" : `Serie ${state.selection}`}`
 }
 
 /**

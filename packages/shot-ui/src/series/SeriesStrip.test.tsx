@@ -82,12 +82,12 @@ describe("SeriesStrip", () => {
     ]).toHaveLength(3)
   })
 
-  it("bei einer Auswahl sind ihre Kacheln gedrückt, die übrigen blass", () => {
-    const html = render({ selection: ["probe", 2] })
+  it("bei einer gewählten Serie ist nur ihre Kachel gedrückt, die übrigen blass", () => {
+    const html = render({ selection: 2 })
     expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Alle<\/button>/)
-    expect(html).toMatch(/data-series="probe"[^>]*aria-pressed="true"/)
-    expect(html).toMatch(/data-series="1"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
     expect(html).toMatch(/data-series="2"[^>]*aria-pressed="true"/)
+    expect(html).toMatch(/data-series="probe"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
+    expect(html).toMatch(/data-series="1"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
   })
 
   it("Probe vor der Verstellung gestrichelt, danach durchgezogen", () => {

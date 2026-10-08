@@ -203,12 +203,19 @@ addEventListener("load", async () => {
     labelsOf(hits()).join() === "11,12,13,14,15,16,17,18,19,20"
   )
   await click(button("Übrige blass"))
+  // eine Serie oder alle: eine andere Serie wechselt, keine Mehrfachauswahl
   await click(tile("3"))
-  await click(tile("2"))
   check(
-    "Serie 3 dazu, Serie 2 heraus",
-    labelsOf(hits().filter((g) => !g.dataset.faded)).join() === "21,22,23,24,25,26,27,28,29,30"
+    "Serie 3 statt Serie 2, nur eine Kachel gedrückt",
+    labelsOf(hits().filter((g) => !g.dataset.faded)).join() === "21,22,23,24,25,26,27,28,29,30" &&
+      $$("[data-series][aria-pressed='true']").length === 1
   )
+  await click(tile("3"), 700)
+  check(
+    "dieselbe Serie noch einmal zeigt wieder alle",
+    hits().every((g) => !g.dataset.faded) && button("Alle").getAttribute("aria-pressed") === "true"
+  )
+  await click(tile("4"))
   await click(button("Alle"), 700)
   check(
     "„Alle“ setzt zurück",

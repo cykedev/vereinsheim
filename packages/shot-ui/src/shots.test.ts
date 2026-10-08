@@ -65,8 +65,8 @@ describe("Schüsse für die Bausteine", () => {
 
   it("Gruppe der Auswahl: deren Wertungsschüsse mit Lage, ohne Wertung die gewählte Probe", () => {
     expect(groupShots(CARD, "all")).toEqual([CARD[2], CARD[3], CARD[4]])
-    expect(groupShots(CARD, [2])).toEqual([CARD[4]])
-    expect(groupShots(CARD, ["probe"])).toEqual([CARD[0], CARD[1]])
-    expect(groupShots(CARD, ["probe", 1])).toEqual([CARD[2], CARD[3]])
+    expect(groupShots(CARD, 2)).toEqual([CARD[4]])
+    expect(groupShots(CARD, 1)).toEqual([CARD[2], CARD[3]])
+    expect(groupShots(CARD, "probe")).toEqual([CARD[0], CARD[1]])
   })
 })

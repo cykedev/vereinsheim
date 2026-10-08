@@ -84,7 +84,7 @@ describe("TargetView: Ebenen", () => {
 
 describe("TargetView: Auswahl und Antippen", () => {
   it("gewählte Serie normal und oben, die übrigen blass, ohne Nummer und nicht antippbar", () => {
-    const html = render({ selection: [2] })
+    const html = render({ selection: 2 })
     expect(shotOrder(html)).toEqual(["P1", "P2", "1", "2", "3", "4", "5"])
     for (const label of ["P1", "P2", "1", "2", "3"]) {
       expect(html).toMatch(
@@ -99,12 +99,12 @@ describe("TargetView: Auswahl und Antippen", () => {
 
   it("Streukreis und Schwerpunkt rechnen über die Auswahl", () => {
     // Serie 2: Schwerpunkt (2,75 | −1,75) mm, in SVG y nach unten also 1,75
-    const html = render({ selection: [2] })
+    const html = render({ selection: 2 })
     expect(html).toMatch(/data-overlay="mpi"[^>]*transform="translate\(2\.75 1\.75\)/)
   })
 
   it("ausgeblendet statt blass: die übrigen fehlen ganz", () => {
-    const html = render({ selection: [2] }, "hide")
+    const html = render({ selection: 2 }, "hide")
     expect(shotOrder(html)).toEqual(["4", "5"])
   })
 
@@ -138,7 +138,8 @@ describe("TargetView: Probe und Scheibe", () => {
     expect(render()).toMatch(
       /<svg[^>]*role="img"[^>]*aria-label="Luftpistole 10 m: 5 Wertungsschüsse, 2 Probeschüsse"/
     )
-    expect(render({ selection: ["probe", 2] })).toContain("gewählt: Probe, Serie 2")
+    expect(render({ selection: 2 })).toContain("gewählt: Serie 2")
+    expect(render({ selection: "probe" })).toContain("gewählt: Probe")
   })
 
   it("Luftgewehr: die Zehn ist ein weißer Punkt, LP: der Innenzehner gestrichelt", () => {

@@ -8,7 +8,7 @@ import type { SeriesKey, Selection } from "./types"
 export type Layer = "mpi" | "circle" | "numbers" | "ellipse"
 
 export interface ViewState {
-  /** „all“ oder gewählte Serien und Probe, Probe zuerst, Serien aufsteigend */
+  /** „all“ oder genau eine Serie bzw. die Probe */
   selection: Selection
   /** der angetippte Schuss mit seiner Serie, damit er mit der Auswahl wegfallen kann */
   chosen: { index: number; series: SeriesKey } | null
@@ -44,21 +44,15 @@ export function initialViewState(overrides: Partial<ViewState> = {}): ViewState 
 }
 
 export const isSelected = (selection: Selection, key: SeriesKey) =>
-  selection === "all" || selection.includes(key)
-
-const order = (key: SeriesKey) => (key === "probe" ? 0 : key)
-
-function toggled(selection: Selection, key: SeriesKey): Selection {
-  const current = selection === "all" ? [] : selection
-  const next = current.includes(key) ? current.filter((k) => k !== key) : [...current, key]
-  return next.length === 0 ? "all" : [...next].sort((a, b) => order(a) - order(b))
-}
+  selection === "all" || selection === key
 
 export function viewReducer(state: ViewState, action: ViewAction): ViewState {
   switch (action.type) {
     case "select":
     case "selectAll": {
-      const selection = action.type === "select" ? toggled(state.selection, action.series) : "all"
+      // Tippen wählt genau diese Serie; dieselbe noch einmal zeigt wieder alle
+      const selection: Selection =
+        action.type === "select" && state.selection !== action.series ? action.series : "all"
       const chosen =
         state.chosen && isSelected(selection, state.chosen.series) ? state.chosen : null
       return { ...state, selection, chosen }
