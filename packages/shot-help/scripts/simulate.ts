@@ -341,22 +341,33 @@ for (const [label, base, seed] of [
   out("B13", `Richtungsuhr, 30 Schuss: stärkster Keil im Median ×${num(quantile(ratios, 0.5), 1)}`)
 }
 
-// B14: Ausreißer bei 10 Schuss: ein Schuss bei 5σ; zwei Schuss bei 5σ (mindestens einer erkannt)
-for (const far of [1, 2]) {
-  let hits = 0
-  repeat(5_000, 14_000 + far, (rand) => {
+// B14: Ausreißer bei 10 Schuss: ein Schuss bei 5σ; zwei bei 5σ, zufällig verteilt oder nah beieinander
+for (const [far, near, seed] of [
+  [1, false, 14_001],
+  [2, false, 14_002],
+  [2, true, 14_102],
+] as const) {
+  let one = 0
+  let all = 0
+  repeat(5_000, seed, (rand) => {
+    const base = 2 * Math.PI * rand.uniform()
     const shots = card(rand, { ...LG, n: 10 }).map((s, i) => {
       if (i < 10 - far) return s
-      const angle = 2 * Math.PI * rand.uniform()
+      const angle = near ? base + 0.15 * (i - (10 - far)) : 2 * Math.PI * rand.uniform()
       const xUm = Math.round(5 * 1500 * Math.cos(angle))
       const yUm = Math.round(5 * 1500 * Math.sin(angle))
       const score = scoreFromCoordinates(LG_10M, xUm, yUm)
       return { ...s, xUm, yUm, decimalTenths: score.decimalTenths, ring: score.ring }
     })
     const flagged = new Set(outliers(shots)?.flagged.map((f) => f.shot) ?? [])
-    if (shots.slice(10 - far).some((s) => flagged.has(s))) hits++
+    const found = shots.slice(10 - far).filter((s) => flagged.has(s)).length
+    if (found > 0) one++
+    if (found === far) all++
   })
-  out("B14", `10 Schuss, ${far} bei 5σ: mindestens einer erkannt in ${share(hits, 5_000)}`)
+  out(
+    "B14",
+    `10 Schuss, ${far} bei 5σ${near ? " nah beieinander" : ""}: mindestens einer erkannt in ${share(one, 5_000)}${far > 1 ? `, beide in ${share(all, 5_000)}` : ""}`
+  )
 }
 
 // B15: deterministisch: Wilson 20/40; Bereich von σ relativ zu σ̂ bei 10, 30 und 120 Schuss
