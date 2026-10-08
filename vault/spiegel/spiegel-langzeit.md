@@ -9,7 +9,7 @@ governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]"]
 ---
 
-**TL;DR** Die Seite eines Zeitraums ist für den Schützen selbst gebaut wie die Seite einer Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, statt des Schusses wird eine Scheibe abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten Zeitraum ist eingebaut und urteilt nur mit Test. Entwurf vom 8. Oktober 2026, die Grundentscheidungen hat der User getroffen.
+**TL;DR** Die Seite eines Zeitraums ist für den Schützen selbst gebaut wie die Seite einer Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, statt des Schusses wird eine Scheibe abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten Zeitraum ist eingebaut und urteilt nur mit Test. Entwurf vom 8. Oktober 2026; Grundentscheidungen und Vorgaben hat der User getroffen, als Nächstes kommt L1, das Diagramm-Lineal.
 
 ## Entschieden mit dem User (8. Oktober 2026)
 
@@ -166,13 +166,10 @@ Wie auf der Scheibe:
 | L5 | Erkenntnisse Reiter für Reiter, jede mit Mindestzahl und Simulation | SP-2.7 |
 | L6 | Benannte Zeiträume speichern; Merkmal-Vergleich nach SP-2.3 | SP-2.2, SP-2.3 |
 
-## Offen
+## Vorgaben (vom User bestätigt, 8. Oktober 2026)
 
-- **Vorgabe beim ersten Öffnen:** Empfehlung sind die letzten 90 Tage; sie zeigen Form und Trend, ohne alte
-  Abende zu mischen.
-- **Kennzahl des Verlaufs als Vorgabe:** Empfehlung ist Ø je Schuss, verständlich und von der Schusszahl
-  unabhängig.
-- **Vorgabe des Langzeit-Trefferbilds:** Empfehlung ist die Sicht **Form**, denn sie beantwortet „Wie eng
-  schieße ich?“ ohne die Wanderung der Lage.
-- **Mindestzahl für ein Urteil im Vergleich:** Empfehlung sind fünf Scheiben je Seite; die Simulation in L2
-  legt sie fest.
+- **Beim ersten Öffnen** die letzten 90 Tage: Sie zeigen Form und Trend, ohne alte Abende zu mischen.
+- **Kennzahl des Verlaufs** ist Ø je Schuss: verständlich und von der Schusszahl unabhängig.
+- **Langzeit-Trefferbild** startet in der Sicht **Form**: Sie beantwortet „Wie eng schieße ich?“ ohne die
+  Wanderung der Lage.
+- **Ein Vergleich urteilt** ab fünf Scheiben je Seite; die Simulation in L2 legt die Zahl endgültig fest.
