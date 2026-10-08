@@ -22,7 +22,9 @@
     "./help/HelpBody": "./src/help/HelpBody.tsx",
     "./help/HelpButton": "./src/help/HelpButton.tsx",
     "./help/HelpDetails": "./src/help/HelpDetails.tsx",
-    "./help/HelpSheet": "./src/help/HelpSheet.tsx"
+    "./help/HelpSheet": "./src/help/HelpSheet.tsx",
+    "./target/MpiMark": "./src/target/MpiMark.tsx",
+    "./analysis/parts": "./src/analysis/parts.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

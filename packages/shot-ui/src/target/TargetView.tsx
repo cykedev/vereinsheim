@@ -28,6 +28,7 @@ import {
 } from "../shots"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
+import { MpiMark } from "./MpiMark"
 import { useAnimatedViewBox, useElementWidth } from "./useAnimatedViewBox"
 
 export interface TargetViewProps {
@@ -364,16 +365,12 @@ export function TargetView({
         )}
         {center && (
           // Schwerpunkt ganz oben: weiße Scheibe, zwei schwarze Viertel, Kontur mit hellem Saum
-          <g
+          <MpiMark
             data-overlay="mpi"
-            transform={`translate(${mm(center.xUm)} ${-mm(center.yUm)}) scale(${sizes.mpiRadius})`}
-          >
-            <title>Schwerpunkt</title>
-            <circle r={1} fill="none" stroke="var(--mpi-halo)" strokeWidth={3} {...HAIR} />
-            <circle r={1} fill="var(--mpi-light)" />
-            <path d="M0 0L0-1A1 1 0 0 0-1 0ZM0 0L0 1A1 1 0 0 0 1 0Z" fill="var(--mpi-dark)" />
-            <circle r={1} fill="none" stroke="var(--mpi-dark)" strokeWidth={1} {...HAIR} />
-          </g>
+            x={mm(center.xUm)}
+            y={-mm(center.yUm)}
+            radius={sizes.mpiRadius}
+          />
         )}
       </g>
     </svg>
