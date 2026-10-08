@@ -2,8 +2,10 @@
 
 Eine Seite aus den echten Bausteinen von Spiegel (`@vereinsheim/shot-ui`, Design-2-Bausteine aus
 `@vereinsheim/ui`) mit erfundenen Beispielscheiben, gebaut zu einer einzigen HTML-Datei. Zum Ausprobieren
-und Beurteilen, auch auf dem Handy als privates Artifact „Spiegel-Labor“. Plan:
-`plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vorbild war die Spielwiese (`tools/spielwiese`).
+und Beurteilen, auch auf dem Handy als privates Artifact „Spiegel-Labor“
+(https://claude.ai/artifact/RBdMhiyLsNvqbVDWvJH5Ni; aus einer anderen Session mit dieser Adresse als `url`
+neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vorbild war die Spielwiese
+(`tools/spielwiese`).
 
 ## Befehle
 
