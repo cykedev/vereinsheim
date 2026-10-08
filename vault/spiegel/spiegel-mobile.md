@@ -47,17 +47,17 @@ relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statisti
 
 - **Optik wie am Desktop:** Bedienelemente behalten auf dem Telefon ihre Desktop-Höhe (rund 30 px, WCAG-AA 24 px erfüllt), auch „Was heißt das?“ bekommt keine größere Tippfläche. Die zuerst eingebauten 44 px Mindesthöhe und die umgebrochene Reiterleiste wirkten zu hoch.
 - **Reiter in einer Zeile:** Auf schmalen Bildschirmen scrollt die Reiterleiste seitlich in sich, der gewählte Reiter rückt ins Bild.
-- **Karten im Raster aus Zeilen:** zwei Spalten erst, wenn der Kartenbereich 820 px breit ist (beide Karten einer Zeile gleich hoch, eine einzelne letzte Karte über die volle Breite); jeder Abstand 16 px, die Skriptprüfung des Labors misst das. Seit dem Seitenaufbau (Schritt 4) steht die Analyse ab 768 px rechts neben der Scheibe, der Bereich ist dort schmaler: Auf der Seite stehen die Karten in jeder Größe in einer Spalte.
+- **Karten im Raster aus Zeilen:** zwei Spalten erst, wenn der Kartenbereich 820 px breit ist (beide Karten einer Zeile gleich hoch, eine einzelne letzte Karte über die volle Breite); jeder Abstand 16 px, die Skriptprüfung des Labors misst das. Auf der Seite steht die Analyse ab 768 px in voller Breite unter der Scheibe, die Karten stehen dort zu zweit.
 
 ## Empfehlung für den Seitenaufbau
 
-**Eine Seite mit Sprungleiste.** Sobald der Kopf weggescrollt ist, erscheint oben „Scheibe · Zahlen · Schüsse · Analyse“; in der Analyse zeigt dieselbe Leiste die Themen (nie zwei Leisten). Aktionen mit Wirkung auf die Scheibe springen zur Scheibe und blenden „Zurück zu …“ ein. Abschnitt und Thema stehen in der Adresse (`#lage`), damit Zurück und geteilte Links gehen. Eine untere Abschnittsleiste scheidet aus, dort sitzt die App-Navigation ([[spiegel-ui-design]]). Ausweg, falls die Seite zu lang wirkt: die Analyse als eigene Ansicht.
+**Eine Seite mit Sprungleiste.** Sobald der Kopf weggescrollt ist, erscheint oben „Scheibe · Schüsse · Zahlen · Analyse“; in der Analyse zeigt dieselbe Leiste die Themen (nie zwei Leisten). Aktionen mit Wirkung auf die Scheibe springen zur Scheibe und blenden „Zurück zu …“ ein. Abschnitt und Thema stehen in der Adresse (`#lage`), damit Zurück und geteilte Links gehen. Eine untere Abschnittsleiste scheidet aus, dort sitzt die App-Navigation ([[spiegel-ui-design]]). Ausweg, falls die Seite zu lang wirkt: die Analyse als eigene Ansicht.
 
-Reihenfolge auf dem Telefon: Kopf mit Ergebnis, Scheibe mit Ablesezeile, Serien und Kacheln, Schüsse (ohne eigenen Scrollkasten, „Alle zeigen“), Analyse mit Überblick.
+Reihenfolge auf dem Telefon: Kopf mit Ergebnis, Scheibe mit Ablesezeile, Serien und Übersicht, Schüsse (ohne eigenen Scrollkasten, „Alle zeigen“), Kacheln, Analyse mit Überblick.
 
 **Diagramme:** Ablesen durch Antippen oder Ziehen (Lineal), die Werte stehen fest über dem Diagramm, im Verlauf wählt das zugleich den Schuss auf der Scheibe. Jedes Diagramm bekommt seine Kernaussage als Label und „Werte als Tabelle“.
 
-**Tablet und Desktop:** Ab 768 px steht die Scheibe links fest, rechts scrollt der Rest, jede Kopplung bleibt sichtbar.
+**Tablet und Desktop:** Ab 768 px steht die Scheibe links fest, rechts daneben Schuss, Serien, Übersicht und Schüsse; Kacheln und Analyse folgen in voller Breite darunter (siehe unten).
 
 ## Entschieden mit dem Plan für Schritt 4 (8. Oktober 2026)
 
@@ -73,6 +73,20 @@ freigegeben vom User):
 Abweichend von der Empfehlung springt die Seite zur Scheibe sofort statt gleitend: Glattes Scrollen über
 Tausende Pixel kam in einem verborgenen Fenster verspätet an und lief in der Skriptprüfung nicht. Aus demselben
 Grund misst die Sprungleiste den aktiven Abschnitt beim Scrollen statt über einen `IntersectionObserver`.
+
+## Nachgeschärft nach dem ersten Blick (8. Oktober 2026)
+
+- **Neben der Scheibe nur, was zu ihr gehört:** Schuss, Serien und Schusstabelle sind beim Blick auf die Scheibe
+  immer sinnvoll und stehen rechts daneben. Kacheln und Analyse brauchen Platz: In der rechten Spalte standen
+  die zehn Kacheln zu fünf auf knapp 100 px und schnitten Werte ab. Sie stehen jetzt darunter in voller Breite,
+  ihre Spalten richten sich nach der Breite des Bereichs. Die Sprungleiste folgt der neuen Reihenfolge.
+- **Nichts angeschnitten:** Die Schalter der Scheibe liefen ab 768 px als Zeile, die in sich scrollte, und waren
+  rechts abgeschnitten, die Reiterleiste in der schmalen Spalte ebenso. Die Schalter liegen jetzt als runde
+  Knöpfe in den Ecken der Scheibe, wie an einer DISAG-Anzeige (Vorschlag des Users), „Übrige blass/aus“ als
+  einer davon; die Labor-Schalter (Ansehen/Setzen) stehen im Labor-Kopf, die App hat sie nicht. Die
+  Reiterleiste hat in voller Breite Platz. Auf dem Telefon teilt die Sprungleiste die Breite in vier Felder.
+- **Aktiver Abschnitt an der Leiste:** Mit 45 % der Fensterhöhe galt nach einem Sprung zu den kurzen Zahlen
+  schon die Analyse als aktiv. Es zählt jetzt der Abschnitt, dessen Anfang die Leiste erreicht hat.
 
 ## Offen
 

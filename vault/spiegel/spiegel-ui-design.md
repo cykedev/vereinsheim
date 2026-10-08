@@ -91,15 +91,25 @@ Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` 
 
 - **Kopf** (`CardHeader`): Scheibe und Metazeile, das Ergebnis groß mit Schusszahl, die Wertung ganze
   Ringe/Zehntel, darunter ein Satz (der erste Satz der ersten Beobachtung).
-- **Sprungleiste** (`SectionNav`) unter dem Kopf, klebt oben: „Scheibe · Zahlen · Schüsse · Analyse“ als Anker,
-  der aktive Abschnitt hervorgehoben (der späteste, der oberhalb von 45 % der Fensterhöhe begonnen hat, beim
-  Scrollen gemessen). In der Analyse deckt auf dem Telefon ihre Reiterleiste die Sprungleiste ab.
-- **Telefon:** eine Spalte. Kopf und Scheibe (mit Schaltern und Ablesezeile `ShotLine` statt Ablese-Karte)
-  passen auf den ersten Bildschirm, die Serien folgen direkt; dann Kacheln, Schüsse, Analyse. Die Schusstabelle
-  zeigt die zehn neuesten Schüsse und „Alle 40 zeigen“, der gewählte bleibt sichtbar.
-- **Ab 768 px** (`CardPage`): links die Scheibe fest unter der Leiste, höchstens so groß, dass sie ins Fenster
-  passt; rechts Ablese-Karte, Serien, Übersicht, Kacheln, Schüsse, Analyse. Auch im Querformat am Telefon passt
-  die Scheibe in die Höhe.
+- **Sprungleiste** (`SectionNav`) unter dem Kopf, klebt oben: „Scheibe · Schüsse · Zahlen · Analyse“ als Anker,
+  auf dem Telefon vier gleich breite Felder, nie angeschnitten. Aktiv ist der späteste Abschnitt, dessen Anfang
+  die Leiste erreicht hat (bis 40 px darunter, beim Scrollen gemessen); so ist nach einem Sprung genau dieser
+  Abschnitt aktiv, auch wenn er kürzer ist als das Fenster. In der Analyse deckt auf dem Telefon ihre
+  Reiterleiste die Sprungleiste ab.
+- **Schalter in den Ecken der Scheibe** (`TargetControls`, wie an einer DISAG-Anzeige, User, 8. Oktober 2026):
+  oben links Lupe (Ausschnitt Gruppe/Scheibe) und übrige Schüsse blass oder aus, oben rechts das „?“, unten links
+  Schwerpunkt und Streukreis, unten rechts Vertrauensellipse und Nummern; runde Knöpfe zu 28 px nur mit Symbol,
+  Name als Tooltip und für Screenreader. Eine Leiste über der Scheibe brach in schmalen Spalten um oder wurde
+  angeschnitten und kostete Höhe. Im Ausschnitt „Scheibe“ bleibt der äußere Ring ab 290 px Kastenbreite frei.
+- **Telefon:** eine Spalte. Kopf und Scheibe (Ablesezeile `ShotLine` statt Ablese-Karte) passen auf den ersten
+  Bildschirm, die Serien folgen direkt; dann Übersicht, Schüsse, Zahlen, Analyse. Die Schusstabelle zeigt die
+  zehn neuesten Schüsse und „Alle 40 zeigen“, der gewählte bleibt sichtbar.
+- **Ab 768 px** (`CardPage`): links die Scheibe fest unter der Leiste, höchstens so groß, dass sie samt Karte ins
+  Fenster passt; rechts daneben, was man beim Blick auf die Scheibe braucht: Ablese-Karte, Serien, Übersicht,
+  Schusstabelle. Zahlen und Analyse folgen darunter in voller Breite, die Scheibe scrollt dort mit weg (User,
+  8. Oktober 2026: Bereiche, die neben der Scheibe bleiben, und Bereiche, die unten mehr Platz brauchen). Die
+  Kacheln stehen zu fünf, die Karten der Analyse zu zweit; ihre Spalten richten sich nach der Breite des
+  Bereichs, nicht des Fensters. Auch im Querformat am Telefon passt die Scheibe in die Höhe.
 - **Sprung zur Scheibe mit Rücksprung:** Schaltet der Knopf „Vertrauensellipse“ in der Analyse oder eine Zeile der
   Schusstabelle die Scheibe und ist sie außer Sicht, springt die Seite zu ihr und zeigt die Pille
   „Zurück zu „Lage““. Gesprungen wird sofort wie bei Ankern, nicht gleitend.
