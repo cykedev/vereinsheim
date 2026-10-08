@@ -7,11 +7,12 @@ dieselben Bausteine mit echten Daten ein.
 
 ## Exporte
 
-| Export                          | Datei             | Inhalt                                                                                                |
-| ------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
-| `@vereinsheim/shot-ui/types`    | `src/types.ts`    | `SeriesKey`, `Selection`, `ViewBox`                                                                   |
-| `@vereinsheim/shot-ui/geometry` | `src/geometry.ts` | Ausschnitte (`targetView`, `groupView`, `seriesTileView`), `screenSizes`, `scoreColor`, `tileColumns` |
-| `@vereinsheim/shot-ui/layers`   | `src/layers.ts`   | `layerOrder`: Treffer mit Nummer in Abgabefolge, Auswahl oben, angetippter Schuss zuletzt             |
+| Export                            | Datei               | Inhalt                                                                                                            |
+| --------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `@vereinsheim/shot-ui/types`      | `src/types.ts`      | `SeriesKey`, `Selection`, `ViewBox`                                                                               |
+| `@vereinsheim/shot-ui/geometry`   | `src/geometry.ts`   | Ausschnitte (`targetView`, `groupView`, `seriesTileView`), `screenSizes`, `scoreColor`, `tileColumns`             |
+| `@vereinsheim/shot-ui/layers`     | `src/layers.ts`     | `layerOrder`: Treffer mit Nummer in Abgabefolge, Auswahl oben, angetippter Schuss zuletzt                         |
+| `@vereinsheim/shot-ui/view-state` | `src/view-state.ts` | `viewReducer`, `initialViewState`, `isSelected`: Auswahl, angetippter Schuss, Ausschnitt, Ebenen, Wertung, Visier |
 
 ## Regeln
 
