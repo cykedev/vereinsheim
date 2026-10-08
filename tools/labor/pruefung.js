@@ -1050,6 +1050,91 @@ addEventListener("load", async () => {
     const tired = S().fatigue(base(), "decimal")
     check("Zeit: Ermüdung", ctext("ermuedung").includes(`Ø ${nf(tired.lastMeanRings, 2)}`))
 
+    // ---------- Lineal (Plan L1): Antippen, Ziehen, zweites Tippen, „Auf der Scheibe“, Kopplung, Tabellen
+    const courseSvg = () =>
+      $('svg[aria-label="Wert je Schuss mit gleitendem Schnitt"]', card("verlauf-und-trend"))
+    const courseLine = () => txt($("[data-readout]", card("verlauf-und-trend")))
+    const pointAt = (n) => Number($(`[data-course-point="${n}"]`, courseSvg()).getAttribute("cx"))
+    const pointer = async (type, n, root = courseSvg(), x = pointAt(n)) => {
+      const r = root.getBoundingClientRect()
+      const clientX = r.left + (x / root.viewBox.baseVal.width) * r.width
+      root.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          clientX,
+          clientY: r.top + r.height / 2,
+          pointerId: 1,
+        })
+      )
+      await wait(30)
+    }
+    const tapPoint = async (n) => {
+      await pointer("pointerdown", n)
+      await pointer("pointerup", n)
+    }
+    check("Lineal: ohne Wahl der Hinweis", courseLine().includes("Tippe oder ziehe im Diagramm"))
+    await tapPoint(23)
+    check(
+      "Lineal: Antippen von Punkt 23 nennt ihn und zeigt die Linie",
+      courseLine().includes("Schuss 23 · ") && !!$("[data-ruler]", courseSvg()),
+      courseLine().slice(0, 60)
+    )
+    await pointer("pointerdown", 10)
+    await pointer("pointermove", 20)
+    await pointer("pointermove", 30)
+    await pointer("pointerup", 30)
+    check(
+      "Lineal: Ziehen von 10 bis 30 wandert mit",
+      courseLine().includes("Schuss 30 · "),
+      courseLine().slice(0, 40)
+    )
+    await tapPoint(30)
+    check(
+      "Lineal: zweites Tippen auf denselben Punkt hebt die Wahl auf",
+      courseLine().includes("Tippe oder ziehe") && !$("[data-ruler]", courseSvg())
+    )
+    await tapPoint(14)
+    await click(button("Auf der Scheibe", card("verlauf-und-trend")), 120)
+    check(
+      "Lineal: „Auf der Scheibe“ wählt Schuss 14 dort",
+      txt($("#readout")).includes("Schuss 14 · angetippt"),
+      txt($("#readout")).slice(0, 40)
+    )
+    check(
+      "Lineal: der Schuss der Scheibe steht im Verlauf und im Rhythmus",
+      !!$('[data-course-point="14"][data-chosen]', courseSvg()) &&
+        !!$('[data-interval="14"][data-chosen]', card("rhythmus"))
+    )
+    await click(button("Auf der Scheibe", card("verlauf-und-trend")), 120)
+    check(
+      "Lineal: noch einmal „Auf der Scheibe“ lässt ihn gewählt",
+      txt($("#readout")).includes("Schuss 14 · angetippt")
+    )
+    check(
+      "Lineal: Verlauf, Rhythmus und Zehntel-Säulen scrollen senkrecht weiter (touch-action)",
+      [courseSvg(), $('svg[aria-label="Abstände zwischen den Schüssen"]', card("rhythmus"))].every(
+        (el) => getComputedStyle(el).touchAction === "pan-y"
+      )
+    )
+    // zurück ohne Wahl: eine andere Scheibe und wieder zurück setzt den Zustand zurück
+    await click(button("Luftgewehr"), 150)
+    await click(button("Luftpistole"), 150)
+    await tab("Ergebnis")
+    const decimalSvg = $('svg[aria-label^="Zehntelverteilung"]', A())
+    check(
+      "Tabelle: Zehntel-Säulen, eine Zeile je belegtem Zehntel",
+      $$("tbody tr", decimalSvg.parentElement).length === $$("[data-tenth]", decimalSvg).length &&
+        getComputedStyle(decimalSvg).touchAction === "pan-y",
+      `${$$("tbody tr", decimalSvg.parentElement).length} / ${$$("[data-tenth]", decimalSvg).length}`
+    )
+    await tab("Lage")
+    const clockSvg = $('svg[aria-label="Richtungsuhr"]', A())
+    check(
+      "Tabelle: Richtungsuhr, eine Zeile je belegter Stunde",
+      $$("tbody tr", clockSvg.parentElement).length === $$("[data-hour]", clockSvg).length,
+      `${$$("tbody tr", clockSvg.parentElement).length} / ${$$("[data-hour]", clockSvg).length}`
+    )
+
     await tab("Probe")
     check("Probe: Umfang 9", ctext("probe-umfang").includes("9 (1 Block à zehn)"))
     const zeroed = S().sighterZeroed(L().shots)
@@ -1507,6 +1592,47 @@ addEventListener("load", async () => {
       )
       flat.remove()
     }
+
+    // Telefon: „Auf der Scheibe“ im Lineal springt zur Scheibe, die Pille nennt den Reiter (Plan L1, D4)
+    const rulerPhone = await openFrame(375, 812)
+    const rd = rulerPhone.contentDocument
+    const rulerTab = [...rd.querySelectorAll('section[aria-label="Analyse"] [role="radio"]')].find(
+      (b) => txt(b) === "Zeit und Verlauf"
+    )
+    await frameClick(rulerPhone, rulerTab, 200)
+    const rulerCourse = rd.querySelector('svg[aria-label="Wert je Schuss mit gleitendem Schnitt"]')
+    rulerCourse.scrollIntoView()
+    await wait(100)
+    const rulerRect = rulerCourse.getBoundingClientRect()
+    const rulerX =
+      rulerRect.left +
+      (Number(rulerCourse.querySelector('[data-course-point="14"]').getAttribute("cx")) /
+        rulerCourse.viewBox.baseVal.width) *
+        rulerRect.width
+    for (const type of ["pointerdown", "pointerup"])
+      rulerCourse.dispatchEvent(
+        new rulerPhone.contentWindow.PointerEvent(type, {
+          bubbles: true,
+          clientX: rulerX,
+          clientY: rulerRect.top + rulerRect.height / 2,
+          pointerId: 1,
+        })
+      )
+    await wait(80)
+    const rulerShow = [...rd.querySelectorAll('[data-card="verlauf-und-trend"] button')].find(
+      (b) => txt(b) === "Auf der Scheibe"
+    )
+    if (rulerShow) await frameClick(rulerPhone, rulerShow, 400)
+    const rulerPill = [...rd.querySelectorAll("button")].find((b) => txt(b).startsWith("Zurück zu"))
+    check(
+      "Telefon: „Auf der Scheibe“ springt zur Scheibe, die Pille führt zurück zu „Zeit und Verlauf“",
+      !!rulerShow &&
+        !!rulerPill &&
+        txt(rulerPill).includes("Zeit und Verlauf") &&
+        rd.querySelector('[data-section="scheibe"]').getBoundingClientRect().top < 400,
+      rulerPill ? txt(rulerPill) : rulerShow ? "keine Pille" : "kein Knopf"
+    )
+    rulerPhone.remove()
 
     // Anker beim Laden: die Seite entsteht erst im Browser, der Sprung kommt aus dem Labor
     const loaded = await openFrame(375, 812, "#schuesse")
