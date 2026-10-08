@@ -26,10 +26,14 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   über `requestClose()`, das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
   `window.__labor` (Prüfhaken) liefert Schüsse, Zustand, Scheibe, die Funktionen des Fachkerns (auch die
   Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen.
-- **Analyse** steht unter den Kacheln (`AnalysisPanel`, Reiter in `localStorage` als `labor.tab`, „Erklärungen“
-  geteilt). Die Prüfung misst dort auch die Abstände (16 px, Karten einer Zeile bündig) und das Telefon bei
-  390 und 375 px. Der Hell/Dunkel-Umschalter heißt „Darstellung“, damit die Reiterleiste die einzige „Thema“
-  ist.
+- **Seite aus `CardPage`** (Plan Schritt 4): Labor-Kopf mit Scheibe, Beispiel und „Darstellung“ (nicht „Thema“,
+  das ist die Reiterleiste), darunter die Seite einer Scheibe wie in der App; die Labor-Schalter (Ansehen/Setzen,
+  Übrige) stehen rechts zuletzt. Reiter: Anker in der Adresse vor `labor.tab` in `localStorage`; in der Prüfung
+  schreibt das Labor keinen Anker, und `underTest()` hält `#pruefen` beim Laden fest.
+- **Prüfung der Seite:** Desktop in einem Rahmen von 1280 × 900 (das Fenster der Prüfung ist über 2000 px hoch),
+  Telefon bei 390 und 375 px, Querformat 812 × 375. Headless-Chrome liefert hier keine Rückrufe eines
+  `IntersectionObserver` und kein glattes Scrollen; Bausteine, die die Prüfung sehen soll, messen beim Scrollen
+  und springen sofort.
 - **Artifact neu veröffentlichen** aus `dist/labor.html` nach einem direkten `pnpm --filter @vereinsheim/labor
 build` (ohne Turbo-Cache, sonst kann der Stand-Stempel von einem älteren Commit stammen), unter derselben
   Adresse, damit der User den

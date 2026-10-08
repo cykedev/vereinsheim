@@ -51,7 +51,7 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 
 - **Jede Zahl ist erklärt.** An jeder Kachel und jeder Karte sitzt ein „?“; es öffnet die Erklärung aus `@vereinsheim/shot-help` (nachzulesen in [[spiegel-statistics-help]]): was die Zahl misst, wie man sie liest, was man tun kann, wo man sich täuscht. Auf dem Handy als Blatt von unten, auf dem Desktop als Karte daneben, nie nur als Tooltip.
 - **Erst Worte, dann Formel.** Die Formel steht aufklappbar für Profis darunter, nie davor.
-- **Schalter „Erklärungen“:** öffnet alle „Was heißt das?“ auf einmal und zeigt an jeder Kachel den Kurzsatz sichtbar, nicht nur als Tooltip. Das „?“ einer Kachel öffnet ihr Thema als Blatt (`Sheet` in `@vereinsheim/ui/design2` auf dem nativen `<dialog>`: Fokus, Escape und Rückkehr des Fokus übernimmt der Browser; geschlossen wird aus dem Zustand, weil das `close`-Ereignis spät oder gar nicht kommt). Die Feldnamen („Was“, „So liest du es“ …) sind die des Leitfadens; ein Test hält sie gleich.
+- **Schalter „Erklärungen“:** zeigt an jeder Kachel und jeder Karte der Analyse den Kurzsatz sichtbar unter dem Titel, nicht nur als Tooltip; die langen Erklärungen bleiben im Blatt (seit Oktober 2026, Plan `2026-10-08-spiegel-mobile-seitenaufbau`, D3: kein aufklappbares „Was heißt das?“ mehr zwischen den Zahlen). Das „?“ einer Kachel, einer Karte, der Datenlage oder der Scheibe öffnet ihr Thema als Blatt (`Sheet` in `@vereinsheim/ui/design2` auf dem nativen `<dialog>`: Fokus, Escape und Rückkehr des Fokus übernimmt der Browser; geschlossen wird aus dem Zustand, weil das `close`-Ereignis spät oder gar nicht kommt). Die Feldnamen („Was“, „So liest du es“ …) sind die des Leitfadens; ein Test hält sie gleich.
 - **Auch „–“ und „unklar“ erklären:** „ab 10 Schuss“ sagt, warum ein Wert fehlt, aber nur, wenn es an der Zahl der Schüsse liegt; fehlen Daten, nennt die Kachel sie („ohne Zeiten“, „ohne Zehntel · auf ganze Ringe schalten“, SF-18); „unklar“ sagt, was mehr Schüsse klären würden.
 - **Einmal oben erklärt:** Ein Einstieg „So liest du die Analyse“ erklärt n, 95-%-Bereich, „echt“ und „unklar“ und die Wertung, damit die Karten kurz bleiben.
 - **Ein Glossar** für die Begriffe (σ, R50, Median, Hotelling …), aus jeder Erklärung verlinkt.
@@ -67,10 +67,12 @@ Oktober 2026), im Labor unter den Kacheln.
   Grundlage („Analyse über alle Schüsse ohne Probe“). Der Reiter Probe rechnet über die ganze Karte.
 - **Sechs Reiter** wie in der Spielwiese: Überblick (acht Kacheln, Beobachtungen in Worten, Einstieg), Ergebnis,
   Präzision, Lage, Zeit und Verlauf, Probe. Darunter die Zeile „Datenlage“, Glossar und typische Fehlschlüsse.
-  Auf schmalen Bildschirmen bleibt die Reiterleiste eine Zeile und scrollt seitlich in sich ([[spiegel-mobile]]).
-- **Karten im Raster:** breite Karten allein, schmale ab 861 px zu zweit in Zeilen, beide Karten einer Zeile
-  gleich hoch, „Was heißt das?“ unten bündig, eine einzelne letzte Karte über die volle Breite; jeder Abstand
-  16 px. CSS-Spalten ließen Lücken unter der kürzeren Spalte und verschluckten Ränder (User, 8. Oktober 2026).
+  Die Reiterleiste ist ein eigener Streifen, der beim Scrollen klebt (auf dem Telefon über der Sprungleiste, ab
+  768 px darunter), bleibt eine Zeile und scrollt seitlich in sich ([[spiegel-mobile]]).
+- **Karten im Raster:** breite Karten allein, schmale zu zweit in Zeilen, sobald der Bereich der Karten 820 px
+  breit ist (Container, nicht Fenster: ab 768 px steht die Analyse rechts neben der Scheibe), beide Karten einer
+  Zeile gleich hoch, eine einzelne letzte Karte über die volle Breite; jeder Abstand 16 px. CSS-Spalten ließen
+  Lücken unter der kürzeren Spalte und verschluckten Ränder (User, 8. Oktober 2026).
 - **Diagramme** als SVG in Bildschirm-Pixeln (Breite gemessen, ohne Messung 600 px), Schrift 12 px, Farben aus
   den Design-2-Tokens. Punkte tragen einen dunklen Rand, Ausreißer zusätzlich einen Ring (nicht nur Rot). Das
   Schwerpunkt-Zeichen ist dasselbe wie auf der Scheibe.
@@ -78,9 +80,33 @@ Oktober 2026), im Labor unter den Kacheln.
   der Scheibe. Der Bezug der Richtungsuhr (Mitte oder Schwerpunkt) gehört der Karte.
 - **Probe ohne Visier:** „Probe gegen Wertung“ nimmt die ganze Probe vor der Wertung, „Eingeschossen?“ die
   letzten fünf Probeschüsse mit Lage; das Probe-Diagramm zeichnet sie in Abgabefolge.
-- **Hilfe an jeder Karte:** Titel, Katalog-IDs und Kurzsatz aus dem Thema, darunter „Was heißt das?“; der
-  Schalter „Erklärungen“ öffnet alles, auch an den Kacheln. Ob die Hilfe auf dem Telefon als Blatt kommt, ist
-  offen ([[spiegel-mobile]]).
+- **Hilfe an jeder Karte:** Titel, Katalog-IDs und Kurzsatz aus dem Thema, im Kopf ein „?“, das die Erklärung als
+  Blatt öffnet; „Erklärungen“ zeigt den Kurzsatz unter dem Titel. Glossar und typische Fehlschlüsse bleiben
+  aufklappbar am Ende der Analyse.
+
+## Seitenaufbau
+
+Die Seite einer Scheibe für Telefon, Tablet und Desktop (Schritt 4 von SP-1.8, Oktober 2026; Begründung und
+Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` und `readout/*`.
+
+- **Kopf** (`CardHeader`): Scheibe und Metazeile, das Ergebnis groß mit Schusszahl, die Wertung ganze
+  Ringe/Zehntel, darunter ein Satz (der erste Satz der ersten Beobachtung).
+- **Sprungleiste** (`SectionNav`) unter dem Kopf, klebt oben: „Scheibe · Zahlen · Schüsse · Analyse“ als Anker,
+  der aktive Abschnitt hervorgehoben (der späteste, der oberhalb von 45 % der Fensterhöhe begonnen hat, beim
+  Scrollen gemessen). In der Analyse deckt auf dem Telefon ihre Reiterleiste die Sprungleiste ab.
+- **Telefon:** eine Spalte. Kopf und Scheibe (mit Schaltern und Ablesezeile `ShotLine` statt Ablese-Karte)
+  passen auf den ersten Bildschirm, die Serien folgen direkt; dann Kacheln, Schüsse, Analyse. Die Schusstabelle
+  zeigt die zehn neuesten Schüsse und „Alle 40 zeigen“, der gewählte bleibt sichtbar.
+- **Ab 768 px** (`CardPage`): links die Scheibe fest unter der Leiste, höchstens so groß, dass sie ins Fenster
+  passt; rechts Ablese-Karte, Serien, Übersicht, Kacheln, Schüsse, Analyse. Auch im Querformat am Telefon passt
+  die Scheibe in die Höhe.
+- **Sprung zur Scheibe mit Rücksprung:** Schaltet der Knopf „Vertrauensellipse“ in der Analyse oder eine Zeile der
+  Schusstabelle die Scheibe und ist sie außer Sicht, springt die Seite zu ihr und zeigt die Pille
+  „Zurück zu „Lage““. Gesprungen wird sofort wie bei Ankern, nicht gleitend.
+- **Adresse:** Abschnitte und Reiter als einfache Anker (`#scheibe` … `#analyse`, `#ueberblick` … `#probe`); ein
+  Reiter-Anker öffnet den Reiter, ein Reiterwechsel schreibt den Anker.
+- **Optik wie am Desktop:** Umschalter, Chips und Knöpfe behalten auf dem Telefon ihre Höhe (User,
+  8. Oktober 2026).
 
 ## Zeichnen der Scheibe
 

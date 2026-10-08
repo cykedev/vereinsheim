@@ -26,7 +26,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/help/HelpBody`             | `src/help/HelpBody.tsx`            | Erklärung aus `shot-help`: Felder in der Reihenfolge des Leitfadens (`HELP_FIELDS`), Formel zugeklappt                                                                                                                                                      |
 | `@vereinsheim/shot-ui/help/HelpDetails`          | `src/help/HelpDetails.tsx`         | „Was heißt das?“ unter einer Karte, `helpEntry(id)` (Thema oder Oberfläche)                                                                                                                                                                                 |
 | `@vereinsheim/shot-ui/help/HelpButton`           | `src/help/HelpButton.tsx`          | „?“-Knopf mit Namen, `HelpIcon`                                                                                                                                                                                                                             |
-| `@vereinsheim/shot-ui/help/HelpSheet`            | `src/help/HelpSheet.tsx`           | Erklärung einer Kennzahl als Blatt (`Sheet` aus `@vereinsheim/ui/design2`)                                                                                                                                                                                  |
+| `@vereinsheim/shot-ui/help/HelpSheet`            | `src/help/HelpSheet.tsx`           | jede Erklärung (Thema oder Oberfläche, `helpId`) als Blatt (`Sheet` aus `@vereinsheim/ui/design2`)                                                                                                                                                          |
 | `@vereinsheim/shot-ui/target/MpiMark`            | `src/target/MpiMark.tsx`           | Schwerpunkt-Zeichen (weiß mit zwei schwarzen Vierteln), auf der Scheibe und in Diagrammen                                                                                                                                                                   |
 | `@vereinsheim/shot-ui/analysis/parts`            | `src/analysis/parts.tsx`           | Teile der Analyse: `AnalysisCard`, `KeyValues`, `Verdict`, `Note`, `IntervalBar`, `ScaleBar`, `scaleStep`                                                                                                                                                   |
 | `@vereinsheim/shot-ui/analysis/AnalysisPanel`    | `src/analysis/AnalysisPanel.tsx`   | Analyse einer Scheibe: sechs Reiter, Grundlage ohne Probe (bei nur Probe die Probe), Datenlage, Glossar, Fehlschlüsse                                                                                                                                       |
@@ -66,6 +66,12 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   jeder Abstand 16 px), keine CSS-Spalten. Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
   (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`
   ohne Grund (Antippen statt Hover ist offen, `vault/spiegel/spiegel-mobile.md`).
+- **Seite aus `CardPage`:** Kopf (`CardHeader`), Sprungleiste (`SectionNav` mit `useActiveSection`), Scheibe,
+  Seite, Abschnitte; die Scheibe trägt selbst `data-section`, die Abschnitte haben `scroll-mt-14` für die
+  56 px hohe Leiste. Was außerhalb der Scheibe die Scheibe ändert, springt über `useReturnJump` zu ihr.
+- **Erklärungen als Blatt:** Karten der Analyse, Kacheln und die Scheibe tragen ein „?“ (`HelpButton` mit
+  `helpId`), die Seite öffnet `HelpSheet`; „Erklärungen“ zeigt nur Kurzsätze. Kein „Was heißt das?“ zwischen
+  den Zahlen (Plan Schritt 4, D3).
 - **Auf dem Telefon dieselbe Optik wie am Desktop:** keine 44-px-Mindesthöhe an Umschaltern und Chips
   (User, 8. Oktober 2026); was zu breit ist, scrollt in sich (Reiterleiste), die Seite nie.
 - **Farben nur aus den Design-2-Tokens** (`@vereinsheim/ui/design2.css`), keine Palette-Klassen, keine

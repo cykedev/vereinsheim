@@ -1,7 +1,7 @@
 ---
 id: spiegel-mobile
 type: concept
-title: "Spiegel auf dem Telefon — Usability-Konzept (Entwurf)"
+title: "Spiegel auf dem Telefon — Usability-Konzept"
 aliases: [spiegel-telefon, spiegel-handy, mobil-konzept]
 keywords: [mobil, handy, telefon, smartphone, touch, tippen, daumenzone, sprungleiste, reiter, tabs, seitlich scrollen, querformat, tablet, desktop, sticky, hover, tooltip, lineal, touch-ziel, 44 px, wcag, kontrast, screenreader, blatt, bottom sheet, abstände, raster, spalten]
 part_of: ["[[spiegel]]"]
@@ -9,7 +9,7 @@ governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics-help]]"]
 ---
 
-**TL;DR** Jede Zahl von Spiegel soll auf dem Telefon erreichbar sein: ohne seitliches Scrollen, ohne Hover, mit einer Hand, das Häufigste zuerst. Gemessen am 8. Oktober 2026 mit den echten Bausteinen bei 375 × 812 px. Die kleinen Korrekturen sind umgesetzt. Seitenaufbau, Diagramm-Lineal und Hilfe als Blatt sind ein eigener Schritt mit vier offenen Fragen.
+**TL;DR** Jede Zahl von Spiegel soll auf dem Telefon erreichbar sein: ohne seitliches Scrollen, ohne Hover, mit einer Hand, das Häufigste zuerst. Gemessen am 8. Oktober 2026 mit den echten Bausteinen bei 375 × 812 px. Umgesetzt sind die kleinen Korrekturen (Schritt 3) und der Seitenaufbau mit Sprungleiste, Hilfe als Blatt und Rücksprung (Schritt 4, [[spiegel-ui-design]]). Offen ist nur das Diagramm-Lineal (Schritt 5).
 
 ## Nutzungssituationen
 
@@ -59,9 +59,23 @@ Reihenfolge auf dem Telefon: Kopf mit Ergebnis, Scheibe mit Ablesezeile, Serien 
 
 **Tablet und Desktop:** Ab 768 px steht die Scheibe links fest, rechts scrollt der Rest, jede Kopplung bleibt sichtbar.
 
-## Offene Fragen an den User
+## Entschieden mit dem Plan für Schritt 4 (8. Oktober 2026)
 
-1. **Analyse auf derselben Seite** mit Sprungleiste oder als eigene Ansicht? Empfehlung: dieselbe Seite.
-2. **Erster Bildschirm am Stand:** Empfehlung Ergebnis, Serien, Scheibe und ein Satz; die Kacheln einen Wisch tiefer.
-3. **Hilfe als Blatt von unten** statt Aufklappen unter der Karte? Empfehlung: ja. Das ändert die Plan-Entscheidung D4 der Analyse; [[spiegel-ui-design]] verlangt das Blatt schon.
-4. **σ und Zehnerquote zweimal** (an der Scheibe über die Auswahl, in der Analyse über die ganze Wertung)? Empfehlung: beide behalten, jede Gruppe nennt im Kopf, worüber sie rechnet.
+Die vier Fragen sind mit der Empfehlung entschieden (Plan `plans/2026-10-08-spiegel-mobile-seitenaufbau.md`,
+freigegeben vom User):
+
+1. **Analyse auf derselben Seite** mit Sprungleiste.
+2. **Erster Bildschirm:** Kopf mit Ergebnis und einem Satz, Scheibe mit Ablesezeile; die Serien folgen direkt
+   (bei 375 × 812 px passen Kopf und Scheibe, die Serien beginnen knapp darunter).
+3. **Hilfe als Blatt** über „?“, „Erklärungen“ zeigt die Kurzsätze; ersetzt das Aufklappen unter der Karte.
+4. **σ und Zehnerquote zweimal**, jede Gruppe nennt ihre Grundlage („über Serie 2“, „Analyse über …“).
+
+Abweichend von der Empfehlung springt die Seite zur Scheibe sofort statt gleitend: Glattes Scrollen über
+Tausende Pixel kam in einem verborgenen Fenster verspätet an und lief in der Skriptprüfung nicht. Aus demselben
+Grund misst die Sprungleiste den aktiven Abschnitt beim Scrollen statt über einen `IntersectionObserver`.
+
+## Offen
+
+- **Diagramm-Lineal** (Schritt 5): Werte per Antippen oder Ziehen, fest über dem Diagramm, Kopplung an die
+  Scheibe; Kernaussage als Label und „Werte als Tabelle“ für Screenreader.
+- Test mit VoiceOver.
