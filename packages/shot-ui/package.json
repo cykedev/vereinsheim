@@ -11,7 +11,8 @@
     "./view-state": "./src/view-state.ts",
     "./shots": "./src/shots.ts",
     "./target/TargetView": "./src/target/TargetView.tsx",
-    "./target/useAnimatedViewBox": "./src/target/useAnimatedViewBox.ts"
+    "./target/useAnimatedViewBox": "./src/target/useAnimatedViewBox.ts",
+    "./series/SeriesStrip": "./src/series/SeriesStrip.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

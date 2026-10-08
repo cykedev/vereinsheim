@@ -27,6 +27,12 @@ export function formatScore(shot: MetricShot, scoring: Scoring): string {
   return shot.decimalTenths === null ? "–" : (shot.decimalTenths / 10).toFixed(1).replace(".", ",")
 }
 
+/** Summe in der gewählten Wertung („105,3“ bzw. „100“); ohne Summe ein Strich */
+export function formatTotal(total: number | null, scoring: Scoring): string {
+  if (total === null) return "–"
+  return scoring === "rings" ? String(Math.round(total)) : total.toFixed(1).replace(".", ",")
+}
+
 export const hasPosition = (shot: MetricShot) =>
   shot.xUm !== null && shot.yUm !== null && Number.isFinite(shot.xUm) && Number.isFinite(shot.yUm)
 
