@@ -627,7 +627,10 @@ addEventListener("load", async () => {
         txt($("#shot-table th:nth-child(2)")) === "Ring",
       tilesMatch().join(" ")
     )
-    check("amtliche Wertung bleibt als Hinweis", txt($("#summary")).includes("amtlich: Zehntel"))
+    check(
+      "amtliche Wertung bleibt als Hinweis (im Kopf der Scheibe)",
+      txt($("[data-result]").closest("header")).includes("amtlich: Zehntel")
+    )
     await click(button("Zehntel"))
     // eine andere Scheibe steht sofort, ohne Gleiten
     await click(button("Luftgewehr"), 60)
@@ -695,22 +698,29 @@ addEventListener("load", async () => {
     await click(button("System"))
 
     // ---------- Hilfe
-    const targetHelp = () => $('details[data-help="trefferbild"]')
+    // Plan Schritt 4, D3: Erklärungen als Blatt über „?“, der Schalter zeigt nur Kurzsätze
     check(
-      "Erklärungen aus: Trefferbild-Hilfe zu, keine Kurzsätze an den Kacheln",
-      !!targetHelp() && !targetHelp().open && $$("[data-short]").length === 0
+      "Erklärungen aus: keine Kurzsätze, kein „Was heißt das?“ mehr auf der Seite",
+      $$("[data-short]").length === 0 && $$("details[data-help]").length === 0
     )
     await click(button("Erklärungen"))
     check(
-      "Erklärungen an: alles offen, Kurzsätze sichtbar an jeder Kachel",
-      targetHelp().open &&
-        $$("[data-metric] [data-short]").length === 10 &&
+      "Erklärungen an: Kurzsätze sichtbar an jeder Kachel",
+      $$("[data-metric] [data-short]").length === 10 &&
         $$("[data-metric]").every(
           (t) => txt($("[data-short]", t)) === L().tools.helpForMetric(t.dataset.metric).short
         )
     )
     await click(button("Erklärungen"))
-    check("Erklärungen wieder aus", !targetHelp().open && $$("[data-short]").length === 0)
+    check("Erklärungen wieder aus", $$("[data-short]").length === 0)
+    const targetHelpButton = $('#scheibe button[data-help="trefferbild"]')
+    await click(targetHelpButton, 100)
+    check(
+      "„?“ an der Scheibe öffnet die Erklärung „Trefferbild“ als Blatt",
+      !!$("dialog")?.open && txt($("dialog h2")).startsWith("Trefferbild"),
+      txt($("dialog h2"))
+    )
+    await click($('button[aria-label="Schließen"]', $("dialog")), 100)
 
     const sigmaHelp = () => $('[data-metric="group.sigma"] button[aria-label^="Erklärung"]')
     const sheet = () => $("dialog")
@@ -992,7 +1002,7 @@ addEventListener("load", async () => {
 
     // Abstände: zwischen Blöcken und Karten 16 px, Karten einer Zeile mit gleicher Unterkante
     const BOXES =
-      'article, details[data-glossary], details[data-fallacies], [data-coverage], div:has(> [data-tile]), section[aria-label="Analyse"] > div:first-child'
+      'article, details[data-glossary], details[data-fallacies], [data-coverage], div:has(> [data-tile]), section[aria-label="Analyse"] > div:first-child, section[aria-label="Analyse"] > div:has(> [role="radiogroup"])'
     const gapProblems = () => {
       const boxes = $$(BOXES, A())
         .filter((e) => e.offsetParent !== null)
@@ -1028,6 +1038,9 @@ addEventListener("load", async () => {
     const gapReport = []
     for (const label of TABS) {
       await tab(label)
+      // oben auf der Seite klebt noch nichts über den Karten
+      scrollTo(0, 0)
+      await wait(30)
       const bad = gapProblems()
       if (bad.length) gapReport.push(`${label}: ${bad.join("; ")}`)
     }
@@ -1037,35 +1050,41 @@ addEventListener("load", async () => {
       gapReport.join(" | ")
     )
 
-    // Hilfe in der Analyse: jede Karte erklärt sich, jedes Thema hat seinen Platz, Texte aus dem Paket
+    // Hilfe in der Analyse (Plan Schritt 4, D3): jede Karte ein „?“, das ihre Erklärung als Blatt öffnet
     const seenHelp = new Set()
     const withoutHelp = []
-    const helpTextProblems = []
     const headProblems = []
+    const sheetProblems = []
     for (const label of TABS) {
       await tab(label)
       for (const art of $$("article", A())) {
-        const details = $("details[data-help]", art)
         const heading = txt($("h3", art))
-        if (!details) {
+        if (!$("button[data-help]", art)) {
           if (!heading.startsWith("So liest du")) withoutHelp.push(`${label}: ${heading}`)
           continue
         }
-        const id = details.dataset.help
+        const id = $("button[data-help]", art).dataset.help
         const topic = T().helpTopic(id)
-        const entry = topic ?? T().VIEW_HELP.find((v) => v.id === id)
-        if (!entry || !txt(details).includes(entry.what)) helpTextProblems.push(id)
         if (topic && ($("h3", art).title !== topic.short || !heading.startsWith(topic.title))) {
           headProblems.push(id)
         }
       }
-      for (const d of $$("details[data-help]", A())) seenHelp.add(d.dataset.help)
+      for (const b of $$("button[data-help]", A())) seenHelp.add(b.dataset.help)
+      // je Reiter das Blatt der ersten Karte: Titel und „Was“ aus dem Paket
+      const first = $("article button[data-help]", A())
+      const id = first.dataset.help
+      const entry = T().helpTopic(id) ?? T().VIEW_HELP.find((v) => v.id === id)
+      await click(first, 100)
+      if (
+        !$("dialog").open ||
+        txt($("dialog h2")) !== entry.title ||
+        !txt($("dialog")).includes(entry.what)
+      ) {
+        sheetProblems.push(`${label}: ${id}`)
+      }
+      await click($('button[aria-label="Schließen"]', $("dialog")), 100)
     }
-    check(
-      "Hilfe: jede Karte hat „Was heißt das?“",
-      withoutHelp.length === 0,
-      withoutHelp.join(", ")
-    )
+    check("Hilfe: jede Karte hat ihr „?“", withoutHelp.length === 0, withoutHelp.join(", "))
     const wantedHelp = [
       ...T().HELP_TOPICS.map((t) => t.id),
       "beobachtungen",
@@ -1076,7 +1095,11 @@ addEventListener("load", async () => {
       wantedHelp.every((id) => seenHelp.has(id)),
       wantedHelp.filter((id) => !seenHelp.has(id)).join(", ")
     )
-    check("Hilfe: Texte aus dem Paket", helpTextProblems.length === 0, helpTextProblems.join(", "))
+    check(
+      "Hilfe: „?“ öffnet das Blatt mit Titel und Text aus dem Paket",
+      sheetProblems.length === 0,
+      sheetProblems.join(", ")
+    )
     check(
       "Hilfe: Kartenkopf und Kurzsatz aus dem Thema",
       headProblems.length === 0,
@@ -1090,28 +1113,29 @@ addEventListener("load", async () => {
         $$("[data-fallacy]", A()).length === T().FALLACIES.length
     )
     check(
-      "Hilfe: anfangs zu",
+      "Hilfe: Glossar und Fehlschlüsse anfangs zu",
       $$("details", A()).every((d) => !d.open)
     )
     await click(button("Erklärungen"), 120)
     check(
-      "Hilfe: Schalter öffnet alle, Kurzsätze an den acht Kacheln",
-      $$("details[data-help], details[data-glossary], details[data-fallacies]", A()).every(
-        (d) => d.open
-      ) && $$("[data-tile] [data-short]", A()).length === 8
+      "Hilfe: „Erklärungen“ zeigt Kurzsätze an den acht Kacheln, das Glossar bleibt zu",
+      $$("[data-tile] [data-short]", A()).length === 8 && $$("details", A()).every((d) => !d.open)
     )
     await tab("Lage")
+    const topicCards = $$("article", A()).filter((a) =>
+      T().helpTopic($("button[data-help]", a)?.dataset.help ?? "")
+    )
     check(
-      "Hilfe: bleibt beim Reiterwechsel offen, die Formel bleibt zu",
-      $$("details[data-help]", A()).every((d) => d.open) &&
-        $$("details[data-help] details", A()).length > 0 &&
-        $$("details[data-help] details", A()).every((d) => !d.open)
+      "Hilfe: Kurzsatz unter jeder Karte, auch nach dem Reiterwechsel",
+      topicCards.length > 0 &&
+        topicCards.every(
+          (a) =>
+            txt($("[data-short]", a)) ===
+            T().helpTopic($("button[data-help]", a).dataset.help).short
+        )
     )
     await click(button("Erklärungen"), 120)
-    check(
-      "Hilfe: Schalter schließt alle",
-      $$("details[data-help]", A()).every((d) => !d.open)
-    )
+    check("Hilfe: Schalter nimmt die Kurzsätze wieder weg", $$("[data-short]", A()).length === 0)
 
     // die übrigen Beispiele
     await click(button("60 Probe"), 200)
@@ -1169,6 +1193,118 @@ addEventListener("load", async () => {
       }
       return problems
     }
+
+    // ---------- Seitenaufbau (Plan Schritt 4): Sprungleiste, Anker, feste Scheibe, Streifen der Analyse
+    const openFrame = async (width, height, hash = "") => {
+      const f = document.createElement("iframe")
+      f.style.cssText = `width:${width}px;height:${height}px;border:0;position:absolute;left:-9999px`
+      f.src = location.href.split("#")[0] + hash
+      document.body.appendChild(f)
+      await new Promise((resolve) => f.addEventListener("load", resolve, { once: true }))
+      await wait(600)
+      return f
+    }
+    const frameClick = async (f, el, ms = 150) => {
+      el.dispatchEvent(new f.contentWindow.MouseEvent("click", { bubbles: true }))
+      await wait(ms)
+    }
+    // Desktop in einem Fenster von 1280 × 900 (das Fenster der Prüfung ist über 2000 px hoch)
+    const desk = await openFrame(1280, 900)
+    const dd = desk.contentDocument
+    const dw = desk.contentWindow
+    const sectionNav = dd.querySelector('nav[aria-label="Abschnitte"]')
+    check(
+      "Sprungleiste: vier Anker in der Reihenfolge der Seite",
+      [...sectionNav.querySelectorAll("a")].map((a) => a.getAttribute("href")).join() ===
+        "#scheibe,#zahlen,#schuesse,#analyse"
+    )
+    sectionNav.querySelector('a[href="#analyse"]').click()
+    await wait(500)
+    const analyseTop = dd.getElementById("analyse").getBoundingClientRect().top
+    check(
+      "Sprungleiste: „Analyse“ bringt die Analyse unter die Leiste",
+      near(analyseTop, 56, 3),
+      analyseTop.toFixed(0)
+    )
+    dw.scrollBy(0, 600)
+    await wait(100)
+    const strip = dd.querySelector(
+      'section[aria-label="Analyse"] [role="radiogroup"][aria-label="Thema"]'
+    ).parentElement
+    check(
+      "Desktop: Reiterleiste klebt unter der Sprungleiste",
+      near(strip.getBoundingClientRect().top, 56, 1) &&
+        near(sectionNav.getBoundingClientRect().top, 0, 1),
+      strip.getBoundingClientRect().top.toFixed(0)
+    )
+    dw.scrollTo(0, 1500)
+    await wait(80)
+    const stuck1 = dd.getElementById("target-box").getBoundingClientRect().top
+    dw.scrollTo(0, 3000)
+    await wait(80)
+    const stuck2 = dd.getElementById("target-box").getBoundingClientRect().top
+    check(
+      "Desktop: die Scheibe bleibt beim Scrollen der rechten Spalte stehen",
+      near(stuck1, stuck2, 1) && stuck1 > 56 && stuck1 < 200,
+      `${stuck1.toFixed(0)} / ${stuck2.toFixed(0)}`
+    )
+    desk.remove()
+    // aktiver Abschnitt im Fenster der Prüfung: nach dem Sprung meldet der Browser ein Scroll-Ereignis
+    {
+      const mainNav = $('nav[aria-label="Abschnitte"]')
+      $('a[href="#analyse"]', mainNav).click()
+      dispatchEvent(new Event("scroll"))
+      await wait(100)
+      const active = [...mainNav.querySelectorAll("[aria-current]")].map(txt)
+      check(
+        "Sprungleiste: genau ein Eintrag aktiv, „Analyse“",
+        active.join() === "Analyse",
+        active.join()
+      )
+      // am Desktop klebt die Scheibe und ist immer im Bild; oben auf der Seite ist sie der aktive Abschnitt
+      scrollTo(0, 0)
+      dispatchEvent(new Event("scroll"))
+      await wait(100)
+      const top = [...mainNav.querySelectorAll("[aria-current]")].map(txt)
+      check(
+        "Sprungleiste: oben auf der Seite „Scheibe“ aktiv",
+        top.join() === "Scheibe",
+        top.join()
+      )
+      scrollTo(0, 0)
+    }
+
+    const anchored = await openFrame(800, 900, "#lage")
+    const ad = anchored.contentDocument
+    const anchoredTab = ad?.querySelector(
+      'section[aria-label="Analyse"] [role="radio"][aria-checked="true"]'
+    )
+    check(
+      "Anker #lage öffnet den Reiter Lage und zeigt die Analyse",
+      txt(anchoredTab) === "Lage" && ad.getElementById("analyse").getBoundingClientRect().top < 300,
+      `${txt(anchoredTab)} · ${ad?.getElementById("analyse").getBoundingClientRect().top.toFixed(0)}`
+    )
+    const timeTab = [...ad.querySelectorAll('section[aria-label="Analyse"] [role="radio"]')].find(
+      (b) => txt(b) === "Zeit und Verlauf"
+    )
+    await frameClick(anchored, timeTab)
+    check(
+      "Reiterwechsel schreibt den Anker",
+      anchored.contentWindow.location.hash === "#zeit",
+      anchored.contentWindow.location.hash
+    )
+    anchored.remove()
+
+    // Querformat am Telefon: keine Überbreite, die Scheibe passt in die Höhe (D9)
+    const landscape = await openFrame(812, 375)
+    const ld = landscape.contentDocument
+    const landscapeTarget = ld.getElementById("target-box").getBoundingClientRect()
+    check(
+      "Querformat 812 × 375: kein seitliches Scrollen, die Scheibe passt in die Höhe",
+      ld.documentElement.scrollWidth <= 812 && landscapeTarget.height <= 375 - 56,
+      `${ld.documentElement.scrollWidth} · ${landscapeTarget.height.toFixed(0)}`
+    )
+    landscape.remove()
 
     // ---------- Handy: 390 px ohne seitliches Scrollen
     const frame = document.createElement("iframe")
@@ -1245,6 +1381,66 @@ addEventListener("load", async () => {
       "Handy 375 px: jeder Reiter der Analyse passt",
       phone375.length === 0,
       phone375.join(" | ")
+    )
+    // erster Bildschirm (D2): ab dem Kopf der Scheibe passen Kopf und Scheibe auf einen Bildschirm, die Serien
+    // folgen direkt (der Kopf des Labors darüber gehört nicht zur App)
+    const sd = smallDoc
+    const sw = small.contentWindow
+    const headTop = sd.querySelector("[data-result]").closest("header").getBoundingClientRect().top
+    const targetBottom = sd.getElementById("target-box").getBoundingClientRect().bottom
+    const cardBottom = sd.getElementById("scheibe").getBoundingClientRect().bottom
+    const seriesTop = sd.getElementById("series").getBoundingClientRect().top
+    check(
+      "Handy 375 px: Kopf mit Ergebnis und Scheibe auf dem ersten Bildschirm, die Serien direkt danach",
+      targetBottom - headTop <= 812 && seriesTop - cardBottom <= 30,
+      `${(targetBottom - headTop).toFixed(0)} px bis zum Ende der Scheibe, Serien ${(seriesTop - cardBottom).toFixed(0)} px danach`
+    )
+    const visibleRows = [...sd.querySelectorAll("#shot-table tr[data-row]")].filter(
+      (tr) => tr.getBoundingClientRect().height > 0
+    )
+    const showAll = [...sd.querySelectorAll("#shot-table button")].find((b) =>
+      txt(b).startsWith("Alle")
+    )
+    check(
+      "Handy 375 px: die zehn neuesten Schüsse und „Alle 40 zeigen“",
+      visibleRows.length === 10 && txt(showAll) === "Alle 40 zeigen",
+      `${visibleRows.length} Zeilen · ${txt(showAll)}`
+    )
+    // Rücksprung (D6): der Ellipsen-Knopf aus „Lage“ holt die Scheibe, die Pille bringt zurück
+    const smallBar = sd.querySelector(
+      'section[aria-label="Analyse"] [role="radiogroup"][aria-label="Thema"]'
+    )
+    await frameClick(
+      small,
+      [...smallBar.querySelectorAll("button")].find((b) => txt(b) === "Lage")
+    )
+    sd.getElementById("analyse").scrollIntoView({ block: "start" })
+    sw.scrollBy(0, 200)
+    await wait(200)
+    const origin = sw.scrollY
+    check(
+      "Handy 375 px: in der Analyse deckt die Reiterleiste die Sprungleiste ab",
+      near(smallBar.parentElement.getBoundingClientRect().top, 0, 1) &&
+        smallBar.parentElement.contains(sd.elementFromPoint(20, 28)),
+      `${smallBar.parentElement.getBoundingClientRect().top.toFixed(0)} · ${sd.elementFromPoint(20, 28)?.tagName}`
+    )
+    const smallEllipse = [...sd.querySelectorAll('[data-card="lage-echt"] button')].find((b) =>
+      txt(b).includes("Vertrauensellipse")
+    )
+    await frameClick(small, smallEllipse, 1500)
+    const pillButton = () =>
+      [...sd.querySelectorAll("button")].find((b) => txt(b).startsWith("Zurück zu"))
+    const jumped = sd.getElementById("scheibe").getBoundingClientRect().top
+    check(
+      "Handy 375 px: Ellipse aus „Lage“ bringt die Scheibe ins Bild und die Pille",
+      jumped >= 0 && jumped < 150 && txt(pillButton()) === "Zurück zu „Lage“",
+      `${jumped.toFixed(0)} · ${txt(pillButton())}`
+    )
+    await frameClick(small, pillButton(), 1500)
+    check(
+      "Handy 375 px: die Pille bringt zurück und verschwindet",
+      near(sw.scrollY, origin, 60) && !pillButton(),
+      `${sw.scrollY.toFixed(0)} statt ${origin.toFixed(0)}`
     )
     small.remove()
 

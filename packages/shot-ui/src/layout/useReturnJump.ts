@@ -4,13 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { isOutOfView, shouldDismiss, type ReturnState } from "./jump"
 
-const reducedMotion = () =>
-  typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-
 /**
  * Sprung zur Scheibe mit Rücksprung (Plan Schritt 4, D6). `jumpTo(element, label)` scrollt nur, wenn das
  * Element außer Sicht ist, merkt die Ausgangsstelle und zeigt die Pille; `back` scrollt zurück. Die Pille
- * verschwindet auch, wenn man selbst zurückscrollt. Mit „Bewegung reduzieren“ ohne Animation.
+ * verschwindet auch, wenn man selbst zurückscrollt. Gesprungen wird sofort, wie bei den Ankern der
+ * Sprungleiste: Glattes Scrollen über Tausende Pixel läuft in einem verborgenen Fenster verspätet und in der
+ * Skriptprüfung gar nicht; die Pille gibt die Orientierung.
  */
 export function useReturnJump(topInset = 56) {
   const [pill, setPill] = useState<{ label: string; origin: number } | null>(null)
@@ -22,7 +21,7 @@ export function useReturnJump(topInset = 56) {
       if (!isOutOfView(element.getBoundingClientRect(), window.innerHeight, topInset)) return
       const origin = window.scrollY
       state.current = { origin, away: false }
-      element.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" })
+      element.scrollIntoView({ block: "start" })
       setPill({ label, origin })
     },
     [topInset]
@@ -34,7 +33,7 @@ export function useReturnJump(topInset = 56) {
   }, [])
 
   const back = useCallback(() => {
-    if (pill) window.scrollTo({ top: pill.origin, behavior: reducedMotion() ? "auto" : "smooth" })
+    if (pill) window.scrollTo({ top: pill.origin })
     dismiss()
   }, [pill, dismiss])
 

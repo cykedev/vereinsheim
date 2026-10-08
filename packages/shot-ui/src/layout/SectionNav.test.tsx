@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { SectionNav } from "./SectionNav"
-import { pickActive } from "./useActiveSection"
+import { activeSection } from "./useActiveSection"
 
 describe("Sprungleiste (D1)", () => {
   const html = renderToStaticMarkup(createElement(SectionNav, { active: "schuesse" }))
@@ -32,13 +32,29 @@ describe("Sprungleiste (D1)", () => {
 })
 
 describe("aktiver Abschnitt", () => {
-  it("von den Abschnitten in der Mitte gewinnt der späteste (die feste Scheibe schneidet immer)", () => {
-    expect(pickActive(new Set(["scheibe", "zahlen"]), null)).toBe("zahlen")
-    expect(pickActive(new Set(["scheibe"]), "analyse")).toBe("scheibe")
+  const box = (id: "scheibe" | "zahlen" | "schuesse" | "analyse", top: number) => ({ id, top })
+
+  it("der späteste Abschnitt, der oberhalb von 45 % der Fensterhöhe begonnen hat", () => {
+    // Desktop: die feste Scheibe oben, rechts ist die Analyse bis unter die Leiste gescrollt
+    expect(
+      activeSection(
+        [box("scheibe", 56), box("zahlen", -710), box("schuesse", -310), box("analyse", 56)],
+        900
+      )
+    ).toBe("analyse")
+    // Desktop: rechts beginnen die Zahlen gerade über der Linie
+    expect(
+      activeSection(
+        [box("scheibe", 56), box("zahlen", 300), box("schuesse", 900), box("analyse", 1400)],
+        900
+      )
+    ).toBe("zahlen")
   })
 
-  it("schneidet keiner die Mitte, bleibt der vorige", () => {
-    expect(pickActive(new Set(), "zahlen")).toBe("zahlen")
-    expect(pickActive(new Set(), null)).toBeNull()
+  it("über den Serien bleibt die Scheibe aktiv; ganz oben noch keiner", () => {
+    expect(
+      activeSection([box("scheibe", -200), box("zahlen", 600), box("schuesse", 1300)], 900)
+    ).toBe("scheibe")
+    expect(activeSection([box("scheibe", 850), box("zahlen", 1700)], 900)).toBeNull()
   })
 })

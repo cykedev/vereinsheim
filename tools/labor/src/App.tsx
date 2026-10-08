@@ -350,6 +350,28 @@ export function App({ commit }: { commit: string }) {
         }
         aside={
           <>
+            {/* Telefon: Serien gleich unter der Scheibe (D2); die Ablesung als Karte erst ab 768 px; die
+                Schalter des Labors zuletzt, die App hat sie nicht */}
+            <div
+              id="readout"
+              className="rounded-2xl border border-border bg-card p-4 max-md:hidden"
+            >
+              <ShotReadout shots={shots} state={state} />
+            </div>
+            <div id="series" className="grid gap-4 rounded-2xl border border-border bg-card p-3.5">
+              {/* je Karte eine neue Leiste, wie in der App beim Wechsel der Session */}
+              <SeriesStrip
+                key={`${targetId}:${sample.id}`}
+                target={target}
+                shots={shots}
+                state={state}
+                onSelect={(series) => dispatch({ type: "select", series })}
+                onSelectWhole={(whole) => dispatch({ type: "selectWhole", whole })}
+              />
+            </div>
+            <div id="summary" className="rounded-2xl border border-border bg-card p-4">
+              <CardSummary shots={shots} state={state} />
+            </div>
             <div
               id="labor-controls"
               className="grid gap-3 rounded-2xl border border-border bg-card p-3.5"
@@ -386,26 +408,6 @@ export function App({ commit }: { commit: string }) {
                 />
               </div>
               <p className="text-[13px] text-muted-foreground">{sample.hint}</p>
-            </div>
-            <div
-              id="readout"
-              className="rounded-2xl border border-border bg-card p-4 max-md:hidden"
-            >
-              <ShotReadout shots={shots} state={state} />
-            </div>
-            <div id="summary" className="rounded-2xl border border-border bg-card p-4">
-              <CardSummary shots={shots} state={state} />
-            </div>
-            <div id="series" className="grid gap-4 rounded-2xl border border-border bg-card p-3.5">
-              {/* je Karte eine neue Leiste, wie in der App beim Wechsel der Session */}
-              <SeriesStrip
-                key={`${targetId}:${sample.id}`}
-                target={target}
-                shots={shots}
-                state={state}
-                onSelect={(series) => dispatch({ type: "select", series })}
-                onSelectWhole={(whole) => dispatch({ type: "selectWhole", whole })}
-              />
             </div>
           </>
         }

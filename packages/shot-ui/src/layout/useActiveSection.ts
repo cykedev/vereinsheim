@@ -2,45 +2,47 @@
 
 import { useEffect, useState } from "react"
 
-import { PAGE_SECTIONS, type PageSection } from "./sections"
+import type { PageSection } from "./sections"
 
-const ORDER = PAGE_SECTIONS.map((s) => s.id as PageSection)
+/** ein Abschnitt zählt, sobald er oberhalb dieser Höhe des Fensters begonnen hat (Anteil) */
+const LINE = 0.45
 
 /**
- * Aktiver Abschnitt aus denen, die gerade die Mitte des Fensters schneiden: der späteste in der Seite (am
- * Desktop schneidet die feste Scheibe immer); schneidet keiner, bleibt der vorige (etwa über den Serien).
+ * Aktiver Abschnitt: der späteste in der Seite, der schon oberhalb von 45 % der Fensterhöhe begonnen hat.
+ * Über den Serien bleibt so die Scheibe aktiv, am Desktop löst ein Abschnitt rechts die feste Scheibe ab;
+ * ganz oben, solange noch keiner begonnen hat, keiner.
  */
-export function pickActive(
-  intersecting: ReadonlySet<PageSection>,
-  previous: PageSection | null
+export function activeSection(
+  boxes: readonly { id: PageSection; top: number }[],
+  viewportHeight: number
 ): PageSection | null {
-  const last = [...ORDER].reverse().find((id) => intersecting.has(id))
-  return last ?? previous
+  const started = boxes.filter((b) => b.top < viewportHeight * LINE)
+  return started.length ? started[started.length - 1].id : null
 }
 
 /**
- * Beobachtet die Elemente mit `data-section` und liefert den aktiven Abschnitt für die Sprungleiste; ohne
- * `IntersectionObserver` (Server, Test) null. `key` beobachtet neu, wenn die Seite neu aufgebaut wird.
+ * Aktiver Abschnitt für die Sprungleiste: misst bei jedem Scrollen und jeder Größenänderung die Kästen der
+ * Elemente mit `data-section` (vier Stück, in Seitenreihenfolge). Ein Scroll-Ereignis statt eines
+ * `IntersectionObserver`: dessen Rückrufe bleiben in einem verborgenen Fenster und in der Skriptprüfung aus.
+ * Ohne Fenster (Server) null.
  */
-export function useActiveSection(key?: unknown): PageSection | null {
+export function useActiveSection(): PageSection | null {
   const [active, setActive] = useState<PageSection | null>(null)
   useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return
-    const intersecting = new Set<PageSection>()
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const id = entry.target.getAttribute("data-section") as PageSection
-          if (entry.isIntersecting) intersecting.add(id)
-          else intersecting.delete(id)
-        }
-        setActive((previous) => pickActive(intersecting, previous))
-      },
-      // ein schmaler Streifen etwas über der Mitte des Fensters
-      { rootMargin: "-40% 0px -55% 0px" }
-    )
-    for (const node of document.querySelectorAll("[data-section]")) observer.observe(node)
-    return () => observer.disconnect()
-  }, [key])
+    const measure = () => {
+      const boxes = [...document.querySelectorAll<HTMLElement>("[data-section]")].map((node) => ({
+        id: node.dataset.section as PageSection,
+        top: node.getBoundingClientRect().top,
+      }))
+      setActive(activeSection(boxes, window.innerHeight))
+    }
+    measure()
+    window.addEventListener("scroll", measure, { passive: true })
+    window.addEventListener("resize", measure)
+    return () => {
+      window.removeEventListener("scroll", measure)
+      window.removeEventListener("resize", measure)
+    }
+  }, [])
   return active
 }
