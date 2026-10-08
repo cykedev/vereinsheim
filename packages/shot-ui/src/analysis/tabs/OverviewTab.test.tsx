@@ -23,6 +23,7 @@ const render = (explain = false) =>
       onTab: () => {},
       explain,
       onToggleLayer: () => {},
+      onHelp: () => {},
     })
   )
 
@@ -54,7 +55,7 @@ describe("Reiter Überblick", () => {
       observations(input).length
     )
     expect(html).toMatch(/data-card="beobachtungen"/)
-    expect(html).toMatch(/<details data-help="beobachtungen"/)
+    expect(html).toMatch(/<button[^>]*data-help="beobachtungen"/)
   })
 
   it("der Einstieg aus dem Paket und ein Satz zum Schalter", () => {

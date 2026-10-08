@@ -81,16 +81,18 @@ describe("HelpButton und HelpSheet", () => {
     expect(html).toMatch(/class="[^"]*\bsize-10\b/)
   })
 
-  it("das Blatt zeigt die Erklärung der Kennzahl unter dem Titel ihres Themas", () => {
+  it("das Blatt zeigt eine Erklärung unter ihrem Titel: Thema einer Kennzahl, einer Karte oder der Oberfläche", () => {
     const topic = helpForMetric("group.r50")!
-    const html = render(createElement(HelpSheet, { metricKey: "group.r50", onClose: () => {} }))
+    const html = render(createElement(HelpSheet, { helpId: topic.id, onClose: () => {} }))
     expect(html).toMatch(new RegExp(`<h2[^>]*>${topic.title}</h2>`))
     expect(html).toContain(esc(topic.what))
-    expect(helpTopic(topic.id)).toBe(topic)
+    const view = VIEW_HELP.find((v) => v.id === "trefferbild")!
+    const viewHtml = render(createElement(HelpSheet, { helpId: "trefferbild", onClose: () => {} }))
+    expect(viewHtml).toMatch(new RegExp(`<h2[^>]*>${view.title}</h2>`))
   })
 
-  it("ohne Kennzahl ein leeres, geschlossenes Blatt", () => {
-    const html = render(createElement(HelpSheet, { metricKey: null, onClose: () => {} }))
+  it("ohne Erklärung ein leeres, geschlossenes Blatt", () => {
+    const html = render(createElement(HelpSheet, { helpId: null, onClose: () => {} }))
     expect(html).toMatch(/^<dialog(?![^>]*\bopen)/)
     expect(html).not.toContain("<b>")
   })

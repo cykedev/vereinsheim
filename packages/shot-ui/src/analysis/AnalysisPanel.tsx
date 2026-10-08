@@ -10,7 +10,7 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import type { ReactNode } from "react"
 
 import { HelpIcon } from "../help/HelpButton"
-import { HelpDetails } from "../help/HelpDetails"
+import { HelpButton } from "../help/HelpButton"
 import { isProbeShot } from "../shots"
 import type { Layer, ViewState } from "../view-state"
 import { analysisInput, type AnalysisBasis } from "./input"
@@ -106,6 +106,8 @@ export interface AnalysisPanelProps {
   explain: boolean
   /** eine Karte schaltet eine Ebene der Scheibe (die Vertrauensellipse) */
   onToggleLayer: (layer: Layer) => void
+  /** „?“ an Karten und Datenlage: öffnet die Erklärung als Blatt (`HelpSheet`), Plan Schritt 4 D3 */
+  onHelp?: (id: string) => void
   className?: string
 }
 
@@ -122,11 +124,12 @@ export function AnalysisPanel({
   onTab,
   explain,
   onToggleLayer,
+  onHelp,
   className,
 }: AnalysisPanelProps) {
   const input = analysisInput(shots, state.scoring, target)
   const cards = shots.length
-    ? TAB_CARDS[tab]({ input, explain, layers: state.layers, onToggleLayer })
+    ? TAB_CARDS[tab]({ input, explain, layers: state.layers, onToggleLayer, onHelp })
     : [
         {
           key: "empty",
@@ -158,9 +161,11 @@ export function AnalysisPanel({
       {layout(cards)}
       {/* ohne Schüsse keine Datenlage: sie behauptete sonst „alle mit Lage, Zeit und Wert“ */}
       {shots.length > 0 && (
-        <div data-coverage="true" className="grid gap-2">
+        <div data-coverage="true" className="flex items-start justify-between gap-2">
           <p className="text-[13px] text-muted-foreground">{coverageText(shots, state.scoring)}</p>
-          <HelpDetails id="datenlage" open={explain} />
+          {onHelp && (
+            <HelpButton label="Datenlage" helpId="datenlage" onClick={() => onHelp("datenlage")} />
+          )}
         </div>
       )}
       <details

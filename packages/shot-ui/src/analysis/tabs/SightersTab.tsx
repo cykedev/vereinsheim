@@ -34,7 +34,7 @@ const sideCells = (side: GroupSide) => [
  * Probe: Umfang, Probe gegen Wertung, eingeschossen?, Probe auf der Scheibe. Über alle Schüsse der
  * Karte, denn die Probe gehört nicht zur Grundlage; ohne Visierverstellung (D7).
  */
-export function sighterCards({ input, explain }: CardContext): CardSpec[] {
+export function sighterCards({ input, explain, onHelp }: CardContext): CardSpec[] {
   const { all, scoring, target, basis } = input
   const summary = sighterSummary(all)
   const comparison = sighterComparison(all, scoring)
@@ -50,7 +50,7 @@ export function sighterCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "probe-umfang",
       element: (
-        <AnalysisCard help="probe-umfang" explain={explain}>
+        <AnalysisCard help="probe-umfang" explain={explain} onHelp={onHelp}>
           {summary ? (
             <KeyValues
               rows={[
@@ -80,7 +80,7 @@ export function sighterCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "probe-gegen-wertung",
       element: (
-        <AnalysisCard help="probe-gegen-wertung" explain={explain}>
+        <AnalysisCard help="probe-gegen-wertung" explain={explain} onHelp={onHelp}>
           {comparison ? (
             <>
               <div className="overflow-x-auto">
@@ -131,7 +131,7 @@ export function sighterCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "eingeschossen",
       element: (
-        <AnalysisCard help="eingeschossen" explain={explain}>
+        <AnalysisCard help="eingeschossen" explain={explain} onHelp={onHelp}>
           {zeroed ? (
             <>
               <KeyValues
@@ -170,7 +170,7 @@ export function sighterCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "probe-auf-der-scheibe",
       element: (
-        <AnalysisCard help="probe-auf-der-scheibe" ids="" explain={explain}>
+        <AnalysisCard help="probe-auf-der-scheibe" ids="" explain={explain} onHelp={onHelp}>
           {summary && sightersWithPosition ? (
             <>
               <ChartSlot height={260}>

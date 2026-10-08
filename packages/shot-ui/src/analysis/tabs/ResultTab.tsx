@@ -57,7 +57,7 @@ function TeilerList({ refs }: { refs: readonly TeilerRef[] }) {
  * Ergebnis: Ergebnis, Ringverteilung, Zehntelverteilung, beste und weiteste Teiler, Serien und Konstanz,
  * Quoten, alle über die Grundlage
  */
-export function resultCards({ input, explain }: CardContext): CardSpec[] {
+export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[] {
   const { base, scoring } = input
   const metric = (key: string) => computeMetric(inScoring(metricByKey(key)!, scoring), base)
   const total = metric("result.decimal")
@@ -77,7 +77,7 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "ergebnis",
       element: (
-        <AnalysisCard help="ergebnis" explain={explain}>
+        <AnalysisCard help="ergebnis" explain={explain} onHelp={onHelp}>
           {total === null ? (
             <Note>{base.length ? "nicht jeder Schuss mit Wert" : "ab 1 Schuss"}</Note>
           ) : (
@@ -95,7 +95,7 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "ringverteilung",
       element: (
-        <AnalysisCard help="ringverteilung" explain={explain}>
+        <AnalysisCard help="ringverteilung" explain={explain} onHelp={onHelp}>
           {dist.n ? (
             <>
               <RingBars dist={dist} />
@@ -110,7 +110,7 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "zehntelverteilung",
       element: (
-        <AnalysisCard help="zehntelverteilung" explain={explain}>
+        <AnalysisCard help="zehntelverteilung" explain={explain} onHelp={onHelp}>
           {scoring === "rings" ? (
             <Note>Gibt es nur in der Zehntelwertung; oben auf „Zehntel“ umschalten.</Note>
           ) : hist.n ? (
@@ -129,7 +129,7 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "extreme-und-teiler",
       element: (
-        <AnalysisCard help="extreme-und-teiler" explain={explain}>
+        <AnalysisCard help="extreme-und-teiler" explain={explain} onHelp={onHelp}>
           {extremes ? (
             <>
               <KeyValues
@@ -152,7 +152,7 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "serien-und-konstanz",
       element: (
-        <AnalysisCard help="serien-und-konstanz" explain={explain}>
+        <AnalysisCard help="serien-und-konstanz" explain={explain} onHelp={onHelp}>
           {consistency ? (
             <>
               {consistency.series.length > 1 && (
@@ -209,7 +209,7 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "quoten",
       element: (
-        <AnalysisCard help="quoten" explain={explain}>
+        <AnalysisCard help="quoten" explain={explain} onHelp={onHelp}>
           {shares.length ? (
             <>
               <div className="grid gap-2.5 text-[13.5px] tabular-nums">

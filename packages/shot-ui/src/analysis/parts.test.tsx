@@ -2,32 +2,75 @@ import { VIEW_HELP } from "@vereinsheim/shot-help/guide"
 import { helpTopic } from "@vereinsheim/shot-help/lookup"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { isValidElement, type ReactNode } from "react"
+import { describe, expect, it, vi } from "vitest"
 
 import { MpiMark } from "../target/MpiMark"
+import { HelpButton } from "../help/HelpButton"
 import { AnalysisCard, IntervalBar, KeyValues, Note, scaleStep, Verdict } from "./parts"
+
+/** das erste Element eines Typs im Baum */
+function findElement(node: ReactNode, type: unknown): { props: Record<string, unknown> } | null {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const hit = findElement(child, type)
+      if (hit) return hit
+    }
+    return null
+  }
+  if (!isValidElement(node)) return null
+  const props = node.props as Record<string, unknown>
+  if (node.type === type) return { props }
+  return findElement(props.children as ReactNode, type)
+}
 
 const render = (element: Parameters<typeof renderToStaticMarkup>[0]) =>
   renderToStaticMarkup(element)
 
 describe("AnalysisCard", () => {
-  it("Titel, Katalog-IDs mit „ · “ und Kurzsatz aus dem Thema, darunter „Was heißt das?“", () => {
+  it("Titel, Katalog-IDs mit „ · “, Kurzsatz als title und „?“ im Kopf statt „Was heißt das?“ (D3)", () => {
     const topic = helpTopic("masse-der-gruppe")!
     const html = render(
-      createElement(AnalysisCard, { help: "masse-der-gruppe", explain: false, children: "Inhalt" })
+      createElement(AnalysisCard, {
+        help: "masse-der-gruppe",
+        explain: false,
+        onHelp: () => {},
+        children: "Inhalt",
+      })
+    )
+    expect(html).toMatch(
+      new RegExp(`<h3[^>]*title="${topic.short}"[^>]*><span>${topic.title}</span>`)
+    )
+    expect(html).toContain(
+      `<span class="font-mono text-xs font-semibold tracking-wide text-muted-foreground">${topic.catalog.join(" · ")}</span>`
     )
     expect(html).toMatch(
       new RegExp(
-        `<h3[^>]*title="${topic.short}"[^>]*><span>${topic.title}</span><span[^>]*>${topic.catalog.join(" · ")}</span></h3>`
+        `<button[^>]*aria-label="Erklärung: ${topic.title}"[^>]*data-help="masse-der-gruppe"`
       )
     )
     expect(html).toContain("Inhalt")
-    expect(html).toMatch(/<details data-help="masse-der-gruppe"(?! open)/)
-    expect(
-      render(
-        createElement(AnalysisCard, { help: "masse-der-gruppe", explain: true, children: "x" })
-      )
-    ).toMatch(/<details data-help="masse-der-gruppe" open=""/)
+    expect(html).not.toContain("<details")
+    expect(html).not.toContain("data-short")
+  })
+
+  it("„?“ meldet die Erklärung der Karte", () => {
+    const onHelp = vi.fn<(id: string) => void>()
+    const tree = AnalysisCard({ help: "masse-der-gruppe", explain: false, onHelp, children: "x" })
+    const button = findElement(tree, HelpButton)!
+    ;(button.props.onClick as () => void)()
+    expect(onHelp).toHaveBeenCalledWith("masse-der-gruppe")
+  })
+
+  it("„Erklärungen“ zeigt den Kurzsatz unter dem Titel; ohne onHelp kein „?“", () => {
+    const topic = helpTopic("masse-der-gruppe")!
+    const html = render(
+      createElement(AnalysisCard, { help: "masse-der-gruppe", explain: true, children: "x" })
+    )
+    expect(html).toContain(
+      `<p data-short="true" class="text-[12.5px] leading-snug text-foreground-2">${topic.short}</p>`
+    )
+    expect(html).not.toContain("<button")
   })
 
   it("Oberflächen-Hilfe: Titel aus VIEW_HELP, eigene IDs, kein Kurzsatz", () => {

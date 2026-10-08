@@ -24,7 +24,7 @@ const Muted = ({ children }: { children: ReactNode }) => (
 )
 
 /** Präzision: σ, Maße der Gruppe, Form der Gruppe, Ausreißer, alle über die Grundlage */
-export function precisionCards({ input, explain }: CardContext): CardSpec[] {
+export function precisionCards({ input, explain, onHelp }: CardContext): CardSpec[] {
   const { base, scoring, target } = input
   const sigma = sigmaEstimate(base)
   const metric = (key: string) => computeMetric(inScoring(metricByKey(key)!, scoring), base)
@@ -42,7 +42,7 @@ export function precisionCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "praezision-sigma",
       element: (
-        <AnalysisCard help="praezision-sigma" explain={explain}>
+        <AnalysisCard help="praezision-sigma" explain={explain} onHelp={onHelp}>
           {sigma ? (
             <>
               <div className="font-display text-[1.9rem] leading-none font-bold tabular-nums">
@@ -79,7 +79,7 @@ export function precisionCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "masse-der-gruppe",
       element: (
-        <AnalysisCard help="masse-der-gruppe" explain={explain}>
+        <AnalysisCard help="masse-der-gruppe" explain={explain} onHelp={onHelp}>
           <KeyValues
             rows={[
               ["Streukreis", mmOr(metric("group.enclosingDiameter"))],
@@ -113,7 +113,7 @@ export function precisionCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "form-der-gruppe",
       element: (
-        <AnalysisCard help="form-der-gruppe" explain={explain}>
+        <AnalysisCard help="form-der-gruppe" explain={explain} onHelp={onHelp}>
           {shape ? (
             <>
               <ChartSlot height={220}>
@@ -168,7 +168,7 @@ export function precisionCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "ausreisser",
       element: (
-        <AnalysisCard help="ausreisser" explain={explain}>
+        <AnalysisCard help="ausreisser" explain={explain} onHelp={onHelp}>
           {outlying ? (
             <>
               <KeyValues

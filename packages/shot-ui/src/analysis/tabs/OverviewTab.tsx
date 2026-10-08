@@ -49,7 +49,7 @@ function ObservationSymbol({ icon }: { icon: ObservationIcon }) {
 }
 
 /** Überblick: acht Kacheln, Beobachtungen in Worten und der Einstieg „So liest du die Analyse“ */
-export function overviewCards({ input, explain }: CardContext): CardSpec[] {
+export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec[] {
   const tiles = overviewTiles(input)
   const sentences = observations(input)
   return [
@@ -101,7 +101,7 @@ export function overviewCards({ input, explain }: CardContext): CardSpec[] {
       key: "beobachtungen",
       wide: true,
       element: (
-        <AnalysisCard help="beobachtungen" ids="aus den Zahlen" explain={explain}>
+        <AnalysisCard help="beobachtungen" ids="aus den Zahlen" explain={explain} onHelp={onHelp}>
           {sentences.length ? (
             <ul className="grid gap-2.5 text-[14px] leading-relaxed">
               {sentences.map((sentence) => (
@@ -121,7 +121,7 @@ export function overviewCards({ input, explain }: CardContext): CardSpec[] {
       key: "einstieg",
       wide: true,
       element: (
-        <AnalysisCard title="So liest du die Analyse" ids="Hilfe" explain={explain}>
+        <AnalysisCard title="So liest du die Analyse" ids="Hilfe" explain={explain} onHelp={onHelp}>
           <ul className="grid gap-2 text-[13.5px] leading-relaxed text-foreground-2 [&_b]:font-semibold [&_b]:text-foreground">
             {READING_GUIDE.map((item) => (
               <li key={item.title} data-guide="true">

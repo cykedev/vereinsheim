@@ -42,9 +42,10 @@ describe("Analyse auf dem Telefon", () => {
     expect(result).toContain("min-[861px]:[&amp;&gt;:last-child:nth-child(odd)]:col-span-2")
   })
 
-  it("Glossar, Fehlschlüsse und „Was heißt das?“ auf dem Telefon so knapp wie am Desktop", () => {
+  it("Glossar und Fehlschlüsse auf dem Telefon so knapp wie am Desktop", () => {
     const summaries = overview.match(/<summary[^>]*>/g)!
-    expect(summaries.length).toBeGreaterThan(3)
+    // nur noch Glossar und Fehlschlüsse; die Karten erklären sich über „?“ (Plan Schritt 4, D3)
+    expect(summaries).toHaveLength(2)
     for (const summary of summaries) expect(summary).not.toContain("pointer-coarse")
     const help = renderToStaticMarkup(createElement(HelpDetails, { id: "ergebnis", open: false }))
     expect(help).not.toMatch(/<summary[^>]*pointer-coarse/)

@@ -21,6 +21,8 @@ export interface CardContext {
   /** Ebenen der Scheibe, etwa die Vertrauensellipse, die eine Karte schaltet */
   layers: Readonly<Record<Layer, boolean>>
   onToggleLayer: (layer: Layer) => void
+  /** „?“ einer Karte: öffnet ihre Erklärung als Blatt (Plan Schritt 4, D3) */
+  onHelp?: (id: string) => void
 }
 
 export interface CardSpec {

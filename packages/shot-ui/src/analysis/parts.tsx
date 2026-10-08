@@ -5,7 +5,8 @@ import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
 import { formatValue } from "../format"
-import { HelpDetails, helpEntry } from "../help/HelpDetails"
+import { HelpButton } from "../help/HelpButton"
+import { helpEntry } from "../help/HelpDetails"
 
 // Gemeinsame Teile der Analyse-Karten (Spielwiese `card`, `kv`, `pill`, `note`, `intervalBar`, `scaleBar`).
 
@@ -18,13 +19,23 @@ export interface AnalysisCardProps {
   ids?: string
   /** breite Karte: steht allein, nicht im Raster */
   wide?: boolean
-  /** Schalter „Erklärungen“: „Was heißt das?“ offen */
+  /** Schalter „Erklärungen“: der Kurzsatz steht sichtbar unter dem Titel */
   explain: boolean
+  /** „?“ im Kopf öffnet die Erklärung als Blatt (Plan Schritt 4, D3); ohne kein „?“ */
+  onHelp?: (id: string) => void
   children: ReactNode
 }
 
-/** Eine Karte der Analyse: Kopf mit Titel und Katalog-IDs, Inhalt, darunter „Was heißt das?“ */
-export function AnalysisCard({ help, title, ids, wide, explain, children }: AnalysisCardProps) {
+/** Eine Karte der Analyse: Kopf mit Titel, Katalog-IDs und „?“, mit „Erklärungen“ der Kurzsatz, dann Inhalt */
+export function AnalysisCard({
+  help,
+  title,
+  ids,
+  wide,
+  explain,
+  onHelp,
+  children,
+}: AnalysisCardProps) {
   const topic = help ? helpTopic(help) : undefined
   const heading = title ?? (help ? helpEntry(help).title : "")
   const catalog = ids ?? (topic ? topic.catalog.join(" · ") : "")
@@ -34,20 +45,28 @@ export function AnalysisCard({ help, title, ids, wide, explain, children }: Anal
       data-wide={wide || undefined}
       className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4"
     >
-      <h3
-        title={topic?.short}
-        className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 font-display text-base leading-tight font-bold"
-      >
-        <span>{heading}</span>
-        {catalog && (
-          <span className="font-mono text-xs font-semibold tracking-wide text-muted-foreground">
-            {catalog}
-          </span>
+      <div className="flex items-start justify-between gap-2">
+        <h3
+          title={topic?.short}
+          className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3 gap-y-1 font-display text-base leading-tight font-bold"
+        >
+          <span>{heading}</span>
+          {catalog && (
+            <span className="font-mono text-xs font-semibold tracking-wide text-muted-foreground">
+              {catalog}
+            </span>
+          )}
+        </h3>
+        {help && onHelp && (
+          <HelpButton label={heading} helpId={help} onClick={() => onHelp(help)} />
         )}
-      </h3>
+      </div>
+      {explain && topic && (
+        <p data-short="true" className="text-[12.5px] leading-snug text-foreground-2">
+          {topic.short}
+        </p>
+      )}
       {children}
-      {/* unten bündig, wenn die Karte im Raster höher ist als ihr Inhalt */}
-      {help && <HelpDetails id={help} open={explain} className="mt-auto" />}
     </article>
   )
 }

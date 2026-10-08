@@ -49,6 +49,7 @@ const render = (shots: readonly MetricShot[], extra: Record<string, unknown> = {
       onTab: () => {},
       explain: false,
       onToggleLayer: () => {},
+      onHelp: () => {},
       ...extra,
     })
   )
@@ -115,7 +116,11 @@ describe("AnalysisPanel", () => {
     expect(render(CARD, { state: initialViewState({ scoring: "rings" }) })).toContain(
       "Wertung in ganzen Ringen"
     )
-    expect(render(CARD)).toMatch(/<details data-help="datenlage"/)
+    // „?“ an der Datenlage statt „Was heißt das?“ (Plan Schritt 4, D3)
+    expect(render(CARD)).toMatch(
+      /<div data-coverage="true"[^>]*>.*?<button[^>]*data-help="datenlage"/
+    )
+    expect(render(CARD)).not.toContain("<details data-help")
   })
 
   it("auf einer Trainingskarte zählt die Datenlage die Probe als Probe", () => {

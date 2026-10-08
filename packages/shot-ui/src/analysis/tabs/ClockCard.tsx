@@ -24,10 +24,12 @@ const REFERENCES = [
 export function ClockCard({
   shots,
   explain,
+  onHelp,
   initialReference = "center",
 }: {
   shots: readonly MetricShot[]
   explain: boolean
+  onHelp?: (id: string) => void
   initialReference?: ClockReference
 }) {
   const [reference, setReference] = useState<ClockReference>(initialReference)
@@ -39,7 +41,7 @@ export function ClockCard({
   const clock = origin ? directionClock(shots, origin) : null
 
   return (
-    <AnalysisCard help="richtungsuhr" explain={explain}>
+    <AnalysisCard help="richtungsuhr" explain={explain} onHelp={onHelp}>
       {clock && clock.n ? (
         <>
           <Segmented

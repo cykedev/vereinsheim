@@ -44,7 +44,7 @@ const TEMPO_MISSING = "ab 4 Schuss mit Zeit"
  * Zeit und Verlauf: Verlauf und Trend, Rhythmus, Tempo und Dauer, Pausen, Ermüdung, Serien im
  * Vergleich, über die Grundlage
  */
-export function timeCards({ input, explain }: CardContext): CardSpec[] {
+export function timeCards({ input, explain, onHelp }: CardContext): CardSpec[] {
   const { base, scoring } = input
   const trend = cardTrend(base, scoring)
   const profile = rhythmProfile(base)
@@ -63,7 +63,7 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
       key: "verlauf-und-trend",
       wide: true,
       element: (
-        <AnalysisCard help="verlauf-und-trend" wide explain={explain}>
+        <AnalysisCard help="verlauf-und-trend" wide explain={explain} onHelp={onHelp}>
           {/* wie das Diagramm: ab zwei Schuss mit Wert */}
           {movingAverage(base, scoring).length >= 2 ? (
             <>
@@ -105,7 +105,7 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
       key: "rhythmus",
       wide: true,
       element: (
-        <AnalysisCard help="rhythmus" wide explain={explain}>
+        <AnalysisCard help="rhythmus" wide explain={explain} onHelp={onHelp}>
           {timed >= 2 ? (
             <>
               <ChartSlot height={190}>
@@ -125,7 +125,7 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "tempo-und-dauer",
       element: (
-        <AnalysisCard help="tempo-und-dauer" explain={explain}>
+        <AnalysisCard help="tempo-und-dauer" explain={explain} onHelp={onHelp}>
           {pace || duration !== null ? (
             <>
               <KeyValues
@@ -164,7 +164,7 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "pausen",
       element: (
-        <AnalysisCard help="pausen" explain={explain}>
+        <AnalysisCard help="pausen" explain={explain} onHelp={onHelp}>
           {!recovery ? (
             <Note>ab 1 Schuss mit Zeit</Note>
           ) : recovery.effects.length ? (
@@ -198,7 +198,7 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "ermuedung",
       element: (
-        <AnalysisCard help="ermuedung" explain={explain}>
+        <AnalysisCard help="ermuedung" explain={explain} onHelp={onHelp}>
           {tired ? (
             <>
               <KeyValues
@@ -226,7 +226,7 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
     {
       key: "serien-im-vergleich",
       element: (
-        <AnalysisCard help="serien-im-vergleich" explain={explain}>
+        <AnalysisCard help="serien-im-vergleich" explain={explain} onHelp={onHelp}>
           {series.length ? (
             <>
               <div className="overflow-x-auto">

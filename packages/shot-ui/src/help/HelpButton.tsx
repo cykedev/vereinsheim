@@ -25,15 +25,18 @@ export interface HelpButtonProps {
   /** wofür die Erklärung ist, etwa der Name der Kachel */
   label: string
   onClick: () => void
+  /** Id der Erklärung, als `data-help` am Knopf (Prüfung: jedes Thema hat seinen Platz) */
+  helpId?: string
   className?: string
 }
 
 /** „?“ an einer Zahl: öffnet ihre Erklärung (als Blatt, nie nur als Tooltip) */
-export function HelpButton({ label, onClick, className }: HelpButtonProps) {
+export function HelpButton({ label, onClick, helpId, className }: HelpButtonProps) {
   return (
     <button
       type="button"
       aria-label={`Erklärung: ${label}`}
+      data-help={helpId}
       onClick={onClick}
       className={cn(
         "-m-2.5 inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",

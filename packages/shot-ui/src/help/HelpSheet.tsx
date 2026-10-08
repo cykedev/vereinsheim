@@ -1,26 +1,27 @@
 "use client"
 
-import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { Sheet } from "@vereinsheim/ui/design2/sheet"
 
 import { HelpBody } from "./HelpBody"
+import { helpEntry } from "./HelpDetails"
 
 export interface HelpSheetProps {
-  /** Kennzahl, deren Erklärung offen ist; null: Blatt zu */
-  metricKey: string | null
+  /** Erklärung, die offen ist: Thema (`helpTopic`, für Kennzahlen über `helpForMetric(key).id`) oder
+   * Oberfläche (`VIEW_HELP`); null: Blatt zu */
+  helpId: string | null
   onClose: () => void
 }
 
 /**
- * Die Erklärung einer Kennzahl als Blatt (spiegel-ui-design: auf dem Handy von unten, auf dem Desktop als
- * Karte daneben). Titel ist das Thema aus `shot-help`; das Blatt bleibt eingehängt, damit der Browser den
- * Fokus beim Schließen zurückgibt.
+ * Eine Erklärung als Blatt (spiegel-ui-design: auf dem Handy von unten, auf dem Desktop als Karte daneben),
+ * für Kacheln, Karten der Analyse und die Scheibe (Plan Schritt 4, D3). Das Blatt bleibt eingehängt, damit der
+ * Browser den Fokus beim Schließen zurückgibt.
  */
-export function HelpSheet({ metricKey, onClose }: HelpSheetProps) {
-  const topic = metricKey ? helpForMetric(metricKey) : undefined
+export function HelpSheet({ helpId, onClose }: HelpSheetProps) {
+  const entry = helpId ? helpEntry(helpId) : undefined
   return (
-    <Sheet open={!!topic} title={topic?.title ?? ""} onClose={onClose}>
-      {topic && <HelpBody topic={topic} />}
+    <Sheet open={!!entry} title={entry?.title ?? ""} onClose={onClose}>
+      {entry && <HelpBody topic={entry} />}
     </Sheet>
   )
 }

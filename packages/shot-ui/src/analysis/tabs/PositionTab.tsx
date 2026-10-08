@@ -23,7 +23,13 @@ const EllipseIcon = () => (
 )
 
 /** Lage: Lage echt?, Ringverlust nach Ursache, Richtungsuhr, Drift und Wanderung, über die Grundlage */
-export function positionCards({ input, explain, layers, onToggleLayer }: CardContext): CardSpec[] {
+export function positionCards({
+  input,
+  explain,
+  layers,
+  onToggleLayer,
+  onHelp,
+}: CardContext): CardSpec[] {
   const { base, scoring, target } = input
   const confidence = mpiConfidence(base)
   const split = ringLossSplit(base, target)
@@ -36,7 +42,7 @@ export function positionCards({ input, explain, layers, onToggleLayer }: CardCon
     {
       key: "lage-echt",
       element: (
-        <AnalysisCard help="lage-echt" explain={explain}>
+        <AnalysisCard help="lage-echt" explain={explain} onHelp={onHelp}>
           {confidence ? (
             <>
               <KeyValues
@@ -83,7 +89,7 @@ export function positionCards({ input, explain, layers, onToggleLayer }: CardCon
     {
       key: "ringverlust-nach-ursache",
       element: (
-        <AnalysisCard help="ringverlust-nach-ursache" explain={explain}>
+        <AnalysisCard help="ringverlust-nach-ursache" explain={explain} onHelp={onHelp}>
           {split ? (
             <RingLoss split={split} keyName={key} rings={rings} />
           ) : (
@@ -94,12 +100,12 @@ export function positionCards({ input, explain, layers, onToggleLayer }: CardCon
     },
     {
       key: "richtungsuhr",
-      element: <ClockCard shots={base} explain={explain} />,
+      element: <ClockCard shots={base} explain={explain} onHelp={onHelp} />,
     },
     {
       key: "drift-und-wanderung",
       element: (
-        <AnalysisCard help="drift-und-wanderung" explain={explain}>
+        <AnalysisCard help="drift-und-wanderung" explain={explain} onHelp={onHelp}>
           {wander ? (
             <>
               <div className="grid gap-1.5">

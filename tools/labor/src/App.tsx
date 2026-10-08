@@ -8,6 +8,7 @@ import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { HelpDetails } from "@vereinsheim/shot-ui/help/HelpDetails"
 import { HelpSheet } from "@vereinsheim/shot-ui/help/HelpSheet"
+import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { MetricTiles } from "@vereinsheim/shot-ui/metrics/MetricTiles"
 import { CardSummary } from "@vereinsheim/shot-ui/readout/CardSummary"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
@@ -79,7 +80,7 @@ export function App({ commit }: { commit: string }) {
   const [pop, setPop] = useState<number | null>(null)
   const [theme, setTheme] = useState<Theme>(() => (store.get("theme") as Theme | null) ?? "system")
   const [explain, setExplain] = useState(() => store.get("help") === "1")
-  const [helpKey, setHelpKey] = useState<string | null>(null)
+  const [helpId, setHelpId] = useState<string | null>(null)
   const [tab, setTab] = useState<AnalysisTab>(() => {
     const saved = store.get("tab")
     return ANALYSIS_TABS.find((t) => t.value === saved)?.value ?? "overview"
@@ -319,7 +320,7 @@ export function App({ commit }: { commit: string }) {
         shots={shots}
         state={state}
         explain={explain}
-        onHelp={setHelpKey}
+        onHelp={(key) => setHelpId(helpForMetric(key)?.id ?? null)}
         action={
           <ToggleChip
             pressed={explain}
@@ -341,8 +342,9 @@ export function App({ commit }: { commit: string }) {
         onTab={changeTab}
         explain={explain}
         onToggleLayer={toggle}
+        onHelp={setHelpId}
       />
-      <HelpSheet metricKey={helpKey} onClose={() => setHelpKey(null)} />
+      <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />
     </div>
   )
 }

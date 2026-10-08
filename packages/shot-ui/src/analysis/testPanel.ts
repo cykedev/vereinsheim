@@ -18,6 +18,7 @@ export interface RenderOptions {
   explain?: boolean
   layers?: Partial<Record<Layer, boolean>>
   onToggleLayer?: (layer: Layer) => void
+  onHelp?: (id: string) => void
 }
 
 /** ein Reiter der Analyse als Markup; ohne Angaben die Beispielkarte „40 Schuss“ (LP) in Zehnteln */
@@ -32,6 +33,7 @@ export function renderTab(tab: AnalysisTab, options: RenderOptions = {}): string
       onTab: () => {},
       explain: options.explain ?? false,
       onToggleLayer: options.onToggleLayer ?? (() => {}),
+      onHelp: options.onHelp ?? (() => {}),
     })
   )
 }
