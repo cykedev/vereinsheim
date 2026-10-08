@@ -43,6 +43,11 @@
   --color-shot-edge: var(--shot-edge);
   --color-overlay: var(--overlay);
   --color-overlay-halo: var(--overlay-halo);
+  --color-shot-number: var(--shot-number);
+  --color-shot-number-halo: var(--shot-number-halo);
+  --color-mpi-light: var(--mpi-light);
+  --color-mpi-dark: var(--mpi-dark);
+  --color-mpi-halo: var(--mpi-halo);
   --color-score-10: var(--score-10);
   --color-score-9: var(--score-9);
   --color-score-8: var(--score-8);
@@ -101,6 +106,13 @@
   --overlay: #3d8bff;
   /* heller Saum unter Linien, die über den Treffern liegen */
   --overlay-halo: rgba(255, 255, 255, 0.8);
+  /* Schussnummer: weiß mit dunklem Saum, lesbar auf jeder Ringwert-Farbe, auf Papier und Spiegel */
+  --shot-number: #ffffff;
+  --shot-number-halo: rgba(0, 0, 0, 0.78);
+  /* Schwerpunkt: weiße Scheibe mit zwei schwarzen Vierteln, heller Saum um die Kontur */
+  --mpi-light: #ffffff;
+  --mpi-dark: #0b0b0b;
+  --mpi-halo: rgba(255, 255, 255, 0.9);
   /* Ringwert-Skala, farbenblind geprüft: 10 rot, 9 gold, 8 türkis, ≤ 7 violett */
   --score-10: #e5484d;
   --score-9: #e9b10c;

@@ -71,6 +71,11 @@ describe("Design-2-Tokens", () => {
       "shot-edge",
       "overlay",
       "overlay-halo",
+      "shot-number",
+      "shot-number-halo",
+      "mpi-light",
+      "mpi-dark",
+      "mpi-halo",
     ]) {
       expect(root.has(name), `--${name}`).toBe(true)
       expect(dark.has(name), `--${name}`).toBe(false)

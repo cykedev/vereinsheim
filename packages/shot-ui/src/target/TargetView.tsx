@@ -243,8 +243,8 @@ export function TargetView({
                   dominantBaseline="central"
                   fontSize={sizes.numberFont}
                   fontWeight={700}
-                  fill="#ffffff"
-                  stroke="rgba(0, 0, 0, 0.78)"
+                  fill="var(--shot-number)"
+                  stroke="var(--shot-number-halo)"
                   strokeWidth={sizes.numberHalo}
                   strokeLinejoin="round"
                   paintOrder="stroke"
@@ -334,10 +334,10 @@ export function TargetView({
             transform={`translate(${mm(center.xUm)} ${-mm(center.yUm)}) scale(${sizes.mpiRadius})`}
           >
             <title>Schwerpunkt</title>
-            <circle r={1} fill="none" stroke="rgba(255, 255, 255, 0.9)" strokeWidth={3} {...HAIR} />
-            <circle r={1} fill="#ffffff" />
-            <path d="M0 0L0-1A1 1 0 0 0-1 0ZM0 0L0 1A1 1 0 0 0 1 0Z" fill="#0b0b0b" />
-            <circle r={1} fill="none" stroke="#0b0b0b" strokeWidth={1} {...HAIR} />
+            <circle r={1} fill="none" stroke="var(--mpi-halo)" strokeWidth={3} {...HAIR} />
+            <circle r={1} fill="var(--mpi-light)" />
+            <path d="M0 0L0-1A1 1 0 0 0-1 0ZM0 0L0 1A1 1 0 0 0 1 0Z" fill="var(--mpi-dark)" />
+            <circle r={1} fill="none" stroke="var(--mpi-dark)" strokeWidth={1} {...HAIR} />
           </g>
         )}
       </g>

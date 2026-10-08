@@ -172,6 +172,15 @@ describe("TargetView: Probe und Scheibe", () => {
     )
   })
 
+  it("Farben nur aus den Design-2-Tokens, keine festen Werte", () => {
+    const html = render({ chosen: { index: 3, series: 1 } })
+    expect(html).not.toMatch(/(?:fill|stroke)="(?:#|rgb)/)
+    expect(html).toContain('fill="var(--shot-number)"')
+    expect(html).toContain('stroke="var(--shot-number-halo)"')
+    expect(html).toContain('fill="var(--mpi-light)"')
+    expect(html).toContain('fill="var(--mpi-dark)"')
+  })
+
   it("ein Bild mit Satz für Screenreader", () => {
     expect(render()).toMatch(
       /<svg[^>]*role="img"[^>]*aria-label="Luftpistole 10 m: 5 Wertungsschüsse, 2 Probeschüsse"/
