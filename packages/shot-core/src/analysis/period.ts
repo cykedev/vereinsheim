@@ -1,5 +1,6 @@
 // Auswertungen über viele Scheiben (Plan L2, vault/spiegel/spiegel-langzeit.md): Werte je Scheibe, Verlauf
-// mit gleitendem Schnitt und Formband, Boden und Decke je Abschnitt, Trainingsumfang (Katalog T1, T2, T5, T6). Die Disziplin-Familie wählt der Aufrufer; Wochen,
+// mit gleitendem Schnitt und Formband, Boden und Decke je Abschnitt, Trainingsumfang, Vergleich zweier
+// Zeiträume und die letzte Scheibe gegen den eigenen Schnitt (Katalog T1, T2, T3, T5, T6, C3, C4). Die Disziplin-Familie wählt der Aufrufer; Wochen,
 // Monate und Tage ordnet er zu, denn die Anzeige-Zeitzone liegt in der App (D1).
 
 import {
@@ -10,7 +11,7 @@ import {
   type MetricShot,
   type Scoring,
 } from "../metrics"
-import { mad, median, quantile } from "../stats"
+import { mad, mannWhitney, median, quantile } from "../stats"
 import { byStart, cardShots } from "./card-shots"
 
 /** Faktor, der den MAD bei normalverteilten Werten zur Standardabweichung macht */
@@ -19,6 +20,17 @@ const MAD_TO_SD = 1.4826
 const MIN_BAND_CARDS = 10
 /** ab so vielen Scheiben in einem Abschnitt Boden und Decke (D4) */
 const MIN_BUCKET_SPREAD = 5
+/** Signifikanzniveau des Vergleichs (D5) */
+const COMPARE_ALPHA = 0.05
+/** bedeutsam ab diesem Anteil der gepoolten Streuung (T3, Hopkins) */
+const MEANINGFUL_SHARE = 0.3
+const DAY_MS = 86_400_000
+/** Schnitt über die Scheiben dieser Tage vor der letzten (C4, D6), ab so vielen Scheiben */
+const AVERAGE_DAYS = 30
+const MIN_AVERAGE_CARDS = 3
+/** Perzentil unter so vielen letzten Scheiben, ab so vielen */
+const PERCENTILE_CARDS = 50
+const MIN_PERCENTILE_CARDS = 10
 
 export interface PeriodCard {
   /** stabile Kennung der Scheibe (Rekord und Weg zur Scheibe) */
@@ -167,4 +179,89 @@ export function trainingVolume(
     cards: group.length,
     days: new Set(group.map((card) => dayOf(card.startedAtMs))).size,
   }))
+}
+
+/** ab so vielen Scheiben je Seite ein Urteil (D5; die Simulation B19 belegt Fehlalarm und Trennschärfe) */
+export const MIN_CARDS_PER_SIDE = 5
+
+export interface PeriodComparison {
+  a: { n: number; mean: number }
+  b: { n: number; mean: number }
+  /** Mittel b − Mittel a */
+  delta: number
+  /** Mann-Whitney über die Scheibenwerte; null unter fünf Scheiben je Seite */
+  test: { p: number; exact: boolean } | null
+  /**
+   * „höher“ oder „tiefer“ beschreibt die Zahl, ob das besser ist, sagt `metric.better`. „unklar“ bei p ≥ 0,05,
+   * zu wenigen Scheiben oder wenn Rangtest und Mittel in verschiedene Richtungen zeigen.
+   */
+  verdict: "higher" | "lower" | "unclear"
+  /** |Δ| ≥ 0,3 × gepoolte Streuung der Scheibenwerte (T3); null unter fünf je Seite */
+  meaningful: boolean | null
+}
+
+const meanOf = (xs: readonly number[]) => xs.reduce((sum, x) => sum + x, 0) / xs.length
+const squares = (xs: readonly number[], center: number) =>
+  xs.reduce((sum, x) => sum + (x - center) ** 2, 0)
+
+/**
+ * Vergleich zweier Zeiträume (C3, T3, D5): Einheit ist die Scheibe. Mann-Whitney auf den Scheibenwerten,
+ * zweiseitig, α 0,05; der Unterschied ist die Differenz der Mittel. Ein Urteil ab fünf Scheiben je Seite.
+ * Ohne Scheiben auf einer Seite null.
+ */
+export function comparePeriods(
+  a: readonly CardValue[],
+  b: readonly CardValue[]
+): PeriodComparison | null {
+  if (!a.length || !b.length) return null
+  const xa = a.map((v) => v.value)
+  const xb = b.map((v) => v.value)
+  const ma = meanOf(xa)
+  const mb = meanOf(xb)
+  const delta = mb - ma
+  const summary = { a: { n: xa.length, mean: ma }, b: { n: xb.length, mean: mb }, delta }
+  if (xa.length < MIN_CARDS_PER_SIDE || xb.length < MIN_CARDS_PER_SIDE) {
+    return { ...summary, test: null, verdict: "unclear", meaningful: null }
+  }
+  const test = mannWhitney(xa, xb) as { u: number; p: number; exact: boolean }
+  // U von a unter der Erwartung heißt: b liegt eher oben; das Urteil gilt nur, wenn das Mittel mitgeht
+  const ranksUp = test.u < (xa.length * xb.length) / 2
+  const significant = test.p < COMPARE_ALPHA
+  const verdict =
+    significant && delta > 0 && ranksUp
+      ? "higher"
+      : significant && delta < 0 && !ranksUp
+        ? "lower"
+        : "unclear"
+  const pooled = Math.sqrt((squares(xa, ma) + squares(xb, mb)) / (xa.length + xb.length - 2))
+  const meaningful = delta !== 0 && Math.abs(delta) >= MEANINGFUL_SHARE * pooled
+  return { ...summary, test: { p: test.p, exact: test.exact }, verdict, meaningful }
+}
+
+export interface OwnAverage {
+  last: CardValue
+  /** Schnitt der Scheiben aus den 30 Tagen davor, ohne die letzte; null unter drei */
+  average: { n: number; mean: number; delta: number } | null
+  /** Anteil der letzten 50 (mit ihr) mit kleinerem Wert, gleiche zur Hälfte; null unter zehn */
+  percentile: number | null
+}
+
+/**
+ * Die letzte Scheibe gegen den eigenen Schnitt (C4, D6): gegen das Mittel der Scheiben aus den 30 Tagen
+ * davor (ab drei; genau 30 Tage zählt noch) und ihr Rang unter den letzten 50 als Perzentil (ab zehn).
+ * `values` in der Folge der Scheiben (`cardValues`); ohne Werte null.
+ */
+export function againstOwnAverage(values: readonly CardValue[]): OwnAverage | null {
+  if (!values.length) return null
+  const last = values[values.length - 1]
+  const since = last.atMs - AVERAGE_DAYS * DAY_MS
+  const before = values.slice(0, -1).filter((v) => v.atMs >= since)
+  const mean = before.length >= MIN_AVERAGE_CARDS ? meanOf(before.map((v) => v.value)) : null
+  const average = mean === null ? null : { n: before.length, mean, delta: last.value - mean }
+  const recent = values.slice(-PERCENTILE_CARDS)
+  const below = recent.filter((v) => v.value < last.value).length
+  const equal = recent.filter((v) => v.value === last.value).length
+  const percentile =
+    recent.length >= MIN_PERCENTILE_CARDS ? (below + 0.5 * equal) / recent.length : null
+  return { last, average, percentile }
 }

@@ -2,7 +2,15 @@ import { describe, expect, it } from "vitest"
 
 import { card, DAY } from "../__fixtures__/period"
 import { metricByKey } from "../metrics"
-import { cardValues, periodBuckets, periodTrend, trainingVolume, type CardValue } from "./period"
+import {
+  againstOwnAverage,
+  cardValues,
+  comparePeriods,
+  periodBuckets,
+  periodTrend,
+  trainingVolume,
+  type CardValue,
+} from "./period"
 
 const values = (list: readonly number[]): CardValue[] =>
   list.map((value, i) => ({ id: `s${i + 1}`, atMs: i * DAY, value, n: 40 }))
@@ -113,5 +121,112 @@ describe("Boden und Decke je Abschnitt, Trainingsumfang (T5, T6)", () => {
       { key: "0", shots: 6, cards: 3, days: 2 },
       { key: "1", shots: 2, cards: 1, days: 1 },
     ])
+  })
+})
+
+describe("Vergleich zweier Zeiträume (C3, T3)", () => {
+  it("getrennte Gruppen 5 gegen 5: höher, genau, p 2/252, bedeutsam", () => {
+    const result = comparePeriods(values([1, 2, 3, 4, 5]), values([6, 7, 8, 9, 10]))
+    expect(result?.a).toEqual({ n: 5, mean: 3 })
+    expect(result?.b).toEqual({ n: 5, mean: 8 })
+    expect(result?.delta).toBe(5)
+    expect(result?.test?.exact).toBe(true)
+    expect(result?.test?.p).toBeCloseTo(2 / 252, 12)
+    expect(result?.verdict).toBe("higher")
+    expect(result?.meaningful).toBe(true)
+  })
+
+  it("umgekehrt tiefer", () => {
+    expect(comparePeriods(values([6, 7, 8, 9, 10]), values([1, 2, 3, 4, 5]))?.verdict).toBe("lower")
+  })
+
+  it("gleiche Werte: unklar, Δ 0, nicht bedeutsam", () => {
+    const result = comparePeriods(values([9, 9, 9, 9, 9]), values([9, 9, 9, 9, 9]))
+    expect(result?.delta).toBe(0)
+    expect(result?.test?.p).toBe(1)
+    expect(result?.verdict).toBe("unclear")
+    expect(result?.meaningful).toBe(false)
+  })
+
+  it("vier Scheiben auf einer Seite: kein Test, kein Urteil", () => {
+    const result = comparePeriods(values([1, 2, 3, 4]), values([6, 7, 8, 9, 10]))
+    expect(result?.a.n).toBe(4)
+    expect(result?.test).toBeNull()
+    expect(result?.verdict).toBe("unclear")
+    expect(result?.meaningful).toBeNull()
+  })
+
+  it("eine leere Seite: null", () => {
+    expect(comparePeriods([], values([1, 2, 3, 4, 5]))).toBeNull()
+  })
+
+  it("kleiner, aber klarer Unterschied: höher und bedeutsam (s = 0,0059)", () => {
+    const a = values(Array.from({ length: 20 }, (_, i) => 9.5 + 0.001 * i))
+    const b = values(a.map((v) => v.value + 0.05))
+    const result = comparePeriods(a, b)
+    expect(result?.test?.exact).toBe(true)
+    expect(result?.verdict).toBe("higher")
+    expect(result?.meaningful).toBe(true)
+  })
+
+  it("große Streuung: Δ 0,1 bei s 1,58 ist nicht bedeutsam und unklar", () => {
+    const a = [8, 9, 10, 11, 12]
+    const result = comparePeriods(values(a), values(a.map((v) => v + 0.1)))
+    expect(result?.delta).toBeCloseTo(0.1, 12)
+    expect(result?.meaningful).toBe(false)
+    expect(result?.verdict).toBe("unclear")
+  })
+
+  it("widersprechen Rangtest und Mittel, kein Urteil", () => {
+    // neun Einsen und eine 100 gegen zehn Zweien: die Ränge sagen „b höher“ (U = 10 von 100), das Mittel
+    // „b tiefer“ (10,9 gegen 2)
+    const result = comparePeriods(
+      values([1, 1, 1, 1, 1, 1, 1, 1, 1, 100]),
+      values(Array(10).fill(2))
+    )
+    expect(result?.test?.p).toBeLessThan(0.05)
+    expect(result?.delta).toBeLessThan(0)
+    expect(result?.verdict).toBe("unclear")
+  })
+})
+
+describe("Gegen den eigenen Schnitt (C4)", () => {
+  const at = (day: number, value: number): CardValue => ({
+    id: `d${day}`,
+    atMs: day * DAY,
+    value,
+    n: 40,
+  })
+
+  it("nur die 30 Tage davor zählen, unter drei kein Schnitt", () => {
+    const result = againstOwnAverage([at(5, 9), at(15, 9), at(39, 11), at(40, 10.5)])
+    expect(result?.last.id).toBe("d40")
+    expect(result?.average).toBeNull()
+  })
+
+  it("ab drei Scheiben der Schnitt und der Abstand", () => {
+    const result = againstOwnAverage([at(5, 1), at(15, 9), at(20, 10), at(39, 11), at(40, 10.5)])
+    expect(result?.average).toEqual({ n: 3, mean: 10, delta: 0.5 })
+  })
+
+  it("genau 30 Tage davor zählt noch", () => {
+    const result = againstOwnAverage([at(10, 9), at(15, 9), at(39, 12), at(40, 10)])
+    expect(result?.average).toEqual({ n: 3, mean: 10, delta: 0 })
+  })
+
+  it("Perzentil: kleinere ganz, gleiche zur Hälfte (mit ihr), ab zehn", () => {
+    // die zwölf Werte aus dem Verlauf, die letzte ist 10: sechs kleiner, fünf gleich → (6 + 2,5) / 12
+    const twelve = values([9, 10, 8, 10, 9, 11, 9, 10, 8, 10, 9, 10])
+    expect(againstOwnAverage(twelve)?.percentile).toBeCloseTo(8.5 / 12, 12)
+    expect(againstOwnAverage(twelve.slice(0, 9))?.percentile).toBeNull()
+  })
+
+  it("Perzentil nur über die letzten 50", () => {
+    const list = values([...Array(10).fill(100), ...Array(50).fill(5)])
+    expect(againstOwnAverage(list)?.percentile).toBe(0.5)
+  })
+
+  it("ohne Werte null", () => {
+    expect(againstOwnAverage([])).toBeNull()
   })
 })
