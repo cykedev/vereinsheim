@@ -214,7 +214,7 @@ describe("Kacheln „Trefferbild in Zahlen“", () => {
       })
     )
     expect(html).toMatch(
-      /<\/h2>[\s\S]*alle Wertungsschüsse[\s\S]*>Erklärungen<\/button>[\s\S]*data-metric=/
+      /<\/h2>[\s\S]*alle Schüsse mit Probe[\s\S]*>Erklärungen<\/button>[\s\S]*data-metric=/
     )
   })
 })

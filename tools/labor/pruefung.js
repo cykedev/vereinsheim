@@ -189,14 +189,23 @@ addEventListener("load", async () => {
       tileRows(document).join("+")
     )
 
+    // ---------- Grundauswahl: Probe und Wertung, also ohne Probe
+    check(
+      "Grundauswahl ohne Probe: „Ohne Probe“ gedrückt, Probe blass, Wertung kräftig",
+      L().state.selection === "match" &&
+        button("Ohne Probe")?.getAttribute("aria-pressed") === "true" &&
+        button("Alle").getAttribute("aria-pressed") === "false" &&
+        hits().every((g) => !!g.dataset.faded === g.dataset.shot.startsWith("P"))
+    )
+
     // ---------- Schusstabelle
     const labelsAll = L().tools.shotLabels(L().shots)
     const intervalsAll = L().tools.shotIntervals(L().shots)
     check(
-      "Tabelle: 49 Zeilen, neuester oben, P1 unten",
-      tableRows().length === 49 &&
+      "Tabelle ohne Probe: 40 Zeilen, neuester oben, Schuss 1 unten",
+      tableRows().length === 40 &&
         tableRows()[0].dataset.row === "40" &&
-        tableRows().at(-1).dataset.row === "P1"
+        tableRows().at(-1).dataset.row === "1"
     )
     const wrongIntervals = tableRows().filter(
       (tr) =>
@@ -212,9 +221,21 @@ addEventListener("load", async () => {
     const groupTitles = () => $$('#shot-table th[scope="rowgroup"]').map((th) => txt(th).trim())
     check(
       "Tabelle: Trenner je Serie, neueste zuerst",
-      groupTitles().join() === "Serie 4,Serie 3,Serie 2,Serie 1,Probe",
+      groupTitles().join() === "Serie 4,Serie 3,Serie 2,Serie 1",
       groupTitles().join(" | ")
     )
+    await click(button("Alle"))
+    check(
+      "Alle mit Probe: 49 Zeilen bis P1, Probe als eigene Gruppe, Kacheln mit Probe",
+      tableRows().length === 49 &&
+        tableRows().at(-1).dataset.row === "P1" &&
+        groupTitles().at(-1) === "Probe" &&
+        L().state.selection === "all" &&
+        tilesMatch().length === 0 &&
+        hits().every((g) => !g.dataset.faded),
+      `${tableRows().length} Zeilen, ${groupTitles().join(" | ")}`
+    )
+    await click(button("Ohne Probe"))
     const dotLefts = new Set(
       tableRows().map((tr) =>
         Math.round($("td:nth-child(2) span[aria-hidden]", tr).getBoundingClientRect().left)
@@ -241,7 +262,13 @@ addEventListener("load", async () => {
     // ---------- Nummern in Ebenen
     check("Nummern zuerst aus", $$("text[data-number]", svg()).length === 0)
     await click(button("Nummern"))
-    const numbered = hits()
+    const numbered = hits().filter((g) => !g.dataset.faded)
+    check(
+      "Nummern an: blasse ohne Nummer",
+      hits()
+        .filter((g) => g.dataset.faded)
+        .every((g) => !$("text[data-number]", g))
+    )
     check(
       "Nummern an: jede in der Gruppe ihres Treffers, nach dem Kreis",
       numbered.every((g) => {
@@ -262,7 +289,8 @@ addEventListener("load", async () => {
         hits().indexOf(hits().find((g) => g.dataset.shot === "1"))
     )
 
-    // ---------- Antippen
+    // ---------- Antippen (mit Probe, damit auch Probeschüsse wählbar sind)
+    await click(button("Alle"))
     // Ein Tipp wählt den nächsten Treffer der Auswahl, bis 20 px neben seiner Mitte: Auf dem Handy misst ein
     // Treffer auf der ganzen Scheibe nur wenige Pixel. Chrome kürzt synthetische Koordinaten auf ganze Pixel.
     await tapAt(centerOf("P1"))
@@ -306,6 +334,8 @@ addEventListener("load", async () => {
       "zweites Antippen nimmt ihn zurück",
       !$("[data-chosen]", svg()) && txt($("#readout")).includes("letzter Schuss")
     )
+
+    await click(button("Ohne Probe"))
 
     // ---------- Auswahl einer Serie
     const tile = (key) => $(`[data-series="${key}"]`)
@@ -400,9 +430,9 @@ addEventListener("load", async () => {
     )
     await click(tile("3"), 700)
     check(
-      "dieselbe Serie noch einmal zeigt wieder alle",
-      hits().every((g) => !g.dataset.faded) &&
-        button("Alle").getAttribute("aria-pressed") === "true"
+      "dieselbe Serie noch einmal führt zur Grundauswahl zurück (ohne Probe)",
+      hits().every((g) => !!g.dataset.faded === g.dataset.shot.startsWith("P")) &&
+        button("Ohne Probe").getAttribute("aria-pressed") === "true"
     )
     await click(tile("4"))
     await click(button("Alle"), 700)

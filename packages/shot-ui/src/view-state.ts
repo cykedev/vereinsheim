@@ -3,13 +3,15 @@
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
-import type { SeriesKey, Selection } from "./types"
+import type { SeriesKey, Selection, Whole } from "./types"
 
 export type Layer = "mpi" | "circle" | "numbers" | "ellipse"
 
 export interface ViewState {
-  /** „all“ oder genau eine Serie bzw. die Probe */
+  /** die ganze Scheibe (mit oder ohne Probe) oder genau eine Serie bzw. die Probe */
   selection: Selection
+  /** Grundauswahl der Scheibe (`defaultWhole`): dorthin führt ein zweiter Tipp auf dieselbe Serie */
+  home: Whole
   /** der angetippte Schuss mit seiner Serie (null: ohne Serie), damit er mit der Auswahl wegfallen kann */
   chosen: { index: number; series: SeriesKey | null } | null
   view: "target" | "group"
@@ -19,18 +21,19 @@ export interface ViewState {
 
 export type ViewAction =
   | { type: "select"; series: SeriesKey }
-  | { type: "selectAll" }
+  | { type: "selectWhole"; whole: Whole }
   | { type: "choose"; shot: number; series: SeriesKey | null }
   | { type: "setView"; view: ViewState["view"] }
   | { type: "toggle"; layer: Layer }
   | { type: "setScoring"; scoring: Scoring }
-  /** neue Scheibe: Auswahl, Schuss und Ausschnitt zurück; Wertung und Ebenen bleiben */
-  | { type: "reset" }
+  /** neue Scheibe: Auswahl auf ihre Grundauswahl, Schuss und Ausschnitt zurück; Wertung, Ebenen bleiben */
+  | { type: "reset"; home?: Whole }
 
 /** Ebenen wie in der Spielwiese: Schwerpunkt und Streukreis an, Nummern und Ellipse aus */
 export function initialViewState(overrides: Partial<ViewState> = {}): ViewState {
   return {
     selection: "all",
+    home: "all",
     chosen: null,
     view: "target",
     layers: { mpi: true, circle: true, numbers: false, ellipse: false },
@@ -39,17 +42,24 @@ export function initialViewState(overrides: Partial<ViewState> = {}): ViewState 
   }
 }
 
-/** gehört eine Serie zur Auswahl? Ein Schuss ohne Serie (null) nur bei „alle“ */
+/**
+ * Gehört eine Serie zur Auswahl? „all“ nimmt alles, „match“ alles außer der Probe (auch Wertung ohne
+ * Serie, null); eine einzelne Serie nur sich selbst.
+ */
 export const isSelected = (selection: Selection, key: SeriesKey | null) =>
-  selection === "all" || selection === key
+  selection === "all" || (selection === "match" ? key !== "probe" : selection === key)
 
 export function viewReducer(state: ViewState, action: ViewAction): ViewState {
   switch (action.type) {
     case "select":
-    case "selectAll": {
-      // Tippen wählt genau diese Serie; dieselbe noch einmal zeigt wieder alle
+    case "selectWhole": {
+      // Tippen wählt genau diese Serie; dieselbe noch einmal führt zur Grundauswahl zurück
       const selection: Selection =
-        action.type === "select" && state.selection !== action.series ? action.series : "all"
+        action.type === "selectWhole"
+          ? action.whole
+          : state.selection !== action.series
+            ? action.series
+            : state.home
       const chosen =
         state.chosen && isSelected(selection, state.chosen.series) ? state.chosen : null
       return { ...state, selection, chosen }
@@ -68,12 +78,15 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return { ...state, layers: { ...state.layers, [action.layer]: !state.layers[action.layer] } }
     case "setScoring":
       return { ...state, scoring: action.scoring }
-    case "reset":
+    case "reset": {
+      const home = action.home ?? "all"
       return {
         ...state,
-        selection: "all",
+        selection: home,
+        home,
         chosen: null,
         view: "target",
       }
+    }
   }
 }

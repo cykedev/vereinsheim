@@ -151,14 +151,17 @@ export function MetricTiles({
       .length,
     scoring: state.scoring,
   }
+  const mixed = shots.some((s) => s.kind === "probe") && shots.some((s) => s.kind !== "probe")
   const scope =
     state.selection === "all"
-      ? selected.some((s) => s.kind === "match")
-        ? "alle Wertungsschüsse"
-        : "Probe"
-      : state.selection === "probe"
-        ? "Probe"
-        : `Serie ${state.selection}`
+      ? mixed
+        ? "alle Schüsse mit Probe"
+        : "alle Schüsse"
+      : state.selection === "match"
+        ? "ohne Probe"
+        : state.selection === "probe"
+          ? "Probe"
+          : `Serie ${state.selection}`
 
   return (
     <section className={cn("grid gap-3", className)} aria-label="Trefferbild in Zahlen">

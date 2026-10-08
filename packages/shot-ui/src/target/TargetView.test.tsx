@@ -111,7 +111,10 @@ describe("TargetView: Auswahl und Antippen", () => {
     const centers = smallestEnclosingCircle(
       CARD.filter((s) => s.kind === "match").map((s) => ({ xUm: s.xUm!, yUm: s.yUm! }))
     )
-    const r = Number(/data-overlay="spread"[^>]*r="([^"]+)"/.exec(render())?.[1])
+    // ohne Probe: der Streukreis um die Wertung
+    const r = Number(
+      /data-overlay="spread"[^>]*r="([^"]+)"/.exec(render({ selection: "match" }))?.[1]
+    )
     expect(centers).not.toBeNull()
     expect(r).toBeCloseTo(centers!.radiusUm / 1000 + caliberRadius(LP_10M) + gap, 9)
   })

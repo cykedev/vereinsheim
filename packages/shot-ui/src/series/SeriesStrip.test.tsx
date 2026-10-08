@@ -38,7 +38,7 @@ const render = (state: Partial<ViewState> = {}) =>
       shots: CARD,
       state: { ...initialViewState(), ...state },
       onSelect: () => {},
-      onSelectAll: () => {},
+      onSelectWhole: () => {},
     })
   )
 
@@ -129,5 +129,26 @@ describe("SeriesStrip", () => {
       })
     )
     expect(html).toMatch(/<circle[^>]*fill="none"[^>]*stroke-dasharray="2 2"/)
+  })
+
+  it("„Alle“ und „Ohne Probe“, wenn es beides gibt; gedrückt ist die gewählte ganze Scheibe", () => {
+    const html = render({ selection: "match", home: "match" })
+    expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Alle<\/button>/)
+    expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*>Ohne Probe<\/button>/)
+    // ohne Probe: die Probe blass, keine Serie gedrückt
+    expect(html).toMatch(/data-series="probe"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
+    expect(html).not.toMatch(/data-series="1"[^>]*data-dim="true"/)
+    expect(html).not.toMatch(/data-series="[^"]+"[^>]*aria-pressed="true"/)
+    // nur Wertung: kein „Ohne Probe“
+    const matchOnly = renderToStaticMarkup(
+      createElement(SeriesStrip, {
+        target: LP_10M,
+        shots: CARD.filter((s) => s.kind === "match"),
+        state: initialViewState(),
+        onSelect: () => {},
+        onSelectWhole: () => {},
+      })
+    )
+    expect(matchOnly).not.toContain("Ohne Probe")
   })
 })

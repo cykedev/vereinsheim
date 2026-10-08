@@ -8,7 +8,7 @@ import { CardSummary } from "@vereinsheim/shot-ui/readout/CardSummary"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
-import { probeOnlyAsMatch } from "@vereinsheim/shot-ui/shots"
+import { defaultWhole, probeOnlyAsMatch } from "@vereinsheim/shot-ui/shots"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import type { SeriesKey } from "@vereinsheim/shot-ui/types"
 import { initialViewState, viewReducer, type Layer } from "@vereinsheim/shot-ui/view-state"
@@ -46,6 +46,10 @@ const LAYERS: readonly [Layer, string][] = [
   ["ellipse", "Vertrauensellipse"],
 ]
 
+/** die Schüsse einer Karte, wie die Bausteine sie bekommen: nur Probe ist Training und zeigt sich wie Wertung */
+const cardShots = (targetId: TargetId, raw: readonly RawShot[]) =>
+  probeOnlyAsMatch(toMetricShots(TARGETS[targetId], raw))
+
 function useTheme(theme: Theme) {
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)")
@@ -71,8 +75,12 @@ export function App({ commit }: { commit: string }) {
   const [theme, setTheme] = useState<Theme>(() => (store.get("theme") as Theme | null) ?? "system")
   const [explain, setExplain] = useState(() => store.get("help") === "1")
   const [helpKey, setHelpKey] = useState<string | null>(null)
-  const [state, dispatch] = useReducer(viewReducer, undefined, () =>
-    initialViewState({
+  const [state, dispatch] = useReducer(viewReducer, undefined, () => {
+    // Grundauswahl der ersten Karte: ohne Probe, wenn es Probe und Wertung gibt
+    const home = defaultWhole(cardShots("lp-10m", rawSample("lp-10m", "forty")))
+    return initialViewState({
+      selection: home,
+      home,
       scoring: store.get("scoring") === "rings" ? "rings" : "decimal",
       layers: {
         mpi: store.get("mpi") !== "0",
@@ -81,12 +89,12 @@ export function App({ commit }: { commit: string }) {
         ellipse: store.get("ellipse") === "1",
       },
     })
-  )
+  })
   useTheme(theme)
 
   const target = TARGETS[targetId]
   // nur Probe ist Training und zeigt sich wie Wertung; erst mit Wertung trennt sich die Probe ab
-  const shots = useMemo(() => probeOnlyAsMatch(toMetricShots(target, raw)), [target, raw])
+  const shots = useMemo(() => cardShots(targetId, raw), [targetId, raw])
   const samples = SAMPLES[targetId]
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0]
   useEffect(() => exposeForTest(shots, state), [shots, state])
@@ -96,9 +104,10 @@ export function App({ commit }: { commit: string }) {
     const chosen = available.find((s) => s.id === nextSample) ?? available[0]
     setTargetId(nextTarget)
     setSampleId(chosen.id)
-    setRaw(rawSample(nextTarget, chosen.id))
+    const nextRaw = rawSample(nextTarget, chosen.id)
+    setRaw(nextRaw)
     setPop(null)
-    dispatch({ type: "reset" })
+    dispatch({ type: "reset", home: defaultWhole(cardShots(nextTarget, nextRaw)) })
   }
 
   const place = (event: MouseEvent<HTMLDivElement>) => {
@@ -282,7 +291,7 @@ export function App({ commit }: { commit: string }) {
                 shots={shots}
                 state={state}
                 onSelect={(series) => dispatch({ type: "select", series })}
-                onSelectAll={() => dispatch({ type: "selectAll" })}
+                onSelectWhole={(whole) => dispatch({ type: "selectWhole", whole })}
               />
             </div>
             <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">

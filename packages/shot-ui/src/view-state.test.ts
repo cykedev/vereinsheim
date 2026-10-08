@@ -19,7 +19,10 @@ describe("Auswahl: eine Serie oder alle (Wunsch des Users, 8. Oktober 2026)", ()
   })
 
   it("„Alle“ setzt zurück", () => {
-    const s = viewReducer(viewReducer(start, { type: "select", series: 2 }), { type: "selectAll" })
+    const s = viewReducer(viewReducer(start, { type: "select", series: 2 }), {
+      type: "selectWhole",
+      whole: "all",
+    })
     expect(s.selection).toBe("all")
   })
 
@@ -51,7 +54,10 @@ describe("Antippen eines Schusses", () => {
     // seine eigene Serie gewählt: er bleibt, und mit „alle“ ebenso
     const own = viewReducer(chosen, { type: "select", series: 2 })
     expect(own.chosen).toEqual({ index: 5, series: 2 })
-    expect(viewReducer(own, { type: "selectAll" }).chosen).toEqual({ index: 5, series: 2 })
+    expect(viewReducer(own, { type: "selectWhole", whole: "all" }).chosen).toEqual({
+      index: 5,
+      series: 2,
+    })
   })
 })
 
@@ -83,5 +89,41 @@ describe("Ausschnitt, Ebenen, Wertung", () => {
     viewReducer(start, { type: "select", series: 1 })
     viewReducer(start, { type: "toggle", layer: "mpi" })
     expect(JSON.stringify(start)).toBe(before)
+  })
+})
+
+describe("Alle oder ohne Probe", () => {
+  it("„ohne Probe“ enthält jede Serie und Wertung ohne Serie, nicht die Probe", () => {
+    expect(isSelected("match", 3)).toBe(true)
+    expect(isSelected("match", null)).toBe(true)
+    expect(isSelected("match", "probe")).toBe(false)
+    expect(isSelected("all", "probe")).toBe(true)
+  })
+
+  it("die ganze Scheibe wählen: mit oder ohne Probe", () => {
+    const start = initialViewState({ selection: "match", home: "match" })
+    expect(viewReducer(start, { type: "selectWhole", whole: "all" }).selection).toBe("all")
+    expect(viewReducer(start, { type: "selectWhole", whole: "match" }).selection).toBe("match")
+  })
+
+  it("dieselbe Serie noch einmal führt zur Grundauswahl zurück", () => {
+    let s = initialViewState({ selection: "match", home: "match" })
+    s = viewReducer(s, { type: "select", series: 2 })
+    expect(s.selection).toBe(2)
+    expect(viewReducer(s, { type: "select", series: 2 }).selection).toBe("match")
+  })
+
+  it("ohne Probe fällt ein angetippter Probeschuss weg", () => {
+    const s = viewReducer(initialViewState({ chosen: { index: 0, series: "probe" } }), {
+      type: "selectWhole",
+      whole: "match",
+    })
+    expect(s.chosen).toBeNull()
+  })
+
+  it("neue Scheibe: zurück auf ihre Grundauswahl", () => {
+    const s = viewReducer(initialViewState({ selection: 3 }), { type: "reset", home: "match" })
+    expect(s.selection).toBe("match")
+    expect(s.home).toBe("match")
   })
 })

@@ -56,6 +56,7 @@ const mm = (um: number) => um / 1000
 
 function selectionText(state: ViewState): string {
   if (state.selection === "all") return ""
+  if (state.selection === "match") return ", gewählt: ohne Probe"
   return `, gewählt: ${state.selection === "probe" ? "Probe" : `Serie ${state.selection}`}`
 }
 

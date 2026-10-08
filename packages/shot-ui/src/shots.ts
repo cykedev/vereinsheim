@@ -12,7 +12,7 @@ import {
 } from "@vereinsheim/shot-core/metrics"
 
 import { formatValue } from "./format"
-import type { SeriesKey, Selection } from "./types"
+import type { SeriesKey, Selection, Whole } from "./types"
 import { isSelected } from "./view-state"
 
 /** Schüsse je Serie, wenn eine Karte nur Probe hat */
@@ -74,23 +74,30 @@ export const hasValidPosition = (shot: MetricShot) =>
   selectShots([shot], { need: "position" }).length > 0
 
 /**
- * Die Gruppe für Streukreis, Ellipse, Schwerpunkt und den Ausschnitt „Gruppe“: die Wertungsschüsse der
- * Auswahl mit Lage, ohne Wertung in der Auswahl deren Probeschüsse.
+ * Grundauswahl einer Scheibe: ohne Probe, wenn es Probe und Wertung gibt (richtige Zahlen der Wertung),
+ * sonst alle. Die Seite gibt sie bei einer neuen Scheibe an `reset`.
  */
-export function groupShots(shots: readonly MetricShot[], selection: Selection): MetricShot[] {
-  const chosen = shots.filter((shot) => isSelected(selection, seriesKeyOf(shot)))
-  const match = selectShots(chosen, { kinds: ["match"], need: "position" })
-  return match.length ? match : selectShots(chosen, { kinds: ["probe"], need: "position" })
+export function defaultWhole(shots: readonly MetricShot[]): Whole {
+  const probe = shots.some((shot) => shot.kind === "probe")
+  const match = shots.some((shot) => shot.kind !== "probe")
+  return probe && match ? "match" : "all"
 }
 
 /**
- * Die Schüsse der Auswahl für Kennzahlen: Wertungsschüsse, ohne Wertung in der Auswahl deren Probe.
- * Ohne Filter auf die Lage, denn jede Kennzahl wählt über `computeMetric` selbst, was sie braucht.
+ * Die Gruppe für Streukreis, Ellipse, Schwerpunkt und den Ausschnitt „Gruppe“: die Schüsse der Auswahl
+ * mit gültiger Lage, bei „alle“ mit der Probe, bei „ohne Probe“ ohne.
+ */
+export function groupShots(shots: readonly MetricShot[], selection: Selection): MetricShot[] {
+  const chosen = shots.filter((shot) => isSelected(selection, seriesKeyOf(shot)))
+  return selectShots(chosen, { kinds: ["probe", "match"], need: "position" })
+}
+
+/**
+ * Die Schüsse der Auswahl für Kennzahlen, bei „alle“ mit der Probe. Ohne Filter auf die Lage, denn jede
+ * Kennzahl wählt über `computeMetric` selbst, was sie braucht (auch, ob sie Probe zählt, SF-01).
  */
 export function selectionShots(shots: readonly MetricShot[], selection: Selection): MetricShot[] {
-  const chosen = shots.filter((shot) => isSelected(selection, seriesKeyOf(shot)))
-  const match = chosen.filter((shot) => shot.kind === "match")
-  return match.length ? match : chosen.filter((shot) => shot.kind === "probe")
+  return shots.filter((shot) => isSelected(selection, seriesKeyOf(shot)))
 }
 
 /**

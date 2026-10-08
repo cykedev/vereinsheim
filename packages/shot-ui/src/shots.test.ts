@@ -2,6 +2,7 @@ import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { describe, expect, it } from "vitest"
 
 import {
+  defaultWhole,
   formatScore,
   groupShots,
   hasPosition,
@@ -67,17 +68,17 @@ describe("Schüsse für die Bausteine", () => {
     expect(hasPosition(shot("match", 1, null, 100))).toBe(false)
   })
 
-  it("Gruppe der Auswahl: deren Wertungsschüsse mit Lage, ohne Wertung die gewählte Probe", () => {
-    expect(groupShots(CARD, "all")).toEqual([CARD[2], CARD[3], CARD[4]])
+  it("Gruppe der Auswahl: ihre Schüsse mit Lage", () => {
+    expect(groupShots(CARD, "match")).toEqual([CARD[2], CARD[3], CARD[4]])
     expect(groupShots(CARD, 2)).toEqual([CARD[4]])
     expect(groupShots(CARD, 1)).toEqual([CARD[2], CARD[3]])
     expect(groupShots(CARD, "probe")).toEqual([CARD[0], CARD[1]])
   })
 
-  it("Schüsse der Auswahl für Kennzahlen: auch ohne Lage, ohne Wertung die Probe", () => {
+  it("Schüsse der Auswahl für Kennzahlen: auch ohne Lage", () => {
     const noPosition = shot("match", 1, null, 100)
     const card = [...CARD, noPosition]
-    expect(selectionShots(card, "all")).toEqual([CARD[2], CARD[3], CARD[4], noPosition])
+    expect(selectionShots(card, "match")).toEqual([CARD[2], CARD[3], CARD[4], noPosition])
     expect(selectionShots(card, 1)).toEqual([CARD[2], CARD[3], noPosition])
     expect(selectionShots(card, "probe")).toEqual([CARD[0], CARD[1]])
   })
@@ -101,5 +102,19 @@ describe("Schüsse für die Bausteine", () => {
   it("folgt Wertung, bleibt die Probe Probe; ohne Schüsse nichts", () => {
     expect(probeOnlyAsMatch(CARD)).toBe(CARD)
     expect(probeOnlyAsMatch([])).toEqual([])
+  })
+
+  it("Grundauswahl: ohne Probe, wenn es Probe und Wertung gibt, sonst alle", () => {
+    expect(defaultWhole(CARD)).toBe("match")
+    expect(defaultWhole(CARD.filter((s) => s.kind === "match"))).toBe("all")
+    expect(defaultWhole(CARD.filter((s) => s.kind === "probe"))).toBe("all")
+    expect(defaultWhole([])).toBe("all")
+  })
+
+  it("alle mit Probe rechnen mit der Probe, ohne Probe nur mit der Wertung", () => {
+    expect(selectionShots(CARD, "all")).toEqual(CARD)
+    expect(selectionShots(CARD, "match")).toEqual(CARD.slice(2))
+    expect(groupShots(CARD, "all")).toEqual(CARD)
+    expect(groupShots(CARD, "match")).toEqual(CARD.slice(2))
   })
 })

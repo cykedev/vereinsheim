@@ -9,7 +9,7 @@ import { useMemo } from "react"
 import { caliberRadius, probeCorner, scoreColor, seriesTileView, tileColumns } from "../geometry"
 import { formatTotal, hasPosition, seriesKeyOf } from "../shots"
 import { useElementWidth } from "../target/useAnimatedViewBox"
-import type { SeriesKey } from "../types"
+import type { SeriesKey, Whole } from "../types"
 import { isSelected, type ViewState } from "../view-state"
 
 export interface SeriesStripProps {
@@ -19,7 +19,8 @@ export interface SeriesStripProps {
   state: ViewState
   /** Tippen auf eine kleine Scheibe wählt genau diese Serie; dieselbe noch einmal zeigt wieder alle */
   onSelect?: (key: SeriesKey) => void
-  onSelectAll?: () => void
+  /** die ganze Scheibe wählen: „Alle“ mit Probe oder „Ohne Probe“ (nur, wenn es beides gibt) */
+  onSelectWhole?: (whole: Whole) => void
   className?: string
 }
 
@@ -45,7 +46,7 @@ export function SeriesStrip({
   shots,
   state,
   onSelect,
-  onSelectAll,
+  onSelectWhole,
   className,
 }: SeriesStripProps) {
   const [width, measure] = useElementWidth()
@@ -93,20 +94,27 @@ export function SeriesStrip({
   const calR = caliberRadius(target)
   const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
   const columns = tileColumns(blocks.length, width || 300)
-  const all = state.selection === "all"
+  const whole = state.selection === "all" || state.selection === "match"
+  const mixed = shots.some((s) => s.kind === "probe") && shots.some((s) => s.kind !== "probe")
+  const wholeButton = (value: Whole, label: string) => (
+    <button
+      type="button"
+      aria-pressed={state.selection === value}
+      onClick={onSelectWhole ? () => onSelectWhole(value) : undefined}
+      className="cursor-pointer rounded-full border border-line-strong px-3 py-1 text-[12.5px] leading-none font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-accent-wash aria-pressed:text-foreground"
+    >
+      {label}
+    </button>
+  )
 
   return (
     <div className={cn("grid gap-2.5", className)}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-[13px] text-muted-foreground">Serien</span>
-        <button
-          type="button"
-          aria-pressed={all}
-          onClick={onSelectAll}
-          className="cursor-pointer rounded-full border border-line-strong px-3 py-1 text-[12.5px] leading-none font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-accent-wash aria-pressed:text-foreground"
-        >
-          Alle
-        </button>
+        <div className="flex flex-wrap gap-1.5">
+          {wholeButton("all", "Alle")}
+          {mixed && wholeButton("match", "Ohne Probe")}
+        </div>
       </div>
       <div
         ref={measure}
@@ -114,8 +122,9 @@ export function SeriesStrip({
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 104px))` }}
       >
         {blocks.map((block) => {
-          const pressed = !all && isSelected(state.selection, block.key)
-          const dim = !all && !pressed
+          // ganze Scheibe: keine Kachel gedrückt, ohne Probe die Probe blass; eine Serie: nur sie gedrückt
+          const pressed = !whole && isSelected(state.selection, block.key)
+          const dim = !isSelected(state.selection, block.key)
           const label = `${block.title}: ${block.value}${block.unit ? ` ${block.unit}` : ""}${
             block.sub ? `, ${block.sub}` : ""
           }`
