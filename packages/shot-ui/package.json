@@ -13,7 +13,8 @@
     "./target/TargetView": "./src/target/TargetView.tsx",
     "./target/useAnimatedViewBox": "./src/target/useAnimatedViewBox.ts",
     "./series/SeriesStrip": "./src/series/SeriesStrip.tsx",
-    "./format": "./src/format.ts"
+    "./format": "./src/format.ts",
+    "./metrics/MetricTiles": "./src/metrics/MetricTiles.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

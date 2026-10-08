@@ -57,3 +57,13 @@ export function groupShots(shots: readonly MetricShot[], selection: Selection): 
   const match = selectShots(chosen, { kinds: ["match"], need: "position" })
   return match.length ? match : selectShots(chosen, { kinds: ["probe"], need: "position" })
 }
+
+/**
+ * Die Schüsse der Auswahl für Kennzahlen: Wertungsschüsse, ohne Wertung in der Auswahl deren Probe.
+ * Ohne Filter auf die Lage, denn jede Kennzahl wählt über `computeMetric` selbst, was sie braucht.
+ */
+export function selectionShots(shots: readonly MetricShot[], selection: Selection): MetricShot[] {
+  const chosen = shots.filter((shot) => isSelected(selection, seriesKeyOf(shot)))
+  const match = chosen.filter((shot) => shot.kind === "match")
+  return match.length ? match : chosen.filter((shot) => shot.kind === "probe")
+}

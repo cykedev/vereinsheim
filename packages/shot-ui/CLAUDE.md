@@ -7,17 +7,18 @@ dieselben Bausteine mit echten Daten ein.
 
 ## Exporte
 
-| Export                                           | Datei                              | Inhalt                                                                                                                     |
-| ------------------------------------------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `@vereinsheim/shot-ui/types`                     | `src/types.ts`                     | `SeriesKey`, `Selection`, `ViewBox`                                                                                        |
-| `@vereinsheim/shot-ui/geometry`                  | `src/geometry.ts`                  | Ausschnitte (`targetView`, `groupView`, `seriesTileView`), `screenSizes`, `scoreColor`, `tileColumns`                      |
-| `@vereinsheim/shot-ui/layers`                    | `src/layers.ts`                    | `layerOrder`: Treffer mit Nummer in Abgabefolge, Auswahl oben, angetippter Schuss zuletzt                                  |
-| `@vereinsheim/shot-ui/view-state`                | `src/view-state.ts`                | `viewReducer`, `initialViewState`, `isSelected`: Auswahl, angetippter Schuss, Ausschnitt, Ebenen, Wertung, Visier          |
-| `@vereinsheim/shot-ui/shots`                     | `src/shots.ts`                     | `seriesKeyOf`, `shotLabels` (P1 …, 1 …), `formatScore`, `hasPosition`, `sightAdjustCut`, `groupShots` (Gruppe der Auswahl) |
-| `@vereinsheim/shot-ui/target/TargetView`         | `src/target/TargetView.tsx`        | die Scheibe: Ringe, Treffer mit Nummer, Auswahl blass oder aus, Streukreis, Ellipse, Schwerpunkt, Zoom                     |
-| `@vereinsheim/shot-ui/target/useAnimatedViewBox` | `src/target/useAnimatedViewBox.ts` | weicher Übergang des Ausschnitts (340 ms), `useElementWidth`                                                               |
-| `@vereinsheim/shot-ui/series/SeriesStrip`        | `src/series/SeriesStrip.tsx`       | Serien als kleine Scheiben im gleichen Ausschnitt, Serienergebnis, als Schalter für die Auswahl, dazu „Alle“               |
-| `@vereinsheim/shot-ui/format`                    | `src/format.ts`                    | `formatValue`, `formatSigned`, `unitText`: feste Stellen, Komma, echtes Minus, ohne `Intl`                                 |
+| Export                                           | Datei                              | Inhalt                                                                                                                                                                            |
+| ------------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@vereinsheim/shot-ui/types`                     | `src/types.ts`                     | `SeriesKey`, `Selection`, `ViewBox`                                                                                                                                               |
+| `@vereinsheim/shot-ui/geometry`                  | `src/geometry.ts`                  | Ausschnitte (`targetView`, `groupView`, `seriesTileView`), `screenSizes`, `scoreColor`, `tileColumns`                                                                             |
+| `@vereinsheim/shot-ui/layers`                    | `src/layers.ts`                    | `layerOrder`: Treffer mit Nummer in Abgabefolge, Auswahl oben, angetippter Schuss zuletzt                                                                                         |
+| `@vereinsheim/shot-ui/view-state`                | `src/view-state.ts`                | `viewReducer`, `initialViewState`, `isSelected`: Auswahl, angetippter Schuss, Ausschnitt, Ebenen, Wertung, Visier                                                                 |
+| `@vereinsheim/shot-ui/shots`                     | `src/shots.ts`                     | `seriesKeyOf`, `shotLabels` (P1 …, 1 …), `formatScore`, `hasPosition`, `sightAdjustCut`, `groupShots` (Gruppe der Auswahl), `selectionShots` (Schüsse der Auswahl für Kennzahlen) |
+| `@vereinsheim/shot-ui/target/TargetView`         | `src/target/TargetView.tsx`        | die Scheibe: Ringe, Treffer mit Nummer, Auswahl blass oder aus, Streukreis, Ellipse, Schwerpunkt, Zoom                                                                            |
+| `@vereinsheim/shot-ui/target/useAnimatedViewBox` | `src/target/useAnimatedViewBox.ts` | weicher Übergang des Ausschnitts (340 ms), `useElementWidth`                                                                                                                      |
+| `@vereinsheim/shot-ui/series/SeriesStrip`        | `src/series/SeriesStrip.tsx`       | Serien als kleine Scheiben im gleichen Ausschnitt, Serienergebnis, als Schalter für die Auswahl, dazu „Alle“                                                                      |
+| `@vereinsheim/shot-ui/format`                    | `src/format.ts`                    | `formatValue`, `formatSigned`, `unitText`, `directionText`: feste Stellen, Komma, echtes Minus, ohne `Intl`                                                                       |
+| `@vereinsheim/shot-ui/metrics/MetricTiles`       | `src/metrics/MetricTiles.tsx`      | Kacheln „Trefferbild in Zahlen“ über die Auswahl: Wert, Einheit, kurze Angabe, Kurzsatz als Titel, optional „?“                                                                   |
 
 ## Regeln
 

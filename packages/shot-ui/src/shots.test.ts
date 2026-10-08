@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import {
   formatScore,
   groupShots,
+  selectionShots,
   hasPosition,
   seriesKeyOf,
   shotLabels,
@@ -68,5 +69,13 @@ describe("Schüsse für die Bausteine", () => {
     expect(groupShots(CARD, 2)).toEqual([CARD[4]])
     expect(groupShots(CARD, 1)).toEqual([CARD[2], CARD[3]])
     expect(groupShots(CARD, "probe")).toEqual([CARD[0], CARD[1]])
+  })
+
+  it("Schüsse der Auswahl für Kennzahlen: auch ohne Lage, ohne Wertung die Probe", () => {
+    const noPosition = shot("match", 1, null, 100)
+    const card = [...CARD, noPosition]
+    expect(selectionShots(card, "all")).toEqual([CARD[2], CARD[3], CARD[4], noPosition])
+    expect(selectionShots(card, 1)).toEqual([CARD[2], CARD[3], noPosition])
+    expect(selectionShots(card, "probe")).toEqual([CARD[0], CARD[1]])
   })
 })
