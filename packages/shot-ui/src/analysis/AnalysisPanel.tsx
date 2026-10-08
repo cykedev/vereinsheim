@@ -165,7 +165,7 @@ export function AnalysisPanel({
         open={explain}
         className="rounded-2xl border border-border bg-card p-4"
       >
-        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary pointer-coarse:py-3 [&::-webkit-details-marker]:hidden">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
           <HelpIcon />
           Glossar: die Begriffe kurz erklärt
         </summary>
@@ -185,7 +185,7 @@ export function AnalysisPanel({
         open={explain}
         className="rounded-2xl border border-border bg-card p-4"
       >
-        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary pointer-coarse:py-3 [&::-webkit-details-marker]:hidden">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
           <HelpIcon />
           Typische Fehlschlüsse
         </summary>

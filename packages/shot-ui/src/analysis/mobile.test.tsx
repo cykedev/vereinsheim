@@ -42,12 +42,12 @@ describe("Analyse auf dem Telefon", () => {
     expect(result).toContain("min-[861px]:[&amp;&gt;:last-child:nth-child(odd)]:col-span-2")
   })
 
-  it("Glossar, Fehlschlüsse und „Was heißt das?“ mit großer Fläche bei grobem Zeiger", () => {
+  it("Glossar, Fehlschlüsse und „Was heißt das?“ auf dem Telefon so knapp wie am Desktop", () => {
     const summaries = overview.match(/<summary[^>]*>/g)!
     expect(summaries.length).toBeGreaterThan(3)
-    for (const summary of summaries) expect(summary).toContain("pointer-coarse:py-3")
+    for (const summary of summaries) expect(summary).not.toContain("pointer-coarse")
     const help = renderToStaticMarkup(createElement(HelpDetails, { id: "ergebnis", open: false }))
-    expect(help).toMatch(/<summary[^>]*pointer-coarse:py-3/)
+    expect(help).not.toMatch(/<summary[^>]*pointer-coarse/)
   })
 
   it("Diagrammschrift 12 px, Prozent der Ringbalken nicht kleiner", () => {

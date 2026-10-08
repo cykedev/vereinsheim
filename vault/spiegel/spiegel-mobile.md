@@ -45,7 +45,7 @@ relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statisti
 
 ## Entscheidungen des Users (8. Oktober 2026)
 
-- **Optik wie am Desktop:** Bedienelemente behalten auf dem Telefon ihre Desktop-Höhe (rund 30 px, WCAG-AA 24 px erfüllt). Die zuerst eingebauten 44 px Mindesthöhe und die umgebrochene Reiterleiste wirkten zu hoch.
+- **Optik wie am Desktop:** Bedienelemente behalten auf dem Telefon ihre Desktop-Höhe (rund 30 px, WCAG-AA 24 px erfüllt), auch „Was heißt das?“ bekommt keine größere Tippfläche. Die zuerst eingebauten 44 px Mindesthöhe und die umgebrochene Reiterleiste wirkten zu hoch.
 - **Reiter in einer Zeile:** Auf schmalen Bildschirmen scrollt die Reiterleiste seitlich in sich, der gewählte Reiter rückt ins Bild.
 - **Karten im Raster aus Zeilen:** ab 861 px zwei Spalten, beide Karten einer Zeile gleich hoch, „Was heißt das?“ unten bündig, eine einzelne letzte Karte über die volle Breite; jeder Abstand 16 px. Die Skriptprüfung des Labors misst das.
 
