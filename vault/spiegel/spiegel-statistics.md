@@ -135,29 +135,29 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| T1 | Verlauf jeder Kennzahl | Wert je Scheibe, Woche oder Monat mit gleitendem Schnitt; Familie Pflicht, n-abhängige Maße nur bei gleichem n | Zeitraum | A | SP-2.1 |
-| T2 | Formband | typische Schwankung um den gleitenden Schnitt | Zeitraum | A | SP-2.1 |
-| T3 | Bedeutsame Veränderung | Unterschied zweier Zeiträume gegen die typische Schwankung (lohnend ab 0,3 ×, Hopkins) | Zeitraum | B | SP-2.7 |
+| T1 | Verlauf jeder Kennzahl | Wert je Scheibe aus der Registry über ihre Wertungsschüsse, gleitender Schnitt über die letzten fünf Scheiben („bisher“, solange es keine fünf sind); Familie und Abschnitt (Woche, Monat) wählt der Aufrufer, n-abhängige Maße nur bei gleichem n | Zeitraum | A | SP-2.1, Fachkern L2 (`cardValues`, `periodTrend`) |
+| T2 | Formband | gleitender Schnitt ± 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt, ab zehn Scheiben; ein gleichbleibender Schütze liegt mit etwa zwei von drei Scheiben im Band (B20) | Zeitraum | A | SP-2.1, Fachkern L2 (`periodTrend`) |
+| T3 | Bedeutsame Veränderung | Δ der Mittel zweier Zeiträume gegen die gepoolte Standardabweichung der Scheibenwerte, bedeutsam ab 0,3 × (Hopkins), ab fünf Scheiben je Seite; zählt nur zusammen mit einem Urteil aus C3, denn ohne Veränderung trifft es bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen zu (B19) | Zeitraum | B | SP-2.7, Fachkern L2 (`comparePeriods`) |
 | T4 | Trendsteigung | Theil-Sen je Monat mit Intervall; nicht in die Zukunft verlängern | Zeitraum | B | SP-2.7 |
-| T5 | Boden und Decke | P10, Median und P90 der Scheiben-Ø je Monat | Zeitraum | B | SP-2.1 |
-| T6 | Trainingsumfang | Schüsse, Scheiben, Einheiten, Netto-Zeit je Woche | Zeitraum | A | SP-2.1 |
+| T5 | Boden und Decke | P10, Median und P90 der Scheibenwerte je Abschnitt (Monat), P10 und P90 ab fünf Scheiben | Zeitraum | B | SP-2.1, Fachkern L2 (`periodBuckets`) |
+| T6 | Trainingsumfang | Schüsse (Probe und Wertung), Scheiben und Tage je Woche; keine Netto-Zeit, sie folgt aus den Abständen | Zeitraum | A | SP-2.1, Fachkern L2 (`trainingVolume`) |
 | T7 | Kalender | Trainingstage als Kalender | Zeitraum | B | SP-2.1 |
 | T8 | Erfolgsserien | Wochen in Folge mit Training, Scheiben über dem eigenen Schnitt | Zeitraum | C | SP-2.8 |
 
 ### 9 Rekorde und Meilensteine
 
-Nur endgültige, vollständige Wertung, ohne die Merkmale verdächtig, nur-pdf, neu-gewertet und ausgenommen (SF-15, SF-66); je Familie und je Wertung, wahlweise getrennt nach Training und Wettkampf.
+Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss und ohne die Merkmale nur-pdf, neu-gewertet und ausgenommen (SF-15, SF-66); je Familie und je Wertung, wahlweise nur Training oder nur Wettkampf. R1, R4 (volle Scheibe), R5 und R6 je Schusszahl; bei Gleichstand gilt der frühere; Zählungen (R5–R7) erst ab einem Treffer. Eine Scheibe nur mit Probe zählt nur auf Wunsch, dann ihre Probe wie Wertung in Serien zu zehn (SF-01). Umgesetzt im Fachkern L2 (`recordEligible`, `periodRecords`).
 
 | ID | Kennzahl | Prio | Wo |
 |---|---|---|---|
-| R1 | Beste Scheibe je Schusszahl | A | SP-2.1 |
-| R2 | Beste Serie | A | SP-2.1 |
-| R3 | Bester Teiler | A | SP-2.1 |
-| R4 | Engste Gruppe über genau zehn Schuss und über die volle Scheibe | A | SP-2.1 |
-| R5 | Bester Schuss, Zahl der 10,9 | B | SP-2.1 |
-| R6 | Meiste Zehner und Innenzehner | B | SP-2.1 |
-| R7 | Längste Zehnerfolge | B | SP-2.1 |
-| R8 | Beste Form (Ø über fünf Scheiben) | C | SP-2.1 |
+| R1 | Beste Scheibe je Schusszahl | A | SP-2.1, Fachkern L2 |
+| R2 | Beste Serie voller Länge (die häufigste Serienlänge der Scheibe) | A | SP-2.1, Fachkern L2 |
+| R3 | Bester Teiler, zugleich der beste Schuss | A | SP-2.1, Fachkern L2 |
+| R4 | Engste Gruppe (Streukreis) über eine Serie zu zehn und über die volle Scheibe, nur wenn jeder Schuss eine Lage hat | A | SP-2.1, Fachkern L2 |
+| R5 | Meiste 10,9 (nur in Zehnteln); der beste Schuss ist der beste Teiler (R3) | B | SP-2.1, Fachkern L2 |
+| R6 | Meiste Zehner und Innenzehner | B | SP-2.1, Fachkern L2 |
+| R7 | Längste Zehnerfolge | B | SP-2.1, Fachkern L2 |
+| R8 | Beste Form (höchster voller Schnitt je Schuss über fünf Scheiben) | C | SP-2.1, Fachkern L2 |
 | R9 | Meilensteine (1 000 Schuss, erste 10,9, Abstand zum Rekord) | C | SP-2.8 |
 
 ### 10 Vergleiche
@@ -166,8 +166,8 @@ Nur endgültige, vollständige Wertung, ohne die Merkmale verdächtig, nur-pdf, 
 |---|---|---|---|---|
 | C1 | Serie gegen Serie | alle Serien mit jeder Kennzahl, beste und engste markiert | A | SP-1.8 |
 | C2 | Scheibe gegen Scheibe | zwei Gruppen auf einer Scheibe, Tabelle mit Δ | A | SP-2.2 |
-| C3 | Zeitraum gegen Zeitraum | Ø je Scheibe mit Intervall, Abstandskurven übereinander | A | SP-2.2 |
-| C4 | Gegen den eigenen Schnitt | Δ zum 30-Tage-Schnitt, Perzentil unter den letzten 50 | A | SP-2.2 |
+| C3 | Zeitraum gegen Zeitraum | Werte je Scheibe zweier Zeiträume, Einheit ist die Scheibe: Mann-Whitney zweiseitig, α 0,05, bis 20 Scheiben je Seite genau ausgezählt; Δ der Mittel; Urteil höher, tiefer oder unklar ab fünf Scheiben je Seite, unklar auch, wenn Test und Mittel verschieden zeigen; Fehlalarm höchstens etwa 5 % (B19); Abstandskurven übereinander mit der Oberfläche (L3) | A | SP-2.2, Fachkern L2 (`comparePeriods`) |
+| C4 | Gegen den eigenen Schnitt | Δ der letzten Scheibe zum Schnitt der 30 Tage davor (ab drei Scheiben), Perzentil unter den letzten 50 mit ihr (ab zehn, gleiche zur Hälfte) | A | SP-2.2, Fachkern L2 (`againstOwnAverage`) |
 | C5 | Merkmal A gegen B | Welch-t, Mann-Whitney, F-Test; Urteil besser, schlechter oder unklar | B | SP-2.2 nach SP-2.3 |
 | C6 | Vorher/Nachher | Scheiben vor und nach einem Ereignis, gegen den Trend geprüft | B | SP-2.2 nach SP-2.3 |
 | C7 | Schütze gegen Schütze | nur mit beidseitiger Freigabe, nur je Schuss normiert | C | SP-3.2 |
@@ -234,7 +234,7 @@ Nur endgültige, vollständige Wertung, ohne die Merkmale verdächtig, nur-pdf, 
 
 ## Belege aus Simulationen
 
-Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer (8. Oktober 2026):
+Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026):
 
 ```
 B0   innerhalb σ 39,3 %, innerhalb 2σ 86,5 %
@@ -277,6 +277,9 @@ B18  als gestreckt gemeldet, rund (alt → ohne Ausreißer): 10: 5,0 % → 4,1 %
 B18  als gestreckt gemeldet, a/b 2 (alt → ohne Ausreißer): 10: 35,5 % → 30,3 %, 20: 74,1 % → 68,7 %, 40: 97,4 % → 96,0 %
 B18  als gestreckt gemeldet, a/b 3 (alt → ohne Ausreißer): 10: 77,8 % → 66,5 %, 20: 98,9 % → 96,7 %
 B18  als gestreckt gemeldet, rund mit Abreißern (alt → ohne Ausreißer): 10: 13,4 % → 6,3 %, 20: 15,8 % → 7,6 %, 40: 13,0 % → 7,8 %
+B19  gleich, Urteil trotz gleicher Streuung: 5/5 3,6 % (bedeutsam 61,5 %), 10/10 3,8 % (bedeutsam 50,5 %), 20/20 5,3 % (bedeutsam 36,4 %), 30/30 4,9 % (bedeutsam 23,7 %)
+B19  σ 1,5 → 1,3 mm, „höher“ erkannt: 5/5 55,5 % (bedeutsam 99,0 %), 10/10 94,3 % (bedeutsam 99,8 %), 20/20 100,0 % (bedeutsam 100,0 %), 30/30 100,0 % (bedeutsam 100,0 %)
+B20  Scheiben im Formband (60 Scheiben, ab der zehnten): Median 68,6 %, 95 % zwischen 58,8 % und 80,4 %
 ```
 
 Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05, bis Oktober 2026), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.

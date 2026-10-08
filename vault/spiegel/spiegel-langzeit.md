@@ -9,7 +9,7 @@ governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]"]
 ---
 
-**TL;DR** Die Seite eines Zeitraums ist für den Schützen selbst gebaut wie die Seite einer Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, statt des Schusses wird eine Scheibe abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten Zeitraum ist eingebaut und urteilt nur mit Test. Entwurf vom 8. Oktober 2026; Grundentscheidungen und Vorgaben hat der User getroffen, L1, das Diagramm-Lineal, ist erledigt; als Nächstes kommt L2, der Fachkern für Zeiträume.
+**TL;DR** Die Seite eines Zeitraums ist für den Schützen selbst gebaut wie die Seite einer Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, statt des Schusses wird eine Scheibe abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten Zeitraum ist eingebaut und urteilt nur mit Test. Entwurf vom 8. Oktober 2026; Grundentscheidungen und Vorgaben hat der User getroffen, L1, das Diagramm-Lineal, und L2, der Fachkern für Zeiträume, sind erledigt; als Nächstes kommt L3, die Oberfläche.
 
 ## Entschieden mit dem User (8. Oktober 2026)
 
@@ -160,7 +160,7 @@ Wie auf der Scheibe:
 | Schritt | Inhalt | Roadmap |
 |---|---|---|
 | L1 | Diagramm-Lineal: Werte per Antippen, Kopplung an die Auswahl (erledigt, 8. Oktober 2026) | SP-1.8, Schritt 5 |
-| L2 | Fachkern: Werte je Scheibe → Verlauf, gleitender Schnitt, Formband, Boden und Decke, Vergleich zweier Zeiträume mit Test und Bedeutsamkeit, Rekorde; mit Simulationen | SP-2.1, SP-2.2 |
+| L2 | Fachkern: Werte je Scheibe → Verlauf, gleitender Schnitt, Formband, Boden und Decke, Vergleich zweier Zeiträume mit Test und Bedeutsamkeit, Rekorde; mit Simulationen (erledigt, 8. Oktober 2026: `shot-core/analysis/period.ts` und `records.ts`, Entscheidungen D1–D9 im Plan `plans/2026-10-08-spiegel-zeitraum-kern.md`, Belege B19 und B20) | SP-2.1, SP-2.2 |
 | L3 | Bausteine: Zeitraum-Wähler, Verlauf-Diagramm, Ablesung einer Scheibe, Liste der Scheiben, Kacheln mit Vergleich, Seite eines Zeitraums. Im Labor eine erfundene Saison (etwa 80 Scheiben über sechs Monate mit Formknick und Munitionswechsel) | SP-2.1 |
 | L4 | Langzeit-Trefferbild mit Form, Lage und Dichte | SP-2.7 |
 | L5 | Erkenntnisse Reiter für Reiter, jede mit Mindestzahl und Simulation | SP-2.7 |
@@ -172,4 +172,4 @@ Wie auf der Scheibe:
 - **Kennzahl des Verlaufs** ist Ø je Schuss: verständlich und von der Schusszahl unabhängig.
 - **Langzeit-Trefferbild** startet in der Sicht **Form**: Sie beantwortet „Wie eng schieße ich?“ ohne die
   Wanderung der Lage.
-- **Ein Vergleich urteilt** ab fünf Scheiben je Seite; die Simulation in L2 legt die Zahl endgültig fest.
+- **Ein Vergleich urteilt** ab fünf Scheiben je Seite; die Simulation in L2 bestätigt die Zahl (B19: Fehlalarm höchstens etwa 5 %, eine Verengung von 1,5 auf 1,3 mm erkennt der Vergleich bei 5 gegen 5 Scheiben in gut der Hälfte, bei 10 gegen 10 in gut neun von zehn Fällen). „Bedeutsam“ zeigt die Oberfläche nur neben einem Urteil: Ohne Veränderung trifft es bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen zu.

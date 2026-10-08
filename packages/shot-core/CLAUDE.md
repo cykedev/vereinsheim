@@ -9,18 +9,18 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 
 ## Exporte
 
-| Export                              | Datei               | Inhalt                                                                                                                                                                                                                         |
-| ----------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@vereinsheim/shot-core/units`      | `src/units.ts`      | `mmToUm` (ganze µm oder Fehler)                                                                                                                                                                                                |
-| `@vereinsheim/shot-core/targets`    | `src/targets.ts`    | `defineTarget`, `LG_10M`, `LP_10M`, `TARGETS`, `MAX_DECIMAL_TENTHS`                                                                                                                                                            |
-| `@vereinsheim/shot-core/scoring`    | `src/scoring.ts`    | `scoreFromCoordinates`, `scoreFromDistance`, `distanceUm`, Teiler                                                                                                                                                              |
-| `@vereinsheim/shot-core/discipline` | `src/discipline.ts` | `parseDisciplineId`, `resolveTarget`, `suggestFamily`, Vollständigkeit                                                                                                                                                         |
-| `@vereinsheim/shot-core/verify`     | `src/verify.ts`     | `checkShot`, `verifyCard`, `suggestTargets`, `rescore` (Neu-Wertung)                                                                                                                                                           |
-| `@vereinsheim/shot-core/geometry`   | `src/geometry.ts`   | Schwerpunkt, Streukreis, `extremeSpread`, Radien, Streuung, Ellipse                                                                                                                                                            |
-| `@vereinsheim/shot-core/time`       | `src/time.ts`       | `tempo` in Abgabefolge: Intervalle, Pausen über 180 s, Lücken, Uhrsprünge                                                                                                                                                      |
-| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `METRICS`, `metricByKey`, `computeMetric`, `eligibleShots`, `selectShots`, `inScoring`, `inShotOrder`, `shotNumbers`, `shotSteps`, `stepsInOrder`, `timesWithGaps`, `timesInOrder`, `shotDistanceUm`, `FLAG_*` |
-| `@vereinsheim/shot-core/stats`      | `src/stats.ts`      | Quantil, Median, MAD, IQR, Wilson, lnΓ, c4, χ²- und F-Quantile, Theil-Sen, Mann-Kendall, Ausgleichsgerade                                                                                                                      |
-| `@vereinsheim/shot-core/analysis`   | `src/analysis/*.ts` | Analyse einer Scheibe: Ergebnis, Präzision, Lage, Zeit, Verlauf, Probe, Datenlage; `ANALYSIS_CATALOG` (Funktion → Katalog-IDs)                                                                                                 |
+| Export                              | Datei               | Inhalt                                                                                                                                                                                                                                                                                 |
+| ----------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@vereinsheim/shot-core/units`      | `src/units.ts`      | `mmToUm` (ganze µm oder Fehler)                                                                                                                                                                                                                                                        |
+| `@vereinsheim/shot-core/targets`    | `src/targets.ts`    | `defineTarget`, `LG_10M`, `LP_10M`, `TARGETS`, `MAX_DECIMAL_TENTHS`                                                                                                                                                                                                                    |
+| `@vereinsheim/shot-core/scoring`    | `src/scoring.ts`    | `scoreFromCoordinates`, `scoreFromDistance`, `distanceUm`, Teiler                                                                                                                                                                                                                      |
+| `@vereinsheim/shot-core/discipline` | `src/discipline.ts` | `parseDisciplineId`, `resolveTarget`, `suggestFamily`, Vollständigkeit                                                                                                                                                                                                                 |
+| `@vereinsheim/shot-core/verify`     | `src/verify.ts`     | `checkShot`, `verifyCard`, `suggestTargets`, `rescore` (Neu-Wertung)                                                                                                                                                                                                                   |
+| `@vereinsheim/shot-core/geometry`   | `src/geometry.ts`   | Schwerpunkt, Streukreis, `extremeSpread`, Radien, Streuung, Ellipse                                                                                                                                                                                                                    |
+| `@vereinsheim/shot-core/time`       | `src/time.ts`       | `tempo` in Abgabefolge: Intervalle, Pausen über 180 s, Lücken, Uhrsprünge                                                                                                                                                                                                              |
+| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `METRICS`, `metricByKey`, `computeMetric`, `eligibleShots`, `selectShots`, `inScoring`, `inShotOrder`, `shotNumbers`, `shotSteps`, `stepsInOrder`, `timesWithGaps`, `timesInOrder`, `shotDistanceUm`, `FLAG_*`                                                         |
+| `@vereinsheim/shot-core/stats`      | `src/stats.ts`      | Quantil, Median, MAD, IQR, Wilson, lnΓ, c4, χ²- und F-Quantile, Theil-Sen, Mann-Kendall, Ausgleichsgerade, Mann-Whitney, zweiseitiges p der Normalverteilung                                                                                                                           |
+| `@vereinsheim/shot-core/analysis`   | `src/analysis/*.ts` | Analyse einer Scheibe: Ergebnis, Präzision, Lage, Zeit, Verlauf, Probe, Datenlage; über viele Scheiben (`period.ts`: Werte je Scheibe, Verlauf, Formband, Boden und Decke, Umfang, Vergleich, eigener Schnitt) und Rekorde (`records.ts`); `ANALYSIS_CATALOG` (Funktion → Katalog-IDs) |
 
 ## Regeln
 
@@ -74,15 +74,23 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   Katalog-IDs in `ANALYSIS_CATALOG` (Test erzwingt das), und `@vereinsheim/shot-help` braucht für jede
   dieser IDs eine Erklärung (Test dort). Ohne Erklärung bleibt das Gate rot.
 - **Simulation nachziehen:** Ändert sich eine Auswertung, die eine Zahl in einem Hilfetext belegt
-  (Trend, Ringverlust, Ausreißer, Form, σ, Probe), `pnpm --filter @vereinsheim/shot-help simulate`
+  (Trend, Ringverlust, Ausreißer, Form, σ, Probe, Vergleich zweier Zeiträume, Formband),
+  `pnpm --filter @vereinsheim/shot-help simulate`
   laufen lassen und den Block „Belege aus Simulationen“ in `vault/spiegel/spiegel-statistics.md` samt den
   zitierenden Texten angleichen. Das Gate prüft das nicht (Laufzeit, Zufallszahlen).
+- **Über viele Scheiben** (Plan L2, Oktober 2026): Einheit ist die Scheibe. Werte je Scheibe kommen aus der
+  Registry (`cardValues`), Tests laufen über Scheiben, nie über alle Schüsse. Familie, Woche, Monat und Tag
+  wählt der Aufrufer, denn die Anzeige-Zeitzone liegt in der App. Eine Scheibe nur mit Probe zählt nur mit
+  `includeProbeOnly`, dann über `cardShots` (`analysis/card-shots.ts`, nicht exportiert) wie
+  `probeOnlyAsMatch` in shot-ui.
 - **Ehrlich statt scheingenau.** Unsicherheit nur mit einem anerkannten Verfahren (Wilson, χ²,
   Hotelling mit F(2, n − 2), Mann-Kendall mit Bindungskorrektur über die Normalnäherung, Ausreißer
   schrittweise als verallgemeinerter ESD nach Rosner, je Schritt der weiteste gegen die übrigen mit
-  F(2, 2(m − 2)), Bonferroni und α 0,04, Form mit Mauchly); Aussagen wie „echt“ oder „klar“ nur über der
+  F(2, 2(m − 2)), Bonferroni und α 0,04, Form mit Mauchly, Vergleich zweier Zeiträume mit Mann-Whitney,
+  genau ausgezählt bis 20 Scheiben je Seite); Aussagen wie „echt“ oder „klar“ nur über der
   Grenze, sonst kein Urteil. Ein Urteil und die Zahl daneben dürfen sich nicht
-  widersprechen (der Trend ist nur „klar“, wenn die Gerade dieselbe Richtung zeigt wie der Test). Unter
+  widersprechen (der Trend ist nur „klar“, wenn die Gerade dieselbe Richtung zeigt wie der Test; ein
+  Vergleich ist nur „höher“ oder „tiefer“, wenn Rangtest und Mittel dieselbe Richtung zeigen). Unter
   der Mindestzahl `null`. Testwerte aus Tabellen oder Hand-Rechnung, nicht aus der eigenen
   Implementierung; Testdaten symmetrisch und ganzzahlig, wenn sie einen Schwerpunkt in der Mitte
   brauchen (`Math.round` rundet −x,5 anders als x,5).

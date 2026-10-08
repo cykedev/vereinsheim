@@ -150,10 +150,10 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ## Phase 2 · Auswertung
 
 ### SP-2.1 Verläufe und Rekorde
-- **Umfang:** Verlauf jeder Kennzahl je Disziplin-Familie mit Filtern und gleitendem Schnitt, Rekorde je Wertung (ganze Ringe, Zehntel), Kalender ([[spiegel-metrics]]); aus dem Katalog ([[spiegel-statistics]]) T1, T2, T5–T7, R1–R8, V3–V5; für Verläufe über unterschiedliche Schusszahlen σ̂ statt Streukreis; Sonderfälle SF-60, SF-64, SF-65, SF-66. Seite und Bedienung: [[spiegel-langzeit]] (Entwurf, Oktober 2026). **Hängt ab von:** SP-1.2, SP-1.8, SP-1.10. **Status:** offen.
+- **Umfang:** Verlauf jeder Kennzahl je Disziplin-Familie mit Filtern und gleitendem Schnitt, Rekorde je Wertung (ganze Ringe, Zehntel), Kalender ([[spiegel-metrics]]); aus dem Katalog ([[spiegel-statistics]]) T1, T2, T5–T7, R1–R8, V3–V5; für Verläufe über unterschiedliche Schusszahlen σ̂ statt Streukreis; Sonderfälle SF-60, SF-64, SF-65, SF-66. Seite und Bedienung: [[spiegel-langzeit]] (Entwurf, Oktober 2026). **Hängt ab von:** SP-1.2, SP-1.8, SP-1.10. **Status:** Fachkern erledigt (L2, 8. Oktober 2026: T1, T2, T5, T6, R1–R8 in `shot-core/analysis`), Oberfläche mit L3; T7 (Kalender) und V3–V5 offen.
 
 ### SP-2.2 Direkte Vergleiche und Beobachtungen
-- **Umfang:** Serie, Scheibe, Zeitraum, Merkmal, Baseline; Sätze aus Kennzahlen nach den Regeln für ehrliche Zahlen; aus dem Katalog C1–C6 (C5 und C6 nach SP-2.3) und die Beobachtungen in Worten ([[spiegel-statistics]]). **Hängt ab von:** SP-2.1. **Status:** offen.
+- **Umfang:** Serie, Scheibe, Zeitraum, Merkmal, Baseline; Sätze aus Kennzahlen nach den Regeln für ehrliche Zahlen; aus dem Katalog C1–C6 (C5 und C6 nach SP-2.3) und die Beobachtungen in Worten ([[spiegel-statistics]]). **Hängt ab von:** SP-2.1. **Status:** Fachkern für C3, C4 und T3 erledigt (L2, 8. Oktober 2026), Oberfläche mit L3; der Rest offen.
 
 ### SP-2.3 Notizen, Tags, Ausrüstung
 - **Umfang:** Kontext an Scheibe und Serie, Grundlage für Vergleiche nach Merkmal (Munitionslos, Griff). Ein Ereignis „Visier verstellt“ gibt es nicht (User, 8. Oktober 2026, [[spiegel-open-questions]]); S1, S3 und S4 nehmen die letzten fünf Probeschüsse. **Hängt ab von:** SP-1.8. **Status:** offen.
