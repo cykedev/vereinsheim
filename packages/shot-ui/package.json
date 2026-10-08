@@ -8,7 +8,10 @@
     "./types": "./src/types.ts",
     "./geometry": "./src/geometry.ts",
     "./layers": "./src/layers.ts",
-    "./view-state": "./src/view-state.ts"
+    "./view-state": "./src/view-state.ts",
+    "./shots": "./src/shots.ts",
+    "./target/TargetView": "./src/target/TargetView.tsx",
+    "./target/useAnimatedViewBox": "./src/target/useAnimatedViewBox.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
