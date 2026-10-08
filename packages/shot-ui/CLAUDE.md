@@ -1,9 +1,9 @@
 # @vereinsheim/shot-ui — Claude Scope-Notiz
 
 Die Bausteine von Spiegel als echte React-Komponenten: Scheibe, Serien als kleine Scheiben und was
-folgt (Plan `plans/2026-10-08-spiegel-shot-ui-fundament.md`, ADR-030, Roadmap SP-1.8). Vorbild ist die
-Spielwiese (`tools/spielwiese`), ausprobiert wird im Labor (`tools/labor`); später setzt `apps/spiegel`
-dieselben Bausteine mit echten Daten ein.
+folgt (Pläne `plans/2026-10-08-spiegel-shot-ui-fundament.md` und `…-kacheln.md`, ADR-030, Roadmap
+SP-1.8). Vorbild ist die Spielwiese (`tools/spielwiese`), ausprobiert wird im Labor (`tools/labor`);
+später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 
 ## Exporte
 
