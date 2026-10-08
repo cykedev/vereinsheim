@@ -1,12 +1,18 @@
 import {
   cardTrend,
+  fatigue,
   movingAverage,
+  mpiPath,
   pauseRecovery,
   rhythmProfile,
+  seriesCurve,
+  seriesSpread,
+  tempoSpread,
 } from "@vereinsheim/shot-core/analysis"
+import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 import { describe, expect, it } from "vitest"
 
-import { durationText, formatSigned } from "../../format"
+import { durationText, formatSigned, formatValue, percentText } from "../../format"
 import { fortyCard } from "../testCard"
 import { cardHtml, cardText, renderTab } from "../testPanel"
 
@@ -69,5 +75,82 @@ describe("Reiter Zeit und Verlauf, Diagramme", () => {
     )
     const short = renderTab("time", { shots: BASE.slice(0, 5) })
     expect(cardText(short, "verlauf-und-trend")).toContain("Einen Trend gibt es ab 10 Schuss.")
+  })
+})
+
+describe("Reiter Zeit und Verlauf, Karten", () => {
+  const html = renderTab("time")
+
+  it("Tempo und Dauer aus dem Fachkern", () => {
+    const pace = tempoSpread(BASE)!
+    const duration = computeMetric(inScoring(metricByKey("time.duration")!, "decimal"), BASE)!
+    const text = cardText(html, "tempo-und-dauer")
+    expect(text).toContain(`Tempo (Median) ${formatValue(pace.medianMs / 1000, 0)} s`)
+    expect(text).toContain(
+      `Mittlere Hälfte (IQR) ${formatValue(pace.iqrMs / 1000, 0)} s (${percentText(pace.relative!)} vom Median)`
+    )
+    expect(text).toContain(`Dauer ${durationText(duration * 1000)}`)
+  })
+
+  it("Tempo nennt dieselbe Mindestzahl wie die Kachel", () => {
+    const three = renderTab("time", { shots: BASE.slice(0, 3) })
+    expect(tempoSpread(BASE.slice(0, 3))).toBeNull()
+    expect(cardText(three, "tempo-und-dauer")).toContain("ab 4 Schuss mit Zeit")
+    const timeless = BASE.map((s) => ({ ...s, firedAtMs: null }))
+    expect(cardText(renderTab("time", { shots: timeless }), "tempo-und-dauer")).toContain(
+      "ab 4 Schuss mit Zeit"
+    )
+  })
+
+  it("Pausen: je Pause Dauer und Wirkung danach", () => {
+    const recovery = pauseRecovery(BASE, "decimal")!
+    const profile = rhythmProfile(BASE)
+    const text = cardText(html, "pausen")
+    expect(text).toContain(
+      `Pausen ${recovery.pauses} · zusammen ${durationText(recovery.totalPauseMs)}`
+    )
+    for (const e of recovery.effects) {
+      const interval = profile.find((p) => p.number === e.afterShot)!.intervalMs!
+      expect(text).toContain(
+        `Vor Schuss ${e.afterShot} ${durationText(interval)} Pause · danach ${formatSigned(e.deltaRings!, 2)} Ringe`
+      )
+    }
+    const calm = renderTab("time", { shots: BASE.slice(0, 20) })
+    expect(cardText(calm, "pausen")).toContain("Keine Pause über drei Minuten.")
+  })
+
+  it("Ermüdung erst ab 20 Wertungsschüssen", () => {
+    const tired = fatigue(BASE, "decimal")!
+    const text = cardText(html, "ermuedung")
+    expect(text).toContain(`Erste zehn Ø ${formatValue(tired.firstMeanRings, 2)}`)
+    expect(text).toContain(`Letzte zehn Ø ${formatValue(tired.lastMeanRings, 2)}`)
+    expect(text).toContain(`Unterschied ${formatSigned(tired.deltaRings, 2)} Ringe`)
+    expect(text).toContain(`R50 letzte gegen erste ${formatSigned(tired.deltaR50Um! / 1000, 2)} mm`)
+    expect(cardText(renderTab("time", { shots: BASE.slice(0, 19) }), "ermuedung")).toContain(
+      "ab 20 Wertungsschüssen"
+    )
+  })
+
+  it("Serien im Vergleich: eine Zeile je Serie mit Ergebnis, R50 und Versatz", () => {
+    const series = seriesCurve(BASE, "decimal")
+    const spreads = seriesSpread(BASE)
+    const path = mpiPath(BASE)
+    const card = cardHtml(html, "serien-im-vergleich")
+    const rows = [...card.matchAll(/<tr data-series-row="(\d+)"[^>]*>(.*?)<\/tr>/g)]
+    expect(rows.map((m) => Number(m[1]))).toEqual(series.map((p) => p.series))
+    for (const [i, p] of series.entries()) {
+      const cells = [...rows[i][2].matchAll(/<td[^>]*>(.*?)<\/td>/g)].map((m) =>
+        m[1].replace(/<[^>]+>/g, "")
+      )
+      const r50 = spreads.find((q) => q.series === p.series)!.r50Um
+      const offset = path.find((q) => q.series === p.series)!.offsetUm
+      expect(cells).toEqual([
+        `S${p.series} (${p.shots})`,
+        formatValue(p.total!, 1),
+        r50 === null ? "–" : formatValue(r50 / 1000, 2),
+        formatValue(offset / 1000, 2),
+      ])
+    }
+    expect(html).toMatch(/data-card="serien-im-vergleich" data-wide="true"/)
   })
 })

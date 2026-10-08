@@ -1,13 +1,23 @@
 "use client"
 
-import { cardTrend, rhythmProfile } from "@vereinsheim/shot-core/analysis"
+import {
+  cardTrend,
+  fatigue,
+  mpiPath,
+  pauseRecovery,
+  rhythmProfile,
+  seriesCurve,
+  seriesSpread,
+  tempoSpread,
+} from "@vereinsheim/shot-core/analysis"
+import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 import type { ReactNode } from "react"
 
-import { formatSigned } from "../../format"
+import { durationText, formatSigned, formatValue, percentText } from "../../format"
 import { CourseChart } from "../charts/CourseChart"
 import { ChartSlot } from "../charts/frame"
 import { RhythmChart } from "../charts/RhythmChart"
-import { AnalysisCard, Note } from "../parts"
+import { AnalysisCard, KeyValues, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
 
 /** Zeichen der Legende im Verlauf, 14 px */
@@ -22,11 +32,30 @@ function LegendItem({ children, label }: { children: ReactNode; label: string })
   )
 }
 
-/** Zeit und Verlauf: Verlauf und Trend, Rhythmus (breit), über die Grundlage */
+const Muted = ({ children }: { children: ReactNode }) => (
+  <span className="font-normal text-muted-foreground">{children}</span>
+)
+
+/** Mindestzahl für das Tempo, wie in der Kachel „Tempo“ (D8) */
+const TEMPO_MISSING = "ab 4 Schuss mit Zeit"
+
+/**
+ * Zeit und Verlauf: Verlauf und Trend, Rhythmus, Tempo und Dauer, Pausen, Ermüdung, Serien im
+ * Vergleich, über die Grundlage
+ */
 export function timeCards({ input, explain }: CardContext): CardSpec[] {
   const { base, scoring } = input
   const trend = cardTrend(base, scoring)
-  const timed = rhythmProfile(base).filter((p) => p.intervalMs !== null).length
+  const profile = rhythmProfile(base)
+  const timed = profile.filter((p) => p.intervalMs !== null).length
+  const pace = tempoSpread(base)
+  const duration = computeMetric(inScoring(metricByKey("time.duration")!, scoring), base)
+  const recovery = pauseRecovery(base, scoring)
+  const tired = fatigue(base, scoring)
+  const series = seriesCurve(base, scoring)
+  const spreads = seriesSpread(base)
+  const path = mpiPath(base)
+  const digits = scoring === "rings" ? 0 : 1
 
   return [
     {
@@ -87,6 +116,172 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
             </>
           ) : (
             <Note>ab 3 Schuss mit Zeit</Note>
+          )}
+        </AnalysisCard>
+      ),
+    },
+    {
+      key: "tempo-und-dauer",
+      element: (
+        <AnalysisCard help="tempo-und-dauer" explain={explain}>
+          {pace || duration !== null ? (
+            <>
+              <KeyValues
+                rows={[
+                  [
+                    "Tempo (Median)",
+                    pace ? (
+                      `${formatValue(pace.medianMs / 1000, 0)} s`
+                    ) : (
+                      <>
+                        –<Muted>{` ${TEMPO_MISSING}`}</Muted>
+                      </>
+                    ),
+                  ],
+                  pace && [
+                    "Mittlere Hälfte (IQR)",
+                    <>
+                      {`${formatValue(pace.iqrMs / 1000, 0)} s`}
+                      <Muted>{` (${pace.relative === null ? "–" : percentText(pace.relative)} vom Median)`}</Muted>
+                    </>,
+                  ],
+                  ["Dauer", duration === null ? "–" : durationText(duration * 1000)],
+                ]}
+              />
+              <Note>
+                Konstanter ist nicht automatisch besser: Die Streuung zeigt, wie gleichmäßig du im
+                Ablauf bist.
+              </Note>
+            </>
+          ) : (
+            <Note>{TEMPO_MISSING}</Note>
+          )}
+        </AnalysisCard>
+      ),
+    },
+    {
+      key: "pausen",
+      element: (
+        <AnalysisCard help="pausen" explain={explain}>
+          {!recovery ? (
+            <Note>ab 1 Schuss mit Zeit</Note>
+          ) : recovery.effects.length ? (
+            <>
+              <KeyValues
+                rows={[
+                  [
+                    "Pausen",
+                    `${recovery.pauses} · zusammen ${durationText(recovery.totalPauseMs)}`,
+                  ],
+                  ...recovery.effects.map((effect) => {
+                    const interval = profile.find((p) => p.number === effect.afterShot)?.intervalMs
+                    return [
+                      `Vor Schuss ${effect.afterShot}`,
+                      `${interval ? `${durationText(interval)} ` : ""}Pause · danach ${effect.deltaRings === null ? "–" : `${formatSigned(effect.deltaRings, 2)} Ringe`}`,
+                    ] as const
+                  }),
+                ]}
+              />
+              <Note>
+                „Danach“: Ø der nächsten drei Schuss gegen den Ø der übrigen. Drei Schuss sind
+                wenig; ein Muster zeigt der Vergleich über Abende.
+              </Note>
+            </>
+          ) : (
+            <Note>Keine Pause über drei Minuten.</Note>
+          )}
+        </AnalysisCard>
+      ),
+    },
+    {
+      key: "ermuedung",
+      element: (
+        <AnalysisCard help="ermuedung" explain={explain}>
+          {tired ? (
+            <>
+              <KeyValues
+                rows={[
+                  ["Erste zehn", `Ø ${formatValue(tired.firstMeanRings, 2)}`],
+                  ["Letzte zehn", `Ø ${formatValue(tired.lastMeanRings, 2)}`],
+                  ["Unterschied", `${formatSigned(tired.deltaRings, 2)} Ringe`],
+                  tired.deltaR50Um !== null && [
+                    "R50 letzte gegen erste",
+                    `${formatSigned(tired.deltaR50Um / 1000, 2)} mm`,
+                  ],
+                ]}
+              />
+              <Note>
+                Eine Scheibe ist verrauscht; ein Muster zeigt erst der Vergleich über mehrere
+                Scheiben.
+              </Note>
+            </>
+          ) : (
+            <Note>ab 20 Wertungsschüssen</Note>
+          )}
+        </AnalysisCard>
+      ),
+    },
+    {
+      key: "serien-im-vergleich",
+      wide: true,
+      element: (
+        <AnalysisCard help="serien-im-vergleich" wide explain={explain}>
+          {series.length ? (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-[13px] tabular-nums">
+                  <thead className="text-xs text-muted-foreground">
+                    <tr>
+                      <th scope="col" className="px-2 py-1.5 text-left font-medium">
+                        Serie
+                      </th>
+                      <th scope="col" className="px-2 py-1.5 text-right font-medium">
+                        Ergebnis
+                      </th>
+                      <th scope="col" className="px-2 py-1.5 text-right font-medium">
+                        R50 mm
+                      </th>
+                      <th scope="col" className="px-2 py-1.5 text-right font-medium">
+                        Versatz mm
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {series.map((p) => {
+                      const r50 = spreads.find((q) => q.series === p.series)?.r50Um ?? null
+                      const offset = path.find((q) => q.series === p.series)?.offsetUm
+                      return (
+                        <tr
+                          key={p.series}
+                          data-series-row={p.series}
+                          className="border-t border-border"
+                        >
+                          <td className="px-2 py-1.5 font-semibold">
+                            {`S${p.series}`}
+                            <Muted>{` (${p.shots})`}</Muted>
+                          </td>
+                          <td className="px-2 py-1.5 text-right">
+                            {p.total === null ? "–" : formatValue(p.total, digits)}
+                          </td>
+                          <td className="px-2 py-1.5 text-right">
+                            {r50 === null ? "–" : formatValue(r50 / 1000, 2)}
+                          </td>
+                          <td className="px-2 py-1.5 text-right">
+                            {offset === undefined ? "–" : formatValue(offset / 1000, 2)}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <Note>
+                Versatz: Abstand des Serien-Schwerpunkts zum Schwerpunkt der Scheibe. R50 ab fünf
+                Schuss je Serie.
+              </Note>
+            </>
+          ) : (
+            <Note>ab 1 Schuss</Note>
           )}
         </AnalysisCard>
       ),
