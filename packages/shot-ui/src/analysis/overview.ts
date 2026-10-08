@@ -64,7 +64,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       total === null ? null : rings(total),
       "Ringe",
       `Ø ${mean === null ? "–" : formatValue(mean, 2)} je Schuss · ${base.length} Schuss`,
-      "ab 1 Schuss"
+      base.length ? "nicht jeder Schuss mit Wert" : "ab 1 Schuss"
     ),
     tile(
       "Zehnerquote",

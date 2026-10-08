@@ -156,10 +156,13 @@ export function AnalysisPanel({
         />
       </div>
       {layout(cards)}
-      <div data-coverage="true" className="grid gap-2">
-        <p className="text-[13px] text-muted-foreground">{coverageText(shots, state.scoring)}</p>
-        <HelpDetails id="datenlage" open={explain} />
-      </div>
+      {/* ohne Schüsse keine Datenlage: sie behauptete sonst „alle mit Lage, Zeit und Wert“ */}
+      {shots.length > 0 && (
+        <div data-coverage="true" className="grid gap-2">
+          <p className="text-[13px] text-muted-foreground">{coverageText(shots, state.scoring)}</p>
+          <HelpDetails id="datenlage" open={explain} />
+        </div>
+      )}
       <details
         data-glossary="true"
         open={explain}

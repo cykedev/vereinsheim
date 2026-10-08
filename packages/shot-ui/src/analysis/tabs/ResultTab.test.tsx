@@ -105,6 +105,11 @@ describe("Reiter Ergebnis", () => {
     expect(cardText(text, "quoten")).toMatch(/· \d+\/40/)
   })
 
+  it("fehlt einem Schuss der Wert, sagt die Karte Ergebnis das", () => {
+    const blind = BASE.map((s, i) => (i === 5 ? { ...s, decimalTenths: null, ring: null } : s))
+    expect(cardText(render("decimal", blind), "ergebnis")).toContain("nicht jeder Schuss mit Wert")
+  })
+
   it("ohne Schuss mit Lage keine Teiler", () => {
     const noPosition = BASE.slice(0, 3).map((s) => ({
       ...s,

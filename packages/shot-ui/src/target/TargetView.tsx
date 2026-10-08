@@ -267,7 +267,8 @@ export function TargetView({
                   r={calR}
                   fill={shot.ring === null ? "none" : color}
                   fillOpacity={SHOT_FILL_OPACITY}
-                  stroke={faded ? "none" : "var(--shot-edge)"}
+                  // ohne Wert ist der Rand das ganze Zeichen: blass grau statt ganz weg
+                  stroke={faded ? (shot.ring === null ? FADED_COLOR : "none") : "var(--shot-edge)"}
                   strokeWidth={1}
                   strokeDasharray={shot.ring === null ? "2 2" : undefined}
                   pointerEvents={hitArea}

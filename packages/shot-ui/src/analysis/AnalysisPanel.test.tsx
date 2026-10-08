@@ -98,7 +98,7 @@ describe("AnalysisPanel", () => {
     expect(render(CARD)).toContain("über alle Schüsse ohne Probe")
     expect(render(CARD.slice(0, 2))).toContain("über alle Probeschüsse")
     expect(render(probeOnlyAsMatch(CARD.slice(0, 2)))).toContain("über alle Probeschüsse")
-    expect(render(CARD.slice(2))).toContain("über alle Schüsse")
+    expect(render(CARD.slice(2))).toContain("Analyse über alle Schüsse<")
   })
 
   it("Datenlage unter jedem Reiter, mit Merkmalen in Worten und der Wertung", () => {
@@ -136,5 +136,7 @@ describe("AnalysisPanel", () => {
 
   it("ohne Schüsse eine Karte, die sagt, was fehlt", () => {
     expect(render([])).toContain("Noch keine Schüsse auf dieser Scheibe.")
+    // keine Datenlage, die „alle mit Lage, Zeit und Wert“ behauptet
+    expect(render([])).not.toContain("data-coverage")
   })
 })

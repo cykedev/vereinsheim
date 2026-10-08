@@ -4,6 +4,7 @@ import { helpTopic } from "@vereinsheim/shot-help/lookup"
 import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
+import { formatValue } from "../format"
 import { HelpDetails, helpEntry } from "../help/HelpDetails"
 
 // Gemeinsame Teile der Analyse-Karten (Spielwiese `card`, `kv`, `pill`, `note`, `intervalBar`, `scaleBar`).
@@ -108,8 +109,9 @@ export interface IntervalBarProps {
   label: string
 }
 
+// ohne Spanne (alle Treffer in einem Punkt) liegt alles am Anfang
 const percent = (v: number, min: number, max: number) =>
-  `${Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100))}%`
+  max > min ? `${Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100))}%` : "0%"
 
 /** 95-%-Bereich als Balken mit dem gemessenen Wert als Punkt (Spielwiese `intervalBar`) */
 export function IntervalBar({ value, low, high, min, max, label }: IntervalBarProps) {
@@ -159,11 +161,10 @@ export function ScaleBar({
         x={x + length / 2}
         y={y - 5}
         textAnchor="middle"
-        fontSize={11}
         fill="var(--muted-foreground)"
         style={{ fontFamily: "var(--font-mono)" }}
       >
-        {`${step < 1 ? step.toFixed(1).replace(".", ",") : step} mm`}
+        {`${formatValue(step, step < 1 ? 1 : 0)} mm`}
       </text>
     </g>
   )

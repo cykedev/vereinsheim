@@ -64,6 +64,15 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(t("Tempo").hint).toBe("ab 4 Schuss mit Zeit")
     expect(t("Probe → Wertung").hint).toBe("ab 3 Probe- und 3 Wertungsschüssen")
   })
+
+  it("fehlt einem Schuss der Wert, nennt die Kachel Ergebnis das statt der Mindestzahl", () => {
+    const blind = CARD.map((s, i) => (i === 20 ? { ...s, decimalTenths: null, ring: null } : s))
+    const t = overviewTiles(analysisInput(blind, "decimal", LP_10M)).find(
+      (x) => x.label === "Ergebnis"
+    )!
+    expect(t.value).toBeNull()
+    expect(t.hint).toBe("nicht jeder Schuss mit Wert")
+  })
 })
 
 describe("Beobachtungen in Worten", () => {
@@ -72,7 +81,9 @@ describe("Beobachtungen in Worten", () => {
   it("mindestens fünf Sätze, in der Reihenfolge der Spielwiese", () => {
     expect(sentences.length).toBeGreaterThanOrEqual(5)
     expect(sentences[0].icon).toBe("position")
-    expect(sentences[0].text).toMatch(mpiConfidence(base)!.real ? /echt/ : /Zufall/)
+    expect(sentences[0].text).toMatch(
+      mpiConfidence(base)!.real ? /^Die Lage ist echt/ : /vom Zufall nicht zu unterscheiden/
+    )
     expect(sentences.map((s) => s.icon)).toContain("spread")
   })
 

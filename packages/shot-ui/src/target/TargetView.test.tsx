@@ -86,6 +86,20 @@ describe("TargetView: Ebenen", () => {
 })
 
 describe("TargetView: Auswahl und Antippen", () => {
+  it("ein blasser Schuss ohne Wert bleibt sichtbar: grauer gestrichelter Rand", () => {
+    const blind = { ...shot("match", 1, 500, 500, 100), decimalTenths: null, ring: null }
+    const html = renderToStaticMarkup(
+      createElement(TargetView, {
+        target: LP_10M,
+        shots: [...CARD, blind],
+        state: initialViewState({ selection: 2 }),
+      })
+    )
+    expect(html).toMatch(
+      /<g data-shot="6" data-faded="true"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*fill="none"[^>]*stroke="var\(--shot-faded\)"[^>]*stroke-dasharray="2 2"/
+    )
+  })
+
   it("gewählte Serie normal und oben, die übrigen blass, ohne Nummer und nicht antippbar", () => {
     const html = render({ selection: 2 })
     expect(shotOrder(html)).toEqual(["P1", "P2", "1", "2", "3", "4", "5"])

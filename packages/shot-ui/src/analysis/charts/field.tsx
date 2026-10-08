@@ -1,7 +1,8 @@
 import { ScaleBar } from "../parts"
 
 // Feld um einen Punkt (Spielwiese `fieldFrame`, `scaleBar`): quadratisch, höchstens 260 px hoch, mittig in
-// der Breite; µm nach Pixeln mit y nach oben.
+// der Breite; µm nach Pixeln mit y nach oben. Mindestens 0,25 mm Ausdehnung, sonst wird der kleinste
+// Maßstab (0,1 mm) länger als das Feld.
 
 export interface FieldFrame {
   width: number
@@ -14,10 +15,12 @@ export interface FieldFrame {
   Y: (um: number) => number
 }
 
+const MIN_EXTENT_UM = 250
+
 export function fieldFrame(width: number, extentUm: number): FieldFrame {
   const size = Math.min(width, 260)
   const half = size / 2 - 14
-  const k = half / Math.max(extentUm, 1)
+  const k = half / Math.max(extentUm, MIN_EXTENT_UM)
   const cx = width / 2
   const cy = size / 2
   return { width, size, k, cx, cy, X: (um) => cx + um * k, Y: (um) => cy - um * k }

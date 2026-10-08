@@ -31,7 +31,8 @@ export function SeriesChart({
   if (series.length < 2 || totals.length < 1) return null
   const modal = modalLength(series)
   const span = Math.max(...totals) - Math.min(...totals) || 1
-  const step = niceStep(span, 3)
+  // nicht feiner als die Wertung: ein Zehntel, in ganzen Ringen ein Ring
+  const step = Math.max(niceStep(span, 3), digits ? 0.1 : 1)
   const lo = Math.floor((Math.min(...totals) - step * 0.3) / step) * step
   const hi = Math.ceil((Math.max(...totals) + step * 0.3) / step) * step
   const x = (i: number) =>

@@ -3,6 +3,7 @@
 import {
   cardTrend,
   fatigue,
+  movingAverage,
   mpiPath,
   pauseRecovery,
   rhythmProfile,
@@ -63,7 +64,8 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
       wide: true,
       element: (
         <AnalysisCard help="verlauf-und-trend" wide explain={explain}>
-          {base.length >= 2 ? (
+          {/* wie das Diagramm: ab zwei Schuss mit Wert */}
+          {movingAverage(base, scoring).length >= 2 ? (
             <>
               <ChartSlot height={230}>
                 {(width) => <CourseChart width={width} shots={base} scoring={scoring} />}
@@ -94,7 +96,7 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
               </Note>
             </>
           ) : (
-            <Note>ab 2 Schuss</Note>
+            <Note>{base.length >= 2 ? "ab 2 Schuss mit Wert" : "ab 2 Schuss"}</Note>
           )}
         </AnalysisCard>
       ),

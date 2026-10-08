@@ -4,8 +4,10 @@ import {
   sighterComparison,
   sighterSummary,
   sighterZeroed,
+  sightersBeforeMatch,
   type GroupSide,
 } from "@vereinsheim/shot-core/analysis"
+import { selectShots } from "@vereinsheim/shot-core/metrics"
 import type { ReactNode } from "react"
 
 import { directionWords, durationText, formatValue } from "../../format"
@@ -37,6 +39,8 @@ export function sighterCards({ input, explain }: CardContext): CardSpec[] {
   const summary = sighterSummary(all)
   const comparison = sighterComparison(all, scoring)
   const zeroed = sighterZeroed(all)
+  // wie das Diagramm: die Probe vor der Wertung, nur mit Lage
+  const sightersWithPosition = selectShots(sightersBeforeMatch(all), { need: "position" }).length
   const noProbe =
     basis === "nur Probe"
       ? "Nur Probeschüsse: Die anderen Reiter rechnen über sie wie über Wertung."
@@ -158,7 +162,7 @@ export function sighterCards({ input, explain }: CardContext): CardSpec[] {
               </Note>
             </>
           ) : (
-            <Note>ab 3 Probeschüssen vor der Wertung</Note>
+            <Note>ab 3 Probeschüssen mit Lage vor der Wertung</Note>
           )}
         </AnalysisCard>
       ),
@@ -167,7 +171,7 @@ export function sighterCards({ input, explain }: CardContext): CardSpec[] {
       key: "probe-auf-der-scheibe",
       element: (
         <AnalysisCard help="probe-auf-der-scheibe" ids="" explain={explain}>
-          {summary ? (
+          {summary && sightersWithPosition ? (
             <>
               <ChartSlot height={260}>
                 {(width) => <SighterChart width={width} shots={all} target={target} />}
@@ -178,7 +182,7 @@ export function sighterCards({ input, explain }: CardContext): CardSpec[] {
               </Note>
             </>
           ) : (
-            <Note>{noProbe}</Note>
+            <Note>{summary ? "Keine Probeschüsse mit Lage." : noProbe}</Note>
           )}
         </AnalysisCard>
       ),

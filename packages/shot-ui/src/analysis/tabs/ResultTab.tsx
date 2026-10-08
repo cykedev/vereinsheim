@@ -79,7 +79,7 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
       element: (
         <AnalysisCard help="ergebnis" explain={explain}>
           {total === null ? (
-            <Note>ab 1 Schuss</Note>
+            <Note>{base.length ? "nicht jeder Schuss mit Wert" : "ab 1 Schuss"}</Note>
           ) : (
             <KeyValues
               rows={[

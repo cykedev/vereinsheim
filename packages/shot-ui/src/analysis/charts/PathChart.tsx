@@ -13,7 +13,11 @@ import { FieldAxes, fieldFrame, FieldScale } from "./field"
 export function PathChart({ width, shots }: { width: number; shots: readonly MetricShot[] }) {
   const path = mpiPath(shots)
   const whole = centroid(
-    selectShots(shots, { need: "position" }).map((s) => ({
+    // wie `mpiPath`: nur Schüsse mit Serie
+    selectShots(
+      shots.filter((s) => s.series !== null),
+      { need: "position" }
+    ).map((s) => ({
       xUm: s.xUm as number,
       yUm: s.yUm as number,
     }))

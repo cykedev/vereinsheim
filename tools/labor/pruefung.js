@@ -775,7 +775,11 @@ addEventListener("load", async () => {
     const T = () => L().tools
     const S = () => T().analysis
     const input = () => T().analysisInput(L().shots, L().state.scoring, L().target)
-    const base = () => input().base
+    // unabhängig von analysisInput (D1): die Wertung, ohne Wertung die Probe
+    const base = () => {
+      const match = L().shots.filter((s) => s.kind === "match")
+      return match.length ? match : L().shots
+    }
     const nf = (v, d) => T().formatValue(v, d)
     const ovTile = (label) => $(`[data-tile="${label}"]`, A())
     const ovValue = (label) => txt(ovTile(label).children[1].childNodes[0])
@@ -799,6 +803,16 @@ addEventListener("load", async () => {
         .map((t) => t.label)
         .join(", ")
     )
+    const resultTotal = T().computeMetric(
+      T().inScoring(T().metricByKey("result.decimal"), "decimal"),
+      base()
+    )
+    check(
+      "Überblick: Ergebnis und σ direkt aus dem Fachkern",
+      ovValue("Ergebnis") === nf(resultTotal, 1) &&
+        ovValue("Präzision σ") === nf(S().sigmaEstimate(base()).sigma / 1000, 2),
+      `${ovValue("Ergebnis")} · ${ovValue("Präzision σ")}`
+    )
     const sentences = $$("[data-observation]", A()).map((li) => txt(li).trim())
     const model = T().observations(input())
     check(
@@ -809,7 +823,7 @@ addEventListener("load", async () => {
     const conf = S().mpiConfidence(base())
     check(
       "Beobachtungen: Lage-Satz passt zu Hotelling",
-      sentences[0].includes(conf.real ? "echt" : "Zufall"),
+      (conf.real ? /^Die Lage ist echt/ : /vom Zufall nicht zu unterscheiden/).test(sentences[0]),
       sentences[0]
     )
     check(
@@ -831,7 +845,8 @@ addEventListener("load", async () => {
       "Ergebnis: Ringbalken je Ring, die Zehn zuerst",
       ringRows.length >= 3 &&
         ringRows[0].dataset.ringRow === "10" &&
-        txt(ringRows[0]).includes(String(dist.counts[10]))
+        txt(ringRows[0].children[2]) ===
+          `${dist.counts[10]}· ${nf((dist.counts[10] / dist.n) * 100, 0)} %`
     )
     const hist = S().decimalHistogram(base())
     check(
@@ -876,7 +891,14 @@ addEventListener("load", async () => {
     await tab("Präzision")
     const sigma = S().sigmaEstimate(base())
     check("Präzision: σ groß", ctext("praezision-sigma").includes(`${nf(sigma.sigma / 1000, 2)}mm`))
-    check("Präzision: R50 in Ringbreiten", ctext("masse-der-gruppe").includes("R50 in Ringbreiten"))
+    const r50 = T().computeMetric(T().inScoring(T().metricByKey("group.r50"), "decimal"), base())
+    check(
+      "Präzision: R50 in Ringbreiten",
+      ctext("masse-der-gruppe").includes(
+        `R50 in Ringbreiten${nf(S().ringWidths(r50 * 1000, L().target), 2)}`
+      ),
+      ctext("masse-der-gruppe")
+    )
     const outlierLoss = S().outlierLoss(base(), "decimal")
     check(
       "Präzision: Kosten der Ausreißer",
