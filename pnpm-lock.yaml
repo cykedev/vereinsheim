@@ -555,9 +555,6 @@ importers:
 
   tools/labor:
     dependencies:
-      '@vereinsheim/lib':
-        specifier: workspace:*
-        version: link:../../packages/lib
       '@vereinsheim/shot-core':
         specifier: workspace:*
         version: link:../../packages/shot-core

@@ -19,7 +19,8 @@ const FONTS =
 
 function commit(): string {
   try {
-    return execSync("git rev-parse --short HEAD", { cwd: ROOT }).toString().trim()
+    // „-dirty“ zeigt, dass die Seite aus nicht committetem Stand gebaut wurde
+    return execSync("git describe --always --dirty", { cwd: ROOT }).toString().trim()
   } catch {
     return "unbekannt"
   }

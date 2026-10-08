@@ -144,7 +144,7 @@ export function App({ commit }: { commit: string }) {
   return (
     <div className="mx-auto grid max-w-6xl gap-7 px-4 pt-7 pb-14">
       <header className="grid gap-2.5">
-        <p className="font-mono text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+        <p className="font-mono text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
           Spiegel · Labor
         </p>
         <h1 className="font-display text-[clamp(1.7rem,4vw,2.3rem)] font-bold tracking-tight text-balance">

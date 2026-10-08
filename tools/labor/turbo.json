@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/labor.html", "dist/preview.html"]
     },
     "test": {
       "dependsOn": ["db:generate", "^build"]

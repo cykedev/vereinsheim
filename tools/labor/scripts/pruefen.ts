@@ -4,7 +4,8 @@
 // pnpm --filter @vereinsheim/labor pruefen   (Chrome über CHROME_PATH, sonst der macOS-Standardpfad)
 
 import { spawn } from "node:child_process"
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { pathToFileURL } from "node:url"
 
@@ -26,13 +27,15 @@ const unescape = (text: string) =>
     .replace(/&amp;/g, "&")
 
 function dumpDom(url: string): Promise<string> {
+  // eigenes Profil je Lauf außerhalb von dist/, damit es nicht im Build-Cache landet
+  const profile = mkdtempSync(join(tmpdir(), "labor-chrome-"))
   return new Promise((resolve, reject) => {
     const chrome = spawn(CHROME, [
       "--headless=new",
       "--disable-gpu",
       "--no-first-run",
       "--allow-file-access-from-files",
-      `--user-data-dir=${join(DIST, ".chrome")}`,
+      `--user-data-dir=${profile}`,
       "--virtual-time-budget=40000",
       "--window-size=1280,2200",
       "--dump-dom",
@@ -48,6 +51,7 @@ function dumpDom(url: string): Promise<string> {
     chrome.on("error", reject)
     chrome.on("close", () => {
       clearTimeout(timer)
+      rmSync(profile, { recursive: true, force: true })
       resolve(out)
     })
   })
