@@ -986,15 +986,17 @@ addEventListener("load", async () => {
         ctext("form-der-gruppe").includes("nicht nachweisbar"),
       `${pairForm.n} · ${pairForm.without.join()} · ${pairForm.elongated}`
     )
-    const ellipseCx = Number($("ellipse", pairShape).getAttribute("cx"))
-    const groupCx = $$("[data-group-point]:not([data-outlier])", pairShape).map((c) =>
-      Number(c.getAttribute("cx"))
+    const ellipseAt = ["cx", "cy"].map((a) => Number($("ellipse", pairShape).getAttribute(a)))
+    const groupDots = $$("[data-group-point]:not([data-outlier])", pairShape)
+    const groupMean = ["cx", "cy"].map(
+      (a) => groupDots.reduce((sum, c) => sum + Number(c.getAttribute(a)), 0) / groupDots.length
     )
-    const groupMean = groupCx.reduce((sum, x) => sum + x, 0) / groupCx.length
     check(
       "Zwei Abreißer: die Ellipse sitzt auf der Gruppe",
-      groupCx.length === 8 && near(groupMean, ellipseCx, 0.5),
-      `${groupMean.toFixed(1)} / ${ellipseCx.toFixed(1)}`
+      groupDots.length === 8 &&
+        near(groupMean[0], ellipseAt[0], 0.5) &&
+        near(groupMean[1], ellipseAt[1], 0.5),
+      `${groupMean.map((v) => v.toFixed(1)).join(", ")} / ${ellipseAt.map((v) => v.toFixed(1)).join(", ")}`
     )
     await tab("Überblick")
     check(

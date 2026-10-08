@@ -126,12 +126,15 @@ describe("Reiter Präzision", () => {
     expect(cardText(page, "form-der-gruppe")).toContain("bei 8 Schuss (ohne Ausreißer 9, 10)")
     expect(cardText(page, "form-der-gruppe")).toContain("nicht nachweisbar")
     const card = cardHtml(page, "form-der-gruppe")
-    const ellipseX = Number(/<ellipse cx="([-\d.]+)"/.exec(card)?.[1])
-    const groupX = [...card.matchAll(/<circle data-group-point="\d+" cx="([-\d.]+)"/g)].map((m) =>
-      Number(m[1])
-    )
-    expect(groupX).toHaveLength(8)
-    const mean = groupX.reduce((sum, x) => sum + x, 0) / groupX.length
-    expect(Math.abs(mean - ellipseX)).toBeLessThan(0.5)
+    const ellipse = /<ellipse cx="([-\d.]+)" cy="([-\d.]+)"/.exec(card)
+    // Punkte ohne Ausreißer: Bei ihnen folgt auf data-group-point direkt cx (kein data-outlier dazwischen)
+    const group = [
+      ...card.matchAll(/<circle data-group-point="\d+" cx="([-\d.]+)" cy="([-\d.]+)"/g),
+    ].map((m) => [Number(m[1]), Number(m[2])])
+    expect(group).toHaveLength(8)
+    const meanX = group.reduce((sum, [x]) => sum + x, 0) / group.length
+    const meanY = group.reduce((sum, [, y]) => sum + y, 0) / group.length
+    expect(Math.abs(meanX - Number(ellipse?.[1]))).toBeLessThan(0.5)
+    expect(Math.abs(meanY - Number(ellipse?.[2]))).toBeLessThan(0.5)
   })
 })

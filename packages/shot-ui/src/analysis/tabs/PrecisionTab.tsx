@@ -154,14 +154,17 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
                     ) : (
                       <Muted>
                         {shape.elongated
-                          ? "Winkel erst ab 10 Schuss"
+                          ? "Winkel erst ab 10 Schuss ohne Ausreißer"
                           : "rund im Rahmen des Zufalls"}
                       </Muted>
                     ),
                   ],
                 ]}
               />
-              <Note>Ellipse: 2 σ entlang der Hauptachsen, ohne die Ausreißer (rote Punkte).</Note>
+              <Note>
+                Ellipse und Mitte ohne die Ausreißer (rote Punkte); die Ellipse misst 2 σ entlang
+                der Hauptachsen.
+              </Note>
             </>
           ) : (
             <Note>ab 3 Schuss</Note>

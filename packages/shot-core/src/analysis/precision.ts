@@ -82,8 +82,11 @@ export interface GroupShape {
 
 /**
  * Form der Gruppe (P8): Halbachsen und Winkel der Kovarianz-Ellipse. Ob sie wirklich gestreckt ist,
- * entscheidet der Sphärizitätstest nach Mauchly; für zwei Dimensionen ist er exakt: Bei einer runden
- * Normalgruppe ist W Beta((n − 2)/2, 1)-verteilt, also P(W ≤ w) = w^((n − 2)/2), Grenze 0,05^(2/(n − 2)).
+ * entscheidet der Sphärizitätstest nach Mauchly; für eine runde Normalgruppe ist er exakt: W ist
+ * Beta((n − 2)/2, 1)-verteilt, also P(W ≤ w) = w^((n − 2)/2), Grenze 0,05^(2/(n − 2)). Ohne die Ausreißer
+ * ist er eine Näherung, etwas vorsichtiger (Simulation B18: runde Gruppe 4,1–5,2 % gestreckt); deutlich
+ * gestreckte, kurze Gruppen erkennt er seltener, weil der runde Ausreißer-Test dort eine Spitze herausnehmen
+ * kann (a/b 3 bei 10 Schuss: 66,5 statt 77,8 %).
  * Den Winkel zeigt die Oberfläche nur bei gestreckten Gruppen ab 10 Schuss. Ohne Ausdehnung (alle
  * Treffer an einer Stelle) gibt es keine Form. Gerechnet wird ohne die von `outliers` (V6) markierten
  * Schüsse: Ein Abreißer streckte die Ellipse sonst in seine Richtung (Oktober 2026). Unter fünf Schuss gibt

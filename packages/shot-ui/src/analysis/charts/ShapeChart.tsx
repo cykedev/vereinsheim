@@ -1,4 +1,4 @@
-import { groupShape, outliers } from "@vereinsheim/shot-core/analysis"
+import { groupShape } from "@vereinsheim/shot-core/analysis"
 import { selectShots, shotNumbers, type MetricShot } from "@vereinsheim/shot-core/metrics"
 
 import { MpiMark } from "../../target/MpiMark"
@@ -19,8 +19,10 @@ export function ShapeChart({ width, shots }: { width: number; shots: readonly Me
   const relative = points.map((p) => ({ xUm: p.xUm - center.xUm, yUm: p.yUm - center.yUm }))
   const extent = Math.max(2 * shape.majorUm, ...relative.map((p) => Math.hypot(p.xUm, p.yUm)))
   const frame = fieldFrame(width, extent)
-  const flagged = new Set(outliers(shots)?.flagged.map((f) => f.shot))
+  // rot sind genau die Schüsse, die die Form herausgenommen hat: eine Quelle für Rechnung und Bild
   const numbers = shotNumbers(shots)
+  const without = new Set(shape.without)
+  const flagged = new Set(positioned.filter((shot) => without.has(numbers.get(shot) as number)))
   const ellipse = {
     cx: frame.cx,
     cy: frame.cy,
@@ -30,7 +32,11 @@ export function ShapeChart({ width, shots }: { width: number; shots: readonly Me
   }
 
   return (
-    <ChartSvg width={width} height={frame.size} label="Form der Gruppe um den Schwerpunkt">
+    <ChartSvg
+      width={width}
+      height={frame.size}
+      label={`Form der Gruppe${shape.without.length ? " ohne die Ausreißer" : ""} um ihren Schwerpunkt`}
+    >
       <FieldAxes frame={frame} />
       <ellipse {...ellipse} fill="var(--accent-wash)" />
       {relative.map((p, i) => {

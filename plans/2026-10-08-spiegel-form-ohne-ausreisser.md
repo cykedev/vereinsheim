@@ -23,7 +23,7 @@ Ausreißer heraus, gehört die Ellipse um den Schwerpunkt der übrigen.
   - `centerUm: Point`: der Schwerpunkt der Schüsse, über die die Form rechnet, also die Mitte der Ellipse
 - `ShapeChart` legt die Ellipse und den Schwerpunkt auf `shape.centerUm`. Alle Punkte stehen relativ dazu,
   die Ausreißer weiter rot mit Ring außerhalb.
-- Die Karte nennt bei „Verhältnis a/b“ die Grundlage: „gestreckt ab 2,51 bei 8 Schuss (ohne Ausreißer
+- Die Karte nennt bei „Verhältnis a/b“ die Grundlage: „gestreckt ab 2,96 bei 8 Schuss (ohne Ausreißer
   9, 10)“. Die Notiz lautet: „Ellipse: 2 σ entlang der Hauptachsen, ohne die Ausreißer (rote Punkte).“
 - Keine anderen Auswertungen ändern sich. Lage (Hotelling), σ, R50 und Streukreis rechnen weiter über alle
   Schüsse. Nur die Form fragt nach der Gestalt der Gruppe, und dabei verfälscht ein Abreißer das Bild am

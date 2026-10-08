@@ -9,6 +9,10 @@ Seit Oktober 2026 entstehen die Bausteine als echte Komponenten in `packages/sho
 (`tools/labor`) erprobt. Bis ein Baustein dort ist, bleibt die Spielwiese die Referenz für Aussehen und
 Verhalten; ihre Prüfungen werden Schritt für Schritt Prüfungen des Labors.
 
+Die Vorlage bleibt wie Version 13, auch wo der Fachkern weiter ist: Seit Oktober 2026 rechnet die Form der
+Gruppe ohne die Ausreißer, das Formdiagramm der Spielwiese zentriert aber auf alle Punkte. Nach einem neuen
+Bau säße die Ellipse dort versetzt; das Labor zeigt es richtig.
+
 ## Herkunft
 
 Die Quellen lagen nur im Scratchpad einer Session und gingen am 8. Oktober 2026 beim Neustart

@@ -184,11 +184,14 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   120 ab 1,25.
 - *Vorsicht:* Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im
   Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe
-  deshalb selten; sichtbar wird sie über mehrere Scheiben.
-- *Mindestzahl:* Ab 3 Schuss; den Winkel zeigt Spiegel nur bei einer gestreckten Gruppe ab 10
-  Schuss.
+  deshalb selten; sichtbar wird sie über mehrere Scheiben. Ist deine Gruppe deutlich gestreckt, hält
+  der Ausreißer-Test manchmal einen Schuss an der Spitze für einen Ausreißer, und ohne ihn wirkt die
+  Gruppe runder. Steht „ohne Ausreißer“, schau, ob der Schuss in Richtung der Streckung liegt.
+- *Mindestzahl:* Ab 3 Schuss ohne Ausreißer; den Winkel zeigt Spiegel nur bei einer gestreckten
+  Gruppe ab 10 Schuss ohne Ausreißer.
 - *Formel:* `Halbachsen a, b aus der Kovarianz der Schüsse ohne Ausreißer; gestreckt, wenn W = 4a²b²
-  / (a² + b²)² < 0,05^(2/(n − 2)) (Mauchly, exakt)`
+  / (a² + b²)² < 0,05^(2/(n − 2)) (Mauchly; für eine Normalgruppe exakt, ohne die Ausreißer eine
+  Näherung)`
 
 **Ausreißer (V6, V7)**
 - *Was:* Spiegel prüft die Treffer Schritt für Schritt: zuerst den, der am weitesten von den übrigen

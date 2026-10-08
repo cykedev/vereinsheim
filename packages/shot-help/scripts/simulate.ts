@@ -19,7 +19,7 @@ import {
   sighterZeroed,
   sigmaEstimate,
 } from "@vereinsheim/shot-core/analysis"
-import { centroid } from "@vereinsheim/shot-core/geometry"
+import { centroid, covarianceEllipse } from "@vereinsheim/shot-core/geometry"
 import { computeMetric, metricByKey, type MetricShot } from "@vereinsheim/shot-core/metrics"
 import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { c4, chiSquareQuantileEven, fQuantile2, wilson } from "@vereinsheim/shot-core/stats"
@@ -416,6 +416,58 @@ for (const [far, near, seed] of [
     return `${n} Schuss ${share(hits, 5_000)}`
   })
   out("B17", `echte Streckung a/b 1,3 als gestreckt erkannt: ${found.join(", ")}`)
+}
+
+// B18: Form mit und ohne Ausreißer. „Alt“ ist Mauchly über alle Schüsse wie bis Oktober 2026 (dieselbe
+// Kovarianz aus shot-core, dieselbe Grenze), „neu“ ist `groupShape` ohne die markierten Ausreißer
+{
+  const elongatedAll = (shots: readonly MetricShot[]) => {
+    const points = shots.map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
+    const ellipse = covarianceEllipse(points)
+    if (!ellipse || !(ellipse.majorUm > 0)) return false
+    const a2 = ellipse.majorUm ** 2
+    const b2 = ellipse.minorUm ** 2
+    return (4 * a2 * b2) / (a2 + b2) ** 2 < 0.05 ** (2 / (points.length - 2))
+  }
+  // ein Zehntel der Schüsse (mindestens einer) als Abreißer bei 4σ in zufälliger Richtung
+  const withFlyers = (rand: Random, n: number) =>
+    card(rand, { ...LG, n }).map((s, i) => {
+      if (i < n - Math.max(1, Math.floor(n / 10))) return s
+      const angle = 2 * Math.PI * rand.uniform()
+      const xUm = Math.round(4 * 1500 * Math.cos(angle))
+      const yUm = Math.round(4 * 1500 * Math.sin(angle))
+      const score = scoreFromCoordinates(LG_10M, xUm, yUm)
+      return { ...s, xUm, yUm, decimalTenths: score.decimalTenths, ring: score.ring }
+    })
+  const cases = [
+    ["rund", [10, 20, 40, 60], 1500, (rand: Random, n: number) => card(rand, { ...LG, n })],
+    [
+      "a/b 2",
+      [10, 20, 40],
+      2120,
+      (rand: Random, n: number) => card(rand, { target: LG_10M, n, sx: 2120, sy: 1060 }),
+    ],
+    [
+      "a/b 3",
+      [10, 20],
+      2600,
+      (rand: Random, n: number) => card(rand, { target: LG_10M, n, sx: 2600, sy: 867 }),
+    ],
+    ["rund mit Abreißern", [10, 20, 40], 4, withFlyers],
+  ] as const
+  for (const [label, sizes, seedPart, make] of cases) {
+    const parts = sizes.map((n) => {
+      let before = 0
+      let after = 0
+      repeat(5_000, 18_000 + seedPart + n, (rand) => {
+        const shots = make(rand, n)
+        if (elongatedAll(shots)) before++
+        if (groupShape(shots)?.elongated) after++
+      })
+      return `${n}: ${share(before, 5_000)} → ${share(after, 5_000)}`
+    })
+    out("B18", `als gestreckt gemeldet, ${label} (alt → ohne Ausreißer): ${parts.join(", ")}`)
+  }
 }
 
 console.log(lines.join("\n"))

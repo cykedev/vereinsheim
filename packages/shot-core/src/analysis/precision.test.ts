@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 
 import { MATCH, PROBE, SPREAD } from "../__fixtures__/cards"
 import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
-import { centroid } from "../geometry"
 import { LG_10M } from "../targets"
 import { groupShape, outlierLoss, outliers, ringWidths, sigmaEstimate } from "./precision"
 
@@ -48,8 +47,8 @@ describe("Form und Ringbreiten (P8, P9)", () => {
     const shape = groupShape(SPREAD)
     expect(shape?.without).toEqual([])
     expect(shape?.n).toBe(6)
-    const center = centroid(SPREAD.map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number })))
-    expect(shape?.centerUm).toEqual(center)
+    // SPREAD summiert sich in x und y zu 0
+    expect(shape?.centerUm).toEqual({ xUm: 0, yUm: 0 })
   })
 
   it("Abreißer zählen für die Form nicht", () => {
@@ -73,6 +72,8 @@ describe("Form und Ringbreiten (P8, P9)", () => {
     expect(shape?.minorUm).toBeCloseTo(half, 0)
     expect(shape?.ratio).toBeLessThan(1.01)
     expect(shape?.elongated).toBe(false)
+    // die Grenze gilt für die acht: L = 0,05^(2/6) = 0,368403, a/b = √((2 − L + 2√(1 − L))/L) = 2,9569
+    expect(shape?.ratioLimit).toBeCloseTo(2.9569, 3)
     expect(Math.hypot(shape!.centerUm.xUm, shape!.centerUm.yUm)).toBeLessThan(1)
     // mit den Abreißern wäre sie gestreckt (Gegenprobe im Plan, Task 2)
   })
