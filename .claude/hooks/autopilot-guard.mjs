@@ -64,7 +64,13 @@ const PROTECTED_CMDS = [
     /\bgit\s+(-c\s+\S+\s+|-C\s+\S+\s+|--no-pager\s+|--git-dir=\S+\s+|--work-tree=\S+\s+)*(push|merge|rebase|reset\s+--hard)\b/,
     "git push/merge/rebase/reset --hard",
   ],
-  [/\bvereinsheim\b[^|;&]*\b(deploy|build|release|backup|restore)\b/, "vereinsheim deploy/build/release/backup/restore"],
+  // Die Ops-CLI nur als Aufruf: `…scripts/vereinsheim` oder `vereinsheim` als eigenes Wort, gefolgt von einem
+  // Leerzeichen. Das Repo-Verzeichnis (`…/verein/vereinsheim/…`) und Paketnamen (`@vereinsheim/…`) vor
+  // einem „build“ sind kein Aufruf (Fehlalarm `pnpm --filter @vereinsheim/labor build`, Oktober 2026).
+  [
+    /(?:(?:^|\s)\S*\bscripts\/|(?:^|[\s;&|(]))vereinsheim(?=\s)[^|;&\n]*\b(deploy|build|release|backup|restore)\b/,
+    "vereinsheim deploy/build/release/backup/restore",
+  ],
   [/\bdocker\s+(?:image\s+)?push\b/, "docker push"],
   [/\bprisma\s+migrate\b/, "prisma migrate"],
   [/\b(pnpm|npm|yarn)\s+publish\b/, "package publish"],
@@ -78,6 +84,14 @@ const INTERPRETERS = /^(python[0-9.]*|node|deno|bun|perl|ruby|php|bash|sh|zsh)$/
 const MUTATING = /^(rm|mv|cp|tee|truncate|ln)$/
 
 // ── Pure, testbare Helper (exportiert für autopilot-guard.test.mjs) ──────────
+
+// Das geschützte Kommando, das eine Kommandozeile aufruft (Label), oder null. Quotes werden zuerst
+// geblankt, damit ein Verb in einem String (eine Commit-Message, die "push" erwähnt) nie triggert.
+export function protectedCommand(cmd) {
+  const blanked = String(cmd).replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""')
+  for (const [re, label] of PROTECTED_CMDS) if (re.test(blanked)) return label
+  return null
+}
 
 // Quote-aware Tokenizer. Splittet eine Kommandozeile an UNQUOTEDEN ; | & Newline ( ) `
 // und $( , und trennt pro Segment `words` von Redirect-`redirs`-Zielen. Quotes werden
@@ -203,8 +217,7 @@ export function interpreterOneLinerViolation(cmd) {
       if (PROTECTED_DIR_RES.some((re) => re.test(w))) return "interpreter one-liner references a protected directory"
       if (PROTECTED_FILE_PATTERNS.some((fn) => fn(w))) return "interpreter one-liner references a protected file pattern"
       if (isDotenvPath(w)) return "interpreter one-liner references a .env/.vereinsheim.local secret"
-      const blankedW = w.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""')
-      if (PROTECTED_CMDS.some(([re]) => re.test(blankedW))) {
+      if (protectedCommand(w)) {
         return "interpreter one-liner runs a protected command (push/merge/rebase/reset --hard/deploy/publish/migrate)"
       }
     }
@@ -272,12 +285,9 @@ export function evaluate(input) {
 
   if (tool === "Bash") {
     const cmd = String(ti.command || "")
-    // Geschützte Kommandos: Quotes zuerst blanken, damit ein Verb innerhalb eines
-    // Strings (eine Commit-Message, die "push" erwähnt) nie triggert.
-    const blanked = cmd.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""')
-    for (const [re, label] of PROTECTED_CMDS) {
-      if (re.test(blanked)) return { deny: true, reason: denyReason(`verbotenes Kommando im autonomen Modus: „${label}".`) }
-    }
+    // Geschützte Kommandos (Quotes geblankt, siehe protectedCommand)
+    const label = protectedCommand(cmd)
+    if (label) return { deny: true, reason: denyReason(`verbotenes Kommando im autonomen Modus: „${label}".`) }
     // Direkte Writes: Redirect-Ziele + Datei-Argumente mutierender Kommandos + dd of=.
     for (const t of writeTargets(cmd)) {
       if (hits(t)) return { deny: true, reason: denyReason(`Shell-Write auf geschützten Pfad „${relPath(t)}".`) }

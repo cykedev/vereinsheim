@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { bashSegments, writeTargets, interpreterOneLinerViolation } from './autopilot-guard.mjs';
+import { bashSegments, writeTargets, interpreterOneLinerViolation, protectedCommand } from './autopilot-guard.mjs';
 import { isDotenvPath } from './_lib.mjs';
 
 const P = 'package.json'; // stand-in protected path
@@ -159,4 +159,48 @@ test('interpreterOneLinerViolation catches -xc and node -pe combined clusters', 
 
 test('interpreterOneLinerViolation does not flag a flag cluster without c/e/p/E', () => {
 	assert.equal(interpreterOneLinerViolation('bash -lx script.sh'), null);
+});
+
+// Die Ops-CLI (scripts/vereinsheim) bleibt im Autopilot gesperrt, aber nur als Aufruf: Ein Pfad im Repo
+// (…/verein/vereinsheim/…) oder ein Paketname (@vereinsheim/…) vor „build“ ist kein Aufruf. Fehlalarm vom
+// 8. Oktober 2026: `pnpm --filter @vereinsheim/labor build` und ein Skript `…/vereinsheim/…/build.mjs`.
+const CLI_CALLS = [
+	'./scripts/vereinsheim build',
+	'scripts/vereinsheim deploy',
+	'bash scripts/vereinsheim release',
+	'vereinsheim backup',
+	'cd /Users/me/repos/verein/vereinsheim && ./scripts/vereinsheim restore',
+	'/Users/me/repos/verein/vereinsheim/scripts/vereinsheim deploy',
+	'./scripts/vereinsheim remote deploy',
+	'./scripts/vereinsheim build --app ringwerk',
+];
+const NOT_CLI_CALLS = [
+	'pnpm --filter @vereinsheim/labor build',
+	'node /Users/me/repos/verein/vereinsheim/scratch/build.mjs',
+	'cd /Users/me/repos/verein/vereinsheim && pnpm build',
+	'cd /Users/me/repos/verein/vereinsheim/tools/labor && pnpm build',
+	'cat /Users/me/repos/verein/vereinsheim/vault/restore-notes.md',
+	'./scripts/vereinsheim status',
+	'bash -n scripts/vereinsheim',
+	'sed -n 1,20p scripts/vereinsheim | grep deploy',
+];
+for (const cmd of CLI_CALLS) {
+	test(`protectedCommand blocks the CLI call: ${cmd}`, () => {
+		assert.equal(protectedCommand(cmd), 'vereinsheim deploy/build/release/backup/restore');
+	});
+}
+for (const cmd of NOT_CLI_CALLS) {
+	test(`protectedCommand lets through what is no CLI call: ${cmd}`, () => {
+		assert.equal(protectedCommand(cmd), null);
+	});
+}
+
+test('protectedCommand still blocks git push and ignores a quoted mention', () => {
+	assert.equal(protectedCommand('git push origin main'), 'git push/merge/rebase/reset --hard');
+	assert.equal(protectedCommand('git commit -m "push later"'), null);
+});
+
+test('interpreterOneLinerViolation catches the CLI inside bash -c', () => {
+	assert.ok(interpreterOneLinerViolation('bash -c "./scripts/vereinsheim deploy"'));
+	assert.equal(interpreterOneLinerViolation('bash -c "pnpm --filter @vereinsheim/labor build"'), null);
 });
