@@ -1,6 +1,8 @@
+"use client"
+
 import { formatValue } from "../../format"
 import { scoreColor } from "../../geometry"
-import { RulerMark, RulerReadout, useRuler, ValuesTable } from "./ChartRuler"
+import { RULER_HINT, RulerMark, RulerReadout, useRuler, ValuesTable } from "./ChartRuler"
 import { ChartSvg, crisp } from "./frame"
 
 const HEIGHT = 150
@@ -30,20 +32,18 @@ export function DecimalHistogram({
   for (let t = lo; t <= 100; t += 10) ticks.push(t)
   const center = (t: number) => PAD.left + (t - lo + 0.5) * cw
   const ruler = useRuler(present.map(center), width)
-  const chosen = ruler.index === null ? null : present[ruler.index]
+  const chosen = ruler.index === null ? null : (present[ruler.index] ?? null)
+  const text =
+    chosen === null ? null : `${formatValue(chosen / 10, 1)}: ${hist.counts[chosen]} Schuss`
 
   return (
     <div className="grid gap-2">
-      <RulerReadout
-        text={
-          chosen === null ? null : `${formatValue(chosen / 10, 1)}: ${hist.counts[chosen]} Schuss`
-        }
-      />
+      <RulerReadout text={text} />
       <ChartSvg
         width={width}
         height={HEIGHT}
         label={`Zehntelverteilung, ${hist.n} Schuss`}
-        svgProps={ruler.svgProps}
+        svgProps={{ ...ruler.svgProps, "aria-valuetext": text ?? RULER_HINT }}
       >
         {present.map((tenth) => {
           const count = hist.counts[tenth]
@@ -53,6 +53,8 @@ export function DecimalHistogram({
               key={tenth}
               data-tenth={tenth}
               data-chosen={tenth === chosen || undefined}
+              stroke={tenth === chosen ? "var(--foreground-2)" : undefined}
+              strokeWidth={tenth === chosen ? 1.5 : undefined}
               x={PAD.left + (tenth - lo) * cw + gap / 2}
               y={top}
               width={Math.max(1, cw - gap)}

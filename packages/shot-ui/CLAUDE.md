@@ -70,7 +70,10 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   `CardPage` steht die Analyse ab 768 px in voller Breite unter der Scheibe (`below`). Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
   (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`: Einzelwerte liest das
   Lineal (`analysis/charts/ChartRuler.tsx`: `useRuler`, Zeile über dem Diagramm, „Werte als Tabelle“), reine
-  Hilfen in `analysis/charts/ruler.ts`. Ziehen ändert die Scheibe nicht, „Auf der Scheibe“ springt zu ihr.
+  Hilfen in `analysis/charts/ruler.ts`. Ziehen ändert die Scheibe nicht; „Auf der Scheibe“ (`onChoose` der
+  Analyse) zeigt den Schuss über die Aktion `show` (ohne Umschalten, Auswahl bei Bedarf auf die Grundauswahl) und
+  springt zu ihr. Die Seite hängt `AnalysisPanel` je Karte neu ein (`key`), damit kein Lineal eine alte Wahl
+  mitnimmt.
 - **Seite aus `CardPage`:** Kopf (`CardHeader`), Sprungleiste (`SectionNav` mit `useActiveSection`), Scheibe,
   unter ihr die Serien (`under`), rechts daneben was zu ihr gehört (`result`: das Ergebnis als Box, auf dem Telefon im Kopf; `aside`: Ablesung; `beside`:
   Schüsse, füllen die Höhe), darunter in voller Breite, was Platz braucht (`below`: Zahlen, Analyse). Der Kasten

@@ -156,7 +156,9 @@ describe("Zehntel-Säulen und Richtungsuhr: Werte als Tabelle", () => {
     expect(html).toContain(RULER_HINT)
     expect(html).not.toContain("<title>")
     const rows = [
-      ...html.matchAll(/<tr class="border-t[^>]*><td[^>]*>([^<]+)<\/td><td[^>]*>(\d+)<\/td>/g),
+      ...html.matchAll(
+        /<tr class="border-t[^>]*><th scope="row"[^>]*>([^<]+)<\/th><td[^>]*>(\d+)<\/td>/g
+      ),
     ].map((m) => `${m[1]}:${m[2]}`)
     expect(rows).toEqual(["9,7:3", "10,4:5", "10,8:1"])
   })
@@ -166,7 +168,9 @@ describe("Zehntel-Säulen und Richtungsuhr: Werte als Tabelle", () => {
     const html = renderToStaticMarkup(createElement(ClockChart, { width: 600, counts }))
     expect(html).not.toContain("<title>")
     const rows = [
-      ...html.matchAll(/<tr class="border-t[^>]*><td[^>]*>([^<]+)<\/td><td[^>]*>(\d+)<\/td>/g),
+      ...html.matchAll(
+        /<tr class="border-t[^>]*><th scope="row"[^>]*>([^<]+)<\/th><td[^>]*>(\d+)<\/td>/g
+      ),
     ].map((m) => `${m[1]}:${m[2]}`)
     expect(rows).toEqual(["12 Uhr:2", "3 Uhr:4", "9 Uhr:1"])
   })

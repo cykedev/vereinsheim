@@ -140,18 +140,23 @@ export function AnalysisPanel({
     () => analysisInput(shots, state.scoring, target),
     [shots, state.scoring, target]
   )
-  // der auf der Scheibe gewählte Schuss, wenn er zur Grundlage gehört (das Lineal steht auf ihm)
+  // der auf der Scheibe gewählte Schuss, wenn er zur Grundlage gehört: Nur „Zeit und Verlauf“ hat ein Lineal,
+  // das ihn zeigt; in den anderen Reitern ändert ein angetippter Schuss die Karten nicht
   const chosenShot = useMemo(() => {
-    const shot = state.chosen ? shots[state.chosen.index] : undefined
+    const shot = tab === "time" && state.chosen ? shots[state.chosen.index] : undefined
     return shot && input.base.includes(shot) ? shot : null
-  }, [state.chosen, shots, input.base])
+  }, [tab, state.chosen, shots, input.base])
   const onShowShot = useMemo(
     () =>
-      onChoose ? (shot: MetricShot) => onChoose(shots.indexOf(shot), seriesKeyOf(shot)) : undefined,
+      onChoose
+        ? (shot: MetricShot) => {
+            const index = shots.indexOf(shot)
+            if (index >= 0) onChoose(index, seriesKeyOf(shot))
+          }
+        : undefined,
     [onChoose, shots]
   )
-  // ein angetippter Schuss ändert die Karten nur über das Lineal: neu nur, wenn sich ihre Eingaben ändern
-  // (die Seite reicht stabile Rückrufe)
+  // die Karten nur neu, wenn sich ihre Eingaben ändern (die Seite reicht stabile Rückrufe)
   const cards = useMemo(
     () =>
       shots.length

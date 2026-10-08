@@ -10,13 +10,17 @@ function Probe({ preset }: { preset: number | null }) {
 }
 
 describe("Lineal als Baustein", () => {
-  it("Zeile ohne Wahl: der Hinweis, gemeldet, ohne Knopf", () => {
+  it("Zeile ohne Wahl: der Hinweis, gemeldet; der Knopf hält nur seinen Platz", () => {
     const html = renderToStaticMarkup(
       h(RulerReadout, { text: null, action: { label: "Auf der Scheibe", onClick: () => {} } })
     )
-    expect(html).toContain('aria-live="polite"')
+    // gemeldet wird nur der Text, nicht der Knopf; feste Höhe von zwei Zeilen
+    expect(html).toMatch(/^<div data-readout="true" class="grid h-10 /)
+    expect(html).toMatch(/<span aria-live="polite" aria-atomic="true"[^>]*>Tippe oder ziehe/)
     expect(html).toContain(RULER_HINT)
-    expect(html).not.toContain("<button")
+    expect(html).toMatch(
+      /<button type="button" aria-hidden="true" tabindex="-1" class="[^"]*invisible/
+    )
   })
 
   it("Zeile mit Wahl: die Werte und die Aktion", () => {
@@ -56,6 +60,10 @@ describe("Lineal als Baustein", () => {
     expect(html).toContain("<summary")
     expect(html).toContain("Werte als Tabelle")
     expect(html).toContain('<caption class="sr-only">Wert je Schuss</caption>')
+    // die Zusammenfassung nennt die Tabelle, der Scrollbereich ist per Tastatur erreichbar
+    expect(html).toContain('<span class="sr-only">: Wert je Schuss</span>')
+    expect(html).toMatch(/<div tabindex="0" role="region" aria-label="Wert je Schuss"/)
+    expect([...html.matchAll(/<th scope="row"/g)]).toHaveLength(2)
     expect([...html.matchAll(/<th scope="col"/g)]).toHaveLength(2)
     expect([...html.matchAll(/<tr class="border-t/g)]).toHaveLength(2)
   })
@@ -65,6 +73,22 @@ describe("Lineal als Baustein", () => {
     expect(html).toContain('tabindex="0"')
     expect(html).toContain("touch-action:pan-y")
     expect(html).toContain("Index 1")
+    // als Schieberegler bedienbar (APG): Wert 2 von 3
+    expect(html).toContain('role="slider"')
+    expect(html).toContain('aria-valuenow="2"')
+    expect(html).toContain('aria-valuemax="3"')
     expect(renderToStaticMarkup(h(Probe, { preset: null }))).toContain("keine")
+  })
+})
+
+describe("Lineal: Index außerhalb der Werte", () => {
+  function Few({ preset }: { preset: number | null }) {
+    const { index } = useRuler([10, 20], 600, preset)
+    return h("p", null, index === null ? "keine" : `Index ${index}`)
+  }
+
+  it("gilt als keine Wahl, statt auf einen fehlenden Wert zu zeigen", () => {
+    expect(renderToStaticMarkup(h(Few, { preset: 5 }))).toContain("keine")
+    expect(renderToStaticMarkup(h(Few, { preset: 1 }))).toContain("Index 1")
   })
 })

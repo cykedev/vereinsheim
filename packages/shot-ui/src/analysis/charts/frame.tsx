@@ -57,7 +57,7 @@ export function ChartSvg({
       viewBox={`0 0 ${width} ${height}`}
       width={width}
       height={height}
-      role="img"
+      role={svgProps?.role ?? "img"}
       aria-label={label}
       className="block h-auto w-full overflow-visible font-mono text-xs font-medium [&_text]:fill-muted-foreground [&_text[data-value]]:fill-foreground-2 [&_text[data-value]]:font-semibold"
     >

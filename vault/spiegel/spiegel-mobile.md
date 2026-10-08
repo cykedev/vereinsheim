@@ -109,8 +109,13 @@ Plan `plans/2026-10-08-spiegel-diagramm-lineal.md`:
 - **Umfang:** Verlauf, Rhythmus und Zehntel-Säulen bekommen ein Lineal, diese drei und die Richtungsuhr
   „Werte als Tabelle“ (zugeklappt, auch für Screenreader). Kein Wert steht mehr nur im SVG-`<title>`.
 - **Bedienung:** Tippen wählt den nächsten Wert, waagrechtes Ziehen wandert mit, senkrecht scrollt die Seite
-  weiter (`touch-action: pan-y`), ein zweites Tippen hebt auf. Mit der Tastatur Pfeile, Pos1, Ende, Escape.
-- **Werte fest über dem Diagramm** in einer Zeile mit fester Höhe, ohne Wahl ein Hinweis.
+  weiter (`touch-action: pan-y`), ein zweites Tippen hebt auf. Übernimmt der Browser das Scrollen
+  (`pointercancel`), gilt die Wahl davor. Mit der Tastatur Pfeile, Pos1, Ende, Escape; mit Alt, Strg oder
+  Befehl bleibt die Taste dem Browser. Für Screenreader ist das Diagramm ein Schieberegler mit dem Wert in
+  Worten (APG-Muster).
+- **Werte fest über dem Diagramm** in einer Zeile von zwei Zeilen Höhe, bei 375 px für den Hinweis und jede
+  Wahl gleich hoch (Skriptprüfung); der Knopf hält seinen Platz. Ohne Wahl steht ein Hinweis.
+- **Je Karte neu:** Die Seite hängt die Analyse je Karte neu ein; eine Wahl im Lineal wandert nicht mit.
 - **Kopplung:** Ziehen ändert die Scheibe nicht, sonst spränge die Seite bei jeder Bewegung. Der Knopf „Auf
   der Scheibe“ wählt den Schuss dort und springt mit Rücksprung; ein auf der Scheibe gewählter Schuss steht
   schon im Lineal.

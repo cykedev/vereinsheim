@@ -201,18 +201,17 @@ export function App({ commit }: { commit: string }) {
     },
     [toggle, jumpTo]
   )
-  // „Auf der Scheibe“ im Lineal eines Diagramms: den Schuss wählen (ein schon gewählter bleibt gewählt, die
-  // Aktion schaltet sonst um) und zur Scheibe springen, die Pille nennt den Reiter (Plan L1, D4)
-  const chosenIndex = state.chosen?.index ?? null
+  // „Auf der Scheibe“ im Lineal eines Diagramms: den Schuss zeigen (wählt ohne Umschalten, weitet bei Bedarf die
+  // Auswahl) und zur Scheibe springen, die Pille nennt den Reiter (Plan L1, D4)
   const chooseFromAnalysis = useCallback(
     (index: number, series: SeriesKey | null) => {
-      if (chosenIndex !== index) choose(index, series)
+      dispatch({ type: "show", shot: index, series })
       jumpTo(
         document.querySelector('[data-section="scheibe"]'),
         ANALYSIS_TABS.find((t) => t.value === tab)?.label ?? "Analyse"
       )
     },
-    [chosenIndex, choose, jumpTo, tab]
+    [jumpTo, tab]
   )
   const chooseFromTable = useCallback(
     (index: number, series: SeriesKey | null) => {
@@ -434,6 +433,8 @@ export function App({ commit }: { commit: string }) {
             id: "analyse",
             node: (
               <AnalysisPanel
+                // je Karte neu eingehängt: das Lineal fängt ohne Wahl an
+                key={`${targetId}:${sample.id}`}
                 shots={shots}
                 state={state}
                 target={target}

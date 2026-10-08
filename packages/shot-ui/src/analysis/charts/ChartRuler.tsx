@@ -25,29 +25,38 @@ const KEY_STEPS: Readonly<Record<string, number>> = {
 
 /**
  * Lineal eines Diagramms (Plan L1, D2): Tippen wählt den nächsten Wert, waagrechtes Ziehen wandert mit,
- * senkrecht scrollt die Seite weiter (`touch-action: pan-y`); ein zweites Tippen auf denselben Wert hebt die
- * Wahl auf. Mit der Tastatur Pfeil links/rechts, Pos1/Ende, Escape. `xs` sind die x-Positionen der Werte in
- * Pixeln des SVG, `width` dessen Breite; `preset` setzt die Wahl, sobald es sich ändert (die Scheibe gibt
- * den Schuss vor, D4).
+ * senkrecht scrollt die Seite weiter (`touch-action: pan-y`); übernimmt der Browser das Scrollen
+ * (`pointercancel`), gilt wieder die Wahl davor. Ein zweites Tippen auf denselben Wert hebt die Wahl auf. Mit der
+ * Tastatur Pfeil links/rechts, Pos1/Ende, Escape; das Diagramm meldet sich dafür als Schieberegler (APG-Muster),
+ * `aria-valuetext` setzt das Diagramm. `xs` sind die x-Positionen der Werte in Pixeln des SVG, `width` dessen
+ * Breite; `preset` setzt die Wahl, sobald es sich ändert (die Scheibe gibt den Schuss vor, D4). Ein Index
+ * außerhalb von `xs` gilt als keine Wahl; die Seite hängt die Analyse ohnehin je Karte neu ein.
  */
 export function useRuler(xs: readonly number[], width: number, preset: number | null = null) {
-  const [index, setIndex] = useState<number | null>(preset)
+  const [chosen, setIndex] = useState<number | null>(preset)
   useEffect(() => setIndex(preset), [preset])
-  const drag = useRef<{ again: boolean; moved: boolean } | null>(null)
+  const index = chosen !== null && chosen < xs.length ? chosen : null
+  const drag = useRef<{ again: boolean; moved: boolean; before: number | null } | null>(null)
   const at = (event: PointerEvent<SVGSVGElement>) =>
     nearestIndex(xs, toSvgX(event.clientX, event.currentTarget.getBoundingClientRect(), width))
 
   const svgProps: SVGProps<SVGSVGElement> = {
     tabIndex: 0,
-    style: { touchAction: "pan-y", cursor: "crosshair" },
+    role: "slider",
+    "aria-valuemin": 0,
+    "aria-valuemax": xs.length,
+    "aria-valuenow": index === null ? 0 : index + 1,
+    style: { touchAction: "pan-y", cursor: "crosshair", userSelect: "none" },
     onPointerDown: (event) => {
+      // nur die Haupttaste (Finger, Stift, linke Maustaste) wählt
+      if (event.button !== 0) return
       const i = at(event)
       try {
         event.currentTarget.setPointerCapture(event.pointerId)
       } catch {
         // ein ausgelöstes Ereignis ohne echten Zeiger: ohne Fangen geht es auch
       }
-      drag.current = { again: i !== null && i === index, moved: false }
+      drag.current = { again: i !== null && i === index, moved: false, before: index }
       setIndex(i)
     },
     onPointerMove: (event) => {
@@ -62,10 +71,17 @@ export function useRuler(xs: readonly number[], width: number, preset: number | 
       drag.current = null
       if (gesture?.again && !gesture.moved) setIndex(null)
     },
+    // der Browser scrollt: die Berührung war kein Ablesen
     onPointerCancel: () => {
+      if (drag.current) setIndex(drag.current.before)
+      drag.current = null
+    },
+    onLostPointerCapture: () => {
       drag.current = null
     },
     onKeyDown: (event: KeyboardEvent<SVGSVGElement>) => {
+      // mit Alt, Strg oder Befehl bleibt die Taste dem Browser (etwa „Zurück“)
+      if (event.altKey || event.ctrlKey || event.metaKey) return
       const delta = KEY_STEPS[event.key]
       if (delta !== undefined) {
         event.preventDefault()
@@ -80,8 +96,9 @@ export function useRuler(xs: readonly number[], width: number, preset: number | 
 }
 
 /**
- * Zeile über dem Diagramm (D3): feste Höhe, damit nichts springt; ohne Wahl der Hinweis, mit Wahl die Werte
- * und, wenn es eine gibt, die Aktion rechts (etwa „Auf der Scheibe“). Ein Wechsel wird gemeldet.
+ * Zeile über dem Diagramm (D3): feste Höhe von zwei Zeilen, damit das Diagramm beim Ziehen nicht springt;
+ * ohne Wahl der Hinweis, mit Wahl die Werte. Die Aktion (etwa „Auf der Scheibe“) hat immer ihren Platz und ist
+ * ohne Wahl unsichtbar. Gemeldet wird nur der Text, nicht der Knopf.
  */
 export function RulerReadout({
   text,
@@ -92,20 +109,29 @@ export function RulerReadout({
 }) {
   return (
     <div
-      aria-live="polite"
       data-readout
-      className="flex min-h-7 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[13px]"
+      className="grid h-10 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 text-[13px]"
     >
-      {text ? (
-        <span className="font-medium text-foreground-2 tabular-nums">{text}</span>
-      ) : (
-        <span className="text-muted-foreground">{RULER_HINT}</span>
-      )}
-      {text && action && (
+      <span
+        aria-live="polite"
+        aria-atomic="true"
+        className={cn(
+          "line-clamp-2",
+          text ? "font-medium text-foreground-2 tabular-nums" : "text-muted-foreground"
+        )}
+      >
+        {text ?? RULER_HINT}
+      </span>
+      {action && (
         <button
           type="button"
           onClick={action.onClick}
-          className="cursor-pointer rounded font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+          aria-hidden={text ? undefined : true}
+          tabIndex={text ? undefined : -1}
+          className={cn(
+            "cursor-pointer rounded font-semibold whitespace-nowrap text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring",
+            !text && "invisible"
+          )}
         >
           {action.label}
         </button>
@@ -142,8 +168,16 @@ export function ValuesTable({
 }) {
   return (
     <details data-values className="text-[13px]">
-      <summary className="cursor-pointer font-semibold text-primary">Werte als Tabelle</summary>
-      <div className="mt-2 max-h-64 overflow-auto">
+      <summary className="cursor-pointer font-semibold text-primary">
+        Werte als Tabelle<span className="sr-only">{`: ${caption}`}</span>
+      </summary>
+      {/* der Bereich scrollt bei vielen Zeilen in sich und ist deshalb selbst per Tastatur erreichbar */}
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label={caption}
+        className="mt-2 max-h-64 overflow-auto rounded focus-visible:outline-2 focus-visible:outline-ring"
+      >
         <table className="w-full border-collapse tabular-nums">
           <caption className="sr-only">{caption}</caption>
           <thead>
@@ -165,11 +199,17 @@ export function ValuesTable({
           <tbody>
             {rows.map((row, r) => (
               <tr key={r} className="border-t border-border">
-                {row.map((cell, i) => (
-                  <td key={i} className={cn("px-2 py-1", i ? "text-right" : "text-left")}>
-                    {cell}
-                  </td>
-                ))}
+                {row.map((cell, i) =>
+                  i ? (
+                    <td key={i} className="px-2 py-1 text-right">
+                      {cell}
+                    </td>
+                  ) : (
+                    <th key={i} scope="row" className="px-2 py-1 text-left font-normal">
+                      {cell}
+                    </th>
+                  )
+                )}
               </tr>
             ))}
           </tbody>

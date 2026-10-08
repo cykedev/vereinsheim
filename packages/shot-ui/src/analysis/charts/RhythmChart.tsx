@@ -1,8 +1,10 @@
+"use client"
+
 import { rhythmProfile } from "@vereinsheim/shot-core/analysis"
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 
 import { durationText } from "../../format"
-import { RulerMark, RulerReadout, useRuler, ValuesTable } from "./ChartRuler"
+import { RULER_HINT, RulerMark, RulerReadout, useRuler, ValuesTable } from "./ChartRuler"
 import { ChartSvg, crisp, niceStep } from "./frame"
 
 const HEIGHT = 190
@@ -56,7 +58,8 @@ export function RhythmChart({
   const line = profile.filter((p) => p.medianMs !== null)
   const gapText = (p: (typeof timed)[number]) =>
     `vor Schuss ${p.number}: ${durationText(p.intervalMs as number)}${p.pause ? " (Pause)" : ""}${
-      p.medianMs !== null ? ` · Median der letzten fünf ${durationText(p.medianMs)}` : ""
+      // kurz, damit es auf dem Telefon in zwei Zeilen passt; die Notiz erklärt den Median der letzten fünf
+      p.medianMs !== null ? ` · Median ${durationText(p.medianMs)}` : ""
     }`
 
   return (
@@ -64,8 +67,8 @@ export function RhythmChart({
       <RulerReadout
         text={chosen ? gapText(chosen) : null}
         action={
-          chosen && onShow
-            ? { label: "Auf der Scheibe", onClick: () => onShow(chosen.number) }
+          onShow
+            ? { label: "Auf der Scheibe", onClick: () => chosen && onShow(chosen.number) }
             : null
         }
       />
@@ -73,7 +76,10 @@ export function RhythmChart({
         width={width}
         height={HEIGHT}
         label="Abstände zwischen den Schüssen"
-        svgProps={ruler.svgProps}
+        svgProps={{
+          ...ruler.svgProps,
+          "aria-valuetext": chosen ? gapText(chosen) : RULER_HINT,
+        }}
       >
         {grid.map((v) => (
           <g key={v}>

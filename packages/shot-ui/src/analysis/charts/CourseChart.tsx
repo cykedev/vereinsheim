@@ -1,9 +1,11 @@
+"use client"
+
 import { movingAverage, pauseRecovery } from "@vereinsheim/shot-core/analysis"
 import { shotNumbers, type MetricShot, type Scoring } from "@vereinsheim/shot-core/metrics"
 
 import { formatValue } from "../../format"
 import { scoreColor } from "../../geometry"
-import { RulerMark, RulerReadout, useRuler, ValuesTable } from "./ChartRuler"
+import { RULER_HINT, RulerMark, RulerReadout, useRuler, ValuesTable } from "./ChartRuler"
 import { ChartSvg, crisp } from "./frame"
 
 const HEIGHT = 230
@@ -75,18 +77,17 @@ export function CourseChart({
   const digits = scoring === "rings" ? 0 : 1
   const meanText = (p: (typeof avg)[number]) =>
     `${p.partial ? "Schnitt bisher" : "Schnitt der letzten zehn"} ${formatValue(p.meanRings, 2)}`
+  const text = chosen
+    ? `Schuss ${chosen.number} · ${formatValue(chosen.value, digits)} · ${meanText(chosen)}`
+    : null
 
   return (
     <div className="grid gap-2">
       <RulerReadout
-        text={
-          chosen
-            ? `Schuss ${chosen.number} · ${formatValue(chosen.value, digits)} · ${meanText(chosen)}`
-            : null
-        }
+        text={text}
         action={
-          chosen && onShow
-            ? { label: "Auf der Scheibe", onClick: () => onShow(chosen.number) }
+          onShow
+            ? { label: "Auf der Scheibe", onClick: () => chosen && onShow(chosen.number) }
             : null
         }
       />
@@ -94,7 +95,7 @@ export function CourseChart({
         width={width}
         height={HEIGHT}
         label="Wert je Schuss mit gleitendem Schnitt"
-        svgProps={ruler.svgProps}
+        svgProps={{ ...ruler.svgProps, "aria-valuetext": text ?? RULER_HINT }}
       >
         {grid.map((r) => (
           <g key={r}>

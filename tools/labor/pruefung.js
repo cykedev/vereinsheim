@@ -1100,26 +1100,116 @@ addEventListener("load", async () => {
       txt($("#readout")).includes("Schuss 14 · angetippt"),
       txt($("#readout")).slice(0, 40)
     )
-    check(
-      "Lineal: der Schuss der Scheibe steht im Verlauf und im Rhythmus",
-      !!$('[data-course-point="14"][data-chosen]', courseSvg()) &&
-        !!$('[data-interval="14"][data-chosen]', card("rhythmus"))
-    )
     await click(button("Auf der Scheibe", card("verlauf-und-trend")), 120)
     check(
       "Lineal: noch einmal „Auf der Scheibe“ lässt ihn gewählt",
       txt($("#readout")).includes("Schuss 14 · angetippt")
     )
+    // Tastatur: das Diagramm hat den Fokus; Pfeile und Ränder wandern, Escape hebt auf, fremde Tasten bleiben frei
+    const keyOn = (el, key, extra = {}) => {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...extra })
+      el.dispatchEvent(event)
+      return event.defaultPrevented
+    }
+    courseSvg().focus()
+    keyOn(courseSvg(), "ArrowRight")
+    await wait(30)
+    const afterRight = courseLine()
+    keyOn(courseSvg(), "End")
+    await wait(30)
+    const afterEnd = courseLine()
+    const altTaken = keyOn(courseSvg(), "ArrowLeft", { altKey: true })
+    await wait(30)
+    const afterAlt = courseLine()
+    const downTaken = keyOn(courseSvg(), "ArrowDown")
+    keyOn(courseSvg(), "Escape")
+    await wait(30)
+    const afterEscape = courseLine()
+    const escapeTaken = keyOn(courseSvg(), "Escape")
     check(
-      "Lineal: Verlauf, Rhythmus und Zehntel-Säulen scrollen senkrecht weiter (touch-action)",
+      "Lineal: Tastatur wandert, Escape hebt auf; Alt+Pfeil, Pfeil runter und Escape ohne Wahl bleiben dem Browser",
+      document.activeElement === courseSvg() &&
+        afterRight.includes("Schuss 15 · ") &&
+        afterEnd.includes("Schuss 40 · ") &&
+        !altTaken &&
+        afterAlt.includes("Schuss 40 · ") &&
+        !downTaken &&
+        afterEscape.includes("Tippe oder ziehe") &&
+        !escapeTaken,
+      [afterRight, afterEnd, afterAlt, afterEscape].map((t) => t.slice(0, 10)).join(" | ")
+    )
+    const beforeHover = courseLine()
+    await pointer("pointermove", 30)
+    check("Lineal: Überfahren ohne Druck wählt nichts", courseLine() === beforeHover)
+    await tapPoint(20)
+    await pointer("pointerdown", 8)
+    await pointer("pointercancel", 8)
+    check(
+      "Lineal: übernimmt der Browser das Scrollen (pointercancel), gilt die Wahl davor",
+      courseLine().includes("Schuss 20 · "),
+      courseLine().slice(0, 24)
+    )
+    await click(
+      $$("#shot-table button").find((b) => b.getAttribute("aria-label") === "Schuss 15 wählen"),
+      150
+    )
+    check(
+      "Lineal: ein auf der Scheibe gewählter Schuss steht im Verlauf und im Rhythmus",
+      !!$('[data-course-point="15"][data-chosen]', courseSvg()) &&
+        !!$('[data-interval="15"][data-chosen]', card("rhythmus")) &&
+        courseLine().includes("Schuss 15 · "),
+      courseLine().slice(0, 24)
+    )
+    check(
+      "Lineal: Verlauf und Rhythmus scrollen senkrecht weiter (touch-action)",
       [courseSvg(), $('svg[aria-label="Abstände zwischen den Schüssen"]', card("rhythmus"))].every(
         (el) => getComputedStyle(el).touchAction === "pan-y"
       )
     )
-    // zurück ohne Wahl: eine andere Scheibe und wieder zurück setzt den Zustand zurück
+    // eine Wahl im Lineal gehört zu ihrer Karte: Schuss 15 auf der Scheibe abwählen (ohne Vorgabe der Scheibe),
+    // Punkt 33 antippen, andere Karte → der Hinweis, nicht Schuss 33 der neuen Karte
+    await click(
+      $$("#shot-table button").find((b) => b.getAttribute("aria-label") === "Schuss 15 wählen"),
+      150
+    )
+    await tapPoint(33)
+    const before33 = courseLine()
     await click(button("Luftgewehr"), 150)
+    check(
+      "Lineal: eine Wahl bleibt bei ihrer Karte, die neue Karte fängt ohne Wahl an",
+      before33.includes("Schuss 33 · ") && courseLine().includes("Tippe oder ziehe"),
+      `${before33.slice(0, 12)} → ${courseLine().slice(0, 16)}`
+    )
     await click(button("Luftpistole"), 150)
     await tab("Ergebnis")
+    const lastBar = $$("[data-tenth]", $('svg[aria-label^="Zehntelverteilung"]', A())).at(-1)
+    await pointer(
+      "pointerdown",
+      null,
+      lastBar.ownerSVGElement,
+      Number(lastBar.getAttribute("x")) + Number(lastBar.getAttribute("width")) / 2
+    )
+    await pointer(
+      "pointerup",
+      null,
+      lastBar.ownerSVGElement,
+      Number(lastBar.getAttribute("x")) + Number(lastBar.getAttribute("width")) / 2
+    )
+    const barLine = txt($("[data-readout]", lastBar.ownerSVGElement.parentElement))
+    await click(button("Luftgewehr"), 150)
+    await click(button("Zehnerserie"), 150)
+    const freshLine = txt(
+      $("[data-readout]", $('svg[aria-label^="Zehntelverteilung"]', A()).parentElement)
+    )
+    check(
+      "Lineal: nach einem Kartenwechsel ohne alte Wahl, nirgends NaN",
+      / Schuss$/.test(barLine) &&
+        freshLine.includes("Tippe oder ziehe") &&
+        !/NaN|undefined/.test(txt(A())),
+      `${barLine} → ${freshLine.slice(0, 20)}`
+    )
+    await click(button("Luftpistole"), 150)
+    await click(button("40 Schuss mit Probe"), 150)
     const decimalSvg = $('svg[aria-label^="Zehntelverteilung"]', A())
     check(
       "Tabelle: Zehntel-Säulen, eine Zeile je belegtem Zehntel",
@@ -1600,6 +1690,52 @@ addEventListener("load", async () => {
       (b) => txt(b) === "Zeit und Verlauf"
     )
     await frameClick(rulerPhone, rulerTab, 200)
+    // die Zeile über dem Diagramm hat bei 375 px für den Hinweis und jede Wahl dieselbe Höhe, nichts abgeschnitten
+    const rulerTap = (svgEl, attr, n) => {
+      const r = svgEl.querySelector(`[${attr}="${n}"]`).getBoundingClientRect()
+      for (const type of ["pointerdown", "pointerup"])
+        svgEl.dispatchEvent(
+          new rulerPhone.contentWindow.PointerEvent(type, {
+            bubbles: true,
+            clientX: r.left + r.width / 2,
+            clientY: r.top + r.height / 2,
+            pointerId: 1,
+          })
+        )
+    }
+    const lineBoxes = []
+    for (const [cardId, label, attr, points] of [
+      [
+        "verlauf-und-trend",
+        "Wert je Schuss mit gleitendem Schnitt",
+        "data-course-point",
+        [1, 21, 40],
+      ],
+      ["rhythmus", "Abstände zwischen den Schüssen", "data-interval", [21, 2, 39]],
+    ]) {
+      const chartEl = rd.querySelector(`[data-card="${cardId}"] svg[aria-label="${label}"]`)
+      const lineEl = rd.querySelector(`[data-card="${cardId}"] [data-readout]`)
+      const measure = () => {
+        const span = lineEl.querySelector("span")
+        return {
+          h: Math.round(lineEl.getBoundingClientRect().height),
+          clipped: span.scrollHeight > span.clientHeight + 1,
+        }
+      }
+      lineBoxes.push(measure())
+      for (const n of points) {
+        rulerTap(chartEl, attr, n)
+        await wait(60)
+        lineBoxes.push(measure())
+      }
+      rulerTap(chartEl, attr, points.at(-1))
+      await wait(60)
+    }
+    check(
+      "Telefon: die Zeile über Verlauf und Rhythmus behält ihre Höhe, kein Text abgeschnitten",
+      lineBoxes.every((b) => b.h === lineBoxes[0].h && !b.clipped),
+      lineBoxes.map((b) => `${b.h}${b.clipped ? "!" : ""}`).join(" ")
+    )
     const rulerCourse = rd.querySelector('svg[aria-label="Wert je Schuss mit gleitendem Schnitt"]')
     rulerCourse.scrollIntoView()
     await wait(100)

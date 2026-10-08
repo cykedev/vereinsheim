@@ -61,6 +61,31 @@ describe("Antippen eines Schusses", () => {
   })
 })
 
+describe("Schuss zeigen (aus dem Lineal, Plan L1)", () => {
+  it("wählt ohne Umschalten: ein schon gewählter Schuss bleibt gewählt", () => {
+    let s = viewReducer(start, { type: "show", shot: 4, series: 1 })
+    expect(s.chosen).toEqual({ index: 4, series: 1 })
+    s = viewReducer(s, { type: "show", shot: 4, series: 1 })
+    expect(s.chosen).toEqual({ index: 4, series: 1 })
+  })
+
+  it("liegt der Schuss außerhalb der Auswahl, gilt wieder die Grundauswahl, damit er zu sehen ist", () => {
+    const home: ViewState = { ...start, selection: "match", home: "match" }
+    let s = viewReducer(home, { type: "select", series: 1 })
+    expect(s.selection).toBe(1)
+    s = viewReducer(s, { type: "show", shot: 34, series: 4 })
+    expect(s.selection).toBe("match")
+    expect(s.chosen).toEqual({ index: 34, series: 4 })
+    // in der Auswahl bleibt sie, wie sie ist
+    const same = viewReducer(viewReducer(home, { type: "select", series: 1 }), {
+      type: "show",
+      shot: 3,
+      series: 1,
+    })
+    expect(same.selection).toBe(1)
+  })
+})
+
 describe("Ausschnitt, Ebenen, Wertung", () => {
   it("Schalter wirken nur auf ihre Ebene", () => {
     const s = viewReducer(start, { type: "toggle", layer: "numbers" })

@@ -23,6 +23,11 @@ export type ViewAction =
   | { type: "select"; series: SeriesKey }
   | { type: "selectWhole"; whole: Whole }
   | { type: "choose"; shot: number; series: SeriesKey | null }
+  /**
+   * einen Schuss zeigen, etwa aus dem Lineal eines Diagramms: wählt ohne Umschalten; liegt er außerhalb der
+   * Auswahl, gilt wieder die Grundauswahl, damit er zu sehen ist (Plan L1)
+   */
+  | { type: "show"; shot: number; series: SeriesKey | null }
   | { type: "setView"; view: ViewState["view"] }
   | { type: "toggle"; layer: Layer }
   | { type: "setScoring"; scoring: Scoring }
@@ -71,6 +76,12 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
           state.chosen?.index === action.shot
             ? null
             : { index: action.shot, series: action.series },
+      }
+    case "show":
+      return {
+        ...state,
+        selection: isSelected(state.selection, action.series) ? state.selection : state.home,
+        chosen: { index: action.shot, series: action.series },
       }
     case "setView":
       return { ...state, view: action.view }
