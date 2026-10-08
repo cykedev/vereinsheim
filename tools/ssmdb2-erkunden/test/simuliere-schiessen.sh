@@ -5,9 +5,11 @@
 set -euo pipefail
 
 : "${ANLAGE:?ANLAGE fehlt}"
+# Versatz der Zeitstempel gegen die Server-Uhr in Stunden (Zeitzonen-Durcheinander, SF-29/SF-31).
+ZEIT="NOW() + INTERVAL ${SIM_VERSATZ_STUNDEN:-0} HOUR"
 
 sql() {
-  docker exec -i "$ANLAGE" mariadb -uroot -proot SSMDB2
+  docker exec -i "$ANLAGE" mariadb --skip-ssl -uroot -proot SSMDB2
 }
 
 scheibe() { # id nachname disziplin_id disziplin
@@ -16,15 +18,15 @@ INSERT INTO Scheiben (ScheibenID, Starterliste, StarterlisteID, Startzeit, Start
   StandNr, StandNrText, Disziplin, DisziplinID, Status, Trefferzahl, TotalRing, TotalRing01, BesterTeiler01,
   BesterTeiler001, Zeitstempel)
 VALUES ($1, 'Training', 1, '0000-00-00 00:00:00', 0, '$2', 'Annegret', IF('$2' = '--frei--', 0, 48151623),
-  4, '4', '$4', $3, '1', 0, 0, 0, 0, 0, NOW());
+  4, '4', '$4', $3, '1', 0, 0, 0, 0, 0, $ZEIT);
 EOF
 }
 
 schuss() { # id stellung nr x y ring01
   sql <<EOF
 INSERT INTO Treffer VALUES ($1, $2, $3, IF($2 = 0, 0, 1), $4, $5, 0, 1, '', FLOOR($6 / 10), $6,
-  ROUND(SQRT($4 * $4 + $5 * $5) / 10), ROUND(SQRT($4 * $4 + $5 * $5)), NOW(), FLOOR(RAND() * 1000));
-UPDATE Scheiben SET Zeitstempel = NOW(),
+  ROUND(SQRT($4 * $4 + $5 * $5) / 10), ROUND(SQRT($4 * $4 + $5 * $5)), $ZEIT, FLOOR(RAND() * 1000));
+UPDATE Scheiben SET Zeitstempel = $ZEIT,
   Trefferzahl = (SELECT COUNT(*) FROM Treffer WHERE ScheibenID = $1 AND Stellung > 0) WHERE ScheibenID = $1;
 EOF
 }

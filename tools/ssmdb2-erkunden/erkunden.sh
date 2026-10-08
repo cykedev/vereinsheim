@@ -49,12 +49,18 @@ frage_ja() {
 }
 
 aufraeumen() {
+  local rc=$?
+  set +e  # Aufräumen muss ganz laufen, auch wenn ein Schritt scheitert.
   # Reihenfolge: erst den Mitschnitt stoppen und das Protokoll sichern, dann den Client entfernen.
   if [ -n "$MITSCHNITT_PID" ]; then
     mitschnitt_stoppen
     protokoll_anonymisieren
   fi
   client_aufraeumen
+  if [ "$rc" != 0 ] && [ -n "$AUSGABE" ]; then
+    warnung "Abgebrochen. Bisherige Ergebnisse: $AUSGABE"
+    warnung "Fortsetzen mit: $0 --ausgabe $AUSGABE <fehlende Phasen>"
+  fi
 }
 trap aufraeumen EXIT
 
@@ -96,6 +102,9 @@ phase_selbsttest() {
   echo "Bash: $BASH_VERSION"
   if client_finden "$DOCKER_ERZWINGEN"; then
     echo "MySQL-Client: $(client_beschreibung)"
+  elif [ "$DOCKER_LAEUFT_NICHT" = 1 ]; then
+    warnung "Docker ist installiert, läuft aber nicht: Docker Desktop starten."
+    ok=0
   else
     warnung "Kein MySQL-Client: weder mariadb/mysql lokal noch das Docker-Image $DOCKER_IMAGE."
     warnung "Zu Hause vorbereiten: docker pull $DOCKER_IMAGE (oder: brew install mariadb)."
@@ -119,7 +128,9 @@ zugang_abfragen() {
   local passwort="${ERKUNDEN_PASSWORT:-}"
   if [ -z "$BENUTZER" ]; then
     [ "$AUTO" = 0 ] || fehler "--auto braucht ERKUNDEN_USER oder --user"
-    read -r -p "Benutzer (Standard-Zugang laut Meyton-Handbuch): " BENUTZER
+    # Standard-Benutzer laut Meyton-Handbuch zur SSMDB2 (Seite 3); das Passwort steht ebenda.
+    read -r -p "Benutzer [meyton]: " BENUTZER
+    BENUTZER=${BENUTZER:-meyton}
   fi
   if [ -z "$passwort" ]; then
     [ "$AUTO" = 0 ] || fehler "--auto braucht ERKUNDEN_PASSWORT"
@@ -133,7 +144,10 @@ zugang_abfragen() {
 verbindung_sicherstellen() {
   local fehlertext
   [ "$VERBUNDEN" = 0 ] || return 0
-  client_finden "$DOCKER_ERZWINGEN" || fehler "kein MySQL-Client (erst: erkunden.sh selbsttest)"
+  if ! client_finden "$DOCKER_ERZWINGEN"; then
+    [ "$DOCKER_LAEUFT_NICHT" = 0 ] || fehler "Docker Desktop läuft nicht: bitte starten und erneut versuchen"
+    fehler "kein MySQL-Client (erst: erkunden.sh selbsttest)"
+  fi
   ausgabe_anlegen
   zugang_abfragen
   client_starten
@@ -149,6 +163,7 @@ verbindung_sicherstellen() {
       fehler "Verbindung fehlgeschlagen: $fehlertext"
     fi
   fi
+  server_faehigkeiten
   VERBUNDEN=1
 }
 
@@ -165,7 +180,7 @@ phase_verbinden() {
   local datei="$AUSGABE/bericht/umgebung.md" vorher nachher anlage_ms
   info "Umgebung festhalten: $datei"
   vorher=$(jetzt_ms)
-  anlage_ms=$(sql_text "SELECT ROUND(UNIX_TIMESTAMP(NOW(3)) * 1000) AS ms" | sed -n 2p)
+  anlage_ms=$(sql_text "SELECT ROUND(UNIX_TIMESTAMP($JETZT_SQL) * 1000) AS ms" 2>/dev/null | sed -n 2p || true)
   nachher=$(jetzt_ms)
   {
     echo "# Umgebung"
@@ -182,25 +197,41 @@ phase_verbinden() {
     echo
     echo "## Server und Uhr"
     echo
-    sql_tabelle "SELECT VERSION() AS version, @@version_comment AS art, NOW(3) AS jetzt_anlage,
-      UTC_TIMESTAMP(3) AS utc_anlage, @@session.time_zone AS sitzung_tz,
-      @@global.time_zone AS global_tz, @@system_time_zone AS system_tz" | md_code
+    abschnitt_sql "SELECT VERSION() AS version, @@version_comment AS art, $JETZT_SQL AS jetzt_anlage,
+      UTC_TIMESTAMP() AS utc_anlage, @@session.time_zone AS sitzung_tz,
+      @@global.time_zone AS global_tz, @@system_time_zone AS system_tz"
     echo
-    echo "Uhr der Anlage minus Uhr des Macs: $((anlage_ms - (vorher + nachher) / 2)) ms" \
-      "(Abfrage dauerte $((nachher - vorher)) ms; SF-29)."
+    if [ -n "$anlage_ms" ]; then
+      echo "Uhr der Anlage minus Uhr des Macs: $((anlage_ms - (vorher + nachher) / 2)) ms" \
+        "(Abfrage dauerte $((nachher - vorher)) ms; SF-29)."
+    else
+      echo "Uhr der Anlage nicht lesbar."
+    fi
+    echo
+    echo "- Millisekunden in NOW(): $([ "$JETZT_SQL" = "NOW(3)" ] && echo ja || echo nein)"
+    echo "- Zeitgrenze je Abfrage der Checkliste: ${ZEITGRENZE_SQL:-keine (Server kennt keine)}"
     echo
     echo "## Zeichensatz"
     echo
-    sql_tabelle "SHOW VARIABLES WHERE Variable_name LIKE 'character_set%' OR Variable_name LIKE 'collation%'" | md_code
+    abschnitt_sql "SHOW VARIABLES WHERE Variable_name LIKE 'character_set%' OR Variable_name LIKE 'collation%'"
+    echo
+    echo "## Tabellen"
+    echo
+    abschnitt_sql "SHOW TABLES"
     echo
     echo "## Tabelle Version"
     echo
-    sql_tabelle "SELECT * FROM Version" 2>&1 | md_code
+    abschnitt_sql "SELECT * FROM Version"
     echo
     echo "## Netz (SF-57)"
     echo
     netz_pruefen | md_code
   } >"$datei"
+}
+
+# Eine Abfrage als Codeblock; scheitert sie, steht der Fehler im Bericht und der Lauf geht weiter.
+abschnitt_sql() {
+  { sql_tabelle "$1" 2>&1 || echo "(nicht lesbar)"; } | md_code
 }
 
 netz_pruefen() {
@@ -209,8 +240,8 @@ netz_pruefen() {
   echo "Internet vom Mac aus (https://example.com): HTTP ${code:-keine Antwort}"
   echo "Standard-Route: $(route -n get default 2>/dev/null | awk '/gateway|interface/ {printf "%s ", $0}' || true)"
   if command -v smbutil >/dev/null 2>&1; then
-    echo "Freigaben auf $HOST (smbutil view, Gast):"
-    smbutil view -G "//$HOST" 2>&1 | sed 's/^/  /' || true
+    echo "Freigaben auf $HOST (smbutil view, nur Gast, ohne Passwortabfrage):"
+    smbutil view -N -g "//$HOST" 2>&1 | sed 's/^/  /' || true
   else
     echo "smbutil nicht vorhanden; Freigaben nicht geprüft"
   fi
@@ -264,29 +295,42 @@ phase_dump() {
     warnung "Kopie übersprungen"
     return 0
   }
-  local roh="$AUSGABE/privat/ssmdb2.sql.gz" bericht="$AUSGABE/bericht/dump.md" start dauer zusatz tabelle
+  local roh="$AUSGABE/privat/ssmdb2.sql.gz" bericht="$AUSGABE/bericht/dump.md" fehler="$AUSGABE/privat/dump-fehler.txt"
+  local start dauer zusatz tabelle stand="vollständig"
   zusatz=$(dump_zusatz)
   start=$(jetzt_ms)
   # shellcheck disable=SC2086  # $zusatz sind null bis zwei einzelne Optionen
-  sql_dump --single-transaction --skip-lock-tables --no-tablespaces --hex-blob $zusatz | gzip >"$roh"
+  if ! sql_dump --single-transaction --skip-lock-tables --no-tablespaces --hex-blob $zusatz 2>"$fehler" | gzip >"$roh"; then
+    stand="unvollständig"
+    warnung "Die Kopie ist unvollständig (Fehler in privat/dump-fehler.txt); der Rest läuft weiter."
+  fi
   dauer=$(($(jetzt_ms) - start))
   chmod 600 "$roh"
   # shellcheck disable=SC2086
-  sql_dump --no-data --skip-lock-tables --no-tablespaces --skip-comments $zusatz >"$AUSGABE/bericht/schema.sql"
+  sql_dump --no-data --skip-lock-tables --no-tablespaces --skip-comments $zusatz \
+    >"$AUSGABE/bericht/schema.sql" 2>/dev/null || warnung "Schema nur teilweise gelesen"
   {
     echo "# Kopie der SSMDB2"
     echo
-    echo "- Datei: privat/ssmdb2.sql.gz (enthält Namen, bleibt auf diesem Rechner)"
+    echo "- Datei: privat/ssmdb2.sql.gz (enthält Namen, bleibt auf diesem Rechner; einspielen mit einem MariaDB-Client)"
+    echo "- Stand: $stand"
     echo "- Größe: $(wc -c <"$roh" | tr -d ' ') Bytes gepackt, Dauer $dauer ms"
     echo "- Schema ohne Daten: bericht/schema.sql"
+    if [ "$stand" != "vollständig" ]; then
+      echo
+      echo "## Fehler beim Kopieren"
+      echo
+      head -5 "$fehler" | md_code
+    fi
     echo
     echo "## Zeilen je Tabelle"
     echo
-    for tabelle in $(sql_text "SHOW TABLES" | sed 1d); do
-      printf -- '- %s: %s\n' "$tabelle" "$(sql_text "SELECT COUNT(*) FROM \`$tabelle\`" | sed -n 2p)"
+    for tabelle in $(sql_text "SHOW TABLES" 2>/dev/null | sed 1d || true); do
+      printf -- '- %s: %s\n' "$tabelle" \
+        "$(sql_text "SELECT COUNT(*) FROM \`$tabelle\`" 2>/dev/null | sed -n 2p || echo "nicht lesbar")"
     done
   } >"$bericht"
-  info "Kopie geschrieben: $roh ($dauer ms)"
+  info "Kopie geschrieben: $roh ($dauer ms, $stand)"
 }
 
 # ---------------------------------------------------------------- Phase protokoll
@@ -307,11 +351,19 @@ phase_protokoll() {
     warnung "Protokoll übersprungen"
     return 0
   }
-  mitschnitt_starten
+  MITSCHNITT_DATEI="$AUSGABE/privat/protokoll-roh.tsv"
+  if mitschnitt_vorpruefen; then
+    mitschnitt_starten
+  else
+    warnung "Ohne Mitschnitt fehlt das Wichtigste (Probe, Zeitstempel, Latenz)."
+    frage_ja "Trotzdem die Schritte durchgehen (nur Notizen und IDs der Ausdrucke)?" || return 0
+  fi
   protokoll_schiessen
-  info "Letzte Änderungen abwarten …"
-  sleep 3
-  mitschnitt_stoppen
+  if [ -n "$MITSCHNITT_PID" ]; then
+    info "Letzte Änderungen abwarten …"
+    sleep 3
+    mitschnitt_stoppen
+  fi
   protokoll_anonymisieren
   info "Protokoll geschrieben: $AUSGABE/bericht/schritte.md, $AUSGABE/bericht/protokoll.tsv"
 }
@@ -319,14 +371,22 @@ phase_protokoll() {
 # ---------------------------------------------------------------- Phase abschluss
 
 # Sucht Namen und Sportpassnummern aus der Ablage als ganze Wörter in bericht/. Meldet nur Anzahlen
-# je Datei, nie den Namen. Die Liste liegt nur kurz in privat/.
+# je Datei, nie den Namen. Die Liste liegt nur kurz in privat/. Kurze Sportpassnummern (unter fünf
+# Stellen) bleiben außen vor, sie träfen sonst jede Zahl. Scheitert die Abfrage, gibt es keine
+# Entwarnung (Review S1).
 namen_pruefen() {
   local liste datei treffer gesamt=0
   liste=$(mktemp "$AUSGABE/privat/.namen.XXXXXX")
-  sql_text "SELECT DISTINCT Nachname AS n FROM Scheiben WHERE CHAR_LENGTH(TRIM(Nachname)) >= 3
+  if ! sql_text "SELECT DISTINCT Nachname AS n FROM Scheiben WHERE CHAR_LENGTH(TRIM(Nachname)) >= 3
       UNION SELECT DISTINCT Vorname FROM Scheiben WHERE CHAR_LENGTH(TRIM(Vorname)) >= 3
-      UNION SELECT DISTINCT CAST(SportpassID AS CHAR) FROM Scheiben WHERE SportpassID > 0" |
-    sed 1d | grep -v -x -e '--frei--' -e 'NULL' >"$liste" || true
+      UNION SELECT DISTINCT CAST(SportpassID AS CHAR) FROM Scheiben WHERE SportpassID >= 10000" \
+    >"$liste.roh" 2>/dev/null; then
+    rm -f "$liste" "$liste.roh"
+    echo "Namensprüfung nicht möglich (Spalten Nachname/Vorname/SportpassID nicht lesbar); bericht/ vor dem Weitergeben selbst durchsehen"
+    return 0
+  fi
+  sed 1d "$liste.roh" | grep -v -x -e '--frei--' -e 'NULL' >"$liste" || true
+  rm -f "$liste.roh"
   if [ ! -s "$liste" ]; then
     rm -f "$liste"
     echo "Namensprüfung: keine Namen in der Ablage"
@@ -343,6 +403,10 @@ namen_pruefen() {
   if [ "$gesamt" = 0 ]; then echo "Namensprüfung: keine Treffer in bericht/"; fi
 }
 
+liesmich_zeile() {
+  if [ -e "$AUSGABE/bericht/$1" ]; then echo "| $1 | $2 |"; fi
+}
+
 phase_abschluss() {
   verbindung_sicherstellen
   local liesmich="$AUSGABE/bericht/LIESMICH.md" pruefung
@@ -353,18 +417,23 @@ phase_abschluss() {
   {
     echo "# SSMDB2-Erkundung $(date '+%Y-%m-%d')"
     echo
-    echo "Dieser Ordner (bericht/) enthält keine Namen und Sportpassnummern und darf weitergegeben werden."
+    case "$pruefung" in
+      *"keine Treffer"* | *"keine Namen in der Ablage"*)
+        echo "Dieser Ordner (bericht/) enthält keine Namen und Sportpassnummern und darf weitergegeben werden." ;;
+      *)
+        echo "**Vor dem Weitergeben prüfen:** Die Namensprüfung unten hat Treffer oder war nicht möglich." ;;
+    esac
     echo "Der Ordner privat/ daneben enthält die vollständige Kopie mit Namen und bleibt auf diesem Rechner."
     echo
     echo "| Datei | Inhalt |"
     echo "|---|---|"
-    echo "| umgebung.md | Server, Uhr, Zeitzonen, Zeichensatz, Netz |"
-    echo "| antworten.md | SQL-Checkliste vor dem Schießen |"
-    echo "| antworten-danach.md | dieselbe Checkliste danach |"
-    echo "| schema.sql | Tabellen ohne Daten |"
-    echo "| dump.md | Größe der Kopie, Zeilen je Tabelle |"
-    echo "| schritte.md | geführte Schritte mit Zeit, Notizen, IDs der Ausdrucke |"
-    echo "| protokoll.tsv | Mitschnitt jeder Änderung (Namen als P1, P2 …, Sportpass als S1, S2 …) |"
+    liesmich_zeile umgebung.md "Server, Uhr, Zeitzonen, Zeichensatz, Netz"
+    liesmich_zeile antworten.md "SQL-Checkliste vor dem Schießen"
+    liesmich_zeile antworten-danach.md "dieselbe Checkliste danach"
+    liesmich_zeile schema.sql "Tabellen ohne Daten"
+    liesmich_zeile dump.md "Größe der Kopie, Zeilen je Tabelle"
+    liesmich_zeile schritte.md "geführte Schritte mit Zeit, Notizen, IDs der Ausdrucke"
+    liesmich_zeile protokoll.tsv "Mitschnitt jeder Änderung (Namen als P1, P2 …, Sportpass als S1, S2 …)"
     echo
     echo "## Prüfung"
     echo
@@ -376,6 +445,11 @@ phase_abschluss() {
 }
 
 # ---------------------------------------------------------------- Ablauf
+
+# Der Mac darf während des Abends nicht einschlafen, sonst steht der Mitschnitt (Review S6).
+if [ "$AUTO" = 0 ] && command -v caffeinate >/dev/null 2>&1; then
+  caffeinate -dims -w $$ >/dev/null 2>&1 &
+fi
 
 for phase in $PHASEN; do
   case "$phase" in

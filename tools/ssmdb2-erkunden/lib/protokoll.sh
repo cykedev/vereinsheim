@@ -11,7 +11,7 @@ SCHRITTE_DATEI=""
 # Ausgabe leer, wenn die Eingabe kein gültiges Muster ist.
 pdf_id_dekodieren() {
   local hex wert
-  hex=$(printf '%s' "$1" | tr -d ' ' | tr 'A-F' 'a-f')
+  hex=$(printf '%s' "$1" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
   case "$hex" in id:*) hex=${hex#id:} ;; esac
   printf '%s' "$hex" | grep -Eq '^[0-9a-f]{8}$' || return 0
   wert=$((16#$hex))
@@ -21,10 +21,10 @@ pdf_id_dekodieren() {
 
 _marker() {
   local nr=$1 titel=$2 status=$3 notiz=${4:-} anlage
-  anlage=$(sql_text "SELECT NOW(3) AS jetzt" 2>/dev/null | sed -n 2p || true)
+  anlage=$(sql_text "SELECT $JETZT_SQL AS jetzt" 2>/dev/null | sed -n 2p || true)
   printf '| %s | %s | %s | %s | %s | %s |\n' "$nr" "$titel" "$status" "$(date '+%H:%M:%S')" "$anlage" "$notiz" \
     >>"$SCHRITTE_DATEI"
-  mitschnitt_ereignis "schritt $nr $status anlage=$anlage"
+  mitschnitt_marker "schritt $nr $status anlage=$anlage"
 }
 
 # Fragt IDs aus Ausdrucken ab und sucht die Scheiben (ohne Namen).
@@ -61,6 +61,17 @@ _pdf_ids_abfragen() {
   echo >>"$SCHRITTE_DATEI"
 }
 
+# Nach jedem Schritt: Stand des Mitschnitts. Sieht er nach Schritt 1 noch nichts, laut warnen
+# (Review B2): Dann stimmen Uhr, Zeitzone oder die Einstellung des SSMDB2-Dienstes nicht.
+_status_zeigen() {
+  [ -n "$MITSCHNITT_PID" ] || return 0
+  sleep 1
+  if ! mitschnitt_status && [ "$1" -ge 1 ]; then
+    printf '\033[31m!! Mitschnitt sieht keine Scheibe.\033[0m Prüfen: Dienst SSMDB2 im Kontrollzentrum auf Echtzeit?\n' >&2
+    printf '   Uhr und Zeitzone der Anlage (umgebung.md)? Wurde wirklich auf einer Scheibe geschossen?\n' >&2
+  fi
+}
+
 # Ein Schritt: Anweisung zeigen, auf den Schützen warten, Marker setzen.
 # Rückgabe 1, wenn der User das Protokoll beenden will.
 _schritt() {
@@ -92,6 +103,7 @@ _schritt() {
   fi
   _marker "$nr" "$titel" "erledigt" "$notiz"
   if [ "$ids" = ids ]; then _pdf_ids_abfragen; fi
+  _status_zeigen "$nr"
   return 0
 }
 

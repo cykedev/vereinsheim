@@ -3,6 +3,7 @@
 # Kompatibel mit macOS-Bash 3.2: keine assoziativen Arrays, keine leeren Arrays unter `set -u`.
 
 CLIENT_MODUS=""                        # lokal | docker
+DOCKER_LAEUFT_NICHT=0
 MYSQL_BIN=""
 DUMP_BIN=""
 DOCKER_IMAGE="${ERKUNDEN_DOCKER_IMAGE:-mariadb:11}"
@@ -10,6 +11,8 @@ DOCKER_CLIENT="ssmdb2-erkunden-client-$$"
 DOCKER_NETZ=""                         # nur für den Selbsttest
 ZUGANG_DIR=""
 RO_INIT="SET SESSION TRANSACTION READ ONLY"
+JETZT_SQL="NOW()"                      # NOW(3), wenn der Server Millisekunden kann (verbinden prüft das)
+ZEITGRENZE_SQL=""                      # Zeitgrenze je Abfrage der Checkliste, je nach Server
 
 # Sucht einen MySQL-Client. $1 = 1 erzwingt Docker. Rückgabe 1, wenn keiner da ist.
 client_finden() {
@@ -25,6 +28,10 @@ client_finden() {
       CLIENT_MODUS=lokal
       return 0
     fi
+  fi
+  if command -v docker >/dev/null 2>&1 && ! docker info >/dev/null 2>&1; then
+    DOCKER_LAEUFT_NICHT=1
+    return 1
   fi
   if command -v docker >/dev/null 2>&1 && docker image inspect "$DOCKER_IMAGE" >/dev/null 2>&1; then
     CLIENT_MODUS=docker
@@ -60,6 +67,11 @@ zugang_schreiben() {
       echo "port=$2"
       echo "user=\"$(_cnf_escape "$3")\""
       echo "password=\"$(_cnf_escape "$4")\""
+      # Der MariaDB-Client ab 11.4 verlangt sonst TLS mit gültigem Zertifikat und verweigert einen
+      # Server ohne TLS ganz (Review B1). Die Verbindung bleibt im lokalen Gerätenetz. Nur
+      # MariaDB-Clients lesen diese Gruppe; ein Oracle-mysql ignoriert sie.
+      echo "[client-mariadb]"
+      echo "skip-ssl-verify-server-cert"
     } >"$ZUGANG_DIR/zugang.cnf"
   )
 }
@@ -135,14 +147,18 @@ sql_tabelle() {
 }
 
 # Eine SQL-Datei als lesbare Tabellen, jede Abfrage mit ihrem Text (für den Bericht). Scheitert eine
-# Abfrage (etwa weil das echte Schema anders aussieht), laufen die übrigen weiter (--force).
+# Abfrage (etwa weil das echte Schema anders aussieht), laufen die übrigen weiter (--force). Vorweg
+# die Zeitgrenze je Abfrage, damit kein Vollscan die Anlage lange hält (Review S4); ungepuffert, damit
+# Fehler bei ihrer Abfrage stehen.
 sql_datei_tabelle() {
-  _mysql_stdin --table -vvv --force <"$1" 2>&1 | sed '/^Bye$/d'
+  { if [ -n "$ZEITGRENZE_SQL" ]; then printf '%s;\n' "$ZEITGRENZE_SQL"; fi; cat "$1"; } |
+    _mysql_stdin --table -vvv --force --unbuffered 2>&1 | sed '/^Bye$/d'
 }
 
-# Dump über den passenden Dump-Client; Argumente werden angehängt, Ausgabe auf stdout.
+# Dump über den passenden Dump-Client; Argumente werden angehängt, Ausgabe auf stdout. Mit --force,
+# damit eine View ohne SHOW VIEW-Recht nicht die ganze Kopie abbricht (Review B3).
 sql_dump() {
-  _client "$DUMP_BIN" "$@" "$DB"
+  _client "$DUMP_BIN" --force "$@" "$DB"
 }
 
 # Zusatzoptionen, die nur ein lokales mysqldump 8 braucht (gegen ältere Server und GTID).
@@ -161,6 +177,19 @@ tx_start() {
   else
     echo "START TRANSACTION WITH CONSISTENT SNAPSHOT"
   fi
+}
+
+# Erkennt, was der Server kann: Millisekunden in NOW() und eine Zeitgrenze je Abfrage.
+server_faehigkeiten() {
+  local version
+  if sql_text "SELECT NOW(3)" >/dev/null 2>&1; then JETZT_SQL="NOW(3)"; else JETZT_SQL="NOW()"; fi
+  version=$(sql_text "SELECT VERSION() AS v" 2>/dev/null | sed -n 2p || true)
+  case "$version" in
+    *MariaDB*) ZEITGRENZE_SQL="SET SESSION max_statement_time = 60" ;;
+    *) if sql_text "SELECT @@max_execution_time" >/dev/null 2>&1; then
+         ZEITGRENZE_SQL="SET SESSION max_execution_time = 60000"
+       fi ;;
+  esac
 }
 
 # Zeit des Macs in Millisekunden.
