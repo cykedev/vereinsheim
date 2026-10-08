@@ -177,3 +177,40 @@ describe("ShotTable", () => {
     expect(html).toMatch(/<tr data-row="P1"[\s\S]*?box-shadow:inset 0 0 0 1.5px var\(--score-9\)/)
   })
 })
+
+describe("Schusstabelle auf dem Telefon (Plan Schritt 4, D8)", () => {
+  // 15 Wertungsschüsse in einer Serie
+  const many: MetricShot[] = Array.from({ length: 15 }, (_, i) => ({
+    xUm: i * 100,
+    yUm: 0,
+    decimalTenths: 100,
+    ring: 10,
+    innerTen: false,
+    firedAtMs: i * 60_000,
+    kind: "match",
+    series: 1,
+  }))
+  const table = (state: Partial<ViewState> = {}, shots: readonly MetricShot[] = many) =>
+    renderToStaticMarkup(
+      createElement(ShotTable, { shots, state: { ...initialViewState(), ...state } })
+    )
+  const hiddenRows = (html: string) =>
+    [...html.matchAll(/<tr data-row="(\d+)"[^>]*class="[^"]*max-md:hidden/g)].map((m) => m[1])
+
+  it("die zehn neuesten Zeilen, die übrigen erst nach „Alle zeigen“", () => {
+    const html = table()
+    expect(hiddenRows(html)).toEqual(["5", "4", "3", "2", "1"])
+    expect(html).toMatch(/<button[^>]*aria-expanded="false"[^>]*>Alle 15 zeigen<\/button>/)
+    expect(html).toMatch(/<button[^>]*class="[^"]*md:hidden[^"]*"[^>]*>Alle 15 zeigen/)
+  })
+
+  it("der gewählte Schuss bleibt sichtbar, auch wenn er älter ist", () => {
+    expect(hiddenRows(table({ chosen: { index: 0, series: 1 } }))).toEqual(["5", "4", "3", "2"])
+  })
+
+  it("bei zehn oder weniger Zeilen kein Knopf und nichts versteckt", () => {
+    const html = table({}, many.slice(0, 10))
+    expect(hiddenRows(html)).toEqual([])
+    expect(html).not.toContain("aria-expanded")
+  })
+})

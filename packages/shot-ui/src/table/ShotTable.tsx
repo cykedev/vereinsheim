@@ -4,7 +4,7 @@ import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { teilerFromDistanceUm } from "@vereinsheim/shot-core/scoring"
 import { PAUSE_THRESHOLD_MS } from "@vereinsheim/shot-core/time"
 import { cn } from "@vereinsheim/lib/utils"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import { formatValue } from "../format"
 import { scoreColor } from "../geometry"
@@ -18,6 +18,8 @@ export interface ShotTableProps {
   state: ViewState
   /** Zeile gewählt: derselbe Schuss wie beim Antippen auf der Scheibe */
   onChoose?: (index: number, series: SeriesKey | null) => void
+  /** unter 768 px nur so viele neueste Zeilen, dazu „Alle zeigen“ (Plan Schritt 4, D8) */
+  collapseAfter?: number
   className?: string
 }
 
@@ -45,7 +47,14 @@ function teilerText(shot: MetricShot): string {
  * der Knopf in der ersten Zelle ist der Weg per Tastatur und Screenreader. Zeigt sie mehrere Serien,
  * trennt eine Zeile mit dem Namen jede Serie (je ein `tbody`).
  */
-export function ShotTable({ shots, state, onChoose, className }: ShotTableProps) {
+export function ShotTable({
+  shots,
+  state,
+  onChoose,
+  collapseAfter = 10,
+  className,
+}: ShotTableProps) {
+  const [expanded, setExpanded] = useState(false)
   const labels = useMemo(() => shotLabels(shots), [shots])
   const intervals = useMemo(() => shotIntervals(shots), [shots])
   const indices = shots
@@ -61,6 +70,10 @@ export function ShotTable({ shots, state, onChoose, className }: ShotTableProps)
     if (last && last.key === key) last.indices.push(i)
     else groups.push({ key, indices: [i] })
   }
+
+  // auf dem Telefon nur die neuesten Zeilen und der gewählte Schuss, bis „Alle zeigen“
+  const shown = new Set(indices.slice(0, collapseAfter))
+  const collapsed = (i: number) => !expanded && !shown.has(i) && state.chosen?.index !== i
 
   if (!indices.length) {
     return <p className={cn("text-[13px] text-muted-foreground", className)}>Noch kein Schuss.</p>
@@ -93,7 +106,7 @@ export function ShotTable({ shots, state, onChoose, className }: ShotTableProps)
         {groups.map((group) => (
           <tbody key={String(group.key)}>
             {groups.length > 1 && (
-              <tr>
+              <tr className={cn(group.indices.every(collapsed) && "max-md:hidden")}>
                 <th
                   scope="rowgroup"
                   colSpan={5}
@@ -118,7 +131,8 @@ export function ShotTable({ shots, state, onChoose, className }: ShotTableProps)
                   className={cn(
                     "border-t border-border",
                     choose && "cursor-pointer hover:bg-surface-2",
-                    chosen && "bg-accent-wash"
+                    chosen && "bg-accent-wash",
+                    collapsed(i) && "max-md:hidden"
                   )}
                 >
                   <td className="px-2 py-1.5">
@@ -167,6 +181,16 @@ export function ShotTable({ shots, state, onChoose, className }: ShotTableProps)
           </tbody>
         ))}
       </table>
+      {indices.length > collapseAfter && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded(!expanded)}
+          className="mt-1 w-full cursor-pointer rounded-lg px-2 py-2 text-[13px] font-semibold text-primary hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring md:hidden"
+        >
+          {expanded ? "Weniger zeigen" : `Alle ${indices.length} zeigen`}
+        </button>
+      )}
     </div>
   )
 }
