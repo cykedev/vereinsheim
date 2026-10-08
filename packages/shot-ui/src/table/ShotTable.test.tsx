@@ -83,6 +83,26 @@ describe("ShotTable", () => {
     expect(rows(render({ selection: "probe" })).map((r) => r[0])).toEqual(["P2", "P1"])
   })
 
+  it("Trenner zwischen den Serien, neueste zuerst; bei einer Serie keiner", () => {
+    const groups = (html: string) =>
+      [...html.matchAll(/<th[^>]*scope="rowgroup"[^>]*>([^<]+)<\/th>/g)].map((m) => m[1])
+    expect(groups(render())).toEqual(["Serie 2", "Serie 1", "Probe"])
+    // jede Gruppe ein eigener tbody mit ihren Zeilen
+    expect([...render().matchAll(/<tbody>/g)]).toHaveLength(3)
+    expect(groups(render({ selection: 2 }))).toEqual([])
+  })
+
+  it("Farbpunkte stehen untereinander: der Wert hat eine feste Breite", () => {
+    // „10,4“ und „9,0“ sind verschieden breit; rechtsbündig ohne feste Breite stünde der Punkt versetzt
+    const html = render()
+    const cells = [...html.matchAll(/<tr data-row="[^"]*"[\s\S]*?<\/tr>/g)].map((m) => m[0])
+    expect(
+      cells.every((row) =>
+        /<span class="inline-block min-w-\[4ch\] text-right">[^<]+<\/span>/.test(row)
+      )
+    ).toBe(true)
+  })
+
   it("Wert in der gewählten Wertung, Spaltenkopf Wert oder Ring", () => {
     expect(render()).toMatch(/<th[^>]*>Wert<\/th>/)
     expect(rows(render())[4][1]).toBe("10,8")

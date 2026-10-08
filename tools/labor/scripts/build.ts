@@ -59,11 +59,22 @@ export async function buildPage(): Promise<string> {
   ].join("\n")
 }
 
+/**
+ * Die Grundformatierung, die das Artifact um die Seite legt (laut Artifact-Vertrag): außerhalb jeder
+ * CSS-Ebene, also stärker als `@layer base`. Vorschau und Skriptprüfung tragen sie mit, damit sie
+ * zeigen, was das Artifact zeigt (ohne sie blieb ein Fehler im dunklen Thema unbemerkt).
+ */
+const ARTIFACT_RESET =
+  "<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);" +
+  "padding-bottom:env(safe-area-inset-bottom,0px)}" +
+  "body{margin:0;font:14px/1.4 system-ui,-apple-system,sans-serif;background:#f7f7f5}" +
+  "img{max-width:100%}[hidden]{display:none!important}</style>"
+
 /** die Seite im Gerüst, wie das Artifact sie zeigt: für den Browser und die Skriptprüfung */
 export const withSkeleton = (page: string, extraHead = "", extraEnd = "") =>
   '<!doctype html><html lang="de"><head><meta charset="utf-8">' +
   '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' +
-  `${extraHead}</head><body>${page}${extraEnd}</body></html>`
+  `${ARTIFACT_RESET}${extraHead}</head><body>${page}${extraEnd}</body></html>`
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const page = await buildPage()

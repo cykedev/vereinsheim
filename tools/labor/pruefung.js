@@ -210,6 +210,22 @@ addEventListener("load", async () => {
         tableRows().some((tr) => txt(tr.lastElementChild).includes("min")),
       wrongIntervals.map((tr) => tr.dataset.row).join(" ")
     )
+    const groupTitles = () => $$('#shot-table th[scope="rowgroup"]').map((th) => txt(th).trim())
+    check(
+      "Tabelle: Trenner je Serie, neueste zuerst",
+      groupTitles().join() === "Serie 4,Serie 3,Serie 2,Serie 1,Probe",
+      groupTitles().join(" | ")
+    )
+    const dotLefts = new Set(
+      tableRows().map((tr) =>
+        Math.round($("td:nth-child(2) span[aria-hidden]", tr).getBoundingClientRect().left)
+      )
+    )
+    check(
+      "Tabelle: Farbpunkte stehen untereinander (9,x wie 10,x)",
+      dotLefts.size === 1,
+      [...dotLefts].join(" ")
+    )
     check(
       "Tabelle: jede Zeile mit echtem Knopf (Tab und Enter), mit Namen",
       tableRows().every((tr) => {
@@ -351,10 +367,10 @@ addEventListener("load", async () => {
       tilesMatch().join(" ")
     )
     check(
-      "Tabelle folgt der Auswahl: nur Serie 2, neuester oben",
+      "Tabelle folgt der Auswahl: nur Serie 2, neuester oben, ohne Trenner",
       tableRows()
         .map((tr) => tr.dataset.row)
-        .join() === "20,19,18,17,16,15,14,13,12,11"
+        .join() === "20,19,18,17,16,15,14,13,12,11" && groupTitles().length === 0
     )
     await click(button("Gruppe"), 700)
     const [gx, gy, gw] = view()
@@ -550,10 +566,32 @@ addEventListener("load", async () => {
       `${wGroup.toFixed(2)} → ${wNext}`
     )
     await click(button("40 Schuss mit Probe"), 60)
+    // die Seite selbst folgt dem Thema, auch unter der Grundformatierung des Artifacts
+    const tokenColor = (name) => {
+      const probe = document.createElement("div")
+      probe.style.background = `var(--${name})`
+      document.body.appendChild(probe)
+      const color = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return color
+    }
+    const page = () => getComputedStyle(document.body)
     await click(button("Dunkel"))
-    check("Thema dunkel", document.documentElement.classList.contains("dark"))
+    check(
+      "Thema dunkel: Seite dunkel, Schrift aus dem Design",
+      document.documentElement.classList.contains("dark") &&
+        page().backgroundColor === tokenColor("background") &&
+        page().backgroundColor !== "rgb(247, 247, 245)" &&
+        page().fontFamily.includes("Geist"),
+      `${page().backgroundColor} / ${tokenColor("background")}, ${page().fontFamily.slice(0, 20)}`
+    )
     await click(button("Hell"))
-    check("Thema hell", !document.documentElement.classList.contains("dark"))
+    check(
+      "Thema hell: Seite hell aus dem Design",
+      !document.documentElement.classList.contains("dark") &&
+        page().backgroundColor === tokenColor("background"),
+      `${page().backgroundColor} / ${tokenColor("background")}`
+    )
     await click(button("System"))
 
     // ---------- Visier verstellt
