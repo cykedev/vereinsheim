@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 import type { Layer } from "../../view-state"
 import type { AnalysisInput } from "../input"
 import { overviewCards } from "./OverviewTab"
+import { precisionCards } from "./PrecisionTab"
 import { resultCards } from "./ResultTab"
 
 export type AnalysisTab = "overview" | "result" | "precision" | "position" | "time" | "sighters"
@@ -32,7 +33,7 @@ export type TabCards = (context: CardContext) => CardSpec[]
 export const TAB_CARDS: Record<AnalysisTab, TabCards> = {
   overview: overviewCards,
   result: resultCards,
-  precision: () => [],
+  precision: precisionCards,
   position: () => [],
   time: () => [],
   sighters: () => [],

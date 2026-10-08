@@ -13,14 +13,11 @@ import {
   type MetricShot,
 } from "@vereinsheim/shot-core/metrics"
 import { LG_10M, LP_10M, type TargetImage } from "@vereinsheim/shot-core/targets"
-import { createElement } from "react"
-import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { formatValue, percentText } from "../../format"
-import { initialViewState } from "../../view-state"
-import { AnalysisPanel } from "../AnalysisPanel"
 import { fortyCard } from "../testCard"
+import { cardText, renderTab } from "../testPanel"
 
 const CARD = fortyCard()
 const BASE = CARD.filter((s) => s.kind === "match")
@@ -29,28 +26,7 @@ const render = (
   scoring: "decimal" | "rings" = "decimal",
   shots: readonly MetricShot[] = CARD,
   target: TargetImage = LP_10M
-) =>
-  renderToStaticMarkup(
-    createElement(AnalysisPanel, {
-      shots,
-      state: initialViewState({ scoring }),
-      target,
-      tab: "result",
-      onTab: () => {},
-      explain: false,
-      onToggleLayer: () => {},
-    })
-  )
-
-/** Text einer Karte (data-card) ohne Markup */
-const cardText = (html: string, id: string) => {
-  const start = html.indexOf(`data-card="${id}"`)
-  const end = html.indexOf("</article>", start)
-  return html
-    .slice(start, end)
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-}
+) => renderTab("result", { scoring, shots, target })
 
 describe("Reiter Ergebnis", () => {
   const html = render()
