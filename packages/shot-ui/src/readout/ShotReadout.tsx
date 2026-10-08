@@ -3,7 +3,7 @@
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { cn } from "@vereinsheim/lib/utils"
 
-import { formatSigned, formatValue } from "../format"
+import { formatValue } from "../format"
 import { scoreColor } from "../geometry"
 import type { ViewState } from "../view-state"
 import { readoutDetail, readoutModel, readoutValue } from "./readout"
@@ -16,12 +16,12 @@ export interface ShotReadoutProps {
 }
 
 const mm = (um: number) => `${formatValue(um / 1000, 2)} mm`
-const signedMm = (um: number) => `${formatSigned(um / 1000, 2)} mm`
 
 /**
- * Ablesung (spiegel-ui-design): der angetippte oder letzte Schuss mit Wert und Ringwert-Farbe als Punkt, der
- * anderen Wertung klein darunter, Teiler und Abstand zur Mitte (gemessen vor der Lage) und x/y.
- * Ein Wechsel wird Screenreadern gemeldet.
+ * Ablesung (spiegel-ui-design): der angetippte oder letzte Schuss, kompakt in einer Zeile: der Wert groß mit der
+ * Ringwert-Farbe als Punkt, daneben die andere Wertung, Teiler und Abstand zur Mitte (gemessen vor der Lage).
+ * Ohne x/y: Abstand und Teiler sagen dasselbe lesbarer (User, 8. Oktober 2026). Ein Wechsel wird
+ * Screenreadern gemeldet.
  */
 export function ShotReadout({ shots, state, className }: ShotReadoutProps) {
   const model = readoutModel(shots, state)
@@ -32,51 +32,47 @@ export function ShotReadout({ shots, state, className }: ShotReadoutProps) {
       </section>
     )
   }
-  const { shot, label, chosen, kindWord, distanceUm: distance, teiler, placed } = model
+  const { shot, label, chosen, kindWord, distanceUm: distance, teiler } = model
   return (
-    <section aria-live="polite" aria-label="Ablesung" className={cn("grid gap-3", className)}>
+    <section aria-live="polite" aria-label="Ablesung" className={cn("grid gap-2", className)}>
       <p className="text-[13px] text-muted-foreground">
         {`${kindWord} ${label} · ${chosen ? "angetippt" : "letzter Schuss"}`}
       </p>
-      {/* Wert in Schriftfarbe, die Ringwert-Farbe als Punkt davor: Gold und Türkis hätten als Schrift auf
-          Weiß zu wenig Kontrast; die Probe hohl wie auf der Scheibe */}
-      <p className="flex items-center gap-3">
-        {shot.ring !== null && (
-          <span
-            aria-hidden="true"
-            className="inline-block size-4 shrink-0 rounded-full"
-            style={
-              shot.kind === "probe"
-                ? { boxShadow: `inset 0 0 0 2px ${scoreColor(shot.ring)}` }
-                : { background: scoreColor(shot.ring) }
-            }
-          />
-        )}
-        <span className="font-display text-5xl leading-none font-bold tabular-nums">
-          {readoutValue(model, state.scoring)}
-        </span>
-      </p>
-      <p className="text-[13px] text-foreground-2">{readoutDetail(shot, state.scoring)}</p>
-      {(distance !== null || placed) && (
-        <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-[13px]">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        {/* Wert in Schriftfarbe, die Ringwert-Farbe als Punkt davor: Gold und Türkis hätten als Schrift auf
+            Weiß zu wenig Kontrast; die Probe hohl wie auf der Scheibe */}
+        <p className="flex items-center gap-3">
+          {shot.ring !== null && (
+            <span
+              aria-hidden="true"
+              className="inline-block size-4 shrink-0 rounded-full"
+              style={
+                shot.kind === "probe"
+                  ? { boxShadow: `inset 0 0 0 2px ${scoreColor(shot.ring)}` }
+                  : { background: scoreColor(shot.ring) }
+              }
+            />
+          )}
+          <span className="font-display text-5xl leading-none font-bold tabular-nums">
+            {readoutValue(model, state.scoring)}
+          </span>
+        </p>
+        <div className="grid gap-1 text-[13px]">
+          <p className="text-foreground-2">{readoutDetail(shot, state.scoring)}</p>
           {distance !== null && (
-            <>
-              <dt className="text-muted-foreground">Teiler</dt>
-              <dd className="font-semibold tabular-nums">{formatValue(teiler as number, 1)}</dd>
-              <dt className="text-muted-foreground">Abstand zur Mitte</dt>
-              <dd className="font-semibold tabular-nums">{mm(distance)}</dd>
-            </>
+            <dl className="flex flex-wrap gap-x-4 gap-y-1">
+              <div className="flex gap-1.5">
+                <dt className="text-muted-foreground">Teiler</dt>
+                <dd className="font-semibold tabular-nums">{formatValue(teiler as number, 1)}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="text-muted-foreground">Abstand zur Mitte</dt>
+                <dd className="font-semibold tabular-nums">{mm(distance)}</dd>
+              </div>
+            </dl>
           )}
-          {placed && (
-            <>
-              <dt className="text-muted-foreground">x / y</dt>
-              <dd className="font-semibold tabular-nums">
-                {`${signedMm(shot.xUm as number)} / ${signedMm(shot.yUm as number)}`}
-              </dd>
-            </>
-          )}
-        </dl>
-      )}
+        </div>
+      </div>
     </section>
   )
 }

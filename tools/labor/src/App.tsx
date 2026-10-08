@@ -18,7 +18,6 @@ import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { MetricTiles } from "@vereinsheim/shot-ui/metrics/MetricTiles"
 import { CardHeader } from "@vereinsheim/shot-ui/readout/CardHeader"
-import { CardSummary } from "@vereinsheim/shot-ui/readout/CardSummary"
 import { ShotLine } from "@vereinsheim/shot-ui/readout/ShotLine"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
@@ -362,18 +361,11 @@ export function App({ commit }: { commit: string }) {
           </div>
         }
         aside={
-          <>
-            {/* die Ablesung als Karte erst ab 768 px, auf dem Telefon die Ablesezeile an der Scheibe */}
-            <div
-              id="readout"
-              className="rounded-2xl border border-border bg-card p-4 max-md:hidden"
-            >
-              <ShotReadout shots={shots} state={state} />
-            </div>
-            <div id="summary" className="rounded-2xl border border-border bg-card p-4">
-              <CardSummary shots={shots} state={state} />
-            </div>
-          </>
+          // die Ablesung als Karte erst ab 768 px, auf dem Telefon die Ablesezeile an der Scheibe; was die
+          // ganze Scheibe zusammenfasst, steht im Kopf
+          <div id="readout" className="rounded-2xl border border-border bg-card p-4 max-md:hidden">
+            <ShotReadout shots={shots} state={state} />
+          </div>
         }
         beside={[
           {

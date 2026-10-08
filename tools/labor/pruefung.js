@@ -156,10 +156,19 @@ addEventListener("load", async () => {
       gapAll?.toFixed(3)
     )
     check("Ablesung: letzter Schuss", txt($("#readout")).includes("Schuss 40 · letzter Schuss"))
+    const head = () => txt($("[data-card-header]"))
     check(
-      "Übersicht: Ergebnis 365,2 und 9 Zehner wie in der Spielwiese",
-      txt($("#summary")).includes("365,2") && /Zehner\s*9/.test(txt($("#summary"))),
-      txt($("#summary"))
+      "Kopf: Ergebnis 365,2, 40 Schuss + 9 Probe und 9 Zehner wie in der Spielwiese",
+      txt($("[data-result]")).includes("365,2") &&
+        head().includes("40 Schuss + 9 Probe") &&
+        /Zehner\s*9/.test(head()),
+      head().slice(0, 160)
+    )
+    check(
+      "Ablesung: Teiler und Abstand, kein x/y",
+      /Teiler\s*\d/.test(txt($("#readout"))) &&
+        txt($("#readout")).includes("Abstand zur Mitte") &&
+        !txt($("#readout")).includes("x / y")
     )
 
     // ---------- Kacheln „Trefferbild in Zahlen“ gegen den Fachkern
@@ -580,13 +589,13 @@ addEventListener("load", async () => {
         $$("[data-series]").every((t) => !!$("[data-probe-corner]", t))
     )
     check(
-      "Nur Probe: sechs Serien zu zehn ohne Probe-Kachel, Übersicht mit Ergebnis",
+      "Nur Probe: sechs Serien zu zehn ohne Probe-Kachel, Kopf mit Ergebnis",
       $$("[data-series]")
         .map((t) => t.dataset.series)
         .join() === "1,2,3,4,5,6" &&
-        /Wertung\s*60 Schuss(?! \+)/.test(txt($("#summary"))) &&
-        /Ergebnis\s*\d+,\d/.test(txt($("#summary"))),
-      txt($("#summary")).slice(0, 80)
+        /60 Schuss(?! \+)/.test(head()) &&
+        /^\d+,\d/.test(txt($("[data-result]")).trim()),
+      head().slice(0, 160)
     )
     check(
       "Nur Probe: Tabelle mit Trennern je Serie und der Pause",
@@ -623,11 +632,11 @@ addEventListener("load", async () => {
       seriesValues.join(" ")
     )
     check(
-      "Ganze Ringe: Kacheln, Übersicht und Tabelle in Ringen",
+      "Ganze Ringe: Kacheln, Kopf und Tabelle in Ringen",
       L().state.scoring === "rings" &&
         tilesMatch().length === 0 &&
         txt($('[data-metric="result.decimalMean"]')).includes("in ganzen Ringen") &&
-        /Ergebnis\s*\d+(?!,)/.test(txt($("#summary"))) &&
+        /^\d+(?![\d,])/.test(txt($("[data-result]")).trim()) &&
         txt($("#shot-table th:nth-child(2)")) === "Ring",
       tilesMatch().join(" ")
     )
@@ -1280,11 +1289,9 @@ addEventListener("load", async () => {
       const r = deskRect(id)
       return near(r.left, regionBox.left, 1) && near(r.width, regionBox.width, 1)
     })
-    const besideTarget = ["readout", "summary", "shot-table"].every(
-      (id) => deskRect(id).left > deskBox.right
-    )
+    const besideTarget = ["readout", "shot-table"].every((id) => deskRect(id).left > deskBox.right)
     check(
-      "Desktop: Serien unter der Scheibe, Schuss, Übersicht und Schüsse daneben, Zahlen und Analyse darunter in voller Breite",
+      "Desktop: Serien unter der Scheibe, Schuss und Schüsse daneben, Zahlen und Analyse darunter in voller Breite",
       fullWidth && besideTarget && deskSeries.right < deskRect("readout").left,
       `${regionBox.width.toFixed(0)} px`
     )

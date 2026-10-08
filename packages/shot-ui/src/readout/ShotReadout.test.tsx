@@ -77,12 +77,14 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
     expect(text(render({ chosen: { index: 2, series: 1 } }))).toContain("Fehlschuss")
   })
 
-  it("Teiler, Abstand und Lage aus der Lage des Schusses", () => {
+  it("Teiler und Abstand aus der Lage des Schusses, ohne x/y (User, 8. Oktober 2026)", () => {
     const t = text(render())
     expect(t).toContain(`Teiler ${formatValue(distanceUm(-300, -400) / 10, 1)}`)
     expect(t).toContain("Abstand zur Mitte 0,50 mm")
-    expect(t).toContain("x / y −0,30 mm / −0,40 mm")
-    expect(text(render({ chosen: { index: 1, series: 1 } }))).toContain("x / y +14,00 mm / 0,00 mm")
+    expect(t).not.toContain("x / y")
+    expect(text(render({ chosen: { index: 1, series: 1 } }))).toContain(
+      "Abstand zur Mitte 14,00 mm"
+    )
   })
 
   it("Teiler und Abstand wie der Fachkern: gemessen vor der Lage, verdächtig ohne Angaben", () => {
@@ -90,19 +92,17 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
     const t = text(render({}, [CARD[0], measured]))
     expect(t).toContain("Teiler 331,7")
     expect(t).toContain("Abstand zur Mitte 3,32 mm")
-    expect(t).toContain("x / y 0,00 mm / +3,32 mm")
     const pdfOnly = text(render({}, [{ ...CARD[3], xUm: null, yUm: null, distanceUm: 5000 }]))
     expect(pdfOnly).toContain("Teiler 500,0")
-    expect(pdfOnly).not.toContain("x / y")
     const placeholder = text(render({}, [{ ...CARD[3], xUm: 0, yUm: 0, flags: ["verdaechtig"] }]))
     expect(placeholder).not.toContain("Teiler")
-    expect(placeholder).not.toContain("x / y")
+    expect(placeholder).not.toContain("Abstand")
   })
 
   it("ohne Lage keine Angaben zur Lage", () => {
     const t = text(render({ chosen: { index: 2, series: 1 } }))
     expect(t).not.toContain("Teiler")
-    expect(t).not.toContain("x / y")
+    expect(t).not.toContain("Abstand")
   })
 
   it("ein Antippen, das nicht mehr passt (andere Karte), zeigt den letzten Schuss", () => {
