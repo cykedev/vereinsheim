@@ -56,7 +56,12 @@ const SHAPE_MIN_SHOTS = 10
 const SHAPE_ALPHA = 0.05
 
 export interface GroupShape {
+  /** Schüsse, über die die Form rechnet: alle mit Lage ohne die Ausreißer (V6) */
   n: number
+  /** Nummern der herausgenommenen Ausreißer in Abgabefolge; leer ohne Ausreißer oder unter fünf Schuss */
+  without: readonly number[]
+  /** Schwerpunkt der Schüsse, über die die Form rechnet: die Mitte der Ellipse */
+  centerUm: Point
   majorUm: number
   minorUm: number
   /** a / b; unendlich, wenn alle Treffer auf einer Linie liegen */
@@ -80,13 +85,18 @@ export interface GroupShape {
  * entscheidet der Sphärizitätstest nach Mauchly; für zwei Dimensionen ist er exakt: Bei einer runden
  * Normalgruppe ist W Beta((n − 2)/2, 1)-verteilt, also P(W ≤ w) = w^((n − 2)/2), Grenze 0,05^(2/(n − 2)).
  * Den Winkel zeigt die Oberfläche nur bei gestreckten Gruppen ab 10 Schuss. Ohne Ausdehnung (alle
- * Treffer an einer Stelle) gibt es keine Form.
+ * Treffer an einer Stelle) gibt es keine Form. Gerechnet wird ohne die von `outliers` (V6) markierten
+ * Schüsse: Ein Abreißer streckte die Ellipse sonst in seine Richtung (Oktober 2026). Unter fünf Schuss gibt
+ * es kein Urteil über Ausreißer, dann zählen alle; mindestens drei Schuss ohne Ausreißer.
  */
 export function groupShape(shots: readonly MetricShot[]): GroupShape | null {
-  const points = positioned(shots)
+  const verdict = outliers(shots)
+  const out = new Set(verdict?.flagged.map((f) => f.shot))
+  const points = positioned(shots.filter((shot) => !out.has(shot)))
   const n = points.length
+  const center = centroid(points)
   const ellipse = n >= 3 ? covarianceEllipse(points) : null
-  if (!ellipse || !(ellipse.majorUm > 0)) return null
+  if (!center || !ellipse || !(ellipse.majorUm > 0)) return null
   const a2 = ellipse.majorUm ** 2
   const b2 = ellipse.minorUm ** 2
   const sphericity = (4 * a2 * b2) / (a2 + b2) ** 2
@@ -96,6 +106,8 @@ export function groupShape(shots: readonly MetricShot[]): GroupShape | null {
   const ratioLimit = Math.sqrt((2 - limit + 2 * Math.sqrt(1 - limit)) / limit)
   return {
     n,
+    without: verdict?.flagged.map((f) => f.number) ?? [],
+    centerUm: center,
     ...ellipse,
     ratio: ellipse.minorUm > 0 ? ellipse.majorUm / ellipse.minorUm : Number.POSITIVE_INFINITY,
     sphericity,

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { MATCH, PROBE, SPREAD } from "../__fixtures__/cards"
 import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
+import { centroid } from "../geometry"
 import { LG_10M } from "../targets"
 import { groupShape, outlierLoss, outliers, ringWidths, sigmaEstimate } from "./precision"
 
@@ -41,6 +42,45 @@ describe("Form und Ringbreiten (P8, P9)", () => {
       yUm: i % 2 === 0 ? 300 : -300,
     }))
     expect(groupShape(stretched)?.showAngle).toBe(true)
+  })
+
+  it("SPREAD: ohne Ausreißer nichts herausgenommen, die Mitte ist der Schwerpunkt", () => {
+    const shape = groupShape(SPREAD)
+    expect(shape?.without).toEqual([])
+    expect(shape?.n).toBe(6)
+    const center = centroid(SPREAD.map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number })))
+    expect(shape?.centerUm).toEqual(center)
+  })
+
+  it("Abreißer zählen für die Form nicht", () => {
+    // acht im Kreis von 1 mm (wie im Ausreißer-Block), dazu zwei Abreißer, die V6 als 9 und 10 markiert
+    const ring = [0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => ({
+      ...MATCH[0],
+      xUm: Math.round(1000 * Math.cos((deg * Math.PI) / 180)),
+      yUm: Math.round(1000 * Math.sin((deg * Math.PI) / 180)),
+      firedAtMs: i * 1000,
+    }))
+    const flyers = [
+      { ...MATCH[0], xUm: 4000, yUm: 0, firedAtMs: 9000 },
+      { ...MATCH[0], xUm: 4000, yUm: 400, firedAtMs: 10_000 },
+    ]
+    const shape = groupShape([...ring, ...flyers])
+    expect(shape?.n).toBe(8)
+    expect(shape?.without).toEqual([9, 10])
+    // die acht sind rund: Σdx² = Σdy² = 2 · 1000² + 4 · 707² über 7, Σdxdy = 0
+    const half = Math.sqrt(ring.reduce((sum, s) => sum + (s.xUm as number) ** 2, 0) / 7)
+    expect(shape?.majorUm).toBeCloseTo(half, 0)
+    expect(shape?.minorUm).toBeCloseTo(half, 0)
+    expect(shape?.ratio).toBeLessThan(1.01)
+    expect(shape?.elongated).toBe(false)
+    expect(Math.hypot(shape!.centerUm.xUm, shape!.centerUm.yUm)).toBeLessThan(1)
+    // mit den Abreißern wäre sie gestreckt (Gegenprobe im Plan, Task 2)
+  })
+
+  it("unter fünf Schuss kein Urteil über Ausreißer: alle zählen", () => {
+    const shape = groupShape(SPREAD.slice(0, 4))
+    expect(shape?.without).toEqual([])
+    expect(shape?.n).toBe(4)
   })
 
   it("gestreckt nur, wenn Mauchly es mit 95 % zeigt, nicht schon ab a/b 1,3", () => {
