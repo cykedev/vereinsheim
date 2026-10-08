@@ -458,6 +458,43 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.2)(vite@8.0.16(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
 
+  packages/shot-ui:
+    dependencies:
+      '@vereinsheim/lib':
+        specifier: workspace:*
+        version: link:../lib
+      '@vereinsheim/shot-core':
+        specifier: workspace:*
+        version: link:../shot-core
+      '@vereinsheim/shot-help':
+        specifier: workspace:*
+        version: link:../shot-help
+    devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.4(@types/react@19.2.18)
+      '@vereinsheim/config':
+        specifier: workspace:*
+        version: link:../config
+      prettier:
+        specifier: 'catalog:'
+        version: 3.8.4
+      react:
+        specifier: 'catalog:'
+        version: 19.2.8
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.8(react@19.2.8)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.2)(vite@8.0.16(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
+
   packages/ui:
     dependencies:
       '@radix-ui/react-slider':
