@@ -1066,6 +1066,35 @@ addEventListener("load", async () => {
         .map((g) => g.dataset.sighter)
         .join() === "P1,P2,P3,P4,P5,P6,P7,P8,P9"
     )
+    // Nummern mit echter Schriftbreite: keine überlappt eine andere (1 px Toleranz), alle im Bild
+    const sighterLabels = () => {
+      const chart = $('svg[aria-label="Probeschüsse um die Mitte"]', A())
+      const boxes = $$("[data-sighter-label]", chart).map((t) => t.getBBox())
+      const view = chart.viewBox.baseVal
+      const hits = []
+      boxes.forEach((a, i) =>
+        boxes.slice(i + 1).forEach((b, j) => {
+          const dx = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)
+          const dy = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y)
+          if (dx > 1 && dy > 1) hits.push(`P${i + 1}/P${i + j + 2}`)
+        })
+      )
+      const inside = boxes.every(
+        (b) => b.x >= 0 && b.y >= 0 && b.x + b.width <= view.width && b.y + b.height <= view.height
+      )
+      return { n: boxes.length, hits, inside }
+    }
+    for (const gun of ["Luftpistole", "Luftgewehr"]) {
+      if (gun === "Luftgewehr") await click(button("Luftgewehr"), 200)
+      const probe = sighterLabels()
+      check(
+        `Probe ${gun}: Nummern ohne Überlappung, alle im Bild`,
+        probe.n === 9 && probe.hits.length === 0 && probe.inside,
+        `${probe.n} · ${probe.hits.join(" ") || "frei"} · ${probe.inside ? "im Bild" : "ragt hinaus"}`
+      )
+    }
+    await click(button("Luftpistole"), 200)
+    await click(button("40 Schuss mit Probe"), 200)
     check("keine Visierverstellung auf der Seite", !/Verstellung|verstellt/.test(pageText()))
 
     // Abstände: zwischen Blöcken und Karten 16 px, Karten einer Zeile mit gleicher Unterkante

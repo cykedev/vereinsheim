@@ -67,6 +67,44 @@ describe("Reiter Probe", () => {
     expect(cardHtml(html, "probe-auf-der-scheibe")).toContain('data-overlay="mpi"')
   })
 
+  it("Probe auf der Scheibe: Nummer am Schuss, ohne Überlappung, jeder Kreis ganz im Bild", () => {
+    // P2 auf die Stelle von P4: zwei Nummern an einem Punkt müssen ausweichen
+    const p4 = PROBES[3]
+    const shots = CARD.map((s) => (s === PROBES[1] ? { ...s, xUm: p4.xUm, yUm: p4.yUm } : s))
+    for (const page of [html, renderTab("sighters", { shots })]) {
+      const card = cardHtml(page, "probe-auf-der-scheibe")
+      const chart = /<svg[^>]*aria-label="Probeschüsse um die Mitte"[^>]*>/.exec(card)![0]
+      const [, w, h] = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(chart)!.map(Number)
+      const circles = new Map(
+        [
+          ...card.matchAll(
+            /data-sighter="(P\d+)"><circle cx="([-\d.]+)" cy="([-\d.]+)" r="([\d.]+)"/g
+          ),
+        ].map((m) => [m[1], [Number(m[2]), Number(m[3]), Number(m[4])]])
+      )
+      const texts = [
+        ...card.matchAll(/data-sighter-label="(P\d+)" x="([-\d.]+)" y="([-\d.]+)"/g),
+      ].map((m) => ({ label: m[1], x: Number(m[2]), y: Number(m[3]) }))
+      expect(texts).toHaveLength(PROBES.length)
+      for (const t of texts) {
+        const [cx, cy, r] = circles.get(t.label)!
+        expect(t.x).toBe(cx)
+        // auf dem Schuss oder, wenn sie ausweicht, höchstens drei Zeilen darüber oder darunter
+        expect(Math.abs(t.y - cy)).toBeLessThanOrEqual(3 * 14)
+        expect(cx - r).toBeGreaterThanOrEqual(0)
+        expect(cx + r).toBeLessThanOrEqual(w)
+        expect(cy - r).toBeGreaterThanOrEqual(0)
+        expect(cy + r).toBeLessThanOrEqual(h)
+      }
+      for (const [i, a] of texts.entries())
+        for (const b of texts.slice(i + 1))
+          expect(
+            Math.abs(a.x - b.x) >= 19 || Math.abs(a.y - b.y) >= 14,
+            `${a.label}/${b.label}`
+          ).toBe(true)
+    }
+  })
+
   it("ohne Probe der Hinweis; nur Probe zählt wie Wertung", () => {
     const none = renderTab("sighters", { shots: BASE })
     expect(cardText(none, "probe-umfang")).toContain("Keine Probeschüsse.")
