@@ -209,3 +209,108 @@ export function leastSquaresSlope(xs: readonly number[], ys: readonly number[]):
   }
   return sxx > 0 ? sxy / sxx : null
 }
+
+/**
+ * Komplementäre Fehlerfunktion nach Numerical Recipes (`erfcc`, Chebyshev-Näherung), relativer Fehler unter
+ * 1,2 · 10⁻⁷ für alle x.
+ */
+function erfc(x: number): number {
+  const z = Math.abs(x)
+  const t = 1 / (1 + 0.5 * z)
+  const r =
+    t *
+    Math.exp(
+      -z * z -
+        1.26551223 +
+        t *
+          (1.00002368 +
+            t *
+              (0.37409196 +
+                t *
+                  (0.09678418 +
+                    t *
+                      (-0.18628806 +
+                        t *
+                          (0.27886807 +
+                            t *
+                              (-1.13520398 +
+                                t * (1.48851587 + t * (-0.82215223 + t * 0.17087277))))))))
+    )
+  return x >= 0 ? r : 2 - r
+}
+
+/** zweiseitiger p-Wert zu z unter der Standardnormalverteilung: P(|Z| ≥ |z|) */
+export function normalTwoSided(z: number): number {
+  return Math.min(1, erfc(Math.abs(z) / Math.SQRT2))
+}
+
+/** bis zu so vielen Werten je Seite zählt `mannWhitney` die Verteilung genau aus */
+const MANN_WHITNEY_EXACT = 20
+
+/**
+ * Mann-Whitney-U für zwei unabhängige Gruppen, zweiseitig (Plan L2, D5). Gleiche Werte bekommen mittlere
+ * Ränge. Bis 20 Werte je Seite genau: Über alle Aufteilungen der gemeinsamen Ränge auf |a| und |b| wird die
+ * Rangsumme von `a` ausgezählt (doppelte Ränge als ganze Zahlen, Tabelle über Anzahl und Summe); p ist der
+ * Anteil der Aufteilungen, deren Rangsumme mindestens so weit von der Erwartung liegt wie die beobachtete.
+ * Darüber Normalnäherung mit Korrektur für gleiche Werte und Stetigkeitskorrektur. `u` ist U von `a`. Unter
+ * einem Wert je Seite null.
+ */
+export function mannWhitney(
+  a: readonly number[],
+  b: readonly number[]
+): { u: number; p: number; exact: boolean } | null {
+  if (a.length < 1 || b.length < 1) return null
+  assertFinite(a)
+  assertFinite(b)
+  const na = a.length
+  const nb = b.length
+  const n = na + nb
+  // gemeinsame Ränge, gleiche Werte mit dem mittleren Rang; doppelt als ganze Zahl
+  const pooled = [...a.map((v) => ({ v, inA: true })), ...b.map((v) => ({ v, inA: false }))].sort(
+    (x, y) => x.v - y.v
+  )
+  const doubled: number[] = new Array(n)
+  const ties: number[] = []
+  for (let i = 0; i < n; ) {
+    let j = i
+    while (j + 1 < n && pooled[j + 1].v === pooled[i].v) j++
+    // Ränge i + 1 … j + 1, ihr Mittel doppelt: (i + 1) + (j + 1)
+    for (let k = i; k <= j; k++) doubled[k] = i + j + 2
+    ties.push(j - i + 1)
+    i = j + 1
+  }
+  const observed2 = pooled.reduce((sum, item, k) => (item.inA ? sum + doubled[k] : sum), 0)
+  const u = observed2 / 2 - (na * (na + 1)) / 2
+  // Erwartung der doppelten Rangsumme von a: na · (n + 1)
+  const expected2 = na * (n + 1)
+  const distance2 = Math.abs(observed2 - expected2)
+
+  if (na <= MANN_WHITNEY_EXACT && nb <= MANN_WHITNEY_EXACT) {
+    const maxSum = doubled.reduce((sum, r) => sum + r, 0)
+    // count[k][s]: Zahl der Auswahlen von k Werten mit doppelter Rangsumme s
+    const count = Array.from({ length: na + 1 }, () => new Float64Array(maxSum + 1))
+    count[0][0] = 1
+    for (const r of doubled) {
+      for (let k = na; k >= 1; k--) {
+        const row = count[k]
+        const prev = count[k - 1]
+        for (let s = maxSum; s >= r; s--) if (prev[s - r]) row[s] += prev[s - r]
+      }
+    }
+    let far = 0
+    let all = 0
+    count[na].forEach((ways, s) => {
+      if (!ways) return
+      all += ways
+      if (Math.abs(s - expected2) >= distance2) far += ways
+    })
+    return { u, p: Math.min(1, far / all), exact: true }
+  }
+
+  const mean = (na * nb) / 2
+  const tieTerm = ties.reduce((sum, t) => sum + (t * t * t - t), 0)
+  const variance = ((na * nb) / 12) * (n + 1 - tieTerm / (n * (n - 1)))
+  if (!(variance > 0)) return { u, p: 1, exact: false }
+  const z = Math.max(0, Math.abs(u - mean) - 0.5) / Math.sqrt(variance)
+  return { u, p: normalTwoSided(z), exact: false }
+}

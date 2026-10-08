@@ -14,6 +14,8 @@ import {
   quantile,
   theilSen,
   wilson,
+  mannWhitney,
+  normalTwoSided,
 } from "./stats"
 
 describe("Lage- und Streumaße", () => {
@@ -206,5 +208,52 @@ describe("Mann-Kendall und Ausgleichsgerade", () => {
     expect(leastSquaresSlope(Array<number>(7).fill(0.1), ys)).toBeNull()
     expect(leastSquaresSlope([1], [1])).toBeNull()
     expect(() => leastSquaresSlope([1, 2, 3], [1, 2])).toThrow(RangeError)
+  })
+})
+
+describe("Mann-Whitney und Normalverteilung", () => {
+  it("zweiseitiger p-Wert der Normalverteilung", () => {
+    expect(normalTwoSided(1.959964)).toBeCloseTo(0.05, 6)
+    expect(normalTwoSided(-1.959964)).toBeCloseTo(0.05, 6)
+    expect(normalTwoSided(0)).toBeCloseTo(1, 7)
+  })
+
+  it("genau ausgezählt: vollständig getrennte Gruppen", () => {
+    const three = mannWhitney([1, 2, 3], [4, 5, 6])
+    expect(three).toEqual({ u: 0, p: expect.any(Number), exact: true })
+    // nur die zwei äußersten der 20 Aufteilungen sind so weit weg
+    expect(three?.p).toBeCloseTo(2 / 20, 12)
+    expect(mannWhitney([1, 2, 3, 4, 5], [6, 7, 8, 9, 10])?.p).toBeCloseTo(2 / 252, 12)
+  })
+
+  it("gleiche Werte mit mittleren Rängen, gegen ein eigenes Durchzählen", () => {
+    // Ränge 1, 3, 3, 3, 5, 6; a = [1, 2, 2] hat die Rangsumme 7, Erwartung 10,5
+    const ranks = [1, 3, 3, 3, 5, 6]
+    let far = 0
+    let all = 0
+    for (let i = 0; i < 6; i++)
+      for (let j = i + 1; j < 6; j++)
+        for (let k = j + 1; k < 6; k++) {
+          all++
+          if (Math.abs(ranks[i] + ranks[j] + ranks[k] - 10.5) >= 3.5 - 1e-9) far++
+        }
+    expect(far / all).toBeCloseTo(0.3, 12)
+    expect(mannWhitney([1, 2, 2], [2, 3, 4])?.p).toBeCloseTo(far / all, 12)
+  })
+
+  it("über 20 Werten je Seite die Normalnäherung mit Stetigkeitskorrektur", () => {
+    const a = Array.from({ length: 21 }, (_, i) => i + 1)
+    const b = a.map((v) => v + 0.5)
+    // U von a: Σ(i − 1) = 210, Erwartung 220,5, Varianz 21 · 21 · 43 / 12 = 1580,25
+    // z = (10,5 − 0,5) / 39,7524 = 0,25156, p = erfc(z / √2) = 0,80138
+    const result = mannWhitney(a, b)
+    expect(result?.exact).toBe(false)
+    expect(result?.u).toBe(210)
+    expect(result?.p).toBeCloseTo(0.80138, 4)
+  })
+
+  it("ohne Werte auf einer Seite kein Ergebnis", () => {
+    expect(mannWhitney([], [1, 2])).toBeNull()
+    expect(mannWhitney([1], [])).toBeNull()
   })
 })
