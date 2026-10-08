@@ -84,6 +84,9 @@ Dazu kommen Entscheidungen dieser Session:
 | `packages/shot-ui/package.json`, `CLAUDE.md` | Exporte, Regeln |
 | `tools/labor/src/App.tsx`, `src/testHook.ts`, `pruefung.js`, `CLAUDE.md` | Verdrahtung, Prüfhaken, Prüfungen |
 | `vault/spiegel/spiegel-roadmap.md`, `vault/architecture/architecture.md` | Stand SP-1.8, Repo-Karte |
+| `packages/ui/src/design2/segmented.tsx`, `toggle-chip.tsx` (+ Tests), `packages/shot-ui/src/series/SeriesStrip.tsx`, `src/help/HelpDetails.tsx`, `src/analysis/charts/*.tsx` | Mobil-Grundlagen (13a): Touch-Ziele, Umbruch, Schrift, Punktrand |
+| `packages/shot-core/src/analysis/catalog.ts` | `sightersBeforeMatch` (S2), Nachtrag zu Task 13 |
+| `vault/spiegel/spiegel-mobile.md` (neu) | Konzept-Entwurf „Spiegel auf dem Telefon“ |
 
 ## Required Docs
 
@@ -166,6 +169,19 @@ steht in `packages/shot-core/CLAUDE.md` und an den Aufrufen in `analysis/*.ts`.
     „Probe auf der Scheibe“ mit `SighterChart` (Probe hohl um die Mitte, Nummern P1 …, Schwerpunkt der Wertung
     als `MpiMark`, Maßstab; Abgabefolge, nur mit Lage). Tests: Werte gleich Fachkern, keine Erwähnung von
     „Verstellung“, Reihenfolge nach `seq` auch bei vertauschter Liste, Karte ohne Probe mit Hinweis.
+13a. **Mobil-Grundlagen (Nachtrag 8. Oktober, test-first).** Aus dem Entwurf „Spiegel auf dem Telefon“ (gemessen
+    bei 375 × 812 px mit den echten Bausteinen) die kleinen Korrekturen, die vor dem Labor nötig sind; Seitenaufbau,
+    Diagramm-Lineal, Hilfe als Blatt und die doppelten Kennzahlen sind ein eigener Schritt (Fragen an den User
+    offen). `AnalysisPanel`: Abschnitt `grid-cols-[minmax(0,1fr)]`, Kopf `min-w-0`, Reiter unter `sm` umbrechen
+    (`max-sm:flex-wrap max-sm:rounded-[18px]` am `Segmented`), sonst ist die Leiste 512 px breit und die Seite
+    scrollt seitlich; zwei Kartenspalten erst ab 861 px wie D3 (`min-[861px]:columns-2`, bisher `md`). Touch-Ziele
+    44 px bei grobem Zeiger (`pointer-coarse:min-h-11`) in `segmented.tsx`, `toggle-chip.tsx` und an „Alle“/„Ohne
+    Probe“ (`SeriesStrip.tsx`), `pointer-coarse:py-3` an den `summary` von `HelpDetails`, Glossar und
+    Fehlschlüssen. Diagrammschrift 12 px (`frame.tsx`), Prozent der Ringbalken `text-xs`. Punkte im Verlauf, in
+    der Serienkurve und in der Form der Gruppe mit dunklem Rand `var(--shot-edge)` statt `var(--card)` (Gold und
+    Türkis haben auf weißer Karte unter 3:1); Ausreißer zusätzlich mit Ring, nicht nur rot. Labor: Schusstabelle
+    nur ab `md` im eigenen Scrollkasten (`md:max-h-80`). Tests: Markup für Raster, Umbruch, Spaltenschwelle,
+    Schriftgröße, Punktrand, Ausreißer-Ring; Touch-Höhen in den Tests von `segmented` und `toggle-chip`.
 14. **Labor.** Unter „Trefferbild in Zahlen“ der Abschnitt „Analyse“ mit `AnalysisPanel`; Reiter in
     `localStorage` (`labor.tab`), „Erklärungen“ geteilt mit den Kacheln, `onToggleLayer` dispatcht `toggle`.
     Prüfhaken: `window.__labor.tools` bekommt die Analyse-Funktionen des Fachkerns (`import * as analysis`),
@@ -181,8 +197,10 @@ steht in `packages/shot-core/CLAUDE.md` und an den Aufrufen in `analysis/*.ts`.
     Karte mit „Was heißt das?“, jedes Thema hat seinen Platz, Texte gleich dem Paket, Einstieg, Glossar,
     Fehlschlüsse, Schalter öffnet und schließt alle und bleibt beim Reiterwechsel, Formel bleibt zu); Abstände
     16 px; „60 Probe“ bekommt die volle Analyse (Ergebnis, Serien 6); Ausdruck ohne Trend unter 10 Schuss; leere
-    Karte sagt, was fehlt; Handy 390 px ohne seitliches Scrollen.
-16. **Doku.** [[spiegel-ui-design]] (Abschnitt Analyse: D1, Reiter, Karten, Diagramme), Roadmap SP-1.8 Stand
+    Karte sagt, was fehlt; Handy 390 px und 375 px ohne seitliches Scrollen, alle sechs Reiter im Bild.
+16. **Doku.** Der Entwurf „Spiegel auf dem Telefon“ als Vault-Note `vault/spiegel/spiegel-mobile.md` (Befunde,
+    Empfehlung, offene Fragen; Status Entwurf), verlinkt aus [[spiegel-ui-design]] und der Roadmap.
+    [[spiegel-ui-design]] (Abschnitt Analyse: D1, Reiter, Karten, Diagramme), Roadmap SP-1.8 Stand
     (Schritt 3 erledigt), `packages/shot-ui/CLAUDE.md` (Exporte, Regel D1), Repo-Karte, `tools/labor/CLAUDE.md`.
 
 ## Test steps
