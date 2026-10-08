@@ -11,6 +11,7 @@ dieselben Bausteine mit echten Daten ein.
 | ------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
 | `@vereinsheim/shot-ui/types`    | `src/types.ts`    | `SeriesKey`, `Selection`, `ViewBox`                                                                   |
 | `@vereinsheim/shot-ui/geometry` | `src/geometry.ts` | Ausschnitte (`targetView`, `groupView`, `seriesTileView`), `screenSizes`, `scoreColor`, `tileColumns` |
+| `@vereinsheim/shot-ui/layers`   | `src/layers.ts`   | `layerOrder`: Treffer mit Nummer in Abgabefolge, Auswahl oben, angetippter Schuss zuletzt             |
 
 ## Regeln
 
