@@ -4,8 +4,8 @@ import { PAGE_SECTIONS, type PageSection } from "./sections"
 
 /**
  * Sprungleiste (Plan Schritt 4, D1): klebt unter dem Kopf am oberen Rand, vier Anker zu den Abschnitten,
- * der sichtbare hervorgehoben. Optik wie die Reiterleiste der Analyse, die sie dort abdeckt; ist sie zu
- * schmal, scrollt sie in sich.
+ * der sichtbare hervorgehoben. Optik wie die Reiterleiste der Analyse, die sie auf dem Telefon abdeckt. Dort
+ * teilen sich die vier Einträge die Breite, nichts wird angeschnitten (User, 8. Oktober 2026).
  */
 export function SectionNav({
   active,
@@ -23,13 +23,13 @@ export function SectionNav({
         className
       )}
     >
-      <div className="inline-flex max-w-full overflow-x-auto rounded-full border border-border bg-surface-2 p-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="inline-flex rounded-full border border-border bg-surface-2 p-[3px] max-sm:grid max-sm:w-full max-sm:grid-cols-4">
         {PAGE_SECTIONS.map((section) => (
           <a
             key={section.id}
             href={`#${section.id}`}
             aria-current={active === section.id ? "location" : undefined}
-            className="shrink-0 rounded-full px-3.5 py-2 text-[13px] leading-none font-semibold whitespace-nowrap text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-[current=location]:bg-primary aria-[current=location]:text-primary-foreground"
+            className="rounded-full px-3.5 py-2 text-center text-[13px] leading-none font-semibold whitespace-nowrap text-foreground-2 max-sm:px-1 focus-visible:outline-2 focus-visible:outline-ring aria-[current=location]:bg-primary aria-[current=location]:text-primary-foreground"
           >
             {section.label}
           </a>

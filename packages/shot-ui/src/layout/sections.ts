@@ -3,10 +3,12 @@
 
 import type { AnalysisTab } from "../analysis/tabs"
 
+// in Seitenreihenfolge: die Schüsse stehen neben der Scheibe (und auf dem Telefon gleich nach ihr), Zahlen
+// und Analyse darunter in voller Breite (User, 8. Oktober 2026)
 export const PAGE_SECTIONS = [
   { id: "scheibe", label: "Scheibe" },
-  { id: "zahlen", label: "Zahlen" },
   { id: "schuesse", label: "Schüsse" },
+  { id: "zahlen", label: "Zahlen" },
   { id: "analyse", label: "Analyse" },
 ] as const
 

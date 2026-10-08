@@ -11,6 +11,7 @@
     "./view-state": "./src/view-state.ts",
     "./shots": "./src/shots.ts",
     "./target/TargetView": "./src/target/TargetView.tsx",
+    "./target/TargetControls": "./src/target/TargetControls.tsx",
     "./target/useAnimatedViewBox": "./src/target/useAnimatedViewBox.ts",
     "./series/SeriesStrip": "./src/series/SeriesStrip.tsx",
     "./format": "./src/format.ts",

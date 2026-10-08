@@ -57,7 +57,8 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
       key: "tiles",
       wide: true,
       element: (
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-4">
+        // vier Spalten nach der Breite des Kartenbereichs, nicht des Fensters
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border @min-[36rem]:grid-cols-4">
           {tiles.map((tile) => {
             const short = helpTopic(tile.help)?.short
             return (

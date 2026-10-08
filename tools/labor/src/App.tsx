@@ -7,7 +7,7 @@ import {
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
 import { observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
-import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
+import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { HelpSheet } from "@vereinsheim/shot-ui/help/HelpSheet"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { CardPage } from "@vereinsheim/shot-ui/layout/CardPage"
@@ -24,6 +24,7 @@ import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
 import { defaultWhole, probeOnlyAsMatch } from "@vereinsheim/shot-ui/shots"
+import { TargetControls, type Others } from "@vereinsheim/shot-ui/target/TargetControls"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import type { SeriesKey } from "@vereinsheim/shot-ui/types"
 import { initialViewState, viewReducer, type Layer } from "@vereinsheim/shot-ui/view-state"
@@ -53,13 +54,6 @@ const store = {
 
 type Theme = "system" | "light" | "dark"
 type Mode = "view" | "set"
-
-const LAYERS: readonly [Layer, string][] = [
-  ["mpi", "Schwerpunkt"],
-  ["circle", "Streukreis"],
-  ["numbers", "Nummern"],
-  ["ellipse", "Vertrauensellipse"],
-]
 
 /** die Schüsse einer Karte, wie die Bausteine sie bekommen: nur Probe ist Training und zeigt sich wie Wertung */
 const cardShots = (targetId: TargetId, raw: readonly RawShot[]) =>
@@ -101,7 +95,7 @@ export function App({ commit }: { commit: string }) {
   const [raw, setRaw] = useState<RawShot[]>(() => rawSample("lp-10m", "forty"))
   const [mode, setMode] = useState<Mode>("view")
   const [setKind, setSetKind] = useState<RawShot["kind"]>("match")
-  const [others, setOthers] = useState<"dim" | "hide">("dim")
+  const [others, setOthers] = useState<Others>("dim")
   const [pop, setPop] = useState<number | null>(null)
   const [theme, setTheme] = useState<Theme>(() => (store.get("theme") as Theme | null) ?? "system")
   const [explain, setExplain] = useState(() => store.get("help") === "1")
@@ -282,7 +276,31 @@ export function App({ commit }: { commit: string }) {
               setTheme(next)
             }}
           />
+          {/* nur im Labor: die App setzt keine Schüsse */}
+          <Segmented
+            label="Tippen"
+            value={mode}
+            options={[
+              { value: "view", label: "Ansehen" },
+              { value: "set", label: "Setzen" },
+            ]}
+            onChange={setMode}
+          />
+          {mode === "set" && (
+            <Segmented
+              label="Neuer Schuss"
+              value={setKind}
+              options={[
+                { value: "match", label: "Wertung" },
+                { value: "probe", label: "Probe" },
+              ]}
+              onChange={setSetKind}
+            />
+          )}
         </div>
+        <p id="sample-hint" className="max-w-[46rem] text-[13px] text-muted-foreground">
+          {sample.hint}
+        </p>
       </header>
 
       <CardPage
@@ -299,40 +317,11 @@ export function App({ commit }: { commit: string }) {
         nav={<SectionNav active={active} />}
         target={
           <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5">
-            {/* ab 768 px eine Zeile, die in sich scrollt: so passt die feste Scheibe samt Leiste ins Fenster */}
-            <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap md:overflow-x-auto md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden">
-              <div className="flex flex-wrap gap-1.5 md:shrink-0 md:flex-nowrap">
-                {LAYERS.map(([layer, label]) => (
-                  <ToggleChip
-                    key={layer}
-                    pressed={state.layers[layer]}
-                    onPressedChange={() => toggle(layer)}
-                  >
-                    {label}
-                  </ToggleChip>
-                ))}
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <Segmented
-                  label="Ausschnitt"
-                  value={state.view}
-                  options={[
-                    { value: "target", label: "Scheibe" },
-                    { value: "group", label: "Gruppe" },
-                  ]}
-                  onChange={(view) => dispatch({ type: "setView", view })}
-                />
-                <HelpButton
-                  label="Trefferbild"
-                  helpId="trefferbild"
-                  onClick={() => setHelpId("trefferbild")}
-                />
-              </div>
-            </div>
-            {/* höchstens so groß, dass die Scheibe mit Leiste und Schaltern ins Fenster passt (D5, D9) */}
+            {/* höchstens so groß, dass die Scheibe samt Karte unter der Leiste ins Fenster passt (D5, D9): 3,5rem
+                Leiste, 1,875rem Rahmen der Karte, etwas Luft; die Schalter liegen in den Ecken */}
             <div
               id="target-box"
-              className="relative mx-auto aspect-square w-full max-w-[calc(100svh-9rem)] overflow-hidden rounded-xl bg-surface-2"
+              className="relative mx-auto aspect-square w-full max-w-[calc(100svh-6.5rem)] overflow-hidden rounded-xl bg-surface-2"
               style={{ cursor: mode === "set" ? "crosshair" : undefined }}
               onClick={place}
             >
@@ -346,14 +335,21 @@ export function App({ commit }: { commit: string }) {
                 viewKey={`${targetId}:${sample.id}`}
                 onChoose={mode === "view" ? choose : undefined}
               />
+              <TargetControls
+                state={state}
+                others={others}
+                onToggle={toggle}
+                onView={(view) => dispatch({ type: "setView", view })}
+                onOthers={setOthers}
+                onHelp={() => setHelpId("trefferbild")}
+              />
             </div>
             <ShotLine className="md:hidden" shots={shots} state={state} />
           </div>
         }
         aside={
           <>
-            {/* Telefon: Serien gleich unter der Scheibe (D2); die Ablesung als Karte erst ab 768 px; die
-                Schalter des Labors zuletzt, die App hat sie nicht */}
+            {/* Telefon: Serien gleich unter der Scheibe (D2); die Ablesung als Karte erst ab 768 px */}
             <div
               id="readout"
               className="rounded-2xl border border-border bg-card p-4 max-md:hidden"
@@ -374,46 +370,25 @@ export function App({ commit }: { commit: string }) {
             <div id="summary" className="rounded-2xl border border-border bg-card p-4">
               <CardSummary shots={shots} state={state} />
             </div>
-            <div
-              id="labor-controls"
-              className="grid gap-3 rounded-2xl border border-border bg-card p-3.5"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <Segmented
-                  label="Tippen"
-                  value={mode}
-                  options={[
-                    { value: "view", label: "Ansehen" },
-                    { value: "set", label: "Setzen" },
-                  ]}
-                  onChange={setMode}
-                />
-                {mode === "set" && (
-                  <Segmented
-                    label="Neuer Schuss"
-                    value={setKind}
-                    options={[
-                      { value: "match", label: "Wertung" },
-                      { value: "probe", label: "Probe" },
-                    ]}
-                    onChange={setSetKind}
-                  />
-                )}
-                <Segmented
-                  label="Übrige Schüsse"
-                  value={others}
-                  options={[
-                    { value: "dim", label: "Übrige blass" },
-                    { value: "hide", label: "Übrige aus" },
-                  ]}
-                  onChange={setOthers}
-                />
-              </div>
-              <p className="text-[13px] text-muted-foreground">{sample.hint}</p>
-            </div>
           </>
         }
-        sections={[
+        beside={[
+          {
+            id: "schuesse",
+            node: (
+              <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
+                <ShotTable
+                  key={`${targetId}:${sample.id}`}
+                  className="md:max-h-80"
+                  shots={shots}
+                  state={state}
+                  onChoose={chooseFromTable}
+                />
+              </div>
+            ),
+          },
+        ]}
+        below={[
           {
             id: "zahlen",
             node: (
@@ -435,20 +410,6 @@ export function App({ commit }: { commit: string }) {
                   </ToggleChip>
                 }
               />
-            ),
-          },
-          {
-            id: "schuesse",
-            node: (
-              <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
-                <ShotTable
-                  key={`${targetId}:${sample.id}`}
-                  className="md:max-h-80"
-                  shots={shots}
-                  state={state}
-                  onChoose={chooseFromTable}
-                />
-              </div>
             ),
           },
           {

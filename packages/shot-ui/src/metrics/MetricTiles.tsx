@@ -90,11 +90,15 @@ function missingReason(metric: Metric, selected: readonly MetricShot[]): string 
     : "kein Wert für diese Schüsse"
 }
 
-/** Spalten ab 768 px, die die Kacheln ganz füllen (5, 4 oder 3), sonst 5; Klassen fest für Tailwind */
+/**
+ * Spalten, die die Kacheln ganz füllen (5, 4 oder 3), sonst 5, sobald der Bereich breit genug ist (gut 140 px
+ * je Kachel): gemessen am Bereich, nicht am Fenster, sonst quetschen sie sich in eine schmale Spalte neben der
+ * Scheibe. Klassen fest für Tailwind.
+ */
 const COLUMNS: Readonly<Record<number, string>> = {
-  5: "md:grid-cols-5",
-  4: "md:grid-cols-4",
-  3: "md:grid-cols-3",
+  5: "@min-[45rem]:grid-cols-5",
+  4: "@min-[36rem]:grid-cols-4",
+  3: "@min-[27rem]:grid-cols-3",
 }
 const columnsFor = (count: number) => COLUMNS[[5, 4, 3].find((n) => count % n === 0) ?? 5]
 
@@ -165,7 +169,7 @@ export function MetricTiles({
           : `über Serie ${state.selection}`
 
   return (
-    <section className={cn("grid gap-3", className)} aria-label="Trefferbild in Zahlen">
+    <section className={cn("@container grid gap-3", className)} aria-label="Trefferbild in Zahlen">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-xl font-bold tracking-tight">Trefferbild in Zahlen</h2>
         <div className="flex flex-wrap items-center gap-3">

@@ -44,7 +44,7 @@ export const VIEW_HELP: readonly ViewHelp[] = [
     id: "trefferbild",
     title: "Trefferbild",
     what: "Jeder Treffer in Kalibergröße, gefärbt nach seinem Ring: 10 rot, 9 gold, 8 türkis, 7 und weniger violett. Probeschüsse sind hohl. Die Treffer sind leicht durchscheinend, damit du siehst, wo sie sich überlagern.",
-    read: "Die Schalter blenden ein: den Schwerpunkt (kleiner schwarz-weiß geviertelter Kreis, der Mittelpunkt deiner Treffer), den Streukreis (blauer Ring um alle Treffer; seine Zahl misst Mitte zu Mitte), die Vertrauensellipse (gestrichelt: wo dein wahrer Schwerpunkt mit großer Sicherheit liegt; liegt die Mitte darin, ist ein Versatz nicht belegt) und die Schussnummern. „Gruppe“ zoomt auf deine Treffer, „Scheibe“ zeigt die ganze Scheibe.",
+    read: "Die Knöpfe in den Ecken blenden ein: unten links den Schwerpunkt (kleiner schwarz-weiß geviertelter Kreis, der Mittelpunkt deiner Treffer) und den Streukreis (blauer Ring um alle Treffer; seine Zahl misst Mitte zu Mitte), unten rechts die Vertrauensellipse (gestrichelt: wo dein wahrer Schwerpunkt mit großer Sicherheit liegt; liegt die Mitte darin, ist ein Versatz nicht belegt) und die Schussnummern. Oben links zoomt die Lupe auf deine Treffer und wieder zurück; daneben zeigt der Knopf mit den Punkten die übrigen Schüsse blass oder blendet sie aus.",
   },
   {
     id: "beobachtungen",

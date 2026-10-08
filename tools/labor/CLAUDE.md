@@ -27,13 +27,15 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   `window.__labor` (Prüfhaken) liefert Schüsse, Zustand, Scheibe, die Funktionen des Fachkerns (auch die
   Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen.
 - **Seite aus `CardPage`** (Plan Schritt 4): Labor-Kopf mit Scheibe, Beispiel und „Darstellung“ (nicht „Thema“,
-  das ist die Reiterleiste), darunter die Seite einer Scheibe wie in der App; die Labor-Schalter (Ansehen/Setzen,
-  Übrige) stehen rechts zuletzt. Reiter: Anker in der Adresse vor `labor.tab` in `localStorage`; in der Prüfung
-  schreibt das Labor keinen Anker, und `underTest()` hält `#pruefen` beim Laden fest.
+  das ist die Reiterleiste), darunter die Seite einer Scheibe wie in der App. Was nur das Labor hat
+  (Ansehen/Setzen, Neuer Schuss, der Hinweis zum Beispiel), steht im Labor-Kopf; „Übrige blass/aus“ ist ein
+  Eckknopf der Scheibe. Reiter: Anker in der Adresse vor `labor.tab` in `localStorage`; in der Prüfung schreibt
+  das Labor keinen Anker, und `underTest()` hält `#pruefen` beim Laden fest.
 - **Prüfung der Seite:** Desktop in einem Rahmen von 1280 × 900 (das Fenster der Prüfung ist über 2000 px hoch),
-  Telefon bei 390 und 375 px, Querformat 812 × 375. Headless-Chrome liefert hier keine Rückrufe eines
-  `IntersectionObserver` und kein glattes Scrollen; Bausteine, die die Prüfung sehen soll, messen beim Scrollen
-  und springen sofort.
+  Telefon bei 390 und 375 px, Querformat 812 × 375. `scrollWhileStuck` scrollt in den Bereich, in dem die
+  Scheibe klebt; Knöpfe nur mit Symbol (Ecken der Scheibe) findet `button` über ihren Namen. Headless-Chrome
+  liefert hier keine Rückrufe eines `IntersectionObserver` und kein glattes Scrollen; Bausteine, die die
+  Prüfung sehen soll, messen beim Scrollen und springen sofort.
 - **Artifact neu veröffentlichen** aus `dist/labor.html` nach einem direkten `pnpm --filter @vereinsheim/labor
 build` (ohne Turbo-Cache, sonst kann der Stand-Stempel von einem älteren Commit stammen), unter derselben
   Adresse, damit der User den

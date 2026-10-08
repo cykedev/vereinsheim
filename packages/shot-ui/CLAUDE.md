@@ -15,6 +15,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/view-state`                | `src/view-state.ts`                | `viewReducer`, `initialViewState`, `isSelected`: Auswahl, angetippter Schuss, Ausschnitt, Ebenen, Wertung                                                                                                                                                   |
 | `@vereinsheim/shot-ui/shots`                     | `src/shots.ts`                     | `probeOnlyAsMatch` (nur Probe wie Wertung), `defaultWhole` (Grundauswahl), `seriesKeyOf`, `shotLabels` (P1 …, 1 …), `formatScore`, `hasPosition`, `groupShots` (Gruppe der Auswahl), `selectionShots` (Schüsse der Auswahl für Kennzahlen), `shotIntervals` |
 | `@vereinsheim/shot-ui/target/TargetView`         | `src/target/TargetView.tsx`        | die Scheibe: Ringe, Treffer mit Nummer, Auswahl blass oder aus, Streukreis, Ellipse, Schwerpunkt, Zoom                                                                                                                                                      |
+| `@vereinsheim/shot-ui/target/TargetControls`     | `src/target/TargetControls.tsx`    | Knöpfe in den Ecken der Scheibe: Ausschnitt, übrige blass/aus, „?“, Schwerpunkt, Streukreis, Ellipse, Nummern                                                                                                                                               |
 | `@vereinsheim/shot-ui/target/useAnimatedViewBox` | `src/target/useAnimatedViewBox.ts` | weicher Übergang des Ausschnitts (340 ms), `useElementWidth`                                                                                                                                                                                                |
 | `@vereinsheim/shot-ui/series/SeriesStrip`        | `src/series/SeriesStrip.tsx`       | Serien als kleine Scheiben im gleichen Ausschnitt, Serienergebnis, als Schalter für die Auswahl, dazu „Alle“                                                                                                                                                |
 | `@vereinsheim/shot-ui/format`                    | `src/format.ts`                    | `formatValue`, `formatSigned`, `unitText`, `directionText`, `directionWords`, `durationText`, `percentText`: feste Stellen, Komma, echtes Minus, ohne `Intl`                                                                                                |
@@ -34,9 +35,9 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/analysis/overview`         | `src/analysis/overview.ts`         | `overviewTiles`: die acht Kacheln des Überblicks aus dem Fachkern, ohne Wert der Grund                                                                                                                                                                      |
 | `@vereinsheim/shot-ui/analysis/observations`     | `src/analysis/observations.ts`     | `observations`: Beobachtungen in Worten, nur mit Wert, ohne Visier                                                                                                                                                                                          |
 | `@vereinsheim/shot-ui/layout/sections`           | `src/layout/sections.ts`           | Abschnitte der Seite und Anker (`#lage` …): `PAGE_SECTIONS`, `TAB_ANCHORS`, `parseHash`, `hashFor`                                                                                                                                                          |
-| `@vereinsheim/shot-ui/layout/SectionNav`         | `src/layout/SectionNav.tsx`        | Sprungleiste „Scheibe · Zahlen · Schüsse · Analyse“, klebt oben, aktiver Abschnitt hervorgehoben                                                                                                                                                            |
-| `@vereinsheim/shot-ui/layout/useActiveSection`   | `src/layout/useActiveSection.ts`   | aktiver Abschnitt beim Scrollen gemessen, `activeSection` (spätester über 45 % der Fensterhöhe begonnen)                                                                                                                                                    |
-| `@vereinsheim/shot-ui/layout/CardPage`           | `src/layout/CardPage.tsx`          | Rahmen der Seite: Telefon eine Spalte, ab 768 px Scheibe links fest, rechts der Rest                                                                                                                                                                        |
+| `@vereinsheim/shot-ui/layout/SectionNav`         | `src/layout/SectionNav.tsx`        | Sprungleiste „Scheibe · Schüsse · Zahlen · Analyse“, klebt oben, aktiver Abschnitt hervorgehoben, auf dem Telefon vier gleiche Felder                                                                                                                       |
+| `@vereinsheim/shot-ui/layout/useActiveSection`   | `src/layout/useActiveSection.ts`   | aktiver Abschnitt beim Scrollen gemessen, `activeSection` (spätester, dessen Anfang die Leiste erreicht hat)                                                                                                                                                |
+| `@vereinsheim/shot-ui/layout/CardPage`           | `src/layout/CardPage.tsx`          | Rahmen der Seite: Telefon eine Spalte; ab 768 px Scheibe links fest, daneben `aside` und `beside`, darunter `below` in voller Breite                                                                                                                        |
 | `@vereinsheim/shot-ui/layout/jump`               | `src/layout/jump.ts`               | `isOutOfView`, `shouldDismiss`: wann zur Scheibe springen, wann die Pille verschwindet                                                                                                                                                                      |
 | `@vereinsheim/shot-ui/layout/useReturnJump`      | `src/layout/useReturnJump.ts`      | Sprung zur Scheibe mit Rücksprung (sofort, ohne Gleiten)                                                                                                                                                                                                    |
 | `@vereinsheim/shot-ui/layout/ReturnPill`         | `src/layout/ReturnPill.tsx`        | Pille „Zurück zu „Lage““ unten mittig                                                                                                                                                                                                                       |
@@ -64,18 +65,22 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   die Auswahl an der Scheibe. Nur der Reiter Probe nimmt die ganze Karte.
 - **Karten und Diagramme der Analyse:** schmale Karten im Raster aus Zeilen, zu zweit erst ab 820 px Breite
   des Kartenbereichs (Container, gleich hoch, jeder Abstand 16 px), keine CSS-Spalten. In der Seite aus
-  `CardPage` ist der Bereich schmaler (rechts neben der Scheibe, auf dem Telefon die volle Breite): Dort stehen
-  die Karten in einer Spalte. Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
+  `CardPage` steht die Analyse ab 768 px in voller Breite unter der Scheibe (`below`). Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
   (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`
   ohne Grund (Antippen statt Hover ist offen, `vault/spiegel/spiegel-mobile.md`).
 - **Seite aus `CardPage`:** Kopf (`CardHeader`), Sprungleiste (`SectionNav` mit `useActiveSection`), Scheibe,
-  Seite, Abschnitte; die Scheibe trägt selbst `data-section`, die Abschnitte haben `scroll-mt-14` für die
-  56 px hohe Leiste. Was außerhalb der Scheibe die Scheibe ändert, springt über `useReturnJump` zu ihr.
+  daneben was zu ihr gehört (`aside`: Ablesung, Serien, Übersicht; `beside`: Schüsse), darunter in voller Breite,
+  was Platz braucht (`below`: Zahlen, Analyse). Die Scheibe trägt selbst `data-section`, die Abschnitte haben
+  `scroll-mt-14` für die 56 px hohe Leiste. Was außerhalb der Scheibe die Scheibe ändert, springt über
+  `useReturnJump` zu ihr. Die Schalter der Scheibe liegen in ihren Ecken (`TargetControls`), nicht als Leiste.
 - **Erklärungen als Blatt:** Karten der Analyse, Kacheln und die Scheibe tragen ein „?“ (`HelpButton` mit
   `helpId`), die Seite öffnet `HelpSheet`; „Erklärungen“ zeigt nur Kurzsätze. Kein „Was heißt das?“ zwischen
   den Zahlen (Plan Schritt 4, D3).
 - **Auf dem Telefon dieselbe Optik wie am Desktop:** keine 44-px-Mindesthöhe an Umschaltern und Chips
-  (User, 8. Oktober 2026); was zu breit ist, scrollt in sich (Reiterleiste), die Seite nie.
+  (User, 8. Oktober 2026); was zu breit ist, scrollt in sich (Reiterleiste auf dem Telefon), die Seite nie.
+- **Nichts anschneiden, wo Platz ist:** Leisten und Kacheln richten sich nach dem Bereich, in dem sie stehen
+  (Container-Abfragen wie `@min-[45rem]:`), nicht nach dem Fenster; eine Leiste, die in sich scrollt, ist der
+  Ausweg für das Telefon, nicht für den Desktop (User, 8. Oktober 2026).
 - **Farben nur aus den Design-2-Tokens** (`@vereinsheim/ui/design2.css`), keine Palette-Klassen, keine
   `dark:`-Varianten; die Scheibe ist in beiden Themes gleich.
 - Markup-Tests mit `renderToStaticMarkup` in der Node-Umgebung; Bedienung prüft die Skriptprüfung des

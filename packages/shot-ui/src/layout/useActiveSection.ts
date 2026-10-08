@@ -6,23 +6,25 @@ import { PAGE_SECTIONS, type PageSection } from "./sections"
 
 const IDS = new Set<string>(PAGE_SECTIONS.map((section) => section.id))
 
-/** ein Abschnitt zählt, sobald er oberhalb dieser Höhe des Fensters begonnen hat (Anteil) */
-const LINE = 0.45
+/** ein Abschnitt zählt, sobald sein Anfang die Leiste erreicht hat: 56 px Leiste plus 40 px Luft */
+const LINE_PX = 96
 
 /**
- * Aktiver Abschnitt: der späteste in der Seite, der schon oberhalb von 45 % der Fensterhöhe begonnen hat.
- * Über den Serien bleibt so die Scheibe aktiv, am Desktop löst ein Abschnitt rechts die feste Scheibe ab;
- * ganz oben, solange noch keiner begonnen hat, keiner. Am Ende der Seite der letzte: Ein kurzer letzter Abschnitt
- * erreicht die Linie sonst nie.
+ * Aktiver Abschnitt: der späteste in der Seite, dessen Anfang schon an der Leiste angekommen ist. Ein Sprung
+ * über die Leiste legt den Abschnitt genau unter sie und macht ihn so aktiv, auch wenn er kürzer ist als das
+ * Fenster (die Zahlen in voller Breite, User, 8. Oktober 2026); ein Anteil der Fensterhöhe hätte dann schon den
+ * nächsten gezählt. Über den Serien bleibt die Scheibe aktiv, am Desktop löst ein Abschnitt rechts die feste
+ * Scheibe ab. Oben auf der Seite, bevor einer die Leiste erreicht, der erste; am Ende der Seite der letzte, denn
+ * ein kurzer letzter Abschnitt erreicht die Leiste sonst nie.
  */
 export function activeSection(
   boxes: readonly { id: PageSection; top: number }[],
-  viewportHeight: number,
   atBottom = false
 ): PageSection | null {
-  if (atBottom && boxes.length) return boxes[boxes.length - 1].id
-  const started = boxes.filter((b) => b.top < viewportHeight * LINE)
-  return started.length ? started[started.length - 1].id : null
+  if (!boxes.length) return null
+  if (atBottom) return boxes[boxes.length - 1].id
+  const started = boxes.filter((b) => b.top < LINE_PX)
+  return (started.length ? started[started.length - 1] : boxes[0]).id
 }
 
 /**
@@ -43,7 +45,7 @@ export function useActiveSection(): PageSection | null {
         }))
       const root = document.documentElement
       const atBottom = window.scrollY + window.innerHeight >= root.scrollHeight - 1
-      setActive(activeSection(boxes, window.innerHeight, atBottom))
+      setActive(activeSection(boxes, atBottom))
     }
     measure()
     window.addEventListener("scroll", measure, { passive: true })

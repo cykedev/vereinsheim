@@ -178,9 +178,10 @@ describe("Kacheln „Trefferbild in Zahlen“", () => {
     expect(render()).not.toContain("Erklärung:")
   })
 
-  it("volle Zeilen: so viele Spalten, wie die Kacheln ganz füllen", () => {
+  it("volle Zeilen: so viele Spalten, wie die Kacheln ganz füllen, gemessen am Bereich", () => {
+    expect(render()).toMatch(/^<section class="@container /)
     const columns = (count: number) =>
-      /md:grid-cols-(\d)/.exec(
+      /@min-\[\d+rem\]:grid-cols-(\d)/.exec(
         renderToStaticMarkup(
           createElement(MetricTiles, {
             shots: CARD,

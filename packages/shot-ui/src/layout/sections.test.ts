@@ -5,7 +5,7 @@ import { hashFor, PAGE_SECTIONS, parseHash, TAB_ANCHORS } from "./sections"
 
 describe("Abschnitte und Anker (D7)", () => {
   it("vier Abschnitte in der Reihenfolge der Seite", () => {
-    expect(PAGE_SECTIONS.map((s) => s.label)).toEqual(["Scheibe", "Zahlen", "Schüsse", "Analyse"])
+    expect(PAGE_SECTIONS.map((s) => s.label)).toEqual(["Scheibe", "Schüsse", "Zahlen", "Analyse"])
   })
 
   it("jeder Abschnitt hin und zurück", () => {

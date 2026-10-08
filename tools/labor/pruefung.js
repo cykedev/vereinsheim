@@ -17,8 +17,12 @@ addEventListener("load", async () => {
     const pxPerMm = () => svg().getBoundingClientRect().width / view()[2]
     const hits = () => $$('[data-layer="shots"] > g[data-shot]', svg())
     const labelsOf = (groups) => groups.map((g) => g.dataset.shot)
+    // nach Text oder, bei Knöpfen nur mit Symbol (Ecken der Scheibe), nach Namen
     const button = (label, root = document) =>
-      $$("button", root).find((b) => txt(b).trim() === label)
+      $$("button", root).find(
+        (b) => txt(b).trim() === label || b.getAttribute("aria-label") === label
+      )
+    const zoom = () => button("Auf Gruppe zoomen")
     const click = async (el, ms = 60) => {
       el.dispatchEvent(new MouseEvent("click", { bubbles: true }))
       await wait(ms)
@@ -407,7 +411,7 @@ addEventListener("load", async () => {
         .map((tr) => tr.dataset.row)
         .join() === "20,19,18,17,16,15,14,13,12,11" && groupTitles().length === 0
     )
-    await click(button("Gruppe"), 700)
+    await click(zoom(), 700)
     const [gx, gy, gw] = view()
     check(
       "Gruppe: Ausschnitt auf Serie 2, alle ihre Treffer darin",
@@ -421,12 +425,12 @@ addEventListener("load", async () => {
       numberPxGroup >= 7.99 && numberPxGroup <= 12.01,
       numberPxGroup.toFixed(2)
     )
-    await click(button("Übrige aus"))
+    await click(button("Übrige Schüsse blass zeigen"))
     check(
       "„Übrige aus“: nur die Auswahl gezeichnet",
       labelsOf(hits()).join() === "11,12,13,14,15,16,17,18,19,20"
     )
-    await click(button("Übrige blass"))
+    await click(button("Übrige Schüsse blass zeigen"))
     // eine Serie oder alle: eine andere Serie wechselt, keine Mehrfachauswahl
     await click(tile("3"))
     check(
@@ -447,7 +451,7 @@ addEventListener("load", async () => {
       hits().every((g) => !g.dataset.faded) &&
         button("Alle").getAttribute("aria-pressed") === "true"
     )
-    await click(button("Scheibe"), 700)
+    await click(zoom(), 700)
 
     // ---------- Tabelle wählt den Schuss wie das Antippen
     const row14 = () => tableRows().find((tr) => tr.dataset.row === "14")
@@ -646,7 +650,7 @@ addEventListener("load", async () => {
       hits().length === 10 && !$("[data-series='probe']")
     )
     // gezoomt ist ein Treffer größer als 20 px: Ein Tipp in ihn hinein zählt bis an seinen Rand
-    await click(button("Gruppe"), 700)
+    await click(zoom(), 700)
     const calPx = Number(circleOf(hits()[0]).getAttribute("r")) * pxPerMm()
     const inside = calPx > 30 ? beside("5", calPx * 0.8) : null
     if (inside) await tapAt(inside)
@@ -656,10 +660,10 @@ addEventListener("load", async () => {
       `Treffer ${calPx.toFixed(0)} px, ${inside ? txt($("#readout")).slice(0, 30) : "keine freie Stelle"}`
     )
     if (inside) await tapAt(inside)
-    await click(button("Scheibe"), 700)
+    await click(zoom(), 700)
     await click(button("Luftpistole"), 60)
     // eine andere Karte derselben Scheibe steht ebenso sofort: aus der Gruppe direkt auf die ganze Scheibe
-    await click(button("Gruppe"), 700)
+    await click(zoom(), 700)
     const [, , wGroup] = view()
     await click(button("Ausdruck vom 2. Oktober"), 60)
     const [, , wNext] = view()
@@ -1205,6 +1209,16 @@ addEventListener("load", async () => {
       await wait(600)
       return f
     }
+    // scrollt in den Bereich, in dem die Scheibe klebt (Anteil 0 bis 1 seiner Länge); liefert die Länge
+    const scrollWhileStuck = (w, share) => {
+      const d = w.document
+      const region = d.getElementById("scheibe")
+      const card = d.querySelector('[data-section="scheibe"]')
+      const start = region.getBoundingClientRect().top + w.scrollY - 56
+      const room = region.offsetHeight - card.offsetHeight
+      w.scrollTo(0, start + Math.max(0, room) * share)
+      return room
+    }
     const frameClick = async (f, el, ms = 150) => {
       el.dispatchEvent(new f.contentWindow.MouseEvent("click", { bubbles: true }))
       await wait(ms)
@@ -1217,7 +1231,19 @@ addEventListener("load", async () => {
     check(
       "Sprungleiste: vier Anker in der Reihenfolge der Seite",
       [...sectionNav.querySelectorAll("a")].map((a) => a.getAttribute("href")).join() ===
-        "#scheibe,#zahlen,#schuesse,#analyse"
+        "#scheibe,#schuesse,#zahlen,#analyse"
+    )
+    // „Zahlen“ ist kürzer als das Fenster: nach dem Sprung trotzdem genau „Zahlen“ aktiv, nicht die Analyse
+    sectionNav.querySelector('a[href="#zahlen"]').click()
+    await wait(300)
+    dw.dispatchEvent(new dw.Event("scroll"))
+    await wait(100)
+    const deskActive = [...sectionNav.querySelectorAll("[aria-current]")].map(txt)
+    check(
+      "Desktop: „Zahlen“ bringt die Zahlen unter die Leiste, aktiv ist genau „Zahlen“",
+      near(dd.getElementById("zahlen").getBoundingClientRect().top, 56, 3) &&
+        deskActive.join() === "Zahlen",
+      `${dd.getElementById("zahlen").getBoundingClientRect().top.toFixed(0)} · ${deskActive.join()}`
     )
     sectionNav.querySelector('a[href="#analyse"]').click()
     await wait(500)
@@ -1238,16 +1264,69 @@ addEventListener("load", async () => {
         near(sectionNav.getBoundingClientRect().top, 0, 1),
       strip.getBoundingClientRect().top.toFixed(0)
     )
-    dw.scrollTo(0, 1500)
+    const stuckRoom = scrollWhileStuck(dw, 0.1)
     await wait(80)
     const stuck1 = dd.getElementById("target-box").getBoundingClientRect().top
-    dw.scrollTo(0, 3000)
+    scrollWhileStuck(dw, 0.9)
     await wait(80)
     const stuck2 = dd.getElementById("target-box").getBoundingClientRect().top
     check(
-      "Desktop: die Scheibe bleibt beim Scrollen der rechten Spalte stehen",
-      near(stuck1, stuck2, 1) && stuck1 > 56 && stuck1 < 200,
-      `${stuck1.toFixed(0)} / ${stuck2.toFixed(0)}`
+      "Desktop: die Scheibe bleibt stehen, solange rechts daneben gescrollt wird",
+      stuckRoom > 200 && near(stuck1, stuck2, 1) && stuck1 > 56 && stuck1 < 200,
+      `${stuckRoom} px · ${stuck1.toFixed(0)} / ${stuck2.toFixed(0)}`
+    )
+    // neben der Scheibe Schuss, Serien und Schüsse; Zahlen und Analyse darunter über die ganze Breite
+    const regionBox = dd.getElementById("scheibe").getBoundingClientRect()
+    const fullWidth = ["zahlen", "analyse"].every((id) => {
+      const r = dd.getElementById(id).getBoundingClientRect()
+      return near(r.left, regionBox.left, 1) && near(r.width, regionBox.width, 1)
+    })
+    const besideTarget = ["readout", "series", "shot-table"].every(
+      (id) =>
+        dd.getElementById(id).getBoundingClientRect().left >
+        dd.getElementById("target-box").getBoundingClientRect().right
+    )
+    check(
+      "Desktop: Schuss, Serien und Schüsse neben der Scheibe, Zahlen und Analyse darunter in voller Breite",
+      fullWidth && besideTarget,
+      `${regionBox.width.toFixed(0)} px`
+    )
+    dd.getElementById("analyse").scrollIntoView()
+    await wait(80)
+    check(
+      "Desktop: unter dem Raster scrollt die Scheibe mit weg",
+      dd.querySelector('[data-section="scheibe"]').getBoundingClientRect().bottom < 56,
+      dd.querySelector('[data-section="scheibe"]').getBoundingClientRect().bottom.toFixed(0)
+    )
+    // nichts angeschnitten: Kacheln in Zeilen zu fünf ohne abgeschnittenen Text, alle Reiter sichtbar,
+    // die Knöpfe der Scheibe in ihrem Kasten
+    const clipped = [...dd.querySelectorAll("[data-metric] *, [data-tile] *")].filter(
+      (e) => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflow !== "visible"
+    )
+    check(
+      "Desktop: Kacheln zu fünf, kein Text abgeschnitten",
+      tileRows(dd).every((n) => n === 5) && clipped.length === 0,
+      `${tileRows(dd).join("+")} · ${clipped.length}`
+    )
+    const deskTabs = dd.querySelector(
+      'section[aria-label="Analyse"] [role="radiogroup"][aria-label="Thema"]'
+    )
+    const boxRect = dd.getElementById("target-box").getBoundingClientRect()
+    const corners = [...dd.querySelectorAll('[aria-label="Ansicht der Scheibe"] button')]
+    check(
+      "Desktop: Reiterleiste ganz sichtbar, die sieben Knöpfe in den Ecken der Scheibe",
+      deskTabs.scrollWidth <= deskTabs.clientWidth + 1 &&
+        corners.length === 7 &&
+        corners.every((b) => {
+          const r = b.getBoundingClientRect()
+          return (
+            r.left >= boxRect.left &&
+            r.right <= boxRect.right &&
+            r.top >= boxRect.top &&
+            r.bottom <= boxRect.bottom
+          )
+        }),
+      `${deskTabs.scrollWidth}/${deskTabs.clientWidth} · ${corners.length}`
     )
     dw.scrollTo(0, 3000)
     await wait(50)
@@ -1313,7 +1392,7 @@ addEventListener("load", async () => {
     ]) {
       const flat = await openFrame(width, height)
       const fd = flat.contentDocument
-      flat.contentWindow.scrollTo(0, 1500)
+      scrollWhileStuck(flat.contentWindow, 0.5)
       await wait(100)
       const card = fd.querySelector('[data-section="scheibe"]').getBoundingClientRect()
       check(
