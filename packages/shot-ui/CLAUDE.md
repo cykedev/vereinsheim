@@ -17,6 +17,7 @@ dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/target/TargetView`         | `src/target/TargetView.tsx`        | die Scheibe: Ringe, Treffer mit Nummer, Auswahl blass oder aus, Streukreis, Ellipse, Schwerpunkt, Zoom                     |
 | `@vereinsheim/shot-ui/target/useAnimatedViewBox` | `src/target/useAnimatedViewBox.ts` | weicher Übergang des Ausschnitts (340 ms), `useElementWidth`                                                               |
 | `@vereinsheim/shot-ui/series/SeriesStrip`        | `src/series/SeriesStrip.tsx`       | Serien als kleine Scheiben im gleichen Ausschnitt, Serienergebnis, als Schalter für die Auswahl, dazu „Alle“               |
+| `@vereinsheim/shot-ui/format`                    | `src/format.ts`                    | `formatValue`, `formatSigned`, `unitText`: feste Stellen, Komma, echtes Minus, ohne `Intl`                                 |
 
 ## Regeln
 
