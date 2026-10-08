@@ -72,7 +72,7 @@ kein_passwort_in_ausgabe() {
 echo "Testanlage starten ($IMAGE)"
 anlage_starten
 
-erkunden selbsttest verbinden checkliste
+erkunden selbsttest verbinden checkliste dump
 pruefe "umgebung.md geschrieben" test -s "$AUSGABE/bericht/umgebung.md"
 pruefe "Server-Version im Bericht" grep -q "MariaDB" "$AUSGABE/bericht/umgebung.md"
 pruefe "Tabelle Version gelesen" grep -q "6.0.2" "$AUSGABE/bericht/umgebung.md"
@@ -84,6 +84,22 @@ pruefe "alle zehn Themen im Bericht" test "$(grep -c '^## [0-9][0-9]-' "$ANTWORT
 pruefe "keine SQL-Fehler gegen die Testanlage" sh -c "! grep -q '^ERROR' '$ANTWORTEN'"
 pruefe "Skalen-Abfrage gelaufen" grep -q "ring01_gleich_summe" "$ANTWORTEN"
 pruefe "Handeintrag gefunden" grep -q "Hand" "$ANTWORTEN"
+# Die Kopie muss sich einspielen lassen und dieselben Zeilen haben.
+dump_einspielbar() {
+  local tabelle a b
+  echo "CREATE DATABASE kopie" | anlage_sql
+  gunzip -c "$AUSGABE/privat/ssmdb2.sql.gz" | docker exec -i "$ANLAGE" mariadb -uroot -proot kopie || return 1
+  for tabelle in Version Scheiben Serien Treffer; do
+    a=$(echo "SELECT COUNT(*) FROM SSMDB2.$tabelle" | anlage_sql | sed -n 2p)
+    b=$(echo "SELECT COUNT(*) FROM kopie.$tabelle" | anlage_sql | sed -n 2p)
+    [ "$a" = "$b" ] || { echo "  $tabelle: $a gegen $b" >&2; return 1; }
+  done
+}
+pruefe "Kopie in privat/ geschrieben" test -s "$AUSGABE/privat/ssmdb2.sql.gz"
+pruefe "privat/ nur für den Besitzer" sh -c "ls -ld '$AUSGABE/privat' | grep -q '^drwx------'"
+pruefe "Kopie einspielbar mit gleichen Zeilen" dump_einspielbar
+pruefe "Schema ohne Daten im Bericht" sh -c "grep -q 'CREATE TABLE \`Treffer\`' '$AUSGABE/bericht/schema.sql' && ! grep -q 'INSERT' '$AUSGABE/bericht/schema.sql'"
+pruefe "Zeilenzahlen in dump.md" grep -q "Treffer: 6" "$AUSGABE/bericht/dump.md"
 pruefe "kein Passwort in der Ausgabe" kein_passwort_in_ausgabe
 pruefe "kein Testname im Bericht" kein_testname_im_bericht
 

@@ -27,7 +27,7 @@ AUSGABE=""
 AUTO=0
 DOCKER_ERZWINGEN=0
 VERBUNDEN=0
-ALLE_PHASEN="selbsttest verbinden checkliste"
+ALLE_PHASEN="selbsttest verbinden checkliste dump"
 
 info() { printf '\033[1m==>\033[0m %s\n' "$*" >&2; }
 warnung() { printf '\033[33m!!\033[0m %s\n' "$*" >&2; }
@@ -244,6 +244,42 @@ phase_checkliste() {
   info "Checkliste geschrieben: $AUSGABE/bericht/antworten.md"
 }
 
+# ---------------------------------------------------------------- Phase dump
+
+# Kopie der ganzen SSMDB2 nach privat/ (mit Namen) und das Schema ohne Daten nach bericht/.
+# Ohne LOCK TABLES: unter MyISAM würde das ShootMaster blockieren (SF-51).
+phase_dump() {
+  verbindung_sicherstellen
+  info "Kopie der SSMDB2: liest alle Tabellen. Nur ausführen, wenn gerade niemand schießt."
+  frage_ja "Schießt gerade niemand? Kopie jetzt ziehen?" || {
+    warnung "Kopie übersprungen"
+    return 0
+  }
+  local roh="$AUSGABE/privat/ssmdb2.sql.gz" bericht="$AUSGABE/bericht/dump.md" start dauer zusatz tabelle
+  zusatz=$(dump_zusatz)
+  start=$(jetzt_ms)
+  # shellcheck disable=SC2086  # $zusatz sind null bis zwei einzelne Optionen
+  sql_dump --single-transaction --skip-lock-tables --no-tablespaces --hex-blob $zusatz | gzip >"$roh"
+  dauer=$(($(jetzt_ms) - start))
+  chmod 600 "$roh"
+  # shellcheck disable=SC2086
+  sql_dump --no-data --skip-lock-tables --no-tablespaces --skip-comments $zusatz >"$AUSGABE/bericht/schema.sql"
+  {
+    echo "# Kopie der SSMDB2"
+    echo
+    echo "- Datei: privat/ssmdb2.sql.gz (enthält Namen, bleibt auf diesem Rechner)"
+    echo "- Größe: $(wc -c <"$roh" | tr -d ' ') Bytes gepackt, Dauer $dauer ms"
+    echo "- Schema ohne Daten: bericht/schema.sql"
+    echo
+    echo "## Zeilen je Tabelle"
+    echo
+    for tabelle in $(sql_text "SHOW TABLES" | sed 1d); do
+      printf -- '- %s: %s\n' "$tabelle" "$(sql_text "SELECT COUNT(*) FROM \`$tabelle\`" | sed -n 2p)"
+    done
+  } >"$bericht"
+  info "Kopie geschrieben: $roh ($dauer ms)"
+}
+
 # ---------------------------------------------------------------- Ablauf
 
 for phase in $PHASEN; do
@@ -251,6 +287,7 @@ for phase in $PHASEN; do
     selbsttest) phase_selbsttest ;;
     verbinden) phase_verbinden ;;
     checkliste) phase_checkliste ;;
+    dump) phase_dump ;;
     *) fehler "unbekannte Phase: $phase (bekannt: $ALLE_PHASEN)" ;;
   esac
 done

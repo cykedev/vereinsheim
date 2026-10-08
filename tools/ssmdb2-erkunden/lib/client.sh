@@ -125,6 +125,15 @@ sql_dump() {
   _client "$DUMP_BIN" "$@" "$DB"
 }
 
+# Zusatzoptionen, die nur ein lokales mysqldump 8 braucht (gegen ältere Server und GTID).
+dump_zusatz() {
+  local hilfe
+  [ "$DUMP_BIN" = mysqldump ] || return 0
+  hilfe=$(_client "$DUMP_BIN" --help 2>/dev/null || true)
+  case "$hilfe" in *column-statistics*) printf '%s\n' --column-statistics=0 ;; esac
+  case "$hilfe" in *set-gtid-purged*) printf '%s\n' --set-gtid-purged=OFF ;; esac
+}
+
 # Zeit des Macs in Millisekunden.
 jetzt_ms() {
   perl -MTime::HiRes=time -e 'printf "%d\n", time * 1000'
