@@ -1,6 +1,8 @@
 import {
+  decimalHistogram,
   longestRun,
   ringDistribution,
+  seriesConsistency,
   shareAtLeast,
   shotExtremes,
 } from "@vereinsheim/shot-core/analysis"
@@ -137,5 +139,50 @@ describe("Reiter Ergebnis", () => {
     expect(cardText(render("decimal", noPosition), "extreme-und-teiler")).toContain(
       "ab 1 Schuss mit Lage"
     )
+  })
+
+  it("Zehntelverteilung: eine Säule je belegtem Zehntel, Farbe nach Ring, Achse bis 10,9", () => {
+    const hist = decimalHistogram(BASE)
+    const card = html.slice(html.indexOf('data-card="zehntelverteilung"'))
+    const bars = [...card.matchAll(/data-tenth="(\d+)"[^>]*fill="([^"]+)"/g)]
+    expect(bars.map((m) => Number(m[1]))).toEqual(
+      hist.counts.flatMap((count, tenth) => (count ? [tenth] : []))
+    )
+    for (const [, tenth, fill] of bars) {
+      expect(fill).toBe(`var(--score-${Math.max(7, Math.min(10, Math.floor(Number(tenth) / 10)))})`)
+    }
+    expect(cardText(html, "zehntelverteilung")).toContain("10,9")
+    expect(cardText(html, "zehntelverteilung")).toContain(
+      `höchste Säule ${Math.max(...hist.counts)}`
+    )
+  })
+
+  it("Zehntelverteilung in ganzen Ringen: der Hinweis zum Umschalten statt Säulen", () => {
+    const rings = render("rings")
+    expect(cardText(rings, "zehntelverteilung")).toContain("Gibt es nur in der Zehntelwertung")
+    expect(rings).not.toContain("data-tenth")
+  })
+
+  it("Serien und Konstanz: ein Punkt je Serie mit Wert, Kennzahlen aus dem Fachkern", () => {
+    const cons = seriesConsistency(BASE, "decimal")!
+    const points = [...html.matchAll(/data-series-point="(\d+)"/g)].map((m) => Number(m[1]))
+    expect(points).toEqual(cons.series.filter((p) => p.total !== null).map((p) => p.series))
+    const text = cardText(html, "serien-und-konstanz")
+    expect(text).toContain(`Verglichen ${cons.compared} von ${cons.series.length} Serien`)
+    expect(text).toContain(`Streuung der Serien ${formatValue(cons.sd!, 2)} Ringe`)
+    expect(text).toContain(`Spanne ${formatValue(cons.range!, 1)} Ringe`)
+    expect(text).toContain(`Schwankung je Schuss ${formatValue(cons.mad!, 2)} Ringe`)
+    expect(html).not.toMatch(/data-series-point="\d+" data-short/)
+  })
+
+  it("Serien: eine kurze Restserie ist hohl und nicht in der Linie", () => {
+    const short = render("decimal", BASE.slice(0, 35))
+    const cons = seriesConsistency(BASE.slice(0, 35), "decimal")!
+    const last = cons.series[cons.series.length - 1]
+    expect(last.shots).toBe(5)
+    expect(short).toMatch(new RegExp(`data-series-point="${last.series}" data-short="true"`))
+    const line = short.match(/data-series-line="true" points="([^"]+)"/)![1]
+    expect(line.trim().split(" ")).toHaveLength(cons.series.length - 1)
+    expect(cardText(short, "serien-und-konstanz")).toContain(`S${last.series} (5)`)
   })
 })

@@ -1,8 +1,10 @@
 "use client"
 
 import {
+  decimalHistogram,
   longestRun,
   ringDistribution,
+  seriesConsistency,
   shareAtLeast,
   shotExtremes,
   type TeilerRef,
@@ -10,7 +12,10 @@ import {
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
 import { formatValue, percentText } from "../../format"
+import { DecimalHistogram } from "../charts/DecimalHistogram"
+import { ChartSlot } from "../charts/frame"
 import { RingBars } from "../charts/RingBars"
+import { SeriesChart } from "../charts/SeriesChart"
 import type { AnalysisInput } from "../input"
 import { AnalysisCard, IntervalBar, KeyValues, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
@@ -48,14 +53,20 @@ function TeilerList({ refs }: { refs: readonly TeilerRef[] }) {
   )
 }
 
-/** Ergebnis: Ergebnis, Ringverteilung, beste und weiteste Teiler, Quoten, alle über die Grundlage */
+/**
+ * Ergebnis: Ergebnis, Ringverteilung, Zehntelverteilung, beste und weiteste Teiler, Serien und Konstanz,
+ * Quoten, alle über die Grundlage
+ */
 export function resultCards({ input, explain }: CardContext): CardSpec[] {
   const { base, scoring } = input
   const metric = (key: string) => computeMetric(inScoring(metricByKey(key)!, scoring), base)
   const total = metric("result.decimal")
   const mean = metric("result.decimalMean")
   const dist = ringDistribution(base)
+  const hist = decimalHistogram(base)
   const extremes = shotExtremes(base)
+  const consistency = seriesConsistency(base, scoring)
+  const digits = scoring === "rings" ? 0 : 1
   const shares = shareThresholds(input).flatMap(([tenths, label]) => {
     const share = shareAtLeast(base, scoring, tenths)
     return share ? [{ label, share }] : []
@@ -72,7 +83,7 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
           ) : (
             <KeyValues
               rows={[
-                ["Ergebnis", `${formatValue(total, scoring === "rings" ? 0 : 1)} Ringe`],
+                ["Ergebnis", `${formatValue(total, digits)} Ringe`],
                 ["Ø je Schuss", mean === null ? "–" : formatValue(mean, 2)],
                 ["Schuss", String(base.length)],
               ]}
@@ -89,6 +100,25 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
             <>
               <RingBars dist={dist} />
               <Note>{`${dist.innerTens} Innenzehner · n = ${dist.n}`}</Note>
+            </>
+          ) : (
+            <Note>ab 1 Schuss</Note>
+          )}
+        </AnalysisCard>
+      ),
+    },
+    {
+      key: "zehntelverteilung",
+      element: (
+        <AnalysisCard help="zehntelverteilung" explain={explain}>
+          {scoring === "rings" ? (
+            <Note>Gibt es nur in der Zehntelwertung; oben auf „Zehntel“ umschalten.</Note>
+          ) : hist.n ? (
+            <>
+              <ChartSlot height={150}>
+                {(width) => <DecimalHistogram width={width} hist={hist} />}
+              </ChartSlot>
+              <Note>Jede Säule ein Zehntelwert, Farbe nach Ring.</Note>
             </>
           ) : (
             <Note>ab 1 Schuss</Note>
@@ -115,6 +145,63 @@ export function resultCards({ input, explain }: CardContext): CardSpec[] {
             </>
           ) : (
             <Note>ab 1 Schuss mit Lage</Note>
+          )}
+        </AnalysisCard>
+      ),
+    },
+    {
+      key: "serien-und-konstanz",
+      element: (
+        <AnalysisCard help="serien-und-konstanz" explain={explain}>
+          {consistency ? (
+            <>
+              {consistency.series.length > 1 && (
+                <ChartSlot height={170}>
+                  {(width) => (
+                    <SeriesChart width={width} series={consistency.series} digits={digits} />
+                  )}
+                </ChartSlot>
+              )}
+              <KeyValues
+                rows={[
+                  ["Verglichen", `${consistency.compared} von ${consistency.series.length} Serien`],
+                  [
+                    "Streuung der Serien",
+                    consistency.sd === null ? (
+                      "–"
+                    ) : (
+                      <>
+                        {`${formatValue(consistency.sd, 2)} Ringe`}
+                        <span className="font-normal text-muted-foreground"> (SD)</span>
+                      </>
+                    ),
+                  ],
+                  [
+                    "Spanne",
+                    consistency.range === null
+                      ? "–"
+                      : `${formatValue(consistency.range, digits)} Ringe`,
+                  ],
+                  [
+                    "Schwankung je Schuss",
+                    consistency.mad === null ? (
+                      "–"
+                    ) : (
+                      <>
+                        {`${formatValue(consistency.mad, 2)} Ringe`}
+                        <span className="font-normal text-muted-foreground"> (MAD)</span>
+                      </>
+                    ),
+                  ],
+                ]}
+              />
+              <Note>
+                Nur Serien gleicher Länge sind vergleichbar; eine kurze Restserie ist hohl
+                gezeichnet.
+              </Note>
+            </>
+          ) : (
+            <Note>Serien gibt es ab dem ersten Wertungsschuss.</Note>
           )}
         </AnalysisCard>
       ),
