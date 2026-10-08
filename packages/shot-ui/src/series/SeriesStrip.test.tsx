@@ -95,10 +95,30 @@ describe("SeriesStrip", () => {
     expect([...probe.matchAll(/stroke-dasharray="2 2"/g)]).toHaveLength(1)
   })
 
-  it("jede Kachel hat einen Satz für Screenreader", () => {
-    expect(render({ adjustAfter: [1] })).toContain(
-      'aria-label="Probe: 3 Schuss, 2 nach der Verstellung"'
+  it("jede Kachel hat einen Satz für Screenreader, das Bild darin schweigt", () => {
+    const html = render({ adjustAfter: [1] })
+    expect(html).toMatch(
+      /<button[^>]*aria-label="Probe: 3 Schuss, 2 nach der Verstellung"[^>]*>\s*<svg[^>]*aria-hidden="true"/
     )
-    expect(render()).toContain('aria-label="Serie 2: 70,0, 7 von 10 Schuss"')
+    expect(render()).toMatch(/<button[^>]*aria-label="Serie 2: 70,0, 7 von 10 Schuss"/)
+    expect(html).not.toContain('role="img"')
+  })
+
+  it("blasse Kacheln: nur das Bild tritt zurück, die Schrift bleibt lesbar", () => {
+    const html = render({ selection: 2 })
+    const dim = html.slice(html.indexOf('data-series="1"'), html.indexOf('data-series="2"'))
+    expect(dim).toMatch(/<svg[^>]*class="[^"]*opacity-55/)
+    expect(html).not.toMatch(/<button[^>]*class="[^"]*opacity-55/)
+  })
+
+  it("ein Wertungsschuss ohne Wert hohl und gestrichelt wie auf der großen Scheibe", () => {
+    const html = renderToStaticMarkup(
+      createElement(SeriesStrip, {
+        target: LP_10M,
+        shots: [{ ...shot("match", 1, 0, 100), ring: null, decimalTenths: null }],
+        state: initialViewState(),
+      })
+    )
+    expect(html).toMatch(/<circle[^>]*fill="none"[^>]*stroke-dasharray="2 2"/)
   })
 })

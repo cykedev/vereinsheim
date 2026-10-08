@@ -134,7 +134,7 @@ export function MetricTiles({
               className="grid min-w-0 content-start gap-1 bg-card px-4 py-3.5"
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="font-mono text-[11px] leading-snug font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+                <span className="font-mono text-xs leading-snug font-semibold tracking-[0.08em] text-muted-foreground uppercase">
                   {labelNode(label)}
                 </span>
                 {onHelp && (

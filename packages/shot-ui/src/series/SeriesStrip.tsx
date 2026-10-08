@@ -17,7 +17,7 @@ export interface SeriesStripProps {
   /** alle Schüsse der Scheibe in Abgabefolge (`inShotOrder`) */
   shots: readonly MetricShot[]
   state: ViewState
-  /** Tippen auf eine kleine Scheibe nimmt sie in die Auswahl oder heraus */
+  /** Tippen auf eine kleine Scheibe wählt genau diese Serie; dieselbe noch einmal zeigt wieder alle */
   onSelect?: (key: SeriesKey) => void
   onSelectAll?: () => void
   className?: string
@@ -127,19 +127,22 @@ export function SeriesStrip({
               type="button"
               data-series={String(block.key)}
               aria-pressed={pressed}
+              aria-label={label}
               data-dim={dim || undefined}
               onClick={onSelect ? () => onSelect(block.key) : undefined}
               className={cn(
                 "grid min-w-0 cursor-pointer content-start gap-1.5 rounded-[10px] p-0.5 text-left focus-visible:outline-2 focus-visible:outline-ring",
-                pressed && "bg-accent-wash outline-2 outline-primary",
-                dim && "opacity-55"
+                pressed && "bg-accent-wash outline-2 outline-primary"
               )}
             >
+              {/* blass tritt nur das Bild zurück; die Schrift behält ihren Kontrast */}
               <svg
                 viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
-                role="img"
-                aria-label={label}
-                className="block aspect-square h-auto w-full rounded-lg border border-border"
+                aria-hidden="true"
+                className={cn(
+                  "block aspect-square h-auto w-full rounded-lg border border-border",
+                  dim && "opacity-55"
+                )}
               >
                 <rect x={view.x} y={view.y} width={view.w} height={view.w} fill="var(--paper)" />
                 <circle r={blackR} fill="var(--spiegel)" />
@@ -188,10 +191,11 @@ export function SeriesStrip({
                         cx={x}
                         cy={y}
                         r={calR}
-                        fill={color}
+                        fill={shot.ring === null ? "none" : color}
                         fillOpacity={0.8}
                         stroke="var(--shot-edge)"
                         strokeWidth={1}
+                        strokeDasharray={shot.ring === null ? "2 2" : undefined}
                         {...HAIR}
                       />
                     )
