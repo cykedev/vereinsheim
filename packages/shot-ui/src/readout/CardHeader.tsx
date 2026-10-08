@@ -40,7 +40,8 @@ export function CardHeader({
   const total = computeMetric(inScoring(metricByKey("result.decimal")!, state.scoring), shots)
   const count = shots.filter((s) => s.kind === "match").length
   return (
-    <header className={cn("grid gap-3", className)}>
+    // kein <header>: außerhalb von <main> wäre es eine zweite Banner-Landmarke neben dem Kopf der App
+    <div data-card-header className={cn("grid gap-3", className)}>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="grid min-w-0 gap-1">
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight text-balance">
@@ -79,6 +80,6 @@ export function CardHeader({
           {sentence}
         </p>
       )}
-    </header>
+    </div>
   )
 }

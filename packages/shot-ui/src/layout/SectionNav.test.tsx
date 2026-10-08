@@ -56,5 +56,9 @@ describe("aktiver Abschnitt", () => {
       activeSection([box("scheibe", -200), box("zahlen", 600), box("schuesse", 1300)], 900)
     ).toBe("scheibe")
     expect(activeSection([box("scheibe", 850), box("zahlen", 1700)], 900)).toBeNull()
+    // am Ende der Seite der letzte, auch wenn er die Linie nicht erreicht (kurze Analyse)
+    expect(
+      activeSection([box("scheibe", 56), box("schuesse", 100), box("analyse", 432)], 900, true)
+    ).toBe("analyse")
   })
 })

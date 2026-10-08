@@ -28,7 +28,11 @@ describe("Rahmen der Seite (D2, D5)", () => {
   })
 
   it("jeder Abschnitt mit Anker-Id, data-section und Abstand für die Leiste", () => {
-    for (const id of ["scheibe", "zahlen", "schuesse", "analyse"]) {
+    // der Anker der Scheibe sitzt auf dem Raster, das nicht klebt; die Scheibe selbst trägt data-section
+    expect(html).toMatch(
+      /<div id="scheibe" class="[^"]*scroll-mt-14[^"]*"><div data-section="scheibe" class="[^"]*scroll-mt-14/
+    )
+    for (const id of ["zahlen", "schuesse", "analyse"]) {
       expect(html).toMatch(
         new RegExp(`<div[^>]*id="${id}"[^>]*data-section="${id}"[^>]*class="[^"]*scroll-mt-14`)
       )

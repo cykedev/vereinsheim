@@ -89,11 +89,10 @@ function writeHash(hash: string) {
   }
 }
 
-/** die Analyse ins Bild holen, etwa nach einem Reiter-Anker */
-function showAnalysis() {
-  requestAnimationFrame(() =>
-    document.getElementById("analyse")?.scrollIntoView({ block: "start" })
-  )
+/** einen Abschnitt ins Bild holen: nach dem Laden mit Anker (die Seite entsteht erst im Browser, der eigene
+ * Sprung des Browsers findet nichts) und nach einem Reiter-Anker */
+function showSection(id: string) {
+  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "start" }))
 }
 
 export function App({ commit }: { commit: string }) {
@@ -144,15 +143,16 @@ export function App({ commit }: { commit: string }) {
     return first ? first.split(/(?<=\.) (?=[A-ZÄÖÜ])/)[0] : null
   }, [shots, state.scoring, target])
 
-  // Reiter-Anker beim Laden und beim Wechsel der Adresse: Reiter öffnen und zur Analyse
+  // Anker beim Laden: zum Abschnitt; Reiter-Anker auch beim Wechsel der Adresse: Reiter öffnen, zur Analyse
   useEffect(() => {
     const follow = () => {
       const anchor = parseHash(location.hash)
       if (!anchor?.tab) return
       setTab(anchor.tab)
-      showAnalysis()
+      showSection(anchor.section)
     }
-    if (parseHash(location.hash)?.tab) showAnalysis()
+    const onLoad = parseHash(location.hash)
+    if (onLoad) showSection(onLoad.section)
     addEventListener("hashchange", follow)
     return () => removeEventListener("hashchange", follow)
   }, [])
@@ -201,14 +201,14 @@ export function App({ commit }: { commit: string }) {
   const toggleFromAnalysis = useCallback(
     (layer: Layer) => {
       toggle(layer)
-      jumpTo(document.getElementById("scheibe"), "Lage")
+      jumpTo(document.querySelector('[data-section="scheibe"]'), "Lage")
     },
     [toggle, jumpTo]
   )
   const chooseFromTable = useCallback(
     (index: number, series: SeriesKey | null) => {
       choose(index, series)
-      jumpTo(document.getElementById("scheibe"), "Schüsse")
+      jumpTo(document.querySelector('[data-section="scheibe"]'), "Schüsse")
     },
     [choose, jumpTo]
   )
@@ -298,8 +298,9 @@ export function App({ commit }: { commit: string }) {
         nav={<SectionNav active={active} />}
         target={
           <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap gap-1.5">
+            {/* ab 768 px eine Zeile, die in sich scrollt: so passt die feste Scheibe samt Leiste ins Fenster */}
+            <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap md:overflow-x-auto md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden">
+              <div className="flex flex-wrap gap-1.5 md:shrink-0 md:flex-nowrap">
                 {LAYERS.map(([layer, label]) => (
                   <ToggleChip
                     key={layer}
@@ -310,7 +311,7 @@ export function App({ commit }: { commit: string }) {
                   </ToggleChip>
                 ))}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-3">
                 <Segmented
                   label="Ausschnitt"
                   value={state.view}
@@ -330,7 +331,7 @@ export function App({ commit }: { commit: string }) {
             {/* höchstens so groß, dass die Scheibe mit Leiste und Schaltern ins Fenster passt (D5, D9) */}
             <div
               id="target-box"
-              className="relative mx-auto aspect-square w-full max-w-[calc(100dvh-9rem)] overflow-hidden rounded-xl bg-surface-2"
+              className="relative mx-auto aspect-square w-full max-w-[calc(100svh-9rem)] overflow-hidden rounded-xl bg-surface-2"
               style={{ cursor: mode === "set" ? "crosshair" : undefined }}
               onClick={place}
             >

@@ -629,7 +629,7 @@ addEventListener("load", async () => {
     )
     check(
       "amtliche Wertung bleibt als Hinweis (im Kopf der Scheibe)",
-      txt($("[data-result]").closest("header")).includes("amtlich: Zehntel")
+      txt($("[data-result]").closest("[data-card-header]")).includes("amtlich: Zehntel")
     )
     await click(button("Zehntel"))
     // eine andere Scheibe steht sofort, ohne Gleiten
@@ -1248,6 +1248,16 @@ addEventListener("load", async () => {
       near(stuck1, stuck2, 1) && stuck1 > 56 && stuck1 < 200,
       `${stuck1.toFixed(0)} / ${stuck2.toFixed(0)}`
     )
+    dw.scrollTo(0, 3000)
+    await wait(50)
+    sectionNav.querySelector('a[href="#scheibe"]').click()
+    await wait(100)
+    check(
+      "Desktop: „Scheibe“ in der Sprungleiste führt nach oben, auch wenn die Scheibe klebt",
+      dd.getElementById("scheibe").getBoundingClientRect().top >= 0 &&
+        near(dd.getElementById("scheibe").getBoundingClientRect().top, 56, 3),
+      `${dw.scrollY.toFixed(0)} · ${dd.getElementById("scheibe").getBoundingClientRect().top.toFixed(0)}`
+    )
     desk.remove()
     // aktiver Abschnitt im Fenster der Prüfung: nach dem Sprung meldet der Browser ein Scroll-Ereignis
     {
@@ -1295,16 +1305,33 @@ addEventListener("load", async () => {
     )
     anchored.remove()
 
-    // Querformat am Telefon: keine Überbreite, die Scheibe passt in die Höhe (D9)
-    const landscape = await openFrame(812, 375)
-    const ld = landscape.contentDocument
-    const landscapeTarget = ld.getElementById("target-box").getBoundingClientRect()
+    // feste Scheibe ab 768 px: beim Kleben passt sie samt Leiste ins Fenster, auch flach (D5, D9)
+    for (const [width, height] of [
+      [812, 375],
+      [1024, 600],
+    ]) {
+      const flat = await openFrame(width, height)
+      const fd = flat.contentDocument
+      flat.contentWindow.scrollTo(0, 1500)
+      await wait(100)
+      const card = fd.querySelector('[data-section="scheibe"]').getBoundingClientRect()
+      check(
+        `${width} × ${height}: kein seitliches Scrollen, die feste Scheibe endet über dem Fensterrand`,
+        fd.documentElement.scrollWidth <= width && card.bottom <= height && near(card.top, 56, 1),
+        `${fd.documentElement.scrollWidth} · ${card.top.toFixed(0)}–${card.bottom.toFixed(0)} von ${height}`
+      )
+      flat.remove()
+    }
+
+    // Anker beim Laden: die Seite entsteht erst im Browser, der Sprung kommt aus dem Labor
+    const loaded = await openFrame(375, 812, "#schuesse")
+    const shotsTop = loaded.contentDocument.getElementById("schuesse").getBoundingClientRect().top
     check(
-      "Querformat 812 × 375: kein seitliches Scrollen, die Scheibe passt in die Höhe",
-      ld.documentElement.scrollWidth <= 812 && landscapeTarget.height <= 375 - 56,
-      `${ld.documentElement.scrollWidth} · ${landscapeTarget.height.toFixed(0)}`
+      "Anker #schuesse beim Laden: die Schüsse unter der Leiste",
+      near(shotsTop, 56, 3),
+      shotsTop.toFixed(0)
     )
-    landscape.remove()
+    loaded.remove()
 
     // ---------- Handy: 390 px ohne seitliches Scrollen
     const frame = document.createElement("iframe")
@@ -1386,7 +1413,10 @@ addEventListener("load", async () => {
     // folgen direkt (der Kopf des Labors darüber gehört nicht zur App)
     const sd = smallDoc
     const sw = small.contentWindow
-    const headTop = sd.querySelector("[data-result]").closest("header").getBoundingClientRect().top
+    const headTop = sd
+      .querySelector("[data-result]")
+      .closest("[data-card-header]")
+      .getBoundingClientRect().top
     const targetBottom = sd.getElementById("target-box").getBoundingClientRect().bottom
     const cardBottom = sd.getElementById("scheibe").getBoundingClientRect().bottom
     const seriesTop = sd.getElementById("series").getBoundingClientRect().top
@@ -1430,10 +1460,10 @@ addEventListener("load", async () => {
     await frameClick(small, smallEllipse, 1500)
     const pillButton = () =>
       [...sd.querySelectorAll("button")].find((b) => txt(b).startsWith("Zurück zu"))
-    const jumped = sd.getElementById("scheibe").getBoundingClientRect().top
+    const jumped = sd.querySelector('[data-section="scheibe"]').getBoundingClientRect().top
     check(
       "Handy 375 px: Ellipse aus „Lage“ bringt die Scheibe ins Bild und die Pille",
-      jumped >= 0 && jumped < 150 && txt(pillButton()) === "Zurück zu „Lage“",
+      near(jumped, 56, 3) && txt(pillButton()) === "Zurück zu „Lage“",
       `${jumped.toFixed(0)} · ${txt(pillButton())}`
     )
     await frameClick(small, pillButton(), 1500)

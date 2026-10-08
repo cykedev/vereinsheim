@@ -17,7 +17,11 @@ export function SectionNav({
   return (
     <nav
       aria-label="Abschnitte"
-      className={cn("sticky top-0 z-20 -mx-4 flex h-14 items-center bg-background px-4", className)}
+      // mit Fokus über dem Streifen der Analyse, der sie auf dem Telefon sonst abdeckt
+      className={cn(
+        "sticky top-0 z-20 -mx-4 flex h-14 items-center bg-background px-4 focus-within:z-40",
+        className
+      )}
     >
       <div className="inline-flex max-w-full overflow-x-auto rounded-full border border-border bg-surface-2 p-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {PAGE_SECTIONS.map((section) => (
