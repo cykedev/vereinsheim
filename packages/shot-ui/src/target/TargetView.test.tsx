@@ -142,6 +142,18 @@ describe("TargetView: Auswahl und Antippen", () => {
     expect([...html.matchAll(/data-number="([^"]+)"/g)].map((m) => m[1])).toEqual(["2"])
   })
 
+  it("hohle Treffer sind auf der ganzen Fläche antippbar, blasse gar nicht", () => {
+    // fill="none" nimmt sonst nur den Rand als Trefferfläche
+    const html = render({ selection: "probe" })
+    expect(html).toMatch(
+      /<g data-shot="P1"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*fill="none"[^>]*pointer-events="visible"/
+    )
+    expect(html).toMatch(/<g data-shot="1" data-faded="true"[^>]*pointer-events="none"/)
+    expect(html).not.toMatch(
+      /<g data-shot="1" data-faded="true"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*pointer-events="visible"/
+    )
+  })
+
   it("ein Wertungsschuss ohne Serie gehört zu keiner gewählten Serie", () => {
     const html = renderToStaticMarkup(
       createElement(TargetView, {

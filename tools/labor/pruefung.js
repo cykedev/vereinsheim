@@ -127,6 +127,23 @@ addEventListener("load", async () => {
   )
 
   // ---------- Antippen
+  // ein hohler Probeschuss ist auf der ganzen Fläche antippbar, nicht nur am Rand: der Browser muss an
+  // seiner Mitte den Schuss treffen (echte Trefferprüfung, nicht nur ein Ereignis am Element)
+  const p1 = hits().find((g) => g.dataset.shot === "P1")
+  const p1Mid = new DOMPoint(...center(circleOf(p1))).matrixTransform(svg().getScreenCTM())
+  const atMid = document.elementFromPoint(p1Mid.x, p1Mid.y)
+  check(
+    "Probe in der Mitte antippbar, nicht nur am Rand",
+    atMid?.closest("g[data-shot]")?.dataset.shot === "P1",
+    atMid ? `${atMid.tagName} ${atMid.closest("g[data-shot]")?.dataset.shot ?? "–"}` : "nichts"
+  )
+  if (atMid) await click(atMid)
+  check(
+    "angetippte Probe in der Ablesung",
+    txt($("#readout")).includes("Probe P1 · angetippt"),
+    txt($("#readout")).slice(0, 40)
+  )
+  if (atMid) await click(atMid)
   await click(hits().find((g) => g.dataset.shot === "14"))
   check(
     "Antippen hebt den Schuss ganz nach oben, mit Ring",

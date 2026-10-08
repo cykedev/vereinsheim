@@ -195,6 +195,8 @@ export function TargetView({
           const y = -mm(shot.yUm as number)
           const color = shot.ring === null ? "var(--paper-line)" : scoreColor(shot.ring)
           const before = beforeAdjust.has(shot)
+          // ein hohler Kreis (fill="none") wäre sonst nur am Rand antippbar; blasse bleiben ganz aus
+          const hitArea = faded ? undefined : "visible"
           return (
             <g
               key={i}
@@ -216,6 +218,7 @@ export function TargetView({
                   stroke={color}
                   strokeWidth={1.5}
                   strokeDasharray={before ? "2 2" : undefined}
+                  pointerEvents={hitArea}
                   className={i === popIndex ? "shot-ui-pop" : undefined}
                   {...HAIR}
                 />
@@ -229,6 +232,7 @@ export function TargetView({
                   stroke="var(--shot-edge)"
                   strokeWidth={1}
                   strokeDasharray={shot.ring === null ? "2 2" : undefined}
+                  pointerEvents={hitArea}
                   className={i === popIndex ? "shot-ui-pop" : undefined}
                   {...HAIR}
                 />
