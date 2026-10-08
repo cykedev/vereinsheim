@@ -37,7 +37,11 @@ export function Sheet({ open, onClose, title, children, className }: SheetProps)
         event.preventDefault()
         onClose()
       }}
-      onClose={onClose}
+      // ein spätes „close“ eines früheren Schließens trifft ein schon wieder offenes Blatt: nur zählen, wenn
+      // der Dialog wirklich zu ist (etwa nach Escape ohne „cancel“)
+      onClose={(event) => {
+        if (!event.currentTarget.open) onClose()
+      }}
       // ein Tipp auf den Hintergrund trifft das <dialog> selbst, nicht seinen Inhalt
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose()
