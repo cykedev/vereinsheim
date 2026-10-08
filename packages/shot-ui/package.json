@@ -28,7 +28,17 @@
     "./analysis/AnalysisPanel": "./src/analysis/AnalysisPanel.tsx",
     "./analysis/input": "./src/analysis/input.ts",
     "./analysis/overview": "./src/analysis/overview.ts",
-    "./analysis/observations": "./src/analysis/observations.ts"
+    "./analysis/observations": "./src/analysis/observations.ts",
+    "./layout/sections": "./src/layout/sections.ts",
+    "./layout/SectionNav": "./src/layout/SectionNav.tsx",
+    "./layout/useActiveSection": "./src/layout/useActiveSection.ts",
+    "./layout/CardPage": "./src/layout/CardPage.tsx",
+    "./layout/jump": "./src/layout/jump.ts",
+    "./layout/useReturnJump": "./src/layout/useReturnJump.ts",
+    "./layout/ReturnPill": "./src/layout/ReturnPill.tsx",
+    "./readout/readout": "./src/readout/readout.ts",
+    "./readout/ShotLine": "./src/readout/ShotLine.tsx",
+    "./readout/CardHeader": "./src/readout/CardHeader.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

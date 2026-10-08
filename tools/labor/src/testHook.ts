@@ -58,8 +58,11 @@ declare global {
   }
 }
 
-/** läuft die Seite in der Skriptprüfung? */
-export const underTest = () => typeof location !== "undefined" && location.hash === "#pruefen"
+// beim Laden festgehalten: Anker der Sprungleiste (#analyse …) ändern die Adresse während der Prüfung
+const TEST_AT_LOAD = typeof location !== "undefined" && location.hash === "#pruefen"
+
+/** läuft die Seite in der Skriptprüfung? (so, wie sie geladen wurde) */
+export const underTest = () => TEST_AT_LOAD
 
 /** den aktuellen Stand für die Skriptprüfung ablegen; außerhalb von #pruefen nichts */
 export function exposeForTest(shots: readonly MetricShot[], state: ViewState, target: TargetImage) {

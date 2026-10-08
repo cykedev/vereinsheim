@@ -4,13 +4,22 @@ import {
   ANALYSIS_TABS,
   type AnalysisTab,
 } from "@vereinsheim/shot-ui/analysis/AnalysisPanel"
+import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
+import { observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
-import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
-import { HelpDetails } from "@vereinsheim/shot-ui/help/HelpDetails"
+import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { HelpSheet } from "@vereinsheim/shot-ui/help/HelpSheet"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
+import { CardPage } from "@vereinsheim/shot-ui/layout/CardPage"
+import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
+import { SectionNav } from "@vereinsheim/shot-ui/layout/SectionNav"
+import { hashFor, parseHash } from "@vereinsheim/shot-ui/layout/sections"
+import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
+import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { MetricTiles } from "@vereinsheim/shot-ui/metrics/MetricTiles"
+import { CardHeader } from "@vereinsheim/shot-ui/readout/CardHeader"
 import { CardSummary } from "@vereinsheim/shot-ui/readout/CardSummary"
+import { ShotLine } from "@vereinsheim/shot-ui/readout/ShotLine"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
@@ -20,10 +29,10 @@ import type { SeriesKey } from "@vereinsheim/shot-ui/types"
 import { initialViewState, viewReducer, type Layer } from "@vereinsheim/shot-ui/view-state"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
-import { useEffect, useMemo, useReducer, useState, type MouseEvent } from "react"
+import { useCallback, useEffect, useMemo, useReducer, useState, type MouseEvent } from "react"
 
 import { rawSample, SAMPLES, toMetricShots, type RawShot, type SampleId } from "./samples"
-import { exposeForTest } from "./testHook"
+import { exposeForTest, underTest } from "./testHook"
 
 const store = {
   get(key: string): string | null {
@@ -70,6 +79,23 @@ function useTheme(theme: Theme) {
   }, [theme])
 }
 
+/** Anker in die Adresse schreiben, ohne zu scrollen; in der Skriptprüfung bleibt `#pruefen` stehen */
+function writeHash(hash: string) {
+  if (underTest()) return
+  try {
+    history.replaceState(null, "", hash)
+  } catch {
+    // ohne Verlauf (eingebettet) gilt der Anker nur bis zum Neuladen
+  }
+}
+
+/** die Analyse ins Bild holen, etwa nach einem Reiter-Anker */
+function showAnalysis() {
+  requestAnimationFrame(() =>
+    document.getElementById("analyse")?.scrollIntoView({ block: "start" })
+  )
+}
+
 export function App({ commit }: { commit: string }) {
   const [targetId, setTargetId] = useState<TargetId>("lp-10m")
   const [sampleId, setSampleId] = useState<SampleId>("forty")
@@ -81,9 +107,11 @@ export function App({ commit }: { commit: string }) {
   const [theme, setTheme] = useState<Theme>(() => (store.get("theme") as Theme | null) ?? "system")
   const [explain, setExplain] = useState(() => store.get("help") === "1")
   const [helpId, setHelpId] = useState<string | null>(null)
+  // Reiter: der Anker in der Adresse vor dem gemerkten (Plan Schritt 4, D7)
   const [tab, setTab] = useState<AnalysisTab>(() => {
+    const anchored = typeof location === "undefined" ? undefined : parseHash(location.hash)?.tab
     const saved = store.get("tab")
-    return ANALYSIS_TABS.find((t) => t.value === saved)?.value ?? "overview"
+    return anchored ?? ANALYSIS_TABS.find((t) => t.value === saved)?.value ?? "overview"
   })
   const [state, dispatch] = useReducer(viewReducer, undefined, () => {
     // Grundauswahl der ersten Karte: ohne Probe, wenn es Probe und Wertung gibt
@@ -101,6 +129,8 @@ export function App({ commit }: { commit: string }) {
     })
   })
   useTheme(theme)
+  const active = useActiveSection()
+  const { pill, jumpTo, back, dismiss } = useReturnJump()
 
   const target = TARGETS[targetId]
   // nur Probe ist Training und zeigt sich wie Wertung; erst mit Wertung trennt sich die Probe ab
@@ -108,6 +138,24 @@ export function App({ commit }: { commit: string }) {
   const samples = SAMPLES[targetId]
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0]
   useEffect(() => exposeForTest(shots, state, target), [shots, state, target])
+  // ein Satz im Kopf: der erste Satz der ersten Beobachtung der Analyse
+  const sentence = useMemo(() => {
+    const first = observations(analysisInput(shots, state.scoring, target))[0]?.text
+    return first ? first.split(/(?<=\.) (?=[A-ZÄÖÜ])/)[0] : null
+  }, [shots, state.scoring, target])
+
+  // Reiter-Anker beim Laden und beim Wechsel der Adresse: Reiter öffnen und zur Analyse
+  useEffect(() => {
+    const follow = () => {
+      const anchor = parseHash(location.hash)
+      if (!anchor?.tab) return
+      setTab(anchor.tab)
+      showAnalysis()
+    }
+    if (parseHash(location.hash)?.tab) showAnalysis()
+    addEventListener("hashchange", follow)
+    return () => removeEventListener("hashchange", follow)
+  }, [])
 
   const load = (nextTarget: TargetId, nextSample: SampleId) => {
     const available = SAMPLES[nextTarget]
@@ -137,21 +185,52 @@ export function App({ commit }: { commit: string }) {
     setPop(raw.length)
   }
 
-  const toggle = (layer: Layer) => {
-    store.set(layer, state.layers[layer] ? "0" : "1")
-    dispatch({ type: "toggle", layer })
-  }
-
-  const choose = (index: number, series: SeriesKey | null) =>
-    dispatch({ type: "choose", shot: index, series })
-
-  const changeTab = (next: AnalysisTab) => {
+  // stabile Rückrufe: die Analyse rechnet ihre Karten nur neu, wenn sich ihre Eingaben ändern
+  const toggle = useCallback(
+    (layer: Layer) => {
+      store.set(layer, state.layers[layer] ? "0" : "1")
+      dispatch({ type: "toggle", layer })
+    },
+    [state.layers]
+  )
+  const choose = useCallback(
+    (index: number, series: SeriesKey | null) => dispatch({ type: "choose", shot: index, series }),
+    []
+  )
+  // was außerhalb der Scheibe die Scheibe ändert, holt sie ins Bild, mit dem Weg zurück (D6)
+  const toggleFromAnalysis = useCallback(
+    (layer: Layer) => {
+      toggle(layer)
+      jumpTo(document.getElementById("scheibe"), "Lage")
+    },
+    [toggle, jumpTo]
+  )
+  const chooseFromTable = useCallback(
+    (index: number, series: SeriesKey | null) => {
+      choose(index, series)
+      jumpTo(document.getElementById("scheibe"), "Schüsse")
+    },
+    [choose, jumpTo]
+  )
+  const changeTab = useCallback((next: AnalysisTab) => {
     store.set("tab", next)
     setTab(next)
-  }
+    writeHash(hashFor("analyse", next))
+  }, [])
+
+  const scoringSwitch = (
+    <ScoringSwitch
+      scoring={state.scoring}
+      official={sample.official}
+      onChange={(scoring) => {
+        store.set("scoring", scoring)
+        dispatch({ type: "setScoring", scoring })
+      }}
+    />
+  )
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-7 px-4 pt-7 pb-14">
+    <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
       <header className="grid gap-2.5">
         <p className="font-mono text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
           Spiegel · Labor
@@ -163,7 +242,7 @@ export function App({ commit }: { commit: string }) {
           Alles hier sind die echten Bausteine aus <code>packages/shot-ui</code>, mit dem Fachkern
           gerechnet. Tippe auf eine Serie, um nur sie zu sehen, auf einen Treffer oder eine Zeile
           der Tabelle, um ihn abzulesen, oder setze im Modus „Setzen“ eigene Schüsse. Das „?“ an
-          einer Kachel erklärt die Zahl.
+          einer Kachel oder Karte erklärt die Zahl.
         </p>
         <div className="flex flex-wrap gap-2">
           <span className="rounded-full border border-line-strong px-2.5 py-1 font-mono text-xs">
@@ -173,9 +252,6 @@ export function App({ commit }: { commit: string }) {
             Design 2
           </span>
         </div>
-      </header>
-
-      <section className="grid gap-4" aria-label="Scheibe">
         <div className="flex flex-wrap items-center gap-2">
           <Segmented
             label="Scheibe"
@@ -206,8 +282,21 @@ export function App({ commit }: { commit: string }) {
             }}
           />
         </div>
+      </header>
 
-        <div className="grid items-start gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+      <CardPage
+        header={
+          <CardHeader
+            title={target.label}
+            meta={[sample.label]}
+            shots={shots}
+            state={state}
+            scoring={scoringSwitch}
+            sentence={sentence}
+          />
+        }
+        nav={<SectionNav active={active} />}
+        target={
           <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap gap-1.5">
@@ -221,19 +310,27 @@ export function App({ commit }: { commit: string }) {
                   </ToggleChip>
                 ))}
               </div>
-              <Segmented
-                label="Ausschnitt"
-                value={state.view}
-                options={[
-                  { value: "target", label: "Scheibe" },
-                  { value: "group", label: "Gruppe" },
-                ]}
-                onChange={(view) => dispatch({ type: "setView", view })}
-              />
+              <div className="flex items-center gap-3">
+                <Segmented
+                  label="Ausschnitt"
+                  value={state.view}
+                  options={[
+                    { value: "target", label: "Scheibe" },
+                    { value: "group", label: "Gruppe" },
+                  ]}
+                  onChange={(view) => dispatch({ type: "setView", view })}
+                />
+                <HelpButton
+                  label="Trefferbild"
+                  helpId="trefferbild"
+                  onClick={() => setHelpId("trefferbild")}
+                />
+              </div>
             </div>
+            {/* höchstens so groß, dass die Scheibe mit Leiste und Schaltern ins Fenster passt (D5, D9) */}
             <div
               id="target-box"
-              className="relative aspect-square max-w-full overflow-hidden rounded-xl bg-surface-2"
+              className="relative mx-auto aspect-square w-full max-w-[calc(100dvh-9rem)] overflow-hidden rounded-xl bg-surface-2"
               style={{ cursor: mode === "set" ? "crosshair" : undefined }}
               onClick={place}
             >
@@ -248,54 +345,55 @@ export function App({ commit }: { commit: string }) {
                 onChoose={mode === "view" ? choose : undefined}
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Segmented
-                label="Tippen"
-                value={mode}
-                options={[
-                  { value: "view", label: "Ansehen" },
-                  { value: "set", label: "Setzen" },
-                ]}
-                onChange={setMode}
-              />
-              {mode === "set" && (
-                <Segmented
-                  label="Neuer Schuss"
-                  value={setKind}
-                  options={[
-                    { value: "match", label: "Wertung" },
-                    { value: "probe", label: "Probe" },
-                  ]}
-                  onChange={setSetKind}
-                />
-              )}
-              <Segmented
-                label="Übrige Schüsse"
-                value={others}
-                options={[
-                  { value: "dim", label: "Übrige blass" },
-                  { value: "hide", label: "Übrige aus" },
-                ]}
-                onChange={setOthers}
-              />
-            </div>
-            <p className="text-[13px] text-muted-foreground">{sample.hint}</p>
-            <HelpDetails id="trefferbild" open={explain} />
+            <ShotLine className="md:hidden" shots={shots} state={state} />
           </div>
-
-          <aside className="grid content-start gap-4">
-            <div id="readout" className="rounded-2xl border border-border bg-card p-4">
+        }
+        aside={
+          <>
+            <div
+              id="labor-controls"
+              className="grid gap-3 rounded-2xl border border-border bg-card p-3.5"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Segmented
+                  label="Tippen"
+                  value={mode}
+                  options={[
+                    { value: "view", label: "Ansehen" },
+                    { value: "set", label: "Setzen" },
+                  ]}
+                  onChange={setMode}
+                />
+                {mode === "set" && (
+                  <Segmented
+                    label="Neuer Schuss"
+                    value={setKind}
+                    options={[
+                      { value: "match", label: "Wertung" },
+                      { value: "probe", label: "Probe" },
+                    ]}
+                    onChange={setSetKind}
+                  />
+                )}
+                <Segmented
+                  label="Übrige Schüsse"
+                  value={others}
+                  options={[
+                    { value: "dim", label: "Übrige blass" },
+                    { value: "hide", label: "Übrige aus" },
+                  ]}
+                  onChange={setOthers}
+                />
+              </div>
+              <p className="text-[13px] text-muted-foreground">{sample.hint}</p>
+            </div>
+            <div
+              id="readout"
+              className="rounded-2xl border border-border bg-card p-4 max-md:hidden"
+            >
               <ShotReadout shots={shots} state={state} />
             </div>
-            <div id="summary" className="grid gap-3 rounded-2xl border border-border bg-card p-4">
-              <ScoringSwitch
-                scoring={state.scoring}
-                official={sample.official}
-                onChange={(scoring) => {
-                  store.set("scoring", scoring)
-                  dispatch({ type: "setScoring", scoring })
-                }}
-              />
+            <div id="summary" className="rounded-2xl border border-border bg-card p-4">
               <CardSummary shots={shots} state={state} />
             </div>
             <div id="series" className="grid gap-4 rounded-2xl border border-border bg-card p-3.5">
@@ -309,42 +407,64 @@ export function App({ commit }: { commit: string }) {
                 onSelectWhole={(whole) => dispatch({ type: "selectWhole", whole })}
               />
             </div>
-            <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
-              <ShotTable className="md:max-h-80" shots={shots} state={state} onChoose={choose} />
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <MetricTiles
-        shots={shots}
-        state={state}
-        explain={explain}
-        onHelp={(key) => setHelpId(helpForMetric(key)?.id ?? null)}
-        action={
-          <ToggleChip
-            pressed={explain}
-            icon={<HelpIcon />}
-            onPressedChange={(next) => {
-              store.set("help", next ? "1" : "0")
-              setExplain(next)
-            }}
-          >
-            Erklärungen
-          </ToggleChip>
+          </>
         }
-      />
-      <AnalysisPanel
-        shots={shots}
-        state={state}
-        target={target}
-        tab={tab}
-        onTab={changeTab}
-        explain={explain}
-        onToggleLayer={toggle}
-        onHelp={setHelpId}
+        sections={[
+          {
+            id: "zahlen",
+            node: (
+              <MetricTiles
+                shots={shots}
+                state={state}
+                explain={explain}
+                onHelp={(key) => setHelpId(helpForMetric(key)?.id ?? null)}
+                action={
+                  <ToggleChip
+                    pressed={explain}
+                    icon={<HelpIcon />}
+                    onPressedChange={(next) => {
+                      store.set("help", next ? "1" : "0")
+                      setExplain(next)
+                    }}
+                  >
+                    Erklärungen
+                  </ToggleChip>
+                }
+              />
+            ),
+          },
+          {
+            id: "schuesse",
+            node: (
+              <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
+                <ShotTable
+                  className="md:max-h-80"
+                  shots={shots}
+                  state={state}
+                  onChoose={chooseFromTable}
+                />
+              </div>
+            ),
+          },
+          {
+            id: "analyse",
+            node: (
+              <AnalysisPanel
+                shots={shots}
+                state={state}
+                target={target}
+                tab={tab}
+                onTab={changeTab}
+                explain={explain}
+                onToggleLayer={toggleFromAnalysis}
+                onHelp={setHelpId}
+              />
+            ),
+          },
+        ]}
       />
       <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />
+      {pill && <ReturnPill label={pill.label} onReturn={back} onDismiss={dismiss} />}
     </div>
   )
 }
