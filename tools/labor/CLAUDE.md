@@ -20,6 +20,11 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   Baustein nach `shot-ui` (mit Tests) und wird hier nur verdrahtet; Zahlen nur aus dem Fachkern.
 - **Nach jeder Änderung** an Bausteinen oder Labor: `pruefen` muss „0 FAIL“ melden (nicht im Gate, braucht
   Chrome; `CHROME_PATH` für einen anderen Pfad). Neue Bedienung bekommt Prüfungen in `pruefung.js`.
+- **Eigenheiten der Skriptprüfung** (Headless-Chrome mit `--dump-dom`): Ein synthetischer Klick fokussiert
+  nicht und eine synthetische Taste löst keine Aktion aus (Tastatur nur über echte, fokussierbare Knöpfe
+  prüfen); das `close`-Ereignis eines `<dialog>` kommt gar nicht an (Escape-Weg über `requestClose()`,
+  das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
+  `window.__labor` (Prüfhaken) liefert Schüsse, Zustand und die Funktionen des Fachkerns zum Nachrechnen.
 - **Artifact neu veröffentlichen** aus `dist/labor.html`, unter derselben Adresse, damit der User den
   Stand auf dem Handy sieht.
 - **Beispiele** (`src/samples.ts`) mit festem Seed und festem Beginn, Lagen auf 1/100 mm; kein echter

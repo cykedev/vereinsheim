@@ -31,6 +31,12 @@ export function Sheet({ open, onClose, title, children, className }: SheetProps)
     <dialog
       ref={dialog}
       aria-labelledby={titleId}
+      // Escape kommt als „cancel“, synchron; das „close“ danach kommt später (im Headless-Chrome der
+      // Prüfung gar nicht). Darum schließt der Zustand das Blatt, nicht der Browser.
+      onCancel={(event) => {
+        event.preventDefault()
+        onClose()
+      }}
       onClose={onClose}
       // ein Tipp auf den Hintergrund trifft das <dialog> selbst, nicht seinen Inhalt
       onClick={(event) => {
