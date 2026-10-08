@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { formatSigned, formatValue, unitText } from "./format"
+import {
+  directionWords,
+  durationText,
+  formatSigned,
+  formatValue,
+  percentText,
+  unitText,
+} from "./format"
 
 describe("Zahlen wie in der Spielwiese: feste Stellen, Komma, echtes Minus", () => {
   it("feste Nachkommastellen mit Komma", () => {
@@ -33,5 +40,27 @@ describe("Einheiten der Kennzahlen", () => {
     expect(unitText("%")).toBe("%")
     expect(unitText("Schuss")).toBe("Schuss")
     expect(unitText("Teiler")).toBe("")
+  })
+})
+
+describe("Dauer, Anteil und Richtung in Worten", () => {
+  it("Dauer: Sekunden, ab einer Minute m:ss min, ab einer Stunde h:mm h", () => {
+    expect(durationText(42_000)).toBe("42 s")
+    expect(durationText(59_400)).toBe("59 s")
+    expect(durationText(185_000)).toBe("3:05 min")
+    expect(durationText(3_720_000)).toBe("1:02 h")
+  })
+
+  it("Anteil in ganzen Prozent", () => {
+    expect(percentText(0.234)).toBe("23 %")
+    expect(percentText(1)).toBe("100 %")
+    expect(percentText(0)).toBe("0 %")
+  })
+
+  it("Richtung in Worten für Sätze, unter 0,05 mm je Richtung mittig", () => {
+    expect(directionWords({ xUm: 2500, yUm: -1200 })).toBe("2,5 mm rechts und 1,2 mm tief")
+    expect(directionWords({ xUm: -800, yUm: 30 })).toBe("0,8 mm links")
+    expect(directionWords({ xUm: 10, yUm: 900 })).toBe("0,9 mm hoch")
+    expect(directionWords({ xUm: 30, yUm: -40 })).toBe("mittig")
   })
 })
