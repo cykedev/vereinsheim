@@ -11,7 +11,8 @@ import { useId, useMemo, type ReactNode } from "react"
 
 import { HelpIcon } from "../help/HelpButton"
 import { HelpButton } from "../help/HelpButton"
-import { isProbeShot } from "../shots"
+import { isProbeShot, seriesKeyOf } from "../shots"
+import type { SeriesKey } from "../types"
 import type { Layer, ViewState } from "../view-state"
 import { analysisInput, type AnalysisBasis } from "./input"
 import { AnalysisCard, Note } from "./parts"
@@ -109,6 +110,11 @@ export interface AnalysisPanelProps {
   onToggleLayer: (layer: Layer) => void
   /** „?“ an Karten und Datenlage: öffnet die Erklärung als Blatt (`HelpSheet`), Plan Schritt 4 D3 */
   onHelp?: (id: string) => void
+  /**
+   * „Auf der Scheibe“ im Lineal eines Diagramms: den Schuss (Index in `shots`) auf der Scheibe wählen; die
+   * Seite springt dann zur Scheibe (Plan L1, D4). Ohne den Rückruf gibt es den Knopf nicht.
+   */
+  onChoose?: (index: number, series: SeriesKey | null) => void
   className?: string
 }
 
@@ -126,6 +132,7 @@ export function AnalysisPanel({
   explain,
   onToggleLayer,
   onHelp,
+  onChoose,
   className,
 }: AnalysisPanelProps) {
   const regionId = useId()
@@ -133,12 +140,30 @@ export function AnalysisPanel({
     () => analysisInput(shots, state.scoring, target),
     [shots, state.scoring, target]
   )
-  // ein angetippter Schuss ändert den Zustand, nicht die Analyse: die Karten nur neu, wenn sich ihre
-  // Eingaben ändern (die Seite reicht stabile Rückrufe)
+  // der auf der Scheibe gewählte Schuss, wenn er zur Grundlage gehört (das Lineal steht auf ihm)
+  const chosenShot = useMemo(() => {
+    const shot = state.chosen ? shots[state.chosen.index] : undefined
+    return shot && input.base.includes(shot) ? shot : null
+  }, [state.chosen, shots, input.base])
+  const onShowShot = useMemo(
+    () =>
+      onChoose ? (shot: MetricShot) => onChoose(shots.indexOf(shot), seriesKeyOf(shot)) : undefined,
+    [onChoose, shots]
+  )
+  // ein angetippter Schuss ändert die Karten nur über das Lineal: neu nur, wenn sich ihre Eingaben ändern
+  // (die Seite reicht stabile Rückrufe)
   const cards = useMemo(
     () =>
       shots.length
-        ? TAB_CARDS[tab]({ input, explain, layers: state.layers, onToggleLayer, onHelp })
+        ? TAB_CARDS[tab]({
+            input,
+            explain,
+            layers: state.layers,
+            onToggleLayer,
+            onHelp,
+            chosenShot,
+            onShowShot,
+          })
         : [
             {
               key: "empty",
@@ -150,7 +175,7 @@ export function AnalysisPanel({
               ),
             },
           ],
-    [shots.length, tab, input, explain, state.layers, onToggleLayer, onHelp]
+    [shots.length, tab, input, explain, state.layers, onToggleLayer, onHelp, chosenShot, onShowShot]
   )
   const tabLabel = ANALYSIS_TABS.find((t) => t.value === tab)?.label ?? ""
 

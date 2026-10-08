@@ -1,4 +1,4 @@
-import type { MetricShot } from "@vereinsheim/shot-core/metrics"
+import { shotNumbers, type MetricShot } from "@vereinsheim/shot-core/metrics"
 import { FALLACIES } from "@vereinsheim/shot-help/guide"
 import { GLOSSARY } from "@vereinsheim/shot-help/glossary"
 import { LP_10M } from "@vereinsheim/shot-core/targets"
@@ -10,6 +10,8 @@ import { probeOnlyAsMatch } from "../shots"
 import { initialViewState } from "../view-state"
 import { AnalysisPanel, ANALYSIS_TABS } from "./AnalysisPanel"
 import { analysisInput } from "./input"
+import { renderTab } from "./testPanel"
+import { fortyCard } from "./testCard"
 
 const shot = (
   seq: number,
@@ -146,5 +148,31 @@ describe("AnalysisPanel", () => {
     expect(render([])).toContain("Noch keine Schüsse auf dieser Scheibe.")
     // keine Datenlage, die „alle mit Lage, Zeit und Wert“ behauptet
     expect(render([])).not.toContain("data-coverage")
+  })
+})
+
+describe("Lineal und Scheibe (Plan L1, D4)", () => {
+  const card = fortyCard()
+  const numbers = shotNumbers(card)
+  const seventh = card.findIndex((s) => s.kind === "match" && numbers.get(s) === 7)
+
+  it("ein auf der Scheibe gewählter Wertungsschuss steht im Lineal von Verlauf und Rhythmus", () => {
+    const html = renderTab("time", { chosen: { index: seventh, series: 1 } })
+    expect(html).toMatch(/data-course-point="7" data-chosen="true"/)
+    expect(html).toMatch(/data-interval="7"[^>]*data-chosen="true"/)
+    expect(html).toContain("Schuss 7 · ")
+  })
+
+  it("„Auf der Scheibe“ nur, wenn die Seite den Rückweg anbietet", () => {
+    const chosen = { index: seventh, series: 1 } as const
+    expect(renderTab("time", { chosen, onChoose: () => {} })).toContain(">Auf der Scheibe<")
+    expect(renderTab("time", { chosen })).not.toContain(">Auf der Scheibe<")
+  })
+
+  it("ein Probeschuss gehört nicht zur Grundlage: kein Lineal", () => {
+    const probe = card.findIndex((s) => s.kind === "probe")
+    expect(renderTab("time", { chosen: { index: probe, series: "probe" } })).not.toContain(
+      'data-chosen="true"'
+    )
   })
 })

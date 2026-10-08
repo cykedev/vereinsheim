@@ -11,7 +11,7 @@ import {
   seriesSpread,
   tempoSpread,
 } from "@vereinsheim/shot-core/analysis"
-import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
+import { computeMetric, inScoring, metricByKey, shotNumbers } from "@vereinsheim/shot-core/metrics"
 import type { ReactNode } from "react"
 
 import { durationText, formatSigned, formatValue, percentText } from "../../format"
@@ -44,8 +44,23 @@ const TEMPO_MISSING = "ab 4 Schuss mit Zeit"
  * Zeit und Verlauf: Verlauf und Trend, Rhythmus, Tempo und Dauer, Pausen, Ermüdung, Serien im
  * Vergleich, über die Grundlage
  */
-export function timeCards({ input, explain, onHelp }: CardContext): CardSpec[] {
+export function timeCards({
+  input,
+  explain,
+  onHelp,
+  chosenShot,
+  onShowShot,
+}: CardContext): CardSpec[] {
   const { base, scoring } = input
+  // Lineal in Verlauf und Rhythmus: auf dem Schuss der Scheibe, „Auf der Scheibe“ zurück (Plan L1, D4)
+  const numbers = shotNumbers(base)
+  const chosenNumber = chosenShot ? (numbers.get(chosenShot) ?? null) : null
+  const onShow = onShowShot
+    ? (number: number) => {
+        const shot = base.find((s) => numbers.get(s) === number)
+        if (shot) onShowShot(shot)
+      }
+    : undefined
   const trend = cardTrend(base, scoring)
   const profile = rhythmProfile(base)
   const timed = profile.filter((p) => p.intervalMs !== null).length
@@ -68,7 +83,15 @@ export function timeCards({ input, explain, onHelp }: CardContext): CardSpec[] {
           {movingAverage(base, scoring).length >= 2 ? (
             <>
               <ChartSlot height={230}>
-                {(width) => <CourseChart width={width} shots={base} scoring={scoring} />}
+                {(width) => (
+                  <CourseChart
+                    width={width}
+                    shots={base}
+                    scoring={scoring}
+                    chosenNumber={chosenNumber}
+                    onShow={onShow}
+                  />
+                )}
               </ChartSlot>
               <div className="flex flex-wrap items-center gap-x-[18px] gap-y-1.5 text-[13px] text-muted-foreground">
                 <LegendItem label="Wert je Schuss">
@@ -109,7 +132,14 @@ export function timeCards({ input, explain, onHelp }: CardContext): CardSpec[] {
           {timed >= 2 ? (
             <>
               <ChartSlot height={190}>
-                {(width) => <RhythmChart width={width} shots={base} />}
+                {(width) => (
+                  <RhythmChart
+                    width={width}
+                    shots={base}
+                    chosenNumber={chosenNumber}
+                    onShow={onShow}
+                  />
+                )}
               </ChartSlot>
               <Note>
                 Säule: Abstand zum vorigen Schuss; Linie: Median der letzten fünf Abstände, Pausen

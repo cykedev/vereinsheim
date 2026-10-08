@@ -6,7 +6,8 @@ import { LP_10M, type TargetImage } from "@vereinsheim/shot-core/targets"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 
-import { initialViewState, type Layer } from "../view-state"
+import type { SeriesKey } from "../types"
+import { initialViewState, type Layer, type ViewState } from "../view-state"
 import { AnalysisPanel } from "./AnalysisPanel"
 import type { AnalysisTab } from "./tabs"
 import { fortyCard } from "./testCard"
@@ -19,6 +20,9 @@ export interface RenderOptions {
   layers?: Partial<Record<Layer, boolean>>
   onToggleLayer?: (layer: Layer) => void
   onHelp?: (id: string) => void
+  /** auf der Scheibe gewählter Schuss (Index in den Schüssen) */
+  chosen?: ViewState["chosen"]
+  onChoose?: (index: number, series: SeriesKey | null) => void
 }
 
 /** ein Reiter der Analyse als Markup; ohne Angaben die Beispielkarte „40 Schuss“ (LP) in Zehnteln */
@@ -27,13 +31,18 @@ export function renderTab(tab: AnalysisTab, options: RenderOptions = {}): string
   return renderToStaticMarkup(
     createElement(AnalysisPanel, {
       shots: options.shots ?? fortyCard(options.target),
-      state: { ...state, layers: { ...state.layers, ...options.layers } },
+      state: {
+        ...state,
+        layers: { ...state.layers, ...options.layers },
+        chosen: options.chosen ?? null,
+      },
       target: options.target ?? LP_10M,
       tab,
       onTab: () => {},
       explain: options.explain ?? false,
       onToggleLayer: options.onToggleLayer ?? (() => {}),
       onHelp: options.onHelp ?? (() => {}),
+      onChoose: options.onChoose,
     })
   )
 }

@@ -1,6 +1,7 @@
 // Die Karten je Reiter. Jeder Reiter liefert Karten mit Schlüssel und Breite; der Rahmen ordnet sie an
 // (breite allein, schmale im Raster).
 
+import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import type { ReactNode } from "react"
 
 import type { Layer } from "../../view-state"
@@ -23,6 +24,10 @@ export interface CardContext {
   onToggleLayer: (layer: Layer) => void
   /** „?“ einer Karte: öffnet ihre Erklärung als Blatt (Plan Schritt 4, D3) */
   onHelp?: (id: string) => void
+  /** der auf der Scheibe gewählte Schuss, wenn er zur Grundlage gehört: das Lineal steht auf ihm (Plan L1, D4) */
+  chosenShot?: MetricShot | null
+  /** „Auf der Scheibe“ im Lineal: diesen Schuss dort wählen und zu ihr springen */
+  onShowShot?: (shot: MetricShot) => void
 }
 
 export interface CardSpec {
