@@ -33,6 +33,7 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   mpiPath: ["I6"],
   longestRun: ["I10"],
   // Probe und Datenlage
+  sightersBeforeMatch: ["S2"],
   sighterSummary: ["S2"],
   sighterComparison: ["S3"],
   sighterZeroed: ["S1", "S4"],

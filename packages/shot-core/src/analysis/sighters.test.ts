@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { MATCH, PROBE } from "../__fixtures__/cards"
 import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
 import { c4 } from "../stats"
-import { sighterComparison, sighterSummary, sighterZeroed } from "./sighters"
+import { sighterComparison, sighterSummary, sighterZeroed, sightersBeforeMatch } from "./sighters"
 
 const shot = (
   kind: MetricShot["kind"],
@@ -49,6 +49,20 @@ const CARD_FAR_FIRST = [...SIGHTERS, ...MATCHES]
 // nur die fünf Probeschüsse um die Mitte, dann die Wertung
 const NEAR_SIGHTERS = SIGHTERS.slice(3).map((s, i) => ({ ...s, seq: i + 1 }))
 const CARD_NEAR = [...NEAR_SIGHTERS, ...MATCHES.map((m, i) => ({ ...m, seq: 6 + i }))]
+
+describe("Probe vor der Wertung", () => {
+  it("in Abgabefolge, auch bei vertauschter Liste; Probe nach Beginn der Wertung zählt nicht", () => {
+    const card = [
+      shot("probe", 0, 0, 0),
+      shot("probe", 1, 100, 0),
+      shot("match", 2, 0, 0),
+      shot("probe", 3, 0, 100),
+    ]
+    expect(sightersBeforeMatch([...card].reverse())).toEqual(card.slice(0, 2))
+    expect(sightersBeforeMatch(card.filter((s) => s.kind === "probe"))).toHaveLength(3)
+    expect(sightersBeforeMatch(card.filter((s) => s.kind === "match"))).toEqual([])
+  })
+})
 
 describe("Probe-Umfang (S2)", () => {
   it("Zahl, Blöcke, Dauer und Zeit bis zum ersten Wertungsschuss", () => {

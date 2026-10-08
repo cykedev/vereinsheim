@@ -9,6 +9,7 @@ import { overviewCards } from "./OverviewTab"
 import { positionCards } from "./PositionTab"
 import { precisionCards } from "./PrecisionTab"
 import { resultCards } from "./ResultTab"
+import { sighterCards } from "./SightersTab"
 import { timeCards } from "./TimeTab"
 
 export type AnalysisTab = "overview" | "result" | "precision" | "position" | "time" | "sighters"
@@ -31,12 +32,12 @@ export interface CardSpec {
 
 export type TabCards = (context: CardContext) => CardSpec[]
 
-/** Karten je Reiter; die Reiter füllen die Tasks 5 bis 13 des Plans */
+/** Karten je Reiter */
 export const TAB_CARDS: Record<AnalysisTab, TabCards> = {
   overview: overviewCards,
   result: resultCards,
   precision: precisionCards,
   position: positionCards,
   time: timeCards,
-  sighters: () => [],
+  sighters: sighterCards,
 }

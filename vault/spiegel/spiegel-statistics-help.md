@@ -353,9 +353,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Eingeschossen? (S1, S4)**
 - *Was:* Ein Test deiner letzten fünf Probeschüsse vor der Wertung: Lagen sie echt neben der Mitte?
   Dazu der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.
-- *So liest du es:* „Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Hast du danach
-  nicht mehr verstellt, begann die Wertung mit diesem Versatz; der Abstand zur Wertung zeigt, ob er
-  blieb.
+- *So liest du es:* „Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Ob die Wertung
+  mit diesem Versatz weiterging, zeigt der Versatz Probe → Wertung.
 - *Vorsicht:* „Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur
   einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in
   knapp zwei von drei Fällen auf.

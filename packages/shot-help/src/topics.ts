@@ -332,7 +332,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob deine letzten Probeschüsse neben der Mitte lagen.",
     what: "Ein Test deiner letzten fünf Probeschüsse vor der Wertung: Lagen sie echt neben der Mitte? Dazu der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.",
-    read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Hast du danach nicht mehr verstellt, begann die Wertung mit diesem Versatz; der Abstand zur Wertung zeigt, ob er blieb.",
+    read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Ob die Wertung mit diesem Versatz weiterging, zeigt der Versatz Probe → Wertung.",
     caution:
       "„Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in knapp zwei von drei Fällen auf.",
     minimum:

@@ -9,8 +9,11 @@ import { mpiConfidence, type MpiConfidence } from "./position"
 import { sigmaEstimate } from "./precision"
 import { valueNeed, valueTenths } from "./values"
 
-/** Probeschüsse vor dem ersten Wertungsschuss, in Abgabefolge */
-function sightersBeforeMatch(shots: readonly MetricShot[]): MetricShot[] {
+/**
+ * Probeschüsse vor dem ersten Wertungsschuss, in Abgabefolge; was nach Beginn der Wertung als Probe
+ * kommt, zählt nicht zur Probe. Auch für das Probe-Diagramm der Oberfläche.
+ */
+export function sightersBeforeMatch(shots: readonly MetricShot[]): MetricShot[] {
   const ordered = inShotOrder(shots)
   const first = ordered.findIndex((shot) => shot.kind === "match")
   return (first < 0 ? ordered : ordered.slice(0, first)).filter((shot) => shot.kind === "probe")
