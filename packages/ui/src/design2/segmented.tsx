@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, type KeyboardEvent } from "react"
+import { useEffect, useRef, type KeyboardEvent } from "react"
 
 import { cn } from "@vereinsheim/lib/utils"
 
@@ -39,12 +39,24 @@ export function Segmented<T extends string>({
   onChange,
   className,
 }: SegmentedProps<T>) {
+  const bar = useRef<HTMLDivElement>(null)
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
   // ohne passende Wahl bleibt der erste Knopf der Tab-Halt
   const current = Math.max(
     0,
     options.findIndex((option) => option.value === value)
   )
+  // scrollt die Leiste seitlich (schmaler Bildschirm), rückt die Wahl ins Bild; nur waagrecht, die Seite
+  // bleibt stehen
+  useEffect(() => {
+    const el = bar.current
+    const button = buttons.current[current]
+    if (!el || !button || el.scrollWidth <= el.clientWidth) return
+    const b = button.getBoundingClientRect()
+    const c = el.getBoundingClientRect()
+    if (b.left < c.left) el.scrollLeft += b.left - c.left - 8
+    else if (b.right > c.right) el.scrollLeft += b.right - c.right + 8
+  }, [current])
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const next = nextIndex(current, event.key, options.length)
     if (next === null) return
@@ -54,6 +66,7 @@ export function Segmented<T extends string>({
   }
   return (
     <div
+      ref={bar}
       role="radiogroup"
       aria-label={label}
       onKeyDown={onKeyDown}
@@ -73,7 +86,7 @@ export function Segmented<T extends string>({
           aria-checked={option.value === value}
           tabIndex={i === current ? 0 : -1}
           onClick={() => onChange(option.value)}
-          className="cursor-pointer rounded-full px-3.5 py-2 text-[13px] pointer-coarse:min-h-11 leading-none font-semibold text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-checked:bg-primary aria-checked:text-primary-foreground"
+          className="cursor-pointer rounded-full px-3.5 py-2 text-[13px] leading-none font-semibold text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-checked:bg-primary aria-checked:text-primary-foreground"
         >
           {option.label}
         </button>

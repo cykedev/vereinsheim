@@ -192,7 +192,7 @@ export function App({ commit }: { commit: string }) {
             onChange={(id) => load(targetId, id)}
           />
           <Segmented
-            label="Thema"
+            label="Darstellung"
             value={theme}
             options={[
               { value: "system", label: "System" },

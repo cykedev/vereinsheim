@@ -60,16 +60,24 @@ function coverageText(shots: readonly MetricShot[], scoring: ViewState["scoring"
   ].join(" · ")
 }
 
-/** breite Karten allein, Folgen schmaler Karten im zweispaltigen Raster (ab 768 px) */
+/**
+ * Breite Karten allein, Folgen schmaler Karten im Raster: ab 861 px zwei Spalten in Zeilen, beide Karten
+ * einer Zeile gleich hoch, eine einzelne Karte in der letzten Zeile über die volle Breite. Jeder Abstand ist
+ * 16 px; Spalten wie in der Spielwiese ließen unter der kürzeren Spalte bis zu 360 px frei (User, 8. Oktober
+ * 2026).
+ */
 function layout(cards: readonly CardSpec[]): ReactNode[] {
   const blocks: ReactNode[] = []
   let run: CardSpec[] = []
   const flush = () => {
     if (!run.length) return
     blocks.push(
-      <div key={`run:${run[0].key}`} className="-mb-4 gap-4 min-[861px]:columns-2">
+      <div
+        key={`run:${run[0].key}`}
+        className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[861px]:grid-cols-2 min-[861px]:[&>:last-child:nth-child(odd)]:col-span-2"
+      >
         {run.map((card) => (
-          <div key={card.key} className="mb-4 break-inside-avoid">
+          <div key={card.key} className="grid min-w-0">
             {card.element}
           </div>
         ))}
@@ -138,13 +146,13 @@ export function AnalysisPanel({
           <h2 className="font-display text-xl font-bold tracking-tight">Was diese Scheibe zeigt</h2>
           <p className="text-[13px] text-muted-foreground">{`Analyse ${BASIS_TEXT[input.basis]}`}</p>
         </div>
-        {/* auf dem Telefon umbrechen statt die Seite zu verbreitern (Mobil-Konzept, 375 px) */}
+        {/* auf dem Telefon eine Zeile, die in sich seitlich scrollt, statt die Seite zu verbreitern */}
         <Segmented
           label="Thema"
           value={tab}
           options={ANALYSIS_TABS}
           onChange={onTab}
-          className="max-w-full max-sm:flex-wrap max-sm:rounded-[18px]"
+          className="max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:shrink-0 [&>button]:whitespace-nowrap"
         />
       </div>
       {layout(cards)}

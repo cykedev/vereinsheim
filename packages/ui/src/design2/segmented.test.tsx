@@ -55,10 +55,8 @@ describe("Segmented", () => {
     expect(none).toMatch(/<button[^>]*tabindex="-1"[^>]*>Gruppe/)
   })
 
-  it("auf dem Touchscreen mindestens 44 px hoch, die Optik bleibt", () => {
-    for (const button of html.match(/<button[^>]*>/g)!) {
-      expect(button).toContain("pointer-coarse:min-h-11")
-    }
+  it("auf dem Telefon dieselbe Optik wie am Desktop (User, 8. Oktober 2026)", () => {
+    for (const button of html.match(/<button[^>]*>/g)!) expect(button).not.toContain("min-h-11")
   })
 
   it("eine Klasse von außen reicht bis an die Leiste, etwa zum Umbrechen", () => {
@@ -68,10 +66,10 @@ describe("Segmented", () => {
         value: "a",
         options: [{ value: "a", label: "A" }],
         onChange: () => {},
-        className: "max-sm:flex-wrap",
+        className: "overflow-x-auto",
       })
     )
-    expect(wrapped).toMatch(/role="radiogroup"[^>]*class="[^"]*max-sm:flex-wrap/)
+    expect(wrapped).toMatch(/role="radiogroup"[^>]*class="[^"]*overflow-x-auto/)
   })
 
   it("Farben nur aus Tokens", () => {
@@ -96,6 +94,7 @@ describe("ToggleChip", () => {
       createElement(ToggleChip, { pressed: false, onPressedChange: () => {}, children: "Nummern" })
     )
     expect(off).toContain('aria-pressed="false"')
-    expect(off).toContain("pointer-coarse:min-h-11")
+    // auf dem Telefon dieselbe Optik wie am Desktop (User, 8. Oktober 2026)
+    expect(off).not.toContain("min-h-11")
   })
 })

@@ -11,7 +11,8 @@ import { fortyCard } from "./testCard"
 import { cardHtml, renderTab } from "./testPanel"
 
 // Mobil-Grundlagen (Plan Task 13a, gemessen bei 375 px): nichts macht die Seite breiter als den Bildschirm,
-// Touch-Ziele 44 px bei grobem Zeiger, Schrift ab 12 px, Punkte mit Rand, Ausreißer nicht nur über die Farbe.
+// Bedienelemente in der Optik des Desktops (User, 8. Oktober 2026), Schrift ab 12 px, Punkte mit Rand,
+// Ausreißer nicht nur über die Farbe.
 
 const CARD = fortyCard()
 const BASE = CARD.filter((s) => s.kind === "match")
@@ -20,19 +21,25 @@ describe("Analyse auf dem Telefon", () => {
   const overview = renderTab("overview")
   const result = renderTab("result")
 
-  it("der Abschnitt wächst nicht mit seinem Inhalt, die Reiter brechen unter sm um", () => {
+  it("der Abschnitt wächst nicht mit seinem Inhalt, die Reiter scrollen in einer Zeile", () => {
     expect(overview).toMatch(
       /^<section aria-label="Analyse" class="[^"]*grid-cols-\[minmax\(0,1fr\)\]/
     )
+    expect(overview).toMatch(/role="radiogroup" aria-label="Thema"[^>]*class="[^"]*overflow-x-auto/)
+    // nur diese Leiste: Knöpfe schrumpfen nicht und brechen nicht um (andere Umschalter dürfen umbrechen)
     expect(overview).toMatch(
-      /role="radiogroup" aria-label="Thema"[^>]*class="[^"]*max-sm:flex-wrap/
+      /role="radiogroup" aria-label="Thema"[^>]*class="[^"]*\[&amp;&gt;button\]:shrink-0 \[&amp;&gt;button\]:whitespace-nowrap/
     )
+    expect(overview).not.toMatch(/role="radiogroup" aria-label="Thema"[^>]*class="[^"]*flex-wrap/)
     expect(overview).toMatch(/role="radiogroup" aria-label="Thema"[^>]*class="[^"]*max-w-full/)
   })
 
-  it("zwei Kartenspalten erst ab 861 px wie D3", () => {
-    expect(result).toContain("min-[861px]:columns-2")
-    expect(result).not.toContain("md:columns-2")
+  it("zwei Kartenspalten erst ab 861 px wie D3, als Raster in Zeilen", () => {
+    expect(result).toContain("min-[861px]:grid-cols-2")
+    // Spalten (columns) ließen unter der kürzeren Spalte Lücken und verschluckten Ränder am Spaltenende
+    expect(result).not.toMatch(/columns-2/)
+    // eine einzelne Karte in der letzten Zeile über die volle Breite, kein Loch daneben
+    expect(result).toContain("min-[861px]:[&amp;&gt;:last-child:nth-child(odd)]:col-span-2")
   })
 
   it("Glossar, Fehlschlüsse und „Was heißt das?“ mit großer Fläche bei grobem Zeiger", () => {
@@ -81,8 +88,8 @@ describe("Analyse auf dem Telefon", () => {
   })
 })
 
-describe("Serien auf dem Telefon", () => {
-  it("„Alle“ und „Ohne Probe“ mit 44 px bei grobem Zeiger", () => {
+describe("Bedienelemente auf dem Telefon", () => {
+  it("„Alle“ und „Ohne Probe“ in derselben Optik wie am Desktop", () => {
     const html = renderToStaticMarkup(
       createElement(SeriesStrip, {
         target: LP_10M,
@@ -93,7 +100,8 @@ describe("Serien auf dem Telefon", () => {
       })
     )
     for (const label of ["Alle", "Ohne Probe"]) {
-      expect(html).toMatch(new RegExp(`<button[^>]*pointer-coarse:min-h-11[^>]*>${label}</button>`))
+      expect(html).toMatch(new RegExp(`<button[^>]*>${label}</button>`))
+      expect(html).not.toMatch(new RegExp(`<button[^>]*min-h-11[^>]*>${label}</button>`))
     }
   })
 })

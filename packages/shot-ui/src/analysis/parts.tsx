@@ -31,7 +31,7 @@ export function AnalysisCard({ help, title, ids, wide, explain, children }: Anal
     <article
       data-card={help}
       data-wide={wide || undefined}
-      className="grid min-w-0 content-start gap-3 rounded-2xl border border-border bg-card p-4"
+      className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4"
     >
       <h3
         title={topic?.short}
@@ -45,7 +45,8 @@ export function AnalysisCard({ help, title, ids, wide, explain, children }: Anal
         )}
       </h3>
       {children}
-      {help && <HelpDetails id={help} open={explain} />}
+      {/* unten bündig, wenn die Karte im Raster höher ist als ihr Inhalt */}
+      {help && <HelpDetails id={help} open={explain} className="mt-auto" />}
     </article>
   )
 }

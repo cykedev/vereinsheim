@@ -151,6 +151,7 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
         formatValue(offset / 1000, 2),
       ])
     }
-    expect(html).toMatch(/data-card="serien-im-vergleich" data-wide="true"/)
+    // schmal: mit Tempo, Pausen und Ermüdung zwei volle Zeilen im Raster
+    expect(html).not.toMatch(/data-card="serien-im-vergleich" data-wide/)
   })
 })

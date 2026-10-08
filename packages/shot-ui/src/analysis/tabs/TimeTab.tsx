@@ -223,9 +223,8 @@ export function timeCards({ input, explain }: CardContext): CardSpec[] {
     },
     {
       key: "serien-im-vergleich",
-      wide: true,
       element: (
-        <AnalysisCard help="serien-im-vergleich" wide explain={explain}>
+        <AnalysisCard help="serien-im-vergleich" explain={explain}>
           {series.length ? (
             <>
               <div className="overflow-x-auto">
