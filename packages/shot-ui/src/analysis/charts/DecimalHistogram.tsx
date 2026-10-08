@@ -1,5 +1,6 @@
 import { formatValue } from "../../format"
 import { scoreColor } from "../../geometry"
+import { RulerMark, RulerReadout, useRuler, ValuesTable } from "./ChartRuler"
 import { ChartSvg, crisp } from "./frame"
 
 const HEIGHT = 150
@@ -7,7 +8,8 @@ const PAD = { left: 4, right: 4, top: 16, bottom: 22 }
 
 /**
  * Zehntelverteilung (Spielwiese `decimalChart`): eine Säule je belegtem Zehntel ab dem Ring des tiefsten
- * Treffers bis 10,9, Farbe nach Ring, Beschriftung je Ring und „10,9“.
+ * Treffers bis 10,9, Farbe nach Ring, Beschriftung je Ring und „10,9“. Werte per Lineal über die belegten
+ * Zehntel (Plan L1), darunter „Werte als Tabelle“.
  */
 export function DecimalHistogram({
   width,
@@ -27,46 +29,65 @@ export function DecimalHistogram({
   const ticks: number[] = []
   for (let t = lo; t <= 100; t += 10) ticks.push(t)
   const center = (t: number) => PAD.left + (t - lo + 0.5) * cw
+  const ruler = useRuler(present.map(center), width)
+  const chosen = ruler.index === null ? null : present[ruler.index]
 
   return (
-    <ChartSvg width={width} height={HEIGHT} label={`Zehntelverteilung, ${hist.n} Schuss`}>
-      {present.map((tenth) => {
-        const count = hist.counts[tenth]
-        const top = y(count)
-        return (
-          <rect
-            key={tenth}
-            data-tenth={tenth}
-            x={PAD.left + (tenth - lo) * cw + gap / 2}
-            y={top}
-            width={Math.max(1, cw - gap)}
-            height={base - top}
-            rx={Math.min(2, (cw - gap) / 2)}
-            fill={scoreColor(Math.floor(tenth / 10))}
-          >
-            <title>{`${formatValue(tenth / 10, 1)}: ${count}`}</title>
-          </rect>
-        )
-      })}
-      <line
-        x1={PAD.left}
-        x2={width - PAD.right}
-        y1={crisp(base)}
-        y2={crisp(base)}
-        stroke="var(--line-strong)"
-        strokeWidth={1}
+    <div className="grid gap-2">
+      <RulerReadout
+        text={
+          chosen === null ? null : `${formatValue(chosen / 10, 1)}: ${hist.counts[chosen]} Schuss`
+        }
       />
-      {ticks.map((t) => (
-        <text key={t} x={center(t)} y={HEIGHT - 6} textAnchor="middle">
-          {t / 10}
+      <ChartSvg
+        width={width}
+        height={HEIGHT}
+        label={`Zehntelverteilung, ${hist.n} Schuss`}
+        svgProps={ruler.svgProps}
+      >
+        {present.map((tenth) => {
+          const count = hist.counts[tenth]
+          const top = y(count)
+          return (
+            <rect
+              key={tenth}
+              data-tenth={tenth}
+              data-chosen={tenth === chosen || undefined}
+              x={PAD.left + (tenth - lo) * cw + gap / 2}
+              y={top}
+              width={Math.max(1, cw - gap)}
+              height={base - top}
+              rx={Math.min(2, (cw - gap) / 2)}
+              fill={scoreColor(Math.floor(tenth / 10))}
+            />
+          )
+        })}
+        <line
+          x1={PAD.left}
+          x2={width - PAD.right}
+          y1={crisp(base)}
+          y2={crisp(base)}
+          stroke="var(--line-strong)"
+          strokeWidth={1}
+        />
+        {ticks.map((t) => (
+          <text key={t} x={center(t)} y={HEIGHT - 6} textAnchor="middle">
+            {t / 10}
+          </text>
+        ))}
+        <text x={center(109)} y={HEIGHT - 6} textAnchor="middle">
+          10,9
         </text>
-      ))}
-      <text x={center(109)} y={HEIGHT - 6} textAnchor="middle">
-        10,9
-      </text>
-      <text data-value x={PAD.left} y={10}>
-        {`höchste Säule ${max}`}
-      </text>
-    </ChartSvg>
+        <text data-value x={PAD.left} y={10}>
+          {`höchste Säule ${max}`}
+        </text>
+        {chosen !== null && <RulerMark x={center(chosen)} top={PAD.top - 4} bottom={base} />}
+      </ChartSvg>
+      <ValuesTable
+        caption={`Zehntelverteilung, ${hist.n} Schuss`}
+        columns={["Zehntel", "Schuss"]}
+        rows={present.map((tenth) => [formatValue(tenth / 10, 1), String(hist.counts[tenth])])}
+      />
+    </div>
   )
 }

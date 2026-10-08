@@ -6,7 +6,9 @@ import { describe, expect, it } from "vitest"
 
 import { IntervalBar } from "../parts"
 import { RULER_HINT } from "./ChartRuler"
+import { ClockChart } from "./ClockChart"
 import { CourseChart } from "./CourseChart"
+import { DecimalHistogram } from "./DecimalHistogram"
 import { RhythmChart } from "./RhythmChart"
 import { PathChart } from "./PathChart"
 import { SeriesChart } from "./SeriesChart"
@@ -140,5 +142,32 @@ describe("Rhythmus mit Lineal", () => {
     expect(html).toContain("vor Schuss 7: 4:00 min (Pause)")
     expect(html).toContain("data-ruler")
     expect(html).toMatch(/<button type="button"[^>]*>Auf der Scheibe<\/button>/)
+  })
+})
+
+describe("Zehntel-Säulen und Richtungsuhr: Werte als Tabelle", () => {
+  it("Säulen: Hinweis im Lineal, eine Tabellenzeile je belegtem Zehntel, kein <title>", () => {
+    const counts = Array.from({ length: 110 }, (_, t) =>
+      t === 97 ? 3 : t === 104 ? 5 : t === 108 ? 1 : 0
+    )
+    const html = renderToStaticMarkup(
+      createElement(DecimalHistogram, { width: 600, hist: { n: 9, counts } })
+    )
+    expect(html).toContain(RULER_HINT)
+    expect(html).not.toContain("<title>")
+    const rows = [
+      ...html.matchAll(/<tr class="border-t[^>]*><td[^>]*>([^<]+)<\/td><td[^>]*>(\d+)<\/td>/g),
+    ].map((m) => `${m[1]}:${m[2]}`)
+    expect(rows).toEqual(["9,7:3", "10,4:5", "10,8:1"])
+  })
+
+  it("Richtungsuhr: eine Tabellenzeile je belegter Stunde, 12 statt 0, kein <title>", () => {
+    const counts = [2, 0, 0, 4, 0, 0, 0, 0, 0, 1, 0, 0]
+    const html = renderToStaticMarkup(createElement(ClockChart, { width: 600, counts }))
+    expect(html).not.toContain("<title>")
+    const rows = [
+      ...html.matchAll(/<tr class="border-t[^>]*><td[^>]*>([^<]+)<\/td><td[^>]*>(\d+)<\/td>/g),
+    ].map((m) => `${m[1]}:${m[2]}`)
+    expect(rows).toEqual(["12 Uhr:2", "3 Uhr:4", "9 Uhr:1"])
   })
 })
