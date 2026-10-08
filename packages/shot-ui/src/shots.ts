@@ -8,6 +8,7 @@ import {
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
 
+import { formatValue } from "./format"
 import type { SeriesKey, Selection } from "./types"
 import { isSelected } from "./view-state"
 
@@ -26,14 +27,13 @@ export function shotLabels(shots: readonly MetricShot[]): string[] {
 
 /** Wert in der gewählten Wertung („10,4“ bzw. „10“); ohne Wert ein Strich */
 export function formatScore(shot: MetricShot, scoring: Scoring): string {
-  if (scoring === "rings") return shot.ring === null ? "–" : String(shot.ring)
-  return shot.decimalTenths === null ? "–" : (shot.decimalTenths / 10).toFixed(1).replace(".", ",")
+  if (scoring === "rings") return shot.ring === null ? "–" : formatValue(shot.ring, 0)
+  return shot.decimalTenths === null ? "–" : formatValue(shot.decimalTenths / 10, 1)
 }
 
 /** Summe in der gewählten Wertung („105,3“ bzw. „100“); ohne Summe ein Strich */
 export function formatTotal(total: number | null, scoring: Scoring): string {
-  if (total === null) return "–"
-  return scoring === "rings" ? String(Math.round(total)) : total.toFixed(1).replace(".", ",")
+  return total === null ? "–" : formatValue(total, scoring === "rings" ? 0 : 1)
 }
 
 export const hasPosition = (shot: MetricShot) =>

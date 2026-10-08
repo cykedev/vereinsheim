@@ -24,8 +24,11 @@ dieselben Bausteine mit echten Daten ein.
 
 - **Reine Funktionen getrennt von React:** Geometrie, Ebenen und Zustand sind Funktionen mit Tests nach
   Handwerten; Komponenten zeichnen nur, was diese liefern.
-- **Zahlen nur aus dem Fachkern** (`@vereinsheim/shot-core`), Texte nur aus `@vereinsheim/shot-help`,
-  Format über `@vereinsheim/lib/format` (Zeitzone als Parameter). Keine eigene Statistik im Baustein.
+- **Zahlen nur aus dem Fachkern** (`@vereinsheim/shot-core`), Texte nur aus `@vereinsheim/shot-help`.
+  Keine eigene Statistik im Baustein.
+- **Zahlen formatiert `./format`** (feste Stellen, Komma, echtes Minus, ohne `Intl`, wie auf dem
+  Ausdruck); kein `toFixed(…).replace(…)` in Komponenten. Datum und Uhrzeit über `@vereinsheim/lib/format`
+  mit der Zeitzone als Parameter.
 - **Client-Komponenten** mit `"use client"`, Daten kommen als Props; kein Laden von Daten im Baustein.
 - **Farben nur aus den Design-2-Tokens** (`@vereinsheim/ui/design2.css`), keine Palette-Klassen, keine
   `dark:`-Varianten; die Scheibe ist in beiden Themes gleich.
