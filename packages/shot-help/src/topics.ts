@@ -363,7 +363,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Jeder Punkt ist eine Scheibe, mit dem Wert der gewählten Zahl über ihre Wertungsschüsse. Die Linie ist der Schnitt der letzten fünf Scheiben (gestrichelt, solange es noch keine fünf sind). Das Formband um die Linie zeigt, wie weit deine Scheiben üblicherweise um diesen Schnitt schwanken. Je Monat zeigt Spiegel dazu Boden und Decke: den Wert, den du an einem schwachen Tag hältst, den mittleren und den, den du an einem guten Tag erreichst.",
     read: "Liegt eine Scheibe im Band, war sie für deine Form normal: Bei einem gleichbleibenden Schützen liegen etwa zwei von drei Scheiben darin. Steigt der Boden über die Monate, werden deine schwachen Tage besser, auch wenn die Decke gleich bleibt.",
     caution:
-      "Vergleiche nur Scheiben derselben Disziplin. Zahlen, die an der Schusszahl hängen (Ergebnis, Streukreis), passen nur bei gleicher Schusszahl zusammen; für die Streuung über verschiedene Schusszahlen nimm σ. Eine einzelne Scheibe außerhalb des Bands ist noch kein Formknick.",
+      "Vergleiche nur Scheiben derselben Disziplin. Zahlen, die an der Schusszahl hängen (Ergebnis, Streukreis), passen nur bei gleicher Schusszahl zusammen; für die Streuung über verschiedene Schusszahlen nimm σ. Eine einzelne Scheibe außerhalb des Bands ist noch kein Formknick. Sind deine Werte fast immer gleich (etwa die Zahl der Innenzehner), gibt es kein Band.",
     minimum: "Ab 1 Scheibe, das Formband ab 10 Scheiben, Boden und Decke ab 5 Scheiben im Monat.",
     formula:
       "Schnitt über die letzten 5 Scheiben; Formband = Schnitt ± 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt; Boden und Decke = P10 und P90 der Scheibenwerte je Monat, dazu der Median",
@@ -418,10 +418,10 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"],
     metrics: [],
     short: "Deine Bestwerte über alle Scheiben, die zählen.",
-    what: "Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe, meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner, längste Folge von Zehnern und deine beste Form: der höchste Schnitt je Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe und die Zählungen führt Spiegel je Schusszahl, denn 40 und 60 Schuss sind nicht vergleichbar.",
+    what: "Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe, meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner, längste Folge von Zehnern und deine beste Form: der höchste Schnitt je Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe und die Zahl der 10,9, Zehner und Innenzehner führt Spiegel je Schusszahl, die beste Serie je Serienlänge, denn 40 und 60 Schuss sind nicht vergleichbar.",
     read: "Bei Gleichstand bleibt der frühere Rekord, denn er hat ihn zuerst gesetzt. Rekorde gibt es je Wertung (Zehntel oder ganze Ringe) und wahlweise nur für Training oder nur für Wettkampf.",
     caution:
-      "Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss. Eine Trainingsscheibe nur mit Probe zählt nur, wenn du das einschaltest; dann gilt ihre Probe wie Wertung, in Serien zu zehn.",
+      "Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der Wertung. Eine Trainingsscheibe nur mit Probe zählt nur, wenn du das einschaltest; dann gilt ihre Probe wie Wertung, in Serien zu zehn.",
     minimum: "Ab 1 Scheibe, die beste Form ab 5 Scheiben.",
   },
 ]

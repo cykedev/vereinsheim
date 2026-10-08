@@ -3,6 +3,7 @@
 
 import {
   inShotOrder,
+  probeOnlyAsMatch as probeOnlyAsMatchInCore,
   selectShots,
   shotDistanceUm,
   shotNumbers,
@@ -15,25 +16,18 @@ import { formatValue } from "./format"
 import type { SeriesKey, Selection, Whole } from "./types"
 import { isSelected } from "./view-state"
 
-/** Schüsse je Serie, wenn eine Karte nur Probe hat */
-const SERIES_SIZE = 10
-
 /**
  * Eine Karte nur mit Probe ist Training (User, 8. Oktober 2026): Sie verhält sich genau wie Wertung, auch
- * optisch. Jeder Probeschuss wird Wertungsschuss, in Serien zu zehn nach der Abgabefolge (`inShotOrder`);
- * Reihenfolge der Liste und alle übrigen Angaben bleiben; `fromProbe` merkt sich die Herkunft (nur für das
- * Probe-Eck, der Fachkern kennt das Feld nicht). Folgt Wertung, bleibt die Probe Probe und die Karte
- * unverändert. Die Seite wendet das einmal an, bevor sie die Bausteine füttert.
+ * optisch. Die Regel kommt aus dem Fachkern (`probeOnlyAsMatch` in `metrics`, dieselbe wie für Zeiträume):
+ * jeder Probeschuss wird Wertungsschuss, in Serien zu zehn nach der Abgabefolge; Reihenfolge der Liste und alle
+ * übrigen Angaben bleiben. Hier kommt nur `fromProbe` dazu, das sich die Herkunft merkt (für das Probe-Eck,
+ * der Fachkern kennt das Feld nicht). Folgt Wertung, bleibt die Probe Probe und die Karte unverändert. Die
+ * Seite wendet das einmal an, bevor sie die Bausteine füttert.
  */
 export function probeOnlyAsMatch(shots: readonly MetricShot[]): readonly MetricShot[] {
-  if (!shots.length || shots.some((shot) => shot.kind !== "probe")) return shots
-  const position = new Map(inShotOrder(shots).map((shot, i) => [shot, i]))
-  return shots.map((shot) => ({
-    ...shot,
-    kind: "match" as const,
-    series: Math.floor((position.get(shot) as number) / SERIES_SIZE) + 1,
-    fromProbe: true,
-  }))
+  const converted = probeOnlyAsMatchInCore(shots)
+  if (converted === shots) return shots
+  return converted.map((shot) => ({ ...shot, fromProbe: true }))
 }
 
 /** ein Probeschuss, auch einer, den `probeOnlyAsMatch` als Training wie Wertung zeigt (für das Probe-Eck) */

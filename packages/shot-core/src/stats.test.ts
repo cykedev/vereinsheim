@@ -252,6 +252,18 @@ describe("Mann-Whitney und Normalverteilung", () => {
     expect(result?.p).toBeCloseTo(0.80138, 4)
   })
 
+  it("über 20 je Seite mit Korrektur für gleiche Werte", () => {
+    // elf Einsen und zehn Zweien gegen zehn Einsen und elf Zweien: mittlere Ränge 11 und 32, U von a 210;
+    // Varianz 441/12 · (43 − 2 · (21³ − 21) / (42 · 41)) = 1185,86, z = 10 / 34,436 = 0,29039,
+    // p = 0,77152 (ohne die Korrektur 0,80138)
+    const a = [...Array<number>(11).fill(1), ...Array<number>(10).fill(2)]
+    const b = [...Array<number>(10).fill(1), ...Array<number>(11).fill(2)]
+    const result = mannWhitney(a, b)
+    expect(result?.exact).toBe(false)
+    expect(result?.u).toBe(210)
+    expect(result?.p).toBeCloseTo(0.77152, 4)
+  })
+
   it("ohne Werte auf einer Seite kein Ergebnis", () => {
     expect(mannWhitney([], [1, 2])).toBeNull()
     expect(mannWhitney([1], [])).toBeNull()

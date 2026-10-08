@@ -9,6 +9,7 @@ import {
   inShotOrder,
   METRICS,
   metricByKey,
+  probeOnlyAsMatch,
   shotNumbers,
   timesInOrder,
   type MetricDefinition,
@@ -339,6 +340,29 @@ describe("shotNumbers", () => {
     ])
     expect(numbers.get(PROBE[0])).toBe(1)
     expect(numbers.get(PROBE[1])).toBe(2)
+  })
+})
+
+describe("probeOnlyAsMatch", () => {
+  it("eine Karte nur mit Probe wird Wertung, Serien zu zehn in Abgabefolge, Liste in ihrer Reihenfolge", () => {
+    const probes: MetricShot[] = Array.from({ length: 12 }, (_, i) => ({
+      ...PROBE[0],
+      seq: i + 1,
+      xUm: 100 * i,
+    }))
+    // die beiden letzten zuerst: Reihenfolge der Liste bleibt, die Serie folgt der Abgabefolge
+    const shuffled = [probes[11], probes[10], ...probes.slice(0, 10)]
+    const card = probeOnlyAsMatch(shuffled)
+    expect(card.map((s) => s.kind)).toEqual(Array(12).fill("match"))
+    expect(card.map((s) => s.seq)).toEqual(shuffled.map((s) => s.seq))
+    expect(card.map((s) => s.series)).toEqual([2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+  })
+
+  it("mit Wertung oder ohne Schüsse bleibt die Karte, wie sie ist", () => {
+    const card = [PROBE[0], MATCH[0]]
+    expect(probeOnlyAsMatch(card)).toBe(card)
+    const empty: MetricShot[] = []
+    expect(probeOnlyAsMatch(empty)).toBe(empty)
   })
 })
 

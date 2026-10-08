@@ -1,29 +1,34 @@
 // Welche Schüsse einer Scheibe in Auswertungen über viele Scheiben zählen (Plan L2, D8), und die Folge
-// der Scheiben. Nicht über
-// `./index` exportiert: eine Hilfe für `period.ts` und `records.ts`, keine Auswertung.
+// der Scheiben. Nicht über `./index` exportiert: eine Hilfe für `period.ts` und `records.ts`, keine
+// Auswertung.
 
-import { inShotOrder, type MetricShot } from "../metrics"
+import { probeOnlyAsMatch, type MetricShot } from "../metrics"
 
-/** Serien zu zehn, wenn eine Scheibe nur Probe hat (wie `probeOnlyAsMatch` in shot-ui) */
-const SERIES_SIZE = 10
+export interface CardShots {
+  /** die Wertungsschüsse: für Kennzahlen der Registry und die Schusszahl */
+  match: readonly MetricShot[]
+  /**
+   * die ganze Karte für Auswertungen, die selbst auswählen und nummerieren (`shotExtremes`, `longestRun`,
+   * `seriesCurve`): erst die ganze Karte ordnen, dann auswählen, damit „Schuss 8“ derselbe ist wie auf
+   * der Seite der Scheibe
+   */
+  whole: readonly MetricShot[]
+}
 
 /**
- * Die Wertungsschüsse einer Scheibe. Hat sie nur Probe, mit `includeProbeOnly` die Probe wie Wertung: in
- * Abgabefolge, Serien zu zehn (SF-01, wie `probeOnlyAsMatch` auf der Seite einer Scheibe); sonst null, die
- * Scheibe zählt nicht. Eine Scheibe ohne Schüsse zählt nie.
+ * Die Schüsse einer Scheibe, die zählen. Hat sie nur Probe, mit `includeProbeOnly` die Probe wie Wertung
+ * (`probeOnlyAsMatch`, dieselbe Regel wie auf der Seite einer Scheibe, SF-01); sonst null, die Scheibe zählt
+ * nicht. Eine Scheibe ohne Schüsse zählt nie.
  */
 export function cardShots(
   shots: readonly MetricShot[],
   includeProbeOnly = false
-): readonly MetricShot[] | null {
+): CardShots | null {
   const match = shots.filter((shot) => shot.kind === "match")
-  if (match.length) return match
+  if (match.length) return { match, whole: shots }
   if (!includeProbeOnly || !shots.length) return null
-  return inShotOrder(shots).map((shot, i) => ({
-    ...shot,
-    kind: "match" as const,
-    series: Math.floor(i / SERIES_SIZE) + 1,
-  }))
+  const converted = probeOnlyAsMatch(shots)
+  return { match: converted, whole: converted }
 }
 
 /** Scheiben in ihrer Folge: nach Beginn, bei Gleichstand nach Kennung */

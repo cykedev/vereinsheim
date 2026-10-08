@@ -248,6 +248,25 @@ export function shotNumbers(shots: readonly MetricShot[]): Map<MetricShot, numbe
   return numbers
 }
 
+/** Schüsse je Serie, wenn eine Karte nur Probe hat */
+const PROBE_SERIES_SIZE = 10
+
+/**
+ * Eine Karte nur mit Probe als Wertung (SF-01, Training; User, 8. Oktober 2026): jeder Schuss wird
+ * Wertungsschuss, in Serien zu zehn nach der Abgabefolge (`inShotOrder`); Reihenfolge der Liste und alle
+ * übrigen Angaben bleiben. Hat die Karte einen Wertungsschuss oder keinen Schuss, bleibt sie, wie sie ist.
+ * Die eine Regel für die Seite einer Scheibe (shot-ui `probeOnlyAsMatch`) und für Zeiträume (`analysis`).
+ */
+export function probeOnlyAsMatch<T extends MetricShot>(shots: readonly T[]): readonly T[] {
+  if (!shots.length || shots.some((shot) => shot.kind !== "probe")) return shots
+  const position = new Map(inShotOrder(shots).map((shot, i) => [shot, i]))
+  return shots.map((shot) => ({
+    ...shot,
+    kind: "match" as const,
+    series: Math.floor((position.get(shot) as number) / PROBE_SERIES_SIZE) + 1,
+  }))
+}
+
 // ---------------------------------------------------------------------------------------------
 // Hilfen für die Definitionen. Die Filter in computeMetric garantieren die nötigen Angaben.
 

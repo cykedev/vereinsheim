@@ -52,7 +52,20 @@ describe("Rekorde (R1–R8)", () => {
   it("R2 beste Serie voller Länge, eine kurze Restserie zählt nicht", () => {
     // Serie 1: zehn 4,0 (40,0); Serie 2: fünf 10,9 (54,5) ist kürzer als die häufigste Länge
     const records = periodRecords([card("a", 1, [...tens(10, 40), ...tens(5, 109)])], "decimal")
-    expect(records.bestSeries).toEqual({ value: 40, cardId: "a", atMs: DAY, detail: "Serie 1" })
+    expect(records.bestSeries).toEqual({
+      10: { value: 40, cardId: "a", atMs: DAY, detail: "Serie 1" },
+    })
+  })
+
+  it("R2 je Serienlänge: eine Scheibe in einer einzigen Serie schlägt keine Zehnerserie", () => {
+    // b hat alle 40 Schuss in Serie 1 (400,0); das ist keine Serie zu zehn
+    const cards = [
+      card("a", 1, tens(20, 95)),
+      card("b", 2, tens(40), { shot: () => ({ series: 1 }) }),
+    ]
+    const records = periodRecords(cards, "decimal").bestSeries
+    expect(records[10]).toMatchObject({ cardId: "a", value: 95 })
+    expect(records[40]).toMatchObject({ cardId: "b", value: 400 })
   })
 
   it("R3 bester Teiler, ohne Scheiben mit verdächtigem Schuss", () => {
@@ -97,6 +110,53 @@ describe("Rekorde (R1–R8)", () => {
     const records = periodRecords(cards, "decimal")
     expect(records.tightestCard[10].cardId).toBe("a")
     expect(records.tightestSeries?.cardId).toBe("a")
+  })
+
+  it("eine Scheibe mit Probe und Wertung zählt nur mit ihren Wertungsschüssen", () => {
+    // drei Probeschüsse weit außen (10,9) vor zehn Wertungsschüssen 10,0 auf einer Linie (0,9 mm)
+    const mixed = card("m", 1, [109, 109, 109, ...tens(10)], {
+      shot: (i) =>
+        i < 3
+          ? { kind: "probe", series: null, xUm: 5000 + 1000 * i }
+          : { series: 1, xUm: 100 * (i - 3) },
+    })
+    const records = periodRecords([mixed], "decimal")
+    expect(Object.keys(records.bestCard)).toEqual(["10"])
+    expect(records.bestCard[10].value).toBe(100)
+    expect(records.tightestCard[10].value).toBeCloseTo(0.9, 9)
+    expect(records.mostPerfect).toEqual({})
+    // die Nummern sind die der Wertung, wie auf der Seite der Scheibe
+    expect(records.longestTenRun).toMatchObject({ value: 10, detail: "ab Schuss 1" })
+  })
+
+  it("Schussnummern wie auf der Seite der Scheibe: erst die ganze Karte ordnen, dann auswählen", () => {
+    // dem Probeschuss fehlt die Abgabefolge, also ordnet die Zeit die ganze Karte: Wertung 90 (Schuss 1),
+    // 100, 100 (Schuss 2 und 3); nach `seq` allein wären die Zehner Schuss 1 und 2
+    const times = [0, 300, 200, 100]
+    const mixed = card("m", 1, [100, 100, 100, 90], {
+      shot: (i) => ({
+        firedAtMs: DAY + times[i] * 1000,
+        ...(i === 0 ? { kind: "probe", series: null, seq: null } : { series: 1, seq: i }),
+      }),
+    })
+    expect(periodRecords([mixed], "decimal").longestTenRun).toMatchObject({
+      value: 2,
+      detail: "ab Schuss 2",
+    })
+  })
+
+  it("ein verdächtiger Probeschuss vor der Wertung schließt die Scheibe nicht aus", () => {
+    const mixed = card("m", 1, [100, ...tens(10)], {
+      shot: (i) =>
+        i === 0 ? { kind: "probe", series: null, flags: [FLAG_SUSPICIOUS] } : { series: 1 },
+    })
+    expect(recordEligible(mixed)).toBe(true)
+    // bei einer Scheibe nur mit Probe zählt die Probe, ein verdächtiger Schuss schließt sie aus
+    const probeOnly = card("p", 1, tens(10), {
+      probe: true,
+      shot: (i) => (i === 0 ? { flags: [FLAG_SUSPICIOUS] } : {}),
+    })
+    expect(recordEligible(probeOnly)).toBe(false)
   })
 
   it("R5 meiste 10,9 nur in Zehnteln, R6 meiste Zehner und Innenzehner je Schusszahl", () => {
@@ -158,9 +218,9 @@ describe("Rekorde (R1–R8)", () => {
     ]
     const without = periodRecords(cards, "decimal")
     expect(without.bestTeiler?.cardId).toBe("a")
-    expect(without.bestSeries?.value).toBe(95)
+    expect(without.bestSeries[10].value).toBe(95)
     const withProbe = periodRecords(cards, "decimal", { includeProbeOnly: true })
     expect(withProbe.bestTeiler).toMatchObject({ cardId: "p", value: 2, detail: "Schuss 13" })
-    expect(withProbe.bestSeries).toMatchObject({ cardId: "p", value: 100, detail: "Serie 2" })
+    expect(withProbe.bestSeries[10]).toMatchObject({ cardId: "p", value: 100, detail: "Serie 2" })
   })
 })

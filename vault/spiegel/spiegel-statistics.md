@@ -136,7 +136,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
 | T1 | Verlauf jeder Kennzahl | Wert je Scheibe aus der Registry über ihre Wertungsschüsse, gleitender Schnitt über die letzten fünf Scheiben („bisher“, solange es keine fünf sind); Familie und Abschnitt (Woche, Monat) wählt der Aufrufer, n-abhängige Maße nur bei gleichem n | Zeitraum | A | SP-2.1, Fachkern L2 (`cardValues`, `periodTrend`) |
-| T2 | Formband | gleitender Schnitt ± 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt, ab zehn Scheiben; ein gleichbleibender Schütze liegt mit etwa zwei von drei Scheiben im Band (B20) | Zeitraum | A | SP-2.1, Fachkern L2 (`periodTrend`) |
+| T2 | Formband | gleitender Schnitt ± 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt, ab zehn Scheiben, ohne Schwankung (MAD 0) kein Band; ein gleichbleibender Schütze liegt mit etwa zwei von drei Scheiben im Band (B20) | Zeitraum | A | SP-2.1, Fachkern L2 (`periodTrend`) |
 | T3 | Bedeutsame Veränderung | Δ der Mittel zweier Zeiträume gegen die gepoolte Standardabweichung der Scheibenwerte, bedeutsam ab 0,3 × (Hopkins), ab fünf Scheiben je Seite; zählt nur zusammen mit einem Urteil aus C3, denn ohne Veränderung trifft es bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen zu (B19) | Zeitraum | B | SP-2.7, Fachkern L2 (`comparePeriods`) |
 | T4 | Trendsteigung | Theil-Sen je Monat mit Intervall; nicht in die Zukunft verlängern | Zeitraum | B | SP-2.7 |
 | T5 | Boden und Decke | P10, Median und P90 der Scheibenwerte je Abschnitt (Monat), P10 und P90 ab fünf Scheiben | Zeitraum | B | SP-2.1, Fachkern L2 (`periodBuckets`) |
@@ -146,12 +146,12 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 ### 9 Rekorde und Meilensteine
 
-Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss und ohne die Merkmale nur-pdf, neu-gewertet und ausgenommen (SF-15, SF-66); je Familie und je Wertung, wahlweise nur Training oder nur Wettkampf. R1, R4 (volle Scheibe), R5 und R6 je Schusszahl; bei Gleichstand gilt der frühere; Zählungen (R5–R7) erst ab einem Treffer. Eine Scheibe nur mit Probe zählt nur auf Wunsch, dann ihre Probe wie Wertung in Serien zu zehn (SF-01). Umgesetzt im Fachkern L2 (`recordEligible`, `periodRecords`).
+Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter denen, die zählen (Wertung; bei nur Probe die Probe), und ohne die Merkmale nur-pdf, neu-gewertet und ausgenommen (SF-15, SF-66); je Familie und je Wertung, wahlweise nur Training oder nur Wettkampf. R1, R4 (volle Scheibe), R5 und R6 je Schusszahl, R2 je Serienlänge; bei Gleichstand gilt der frühere; Zählungen (R5–R7) erst ab einem Treffer. Eine Scheibe nur mit Probe zählt nur auf Wunsch, dann ihre Probe wie Wertung in Serien zu zehn (SF-01). Umgesetzt im Fachkern L2 (`recordEligible`, `periodRecords`).
 
 | ID | Kennzahl | Prio | Wo |
 |---|---|---|---|
 | R1 | Beste Scheibe je Schusszahl | A | SP-2.1, Fachkern L2 |
-| R2 | Beste Serie voller Länge (die häufigste Serienlänge der Scheibe) | A | SP-2.1, Fachkern L2 |
+| R2 | Beste Serie voller Länge (die häufigste Serienlänge der Scheibe), je Serienlänge | A | SP-2.1, Fachkern L2 |
 | R3 | Bester Teiler, zugleich der beste Schuss | A | SP-2.1, Fachkern L2 |
 | R4 | Engste Gruppe (Streukreis) über eine Serie zu zehn und über die volle Scheibe, nur wenn jeder Schuss eine Lage hat | A | SP-2.1, Fachkern L2 |
 | R5 | Meiste 10,9 (nur in Zehnteln); der beste Schuss ist der beste Teiler (R3) | B | SP-2.1, Fachkern L2 |

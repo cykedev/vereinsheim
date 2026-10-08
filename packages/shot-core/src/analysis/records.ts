@@ -24,8 +24,6 @@ export const RECORD_EXCLUDING_FLAGS = ["nur-pdf", "neu-gewertet", "ausgenommen"]
 const TIGHT_SERIES = 10
 /** Schwelle eines Zehners in Zehnteln (R7) */
 const TEN_TENTHS = 100
-/** beste Form über so viele Scheiben (R8) */
-const FORM_WINDOW = 5
 
 const metric = (key: string) => metricByKey(key) as Readonly<MetricDefinition>
 const RESULT = metric("result.decimal")
@@ -36,13 +34,16 @@ const ENCLOSING = metric("group.enclosingDiameter")
 
 /**
  * Zählt die Scheibe für Rekorde (D7)? Nur endgültig und vollständig, ohne `nur-pdf`, `neu-gewertet` und
- * `ausgenommen` und ohne einen verdächtigen Schuss (SF-15, SF-66).
+ * `ausgenommen` und ohne einen verdächtigen Schuss unter denen, die zählen (SF-15, SF-66): bei Wertung die
+ * Wertungsschüsse, bei einer Scheibe nur mit Probe die Probe. Ein verdächtiger Probeschuss vor der Wertung
+ * schließt die Scheibe nicht aus, er geht in keinen Rekord ein.
  */
 export function recordEligible(card: PeriodCard): boolean {
   if (!card.complete) return false
   const excluding: readonly string[] = RECORD_EXCLUDING_FLAGS
   if ((card.flags ?? []).some((flag) => excluding.includes(flag))) return false
-  return !card.shots.some((shot) => (shot.flags ?? []).includes(FLAG_SUSPICIOUS))
+  const counted = cardShots(card.shots, true)?.match ?? []
+  return !counted.some((shot) => (shot.flags ?? []).includes(FLAG_SUSPICIOUS))
 }
 
 export interface RecordRef {
@@ -56,8 +57,11 @@ export interface RecordRef {
 export interface PeriodRecords {
   /** R1: bestes Ergebnis je Schusszahl der Wertung (Schlüssel: Schusszahl) */
   bestCard: Readonly<Record<number, RecordRef>>
-  /** R2: beste Serie voller Länge (die häufigste Serienlänge der Scheibe), detail „Serie 3“ */
-  bestSeries: RecordRef | null
+  /**
+   * R2: beste Serie voller Länge (die häufigste Serienlänge der Scheibe) je Serienlänge (Schlüssel: Schüsse
+   * der Serie), detail „Serie 3“; Serien zu zehn und zu fünf sind nicht vergleichbar
+   */
+  bestSeries: Readonly<Record<number, RecordRef>>
   /** R3: bester Teiler (kleinster), detail „Schuss 17“ */
   bestTeiler: RecordRef | null
   /** R4: engste Gruppe (Streukreis in mm) über eine volle Serie zu zehn … */
@@ -71,7 +75,7 @@ export interface PeriodRecords {
   mostInnerTens: Readonly<Record<number, RecordRef>>
   /** R7: längste Folge von Zehnern, detail „ab Schuss 4“ */
   longestTenRun: RecordRef | null
-  /** R8: beste Form: höchster voller Schnitt über fünf Scheiben (Ø je Schuss); an der fünften Scheibe */
+  /** R8: beste Form: höchster voller Schnitt über fünf Scheiben (Ø je Schuss, `periodTrend`); an der fünften Scheibe */
   bestForm: RecordRef | null
 }
 
@@ -118,14 +122,17 @@ export function periodRecords(
   const mostPerfect: Record<number, RecordRef> = {}
   const mostTens: Record<number, RecordRef> = {}
   const mostInnerTens: Record<number, RecordRef> = {}
-  let bestSeries: RecordRef | null = null
+  const bestSeries: Record<number, RecordRef> = {}
   let bestTeiler: RecordRef | null = null
   let tightestSeries: RecordRef | null = null
   let longestTenRun: RecordRef | null = null
 
   for (const card of counted) {
-    const shots = cardShots(card.shots, options.includeProbeOnly)
-    if (!shots) continue
+    const counted = cardShots(card.shots, options.includeProbeOnly)
+    if (!counted) continue
+    // Kennzahlen der Registry über die Wertungsschüsse; Auswertungen, die selbst auswählen und nummerieren,
+    // über die ganze Karte (erst ordnen, dann auswählen)
+    const { match: shots, whole } = counted
     const n = shots.length
     const ref = (value: number, detail?: string): RecordRef => ({
       value,
@@ -133,28 +140,34 @@ export function periodRecords(
       atMs: card.startedAtMs,
       ...(detail === undefined ? {} : { detail }),
     })
-    const perCount = (table: Record<number, RecordRef>, value: number | null, better: Better) => {
-      if (value !== null && beats(value, table[n], better)) table[n] = ref(value)
+    const put = (
+      table: Record<number, RecordRef>,
+      key: number,
+      value: number | null,
+      better: Better,
+      detail?: string
+    ) => {
+      if (value !== null && beats(value, table[key], better)) table[key] = ref(value, detail)
     }
+    const perCount = (table: Record<number, RecordRef>, value: number | null, better: Better) =>
+      put(table, n, value, better)
     const count = (value: number | null) => (value === null || value < 1 ? null : value)
 
     perCount(bestCard, computeMetric(result, shots), "higher")
     perCount(mostTens, count(computeMetric(TENS, shots)), "higher")
     perCount(mostInnerTens, count(computeMetric(INNER_TENS, shots)), "higher")
     if (scoring === "decimal") {
-      perCount(mostPerfect, count(decimalHistogram(shots).counts[MAX_DECIMAL_TENTHS]), "higher")
+      perCount(mostPerfect, count(decimalHistogram(whole).counts[MAX_DECIMAL_TENTHS]), "higher")
     }
     const enclosing = computeMetric(ENCLOSING, shots)
     if (eligibleShots(ENCLOSING, shots).length === n) perCount(tightestCard, enclosing, "lower")
 
-    const curve = seriesCurve(shots, scoring)
+    const curve = seriesCurve(whole, scoring)
     const full = modalLength(curve.map((s) => s.shots))
     for (const s of curve) {
-      if (s.shots === full && s.total !== null && beats(s.total, bestSeries, "higher")) {
-        bestSeries = ref(s.total, `Serie ${s.series}`)
-      }
+      if (s.shots === full) put(bestSeries, s.shots, s.total, "higher", `Serie ${s.series}`)
     }
-    for (const [series, group] of seriesShots(shots)) {
+    for (const [series, group] of seriesShots(whole)) {
       // eine volle Serie zu zehn, und jeder Schuss mit Lage
       if (
         group.length !== TIGHT_SERIES ||
@@ -168,11 +181,11 @@ export function periodRecords(
       }
     }
 
-    const best = shotExtremes(shots)?.bestTeiler[0]
+    const best = shotExtremes(whole)?.bestTeiler[0]
     if (best && beats(best.teiler, bestTeiler, "lower")) {
       bestTeiler = ref(best.teiler, `Schuss ${best.number}`)
     }
-    const run = longestRun(shots, scoring, TEN_TENTHS)
+    const run = longestRun(whole, scoring, TEN_TENTHS)
     if (run.length >= 1 && beats(run.length, longestTenRun, "higher")) {
       longestTenRun = ref(run.length, `ab Schuss ${run.start}`)
     }
@@ -180,7 +193,7 @@ export function periodRecords(
 
   let bestForm: RecordRef | null = null
   const values = cardValues(counted, MEAN, scoring, { includeProbeOnly: options.includeProbeOnly })
-  for (const point of periodTrend(values, FORM_WINDOW).points) {
+  for (const point of periodTrend(values).points) {
     if (!point.partial && beats(point.mean, bestForm, "higher")) {
       bestForm = { value: point.mean, cardId: point.id, atMs: point.atMs }
     }

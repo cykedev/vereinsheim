@@ -47,6 +47,29 @@ describe("Werte je Scheibe (T1)", () => {
     ])
   })
 
+  it("gleiche Werte bei verschiedener Schusszahl sind gleich (Ø je Schuss in zwei Schritten)", () => {
+    // 3202 Zehntel auf 40 Schuss und 4803 auf 60 sind beide 8,005; ungerundet 8,004999… gegen 8,005
+    const forty = card("a", 1, [...Array<number>(38).fill(80), 81, 81])
+    const sixty = card("b", 2, [...Array<number>(57).fill(80), 81, 81, 81])
+    const [a, b] = cardValues([forty, sixty], mean, "decimal")
+    expect(a.value).toBe(8.005)
+    expect(b.value).toBe(a.value)
+  })
+
+  it("nur über die Wertungsschüsse, auch bei Maßen, die die Probe mitnehmen könnten", () => {
+    // drei Probeschüsse weit außen vor zehn Wertungsschüssen auf einer Linie (0,9 mm)
+    const mixed = card("m", 1, Array<number>(13).fill(100), {
+      shot: (i) =>
+        i < 3
+          ? { kind: "probe", series: null, xUm: 5000 + 1000 * i }
+          : { series: 1, xUm: 100 * (i - 3) },
+    })
+    const enclosing = metricByKey("group.enclosingDiameter")!
+    const [value] = cardValues([mixed], enclosing, "decimal")
+    expect(value.n).toBe(10)
+    expect(value.value).toBeCloseTo(0.9, 9)
+  })
+
   it("ohne Wert fällt die Scheibe weg", () => {
     const blind = card("x", 1, [100])
     const cards = [
@@ -78,6 +101,23 @@ describe("Verlauf mit gleitendem Schnitt und Formband (T1, T2)", () => {
     expect(points[3].band).toBeNull()
   })
 
+  it("genau zehn Scheiben: Band, MAD um den Median der Abweichungen", () => {
+    // volle Schnitte 9,2 / 9,6 / 9,6 / 10,2 / 10,0 / 10,4; Abweichungen −0,2 / 1,4 / 0,4 / 0,8 / −1,0 / 0,6,
+    // Median 0,5, Abstände zu ihm 0,7 / 0,9 / 0,1 / 0,3 / 1,5 / 0,1, MAD 0,5 → Schwankung 0,7413
+    // (um 0 statt um den Median wäre der MAD 0,7)
+    const { points, spread } = periodTrend(values([9, 10, 8, 10, 9, 11, 10, 11, 9, 11]))
+    expect(spread).not.toBeNull()
+    expect(spread).toBeCloseTo(0.7413, 9)
+    expect(points[9].band?.low).toBeCloseTo(10.4 - 0.7413, 9)
+  })
+
+  it("ohne Schwankung kein Band, auch nicht eines der Breite null", () => {
+    // Innenzehner eines Anfängers: fast immer 0, einmal 1
+    const { points, spread } = periodTrend(values([...Array(10).fill(0), 1, ...Array(5).fill(0)]))
+    expect(spread).toBeNull()
+    expect(points.every((p) => p.band === null)).toBe(true)
+  })
+
   it("unter zehn Scheiben kein Band", () => {
     const { points, spread } = periodTrend(values([9, 10, 8, 10, 9, 11, 9, 10, 8]))
     expect(spread).toBeNull()
@@ -107,6 +147,12 @@ describe("Boden und Decke je Abschnitt, Trainingsumfang (T5, T6)", () => {
   it("unter fünf Werten nur der Median", () => {
     const buckets = periodBuckets([at(0, 8), at(1, 9), at(2, 10)], week)
     expect(buckets).toEqual([{ key: "0", n: 3, median: 9, p10: null, p90: null }])
+  })
+
+  it("Boden und Decke ab genau fünf Werten", () => {
+    const five = [1, 2, 3, 4, 5].map((v, i) => at(i, v))
+    expect(periodBuckets(five, week)[0].p10).not.toBeNull()
+    expect(periodBuckets(five.slice(0, 4), week)[0].p10).toBeNull()
   })
 
   it("Umfang: Schüsse mit Probe, Scheiben und Tage je Woche", () => {
@@ -160,16 +206,16 @@ describe("Vergleich zweier Zeiträume (C3, T3)", () => {
     expect(comparePeriods([], values([1, 2, 3, 4, 5]))).toBeNull()
   })
 
-  it("Einheit ist die Scheibe: zwei Scheiben mit vielen Schüssen geben kein Urteil", () => {
+  it("Einheit ist die Scheibe: das Mittel über die Scheiben, nicht über die Schüsse", () => {
+    // 9, 10, 9, 10, 9 mit 60, 5, 60, 5, 60 Schuss: je Scheibe 9,4; nach Schüssen gewichtet wäre es 9,05
+    const shotCounts = [60, 5, 60, 5, 60]
+    const a = values([9, 10, 9, 10, 9]).map((v, i) => ({ ...v, n: shotCounts[i] }))
+    const result = comparePeriods(a, values([9, 10, 9, 10, 9]))
+    expect(result?.a.mean).toBeCloseTo(9.4, 12)
+    expect(result?.delta).toBeCloseTo(0, 12)
+    // zwei Scheiben mit vielen Schüssen geben kein Urteil
     const many = values([9.2, 9.3]).map((v) => ({ ...v, n: 60 }))
-    const few = values([9.8, 9.9, 10, 10.1, 10.2, 9.7, 9.9, 10, 10.1, 10]).map((v) => ({
-      ...v,
-      n: 5,
-    }))
-    const result = comparePeriods(many, few)
-    expect(result?.a.n).toBe(2)
-    expect(result?.test).toBeNull()
-    expect(result?.verdict).toBe("unclear")
+    expect(comparePeriods(many, values([9.8, 9.9, 10, 10.1, 10.2]))?.test).toBeNull()
   })
 
   it("kleiner, aber klarer Unterschied: höher und bedeutsam (s = 0,0059)", () => {
@@ -187,6 +233,23 @@ describe("Vergleich zweier Zeiträume (C3, T3)", () => {
     expect(result?.delta).toBeCloseTo(0.1, 12)
     expect(result?.meaningful).toBe(false)
     expect(result?.verdict).toBe("unclear")
+  })
+
+  it("Grenze α 0,05: p 8/252 ist ein Urteil, p 14/252 nicht", () => {
+    // U von a 2 (zwei Paare b < a): vier Aufteilungen mit U ≤ 2 je Seite → 8/252 = 0,0317
+    const clear = comparePeriods(values([1, 2, 3, 5, 6]), values([4, 7, 8, 9, 10]))
+    expect(clear?.test?.p).toBeCloseTo(8 / 252, 12)
+    expect(clear?.verdict).toBe("higher")
+    // U von a 3: sieben Aufteilungen mit U ≤ 3 je Seite → 14/252 = 0,0556
+    const close = comparePeriods(values([1, 2, 4, 5, 6]), values([3, 7, 8, 9, 10]))
+    expect(close?.test?.p).toBeCloseTo(14 / 252, 12)
+    expect(close?.verdict).toBe("unclear")
+  })
+
+  it("Grenze bedeutsam: 0,3 · gepoolte Streuung (s 1,5811, Grenze 0,4743)", () => {
+    const a = [8, 9, 10, 11, 12]
+    expect(comparePeriods(values(a), values(a.map((v) => v + 0.48)))?.meaningful).toBe(true)
+    expect(comparePeriods(values(a), values(a.map((v) => v + 0.47)))?.meaningful).toBe(false)
   })
 
   it("widersprechen Rangtest und Mittel, kein Urteil", () => {
@@ -226,10 +289,16 @@ describe("Gegen den eigenen Schnitt (C4)", () => {
     expect(result?.average).toEqual({ n: 3, mean: 10, delta: 0 })
   })
 
+  it("31 Tage davor zählt nicht mehr", () => {
+    const result = againstOwnAverage([at(9, 9), at(15, 9), at(39, 12), at(40, 10)])
+    expect(result?.average).toBeNull()
+  })
+
   it("Perzentil: kleinere ganz, gleiche zur Hälfte (mit ihr), ab zehn", () => {
     // die zwölf Werte aus dem Verlauf, die letzte ist 10: sechs kleiner, fünf gleich → (6 + 2,5) / 12
     const twelve = values([9, 10, 8, 10, 9, 11, 9, 10, 8, 10, 9, 10])
     expect(againstOwnAverage(twelve)?.percentile).toBeCloseTo(8.5 / 12, 12)
+    expect(againstOwnAverage(twelve.slice(0, 10))?.percentile).not.toBeNull()
     expect(againstOwnAverage(twelve.slice(0, 9))?.percentile).toBeNull()
   })
 

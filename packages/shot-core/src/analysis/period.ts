@@ -16,8 +16,14 @@ import { byStart, cardShots } from "./card-shots"
 
 /** Faktor, der den MAD bei normalverteilten Werten zur Standardabweichung macht */
 const MAD_TO_SD = 1.4826
+/** gleitender Schnitt über so viele Scheiben (D2) */
+const TREND_WINDOW = 5
 /** ab so vielen Scheiben ein Formband (D3) */
 const MIN_BAND_CARDS = 10
+/** Ø je Schuss rechnet in zwei Schritten (Summe ÷ 10 ÷ n): gleiche Werte bei verschiedener Schusszahl
+ * weichen in der letzten Stelle ab. Auf neun Nachkommastellen gerundet sind sie wieder gleich, für den Test
+ * über Ränge und das Perzentil. */
+const VALUE_DIGITS = 1e9
 /** ab so vielen Scheiben in einem Abschnitt Boden und Decke (D4) */
 const MIN_BUCKET_SPREAD = 5
 /** Signifikanzniveau des Vergleichs (D5) */
@@ -38,7 +44,10 @@ export interface PeriodCard {
   /** Beginn in ms (UTC) */
   startedAtMs: number
   kind: "training" | "competition"
-  /** endgültig und mit voller Schusszahl (SF-66): nur dann für Rekorde */
+  /**
+   * endgültig und mit voller Schusszahl (SF-66): nur dann für Rekorde. Eine Scheibe nur mit Probe ist
+   * vollständig, wenn das Training abgeschlossen ist; ihre Schusszahl ist die der Probe, nicht die der Wertung.
+   */
   complete: boolean
   /** Merkmale der Scheibe, etwa "nur-pdf", "neu-gewertet", "ausgenommen" */
   flags?: readonly string[]
@@ -56,7 +65,8 @@ export interface CardValue {
 /**
  * Wert einer Registry-Kennzahl je Scheibe (T1), in der Folge der Scheiben (`startedAtMs`, bei Gleichstand
  * die Kennung), über die Wertungsschüsse; eine Scheibe nur mit Probe nur mit `includeProbeOnly`, dann über
- * die Probe (D8). Ohne Wert (Mindestzahl, fehlende Angaben) fällt die Scheibe weg.
+ * die Probe (D8). Ohne Wert (Mindestzahl, fehlende Angaben) fällt die Scheibe weg. Der Wert ist auf neun
+ * Nachkommastellen gerundet, damit gleiche Werte gleich sind.
  */
 export function cardValues(
   cards: readonly PeriodCard[],
@@ -66,11 +76,18 @@ export function cardValues(
 ): CardValue[] {
   const scored = inScoring(metric, scoring)
   return byStart(cards).flatMap((card) => {
-    const shots = cardShots(card.shots, options.includeProbeOnly)
+    const shots = cardShots(card.shots, options.includeProbeOnly)?.match
     if (!shots) return []
     const value = computeMetric(scored, shots)
     if (value === null) return []
-    return [{ id: card.id, atMs: card.startedAtMs, value, n: eligibleShots(scored, shots).length }]
+    return [
+      {
+        id: card.id,
+        atMs: card.startedAtMs,
+        value: Math.round(value * VALUE_DIGITS) / VALUE_DIGITS,
+        n: eligibleShots(scored, shots).length,
+      },
+    ]
   })
 }
 
@@ -78,32 +95,32 @@ export interface TrendPoint extends CardValue {
   /** Schnitt der letzten fünf Scheiben bis hierher; `partial`, solange es noch keine fünf sind */
   mean: number
   partial: boolean
-  /** Formband: Schnitt ± typische Schwankung; null unter zehn Scheiben und solange das Fenster nicht voll ist */
+  /**
+   * Formband: Schnitt ± typische Schwankung; null unter zehn Scheiben, solange das Fenster nicht voll ist und
+   * ohne Schwankung
+   */
   band: { low: number; high: number } | null
 }
 
 /**
- * Verlauf mit gleitendem Schnitt über die letzten `window` Scheiben (T1, D2) und Formband (T2, D3): Die
+ * Verlauf mit gleitendem Schnitt über die letzten fünf Scheiben (T1, D2) und Formband (T2, D3): Die
  * typische Schwankung ist 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt, ab zehn Scheiben.
+ * Ist der MAD 0 (mehr als die Hälfte der Abweichungen genau 0, etwa bei Zählungen wie den Innenzehnern),
+ * gibt es kein Band: Eines der Breite null wäre scheingenau.
  */
-export function periodTrend(
-  values: readonly CardValue[],
-  window = 5
-): {
+export function periodTrend(values: readonly CardValue[]): {
   points: TrendPoint[]
-  /** 1,4826 · MAD der Abweichungen vom vollen Schnitt; null unter zehn Werten */
+  /** 1,4826 · MAD der Abweichungen vom vollen Schnitt; null unter zehn Werten oder ohne Schwankung */
   spread: number | null
 } {
-  if (!Number.isInteger(window) || window < 1) {
-    throw new RangeError(`Fenster ${window} ist keine ganze Zahl ab 1`)
-  }
+  const window = TREND_WINDOW
   const means = values.map((_, i) => {
     const slice = values.slice(Math.max(0, i - window + 1), i + 1)
     return slice.reduce((sum, v) => sum + v.value, 0) / slice.length
   })
   const residuals = values.flatMap((v, i) => (i + 1 >= window ? [v.value - means[i]] : []))
   const deviation = values.length >= MIN_BAND_CARDS ? mad(residuals) : null
-  const spread = deviation === null ? null : MAD_TO_SD * deviation
+  const spread = deviation === null || deviation === 0 ? null : MAD_TO_SD * deviation
   const points = values.map((v, i) => {
     const partial = i + 1 < window
     const band =
@@ -166,7 +183,9 @@ export interface VolumeBucket {
 
 /**
  * Trainingsumfang je Abschnitt (T6, D9): Schüsse mit Probe, Scheiben und Tage. Keine Netto-Zeit, sie folgt
- * aus den Abständen. Abschnitte in der Folge ihrer ersten Scheibe.
+ * aus den Abständen. Abschnitte in der Folge ihrer ersten Scheibe. Anders als die übrigen Auswertungen zählt
+ * der Umfang jede Scheibe, auch eine nur mit Probe (D8 gilt für Werte, nicht für den Umfang); Training oder
+ * Wettkampf wählt der Aufrufer.
  */
 export function trainingVolume(
   cards: readonly PeriodCard[],

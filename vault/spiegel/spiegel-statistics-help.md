@@ -400,7 +400,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Vorsicht:* Vergleiche nur Scheiben derselben Disziplin. Zahlen, die an der Schusszahl hängen
   (Ergebnis, Streukreis), passen nur bei gleicher Schusszahl zusammen; für die Streuung über
   verschiedene Schusszahlen nimm σ. Eine einzelne Scheibe außerhalb des Bands ist noch kein
-  Formknick.
+  Formknick. Sind deine Werte fast immer gleich (etwa die Zahl der Innenzehner), gibt es kein Band.
 - *Mindestzahl:* Ab 1 Scheibe, das Formband ab 10 Scheiben, Boden und Decke ab 5 Scheiben im Monat.
 - *Formel:* `Schnitt über die letzten 5 Scheiben; Formband = Schnitt ± 1,4826 · MAD der Abweichungen
   der Scheiben vom vollen Schnitt; Boden und Decke = P10 und P90 der Scheibenwerte je Monat, dazu
@@ -450,14 +450,15 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe,
   meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner, längste Folge von Zehnern und deine
   beste Form: der höchste Schnitt je Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe
-  und die Zählungen führt Spiegel je Schusszahl, denn 40 und 60 Schuss sind nicht vergleichbar.
+  und die Zahl der 10,9, Zehner und Innenzehner führt Spiegel je Schusszahl, die beste Serie je
+  Serienlänge, denn 40 und 60 Schuss sind nicht vergleichbar.
 - *So liest du es:* Bei Gleichstand bleibt der frühere Rekord, denn er hat ihn zuerst gesetzt.
   Rekorde gibt es je Wertung (Zehntel oder ganze Ringe) und wahlweise nur für Training oder nur für
   Wettkampf.
 - *Vorsicht:* Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem
-  Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss. Eine
-  Trainingsscheibe nur mit Probe zählt nur, wenn du das einschaltest; dann gilt ihre Probe wie
-  Wertung, in Serien zu zehn.
+  Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der
+  Wertung. Eine Trainingsscheibe nur mit Probe zählt nur, wenn du das einschaltest; dann gilt ihre
+  Probe wie Wertung, in Serien zu zehn.
 - *Mindestzahl:* Ab 1 Scheibe, die beste Form ab 5 Scheiben.
 
 ## Glossar

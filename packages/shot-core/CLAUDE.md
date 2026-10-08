@@ -18,7 +18,7 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 | `@vereinsheim/shot-core/verify`     | `src/verify.ts`     | `checkShot`, `verifyCard`, `suggestTargets`, `rescore` (Neu-Wertung)                                                                                                                                                                                                                   |
 | `@vereinsheim/shot-core/geometry`   | `src/geometry.ts`   | Schwerpunkt, Streukreis, `extremeSpread`, Radien, Streuung, Ellipse                                                                                                                                                                                                                    |
 | `@vereinsheim/shot-core/time`       | `src/time.ts`       | `tempo` in Abgabefolge: Intervalle, Pausen über 180 s, Lücken, Uhrsprünge                                                                                                                                                                                                              |
-| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `METRICS`, `metricByKey`, `computeMetric`, `eligibleShots`, `selectShots`, `inScoring`, `inShotOrder`, `shotNumbers`, `shotSteps`, `stepsInOrder`, `timesWithGaps`, `timesInOrder`, `shotDistanceUm`, `FLAG_*`                                                         |
+| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `METRICS`, `metricByKey`, `computeMetric`, `eligibleShots`, `selectShots`, `inScoring`, `inShotOrder`, `shotNumbers`, `probeOnlyAsMatch`, `shotSteps`, `stepsInOrder`, `timesWithGaps`, `timesInOrder`, `shotDistanceUm`, `FLAG_*`                                     |
 | `@vereinsheim/shot-core/stats`      | `src/stats.ts`      | Quantil, Median, MAD, IQR, Wilson, lnΓ, c4, χ²- und F-Quantile, Theil-Sen, Mann-Kendall, Ausgleichsgerade, Mann-Whitney, zweiseitiges p der Normalverteilung                                                                                                                           |
 | `@vereinsheim/shot-core/analysis`   | `src/analysis/*.ts` | Analyse einer Scheibe: Ergebnis, Präzision, Lage, Zeit, Verlauf, Probe, Datenlage; über viele Scheiben (`period.ts`: Werte je Scheibe, Verlauf, Formband, Boden und Decke, Umfang, Vergleich, eigener Schnitt) und Rekorde (`records.ts`); `ANALYSIS_CATALOG` (Funktion → Katalog-IDs) |
 
@@ -81,8 +81,10 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - **Über viele Scheiben** (Plan L2, Oktober 2026): Einheit ist die Scheibe. Werte je Scheibe kommen aus der
   Registry (`cardValues`), Tests laufen über Scheiben, nie über alle Schüsse. Familie, Woche, Monat und Tag
   wählt der Aufrufer, denn die Anzeige-Zeitzone liegt in der App. Eine Scheibe nur mit Probe zählt nur mit
-  `includeProbeOnly`, dann über `cardShots` (`analysis/card-shots.ts`, nicht exportiert) wie
-  `probeOnlyAsMatch` in shot-ui.
+  `includeProbeOnly`, dann über `probeOnlyAsMatch` (`metrics`), dieselbe Regel wie auf der Seite einer
+  Scheibe (shot-ui ergänzt nur `fromProbe`). Welche Schüsse zählen, sagt `cardShots` (`analysis/card-shots.ts`,
+  nicht exportiert): Registry-Kennzahlen über die Wertung, Auswertungen mit eigenen Nummern über die ganze
+  Karte.
 - **Ehrlich statt scheingenau.** Unsicherheit nur mit einem anerkannten Verfahren (Wilson, χ²,
   Hotelling mit F(2, n − 2), Mann-Kendall mit Bindungskorrektur über die Normalnäherung, Ausreißer
   schrittweise als verallgemeinerter ESD nach Rosner, je Schritt der weiteste gegen die übrigen mit
