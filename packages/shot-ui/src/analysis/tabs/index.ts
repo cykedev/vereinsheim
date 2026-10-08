@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 
 import type { Layer } from "../../view-state"
 import type { AnalysisInput } from "../input"
+import { overviewCards } from "./OverviewTab"
 
 export type AnalysisTab = "overview" | "result" | "precision" | "position" | "time" | "sighters"
 
@@ -28,7 +29,7 @@ export type TabCards = (context: CardContext) => CardSpec[]
 
 /** Karten je Reiter; die Reiter füllen die Tasks 5 bis 13 des Plans */
 export const TAB_CARDS: Record<AnalysisTab, TabCards> = {
-  overview: () => [],
+  overview: overviewCards,
   result: () => [],
   precision: () => [],
   position: () => [],

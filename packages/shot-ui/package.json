@@ -26,7 +26,9 @@
     "./target/MpiMark": "./src/target/MpiMark.tsx",
     "./analysis/parts": "./src/analysis/parts.tsx",
     "./analysis/AnalysisPanel": "./src/analysis/AnalysisPanel.tsx",
-    "./analysis/input": "./src/analysis/input.ts"
+    "./analysis/input": "./src/analysis/input.ts",
+    "./analysis/overview": "./src/analysis/overview.ts",
+    "./analysis/observations": "./src/analysis/observations.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

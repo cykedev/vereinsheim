@@ -1,0 +1,152 @@
+// Beobachtungen in Worten (Spielwiese `observations`): die wichtigsten Befunde als Sätze, gebildet aus
+// denselben Zahlen wie die Karten, in fester Reihenfolge. Ein Satz steht nur, wenn der Fachkern einen Wert
+// hat; „echt“ und „klar“ nur, wenn sein Test es sagt.
+
+import {
+  cardTrend,
+  fatigue,
+  mpiConfidence,
+  outlierLoss,
+  outliers,
+  pauseRecovery,
+  ringLossSplit,
+  sighterComparison,
+  sighterZeroed,
+  sigmaEstimate,
+  ringWidths,
+  tempoSpread,
+} from "@vereinsheim/shot-core/analysis"
+import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
+
+import { directionWords, formatSigned, formatValue } from "../format"
+import type { AnalysisInput } from "./input"
+
+export type ObservationIcon =
+  | "position"
+  | "spread"
+  | "outlier"
+  | "trend"
+  | "pause"
+  | "clock"
+  | "flag"
+
+export interface Observation {
+  icon: ObservationIcon
+  text: string
+}
+
+export function observations(input: AnalysisInput): Observation[] {
+  const { all, base, scoring, target } = input
+  const out: Observation[] = []
+  const rings = (v: number) => formatValue(v, scoring === "rings" ? 0 : 1)
+  const mm = (um: number) => `${formatValue(um / 1000, 2)} mm`
+
+  const confidence = mpiConfidence(base)
+  if (confidence) {
+    if (confidence.real) {
+      let text = `Die Lage ist echt: Der Schwerpunkt liegt ${directionWords(confidence.center)} neben der Mitte, mit 95 % kein Zufall.`
+      const split = ringLossSplit(base, target)
+      if (split?.reliable) {
+        const gain = split.positionLoss[scoring === "rings" ? "rings" : "decimal"]
+        text +=
+          gain > 0
+            ? ` Mit korrigiertem Visier brächten die nächsten Schüsse etwa ${rings(gain)} ${gain === 1 ? "Ring" : "Ringe"} mehr.`
+            : " Eine Korrektur brächte keine Ringe."
+      }
+      out.push({ icon: "position", text })
+    } else {
+      out.push({
+        icon: "position",
+        text: `Der Schwerpunkt liegt ${mm(Math.hypot(confidence.center.xUm, confidence.center.yUm))} neben der Mitte; vom Zufall ist das nicht zu unterscheiden. Die Daten geben keinen Grund, das Visier zu verstellen.`,
+      })
+    }
+  }
+
+  const sigma = sigmaEstimate(base)
+  if (sigma) {
+    const r50 = computeMetric(inScoring(metricByKey("group.r50")!, scoring), base)
+    out.push({
+      icon: "spread",
+      text: `Präzision σ ${formatValue(sigma.sigma / 1000, 2)} mm, mit 95 % zwischen ${formatValue(sigma.low / 1000, 2)} und ${formatValue(sigma.high / 1000, 2)} mm.${
+        r50 === null
+          ? ""
+          : ` Die Hälfte der Treffer liegt innerhalb von ${formatValue(ringWidths(r50 * 1000, target), 2)} Ringbreiten um den Schwerpunkt.`
+      }`,
+    })
+  }
+
+  const flagged = outliers(base)
+  if (flagged) {
+    const loss = outlierLoss(base, scoring)
+    const numbers = flagged.flagged.map((o) => o.number)
+    const lossText =
+      !loss || !loss.count
+        ? ""
+        : loss.loss >= 0
+          ? ` Sie kosten ${rings(loss.loss)} Ringe gegen deinen typischen Schuss.`
+          : ` Sie bringen ${rings(-loss.loss)} Ringe mehr als dein typischer Schuss, weil sie zur Mitte hin liegen.`
+    out.push({
+      icon: "outlier",
+      text: numbers.length
+        ? `${numbers.length === 1 ? `Schuss ${numbers[0]} fällt` : `Die Schüsse ${numbers.join(", ")} fallen`} als Ausreißer aus der Gruppe.${lossText}`
+        : `Keine Ausreißer.${lossText}`,
+    })
+  }
+
+  const trend = cardTrend(base, scoring)
+  if (trend) {
+    let text = trend.clear
+      ? `Über die Scheibe klar ${trend.direction === "up" ? "steigend" : "fallend"}: ${formatSigned(trend.perTenShots, 2)} Ringe je zehn Schuss.`
+      : `Kein klarer Trend über die Scheibe (${formatSigned(trend.perTenShots, 2)} Ringe je zehn Schuss).`
+    const tired = fatigue(base, scoring)
+    if (tired) {
+      text += ` Die letzten zehn Schuss: ${formatSigned(tired.deltaRings, 2)} Ringe gegen die ersten zehn${
+        tired.deltaR50Um !== null ? `, R50 ${formatSigned(tired.deltaR50Um / 1000, 2)} mm` : ""
+      }. Ein Muster zeigt erst der Vergleich über mehrere Scheiben.`
+    }
+    out.push({ icon: "trend", text })
+  }
+
+  const recovery = pauseRecovery(base, scoring)
+  if (recovery?.effects.length) {
+    // ohne vergleichbaren Wert sagt der Satz das, statt „im Schnitt“ (Plan D8)
+    const relative = (d: number | null) =>
+      d === null
+        ? "ohne Wert zum Vergleich"
+        : Math.abs(d) < 0.005
+          ? "genau im Schnitt der Scheibe"
+          : `${formatValue(Math.abs(d), 2)} Ringe ${d < 0 ? "unter" : "über"} dem Schnitt der Scheibe`
+    const text = recovery.effects
+      .map(
+        (e) =>
+          `nach der Pause vor Schuss ${e.afterShot} lagen die nächsten drei Schuss ${relative(e.deltaRings)}`
+      )
+      .join("; ")
+    out.push({
+      icon: "pause",
+      text: `${text[0].toUpperCase()}${text.slice(1)}. Drei Schuss sind wenig; ein Urteil braucht mehrere Abende.`,
+    })
+  }
+
+  const pace = tempoSpread(base)
+  if (pace) {
+    out.push({
+      icon: "clock",
+      text: `Tempo: im Median ${formatValue(pace.medianMs / 1000, 0)} s je Schuss; die mittlere Hälfte der Abstände liegt in einem Fenster von ${formatValue(pace.iqrMs / 1000, 0)} s.`,
+    })
+  }
+
+  const comparison = sighterComparison(all, scoring)
+  if (comparison && comparison.probe.meanRings !== null && comparison.match.meanRings !== null) {
+    let text = `Probe: Ø ${formatValue(comparison.probe.meanRings, 2)} je Schuss gegen ${formatValue(comparison.match.meanRings, 2)} in der Wertung.`
+    const zeroed = sighterZeroed(all)
+    if (zeroed) {
+      text += zeroed.real
+        ? ` Die letzten fünf Probeschüsse lagen echt neben der Mitte (${mm(zeroed.offsetUm)}): Die Wertung begann mit einem Versatz.`
+        : " Bei den letzten fünf Probeschüssen ist kein Versatz nachweisbar."
+    }
+    out.push({ icon: "flag", text })
+  }
+
+  return out
+}

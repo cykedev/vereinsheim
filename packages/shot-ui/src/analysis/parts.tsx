@@ -167,3 +167,22 @@ export function ScaleBar({
     </g>
   )
 }
+
+/** σ bleibt σ: In der Großschrift einer Beschriftung würde es sonst zu Σ */
+export function CaseSafe({ text }: { text: string }) {
+  const parts = text.split("σ")
+  return (
+    <>
+      {parts.flatMap((part, i) =>
+        i === 0
+          ? [part]
+          : [
+              <span key={i} className="normal-case">
+                σ
+              </span>,
+              part,
+            ]
+      )}
+    </>
+  )
+}
