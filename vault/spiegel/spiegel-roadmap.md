@@ -30,7 +30,7 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 - **Ziel:** wissen, was in unserer Ablage steht.
 - **Umfang:** SQL-Checkliste aus [[meyton-ssmdb2]] vor oder nach einem Trainingsabend: Struktur, Engine, Indizes und Abfragekosten, Spaltentypen, Wertungsmodi je Disziplin, mehrdeutige SportpassIDs, Disziplin-Varianten, `--frei--`-Scheiben; dazu, ob das Gerätenetz ausgehend Internet hat. Die Versuche am Stand folgen im Schießprotokoll (SP-0.6) am selben Abend. Der SSMDB2-Dienst ist aktiv. Fragen: Landen Trainings ohne Starter in der Ablage (den QR gibt es immer, ohne Ablage gäbe es aber nur das PDF-Ergebnis)? Skalen der Ring-Felder? Achsenrichtung? Teiler-Einheiten? Wie weit reicht die Historie? Bleiben Probeschüsse nach der Wertung? Größte SportpassID (Überlauf)? Uhrabweichung? Liegen die PDF-Ausdrucke auch auf der Freigabe `ERGEBNIS`?
 - **Abnahme:** Antworten (ohne Namen) in [[meyton-ssmdb2]], [[spiegel-open-questions]] und [[spiegel-edge-cases]] eingetragen; Sonderfälle, die sich bestätigen oder erledigen, dort nachgezogen.
-- **Hängt ab von:** nichts. **Status:** offen.
+- **Hängt ab von:** nichts. **Status:** Werkzeug bereit (`tools/ssmdb2-erkunden`, [[ssmdb2-erkundung]], Oktober 2026), der Abend steht aus.
 
 ### SP-0.2 QR-ID prüfen
 - **Ziel:** bestätigen, dass die ID im Fuß des Ausdrucks die ScheibenID ist (den QR gibt es laut Verein immer).
@@ -57,7 +57,7 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 - **Ziel:** sehen, wie sich die Ablage bei den Sonderfällen wirklich verhält, und Testdaten ableiten, die der Anlage gleichen.
 - **Umfang:** Ein kleines Skript liest wie die Brücke, nur lesend, und schreibt jeden Zustand mit Zeit in ein Protokoll; Namen und SportpassIDs ersetzt es schon beim Mitschreiben. Dazu schießen wir mit der Standaufsicht das Schießprotokoll aus [[meyton-ssmdb2]] (Probe → Wertung → Probe, lange Probe, nur Probe, Abbruch, ohne Starter, Zwischen- und Doppelausdruck, Korrektur, falsche Disziplin, verdeckte Wertung) und sichern `SHOW CREATE TABLE` aller Tabellen. Ins Repo kommt nur das Schema; das Protokoll bleibt lokal und dient als Vorbild für synthetische Daten ([[adr-029]]).
 - **Abnahme:** jeder Versuch mit Ergebnis in [[meyton-ssmdb2]] und [[spiegel-edge-cases]] eingetragen; Schema im Repo; Protokoll ohne Namen und Nummern.
-- **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** offen.
+- **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** Werkzeug bereit ([[ssmdb2-erkundung]]): Das Rohprotokoll mit Namen bleibt in `privat/`, der Bericht trägt Pseudonyme; der Abend steht aus.
 
 ## Phase 1 · Fundament
 

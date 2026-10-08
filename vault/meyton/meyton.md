@@ -17,6 +17,7 @@ relates_to: ["[[spiegel]]"]
 - [[meyton-ssmdb2]] — die Scheibenablage in MySQL: Tabellen, Felder, Skalen, Versionen, Stolperfallen, SQL-Checkliste für vor Ort.
 - [[meyton-interfaces]] — SDF-Live-Export, LANA-Belegung, WM-Shot-CSV, QR-Code, DISAG M-Qnect, die neue Linie ESTANX und Community-Projekte.
 - [[meyton-printout]] — der Ergebnisausdruck hinter dem QR-Code: Link-Format, Inhalt, ID im Fuß.
+- [[ssmdb2-erkundung]] — das Werkzeug für den Erkundungsabend: Checkliste, Kopie und geführtes Schießprotokoll mit Mitschnitt.
 
 ## Quellen
 

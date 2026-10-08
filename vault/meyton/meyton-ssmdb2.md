@@ -72,6 +72,8 @@ Meytons Standardlisten stehen im Handbuch „Disziplin erstellen“ ([[src-meyto
 
 ## Erkundung vor Ort
 
+Das Werkzeug dafür ist `tools/ssmdb2-erkunden/erkunden.sh` ([[ssmdb2-erkundung]]); es führt diese Abfragen aus, ergänzt um Skalen, Zeittypen und die Grenzen des Vertrags.
+
 Nur lesen, Ergebnisse mit Namen nicht weitergeben. Feste IP aus dem Workstation-Bereich (.10.201–239). Die Abfragen vor oder nach dem Training ausführen, nicht während geschossen wird: Einige lesen ganze Tabellen.
 
 ```sql
@@ -124,6 +126,8 @@ AND EXISTS (SELECT 1 FROM Treffer t WHERE t.ScheibenID = s.ScheibenID);
 ```
 
 ## Schießprotokoll
+
+Das Werkzeug [[ssmdb2-erkundung]] führt durch diese Versuche in einer Fassung, die man allein schießen kann, und liest dabei jede Sekunde mit.
 
 Diese Versuche schießen wir mit der Standaufsicht an einem Abend, während ein kleines Skript wie die Brücke mitliest und jeden Zustand mit Zeit festhält (SP-0.6 der [[spiegel-roadmap]]). Die Fälle stehen mit IDs in [[spiegel-edge-cases]].
 

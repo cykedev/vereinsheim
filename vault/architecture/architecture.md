@@ -44,6 +44,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           einfacher Sprache (Themen, Einstieg, Glossar, Fehlschlüsse); Quelle für App
 │                           und Vault-Leitfaden, den `pnpm --filter @vereinsheim/shot-help docs` erzeugt
 │                           (SP-1.11); noch von keiner App genutzt.
+├── tools/ssmdb2-erkunden/  Erkundung der Meyton-SSMDB2 vor Ort (SP-0.1/0.6): Checkliste, Kopie, Schießprotokoll;
+│                           Bash, nur lesend, Selbsttest gegen mariadb:11 (Oktober 2026).
 ├── docs/                   spec, decisions (ADRs), monorepo-plan, operations, plan,
 │                           architecture (dies), shared-conventions, consistency
 ├── .claude/                Harness: settings(+hooks), skills/, agents/, context/, knowledge-graph.json
