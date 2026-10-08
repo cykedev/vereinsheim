@@ -67,7 +67,7 @@ function layout(cards: readonly CardSpec[]): ReactNode[] {
   const flush = () => {
     if (!run.length) return
     blocks.push(
-      <div key={`run:${run[0].key}`} className="-mb-4 gap-4 md:columns-2">
+      <div key={`run:${run[0].key}`} className="-mb-4 gap-4 min-[861px]:columns-2">
         {run.map((card) => (
           <div key={card.key} className="mb-4 break-inside-avoid">
             {card.element}
@@ -132,13 +132,20 @@ export function AnalysisPanel({
       ]
 
   return (
-    <section aria-label="Analyse" className={cn("grid gap-4", className)}>
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <section aria-label="Analyse" className={cn("grid grid-cols-[minmax(0,1fr)] gap-4", className)}>
+      <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
         <div className="grid gap-1">
           <h2 className="font-display text-xl font-bold tracking-tight">Was diese Scheibe zeigt</h2>
           <p className="text-[13px] text-muted-foreground">{`Analyse ${BASIS_TEXT[input.basis]}`}</p>
         </div>
-        <Segmented label="Thema" value={tab} options={ANALYSIS_TABS} onChange={onTab} />
+        {/* auf dem Telefon umbrechen statt die Seite zu verbreitern (Mobil-Konzept, 375 px) */}
+        <Segmented
+          label="Thema"
+          value={tab}
+          options={ANALYSIS_TABS}
+          onChange={onTab}
+          className="max-w-full max-sm:flex-wrap max-sm:rounded-[18px]"
+        />
       </div>
       {layout(cards)}
       <div data-coverage="true" className="grid gap-2">
@@ -150,7 +157,7 @@ export function AnalysisPanel({
         open={explain}
         className="rounded-2xl border border-border bg-card p-4"
       >
-        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary pointer-coarse:py-3 [&::-webkit-details-marker]:hidden">
           <HelpIcon />
           Glossar: die Begriffe kurz erklärt
         </summary>
@@ -170,7 +177,7 @@ export function AnalysisPanel({
         open={explain}
         className="rounded-2xl border border-border bg-card p-4"
       >
-        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary pointer-coarse:py-3 [&::-webkit-details-marker]:hidden">
           <HelpIcon />
           Typische Fehlschlüsse
         </summary>

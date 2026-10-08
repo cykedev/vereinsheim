@@ -45,11 +45,26 @@ export function ShapeChart({ width, shots }: { width: number; shots: readonly Me
             cy={frame.Y(p.yUm)}
             r={out ? 4 : 3}
             fill={out ? "var(--destructive)" : "var(--foreground-2)"}
-            stroke="var(--card)"
+            stroke="var(--shot-edge)"
             strokeWidth={1}
           />
         )
       })}
+      {/* Ausreißer nicht nur über die Farbe: ein Ring um den Punkt */}
+      {relative.map((p, i) =>
+        flagged.has(positioned[i]) ? (
+          <circle
+            key={`ring-${i}`}
+            data-outlier-ring={numbers.get(positioned[i])}
+            cx={frame.X(p.xUm)}
+            cy={frame.Y(p.yUm)}
+            r={7.5}
+            fill="none"
+            stroke="var(--destructive)"
+            strokeWidth={1.5}
+          />
+        ) : null
+      )}
       <ellipse {...ellipse} fill="none" stroke="var(--primary)" strokeWidth={1.25} />
       <MpiMark data-overlay="mpi" x={frame.cx} y={frame.cy} radius={5} />
       <FieldScale frame={frame} spanUm={extent * 2} />

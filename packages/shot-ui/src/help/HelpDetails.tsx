@@ -26,7 +26,7 @@ export function HelpDetails({ id, open, className }: HelpDetailsProps) {
   const entry = helpEntry(id)
   return (
     <details data-help={id} open={open} className={cn("border-t border-border pt-2.5", className)}>
-      <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] rounded text-[13px] font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] rounded text-[13px] font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring pointer-coarse:py-3 [&::-webkit-details-marker]:hidden">
         <HelpIcon />
         Was heißt das?
       </summary>

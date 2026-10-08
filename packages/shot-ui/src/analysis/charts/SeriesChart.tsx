@@ -89,7 +89,7 @@ export function SeriesChart({
               cy={y(p.total)}
               r={4.5}
               fill={short ? "var(--card)" : "var(--primary)"}
-              stroke={short ? "var(--muted-foreground)" : "var(--card)"}
+              stroke={short ? "var(--muted-foreground)" : "var(--shot-edge)"}
               strokeWidth={short ? 1.5 : 2}
             >
               <title>{`Serie ${p.series}: ${value} (${p.shots} Schuss)`}</title>

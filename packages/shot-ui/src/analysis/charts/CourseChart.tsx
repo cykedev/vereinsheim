@@ -145,7 +145,7 @@ export function CourseChart({
           cy={y(p.value)}
           r={3.5}
           fill={scoreColor(scoring === "rings" ? p.value : Math.floor(p.value + 1e-9))}
-          stroke="var(--card)"
+          stroke="var(--shot-edge)"
           strokeWidth={1}
         >
           <title>{`Schuss ${p.number}: ${formatValue(p.value, digits)}`}</title>

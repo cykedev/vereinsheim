@@ -108,7 +108,7 @@ export function SeriesStrip({
       type="button"
       aria-pressed={state.selection === value}
       onClick={onSelectWhole ? () => onSelectWhole(value) : undefined}
-      className="cursor-pointer rounded-full border border-line-strong px-3 py-1 text-[12.5px] leading-none font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-accent-wash aria-pressed:text-foreground"
+      className="cursor-pointer rounded-full border border-line-strong px-3 py-1 text-[12.5px] pointer-coarse:min-h-11 leading-none font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-accent-wash aria-pressed:text-foreground"
     >
       {label}
     </button>

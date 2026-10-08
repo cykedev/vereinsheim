@@ -73,7 +73,7 @@ export function Segmented<T extends string>({
           aria-checked={option.value === value}
           tabIndex={i === current ? 0 : -1}
           onClick={() => onChange(option.value)}
-          className="cursor-pointer rounded-full px-3.5 py-2 text-[13px] leading-none font-semibold text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-checked:bg-primary aria-checked:text-primary-foreground"
+          className="cursor-pointer rounded-full px-3.5 py-2 text-[13px] pointer-coarse:min-h-11 leading-none font-semibold text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-checked:bg-primary aria-checked:text-primary-foreground"
         >
           {option.label}
         </button>

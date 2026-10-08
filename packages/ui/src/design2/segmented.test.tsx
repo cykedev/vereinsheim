@@ -55,6 +55,25 @@ describe("Segmented", () => {
     expect(none).toMatch(/<button[^>]*tabindex="-1"[^>]*>Gruppe/)
   })
 
+  it("auf dem Touchscreen mindestens 44 px hoch, die Optik bleibt", () => {
+    for (const button of html.match(/<button[^>]*>/g)!) {
+      expect(button).toContain("pointer-coarse:min-h-11")
+    }
+  })
+
+  it("eine Klasse von außen reicht bis an die Leiste, etwa zum Umbrechen", () => {
+    const wrapped = renderToStaticMarkup(
+      createElement(Segmented, {
+        label: "Thema",
+        value: "a",
+        options: [{ value: "a", label: "A" }],
+        onChange: () => {},
+        className: "max-sm:flex-wrap",
+      })
+    )
+    expect(wrapped).toMatch(/role="radiogroup"[^>]*class="[^"]*max-sm:flex-wrap/)
+  })
+
   it("Farben nur aus Tokens", () => {
     expect(html).toContain("aria-checked:bg-primary")
     expect(html).not.toMatch(/(?:bg|text)-(?:red|blue|gray|slate|zinc|emerald|amber)-\d/)
@@ -77,5 +96,6 @@ describe("ToggleChip", () => {
       createElement(ToggleChip, { pressed: false, onPressedChange: () => {}, children: "Nummern" })
     )
     expect(off).toContain('aria-pressed="false"')
+    expect(off).toContain("pointer-coarse:min-h-11")
   })
 })

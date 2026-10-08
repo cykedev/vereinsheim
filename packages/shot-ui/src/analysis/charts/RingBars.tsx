@@ -37,7 +37,7 @@ export function RingBars({ dist }: { dist: RingDistribution }) {
             </span>
             <span className="min-w-[9ch] text-right font-semibold tabular-nums">
               {count}
-              <small className="ml-1 font-normal text-muted-foreground">
+              <small className="ml-1 text-xs font-normal text-muted-foreground">
                 {`· ${dist.n ? percentText(count / dist.n) : "–"}`}
               </small>
             </span>

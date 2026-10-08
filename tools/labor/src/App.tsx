@@ -295,7 +295,7 @@ export function App({ commit }: { commit: string }) {
               />
             </div>
             <div id="shot-table" className="rounded-2xl border border-border bg-card p-2">
-              <ShotTable className="max-h-80" shots={shots} state={state} onChoose={choose} />
+              <ShotTable className="md:max-h-80" shots={shots} state={state} onChoose={choose} />
             </div>
           </aside>
         </div>

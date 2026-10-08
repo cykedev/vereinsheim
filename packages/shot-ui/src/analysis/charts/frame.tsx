@@ -56,7 +56,7 @@ export function ChartSvg({
       height={height}
       role="img"
       aria-label={label}
-      className="block h-auto w-full overflow-visible font-mono text-[11px] font-medium [&_text]:fill-muted-foreground [&_text[data-value]]:fill-foreground-2 [&_text[data-value]]:font-semibold"
+      className="block h-auto w-full overflow-visible font-mono text-xs font-medium [&_text]:fill-muted-foreground [&_text[data-value]]:fill-foreground-2 [&_text[data-value]]:font-semibold"
     >
       {children}
     </svg>
