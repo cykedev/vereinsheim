@@ -13,7 +13,7 @@ export interface RawShot {
   kind: "probe" | "match"
 }
 
-export type SampleId = "forty" | "training" | "printout" | "series" | "empty"
+export type SampleId = "forty" | "training" | "printout" | "series" | "pair" | "empty"
 
 export interface Sample {
   id: SampleId
@@ -56,6 +56,11 @@ export const SAMPLES: Readonly<Record<TargetId, readonly Sample[]>> = {
   "lg-10m": [
     FORTY,
     { id: "series", label: "Zehnerserie", hint: "Eine erfundene Zehnerserie." },
+    {
+      id: "pair",
+      label: "Zwei Abreißer",
+      hint: "Die Zehnerserie, die letzten beiden Schüsse als Abreißer dicht beieinander (8,3 und 8,0). Einzeln gegen die übrigen geprüft, verdecken sie sich; schrittweise geprüft, fallen beide auf.",
+    },
     TRAINING,
     EMPTY,
   ],
@@ -154,6 +159,12 @@ const LG_SERIES = [
   [150, 210],
 ]
 
+/** zwei Abreißer dicht beieinander als Schuss 9 und 10 der Zehnerserie (8,3 und 8,0 Ringe) */
+const PAIR_FLYERS = [
+  [5200, 4300],
+  [5600, 4700],
+]
+
 /** Teiler in 1/100 mm vom Ausdruck des 2. Oktober (ohne Namen) */
 const PRINTOUT_TEILER = [331.8, 396.4, 547.4, 2656, 3369, 3831]
 const PRINTOUT_ANGLES = [90, 180, 0, 270, 0, 180]
@@ -165,11 +176,13 @@ export function rawSample(targetId: TargetId, id: SampleId): RawShot[] {
   const points =
     id === "series"
       ? LG_SERIES
-      : PRINTOUT_TEILER.map((teiler, i) => {
-          const r = teiler * 10
-          const a = (PRINTOUT_ANGLES[i] * Math.PI) / 180
-          return [Math.round(r * Math.cos(a)), Math.round(r * Math.sin(a))]
-        })
+      : id === "pair"
+        ? [...LG_SERIES.slice(0, 8), ...PAIR_FLYERS]
+        : PRINTOUT_TEILER.map((teiler, i) => {
+            const r = teiler * 10
+            const a = (PRINTOUT_ANGLES[i] * Math.PI) / 180
+            return [Math.round(r * Math.cos(a)), Math.round(r * Math.sin(a))]
+          })
   return points.map(([xUm, yUm], i) => ({
     xUm,
     yUm,

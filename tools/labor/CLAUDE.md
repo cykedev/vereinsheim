@@ -41,7 +41,8 @@ build` (ohne Turbo-Cache, sonst kann der Stand-Stempel von einem älteren Commit
   Adresse, damit der User den
   Stand auf dem Handy sieht.
 - **Beispiele** (`src/samples.ts`) mit festem Seed und festem Beginn, Lagen auf 1/100 mm; kein echter
-  Ausdruck (ADR-029). Die Seeds sind die der Spielwiese, damit beide dasselbe zeigen.
+  Ausdruck (ADR-029). Die Seeds sind die der Spielwiese, damit beide dasselbe zeigen. „Zwei Abreißer“
+  (Luftgewehr, Oktober 2026) zeigt, dass sich zwei nahe Abreißer im schrittweisen Ausreißer-Test nicht verdecken.
 - `build` läuft im Gate (esbuild und Tailwind über PostCSS, unter zwei Sekunden) und hängt an `^build`,
   damit eine Änderung an einem Baustein den Cache ungültig macht.
 - Nach Änderungen: `pnpm check`; `format:check` prüft auch diese Datei.

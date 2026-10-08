@@ -45,8 +45,26 @@ describe("Beispielscheiben wie in der Spielwiese", () => {
 
   it("je Scheibe die passenden Beispiele", () => {
     expect(SAMPLES["lp-10m"].map((s) => s.id)).toEqual(["forty", "printout", "training", "empty"])
-    expect(SAMPLES["lg-10m"].map((s) => s.id)).toEqual(["forty", "series", "training", "empty"])
+    expect(SAMPLES["lg-10m"].map((s) => s.id)).toEqual([
+      "forty",
+      "series",
+      "pair",
+      "training",
+      "empty",
+    ])
     expect(rawSample("lp-10m", "empty")).toEqual([])
+  })
+
+  it("Zwei Abreißer: die Zehnerserie, Schuss 9 und 10 dicht beieinander bei 8,3 und 8,0", () => {
+    const series = rawSample("lg-10m", "series")
+    const pair = rawSample("lg-10m", "pair")
+    expect(pair.slice(0, 8)).toEqual(series.slice(0, 8))
+    expect(pair.slice(8).map((s) => [s.xUm, s.yUm])).toEqual([
+      [5200, 4300],
+      [5600, 4700],
+    ])
+    const values = toMetricShots(LG_10M, pair).map((s) => s.decimalTenths)
+    expect(values.slice(8)).toEqual([83, 80])
   })
 
   it("Training nur mit Probe: 60 Probeschüsse, nach Schuss 30 eine Pause, immer gleich", () => {

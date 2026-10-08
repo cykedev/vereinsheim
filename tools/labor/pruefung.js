@@ -954,6 +954,35 @@ addEventListener("load", async () => {
       flaggedShots.map((f) => f.number).join(", ")
     )
 
+    // zwei nahe Abreißer: einzeln geprüft verdeckten sie sich, schrittweise fallen beide auf
+    await click(button("Luftgewehr"), 200)
+    await click(button("Zwei Abreißer"), 200)
+    await tab("Präzision")
+    const pairFlagged = S()
+      .outliers(base())
+      .flagged.map((f) => f.number)
+    const pairLoss = S().outlierLoss(base(), "decimal")
+    check(
+      "Zwei Abreißer: beide markiert, Kosten 4,5 Ringe gegen den Median 10,4",
+      pairFlagged.join() === "9,10" &&
+        pairLoss?.count === 2 &&
+        near(pairLoss.loss, 4.5, 1e-9) &&
+        ctext("ausreisser").includes("Schuss 9, Schuss 10"),
+      `${pairFlagged.join()} · ${pairLoss?.loss}`
+    )
+    const pairShape = $('svg[role="img"]', card("form-der-gruppe"))
+    check(
+      "Zwei Abreißer: zwei rote Punkte im Diagramm der Form",
+      $$('[data-outlier="true"]', pairShape).length === 2
+    )
+    await tab("Überblick")
+    check(
+      "Zwei Abreißer: die Beobachtung nennt beide",
+      txt(A()).includes("Die Schüsse 9, 10 fallen als Ausreißer aus der Gruppe")
+    )
+    await click(button("Luftpistole"), 200)
+    await click(button("40 Schuss mit Probe"), 200)
+
     await tab("Lage")
     check(
       "Lage: ein Keil je besetzter Stunde",
