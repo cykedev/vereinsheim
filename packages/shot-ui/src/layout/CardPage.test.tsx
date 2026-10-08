@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { CardPage } from "./CardPage"
+import { NoShots } from "./NoShots"
 import { MIN_TARGET_PX, targetRoom } from "./useTargetFit"
 
 const html = renderToStaticMarkup(
@@ -10,6 +11,7 @@ const html = renderToStaticMarkup(
     header: h("p", null, "KOPF"),
     nav: h("nav", null, "LEISTE"),
     target: h("p", null, "SCHEIBE"),
+    result: h("p", null, "ERGEBNIS"),
     under: h("p", null, "SERIEN"),
     aside: h("p", null, "SEITE"),
     beside: [{ id: "schuesse", node: h("p", null, "SCHÜSSE") }],
@@ -64,15 +66,47 @@ describe("Rahmen der Seite (D2, D5)", () => {
     expect(opens).toBe(closes)
   })
 
+  it("ab 768 px das Ergebnis als Box oben rechts, über der Ablesung; auf dem Telefon nicht", () => {
+    expect(html).toMatch(
+      /<div data-result-box="[^"]*" class="[^"]*max-md:hidden[^"]*"><p>ERGEBNIS<\/p><\/div><p>SEITE<\/p>/
+    )
+  })
+
   it("die Serien in der Spalte der Scheibe, die Schüsse rechts füllen die Höhe", () => {
     // die Spalte der Scheibe schließt erst nach den Serien
-    const column = html.slice(html.indexOf('data-section="scheibe"'), html.indexOf("SEITE"))
+    const column = html.slice(
+      html.indexOf('data-section="scheibe"'),
+      html.indexOf("data-result-box")
+    )
     expect(column).toContain("SERIEN")
     expect(column.match(/<\/div>/g)).toHaveLength(1)
     expect(html).toMatch(
       /id="schuesse" data-section="schuesse" class="[^"]*md:flex-1[^"]*md:\[contain:size\]/
     )
     expect(html).not.toMatch(/id="zahlen"[^>]*md:flex-1/)
+  })
+})
+
+describe("ohne Schüsse (empty)", () => {
+  const blank = renderToStaticMarkup(
+    h(CardPage, {
+      header: h("p", null, "KOPF"),
+      nav: h("nav", null, "LEISTE"),
+      target: h("p", null, "SCHEIBE"),
+      result: h("p", null, "ERGEBNIS"),
+      under: h("p", null, "SERIEN"),
+      aside: h("p", null, "SEITE"),
+      beside: [{ id: "schuesse", node: h("p", null, "SCHÜSSE") }],
+      below: [{ id: "zahlen", node: h("p", null, "ZAHLEN") }],
+      empty: h(NoShots),
+    })
+  )
+
+  it("nur Kopf, Scheibe und der Hinweis: keine Leiste, keine leeren Kästen", () => {
+    for (const part of ["KOPF", "SCHEIBE", "Noch kein Schuss"]) expect(blank).toContain(part)
+    for (const part of ["LEISTE", "ERGEBNIS", "SERIEN", "SEITE", "SCHÜSSE", "ZAHLEN"])
+      expect(blank).not.toContain(part)
+    expect(blank).toMatch(/data-section="scheibe"/)
   })
 })
 

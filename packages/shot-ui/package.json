@@ -36,9 +36,11 @@
     "./layout/jump": "./src/layout/jump.ts",
     "./layout/useReturnJump": "./src/layout/useReturnJump.ts",
     "./layout/ReturnPill": "./src/layout/ReturnPill.tsx",
+    "./layout/NoShots": "./src/layout/NoShots.tsx",
     "./readout/readout": "./src/readout/readout.ts",
     "./readout/ShotLine": "./src/readout/ShotLine.tsx",
-    "./readout/CardHeader": "./src/readout/CardHeader.tsx"
+    "./readout/CardHeader": "./src/readout/CardHeader.tsx",
+    "./readout/CardResult": "./src/readout/CardResult.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

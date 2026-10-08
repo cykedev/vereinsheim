@@ -553,10 +553,13 @@ addEventListener("load", async () => {
     // misst dann ihre Breite (sonst stünden die Kacheln in schmalen Zeilen für 300 px)
     await click(button("Leer"), 100)
     check(
-      "Leer: keine Treffer, keine Serien, Ablesung wartet",
+      "Leer: keine Treffer, statt leerer Kästen nur der Hinweis neben der Scheibe",
       hits().length === 0 &&
         $$("[data-series]").length === 0 &&
-        txt($("#readout")).includes("Noch kein Schuss")
+        txt($("[data-no-shots]")).includes("Noch kein Schuss") &&
+        ["readout", "series", "shot-table", "zahlen", "analyse"].every((id) => !$(`#${id}`)) &&
+        !$('nav[aria-label="Abschnitte"]') &&
+        !$("[data-result]")
     )
     await click(button("Setzen"))
     const setAt = async (x, y) => {
@@ -1169,7 +1172,7 @@ addEventListener("load", async () => {
       `${ovValue("Trend")} ${ovHint("Trend")}`
     )
     await click(button("Leer"), 200)
-    check("Leer: die Analyse sagt, was fehlt", txt(A()).includes("Noch keine Schüsse"))
+    check("Leer: keine Analyse, der Hinweis neben der Scheibe", !A() && !!$("[data-no-shots]"))
     await click(button("Luftgewehr"), 200)
     await click(button("40 Schuss mit Probe"), 200)
     await tab("Ergebnis")
@@ -1294,6 +1297,17 @@ addEventListener("load", async () => {
       "Desktop: Serien unter der Scheibe, Schuss und Schüsse daneben, Zahlen und Analyse darunter in voller Breite",
       fullWidth && besideTarget && deskSeries.right < deskRect("readout").left,
       `${regionBox.width.toFixed(0)} px`
+    )
+    // das Ergebnis als Box rechts über der Ablesung; im Kopf steht es nur auf dem Telefon
+    const resultBox = dd.querySelector("[data-result-box]").getBoundingClientRect()
+    const headResult = dd.querySelector("[data-card-header] [data-result]")
+    check(
+      "Desktop: Ergebnis als Box über der Ablesung, nicht im Kopf",
+      near(resultBox.left, deskRect("readout").left, 1) &&
+        resultBox.bottom < deskRect("readout").top &&
+        near(resultBox.top, deskBox.top - 15, 2) &&
+        headResult.offsetParent === null,
+      `${resultBox.left.toFixed(0)}/${deskRect("readout").left.toFixed(0)} · ${resultBox.top.toFixed(0)}`
     )
     dd.getElementById("analyse").scrollIntoView()
     await wait(80)

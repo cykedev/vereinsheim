@@ -11,6 +11,7 @@ import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { HelpSheet } from "@vereinsheim/shot-ui/help/HelpSheet"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { CardPage } from "@vereinsheim/shot-ui/layout/CardPage"
+import { NoShots } from "@vereinsheim/shot-ui/layout/NoShots"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
 import { SectionNav } from "@vereinsheim/shot-ui/layout/SectionNav"
 import { hashFor, parseHash } from "@vereinsheim/shot-ui/layout/sections"
@@ -18,6 +19,7 @@ import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { MetricTiles } from "@vereinsheim/shot-ui/metrics/MetricTiles"
 import { CardHeader } from "@vereinsheim/shot-ui/readout/CardHeader"
+import { CardResult } from "@vereinsheim/shot-ui/readout/CardResult"
 import { ShotLine } from "@vereinsheim/shot-ui/readout/ShotLine"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
@@ -212,6 +214,7 @@ export function App({ commit }: { commit: string }) {
     writeHash(hashFor("analyse", next))
   }, [])
 
+  const empty = shots.length === 0
   const scoringSwitch = (
     <ScoringSwitch
       scoring={state.scoring}
@@ -222,6 +225,8 @@ export function App({ commit }: { commit: string }) {
       }}
     />
   )
+  // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung
+  const result = <CardResult shots={shots} state={state} scoring={scoringSwitch} />
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
@@ -307,13 +312,13 @@ export function App({ commit }: { commit: string }) {
           <CardHeader
             title={target.label}
             meta={[sample.label]}
-            shots={shots}
-            state={state}
-            scoring={scoringSwitch}
+            result={empty ? null : result}
             sentence={sentence}
           />
         }
         nav={<SectionNav active={active} />}
+        result={result}
+        empty={empty ? <NoShots /> : undefined}
         target={
           <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5">
             {/* höchstens so groß, dass sie mit den Serien darunter ins Fenster passt (`--target-max` aus CardPage),
@@ -373,12 +378,13 @@ export function App({ commit }: { commit: string }) {
             node: (
               <div
                 id="shot-table"
-                className="rounded-2xl border border-border bg-card p-2 md:h-full"
+                className="rounded-2xl border border-border bg-card p-2 md:flex md:max-h-full md:flex-col"
               >
-                {/* ab 768 px so hoch wie Scheibe und Serien links, scrollt in sich */}
+                {/* ab 768 px höchstens bis zur Unterkante der Serien, dann scrollt sie in sich; mit wenigen
+                    Schüssen nur so hoch wie ihre Zeilen */}
                 <ShotTable
                   key={`${targetId}:${sample.id}`}
-                  className="md:h-full"
+                  className="md:min-h-0"
                   shots={shots}
                   state={state}
                   onChoose={chooseFromTable}
