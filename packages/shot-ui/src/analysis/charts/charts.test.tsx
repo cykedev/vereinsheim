@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest"
 import { IntervalBar } from "../parts"
 import { RULER_HINT } from "./ChartRuler"
 import { CourseChart } from "./CourseChart"
+import { RhythmChart } from "./RhythmChart"
 import { PathChart } from "./PathChart"
 import { SeriesChart } from "./SeriesChart"
 
@@ -117,5 +118,27 @@ describe("Verlauf mit Lineal", () => {
     expect(html).not.toContain(">Auf der Scheibe<")
     expect(html).toContain("Schnitt der letzten zehn")
     expect([...html.matchAll(/<tr class="border-t/g)]).toHaveLength(12)
+  })
+})
+
+describe("Rhythmus mit Lineal", () => {
+  // zwölf Schüsse im Abstand von 50 s, vor Schuss 7 eine Pause von vier Minuten
+  const paced = twelve.map((s, i) => ({ ...s, firedAtMs: i * 50_000 + (i >= 6 ? 190_000 : 0) }))
+  const rhythm = (props: Partial<Parameters<typeof RhythmChart>[0]> = {}) =>
+    renderToStaticMarkup(createElement(RhythmChart, { width: 600, shots: paced, ...props }))
+
+  it("ohne Wahl der Hinweis, kein <title>, eine Tabellenzeile je Abstand", () => {
+    const html = rhythm()
+    expect(html).toContain(RULER_HINT)
+    expect(html).not.toContain("<title>")
+    expect([...html.matchAll(/<tr class="border-t/g)]).toHaveLength(11)
+  })
+
+  it("das Lineal steht auf dem Abstand vor dem gewählten Schuss, die Pause heißt so", () => {
+    const html = rhythm({ chosenNumber: 7, onShow: () => {} })
+    expect(html).toMatch(/data-interval="7" data-pause="true" data-chosen="true"/)
+    expect(html).toContain("vor Schuss 7: 4:00 min (Pause)")
+    expect(html).toContain("data-ruler")
+    expect(html).toMatch(/<button type="button"[^>]*>Auf der Scheibe<\/button>/)
   })
 })
