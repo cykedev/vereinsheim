@@ -6,7 +6,14 @@ import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { cn } from "@vereinsheim/lib/utils"
 import { useMemo } from "react"
 
-import { caliberRadius, probeCorner, scoreColor, seriesTileView, tileColumns } from "../geometry"
+import {
+  caliberRadius,
+  probeCorner,
+  scoreColor,
+  seriesTileView,
+  SHOT_FILL_OPACITY,
+  tileColumns,
+} from "../geometry"
 import { formatTotal, hasPosition, isProbeShot, seriesKeyOf } from "../shots"
 import { useElementWidth } from "../target/useAnimatedViewBox"
 import type { SeriesKey, Whole } from "../types"
@@ -207,7 +214,7 @@ export function SeriesStrip({
                         cy={y}
                         r={calR}
                         fill={shot.ring === null ? "none" : color}
-                        fillOpacity={0.8}
+                        fillOpacity={SHOT_FILL_OPACITY}
                         stroke="var(--shot-edge)"
                         strokeWidth={1}
                         strokeDasharray={shot.ring === null ? "2 2" : undefined}

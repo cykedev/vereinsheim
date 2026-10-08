@@ -127,8 +127,8 @@ addEventListener("load", async () => {
     )
     const matchCircle = circleOf(hits().find((g) => g.dataset.shot === "1"))
     check(
-      "Wertung gefüllt, Deckkraft 0,8, Haarlinie",
-      matchCircle.getAttribute("fill-opacity") === "0.8" &&
+      "Wertung gefüllt, Deckkraft 0,9, Haarlinie",
+      matchCircle.getAttribute("fill-opacity") === "0.9" &&
         matchCircle.getAttribute("vector-effect") === "non-scaling-stroke"
     )
     check(
@@ -347,11 +347,17 @@ addEventListener("load", async () => {
     )
     const series2 = hits().filter((g) => !g.dataset.faded)
     check(
-      "nur Serie 2 kräftig, alle anderen blass",
+      "nur Serie 2 in Ringwert-Farbe, alle anderen blass und grau",
       labelsOf(series2).join() === "11,12,13,14,15,16,17,18,19,20" &&
         hits()
           .filter((g) => g.dataset.faded)
-          .every((g) => g.getAttribute("opacity") === "0.18")
+          .every(
+            (g) =>
+              g.getAttribute("opacity") === "0.55" &&
+              [circleOf(g).getAttribute("fill"), circleOf(g).getAttribute("stroke")].includes(
+                "var(--shot-faded)"
+              )
+          )
     )
     // ein blasser Schuss, neben dem kein Schuss der Auswahl liegt: ein Tipp darauf wählt nichts
     const lonelyFaded = hits()

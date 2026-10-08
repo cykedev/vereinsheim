@@ -13,6 +13,7 @@ import {
   probeCorner,
   scoreColor,
   screenSizes,
+  SHOT_FILL_OPACITY,
   TAP_REACH_PX,
   targetView,
   unitsPerPixel,
@@ -55,8 +56,9 @@ export interface TargetViewProps {
 
 /** Linien bleiben 1 px breit, egal wie weit gezoomt ist */
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
-const SHOT_FILL_OPACITY = 0.8
-const FADED_OPACITY = 0.18
+/** Schüsse außerhalb der Auswahl: grau statt farbig, damit nur die Auswahl Ringwert-Farben trägt */
+const FADED_OPACITY = 0.55
+const FADED_COLOR = "var(--shot-faded)"
 const SPREAD_MIN_SHOTS = metricByKey("group.enclosingDiameter")?.minShots ?? 2
 
 const point = (shot: MetricShot): Point => ({ xUm: shot.xUm as number, yUm: shot.yUm as number })
@@ -228,7 +230,11 @@ export function TargetView({
           const isChosen = i === chosen
           const x = mm(shot.xUm as number)
           const y = -mm(shot.yUm as number)
-          const color = shot.ring === null ? "var(--paper-line)" : scoreColor(shot.ring)
+          const color = faded
+            ? FADED_COLOR
+            : shot.ring === null
+              ? "var(--paper-line)"
+              : scoreColor(shot.ring)
           // auch in einem hohlen Kreis (fill="none") zeigt der Mauszeiger die Hand; blasse bleiben ganz aus
           const hitArea = faded ? undefined : "visible"
           return (
@@ -261,7 +267,7 @@ export function TargetView({
                   r={calR}
                   fill={shot.ring === null ? "none" : color}
                   fillOpacity={SHOT_FILL_OPACITY}
-                  stroke="var(--shot-edge)"
+                  stroke={faded ? "none" : "var(--shot-edge)"}
                   strokeWidth={1}
                   strokeDasharray={shot.ring === null ? "2 2" : undefined}
                   pointerEvents={hitArea}

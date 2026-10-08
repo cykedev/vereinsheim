@@ -41,6 +41,7 @@
   --color-spiegel: var(--spiegel);
   --color-spiegel-line: var(--spiegel-line);
   --color-shot-edge: var(--shot-edge);
+  --color-shot-faded: var(--shot-faded);
   --color-overlay: var(--overlay);
   --color-overlay-halo: var(--overlay-halo);
   --color-shot-number: var(--shot-number);
@@ -103,6 +104,8 @@
   --spiegel: #151515;
   --spiegel-line: #e6e6e1;
   --shot-edge: rgba(0, 0, 0, 0.62);
+  /* Schüsse außerhalb der Auswahl: neutral grau statt Ringwert-Farbe, auf Papier und Spiegel ruhig */
+  --shot-faded: #8c8c88;
   /* Streukreis und Ellipse: keine Ringwert-Farbe, trägt auf Papier und Spiegel */
   --overlay: #3d8bff;
   /* heller Saum unter Linien, die über den Treffern liegen */

@@ -69,6 +69,7 @@ describe("Design-2-Tokens", () => {
       "spiegel",
       "spiegel-line",
       "shot-edge",
+      "shot-faded",
       "overlay",
       "overlay-halo",
       "shot-number",

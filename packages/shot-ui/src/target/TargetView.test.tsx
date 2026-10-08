@@ -90,8 +90,16 @@ describe("TargetView: Auswahl und Antippen", () => {
     const html = render({ selection: 2 })
     expect(shotOrder(html)).toEqual(["P1", "P2", "1", "2", "3", "4", "5"])
     for (const label of ["P1", "P2", "1", "2", "3"]) {
+      // grau statt Ringwert-Farbe, ohne Kante: nur die Auswahl trägt Farbe
       expect(html).toMatch(
-        new RegExp(`<g data-shot="${label}" data-faded="true"[^>]*opacity="0.18"`)
+        new RegExp(
+          `<g data-shot="${label}" data-faded="true"[^>]*opacity="0.55"[^>]*>(?:<title>[^<]*</title>)?<circle[^>]*(?:fill|stroke)="var\\(--shot-faded\\)"`
+        )
+      )
+      expect(html).not.toMatch(
+        new RegExp(
+          `<g data-shot="${label}" data-faded="true"[^>]*>(?:<title>[^<]*</title>)?<circle[^>]*var\\(--score-`
+        )
       )
       // Ringzahlen tragen auch „1“ bis „8“: Nummern erkennt man an data-number
       expect(html).not.toContain(`data-number="${label}"`)
@@ -220,7 +228,7 @@ describe("TargetView: Probe und Scheibe", () => {
   it("Wertung gefüllt in der Ringwert-Farbe, leicht durchscheinend, Rand als Haarlinie", () => {
     const html = render()
     expect(html).toMatch(
-      /<g data-shot="1"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*fill="var\(--score-10\)"[^>]*fill-opacity="0.8"[^>]*stroke="var\(--shot-edge\)"[^>]*vector-effect="non-scaling-stroke"/
+      /<g data-shot="1"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*fill="var\(--score-10\)"[^>]*fill-opacity="0.9"[^>]*stroke="var\(--shot-edge\)"[^>]*vector-effect="non-scaling-stroke"/
     )
   })
 

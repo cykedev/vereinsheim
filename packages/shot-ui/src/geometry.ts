@@ -62,6 +62,9 @@ export function screenSizes(target: TargetImage, unitsPerPx: number): ScreenSize
   }
 }
 
+/** Deckkraft eines Treffers: kräftig, aber Ringe und Treffer darunter bleiben sichtbar */
+export const SHOT_FILL_OPACITY = 0.9
+
 /** Ringwert-Farbe als Token: 10 rot, 9 gold, 8 türkis, alles darunter violett (farbenblind geprüft) */
 export function scoreColor(ring: number): string {
   if (ring >= 10) return "var(--score-10)"
