@@ -5,7 +5,13 @@ import {
   ringWidths,
   sigmaEstimate,
 } from "@vereinsheim/shot-core/analysis"
-import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
+import {
+  computeMetric,
+  inScoring,
+  metricByKey,
+  type MetricShot,
+} from "@vereinsheim/shot-core/metrics"
+import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
@@ -90,5 +96,42 @@ describe("Reiter Präzision", () => {
     expect(cardText(round, "ausreisser")).toContain("Ausreißer keine")
     expect(cardHtml(round, "ausreisser")).not.toMatch(/<dt[^>]*>Kosten<\/dt>/)
     expect(cardHtml(html, "ausreisser")).toMatch(/<dt[^>]*>Kosten<\/dt>/)
+  })
+
+  it("Form ohne Ausreißer: Grundlage genannt, Ellipse auf dem Schwerpunkt der übrigen", () => {
+    // acht im Kreis von 1 mm und zwei Abreißer, die V6 als 9 und 10 markiert (wie im Fachkern)
+    const points = [
+      ...[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => [
+        Math.round(1000 * Math.cos((deg * Math.PI) / 180)),
+        Math.round(1000 * Math.sin((deg * Math.PI) / 180)),
+      ]),
+      [4000, 0],
+      [4000, 400],
+    ]
+    const shots: MetricShot[] = points.map(([xUm, yUm], i) => {
+      const score = scoreFromCoordinates(LP_10M, xUm, yUm)
+      return {
+        seq: i + 1,
+        xUm,
+        yUm,
+        decimalTenths: score.decimalTenths,
+        ring: score.ring,
+        innerTen: score.innerTen,
+        firedAtMs: i * 50_000,
+        kind: "match",
+        series: 1,
+      }
+    })
+    const page = renderTab("precision", { shots })
+    expect(cardText(page, "form-der-gruppe")).toContain("bei 8 Schuss (ohne Ausreißer 9, 10)")
+    expect(cardText(page, "form-der-gruppe")).toContain("nicht nachweisbar")
+    const card = cardHtml(page, "form-der-gruppe")
+    const ellipseX = Number(/<ellipse cx="([-\d.]+)"/.exec(card)?.[1])
+    const groupX = [...card.matchAll(/<circle data-group-point="\d+" cx="([-\d.]+)"/g)].map((m) =>
+      Number(m[1])
+    )
+    expect(groupX).toHaveLength(8)
+    const mean = groupX.reduce((sum, x) => sum + x, 0) / groupX.length
+    expect(Math.abs(mean - ellipseX)).toBeLessThan(0.5)
   })
 })

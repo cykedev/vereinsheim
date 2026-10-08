@@ -126,7 +126,11 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
                     "Verhältnis a/b",
                     <>
                       {Number.isFinite(shape.ratio) ? formatValue(shape.ratio, 2) : "∞"}
-                      <Muted>{` · gestreckt ab ${formatValue(shape.ratioLimit, 2)} bei ${shape.n} Schuss`}</Muted>
+                      <Muted>
+                        {` · gestreckt ab ${formatValue(shape.ratioLimit, 2)} bei ${shape.n} Schuss`}
+                        {shape.without.length > 0 &&
+                          ` (ohne Ausreißer ${shape.without.join(", ")})`}
+                      </Muted>
                     </>,
                   ],
                   [
@@ -157,7 +161,7 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
                   ],
                 ]}
               />
-              <Note>Ellipse: 2 σ entlang der Hauptachsen; rote Punkte sind Ausreißer.</Note>
+              <Note>Ellipse: 2 σ entlang der Hauptachsen, ohne die Ausreißer (rote Punkte).</Note>
             </>
           ) : (
             <Note>ab 3 Schuss</Note>

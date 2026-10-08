@@ -1,5 +1,4 @@
 import { groupShape, outliers } from "@vereinsheim/shot-core/analysis"
-import { centroid } from "@vereinsheim/shot-core/geometry"
 import { selectShots, shotNumbers, type MetricShot } from "@vereinsheim/shot-core/metrics"
 
 import { MpiMark } from "../../target/MpiMark"
@@ -8,14 +7,15 @@ import { FieldAxes, fieldFrame, FieldScale } from "./field"
 
 /**
  * Form der Gruppe um den Schwerpunkt (Spielwiese `shapeChart`): die 2-σ-Ellipse als Fläche unter den
- * Punkten und als Linie darüber, Ausreißer rot, der Schwerpunkt in der Mitte, Maßstab unten links.
+ * Punkten und als Linie darüber, Ausreißer rot, der Schwerpunkt in der Mitte, Maßstab unten links. Die Form
+ * rechnet ohne die Ausreißer, also sitzen Ellipse und Mitte auf dem Schwerpunkt der übrigen (`centerUm`).
  */
 export function ShapeChart({ width, shots }: { width: number; shots: readonly MetricShot[] }) {
   const positioned = selectShots(shots, { need: "position" })
   const points = positioned.map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
-  const center = centroid(points)
   const shape = groupShape(shots)
-  if (!center || !shape) return null
+  if (!shape) return null
+  const center = shape.centerUm
   const relative = points.map((p) => ({ xUm: p.xUm - center.xUm, yUm: p.yUm - center.yUm }))
   const extent = Math.max(2 * shape.majorUm, ...relative.map((p) => Math.hypot(p.xUm, p.yUm)))
   const frame = fieldFrame(width, extent)
