@@ -9,7 +9,7 @@ import { initialPeriodState } from "./state"
 import { NOW, periodCard, TZ } from "./testSeason"
 
 const metric = metricByKey("result.decimalMean")!
-const render = (count: number, chosen: string | null = null) => {
+const render = (count: number, chosen: string | null = null, onShowAll?: () => void) => {
   const cards = Array.from({ length: count }, (_, i) =>
     periodCard(`k${i}`, 40 - i, [90 + i, 90 + i], { kind: i === 2 ? "competition" : "training" })
   )
@@ -29,6 +29,7 @@ const render = (count: number, chosen: string | null = null) => {
       timeZone: TZ,
       chosen,
       onChoose: () => {},
+      onShowAll,
     })
   )
 }
@@ -60,5 +61,12 @@ describe("Liste der Scheiben (D10)", () => {
     expect([...html.matchAll(/<tr[^>]*class="[^"]*max-md:hidden/g)]).toHaveLength(1)
     expect(html).toContain("Alle 12 zeigen")
     expect(render(10)).not.toContain("zeigen</button>")
+  })
+
+  it("„Alle in Scheiben zeigen“ nur mit Rückruf; sonst bleibt die Liste gleich (Plan N2, D8)", () => {
+    expect(render(4)).not.toContain("data-show-all")
+    const html = render(4, null, () => {})
+    expect(html).toMatch(/data-show-all="true"[^>]*>Alle in Scheiben zeigen</)
+    expect(html.replace(/<button[^>]*data-show-all[^]*?<\/button>/, "")).toBe(render(4))
   })
 })
