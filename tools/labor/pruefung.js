@@ -1785,6 +1785,20 @@ addEventListener("load", async () => {
       )
       flat.remove()
     }
+    // Tablet (unter 1024 px breit): die untere Leiste nimmt 72 px, Scheibe und Serien enden darüber (Plan N3, D2).
+    // 660 px hoch, damit die Höhe die Scheibe begrenzt und nicht die Breite: ohne Abzug der Leiste reichten die
+    // Serien unter sie
+    const tablet = await openFrame(768, 660)
+    scrollToRegion(tablet.contentWindow)
+    await wait(100)
+    const tabletBox = tablet.contentDocument.getElementById("target-box").getBoundingClientRect()
+    const tabletSeries = tablet.contentDocument.getElementById("series").getBoundingClientRect()
+    check(
+      "768 × 660: Scheibe und Serien enden über der unteren Leiste",
+      tabletBox.bottom <= 660 - 72 && tabletSeries.bottom <= 660 - 72,
+      `Scheibe bis ${tabletBox.bottom.toFixed(0)}, Serien bis ${tabletSeries.bottom.toFixed(0)} von ${660 - 72}`
+    )
+    tablet.remove()
 
     // Telefon: „Auf der Scheibe“ im Lineal springt zur Scheibe, die Pille nennt den Reiter (Plan L1, D4)
     const rulerPhone = await openFrame(375, 812)
@@ -1870,6 +1884,12 @@ addEventListener("load", async () => {
         txt(rulerPill).includes("Zeit und Verlauf") &&
         rd.querySelector('[data-section="target"]').getBoundingClientRect().top < 400,
       rulerPill ? txt(rulerPill) : rulerShow ? "keine Pille" : "kein Knopf"
+    )
+    const pillBottom = rulerPill?.parentElement.getBoundingClientRect().bottom ?? 9999
+    check(
+      "Telefon: die Pille steht über der unteren Leiste (Plan N3, D2)",
+      pillBottom <= 812 - 72,
+      `${Math.round(pillBottom)} von 812`
     )
     rulerPhone.remove()
 
@@ -2347,6 +2367,20 @@ addEventListener("load", async () => {
           tools.formatValue(openedMean, 2) === listValue,
         `${matchShots.length}/${listShots} ${listValue}`
       )
+      // Blättern aus dem Fortschritt (Plan N3, D5): die Nachbarn unter den Scheiben seines Zeitraums
+      const periodIds = P().model.cards.map((c) => c.id)
+      const openedId = routeOf(addr()).id
+      const at = periodIds.indexOf(openedId)
+      const linkId = (el) => (el ? routeOf(el.getAttribute("href")).id : null)
+      check(
+        "Blättern aus dem Fortschritt: vorige und nächste liegen im Zeitraum, als Nachbarn",
+        at >= 0 &&
+          linkId(link("Vorige Scheibe")) === (periodIds[at - 1] ?? null) &&
+          linkId(link("Nächste Scheibe")) === (periodIds[at + 1] ?? null) &&
+          routeOf(link("Vorige Scheibe")?.getAttribute("href") ?? addr()).origin?.from ===
+            "progress",
+        `${periodIds.length} im Zeitraum · ${openedId} an ${at}`
+      )
       await click(link("Zurück zu „Neue Munition“"), 500)
       check(
         "Zeitraum: „Zurück“ kehrt an die Stelle zurück",
@@ -2730,6 +2764,136 @@ addEventListener("load", async () => {
           addr() === "/cards?family=lg-freihand",
         `${periodFamily} · ${Li().query.family} · ${addr()}`
       )
+
+      // ---------- Rahmen der App (Plan N3)
+      const shown = (el) =>
+        !!el && el.ownerDocument.defaultView.getComputedStyle(el).display !== "none"
+      const areasOf = (nav) => [...nav.querySelectorAll("a[data-area]")].map((a) => a.dataset.area)
+      const roundTrips = (href) =>
+        L().tools.nav.urlFromRoute(L().tools.nav.routeFromUrl(...urlParts(href))) === href
+      // Bereiche merken sich ihren Zustand (D4): Art und Familie bleiben, der Link trägt die Familie
+      await click(button("Luftpistole", $("[data-list-controls]")), 300)
+      await click(button("Wettkampf", $("[data-list-controls]")), 300)
+      const progressHref = area("Fortschritt")?.getAttribute("href") ?? ""
+      await click(area("Fortschritt"), 400)
+      const familyThere = P()?.state.family
+      await click(area("Scheiben"), 400)
+      check(
+        "Rahmen: „Fortschritt“ trägt die Familie, „Scheiben“ kehrt mit Art und Familie zurück",
+        progressHref.includes("family=lp-freihand") &&
+          familyThere === "lp-freihand" &&
+          Li().query.family === "lp-freihand" &&
+          Li().query.kind === "competition",
+        `${progressHref} · ${familyThere} · ${addr()}`
+      )
+      // und die Scrollstelle, wenn man zur selben Adresse zurückkehrt
+      await click(button("Luftgewehr", $("[data-list-controls]")), 300)
+      await click(button("Alle", $("[data-list-controls]")), 300)
+      scrollTo(0, 800)
+      await wait(50)
+      const listScroll = window.scrollY
+      await click(area("Fortschritt"), 400)
+      await click(area("Scheiben"), 400)
+      check(
+        "Rahmen: zurück in „Scheiben“ an derselben Stelle",
+        listScroll > 0 && near(window.scrollY, listScroll, 5),
+        `${Math.round(window.scrollY)} / ${Math.round(listScroll)}`
+      )
+      // Blättern aus der Liste (D5): die zeitlichen Nachbarn unter den Wettkämpfen, das Ende ausgegraut
+      await click(button("Wettkampf", $("[data-list-controls]")), 300)
+      const competitionIds = Li()
+        .model.evenings.flatMap((e) => e.rows)
+        .sort((a, b) => a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : 1))
+        .map((r) => r.id)
+      const middle = competitionIds[5]
+      await click($(`[data-card-row="${middle}"]`), 500)
+      const idOf = (el) => (el ? routeOf(el.getAttribute("href")).id : null)
+      const prevId = idOf(link("Vorige Scheibe"))
+      const nextId = idOf(link("Nächste Scheibe"))
+      const contextLinks = $$("[data-card-context] a").map((a) => a.getAttribute("href"))
+      await click(link("Nächste Scheibe"), 500)
+      const pagedTo = routeOf(addr())
+      await click(link("Zurück zu „Scheiben“"), 500)
+      check(
+        "Blättern aus der Liste: vorige und nächste sind die zeitlichen Nachbarn mit denselben Filtern, zurück in die Liste",
+        competitionIds.length === 11 &&
+          prevId === competitionIds[4] &&
+          nextId === competitionIds[6] &&
+          pagedTo.id === competitionIds[6] &&
+          pagedTo.origin?.query.kind === "competition" &&
+          Li().query.kind === "competition" &&
+          contextLinks.length === 3 &&
+          contextLinks.every(roundTrips),
+        `${prevId} ‹ ${middle} › ${nextId} · ${addr()}`
+      )
+      await click($(`[data-card-row="${competitionIds.at(-1)}"]`), 500)
+      check(
+        "Blättern: bei der neuesten Scheibe ist „nächste“ ausgegraut",
+        !link("Nächste Scheibe") &&
+          !!$('[data-card-context] [data-pager="next"][aria-disabled="true"]') &&
+          idOf(link("Vorige Scheibe")) === competitionIds.at(-2)
+      )
+      await click(link("Zurück zu „Scheiben“"), 500)
+      await click(button("Alle", $("[data-list-controls]")), 300)
+      // Desktop 1280 px: Seitenleiste mit allen Bereichen, Admin zuletzt, Zähler, die Seite daneben
+      const deskFrame = await openFrame(1280, 900)
+      const fd = deskFrame.contentDocument
+      const sidebar = fd.querySelector("[data-app-sidebar]")
+      const pageLeft = fd.querySelector("[data-app-content] > *")?.getBoundingClientRect().left ?? 0
+      check(
+        "Rahmen 1280 px: Seitenleiste mit Start, Scheiben, Fortschritt, QR scannen, Profil, Admin; Zähler; Seite daneben",
+        shown(sidebar) &&
+          areasOf(sidebar).join() === "start,cards,progress,scan,profile,admin" &&
+          txt(sidebar.querySelector("[data-badge]")) === "2" &&
+          sidebar.querySelector('[aria-current="page"]')?.dataset.area === "cards" &&
+          !shown(fd.querySelector("[data-app-bar]")) &&
+          !shown(fd.querySelector("[data-app-rail]")) &&
+          pageLeft >= 224 &&
+          [...sidebar.querySelectorAll("a")].every((a) => roundTrips(a.getAttribute("href"))),
+        `${areasOf(sidebar).join()} · Seite ab ${Math.round(pageLeft)}`
+      )
+      deskFrame.remove()
+      // Telefon 390 px: untere Leiste, Scannen erhaben in der Mitte, kein Admin, die letzte Zeile über der Leiste
+      const barFrame = await openFrame(390, 844)
+      const bd = barFrame.contentDocument
+      const bw = barFrame.contentWindow
+      const bar = bd.querySelector("[data-app-bar]")
+      const barTops = [...bar.querySelectorAll("a[data-area]")].map(
+        (a) => a.getBoundingClientRect().top
+      )
+      bw.scrollTo(0, bd.documentElement.scrollHeight)
+      await wait(100)
+      const lastRow = [...bd.querySelectorAll("[data-card-row]")].at(-1)
+      const lastBottom = lastRow?.getBoundingClientRect().bottom ?? 9999
+      // der Rahmen hält unten den Platz der Leiste frei, unabhängig vom Abstand der Seite selbst
+      const contentPad = parseFloat(
+        bw.getComputedStyle(bd.querySelector("[data-app-content]")).paddingBottom
+      )
+      check(
+        "Rahmen 390 px: untere Leiste mit fünf Bereichen, Scannen erhaben in der Mitte, kein Admin; nichts unter ihr versteckt",
+        shown(bar) &&
+          areasOf(bar).join() === "start,cards,scan,progress,profile" &&
+          barTops[2] < Math.min(barTops[0], barTops[1], barTops[3], barTops[4]) - 8 &&
+          !shown(bd.querySelector("[data-app-sidebar]")) &&
+          lastBottom <= 844 - 72 &&
+          contentPad >= 72 &&
+          bd.documentElement.scrollWidth <= 390,
+        `${areasOf(bar).join()} · Scannen ${Math.round(barTops[2])} · letzte Zeile bis ${Math.round(lastBottom)} · Abstand ${contentPad}`
+      )
+      barFrame.remove()
+      // Telefon quer: die schmale Leiste links statt der unteren (D1)
+      const railFrame = await openFrame(812, 375)
+      const rd2 = railFrame.contentDocument
+      const rail = rd2.querySelector("[data-app-rail]")
+      check(
+        "Rahmen 812 × 375: schmale Leiste links, keine untere Leiste, kein seitliches Scrollen",
+        shown(rail) &&
+          areasOf(rail).join() === "start,cards,scan,progress,profile" &&
+          !shown(rd2.querySelector("[data-app-bar]")) &&
+          rd2.documentElement.scrollWidth <= 812,
+        `${areasOf(rail).join()} · ${rd2.documentElement.scrollWidth}`
+      )
+      railFrame.remove()
       // Telefon 375 px mit einem Abend als Anker: kein seitliches Scrollen, ohne Uhrzeit, Abstand und Schuss
       const phoneDay = Li().model.evenings[2].day
       const phone = await openFrame(375, 812, `#${phoneDay}`)
