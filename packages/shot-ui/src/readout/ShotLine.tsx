@@ -4,14 +4,14 @@ import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { cn } from "@vereinsheim/lib/utils"
 import { Fragment } from "react"
 
-import { directionWords, formatValue } from "../format"
+import { formatValue } from "../format"
 import { scoreColor } from "../geometry"
 import type { ViewState } from "../view-state"
 import { readoutModel, readoutValue } from "./readout"
 
 /**
  * Ablesezeile (Plan Schritt 4, D2): auf dem Telefon unter der Scheibe statt der Ablese-Karte, eine Zeile
- * „Schuss 23 · 9,7 · Teiler 312,4 · 4,2 mm rechts und 1,1 mm tief“, dazu Fehlschuss und Innenzehner.
+ * „Schuss 23 · 9,7 · Teiler 312,4 · Abstand zur Mitte 3,12 mm“, dazu Fehlschuss und Innenzehner.
  * Dieselben Werte wie die Karte; ein Wechsel wird Screenreadern gemeldet (`role="status"`).
  */
 export function ShotLine({
@@ -29,9 +29,10 @@ export function ShotLine({
         `${model.kindWord} ${model.label}`,
         readoutValue(model, state.scoring),
         model.teiler === null ? null : `Teiler ${formatValue(model.teiler, 1)}`,
-        model.placed
-          ? directionWords({ xUm: model.shot.xUm as number, yUm: model.shot.yUm as number })
-          : null,
+        // wie die Karte: Abstand zur Mitte statt x/y (Prüfung, Lage 12)
+        model.distanceUm === null
+          ? null
+          : `Abstand zur Mitte ${formatValue(model.distanceUm / 1000, 2)} mm`,
         // wie die Ablese-Karte: Fehlschuss und Innenzehner
         model.shot.ring === 0 ? "Fehlschuss" : null,
         model.shot.innerTen ? "Innenzehner" : null,

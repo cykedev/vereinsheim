@@ -118,6 +118,40 @@ describe("Reiter Lage", () => {
     )
   })
 
+  it("Ellipse auf der Scheibe und Urteil: wofür jedes gilt (Prüfung, Lage 3)", () => {
+    expect(cardText(html, "lage-echt")).toContain(
+      "Auf der Scheibe gilt die Ellipse für die Auswahl dort; dieses Urteil für alle Wertungsschüsse."
+    )
+  })
+
+  it("Wandern und Pfad: was unter und über 2 heißt, wie weit Serien ohne Wandern liegen", () => {
+    const text = cardText(html, "drift-und-wanderung")
+    expect(text).toContain(
+      "Um 2 sind die Schüsse unabhängig. Deutlich darunter liegen aufeinanderfolgende Treffer näher beieinander, als die Gruppe breit ist: Die Gruppe wandert langsam, oder mehrere Ausreißer folgen direkt aufeinander. Über 2 springen aufeinanderfolgende Treffer eher hin und her."
+    )
+    // B12: im Mittel 0,35 σ
+    expect(text).toContain(
+      "Auch ohne Wandern liegt der Schwerpunkt einer Zehnerserie im Mittel etwa ein Drittel σ neben dem der Scheibe."
+    )
+  })
+
+  it("negativer Lage-Anteil: Vorzeichen auch für den Screenreader und eine Notiz", () => {
+    // Prüfung, Lage 8: die Gruppe sitzt um die Mitte, das Verschieben um den Zufallsversatz kostet
+    const calm = BASE.map((s) =>
+      s.xUm === null || s.yUm === null ? s : { ...s, xUm: s.xUm + 3500, yUm: s.yUm - 2200 }
+    )
+    const split = ringLossSplit(calm, LP_10M)!
+    expect(split.positionLoss.decimal).toBeLessThan(0)
+    const card = cardHtml(renderTab("position", { shots: calm }), "ringverlust-nach-ursache")
+    expect(card).toContain(
+      `aria-label="Lage ${formatValue(split.positionLoss.decimal, 1)}, Streuung ${formatValue(split.spreadLoss.decimal, 1)} Ringe"`
+    )
+    expect(cardText(renderTab("position", { shots: calm }), "ringverlust-nach-ursache")).toContain(
+      "Lage negativ: Eine Verschiebung um den gemessenen Versatz würde Ringe kosten."
+    )
+    expect(cardText(html, "ringverlust-nach-ursache")).not.toContain("Lage negativ")
+  })
+
   it("Drift: von-Neumann auf der Skala, Pfad mit einer Marke je Serie", () => {
     const d = drift(BASE)!
     const text = cardText(html, "drift-und-wanderung")
@@ -132,7 +166,15 @@ describe("Reiter Lage", () => {
 
   it("wenige Schüsse: der Grund statt eines Werts", () => {
     const few = renderTab("position", { shots: BASE.slice(0, 2) })
-    expect(cardText(few, "lage-echt")).toContain("ab 3 Schuss")
+    expect(cardText(few, "lage-echt")).toContain(
+      "ab 3 Schuss mit Lage (nicht alle auf einer Linie)"
+    )
+    // drei auf einer Linie: kein Test möglich, derselbe Grund (Prüfung, Lage 10)
+    const line = [0, 1, 2].map((i) => ({ ...BASE[i], xUm: 1000 * i, yUm: 500 * i }))
+    expect(mpiConfidence(line)).toBeNull()
+    expect(cardText(renderTab("position", { shots: line }), "lage-echt")).toContain(
+      "ab 3 Schuss mit Lage (nicht alle auf einer Linie)"
+    )
     expect(cardText(few, "drift-und-wanderung")).toContain("ab 3 Schuss")
     const one = renderTab("position", { shots: BASE.slice(0, 1) })
     expect(cardText(one, "ringverlust-nach-ursache")).toContain("ab 2 Schuss mit Lage")

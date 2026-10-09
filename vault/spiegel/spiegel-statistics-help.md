@@ -243,7 +243,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.
 - *Was du tun kannst:* Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele Ringe
   sie etwa kostet.
-- *Mindestzahl:* Schwerpunkt ab 2 Schuss, der Test ab 3.
+- *Mindestzahl:* Ab 3 Schuss mit Lage, die nicht alle auf einer Linie liegen.
 - *Formel:* `T² = n · m′ S⁻¹ m gegen 2(n − 1)/(n − 2) · F₀,₉₅(2, n − 2)`
 
 **Ringverlust nach Ursache (E9, L4)**
@@ -280,8 +280,11 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Drift und Wanderung (L8, I6)**
 - *Was:* Ob die Sprünge von Schuss zu Schuss zu deiner Streuung passen (von-Neumann-Verhältnis) und
   wie der Schwerpunkt von Serie zu Serie wandert.
-- *So liest du es:* Sind deine Schüsse unabhängig voneinander, liegt die Zahl um 2. Deutlich
-  darunter wandert die Gruppe langsam, etwa weil sich der Anschlag im Lauf des Abends verändert.
+- *So liest du es:* Um 2 sind die Schüsse unabhängig. Deutlich darunter liegen aufeinanderfolgende
+  Treffer näher beieinander, als die Gruppe breit ist: Die Gruppe wandert langsam, etwa weil sich
+  der Anschlag im Lauf des Abends verändert, oder mehrere Ausreißer folgen direkt aufeinander. Über
+  2 springen aufeinanderfolgende Treffer eher hin und her. Auch ohne Wandern liegt der Schwerpunkt
+  einer Zehnerserie im Mittel etwa ein Drittel σ neben dem der Scheibe.
 - *Vorsicht:* Spiegel urteilt hier nicht: Auch ohne jedes Wandern liegt die Zahl zufällig bei 10
   Schuss etwa zwischen 1,2 und 2,8 und bei 40 Schuss zwischen 1,6 und 2,4.
 - *Mindestzahl:* Ab 3 Schuss mit Lage, die Wanderung ab 2 Serien mit je 2 Schuss mit Lage.

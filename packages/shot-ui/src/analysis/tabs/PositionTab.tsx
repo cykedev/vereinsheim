@@ -74,11 +74,12 @@ export function positionCards({
               </div>
               <Note>
                 Die Ellipse umschließt mit 95 % den wahren Schwerpunkt. Liegt die Mitte darin, ist
-                ein Versatz nicht belegt.
+                ein Versatz nicht belegt. Auf der Scheibe gilt die Ellipse für die Auswahl dort;
+                dieses Urteil für alle Wertungsschüsse.
               </Note>
             </>
           ) : (
-            <Note>ab 3 Schuss</Note>
+            <Note>ab 3 Schuss mit Lage (nicht alle auf einer Linie)</Note>
           )}
         </AnalysisCard>
       ),
@@ -132,13 +133,17 @@ export function positionCards({
                     {(width) => <PathChart width={width} shots={base} />}
                   </ChartSlot>
                   <Note>
-                    Schwerpunkt je Serie gegen den Schwerpunkt der Scheibe (Mitte des Feldes).
+                    Schwerpunkt je Serie gegen den Schwerpunkt der Scheibe (Mitte des Feldes). Auch
+                    ohne Wandern liegt der Schwerpunkt einer Zehnerserie im Mittel etwa ein Drittel
+                    σ neben dem der Scheibe.
                   </Note>
                 </>
               )}
               <Note>
-                Um 2 liegen die Treffer unabhängig voneinander; deutlich darunter wandert die Gruppe
-                von Schuss zu Schuss.
+                Um 2 sind die Schüsse unabhängig. Deutlich darunter liegen aufeinanderfolgende
+                Treffer näher beieinander, als die Gruppe breit ist: Die Gruppe wandert langsam,
+                oder mehrere Ausreißer folgen direkt aufeinander. Über 2 springen
+                aufeinanderfolgende Treffer eher hin und her.
               </Note>
             </>
           ) : (
@@ -171,7 +176,8 @@ function RingLoss({
     <>
       <div
         role="img"
-        aria-label={`Lage ${rings(pos)}, Streuung ${rings(spr)} Ringe`}
+        // die Werte, nicht die Breiten: ein negativer Lage-Anteil ist kein „0“ (Prüfung, Lage 8)
+        aria-label={`Lage ${rings(split.positionLoss[keyName])}, Streuung ${rings(split.spreadLoss[keyName])} Ringe`}
         className="flex h-3 gap-0.5 overflow-hidden rounded-md bg-surface-2"
       >
         <span
@@ -227,6 +233,9 @@ function RingLoss({
           <Verdict tone="none">unsicher</Verdict>
         )}
       </div>
+      {split.positionLoss[keyName] < 0 && (
+        <Note>Lage negativ: Eine Verschiebung um den gemessenen Versatz würde Ringe kosten.</Note>
+      )}
       <Note>
         Jeder Treffer um den Schwerpunkt der übrigen verschoben und neu gewertet: So schätzt
         Spiegel, was dieselben Schüsse mit der Gruppe in der Mitte brächten. Belastbar erst ab 10

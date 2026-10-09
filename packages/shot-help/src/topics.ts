@@ -169,7 +169,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Der Schwerpunkt ist der Mittelpunkt aller Treffer, auf der Scheibe der kleine schwarz-weiß geviertelte Kreis. Er ist selbst nur geschätzt: Die Vertrauensellipse zeigt, wo dein wahrer Schwerpunkt mit großer Sicherheit liegt. Ein Test (Hotelling) prüft, ob der Versatz zur Mitte mehr als Zufall ist; er sagt dasselbe wie die Ellipse: Liegt die Mitte darin, ist der Versatz nicht belegt.",
     read: "Die Lage steht als Abstand und Richtung zur Mitte da, etwa 0,72 mm, davon 0,6 mm rechts und 0,4 mm tief. „Echt versetzt“: Der Versatz ist größer, als der Zufall bei dieser Schusszahl erklärt. „Vom Zufall nicht zu unterscheiden“: Er kann Zufall sein, auch wenn der Schwerpunkt sichtbar neben der Mitte liegt. Die Ellipse hat die Form deiner Gruppe und schrumpft mit der Schusszahl: Ihre Halbachse ist bei 10 Schuss etwa so groß wie deine Streuung σ, bei 40 Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.",
     act: "Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele Ringe sie etwa kostet.",
-    minimum: "Schwerpunkt ab 2 Schuss, der Test ab 3.",
+    minimum: "Ab 3 Schuss mit Lage, die nicht alle auf einer Linie liegen.",
     formula: "T² = n · m′ S⁻¹ m gegen 2(n − 1)/(n − 2) · F₀,₉₅(2, n − 2)",
   },
   {
@@ -210,7 +210,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob deine Gruppe im Lauf der Scheibe wandert.",
     what: "Ob die Sprünge von Schuss zu Schuss zu deiner Streuung passen (von-Neumann-Verhältnis) und wie der Schwerpunkt von Serie zu Serie wandert.",
-    read: "Sind deine Schüsse unabhängig voneinander, liegt die Zahl um 2. Deutlich darunter wandert die Gruppe langsam, etwa weil sich der Anschlag im Lauf des Abends verändert.",
+    read: "Um 2 sind die Schüsse unabhängig. Deutlich darunter liegen aufeinanderfolgende Treffer näher beieinander, als die Gruppe breit ist: Die Gruppe wandert langsam, etwa weil sich der Anschlag im Lauf des Abends verändert, oder mehrere Ausreißer folgen direkt aufeinander. Über 2 springen aufeinanderfolgende Treffer eher hin und her. Auch ohne Wandern liegt der Schwerpunkt einer Zehnerserie im Mittel etwa ein Drittel σ neben dem der Scheibe.",
     caution:
       "Spiegel urteilt hier nicht: Auch ohne jedes Wandern liegt die Zahl zufällig bei 10 Schuss etwa zwischen 1,2 und 2,8 und bei 40 Schuss zwischen 1,6 und 2,4.",
     minimum: "Ab 3 Schuss mit Lage, die Wanderung ab 2 Serien mit je 2 Schuss mit Lage.",

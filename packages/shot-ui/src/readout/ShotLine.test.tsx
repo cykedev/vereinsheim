@@ -52,11 +52,13 @@ const card = (state: Partial<ViewState> = {}) =>
   )
 
 describe("Ablesezeile (D2)", () => {
-  it("letzter Schuss: Nummer, Wert, Teiler und Lage in einer Zeile, Werte wie die Ablesung", () => {
+  it("letzter Schuss: Nummer, Wert, Teiler und Abstand in einer Zeile, Werte wie die Ablesung", () => {
     const teiler = formatValue(distanceUm(-4200, -1100) / 10, 1)
-    expect(line()).toBe(
-      `Schuss 3 · 8,7 · Teiler ${teiler} · ${directionWords({ xUm: -4200, yUm: -1100 })}`
-    )
+    const away = `${formatValue(distanceUm(-4200, -1100) / 1000, 2)} mm`
+    // wie die Karte: Abstand zur Mitte statt x/y (Prüfung, Lage 12)
+    expect(line()).toBe(`Schuss 3 · 8,7 · Teiler ${teiler} · Abstand zur Mitte ${away}`)
+    expect(card()).toContain(`Abstand zur Mitte ${away}`)
+    expect(line()).not.toContain(directionWords({ xUm: -4200, yUm: -1100 }))
     expect(card()).toContain(`Teiler ${teiler}`)
     expect(card()).toContain("8,7")
   })
