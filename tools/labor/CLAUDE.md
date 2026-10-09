@@ -20,7 +20,9 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   Baustein nach `shot-ui` (mit Tests) und wird hier nur verdrahtet; Zahlen nur aus dem Fachkern.
 - **Nach jeder Änderung** an Bausteinen oder Labor: `pruefen` muss „0 FAIL“ melden (nicht im Gate, braucht
   Chrome; `CHROME_PATH` für einen anderen Pfad). Neue Bedienung bekommt Prüfungen in `pruefung.js`.
-- **Eigenheiten der Skriptprüfung** (Headless-Chrome mit `--dump-dom`): Ein synthetischer Klick fokussiert
+- **Eigenheiten der Skriptprüfung** (Headless-Chrome mit `--dump-dom`): Klicks sind `cancelable`, sonst folgt der
+  Browser einem Link trotz `preventDefault` und die Seite ist weg („Kein Bericht“). Helfer: `button`, `link` (nach Text
+  oder `aria-label`), `area` (sichtbarer Eintrag der Navigation). Ein synthetischer Klick fokussiert
   nicht und eine synthetische Taste löst keine Aktion aus (Tastatur nur über echte, fokussierbare Knöpfe
   prüfen); das `close`-Ereignis eines `<dialog>` kommt spät oder gar nicht (nie darauf warten; Escape-Weg
   über `requestClose()`, das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
@@ -32,18 +34,22 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   das letzte `<dialog>`.
   In den Rahmen der Prüfung (außerhalb des Bilds, `left:-9999px`) kam ein Sprung über `requestAnimationFrame` beim
   Laden nicht an; was beim Laden zu einem Anker springen soll, springt deshalb im Effekt sofort (Review N2).
-- **Drei Ansichten** (Plan L3, N2): „Ansicht: Scheiben | Scheibe | Zeitraum“ im Labor-Kopf (`LaborHeader`), gemerkt
-  in `labor.mode`; ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie, ein Abend (`#2026-09-25`) die
-  Scheiben-Liste (`ListView`). Aus der Liste öffnet eine Zeile die Scheibe mit der Liste als Herkunft, „Zurück zu
-  „Scheiben““ stellt Filter und Scrollstelle wieder her; „Verlauf dieser Filter“ und „Alle in Scheiben zeigen“
-  wechseln zwischen Liste und Zeitraum. Die Liste hat keine eigene Wertung: Sie nimmt die des Geräts (`scoring` im
-  Speicher), die Scheibe und Zeitraum beim Umschalten schreiben. Die Familie teilen Liste und Zeitraum
-  (`changeList`, `changePeriod` in `App`): wer sie in einem wählt, findet sie im anderen wieder, auch über die Leiste
-  oben; Filter, Zeitraum und Scrollstelle bleiben je Ansicht. `App` hält, was beide teilen
-  (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
-  Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums. „Scheibe öffnen“ zeigt eine
-  Scheibe der Saison in „Scheibe“, „Zurück zu „…““ (nach dem Zeitraum benannt) stellt Zeitraum, Vergleich, Wahl und
-  Scrollstelle wieder her.
+- **Die App im Rahmen** (Plan L3, N2, N3): `AppFrame` umgibt jede Ansicht; die Navigation wechselt die Bereiche
+  (Scheiben `ListView`, Fortschritt `PeriodView`, Platzhalter `PlaceholderView` für Start, Scannen, Profil, Admin).
+  - Der Labor-Kopf schaltet „Labor: App | Beispiele“. Beispiele sind die Beispielscheiben in `CardView`, ohne Adresse
+    und ohne aktiven Bereich.
+  - Die Ansicht steht in `labor.mode`. Ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie, ein Abend
+    (`#2026-09-25`) die Scheiben-Liste.
+  - **Router im Speicher:** Jeder Link (`RouteLink`) landet über den `RouteLinkProvider` in `go(route)` in `App`, wie
+    ein Seitenwechsel: öffnen, Rückweg, Blättern, Querverweise, Navigation.
+  - **Scrollstelle:** Jeder Bereich merkt sie sich mit seiner Adresse (ohne Wahl und Wertung). Wer zu derselben
+    Adresse zurückkehrt, landet an derselben Stelle, sonst oben.
+  - Eine Scheibe der Saison zeigt über `CardPage` die `CardContextBar` (Rückweg, vorige, nächste). Die Liste hat keine eigene Wertung: Sie nimmt die des Geräts (`scoring` im
+    Speicher), die Scheibe und Zeitraum beim Umschalten schreiben. Die Familie teilen Liste und Zeitraum
+    (`changeList`, `changePeriod` in `App`): wer sie in einem wählt, findet sie im anderen wieder, auch über die Leiste
+    oben; Filter, Zeitraum und Scrollstelle bleiben je Ansicht. `App` hält, was beide teilen
+    (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
+    Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums.
 - **Adresse** (Plan N1, `nav/routes` und `nav/navigate` aus `shot-ui`): Der Kopf zeigt „Adresse in der App: …“
   (`data-address`) für den Zeitraum und die Scheibe. Im Artifact kommt nur ein einfacher Anker an, deshalb führt das
   Labor die Adresse nicht als URL. „Scheibe öffnen“ baut die Adresse der Scheibe mit dem Zeitraum als Herkunft, „Zurück

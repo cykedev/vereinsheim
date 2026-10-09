@@ -213,6 +213,34 @@ Plan `plans/2026-10-09-spiegel-scheiben-liste.md`, Branch `feat/spiegel-scheiben
     `ListHeader`, die Abende sind Überschriften zweiter Ebene.
 - **Für N3:** echte Navigation und Blättern mit Daten; die Zeile wird dann ein Link.
 
+## Umgesetzt in N3 (9. Oktober 2026)
+
+Plan `plans/2026-10-09-spiegel-app-rahmen.md`, Branch `feat/spiegel-app-rahmen`.
+
+- **Rahmen (`AppFrame`):**
+  - Ab 1024 px eine Seitenleiste: „Spiegel“, Start mit Zähler, Scheiben, Fortschritt, „QR scannen“, Profil, Admin als
+    letzter Eintrag.
+  - Darunter eine untere Leiste mit fünf Bereichen, Scannen erhaben in der Mitte.
+  - Telefon quer (unter 500 px hoch): eine schmale Leiste links. Eine untere Leiste nähme dort 72 von 375 px, die
+    Scheibe passte nicht mehr unter die Sprungleiste.
+  - Admin sieht nur ein Admin; auf dem Telefon steckt Admin in Profil.
+- **Platz der Leiste:** `--app-bar` (72 px). Pille, Abstand der Seite und die Größe der Scheibe richten sich danach.
+- **Links statt Rückrufe:**
+  - `RouteLink` mit der Adresse aus `urlFromRoute` für Zeile der Liste, Hinweis auf andere Familien, „Verlauf dieser
+    Filter“, „Alle in Scheiben zeigen“, „Scheibe öffnen“, Rückweg, Blättern und Navigation.
+  - Ein Provider fängt im Labor den Klick ab. **Für N7:** die App setzt `next/link` als Komponente des Providers,
+    `navigate` entfällt.
+- **Bereiche merken sich ihren Zustand** wie Reiter (`areaLinks`): Filter, Zeitraum und die zuletzt gewählte Familie,
+  im Labor auch die Scrollstelle.
+- **Rückweg und Blättern** (`CardContextBar`):
+  - „← Scheiben“ bzw. „← Letzte 90 Tage“, dazu „‹ vorige · nächste ›“ in zeitlicher Folge der Scheiben der Herkunft
+    (`contextCardIds`); vorige ist die ältere.
+  - Am Ende ausgegraut. Ohne Herkunft und von Start kein Blättern (Start kommt mit N5).
+- **Labor:**
+  - „Labor: App | Beispiele“ statt der alten Ansichten.
+  - Start, Scannen, Profil und Admin sind Platzhalter mit dem Schritt, der sie bringt.
+  - Ein Router im Speicher (`go`). Browser-Zurück gibt es im Artifact nicht.
+
 ## Was die Bausteine schon haben, was fehlt
 
 - **Wiederverwendbar:**
@@ -228,8 +256,8 @@ Plan `plans/2026-10-09-spiegel-scheiben-liste.md`, Branch `feat/spiegel-scheiben
   - untere Leiste und Seitenleiste;
   - der Auswahlmodus;
   - Start.
-- **Technisch zu lösen:** Die Pille „Zurück zu …“ (`ReturnPill`) sitzt unten fest und muss über die untere Leiste
-  mit erhabenem Scan-Knopf rücken. Der Rückweg zum Fortschritt hängt im Labor am Speicher und muss in die Adresse.
+- **Gelöst in N3:** Die Pille „Zurück zu …“ rückt über die untere Leiste (`--app-bar`). Der Rückweg kommt aus der
+  Adresse der Scheibe; im Speicher bleibt nur die Scrollstelle.
 
 ## Schritte (je eine Session, über `/plan`)
 
