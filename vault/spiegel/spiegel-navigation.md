@@ -283,6 +283,15 @@ Plan `plans/2026-10-09-spiegel-start.md`, Branch `feat/spiegel-start`. Drei Entw
   letzten Abends, über alle Familien.
 - **Offen:** „Läuft gerade“ und echte offene Fälle (N6, N7).
 
+## Labor näher an der App (9. Oktober 2026)
+
+Plan `plans/2026-10-09-spiegel-labor-wie-app.md`. Der Labor-Kopf ist weg, die Seiten beginnen wie in der App, damit
+wir die Usability beurteilen können. Was nur das Labor hat (Stand, Adresse, Beispielscheiben, Schüsse setzen), liegt
+hinter einem kleinen Knopf „Labor-Werkzeuge“.
+
+- **Darstellung (System, Hell, Dunkel) ist eine Einstellung der App:** In Profil, am Desktop zusätzlich unten in der
+  Seitenleiste (`AppFrame.sidebarFooter`).
+
 ## Was die Bausteine schon haben, was fehlt
 
 - **Wiederverwendbar:**

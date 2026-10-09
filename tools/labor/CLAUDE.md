@@ -22,7 +22,9 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   Chrome; `CHROME_PATH` für einen anderen Pfad). Neue Bedienung bekommt Prüfungen in `pruefung.js`.
 - **Eigenheiten der Skriptprüfung** (Headless-Chrome mit `--dump-dom`): Klicks sind `cancelable`, sonst folgt der
   Browser einem Link trotz `preventDefault` und die Seite ist weg („Kein Bericht“). Helfer: `button`, `link` (nach Text
-  oder `aria-label`), `area` (sichtbarer Eintrag der Navigation). Ein synthetischer Klick fokussiert
+  oder `aria-label`), `area` (sichtbarer Eintrag der Navigation), `helpSheet` (das Blatt der Hilfe ist das letzte
+  `<dialog>`; davor steht das der Labor-Werkzeuge). Knöpfe im Blatt der Labor-Werkzeuge findet `button(…,
+$("[data-labor-panel]"))` auch geschlossen; der Pillen-Helfer übergeht „Zurück zur App“. Ein synthetischer Klick fokussiert
   nicht und eine synthetische Taste löst keine Aktion aus (Tastatur nur über echte, fokussierbare Knöpfe
   prüfen); das `close`-Ereignis eines `<dialog>` kommt spät oder gar nicht (nie darauf warten; Escape-Weg
   über `requestClose()`, das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
@@ -37,8 +39,14 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
 - **Die App im Rahmen** (Plan L3, N2, N3): `AppFrame` umgibt jede Ansicht; die Navigation wechselt die Bereiche
   (Start `StartView` seit N5, Scheiben `ListView`, Fortschritt `PeriodView`, Platzhalter `PlaceholderView` für
   Scannen, Profil, Admin). „Offen“ auf Start zeigt zwei Beispiele (`OPEN_EXAMPLES`); ihre Zahl steht am Rahmen.
-  - Der Labor-Kopf schaltet „Labor: App | Beispiele“. Beispiele sind die Beispielscheiben in `CardView`, ohne Adresse
+  - **Kein Labor-Kopf** (Labor näher an der App, `plans/2026-10-09-spiegel-labor-wie-app.md`): Die Seiten beginnen wie
+    in der App. Was nur das Labor hat, liegt hinter dem runden Knopf „Labor-Werkzeuge“ unten rechts über der Leiste
+    (`LaborPanel`, `data-labor-button`): ein Blatt mit Stand, Absatz und Hinweis zur Ansicht, „Adresse in der App“
+    (`data-address`), den Umschaltern der Ansicht (auf der Scheibe: Scheibe, Beispiel, Tippen, Neuer Schuss) und
+    „Beispielscheiben öffnen“ bzw. „Zurück zur App“. Beispiele sind die Beispielscheiben in `CardView`, ohne Adresse
     und ohne aktiven Bereich.
+  - **Darstellung** (System, Hell, Dunkel, `ThemeSwitch`): am Desktop unten in der Seitenleiste
+    (`AppFrame.sidebarFooter`), auf dem Telefon und im Querformat in Profil.
   - Die Ansicht steht in `labor.mode`. Ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie, ein Abend
     (`#2026-09-25`) die Scheiben-Liste.
   - **Router im Speicher:** Jeder Link (`RouteLink`) landet über den `RouteLinkProvider` in `go(route)` in `App`, wie
@@ -51,7 +59,8 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
     oben; Filter, Zeitraum und Scrollstelle bleiben je Ansicht. `App` hält, was beide teilen
     (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
     Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums.
-- **Adresse** (Plan N1, `nav/routes` und `nav/navigate` aus `shot-ui`): Der Kopf zeigt „Adresse in der App: …“
+- **Adresse** (Plan N1, `nav/routes` und `nav/navigate` aus `shot-ui`): Das Blatt der Labor-Werkzeuge zeigt
+  „Adresse in der App: …“
   (`data-address`) für den Zeitraum und die Scheibe. Im Artifact kommt nur ein einfacher Anker an, deshalb führt das
   Labor die Adresse nicht als URL. „Scheibe öffnen“ baut die Adresse der Scheibe mit dem Zeitraum als Herkunft, „Zurück
   zu „…““ stellt den Zeitraum aus ihr wieder her (`restore`), die Wertung der Scheibe kommt mit. Nur die Scrollstelle
@@ -63,10 +72,9 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   Wettkampf des Luftgewehrs; das Luftgewehr bleibt gleich, Fingerabdruck im Test); amtliche Wertung je Scheibe (Luftpistole und Wettkampf ganze Ringe, Training Luftgewehr Zehntel, nur
   Probe keine); benannt „Vorbereitung Landesmeisterschaft“ und „Neue
   Munition“; „jetzt“ ist der 30. September 2026, 12:00 Uhr MESZ (die Saison liegt ganz in der Sommerzeit).
-- **Seite aus `CardPage`** (Plan Schritt 4): Labor-Kopf mit Scheibe, Beispiel und „Darstellung“ (nicht „Thema“,
-  das ist die Reiterleiste), darunter die Seite einer Scheibe wie in der App. Was nur das Labor hat
-  (Ansehen/Setzen, Neuer Schuss, der Hinweis zum Beispiel), steht im Labor-Kopf; „Übrige blass/aus“ ist ein
-  Eckknopf der Scheibe. Reiter: Anker in der Adresse vor `labor.tab` in `localStorage`; in der Prüfung schreibt
+- **Seite aus `CardPage`** (Plan Schritt 4): die Seite einer Scheibe wie in der App. Was nur das Labor hat (Scheibe,
+  Beispiel, Ansehen/Setzen, Neuer Schuss, der Hinweis zum Beispiel), steht im Blatt der Labor-Werkzeuge; „Übrige
+  blass/aus“ ist ein Eckknopf der Scheibe. Reiter: Anker in der Adresse vor `labor.tab` in `localStorage`; in der Prüfung schreibt
   das Labor keinen Anker, und `underTest()` hält `#pruefen` beim Laden fest.
 - **Prüfung der Seite:** Desktop in einem Rahmen von 1280 × 900 (das Fenster der Prüfung ist über 2000 px hoch),
   Telefon bei 390 und 375 px, Querformat 812 × 375. `scrollWhileStuck` scrollt in den Bereich, in dem die
