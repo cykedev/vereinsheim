@@ -3,13 +3,14 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { DEFAULT_LIST, type ListRoute } from "../nav/routes"
 import { CardList } from "./CardList"
 import { periodModel } from "./model"
 import { initialPeriodState } from "./state"
 import { NOW, periodCard, TZ } from "./testSeason"
 
 const metric = metricByKey("result.decimalMean")!
-const render = (count: number, chosen: string | null = null, onShowAll?: () => void) => {
+const render = (count: number, chosen: string | null = null, showAll?: ListRoute) => {
   const cards = Array.from({ length: count }, (_, i) =>
     periodCard(`k${i}`, 40 - i, [90 + i, 90 + i], { kind: i === 2 ? "competition" : "training" })
   )
@@ -29,7 +30,7 @@ const render = (count: number, chosen: string | null = null, onShowAll?: () => v
       timeZone: TZ,
       chosen,
       onChoose: () => {},
-      onShowAll,
+      showAll,
     })
   )
 }
@@ -63,10 +64,16 @@ describe("Liste der Scheiben (D10)", () => {
     expect(render(10)).not.toContain("zeigen</button>")
   })
 
-  it("„Alle in Scheiben zeigen“ nur mit Rückruf; sonst bleibt die Liste gleich (Plan N2, D8)", () => {
+  it("„Alle in Scheiben zeigen“ nur mit Ziel, als Link; sonst bleibt die Liste gleich (Plan N2, D8; N3)", () => {
     expect(render(4)).not.toContain("data-show-all")
-    const html = render(4, null, () => {})
-    expect(html).toMatch(/data-show-all="true"[^>]*>Alle in Scheiben zeigen</)
-    expect(html.replace(/<button[^>]*data-show-all[^]*?<\/button>/, "")).toBe(render(4))
+    const html = render(4, null, {
+      page: "cards",
+      query: { ...DEFAULT_LIST, family: "lg-freihand" },
+      evening: null,
+    })
+    expect(html).toMatch(
+      /<a href="\/cards\?family=lg-freihand" data-show-all="true"[^>]*>Alle in Scheiben zeigen<\/a>/
+    )
+    expect(html.replace(/<a[^>]*data-show-all[^]*?<\/a>/, "")).toBe(render(4))
   })
 })

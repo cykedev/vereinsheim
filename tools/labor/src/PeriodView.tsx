@@ -24,7 +24,7 @@ import { VolumeChart } from "@vereinsheim/shot-ui/period/VolumeChart"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { useCallback, useEffect, useMemo } from "react"
 
-import { progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
+import { listFromProgress, openCard, progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import { urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 
 import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
@@ -35,7 +35,6 @@ import {
   SEASON_NOW_MS,
   SEASON_TIME_ZONE,
   targetOfFamily,
-  type SeasonCard,
 } from "./season"
 import { store } from "./store"
 import { exposePeriodForTest } from "./testHook"
@@ -50,9 +49,6 @@ export interface PeriodViewProps {
   explain: boolean
   onHelp: (helpId: string | null) => void
   /** „Scheibe öffnen“: die Scheibe in der Ansicht „Scheibe“ zeigen */
-  onOpen: (card: SeasonCard) => void
-  /** „Alle in Scheiben zeigen“: die Scheiben-Liste mit Familie, Art und Zeitraum (Plan N2, D8) */
-  onShowAll: () => void
 }
 
 /**
@@ -60,20 +56,11 @@ export interface PeriodViewProps {
  * Seite, alles Gerechnete aus `periodModel`, die Bausteine aus `shot-ui/period`. Der Zustand kommt aus `App`, damit
  * „Zurück zum Zeitraum“ Filter und Wahl wiederfindet.
  */
-export function PeriodView({
-  header,
-  state,
-  dispatch,
-  explain,
-  onHelp,
-  onOpen,
-  onShowAll,
-}: PeriodViewProps) {
+export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodViewProps) {
   const active = useActiveSection(PERIOD_IDS)
   const { pill, jumpTo, back, close } = useReturnJump()
   const all = season()
   const family = all.filter((c) => c.family === state.family)
-  const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all])
   // das Modell ohne die Wahl: eine neue Wahl rechnet nur die Ablesung neu (Review, 9. Oktober 2026)
   const { choice, compare, kind, includeProbeOnly, metric, view } = state
   const base = useMemo(
@@ -108,13 +95,9 @@ export function PeriodView({
   const sentence = periodSentence(model)
   const reading = model.reading
   const readingValue = reading ? (model.values.find((v) => v.id === reading.card.id) ?? null) : null
-  const open = useCallback(
-    (id: string) => {
-      const card = byId.get(id)
-      if (card) onOpen(card)
-    },
-    [byId, onOpen]
-  )
+  // die Wege als Adressen (Plan N3, D3): eine Scheibe mit diesem Fortschritt als Herkunft, „Alle in Scheiben zeigen“
+  const here = progressRoute(state, null)
+  const cardRoute = (id: string) => openCard(here, id)
   const chooseFromList = useCallback(
     (id: string) => {
       // nur eine neue Wahl holt den Verlauf ins Bild, das Abwählen nicht
@@ -234,7 +217,7 @@ export function PeriodView({
                 delta={model.deltas.get(reading.card.id)}
                 metric={model.metric}
                 timeZone={TZ}
-                onOpen={open}
+                cardRoute={cardRoute}
               />
             )}
           </div>
@@ -273,7 +256,7 @@ export function PeriodView({
                 metric={model.metric}
                 timeZone={TZ}
                 chosen={reading.chosen}
-                onOpen={open}
+                cardRoute={cardRoute}
               />
             </div>
           )
@@ -295,7 +278,7 @@ export function PeriodView({
                   timeZone={TZ}
                   chosen={state.chosen}
                   onChoose={chooseFromList}
-                  onShowAll={onShowAll}
+                  showAll={listFromProgress(here)}
                 />
               </div>
             ),

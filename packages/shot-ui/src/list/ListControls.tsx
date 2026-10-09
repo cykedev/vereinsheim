@@ -3,7 +3,8 @@
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 
 import { CardFilters } from "../controls/CardFilters"
-import type { ListQuery } from "../nav/routes"
+import { RouteLink } from "../nav/RouteLink"
+import type { ListQuery, ProgressRoute } from "../nav/routes"
 
 /** Namen der Merkmale (D7); Unbekanntes mit seiner Id */
 const FLAG_NAMES: Readonly<Record<string, string>> = {
@@ -27,7 +28,8 @@ export interface ListControlsProps {
   rangeLabel: string | null
   onQuery: (query: ListQuery) => void
   /** „Verlauf dieser Filter“: in den Fortschritt (D8) */
-  onProgress: () => void
+  /** „Verlauf dieser Filter“: der Fortschritt mit Familie, Art und Zeitraum der Liste (`progressFromList`) */
+  progress: ProgressRoute
 }
 
 /**
@@ -42,7 +44,7 @@ export function ListControls({
   flags,
   rangeLabel,
   onQuery,
-  onProgress,
+  progress,
 }: ListControlsProps) {
   return (
     <div data-list-controls className="flex flex-wrap items-center gap-2">
@@ -90,14 +92,13 @@ export function ListControls({
           </button>
         </span>
       )}
-      <button
-        type="button"
+      <RouteLink
+        route={progress}
         data-to-progress
-        onClick={onProgress}
         className="cursor-pointer rounded-full border border-line-strong px-3 py-1.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
       >
         Verlauf dieser Filter
-      </button>
+      </RouteLink>
     </div>
   )
 }

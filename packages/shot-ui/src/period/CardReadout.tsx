@@ -8,6 +8,8 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue, unitText } from "../format"
 import { groupView } from "../geometry"
+import { RouteLink } from "../nav/RouteLink"
+import type { CardRoute } from "../nav/routes"
 import { hasPosition, matchShots } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
 import { isProbeOnly } from "./model"
@@ -25,7 +27,8 @@ export interface CardReadoutProps {
   timeZone: string
   /** gewählt oder, ohne Wahl, die neueste */
   chosen: boolean
-  onOpen: (id: string) => void
+  /** die Adresse einer Scheibe aus diesem Fortschritt (`openCard` mit ihm als Herkunft) */
+  cardRoute: (id: string) => CardRoute
   className?: string
 }
 
@@ -56,7 +59,7 @@ export function CardReadout({
   metric,
   timeZone,
   chosen,
-  onOpen,
+  cardRoute,
   className,
 }: CardReadoutProps) {
   const shots = shownShots(card)
@@ -112,13 +115,12 @@ export function CardReadout({
           <p className="text-[13px] text-muted-foreground">ohne Lage</p>
         )}
       </div>
-      <button
-        type="button"
-        onClick={() => onOpen(card.id)}
+      <RouteLink
+        route={cardRoute(card.id)}
         className="justify-self-start cursor-pointer rounded-full border border-line-strong px-3.5 py-1.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
       >
         Scheibe öffnen
-      </button>
+      </RouteLink>
     </div>
   )
 }
@@ -133,9 +135,9 @@ export function CardLine({
   delta,
   metric,
   timeZone,
-  onOpen,
+  cardRoute,
   className,
-}: Pick<CardReadoutProps, "card" | "value" | "delta" | "metric" | "timeZone" | "onOpen"> & {
+}: Pick<CardReadoutProps, "card" | "value" | "delta" | "metric" | "timeZone" | "cardRoute"> & {
   className?: string
 }) {
   const parts = [
@@ -151,13 +153,12 @@ export function CardLine({
       <span className="min-w-0 font-medium text-foreground-2 tabular-nums">
         {parts.join(" · ")}
       </span>
-      <button
-        type="button"
-        onClick={() => onOpen(card.id)}
+      <RouteLink
+        route={cardRoute(card.id)}
         className="shrink-0 cursor-pointer rounded font-semibold whitespace-nowrap text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
       >
         Scheibe öffnen
-      </button>
+      </RouteLink>
     </div>
   )
 }

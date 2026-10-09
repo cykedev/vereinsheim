@@ -22,6 +22,9 @@ addEventListener("load", async () => {
       $$("button", root).find(
         (b) => txt(b).trim() === label || b.getAttribute("aria-label") === label
       )
+    // Wege sind seit N3 Links mit Adresse (`RouteLink`), gefunden nach Text oder Namen
+    const link = (label, root = document) =>
+      $$("a", root).find((a) => txt(a).trim() === label || a.getAttribute("aria-label") === label)
     const zoom = () => button("Auf Gruppe zoomen")
     // Adressen (Plan N1): die Zeile im Kopf, in Teile wie `location`, hin und zurück über den Prüfhaken
     const addr = () => txt($("[data-address]")).trim()
@@ -49,7 +52,8 @@ addEventListener("load", async () => {
           : v
     const same = (a, b) => JSON.stringify(sortKeys(a)) === JSON.stringify(sortKeys(b))
     const click = async (el, ms = 60) => {
-      el.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+      // abbrechbar wie ein echter Klick: sonst folgt der Browser einem Link trotz `preventDefault` (N3)
+      el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }))
       await wait(ms)
     }
     const circleOf = (g) => $("circle", g)
@@ -1565,7 +1569,7 @@ addEventListener("load", async () => {
       w.scrollTo(0, region.getBoundingClientRect().top + w.scrollY - 56)
     }
     const frameClick = async (f, el, ms = 150) => {
-      el.dispatchEvent(new f.contentWindow.MouseEvent("click", { bubbles: true }))
+      el.dispatchEvent(new f.contentWindow.MouseEvent("click", { bubbles: true, cancelable: true }))
       await wait(ms)
     }
     // Desktop in einem Fenster von 1280 × 900 (das Fenster der Prüfung ist über 2000 px hoch)
@@ -2298,7 +2302,7 @@ addEventListener("load", async () => {
           progressAddress.includes(`pick=${chosenId}`),
         progressAddress
       )
-      await click(button("Scheibe öffnen", $("[data-card-readout]")), 500)
+      await click(link("Scheibe öffnen", $("[data-card-readout]")), 500)
       const openedAddress = addr()
       check(
         "Adresse: die geöffnete Scheibe trägt den Zeitraum als Herkunft, ohne `pick`",
@@ -2352,12 +2356,12 @@ addEventListener("load", async () => {
       check("Adresse: zurück auf Zehntel wie vor dem Öffnen", addr() === progressAddress, addr())
       // ganze Ringe im Zeitraum, Zehntel im Speicher des Geräts: die Scheibe öffnet mit der Wertung des Zeitraums,
       // und „Zurück“ lässt sie stehen (Review N1). Erst auf einer Scheibe Zehntel wählen, damit der Speicher sie hat.
-      await click(button("Scheibe öffnen", $("[data-card-readout]")), 500)
+      await click(link("Scheibe öffnen", $("[data-card-readout]")), 500)
       await click(button("Ganze Ringe"), 120)
       await click(button("Zehntel"), 120)
       await click(button("Zurück zu „Neue Munition“"), 500)
       await click(button("Ganze Ringe"), 150)
-      await click(button("Scheibe öffnen", $("[data-card-readout]")), 500)
+      await click(link("Scheibe öffnen", $("[data-card-readout]")), 500)
       check(
         "Adresse: ganze Ringe aus dem Zeitraum gelten auf der geöffneten Scheibe",
         L().state.scoring === "rings" && addr().includes("scoring=rings"),
@@ -2659,7 +2663,7 @@ addEventListener("load", async () => {
         `${addr()} · ${Math.round(window.scrollY)} / ${Math.round(listY)}`
       )
       // Querverweise: Liste → Zeitraum „Alles“, Zeitraum → Liste mit Zeitraum-Chip
-      await click(button("Verlauf dieser Filter"), 400)
+      await click(link("Verlauf dieser Filter"), 400)
       check(
         "Liste: „Verlauf dieser Filter“ öffnet den Zeitraum „Alles“ der Familie",
         P()?.state.family === "lg-freihand" &&
@@ -2670,7 +2674,7 @@ addEventListener("load", async () => {
       await choose("Neue Munition")
       // die Wertung des Zeitraums geht mit in die Liste und zurück (Review N2)
       await click(button("Ganze Ringe"), 300)
-      await click(button("Alle in Scheiben zeigen"), 400)
+      await click(link("Alle in Scheiben zeigen"), 400)
       check(
         "Zeitraum: „Alle in Scheiben zeigen“ zeigt die Liste mit dem Zeitraum als Chip",
         !!$("[data-card-list-page]") &&
@@ -2685,7 +2689,7 @@ addEventListener("load", async () => {
         .filter((r) => !r.official)
         .map((r) => txt($(`[data-card-row="${r.id}"] [data-result]`)))
       const listScoring = Li().model.scoring
-      await click(button("Verlauf dieser Filter"), 400)
+      await click(link("Verlauf dieser Filter"), 400)
       check(
         "Liste: die Wertung des Zeitraums gilt in der Liste und im Rückweg „Verlauf dieser Filter“",
         listScoring === "rings" &&
@@ -2696,7 +2700,7 @@ addEventListener("load", async () => {
         `${probeFront.slice(0, 3).join(" ")} · ${addr()}`
       )
       await click(button("Zehntel"), 300)
-      await click(button("Alle in Scheiben zeigen"), 400)
+      await click(link("Alle in Scheiben zeigen"), 400)
       await click(button("Zeitraum entfernen"), 300)
       check(
         "Liste: „×“ entfernt den Zeitraum",

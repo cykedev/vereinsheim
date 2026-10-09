@@ -4,10 +4,17 @@ import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { DEFAULT_LIST } from "../nav/routes"
+import { listOnEvening, openCard } from "../nav/navigate"
+import { DEFAULT_LIST, type ListRoute } from "../nav/routes"
 import { NOW, periodCard, TZ } from "../period/testSeason"
 import { cardListModel, type ListInputCard } from "./evenings"
 import { EveningList } from "./EveningList"
+
+const LIST: ListRoute = {
+  page: "cards",
+  query: { ...DEFAULT_LIST, family: "lg-freihand" },
+  evening: null,
+}
 
 const at = (hourUtc: number, minute = 0, day = 29) => Date.UTC(2026, 8, day, hourUtc, minute)
 const INPUT: ListInputCard[] = [
@@ -33,8 +40,9 @@ const render = (scoring: "decimal" | "rings" = "decimal", input = INPUT) => {
       target: LG_10M,
       families: FAMILIES,
       timeZone: TZ,
-      onOpen: () => {},
-      onFamily: () => {},
+      cardRoute: (id: string) => openCard(LIST, id),
+      otherFamilyRoute: (family: string, day: string) =>
+        listOnEvening({ ...DEFAULT_LIST, family: "lg-freihand" }, family, day),
     })
   )
 }
@@ -63,7 +71,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     expect(html.match(/scope="row"/g)).toHaveLength(2)
     expect(html).not.toContain("rowSpan")
     expect(html).toMatch(/<tr data-card-row="b"[^>]*><td class="px-2 py-1"><\/td>/)
-    expect(html).toMatch(/<td colSpan="8" class="[^"]*text-right"><button[^>]*data-other-family/)
+    expect(html).toMatch(/<td colSpan="8" class="[^"]*text-right"><a [^>]*data-other-family/)
     expect(text(html)).not.toMatch(/\d Scheiben? · \d+ Schuss auch/)
     for (const head of [
       "Datum",
@@ -78,14 +86,16 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
   })
 
   it("Mischabend: der Hinweis nennt die andere Familie mit Namen und Zahl", () => {
-    expect(html).toMatch(/data-other-family="lp-freihand"[^>]*>auch 1 Scheibe Luftpistole ›</)
+    expect(html).toMatch(
+      /<a href="\/cards\?family=lp-freihand#2026-09-29" data-other-family="lp-freihand"[^>]*>auch 1 Scheibe Luftpistole ›</
+    )
     expect(html.match(/data-other-family=/g)).toHaveLength(1)
   })
 
   it("Zeilen in zeitlicher Folge: Uhrzeit, Art, Ergebnis, Ø, Abstand, Schuss; die kleine Scheibe ist der Knopf", () => {
     expect([...html.matchAll(/data-card-row="([^"]+)"/g)].map((m) => m[1])).toEqual(["a", "b", "d"])
     expect(html).toMatch(
-      /<tr data-card-row="a"[^>]*><th[^>]*>[^<]*<\/th><td[^>]*><button type="button" aria-label=/
+      /<tr data-card-row="a"[^>]*><th[^>]*>[^<]*<\/th><td[^>]*><a href="\/cards\/a\?from=list&amp;family=lg-freihand" aria-label=/
     )
     const rowA = html.slice(html.indexOf('data-card-row="a"'), html.indexOf('data-card-row="b"'))
     expect(text(rowA)).toContain("18:30 T")

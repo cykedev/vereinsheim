@@ -22,7 +22,15 @@ const render = (props: Partial<Parameters<typeof CardReadout>[0]> = {}) =>
       metric,
       timeZone: TZ,
       chosen: true,
-      onOpen: () => {},
+      cardRoute: (id: string) => ({
+        page: "card" as const,
+        id,
+        origin: null,
+        selection: null,
+        shot: null,
+        scoring: "decimal" as const,
+        anchor: null,
+      }),
       ...props,
     })
   )
@@ -37,7 +45,8 @@ describe("Ablesung einer Scheibe (D9)", () => {
     expect(html).toContain("+0,12 zum Schnitt der 5 Scheiben davor")
     expect(html).toContain('data-in-band="true"')
     expect(html).toMatch(/<svg viewBox=/)
-    expect(html).toContain("Scheibe öffnen")
+    // „Scheibe öffnen“ ist ein Link auf die Adresse der Scheibe (Plan N3, D3)
+    expect(html).toMatch(/<a href="\/cards\/[^"]+"[^>]*>Scheibe öffnen<\/a>/)
   })
 
   it("ohne Wahl die neueste; erste Scheibe ohne Schnitt; außerhalb des Bands; ohne Band nichts", () => {
@@ -70,10 +79,18 @@ describe("Ablesezeile auf dem Telefon", () => {
         delta: { delta: 0.03, n: 5 },
         metric,
         timeZone: TZ,
-        onOpen: () => {},
+        cardRoute: (id: string) => ({
+          page: "card" as const,
+          id,
+          origin: null,
+          selection: null,
+          shot: null,
+          scoring: "decimal" as const,
+          anchor: null,
+        }),
       })
     )
     expect(html).toContain("28.09. · 10,00 · +0,03 zum Schnitt davor")
-    expect(html).toContain("Scheibe öffnen")
+    expect(html).toMatch(/<a href="\/cards\/[^"]+"[^>]*>Scheibe öffnen<\/a>/)
   })
 })

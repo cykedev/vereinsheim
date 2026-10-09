@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
 import { CardFilters } from "../controls/CardFilters"
-import { DEFAULT_LIST, type ListQuery } from "../nav/routes"
+import { DEFAULT_LIST, DEFAULT_PROGRESS, type ListQuery } from "../nav/routes"
 import { ListControls, type ListControlsProps } from "./ListControls"
 
 const QUERY: ListQuery = {
@@ -23,7 +23,11 @@ const props = (patch: Partial<ListControlsProps> = {}): ListControlsProps => ({
   flags: ["nur-pdf"],
   rangeLabel: "Neue Munition",
   onQuery: () => {},
-  onProgress: () => {},
+  progress: {
+    page: "progress",
+    query: { ...DEFAULT_PROGRESS, family: "lg-freihand", choice: { type: "all" } },
+    section: null,
+  },
   ...patch,
 })
 
@@ -76,13 +80,10 @@ describe("Filter der Scheiben-Liste (Plan N2, D7, D8)", () => {
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, kind: "competition" })
   })
 
-  it("„Verlauf dieser Filter“ ruft den Querverweis", () => {
-    const onProgress = vi.fn()
-    const button = find(
-      ListControls(props({ onProgress })),
-      (e) => e.props["data-to-progress"] === true
-    )!
-    ;(button.props.onClick as () => void)()
-    expect(onProgress).toHaveBeenCalledOnce()
+  it("„Verlauf dieser Filter“ ist ein Link auf den Fortschritt (Plan N3, D3)", () => {
+    const html = renderToStaticMarkup(h(ListControls, props()))
+    expect(html).toMatch(
+      /<a href="\/progress\?range=all&amp;family=lg-freihand" data-to-progress="true"[^>]*>Verlauf dieser Filter<\/a>/
+    )
   })
 })

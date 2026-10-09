@@ -7,6 +7,8 @@ import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, useState } from "react"
 
 import { formatSigned, formatValue } from "../format"
+import { RouteLink } from "../nav/RouteLink"
+import type { ListRoute } from "../nav/routes"
 import { cardKindText } from "./CardReadout"
 import { isProbeOnly } from "./model"
 
@@ -23,8 +25,8 @@ export interface CardListProps {
   onChoose?: (id: string) => void
   /** auf dem Telefon so viele Zeilen, bis „Alle zeigen“ */
   collapseAfter?: number
-  /** „Alle in Scheiben zeigen“: in die Scheiben-Liste mit Familie, Art und Zeitraum (Plan N2, D8) */
-  onShowAll?: () => void
+  /** „Alle in Scheiben zeigen“: die Scheiben-Liste mit Familie, Art und Zeitraum (Plan N2, D8; `listFromProgress`) */
+  showAll?: ListRoute
   className?: string
 }
 
@@ -48,7 +50,7 @@ export function CardList({
   chosen,
   onChoose,
   collapseAfter = 10,
-  onShowAll,
+  showAll,
   className,
 }: CardListProps) {
   const [expanded, setExpanded] = useState(false)
@@ -164,15 +166,14 @@ export function CardList({
           {expanded ? "Weniger zeigen" : `Alle ${rows.length} zeigen`}
         </button>
       )}
-      {onShowAll && (
-        <button
-          type="button"
+      {showAll && (
+        <RouteLink
+          route={showAll}
           data-show-all
-          onClick={onShowAll}
-          className="mt-1 w-full cursor-pointer rounded-lg px-2 py-2 text-[13px] font-semibold text-primary hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
+          className="mt-1 block w-full cursor-pointer rounded-lg px-2 py-2 text-center text-[13px] font-semibold text-primary hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
         >
           Alle in Scheiben zeigen
-        </button>
+        </RouteLink>
       )}
     </div>
   )

@@ -5,7 +5,8 @@ import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { EveningList } from "@vereinsheim/shot-ui/list/EveningList"
 import { ListControls } from "@vereinsheim/shot-ui/list/ListControls"
 import { ListHeader } from "@vereinsheim/shot-ui/list/ListHeader"
-import { urlFromRoute, type ListQuery } from "@vereinsheim/shot-ui/nav/routes"
+import { listOnEvening, openCard, progressFromList } from "@vereinsheim/shot-ui/nav/navigate"
+import { urlFromRoute, type ListQuery, type ListRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { useEffect, useMemo } from "react"
 
 import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
@@ -16,7 +17,6 @@ import {
   SEASON_NOW_MS,
   SEASON_TIME_ZONE,
   targetOfFamily,
-  type SeasonCard,
 } from "./season"
 import { exposeListForTest } from "./testHook"
 
@@ -26,12 +26,6 @@ export interface ListViewProps {
   onQuery: (query: ListQuery) => void
   /** Wertung des Geräts (die Liste hat keine eigene) */
   scoring: Scoring
-  /** die ganze Zeile öffnet die Scheibe in der Ansicht „Scheibe“ */
-  onOpen: (card: SeasonCard) => void
-  /** „Verlauf dieser Filter“ */
-  onProgress: () => void
-  /** eine andere Familie desselben Abends: Familie wechseln, zum Abend springen */
-  onFamily: (family: string, day: string) => void
 }
 
 /**
@@ -39,17 +33,13 @@ export interface ListViewProps {
  * Bausteine aus `shot-ui/list`. Der Zustand (Filter) kommt aus `App`, damit „Zurück zu „Scheiben““ ihn wiederfindet;
  * die Adresse zeigt, wie die App ihn schriebe.
  */
-export function ListView({
-  header,
-  query,
-  onQuery,
-  scoring,
-  onOpen,
-  onProgress,
-  onFamily,
-}: ListViewProps) {
+export function ListView({ header, query, onQuery, scoring }: ListViewProps) {
   const all = season()
   const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all])
+  // die Wege als Adressen (Plan N3, D3): öffnen in der Wertung, die die Zeile vorn zeigt (die amtliche, sonst die
+  // des Geräts), „Verlauf dieser Filter“, eine andere Familie am selben Abend
+  const route: ListRoute = { page: "cards", query, evening: null }
+  const cardRoute = (id: string) => openCard(route, id, byId.get(id)?.card.official ?? scoring)
   const cards = useMemo(() => new Map<string, PeriodCard>(all.map((c) => [c.id, c.card])), [all])
   const model = useMemo(
     () =>
@@ -91,7 +81,7 @@ export function ListView({
               flags={model.flags}
               rangeLabel={model.range?.label ?? null}
               onQuery={onQuery}
-              onProgress={onProgress}
+              progress={progressFromList(route, scoring)}
             />
           }
         />
@@ -101,11 +91,8 @@ export function ListView({
           target={TARGETS[targetOfFamily(family)]}
           families={FAMILIES}
           timeZone={SEASON_TIME_ZONE}
-          onOpen={(id) => {
-            const card = byId.get(id)
-            if (card) onOpen(card)
-          }}
-          onFamily={onFamily}
+          cardRoute={cardRoute}
+          otherFamilyRoute={(family, day) => listOnEvening(query, family, day)}
         />
       </section>
     </div>

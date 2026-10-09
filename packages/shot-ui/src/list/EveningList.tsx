@@ -15,6 +15,8 @@ import { cn } from "@vereinsheim/lib/utils"
 import { formatSigned, formatValue } from "../format"
 import { groupView } from "../geometry"
 import { hasPosition, matchShots } from "../shots"
+import { RouteLink, useRouteNavigate } from "../nav/RouteLink"
+import type { CardRoute, ListRoute } from "../nav/routes"
 import { MiniTarget } from "../target/MiniTarget"
 import { eveningsByMonth, type CardListModel, type ListRow } from "./evenings"
 
@@ -50,10 +52,10 @@ export interface EveningListProps {
   /** Namen der Familien für den Hinweis auf andere Familien des Abends */
   families: readonly { value: string; label: string }[]
   timeZone: string
-  /** die ganze Zeile öffnet die Scheibe (D6) */
-  onOpen: (id: string) => void
-  /** eine andere Familie desselben Abends zeigen (D3) */
-  onFamily: (family: string, day: string) => void
+  /** die Adresse einer Scheibe aus dieser Liste (`openCard` mit der Liste als Herkunft); die ganze Zeile führt hin */
+  cardRoute: (id: string) => CardRoute
+  /** die Liste einer anderen Familie an diesem Abend (`listOnEvening`, D3) */
+  otherFamilyRoute: (family: string, day: string) => ListRoute
   className?: string
 }
 
@@ -69,10 +71,11 @@ export function EveningList({
   target,
   families,
   timeZone,
-  onOpen,
-  onFamily,
+  cardRoute,
+  otherFamilyRoute,
   className,
 }: EveningListProps) {
+  const go = useRouteNavigate()
   if (!model.evenings.length) {
     return (
       <p className={cn("text-[13px] text-muted-foreground", className)}>
@@ -178,7 +181,11 @@ export function EveningList({
                           <tr
                             key={row.id}
                             data-card-row={row.id}
-                            onClick={() => onOpen(row.id)}
+                            onClick={(event) => {
+                              // der Link der kleinen Scheibe geht selbst (auch mit Strg in einen neuen Tab)
+                              if ((event.target as Element).closest("a")) return
+                              go(cardRoute(row.id))
+                            }}
                             className="cursor-pointer hover:bg-surface-2"
                           >
                             {/* jede Zeile hat ihre Datumszelle (das Hervorheben bleibt ein Rechteck), das Datum
@@ -191,8 +198,8 @@ export function EveningList({
                               <td className={CELL} />
                             )}
                             <td className="py-1">
-                              <button
-                                type="button"
+                              <RouteLink
+                                route={cardRoute(row.id)}
                                 aria-label={rowName(row, evening.day, time)}
                                 className="block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-ring"
                               >
@@ -212,7 +219,7 @@ export function EveningList({
                                 ) : (
                                   <span className="block size-8" aria-hidden="true" />
                                 )}
-                              </button>
+                              </RouteLink>
                             </td>
                             <td className={cn(CELL, WIDE, "text-foreground-2")}>{time}</td>
                             <td
@@ -252,15 +259,14 @@ export function EveningList({
                         <tr>
                           <td colSpan={8} className="px-1 pb-1.5 text-right">
                             {evening.others.map((other) => (
-                              <button
+                              <RouteLink
                                 key={other.family}
-                                type="button"
+                                route={otherFamilyRoute(other.family, evening.day)}
                                 data-other-family={other.family}
-                                onClick={() => onFamily(other.family, evening.day)}
-                                className="cursor-pointer rounded-full px-2 py-0.5 text-xs font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
+                                className="inline-block cursor-pointer rounded-full px-2 py-0.5 text-xs font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
                               >
                                 {`auch ${other.count} ${other.count === 1 ? "Scheibe" : "Scheiben"} ${nameOf(other.family)} ›`}
-                              </button>
+                              </RouteLink>
                             ))}
                           </td>
                         </tr>
