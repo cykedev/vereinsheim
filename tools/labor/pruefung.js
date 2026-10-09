@@ -2289,6 +2289,28 @@ addEventListener("load", async () => {
         }
         await apply()
       }
+      // Blatt „Filter“ (U2, D3): Art, Vergleich und Trainings nur aus Probe stehen im Blatt, nicht im Kopf
+      const filterSet = (legend) =>
+        $$("[data-period-picker] fieldset").find((f) => txt($("legend", f)) === legend)
+      const pickIn = (legend, label) =>
+        $$("label", filterSet(legend))
+          .find((l) => txt(l).startsWith(label))
+          ?.querySelector("input")
+      const applyFilters = async ({ kind, compare, probe } = {}) => {
+        await click($("[data-period-chip]"), 150)
+        if (kind) await click(pickIn("Art", kind), 60)
+        if (compare) await click(pickIn("Vergleichen mit", compare), 60)
+        const box = $('[data-period-picker] input[type="checkbox"]')
+        if (probe !== undefined && box.checked !== probe) await click(box, 60)
+        await apply()
+      }
+      const clearCompare = () => applyFilters({ compare: "ohne" })
+      // die Wertung des Geräts steht in Profil (U2, D4); zurück in den Fortschritt über die Navigation
+      const deviceScoring = async (label) => {
+        await click(area("Profil"), 300)
+        await click(button(label, $("[data-scoring-setting]")), 150)
+        await click(area("Fortschritt"), 400)
+      }
       const rowIds = () => $$("[data-card-row]").map((r) => r.dataset.cardRow)
       const chartSvg = () =>
         $(
@@ -2360,6 +2382,67 @@ addEventListener("load", async () => {
         "Zeitraum: Satz im Kopf aus dem Modell",
         txt($("[data-period-header] [data-sentence]")) === tools.period.periodSentence(M())
       )
+      // „Werde ich besser?“ (U2, D1): ohne gewählten Vergleich still gegen den Zeitraum davor, nie die 30 Tage
+      const plainSentence = txt($("[data-period-header] [data-sentence]"))
+      check(
+        "Zeitraum: der Satz vergleicht ohne gewählten Vergleich mit dem Zeitraum davor",
+        !M().compareRange &&
+          M().form?.label === "Zeitraum davor" &&
+          plainSentence.includes("Zeitraum davor") &&
+          !plainSentence.includes("30 Tage"),
+        plainSentence
+      )
+      // eine Zeile Bedienung (U2, D3): die Familie und der Chip, keine Art, kein „mit Training nur aus Probe“
+      check(
+        "Zeitraum: im Kopf nur die Familie und der Chip des Blatts „Filter“",
+        $$("[data-period-controls] > *").filter((c) => c.tagName !== "DIALOG").length === 2 &&
+          !!$('[data-period-controls] [aria-label="Familie"]') &&
+          !!$("[data-period-controls] [data-period-chip]") &&
+          !$('[data-period-controls] [aria-label="Art"]') &&
+          !txt($("[data-period-controls]")).includes("mit Training"),
+        txt($("[data-period-controls]"))
+      )
+      await applyFilters({ kind: "Training", probe: false })
+      const filteredChip = txt($("[data-period-chip]"))
+      const filteredState = [P().state.kind, P().state.includeProbeOnly]
+      await applyFilters({ kind: "Alle", probe: true })
+      check(
+        "Zeitraum: das Blatt „Filter“ setzt Art und Trainings nur aus Probe, der Chip fasst zusammen",
+        filteredState[0] === "training" &&
+          filteredState[1] === false &&
+          filteredChip === "Letzte 90 Tage · Training · ohne Probe-Training" &&
+          P().state.kind === "all" &&
+          P().state.includeProbeOnly === true &&
+          txt($("[data-period-chip]")) === "Letzte 90 Tage",
+        `${filteredChip} · ${filteredState.join(" ")}`
+      )
+      // ein Bezug für eine Scheibe (U2, D2): keine Karte „Gegen deinen Schnitt“, das „?“ steht an der Ablesung
+      check("Zeitraum: keine Karte „Gegen deinen Schnitt“", !$('[data-card="gegen-den-schnitt"]'))
+      await click($('[data-card-readout] button[data-help="gegen-den-schnitt"]'), 120)
+      const readoutHelp = txt($("h2", helpSheet()))
+      await click($('button[aria-label="Schließen"]', helpSheet()), 80)
+      check(
+        "Zeitraum: das „?“ an der Ablesung erklärt den Abstand zum Schnitt davor",
+        readoutHelp === "Abstand zum Schnitt davor",
+        readoutHelp
+      )
+      // Rekorde (U2, D5): oben höchstens fünf aus dem Zeitraum, alle zugeklappt darunter
+      const newRecords = $$("[data-records-new] [data-record]")
+      const allRecords = $$("[data-records] [data-record]")
+      const periodIdsNow = new Set(M().cards.map((c) => c.id))
+      const rowsNow = tools.period.recordRows(M().records, P().state.scoring)
+      check(
+        "Zeitraum: Rekorde oben höchstens fünf aus dem Zeitraum, „Alle Rekorde (n)“ zugeklappt",
+        newRecords.length > 0 &&
+          newRecords.length <= 5 &&
+          newRecords.every((r) =>
+            periodIdsNow.has(rowsNow.find((x) => x.key === r.dataset.record)?.record.cardId)
+          ) &&
+          allRecords.length === rowsNow.length &&
+          txt($("[data-all-records] summary")) === `Alle Rekorde (${rowsNow.length})` &&
+          !$("[data-all-records]").open,
+        `${newRecords.length} oben · ${allRecords.length} alle`
+      )
 
       // Lineal und Liste teilen die Wahl
       const target = M().values[Math.floor(M().values.length / 2)]
@@ -2383,9 +2466,9 @@ addEventListener("load", async () => {
       await click($(`[data-card-row="${rowId}"] button`), 200)
       check("Zeitraum: dieselbe Zeile noch einmal hebt die Wahl auf", P().state.chosen === null)
       check(
-        "Zeitraum: ohne Wahl liest die Ablesung die neueste Scheibe mit Ø, wie Satz und „gegen deinen Schnitt“",
+        "Zeitraum: ohne Wahl liest die Ablesung die neueste Scheibe mit Ø",
         $("[data-card-readout]")?.dataset.cardReadout === M().reading.card.id &&
-          M().reading.card.id === M().ownAverage.last.id &&
+          M().reading.card.id === M().newest &&
           txt($("[data-card-readout] h3")) === "Neueste Scheibe"
       )
       const readoutDelta = txt($("[data-card-readout] [data-delta]"))
@@ -2406,7 +2489,10 @@ addEventListener("load", async () => {
 
       // Wähler
       await click($("[data-period-chip]"), 150)
-      check("Zeitraum: der Chip öffnet das Blatt „Zeitraum“", pickerDialog().open)
+      check(
+        "Zeitraum: der Chip öffnet das Blatt „Filter“",
+        pickerDialog().open && txt($("h2", pickerDialog())) === "Filter"
+      )
       await click($('button[aria-label="Schließen"]', pickerDialog()), 100)
       await choose("Letzte 30 Tage")
       const in30 = P().cards.filter(
@@ -2474,7 +2560,7 @@ addEventListener("load", async () => {
         !!$("[data-legend]") &&
           $$("[data-compare-point]").length === (M().compareValues?.length ?? -1) &&
           !$("[data-band]") &&
-          txt($("[data-compare-chip]")).startsWith("mit Zeitraum davor")
+          txt($("[data-period-chip]")).includes("mit Zeitraum davor")
       )
 
       // Hilfe
@@ -2576,21 +2662,27 @@ addEventListener("load", async () => {
       check(
         "Zeitraum: „Zurück“ stellt aus der Adresse Zeitraum, Vergleich und Wahl wieder her",
         txt($("[data-period-header] h1")) === "Neue Munition" &&
-          !!$("[data-compare-chip]") &&
+          txt($("[data-period-chip]")).includes("mit Zeitraum davor") &&
           P().state.chosen === chosenId &&
           P().state.scoring === "rings" &&
           same(routeOf(addr()).query, { ...progressRoute.query, scoring: "rings" }),
         `${addr()} / ${progressAddress}`
       )
-      await click(button("Zehntel"), 150)
+      // im Fortschritt kein Schalter der Wertung mehr (U2, D4): zurück auf Zehntel über Profil
+      check(
+        "Zeitraum: kein Schalter der Wertung im Fortschritt",
+        !button("Ganze Ringe", $("[data-result-box]")) && !button("Zehntel", $("[data-result-box]"))
+      )
+      await deviceScoring("Zehntel")
       check("Adresse: zurück auf Zehntel wie vor dem Öffnen", addr() === progressAddress, addr())
-      // ganze Ringe im Zeitraum, Zehntel im Speicher des Geräts: die Scheibe öffnet mit der Wertung des Zeitraums,
-      // und „Zurück“ lässt sie stehen (Review N1). Erst auf einer Scheibe Zehntel wählen, damit der Speicher sie hat.
-      await click(link("Scheibe öffnen", $("[data-card-readout]")), 500)
-      await click(button("Ganze Ringe"), 120)
-      await click(button("Zehntel"), 120)
-      await click(link("Zurück zu „Neue Munition“"), 500)
-      await click(button("Ganze Ringe"), 150)
+      // die Wertung des Geräts aus Profil gilt im Fortschritt und auf der Scheibe, die er öffnet; „Zurück“ lässt sie
+      // stehen (Review N1)
+      await deviceScoring("Ganze Ringe")
+      check(
+        "Zeitraum: Profil „Ganze Ringe“ gilt im Fortschritt",
+        P().state.scoring === "rings" && addr().includes("scoring=rings"),
+        addr()
+      )
       await click(link("Scheibe öffnen", $("[data-card-readout]")), 500)
       check(
         "Adresse: ganze Ringe aus dem Zeitraum gelten auf der geöffneten Scheibe",
@@ -2604,7 +2696,7 @@ addEventListener("load", async () => {
         P().state.scoring === "rings" && addr().includes("scoring=rings"),
         `${P().state.scoring} · ${addr()}`
       )
-      await click(button("Zehntel"), 150)
+      await deviceScoring("Zehntel")
       const brokenAddresses = [...seenAddresses].filter(
         (url) => L().tools.nav.urlFromRoute(L().tools.nav.routeFromUrl(...urlParts(url))) !== url
       )
@@ -2613,8 +2705,11 @@ addEventListener("load", async () => {
         seenAddresses.size >= 5 && brokenAddresses.length === 0,
         `${seenAddresses.size} gesehen · ${brokenAddresses.join(" ")}`
       )
-      await click(button("Vergleich entfernen"), 200)
-      check("Zeitraum: „×“ entfernt den Vergleich", !$("[data-compare-chip]") && !M().compareRange)
+      await clearCompare()
+      check(
+        "Zeitraum: „ohne“ im Blatt „Filter“ entfernt den Vergleich",
+        !M().compareRange && !txt($("[data-period-chip]")).includes("mit ")
+      )
 
       // überlappende Zeiträume: die gemeinsamen Scheiben zählen nur im gewählten (Review)
       await choose("Letzte 12 Monate", "Vorbereitung Landesmeisterschaft")
@@ -2627,7 +2722,7 @@ addEventListener("load", async () => {
           txt($("[data-result-box] [data-comparison]")).includes("zu wenige Scheiben"),
         txt($("[data-result-box]"))
       )
-      await click(button("Vergleich entfernen"), 200)
+      await clearCompare()
 
       // „Frei“: zwei Tage, übernehmen; nicht übernommene Tage gelten beim nächsten Öffnen nicht (Review)
       const setDate = (input, value) => {
@@ -2715,6 +2810,19 @@ addEventListener("load", async () => {
           `Zeitraum, Telefon ${width} px: Sprungleiste mit vier gleichen Feldern`,
           w.getComputedStyle(nav).gridTemplateColumns.split(" ").length === 4
         )
+        // eine Zeile Bedienung vor dem Ergebnis (U2, D3): die Familie und der Chip
+        const controlsBox = d.querySelector("[data-period-controls]")
+        // das Blatt hängt als geschlossenes <dialog> daneben und zählt nicht; auf dem Telefon darf der Chip unter die
+        // Familie rutschen, es bleiben zwei Bedienelemente vor dem Ergebnis (Plan U2, Task 7)
+        const controlItems = [...controlsBox.children].filter((c) => c.tagName !== "DIALOG")
+        const controlTops = new Set(
+          controlItems.map((c) => Math.round(c.getBoundingClientRect().top))
+        )
+        check(
+          `Zeitraum, Telefon ${width} px: vor dem Ergebnis nur Familie und Chip`,
+          controlItems.length === 2 && controlTops.size <= 2,
+          `${controlItems.map((c) => Math.round(c.getBoundingClientRect().width)).join(" + ")} px in ${controlTops.size} Zeilen`
+        )
         d.querySelector("[data-period-chip]").dispatchEvent(
           new w.MouseEvent("click", { bubbles: true })
         )
@@ -2731,6 +2839,16 @@ addEventListener("load", async () => {
         )
         f.remove()
       }
+      // Länge des Fortschritts am Telefon 390 × 844 (Durchsicht: 4,7 Bildschirme zu 772 px)
+      const periodLength = await openFrame(390, 844, "#history")
+      const periodScreens = periodLength.contentDocument.documentElement.scrollHeight / (844 - 72)
+      const periodIsShown = !!periodLength.contentDocument.querySelector("[data-period-header]")
+      periodLength.remove()
+      check(
+        "Zeitraum, Telefon 390 × 844: kürzer als vorher (4,7 Bildschirme)",
+        periodIsShown && periodScreens < 4.7,
+        periodScreens.toFixed(2)
+      )
       const desk2 = await openFrame(1280, 900, "#history")
       const d2 = desk2.contentDocument
       const w2 = desk2.contentWindow
@@ -2902,8 +3020,8 @@ addEventListener("load", async () => {
         addr()
       )
       await choose("Neue Munition")
-      // die Wertung des Zeitraums geht mit in die Liste und zurück (Review N2)
-      await click(button("Ganze Ringe"), 300)
+      // die Wertung des Zeitraums geht mit in die Liste und zurück (Review N2); sie kommt seit U2 aus Profil
+      await deviceScoring("Ganze Ringe")
       await click(link("Alle in Scheiben zeigen"), 400)
       check(
         "Zeitraum: „Alle in Scheiben zeigen“ zeigt die Liste mit dem Zeitraum als Chip",
@@ -2929,7 +3047,7 @@ addEventListener("load", async () => {
           addr().includes("scoring=rings"),
         `${probeFront.slice(0, 3).join(" ")} · ${addr()}`
       )
-      await click(button("Zehntel"), 300)
+      await deviceScoring("Zehntel")
       await click(link("Alle in Scheiben zeigen"), 400)
       await click(button("Zeitraum entfernen"), 300)
       check(

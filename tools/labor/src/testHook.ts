@@ -22,6 +22,8 @@ import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import type { StartModel } from "@vereinsheim/shot-ui/start/model"
 import { routeFromUrl, urlFromRoute, type ListQuery } from "@vereinsheim/shot-ui/nav/routes"
 import { periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
+import { filterSummary } from "@vereinsheim/shot-ui/period/PeriodPicker"
+import { recordRows } from "@vereinsheim/shot-ui/period/records"
 import { periodSentence, verdictText } from "@vereinsheim/shot-ui/period/sentence"
 import type { PeriodState } from "@vereinsheim/shot-ui/period/state"
 import { selectionShots, shotIntervals, shotLabels } from "@vereinsheim/shot-ui/shots"
@@ -51,7 +53,7 @@ const TOOLS = {
   GLOSSARY,
   FALLACIES,
   // Seite eines Zeitraums (Plan L3): Modell und Worte zum Nachrechnen
-  period: { periodModel, periodSentence, verdictText },
+  period: { periodModel, periodSentence, verdictText, recordRows, filterSummary },
   // Adressen (Plan N1): die Prüfung rechnet jede gezeigte Adresse hin und zurück
   nav: { routeFromUrl, urlFromRoute },
 }
