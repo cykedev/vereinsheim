@@ -283,7 +283,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Die letzten zehn Schuss gegen die ersten zehn, im Wert und in der Streuung (R50).",
     read: "Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. Der Unterschied im Wert gilt je Schuss; über die zehn Schuss zusammen ist es das Zehnfache.",
     caution:
-      "Eine einzelne Scheibe ist verrauscht: Auch ohne jede Ermüdung unterscheiden sich die ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm) bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Ein Muster wird es erst, wenn es auf mehreren Scheiben so ist.",
+      "Eine einzelne Scheibe ist verrauscht: Auch ohne jede Ermüdung unterscheiden sich die ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm; in ganzen Ringen etwa 0,4) bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Ein Muster wird es erst, wenn es auf mehreren Scheiben so ist.",
     minimum: "Ab 20 Wertungsschüssen mit Wert, R50 ab 20 mit Lage ohne Fehlschüsse.",
     formula: "Ø der letzten 10 − Ø der ersten 10; ebenso R50",
   },

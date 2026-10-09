@@ -277,11 +277,16 @@ for (const [label, base, seed] of [
   ["LP σ 15 mm", LP, 9010],
 ] as const) {
   const delta: number[] = []
+  const deltaRings: number[] = []
   const r50: number[] = []
   repeat(5_000, seed, (rand) => {
-    const result = fatigue(card(rand, { ...base, n: 40 }), "decimal")
+    const shots = card(rand, { ...base, n: 40 })
+    const result = fatigue(shots, "decimal")
     if (!result) return
     delta.push(result.deltaRings)
+    // dieselben Karten in ganzen Ringen (Prüfung, 9. Oktober 2026): zieht keine Zufallszahl
+    const rings = fatigue(shots, "rings")
+    if (rings) deltaRings.push(rings.deltaRings)
     if (result.deltaR50Um !== null)
       r50.push(result.deltaR50Um / (base.sx * Math.sqrt(2 * Math.log(2))))
   })
@@ -289,6 +294,10 @@ for (const [label, base, seed] of [
     "B9",
     `Ermüdung ${label}: Δ Ø ${num(quantile(delta, 0.025))} bis ${num(quantile(delta, 0.975))} Ringe, ` +
       `Δ R50 ${num(100 * quantile(r50, 0.025), 0)} bis ${num(100 * quantile(r50, 0.975), 0)} %`
+  )
+  out(
+    "B9",
+    `Ermüdung ${label}, ganze Ringe: Δ Ø ${num(quantile(deltaRings, 0.025))} bis ${num(quantile(deltaRings, 0.975))} Ringe`
   )
 }
 
@@ -540,6 +549,22 @@ const perShot = metric("result.decimalMean")
   out(
     "B20",
     `Scheiben im Formband (60 Scheiben, ab der zehnten): Median ${pct(quantile(inside, 0.5))}, 95 % zwischen ${pct(quantile(inside, 0.025))} und ${pct(quantile(inside, 0.975))}`
+  )
+}
+
+// B21: Versatz Probe → Wertung ohne jede Verschiebung (D3, Prüfung 9. Oktober 2026): n Probe- und
+// 40 Wertungsschüsse um dieselbe Mitte, Abstand der Schwerpunkte in σ
+for (const n of [5, 3]) {
+  const offsets: number[] = []
+  repeat(5_000, 21_000 + n, (rand) => {
+    const probe = card(rand, { ...LG, n, kind: "probe" })
+    const match = card(rand, { ...LG, n: 40, firstSeq: n + 1, startMs: 300_000 })
+    const zeroed = sighterZeroed([...probe, ...match])
+    if (zeroed?.matchOffsetUm != null) offsets.push(zeroed.matchOffsetUm / LG.sx)
+  })
+  out(
+    "B21",
+    `Versatz Probe → Wertung ohne Verschiebung, ${n} Probe- und 40 Wertungsschüsse: Median ${num(quantile(offsets, 0.5))} σ, 95. Perzentil ${num(quantile(offsets, 0.95))} σ (${offsets.length} Läufe)`
   )
 }
 

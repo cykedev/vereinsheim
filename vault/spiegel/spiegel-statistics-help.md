@@ -346,9 +346,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *So liest du es:* Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. Der
   Unterschied im Wert gilt je Schuss; über die zehn Schuss zusammen ist es das Zehnfache.
 - *Vorsicht:* Eine einzelne Scheibe ist verrauscht: Auch ohne jede Ermüdung unterscheiden sich die
-  ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm)
-  bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Ein Muster wird es erst, wenn es
-  auf mehreren Scheiben so ist.
+  ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm; in
+  ganzen Ringen etwa 0,4) bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Ein Muster
+  wird es erst, wenn es auf mehreren Scheiben so ist.
 - *Mindestzahl:* Ab 20 Wertungsschüssen mit Wert, R50 ab 20 mit Lage ohne Fehlschüsse.
 - *Formel:* `Ø der letzten 10 − Ø der ersten 10; ebenso R50`
 

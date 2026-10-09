@@ -125,10 +125,10 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| S1 | Versatz Probe → Wertung | Schwerpunkt der letzten fünf Probeschüsse mit Lage gegen die Wertung, in S4 (`matchOffsetUm`); bis Oktober 2026 eine eigene Registry-Kennzahl | Scheibe | A | SP-1.12 |
+| S1 | Versatz Probe → Wertung | Schwerpunkt der letzten bis zu fünf Probeschüsse mit Lage gegen die Wertung, in S4 (`matchOffsetUm`); bis Oktober 2026 eine eigene Registry-Kennzahl. Auch ohne jede Verschiebung im Median 0,56 σ, in 5 von 100 Fällen über 1,16 σ (B21): Der Überblick zeigt deshalb nur das Urteil von S4, die Zahl steht im Reiter Probe mit diesem Hinweis (D3, User, 9. Oktober 2026) | Scheibe | A | SP-1.12 |
 | S2 | Probe-Umfang | Zahl bis zum ersten Wertungsschuss, Blöcke à zehn, Dauer, Zeit bis zum ersten Wertungsschuss | Scheibe, Zeitraum | A | SP-1.10 |
 | S3 | Probe-Qualität | Ø, R50 und σ̂ der ganzen Probe vor der Wertung gegen die Wertung; R50 hängt an n, σ̂ kaum | Scheibe, Zeitraum | B | SP-1.10 |
-| S4 | Eingeschossen? | Lage der letzten fünf Probeschüsse mit Lage, Vertrauensbereich wie L3; „kein Versatz nachweisbar“ heißt nicht „eingeschossen“ | Scheibe | C | SP-1.10 |
+| S4 | Eingeschossen? | Lage der letzten bis zu fünf Probeschüsse mit Lage (drei bis fünf, Texte nennen ihr n), Vertrauensbereich wie L3; „kein Versatz nachweisbar“ heißt nicht „eingeschossen“ | Scheibe | C | SP-1.10 |
 | S5 | Visierverstellungen | **entfernt (Oktober 2026):** Spiegel fragt keine Visierverstellung ab, das ist zu viel Komplexität für ihren Nutzen (User, 8. Oktober 2026) | – | – | entfernt (SP-1.8) |
 
 ### 8 Langzeit und Trend
@@ -234,7 +234,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 
 ## Belege aus Simulationen
 
-Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026), B19 mit einer kleinen Veränderung und dem Unterschied je Schuss (Prüfung, 9. Oktober 2026):
+Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026), B19 mit einer kleinen Veränderung und dem Unterschied je Schuss, B9 auch in ganzen Ringen, B21 neu (Prüfung, 9. Oktober 2026; alle übrigen Zeilen im neuen Lauf unverändert):
 
 ```
 B0   innerhalb σ 39,3 %, innerhalb 2σ 86,5 %
@@ -257,7 +257,9 @@ B7   5 Probeschüsse, Versatz 2σ: echt in 62,9 %
 B8   von Neumann, 10 Schuss: 1,15 bis 2,80
 B8   von Neumann, 40 Schuss: 1,57 bis 2,41
 B9   Ermüdung LG σ 1,5 mm: Δ Ø -0,34 bis 0,35 Ringe, Δ R50 -57 bis 57 %
+B9   Ermüdung LG σ 1,5 mm, ganze Ringe: Δ Ø -0,40 bis 0,40 Ringe
 B9   Ermüdung LP σ 15 mm: Δ Ø -1,07 bis 1,11 Ringe, Δ R50 -59 bis 57 %
+B9   Ermüdung LP σ 15 mm, ganze Ringe: Δ Ø -1,10 bis 1,10 Ringe
 B10  Wiedereinstieg LG σ 1,5 mm: -0,49 bis 0,42 Ringe
 B10  Wiedereinstieg LP σ 15 mm: -1,52 bis 1,32 Ringe
 B11  σ Probe/Wertung (5 gegen 40): 0,54 bis 1,57
@@ -281,6 +283,8 @@ B19  gleich, Urteil trotz gleicher Streuung: 5/5 3,6 % (bedeutsam 61,5 %), 10/10
 B19  σ 1,5 → 1,3 mm, „höher“ erkannt: 5/5 55,5 % (bedeutsam 99,0 %), 10/10 94,3 % (bedeutsam 99,8 %), 20/20 100,0 % (bedeutsam 100,0 %), 30/30 100,0 % (bedeutsam 100,0 %); Δ Ø je Schuss im Mittel 0,101
 B19  σ 1,5 → 1,45 mm, „höher“ erkannt: 5/5 5,8 % (bedeutsam 69,8 %), 10/10 12,8 % (bedeutsam 63,7 %), 20/20 21,8 % (bedeutsam 64,1 %), 30/30 31,4 % (bedeutsam 65,7 %); Δ Ø je Schuss im Mittel 0,025
 B20  Scheiben im Formband (60 Scheiben, ab der zehnten): Median 68,6 %, 95 % zwischen 58,8 % und 80,4 %
+B21  Versatz Probe → Wertung ohne Verschiebung, 5 Probe- und 40 Wertungsschüsse: Median 0,56 σ, 95. Perzentil 1,16 σ (5000 Läufe)
+B21  Versatz Probe → Wertung ohne Verschiebung, 3 Probe- und 40 Wertungsschüsse: Median 0,72 σ, 95. Perzentil 1,46 σ (5000 Läufe)
 ```
 
 Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05, bis Oktober 2026), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.
