@@ -1,20 +1,17 @@
 "use client"
 
 import { cn } from "@vereinsheim/lib/utils"
-import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 import type { ReactNode } from "react"
 
+import { CardFilters } from "../controls/CardFilters"
 import { PAGE_COLUMNS } from "../layout/columns"
 import type { CompareChoice, DateRange, NamedPeriod } from "./calendar"
 import { PeriodPicker } from "./PeriodPicker"
-import type { CardKind, PeriodAction, PeriodState } from "./state"
+import type { PeriodAction, PeriodState } from "./state"
 
-export const KIND_OPTIONS: readonly { value: CardKind; label: string }[] = [
-  { value: "all", label: "Alle" },
-  { value: "training", label: "Training" },
-  { value: "competition", label: "Wettkampf" },
-]
+/** die Arten wie in `CardFilters`; hier weiter exportiert für bestehende Aufrufer */
+export { KIND_OPTIONS } from "../controls/CardFilters"
 
 export interface PeriodControlsProps {
   state: PeriodState
@@ -82,19 +79,12 @@ export function PeriodControls({
           </button>
         </span>
       )}
-      {families.length > 1 && (
-        <Segmented
-          label="Familie"
-          value={state.family}
-          options={families}
-          onChange={(family) => dispatch({ type: "setFamily", family })}
-        />
-      )}
-      <Segmented
-        label="Art"
-        value={state.kind}
-        options={KIND_OPTIONS}
-        onChange={(kind) => dispatch({ type: "setKind", kind })}
+      <CardFilters
+        family={state.family}
+        families={families}
+        kind={state.kind}
+        onFamily={(family) => dispatch({ type: "setFamily", family })}
+        onKind={(kind) => dispatch({ type: "setKind", kind })}
       />
       <ToggleChip
         pressed={state.includeProbeOnly}
