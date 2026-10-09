@@ -4,8 +4,10 @@
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
+import { hashFor, parseHash, type PageAnchor } from "../layout/sections"
 import { DEFAULT_CHOICE, type CompareChoice, type PeriodChoice } from "../period/calendar"
 import type { CardKind, PeriodMetricKey } from "../period/state"
+import type { Selection } from "../types"
 
 /** Id eines benannten Zeitraums, einer Familie oder eines Merkmals: klein, Ziffern, Bindestriche */
 const SLUG = /^[a-z0-9][a-z0-9-]*$/
@@ -193,3 +195,83 @@ export function progressQueryFromParams(params: URLSearchParams): ProgressQuery 
     chosen: idOrNull(params.get("pick")),
   }
 }
+
+/** woher eine Scheibe geöffnet wurde, mit dem Zustand dort (D6); null: ein direkter Link */
+export type CardOrigin =
+  | null
+  | { from: "start" }
+  | { from: "list"; query: ListQuery }
+  | { from: "progress"; query: Omit<ProgressQuery, "chosen" | "scoring"> }
+
+/** die Seite einer Scheibe: Herkunft, Auswahl, Schuss als Nummer (D5), Wertung, Abschnitt oder Reiter */
+export interface CardRoute {
+  page: "card"
+  id: string
+  origin: CardOrigin
+  /** null: die Grundauswahl der Scheibe (`defaultWhole`) */
+  selection: Selection | null
+  /** Nummer wie `shotLabels` („23“, „P3“) */
+  shot: string | null
+  scoring: Scoring
+  anchor: PageAnchor | null
+}
+
+const SHOT = /^P?[1-9]\d*$/
+const SERIES = /^[1-9]\d*$/
+
+function selectionOf(value: string | null): Selection | null {
+  if (value === "all" || value === "match" || value === "probe") return value
+  return value && SERIES.test(value) ? Number(value) : null
+}
+
+function originFrom(params: URLSearchParams): CardOrigin {
+  switch (params.get("from")) {
+    case "start":
+      return { from: "start" }
+    case "list":
+      return { from: "list", query: listQueryFromParams(params) }
+    case "progress": {
+      // `pick` wäre die Scheibe selbst, die Wertung trägt die Scheibe (D6)
+      const { chosen: _chosen, scoring: _scoring, ...query } = progressQueryFromParams(params)
+      return { from: "progress", query }
+    }
+    default:
+      return null
+  }
+}
+
+function originPairs(origin: CardOrigin): Param[] {
+  if (!origin) return []
+  if (origin.from === "start") return [["from", "start"]]
+  if (origin.from === "list") return [["from", "list"], ...listQueryToParams(origin.query)]
+  return [["from", "progress"], ...present(progressPairs(origin.query))]
+}
+
+/** die Seite einer Scheibe aus Id, Query und Anker */
+export function cardFromParts(id: string, params: URLSearchParams, hash: string): CardRoute {
+  return {
+    page: "card",
+    id,
+    origin: originFrom(params),
+    selection: selectionOf(params.get("series")),
+    shot: SHOT.test(params.get("shot") ?? "") ? (params.get("shot") as string) : null,
+    scoring: scoringOf(params.get("scoring")),
+    anchor: parseHash(hash),
+  }
+}
+
+/** Schlüssel der Seite einer Scheibe: Herkunft mit ihrem Zustand, dann Serie, Schuss, Wertung */
+export function cardToParams(card: CardRoute): Param[] {
+  return [
+    ...originPairs(card.origin),
+    ...present([
+      ["series", card.selection === null ? null : String(card.selection)],
+      ["shot", card.shot],
+      ["scoring", card.scoring === "rings" ? "rings" : null],
+    ]),
+  ]
+}
+
+/** Anker der Seite einer Scheibe; ohne Abschnitt keiner */
+export const cardHash = (card: CardRoute) =>
+  card.anchor ? hashFor(card.anchor.section, card.anchor.tab) : ""

@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest"
 
 import { DEFAULT_CHOICE, type PeriodChoice } from "../period/calendar"
 import {
+  cardFromParts,
+  cardHash,
+  cardToParams,
   decodeChoice,
   decodeCompare,
   DEFAULT_LIST,
@@ -122,5 +125,90 @@ describe("Liste und Fortschritt als Query (D4)", () => {
       "range=30d&family=lg-10m&kind=competition&flag=nur-pdf"
     )
     expect(listQueryFromParams(new URLSearchParams("family=LG 10m&flag=")).family).toBeNull()
+  })
+})
+
+describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
+  it("aus dem Fortschritt mit Serie, Schuss und Reiter, und zurückgeschrieben dieselbe Zeichenkette", () => {
+    const card = cardFromParts(
+      "c42",
+      new URLSearchParams("from=progress&family=lg-10m&series=2&shot=23"),
+      "#lage"
+    )
+    expect(card).toEqual({
+      page: "card",
+      id: "c42",
+      origin: {
+        from: "progress",
+        query: {
+          choice: { type: "rolling", days: 90 },
+          compare: { type: "none" },
+          family: "lg-10m",
+          kind: "all",
+          includeProbeOnly: true,
+          metric: "result.decimalMean",
+          view: null,
+        },
+      },
+      selection: 2,
+      shot: "23",
+      scoring: "decimal",
+      anchor: { section: "analyse", tab: "position" },
+    })
+    expect(query(cardToParams(card))).toBe("from=progress&family=lg-10m&series=2&shot=23")
+    expect(cardHash(card)).toBe("#lage")
+  })
+
+  it("die Herkunft trägt ihre Schlüssel, aber nicht `pick`; die Wertung ist die der Scheibe", () => {
+    const card = cardFromParts(
+      "c42",
+      new URLSearchParams("from=progress&range=12m&compare=previous&pick=c42&scoring=rings"),
+      ""
+    )
+    expect(card.scoring).toBe("rings")
+    expect(card.origin).toMatchObject({
+      from: "progress",
+      query: { compare: { type: "previous" } },
+    })
+    expect(card.origin && "query" in card.origin && "chosen" in card.origin.query).toBe(false)
+    expect(query(cardToParams(card))).toBe("from=progress&range=12m&compare=previous&scoring=rings")
+  })
+
+  it("aus der Liste, von Start und als direkter Link", () => {
+    const list = cardFromParts(
+      "c7",
+      new URLSearchParams("from=list&family=lp-10m&flag=nur-pdf"),
+      ""
+    )
+    expect(list.origin).toEqual({
+      from: "list",
+      query: { family: "lp-10m", kind: "all", flag: "nur-pdf", range: null },
+    })
+    expect(query(cardToParams(list))).toBe("from=list&family=lp-10m&flag=nur-pdf")
+    expect(cardFromParts("c7", new URLSearchParams("from=start"), "").origin).toEqual({
+      from: "start",
+    })
+    const direct = cardFromParts("c7", new URLSearchParams("from=liste&family=lp-10m"), "")
+    expect(direct.origin).toBeNull()
+    expect(cardToParams(direct)).toEqual([])
+  })
+
+  it("Auswahl: ganze Scheibe, Wertung, Probe oder eine Serie; Schuss als Nummer wie shotLabels", () => {
+    const read = (search: string) => cardFromParts("c1", new URLSearchParams(search), "")
+    expect(read("series=all").selection).toBe("all")
+    expect(read("series=match").selection).toBe("match")
+    expect(read("series=probe&shot=P3").selection).toBe("probe")
+    expect(read("series=probe&shot=P3").shot).toBe("P3")
+    for (const bad of ["series=0", "series=-1", "series=02", "series=zwei"])
+      expect(read(bad).selection).toBeNull()
+    for (const bad of ["shot=0", "shot=P", "shot=p3", "shot=3a"]) expect(read(bad).shot).toBeNull()
+  })
+
+  it("ein Anker ohne Bedeutung zählt nicht; ein Abschnitt ohne Reiter bleibt ein Abschnitt", () => {
+    expect(cardFromParts("c1", new URLSearchParams(), "#irgendwo").anchor).toBeNull()
+    const card = cardFromParts("c1", new URLSearchParams(), "#zahlen")
+    expect(card.anchor).toEqual({ section: "zahlen" })
+    expect(cardHash(card)).toBe("#zahlen")
+    expect(cardHash({ ...card, anchor: null })).toBe("")
   })
 })
