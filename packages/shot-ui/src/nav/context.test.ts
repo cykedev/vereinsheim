@@ -147,8 +147,27 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     ).toEqual(["t1", "w1", "t2", "w2", "w3", "t3", "pp"])
   })
 
-  it("ohne Herkunft und von Start: kein Blättern", () => {
+  it("ohne Herkunft kein Blättern", () => {
     expect(contextCardIds(card("w2", null), context)).toBeNull()
-    expect(contextCardIds(card("w2", { from: "start" }), context)).toBeNull()
+  })
+
+  it("von Start: die Scheiben des letzten Abends, alle Familien, in zeitlicher Folge (Plan N5, D8)", () => {
+    // t3 am 27.09. um 12:00, eine Luftpistole am Abend, ein Luftgewehr um 01:00 danach (zählt zum Abend davor)
+    const evening: ListInputCard[] = [
+      ...INPUT,
+      {
+        card: periodCard("pe", 0, [96], { startedAtMs: Date.UTC(2026, 8, 27, 16) }),
+        family: "lp-freihand",
+      },
+      {
+        card: periodCard("late", 0, [99], { startedAtMs: Date.UTC(2026, 8, 27, 23) }),
+        family: "lg-freihand",
+      },
+    ]
+    expect(contextCardIds(card("pe", { from: "start" }), { ...context, cards: evening })).toEqual([
+      "t3",
+      "pe",
+      "late",
+    ])
   })
 })
