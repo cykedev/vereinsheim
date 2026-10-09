@@ -58,7 +58,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     )
     expect(tile("Zehnerquote").hint).toMatch(/^\d+ von \d+ · sicher \d+ % bis \d+ %$/)
     const confidence = mpiConfidence(base)!
-    expect(tile("Lage").value).toBe(confidence.real ? "echt" : "unklar")
+    expect(tile("Lage").value).toBe(confidence.real ? "versetzt" : "passt")
     // nur die Richtung, ohne Zahlen und ohne T²: die Zahlen stehen in der Beobachtung (U3, D3)
     expect(tile("Lage").hint).toBe(
       confidence.real ? directionName(confidence.center) : "kein Versatz belegt"
@@ -225,6 +225,10 @@ describe("Beobachtungen in Worten", () => {
     const hint = overviewTiles(input).find((t) => t.label === "Ringverlust")!.hint
     expect(hint).toMatch(/^Lage kostet nichts · Streuung [\d,]+/)
     expect(hint).not.toContain("−")
+    // ohne belegten Versatz „passt“ die Lage (U3, D11), nicht „unklar“
+    expect(mpiConfidence(input.base)!.real).toBe(false)
+    const lage = overviewTiles(input).find((t) => t.label === "Lage")!
+    expect([lage.value, lage.hint]).toEqual(["passt", "kein Versatz belegt"])
   })
 
   it("Lage nicht echt: kein Grund zum Verstellen, nur kein Beleg", () => {

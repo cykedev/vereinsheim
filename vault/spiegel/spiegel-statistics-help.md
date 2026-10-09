@@ -28,13 +28,13 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Dein wahrer Wert liegt mit großer Sicherheit (95 von 100) in diesem Bereich. Mehr Schüsse machen
   ihn schmaler. Bei 10 Schuss reicht er für σ von etwa einem Viertel darunter bis knapp die Hälfte
   darüber, erst bei rund 120 Schuss auf etwa ±10 %.
-- **„Echt“ und „unklar“.** „Echt“ heißt: Reiner Zufall brächte ein so deutliches Ergebnis nur in 5
-  von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede fünfte ganz
-  normale Scheibe irgendwo ein „echt“, „gestreckt“, „klar“ oder einen Ausreißer. „Unklar“ heißt
-  nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht, um es zu zeigen oder auszuschließen.
-  Mehr Schüsse oder mehrere Scheiben klären es. Auf den Karten heißt das auch „nicht klar“, „vom
-  Zufall nicht zu unterscheiden“ oder „kein Versatz nachweisbar“; es ist ein ehrliches Ergebnis,
-  kein Fehler.
+- **„Sicher“ und „kann Zufall sein“.** „Sicher“ heißt: Reiner Zufall brächte ein so deutliches
+  Ergebnis nur in 5 von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa
+  jede fünfte ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen
+  Ausreißer. „Kann Zufall sein“ heißt nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht,
+  um es zu zeigen oder auszuschließen. Mehr Schüsse oder mehrere Scheiben klären es. „Passt“ an der
+  Lage heißt dasselbe: kein Versatz belegt. Auf den Karten heißt das auch „nicht klar“ oder „kein
+  Versatz nachweisbar“; es ist ein ehrliches Ergebnis, kein Fehler.
 - **Ganze Ringe oder Zehntel.** Auf der Scheibe oben umschalten, für Liste, Start und Fortschritt in
   Profil; jede Auswertung über Werte gibt es in beiden, nur die Zehntelverteilung allein in
   Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10); beim
@@ -71,9 +71,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Beobachtungen in Worten**
 - *Was:* Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die
   Karten.
-- *So liest du es:* „Echt“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall brächte das
-  nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil mehrere
-  Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.
+- *So liest du es:* „Sicher“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall brächte
+  das nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil
+  mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.
 
 **Probe auf der Scheibe**
 - *Was:* Die Probeschüsse um die Mitte, hohl gezeichnet, dazu der Schwerpunkt der Wertung als
@@ -234,20 +234,21 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 ## Lage
 
-**Ist die Lage echt? (L1, L2, L3)**
+**Ist die Lage versetzt? (L1, L2, L3)**
 - *Was:* Der Schwerpunkt ist der Mittelpunkt aller Treffer, auf der Scheibe der kleine schwarz-weiß
   geviertelte Kreis. Er ist selbst nur geschätzt: Die Vertrauensellipse zeigt, wo dein wahrer
   Schwerpunkt mit großer Sicherheit liegt. Ein Test (Hotelling) prüft, ob der Versatz zur Mitte mehr
   als Zufall ist; er sagt dasselbe wie die Ellipse: Liegt die Mitte darin, ist der Versatz nicht
   belegt.
 - *So liest du es:* Die Lage steht als Abstand und Richtung zur Mitte da, etwa 0,72 mm, davon 0,6 mm
-  rechts und 0,4 mm tief. „Echt versetzt“: Der Versatz ist größer, als der Zufall bei dieser
-  Schusszahl erklärt. „Vom Zufall nicht zu unterscheiden“: Er kann Zufall sein, auch wenn der
-  Schwerpunkt sichtbar neben der Mitte liegt. Die Ellipse hat die Form deiner Gruppe und schrumpft
-  mit der Schusszahl: Ihre Halbachse ist bei 10 Schuss etwa so groß wie deine Streuung σ, bei 40
-  Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.
-- *Was du tun kannst:* Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele Ringe
-  sie etwa kostet.
+  rechts und 0,4 mm tief. „Sicher versetzt“: Der Versatz ist größer, als der Zufall bei dieser
+  Schusszahl erklärt. „Kann Zufall sein“: Auch wenn der Schwerpunkt sichtbar neben der Mitte liegt,
+  reicht das nicht als Beleg; im Überblick heißt die Lage dann „passt“. Die Ellipse hat die Form
+  deiner Gruppe und schrumpft mit der Schusszahl: Ihre Halbachse ist bei 10 Schuss etwa so groß wie
+  deine Streuung σ, bei 40 Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur wo ihr
+  Mittelpunkt liegen kann.
+- *Was du tun kannst:* Ist die Lage sicher versetzt, zeigt „Ringverlust nach Ursache“, wie viele
+  Ringe sie etwa kostet.
 - *Mindestzahl:* Ab 3 Schuss mit Lage, die nicht alle auf einer Linie liegen.
 - *Formel:* `T² = n · m′ S⁻¹ m gegen 2(n − 1)/(n − 2) · F₀,₉₅(2, n − 2)`
 
@@ -391,7 +392,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Ein Test deiner letzten bis zu fünf Probeschüsse mit Lage vor der Wertung: Lagen sie echt
   neben der Mitte? Dazu im Reiter Probe der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.
 - *So liest du es:* „Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Über die
-  Wertung sagt das Urteil nichts; ihre Lage prüft „Ist die Lage echt?“ im Reiter Lage.
+  Wertung sagt das Urteil nichts; ihre Lage prüft „Ist die Lage versetzt?“ im Reiter Lage.
 - *Vorsicht:* „Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur
   einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in
   knapp zwei von drei Fällen auf. Auch der Abstand Probe → Wertung ist unsicher: Ohne jede

@@ -37,6 +37,22 @@ describe("Wortwahl wie auf der Seite (U3, D9)", () => {
     )
   })
 
+  it("die Lage in Alltagsworten: „sicher versetzt“ oder „kann Zufall sein“ (U3, D11)", () => {
+    const topic = helpTopic("lage-echt")!
+    expect(topic.title).toBe("Ist die Lage versetzt?")
+    expect(topic.read).toContain("„Sicher versetzt“")
+    expect(topic.read).toContain("„Kann Zufall sein“")
+    const guide = READING_GUIDE.find((i) => i.title === "„Sicher“ und „kann Zufall sein“")
+    expect(guide?.text).toContain("„Passt“")
+    // außerhalb der Probe-Themen (U4 entfernt sie) kein „echt“ und kein „unklar“ mehr als Urteil
+    const texts = [
+      ...[topic.title, topic.read, topic.act ?? ""],
+      ...READING_GUIDE.flatMap((i) => [i.title, i.text]),
+      ...VIEW_HELP.flatMap((v) => [v.title, v.what, v.read ?? ""]),
+    ]
+    for (const text of texts) expect(text).not.toMatch(/„(echt|Echt|unklar|Unklar)/)
+  })
+
   it("der Einstieg zitiert einen Bereich so, wie ihn die Seite zeigt", () => {
     expect(READING_GUIDE.map((i) => i.text).join(" ")).toContain(
       "„Streuung 1,12 mm, sicher zwischen 0,94 und 1,36 mm“"

@@ -92,7 +92,8 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
     tile(
       "Lage",
       "lage-echt",
-      confidence ? (confidence.real ? "echt" : "unklar") : null,
+      // in Alltagsworten (U3, D11; User: „Lage unklar ist … schwer zu verstehen“): ohne belegten Versatz passt sie
+      confidence ? (confidence.real ? "versetzt" : "passt") : null,
       "",
       // nur die Richtung: die Zahlen stehen in der Beobachtung, T² und Grenze im Blatt (U3, D3)
       confidence

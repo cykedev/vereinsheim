@@ -50,7 +50,7 @@ describe("Reiter Lage", () => {
     expect(cardHtml(html, "lage-echt")).toContain(
       conf.real ? 'data-verdict="warn"' : 'data-verdict="none"'
     )
-    expect(text).toContain(conf.real ? "echt versetzt" : "vom Zufall nicht zu unterscheiden")
+    expect(text).toContain(conf.real ? "sicher versetzt" : "kann Zufall sein")
   })
 
   it("Knopf Vertrauensellipse zeigt die Ebene der Scheibe und meldet sie", () => {
@@ -162,6 +162,12 @@ describe("Reiter Lage", () => {
       `Deine Gruppe sitzt schon gut; in die Mitte geschoben brächte sie rechnerisch nichts (Lage ${formatValue(split.positionLoss.decimal, 1)} Ringe).`
     )
     expect(cardText(html, "ringverlust-nach-ursache")).not.toContain("kostet nichts")
+    // dieselbe Gruppe um die Mitte: der Versatz ist nicht belegt (U3, D11)
+    expect(mpiConfidence(calm)!.real).toBe(false)
+    expect(cardText(renderTab("position", { shots: calm }), "lage-echt")).toContain(
+      "kann Zufall sein"
+    )
+    expect(cardText(html, "lage-echt")).not.toContain("kann Zufall sein")
     expect(cardText(html, "ringverlust-nach-ursache")).not.toContain("sitzt schon gut")
   })
 

@@ -99,7 +99,7 @@ const TONES = {
   none: "bg-surface-2 text-muted-foreground",
 } as const
 
-/** Urteil des Fachkerns als Etikett: „belastbar“ (ok), „echt versetzt“ (warn), „unklar“ (none) */
+/** Urteil des Fachkerns als Etikett: „belastbar“ (ok), „sicher versetzt“ (warn), „kann Zufall sein“ (none) */
 export function Verdict({ tone, children }: { tone: keyof typeof TONES; children: ReactNode }) {
   return (
     <span

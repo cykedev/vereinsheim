@@ -923,6 +923,15 @@ addEventListener("load", async () => {
         ovValue("Streuung") === nf(S().sigmaEstimate(base()).sigma / 1000, 2),
       `${ovValue("Ergebnis")} · ${ovValue("Streuung")}`
     )
+    // die Lage in Alltagsworten (U3, D11): „versetzt“ mit Richtung oder „passt“, nie „echt“ oder „unklar“
+    const lageConf = S().mpiConfidence(base())
+    check(
+      "Überblick: Lage „versetzt“ mit Richtung oder „passt“",
+      ovValue("Lage") === (lageConf.real ? "versetzt" : "passt") &&
+        ovHint("Lage") ===
+          (lageConf.real ? L().tools.directionName(lageConf.center) : "kein Versatz belegt"),
+      `${ovValue("Lage")} · ${ovHint("Lage")}`
+    )
     // ein Lage-Anteil bis null heißt „kostet nichts“, nie ein Gewinn (U3, D10)
     const lossSplit = S().ringLossSplit(base(), L().target)
     const lossPosition = lossSplit.positionLoss.decimal

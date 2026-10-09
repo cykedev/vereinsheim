@@ -60,9 +60,9 @@ export function positionCards({
               />
               <div className="flex flex-wrap items-center gap-2">
                 {confidence.real ? (
-                  <Verdict tone="warn">echt versetzt</Verdict>
+                  <Verdict tone="warn">sicher versetzt</Verdict>
                 ) : (
-                  <Verdict tone="none">vom Zufall nicht zu unterscheiden</Verdict>
+                  <Verdict tone="none">kann Zufall sein</Verdict>
                 )}
                 <ToggleChip
                   pressed={layers.ellipse}
@@ -243,7 +243,7 @@ function RingLoss({
       <Note>
         Jeder Treffer um den Schwerpunkt der übrigen verschoben und neu gewertet: So schätzt
         Spiegel, was dieselben Schüsse mit der Gruppe in der Mitte brächten. Belastbar erst ab 10
-        Schuss, wenn die Lage echt ist und die Mitte Ringe bringt; nie amtlich.
+        Schuss, wenn die Lage sicher versetzt ist und die Mitte Ringe bringt; nie amtlich.
       </Note>
     </>
   )

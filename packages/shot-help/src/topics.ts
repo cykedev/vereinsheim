@@ -162,14 +162,14 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   // ---------- Lage
   {
     id: "lage-echt",
-    title: "Ist die Lage echt?",
+    title: "Ist die Lage versetzt?",
     theme: "position",
     catalog: ["L1", "L2", "L3"],
     metrics: ["group.mpiDistance"],
     short: "Wo dein Schwerpunkt liegt und ob der Versatz mehr als Zufall ist.",
     what: "Der Schwerpunkt ist der Mittelpunkt aller Treffer, auf der Scheibe der kleine schwarz-weiß geviertelte Kreis. Er ist selbst nur geschätzt: Die Vertrauensellipse zeigt, wo dein wahrer Schwerpunkt mit großer Sicherheit liegt. Ein Test (Hotelling) prüft, ob der Versatz zur Mitte mehr als Zufall ist; er sagt dasselbe wie die Ellipse: Liegt die Mitte darin, ist der Versatz nicht belegt.",
-    read: "Die Lage steht als Abstand und Richtung zur Mitte da, etwa 0,72 mm, davon 0,6 mm rechts und 0,4 mm tief. „Echt versetzt“: Der Versatz ist größer, als der Zufall bei dieser Schusszahl erklärt. „Vom Zufall nicht zu unterscheiden“: Er kann Zufall sein, auch wenn der Schwerpunkt sichtbar neben der Mitte liegt. Die Ellipse hat die Form deiner Gruppe und schrumpft mit der Schusszahl: Ihre Halbachse ist bei 10 Schuss etwa so groß wie deine Streuung σ, bei 40 Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.",
-    act: "Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele Ringe sie etwa kostet.",
+    read: "Die Lage steht als Abstand und Richtung zur Mitte da, etwa 0,72 mm, davon 0,6 mm rechts und 0,4 mm tief. „Sicher versetzt“: Der Versatz ist größer, als der Zufall bei dieser Schusszahl erklärt. „Kann Zufall sein“: Auch wenn der Schwerpunkt sichtbar neben der Mitte liegt, reicht das nicht als Beleg; im Überblick heißt die Lage dann „passt“. Die Ellipse hat die Form deiner Gruppe und schrumpft mit der Schusszahl: Ihre Halbachse ist bei 10 Schuss etwa so groß wie deine Streuung σ, bei 40 Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.",
+    act: "Ist die Lage sicher versetzt, zeigt „Ringverlust nach Ursache“, wie viele Ringe sie etwa kostet.",
     minimum: "Ab 3 Schuss mit Lage, die nicht alle auf einer Linie liegen.",
     formula: "T² = n · m′ S⁻¹ m gegen 2(n − 1)/(n − 2) · F₀,₉₅(2, n − 2)",
   },
@@ -336,7 +336,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob deine letzten Probeschüsse neben der Mitte lagen.",
     what: "Ein Test deiner letzten bis zu fünf Probeschüsse mit Lage vor der Wertung: Lagen sie echt neben der Mitte? Dazu im Reiter Probe der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.",
-    read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Über die Wertung sagt das Urteil nichts; ihre Lage prüft „Ist die Lage echt?“ im Reiter Lage.",
+    read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Über die Wertung sagt das Urteil nichts; ihre Lage prüft „Ist die Lage versetzt?“ im Reiter Lage.",
     caution:
       "„Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in knapp zwei von drei Fällen auf. Auch der Abstand Probe → Wertung ist unsicher: Ohne jede Verschiebung liegt er bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen über gut einem σ, bei drei etwa 0,7 σ und über knapp anderthalb σ. Darum zeigt der Überblick nur das Urteil.",
     minimum:
