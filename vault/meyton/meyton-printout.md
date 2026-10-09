@@ -8,7 +8,7 @@ part_of: ["[[meyton]]"]
 relates_to: ["[[treffsicher-meyton-import]]", "[[meyton-pdf-format-change]]", "[[spiegel-assignment]]"]
 ---
 
-**TL;DR** Der QR-Code am Meyton-Stand führt per HTTP auf ein PDF bei Meyton (`http://195.201.88.185/print_<UUID>.pdf`, eine Woche abrufbar). Das PDF enthält Stand, Zeiten, Name mit #Nummer, alle Werte, Teiler, Trefferkreis und Trefferlage, aber keine Koordinaten. Im Fuß steht eine Hex-ID, vermutlich die ScheibenID, die Spiegel für die exakte Zuordnung nutzt. Für die Zuordnung liest Spiegel nur diese ID und die Erstellzeit aus den Metadaten, unabhängig vom Layout ([[adr-028]]).
+**TL;DR** Der QR-Code am Meyton-Stand führt per HTTP auf ein PDF bei Meyton (`http://195.201.88.185/print_<UUID>.pdf`, eine Woche abrufbar). Das PDF enthält Stand, Zeiten, Name mit #Nummer, alle Werte, Teiler, Trefferkreis und Trefferlage, aber keine Koordinaten. Im Fuß steht eine Hex-ID, die ScheibenID (am 9. Oktober 2026 an der eigenen Anlage belegt), die Spiegel für die exakte Zuordnung nutzt. Für die Zuordnung liest Spiegel nur diese ID und die Erstellzeit aus den Metadaten, unabhängig vom Layout ([[adr-028]]).
 
 ## Link
 
@@ -25,7 +25,7 @@ Beobachtet am Beispiel vom 2. Oktober 2026 (abgerufen am 5. Oktober):
 | Bereich | Beispiel | Nutzen |
 |---|---|---|
 | Kopf | Disziplin „LP 40 alt“, Klasse, StartNr, StandNr 8, Wertung 02.10.2026 19:51, Name mit #Nummer, Verein | Gegenprobe; #Nummer vermutlich die SportpassID |
-| Fuß | initialisiert 19:21, gedruckt 19:52, `ID: ff914420`, Seitenzahl | Beginn, Druckzeit, vermutlich ScheibenID |
+| Fuß | initialisiert 19:21, gedruckt 19:52, `ID: ff914420`, Seitenzahl | Wechsel auf Wertung, Druckzeit, ScheibenID |
 | Ergebnis | 352 (371,4), Serien …, Zähler …, Innenzehner 2 | Gegenprobe; auswärts das Ergebnis selbst |
 | Teiler | die drei besten und die drei weitesten mit Schussnummer | Gegenprobe der Formel ([[spiegel-target-library]]) |
 | Streuung | Trefferkreis … mm, Trefferlage … links, … hoch; dasselbe je Serie | Meytons eigene Streumaße |
@@ -34,7 +34,9 @@ Beobachtet am Beispiel vom 2. Oktober 2026 (abgerufen am 5. Oktober):
 | Metadaten | Qt 5.12.8, „Meyton Elektronik GmbH“, erstellt 2026-10-02 19:52:12 +02:00 | Druckpfad wie im Treffsicher-Fixture `meyton-qt-identity-h.pdf` |
 | Fehlt | x/y-Koordinaten, Zeit je Schuss | nur aus der SSMDB2 |
 
-Der Trefferkreis von Serie 3 ist mit 66,93 mm so groß wie der der ganzen Scheibe; ihn bestimmen also zwei Treffer aus Serie 3. Welche Definition Meyton nutzt (kleinster Kreis um alle Treffer oder größter Abstand zweier Treffer), zeigen die Rohdaten.
+Der Trefferkreis von Serie 3 ist mit 66,93 mm so groß wie der der ganzen Scheibe; ihn bestimmen also zwei Treffer aus Serie 3.
+
+**Gegen die Rohdaten geprüft** (Ausdruck und Ablage vom 9. Oktober 2026, [[src-ssmdb2-abend-2026-10-09]]): Alle 40 Zehntel, Innenzehner, Serien, Ergebnis, beste Teiler und der Kopf stimmen. Der **Trefferkreis** ist der kleinste Kreis um die Schussmitten plus Kaliber (4,5 mm), auf 1/100 mm gerundet; der größte Abstand zweier Treffer passt nicht, sobald drei Schüsse den Kreis bestimmen. Die **Trefferlage** ist der Schwerpunkt, auf 1/100 mm **abgeschnitten** (5,756 mm steht als 5,75). „Weiteste“ sind die Teiler, auf ganze Zahlen abgeschnitten. „initialisiert“ ist der Wechsel auf Wertung, nicht der erste Probeschuss; die Zeit im Kopf ist der letzte Schuss. Spiegel rundet wie Meyton, wo es dieselbe Zahl zeigt (SF-76).
 
 ## ID im Fuß
 

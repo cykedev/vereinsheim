@@ -3,9 +3,9 @@ id: meyton-ssmdb2
 type: concept
 title: "Meyton SSMDB2 — die Scheibenablage in MySQL"
 aliases: [ssmdb2, scheibenablage, small shootmaster database, meyton-db]
-keywords: [ssmdb2, mysql, scheibenablage, scheiben, serien, treffer, scheibenid, stellung, probe, disziplinid, regelnummer, wertungsmodus, verdeckte wertung, ring01, teiler01, teiler001, zeitstempel, millisekunden, sportpassid, starterliste, status, rwk, liga, kontrollzentrum, odbc, read only, erkundung, index, explain, show create table, timestamp, sitzungs-zeitzone, nur probe, versuche am stand, sportpass überlauf]
+keywords: [ssmdb2, mysql, scheibenablage, scheiben, serien, treffer, scheibenid, stellung, probe, disziplinid, regelnummer, wertungsmodus, verdeckte wertung, ring01, teiler01, teiler001, zeitstempel, millisekunden, sportpassid, starterliste, status, rwk, liga, kontrollzentrum, odbc, read only, erkundung, index, explain, show create table, timestamp, sitzungs-zeitzone, nur probe, versuche am stand, sportpass überlauf, lebenszeichen, heartbeat, zerrissene lesung, torn read, neustart der probe, uhr je stand, anzeigeart, toleranz 10 µm, mariadb 10.6]
 part_of: ["[[meyton]]"]
-documented_in: ["[[src-meyton-ssmdb2-handbuch]]", "[[src-meyton-live-display]]", "[[src-meyton-recherche-2026-10]]", "[[src-meyton-disziplin-erstellen]]", "[[src-ssmdb2-zugang-recherche]]"]
+documented_in: ["[[src-meyton-ssmdb2-handbuch]]", "[[src-meyton-live-display]]", "[[src-meyton-recherche-2026-10]]", "[[src-meyton-disziplin-erstellen]]", "[[src-ssmdb2-zugang-recherche]]", "[[src-ssmdb2-abend-2026-10-09]]"]
 relates_to: ["[[spiegel-bridge]]", "[[spiegel-ingest-pipeline]]"]
 ---
 
@@ -14,7 +14,7 @@ relates_to: ["[[spiegel-bridge]]", "[[spiegel-ingest-pipeline]]"]
 ## Zugang
 
 - Datenbank `SSMDB2` auf dem Meyton-Server (Standard 192.168.10.200), „per Netzwerk erreichbar“ ohne weitere Einstellung; Benutzer `meyton`, das Passwort steht im Handbuch auf Seite 3 und ist in V5, V7 und V9 gleich (auf allen Anlagen gleich; **nicht ins Repo**). Port 3306 nutzen alle Community-Projekte, das Handbuch nennt keinen. Auch über ODBC (bei Architekturfehlern Connector/ODBC 3.5.1) ([[src-ssmdb2-zugang-recherche]]).
-- Der Hersteller schreibt „MySQL“; laut Meyton-Forum ist es MariaDB. ShootMaster 6.0 setzt openSUSE Leap 15.3 bis 15.6 voraus, Leap 15.6 bringt MariaDB 10.11 mit; die Version ist unbelegt und wird vor Ort gelesen ([[ssmdb2-erkundung]]). Ein MariaDB-Client ab 11.4 verlangt TLS und verweigert einen Server ohne TLS, wenn man die Prüfung nicht abschaltet.
+- Der Hersteller schreibt „MySQL“; es ist MariaDB, beim Verein **10.6.20** (gelesen am 9. Oktober 2026, Systemzeitzone CEST, [[src-ssmdb2-abend-2026-10-09]]). Ein MariaDB-Client ab 11.4 verlangt TLS und verweigert einen Server ohne TLS, wenn man die Prüfung nicht abschaltet.
 - Seit ShootMaster 5.3 gibt es keinen root-Zugang mehr, die Haupt-DB ist für Externe gesperrt; ein eigener Lese-Benutzer ist nicht vorgesehen. Wer liest, schützt sich selbst: Read-only-Transaktionen, nur SELECT.
 - Beim Verein ist der Dienst aktiviert (Stand 5. Oktober 2026); es gibt nur 10-m-Stände.
 - Befüllt wird die Ablage vom Dienst im Kontrollzentrum (Bereich SSMDB2, in Echtzeit oder nachträglich) oder manuell aus Preisschießen (accmanII), Wettkampfsteuerung (masterII) und Auswertung (ranklistII). Eine automatische Löschung ist nicht dokumentiert; „alle Ergebnisse aus SSMDB2 löschen“ im Kontrollzentrum leert immer die ganze Ablage (SF-23), die zentrale DB bleibt.
@@ -25,9 +25,9 @@ relates_to: ["[[spiegel-bridge]]", "[[spiegel-ingest-pipeline]]"]
 
 | Tabelle | Schlüssel | Inhalt |
 |---|---|---|
-| `Scheiben` | `ScheibenID` | Starterliste(+ID), Startzeit, StartNr, Nachname, Vorname, Geschlecht, Land, SportpassID, StandNr, StandNrText, Disziplin, DisziplinID, Klasse(+ID), Verein(+ID), Mannschaft(+ID), Rangliste(+ID), Gruppe(+ID), Status, Trefferzahl, TotalRing, TotalRing01, BesterTeiler01, BesterTeiler001, Zeitstempel (letzte Änderung) |
+| `Scheiben` | `ScheibenID` | Starterliste(+ID), Startzeit, StartNr, Nachname, Vorname, Geschlecht, Land, SportpassID, StandNr, StandNrText, Disziplin, DisziplinID, Klasse(+ID), Verein(+ID), Mannschaft(+ID), Rangliste(+ID), Gruppe(+ID), Status, Trefferzahl, TotalRing, TotalRing01, BesterTeiler01, BesterTeiler001, Zeitstempel (Lebenszeichen, siehe Stolperfallen) |
 | `Serien` | `ScheibenID`, `Stellung`, `Serie` | Ring, Ring01 |
-| `Treffer` | `ScheibenID`, `Stellung`, `Treffer` | Serie, x, y (1/100 mm ab Scheibenmitte), Innenzehner, Wertung (Modus), Text, Ring, Ring01, Teiler01, Teiler001, Zeitstempel (Sekunde), Millisekunden. `Stellung = 0` ist die Probe |
+| `Treffer` | `ScheibenID`, `Stellung`, `Treffer` | Serie, x, y (1/100 mm ab Scheibenmitte), Innenzehner, Wertung (Anzeigeart), Text, Ring, Ring01, Teiler01, Teiler001, Zeitstempel (Sekunde, Uhr des Stands), Millisekunden. `Stellung = 0` ist die Probe |
 
 Laut Community-Projekt gibt es zusätzlich eine Tabelle `Version` mit der Schema-Version.
 
@@ -40,7 +40,8 @@ Meytons Standardlisten stehen im Handbuch „Disziplin erstellen“ ([[src-meyto
 ## Status und Wertungsmodus
 
 - **Status** (Scheiben): RWK, Liga, Heim, Gast, S (Stammschütze), E (Ersatz), F (festgeschossener Ersatz), AK (außer Konkurrenz), Einlage (Preisschießen), GMM/BMM (ISSF-Finale), I (ungültig). Daraus lässt sich Training gegen Wettkampf ableiten.
-- **Wertung** (Treffer, seit 5.2): 0 unbekannt, 1 Zehntel, 2 ganze Ringe, 3 Teiler, 4 Trefferumkreis, **5 komplett verdeckt** (kein Wert, keine Lage), 6 Schweizer 100er, 7 Zehntel + bester Teiler, 8 ganze Ringe + bester Teiler, 9 Zehntelteiler, **10 verdeckt** (Lage sichtbar), 11 Hundertstelteiler, 12 Nachkommastelle.
+- **Status** ist im Training leer; `Starterliste` heißt dort „Direktbelegung“ oder ist leer (9. Oktober 2026).
+- **Wertung** (Treffer, seit 5.2) ist die **Anzeigeart am Monitor**, nicht die Wertung der Disziplin: Schaltet der Schütze um, schreibt Meyton `Wertung` und `Text` für ganze Serien oder die ganze Scheibe neu, Werte und Lage bleiben; gedruckt wird trotzdem nach der Disziplin (SF-74). Codes: 0 unbekannt, 1 Zehntel, 2 ganze Ringe, 3 Teiler, 4 Trefferumkreis, **5 komplett verdeckt** (kein Wert, keine Lage), 6 Schweizer 100er, 7 Zehntel + bester Teiler, 8 ganze Ringe + bester Teiler, 9 Zehntelteiler, **10 verdeckt** (Lage sichtbar), 11 Hundertstelteiler, 12 Nachkommastelle.
 
 ## Versionen
 
@@ -57,21 +58,23 @@ Handbuchstände: V5 (08/2023) → V7 (03/2024): `SportpassID` von `int(11)` auf 
 
 | Befund | Umgang |
 |---|---|
-| Ring-Felder unterschiedlich skaliert (Serien in ganzen Ringen, Gesamt- und Zehntelwerte ×10) | Skala je Feld im Adapter, per Test am echten Datensatz |
-| `Startzeit` oft `0000-00-00` | Beginn aus dem ersten Treffer |
-| Zeiten sind Ortszeit ohne Zone | Zeitzone der Anlage, Rohwert behalten, Uhrabweichung messen |
+| Ring-Felder unterschiedlich skaliert: `Treffer.Ring`, `Ring01`, `TotalRing`, `TotalRing01` in Zehnteln, `Serien.Ring` in ganzen Ringen, `Serien.Ring01` in Zehnteln; `Teiler01` = Abstand in µm, `Teiler001` in 0,1 µm (am Ausdruck belegt, 9. Oktober 2026) | Skala je Feld im Adapter, Test mit diesen Werten |
+| `Startzeit` im Training immer `0000-00-00` | Beginn aus dem ersten Treffer |
+| Zeiten sind Ortszeit ohne Zone **nach der Uhr des Stands**: Stand 20 ging am 9. Oktober 2026 elf Minuten nach | Abweichung je Stand messen (Beobachtung minus Zeitstempel); Abstände aus den Zeitstempeln, Datum und Uhrzeit nicht blind übernehmen (SF-73) |
 | `ScheibenID` vorzeichenbehaftet 32 Bit, oft negativ, nur je Instanz eindeutig | Schlüssel Quelle + Epoche + ScheibenID |
 | Platzhalter `--frei--` für freie Stände; womöglich heißen so auch Trainings ohne Starter | nur Scheiben ohne Treffer weglassen, nie nach dem Namen filtern |
 | keine Standbelegung in der DB | für Live optional LANA ([[meyton-interfaces]]) |
 | Korrekturen und Löschungen ändern Zeilen nachträglich | Snapshots mit Revision, Abgleich der letzten Tage |
-| Probeschüsse laut Release-Notiz nur bis zum ersten Wertungsschuss gespeichert; unklar, ob sie dann gelöscht oder nur nicht mehr geschrieben werden | während des Schießens mitlesen und auf der Brücke puffern; Versuch in Phase 0 |
+| Probeschüsse werden **gelöscht**: alle mit dem ersten Wertungsschuss, ebenso die alte Probe mit dem ersten Schuss nach einem Neustart der Probe (gleiche ScheibenID, Nummern ab 1; belegt am 9. Oktober 2026) | Probe nur, solange sie in der Ablage steht; Spiegel sammelt sie über die live gesehenen Snapshots (SF-03, SF-72) |
+| Eine Lesung kann **zerrissen** sein: einzelne oder alle Schüsse fehlen für genau einen Durchgang, auch bei fertigen Scheiben (16-mal in 51 Minuten) | nur senden, wenn zwei Lesungen hintereinander gleich sind; Fehlen ist keine Löschung (SF-71) |
 | `SportpassID` war bis Handbuch V5 `int(11)` (höchstens 2147483647), Sportpassnummern dürfen 12 Stellen haben; seit V7 `bigint(20)`. Ältere Einträge können gekappt sein, dann teilen sich viele Schützen eine ID | Typ und Spitzenwerte vor Ort prüfen; mehrdeutige IDs nie automatisch zuordnen ([[spiegel-assignment]]) |
 | im Training oft frei getippte Namen | Zuordnung nicht über Namen ([[spiegel-assignment]]) |
 | Indizes unbekannt; eine Abfrage ohne Index liest bei jedem Takt die ganze Tabelle, während geschossen wird | `SHOW INDEX` und `EXPLAIN` vor dem ersten Polling |
 | Ist `Zeitstempel` ein `TIMESTAMP`, rechnet MySQL ihn in die Sitzungs-Zeitzone um; laut Handbuch V9 ist es `datetime` (Ortszeit ohne Zone, Community bestätigt) | Spaltentyp vor Ort bestätigen, Sitzungs-Zeitzone trotzdem fest setzen und mitsenden |
-| Ob `Scheiben.Zeitstempel` bei Probeschüssen steigt, ist offen | Versuch in Phase 0; davon hängt die Änderungserkennung ab |
+| `Scheiben.Zeitstempel` ist ein **Lebenszeichen**: Er steigt alle 5 bis 10 s, solange der Stand belegt ist, auch in der Probe und ohne Schuss, und steht ab dem Freigeben des Stands | Änderungserkennung je ScheibenID über den zuletzt gesehenen Wert; Ende einer Scheibe am Ende des Lebenszeichens (SF-10, SF-50) |
 | `Zeitstempel + Millisekunden` rechnet MySQL als Zahl; spätere Schüsse wirken dann älter | als Paar vergleichen |
-| Engine unbekannt: MyISAM sperrt beim Lesen die Tabelle und kann nach hartem Stromaus beschädigt sein; InnoDB zeigt einer lang offenen Transaktion keine neuen Zeilen | kurze Abfragen, Fehler nie als Löschung werten, `SHOW TABLE STATUS` |
+| Engine unbekannt: MyISAM sperrt beim Lesen die Tabelle und kann nach hartem Stromaus beschädigt sein; InnoDB zeigt einer lang offenen Transaktion keine neuen Zeilen. Die zerrissenen Lesungen sprechen für Schreiben ohne Transaktion | kurze Abfragen, Fehler nie als Löschung werten, `SHOW TABLE STATUS` (SP-0.1) |
+| Meyton wertet jede Grenze **10 µm großzügiger** als die Regel: Ein Schuss erreicht einen Wert, wenn sein Abstand unter Grenze + 10 µm liegt; so stimmen alle 640 Schüsse des 9. Oktober 2026, mit der reinen Regel 15 nicht | `shot-core` übernimmt die Toleranz (SF-75) |
 | Wertungsmodus `0` (unbekannt), womöglich bei Probe oder Altdaten | Admin gibt Modus 0 je Disziplin frei, Zähler im Heartbeat |
 | Die SportpassID steht als Kopie in jeder Scheibe; eine später nachgepflegte Nummer fehlt in alten Scheiben | rückwirkend nur mit Namensvorschlag und Bestätigung |
 

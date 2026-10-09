@@ -57,11 +57,11 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 - **Ziel:** sehen, wie sich die Ablage bei den Sonderfällen wirklich verhält, und Testdaten ableiten, die der Anlage gleichen.
 - **Umfang:** Ein kleines Skript liest wie die Brücke, nur lesend, und schreibt jeden Zustand mit Zeit in ein Protokoll; Namen und SportpassIDs ersetzt es schon beim Mitschreiben. Dazu schießen wir mit der Standaufsicht das Schießprotokoll aus [[meyton-ssmdb2]] (Probe → Wertung → Probe, lange Probe, nur Probe, Abbruch, ohne Starter, Zwischen- und Doppelausdruck, Korrektur, falsche Disziplin, verdeckte Wertung) und sichern `SHOW CREATE TABLE` aller Tabellen. Ins Repo kommt nur das Schema; das Protokoll bleibt lokal und dient als Vorbild für synthetische Daten ([[adr-029]]).
 - **Abnahme:** jeder Versuch mit Ergebnis in [[meyton-ssmdb2]] und [[spiegel-edge-cases]] eingetragen; Schema im Repo; Protokoll ohne Namen und Nummern.
-- **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** Werkzeug bereit ([[ssmdb2-erkundung]]): Das Rohprotokoll mit Namen bleibt in `privat/`, der Bericht trägt Pseudonyme; der Abend steht aus.
+- **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** zum großen Teil erledigt (9. Oktober 2026): Statt des geführten Protokolls lief ein Mitschnitt über einen ganzen Trainingsabend (Phase `abend` von [[ssmdb2-erkundung]]), dazu ein Ausdruck ([[src-ssmdb2-abend-2026-10-09]]). Belegt: Probe wird beim Umschalten und beim Neustart gelöscht, zerrissene Lesungen, Lebenszeichen, Uhr je Stand, Anzeigeart, Meytons Toleranz von 10 µm; eingetragen in [[meyton-ssmdb2]], [[spiegel-edge-cases]] und [[adr-027]]. Offen: Weg zurück auf Probe, Auslöser des Probe-Neustarts, ohne Starter, Zwischen- und Doppelausdruck, Korrektur, falsche Disziplin, verdeckte Wertung; das Schema kommt mit der Kopie (SP-0.1).
 
 ## Phase 1 · Fundament
 
-Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Opt-in reicht der Meyton-QR.** Beide Male mit allen Schüssen, die Probe eingeschlossen, sofern die Brücke beim Schießen lief (SF-03).
+Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Opt-in reicht der Meyton-QR.** Beide Male mit allen Schüssen, die Probe eingeschlossen, soweit Meyton sie nicht gelöscht hat oder die Brücke sie live gesehen hat (SF-03, SF-72; [[adr-027]], Änderung vom 9. Oktober 2026).
 
 **Meilenstein Durchstich:** Bevor Zuordnung und Oberfläche entstehen, läuft eine echte Scheibe einmal durch: SP-1.0a, SP-1.4a/b und SP-1.6a/b in der einfachsten Form, mit festem Filter auf die eigene SportpassID. Am Trainingsabend erscheint die Scheibe samt Probe roh in Spiegel. Gemessen werden Latenz, Abfragekosten auf der Anlage, Speicher je Scheibe und der Speicher des leeren Skeletts unter der 256-MB-Grenze, an der [[adr-026]] hängt. Was dabei überrascht, ändert den Plan, solange er noch billig zu ändern ist.
 
@@ -76,7 +76,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Ziel:** Scheiben korrekt zeichnen und werten.
 - **Umfang:** `packages/shot-core`: Datenformat Scheibenbild; Bibliothek für eure 10-m-Stände, also Luftgewehr und Luftpistole (Auflage nutzt dieselben Scheiben), weitere Scheiben erst bei Bedarf; Regelkatalog DisziplinID → Regel (DSB und Meyton-eigen) → Scheibenbild, über Regelnummer und Schusscode mit Rückfall auf LG/LP als Wort im Namen, sonst Vorschlag per Gegenprobe mit Admin-Bestätigung; Disziplin-Familien; Neu-Wertung mit anderem Scheibenbild; Wertungsformel mit Innenzehner ([[spiegel-target-library]]).
 - **Abnahme:** Gegenprobe reproduziert alle bekannten Meyton-Werte; Mutationsprobe nach [[conventions]] §9; Sonderfälle SF-09, SF-14, SF-16, SF-17, SF-18, SF-70.
-- **Hängt ab von:** nichts. **Status:** erledigt (Oktober 2026, `packages/shot-core`).
+- **Hängt ab von:** nichts. **Status:** erledigt (Oktober 2026, `packages/shot-core`). **Nachtrag offen:** Meyton wertet jede Grenze 10 µm großzügiger als die Regel (SF-75); ohne diese Toleranz weichen 15 von 640 echten Schüssen um ein Zehntel ab. Dazu Rundung wie im Ausdruck (SF-76).
 
 ### SP-1.2 Fachkern: Geometrie und Kennzahlen-Registry
 - **Ziel:** die Rechenbasis für alle Auswertungen.
@@ -92,7 +92,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-1.4 Brücke v1: lesen, puffern, hochladen
 - **Ziel:** Rohdaten kommen verlässlich aus dem Schützenhaus.
-- **Umfang:** `apps/spiegel-bridge` nach [[spiegel-bridge]], ohne eigenen Zustand ([[adr-027]], Änderung vom 8. Oktober 2026): Kopplung, Leser mit Read-only-Transaktionen, Änderungserkennung, Snapshots mit Prüfsumme, Upload mit Wiederholung statt Warteschlange, Heartbeat, Statusseite; Probe höchstens im Arbeitsspeicher (nach SP-0.6); Betrieb mit Abschalten nach dem Training (Nachholen beim Start ab dem Wasserstand in Spiegel).
+- **Umfang:** `apps/spiegel-bridge` nach [[spiegel-bridge]], ohne eigenen Zustand ([[adr-027]], Änderung vom 8. Oktober 2026): Kopplung, Leser mit Read-only-Transaktionen, Änderungserkennung, Snapshots mit Prüfsumme, Upload mit Wiederholung statt Warteschlange, Heartbeat, Statusseite; ohne Probe-Puffer, Snapshot erst nach zwei gleichen Lesungen, Änderungen je ScheibenID über den zuletzt gesehenen Zeitstempel ([[adr-027]], Änderung vom 9. Oktober 2026); Betrieb mit Abschalten nach dem Training (Nachholen beim Start ab dem Wasserstand in Spiegel).
 - **Schnitt:** a) Leser, Änderungserkennung und Snapshots, nur lokal; b) Kopplung, Upload und Heartbeat; c) Nachholen beim Start, Updates, Statusseite.
 - **Abnahme:** gegen eine lokale MySQL mit SSMDB2-Schema und den Fällen aus SP-1.0, Ausfalltests (Netz weg, DB weg, Stecker ziehen während des Uploads; danach nichts auf der Platte außer der Konfiguration), einmal an der echten Anlage; Sonderfälle SF-02, SF-03, SF-07, SF-08, SF-10, SF-23, SF-24, SF-25, SF-26, SF-31, SF-32, SF-33, SF-49, SF-50, SF-51, SF-52, SF-53, SF-54, SF-55, SF-57, SF-58.
 - **Hängt ab von:** SP-0.4, SP-1.0. **Status:** offen.

@@ -3,9 +3,9 @@ id: ssmdb2-erkundung
 type: operation
 title: "SSMDB2 vor Ort erkunden (Werkzeug für SP-0.1 und SP-0.6)"
 aliases: [erkunden.sh, ssmdb2-erkunden, erkundungsabend, schießprotokoll-skript]
-keywords: [erkundung, vor ort, schützenheim, skript, erkunden.sh, sql-checkliste, schießprotokoll, mitschnitt, dump, kopie, mysql-client, mariadb, docker, read-only, nur lesen, pseudonym, bericht, privat, selbsttest, testanlage, probe verschwindet, latenz, pdf-id, sp-0.1, sp-0.6]
+keywords: [erkundung, vor ort, schützenheim, skript, erkunden.sh, sql-checkliste, schießprotokoll, mitschnitt, dump, kopie, mysql-client, mariadb, docker, read-only, nur lesen, pseudonym, bericht, privat, selbsttest, testanlage, probe verschwindet, latenz, pdf-id, sp-0.1, sp-0.6, abend-mitschnitt, schießbetrieb, ganzer abend, fenster, ctrl-c]
 part_of: ["[[meyton]]"]
-relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]", "[[spiegel-open-questions]]", "[[spiegel-roadmap]]"]
+relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]", "[[spiegel-open-questions]]", "[[spiegel-roadmap]]", "[[src-ssmdb2-abend-2026-10-09]]"]
 governed_by: ["[[adr-027]]", "[[adr-029]]"]
 ---
 
@@ -24,7 +24,8 @@ Anleitung für den Abend: `tools/ssmdb2-erkunden/README.md`. Plan: `plans/2026-1
 | `checkliste` | die SQL-Checkliste aus [[meyton-ssmdb2]] in zehn Themen (`abfragen/`), dazu Skalen, Grenzen des Vertrags, Zeittypen | niemand schießt |
 | `dump` | vollständige Kopie ohne `LOCK TABLES`, Schema ohne Daten | niemand schießt |
 | `protokoll` | elf geführte Schritte, Mitschnitt jede Sekunde, IDs der Ausdrucke | beim Schießen |
-| `abschluss` | Checkliste ein zweites Mal, Namensprüfung, `LIESMICH.md` | danach |
+| `abschluss` | Checkliste ein zweites Mal, Namensprüfung, `LIESMICH.md`; schreibt die Fassung mit Pseudonymen nach, falls ein Mitschnitt hart endete | danach |
+| `abend` | Mitschnitt im laufenden Betrieb ohne Eingaben bis Ctrl-C, Statuszeile alle 5 Minuten; nicht in „alle Phasen“ | den ganzen Abend |
 
 ## Regeln
 
@@ -55,6 +56,12 @@ Anleitung für den Abend: `tools/ssmdb2-erkunden/README.md`. Plan: `plans/2026-1
   einer eigenen Datei. Gemessen wird die Stand-Abfrage allein; die Grundlast des Clients (`SELECT 1`, im
   Docker-Fall vor allem `docker exec`, gemessen 85 bis 240 ms) zieht er ab. Liegt eine Abfrage mehr als
   300 ms darüber, verdoppelt er den Takt (SF-49), nach zehn schnellen halbiert er ihn wieder.
+- **Abend im Betrieb** (Phase `abend`, 9. Oktober 2026): Statt alle Scheiben seit dem Start liest der
+  Mitschnitt nur die mit einer Änderung in den letzten 90 Minuten; das Fenster rückt jede Minute nach,
+  und eine ausgeschiedene Scheibe steht als Ereignis im Protokoll, damit sie nicht wie gelöscht aussieht.
+  Das Netz über `Treffer` entfällt, wenn es die ganze Tabelle lesen müsste. Fällt der Docker-Client weg,
+  startet er neu; nach Fehlern wartet er 5 s. Ctrl-C oder TERM beenden sauber, ein hartes Ende lässt das
+  Rohprotokoll stehen.
 - Der Mac bleibt wach (`caffeinate`); `smbutil` fragt nie nach einem Passwort.
 
 ## Selbsttest
@@ -71,10 +78,20 @@ nur lesen darf, dem Schema nach Handbuch V9 (MyISAM) und Testdaten mit erfundene
 - einen Lauf ohne `--auto` mit Antworten über stdin, wie am Abend (er fand, dass `docker exec -i`
   Eingaben des Users verbrauchte), mit der ID so getippt, wie sie gedruckt ist (`ID: FF914420`).
 
-53 Prüfungen, unter anderem: Kopie einspielbar mit gleichen Zeilen, keine Testnamen und kein Passwort in
+Dazu ein Abend-Lauf mit einem Fenster von 3 s: Eine ruhige Scheibe fällt heraus, eine aktive bleibt, der
+Client-Container verschwindet mittendrin und kommt wieder, TERM beendet mit Exit 0. Eine Prüfung ohne
+Datenbank sichert, dass die Suche nach dem Client ohne lokalen `mariadb` auch beim zweiten Aufruf bei
+Docker bleibt (Fehler vom 9. Oktober 2026).
+
+65 Prüfungen, unter anderem: Kopie einspielbar mit gleichen Zeilen, keine Testnamen und kein Passwort in
 der Ausgabe, Zugangsdateien gelöscht, verschwindende Probe im Protokoll sichtbar, `ff914420` → −7257056
 samt Tabellenzeile. Gegenproben: ohne gelöschte Probe und mit einer Abfrage, die Namen ausgibt, werden
 die zugehörigen Prüfungen rot. Läuft auch mit der macOS-Bash 3.2 (`ERKUNDEN_BASH=/bin/bash`).
+
+## Ergebnisse
+
+Der erste Einsatz war ein Abend-Mitschnitt am 9. Oktober 2026 (18:57 bis 19:48, 17 Scheiben); Befunde in
+[[src-ssmdb2-abend-2026-10-09]]. Checkliste und Kopie stehen noch aus.
 
 ## Danach
 
