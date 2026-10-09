@@ -71,7 +71,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/nav/context`               | `src/nav/context.ts`               | Blättern im Kontext: `contextCardIds` (Scheiben der Herkunft in zeitlicher Folge), `neighbours` (vorige ist die ältere)                                                                                                                                                                                                                                |
 | `@vereinsheim/shot-ui/nav/RouteLink`             | `src/nav/RouteLink.tsx`            | `RouteLink` (Link mit Adresse), `RouteLinkProvider` (Klick abfangen, eigene Link-Komponente), `useRouteNavigate`, `shouldIntercept`                                                                                                                                                                                                                    |
 | `@vereinsheim/shot-ui/nav/CardContextBar`        | `src/nav/CardContextBar.tsx`       | über dem Kopf der Scheibe: Rückweg mit Namen, „‹ vorige · nächste ›“, am Ende ausgegraut                                                                                                                                                                                                                                                               |
-| `@vereinsheim/shot-ui/layout/AppFrame`           | `src/layout/AppFrame.tsx`          | Rahmen der App: Seitenleiste ab 1024 px, untere Leiste mit Scannen in der Mitte, schmale Leiste im Querformat, `--app-bar`                                                                                                                                                                                                                             |
+| `@vereinsheim/shot-ui/layout/AppFrame`           | `src/layout/AppFrame.tsx`          | Rahmen der App: Seitenleiste ab 1024 px (unten `sidebarFooter`), untere Leiste mit Scannen in der Mitte, schmale Leiste im Querformat, `--app-bar`                                                                                                                                                                                                     |
 | `@vereinsheim/shot-ui/layout/StartPage`          | `src/layout/StartPage.tsx`         | Rahmen von Start im Raster der Seite eines Zeitraums: links die Abende, rechts Offen und Form                                                                                                                                                                                                                                                          |
 | `@vereinsheim/shot-ui/start/model`               | `src/start/model.ts`               | Start (Plan N5): `startModel` (letzter Abend je Familie, Ø je Schuss, Schnitt der fünf davor, Formband, Urteil, Streifen, neue Rekorde, Form der letzten 90 Tage)                                                                                                                                                                                      |
 | `@vereinsheim/shot-ui/start/sentence`            | `src/start/sentence.ts`            | `eveningSentence` (Urteil folgt dem Band), `eveningDeltaText`                                                                                                                                                                                                                                                                                          |
@@ -113,7 +113,10 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Hilfen in `analysis/charts/ruler.ts`. Ziehen ändert die Scheibe nicht; „Auf der Scheibe“ (`onChoose` der
   Analyse) zeigt den Schuss über die Aktion `show` (ohne Umschalten, Auswahl bei Bedarf auf die Grundauswahl) und
   springt zu ihr. Die Seite hängt `AnalysisPanel` je Karte neu ein (`key`), damit kein Lineal eine alte Wahl
-  mitnimmt.
+  mitnimmt. Diagramme und Scheibe sind nicht markierbar (`select-none` an `ChartSlot`, `ChartSvg`, `TargetView`; das
+  Lineal setzt `WebkitUserSelect` und verhindert mit der Maus den Beginn einer Auswahl, User, 9. Oktober 2026).
+  Der Kopf einer Karte (`AnalysisCard`) zeigt keine Katalog-IDs, höchstens einen Zusatz (`tag`, etwa „aus den
+  Zahlen“). Eine Scheibe beginnt mit dem ersten Reiter; `siblingRoute` lässt den Reiter fallen.
 - **Seite aus `CardPage`:** Kopf (`CardHeader`), Sprungleiste (`SectionNav` mit `useActiveSection`), Scheibe,
   unter ihr die Serien (`under`), rechts daneben was zu ihr gehört (`result`: das Ergebnis als Box, auf dem Telefon im Kopf; `aside`: Ablesung; `beside`:
   Schüsse, füllen die Höhe), darunter in voller Breite, was Platz braucht (`below`: Zahlen, Analyse). Der Kasten
@@ -163,6 +166,8 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   - `AppFrame`: Seitenleiste ab 1024 px; darunter die untere Leiste (Start · Scheiben · Scannen · Fortschritt · Profil,
     Scannen erhaben in der Mitte); im Querformat des Telefons (unter 500 px hoch) eine schmale Leiste links.
   - Admin sieht nur ein Admin: in der Seitenleiste als letzter Eintrag, auf dem Telefon in Profil.
+  - `sidebarFooter`: ein Platz unten in der Seitenleiste (`mt-auto`), neben der Navigation, nicht in ihr; für
+    Einstellungen wie die Darstellung. Auf dem Telefon gehört eine Einstellung nach Profil.
   - Die Wurzel setzt `--app-bar` (72 px mit unterer Leiste, sonst 0 px). `ReturnPill`, der Abstand der Seite und
     `useTargetFit` richten sich danach.
   - Der Inhalt ist `<main>` und steht im DOM vor der unteren Leiste (Fokus-Reihenfolge); Seiten setzen kein eigenes

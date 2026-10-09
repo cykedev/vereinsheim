@@ -64,6 +64,8 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
      Familie, der Fortschritt mit seiner Wahl, Start mit dem letzten Abend.
    - Der Rückweg nennt den Kontext: „← Scheiben“, „← Letzte 90 Tage“, „← Start“.
    - Kein Wischen: Es kollidiert mit Zoom und Ausschnitt der Scheibe.
+   - Eine Scheibe beginnt in der Analyse immer mit dem ersten Reiter, ob geöffnet oder geblättert (User,
+     9. Oktober 2026): Es gibt keinen gemerkten Reiter. Beim Blättern bleibt der Abschnitt, der Reiter nicht.
 10. **Der ganze Zustand steht in der Adresse, mit englischen Pfaden** (wie Treffsicher `/sessions`):
     - Filter, Zeitraum, Vergleich, Wahl und Herkunft stehen als Query.
     - Browser-Zurück und geteilte Links stellen alles wieder her.
@@ -157,7 +159,7 @@ Plan `plans/2026-10-09-spiegel-routen.md`, Branch `feat/spiegel-routen`.
 - **`@vereinsheim/shot-ui/nav/navigate`:**
   - `openCard` (die Herkunft trägt ihren Zustand, die Wertung trägt die Scheibe).
   - `backRoute` (zurück mit der Scheibe gewählt), `backLabel` („Letzte 90 Tage“, „Neue Munition“, „Start“,
-    „Scheiben“), `siblingRoute` (Blättern behält Herkunft, Wertung und Abschnitt).
+    „Scheiben“), `siblingRoute` (Blättern behält Herkunft, Wertung und Abschnitt, nicht den Reiter).
   - `listFromProgress` und `progressFromList` (ohne Wertung der Liste gilt die des Geräts, wie bei `openCard`).
   - `progressRoute` und `periodStateFromRoute`; dazu die Aktion `restore` des `periodReducer`.
 - **Labor:**
@@ -290,7 +292,13 @@ wir die Usability beurteilen können. Was nur das Labor hat (Stand, Adresse, Bei
 hinter einem kleinen Knopf „Labor-Werkzeuge“.
 
 - **Darstellung (System, Hell, Dunkel) ist eine Einstellung der App:** In Profil, am Desktop zusätzlich unten in der
-  Seitenleiste (`AppFrame.sidebarFooter`).
+  Seitenleiste (`AppFrame.sidebarFooter`), neben der Navigation, nicht in ihr.
+- **Aus der ersten Sichtung (User, 9. Oktober 2026):**
+  - Eine Scheibe beginnt mit dem ersten Reiter (siehe Blättern im Kontext).
+  - Keine Verweise in den Katalog („E1 · E2“) im Kopf der Analyse-Karten; sie interessieren den Nutzer nicht. Der
+    Katalog bleibt im Vault-Leitfaden (`shot-help`).
+  - Tippen und Ziehen in Diagrammen und auf der Scheibe markiert keinen Text (auch Safari, das `user-select` nur mit
+    Präfix kennt).
 
 ## Was die Bausteine schon haben, was fehlt
 

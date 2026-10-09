@@ -23,8 +23,10 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
 - **Eigenheiten der Skriptprüfung** (Headless-Chrome mit `--dump-dom`): Klicks sind `cancelable`, sonst folgt der
   Browser einem Link trotz `preventDefault` und die Seite ist weg („Kein Bericht“). Helfer: `button`, `link` (nach Text
   oder `aria-label`), `area` (sichtbarer Eintrag der Navigation), `helpSheet` (das Blatt der Hilfe ist das letzte
-  `<dialog>`; davor steht das der Labor-Werkzeuge). Knöpfe im Blatt der Labor-Werkzeuge findet `button(…,
-$("[data-labor-panel]"))` auch geschlossen; der Pillen-Helfer übergeht „Zurück zur App“. Ein synthetischer Klick fokussiert
+  `<dialog>`; davor stehen das der Labor-Werkzeuge und je Seite weitere), `inLabor` (Knopf im Blatt der
+  Labor-Werkzeuge, auch geschlossen; nur dort suchen, die Seite hat gleich benannte Knöpfe wie den Reiter „Probe“),
+  `sideTheme` (Darstellung in der Seitenleiste), `pageHeadTop` (Abstand des Seitenkopfs oben); der Pillen-Helfer
+  übergeht „Zurück zur App“. Ein synthetischer Klick fokussiert
   nicht und eine synthetische Taste löst keine Aktion aus (Tastatur nur über echte, fokussierbare Knöpfe
   prüfen); das `close`-Ereignis eines `<dialog>` kommt spät oder gar nicht (nie darauf warten; Escape-Weg
   über `requestClose()`, das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
@@ -32,8 +34,7 @@ $("[data-labor-panel]"))` auch geschlossen; der Pillen-Helfer übergeht „Zurü
   Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen, auf der Seite
   eines Zeitraums dazu `period` (Scheiben, Zustand, Modell) und `tools.period`, auf der Scheiben-Liste `list` (Modell,
   Filter, Scheiben, Familie je Id), auf Start `start` (Modell, Scheiben). Die Prüfung braucht seit L3 mehr
-  als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`); in einer Seite mit zwei Blättern ist das der Hilfe
-  das letzte `<dialog>`.
+  als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`).
   In den Rahmen der Prüfung (außerhalb des Bilds, `left:-9999px`) kam ein Sprung über `requestAnimationFrame` beim
   Laden nicht an; was beim Laden zu einem Anker springen soll, springt deshalb im Effekt sofort (Review N2).
 - **Die App im Rahmen** (Plan L3, N2, N3): `AppFrame` umgibt jede Ansicht; die Navigation wechselt die Bereiche
@@ -43,10 +44,12 @@ $("[data-labor-panel]"))` auch geschlossen; der Pillen-Helfer übergeht „Zurü
     in der App. Was nur das Labor hat, liegt hinter dem runden Knopf „Labor-Werkzeuge“ unten rechts über der Leiste
     (`LaborPanel`, `data-labor-button`): ein Blatt mit Stand, Absatz und Hinweis zur Ansicht, „Adresse in der App“
     (`data-address`), den Umschaltern der Ansicht (auf der Scheibe: Scheibe, Beispiel, Tippen, Neuer Schuss) und
-    „Beispielscheiben öffnen“ bzw. „Zurück zur App“. Beispiele sind die Beispielscheiben in `CardView`, ohne Adresse
-    und ohne aktiven Bereich.
-  - **Darstellung** (System, Hell, Dunkel, `ThemeSwitch`): am Desktop unten in der Seitenleiste
-    (`AppFrame.sidebarFooter`), auf dem Telefon und im Querformat in Profil.
+    „Beispielscheiben öffnen“ bzw. „Zurück zur App“. Beispiele sind die Beispielscheiben in `CardView`, mit Adresse
+    ohne Herkunft und ohne aktiven Bereich. Der Knopf steht zuletzt in der Ansicht (Tab-Folge), unter 1024 px über
+    der Pille (`ReturnPill`), und zeigt ein Werkzeug, das bei geschlossenem Blatt weiterwirkt („Setzen“: Punkt und
+    „Labor-Werkzeuge, Setzen aktiv“, `active`). Nach dem Wechsel App ↔ Beispiele steht der Fokus auf dem neuen Knopf.
+  - **Darstellung** (System, Hell, Dunkel, `ThemeSwitch`): in Profil, am Desktop zusätzlich unten in der Seitenleiste (`AppFrame.sidebarFooter`, neben der Navigation). Die
+    drei Knöpfe teilen sich dort die Breite.
   - Die Ansicht steht in `labor.mode`. Ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie, ein Abend
     (`#2026-09-25`) die Scheiben-Liste.
   - **Router im Speicher:** Jeder Link (`RouteLink`) landet über den `RouteLinkProvider` in `go(route)` in `App`, wie
@@ -74,7 +77,7 @@ $("[data-labor-panel]"))` auch geschlossen; der Pillen-Helfer übergeht „Zurü
   Munition“; „jetzt“ ist der 30. September 2026, 12:00 Uhr MESZ (die Saison liegt ganz in der Sommerzeit).
 - **Seite aus `CardPage`** (Plan Schritt 4): die Seite einer Scheibe wie in der App. Was nur das Labor hat (Scheibe,
   Beispiel, Ansehen/Setzen, Neuer Schuss, der Hinweis zum Beispiel), steht im Blatt der Labor-Werkzeuge; „Übrige
-  blass/aus“ ist ein Eckknopf der Scheibe. Reiter: Anker in der Adresse vor `labor.tab` in `localStorage`; in der Prüfung schreibt
+  blass/aus“ ist ein Eckknopf der Scheibe. Reiter: eine Scheibe beginnt mit dem ersten (User, 9. Oktober 2026), nur ein Anker beim Laden der Beispiele öffnet einen anderen; kein gemerkter Reiter. In der Prüfung schreibt
   das Labor keinen Anker, und `underTest()` hält `#pruefen` beim Laden fest.
 - **Prüfung der Seite:** Desktop in einem Rahmen von 1280 × 900 (das Fenster der Prüfung ist über 2000 px hoch),
   Telefon bei 390 und 375 px, Querformat 812 × 375. `scrollWhileStuck` scrollt in den Bereich, in dem die
