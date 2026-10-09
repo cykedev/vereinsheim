@@ -1,5 +1,6 @@
-// Worte für den Vergleich und der Satz im Kopf der Seite eines Zeitraums (Plan L3, D6, D14). „bedeutsam“
-// nur neben einem Urteil (L2, B19: ohne Veränderung trifft es bei 5 gegen 5 Scheiben oft zu).
+// Worte für den Vergleich und der Satz im Kopf der Seite eines Zeitraums (Plan L3, D6, D14). „deutlich“ (die
+// Effektstärke, früher „bedeutsam“) nur neben einem Urteil (L2, B19: ohne Veränderung trifft es bei 5 gegen 5
+// Scheiben oft zu).
 
 import type { PeriodComparison } from "@vereinsheim/shot-core/analysis"
 
@@ -7,16 +8,26 @@ import { formatValue } from "../format"
 import { PREVIOUS_LABEL } from "./calendar"
 import type { PeriodModel } from "./model"
 
-/** „höher, besser · bedeutsam“, „tiefer“, „nicht nachweisbar“, „zu wenige Scheiben“ */
+/**
+ * Urteil in Alltagsworten (U3, D5): „deutlich besser“, „schwächer“, „kein klarer Unterschied“, „zu wenige Scheiben“;
+ * ohne Richtung der Kennzahl (Tempo) „höher“ oder „tiefer“. Die Richtung der Zahl steht schon im Δ daneben.
+ */
 export function verdictText(
   comparison: PeriodComparison,
   better: "higher" | "lower" | "none"
 ): string {
   if (comparison.test === null) return "zu wenige Scheiben"
-  if (comparison.verdict === "unclear") return "nicht nachweisbar"
+  if (comparison.verdict === "unclear") return "kein klarer Unterschied"
   const up = comparison.verdict === "higher"
-  const judged = better === "none" ? "" : (better === "higher") === up ? ", besser" : ", schwächer"
-  return `${up ? "höher" : "tiefer"}${judged}${comparison.meaningful ? " · bedeutsam" : ""}`
+  const word =
+    better === "none"
+      ? up
+        ? "höher"
+        : "tiefer"
+      : (better === "higher") === up
+        ? "besser"
+        : "schwächer"
+  return `${comparison.meaningful ? "deutlich " : ""}${word}`
 }
 
 /** unter diesem Abstand heißt es „gleichauf“: zwei Stellen nach dem Komma zeigten 0,00 */

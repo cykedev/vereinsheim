@@ -148,7 +148,7 @@ describe("Vergleich und Satz", () => {
     )
   })
 
-  it("Urteil in Worten: Richtung, besser oder schwächer, bedeutsam nur mit Urteil", () => {
+  it("Urteil in Worten (U3, D5): besser oder schwächer, „deutlich“ nur mit Urteil, ohne Richtung höher oder tiefer", () => {
     const base = {
       a: { n: 5, mean: 1 },
       b: { n: 5, mean: 2 },
@@ -156,16 +156,18 @@ describe("Vergleich und Satz", () => {
       test: { p: 0.01, exact: true },
     }
     expect(verdictText({ ...base, verdict: "higher", meaningful: true }, "higher")).toBe(
-      "höher, besser · bedeutsam"
+      "deutlich besser"
     )
     expect(verdictText({ ...base, verdict: "higher", meaningful: false }, "lower")).toBe(
-      "höher, schwächer"
+      "schwächer"
     )
+    expect(verdictText({ ...base, verdict: "lower", meaningful: false }, "lower")).toBe("besser")
     expect(verdictText({ ...base, verdict: "lower", meaningful: true }, "none")).toBe(
-      "tiefer · bedeutsam"
+      "deutlich tiefer"
     )
+    expect(verdictText({ ...base, verdict: "higher", meaningful: false }, "none")).toBe("höher")
     expect(verdictText({ ...base, verdict: "unclear", meaningful: true }, "higher")).toBe(
-      "nicht nachweisbar"
+      "kein klarer Unterschied"
     )
     expect(
       verdictText({ ...base, test: null, verdict: "unclear", meaningful: null }, "higher")

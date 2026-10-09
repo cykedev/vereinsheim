@@ -2602,9 +2602,15 @@ addEventListener("load", async () => {
         ...$$("[data-tile-compare]").map(txt),
         txt($("[data-period-header] [data-sentence]")),
       ]
+      // Urteil in Alltagsworten (U3, D5): „deutlich“ nur mit einem Urteil, kein „bedeutsam“ mehr auf der Seite
       check(
-        "Zeitraum: „bedeutsam“ nie ohne „höher“ oder „tiefer“",
-        judged.every((t) => !t.includes("bedeutsam") || /höher|tiefer/.test(t))
+        "Zeitraum: „deutlich“ nie ohne Urteil, kein „bedeutsam“",
+        judged.every(
+          (t) =>
+            !t.includes("bedeutsam") &&
+            (!/deutlich /.test(t) || /deutlich (besser|schwächer|höher|tiefer)/.test(t))
+        ) && judged.some((t) => /besser|schwächer|kein klarer Unterschied/.test(t)),
+        judged.join(" | ")
       )
       check(
         "Zeitraum: Vergleich im Verlauf übereinander mit Legende, ohne Band",

@@ -36,7 +36,7 @@ describe("Zahlen über den Zeitraum (D11)", () => {
       h(PeriodTiles, { tiles: m.tiles, compareLabel: "Zeitraum davor" })
     )
     expect(html).toMatch(
-      /data-period-tile="result.decimalMean"[\s\S]*?Zeitraum davor: 3,00<br\/><span[^>]*>Δ \+5,00 · <\/span><span[^>]*>höher, besser · bedeutsam/
+      /data-period-tile="result.decimalMean"[\s\S]*?Zeitraum davor: 3,00<br\/><span[^>]*>Δ \+5,00 · <\/span><span[^>]*>deutlich besser/
     )
     // drei Schüsse ohne Zeit zwischen ihnen gibt es nicht: das Tempo hat Werte; ohne Scheiben ein Strich
     const empty = renderToStaticMarkup(

@@ -194,9 +194,7 @@ describe("Ergebnis-Box (D13)", () => {
 
   it("mit Vergleich: Unterschied und Urteil, „?“ zum Vergleich", () => {
     const html = render(model([...now, ...before], { compare: { type: "previous" } }))
-    expect(html).toMatch(
-      /\+5,00<\/span> gegen Zeitraum davor · <span[^>]*>höher, besser · bedeutsam/
-    )
+    expect(html).toMatch(/\+5,00<\/span> gegen Zeitraum davor · <span[^>]*>deutlich besser/)
     expect(html).toContain('data-help="zeitraum-vergleich"')
   })
 
