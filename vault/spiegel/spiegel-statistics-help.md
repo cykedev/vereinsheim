@@ -35,10 +35,11 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Mehr Schüsse oder mehrere Scheiben klären es. Auf den Karten heißt das auch „nicht klar“, „vom
   Zufall nicht zu unterscheiden“ oder „kein Versatz nachweisbar“; es ist ein ehrliches Ergebnis,
   kein Fehler.
-- **Ganze Ringe oder Zehntel.** Oben umschalten; jede Auswertung über Werte gibt es in beiden, nur
-  die Zehntelverteilung allein in Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und
-  10,9 sind beide eine 10); beim Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich
-  bleiben Zehner, Innenzehner und Zehnerquote.
+- **Ganze Ringe oder Zehntel.** Auf der Scheibe oben umschalten, für Liste, Start und Fortschritt in
+  Profil; jede Auswertung über Werte gibt es in beiden, nur die Zehntelverteilung allein in
+  Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10); beim
+  Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich bleiben Zehner, Innenzehner
+  und Zehnerquote.
 - **Probe und Wertung.** Lage, Streuung und Tempo der Analyse rechnen über die Wertung, ohne Probe;
   gibt es nur Probe, über die Probe. Die Probe hat einen eigenen Reiter: „Probe gegen Wertung“ nimmt
   die ganze Probe vor der Wertung, „Eingeschossen?“ ihre letzten bis zu fünf Schüsse. Eine Scheibe
@@ -475,11 +476,12 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Abstand zum Schnitt davor (C4)**
 - *Was:* Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf
-  Scheiben davor, in derselben Disziplin und Art. Die Scheibe selbst zählt nicht mit. Gezählt werden
-  alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.
-- *So liest du es:* +0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. Dieselbe
-  Zahl steht in der Liste der Scheiben, auf Start und in der Ablesung im Fortschritt; ein Bezug für
-  eine Scheibe überall.
+  Scheiben davor in derselben Disziplin; im Fortschritt zählen dazu nur Scheiben der gewählten Art,
+  und Trainings nur aus Probe nur, wenn sie mitzählen. Die Scheibe selbst zählt nicht mit. Gezählt
+  werden alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.
+- *So liest du es:* +0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. In der
+  Grundeinstellung steht dieselbe Zahl in der Liste der Scheiben, auf Start und in der Ablesung im
+  Fortschritt; ein Bezug für eine Scheibe überall.
 - *Vorsicht:* Eine Scheibe ist eine Scheibe: Ein Abstand zum Schnitt, der in deinem Formband bleibt,
   ist normal.
 - *Mindestzahl:* Ab der zweiten Scheibe; mit weniger als fünf davor über so viele, wie es gibt.
@@ -497,9 +499,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Wettkampf; sie gelten über alle deine Scheiben, nicht nur über den gewählten Zeitraum.
 - *Vorsicht:* Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem
   Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der
-  Wertung. Eine Trainingsscheibe nur mit Probe zählt mit, solange „mit Training nur aus Probe“ an
-  ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine Scheibe, deren
-  Probe du als Wertung zählst.
+  Wertung. Eine Trainingsscheibe nur mit Probe zählt mit, solange „Trainings nur aus Probe
+  mitzählen“ im Blatt „Filter“ an ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu
+  zehn. Ebenso eine Scheibe, deren Probe du als Wertung zählst.
 - *Mindestzahl:* Ab 1 Scheibe, die beste Form ab 5 Scheiben.
 
 ## Glossar

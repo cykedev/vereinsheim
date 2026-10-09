@@ -184,6 +184,7 @@ Das Konzept oben genauer, wie es im Labor steht (Entscheidungen D1–D18 im Plan
   „Rekorde“ (über alle Scheiben der Familie). Reiter kommen mit L4 und L5.
 - **Training nur aus Probe** zählt als Vorgabe mit (Schalter „mit Training nur aus Probe“ an), denn so
   trainieren die meisten (User, 9. Oktober 2026); im Fachkern bleibt `includeProbeOnly` eine Option, die Seite setzt sie als Vorgabe.
+- **Nicht in L3:** „Als Zeitraum speichern“ (L6), Kalender (T7), Trendsteigung (T4), Langzeit-Trefferbild (L4).
 
 ### Nach U2 (9. Oktober 2026)
 
@@ -198,7 +199,6 @@ Aus der Durchsicht ([[spiegel-durchsicht]], Plan `plans/2026-10-09-spiegel-forts
 - **Kein Schalter der Wertung:** Der Fortschritt zeigt die Wertung des Geräts; sie steht in Profil.
 - **Rekorde:** oben höchstens fünf aus dem Zeitraum, darunter zugeklappt „Alle Rekorde (n)“.
 - Auf dem Telefon (390 × 844) 3,97 statt 4,7 Bildschirme.
-- **Nicht in L3:** „Als Zeitraum speichern“ (L6), Kalender (T7), Trendsteigung (T4), Langzeit-Trefferbild (L4).
 
 ## Vorgaben (vom User bestätigt, 8. Oktober 2026)
 
