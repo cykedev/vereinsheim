@@ -46,6 +46,11 @@ export interface Observation {
    * nur wenn er klar ist, die Probe nur wenn sie echt neben der Mitte lag; Präzision, Pausen und Tempo nie
    */
   notable: boolean
+  /**
+   * der Satz für den Kopf, wenn das Auffällige nicht im ersten Satz steht (die Probe: erst der Vergleich der Mittel,
+   * dann der Versatz; Review U1); sonst gilt der erste Satz
+   */
+  head?: string
 }
 
 /** der erste Satz: bis zum Punkt, auf den ein Leerzeichen und ein Großbuchstabe folgen (ein Komma in Zahlen trennt nicht) */
@@ -55,14 +60,15 @@ export function firstSentence(text: string): string {
 
 /**
  * Die wichtigsten Beobachtungen für den Kopf der Seite (U1, D4): die Lage zuerst, dann die auffälligen in ihrer
- * Reihenfolge, höchstens `max`, je ihr erster Satz. Ohne Lage nur die auffälligen, ohne beides keine.
+ * Reihenfolge, höchstens `max`, je ihr Satz für den Kopf (`head`, sonst der erste). Ohne Lage nur die auffälligen,
+ * ohne beides keine.
  */
 export function keyObservations(list: readonly Observation[], max = 3): Observation[] {
   const position = list.find((o) => o.icon === "position")
   const rest = list.filter((o) => o.icon !== "position" && o.notable)
   return [...(position ? [position] : []), ...rest]
     .slice(0, max)
-    .map((o) => ({ ...o, text: firstSentence(o.text) }))
+    .map((o) => ({ ...o, text: o.head ?? firstSentence(o.text) }))
 }
 
 export function observations(input: AnalysisInput): Observation[] {
@@ -185,14 +191,18 @@ export function observations(input: AnalysisInput): Observation[] {
   if (comparison && comparison.probe.meanRings !== null && comparison.match.meanRings !== null) {
     let text = `Probe: Ø ${formatValue(comparison.probe.meanRings, 2)} je Schuss gegen ${formatValue(comparison.match.meanRings, 2)} in der Wertung.`
     const zeroed = sighterZeroed(all)
+    // auffällig ist an der Probe der echte Versatz: Er steht im Kopf, nicht der Vergleich der Mittel (Review U1)
+    let head: string | undefined
     if (zeroed) {
       // nur, was der Test über die Probe sagt, nichts über die Wertung; mit ihrem n (Prüfung, Probe 1 und 5)
       const last = countWord(zeroed.n)
-      text += zeroed.real
-        ? ` Die letzten ${last} Probeschüsse lagen echt neben der Mitte (${directionName(zeroed.center)}, ${mm(zeroed.offsetUm)}).`
+      if (zeroed.real)
+        head = `Die letzten ${last} Probeschüsse lagen echt neben der Mitte (${directionName(zeroed.center)}, ${mm(zeroed.offsetUm)}).`
+      text += head
+        ? ` ${head}`
         : ` Bei den letzten ${last} Probeschüssen ist kein Versatz nachweisbar.`
     }
-    out.push({ icon: "flag", text, notable: zeroed?.real === true })
+    out.push({ icon: "flag", text, notable: zeroed?.real === true, ...(head ? { head } : {}) })
   }
 
   return out

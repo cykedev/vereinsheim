@@ -105,7 +105,12 @@ describe("was auffällt, an echten Scheiben", () => {
     expect(notable("trend", list)).toBe(true)
     expect(list.find((x) => x.icon === "flag")?.text).toContain("lagen echt neben der Mitte")
     expect(notable("flag", list)).toBe(true)
-    expect(keyObservations(list).length).toBeLessThanOrEqual(3)
-    expect(keyObservations(list)[0].icon).toBe("position")
+    // im Kopf steht bei der Probe, was auffällt, nicht der Vergleich der Mittel (Review U1, B1)
+    const key = keyObservations(list, 6)
+    expect(key.map((k) => k.icon)).toEqual(["position", "trend", "flag"])
+    expect(key.find((k) => k.icon === "flag")?.text).toMatch(
+      /^Die letzten fünf Probeschüsse lagen echt neben der Mitte \(rechts, \d+,\d{2} mm\)\.$/
+    )
+    expect(keyObservations(list).map((k) => k.icon)).toEqual(["position", "trend", "flag"])
   })
 })
