@@ -1,6 +1,7 @@
 import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 
-import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
+import { LaborHeader, type LaborHeaderProps, type Theme } from "./LaborHeader"
+import { ThemeSwitch } from "./ThemeSwitch"
 
 /** die Bereiche, die das Labor nur andeutet (Plan N3, D7; Start seit N5 echt) */
 export type PlaceholderPage = "scan" | "profile" | "admin"
@@ -29,9 +30,14 @@ const TEXT: Readonly<Record<PlaceholderPage, { title: string; sentence: string }
 export function PlaceholderView({
   header,
   page,
+  theme,
+  onTheme,
 }: {
   header: Omit<LaborHeaderProps, "children" | "hint">
   page: PlaceholderPage
+  /** Darstellung: in Profil, wo die Einstellung in der App lebt (Labor näher an der App, D2) */
+  theme: Theme
+  onTheme: (theme: Theme) => void
 }) {
   const { title, sentence } = TEXT[page]
   return (
@@ -45,6 +51,9 @@ export function PlaceholderView({
           {title}
         </h1>
         <p className="text-foreground-2">{sentence}</p>
+        {page === "profile" && (
+          <ThemeSwitch theme={theme} onTheme={onTheme} className="justify-self-start" />
+        )}
         {page === "profile" && (
           <RouteLink
             route={{ page: "admin", section: null }}

@@ -35,6 +35,7 @@ import { ListView } from "./ListView"
 import { PeriodView } from "./PeriodView"
 import { PlaceholderView, type PlaceholderPage } from "./PlaceholderView"
 import { OPEN_EXAMPLES, StartView } from "./StartView"
+import { ThemeSwitch } from "./ThemeSwitch"
 import { season, SEASON_TIME_ZONE } from "./season"
 import { store } from "./store"
 
@@ -265,6 +266,7 @@ export function App({ commit }: { commit: string }) {
         links={areaLinks({ cards: listRoute, progress: progressHere }, period.family)}
         openCount={OPEN_EXAMPLES.length}
         isAdmin
+        sidebarFooter={<ThemeSwitch theme={theme} onTheme={header.onTheme} />}
       >
         {mode === "card" ? (
           <CardView
@@ -288,7 +290,7 @@ export function App({ commit }: { commit: string }) {
         ) : mode === "start" ? (
           <StartView header={header} scoring={devicesScoring()} family={period.family} />
         ) : (
-          <PlaceholderView header={header} page={mode} />
+          <PlaceholderView header={header} page={mode} theme={theme} onTheme={header.onTheme} />
         )}
       </AppFrame>
       <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />
