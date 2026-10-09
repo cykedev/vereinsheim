@@ -15,7 +15,11 @@ import { GLOSSARY } from "@vereinsheim/shot-help/glossary"
 import { helpForMetric, helpTopic } from "@vereinsheim/shot-help/lookup"
 import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
-import { observations } from "@vereinsheim/shot-ui/analysis/observations"
+import {
+  firstSentence,
+  keyObservations,
+  observations,
+} from "@vereinsheim/shot-ui/analysis/observations"
 import { overviewTiles } from "@vereinsheim/shot-ui/analysis/overview"
 import { formatValue } from "@vereinsheim/shot-ui/format"
 import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
@@ -24,7 +28,6 @@ import { routeFromUrl, urlFromRoute, type ListQuery } from "@vereinsheim/shot-ui
 import { periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
 import { periodSentence, verdictText } from "@vereinsheim/shot-ui/period/sentence"
 import type { PeriodState } from "@vereinsheim/shot-ui/period/state"
-import { TILE_KEYS } from "@vereinsheim/shot-ui/metrics/MetricTiles"
 import { selectionShots, shotIntervals, shotLabels } from "@vereinsheim/shot-ui/shots"
 import type { ViewState } from "@vereinsheim/shot-ui/view-state"
 
@@ -37,12 +40,14 @@ const TOOLS = {
   selectionShots,
   shotIntervals,
   shotLabels,
-  TILE_KEYS,
   // Analyse (Schritt 3): die Auswertungen des Fachkerns und die Modelle des Überblicks zum Nachrechnen
   analysis,
   analysisInput,
   overviewTiles,
   observations,
+  // der Kopf der Scheibe (U1): die wichtigsten Beobachtungen, je ihr erster Satz
+  keyObservations,
+  firstSentence,
   // Hilfe aus dem Paket, gegen die die Prüfung Texte und Plätze vergleicht
   helpTopic,
   HELP_TOPICS,

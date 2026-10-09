@@ -19,7 +19,7 @@ const cards = (n: number) => `${n} ${n === 1 ? "Scheibe" : "Scheiben"}`
 /**
  * Zahlen über den Zeitraum (Plan L3, D11): je Kennzahl das Mittel der Werte je Scheibe (Einheit Scheibe) und die
  * Zahl der Scheiben; mit Vergleich der Wert im Vergleichszeitraum, der Unterschied und das Urteil („bedeutsam“ nur
- * neben einem Urteil). Im Stil der Kacheln einer Scheibe (`MetricTiles`), drei Spalten ab 27rem Breite.
+ * neben einem Urteil). Kacheln mit Wert, Einheit und kurzer Angabe, drei Spalten ab 27rem Breite.
  */
 export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTilesProps) {
   return (
