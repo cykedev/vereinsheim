@@ -49,7 +49,7 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 
 ## Hilfe und Erklärungen
 
-- **Jede Zahl ist erklärt.** An jeder Kachel und jeder Karte sitzt ein „?“; es öffnet die Erklärung aus `@vereinsheim/shot-help` (nachzulesen in [[spiegel-statistics-help]]): was die Zahl misst, wie man sie liest, was man tun kann, wo man sich täuscht. Auf dem Handy als Blatt von unten, auf dem Desktop als Karte daneben, nie nur als Tooltip.
+- **Jede Zahl ist erklärt.** An jeder Kachel des Überblicks und jeder Karte sitzt ein „?“; es öffnet die Erklärung aus `@vereinsheim/shot-help` (nachzulesen in [[spiegel-statistics-help]]): was die Zahl misst, wie man sie liest, was man tun kann, wo man sich täuscht. Auf dem Handy als Blatt von unten, auf dem Desktop als Karte daneben, nie nur als Tooltip.
 - **Erst Worte, dann Formel.** Die Formel steht aufklappbar für Profis darunter, nie davor.
 - **Schalter „Erklärungen“:** zeigt an jeder Kachel und jeder Karte der Analyse den Kurzsatz sichtbar unter dem Titel, nicht nur als Tooltip; die langen Erklärungen bleiben im Blatt (seit Oktober 2026, Plan `2026-10-08-spiegel-mobile-seitenaufbau`, D3: kein aufklappbares „Was heißt das?“ mehr zwischen den Zahlen). Das „?“ einer Kachel, einer Karte, der Datenlage oder der Scheibe öffnet ihr Thema als Blatt (`Sheet` in `@vereinsheim/ui/design2` auf dem nativen `<dialog>`: Fokus, Escape und Rückkehr des Fokus übernimmt der Browser; geschlossen wird aus dem Zustand, weil das `close`-Ereignis spät oder gar nicht kommt). Die Feldnamen („Was“, „So liest du es“ …) sind die des Leitfadens; ein Test hält sie gleich.
 - **Auch „–“ und „unklar“ erklären:** „ab 10 Schuss“ sagt, warum ein Wert fehlt, aber nur, wenn es an der Zahl der Schüsse liegt; fehlen Daten, nennt die Kachel sie („ohne Zeiten“, „ohne Zehntel · auf ganze Ringe schalten“, SF-18); „unklar“ sagt, was mehr Schüsse klären würden.
@@ -60,7 +60,7 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 ## Analyse einer Scheibe
 
 Die Auswertungen aus SP-1.10 als Bausteine (`@vereinsheim/shot-ui/analysis/AnalysisPanel`, Schritt 3 von SP-1.8,
-Oktober 2026), im Labor unter den Kacheln.
+Oktober 2026), im Labor unter der Scheibe und den Schüssen (seit U1 ohne Kacheln „Trefferbild in Zahlen“ davor).
 
 - **Grundlage:** Die Analyse rechnet über alle Schüsse ohne Probe; gibt es nur Probe, über alle Probeschüsse
   (`analysisInput`, User, 8. Oktober 2026). Sie folgt nicht der Auswahl an der Scheibe; der Kopf nennt die
@@ -110,16 +110,17 @@ Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` 
   Name als Tooltip und für Screenreader. Eine Leiste über der Scheibe brach in schmalen Spalten um oder wurde
   angeschnitten und kostete Höhe. Im Ausschnitt „Scheibe“ bleibt der äußere Ring ab 290 px Kastenbreite frei.
 - **Telefon:** eine Spalte. Kopf und Scheibe (Ablesezeile `ShotLine` statt Ablese-Karte) passen auf den ersten
-  Bildschirm, die Serien folgen direkt; dann Schüsse, Zahlen, Analyse. Die Schusstabelle zeigt die
+  Bildschirm, die Serien folgen direkt; dann Schüsse und Analyse (seit U1 ohne Abschnitt „Zahlen“; im Kopf auf dem
+  Telefon nur die erste der wichtigsten Beobachtungen, sonst rutscht die Scheibe unter die untere Leiste). Die Schusstabelle zeigt die
   zehn neuesten Schüsse und „Alle 40 zeigen“, der gewählte bleibt sichtbar.
 - **Ab 768 px** (`CardPage`): links die Scheibe, darunter die Serien (User, 8. Oktober 2026), zusammen so groß,
   dass beide unter der Leiste ins Fenster passen (`useTargetFit` misst die Spalte; bleibt für die Scheibe weniger
   als 280 px, passt sie allein ins Fenster und die Serien folgen darunter). Rechts daneben Ergebnis, Ablese-Karte
   und Schusstabelle; die Tabelle reicht höchstens bis zur Unterkante der Serien und scrollt dann in sich, mit
-  wenigen Schüssen ist sie nur so hoch wie ihre Zeilen. Zahlen und Analyse
-  folgen darunter in voller Breite, die Scheibe scrollt dort mit weg (User, 8. Oktober 2026: Bereiche, die neben
+  wenigen Schüssen ist sie nur so hoch wie ihre Zeilen. Die Analyse
+  folgt darunter in voller Breite, die Scheibe scrollt dort mit weg (User, 8. Oktober 2026: Bereiche, die neben
   der Scheibe bleiben, und Bereiche, die unten mehr Platz brauchen). Die
-  Kacheln stehen zu fünf, die Karten der Analyse zu zweit; ihre Spalten richten sich nach der Breite des
+  Kacheln des Überblicks stehen zu vier, die Karten der Analyse zu zweit; ihre Spalten richten sich nach der Breite des
   Bereichs, nicht des Fensters. Auch im Querformat am Telefon passt die Scheibe in die Höhe.
 - **Ohne Schüsse** (`NoShots`): nur Kopf, Scheibe und daneben „Noch kein Schuss“ mit einem Satz, was hier
   erscheint; keine Sprungleiste, keine leeren Kästen, keine Kacheln voller Striche (User, 8. Oktober 2026).
@@ -149,11 +150,11 @@ Die Optik ist dem User besonders wichtig: minimal, scharf, nichts Klobiges, auch
 - **Ablesung:** kompakt in einer Zeile, der Wert groß in Schriftfarbe, davor ein Punkt in der Ringwert-Farbe (Probe hohl), daneben die andere Wertung, Teiler und Abstand zur Mitte; kein x/y, Abstand und Teiler sagen es lesbarer (User, 8. Oktober 2026). Gold und Türkis hätten als Schrift auf hellem Grund zu wenig Kontrast (Review, 8. Oktober 2026). Teiler und Abstand wie im Fachkern: gemessen vor der Lage, auch ohne Lage; ein verdächtiger Platzhalter ohne beides (SF-15).
 - **Kein Dauer-Ring um den letzten Schuss:** In einer engen Gruppe verwirrt er. Ein neuer Schuss ploppt beim Setzen kurz auf; Ablesung und Liste nennen ihn.
 - **Antippen** eines Treffers wählt ihn. Getroffen ist der Treffer der Auswahl mit der nächsten Mitte, bis 20 px daneben (gezoomt bis an seinen Rand, wenn er größer ist); blasse Schüsse nie. Auf dem Handy misst ein Treffer auf der ganzen Scheibe nur gut 8 px, so muss man ihn nicht genau treffen (User, 8. Oktober 2026). Der gewählte Treffer liegt mit Nummer und einem Haarlinien-Ring (Blau mit hellem Saum) ganz oben, die Ablesung zeigt ihn statt des letzten Schusses, ein zweites Tippen nimmt ihn zurück. In der App setzt Tippen keinen Schuss; das Labor hat dafür einen eigenen Modus.
-- **Alle oder ohne Probe** (User, 8. Oktober 2026, „für korrekte Zahlen“): Die ganze Scheibe ist wählbar mit Probe („Alle“) oder ohne („Ohne Probe“, nur Wertung); Streukreis, Ellipse, Schwerpunkt, Kacheln und Tabelle rechnen danach. Grundeinstellung ist „Ohne Probe“, wenn es Probe und Wertung gibt, sonst „Alle“ (`defaultWhole`); „Ohne Probe“ erscheint nur, wenn es beides gibt. Der Kopf bleibt die amtliche Wertung.
+- **Alle oder ohne Probe** (User, 8. Oktober 2026, „für korrekte Zahlen“): Die ganze Scheibe ist wählbar mit Probe („Alle“) oder ohne („Ohne Probe“, nur Wertung); Streukreis, Ellipse, Schwerpunkt und Tabelle rechnen danach. Grundeinstellung ist „Ohne Probe“, wenn es Probe und Wertung gibt, sonst „Alle“ (`defaultWhole`); „Ohne Probe“ erscheint nur, wenn es beides gibt. Der Kopf bleibt die amtliche Wertung.
 - **Serien wählen: eine oder die ganze Scheibe.** Tippen auf eine kleine Scheibe zeigt nur diese Serie kräftig, eine andere wechselt, dieselbe noch einmal führt zur Grundeinstellung zurück; die Probe ist wählbar wie eine Serie. Mehrere Serien zugleich sind bewusst nicht wählbar, das ist einfacher zu bedienen (User, 8. Oktober 2026); Serien vergleichen wird eine eigene Ansicht. Die übrigen Schüsse liegen blass darunter oder sind ausgeblendet (beides im Labor zum Vergleich). Blass heißt grau statt Ringwert-Farbe (Token `--shot-faded`, Deckkraft 0,55, ohne Rand, ohne Nummer, nicht antippbar): Nur die Auswahl trägt Farbe. Mit Ringwert-Farbe und Deckkraft 0,18 gruppierte das Auge weiter nach Farbe, und die Auswahl war schwer zu unterscheiden (User, 8. Oktober 2026). Streukreis, Ellipse, Schwerpunkt und der Ausschnitt „Gruppe“ rechnen über die Auswahl, die Nummern bleiben die der ganzen Scheibe (Wunsch des Users, 8. Oktober 2026).
 - **Eine andere Scheibe** steht sofort in ihrem Ausschnitt; nur ein neuer Ausschnitt derselben Scheibe gleitet (340 ms, bei „Bewegung reduzieren“ ein Sprung). Das gilt auch für eine andere Karte auf derselben Scheibe (Schlüssel der Karte, etwa die Session).
 - **Hohle Treffer** (Probe, Wertung ohne Wert) sind wie alle über ihre Mitte antippbar, nicht nur am Rand; der Mauszeiger zeigt auch in ihnen die Hand (User, 8. Oktober 2026).
-- **Kacheln folgen der Auswahl** wie Streukreis und Schwerpunkt: Sie rechnen über die Schüsse der Auswahl, auch die ohne Lage (jede Kennzahl wählt selbst, was sie braucht), und der Kopf nennt die Auswahl („Serie 2“). Der **Kopf** (Ergebnis, Schüsse und Probe, Zehner, Innenzehner, bester Teiler) bleibt der der ganzen Scheibe, weil er deren Ergebnis zeigt; bis Oktober 2026 stand das als eigene Übersicht daneben.
+- **Kennzahlen der Auswahl:** Bis U1 folgten die zehn Kacheln „Trefferbild in Zahlen“ der Auswahl. Seitdem rechnet die Analyse immer über alle Wertungsschüsse; für eine gewählte Serie bleiben Streukreis und Schwerpunkt auf der Scheibe, ihr Ergebnis an der kleinen Scheibe und unter „Serien im Vergleich“ Ergebnis, R50 und Versatz je Serie (offen nach U1, [[spiegel-durchsicht]]). Der **Kopf** (Ergebnis, Schüsse und Probe, Zehner, Innenzehner, bester Teiler) bleibt der der ganzen Scheibe, weil er deren Ergebnis zeigt; bis Oktober 2026 stand das als eigene Übersicht daneben.
 - **Schusstabelle:** neuester Schuss oben, nur die Schüsse der Auswahl; Nummer, Wert mit Farbpunkt (Probe hohl), Innenzehner, Teiler und der Abstand zum vorigen Schuss der Karte (nach einer Lücke in der Abgabefolge keiner, über drei Minuten als Pause in Minuten). Jede Zeile wählt ihren Schuss wie das Antippen; der Knopf in der ersten Zelle ist der Weg per Tastatur und Screenreader, denn die Treffer auf der Scheibe sind nur zum Antippen.
 - **Wertung:** Der Wertungsschalter zeigt die amtliche Wertung als Hinweis daneben.
 - **Kein „Visier verstellt“** (User, 8. Oktober 2026): Eine Angabe, nach welchem Probeschuss das Visier verstellt wurde, ist zu viel Komplexität für ihren Nutzen. Spiegel fragt sie weder ab noch schlägt sie vor; die Probe wird nicht gestrichelt. „Probe gegen Wertung“ nimmt die ganze Probe vor der Wertung, „Eingeschossen?“ und der Versatz Probe → Wertung ihre letzten fünf Schüsse mit Lage (SF-63).

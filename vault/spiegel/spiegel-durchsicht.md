@@ -111,6 +111,14 @@ Die Analyse hat 25 Karten:
   - B1 und B2 (`plans/2026-10-09-spiegel-scheibe-entschlacken.md`);
   - dazu der Fehler „Beispielscheibe öffnen springt zur Analyse“: Ein Anker beim Laden gilt nur für die erste
     Ansicht.
+- **Offen nach U1** (Review, 9. Oktober 2026):
+  - Die Lage steht weiter dreimal in Worten: im Kopf, in der Kachel „Lage“ und unter den Beobachtungen. Der Kopf
+    wiederholt dieselben Zahlen (Regel „jede Zahl einmal“); gehört zu U3.
+  - Kennzahlen einer gewählten Serie oder der Probe: Die Kacheln, die der Auswahl folgten, sind weg. „Serien im
+    Vergleich“ zeigt je Serie nur Ergebnis, R50 und Versatz; Streukreis, σ, Ø, Zehnerquote und Tempo einer Serie
+    fehlen. Erst entscheiden, wenn echte Daten zeigen, ob man sie braucht.
+  - Auf dem Telefon steht im Kopf nur die erste Beobachtung (sonst rutscht die Scheibe unter die untere Leiste:
+    gemessen bis 870 px bei 740 px Sicht auf 375 × 812); mit kürzeren Sätzen (U3) neu prüfen.
 - **U2 Fortschritt beantwortet „Werde ich besser?“:**
   - B3: ein Bezug, der Satz zum Vergleich;
   - B5: Filter in einer Zeile;

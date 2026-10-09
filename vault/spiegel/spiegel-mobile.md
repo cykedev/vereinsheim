@@ -22,13 +22,13 @@ relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statisti
 ## Ebenen der Information
 
 1. **Auf einen Blick:** Ergebnis, Serienwerte, Trefferbild, letzter oder angetippter Schuss, die wichtigsten
-   Beobachtungen in Worten (seit U1 bis zu drei, die Lage zuerst).
+   Beobachtungen in Worten (seit U1 bis zu drei, die Lage zuerst; auf dem Telefon nur die erste).
 2. **Genauer:** Schusstabelle, Analyse in sechs Reitern mit 25 Karten; der Überblick ist die Zahlen-Ansicht. Die zehn
    Kacheln „Trefferbild in Zahlen“, die der Auswahl folgten, entfielen mit U1.
+3. **Erklärung:** Kurzsatz, „Was heißt das?“, Formel, Einstieg, Datenlage, Glossar, Fehlschlüsse ([[spiegel-statistics-help]]).
 
 Seit der Durchsicht vom 9. Oktober 2026 gilt die Leitlinie „drei Ebenen“ (Antwort, Belege, Werkzeug) aus
 [[spiegel-durchsicht]].
-3. **Erklärung:** Kurzsatz, „Was heißt das?“, Formel, Einstieg, Datenlage, Glossar, Fehlschlüsse ([[spiegel-statistics-help]]).
 
 ## Prinzipien
 
@@ -63,7 +63,7 @@ Reihenfolge auf dem Telefon: Kopf mit Ergebnis und den wichtigsten Beobachtungen
 
 **Diagramme:** Ablesen durch Antippen oder Ziehen (Lineal), die Werte stehen fest über dem Diagramm, im Verlauf wählt das zugleich den Schuss auf der Scheibe. Jedes Diagramm bekommt seine Kernaussage als Label und „Werte als Tabelle“.
 
-**Tablet und Desktop:** Ab 768 px links die Scheibe mit den Serien darunter, rechts daneben Schuss und Schüsse; Kacheln und Analyse folgen in voller Breite darunter (siehe unten).
+**Tablet und Desktop:** Ab 768 px links die Scheibe mit den Serien darunter, rechts daneben Schuss und Schüsse; die Analyse folgt in voller Breite darunter (siehe unten).
 
 ## Entschieden mit dem Plan für Schritt 4 (8. Oktober 2026)
 

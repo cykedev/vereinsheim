@@ -84,7 +84,8 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   das Labor keinen Anker, und `underTest()` hält `#pruefen` beim Laden fest. Seit U1
   (`plans/2026-10-09-spiegel-scheibe-entschlacken.md`) ohne Abschnitt „Zahlen“: Der Schalter „Erklärungen“ steht im
   Kopf der Analyse (`AnalysisPanel.action`), der Kopf der Scheibe zeigt die wichtigsten Beobachtungen
-  (`keyObservations`) mit „Alle Beobachtungen ›“; die Prüfung vergleicht sie mit `tools.keyObservations`.
+  (`keyObservations`, auf dem Telefon nur die erste) mit „Alle Beobachtungen ›“, das zur Karte „Beobachtungen“ im
+  Überblick springt; die Prüfung vergleicht sie mit `tools.keyObservations`.
 - **Prüfung der Seite:** Desktop in einem Rahmen von 1280 × 900 (das Fenster der Prüfung ist über 2000 px hoch),
   Telefon bei 390 und 375 px, Querformat 812 × 375. `scrollWhileStuck` scrollt in den Bereich, in dem die
   Scheibe klebt; Knöpfe nur mit Symbol (Ecken der Scheibe) findet `button` über ihren Namen. Headless-Chrome
