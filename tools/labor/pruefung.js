@@ -3139,9 +3139,9 @@ addEventListener("load", async () => {
         `${addr()} · ${Math.round(window.scrollY)} / ${Math.round(listY)}`
       )
       // Querverweise: Liste → Zeitraum „Alles“, Zeitraum → Liste mit Zeitraum-Chip
-      await click(link("Verlauf dieser Filter"), 400)
+      await click(link("Im Fortschritt zeigen"), 400)
       check(
-        "Liste: „Verlauf dieser Filter“ öffnet den Zeitraum „Alles“ der Familie",
+        "Liste: „Im Fortschritt zeigen“ (im Blatt „Filter“) öffnet den Zeitraum „Alles“ der Familie",
         P()?.state.family === "lg-freihand" &&
           P().state.choice.type === "all" &&
           addr().startsWith("/progress?range=all&family=lg-freihand"),
@@ -3169,9 +3169,9 @@ addEventListener("load", async () => {
             : txt($(`[data-card-row="${r.id}"] [data-rings]`))
         )
       const listScoring = Li().model.scoring
-      await click(link("Verlauf dieser Filter"), 400)
+      await click(link("Im Fortschritt zeigen"), 400)
       check(
-        "Liste: die Wertung des Zeitraums gilt in der Liste und im Rückweg „Verlauf dieser Filter“",
+        "Liste: die Wertung des Zeitraums gilt in der Liste und im Rückweg „Im Fortschritt zeigen“",
         listScoring === "rings" &&
           probeFront.length > 0 &&
           probeFront.every((r) => r === "–" || /^\d+$/.test(r)) &&
@@ -3699,6 +3699,22 @@ addEventListener("load", async () => {
           phoneDayTop >= 0 &&
           phoneDayTop < 812,
         `${pd.documentElement.scrollWidth} · ${hiddenCells} · ${Math.round(phoneDayTop)} · ${overflowing} von ${tableBoxes.length} Karten zu breit`
+      )
+      // Filter in einer Zeile wie im Fortschritt (U5, D6): vor der Liste nur Familie und Chip, Art und Merkmal im Blatt
+      const listControls = [...pd.querySelector("[data-list-controls]").children].filter(
+        (c) => c.tagName !== "DIALOG"
+      )
+      const listControlTops = new Set(
+        listControls.map((c) => Math.round(c.getBoundingClientRect().top))
+      )
+      // im Rahmen mit Scrollleiste darf der Chip unter die Familie rutschen, wie im Fortschritt (U2, Task 7)
+      check(
+        "Liste, Telefon 375 px: vor der Liste nur Familie und Chip; Art und Merkmal im Blatt „Filter“",
+        listControls.length === 2 &&
+          listControlTops.size <= 2 &&
+          !!pd.querySelector("[data-list-chip]") &&
+          !!pd.querySelector('dialog [aria-label="Art"]'),
+        `${listControls.length} Elemente in ${listControlTops.size} Zeilen`
       )
       phone.remove()
       await click(area("Fortschritt"), 300)

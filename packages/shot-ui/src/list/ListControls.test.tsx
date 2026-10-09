@@ -4,7 +4,12 @@ import { describe, expect, it, vi } from "vitest"
 
 import { CardFilters } from "../controls/CardFilters"
 import { DEFAULT_LIST, DEFAULT_PROGRESS, type ListQuery } from "../nav/routes"
-import { ListControls, type ListControlsProps } from "./ListControls"
+import {
+  listFilterSummary,
+  ListControls,
+  ListControlsView,
+  type ListControlsProps,
+} from "./ListControls"
 
 const QUERY: ListQuery = {
   ...DEFAULT_LIST,
@@ -49,41 +54,58 @@ function find(
   return find(element.props.children as ReactNode, match)
 }
 
-describe("Filter der Scheiben-Liste (Plan N2, D7, D8)", () => {
-  it("Familie, Art, Merkmal mit Namen, Zeitraum-Chip und „Verlauf dieser Filter“", () => {
+const view = (patch: Partial<ListControlsProps> = {}) =>
+  ListControlsView({ ...props(patch), open: false, onOpen: () => {}, onClose: () => {} })
+
+describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)", () => {
+  it("vorn nur Familie und der Chip mit der Zusammenfassung, alles Übrige im Blatt „Filter“", () => {
     const html = renderToStaticMarkup(h(ListControls, props()))
-    expect(html).toContain('aria-label="Familie"')
-    expect(html).toContain('aria-label="Art"')
-    expect(html).toContain('aria-label="Merkmal"')
-    expect(html).toContain(">Nur PDF<")
-    expect(html).toMatch(/data-range-chip="true"[^>]*>Neue Munition</)
-    expect(html).toContain('aria-label="Zeitraum entfernen"')
-    expect(html).toContain(">Verlauf dieser Filter<")
+    const row = html.slice(0, html.indexOf("<dialog"))
+    expect(row).toContain('aria-label="Familie"')
+    expect(row).not.toContain('aria-label="Art"')
+    expect(row).not.toContain('aria-label="Merkmal"')
+    expect(row).toMatch(
+      /<button[^>]*data-list-chip="true"[^>]*>Training · Nur PDF · Neue Munition<svg/
+    )
+    // im Blatt: Art, Merkmal, Zeitraum mit „entfernen“, der Weg in den Fortschritt
+    const sheet = html.slice(html.indexOf("<dialog"))
+    expect(sheet).toContain('aria-label="Art"')
+    expect(sheet).toContain('aria-label="Merkmal"')
+    expect(sheet).toMatch(/data-range-chip="true"[^>]*>Neue Munition/)
+    expect(sheet).toContain('aria-label="Zeitraum entfernen"')
+    expect(sheet).toMatch(
+      /<a href="\/progress\?range=all&amp;family=lg-freihand" data-to-progress="true"/
+    )
   })
 
-  it("ohne Merkmale keine Wahl „Merkmal“, ohne Zeitraum kein Chip", () => {
+  it("die Zusammenfassung: nur, was von der Vorgabe abweicht", () => {
+    expect(listFilterSummary({ kind: "all", flag: null, rangeLabel: null })).toBe("Alle Scheiben")
+    expect(listFilterSummary({ kind: "competition", flag: null, rangeLabel: null })).toBe(
+      "Wettkampf"
+    )
+    expect(listFilterSummary({ kind: "all", flag: "nur-pdf", rangeLabel: "Letzte 90 Tage" })).toBe(
+      "Nur PDF · Letzte 90 Tage"
+    )
+  })
+
+  it("ohne Merkmale keine Wahl „Merkmal“, ohne Zeitraum kein Zeitraum im Blatt", () => {
     const html = renderToStaticMarkup(h(ListControls, props({ flags: [], rangeLabel: null })))
     expect(html).not.toContain('aria-label="Merkmal"')
     expect(html).not.toContain("data-range-chip")
   })
 
-  it("„×“ entfernt nur den Zeitraum; ein Familienwechsel behält Art, Merkmal und Zeitraum", () => {
+  it("„entfernen“ nimmt nur den Zeitraum; Familie, Art und Merkmal ändern nur sich", () => {
     const onQuery = vi.fn()
-    const tree = ListControls(props({ onQuery }))
+    const tree = view({ onQuery })
     const remove = find(tree, (e) => e.props["aria-label"] === "Zeitraum entfernen")!
     ;(remove.props.onClick as () => void)()
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, range: null })
     const filters = find(tree, (e) => e.type === CardFilters)!
     ;(filters.props.onFamily as (f: string) => void)("lp-freihand")
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, family: "lp-freihand" })
-    ;(filters.props.onKind as (k: string) => void)("competition")
+    expect(filters.props.onKind).toBeUndefined()
+    const kind = find(tree, (e) => e.props.label === "Art")!
+    ;(kind.props.onChange as (k: string) => void)("competition")
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, kind: "competition" })
-  })
-
-  it("„Verlauf dieser Filter“ ist ein Link auf den Fortschritt (Plan N3, D3)", () => {
-    const html = renderToStaticMarkup(h(ListControls, props()))
-    expect(html).toMatch(
-      /<a href="\/progress\?range=all&amp;family=lg-freihand" data-to-progress="true"[^>]*>Verlauf dieser Filter<\/a>/
-    )
   })
 })
