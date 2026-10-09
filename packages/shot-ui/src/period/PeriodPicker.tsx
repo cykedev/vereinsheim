@@ -161,7 +161,7 @@ export function PeriodPicker({
         data-period-chip
         onClick={show}
         className={cn(
-          "inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-accent-wash px-3 py-1.5 text-[13px] leading-none font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring",
+          "inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-accent-wash px-3 py-1.5 text-[13px] leading-tight font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring",
           className
         )}
       >

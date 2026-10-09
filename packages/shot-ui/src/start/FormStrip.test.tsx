@@ -61,7 +61,8 @@ describe("Streifen der letzten Scheiben (Plan N5, D2)", () => {
 
   it("ein Rahmen über die ganze Achse, hinter Band und Punkten (User, 9. Oktober 2026: „im leeren“)", () => {
     const track = /<rect data-track="true"([^>]*)>/.exec(html)?.[1] ?? ""
-    expect(track).toMatch(/x="8"/)
+    // auf halben Pixeln, damit die 1-px-Linie scharf ist (Review U2)
+    expect(track).toMatch(/x="8.5"/)
     expect(track).toMatch(/width="584"/)
     expect(track).toMatch(/class="fill-surface-2 stroke-border"/)
     // vor dem Band und vor dem ersten Punkt gezeichnet, also dahinter

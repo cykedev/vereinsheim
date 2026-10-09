@@ -206,6 +206,25 @@ describe("Vergleich für den Satz (U2, D1)", () => {
   it("ohne Scheiben kein Vergleich", () => {
     expect(model([]).form).toBeNull()
   })
+
+  it("„Alles“ nach einer langen Pause: der Vergleich sagt „zu wenige“ statt nichts (Review U2)", () => {
+    const m = model(before, { choice: { type: "all" } })
+    expect(m.cards.length).toBe(5)
+    expect(m.form).toMatchObject({ comparison: null, lastDays: 90 })
+    expect(periodSentence(m)).toBe(
+      "Für einen Vergleich der letzten 90 Tage mit den 90 Tagen davor sind es zu wenige Scheiben."
+    )
+  })
+
+  it("Art und Probe-Training gelten auch für den stillen Vergleich (Review U2)", () => {
+    // im Zeitraum Training, davor nur Wettkämpfe: mit „Training“ bleibt davor nichts
+    const contests = [10, 20, 30, 40, 50].map((t, i) =>
+      periodCard(`w${i}`, 100 + i, [t], { kind: "competition" })
+    )
+    const m = model([...now, ...contests], { kind: "training" })
+    expect(m.form?.comparison).toBeNull()
+    expect(model([...now, ...contests]).form?.comparison?.a.n).toBe(5)
+  })
 })
 
 describe("Darstellung, Monate, Wochen, Ablesung", () => {

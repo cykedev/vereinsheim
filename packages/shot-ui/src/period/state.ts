@@ -46,6 +46,14 @@ export type PeriodAction =
   | { type: "pick"; id: string | null }
   /** den ganzen Zustand setzen, etwa aus der Adresse beim Zurück (Plan N1) */
   | { type: "restore"; state: PeriodState }
+  /**
+   * das Blatt „Filter“ auf einmal (Review U2): eine Aktion statt bis zu vier, damit eine App, die die Adresse aus dem
+   * Zustand baut, keine Änderung verliert; die Wahl fällt weg, wenn sich die Menge der Scheiben ändert
+   */
+  | {
+      type: "setFilters"
+      filters: Pick<PeriodState, "choice" | "compare" | "kind" | "includeProbeOnly">
+    }
 
 export function initialPeriodState(
   partial: Partial<PeriodState> & { family: string }
@@ -92,5 +100,19 @@ export function periodReducer(state: PeriodState, action: PeriodAction): PeriodS
       return { ...state, chosen: action.id }
     case "restore":
       return action.state
+    case "setFilters": {
+      const { choice, compare, kind, includeProbeOnly } = action.filters
+      const same = JSON.stringify(choice) === JSON.stringify(state.choice)
+      const cardsChange =
+        !same || kind !== state.kind || includeProbeOnly !== state.includeProbeOnly
+      return {
+        ...state,
+        choice,
+        compare,
+        kind,
+        includeProbeOnly,
+        chosen: cardsChange ? null : state.chosen,
+      }
+    }
   }
 }

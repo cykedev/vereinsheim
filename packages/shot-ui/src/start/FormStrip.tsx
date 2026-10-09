@@ -87,9 +87,9 @@ export function FormStrip({ strip, average, band, className }: FormStripProps) {
               {/* der Rahmen über die ganze Achse: Band und Punkte stehen nicht mehr „im leeren“ (User, U2 D6) */}
               <rect
                 data-track
-                x={PAD / 2}
-                y={MID - BAND_HALF - TRACK_PAD}
-                width={width - PAD}
+                x={crisp(PAD / 2)}
+                y={crisp(MID - BAND_HALF - TRACK_PAD)}
+                width={Math.round(width - PAD)}
                 height={BAND_HALF * 2 + TRACK_PAD * 2}
                 rx={12}
                 className="fill-surface-2 stroke-border"

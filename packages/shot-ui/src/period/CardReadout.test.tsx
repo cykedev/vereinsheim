@@ -41,6 +41,10 @@ describe("Ablesung einer Scheibe (D9)", () => {
       /data-delta="true"[\s\S]*?<button type="button" aria-label="Erklärung: Abstand zum Schnitt davor" data-help="gegen-den-schnitt"/
     )
     expect(render()).not.toContain('data-help="gegen-den-schnitt"')
+    // die Erklärung gilt dem Ø je Schuss; zeigt der Verlauf eine andere Kennzahl, kein „?“ (Review U2)
+    expect(render({ onHelp: () => {}, metric: metricByKey("group.sigma")! })).not.toContain(
+      'data-help="gegen-den-schnitt"'
+    )
   })
 
   it("gewählt: Datum, Art, Wert, Schusszahl, Abstand zum Schnitt davor, Formband, kleine Scheibe", () => {
@@ -99,5 +103,35 @@ describe("Ablesezeile auf dem Telefon", () => {
     )
     expect(html).toContain("28.09. · 10,00 · +0,03 zum Schnitt davor")
     expect(html).toMatch(/<a href="\/cards\/[^"]+"[^>]*>Scheibe öffnen<\/a>/)
+  })
+
+  it("„?“ am Abstand auch auf dem Telefon, nur mit `onHelp` und beim Ø je Schuss (Review U2)", () => {
+    const line = (extra: Record<string, unknown>) =>
+      renderToStaticMarkup(
+        createElement(CardLine, {
+          card,
+          value,
+          delta: { delta: 0.03, n: 5 },
+          metric,
+          timeZone: TZ,
+          cardRoute: (id: string) => ({
+            page: "card" as const,
+            id,
+            origin: null,
+            selection: null,
+            shot: null,
+            scoring: "decimal" as const,
+            anchor: null,
+          }),
+          ...extra,
+        })
+      )
+    expect(line({ onHelp: () => {} })).toMatch(
+      /zum Schnitt davor[\s\S]*?<button type="button" aria-label="Erklärung: Abstand zum Schnitt davor" data-help="gegen-den-schnitt"/
+    )
+    expect(line({})).not.toContain("data-help")
+    expect(line({ onHelp: () => {}, metric: metricByKey("group.sigma")! })).not.toContain(
+      "data-help"
+    )
   })
 })

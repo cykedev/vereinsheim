@@ -90,7 +90,7 @@ export function PeriodInsights({
             ) : (
               <Note>Im Zeitraum kein neuer Rekord.</Note>
             )}
-            <details data-all-records className="group">
+            <details data-all-records>
               <summary className="cursor-pointer text-[13px] font-semibold text-primary">
                 {`Alle Rekorde (${rows.length})`}
               </summary>

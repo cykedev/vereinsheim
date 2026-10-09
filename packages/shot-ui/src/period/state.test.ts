@@ -49,6 +49,34 @@ describe("Zustand der Seite eines Zeitraums", () => {
       expect(periodReducer(chosen, action).chosen, action.type).toBeNull()
   })
 
+  it("das Blatt „Filter“ setzt alles auf einmal; die Wahl fällt nur weg, wenn sich die Scheiben ändern (Review U2)", () => {
+    const filters = {
+      choice: chosen.choice,
+      compare: { type: "previous" as const },
+      kind: chosen.kind,
+      includeProbeOnly: chosen.includeProbeOnly,
+    }
+    const onlyCompare = periodReducer(chosen, { type: "setFilters", filters })
+    expect(onlyCompare.compare).toEqual({ type: "previous" })
+    expect(onlyCompare.chosen).toBe("k12")
+    const all = periodReducer(chosen, {
+      type: "setFilters",
+      filters: {
+        choice: { type: "rolling", days: 30 },
+        compare: { type: "none" },
+        kind: "training",
+        includeProbeOnly: false,
+      },
+    })
+    expect(all).toMatchObject({
+      choice: { type: "rolling", days: 30 },
+      compare: { type: "none" },
+      kind: "training",
+      includeProbeOnly: false,
+      chosen: null,
+    })
+  })
+
   it("die Wahl bleibt bei Vergleich, Wertung, Kennzahl und Darstellung", () => {
     const keeps: PeriodAction[] = [
       { type: "setCompare", compare: { type: "previous" } },

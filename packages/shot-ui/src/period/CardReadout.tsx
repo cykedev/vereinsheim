@@ -35,6 +35,12 @@ export interface CardReadoutProps {
   className?: string
 }
 
+/**
+ * Das „?“ am Abstand erklärt den Abstand im Ø je Schuss (Thema „Abstand zum Schnitt davor“); zeigt der Verlauf eine
+ * andere Kennzahl, gilt die Erklärung nicht (Review U2)
+ */
+const explainsDelta = (metric: Readonly<MetricDefinition>) => metric.key === "result.decimalMean"
+
 /** „Training“, „Wettkampf“, „Training nur Probe“ */
 export const cardKindText = (card: PeriodCard) =>
   card.kind === "competition" ? "Wettkampf" : isProbeOnly(card) ? "Training nur Probe" : "Training"
@@ -100,7 +106,7 @@ export function CardReadout({
               <p data-delta className="tabular-nums">
                 {delta ? deltaText(delta, metric.decimals) : "erste Scheibe, kein Schnitt davor"}
               </p>
-              {onHelp && (
+              {onHelp && explainsDelta(metric) && (
                 <HelpButton
                   label="Abstand zum Schnitt davor"
                   helpId="gegen-den-schnitt"
@@ -149,8 +155,12 @@ export function CardLine({
   metric,
   timeZone,
   cardRoute,
+  onHelp,
   className,
-}: Pick<CardReadoutProps, "card" | "value" | "delta" | "metric" | "timeZone" | "cardRoute"> & {
+}: Pick<
+  CardReadoutProps,
+  "card" | "value" | "delta" | "metric" | "timeZone" | "cardRoute" | "onHelp"
+> & {
   className?: string
 }) {
   const parts = [
@@ -163,8 +173,16 @@ export function CardLine({
       data-card-line={card.id}
       className={cn("flex items-center justify-between gap-3 text-[13px]", className)}
     >
-      <span className="min-w-0 font-medium text-foreground-2 tabular-nums">
-        {parts.join(" · ")}
+      <span className="flex min-w-0 items-center gap-1 font-medium text-foreground-2 tabular-nums">
+        <span className="min-w-0">{parts.join(" · ")}</span>
+        {/* das „?“ am Abstand auch auf dem Telefon, wo die Ablesung als Karte fehlt (Review U2) */}
+        {onHelp && value && delta && explainsDelta(metric) && (
+          <HelpButton
+            label="Abstand zum Schnitt davor"
+            helpId="gegen-den-schnitt"
+            onClick={() => onHelp("gegen-den-schnitt")}
+          />
+        )}
       </span>
       <RouteLink
         route={cardRoute(card.id)}

@@ -5,7 +5,7 @@ import type { ReactNode } from "react"
 
 import { CardFilters } from "../controls/CardFilters"
 import { PAGE_COLUMNS } from "../layout/columns"
-import type { CompareChoice, DateRange, NamedPeriod } from "./calendar"
+import type { DateRange, NamedPeriod } from "./calendar"
 import { PeriodPicker } from "./PeriodPicker"
 import type { PeriodAction, PeriodState } from "./state"
 
@@ -33,7 +33,6 @@ export function PeriodControls({
   timeZone,
   families,
 }: PeriodControlsProps) {
-  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
   return (
     <div data-period-controls className="flex flex-wrap items-center gap-2">
       <CardFilters
@@ -50,15 +49,8 @@ export function PeriodControls({
         range={range}
         named={named}
         timeZone={timeZone}
-        onApply={(next) => {
-          // nur, was sich ändert: eine neue Wahl setzt sonst die Wahl im Verlauf zurück
-          if (!same(next.choice, state.choice)) dispatch({ type: "setChoice", choice: next.choice })
-          if (!same(next.compare, state.compare))
-            dispatch({ type: "setCompare", compare: next.compare })
-          if (next.kind !== state.kind) dispatch({ type: "setKind", kind: next.kind })
-          if (next.includeProbeOnly !== state.includeProbeOnly)
-            dispatch({ type: "setIncludeProbeOnly", include: next.includeProbeOnly })
-        }}
+        // eine Aktion für das ganze Blatt (Review U2)
+        onApply={(filters) => dispatch({ type: "setFilters", filters })}
       />
     </div>
   )

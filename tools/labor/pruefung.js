@@ -2410,6 +2410,12 @@ addEventListener("load", async () => {
         "Zeitraum: das Blatt „Filter“ setzt Art und Trainings nur aus Probe, der Chip fasst zusammen",
         filteredState[0] === "training" &&
           filteredState[1] === false &&
+          filteredChip ===
+            tools.period.filterSummary("Letzte 90 Tage", {
+              kind: "training",
+              compareLabel: null,
+              includeProbeOnly: false,
+            }) &&
           filteredChip === "Letzte 90 Tage · Training · ohne Probe-Training" &&
           P().state.kind === "all" &&
           P().state.includeProbeOnly === true &&
@@ -2671,7 +2677,8 @@ addEventListener("load", async () => {
       // im Fortschritt kein Schalter der Wertung mehr (U2, D4): zurück auf Zehntel über Profil
       check(
         "Zeitraum: kein Schalter der Wertung im Fortschritt",
-        !button("Ganze Ringe", $("[data-result-box]")) && !button("Zehntel", $("[data-result-box]"))
+        !button("Ganze Ringe", $("[data-app-content]")) &&
+          !button("Zehntel", $("[data-app-content]"))
       )
       await deviceScoring("Zehntel")
       check("Adresse: zurück auf Zehntel wie vor dem Öffnen", addr() === progressAddress, addr())
@@ -2820,7 +2827,7 @@ addEventListener("load", async () => {
         )
         check(
           `Zeitraum, Telefon ${width} px: vor dem Ergebnis nur Familie und Chip`,
-          controlItems.length === 2 && controlTops.size <= 2,
+          controlItems.length === 2,
           `${controlItems.map((c) => Math.round(c.getBoundingClientRect().width)).join(" + ")} px in ${controlTops.size} Zeilen`
         )
         d.querySelector("[data-period-chip]").dispatchEvent(

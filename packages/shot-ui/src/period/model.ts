@@ -97,12 +97,13 @@ export interface PeriodModel {
   compareShared: number
   /** Scheiben nur aus Probe im Zeitraum, die ohne den Schalter nicht zählen (L2, D8) */
   excludedProbeOnly: number
-  /** Vergleich im Ø je Schuss (Ergebnis-Box, Satz): a der Vergleich, b der Zeitraum; Δ = Zeitraum − Vergleich */
+  /** gewählter Vergleich im Ø je Schuss (Ergebnis-Box, Zahlen): a der Vergleich, b der Zeitraum; Δ = Zeitraum − Vergleich */
   comparison: PeriodComparison | null
   /**
    * der Vergleich für den Satz (U2, D1: „Werde ich besser?“): der gewählte, sonst still der Zeitraum davor, bei „Alles“
    * die letzten 90 Tage gegen die 90 davor (`lastDays`); im Ø je Schuss. Er zeigt sich nicht im Verlauf und nicht in der
-   * Ergebnis-Box. null ohne Scheiben
+   * Ergebnis-Box. null ohne Scheiben im Zeitraum; mit gewähltem Vergleich nie null; bei „Alles“ ohne Scheibe in den
+   * letzten 90 Tagen ein Vergleich ohne Wert (der Satz sagt „zu wenige“)
    */
   form: { comparison: PeriodComparison | null; label: string; lastDays: number | null } | null
   view: "cards" | "months"
@@ -138,8 +139,8 @@ export interface PeriodModel {
   }
   tiles: PeriodTile[]
   /**
-   * gewählte oder, ohne Wahl, die neueste Scheibe mit Ø je Schuss (dieselbe wie im Satz und bei „gegen deinen
-   * Schnitt“), mit ihrem Punkt im Verlauf; null ohne Scheiben
+   * gewählte oder, ohne Wahl, die neueste Scheibe mit Ø je Schuss (`newest`), mit ihrem Punkt im Verlauf; null ohne
+   * Scheiben
    */
   reading: PeriodReading | null
 }
@@ -310,7 +311,9 @@ export function periodModel(input: {
       : range
     const ownCards = all ? within(own) : cards
     const previous = compareRange({ type: "previous" }, own, { nowMs, timeZone, named })
-    if (!ownCards.length || !previous) return null
+    // ohne Scheiben auf der Seite kein Satz; bei „Alles“ nach einer Pause ein Vergleich ohne Wert (Review U2)
+    if (!cards.length || !previous) return null
+    // defensiv: der Zeitraum davor endet, wo der eigene beginnt; überlappt er doch, zählt eine Scheibe nur im eigenen
     const ownIds = new Set(ownCards.map((c) => c.id))
     const previousCards = within(previous).filter((c) => !ownIds.has(c.id))
     return {

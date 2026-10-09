@@ -201,6 +201,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
                 metric={model.metric}
                 timeZone={TZ}
                 cardRoute={cardRoute}
+                onHelp={onHelp}
               />
             )}
           </div>
