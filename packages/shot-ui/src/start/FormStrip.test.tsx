@@ -59,6 +59,20 @@ describe("Streifen der letzten Scheiben (Plan N5, D2)", () => {
     expect(x + (12 * 7.2) / 2).toBeLessThanOrEqual(600)
   })
 
+  it("ein Rahmen über die ganze Achse, hinter Band und Punkten (User, 9. Oktober 2026: „im leeren“)", () => {
+    const track = /<rect data-track="true"([^>]*)>/.exec(html)?.[1] ?? ""
+    expect(track).toMatch(/x="8"/)
+    expect(track).toMatch(/width="584"/)
+    expect(track).toMatch(/class="fill-surface-2 stroke-border"/)
+    // vor dem Band und vor dem ersten Punkt gezeichnet, also dahinter
+    expect(html.indexOf("data-track")).toBeLessThan(html.indexOf("data-band"))
+    expect(html.indexOf("data-track")).toBeLessThan(html.indexOf("data-strip-dot"))
+    // auch ohne Band
+    expect(renderToStaticMarkup(h(FormStrip, { strip, average: null, band: null }))).toContain(
+      "data-track"
+    )
+  })
+
   it("nur Tokens, keine Palette-Klassen; kleinster und größter Wert an den Enden", () => {
     expect(html).not.toMatch(/\b(text|bg|fill|stroke)-(red|green|blue|amber|slate|gray)-\d/)
     expect(html).toContain(">8,70<")

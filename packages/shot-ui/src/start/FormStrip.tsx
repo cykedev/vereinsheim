@@ -11,6 +11,8 @@ const PAD = 16
 /** Mitte der Punkte und Höhe des Bands */
 const MID = 46
 const BAND_HALF = 18
+/** Luft zwischen Band und Rahmen (U2, D6) */
+const TRACK_PAD = 4
 /** Breite eines Zeichens der Achsenschrift (Geist Mono, text-xs) und Luft zwischen zwei Beschriftungen */
 const CHAR_PX = 7.2
 const GAP_PX = 8
@@ -27,7 +29,7 @@ export interface FormStripProps {
 
 /**
  * Der Abend im Formband (Plan N5, D2): die letzten Scheiben der Familie als Punkte auf einer Achse des Ø je Schuss,
- * die des Abends groß in der Farbe des Akzents. Dahinter das Formband wie im Verlauf des Fortschritts (an der letzten
+ * die des Abends groß in der Farbe des Akzents, alles in einem Rahmen über die ganze Achse (U2, D6). Dahinter das Formband wie im Verlauf des Fortschritts (an der letzten
  * Scheibe des Abends) und der Schnitt der fünf Scheiben vor dem Abend als gestrichelte Linie. Kein Wert steht nur im SVG: die große Zahl und der Abstand stehen
  * darüber, der Name des Bilds sagt Band und Schnitt in Worten.
  */
@@ -82,6 +84,16 @@ export function FormStrip({ strip, average, band, className }: FormStripProps) {
             (!showMin || apart(minSpan, maxSpan))
           return (
             <ChartSvg width={width} height={HEIGHT} label={label}>
+              {/* der Rahmen über die ganze Achse: Band und Punkte stehen nicht mehr „im leeren“ (User, U2 D6) */}
+              <rect
+                data-track
+                x={PAD / 2}
+                y={MID - BAND_HALF - TRACK_PAD}
+                width={width - PAD}
+                height={BAND_HALF * 2 + TRACK_PAD * 2}
+                rx={12}
+                className="fill-surface-2 stroke-border"
+              />
               {band && (
                 <rect
                   data-band
@@ -98,8 +110,8 @@ export function FormStrip({ strip, average, band, className }: FormStripProps) {
                   data-average
                   x1={crisp(averageX)}
                   x2={crisp(averageX)}
-                  y1={MID - BAND_HALF - 4}
-                  y2={MID + BAND_HALF + 4}
+                  y1={MID - BAND_HALF - TRACK_PAD}
+                  y2={MID + BAND_HALF + TRACK_PAD}
                   strokeDasharray="3 3"
                   className="stroke-line-strong"
                 />
