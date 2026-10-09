@@ -40,7 +40,8 @@
     "./readout/readout": "./src/readout/readout.ts",
     "./readout/ShotLine": "./src/readout/ShotLine.tsx",
     "./readout/CardHeader": "./src/readout/CardHeader.tsx",
-    "./readout/CardResult": "./src/readout/CardResult.tsx"
+    "./readout/CardResult": "./src/readout/CardResult.tsx",
+    "./period/calendar": "./src/period/calendar.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
