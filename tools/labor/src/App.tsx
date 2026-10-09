@@ -81,10 +81,11 @@ function useTheme(theme: Theme) {
  */
 export function App({ commit }: { commit: string }) {
   const [mode, setMode] = useState<LaborMode>(() => {
-    // nur die Anker, die es allein auf der Seite eines Zeitraums gibt; #numbers und #analysis haben beide Seiten
+    // nur die Anker, die es allein auf der Seite eines Zeitraums gibt; #analysis hat auch die Scheibe, #numbers seit U1
+    // nicht mehr
     const hash = typeof location === "undefined" ? "" : location.hash
     const anchor = parsePeriodHash(hash)
-    if (anchor === "history" || anchor === "cards") return "period"
+    if (anchor === "history" || anchor === "cards" || anchor === "numbers") return "period"
     // ein Abend (#2026-09-25) öffnet die Scheiben-Liste (Plan N2, D1)
     if (EVENING_ANCHOR.test(hash)) return "list"
     const saved = store.get("mode")
