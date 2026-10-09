@@ -2808,7 +2808,18 @@ addEventListener("load", async () => {
         .sort((a, b) => a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : 1))
         .map((r) => r.id)
       const middle = competitionIds[5]
+      const rowTime = txt($(`[data-card-row="${middle}"]`)).match(/\d{2}:\d{2}/)?.[0]
       await click($(`[data-card-row="${middle}"]`), 500)
+      // der Kopf der Scheibe nennt Art, Datum und dieselbe Uhrzeit wie die Zeile (User, 9. Oktober 2026)
+      const headMeta = txt($("[data-card-header] p"))
+      check(
+        "Scheibe aus der Liste: der Kopf nennt Art, Wochentag mit Datum und die Uhrzeit der Zeile",
+        !!rowTime &&
+          headMeta.startsWith("Wettkampf · ") &&
+          /· [A-Z][a-z] \d{2}\.\d{2}\.\d{4} · /.test(headMeta) &&
+          headMeta.endsWith(`· ${rowTime}`),
+        `${headMeta} · Zeile ${rowTime}`
+      )
       const idOf = (el) => (el ? routeOf(el.getAttribute("href")).id : null)
       const prevId = idOf(link("Vorige Scheibe"))
       const nextId = idOf(link("Nächste Scheibe"))

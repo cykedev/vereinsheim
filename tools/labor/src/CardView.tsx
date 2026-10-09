@@ -75,6 +75,8 @@ export interface OpenedCard {
   route: CardRoute
   /** amtliche Wertung der Scheibe, als Hinweis am Schalter */
   official?: Scoring
+  /** Metazeile im Kopf: Art, Datum, Uhrzeit (`cardMeta`) */
+  meta: string[]
 }
 
 export interface CardViewProps {
@@ -348,7 +350,7 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
         header={
           <CardHeader
             title={target.label}
-            meta={[opened ? opened.label : sample.label]}
+            meta={opened ? opened.meta : [sample.label]}
             result={empty ? null : result}
             sentence={sentence}
           />

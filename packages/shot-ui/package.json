@@ -46,6 +46,7 @@
     "./readout/ShotLine": "./src/readout/ShotLine.tsx",
     "./readout/CardHeader": "./src/readout/CardHeader.tsx",
     "./readout/CardResult": "./src/readout/CardResult.tsx",
+    "./readout/cardMeta": "./src/readout/cardMeta.ts",
     "./period/calendar": "./src/period/calendar.ts",
     "./period/state": "./src/period/state.ts",
     "./period/model": "./src/period/model.ts",

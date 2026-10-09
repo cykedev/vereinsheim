@@ -5,6 +5,7 @@ import { AppFrame } from "@vereinsheim/shot-ui/layout/AppFrame"
 import { areaLinks, areaOf, type Area } from "@vereinsheim/shot-ui/nav/areas"
 import { periodStateFromRoute, progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import { RouteLinkProvider } from "@vereinsheim/shot-ui/nav/RouteLink"
+import { cardMeta } from "@vereinsheim/shot-ui/readout/cardMeta"
 import {
   DEFAULT_LIST,
   routeFromHref,
@@ -33,7 +34,7 @@ import type { LaborMode, LaborView, Theme } from "./LaborHeader"
 import { ListView } from "./ListView"
 import { PeriodView } from "./PeriodView"
 import { PlaceholderView, type PlaceholderPage } from "./PlaceholderView"
-import { season } from "./season"
+import { season, SEASON_TIME_ZONE } from "./season"
 import { store } from "./store"
 
 /** ein Abend als Anker der Scheiben-Liste (Plan N2, D1) */
@@ -177,6 +178,7 @@ export function App({ commit }: { commit: string }) {
         target: card.target,
         raw: card.raw,
         official: card.card.official,
+        meta: cardMeta(card.card, SEASON_TIME_ZONE),
         route: next,
       })
       show("card")
