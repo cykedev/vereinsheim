@@ -51,6 +51,8 @@
     "./start/sentence": "./src/start/sentence.ts",
     "./start/FormStrip": "./src/start/FormStrip.tsx",
     "./start/EveningBlock": "./src/start/EveningBlock.tsx",
+    "./start/OpenBox": "./src/start/OpenBox.tsx",
+    "./start/FormLine": "./src/start/FormLine.tsx",
     "./period/calendar": "./src/period/calendar.ts",
     "./period/state": "./src/period/state.ts",
     "./period/model": "./src/period/model.ts",
