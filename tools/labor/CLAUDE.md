@@ -33,8 +33,8 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   `labor.mode`; ein Anker der Zeitraum-Seite (`#verlauf` …) öffnet sie. `App` hält, was beide teilen
   (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
   Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums. „Scheibe öffnen“ zeigt eine
-  Scheibe der Saison in „Scheibe“, „Zurück zum Zeitraum“ stellt Zeitraum, Vergleich, Wahl und Scrollstelle wieder
-  her.
+  Scheibe der Saison in „Scheibe“, „Zurück zu „…““ (nach dem Zeitraum benannt) stellt Zeitraum, Vergleich, Wahl und
+  Scrollstelle wieder her.
 - **Adresse** (Plan N1, `nav/routes` und `nav/navigate` aus `shot-ui`): Der Kopf zeigt „Adresse in der App: …“
   (`data-address`) für den Zeitraum und die Scheibe. Im Artifact kommt nur ein einfacher Anker an, deshalb führt das
   Labor die Adresse nicht als URL. „Scheibe öffnen“ baut die Adresse der Scheibe mit dem Zeitraum als Herkunft, „Zurück

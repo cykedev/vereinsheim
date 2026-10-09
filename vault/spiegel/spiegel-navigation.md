@@ -122,6 +122,40 @@ Seiten ohne eigenen Bereich:
 
 Die Schlüssel sind englisch wie die Pfade. Die genaue Form legt N1 fest.
 
+## Umgesetzt in N1 (9. Oktober 2026)
+
+Plan `plans/2026-10-09-spiegel-routen.md`, Branch `feat/spiegel-routen`.
+
+- **`@vereinsheim/shot-ui/nav/routes`:** `Route` für jede Seite, dazu `routeFromUrl(pathname, search, hash)` und
+  `urlFromRoute`.
+  - Kanonisch: Vorgaben fallen weg, Schlüssel in fester Reihenfolge.
+  - Ungültiges gilt als Vorgabe; eine unbekannte Seite ist `unknown` mit ihrem Pfad, nie ein Fehler.
+  - Belegt durch zwölf Handwerte und eine Rundreise über gut 3 000 Routen.
+- **Werte:**
+  - `range`: `30d`, `90d` (Vorgabe), `12m`, `all`, `JJJJ-MM-TT..JJJJ-MM-TT` oder die Id eines benannten Zeitraums;
+    die festen Werte gehen vor.
+  - `compare`: `previous` oder eine Id.
+  - Filter: `family`, `kind` (`training`, `competition`), `flag`.
+  - Darstellung: `probe=0`, `scoring=rings`, `metric` (`sigma`, `tens`, `tempo`), `view` (`cards`, `months`).
+  - Wahl: `pick` mit der Id einer Scheibe.
+  - Scheibe: `from` (`list`, `start`, `progress`) mit den Schlüsseln der Herkunft, ohne `pick`, dazu `series`
+    (`all`, `match`, `probe`, Serie), `shot` (Nummer wie auf der Scheibe, `23`, `P3`).
+  - Die Liste trägt den Abend als Anker (`#2026-09-25`).
+- **Nicht in der Adresse:** wie gezeichnet wird (Ebenen, Ausschnitt, Thema, Erklärungen). Das bleibt Einstellung im
+  Gerät.
+- **`@vereinsheim/shot-ui/nav/navigate`:**
+  - `openCard` (die Herkunft trägt ihren Zustand, die Wertung trägt die Scheibe).
+  - `backRoute` (zurück mit der Scheibe gewählt), `backLabel` („Letzte 90 Tage“, „Neue Munition“, „Start“,
+    „Scheiben“), `siblingRoute` (Blättern behält Herkunft, Wertung und Abschnitt).
+  - `listFromProgress` und `progressFromList`.
+  - `progressRoute` und `periodStateFromRoute`; dazu die Aktion `restore` des `periodReducer`.
+- **Labor:**
+  - Im Artifact kommt nur ein einfacher Anker an. Das Labor zeigt die Adresse deshalb nur an („Adresse in der App“),
+    baut den Rückweg aber aus ihr. Die Wertung der Scheibe kommt mit zurück.
+  - Die Skriptprüfung rechnet jede gezeigte Adresse hin und zurück.
+- **Für N3 offen:** echte Navigation in einem Router, Browser-Zurück, „‹ vorige · nächste ›“ mit Daten. Der Anker
+  des Abends wird in der Liste (N2) gesetzt.
+
 ## Was die Bausteine schon haben, was fehlt
 
 - **Wiederverwendbar:**
