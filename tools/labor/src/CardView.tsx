@@ -109,6 +109,11 @@ export function CardView({
     const saved = store.get("tab")
     return anchored ?? ANALYSIS_TABS.find((t) => t.value === saved)?.value ?? "overview"
   })
+  // der Reiter gehört erst in die Adresse, wenn er gewählt ist oder mit ihr kam: eine geöffnete Scheibe beginnt oben
+  // ohne Anker, wie `openCard` sie baut (Review N1)
+  const [tabInAddress, setTabInAddress] = useState(
+    () => !opened && typeof location !== "undefined" && !!parseHash(location.hash)?.tab
+  )
   const [state, dispatch] = useReducer(viewReducer, undefined, () => {
     // Grundauswahl der ersten Karte: ohne Probe, wenn es Probe und Wertung gibt
     const home = defaultWhole(
@@ -117,7 +122,12 @@ export function CardView({
     return initialViewState({
       selection: home,
       home,
-      scoring: store.get("scoring") === "rings" ? "rings" : "decimal",
+      // eine aus dem Zeitraum geöffnete Scheibe übernimmt dessen Wertung (D6), sonst die gemerkte (Review N1)
+      scoring: opened
+        ? opened.route.scoring
+        : store.get("scoring") === "rings"
+          ? "rings"
+          : "decimal",
       layers: {
         mpi: store.get("mpi") !== "0",
         circle: store.get("circle") !== "0",
@@ -228,6 +238,7 @@ export function CardView({
   const changeTab = useCallback((next: AnalysisTab) => {
     store.set("tab", next)
     setTab(next)
+    setTabInAddress(true)
     writeHash(hashFor("analyse", next))
   }, [])
 
@@ -246,7 +257,7 @@ export function CardView({
     selection: state.selection === state.home ? null : state.selection,
     shot: state.chosen ? (shotLabels(shots)[state.chosen.index] ?? null) : null,
     scoring: state.scoring,
-    anchor: { section: "analyse", tab },
+    anchor: tabInAddress ? { section: "analyse", tab } : null,
   }
   const backText = `Zurück zu „${backLabel(route, { named: NAMED_PERIODS, timeZone: SEASON_TIME_ZONE })}“`
 

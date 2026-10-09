@@ -18,8 +18,20 @@ import type { Selection } from "../types"
 /** Id eines benannten Zeitraums, einer Familie oder eines Merkmals: klein, Ziffern, Bindestriche */
 const SLUG = /^[a-z0-9][a-z0-9-]*$/
 const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/
-/** Id einer Scheibe: Buchstaben, Ziffern, Unterstrich, Bindestrich */
+/** Id einer Scheibe: Buchstaben, Ziffern, Unterstrich, Bindestrich (in der App die Id aus der Datenbank) */
 const ID = /^[A-Za-z0-9_-]+$/
+
+/** feste Werte von `range` und `compare`; sie gehen einer gleichlautenden Id vor (D4) */
+const RESERVED = new Set(["30d", "90d", "12m", "all", "previous"])
+
+/** taugt die Zeichenkette als Id einer Scheibe in der Adresse? */
+export const isCardId = (id: string) => ID.test(id)
+
+/**
+ * taugt die Zeichenkette als Id eines benannten Zeitraums? Ids sind erzeugt (in der App aus der Datenbank, klein
+ * geschrieben wie cuid oder UUID), nie aus dem Namen abgeleitet; die festen Wörter scheiden aus (Review N1)
+ */
+export const isNamedPeriodId = (id: string) => SLUG.test(id) && !RESERVED.has(id)
 
 /** ein echter Kalendertag im Format JJJJ-MM-TT (kein 30. Februar) */
 function isDay(text: string): boolean {
@@ -87,8 +99,8 @@ export interface ListQuery {
   kind: CardKind
   /** Merkmal wie `nur-pdf` */
   flag: string | null
-  /** null: alle Abende */
-  range: PeriodChoice | null
+  /** null: alle Abende; „Alles“ ist dasselbe und hat darum keine eigene Form */
+  range: Exclude<PeriodChoice, { type: "all" }> | null
 }
 
 /** Zustand der Seite eines Zeitraums, wie `PeriodState`, nur mit Familie auch ohne Wert */
@@ -154,7 +166,7 @@ export function listQueryFromParams(params: URLSearchParams): ListQuery {
     kind: kindOf(params.get("kind")),
     flag: slugOrNull(params.get("flag")),
     // „all“ und ohne Angabe heißen dasselbe: alle Abende
-    range: range?.type === "all" ? null : range,
+    range: range === null || range.type === "all" ? null : range,
   }
 }
 
@@ -223,7 +235,8 @@ export interface CardRoute {
 }
 
 const SHOT = /^P?[1-9]\d*$/
-const SERIES = /^[1-9]\d*$/
+/** Serien bis 999: eine längere Zahl ist keine Serie (sonst stünde 1e+23 in der Adresse) */
+const SERIES = /^[1-9]\d{0,2}$/
 
 function selectionOf(value: string | null): Selection | null {
   if (value === "all" || value === "match" || value === "probe") return value
@@ -250,7 +263,11 @@ function originPairs(origin: CardOrigin): Param[] {
   if (!origin) return []
   if (origin.from === "start") return [["from", "start"]]
   if (origin.from === "list") return [["from", "list"], ...listQueryToParams(origin.query)]
-  return [["from", "progress"], ...present(progressPairs(origin.query))]
+  // nie `pick` oder die Wertung der Herkunft, auch wenn ein Aufrufer sie mitgibt: die trägt die Scheibe (D6)
+  return [
+    ["from", "progress"],
+    ...present(progressPairs({ ...origin.query, chosen: null, scoring: "decimal" })),
+  ]
 }
 
 /** die Seite einer Scheibe aus Id, Query und Anker */
@@ -407,4 +424,15 @@ export function urlFromRoute(route: Route): string {
     case "unknown":
       return route.path
   }
+}
+
+/** die Route einer ganzen Adresse als eine Zeichenkette, wie ein Link sie hat („/cards/c1?from=list#analysis“) */
+export function routeFromHref(href: string): Route {
+  const hashAt = href.indexOf("#")
+  const hash = hashAt < 0 ? "" : href.slice(hashAt)
+  const rest = hashAt < 0 ? href : href.slice(0, hashAt)
+  const searchAt = rest.indexOf("?")
+  return searchAt < 0
+    ? routeFromUrl(rest, "", hash)
+    : routeFromUrl(rest.slice(0, searchAt), rest.slice(searchAt), hash)
 }

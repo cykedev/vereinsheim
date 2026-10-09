@@ -18,7 +18,6 @@ import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
 import { observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { overviewTiles } from "@vereinsheim/shot-ui/analysis/overview"
 import { formatValue } from "@vereinsheim/shot-ui/format"
-import { backRoute, openCard } from "@vereinsheim/shot-ui/nav/navigate"
 import { routeFromUrl, urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
 import { periodSentence, verdictText } from "@vereinsheim/shot-ui/period/sentence"
@@ -52,7 +51,7 @@ const TOOLS = {
   // Seite eines Zeitraums (Plan L3): Modell und Worte zum Nachrechnen
   period: { periodModel, periodSentence, verdictText },
   // Adressen (Plan N1): die Prüfung rechnet jede gezeigte Adresse hin und zurück
-  nav: { routeFromUrl, urlFromRoute, backRoute, openCard },
+  nav: { routeFromUrl, urlFromRoute },
 }
 
 export interface LaborHook {

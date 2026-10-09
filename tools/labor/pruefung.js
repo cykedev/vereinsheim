@@ -434,10 +434,8 @@ addEventListener("load", async () => {
       `${mpiAt} / ${mean}`
     )
     check(
-      "Adresse: Beispiel ohne Herkunft, Serie 2 steht darin, der Reiter als Anker",
-      /^\/cards\/lp-10m-forty\?series=2(&|#)/.test(addr()) &&
-        routeOf(addr()).selection === 2 &&
-        routeOf(addr()).anchor?.section === "analyse",
+      "Adresse: Beispiel ohne Herkunft, Serie 2 steht darin",
+      /^\/cards\/lp-10m-forty\?series=2(&|#|$)/.test(addr()) && routeOf(addr()).selection === 2,
       addr()
     )
     check(
@@ -2350,6 +2348,27 @@ addEventListener("load", async () => {
       )
       await click(button("Zehntel"), 150)
       check("Adresse: zurück auf Zehntel wie vor dem Öffnen", addr() === progressAddress, addr())
+      // ganze Ringe im Zeitraum, Zehntel im Speicher des Geräts: die Scheibe öffnet mit der Wertung des Zeitraums,
+      // und „Zurück“ lässt sie stehen (Review N1). Erst auf einer Scheibe Zehntel wählen, damit der Speicher sie hat.
+      await click(button("Scheibe öffnen", $("[data-card-readout]")), 500)
+      await click(button("Ganze Ringe"), 120)
+      await click(button("Zehntel"), 120)
+      await click(button("Zurück zu „Neue Munition“"), 500)
+      await click(button("Ganze Ringe"), 150)
+      await click(button("Scheibe öffnen", $("[data-card-readout]")), 500)
+      check(
+        "Adresse: ganze Ringe aus dem Zeitraum gelten auf der geöffneten Scheibe",
+        L().state.scoring === "rings" && addr().includes("scoring=rings"),
+        `${L().state.scoring} · ${addr()}`
+      )
+      check("Adresse: eine geöffnete Scheibe beginnt ohne Anker", !addr().includes("#"), addr())
+      await click(button("Zurück zu „Neue Munition“"), 500)
+      check(
+        "Adresse: „Zurück“ lässt die ganzen Ringe des Zeitraums stehen",
+        P().state.scoring === "rings" && addr().includes("scoring=rings"),
+        `${P().state.scoring} · ${addr()}`
+      )
+      await click(button("Zehntel"), 150)
       const brokenAddresses = [...seenAddresses].filter(
         (url) => L().tools.nav.urlFromRoute(L().tools.nav.routeFromUrl(...urlParts(url))) !== url
       )

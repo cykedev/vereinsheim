@@ -15,6 +15,9 @@ import {
   listQueryToParams,
   progressQueryFromParams,
   progressQueryToParams,
+  isCardId,
+  isNamedPeriodId,
+  routeFromHref,
   routeFromUrl,
   urlFromRoute,
   type CardOrigin,
@@ -334,13 +337,18 @@ describe("die ganze Adresse (D3)", () => {
           for (const range of [
             null,
             { type: "rolling", days: 30 } as const,
+            { type: "rolling", days: 365 } as const,
             { type: "free", from: "2026-05-01", to: "2026-06-30" } as const,
+            { type: "named", id: "clx8k2abc" } as const,
           ])
             lists.push({ family, kind, flag, range })
     const progresses: ProgressQuery[] = []
     for (const choice of [
       DEFAULT_CHOICE,
       { type: "all" } as const,
+      { type: "rolling", days: 30 } as const,
+      { type: "rolling", days: 365 } as const,
+      { type: "free", from: "2026-05-01", to: "2026-06-30" } as const,
       { type: "named", id: "neue-munition" } as const,
     ])
       for (const compare of [
@@ -349,11 +357,16 @@ describe("die ganze Adresse (D3)", () => {
         { type: "named", id: "saison-2025" } as const,
       ])
         for (const family of [null, "lp-10m"])
-          for (const kind of ["all", "competition"] as const)
+          for (const kind of ["all", "training", "competition"] as const)
             for (const includeProbeOnly of [true, false])
               for (const scoring of ["decimal", "rings"] as const)
-                for (const metric of ["result.decimalMean", "group.sigma"] as const)
-                  for (const view of [null, "months"] as const)
+                for (const metric of [
+                  "result.decimalMean",
+                  "group.sigma",
+                  "result.tensRate",
+                  "time.intervalMedian",
+                ] as const)
+                  for (const view of [null, "cards", "months"] as const)
                     for (const chosen of [null, "c9"])
                       progresses.push({
                         choice,
@@ -392,7 +405,58 @@ describe("die ganze Adresse (D3)", () => {
               { section: "analyse", tab: "position" } as const,
             ])
               routes.push({ page: "card", id: "c42", origin, selection, shot, scoring, anchor })
-    expect(routes.length).toBeGreaterThan(3000)
+    expect(routes.length).toBeGreaterThan(20000)
     for (const r of routes) expect(route(urlFromRoute(r))).toEqual(r)
+  })
+})
+
+describe("Grammatik der Ids und Grenzfälle (Review)", () => {
+  it("Ids von Scheiben und benannten Zeiträumen sind erzeugte Ids, nie Namen; feste Wörter sind keine", () => {
+    // in der App: Ids aus der Datenbank (cuid, UUID); ein Name wie „All“ oder „12m“ wird nie zur Id
+    expect(isCardId("clx8k2abc0001")).toBe(true)
+    expect(isCardId("0b9f6c1e-5d2a-4c3b-9e8f-1a2b3c4d5e6f")).toBe(true)
+    expect(isCardId("a b")).toBe(false)
+    expect(isNamedPeriodId("clx8k2abc")).toBe(true)
+    for (const reserved of ["30d", "90d", "12m", "all", "previous"]) {
+      expect(isNamedPeriodId(reserved), reserved).toBe(false)
+    }
+    expect(isNamedPeriodId("Neue Munition")).toBe(false)
+    // so entschieden (D4): die festen Wörter gehen vor
+    expect(decodeCompare("previous")).toEqual({ type: "previous" })
+  })
+
+  it("eine Serie über drei Stellen ist keine Serie (kein 1e+23 in der Adresse)", () => {
+    const read = (search: string) => route(`/cards/c1?${search}`)
+    expect(read("series=999")).toMatchObject({ selection: 999 })
+    expect(read("series=99999999999999999999999")).toMatchObject({ selection: null })
+  })
+
+  it("eine Herkunft aus dem Fortschritt schreibt nie `pick` oder ihre Wertung, auch wenn sie sie trägt", () => {
+    const full = {
+      ...DEFAULT_PROGRESS,
+      family: "lg-freihand",
+      scoring: "rings" as const,
+      chosen: "c9",
+    }
+    const url = urlFromRoute({
+      page: "card",
+      id: "c1",
+      origin: { from: "progress", query: full },
+      selection: null,
+      shot: null,
+      scoring: "decimal",
+      anchor: null,
+    })
+    expect(url).toBe("/cards/c1?from=progress&family=lg-freihand")
+  })
+
+  it("eine ganze Adresse als eine Zeichenkette, wie ein Link sie hat", () => {
+    expect(routeFromHref("/progress?family=lg-freihand&pick=c9#history")).toEqual(
+      route("/progress?family=lg-freihand&pick=c9#history")
+    )
+    expect(routeFromHref("/cards/c1#analysis")).toEqual(routeFromUrl("/cards/c1", "", "#analysis"))
+    expect(routeFromHref("/cards?kind=training")).toEqual(
+      routeFromUrl("/cards", "?kind=training", "")
+    )
   })
 })

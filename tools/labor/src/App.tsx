@@ -6,7 +6,7 @@ import {
   periodStateFromRoute,
   progressRoute,
 } from "@vereinsheim/shot-ui/nav/navigate"
-import type { CardRoute } from "@vereinsheim/shot-ui/nav/routes"
+import { routeFromHref, urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { initialPeriodState, periodReducer } from "@vereinsheim/shot-ui/period/state"
 import { useCallback, useEffect, useReducer, useState } from "react"
 
@@ -92,7 +92,9 @@ export function App({ commit }: { commit: string }) {
   const backToPeriod = useCallback(
     (route: CardRoute) => {
       const y = returnTo
-      const back = backRoute(route)
+      // über die gezeigte Zeichenkette, wie ein Link in der App: Lesen und Schreiben laufen mit (Review N1)
+      const shown = routeFromHref(urlFromRoute(route))
+      const back = backRoute(shown.page === "card" ? shown : route)
       if (back.page === "progress") {
         dispatch({ type: "restore", state: periodStateFromRoute(back, period.family) })
       }

@@ -72,12 +72,15 @@ export function listFromProgress(progress: ProgressRoute): ListRoute {
   }
 }
 
-/** „Verlauf dieser Filter“ (D7): Familie, Art und Zeitraum der Liste; ohne Zeitraum „Alles“ */
-export function progressFromList(list: ListRoute): ProgressRoute {
+/**
+ * „Verlauf dieser Filter“ (D7): Familie, Art und Zeitraum der Liste; ohne Zeitraum „Alles“. Die Liste hat keine
+ * Wertung; es gilt die des Geräts wie bei `openCard`.
+ */
+export function progressFromList(list: ListRoute, scoring: Scoring = "decimal"): ProgressRoute {
   const { family, kind, range } = list.query
   return {
     page: "progress",
-    query: { ...DEFAULT_PROGRESS, family, kind, choice: range ?? { type: "all" } },
+    query: { ...DEFAULT_PROGRESS, family, kind, scoring, choice: range ?? { type: "all" } },
     section: null,
   }
 }

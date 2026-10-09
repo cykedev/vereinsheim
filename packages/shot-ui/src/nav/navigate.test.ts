@@ -14,6 +14,7 @@ import { initialPeriodState, periodReducer, type PeriodState } from "../period/s
 import {
   DEFAULT_LIST,
   DEFAULT_PROGRESS,
+  routeFromHref,
   urlFromRoute,
   type ListRoute,
   type ProgressRoute,
@@ -136,6 +137,8 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
       progressFromList({ ...LIST, query: { ...LIST.query, range: { type: "rolling", days: 30 } } })
         .query.choice
     ).toEqual({ type: "rolling", days: 30 })
+    // die Liste hat keine Wertung; es gilt die des Geräts wie bei `openCard` (Review)
+    expect(progressFromList(LIST, "rings").query.scoring).toBe("rings")
   })
 })
 
@@ -185,8 +188,10 @@ describe("Fortschritt ↔ Zustand der Seite (Task 7)", () => {
       const route = progressRoute(state, "verlauf")
       expect(route.section).toBe("verlauf")
       expect(periodStateFromRoute(route, "lg-10m")).toEqual(state)
-      // auch über die Adresse
-      expect(urlFromRoute(route)).toMatch(/^\/progress(\?|#)/)
+      // auch über die Adresse: Zustand → Adresse → Route → Zustand
+      const back = routeFromHref(urlFromRoute(route))
+      expect(back.page).toBe("progress")
+      expect(periodStateFromRoute(back as ProgressRoute, "lg-10m")).toEqual(state)
     }
   })
 
