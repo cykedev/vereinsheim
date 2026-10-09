@@ -41,6 +41,7 @@ import { LaborPanel, type LaborPanelProps } from "./LaborPanel"
 
 import { rawSample, SAMPLES, toMetricShots, type RawShot, type SampleId } from "./samples"
 import { NAMED_PERIODS, season, SEASON_NOW_MS, SEASON_TIME_ZONE } from "./season"
+import { loadAnchor } from "./loadAnchor"
 import { store } from "./store"
 import { exposeForTest, underTest } from "./testHook"
 
@@ -104,15 +105,11 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
   // Reiter: eine Scheibe beginnt immer mit dem ersten (User, 9. Oktober 2026), nur ein Anker in der Adresse beim
   // Laden öffnet einen anderen. Kein gemerkter Reiter: der vorige stünde sonst auf der nächsten Scheibe
   const [tab, setTab] = useState<AnalysisTab>(
-    () =>
-      (opened || typeof location === "undefined" ? undefined : parseHash(location.hash)?.tab) ??
-      ANALYSIS_TABS[0].value
+    () => (opened ? undefined : parseHash(loadAnchor())?.tab) ?? ANALYSIS_TABS[0].value
   )
   // der Reiter gehört erst in die Adresse, wenn er gewählt ist oder mit ihr kam: eine geöffnete Scheibe beginnt oben
   // ohne Anker, wie `openCard` sie baut (Review N1)
-  const [tabInAddress, setTabInAddress] = useState(
-    () => !opened && typeof location !== "undefined" && !!parseHash(location.hash)?.tab
-  )
+  const [tabInAddress, setTabInAddress] = useState(() => !opened && !!parseHash(loadAnchor())?.tab)
   const [state, dispatch] = useReducer(viewReducer, undefined, () => {
     // Grundauswahl der ersten Karte: ohne Probe, wenn es Probe und Wertung gibt
     const home = defaultWhole(
@@ -158,9 +155,9 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
       setTab(anchor.tab)
       showSection(anchor.section)
     }
-    // eine aus dem Zeitraum geöffnete Scheibe beginnt oben, auch wenn die Adresse noch einen Anker der Seite
-    // eines Zeitraums trägt (#numbers, #analysis gibt es auf beiden Seiten)
-    const onLoad = opened ? null : parseHash(location.hash)
+    // nur ein Anker beim Laden springt (`loadAnchor`): Nach einem Wechsel der Ansicht trägt die Adresse noch den Anker
+    // der vorigen Seite (Sprungleiste, Reiter), die Scheibe beginnt dann oben; eine geöffnete Scheibe immer
+    const onLoad = opened ? null : parseHash(loadAnchor())
     if (onLoad) showSection(onLoad.section)
     addEventListener("hashchange", follow)
     return () => removeEventListener("hashchange", follow)

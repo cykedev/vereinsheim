@@ -3224,6 +3224,35 @@ addEventListener("load", async () => {
         dark && light && themeInProfile,
         `${dark} ${light} ${themeInProfile}`
       )
+      // Fehler (User, 9. Oktober 2026): Die Sprungleiste schreibt #analysis in die Adresse; die Beispielscheibe las ihn
+      // beim Öffnen wie einen Anker beim Laden und begann bei der Analyse. Sie beginnt oben mit dem ersten Reiter
+      await click(area("Fortschritt"), 300)
+      await click(link("Analyse", $('nav[aria-label="Abschnitte"]')), 200)
+      const staleHash = location.hash
+      await click($("[data-labor-button]"), 200)
+      await click(inLabor("Beispielscheiben öffnen"), 400)
+      const sampleHead = Math.round($("[data-card-header]")?.getBoundingClientRect().top ?? 999)
+      const sampleTab = txt(
+        $('[role="radiogroup"][aria-label="Thema"] [aria-checked="true"]') ?? document.body
+      ).slice(0, 20)
+      const sampleScroll = Math.round(scrollY)
+      await click($("[data-labor-button]"), 200)
+      await click(inLabor("Zurück zur App"), 400)
+      check(
+        "Labor: nach der Sprungleiste (#analysis) beginnt die Beispielscheibe oben mit „Überblick“",
+        staleHash === "#analysis" &&
+          sampleScroll < 40 &&
+          sampleHead >= 0 &&
+          sampleHead < 80 &&
+          sampleTab === "Überblick",
+        `${staleHash} · scrollY ${sampleScroll} · Kopf ${sampleHead} · ${sampleTab}`
+      )
+      try {
+        history.replaceState(null, "", "#pruefen")
+      } catch {
+        // ohne Verlauf bleibt der Anker; die folgenden Prüfungen lesen ihn nicht
+      }
+      await click(area("Scheiben"), 300)
       // die Beispielscheiben über das offene Blatt, zurück zur App in den letzten Bereich; danach kein Blatt mehr offen
       // und der Fokus auf dem neuen Knopf (Review)
       await click($("[data-labor-button]"), 200)

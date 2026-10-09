@@ -32,6 +32,7 @@ import {
 import { CardView, type OpenedCard } from "./CardView"
 import type { LaborMode, LaborView, Theme } from "./LaborPanel"
 import { ListView } from "./ListView"
+import { leaveFirstView } from "./loadAnchor"
 import { PeriodView } from "./PeriodView"
 import { PlaceholderView, type PlaceholderPage } from "./PlaceholderView"
 import { OPEN_EXAMPLES, StartView } from "./StartView"
@@ -158,6 +159,8 @@ export function App({ commit }: { commit: string }) {
             : { page: mode }
   // die Scrollstelle des Bereichs, den man verlässt
   const leave = () => {
+    // ein Wechsel der Ansicht: der Anker beim Laden gilt nicht mehr, die neue Seite beginnt oben
+    leaveFirstView()
     if (mode === "list") scrolls.current.set("cards", { key: listKey(list), y: window.scrollY })
     if (mode === "period")
       scrolls.current.set("progress", { key: progressKey(period), y: window.scrollY })
