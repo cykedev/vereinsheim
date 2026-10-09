@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { EVENING_PRINTOUT, EVENING_SHOTS } from "./__fixtures__/meyton-2026-10-09"
 import {
   centroid,
   covarianceEllipse,
@@ -193,5 +194,38 @@ describe("Radien und Streuung", () => {
     )
     expect(covarianceEllipse(steep)?.angleRad).toBeCloseTo(back, 9)
     expect(covarianceEllipse([pt(0, 0)])).toBeNull()
+  })
+})
+
+describe("Ausdruck vom 9. Oktober 2026: Meytons Trefferkreis und Trefferlage (SF-76)", () => {
+  // Index 0 die ganze Scheibe, dann Serie 1 bis 4, wie im Ausdruck.
+  const groups = [
+    EVENING_SHOTS,
+    ...[1, 2, 3, 4].map((series) => EVENING_SHOTS.filter((shot) => shot.series === series)),
+  ].map((shots) => shots.map((shot) => pt(shot.xUm, shot.yUm)))
+  const CALIBER_UM = 4500
+  const roundedMm = (um: number) => Math.round(um / 10) / 100
+  const truncatedMm = (um: number) => Math.trunc(um / 10) / 100
+
+  it("Trefferkreis: kleinster Hüllkreis der Schussmitten plus Kaliber, auf 1/100 mm gerundet", () => {
+    groups.forEach((points, i) => {
+      const circle = smallestEnclosingCircle(points)!
+      expect(roundedMm(2 * circle.radiusUm + CALIBER_UM), `Gruppe ${i}`).toBe(
+        EVENING_PRINTOUT.enclosingMm[i]
+      )
+    })
+    // Der größte Abstand zweier Treffer ist es nicht: Drei Schüsse bestimmen den Kreis der Scheibe.
+    expect(roundedMm(extremeSpread(groups[0])! + CALIBER_UM)).toBe(82.48)
+  })
+
+  it("Trefferlage: Schwerpunkt, auf 1/100 mm abgeschnitten", () => {
+    groups.forEach((points, i) => {
+      const center = centroid(points)!
+      expect([truncatedMm(center.xUm), truncatedMm(center.yUm)], `Gruppe ${i}`).toEqual(
+        EVENING_PRINTOUT.mpiMm[i]
+      )
+    })
+    // Gerundet stünde bei Serie 2 5,76 statt 5,75.
+    expect(roundedMm(centroid(groups[2])!.xUm)).toBe(5.76)
   })
 })

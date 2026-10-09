@@ -2,7 +2,9 @@
 //
 // Gerechnet wird in µm mit Gleitkomma; die Lagen selbst sind ganze µm (SP-1.1). Der Streukreis ist
 // der kleinste Kreis um alle Trefferzentren, ohne Kaliber (Mitte zu Mitte). Daneben gibt es den
-// größten Abstand zweier Treffer: Welches der beiden Meytons „Trefferkreis“ ist, klärt SP-0.6.
+// größten Abstand zweier Treffer. Meytons „Trefferkreis“ ist der Streukreis plus Kaliber, auf 1/100 mm
+// gerundet; seine „Trefferlage“ der Schwerpunkt, auf 1/100 mm abgeschnitten (Ausdruck vom 9. Oktober
+// 2026, SF-76).
 
 export interface Point {
   xUm: number
