@@ -36,6 +36,7 @@
     "./layout/useActiveSection": "./src/layout/useActiveSection.ts",
     "./layout/CardPage": "./src/layout/CardPage.tsx",
     "./layout/PeriodPage": "./src/layout/PeriodPage.tsx",
+    "./layout/AppFrame": "./src/layout/AppFrame.tsx",
     "./layout/SectionBlock": "./src/layout/SectionBlock.tsx",
     "./layout/jump": "./src/layout/jump.ts",
     "./layout/useReturnJump": "./src/layout/useReturnJump.ts",
@@ -80,7 +81,8 @@
     "@vereinsheim/lib": "workspace:*",
     "@vereinsheim/shot-core": "workspace:*",
     "@vereinsheim/shot-help": "workspace:*",
-    "@vereinsheim/ui": "workspace:*"
+    "@vereinsheim/ui": "workspace:*",
+    "lucide-react": "catalog:"
   },
   "peerDependencies": {
     "react": "^19.2.6",
