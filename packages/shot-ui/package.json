@@ -49,7 +49,8 @@
     "./period/model": "./src/period/model.ts",
     "./period/sentence": "./src/period/sentence.ts",
     "./period/PeriodChart": "./src/period/PeriodChart.tsx",
-    "./period/VolumeChart": "./src/period/VolumeChart.tsx"
+    "./period/VolumeChart": "./src/period/VolumeChart.tsx",
+    "./period/CardReadout": "./src/period/CardReadout.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
