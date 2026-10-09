@@ -114,30 +114,32 @@ export function AppFrame({
         "max-lg:[@media(max-height:499px)]:[--app-bar:0px]"
       )}
     >
-      <nav
-        aria-label="Bereiche"
+      <div
         data-app-sidebar
-        className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col gap-1 overflow-y-auto border-r border-border bg-card px-3 py-5 lg:flex"
+        className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col overflow-y-auto border-r border-border bg-card px-3 py-5 lg:flex"
       >
-        <p className="px-3 pb-4 font-display text-xl font-bold tracking-tight">Spiegel</p>
-        {(["start", "cards", "progress"] as const).map(sideEntry)}
-        {link(
-          "scan",
-          "mt-3 flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[14px] font-semibold text-primary-foreground hover:opacity-90 aria-[current=page]:ring-2 aria-[current=page]:ring-ring aria-[current=page]:ring-offset-2 aria-[current=page]:ring-offset-card",
-          <>
-            <ScanQrCode aria-hidden="true" className="size-[18px]" />
-            QR scannen
-          </>
-        )}
-        <div aria-hidden="true" className="my-3 border-t border-border" />
-        {sideEntry("profile")}
-        {isAdmin && sideEntry("admin")}
+        <nav aria-label="Bereiche" className="flex flex-col gap-1">
+          <p className="px-3 pb-4 font-display text-xl font-bold tracking-tight">Spiegel</p>
+          {(["start", "cards", "progress"] as const).map(sideEntry)}
+          {link(
+            "scan",
+            "mt-3 flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[14px] font-semibold text-primary-foreground hover:opacity-90 aria-[current=page]:ring-2 aria-[current=page]:ring-ring aria-[current=page]:ring-offset-2 aria-[current=page]:ring-offset-card",
+            <>
+              <ScanQrCode aria-hidden="true" className="size-[18px]" />
+              QR scannen
+            </>
+          )}
+          <div aria-hidden="true" className="my-3 border-t border-border" />
+          {sideEntry("profile")}
+          {isAdmin && sideEntry("admin")}
+        </nav>
+        {/* Einstellungen gehören nicht in die Navigation: neben ihr, unten in der Seitenleiste (Review) */}
         {sidebarFooter && (
           <div data-sidebar-footer className="mt-auto border-t border-border px-1 pt-3">
             {sidebarFooter}
           </div>
         )}
-      </nav>
+      </div>
 
       <nav
         aria-label="Bereiche"

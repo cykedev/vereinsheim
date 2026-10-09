@@ -39,7 +39,7 @@ describe("Rahmen der App (Plan N3, D1, D2, D6)", () => {
       "admin",
     ])
     expect(html).toMatch(
-      /<nav aria-label="Bereiche" data-app-sidebar="true" class="[^"]*hidden[^"]*lg:flex/
+      /<div data-app-sidebar="true" class="[^"]*hidden[^"]*lg:flex[^"]*"><nav aria-label="Bereiche"/
     )
     expect(html).toMatch(/data-app-sidebar[\s\S]*?>Spiegel</)
   })
@@ -94,16 +94,18 @@ describe("Rahmen der App (Plan N3, D1, D2, D6)", () => {
   })
 
   it("unten in der Seitenleiste ein Platz für Einstellungen, nur dort (Labor näher an der App, D2)", () => {
-    const withFooter = render({ sidebarFooter: h("div", { "data-footer": true }, "DARSTELLUNG") })
-    const sidebar = withFooter.slice(
-      withFooter.indexOf("data-app-sidebar"),
-      withFooter.indexOf("</nav>", withFooter.indexOf("data-app-sidebar"))
-    )
-    expect(sidebar).toMatch(
-      /data-area="admin"[\s\S]*data-sidebar-footer="true" class="[^"]*mt-auto[^"]*"><div data-footer="true">DARSTELLUNG/
+    const footer = h("div", { "data-footer": true }, "DARSTELLUNG")
+    const withFooter = render({ sidebarFooter: footer })
+    // nach Admin, außerhalb der Navigation (eine Einstellung ist kein Weg), noch in der Seitenleiste
+    expect(withFooter).toMatch(
+      /<div data-app-sidebar="true"[^>]*><nav aria-label="Bereiche"[^>]*>(?:(?!<\/nav>)[\s\S])*data-area="admin"(?:(?!<\/nav>)[\s\S])*<\/nav><div data-sidebar-footer="true" class="[^"]*mt-auto[^"]*"><div data-footer="true">DARSTELLUNG/
     )
     expect(withFooter.match(/DARSTELLUNG/g)).toHaveLength(1)
     expect(html).not.toContain("data-sidebar-footer")
+    // ohne Admin steht der Platz nach Profil
+    expect(render({ isAdmin: false, sidebarFooter: footer })).toMatch(
+      /data-area="profile"(?:(?!<\/nav>)[\s\S])*<\/nav><div data-sidebar-footer="true"/
+    )
   })
 
   it("ohne Admin-Recht kein Admin", () => {
