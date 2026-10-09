@@ -58,7 +58,9 @@ describe("Reiter Überblick", () => {
     expect(html).toMatch(/<button[^>]*data-help="beobachtungen"/)
   })
 
-  it("der Einstieg aus dem Paket und ein Satz zum Schalter", () => {
+  it("der Einstieg aus dem Paket und ein Satz zum Schalter, anfangs zugeklappt", () => {
+    expect(html).toMatch(/<details data-guide-card="true"[^>]*>/)
+    expect(html).not.toMatch(/<details data-guide-card="true"[^>]*\bopen\b/)
     expect([...html.matchAll(/<li data-guide="true"/g)]).toHaveLength(READING_GUIDE.length + 1)
     for (const item of READING_GUIDE) expect(html).toContain(item.title)
   })

@@ -15,7 +15,7 @@ import { isProbeShot, seriesKeyOf } from "../shots"
 import type { SeriesKey } from "../types"
 import type { Layer, ViewState } from "../view-state"
 import { analysisInput, type AnalysisBasis } from "./input"
-import { AnalysisCard, Note } from "./parts"
+import { AnalysisCard, Disclosure, Note } from "./parts"
 import { TAB_CARDS, type AnalysisTab, type CardSpec } from "./tabs"
 
 export type { AnalysisTab } from "./tabs"
@@ -219,11 +219,7 @@ export function AnalysisPanel({
           )}
         </div>
       )}
-      <details data-glossary="true" className="rounded-2xl border border-border bg-card p-4">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
-          <HelpIcon />
-          Glossar: die Begriffe kurz erklärt
-        </summary>
+      <Disclosure data-glossary="true" summary="Glossar: die Begriffe kurz erklärt">
         <dl className="mt-3 grid gap-x-4 gap-y-2 text-[13.5px] sm:grid-cols-[max-content_minmax(0,1fr)]">
           {GLOSSARY.flatMap((entry) => [
             <dt key={`${entry.term}:t`} data-term="true" className="font-semibold">
@@ -234,12 +230,8 @@ export function AnalysisPanel({
             </dd>,
           ])}
         </dl>
-      </details>
-      <details data-fallacies="true" className="rounded-2xl border border-border bg-card p-4">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
-          <HelpIcon />
-          Typische Fehlschlüsse
-        </summary>
+      </Disclosure>
+      <Disclosure data-fallacies="true" summary="Typische Fehlschlüsse">
         <ol className="mt-3 grid list-decimal gap-2 pl-5 text-[13.5px] text-foreground-2">
           {FALLACIES.map((item) => (
             <li key={item.title} data-fallacy="true">
@@ -248,7 +240,7 @@ export function AnalysisPanel({
             </li>
           ))}
         </ol>
-      </details>
+      </Disclosure>
     </section>
   )
 }

@@ -6,7 +6,7 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { observations, type ObservationIcon } from "../observations"
 import { overviewTiles } from "../overview"
-import { AnalysisCard, CaseSafe, Note } from "../parts"
+import { AnalysisCard, CaseSafe, Disclosure, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
 
 /** Symbole der Beobachtungen wie in der Spielwiese (24er-Raster, Linien) */
@@ -48,7 +48,7 @@ function ObservationSymbol({ icon }: { icon: ObservationIcon }) {
   )
 }
 
-/** Überblick: acht Kacheln, Beobachtungen in Worten und der Einstieg „So liest du die Analyse“ */
+/** Überblick: acht Kacheln, Beobachtungen in Worten und der Einstieg „So liest du die Analyse“ (anfangs zu) */
 export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec[] {
   const tiles = overviewTiles(input)
   const sentences = observations(input)
@@ -122,8 +122,9 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
       key: "einstieg",
       wide: true,
       element: (
-        <AnalysisCard title="So liest du die Analyse" ids="Hilfe" explain={explain} onHelp={onHelp}>
-          <ul className="grid gap-2 text-[13.5px] leading-relaxed text-foreground-2 [&_b]:font-semibold [&_b]:text-foreground">
+        // anfangs zu wie Glossar und Fehlschlüsse (User, 9. Oktober 2026)
+        <Disclosure data-guide-card="true" summary="So liest du die Analyse">
+          <ul className="mt-3 grid gap-2 text-[13.5px] leading-relaxed text-foreground-2 [&_b]:font-semibold [&_b]:text-foreground">
             {READING_GUIDE.map((item) => (
               <li key={item.title} data-guide="true">
                 <b>{`${item.title}.`}</b>
@@ -137,7 +138,7 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
               }
             </li>
           </ul>
-        </AnalysisCard>
+        </Disclosure>
       ),
     },
   ]

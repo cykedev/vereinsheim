@@ -55,10 +55,11 @@ describe("Analyse auf dem Telefon", () => {
     expect(result).toContain(`<div id="${controls}" role="region" aria-label="Thema Ergebnis"`)
   })
 
-  it("Glossar und Fehlschlüsse auf dem Telefon so knapp wie am Desktop", () => {
+  it("Einstieg, Glossar und Fehlschlüsse auf dem Telefon so knapp wie am Desktop", () => {
     const summaries = overview.match(/<summary[^>]*>/g)!
-    // nur noch Glossar und Fehlschlüsse; die Karten erklären sich über „?“ (Plan Schritt 4, D3)
-    expect(summaries).toHaveLength(2)
+    // nur Einstieg (seit 9. Oktober 2026 anfangs zu), Glossar und Fehlschlüsse; die Karten erklären sich über „?“
+    // (Plan Schritt 4, D3)
+    expect(summaries).toHaveLength(3)
     for (const summary of summaries) expect(summary).not.toContain("pointer-coarse")
     const help = renderToStaticMarkup(createElement(HelpDetails, { id: "ergebnis", open: false }))
     expect(help).not.toMatch(/<summary[^>]*pointer-coarse/)

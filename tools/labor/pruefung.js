@@ -1274,7 +1274,7 @@ addEventListener("load", async () => {
 
     // Abstände: zwischen Blöcken und Karten 16 px, Karten einer Zeile mit gleicher Unterkante
     const BOXES =
-      'article, details[data-glossary], details[data-fallacies], [data-coverage], div:has(> [data-tile]), section[aria-label="Analyse"] > div:first-child, section[aria-label="Analyse"] > div:has(> [role="radiogroup"])'
+      'article, details[data-guide-card], details[data-glossary], details[data-fallacies], [data-coverage], div:has(> [data-tile]), section[aria-label="Analyse"] > div:first-child, section[aria-label="Analyse"] > div:has(> [role="radiogroup"])'
     const gapProblems = () => {
       const boxes = $$(BOXES, A())
         .filter((e) => e.offsetParent !== null)
@@ -1389,7 +1389,7 @@ addEventListener("load", async () => {
         $$("[data-fallacy]", A()).length === T().FALLACIES.length
     )
     check(
-      "Hilfe: Glossar und Fehlschlüsse anfangs zu",
+      "Hilfe: Einstieg, Glossar und Fehlschlüsse anfangs zu",
       $$("details", A()).every((d) => !d.open)
     )
     await click(button("Erklärungen"), 120)

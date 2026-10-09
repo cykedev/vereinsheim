@@ -5,7 +5,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
 import { formatValue } from "../format"
-import { HelpButton } from "../help/HelpButton"
+import { HelpButton, HelpIcon } from "../help/HelpButton"
 import { helpEntry } from "../help/HelpDetails"
 
 // Gemeinsame Teile der Analyse-Karten (Spielwiese `card`, `kv`, `pill`, `note`, `intervalBar`, `scaleBar`).
@@ -110,6 +110,26 @@ export function Verdict({ tone, children }: { tone: keyof typeof TONES; children
     >
       {children}
     </span>
+  )
+}
+
+/**
+ * Aufklappbarer Kasten der Analyse (Einstieg, Glossar, Fehlschlüsse): anfangs zu, die Zeile mit „?“-Symbol
+ * öffnet ihn. `data-*` kommt an den Kasten, für Prüfungen.
+ */
+export function Disclosure({
+  summary,
+  children,
+  ...data
+}: { summary: string; children: ReactNode } & { [key: `data-${string}`]: string }) {
+  return (
+    <details {...data} className="rounded-2xl border border-border bg-card p-4">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-[7px] text-[13px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
+        <HelpIcon />
+        {summary}
+      </summary>
+      {children}
+    </details>
   )
 }
 
