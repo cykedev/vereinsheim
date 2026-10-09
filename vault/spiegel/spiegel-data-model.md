@@ -58,6 +58,7 @@ type Shot = {
 
 - **Koordinaten** intern in Mikrometern als Ganzzahl. Aus der SSMDB2 (1/100 mm) mal 10. Achsen: x rechts, y oben (in Phase 0 zu bestätigen).
 - **Amtliche Werte** (Ring, Zehntel, Teiler, Innenzehner) so, wie die Quelle sie liefert; die Skala je Quellfeld steht im Adapter ([[spiegel-ingest-pipeline]]).
+- **Amtliche Wertung der Scheibe** aus dem Wertungsmodus ihrer Wertungsschüsse: 1 und 7 Zehntel, 2 und 8 ganze Ringe, alles andere unbekannt. Im Fachkern `PeriodCard.official`; die Scheiben-Liste zeigt sie vorn ([[spiegel-navigation]]). Training nur aus Probe hat keine.
 - **Zeit** in UTC mit Millisekunden; der Rohwert (Ortszeit ohne Zone) bleibt im Rohdatensatz.
 - **Revisionen:** Korrekturen erzeugen eine neue Revision; die vorige bleibt nachvollziehbar.
 - **Herkunft:** Eine Scheibe kann zuerst nur aus dem PDF bestehen (QR-Scan, Brücke gerade aus oder fremde Anlage) und später um Rohdaten ergänzt werden.

@@ -23,9 +23,17 @@ export interface ListRow {
   startedAtMs: number
   /** Training, Wettkampf oder Training nur aus Probe */
   kind: "training" | "competition" | "probe"
-  /** Ergebnis in der Wertung; nur Probe wie Wertung, nicht amtlich; null ohne Wert */
+  /**
+   * Ergebnis in der Wertung, die vorn steht: der amtlichen der Scheibe, ohne sie der Wertung der Liste; nur Probe
+   * rechnet wie Wertung und ist nie amtlich. null ohne Wert
+   */
   result: number | null
-  /** Ø je Schuss in der Wertung */
+  resultScoring: Scoring
+  /** die vordere Wertung ist die amtliche der Scheibe */
+  official: boolean
+  /** Ergebnis in der anderen Wertung, klein daneben */
+  otherResult: number | null
+  /** Ø je Schuss in der Wertung der Liste (eine für alle Zeilen, damit die Spalte vergleichbar bleibt) */
   mean: number | null
   /** Abstand zum Schnitt der bis zu fünf Scheiben davor (Familie und Art), im Ø je Schuss; null bei der ersten */
   delta: { delta: number; n: number } | null
@@ -50,10 +58,38 @@ export interface CardListModel {
   flags: string[]
   /** gezeigte Scheiben */
   cards: number
-  /** Stellen von Ergebnis und Ø in der Wertung (aus der Kennzahl); der Abstand hat die Stellen des Ø */
-  digits: { result: number; mean: number }
+  /** Wertung der Liste: Ø und Abstand, vorn beim Ergebnis ohne amtliche Wertung */
+  scoring: Scoring
+  /** Stellen aus den Kennzahlen: Ergebnis je Wertung, Ø in der Wertung der Liste; der Abstand hat die des Ø */
+  digits: { result: Record<Scoring, number>; mean: number }
   /** der Zeitraum aus „Alle in Scheiben zeigen“; null: alle Abende */
   range: DateRange | null
+}
+
+/** ein Monat der Liste: seine Abende, neueste zuerst, mit Zahl der Scheiben und der Wertungsschüsse */
+export interface Month {
+  /** JJJJ-MM */
+  month: string
+  evenings: Evening[]
+  cards: number
+  shots: number
+}
+
+/** die Abende nach Monat, in ihrer Folge (neueste zuerst); der Monat ist der des Abends */
+export function eveningsByMonth(evenings: readonly Evening[]): Month[] {
+  const months: Month[] = []
+  for (const evening of evenings) {
+    const month = evening.day.slice(0, 7)
+    let current = months.at(-1)
+    if (current?.month !== month) {
+      current = { month, evenings: [], cards: 0, shots: 0 }
+      months.push(current)
+    }
+    current.evenings.push(evening)
+    current.cards += evening.rows.length
+    current.shots += evening.shots
+  }
+  return months
 }
 
 export interface CardListContext {
@@ -99,7 +135,8 @@ export function cardListModel(
       (!range || inRange(card.startedAtMs, range))
   )
 
-  const resultMetric = inScoring(metricByKey("result.decimal")!, context.scoring)
+  const resultMetric = (scoring: Scoring) => inScoring(metricByKey("result.decimal")!, scoring)
+  const other = (scoring: Scoring): Scoring => (scoring === "rings" ? "decimal" : "rings")
   const meanMetric = inScoring(metricByKey("result.decimalMean")!, context.scoring)
   // der Abstand rechnet über die Familie in der Art, auch vor dem Zeitraum (wie die Seite eines Zeitraums)
   const deltas = deltasBefore(
@@ -113,11 +150,16 @@ export function cardListModel(
   for (const card of shown) {
     const day = eveningDay(card.startedAtMs, context.timeZone)
     const shots = matchShots(card.shots)
+    const official = isProbeOnly(card) ? undefined : card.official
+    const resultScoring = official ?? context.scoring
     const row: ListRow = {
       id: card.id,
       startedAtMs: card.startedAtMs,
       kind: card.kind === "competition" ? "competition" : isProbeOnly(card) ? "probe" : "training",
-      result: computeMetric(resultMetric, shots),
+      result: computeMetric(resultMetric(resultScoring), shots),
+      resultScoring,
+      official: official !== undefined,
+      otherResult: computeMetric(resultMetric(other(resultScoring)), shots),
       mean: computeMetric(meanMetric, shots),
       delta: deltas.get(card.id) ?? null,
       shots: shots.length,
@@ -148,7 +190,11 @@ export function cardListModel(
       ...new Set([...ofFamily.flatMap((c) => c.flags ?? []), ...(query.flag ? [query.flag] : [])]),
     ].sort(),
     cards: shown.length,
-    digits: { result: resultMetric.decimals, mean: meanMetric.decimals },
+    scoring: context.scoring,
+    digits: {
+      result: { decimal: resultMetric("decimal").decimals, rings: resultMetric("rings").decimals },
+      mean: meanMetric.decimals,
+    },
     range,
   }
 }

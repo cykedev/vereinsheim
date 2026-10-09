@@ -1,3 +1,4 @@
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import {
   AnalysisPanel,
@@ -70,6 +71,8 @@ export interface OpenedCard {
   target: TargetId
   raw: RawShot[]
   route: CardRoute
+  /** amtliche Wertung der Scheibe, als Hinweis am Schalter */
+  official?: Scoring
 }
 
 export interface CardViewProps {
@@ -265,7 +268,7 @@ export function CardView({
   const scoringSwitch = (
     <ScoringSwitch
       scoring={state.scoring}
-      official={opened ? undefined : sample.official}
+      official={opened ? opened.official : sample.official}
       onChange={(scoring) => {
         store.set("scoring", scoring)
         dispatch({ type: "setScoring", scoring })

@@ -74,6 +74,12 @@ export function formatTimeOfDay(date: Date, timeZone: string): string {
   return dateTimeFormat({ hour: "2-digit", minute: "2-digit" }, timeZone).format(date)
 }
 
+/** "Sa 26.09." — Wochentag mit Tag und Monat, unter einem Monatskopf (Spiegel, Scheiben-Liste). */
+export function formatWeekdayDay(date: Date, timeZone: string): string {
+  const weekday = dateTimeFormat({ weekday: "short" }, timeZone).format(date).replace(/\.$/, "")
+  return `${weekday} ${formatShortDay(date, timeZone)}`
+}
+
 /** "09.09." — Diagramm-Achse mit Tagesauflösung. */
 export function formatShortDay(date: Date, timeZone: string): string {
   return dateTimeFormat({ day: "2-digit", month: "2-digit" }, timeZone).format(date)

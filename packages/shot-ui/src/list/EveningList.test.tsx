@@ -44,17 +44,37 @@ const text = (html: string) =>
     .replace(/\s+/g, " ")
     .trim()
 
-describe("Scheiben-Liste nach Abend (Plan N2, D2–D6)", () => {
+describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines Zeitraums)", () => {
   const html = render()
 
-  it("ein Abschnitt je Abend mit Anker, neueste zuerst, Kopf mit Wochentag, Zahl und Schüssen", () => {
-    expect([...html.matchAll(/data-evening="([^"]+)"/g)].map((m) => m[1])).toEqual([
+  it("je Monat eine Karte mit Kopf und Tabelle; je Abend eine Gruppe mit Anker, das Datum einmal", () => {
+    expect(html).toMatch(/<section data-month="2026-09"[^>]*aria-labelledby="month-2026-09"/)
+    expect(html).toMatch(/<h2 id="month-2026-09" class="font-display[^"]*">September 2026<\/h2>/)
+    expect(text(html)).toContain("September 2026 3 Scheiben · 6 Schuss")
+    expect(html).toMatch(/rounded-2xl border border-border bg-card[^"]*"><table/)
+    expect([...html.matchAll(/<tbody id="([^"]+)" data-evening="\1"/g)].map((m) => m[1])).toEqual([
       "2026-09-29",
       "2026-09-27",
     ])
-    expect(html).toMatch(/<section[^>]*id="2026-09-29"[^>]*data-evening="2026-09-29"/)
-    expect(text(html)).toContain("Di 29.09.2026 2 Scheiben · 5 Schuss")
-    expect(text(html)).toContain("So 27.09.2026 1 Scheibe · 1 Schuss")
+    // das Datum steht einmal je Abend, jede Zeile hat ihre Zelle (kein rowSpan: das Hervorheben bleibt ein
+    // Rechteck); keine Zahl der Scheiben und Schüsse je Abend; der Hinweis rechtsbündig in eigener Zeile
+    expect(html).toMatch(/<th scope="row"[^>]*>Di 29\.09\.<\/th>/)
+    expect(html).toMatch(/<th scope="row"[^>]*>So 27\.09\.<\/th>/)
+    expect(html.match(/scope="row"/g)).toHaveLength(2)
+    expect(html).not.toContain("rowSpan")
+    expect(html).toMatch(/<tr data-card-row="b"[^>]*><td class="px-2 py-1"><\/td>/)
+    expect(html).toMatch(/<td colSpan="8" class="[^"]*text-right"><button[^>]*data-other-family/)
+    expect(text(html)).not.toMatch(/\d Scheiben? · \d+ Schuss auch/)
+    for (const head of [
+      "Datum",
+      "Uhrzeit",
+      "Art",
+      "Ergebnis",
+      "Ø je Schuss",
+      "zum Schnitt",
+      "Schuss",
+    ])
+      expect(html, head).toMatch(new RegExp(`<th scope="col"[^>]*>${head}</th>`))
   })
 
   it("Mischabend: der Hinweis nennt die andere Familie mit Namen und Zahl", () => {
@@ -62,30 +82,42 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6)", () => {
     expect(html.match(/data-other-family=/g)).toHaveLength(1)
   })
 
-  it("Zeilen in zeitlicher Folge: Uhrzeit, Art, Ergebnis, Ø, Abstand, Schuss; die Zeile ist der Knopf", () => {
+  it("Zeilen in zeitlicher Folge: Uhrzeit, Art, Ergebnis, Ø, Abstand, Schuss; die kleine Scheibe ist der Knopf", () => {
     expect([...html.matchAll(/data-card-row="([^"]+)"/g)].map((m) => m[1])).toEqual(["a", "b", "d"])
-    expect(html).toMatch(/<button type="button" data-card-row="a"/)
+    expect(html).toMatch(
+      /<tr data-card-row="a"[^>]*><th[^>]*>[^<]*<\/th><td[^>]*><button type="button" aria-label=/
+    )
     const rowA = html.slice(html.indexOf('data-card-row="a"'), html.indexOf('data-card-row="b"'))
     expect(text(rowA)).toContain("18:30 T")
     expect(rowA).toMatch(/data-result[^>]*>30,0</)
+    expect(rowA).toMatch(/data-other-result[^>]*>29</)
     expect(rowA).toMatch(/data-mean[^>]*>10,00</)
     expect(rowA).toContain("<svg")
     // vor b liegen d (9,9) und a (10,0): 10,2 − 9,95 = +0,25; vor a nur d: +0,10
     const rowB = html.slice(html.indexOf('data-card-row="b"'))
     expect(rowB).toMatch(/data-delta[^>]*>\+0,25</)
     expect(rowA).toMatch(/data-delta[^>]*>\+0,10</)
-    // der Knopf nennt die Werte mit ihrer Bedeutung, die Spaltenköpfe sind nur Bild
+    // der Knopf nennt die Werte mit ihrer Bedeutung und dem Datum
     expect(html).toContain(
-      'aria-label="18:30, Training, Ergebnis 30,0, Ø 10,00 je Schuss, +0,10 zum Schnitt davor, 3 Schuss"'
+      'aria-label="Di 29.09.2026, 18:30, Training, Ergebnis 30,0 in Zehnteln, 29 in ganzen Ringen, Ø 10,00 je Schuss, +0,10 zum Schnitt davor, 3 Schuss"'
     )
-    expect(html).toMatch(/<div aria-hidden="true"[^>]*>(?:<span[^>]*>[^<]*<\/span>){7}<\/div>/)
-    // der Abend ist eine Überschrift zweiter Ebene unter dem Kopf der Seite
-    expect(html).toMatch(/<h2 id="2026-09-29-title"/)
   })
 
   it("in ganzen Ringen das ganzzahlige Ergebnis; ein Abstand unter null mit echtem Minus", () => {
     expect(render("rings")).toMatch(/data-card-row="a"[\s\S]*?data-result[^>]*>29</)
-    expect(render("rings")).toContain("Ergebnis 29, Ø")
+    expect(render("rings")).toContain("Ergebnis 29 in ganzen Ringen, 30,0 in Zehnteln, Ø")
+  })
+
+  it("die amtliche Wertung steht vorn und heißt so", () => {
+    const official = render("decimal", [
+      {
+        card: periodCard("o", 1, [100, 102, 98], { official: "rings", startedAtMs: at(16, 30) }),
+        family: "lg-freihand",
+      },
+    ])
+    expect(official).toMatch(/data-result[^>]*>29</)
+    expect(official).toMatch(/data-other-result[^>]*>30,0</)
+    expect(official).toContain("Ergebnis 29 amtlich in ganzen Ringen, 30,0 in Zehnteln")
     const lower = render("decimal", [
       { card: periodCard("x", 2, [103]), family: "lg-freihand" },
       { card: periodCard("y", 1, [100]), family: "lg-freihand" },
@@ -95,7 +127,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6)", () => {
 
   it("Telefon: Uhrzeit, Abstand und Schuss erst ab 32rem Breite (Container), keine Palette-Klassen", () => {
     expect(html).toContain("@container")
-    expect(html).toContain("hidden @min-[32rem]:block")
+    expect(html.match(/hidden @min-\[32rem\]:table-cell/g)).toHaveLength(3 + 3 * 3)
     expect(html).not.toMatch(/\b(text|bg|border)-(red|green|blue|emerald|amber|slate|gray)-\d/)
     expect(html).not.toContain("dark:")
   })

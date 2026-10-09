@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 import { listOnEvening } from "../nav/navigate"
 import { DEFAULT_LIST, type ListQuery } from "../nav/routes"
 import { NOW, periodCard, TZ } from "../period/testSeason"
-import { cardListModel, eveningDay, type ListInputCard } from "./evenings"
+import { cardListModel, eveningDay, eveningsByMonth, type ListInputCard } from "./evenings"
 
 const at = (hourUtc: number, minute = 0, day = 29) => Date.UTC(2026, 8, day, hourUtc, minute)
 const lg = (card: PeriodCard): ListInputCard => ({ card, family: "lg-freihand" })
@@ -176,6 +176,20 @@ describe("Scheiben-Liste nach dem Review (N2)", () => {
     ])
   })
 
+  it("Monate aus den Abenden, neueste zuerst, mit Zahl der Scheiben und Schüsse", () => {
+    const cards = [
+      lg(periodCard("s1", 2, [100, 101])),
+      lg(periodCard("s2", 1, [100])),
+      lg(periodCard("a1", 40, [99, 98, 97])),
+    ]
+    const months = eveningsByMonth(cardListModel(cards, query(), context).evenings)
+    expect(months.map((m) => [m.month, m.evenings.map((e) => e.day), m.cards, m.shots])).toEqual([
+      ["2026-09", ["2026-09-29", "2026-09-28"], 2, 3],
+      ["2026-08", ["2026-08-21"], 1, 3],
+    ])
+    expect(eveningsByMonth([])).toEqual([])
+  })
+
   it("gleiche Startzeit: nach Id, unabhängig von der Reihenfolge der Eingabe", () => {
     const same = at(16)
     const model = cardListModel(
@@ -189,11 +203,48 @@ describe("Scheiben-Liste nach dem Review (N2)", () => {
     expect(model.evenings[0].rows.map((r) => r.id)).toEqual(["a2", "b2"])
   })
 
-  it("Stellen aus der Kennzahl der Wertung", () => {
-    expect(cardListModel(INPUT, query(), context).digits).toEqual({ result: 1, mean: 2 })
-    expect(cardListModel(INPUT, query(), { ...context, scoring: "rings" }).digits).toEqual({
-      result: 0,
-      mean: 2,
+  it("Stellen aus den Kennzahlen: Ergebnis je Wertung, Ø in der Wertung der Liste", () => {
+    const decimal = cardListModel(INPUT, query(), context)
+    expect(decimal.digits).toEqual({ result: { decimal: 1, rings: 0 }, mean: 2 })
+    expect(decimal.scoring).toBe("decimal")
+    expect(cardListModel(INPUT, query(), { ...context, scoring: "rings" }).scoring).toBe("rings")
+  })
+
+  it("beide Ergebnisse: vorn die amtliche Wertung der Scheibe, ohne sie die der Liste", () => {
+    // 100 + 102 + 98: 30,0 in Zehnteln, 10 + 10 + 9 = 29 in ganzen Ringen
+    const cards = [
+      lg(periodCard("r", 3, [100, 102, 98], { official: "rings" })),
+      lg(periodCard("z", 2, [100, 102, 98], { official: "decimal" })),
+      lg(periodCard("u", 1, [100, 102, 98])),
+      lg(periodCard("p", 0, [100, 102, 98], { probe: true, official: "rings" })),
+    ]
+    const rows = (scoring: "decimal" | "rings") =>
+      cardListModel(cards, query(), { ...context, scoring }).evenings.flatMap((e) => e.rows)
+    const byId = (scoring: "decimal" | "rings", id: string) =>
+      rows(scoring).find((r) => r.id === id)!
+    // amtlich ganze Ringe: 29 vorn, auch wenn die Liste Zehntel zeigt; der Ø bleibt in der Wertung der Liste
+    expect(byId("decimal", "r")).toMatchObject({
+      result: 29,
+      resultScoring: "rings",
+      official: true,
+      mean: 10,
     })
+    expect(byId("decimal", "r").otherResult).toBeCloseTo(30.0, 9)
+    // amtlich Zehntel: 30,0 vorn, auch wenn die Liste ganze Ringe zeigt
+    expect(byId("rings", "z")).toMatchObject({
+      resultScoring: "decimal",
+      official: true,
+      otherResult: 29,
+    })
+    expect(byId("rings", "z").result).toBeCloseTo(30.0, 9)
+    // unbekannt: die Wertung der Liste vorn
+    expect(byId("rings", "u")).toMatchObject({
+      result: 29,
+      resultScoring: "rings",
+      official: false,
+    })
+    expect(byId("decimal", "u")).toMatchObject({ resultScoring: "decimal", otherResult: 29 })
+    // nur Probe ist nie amtlich, auch wenn die Quelle eine Wertung nennt
+    expect(byId("decimal", "p")).toMatchObject({ resultScoring: "decimal", official: false })
   })
 })

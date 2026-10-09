@@ -117,4 +117,19 @@ describe("Saison im Labor (Plan L3, D17)", () => {
     for (const c of mixedTraining)
       expect(new Date(`${day(c)}T12:00:00Z`).getUTCDay(), day(c)).toBe(6)
   })
+
+  it("amtliche Wertung: Luftpistole und Wettkampf in ganzen Ringen, Training Luftgewehr in Zehnteln, nur Probe ohne", () => {
+    const probeOnly = (c: (typeof lg)[number]) => c.card.shots.every((s) => s.kind === "probe")
+    for (const c of season()) {
+      const expected = probeOnly(c)
+        ? undefined
+        : c.family === "lp-freihand" || c.card.kind === "competition"
+          ? "rings"
+          : "decimal"
+      expect(c.card.official, c.id).toBe(expected)
+    }
+    expect(lg.filter((c) => c.card.official === "decimal").length).toBeGreaterThan(40)
+    expect(lg.filter((c) => c.card.official === "rings")).toHaveLength(11)
+    expect(lg.filter((c) => c.card.official === undefined).length).toBeGreaterThan(3)
+  })
 })

@@ -1,15 +1,28 @@
 "use client"
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
-import { formatTimeOfDay, formatWeekdayDate, zonedDayStartMs } from "@vereinsheim/lib/format"
+import {
+  formatMonthYear,
+  formatTimeOfDay,
+  formatWeekdayDate,
+  formatWeekdayDay,
+  zonedDayStartMs,
+} from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue } from "../format"
 import { groupView } from "../geometry"
 import { hasPosition, matchShots } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
-import type { CardListModel, ListRow } from "./evenings"
+import { eveningsByMonth, type CardListModel, type ListRow } from "./evenings"
+
+/** die Wertung im Namen der Zeile */
+const SCORING_IN: Readonly<Record<Scoring, string>> = {
+  decimal: "in Zehnteln",
+  rings: "in ganzen Ringen",
+}
 
 const KIND: Readonly<Record<ListRow["kind"], { short: string; text: string }>> = {
   training: { short: "T", text: "Training" },
@@ -17,13 +30,16 @@ const KIND: Readonly<Record<ListRow["kind"], { short: string; text: string }>> =
   probe: { short: "P", text: "Training nur Probe" },
 }
 
-/** Spalten: auf dem Telefon kleine Scheibe, Art, Ergebnis, Ø; ab 32rem Breite dazu Uhrzeit, Abstand, Schuss (D5) */
-const COLUMNS =
-  "grid grid-cols-[2.5rem_1.5rem_minmax(0,1fr)_3.5rem] items-center gap-x-3 @min-[32rem]:grid-cols-[2.5rem_3rem_1.5rem_minmax(0,1fr)_3.5rem_4.5rem_3rem]"
-const WIDE = "hidden @min-[32rem]:block"
+/** auf dem Telefon ohne Uhrzeit, Abstand und Schusszahl; ab 32rem Breite der Liste (Container) mit (D5) */
+const WIDE = "hidden @min-[32rem]:table-cell"
+const CELL = "px-2 py-1"
 
 /** die Schüsse der kleinen Scheibe: die Wertung, bei nur Probe die Probe wie Wertung, nur mit Lage */
 const placedShots = (card: PeriodCard) => matchShots(card.shots).filter(hasPosition)
+
+/** Mittag des Tages: das Datum eines Abends, unabhängig von der Zeitumstellung */
+const noonOf = (day: string, timeZone: string) =>
+  new Date(zonedDayStartMs(day, timeZone) + 12 * 3_600_000)
 
 export interface EveningListProps {
   model: CardListModel
@@ -42,9 +58,10 @@ export interface EveningListProps {
 }
 
 /**
- * Scheiben-Liste nach Abend (Plan N2, D1–D6): je Abend ein Kopf mit Wochentag, Datum, Zahl der Scheiben und
- * Schüsse und dem Hinweis auf andere Familien, darunter alle Scheiben in zeitlicher Folge. Der Abend trägt seinen
- * ISO-Tag als Anker. Die ganze Zeile öffnet die Scheibe.
+ * Scheiben-Liste nach Abend (Plan N2, D1–D6), im Stil der Liste eines Zeitraums: je Monat eine Karte mit Kopf und
+ * einer Tabelle, je Abend eine Gruppe von Zeilen (das Datum steht einmal, die Scheiben in zeitlicher Folge), dazu
+ * der Hinweis auf andere Familien des Abends. Die Gruppe trägt den ISO-Tag als Anker. Die ganze Zeile öffnet die
+ * Scheibe; ihr Knopf ist die kleine Scheibe und trägt die Werte der Zeile als Namen.
  */
 export function EveningList({
   model,
@@ -65,12 +82,21 @@ export function EveningList({
   }
   const nameOf = (family: string) => families.find((f) => f.value === family)?.label ?? family
   const { digits } = model
-  // die Spaltenköpfe sind nur Bild; der Knopf trägt die Werte mit ihrer Bedeutung als Namen (Review N2)
-  const rowName = (row: ListRow, time: string) =>
+  const otherScoring = (row: ListRow): Scoring =>
+    row.resultScoring === "rings" ? "decimal" : "rings"
+  const resultText = (value: number | null, scoring: Scoring) =>
+    value === null ? "–" : formatValue(value, digits.result[scoring])
+  const rowName = (row: ListRow, day: string, time: string) =>
     [
+      formatWeekdayDate(noonOf(day, timeZone), timeZone),
       time,
       KIND[row.kind].text,
-      row.result === null ? "ohne Ergebnis" : `Ergebnis ${formatValue(row.result, digits.result)}`,
+      row.result === null
+        ? "ohne Ergebnis"
+        : `Ergebnis ${resultText(row.result, row.resultScoring)}${row.official ? " amtlich" : ""} ${SCORING_IN[row.resultScoring]}`,
+      row.otherResult === null
+        ? null
+        : `${resultText(row.otherResult, otherScoring(row))} ${SCORING_IN[otherScoring(row)]}`,
       row.mean === null ? null : `Ø ${formatValue(row.mean, digits.mean)} je Schuss`,
       row.delta ? `${formatSigned(row.delta.delta, digits.mean)} zum Schnitt davor` : null,
       `${row.shots} Schuss`,
@@ -79,100 +105,174 @@ export function EveningList({
       .join(", ")
 
   return (
-    <div data-evening-list className={cn("@container grid gap-6", className)}>
-      <div aria-hidden="true" className={cn(COLUMNS, "px-2 text-xs text-muted-foreground")}>
-        <span />
-        <span className={WIDE}>Uhrzeit</span>
-        <span>Art</span>
-        <span>Ergebnis</span>
-        <span className="text-right">Ø</span>
-        <span className={cn(WIDE, "text-right")}>zum Schnitt</span>
-        <span className={cn(WIDE, "text-right")}>Schuss</span>
-      </div>
-      {model.evenings.map((evening) => (
-        <section
-          key={evening.day}
-          id={evening.day}
-          data-evening={evening.day}
-          aria-labelledby={`${evening.day}-title`}
-          className="grid scroll-mt-14 gap-1.5"
-        >
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border px-2 pb-1.5">
-            <h2 id={`${evening.day}-title`} className="text-[15px] font-semibold tracking-tight">
-              {formatWeekdayDate(
-                new Date(zonedDayStartMs(evening.day, timeZone) + 12 * 3_600_000),
-                timeZone
-              )}
-            </h2>
-            <p className="text-[13px] text-muted-foreground">
-              {`${evening.rows.length} ${evening.rows.length === 1 ? "Scheibe" : "Scheiben"} · ${evening.shots} Schuss`}
-            </p>
-            {evening.others.map((other) => (
-              <button
-                key={other.family}
-                type="button"
-                data-other-family={other.family}
-                onClick={() => onFamily(other.family, evening.day)}
-                className="cursor-pointer rounded-full px-2 py-0.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
+    <div data-evening-list className={cn("@container grid gap-7", className)}>
+      {eveningsByMonth(model.evenings).map((month) => {
+        const title = formatMonthYear(noonOf(`${month.month}-15`, timeZone), timeZone)
+        return (
+          <section
+            key={month.month}
+            data-month={month.month}
+            aria-labelledby={`month-${month.month}`}
+            className="grid gap-2"
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1">
+              <h2
+                id={`month-${month.month}`}
+                className="font-display text-xl font-bold tracking-tight"
               >
-                {`auch ${other.count} ${other.count === 1 ? "Scheibe" : "Scheiben"} ${nameOf(other.family)} ›`}
-              </button>
-            ))}
-          </div>
-          <ol className="grid gap-0.5">
-            {evening.rows.map((row) => {
-              const card = cards.get(row.id)
-              const placed = card ? placedShots(card) : []
-              const kind = KIND[row.kind]
-              const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
-              return (
-                <li key={row.id}>
-                  <button
-                    type="button"
-                    data-card-row={row.id}
-                    aria-label={rowName(row, time)}
-                    onClick={() => onOpen(row.id)}
-                    className={cn(
-                      COLUMNS,
-                      "w-full cursor-pointer rounded-lg px-2 py-1.5 text-left text-[13px] tabular-nums hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
-                    )}
-                  >
-                    {placed.length ? (
-                      <MiniTarget
-                        target={target}
-                        view={groupView(
-                          target,
-                          placed.map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
-                        )}
-                        shots={placed}
-                        className="size-10"
-                      />
-                    ) : (
-                      <span className="size-10" aria-hidden="true" />
-                    )}
-                    <span className={cn(WIDE, "text-foreground-2")}>{time}</span>
-                    <span className="text-muted-foreground" title={kind.text}>
-                      {kind.short}
-                    </span>
-                    <span data-result className="font-semibold">
-                      {row.result === null ? "–" : formatValue(row.result, digits.result)}
-                    </span>
-                    <span data-mean className="text-right">
-                      {row.mean === null ? "–" : formatValue(row.mean, digits.mean)}
-                    </span>
-                    <span data-delta className={cn(WIDE, "text-right text-foreground-2")}>
-                      {row.delta ? formatSigned(row.delta.delta, digits.mean) : "–"}
-                    </span>
-                    <span className={cn(WIDE, "text-right text-muted-foreground")}>
-                      {row.shots}
-                    </span>
-                  </button>
-                </li>
-              )
-            })}
-          </ol>
-        </section>
-      ))}
+                {title}
+              </h2>
+              <p className="text-[13px] text-muted-foreground">
+                {`${month.cards} ${month.cards === 1 ? "Scheibe" : "Scheiben"} · ${month.shots} Schuss`}
+              </p>
+            </div>
+            <div className="overflow-x-auto rounded-2xl border border-border bg-card p-2">
+              <table className="w-full border-collapse text-[13px] tabular-nums">
+                <caption className="sr-only">{`Scheiben im ${title} nach Abend, neueste zuerst`}</caption>
+                <thead className="text-xs text-muted-foreground">
+                  <tr>
+                    <th scope="col" className={cn(CELL, "py-1.5 text-left font-medium")}>
+                      Datum
+                    </th>
+                    <th scope="col" className="w-10 py-1.5">
+                      <span className="sr-only">Scheibe</span>
+                    </th>
+                    <th scope="col" className={cn(CELL, WIDE, "py-1.5 text-left font-medium")}>
+                      Uhrzeit
+                    </th>
+                    <th scope="col" className="px-1 py-1.5 text-center font-medium">
+                      Art
+                    </th>
+                    <th scope="col" className={cn(CELL, "py-1.5 text-left font-medium")}>
+                      Ergebnis
+                    </th>
+                    <th scope="col" className={cn(CELL, "py-1.5 text-right font-medium")}>
+                      Ø je Schuss
+                    </th>
+                    <th
+                      scope="col"
+                      title="Abstand zum Schnitt der bis zu fünf Scheiben davor"
+                      className={cn(CELL, WIDE, "py-1.5 text-right font-medium")}
+                    >
+                      zum Schnitt
+                    </th>
+                    <th scope="col" className={cn(CELL, WIDE, "py-1.5 text-right font-medium")}>
+                      Schuss
+                    </th>
+                  </tr>
+                </thead>
+                {month.evenings.map((evening) => {
+                  return (
+                    <tbody
+                      key={evening.day}
+                      id={evening.day}
+                      data-evening={evening.day}
+                      className="scroll-mt-14 border-t border-border"
+                    >
+                      {evening.rows.map((row, i) => {
+                        const card = cards.get(row.id)
+                        const placed = card ? placedShots(card) : []
+                        const kind = KIND[row.kind]
+                        const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
+                        return (
+                          <tr
+                            key={row.id}
+                            data-card-row={row.id}
+                            onClick={() => onOpen(row.id)}
+                            className="cursor-pointer hover:bg-surface-2"
+                          >
+                            {/* jede Zeile hat ihre Datumszelle (das Hervorheben bleibt ein Rechteck), das Datum
+                                steht nur in der ersten des Abends (User, 9. Oktober 2026) */}
+                            {i === 0 ? (
+                              <th scope="row" className={cn(CELL, "text-left font-semibold")}>
+                                {formatWeekdayDay(noonOf(evening.day, timeZone), timeZone)}
+                              </th>
+                            ) : (
+                              <td className={CELL} />
+                            )}
+                            <td className="py-1">
+                              <button
+                                type="button"
+                                aria-label={rowName(row, evening.day, time)}
+                                className="block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-ring"
+                              >
+                                {placed.length ? (
+                                  <MiniTarget
+                                    target={target}
+                                    view={groupView(
+                                      target,
+                                      placed.map((s) => ({
+                                        xUm: s.xUm as number,
+                                        yUm: s.yUm as number,
+                                      }))
+                                    )}
+                                    shots={placed}
+                                    className="size-8"
+                                  />
+                                ) : (
+                                  <span className="block size-8" aria-hidden="true" />
+                                )}
+                              </button>
+                            </td>
+                            <td className={cn(CELL, WIDE, "text-foreground-2")}>{time}</td>
+                            <td
+                              className="px-1 py-1 text-center text-muted-foreground"
+                              title={kind.text}
+                            >
+                              {kind.short}
+                            </td>
+                            <td className={CELL}>
+                              <span className="flex items-baseline gap-1.5 whitespace-nowrap">
+                                <span data-result className="font-semibold">
+                                  {resultText(row.result, row.resultScoring)}
+                                </span>
+                                {row.otherResult !== null && (
+                                  <span data-other-result className="text-xs text-muted-foreground">
+                                    {resultText(row.otherResult, otherScoring(row))}
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                            <td data-mean className={cn(CELL, "text-right")}>
+                              {row.mean === null ? "–" : formatValue(row.mean, digits.mean)}
+                            </td>
+                            <td
+                              data-delta
+                              className={cn(CELL, WIDE, "text-right text-foreground-2")}
+                            >
+                              {row.delta ? formatSigned(row.delta.delta, digits.mean) : "–"}
+                            </td>
+                            <td className={cn(CELL, WIDE, "text-right text-muted-foreground")}>
+                              {row.shots}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                      {evening.others.length > 0 && (
+                        <tr>
+                          <td colSpan={8} className="px-1 pb-1.5 text-right">
+                            {evening.others.map((other) => (
+                              <button
+                                key={other.family}
+                                type="button"
+                                data-other-family={other.family}
+                                onClick={() => onFamily(other.family, evening.day)}
+                                className="cursor-pointer rounded-full px-2 py-0.5 text-xs font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
+                              >
+                                {`auch ${other.count} ${other.count === 1 ? "Scheibe" : "Scheiben"} ${nameOf(other.family)} ›`}
+                              </button>
+                            ))}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  )
+                })}
+              </table>
+            </div>
+          </section>
+        )
+      })}
     </div>
   )
 }

@@ -37,7 +37,9 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   Scheiben-Liste (`ListView`). Aus der Liste öffnet eine Zeile die Scheibe mit der Liste als Herkunft, „Zurück zu
   „Scheiben““ stellt Filter und Scrollstelle wieder her; „Verlauf dieser Filter“ und „Alle in Scheiben zeigen“
   wechseln zwischen Liste und Zeitraum. Die Liste hat keine eigene Wertung: Sie nimmt die des Geräts (`scoring` im
-  Speicher), die Scheibe und Zeitraum beim Umschalten schreiben. `App` hält, was beide teilen
+  Speicher), die Scheibe und Zeitraum beim Umschalten schreiben. Die Familie teilen Liste und Zeitraum
+  (`changeList`, `changePeriod` in `App`): wer sie in einem wählt, findet sie im anderen wieder, auch über die Leiste
+  oben; Filter, Zeitraum und Scrollstelle bleiben je Ansicht. `App` hält, was beide teilen
   (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
   Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums. „Scheibe öffnen“ zeigt eine
   Scheibe der Saison in „Scheibe“, „Zurück zu „…““ (nach dem Zeitraum benannt) stellt Zeitraum, Vergleich, Wahl und
@@ -50,7 +52,8 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
 - **Saison** (`src/season.ts`): erfunden, Seed 20261009; Luftgewehr 81 Scheiben vom 6. April bis 27. September
   2026 (Formknick im Juni σ 1,9 mm, neue Munition ab 1. August σ 1,3 mm, Urlaub 3.–16. August, eine Scheibe
   `nur-pdf`, Trainings nur aus Probe), Luftpistole 44 (seit N2 fünf mehr aus eigenem Zufall: an zwei Abenden zwei
-  Scheiben, drei Samstage mit Luftgewehr am selben Abend; das Luftgewehr bleibt gleich, Fingerabdruck im Test); benannt „Vorbereitung Landesmeisterschaft“ und „Neue
+  Scheiben, drei Samstage mit Luftgewehr am selben Abend; das Luftgewehr bleibt gleich, Fingerabdruck im Test); amtliche Wertung je Scheibe (Luftpistole und Wettkampf ganze Ringe, Training Luftgewehr Zehntel, nur
+  Probe keine); benannt „Vorbereitung Landesmeisterschaft“ und „Neue
   Munition“; „jetzt“ ist der 30. September 2026, 12:00 Uhr MESZ (die Saison liegt ganz in der Sommerzeit).
 - **Seite aus `CardPage`** (Plan Schritt 4): Labor-Kopf mit Scheibe, Beispiel und „Darstellung“ (nicht „Thema“,
   das ist die Reiterleiste), darunter die Seite einer Scheibe wie in der App. Was nur das Labor hat

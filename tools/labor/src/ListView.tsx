@@ -95,20 +95,18 @@ export function ListView({
             />
           }
         />
-        <div className="rounded-2xl border border-border bg-card p-2">
-          <EveningList
-            model={model}
-            cards={cards}
-            target={TARGETS[targetOfFamily(family)]}
-            families={FAMILIES}
-            timeZone={SEASON_TIME_ZONE}
-            onOpen={(id) => {
-              const card = byId.get(id)
-              if (card) onOpen(card)
-            }}
-            onFamily={onFamily}
-          />
-        </div>
+        <EveningList
+          model={model}
+          cards={cards}
+          target={TARGETS[targetOfFamily(family)]}
+          families={FAMILIES}
+          timeZone={SEASON_TIME_ZONE}
+          onOpen={(id) => {
+            const card = byId.get(id)
+            if (card) onOpen(card)
+          }}
+          onFamily={onFamily}
+        />
       </section>
     </div>
   )

@@ -2565,22 +2565,30 @@ addEventListener("load", async () => {
         const delta = before.length
           ? meanValues[i].value - before.reduce((s, v) => s + v.value, 0) / before.length
           : null
-        const result =
-          row.kind === "probe"
-            ? null
-            : tools.computeMetric(
-                tools.inScoring(tools.metricByKey("result.decimal"), "decimal"),
-                card.shots
-              )
+        // vorn die amtliche Wertung, ohne sie die der Liste (hier Zehntel), daneben die andere; nur Probe prüft der
+        // Test des Modells
+        const front = card.official ?? "decimal"
+        const back = front === "rings" ? "decimal" : "rings"
+        const resultIn = (scoring) =>
+          tools.computeMetric(
+            tools.inScoring(tools.metricByKey("result.decimal"), scoring),
+            card.shots
+          )
+        const shown = (scoring) => nf(resultIn(scoring), scoring === "rings" ? 0 : 1)
         const ok =
-          (row.kind === "probe" || txt($("[data-result]", el)) === nf(result, 1)) &&
+          (row.kind === "probe" ||
+            (txt($("[data-result]", el)) === shown(front) &&
+              txt($("[data-other-result]", el)) === shown(back))) &&
           txt($("[data-mean]", el)) === nf(meanValues[i].value, 2) &&
           txt($("[data-delta]", el)) === (delta === null ? "–" : signed2(delta))
         if (!ok) wrongRows.push(row.id)
       }
+      const shownRows = evenings.slice(0, 12).flatMap((e) => e.rows)
       check(
-        "Liste: Ergebnis, Ø und Abstand je Zeile wie im Fachkern",
-        wrongRows.length === 0,
+        "Liste: Ergebnis in beiden Wertungen (amtlich vorn), Ø und Abstand je Zeile wie im Fachkern",
+        wrongRows.length === 0 &&
+          shownRows.some((r) => r.resultScoring === "rings" && r.official) &&
+          shownRows.some((r) => r.resultScoring === "decimal" && r.official),
         wrongRows.join(" ")
       )
       const listAddress = addr()
@@ -2628,7 +2636,8 @@ addEventListener("load", async () => {
       )
       await click(button("Alle", $("[data-list-controls]")), 300)
       // Öffnen und zurück: Filter und Scrollstelle bleiben
-      const openId = Li().model.evenings[6].rows[0].id
+      // ein Abend weit unten, damit die Seite scrollen muss (das Fenster der Prüfung ist über 2000 px hoch)
+      const openId = Li().model.evenings[40].rows[0].id
       $(`[data-card-row="${openId}"]`).scrollIntoView({ block: "center" })
       await wait(50)
       const listY = window.scrollY
@@ -2670,16 +2679,21 @@ addEventListener("load", async () => {
           Li().model.evenings.every((e) => e.day >= "2026-08-01"),
         `${txt($("[data-range-chip]"))} · ${addr()}`
       )
-      const ringResults = $$("[data-card-row] [data-result]").map(txt)
+      // ohne amtliche Wertung (nur Probe) steht die der Liste vorn: hier ganze Ringe
+      const probeFront = Li()
+        .model.evenings.flatMap((e) => e.rows)
+        .filter((r) => !r.official)
+        .map((r) => txt($(`[data-card-row="${r.id}"] [data-result]`)))
+      const listScoring = Li().model.scoring
       await click(button("Verlauf dieser Filter"), 400)
       check(
         "Liste: die Wertung des Zeitraums gilt in der Liste und im Rückweg „Verlauf dieser Filter“",
-        Li().model.digits.result === 0 &&
-          ringResults.length > 0 &&
-          ringResults.every((r) => r === "–" || /^\d+$/.test(r)) &&
+        listScoring === "rings" &&
+          probeFront.length > 0 &&
+          probeFront.every((r) => r === "–" || /^\d+$/.test(r)) &&
           P()?.state.scoring === "rings" &&
           addr().includes("scoring=rings"),
-        `${ringResults.slice(0, 3).join(" ")} · ${addr()}`
+        `${probeFront.slice(0, 3).join(" ")} · ${addr()}`
       )
       await click(button("Zehntel"), 300)
       await click(button("Alle in Scheiben zeigen"), 400)
@@ -2688,6 +2702,19 @@ addEventListener("load", async () => {
         "Liste: „×“ entfernt den Zeitraum",
         !$("[data-range-chip]") && addr() === listAddress,
         addr()
+      )
+      // die Disziplin bleibt beim Wechsel über die Leiste oben, in beide Richtungen (User, 9. Oktober 2026)
+      await click(button("Luftpistole", $("[data-list-controls]")), 300)
+      await click(button("Zeitraum"), 400)
+      const periodFamily = P()?.state.family
+      await click(button("Luftgewehr", $("[data-period-controls]")), 300)
+      await click(button("Scheiben"), 400)
+      check(
+        "Liste ↔ Zeitraum über die Leiste: die gewählte Disziplin bleibt",
+        periodFamily === "lp-freihand" &&
+          Li().query.family === "lg-freihand" &&
+          addr() === "/cards?family=lg-freihand",
+        `${periodFamily} · ${Li().query.family} · ${addr()}`
       )
       // Telefon 375 px mit einem Abend als Anker: kein seitliches Scrollen, ohne Uhrzeit, Abstand und Schuss
       const phoneDay = Li().model.evenings[2].day
@@ -2699,15 +2726,20 @@ addEventListener("load", async () => {
         ? [...phoneRow.children].filter((c) => pw.getComputedStyle(c).display === "none").length
         : -1
       const phoneDayTop = pd.getElementById(phoneDay)?.getBoundingClientRect().top ?? -1
+      // die Tabelle passt in ihre Karte: kein Scrollen in der Karte, das Datum bleibt sichtbar
+      const tableBoxes = [...pd.querySelectorAll("[data-month] table")].map((t) => t.parentElement)
+      const overflowing = tableBoxes.filter((box) => box.scrollWidth > box.clientWidth + 1).length
       check(
-        "Liste, Telefon 375 px: der Anker eines Abends öffnet die Liste am Abend, kein seitliches Scrollen, drei Spalten weniger",
+        "Liste, Telefon 375 px: der Anker eines Abends öffnet die Liste am Abend, kein seitliches Scrollen, auch nicht in einer Karte, drei Spalten weniger",
         !!pd.querySelector("[data-card-list-page]") &&
           pd.documentElement.scrollWidth <= 375 &&
           hiddenCells === 3 &&
+          tableBoxes.length > 0 &&
+          overflowing === 0 &&
           pw.scrollY > 0 &&
           phoneDayTop >= 0 &&
           phoneDayTop < 812,
-        `${pd.documentElement.scrollWidth} · ${hiddenCells} · ${Math.round(phoneDayTop)}`
+        `${pd.documentElement.scrollWidth} · ${hiddenCells} · ${Math.round(phoneDayTop)} · ${overflowing} von ${tableBoxes.length} Karten zu breit`
       )
       phone.remove()
       await click(button("Zeitraum"), 300)

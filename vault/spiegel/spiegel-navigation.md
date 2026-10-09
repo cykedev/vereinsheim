@@ -188,9 +188,21 @@ Plan `plans/2026-10-09-spiegel-scheiben-liste.md`, Branch `feat/spiegel-scheiben
 - **Offen, „kleine“ Scheiben (SF-11):** Der User kannte das Konzept nicht (9. Oktober 2026); Einklappen entfällt. Ob
   Nebenscheiben (Einschießen, Neustart, Abbruch) im Verein vorkommen und ob sie im Fortschritt zählen, entscheiden
   wir mit echten Daten (Schießprotokoll, SP-0.6).
-- **Kopf des Abends** nach Plan D4: Wochentag, Datum, „n Scheiben · m Schuss“ und der Hinweis auf andere Familien.
-  Anders als in Entscheidung 2 oben ohne Familie (sie steht als Pflichtfilter im Kopf der Seite) und ohne bestes
-  Ergebnis (jede Zeile zeigt ihr Ergebnis, der Abend hat nur wenige).
+- **Form der Liste** (User, 9. Oktober 2026: die Liste wirkte wie ein Fremdkörper, „1 Scheibe · 30 Schuss“ je
+  Abend sei überflüssig): wie die Liste eines Zeitraums. Je Monat eine Karte mit Kopf („September 2026“, Zahl der
+  Scheiben und Schüsse) und einer Tabelle (Datum, kleine Scheibe, Uhrzeit, Art, Ergebnis, Ø je Schuss, zum Schnitt,
+  Schuss). Ein Abend ist eine Gruppe von Zeilen: das Datum steht einmal, ohne eigenen Kopf und ohne Zahl je Abend;
+  der Hinweis auf andere Familien steht als kleine Zeile darunter, rechtsbündig. Damit ersetzt das Entscheidung 2 oben („Ein Kopf
+  je Abend: Datum, Familie, Zahl der Scheiben und Schüsse, bestes Ergebnis“).
+- **Ergebnis in beiden Wertungen** (User, 9. Oktober 2026): vorn die amtliche Wertung der Scheibe, klein daneben die
+  andere ([[spiegel-ui-design]]). Meyton liefert sie je Treffer (`Treffer.Wertung` seit ShootMaster 5.2,
+  [[meyton-ssmdb2]]); die Scheibe trägt sie als `official` (1 und 7 Zehntel, 2 und 8 ganze Ringe, sonst unbekannt).
+  Ohne amtliche Wertung (Training nur aus Probe, Modus 0) steht die Wertung des Geräts vorn. Ø und Abstand bleiben in
+  einer Wertung für die ganze Liste, damit die Spalte vergleichbar bleibt. Eine Zeile öffnet die Scheibe in der
+  Wertung, die sie vorn zeigt.
+- **Die Disziplin bleibt beim Wechsel zwischen Scheiben und Fortschritt** (User, 9. Oktober 2026), auch über die
+  Navigation, nicht nur über die Querverweise. Für N3: Die Links der Navigation zu „Scheiben“ und „Fortschritt“ tragen
+  die zuletzt gewählte Familie.
 - **Nach dem Review:**
   - Der Hinweis „auch 1 Scheibe Luftpistole ›“ zählt ohne Art und Merkmal, nur im Zeitraum. Der Sprung
     (`listOnEvening`) lässt deshalb Art und Merkmal fallen; so steht der versprochene Abend sicher in der Liste.

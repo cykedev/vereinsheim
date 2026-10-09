@@ -155,6 +155,11 @@ function makeCard(
       kind,
       complete: true,
       ...(id === PRINTOUT_ONLY_ID ? { flags: ["nur-pdf"] } : {}),
+      // amtliche Wertung wie am Stand: Luftpistole und Rundenwettkämpfe in ganzen Ringen, Training Luftgewehr in
+      // Zehnteln; nur Probe hat keine (die Saison zieht dafür keinen Zufall, alles andere bleibt gleich)
+      ...(probeOnly
+        ? {}
+        : { official: target === "lp-10m" || kind === "competition" ? "rings" : "decimal" }),
       shots: toMetricShots(TARGETS[target], raw),
     },
   }
