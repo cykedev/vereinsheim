@@ -50,6 +50,9 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
     „Labor-Werkzeuge, Setzen aktiv“, `active`). Nach dem Wechsel App ↔ Beispiele steht der Fokus auf dem neuen Knopf.
   - **Darstellung** (System, Hell, Dunkel, `ThemeSwitch`): in Profil, am Desktop zusätzlich unten in der Seitenleiste (`AppFrame.sidebarFooter`, neben der Navigation). Die
     drei Knöpfe teilen sich dort die Breite.
+  - **Wertung** (Zehntel, Ganze Ringe) seit U2 als Einstellung des Geräts in Profil (`data-scoring-setting`, `App.changeScoring`):
+    der Fortschritt hat keinen Schalter mehr und folgt ihr; die Scheibe behält ihren. Die Prüfung schaltet sie über
+    `deviceScoring(…)` (Profil und zurück), Filter des Fortschritts über `applyFilters({ kind, compare, probe })`.
   - Die Ansicht steht in `labor.mode`. Ein Anker der Zeitraum-Seite (`#history`, `#cards`, seit U1 auch `#numbers`)
     öffnet sie, ein Abend
     (`#2026-09-25`) die Scheiben-Liste.

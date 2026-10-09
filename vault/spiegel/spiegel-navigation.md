@@ -263,7 +263,8 @@ Plan `plans/2026-10-09-spiegel-start.md`, Branch `feat/spiegel-start`. Drei Entw
     ein und wertet nicht (nach dem Review, siehe unten);
   - Tag, Familie, Scheiben, Schuss;
   - der Ø je Schuss des Abends groß, dazu der Abstand zum Schnitt der fünf Scheiben davor;
-  - der Streifen der letzten 20 Scheiben mit Formband;
+  - der Streifen der letzten 20 Scheiben mit Formband, seit U2 in einem Rahmen über die ganze Achse (User: „im
+    leeren“);
   - die Scheiben als Kacheln (kleine Scheibe 56 px);
   - neue Rekorde, nur wenn der Abend welche aufgestellt hat;
   - „Abend in Scheiben ›“.

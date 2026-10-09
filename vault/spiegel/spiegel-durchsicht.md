@@ -119,7 +119,8 @@ Die Analyse hat 25 Karten:
     fehlen. Erst entscheiden, wenn echte Daten zeigen, ob man sie braucht.
   - Auf dem Telefon steht im Kopf nur die erste Beobachtung (sonst rutscht die Scheibe unter die untere Leiste:
     gemessen bis 870 px bei 740 px Sicht auf 375 × 812); mit kürzeren Sätzen (U3) neu prüfen.
-- **U2 Fortschritt beantwortet „Werde ich besser?“:**
+- **U2 Fortschritt beantwortet „Werde ich besser?“** (umgesetzt 9. Oktober 2026,
+  `plans/2026-10-09-spiegel-fortschritt-besser.md`; dazu der Rahmen um das Formband auf Start):
   - B3: ein Bezug, der Satz zum Vergleich;
   - B5: Filter in einer Zeile;
   - B6: Rekorde gekürzt.
