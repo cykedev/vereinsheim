@@ -114,8 +114,8 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
     })
     // die nächste Scheibe öffnet die Analyse mit dem ersten Reiter (User, 9. Oktober 2026)
     expect(urlFromRoute(siblingRoute(card, "c43"))).toMatch(/#analysis$/)
-    expect(siblingRoute({ ...card, anchor: { section: "numbers" } }, "c43").anchor).toEqual({
-      section: "numbers",
+    expect(siblingRoute({ ...card, anchor: { section: "shots" } }, "c43").anchor).toEqual({
+      section: "shots",
     })
     expect(siblingRoute({ ...card, anchor: null }, "c43").anchor).toBeNull()
   })

@@ -25,10 +25,16 @@ export function jumpToSection(event: MouseEvent<HTMLAnchorElement>, id: string) 
   }
 }
 
+/** Spalten auf dem Telefon je Zahl der Abschnitte; Klassen wörtlich für Tailwind */
+const PHONE_COLUMNS: Readonly<Record<number, string>> = {
+  3: "max-sm:grid-cols-3",
+  4: "max-sm:grid-cols-4",
+}
+
 /**
- * Sprungleiste (Plan Schritt 4, D1): klebt unter dem Kopf am oberen Rand, vier Anker zu den Abschnitten,
- * der sichtbare hervorgehoben. Optik wie die Reiterleiste der Analyse, die sie auf dem Telefon abdeckt. Dort
- * teilen sich die vier Einträge die Breite, nichts wird angeschnitten (User, 8. Oktober 2026).
+ * Sprungleiste (Plan Schritt 4, D1): klebt unter dem Kopf am oberen Rand, Anker zu den Abschnitten (drei auf der
+ * Scheibe, vier im Zeitraum), der sichtbare hervorgehoben. Optik wie die Reiterleiste der Analyse, die sie auf dem
+ * Telefon abdeckt. Dort teilen sich die Einträge die Breite, nichts wird angeschnitten (User, 8. Oktober 2026).
  */
 export function SectionNav({
   active,
@@ -49,7 +55,12 @@ export function SectionNav({
         className
       )}
     >
-      <div className="inline-flex rounded-full border border-border bg-surface-2 p-[3px] max-sm:grid max-sm:w-full max-sm:grid-cols-4">
+      <div
+        className={cn(
+          "inline-flex rounded-full border border-border bg-surface-2 p-[3px] max-sm:grid max-sm:w-full",
+          PHONE_COLUMNS[sections.length] ?? PHONE_COLUMNS[4]
+        )}
+      >
         {sections.map((section) => (
           <a
             key={section.id}

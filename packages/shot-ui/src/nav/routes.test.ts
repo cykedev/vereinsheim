@@ -214,9 +214,11 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
 
   it("ein Anker ohne Bedeutung zählt nicht; ein Abschnitt ohne Reiter bleibt ein Abschnitt", () => {
     expect(cardFromParts("c1", new URLSearchParams(), "#irgendwo").anchor).toBeNull()
-    const card = cardFromParts("c1", new URLSearchParams(), "#numbers")
-    expect(card.anchor).toEqual({ section: "numbers" })
-    expect(cardHash(card)).toBe("#numbers")
+    // „Zahlen“ entfiel auf der Scheibe (U1): ein alter Link mit #numbers beginnt oben, ohne Fehler
+    expect(cardFromParts("c1", new URLSearchParams(), "#numbers").anchor).toBeNull()
+    const card = cardFromParts("c1", new URLSearchParams(), "#shots")
+    expect(card.anchor).toEqual({ section: "shots" })
+    expect(cardHash(card)).toBe("#shots")
     expect(cardHash({ ...card, anchor: null })).toBe("")
   })
 })
@@ -401,7 +403,7 @@ describe("die ganze Adresse (D3)", () => {
           for (const scoring of ["decimal", "rings"] as const)
             for (const anchor of [
               null,
-              { section: "numbers" } as const,
+              { section: "shots" } as const,
               { section: "analysis", tab: "position" } as const,
             ])
               routes.push({ page: "card", id: "c42", origin, selection, shot, scoring, anchor })

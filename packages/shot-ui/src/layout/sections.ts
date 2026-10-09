@@ -4,12 +4,12 @@
 
 import type { AnalysisTab } from "../analysis/tabs"
 
-// in Seitenreihenfolge: die Schüsse stehen neben der Scheibe (und auf dem Telefon gleich nach ihr), Zahlen
-// und Analyse darunter in voller Breite (User, 8. Oktober 2026)
+// in Seitenreihenfolge: die Schüsse stehen neben der Scheibe (und auf dem Telefon gleich nach ihr), die Analyse
+// darunter in voller Breite (User, 8. Oktober 2026). „Zahlen“ entfiel mit U1: Der Überblick der Analyse ist die
+// Zahlen-Ansicht (Durchsicht, 9. Oktober 2026)
 export const PAGE_SECTIONS = [
   { id: "target", label: "Scheibe" },
   { id: "shots", label: "Schüsse" },
-  { id: "numbers", label: "Zahlen" },
   { id: "analysis", label: "Analyse" },
 ] as const
 

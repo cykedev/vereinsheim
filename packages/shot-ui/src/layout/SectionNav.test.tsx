@@ -2,17 +2,17 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { PERIOD_SECTIONS } from "./sections"
 import { SectionNav } from "./SectionNav"
 import { activeSection } from "./useActiveSection"
 
 describe("Sprungleiste (D1)", () => {
   const html = renderToStaticMarkup(createElement(SectionNav, { active: "shots" }))
 
-  it("vier Anker in der Reihenfolge der Seite", () => {
+  it("drei Anker in der Reihenfolge der Seite (U1: ohne „Zahlen“)", () => {
     expect([...html.matchAll(/<a href="#([a-z]+)"/g)].map((m) => m[1])).toEqual([
       "target",
       "shots",
-      "numbers",
       "analysis",
     ])
     expect(html).toMatch(/^<nav aria-label="Abschnitte"/)
@@ -25,10 +25,17 @@ describe("Sprungleiste (D1)", () => {
     expect(none).not.toContain("aria-current")
   })
 
-  it("klebt oben, deckt den Inhalt darunter; auf dem Telefon vier gleiche Felder, nie angeschnitten", () => {
+  it("klebt oben, deckt den Inhalt darunter; auf dem Telefon gleiche Felder je Abschnitt, nie angeschnitten", () => {
     expect(html).toMatch(/<nav[^>]*class="[^"]*sticky top-0 z-20[^"]*bg-background/)
-    expect(html).toContain("max-sm:grid-cols-4")
+    expect(html).toContain("max-sm:grid-cols-3")
+    expect(html).not.toContain("max-sm:grid-cols-4")
     expect(html).not.toContain("overflow-x-auto")
+    // der Zeitraum hat weiter vier
+    const period = renderToStaticMarkup(
+      createElement(SectionNav, { active: null, sections: PERIOD_SECTIONS })
+    )
+    expect(period).toContain("max-sm:grid-cols-4")
+    expect(period).not.toContain("max-sm:grid-cols-3")
   })
 })
 

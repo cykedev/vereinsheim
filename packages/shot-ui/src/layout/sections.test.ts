@@ -4,8 +4,9 @@ import { ANALYSIS_TABS } from "../analysis/AnalysisPanel"
 import { hashFor, PAGE_SECTIONS, parseHash, TAB_ANCHORS } from "./sections"
 
 describe("Abschnitte und Anker (D7)", () => {
-  it("vier Abschnitte in der Reihenfolge der Seite", () => {
-    expect(PAGE_SECTIONS.map((s) => s.label)).toEqual(["Scheibe", "Schüsse", "Zahlen", "Analyse"])
+  it("drei Abschnitte in der Reihenfolge der Seite, „Zahlen“ entfiel mit U1", () => {
+    expect(PAGE_SECTIONS.map((s) => s.label)).toEqual(["Scheibe", "Schüsse", "Analyse"])
+    expect(PAGE_SECTIONS.map((s) => s.id)).toEqual(["target", "shots", "analysis"])
   })
 
   it("jeder Abschnitt hin und zurück", () => {
@@ -31,5 +32,7 @@ describe("Abschnitte und Anker (D7)", () => {
     expect(parseHash("#")).toBeNull()
     expect(parseHash("#pruefen")).toBeNull()
     expect(parseHash("#Lage")).toBeNull()
+    // „Zahlen“ gibt es nur noch im Fortschritt: auf der Scheibe ein Anker ohne Bedeutung, also oben (U1)
+    expect(parseHash("#numbers")).toBeNull()
   })
 })

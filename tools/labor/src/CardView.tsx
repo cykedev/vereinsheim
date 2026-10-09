@@ -9,7 +9,6 @@ import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
 import { observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
-import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { CardPage } from "@vereinsheim/shot-ui/layout/CardPage"
 import { NoShots } from "@vereinsheim/shot-ui/layout/NoShots"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
@@ -17,7 +16,6 @@ import { SectionNav } from "@vereinsheim/shot-ui/layout/SectionNav"
 import { hashFor, parseHash } from "@vereinsheim/shot-ui/layout/sections"
 import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
-import { MetricTiles } from "@vereinsheim/shot-ui/metrics/MetricTiles"
 import { CardHeader } from "@vereinsheim/shot-ui/readout/CardHeader"
 import { CardResult } from "@vereinsheim/shot-ui/readout/CardResult"
 import { ShotLine } from "@vereinsheim/shot-ui/readout/ShotLine"
@@ -384,22 +382,6 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
         ]}
         below={[
           {
-            id: "numbers",
-            node: (
-              <MetricTiles
-                shots={shots}
-                state={state}
-                explain={explain}
-                onHelp={(key) => onHelp(helpForMetric(key)?.id ?? null)}
-                action={
-                  <ToggleChip pressed={explain} icon={<HelpIcon />} onPressedChange={onExplain}>
-                    Erklärungen
-                  </ToggleChip>
-                }
-              />
-            ),
-          },
-          {
             id: "analysis",
             node: (
               <AnalysisPanel
@@ -414,6 +396,12 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
                 onToggleLayer={toggleFromAnalysis}
                 onHelp={onHelp}
                 onChoose={chooseFromAnalysis}
+                // „Zahlen“ entfiel (U1): der Schalter steht im Kopf der Analyse
+                action={
+                  <ToggleChip pressed={explain} icon={<HelpIcon />} onPressedChange={onExplain}>
+                    Erklärungen
+                  </ToggleChip>
+                }
               />
             ),
           },

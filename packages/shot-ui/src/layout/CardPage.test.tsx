@@ -15,25 +15,16 @@ const html = renderToStaticMarkup(
     under: h("p", null, "SERIEN"),
     aside: h("p", null, "SEITE"),
     beside: [{ id: "shots", node: h("p", null, "SCHÜSSE") }],
-    below: [
-      { id: "numbers", node: h("p", null, "ZAHLEN") },
-      { id: "analysis", node: h("p", null, "ANALYSE") },
-    ],
+    // seit U1 nur die Analyse darunter (kein Abschnitt „Zahlen“)
+    below: [{ id: "analysis", node: h("p", null, "ANALYSE") }],
   })
 )
 
 describe("Rahmen der Seite (D2, D5)", () => {
   it("auf dem Telefon eine Spalte: Kopf, Leiste, Scheibe, Serien, Seite, Abschnitte", () => {
-    const order = [
-      "KOPF",
-      "LEISTE",
-      "SCHEIBE",
-      "SERIEN",
-      "SEITE",
-      "SCHÜSSE",
-      "ZAHLEN",
-      "ANALYSE",
-    ].map((t) => html.indexOf(t))
+    const order = ["KOPF", "LEISTE", "SCHEIBE", "SERIEN", "SEITE", "SCHÜSSE", "ANALYSE"].map((t) =>
+      html.indexOf(t)
+    )
     expect(order.every((i) => i >= 0)).toBe(true)
     expect([...order].sort((a, b) => a - b)).toEqual(order)
   })
@@ -43,7 +34,7 @@ describe("Rahmen der Seite (D2, D5)", () => {
     expect(html).toMatch(
       /<div id="target" class="[^"]*scroll-mt-14[^"]*"><div data-section="target" class="[^"]*scroll-mt-14/
     )
-    for (const id of ["numbers", "shots", "analysis"]) {
+    for (const id of ["shots", "analysis"]) {
       expect(html).toMatch(
         new RegExp(`<div[^>]*id="${id}"[^>]*data-section="${id}"[^>]*class="[^"]*scroll-mt-14`)
       )
@@ -55,14 +46,14 @@ describe("Rahmen der Seite (D2, D5)", () => {
     expect(html).toMatch(/data-section="target"[^>]*class="[^"]*md:sticky md:top-14 md:self-start/)
   })
 
-  it("neben der Scheibe die Schüsse, Zahlen und Analyse darunter in voller Breite", () => {
-    // die rechte Spalte endet vor den Zahlen: Zahlen und Analyse liegen außerhalb des Rasters mit der Scheibe
-    const grid = html.slice(html.indexOf('id="target"'), html.indexOf('id="numbers"'))
+  it("neben der Scheibe die Schüsse, die Analyse darunter in voller Breite", () => {
+    // die rechte Spalte endet vor der Analyse: Sie liegt außerhalb des Rasters mit der Scheibe
+    const grid = html.slice(html.indexOf('id="target"'), html.indexOf('id="analysis"'))
     expect(grid).toContain("SCHÜSSE")
     const closes = (grid.match(/<\/div>/g) ?? []).length
     const opens = (grid.match(/<div/g) ?? []).length
-    // ab dem Anker der Scheibe (ihr <div fehlt) bis in den Block der Zahlen (sein <div zählt): ausgeglichen
-    // heißt, die Zahlen sind Geschwister des Rasters und nicht in der rechten Spalte
+    // ab dem Anker der Scheibe (ihr <div fehlt) bis in den Block der Analyse (sein <div zählt): ausgeglichen
+    // heißt, die Analyse ist Geschwister des Rasters und nicht in der rechten Spalte
     expect(opens).toBe(closes)
   })
 
@@ -83,10 +74,9 @@ describe("Rahmen der Seite (D2, D5)", () => {
     expect(html).toMatch(
       /id="shots" data-section="shots" class="[^"]*md:flex-1[^"]*md:\[contain:size\]/
     )
-    expect(html).not.toMatch(/id="numbers"[^>]*md:flex-1/)
-    // nur der letzte Abschnitt ist mindestens fensterhoch (die Sprungleiste erreicht sonst „Zahlen“ nie)
+    expect(html).not.toMatch(/id="analysis"[^>]*md:flex-1/)
+    // der letzte Abschnitt ist mindestens fensterhoch, sonst erreicht die Sprungleiste ihn nie
     expect(html).toMatch(/id="analysis"[^>]*min-h-\[calc\(100svh-3\.5rem\)\]/)
-    expect(html).not.toMatch(/id="numbers"[^>]*min-h-\[calc/)
   })
 })
 
@@ -100,14 +90,14 @@ describe("ohne Schüsse (empty)", () => {
       under: h("p", null, "SERIEN"),
       aside: h("p", null, "SEITE"),
       beside: [{ id: "shots", node: h("p", null, "SCHÜSSE") }],
-      below: [{ id: "numbers", node: h("p", null, "ZAHLEN") }],
+      below: [{ id: "analysis", node: h("p", null, "ANALYSE") }],
       empty: h(NoShots),
     })
   )
 
   it("nur Kopf, Scheibe und der Hinweis: keine Leiste, keine leeren Kästen", () => {
     for (const part of ["KOPF", "SCHEIBE", "Noch kein Schuss"]) expect(blank).toContain(part)
-    for (const part of ["LEISTE", "ERGEBNIS", "SERIEN", "SEITE", "SCHÜSSE", "ZAHLEN"])
+    for (const part of ["LEISTE", "ERGEBNIS", "SERIEN", "SEITE", "SCHÜSSE", "ANALYSE"])
       expect(blank).not.toContain(part)
     expect(blank).toMatch(/data-section="target"/)
   })
