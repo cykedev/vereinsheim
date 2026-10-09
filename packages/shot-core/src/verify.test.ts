@@ -112,13 +112,13 @@ describe("checkShot an der Messauflösung", () => {
       officialDecimalTenths: official,
       officialInnerTen: false,
     })
-    expect(checkShot(LP_10M, shot(4750, 104))).toBe("boundary")
+    expect(checkShot(LP_10M, shot(4759.8, 104))).toBe("boundary")
     expect(checkShot(LP_10M, shot(4000, 105))).toBe("mismatch")
   })
 
   it("ein Innenzehner knapp jenseits der Grenze ist ein Grenzfall", () => {
     const shot: ShotEvidence = {
-      distance: { um: 4750.4, resolutionUm: 1 },
+      distance: { um: 4760.4, resolutionUm: 1 },
       officialDecimalTenths: 104,
       officialInnerTen: true,
     }
@@ -137,7 +137,8 @@ describe("checkShot an der Messauflösung", () => {
 
   it("misst zuerst über den Abstand aus dem Teiler, der genauer ist als die Lage", () => {
     const shot: ShotEvidence = {
-      distance: { um: 3207, resolutionUm: 1 },
+      // Aus der Lage allein käme 10,6 (3200 µm liegt vor der Grenze 3210 µm), aus dem Abstand 10,5.
+      distance: { um: 3212, resolutionUm: 1 },
       position: { xUm: 0, yUm: 3200, resolutionUm: 10 },
       officialDecimalTenths: 105,
     }
@@ -147,7 +148,7 @@ describe("checkShot an der Messauflösung", () => {
 
   it("Ganzring-Wertung: ohne Zehntel wird der amtliche Ring geprüft (SF-18)", () => {
     const ring = (officialRing: number): ShotEvidence => ({
-      distance: { um: 16000, resolutionUm: 1 },
+      distance: { um: 16009.8, resolutionUm: 1 },
       officialDecimalTenths: null,
       officialRing,
     })
