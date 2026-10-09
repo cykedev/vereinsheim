@@ -1,6 +1,7 @@
 // Gegenprobe: passen die amtlichen Werte zur Lage und zum Scheibenbild?
 //
-// Gemessen wird über den Abstand (aus dem Teiler, genauer) oder über die Lage (SSMDB2: 1/100 mm).
+// Gemessen wird über den Abstand (aus dem Teiler, Meytons eigener Wert) oder über die Lage (SSMDB2:
+// 1/100 mm).
 // Weicht ein amtlicher Wert ab, ist er ein Grenzfall, wenn er innerhalb der Messauflösung erreichbar
 // ist: Wert und Innenzehner treten zusammen an einem Rand von [d − ε, d + ε] auf, oder der Wert liegt
 // zwischen beiden Rändern. Sonst ist er eine Abweichung. Ohne Zehntel (Ganzring-Wertung) wird der
@@ -41,7 +42,9 @@ interface Measurement {
   toleranceUm: number
 }
 
-// Der Abstand aus dem Teiler ist genauer als die auf 1/100 mm gerundete Lage, also zuerst.
+// Zuerst der Abstand aus dem Teiler: Meyton rechnet ihn aus der Lage auf 1/100 mm und speichert ihn auf
+// 0,1 µm (am Ausdruck vom 9. Oktober 2026 auf 0,09 µm gleich), und aus ihm wertet es. Die gespeicherte
+// Lage ist dagegen schon gerundet.
 function measure(target: TargetImage, shot: ShotEvidence): Measurement | null {
   if (shot.distance) {
     const { um, resolutionUm } = shot.distance

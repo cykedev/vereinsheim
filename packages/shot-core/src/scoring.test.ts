@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { BOUNDARY_DISTANCES, EVENING_SHOTS } from "./__fixtures__/meyton-2026-10-09"
+import {
+  BOUNDARY_DISTANCES,
+  EVENING_PRINTOUT,
+  EVENING_SHOTS,
+} from "./__fixtures__/meyton-2026-10-09"
 import {
   distanceUm,
   MEYTON_TOLERANCE_UM,
@@ -48,7 +52,11 @@ describe("Abend vom 9. Oktober 2026 (Meyton-Toleranz, SF-75)", () => {
         expected
       )
     }
-    expect(EVENING_SHOTS.reduce((sum, shot) => sum + shot.decimalTenths, 0)).toBe(3564)
+    const total = EVENING_SHOTS.reduce(
+      (sum, shot) => sum + scoreFromCoordinates(LP_10M, shot.xUm, shot.yUm).decimalTenths,
+      0
+    )
+    expect(total).toBe(EVENING_PRINTOUT.total)
   })
 
   it("die Grenzabstände legen die Toleranz auf 10 µm fest", () => {
@@ -174,6 +182,35 @@ describe("Eigenschaften über den ganzen Abstand", () => {
       }
     }
   )
+})
+
+describe("Meytons Toleranz ist Abschneiden auf 1/100 mm", () => {
+  it.each([
+    ["Luftpistole", LP_10M],
+    ["Luftgewehr", LG_10M],
+  ] as const)("%s: alle Grenzen liegen auf 10 µm", (_, t) => {
+    const limits = [
+      t.scoringRadiusUm,
+      t.innerTenMaxDistanceUm,
+      t.ringWidthUm / 10,
+      ...t.ringRadiiUm,
+    ]
+    for (const limit of limits) expect(limit % 10, `${limit} µm`).toBe(0)
+  })
+
+  it.each([
+    ["Luftpistole", LP_10M],
+    ["Luftgewehr", LG_10M],
+  ] as const)("%s: gewertet wie der auf 10 µm abgeschnittene Abstand", (_, t) => {
+    // Gilt, solange alle Grenzen auf 10 µm liegen (Test oben); eine Scheibe mit anderen Grenzen
+    // verlangt eine Entscheidung, welches der beiden Modelle Meyton dort nutzt.
+    // In ganzen 0,01 µm zählen: Ein aufaddiertes 3,7 landet sonst bei 369,9999… µm, das die Wertung auf
+    // 370 µm rundet und Math.floor auf 360 µm abschneidet.
+    for (let hundredths = 0; hundredths <= 9_000_000; hundredths += 370) {
+      const truncated = Math.floor(hundredths / 1000) * 10
+      expect(scoreFromDistance(t, hundredths / 100)).toEqual(scoreFromDistance(t, truncated))
+    }
+  })
 })
 
 describe("Abstand und Teiler", () => {

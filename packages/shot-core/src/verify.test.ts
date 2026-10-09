@@ -99,11 +99,12 @@ describe("suggestTargets (SF-17)", () => {
 
 describe("checkShot an der Messauflösung", () => {
   it("die Lage hat 1/100 mm: ein Nachbarwert an der Grenze ist ein Grenzfall", () => {
-    // y = 3200 µm liegt genau auf der Grenze zu 10,6; der wahre Abstand kann bis etwa 3207 µm
-    // betragen haben, Meytons 10,5 ist also erreichbar.
-    expect(checkShot(LP_10M, at(0, 3200, 106))).toBe("match")
-    expect(checkShot(LP_10M, at(0, 3200, 105))).toBe("boundary")
-    expect(checkShot(LP_10M, at(0, 3200, 103))).toBe("mismatch")
+    // y = 3210 µm liegt genau auf Meytons Grenze zu 10,6 (Regelgrenze 3200 µm + 10 µm, strikt): Es
+    // zählt 10,5. Der wahre Abstand kann bis etwa 14 µm kürzer gewesen sein, Meytons 10,6 ist also
+    // erreichbar, 10,3 nicht.
+    expect(checkShot(LP_10M, at(0, 3210, 105))).toBe("match")
+    expect(checkShot(LP_10M, at(0, 3210, 106))).toBe("boundary")
+    expect(checkShot(LP_10M, at(0, 3210, 103))).toBe("mismatch")
   })
 
   it("auch der Innenzehner zählt als Grenzfall, wenn er innerhalb der Auflösung kippt", () => {
@@ -126,16 +127,17 @@ describe("checkShot an der Messauflösung", () => {
   })
 
   it("Wert und Innenzehner müssen zusammen erreichbar sein", () => {
-    // Luftgewehr: 10,2 heißt immer Innenzehner; „10,2 ohne Stern“ gibt es nicht.
+    // Luftgewehr: 10,2 heißt immer Innenzehner; „10,2 ohne Stern“ gibt es nicht. Genau auf Meytons
+    // Grenze (2010 µm) ist 10,2 mit Stern und 10,1 ohne erreichbar, aber nicht 10,2 ohne Stern.
     const shot: ShotEvidence = {
-      distance: { um: 2000, resolutionUm: 1 },
+      distance: { um: 2010, resolutionUm: 1 },
       officialDecimalTenths: 102,
       officialInnerTen: false,
     }
     expect(checkShot(LG_10M, shot)).toBe("mismatch")
   })
 
-  it("misst zuerst über den Abstand aus dem Teiler, der genauer ist als die Lage", () => {
+  it("misst zuerst über den Abstand aus dem Teiler, aus dem Meyton wertet", () => {
     const shot: ShotEvidence = {
       // Aus der Lage allein käme 10,6 (3200 µm liegt vor der Grenze 3210 µm), aus dem Abstand 10,5.
       distance: { um: 3212, resolutionUm: 1 },

@@ -3,16 +3,18 @@
 // der Schussmitte zur Scheibenmitte. Der ganze Ring ist der abgeschnittene Zehntelwert; bei gleichen
 // Ringabständen ist das genau die Berührungsregel.
 //
-// Meyton legt jede Grenze um MEYTON_TOLERANCE_UM nach außen, und der Abstand muss darunter liegen
-// (strikt): Wert k gilt, wenn d < b(k) + T, Innenzehner ebenso. Belegt an 43 000 von 43 000 Schüssen
-// zweier Jahre der Vereinsanlage, Luftgewehr wie Luftpistole; nach der reinen Regel lägen gut 3 % ein
-// Zehntel zu tief (SF-75).
+// Meyton legt jede Regelgrenze b(k) = R − (k − 100) · W ÷ 10 um T = MEYTON_TOLERANCE_UM nach außen,
+// und der Abstand muss darunter liegen (strikt): Wert k gilt, wenn d < g(k) = b(k) + T, Innenzehner
+// ebenso. Weil alle Grenzen von Luftgewehr und Luftpistole auf 10 µm liegen, ist das dasselbe, wie den
+// Abstand auf 1/100 mm abzuschneiden und dann d ≤ b(k) zu prüfen; Meyton misst auf 1/100 mm. Belegt an
+// 43 000 von 43 000 Schüssen zweier Jahre der Vereinsanlage, Luftgewehr wie Luftpistole; nach der
+// reinen Regel lägen gut 3 % ein Zehntel zu tief (SF-75).
 //
-// Exakt statt Gleitkomma: Die Grenze für den Wert k (in Zehnteln) liegt bei
-// b(k) = R + T − (k − 100) · W ÷ 10, laut defineTarget immer ein ganzes µm. Aus Koordinaten vergleicht
-// die Wertung x² + y² mit b(k)², aus einem Abstand rundet sie ihn auf ein 0,01-µm-Raster; beides
-// ganzzahlig. Die naive Formel floor((11 − d ÷ W) · 10) liegt an neun Grenzen je Scheibe einen
-// Zehntel zu tief, etwa bei d = 63 200 µm auf der Luftpistole.
+// Exakt statt Gleitkomma: Die verschobene Grenze g(k) = R + T − (k − 100) · W ÷ 10 ist laut
+// defineTarget immer ein ganzes µm. Aus Koordinaten vergleicht die Wertung x² + y² mit g(k)², aus einem
+// Abstand rundet sie ihn auf ein 0,01-µm-Raster; beides ganzzahlig. Die naive Formel
+// floor((11 − d ÷ W) · 10) liegt an neun Grenzen je Scheibe einen Zehntel zu tief, etwa bei d = 63 200 µm
+// auf der Luftpistole.
 
 import { MAX_DECIMAL_TENTHS, type TargetImage } from "./targets"
 

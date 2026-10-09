@@ -19,7 +19,8 @@
 // Belegt an der Vereinsanlage (Kopie vom 9. Oktober 2026), ebenfalls ohne Scheibe: Vereinsspiele wie
 // Schach, Balken, Dart, Lotto, Dreieck, Blanko und Spiegel (Regeln 8000 bis 8154, hier 8000 bis 8199,
 // lieber unbekannt als falsch gewertet), Meytons LP- und LG-Trainingsscheibe (9001, 9002) und „LG
-// Training Spiegel“ des Vereins (0119 mit 000); sie werten 0,0 bis 1,9 statt Ringe. Offen bleibt
+// Training Spiegel“ des Vereins (0119 mit 000). Die Trainingsscheiben werten 0,0 bis 1,9 statt Ringe,
+// die Vereinsspiele auch mit negativen Zehnteln. Offen bleibt
 // Meytons „LG/LP Training Spiegel“ unter 19110000 und 19210000; bis dahin gilt dort die Standardscheibe.
 
 import { TARGETS, type TargetId, type Weapon } from "./targets"

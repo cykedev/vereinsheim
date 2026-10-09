@@ -68,7 +68,7 @@ Bei Luftgewehr, Luftpistole und KK ergibt Zehnerradius plus halbes Kaliber genau
 
 Der **Teiler** ist der Abstand Schussmitte zu Scheibenmitte in 1/100 mm. Einen Teilerfaktor für die Luftpistole kennt die Sportordnung nicht; er steht in der jeweiligen Ausschreibung (üblich: LP-Teiler ÷ 2,6 bis 3,0). Spiegel speichert den rohen Teiler und rechnet Faktoren nur in der Ansicht.
 
-**Neu werten:** Lage und Abstand hängen nicht vom Scheibenbild ab; Spiegel nimmt den genaueren Abstand aus dem Teiler, sonst die Lage. War am Stand die falsche Disziplin gewählt, wertet Spiegel die Scheibe mit dem richtigen Bild neu; die Werte sind dann nicht amtlich und tragen das Merkmal `neu-gewertet` (SF-16).
+**Neu werten:** Lage und Abstand hängen nicht vom Scheibenbild ab; Spiegel nimmt den Abstand aus dem Teiler, aus dem Meyton selbst wertet (Meyton rechnet ihn aus der Lage auf 1/100 mm und speichert ihn auf 0,1 µm), sonst die Lage. War am Stand die falsche Disziplin gewählt, wertet Spiegel die Scheibe mit dem richtigen Bild neu; die Werte sind dann nicht amtlich und tragen das Merkmal `neu-gewertet` (SF-16).
 
 ## Gegenprobe
 

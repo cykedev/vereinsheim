@@ -36,7 +36,10 @@ export interface TargetImage extends TargetSpec {
   ringRadiiUm: readonly number[]
   ringWidthUm: number
   caliberUm: number
-  /** R = Zehnerradius + halbes Kaliber: Bis zu diesem Abstand zählt ein Schuss 10,0. */
+  /**
+   * R = Zehnerradius + halbes Kaliber: Nach der Regel zählt ein Schuss bis zu diesem Abstand 10,0;
+   * Meyton wertet bis knapp R + MEYTON_TOLERANCE_UM (scoring.ts).
+   */
   scoringRadiusUm: number
   innerTenMaxDistanceUm: number
   /** Ring, an dem der Spiegel endet (LG 4, LP 7) */
