@@ -84,7 +84,9 @@ describe("Verlauf je Monat und im Vergleich (D7)", () => {
     expect(count(html, /data-month="/g)).toBe(3)
     expect(count(html, /data-month-span="true"/g)).toBe(3)
     expect(html).not.toContain("data-card-point")
-    expect(html).toMatch(/<th scope="col"[^>]*>P10<\/th>/)
+    // die Tabelle in Alltagsworten (Review U3): Mitte und Spanne, kein Median, P10, P90
+    expect(html).toMatch(/<th scope="col"[^>]*>Mitte<\/th><th scope="col"[^>]*>Spanne von<\/th>/)
+    expect(html).not.toMatch(/Median|P10|P90/)
   })
 
   it("mit Vergleich beide Zeiträume übereinander, mit Legende, ohne Band", () => {

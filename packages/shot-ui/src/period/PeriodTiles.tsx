@@ -18,8 +18,8 @@ const cards = (n: number) => `${n} ${n === 1 ? "Scheibe" : "Scheiben"}`
 
 /**
  * Zahlen über den Zeitraum (Plan L3, D11): je Kennzahl das Mittel der Werte je Scheibe (Einheit Scheibe) und die
- * Zahl der Scheiben; mit Vergleich der Wert im Vergleichszeitraum, der Unterschied und das Urteil („bedeutsam“ nur
- * neben einem Urteil). Kacheln mit Wert, Einheit und kurzer Angabe, drei Spalten ab 27rem Breite.
+ * Zahl der Scheiben; mit Vergleich der Wert im Vergleichszeitraum, der Unterschied und das Urteil („deutlich“ nur
+ * neben einem Urteil, U3). Kacheln mit Wert, Einheit und kurzer Angabe, drei Spalten ab 27rem Breite.
  */
 export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTilesProps) {
   return (
@@ -36,13 +36,11 @@ export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTi
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border @min-[27rem]:grid-cols-3">
         {tiles.map((tile) => {
           const unit = unitText(tile.unit)
-          const short = helpForMetric(tile.key)?.short
           const other = tile.compare
           return (
             <div
               key={tile.key}
               data-period-tile={tile.key}
-              title={short}
               className="grid min-w-0 content-start gap-1 bg-card px-4 py-3.5"
             >
               <div className="flex items-start justify-between gap-2">

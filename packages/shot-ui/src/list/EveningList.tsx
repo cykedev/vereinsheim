@@ -218,10 +218,7 @@ export function EveningList({
                               </RouteLink>
                             </td>
                             <td className={cn(CELL, WIDE, "text-foreground-2")}>{time}</td>
-                            <td
-                              className="px-1 py-1 text-center text-muted-foreground"
-                              title={KIND_TEXT[row.kind]}
-                            >
+                            <td className="px-1 py-1 text-center text-muted-foreground">
                               <KindMark kind={row.kind} />
                             </td>
                             <td className={CELL}>

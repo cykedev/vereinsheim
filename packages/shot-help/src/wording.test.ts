@@ -31,10 +31,15 @@ describe("Wortwahl wie auf der Seite (U3, D9)", () => {
     for (const text of allTexts()) expect(text).not.toMatch(/bedeutsam/i)
   })
 
-  it("der Ringverlust erklärt „Lage kostet nichts“ (U3, D10)", () => {
-    expect(helpTopic("ringverlust-nach-ursache")?.caution).toContain(
-      "Spiegel schreibt dann „Lage kostet nichts“"
-    )
+  it("der Ringverlust erklärt „Lage kostet nichts“ in den Worten der Seite (U3, D10)", () => {
+    const caution = helpTopic("ringverlust-nach-ursache")?.caution ?? ""
+    expect(caution).toContain("Spiegel schreibt dann „Lage kostet nichts“")
+    expect(caution).toContain("wenn die Lage sicher versetzt ist")
+    expect(caution).not.toMatch(/\becht/)
+  })
+
+  it("der Vergleich zitiert den Satz oben, wie er dasteht", () => {
+    expect(helpTopic("zeitraum-vergleich")?.read).toContain("„ein klarer Unterschied“")
   })
 
   it("die Lage in Alltagsworten: „sicher versetzt“ oder „kann Zufall sein“ (U3, D11)", () => {
@@ -48,6 +53,7 @@ describe("Wortwahl wie auf der Seite (U3, D9)", () => {
     const texts = [
       ...[topic.title, topic.read, topic.act ?? ""],
       ...READING_GUIDE.flatMap((i) => [i.title, i.text]),
+      ...FALLACIES.flatMap((i) => [i.title, i.text]),
       ...VIEW_HELP.flatMap((v) => [v.title, v.what, v.read ?? ""]),
     ]
     for (const text of texts) expect(text).not.toMatch(/„(echt|Echt|unklar|Unklar)/)

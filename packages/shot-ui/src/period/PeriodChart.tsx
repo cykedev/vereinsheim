@@ -184,7 +184,8 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
         : m.floor !== null && m.ceiling !== null
           ? `Boden ${formatValue(m.floor, digits)} · Decke ${formatValue(m.ceiling, digits)}`
           : `Spanne ${formatValue(m.p10, digits)} – ${formatValue(m.p90 as number, digits)}`
-    return `${m.label} · ${m.n} ${m.n === 1 ? "Scheibe" : "Scheiben"} · Median ${formatValue(m.median, digits)} · ${spread}`
+    // Alltagsworte wie auf der ersten Ebene (Review U3): „Mitte“ ist der Median, das Blatt „?“ nennt ihn so
+    return `${m.label} · ${m.n} ${m.n === 1 ? "Scheibe" : "Scheiben"} · Mitte ${formatValue(m.median, digits)} · ${spread}`
   }
   const index = ruler.index
   const text = index === null ? null : mode === "months" ? monthText(index) : cardText(index)
@@ -402,7 +403,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
         caption={label}
         columns={
           mode === "months"
-            ? ["Monat", "Scheiben", "Median", "P10", "P90"]
+            ? ["Monat", "Scheiben", "Mitte", "Spanne von", "bis"]
             : mode === "compare"
               ? ["Scheibe", range.label, compareRange?.label ?? ""]
               : ["Datum", metric.label, "Linie: Schnitt der letzten fünf mit ihr"]

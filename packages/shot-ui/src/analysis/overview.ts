@@ -15,6 +15,7 @@ import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/me
 import { directionName, formatSigned, formatValue, percentText } from "../format"
 import { meanWithCount, NO_CENTER, NO_FULL_POSITION, noResultReason, valuedWord } from "../reasons"
 import type { AnalysisInput } from "./input"
+import { shownRingLoss } from "./ringLoss"
 
 export interface OverviewTile {
   label: string
@@ -108,9 +109,14 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       "ringverlust-nach-ursache",
       split?.total ? rings(split.total[key]) : null,
       "Ringe",
-      // ein Lage-Anteil unter null ist kein Gewinn: Die Gruppe sitzt schon gut (U3, D10, Grund im Reiter Lage)
+      // ein Lage-Anteil bis null ist kein Gewinn: Die Gruppe sitzt schon gut, die Streuung trägt dann den ganzen
+      // Verlust (U3, D10 und Review; Grund im Reiter Lage)
       split
-        ? `Lage ${split.positionLoss[key] <= 0 ? "kostet nichts" : rings(split.positionLoss[key])} · Streuung ${rings(split.spreadLoss[key])}${split.reliable ? "" : " · Aufteilung unsicher"}`
+        ? (() => {
+            const shown = shownRingLoss(split, key)
+            const position = shown.position === null ? "kostet nichts" : rings(shown.position)
+            return `Lage ${position} · Streuung ${rings(shown.spread)}${split.reliable ? "" : " · Aufteilung unsicher"}`
+          })()
         : "",
       split ? NO_FULL_POSITION : "ab 2 Schuss mit Lage"
     ),

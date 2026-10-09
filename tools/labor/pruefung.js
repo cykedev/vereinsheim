@@ -24,11 +24,18 @@ addEventListener("load", async () => {
       )
     // Ebene 1 und 2 sprechen Alltag (U3, D1): Fachbegriffe stehen nur im Blatt „?“ und in den Reitern. „unklar“ fehlt
     // hier, weil „Eingeschossen?“ es bis U4 noch zeigt; „rechts“ trifft `\becht` nicht
-    const JARGON = /σ|R50|T²|95 ?%|Median|mittlere Hälfte|bedeutsam|Hotelling|\bechte?\b|KW \d/
+    // „95 %“ nur als Sicherheit („mit 95 %“, „95 %:“), nicht als Quote; „echt“ auch groß und gebeugt (Review U3)
+    const JARGON =
+      /σ|R50|T²|mit 95 ?%|95 ?%:|Median|P10|P90|mittlere Hälfte|bedeutsam|Hotelling|\b[Ee]cht(e[nmrs]?)?\b|KW \d/
+    // ohne Blätter (`<dialog>`): das der Labor-Werkzeuge spricht über das Labor („aus den echten Bausteinen“)
     const jargonIn = (...els) =>
       els
         .filter(Boolean)
-        .map((el) => txt(el))
+        .map((el) => {
+          const copy = el.cloneNode(true)
+          copy.querySelectorAll("dialog").forEach((d) => d.remove())
+          return txt(copy)
+        })
         .join(" ")
         .match(JARGON)?.[0] ?? null
     // Wege sind seit N3 Links mit Adresse (`RouteLink`), gefunden nach Text oder Namen
@@ -944,11 +951,18 @@ addEventListener("load", async () => {
     // ein Lage-Anteil bis null heißt „kostet nichts“, nie ein Gewinn (U3, D10)
     const lossSplit = S().ringLossSplit(base(), L().target)
     const lossPosition = lossSplit.positionLoss.decimal
+    // gerundet wie gezeigt; kostet die Lage nichts, trägt die Streuung den ganzen Ringverlust (Review U3)
+    const lossFree = Math.round(lossPosition * 10) <= 0
+    const lossSpread = lossFree
+      ? lossSplit.spreadLoss.decimal + lossPosition
+      : lossSplit.spreadLoss.decimal
     check(
-      "Überblick: Ringverlust nennt die Lage mit Zahl oder „Lage kostet nichts“",
+      "Überblick: Ringverlust nennt die Lage mit Zahl oder „Lage kostet nichts“, beide ergeben den Ringverlust",
       ovHint("Ringverlust").startsWith(
-        lossPosition <= 0 ? "Lage kostet nichts · " : `Lage ${nf(lossPosition, 1)} · `
-      ),
+        `${lossFree ? "Lage kostet nichts" : `Lage ${nf(lossPosition, 1)}`} · Streuung ${nf(lossSpread, 1)}`
+      ) &&
+        (lossSplit.total === null ||
+          Math.abs((lossFree ? 0 : lossPosition) + lossSpread - lossSplit.total.decimal) < 1e-9),
       ovHint("Ringverlust")
     )
     const sentences = $$("[data-observation]", A()).map((li) => txt(li).trim())
@@ -2496,6 +2510,7 @@ addEventListener("load", async () => {
         $("[data-period-header]"),
         $("[data-result-box]"),
         ...$$("[data-period-tile]"),
+        $("[data-card-readout]"),
         $("#card-list"),
         $('[data-section="history"]')
       )
@@ -2635,6 +2650,9 @@ addEventListener("load", async () => {
         "Zeitraum: je Monat Median und Spanne P10–P90 ab fünf Scheiben",
         monthSpans === M().months.filter((m) => m.p10 !== null).length && monthSpans > 0
       )
+      // auch je Monat ohne Fachbegriffe: „Mitte“ und „Spanne“, kein Median, P10, P90 (Review U3)
+      const monthJargon = jargonIn($('[data-section="history"]'))
+      check("Zeitraum je Monat: ohne Fachbegriffe", !monthJargon, monthJargon ?? "")
       await click(button("je Scheibe"), 200)
       check(
         "Zeitraum: „je Scheibe“ zeigt wieder jede Scheibe",
@@ -3039,25 +3057,29 @@ addEventListener("load", async () => {
       const listRows = () => $$("[data-card-row]").map((r) => r.dataset.cardRow)
       await click(area("Scheiben"), 400)
       const evenings = Li().model.evenings
-      // Art ohne Kürzel (U3, D7): Wettkampf als Pokal, Training ohne Zeichen, Training nur aus Probe als „Probe“
-      const kindCells = $$("[data-card-row] td[title]")
-      const seen = (td) =>
-        [...td.childNodes]
+      // Art ohne Kürzel (U3, D7): Wettkampf als Pokal, Training ohne Zeichen, Training nur aus Probe als „Probe“; den
+      // Namen hört der Screenreader einmal, der Tooltip steht am verborgenen Zeichen (Review U3)
+      const kindMarks = $$("[data-card-row] [data-kind]")
+      const seen = (mark) =>
+        [...mark.childNodes]
           .filter((n) => !(n.classList && n.classList.contains("sr-only")))
           .map((n) => n.textContent)
           .join("")
           .trim()
-      const byKind = (title) => kindCells.filter((td) => td.title === title)
+      const byKind = (kind) => kindMarks.filter((m) => m.dataset.kind === kind)
       check(
         "Liste: Art als Pokal, ohne Zeichen oder „Probe“, keine Kürzel",
-        byKind("Wettkampf").length > 0 &&
-          byKind("Wettkampf").every((td) => !!$("svg.lucide-trophy", td) && seen(td) === "") &&
-          byKind("Training").length > 0 &&
-          byKind("Training").every((td) => !$("svg", td) && seen(td) === "") &&
-          byKind("Training nur Probe").length > 0 &&
-          byKind("Training nur Probe").every((td) => seen(td) === "Probe") &&
-          kindCells.every((td) => !/^[TWP]$/.test(seen(td))),
-        `${byKind("Wettkampf").length} Wettkampf · ${byKind("Training").length} Training · ${byKind("Training nur Probe").length} nur Probe`
+        byKind("competition").length > 0 &&
+          byKind("competition").every(
+            (m) =>
+              !!$('[aria-hidden="true"][title="Wettkampf"] svg.lucide-trophy', m) && seen(m) === ""
+          ) &&
+          byKind("training").length > 0 &&
+          byKind("training").every((m) => !$("svg", m) && seen(m) === "") &&
+          byKind("probe").length > 0 &&
+          byKind("probe").every((m) => seen(m) === "Probe") &&
+          kindMarks.every((m) => !/^[TWP]$/.test(seen(m)) && !m.closest("td[title]")),
+        `${byKind("competition").length} Wettkampf · ${byKind("training").length} Training · ${byKind("probe").length} nur Probe`
       )
       const listJargon = jargonIn($("main"))
       check("Liste: ohne Fachbegriffe", !listJargon, listJargon ?? "")

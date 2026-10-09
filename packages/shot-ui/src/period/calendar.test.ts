@@ -9,6 +9,7 @@ import {
   resolveRange,
   ROLLING_CHOICES,
   weekLabel,
+  weekDate,
   weekStartIso,
   type NamedPeriod,
 } from "./calendar"
@@ -131,5 +132,8 @@ describe("ISO-Wochen", () => {
   it("Name der Woche ist ihr Montag, keine Kalenderwoche (U3, D6)", () => {
     expect(weekLabel("2026-W27")).toBe("29.06.")
     expect(weekLabel("2026-W01")).toBe("29.12.")
+    // mit Jahr für Lineal und Tabelle: „Alles“ reicht über Jahreswechsel (Review U3)
+    expect(weekDate("2026-W01")).toBe("29.12.2025")
+    expect(weekDate("2026-W27")).toBe("29.06.2026")
   })
 })

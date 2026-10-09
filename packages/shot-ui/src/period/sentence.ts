@@ -36,7 +36,8 @@ const LEVEL = 0.005
 /**
  * Ein Satz zum Zeitraum (D14, U2 D1): Er beantwortet „Werde ich besser?“ im Ø je Schuss wie die Ergebnis-Box. Er
  * vergleicht mit dem gewählten Vergleich, sonst still mit dem Zeitraum davor, bei „Alles“ die letzten 90 Tage mit den
- * 90 davor (`PeriodModel.form`); „nachweisbar“ nur bei einem Urteil. Ohne Scheiben keiner.
+ * 90 davor (`PeriodModel.form`); „ein klarer Unterschied“ nur bei einem Urteil, in denselben Worten wie `verdictText`
+ * (Review U3). Ohne Scheiben keiner.
  */
 export function periodSentence(model: Pick<PeriodModel, "form">): string | null {
   const form = model.form
@@ -60,8 +61,8 @@ export function periodSentence(model: Pick<PeriodModel, "form">): string | null 
   // „…, nicht nachweisbar“ klang wie ein Widerspruch zur Zahl davor (Prüfung, 9. Oktober 2026)
   const proven =
     c.verdict === "unclear"
-      ? "der Unterschied ist aber nicht nachweisbar"
-      : "der Unterschied ist nachweisbar"
+      ? "ein klarer Unterschied ist das aber nicht"
+      : "das ist ein klarer Unterschied"
   const direction = c.delta > 0 ? "höher" : "tiefer"
   return `${subject} ${formatValue(Math.abs(c.delta), 2)} ${direction} als ${other.als}; ${proven}.`
 }

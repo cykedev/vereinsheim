@@ -68,7 +68,8 @@ Die Lage steht dazu dreimal mit denselben Zahlen: im Kopf, in der Kachel „Lage
 - **D8 Legende am Formband:** Unter dem Streifen auf Start eine Zeile „Das Band zeigt deine übliche Schwankung.“,
   nur mit Band.
 - **D9 Hilfe:**
-  - Das Thema `praezision-sigma` heißt „Streuung (σ)“.
+  - Das Thema `praezision-sigma` heißt „Streuung σ“ (umgesetzt so statt „Streuung (σ)“: im Leitfaden stünde sonst
+    „(σ) (P5)“).
   - Texte in `shot-help`, die die alten Urteilsworte zitieren („bedeutsam“), sagen die neuen.
   - Danach `pnpm --filter @vereinsheim/shot-help docs`.
 
@@ -78,6 +79,8 @@ Die Lage steht dazu dreimal mit denselben Zahlen: im Kopf, in der Kachel „Lage
     Schwerpunkt zieht.
   - Auf der Kachel „Ringverlust“ und in der Legende der Karte steht bei einem Lage-Anteil ≤ 0 „Lage kostet nichts“
     statt „Lage −0,4“.
+  - Lage und Streuung ergeben zusammen den Ringverlust (Review): Kostet die Lage nichts (gerundet nicht über null),
+    zeigt die Streuung den ganzen Verlust (`shownRingLoss` in `shot-ui`, nur Auswahl aus den Zahlen des Fachkerns).
   - Die Karte „Ringverlust nach Ursache“ nennt die Zahl mit einem Satz zum Grund: „Deine Gruppe sitzt schon gut; in
     die Mitte geschoben brächte sie rechnerisch nichts (Lage −0,4 Ringe).“
 - **D11 Urteil der Lage in Alltagsworten** (User während der Umsetzung, 9. Oktober 2026: „Lage unklar ist auch seltsam

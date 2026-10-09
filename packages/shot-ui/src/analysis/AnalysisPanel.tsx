@@ -228,7 +228,7 @@ export function AnalysisPanel({
           options={ANALYSIS_TABS}
           onChange={onTab}
           controls={regionId}
-          className="max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:shrink-0 [&>button]:whitespace-nowrap"
+          scroll
         />
       </div>
       <div

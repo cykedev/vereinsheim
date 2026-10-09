@@ -10,6 +10,7 @@ import {
   ValuesTable,
 } from "../analysis/charts/ChartRuler"
 import { ChartSvg, crisp, niceStep } from "../analysis/charts/frame"
+import { weekDate } from "./calendar"
 
 const HEIGHT = 120
 const PAD = { left: 36, right: 12, top: 10, bottom: 22 }
@@ -18,11 +19,11 @@ export type VolumeWeek = VolumeBucket & { label: string }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
-/** „Woche ab 06.07.: 140 Schuss mit Probe, 3 Scheiben, 2 Tage“ (die Woche als Datum ihres Montags, U3, D6) */
+/** „Woche ab 06.07.2026: 140 Schuss mit Probe, 3 Scheiben, 2 Tage“ (die Woche als Datum ihres Montags, U3, D6) */
 export const weekText = (w: VolumeWeek) =>
   w.cards
-    ? `Woche ab ${w.label}: ${w.shots} Schuss mit Probe, ${plural(w.cards, "Scheibe", "Scheiben")}, ${plural(w.days, "Tag", "Tage")}`
-    : `Woche ab ${w.label}: kein Training`
+    ? `Woche ab ${weekDate(w.key)}: ${w.shots} Schuss mit Probe, ${plural(w.cards, "Scheibe", "Scheiben")}, ${plural(w.days, "Tag", "Tage")}`
+    : `Woche ab ${weekDate(w.key)}: kein Training`
 
 /**
  * Umfang je Woche (Plan L3, D15, T6): je ISO-Woche eine Säule der Schüsse mit Probe, auch Wochen ohne Training
@@ -103,7 +104,7 @@ export function VolumeChart({ width, weeks }: { width: number; weeks: readonly V
       <ValuesTable
         caption="Schüsse je Woche"
         columns={["Woche ab", "Schuss mit Probe", "Scheiben", "Tage"]}
-        rows={weeks.map((w) => [w.label, String(w.shots), String(w.cards), String(w.days)])}
+        rows={weeks.map((w) => [weekDate(w.key), String(w.shots), String(w.cards), String(w.days)])}
       />
     </div>
   )

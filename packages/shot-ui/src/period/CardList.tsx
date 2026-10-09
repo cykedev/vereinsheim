@@ -10,7 +10,6 @@ import { formatSigned, formatValue } from "../format"
 import { RouteLink } from "../nav/RouteLink"
 import type { ListRoute } from "../nav/routes"
 import { KindMark } from "../list/KindMark"
-import { cardKindText } from "./CardReadout"
 import { cardKind, isProbeOnly } from "./model"
 
 export interface CardListProps {
@@ -94,7 +93,6 @@ export function CardList({
           {rows.map((card) => {
             const value = byId.get(card.id)
             const delta = deltas.get(card.id)
-            const kind = cardKindText(card)
             const picked = chosen === card.id
             const date = formatShortDate(new Date(card.startedAtMs), timeZone)
             const choose = onChoose ? () => onChoose(card.id) : undefined
@@ -129,7 +127,7 @@ export function CardList({
                     {date}
                   </button>
                 </td>
-                <td className="px-1 py-1.5 text-center text-muted-foreground" title={kind}>
+                <td className="px-1 py-1.5 text-center text-muted-foreground">
                   <KindMark kind={cardKind(card)} />
                 </td>
                 <td className="px-2 py-1.5 text-right">

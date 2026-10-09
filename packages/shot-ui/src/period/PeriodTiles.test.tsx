@@ -28,6 +28,8 @@ describe("Zahlen über den Zeitraum (D11)", () => {
       /data-period-tile="result.decimalMean"[\s\S]*?8,00<small[^>]*>Ringe[\s\S]*?5 Scheiben/
     )
     expect(html).not.toContain("data-tile-compare")
+    // auch kein Tooltip mit Fachbegriffen (Review U3): Die Erklärung steht im Blatt „?“
+    expect(html).not.toMatch(/title="|R50|σ/)
   })
 
   it("mit Vergleich: Wert dort, Δ und Urteil; ohne Wert ein Strich mit Grund", () => {

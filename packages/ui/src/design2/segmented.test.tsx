@@ -21,6 +21,38 @@ describe("nextIndex: Pfeiltasten im Segment-Umschalter", () => {
   })
 })
 
+describe("Segmented mit scroll", () => {
+  const render = (scroll?: boolean) =>
+    renderToStaticMarkup(
+      createElement(Segmented, {
+        label: "Kennzahl",
+        value: "a",
+        options: [
+          { value: "a", label: "Ø je Schuss" },
+          { value: "b", label: "Streuung" },
+        ],
+        onChange: () => {},
+        scroll,
+      })
+    )
+
+  it("ohne Umbruch in einer Zeile, zu breit scrollt er in sich, ohne Leiste", () => {
+    // das Markup maskiert „&“ und „>“ im Attribut
+    const bar = (render(true).match(/role="radiogroup"[^>]*class="([^"]+)"/)?.[1] ?? "")
+      .replaceAll("&amp;", "&")
+      .replaceAll("&gt;", ">")
+    for (const cls of [
+      "max-w-full",
+      "min-w-0",
+      "overflow-x-auto",
+      "[&>button]:shrink-0",
+      "[&>button]:whitespace-nowrap",
+    ])
+      expect(bar.split(" ")).toContain(cls)
+    expect(render()).not.toContain("whitespace-nowrap")
+  })
+})
+
 describe("Segmented", () => {
   const segmented = (value: string) =>
     renderToStaticMarkup(

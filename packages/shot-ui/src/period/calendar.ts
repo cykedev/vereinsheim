@@ -1,5 +1,6 @@
 // Zeiträume der Seite eines Zeitraums (Plan L3, D4, D6, D15, D16): rollend, alles, benannt, frei; der
-// Vergleichszeitraum; ISO-Wochen ohne `Intl`. Tage beginnen in der Anzeige-Zeitzone (`zonedDayStartMs`).
+// Vergleichszeitraum; ISO-Wochen (gerechnet ohne `Intl`, benannt nach ihrem Montag über `@vereinsheim/lib/format`).
+// Tage beginnen in der Anzeige-Zeitzone (`zonedDayStartMs`).
 
 import { formatDateOnly, formatShortDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 
@@ -138,12 +139,17 @@ export function weekStartIso(key: string): string {
   return new Date(monday).toISOString().slice(0, 10)
 }
 
-/** Name einer Woche ist ihr Montag („29.06.“), keine Kalenderwoche (U3, D6) */
-export function weekLabel(key: string): string {
+/** der Montag einer Woche als Kalendertag ohne Zone: Mittag in UTC, in UTC formatiert */
+const mondayNoon = (key: string) => {
   const [y, m, d] = weekStartIso(key).split("-").map(Number)
-  // ein Kalendertag ohne Zone: Mittag in UTC, in UTC formatiert
-  return formatShortDay(new Date(Date.UTC(y, m - 1, d, 12)), "UTC")
+  return new Date(Date.UTC(y, m - 1, d, 12))
 }
+
+/** Name einer Woche ist ihr Montag („29.06.“), keine Kalenderwoche (U3, D6); kurz, für die Achse */
+export const weekLabel = (key: string) => formatShortDay(mondayNoon(key), "UTC")
+
+/** der Montag mit Jahr („29.06.2026“) für Lineal und Tabelle: „Alles“ reicht über Jahreswechsel (Review U3) */
+export const weekDate = (key: string) => formatDateOnly(mondayNoon(key), "UTC")
 
 /** „02.07.2026 – 30.09.2026“: erster und letzter Tag des Zeitraums in der Zeitzone */
 export function rangeDays(range: DateRange, timeZone: string): string {

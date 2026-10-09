@@ -223,8 +223,10 @@ describe("Beobachtungen in Worten", () => {
     const split = ringLossSplit(input.base, LP_10M)!
     expect(split.positionLoss.decimal).toBeLessThan(0)
     const hint = overviewTiles(input).find((t) => t.label === "Ringverlust")!.hint
-    expect(hint).toMatch(/^Lage kostet nichts · Streuung [\d,]+/)
-    expect(hint).not.toContain("−")
+    // Lage und Streuung ergeben zusammen den Ringverlust: kostet die Lage nichts, trägt die Streuung alles (Review U3)
+    expect(hint).toBe(
+      `Lage kostet nichts · Streuung ${formatValue(split.total!.decimal, 1)} · Aufteilung unsicher`
+    )
     // ohne belegten Versatz „passt“ die Lage (U3, D11), nicht „unklar“
     expect(mpiConfidence(input.base)!.real).toBe(false)
     const lage = overviewTiles(input).find((t) => t.label === "Lage")!

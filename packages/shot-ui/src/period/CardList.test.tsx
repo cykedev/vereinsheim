@@ -48,7 +48,7 @@ describe("Liste der Scheiben (D10)", () => {
     expect(html).toMatch(/data-card-row="k3"[\s\S]*?9,30[\s\S]*?\+0,20[\s\S]*?>2</)
     // die erste Scheibe hat keinen Schnitt davor
     expect(html).toMatch(/data-card-row="k0"[\s\S]*?9,00<\/td><td[^>]*>–</)
-    expect(html).toMatch(/data-card-row="k2"[\s\S]*?title="Wettkampf"/)
+    expect(html).toMatch(/data-card-row="k2"[\s\S]*?data-kind="competition"/)
     // Art ohne Kürzel (U3, D7): der Wettkampf als Pokal, ein Training ohne Zeichen
     const rowOf = (id: string) =>
       html.slice(html.indexOf(`data-card-row="${id}"`)).split("</tr>")[0]

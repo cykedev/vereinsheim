@@ -1,6 +1,6 @@
 // Beobachtungen in Worten (Spielwiese `observations`): die wichtigsten Befunde als Sätze, gebildet aus
 // denselben Zahlen wie die Karten, in fester Reihenfolge. Ein Satz steht nur, wenn der Fachkern einen Wert
-// hat; „echt“ und „klar“ nur, wenn sein Test es sagt.
+// hat; „sicher“ und „klar“ nur, wenn sein Test es sagt (Alltagsworte seit U3).
 
 import {
   cardTrend,

@@ -260,11 +260,12 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *So liest du es:* Großer Lage-Anteil: Die Gruppe sitzt neben der Mitte. Großer Streuungs-Anteil:
   Präzision. Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der
   Schusszahl.
-- *Vorsicht:* Ohne echten Versatz ist der Lage-Anteil meist leicht negativ, in ganzen Ringen oft 0:
-  Die Gruppe um den gemessenen Versatz zu verschieben, würde dann Ringe kosten; Spiegel schreibt
-  dann „Lage kostet nichts“. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Gruppe in
-  der Mitte Ringe bringt. Gewertet wird aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist
-  er verdächtig, gibt es keinen Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.
+- *Vorsicht:* Ohne belegten Versatz ist der Lage-Anteil meist leicht negativ, in ganzen Ringen oft
+  0: Die Gruppe um den gemessenen Versatz zu verschieben, würde dann Ringe kosten; Spiegel schreibt
+  dann „Lage kostet nichts“, und die Streuung trägt den ganzen Ringverlust. Belastbar erst ab 10
+  Schuss, wenn die Lage sicher versetzt ist und die Gruppe in der Mitte Ringe bringt. Gewertet wird
+  aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig, gibt es keinen
+  Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.
 - *Mindestzahl:* Ab 2 Schuss mit Lage, belastbar ab 10; den Ringverlust gibt es nur, wenn jeder
   Wertungsschuss eine Lage hat.
 - *Formel:* `Ringverlust = n · 10,9 − Σ vᵢ bzw. n · 10 − Σ Ringᵢ; zentriert: (pᵢ − m) · n/(n − 1),
@@ -438,7 +439,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Mindestzahl:* Ab 1 Scheibe, das Formband ab 10 Scheiben, Boden und Decke ab 5 Scheiben im Monat.
 - *Formel:* `Schnitt über die letzten 5 Scheiben; Formband = Schnitt ± 1,4826 · MAD der Abweichungen
   der Scheiben vom vollen Schnitt; Boden und Decke = P10 und P90 der Scheibenwerte je Monat (bei σ
-  umgekehrt), dazu der Median; Abstand zum Schnitt = Wert − Mittel der bis zu 5 Scheiben davor`
+  umgekehrt), dazu der Median („Mitte“); Abstand zum Schnitt = Wert − Mittel der bis zu 5 Scheiben
+  davor`
 
 **Trainingsumfang (T6)**
 - *Was:* Je Woche die Zahl deiner Schüsse mit Probe, deiner Scheiben und der Tage, an denen du
@@ -455,13 +457,13 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   neuen Abzug. Jede Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die
   Differenz der Mittel.
 - *So liest du es:* Steht „besser“ oder „schwächer“, entstünde ein so deutlicher Unterschied durch
-  Zufall allein in höchstens 5 von 100 Vergleichen; der Satz oben nennt das „nachweisbar“. Ob
-  kleiner besser ist, weiß Spiegel je Zahl (bei Streukreis und Streuung σ ist kleiner besser); beim
-  Tempo heißt es nur „höher“ oder „tiefer“. Steht „kein klarer Unterschied“, heißt das nicht „gleich
-  geblieben“: Diese Scheiben reichen nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je
-  Seite steht „zu wenige Scheiben“. „Deutlich“ davor heißt: Der Unterschied ist mindestens knapp ein
-  Drittel der Streuung deiner Scheiben innerhalb der beiden Zeiträume, also groß genug, um im
-  Training etwas auszumachen.
+  Zufall allein in höchstens 5 von 100 Vergleichen; der Satz oben nennt das „ein klarer
+  Unterschied“. Ob kleiner besser ist, weiß Spiegel je Zahl (bei Streukreis und Streuung σ ist
+  kleiner besser); beim Tempo heißt es nur „höher“ oder „tiefer“. Steht „kein klarer Unterschied“,
+  heißt das nicht „gleich geblieben“: Diese Scheiben reichen nicht, es zu zeigen oder
+  auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige Scheiben“. „Deutlich“ davor heißt: Der
+  Unterschied ist mindestens knapp ein Drittel der Streuung deiner Scheiben innerhalb der beiden
+  Zeiträume, also groß genug, um im Training etwas auszumachen.
 - *Vorsicht:* „Deutlich“ steht nur zusammen mit einem Urteil: Auch ohne jede Veränderung ist der
   Unterschied bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen so groß. Bei gleicher Form gibt
   Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein Urteil. Wird dein σ beim Luftgewehr von
@@ -547,10 +549,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 2. **Mehr Schüsse, größerer Streukreis.** Bei gleicher Präzision ist der Streukreis über 40 Schuss
    im Mittel rund 30 % größer als über 10. Wer so vergleicht, vergleicht vor allem die Schusszahl.
    Für Vergleiche σ nehmen.
-3. **„Unklar“ ist ein Ergebnis.** Es sagt: Diese Schüsse zeigen nichts, was über den Zufall
-   hinausgeht. Vielleicht gibt es nichts, vielleicht ist es für diese Schusszahl zu klein. Wer
-   trotzdem auf einen Versatz reagiert, den der Zufall erklärt, verschiebt seine Gruppe oft weg von
-   der Mitte und verliert dabei im Mittel Ringe.
+3. **„Kann Zufall sein“ ist ein Ergebnis.** Es sagt: Diese Schüsse zeigen nichts, was über den
+   Zufall hinausgeht. Vielleicht gibt es nichts, vielleicht ist es für diese Schusszahl zu klein.
+   Wer trotzdem auf einen Versatz reagiert, den der Zufall erklärt, verschiebt seine Gruppe oft weg
+   von der Mitte und verliert dabei im Mittel Ringe.
 4. **Nach einem Rekord kommt meist eine schwächere Scheibe.** Das ist meist Statistik (Regression
    zur Mitte) und für sich kein Zeichen von Formverlust.
 5. **Ganze Ringe verstecken Feinheiten.** 10,0 und 10,9 sind beide eine 10; für die Analyse sind

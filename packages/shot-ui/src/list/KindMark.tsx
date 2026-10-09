@@ -14,13 +14,19 @@ export const KIND_TEXT: Readonly<Record<CardKind, string>> = {
  * Zeichen (das Übliche), Training nur aus Probe als Wort „Probe“. Den vollen Namen hört der Screenreader.
  */
 export function KindMark({ kind }: { kind: CardKind }) {
+  // der Name als Tooltip am sichtbaren Zeichen, das Screenreader übergehen: sie hören ihn einmal (Review U3)
   return (
-    <>
-      {kind === "competition" && (
-        <Trophy aria-hidden="true" className="inline size-3.5 align-[-2px] text-foreground-2" />
+    <span data-kind={kind}>
+      {kind !== "training" && (
+        <span aria-hidden="true" title={KIND_TEXT[kind]}>
+          {kind === "competition" ? (
+            <Trophy className="inline size-3.5 align-[-2px] text-foreground-2" />
+          ) : (
+            "Probe"
+          )}
+        </span>
       )}
-      {kind === "probe" && <span aria-hidden="true">Probe</span>}
       <span className="sr-only">{KIND_TEXT[kind]}</span>
-    </>
+    </span>
   )
 }

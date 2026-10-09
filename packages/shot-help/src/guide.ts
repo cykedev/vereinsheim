@@ -70,7 +70,7 @@ export const FALLACIES: readonly GuideItem[] = [
     text: "Bei gleicher Präzision ist der Streukreis über 40 Schuss im Mittel rund 30 % größer als über 10. Wer so vergleicht, vergleicht vor allem die Schusszahl. Für Vergleiche σ nehmen.",
   },
   {
-    title: "„Unklar“ ist ein Ergebnis",
+    title: "„Kann Zufall sein“ ist ein Ergebnis",
     text: "Es sagt: Diese Schüsse zeigen nichts, was über den Zufall hinausgeht. Vielleicht gibt es nichts, vielleicht ist es für diese Schusszahl zu klein. Wer trotzdem auf einen Versatz reagiert, den der Zufall erklärt, verschiebt seine Gruppe oft weg von der Mitte und verliert dabei im Mittel Ringe.",
   },
   {

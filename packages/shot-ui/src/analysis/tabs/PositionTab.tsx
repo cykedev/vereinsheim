@@ -9,6 +9,7 @@ import { NO_CENTER, NO_FULL_POSITION } from "../../reasons"
 import { ChartSlot } from "../charts/frame"
 import { PathChart } from "../charts/PathChart"
 import { AnalysisCard, KeyValues, Muted, Note, Verdict } from "../parts"
+import { shownRingLoss } from "../ringLoss"
 import { ClockCard } from "./ClockCard"
 import type { CardContext, CardSpec } from "./index"
 
@@ -19,7 +20,7 @@ const EllipseIcon = () => (
   </svg>
 )
 
-/** Lage: Lage echt?, Ringverlust nach Ursache, Richtungsuhr, Drift und Wanderung, über die Grundlage */
+/** Lage: Ist die Lage versetzt?, Ringverlust nach Ursache, Richtungsuhr, Drift und Wanderung, über die Grundlage */
 export function positionCards({
   input,
   explain,
@@ -166,22 +167,25 @@ function RingLoss({
   keyName: "rings" | "decimal"
   rings: (v: number) => string
 }) {
-  const pos = Math.max(0, split.positionLoss[keyName])
-  const spr = Math.max(0, split.spreadLoss[keyName])
+  // Lage und Streuung, die zusammen den Ringverlust ergeben (U3, D10 und Review): kostet die Lage nichts, trägt die
+  // Streuung alles; die Rohzahl steht mit ihrem Grund im Satz darunter
+  const shown = shownRingLoss(split, keyName)
+  const pos = Math.max(0, shown.position ?? 0)
+  const spr = Math.max(0, shown.spread)
   const sum = pos + spr || 1
   const digits = keyName === "rings" ? 0 : 1
   // ohne Ringverlust rechnen Ist und Mitte über weniger Schüsse: das steht dabei (Prüfung, Ergebnis 5)
   const over = split.total ? "" : ` (${split.n} Schuss mit Lage)`
   // ein Lage-Anteil bis null kostet nichts (U3, D10): die Mitte ohne den Schuss selbst ist etwas weiter, ein
-  // Ausreißer zieht den Schwerpunkt; die Zahl steht mit diesem Grund im Satz darunter
-  const position = split.positionLoss[keyName]
-  const positionText = position <= 0 ? "Lage kostet nichts" : `Lage ${rings(position)}`
+  // Ausreißer zieht den Schwerpunkt
+  const positionText =
+    shown.position === null ? "Lage kostet nichts" : `Lage ${rings(shown.position)}`
   return (
     <>
       <div
         role="img"
         // die Werte, nicht die Breiten; ein negativer Lage-Anteil heißt „kostet nichts“, die Zahl im Satz darunter
-        aria-label={`${positionText}, Streuung ${rings(split.spreadLoss[keyName])} Ringe`}
+        aria-label={`${positionText}, Streuung ${rings(shown.spread)} Ringe`}
         className="flex h-3 gap-0.5 overflow-hidden rounded-md bg-surface-2"
       >
         <span
@@ -202,7 +206,7 @@ function RingLoss({
         </span>
         <span className="inline-flex items-center gap-[7px]">
           <i className="size-2.5 rounded-sm bg-primary" />
-          {`Streuung ${rings(split.spreadLoss[keyName])}`}
+          {`Streuung ${rings(shown.spread)}`}
         </span>
       </div>
       <KeyValues
@@ -237,8 +241,8 @@ function RingLoss({
           <Verdict tone="none">unsicher</Verdict>
         )}
       </div>
-      {position < 0 && (
-        <Note>{`Deine Gruppe sitzt schon gut; in die Mitte geschoben brächte sie rechnerisch nichts (Lage ${rings(position)} Ringe).`}</Note>
+      {shown.negative !== null && (
+        <Note>{`Deine Gruppe sitzt schon gut; in die Mitte geschoben brächte sie rechnerisch nichts (Lage ${ringsText(shown.negative, digits)}).`}</Note>
       )}
       <Note>
         Jeder Treffer um den Schwerpunkt der übrigen verschoben und neu gewertet: So schätzt

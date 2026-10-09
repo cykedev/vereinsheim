@@ -17,8 +17,17 @@ interface SegmentedProps<T extends string> {
   onChange: (value: T) => void
   /** Id des Bereichs, den die Wahl steuert (`aria-controls`), etwa die Karten eines Reiters */
   controls?: string
+  /**
+   * in einer Zeile ohne Umbruch; ist er breiter als sein Platz, scrollt er in sich (Telefon), ohne Leiste. Die Wahl
+   * rückt dabei ins Bild
+   */
+  scroll?: boolean
   className?: string
 }
+
+/** ohne Umbruch, zu breit scrollt er in sich: Reiter der Analyse, Kennzahl des Verlaufs */
+const SCROLL =
+  "max-w-full min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:shrink-0 [&>button]:whitespace-nowrap"
 
 /** Ziel einer Pfeiltaste im Umschalter; `null` für Tasten, die nichts bewegen */
 export function nextIndex(current: number, key: string, count: number): number | null {
@@ -40,6 +49,7 @@ export function Segmented<T extends string>({
   value,
   onChange,
   controls,
+  scroll,
   className,
 }: SegmentedProps<T>) {
   const bar = useRef<HTMLDivElement>(null)
@@ -76,6 +86,7 @@ export function Segmented<T extends string>({
       onKeyDown={onKeyDown}
       className={cn(
         "inline-flex rounded-full border border-border bg-surface-2 p-[3px]",
+        scroll && SCROLL,
         className
       )}
     >

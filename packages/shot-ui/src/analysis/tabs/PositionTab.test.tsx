@@ -151,13 +151,14 @@ describe("Reiter Lage", () => {
     const split = ringLossSplit(calm, LP_10M)!
     expect(split.positionLoss.decimal).toBeLessThan(0)
     const card = cardHtml(renderTab("position", { shots: calm }), "ringverlust-nach-ursache")
+    // die Streuung trägt den ganzen Ringverlust, Lage und Streuung ergeben ihn zusammen (Review U3)
     expect(card).toContain(
-      `aria-label="Lage kostet nichts, Streuung ${formatValue(split.spreadLoss.decimal, 1)} Ringe"`
+      `aria-label="Lage kostet nichts, Streuung ${formatValue(split.total!.decimal, 1)} Ringe"`
     )
     const text = cardText(renderTab("position", { shots: calm }), "ringverlust-nach-ursache")
     expect(text).toContain("Lage kostet nichts")
     // die Legende nennt keine Zahl, nur der Satz mit dem Grund
-    expect(text).toContain("Lage kostet nichts Streuung")
+    expect(text).toContain(`Lage kostet nichts Streuung ${formatValue(split.total!.decimal, 1)}`)
     expect(text).toContain(
       `Deine Gruppe sitzt schon gut; in die Mitte geschoben brächte sie rechnerisch nichts (Lage ${formatValue(split.positionLoss.decimal, 1)} Ringe).`
     )
