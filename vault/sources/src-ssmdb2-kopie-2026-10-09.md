@@ -32,6 +32,7 @@ relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]", "[[spiegel-bridge]]"
 - **Sportpass:** 1.517 von 1.532 Scheiben tragen eine Nummer, 215 verschiedene, keine mit mehreren Namen, die größte achtstellig (kein Überlauf, SF-35).
 - **ScheibenID:** innerhalb eines Abends dicht beieinander und mit der Zeit steigend, über Abende springend und zu 45 % negativ; die Sprünge passen zu einem Millisekunden-Zähler, der etwa alle 49,7 Tage über den 32-Bit-Bereich läuft (vermutet). Kein Wasserstand über die ID; Schlüssel nur mit Quelle und Epoche (SF-77).
 - **Fehlschüsse:** 377 Schüsse mit Ring 0 und Zehntel 0; 100 weitere mit negativen Zehnteln, alle in Vereinsspielen.
+- **Schüsse über der Soll-Zahl:** 53 in 16 Scheiben (etwa Schuss 41 bis 46 bei LG 40) mit echter Lage, aber Wert 0, `Text` „0F“ oder „inv“ und dem Platzhalter 2147483647 in `Teiler01` und `Teiler001` (SF-08). Aus der Lage gewertet ergäben sie Treffer bis 10,6.
 - **Anzeigeart:** alle Codes außer 0 und 10 kommen vor; **Modus 5** („komplett verdeckt“) nur bei 25 Ein-Schuss-Scheiben „König LG/LP“, und die Ablage enthält trotzdem bei allen die Lage und bei 15 den Wert (SF-19).
 
 ## Disziplinen und Wertung
