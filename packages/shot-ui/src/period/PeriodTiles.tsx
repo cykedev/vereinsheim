@@ -47,16 +47,7 @@ export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTi
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="font-mono text-xs leading-snug font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-                  {tile.label.split("σ").flatMap((part, i) =>
-                    i
-                      ? [
-                          <span key={i} className="normal-case">
-                            σ
-                          </span>,
-                          part,
-                        ]
-                      : [part]
-                  )}
+                  {tile.label}
                 </span>
                 {onHelp && (
                   <HelpButton

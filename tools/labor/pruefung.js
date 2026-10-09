@@ -2574,10 +2574,10 @@ addEventListener("load", async () => {
         "Zeitraum: „je Scheibe“ zeigt wieder jede Scheibe",
         M().view === "cards" && $$("[data-card-point]").length === M().values.length
       )
-      await click(button("σ"), 200)
+      await click(button("Streuung"), 200)
       const sigmaMonths = M().months
       check(
-        "Zeitraum: σ im Verlauf, Boden ist bei σ das P90 (kleiner ist besser)",
+        "Zeitraum: Streuung (σ) im Verlauf, Boden ist bei σ das P90 (kleiner ist besser)",
         P().state.metric === "group.sigma" &&
           sigmaMonths.every((m) => m.p10 === null || (m.floor === m.p90 && m.ceiling === m.p10))
       )

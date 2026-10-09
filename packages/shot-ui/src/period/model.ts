@@ -25,6 +25,7 @@ import {
 } from "@vereinsheim/shot-core/metrics"
 import { formatIsoDate, formatMonthYear, zonedDayStartMs } from "@vereinsheim/lib/format"
 
+import { metricLabel } from "../labels"
 import {
   compareRange,
   DAY_MS,
@@ -40,7 +41,7 @@ import type { PeriodMetricKey, PeriodState } from "./state"
 /** Kennzahlen des Verlaufs mit kurzem Namen für den Umschalter (D7) */
 export const PERIOD_CHART_METRICS: readonly { key: PeriodMetricKey; label: string }[] = [
   { key: "result.decimalMean", label: "Ø je Schuss" },
-  { key: "group.sigma", label: "σ" },
+  { key: "group.sigma", label: "Streuung" },
   { key: "result.tensRate", label: "Zehner" },
   { key: "time.intervalMedian", label: "Tempo" },
 ]
@@ -273,7 +274,7 @@ export function periodModel(input: {
     const theirs = otherCards ? cardValues(otherCards, base, scoring, options) : null
     return {
       key,
-      label: metric.label,
+      label: metricLabel(metric),
       unit: metric.unit,
       decimals: metric.decimals,
       better: metric.better,
@@ -330,7 +331,11 @@ export function periodModel(input: {
     range,
     compareRange: other,
     cards,
-    metric: inScoring(chartMetric, scoring),
+    metric: (() => {
+      // der Name auf der Seite (U3, D4): Achse, Liste und Ablesung sagen „Streuung“, nicht „Präzision σ“
+      const shown = inScoring(chartMetric, scoring)
+      return { ...shown, label: metricLabel(shown) }
+    })(),
     values,
     trend,
     compareValues,
