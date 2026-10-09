@@ -111,7 +111,8 @@ addEventListener("load", async () => {
     const expectedTile = (key) => {
       const { tools, shots, state } = L()
       const metric = tools.inScoring(tools.metricByKey(key), state.scoring)
-      const value = tools.computeMetric(metric, tools.selectionShots(shots, state.selection))
+      // die ganze Karte für Abstände wie die Kacheln: eine späte Probe ist keine Lücke (SF-04)
+      const value = tools.computeMetric(metric, tools.selectionShots(shots, state.selection), shots)
       return value === null ? "–" : tools.formatValue(value, metric.decimals)
     }
     const tilesMatch = () => tileKeys().filter((key) => tileValue(key) !== expectedTile(key))
@@ -1099,7 +1100,7 @@ addEventListener("load", async () => {
     check("Lage: und schaltet sie zurück", ellipseShown() === ellipseBefore)
     check(
       "Lage: von Neumann",
-      ctext("drift-und-wanderung").includes(nf(S().drift(base()).vonNeumann, 2))
+      ctext("drift-und-wanderung").includes(nf(S().drift(base(), input().card).vonNeumann, 2))
     )
     check(
       "Lage: „Gruppe in der Mitte“ statt korrigiertem Visier",
