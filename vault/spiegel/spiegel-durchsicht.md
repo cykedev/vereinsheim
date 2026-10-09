@@ -143,7 +143,14 @@ Die Analyse hat 25 Karten:
   - Das Training nur aus Probe bleibt mit Probe-Eck; der Filter „Probe-Training einbeziehen“ im Fortschritt bleibt.
   - Auf dem Tablet sind die Serien-Kacheln breiter (vier statt fünf je Zeile): Unter etwa 700 px Höhe folgen die
     Serien unter der Scheibe statt neben die untere Leiste zu passen.
-- **U5 Start und Liste** (hieß bis zum 9. Oktober U4): B8, B9 und die Filter der Liste wie in B5.
+- **U5 Start und Liste** (umgesetzt 10. Oktober 2026, `plans/2026-10-09-spiegel-start-und-liste.md`; hieß bis zum
+  9. Oktober U4): B8, B9 und die Filter der Liste wie in B5.
+  - Formband als kleiner Verlauf (Zeit nach rechts, Band um den gleitenden Schnitt, der Abend mit Datum).
+  - Unter der großen Zahl der Bezug statt noch einmal der Abstand; Form als Titel und ein Satz.
+  - Rekorde in ganzen Worten („Meiste 10,9 (20 Schuss): 1“).
+  - Ergebnisse mit Namen der Wertung: Liste „Ganze Ringe“ | „Zehntel“, amtliche fett; Kacheln „18,8 Zehntel · 18
+    ganze Ringe“.
+  - Filter der Liste in einer Zeile, Art und Merkmal im Blatt „Filter“.
   - Dazu das Formband auf Start (User, 9. Oktober 2026: „das formband ist irgendwie seltsam, ich verstehe es kaum,
     vor allem mit der ‚abend‘“). Woran es liegt:
     - Der Streifen ist eine Zahlenachse ohne Zeit (nach rechts der Ø je Schuss). Die grauen Punkte sind die letzten

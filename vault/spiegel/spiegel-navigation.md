@@ -39,8 +39,9 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
 3. **Ein Abend klappt nur auf.** Er hat keine eigene Seite; eine Zeile öffnet die Scheibe. Eine Abend-Seite kommt
    erst, wenn die Verknüpfung mit Treffsicher sie braucht (SP-3.1).
 4. **Liste und Fortschritt sind zwei verlinkte Bereiche:**
-   - Beide haben dieselbe Filterleiste und dieselbe Zeile.
-   - „Verlauf dieser Filter“ führt von der Liste zum Fortschritt.
+   - Beide haben dieselbe Filterleiste: eine Zeile mit Familie und einem Chip, der das Blatt „Filter“ öffnet (U2, U5).
+   - „Im Fortschritt zeigen“ (im Blatt „Filter“ der Liste, bis U5 „Verlauf dieser Filter“) führt von der Liste zum
+     Fortschritt.
    - „Alle in Scheiben zeigen“ führt vom Fortschritt zur Liste, mit Familie, von und bis.
    - Der Fortschritt behält seine kurze Liste mit Ablesung und „Scheibe öffnen“.
 5. **Die Familie ist auch in der Liste Pflicht**, wie im Zeitraum ([[spiegel-langzeit]], Prinzip 1). Vorgewählt ist
@@ -183,7 +184,8 @@ Plan `plans/2026-10-09-spiegel-scheiben-liste.md`, Branch `feat/spiegel-scheiben
     des Abends und die Merkmale der Familie.
 - **Bausteine:**
   - `EveningList`: Abschnitt je Abend mit dem ISO-Tag als Anker; die Zeile ist ein Knopf.
-  - `ListControls`: Filter, Zeitraum-Chip, „Verlauf dieser Filter“.
+  - `ListControls`: eine Zeile mit Familie und Chip; im Blatt „Filter“ Art, Merkmal, Zeitraum (entfernen) und „Im
+    Fortschritt zeigen“ (U5).
   - `CardFilters`: Familie und Art, geteilt mit dem Zeitraum.
   - Im Fortschritt „Alle in Scheiben zeigen“.
 - **Labor:** Ansicht „Scheiben“ mit der Saison. Die Luftpistole hat seit N2 Abende mit zwei Scheiben und drei
@@ -257,15 +259,19 @@ Plan `plans/2026-10-09-spiegel-start.md`, Branch `feat/spiegel-start`. Drei Entw
 (Artifact „Start-Entwürfe“); gewählt ist B, „der Abend im Formband“, mit dem Satz aus A darüber und größeren Kacheln.
 
 - **Aufbau:** „Offen (n)“ (im Labor zwei Beispiele), je Familie des letzten Abends ein Block, darunter eine Zeile
-  „Form, letzte 90 Tage“ für die zuletzt gewählte Familie.
+  „Form der letzten 90 Tage“ für die zuletzt gewählte Familie, seit U5 als Titel und ein Satz („Luftgewehr: Ø 10,25 je
+  Schuss, deutlich besser als in den 90 Tagen davor (+0,15).“).
 - **Der Block** (`EveningBlock`):
   - der Satz: „Im Formband: 0,09 über deinem Schnitt.“, „Über dem Formband: …“, „Unter dem Formband: …“; er ordnet
     ein und wertet nicht (nach dem Review, siehe unten);
   - Tag, Familie, Scheiben, Schuss;
-  - der Ø je Schuss des Abends groß, dazu der Abstand zum Schnitt der fünf Scheiben davor;
-  - der Streifen der letzten 20 Scheiben mit Formband, seit U2 in einem Rahmen über die ganze Achse (User: „im
-    leeren“);
-  - die Scheiben als Kacheln (kleine Scheibe 56 px);
+  - der Ø je Schuss des Abends groß, darunter der Bezug „Schnitt der 5 Scheiben davor: 9,05“ (seit U5; den Abstand
+    sagt schon der Satz);
+  - das Formband als kleiner Verlauf der letzten 20 Scheiben (seit U5, D1: Zeit nach rechts, Band um den gleitenden
+    Schnitt, der Abend rechts groß mit Datum; vorher eine Zahlenachse mit „Abend“, User: „ich verstehe es kaum“), in
+    einem Rahmen (U2), darunter eine Zeile, die Punkte, Linie und Band erklärt;
+  - die Scheiben als Kacheln (kleine Scheibe 56 px), das Ergebnis mit Namen der Wertung („18,8 Zehntel · 18 ganze
+    Ringe“, U5);
   - neue Rekorde, nur wenn der Abend welche aufgestellt hat;
   - „Abend in Scheiben ›“.
 - **Einheit ist die Scheibe** (Regel des Fachkerns): Der Streifen zeigt Scheiben, nicht Abende. Der „Platz unter den
