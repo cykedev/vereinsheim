@@ -5,6 +5,8 @@ import {
   EVENING_PRINTOUT,
   EVENING_SHOTS,
 } from "./__fixtures__/meyton-2026-10-09"
+import { OWN_SHOTS } from "./__fixtures__/meyton-eigene-scheiben"
+import { resolveTarget } from "./discipline"
 import {
   distanceUm,
   MEYTON_TOLERANCE_UM,
@@ -65,6 +67,35 @@ describe("Abend vom 9. Oktober 2026 (Meyton-Toleranz, SF-75)", () => {
         tenths
       )
     }
+  })
+})
+
+describe("Alle eigenen Scheiben des Users, Oktober 2024 bis Oktober 2026 (SF-75)", () => {
+  // Die Disziplin bestimmt die Scheibe wie in Spiegel; Disziplinen ohne Scheibenbild (Schach,
+  // Zimmerstutzen) und über den Namen aufgelöste (König, verdeckt) bleiben außen vor.
+  const scored = OWN_SHOTS.flatMap((shot) => {
+    const { targetId, source } = resolveTarget({ disciplineId: shot.disciplineId, name: "" })
+    return targetId && source === "catalog" ? [{ shot, target: TARGETS[targetId] }] : []
+  })
+
+  it("jeder Schuss wie Meyton, aus der Lage wie aus dem Teiler", () => {
+    expect(OWN_SHOTS).toHaveLength(969)
+    expect(scored).toHaveLength(953)
+    for (const { shot, target } of scored) {
+      const expected = { decimalTenths: shot.decimalTenths, innerTen: shot.innerTen }
+      const label = `Scheibe ${shot.card}, Schuss ${shot.nr}`
+      expect(scoreFromCoordinates(target, shot.xUm, shot.yUm), label).toMatchObject(expected)
+      expect(scoreFromDistance(target, shot.distanceUm), label).toMatchObject(expected)
+    }
+  })
+
+  it("Schach, Zimmerstutzen und König haben ohne Namen kein Scheibenbild", () => {
+    const unresolved = OWN_SHOTS.filter(
+      (shot) => resolveTarget({ disciplineId: shot.disciplineId, name: "" }).targetId === null
+    )
+    expect(new Set(unresolved.map((shot) => shot.disciplineId))).toEqual(
+      new Set([18151010, 10199005, 19100001])
+    )
   })
 })
 
