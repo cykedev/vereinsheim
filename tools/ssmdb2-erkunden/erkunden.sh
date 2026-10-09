@@ -385,7 +385,9 @@ phase_abend() {
     return 0
   }
   MITSCHNITT_DATEI="$AUSGABE/privat/protokoll-roh.tsv"
-  MITSCHNITT_FENSTER_MIN="${ERKUNDEN_FENSTER_MIN:-90}"
+  # 90 Minuten; kürzer nur im Selbsttest
+  MITSCHNITT_FENSTER_S="${ERKUNDEN_FENSTER_S:-5400}"
+  MITSCHNITT_FENSTER_TAKT_S="${ERKUNDEN_FENSTER_TAKT_S:-60}"
   mitschnitt_vorpruefen || fehler "Der Mitschnitt kann nicht lesen (siehe oben)"
   if [ "$MITSCHNITT_NETZ_S" -ge 60 ]; then
     MITSCHNITT_NETZ_S=0

@@ -22,8 +22,10 @@ MITSCHNITT_LANGSAM_MS=300
 MITSCHNITT_BASIS_MS=0
 MITSCHNITT_NETZ_S=10        # Abstand des Netzes über Treffer.Zeitstempel; 60 bei Vollscan, 0 = aus
 # Fenster für den Abend im laufenden Betrieb (Phase abend): nur Scheiben lesen, die sich in den letzten
-# N Minuten geändert haben, und das Fenster jede Minute nachziehen. 0 = aus (Protokoll: alle seit Start).
-MITSCHNITT_FENSTER_MIN=0
+# N Sekunden geändert haben, und das Fenster alle MITSCHNITT_FENSTER_TAKT_S nachziehen. 0 = aus
+# (Protokoll: alle seit Start).
+MITSCHNITT_FENSTER_S=0
+MITSCHNITT_FENSTER_TAKT_S=60
 
 # Die Fehlerzeile einer Client-Ausgabe: Der MariaDB-Client schreibt zuerst die Anweisung, dann ERROR.
 _fehlerzeile() {
@@ -55,10 +57,10 @@ _ids_vereinigen() {
 }
 
 # Zieht den Beginn des Fensters nach: jüngster Eintrag oder Server-Uhr, was früher ist, minus
-# MITSCHNITT_FENSTER_MIN (wie mitschnitt_vorpruefen). Nie zurück; bei einem Fehler bleibt $1.
+# MITSCHNITT_FENSTER_S (wie mitschnitt_vorpruefen). Nie zurück; bei einem Fehler bleibt $1.
 _fenster_seit() {
   local neu
-  neu=$(sql_text "SELECT LEAST(NOW(), COALESCE(MAX(Zeitstempel), NOW())) - INTERVAL $MITSCHNITT_FENSTER_MIN MINUTE
+  neu=$(sql_text "SELECT LEAST(NOW(), COALESCE(MAX(Zeitstempel), NOW())) - INTERVAL $MITSCHNITT_FENSTER_S SECOND
     AS seit FROM Scheiben" 2>/dev/null | sed -n 2p || true)
   if [ -n "$neu" ] && [[ "$neu" > "$1" ]]; then printf '%s\n' "$neu"; else printf '%s\n' "$1"; fi
 }
@@ -111,20 +113,21 @@ _stand_sql() {
 
 _mitschnitt_schleife() {
   local seit=$1 takt=1 schnell=0 ids="" vorher="" marker=0 letztes_netz=0 letztes_fenster
-  local stand t0 dauer anlage koerper neu aktiv
+  local stand t0 dauer anlage koerper neu aktiv weg
   letztes_fenster=$(jetzt_ms)
   while [ ! -f "$MITSCHNITT_STOP" ]; do
     marker=$(_marker_uebernehmen "$marker")
-    # Abend: Fenster jede Minute nachziehen und Scheiben ohne Änderung darin nicht mehr lesen. Das
-    # Ereignis nennt sie, damit eine ausgeschiedene Scheibe nicht als gelöscht gelesen wird.
-    if [ "$MITSCHNITT_FENSTER_MIN" -gt 0 ] && [ $(($(jetzt_ms) - letztes_fenster)) -ge 60000 ]; then
+    # Abend: Fenster nachziehen und Scheiben ohne Änderung darin nicht mehr lesen. Das Ereignis nennt
+    # sie, damit eine ausgeschiedene Scheibe nicht als gelöscht gelesen wird; nur, wenn eine ausscheidet
+    # (die Abfrage liefert dieselben IDs auch in anderer Reihenfolge).
+    if [ "$MITSCHNITT_FENSTER_S" -gt 0 ] &&
+      [ $(($(jetzt_ms) - letztes_fenster)) -ge $((MITSCHNITT_FENSTER_TAKT_S * 1000)) ]; then
       letztes_fenster=$(jetzt_ms)
       seit=$(_fenster_seit "$seit")
       aktiv=$(_ids_aktiv "$ids" "$seit")
-      if [ "$aktiv" != "$ids" ]; then
-        mitschnitt_ereignis "fenster seit=$seit ausgeschieden=$(_ids_ohne "$ids" "$aktiv" | tr ' ' ',')"
-        ids=$aktiv
-      fi
+      weg=$(_ids_ohne "$ids" "$aktiv")
+      if [ -n "$weg" ]; then mitschnitt_ereignis "fenster seit=$seit ausgeschieden=$(printf '%s' "$weg" | tr ' ' ',')"; fi
+      ids=$aktiv
       letztes_netz=0
     fi
     if ! neu=$(sql_text "SELECT ScheibenID FROM Scheiben WHERE Zeitstempel >= '$seit'" 2>&1); then
@@ -183,7 +186,7 @@ _mitschnitt_schleife() {
 # Nach einem Fehler: Am Abend den Docker-Client wiederbeleben, falls er weg ist, und nicht im
 # Sekundentakt gegen eine fehlende Verbindung laufen. $1 = Pause (0 = keine).
 _nach_fehler() {
-  if [ "$MITSCHNITT_FENSTER_MIN" -gt 0 ]; then
+  if [ "$MITSCHNITT_FENSTER_S" -gt 0 ]; then
     if client_wiederbeleben; then mitschnitt_ereignis "client neu gestartet"; fi
     sleep 5
   elif [ "$1" -gt 0 ]; then
@@ -245,7 +248,7 @@ mitschnitt_starten() {
   rm -f "$MITSCHNITT_STOP"
   : >"$MITSCHNITT_MARKER"
   MITSCHNITT_BASIS_MS=$(_grundlast_messen)
-  mitschnitt_ereignis "start seit=$MITSCHNITT_SEIT basis_ms=$MITSCHNITT_BASIS_MS netz_s=$MITSCHNITT_NETZ_S fenster_min=$MITSCHNITT_FENSTER_MIN"
+  mitschnitt_ereignis "start seit=$MITSCHNITT_SEIT basis_ms=$MITSCHNITT_BASIS_MS netz_s=$MITSCHNITT_NETZ_S fenster_s=$MITSCHNITT_FENSTER_S"
   # Ohne stdin: Der Mitschnitt darf nie Eingaben des Users lesen.
   _mitschnitt_schleife "$MITSCHNITT_SEIT" </dev/null &
   MITSCHNITT_PID=$!

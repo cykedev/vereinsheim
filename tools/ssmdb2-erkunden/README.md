@@ -50,6 +50,22 @@ durch ein Schießprotokoll, das man allein schießen kann, während es jede Seku
 4. Ausdrucke aufheben. Wer mag, öffnet den QR-Link des Ausdrucks auf dem Mac und speichert das PDF
    unter `privat/pdf/` (enthält Namen).
 
+### Einen ganzen Abend im Betrieb mitschneiden
+
+Wer nicht dabeibleiben kann, lässt nur mitschneiden, während der Verein schießt:
+
+```bash
+tools/ssmdb2-erkunden/erkunden.sh selbsttest verbinden abend
+```
+
+Die Phase **abend** fragt einmal, danach läuft sie ohne Eingaben und schreibt alle 5 Minuten eine
+Statuszeile. Beenden mit **einmal Ctrl-C**, dann warten, bis „Abend-Mitschnitt geschrieben“ und der
+Befehl für danach erscheinen; Terminal offen lassen, Mac am Netzteil und aufgeklappt. Sie liest nur
+Scheiben mit einer Änderung in den letzten 90 Minuten und lässt das Netz über `Treffer` weg, wenn es die
+ganze Tabelle lesen müsste. Checkliste und Kopie folgen, wenn niemand mehr schießt:
+`erkunden.sh --ausgabe <Ordner> checkliste dump abschluss`. Ein hart beendeter Mitschnitt (Fenster zu,
+Akku leer) ist bis dahin gesichert; `abschluss` schreibt die Fassung mit Pseudonymen nach.
+
 ## Was herauskommt
 
 Alles unter `~/ssmdb2-erkundung/<Datum_Zeit>/`:

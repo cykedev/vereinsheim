@@ -221,6 +221,49 @@ pruefe "interaktiv: q beendet bei Schritt 6" grep -q '| 6 | .* | abgebrochen |' 
 pruefe "interaktiv: keine Schritte nach dem Abbruch" sh -c "! grep -q '^| 7 ' '$INTERAKTIV/bericht/schritte.md'"
 pruefe "interaktiv: LIESMICH geschrieben" test -s "$INTERAKTIV/bericht/LIESMICH.md"
 
+# Abend im laufenden Betrieb: Fenster von 3 s statt 90 min. Scheibe 3001 schießt einmal und fällt aus
+# dem Fenster, 3002 schießt weiter; mittendrin verschwindet der Client-Container; TERM beendet sauber.
+ABEND="$AUSGABE/abend"
+echo "Abend-Mitschnitt mit kurzem Fenster (etwa 20 Sekunden) …"
+abend_scheibe() { # id name
+  echo "INSERT INTO Scheiben (ScheibenID, Starterliste, Nachname, Vorname, SportpassID, StandNr, Disziplin,
+    DisziplinID, Status, Trefferzahl, Zeitstempel) VALUES ($1, 'Training', '$2', 'Annegret', 48151623, 7,
+    'LG 40', 10110040, '', 0, NOW());" | anlage_sql
+}
+abend_schuss() { # id nr
+  echo "INSERT INTO Treffer VALUES ($1, 0, $2, 1, 100, 200, 0, 1, '', 10, 101, 22, 224, NOW(), 5);
+    UPDATE Scheiben SET Zeitstempel = NOW() WHERE ScheibenID = $1;" | anlage_sql
+}
+abend_scheibe 3001 'Bertram'
+abend_schuss 3001 1
+abend_scheibe 3002 'Zielwasser'
+ERKUNDEN_FENSTER_S=3 ERKUNDEN_FENSTER_TAKT_S=2 "${ERKUNDEN_BASH:-bash}" "$WERKZEUG/erkunden.sh" \
+  --host "$ANLAGE" --docker --docker-netz "$NETZ" --auto --ausgabe "$ABEND" abend \
+  >/dev/null 2>"$AUSGABE/abend-stderr.txt" &
+ABEND_PID=$!
+for nr in 1 2 3 4 5 6 7 8 9 10 11 12; do
+  sleep 1
+  abend_schuss 3002 "$nr"
+  if [ "$nr" = 6 ]; then
+    docker rm -f "ssmdb2-erkunden-client-$ABEND_PID" >/dev/null 2>&1 || true
+  fi
+done
+sleep 2
+kill -TERM "$ABEND_PID"
+if wait "$ABEND_PID"; then RC_ABEND=0; else RC_ABEND=$?; fi
+ABEND_ROH="$ABEND/privat/protokoll-roh.tsv"
+pruefe "abend: TERM beendet sauber (Exit 0)" test "$RC_ABEND" = 0
+pruefe "abend: Ende im Protokoll" grep -q '^# ende ' "$ABEND_ROH"
+pruefe "abend: Fenster in Sekunden" grep -q '^# start .* fenster_s=3 ' "$ABEND_ROH"
+pruefe "abend: ruhige Scheibe fällt aus dem Fenster" grep -q -E '^# fenster .*ausgeschieden=([0-9,-]*,)?3001[, ]' "$ABEND_ROH"
+pruefe "abend: aktive Scheibe bleibt im Fenster" sh -c "! grep '^# fenster ' '$ABEND_ROH' | grep -q '3002'"
+pruefe "abend: kein Fenster-Ereignis ohne ausgeschiedene Scheibe" sh -c "! grep -q 'ausgeschieden= ' '$ABEND_ROH'"
+pruefe "abend: Client nach dem Verschwinden neu gestartet" grep -q '^# client neu gestartet' "$ABEND_ROH"
+pruefe "abend: letzter Stand mit allen zwölf Schüssen von 3002" sh -c "awk -F'\t' '/^# stand /{n=0} /^3002\t0\t/{n++} END{exit !(n == 12)}' '$ABEND_ROH'"
+pruefe "abend: Protokoll mit Pseudonymen" test -s "$ABEND/bericht/protokoll.tsv"
+pruefe "abend: kein Testname im Bericht" sh -c "! grep -q -E 'Bertram|Zielwasser|Annegret|48151623' '$ABEND/bericht/protokoll.tsv'"
+pruefe "abend: kein Client-Container übrig" sh -c "test -z \"\$(docker ps -aq --filter name=ssmdb2-erkunden-client-$ABEND_PID)\""
+
 ZUGAENGE_NACHHER=$(find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'ssmdb2-zugang.*' 2>/dev/null | wc -l | tr -d ' ')
 pruefe "Zugangsdateien nach jedem Lauf gelöscht" test "$ZUGAENGE_NACHHER" = "$ZUGAENGE_VORHER"
 
