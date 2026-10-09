@@ -72,6 +72,15 @@ Die Lage steht dazu dreimal mit denselben Zahlen: im Kopf, in der Kachel „Lage
   - Texte in `shot-help`, die die alten Urteilsworte zitieren („bedeutsam“), sagen die neuen.
   - Danach `pnpm --filter @vereinsheim/shot-help docs`.
 
+- **D10 Ein negativer Lage-Anteil heißt „kostet nichts“** (User-Frage während der Umsetzung, 9. Oktober 2026: „ich sehe
+  einen negativen Ringverlust durch die Lage … wie ist das möglich“).
+  - Woher er kommt: Die Mitte ohne den Schuss selbst (Gruppe um n/(n−1) größer) oder ein Ausreißer, der den
+    Schwerpunkt zieht.
+  - Auf der Kachel „Ringverlust“ und in der Legende der Karte steht bei einem Lage-Anteil ≤ 0 „Lage kostet nichts“
+    statt „Lage −0,4“.
+  - Die Karte „Ringverlust nach Ursache“ nennt die Zahl mit einem Satz zum Grund: „Deine Gruppe sitzt schon gut; in
+    die Mitte geschoben brächte sie rechnerisch nichts (Lage −0,4 Ringe).“
+
 ## Dateien
 
 | Datei | Änderung |
@@ -104,11 +113,14 @@ Die Lage steht dazu dreimal mit denselben Zahlen: im Kopf, in der Kachel „Lage
 6. **Art in den Listen (D7):** Markup-Tests, dann `EveningList` und `CardList`.
 7. **Legende am Formband (D8):** Test, dann `EveningBlock`.
 8. **Hilfe (D9):** `topics.ts`, Test, Leitfaden erzeugen.
-9. **Skriptprüfung:**
+9. **Lage kostet nichts (D10):**
+   - Tests: Kachel und Karte mit einem Lage-Anteil ≤ 0 (konstruierte Gruppe fast mittig mit Ausreißer);
+   - dann `overview.ts` und `PositionTab.tsx` (`RingLoss`).
+10. **Skriptprüfung:**
    - Texte und Bezeichnungen nachziehen;
    - neu: Kopf und Überblick ohne σ, R50, T², „95 %“;
    - Gegenprobe: alter Lage-Satz rot.
-10. **Doku:**
+11. **Doku:**
     - `packages/shot-ui/CLAUDE.md`;
     - Vault: Durchsicht U3 erledigt; `spiegel-ui-design` Wortwahl.
 
