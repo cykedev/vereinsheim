@@ -25,6 +25,15 @@ addEventListener("load", async () => {
     // Wege sind seit N3 Links mit Adresse (`RouteLink`), gefunden nach Text oder Namen
     const link = (label, root = document) =>
       $$("a", root).find((a) => txt(a).trim() === label || a.getAttribute("aria-label") === label)
+    // ein Bereich der Navigation (Plan N3): der sichtbare Eintrag des Rahmens mit diesem Text oder Namen
+    const area = (label, root = document) =>
+      $$("[data-app-frame] nav a", root).find(
+        (a) =>
+          a.offsetParent !== null &&
+          (txt(a).trim() === label ||
+            a.getAttribute("aria-label") === label ||
+            a.getAttribute("aria-label")?.startsWith(`${label},`))
+      )
     const zoom = () => button("Auf Gruppe zoomen")
     // Adressen (Plan N1): die Zeile im Kopf, in Teile wie `location`, hin und zurück über den Prüfhaken
     const addr = () => txt($("[data-address]")).trim()
@@ -1753,10 +1762,11 @@ addEventListener("load", async () => {
     anchored.remove()
 
     // feste Scheibe ab 768 px: beim Kleben passt sie samt Leiste ins Fenster, auch flach (D5, D9)
-    // flach passt die Scheibe allein ins Fenster, mit genug Höhe samt Serien (ab 280 px Scheibe)
+    // flach passt die Scheibe allein ins Fenster, mit genug Höhe samt Serien (ab 280 px Scheibe). Ab 1024 px steht die
+    // Seitenleiste daneben (N3): die Spalte wird schmaler, bei 1024 × 600 passen die Serien darum mit ins Fenster
     for (const [width, height, withSeries] of [
       [812, 375, false],
-      [1024, 600, false],
+      [1024, 600, true],
       [1024, 768, true],
     ]) {
       const flat = await openFrame(width, height)
@@ -2091,7 +2101,7 @@ addEventListener("load", async () => {
         await wait(40)
       }
 
-      await click(button("Zeitraum"), 400)
+      await click(area("Fortschritt"), 400)
       check(
         "Zeitraum: die Ansicht öffnet die Seite mit Kopf und Sprungleiste",
         !!$("[data-period-header]") &&
@@ -2313,7 +2323,7 @@ addEventListener("load", async () => {
       )
       check(
         "Adresse: der Rückweg heißt nach dem Zeitraum",
-        !!button("Zurück zu „Neue Munition“") && !button("Zurück zum Zeitraum")
+        !!link("Zurück zu „Neue Munition“") && !link("Zurück zum Zeitraum")
       )
       await click($('[data-series="2"]'), 120)
       check(
@@ -2337,7 +2347,7 @@ addEventListener("load", async () => {
           tools.formatValue(openedMean, 2) === listValue,
         `${matchShots.length}/${listShots} ${listValue}`
       )
-      await click(button("Zurück zu „Neue Munition“"), 500)
+      await click(link("Zurück zu „Neue Munition“"), 500)
       check(
         "Zeitraum: „Zurück“ kehrt an die Stelle zurück",
         scrolledTo > 0 && near(window.scrollY, scrolledTo, 5),
@@ -2359,7 +2369,7 @@ addEventListener("load", async () => {
       await click(link("Scheibe öffnen", $("[data-card-readout]")), 500)
       await click(button("Ganze Ringe"), 120)
       await click(button("Zehntel"), 120)
-      await click(button("Zurück zu „Neue Munition“"), 500)
+      await click(link("Zurück zu „Neue Munition“"), 500)
       await click(button("Ganze Ringe"), 150)
       await click(link("Scheibe öffnen", $("[data-card-readout]")), 500)
       check(
@@ -2368,7 +2378,7 @@ addEventListener("load", async () => {
         `${L().state.scoring} · ${addr()}`
       )
       check("Adresse: eine geöffnete Scheibe beginnt ohne Anker", !addr().includes("#"), addr())
-      await click(button("Zurück zu „Neue Munition“"), 500)
+      await click(link("Zurück zu „Neue Munition“"), 500)
       check(
         "Adresse: „Zurück“ lässt die ganzen Ringe des Zeitraums stehen",
         P().state.scoring === "rings" && addr().includes("scoring=rings"),
@@ -2533,7 +2543,7 @@ addEventListener("load", async () => {
       // ---------- Scheiben-Liste (Plan N2, Task 9)
       const Li = () => L().list
       const listRows = () => $$("[data-card-row]").map((r) => r.dataset.cardRow)
-      await click(button("Scheiben"), 400)
+      await click(area("Scheiben"), 400)
       const evenings = Li().model.evenings
       check(
         "Liste: Abende neueste zuerst, die Scheiben eines Abends in zeitlicher Folge, wie im Modell",
@@ -2630,7 +2640,7 @@ addEventListener("load", async () => {
       )
       const competitionAddress = addr()
       await click($(`[data-card-row="${Li().model.evenings[1].rows[0].id}"]`), 500)
-      await click(button("Zurück zu „Scheiben“"), 500)
+      await click(link("Zurück zu „Scheiben“"), 500)
       check(
         "Liste: „Zurück“ aus einer gefilterten Liste behält die Art",
         !!$("[data-card-list-page]") &&
@@ -2650,10 +2660,10 @@ addEventListener("load", async () => {
         "Liste: eine Zeile öffnet die Scheibe mit der Liste als Herkunft",
         addr().startsWith(`/cards/${openId}?from=list&family=lg-freihand`) &&
           routeOf(addr()).origin?.from === "list" &&
-          !!button("Zurück zu „Scheiben“"),
+          !!link("Zurück zu „Scheiben“"),
         addr()
       )
-      await click(button("Zurück zu „Scheiben“"), 500)
+      await click(link("Zurück zu „Scheiben“"), 500)
       check(
         "Liste: „Zurück“ stellt Filter und Scrollstelle wieder her",
         !!$("[data-card-list-page]") &&
@@ -2709,10 +2719,10 @@ addEventListener("load", async () => {
       )
       // die Disziplin bleibt beim Wechsel über die Leiste oben, in beide Richtungen (User, 9. Oktober 2026)
       await click(button("Luftpistole", $("[data-list-controls]")), 300)
-      await click(button("Zeitraum"), 400)
+      await click(area("Fortschritt"), 400)
       const periodFamily = P()?.state.family
       await click(button("Luftgewehr", $("[data-period-controls]")), 300)
-      await click(button("Scheiben"), 400)
+      await click(area("Scheiben"), 400)
       check(
         "Liste ↔ Zeitraum über die Leiste: die gewählte Disziplin bleibt",
         periodFamily === "lp-freihand" &&
@@ -2746,8 +2756,8 @@ addEventListener("load", async () => {
         `${pd.documentElement.scrollWidth} · ${hiddenCells} · ${Math.round(phoneDayTop)} · ${overflowing} von ${tableBoxes.length} Karten zu breit`
       )
       phone.remove()
-      await click(button("Zeitraum"), 300)
-      await click(button("Scheibe"), 300)
+      await click(area("Fortschritt"), 300)
+      await click(button("Beispiele"), 300)
       // #numbers gibt es auf beiden Seiten: es öffnet die zuletzt gewählte Ansicht, hier die Scheibe (Review)
       const reload = await openFrame(1280, 900, "#numbers")
       check(

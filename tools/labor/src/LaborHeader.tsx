@@ -2,12 +2,16 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import type { ReactNode } from "react"
 
 export type Theme = "system" | "light" | "dark"
-export type LaborMode = "list" | "card" | "period"
+/** die Ansichten des Labors: die Bereiche der App (Platzhalter für Start, Scannen, Profil, Admin) und die Scheibe */
+export type LaborMode = "list" | "card" | "period" | "start" | "scan" | "profile" | "admin"
+/** die App im Rahmen oder die Beispielscheiben, die nur das Labor hat */
+export type LaborView = "app" | "samples"
 
 export interface LaborHeaderProps {
   commit: string
   mode: LaborMode
-  onMode: (mode: LaborMode) => void
+  view: LaborView
+  onView: (view: LaborView) => void
   theme: Theme
   onTheme: (theme: Theme) => void
   /** Umschalter der Ansicht (Scheibe, Beispiel, Tippen …) */
@@ -21,11 +25,15 @@ export interface LaborHeaderProps {
   address?: string
 }
 
-/** Kopf des Labors: was es ist, der Stand, die Ansicht (Scheibe oder Zeitraum), die Darstellung und je Ansicht ihre Umschalter */
+/**
+ * Kopf des Labors: was es ist, der Stand, App oder Beispiele, die Darstellung und je Ansicht ihre Umschalter. Die
+ * Bereiche wechselt der Rahmen der App (Plan N3), nicht der Kopf.
+ */
 export function LaborHeader({
   commit,
   mode,
-  onMode,
+  view,
+  onView,
   theme,
   onTheme,
   children,
@@ -45,7 +53,9 @@ export function LaborHeader({
           ? "Die Scheiben-Liste aus den echten Bausteinen, über die erfundene Saison: jeder Abend mit seinen Scheiben, neueste zuerst. Wähle Familie und Art oben, tippe auf eine Zeile, um die Scheibe zu öffnen, oder auf „Verlauf dieser Filter“."
           : mode === "card"
             ? "Alles hier sind die echten Bausteine aus packages/shot-ui, mit dem Fachkern gerechnet. Tippe auf eine Serie, um nur sie zu sehen, auf einen Treffer oder eine Zeile der Tabelle, um ihn abzulesen, oder setze im Modus „Setzen“ eigene Schüsse. Das „?“ an einer Kachel oder Karte erklärt die Zahl."
-            : "Die Seite eines Zeitraums aus den echten Bausteinen, über eine erfundene Saison. Wähle den Zeitraum oben, tippe in den Verlauf oder auf eine Zeile der Liste, um eine Scheibe abzulesen, und öffne sie mit „Scheibe öffnen“."}
+            : mode === "period"
+              ? "Die Seite eines Zeitraums aus den echten Bausteinen, über eine erfundene Saison. Wähle den Zeitraum oben, tippe in den Verlauf oder auf eine Zeile der Liste, um eine Scheibe abzulesen, und öffne sie mit „Scheibe öffnen“."
+              : "Der Rahmen der App aus den echten Bausteinen: am Desktop die Seitenleiste, auf dem Telefon die untere Leiste mit Scannen in der Mitte. Dieser Bereich ist noch ein Platzhalter."}
       </p>
       <div className="flex flex-wrap gap-2">
         <span className="rounded-full border border-line-strong px-2.5 py-1 font-mono text-xs">
@@ -57,14 +67,13 @@ export function LaborHeader({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Segmented
-          label="Ansicht"
-          value={mode}
+          label="Labor"
+          value={view}
           options={[
-            { value: "list", label: "Scheiben" },
-            { value: "card", label: "Scheibe" },
-            { value: "period", label: "Zeitraum" },
+            { value: "app", label: "App" },
+            { value: "samples", label: "Beispiele" },
           ]}
-          onChange={onMode}
+          onChange={onView}
         />
         {children}
         <Segmented

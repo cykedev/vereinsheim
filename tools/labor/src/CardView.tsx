@@ -24,7 +24,9 @@ import { ShotLine } from "@vereinsheim/shot-ui/readout/ShotLine"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
-import { backLabel } from "@vereinsheim/shot-ui/nav/navigate"
+import { CardContextBar } from "@vereinsheim/shot-ui/nav/CardContextBar"
+import { contextCardIds, neighbours } from "@vereinsheim/shot-ui/nav/context"
+import { backLabel, backRoute, siblingRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import { urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { defaultWhole, probeOnlyAsMatch, shotLabels } from "@vereinsheim/shot-ui/shots"
 import { TargetControls, type Others } from "@vereinsheim/shot-ui/target/TargetControls"
@@ -38,7 +40,7 @@ import { useCallback, useEffect, useMemo, useReducer, useState, type MouseEvent 
 import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
 
 import { rawSample, SAMPLES, toMetricShots, type RawShot, type SampleId } from "./samples"
-import { NAMED_PERIODS, SEASON_TIME_ZONE } from "./season"
+import { NAMED_PERIODS, season, SEASON_NOW_MS, SEASON_TIME_ZONE } from "./season"
 import { store } from "./store"
 import { exposeForTest, underTest } from "./testHook"
 
@@ -83,22 +85,13 @@ export interface CardViewProps {
   onHelp: (helpId: string | null) => void
   /** eine Scheibe aus der Saison statt eines Beispiels */
   opened?: OpenedCard | null
-  /** zurück zur Seite des Zeitraums, mit der Adresse der Scheibe, wie sie gerade ist (Wertung, Auswahl, Reiter) */
-  onBack?: (route: CardRoute) => void
 }
 
 /**
  * Die Seite einer Scheibe im Labor (bis L3 die ganze App): Beispiele oder eine Scheibe aus der Saison, Ansehen und
  * Setzen, Anker, Analyse. Der Zustand gilt je Scheibe; die Seite eines Zeitraums hält ihren eigenen in `App`.
  */
-export function CardView({
-  header,
-  explain,
-  onExplain,
-  onHelp,
-  opened = null,
-  onBack,
-}: CardViewProps) {
+export function CardView({ header, explain, onExplain, onHelp, opened = null }: CardViewProps) {
   const [targetId, setTargetId] = useState<TargetId>(opened?.target ?? "lp-10m")
   const [sampleId, setSampleId] = useState<SampleId>("forty")
   const [raw, setRaw] = useState<RawShot[]>(() => opened?.raw ?? rawSample("lp-10m", "forty"))
@@ -262,7 +255,21 @@ export function CardView({
     scoring: state.scoring,
     anchor: tabInAddress ? { section: "analysis", tab } : null,
   }
-  const backText = `Zurück zu „${backLabel(route, { named: NAMED_PERIODS, timeZone: SEASON_TIME_ZONE })}“`
+  // Rückweg und Blättern im Kontext (Plan N3, D5): die Scheiben, aus denen sie geöffnet wurde, in zeitlicher Folge
+  const contextIds = useMemo(
+    () =>
+      opened
+        ? contextCardIds(opened.route, {
+            cards: season().map((c) => ({ card: c.card, family: c.family })),
+            nowMs: SEASON_NOW_MS,
+            timeZone: SEASON_TIME_ZONE,
+            named: NAMED_PERIODS,
+          })
+        : null,
+    [opened]
+  )
+  const near = opened && contextIds ? neighbours(contextIds, opened.id) : null
+  const backText = backLabel(route, { named: NAMED_PERIODS, timeZone: SEASON_TIME_ZONE })
 
   const empty = shots.length === 0
   const scoringSwitch = (
@@ -285,27 +292,7 @@ export function CardView({
         address={urlFromRoute(route)}
         hint={opened ? `${opened.label} aus der erfundenen Saison.` : sample.hint}
       >
-        {opened ? (
-          <button
-            type="button"
-            onClick={() => onBack?.(route)}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-accent-wash px-3 py-1.5 text-[13px] leading-none font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              className="size-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 6l-6 6 6 6" />
-            </svg>
-            {backText}
-          </button>
-        ) : (
+        {opened ? null : (
           <>
             <Segmented
               label="Scheibe"
@@ -346,6 +333,16 @@ export function CardView({
           />
         )}
       </LaborHeader>
+
+      {opened && (
+        <CardContextBar
+          back={backRoute(route)}
+          backText={backText}
+          prev={near?.prev ? siblingRoute(route, near.prev) : null}
+          next={near?.next ? siblingRoute(route, near.next) : null}
+          paging={contextIds !== null}
+        />
+      )}
 
       <CardPage
         header={
