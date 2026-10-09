@@ -2937,6 +2937,7 @@ addEventListener("load", async () => {
       check(
         "Start: der letzte Abend mit seiner Zahl, nachgerechnet, und dem Satz, der zum Urteil passt",
         !!$("[data-start-page]") &&
+          !txt($("header")).includes("Platzhalter") &&
           !!blockEl &&
           eveningMean !== null &&
           txt($("[data-evening-mean]", blockEl)) === tools.formatValue(eveningMean, 2) &&

@@ -55,7 +55,9 @@ export function LaborHeader({
             ? "Alles hier sind die echten Bausteine aus packages/shot-ui, mit dem Fachkern gerechnet. Tippe auf eine Serie, um nur sie zu sehen, auf einen Treffer oder eine Zeile der Tabelle, um ihn abzulesen, oder setze im Modus „Setzen“ eigene Schüsse. Das „?“ an einer Kachel oder Karte erklärt die Zahl."
             : mode === "period"
               ? "Die Seite eines Zeitraums aus den echten Bausteinen, über eine erfundene Saison. Wähle den Zeitraum oben, tippe in den Verlauf oder auf eine Zeile der Liste, um eine Scheibe abzulesen, und öffne sie mit „Scheibe öffnen“."
-              : "Der Rahmen der App aus den echten Bausteinen: am Desktop die Seitenleiste, auf dem Telefon die untere Leiste mit Scannen in der Mitte. Dieser Bereich ist noch ein Platzhalter."}
+              : mode === "start"
+                ? "Start aus den echten Bausteinen: was offen ist, der letzte Abend im Formband und die Form der letzten 90 Tage. Tippe auf eine Kachel, um die Scheibe zu öffnen."
+                : "Der Rahmen der App aus den echten Bausteinen: am Desktop die Seitenleiste, auf dem Telefon die untere Leiste mit Scannen in der Mitte. Dieser Bereich ist noch ein Platzhalter."}
       </p>
       <div className="flex flex-wrap gap-2">
         <span className="rounded-full border border-line-strong px-2.5 py-1 font-mono text-xs">
