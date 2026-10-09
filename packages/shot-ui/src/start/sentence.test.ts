@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { EveningBlock } from "./model"
-import { eveningReferenceText, eveningSentence } from "./sentence"
+import { eveningReferenceText, eveningSentence, formLegend } from "./sentence"
 
 const block = (patch: Partial<EveningBlock>): EveningBlock => ({
   family: "lp-freihand",
@@ -67,5 +67,29 @@ describe("Satz über dem Abend (Plan N5, D4)", () => {
       eveningReferenceText(block({ band: null, verdict: null, average: { value: 9, n: 1 } }))
     ).toBe("Schnitt der Scheibe davor: 9,00")
     expect(eveningReferenceText(block({ average: null }))).toBeNull()
+    expect(eveningReferenceText(block({ mean: null }))).toBeNull()
+  })
+
+  it("Legende: nur was der Verlauf zeigt (Review U5)", () => {
+    const point = (id: string, tonight: boolean, partial: boolean) => ({
+      id,
+      value: 9,
+      tonight,
+      mean: 9,
+      partial,
+      band: null,
+    })
+    const LINE = "Grau: deine letzten Scheiben. Die Linie ist der Schnitt der jeweils letzten fünf"
+    expect(formLegend(block({ strip: [point("a", true, true)], band: null }))).toBeNull()
+    // nur der Abend, aber schon mit Band: nur der Satz zum Band
+    expect(formLegend(block({ strip: [point("a", true, false), point("b", true, false)] }))).toBe(
+      "Das Band zeigt deine übliche Schwankung."
+    )
+    expect(
+      formLegend(block({ strip: [point("a", false, false), point("b", true, false)], band: null }))
+    ).toBe(`${LINE}.`)
+    expect(
+      formLegend(block({ strip: [point("a", false, true), point("b", true, false)], band: null }))
+    ).toBe(`${LINE} (gestrichelt, solange es weniger sind).`)
   })
 })

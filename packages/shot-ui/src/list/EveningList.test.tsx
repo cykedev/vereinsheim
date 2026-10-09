@@ -146,6 +146,8 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
       /<p data-official-legend[^>]*>Fett: amtliche Wertung der Scheibe\.<\/p>/
     )
     expect(official).toContain("Ergebnis 29 amtlich in ganzen Ringen, 30,0 in Zehnteln")
+    // ohne amtliche Wertung im Monat keine Erklärung für Fettes, das es nicht gibt (Review U5)
+    expect(html).not.toContain("data-official-legend")
     const lower = render("decimal", [
       { card: periodCard("x", 2, [103]), family: "lg-freihand" },
       { card: periodCard("y", 1, [100]), family: "lg-freihand" },

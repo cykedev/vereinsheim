@@ -64,19 +64,20 @@ export interface EveningBlock {
     value: number
     tonight: boolean
     mean: number
+    /** der Schnitt über weniger als fünf Scheiben (die ersten der Familie), gestrichelt wie im Fortschritt */
+    partial: boolean
     band: { low: number; high: number } | null
   }[]
   /** Rekorde der Familie, deren Scheibe am Abend liegt (D6) */
   records: RecordRow[]
 }
 
-/** die Zeile „Form, letzte 90 Tage“ (D7) */
+/** „Form der letzten 90 Tage“ rechts auf Start (D7, U5) */
 export interface StartForm {
   family: string
   mean: number | null
   cards: number
   comparison: PeriodComparison | null
-  compareLabel: string | null
   /** der Fortschritt mit dieser Familie und dem Vergleich */
   route: ProgressRoute
 }
@@ -148,6 +149,7 @@ export function startModel(input: StartInput): StartModel {
       value: p.value,
       tonight: ids.has(p.id),
       mean: p.mean,
+      partial: p.partial,
       band: p.band,
     }))
     const records = recordRows(
@@ -191,7 +193,6 @@ function formOf(all: readonly ListInputCard[], family: string, input: StartInput
     mean: model.summary.mean,
     cards: model.summary.cards,
     comparison: model.comparison,
-    compareLabel: model.compareRange?.label ?? null,
     route: progressRoute(state, null),
   }
 }

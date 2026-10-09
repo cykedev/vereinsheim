@@ -40,6 +40,9 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
    erst, wenn die Verknüpfung mit Treffsicher sie braucht (SP-3.1).
 4. **Liste und Fortschritt sind zwei verlinkte Bereiche:**
    - Beide haben dieselbe Filterleiste: eine Zeile mit Familie und einem Chip, der das Blatt „Filter“ öffnet (U2, U5).
+   - Die Blätter wirken verschieden (Review U5): Das der Liste filtert bei jeder Wahl sofort und bleibt offen, man sieht
+     die Liste dahinter wechseln. Das des Fortschritts sammelt die Wahl und wendet sie erst mit „Übernehmen“ an, weil
+     Zeitraum, Vergleich und Art zusammen eine Rechnung ergeben und „Frei“ zwei Tage braucht, bevor es gilt.
    - „Im Fortschritt zeigen“ (im Blatt „Filter“ der Liste, bis U5 „Verlauf dieser Filter“) führt von der Liste zum
      Fortschritt.
    - „Alle in Scheiben zeigen“ führt vom Fortschritt zur Liste, mit Familie, von und bis.

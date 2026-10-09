@@ -3007,21 +3007,39 @@ addEventListener("load", async () => {
       )
       const listJargon = jargonIn($("main"))
       check("Liste: ohne Fachbegriffe", !listJargon, listJargon ?? "")
+      // am Desktop stehen Familie und Chip in einer Zeile (U5, D6; Review U5: am Telefon prüft die Zeile nichts)
+      const deskControls = [...$("[data-list-controls]").children].filter(
+        (c) => c.tagName !== "DIALOG"
+      )
+      // Mitten statt Oberkanten: Segmente und Chip sind verschieden hoch und mittig ausgerichtet
+      const rowOf = (c) => {
+        const r = c.getBoundingClientRect()
+        return Math.round((r.top + r.bottom) / 2)
+      }
+      const deskTops = new Set(deskControls.map(rowOf))
+      check(
+        "Liste, Desktop: Familie und Chip in einer Zeile",
+        deskControls.length === 2 && deskTops.size === 1,
+        `${deskControls.length} Elemente in ${deskTops.size} Zeilen`
+      )
       // das Blatt „Filter“ der Liste setzt Art und Merkmal, der Chip fasst zusammen (U5, D6)
       const listSheet = () => $("[data-list-filter]").closest("dialog")
       await click($("[data-list-chip]"), 150)
       const sheetOpened = listSheet().open
       await click(button("Wettkampf", listSheet()), 200)
+      // das Blatt wirkt sofort und bleibt offen (anders als „Übernehmen“ im Fortschritt)
+      const stillOpen = listSheet().open
       const afterKind = [Li().query.kind, txt($("[data-list-chip]")).trim()]
       await click(button("Nur PDF", listSheet()), 200)
       const afterFlag = [Li().query.flag, txt($("[data-list-chip]")).trim()]
       await click(button("Alle", $('[role="radiogroup"][aria-label="Merkmal"]', listSheet())), 150)
       await click(button("Alle", $('[role="radiogroup"][aria-label="Art"]', listSheet())), 150)
-      listSheet().close()
-      await wait(100)
+      await click($('button[aria-label="Schließen"]', listSheet()), 100)
       check(
-        "Liste: das Blatt „Filter“ setzt Art und Merkmal, der Chip fasst zusammen, zurück auf „Alle Scheiben“",
+        "Liste: das Blatt „Filter“ setzt Art und Merkmal sofort, der Chip fasst zusammen, zurück auf „Alle Scheiben“",
         sheetOpened &&
+          stillOpen &&
+          !listSheet().open &&
           afterKind.join() === "competition,Wettkampf" &&
           afterFlag.join() === "nur-pdf,Wettkampf · Nur PDF" &&
           Li().query.kind === "all" &&
@@ -3203,12 +3221,21 @@ addEventListener("load", async () => {
       )
       await deviceScoring("Zehntel")
       await click(link("Alle in Scheiben zeigen"), 400)
+      await click($("[data-list-chip]"), 150)
       await click(button("Zeitraum entfernen"), 300)
+      const rangeSheet = $("[data-list-filter]").closest("dialog")
+      // der Knopf verschwindet, der Fokus bleibt im Blatt auf der gewählten Art (Review U5)
+      const focusAfterRange = document.activeElement
       check(
-        "Liste: „×“ entfernt den Zeitraum",
-        !$("[data-range-chip]") && addr() === listAddress,
-        addr()
+        "Liste: „×“ entfernt den Zeitraum, der Fokus bleibt im offenen Blatt auf der gewählten Art",
+        !$("[data-range-chip]") &&
+          addr() === listAddress &&
+          rangeSheet.open &&
+          focusAfterRange?.getAttribute("aria-checked") === "true" &&
+          !!focusAfterRange.closest('[role="radiogroup"][aria-label="Art"]'),
+        `${addr()} · ${focusAfterRange?.textContent ?? "kein Fokus"}`
       )
+      await click($('button[aria-label="Schließen"]', rangeSheet), 100)
       // die Disziplin bleibt beim Wechsel über die Leiste oben, in beide Richtungen (User, 9. Oktober 2026)
       await click(button("Luftpistole", $("[data-list-controls]")), 300)
       await click(area("Fortschritt"), 400)
@@ -3433,20 +3460,30 @@ addEventListener("load", async () => {
         stripDots.map((d) => d.id).join() === startBlock.strip.map((s) => s.id).join() &&
           stripDots.every((d, i) => !i || d.x > stripDots[i - 1].x) &&
           /^(Mo|Di|Mi|Do|Fr|Sa|So) \d\d\.\d\d\.$/.test(stripDate) &&
-          !txt(blockEl).includes("Abend\n") &&
           !!$("[data-mean]", blockEl) &&
           !$("[data-average]", blockEl),
         `${stripDots.length} Punkte · ${stripDate}`
       )
       check(
-        "Start: Legende unter dem Verlauf, der Satz zum Band nur mit Band",
+        "Start: Legende unter dem Verlauf, „gestrichelt“ nur mit gestricheltem Stück, der Satz zum Band nur mit Band",
         St().model.blocks.every((b) => {
           const legend = txt($(`[data-evening-block="${b.family}"] [data-form-legend]`))
           return (
-            legend.startsWith("Grau: deine letzten Scheiben, die Linie ihr Schnitt.") &&
+            legend.startsWith(
+              "Grau: deine letzten Scheiben. Die Linie ist der Schnitt der jeweils letzten fünf"
+            ) &&
+            legend.includes("gestrichelt") === b.strip.some((x) => x.partial) &&
             legend.includes("Das Band zeigt deine übliche Schwankung.") === !!b.band
           )
         })
+      )
+      // die Kacheln brechen nur zwischen den Wertungen um, nie in „ganze / Ringe“ (Review U5; 1280 px wie gemeldet)
+      const resultSpans = $$("[data-start-result] span", $("[data-start-page]"))
+      const brokenSpans = resultSpans.filter((sp) => sp.getClientRects().length > 1)
+      check(
+        "Start: Ergebnis in den Kacheln ohne Umbruch mitten in einer Wertung",
+        resultSpans.length > 0 && brokenSpans.length === 0,
+        `${brokenSpans.length} von ${resultSpans.length} umbrochen · ${brokenSpans.map((sp) => txt(sp)).join(" | ")}`
       )
       check(
         "Start: der Streifen zeigt die letzten Scheiben, die des Abends hervorgehoben",
@@ -3727,16 +3764,20 @@ addEventListener("load", async () => {
         (c) => c.tagName !== "DIALOG"
       )
       const listControlTops = new Set(
-        listControls.map((c) => Math.round(c.getBoundingClientRect().top))
+        listControls.map((c) => {
+          const r = c.getBoundingClientRect()
+          return Math.round((r.top + r.bottom) / 2)
+        })
       )
-      // im Rahmen mit Scrollleiste darf der Chip unter die Familie rutschen, wie im Fortschritt (U2, Task 7)
+      // mit längerer Zusammenfassung darf der Chip unter die Familie rutschen (mit „Alle Scheiben“ füllen beide die 343 px
+      // genau); geprüft wird die Zahl der Bedienelemente (mit Art in der Zeile wären es drei), die eine Zeile am Desktop
       check(
-        "Liste, Telefon 375 px: vor der Liste nur Familie und Chip; Art und Merkmal im Blatt „Filter“",
+        "Liste, Telefon 375 px: vor der Liste nur zwei Bedienelemente, Familie und Chip; Art und Merkmal im Blatt „Filter“",
         listControls.length === 2 &&
           listControlTops.size <= 2 &&
-          !!pd.querySelector("[data-list-chip]") &&
+          listControls.includes(pd.querySelector("[data-list-chip]")) &&
           !!pd.querySelector('dialog [aria-label="Art"]'),
-        `${listControls.length} Elemente in ${listControlTops.size} Zeilen`
+        `${listControls.length} Elemente in ${listControlTops.size} Zeilen · ${listControls.map((c) => Math.round(c.getBoundingClientRect().width)).join("+")} in ${Math.round(pd.querySelector("[data-list-controls]").getBoundingClientRect().width)}`
       )
       phone.remove()
       await click(area("Fortschritt"), 300)

@@ -149,6 +149,11 @@ describe("Start: der letzte Abend (Plan N5, D1–D6)", () => {
     expect(all.strip.every((s) => typeof s.mean === "number")).toBe(true)
     expect(all.strip.at(-1)?.band).toEqual(all.band)
     expect(all.strip.some((s) => s.band !== null)).toBe(true)
+    expect(all.strip.every((s) => !s.partial)).toBe(true)
+    // die ersten vier Scheiben der Familie: Schnitt über weniger als fünf, gestrichelt (Review U5)
+    const few = model([...before(6), lg(periodCard("e", 0, [100], { startedAtMs: at(29, 18) }))])
+      .blocks[0]
+    expect(few.strip.map((s) => s.partial)).toEqual([true, true, true, true, false, false, false])
   })
 
   it("neue Rekorde: nur die, deren Scheibe am Abend liegt", () => {

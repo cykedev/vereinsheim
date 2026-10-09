@@ -16,7 +16,7 @@ import { hasPosition, matchShots } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
 import { FormStrip } from "./FormStrip"
 import type { EveningBlock as EveningBlockModel } from "./model"
-import { eveningReferenceText, eveningSentence } from "./sentence"
+import { eveningReferenceText, eveningSentence, formLegend } from "./sentence"
 
 const KIND: Readonly<Record<ListRow["kind"], string>> = {
   training: "Training",
@@ -71,6 +71,7 @@ export function EveningBlock({
   const count = block.rows.length
   const sentence = eveningSentence(block, familyLabel)
   const reference = eveningReferenceText(block)
+  const legend = formLegend(block)
   return (
     <section
       data-evening-block={block.family}
@@ -117,10 +118,12 @@ export function EveningBlock({
       </div>
       <div className="grid gap-1.5">
         <FormStrip strip={block.strip} band={block.band} dateLabel={date} />
-        {/* was der Verlauf zeigt, in einem Satz (U3, D8; U5, D1); die Rechnung steht im Blatt „?“ des Verlaufs */}
-        <p data-form-legend className="text-[13px] text-muted-foreground">
-          {`Grau: deine letzten Scheiben, die Linie ihr Schnitt.${block.band ? " Das Band zeigt deine übliche Schwankung." : ""}`}
-        </p>
+        {/* was der Verlauf zeigt, nur was zu sehen ist (U3, D8; U5, D1; Review U5); die Rechnung steht im Blatt „?“ */}
+        {legend && (
+          <p data-form-legend className="text-[13px] text-muted-foreground">
+            {legend}
+          </p>
+        )}
       </div>
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-2">
         {block.rows.map((row) => {
@@ -159,17 +162,26 @@ export function EveningBlock({
                 )}
                 <span className="grid min-w-0 gap-0.5">
                   <span className="text-[13px] text-muted-foreground">{`${time} · ${KIND[row.kind]}`}</span>
-                  <span className="flex items-baseline gap-1.5 tabular-nums">
-                    <span data-result className="text-[17px] font-semibold">
-                      {result}
-                    </span>
-                    {row.result !== null && (
-                      <span className="text-[13px] text-muted-foreground">
-                        {name(row.resultScoring)}
+                  {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (Review U5: „ganze / Ringe“) */}
+                  <span
+                    data-start-result
+                    className="flex flex-wrap items-baseline gap-x-1.5 tabular-nums"
+                  >
+                    <span className="whitespace-nowrap">
+                      <span data-result className="text-[17px] font-semibold">
+                        {result}
                       </span>
-                    )}
+                      {row.result !== null && (
+                        <span className="text-[13px] text-muted-foreground">
+                          {` ${name(row.resultScoring)}`}
+                        </span>
+                      )}
+                    </span>
                     {second && (
-                      <span data-other-result className="text-xs text-muted-foreground">
+                      <span
+                        data-other-result
+                        className="text-xs whitespace-nowrap text-muted-foreground"
+                      >
                         {`· ${second}`}
                       </span>
                     )}

@@ -285,9 +285,15 @@ export function EveningList({
                   )
                 })}
               </table>
-              <p data-official-legend className="px-2 pt-1.5 pb-0.5 text-xs text-muted-foreground">
-                Fett: amtliche Wertung der Scheibe.
-              </p>
+              {/* nur mit Fettem im Monat (Review U5) */}
+              {month.evenings.some((evening) => evening.rows.some((row) => row.official)) && (
+                <p
+                  data-official-legend
+                  className="px-2 pt-1.5 pb-0.5 text-xs text-muted-foreground"
+                >
+                  Fett: amtliche Wertung der Scheibe.
+                </p>
+              )}
             </div>
           </section>
         )

@@ -91,7 +91,7 @@ export function listOnEvening(query: ListQuery, family: string, day: string): Li
 }
 
 /**
- * „Verlauf dieser Filter“ (D7): Familie, Art und Zeitraum der Liste; ohne Zeitraum „Alles“. Die Liste hat keine
+ * „Im Fortschritt zeigen“ im Blatt „Filter“ der Liste (D7, U5): Familie, Art und Zeitraum der Liste; ohne Zeitraum „Alles“. Die Liste hat keine
  * Wertung; es gilt die des Geräts wie bei `openCard`.
  */
 export function progressFromList(list: ListRoute, scoring: Scoring = "decimal"): ProgressRoute {

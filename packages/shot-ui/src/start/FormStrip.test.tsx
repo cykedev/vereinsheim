@@ -11,6 +11,7 @@ const strip = values.map((value, i) => ({
   value,
   tonight: i >= 5,
   mean: 8.9 + i * 0.01,
+  partial: false,
   band: i >= 2 ? { low: 8.72 + i * 0.01, high: 9.08 + i * 0.01 } : null,
 }))
 const render = (props: Partial<Parameters<typeof FormStrip>[0]> = {}) =>
@@ -65,7 +66,7 @@ describe("Formband als kleiner Verlauf (U5, D1)", () => {
     )
     const one = renderToStaticMarkup(
       h(FormStrip, {
-        strip: [{ id: "x", value: 10.22, tonight: true, mean: 10.22, band: null }],
+        strip: [{ id: "x", value: 10.22, tonight: true, mean: 10.22, partial: true, band: null }],
         band: null,
         dateLabel: "Sa 26.09.",
       })
@@ -81,6 +82,27 @@ describe("Formband als kleiner Verlauf (U5, D1)", () => {
     expect(html.indexOf("data-track")).toBeLessThan(html.indexOf("data-strip-dot"))
     expect(html).toContain(">9,25<")
     expect(html).toContain(">8,70<")
+  })
+
+  it("die Achse zeigt einen Wert nur einmal und nie übereinander (Review U5)", () => {
+    const flat = strip.map((s, i) => ({ ...s, value: i % 2 ? 9.21 : 9.2, mean: 9.205, band: null }))
+    const close = render({ strip: flat, band: null })
+    expect(close).toContain(">9,21<")
+    expect(close).not.toContain(">9,20<")
+    const same = strip.map((s, i) => ({
+      ...s,
+      value: 9.2041 + (i % 2) * 0.0003,
+      mean: 9.2042,
+      band: null,
+    }))
+    expect(render({ strip: same, band: null }).match(/>9,20</g)).toHaveLength(1)
+  })
+
+  it("der Schnitt, solange es noch keine fünf Scheiben sind, gestrichelt wie im Fortschritt", () => {
+    const partial = strip.map((s, i) => ({ ...s, partial: i < 4 }))
+    const html2 = render({ strip: partial })
+    expect(html2).toMatch(/<polyline[^>]*data-mean="partial"[^>]*stroke-dasharray/)
+    expect(html2).toMatch(/<polyline[^>]*data-mean="true"/)
   })
 
   it("nur Tokens, keine Palette-Klassen", () => {

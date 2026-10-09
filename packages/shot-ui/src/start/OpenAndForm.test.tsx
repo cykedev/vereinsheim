@@ -46,7 +46,7 @@ describe("Offen auf Start (Plan N5, D1)", () => {
   })
 })
 
-describe("Form, letzte 90 Tage (Plan N5, D7)", () => {
+describe("Form der letzten 90 Tage (Plan N5, D7; U5, D4)", () => {
   const form: StartForm = {
     family: "lg-freihand",
     mean: 10.27,
@@ -59,7 +59,6 @@ describe("Form, letzte 90 Tage (Plan N5, D7)", () => {
       verdict: "unclear",
       meaningful: null,
     },
-    compareLabel: "Zeitraum davor",
     route: {
       page: "progress",
       query: { ...DEFAULT_PROGRESS, family: "lg-freihand", compare: { type: "previous" } },

@@ -149,7 +149,14 @@ export function ListControlsView({
                 <button
                   type="button"
                   aria-label="Zeitraum entfernen"
-                  onClick={() => onQuery({ ...query, range: null })}
+                  onClick={(event) => {
+                    // der Knopf verschwindet: der Fokus bleibt im Blatt, auf der gewählten Art (Review U5)
+                    event.currentTarget
+                      .closest("[data-list-filter]")
+                      ?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]')
+                      ?.focus()
+                    onQuery({ ...query, range: null })
+                  }}
                   className="inline-flex size-7 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   <svg

@@ -87,11 +87,27 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
       lp(periodCard("a", 0, [94, 94], { startedAtMs: at(25, 18) })),
     ]
     expect(render(many)).toMatch(
-      /data-form-strip[\s\S]*?<p data-form-legend[^>]*>Grau: deine letzten Scheiben, die Linie ihr Schnitt\. Das Band zeigt deine übliche Schwankung\.<\/p>/
+      /data-form-strip[\s\S]*?<p data-form-legend[^>]*>Grau: deine letzten Scheiben\. Die Linie ist der Schnitt der jeweils letzten fünf \(gestrichelt, solange es weniger sind\)\. Das Band zeigt deine übliche Schwankung\.<\/p>/
     )
     expect(html).toMatch(
-      /<p data-form-legend[^>]*>Grau: deine letzten Scheiben, die Linie ihr Schnitt\.<\/p>/
+      /<p data-form-legend[^>]*>Grau: deine letzten Scheiben\. Die Linie ist der Schnitt der jeweils letzten fünf \(gestrichelt, solange es weniger sind\)\.<\/p>/
     )
+    // ab der fünften Scheibe im Streifen ohne gestrichelten Teil kein Wort dazu
+    const full = Array.from({ length: 25 }, (_, i) =>
+      lp(periodCard(`f${i}`, 0, [88 + (i % 4)], { startedAtMs: at(1, 18) + i * 86_400_000 }))
+    )
+    expect(render(full)).toMatch(
+      /<p data-form-legend[^>]*>Grau: deine letzten Scheiben\. Die Linie ist der Schnitt der jeweils letzten fünf\. Das Band/
+    )
+    // ohne graue Punkte (nur der Abend) und ohne Band nichts zu erklären (Review U5)
+    const lone = render([lp(periodCard("a", 0, [94, 94], { startedAtMs: at(25, 18) }))])
+    expect(lone).not.toContain("data-form-legend")
+    // ohne Wert des Abends kein Bezug unter dem Strich
+    const blind = render([
+      ...CARDS.slice(0, 5),
+      lp(periodCard("a", 0, [], { startedAtMs: at(25, 18) })),
+    ])
+    expect(blind).not.toContain("data-evening-reference")
     // das Datum des Abends steht im Verlauf, nicht „Abend“
     expect(html).toMatch(/data-evening-label="true"[^>]*>Fr 25\.09\.</)
   })
@@ -101,6 +117,10 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     const tileText = text(tile.slice(0, tile.indexOf("</a>")))
     expect(tileText).toMatch(/\d+,\d Zehntel · \d+ ganze Ringe$/)
     expect(tile).toMatch(/aria-label="[^"]*Ergebnis \d+,\d Zehntel, \d+ ganze Ringe"/)
+    // umbrechen nur zwischen den Wertungen, jede bleibt zusammen (Review U5: „ganze / Ringe“ bei 1280 px)
+    expect(tile).toMatch(/<span data-start-result="true" class="[^"]*flex-wrap/)
+    expect(tile).toMatch(/<span class="whitespace-nowrap"><span data-result/)
+    expect(tile).toMatch(/<span data-other-result="true" class="[^"]*whitespace-nowrap/)
   })
 
   it("die Disziplin steht als Überschrift oben im Block, mit dem Symbol der Disziplinen (Rückmeldung des Users)", () => {

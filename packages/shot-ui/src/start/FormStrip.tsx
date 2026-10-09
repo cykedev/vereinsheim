@@ -43,6 +43,8 @@ export function FormStrip({ strip, band, dateLabel, className }: FormStripProps)
   const hi = lo + span
   const minValue = Math.min(...strip.map((s) => s.value))
   const maxValue = Math.max(...strip.map((s) => s.value))
+  const minText = formatValue(minValue, 2)
+  const maxText = formatValue(maxValue, 2)
   const label = [
     `${strip.length === 1 ? "Die letzte Scheibe" : `Die letzten ${strip.length} Scheiben in zeitlicher Folge`}, die des Abends (${dateLabel}) hervorgehoben`,
     band ? `Formband zuletzt ${formatValue(band.low, 2)} bis ${formatValue(band.high, 2)}` : null,
@@ -63,13 +65,25 @@ export function FormStrip({ strip, band, dateLabel, className }: FormStripProps)
           const top = PAD.top + INSET
           const bottom = HEIGHT - PAD.bottom - INSET
           const y = (v: number) => bottom - ((v - lo) / (hi - lo)) * (bottom - top)
+          // das Band gibt es ab der fünften Scheibe der Familie lückenlos bis zur letzten (`periodTrend`), die Punkte
+          // mit Band sind also eine zusammenhängende Folge und der Pfad ein Streifen
           const banded = strip.flatMap((s, i) => (s.band ? [{ i, band: s.band }] : []))
-          const bandPath = banded.length
-            ? `M${banded.map(({ i, band: b }) => `${x(i)},${y(b.high)}`).join(" L")} L${[...banded]
-                .reverse()
-                .map(({ i, band: b }) => `${x(i)},${y(b.low)}`)
-                .join(" L")} Z`
-            : null
+          const bandPath =
+            banded.length > 1
+              ? `M${banded.map(({ i, band: b }) => `${x(i)},${y(b.high)}`).join(" L")} L${[
+                  ...banded,
+                ]
+                  .reverse()
+                  .map(({ i, band: b }) => `${x(i)},${y(b.low)}`)
+                  .join(" L")} Z`
+              : null
+          // der Schnitt über weniger als fünf Scheiben gestrichelt, bis zum ersten vollen Punkt (wie `PeriodChart`)
+          const coords = strip.map((s, i) => `${x(i)},${y(s.mean)}`)
+          const firstFull = strip.findIndex((s) => !s.partial)
+          const partialLine = firstFull < 0 ? coords : coords.slice(0, firstFull + 1)
+          const fullLine = firstFull < 0 ? [] : coords.slice(firstFull)
+          // die untere Zahl nur, wenn sie anders lautet und nicht in die obere läuft (Review U5)
+          const showMin = minText !== maxText && y(minValue) - y(maxValue) >= 14
           const tonight = strip.flatMap((s, i) => (s.tonight ? [i] : []))
           const labelX = tonight.length
             ? tonight.reduce((sum, i) => sum + x(i), 0) / tonight.length
@@ -87,13 +101,25 @@ export function FormStrip({ strip, band, dateLabel, className }: FormStripProps)
                 className="fill-surface-2 stroke-border"
               />
               {bandPath && <path data-band d={bandPath} className="fill-accent-wash" />}
-              <polyline
-                data-mean
-                points={strip.map((s, i) => `${x(i)},${y(s.mean)}`).join(" ")}
-                fill="none"
-                strokeWidth={1.5}
-                className="stroke-primary"
-              />
+              {partialLine.length > 1 && (
+                <polyline
+                  data-mean="partial"
+                  points={partialLine.join(" ")}
+                  fill="none"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 4"
+                  className="stroke-primary"
+                />
+              )}
+              {fullLine.length > 1 && (
+                <polyline
+                  data-mean
+                  points={fullLine.join(" ")}
+                  fill="none"
+                  strokeWidth={1.5}
+                  className="stroke-primary"
+                />
+              )}
               {strip.map((s, i) =>
                 s.tonight ? null : (
                   <circle
@@ -133,11 +159,11 @@ export function FormStrip({ strip, band, dateLabel, className }: FormStripProps)
                 </text>
               )}
               <text x={PAD.left - 6} y={y(maxValue)} textAnchor="end" dominantBaseline="central">
-                {formatValue(maxValue, 2)}
+                {maxText}
               </text>
-              {minValue !== maxValue && (
+              {showMin && (
                 <text x={PAD.left - 6} y={y(minValue)} textAnchor="end" dominantBaseline="central">
-                  {formatValue(minValue, 2)}
+                  {minText}
                 </text>
               )}
             </ChartSvg>
