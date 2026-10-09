@@ -42,7 +42,9 @@
     "./readout/CardHeader": "./src/readout/CardHeader.tsx",
     "./readout/CardResult": "./src/readout/CardResult.tsx",
     "./period/calendar": "./src/period/calendar.ts",
-    "./period/state": "./src/period/state.ts"
+    "./period/state": "./src/period/state.ts",
+    "./period/model": "./src/period/model.ts",
+    "./period/sentence": "./src/period/sentence.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

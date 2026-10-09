@@ -31,6 +31,9 @@ export interface DateRange {
 
 export const DEFAULT_CHOICE: PeriodChoice = { type: "rolling", days: 90 }
 
+/** Name des gleich langen Zeitraums direkt davor */
+export const PREVIOUS_LABEL = "Zeitraum davor"
+
 export const ROLLING_CHOICES: readonly { choice: PeriodChoice; label: string }[] = [
   { choice: { type: "rolling", days: 30 }, label: "Letzte 30 Tage" },
   { choice: { type: "rolling", days: 90 }, label: "Letzte 90 Tage" },
@@ -103,7 +106,7 @@ export function compareRange(
   if (compare.type === "none") return null
   if (compare.type === "previous") {
     const length = range.toMs - range.fromMs
-    return { fromMs: range.fromMs - length, toMs: range.fromMs, label: "Zeitraum davor" }
+    return { fromMs: range.fromMs - length, toMs: range.fromMs, label: PREVIOUS_LABEL }
   }
   const named = context.named.find((p) => p.id === compare.id)
   return named ? dayRange(named.from, named.to, context, named.name) : null
