@@ -15,11 +15,7 @@ import { GLOSSARY } from "@vereinsheim/shot-help/glossary"
 import { helpForMetric, helpTopic } from "@vereinsheim/shot-help/lookup"
 import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
-import {
-  firstSentence,
-  keyObservations,
-  observations,
-} from "@vereinsheim/shot-ui/analysis/observations"
+import { keyObservations, observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { overviewTiles } from "@vereinsheim/shot-ui/analysis/overview"
 import { formatValue } from "@vereinsheim/shot-ui/format"
 import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
@@ -45,9 +41,8 @@ const TOOLS = {
   analysisInput,
   overviewTiles,
   observations,
-  // der Kopf der Scheibe (U1): die wichtigsten Beobachtungen, je ihr erster Satz
+  // der Kopf der Scheibe (U1): die wichtigsten Beobachtungen, je ihr Satz für den Kopf
   keyObservations,
-  firstSentence,
   // Hilfe aus dem Paket, gegen die die Prüfung Texte und Plätze vergleicht
   helpTopic,
   HELP_TOPICS,

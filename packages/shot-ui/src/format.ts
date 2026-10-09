@@ -44,20 +44,6 @@ export function unitText(unit: string): string {
   return unit === "Teiler" ? "" : unit
 }
 
-/** Lage eines Punkts in Worten: „2,5 rechts · 1,2 tief (mm)“; unter 0,05 mm je Richtung „mittig“ */
-export function directionText(point: { xUm: number; yUm: number }): string {
-  const parts: string[] = []
-  if (Math.abs(point.xUm) >= 50) {
-    parts.push(
-      `${formatValue(Math.abs(point.xUm) / 1000, 1)} ${point.xUm > 0 ? "rechts" : "links"}`
-    )
-  }
-  if (Math.abs(point.yUm) >= 50) {
-    parts.push(`${formatValue(Math.abs(point.yUm) / 1000, 1)} ${point.yUm > 0 ? "hoch" : "tief"}`)
-  }
-  return parts.length ? `${parts.join(" · ")} (mm)` : "mittig"
-}
-
 /** Dauer wie in der Spielwiese: „42 s“, ab einer Minute „3:05 min“, ab einer Stunde „1:02 h“ */
 export function durationText(ms: number): string {
   const seconds = Math.round(ms / 1000)
