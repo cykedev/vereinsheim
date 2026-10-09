@@ -48,6 +48,13 @@ kleinster Hüllkreis der Schussmitten + Kaliber 4,5 mm, auf 1/100 mm gerundet; T
 - **E6 — Simulation neu.** Die Belege B6, B10, B19 und B20 ändern sich in der ersten Nachkommastelle (Probelauf
   vom 9. Oktober 2026); kein Hilfetext zitiert sie, nur der Belegblock in `vault/spiegel/spiegel-statistics.md`.
 
+- **E7 — Katalog für Vereinsspiele und Trainingsscheiben (SF-70).** Die Kopie vom 9. Oktober 2026 zeigt
+  39 Disziplinen. Vereinsspiele (Regel 8000 bis 8154: Schach, Balken, Dart, Lotto, Dreieck, Blanko, Spiegel) und
+  Meytons Trainingsscheiben (`19001000`, `19002000`, `10119000`) tragen „LG“/„LP“ im Namen, landen heute über den
+  Namen auf der Standardscheibe und passen dort fast nie (0 bis 17 von bis zu 390 Schüssen). Sie kommen als
+  bekannte Disziplinen ohne Scheibe in den Katalog (`target: null`), wie schon Kyffhäuser oder LP5. Die
+  „alt“-Varianten (9110, 9210), König, Kranzl und „LG 40 nachhalten“ passen und bleiben.
+
 ## Required Docs
 
 - `packages/shot-core/CLAUDE.md` (Exakte Wertung, Tests)
@@ -66,6 +73,7 @@ kleinster Hüllkreis der Schussmitten + Kaliber 4,5 mm, auf 1/100 mm gerundet; T
 | `packages/shot-core/src/verify.test.ts` | vier Grenztests mit neuen Abständen |
 | `packages/shot-core/src/geometry.test.ts` | Block „Ausdruck vom 9. Oktober 2026“ (SF-76) |
 | `packages/shot-core/src/geometry.ts` | Kopfkommentar: Trefferkreis geklärt |
+| `packages/shot-core/src/discipline.ts`, `discipline.test.ts` | Vereinsspiele und Trainingsscheiben ohne Scheibe (E7) |
 | `packages/shot-core/CLAUDE.md` | Punkt „Exakte Wertung“ um die Toleranz ergänzen |
 | `packages/shot-help/src/glossary.ts`, `vault/spiegel/spiegel-statistics-help.md` (erzeugt) | Streukreis und Trefferkreis |
 | `vault/spiegel/spiegel-statistics.md` | Belegblock neu, Stand-Satz |
@@ -143,6 +151,15 @@ kleinster Hüllkreis der Schussmitten + Kaliber 4,5 mm, auf 1/100 mm gerundet; T
    Trefferzentren, Mitte zu Mitte; die Zahl ist sein Durchmesser. Meytons „Trefferkreis“ ist derselbe Kreis
    plus ein Kaliber (4,5 mm), deshalb größer.“ Eintrag „Schwerpunkt“ bleibt. Dann
    `pnpm --filter @vereinsheim/shot-help docs` und `pnpm --filter @vereinsheim/shot-help test`.
+
+7a. **Katalog (E7).** `discipline.test.ts` zuerst: `resolveTarget` liefert `{ targetId: null, source: "unknown" }`
+   für `18051010` „LG Schach 6x6“, `18000200` „LG Balken 5,5x90 mm“, `18054010` „LG Dart“, `18104200`
+   „LP Dreieck 60x60 mm“, `18106200` „LP Spiegel“, `18151010` „LP Schach 6x6“, `19001000` „LP-Trainingsscheibe“,
+   `19002000` „LG-Trainingsscheibe“, `10119000` „LG Training Spiegel“; weiter `lg-10m` für `19110040` „LG 40 alt“,
+   `19200020` „Kranzl LG“ (über den Namen) und `19000010` „LG 40 nachhalten“. Dann in `discipline.ts` die erste
+   Katalogzeile um `...ruleRange(8000, 8199), "9001", "9002"` ergänzen und eine Zeile
+   `{ rules: ["0119"], shotCode: 0, target: null }` vor die LG-Zeile setzen; Kopfkommentar mit Beleg
+   (Kopie vom 9. Oktober 2026). Die offene Frage zu „Training Spiegel“ im Kommentar streichen.
 
 7. **Simulation.** `pnpm --filter @vereinsheim/shot-help simulate`; den Belegblock in
    `vault/spiegel/spiegel-statistics.md` durch die neue Ausgabe ersetzen, im Satz davor ergänzen: „Wertung mit

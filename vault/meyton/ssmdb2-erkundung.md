@@ -91,7 +91,10 @@ die zugehörigen Prüfungen rot. Läuft auch mit der macOS-Bash 3.2 (`ERKUNDEN_B
 ## Ergebnisse
 
 Der erste Einsatz war ein Abend-Mitschnitt am 9. Oktober 2026 (18:57 bis 19:48, 17 Scheiben); Befunde in
-[[src-ssmdb2-abend-2026-10-09]]. Checkliste und Kopie stehen noch aus.
+[[src-ssmdb2-abend-2026-10-09]]. Danach liefen Checkliste und Kopie (0,5 s für zwei Jahre Historie); Befunde in
+[[src-ssmdb2-kopie-2026-10-09]]. Die Namensprüfung meldete dabei falsche Treffer: `unknown` ist bei Meyton ein
+Platzhalter (Liste „Trash“, Vorgabe von `Geschlecht`) und wird seitdem wie `--frei--` übergangen, auch beim
+Pseudonymisieren; der Selbsttest hat dafür eine Scheibe in „Trash“.
 
 ## Danach
 

@@ -57,7 +57,7 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 - **Ziel:** sehen, wie sich die Ablage bei den Sonderfällen wirklich verhält, und Testdaten ableiten, die der Anlage gleichen.
 - **Umfang:** Ein kleines Skript liest wie die Brücke, nur lesend, und schreibt jeden Zustand mit Zeit in ein Protokoll; Namen und SportpassIDs ersetzt es schon beim Mitschreiben. Dazu schießen wir mit der Standaufsicht das Schießprotokoll aus [[meyton-ssmdb2]] (Probe → Wertung → Probe, lange Probe, nur Probe, Abbruch, ohne Starter, Zwischen- und Doppelausdruck, Korrektur, falsche Disziplin, verdeckte Wertung) und sichern `SHOW CREATE TABLE` aller Tabellen. Ins Repo kommt nur das Schema; das Protokoll bleibt lokal und dient als Vorbild für synthetische Daten ([[adr-029]]).
 - **Abnahme:** jeder Versuch mit Ergebnis in [[meyton-ssmdb2]] und [[spiegel-edge-cases]] eingetragen; Schema im Repo; Protokoll ohne Namen und Nummern.
-- **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** zum großen Teil erledigt (9. Oktober 2026): Statt des geführten Protokolls lief ein Mitschnitt über einen ganzen Trainingsabend (Phase `abend` von [[ssmdb2-erkundung]]), dazu ein Ausdruck ([[src-ssmdb2-abend-2026-10-09]]). Belegt: Probe wird beim Umschalten und beim Neustart gelöscht, zerrissene Lesungen, Lebenszeichen, Uhr je Stand, Anzeigeart, Meytons Toleranz von 10 µm; eingetragen in [[meyton-ssmdb2]], [[spiegel-edge-cases]] und [[adr-027]]. Offen: Weg zurück auf Probe, Auslöser des Probe-Neustarts, ohne Starter, Zwischen- und Doppelausdruck, Korrektur, falsche Disziplin, verdeckte Wertung; das Schema kommt mit der Kopie (SP-0.1).
+- **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** zum großen Teil erledigt (9. Oktober 2026): Statt des geführten Protokolls lief ein Mitschnitt über einen ganzen Trainingsabend (Phase `abend` von [[ssmdb2-erkundung]]), dazu ein Ausdruck ([[src-ssmdb2-abend-2026-10-09]]). Belegt: Probe wird beim Umschalten und beim Neustart gelöscht, zerrissene Lesungen, Lebenszeichen, Uhr je Stand, Anzeigeart, Meytons Toleranz von 10 µm; eingetragen in [[meyton-ssmdb2]], [[spiegel-edge-cases]] und [[adr-027]]. Offen: Weg zurück auf Probe, Auslöser des Probe-Neustarts, ohne Starter, Zwischen- und Doppelausdruck, Korrektur, falsche Disziplin, verdeckte Wertung. Das echte Schema liegt mit der Kopie vor (SP-0.1).
 
 ## Phase 1 · Fundament
 
@@ -76,7 +76,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Ziel:** Scheiben korrekt zeichnen und werten.
 - **Umfang:** `packages/shot-core`: Datenformat Scheibenbild; Bibliothek für eure 10-m-Stände, also Luftgewehr und Luftpistole (Auflage nutzt dieselben Scheiben), weitere Scheiben erst bei Bedarf; Regelkatalog DisziplinID → Regel (DSB und Meyton-eigen) → Scheibenbild, über Regelnummer und Schusscode mit Rückfall auf LG/LP als Wort im Namen, sonst Vorschlag per Gegenprobe mit Admin-Bestätigung; Disziplin-Familien; Neu-Wertung mit anderem Scheibenbild; Wertungsformel mit Innenzehner ([[spiegel-target-library]]).
 - **Abnahme:** Gegenprobe reproduziert alle bekannten Meyton-Werte; Mutationsprobe nach [[conventions]] §9; Sonderfälle SF-09, SF-14, SF-16, SF-17, SF-18, SF-70.
-- **Hängt ab von:** nichts. **Status:** erledigt (Oktober 2026, `packages/shot-core`). **Nachtrag offen:** Meyton wertet jede Grenze 10 µm großzügiger als die Regel (SF-75); ohne diese Toleranz weichen 15 von 640 echten Schüssen um ein Zehntel ab. Dazu Rundung wie im Ausdruck (SF-76).
+- **Hängt ab von:** nichts. **Status:** erledigt (Oktober 2026, `packages/shot-core`). **Nachtrag offen** (`plans/2026-10-09-meyton-toleranz.md`): Meyton wertet jede Grenze 10 µm großzügiger als die Regel (SF-75); ohne diese Toleranz weichen 1.351 von 43.000 Schüssen der zweijährigen Historie um ein Zehntel ab, mit ihr keiner. Dazu Rundung wie im Ausdruck (SF-76) und der Katalog für Vereinsspiele und Meytons Trainingsscheiben (SF-70).
 
 ### SP-1.2 Fachkern: Geometrie und Kennzahlen-Registry
 - **Ziel:** die Rechenbasis für alle Auswertungen.
@@ -146,6 +146,12 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** Drei unabhängige Prüfungen (Hilfe gegen Code, Zahlen per Simulation, Nutzen und Redundanz); entfernt nach Stufe 1 + 2 (E6, E7, P3, P7, L5, Netto-Zeit und Schüsse je Stunde, längste Pause, Sprünge in L8, Verhältnis Ø Abstand/R50; E9 in L4, S1 in S4, V7 neu als Kosten der markierten Ausreißer, P9 als R50/W); Code-Fehler behoben (Trend nach Mann-Kendall mit Bindungen, Lage-Verlust per Leave-one-out); alle Texte berichtigt, Trefferbild und Vertrauensellipse erklärt; Belege per `pnpm --filter @vereinsheim/shot-help simulate` ([[spiegel-statistics]], „Belege aus Simulationen“). Plan: `plans/2026-10-07-spiegel-straffen.md`.
 - **Abnahme:** Tests gegen entfernte IDs (Rückwärtstest), Mutationsproben, Skriptprüfung der Spielwiese, Leseprobe mit dem User.
 - **Hängt ab von:** SP-1.11. **Status:** erledigt (Oktober 2026). Stufe 3 (auf der Scheibe ausblenden, was dort nur Zufall zeigt) gehört zur Gestaltung in SP-1.8.
+
+### SP-1.13 Erstbefüllung aus einer Kopie der Ablage (Vorschlag)
+- **Ziel:** Wer startet, sieht nicht eine leere App, sondern seine Scheiben der letzten Jahre. Anlass: Die Kopie vom 9. Oktober 2026 enthält zwei Jahre Historie, für den User 36 Scheiben an 31 Abenden ([[src-ssmdb2-kopie-2026-10-09]]).
+- **Umfang:** Ein Werkzeug liest eine Kopie (`erkunden.sh dump`) aus einer lokalen MariaDB und macht daraus Snapshots nach dem Vertrag ([[spiegel-ingest-contract]]), nur für Scheiben mit Opt-in, also gehashten Sportpassnummern zustimmender Schützen; Spiegel nimmt sie über dieselbe Ingest-API an wie Lieferungen der Brücke. Damit läuft der ganze Weg einmal mit echten Daten, bevor die Brücke steht. Die Kopie bleibt lokal ([[adr-029]]).
+- **Grenzen:** Scheiben vor September 2026 haben keine Probe; Vereinsspiele und Meytons Trainingsscheiben ohne Scheibenbild (SF-70); verdeckte Scheiben (Königsschießen, Modus 5) nie (SF-19).
+- **Hängt ab von:** SP-1.6, SP-1.7. **Status:** Vorschlag (9. Oktober 2026), nicht freigegeben.
 
 ## Phase 2 · Auswertung
 
