@@ -26,14 +26,18 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   über `requestClose()`, das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
   `window.__labor` (Prüfhaken) liefert Schüsse, Zustand, Scheibe, die Funktionen des Fachkerns (auch die
   Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen, auf der Seite
-  eines Zeitraums dazu `period` (Scheiben, Zustand, Modell) und `tools.period`. Die Prüfung braucht seit L3 mehr
+  eines Zeitraums dazu `period` (Scheiben, Zustand, Modell) und `tools.period`, auf der Scheiben-Liste `list` (Modell,
+  Filter, Scheiben, Familie je Id). Die Prüfung braucht seit L3 mehr
   als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`); in einer Seite mit zwei Blättern ist das der Hilfe
   das letzte `<dialog>`.
+  In den Rahmen der Prüfung (außerhalb des Bilds, `left:-9999px`) kam ein Sprung über `requestAnimationFrame` beim
+  Laden nicht an; was beim Laden zu einem Anker springen soll, springt deshalb im Effekt sofort (Review N2).
 - **Drei Ansichten** (Plan L3, N2): „Ansicht: Scheiben | Scheibe | Zeitraum“ im Labor-Kopf (`LaborHeader`), gemerkt
   in `labor.mode`; ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie, ein Abend (`#2026-09-25`) die
   Scheiben-Liste (`ListView`). Aus der Liste öffnet eine Zeile die Scheibe mit der Liste als Herkunft, „Zurück zu
   „Scheiben““ stellt Filter und Scrollstelle wieder her; „Verlauf dieser Filter“ und „Alle in Scheiben zeigen“
-  wechseln zwischen Liste und Zeitraum. `App` hält, was beide teilen
+  wechseln zwischen Liste und Zeitraum. Die Liste hat keine eigene Wertung: Sie nimmt die des Geräts (`scoring` im
+  Speicher), die Scheibe und Zeitraum beim Umschalten schreiben. `App` hält, was beide teilen
   (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
   Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums. „Scheibe öffnen“ zeigt eine
   Scheibe der Saison in „Scheibe“, „Zurück zu „…““ (nach dem Zeitraum benannt) stellt Zeitraum, Vergleich, Wahl und

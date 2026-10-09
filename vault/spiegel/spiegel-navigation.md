@@ -188,6 +188,17 @@ Plan `plans/2026-10-09-spiegel-scheiben-liste.md`, Branch `feat/spiegel-scheiben
 - **Offen, „kleine“ Scheiben (SF-11):** Der User kannte das Konzept nicht (9. Oktober 2026); Einklappen entfällt. Ob
   Nebenscheiben (Einschießen, Neustart, Abbruch) im Verein vorkommen und ob sie im Fortschritt zählen, entscheiden
   wir mit echten Daten (Schießprotokoll, SP-0.6).
+- **Kopf des Abends** nach Plan D4: Wochentag, Datum, „n Scheiben · m Schuss“ und der Hinweis auf andere Familien.
+  Anders als in Entscheidung 2 oben ohne Familie (sie steht als Pflichtfilter im Kopf der Seite) und ohne bestes
+  Ergebnis (jede Zeile zeigt ihr Ergebnis, der Abend hat nur wenige).
+- **Nach dem Review:**
+  - Der Hinweis „auch 1 Scheibe Luftpistole ›“ zählt ohne Art und Merkmal, nur im Zeitraum. Der Sprung
+    (`listOnEvening`) lässt deshalb Art und Merkmal fallen; so steht der versprochene Abend sicher in der Liste.
+  - Ein gewähltes Merkmal bleibt wählbar, auch wenn die Familie es nicht hat; sonst ließe es sich nicht lösen.
+  - Die Liste hat keine eigene Wertung, sie nimmt die des Geräts. Jede Umschaltung schreibt diese, auch die im
+    Fortschritt.
+  - Jede Zeile nennt ihre Werte mit Bedeutung als Namen des Knopfs für Screenreader. Den Kopf der Seite zeichnet
+    `ListHeader`, die Abende sind Überschriften zweiter Ebene.
 - **Für N3:** echte Navigation und Blättern mit Daten; die Zeile wird dann ein Link.
 
 ## Was die Bausteine schon haben, was fehlt
