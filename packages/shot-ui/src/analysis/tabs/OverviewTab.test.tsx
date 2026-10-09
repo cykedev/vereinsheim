@@ -46,7 +46,9 @@ describe("Reiter Überblick", () => {
       )
       if (tile.value) expect(html).toContain(`>${tile.value}<`)
     }
-    expect(html).toContain('<span class="normal-case">σ</span>')
+    // Alltagswort auf der Kachel, σ steht im Blatt (U3, D3)
+    expect(html).not.toContain('<span class="normal-case">σ</span>')
+    expect(html).toContain('data-tile="Streuung"')
   })
 
   it("jede Kachel mit „?“ zu ihrem Thema (seit U1 die Zahlen-Ansicht der Seite, Review)", () => {

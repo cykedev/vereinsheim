@@ -12,7 +12,7 @@ import {
 } from "@vereinsheim/shot-core/analysis"
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
-import { directionWords, formatSigned, formatValue, percentText } from "../format"
+import { directionName, formatSigned, formatValue, percentText } from "../format"
 import { meanWithCount, NO_CENTER, NO_FULL_POSITION, noResultReason, valuedWord } from "../reasons"
 import type { AnalysisInput } from "./input"
 
@@ -76,16 +76,17 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       tens ? formatValue(tens.rate * 100, 0) : null,
       "%",
       tens
-        ? `${tens.count} von ${tens.n} · 95 %: ${percentText(tens.low)} bis ${percentText(tens.high)}`
+        ? `${tens.count} von ${tens.n} · sicher ${percentText(tens.low)} bis ${percentText(tens.high)}`
         : "",
       "ab 1 Schuss"
     ),
     tile(
-      "Präzision σ",
+      // Alltagswort auf der Kachel, σ im Blatt (U3, D3)
+      "Streuung",
       "praezision-sigma",
       sigma ? mm2(sigma.sigma) : null,
       "mm",
-      sigma ? `95 %: ${mm2(sigma.low)} bis ${mm2(sigma.high)} mm` : "",
+      sigma ? `sicher ${mm2(sigma.low)} bis ${mm2(sigma.high)} mm` : "",
       "ab 3 Schuss"
     ),
     tile(
@@ -93,8 +94,11 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       "lage-echt",
       confidence ? (confidence.real ? "echt" : "unklar") : null,
       "",
+      // nur die Richtung: die Zahlen stehen in der Beobachtung, T² und Grenze im Blatt (U3, D3)
       confidence
-        ? `${directionWords(confidence.center)} · T² ${formatValue(confidence.t2, 1)}, Grenze ${formatValue(confidence.critical, 1)}`
+        ? confidence.real
+          ? directionName(confidence.center)
+          : "kein Versatz belegt"
         : "",
       NO_CENTER
     ),
@@ -116,9 +120,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       "Ringe",
       trend
         ? `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe · ${
-            trend.clear
-              ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (95 %)`
-              : "nicht klar"
+            trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"}` : "nicht klar"
           }`
         : "",
       "ab 10 Schuss"
@@ -129,7 +131,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       // der Median wie im Reiter Zeit und an der Scheibe ab 3 Schuss mit Zeit, die Streuung ab 4 (Review)
       tempoMedian === null ? null : formatValue(tempoMedian, 0),
       "s",
-      pace ? `Median · mittlere Hälfte in ${formatValue(pace.iqrMs / 1000, 0)} s` : "Median",
+      pace ? `die Hälfte in ${formatValue(pace.iqrMs / 1000, 0)} s` : "",
       "ab 3 Schuss mit Zeit"
     ),
     // D3 (User, 9. Oktober 2026): das Urteil statt des Abstands Probe → Wertung, der auch ohne jede
@@ -141,7 +143,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       input.basis === "nur Probe" || !zeroed ? null : zeroed.real ? "versetzt" : "unklar",
       "",
       zeroed
-        ? `${zeroed.real ? "echt neben der Mitte" : "kein Versatz nachweisbar"} · letzte ${zeroed.n} Probeschüsse`
+        ? `${zeroed.real ? "sicher neben der Mitte" : "kein Versatz nachweisbar"} · letzte ${zeroed.n} Probeschüsse`
         : "",
       input.basis === "nur Probe"
         ? "Training nur mit Probe"

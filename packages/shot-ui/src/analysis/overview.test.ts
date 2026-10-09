@@ -19,7 +19,7 @@ import {
 import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
-import { formatSigned, formatValue } from "../format"
+import { directionName, formatSigned, formatValue } from "../format"
 import { analysisInput } from "./input"
 import { observations } from "./observations"
 import { overviewTiles } from "./overview"
@@ -37,7 +37,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(tiles.map((t) => t.label)).toEqual([
       "Ergebnis",
       "Zehnerquote",
-      "Präzision σ",
+      "Streuung",
       "Lage",
       "Ringverlust",
       "Trend",
@@ -51,21 +51,31 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(tile("Ergebnis").hint).toMatch(/^Ø \d+,\d\d je Schuss · 40 Schuss$/)
     const tens = shareAtLeast(base, "decimal", 100)!
     expect(tile("Zehnerquote").value).toBe(formatValue(tens.rate * 100, 0))
-    expect(tile("Präzision σ").value).toBe(formatValue(sigmaEstimate(base)!.sigma / 1000, 2))
-    expect(tile("Lage").value).toBe(mpiConfidence(base)!.real ? "echt" : "unklar")
+    expect(tile("Streuung").value).toBe(formatValue(sigmaEstimate(base)!.sigma / 1000, 2))
+    const sigma = sigmaEstimate(base)!
+    expect(tile("Streuung").hint).toBe(
+      `sicher ${formatValue(sigma.low / 1000, 2)} bis ${formatValue(sigma.high / 1000, 2)} mm`
+    )
+    expect(tile("Zehnerquote").hint).toMatch(/^\d+ von \d+ · sicher \d+ % bis \d+ %$/)
+    const confidence = mpiConfidence(base)!
+    expect(tile("Lage").value).toBe(confidence.real ? "echt" : "unklar")
+    // nur die Richtung, ohne Zahlen und ohne T²: die Zahlen stehen in der Beobachtung (U3, D3)
+    expect(tile("Lage").hint).toBe(
+      confidence.real ? directionName(confidence.center) : "kein Versatz belegt"
+    )
     const trend = cardTrend(base, "decimal")!
     expect(tile("Trend").value).toBe(formatSigned(trend.perTenShots, 2))
     // Ringe je Schuss alle zehn Schuss, nicht „je 10“ (Prüfung, Zeit 3)
     expect(tile("Trend").unit).toBe("Ringe")
     expect(tile("Trend").hint).toBe(
-      `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe · ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (95 %)` : "nicht klar"}`
+      `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe · ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"}` : "nicht klar"}`
     )
     // der Median wie Reiter und Kachel an der Scheibe: aus der Registry, ab 3 Schuss mit Zeit (Review)
     expect(tile("Tempo").value).toBe(
       formatValue(computeMetric(metricByKey("time.intervalMedian")!, base)!, 0)
     )
     expect(tile("Tempo").hint).toBe(
-      `Median · mittlere Hälfte in ${formatValue(tempoSpread(base)!.iqrMs / 1000, 0)} s`
+      `die Hälfte in ${formatValue(tempoSpread(base)!.iqrMs / 1000, 0)} s`
     )
     // D3: das Urteil von S4 statt des Abstands, der auch ohne Verschiebung groß ausfällt (B21)
     const zeroed = sighterZeroed(CARD)!
@@ -73,7 +83,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(tile("Eingeschossen?").unit).toBe("")
     expect(tile("Eingeschossen?").hint).toBe(
       zeroed.real
-        ? `echt neben der Mitte · letzte ${zeroed.n} Probeschüsse`
+        ? `sicher neben der Mitte · letzte ${zeroed.n} Probeschüsse`
         : `kein Versatz nachweisbar · letzte ${zeroed.n} Probeschüsse`
     )
   })
@@ -86,8 +96,8 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
   it("ohne Wert ein Strich und der Grund", () => {
     const few = overviewTiles(analysisInput(CARD.slice(9, 11), "decimal", LP_10M))
     const t = (label: string) => few.find((x) => x.label === label)!
-    expect(t("Präzision σ").value).toBeNull()
-    expect(t("Präzision σ").hint).toBe("ab 3 Schuss")
+    expect(t("Streuung").value).toBeNull()
+    expect(t("Streuung").hint).toBe("ab 3 Schuss")
     // wie der Reiter Lage: drei auf einer Linie haben keinen Test (Review)
     expect(t("Lage").hint).toBe("ab 3 Schuss mit Lage (nicht alle auf einer Linie)")
     expect(t("Trend").hint).toBe("ab 10 Schuss")
@@ -95,7 +105,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     const three = overviewTiles(analysisInput(CARD.slice(9, 12), "decimal", LP_10M))
     const tempo = three.find((x) => x.label === "Tempo")!
     expect(tempo.value).not.toBeNull()
-    expect(tempo.hint).toBe("Median")
+    expect(tempo.hint).toBe("")
     expect(t("Eingeschossen?").hint).toBe("ab 3 Probeschüssen mit Lage vor der Wertung")
     // ein Training nur aus Probe ist kein Einschießen (Prüfung, Probe 6)
     const probes = CARD.filter((s) => s.kind === "probe")
@@ -145,7 +155,7 @@ describe("Überblick mit einer späten Probe (SF-04)", () => {
     // ohne die Karte fiele der Abstand über die Probe weg: ein anderer Median
     expect(withCard).not.toBe(formatValue(computeMetric(median, late.base)!, 0))
     expect(tempo.hint).toBe(
-      `Median · mittlere Hälfte in ${formatValue(tempoSpread(late.base, late.card)!.iqrMs / 1000, 0)} s`
+      `die Hälfte in ${formatValue(tempoSpread(late.base, late.card)!.iqrMs / 1000, 0)} s`
     )
   })
 })
