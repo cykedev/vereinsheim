@@ -157,6 +157,41 @@ describe("Vergleich und Satz", () => {
   })
 })
 
+describe("Vergleich für den Satz (U2, D1)", () => {
+  // fünf Scheiben mit 6,0 … 10,0 vor 10 bis 14 Tagen, fünf mit 1,0 … 5,0 vor 100 bis 104 Tagen
+  const now = [60, 70, 80, 90, 100].map((t, i) => periodCard(`n${i}`, 10 + i, [t]))
+  const before = [10, 20, 30, 40, 50].map((t, i) => periodCard(`v${i}`, 100 + i, [t]))
+
+  it("ohne gewählten Vergleich still gegen den Zeitraum davor, ohne Vergleich im Bild", () => {
+    const m = model([...now, ...before])
+    expect(m.compareRange).toBeNull()
+    expect(m.comparison).toBeNull()
+    expect(m.form).toMatchObject({ label: "Zeitraum davor", lastDays: null })
+    expect(m.form?.comparison?.verdict).toBe("higher")
+    expect(m.form?.comparison?.delta).toBeCloseTo(5, 12)
+    expect(m.form?.comparison?.a.n).toBe(5)
+  })
+
+  it("mit gewähltem Vergleich ist es dieser", () => {
+    const m = model([...now, ...before], { compare: { type: "named", id: "lm" } })
+    expect(m.form?.label).toBe("Vorbereitung")
+    expect(m.form?.comparison).toEqual(m.comparison)
+  })
+
+  it("„Alles“: die letzten 90 Tage gegen die 90 davor, ältere zählen nicht", () => {
+    const old = periodCard("alt", 300, [10])
+    const m = model([...now, ...before, old], { choice: { type: "all" } })
+    expect(m.form).toMatchObject({ label: "Zeitraum davor", lastDays: 90 })
+    expect(m.form?.comparison?.b.n).toBe(5)
+    expect(m.form?.comparison?.a.n).toBe(5)
+    expect(m.form?.comparison?.delta).toBeCloseTo(5, 12)
+  })
+
+  it("ohne Scheiben kein Vergleich", () => {
+    expect(model([]).form).toBeNull()
+  })
+})
+
 describe("Darstellung, Monate, Wochen, Ablesung", () => {
   const many = Array.from({ length: 60 }, (_, i) => periodCard(`k${i}`, 80 - i, [95 + (i % 5)]))
 

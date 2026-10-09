@@ -64,6 +64,8 @@ export const PERIOD_TILE_KEYS = [
 export const MONTH_VIEW_FROM = 60
 
 const SUMMARY_KEY = "result.decimalMean"
+/** bei „Alles“ vergleicht der Satz so viele letzte Tage mit ebenso vielen davor (U2, D1) */
+const FORM_DAYS = 90
 
 export interface PeriodTile {
   key: string
@@ -99,6 +101,12 @@ export interface PeriodModel {
   excludedProbeOnly: number
   /** Vergleich im Ø je Schuss (Ergebnis-Box, Satz): a der Vergleich, b der Zeitraum; Δ = Zeitraum − Vergleich */
   comparison: PeriodComparison | null
+  /**
+   * der Vergleich für den Satz (U2, D1: „Werde ich besser?“): der gewählte, sonst still der Zeitraum davor, bei „Alles“
+   * die letzten 90 Tage gegen die 90 davor (`lastDays`); im Ø je Schuss. Er zeigt sich nicht im Verlauf und nicht in der
+   * Ergebnis-Box. null ohne Scheiben
+   */
+  form: { comparison: PeriodComparison | null; label: string; lastDays: number | null } | null
   view: "cards" | "months"
   /**
    * je Monat Median, P10 und P90 (T5); Boden und Decke nach der Richtung der Kennzahl: Ist höher besser, ist der
@@ -301,6 +309,34 @@ export function periodModel(input: {
   for (const value of perShot) {
     if (value.n === usual && (!best || value.value > best.value)) best = value
   }
+  // der Vergleich für den Satz (D1): der gewählte, sonst still der Zeitraum davor; bei „Alles“ die letzten 90 Tage gegen
+  // die 90 davor. Scheiben, die in beiden liegen, zählen nur im Zeitraum, wie beim gewählten Vergleich
+  const form: PeriodModel["form"] = (() => {
+    if (other) {
+      return {
+        comparison: tiles[0].compare?.comparison ?? null,
+        label: other.label,
+        lastDays: null,
+      }
+    }
+    const all = state.choice.type === "all"
+    const own = all
+      ? resolveRange({ type: "rolling", days: FORM_DAYS }, { nowMs, timeZone, named, firstMs })
+      : range
+    const ownCards = all ? within(own) : cards
+    const previous = compareRange({ type: "previous" }, own, { nowMs, timeZone, named })
+    if (!ownCards.length || !previous) return null
+    const ownIds = new Set(ownCards.map((c) => c.id))
+    const previousCards = within(previous).filter((c) => !ownIds.has(c.id))
+    return {
+      comparison: comparePeriods(
+        cardValues(previousCards, summaryMetric, scoring, options),
+        cardValues(ownCards, summaryMetric, scoring, options)
+      ),
+      label: previous.label,
+      lastDays: all ? FORM_DAYS : null,
+    }
+  })()
   const familyPerShot = cardValues(family, summaryMetric, scoring, options)
   const newest = perShot.at(-1)
   const upToNewest = newest
@@ -318,6 +354,7 @@ export function periodModel(input: {
     compareShared: otherAll ? otherAll.length - (otherCards?.length ?? 0) : 0,
     excludedProbeOnly: state.includeProbeOnly ? 0 : cards.filter(isProbeOnly).length,
     comparison: tiles[0].compare?.comparison ?? null,
+    form,
     view: other ? "cards" : (state.view ?? (values.length >= MONTH_VIEW_FROM ? "months" : "cards")),
     months,
     deltas,
