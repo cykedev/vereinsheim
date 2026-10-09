@@ -58,7 +58,13 @@ export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTi
                       : [part]
                   )}
                 </span>
-                {onHelp && <HelpButton label={tile.label} onClick={() => onHelp(tile.key)} />}
+                {onHelp && (
+                  <HelpButton
+                    label={tile.label}
+                    helpId={helpForMetric(tile.key)?.id}
+                    onClick={() => onHelp(tile.key)}
+                  />
+                )}
               </div>
               <span
                 className={cn(

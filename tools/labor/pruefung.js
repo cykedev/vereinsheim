@@ -1932,6 +1932,367 @@ addEventListener("load", async () => {
     )
     small.remove()
 
+    // ---------- Seite eines Zeitraums (Plan L3, Task 15)
+    {
+      const P = () => L().period
+      const M = () => P().model
+      const tools = L().tools
+      const mean = (vs) => (vs.length ? vs.reduce((s, v) => s + v.value, 0) / vs.length : null)
+      const valuesOf = (key, cards = M().cards) =>
+        tools.analysis.cardValues(cards, tools.metricByKey(key), P().state.scoring, {
+          includeProbeOnly: P().state.includeProbeOnly,
+        })
+      const helpDialog = () => $$("dialog").at(-1)
+      const pickerDialog = () => $("[data-period-picker]").closest("dialog")
+      const radio = (label) =>
+        $$("[data-period-picker] label")
+          .find((l) => txt(l).startsWith(label))
+          ?.querySelector("input")
+      const apply = async () => {
+        await click(button("Übernehmen", pickerDialog()), 200)
+      }
+      const choose = async (periodLabel, compareLabel = null) => {
+        await click($("[data-period-chip]"), 150)
+        const inputs = $$("[data-period-picker] fieldset")
+        const pick = (fieldset, label) =>
+          $$("label", fieldset)
+            .find((l) => txt(l).startsWith(label))
+            ?.querySelector("input")
+        const p = pick(inputs[0], periodLabel)
+        if (p) await click(p, 60)
+        if (compareLabel) {
+          const c = pick(inputs[1], compareLabel)
+          if (c) await click(c, 60)
+        }
+        await apply()
+      }
+      const rowIds = () => $$("[data-card-row]").map((r) => r.dataset.cardRow)
+      const chartSvg = () =>
+        $(
+          'svg[role="slider"][aria-label*="je Scheibe"], svg[role="slider"][aria-label*="je Monat"]'
+        )
+      const pointerAt = async (svgEl, x, type) => {
+        const r = svgEl.getBoundingClientRect()
+        svgEl.dispatchEvent(
+          new PointerEvent(type, {
+            bubbles: true,
+            clientX: r.left + (x / svgEl.viewBox.baseVal.width) * r.width,
+            clientY: r.top + r.height / 2,
+            pointerId: 1,
+          })
+        )
+        await wait(40)
+      }
+
+      await click(button("Zeitraum"), 400)
+      check(
+        "Zeitraum: die Ansicht öffnet die Seite mit Kopf und Sprungleiste",
+        !!$("[data-period-header]") &&
+          $$('nav[aria-label="Abschnitte"] a')
+            .map((a) => a.getAttribute("href"))
+            .join() === "#verlauf,#scheiben,#zahlen,#analyse"
+      )
+      check(
+        "Zeitraum: Vorgabe „Letzte 90 Tage“ über Luftgewehr",
+        txt($("[data-period-header] h1")) === "Letzte 90 Tage" &&
+          P().state.family === "lg-10m" &&
+          P().state.choice.days === 90
+      )
+      const boxValue = txt($("[data-result-box] [data-period-result]")).split("R")[0].trim()
+      check(
+        "Zeitraum: Ergebnis-Box = Mittel der Ø je Schuss je Scheibe",
+        boxValue === tools.formatValue(mean(valuesOf("result.decimalMean")), 2),
+        boxValue
+      )
+      const tileProblems = []
+      for (const tile of $$("[data-period-tile]")) {
+        const key = tile.dataset.periodTile
+        const metric = tools.inScoring(tools.metricByKey(key), P().state.scoring)
+        const want = mean(valuesOf(key))
+        const shown = txt(tile.querySelector(".font-display"))
+          .replace(/[^\d,−-].*$/, "")
+          .trim()
+        if (want !== null && shown !== tools.formatValue(want, metric.decimals)) {
+          tileProblems.push(`${key}: ${shown}`)
+        }
+      }
+      check(
+        "Zeitraum: jede Kachel = Mittel der Werte je Scheibe (sechs Kacheln)",
+        $$("[data-period-tile]").length === 6 && tileProblems.length === 0,
+        tileProblems.join(", ")
+      )
+      check(
+        "Zeitraum: Liste mit jeder Scheibe des Zeitraums, neueste oben",
+        rowIds().join() ===
+          M()
+            .cards.map((c) => c.id)
+            .reverse()
+            .join()
+      )
+      check(
+        "Zeitraum: Verlauf mit einem Punkt je Scheibe mit Wert und Formband",
+        $$("[data-card-point]").length === M().values.length && !!$("[data-band]")
+      )
+      check(
+        "Zeitraum: Satz im Kopf aus dem Modell",
+        txt($("[data-period-header] [data-sentence]")) === tools.period.periodSentence(M())
+      )
+
+      // Lineal und Liste teilen die Wahl
+      const target = M().values[Math.floor(M().values.length / 2)]
+      const point = $(`[data-card-point="${target.id}"] circle:last-child`)
+      await pointerAt(chartSvg(), Number(point.getAttribute("cx")), "pointerdown")
+      await pointerAt(chartSvg(), Number(point.getAttribute("cx")), "pointerup")
+      await wait(150)
+      check(
+        "Zeitraum: ein Tipp in den Verlauf wählt die Scheibe für Ablesung und Liste",
+        P().state.chosen === target.id &&
+          $("[data-card-readout]")?.dataset.cardReadout === target.id &&
+          $(`[data-card-row="${target.id}"]`)?.dataset.chosen === "true",
+        String(P().state.chosen)
+      )
+      const rowId = rowIds()[2]
+      await click($(`[data-card-row="${rowId}"] button`), 200)
+      check(
+        "Zeitraum: eine Zeile der Liste wählt die Scheibe und setzt das Lineal",
+        P().state.chosen === rowId && $(`[data-card-point="${rowId}"]`)?.dataset.chosen === "true"
+      )
+      await click($(`[data-card-row="${rowId}"] button`), 200)
+      check("Zeitraum: dieselbe Zeile noch einmal hebt die Wahl auf", P().state.chosen === null)
+      check(
+        "Zeitraum: ohne Wahl liest die Ablesung die neueste Scheibe",
+        $("[data-card-readout]")?.dataset.cardReadout === M().cards.at(-1).id &&
+          txt($("[data-card-readout] h3")) === "Neueste Scheibe"
+      )
+      const readoutDelta = txt($("[data-card-readout] [data-delta]"))
+      const newest = M().deltas.get(M().cards.at(-1).id)
+      check(
+        "Zeitraum: Abstand zum Schnitt der Scheiben davor in der Ablesung",
+        !!newest &&
+          readoutDelta.startsWith(
+            tools.formatValue(Math.abs(newest.delta), 2).length
+              ? newest.delta < 0
+                ? "−"
+                : "+"
+              : ""
+          ) &&
+          readoutDelta.includes(`der ${newest.n} Scheiben davor`),
+        readoutDelta
+      )
+
+      // Wähler
+      await click($("[data-period-chip]"), 150)
+      check("Zeitraum: der Chip öffnet das Blatt „Zeitraum“", pickerDialog().open)
+      await click($('button[aria-label="Schließen"]', pickerDialog()), 100)
+      await choose("Letzte 30 Tage")
+      const in30 = P().cards.filter(
+        (c) => c.startedAtMs >= M().range.fromMs && c.startedAtMs < M().range.toMs
+      )
+      check(
+        "Zeitraum: „Letzte 30 Tage“ zeigt genau die Scheiben der 30 Tage",
+        txt($("[data-period-header] h1")) === "Letzte 30 Tage" &&
+          rowIds().length === in30.length &&
+          M().range.toMs - M().range.fromMs === 30 * 86_400_000 + 1,
+        `${rowIds().length} / ${in30.length}`
+      )
+      await choose("Alles")
+      check(
+        "Zeitraum: „Alles“ zeigt alle Scheiben der Familie, ab 60 je Monat",
+        rowIds().length === P().cards.length &&
+          M().view === "months" &&
+          $$("[data-month]").length === M().months.length &&
+          M().months.length >= 6
+      )
+      const monthSpans = $$("[data-month-span]").length
+      check(
+        "Zeitraum: je Monat Median und Spanne P10–P90 ab fünf Scheiben",
+        monthSpans === M().months.filter((m) => m.p10 !== null).length && monthSpans > 0
+      )
+      await click(button("je Scheibe"), 200)
+      check(
+        "Zeitraum: „je Scheibe“ zeigt wieder jede Scheibe",
+        M().view === "cards" && $$("[data-card-point]").length === M().values.length
+      )
+      await click(button("σ"), 200)
+      const sigmaMonths = M().months
+      check(
+        "Zeitraum: σ im Verlauf, Boden ist bei σ das P90 (kleiner ist besser)",
+        P().state.metric === "group.sigma" &&
+          sigmaMonths.every((m) => m.p10 === null || (m.floor === m.p90 && m.ceiling === m.p10))
+      )
+      await click(button("Ø je Schuss"), 200)
+      await choose("Neue Munition", "Zeitraum davor")
+      const comparison = M().comparison
+      const boxCompare = txt($("[data-result-box] [data-comparison]"))
+      check(
+        "Zeitraum: „Neue Munition“ gegen den Zeitraum davor mit Unterschied und Urteil",
+        txt($("[data-period-header] h1")) === "Neue Munition" &&
+          !!comparison &&
+          boxCompare.includes(tools.formatValue(Math.abs(comparison.delta), 2)) &&
+          boxCompare.includes(tools.period.verdictText(comparison, "higher")),
+        boxCompare
+      )
+      check(
+        "Zeitraum: die Saison zeigt den Munitionswechsel: Ø nachweisbar höher",
+        comparison?.verdict === "higher"
+      )
+      const judged = [
+        boxCompare,
+        ...$$("[data-tile-compare]").map(txt),
+        txt($("[data-period-header] [data-sentence]")),
+      ]
+      check(
+        "Zeitraum: „bedeutsam“ nie ohne „höher“ oder „tiefer“",
+        judged.every((t) => !t.includes("bedeutsam") || /höher|tiefer/.test(t))
+      )
+      check(
+        "Zeitraum: Vergleich im Verlauf übereinander mit Legende, ohne Band",
+        !!$("[data-legend]") &&
+          $$("[data-compare-point]").length === (M().compareValues?.length ?? -1) &&
+          !$("[data-band]") &&
+          txt($("[data-compare-chip]")).startsWith("mit Zeitraum davor")
+      )
+
+      // Hilfe
+      const helpIds = [...new Set($$("button[data-help]").map((b) => b.dataset.help))]
+      const helpProblems = []
+      for (const id of helpIds) {
+        const entry = tools.helpTopic(id) ?? tools.VIEW_HELP.find((v) => v.id === id)
+        await click($(`button[data-help="${id}"]`), 120)
+        if (!helpDialog().open || txt($("h2", helpDialog())) !== entry?.title) helpProblems.push(id)
+        await click($('button[aria-label="Schließen"]', helpDialog()), 80)
+      }
+      check(
+        "Zeitraum: jedes „?“ öffnet sein Blatt",
+        helpIds.length >= 5 && helpProblems.length === 0,
+        helpProblems.join(", ")
+      )
+      const periodTopics = tools.HELP_TOPICS.filter((t) => t.theme === "period").map((t) => t.id)
+      check(
+        "Hilfe: jedes Thema über viele Scheiben hat seinen Platz auf der Seite eines Zeitraums",
+        periodTopics.every((id) => helpIds.includes(id)),
+        periodTopics.filter((id) => !helpIds.includes(id)).join(", ")
+      )
+
+      // Öffnen und zurück
+      const chosenId = M().cards.at(-3).id
+      await click($(`[data-card-row="${chosenId}"] button`), 200)
+      const listShots = Number(txt($(`[data-card-row="${chosenId}"] td:last-child`)))
+      const listValue = txt($(`[data-card-row="${chosenId}"] td:nth-child(3)`))
+      await click(button("Scheibe öffnen", $("[data-card-readout]")), 500)
+      const matchShots = (L().shots ?? []).filter((s) => s.kind === "match")
+      const openedMean = tools.computeMetric(
+        tools.inScoring(tools.metricByKey("result.decimalMean"), "decimal"),
+        L().shots ?? []
+      )
+      check(
+        "Zeitraum: „Scheibe öffnen“ zeigt die Scheibe mit derselben Schusszahl und demselben Ø",
+        !!$("[data-card-header]") &&
+          matchShots.length === listShots &&
+          openedMean !== null &&
+          tools.formatValue(openedMean, 2) === listValue,
+        `${matchShots.length}/${listShots} ${listValue}`
+      )
+      await click(button("Zurück zum Zeitraum"), 500)
+      check(
+        "Zeitraum: „Zurück zum Zeitraum“ stellt Zeitraum, Vergleich und Wahl wieder her",
+        txt($("[data-period-header] h1")) === "Neue Munition" &&
+          !!$("[data-compare-chip]") &&
+          P().state.chosen === chosenId
+      )
+      await click(button("Vergleich entfernen"), 200)
+      check("Zeitraum: „×“ entfernt den Vergleich", !$("[data-compare-chip]") && !M().compareRange)
+
+      // Rekorde
+      const records = M().records
+      const teilerRow = $('[data-record="R3"]')
+      check(
+        "Zeitraum: bester Teiler wie im Fachkern",
+        !!records.bestTeiler &&
+          !!teilerRow &&
+          txt(teilerRow).includes(`bester Teiler ${tools.formatValue(records.bestTeiler.value, 1)}`)
+      )
+      const recordCards = Object.values(records).flatMap((r) =>
+        !r ? [] : "cardId" in r ? [r.cardId] : Object.values(r).map((x) => x.cardId)
+      )
+      check(
+        "Zeitraum: die Scheibe nur aus dem Ausdruck setzt keinen Rekord",
+        recordCards.length > 0 && !recordCards.includes("lg-10m-2026-05-23")
+      )
+
+      // Telefon und Desktop in eigenen Fenstern (die Ansicht ist gemerkt, der Anker hält sie fest)
+      for (const [width, height] of [
+        [390, 844],
+        [375, 812],
+      ]) {
+        const f = await openFrame(width, height, "#verlauf")
+        const d = f.contentDocument
+        const w = f.contentWindow
+        const rows = [...d.querySelectorAll("[data-card-row]")]
+        const visibleRows = rows.filter((r) => w.getComputedStyle(r).display !== "none")
+        const line = d.querySelector("[data-card-line]")
+        const nav = d.querySelector('nav[aria-label="Abschnitte"] > div')
+        check(
+          `Zeitraum, Telefon ${width} px: kein seitliches Scrollen`,
+          d.documentElement.scrollWidth <= width,
+          `${d.documentElement.scrollWidth}`
+        )
+        check(
+          `Zeitraum, Telefon ${width} px: zehn Zeilen und „Alle zeigen“, Ablesezeile unter dem Verlauf`,
+          rows.length > 10 &&
+            visibleRows.length === 10 &&
+            [...d.querySelectorAll("button")].some((b) => b.textContent.startsWith("Alle ")) &&
+            !!line &&
+            w.getComputedStyle(line).display !== "none" &&
+            !d.querySelector("[data-card-readout]")?.offsetParent,
+          `${visibleRows.length}/${rows.length}`
+        )
+        check(
+          `Zeitraum, Telefon ${width} px: Sprungleiste mit vier gleichen Feldern`,
+          w.getComputedStyle(nav).gridTemplateColumns.split(" ").length === 4
+        )
+        d.querySelector("[data-period-chip]").dispatchEvent(
+          new w.MouseEvent("click", { bubbles: true })
+        )
+        await wait(200)
+        const sheet = d.querySelector("[data-period-picker]").closest("dialog")
+        const sheetRect = sheet.getBoundingClientRect()
+        check(
+          `Zeitraum, Telefon ${width} px: der Wähler kommt als Blatt von unten`,
+          // volle Breite des Fensters ohne Scrollleiste
+          sheet.open &&
+            near(sheetRect.bottom, height, 2) &&
+            near(sheetRect.width, d.documentElement.clientWidth, 2),
+          `${Math.round(sheetRect.bottom)} ${Math.round(sheetRect.width)}`
+        )
+        f.remove()
+      }
+      const desk2 = await openFrame(1280, 900, "#verlauf")
+      const d2 = desk2.contentDocument
+      const w2 = desk2.contentWindow
+      // die Liste füllt die Höhe der Spalte mit dem Verlauf (D1), mindestens 240 px wie die Schusstabelle
+      const column = d2.querySelector('[data-section="verlauf"]')
+      const listCard = d2.querySelector("#card-list")
+      const listBottom = listCard.getBoundingClientRect().bottom
+      const columnBottom = column.getBoundingClientRect().bottom
+      check(
+        "Zeitraum, Desktop: die Liste reicht bis ans Ende der Spalte des Verlaufs",
+        listBottom >= columnBottom - 3 &&
+          (near(listBottom, columnBottom, 3) || listCard.getBoundingClientRect().height <= 260),
+        `${Math.round(listBottom)} / ${Math.round(columnBottom)}`
+      )
+      const list = d2.querySelector("#card-list > div")
+      check(
+        "Zeitraum, Desktop: die Liste scrollt in sich, die Ablesung steht als Karte",
+        !!list &&
+          list.scrollHeight > list.clientHeight &&
+          !!d2.querySelector("[data-card-readout]")?.offsetParent &&
+          d2.documentElement.scrollWidth <= 1280
+      )
+      desk2.remove()
+      await click(button("Scheibe"), 300)
+    }
+
     check("Keine Skriptfehler", window.__errors.length === 0, window.__errors.join(" | "))
   } catch (error) {
     log.push(`FAIL Skriptprüfung abgebrochen — ${error?.stack ?? error}`)
