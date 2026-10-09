@@ -125,8 +125,28 @@ Die Analyse hat 25 Karten:
   - B3: ein Bezug, der Satz zum Vergleich;
   - B5: Filter in einer Zeile;
   - B6: Rekorde gekürzt.
-- **U3 Sprache:** B4 über alle Seiten und die Texte in `shot-help` (`plans/2026-10-09-spiegel-sprache.md`).
+- **U3 Sprache** (umgesetzt 9. Oktober 2026, `plans/2026-10-09-spiegel-sprache.md`): B4 über alle Seiten und die
+  Texte in `shot-help`.
+  - Beobachtungen und Kacheln in Alltagsworten: „Deine Gruppe liegt …; das ist sicher kein Zufall.“, „Streuung“,
+    „sicher zwischen …“, „meist 56 s“, Lage „versetzt“ mit Richtung oder „passt“. Die Kachel „Lage“ nennt nur die
+    Richtung; die Zahlen stehen einmal, in der Beobachtung („Offen nach U1“: die Lage dreifach).
+  - Urteile „deutlich besser“, „schwächer“, „kein klarer Unterschied“ statt „höher, besser · bedeutsam“.
+  - Wochen als Datum des Montags, Art in den Listen als Pokal, ohne Zeichen oder „Probe“, eine Zeile unter dem
+    Formband.
+  - Ein Lage-Anteil bis null heißt „Lage kostet nichts“ (User-Frage zum negativen Ringverlust durch die Lage).
+  - Fachbegriffe nur im Blatt „?“ und in den Reitern; die Skriptprüfung sucht sie auf den ersten beiden Ebenen.
+  - Nicht in U3: die Kachel „Eingeschossen?“ und der Reiter Probe sagen noch „unklar“ und „echt“; U4 entfernt sie.
 - **U4 Probe wie am Ausdruck** (dazugekommen am 9. Oktober 2026 aus der Erkundung der Daten, [[adr-027]],
   `plans/2026-10-09-spiegel-probe-wie-ausdruck.md`): keine Scheibe mehr mit Probe und Wertung, der Reiter „Probe“ und
   alles, was beides voraussetzt, fällt weg. U3 steckt in diese Teile keine Arbeit mehr.
 - **U5 Start und Liste** (hieß bis zum 9. Oktober U4): B8, B9 und die Filter der Liste wie in B5.
+  - Dazu das Formband auf Start (User, 9. Oktober 2026: „das formband ist irgendwie seltsam, ich verstehe es kaum,
+    vor allem mit der ‚abend‘“). Woran es liegt:
+    - Der Streifen ist eine Zahlenachse ohne Zeit (nach rechts der Ø je Schuss). Die grauen Punkte sind die letzten
+      20 Scheiben, leicht übereinander versetzt; man liest eine Zeitachse hinein.
+    - „Abend“ steht über dem Mittel der Scheiben des Abends, bei zwei Scheiben über der Lücke zwischen ihnen.
+    - Band und gestrichelte Linie haben zwei Bezüge: das Band den gleitenden Schnitt, die Linie den Schnitt der fünf
+      Scheiben davor.
+  - Empfehlung: ein kleiner Verlauf wie im Fortschritt (Zeit nach rechts, das Band um den gleitenden Schnitt, die
+    Scheiben des Abends rechts groß und mit Datum beschriftet). Dann lernt man das Formband einmal für Start und
+    Fortschritt. Andernfalls entfällt der Streifen, und Satz und Zahl bleiben.

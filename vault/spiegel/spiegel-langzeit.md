@@ -179,7 +179,8 @@ Das Konzept oben genauer, wie es im Labor steht (Entscheidungen D1–D18 im Plan
 - **Ergebnis-Box:** Ø je Schuss als Mittel der Scheiben, Wertungsschüsse, die beste Scheibe unter der häufigsten
   Schusszahl (eine kurze Scheibe hätte es sonst leichter).
 - **Zahlen:** sechs Kacheln (Mittel je Scheibe), mit Vergleich Wert dort, Δ und Urteil; „bedeutsam“ nur neben
-  einem Urteil.
+  einem Urteil. Seit U3 (9. Oktober 2026) in Alltagsworten: „deutlich besser“, „schwächer“, „kein klarer
+  Unterschied“, die Kacheln heißen „Streuung“ und „Tempo“.
 - **Analyse in L3:** „Gegen deinen Schnitt“ (über alle Scheiben der Familie bis zur neuesten im Zeitraum) und
   „Rekorde“ (über alle Scheiben der Familie). Reiter kommen mit L4 und L5.
 - **Training nur aus Probe** zählt als Vorgabe mit (Schalter „mit Training nur aus Probe“ an), denn so

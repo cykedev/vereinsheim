@@ -25,8 +25,9 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   oder `aria-label`), `area` (sichtbarer Eintrag der Navigation), `helpSheet` (das Blatt der Hilfe ist das letzte
   `<dialog>`; davor stehen das der Labor-Werkzeuge und je Seite weitere), `inLabor` (Knopf im Blatt der
   Labor-Werkzeuge, auch geschlossen; nur dort suchen, die Seite hat gleich benannte Knöpfe wie den Reiter „Probe“),
-  `sideTheme` (Darstellung in der Seitenleiste), `pageHeadTop` (Abstand des Seitenkopfs oben); der Pillen-Helfer
-  übergeht „Zurück zur App“. Ein synthetischer Klick fokussiert
+  `sideTheme` (Darstellung in der Seitenleiste), `pageHeadTop` (Abstand des Seitenkopfs oben), `jargonIn`
+  (Fachbegriffe auf den ersten beiden Ebenen, U3), `recordJump` (Sprung von einem Rekord zur gewählten Scheibe in einem
+  vorhandenen Rahmen); der Pillen-Helfer übergeht „Zurück zur App“. Ein synthetischer Klick fokussiert
   nicht und eine synthetische Taste löst keine Aktion aus (Tastatur nur über echte, fokussierbare Knöpfe
   prüfen); das `close`-Ereignis eines `<dialog>` kommt spät oder gar nicht (nie darauf warten; Escape-Weg
   über `requestClose()`, das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
@@ -34,7 +35,9 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen, auf der Seite
   eines Zeitraums dazu `period` (Scheiben, Zustand, Modell) und `tools.period`, auf der Scheiben-Liste `list` (Modell,
   Filter, Scheiben, Familie je Id), auf Start `start` (Modell, Scheiben). Die Prüfung braucht seit L3 mehr
-  als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`).
+  als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`) und liegt seit U3 nahe daran: Neue Prüfungen nutzen
+  vorhandene Rahmen (`openFrame`, `tallJump(…, then)`), statt eigene zu öffnen; reißt das Budget, endet der Lauf mit
+  „Kein Bericht“. `scripts/` ist für den Autopiloten geschützt.
   In den Rahmen der Prüfung (außerhalb des Bilds, `left:-9999px`) kam ein Sprung über `requestAnimationFrame` beim
   Laden nicht an; was beim Laden zu einem Anker springen soll, springt deshalb im Effekt sofort (Review N2).
 - **Die App im Rahmen** (Plan L3, N2, N3): `AppFrame` umgibt jede Ansicht; die Navigation wechselt die Bereiche

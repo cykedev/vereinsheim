@@ -20,6 +20,11 @@ relates_to: ["[[component-canon]]", "[[navigation-pattern]]", "[[spiegel-metrics
 - **Hell und dunkel:** dunkel für die Halle am Abend, hell für Tageslicht. Der Verein schießt nur in der 10-m-Halle; ob Phase 1 nur dunkel startet, ist offen ([[spiegel-open-questions]]).
 - **Desktop ist die Analysezentrale:** Scheibe links, Kennzahlen rechts, Vergleiche nebeneinander.
 - **Zahlen in Worten:** die wichtigste Beobachtung als Satz ([[spiegel-metrics]]).
+- **Alltagsworte vorn, Fachbegriffe im Blatt** (U3, 9. Oktober 2026, [[spiegel-durchsicht]]): Auf Kopf, Überblick,
+  Start, Fortschritt und Listen stehen „Streuung“, „Tempo“, „sicher zwischen …“, „deutlich besser“, „kein klarer
+  Unterschied“, „passt“ und „versetzt“; σ, R50, T², Median und „95 %“ nur im Blatt „?“ und in den Karten der Reiter.
+  Wochen heißen nach ihrem Montag („Woche ab 06.07.“), nicht „KW“. Eine Skriptprüfung des Labors sucht die
+  Fachbegriffe auf den ersten beiden Ebenen.
 - **Ganze Ringe oder Zehntel, jederzeit:** Jeder Wert lässt sich zwischen beiden Wertungen umschalten (unten).
 
 ## Navigation (Handy)
@@ -52,8 +57,8 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 - **Jede Zahl ist erklärt.** An jeder Kachel des Überblicks und jeder Karte sitzt ein „?“; es öffnet die Erklärung aus `@vereinsheim/shot-help` (nachzulesen in [[spiegel-statistics-help]]): was die Zahl misst, wie man sie liest, was man tun kann, wo man sich täuscht. Auf dem Handy als Blatt von unten, auf dem Desktop als Karte daneben, nie nur als Tooltip.
 - **Erst Worte, dann Formel.** Die Formel steht aufklappbar für Profis darunter, nie davor.
 - **Schalter „Erklärungen“:** zeigt an jeder Kachel und jeder Karte der Analyse den Kurzsatz sichtbar unter dem Titel, nicht nur als Tooltip; die langen Erklärungen bleiben im Blatt (seit Oktober 2026, Plan `2026-10-08-spiegel-mobile-seitenaufbau`, D3: kein aufklappbares „Was heißt das?“ mehr zwischen den Zahlen). Das „?“ einer Kachel, einer Karte, der Datenlage oder der Scheibe öffnet ihr Thema als Blatt (`Sheet` in `@vereinsheim/ui/design2` auf dem nativen `<dialog>`: Fokus, Escape und Rückkehr des Fokus übernimmt der Browser; geschlossen wird aus dem Zustand, weil das `close`-Ereignis spät oder gar nicht kommt). Die Feldnamen („Was“, „So liest du es“ …) sind die des Leitfadens; ein Test hält sie gleich.
-- **Auch „–“ und „unklar“ erklären:** „ab 10 Schuss“ sagt, warum ein Wert fehlt, aber nur, wenn es an der Zahl der Schüsse liegt; fehlen Daten, nennt die Kachel sie („ohne Zeiten“, „ohne Zehntel · auf ganze Ringe schalten“, SF-18); „unklar“ sagt, was mehr Schüsse klären würden.
-- **Einmal oben erklärt:** Ein Einstieg „So liest du die Analyse“ erklärt n, 95-%-Bereich, „echt“ und „unklar“ und die Wertung, damit die Karten kurz bleiben.
+- **Auch „–“ und „kann Zufall sein“ erklären:** „ab 10 Schuss“ sagt, warum ein Wert fehlt, aber nur, wenn es an der Zahl der Schüsse liegt; fehlen Daten, nennt die Kachel sie („ohne Zeiten“, „ohne Zehntel · auf ganze Ringe schalten“, SF-18); „kann Zufall sein“ sagt, was mehr Schüsse klären würden.
+- **Einmal oben erklärt:** Ein Einstieg „So liest du die Analyse“ erklärt n, „sicher zwischen …“, „sicher“ und „kann Zufall sein“ und die Wertung, damit die Karten kurz bleiben.
 - **Ein Glossar** für die Begriffe (σ, R50, Median, Hotelling …), aus jeder Erklärung verlinkt.
 - **Eine Quelle:** App und Doku zeigen dieselben Texte aus `@vereinsheim/shot-help` (SP-1.11). Eine Kachel holt ihr Thema mit `helpForMetric(key)`, eine Karte mit `helpTopic(id)`, eine Auswertung über ihre Katalog-ID mit `helpForCatalog(id)`. `short` ist der Satz für Kachel und Tooltip, `what`, `read`, `act`, `caution` und `minimum` sind die Erklärung, `formula` das Aufklappbare. [[spiegel-statistics-help]] wird daraus erzeugt.
 
