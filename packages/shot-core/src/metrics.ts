@@ -13,7 +13,8 @@
 // - `nSensitive` kennzeichnet Maße, die von der Schusszahl abhängen: Vergleiche nur bei gleichem n
 //   (SF-60); das n liefert `eligibleShots`. Auch R50 fällt bei kleinem n leicht zu klein aus (bei
 //   10 Schuss etwa 4 %); für Verläufe über verschiedene Schusszahlen taugt `group.sigma`.
-// - Die Reihenfolge ist die Abgabefolge `seq`, nicht die Uhr (SF-30).
+// - Die Reihenfolge ist die Abgabefolge `seq`, nicht die Uhr (SF-30); eine Probe zwischen zwei
+//   Wertungsschüssen ist in einer Auswahl nur der Wertung keine Lücke (SF-04).
 //
 // Wertung: Jede wertbasierte Kennzahl gibt es in ganzen Ringen und in Zehnteln (`scoring` und
 // `counterpart`); `inScoring` wählt die passende, damit sich überall umschalten lässt. Ganze Ringe
@@ -94,9 +95,10 @@ export interface MetricDefinition {
   counterpart?: string
   /**
    * Die Formel. Sie rechnet nur über `computeMetric` richtig: Erst das filtert die Schüsse und
-   * garantiert die Angaben, die `needs` verlangt.
+   * garantiert die Angaben, die `needs` verlangt. `context`: Karte und Arten der Auswahl, für Abstände
+   * (SF-04).
    */
-  compute: (shots: readonly MetricShot[]) => number | null
+  compute: (shots: readonly MetricShot[], context: ShotContext) => number | null
 }
 
 const KEY = /^[a-z][a-zA-Z]*(\.[a-z][a-zA-Z0-9]*)+$/
@@ -207,16 +209,18 @@ export function eligibleShots(
 
 /**
  * Wert der Kennzahl für die gewählten Schüsse. Die Auswahl (Wertung, eine Serie, ein Probe-Block)
- * trifft der Aufrufer; `appliesTo` schließt nur aus, was für die Kennzahl nie zählt.
+ * trifft der Aufrufer; `appliesTo` schließt nur aus, was für die Kennzahl nie zählt. `card`: die ganze
+ * Karte, aus der `shots` stammen; nur für Abstände (SF-04).
  */
 export function computeMetric(
   metric: MetricDefinition,
-  shots: readonly MetricShot[]
+  shots: readonly MetricShot[],
+  card: readonly MetricShot[] = shots
 ): number | null {
   const { counting, eligible } = partition(metric, shots)
   if (metric.onMissing === "null" && eligible.length < counting.length) return null
   if (eligible.length < metric.minShots) return null
-  return metric.compute(eligible)
+  return metric.compute(eligible, contextOf(shots, card))
 }
 
 /**
@@ -289,9 +293,26 @@ export interface ShotStep {
   gapBefore: boolean
 }
 
+/** Woher eine Auswahl stammt: die ganze Karte und die Arten der Auswahl (SF-04) */
+export interface ShotContext {
+  card: readonly MetricShot[]
+  kinds: readonly ShotKind[]
+}
+
+/**
+ * Kontext einer Auswahl aus einer Karte. Die Arten kommen aus der Auswahl selbst, vor jedem Filter nach
+ * Angaben: Eine Probe ohne Zeit in „alle mit Probe“ bleibt Teil der Auswahl.
+ */
+export function contextOf(
+  selection: readonly MetricShot[],
+  card: readonly MetricShot[]
+): ShotContext {
+  return { card, kinds: [...new Set(selection.map((shot) => shot.kind))] }
+}
+
 /** Schüsse in Abgabefolge mit der Markierung, wo ein Schuss fehlt; Grundlage aller Zeit-Auswertungen */
-export function shotSteps(shots: readonly MetricShot[]): ShotStep[] {
-  return stepsInOrder(inShotOrder(shots))
+export function shotSteps(shots: readonly MetricShot[], context?: ShotContext): ShotStep[] {
+  return stepsInOrder(inShotOrder(shots), context)
 }
 
 /**
@@ -299,13 +320,30 @@ export function shotSteps(shots: readonly MetricShot[]): ShotStep[] {
  * aller Schüsse einer Karte; ordnet nicht neu. So folgen die Auswertungen derselben Reihenfolge wie
  * `shotNumbers`, auch wenn einem Schuss Abgabefolge und Zeit fehlen und die Karte nur nach der Liste
  * geordnet werden kann.
+ *
+ * Mit `context` ist ein Sprung in `seq`, den auf der Karte nur Schüsse einer Art füllen, die die Auswahl
+ * nicht hat, keine Lücke (SF-04: eine Probe zwischen zwei Wertungsschüssen). Fehlt der Karte eine Nummer
+ * oder liegt dazwischen ein Schuss einer Art der Auswahl (ohne Zeit, Platzhalter), bleibt es eine. Ohne
+ * `context` ist jeder Sprung eine Lücke.
  */
-export function stepsInOrder(ordered: readonly MetricShot[]): ShotStep[] {
+export function stepsInOrder(ordered: readonly MetricShot[], context?: ShotContext): ShotStep[] {
   const withSeq = ordered.every((shot) => finite(shot.seq))
-  return ordered.map((shot, i) => ({
-    shot,
-    gapBefore: withSeq && i > 0 && (shot.seq as number) - (ordered[i - 1].seq as number) > 1,
-  }))
+  // Nummern, die keine Lücke aufreißen: Schüsse der Karte einer Art, die die Auswahl nicht hat
+  const others = new Set(
+    (context?.card ?? [])
+      .filter((shot) => !context?.kinds.includes(shot.kind) && finite(shot.seq))
+      .map((shot) => shot.seq as number)
+  )
+  const filled = (from: number, to: number) => {
+    if (to - from - 1 > others.size) return false
+    for (let seq = from + 1; seq < to; seq++) if (!others.has(seq)) return false
+    return true
+  }
+  return ordered.map((shot, i) => {
+    const from = ordered[i - 1]?.seq as number
+    const to = shot.seq as number
+    return { shot, gapBefore: withSeq && i > 0 && to - from > 1 && !filled(from, to) }
+  })
 }
 
 function timesOf(steps: readonly ShotStep[]): (number | null)[] {
@@ -318,16 +356,23 @@ function timesOf(steps: readonly ShotStep[]): (number | null)[] {
 }
 
 /** Zeiten in Abgabefolge für `tempo()`: `null` dort, wo ein Schuss fehlt oder keine gültige Zeit hat */
-export function timesWithGaps(shots: readonly MetricShot[]): (number | null)[] {
-  return timesOf(shotSteps(shots))
+export function timesWithGaps(
+  shots: readonly MetricShot[],
+  context?: ShotContext
+): (number | null)[] {
+  return timesOf(shotSteps(shots, context))
 }
 
 /** Wie `timesWithGaps`, für Schüsse, die schon in Abgabefolge stehen (siehe `stepsInOrder`) */
-export function timesInOrder(ordered: readonly MetricShot[]): (number | null)[] {
-  return timesOf(stepsInOrder(ordered))
+export function timesInOrder(
+  ordered: readonly MetricShot[],
+  context?: ShotContext
+): (number | null)[] {
+  return timesOf(stepsInOrder(ordered, context))
 }
 
-const pace = (shots: readonly MetricShot[]) => tempo(timesWithGaps(shots))
+const pace = (shots: readonly MetricShot[], context?: ShotContext) =>
+  tempo(timesWithGaps(shots, context))
 
 const BOTH: readonly ShotKind[] = ["match", "probe"]
 const MATCH_ONLY: readonly ShotKind[] = ["match"]
@@ -602,14 +647,14 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 0,
     scopes: SERIES_AND_CARD,
     better: "none",
-    version: 1,
+    version: 2,
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: false,
     excludeMisses: false,
     needs: "time",
     onMissing: "drop",
-    compute: (shots) => seconds(pace(shots).medianIntervalMs),
+    compute: (shots, context) => seconds(pace(shots, context).medianIntervalMs),
   }),
   defineMetric({
     key: "time.tempoSpread",
@@ -620,15 +665,15 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     scopes: SERIES_AND_CARD,
     // konstanter ist nicht automatisch besser (Katalog Z2)
     better: "none",
-    version: 1,
+    version: 2,
     appliesTo: BOTH,
     minShots: 4,
     nSensitive: false,
     excludeMisses: false,
     needs: "time",
     onMissing: "drop",
-    compute: (shots) => {
-      const intervals = pace(shots).intervalsMs
+    compute: (shots, context) => {
+      const intervals = pace(shots, context).intervalsMs
       return intervals.length >= 3 ? seconds(iqr(intervals)) : null
     },
   }),
@@ -640,14 +685,14 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 0,
     scopes: ["card"],
     better: "none",
-    version: 1,
+    version: 2,
     appliesTo: BOTH,
     minShots: 2,
     nSensitive: true,
     excludeMisses: false,
     needs: "time",
     onMissing: "drop",
-    compute: (shots) => seconds(pace(shots).durationMs),
+    compute: (shots, context) => seconds(pace(shots, context).durationMs),
   }),
 ])
 

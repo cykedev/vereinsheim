@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest"
 
 import {
   computeMetric,
+  contextOf,
   defineMetric,
   selectShots,
+  stepsInOrder,
   eligibleShots,
   inScoring,
   inShotOrder,
@@ -286,6 +288,87 @@ describe("Tempo, Reihenfolge und Probe", () => {
       // ohne die Lücke wären die 200 s über den fehlenden Schuss hinweg eine Pause
       const times = timesInOrder(selectShots(inShotOrder(shots), { need: "time" }))
       expect(tempo(times).pausesMs).toEqual([])
+    }
+  })
+})
+
+describe("Lücken in der Abgabefolge (SF-04, SF-30)", () => {
+  const at = (seq: number, kind: MetricShot["kind"], s: number | null): MetricShot => ({
+    ...MATCH[0],
+    seq,
+    kind,
+    series: kind === "match" ? 1 : null,
+    firedAtMs: s === null ? null : s * 1000,
+  })
+  // Wertung 0, 40 s, eine Probe bei 70 s, Wertung 100 und 160 s
+  const CARD5 = [
+    at(1, "match", 0),
+    at(2, "match", 40),
+    at(3, "probe", 70),
+    at(4, "match", 100),
+    at(5, "match", 160),
+  ]
+  const MATCH4 = CARD5.filter((shot) => shot.kind === "match")
+  const gaps = (steps: readonly { gapBefore: boolean }[]) => steps.map((step) => step.gapBefore)
+
+  it("ohne Karte ist jeder Sprung eine Lücke, wie bisher", () => {
+    expect(gaps(stepsInOrder(MATCH4))).toEqual([false, false, true, false])
+  })
+
+  it("füllt nur eine Probe den Sprung, ist er in der Wertung keine Lücke", () => {
+    expect(gaps(stepsInOrder(MATCH4, contextOf(MATCH4, CARD5)))).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ])
+  })
+
+  it("fehlt der Karte die Nummer, bleibt es eine Lücke", () => {
+    expect(gaps(stepsInOrder(MATCH4, contextOf(MATCH4, MATCH4)))).toEqual([
+      false,
+      false,
+      true,
+      false,
+    ])
+  })
+
+  it("fehlt einem Wertungsschuss dazwischen nur die Zeit, bleibt es eine Lücke", () => {
+    const card = CARD5.map((shot) => (shot.seq === 3 ? at(3, "match", null) : shot))
+    const match = card.filter((shot) => shot.kind === "match")
+    const timed = selectShots(inShotOrder(card), { kinds: ["match"], need: "time" })
+    expect(gaps(stepsInOrder(timed, contextOf(match, card)))).toEqual([false, false, true, false])
+  })
+
+  it("in einer Auswahl beider Arten gehört die Probe dazu: ohne Zeit eine Lücke", () => {
+    const card = CARD5.map((shot) => (shot.seq === 3 ? at(3, "probe", null) : shot))
+    const timed = selectShots(inShotOrder(card), { need: "time" })
+    expect(gaps(stepsInOrder(timed, contextOf(card, card)))).toEqual([false, false, true, false])
+  })
+
+  it("ein riesiger Sprung bleibt eine Lücke, auch mit einer Probe darin", () => {
+    const card = [at(1, "match", 0), at(2, "probe", 30), at(1_000_000, "match", 60)]
+    const match = card.filter((shot) => shot.kind === "match")
+    expect(gaps(stepsInOrder(match, contextOf(match, card)))).toEqual([false, true])
+  })
+
+  it("Tempo über die Wertung mit der Karte, ohne sie und über beide Arten (Handwerte)", () => {
+    // ohne Karte: 40 und 60 s, Median 50; mit Karte: 40, 60, 60, Median 60; beide Arten: 40, 30, 30, 60
+    const tempoOf = (shots: readonly MetricShot[], card?: readonly MetricShot[]) =>
+      computeMetric(def("time.intervalMedian"), shots, card)
+    for (const [actual, expected] of [
+      [tempoOf(MATCH4), 50],
+      [tempoOf(MATCH4, CARD5), 60],
+      [tempoOf(CARD5), 35],
+    ] as const) {
+      expect(actual).not.toBeNull()
+      expect(actual).toBe(expected)
+    }
+  })
+
+  it("die Zeit-Kennzahlen rechnen seit der Regel in Version 2", () => {
+    for (const key of ["time.intervalMedian", "time.tempoSpread", "time.duration"]) {
+      expect(def(key).version).toBe(2)
     }
   })
 })
