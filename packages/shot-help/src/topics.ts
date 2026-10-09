@@ -98,7 +98,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   // ---------- Präzision
   {
     id: "praezision-sigma",
-    title: "Präzision σ",
+    title: "Streuung σ",
     theme: "precision",
     catalog: ["P5"],
     metrics: ["group.sigma"],
@@ -393,12 +393,12 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob sich eine Zahl zwischen zwei Zeiträumen wirklich verändert hat.",
     what: "Spiegel vergleicht die Werte deiner Scheiben aus zwei Zeiträumen, etwa vor und nach einem neuen Abzug. Jede Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die Differenz der Mittel.",
-    read: "Steht „nachweisbar“ oder „höher“ und „tiefer“, entstünde ein so deutlicher Unterschied durch Zufall allein in höchstens 5 von 100 Vergleichen; „besser“ oder „schwächer“ sagt, ob das gut ist (bei Streukreis und σ ist kleiner besser). „Nicht nachweisbar“ heißt nicht „gleich geblieben“: Diese Scheiben reichen nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige Scheiben“. „Bedeutsam“ heißt: Der Unterschied ist mindestens knapp ein Drittel der Streuung deiner Scheiben innerhalb der beiden Zeiträume, also groß genug, um im Training etwas auszumachen.",
+    read: "Steht „besser“ oder „schwächer“, entstünde ein so deutlicher Unterschied durch Zufall allein in höchstens 5 von 100 Vergleichen; der Satz oben nennt das „nachweisbar“. Ob kleiner besser ist, weiß Spiegel je Zahl (bei Streukreis und Streuung σ ist kleiner besser); beim Tempo heißt es nur „höher“ oder „tiefer“. Steht „kein klarer Unterschied“, heißt das nicht „gleich geblieben“: Diese Scheiben reichen nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige Scheiben“. „Deutlich“ davor heißt: Der Unterschied ist mindestens knapp ein Drittel der Streuung deiner Scheiben innerhalb der beiden Zeiträume, also groß genug, um im Training etwas auszumachen.",
     caution:
-      "„Bedeutsam“ zählt nur zusammen mit einem Urteil: Auch ohne jede Veränderung ist der Unterschied bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen so groß. Bei gleicher Form gibt Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein Urteil. Wird dein σ beim Luftgewehr von 1,5 auf 1,3 mm kleiner (40 Schuss je Scheibe, im Mittel 0,1 Ring mehr je Schuss), erkennt Spiegel das bei 5 gegen 5 Scheiben in gut der Hälfte der Fälle, bei 10 gegen 10 in gut neun von zehn. Eine kleine Veränderung braucht viel mehr Scheiben: Bei σ 1,5 auf 1,45 mm (etwa ein Ring mehr auf 40 Schuss) erkennt es Spiegel bei 20 gegen 20 Scheiben nur in etwa jedem fünften Fall, bei 30 gegen 30 in knapp jedem dritten. Zeigen Test und Mittel in verschiedene Richtungen, gibt es kein Urteil.",
+      "„Deutlich“ steht nur zusammen mit einem Urteil: Auch ohne jede Veränderung ist der Unterschied bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen so groß. Bei gleicher Form gibt Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein Urteil. Wird dein σ beim Luftgewehr von 1,5 auf 1,3 mm kleiner (40 Schuss je Scheibe, im Mittel 0,1 Ring mehr je Schuss), erkennt Spiegel das bei 5 gegen 5 Scheiben in gut der Hälfte der Fälle, bei 10 gegen 10 in gut neun von zehn. Eine kleine Veränderung braucht viel mehr Scheiben: Bei σ 1,5 auf 1,45 mm (etwa ein Ring mehr auf 40 Schuss) erkennt es Spiegel bei 20 gegen 20 Scheiben nur in etwa jedem fünften Fall, bei 30 gegen 30 in knapp jedem dritten. Zeigen Test und Mittel in verschiedene Richtungen, gibt es kein Urteil.",
     minimum: "Ein Urteil ab 5 Scheiben je Seite.",
     formula:
-      "Mann-Whitney über die Scheibenwerte, zweiseitig, α 0,05; bis 20 Scheiben je Seite genau ausgezählt, darüber Normalnäherung mit Korrektur für gleiche Werte; Δ = Mittel im Zeitraum − Mittel im Vergleichszeitraum; bedeutsam, wenn |Δ| ≥ 0,3 · gepoolte Standardabweichung der Scheibenwerte",
+      "Mann-Whitney über die Scheibenwerte, zweiseitig, α 0,05; bis 20 Scheiben je Seite genau ausgezählt, darüber Normalnäherung mit Korrektur für gleiche Werte; Δ = Mittel im Zeitraum − Mittel im Vergleichszeitraum; „deutlich“ (Effektstärke), wenn |Δ| ≥ 0,3 · gepoolte Standardabweichung der Scheibenwerte",
   },
   {
     id: "gegen-den-schnitt",

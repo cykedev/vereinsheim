@@ -24,10 +24,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 - **Schusszahl n.** Jede Zahl steht auf einer Grundlage, die Zeile „Datenlage“ unter der Analyse
   nennt sie. Reicht die Schusszahl nicht, steht „–“ mit dem Grund („ab 10 Schuss“), nie eine 0.
-- **95-%-Bereich.** „σ 1,12 mm, 95 %: 0,94 bis 1,36 mm“ heißt bei 30 Schuss: Dein wahrer Wert liegt
-  mit großer Sicherheit in diesem Bereich. Mehr Schüsse machen ihn schmaler. Bei 10 Schuss reicht er
-  für σ von etwa einem Viertel darunter bis knapp die Hälfte darüber, erst bei rund 120 Schuss auf
-  etwa ±10 %.
+- **„Sicher zwischen …“.** „Streuung 1,12 mm, sicher zwischen 0,94 und 1,36 mm“ heißt bei 30 Schuss:
+  Dein wahrer Wert liegt mit großer Sicherheit (95 von 100) in diesem Bereich. Mehr Schüsse machen
+  ihn schmaler. Bei 10 Schuss reicht er für σ von etwa einem Viertel darunter bis knapp die Hälfte
+  darüber, erst bei rund 120 Schuss auf etwa ±10 %.
 - **„Echt“ und „unklar“.** „Echt“ heißt: Reiner Zufall brächte ein so deutliches Ergebnis nur in 5
   von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede fünfte ganz
   normale Scheibe irgendwo ein „echt“, „gestreckt“, „klar“ oder einen Ausreißer. „Unklar“ heißt
@@ -155,7 +155,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 ## Präzision
 
-**Präzision σ (P5)**
+**Streuung σ (P5)**
 - *Was:* Wie stark deine Treffer um ihren eigenen Schwerpunkt streuen, als eine Zahl in mm. Bei
   einer runden Gruppe liegen etwa 39 % der Treffer innerhalb von σ um den Schwerpunkt und 86 %
   innerhalb von 2σ.
@@ -453,14 +453,15 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Spiegel vergleicht die Werte deiner Scheiben aus zwei Zeiträumen, etwa vor und nach einem
   neuen Abzug. Jede Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die
   Differenz der Mittel.
-- *So liest du es:* Steht „nachweisbar“ oder „höher“ und „tiefer“, entstünde ein so deutlicher
-  Unterschied durch Zufall allein in höchstens 5 von 100 Vergleichen; „besser“ oder „schwächer“
-  sagt, ob das gut ist (bei Streukreis und σ ist kleiner besser). „Nicht nachweisbar“ heißt nicht
-  „gleich geblieben“: Diese Scheiben reichen nicht, es zu zeigen oder auszuschließen. Unter 5
-  Scheiben je Seite steht „zu wenige Scheiben“. „Bedeutsam“ heißt: Der Unterschied ist mindestens
-  knapp ein Drittel der Streuung deiner Scheiben innerhalb der beiden Zeiträume, also groß genug, um
-  im Training etwas auszumachen.
-- *Vorsicht:* „Bedeutsam“ zählt nur zusammen mit einem Urteil: Auch ohne jede Veränderung ist der
+- *So liest du es:* Steht „besser“ oder „schwächer“, entstünde ein so deutlicher Unterschied durch
+  Zufall allein in höchstens 5 von 100 Vergleichen; der Satz oben nennt das „nachweisbar“. Ob
+  kleiner besser ist, weiß Spiegel je Zahl (bei Streukreis und Streuung σ ist kleiner besser); beim
+  Tempo heißt es nur „höher“ oder „tiefer“. Steht „kein klarer Unterschied“, heißt das nicht „gleich
+  geblieben“: Diese Scheiben reichen nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je
+  Seite steht „zu wenige Scheiben“. „Deutlich“ davor heißt: Der Unterschied ist mindestens knapp ein
+  Drittel der Streuung deiner Scheiben innerhalb der beiden Zeiträume, also groß genug, um im
+  Training etwas auszumachen.
+- *Vorsicht:* „Deutlich“ steht nur zusammen mit einem Urteil: Auch ohne jede Veränderung ist der
   Unterschied bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen so groß. Bei gleicher Form gibt
   Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein Urteil. Wird dein σ beim Luftgewehr von
   1,5 auf 1,3 mm kleiner (40 Schuss je Scheibe, im Mittel 0,1 Ring mehr je Schuss), erkennt Spiegel
@@ -471,8 +472,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Mindestzahl:* Ein Urteil ab 5 Scheiben je Seite.
 - *Formel:* `Mann-Whitney über die Scheibenwerte, zweiseitig, α 0,05; bis 20 Scheiben je Seite genau
   ausgezählt, darüber Normalnäherung mit Korrektur für gleiche Werte; Δ = Mittel im Zeitraum −
-  Mittel im Vergleichszeitraum; bedeutsam, wenn |Δ| ≥ 0,3 · gepoolte Standardabweichung der
-  Scheibenwerte`
+  Mittel im Vergleichszeitraum; „deutlich“ (Effektstärke), wenn |Δ| ≥ 0,3 · gepoolte
+  Standardabweichung der Scheibenwerte`
 
 **Abstand zum Schnitt davor (C4)**
 - *Was:* Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf

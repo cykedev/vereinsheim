@@ -9,8 +9,8 @@ export const READING_GUIDE: readonly GuideItem[] = [
     text: "Jede Zahl steht auf einer Grundlage, die Zeile „Datenlage“ unter der Analyse nennt sie. Reicht die Schusszahl nicht, steht „–“ mit dem Grund („ab 10 Schuss“), nie eine 0.",
   },
   {
-    title: "95-%-Bereich",
-    text: "„σ 1,12 mm, 95 %: 0,94 bis 1,36 mm“ heißt bei 30 Schuss: Dein wahrer Wert liegt mit großer Sicherheit in diesem Bereich. Mehr Schüsse machen ihn schmaler. Bei 10 Schuss reicht er für σ von etwa einem Viertel darunter bis knapp die Hälfte darüber, erst bei rund 120 Schuss auf etwa ±10 %.",
+    title: "„Sicher zwischen …“",
+    text: "„Streuung 1,12 mm, sicher zwischen 0,94 und 1,36 mm“ heißt bei 30 Schuss: Dein wahrer Wert liegt mit großer Sicherheit (95 von 100) in diesem Bereich. Mehr Schüsse machen ihn schmaler. Bei 10 Schuss reicht er für σ von etwa einem Viertel darunter bis knapp die Hälfte darüber, erst bei rund 120 Schuss auf etwa ±10 %.",
   },
   {
     title: "„Echt“ und „unklar“",
