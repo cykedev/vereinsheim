@@ -304,7 +304,8 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
             onMore={() => {
               // „Alle Beobachtungen“: der Überblick der Analyse, oben an ihrem Anfang
               changeTab("overview")
-              showSection("analysis")
+              // sofort, nicht über einen Frame: die Lage der Analyse hängt nicht am Reiter
+              document.getElementById("analysis")?.scrollIntoView({ block: "start" })
             }}
           />
         }

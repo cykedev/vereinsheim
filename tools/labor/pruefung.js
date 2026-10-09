@@ -128,16 +128,6 @@ addEventListener("load", async () => {
 
     // Prüfhaken des Labors (#pruefen): Schüsse, Zustand und die Funktionen des Fachkerns
     const L = () => window.__labor
-    const tileKeys = () => $$("[data-metric]").map((t) => t.dataset.metric)
-    const tileValue = (key) => txt($(`[data-metric="${key}"]`).children[1].childNodes[0])
-    const expectedTile = (key) => {
-      const { tools, shots, state } = L()
-      const metric = tools.inScoring(tools.metricByKey(key), state.scoring)
-      // die ganze Karte für Abstände wie die Kacheln: eine späte Probe ist keine Lücke (SF-04)
-      const value = tools.computeMetric(metric, tools.selectionShots(shots, state.selection), shots)
-      return value === null ? "–" : tools.formatValue(value, metric.decimals)
-    }
-    const tilesMatch = () => tileKeys().filter((key) => tileValue(key) !== expectedTile(key))
     const tableRows = () => $$("#shot-table tr[data-row]")
     // Pausen über drei Minuten als m:ss, nicht auf ganze Minuten gerundet (Prüfung, Zeit 7)
     const intervalText = (ms) => {
@@ -227,35 +217,42 @@ addEventListener("load", async () => {
         !txt($("#readout")).includes("x / y")
     )
 
-    // ---------- Kacheln „Trefferbild in Zahlen“ gegen den Fachkern
+    // ---------- „Zahlen“ entfiel (U1): kein Abschnitt, keine Kacheln „Trefferbild in Zahlen“; der Überblick der
+    // Analyse ist die Zahlen-Ansicht
     check("Prüfhaken des Labors da", !!L() && L().shots.length === 49)
     check(
-      "Kacheln: zehn in der Reihenfolge der Spielwiese",
-      tileKeys().join() === L().tools.TILE_KEYS.join(),
-      tileKeys().join(" ")
+      "U1: keine Kacheln „Trefferbild in Zahlen“, kein Abschnitt #numbers",
+      !$('section[aria-label="Trefferbild in Zahlen"]') &&
+        !$("[data-metric]") &&
+        !document.getElementById("numbers") &&
+        $$('nav[aria-label="Abschnitte"] a').map(txt).join() === "Scheibe,Schüsse,Analyse"
     )
-    check(
-      "Kacheln rechnen wie der Fachkern (alle Wertungsschüsse)",
-      tilesMatch().length === 0,
-      tilesMatch().join(" ")
-    )
-    check(
-      "Kacheln: Kurzsatz aus helpForMetric als Titel",
-      $$("[data-metric]").every((t) => t.title === L().tools.helpForMetric(t.dataset.metric).short)
-    )
-
+    // Kacheln des Überblicks in Zeilen
     const tileRows = (root) => {
       const rows = new Map()
-      for (const t of $$("[data-metric]", root)) {
+      for (const t of $$('section[aria-label="Analyse"] [data-tile]', root)) {
         const top = Math.round(t.getBoundingClientRect().top)
         rows.set(top, (rows.get(top) ?? 0) + 1)
       }
       return [...rows.values()]
     }
+    // der Kopf: die wichtigsten Beobachtungen wie im Paket gerechnet, die Lage zuerst (U1, D4)
+    const headObservations = $$("[data-card-header] [data-observation]")
+    const keyExpected = L().tools.keyObservations(
+      L().tools.observations(L().tools.analysisInput(L().shots, L().state.scoring, L().target))
+    )
     check(
-      "Kacheln: volle Zeilen, keine Lücke (Desktop 5 je Zeile)",
-      tileRows(document).every((n) => n === 5),
-      tileRows(document).join("+")
+      "Kopf: die wichtigsten Beobachtungen, Lage und Ausreißer Schuss 27, je ein Satz",
+      headObservations.length === 2 &&
+        keyExpected.length === 2 &&
+        headObservations.every(
+          (li, i) =>
+            li.dataset.observation === keyExpected[i].icon && txt(li) === keyExpected[i].text
+        ) &&
+        keyExpected[0].icon === "position" &&
+        txt(headObservations[1]) === "Schuss 27 fällt als Ausreißer aus der Gruppe." &&
+        !!$("[data-card-header] [data-more-observations]"),
+      headObservations.map(txt).join(" | ")
     )
 
     // ---------- Grundauswahl: Probe und Wertung, also ohne Probe
@@ -295,12 +292,11 @@ addEventListener("load", async () => {
     )
     await click(button("Alle"))
     check(
-      "Alle mit Probe: 49 Zeilen bis P1, Probe als eigene Gruppe, Kacheln mit Probe",
+      "Alle mit Probe: 49 Zeilen bis P1, Probe als eigene Gruppe",
       tableRows().length === 49 &&
         tableRows().at(-1).dataset.row === "P1" &&
         groupTitles().at(-1) === "Probe" &&
         L().state.selection === "all" &&
-        tilesMatch().length === 0 &&
         hits().every((g) => !g.dataset.faded),
       `${tableRows().length} Zeilen, ${groupTitles().join(" | ")}`
     )
@@ -469,13 +465,6 @@ addEventListener("load", async () => {
       addr()
     )
     check(
-      "Kacheln folgen der Auswahl (Serie 2)",
-      tilesMatch().length === 0 &&
-        txt($('section[aria-label="Trefferbild in Zahlen"]')).includes("Serie 2") &&
-        L().tools.selectionShots(L().shots, 2).length === 10,
-      tilesMatch().join(" ")
-    )
-    check(
       "Tabelle folgt der Auswahl: nur Serie 2, neuester oben, ohne Trenner",
       tableRows()
         .map((tr) => tr.dataset.row)
@@ -635,7 +624,7 @@ addEventListener("load", async () => {
       hits().length === 0 &&
         $$("[data-series]").length === 0 &&
         txt($("[data-no-shots]")).includes("Noch kein Schuss") &&
-        ["readout", "series", "shot-table", "numbers", "analysis"].every((id) => !$(`#${id}`)) &&
+        ["readout", "series", "shot-table", "analysis"].every((id) => !$(`#${id}`)) &&
         !$('nav[aria-label="Abschnitte"]') &&
         !$("[data-result]")
     )
@@ -713,13 +702,12 @@ addEventListener("load", async () => {
       seriesValues.join(" ")
     )
     check(
-      "Ganze Ringe: Kacheln, Kopf und Tabelle in Ringen",
+      "Ganze Ringe: Überblick, Kopf und Tabelle in Ringen",
       L().state.scoring === "rings" &&
-        tilesMatch().length === 0 &&
-        txt($('[data-metric="result.decimalMean"]')).includes("ganze Ringe") &&
+        /^\d+$/.test(txt($('[data-tile="Ergebnis"]').children[1].childNodes[0]).trim()) &&
         /^\d+(?![\d,])/.test(txt($("[data-result]")).trim()) &&
         txt($("#shot-table th:nth-child(2)")) === "Ring",
-      tilesMatch().join(" ")
+      txt($('[data-tile="Ergebnis"]'))
     )
     check(
       "amtliche Wertung bleibt als Hinweis (im Kopf der Scheibe)",
@@ -797,15 +785,12 @@ addEventListener("load", async () => {
       "Erklärungen aus: keine Kurzsätze, kein „Was heißt das?“ mehr auf der Seite",
       $$("[data-short]").length === 0 && $$("details[data-help]").length === 0
     )
-    await click(button("Erklärungen"))
+    await click(button("Erklärungen", $("[data-analysis-head]")))
     check(
-      "Erklärungen an: Kurzsätze sichtbar an jeder Kachel",
-      $$("[data-metric] [data-short]").length === 10 &&
-        $$("[data-metric]").every(
-          (t) => txt($("[data-short]", t)) === L().tools.helpForMetric(t.dataset.metric).short
-        )
+      "Erklärungen an: der Schalter steht im Kopf der Analyse, Kurzsätze an den acht Kacheln des Überblicks",
+      $$('section[aria-label="Analyse"] [data-tile] [data-short]').length === 8
     )
-    await click(button("Erklärungen"))
+    await click(button("Erklärungen", $("[data-analysis-head]")))
     check("Erklärungen wieder aus", $$("[data-short]").length === 0)
     const targetHelpButton = $('#target button[data-help="trefferbild"]')
     await click(targetHelpButton, 100)
@@ -816,7 +801,13 @@ addEventListener("load", async () => {
     )
     await click($('button[aria-label="Schließen"]', helpSheet()), 100)
 
-    const sigmaHelp = () => $('[data-metric="group.sigma"] button[aria-label^="Erklärung"]')
+    // die Erklärung einer Kennzahl am „?“ ihrer Karte (seit U1 ohne Kacheln „Trefferbild in Zahlen“)
+    const themes = () => $('section[aria-label="Analyse"] [role="radiogroup"][aria-label="Thema"]')
+    await click(button("Präzision", themes()), 120)
+    const sigmaHelp = () =>
+      $(
+        'section[aria-label="Analyse"] [data-card="praezision-sigma"] button[aria-label^="Erklärung"]'
+      )
     const sheet = () => helpSheet()
     const sigmaTopic = L().tools.helpForMetric("group.sigma")
     sigmaHelp().focus()
@@ -859,6 +850,7 @@ addEventListener("load", async () => {
     sheet().dispatchEvent(new MouseEvent("click", { bubbles: true }))
     await wait(100)
     check("Tipp neben das Blatt schließt es", !sheet().open)
+    await click(button("Überblick", themes()), 120)
 
     // ---------- Analyse (Schritt 3): jede Zahl gegen den Fachkern, Hilfe, Abstände
     // Text der Seite ohne Skripte und Styles (die Prüfung steht selbst als Skript in der Seite)
@@ -1669,14 +1661,13 @@ addEventListener("load", async () => {
     const dw = desk.contentWindow
     const sectionNav = dd.querySelector('nav[aria-label="Abschnitte"]')
     check(
-      "Sprungleiste: vier Anker in der Reihenfolge der Seite",
+      "Sprungleiste: drei Anker in der Reihenfolge der Seite (U1: ohne „Zahlen“)",
       [...sectionNav.querySelectorAll("a")].map((a) => a.getAttribute("href")).join() ===
-        "#target,#shots,#numbers,#analysis"
+        "#target,#shots,#analysis"
     )
-    // „Zahlen“ ist kürzer als das Fenster: nach dem Sprung trotzdem genau „Zahlen“ aktiv, nicht die Analyse
     // die Leiste scrollt selbst: auch in einer data:-Vorschau, wo der Browser den Sprung zum Anker blockt
     const jumpClick = new dw.MouseEvent("click", { bubbles: true, cancelable: true, button: 0 })
-    sectionNav.querySelector('a[href="#numbers"]').dispatchEvent(jumpClick)
+    sectionNav.querySelector('a[href="#analysis"]').dispatchEvent(jumpClick)
     check(
       "Sprungleiste: der Klick springt selbst, nicht über den Browser",
       jumpClick.defaultPrevented
@@ -1686,10 +1677,30 @@ addEventListener("load", async () => {
     await wait(100)
     const deskActive = [...sectionNav.querySelectorAll("[aria-current]")].map(txt)
     check(
-      "Desktop: „Zahlen“ bringt die Zahlen unter die Leiste, aktiv ist genau „Zahlen“",
-      near(dd.getElementById("numbers").getBoundingClientRect().top, 56, 3) &&
-        deskActive.join() === "Zahlen",
-      `${dd.getElementById("numbers").getBoundingClientRect().top.toFixed(0)} · ${deskActive.join()}`
+      "Desktop: „Analyse“ bringt die Analyse unter die Leiste, aktiv ist genau „Analyse“",
+      near(dd.getElementById("analysis").getBoundingClientRect().top, 56, 3) &&
+        deskActive.join() === "Analyse",
+      `${dd.getElementById("analysis").getBoundingClientRect().top.toFixed(0)} · ${deskActive.join()}`
+    )
+    // „Alle Beobachtungen“ im Kopf: der Überblick der Analyse, oben an ihrem Anfang (U1, D4)
+    dw.scrollTo(0, 0)
+    await frameClick(
+      desk,
+      [...dd.querySelectorAll('section[aria-label="Analyse"] [role="radio"]')].find(
+        (b) => txt(b) === "Lage"
+      )
+    )
+    dw.scrollTo(0, 0)
+    await wait(50)
+    await frameClick(desk, dd.querySelector("[data-more-observations]"), 200)
+    const moreTab = txt(
+      dd.querySelector('section[aria-label="Analyse"] [role="radio"][aria-checked="true"]')
+    )
+    const moreTop = dd.getElementById("analysis").getBoundingClientRect().top
+    check(
+      "„Alle Beobachtungen“ öffnet den Überblick und bringt die Analyse unter die Leiste",
+      moreTab === "Überblick" && near(moreTop, 56, 3) && !!dd.querySelector("[data-observation]"),
+      `${moreTab} · ${moreTop.toFixed(0)}`
     )
     sectionNav.querySelector('a[href="#analysis"]').click()
     await wait(500)
@@ -1724,16 +1735,15 @@ addEventListener("load", async () => {
         tableScroller.scrollHeight > tableScroller.clientHeight,
       `Scheibe ${deskBox.width.toFixed(0)} px · Serien bis ${deskSeries.bottom.toFixed(0)} · Schüsse bis ${deskTable.bottom.toFixed(0)}`
     )
-    // links Scheibe und Serien, rechts Schuss, Übersicht und Schüsse; Zahlen und Analyse darunter über die
-    // ganze Breite
+    // links Scheibe und Serien, rechts Schuss, Übersicht und Schüsse; die Analyse darunter über die ganze Breite
     const regionBox = deskRect("target")
-    const fullWidth = ["numbers", "analysis"].every((id) => {
+    const fullWidth = ["analysis"].every((id) => {
       const r = deskRect(id)
       return near(r.left, regionBox.left, 1) && near(r.width, regionBox.width, 1)
     })
     const besideTarget = ["readout", "shot-table"].every((id) => deskRect(id).left > deskBox.right)
     check(
-      "Desktop: Serien unter der Scheibe, Schuss und Schüsse daneben, Zahlen und Analyse darunter in voller Breite",
+      "Desktop: Serien unter der Scheibe, Schuss und Schüsse daneben, die Analyse darunter in voller Breite",
       fullWidth && besideTarget && deskSeries.right < deskRect("readout").left,
       `${regionBox.width.toFixed(0)} px`
     )
@@ -1755,14 +1765,14 @@ addEventListener("load", async () => {
       dd.querySelector('[data-section="target"]').getBoundingClientRect().bottom < 56,
       dd.querySelector('[data-section="target"]').getBoundingClientRect().bottom.toFixed(0)
     )
-    // nichts angeschnitten: Kacheln in Zeilen zu fünf ohne abgeschnittenen Text, alle Reiter sichtbar,
-    // die Knöpfe der Scheibe in ihrem Kasten
-    const clipped = [...dd.querySelectorAll("[data-metric] *, [data-tile] *")].filter(
+    // nichts angeschnitten: Kacheln des Überblicks in Zeilen zu vier ohne abgeschnittenen Text, alle Reiter
+    // sichtbar, die Knöpfe der Scheibe in ihrem Kasten
+    const clipped = [...dd.querySelectorAll("[data-tile] *")].filter(
       (e) => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflow !== "visible"
     )
     check(
-      "Desktop: Kacheln zu fünf, kein Text abgeschnitten",
-      tileRows(dd).every((n) => n === 5) && clipped.length === 0,
+      "Desktop: Kacheln des Überblicks zu vier, kein Text abgeschnitten",
+      tileRows(dd).length === 2 && tileRows(dd).every((n) => n === 4) && clipped.length === 0,
       `${tileRows(dd).join("+")} · ${clipped.length}`
     )
     const deskTabs = dd.querySelector(
@@ -2020,8 +2030,8 @@ addEventListener("load", async () => {
     await wait(500)
     const doc = frame.contentDocument
     check(
-      "Handy: Kacheln in vollen Zeilen zu zwei",
-      !!doc && tileRows(doc).length === 5 && tileRows(doc).every((n) => n === 2),
+      "Handy: Kacheln des Überblicks in vollen Zeilen zu zwei",
+      !!doc && tileRows(doc).length === 4 && tileRows(doc).every((n) => n === 2),
       doc ? tileRows(doc).join("+") : "kein Zugriff"
     )
     // die breitesten Ausreißer benennen, damit ein Fehlschlag sagt, wo es klemmt
@@ -2041,14 +2051,35 @@ addEventListener("load", async () => {
       !!doc && doc.documentElement.scrollWidth <= 390,
       doc ? `${doc.documentElement.scrollWidth} ${wide.join(" | ")}` : "kein Zugriff"
     )
+    // die Sprungleiste auf dem Telefon: drei gleiche Felder über die volle Breite (U1)
+    const phoneNav = doc?.querySelector('nav[aria-label="Abschnitte"] > div')
+    const phoneNavLinks = phoneNav ? [...phoneNav.querySelectorAll("a")] : []
+    const phoneNavWidths = phoneNavLinks.map((a) => Math.round(a.getBoundingClientRect().width))
+    check(
+      "Handy: Sprungleiste mit drei gleichen Feldern",
+      phoneNavLinks.length === 3 &&
+        Math.max(...phoneNavWidths) - Math.min(...phoneNavWidths) <= 1 &&
+        frame.contentWindow.getComputedStyle(phoneNav).gridTemplateColumns.split(" ").length === 3,
+      phoneNavWidths.join(" ")
+    )
+    // kürzer als vorher (Durchsicht, 9. Oktober 2026: 5,8 Bildschirme zu 772 px bei 390 × 844, nur „Überblick“)
+    const lengthFrame = await openFrame(390, 844)
+    const screens = lengthFrame.contentDocument.documentElement.scrollHeight / (844 - 72)
+    lengthFrame.remove()
+    check(
+      "Handy 390 × 844: die Seite einer Scheibe ist kürzer als 5 Bildschirme (vorher 5,8)",
+      screens < 5,
+      screens.toFixed(2)
+    )
     const phone390 = doc ? await phoneAnalysis(doc, frame.contentWindow, 390) : ["kein Zugriff"]
     check(
       "Handy 390 px: jeder Reiter der Analyse passt",
       phone390.length === 0,
       phone390.join(" | ")
     )
+    // das „?“ der ersten Karte im offenen Reiter (die Prüfung davor endet bei „Probe“)
     const phoneHelp = doc?.querySelector(
-      '[data-metric="group.r50"] button[aria-label^="Erklärung"]'
+      'section[aria-label="Analyse"] [data-card] button[aria-label^="Erklärung"]'
     )
     phoneHelp?.dispatchEvent(new MouseEvent("click", { bubbles: true }))
     await wait(150)
@@ -2162,19 +2193,19 @@ addEventListener("load", async () => {
     )
     small.remove()
 
-    // im hohen Fenster: „Zahlen“ erreicht die Leiste und ist aktiv (der letzte Abschnitt ist fensterhoch)
-    const tallJump = async (hash) => {
+    // im hohen Fenster: ein Abschnitt erreicht die Leiste und ist aktiv (der letzte Abschnitt ist fensterhoch)
+    const tallJump = async (hash, label = "Zahlen", id = "numbers") => {
       const f = await openFrame(1440, 1400, hash)
       const d = f.contentDocument
       const w = f.contentWindow
       const link = [...d.querySelectorAll('nav[aria-label="Abschnitte"] a')].find(
-        (a) => a.textContent === "Zahlen"
+        (a) => a.textContent === label
       )
       link.dispatchEvent(new w.MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }))
       await wait(200)
       w.dispatchEvent(new w.Event("scroll"))
       await wait(100)
-      const top = d.getElementById("numbers").getBoundingClientRect().top
+      const top = d.getElementById(id).getBoundingClientRect().top
       const active = d.querySelector('nav[aria-label="Abschnitte"] [aria-current]')?.textContent
       f.remove()
       return { top, active }
@@ -3311,18 +3342,18 @@ addEventListener("load", async () => {
       phone.remove()
       await click(area("Fortschritt"), 300)
       await click(button("Beispielscheiben öffnen", $("[data-labor-panel]")), 300)
-      // #numbers gibt es auf beiden Seiten: es öffnet die zuletzt gewählte Ansicht, hier die Scheibe (Review)
+      // #numbers hat seit U1 nur noch die Seite eines Zeitraums: Er öffnet sie, auch wenn zuletzt die Scheibe gewählt war
       const reload = await openFrame(1280, 900, "#numbers")
       check(
-        "Labor: der Anker #numbers öffnet die gewählte Ansicht, nicht die Seite eines Zeitraums",
-        !!reload.contentDocument.querySelector("[data-card-header]") &&
-          !reload.contentDocument.querySelector("[data-period-header]")
+        "Labor: der Anker #numbers öffnet die Seite eines Zeitraums (U1: nur sie hat „Zahlen“)",
+        !reload.contentDocument.querySelector("[data-card-header]") &&
+          !!reload.contentDocument.querySelector("[data-period-header]")
       )
       reload.remove()
-      const tallCard = await tallJump("")
+      const tallCard = await tallJump("", "Analyse", "analysis")
       check(
-        "Scheibe, hohes Fenster 1440 × 1400: „Zahlen“ erreicht die Leiste und ist aktiv",
-        near(tallCard.top, 56, 3) && tallCard.active === "Zahlen",
+        "Scheibe, hohes Fenster 1440 × 1400: „Analyse“ erreicht die Leiste und ist aktiv",
+        near(tallCard.top, 56, 3) && tallCard.active === "Analyse",
         `${Math.round(tallCard.top)} ${tallCard.active}`
       )
     }
