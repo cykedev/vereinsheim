@@ -48,7 +48,8 @@
     "./period/state": "./src/period/state.ts",
     "./period/model": "./src/period/model.ts",
     "./period/sentence": "./src/period/sentence.ts",
-    "./period/PeriodChart": "./src/period/PeriodChart.tsx"
+    "./period/PeriodChart": "./src/period/PeriodChart.tsx",
+    "./period/VolumeChart": "./src/period/VolumeChart.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
