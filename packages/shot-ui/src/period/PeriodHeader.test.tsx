@@ -212,6 +212,12 @@ describe("Ergebnis-Box (D13)", () => {
     expect(html).toContain("gegen Vorbereitung Landesmeisterschaft: zu wenige Scheiben")
   })
 
+  it("ohne Schalter der Wertung (U2, D4: die Wertung des Geräts) kein leerer Platz", () => {
+    const html = renderToStaticMarkup(h(PeriodResult, { model: model(now), timeZone: TZ }))
+    expect(html).not.toContain("WERTUNG")
+    expect(html).toMatch(/<\/p><\/div><\/div>$/)
+  })
+
   it("ohne Scheiben ein Strich", () => {
     const html = render(model([]))
     expect(html).toMatch(/data-period-result="true"[^>]*>–</)
