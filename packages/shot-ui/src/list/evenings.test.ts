@@ -1,0 +1,116 @@
+import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
+import { describe, expect, it } from "vitest"
+
+import { DEFAULT_LIST, type ListQuery } from "../nav/routes"
+import { NOW, periodCard, TZ } from "../period/testSeason"
+import { cardListModel, eveningDay, type ListInputCard } from "./evenings"
+
+const at = (hourUtc: number, minute = 0, day = 29) => Date.UTC(2026, 8, day, hourUtc, minute)
+const lg = (card: PeriodCard): ListInputCard => ({ card, family: "lg-freihand" })
+const lp = (card: PeriodCard): ListInputCard => ({ card, family: "lp-freihand" })
+const context = { timeZone: TZ, nowMs: NOW, named: [], scoring: "decimal" as const }
+const query = (patch: Partial<ListQuery> = {}): ListQuery => ({
+  ...DEFAULT_LIST,
+  family: "lg-freihand",
+  ...patch,
+})
+
+// Dienstag, 29. September 2026 (MESZ = UTC+2): zwei Scheiben am Tag, eine Luftpistole am Abend, zwei nach
+// Mitternacht vor 4 Uhr; Mittwoch 04:30 ist schon der nächste Abend; Sonntag nur Luftpistole
+const INPUT: ListInputCard[] = [
+  lg(periodCard("a", 1, [100, 102, 98], { startedAtMs: at(10) })),
+  lg(periodCard("b", 1, [101, 103], { startedAtMs: at(17) })),
+  lp(periodCard("c", 1, [95, 97], { startedAtMs: at(18) })),
+  lg(periodCard("d", 1, [104], { startedAtMs: at(22, 30) })),
+  lg(periodCard("e", 1, [99], { startedAtMs: at(1, 30, 30) })),
+  lg(periodCard("f", 0, [102], { startedAtMs: at(2, 30, 30) })),
+  lp(periodCard("g", 3, [96], { startedAtMs: at(16, 0, 27) })),
+]
+
+describe("Abende der Scheiben-Liste (Plan N2, D1–D5)", () => {
+  it("ein Abend ist der Tag in der Anzeige-Zeitzone; vor 4 Uhr zählt zum Vortag", () => {
+    expect(eveningDay(at(22, 30), TZ)).toBe("2026-09-29") // 00:30 MESZ
+    expect(eveningDay(at(1, 30, 30), TZ)).toBe("2026-09-29") // 03:30 MESZ
+    expect(eveningDay(at(2, 30, 30), TZ)).toBe("2026-09-30") // 04:30 MESZ
+    expect(eveningDay(at(10), TZ)).toBe("2026-09-29")
+  })
+
+  it("Abende neueste zuerst, die Scheiben eines Abends in zeitlicher Folge, nur die Familie", () => {
+    const model = cardListModel(INPUT, query(), context)
+    expect(model.evenings.map((e) => e.day)).toEqual(["2026-09-30", "2026-09-29"])
+    expect(model.evenings[1].rows.map((r) => r.id)).toEqual(["a", "b", "d", "e"])
+    expect(model.evenings[0].rows.map((r) => r.id)).toEqual(["f"])
+    expect(model.cards).toBe(5)
+    expect(model.evenings[1].shots).toBe(3 + 2 + 1 + 1)
+  })
+
+  it("Mischabend: andere Familien des Abends mit Zahl; ein Abend nur der anderen Familie fehlt", () => {
+    const model = cardListModel(INPUT, query(), context)
+    expect(model.evenings[1].others).toEqual([{ family: "lp-freihand", count: 1 }])
+    expect(model.evenings[0].others).toEqual([])
+    const pistol = cardListModel(INPUT, query({ family: "lp-freihand" }), context)
+    expect(pistol.evenings.map((e) => e.day)).toEqual(["2026-09-29", "2026-09-27"])
+    expect(pistol.evenings[0].others).toEqual([{ family: "lg-freihand", count: 4 }])
+  })
+
+  it("Ergebnis und Ø in der Wertung; nur Probe rechnet wie Wertung", () => {
+    const row = cardListModel(INPUT, query(), context).evenings[1].rows[0]
+    expect(row.result).toBeCloseTo(30.0, 9)
+    expect(row.mean).toBeCloseTo(10.0, 9)
+    expect(row.shots).toBe(3)
+    expect(row.kind).toBe("training")
+    const rings = cardListModel(INPUT, query(), { ...context, scoring: "rings" })
+    expect(rings.evenings[1].rows[0].result).toBe(29)
+    const probe = cardListModel(
+      [lg(periodCard("p", 1, [100, 104], { startedAtMs: at(10), probe: true }))],
+      query(),
+      context
+    ).evenings[0].rows[0]
+    expect(probe.kind).toBe("probe")
+    expect(probe.result).toBeCloseTo(20.4, 9)
+    expect(probe.shots).toBe(2)
+  })
+
+  it("Abstand zum Schnitt der bis zu fünf Scheiben davor, auch vor dem Zeitraum", () => {
+    // sieben Scheiben an sieben Tagen, Ø je Schuss 10,0 · 10,2 · 9,8 · 10,1 · 10,0 · 10,3 · 9,9
+    const days = [100, 102, 98, 101, 100, 103, 99].map((t, i) =>
+      lg(periodCard(`k${i + 1}`, 7 - i, [t]))
+    )
+    const model = cardListModel(days, query(), context)
+    const row = (id: string) => model.evenings.flatMap((e) => e.rows).find((r) => r.id === id)!
+    expect(row("k1").delta).toBeNull()
+    expect(row("k7").delta?.n).toBe(5)
+    expect(row("k7").delta?.delta).toBeCloseTo(-0.18, 9)
+    // nur drei Tage gezeigt, der Abstand rechnet trotzdem über die Scheiben davor
+    const recent = cardListModel(
+      days,
+      query({ range: { type: "free", from: "2026-09-27", to: "2026-09-29" } }),
+      context
+    )
+    expect(recent.evenings.flatMap((e) => e.rows).map((r) => r.id)).toEqual(["k7", "k6", "k5"])
+    expect(recent.evenings[0].rows[0].delta?.delta).toBeCloseTo(-0.18, 9)
+  })
+
+  it("Art und Merkmal filtern; die Merkmale der Familie stehen dabei", () => {
+    const cards = [
+      lg(periodCard("t", 2, [100], { kind: "training" })),
+      lg(periodCard("w", 1, [101], { kind: "competition", flags: ["nur-pdf"] })),
+    ]
+    expect(
+      cardListModel(cards, query({ kind: "competition" }), context).evenings.flatMap((e) =>
+        e.rows.map((r) => r.id)
+      )
+    ).toEqual(["w"])
+    expect(
+      cardListModel(cards, query({ flag: "nur-pdf" }), context).evenings.flatMap((e) =>
+        e.rows.map((r) => r.id)
+      )
+    ).toEqual(["w"])
+    expect(cardListModel(cards, query(), context).flags).toEqual(["nur-pdf"])
+  })
+
+  it("ohne Familie die erste vorhandene; ohne Scheiben keine Abende", () => {
+    expect(cardListModel(INPUT, { ...DEFAULT_LIST }, context).family).toBe("lg-freihand")
+    expect(cardListModel([], query(), context).evenings).toEqual([])
+  })
+})

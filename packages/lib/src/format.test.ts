@@ -13,6 +13,8 @@ import {
   formatMonthYear,
   formatShortDate,
   formatShortDay,
+  formatTimeOfDay,
+  formatWeekdayDate,
   zonedDayStartMs,
 } from "./format"
 
@@ -135,5 +137,22 @@ describe("zonedDayStartMs", () => {
   })
   it("kein gültiger Tag: Fehler", () => {
     expect(() => zonedDayStartMs("2026-7-15", "UTC")).toThrow(RangeError)
+  })
+})
+
+describe("formatWeekdayDate und formatTimeOfDay (Spiegel, Abende der Scheiben-Liste)", () => {
+  it("Wochentag kurz ohne Punkt, Datum mit Jahr, in der Zeitzone", () => {
+    // 29.09.2026 ist ein Dienstag; 23:30 UTC ist in Berlin schon Mittwoch
+    expect(formatWeekdayDate(new Date(Date.UTC(2026, 8, 29, 10)), "Europe/Berlin")).toBe(
+      "Di 29.09.2026"
+    )
+    expect(formatWeekdayDate(new Date(Date.UTC(2026, 8, 29, 23, 30)), "Europe/Berlin")).toBe(
+      "Mi 30.09.2026"
+    )
+    expect(formatWeekdayDate(new Date(Date.UTC(2026, 8, 29, 23, 30)), "UTC")).toBe("Di 29.09.2026")
+  })
+  it("Uhrzeit in Stunden und Minuten, in der Zeitzone", () => {
+    expect(formatTimeOfDay(new Date(Date.UTC(2026, 8, 29, 16, 30)), "Europe/Berlin")).toBe("18:30")
+    expect(formatTimeOfDay(new Date(Date.UTC(2026, 8, 29, 22, 30)), "Europe/Berlin")).toBe("00:30")
   })
 })

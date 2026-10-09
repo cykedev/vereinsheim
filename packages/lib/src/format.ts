@@ -63,6 +63,17 @@ export function formatLongDateTime(date: Date, timeZone: string): string {
   ).format(date)
 }
 
+/** "Di 29.09.2026" — Kopf eines Abends in der Scheiben-Liste (Spiegel); Wochentag ohne Punkt. */
+export function formatWeekdayDate(date: Date, timeZone: string): string {
+  const weekday = dateTimeFormat({ weekday: "short" }, timeZone).format(date).replace(/\.$/, "")
+  return `${weekday} ${formatDateOnly(date, timeZone)}`
+}
+
+/** "18:30" — Uhrzeit einer Scheibe in der Scheiben-Liste (Spiegel). */
+export function formatTimeOfDay(date: Date, timeZone: string): string {
+  return dateTimeFormat({ hour: "2-digit", minute: "2-digit" }, timeZone).format(date)
+}
+
 /** "09.09." — Diagramm-Achse mit Tagesauflösung. */
 export function formatShortDay(date: Date, timeZone: string): string {
   return dateTimeFormat({ day: "2-digit", month: "2-digit" }, timeZone).format(date)
