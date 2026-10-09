@@ -37,6 +37,28 @@ zu Probe gegen Wertung. Das alles fällt weg. Reine Probe-Trainings bleiben voll
 - **D5 — Labor wie am Ausdruck:** Die Beispielscheibe „40 Schuss mit Probe“ wird „40 Schuss“ ohne die neun Probeschüsse;
   „60 Probe“ bleibt.
 
+## Abgleich nach U3 (9. Oktober 2026, abends)
+
+Umgesetzt in dieser Session nach U3 (`feat/spiegel-probe-wie-ausdruck` auf `feat/spiegel-sprache`). Der User hat die
+UI-Punkte autonom freigegeben („warte nicht auf freigaben von mir, setze deine annahmen und vorschläge um“).
+
+- **Stand nach U3:**
+  - Die Kachel „Eingeschossen?“ sagt „versetzt“ oder „unklar“ mit „sicher neben der Mitte“ oder „kein Versatz
+    nachweisbar“.
+  - Die Beobachtung zur Probe beginnt mit „Probe:“.
+  - Das Thema `lage-echt` heißt „Ist die Lage versetzt?“; im Thema `eingeschossen` steht nur ein Querverweis darauf.
+  - Alles das fällt mit Aufgabe 5 und 8 weg.
+- **D6 (neu) Kachel „Ausreißer“ statt „Eingeschossen?“:**
+  - Der Überblick hat acht Kacheln, damit das Raster mit 2 und 4 Spalten aufgeht; ohne „Eingeschossen?“ wären es
+    sieben.
+  - An ihre Stelle tritt „Ausreißer“: Wert die Zahl der markierten Schüsse (`outliers` des Fachkerns), darunter welche
+    („Schuss 27“) oder „keiner“; Hilfe `ausreisser`; ab 5 Schuss mit Lage, sonst der Grund.
+  - Was er kostet, steht weiter einmal in der Beobachtung (Regel „jede Zahl einmal“).
+- **Adressen:** Die Auswahl `whole=match` und `sighters` als Serie sowie der Reiter `#sighters` gelten als ungültig,
+  also als Vorgabe (Regel der Adressen). Der Schlüssel `sighters=0` des Fortschritts (Probe-Trainings) bleibt.
+- **Datenlage:** Bei einer gemischten Karte nennt sie keine Probeschüsse mehr, weil `asOnPrintout` sie vorher
+  entfernt.
+
 ## Required Docs
 
 - `vault/decisions/adr-027.md` (Änderung „Entscheidung des Users zur Probe“)
