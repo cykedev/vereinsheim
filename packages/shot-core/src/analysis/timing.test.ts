@@ -19,6 +19,14 @@ const EVENING: MetricShot[] = SECONDS.map((s, i) => ({
 const WITH_PLACEHOLDER = EVENING.map((shot, i) =>
   i === 2 ? { ...shot, flags: [FLAG_SUSPICIOUS] } : shot
 )
+// Dieselben zehn Wertungsschüsse mit einer späten Probe in der Pause (bei 460 s): Die Abgabefolge läuft
+// über beide Arten, die Probe hat seq 7, in der Wertung springt sie von 6 auf 8.
+const LATE_SIGHTER: MetricShot[] = [
+  ...EVENING.slice(0, 6),
+  { ...EVENING[5], kind: "probe", series: null, seq: 7, firedAtMs: 460_000 },
+  ...EVENING.slice(6).map((shot) => ({ ...shot, seq: (shot.seq as number) + 1 })),
+]
+const LATE_SIGHTER_MATCH = LATE_SIGHTER.filter((shot) => shot.kind === "match")
 
 describe("Tempo-Konstanz (Z2)", () => {
   it("IQR der Intervalle ohne Pause, auch relativ zum Median", () => {
@@ -117,6 +125,21 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     const profile = rhythmProfile([hand, ...reversed], 5)
     expect(profile.map((p) => p.number)).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
     expect(profile[1].intervalMs).toBe(40_000)
+  })
+
+  // bekannter Fehler, Plan plans/2026-10-09-spiegel-seq-luecke.md: Task 2 macht daraus `it`
+  it.fails("eine späte Probe ist keine Lücke: die Pause vor Schuss 7 bleibt (ganze Karte)", () => {
+    // Wertung wie EVENING: nach der Pause Ø 9,7 gegen die übrigen sieben (Ø 719/70), −4/7 Ringe
+    const recovery = pauseRecovery(LATE_SIGHTER, "decimal")
+    expect(recovery?.pauses).toBe(1)
+    expect(recovery?.effects[0].afterShot).toBe(7)
+    expect(recovery?.effects[0].deltaRings).toBeCloseTo(-4 / 7, 9)
+  })
+
+  it.fails("eine späte Probe ist keine Lücke: die Pause vor Schuss 7 bleibt (nur Wertung)", () => {
+    expect(pauseRecovery(LATE_SIGHTER_MATCH, "decimal")?.pauses).toBe(1)
+    const seven = rhythmProfile(LATE_SIGHTER_MATCH).find((point) => point.number === 7)
+    expect(seven?.pause).toBe(true)
   })
 
   it("Rhythmus: Nummern sind Schussnummern, über eine Lücke gibt es keinen Abstand", () => {
