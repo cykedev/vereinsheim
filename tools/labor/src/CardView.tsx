@@ -145,7 +145,9 @@ export function CardView({
       setTab(anchor.tab)
       showSection(anchor.section)
     }
-    const onLoad = parseHash(location.hash)
+    // eine aus dem Zeitraum geöffnete Scheibe beginnt oben, auch wenn die Adresse noch einen Anker der Seite
+    // eines Zeitraums trägt (#zahlen, #analyse gibt es auf beiden Seiten)
+    const onLoad = opened ? null : parseHash(location.hash)
     if (onLoad) showSection(onLoad.section)
     addEventListener("hashchange", follow)
     return () => removeEventListener("hashchange", follow)
@@ -229,7 +231,7 @@ export function CardView({
   const scoringSwitch = (
     <ScoringSwitch
       scoring={state.scoring}
-      official={sample.official}
+      official={opened ? undefined : sample.official}
       onChange={(scoring) => {
         store.set("scoring", scoring)
         dispatch({ type: "setScoring", scoring })

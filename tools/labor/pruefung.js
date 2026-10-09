@@ -2060,8 +2060,9 @@ addEventListener("load", async () => {
       await click($(`[data-card-row="${rowId}"] button`), 200)
       check("Zeitraum: dieselbe Zeile noch einmal hebt die Wahl auf", P().state.chosen === null)
       check(
-        "Zeitraum: ohne Wahl liest die Ablesung die neueste Scheibe",
-        $("[data-card-readout]")?.dataset.cardReadout === M().cards.at(-1).id &&
+        "Zeitraum: ohne Wahl liest die Ablesung die neueste Scheibe mit Ø, wie Satz und „gegen deinen Schnitt“",
+        $("[data-card-readout]")?.dataset.cardReadout === M().reading.card.id &&
+          M().reading.card.id === M().ownAverage.last.id &&
           txt($("[data-card-readout] h3")) === "Neueste Scheibe"
       )
       const readoutDelta = txt($("[data-card-readout] [data-delta]"))
@@ -2179,6 +2180,9 @@ addEventListener("load", async () => {
       await click($(`[data-card-row="${chosenId}"] button`), 200)
       const listShots = Number(txt($(`[data-card-row="${chosenId}"] td:last-child`)))
       const listValue = txt($(`[data-card-row="${chosenId}"] td:nth-child(3)`))
+      scrollTo(0, 700)
+      await wait(50)
+      const scrolledTo = window.scrollY
       await click(button("Scheibe öffnen", $("[data-card-readout]")), 500)
       const matchShots = (L().shots ?? []).filter((s) => s.kind === "match")
       const openedMean = tools.computeMetric(
@@ -2195,6 +2199,11 @@ addEventListener("load", async () => {
       )
       await click(button("Zurück zum Zeitraum"), 500)
       check(
+        "Zeitraum: „Zurück zum Zeitraum“ kehrt an die Stelle zurück",
+        scrolledTo > 0 && near(window.scrollY, scrolledTo, 5),
+        `${Math.round(window.scrollY)} / ${Math.round(scrolledTo)}`
+      )
+      check(
         "Zeitraum: „Zurück zum Zeitraum“ stellt Zeitraum, Vergleich und Wahl wieder her",
         txt($("[data-period-header] h1")) === "Neue Munition" &&
           !!$("[data-compare-chip]") &&
@@ -2202,6 +2211,55 @@ addEventListener("load", async () => {
       )
       await click(button("Vergleich entfernen"), 200)
       check("Zeitraum: „×“ entfernt den Vergleich", !$("[data-compare-chip]") && !M().compareRange)
+
+      // überlappende Zeiträume: die gemeinsamen Scheiben zählen nur im gewählten (Review)
+      await choose("Letzte 12 Monate", "Vorbereitung Landesmeisterschaft")
+      check(
+        "Zeitraum: überlappende Zeiträume ohne gemeinsame Scheiben im Vergleich",
+        M().compareShared > 0 &&
+          txt($("[data-result-box] [data-compare-shared]")).startsWith(
+            `${M().compareShared} Scheiben`
+          ) &&
+          txt($("[data-result-box] [data-comparison]")).includes("zu wenige Scheiben"),
+        txt($("[data-result-box]"))
+      )
+      await click(button("Vergleich entfernen"), 200)
+
+      // „Frei“: zwei Tage, übernehmen; nicht übernommene Tage gelten beim nächsten Öffnen nicht (Review)
+      const setDate = (input, value) => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, value)
+        input.dispatchEvent(new Event("input", { bubbles: true }))
+      }
+      const dateInputs = () => $$('[data-period-picker] input[type="date"]')
+      await click($("[data-period-chip]"), 150)
+      await click(radio("Frei"), 60)
+      setDate(dateInputs()[0], "2026-07-01")
+      setDate(dateInputs()[1], "2026-07-31")
+      await wait(60)
+      await apply()
+      const july = P().cards.filter(
+        (c) =>
+          c.startedAtMs >= Date.parse("2026-07-01T00:00:00+02:00") &&
+          c.startedAtMs < Date.parse("2026-08-01T00:00:00+02:00")
+      )
+      check(
+        "Zeitraum: „Frei“ vom 1. bis 31. Juli zeigt genau die Scheiben des Juli",
+        txt($("[data-period-header] h1")) === "01.07.2026 – 31.07.2026" &&
+          rowIds().length === july.length,
+        `${txt($("[data-period-header] h1"))} ${rowIds().length}/${july.length}`
+      )
+      await click($("[data-period-chip]"), 150)
+      setDate(dateInputs()[1], "2026-07-15")
+      await wait(60)
+      await click($('button[aria-label="Schließen"]', pickerDialog()), 100)
+      await click($("[data-period-chip]"), 150)
+      check(
+        "Zeitraum: nicht übernommene freie Tage gelten beim nächsten Öffnen nicht",
+        dateInputs()[1].value === "2026-07-31",
+        dateInputs()[1].value
+      )
+      await click($('button[aria-label="Schließen"]', pickerDialog()), 100)
+      await choose("Letzte 90 Tage")
 
       // Rekorde
       const records = M().records
@@ -2291,6 +2349,14 @@ addEventListener("load", async () => {
       )
       desk2.remove()
       await click(button("Scheibe"), 300)
+      // #zahlen gibt es auf beiden Seiten: es öffnet die zuletzt gewählte Ansicht, hier die Scheibe (Review)
+      const reload = await openFrame(1280, 900, "#zahlen")
+      check(
+        "Labor: der Anker #zahlen öffnet die gewählte Ansicht, nicht die Seite eines Zeitraums",
+        !!reload.contentDocument.querySelector("[data-card-header]") &&
+          !reload.contentDocument.querySelector("[data-period-header]")
+      )
+      reload.remove()
     }
 
     check("Keine Skriptfehler", window.__errors.length === 0, window.__errors.join(" | "))

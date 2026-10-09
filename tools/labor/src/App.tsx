@@ -30,8 +30,10 @@ function useTheme(theme: Theme) {
  */
 export function App({ commit }: { commit: string }) {
   const [mode, setMode] = useState<LaborMode>(() => {
-    const anchored = typeof location !== "undefined" && parsePeriodHash(location.hash)
-    return anchored ? "period" : store.get("mode") === "period" ? "period" : "card"
+    // nur die Anker, die es allein auf der Seite eines Zeitraums gibt; #zahlen und #analyse haben beide Seiten
+    const anchor = typeof location === "undefined" ? null : parsePeriodHash(location.hash)
+    if (anchor === "verlauf" || anchor === "scheiben") return "period"
+    return store.get("mode") === "period" ? "period" : "card"
   })
   const [theme, setTheme] = useState<Theme>(() => (store.get("theme") as Theme | null) ?? "system")
   const [explain, setExplain] = useState(() => store.get("help") === "1")

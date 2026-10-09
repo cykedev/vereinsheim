@@ -12,7 +12,7 @@ import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { rangeDays } from "@vereinsheim/shot-ui/period/calendar"
 import { CardList } from "@vereinsheim/shot-ui/period/CardList"
 import { CardLine, CardReadout } from "@vereinsheim/shot-ui/period/CardReadout"
-import { periodModel, PERIOD_CHART_METRICS } from "@vereinsheim/shot-ui/period/model"
+import { periodModel, periodReading, PERIOD_CHART_METRICS } from "@vereinsheim/shot-ui/period/model"
 import { PeriodChart } from "@vereinsheim/shot-ui/period/PeriodChart"
 import { PeriodControls, PeriodHeader } from "@vereinsheim/shot-ui/period/PeriodHeader"
 import { PeriodInsights } from "@vereinsheim/shot-ui/period/PeriodInsights"
@@ -56,18 +56,34 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
   const all = season()
   const family = all.filter((c) => c.family === state.family)
   const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all])
-  const model = useMemo(
+  // das Modell ohne die Wahl: eine neue Wahl rechnet nur die Ablesung neu (Review, 9. Oktober 2026)
+  const { choice, compare, kind, includeProbeOnly, metric, view } = state
+  const base = useMemo(
     () =>
       periodModel({
         cards: family.map((c) => c.card),
-        state,
+        state: {
+          choice,
+          compare,
+          family: state.family,
+          kind,
+          includeProbeOnly,
+          scoring: state.scoring,
+          metric,
+          view,
+          chosen: null,
+        },
         nowMs: SEASON_NOW_MS,
         timeZone: TZ,
         named: NAMED_PERIODS,
       }),
-    // die Saison ist fest: die Familie im Zustand genügt
+    // die Saison ist fest: der Zustand ohne Wahl genügt
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state]
+    [choice, compare, state.family, kind, includeProbeOnly, state.scoring, metric, view]
+  )
+  const model = useMemo(
+    () => ({ ...base, reading: periodReading(base, state.chosen) }),
+    [base, state.chosen]
   )
   useEffect(() => exposePeriodForTest({ cards: family.map((c) => c.card), state, model }))
   const target = TARGETS[state.family as TargetId]
@@ -83,10 +99,12 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
   )
   const chooseFromList = useCallback(
     (id: string) => {
+      // nur eine neue Wahl holt den Verlauf ins Bild, das Abwählen nicht
+      if (id !== state.chosen)
+        jumpTo(document.querySelector('[data-section="verlauf"]'), "Scheiben")
       dispatch({ type: "choose", id })
-      jumpTo(document.querySelector('[data-section="verlauf"]'), "Scheiben")
     },
-    [dispatch, jumpTo]
+    [dispatch, jumpTo, state.chosen]
   )
   const chooseFromRecord = useCallback(
     (id: string) => {
@@ -105,10 +123,8 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
   const result = <PeriodResult model={model} timeZone={TZ} scoring={scoring} onHelp={onHelp} />
   const familyLabel = FAMILIES.find((f) => f.value === state.family)?.label ?? ""
   // Training nur aus Probe zählt nur mit dem Schalter (L2, D8): sonst steht es in der Liste, aber nicht im Ergebnis
-  const probeOnly = state.includeProbeOnly
-    ? 0
-    : model.cards.filter((c) => c.shots.length && c.shots.every((s) => s.kind === "probe")).length
-  const cardsText = `${model.cards.length} Scheiben${probeOnly ? `, ${probeOnly} nur Probe nicht gezählt` : ""}`
+  const excluded = model.excludedProbeOnly
+  const cardsText = `${model.cards.length} Scheiben${excluded ? `, ${excluded} nur Probe nicht gezählt` : ""}`
   const empty = model.cards.length === 0
 
   return (
@@ -177,13 +193,13 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
             <ChartSlot height={300}>
               {(width) => (
                 <PeriodChart
-                  // je Darstellung und Kennzahl neu: das Lineal fängt ohne Wahl an
-                  key={`${state.family}:${state.metric}:${model.view}:${model.compareRange ? "v" : ""}`}
+                  // je Menge der Scheiben, Darstellung und Kennzahl neu: das Lineal fängt ohne Wahl an
+                  key={`${state.family}:${state.kind}:${state.includeProbeOnly}:${model.range.fromMs}:${model.range.toMs}:${state.metric}:${model.view}:${model.compareRange?.fromMs ?? ""}`}
                   width={width}
                   model={model}
                   timeZone={TZ}
                   chosen={state.chosen}
-                  onChoose={(id) => dispatch({ type: "choose", id })}
+                  onChoose={(id) => dispatch({ type: "pick", id })}
                 />
               )}
             </ChartSlot>
@@ -211,7 +227,13 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
               />
             </div>
             <ChartSlot height={170}>
-              {(width) => <VolumeChart key={state.family} width={width} weeks={model.weeks} />}
+              {(width) => (
+                <VolumeChart
+                  key={`${state.family}:${state.kind}:${model.range.fromMs}:${model.range.toMs}`}
+                  width={width}
+                  weeks={model.weeks}
+                />
+              )}
             </ChartSlot>
           </div>
         }
