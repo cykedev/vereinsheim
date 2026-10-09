@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  axisText,
   directionWords,
   durationText,
   formatSigned,
@@ -30,6 +31,25 @@ describe("Zahlen wie in der Spielwiese: feste Stellen, Komma, echtes Minus", () 
     expect(formatSigned(1.5, 1)).toBe("+1,5")
     expect(formatSigned(-1.5, 1)).toBe("−1,5")
     expect(formatSigned(0.01, 1)).toBe("0,0")
+  })
+})
+
+describe("Achse einer Gruppe in Worten", () => {
+  it("Winkel ab 3 Uhr gegen den Uhrzeigersinn, Uhrzeiten wie die Richtungsuhr (Prüfung, Präzision 3)", () => {
+    const rad = (deg: number) => (deg * Math.PI) / 180
+    expect(axisText(rad(111))).toBe(
+      "längs etwa 11 bis 5 Uhr (111°, gegen den Uhrzeigersinn ab 3 Uhr)"
+    )
+    expect(axisText(rad(90))).toBe(
+      "längs etwa 12 bis 6 Uhr (90°, gegen den Uhrzeigersinn ab 3 Uhr)"
+    )
+    expect(axisText(rad(20))).toBe("längs etwa 2 bis 8 Uhr (20°, gegen den Uhrzeigersinn ab 3 Uhr)")
+  })
+
+  it("auf ganze Grad modulo 180: 179,6° ist 0°, nicht 180°", () => {
+    expect(axisText((179.6 * Math.PI) / 180)).toBe(
+      "längs etwa 3 bis 9 Uhr (0°, gegen den Uhrzeigersinn ab 3 Uhr)"
+    )
   })
 })
 

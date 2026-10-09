@@ -16,6 +16,17 @@ export function formatSigned(value: number, decimals: number): string {
   return value > 0 && Number(Math.abs(value).toFixed(decimals)) !== 0 ? `+${text}` : text
 }
 
+/**
+ * Achse einer Gruppe in Worten, Uhrzeiten wie die Richtungsuhr (12 oben, gerundet auf die nächste Stunde): der
+ * Winkel ab 3 Uhr gegen den Uhrzeigersinn auf ganze Grad modulo 180 (179,6° ist 0°), das obere Ende zuerst.
+ */
+export function axisText(angleRad: number): string {
+  const deg = (((Math.round((angleRad * 180) / Math.PI) % 180) + 180) % 180) as number
+  const hour = ((Math.round((90 - deg) / 30) % 12) + 12) % 12 || 12
+  const opposite = ((hour + 5) % 12) + 1
+  return `längs etwa ${hour} bis ${opposite} Uhr (${deg}°, gegen den Uhrzeigersinn ab 3 Uhr)`
+}
+
 /** Ringe mit Zahl: „1 Ring“ nur, wenn genau 1 dasteht (auch −1), sonst „Ringe“ („1,0 Ringe“, „0 Ringe“) */
 export function ringsText(value: number, decimals: number): string {
   const text = formatValue(value, decimals)

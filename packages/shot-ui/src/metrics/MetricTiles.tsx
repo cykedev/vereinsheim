@@ -44,17 +44,17 @@ interface HintContext {
 
 /** kurze Angabe unter dem Wert, wie gemessen wurde */
 const HINTS: Readonly<Record<string, (c: HintContext) => string>> = {
-  "group.enclosingDiameter": () => "Mitte zu Mitte",
-  "group.r50": () => "Median der Abstände, ohne Fehlschüsse",
+  "group.enclosingDiameter": () => "Durchmesser, Mitte zu Mitte",
+  "group.r50": () => "Radius um den Schwerpunkt, in dem die Hälfte liegt, ohne Fehlschüsse",
   "group.mpiDistance": (c) => (c.center ? directionText(c.center) : ""),
-  "group.sdX": () => "waagrecht, n − 1",
-  "group.sdY": () => "senkrecht, n − 1",
+  "group.sdX": () => "waagrecht",
+  "group.sdY": () => "senkrecht",
   "time.intervalMedian": (c) =>
     c.pauses
       ? `${c.pauses} ${c.pauses === 1 ? "Pause" : "Pausen"} über 3 min nicht gezählt`
       : "Median der Abstände",
   "result.decimalMean": (c) => (c.scoring === "rings" ? "ganze Ringe" : "Zehntelwertung"),
-  "group.sigma": () => "Rayleigh-σ, kaum von n abhängig",
+  "group.sigma": () => "kaum von der Schusszahl abhängig",
   "result.tensRate": () => "Anteil der Zehner",
   "time.tempoSpread": () => "IQR der Intervalle",
 }

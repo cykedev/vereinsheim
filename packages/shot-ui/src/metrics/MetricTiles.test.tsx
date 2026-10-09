@@ -123,6 +123,18 @@ describe("Kacheln „Trefferbild in Zahlen“", () => {
     ).not.toContain("–")
   })
 
+  it("Hinweise in Worten: Durchmesser, Radius, waagrecht und senkrecht (Prüfung, Präzision 4, 5, 11)", () => {
+    const html = render({ selection: "match" })
+    expect(tileText(html, "group.enclosingDiameter")).toContain("Durchmesser, Mitte zu Mitte")
+    expect(tileText(html, "group.r50")).toContain(
+      "Radius um den Schwerpunkt, in dem die Hälfte liegt, ohne Fehlschüsse"
+    )
+    expect(tileText(html, "group.sdX")).toMatch(/ mm waagrecht </)
+    expect(tileText(html, "group.sdY")).toMatch(/ mm senkrecht </)
+    expect(tileText(html, "group.sigma")).toContain("kaum von der Schusszahl abhängig")
+    expect(html).not.toMatch(/Rayleigh|n − 1/)
+  })
+
   it("Ergebnis-Kennzahlen zählen nur Wertung: mit Probe in der Auswahl steht das dabei", () => {
     // Prüfung, Ergebnis 7: „über alle Schüsse mit Probe“, aber Ø und Zehnerquote zählen ohne sie
     const all = render({ selection: "all" })

@@ -167,7 +167,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Der Streukreis ist der kleinste Kreis um alle Trefferzentren, Mitte zu Mitte; die Zahl ist
   sein Durchmesser. R50 ist der Radius um den Schwerpunkt, in dem die Hälfte der Treffer liegt, ohne
   Fehlschüsse. Streuung x und y sind die typischen Abweichungen waagrecht und senkrecht.
-- *So liest du es:* R50 stören einzelne weite Schüsse kaum. In Ringbreiten (Luftgewehr 2,5 mm,
+- *So liest du es:* Einzelne weite Schüsse verändern R50 viel weniger als σ und den Streukreis, bei
+  10 Schuss aber merklich, weil sie den Schwerpunkt verschieben. In Ringbreiten (Luftgewehr 2,5 mm,
   Luftpistole 8 mm) heißt ein R50 von 0,5: Die Hälfte deiner Treffer liegt innerhalb einer halben
   Ringbreite um den Schwerpunkt; so lassen sich Gewehr und Pistole grob vergleichen. Ist die
   Streuung y deutlich größer als x, streust du vor allem senkrecht; ob das mehr als Zufall ist, sagt
@@ -175,7 +176,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Vorsicht:* Der Streukreis wird mit jedem weiteren Schuss größer oder bleibt gleich: Über 40
   Schuss ist er bei gleicher Präzision im Mittel rund 30 % größer als über 10. R50 fällt bei wenigen
   Schüssen etwas zu klein aus, bei 10 Schuss um etwa 4 %. Ein Fehlschuss bläht Streukreis und
-  Streuung auf, R50 nicht. Abende mit unterschiedlicher Schusszahl vergleichst du über σ.
+  Streuung auf, R50 nicht. Streuung x und y rechnen mit allen Schüssen, die Form ohne Ausreißer; ein
+  einzelner Abreißer hebt die Streuung nur in seiner Richtung. Abende mit unterschiedlicher
+  Schusszahl vergleichst du über σ.
 - *Mindestzahl:* Ab 3 Schuss, R50 ab 5.
 - *Formel:* `Streukreis = Durchmesser des kleinsten umschließenden Kreises (Welzl); R50 = Median der
   rᵢ ohne Fehlschüsse; Streuung mit n − 1; in Ringbreiten: R50 / W`
@@ -183,7 +186,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Form der Gruppe (P8)**
 - *Was:* Die Streuung als Ellipse, ohne die Ausreißer: Das Verhältnis a/b sagt, wie gestreckt sie
   ist, der Winkel, in welche Richtung. Ein einzelner Abreißer zöge die Ellipse sonst in seine
-  Richtung.
+  Richtung. a und b sind die Streuung entlang der langen und der kurzen Achse, gemessen wie Streuung
+  x und y, aber ohne die Ausreißer.
 - *So liest du es:* „Gestreckt“ steht nur, wenn ein Test zeigt, dass es kein Zufall ist. Daneben
   steht, ab welchem a/b das bei deiner Schusszahl gilt: bei 20 Schuss ab 1,81, bei 40 ab 1,50, bei
   120 ab 1,25.
@@ -214,8 +218,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Vorsicht:* Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt
   die Gruppe neben der Mitte, kann er sogar Ringe bringen. Unter 10 Schuss prüft Spiegel nur einen
   Schritt, dort können sich zwei gleich weite Ausreißer noch verdecken. Bei 10 Schuss findet die
-  Regel einen einzelnen sehr weiten Schuss in etwa neun von zehn Fällen, von zwei nah beieinander in
-  etwa acht von zehn Fällen beide.
+  Regel einen einzelnen Schuss fünfmal σ neben der Gruppe (Luftgewehr bei σ 1,5 mm: 7,5 mm, drei
+  Ringbreiten) in knapp neun von zehn Fällen, von zwei nah beieinander in etwa acht von zehn Fällen
+  beide.
 - *Mindestzahl:* Ab 5 Schuss mit Lage.
 - *Formel:* `Schritt für Schritt mit den m übrigen Schüssen: T = d² / (2S² (1 + 1/(m − 1))) für den
   weitesten gegen das (1 − 0,04/m)-Quantil von F(2, 2(m − 2)), dann ohne ihn weiter; höchstens
@@ -489,7 +494,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - **Vertrauensellipse:** Bereich um den gemessenen Schwerpunkt, in dem der wahre Schwerpunkt mit
   großer Sicherheit (95 %) liegt. Liegt die Scheibenmitte darin, ist ein Versatz nicht belegt. Sie
   schrumpft mit der Schusszahl, die Gruppe nicht.
-- **σ (Sigma):** Typische Streuung um den Schwerpunkt in mm, kaum von der Schusszahl abhängig.
+- **σ (Sigma):** Streuung je Richtung in mm, gemittelt aus waagrecht und senkrecht; der typische
+  Abstand vom Schwerpunkt ist größer (R50 ≈ 1,18 σ bei einer runden Gruppe). Kaum von der Schusszahl
+  abhängig.
 - **R50:** Radius um den Schwerpunkt, in dem die Hälfte der Treffer liegt, ohne Fehlschüsse.
 - **Fehlschuss:** Ein Nuller oder ein Treffer weit außen, in den Daten markiert; R50 lässt ihn weg,
   die übrigen Maße zählen ihn mit.

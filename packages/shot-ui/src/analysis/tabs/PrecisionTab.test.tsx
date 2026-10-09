@@ -15,7 +15,7 @@ import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
-import { formatValue } from "../../format"
+import { axisText, formatValue } from "../../format"
 import { fortyCard } from "../testCard"
 import { cardHtml, cardText, renderTab } from "../testPanel"
 
@@ -34,7 +34,7 @@ describe("Reiter Präzision", () => {
     expect(text).toContain(`${mm2(sigma.sigma)} mm`)
     expect(text).toContain(`95-%-Bereich ${mm2(sigma.low)} bis ${mm2(sigma.high)} mm`)
     expect(text).toContain(`${formatValue(max, 1)} mm`)
-    expect(text).toContain(`aus ${sigma.n} Schuss`)
+    expect(text).toContain(`σ aus ${sigma.n} Schuss, für wenige Schüsse korrigiert`)
     const card = cardHtml(html, "praezision-sigma")
     const left = (sigma.low / 1000 / max) * 100
     expect(card).toMatch(new RegExp(`data-range="true"[^>]*style="left:${left}%`))
@@ -42,7 +42,9 @@ describe("Reiter Präzision", () => {
 
   it("Maße der Gruppe aus den Kennzahlen, R50 in Ringbreiten", () => {
     const text = cardText(html, "masse-der-gruppe")
-    expect(text).toContain(`Streukreis ${formatValue(metric("group.enclosingDiameter"), 2)} mm`)
+    expect(text).toContain(
+      `Streukreis (Durchmesser) ${formatValue(metric("group.enclosingDiameter"), 2)} mm`
+    )
     expect(text).toContain(`R50 ${formatValue(metric("group.r50"), 2)} mm`)
     expect(text).toContain(
       `R50 in Ringbreiten ${formatValue(ringWidths(metric("group.r50") * 1000, LP_10M), 2)} (R50 durch ${formatValue(LP_10M.ringWidthUm / 1000, 1)} mm)`
@@ -71,9 +73,27 @@ describe("Reiter Präzision", () => {
     expect([...card.matchAll(/data-group-point=/g)]).toHaveLength(BASE.length)
     expect(card).toContain('data-overlay="mpi"')
     const text = cardText(html, "form-der-gruppe")
-    expect(text).toContain(`Halbachsen ${mm2(shape.majorUm)} · ${mm2(shape.minorUm)} mm`)
+    // die Form rechnet ohne Ausreißer, σ und Streuung x · y mit ihnen (Prüfung, Präzision 2)
+    expect(shape.without.length).toBeGreaterThan(0)
+    expect(text).toContain(
+      `Halbachsen (ohne Ausreißer) ${mm2(shape.majorUm)} · ${mm2(shape.minorUm)} mm`
+    )
     expect(text).toContain(`gestreckt ab ${formatValue(shape.ratioLimit, 2)} bei ${shape.n} Schuss`)
-    expect(text).toContain(shape.elongated ? "ja, mit 95 %" : "nicht nachweisbar")
+    expect(text).toContain(shape.elongated ? "Gestreckt? ja, mit 95 %" : "nicht nachweisbar")
+    expect(shape.showAngle).toBe(true)
+    expect(text).toContain(`Ausrichtung ${axisText(shape.angleRad)}`)
+    // die Ellipse ist 2a · 2b, die Zeile zeigt a · b (Prüfung, Präzision 1)
+    expect(text).toContain(
+      "Ellipse und Mitte ohne die Ausreißer (rote Punkte). Die Ellipse reicht doppelt so weit wie die Halbachsen (2a, 2b); bei einer runden Gruppe liegen etwa 86 % der Treffer darin."
+    )
+  })
+
+  it("keine Fachwörter in der Oberfläche: kein Mauchly, kein Rayleigh, kein c4, kein n − 1", () => {
+    // das Glossar unter der Analyse darf sie erklären, die Karten nicht
+    const cards = ["praezision-sigma", "masse-der-gruppe", "form-der-gruppe", "ausreisser"]
+    for (const word of ["Mauchly", "W ", "Rayleigh", "c4", "n − 1", "2 σ entlang"]) {
+      for (const card of cards) expect(cardText(html, card), card).not.toContain(word)
+    }
   })
 
   it("Ausreißer mit Schussnummer und Kosten", () => {
@@ -81,7 +101,40 @@ describe("Reiter Präzision", () => {
     const loss = outlierLoss(BASE, "decimal")!
     const text = cardText(html, "ausreisser")
     expect(text).toContain(`Ausreißer ${flagged.map((f) => `Schuss ${f.number}`).join(", ")}`)
-    expect(text).toContain(`Kosten ${formatValue(loss.loss, 1)} Ringe`)
+    expect(text).toContain(`Kosten ${formatValue(loss.loss, 1)} Ringe gegen den Median der übrigen`)
+  })
+
+  it("ein Ausreißer zur Mitte hin: er bringt Ringe, keine negativen Kosten", () => {
+    // zwölf Treffer eng um (3 | 0) mm, einer genau in der Mitte: Er liegt weit von der Gruppe, nah an der 10,9
+    const points = [
+      ...Array.from({ length: 12 }, (_, i) => [
+        3000 + Math.round(300 * Math.cos((i * Math.PI) / 6)),
+        Math.round(300 * Math.sin((i * Math.PI) / 6)),
+      ]),
+      [0, 0],
+    ]
+    const shots: MetricShot[] = points.map(([xUm, yUm], i) => {
+      const score = scoreFromCoordinates(LP_10M, xUm, yUm)
+      return {
+        seq: i + 1,
+        xUm,
+        yUm,
+        decimalTenths: score.decimalTenths,
+        ring: score.ring,
+        innerTen: score.innerTen,
+        firedAtMs: null,
+        kind: "match",
+        series: 2,
+      }
+    })
+    const loss = outlierLoss(shots, "decimal")!
+    expect(outliers(shots)!.flagged.map((f) => f.number)).toEqual([13])
+    expect(loss.loss).toBeLessThan(0)
+    const text = cardText(renderTab("precision", { shots }), "ausreisser")
+    expect(text).toContain(
+      `Wirkung bringt ${formatValue(-loss.loss, 1)} Ringe mehr als der Median der übrigen (liegt zur Mitte hin)`
+    )
+    expect(text).not.toContain("Kosten")
   })
 
   it("wenige Schüsse: der Grund statt eines Werts", () => {
@@ -125,6 +178,10 @@ describe("Reiter Präzision", () => {
     const page = renderTab("precision", { shots })
     expect(cardText(page, "form-der-gruppe")).toContain("bei 8 Schuss (ohne Ausreißer 9, 10)")
     expect(cardText(page, "form-der-gruppe")).toContain("nicht nachweisbar")
+    // nicht nachweisbar heißt nicht rund (Prüfung, Präzision 10)
+    expect(cardText(page, "form-der-gruppe")).toContain(
+      "Ausrichtung kein Winkel: Streckung nicht nachweisbar"
+    )
     const card = cardHtml(page, "form-der-gruppe")
     const ellipse = /<ellipse cx="([-\d.]+)" cy="([-\d.]+)"/.exec(card)
     // Punkte ohne Ausreißer: Bei ihnen folgt auf data-group-point direkt cx (kein data-outlier dazwischen)

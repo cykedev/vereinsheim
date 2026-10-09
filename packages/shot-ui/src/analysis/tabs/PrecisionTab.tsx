@@ -8,20 +8,14 @@ import {
   sigmaEstimate,
 } from "@vereinsheim/shot-core/analysis"
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
-import type { ReactNode } from "react"
 
-import { formatValue } from "../../format"
+import { axisText, formatValue, ringsText } from "../../format"
 import { ChartSlot } from "../charts/frame"
 import { ShapeChart } from "../charts/ShapeChart"
-import { AnalysisCard, IntervalBar, KeyValues, Note } from "../parts"
+import { AnalysisCard, IntervalBar, KeyValues, Muted, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
 
 const mm = (um: number) => formatValue(um / 1000, 2)
-
-/** zurückgenommener Zusatz hinter einem Wert */
-const Muted = ({ children }: { children: ReactNode }) => (
-  <span className="font-normal text-muted-foreground">{children}</span>
-)
 
 /** Präzision: σ, Maße der Gruppe, Form der Gruppe, Ausreißer, alle über die Grundlage */
 export function precisionCards({ input, explain, onHelp }: CardContext): CardSpec[] {
@@ -35,6 +29,7 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
   const shape = groupShape(base)
   const outlying = outliers(base)
   const loss = outlierLoss(base, scoring)
+  const one = outlying?.flagged.length === 1
   const digits = scoring === "rings" ? 0 : 1
   const max = sigma ? Math.ceil((sigma.high / 1000) * 1.25 * 2) / 2 : 0
 
@@ -67,7 +62,7 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
               </div>
               <KeyValues rows={[["95-%-Bereich", `${mm(sigma.low)} bis ${mm(sigma.high)} mm`]]} />
               <Note>
-                {`Rayleigh-σ aus ${sigma.n} Schuss, um c4 korrigiert: Er hängt kaum von der Schusszahl ab und taugt für den Vergleich über Abende.`}
+                {`σ aus ${sigma.n} Schuss, für wenige Schüsse korrigiert: Er hängt kaum von der Schusszahl ab und taugt für den Vergleich über Abende.`}
               </Note>
             </>
           ) : (
@@ -82,7 +77,7 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
         <AnalysisCard help="masse-der-gruppe" explain={explain} onHelp={onHelp}>
           <KeyValues
             rows={[
-              ["Streukreis", mmOr(metric("group.enclosingDiameter"))],
+              ["Streukreis (Durchmesser)", mmOr(metric("group.enclosingDiameter"))],
               ["R50", mmOr(r50)],
               [
                 "R50 in Ringbreiten",
@@ -121,7 +116,10 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
               </ChartSlot>
               <KeyValues
                 rows={[
-                  ["Halbachsen", `${mm(shape.majorUm)} · ${mm(shape.minorUm)} mm`],
+                  [
+                    shape.without.length ? "Halbachsen (ohne Ausreißer)" : "Halbachsen",
+                    `${mm(shape.majorUm)} · ${mm(shape.minorUm)} mm`,
+                  ],
                   [
                     "Verhältnis a/b",
                     <>
@@ -135,35 +133,27 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
                   ],
                   [
                     "Gestreckt?",
-                    shape.elongated ? (
-                      <>
-                        ja, mit 95 %
-                        <Muted>{` (Mauchly W ${formatValue(shape.sphericity, 2)})`}</Muted>
-                      </>
-                    ) : (
-                      <>
-                        nicht nachweisbar
-                        <Muted>{` (W ${formatValue(shape.sphericity, 2)})`}</Muted>
-                      </>
-                    ),
+                    // der Test steht in der Formel der Hilfe, nicht in der Zeile (Prüfung, Präzision 11)
+                    shape.elongated ? "ja, mit 95 %" : "nicht nachweisbar",
                   ],
                   [
                     "Ausrichtung",
                     shape.showAngle ? (
-                      `${formatValue((shape.angleRad * 180) / Math.PI, 0)}° gegen die Waagrechte`
+                      axisText(shape.angleRad)
                     ) : (
                       <Muted>
                         {shape.elongated
                           ? "Winkel erst ab 10 Schuss ohne Ausreißer"
-                          : "rund im Rahmen des Zufalls"}
+                          : "kein Winkel: Streckung nicht nachweisbar"}
                       </Muted>
                     ),
                   ],
                 ]}
               />
               <Note>
-                Ellipse und Mitte ohne die Ausreißer (rote Punkte); die Ellipse misst 2 σ entlang
-                der Hauptachsen.
+                Ellipse und Mitte ohne die Ausreißer (rote Punkte). Die Ellipse reicht doppelt so
+                weit wie die Halbachsen (2a, 2b); bei einer runden Gruppe liegen etwa 86 % der
+                Treffer darin.
               </Note>
             </>
           ) : (
@@ -187,10 +177,16 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
                       : "keine",
                   ],
                   outlying.flagged.length > 0 && [
-                    "Kosten",
-                    loss ? (
+                    // zur Mitte hin bringen sie Ringe: keine „negativen Kosten“ (Prüfung, Präzision 9)
+                    loss && loss.loss < 0 ? "Wirkung" : "Kosten",
+                    loss && loss.loss < 0 ? (
                       <>
-                        {`${formatValue(loss.loss, digits)} Ringe`}
+                        {`${one ? "bringt" : "bringen"} ${ringsText(-loss.loss, digits)} mehr`}
+                        <Muted>{` als der Median der übrigen (${one ? "liegt" : "liegen"} zur Mitte hin)`}</Muted>
+                      </>
+                    ) : loss ? (
+                      <>
+                        {ringsText(loss.loss, digits)}
                         <Muted> gegen den Median der übrigen</Muted>
                       </>
                     ) : (

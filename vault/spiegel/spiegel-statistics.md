@@ -54,7 +54,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| P1 | Streukreis (Meyton: Trefferkreis) | kleinster Kreis um alle Trefferzentren; wächst mit n | Serie, Scheibe | A | vorhanden |
+| P1 | Streukreis (Meyton: Trefferkreis) | Durchmesser des kleinsten Kreises um alle Trefferzentren, Mitte zu Mitte; wächst mit n | Serie, Scheibe | A | vorhanden |
 | P2 | Extreme Spread | größter Abstand zweier Treffer | Serie, Scheibe | C | Funktion `extremeSpread` |
 | P3 | Mittlerer Radius | **entfernt (Oktober 2026):** ≈ 1,24 · σ̂ mit mehr Rauschen (Effizienz 0,92), weder robust noch auf dem Ausdruck | – | – | entfernt (SP-1.12) |
 | P4 | R50 (≈ CEP50) | Median der rᵢ ohne Fehlschüsse | Serie, Scheibe, Zeitraum | A | vorhanden |

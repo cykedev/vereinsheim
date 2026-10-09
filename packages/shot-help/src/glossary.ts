@@ -14,7 +14,7 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
   },
   {
     term: "σ (Sigma)",
-    text: "Typische Streuung um den Schwerpunkt in mm, kaum von der Schusszahl abhängig.",
+    text: "Streuung je Richtung in mm, gemittelt aus waagrecht und senkrecht; der typische Abstand vom Schwerpunkt ist größer (R50 ≈ 1,18 σ bei einer runden Gruppe). Kaum von der Schusszahl abhängig.",
   },
   {
     term: "R50",

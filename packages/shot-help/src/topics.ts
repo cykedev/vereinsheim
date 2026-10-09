@@ -119,9 +119,9 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: ["group.enclosingDiameter", "group.r50", "group.sdX", "group.sdY"],
     short: "Streukreis, R50 und die Streuung waagrecht und senkrecht.",
     what: "Der Streukreis ist der kleinste Kreis um alle Trefferzentren, Mitte zu Mitte; die Zahl ist sein Durchmesser. R50 ist der Radius um den Schwerpunkt, in dem die Hälfte der Treffer liegt, ohne Fehlschüsse. Streuung x und y sind die typischen Abweichungen waagrecht und senkrecht.",
-    read: "R50 stören einzelne weite Schüsse kaum. In Ringbreiten (Luftgewehr 2,5 mm, Luftpistole 8 mm) heißt ein R50 von 0,5: Die Hälfte deiner Treffer liegt innerhalb einer halben Ringbreite um den Schwerpunkt; so lassen sich Gewehr und Pistole grob vergleichen. Ist die Streuung y deutlich größer als x, streust du vor allem senkrecht; ob das mehr als Zufall ist, sagt die Karte „Form der Gruppe“.",
+    read: "Einzelne weite Schüsse verändern R50 viel weniger als σ und den Streukreis, bei 10 Schuss aber merklich, weil sie den Schwerpunkt verschieben. In Ringbreiten (Luftgewehr 2,5 mm, Luftpistole 8 mm) heißt ein R50 von 0,5: Die Hälfte deiner Treffer liegt innerhalb einer halben Ringbreite um den Schwerpunkt; so lassen sich Gewehr und Pistole grob vergleichen. Ist die Streuung y deutlich größer als x, streust du vor allem senkrecht; ob das mehr als Zufall ist, sagt die Karte „Form der Gruppe“.",
     caution:
-      "Der Streukreis wird mit jedem weiteren Schuss größer oder bleibt gleich: Über 40 Schuss ist er bei gleicher Präzision im Mittel rund 30 % größer als über 10. R50 fällt bei wenigen Schüssen etwas zu klein aus, bei 10 Schuss um etwa 4 %. Ein Fehlschuss bläht Streukreis und Streuung auf, R50 nicht. Abende mit unterschiedlicher Schusszahl vergleichst du über σ.",
+      "Der Streukreis wird mit jedem weiteren Schuss größer oder bleibt gleich: Über 40 Schuss ist er bei gleicher Präzision im Mittel rund 30 % größer als über 10. R50 fällt bei wenigen Schüssen etwas zu klein aus, bei 10 Schuss um etwa 4 %. Ein Fehlschuss bläht Streukreis und Streuung auf, R50 nicht. Streuung x und y rechnen mit allen Schüssen, die Form ohne Ausreißer; ein einzelner Abreißer hebt die Streuung nur in seiner Richtung. Abende mit unterschiedlicher Schusszahl vergleichst du über σ.",
     minimum: "Ab 3 Schuss, R50 ab 5.",
     formula:
       "Streukreis = Durchmesser des kleinsten umschließenden Kreises (Welzl); R50 = Median der rᵢ ohne Fehlschüsse; Streuung mit n − 1; in Ringbreiten: R50 / W",
@@ -133,7 +133,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["P8"],
     metrics: [],
     short: "Ob deine Gruppe rund ist oder in eine Richtung gestreckt.",
-    what: "Die Streuung als Ellipse, ohne die Ausreißer: Das Verhältnis a/b sagt, wie gestreckt sie ist, der Winkel, in welche Richtung. Ein einzelner Abreißer zöge die Ellipse sonst in seine Richtung.",
+    what: "Die Streuung als Ellipse, ohne die Ausreißer: Das Verhältnis a/b sagt, wie gestreckt sie ist, der Winkel, in welche Richtung. Ein einzelner Abreißer zöge die Ellipse sonst in seine Richtung. a und b sind die Streuung entlang der langen und der kurzen Achse, gemessen wie Streuung x und y, aber ohne die Ausreißer.",
     read: "„Gestreckt“ steht nur, wenn ein Test zeigt, dass es kein Zufall ist. Daneben steht, ab welchem a/b das bei deiner Schusszahl gilt: bei 20 Schuss ab 1,81, bei 40 ab 1,50, bei 120 ab 1,25.",
     caution:
       "Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe deshalb selten; sichtbar wird sie über mehrere Scheiben. Ist deine Gruppe deutlich gestreckt, hält der Ausreißer-Test manchmal einen Schuss an der Spitze für einen Ausreißer, und ohne ihn wirkt die Gruppe runder. Steht „ohne Ausreißer“, schau, ob der Schuss in Richtung der Streckung liegt.",
@@ -153,7 +153,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     read: "Ein markierter Schuss ist ein Kandidat für die Frage „Was war da los?“ und bleibt in der Wertung. Darunter steht, wie viele Ringe die markierten Schüsse gegenüber deinem typischen Schuss (Median) gekostet haben.",
     act: "Kosten dich Ausreißer über mehrere Scheiben viele Ringe, lohnt die Arbeit an einem gleichmäßigen Ablauf mehr als an der Präzision.",
     caution:
-      "Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt die Gruppe neben der Mitte, kann er sogar Ringe bringen. Unter 10 Schuss prüft Spiegel nur einen Schritt, dort können sich zwei gleich weite Ausreißer noch verdecken. Bei 10 Schuss findet die Regel einen einzelnen sehr weiten Schuss in etwa neun von zehn Fällen, von zwei nah beieinander in etwa acht von zehn Fällen beide.",
+      "Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt die Gruppe neben der Mitte, kann er sogar Ringe bringen. Unter 10 Schuss prüft Spiegel nur einen Schritt, dort können sich zwei gleich weite Ausreißer noch verdecken. Bei 10 Schuss findet die Regel einen einzelnen Schuss fünfmal σ neben der Gruppe (Luftgewehr bei σ 1,5 mm: 7,5 mm, drei Ringbreiten) in knapp neun von zehn Fällen, von zwei nah beieinander in etwa acht von zehn Fällen beide.",
     minimum: "Ab 5 Schuss mit Lage.",
     formula:
       "Schritt für Schritt mit den m übrigen Schüssen: T = d² / (2S² (1 + 1/(m − 1))) für den weitesten gegen das (1 − 0,04/m)-Quantil von F(2, 2(m − 2)), dann ohne ihn weiter; höchstens max(2, ⌊n/10⌋) Schritte ab 10 Schuss, darunter einer; Ausreißer sind alle bis zum letzten Schritt über seiner Grenze; Kosten = Σ (Median der übrigen − vᵢ) über die markierten Schüsse",
