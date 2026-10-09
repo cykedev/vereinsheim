@@ -487,13 +487,18 @@ const periodCards = (rand: Random, count: number, sx: number, firstDay = 0): Per
 const perShot = metric("result.decimalMean")
 
 // B19: Vergleich zweier Zeiträume über Ø je Schuss (Mann-Whitney über die Scheiben, D5): Fehlalarm bei
-// gleicher Streuung, Trennschärfe bei σ 1,5 → 1,3 mm auf Seite b; dazu der Anteil „bedeutsam“
+// gleicher Streuung, Trennschärfe bei σ 1,5 → 1,3 mm und bei einer kleinen Veränderung σ 1,5 → 1,45 mm auf
+// Seite b (seit der Prüfung vom 9. Oktober 2026); dazu der Anteil „bedeutsam“ und der Unterschied des Ø je
+// Schuss im Mittel (über die Fälle 30/30), damit ein Text sagen kann, wie groß die Veränderung ist
 {
   const cases = [
     ["gleich", 1500, 19_000],
     ["σ 1,5 → 1,3 mm", 1300, 19_500],
+    ["σ 1,5 → 1,45 mm", 1450, 19_700],
   ] as const
   for (const [label, sxB, seed] of cases) {
+    let deltaSum = 0
+    let deltaCount = 0
     const parts = [5, 10, 20, 30].map((n) => {
       let judged = 0
       let higher = 0
@@ -505,12 +510,19 @@ const perShot = metric("result.decimalMean")
         if (result?.verdict !== "unclear") judged++
         if (result?.verdict === "higher") higher++
         if (result?.meaningful) meaningful++
+        if (n === 30 && result) {
+          deltaSum += result.delta
+          deltaCount++
+        }
       })
       const verdict = sxB === 1500 ? share(judged, 2_000) : share(higher, 2_000)
       return `${n}/${n} ${verdict} (bedeutsam ${share(meaningful, 2_000)})`
     })
     const what = sxB === 1500 ? "Urteil trotz gleicher Streuung" : "„höher“ erkannt"
-    out("B19", `${label}, ${what}: ${parts.join(", ")}`)
+    // ohne Veränderung liegt das Mittel bei 0: kein „-0,000“
+    const mean = deltaSum / deltaCount
+    const delta = num(Math.abs(mean) < 0.0005 ? 0 : mean, 3)
+    out("B19", `${label}, ${what}: ${parts.join(", ")}; Δ Ø je Schuss im Mittel ${delta}`)
   }
 }
 
