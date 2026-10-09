@@ -3007,6 +3007,28 @@ addEventListener("load", async () => {
       )
       const listJargon = jargonIn($("main"))
       check("Liste: ohne Fachbegriffe", !listJargon, listJargon ?? "")
+      // das Blatt „Filter“ der Liste setzt Art und Merkmal, der Chip fasst zusammen (U5, D6)
+      const listSheet = () => $("[data-list-filter]").closest("dialog")
+      await click($("[data-list-chip]"), 150)
+      const sheetOpened = listSheet().open
+      await click(button("Wettkampf", listSheet()), 200)
+      const afterKind = [Li().query.kind, txt($("[data-list-chip]")).trim()]
+      await click(button("Nur PDF", listSheet()), 200)
+      const afterFlag = [Li().query.flag, txt($("[data-list-chip]")).trim()]
+      await click(button("Alle", $('[role="radiogroup"][aria-label="Merkmal"]', listSheet())), 150)
+      await click(button("Alle", $('[role="radiogroup"][aria-label="Art"]', listSheet())), 150)
+      listSheet().close()
+      await wait(100)
+      check(
+        "Liste: das Blatt „Filter“ setzt Art und Merkmal, der Chip fasst zusammen, zurück auf „Alle Scheiben“",
+        sheetOpened &&
+          afterKind.join() === "competition,Wettkampf" &&
+          afterFlag.join() === "nur-pdf,Wettkampf · Nur PDF" &&
+          Li().query.kind === "all" &&
+          Li().query.flag === null &&
+          txt($("[data-list-chip]")).trim() === "Alle Scheiben",
+        `${afterKind.join("/")} · ${afterFlag.join("/")} · ${txt($("[data-list-chip]")).trim()}`
+      )
       check(
         "Liste: Abende neueste zuerst, die Scheiben eines Abends in zeitlicher Folge, wie im Modell",
         evenings.length > 20 &&
