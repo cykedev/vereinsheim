@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import type { NamedPeriod } from "./calendar"
 import { periodModel } from "./model"
 import { PeriodControls, PeriodHeader } from "./PeriodHeader"
-import { choiceValid, namedSpan, PeriodPicker } from "./PeriodPicker"
+import { choiceValid, filterSummary, namedSpan, PeriodPicker } from "./PeriodPicker"
 import { PeriodResult } from "./PeriodResult"
 import { initialPeriodState, type PeriodState } from "./state"
 import { NOW, periodCard, TZ } from "./testSeason"
@@ -20,7 +20,7 @@ const state = (partial: Partial<PeriodState> = {}) => ({
   ...partial,
 })
 
-describe("Zeitraum-Wähler (D4, D6)", () => {
+describe("Blatt „Filter“ (D4, D6; U2 D3)", () => {
   const html = renderToStaticMarkup(
     h(PeriodPicker, {
       choice: { type: "rolling", days: 90 },
@@ -28,6 +28,8 @@ describe("Zeitraum-Wähler (D4, D6)", () => {
       range: RANGE,
       named: NAMED,
       timeZone: TZ,
+      kind: "all",
+      includeProbeOnly: true,
       onApply: () => {},
     })
   )
@@ -43,12 +45,20 @@ describe("Zeitraum-Wähler (D4, D6)", () => {
       "Vergleichen mit",
       "Zeitraum davor",
       "Übernehmen",
+      "Trainings nur aus Probe mitzählen",
     ]) {
       expect(html, label).toContain(label)
     }
     expect([...html.matchAll(/Vorbereitung Landesmeisterschaft/g)]).toHaveLength(2)
     expect(html).toContain("01.05.2026 – 30.06.2026")
     expect(html).toContain("seit 01.08.2026")
+    // seit U2 auch Art und Probe-Training im Blatt, als Entwurf bis „Übernehmen“; das Blatt heißt „Filter“
+    expect(html).toMatch(/<legend[^>]*>Art<\/legend>/)
+    expect([...html.matchAll(/<input type="radio"[^>]*name="art"/g)]).toHaveLength(3)
+    for (const label of ["Alle", "Training", "Wettkampf"])
+      expect(html).toContain(`<span>${label}</span>`)
+    expect(html).toMatch(/<input type="checkbox"[^>]*checked=""/)
+    expect(html).toContain(">Filter<")
     // „Frei“ beginnt mit den Tagen des Zeitraums, die Felder sind aus, solange „Frei“ nicht gewählt ist
     expect(html).toMatch(/type="date" disabled=""[^>]*value="2026-07-02"/)
   })
@@ -61,6 +71,8 @@ describe("Zeitraum-Wähler (D4, D6)", () => {
         range: RANGE,
         named: NAMED,
         timeZone: TZ,
+        kind: "all",
+        includeProbeOnly: true,
         onApply: () => {},
       })
     )
@@ -69,6 +81,20 @@ describe("Zeitraum-Wähler (D4, D6)", () => {
     expect(own).toContain("Vorbereitung Landesmeisterschaft")
     expect(named).toContain("Scheiben, die in beiden Zeiträumen liegen, zählen nur im gewählten.")
     expect(named).toMatch(/aria-expanded="false"/)
+  })
+
+  it("der Chip fasst zusammen, was von der Vorgabe abweicht", () => {
+    const base = { kind: "all", compareLabel: null, includeProbeOnly: true } as const
+    expect(filterSummary("Letzte 90 Tage", base)).toBe("Letzte 90 Tage")
+    expect(filterSummary("Letzte 90 Tage", { ...base, kind: "training" })).toBe(
+      "Letzte 90 Tage · Training"
+    )
+    expect(filterSummary("Letzte 90 Tage", { ...base, compareLabel: "Zeitraum davor" })).toBe(
+      "Letzte 90 Tage · mit Zeitraum davor"
+    )
+    expect(
+      filterSummary("Alles", { kind: "competition", compareLabel: null, includeProbeOnly: false })
+    ).toBe("Alles · Wettkampf · ohne Probe-Training")
   })
 
   it("Frei nur mit zwei Tagen, von nicht nach bis", () => {
@@ -102,19 +128,25 @@ describe("Filter und Kopf (D5, D14)", () => {
       })
     )
 
-  it("Art, nur Probe, Familie erst ab zwei Familien, Vergleich als Chip mit „×“", () => {
+  it("eine Zeile: Familie (erst ab zwei) und der Chip; Art, Probe-Training und Vergleich im Blatt (U2, D3)", () => {
     const html = controls({}, null)
-    expect(html).toContain('aria-label="Art"')
-    expect(html).toContain("mit Training nur aus Probe")
+    expect(html).not.toContain('aria-label="Art"')
+    expect(html).not.toContain("mit Training nur aus Probe")
     expect(html).not.toContain('aria-label="Familie"')
     expect(html).not.toContain("data-compare-chip")
-    expect(controls({}, null, 2)).toContain('aria-label="Familie"')
+    expect(html).toMatch(/data-period-chip="true"[^>]*>Letzte 90 Tage</)
+    const two = controls({}, null, 2)
+    expect(two).toContain('aria-label="Familie"')
+    // die Familie vor dem Chip
+    expect(two.indexOf('aria-label="Familie"')).toBeLessThan(two.indexOf("data-period-chip"))
     const compared = controls(
-      { compare: { type: "previous" } },
+      { compare: { type: "previous" }, kind: "training" },
       { ...RANGE, label: "Zeitraum davor" }
     )
-    expect(compared).toMatch(/data-compare-chip="true"[^>]*>mit Zeitraum davor/)
-    expect(compared).toContain('aria-label="Vergleich entfernen"')
+    expect(compared).toMatch(
+      /data-period-chip="true"[^>]*>Letzte 90 Tage · Training · mit Zeitraum davor</
+    )
+    expect(compared).not.toContain('aria-label="Vergleich entfernen"')
   })
 
   it("Kopf: Titel, Metazeile, Filter, Ergebnis nur auf dem Telefon, Satz", () => {

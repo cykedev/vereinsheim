@@ -1,7 +1,6 @@
 "use client"
 
 import { cn } from "@vereinsheim/lib/utils"
-import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 import type { ReactNode } from "react"
 
 import { CardFilters } from "../controls/CardFilters"
@@ -22,8 +21,8 @@ export interface PeriodControlsProps {
 }
 
 /**
- * Filter im Kopf der Seite eines Zeitraums (D4–D6): der Zeitraum-Wähler, der Vergleich als Chip mit „×“, Familie,
- * Art und „mit Training nur aus Probe“. Bricht auf dem Telefon in mehrere Zeilen um.
+ * Filter im Kopf der Seite eines Zeitraums in einer Zeile (U2, D3): die Familie als Segment, sie wechselt man am
+ * häufigsten, dann der Chip, der das Blatt „Filter“ öffnet (Zeitraum, Vergleich, Art, Trainings nur aus Probe).
  */
 export function PeriodControls({
   state,
@@ -34,61 +33,33 @@ export function PeriodControls({
   timeZone,
   families,
 }: PeriodControlsProps) {
-  const clear: CompareChoice = { type: "none" }
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
   return (
     <div data-period-controls className="flex flex-wrap items-center gap-2">
-      <PeriodPicker
-        choice={state.choice}
-        compare={state.compare}
-        range={range}
-        named={named}
-        timeZone={timeZone}
-        onApply={(choice, compare) => {
-          if (JSON.stringify(choice) !== JSON.stringify(state.choice)) {
-            dispatch({ type: "setChoice", choice })
-          }
-          dispatch({ type: "setCompare", compare })
-        }}
-      />
-      {compareRange && (
-        <span
-          data-compare-chip
-          className="inline-flex items-center gap-1 rounded-full border border-line-strong py-1 pr-1 pl-3 text-[13px] text-foreground-2"
-        >
-          {`mit ${compareRange.label}`}
-          <button
-            type="button"
-            aria-label="Vergleich entfernen"
-            onClick={() => dispatch({ type: "setCompare", compare: clear })}
-            className="inline-flex size-7 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              className="size-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.2}
-              strokeLinecap="round"
-            >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
-        </span>
-      )}
       <CardFilters
         family={state.family}
         families={families}
-        kind={state.kind}
         onFamily={(family) => dispatch({ type: "setFamily", family })}
-        onKind={(kind) => dispatch({ type: "setKind", kind })}
       />
-      <ToggleChip
-        pressed={state.includeProbeOnly}
-        onPressedChange={(include) => dispatch({ type: "setIncludeProbeOnly", include })}
-      >
-        mit Training nur aus Probe
-      </ToggleChip>
+      <PeriodPicker
+        choice={state.choice}
+        compare={state.compare}
+        kind={state.kind}
+        includeProbeOnly={state.includeProbeOnly}
+        compareLabel={compareRange?.label ?? null}
+        range={range}
+        named={named}
+        timeZone={timeZone}
+        onApply={(next) => {
+          // nur, was sich ändert: eine neue Wahl setzt sonst die Wahl im Verlauf zurück
+          if (!same(next.choice, state.choice)) dispatch({ type: "setChoice", choice: next.choice })
+          if (!same(next.compare, state.compare))
+            dispatch({ type: "setCompare", compare: next.compare })
+          if (next.kind !== state.kind) dispatch({ type: "setKind", kind: next.kind })
+          if (next.includeProbeOnly !== state.includeProbeOnly)
+            dispatch({ type: "setIncludeProbeOnly", include: next.includeProbeOnly })
+        }}
+      />
     </div>
   )
 }

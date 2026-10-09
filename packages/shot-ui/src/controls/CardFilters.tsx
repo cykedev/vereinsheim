@@ -15,9 +15,10 @@ export interface CardFiltersProps {
   family: string
   /** Disziplin-Familien, die es gibt; erst ab zwei ein Umschalter */
   families: readonly { value: string; label: string }[]
-  kind: CardKind
+  /** Art; ohne `onKind` kein Umschalter (im Fortschritt steht die Art im Blatt „Filter“, U2) */
+  kind?: CardKind
   onFamily: (family: string) => void
-  onKind: (kind: CardKind) => void
+  onKind?: (kind: CardKind) => void
 }
 
 /**
@@ -30,7 +31,9 @@ export function CardFilters({ family, families, kind, onFamily, onKind }: CardFi
       {families.length > 1 && (
         <Segmented label="Familie" value={family} options={families} onChange={onFamily} />
       )}
-      <Segmented label="Art" value={kind} options={KIND_OPTIONS} onChange={onKind} />
+      {onKind && (
+        <Segmented label="Art" value={kind ?? "all"} options={KIND_OPTIONS} onChange={onKind} />
+      )}
     </>
   )
 }

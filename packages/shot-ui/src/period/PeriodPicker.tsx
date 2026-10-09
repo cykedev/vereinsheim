@@ -5,6 +5,8 @@ import { cn } from "@vereinsheim/lib/utils"
 import { Sheet } from "@vereinsheim/ui/design2/sheet"
 import { useState } from "react"
 
+import { KIND_OPTIONS } from "../controls/CardFilters"
+import type { CardKind } from "./state"
 import {
   PREVIOUS_LABEL,
   ROLLING_CHOICES,
@@ -14,15 +16,51 @@ import {
   type PeriodChoice,
 } from "./calendar"
 
+/** was das Blatt „Filter“ setzt (U2, D3) */
+export interface PeriodFilters {
+  choice: PeriodChoice
+  compare: CompareChoice
+  kind: CardKind
+  includeProbeOnly: boolean
+}
+
 export interface PeriodPickerProps {
   choice: PeriodChoice
   compare: CompareChoice
+  /** Art der Scheiben (Alle, Training, Wettkampf) */
+  kind: CardKind
+  /** Trainings nur aus Probe mitzählen (Vorgabe ja) */
+  includeProbeOnly: boolean
+  /** Name des gewählten Vergleichs für den Chip; null ohne Vergleich */
+  compareLabel?: string | null
   /** der Zeitraum der Wahl: sein Name steht auf dem Chip, seine Tage sind die Vorgabe für „Frei“ */
   range: DateRange
   named: readonly NamedPeriod[]
   timeZone: string
-  onApply: (choice: PeriodChoice, compare: CompareChoice) => void
+  onApply: (filters: PeriodFilters) => void
   className?: string
+}
+
+/**
+ * Was der Chip zeigt (U2, D3): der Zeitraum und, was von der Vorgabe abweicht: die Art, ein Vergleich, ohne Trainings
+ * nur aus Probe. „Letzte 90 Tage · Training · mit Zeitraum davor“
+ */
+export function filterSummary(
+  label: string,
+  {
+    kind,
+    compareLabel,
+    includeProbeOnly,
+  }: { kind: CardKind; compareLabel: string | null; includeProbeOnly: boolean }
+): string {
+  return [
+    label,
+    kind === "all" ? null : (KIND_OPTIONS.find((o) => o.value === kind)?.label ?? null),
+    compareLabel ? `mit ${compareLabel}` : null,
+    includeProbeOnly ? null : "ohne Probe-Training",
+  ]
+    .filter(Boolean)
+    .join(" · ")
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
@@ -45,13 +83,17 @@ const optionClass =
   "flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-[14px] hover:bg-surface-2 has-[:checked]:bg-accent-wash has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring"
 
 /**
- * Zeitraum-Wähler (Plan L3, D4, D6): ein Chip mit dem Namen des Zeitraums öffnet ein Blatt (auf dem Telefon von
- * unten) mit den rollenden Vorgaben, den benannten Zeiträumen, „Frei“ mit zwei Tagen und „Vergleichen mit“. Die
- * Wahl gilt erst mit „Übernehmen“. „Als Zeitraum speichern“ kommt mit L6.
+ * Blatt „Filter“ (Plan L3, D4, D6; U2, D3): ein Chip mit dem Zeitraum und dem, was abweicht, öffnet ein Blatt (auf dem
+ * Telefon von unten) mit den rollenden Vorgaben, den benannten Zeiträumen, „Frei“ mit zwei Tagen, „Vergleichen mit“,
+ * der Art und „Trainings nur aus Probe mitzählen“. Die Wahl gilt erst mit „Übernehmen“. „Als Zeitraum speichern“
+ * kommt mit L6.
  */
 export function PeriodPicker({
   choice,
   compare,
+  kind,
+  includeProbeOnly,
+  compareLabel = null,
   range,
   named,
   timeZone,
@@ -61,6 +103,8 @@ export function PeriodPicker({
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(choice)
   const [draftCompare, setDraftCompare] = useState(compare)
+  const [draftKind, setDraftKind] = useState(kind)
+  const [draftProbe, setDraftProbe] = useState(includeProbeOnly)
   const iso = (ms: number) => formatIsoDate(new Date(ms), timeZone)
   const [free, setFree] = useState(() =>
     choice.type === "free"
@@ -70,6 +114,8 @@ export function PeriodPicker({
   const show = () => {
     setDraft(choice)
     setDraftCompare(compare)
+    setDraftKind(kind)
+    setDraftProbe(includeProbeOnly)
     // nicht übernommene freie Tage gelten nicht: immer vom aktuellen Zeitraum aus beginnen
     setFree(
       choice.type === "free"
@@ -119,7 +165,7 @@ export function PeriodPicker({
           className
         )}
       >
-        {range.label}
+        {filterSummary(range.label, { kind, compareLabel, includeProbeOnly })}
         <svg
           viewBox="0 0 24 24"
           aria-hidden="true"
@@ -133,7 +179,7 @@ export function PeriodPicker({
           <path d="M6 9l6 6 6-6" />
         </svg>
       </button>
-      <Sheet open={open} onClose={() => setOpen(false)} title="Zeitraum">
+      <Sheet open={open} onClose={() => setOpen(false)} title="Filter">
         <div data-period-picker className="grid gap-4">
           <fieldset className="grid gap-1">
             <legend className="mb-1 text-[13px] font-semibold text-muted-foreground">
@@ -210,12 +256,37 @@ export function PeriodPicker({
               Scheiben, die in beiden Zeiträumen liegen, zählen nur im gewählten.
             </p>
           </fieldset>
+          <fieldset className="grid gap-1">
+            <legend className="mb-1 text-[13px] font-semibold text-muted-foreground">Art</legend>
+            {KIND_OPTIONS.map((option) =>
+              radio(
+                "art",
+                draftKind === option.value,
+                () => setDraftKind(option.value),
+                option.label
+              )
+            )}
+          </fieldset>
+          <label className={optionClass}>
+            <input
+              type="checkbox"
+              checked={draftProbe}
+              onChange={(event) => setDraftProbe(event.target.checked)}
+              className="size-4 accent-[var(--primary)]"
+            />
+            <span>Trainings nur aus Probe mitzählen</span>
+          </label>
           <button
             type="button"
             disabled={!valid}
             onClick={() => {
               const itself = draftCompare.type === "named" && same(current, draftCompare)
-              onApply(current, itself ? { type: "none" } : draftCompare)
+              onApply({
+                choice: current,
+                compare: itself ? { type: "none" } : draftCompare,
+                kind: draftKind,
+                includeProbeOnly: draftProbe,
+              })
               setOpen(false)
             }}
             className="cursor-pointer justify-self-end rounded-full bg-primary px-4 py-2 text-[14px] font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60"
