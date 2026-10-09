@@ -90,6 +90,13 @@ export interface PeriodModel {
   trend: { points: TrendPoint[]; spread: number | null }
   /** Werte der Kennzahl im Vergleichszeitraum, für den Verlauf; null ohne Vergleich */
   compareValues: CardValue[] | null
+  /**
+   * Scheiben, die in beiden Zeiträumen liegen: Sie zählen nur im Zeitraum, nicht im Vergleich, denn ein Test
+   * braucht zwei getrennte Stichproben (Review, 9. Oktober 2026)
+   */
+  compareShared: number
+  /** Scheiben nur aus Probe im Zeitraum, die ohne den Schalter nicht zählen (L2, D8) */
+  excludedProbeOnly: number
   /** Vergleich im Ø je Schuss (Ergebnis-Box, Satz): a der Vergleich, b der Zeitraum; Δ = Zeitraum − Vergleich */
   comparison: PeriodComparison | null
   view: "cards" | "months"
@@ -124,8 +131,43 @@ export interface PeriodModel {
     best: (CardValue & { shots: number }) | null
   }
   tiles: PeriodTile[]
-  /** gewählte oder neueste Scheibe mit ihrem Punkt im Verlauf; null ohne Scheiben */
-  reading: { card: PeriodCard; point: TrendPoint | null; chosen: boolean } | null
+  /**
+   * gewählte oder, ohne Wahl, die neueste Scheibe mit Ø je Schuss (dieselbe wie im Satz und bei „gegen deinen
+   * Schnitt“), mit ihrem Punkt im Verlauf; null ohne Scheiben
+   */
+  reading: PeriodReading | null
+}
+
+export interface PeriodReading {
+  card: PeriodCard
+  point: TrendPoint | null
+  chosen: boolean
+}
+
+/** eine Scheibe nur aus Probe (Training): eine Regel für Modell und Bausteine */
+export const isProbeOnly = (card: PeriodCard) =>
+  card.shots.length > 0 && card.shots.every((s) => s.kind === "probe")
+
+/**
+ * Die Ablesung zu einer Wahl: die gewählte Scheibe, wenn sie im Zeitraum liegt, sonst die neueste mit Ø je Schuss
+ * (wie im Satz und bei „gegen deinen Schnitt“), sonst die neueste. Getrennt vom Modell, damit eine neue Wahl es
+ * nicht neu rechnet.
+ */
+export function periodReading(
+  model: Pick<PeriodModel, "cards" | "trend" | "ownAverage">,
+  chosen: string | null
+): PeriodReading | null {
+  const picked = chosen ? model.cards.find((c) => c.id === chosen) : undefined
+  const newest = model.ownAverage
+    ? model.cards.find((c) => c.id === model.ownAverage?.last.id)
+    : undefined
+  const card = picked ?? newest ?? model.cards.at(-1)
+  if (!card) return null
+  return {
+    card,
+    point: model.trend.points.find((p) => p.id === card.id) ?? null,
+    chosen: Boolean(picked),
+  }
 }
 
 const mean = (values: readonly CardValue[]) =>
@@ -175,7 +217,9 @@ export function periodModel(input: {
   const within = (r: DateRange) =>
     input.cards.filter((c) => inRange(c.startedAtMs, r) && ofKind(c)).sort(byStart)
   const cards = within(range)
-  const otherCards = other ? within(other) : null
+  const inPeriod = new Set(cards.map((c) => c.id))
+  const otherAll = other ? within(other) : null
+  const otherCards = otherAll ? otherAll.filter((c) => !inPeriod.has(c.id)) : null
 
   const chartMetric = metricByKey(state.metric) as Readonly<MetricDefinition>
   const values = cardValues(cards, chartMetric, scoring, options)
@@ -198,7 +242,6 @@ export function periodModel(input: {
   // Scheiben der Familie in der Art der Seite, auch vor dem Zeitraum: für den Abstand zum Schnitt davor und
   // für „gegen deinen Schnitt“ (Platz unter den letzten 50, nicht nur im Zeitraum)
   const family = input.cards.filter(ofKind).sort(byStart)
-  const inPeriod = new Set(cards.map((c) => c.id))
   const familyValues = cardValues(family, chartMetric, scoring, options)
   const deltas = new Map<string, { delta: number; n: number }>()
   familyValues.forEach((value, i) => {
@@ -249,10 +292,7 @@ export function periodModel(input: {
     ? familyPerShot.slice(0, familyPerShot.findIndex((v) => v.id === newest.id) + 1)
     : []
 
-  const chosenCard = state.chosen ? cards.find((c) => c.id === state.chosen) : undefined
-  const readingCard = chosenCard ?? cards.at(-1)
-
-  return {
+  const model: Omit<PeriodModel, "reading"> = {
     range,
     compareRange: other,
     cards,
@@ -260,6 +300,8 @@ export function periodModel(input: {
     values,
     trend,
     compareValues,
+    compareShared: otherAll ? otherAll.length - (otherCards?.length ?? 0) : 0,
+    excludedProbeOnly: state.includeProbeOnly ? 0 : cards.filter(isProbeOnly).length,
     comparison: tiles[0].compare?.comparison ?? null,
     view: other ? "cards" : (state.view ?? (values.length >= MONTH_VIEW_FROM ? "months" : "cards")),
     months,
@@ -277,12 +319,6 @@ export function periodModel(input: {
       best: best ? { ...best, shots: best.n } : null,
     },
     tiles,
-    reading: readingCard
-      ? {
-          card: readingCard,
-          point: trend.points.find((p) => p.id === readingCard.id) ?? null,
-          chosen: Boolean(chosenCard),
-        }
-      : null,
   }
+  return { ...model, reading: periodReading(model, state.chosen) }
 }

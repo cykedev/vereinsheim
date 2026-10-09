@@ -114,7 +114,7 @@ export function timeCards({
               </div>
               <Note>
                 {trend
-                  ? `Trend: Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss (je Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)}), ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (Mann-Kendall, 95 %)` : "nicht klar"}.`
+                  ? `Trend: Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss (je Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe), ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (Mann-Kendall, 95 %)` : "nicht klar"}.`
                   : "Einen Trend gibt es ab 10 Schuss."}
               </Note>
             </>

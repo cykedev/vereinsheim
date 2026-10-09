@@ -114,16 +114,18 @@ export function PeriodInsights({
                     : "ab 3 Scheiben in den 30 Tagen davor",
                 ],
                 own.average && ["Abstand", formatSigned(own.average.delta, 2)],
-                [
-                  `Platz unter deinen letzten ${own.pool}`,
-                  own.percentile === null ? "ab 10 Scheiben" : percentText(own.percentile),
-                ],
+                own.percentile === null
+                  ? ["Platz unter deinen letzten 50", "ab 10 Scheiben"]
+                  : [`Platz unter deinen letzten ${own.pool}`, percentText(own.percentile)],
               ]}
             />
           ) : (
             <Note>Keine Scheibe im Zeitraum.</Note>
           )}
-          <Note>Im Ø je Schuss; die neueste Scheibe im Zeitraum gegen alle Scheiben davor.</Note>
+          <Note>
+            Im Ø je Schuss, über alle deine Scheiben, nicht nur im Zeitraum: der Schnitt über die 30
+            Tage davor, der Platz unter den letzten 50.
+          </Note>
         </AnalysisCard>
         <AnalysisCard help="rekorde" explain={explain} onHelp={onHelp}>
           {rows.length ? (
@@ -145,6 +147,11 @@ export function PeriodInsights({
                     </span>
                     <button
                       type="button"
+                      aria-label={
+                        here
+                          ? `${row.label} vom ${date(row.record.atMs)} zeigen`
+                          : `${row.label} vom ${date(row.record.atMs)}: außerhalb des Zeitraums`
+                      }
                       disabled={!here || !onChoose}
                       title={here ? undefined : "außerhalb des Zeitraums"}
                       onClick={() => onChoose?.(row.record.cardId)}

@@ -85,18 +85,26 @@ export function formatMonthYear(date: Date, timeZone: string): string {
   return dateTimeFormat({ month: "long", year: "numeric" }, timeZone).format(date)
 }
 
+/** je Zeitzone ein Formatter für die Wanduhr: ein `Intl.DateTimeFormat` je Aufruf wäre teuer */
+const wallClocks = new Map<string, Intl.DateTimeFormat>()
+
 /** Versatz der Zone zu UTC in ms zum Zeitpunkt `ms` (Wanduhr der Zone minus UTC). */
 function zoneOffsetMs(ms: number, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    hourCycle: "h23",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).formatToParts(new Date(ms))
+  let clock = wallClocks.get(timeZone)
+  if (!clock) {
+    clock = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+    wallClocks.set(timeZone, clock)
+  }
+  const parts = clock.formatToParts(new Date(ms))
   const part = (type: Intl.DateTimeFormatPartTypes) =>
     Number(parts.find((p) => p.type === type)?.value ?? 0)
   const wall = Date.UTC(
@@ -112,8 +120,9 @@ function zoneOffsetMs(ms: number, timeZone: string): number {
 
 /**
  * Beginn des Kalendertags `isoDate` ("2026-07-15") in der Zone, in ms (UTC). Der Versatz wird an der
- * gefundenen Zeit nachgeprüft, damit es auch am Tag der Zeitumstellung stimmt (der Tag beginnt dann noch in
- * der Zeit davor).
+ * gefundenen Zeit nachgeprüft, damit es auch am Tag der Zeitumstellung stimmt, wenn sie wie in Mitteleuropa
+ * nachts nach Mitternacht liegt (der Tag beginnt dann noch in der Zeit davor). In Zonen, die genau um
+ * Mitternacht umstellen (etwa America/Santiago), kann der Beginn an diesem Tag um die Verschiebung abweichen.
  */
 export function zonedDayStartMs(isoDate: string, timeZone: string): number {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate)

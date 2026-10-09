@@ -8,7 +8,7 @@ import type { PeriodModel } from "./model"
 import { verdictText } from "./sentence"
 
 export interface PeriodResultProps {
-  model: Pick<PeriodModel, "summary" | "comparison" | "compareRange">
+  model: Pick<PeriodModel, "summary" | "comparison" | "compareRange" | "compareShared">
   timeZone: string
   /** Umschalter ganze Ringe/Zehntel */
   scoring: ReactNode
@@ -22,7 +22,7 @@ export interface PeriodResultProps {
  * der Unterschied mit Urteil („bedeutsam“ nur neben einem Urteil). Auf dem Telefon im Kopf, ab 768 px als Box.
  */
 export function PeriodResult({ model, timeZone, scoring, onHelp, className }: PeriodResultProps) {
-  const { summary, comparison, compareRange } = model
+  const { summary, comparison, compareRange, compareShared } = model
   const best = summary.best
   return (
     <div className={cn("grid content-start gap-3", className)}>
@@ -73,6 +73,11 @@ export function PeriodResult({ model, timeZone, scoring, onHelp, className }: Pe
               />
             )}
           </div>
+        )}
+        {compareRange && compareShared > 0 && (
+          <p data-compare-shared className="text-[12.5px] text-muted-foreground">
+            {`${compareShared} ${compareShared === 1 ? "Scheibe liegt" : "Scheiben liegen"} in beiden Zeiträumen und ${compareShared === 1 ? "zählt" : "zählen"} nur hier.`}
+          </p>
         )}
       </div>
       {scoring}

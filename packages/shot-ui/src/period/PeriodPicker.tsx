@@ -70,7 +70,12 @@ export function PeriodPicker({
   const show = () => {
     setDraft(choice)
     setDraftCompare(compare)
-    if (choice.type !== "free") setFree({ from: iso(range.fromMs), to: iso(range.toMs - 1) })
+    // nicht übernommene freie Tage gelten nicht: immer vom aktuellen Zeitraum aus beginnen
+    setFree(
+      choice.type === "free"
+        ? { from: choice.from, to: choice.to }
+        : { from: iso(range.fromMs), to: iso(range.toMs - 1) }
+    )
     setOpen(true)
   }
   const freeChoice: PeriodChoice = { type: "free", from: free.from, to: free.to }
@@ -82,13 +87,15 @@ export function PeriodPicker({
     checked: boolean,
     onSelect: () => void,
     label: string,
-    sub?: string
+    sub?: string,
+    disabled = false
   ) => (
-    <label key={`${group}:${label}`} className={optionClass}>
+    <label key={`${group}:${label}`} className={cn(optionClass, disabled && "opacity-60")}>
       <input
         type="radio"
         name={group}
         checked={checked}
+        disabled={disabled}
         onChange={onSelect}
         className="size-4 accent-[var(--primary)]"
       />
@@ -104,6 +111,7 @@ export function PeriodPicker({
       <button
         type="button"
         aria-haspopup="dialog"
+        aria-expanded={open}
         data-period-chip
         onClick={show}
         className={cn(
@@ -186,21 +194,28 @@ export function PeriodPicker({
               PREVIOUS_LABEL,
               "gleich lang, direkt davor"
             )}
-            {named.map((period) =>
-              radio(
+            {named.map((period) => {
+              // ein Zeitraum gegen sich selbst wäre kein Vergleich
+              const itself = same(current, { type: "named", id: period.id })
+              return radio(
                 "vergleich",
                 same(draftCompare, { type: "named", id: period.id }),
                 () => setDraftCompare({ type: "named", id: period.id }),
                 period.name,
-                namedSpan(period, timeZone)
+                itself ? "der gewählte Zeitraum" : namedSpan(period, timeZone),
+                itself
               )
-            )}
+            })}
+            <p className="pl-2 text-[12.5px] text-muted-foreground">
+              Scheiben, die in beiden Zeiträumen liegen, zählen nur im gewählten.
+            </p>
           </fieldset>
           <button
             type="button"
             disabled={!valid}
             onClick={() => {
-              onApply(current, draftCompare)
+              const itself = draftCompare.type === "named" && same(current, draftCompare)
+              onApply(current, itself ? { type: "none" } : draftCompare)
               setOpen(false)
             }}
             className="cursor-pointer justify-self-end rounded-full bg-primary px-4 py-2 text-[14px] font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60"

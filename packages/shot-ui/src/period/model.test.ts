@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { NamedPeriod } from "./calendar"
-import { periodModel, PERIOD_TILE_KEYS } from "./model"
+import { isProbeOnly, periodModel, periodReading, PERIOD_TILE_KEYS } from "./model"
 import { periodSentence, verdictText } from "./sentence"
 import { initialPeriodState, type PeriodState } from "./state"
 import { NOW, periodCard, TZ } from "./testSeason"
@@ -127,7 +127,7 @@ describe("Vergleich und Satz", () => {
     const m = model(now)
     expect(m.ownAverage?.average?.delta).toBeCloseTo(-2.5, 12)
     expect(periodSentence(m)).toBe(
-      "Deine neueste Scheibe lag 2,50 unter deinem Schnitt der 30 Tage davor."
+      "Deine neueste Scheibe lag im Ø je Schuss 2,50 unter deinem Schnitt der 30 Tage davor."
     )
     expect(periodSentence(model(now.slice(0, 2)))).toBeNull()
   })
@@ -236,5 +236,71 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
       chosen: false,
     })
     expect(model([]).reading).toBeNull()
+  })
+})
+
+describe("Befunde aus dem Review (9. Oktober 2026)", () => {
+  const probe = periodCard("p", 0.5, [100, 100, 100], { probe: true })
+
+  it("überlappende Zeiträume: der Vergleich ohne die gemeinsamen Scheiben", () => {
+    // „Letzte 12 Monate“ enthält „Vorbereitung“ ganz: ohne die gemeinsamen bleibt im Vergleich nichts
+    const may = [100, 99, 98, 97, 96].map((t, i) => periodCard(`m${i}`, 120 - i, [t]))
+    const m = model([...THREE, ...may], {
+      choice: { type: "rolling", days: 365 },
+      compare: { type: "named", id: "lm" },
+    })
+    expect(m.compareShared).toBe(5)
+    expect(m.compareValues).toEqual([])
+    expect(m.comparison).toBeNull()
+    expect(periodSentence(m)).toBe(
+      "Für einen Vergleich mit „Vorbereitung“ sind es zu wenige Scheiben."
+    )
+    // ohne Überlappung zählt nichts doppelt
+    expect(model(THREE, { compare: { type: "previous" } }).compareShared).toBe(0)
+  })
+
+  it("eine neueste Scheibe: Ablesung, Satz und „gegen deinen Schnitt“ meinen dieselbe", () => {
+    // die Scheibe nur aus Probe zählt ohne den Schalter nicht: die neueste mit Wert ist c
+    const m = model([...THREE, probe])
+    expect(m.reading?.card.id).toBe("c")
+    expect(m.ownAverage?.last.id).toBe("c")
+    expect(model([...THREE, probe], { includeProbeOnly: true }).reading?.card.id).toBe("p")
+  })
+
+  it("Ergebnis, Vergleich und eigener Schnitt bleiben im Ø je Schuss, auch wenn der Verlauf σ zeigt", () => {
+    const cards = [
+      ...THREE.map((c) => ({ ...c })),
+      ...[95, 96, 97].map((t, i) => periodCard(`s${i}`, 4 + i, [t, t, t])),
+    ]
+    const mean = model(cards)
+    const sigma = model(cards, { metric: "group.sigma" })
+    expect(sigma.metric.key).toBe("group.sigma")
+    expect(sigma.summary).toEqual(mean.summary)
+    expect(sigma.ownAverage).toEqual(mean.ownAverage)
+    const now = [60, 70, 80, 90, 100].map((t, i) =>
+      periodCard(`n${i}`, 10 + i, [t, t, t], { spreadUm: 100 * (i + 1) })
+    )
+    const before = [10, 20, 30, 40, 50].map((t, i) =>
+      periodCard(`v${i}`, 100 + i, [t, t, t], { spreadUm: 100 })
+    )
+    const compared = { compare: { type: "previous" } as const }
+    expect(model([...now, ...before], { ...compared, metric: "group.sigma" }).comparison).toEqual(
+      model([...now, ...before], compared).comparison
+    )
+  })
+
+  it("nur Probe: eine Regel; die Zahl der nicht gezählten Scheiben im Modell", () => {
+    expect(isProbeOnly(probe)).toBe(true)
+    expect(isProbeOnly(THREE[0])).toBe(false)
+    expect(isProbeOnly(periodCard("leer", 1, []))).toBe(false)
+    expect(model([...THREE, probe]).excludedProbeOnly).toBe(1)
+    expect(model([...THREE, probe], { includeProbeOnly: true }).excludedProbeOnly).toBe(0)
+  })
+
+  it("Ablesung aus dem Modell und einer Wahl, ohne das Modell neu zu rechnen", () => {
+    const m = model(THREE)
+    expect(periodReading(m, "a")).toMatchObject({ card: { id: "a" }, chosen: true })
+    expect(periodReading(m, null)).toMatchObject({ card: { id: "c" }, chosen: false })
+    expect(periodReading(m, "weg")).toMatchObject({ card: { id: "c" }, chosen: false })
   })
 })

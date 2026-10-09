@@ -100,7 +100,7 @@ export function observations(input: AnalysisInput): Observation[] {
     const perSeries = formatSigned(trend.perTenShots * 10, 1)
     let text = trend.clear
       ? `Über die Scheibe klar ${trend.direction === "up" ? "steigend" : "fallend"}: Der Wert je Schuss ${trend.direction === "up" ? "steigt" : "sinkt"} um ${formatValue(Math.abs(trend.perTenShots), 2)} Ringe alle zehn Schuss, eine Zehnerserie um ${formatValue(Math.abs(trend.perTenShots * 10), 1)} Ringe.`
-      : `Kein klarer Trend über die Scheibe (Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss, je Zehnerserie ${perSeries}).`
+      : `Kein klarer Trend über die Scheibe (Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss, je Zehnerserie ${perSeries} Ringe).`
     const tired = fatigue(base, scoring)
     if (tired) {
       text += ` Die letzten zehn Schuss: ${formatSigned(tired.deltaRings, 2)} Ringe gegen die ersten zehn${

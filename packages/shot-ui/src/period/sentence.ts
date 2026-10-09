@@ -52,7 +52,7 @@ export function periodSentence(model: PeriodModel): string | null {
   const average = model.ownAverage?.average
   if (!average) return null
   if (Math.abs(average.delta) < LEVEL) {
-    return "Deine neueste Scheibe lag genau auf deinem Schnitt der 30 Tage davor."
+    return "Deine neueste Scheibe lag im Ø je Schuss genau auf deinem Schnitt der 30 Tage davor."
   }
-  return `Deine neueste Scheibe lag ${formatValue(Math.abs(average.delta), 2)} ${average.delta > 0 ? "über" : "unter"} deinem Schnitt der 30 Tage davor.`
+  return `Deine neueste Scheibe lag im Ø je Schuss ${formatValue(Math.abs(average.delta), 2)} ${average.delta > 0 ? "über" : "unter"} deinem Schnitt der 30 Tage davor.`
 }

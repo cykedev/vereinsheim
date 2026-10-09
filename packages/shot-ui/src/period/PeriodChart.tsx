@@ -17,8 +17,8 @@ import {
   ValuesTable,
 } from "../analysis/charts/ChartRuler"
 import { ChartSvg, crisp, niceStep } from "../analysis/charts/frame"
-import { formatValue, unitText } from "../format"
-import type { PeriodModel } from "./model"
+import { formatSigned, formatValue, unitText } from "../format"
+import { isProbeOnly, type PeriodModel } from "./model"
 
 const HEIGHT = 240
 const PAD = { left: 44, right: 14, top: 14, bottom: 26 }
@@ -36,6 +36,7 @@ export type PeriodChartModel = Pick<
   | "compareRange"
   | "metric"
   | "cards"
+  | "deltas"
 >
 
 export interface PeriodChartProps {
@@ -44,7 +45,7 @@ export interface PeriodChartProps {
   timeZone: string
   /** gewählte Scheibe der Seite (Liste, Ablesung) */
   chosen: string | null
-  /** das Lineal wählt eine Scheibe (null: keine) */
+  /** das Lineal wählt eine Scheibe (null: keine), ohne Umschalten (Aktion „pick“) */
   onChoose: (id: string | null) => void
 }
 
@@ -97,12 +98,9 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
         : values.map((v) => xTime(v.atMs))
   const preset =
     mode === "months" || chosen === null ? -1 : values.findIndex((v) => v.id === chosen)
-  // das Lineal wählt die Scheibe der Seite (nur „je Scheibe“ und Vergleich), „je Monat“ liest es nur ab; gemeldet
-  // wird nur, was sich ändert: ein zweites „choose“ mit derselben Scheibe höbe die Wahl auf
+  // das Lineal wählt die Scheibe der Seite (nur „je Scheibe“ und Vergleich), „je Monat“ liest es nur ab
   const ruler = useRuler(xs, width, preset < 0 ? null : preset, (i) => {
-    if (mode === "months") return
-    const id = i === null ? null : (values[i]?.id ?? null)
-    if (id !== chosen) onChoose(id)
+    if (mode !== "months") onChoose(i === null ? null : (values[i]?.id ?? null))
   })
 
   const enough = mode === "months" ? months.length >= 1 : values.length >= 2
@@ -120,7 +118,10 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
       ? months.flatMap((m) => [m.median, m.p10, m.p90].filter((v): v is number => v !== null))
       : [
           ...values.map((v) => v.value),
-          ...trend.points.flatMap((p) => (p.band ? [p.band.low, p.band.high] : [])),
+          // das Band nur, wo es gezeichnet wird
+          ...(mode === "cards"
+            ? trend.points.flatMap((p) => (p.band ? [p.band.low, p.band.high] : []))
+            : []),
           ...(compare ?? []).map((v) => v.value),
         ]
   const lo = Math.min(...ys)
@@ -161,13 +162,17 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
   const date = (ms: number) => formatDateOnly(new Date(ms), timeZone)
   const cardText = (i: number) => {
     const v = values[i]
-    const p = trend.points[i]
     const card = kinds.get(v.id)
     const kind = card?.kind === "competition" ? "Wettkampf · " : ""
     const lead = mode === "compare" ? `Scheibe ${i + 1} · ` : ""
     const other =
       mode === "compare" && compare?.[i] ? ` · im Vergleich ${show(compare[i].value)}` : ""
-    return `${lead}${date(v.atMs)} · ${kind}${show(v.value)} · ${p.partial ? "Schnitt bisher" : "Schnitt der letzten fünf"} ${formatValue(p.mean, digits)}${other}`
+    // derselbe Abstand wie in Liste und Ablesung: zu den Scheiben davor, ohne sie selbst (Review, 9. Oktober 2026)
+    const delta = model.deltas.get(v.id)
+    const before = delta
+      ? `${formatSigned(delta.delta, digits)} zum Schnitt ${delta.n === 1 ? "der Scheibe" : `der ${delta.n} Scheiben`} davor`
+      : "erste Scheibe"
+    return `${lead}${date(v.atMs)} · ${kind}${show(v.value)} · ${before}${other}`
   }
   const monthText = (i: number) => {
     const m = months[i]
@@ -328,7 +333,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
             )}
             {pointsOf(values, atValue).map(([cx, cy], i) => {
               const card = kinds.get(values[i].id)
-              const probeOnly = card ? card.shots.every((s) => s.kind === "probe") : false
+              const probeOnly = card ? isProbeOnly(card) : false
               const competition = card?.kind === "competition"
               const picked = i === index
               return (
@@ -400,7 +405,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
             ? ["Monat", "Scheiben", "Median", "P10", "P90"]
             : mode === "compare"
               ? ["Scheibe", range.label, compareRange?.label ?? ""]
-              : ["Datum", metric.label, "Schnitt der letzten fünf"]
+              : ["Datum", metric.label, "Linie: Schnitt der letzten fünf mit ihr"]
         }
         rows={
           mode === "months"

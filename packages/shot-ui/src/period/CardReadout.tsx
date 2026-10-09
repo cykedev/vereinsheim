@@ -10,6 +10,7 @@ import { formatSigned, formatValue, unitText } from "../format"
 import { groupView } from "../geometry"
 import { hasPosition, probeOnlyAsMatch } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
+import { isProbeOnly } from "./model"
 
 export interface CardReadoutProps {
   card: PeriodCard
@@ -27,9 +28,6 @@ export interface CardReadoutProps {
   onOpen: (id: string) => void
   className?: string
 }
-
-const isProbeOnly = (card: PeriodCard) =>
-  card.shots.length > 0 && card.shots.every((s) => s.kind === "probe")
 
 /** „Training“, „Wettkampf“, „Training nur Probe“ */
 export const cardKindText = (card: PeriodCard) =>
@@ -127,7 +125,8 @@ export function CardReadout({
 }
 
 /**
- * Ablesezeile für das Telefon unter dem Verlauf (D9): „12.07. · 10,21 · +0,03 zum Schnitt“ und „Scheibe öffnen“.
+ * Ablesezeile für das Telefon unter dem Verlauf (D9): „12.07. · 10,21 · +0,03 zum Schnitt davor“ und „Scheibe
+ * öffnen“.
  */
 export function CardLine({
   card,
@@ -143,7 +142,7 @@ export function CardLine({
   const parts = [
     formatShortDay(new Date(card.startedAtMs), timeZone),
     value ? formatValue(value.value, metric.decimals) : "ohne Wert",
-    ...(value && delta ? [`${formatSigned(delta.delta, metric.decimals)} zum Schnitt`] : []),
+    ...(value && delta ? [`${formatSigned(delta.delta, metric.decimals)} zum Schnitt davor`] : []),
   ]
   return (
     <div

@@ -40,6 +40,8 @@ export type PeriodAction =
   | { type: "setMetric"; metric: PeriodMetricKey }
   | { type: "setView"; view: "cards" | "months" }
   | { type: "choose"; id: string | null }
+  /** wählen ohne Umschalten (das Lineal): dieselbe Scheibe noch einmal bleibt gewählt */
+  | { type: "pick"; id: string | null }
 
 export function initialPeriodState(
   partial: Partial<PeriodState> & { family: string }
@@ -82,5 +84,7 @@ export function periodReducer(state: PeriodState, action: PeriodAction): PeriodS
       return { ...state, view: action.view }
     case "choose":
       return { ...state, chosen: action.id === state.chosen ? null : action.id }
+    case "pick":
+      return { ...state, chosen: action.id }
   }
 }

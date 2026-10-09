@@ -60,6 +60,12 @@ describe("Zustand der Seite eines Zeitraums", () => {
       expect(periodReducer(chosen, action).chosen, action.type).toBe("k12")
   })
 
+  it("das Lineal wählt ohne Umschalten", () => {
+    expect(periodReducer(chosen, { type: "pick", id: "k12" }).chosen).toBe("k12")
+    expect(periodReducer(chosen, { type: "pick", id: "k3" }).chosen).toBe("k3")
+    expect(periodReducer(chosen, { type: "pick", id: null }).chosen).toBeNull()
+  })
+
   it("dieselbe Scheibe noch einmal hebt die Wahl auf, null auch", () => {
     expect(periodReducer(chosen, { type: "choose", id: "k12" }).chosen).toBeNull()
     expect(periodReducer(chosen, { type: "choose", id: null }).chosen).toBeNull()

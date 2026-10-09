@@ -66,7 +66,7 @@ describe("Analyse über den Zeitraum (D12)", () => {
     expect(html).toMatch(/Neueste Scheibe[\s\S]*?6,00 am 20\.09\.2026/)
     expect(html).toMatch(/Schnitt der 30 Tage davor[\s\S]*?8,50 \(4 Scheiben\)/)
     expect(html).toMatch(/Abstand[\s\S]*?−2,50/)
-    expect(html).toMatch(/Platz unter deinen letzten 5[\s\S]*?ab 10 Scheiben/)
+    expect(html).toMatch(/Platz unter deinen letzten 50[\s\S]*?ab 10 Scheiben/)
   })
 
   it("Rekorde in der Reihenfolge des Katalogs, außerhalb des Zeitraums nicht wählbar", () => {
@@ -80,6 +80,10 @@ describe("Analyse über den Zeitraum (D12)", () => {
       /data-record="R1:3"[\s\S]*?disabled=""[^>]*title="außerhalb des Zeitraums"/
     )
     expect(html).toMatch(/data-record="R8"[\s\S]*?zeigen<\/button>/)
+    expect(html).toMatch(
+      /aria-label="Ergebnis, 3 Schuss vom \d\d\.\d\d\.\d{4}: außerhalb des Zeitraums"/
+    )
+    expect(html).toMatch(/aria-label="beste Form \(Ø über fünf Scheiben\) vom [\d.]+ zeigen"/)
   })
 
   it("ohne Scheiben: Hinweise statt leerer Karten", () => {

@@ -53,6 +53,24 @@ describe("Zeitraum-Wähler (D4, D6)", () => {
     expect(html).toMatch(/type="date" disabled=""[^>]*value="2026-07-02"/)
   })
 
+  it("ein benannter Zeitraum ist kein Vergleich mit sich selbst", () => {
+    const named = renderToStaticMarkup(
+      h(PeriodPicker, {
+        choice: { type: "named", id: "lm" },
+        compare: { type: "none" },
+        range: RANGE,
+        named: NAMED,
+        timeZone: TZ,
+        onApply: () => {},
+      })
+    )
+    const own = named.split("<label").find((l) => l.includes("der gewählte Zeitraum"))
+    expect(own).toMatch(/<input type="radio" disabled=""[^>]*name="vergleich"/)
+    expect(own).toContain("Vorbereitung Landesmeisterschaft")
+    expect(named).toContain("Scheiben, die in beiden Zeiträumen liegen, zählen nur im gewählten.")
+    expect(named).toMatch(/aria-expanded="false"/)
+  })
+
   it("Frei nur mit zwei Tagen, von nicht nach bis", () => {
     expect(choiceValid({ type: "rolling", days: 30 })).toBe(true)
     expect(choiceValid({ type: "free", from: "2026-07-01", to: "2026-07-31" })).toBe(true)
@@ -148,6 +166,18 @@ describe("Ergebnis-Box (D13)", () => {
       /\+5,00<\/span> gegen Zeitraum davor · <span[^>]*>höher, besser · bedeutsam/
     )
     expect(html).toContain('data-help="zeitraum-vergleich"')
+  })
+
+  it("überlappende Zeiträume: die gemeinsamen Scheiben zählen nur im Zeitraum", () => {
+    const html = render(
+      model([...now, ...before], {
+        choice: { type: "rolling", days: 365 },
+        compare: { type: "named", id: "lm" },
+      })
+    )
+    // „Vorbereitung“ (Mai, Juni) enthält v0 … v4 (100 bis 104 Tage vor jetzt): alle auch im Jahr
+    expect(html).toContain("5 Scheiben liegen in beiden Zeiträumen und zählen nur hier.")
+    expect(html).toContain("gegen Vorbereitung Landesmeisterschaft: zu wenige Scheiben")
   })
 
   it("ohne Scheiben ein Strich", () => {

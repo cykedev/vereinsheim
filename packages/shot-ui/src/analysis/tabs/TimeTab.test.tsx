@@ -45,7 +45,7 @@ describe("Reiter Zeit und Verlauf, Diagramme", () => {
   it("Verlauf: der Trend-Satz aus dem Fachkern, breite Karte", () => {
     const trend = cardTrend(BASE, "decimal")!
     expect(cardText(html, "verlauf-und-trend")).toContain(
-      `Trend: Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss (je Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)}), ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"}` : "nicht klar"}`
+      `Trend: Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss (je Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe), ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"}` : "nicht klar"}`
     )
     expect(html).toMatch(/data-card="verlauf-und-trend" data-wide="true"/)
     expect(html).toMatch(/data-card="rhythmus" data-wide="true"/)

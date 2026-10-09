@@ -8,6 +8,7 @@ import { useId, useMemo, useState } from "react"
 
 import { formatSigned, formatValue } from "../format"
 import { cardKindText } from "./CardReadout"
+import { isProbeOnly } from "./model"
 
 export interface CardListProps {
   /** Scheiben des Zeitraums in ihrer Folge (älteste zuerst) */
@@ -97,9 +98,9 @@ export function CardList({
             const picked = chosen === card.id
             const date = formatShortDate(new Date(card.startedAtMs), timeZone)
             const choose = onChoose ? () => onChoose(card.id) : undefined
-            const count = card.shots.some((s) => s.kind === "match")
-              ? card.shots.filter((s) => s.kind === "match").length
-              : card.shots.length
+            const count = isProbeOnly(card)
+              ? card.shots.length
+              : card.shots.filter((s) => s.kind === "match").length
             return (
               <tr
                 key={card.id}

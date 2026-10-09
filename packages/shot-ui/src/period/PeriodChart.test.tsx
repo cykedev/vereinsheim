@@ -58,8 +58,14 @@ describe("Verlauf je Scheibe (D7)", () => {
     expect(html).toMatch(/role="slider"[^>]*aria-valuemax="12"/)
   })
 
-  it("eine gewählte Scheibe steht im Lineal", () => {
-    expect(render(TWELVE, {}, "k2")).toMatch(/data-card-point="k2" data-chosen="true"/)
+  it("eine gewählte Scheibe steht im Lineal, mit dem Abstand zum Schnitt der Scheiben davor", () => {
+    const html = render(TWELVE, {}, "k2")
+    expect(html).toMatch(/data-card-point="k2" data-chosen="true"/)
+    // k2 (8,0) gegen k0 und k1 (9,0 und 10,0): −1,50, wie in Liste und Ablesung
+    expect(html).toContain("8,00 Ringe · −1,50 zum Schnitt der 2 Scheiben davor")
+    expect(render(TWELVE, {}, "k0")).toContain(
+      "10,00 Ringe · erste Scheibe".replace("10,00", "9,00")
+    )
   })
 
   it("unter zwei Scheiben ein Satz statt des Diagramms", () => {

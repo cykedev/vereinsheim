@@ -73,7 +73,7 @@ describe("Ablesezeile auf dem Telefon", () => {
         onOpen: () => {},
       })
     )
-    expect(html).toContain("28.09. · 10,00 · +0,03 zum Schnitt")
+    expect(html).toContain("28.09. · 10,00 · +0,03 zum Schnitt davor")
     expect(html).toContain("Scheibe öffnen")
   })
 })

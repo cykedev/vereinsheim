@@ -47,7 +47,16 @@ export function useRuler(
   }
   useEffect(() => setChosen(preset), [preset])
   const index = chosen !== null && chosen < xs.length ? chosen : null
-  const drag = useRef<{ again: boolean; moved: boolean; before: number | null } | null>(null)
+  // eine Berührung: Wahl beim Aufsetzen (`start`), davor (`before`); gemeldet (`committed`) wird sie erst beim
+  // Loslassen oder bei der ersten Bewegung, damit ein Wischen, das der Browser als Scrollen übernimmt, die Wahl der
+  // Seite nicht ändert (Review, 9. Oktober 2026)
+  const drag = useRef<{
+    again: boolean
+    moved: boolean
+    committed: boolean
+    start: number | null
+    before: number | null
+  } | null>(null)
   const at = (event: PointerEvent<SVGSVGElement>) =>
     nearestIndex(xs, toSvgX(event.clientX, event.currentTarget.getBoundingClientRect(), width))
 
@@ -67,25 +76,38 @@ export function useRuler(
       } catch {
         // ein ausgelöstes Ereignis ohne echten Zeiger: ohne Fangen geht es auch
       }
-      drag.current = { again: i !== null && i === index, moved: false, before: index }
-      if (i !== index) pick(i)
+      drag.current = {
+        again: i !== null && i === index,
+        moved: false,
+        committed: false,
+        start: i,
+        before: index,
+      }
+      if (i !== index) setChosen(i)
     },
     onPointerMove: (event) => {
       if (!drag.current) return
       const i = at(event)
       if (i === index) return
       drag.current.moved = true
+      drag.current.committed = true
       pick(i)
     },
     onPointerUp: () => {
       const gesture = drag.current
       drag.current = null
-      if (gesture?.again && !gesture.moved) pick(null)
+      if (!gesture) return
+      if (gesture.again && !gesture.moved) pick(null)
+      else if (!gesture.committed && gesture.start !== gesture.before) onPick?.(gesture.start)
     },
     // der Browser scrollt: die Berührung war kein Ablesen
     onPointerCancel: () => {
-      if (drag.current && drag.current.before !== index) pick(drag.current.before)
+      const gesture = drag.current
       drag.current = null
+      if (!gesture || gesture.before === index) return
+      // nur zurückmelden, was schon gemeldet war; sonst ändert sich nur die eigene Anzeige zurück
+      if (gesture.committed) pick(gesture.before)
+      else setChosen(gesture.before)
     },
     onLostPointerCapture: () => {
       drag.current = null
@@ -195,7 +217,7 @@ export function ValuesTable({
             <tr>
               {columns.map((column, i) => (
                 <th
-                  key={column}
+                  key={i}
                   scope="col"
                   className={cn(
                     "px-2 py-1 font-medium text-muted-foreground",
