@@ -1,9 +1,11 @@
 // Zeit und Rhythmus: Tempo-Konstanz, Wiedereinstieg nach Pausen und ein Rhythmus-Profil über die
 // Schussnummer (Katalog Z2, Z4, Z5); die Dauer (Z3) liefert die Registry (`time.duration`). Zeiten
-// in Abgabefolge; fehlt ein Schuss oder springt die Uhr zurück, zählt der Abstand nicht (SF-30).
+// in Abgabefolge; fehlt ein Schuss oder springt die Uhr zurück, zählt der Abstand nicht (SF-30). Eine
+// Probe zwischen zwei Wertungsschüssen ist keine Lücke, wenn die ganze Karte mitkommt (`card`, SF-04).
 // Intervalle über drei Minuten sind Pausen.
 
 import {
+  contextOf,
   inShotOrder,
   selectShots,
   shotNumbers,
@@ -11,6 +13,7 @@ import {
   timesInOrder,
   type MetricShot,
   type Scoring,
+  type ShotContext,
   type ShotKind,
 } from "../metrics"
 import { iqr, median } from "../stats"
@@ -28,8 +31,12 @@ interface Interval {
 }
 
 /** Abstände über Schüsse, die schon in Abgabefolge der ganzen Karte stehen */
-function intervals(ordered: readonly MetricShot[], numbers: Map<MetricShot, number>): Interval[] {
-  const steps = stepsInOrder(ordered)
+function intervals(
+  ordered: readonly MetricShot[],
+  numbers: Map<MetricShot, number>,
+  context?: ShotContext
+): Interval[] {
+  const steps = stepsInOrder(ordered, context)
   return steps.map((step, i) => {
     const before = steps[i - 1]?.shot
     const now = step.shot.firedAtMs
@@ -49,11 +56,15 @@ function intervals(ordered: readonly MetricShot[], numbers: Map<MetricShot, numb
 // Erst die ganze Karte ordnen, dann auswählen: dieselbe Reihenfolge wie `shotNumbers`
 const timed = (shots: readonly MetricShot[]) => selectShots(inShotOrder(shots), { need: "time" })
 
-/** Streuung des Tempos: IQR der Intervalle ohne Pausen, auch relativ zum Median; ab drei Intervallen */
+/**
+ * Streuung des Tempos: IQR der Intervalle ohne Pausen, auch relativ zum Median; ab drei Intervallen.
+ * `card`: die ganze Karte, aus der `shots` stammen (SF-04).
+ */
 export function tempoSpread(
-  shots: readonly MetricShot[]
+  shots: readonly MetricShot[],
+  card: readonly MetricShot[] = shots
 ): { n: number; iqrMs: number; medianMs: number; relative: number | null } | null {
-  const pace = tempo(timesInOrder(timed(shots)))
+  const pace = tempo(timesInOrder(timed(shots), contextOf(shots, card)))
   if (pace.intervalsMs.length < 3) return null
   const spread = iqr(pace.intervalsMs) as number
   const center = median(pace.intervalsMs) as number
@@ -80,11 +91,13 @@ export interface PauseEffect {
  * (Z5): Fehlt einem Schuss nur der Wert, bleibt die Pause (Prüfung, 9. Oktober 2026, Grenzfall SF-18).
  * Die Schnitte davor und danach zählen nur Schüsse mit Wert; ohne solche ist die Wirkung null. Verglichen
  * wird mit den übrigen Schüssen, nicht mit der ganzen Scheibe, die die Schüsse nach der Pause selbst
- * enthielte.
+ * enthielte. `card`: die ganze Karte, aus der `shots` stammen; eine Probe zwischen zwei Wertungsschüssen
+ * ist keine Lücke, die Pause gilt von Wertungsschuss zu Wertungsschuss (SF-04).
  */
 export function pauseRecovery(
   shots: readonly MetricShot[],
-  scoring: Scoring
+  scoring: Scoring,
+  card: readonly MetricShot[] = shots
 ): {
   pauses: number
   totalPauseMs: number
@@ -95,7 +108,7 @@ export function pauseRecovery(
   const selected = selectShots(inShotOrder(shots), { kinds: MATCH, need: "time" })
   // eine Pause braucht einen Abstand, also zwei Schüsse mit Zeit
   if (selected.length < 2) return null
-  const steps = intervals(selected, shotNumbers(shots))
+  const steps = intervals(selected, shotNumbers(shots), { card, kinds: MATCH })
   const values = steps.map((step) =>
     withValue.has(step.shot) ? valueTenths(step.shot, scoring) : null
   )
@@ -134,13 +147,17 @@ export interface RhythmPoint {
   medianMs: number | null
 }
 
-/** Rhythmus-Profil über die Schussnummer (Z5) */
-export function rhythmProfile(shots: readonly MetricShot[], window = 5): RhythmPoint[] {
+/** Rhythmus-Profil über die Schussnummer (Z5); `card`: die ganze Karte, aus der `shots` stammen (SF-04) */
+export function rhythmProfile(
+  shots: readonly MetricShot[],
+  window = 5,
+  card: readonly MetricShot[] = shots
+): RhythmPoint[] {
   if (!(Number.isInteger(window) && window >= 1)) {
     throw new RangeError(`Fenster ${window} ist keine ganze Zahl ab 1`)
   }
   const recent: number[] = []
-  return intervals(timed(shots), shotNumbers(shots)).map((step) => {
+  return intervals(timed(shots), shotNumbers(shots), contextOf(shots, card)).map((step) => {
     const pause = step.intervalMs !== null && step.intervalMs > PAUSE_THRESHOLD_MS
     if (step.intervalMs !== null && !pause) {
       recent.push(step.intervalMs)

@@ -3,7 +3,14 @@
 // L8, dazu der Ringverlust E9). Lagen in µm, Mitte (0 | 0), x rechts, y oben.
 
 import { centroid, covarianceEllipse, distancesTo, type Point } from "../geometry"
-import { inShotOrder, selectShots, stepsInOrder, type MetricShot, type ShotKind } from "../metrics"
+import {
+  contextOf,
+  inShotOrder,
+  selectShots,
+  stepsInOrder,
+  type MetricShot,
+  type ShotKind,
+} from "../metrics"
 import { scoreFromCoordinates } from "../scoring"
 import { fQuantile2 } from "../stats"
 import type { TargetImage } from "../targets"
@@ -206,10 +213,17 @@ export function directionClock(
  * Gruppe; ein Urteil gibt es nicht, weil die Zahl bei kleinem n stark schwankt. Ø und größter
  * Sprung entfallen (Oktober 2026): Der Ø Sprung ist im Mittel √π · σ, sagt also nichts Neues, und
  * der größte wächst mit der Schusszahl. Fehlt ein Schuss (Sprung in `seq`, SF-30), zählt der Sprung
- * darüber nicht, und die Normierung je Sprung hält das Verhältnis trotzdem bei 2. Ab drei Schuss.
+ * darüber nicht, und die Normierung je Sprung hält das Verhältnis trotzdem bei 2. Eine Probe zwischen
+ * zwei Wertungsschüssen ist keine Lücke, wenn die ganze Karte mitkommt (`card`, SF-04). Ab drei Schuss.
  */
-export function drift(shots: readonly MetricShot[]): { n: number; vonNeumann: number } | null {
-  const steps = stepsInOrder(selectShots(inShotOrder(shots), { need: "position" }))
+export function drift(
+  shots: readonly MetricShot[],
+  card: readonly MetricShot[] = shots
+): { n: number; vonNeumann: number } | null {
+  const steps = stepsInOrder(
+    selectShots(inShotOrder(shots), { need: "position" }),
+    contextOf(shots, card)
+  )
   if (steps.length < 3) return null
   const points = steps.map(({ shot }) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
   const jumps: number[] = []

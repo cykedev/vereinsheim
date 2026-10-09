@@ -56,6 +56,21 @@ describe("Werte je Scheibe (T1)", () => {
     expect(b.value).toBe(a.value)
   })
 
+  it("Abstände über die ganze Karte: eine späte Probe ist keine Lücke (SF-04)", () => {
+    // Wertung bei 0, 40, 100, 160 s, eine Probe bei 70 s (seq 3): Abstände 40, 60, 60, Median 60 s;
+    // ohne die Karte fiele der Abstand über die Probe weg (Median 50 s)
+    const seconds = [0, 40, 70, 100, 160]
+    const late = card("p", 1, Array<number>(5).fill(100), {
+      shot: (i) => ({
+        firedAtMs: DAY + seconds[i] * 1000,
+        ...(i === 2 ? { kind: "probe" as const, series: null } : {}),
+      }),
+    })
+    const [value] = cardValues([late], metricByKey("time.intervalMedian")!, "decimal")
+    expect(value.value).toBe(60)
+    expect(value.n).toBe(4)
+  })
+
   it("nur über die Wertungsschüsse, auch bei Maßen, die die Probe mitnehmen könnten", () => {
     // drei Probeschüsse weit außen vor zehn Wertungsschüssen auf einer Linie (0,9 mm)
     const mixed = card("m", 1, Array<number>(13).fill(100), {

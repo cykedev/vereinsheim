@@ -127,19 +127,38 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     expect(profile[1].intervalMs).toBe(40_000)
   })
 
-  // bekannter Fehler, Plan plans/2026-10-09-spiegel-seq-luecke.md: Task 2 macht daraus `it`
-  it.fails("eine späte Probe ist keine Lücke: die Pause vor Schuss 7 bleibt (ganze Karte)", () => {
-    // Wertung wie EVENING: nach der Pause Ø 9,7 gegen die übrigen sieben (Ø 719/70), −4/7 Ringe
+  it("eine späte Probe ist keine Lücke: die Pause vor Schuss 7 bleibt (ganze Karte, SF-04)", () => {
+    // Wertung wie EVENING: nach der Pause Ø 9,7 gegen die übrigen sieben (Ø 719/70), −4/7 Ringe; die
+    // Pause gilt von Wertungsschuss 6 (210 s) bis 7 (510 s), die Probe dazwischen gehört zu ihr
     const recovery = pauseRecovery(LATE_SIGHTER, "decimal")
     expect(recovery?.pauses).toBe(1)
+    expect(recovery?.totalPauseMs).toBe(300_000)
     expect(recovery?.effects[0].afterShot).toBe(7)
     expect(recovery?.effects[0].deltaRings).toBeCloseTo(-4 / 7, 9)
   })
 
-  it.fails("eine späte Probe ist keine Lücke: die Pause vor Schuss 7 bleibt (nur Wertung)", () => {
-    expect(pauseRecovery(LATE_SIGHTER_MATCH, "decimal")?.pauses).toBe(1)
-    const seven = rhythmProfile(LATE_SIGHTER_MATCH).find((point) => point.number === 7)
-    expect(seven?.pause).toBe(true)
+  it("eine späte Probe ist keine Lücke: die Pause vor Schuss 7 bleibt (nur Wertung, SF-04)", () => {
+    const recovery = pauseRecovery(LATE_SIGHTER_MATCH, "decimal", LATE_SIGHTER)
+    expect(recovery?.pauses).toBe(1)
+    expect(recovery?.totalPauseMs).toBe(300_000)
+    expect(recovery?.effects[0].afterShot).toBe(7)
+    expect(recovery?.effects[0].deltaRings).toBeCloseTo(-4 / 7, 9)
+    expect(rhythmProfile(LATE_SIGHTER_MATCH, 5, LATE_SIGHTER)[6]).toMatchObject({
+      number: 7,
+      intervalMs: 300_000,
+      pause: true,
+      medianMs: 40_000,
+    })
+    // Tempo wie EVENING: Abstände 40, 45, 40, 45, 40, 50, 55, 50 s ohne die Pause
+    const spread = tempoSpread(LATE_SIGHTER_MATCH, LATE_SIGHTER)
+    expect(spread?.n).toBe(8)
+    expect(spread?.iqrMs).toBe(10_000)
+    expect(spread?.medianMs).toBe(45_000)
+  })
+
+  it("ohne die Karte bleibt die Probe eine Lücke, wie bisher", () => {
+    expect(rhythmProfile(LATE_SIGHTER_MATCH, 5)[6]).toMatchObject({ number: 7, intervalMs: null })
+    expect(pauseRecovery(LATE_SIGHTER_MATCH, "decimal")?.pauses).toBe(0)
   })
 
   it("Rhythmus: Nummern sind Schussnummern, über eine Lücke gibt es keinen Abstand", () => {

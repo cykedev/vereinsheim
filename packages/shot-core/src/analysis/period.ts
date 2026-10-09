@@ -76,9 +76,11 @@ export function cardValues(
 ): CardValue[] {
   const scored = inScoring(metric, scoring)
   return byStart(cards).flatMap((card) => {
-    const shots = cardShots(card.shots, options.includeProbeOnly)?.match
-    if (!shots) return []
-    const value = computeMetric(scored, shots)
+    const chosen = cardShots(card.shots, options.includeProbeOnly)
+    if (!chosen) return []
+    const shots = chosen.match
+    // die ganze Karte für Abstände: eine späte Probe ist keine Lücke (SF-04)
+    const value = computeMetric(scored, shots, chosen.whole)
     if (value === null) return []
     return [
       {

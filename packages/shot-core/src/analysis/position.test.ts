@@ -287,4 +287,30 @@ describe("Richtungsuhr und Drift (L6, L8)", () => {
     const result = drift(gapped)
     expect(result?.vonNeumann).toBeCloseTo(1.4375, 9)
   })
+
+  it("Drift über eine späte Probe: mit der Karte keine Lücke (SF-04)", () => {
+    // Wertung auf der x-Achse bei 0, 1, 4, 5 mm (seq 1, 2, 4, 5), seq 3 ist eine Probe. Schwerpunkt 2,5 mm,
+    // Σ r² = 17 mm², durch 3. Mit der Karte die Sprünge 1, 3, 1 mm: (11/3) / (17/3) = 11/17. Ohne sie fällt
+    // der Sprung über die Probe weg: (2/2) / (17/3) = 3/17.
+    const shot = (seq: number, xUm: number, kind: MetricShot["kind"]): MetricShot => ({
+      ...at(xUm, 0, seq - 1),
+      seq,
+      kind,
+      series: kind === "match" ? 1 : null,
+    })
+    const card = [
+      shot(1, 0, "match"),
+      shot(2, 1000, "match"),
+      shot(3, 2000, "probe"),
+      shot(4, 4000, "match"),
+      shot(5, 5000, "match"),
+    ]
+    const match = card.filter((s) => s.kind === "match")
+    const withCard = drift(match, card)
+    expect(withCard).not.toBeNull()
+    expect(withCard?.vonNeumann).toBeCloseTo(11 / 17, 9)
+    const without = drift(match)
+    expect(without).not.toBeNull()
+    expect(without?.vonNeumann).toBeCloseTo(3 / 17, 9)
+  })
 })
