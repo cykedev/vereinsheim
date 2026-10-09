@@ -2923,6 +2923,24 @@ addEventListener("load", async () => {
           )
         const line = d.querySelector("[data-card-line]")
         const nav = d.querySelector('nav[aria-label="Abschnitte"] > div')
+        // der Umschalter der Kennzahl bricht nicht um (U3: „Streuung“ ist länger als „σ“)
+        const metricButtons = [
+          ...d.querySelectorAll('[role="radiogroup"][aria-label="Kennzahl"] button'),
+        ]
+        const metricHeights = new Set(
+          metricButtons.map((b) => Math.round(b.getBoundingClientRect().height))
+        )
+        // im Rahmen der Prüfung bricht er auch ohne Regel nicht sichtbar um (Bildschirmfoto 390 schon), deshalb dazu die
+        // Regel selbst: kein Umbruch, zu breit scrollt er in sich
+        const metricBar = metricButtons[0]?.parentElement
+        check(
+          `Zeitraum, Telefon ${width} px: Umschalter der Kennzahl ohne Umbruch`,
+          metricButtons.length === 4 &&
+            metricHeights.size === 1 &&
+            metricButtons.every((b) => w.getComputedStyle(b).whiteSpace === "nowrap") &&
+            w.getComputedStyle(metricBar).overflowX === "auto",
+          [...metricHeights].join(" / ")
+        )
         check(
           `Zeitraum, Telefon ${width} px: kein seitliches Scrollen`,
           d.documentElement.scrollWidth <= width,

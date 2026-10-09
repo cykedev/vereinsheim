@@ -158,13 +158,15 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
           ) : undefined
         }
         chart={
-          <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-3.5">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+              {/* ohne Umbruch in einer Zeile (U3: „Streuung“ ist länger als „σ“); ist sie zu breit, scrollt sie in sich */}
               <Segmented
                 label="Kennzahl"
                 value={state.metric}
                 options={PERIOD_CHART_METRICS.map((m) => ({ value: m.key, label: m.label }))}
                 onChange={(metric) => dispatch({ type: "setMetric", metric })}
+                className="max-w-full min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:shrink-0 [&>button]:whitespace-nowrap"
               />
               <div className="ml-auto flex items-center gap-2">
                 {!model.compareRange && (
