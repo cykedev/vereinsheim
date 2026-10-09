@@ -50,7 +50,8 @@
     "./period/sentence": "./src/period/sentence.ts",
     "./period/PeriodChart": "./src/period/PeriodChart.tsx",
     "./period/VolumeChart": "./src/period/VolumeChart.tsx",
-    "./period/CardReadout": "./src/period/CardReadout.tsx"
+    "./period/CardReadout": "./src/period/CardReadout.tsx",
+    "./period/CardList": "./src/period/CardList.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
