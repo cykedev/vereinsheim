@@ -279,6 +279,7 @@ export function App({ commit }: { commit: string }) {
             explain={explain}
             onExplain={onExplain}
             onHelp={setHelpId}
+            onScoring={changeScoring}
             opened={opened}
           />
         ) : mode === "list" ? (

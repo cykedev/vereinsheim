@@ -3418,6 +3418,20 @@ addEventListener("load", async () => {
         dark && light && themeInProfile,
         `${dark} ${light} ${themeInProfile}`
       )
+      // Fehler (Review U2): Die Wertung, die eine Scheibe umschaltet, ist die des Geräts; der Fortschritt folgt ihr, auch
+      // wenn man über die Navigation hinkommt (er hat keinen Schalter mehr und zeigt nicht, welche gilt)
+      await click(area("Start"), 300)
+      await click($("[data-start-card]"), 500)
+      await click(button("Ganze Ringe"), 150)
+      await click(area("Fortschritt"), 400)
+      const followedScoring = P().state.scoring
+      const followedAddress = addr()
+      await deviceScoring("Zehntel")
+      check(
+        "Wertung: „Ganze Ringe“ auf einer Scheibe, dann über die Navigation in den Fortschritt: ganze Ringe",
+        followedScoring === "rings" && followedAddress.includes("scoring=rings"),
+        `${followedScoring} · ${followedAddress}`
+      )
       // Fehler (User, 9. Oktober 2026): Die Sprungleiste schreibt #analysis in die Adresse; die Beispielscheibe las ihn
       // beim Öffnen wie einen Anker beim Laden und begann bei der Analyse. Sie beginnt oben mit dem ersten Reiter
       await click(area("Fortschritt"), 300)

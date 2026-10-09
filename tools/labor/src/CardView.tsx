@@ -84,6 +84,11 @@ export interface CardViewProps {
   explain: boolean
   onExplain: (explain: boolean) => void
   onHelp: (helpId: string | null) => void
+  /**
+   * die Wertung des Geräts setzen (Review U2): eine Stelle in `App` schreibt Speicher und Zeitraum, damit der
+   * Fortschritt ihr folgt, auch über die Navigation
+   */
+  onScoring: (scoring: Scoring) => void
   /** eine Scheibe aus der Saison statt eines Beispiels */
   opened?: OpenedCard | null
 }
@@ -92,7 +97,14 @@ export interface CardViewProps {
  * Die Seite einer Scheibe im Labor (bis L3 die ganze App): Beispiele oder eine Scheibe aus der Saison, Ansehen und
  * Setzen, Anker, Analyse. Der Zustand gilt je Scheibe; die Seite eines Zeitraums hält ihren eigenen in `App`.
  */
-export function CardView({ header, explain, onExplain, onHelp, opened = null }: CardViewProps) {
+export function CardView({
+  header,
+  explain,
+  onExplain,
+  onHelp,
+  onScoring,
+  opened = null,
+}: CardViewProps) {
   const [targetId, setTargetId] = useState<TargetId>(opened?.target ?? "lp-10m")
   const [sampleId, setSampleId] = useState<SampleId>("forty")
   const [raw, setRaw] = useState<RawShot[]>(() => opened?.raw ?? rawSample("lp-10m", "forty"))
@@ -274,7 +286,7 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
       scoring={state.scoring}
       official={opened ? opened.official : sample.official}
       onChange={(scoring) => {
-        store.set("scoring", scoring)
+        onScoring(scoring)
         dispatch({ type: "setScoring", scoring })
       }}
     />
