@@ -93,6 +93,19 @@ describe("Rahmen der App (Plan N3, D1, D2, D6)", () => {
     expect(marked("data-app-rail")).toEqual(["profile"])
   })
 
+  it("unten in der Seitenleiste ein Platz für Einstellungen, nur dort (Labor näher an der App, D2)", () => {
+    const withFooter = render({ sidebarFooter: h("div", { "data-footer": true }, "DARSTELLUNG") })
+    const sidebar = withFooter.slice(
+      withFooter.indexOf("data-app-sidebar"),
+      withFooter.indexOf("</nav>", withFooter.indexOf("data-app-sidebar"))
+    )
+    expect(sidebar).toMatch(
+      /data-area="admin"[\s\S]*data-sidebar-footer="true" class="[^"]*mt-auto[^"]*"><div data-footer="true">DARSTELLUNG/
+    )
+    expect(withFooter.match(/DARSTELLUNG/g)).toHaveLength(1)
+    expect(html).not.toContain("data-sidebar-footer")
+  })
+
   it("ohne Admin-Recht kein Admin", () => {
     expect(render({ isAdmin: false })).not.toContain('data-area="admin"')
   })

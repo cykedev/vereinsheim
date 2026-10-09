@@ -40,6 +40,8 @@ export interface AppFrameProps {
   openCount: number
   /** nur ein Admin sieht Admin */
   isAdmin: boolean
+  /** unten in der Seitenleiste, etwa die Darstellung (Labor näher an der App, D2); nicht in den Leisten des Telefons */
+  sidebarFooter?: ReactNode
   children?: ReactNode
 }
 
@@ -48,7 +50,14 @@ export interface AppFrameProps {
  * Mitte, im Querformat des Telefons eine schmale Leiste links. Die Wurzel setzt `--app-bar`, den Platz, den die
  * untere Leiste samt Scan-Knopf unten einnimmt; Seite, Pille und Scheibe richten sich danach.
  */
-export function AppFrame({ current, links, openCount, isAdmin, children }: AppFrameProps) {
+export function AppFrame({
+  current,
+  links,
+  openCount,
+  isAdmin,
+  sidebarFooter,
+  children,
+}: AppFrameProps) {
   const name = (area: Area) =>
     area === "start" && openCount > 0 ? `Start, ${openCount} offen` : undefined
   const badge = (area: Area, className: string) =>
@@ -123,6 +132,11 @@ export function AppFrame({ current, links, openCount, isAdmin, children }: AppFr
         <div aria-hidden="true" className="my-3 border-t border-border" />
         {sideEntry("profile")}
         {isAdmin && sideEntry("admin")}
+        {sidebarFooter && (
+          <div data-sidebar-footer className="mt-auto border-t border-border px-1 pt-3">
+            {sidebarFooter}
+          </div>
+        )}
       </nav>
 
       <nav
