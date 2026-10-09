@@ -9,6 +9,7 @@ import {
   resolveRange,
   ROLLING_CHOICES,
   weekLabel,
+  weekStartIso,
   type NamedPeriod,
 } from "./calendar"
 
@@ -118,8 +119,17 @@ describe("ISO-Wochen", () => {
     expect(isoWeekKey("2026-07-20")).toBe("2026-W30")
   })
 
-  it("Name der Woche", () => {
-    expect(weekLabel("2026-W09")).toBe("KW 9")
-    expect(weekLabel("2026-W53")).toBe("KW 53")
+  it("Montag einer ISO-Woche, auch über den Jahreswechsel (U3, D6)", () => {
+    expect(weekStartIso("2026-W27")).toBe("2026-06-29")
+    expect(weekStartIso("2026-W01")).toBe("2025-12-29")
+    expect(weekStartIso("2027-W01")).toBe("2027-01-04")
+    expect(weekStartIso("2020-W53")).toBe("2020-12-28")
+    for (const key of ["2026-W01", "2026-W27", "2026-W53", "2027-W01", "2020-W53"])
+      expect(isoWeekKey(weekStartIso(key))).toBe(key)
+  })
+
+  it("Name der Woche ist ihr Montag, keine Kalenderwoche (U3, D6)", () => {
+    expect(weekLabel("2026-W27")).toBe("29.06.")
+    expect(weekLabel("2026-W01")).toBe("29.12.")
   })
 })

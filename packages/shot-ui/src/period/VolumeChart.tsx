@@ -18,11 +18,11 @@ export type VolumeWeek = VolumeBucket & { label: string }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
-/** „KW 29: 140 Schuss mit Probe, 3 Scheiben, 2 Tage“ */
+/** „Woche ab 06.07.: 140 Schuss mit Probe, 3 Scheiben, 2 Tage“ (die Woche als Datum ihres Montags, U3, D6) */
 export const weekText = (w: VolumeWeek) =>
   w.cards
-    ? `${w.label}: ${w.shots} Schuss mit Probe, ${plural(w.cards, "Scheibe", "Scheiben")}, ${plural(w.days, "Tag", "Tage")}`
-    : `${w.label}: kein Training`
+    ? `Woche ab ${w.label}: ${w.shots} Schuss mit Probe, ${plural(w.cards, "Scheibe", "Scheiben")}, ${plural(w.days, "Tag", "Tage")}`
+    : `Woche ab ${w.label}: kein Training`
 
 /**
  * Umfang je Woche (Plan L3, D15, T6): je ISO-Woche eine Säule der Schüsse mit Probe, auch Wochen ohne Training
@@ -44,7 +44,8 @@ export function VolumeChart({ width, weeks }: { width: number; weeks: readonly V
   const base = HEIGHT - PAD.bottom
   const y = (v: number) => PAD.top + (1 - v / top) * (base - PAD.top)
   const bw = Math.max(2, Math.min(14, slot - 2))
-  const every = Math.max(1, Math.ceil(36 / slot))
+  // ein Datum wie „06.07.“ braucht rund 40 px, dazu Luft bis zum nächsten
+  const every = Math.max(1, Math.ceil(52 / slot))
   const chosen = ruler.index === null ? null : weeks[ruler.index]
   const text = chosen ? weekText(chosen) : null
   const grid: number[] = []
@@ -93,7 +94,7 @@ export function VolumeChart({ width, weeks }: { width: number; weeks: readonly V
         {weeks.map((w, i) =>
           i % every ? null : (
             <text key={w.key} x={x(i)} y={HEIGHT - 6} textAnchor="middle">
-              {w.label.replace("KW ", "")}
+              {w.label}
             </text>
           )
         )}
@@ -101,7 +102,7 @@ export function VolumeChart({ width, weeks }: { width: number; weeks: readonly V
       </ChartSvg>
       <ValuesTable
         caption="Schüsse je Woche"
-        columns={["Woche", "Schuss mit Probe", "Scheiben", "Tage"]}
+        columns={["Woche ab", "Schuss mit Probe", "Scheiben", "Tage"]}
         rows={weeks.map((w) => [w.label, String(w.shots), String(w.cards), String(w.days)])}
       />
     </div>

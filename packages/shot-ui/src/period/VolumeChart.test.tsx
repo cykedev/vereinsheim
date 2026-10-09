@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest"
 import { VolumeChart, weekText, type VolumeWeek } from "./VolumeChart"
 
 const WEEKS: VolumeWeek[] = [
-  { key: "2026-W28", label: "KW 28", shots: 140, cards: 3, days: 2 },
-  { key: "2026-W29", label: "KW 29", shots: 0, cards: 0, days: 0 },
-  { key: "2026-W30", label: "KW 30", shots: 40, cards: 1, days: 1 },
+  { key: "2026-W28", label: "06.07.", shots: 140, cards: 3, days: 2 },
+  { key: "2026-W29", label: "13.07.", shots: 0, cards: 0, days: 0 },
+  { key: "2026-W30", label: "20.07.", shots: 40, cards: 1, days: 1 },
 ]
 const html = renderToStaticMarkup(createElement(VolumeChart, { width: 400, weeks: WEEKS }))
 
@@ -24,9 +24,12 @@ describe("Umfang je Woche (D15)", () => {
   })
 
   it("das Lineal nennt Schüsse mit Probe, Scheiben und Tage; Tabelle mit allen Wochen", () => {
-    expect(weekText(WEEKS[0])).toBe("KW 28: 140 Schuss mit Probe, 3 Scheiben, 2 Tage")
-    expect(weekText(WEEKS[2])).toBe("KW 30: 40 Schuss mit Probe, 1 Scheibe, 1 Tag")
-    expect(weekText(WEEKS[1])).toBe("KW 29: kein Training")
+    // Woche als Datum ihres Montags (U3, D6), keine Kalenderwoche
+    expect(weekText(WEEKS[0])).toBe("Woche ab 06.07.: 140 Schuss mit Probe, 3 Scheiben, 2 Tage")
+    expect(weekText(WEEKS[2])).toBe("Woche ab 20.07.: 40 Schuss mit Probe, 1 Scheibe, 1 Tag")
+    expect(weekText(WEEKS[1])).toBe("Woche ab 13.07.: kein Training")
     expect([...html.matchAll(/<tr class="border-t/g)]).toHaveLength(3)
+    expect(html).toContain(">Woche ab</th>")
+    expect(html).not.toContain("KW")
   })
 })

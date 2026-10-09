@@ -1,7 +1,7 @@
 // Zeiträume der Seite eines Zeitraums (Plan L3, D4, D6, D15, D16): rollend, alles, benannt, frei; der
 // Vergleichszeitraum; ISO-Wochen ohne `Intl`. Tage beginnen in der Anzeige-Zeitzone (`zonedDayStartMs`).
 
-import { formatDateOnly, zonedDayStartMs } from "@vereinsheim/lib/format"
+import { formatDateOnly, formatShortDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 
 export const DAY_MS = 86_400_000
 
@@ -129,8 +129,21 @@ export function isoWeekKey(isoDate: string): string {
   return `${year}-W${String(week).padStart(2, "0")}`
 }
 
-/** „KW 29“ */
-export const weekLabel = (key: string) => `KW ${Number(key.slice(6))}`
+/** Montag einer ISO-Woche („2026-W27“ → „2026-06-29“): Der 4. Januar liegt immer in Woche 1 */
+export function weekStartIso(key: string): string {
+  const year = Number(key.slice(0, 4))
+  const week = Number(key.slice(6))
+  const jan4 = Date.UTC(year, 0, 4)
+  const monday = jan4 - ((new Date(jan4).getUTCDay() + 6) % 7) * DAY_MS + (week - 1) * 7 * DAY_MS
+  return new Date(monday).toISOString().slice(0, 10)
+}
+
+/** Name einer Woche ist ihr Montag („29.06.“), keine Kalenderwoche (U3, D6) */
+export function weekLabel(key: string): string {
+  const [y, m, d] = weekStartIso(key).split("-").map(Number)
+  // ein Kalendertag ohne Zone: Mittag in UTC, in UTC formatiert
+  return formatShortDay(new Date(Date.UTC(y, m - 1, d, 12)), "UTC")
+}
 
 /** „02.07.2026 – 30.09.2026“: erster und letzter Tag des Zeitraums in der Zeitzone */
 export function rangeDays(range: DateRange, timeZone: string): string {

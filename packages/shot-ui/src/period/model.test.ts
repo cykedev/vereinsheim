@@ -268,7 +268,23 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     // 90 Tage vor dem 30. September beginnen am 2. Juli (KW 27); der 30. September liegt in KW 40
     // a am Sonntag, 27. September (KW 39), b und c am Montag und Dienstag (KW 40)
     const { weeks } = model(THREE)
-    expect(weeks.map((w) => w.label)).toEqual(Array.from({ length: 14 }, (_, i) => `KW ${27 + i}`))
+    // je Woche ihr Montag (U3, D6): KW 27 beginnt am 29. Juni, KW 40 am 28. September
+    expect(weeks.map((w) => w.label)).toEqual([
+      "29.06.",
+      "06.07.",
+      "13.07.",
+      "20.07.",
+      "27.07.",
+      "03.08.",
+      "10.08.",
+      "17.08.",
+      "24.08.",
+      "31.08.",
+      "07.09.",
+      "14.09.",
+      "21.09.",
+      "28.09.",
+    ])
     expect(weeks.at(-1)).toMatchObject({ shots: 3, cards: 2, days: 2 })
     expect(weeks.at(-2)).toMatchObject({ shots: 2, cards: 1, days: 1 })
     expect(weeks[0]).toMatchObject({ shots: 0, cards: 0, days: 0 })

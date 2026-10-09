@@ -2495,6 +2495,21 @@ addEventListener("load", async () => {
         `${recordCard} · gewählt ${P().state.chosen} · Ablesung ${M().reading?.card.id}`
       )
 
+      // Umfang je Woche: die Achse nennt den Montag jeder Woche, keine Kalenderwoche (U3, D6)
+      const weekTicks = $$('svg[aria-label="Schüsse je Woche"] text')
+        .map(txt)
+        .filter((t) => !/^\d+$/.test(t))
+      const firstWeek = M().weeks[0]
+      check(
+        "Zeitraum: Umfang je Woche mit dem Datum des Montags, keine „KW“",
+        weekTicks.length > 1 &&
+          weekTicks.every((t) => /^\d\d\.\d\d\.$/.test(t)) &&
+          weekTicks[0] === firstWeek.label &&
+          firstWeek.label === tools.period.weekLabel(firstWeek.key) &&
+          !txt($('[data-section="history"]')).includes("KW"),
+        weekTicks.join(" ")
+      )
+
       // Lineal und Liste teilen die Wahl
       const target = M().values[Math.floor(M().values.length / 2)]
       const point = $(`[data-card-point="${target.id}"] circle:last-child`)

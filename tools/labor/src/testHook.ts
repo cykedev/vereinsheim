@@ -25,6 +25,7 @@ import { periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model
 import { filterSummary } from "@vereinsheim/shot-ui/period/PeriodPicker"
 import { recordRows } from "@vereinsheim/shot-ui/period/records"
 import { periodSentence, verdictText } from "@vereinsheim/shot-ui/period/sentence"
+import { weekLabel } from "@vereinsheim/shot-ui/period/calendar"
 import type { PeriodState } from "@vereinsheim/shot-ui/period/state"
 import { selectionShots, shotIntervals, shotLabels } from "@vereinsheim/shot-ui/shots"
 import type { ViewState } from "@vereinsheim/shot-ui/view-state"
@@ -53,7 +54,7 @@ const TOOLS = {
   GLOSSARY,
   FALLACIES,
   // Seite eines Zeitraums (Plan L3): Modell und Worte zum Nachrechnen
-  period: { periodModel, periodSentence, verdictText, recordRows, filterSummary },
+  period: { periodModel, periodSentence, verdictText, recordRows, filterSummary, weekLabel },
   // Adressen (Plan N1): die Prüfung rechnet jede gezeigte Adresse hin und zurück
   nav: { routeFromUrl, urlFromRoute },
 }
