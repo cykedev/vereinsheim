@@ -25,7 +25,7 @@ Frei getippte Namen (bei euch neben der Schützenliste üblich) ergeben nur **Vo
 ## Opt-in per Sportpass
 
 - Der Schütze trägt im Profil seine Sportpassnummer ein und stimmt dem automatischen Hochladen zu; ein Admin bestätigt die Verknüpfung einmal. Dabei sieht er, unter welchem Namen die SportpassID in der SSMDB2 vorkommt; eine Nummer von einem liegengelassenen Ausdruck reicht damit nicht (SF-34).
-- Spiegel gibt der Brücke eine Liste gehashter SportpassIDs der Zustimmenden. Jede Scheibe mit passender SportpassID lädt die Brücke **während des Abends** hoch, Probe eingeschlossen, ohne dass jemand etwas tun muss.
+- Spiegel gibt der Brücke eine Liste gehashter SportpassIDs der Zustimmenden. Jede Scheibe mit passender SportpassID lädt die Brücke **während des Abends** hoch, ohne dass jemand etwas tun muss; in Spiegel steht sie wie am Ausdruck (bei Wertung ohne Probe, [[adr-027]]).
 - Rückwirkend (SP-2.5): Nach der Verknüpfung lädt die Brücke ältere Scheiben mit dieser SportpassID nach, nach einer Vorschau. Meyton kopiert die SportpassID beim Schießen in die Scheibe; eine später nachgepflegte Nummer steht deshalb nicht in alten Scheiben. Die schlägt Spiegel über den Namen vor, und der Schütze bestätigt (SF-36).
 - Voraussetzung ist, dass der Name am Stand aus der Schützenliste gewählt wird. Frei getippte Namen tragen keine SportpassID; dann hilft der QR.
 - Das Original-PDF fehlt auf diesem Weg, solange es nicht auch auf der Meyton-Freigabe liegt (Phase 0). Wer es haben will, scannt den QR; Spiegel hängt es an die vorhandene Scheibe.
