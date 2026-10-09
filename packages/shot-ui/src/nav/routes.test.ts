@@ -1,7 +1,22 @@
 import { describe, expect, it } from "vitest"
 
 import { DEFAULT_CHOICE, type PeriodChoice } from "../period/calendar"
-import { decodeChoice, decodeCompare, encodeChoice, encodeCompare } from "./routes"
+import {
+  decodeChoice,
+  decodeCompare,
+  DEFAULT_LIST,
+  DEFAULT_PROGRESS,
+  encodeChoice,
+  encodeCompare,
+  listQueryFromParams,
+  listQueryToParams,
+  progressQueryFromParams,
+  progressQueryToParams,
+  type ProgressQuery,
+} from "./routes"
+
+const query = (pairs: readonly (readonly [string, string])[]) =>
+  pairs.map(([k, v]) => `${k}=${v}`).join("&")
 
 describe("Zeitraum und Vergleich als Wert (D4)", () => {
   it("rollend, alles, frei und benannt in beide Richtungen", () => {
@@ -54,5 +69,58 @@ describe("Zeitraum und Vergleich als Wert (D4)", () => {
     expect(decodeCompare("previous")).toEqual({ type: "previous" })
     expect(decodeCompare("saison-2025")).toEqual({ type: "named", id: "saison-2025" })
     expect(decodeCompare("Saison 2025")).toEqual({ type: "none" })
+  })
+})
+
+describe("Liste und Fortschritt als Query (D4)", () => {
+  it("die Vorgaben ergeben keine Schlüssel, und ohne Schlüssel gelten die Vorgaben", () => {
+    expect(listQueryToParams(DEFAULT_LIST)).toEqual([])
+    expect(progressQueryToParams(DEFAULT_PROGRESS)).toEqual([])
+    expect(listQueryFromParams(new URLSearchParams())).toEqual(DEFAULT_LIST)
+    expect(progressQueryFromParams(new URLSearchParams())).toEqual(DEFAULT_PROGRESS)
+  })
+
+  it("ein voller Fortschritt in fester Reihenfolge", () => {
+    const full: ProgressQuery = {
+      choice: { type: "free", from: "2026-05-01", to: "2026-06-30" },
+      compare: { type: "previous" },
+      family: "lp-10m",
+      kind: "training",
+      includeProbeOnly: false,
+      scoring: "rings",
+      metric: "group.sigma",
+      view: "months",
+      chosen: "c42",
+    }
+    const text =
+      "range=2026-05-01..2026-06-30&compare=previous&family=lp-10m&kind=training&probe=0&scoring=rings&metric=sigma&view=months&pick=c42"
+    expect(query(progressQueryToParams(full))).toBe(text)
+    expect(progressQueryFromParams(new URLSearchParams(text))).toEqual(full)
+  })
+
+  it("Vorgaben im Link werden gelesen und fallen beim Schreiben weg; Unbekanntes gilt als Vorgabe", () => {
+    const read = progressQueryFromParams(
+      new URLSearchParams("probe=1&metric=mean&range=90d&kind=wettkampf&view=jahr&pick=a b")
+    )
+    expect(read).toEqual(DEFAULT_PROGRESS)
+    expect(progressQueryToParams(read)).toEqual([])
+    expect(progressQueryFromParams(new URLSearchParams("metric=tens&scoring=zehntel")).metric).toBe(
+      "result.tensRate"
+    )
+    expect(progressQueryFromParams(new URLSearchParams("metric=tempo")).metric).toBe(
+      "time.intervalMedian"
+    )
+  })
+
+  it("die Liste: ohne Zeitraum alle Abende, „all“ ebenso; Familie und Merkmal nur als Id", () => {
+    const list = listQueryFromParams(
+      new URLSearchParams("range=all&family=lg-10m&kind=competition&flag=nur-pdf")
+    )
+    expect(list).toEqual({ range: null, family: "lg-10m", kind: "competition", flag: "nur-pdf" })
+    expect(query(listQueryToParams(list))).toBe("family=lg-10m&kind=competition&flag=nur-pdf")
+    expect(query(listQueryToParams({ ...list, range: { type: "rolling", days: 30 } }))).toBe(
+      "range=30d&family=lg-10m&kind=competition&flag=nur-pdf"
+    )
+    expect(listQueryFromParams(new URLSearchParams("family=LG 10m&flag=")).family).toBeNull()
   })
 })
