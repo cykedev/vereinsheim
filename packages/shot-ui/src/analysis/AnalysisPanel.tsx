@@ -127,8 +127,10 @@ export interface AnalysisPanelProps {
   target: TargetImage
   tab: AnalysisTab
   onTab: (tab: AnalysisTab) => void
-  /** Schalter „Erklärungen“, derselbe wie bei den Kacheln */
+  /** Schalter „Erklärungen“: der Kurzsatz an jeder Karte und Kachel */
   explain: boolean
+  /** rechts im Kopf, etwa der Schalter „Erklärungen“ (seit U1 hier, der Abschnitt „Zahlen“ entfiel) */
+  action?: ReactNode
   /** eine Karte schaltet eine Ebene der Scheibe (die Vertrauensellipse) */
   onToggleLayer: (layer: Layer) => void
   /** „?“ an Karten und Datenlage: öffnet die Erklärung als Blatt (`HelpSheet`), Plan Schritt 4 D3 */
@@ -156,6 +158,7 @@ export function AnalysisPanel({
   onToggleLayer,
   onHelp,
   onChoose,
+  action,
   className,
 }: AnalysisPanelProps) {
   const regionId = useId()
@@ -209,9 +212,12 @@ export function AnalysisPanel({
 
   return (
     <section aria-label="Analyse" className={cn("grid grid-cols-[minmax(0,1fr)] gap-4", className)}>
-      <div className="grid min-w-0 gap-1">
-        <h2 className="font-display text-xl font-bold tracking-tight">Was diese Scheibe zeigt</h2>
-        <p className="text-[13px] text-muted-foreground">{`Analyse ${BASIS_TEXT[input.basis]}`}</p>
+      <div data-analysis-head className="flex flex-wrap items-start justify-between gap-3">
+        <div className="grid min-w-0 gap-1">
+          <h2 className="font-display text-xl font-bold tracking-tight">Was diese Scheibe zeigt</h2>
+          <p className="text-[13px] text-muted-foreground">{`Analyse ${BASIS_TEXT[input.basis]}`}</p>
+        </div>
+        {action && <div data-analysis-action>{action}</div>}
       </div>
       {/* Streifen, der klebt: auf dem Telefon über der Sprungleiste (nie zwei Leisten), ab 768 px unter ihr;
           die Leiste ist eine Zeile, die in sich seitlich scrollt, statt die Seite zu verbreitern */}

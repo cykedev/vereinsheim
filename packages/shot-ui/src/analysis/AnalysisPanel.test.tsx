@@ -97,6 +97,19 @@ describe("AnalysisPanel", () => {
     expect(html).toContain('aria-label="Thema"')
   })
 
+  it("im Kopf rechts neben dem Titel die Aktion (der Schalter „Erklärungen“, U1), vor der Reiterleiste", () => {
+    const html = render(CARD, { action: createElement("button", { "data-action": true }, "ERKL") })
+    const title = html.indexOf("Was diese Scheibe zeigt")
+    const action = html.indexOf("data-action")
+    const tabs = html.indexOf('aria-label="Thema"')
+    expect(title).toBeGreaterThan(-1)
+    expect(action).toBeGreaterThan(title)
+    expect(tabs).toBeGreaterThan(action)
+    expect(html).toMatch(/<div data-analysis-head="true" class="[^"]*justify-between/)
+    // ohne Aktion kein leerer Behälter
+    expect(render(CARD)).not.toContain("data-analysis-action")
+  })
+
   it("der Kopf nennt die Grundlage", () => {
     expect(render(CARD)).toContain("über alle Schüsse ohne Probe")
     expect(render(CARD.slice(0, 2))).toContain("über alle Probeschüsse")
