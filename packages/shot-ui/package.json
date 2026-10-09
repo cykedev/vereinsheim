@@ -37,6 +37,7 @@
     "./layout/CardPage": "./src/layout/CardPage.tsx",
     "./layout/PeriodPage": "./src/layout/PeriodPage.tsx",
     "./layout/AppFrame": "./src/layout/AppFrame.tsx",
+    "./layout/StartPage": "./src/layout/StartPage.tsx",
     "./layout/SectionBlock": "./src/layout/SectionBlock.tsx",
     "./layout/jump": "./src/layout/jump.ts",
     "./layout/useReturnJump": "./src/layout/useReturnJump.ts",

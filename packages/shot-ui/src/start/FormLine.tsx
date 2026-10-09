@@ -23,8 +23,8 @@ export function FormLine({
   if (form.mean === null) return null
   const compare = form.compareLabel
     ? form.comparison
-      ? ` · ${formatSigned(form.comparison.delta, 2)} gegen ${form.compareLabel} · ${verdictText(form.comparison, "higher")}`
-      : ` · gegen ${form.compareLabel}: zu wenige Scheiben`
+      ? ` · ${formatSigned(form.comparison.delta, 2)} gegen den ${form.compareLabel} · ${verdictText(form.comparison, "higher")}`
+      : ` · gegen den ${form.compareLabel}: zu wenige Scheiben`
     : ""
   return (
     <RouteLink

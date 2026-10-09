@@ -1,7 +1,7 @@
 // Modell von Start (Plan N5, `vault/spiegel/spiegel-navigation.md`, Entscheidung 1): der letzte Abend je Familie im
 // Formband, neue Rekorde und die Form der letzten 90 Tage. Reine Funktion; alle Zahlen aus dem Fachkern. Einheit ist
 // die Scheibe (Regel „Über viele Scheiben“): Der Streifen zeigt Scheiben, das Band ist das des Fortschritts, seine
-// Mitte der Schnitt der fünf Scheiben vor dem Abend (Entscheidung 13).
+// Mitte der gleitende Schnitt bis zum Abend; der Satz misst gegen den Schnitt der fünf Scheiben davor (Entscheidung 13).
 
 import {
   cardValues,
@@ -17,12 +17,12 @@ import {
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
 
-import { cardListModel, eveningDay, type ListInputCard, type ListRow } from "../list/evenings"
+import { cardListModel, lastEvening, type ListInputCard, type ListRow } from "../list/evenings"
 import { progressRoute } from "../nav/navigate"
 import { DEFAULT_LIST, type ProgressRoute } from "../nav/routes"
 import type { NamedPeriod } from "../period/calendar"
 import { byStart, periodModel } from "../period/model"
-import { recordRows } from "../period/PeriodInsights"
+import { recordRows, type RecordRow } from "../period/records"
 import { initialPeriodState } from "../period/state"
 import { matchShots } from "../shots"
 
@@ -31,7 +31,7 @@ const BEFORE = 5
 /** so viele Scheiben zeigt der Streifen */
 const STRIP = 20
 
-export type RecordRow = ReturnType<typeof recordRows>[number]
+export type { RecordRow }
 
 /** ein Block auf Start: der letzte Abend einer Familie (D2–D6) */
 export interface EveningBlock {
@@ -44,9 +44,14 @@ export interface EveningBlock {
   shots: number
   /** Ø je Schuss über alle Wertungsschüsse des Abends, in der Wertung */
   mean: number | null
-  /** Schnitt der bis zu fünf Scheiben vor dem Abend; null ohne Scheiben davor */
+  /** Scheiben der Familie vor dem Abend, auch ohne Wert (für „Dein erster Abend“) */
+  cardsBefore: number
+  /** Schnitt der bis zu fünf Scheiben vor dem Abend; null ohne Werte davor */
   average: { value: number; n: number } | null
-  /** Formband des Fachkerns an der letzten Scheibe davor; null unter zehn Scheiben oder ohne Schwankung */
+  /**
+   * Formband wie im Verlauf des Fortschritts über alle Scheiben: an der letzten Scheibe des Abends, mit ihr gerechnet
+   * (Mitte ist der gleitende Schnitt bis zu ihr); null unter zehn Scheiben oder ohne Schwankung
+   */
   band: { low: number; high: number } | null
   /** der Abend gegen das Band; null ohne Band */
   verdict: "above" | "within" | "below" | null
@@ -85,10 +90,9 @@ export interface StartInput {
 
 export function startModel(input: StartInput): StartModel {
   const all = [...input.cards].sort((a, b) => byStart(a.card, b.card))
-  const newest = all.at(-1)
-  if (!newest) return { day: null, blocks: [], form: null }
-  const day = eveningDay(newest.card.startedAtMs, input.timeZone)
-  const tonight = all.filter((c) => eveningDay(c.card.startedAtMs, input.timeZone) === day)
+  const last = lastEvening(all, input.timeZone)
+  if (!last) return { day: null, blocks: [], form: null }
+  const { day, cards: tonight } = last
   const families = [...new Set(tonight.map((c) => c.family))]
   const meanMetric = inScoring(metricByKey("result.decimalMean")!, input.scoring)
   const context = {
@@ -103,7 +107,6 @@ export function startModel(input: StartInput): StartModel {
     const evening = tonight.filter((c) => c.family === family).map((c) => c.card)
     const ids = new Set(evening.map((c) => c.id))
     const firstMs = evening[0].startedAtMs
-    const lastMs = evening.at(-1)!.startedAtMs
     const rows =
       cardListModel(all, { ...DEFAULT_LIST, family }, context).evenings.find((e) => e.day === day)
         ?.rows ?? []
@@ -113,12 +116,15 @@ export function startModel(input: StartInput): StartModel {
     const values = cardValues(ofFamily, metricByKey("result.decimalMean")!, input.scoring, {
       includeProbeOnly: true,
     })
-    const earlier = values.filter((v) => v.atMs < firstMs && !ids.has(v.id))
+    // der Abend ist der neueste Tag: davor liegt alles, was vor seiner ersten Scheibe beginnt
+    const earlier = values.filter((v) => v.atMs < firstMs)
     const window = earlier.slice(-BEFORE)
     const average = window.length
       ? { value: window.reduce((sum, v) => sum + v.value, 0) / window.length, n: window.length }
       : null
-    const band = periodTrend(earlier).points.at(-1)?.band ?? null
+    // das Band wie im Verlauf des Fortschritts über alle Scheiben („Alles“): an der letzten Scheibe des Abends, mit
+    // ihr gerechnet; so sagen Start und Fortschritt dasselbe (User, 9. Oktober 2026, nach dem Review N5)
+    const band = periodTrend(values).points.at(-1)?.band ?? null
     const verdict =
       band && mean !== null
         ? mean > band.high
@@ -128,7 +134,6 @@ export function startModel(input: StartInput): StartModel {
             : "within"
         : null
     const strip = values
-      .filter((v) => v.atMs <= lastMs)
       .slice(-STRIP)
       .map((v) => ({ id: v.id, value: v.value, tonight: ids.has(v.id) }))
     const records = recordRows(
@@ -141,6 +146,7 @@ export function startModel(input: StartInput): StartModel {
       rows,
       shots: shots.length,
       mean,
+      cardsBefore: ofFamily.filter((c) => c.startedAtMs < firstMs).length,
       average,
       band,
       verdict,

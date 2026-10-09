@@ -4,7 +4,13 @@ import { describe, expect, it } from "vitest"
 import { listOnEvening } from "../nav/navigate"
 import { DEFAULT_LIST, type ListQuery } from "../nav/routes"
 import { NOW, periodCard, TZ } from "../period/testSeason"
-import { cardListModel, eveningDay, eveningsByMonth, type ListInputCard } from "./evenings"
+import {
+  cardListModel,
+  eveningDay,
+  eveningsByMonth,
+  lastEvening,
+  type ListInputCard,
+} from "./evenings"
 
 const at = (hourUtc: number, minute = 0, day = 29) => Date.UTC(2026, 8, day, hourUtc, minute)
 const lg = (card: PeriodCard): ListInputCard => ({ card, family: "lg-freihand" })
@@ -113,6 +119,19 @@ describe("Abende der Scheiben-Liste (Plan N2, D1–D5)", () => {
   it("ohne Familie die erste vorhandene; ohne Scheiben keine Abende", () => {
     expect(cardListModel(INPUT, { ...DEFAULT_LIST }, context).family).toBe("lg-freihand")
     expect(cardListModel([], query(), context).evenings).toEqual([])
+  })
+})
+
+describe("der letzte Abend (Plan N5, Start und Blättern von Start)", () => {
+  it("der Abend der neuesten Scheibe, alle Familien, in zeitlicher Folge; vor 4 Uhr zählt zum Vortag", () => {
+    expect(lastEvening(INPUT, TZ)).toEqual({
+      day: "2026-09-30",
+      cards: [INPUT[5]],
+    })
+    const evening = lastEvening(INPUT.slice(0, 5), TZ)
+    expect(evening?.day).toBe("2026-09-29")
+    expect(evening?.cards.map((c) => c.card.id)).toEqual(["a", "b", "c", "d", "e"])
+    expect(lastEvening([], TZ)).toBeNull()
   })
 })
 

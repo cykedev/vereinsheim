@@ -212,6 +212,18 @@ export function season(): readonly SeasonCard[] {
       makeCard(extra, "lp-10m", day, "training", 30, false, { slot: 0, hour: 20, minute: 0 })
     )
   }
+  // der letzte Abend als Mischabend (Review N5): zwei Scheiben Luftpistole am Abend des letzten Luftgewehrs, damit
+  // Start zwei Blöcke, Kacheln nebeneinander und Blättern über beide Familien zeigt; aus demselben eigenen Zufall,
+  // nach allen anderen, damit alles davor gleich bleibt
+  const lastRifleDay = dayOf(cards.filter((c) => c.target === "lg-10m").at(-1)!)
+  for (const [slot, hour, minute] of [
+    [0, 20, 0],
+    [1, 20, 45],
+  ] as const) {
+    cards.push(
+      makeCard(extra, "lp-10m", lastRifleDay, "training", 20, false, { slot, hour, minute })
+    )
+  }
 
   // bei gleicher Zeit Luftgewehr vor Luftpistole, wie vor den erzeugten Ids
   cached = cards.sort(

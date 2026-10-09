@@ -73,7 +73,7 @@ describe("Form, letzte 90 Tage (Plan N5, D7)", () => {
       /^<a href="\/progress\?compare=previous&amp;family=lg-freihand" data-form-line="true"/
     )
     expect(text(html)).toBe(
-      "Form, letzte 90 Tage · Luftgewehr: Ø 10,27 je Schuss · +0,03 gegen Zeitraum davor · nicht nachweisbar ›"
+      "Form, letzte 90 Tage · Luftgewehr: Ø 10,27 je Schuss · +0,03 gegen den Zeitraum davor · nicht nachweisbar ›"
     )
   })
 
@@ -85,7 +85,7 @@ describe("Form, letzte 90 Tage (Plan N5, D7)", () => {
         )
       )
     ).toBe(
-      "Form, letzte 90 Tage · Luftgewehr: Ø 10,27 je Schuss · gegen Zeitraum davor: zu wenige Scheiben ›"
+      "Form, letzte 90 Tage · Luftgewehr: Ø 10,27 je Schuss · gegen den Zeitraum davor: zu wenige Scheiben ›"
     )
     expect(
       renderToStaticMarkup(

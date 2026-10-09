@@ -35,8 +35,10 @@ export interface EveningBlockProps {
   /** das Scheibenbild der Familie */
   target: TargetImage
   timeZone: string
-  /** die Adresse einer Scheibe von Start (`openCard({ page: "start" }, …)`) */
+  /** die Adresse einer Scheibe von Start (`openCard({ page: "start" }, …)`), in der Wertung, die die Kachel vorn zeigt */
   cardRoute: (id: string) => CardRoute
+  /** die Adresse der Scheibe eines Rekords, in der Wertung, in der der Rekord steht (Review N5) */
+  recordRoute: (id: string) => CardRoute
   /** die Liste dieser Familie mit dem Abend als Anker */
   listRoute: ListRoute
   className?: string
@@ -55,10 +57,12 @@ export function EveningBlock({
   target,
   timeZone,
   cardRoute,
+  recordRoute,
   listRoute,
   className,
 }: EveningBlockProps) {
   const titleId = `evening-${block.family}`
+  const metaId = `evening-${block.family}-meta`
   const date = formatWeekdayDay(
     new Date(zonedDayStartMs(block.day, timeZone) + 12 * 3_600_000),
     timeZone
@@ -69,7 +73,7 @@ export function EveningBlock({
   return (
     <section
       data-evening-block={block.family}
-      aria-labelledby={titleId}
+      aria-labelledby={`${titleId} ${metaId}`}
       className={cn("grid gap-4 rounded-2xl border border-border bg-card p-4 sm:p-5", className)}
     >
       <div className="grid gap-1.5">
@@ -79,7 +83,7 @@ export function EveningBlock({
         >
           {sentence ?? `Der Abend mit ${familyLabel}`}
         </h2>
-        <p className="text-[13px] text-muted-foreground">
+        <p id={metaId} className="text-[13px] text-muted-foreground">
           {`${date} · ${familyLabel} · ${count} ${count === 1 ? "Scheibe" : "Scheiben"} · ${block.shots} Schuss`}
         </p>
       </div>
@@ -100,7 +104,7 @@ export function EveningBlock({
         )}
       </div>
       <FormStrip strip={block.strip} average={block.average} band={block.band} />
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-2">
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-2">
         {block.rows.map((row) => {
           const card = cards.get(row.id)
           const placed = card ? matchShots(card.shots).filter(hasPosition) : []
@@ -161,7 +165,8 @@ export function EveningBlock({
                   <span className="font-semibold text-foreground tabular-nums">{row.value}</span>
                 </span>
                 <RouteLink
-                  route={cardRoute(row.record.cardId)}
+                  route={recordRoute(row.record.cardId)}
+                  aria-label={`${row.label} ${row.value} zeigen`}
                   className="shrink-0 font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   zeigen

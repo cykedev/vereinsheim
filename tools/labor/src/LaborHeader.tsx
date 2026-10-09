@@ -2,7 +2,7 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import type { ReactNode } from "react"
 
 export type Theme = "system" | "light" | "dark"
-/** die Ansichten des Labors: die Bereiche der App (Platzhalter für Start, Scannen, Profil, Admin) und die Scheibe */
+/** die Ansichten des Labors: die Bereiche der App (Start, Scheiben, Fortschritt, Platzhalter für Scannen, Profil, Admin) und die Scheibe */
 export type LaborMode = "list" | "card" | "period" | "start" | "scan" | "profile" | "admin"
 /** die App im Rahmen oder die Beispielscheiben, die nur das Labor hat */
 export type LaborView = "app" | "samples"

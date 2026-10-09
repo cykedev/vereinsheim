@@ -2,7 +2,7 @@
 // die „‹ vorige · nächste ›“ blättert, in zeitlicher Folge. Reine Funktionen über die Modelle der Liste und des
 // Fortschritts, damit die Folge genau die ist, aus der man kam.
 
-import { cardListModel, eveningDay, type ListInputCard } from "../list/evenings"
+import { cardListModel, lastEvening, type ListInputCard } from "../list/evenings"
 import type { NamedPeriod } from "../period/calendar"
 import { byStart, periodModel } from "../period/model"
 import { backRoute, periodStateFromRoute } from "./navigate"
@@ -65,11 +65,7 @@ export function contextCardIds(card: CardRoute, input: ContextInput): string[] |
   }
   if (origin?.from === "start") {
     // Start zeigt den letzten Abend: geblättert wird durch seine Scheiben, über alle Familien (Plan N5, D8)
-    const sorted = input.cards.map((c) => c.card).sort(byStart)
-    const newest = sorted.at(-1)
-    if (!newest) return null
-    const day = eveningDay(newest.startedAtMs, input.timeZone)
-    return sorted.filter((c) => eveningDay(c.startedAtMs, input.timeZone) === day).map((c) => c.id)
+    return lastEvening(input.cards, input.timeZone)?.cards.map((c) => c.card.id) ?? null
   }
   return null
 }

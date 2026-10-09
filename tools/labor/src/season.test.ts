@@ -30,7 +30,7 @@ describe("Saison im Labor (Plan L3, D17)", () => {
     expect(lg.length).toBeGreaterThanOrEqual(75)
     expect(lg.length).toBeLessThanOrEqual(85)
     expect(lp.length).toBeGreaterThanOrEqual(35)
-    expect(lp.length).toBeLessThanOrEqual(45)
+    expect(lp.length).toBeLessThanOrEqual(50)
     expect(season().every((c) => c.card.startedAtMs < SEASON_NOW_MS)).toBe(true)
     expect(season()).toEqual(season())
   })
@@ -101,19 +101,21 @@ describe("Saison im Labor (Plan L3, D17)", () => {
     }
     expect(lg).toHaveLength(81)
     expect(hash.toString(16)).toBe("7552ea3c")
-    expect(lp).toHaveLength(44)
+    expect(lp).toHaveLength(46)
     // Abende in MESZ (die Saison liegt ganz in der Sommerzeit)
     const day = (c: (typeof lg)[number]) =>
       new Date(c.card.startedAtMs + 2 * 3_600_000).toISOString().slice(0, 10)
     const count = (cards: typeof lg) =>
       cards.reduce((m, c) => m.set(day(c), (m.get(day(c)) ?? 0) + 1), new Map<string, number>())
     const lpDays = count(lp)
-    expect([...lpDays.values()].filter((n) => n === 2)).toHaveLength(2)
+    // zwei Abende mit zwei Scheiben (N2) und der letzte Abend (Review N5)
+    expect([...lpDays.values()].filter((n) => n === 2)).toHaveLength(3)
     // Mischabende: dazu schon die gemeinsamen Wettkampftage; neu sind drei Trainings der Luftpistole an Samstagen
     // mit Luftgewehr
     const lgDays = count(lg)
     const mixedTraining = lp.filter((c) => c.card.kind === "training" && lgDays.has(day(c)))
-    expect(mixedTraining).toHaveLength(3)
+    // drei Samstage (N2) und zwei Scheiben am letzten Abend, einem Samstag mit Wettkampf (Review N5)
+    expect(mixedTraining).toHaveLength(5)
     for (const c of mixedTraining)
       expect(new Date(`${day(c)}T12:00:00Z`).getUTCDay(), day(c)).toBe(6)
   })

@@ -9,6 +9,7 @@ const block = (patch: Partial<EveningBlock>): EveningBlock => ({
   rows: [],
   shots: 60,
   mean: 9.04,
+  cardsBefore: 12,
   average: { value: 8.95, n: 5 },
   band: { low: 8.7, high: 9.2 },
   verdict: "within",
@@ -18,18 +19,16 @@ const block = (patch: Partial<EveningBlock>): EveningBlock => ({
 })
 
 describe("Satz über dem Abend (Plan N5, D4)", () => {
-  it("im Band, darüber, darunter: das Urteil folgt dem Band, die Zahl dem Schnitt", () => {
-    expect(eveningSentence(block({}), "Luftpistole")).toBe(
-      "Ein Abend in deiner Form: 0,09 über deinem Schnitt."
-    )
+  it("im Band, darüber, darunter: ordnet ein wie der Fortschritt, ohne Wertung; die Zahl folgt dem Schnitt", () => {
+    expect(eveningSentence(block({}), "Luftpistole")).toBe("Im Formband: 0,09 über deinem Schnitt.")
     expect(eveningSentence(block({ mean: 9.31, verdict: "above" }), "Luftpistole")).toBe(
-      "Ein starker Abend: 0,36 über deinem Schnitt."
+      "Über dem Formband: 0,36 über deinem Schnitt."
     )
     expect(eveningSentence(block({ mean: 8.6, verdict: "below" }), "Luftpistole")).toBe(
-      "Ein schwächerer Abend: 0,35 unter deinem Schnitt."
+      "Unter dem Formband: 0,35 unter deinem Schnitt."
     )
     expect(eveningSentence(block({ mean: 8.951 }), "Luftpistole")).toBe(
-      "Ein Abend in deiner Form: genau dein Schnitt."
+      "Im Formband: genau dein Schnitt."
     )
   })
 
@@ -44,12 +43,22 @@ describe("Satz über dem Abend (Plan N5, D4)", () => {
       )
     ).toBe("0,06 unter dem Schnitt der Scheibe davor.")
     expect(
-      eveningSentence(block({ average: null, band: null, verdict: null }), "Luftpistole")
+      eveningSentence(
+        block({ average: null, band: null, verdict: null, cardsBefore: 0 }),
+        "Luftpistole"
+      )
     ).toBe("Dein erster Abend mit Luftpistole.")
     expect(eveningSentence(block({ band: null, verdict: null, mean: 8.951 }), "Luftpistole")).toBe(
       "Genau auf dem Schnitt der 5 Scheiben davor."
     )
     expect(eveningSentence(block({ mean: null }), "Luftpistole")).toBeNull()
+    // Scheiben davor, aber keine mit Wert: kein Satz statt „erster Abend“
+    expect(
+      eveningSentence(
+        block({ average: null, band: null, verdict: null, cardsBefore: 2 }),
+        "Luftpistole"
+      )
+    ).toBeNull()
   })
 
   it("Abstand unter der großen Zahl, mit dem Band, wo es eins gibt", () => {

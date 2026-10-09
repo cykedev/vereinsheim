@@ -11,8 +11,12 @@ const PAD = 16
 /** Mitte der Punkte und Höhe des Bands */
 const MID = 46
 const BAND_HALF = 18
-/** so weit müssen die Beschriftungen unten auseinander liegen, sonst entfällt die am Rand */
-const LABEL_ROOM = 64
+/** Breite eines Zeichens der Achsenschrift (Geist Mono, text-xs) und Luft zwischen zwei Beschriftungen */
+const CHAR_PX = 7.2
+const GAP_PX = 8
+/** so schmal darf die Achse höchstens werden; enger liegende Werte stehen mittig */
+const MIN_SPAN = 0.1
+const textWidth = (text: string) => text.length * CHAR_PX
 
 export interface FormStripProps {
   strip: EveningBlock["strip"]
@@ -23,19 +27,22 @@ export interface FormStripProps {
 
 /**
  * Der Abend im Formband (Plan N5, D2): die letzten Scheiben der Familie als Punkte auf einer Achse des Ø je Schuss,
- * die des Abends groß in der Farbe des Akzents. Dahinter das Formband des Fortschritts und der Schnitt der fünf
- * Scheiben vor dem Abend als gestrichelte Linie. Kein Wert steht nur im SVG: die große Zahl und der Abstand stehen
+ * die des Abends groß in der Farbe des Akzents. Dahinter das Formband wie im Verlauf des Fortschritts (an der letzten
+ * Scheibe des Abends) und der Schnitt der fünf Scheiben vor dem Abend als gestrichelte Linie. Kein Wert steht nur im SVG: die große Zahl und der Abstand stehen
  * darüber, der Name des Bilds sagt Band und Schnitt in Worten.
  */
 export function FormStrip({ strip, average, band, className }: FormStripProps) {
   if (!strip.length) return null
   const values = strip.map((s) => s.value)
-  const lo = Math.min(...values, band?.low ?? Infinity, average?.value ?? Infinity)
-  const hi = Math.max(...values, band?.high ?? -Infinity, average?.value ?? -Infinity)
-  const span = Math.max(hi - lo, 0.1)
+  const rawLo = Math.min(...values, band?.low ?? Infinity, average?.value ?? Infinity)
+  const rawHi = Math.max(...values, band?.high ?? -Infinity, average?.value ?? -Infinity)
+  // liegen alle Werte enger als die kleinste Achse, steht die Achse um ihre Mitte
+  const middle = (rawLo + rawHi) / 2
+  const span = Math.max(rawHi - rawLo, MIN_SPAN)
+  const lo = rawHi - rawLo < MIN_SPAN ? middle - span / 2 : rawLo
   const tonight = strip.filter((s) => s.tonight)
   const label = [
-    `Die letzten ${strip.length} Scheiben, die des Abends hervorgehoben`,
+    `${strip.length === 1 ? "Die letzte Scheibe" : `Die letzten ${strip.length} Scheiben`}, die des Abends hervorgehoben`,
     band ? `Formband ${formatValue(band.low, 2)} bis ${formatValue(band.high, 2)}` : null,
     average ? `Schnitt ${formatValue(average.value, 2)}` : null,
   ]
@@ -51,10 +58,28 @@ export function FormStrip({ strip, average, band, className }: FormStripProps) {
           const tonightX = tonight.length
             ? tonight.reduce((sum, s) => sum + x(s.value), 0) / tonight.length
             : null
-          const averageX = average ? x(average.value) : null
+          // Beschriftungen unten: kleinster Wert links bündig, größter rechts bündig, der Schnitt mittig über seiner
+          // Linie, aber im Bild; eine Randbeschriftung, die eine andere berührt, entfällt (Review N5)
           const minValue = Math.min(...values)
           const maxValue = Math.max(...values)
-          const roomFor = (at: number) => averageX === null || Math.abs(at - averageX) >= LABEL_ROOM
+          const minText = formatValue(minValue, 2)
+          const maxText = formatValue(maxValue, 2)
+          const averageText = average ? `Schnitt ${formatValue(average.value, 2)}` : null
+          const averageHalf = averageText ? textWidth(averageText) / 2 : 0
+          const averageX = average
+            ? Math.min(Math.max(x(average.value), averageHalf), width - averageHalf)
+            : null
+          const minSpan: [number, number] = [x(minValue), x(minValue) + textWidth(minText)]
+          const maxSpan: [number, number] = [x(maxValue) - textWidth(maxText), x(maxValue)]
+          const averageSpan: [number, number] | null =
+            averageX === null ? null : [averageX - averageHalf, averageX + averageHalf]
+          const apart = (a: [number, number], b: [number, number]) =>
+            a[1] + GAP_PX <= b[0] || b[1] + GAP_PX <= a[0]
+          const showMin = !averageSpan || apart(minSpan, averageSpan)
+          const showMax =
+            maxText !== minText &&
+            (!averageSpan || apart(maxSpan, averageSpan)) &&
+            (!showMin || apart(minSpan, maxSpan))
           return (
             <ChartSvg width={width} height={HEIGHT} label={label}>
               {band && (
@@ -106,22 +131,22 @@ export function FormStrip({ strip, average, band, className }: FormStripProps) {
               ))}
               {tonightX !== null && (
                 <text data-value="true" x={tonightX} y={MID - BAND_HALF - 10} textAnchor="middle">
-                  heute
+                  Abend
                 </text>
               )}
-              {roomFor(x(minValue)) && (
-                <text x={x(minValue)} y={HEIGHT - 6} textAnchor="start">
-                  {formatValue(minValue, 2)}
+              {showMin && (
+                <text x={minSpan[0]} y={HEIGHT - 6} textAnchor="start">
+                  {minText}
                 </text>
               )}
-              {roomFor(x(maxValue)) && (
-                <text x={x(maxValue)} y={HEIGHT - 6} textAnchor="end">
-                  {formatValue(maxValue, 2)}
+              {showMax && (
+                <text x={maxSpan[1]} y={HEIGHT - 6} textAnchor="end">
+                  {maxText}
                 </text>
               )}
-              {average && averageX !== null && (
+              {averageText && averageX !== null && (
                 <text x={averageX} y={HEIGHT - 6} textAnchor="middle">
-                  {`Schnitt ${formatValue(average.value, 2)}`}
+                  {averageText}
                 </text>
               )}
             </ChartSvg>

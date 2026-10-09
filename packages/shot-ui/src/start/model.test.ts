@@ -75,18 +75,51 @@ describe("Start: der letzte Abend (Plan N5, D1–D6)", () => {
     ).toBeNull()
   })
 
-  it("Formband des Fachkerns ab zehn Scheiben: Mitte ist der Schnitt, Urteil innerhalb, darüber, darunter", () => {
-    // abwechselnd 10,0 und 10,2: Abweichungen vom Fünferschnitt ± 0,08, MAD 0,08, Schwankung 1,4826 · 0,08
+  it("Formband wie im Verlauf des Fortschritts: an der Scheibe des Abends, mit ihr gerechnet", () => {
+    // abwechselnd 10,0 und 10,2, dann der Abend: Abweichungen vom Fünferschnitt ± 0,08 und die des Abends; der MAD
+    // bleibt 0,08 (Schwankung 1,4826 · 0,08), die Mitte ist der Schnitt der letzten fünf mit dem Abend
     const spread = 1.4826 * 0.08
     const evening = (t: number) =>
-      model([...before(12), lg(periodCard("e", 0, [t], { startedAtMs: at(29, 18) }))])
-    const within = evening(101).blocks[0]
+      model([...before(12), lg(periodCard("e", 0, [t], { startedAtMs: at(29, 18) }))]).blocks[0]
+    const within = evening(101)
+    // der Schnitt im Satz bleibt der der fünf Scheiben davor (Entscheidung 13)
     expect(within.average?.value).toBeCloseTo(10.12, 9)
-    expect(within.band?.low).toBeCloseTo(10.12 - spread, 9)
-    expect(within.band?.high).toBeCloseTo(10.12 + spread, 9)
+    expect(within.band?.low).toBeCloseTo(10.1 - spread, 9)
+    expect(within.band?.high).toBeCloseTo(10.1 + spread, 9)
     expect(within.verdict).toBe("within")
-    expect(evening(103).blocks[0].verdict).toBe("above")
-    expect(evening(99).blocks[0].verdict).toBe("below")
+    const above = evening(103)
+    expect(above.band?.low).toBeCloseTo(10.14 - spread, 9)
+    expect(above.verdict).toBe("above")
+    const below = evening(99)
+    expect(below.band?.high).toBeCloseTo(10.06 + spread, 9)
+    expect(below.verdict).toBe("below")
+  })
+
+  it("in ganzen Ringen: Zahl und Streifen in Ringen", () => {
+    // 9,9 und 10,1: in Zehnteln 10,0 je Schuss, in ganzen Ringen (9 + 10) / 2 = 9,5
+    const cards = [lg(periodCard("r", 0, [99, 101], { startedAtMs: at(29, 18) }))]
+    const rings = startModel({ ...context, scoring: "rings", cards, family: null }).blocks[0]
+    expect(rings.mean).not.toBeNull()
+    expect(rings.mean).toBeCloseTo(9.5, 9)
+    expect(rings.strip[0].value).toBeCloseTo(9.5, 9)
+    expect(model(cards).blocks[0].mean).toBeCloseTo(10, 9)
+  })
+
+  it("ein Training nur aus Probe zählt wie Wertung, in der Zahl und im Streifen", () => {
+    const m = model([lg(periodCard("p", 0, [100, 102], { startedAtMs: at(29, 18), probe: true }))])
+    expect(m.blocks[0].mean).not.toBeNull()
+    expect(m.blocks[0].mean).toBeCloseTo(10.1, 9)
+    expect(m.blocks[0].shots).toBe(2)
+    expect(m.blocks[0].strip.map((x) => x.id)).toEqual(["p"])
+  })
+
+  it("Scheiben davor ohne Wert: kein Schnitt, aber auch kein erster Abend", () => {
+    const m = model([
+      lg(periodCard("x", 0, [], { startedAtMs: at(20, 18) })),
+      lg(periodCard("e", 0, [100], { startedAtMs: at(29, 18) })),
+    ])
+    expect(m.blocks[0].average).toBeNull()
+    expect(m.blocks[0].cardsBefore).toBe(1)
   })
 
   it("Streifen: höchstens 20 Scheiben bis zum Abend, die des Abends markiert", () => {

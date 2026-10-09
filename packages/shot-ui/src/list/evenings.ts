@@ -66,6 +66,21 @@ export interface CardListModel {
   range: DateRange | null
 }
 
+/**
+ * Der letzte Abend: der Abend der neuesten Scheibe mit allen seinen Scheiben, über alle Familien, in zeitlicher
+ * Folge; null ohne Scheiben. Eine Stelle für Start und das Blättern von Start (Review N5).
+ */
+export function lastEvening(
+  input: readonly ListInputCard[],
+  timeZone: string
+): { day: string; cards: ListInputCard[] } | null {
+  const sorted = [...input].sort((a, b) => byStart(a.card, b.card))
+  const newest = sorted.at(-1)
+  if (!newest) return null
+  const day = eveningDay(newest.card.startedAtMs, timeZone)
+  return { day, cards: sorted.filter((c) => eveningDay(c.card.startedAtMs, timeZone) === day) }
+}
+
 /** ein Monat der Liste: seine Abende, neueste zuerst, mit Zahl der Scheiben und der Wertungsschüsse */
 export interface Month {
   /** JJJJ-MM */

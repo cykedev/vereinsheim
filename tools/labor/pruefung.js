@@ -2929,9 +2929,9 @@ addEventListener("load", async () => {
         eveningShots
       )
       const lead = {
-        within: "Ein Abend in deiner Form",
-        above: "Ein starker Abend",
-        below: "Ein schwächerer Abend",
+        within: "Im Formband",
+        above: "Über dem Formband",
+        below: "Unter dem Formband",
       }
       const sentenceText = txt($("h2", blockEl)).trim()
       check(
@@ -2963,15 +2963,37 @@ addEventListener("load", async () => {
           startLinks.every(roundTrips),
         `${startLinks.length} Links`
       )
+      // der letzte Abend ist ein Mischabend (Review N5): zwei Blöcke, die Kacheln der Luftpistole nebeneinander
+      const blocks = St().model.blocks
+      const tilesOf = (root, family) =>
+        [...root.querySelectorAll(`[data-evening-block="${family}"] [data-start-card]`)].map((a) =>
+          a.getBoundingClientRect()
+        )
+      const pistolTiles = tilesOf(document, "lp-freihand")
+      check(
+        "Start: der Mischabend in zwei Blöcken, die beiden Kacheln der Luftpistole nebeneinander",
+        blocks.map((b) => b.family).join() === "lg-freihand,lp-freihand" &&
+          pistolTiles.length === 2 &&
+          Math.abs(pistolTiles[0].top - pistolTiles[1].top) < 1 &&
+          pistolTiles[1].left > pistolTiles[0].right,
+        `${blocks.map((b) => `${b.family}:${b.rows.length}`).join(" ")}`
+      )
       // Telefon 390 px: kein seitliches Scrollen, die Kacheln mindestens 56 px hoch
       const startPhone = await openFrame(390, 844)
       const sp = startPhone.contentDocument
       const tile = sp.querySelector("[data-start-card]")
+      const phoneTiles = tilesOf(sp, "lp-freihand")
       check(
-        "Start, Telefon 390 px: kein seitliches Scrollen, die Kachel mit kleiner Scheibe von 56 px",
+        "Start, Telefon 390 px: kein seitliches Scrollen, die Kachel mit kleiner Scheibe von 56 px, keine Kachel zu schmal",
         !!sp.querySelector("[data-start-page]") &&
           sp.documentElement.scrollWidth <= 390 &&
-          (tile?.getBoundingClientRect().height ?? 0) >= 56,
+          (tile?.getBoundingClientRect().height ?? 0) >= 56 &&
+          // nebeneinander, wo zwei passen, sonst untereinander (Plan N5, Task 8); jede mindestens 12,5 rem, keine
+          // überlappt die andere (die Breite hängt am Scrollbalken des Prüffensters)
+          phoneTiles.length === 2 &&
+          phoneTiles.every((r) => r.width >= 200) &&
+          (phoneTiles[1].top >= phoneTiles[0].bottom - 1 ||
+            phoneTiles[1].left >= phoneTiles[0].right),
         `${sp.documentElement.scrollWidth} · Kachel ${Math.round(tile?.getBoundingClientRect().height ?? 0)}`
       )
       startPhone.remove()
@@ -2988,6 +3010,10 @@ addEventListener("load", async () => {
       check(
         "Start: eine Kachel öffnet die Scheibe mit Start als Herkunft; Blättern durch den Abend; zurück heißt „Start“",
         fromStart.startsWith(`/cards/${firstTile}?from=start`) &&
+          startOrder.length === 3 &&
+          !!$('[data-card-context] [data-pager="prev"]') &&
+          !!$('[data-card-context] [data-pager="next"]') &&
+          pageId(link("Nächste Scheibe")) === startOrder[1] &&
           pageId(link("Vorige Scheibe")) === (startOrder[at0 - 1] ?? null) &&
           pageId(link("Nächste Scheibe")) === (startOrder[at0 + 1] ?? null) &&
           !!link("Zurück zu „Start“"),

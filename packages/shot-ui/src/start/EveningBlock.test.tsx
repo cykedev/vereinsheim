@@ -30,7 +30,8 @@ const render = (cards: ListInputCard[]) => {
       cards: new Map(cards.map((c) => [c.card.id, c.card])),
       target: LP_10M,
       timeZone: TZ,
-      cardRoute: (id: string) => openCard({ page: "start" }, id),
+      cardRoute: (id: string) => openCard({ page: "start" }, id, "rings"),
+      recordRoute: (id: string) => openCard({ page: "start" }, id),
       listRoute: {
         page: "cards",
         query: { ...DEFAULT_LIST, family: block.family },
@@ -81,8 +82,8 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
         m[2],
       ])
     ).toEqual([
-      ["/cards/a?from=start", "a"],
-      ["/cards/b?from=start", "b"],
+      ["/cards/a?from=start&amp;scoring=rings", "a"],
+      ["/cards/b?from=start&amp;scoring=rings", "b"],
     ])
     expect(html).toMatch(/data-start-card="a"[\s\S]*?class="[^"]*size-14/)
     expect(text(html)).toContain("18:00 · Training 18,8 18")
@@ -90,7 +91,11 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
 
   it("neue Rekorde nur, wenn der Abend welche hält; der Link in die Liste mit dem Abend", () => {
     expect(html).toContain("data-new-records")
-    expect(html).toMatch(/Neue Rekorde[\s\S]*?<a href="\/cards\/[ab]\?from=start"[^>]*>zeigen<\/a>/)
+    // der Rekord öffnet in seiner Wertung (hier Zehntel, ohne Schlüssel), die Kachel in der der Kachel (Review N5)
+    expect(html).toMatch(
+      /Neue Rekorde[\s\S]*?<a href="\/cards\/[ab]\?from=start" aria-label="[^"]+ zeigen"[^>]*>zeigen<\/a>/
+    )
+    expect(html).toMatch(/aria-labelledby="evening-lp-freihand evening-lp-freihand-meta"/)
     expect(html).toMatch(
       /<a href="\/cards\?family=lp-freihand#2026-09-25"[^>]*data-evening-list-link/
     )
