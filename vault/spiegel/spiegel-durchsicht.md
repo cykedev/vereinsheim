@@ -12,7 +12,8 @@ relates_to: ["[[spiegel-mobile]]", "[[spiegel-ui-design]]", "[[spiegel-navigatio
 **TL;DR** Am 9. Oktober 2026 haben wir das Labor ohne Labor-Kopf Seite für Seite auf dem Telefon geprüft. Start und
 die Scheiben-Liste sind zugänglich, die Seite einer Scheibe und der Fortschritt sind zu voll. Meist liegt das nicht an
 zu viel Tiefe: Antwort, Belege und Statistik stehen gleich laut nebeneinander, manche Zahl dreimal. Leitlinie sind
-seitdem drei Ebenen: **Antwort, Belege, Werkzeug**. Umgesetzt wird in vier Schritten U1–U4.
+seitdem drei Ebenen: **Antwort, Belege, Werkzeug**. Umgesetzt wird in den Schritten U1–U3 und U5; U4 ist seit dem
+9. Oktober die Probe wie am Ausdruck.
 
 # Spiegel-Durchsicht
 
@@ -103,7 +104,7 @@ Die Analyse hat 25 Karten:
 2. Zehntel und ganze Ringe stehen nur noch auf der Scheibe und als Einstellung des Geräts in Profil. Die Liste zeigt
    weiter beide Wertungen.
 3. Fachbegriffe wie σ und R50 nur im Blatt „?“.
-4. Umsetzung in der Reihenfolge U1 bis U4.
+4. Umsetzung in der Reihenfolge U1 bis U5 (U4 kam am 9. Oktober dazu, siehe unten).
 
 ## Umsetzung
 
@@ -124,5 +125,8 @@ Die Analyse hat 25 Karten:
   - B3: ein Bezug, der Satz zum Vergleich;
   - B5: Filter in einer Zeile;
   - B6: Rekorde gekürzt.
-- **U3 Sprache:** B4 über alle Seiten und die Texte in `shot-help`.
-- **U4 Start und Liste:** B8, B9 und die Filter der Liste wie in B5.
+- **U3 Sprache:** B4 über alle Seiten und die Texte in `shot-help` (`plans/2026-10-09-spiegel-sprache.md`).
+- **U4 Probe wie am Ausdruck** (dazugekommen am 9. Oktober 2026 aus der Erkundung der Daten, [[adr-027]],
+  `plans/2026-10-09-spiegel-probe-wie-ausdruck.md`): keine Scheibe mehr mit Probe und Wertung, der Reiter „Probe“ und
+  alles, was beides voraussetzt, fällt weg. U3 steckt in diese Teile keine Arbeit mehr.
+- **U5 Start und Liste** (hieß bis zum 9. Oktober U4): B8, B9 und die Filter der Liste wie in B5.

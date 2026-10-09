@@ -84,13 +84,31 @@ Die Lage steht dazu dreimal mit denselben Zahlen: im Kopf, in der Kachel „Lage
   und schwer zu verstehen“):
   - Kachel „Lage“: „versetzt“ mit der Richtung darunter („links oben“) oder „passt“ mit „kein Versatz belegt“, statt
     „echt“ und „unklar“.
-  - Kachel „Eingeschossen?“: „versetzt“ oder „passt“ statt „unklar“.
-  - Etiketten der Reiter: Lage „sicher versetzt“ / „kann Zufall sein“, Probe „sicher neben der Mitte“ / „kein Versatz
-    belegt“.
+  - Etikett im Reiter Lage: „sicher versetzt“ / „kann Zufall sein“.
   - Hilfe: Thema `lage-echt` heißt „Ist die Lage versetzt?“ (Id bleibt); Einstieg „„Sicher“ und „kann Zufall sein““;
-    Texte, die die alten Etiketten zitieren, nennen die neuen.
+    Texte außerhalb der Probe-Themen, die die alten Etiketten zitieren, nennen die neuen.
+  - Ohne Probe (Abgleich mit U4, siehe unten): Kachel „Eingeschossen?“, Etikett im Reiter Probe und die Probe-Themen
+    bleiben, wie sie sind; U4 entfernt sie.
 - **Nebenbei (Fehler, User, 9. Oktober 2026):** „zeigen“ an einem Rekord sprang in einem hohen Fenster nicht zur
   gewählten Scheibe (der Verlauf klebt und galt als im Bild). Behoben in `d4db2a5` (`jumpTo` mit `shown`).
+
+## Abgleich mit U4 „Probe wie am Ausdruck“ (9. Oktober 2026, abends)
+
+- Eine parallele Session hat U4 geplant (`plans/2026-10-09-spiegel-probe-wie-ausdruck.md`, nach U3 auf eigenem
+  Branch, [[adr-027]]): Eine Scheibe ist wie am Ausdruck, es gibt keine Scheibe mit Probe und Wertung mehr. Der Reiter
+  „Probe“, die Kachel „Eingeschossen?“, die Sätze zu Probe gegen Wertung und die Hilfe-Themen `probe-umfang`,
+  `probe-gegen-wertung`, `eingeschossen` fallen weg.
+- U3 steckt deshalb keine Arbeit mehr in diese Teile:
+  - D11 ohne Probe (Kachel „Eingeschossen?“, `SightersTab.tsx`, Probe-Themen bleiben unverändert);
+  - D9 und D11 ändern in `shot-help` nur Texte außerhalb der Probe-Themen; der Einstieg „Probe und Wertung“ bleibt
+    für U4;
+  - die Skriptprüfung bekommt keine neuen Prüfungen für Probe neben Wertung.
+- Schon erledigt, von U4 später entfernt: der Probe-Satz der Beobachtungen (Task 1) und die Angabe der Kachel
+  „Eingeschossen?“ (Task 2).
+- Reine Probe-Trainings bleiben: D7 („Probe“ in den Listen) gilt weiter.
+- Nummerierung: Die Durchsicht nannte „Start und Liste“ U4; das heißt jetzt U5.
+- Stand: `main` steht auf `140c7a0e`, gleich `feat/spiegel-sprache`, mit U2, Task 1–2 und dem Fix zu den Rekorden.
+  U3 läuft auf `feat/spiegel-sprache` weiter.
 
 ## Dateien
 
@@ -129,7 +147,7 @@ Die Lage steht dazu dreimal mit denselben Zahlen: im Kopf, in der Kachel „Lage
    - dann `overview.ts` und `PositionTab.tsx` (`RingLoss`).
 10. **Lage passt (D11):**
     - Tests auf Kacheln, Etiketten und Hilfe (zuerst rot);
-    - dann `overview.ts`, `PositionTab.tsx`, `SightersTab.tsx`, `shot-help` (`topics.ts`, `guide.ts`), Leitfaden neu
+    - dann `overview.ts`, `PositionTab.tsx`, `shot-help` (`topics.ts` nur `lage-echt`, `guide.ts`), Leitfaden neu
       erzeugen.
 11. **Skriptprüfung:**
    - Texte und Bezeichnungen nachziehen;
