@@ -6,6 +6,7 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { observations } from "../observations"
 import { ObservationSymbol } from "../ObservationSymbol"
+import { HelpButton } from "../../help/HelpButton"
 import { overviewTiles } from "../overview"
 import { AnalysisCard, CaseSafe, Disclosure, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
@@ -30,9 +31,19 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
                 title={short}
                 className="grid min-w-0 content-start gap-1 bg-card px-4 py-3.5"
               >
-                <span className="font-mono text-xs leading-snug font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-                  <CaseSafe text={tile.label} />
-                </span>
+                {/* „?“ an jeder Kachel: seit U1 ist der Überblick die Zahlen-Ansicht der Seite (Review) */}
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-mono text-xs leading-snug font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+                    <CaseSafe text={tile.label} />
+                  </span>
+                  {onHelp && (
+                    <HelpButton
+                      label={tile.label}
+                      helpId={tile.help}
+                      onClick={() => onHelp(tile.help)}
+                    />
+                  )}
+                </div>
                 <span
                   className={cn(
                     "font-display text-[1.6rem] leading-tight font-bold tabular-nums",
@@ -64,7 +75,15 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
       key: "beobachtungen",
       wide: true,
       element: (
-        <AnalysisCard help="beobachtungen" tag="aus den Zahlen" explain={explain} onHelp={onHelp}>
+        // Ziel von „Alle Beobachtungen“ im Kopf: unter der klebenden Reiterleiste (Telefon) bzw. Sprung- und
+        // Reiterleiste (ab 768 px)
+        <AnalysisCard
+          help="beobachtungen"
+          tag="aus den Zahlen"
+          explain={explain}
+          onHelp={onHelp}
+          className="scroll-mt-14 md:scroll-mt-28"
+        >
           {sentences.length ? (
             <ul className="grid gap-2.5 text-[14px] leading-relaxed">
               {sentences.map((sentence) => (

@@ -49,6 +49,30 @@ describe("Reiter Überblick", () => {
     expect(html).toContain('<span class="normal-case">σ</span>')
   })
 
+  it("jede Kachel mit „?“ zu ihrem Thema (seit U1 die Zahlen-Ansicht der Seite, Review)", () => {
+    const tiles = overviewTiles(input)
+    const literal = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    for (const tile of tiles)
+      expect(html).toMatch(
+        new RegExp(
+          `<button type="button" aria-label="Erklärung: ${literal(tile.label)}" data-help="${literal(tile.help)}"`
+        )
+      )
+    // ohne `onHelp` kein „?“
+    const bare = renderToStaticMarkup(
+      createElement(AnalysisPanel, {
+        shots: CARD,
+        state: initialViewState(),
+        target: LP_10M,
+        tab: "overview",
+        onTab: () => {},
+        explain: false,
+        onToggleLayer: () => {},
+      })
+    )
+    for (const tile of tiles) expect(bare).not.toContain(`aria-label="Erklärung: ${tile.label}"`)
+  })
+
   it("mit „Erklärungen“ der Kurzsatz sichtbar an jeder Kachel", () => {
     expect(render(true).match(/data-short/g)).toHaveLength(8)
     expect(html).not.toContain("data-short")

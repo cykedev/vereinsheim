@@ -304,8 +304,19 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
             onMore={() => {
               // „Alle Beobachtungen“: der Überblick der Analyse, oben an ihrem Anfang
               changeTab("overview")
-              // sofort, nicht über einen Frame: die Lage der Analyse hängt nicht am Reiter
-              document.getElementById("analysis")?.scrollIntoView({ block: "start" })
+              // nach dem Rendern des Überblicks zur Karte „Beobachtungen“ (den Abstand für die klebenden Leisten trägt
+              // die Karte, `scroll-mt-…`), der Fokus auf den gewählten Reiter; über einen Timer, nicht über einen Frame:
+              // im Rahmen der Prüfung kommt keiner an (Review U1)
+              setTimeout(() => {
+                document
+                  .querySelector('[data-card="beobachtungen"]')
+                  ?.scrollIntoView({ block: "start" })
+                document
+                  .querySelector<HTMLElement>(
+                    'section[aria-label="Analyse"] [role="radio"][aria-checked="true"]'
+                  )
+                  ?.focus({ preventScroll: true })
+              })
             }}
           />
         }

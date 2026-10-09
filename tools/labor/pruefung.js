@@ -801,13 +801,9 @@ addEventListener("load", async () => {
     )
     await click($('button[aria-label="Schließen"]', helpSheet()), 100)
 
-    // die Erklärung einer Kennzahl am „?“ ihrer Karte (seit U1 ohne Kacheln „Trefferbild in Zahlen“)
-    const themes = () => $('section[aria-label="Analyse"] [role="radiogroup"][aria-label="Thema"]')
-    await click(button("Präzision", themes()), 120)
+    // die Erklärung einer Kennzahl am „?“ ihrer Kachel im Überblick (seit U1 die Zahlen-Ansicht der Seite)
     const sigmaHelp = () =>
-      $(
-        'section[aria-label="Analyse"] [data-card="praezision-sigma"] button[aria-label^="Erklärung"]'
-      )
+      $('section[aria-label="Analyse"] [data-tile="Präzision σ"] button[aria-label^="Erklärung"]')
     const sheet = () => helpSheet()
     const sigmaTopic = L().tools.helpForMetric("group.sigma")
     sigmaHelp().focus()
@@ -850,7 +846,6 @@ addEventListener("load", async () => {
     sheet().dispatchEvent(new MouseEvent("click", { bubbles: true }))
     await wait(100)
     check("Tipp neben das Blatt schließt es", !sheet().open)
-    await click(button("Überblick", themes()), 120)
 
     // ---------- Analyse (Schritt 3): jede Zahl gegen den Fachkern, Hilfe, Abstände
     // Text der Seite ohne Skripte und Styles (die Prüfung steht selbst als Skript in der Seite)
@@ -1696,11 +1691,18 @@ addEventListener("load", async () => {
     const moreTab = txt(
       dd.querySelector('section[aria-label="Analyse"] [role="radio"][aria-checked="true"]')
     )
-    const moreTop = dd.getElementById("analysis").getBoundingClientRect().top
+    // die Karte „Beobachtungen“ steht sichtbar unter Sprung- und Reiterleiste (2 × 56 px; höher geht es nicht, wenn die
+    // Seite darunter endet), der Fokus auf dem Reiter (Review U1)
+    const moreCard = dd.querySelector('section[aria-label="Analyse"] [data-card="beobachtungen"]')
+    const moreTop = moreCard?.getBoundingClientRect().top ?? -1
     check(
-      "„Alle Beobachtungen“ öffnet den Überblick und bringt die Analyse unter die Leiste",
-      moreTab === "Überblick" && near(moreTop, 56, 3) && !!dd.querySelector("[data-observation]"),
-      `${moreTab} · ${moreTop.toFixed(0)}`
+      "„Alle Beobachtungen“ öffnet den Überblick, die Karte „Beobachtungen“ steht unter den Leisten, Fokus am Reiter",
+      moreTab === "Überblick" &&
+        moreTop >= 109 &&
+        moreTop <= 900 - 120 &&
+        dd.activeElement?.getAttribute("aria-checked") === "true" &&
+        txt(dd.activeElement) === "Überblick",
+      `${moreTab} · ${moreTop.toFixed(0)} · ${dd.activeElement?.tagName} ${txt(dd.activeElement ?? dd.body).slice(0, 12)}`
     )
     sectionNav.querySelector('a[href="#analysis"]').click()
     await wait(500)
@@ -2064,11 +2066,12 @@ addEventListener("load", async () => {
     )
     // kürzer als vorher (Durchsicht, 9. Oktober 2026: 5,8 Bildschirme zu 772 px bei 390 × 844, nur „Überblick“)
     const lengthFrame = await openFrame(390, 844)
+    const lengthOfCard = !!lengthFrame.contentDocument.querySelector("[data-card-header]")
     const screens = lengthFrame.contentDocument.documentElement.scrollHeight / (844 - 72)
     lengthFrame.remove()
     check(
       "Handy 390 × 844: die Seite einer Scheibe ist kürzer als 5 Bildschirme (vorher 5,8)",
-      screens < 5,
+      lengthOfCard && screens < 5,
       screens.toFixed(2)
     )
     const phone390 = doc ? await phoneAnalysis(doc, frame.contentWindow, 390) : ["kein Zugriff"]
@@ -2077,6 +2080,19 @@ addEventListener("load", async () => {
       phone390.length === 0,
       phone390.join(" | ")
     )
+    // „Alle Beobachtungen“ auf dem Telefon: die Karte sichtbar unter der Reiterleiste, die dort die Sprungleiste deckt
+    if (doc) {
+      frame.contentWindow.scrollTo(0, 0)
+      await frameClick(frame, doc.querySelector("[data-more-observations]"), 200)
+      const phoneMore = doc
+        .querySelector('section[aria-label="Analyse"] [data-card="beobachtungen"]')
+        ?.getBoundingClientRect().top
+      check(
+        "Handy 390 px: „Alle Beobachtungen“ bringt die Karte „Beobachtungen“ sichtbar unter die Reiterleiste",
+        phoneMore !== undefined && phoneMore >= 53 && phoneMore <= 900 - 72 - 120,
+        String(Math.round(phoneMore ?? -1))
+      )
+    }
     // das „?“ der ersten Karte im offenen Reiter (die Prüfung davor endet bei „Probe“)
     const phoneHelp = doc?.querySelector(
       'section[aria-label="Analyse"] [data-card] button[aria-label^="Erklärung"]'
@@ -2127,12 +2143,18 @@ addEventListener("load", async () => {
       .closest("[data-card-header]")
       .getBoundingClientRect().top
     const targetBottom = sd.getElementById("target-box").getBoundingClientRect().bottom
-    const cardBottom = sd.getElementById("target").getBoundingClientRect().bottom
     const seriesTop = sd.getElementById("series").getBoundingClientRect().top
+    // die Karte der Scheibe (mit der Ablesezeile) ist das erste Kind der Spalte der Scheibe
+    const targetCardBottom = sd
+      .querySelector('[data-section="target"] > *')
+      .getBoundingClientRect().bottom
+    // sichtbar ist das Fenster über der unteren Leiste (72 px); die Serien folgen der Karte der Scheibe direkt (vorher
+    // maß die Prüfung gegen das Ende des Rasters, das die Serien schon enthält: immer negativ, Review U1)
+    const seriesGap = seriesTop - targetCardBottom
     check(
-      "Handy 375 px: Kopf mit Ergebnis und Scheibe auf dem ersten Bildschirm, die Serien direkt danach",
-      targetBottom - headTop <= 812 && seriesTop - cardBottom <= 30,
-      `${(targetBottom - headTop).toFixed(0)} px bis zum Ende der Scheibe, Serien ${(seriesTop - cardBottom).toFixed(0)} px danach`
+      "Handy 375 px: Kopf mit Ergebnis und Scheibe über der unteren Leiste, die Serien direkt danach",
+      targetBottom - headTop <= 812 - 72 && seriesGap >= 0 && seriesGap <= 30,
+      `${(targetBottom - headTop).toFixed(0)} px bis zum Ende der Scheibe, Serien ${seriesGap.toFixed(0)} px danach`
     )
     const visibleRows = [...sd.querySelectorAll("#shot-table tr[data-row]")].filter(
       (tr) => tr.getBoundingClientRect().height > 0
@@ -2190,6 +2212,24 @@ addEventListener("load", async () => {
       sd.activeElement === smallEllipse &&
         !!sd.querySelector('[role="status"][aria-live="polite"].sr-only'),
       sd.activeElement?.textContent?.slice(0, 30) ?? ""
+    )
+    // drei Beobachtungen (LG „Zwei Abreißer“): auf dem Telefon steht nur die erste im Kopf, Kopf und Scheibe passen
+    // weiter über die untere Leiste (Review U1)
+    sw.scrollTo(0, 0)
+    const smallPanel = (label) =>
+      [...sd.querySelectorAll("[data-labor-panel] button")].find((b) => txt(b) === label)
+    await frameClick(small, smallPanel("Luftgewehr"), 200)
+    await frameClick(small, smallPanel("Zwei Abreißer"), 300)
+    sw.scrollTo(0, 0)
+    await wait(50)
+    const pairItems = [...sd.querySelectorAll("[data-card-header] [data-observation]")]
+    const pairShown = pairItems.filter((li) => li.offsetParent !== null).length
+    const pairHead = sd.querySelector("[data-card-header]").getBoundingClientRect().top
+    const pairBottom = sd.getElementById("target-box").getBoundingClientRect().bottom
+    check(
+      "Handy 375 px, drei Beobachtungen: im Kopf nur die erste, Kopf und Scheibe über der unteren Leiste",
+      pairItems.length === 3 && pairShown === 1 && pairBottom - pairHead <= 812 - 72,
+      `${pairShown} von ${pairItems.length} · ${(pairBottom - pairHead).toFixed(0)} px`
     )
     small.remove()
 

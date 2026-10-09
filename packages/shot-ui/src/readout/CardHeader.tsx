@@ -1,3 +1,5 @@
+"use client"
+
 import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
@@ -21,7 +23,8 @@ export interface CardHeaderProps {
 
 /**
  * Kopf der Seite einer Scheibe (Plan Schritt 4, D2): Titel und Metazeile, auf dem Telefon das Ergebnis, darunter die
- * wichtigsten Beobachtungen in Worten (U1, D4: die Antwort steht oben, nicht nach den Zahlen). Ab 768 px im Raster der
+ * wichtigsten Beobachtungen in Worten (U1, D4: die Antwort steht oben, nicht nach den Zahlen); auf dem Telefon nur die
+ * erste, damit Kopf und Scheibe auf den ersten Bildschirm passen (Leitlinie: ein Satz und eine Zahl). Ab 768 px im Raster der
  * Seite über der Scheibe, das Ergebnis steht dann rechts als Box (User, 8. Oktober 2026).
  */
 export function CardHeader({
@@ -47,12 +50,16 @@ export function CardHeader({
           data-key-observations
           className="grid max-w-[46rem] justify-items-start gap-2 md:col-start-1"
         >
-          <ul className="grid gap-1.5">
-            {observations.map((o) => (
+          <ul aria-label="Wichtigste Beobachtungen" className="grid gap-1.5">
+            {observations.map((o, i) => (
               <li
                 key={o.icon}
                 data-observation={o.icon}
-                className="flex gap-2.5 text-[14px] leading-relaxed text-foreground-2"
+                className={cn(
+                  "flex gap-2.5 text-[14px] leading-relaxed text-foreground-2",
+                  // auf dem Telefon nur die erste: sonst rutscht die Scheibe unter die untere Leiste (Review U1)
+                  i > 0 && "max-md:hidden"
+                )}
               >
                 <ObservationSymbol icon={o.icon} />
                 <span className="min-w-0">{o.text}</span>
@@ -66,7 +73,7 @@ export function CardHeader({
               onClick={onMore}
               className="cursor-pointer text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
             >
-              Alle Beobachtungen ›
+              Alle Beobachtungen <span aria-hidden="true">›</span>
             </button>
           )}
         </div>

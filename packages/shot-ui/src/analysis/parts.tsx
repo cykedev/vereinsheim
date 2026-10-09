@@ -23,6 +23,8 @@ export interface AnalysisCardProps {
   explain: boolean
   /** „?“ im Kopf öffnet die Erklärung als Blatt (Plan Schritt 4, D3); ohne kein „?“ */
   onHelp?: (id: string) => void
+  /** etwa ein Abstand für einen Sprung zur Karte (`scroll-mt-…`) */
+  className?: string
   children: ReactNode
 }
 
@@ -34,6 +36,7 @@ export function AnalysisCard({
   wide,
   explain,
   onHelp,
+  className,
   children,
 }: AnalysisCardProps) {
   const topic = help ? helpTopic(help) : undefined
@@ -42,7 +45,10 @@ export function AnalysisCard({
     <article
       data-card={help}
       data-wide={wide || undefined}
-      className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4"
+      className={cn(
+        "flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4",
+        className
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <h3

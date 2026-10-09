@@ -43,9 +43,19 @@ describe("Kopf der Scheibe (D2)", () => {
     expect(html).toContain("Schuss 27 fällt als Ausreißer aus der Gruppe.")
   })
 
-  it("„Alle Beobachtungen“ nur mit `onMore`, als Knopf", () => {
+  it("auf dem Telefon nur die erste (ein Satz auf dem ersten Bildschirm, Review U1), ab 768 px alle", () => {
+    const items = [...render().matchAll(/<li data-observation="[a-z]+" class="([^"]*)"/g)].map(
+      (m) => m[1]
+    )
+    expect(items).toHaveLength(2)
+    expect(items[0]).not.toContain("max-md:hidden")
+    expect(items[1]).toContain("max-md:hidden")
+    expect(render()).toMatch(/<ul aria-label="Wichtigste Beobachtungen"/)
+  })
+
+  it("„Alle Beobachtungen“ nur mit `onMore`, als Knopf; das „›“ liest der Screenreader nicht", () => {
     expect(render()).toMatch(
-      /<button type="button" data-more-observations="true"[^>]*>Alle Beobachtungen ›<\/button>/
+      /<button type="button" data-more-observations="true"[^>]*>Alle Beobachtungen <span aria-hidden="true">›<\/span><\/button>/
     )
     expect(render({ onMore: undefined })).not.toContain("data-more-observations")
   })
@@ -63,6 +73,6 @@ describe("Kopf der Scheibe (D2)", () => {
     const bare = render({ observations: [] })
     expect(bare).not.toContain("data-key-observations")
     expect(bare).not.toContain("data-more-observations")
-    expect(render({ result: null })).not.toContain("md:hidden")
+    expect(render({ result: null })).not.toContain('<div class="md:hidden">')
   })
 })
