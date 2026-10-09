@@ -71,4 +71,9 @@ describe("Zustand der Seite eines Zeitraums", () => {
     expect(periodReducer(chosen, { type: "choose", id: null }).chosen).toBeNull()
     expect(periodReducer(chosen, { type: "choose", id: "k13" }).chosen).toBe("k13")
   })
+
+  it("„restore“ ersetzt den ganzen Zustand, etwa beim Zurück aus der Adresse (Plan N1)", () => {
+    const next = initialPeriodState({ family: "lp-10m", kind: "training", chosen: "k3" })
+    expect(periodReducer(chosen, { type: "restore", state: next })).toEqual(next)
+  })
 })

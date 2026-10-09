@@ -5,9 +5,12 @@ import {
   backRoute,
   listFromProgress,
   openCard,
+  periodStateFromRoute,
   progressFromList,
+  progressRoute,
   siblingRoute,
 } from "./navigate"
+import { initialPeriodState, periodReducer, type PeriodState } from "../period/state"
 import {
   DEFAULT_LIST,
   DEFAULT_PROGRESS,
@@ -159,5 +162,46 @@ describe("Beschriftung des Rückwegs (D8)", () => {
     expect(backLabel(openCard({ page: "start" }, "c1"), context)).toBe("Start")
     expect(backLabel(openCard(LIST, "c1"), context)).toBe("Scheiben")
     expect(backLabel(openCard({ page: "scan" }, "c1"), context)).toBe("Scheiben")
+  })
+})
+
+describe("Fortschritt ↔ Zustand der Seite (Task 7)", () => {
+  it("Rundreise Zustand → Route → Zustand über alle Felder", () => {
+    const states: PeriodState[] = [
+      initialPeriodState({ family: "lg-10m" }),
+      {
+        choice: { type: "free", from: "2026-05-01", to: "2026-06-30" },
+        compare: { type: "named", id: "saison-2025" },
+        family: "lp-10m",
+        kind: "competition",
+        includeProbeOnly: false,
+        scoring: "rings",
+        metric: "time.intervalMedian",
+        view: "cards",
+        chosen: "c9",
+      },
+    ]
+    for (const state of states) {
+      const route = progressRoute(state, "verlauf")
+      expect(route.section).toBe("verlauf")
+      expect(periodStateFromRoute(route, "lg-10m")).toEqual(state)
+      // auch über die Adresse
+      expect(urlFromRoute(route)).toMatch(/^\/progress(\?|#)/)
+    }
+  })
+
+  it("ohne Familie in der Adresse gilt die zuletzt benutzte", () => {
+    const route: ProgressRoute = { page: "progress", query: DEFAULT_PROGRESS, section: null }
+    expect(periodStateFromRoute(route, "lp-10m")).toEqual(initialPeriodState({ family: "lp-10m" }))
+  })
+
+  it("„restore“ setzt den ganzen Zustand, auch die Wahl", () => {
+    const before = initialPeriodState({ family: "lg-10m", chosen: "c1" })
+    const after = periodStateFromRoute(
+      backRoute(openCard(PROGRESS, "c42")) as ProgressRoute,
+      "lg-10m"
+    )
+    expect(periodReducer(before, { type: "restore", state: after })).toEqual(after)
+    expect(periodReducer(before, { type: "restore", state: after }).chosen).toBe("c42")
   })
 })

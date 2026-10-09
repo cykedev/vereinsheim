@@ -44,6 +44,8 @@ export type PeriodAction =
   | { type: "choose"; id: string | null }
   /** wählen ohne Umschalten (das Lineal): dieselbe Scheibe noch einmal bleibt gewählt */
   | { type: "pick"; id: string | null }
+  /** den ganzen Zustand setzen, etwa aus der Adresse beim Zurück (Plan N1) */
+  | { type: "restore"; state: PeriodState }
 
 export function initialPeriodState(
   partial: Partial<PeriodState> & { family: string }
@@ -88,5 +90,7 @@ export function periodReducer(state: PeriodState, action: PeriodAction): PeriodS
       return { ...state, chosen: action.id === state.chosen ? null : action.id }
     case "pick":
       return { ...state, chosen: action.id }
+    case "restore":
+      return action.state
   }
 }

@@ -3,7 +3,9 @@
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
+import type { PeriodSection } from "../layout/sections"
 import { resolveRange, type NamedPeriod } from "../period/calendar"
+import type { PeriodState } from "../period/state"
 
 import {
   DEFAULT_LIST,
@@ -93,4 +95,14 @@ export function backLabel(
   if (origin?.from === "start") return "Start"
   if (origin?.from !== "progress") return "Scheiben"
   return resolveRange(origin.query.choice, { ...context, nowMs: 0, firstMs: null }).label
+}
+
+/** der Zustand der Seite eines Zeitraums als Route; der Abschnitt wird der Anker */
+export function progressRoute(state: PeriodState, section: PeriodSection | null): ProgressRoute {
+  return { page: "progress", query: { ...state }, section }
+}
+
+/** der Zustand der Seite eines Zeitraums aus ihrer Route; ohne Familie die zuletzt benutzte */
+export function periodStateFromRoute(route: ProgressRoute, fallbackFamily: string): PeriodState {
+  return { ...route.query, family: route.query.family ?? fallbackFamily }
 }
