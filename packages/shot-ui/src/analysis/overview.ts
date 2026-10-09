@@ -129,13 +129,20 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       pace ? `Median · mittlere Hälfte in ${formatValue(pace.iqrMs / 1000, 0)} s` : "",
       "ab 4 Schuss mit Zeit"
     ),
+    // D3 (User, 9. Oktober 2026): das Urteil statt des Abstands Probe → Wertung, der auch ohne jede
+    // Verschiebung bei etwa einem halben σ liegt (B21); die Zahl steht im Reiter Probe mit diesem Hinweis.
+    // Ein Training nur aus Probe ist kein Einschießen (Prüfung, Probe 6).
     tile(
-      "Probe → Wertung",
+      "Eingeschossen?",
       "eingeschossen",
-      zeroed && zeroed.matchOffsetUm !== null ? mm2(zeroed.matchOffsetUm) : null,
-      "mm",
-      "Versatz der Schwerpunkte",
-      "ab 3 Probe- und 3 Wertungsschüssen"
+      input.basis === "nur Probe" || !zeroed ? null : zeroed.real ? "versetzt" : "unklar",
+      "",
+      zeroed
+        ? `${zeroed.real ? "echt neben der Mitte" : "kein Versatz nachweisbar"} · letzte ${zeroed.n} Probeschüsse`
+        : "",
+      input.basis === "nur Probe"
+        ? "Training nur mit Probe"
+        : "ab 3 Probeschüssen mit Lage vor der Wertung"
     ),
   ]
 }

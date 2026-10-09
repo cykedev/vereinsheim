@@ -198,7 +198,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 
 | ID | Kennzahl | Definition | Prio | Wo |
 |---|---|---|---|---|
-| Q1 | Datenlage | Wertung, Probe, ohne Lage, ohne Zeit, Merkmale; als dezente Zeile unter jeder Ansicht | A | SP-1.10 |
+| Q1 | Datenlage | Wertungs- und Probeschüsse, ohne Lage, ohne Zeit, ohne Wert, in Zehnteln ohne Zehntel, Merkmale; eine Scheibe nur mit Probe als Training; als dezente Zeile unter jeder Ansicht | A | SP-1.10 |
 
 ## Mit unseren Daten nicht möglich
 

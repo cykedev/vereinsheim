@@ -42,7 +42,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
       "Ringverlust",
       "Trend",
       "Tempo",
-      "Probe → Wertung",
+      "Eingeschossen?",
     ])
   })
 
@@ -61,8 +61,14 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
       `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} · ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (95 %)` : "nicht klar"}`
     )
     expect(tile("Tempo").value).toBe(formatValue(tempoSpread(base)!.medianMs / 1000, 0))
-    expect(tile("Probe → Wertung").value).toBe(
-      formatValue(sighterZeroed(CARD)!.matchOffsetUm! / 1000, 2)
+    // D3: das Urteil von S4 statt des Abstands, der auch ohne Verschiebung groß ausfällt (B21)
+    const zeroed = sighterZeroed(CARD)!
+    expect(tile("Eingeschossen?").value).toBe(zeroed.real ? "versetzt" : "unklar")
+    expect(tile("Eingeschossen?").unit).toBe("")
+    expect(tile("Eingeschossen?").hint).toBe(
+      zeroed.real
+        ? `echt neben der Mitte · letzte ${zeroed.n} Probeschüsse`
+        : `kein Versatz nachweisbar · letzte ${zeroed.n} Probeschüsse`
     )
   })
 
@@ -78,7 +84,12 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(t("Präzision σ").hint).toBe("ab 3 Schuss")
     expect(t("Trend").hint).toBe("ab 10 Schuss")
     expect(t("Tempo").hint).toBe("ab 4 Schuss mit Zeit")
-    expect(t("Probe → Wertung").hint).toBe("ab 3 Probe- und 3 Wertungsschüssen")
+    expect(t("Eingeschossen?").hint).toBe("ab 3 Probeschüssen mit Lage vor der Wertung")
+    // ein Training nur aus Probe ist kein Einschießen (Prüfung, Probe 6)
+    const probes = CARD.filter((s) => s.kind === "probe")
+    const training = overviewTiles(analysisInput(probes, "decimal", LP_10M)).at(-1)!
+    expect(training.value).toBeNull()
+    expect(training.hint).toBe("Training nur mit Probe")
   })
 
   it("fehlt einem Schuss der Wert, nennt die Kachel Ergebnis den Ø und den Grund", () => {
@@ -215,6 +226,32 @@ describe("Beobachtungen in Worten", () => {
     const flag = sentences.find((s) => s.icon === "flag")
     expect(flag?.text).toMatch(/^Probe: Ø \d+,\d\d je Schuss gegen \d+,\d\d in der Wertung\./)
     expect(sentences.map((s) => s.text).join(" ")).not.toContain("Verstellung")
+  })
+
+  it("echt versetzte letzte Probe: Richtung und Abstand, keine Behauptung über die Wertung", () => {
+    // fünf Probeschüsse eng um (3 | 3) mm, danach die Wertung der Testkarte (Prüfung, Probe 1)
+    const offset = CARD.map((s, i) =>
+      i >= 4 && i < 9
+        ? { ...s, xUm: 3000 + (i % 2 ? 100 : -100), yUm: 3000 + (i % 3) * 100 - 100 }
+        : s
+    )
+    const zeroed = sighterZeroed(offset)!
+    expect(zeroed.real).toBe(true)
+    const text = observations(analysisInput(offset, "decimal", LP_10M)).find(
+      (s) => s.icon === "flag"
+    )!.text
+    expect(text).toContain(
+      `Die letzten fünf Probeschüsse lagen echt neben der Mitte (rechts oben, ${formatValue(zeroed.offsetUm / 1000, 2)} mm).`
+    )
+    expect(text).not.toContain("Wertung begann")
+  })
+
+  it("drei Probeschüsse: der Satz nennt drei", () => {
+    const three = CARD.filter((s, i) => s.kind === "match" || i >= 6)
+    const text = observations(analysisInput(three, "decimal", LP_10M)).find(
+      (s) => s.icon === "flag"
+    )!.text
+    expect(text).toContain("Bei den letzten drei Probeschüssen ist kein Versatz nachweisbar.")
   })
 
   it("der Trend nennt den Wert je Schuss alle zehn Schuss und je Zehnerserie das Zehnfache", () => {

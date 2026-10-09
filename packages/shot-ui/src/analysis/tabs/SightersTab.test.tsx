@@ -1,7 +1,7 @@
 import { sighterComparison, sighterSummary, sighterZeroed } from "@vereinsheim/shot-core/analysis"
 import { describe, expect, it } from "vitest"
 
-import { directionWords, durationText, formatValue } from "../../format"
+import { directionName, durationText, formatValue } from "../../format"
 import { probeOnlyAsMatch } from "../../shots"
 import { fortyCard } from "../testCard"
 import { cardHtml, cardText, renderTab } from "../testPanel"
@@ -21,7 +21,10 @@ describe("Reiter Probe", () => {
     const text = cardText(html, "probe-umfang")
     expect(text).toContain(`Probeschüsse ${summary.count} (${summary.blocks} Block à zehn)`)
     expect(text).toContain(`Dauer der Probe ${durationText(summary.durationMs!)}`)
-    expect(text).toContain(`Bis zum ersten Wertungsschuss ${durationText(summary.untilMatchMs!)}`)
+    // gemessen ab dem ersten Probeschuss (Prüfung, Probe 9)
+    expect(text).toContain(
+      `Vom ersten Probeschuss bis zur Wertung ${durationText(summary.untilMatchMs!)}`
+    )
   })
 
   it("Probe gegen Wertung: je Seite Schuss, Ø, R50 und σ", () => {
@@ -45,13 +48,39 @@ describe("Reiter Probe", () => {
   it("Eingeschossen? mit Lage der letzten fünf, Versatz zur Wertung und Urteil", () => {
     const zero = sighterZeroed(CARD)!
     const text = cardText(html, "eingeschossen")
+    // eine Rundung, nicht „0,5 mm rechts (0,47 mm)“ (Prüfung, Probe 11)
     expect(text).toContain(
-      `Lage der letzten fünf ${directionWords(zero.center)} (${mm(zero.offsetUm)} mm)`
+      `Lage der letzten fünf Probeschüsse ${directionName(zero.center)}, ${mm(zero.offsetUm)} mm`
     )
     expect(text).toContain(`Versatz Probe → Wertung ${mm(zero.matchOffsetUm!)} mm`)
+    // D3: der Abstand ohne jede Verschiebung, mit seinem Bezug (B21)
+    expect(text).toContain(
+      "Aus fünf Probeschüssen ist ihr Schwerpunkt unsicher: Auch ohne jede Verschiebung liegt der Abstand zur Wertung bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen über gut einem σ."
+    )
     expect(cardHtml(html, "eingeschossen")).toContain(
       zero.real ? 'data-verdict="warn"' : 'data-verdict="none"'
     )
+  })
+
+  it("drei Probeschüsse mit Lage: die Karte nennt drei, nicht fünf (Prüfung, Probe 5)", () => {
+    const three = CARD.filter((s, i) => s.kind === "match" || i >= 6)
+    expect(sighterZeroed(three)!.n).toBe(3)
+    const text = cardText(renderTab("sighters", { shots: three }), "eingeschossen")
+    expect(text).toContain("Lage der letzten drei Probeschüsse")
+    expect(text).toContain("Aus drei Probeschüssen ist ihr Schwerpunkt unsicher")
+    expect(text).not.toContain("fünf Probeschüssen mit Lage")
+  })
+
+  it("Probe erst nach Beginn der Wertung: sie zählt hier nicht, und das steht da (Prüfung, Probe 4)", () => {
+    const late = [
+      ...BASE.slice(0, 1),
+      ...PROBES.map((s) => ({ ...s, seq: (s.seq ?? 0) + 100 })),
+      ...BASE.slice(1),
+    ]
+    const page = renderTab("sighters", { shots: late })
+    const note = "Keine Probeschüsse vor der Wertung; Probe nach ihrem Beginn zählt hier nicht."
+    expect(cardText(page, "probe-umfang")).toContain(note)
+    expect(cardText(page, "probe-auf-der-scheibe")).toContain(note)
   })
 
   it("keine Erwähnung einer Visierverstellung", () => {
@@ -114,5 +143,11 @@ describe("Reiter Probe", () => {
     expect(cardText(training, "probe-umfang")).toContain(
       "Nur Probeschüsse: Die anderen Reiter rechnen über sie wie über Wertung."
     )
+    // auch ungewandelt: ein Training nur aus Probe ist kein Einschießen (Prüfung, Probe 6)
+    for (const shots of [probeOnlyAsMatch(PROBES), PROBES]) {
+      expect(cardText(renderTab("sighters", { shots }), "eingeschossen")).toContain(
+        "Nur Probeschüsse: Die anderen Reiter rechnen über sie wie über Wertung."
+      )
+    }
   })
 })

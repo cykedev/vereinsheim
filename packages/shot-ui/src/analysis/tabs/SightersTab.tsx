@@ -8,17 +8,13 @@ import {
   type GroupSide,
 } from "@vereinsheim/shot-core/analysis"
 import { selectShots } from "@vereinsheim/shot-core/metrics"
-import type { ReactNode } from "react"
 
-import { directionWords, durationText, formatValue } from "../../format"
+import { countWord, directionName, durationText, formatValue } from "../../format"
+import { isProbeShot } from "../../shots"
 import { ChartSlot } from "../charts/frame"
 import { SighterChart } from "../charts/SighterChart"
-import { AnalysisCard, KeyValues, Note, Verdict } from "../parts"
+import { AnalysisCard, KeyValues, Muted, Note, Verdict } from "../parts"
 import type { CardContext, CardSpec } from "./index"
-
-const Muted = ({ children }: { children: ReactNode }) => (
-  <span className="font-normal text-muted-foreground">{children}</span>
-)
 
 const mm = (um: number) => formatValue(um / 1000, 2)
 
@@ -41,9 +37,13 @@ export function sighterCards({ input, explain, onHelp }: CardContext): CardSpec[
   const zeroed = sighterZeroed(all)
   // wie das Diagramm: die Probe vor der Wertung, nur mit Lage
   const sightersWithPosition = selectShots(sightersBeforeMatch(all), { need: "position" }).length
-  const noProbe =
-    basis === "nur Probe"
-      ? "Nur Probeschüsse: Die anderen Reiter rechnen über sie wie über Wertung."
+  // Probe gibt es, aber erst nach Beginn der Wertung: Sie zählt hier nicht, und das steht da (Prüfung, Probe 4)
+  const late = !summary && all.some(isProbeShot)
+  const training = basis === "nur Probe"
+  const noProbe = training
+    ? "Nur Probeschüsse: Die anderen Reiter rechnen über sie wie über Wertung."
+    : late
+      ? "Keine Probeschüsse vor der Wertung; Probe nach ihrem Beginn zählt hier nicht."
       : "Keine Probeschüsse."
 
   return [
@@ -66,7 +66,7 @@ export function sighterCards({ input, explain, onHelp }: CardContext): CardSpec[
                   summary.durationMs === null ? "–" : durationText(summary.durationMs),
                 ],
                 [
-                  "Bis zum ersten Wertungsschuss",
+                  "Vom ersten Probeschuss bis zur Wertung",
                   summary.untilMatchMs === null ? "–" : durationText(summary.untilMatchMs),
                 ],
               ]}
@@ -132,16 +132,14 @@ export function sighterCards({ input, explain, onHelp }: CardContext): CardSpec[
       key: "eingeschossen",
       element: (
         <AnalysisCard help="eingeschossen" explain={explain} onHelp={onHelp}>
-          {zeroed ? (
+          {/* ein Training nur aus Probe ist kein Einschießen (Prüfung, Probe 6) */}
+          {zeroed && !training ? (
             <>
               <KeyValues
                 rows={[
                   [
-                    "Lage der letzten fünf",
-                    <>
-                      {directionWords(zeroed.center)}
-                      <Muted>{` (${mm(zeroed.offsetUm)} mm)`}</Muted>
-                    </>,
+                    `Lage der letzten ${countWord(zeroed.n)} Probeschüsse`,
+                    `${directionName(zeroed.center)}, ${mm(zeroed.offsetUm)} mm`,
                   ],
                   [
                     "Versatz Probe → Wertung",
@@ -157,12 +155,19 @@ export function sighterCards({ input, explain, onHelp }: CardContext): CardSpec[
                 )}
               </div>
               <Note>
-                Hotelling-T² über die letzten fünf Probeschüsse mit Lage; der Versatz zur Wertung
-                zählt dieselben Schüsse.
+                {`Hotelling-T² über die letzten ${countWord(zeroed.n)} Probeschüsse mit Lage; der Versatz zur Wertung zählt dieselben Schüsse.`}
               </Note>
+              {zeroed.matchOffsetUm !== null && (
+                // D3 (User, 9. Oktober 2026), Zahlen aus B21
+                <Note>
+                  {`Aus ${countWord(zeroed.n)} Probeschüssen ist ihr Schwerpunkt unsicher: Auch ohne jede Verschiebung liegt der Abstand zur Wertung bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen über gut einem σ.`}
+                </Note>
+              )}
             </>
           ) : (
-            <Note>ab 3 Probeschüssen mit Lage vor der Wertung</Note>
+            <Note>
+              {training || late ? noProbe : "ab 3 Probeschüssen mit Lage vor der Wertung"}
+            </Note>
           )}
         </AnalysisCard>
       ),

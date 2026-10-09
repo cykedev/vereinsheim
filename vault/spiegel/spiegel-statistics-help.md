@@ -41,7 +41,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   bleiben Zehner, Innenzehner und Zehnerquote.
 - **Probe und Wertung.** Lage, Streuung und Tempo der Analyse rechnen über die Wertung, ohne Probe;
   gibt es nur Probe, über die Probe. Die Probe hat einen eigenen Reiter: „Probe gegen Wertung“ nimmt
-  die ganze Probe vor der Wertung, „Eingeschossen?“ ihre letzten fünf Schüsse.
+  die ganze Probe vor der Wertung, „Eingeschossen?“ ihre letzten bis zu fünf Schüsse. Eine Scheibe
+  nur mit Probe ist Training: Spiegel zeigt sie wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn
+  und Ergebnis; das schwarze Eck oben rechts an den kleinen Scheiben der Serien erinnert daran, dass
+  es Probe ist.
 - **Nummern.** Wertungsschüsse heißen 1, 2, 3 …, Probeschüsse P1, P2 …, in der Reihenfolge der
   Abgabe. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.
 - **Median statt Durchschnitt.** Wo „Median“ steht, zählt der mittlere Wert: Die Hälfte liegt
@@ -373,35 +376,41 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Durchschnitt, R50 und σ der ganzen Probe vor der Wertung gegen die Wertung.
 - *So liest du es:* σ ist der fairere Vergleich: R50 fällt bei wenigen Schüssen etwas zu klein aus,
   und die Probe hat meist weniger Schüsse.
-- *Vorsicht:* Ein Fehlschuss zählt bei σ mit und bläht es auf; R50 lässt ihn weg. Mit wenigen
-  Probeschüssen ist auch σ unsicher: Bei gleicher Präzision liegt σ aus fünf Probeschüssen zufällig
-  zwischen etwa der Hälfte und dem Anderthalbfachen von σ der Wertung.
+- *Vorsicht:* Lagen deine ersten Probeschüsse woanders, etwa vor einer Korrektur am Anschlag, machen
+  sie σ und R50 der Probe größer, ohne dass du unpräziser warst. Ein Fehlschuss zählt bei σ mit und
+  bläht es auf; R50 lässt ihn weg. Mit wenigen Probeschüssen ist auch σ unsicher: Bei gleicher
+  Präzision liegt σ aus fünf Probeschüssen zufällig zwischen etwa der Hälfte und dem
+  Anderthalbfachen von σ der Wertung.
 - *Mindestzahl:* σ ab 3, R50 ab 5 Schuss je Seite.
 
 **Eingeschossen? (S1, S4)**
-- *Was:* Ein Test deiner letzten fünf Probeschüsse vor der Wertung: Lagen sie echt neben der Mitte?
-  Dazu der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.
-- *So liest du es:* „Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Ob die Wertung
-  mit diesem Versatz weiterging, zeigt der Versatz Probe → Wertung.
+- *Was:* Ein Test deiner letzten bis zu fünf Probeschüsse mit Lage vor der Wertung: Lagen sie echt
+  neben der Mitte? Dazu im Reiter Probe der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.
+- *So liest du es:* „Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Über die
+  Wertung sagt das Urteil nichts; ihre Lage prüft „Ist die Lage echt?“ im Reiter Lage.
 - *Vorsicht:* „Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur
   einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in
-  knapp zwei von drei Fällen auf.
+  knapp zwei von drei Fällen auf. Auch der Abstand Probe → Wertung ist unsicher: Ohne jede
+  Verschiebung liegt er bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen
+  über gut einem σ. Darum zeigt der Überblick nur das Urteil.
 - *Mindestzahl:* Ab 3 Probeschüssen mit Lage, der Abstand zur Wertung zusätzlich ab 3
   Wertungsschüssen mit Lage.
-- *Formel:* `Hotelling-T² über die letzten fünf Probeschüsse mit Lage; Versatz = |m Probe − m
+- *Formel:* `Hotelling-T² über die letzten bis zu fünf Probeschüsse mit Lage; Versatz = |m Probe − m
   Wertung|`
 
 ## Datenlage
 
 **Datenlage (Q1)**
-- *Was:* Wie viele Wertungs- und Probeschüsse die Analyse hat, wie vielen Lage, Zeit oder Wert
-  fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig).
+- *Was:* Wie viele Wertungs- und Probeschüsse die Scheibe hat; Lage, Zeit und Wert zählen über
+  beide: wie vielen davon Lage, Zeit oder Wert fehlen und welche Schüsse markiert sind (Fehlschuss,
+  verdächtig). Eine Scheibe nur mit Probe steht als Training da, wie Wertung gezählt.
 - *So liest du es:* Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei
   Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es
   kein Ergebnis, keine Zahl der Zehner und Innenzehner und keine Summe seiner Serie; Ø und Quoten
   rechnen ohne ihn. Ein verdächtiger Schuss zählt nur mit seinem Wert, auch wenn er eine Lage oder
   Zeit hat.
-- *Vorsicht:* In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat.
+- *Vorsicht:* In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat; die
+  Datenlage nennt ihn „ohne Zehntel“.
 
 ## Über viele Scheiben
 

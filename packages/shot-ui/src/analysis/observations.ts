@@ -18,7 +18,14 @@ import {
 } from "@vereinsheim/shot-core/analysis"
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
-import { directionWords, formatSigned, formatValue, ringsText } from "../format"
+import {
+  countWord,
+  directionName,
+  directionWords,
+  formatSigned,
+  formatValue,
+  ringsText,
+} from "../format"
 import type { AnalysisInput } from "./input"
 
 export type ObservationIcon =
@@ -151,9 +158,11 @@ export function observations(input: AnalysisInput): Observation[] {
     let text = `Probe: Ø ${formatValue(comparison.probe.meanRings, 2)} je Schuss gegen ${formatValue(comparison.match.meanRings, 2)} in der Wertung.`
     const zeroed = sighterZeroed(all)
     if (zeroed) {
+      // nur, was der Test über die Probe sagt, nichts über die Wertung; mit ihrem n (Prüfung, Probe 1 und 5)
+      const last = countWord(zeroed.n)
       text += zeroed.real
-        ? ` Die letzten fünf Probeschüsse lagen echt neben der Mitte (${mm(zeroed.offsetUm)}): Die Wertung begann mit einem Versatz.`
-        : " Bei den letzten fünf Probeschüssen ist kein Versatz nachweisbar."
+        ? ` Die letzten ${last} Probeschüsse lagen echt neben der Mitte (${directionName(zeroed.center)}, ${mm(zeroed.offsetUm)}).`
+        : ` Bei den letzten ${last} Probeschüssen ist kein Versatz nachweisbar.`
     }
     out.push({ icon: "flag", text })
   }

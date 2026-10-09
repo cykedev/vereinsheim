@@ -36,26 +36,49 @@ const BASIS_TEXT: Readonly<Record<AnalysisBasis, string>> = {
   alle: "über alle Schüsse",
 }
 
-/** Merkmale der Datenlage in Worten */
-const FLAG_WORDS: Readonly<Record<string, string>> = {
-  verdaechtig: "verdächtig",
-  fehlschuss: "Fehlschuss",
+/** Merkmale der Datenlage in Worten, Einzahl und Mehrzahl */
+const FLAG_WORDS: Readonly<Record<string, readonly [string, string]>> = {
+  verdaechtig: ["verdächtiger Schuss", "verdächtige Schüsse"],
+  fehlschuss: ["Fehlschuss", "Fehlschüsse"],
 }
 
-/** „Datenlage: 40 Wertung · 9 Probe · alle mit Lage, Zeit und Wert · Wertung in Zehnteln“ (Q1) */
-function coverageText(shots: readonly MetricShot[], scoring: ViewState["scoring"]): string {
+const counted = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+/**
+ * „Datenlage: 40 Wertungsschüsse · 9 Probeschüsse · alle mit Lage, Zeit und Wert · Wertung in Zehnteln“ (Q1). In
+ * Zehnteln zählt ein Schuss ohne Zehntel mit, auch wenn er einen Ring hat; ein Training nur aus Probe heißt so
+ * (Prüfung, Probe 7, 8 und 10).
+ */
+function coverageText(
+  shots: readonly MetricShot[],
+  scoring: ViewState["scoring"],
+  basis: AnalysisBasis
+): string {
   const coverage = dataCoverage(shots)
   // eine Trainingskarte zeigt die Probe wie Wertung, die Datenlage zählt sie als Probe
   const probe = shots.filter(isProbeShot).length
+  const withoutTenths =
+    scoring === "decimal"
+      ? shots.filter((s) => Number.isFinite(s.ring) && !Number.isFinite(s.decimalTenths)).length
+      : 0
   const missing = [
     coverage.withoutPosition ? `${coverage.withoutPosition} ohne Lage` : "",
     coverage.withoutTime ? `${coverage.withoutTime} ohne Zeit` : "",
     coverage.withoutValue ? `${coverage.withoutValue} ohne Wert` : "",
-    ...Object.entries(coverage.flags).map(([flag, n]) => `${n} ${FLAG_WORDS[flag] ?? flag}`),
+    withoutTenths ? `${withoutTenths} ohne Zehntel` : "",
+    ...Object.entries(coverage.flags).map(([flag, n]) =>
+      FLAG_WORDS[flag] ? counted(n, ...FLAG_WORDS[flag]) : `${n} ${flag}`
+    ),
   ].filter(Boolean)
+  const kinds =
+    basis === "nur Probe"
+      ? [`${counted(probe, "Probeschuss", "Probeschüsse")}, als Training wie Wertung gezählt`]
+      : [
+          counted(shots.length - probe, "Wertungsschuss", "Wertungsschüsse"),
+          counted(probe, "Probeschuss", "Probeschüsse"),
+        ]
   return [
-    `Datenlage: ${shots.length - probe} Wertung`,
-    `${probe} Probe`,
+    `Datenlage: ${kinds.join(" · ")}`,
     missing.length ? missing.join(" · ") : "alle mit Lage, Zeit und Wert",
     `Wertung ${scoring === "rings" ? "in ganzen Ringen" : "in Zehnteln"}`,
   ].join(" · ")
@@ -213,7 +236,9 @@ export function AnalysisPanel({
       {/* ohne Schüsse keine Datenlage: sie behauptete sonst „alle mit Lage, Zeit und Wert“ */}
       {shots.length > 0 && (
         <div data-coverage="true" className="flex items-start justify-between gap-2">
-          <p className="text-[13px] text-muted-foreground">{coverageText(shots, state.scoring)}</p>
+          <p className="text-[13px] text-muted-foreground">
+            {coverageText(shots, state.scoring, input.basis)}
+          </p>
           {onHelp && (
             <HelpButton label="Datenlage" helpId="datenlage" onClick={() => onHelp("datenlage")} />
           )}

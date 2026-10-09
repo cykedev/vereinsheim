@@ -320,11 +320,11 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     theme: "sighters",
     catalog: ["S3"],
     metrics: [],
-    short: "Ob deine Probe so gut war wie die Wertung.",
+    short: "Wie deine ganze Probe gegen die Wertung abschneidet.",
     what: "Durchschnitt, R50 und σ der ganzen Probe vor der Wertung gegen die Wertung.",
     read: "σ ist der fairere Vergleich: R50 fällt bei wenigen Schüssen etwas zu klein aus, und die Probe hat meist weniger Schüsse.",
     caution:
-      "Ein Fehlschuss zählt bei σ mit und bläht es auf; R50 lässt ihn weg. Mit wenigen Probeschüssen ist auch σ unsicher: Bei gleicher Präzision liegt σ aus fünf Probeschüssen zufällig zwischen etwa der Hälfte und dem Anderthalbfachen von σ der Wertung.",
+      "Lagen deine ersten Probeschüsse woanders, etwa vor einer Korrektur am Anschlag, machen sie σ und R50 der Probe größer, ohne dass du unpräziser warst. Ein Fehlschuss zählt bei σ mit und bläht es auf; R50 lässt ihn weg. Mit wenigen Probeschüssen ist auch σ unsicher: Bei gleicher Präzision liegt σ aus fünf Probeschüssen zufällig zwischen etwa der Hälfte und dem Anderthalbfachen von σ der Wertung.",
     minimum: "σ ab 3, R50 ab 5 Schuss je Seite.",
   },
   {
@@ -334,14 +334,14 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["S1", "S4"],
     metrics: [],
     short: "Ob deine letzten Probeschüsse neben der Mitte lagen.",
-    what: "Ein Test deiner letzten fünf Probeschüsse vor der Wertung: Lagen sie echt neben der Mitte? Dazu der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.",
-    read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Ob die Wertung mit diesem Versatz weiterging, zeigt der Versatz Probe → Wertung.",
+    what: "Ein Test deiner letzten bis zu fünf Probeschüsse mit Lage vor der Wertung: Lagen sie echt neben der Mitte? Dazu im Reiter Probe der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.",
+    read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Über die Wertung sagt das Urteil nichts; ihre Lage prüft „Ist die Lage echt?“ im Reiter Lage.",
     caution:
-      "„Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in knapp zwei von drei Fällen auf.",
+      "„Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in knapp zwei von drei Fällen auf. Auch der Abstand Probe → Wertung ist unsicher: Ohne jede Verschiebung liegt er bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen über gut einem σ. Darum zeigt der Überblick nur das Urteil.",
     minimum:
       "Ab 3 Probeschüssen mit Lage, der Abstand zur Wertung zusätzlich ab 3 Wertungsschüssen mit Lage.",
     formula:
-      "Hotelling-T² über die letzten fünf Probeschüsse mit Lage; Versatz = |m Probe − m Wertung|",
+      "Hotelling-T² über die letzten bis zu fünf Probeschüsse mit Lage; Versatz = |m Probe − m Wertung|",
   },
   // ---------- Datenlage
   {
@@ -351,9 +351,10 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["Q1"],
     metrics: [],
     short: "Auf welcher Grundlage die Zahlen stehen.",
-    what: "Wie viele Wertungs- und Probeschüsse die Analyse hat, wie vielen Lage, Zeit oder Wert fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig).",
+    what: "Wie viele Wertungs- und Probeschüsse die Scheibe hat; Lage, Zeit und Wert zählen über beide: wie vielen davon Lage, Zeit oder Wert fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig). Eine Scheibe nur mit Probe steht als Training da, wie Wertung gezählt.",
     read: "Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es kein Ergebnis, keine Zahl der Zehner und Innenzehner und keine Summe seiner Serie; Ø und Quoten rechnen ohne ihn. Ein verdächtiger Schuss zählt nur mit seinem Wert, auch wenn er eine Lage oder Zeit hat.",
-    caution: "In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat.",
+    caution:
+      "In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat; die Datenlage nennt ihn „ohne Zehntel“.",
   },
   {
     id: "verlauf-und-form",

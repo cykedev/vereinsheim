@@ -37,8 +37,12 @@ describe("Reiter Überblick", () => {
       tiles.map((t) => t.label)
     )
     for (const tile of tiles) {
+      // Namen wie „Eingeschossen?“ enthalten Zeichen, die in einem Muster etwas bedeuten
+      const literal = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
       expect(html).toMatch(
-        new RegExp(`data-tile="${tile.label}"[^>]*title="${helpTopic(tile.help)!.short}"`)
+        new RegExp(
+          `data-tile="${literal(tile.label)}"[^>]*title="${literal(helpTopic(tile.help)!.short)}"`
+        )
       )
       if (tile.value) expect(html).toContain(`>${tile.value}<`)
     }

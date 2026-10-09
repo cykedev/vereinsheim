@@ -109,9 +109,26 @@ describe("AnalysisPanel", () => {
     const text = render(flagged)
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
+    // ganze Wörter und Einzahl (Prüfung, Probe 10)
     expect(text).toContain(
-      "Datenlage: 4 Wertung · 2 Probe · 1 ohne Zeit · 1 verdächtig · Wertung in Zehnteln"
+      "Datenlage: 4 Wertungsschüsse · 2 Probeschüsse · 1 ohne Zeit · 1 verdächtiger Schuss · Wertung in Zehnteln"
     )
+    const misses = [
+      ...CARD,
+      shot(6, "match", 0, 200_000, ["fehlschuss"]),
+      shot(7, "match", 0, 250_000, ["fehlschuss"]),
+    ]
+    expect(render(misses)).toContain("2 Fehlschüsse")
+    // in Zehnteln fehlt dem Schuss etwas, auch wenn er einen Ring hat (Prüfung, Probe 7)
+    const tenthless = CARD.map((s, i) => (i === 3 ? { ...s, decimalTenths: null } : s))
+    expect(render(tenthless)).toContain("1 ohne Zehntel")
+    expect(render(tenthless, { state: initialViewState({ scoring: "rings" }) })).not.toContain(
+      "ohne Zehntel"
+    )
+    // ein Training zählt die Probe wie Wertung, die Datenlage sagt das (Prüfung, Probe 8)
+    const training = render(probeOnlyAsMatch(CARD.slice(0, 2)))
+    expect(training).toContain("Datenlage: 2 Probeschüsse, als Training wie Wertung gezählt")
+    expect(training).not.toContain("0 Wertungsschüsse")
     expect(render(CARD.slice(0, 1).map((s) => ({ ...s, firedAtMs: 0 })))).toContain(
       "alle mit Lage, Zeit und Wert"
     )
@@ -129,7 +146,7 @@ describe("AnalysisPanel", () => {
     const text = render(probeOnlyAsMatch(CARD.slice(0, 2)))
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
-    expect(text).toContain("Datenlage: 0 Wertung · 2 Probe")
+    expect(text).toContain("Datenlage: 2 Probeschüsse, als Training wie Wertung gezählt")
   })
 
   it("Glossar und typische Fehlschlüsse aus dem Paket, aufklappbar, auch mit „Erklärungen“ zu", () => {

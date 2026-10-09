@@ -22,7 +22,7 @@ export const READING_GUIDE: readonly GuideItem[] = [
   },
   {
     title: "Probe und Wertung",
-    text: "Lage, Streuung und Tempo der Analyse rechnen über die Wertung, ohne Probe; gibt es nur Probe, über die Probe. Die Probe hat einen eigenen Reiter: „Probe gegen Wertung“ nimmt die ganze Probe vor der Wertung, „Eingeschossen?“ ihre letzten fünf Schüsse.",
+    text: "Lage, Streuung und Tempo der Analyse rechnen über die Wertung, ohne Probe; gibt es nur Probe, über die Probe. Die Probe hat einen eigenen Reiter: „Probe gegen Wertung“ nimmt die ganze Probe vor der Wertung, „Eingeschossen?“ ihre letzten bis zu fünf Schüsse. Eine Scheibe nur mit Probe ist Training: Spiegel zeigt sie wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn und Ergebnis; das schwarze Eck oben rechts an den kleinen Scheiben der Serien erinnert daran, dass es Probe ist.",
   },
   {
     title: "Nummern",

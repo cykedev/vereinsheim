@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   axisText,
+  directionName,
   directionWords,
   durationText,
   formatSigned,
@@ -50,6 +51,17 @@ describe("Achse einer Gruppe in Worten", () => {
     expect(axisText((179.6 * Math.PI) / 180)).toBe(
       "längs etwa 3 bis 9 Uhr (0°, gegen den Uhrzeigersinn ab 3 Uhr)"
     )
+  })
+})
+
+describe("Richtung ohne Zahl", () => {
+  it("acht Richtungen, schräg erst ab 22,5° neben der Achse; unter 0,05 mm mittig (Prüfung, Probe 11)", () => {
+    expect(directionName({ xUm: 472, yUm: 18 })).toBe("rechts")
+    expect(directionName({ xUm: 3000, yUm: 3000 })).toBe("rechts oben")
+    expect(directionName({ xUm: -2928, yUm: 5998 })).toBe("links oben")
+    expect(directionName({ xUm: -1000, yUm: -300 })).toBe("links")
+    expect(directionName({ xUm: 100, yUm: -900 })).toBe("unten")
+    expect(directionName({ xUm: 30, yUm: -40 })).toBe("mittig")
   })
 })
 
