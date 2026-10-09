@@ -25,7 +25,20 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   prüfen); das `close`-Ereignis eines `<dialog>` kommt spät oder gar nicht (nie darauf warten; Escape-Weg
   über `requestClose()`, das synchrone `cancel`). Die Prüfung läuft nur mit `#pruefen`, ein Abbruch steht als FAIL im Bericht;
   `window.__labor` (Prüfhaken) liefert Schüsse, Zustand, Scheibe, die Funktionen des Fachkerns (auch die
-  Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen.
+  Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen, auf der Seite
+  eines Zeitraums dazu `period` (Scheiben, Zustand, Modell) und `tools.period`. Die Prüfung braucht seit L3 mehr
+  als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`); in einer Seite mit zwei Blättern ist das der Hilfe
+  das letzte `<dialog>`.
+- **Zwei Ansichten** (Plan L3): „Ansicht: Scheibe | Zeitraum“ im Labor-Kopf (`LaborHeader`), gemerkt in
+  `labor.mode`; ein Anker der Zeitraum-Seite (`#verlauf` …) öffnet sie. `App` hält, was beide teilen
+  (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
+  Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums. „Scheibe öffnen“ zeigt eine
+  Scheibe der Saison in „Scheibe“, „Zurück zum Zeitraum“ stellt Zeitraum, Vergleich, Wahl und Scrollstelle wieder
+  her.
+- **Saison** (`src/season.ts`): erfunden, Seed 20261009; Luftgewehr 81 Scheiben vom 6. April bis 27. September
+  2026 (Formknick im Juni σ 1,9 mm, neue Munition ab 1. August σ 1,3 mm, Urlaub 3.–16. August, eine Scheibe
+  `nur-pdf`, Trainings nur aus Probe), Luftpistole 39; benannt „Vorbereitung Landesmeisterschaft“ und „Neue
+  Munition“; „jetzt“ ist der 30. September 2026, 12:00 Uhr MESZ (die Saison liegt ganz in der Sommerzeit).
 - **Seite aus `CardPage`** (Plan Schritt 4): Labor-Kopf mit Scheibe, Beispiel und „Darstellung“ (nicht „Thema“,
   das ist die Reiterleiste), darunter die Seite einer Scheibe wie in der App. Was nur das Labor hat
   (Ansehen/Setzen, Neuer Schuss, der Hinweis zum Beispiel), steht im Labor-Kopf; „Übrige blass/aus“ ist ein

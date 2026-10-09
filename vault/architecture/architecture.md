@@ -48,10 +48,12 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           (Nummern in Ebenen, Auswahl), Serien als kleine Scheiben, Kennzahl-Kacheln,
 │                           Ablesung, Kopf mit Ergebnis, Schusstabelle, Wertung, Hilfe (Blatt), Zustand der
 │                           Ansicht, Analyse einer Scheibe in sechs Reitern mit Diagrammen, Seitenaufbau
-│                           (Kopf, Sprungleiste, Scheibe fest ab 768 px, Rücksprung); Design 2 (ADR-030,
-│                           Oktober 2026); im Labor erprobt, noch von keiner App genutzt.
-├── tools/labor/            Labor: eine Seite aus den echten Bausteinen mit Beispielscheiben, gebaut zu einer
-│                           HTML-Datei (Artifact), Skriptprüfung in Headless-Chrome (`pruefen`).
+│                           (Kopf, Sprungleiste, Scheibe fest ab 768 px, Rücksprung), Seite eines Zeitraums
+│                           (Verlauf, Umfang, Liste, Vergleich, Rekorde; L3); Design 2 (ADR-030, Oktober 2026);
+│                           im Labor erprobt, noch von keiner App genutzt.
+├── tools/labor/            Labor: Seite einer Scheibe und eines Zeitraums aus den echten Bausteinen, mit
+│                           Beispielscheiben und einer erfundenen Saison, gebaut zu einer HTML-Datei (Artifact),
+│                           Skriptprüfung in Headless-Chrome (`pruefen`).
 ├── tools/spielwiese/       Vorlage und Skriptprüfung der Spielwiese (Prototyp, Referenz bis zur Portierung).
 ├── tools/ssmdb2-erkunden/  Erkundung der Meyton-SSMDB2 vor Ort (SP-0.1/0.6): Checkliste, Kopie, Schießprotokoll;
 │                           Bash, nur lesend, Selbsttest gegen mariadb:11 (Oktober 2026).

@@ -9,7 +9,7 @@ governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]"]
 ---
 
-**TL;DR** Die Seite eines Zeitraums ist für den Schützen selbst gebaut wie die Seite einer Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, statt des Schusses wird eine Scheibe abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten Zeitraum ist eingebaut und urteilt nur mit Test. Entwurf vom 8. Oktober 2026; Grundentscheidungen und Vorgaben hat der User getroffen, L1, das Diagramm-Lineal, und L2, der Fachkern für Zeiträume, sind erledigt; als Nächstes kommt L3, die Oberfläche.
+**TL;DR** Die Seite eines Zeitraums ist für den Schützen selbst gebaut wie die Seite einer Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, statt des Schusses wird eine Scheibe abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten Zeitraum ist eingebaut und urteilt nur mit Test. Entwurf vom 8. Oktober 2026; Grundentscheidungen und Vorgaben hat der User getroffen, L1 (Diagramm-Lineal), L2 (Fachkern) und L3 (die Seite im Labor) sind erledigt; als Nächstes kommen L4 (Langzeit-Trefferbild), L5 (Erkenntnisse je Reiter) und L6 (Zeiträume speichern).
 
 ## Entschieden mit dem User (8. Oktober 2026)
 
@@ -161,10 +161,28 @@ Wie auf der Scheibe:
 |---|---|---|
 | L1 | Diagramm-Lineal: Werte per Antippen, Kopplung an die Auswahl (erledigt, 8. Oktober 2026) | SP-1.8, Schritt 5 |
 | L2 | Fachkern: Werte je Scheibe → Verlauf, gleitender Schnitt, Formband, Boden und Decke, Vergleich zweier Zeiträume mit Test und Bedeutsamkeit, Rekorde; mit Simulationen (erledigt, 8. Oktober 2026: `shot-core/analysis/period.ts` und `records.ts`, Entscheidungen D1–D9 im Plan `plans/2026-10-08-spiegel-zeitraum-kern.md`, Belege B19 und B20) | SP-2.1, SP-2.2 |
-| L3 | Bausteine: Zeitraum-Wähler, Verlauf-Diagramm, Ablesung einer Scheibe, Liste der Scheiben, Kacheln mit Vergleich, Seite eines Zeitraums. Im Labor eine erfundene Saison (etwa 80 Scheiben über sechs Monate mit Formknick und Munitionswechsel) | SP-2.1 |
+| L3 | Bausteine: Zeitraum-Wähler, Verlauf-Diagramm, Ablesung einer Scheibe, Liste der Scheiben, Kacheln mit Vergleich, Seite eines Zeitraums. Im Labor eine erfundene Saison (etwa 80 Scheiben über sechs Monate mit Formknick und Munitionswechsel) (erledigt im Labor, 9. Oktober 2026: `shot-ui/period/*`, `PeriodPage`, Saison in `tools/labor`; Plan `plans/2026-10-09-spiegel-zeitraum-seite.md`) | SP-2.1 |
 | L4 | Langzeit-Trefferbild mit Form, Lage und Dichte | SP-2.7 |
 | L5 | Erkenntnisse Reiter für Reiter, jede mit Mindestzahl und Simulation | SP-2.7 |
 | L6 | Benannte Zeiträume speichern; Merkmal-Vergleich nach SP-2.3 | SP-2.2, SP-2.3 |
+
+## Umgesetzt in L3 (9. Oktober 2026)
+
+Das Konzept oben genauer, wie es im Labor steht (Entscheidungen D1–D18 im Plan):
+
+- **Verlauf:** Kennzahl über einen Umschalter (Ø je Schuss, σ, Zehner, Tempo; nur Kennzahlen, die nicht an der
+  Schusszahl hängen). Ab 60 Scheiben „je Monat“ mit Median und Boden bis Decke, bis der Schütze selbst wählt;
+  Boden ist das schwächere Ende (bei σ das P90), beim Tempo nur die Spanne. Mit Vergleich beide Zeiträume auf
+  „Scheibe 1, 2, 3 …“, der Vergleich grau und hohl.
+- **Abstand zum Schnitt** (Liste, Ablesung): zu den bis zu fünf Scheiben davor, ohne die Scheibe selbst, auch über
+  den Anfang des Zeitraums hinweg.
+- **Ergebnis-Box:** Ø je Schuss als Mittel der Scheiben, Wertungsschüsse, die beste Scheibe unter der häufigsten
+  Schusszahl (eine kurze Scheibe hätte es sonst leichter).
+- **Zahlen:** sechs Kacheln (Mittel je Scheibe), mit Vergleich Wert dort, Δ und Urteil; „bedeutsam“ nur neben
+  einem Urteil.
+- **Analyse in L3:** „Gegen deinen Schnitt“ (über alle Scheiben der Familie bis zur neuesten im Zeitraum) und
+  „Rekorde“ (über alle Scheiben der Familie). Reiter kommen mit L4 und L5.
+- **Nicht in L3:** „Als Zeitraum speichern“ (L6), Kalender (T7), Trendsteigung (T4), Langzeit-Trefferbild (L4).
 
 ## Vorgaben (vom User bestätigt, 8. Oktober 2026)
 
