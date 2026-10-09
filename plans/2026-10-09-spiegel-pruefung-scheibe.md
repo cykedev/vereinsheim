@@ -32,7 +32,7 @@ Jeder Befund unten ist am Code nachvollzogen (Bericht und Agenten-Skripte).
 - **D2 SD statt MAD (User):**
   - Die „Schwankung je Schuss“ (E10) ist die Standardabweichung der Schusswerte (n − 1) statt des MAD.
   - Grund: Der MAD ist in ganzen Ringen beim Luftgewehr fast immer 0,00 (Prüfung: 100 % der Karten bei σ 1,5 mm).
-- **D3 Versatz Probe → Wertung (Vorschlag, bitte bei der Freigabe bestätigen):**
+- **D3 Versatz Probe → Wertung (vom User bestätigt, 9. Oktober 2026):**
   - Die Kachel im Überblick zeigt statt der Zahl das Urteil „eingeschossen?“ (S4: „kein Versatz nachweisbar“
     bzw. „echt neben der Mitte“).
   - Im Reiter Probe bleibt die Zahl, mit dem Hinweis, wie groß sie auch ohne jede Verschiebung ist.
