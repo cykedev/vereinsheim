@@ -1,6 +1,7 @@
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { describe, expect, it } from "vitest"
 
+import { listOnEvening } from "../nav/navigate"
 import { DEFAULT_LIST, type ListQuery } from "../nav/routes"
 import { NOW, periodCard, TZ } from "../period/testSeason"
 import { cardListModel, eveningDay, type ListInputCard } from "./evenings"
@@ -112,5 +113,87 @@ describe("Abende der Scheiben-Liste (Plan N2, D1–D5)", () => {
   it("ohne Familie die erste vorhandene; ohne Scheiben keine Abende", () => {
     expect(cardListModel(INPUT, { ...DEFAULT_LIST }, context).family).toBe("lg-freihand")
     expect(cardListModel([], query(), context).evenings).toEqual([])
+  })
+})
+
+describe("Scheiben-Liste nach dem Review (N2)", () => {
+  it("an den Tagen der Zeitumstellung zählt die Uhrzeit der Zone, nicht vier Stunden absolut", () => {
+    // 29. März 2026: 02:00 MEZ → 03:00 MESZ; 25. Oktober 2026: 03:00 MESZ → 02:00 MEZ
+    expect(eveningDay(Date.UTC(2026, 2, 29, 2, 30), TZ)).toBe("2026-03-29") // 04:30 MESZ
+    expect(eveningDay(Date.UTC(2026, 2, 29, 1, 30), TZ)).toBe("2026-03-28") // 03:30 MESZ
+    expect(eveningDay(Date.UTC(2026, 9, 25, 2, 30), TZ)).toBe("2026-10-24") // 03:30 MEZ
+    expect(eveningDay(Date.UTC(2026, 9, 25, 3, 30), TZ)).toBe("2026-10-25") // 04:30 MEZ
+    expect(eveningDay(Date.UTC(2026, 9, 24, 22, 30), TZ)).toBe("2026-10-24") // 00:30 MESZ
+  })
+
+  it("ein Merkmal, das die Familie nicht hat, bleibt wählbar, damit man es wieder lösen kann", () => {
+    const model = cardListModel(INPUT, query({ family: "lp-freihand", flag: "nur-pdf" }), context)
+    expect(model.cards).toBe(0)
+    expect(model.flags).toEqual(["nur-pdf"])
+  })
+
+  it("Abstand über Familie und Art, Trainings nur aus Probe gehören dazu", () => {
+    // Ø je Schuss: t1 10,0 · w1 9,0 · t2 10,2 · p1 9,6 (nur Probe) · w2 9,2 · t3 10,1
+    const cards = [
+      lg(periodCard("t1", 8, [100])),
+      lg(periodCard("w1", 7, [90], { kind: "competition" })),
+      lg(periodCard("t2", 6, [102])),
+      lg(periodCard("p1", 5, [96], { probe: true })),
+      lg(periodCard("w2", 4, [92], { kind: "competition" })),
+      lg(periodCard("t3", 3, [101])),
+    ]
+    const model = cardListModel(cards, query({ kind: "training" }), context)
+    const t3 = model.evenings.flatMap((e) => e.rows).find((r) => r.id === "t3")!
+    // vor t3 im Training: t1, t2, p1 → 10,1 − 29,8 / 3; ohne Art (alle fünf) wäre es +0,50, ohne Probe 0
+    expect(t3.delta?.n).toBe(3)
+    expect(t3.delta?.delta).toBeCloseTo(0.5 / 3, 9)
+  })
+
+  it("andere Familien zählen ohne Art und Merkmal, aber nur im Zeitraum; der Sprung zeigt den Abend", () => {
+    // Samstag, 26. September: Wettkampf Luftgewehr, Training Luftpistole (nur PDF), eine Luftpistole um 03:00 MESZ
+    const cards = [
+      lg(periodCard("lw", 4, [100], { kind: "competition", startedAtMs: at(16, 0, 26) })),
+      lp(periodCard("pt", 4, [95], { startedAtMs: at(18, 0, 26), flags: ["nur-pdf"] })),
+      lp(periodCard("pn", 3, [96], { startedAtMs: at(1, 0, 27) })),
+    ]
+    const competition = query({ kind: "competition", flag: null })
+    const rifle = cardListModel(cards, competition, context)
+    expect(rifle.evenings[0].others).toEqual([{ family: "lp-freihand", count: 2 }])
+    // im Zeitraum bis 26. September fällt die Scheibe nach Mitternacht heraus wie in der Liste selbst
+    const ranged = cardListModel(
+      cards,
+      { ...competition, range: { type: "free", from: "2026-09-20", to: "2026-09-26" } },
+      context
+    )
+    expect(ranged.evenings[0].others).toEqual([{ family: "lp-freihand", count: 1 }])
+    // der Sprung lässt Art und Merkmal fallen: der Abend steht in der Liste der Luftpistole
+    const jump = listOnEvening(competition, "lp-freihand", "2026-09-26")
+    expect(jump.evening).toBe("2026-09-26")
+    const pistol = cardListModel(cards, jump.query, context)
+    expect(pistol.evenings.find((e) => e.day === "2026-09-26")?.rows.map((r) => r.id)).toEqual([
+      "pt",
+      "pn",
+    ])
+  })
+
+  it("gleiche Startzeit: nach Id, unabhängig von der Reihenfolge der Eingabe", () => {
+    const same = at(16)
+    const model = cardListModel(
+      [
+        lg(periodCard("b2", 1, [100], { startedAtMs: same })),
+        lg(periodCard("a2", 1, [101], { startedAtMs: same })),
+      ],
+      query(),
+      context
+    )
+    expect(model.evenings[0].rows.map((r) => r.id)).toEqual(["a2", "b2"])
+  })
+
+  it("Stellen aus der Kennzahl der Wertung", () => {
+    expect(cardListModel(INPUT, query(), context).digits).toEqual({ result: 1, mean: 2 })
+    expect(cardListModel(INPUT, query(), { ...context, scoring: "rings" }).digits).toEqual({
+      result: 0,
+      mean: 2,
+    })
   })
 })

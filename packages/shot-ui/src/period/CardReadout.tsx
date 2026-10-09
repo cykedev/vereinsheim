@@ -8,7 +8,7 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue, unitText } from "../format"
 import { groupView } from "../geometry"
-import { hasPosition, probeOnlyAsMatch } from "../shots"
+import { hasPosition, matchShots } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
 import { isProbeOnly } from "./model"
 
@@ -40,8 +40,7 @@ export function deltaText(delta: { delta: number; n: number }, decimals: number)
 }
 
 /** die Schüsse, die die kleine Scheibe zeigt: die Wertung, bei nur Probe die Probe wie Wertung */
-const shownShots = (card: PeriodCard) =>
-  isProbeOnly(card) ? probeOnlyAsMatch(card.shots) : card.shots.filter((s) => s.kind === "match")
+const shownShots = (card: PeriodCard) => matchShots(card.shots)
 
 /**
  * Ablesung einer Scheibe auf der Seite eines Zeitraums (Plan L3, D9): Datum und Art, der Wert der Kennzahl, die

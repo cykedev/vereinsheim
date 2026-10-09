@@ -10,9 +10,6 @@ import type { CompareChoice, DateRange, NamedPeriod } from "./calendar"
 import { PeriodPicker } from "./PeriodPicker"
 import type { PeriodAction, PeriodState } from "./state"
 
-/** die Arten wie in `CardFilters`; hier weiter exportiert für bestehende Aufrufer */
-export { KIND_OPTIONS } from "../controls/CardFilters"
-
 export interface PeriodControlsProps {
   state: PeriodState
   dispatch: (action: PeriodAction) => void

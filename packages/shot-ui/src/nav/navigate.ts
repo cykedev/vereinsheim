@@ -12,6 +12,7 @@ import {
   DEFAULT_PROGRESS,
   type CardOrigin,
   type CardRoute,
+  type ListQuery,
   type ListRoute,
   type ProgressRoute,
   type Route,
@@ -70,6 +71,14 @@ export function listFromProgress(progress: ProgressRoute): ListRoute {
     query: { family, kind, flag: null, range: choice.type === "all" ? null : choice },
     evening: null,
   }
+}
+
+/**
+ * Ein Mischabend (D3): die andere Familie an diesem Abend. Der Hinweis zählt ohne Art und Merkmal, deshalb fallen
+ * beide hier weg; der Zeitraum bleibt, der Hinweis zählt nur in ihm. So steht der Abend sicher in der Liste.
+ */
+export function listOnEvening(query: ListQuery, family: string, day: string): ListRoute {
+  return { page: "cards", query: { ...query, family, kind: "all", flag: null }, evening: day }
 }
 
 /**

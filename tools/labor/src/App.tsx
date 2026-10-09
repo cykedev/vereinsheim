@@ -4,6 +4,7 @@ import { parsePeriodHash } from "@vereinsheim/shot-ui/layout/sections"
 import {
   backRoute,
   listFromProgress,
+  listOnEvening,
   openCard as openCardRoute,
   periodStateFromRoute,
   progressFromList,
@@ -30,7 +31,7 @@ import { store } from "./store"
 /** ein Abend als Anker der Scheiben-Liste (Plan N2, D1) */
 const EVENING_ANCHOR = /^#\d{4}-\d{2}-\d{2}$/
 
-/** die Wertung des Geräts, gemerkt von der Seite einer Scheibe; die Liste hat keine eigene */
+/** die Wertung des Geräts, gemerkt von der Seite einer Scheibe und eines Zeitraums; die Liste hat keine eigene */
 const devicesScoring = (): Scoring => (store.get("scoring") === "rings" ? "rings" : "decimal")
 
 function useTheme(theme: Theme) {
@@ -80,14 +81,12 @@ export function App({ commit }: { commit: string }) {
   const [returnTo, setReturnTo] = useState<number | null>(null)
   useTheme(theme)
   useEffect(() => store.set("period.family", period.family), [period.family])
-  // mit einem Abend als Anker geladen: nach dem Einhängen der Liste zu ihm springen
+  // mit einem Abend als Anker geladen: nach dem Einhängen der Liste zu ihm springen, sofort (ohne Frame: ein Fenster,
+  // das nicht zu sehen ist, bekommt keinen; Review N2)
   useEffect(() => {
     const hash = typeof location === "undefined" ? "" : location.hash
-    if (EVENING_ANCHOR.test(hash)) {
-      requestAnimationFrame(() =>
-        document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" })
-      )
-    }
+    if (EVENING_ANCHOR.test(hash))
+      document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" })
   }, [])
 
   const changeMode = useCallback((next: LaborMode) => {
@@ -163,9 +162,9 @@ export function App({ commit }: { commit: string }) {
     setMode("list")
     scrollTo(0, 0)
   }, [period])
-  // ein Mischabend: die andere Familie zeigen und zu diesem Abend springen (D3)
+  // ein Mischabend: die andere Familie an diesem Abend zeigen, ohne Art und Merkmal, und zu ihm springen (D3)
   const showFamily = useCallback((family: string, day: string) => {
-    setList((current) => ({ ...current, family }))
+    setList((current) => listOnEvening(current, family, day).query)
     requestAnimationFrame(() => document.getElementById(day)?.scrollIntoView({ block: "start" }))
   }, [])
   const onExplain = useCallback((next: boolean) => {

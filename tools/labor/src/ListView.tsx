@@ -4,6 +4,7 @@ import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { EveningList } from "@vereinsheim/shot-ui/list/EveningList"
 import { ListControls } from "@vereinsheim/shot-ui/list/ListControls"
+import { ListHeader } from "@vereinsheim/shot-ui/list/ListHeader"
 import { urlFromRoute, type ListQuery } from "@vereinsheim/shot-ui/nav/routes"
 import { useEffect, useMemo } from "react"
 
@@ -79,18 +80,20 @@ export function ListView({
         hint="Die erfundene Saison nach Abend: an zwei Abenden zwei Scheiben Luftpistole, an drei Samstagen Luftgewehr und Luftpistole am selben Abend."
       />
       <section data-card-list-page className="grid max-w-4xl gap-4">
-        <div className="grid gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Scheiben</h1>
-          <p className="text-sm text-muted-foreground">{`${familyLabel} · ${model.cards} ${model.cards === 1 ? "Scheibe" : "Scheiben"}`}</p>
-        </div>
-        <ListControls
-          query={query}
-          family={family}
-          families={FAMILIES}
-          flags={model.flags}
-          rangeLabel={model.range?.label ?? null}
-          onQuery={onQuery}
-          onProgress={onProgress}
+        <ListHeader
+          familyLabel={familyLabel}
+          cards={model.cards}
+          controls={
+            <ListControls
+              query={query}
+              family={family}
+              families={FAMILIES}
+              flags={model.flags}
+              rangeLabel={model.range?.label ?? null}
+              onQuery={onQuery}
+              onProgress={onProgress}
+            />
+          }
         />
         <div className="rounded-2xl border border-border bg-card p-2">
           <EveningList
@@ -98,7 +101,6 @@ export function ListView({
             cards={cards}
             target={TARGETS[targetOfFamily(family)]}
             families={FAMILIES}
-            scoring={scoring}
             timeZone={SEASON_TIME_ZONE}
             onOpen={(id) => {
               const card = byId.get(id)

@@ -32,7 +32,6 @@ const render = (scoring: "decimal" | "rings" = "decimal", input = INPUT) => {
       cards: new Map<string, PeriodCard>(input.map((c) => [c.card.id, c.card])),
       target: LG_10M,
       families: FAMILIES,
-      scoring,
       timeZone: TZ,
       onOpen: () => {},
       onFamily: () => {},
@@ -67,8 +66,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6)", () => {
     expect([...html.matchAll(/data-card-row="([^"]+)"/g)].map((m) => m[1])).toEqual(["a", "b", "d"])
     expect(html).toMatch(/<button type="button" data-card-row="a"/)
     const rowA = html.slice(html.indexOf('data-card-row="a"'), html.indexOf('data-card-row="b"'))
-    expect(text(rowA)).toContain("18:30")
-    expect(text(rowA)).toContain("T Training")
+    expect(text(rowA)).toContain("18:30 T")
     expect(rowA).toMatch(/data-result[^>]*>30,0</)
     expect(rowA).toMatch(/data-mean[^>]*>10,00</)
     expect(rowA).toContain("<svg")
@@ -76,10 +74,18 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6)", () => {
     const rowB = html.slice(html.indexOf('data-card-row="b"'))
     expect(rowB).toMatch(/data-delta[^>]*>\+0,25</)
     expect(rowA).toMatch(/data-delta[^>]*>\+0,10</)
+    // der Knopf nennt die Werte mit ihrer Bedeutung, die Spaltenköpfe sind nur Bild
+    expect(html).toContain(
+      'aria-label="18:30, Training, Ergebnis 30,0, Ø 10,00 je Schuss, +0,10 zum Schnitt davor, 3 Schuss"'
+    )
+    expect(html).toMatch(/<div aria-hidden="true"[^>]*>(?:<span[^>]*>[^<]*<\/span>){7}<\/div>/)
+    // der Abend ist eine Überschrift zweiter Ebene unter dem Kopf der Seite
+    expect(html).toMatch(/<h2 id="2026-09-29-title"/)
   })
 
   it("in ganzen Ringen das ganzzahlige Ergebnis; ein Abstand unter null mit echtem Minus", () => {
     expect(render("rings")).toMatch(/data-card-row="a"[\s\S]*?data-result[^>]*>29</)
+    expect(render("rings")).toContain("Ergebnis 29, Ø")
     const lower = render("decimal", [
       { card: periodCard("x", 2, [103]), family: "lg-freihand" },
       { card: periodCard("y", 1, [100]), family: "lg-freihand" },

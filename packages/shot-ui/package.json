@@ -63,6 +63,7 @@
     "./list/evenings": "./src/list/evenings.ts",
     "./list/EveningList": "./src/list/EveningList.tsx",
     "./list/ListControls": "./src/list/ListControls.tsx",
+    "./list/ListHeader": "./src/list/ListHeader.tsx",
     "./controls/CardFilters": "./src/controls/CardFilters.tsx"
   },
   "scripts": {

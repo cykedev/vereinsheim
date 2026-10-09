@@ -2589,7 +2589,8 @@ addEventListener("load", async () => {
         listAddress === "/cards?family=lg-freihand" && routeOf(listAddress).page === "cards",
         listAddress
       )
-      // Mischabend: der Hinweis wechselt die Familie und springt zum Abend
+      // Mischabend: der Hinweis wechselt die Familie und springt zum Abend; Art und Merkmal fallen dabei weg (Review)
+      await click(button("Training", $("[data-list-controls]")), 300)
       const mixed = $("[data-other-family]")
       const mixedDay = mixed?.closest("[data-evening]")?.dataset.evening
       await click(mixed, 300)
@@ -2605,7 +2606,7 @@ addEventListener("load", async () => {
         `${mixedDay} · ${addr()} · ${Math.round(mixedTop)}`
       )
       await click(button("Luftgewehr", $("[data-list-controls]")), 300)
-      // Art: nur Wettkämpfe
+      // Art: nur Wettkämpfe; öffnen und zurück behält die Art (Review)
       await click(button("Wettkampf", $("[data-list-controls]")), 300)
       const kinds = Li().model.evenings.flatMap((e) => e.rows.map((r) => r.kind))
       check(
@@ -2614,6 +2615,16 @@ addEventListener("load", async () => {
           kinds.every((k) => k === "competition") &&
           addr().includes("kind=competition"),
         `${kinds.length} · ${addr()}`
+      )
+      const competitionAddress = addr()
+      await click($(`[data-card-row="${Li().model.evenings[1].rows[0].id}"]`), 500)
+      await click(button("Zurück zu „Scheiben“"), 500)
+      check(
+        "Liste: „Zurück“ aus einer gefilterten Liste behält die Art",
+        !!$("[data-card-list-page]") &&
+          addr() === competitionAddress &&
+          Li().query.kind === "competition",
+        addr()
       )
       await click(button("Alle", $("[data-list-controls]")), 300)
       // Öffnen und zurück: Filter und Scrollstelle bleiben
@@ -2648,6 +2659,8 @@ addEventListener("load", async () => {
         addr()
       )
       await choose("Neue Munition")
+      // die Wertung des Zeitraums geht mit in die Liste und zurück (Review N2)
+      await click(button("Ganze Ringe"), 300)
       await click(button("Alle in Scheiben zeigen"), 400)
       check(
         "Zeitraum: „Alle in Scheiben zeigen“ zeigt die Liste mit dem Zeitraum als Chip",
@@ -2657,6 +2670,19 @@ addEventListener("load", async () => {
           Li().model.evenings.every((e) => e.day >= "2026-08-01"),
         `${txt($("[data-range-chip]"))} · ${addr()}`
       )
+      const ringResults = $$("[data-card-row] [data-result]").map(txt)
+      await click(button("Verlauf dieser Filter"), 400)
+      check(
+        "Liste: die Wertung des Zeitraums gilt in der Liste und im Rückweg „Verlauf dieser Filter“",
+        Li().model.digits.result === 0 &&
+          ringResults.length > 0 &&
+          ringResults.every((r) => r === "–" || /^\d+$/.test(r)) &&
+          P()?.state.scoring === "rings" &&
+          addr().includes("scoring=rings"),
+        `${ringResults.slice(0, 3).join(" ")} · ${addr()}`
+      )
+      await click(button("Zehntel"), 300)
+      await click(button("Alle in Scheiben zeigen"), 400)
       await click(button("Zeitraum entfernen"), 300)
       check(
         "Liste: „×“ entfernt den Zeitraum",
@@ -2672,12 +2698,16 @@ addEventListener("load", async () => {
       const hiddenCells = phoneRow
         ? [...phoneRow.children].filter((c) => pw.getComputedStyle(c).display === "none").length
         : -1
+      const phoneDayTop = pd.getElementById(phoneDay)?.getBoundingClientRect().top ?? -1
       check(
-        "Liste, Telefon 375 px: der Anker eines Abends öffnet die Liste, kein seitliches Scrollen, drei Spalten weniger",
+        "Liste, Telefon 375 px: der Anker eines Abends öffnet die Liste am Abend, kein seitliches Scrollen, drei Spalten weniger",
         !!pd.querySelector("[data-card-list-page]") &&
           pd.documentElement.scrollWidth <= 375 &&
-          hiddenCells === 3,
-        `${pd.documentElement.scrollWidth} · ${hiddenCells}`
+          hiddenCells === 3 &&
+          pw.scrollY > 0 &&
+          phoneDayTop >= 0 &&
+          phoneDayTop < 812,
+        `${pd.documentElement.scrollWidth} · ${hiddenCells} · ${Math.round(phoneDayTop)}`
       )
       phone.remove()
       await click(button("Zeitraum"), 300)

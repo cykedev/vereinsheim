@@ -37,6 +37,7 @@ import {
   targetOfFamily,
   type SeasonCard,
 } from "./season"
+import { store } from "./store"
 import { exposePeriodForTest } from "./testHook"
 
 const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
@@ -134,7 +135,11 @@ export function PeriodView({
   const scoring = (
     <ScoringSwitch
       scoring={state.scoring}
-      onChange={(next) => dispatch({ type: "setScoring", scoring: next })}
+      onChange={(next) => {
+        // die Wertung des Geräts wie auf der Seite einer Scheibe: Liste und „Verlauf dieser Filter“ nehmen sie mit
+        store.set("scoring", next)
+        dispatch({ type: "setScoring", scoring: next })
+      }}
     />
   )
   const result = <PeriodResult model={model} timeZone={TZ} scoring={scoring} onHelp={onHelp} />

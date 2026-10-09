@@ -1,15 +1,13 @@
 "use client"
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
-import { probeOnlyAsMatch, type Scoring } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { formatTimeOfDay, formatWeekdayDate, zonedDayStartMs } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue } from "../format"
 import { groupView } from "../geometry"
-import { isProbeOnly } from "../period/model"
-import { hasPosition } from "../shots"
+import { hasPosition, matchShots } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
 import type { CardListModel, ListRow } from "./evenings"
 
@@ -21,15 +19,11 @@ const KIND: Readonly<Record<ListRow["kind"], { short: string; text: string }>> =
 
 /** Spalten: auf dem Telefon kleine Scheibe, Art, Ergebnis, Ø; ab 32rem Breite dazu Uhrzeit, Abstand, Schuss (D5) */
 const COLUMNS =
-  "grid grid-cols-[2.5rem_1.5rem_minmax(0,1fr)_3.5rem] items-center gap-x-3 @min-[32rem]:grid-cols-[2.5rem_3rem_1.5rem_minmax(0,1fr)_3.5rem_4rem_3rem]"
+  "grid grid-cols-[2.5rem_1.5rem_minmax(0,1fr)_3.5rem] items-center gap-x-3 @min-[32rem]:grid-cols-[2.5rem_3rem_1.5rem_minmax(0,1fr)_3.5rem_4.5rem_3rem]"
 const WIDE = "hidden @min-[32rem]:block"
 
 /** die Schüsse der kleinen Scheibe: die Wertung, bei nur Probe die Probe wie Wertung, nur mit Lage */
-const placedShots = (card: PeriodCard) =>
-  (isProbeOnly(card)
-    ? probeOnlyAsMatch(card.shots)
-    : card.shots.filter((s) => s.kind === "match")
-  ).filter(hasPosition)
+const placedShots = (card: PeriodCard) => matchShots(card.shots).filter(hasPosition)
 
 export interface EveningListProps {
   model: CardListModel
@@ -39,7 +33,6 @@ export interface EveningListProps {
   target: TargetImage
   /** Namen der Familien für den Hinweis auf andere Familien des Abends */
   families: readonly { value: string; label: string }[]
-  scoring: Scoring
   timeZone: string
   /** die ganze Zeile öffnet die Scheibe (D6) */
   onOpen: (id: string) => void
@@ -58,7 +51,6 @@ export function EveningList({
   cards,
   target,
   families,
-  scoring,
   timeZone,
   onOpen,
   onFamily,
@@ -72,7 +64,19 @@ export function EveningList({
     )
   }
   const nameOf = (family: string) => families.find((f) => f.value === family)?.label ?? family
-  const resultDigits = scoring === "rings" ? 0 : 1
+  const { digits } = model
+  // die Spaltenköpfe sind nur Bild; der Knopf trägt die Werte mit ihrer Bedeutung als Namen (Review N2)
+  const rowName = (row: ListRow, time: string) =>
+    [
+      time,
+      KIND[row.kind].text,
+      row.result === null ? "ohne Ergebnis" : `Ergebnis ${formatValue(row.result, digits.result)}`,
+      row.mean === null ? null : `Ø ${formatValue(row.mean, digits.mean)} je Schuss`,
+      row.delta ? `${formatSigned(row.delta.delta, digits.mean)} zum Schnitt davor` : null,
+      `${row.shots} Schuss`,
+    ]
+      .filter(Boolean)
+      .join(", ")
 
   return (
     <div data-evening-list className={cn("@container grid gap-6", className)}>
@@ -94,12 +98,12 @@ export function EveningList({
           className="grid scroll-mt-14 gap-1.5"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border px-2 pb-1.5">
-            <h3 id={`${evening.day}-title`} className="text-[15px] font-semibold tracking-tight">
+            <h2 id={`${evening.day}-title`} className="text-[15px] font-semibold tracking-tight">
               {formatWeekdayDate(
                 new Date(zonedDayStartMs(evening.day, timeZone) + 12 * 3_600_000),
                 timeZone
               )}
-            </h3>
+            </h2>
             <p className="text-[13px] text-muted-foreground">
               {`${evening.rows.length} ${evening.rows.length === 1 ? "Scheibe" : "Scheiben"} · ${evening.shots} Schuss`}
             </p>
@@ -120,11 +124,13 @@ export function EveningList({
               const card = cards.get(row.id)
               const placed = card ? placedShots(card) : []
               const kind = KIND[row.kind]
+              const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
               return (
                 <li key={row.id}>
                   <button
                     type="button"
                     data-card-row={row.id}
+                    aria-label={rowName(row, time)}
                     onClick={() => onOpen(row.id)}
                     className={cn(
                       COLUMNS,
@@ -144,21 +150,18 @@ export function EveningList({
                     ) : (
                       <span className="size-10" aria-hidden="true" />
                     )}
-                    <span className={cn(WIDE, "text-foreground-2")}>
-                      {formatTimeOfDay(new Date(row.startedAtMs), timeZone)}
-                    </span>
+                    <span className={cn(WIDE, "text-foreground-2")}>{time}</span>
                     <span className="text-muted-foreground" title={kind.text}>
-                      <span aria-hidden="true">{kind.short}</span>
-                      <span className="sr-only">{kind.text}</span>
+                      {kind.short}
                     </span>
                     <span data-result className="font-semibold">
-                      {row.result === null ? "–" : formatValue(row.result, resultDigits)}
+                      {row.result === null ? "–" : formatValue(row.result, digits.result)}
                     </span>
                     <span data-mean className="text-right">
-                      {row.mean === null ? "–" : formatValue(row.mean, 2)}
+                      {row.mean === null ? "–" : formatValue(row.mean, digits.mean)}
                     </span>
                     <span data-delta className={cn(WIDE, "text-right text-foreground-2")}>
-                      {row.delta ? formatSigned(row.delta.delta, 2) : "–"}
+                      {row.delta ? formatSigned(row.delta.delta, digits.mean) : "–"}
                     </span>
                     <span className={cn(WIDE, "text-right text-muted-foreground")}>
                       {row.shots}

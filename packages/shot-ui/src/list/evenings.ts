@@ -4,18 +4,13 @@
 // Abends nennt der Kopf (D3). Zahlen nur aus dem Fachkern.
 
 import { cardValues, type PeriodCard } from "@vereinsheim/shot-core/analysis"
-import {
-  computeMetric,
-  inScoring,
-  metricByKey,
-  probeOnlyAsMatch,
-  type Scoring,
-} from "@vereinsheim/shot-core/metrics"
-import { formatIsoDate } from "@vereinsheim/lib/format"
+import { computeMetric, inScoring, metricByKey, type Scoring } from "@vereinsheim/shot-core/metrics"
+import { formatIsoDate, formatTimeOfDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 
 import type { ListQuery } from "../nav/routes"
 import { inRange, resolveRange, type DateRange, type NamedPeriod } from "../period/calendar"
-import { deltasBefore, isProbeOnly } from "../period/model"
+import { byStart, deltasBefore, isProbeOnly } from "../period/model"
+import { matchShots } from "../shots"
 
 /** eine Scheibe mit ihrer Familie (die Liste filtert nach ihr) */
 export interface ListInputCard {
@@ -55,6 +50,8 @@ export interface CardListModel {
   flags: string[]
   /** gezeigte Scheiben */
   cards: number
+  /** Stellen von Ergebnis und Ø in der Wertung (aus der Kennzahl); der Abstand hat die Stellen des Ø */
+  digits: { result: number; mean: number }
   /** der Zeitraum aus „Alle in Scheiben zeigen“; null: alle Abende */
   range: DateRange | null
 }
@@ -67,18 +64,18 @@ export interface CardListContext {
 }
 
 /** Training bis 4 Uhr nachts gehört zum Abend davor (D1) */
-const EVENING_CUTOFF_MS = 4 * 3_600_000
+const EVENING_STARTS = "04:00"
 
-/** der Abend einer Scheibe als ISO-Tag in der Zone; vor 4 Uhr der Vortag */
+/**
+ * der Abend einer Scheibe als ISO-Tag in der Zone; vor 4 Uhr der Vortag. Es zählt die Uhrzeit der Zone, nicht vier
+ * Stunden absolut: an den Tagen der Zeitumstellung hat die Nacht 23 oder 25 Stunden (Review N2).
+ */
 export function eveningDay(startedAtMs: number, timeZone: string): string {
-  return formatIsoDate(new Date(startedAtMs - EVENING_CUTOFF_MS), timeZone)
+  const at = new Date(startedAtMs)
+  const day = formatIsoDate(at, timeZone)
+  if (formatTimeOfDay(at, timeZone) >= EVENING_STARTS) return day
+  return formatIsoDate(new Date(zonedDayStartMs(day, timeZone) - 1), timeZone)
 }
-
-const byStart = (a: PeriodCard, b: PeriodCard) => a.startedAtMs - b.startedAtMs
-
-/** die Schüsse, über die die Zeile rechnet: die Wertung, bei nur Probe die Probe wie Wertung */
-const countedShots = (card: PeriodCard) =>
-  isProbeOnly(card) ? probeOnlyAsMatch(card.shots) : card.shots
 
 export function cardListModel(
   input: readonly ListInputCard[],
@@ -115,7 +112,7 @@ export function cardListModel(
   const days = new Map<string, Evening>()
   for (const card of shown) {
     const day = eveningDay(card.startedAtMs, context.timeZone)
-    const shots = countedShots(card)
+    const shots = matchShots(card.shots)
     const row: ListRow = {
       id: card.id,
       startedAtMs: card.startedAtMs,
@@ -123,7 +120,7 @@ export function cardListModel(
       result: computeMetric(resultMetric, shots),
       mean: computeMetric(meanMetric, shots),
       delta: deltas.get(card.id) ?? null,
-      shots: shots.filter((s) => s.kind === "match").length,
+      shots: shots.length,
     }
     const evening = days.get(day) ?? { day, rows: [], shots: 0, others: [] }
     evening.rows.push(row)
@@ -131,9 +128,11 @@ export function cardListModel(
     days.set(day, evening)
   }
 
-  // andere Familien des Abends, unabhängig von Art, Merkmal und Zeitraum
+  // andere Familien des Abends, unabhängig von Art und Merkmal, aber nur im Zeitraum: `listOnEvening` lässt Art und
+  // Merkmal fallen und behält den Zeitraum, so steht der Abend nach dem Sprung sicher in der Liste (Review N2)
   for (const other of input) {
     if (other.family === family) continue
+    if (range && !inRange(other.card.startedAtMs, range)) continue
     const evening = days.get(eveningDay(other.card.startedAtMs, context.timeZone))
     if (!evening) continue
     const entry = evening.others.find((o) => o.family === other.family)
@@ -144,8 +143,12 @@ export function cardListModel(
   return {
     family,
     evenings: [...days.values()].sort((a, b) => (a.day < b.day ? 1 : -1)),
-    flags: [...new Set(ofFamily.flatMap((c) => c.flags ?? []))].sort(),
+    // ein gewähltes Merkmal bleibt wählbar, auch wenn die Familie es nicht hat (sonst ließe es sich nicht lösen)
+    flags: [
+      ...new Set([...ofFamily.flatMap((c) => c.flags ?? []), ...(query.flag ? [query.flag] : [])]),
+    ].sort(),
     cards: shown.length,
+    digits: { result: resultMetric.decimals, mean: meanMetric.decimals },
     range,
   }
 }

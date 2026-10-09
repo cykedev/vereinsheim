@@ -30,6 +30,10 @@ export function probeOnlyAsMatch(shots: readonly MetricShot[]): readonly MetricS
   return converted.map((shot) => ({ ...shot, fromProbe: true }))
 }
 
+/** die Wertungsschüsse einer Karte, bei nur Probe die Probe wie Wertung (Zeile, Ablesung, kleine Scheibe) */
+export const matchShots = (shots: readonly MetricShot[]): readonly MetricShot[] =>
+  probeOnlyAsMatch(shots).filter((s) => s.kind === "match")
+
 /** ein Probeschuss, auch einer, den `probeOnlyAsMatch` als Training wie Wertung zeigt (für das Probe-Eck) */
 export const isProbeShot = (shot: MetricShot) =>
   shot.kind === "probe" || (shot as { fromProbe?: boolean }).fromProbe === true

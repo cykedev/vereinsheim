@@ -173,7 +173,8 @@ export function periodReading(
 const mean = (values: readonly CardValue[]) =>
   values.length ? values.reduce((sum, v) => sum + v.value, 0) / values.length : null
 
-const byStart = (a: PeriodCard, b: PeriodCard) =>
+/** zeitliche Folge, bei gleichem Beginn nach Id (wie im Fachkern); eine Regel für Zeitraum und Liste */
+export const byStart = (a: PeriodCard, b: PeriodCard) =>
   a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
 
 /** Platz unter so vielen letzten Scheiben (C4) */
