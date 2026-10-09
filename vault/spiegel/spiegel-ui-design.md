@@ -24,18 +24,18 @@ relates_to: ["[[component-canon]]", "[[navigation-pattern]]", "[[spiegel-metrics
 
 ## Navigation (Handy)
 
-Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Profil. Auf dem Desktop dieselben Bereiche als Seitenleiste. Abweichend vom heutigen Kopfzeilen-Schema ([[navigation-pattern]]), deshalb Teil von Design 2.
+Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Profil. Auf dem Desktop dieselben Bereiche als Seitenleiste ab 1024 px. Abweichend vom heutigen Kopfzeilen-Schema ([[navigation-pattern]]), deshalb Teil von Design 2. Einstieg, Liste, Auswahl, Blättern, Adressen und Löschen regelt [[spiegel-navigation]] (entschieden 9. Oktober 2026).
 
 ## Bildschirme
 
 | Bildschirm | Inhalt |
 |---|---|
-| Start | letzte Scheibe groß, neu seit dem letzten Besuch, Aktivität, gebrochene Rekorde |
-| Scheiben | Liste nach Tagen, Filter nach Disziplin und Art |
-| Scheibe (Session-Detail) | Kopf mit Disziplin, Stand, Zeit, Ergebnis; Trefferbild mit Schaltern (Schwerpunkt, Streukreis, Nummern, Probe), Zoom Gruppe/Scheibe, Wiedergabe; Wertung ganze Ringe/Zehntel; Kennzahl-Kacheln mit Abstand zum 30-Tage-Schnitt; Beobachtung; Serien als kleine Scheiben im gleichen Maßstab; Schuss für Schuss (Wert, Tempo); Schusstabelle; Original-PDF |
+| Start | „Offen (n)“ zum Bestätigen, der letzte Abend groß, neue Rekorde, Form der letzten 90 Tage ([[spiegel-navigation]]) |
+| Scheiben | Liste nach Abend, eine Familie (Pflicht), Hinweis auf andere Familien am Abend-Kopf, Filter nach Art und Merkmal, Auswahl |
+| Scheibe (Session-Detail) | Kopf mit Disziplin, Stand, Zeit, Ergebnis; Trefferbild mit Schaltern (Schwerpunkt, Streukreis, Nummern, Probe), Zoom Gruppe/Scheibe, Wiedergabe; Wertung ganze Ringe/Zehntel; Kennzahl-Kacheln mit Abstand zum Schnitt der bis zu fünf Scheiben davor ([[spiegel-navigation]], wie im Zeitraum); Beobachtung; Serien als kleine Scheiben im gleichen Maßstab; Schuss für Schuss (Wert, Tempo); Schusstabelle; Original-PDF |
 | Vergleich | zwei Auswahlen auf einer Scheibe, Tabelle mit Differenz; laut [[spiegel-langzeit]] eingebaut in die Seite eines Zeitraums |
 | Fortschritt | Seite eines Zeitraums wie die einer Scheibe: Verlauf, Liste der Scheiben, Zahlen, Analyse, Rekorde, Kalender ([[spiegel-langzeit]]) |
-| Profil | Zuordnung (Sportpass), Freigaben, Export, Löschen |
+| Profil | Zuordnung (Sportpass), Freigaben, Export, Papierkorb (30 Tage), Löschen des Kontos; auf dem Telefon auch Admin |
 | Admin | Anlagen, Brücken-Status, Zuordnungen, Scheibenbilder, Nutzer |
 
 ## Wertung: ganze Ringe oder Zehntel

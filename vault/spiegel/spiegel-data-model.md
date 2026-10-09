@@ -21,7 +21,8 @@ relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spi
 | Schützen-Identität | wie Meyton den Schützen kennt | SportpassID, sonst Name + Verein |
 | Konto, Zuordnung | Spiegel-Nutzer und sein Weg zu Identität oder Scheibe, mit Status und Protokoll | id |
 | Rohdatensatz | Snapshot als Liste von Zeilenversionen, mit Folgenummer der Brücke ([[spiegel-ingest-pipeline]]) | Quelle + ScheibenID + Prüfsumme |
-| Grabstein | abgelehnte oder gelöschte Scheibe, die nicht wiederkommen darf; auch die Brücke kennt sie | Quelle + Epoche + ScheibenID |
+| Grabstein | abgelehnte oder fremde Scheibe, die nicht wiederkommen darf; auch die Brücke kennt sie | Quelle + Epoche + ScheibenID |
+| Löschsperre | eigene, endgültig gelöschte Scheibe (nach 30 Tagen Papierkorb): nicht von selbst wieder annehmen, ausdrückliches Holen hebt sie auf; auch die Brücke kennt sie ([[spiegel-navigation]]) | Konto + Quelle + Epoche + ScheibenID |
 | Scheibe | ein Durchgang: Disziplin, Stand, Beginn, Ende, Status, Zustand (offen, ruhend, endgültig), Merkmale, Revision, Herkunft (Rohdaten oder nur PDF) | Quelle + Epoche + ScheibenID |
 | Stellung, Serie | Gliederung mit amtlichen Summen | Scheibe + Stellung + Serie |
 | Schuss | Lage, amtliche Werte, Zeit | Scheibe + Stellung + Treffer je Revision; über Revisionen hinweg ein Fingerabdruck aus Zeit, Millisekunden und Lage |

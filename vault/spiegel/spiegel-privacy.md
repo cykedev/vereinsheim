@@ -17,7 +17,8 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
 - **Datensparsamkeit in der Brücke:** Scheiben ohne zugestimmten Besitzer bleiben im Schützenhaus; die Brücke kennt dafür nur gehashte Kennungen ([[spiegel-bridge]]). Sie hält keinen eigenen Zustand; die Probe fremder Scheiben höchstens begrenzt im Arbeitsspeicher, bis zum Ausschalten. Hinaus geht sie nur mit Opt-in oder Abholung.
 - **Doppelt geprüft:** Spiegel nimmt nur Scheiben an, die zu einem Opt-in oder einem offenen Auftrag passen ([[spiegel-ingest-pipeline]]).
 - **Falsche Zuordnung:** Wählt jemand am Stand einen fremden Namen, landet seine Scheibe beim Falschen. „Nicht meine“ nimmt sie sofort heraus; ohne Besitzer wird sie gelöscht ([[spiegel-assignment]]).
-- **Grabsteine:** Gelöschte und abgelehnte Scheiben merken sich Spiegel und Brücke als Grabstein, damit der nächste Abgleich sie nicht wieder hochlädt.
+- **Grabsteine:** Abgelehnte und fremde Scheiben („Nicht meine“) merken sich Spiegel und Brücke als Grabstein, damit der nächste Abgleich sie nicht wieder hochlädt.
+- **Eigene Scheibe löschen** (9. Oktober 2026, [[spiegel-navigation]]): erst 30 Tage Papierkorb, danach endgültig. Es bleibt eine weiche Sperre, nur der Schlüssel ohne Schussdaten, auch an die Brücke verteilt. Sie verhindert, dass der Abgleich die Scheibe von selbst zurückbringt; ein ausdrückliches Holen (QR, „Scheibe holen“, Nachladen) hebt sie auf.
 - **Netztrennung:** Die Handys sind im Gäste-LAN, Anlage und Brücke im Gerätenetz. Der Standard-Zugang zur SSMDB2 ist überall gleich; die Trennung hält ihn von den Handys fern.
 - **Protokolle ohne Namen:** Diagnose und Logs der Brücke enthalten keine Namen und Sportpassnummern.
 - **Verdeckte Wertung** (Meyton-Modus 5: Wert und Lage verdeckt, Modus 10: Wert verdeckt, unbekannte Modi) wird nie hochgeladen. Nach einem Preis- oder Königsschießen kann ein Admin freigeben.

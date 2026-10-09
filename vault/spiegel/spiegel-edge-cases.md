@@ -83,7 +83,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-25 | Meyton-Update ändert das Schema | Feste Abfragen brechen oder verschlucken neue Spalten; der alte Adapter deutet falsch | `SELECT *` mit Spaltenliste; Schema-Fingerabdruck aus `Version` und `information_schema`; fehlt eine Spalte, Quarantäne | Fixture mit Zusatzspalte und fehlender Spalte |
 | SF-26 | Snapshots kommen in falscher Reihenfolge an | Ein älterer Stand überschreibt einen neueren | Folgenummer (Beobachtungszeit in ms, je Lauf streng steigend) und Beobachtungszeit; nur Neueres zählt | Test |
 | SF-27 | Prüfsumme in Brücke und Spiegel verschieden berechnet | Jede Lieferung wirkt neu; Revisionen ohne Änderung | Kanonische Serialisierung mit Testvektoren im Vertrag; neue Revision nur bei inhaltlicher Änderung | Test: Vektoren in `packages/ingest-contract` ([[spiegel-ingest-contract]]) |
-| SF-28 | Abgelehnte, gelöschte oder fremde Scheibe | Der nächste Abgleich lädt sie wieder hoch | Grabstein in Spiegel, an die Brücke verteilt | Test |
+| SF-28 | Abgelehnte, gelöschte oder fremde Scheibe | Der nächste Abgleich lädt sie wieder hoch | Abgelehnte und fremde: Grabstein in Spiegel, an die Brücke verteilt. Eigene, selbst gelöschte: 30 Tage Papierkorb, danach weiche Sperre (nur der Schlüssel, an die Brücke verteilt), die ein ausdrückliches Holen aufhebt ([[spiegel-navigation]]) | Test |
 
 ### Zeit
 
