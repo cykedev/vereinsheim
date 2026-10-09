@@ -29,7 +29,7 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
 1. **Einstieg ist Start**, ein eigener Bildschirm:
    - oben „Offen (n)“;
    - darunter der letzte Abend groß: Hauptscheibe mit kleiner Scheibe, Ergebnis, ein Satz gegen den Schnitt, die
-     übrigen Scheiben des Abends als Chips;
+     übrigen Scheiben des Abends als Chips (seit N5 ersetzt: der Abend im Formband, siehe „Umgesetzt in N5“);
    - dann „Neue Rekorde“ und „Form, letzte 90 Tage“ → Fortschritt.
    - Läuft gerade eine Scheibe, steht das oben („Läuft · Stand 6 · 23 Schuss“).
 2. **Die Liste gliedert sich nach Abend:**
@@ -247,6 +247,29 @@ Plan `plans/2026-10-09-spiegel-app-rahmen.md`, Branch `feat/spiegel-app-rahmen`.
   - „Labor: App | Beispiele“ statt der alten Ansichten.
   - Start, Scannen, Profil und Admin sind Platzhalter mit dem Schritt, der sie bringt.
   - Ein Router im Speicher (`go`). Browser-Zurück gibt es im Artifact nicht.
+
+## Umgesetzt in N5 (9. Oktober 2026)
+
+Plan `plans/2026-10-09-spiegel-start.md`, Branch `feat/spiegel-start`. Drei Entwürfe lagen dem User vor
+(Artifact „Start-Entwürfe“); gewählt ist B, „der Abend im Formband“, mit dem Satz aus A darüber und größeren Kacheln.
+
+- **Aufbau:** „Offen (n)“ (im Labor zwei Beispiele), je Familie des letzten Abends ein Block, darunter eine Zeile
+  „Form, letzte 90 Tage“ für die zuletzt gewählte Familie.
+- **Der Block** (`EveningBlock`):
+  - der Satz: „Ein Abend in deiner Form: 0,09 über deinem Schnitt.“; „stark“ oder „schwächer“ nur außerhalb des
+    Bands;
+  - Tag, Familie, Scheiben, Schuss;
+  - der Ø je Schuss des Abends groß, dazu der Abstand zum Schnitt der fünf Scheiben davor;
+  - der Streifen der letzten 20 Scheiben mit Formband;
+  - die Scheiben als Kacheln (kleine Scheibe 56 px);
+  - neue Rekorde, nur wenn der Abend welche aufgestellt hat;
+  - „Abend in Scheiben ›“.
+- **Einheit ist die Scheibe** (Regel des Fachkerns): Der Streifen zeigt Scheiben, nicht Abende. Das Band ist das des
+  Fortschritts, seine Mitte der Schnitt der fünf Scheiben vor dem Abend. Der „Platz unter den letzten 20 Abenden“ aus
+  dem Entwurf entfällt.
+- **Wege:** Eine Kachel öffnet die Scheibe mit Herkunft Start („← Start“). Blättern geht durch die Scheiben des
+  letzten Abends, über alle Familien.
+- **Offen:** „Läuft gerade“ und echte offene Fälle (N6, N7).
 
 ## Was die Bausteine schon haben, was fehlt
 

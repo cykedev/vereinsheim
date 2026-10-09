@@ -29,13 +29,14 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   `window.__labor` (Prüfhaken) liefert Schüsse, Zustand, Scheibe, die Funktionen des Fachkerns (auch die
   Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen, auf der Seite
   eines Zeitraums dazu `period` (Scheiben, Zustand, Modell) und `tools.period`, auf der Scheiben-Liste `list` (Modell,
-  Filter, Scheiben, Familie je Id). Die Prüfung braucht seit L3 mehr
+  Filter, Scheiben, Familie je Id), auf Start `start` (Modell, Scheiben). Die Prüfung braucht seit L3 mehr
   als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`); in einer Seite mit zwei Blättern ist das der Hilfe
   das letzte `<dialog>`.
   In den Rahmen der Prüfung (außerhalb des Bilds, `left:-9999px`) kam ein Sprung über `requestAnimationFrame` beim
   Laden nicht an; was beim Laden zu einem Anker springen soll, springt deshalb im Effekt sofort (Review N2).
 - **Die App im Rahmen** (Plan L3, N2, N3): `AppFrame` umgibt jede Ansicht; die Navigation wechselt die Bereiche
-  (Scheiben `ListView`, Fortschritt `PeriodView`, Platzhalter `PlaceholderView` für Start, Scannen, Profil, Admin).
+  (Start `StartView` seit N5, Scheiben `ListView`, Fortschritt `PeriodView`, Platzhalter `PlaceholderView` für
+  Scannen, Profil, Admin). „Offen“ auf Start zeigt zwei Beispiele (`OPEN_EXAMPLES`); ihre Zahl steht am Rahmen.
   - Der Labor-Kopf schaltet „Labor: App | Beispiele“. Beispiele sind die Beispielscheiben in `CardView`, ohne Adresse
     und ohne aktiven Bereich.
   - Die Ansicht steht in `labor.mode`. Ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie, ein Abend
