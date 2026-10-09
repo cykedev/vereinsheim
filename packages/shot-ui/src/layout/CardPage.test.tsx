@@ -84,6 +84,9 @@ describe("Rahmen der Seite (D2, D5)", () => {
       /id="schuesse" data-section="schuesse" class="[^"]*md:flex-1[^"]*md:\[contain:size\]/
     )
     expect(html).not.toMatch(/id="zahlen"[^>]*md:flex-1/)
+    // nur der letzte Abschnitt ist mindestens fensterhoch (die Sprungleiste erreicht sonst „Zahlen“ nie)
+    expect(html).toMatch(/id="analyse"[^>]*min-h-\[calc\(100svh-3\.5rem\)\]/)
+    expect(html).not.toMatch(/id="zahlen"[^>]*min-h-\[calc/)
   })
 })
 

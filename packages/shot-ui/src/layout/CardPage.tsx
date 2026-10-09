@@ -106,8 +106,8 @@ export function CardPage({
             ))}
           </div>
         </div>
-        {below.map((section) => (
-          <SectionBlock key={section.id} section={section} />
+        {below.map((section, i) => (
+          <SectionBlock key={section.id} section={section} last={i === below.length - 1} />
         ))}
       </div>
     </div>

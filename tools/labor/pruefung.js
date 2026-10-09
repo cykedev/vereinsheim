@@ -1938,6 +1938,23 @@ addEventListener("load", async () => {
     )
     small.remove()
 
+    // im hohen Fenster: „Zahlen“ erreicht die Leiste und ist aktiv (der letzte Abschnitt ist fensterhoch)
+    const tallJump = async (hash) => {
+      const f = await openFrame(1440, 1400, hash)
+      const d = f.contentDocument
+      const w = f.contentWindow
+      const link = [...d.querySelectorAll('nav[aria-label="Abschnitte"] a')].find(
+        (a) => a.textContent === "Zahlen"
+      )
+      link.dispatchEvent(new w.MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }))
+      await wait(200)
+      w.dispatchEvent(new w.Event("scroll"))
+      await wait(100)
+      const top = d.getElementById("zahlen").getBoundingClientRect().top
+      const active = d.querySelector('nav[aria-label="Abschnitte"] [aria-current]')?.textContent
+      f.remove()
+      return { top, active }
+    }
     // ---------- Seite eines Zeitraums (Plan L3, Task 15)
     {
       const P = () => L().period
@@ -2354,6 +2371,12 @@ addEventListener("load", async () => {
           d2.documentElement.scrollWidth <= 1280
       )
       desk2.remove()
+      const tallPeriod = await tallJump("#verlauf")
+      check(
+        "Zeitraum, hohes Fenster 1440 × 1400: „Zahlen“ erreicht die Leiste und ist aktiv",
+        near(tallPeriod.top, 56, 3) && tallPeriod.active === "Zahlen",
+        `${Math.round(tallPeriod.top)} ${tallPeriod.active}`
+      )
       await click(button("Scheibe"), 300)
       // #zahlen gibt es auf beiden Seiten: es öffnet die zuletzt gewählte Ansicht, hier die Scheibe (Review)
       const reload = await openFrame(1280, 900, "#zahlen")
@@ -2363,6 +2386,12 @@ addEventListener("load", async () => {
           !reload.contentDocument.querySelector("[data-period-header]")
       )
       reload.remove()
+      const tallCard = await tallJump("")
+      check(
+        "Scheibe, hohes Fenster 1440 × 1400: „Zahlen“ erreicht die Leiste und ist aktiv",
+        near(tallCard.top, 56, 3) && tallCard.active === "Zahlen",
+        `${Math.round(tallCard.top)} ${tallCard.active}`
+      )
     }
 
     check("Keine Skriptfehler", window.__errors.length === 0, window.__errors.join(" | "))

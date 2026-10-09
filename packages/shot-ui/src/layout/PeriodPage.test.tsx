@@ -51,6 +51,10 @@ describe("Rahmen der Seite eines Zeitraums (D1)", () => {
     expect(html).toMatch(/data-result-box="true" class="[^"]*max-md:hidden/)
     expect(html).toMatch(/id="scheiben" data-section="scheiben" class="[^"]*md:flex-1/)
     expect(html).toMatch(/id="zahlen" data-section="zahlen" class="min-w-0 scroll-mt-14"/)
+    // der letzte Abschnitt mindestens fensterhoch: auch ein kurzer Abschnitt davor erreicht die Leiste
+    expect(html).toMatch(
+      /id="analyse" data-section="analyse" class="[^"]*min-h-\[calc\(100svh-3\.5rem\)\]/
+    )
   })
 
   it("ohne Scheiben nur Kopf und Hinweis", () => {
