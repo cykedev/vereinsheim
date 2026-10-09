@@ -3278,6 +3278,29 @@ addEventListener("load", async () => {
           sampleTab === "Überblick",
         `${staleHash} · scrollY ${sampleScroll} · Kopf ${sampleHead} · ${sampleTab}`
       )
+      // derselbe Fehler auf dem zweiten Weg: mit einem Anker der Scheibe geladen (#position), zuerst eine andere Ansicht
+      // (hier der Fortschritt), dann die Beispielscheibe; der Anker beim Laden gilt nur für die erste Ansicht
+      const loaded = await openFrame(1280, 900, "#position")
+      const ld = loaded.contentDocument
+      const firstIsPeriod = !!ld.querySelector("[data-period-header]")
+      await frameClick(loaded, ld.querySelector("[data-labor-button]"), 200)
+      await frameClick(
+        loaded,
+        [...ld.querySelectorAll("[data-labor-panel] button")].find(
+          (b) => txt(b) === "Beispielscheiben öffnen"
+        ),
+        400
+      )
+      const loadedTab = txt(
+        ld.querySelector('section[aria-label="Analyse"] [role="radio"][aria-checked="true"]') ??
+          ld.body
+      ).slice(0, 20)
+      loaded.remove()
+      check(
+        "Labor: mit #position geladen, erst der Fortschritt, dann die Beispielscheibe: Reiter „Überblick“",
+        firstIsPeriod && loadedTab === "Überblick",
+        `${firstIsPeriod} · ${loadedTab}`
+      )
       try {
         history.replaceState(null, "", "#pruefen")
       } catch {
