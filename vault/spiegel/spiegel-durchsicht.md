@@ -136,9 +136,13 @@ Die Analyse hat 25 Karten:
   - Ein Lage-Anteil bis null heißt „Lage kostet nichts“ (User-Frage zum negativen Ringverlust durch die Lage).
   - Fachbegriffe nur im Blatt „?“ und in den Reitern; die Skriptprüfung sucht sie auf den ersten beiden Ebenen.
   - Nicht in U3: die Kachel „Eingeschossen?“ und der Reiter Probe sagen noch „unklar“ und „echt“; U4 entfernt sie.
-- **U4 Probe wie am Ausdruck** (dazugekommen am 9. Oktober 2026 aus der Erkundung der Daten, [[adr-027]],
-  `plans/2026-10-09-spiegel-probe-wie-ausdruck.md`): keine Scheibe mehr mit Probe und Wertung, der Reiter „Probe“ und
-  alles, was beides voraussetzt, fällt weg. U3 steckt in diese Teile keine Arbeit mehr.
+- **U4 Probe wie am Ausdruck** (umgesetzt 9. Oktober 2026, aus der Erkundung der Daten, [[adr-027]],
+  `plans/2026-10-09-spiegel-probe-wie-ausdruck.md`): keine Scheibe mehr mit Probe und Wertung.
+  - Weg sind die Probe-Kachel, „Ohne Probe“, der Reiter „Probe“, „P“-Nummern und der Satz zur Probe.
+  - Im Überblick steht statt „Eingeschossen?“ die Kachel „Ausreißer“ (wie viele, welche).
+  - Das Training nur aus Probe bleibt mit Probe-Eck; der Filter „Probe-Training einbeziehen“ im Fortschritt bleibt.
+  - Auf dem Tablet sind die Serien-Kacheln breiter (vier statt fünf je Zeile): Unter etwa 700 px Höhe folgen die
+    Serien unter der Scheibe statt neben die untere Leiste zu passen.
 - **U5 Start und Liste** (hieß bis zum 9. Oktober U4): B8, B9 und die Filter der Liste wie in B5.
   - Dazu das Formband auf Start (User, 9. Oktober 2026: „das formband ist irgendwie seltsam, ich verstehe es kaum,
     vor allem mit der ‚abend‘“). Woran es liegt:

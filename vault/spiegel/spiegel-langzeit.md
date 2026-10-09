@@ -112,7 +112,7 @@ Seite eines Zeitraums. Die bisher geplante eigene Seite **Vergleich** geht im ei
 | Präzision | σ̂ im Verlauf, Langzeit-Trefferbild, Form über mehrere Scheiben | L9 |
 | Lage | Lage über Zeit, Ausreißerrichtung, Richtungsuhr über alle Schüsse | L7, L10 |
 | Zeit | Umfang und Kalender, Tempo gegen Wert, Tageszeit, Pause | T6, T7, Z6, Z7, K1–K5 |
-| Probe | Versatz Probe → Wertung über Zeit, Anteil „eingeschossen“ | S1–S4 |
+| Probe | ~~Versatz Probe → Wertung über Zeit, Anteil „eingeschossen“~~ entfiel mit U4 (keine Probe neben Wertung) | S1–S4 |
 
 ### Langzeit-Trefferbild
 

@@ -24,7 +24,7 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   Browser einem Link trotz `preventDefault` und die Seite ist weg („Kein Bericht“). Helfer: `button`, `link` (nach Text
   oder `aria-label`), `area` (sichtbarer Eintrag der Navigation), `helpSheet` (das Blatt der Hilfe ist das letzte
   `<dialog>`; davor stehen das der Labor-Werkzeuge und je Seite weitere), `inLabor` (Knopf im Blatt der
-  Labor-Werkzeuge, auch geschlossen; nur dort suchen, die Seite hat gleich benannte Knöpfe wie den Reiter „Probe“),
+  Labor-Werkzeuge, auch geschlossen; nur dort suchen, die Seite kann gleich benannte Knöpfe haben),
   `sideTheme` (Darstellung in der Seitenleiste), `pageHeadTop` (Abstand des Seitenkopfs oben), `jargonIn`
   (Fachbegriffe auf den ersten beiden Ebenen, U3), `recordJump` (Sprung von einem Rekord zur gewählten Scheibe in einem
   vorhandenen Rahmen); der Pillen-Helfer übergeht „Zurück zur App“. Ein synthetischer Klick fokussiert
@@ -101,7 +101,8 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
 build` (ohne Turbo-Cache, sonst kann der Stand-Stempel von einem älteren Commit stammen), unter derselben
   Adresse, damit der User den
   Stand auf dem Handy sieht.
-- **Beispiele** (`src/samples.ts`) mit festem Seed und festem Beginn, Lagen auf 1/100 mm; kein echter
+- **Beispiele** (`src/samples.ts`) mit festem Seed und festem Beginn, Lagen auf 1/100 mm; „40 Schuss“ wie am Ausdruck
+  ohne Probe (U4, die neun Probeschüsse werden gezogen, aber nicht ausgegeben), „60 Probe“ als Training; kein echter
   Ausdruck (ADR-029). Die Seeds sind die der Spielwiese, damit beide dasselbe zeigen. „Zwei Abreißer“
   (Luftgewehr, Oktober 2026) zeigt, dass sich zwei nahe Abreißer im schrittweisen Ausreißer-Test nicht verdecken.
 - `build` läuft im Gate (esbuild und Tailwind über PostCSS, unter zwei Sekunden) und hängt an `^build`,
