@@ -1898,6 +1898,15 @@ addEventListener("load", async () => {
       pillBottom <= 812 - 72,
       `${Math.round(pillBottom)} von 812`
     )
+    // ohne Labor-Kopf beginnt die Seite einer Scheibe mit ihrem Titel (Labor näher an der App)
+    rulerPhone.contentWindow.scrollTo(0, 0)
+    await wait(50)
+    const headTopPhone = rd.querySelector("[data-card-header]")?.getBoundingClientRect().top ?? 999
+    check(
+      "Telefon 375 px: die Seite einer Scheibe beginnt mit ihrem Titel, kein Labor-Kopf davor",
+      headTopPhone < 120,
+      `${Math.round(headTopPhone)}`
+    )
     rulerPhone.remove()
 
     // Anker beim Laden: die Seite entsteht erst im Browser, der Sprung kommt aus dem Labor
@@ -3043,6 +3052,59 @@ addEventListener("load", async () => {
         `${formHref} · ${P()?.state.family}`
       )
       await click(area("Scheiben"), 400)
+
+      // ---------- Labor näher an der App: Werkzeuge im Blatt, Darstellung an der Seite
+      const laborDialog = () => $("[data-labor-panel]").closest("dialog")
+      await click($("[data-labor-button]"), 200)
+      const laborOpen = laborDialog().open
+      const laborText = txt($("[data-labor-panel]"))
+      await click($('button[aria-label="Schließen"]', laborDialog()), 200)
+      check(
+        "Labor: der Knopf „Labor-Werkzeuge“ öffnet das Blatt mit Stand, Adresse und Beispielscheiben, Schließen schließt",
+        $("[data-labor-button]")?.getAttribute("aria-label") === "Labor-Werkzeuge" &&
+          laborOpen &&
+          /Stand [0-9a-f]{7}/.test(laborText) &&
+          laborText.includes("Adresse in der App") &&
+          !!button("Beispielscheiben öffnen", $("[data-labor-panel]")) &&
+          !laborDialog().open,
+        laborText.slice(0, 60)
+      )
+      const themeIn = (root) => $("[data-theme-switch]", root)
+      const wasDark = document.documentElement.classList.contains("dark")
+      await click(button("Dunkel", themeIn($("[data-app-sidebar]"))), 150)
+      const dark = document.documentElement.classList.contains("dark")
+      await click(button("Hell", themeIn($("[data-app-sidebar]"))), 150)
+      const light = !document.documentElement.classList.contains("dark")
+      await click(button(wasDark ? "Dunkel" : "Hell", themeIn($("[data-app-sidebar]"))), 150)
+      await click(area("Profil"), 300)
+      const themeInProfile = !!themeIn($('[data-placeholder="profile"]'))
+      await click(area("Scheiben"), 300)
+      check(
+        "Darstellung: unten in der Seitenleiste wechselt sie Hell und Dunkel, in Profil gibt es sie auch",
+        dark && light && themeInProfile,
+        `${dark} ${light} ${themeInProfile}`
+      )
+      // die Beispielscheiben über das Blatt, zurück zur App in den letzten Bereich
+      await click(button("Beispielscheiben öffnen", $("[data-labor-panel]")), 400)
+      const inSamples =
+        !!$("[data-card-header]") && !!button("Zurück zur App", $("[data-labor-panel]"))
+      await click(button("Zurück zur App", $("[data-labor-panel]")), 400)
+      check(
+        "Labor: „Beispielscheiben öffnen“ zeigt die Beispiele, „Zurück zur App“ kehrt in die Liste zurück",
+        inSamples && !!$("[data-card-list-page]"),
+        addr()
+      )
+      // Telefon 390 px: der Knopf steht über der unteren Leiste
+      const laborPhone = await openFrame(390, 844)
+      const laborButton = laborPhone.contentDocument
+        .querySelector("[data-labor-button]")
+        ?.getBoundingClientRect()
+      check(
+        "Labor, Telefon 390 px: der Knopf steht über der unteren Leiste",
+        !!laborButton && laborButton.bottom <= 844 - 72 && laborButton.right <= 390,
+        `${Math.round(laborButton?.top ?? 0)}–${Math.round(laborButton?.bottom ?? 0)}`
+      )
+      laborPhone.remove()
       // Telefon 375 px mit einem Abend als Anker: kein seitliches Scrollen, ohne Uhrzeit, Abstand und Schuss
       const phoneDay = Li().model.evenings[2].day
       const phone = await openFrame(375, 812, `#${phoneDay}`)
