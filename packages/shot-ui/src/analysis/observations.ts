@@ -106,7 +106,13 @@ export function observations(input: AnalysisInput): Observation[] {
       : `Kein klarer Trend über die Scheibe (Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss, je Zehnerserie ${perSeries} Ringe).`
     const tired = fatigue(base, scoring)
     if (tired) {
-      text += ` Die letzten zehn Schuss: ${formatSigned(tired.deltaRings, 2)} Ringe gegen die ersten zehn${
+      // der Unterschied gilt je Schuss; zehn Schuss zusammen das Zehnfache (Prüfung, Zeit 4)
+      const d = tired.deltaRings
+      const where =
+        Math.abs(d) < 0.005
+          ? "genau im Schnitt der ersten zehn"
+          : `im Schnitt ${formatValue(Math.abs(d), 2)} Ringe je Schuss ${d < 0 ? "unter" : "über"} den ersten zehn (zusammen ${formatSigned(d * 10, scoring === "rings" ? 0 : 1)} Ringe)`
+      text += ` Die letzten zehn Schuss lagen ${where}${
         tired.deltaR50Um !== null ? `, R50 ${formatSigned(tired.deltaR50Um / 1000, 2)} mm` : ""
       }. Ein Muster zeigt erst der Vergleich über mehrere Scheiben.`
     }
@@ -115,19 +121,17 @@ export function observations(input: AnalysisInput): Observation[] {
 
   const recovery = pauseRecovery(base, scoring)
   if (recovery?.effects.length) {
-    // ohne vergleichbaren Wert sagt der Satz das, statt „im Schnitt“ (Plan D8)
-    const relative = (d: number | null) =>
+    // gegen die übrigen Schüsse und je Schuss, bis zu drei danach (Prüfung, Zeit 1); ohne vergleichbaren
+    // Wert sagt der Satz das, statt „im Schnitt“ (Plan D8)
+    const effect = (afterShot: number, d: number | null) =>
       d === null
-        ? "ohne Wert zum Vergleich"
-        : Math.abs(d) < 0.005
-          ? "genau im Schnitt der Scheibe"
-          : `${formatValue(Math.abs(d), 2)} Ringe ${d < 0 ? "unter" : "über"} dem Schnitt der Scheibe`
-    const text = recovery.effects
-      .map(
-        (e) =>
-          `nach der Pause vor Schuss ${e.afterShot} lagen die nächsten drei Schuss ${relative(e.deltaRings)}`
-      )
-      .join("; ")
+        ? `nach der Pause vor Schuss ${afterShot} fehlen Werte zum Vergleich`
+        : `nach der Pause vor Schuss ${afterShot} lagen die Schüsse danach (bis zu drei) ${
+            Math.abs(d) < 0.005
+              ? "genau im Schnitt deiner übrigen Schüsse"
+              : `im Schnitt ${formatValue(Math.abs(d), 2)} Ringe je Schuss ${d < 0 ? "unter" : "über"} deinen übrigen Schüssen`
+          }`
+    const text = recovery.effects.map((e) => effect(e.afterShot, e.deltaRings)).join("; ")
     out.push({
       icon: "pause",
       text: `${text[0].toUpperCase()}${text.slice(1)}. Drei Schuss sind wenig; ein Urteil braucht mehrere Abende.`,

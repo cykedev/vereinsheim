@@ -305,7 +305,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Luftgewehr, wo fast alle Schüsse 9 oder 10 sind, ist ein Trend in ganzen Ringen etwas seltener
   klar. Zeigen Test und Gerade in verschiedene Richtungen (etwa wegen eines sehr schwachen letzten
   Schusses), gibt es kein Urteil.
-- *Mindestzahl:* Ab 1 Schuss, der Trend ab 10.
+- *Mindestzahl:* Ab 2 Schuss mit Wert, der Trend ab 10.
 - *Formel:* `gleitender Schnitt über die letzten 10; Trend: Steigung der Ausgleichsgeraden (Ringe je
   Schuss) mal 10; „klar“ nach Mann-Kendall mit Korrektur für gleiche Werte (95 %), wenn die Gerade
   dieselbe Richtung zeigt`
@@ -313,9 +313,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Rhythmus (Z5)**
 - *Was:* Jede Säule ist der Abstand zum vorigen Schuss, die Linie der Median der letzten fünf
   Abstände. Pausen über drei Minuten sind markiert und zählen nicht hinein.
-- *So liest du es:* Eine ruhige Linie heißt: gleichmäßiger Ablauf. Wird sie zum Ende länger oder
-  unruhiger, lohnt der Blick auf die Ermüdung.
-- *Mindestzahl:* Ab 2 Schuss mit Zeit.
+- *So liest du es:* Eine ruhige Linie heißt: gleichmäßiger Ablauf. Steigt sie zum Ende (längere
+  Abstände) oder werden die Säulen unruhiger, lohnt der Blick auf die Ermüdung.
+- *Mindestzahl:* Ab 3 Schuss mit Zeit.
 - *Formel:* `Median der letzten 5 Abstände ohne Pausen`
 
 **Tempo und Dauer (Z1, Z2, Z3)**
@@ -324,9 +324,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Abstände liegt in einem Fenster dieser Breite. Dazu die Dauer vom ersten bis zum letzten Schuss.
 - *Vorsicht:* Gleichmäßiger ist nicht automatisch besser. Die Streuung ist ein Merkmal, das du mit
   deinem Ergebnis vergleichen kannst.
-- *Mindestzahl:* Tempo ab 3 Schuss, Tempo-Streuung ab 4, Dauer ab 2.
+- *Mindestzahl:* Tempo ab 3 Schuss mit Zeit, die Tempo-Streuung ab 4, die Dauer ab 2.
 - *Formel:* `Tempo = Median der Abstände ohne Pausen über 180 s; Tempo-Streuung = Q3 − Q1 der
-  Abstände; Dauer = letzter − erster Schuss`
+  Abstände ohne Pausen; Dauer = letzter − erster Schuss`
 
 **Pausen und Wiedereinstieg (Z4)**
 - *Was:* Jede Pause über drei Minuten und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr
@@ -334,13 +334,14 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Vorsicht:* Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis
   zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je
   Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.
-- *Mindestzahl:* Ab 2 Wertungsschüssen mit Zeit und Wert.
+- *Mindestzahl:* Pausen ab 2 Wertungsschüssen mit Zeit; was danach kam, nur über Schüsse mit Wert.
 - *Formel:* `Pause = Abstand über 180 s; Wiedereinstieg = Ø der bis zu 3 Schüsse danach − Ø der
   übrigen`
 
 **Ermüdung (I2)**
 - *Was:* Die letzten zehn Schuss gegen die ersten zehn, im Wert und in der Streuung (R50).
-- *So liest du es:* Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer.
+- *So liest du es:* Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. Der
+  Unterschied im Wert gilt je Schuss; über die zehn Schuss zusammen ist es das Zehnfache.
 - *Vorsicht:* Eine einzelne Scheibe ist verrauscht: Auch ohne jede Ermüdung unterscheiden sich die
   ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm)
   bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Ein Muster wird es erst, wenn es

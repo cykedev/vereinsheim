@@ -18,7 +18,7 @@ import { durationText, formatSigned, formatValue, percentText } from "../../form
 import { CourseChart } from "../charts/CourseChart"
 import { ChartSlot } from "../charts/frame"
 import { RhythmChart } from "../charts/RhythmChart"
-import { AnalysisCard, KeyValues, Note } from "../parts"
+import { AnalysisCard, KeyValues, Muted, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
 
 /** Zeichen der Legende im Verlauf, 14 px */
@@ -33,11 +33,7 @@ function LegendItem({ children, label }: { children: ReactNode; label: string })
   )
 }
 
-const Muted = ({ children }: { children: ReactNode }) => (
-  <span className="font-normal text-muted-foreground">{children}</span>
-)
-
-/** Mindestzahl für das Tempo, wie in der Kachel „Tempo“ (D8) */
+/** Mindestzahl für die Streuung des Tempos, wie in der Kachel „Tempo“ (D8) */
 const TEMPO_MISSING = "ab 4 Schuss mit Zeit"
 
 /**
@@ -66,6 +62,8 @@ export function timeCards({
   const timed = profile.filter((p) => p.intervalMs !== null).length
   const pace = tempoSpread(base)
   const duration = computeMetric(inScoring(metricByKey("time.duration")!, scoring), base)
+  // der Median wie die Kachel an der Scheibe ab 3 Schuss mit Zeit, die Streuung ab 4 (Prüfung, Zeit 6)
+  const medianSeconds = computeMetric(metricByKey("time.intervalMedian")!, base)
   const recovery = pauseRecovery(base, scoring)
   const tired = fatigue(base, scoring)
   const series = seriesCurve(base, scoring)
@@ -156,26 +154,32 @@ export function timeCards({
       key: "tempo-und-dauer",
       element: (
         <AnalysisCard help="tempo-und-dauer" explain={explain} onHelp={onHelp}>
-          {pace || duration !== null ? (
+          {medianSeconds !== null || duration !== null ? (
             <>
               <KeyValues
                 rows={[
                   [
                     "Tempo (Median)",
+                    medianSeconds !== null ? (
+                      `${formatValue(medianSeconds, 0)} s`
+                    ) : (
+                      <>
+                        –<Muted> ab 3 Schuss mit Zeit</Muted>
+                      </>
+                    ),
+                  ],
+                  [
+                    "Mittlere Hälfte (IQR)",
                     pace ? (
-                      `${formatValue(pace.medianMs / 1000, 0)} s`
+                      <>
+                        {`${formatValue(pace.iqrMs / 1000, 0)} s`}
+                        <Muted>{` (${pace.relative === null ? "–" : percentText(pace.relative)} vom Median)`}</Muted>
+                      </>
                     ) : (
                       <>
                         –<Muted>{` ${TEMPO_MISSING}`}</Muted>
                       </>
                     ),
-                  ],
-                  pace && [
-                    "Mittlere Hälfte (IQR)",
-                    <>
-                      {`${formatValue(pace.iqrMs / 1000, 0)} s`}
-                      <Muted>{` (${pace.relative === null ? "–" : percentText(pace.relative)} vom Median)`}</Muted>
-                    </>,
                   ],
                   ["Dauer", duration === null ? "–" : durationText(duration * 1000)],
                 ]}
@@ -196,7 +200,7 @@ export function timeCards({
       element: (
         <AnalysisCard help="pausen" explain={explain} onHelp={onHelp}>
           {!recovery ? (
-            <Note>ab 1 Schuss mit Zeit</Note>
+            <Note>ab 2 Schuss mit Zeit</Note>
           ) : recovery.effects.length ? (
             <>
               <KeyValues
@@ -209,14 +213,14 @@ export function timeCards({
                     const interval = profile.find((p) => p.number === effect.afterShot)?.intervalMs
                     return [
                       `Vor Schuss ${effect.afterShot}`,
-                      `${interval ? `${durationText(interval)} ` : ""}Pause · danach ${effect.deltaRings === null ? "–" : `${formatSigned(effect.deltaRings, 2)} Ringe`}`,
+                      `${interval ? `${durationText(interval)} ` : ""}Pause · danach ${effect.deltaRings === null ? "–" : `Ø ${formatSigned(effect.deltaRings, 2)} Ringe je Schuss`}`,
                     ] as const
                   }),
                 ]}
               />
               <Note>
-                „Danach“: Ø der nächsten drei Schuss gegen den Ø der übrigen. Drei Schuss sind
-                wenig; ein Muster zeigt der Vergleich über Abende.
+                „Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen
+                Schüsse. Drei Schuss sind wenig; ein Muster zeigt der Vergleich über Abende.
               </Note>
             </>
           ) : (
@@ -235,7 +239,13 @@ export function timeCards({
                 rows={[
                   ["Erste zehn", `Ø ${formatValue(tired.firstMeanRings, 2)}`],
                   ["Letzte zehn", `Ø ${formatValue(tired.lastMeanRings, 2)}`],
-                  ["Unterschied", `${formatSigned(tired.deltaRings, 2)} Ringe`],
+                  [
+                    "Unterschied je Schuss",
+                    <>
+                      {`${formatSigned(tired.deltaRings, 2)} Ringe`}
+                      <Muted>{` (zehn Schuss: ${formatSigned(tired.deltaRings * 10, digits)})`}</Muted>
+                    </>,
+                  ],
                   tired.deltaR50Um !== null && [
                     "R50 letzte gegen erste",
                     `${formatSigned(tired.deltaR50Um / 1000, 2)} mm`,

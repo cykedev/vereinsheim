@@ -1,6 +1,8 @@
 import {
   cardTrend,
+  fatigue,
   mpiConfidence,
+  pauseRecovery,
   ringLossSplit,
   shareAtLeast,
   sighterZeroed,
@@ -51,7 +53,13 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(tile("Zehnerquote").value).toBe(formatValue(tens.rate * 100, 0))
     expect(tile("Präzision σ").value).toBe(formatValue(sigmaEstimate(base)!.sigma / 1000, 2))
     expect(tile("Lage").value).toBe(mpiConfidence(base)!.real ? "echt" : "unklar")
-    expect(tile("Trend").value).toBe(formatSigned(cardTrend(base, "decimal")!.perTenShots, 2))
+    const trend = cardTrend(base, "decimal")!
+    expect(tile("Trend").value).toBe(formatSigned(trend.perTenShots, 2))
+    // Ringe je Schuss alle zehn Schuss, nicht „je 10“ (Prüfung, Zeit 3)
+    expect(tile("Trend").unit).toBe("Ringe")
+    expect(tile("Trend").hint).toBe(
+      `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} · ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (95 %)` : "nicht klar"}`
+    )
     expect(tile("Tempo").value).toBe(formatValue(tempoSpread(base)!.medianMs / 1000, 0))
     expect(tile("Probe → Wertung").value).toBe(
       formatValue(sighterZeroed(CARD)!.matchOffsetUm! / 1000, 2)
@@ -183,10 +191,24 @@ describe("Beobachtungen in Worten", () => {
     expect(both).toMatch(/^Die Schüsse 27, 31 fallen als Ausreißer aus der Gruppe\. Sie kosten /)
   })
 
-  it("die Pause vor Schuss 21 erkannt", () => {
-    const pause = sentences.find((s) => s.icon === "pause")
-    expect(pause?.text).toContain("der Pause vor Schuss 21")
-    expect(pause?.text).toMatch(/^Nach der Pause/)
+  it("die Pause vor Schuss 21: bis zu drei Schüsse danach, je Schuss gegen die übrigen", () => {
+    // nicht „unter dem Schnitt der Scheibe“ und nicht „die nächsten drei“ (Prüfung, Zeit 1)
+    const delta = pauseRecovery(base, "decimal")!.effects[0].deltaRings!
+    const pause = sentences.find((s) => s.icon === "pause")!.text
+    expect(pause).toMatch(
+      new RegExp(
+        `^Nach der Pause vor Schuss 21 lagen die Schüsse danach \\(bis zu drei\\) im Schnitt ${formatValue(Math.abs(delta), 2)} Ringe je Schuss ${delta < 0 ? "unter" : "über"} deinen übrigen Schüssen\\.`
+      )
+    )
+    expect(pause).not.toContain("Schnitt der Scheibe")
+  })
+
+  it("Ermüdung je Schuss und zusammen über zehn Schuss (Prüfung, Zeit 4)", () => {
+    const tired = fatigue(base, "decimal")!
+    const text = sentences.find((s) => s.icon === "trend")!.text
+    expect(text).toContain(
+      `Die letzten zehn Schuss lagen im Schnitt ${formatValue(Math.abs(tired.deltaRings), 2)} Ringe je Schuss ${tired.deltaRings < 0 ? "unter" : "über"} den ersten zehn (zusammen ${formatSigned(tired.deltaRings * 10, 1)} Ringe), R50 ${formatSigned(tired.deltaR50Um! / 1000, 2)} mm.`
+    )
   })
 
   it("Probe gegen Wertung ohne Verstellung", () => {

@@ -6,7 +6,7 @@ import { PAUSE_THRESHOLD_MS } from "@vereinsheim/shot-core/time"
 import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, useState } from "react"
 
-import { formatValue } from "../format"
+import { durationText, formatValue } from "../format"
 import { scoreColor } from "../geometry"
 import { formatScore, seriesKeyOf, shotDistance, shotIntervals, shotLabels } from "../shots"
 import type { SeriesKey } from "../types"
@@ -23,12 +23,13 @@ export interface ShotTableProps {
   className?: string
 }
 
-/** Intervall wie in der Spielwiese: Sekunden, ab drei Minuten als Pause in Minuten, ohne Abstand ein Strich */
+/**
+ * Intervall: Sekunden, über drei Minuten als Pause in Minuten und Sekunden wie im Reiter Zeit („3:20 min“, nicht
+ * auf ganze Minuten gerundet; Prüfung, Zeit 7), ohne Abstand ein Strich
+ */
 function intervalText(ms: number | null): string {
   if (ms === null) return "–"
-  return ms > PAUSE_THRESHOLD_MS
-    ? `${formatValue(ms / 60_000, 0)} min`
-    : `${formatValue(ms / 1000, 0)} s`
+  return ms > PAUSE_THRESHOLD_MS ? durationText(ms) : `${formatValue(ms / 1000, 0)} s`
 }
 
 /** Name einer Gruppe in der Tabelle: Probe, Serie n oder Wertung ohne Serie */

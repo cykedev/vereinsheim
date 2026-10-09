@@ -92,10 +92,16 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     expect(text).toContain(`Dauer ${durationText(duration * 1000)}`)
   })
 
-  it("Tempo nennt dieselbe Mindestzahl wie die Kachel", () => {
+  it("Tempo ab 3 Schuss mit Zeit wie die Kachel, die Streuung ab 4 (Prüfung, Zeit 6)", () => {
     const three = renderTab("time", { shots: BASE.slice(0, 3) })
     expect(tempoSpread(BASE.slice(0, 3))).toBeNull()
-    expect(cardText(three, "tempo-und-dauer")).toContain("ab 4 Schuss mit Zeit")
+    const median = computeMetric(metricByKey("time.intervalMedian")!, BASE.slice(0, 3))!
+    expect(cardText(three, "tempo-und-dauer")).toContain(
+      `Tempo (Median) ${formatValue(median, 0)} s`
+    )
+    expect(cardText(three, "tempo-und-dauer")).toContain(
+      "Mittlere Hälfte (IQR) – ab 4 Schuss mit Zeit"
+    )
     const timeless = BASE.map((s) => ({ ...s, firedAtMs: null }))
     expect(cardText(renderTab("time", { shots: timeless }), "tempo-und-dauer")).toContain(
       "ab 4 Schuss mit Zeit"
@@ -111,10 +117,16 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     )
     for (const e of recovery.effects) {
       const interval = profile.find((p) => p.number === e.afterShot)!.intervalMs!
+      // je Schuss und gegen die übrigen, nicht gegen die ganze Scheibe (Prüfung, Zeit 1 und 5)
       expect(text).toContain(
-        `Vor Schuss ${e.afterShot} ${durationText(interval)} Pause · danach ${formatSigned(e.deltaRings!, 2)} Ringe`
+        `Vor Schuss ${e.afterShot} ${durationText(interval)} Pause · danach Ø ${formatSigned(e.deltaRings!, 2)} Ringe je Schuss`
       )
     }
+    expect(text).toContain(
+      "„Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen Schüsse."
+    )
+    const one = renderTab("time", { shots: BASE.slice(0, 1) })
+    expect(cardText(one, "pausen")).toContain("ab 2 Schuss mit Zeit")
     const calm = renderTab("time", { shots: BASE.slice(0, 20) })
     expect(cardText(calm, "pausen")).toContain("Keine Pause über drei Minuten.")
   })
@@ -124,7 +136,10 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     const text = cardText(html, "ermuedung")
     expect(text).toContain(`Erste zehn Ø ${formatValue(tired.firstMeanRings, 2)}`)
     expect(text).toContain(`Letzte zehn Ø ${formatValue(tired.lastMeanRings, 2)}`)
-    expect(text).toContain(`Unterschied ${formatSigned(tired.deltaRings, 2)} Ringe`)
+    // der Unterschied ist je Schuss; zehn Schuss verlieren das Zehnfache (Prüfung, Zeit 4)
+    expect(text).toContain(
+      `Unterschied je Schuss ${formatSigned(tired.deltaRings, 2)} Ringe (zehn Schuss: ${formatSigned(tired.deltaRings * 10, 1)})`
+    )
     expect(text).toContain(`R50 letzte gegen erste ${formatSigned(tired.deltaR50Um! / 1000, 2)} mm`)
     expect(cardText(renderTab("time", { shots: BASE.slice(0, 19) }), "ermuedung")).toContain(
       "ab 20 Wertungsschüssen"

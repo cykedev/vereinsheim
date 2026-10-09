@@ -69,15 +69,18 @@ export interface PauseEffect {
   /** Nummer des ersten Wertungsschusses nach der Pause */
   afterShot: number
   /**
-   * Ø der bis zu drei Schüsse danach minus Ø der übrigen Schüsse, in Ringen der gewählten Wertung;
-   * null, wenn es keine übrigen gibt
+   * Ø der bis zu drei Schüsse danach minus Ø der übrigen Schüsse, je Schuss in Ringen der gewählten
+   * Wertung, beides nur über Schüsse mit Wert; null, wenn eine Seite keinen hat
    */
   deltaRings: number | null
 }
 
 /**
- * Pausen und Wiedereinstieg (Z4), über die Wertungsschüsse mit Zeit und Wert. Verglichen wird mit den
- * übrigen Schüssen, nicht mit der ganzen Scheibe, die die Schüsse nach der Pause selbst enthielte.
+ * Pausen und Wiedereinstieg (Z4). Die Pausen kommen aus den Wertungsschüssen mit Zeit, wie im Rhythmus
+ * (Z5): Fehlt einem Schuss nur der Wert, bleibt die Pause (Prüfung, 9. Oktober 2026, Grenzfall SF-18).
+ * Die Schnitte davor und danach zählen nur Schüsse mit Wert; ohne solche ist die Wirkung null. Verglichen
+ * wird mit den übrigen Schüssen, nicht mit der ganzen Scheibe, die die Schüsse nach der Pause selbst
+ * enthielte.
  */
 export function pauseRecovery(
   shots: readonly MetricShot[],
@@ -89,23 +92,25 @@ export function pauseRecovery(
   meanDelta: number | null
 } | null {
   const withValue = new Set(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) }))
-  const selected = selectShots(inShotOrder(shots), { kinds: MATCH, need: "time" }).filter((shot) =>
-    withValue.has(shot)
-  )
-  if (selected.length === 0) return null
+  const selected = selectShots(inShotOrder(shots), { kinds: MATCH, need: "time" })
+  // eine Pause braucht einen Abstand, also zwei Schüsse mit Zeit
+  if (selected.length < 2) return null
   const steps = intervals(selected, shotNumbers(shots))
-  const values = steps.map((step) => valueTenths(step.shot, scoring))
+  const values = steps.map((step) =>
+    withValue.has(step.shot) ? valueTenths(step.shot, scoring) : null
+  )
+  const valued = (list: readonly (number | null)[]) => list.filter((v): v is number => v !== null)
   const meanOf = (list: readonly number[]) => list.reduce((sum, v) => sum + v, 0) / list.length
   const effects: PauseEffect[] = []
   let totalPauseMs = 0
   steps.forEach((step, i) => {
     if (step.intervalMs === null || step.intervalMs <= PAUSE_THRESHOLD_MS) return
     totalPauseMs += step.intervalMs
-    const next = values.slice(i, i + 3)
-    const rest = [...values.slice(0, i), ...values.slice(i + 3)]
+    const next = valued(values.slice(i, i + 3))
+    const rest = valued([...values.slice(0, i), ...values.slice(i + 3)])
     effects.push({
       afterShot: step.number,
-      deltaRings: rest.length ? (meanOf(next) - meanOf(rest)) / 10 : null,
+      deltaRings: next.length && rest.length ? (meanOf(next) - meanOf(rest)) / 10 : null,
     })
   })
   const deltas = effects.flatMap((e) => (e.deltaRings === null ? [] : [e.deltaRings]))

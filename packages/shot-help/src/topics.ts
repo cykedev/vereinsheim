@@ -229,7 +229,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     read: "„Klar fallend“ heißt: Ein so deutlicher Abfall entstünde durch Zufall allein höchstens in 5 von 100 Scheiben; „klar steigend“ gilt ebenso nach oben. Sonst ist der Trend „nicht klar“, auch wenn die Linie etwas fällt oder steigt.",
     caution:
       "Selbst ein deutliches Nachlassen zeigt eine einzelne Scheibe selten als „klar“. Beim Luftgewehr, wo fast alle Schüsse 9 oder 10 sind, ist ein Trend in ganzen Ringen etwas seltener klar. Zeigen Test und Gerade in verschiedene Richtungen (etwa wegen eines sehr schwachen letzten Schusses), gibt es kein Urteil.",
-    minimum: "Ab 1 Schuss, der Trend ab 10.",
+    minimum: "Ab 2 Schuss mit Wert, der Trend ab 10.",
     formula:
       "gleitender Schnitt über die letzten 10; Trend: Steigung der Ausgleichsgeraden (Ringe je Schuss) mal 10; „klar“ nach Mann-Kendall mit Korrektur für gleiche Werte (95 %), wenn die Gerade dieselbe Richtung zeigt",
   },
@@ -241,8 +241,8 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Wie gleichmäßig du schießt, Schuss für Schuss.",
     what: "Jede Säule ist der Abstand zum vorigen Schuss, die Linie der Median der letzten fünf Abstände. Pausen über drei Minuten sind markiert und zählen nicht hinein.",
-    read: "Eine ruhige Linie heißt: gleichmäßiger Ablauf. Wird sie zum Ende länger oder unruhiger, lohnt der Blick auf die Ermüdung.",
-    minimum: "Ab 2 Schuss mit Zeit.",
+    read: "Eine ruhige Linie heißt: gleichmäßiger Ablauf. Steigt sie zum Ende (längere Abstände) oder werden die Säulen unruhiger, lohnt der Blick auf die Ermüdung.",
+    minimum: "Ab 3 Schuss mit Zeit.",
     formula: "Median der letzten 5 Abstände ohne Pausen",
   },
   {
@@ -255,9 +255,9 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Das Tempo ist der Median der Abstände zwischen zwei Schüssen; Pausen über drei Minuten zählen nicht. Die Tempo-Streuung sagt, wie gleichmäßig das ist: Die mittlere Hälfte deiner Abstände liegt in einem Fenster dieser Breite. Dazu die Dauer vom ersten bis zum letzten Schuss.",
     caution:
       "Gleichmäßiger ist nicht automatisch besser. Die Streuung ist ein Merkmal, das du mit deinem Ergebnis vergleichen kannst.",
-    minimum: "Tempo ab 3 Schuss, Tempo-Streuung ab 4, Dauer ab 2.",
+    minimum: "Tempo ab 3 Schuss mit Zeit, die Tempo-Streuung ab 4, die Dauer ab 2.",
     formula:
-      "Tempo = Median der Abstände ohne Pausen über 180 s; Tempo-Streuung = Q3 − Q1 der Abstände; Dauer = letzter − erster Schuss",
+      "Tempo = Median der Abstände ohne Pausen über 180 s; Tempo-Streuung = Q3 − Q1 der Abstände ohne Pausen; Dauer = letzter − erster Schuss",
   },
   {
     id: "pausen",
@@ -265,11 +265,11 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     theme: "time",
     catalog: ["Z4"],
     metrics: [],
-    short: "Deine Pausen und wie viele Ringe die Schüsse danach brachten.",
+    short: "Deine Pausen und ob die Schüsse danach besser oder schwächer waren als deine übrigen.",
     what: "Jede Pause über drei Minuten und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr oder weniger Ringe brachten als deine übrigen Schüsse.",
     caution:
       "Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.",
-    minimum: "Ab 2 Wertungsschüssen mit Zeit und Wert.",
+    minimum: "Pausen ab 2 Wertungsschüssen mit Zeit; was danach kam, nur über Schüsse mit Wert.",
     formula:
       "Pause = Abstand über 180 s; Wiedereinstieg = Ø der bis zu 3 Schüsse danach − Ø der übrigen",
   },
@@ -281,7 +281,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob deine letzten zehn Schuss schwächer sind als die ersten zehn.",
     what: "Die letzten zehn Schuss gegen die ersten zehn, im Wert und in der Streuung (R50).",
-    read: "Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer.",
+    read: "Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. Der Unterschied im Wert gilt je Schuss; über die zehn Schuss zusammen ist es das Zehnfache.",
     caution:
       "Eine einzelne Scheibe ist verrauscht: Auch ohne jede Ermüdung unterscheiden sich die ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm) bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Ein Muster wird es erst, wenn es auf mehreren Scheiben so ist.",
     minimum: "Ab 20 Wertungsschüssen mit Wert, R50 ab 20 mit Lage ohne Fehlschüsse.",

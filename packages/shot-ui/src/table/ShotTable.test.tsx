@@ -134,9 +134,10 @@ describe("ShotTable", () => {
     expect(teiler["3"]).toBe("–")
   })
 
-  it("Intervalle in Sekunden, über drei Minuten als Pause in Minuten, nach einer Lücke keins", () => {
+  it("Intervalle in Sekunden, über drei Minuten als Pause in Minuten und Sekunden, nach einer Lücke keins", () => {
     const r = rows(render())
-    expect(r.map((row) => row[4])).toEqual(["52 s", "4 min", "–", "45 s", "50 s", "50 s", "–"])
+    // „3:20 min“ statt auf ganze Minuten gerundet (Prüfung, Zeit 7)
+    expect(r.map((row) => row[4])).toEqual(["52 s", "4:00 min", "–", "45 s", "50 s", "50 s", "–"])
   })
 
   it("Pause erst über drei Minuten: genau 180 s bleibt in Sekunden", () => {
@@ -150,7 +151,14 @@ describe("ShotTable", () => {
         state: initialViewState(),
       })
     )
-    expect(rows(html).map((r) => r[4])).toEqual(["3 min", "180 s", "–"])
+    expect(rows(html).map((r) => r[4])).toEqual(["3:00 min", "180 s", "–"])
+    const longer = renderToStaticMarkup(
+      createElement(ShotTable, {
+        shots: [shot(1, "match", 1, 0, 100, 0), shot(2, "match", 1, 0, 100, 200)],
+        state: initialViewState(),
+      })
+    )
+    expect(rows(longer).map((r) => r[4])).toEqual(["3:20 min", "–"])
   })
 
   it("der Stern hat einen Text für Screenreader", () => {

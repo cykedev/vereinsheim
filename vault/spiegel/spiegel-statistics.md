@@ -98,10 +98,10 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
 | Z1 | Tempo | Median der Intervalle ohne Pausen | Serie, Scheibe, Zeitraum | A | vorhanden |
-| Z2 | Tempo-Konstanz | IQR der Intervalle, auch relativ zum Median; konstanter ist nicht automatisch besser | Scheibe, Zeitraum | A | SP-1.10 |
+| Z2 | Tempo-Konstanz | IQR (Q3 − Q1) der Abstände ohne Pausen, auch relativ zum Median; konstanter ist nicht automatisch besser | Scheibe, Zeitraum | A | SP-1.10 |
 | Z3 | Dauer | erster bis letzter Schuss (`time.duration`); Netto-Zeit und Schüsse je Stunde entfernt (Oktober 2026): Σ Abstände und 3600 / Ø Abstand | Scheibe, Zeitraum | A | SP-1.10 |
-| Z4 | Pausen und Wiedereinstieg | Anzahl und Summe; Ø der bis zu drei Schüsse nach einer Pause gegen den Ø der übrigen (B10). Die längste Pause als Kennzahl entfällt (Oktober 2026) | Scheibe, Zeitraum | A | SP-1.10 |
-| Z5 | Rhythmus-Profil | gleitender Median der Intervalle über die Schussnummer | Scheibe | B | SP-1.10 |
+| Z4 | Pausen und Wiedereinstieg | Anzahl und Summe; Ø der bis zu drei Schüsse nach einer Pause gegen den Ø der übrigen, je Schuss (B10). Die Pausen kommen aus den Schüssen mit Zeit wie in Z5, die Schnitte nur aus Schüssen mit Wert (Prüfung, 9. Oktober 2026). Die längste Pause als Kennzahl entfällt (Oktober 2026) | Scheibe, Zeitraum | A | SP-1.10 |
+| Z5 | Rhythmus-Profil | Median der letzten fünf Abstände ohne Pausen, über die Schussnummer | Scheibe | B | SP-1.10 |
 | Z6 | Tempo und Wert | Ø vᵢ je Klasse des Intervalls davor; einige hundert Schuss | Zeitraum | B | SP-2.7 |
 | Z7 | Tempo nach schwachem Schuss | Intervall nach schwachen gegen nach übrigen Schüssen | Zeitraum | C | SP-2.7 |
 | Z8 | Zeitbedarf für die Disziplin | Netto-Tempo × Soll-Schusszahl gegen ein gepflegtes Zeitlimit | Scheibe, Zeitraum | C | später |

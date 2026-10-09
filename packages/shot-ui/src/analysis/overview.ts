@@ -110,11 +110,14 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       "Trend",
       "verlauf-und-trend",
       trend ? formatSigned(trend.perTenShots, 2) : null,
-      "je 10",
+      // der Wert je Schuss, über zehn Schuss; die Serie ändert sich um das Zehnfache (Prüfung, Zeit 3)
+      "Ringe",
       trend
-        ? trend.clear
-          ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (95 %)`
-          : "nicht klar"
+        ? `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} · ${
+            trend.clear
+              ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (95 %)`
+              : "nicht klar"
+          }`
         : "",
       "ab 10 Schuss"
     ),
