@@ -435,7 +435,8 @@ namen_pruefen() {
     echo "Namensprüfung nicht möglich (Spalten Nachname/Vorname/SportpassID nicht lesbar); bericht/ vor dem Weitergeben selbst durchsehen"
     return 0
   fi
-  sed 1d "$liste.roh" | grep -v -x -e '--frei--' -e 'NULL' >"$liste" || true
+  # „unknown“ ist ein Platzhalter (Liste „Trash“, Vorgabe von Geschlecht), kein Name.
+  sed 1d "$liste.roh" | grep -v -x -e '--frei--' -e 'NULL' -e 'unknown' >"$liste" || true
   rm -f "$liste.roh"
   if [ ! -s "$liste" ]; then
     rm -f "$liste"

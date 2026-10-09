@@ -88,7 +88,7 @@ erkunden() {
 }
 
 kein_testname_im_bericht() {
-  ! grep -r -E 'Prüfling|Annegret|Zielwasser|Bertram|48151623' "$AUSGABE/bericht" >/dev/null
+  ! grep -r -E 'Prüfling|Annegret|Zielwasser|Bertram|48151623|50607080' "$AUSGABE/bericht" >/dev/null
 }
 
 kein_passwort_in_ausgabe() {
@@ -138,7 +138,7 @@ pruefe "Kopie in privat/ geschrieben" test -s "$AUSGABE/privat/ssmdb2.sql.gz"
 pruefe "privat/ nur für den Besitzer" sh -c "ls -ld '$AUSGABE/privat' | grep -q '^drwx------'"
 pruefe "Kopie einspielbar mit gleichen Zeilen" dump_einspielbar
 pruefe "Schema ohne Daten im Bericht" sh -c "grep -q 'CREATE TABLE \`Treffer\`' '$AUSGABE/bericht/schema.sql' && ! grep -q 'INSERT' '$AUSGABE/bericht/schema.sql'"
-pruefe "Zeilenzahlen in dump.md" grep -q "Treffer: 6" "$AUSGABE/bericht/dump.md"
+pruefe "Zeilenzahlen in dump.md" grep -q "Treffer: 7" "$AUSGABE/bericht/dump.md"
 # Zweiter Aufruf in denselben Ausgabeordner: das Protokoll verändert die Testanlage.
 export ANLAGE
 export ERKUNDEN_AUTO_HOOK="$HIER/simuliere-schiessen.sh"

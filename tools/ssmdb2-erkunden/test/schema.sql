@@ -15,7 +15,7 @@ CREATE TABLE Scheiben (
   StartNr int(11) DEFAULT NULL,
   Nachname varchar(30) DEFAULT NULL,
   Vorname varchar(30) DEFAULT NULL,
-  Geschlecht char(1) DEFAULT NULL,
+  Geschlecht enum('male','female','unknown') NOT NULL DEFAULT 'unknown',
   Land varchar(3) DEFAULT NULL,
   SportpassID bigint(20) DEFAULT NULL,
   StandNr int(11) DEFAULT NULL,

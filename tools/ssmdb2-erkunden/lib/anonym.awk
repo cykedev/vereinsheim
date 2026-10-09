@@ -1,7 +1,7 @@
 # Ersetzt Personendaten in tab-getrennten Blöcken durch stabile Pseudonyme (ADR-029):
 # Namensspalten -> P1, P2, …; Sportpass-Spalten -> S1, S2, … (gleicher Wert, gleiches Pseudonym).
 # Spalten werden ohne Groß-/Kleinschreibung erkannt: nachname, vorname, name, geburt*, sportpass*, passnr.
-# Platzhalter bleiben stehen: leer, NULL, --frei-- und eine Sportpassnummer 0 (SF-13).
+# Platzhalter bleiben stehen: leer, NULL, --frei--, unknown und eine Sportpassnummer 0 (SF-13).
 # Kopfzeile ist die erste Zeile der Eingabe und die erste Zeile nach einem Tabellenmarker
 # (#Scheiben, #Serien, #Treffer: "#" direkt gefolgt von Buchstaben). Andere "#"-Zeilen (# stand …,
 # # schritt …) gehen unverändert durch und setzen den Kopf nicht zurück (Review S2).
@@ -19,7 +19,7 @@ kopf {
 }
 {
   for (i = 1; i <= spalten; i++) {
-    if (typ[i] == "name" && $i != "" && $i != "NULL" && $i != "--frei--") {
+    if (typ[i] == "name" && $i != "" && $i != "NULL" && $i != "--frei--" && $i != "unknown") {
       if (!($i in name)) name[$i] = "P" (++np)
       $i = name[$i]
     } else if (typ[i] == "pass" && $i != "" && $i != "NULL" && $i != "0") {
