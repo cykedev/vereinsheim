@@ -210,7 +210,8 @@ export function eligibleShots(
 /**
  * Wert der Kennzahl für die gewählten Schüsse. Die Auswahl (Wertung, eine Serie, ein Probe-Block)
  * trifft der Aufrufer; `appliesTo` schließt nur aus, was für die Kennzahl nie zählt. `card`: die ganze
- * Karte, aus der `shots` stammen; nur für Abstände (SF-04).
+ * Karte, aus der `shots` stammen, in derselben Form (bei nur Probe nach `probeOnlyAsMatch`); nur für
+ * Abstände (SF-04).
  */
 export function computeMetric(
   metric: MetricDefinition,
@@ -293,7 +294,10 @@ export interface ShotStep {
   gapBefore: boolean
 }
 
-/** Woher eine Auswahl stammt: die ganze Karte und die Arten der Auswahl (SF-04) */
+/**
+ * Woher eine Auswahl stammt: die ganze Karte und die Arten der Auswahl (SF-04). Die Karte in derselben Form
+ * wie die Auswahl, bei nur Probe also nach `probeOnlyAsMatch`.
+ */
 export interface ShotContext {
   card: readonly MetricShot[]
   kinds: readonly ShotKind[]
@@ -321,22 +325,25 @@ export function shotSteps(shots: readonly MetricShot[], context?: ShotContext): 
  * `shotNumbers`, auch wenn einem Schuss Abgabefolge und Zeit fehlen und die Karte nur nach der Liste
  * geordnet werden kann.
  *
- * Mit `context` ist ein Sprung in `seq`, den auf der Karte nur Schüsse einer Art füllen, die die Auswahl
- * nicht hat, keine Lücke (SF-04: eine Probe zwischen zwei Wertungsschüssen). Fehlt der Karte eine Nummer
- * oder liegt dazwischen ein Schuss einer Art der Auswahl (ohne Zeit, Platzhalter), bleibt es eine. Ohne
- * `context` ist jeder Sprung eine Lücke.
+ * Mit `context` ist ein Sprung in `seq`, den auf der Karte nur Probeschüsse füllen, in einer Auswahl ohne
+ * Probe keine Lücke (SF-04: eine Probe zwischen zwei Wertungsschüssen). Fehlt der Karte eine Nummer oder
+ * liegt dazwischen ein Schuss einer Art der Auswahl (ohne Zeit, Platzhalter), bleibt es eine. Durchlässig
+ * ist nur die Probe: In einer Auswahl der Probe bleiben Wertungsschüsse dazwischen eine Lücke, sonst würde
+ * aus der Wertung eine Pause der Probe. Ohne `context` ist jeder Sprung eine Lücke.
  */
 export function stepsInOrder(ordered: readonly MetricShot[], context?: ShotContext): ShotStep[] {
   const withSeq = ordered.every((shot) => finite(shot.seq))
-  // Nummern, die keine Lücke aufreißen: Schüsse der Karte einer Art, die die Auswahl nicht hat
-  const others = new Set(
-    (context?.card ?? [])
-      .filter((shot) => !context?.kinds.includes(shot.kind) && finite(shot.seq))
-      .map((shot) => shot.seq as number)
+  // Nummern, die keine Lücke aufreißen: Probeschüsse der Karte, wenn die Auswahl keine Probe hat
+  const sighters = new Set(
+    context && !context.kinds.includes("probe")
+      ? context.card
+          .filter((shot) => shot.kind === "probe" && finite(shot.seq))
+          .map((shot) => shot.seq as number)
+      : []
   )
   const filled = (from: number, to: number) => {
-    if (to - from - 1 > others.size) return false
-    for (let seq = from + 1; seq < to; seq++) if (!others.has(seq)) return false
+    if (to - from - 1 > sighters.size) return false
+    for (let seq = from + 1; seq < to; seq++) if (!sighters.has(seq)) return false
     return true
   }
   return ordered.map((shot, i) => {

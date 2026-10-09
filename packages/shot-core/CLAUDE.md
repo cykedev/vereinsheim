@@ -51,9 +51,10 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - **Reihenfolge ist die Abgabefolge** (`seq`, SF-30): `inShotOrder`; `tempo` erwartet die Zeiten in
   Abgabefolge und zählt einen Rücksprung der Uhr weder als Intervall noch als Pause; fehlt ein Schuss
   mitten in der Folge (Sprung in `seq`), zählt der Abstand daneben nicht. Füllen den Sprung auf der Karte
-  nur Schüsse der anderen Art (Probe zwischen Wertung, SF-04), ist er keine Lücke; dafür braucht die
-  Rechnung die ganze Karte: `card` an `computeMetric`, `pauseRecovery`, `rhythmProfile`, `tempoSpread`,
-  `drift`, sonst `contextOf`.
+  nur Probeschüsse (Probe zwischen Wertung, SF-04), ist er in einer Auswahl ohne Probe keine Lücke; nur die
+  Probe ist durchlässig, Wertungsschüsse in einer Auswahl der Probe bleiben eine Lücke. Dafür braucht die
+  Rechnung die ganze Karte in derselben Form wie die Auswahl: `card` an `computeMetric`, `pauseRecovery`,
+  `rhythmProfile`, `tempoSpread`, `drift`, sonst `contextOf`.
 - **`toBeCloseTo` nimmt null als 0.** Wo eine Kennzahl 0 ergeben soll, erst `not.toBeNull()` prüfen
   (Helfer `expectNear` in `metrics.test.ts`).
 - **Ganze Ringe und Zehntel sind immer umschaltbar.** Jede wertbasierte Kennzahl gibt es in beiden

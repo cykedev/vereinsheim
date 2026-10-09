@@ -346,6 +346,34 @@ describe("Lücken in der Abgabefolge (SF-04, SF-30)", () => {
     expect(gaps(stepsInOrder(timed, contextOf(card, card)))).toEqual([false, false, true, false])
   })
 
+  it("nur die Probe ist durchlässig: in der Probe bleiben Wertungsschüsse eine Lücke", () => {
+    // Probe 0 und 40 s, Wertung 80 und 120 s, späte Probe 160 s (wie SF-03: Probe → Wertung → Probe)
+    const card = [
+      at(1, "probe", 0),
+      at(2, "probe", 40),
+      at(3, "match", 80),
+      at(4, "match", 120),
+      at(5, "probe", 160),
+    ]
+    const probe = card.filter((shot) => shot.kind === "probe")
+    expect(gaps(stepsInOrder(probe, contextOf(probe, card)))).toEqual([false, false, true])
+  })
+
+  it("Probe vorn füllt keine fremde Lücke: fehlt der Karte eine Nummer, bleibt es eine", () => {
+    // Probe seq 1 und 2, Wertung 3 und 4, späte Probe 5, Wertung 7; seq 6 fehlt der Karte. Die Probe vorn
+    // zählt so viele Nummern, wie der Sprung braucht, liegt aber nicht in ihm.
+    const card = [
+      at(1, "probe", 0),
+      at(2, "probe", 40),
+      at(3, "match", 80),
+      at(4, "match", 120),
+      at(5, "probe", 160),
+      at(7, "match", 240),
+    ]
+    const match = card.filter((shot) => shot.kind === "match")
+    expect(gaps(stepsInOrder(match, contextOf(match, card)))).toEqual([false, false, true])
+  })
+
   it("ein riesiger Sprung bleibt eine Lücke, auch mit einer Probe darin", () => {
     const card = [at(1, "match", 0), at(2, "probe", 30), at(1_000_000, "match", 60)]
     const match = card.filter((shot) => shot.kind === "match")

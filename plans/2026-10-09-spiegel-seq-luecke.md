@@ -306,3 +306,16 @@ Abstands) und rückt `seq` danach um eins.
 - Jeder Aufruf von `pauseRecovery`, `rhythmProfile`, `tempoSpread`, `drift` und `computeMetric` mit `time.*` in
   shot-ui gibt die Karte mit (`grep` über die Namen, Liste im Validierungsbericht).
 - Validierungsbericht `reports/2026-10-09-spiegel-seq-luecke.md` mit der Entscheidung D1 und den Handwerten.
+
+## Nachtrag nach dem Review (9. Oktober 2026)
+
+- **Nur die Probe ist durchlässig.** Task 1 machte jeden Schuss einer Art durchlässig, die die Auswahl nicht hat. In
+  einer Auswahl der Probe wurden damit Wertungsschüsse zwischen früher und später Probe zu keiner Lücke, und aus
+  der Wertung wurde eine Pause der Probe. Freigegeben war „Füllen nur Probeschüsse den Sprung …“, deshalb zählen
+  jetzt nur Probeschüsse und nur in einer Auswahl ohne Probe (`stepsInOrder`, Test „nur die Probe ist
+  durchlässig“).
+- **Gegenprobe der Regel:** Test „Probe vorn füllt keine fremde Lücke“. Er wird rot, wenn `filled` nur die Anzahl
+  der Probeschüsse prüft statt ihrer Nummern.
+- **Übergaben in shot-ui einzeln abgesichert:** Drift (Reiter Lage), Median und Tempo-Streuung (Reiter Zeit),
+  Pausen-Karte, Tempo-Satz der Beobachtungen; jede zurückgenommene Übergabe macht einen Test rot.
+- **Labor-Prüfung** rechnet Kacheln und Drift mit der Karte nach, wie die Bausteine.
