@@ -4,79 +4,86 @@ import { describe, expect, it } from "vitest"
 
 import { FormStrip } from "./FormStrip"
 
-const strip = [8.7, 9.1, 8.9, 9.0, 8.8, 8.94, 9.25].map((value, i) => ({
+// sieben Scheiben in zeitlicher Folge, die letzten beiden am Abend; das Band ab der dritten
+const values = [8.7, 9.1, 8.9, 9.0, 8.8, 8.94, 9.25]
+const strip = values.map((value, i) => ({
   id: `c${i}`,
   value,
   tonight: i >= 5,
+  mean: 8.9 + i * 0.01,
+  band: i >= 2 ? { low: 8.72 + i * 0.01, high: 9.08 + i * 0.01 } : null,
 }))
-
-describe("Streifen der letzten Scheiben (Plan N5, D2)", () => {
-  const html = renderToStaticMarkup(
-    h(FormStrip, { strip, average: { value: 8.9, n: 5 }, band: { low: 8.72, high: 9.08 } })
+const render = (props: Partial<Parameters<typeof FormStrip>[0]> = {}) =>
+  renderToStaticMarkup(
+    h(FormStrip, { strip, band: strip.at(-1)!.band, dateLabel: "Sa 26.09.", ...props })
   )
+const html = render()
+const cx = (markup: string) =>
+  [...markup.matchAll(/<circle[^>]*data-strip-dot="([^"]+)"[^>]*cx="([0-9.]+)"/g)].map((m) => ({
+    id: m[1],
+    x: Number(m[2]),
+  }))
 
-  it("jede Scheibe ein Punkt, die des Abends größer in der Farbe des Akzents", () => {
-    expect(html.match(/data-strip-dot=/g)).toHaveLength(7)
-    expect([...html.matchAll(/<circle[^>]*data-tonight="true"[^>]*>/g)]).toHaveLength(2)
-    for (const dot of html.match(/<circle[^>]*data-tonight="true"[^>]*>/g)!)
-      expect(dot).toMatch(/class="[^"]*fill-primary/)
-    // „Abend“, nicht „heute“: der letzte Abend muss nicht heute gewesen sein (Review N5)
-    expect(html).toMatch(/<text[^>]*data-value="true"[^>]*>Abend<\/text>/)
-    expect(html).not.toContain(">heute<")
+describe("Formband als kleiner Verlauf (U5, D1)", () => {
+  it("die Scheiben in zeitlicher Folge von links nach rechts, die des Abends groß und rechts", () => {
+    const dots = cx(html)
+    expect(dots.map((d) => d.id)).toEqual(strip.map((s) => s.id))
+    expect(dots.every((d, i) => !i || d.x > dots[i - 1].x)).toBe(true)
+    const tonight = [...html.matchAll(/<circle[^>]*data-tonight="true"[^>]*>/g)].map((m) => m[0])
+    expect(tonight).toHaveLength(2)
+    for (const dot of tonight) expect(dot).toMatch(/class="[^"]*fill-primary/)
   })
 
-  it("Band und Schnitt nur, wo es sie gibt; der Name sagt beides in Worten", () => {
-    expect(html).toContain("data-band")
-    expect(html).toContain("data-average")
-    expect(html).toContain(">Schnitt 8,90<")
-    expect(html).toContain(
-      'aria-label="Die letzten 7 Scheiben, die des Abends hervorgehoben; Formband 8,72 bis 9,08; Schnitt 8,90"'
-    )
-    const bare = renderToStaticMarkup(h(FormStrip, { strip, average: null, band: null }))
+  it("höherer Wert weiter oben: die y-Achse ist der Ø je Schuss", () => {
+    const y = (id: string) =>
+      Number(new RegExp(`data-strip-dot="${id}"[^>]*cy="([0-9.]+)"`).exec(html)?.[1])
+    // c6 (9,25) liegt über c0 (8,70)
+    expect(y("c6")).toBeLessThan(y("c0"))
+  })
+
+  it("das Datum des Abends statt „Abend“, über seinen Scheiben", () => {
+    expect(html).toMatch(/<text[^>]*data-evening-label="true"[^>]*>Sa 26\.09\.<\/text>/)
+    expect(html).not.toContain(">Abend<")
+  })
+
+  it("das Band als Fläche um den gleitenden Schnitt, der als Linie; keine Linie „Schnitt“", () => {
+    expect(html).toMatch(/<path[^>]*data-band="true"/)
+    expect(html).toMatch(/<polyline[^>]*data-mean="true"/)
+    expect(html).not.toContain("data-average")
+    expect(html).not.toContain(">Schnitt ")
+    const bare = render({
+      strip: strip.map((s) => ({ ...s, band: null })),
+      band: null,
+    })
     expect(bare).not.toContain("data-band")
-    expect(bare).not.toContain("data-average")
-    expect(bare).toContain('aria-label="Die letzten 7 Scheiben, die des Abends hervorgehoben"')
+    expect(bare).toContain("data-mean")
   })
 
-  it("ein einziger Wert: ein Punkt in der Mitte, eine Beschriftung, Einzahl im Namen", () => {
+  it("der Name sagt Folge, Abend und Band in Worten", () => {
+    expect(html).toContain(
+      'aria-label="Die letzten 7 Scheiben in zeitlicher Folge, die des Abends (Sa 26.09.) hervorgehoben; Formband zuletzt 8,78 bis 9,14"'
+    )
     const one = renderToStaticMarkup(
-      h(FormStrip, { strip: [{ id: "x", value: 10.22, tonight: true }], average: null, band: null })
+      h(FormStrip, {
+        strip: [{ id: "x", value: 10.22, tonight: true, mean: 10.22, band: null }],
+        band: null,
+        dateLabel: "Sa 26.09.",
+      })
     )
-    expect(one.match(/>10,22</g)).toHaveLength(1)
-    expect(Number(/<circle[^>]*cx="([0-9.]+)"/.exec(one)?.[1])).toBeCloseTo(300, 6)
-    expect(one).toContain('aria-label="Die letzte Scheibe, die des Abends hervorgehoben"')
+    expect(one).toContain(
+      'aria-label="Die letzte Scheibe, die des Abends (Sa 26.09.) hervorgehoben"'
+    )
   })
 
-  it("Beschriftungen überlappen nicht: zu nah am Schnitt fällt der Rand weg, der Schnitt bleibt im Bild", () => {
-    // der Schnitt fast am größten Wert: „Schnitt 9,24“ (12 Zeichen, ~94 px) läge über „9,25“
-    const crowded = renderToStaticMarkup(
-      h(FormStrip, { strip, average: { value: 9.24, n: 5 }, band: null })
-    )
-    expect(crowded).toContain(">Schnitt 9,24<")
-    expect(crowded).not.toContain(">9,25<")
-    expect(crowded).toContain(">8,70<")
-    const x = Number(/<text x="([0-9.]+)"[^>]*>Schnitt 9,24</.exec(crowded)?.[1])
-    expect(x + (12 * 7.2) / 2).toBeLessThanOrEqual(600)
-  })
-
-  it("ein Rahmen über die ganze Achse, hinter Band und Punkten (User, 9. Oktober 2026: „im leeren“)", () => {
-    const track = /<rect data-track="true"([^>]*)>/.exec(html)?.[1] ?? ""
-    // auf halben Pixeln, damit die 1-px-Linie scharf ist (Review U2)
-    expect(track).toMatch(/x="8.5"/)
-    expect(track).toMatch(/width="584"/)
-    expect(track).toMatch(/class="fill-surface-2 stroke-border"/)
-    // vor dem Band und vor dem ersten Punkt gezeichnet, also dahinter
+  it("ein Rahmen um den Verlauf, hinter Band und Punkten; höchster und tiefster Wert als Achse", () => {
+    expect(html).toMatch(/<rect data-track="true"[^>]*class="fill-surface-2 stroke-border"/)
     expect(html.indexOf("data-track")).toBeLessThan(html.indexOf("data-band"))
     expect(html.indexOf("data-track")).toBeLessThan(html.indexOf("data-strip-dot"))
-    // auch ohne Band
-    expect(renderToStaticMarkup(h(FormStrip, { strip, average: null, band: null }))).toContain(
-      "data-track"
-    )
+    expect(html).toContain(">9,25<")
+    expect(html).toContain(">8,70<")
   })
 
-  it("nur Tokens, keine Palette-Klassen; kleinster und größter Wert an den Enden", () => {
+  it("nur Tokens, keine Palette-Klassen", () => {
     expect(html).not.toMatch(/\b(text|bg|fill|stroke)-(red|green|blue|amber|slate|gray)-\d/)
-    expect(html).toContain(">8,70<")
-    expect(html).toContain(">9,25<")
   })
 })

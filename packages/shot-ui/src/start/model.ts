@@ -55,8 +55,17 @@ export interface EveningBlock {
   band: { low: number; high: number } | null
   /** der Abend gegen das Band; null ohne Band */
   verdict: "above" | "within" | "below" | null
-  /** die letzten bis zu 20 Scheiben bis einschließlich des Abends, zeitlich */
-  strip: { id: string; value: number; tonight: boolean }[]
+  /**
+   * die letzten bis zu 20 Scheiben bis einschließlich des Abends, zeitlich, je mit dem gleitenden Schnitt und dem
+   * Formband an ihrer Stelle wie im Verlauf des Fortschritts (U5, D1)
+   */
+  strip: {
+    id: string
+    value: number
+    tonight: boolean
+    mean: number
+    band: { low: number; high: number } | null
+  }[]
   /** Rekorde der Familie, deren Scheibe am Abend liegt (D6) */
   records: RecordRow[]
 }
@@ -124,7 +133,8 @@ export function startModel(input: StartInput): StartModel {
       : null
     // das Band wie im Verlauf des Fortschritts über alle Scheiben („Alles“): an der letzten Scheibe des Abends, mit
     // ihr gerechnet; so sagen Start und Fortschritt dasselbe (User, 9. Oktober 2026, nach dem Review N5)
-    const band = periodTrend(values).points.at(-1)?.band ?? null
+    const trend = periodTrend(values)
+    const band = trend.points.at(-1)?.band ?? null
     const verdict =
       band && mean !== null
         ? mean > band.high
@@ -133,9 +143,13 @@ export function startModel(input: StartInput): StartModel {
             ? "below"
             : "within"
         : null
-    const strip = values
-      .slice(-STRIP)
-      .map((v) => ({ id: v.id, value: v.value, tonight: ids.has(v.id) }))
+    const strip = trend.points.slice(-STRIP).map((p) => ({
+      id: p.id,
+      value: p.value,
+      tonight: ids.has(p.id),
+      mean: p.mean,
+      band: p.band,
+    }))
     const records = recordRows(
       periodRecords(ofFamily, input.scoring, { includeProbeOnly: true }),
       input.scoring

@@ -78,7 +78,7 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(text(html)).not.toContain("+0,20 zum Schnitt")
   })
 
-  it("mit Band eine Legende unter dem Streifen, ohne Band keine (U3, D8)", () => {
+  it("eine Legende unter dem Verlauf, der Satz zum Band nur mit Band (U3, D8; U5, D1)", () => {
     // zwölf Scheiben davor geben das Band (ab zehn), die sieben aus CARDS nicht
     const many = [
       ...Array.from({ length: 12 }, (_, i) =>
@@ -87,9 +87,13 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
       lp(periodCard("a", 0, [94, 94], { startedAtMs: at(25, 18) })),
     ]
     expect(render(many)).toMatch(
-      /data-form-strip[\s\S]*?<p data-form-legend[^>]*>Das Band zeigt deine übliche Schwankung\.<\/p>/
+      /data-form-strip[\s\S]*?<p data-form-legend[^>]*>Grau: deine letzten Scheiben, die Linie ihr Schnitt\. Das Band zeigt deine übliche Schwankung\.<\/p>/
     )
-    expect(html).not.toContain("data-form-legend")
+    expect(html).toMatch(
+      /<p data-form-legend[^>]*>Grau: deine letzten Scheiben, die Linie ihr Schnitt\.<\/p>/
+    )
+    // das Datum des Abends steht im Verlauf, nicht „Abend“
+    expect(html).toMatch(/data-evening-label="true"[^>]*>Fr 25\.09\.</)
   })
 
   it("die Disziplin steht als Überschrift oben im Block, mit dem Symbol der Disziplinen (Rückmeldung des Users)", () => {

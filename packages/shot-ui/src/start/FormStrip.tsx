@@ -6,47 +6,46 @@ import { ChartSlot, ChartSvg, crisp } from "../analysis/charts/frame"
 import { formatValue } from "../format"
 import type { EveningBlock } from "./model"
 
-const HEIGHT = 96
-const PAD = 16
-/** Mitte der Punkte und Höhe des Bands */
-const MID = 46
-const BAND_HALF = 18
-/** Luft zwischen Band und Rahmen (U2, D6) */
-const TRACK_PAD = 4
-/** Breite eines Zeichens der Achsenschrift (Geist Mono, text-xs) und Luft zwischen zwei Beschriftungen */
-const CHAR_PX = 7.2
-const GAP_PX = 8
-/** so schmal darf die Achse höchstens werden; enger liegende Werte stehen mittig */
-const MIN_SPAN = 0.1
-const textWidth = (text: string) => text.length * CHAR_PX
+const HEIGHT = 112
+/** links Platz für die Achse (zwei Werte), rechts und oben Luft, oben dazu das Datum des Abends */
+const PAD = { left: 44, right: 14, top: 26, bottom: 10 }
+/** Luft im Rahmen um die Punkte */
+const INSET = 8
 
 export interface FormStripProps {
   strip: EveningBlock["strip"]
-  average: EveningBlock["average"]
+  /** das Formband an der letzten Scheibe, für den Namen des Bilds */
   band: EveningBlock["band"]
+  /** das Datum des Abends („Sa 26.09.“), steht über seinen Scheiben */
+  dateLabel: string
   className?: string
 }
 
 /**
- * Der Abend im Formband (Plan N5, D2): die letzten Scheiben der Familie als Punkte auf einer Achse des Ø je Schuss,
- * die des Abends groß in der Farbe des Akzents, alles in einem Rahmen über die ganze Achse (U2, D6). Dahinter das Formband wie im Verlauf des Fortschritts (an der letzten
- * Scheibe des Abends) und der Schnitt der fünf Scheiben vor dem Abend als gestrichelte Linie. Kein Wert steht nur im SVG: die große Zahl und der Abstand stehen
- * darüber, der Name des Bilds sagt Band und Schnitt in Worten.
+ * Der Abend im Formband als kleiner Verlauf (U5, D1; User: „ich verstehe es kaum, vor allem mit der ‚abend‘“): die
+ * letzten Scheiben der Familie in zeitlicher Folge von links nach rechts, der Ø je Schuss nach oben, wie der Verlauf
+ * im Fortschritt. Das Band läuft als Fläche um den gleitenden Schnitt, der als Linie in der Mitte; die Scheiben des
+ * Abends rechts groß in der Farbe des Akzents, über ihnen das Datum. Alles in einem Rahmen (U2, D6). Kein Wert steht
+ * nur im SVG: Zahl und Bezug stehen darüber, der Name des Bilds sagt Folge, Abend und Band in Worten.
  */
-export function FormStrip({ strip, average, band, className }: FormStripProps) {
+export function FormStrip({ strip, band, dateLabel, className }: FormStripProps) {
   if (!strip.length) return null
-  const values = strip.map((s) => s.value)
-  const rawLo = Math.min(...values, band?.low ?? Infinity, average?.value ?? Infinity)
-  const rawHi = Math.max(...values, band?.high ?? -Infinity, average?.value ?? -Infinity)
-  // liegen alle Werte enger als die kleinste Achse, steht die Achse um ihre Mitte
-  const middle = (rawLo + rawHi) / 2
-  const span = Math.max(rawHi - rawLo, MIN_SPAN)
-  const lo = rawHi - rawLo < MIN_SPAN ? middle - span / 2 : rawLo
-  const tonight = strip.filter((s) => s.tonight)
+  const values = strip.flatMap((s) => [
+    s.value,
+    s.mean,
+    ...(s.band ? [s.band.low, s.band.high] : []),
+  ])
+  const rawLo = Math.min(...values)
+  const rawHi = Math.max(...values)
+  // liegen alle Werte gleich, steht eine kleine Spanne um sie
+  const span = Math.max(rawHi - rawLo, 0.1)
+  const lo = rawHi - rawLo < 0.1 ? (rawLo + rawHi) / 2 - span / 2 : rawLo
+  const hi = lo + span
+  const minValue = Math.min(...strip.map((s) => s.value))
+  const maxValue = Math.max(...strip.map((s) => s.value))
   const label = [
-    `${strip.length === 1 ? "Die letzte Scheibe" : `Die letzten ${strip.length} Scheiben`}, die des Abends hervorgehoben`,
-    band ? `Formband ${formatValue(band.low, 2)} bis ${formatValue(band.high, 2)}` : null,
-    average ? `Schnitt ${formatValue(average.value, 2)}` : null,
+    `${strip.length === 1 ? "Die letzte Scheibe" : `Die letzten ${strip.length} Scheiben in zeitlicher Folge`}, die des Abends (${dateLabel}) hervorgehoben`,
+    band ? `Formband zuletzt ${formatValue(band.low, 2)} bis ${formatValue(band.high, 2)}` : null,
   ]
     .filter(Boolean)
     .join("; ")
@@ -55,110 +54,90 @@ export function FormStrip({ strip, average, band, className }: FormStripProps) {
     <div data-form-strip className={cn("min-w-0", className)}>
       <ChartSlot height={HEIGHT}>
         {(width) => {
-          const x = (v: number) =>
-            PAD + ((v - (lo - span * 0.04)) / (span * 1.08)) * (width - 2 * PAD)
-          const tonightX = tonight.length
-            ? tonight.reduce((sum, s) => sum + x(s.value), 0) / tonight.length
+          const plotLeft = PAD.left + INSET
+          const plotRight = width - PAD.right - INSET
+          const x = (i: number) =>
+            strip.length === 1
+              ? (plotLeft + plotRight) / 2
+              : plotLeft + (i / (strip.length - 1)) * (plotRight - plotLeft)
+          const top = PAD.top + INSET
+          const bottom = HEIGHT - PAD.bottom - INSET
+          const y = (v: number) => bottom - ((v - lo) / (hi - lo)) * (bottom - top)
+          const banded = strip.flatMap((s, i) => (s.band ? [{ i, band: s.band }] : []))
+          const bandPath = banded.length
+            ? `M${banded.map(({ i, band: b }) => `${x(i)},${y(b.high)}`).join(" L")} L${[...banded]
+                .reverse()
+                .map(({ i, band: b }) => `${x(i)},${y(b.low)}`)
+                .join(" L")} Z`
             : null
-          // Beschriftungen unten: kleinster Wert links bündig, größter rechts bündig, der Schnitt mittig über seiner
-          // Linie, aber im Bild; eine Randbeschriftung, die eine andere berührt, entfällt (Review N5)
-          const minValue = Math.min(...values)
-          const maxValue = Math.max(...values)
-          const minText = formatValue(minValue, 2)
-          const maxText = formatValue(maxValue, 2)
-          const averageText = average ? `Schnitt ${formatValue(average.value, 2)}` : null
-          const averageHalf = averageText ? textWidth(averageText) / 2 : 0
-          const averageX = average
-            ? Math.min(Math.max(x(average.value), averageHalf), width - averageHalf)
+          const tonight = strip.flatMap((s, i) => (s.tonight ? [i] : []))
+          const labelX = tonight.length
+            ? tonight.reduce((sum, i) => sum + x(i), 0) / tonight.length
             : null
-          const minSpan: [number, number] = [x(minValue), x(minValue) + textWidth(minText)]
-          const maxSpan: [number, number] = [x(maxValue) - textWidth(maxText), x(maxValue)]
-          const averageSpan: [number, number] | null =
-            averageX === null ? null : [averageX - averageHalf, averageX + averageHalf]
-          const apart = (a: [number, number], b: [number, number]) =>
-            a[1] + GAP_PX <= b[0] || b[1] + GAP_PX <= a[0]
-          const showMin = !averageSpan || apart(minSpan, averageSpan)
-          const showMax =
-            maxText !== minText &&
-            (!averageSpan || apart(maxSpan, averageSpan)) &&
-            (!showMin || apart(minSpan, maxSpan))
           return (
             <ChartSvg width={width} height={HEIGHT} label={label}>
-              {/* der Rahmen über die ganze Achse: Band und Punkte stehen nicht mehr „im leeren“ (User, U2 D6) */}
+              {/* der Rahmen um den Verlauf: Band und Punkte stehen nicht „im leeren“ (User, U2 D6) */}
               <rect
                 data-track
-                x={crisp(PAD / 2)}
-                y={crisp(MID - BAND_HALF - TRACK_PAD)}
-                width={Math.round(width - PAD)}
-                height={BAND_HALF * 2 + TRACK_PAD * 2}
-                rx={12}
+                x={crisp(PAD.left)}
+                y={crisp(PAD.top)}
+                width={Math.round(width - PAD.left - PAD.right)}
+                height={HEIGHT - PAD.top - PAD.bottom}
+                rx={10}
                 className="fill-surface-2 stroke-border"
               />
-              {band && (
-                <rect
-                  data-band
-                  x={x(band.low)}
-                  y={MID - BAND_HALF}
-                  width={Math.max(1, x(band.high) - x(band.low))}
-                  height={BAND_HALF * 2}
-                  rx={8}
-                  className="fill-accent-wash"
-                />
-              )}
-              {averageX !== null && (
-                <line
-                  data-average
-                  x1={crisp(averageX)}
-                  x2={crisp(averageX)}
-                  y1={MID - BAND_HALF - TRACK_PAD}
-                  y2={MID + BAND_HALF + TRACK_PAD}
-                  strokeDasharray="3 3"
-                  className="stroke-line-strong"
-                />
-              )}
+              {bandPath && <path data-band d={bandPath} className="fill-accent-wash" />}
+              <polyline
+                data-mean
+                points={strip.map((s, i) => `${x(i)},${y(s.mean)}`).join(" ")}
+                fill="none"
+                strokeWidth={1.5}
+                className="stroke-primary"
+              />
               {strip.map((s, i) =>
                 s.tonight ? null : (
                   <circle
                     key={s.id}
                     data-strip-dot={s.id}
-                    cx={x(s.value)}
-                    cy={MID + ((i % 3) - 1) * 7}
-                    r={4}
-                    fillOpacity={0.55}
+                    cx={x(i)}
+                    cy={y(s.value)}
+                    r={3.5}
+                    fillOpacity={0.6}
                     className="fill-muted-foreground"
                   />
                 )
               )}
-              {tonight.map((s) => (
-                <circle
-                  key={s.id}
-                  data-strip-dot={s.id}
-                  data-tonight="true"
-                  cx={x(s.value)}
-                  cy={MID}
-                  r={8}
-                  strokeWidth={3}
-                  className="fill-primary stroke-card"
-                />
-              ))}
-              {tonightX !== null && (
-                <text data-value="true" x={tonightX} y={MID - BAND_HALF - 10} textAnchor="middle">
-                  Abend
+              {strip.map((s, i) =>
+                s.tonight ? (
+                  <circle
+                    key={s.id}
+                    data-strip-dot={s.id}
+                    data-tonight="true"
+                    cx={x(i)}
+                    cy={y(s.value)}
+                    r={6}
+                    strokeWidth={2.5}
+                    className="fill-primary stroke-card"
+                  />
+                ) : null
+              )}
+              {labelX !== null && (
+                <text
+                  data-evening-label="true"
+                  data-value="true"
+                  x={Math.min(labelX, width - PAD.right)}
+                  y={PAD.top - 8}
+                  textAnchor={labelX > width - PAD.right - 30 ? "end" : "middle"}
+                >
+                  {dateLabel}
                 </text>
               )}
-              {showMin && (
-                <text x={minSpan[0]} y={HEIGHT - 6} textAnchor="start">
-                  {minText}
-                </text>
-              )}
-              {showMax && (
-                <text x={maxSpan[1]} y={HEIGHT - 6} textAnchor="end">
-                  {maxText}
-                </text>
-              )}
-              {averageText && averageX !== null && (
-                <text x={averageX} y={HEIGHT - 6} textAnchor="middle">
-                  {averageText}
+              <text x={PAD.left - 6} y={y(maxValue)} textAnchor="end" dominantBaseline="central">
+                {formatValue(maxValue, 2)}
+              </text>
+              {minValue !== maxValue && (
+                <text x={PAD.left - 6} y={y(minValue)} textAnchor="end" dominantBaseline="central">
+                  {formatValue(minValue, 2)}
                 </text>
               )}
             </ChartSvg>

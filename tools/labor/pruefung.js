@@ -3391,14 +3391,32 @@ addEventListener("load", async () => {
       )
       const startJargon = jargonIn($("[data-start-page]"))
       check("Start: ohne Fachbegriffe", !startJargon, startJargon ?? "")
-      // Legende am Formband (U3, D8): ein Satz unter dem Streifen, nur mit Band
+      // Formband als kleiner Verlauf (U5, D1): Scheiben in zeitlicher Folge, das Datum des Abends statt „Abend“, die
+      // Legende erklärt Punkte und Linie, den Satz zum Band nur mit Band
+      const stripDots = $$("[data-strip-dot]", blockEl).map((c) => ({
+        id: c.dataset.stripDot,
+        x: Number(c.getAttribute("cx")),
+      }))
+      const stripDate = txt($("[data-evening-label]", blockEl))
       check(
-        "Start: unter dem Streifen „Das Band zeigt deine übliche Schwankung.“, nur mit Band",
-        !!startBlock?.band &&
-          St().model.blocks.every(
-            (b) => !!$(`[data-evening-block="${b.family}"] [data-form-legend]`) === !!b.band
-          ) &&
-          txt($("[data-form-legend]", blockEl)) === "Das Band zeigt deine übliche Schwankung."
+        "Start: Formband als Verlauf, Scheiben von links nach rechts in zeitlicher Folge, Datum des Abends",
+        stripDots.map((d) => d.id).join() === startBlock.strip.map((s) => s.id).join() &&
+          stripDots.every((d, i) => !i || d.x > stripDots[i - 1].x) &&
+          /^(Mo|Di|Mi|Do|Fr|Sa|So) \d\d\.\d\d\.$/.test(stripDate) &&
+          !txt(blockEl).includes("Abend\n") &&
+          !!$("[data-mean]", blockEl) &&
+          !$("[data-average]", blockEl),
+        `${stripDots.length} Punkte · ${stripDate}`
+      )
+      check(
+        "Start: Legende unter dem Verlauf, der Satz zum Band nur mit Band",
+        St().model.blocks.every((b) => {
+          const legend = txt($(`[data-evening-block="${b.family}"] [data-form-legend]`))
+          return (
+            legend.startsWith("Grau: deine letzten Scheiben, die Linie ihr Schnitt.") &&
+            legend.includes("Das Band zeigt deine übliche Schwankung.") === !!b.band
+          )
+        })
       )
       check(
         "Start: der Streifen zeigt die letzten Scheiben, die des Abends hervorgehoben",

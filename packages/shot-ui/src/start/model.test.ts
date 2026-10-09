@@ -132,6 +132,23 @@ describe("Start: der letzte Abend (Plan N5, D1–D6)", () => {
     expect(strip).toHaveLength(20)
     expect(strip.filter((s) => s.tonight).map((s) => s.id)).toEqual(["e1", "e2"])
     expect(strip.at(-1)?.id).toBe("e2")
+    // je Scheibe der gleitende Schnitt und das Band an ihrer Stelle, wie im Verlauf des Fortschritts (U5, D1)
+    // Werte mit Schwankung, damit es ein Band gibt
+    const varied = Array.from({ length: 25 }, (_, i) =>
+      lg(
+        periodCard(`v${i}`, 0, [[100, 103, 98, 101, 104, 99, 102][i % 7]], {
+          startedAtMs: at(20, 18) - (25 - i) * DAY,
+        })
+      )
+    )
+    const all = model([
+      ...varied,
+      lg(periodCard("e1", 0, [100], { startedAtMs: at(29, 18) })),
+      lg(periodCard("e2", 0, [101], { startedAtMs: at(29, 19) })),
+    ]).blocks[0]
+    expect(all.strip.every((s) => typeof s.mean === "number")).toBe(true)
+    expect(all.strip.at(-1)?.band).toEqual(all.band)
+    expect(all.strip.some((s) => s.band !== null)).toBe(true)
   })
 
   it("neue Rekorde: nur die, deren Scheibe am Abend liegt", () => {

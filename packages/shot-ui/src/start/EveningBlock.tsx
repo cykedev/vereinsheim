@@ -116,13 +116,11 @@ export function EveningBlock({
         )}
       </div>
       <div className="grid gap-1.5">
-        <FormStrip strip={block.strip} average={block.average} band={block.band} />
-        {/* was das Band ist, in einem Satz (U3, D8); die Rechnung steht im Blatt „?“ des Verlaufs */}
-        {block.band && (
-          <p data-form-legend className="text-[13px] text-muted-foreground">
-            Das Band zeigt deine übliche Schwankung.
-          </p>
-        )}
+        <FormStrip strip={block.strip} band={block.band} dateLabel={date} />
+        {/* was der Verlauf zeigt, in einem Satz (U3, D8; U5, D1); die Rechnung steht im Blatt „?“ des Verlaufs */}
+        <p data-form-legend className="text-[13px] text-muted-foreground">
+          {`Grau: deine letzten Scheiben, die Linie ihr Schnitt.${block.band ? " Das Band zeigt deine übliche Schwankung." : ""}`}
+        </p>
       </div>
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-2">
         {block.rows.map((row) => {
