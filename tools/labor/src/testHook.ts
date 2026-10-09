@@ -69,7 +69,7 @@ declare global {
   }
 }
 
-// beim Laden festgehalten: Anker der Sprungleiste (#analyse …) ändern die Adresse während der Prüfung
+// beim Laden festgehalten: Anker der Sprungleiste (#analysis …) ändern die Adresse während der Prüfung
 const TEST_AT_LOAD = typeof location !== "undefined" && location.hash === "#pruefen"
 
 /** läuft die Seite in der Skriptprüfung? (so, wie sie geladen wurde) */

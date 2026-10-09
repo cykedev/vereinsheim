@@ -180,7 +180,8 @@ function progressPairs(
     ["compare", encodeCompare(query.compare)],
     ["family", query.family],
     ["kind", kindParams(query.kind)],
-    ["probe", query.includeProbeOnly ? null : "0"],
+    // englisch wie alle Schlüssel (User, 9. Oktober 2026): Training nur aus Probe
+    ["sighters", query.includeProbeOnly ? null : "0"],
     ["scoring", query.scoring === "rings" ? "rings" : null],
     [
       "metric",
@@ -204,7 +205,7 @@ export function progressQueryFromParams(params: URLSearchParams): ProgressQuery 
     compare: decodeCompare(params.get("compare")),
     family: slugOrNull(params.get("family")),
     kind: kindOf(params.get("kind")),
-    includeProbeOnly: params.get("probe") !== "0",
+    includeProbeOnly: params.get("sighters") !== "0",
     scoring: scoringOf(params.get("scoring")),
     metric:
       METRIC_CODES.find(([, code]) => code === params.get("metric"))?.[0] ??
@@ -238,10 +239,15 @@ const SHOT = /^P?[1-9]\d*$/
 /** Serien bis 999: eine längere Zahl ist keine Serie (sonst stünde 1e+23 in der Adresse) */
 const SERIES = /^[1-9]\d{0,2}$/
 
+/** die Probe heißt in der Adresse englisch `sighters`, im Zustand `probe` */
 function selectionOf(value: string | null): Selection | null {
-  if (value === "all" || value === "match" || value === "probe") return value
+  if (value === "all" || value === "match") return value
+  if (value === "sighters") return "probe"
   return value && SERIES.test(value) ? Number(value) : null
 }
+
+const selectionText = (selection: Selection) =>
+  selection === "probe" ? "sighters" : String(selection)
 
 function originFrom(params: URLSearchParams): CardOrigin {
   switch (params.get("from")) {
@@ -288,7 +294,7 @@ export function cardToParams(card: CardRoute): Param[] {
   return [
     ...originPairs(card.origin),
     ...present([
-      ["series", card.selection === null ? null : String(card.selection)],
+      ["series", card.selection === null ? null : selectionText(card.selection)],
       ["shot", card.shot],
       ["scoring", card.scoring === "rings" ? "rings" : null],
     ]),

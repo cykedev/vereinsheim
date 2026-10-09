@@ -588,7 +588,7 @@ addEventListener("load", async () => {
       hits().length === 0 &&
         $$("[data-series]").length === 0 &&
         txt($("[data-no-shots]")).includes("Noch kein Schuss") &&
-        ["readout", "series", "shot-table", "zahlen", "analyse"].every((id) => !$(`#${id}`)) &&
+        ["readout", "series", "shot-table", "numbers", "analysis"].every((id) => !$(`#${id}`)) &&
         !$('nav[aria-label="Abschnitte"]') &&
         !$("[data-result]")
     )
@@ -760,7 +760,7 @@ addEventListener("load", async () => {
     )
     await click(button("Erklärungen"))
     check("Erklärungen wieder aus", $$("[data-short]").length === 0)
-    const targetHelpButton = $('#scheibe button[data-help="trefferbild"]')
+    const targetHelpButton = $('#target button[data-help="trefferbild"]')
     await click(targetHelpButton, 100)
     check(
       "„?“ an der Scheibe öffnet die Erklärung „Trefferbild“ als Blatt",
@@ -1070,7 +1070,7 @@ addEventListener("load", async () => {
     await tab("Lage")
     check(
       "Adresse: der Reiter Lage als Anker",
-      addr().endsWith("#lage") && routeOf(addr()).anchor?.tab === "position",
+      addr().endsWith("#position") && routeOf(addr()).anchor?.tab === "position",
       addr()
     )
     check(
@@ -1560,7 +1560,7 @@ addEventListener("load", async () => {
     }
     // scrollt so, dass das Raster mit Scheibe und Serien direkt unter der Leiste beginnt
     const scrollToRegion = (w) => {
-      const region = w.document.getElementById("scheibe")
+      const region = w.document.getElementById("target")
       w.scrollTo(0, region.getBoundingClientRect().top + w.scrollY - 56)
     }
     const frameClick = async (f, el, ms = 150) => {
@@ -1575,12 +1575,12 @@ addEventListener("load", async () => {
     check(
       "Sprungleiste: vier Anker in der Reihenfolge der Seite",
       [...sectionNav.querySelectorAll("a")].map((a) => a.getAttribute("href")).join() ===
-        "#scheibe,#schuesse,#zahlen,#analyse"
+        "#target,#shots,#numbers,#analysis"
     )
     // „Zahlen“ ist kürzer als das Fenster: nach dem Sprung trotzdem genau „Zahlen“ aktiv, nicht die Analyse
     // die Leiste scrollt selbst: auch in einer data:-Vorschau, wo der Browser den Sprung zum Anker blockt
     const jumpClick = new dw.MouseEvent("click", { bubbles: true, cancelable: true, button: 0 })
-    sectionNav.querySelector('a[href="#zahlen"]').dispatchEvent(jumpClick)
+    sectionNav.querySelector('a[href="#numbers"]').dispatchEvent(jumpClick)
     check(
       "Sprungleiste: der Klick springt selbst, nicht über den Browser",
       jumpClick.defaultPrevented
@@ -1591,13 +1591,13 @@ addEventListener("load", async () => {
     const deskActive = [...sectionNav.querySelectorAll("[aria-current]")].map(txt)
     check(
       "Desktop: „Zahlen“ bringt die Zahlen unter die Leiste, aktiv ist genau „Zahlen“",
-      near(dd.getElementById("zahlen").getBoundingClientRect().top, 56, 3) &&
+      near(dd.getElementById("numbers").getBoundingClientRect().top, 56, 3) &&
         deskActive.join() === "Zahlen",
-      `${dd.getElementById("zahlen").getBoundingClientRect().top.toFixed(0)} · ${deskActive.join()}`
+      `${dd.getElementById("numbers").getBoundingClientRect().top.toFixed(0)} · ${deskActive.join()}`
     )
-    sectionNav.querySelector('a[href="#analyse"]').click()
+    sectionNav.querySelector('a[href="#analysis"]').click()
     await wait(500)
-    const analyseTop = dd.getElementById("analyse").getBoundingClientRect().top
+    const analyseTop = dd.getElementById("analysis").getBoundingClientRect().top
     check(
       "Sprungleiste: „Analyse“ bringt die Analyse unter die Leiste",
       near(analyseTop, 56, 3),
@@ -1630,8 +1630,8 @@ addEventListener("load", async () => {
     )
     // links Scheibe und Serien, rechts Schuss, Übersicht und Schüsse; Zahlen und Analyse darunter über die
     // ganze Breite
-    const regionBox = deskRect("scheibe")
-    const fullWidth = ["zahlen", "analyse"].every((id) => {
+    const regionBox = deskRect("target")
+    const fullWidth = ["numbers", "analysis"].every((id) => {
       const r = deskRect(id)
       return near(r.left, regionBox.left, 1) && near(r.width, regionBox.width, 1)
     })
@@ -1652,12 +1652,12 @@ addEventListener("load", async () => {
         headResult.offsetParent === null,
       `${resultBox.left.toFixed(0)}/${deskRect("readout").left.toFixed(0)} · ${resultBox.top.toFixed(0)}`
     )
-    dd.getElementById("analyse").scrollIntoView()
+    dd.getElementById("analysis").scrollIntoView()
     await wait(80)
     check(
       "Desktop: unter dem Raster scrollt die Scheibe mit weg",
-      dd.querySelector('[data-section="scheibe"]').getBoundingClientRect().bottom < 56,
-      dd.querySelector('[data-section="scheibe"]').getBoundingClientRect().bottom.toFixed(0)
+      dd.querySelector('[data-section="target"]').getBoundingClientRect().bottom < 56,
+      dd.querySelector('[data-section="target"]').getBoundingClientRect().bottom.toFixed(0)
     )
     // nichts angeschnitten: Kacheln in Zeilen zu fünf ohne abgeschnittenen Text, alle Reiter sichtbar,
     // die Knöpfe der Scheibe in ihrem Kasten
@@ -1691,19 +1691,19 @@ addEventListener("load", async () => {
     )
     dw.scrollTo(0, 3000)
     await wait(50)
-    sectionNav.querySelector('a[href="#scheibe"]').click()
+    sectionNav.querySelector('a[href="#target"]').click()
     await wait(100)
     check(
       "Desktop: „Scheibe“ in der Sprungleiste führt nach oben, auch wenn die Scheibe klebt",
-      dd.getElementById("scheibe").getBoundingClientRect().top >= 0 &&
-        near(dd.getElementById("scheibe").getBoundingClientRect().top, 56, 3),
-      `${dw.scrollY.toFixed(0)} · ${dd.getElementById("scheibe").getBoundingClientRect().top.toFixed(0)}`
+      dd.getElementById("target").getBoundingClientRect().top >= 0 &&
+        near(dd.getElementById("target").getBoundingClientRect().top, 56, 3),
+      `${dw.scrollY.toFixed(0)} · ${dd.getElementById("target").getBoundingClientRect().top.toFixed(0)}`
     )
     desk.remove()
     // aktiver Abschnitt im Fenster der Prüfung: nach dem Sprung meldet der Browser ein Scroll-Ereignis
     {
       const mainNav = $('nav[aria-label="Abschnitte"]')
-      $('a[href="#analyse"]', mainNav).click()
+      $('a[href="#analysis"]', mainNav).click()
       dispatchEvent(new Event("scroll"))
       await wait(100)
       const active = [...mainNav.querySelectorAll("[aria-current]")].map(txt)
@@ -1725,15 +1725,16 @@ addEventListener("load", async () => {
       scrollTo(0, 0)
     }
 
-    const anchored = await openFrame(800, 900, "#lage")
+    const anchored = await openFrame(800, 900, "#position")
     const ad = anchored.contentDocument
     const anchoredTab = ad?.querySelector(
       'section[aria-label="Analyse"] [role="radio"][aria-checked="true"]'
     )
     check(
-      "Anker #lage öffnet den Reiter Lage und zeigt die Analyse",
-      txt(anchoredTab) === "Lage" && ad.getElementById("analyse").getBoundingClientRect().top < 300,
-      `${txt(anchoredTab)} · ${ad?.getElementById("analyse").getBoundingClientRect().top.toFixed(0)}`
+      "Anker #position öffnet den Reiter Lage und zeigt die Analyse",
+      txt(anchoredTab) === "Lage" &&
+        ad.getElementById("analysis").getBoundingClientRect().top < 300,
+      `${txt(anchoredTab)} · ${ad?.getElementById("analysis").getBoundingClientRect().top.toFixed(0)}`
     )
     const timeTab = [...ad.querySelectorAll('section[aria-label="Analyse"] [role="radio"]')].find(
       (b) => txt(b) === "Zeit und Verlauf"
@@ -1741,7 +1742,7 @@ addEventListener("load", async () => {
     await frameClick(anchored, timeTab)
     check(
       "Reiterwechsel schreibt den Anker",
-      anchored.contentWindow.location.hash === "#zeit",
+      anchored.contentWindow.location.hash === "#time",
       anchored.contentWindow.location.hash
     )
     anchored.remove()
@@ -1852,16 +1853,16 @@ addEventListener("load", async () => {
       !!rulerShow &&
         !!rulerPill &&
         txt(rulerPill).includes("Zeit und Verlauf") &&
-        rd.querySelector('[data-section="scheibe"]').getBoundingClientRect().top < 400,
+        rd.querySelector('[data-section="target"]').getBoundingClientRect().top < 400,
       rulerPill ? txt(rulerPill) : rulerShow ? "keine Pille" : "kein Knopf"
     )
     rulerPhone.remove()
 
     // Anker beim Laden: die Seite entsteht erst im Browser, der Sprung kommt aus dem Labor
-    const loaded = await openFrame(375, 812, "#schuesse")
-    const shotsTop = loaded.contentDocument.getElementById("schuesse").getBoundingClientRect().top
+    const loaded = await openFrame(375, 812, "#shots")
+    const shotsTop = loaded.contentDocument.getElementById("shots").getBoundingClientRect().top
     check(
-      "Anker #schuesse beim Laden: die Schüsse unter der Leiste",
+      "Anker #shots beim Laden: die Schüsse unter der Leiste",
       near(shotsTop, 56, 3),
       shotsTop.toFixed(0)
     )
@@ -1952,7 +1953,7 @@ addEventListener("load", async () => {
       .closest("[data-card-header]")
       .getBoundingClientRect().top
     const targetBottom = sd.getElementById("target-box").getBoundingClientRect().bottom
-    const cardBottom = sd.getElementById("scheibe").getBoundingClientRect().bottom
+    const cardBottom = sd.getElementById("target").getBoundingClientRect().bottom
     const seriesTop = sd.getElementById("series").getBoundingClientRect().top
     check(
       "Handy 375 px: Kopf mit Ergebnis und Scheibe auf dem ersten Bildschirm, die Serien direkt danach",
@@ -1978,7 +1979,7 @@ addEventListener("load", async () => {
       small,
       [...smallBar.querySelectorAll("button")].find((b) => txt(b) === "Lage")
     )
-    sd.getElementById("analyse").scrollIntoView({ block: "start" })
+    sd.getElementById("analysis").scrollIntoView({ block: "start" })
     sw.scrollBy(0, 200)
     await wait(200)
     const origin = sw.scrollY
@@ -1996,7 +1997,7 @@ addEventListener("load", async () => {
     await frameClick(small, smallEllipse, 1500)
     const pillButton = () =>
       [...sd.querySelectorAll("button")].find((b) => txt(b).startsWith("Zurück zu"))
-    const jumped = sd.querySelector('[data-section="scheibe"]').getBoundingClientRect().top
+    const jumped = sd.querySelector('[data-section="target"]').getBoundingClientRect().top
     check(
       "Handy 375 px: Ellipse aus „Lage“ bringt die Scheibe ins Bild und die Pille",
       near(jumped, 56, 3) && txt(pillButton()) === "Zurück zu „Lage“",
@@ -2028,7 +2029,7 @@ addEventListener("load", async () => {
       await wait(200)
       w.dispatchEvent(new w.Event("scroll"))
       await wait(100)
-      const top = d.getElementById("zahlen").getBoundingClientRect().top
+      const top = d.getElementById("numbers").getBoundingClientRect().top
       const active = d.querySelector('nav[aria-label="Abschnitte"] [aria-current]')?.textContent
       f.remove()
       return { top, active }
@@ -2091,7 +2092,7 @@ addEventListener("load", async () => {
         !!$("[data-period-header]") &&
           $$('nav[aria-label="Abschnitte"] a')
             .map((a) => a.getAttribute("href"))
-            .join() === "#verlauf,#scheiben,#zahlen,#analyse"
+            .join() === "#history,#cards,#numbers,#analysis"
       )
       check(
         "Zeitraum: Vorgabe „Letzte 90 Tage“ über Luftgewehr",
@@ -2453,7 +2454,7 @@ addEventListener("load", async () => {
         [390, 844],
         [375, 812],
       ]) {
-        const f = await openFrame(width, height, "#verlauf")
+        const f = await openFrame(width, height, "#history")
         const d = f.contentDocument
         const w = f.contentWindow
         const rows = [...d.querySelectorAll("[data-card-row]")]
@@ -2495,11 +2496,11 @@ addEventListener("load", async () => {
         )
         f.remove()
       }
-      const desk2 = await openFrame(1280, 900, "#verlauf")
+      const desk2 = await openFrame(1280, 900, "#history")
       const d2 = desk2.contentDocument
       const w2 = desk2.contentWindow
       // die Liste füllt die Höhe der Spalte mit dem Verlauf (D1), mindestens 240 px wie die Schusstabelle
-      const column = d2.querySelector('[data-section="verlauf"]')
+      const column = d2.querySelector('[data-section="history"]')
       const listCard = d2.querySelector("#card-list")
       const listBottom = listCard.getBoundingClientRect().bottom
       const columnBottom = column.getBoundingClientRect().bottom
@@ -2518,17 +2519,17 @@ addEventListener("load", async () => {
           d2.documentElement.scrollWidth <= 1280
       )
       desk2.remove()
-      const tallPeriod = await tallJump("#verlauf")
+      const tallPeriod = await tallJump("#history")
       check(
         "Zeitraum, hohes Fenster 1440 × 1400: „Zahlen“ erreicht die Leiste und ist aktiv",
         near(tallPeriod.top, 56, 3) && tallPeriod.active === "Zahlen",
         `${Math.round(tallPeriod.top)} ${tallPeriod.active}`
       )
       await click(button("Scheibe"), 300)
-      // #zahlen gibt es auf beiden Seiten: es öffnet die zuletzt gewählte Ansicht, hier die Scheibe (Review)
-      const reload = await openFrame(1280, 900, "#zahlen")
+      // #numbers gibt es auf beiden Seiten: es öffnet die zuletzt gewählte Ansicht, hier die Scheibe (Review)
+      const reload = await openFrame(1280, 900, "#numbers")
       check(
-        "Labor: der Anker #zahlen öffnet die gewählte Ansicht, nicht die Seite eines Zeitraums",
+        "Labor: der Anker #numbers öffnet die gewählte Ansicht, nicht die Seite eines Zeitraums",
         !!reload.contentDocument.querySelector("[data-card-header]") &&
           !reload.contentDocument.querySelector("[data-period-header]")
       )

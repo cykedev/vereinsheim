@@ -113,7 +113,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
     (id: string) => {
       // nur eine neue Wahl holt den Verlauf ins Bild, das Abwählen nicht
       if (id !== state.chosen)
-        jumpTo(document.querySelector('[data-section="verlauf"]'), "Scheiben")
+        jumpTo(document.querySelector('[data-section="history"]'), "Scheiben")
       dispatch({ type: "choose", id })
     },
     [dispatch, jumpTo, state.chosen]
@@ -121,7 +121,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
   const chooseFromRecord = useCallback(
     (id: string) => {
       if (state.chosen !== id) dispatch({ type: "choose", id })
-      jumpTo(document.querySelector('[data-section="verlauf"]'), "Analyse")
+      jumpTo(document.querySelector('[data-section="history"]'), "Analyse")
     },
     [dispatch, jumpTo, state.chosen]
   )
@@ -270,7 +270,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
         }
         beside={[
           {
-            id: "scheiben",
+            id: "cards",
             node: (
               <div
                 id="card-list"
@@ -292,7 +292,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
         ]}
         below={[
           {
-            id: "zahlen",
+            id: "numbers",
             node: (
               <PeriodTiles
                 tiles={model.tiles}
@@ -302,7 +302,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
             ),
           },
           {
-            id: "analyse",
+            id: "analysis",
             node: (
               <PeriodInsights
                 model={model}

@@ -5,7 +5,7 @@ import { PAGE_COLUMNS } from "./columns"
 import type { PeriodSection } from "./sections"
 import { SectionBlock, type PageSectionBlock } from "./SectionBlock"
 
-type Section = PageSectionBlock<Exclude<PeriodSection, "verlauf">>
+type Section = PageSectionBlock<Exclude<PeriodSection, "history">>
 
 export interface PeriodPageProps {
   /** Kopf mit Zeitraum, Filtern, auf dem Telefon dem Ergebnis und einem Satz (`PeriodHeader`) */
@@ -63,9 +63,9 @@ export function PeriodPage({
       {header}
       {nav}
       <div className="grid gap-7">
-        <div id="verlauf" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
+        <div id="history" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
           <div
-            data-section="verlauf"
+            data-section="history"
             className="grid min-w-0 scroll-mt-14 content-start gap-7 md:sticky md:top-14 md:self-start"
           >
             {chart}

@@ -16,10 +16,10 @@ const page = (empty?: string) =>
       under: h("p", null, "UMFANG"),
       result: h("p", null, "ERGEBNIS"),
       aside: h("p", null, "ABLESUNG"),
-      beside: [{ id: "scheiben", node: h("p", null, "SCHEIBEN") }],
+      beside: [{ id: "cards", node: h("p", null, "SCHEIBEN") }],
       below: [
-        { id: "zahlen", node: h("p", null, "ZAHLEN") },
-        { id: "analyse", node: h("p", null, "ANALYSE") },
+        { id: "numbers", node: h("p", null, "ZAHLEN") },
+        { id: "analysis", node: h("p", null, "ANALYSE") },
       ],
       empty: empty ? h("p", null, empty) : undefined,
     })
@@ -46,14 +46,14 @@ describe("Rahmen der Seite eines Zeitraums (D1)", () => {
   })
 
   it("der Verlauf klebt ab 768 px, die Box nur ab 768 px, die Liste füllt die Höhe", () => {
-    expect(html).toMatch(/<div id="verlauf" class="[^"]*scroll-mt-14/)
-    expect(html).toMatch(/data-section="verlauf" class="[^"]*md:sticky md:top-14/)
+    expect(html).toMatch(/<div id="history" class="[^"]*scroll-mt-14/)
+    expect(html).toMatch(/data-section="history" class="[^"]*md:sticky md:top-14/)
     expect(html).toMatch(/data-result-box="true" class="[^"]*max-md:hidden/)
-    expect(html).toMatch(/id="scheiben" data-section="scheiben" class="[^"]*md:flex-1/)
-    expect(html).toMatch(/id="zahlen" data-section="zahlen" class="min-w-0 scroll-mt-14"/)
+    expect(html).toMatch(/id="cards" data-section="cards" class="[^"]*md:flex-1/)
+    expect(html).toMatch(/id="numbers" data-section="numbers" class="min-w-0 scroll-mt-14"/)
     // der letzte Abschnitt mindestens fensterhoch: auch ein kurzer Abschnitt davor erreicht die Leiste
     expect(html).toMatch(
-      /id="analyse" data-section="analyse" class="[^"]*min-h-\[calc\(100svh-3\.5rem\)\]/
+      /id="analysis" data-section="analysis" class="[^"]*min-h-\[calc\(100svh-3\.5rem\)\]/
     )
   })
 
@@ -69,31 +69,29 @@ describe("Rahmen der Seite eines Zeitraums (D1)", () => {
 
 describe("Abschnitte der Seite eines Zeitraums (D2)", () => {
   it("Sprungleiste mit vier Ankern", () => {
-    const nav = renderToStaticMarkup(
-      h(SectionNav, { active: "scheiben", sections: PERIOD_SECTIONS })
-    )
+    const nav = renderToStaticMarkup(h(SectionNav, { active: "cards", sections: PERIOD_SECTIONS }))
     expect([...nav.matchAll(/<a href="#([a-z]+)"/g)].map((m) => m[1])).toEqual([
-      "verlauf",
-      "scheiben",
-      "zahlen",
-      "analyse",
+      "history",
+      "cards",
+      "numbers",
+      "analysis",
     ])
-    expect(nav).toMatch(/<a href="#scheiben" aria-current="location"/)
+    expect(nav).toMatch(/<a href="#cards" aria-current="location"/)
   })
 
   it("Anker hin und zurück, Unbekanntes null", () => {
     for (const { id } of PERIOD_SECTIONS) expect(parsePeriodHash(`#${id}`)).toBe(id)
-    expect(parsePeriodHash("#scheibe")).toBeNull()
+    expect(parsePeriodHash("#target")).toBeNull()
     expect(parsePeriodHash("")).toBeNull()
   })
 
   it("aktiver Abschnitt mit den Ids der Seite", () => {
     const boxes = [
-      { id: "verlauf" as const, top: -400 },
-      { id: "scheiben" as const, top: 60 },
-      { id: "zahlen" as const, top: 900 },
+      { id: "history" as const, top: -400 },
+      { id: "cards" as const, top: 60 },
+      { id: "numbers" as const, top: 900 },
     ]
-    expect(activeSection(boxes)).toBe("scheiben")
-    expect(activeSection(boxes, true)).toBe("zahlen")
+    expect(activeSection(boxes)).toBe("cards")
+    expect(activeSection(boxes, true)).toBe("numbers")
   })
 })

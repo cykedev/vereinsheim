@@ -104,14 +104,14 @@ describe("Liste und Fortschritt als Query (D4)", () => {
       chosen: "c42",
     }
     const text =
-      "range=2026-05-01..2026-06-30&compare=previous&family=lp-10m&kind=training&probe=0&scoring=rings&metric=sigma&view=months&pick=c42"
+      "range=2026-05-01..2026-06-30&compare=previous&family=lp-10m&kind=training&sighters=0&scoring=rings&metric=sigma&view=months&pick=c42"
     expect(query(progressQueryToParams(full))).toBe(text)
     expect(progressQueryFromParams(new URLSearchParams(text))).toEqual(full)
   })
 
   it("Vorgaben im Link werden gelesen und fallen beim Schreiben weg; Unbekanntes gilt als Vorgabe", () => {
     const read = progressQueryFromParams(
-      new URLSearchParams("probe=1&metric=mean&range=90d&kind=wettkampf&view=jahr&pick=a b")
+      new URLSearchParams("sighters=1&metric=mean&range=90d&kind=wettkampf&view=jahr&pick=a b")
     )
     expect(read).toEqual(DEFAULT_PROGRESS)
     expect(progressQueryToParams(read)).toEqual([])
@@ -141,7 +141,7 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
     const card = cardFromParts(
       "c42",
       new URLSearchParams("from=progress&family=lg-10m&series=2&shot=23"),
-      "#lage"
+      "#position"
     )
     expect(card).toEqual({
       page: "card",
@@ -161,10 +161,10 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
       selection: 2,
       shot: "23",
       scoring: "decimal",
-      anchor: { section: "analyse", tab: "position" },
+      anchor: { section: "analysis", tab: "position" },
     })
     expect(query(cardToParams(card))).toBe("from=progress&family=lg-10m&series=2&shot=23")
-    expect(cardHash(card)).toBe("#lage")
+    expect(cardHash(card)).toBe("#position")
   })
 
   it("die Herkunft trägt ihre Schlüssel, aber nicht `pick`; die Wertung ist die der Scheibe", () => {
@@ -205,8 +205,8 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
     const read = (search: string) => cardFromParts("c1", new URLSearchParams(search), "")
     expect(read("series=all").selection).toBe("all")
     expect(read("series=match").selection).toBe("match")
-    expect(read("series=probe&shot=P3").selection).toBe("probe")
-    expect(read("series=probe&shot=P3").shot).toBe("P3")
+    expect(read("series=sighters&shot=P3").selection).toBe("probe")
+    expect(read("series=sighters&shot=P3").shot).toBe("P3")
     for (const bad of ["series=0", "series=-1", "series=02", "series=zwei"])
       expect(read(bad).selection).toBeNull()
     for (const bad of ["shot=0", "shot=P", "shot=p3", "shot=3a"]) expect(read(bad).shot).toBeNull()
@@ -214,9 +214,9 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
 
   it("ein Anker ohne Bedeutung zählt nicht; ein Abschnitt ohne Reiter bleibt ein Abschnitt", () => {
     expect(cardFromParts("c1", new URLSearchParams(), "#irgendwo").anchor).toBeNull()
-    const card = cardFromParts("c1", new URLSearchParams(), "#zahlen")
-    expect(card.anchor).toEqual({ section: "zahlen" })
-    expect(cardHash(card)).toBe("#zahlen")
+    const card = cardFromParts("c1", new URLSearchParams(), "#numbers")
+    expect(card.anchor).toEqual({ section: "numbers" })
+    expect(cardHash(card)).toBe("#numbers")
     expect(cardHash({ ...card, anchor: null })).toBe("")
   })
 })
@@ -245,7 +245,7 @@ describe("die ganze Adresse (D3)", () => {
         },
       ],
       [
-        "/cards/c42?from=start&series=probe#probe",
+        "/cards/c42?from=start&series=sighters#sighters",
         {
           page: "card",
           id: "c42",
@@ -253,7 +253,7 @@ describe("die ganze Adresse (D3)", () => {
           selection: "probe",
           shot: null,
           scoring: "decimal",
-          anchor: { section: "analyse", tab: "sighters" },
+          anchor: { section: "analysis", tab: "sighters" },
         },
       ],
       [
@@ -270,7 +270,7 @@ describe("die ganze Adresse (D3)", () => {
       ],
       ["/progress", { page: "progress", query: DEFAULT_PROGRESS, section: null }],
       [
-        "/progress?range=neue-munition&compare=previous&family=lg-10m&pick=c9#verlauf",
+        "/progress?range=neue-munition&compare=previous&family=lg-10m&pick=c9#history",
         {
           page: "progress",
           query: {
@@ -280,7 +280,7 @@ describe("die ganze Adresse (D3)", () => {
             family: "lg-10m",
             chosen: "c9",
           },
-          section: "verlauf",
+          section: "history",
         },
       ],
       [
@@ -307,8 +307,8 @@ describe("die ganze Adresse (D3)", () => {
   })
 
   it("kanonisch: vertauschte Schlüssel, Vorgaben und ein Schrägstrich am Ende ergeben dieselbe Route", () => {
-    const canonical = "/progress?family=lg-10m&kind=training&pick=c1#scheiben"
-    const messy = route("/progress/?pick=c1&range=90d&kind=training&probe=1&family=lg-10m#scheiben")
+    const canonical = "/progress?family=lg-10m&kind=training&pick=c1#cards"
+    const messy = route("/progress/?pick=c1&range=90d&kind=training&sighters=1&family=lg-10m#cards")
     expect(messy).toEqual(route(canonical))
     expect(urlFromRoute(messy)).toBe(canonical)
     expect(route("/cards/")).toEqual(route("/cards"))
@@ -392,7 +392,7 @@ describe("die ganze Adresse (D3)", () => {
         [null, "2026-09-25"].map((evening) => ({ page: "cards" as const, query, evening }))
       ),
       ...progresses.flatMap((query) =>
-        [null, "verlauf" as const].map((section) => ({ page: "progress" as const, query, section }))
+        [null, "history" as const].map((section) => ({ page: "progress" as const, query, section }))
       ),
     ]
     for (const origin of origins)
@@ -401,8 +401,8 @@ describe("die ganze Adresse (D3)", () => {
           for (const scoring of ["decimal", "rings"] as const)
             for (const anchor of [
               null,
-              { section: "zahlen" } as const,
-              { section: "analyse", tab: "position" } as const,
+              { section: "numbers" } as const,
+              { section: "analysis", tab: "position" } as const,
             ])
               routes.push({ page: "card", id: "c42", origin, selection, shot, scoring, anchor })
     expect(routes.length).toBeGreaterThan(20000)

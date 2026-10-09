@@ -160,7 +160,7 @@ export function CardView({
       showSection(anchor.section)
     }
     // eine aus dem Zeitraum geöffnete Scheibe beginnt oben, auch wenn die Adresse noch einen Anker der Seite
-    // eines Zeitraums trägt (#zahlen, #analyse gibt es auf beiden Seiten)
+    // eines Zeitraums trägt (#numbers, #analysis gibt es auf beiden Seiten)
     const onLoad = opened ? null : parseHash(location.hash)
     if (onLoad) showSection(onLoad.section)
     addEventListener("hashchange", follow)
@@ -212,7 +212,7 @@ export function CardView({
   const toggleFromAnalysis = useCallback(
     (layer: Layer) => {
       toggle(layer)
-      jumpTo(document.querySelector('[data-section="scheibe"]'), "Lage")
+      jumpTo(document.querySelector('[data-section="target"]'), "Lage")
     },
     [toggle, jumpTo]
   )
@@ -222,7 +222,7 @@ export function CardView({
     (index: number, series: SeriesKey | null) => {
       dispatch({ type: "show", shot: index, series })
       jumpTo(
-        document.querySelector('[data-section="scheibe"]'),
+        document.querySelector('[data-section="target"]'),
         ANALYSIS_TABS.find((t) => t.value === tab)?.label ?? "Analyse"
       )
     },
@@ -231,7 +231,7 @@ export function CardView({
   const chooseFromTable = useCallback(
     (index: number, series: SeriesKey | null) => {
       choose(index, series)
-      jumpTo(document.querySelector('[data-section="scheibe"]'), "Schüsse")
+      jumpTo(document.querySelector('[data-section="target"]'), "Schüsse")
     },
     [choose, jumpTo]
   )
@@ -239,7 +239,7 @@ export function CardView({
     store.set("tab", next)
     setTab(next)
     setTabInAddress(true)
-    writeHash(hashFor("analyse", next))
+    writeHash(hashFor("analysis", next))
   }, [])
 
   // die Adresse, die die App hätte (Plan N1): Beispiele ohne Herkunft, eine geöffnete Scheibe mit ihrer; die
@@ -257,7 +257,7 @@ export function CardView({
     selection: state.selection === state.home ? null : state.selection,
     shot: state.chosen ? (shotLabels(shots)[state.chosen.index] ?? null) : null,
     scoring: state.scoring,
-    anchor: tabInAddress ? { section: "analyse", tab } : null,
+    anchor: tabInAddress ? { section: "analysis", tab } : null,
   }
   const backText = `Zurück zu „${backLabel(route, { named: NAMED_PERIODS, timeZone: SEASON_TIME_ZONE })}“`
 
@@ -411,7 +411,7 @@ export function CardView({
         }
         beside={[
           {
-            id: "schuesse",
+            id: "shots",
             node: (
               <div
                 id="shot-table"
@@ -432,7 +432,7 @@ export function CardView({
         ]}
         below={[
           {
-            id: "zahlen",
+            id: "numbers",
             node: (
               <MetricTiles
                 shots={shots}
@@ -448,7 +448,7 @@ export function CardView({
             ),
           },
           {
-            id: "analyse",
+            id: "analysis",
             node: (
               <AnalysisPanel
                 // je Karte neu eingehängt: das Lineal fängt ohne Wahl an

@@ -14,10 +14,10 @@ describe("Abschnitte und Anker (D7)", () => {
 
   it("jeder Reiter hin und zurück, öffnet die Analyse", () => {
     for (const { value } of ANALYSIS_TABS) {
-      expect(parseHash(hashFor("analyse", value))).toEqual({ section: "analyse", tab: value })
+      expect(parseHash(hashFor("analysis", value))).toEqual({ section: "analysis", tab: value })
     }
-    expect(hashFor("analyse", "position")).toBe("#lage")
-    expect(parseHash("#zeit")).toEqual({ section: "analyse", tab: "time" })
+    expect(hashFor("analysis", "position")).toBe("#position")
+    expect(parseHash("#time")).toEqual({ section: "analysis", tab: "time" })
   })
 
   it("nur einfache Anker ohne = (im Artifact kommt nur so einer an), alle verschieden", () => {

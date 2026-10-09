@@ -8,7 +8,7 @@ import { SectionBlock, type PageSectionBlock } from "./SectionBlock"
 import type { PageSection } from "./sections"
 import { useTargetFit } from "./useTargetFit"
 
-type Section = PageSectionBlock<Exclude<PageSection, "scheibe">>
+type Section = PageSectionBlock<Exclude<PageSection, "target">>
 
 export interface CardPageProps {
   /** Kopf mit Ergebnis (CardHeader) */
@@ -42,7 +42,7 @@ export interface CardPageProps {
  * Scheibe allein im Fenster); rechts daneben das Ergebnis als Box, die Ablesung und die Schüsse, die bis zur
  * Unterkante der Serien reichen und in sich scrollen. Was Platz braucht (Zahlen, Analyse), folgt darunter in voller Breite
  * (User, 8. Oktober 2026). Die Spalte der Scheibe trägt selbst `data-section`, ein umschließender Abschnitt
- * würde das Raster zerbrechen; der Anker `#scheibe` sitzt auf dem Raster, denn ein klebendes Ziel gilt dem
+ * würde das Raster zerbrechen; der Anker `#target` sitzt auf dem Raster, denn ein klebendes Ziel gilt dem
  * Browser immer als angesprungen.
  */
 export function CardPage({
@@ -62,11 +62,11 @@ export function CardPage({
     return (
       <div className={cn("grid gap-5", className)}>
         {header}
-        <div id="scheibe" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
+        <div id="target" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
           <div
             ref={fit.ref}
             style={fit.style}
-            data-section="scheibe"
+            data-section="target"
             className="grid min-w-0 scroll-mt-14 content-start gap-7"
           >
             {target}
@@ -81,13 +81,13 @@ export function CardPage({
       {header}
       {nav}
       <div className="grid gap-7">
-        <div id="scheibe" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
+        <div id="target" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
           {/* scroll-mt-14 auch hier: der Sprung aus der Analyse zielt auf die Scheibe selbst; klebt, falls
               die rechte Spalte einmal länger ist */}
           <div
             ref={fit.ref}
             style={fit.style}
-            data-section="scheibe"
+            data-section="target"
             className="grid min-w-0 scroll-mt-14 content-start gap-7 md:sticky md:top-14 md:self-start"
           >
             {target}

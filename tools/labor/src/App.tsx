@@ -37,9 +37,9 @@ function useTheme(theme: Theme) {
  */
 export function App({ commit }: { commit: string }) {
   const [mode, setMode] = useState<LaborMode>(() => {
-    // nur die Anker, die es allein auf der Seite eines Zeitraums gibt; #zahlen und #analyse haben beide Seiten
+    // nur die Anker, die es allein auf der Seite eines Zeitraums gibt; #numbers und #analysis haben beide Seiten
     const anchor = typeof location === "undefined" ? null : parsePeriodHash(location.hash)
-    if (anchor === "verlauf" || anchor === "scheiben") return "period"
+    if (anchor === "history" || anchor === "cards") return "period"
     return store.get("mode") === "period" ? "period" : "card"
   })
   const [theme, setTheme] = useState<Theme>(() => (store.get("theme") as Theme | null) ?? "system")

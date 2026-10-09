@@ -32,7 +32,7 @@ const PROGRESS: ProgressRoute = {
     metric: "group.sigma",
     chosen: "c3",
   },
-  section: "scheiben",
+  section: "cards",
 }
 const LIST: ListRoute = {
   page: "cards",
@@ -103,7 +103,7 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
       ...openCard(PROGRESS, "c42"),
       selection: 2,
       shot: "23",
-      anchor: { section: "analyse", tab: "position" },
+      anchor: { section: "analysis", tab: "position" },
     } as const
     expect(siblingRoute(card, "c43")).toEqual({
       ...card,
@@ -185,8 +185,8 @@ describe("Fortschritt ↔ Zustand der Seite (Task 7)", () => {
       },
     ]
     for (const state of states) {
-      const route = progressRoute(state, "verlauf")
-      expect(route.section).toBe("verlauf")
+      const route = progressRoute(state, "history")
+      expect(route.section).toBe("history")
       expect(periodStateFromRoute(route, "lg-10m")).toEqual(state)
       // auch über die Adresse: Zustand → Adresse → Route → Zustand
       const back = routeFromHref(urlFromRoute(route))

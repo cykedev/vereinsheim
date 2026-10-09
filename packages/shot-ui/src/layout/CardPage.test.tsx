@@ -14,10 +14,10 @@ const html = renderToStaticMarkup(
     result: h("p", null, "ERGEBNIS"),
     under: h("p", null, "SERIEN"),
     aside: h("p", null, "SEITE"),
-    beside: [{ id: "schuesse", node: h("p", null, "SCHÜSSE") }],
+    beside: [{ id: "shots", node: h("p", null, "SCHÜSSE") }],
     below: [
-      { id: "zahlen", node: h("p", null, "ZAHLEN") },
-      { id: "analyse", node: h("p", null, "ANALYSE") },
+      { id: "numbers", node: h("p", null, "ZAHLEN") },
+      { id: "analysis", node: h("p", null, "ANALYSE") },
     ],
   })
 )
@@ -41,9 +41,9 @@ describe("Rahmen der Seite (D2, D5)", () => {
   it("jeder Abschnitt mit Anker-Id, data-section und Abstand für die Leiste", () => {
     // der Anker der Scheibe sitzt auf dem Raster, das nicht klebt; die Scheibe selbst trägt data-section
     expect(html).toMatch(
-      /<div id="scheibe" class="[^"]*scroll-mt-14[^"]*"><div data-section="scheibe" class="[^"]*scroll-mt-14/
+      /<div id="target" class="[^"]*scroll-mt-14[^"]*"><div data-section="target" class="[^"]*scroll-mt-14/
     )
-    for (const id of ["zahlen", "schuesse", "analyse"]) {
+    for (const id of ["numbers", "shots", "analysis"]) {
       expect(html).toMatch(
         new RegExp(`<div[^>]*id="${id}"[^>]*data-section="${id}"[^>]*class="[^"]*scroll-mt-14`)
       )
@@ -52,12 +52,12 @@ describe("Rahmen der Seite (D2, D5)", () => {
 
   it("ab 768 px zwei Spalten, die Scheibe bleibt links unter der Leiste stehen", () => {
     expect(html).toContain("md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]")
-    expect(html).toMatch(/data-section="scheibe"[^>]*class="[^"]*md:sticky md:top-14 md:self-start/)
+    expect(html).toMatch(/data-section="target"[^>]*class="[^"]*md:sticky md:top-14 md:self-start/)
   })
 
   it("neben der Scheibe die Schüsse, Zahlen und Analyse darunter in voller Breite", () => {
     // die rechte Spalte endet vor den Zahlen: Zahlen und Analyse liegen außerhalb des Rasters mit der Scheibe
-    const grid = html.slice(html.indexOf('id="scheibe"'), html.indexOf('id="zahlen"'))
+    const grid = html.slice(html.indexOf('id="target"'), html.indexOf('id="numbers"'))
     expect(grid).toContain("SCHÜSSE")
     const closes = (grid.match(/<\/div>/g) ?? []).length
     const opens = (grid.match(/<div/g) ?? []).length
@@ -75,18 +75,18 @@ describe("Rahmen der Seite (D2, D5)", () => {
   it("die Serien in der Spalte der Scheibe, die Schüsse rechts füllen die Höhe", () => {
     // die Spalte der Scheibe schließt erst nach den Serien
     const column = html.slice(
-      html.indexOf('data-section="scheibe"'),
+      html.indexOf('data-section="target"'),
       html.indexOf("data-result-box")
     )
     expect(column).toContain("SERIEN")
     expect(column.match(/<\/div>/g)).toHaveLength(1)
     expect(html).toMatch(
-      /id="schuesse" data-section="schuesse" class="[^"]*md:flex-1[^"]*md:\[contain:size\]/
+      /id="shots" data-section="shots" class="[^"]*md:flex-1[^"]*md:\[contain:size\]/
     )
-    expect(html).not.toMatch(/id="zahlen"[^>]*md:flex-1/)
+    expect(html).not.toMatch(/id="numbers"[^>]*md:flex-1/)
     // nur der letzte Abschnitt ist mindestens fensterhoch (die Sprungleiste erreicht sonst „Zahlen“ nie)
-    expect(html).toMatch(/id="analyse"[^>]*min-h-\[calc\(100svh-3\.5rem\)\]/)
-    expect(html).not.toMatch(/id="zahlen"[^>]*min-h-\[calc/)
+    expect(html).toMatch(/id="analysis"[^>]*min-h-\[calc\(100svh-3\.5rem\)\]/)
+    expect(html).not.toMatch(/id="numbers"[^>]*min-h-\[calc/)
   })
 })
 
@@ -99,8 +99,8 @@ describe("ohne Schüsse (empty)", () => {
       result: h("p", null, "ERGEBNIS"),
       under: h("p", null, "SERIEN"),
       aside: h("p", null, "SEITE"),
-      beside: [{ id: "schuesse", node: h("p", null, "SCHÜSSE") }],
-      below: [{ id: "zahlen", node: h("p", null, "ZAHLEN") }],
+      beside: [{ id: "shots", node: h("p", null, "SCHÜSSE") }],
+      below: [{ id: "numbers", node: h("p", null, "ZAHLEN") }],
       empty: h(NoShots),
     })
   )
@@ -109,7 +109,7 @@ describe("ohne Schüsse (empty)", () => {
     for (const part of ["KOPF", "SCHEIBE", "Noch kein Schuss"]) expect(blank).toContain(part)
     for (const part of ["LEISTE", "ERGEBNIS", "SERIEN", "SEITE", "SCHÜSSE", "ZAHLEN"])
       expect(blank).not.toContain(part)
-    expect(blank).toMatch(/data-section="scheibe"/)
+    expect(blank).toMatch(/data-section="target"/)
   })
 })
 

@@ -6,20 +6,20 @@ import type { AnalysisTab } from "../analysis/tabs"
 // in Seitenreihenfolge: die Schüsse stehen neben der Scheibe (und auf dem Telefon gleich nach ihr), Zahlen
 // und Analyse darunter in voller Breite (User, 8. Oktober 2026)
 export const PAGE_SECTIONS = [
-  { id: "scheibe", label: "Scheibe" },
-  { id: "schuesse", label: "Schüsse" },
-  { id: "zahlen", label: "Zahlen" },
-  { id: "analyse", label: "Analyse" },
+  { id: "target", label: "Scheibe" },
+  { id: "shots", label: "Schüsse" },
+  { id: "numbers", label: "Zahlen" },
+  { id: "analysis", label: "Analyse" },
 ] as const
 
 export type PageSection = (typeof PAGE_SECTIONS)[number]["id"]
 
 /** Abschnitte der Seite eines Zeitraums (Plan L3, D2): der Verlauf steht, wo auf der Scheibe die Scheibe steht */
 export const PERIOD_SECTIONS = [
-  { id: "verlauf", label: "Verlauf" },
-  { id: "scheiben", label: "Scheiben" },
-  { id: "zahlen", label: "Zahlen" },
-  { id: "analyse", label: "Analyse" },
+  { id: "history", label: "Verlauf" },
+  { id: "cards", label: "Scheiben" },
+  { id: "numbers", label: "Zahlen" },
+  { id: "analysis", label: "Analyse" },
 ] as const
 
 export type PeriodSection = (typeof PERIOD_SECTIONS)[number]["id"]
@@ -30,13 +30,14 @@ export function parsePeriodHash(hash: string): PeriodSection | null {
   return PERIOD_SECTIONS.find((s) => s.id === word)?.id ?? null
 }
 
+/** Anker der Reiter: englisch wie Pfade und Schlüssel der Adresse (User, 9. Oktober 2026), gleich dem Reiter */
 export const TAB_ANCHORS: Readonly<Record<AnalysisTab, string>> = {
-  overview: "ueberblick",
-  result: "ergebnis",
-  precision: "praezision",
-  position: "lage",
-  time: "zeit",
-  sighters: "probe",
+  overview: "overview",
+  result: "result",
+  precision: "precision",
+  position: "position",
+  time: "time",
+  sighters: "sighters",
 }
 
 export interface PageAnchor {
@@ -50,7 +51,7 @@ export function parseHash(hash: string): PageAnchor | null {
   const section = PAGE_SECTIONS.find((s) => s.id === word)
   if (section) return { section: section.id }
   const tab = (Object.keys(TAB_ANCHORS) as AnalysisTab[]).find((t) => TAB_ANCHORS[t] === word)
-  return tab ? { section: "analyse", tab } : null
+  return tab ? { section: "analysis", tab } : null
 }
 
 /** Anker eines Abschnitts oder, mit Reiter, des Reiters der Analyse */
