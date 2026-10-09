@@ -1,24 +1,23 @@
-// Worüber die Analyse rechnet (Plan Schritt 3, D1): über alle Schüsse ohne Probe; gibt es nur Probe, über
-// alle Probeschüsse (User, 8. Oktober 2026). Die Auswertungen des Fachkerns zählen meist nur Wertung; eine
-// Karte nur mit Probe geht deshalb wie Wertung hinein (`probeOnlyAsMatch`), auch wenn die Seite das nicht
-// schon getan hat.
+// Worüber die Analyse rechnet (Plan Schritt 3, D1; U4): über die Scheibe wie am Ausdruck, also die Wertung; gibt es nur
+// Probe, über alle Probeschüsse als Training (User, 8. Oktober 2026). Die Auswertungen des Fachkerns zählen meist nur
+// Wertung; die Karte geht deshalb durch `asOnPrintout`, auch wenn die Seite das nicht schon getan hat.
 
 import type { MetricShot, Scoring } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 
-import { isProbeShot, probeOnlyAsMatch } from "../shots"
+import { asOnPrintout, isProbeShot } from "../shots"
 
-/** Grundlage der Analyse, für den Kopf */
-export type AnalysisBasis = "ohne Probe" | "nur Probe" | "alle"
+/** Grundlage der Analyse, für den Kopf: die Scheibe oder ein Training nur aus Probe */
+export type AnalysisBasis = "nur Probe" | "alle"
 
 export interface AnalysisInput {
-  /** alle Schüsse der Karte, wie die Seite sie gibt (für die Probe und die Datenlage) */
+  /** die Schüsse der Karte wie am Ausdruck (für die Datenlage) */
   all: readonly MetricShot[]
   /** die Schüsse, über die die Analyse rechnet: Wertung, bei nur Probe die Probe als Wertung */
   base: readonly MetricShot[]
   /**
-   * die ganze Karte in der Form von `base` (bei nur Probe die Probe als Wertung), für Abstände: eine späte
-   * Probe zwischen zwei Wertungsschüssen ist keine Lücke (SF-04)
+   * die ganze Karte für Abstände: gibt die Seite eine Karte mit Probe zwischen Wertung, reißt die Probe keine Lücke
+   * (SF-04); sonst dieselbe wie `base`
    */
   card: readonly MetricShot[]
   basis: AnalysisBasis
@@ -31,10 +30,8 @@ export function analysisInput(
   scoring: Scoring,
   target: TargetImage
 ): AnalysisInput {
-  const probe = shots.filter(isProbeShot).length
-  const basis: AnalysisBasis =
-    probe > 0 && probe < shots.length ? "ohne Probe" : probe > 0 ? "nur Probe" : "alle"
-  const match = shots.filter((shot) => shot.kind === "match")
-  const base = match.length ? match : probeOnlyAsMatch(shots)
-  return { all: shots, base, card: match.length ? shots : base, basis, scoring, target }
+  const base = asOnPrintout(shots)
+  const basis: AnalysisBasis = base.length > 0 && base.every(isProbeShot) ? "nur Probe" : "alle"
+  const card = shots.some((shot) => shot.kind === "match") ? shots : base
+  return { all: base, base, card, basis, scoring, target }
 }

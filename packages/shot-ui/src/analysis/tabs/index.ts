@@ -10,10 +10,9 @@ import { overviewCards } from "./OverviewTab"
 import { positionCards } from "./PositionTab"
 import { precisionCards } from "./PrecisionTab"
 import { resultCards } from "./ResultTab"
-import { sighterCards } from "./SightersTab"
 import { timeCards } from "./TimeTab"
 
-export type AnalysisTab = "overview" | "result" | "precision" | "position" | "time" | "sighters"
+export type AnalysisTab = "overview" | "result" | "precision" | "position" | "time"
 
 export interface CardContext {
   input: AnalysisInput
@@ -46,5 +45,4 @@ export const TAB_CARDS: Record<AnalysisTab, TabCards> = {
   precision: precisionCards,
   position: positionCards,
   time: timeCards,
-  sighters: sighterCards,
 }

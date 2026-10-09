@@ -14,13 +14,13 @@ export interface LayerOptions {
 }
 
 /**
- * Indizes in Zeichenreihenfolge, von unten nach oben: erst die blassen Schüsse außerhalb der Auswahl,
- * dann die gewählten, jeweils Probe unter Wertung und sonst in Abgabefolge (Reihenfolge der Liste), der
- * angetippte Schuss zuletzt.
+ * Indizes in Zeichenreihenfolge, von unten nach oben: erst die blassen Schüsse außerhalb der Auswahl, dann die
+ * gewählten, jeweils in Abgabefolge (Reihenfolge der Liste), der angetippte Schuss zuletzt. Eine Probe neben Wertung
+ * gibt es seit U4 nicht mehr (`asOnPrintout`).
  */
 export function layerOrder(shots: readonly LayerShot[], options: LayerOptions = {}): number[] {
   const { chosen = null, selected = () => true } = options
-  const rank = (i: number) => (selected(i) ? 2 : 0) + (shots[i].kind === "probe" ? 0 : 1)
+  const rank = (i: number) => (selected(i) ? 1 : 0)
   return shots
     .map((_, i) => i)
     .filter((i) => i !== chosen)

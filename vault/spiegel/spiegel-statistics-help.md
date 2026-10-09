@@ -30,7 +30,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   darüber, erst bei rund 120 Schuss auf etwa ±10 %.
 - **„Sicher“ und „kann Zufall sein“.** „Sicher“ heißt: Reiner Zufall brächte ein so deutliches
   Ergebnis nur in 5 von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa
-  jede fünfte ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen
+  jede sechste ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen
   Ausreißer. „Kann Zufall sein“ heißt nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht,
   um es zu zeigen oder auszuschließen. Mehr Schüsse oder mehrere Scheiben klären es. „Passt“ an der
   Lage heißt dasselbe: kein Versatz belegt. Auf den Karten heißt das auch „nicht klar“ oder „kein
@@ -40,12 +40,11 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10); beim
   Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich bleiben Zehner, Innenzehner
   und Zehnerquote.
-- **Probe und Wertung.** Lage, Streuung und Tempo der Analyse rechnen über die Wertung, ohne Probe;
-  gibt es nur Probe, über die Probe. Die Probe hat einen eigenen Reiter: „Probe gegen Wertung“ nimmt
-  die ganze Probe vor der Wertung, „Eingeschossen?“ ihre letzten bis zu fünf Schüsse. Eine Scheibe
+- **Wie am Ausdruck.** Eine Scheibe in Spiegel ist, was der Ausdruck zeigt: Mit dem ersten
+  Wertungsschuss löscht die Anlage die Probe, also rechnet Spiegel über die Wertung. Eine Scheibe
   nur mit Probe ist Training: Spiegel zeigt sie wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn
-  und Ergebnis; das schwarze Eck oben rechts an den kleinen Scheiben der Serien erinnert daran, dass
-  es Probe ist.
+  und Ergebnis; das schwarze Eck oben rechts an der Scheibe und an den kleinen Scheiben der Serien
+  erinnert daran, dass es Probe ist.
 - **Nummern.** Wertungsschüsse heißen 1, 2, 3 …, Probeschüsse P1, P2 …, in der Reihenfolge der
   Abgabe. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.
 - **Median statt Durchschnitt.** Wo „Median“ steht, zählt der mittlere Wert: Die Hälfte liegt
@@ -73,11 +72,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Karten.
 - *So liest du es:* „Sicher“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall brächte
   das nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil
-  mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.
-
-**Probe auf der Scheibe**
-- *Was:* Die Probeschüsse um die Mitte, hohl gezeichnet, dazu der Schwerpunkt der Wertung als
-  kleiner geviertelter Kreis.
+  mehrere Tests laufen, trifft es bei etwa jeder sechsten ganz normalen Scheibe einmal zufällig zu.
 
 ## Ergebnis
 
@@ -367,43 +362,6 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Drittel σ neben dem der Scheibe, und R50 einer Serie schwankt stark.
 - *Mindestzahl:* R50 ab 5 Schuss in der Serie, der Versatz ab 2.
 - *Formel:* `Versatz = |Schwerpunkt der Serie − Schwerpunkt der Scheibe|`
-
-## Probe
-
-**Umfang der Probe (S2)**
-- *Was:* Wie viele Probeschüsse du vor dem ersten Wertungsschuss abgegeben hast, auch in Blöcken zu
-  zehn, wie lange die Probe dauerte und wie viel Zeit vom ersten Probeschuss bis zum ersten
-  Wertungsschuss verging.
-- *Vorsicht:* Probe nach Beginn der Wertung zählt hier nicht, und Platzhalter bringen keine Zeit
-  mit.
-- *Mindestzahl:* Ab 1 Probeschuss.
-
-**Probe gegen Wertung (S3)**
-- *Was:* Durchschnitt, R50 und σ der ganzen Probe vor der Wertung gegen die Wertung.
-- *So liest du es:* σ ist der fairere Vergleich: R50 fällt bei wenigen Schüssen etwas zu klein aus,
-  und die Probe hat meist weniger Schüsse.
-- *Vorsicht:* Lagen deine ersten Probeschüsse woanders, etwa vor einer Korrektur am Anschlag, machen
-  sie σ und R50 der Probe größer, ohne dass du unpräziser warst. Ein Fehlschuss zählt bei σ mit und
-  bläht es auf; R50 lässt ihn weg. Mit wenigen Probeschüssen ist auch σ unsicher: Bei gleicher
-  Präzision liegt σ aus fünf Probeschüssen zufällig zwischen etwa der Hälfte und dem
-  Anderthalbfachen von σ der Wertung.
-- *Mindestzahl:* σ ab 3, R50 ab 5 Schuss je Seite.
-
-**Eingeschossen? (S1, S4)**
-- *Was:* Ein Test deiner letzten bis zu fünf Probeschüsse mit Lage vor der Wertung: Lagen sie echt
-  neben der Mitte? Dazu im Reiter Probe der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.
-- *So liest du es:* „Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Über die
-  Wertung sagt das Urteil nichts; ihre Lage prüft „Ist die Lage versetzt?“ im Reiter Lage.
-- *Vorsicht:* „Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur
-  einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in
-  knapp zwei von drei Fällen auf. Auch der Abstand Probe → Wertung ist unsicher: Ohne jede
-  Verschiebung liegt er bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen
-  über gut einem σ, bei drei etwa 0,7 σ und über knapp anderthalb σ. Darum zeigt der Überblick nur
-  das Urteil.
-- *Mindestzahl:* Ab 3 Probeschüssen mit Lage, der Abstand zur Wertung zusätzlich ab 3
-  Wertungsschüssen mit Lage.
-- *Formel:* `Hotelling-T² über die letzten bis zu fünf Probeschüsse mit Lage; Versatz = |m Probe − m
-  Wertung|`
 
 ## Datenlage
 

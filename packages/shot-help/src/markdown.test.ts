@@ -80,7 +80,6 @@ describe("renderGuideMarkdown", () => {
       "## Präzision",
       "## Lage",
       "## Zeit und Verlauf",
-      "## Probe",
       "## Datenlage",
       "## Über viele Scheiben",
       "## Glossar",

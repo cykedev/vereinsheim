@@ -2,10 +2,10 @@ import {
   cardTrend,
   fatigue,
   mpiConfidence,
+  outliers,
   pauseRecovery,
   ringLossSplit,
   shareAtLeast,
-  sighterZeroed,
   sigmaEstimate,
   tempoSpread,
 } from "@vereinsheim/shot-core/analysis"
@@ -42,7 +42,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
       "Ringverlust",
       "Trend",
       "Tempo",
-      "Eingeschossen?",
+      "Ausreißer",
     ])
   })
 
@@ -77,15 +77,12 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(tile("Tempo").hint).toBe(
       `die Hälfte in ${formatValue(tempoSpread(base)!.iqrMs / 1000, 0)} s`
     )
-    // D3: das Urteil von S4 statt des Abstands, der auch ohne Verschiebung groß ausfällt (B21)
-    const zeroed = sighterZeroed(CARD)!
-    expect(tile("Eingeschossen?").value).toBe(zeroed.real ? "versetzt" : "unklar")
-    expect(tile("Eingeschossen?").unit).toBe("")
-    expect(tile("Eingeschossen?").hint).toBe(
-      zeroed.real
-        ? `sicher neben der Mitte · letzte ${zeroed.n} Probeschüsse`
-        : `kein Versatz nachweisbar · letzte ${zeroed.n} Probeschüsse`
-    )
+    // U4, D6: die Ausreißer statt „Eingeschossen?“, wie viele und welche (der Abreißer Schuss 27)
+    const flagged = outliers(base)!
+    expect(flagged.flagged.map((o) => o.number)).toEqual([27])
+    expect(tile("Ausreißer").value).toBe("1")
+    expect(tile("Ausreißer").unit).toBe("")
+    expect(tile("Ausreißer").hint).toBe("Schuss 27")
   })
 
   it("in ganzen Ringen ein ganzzahliges Ergebnis", () => {
@@ -106,12 +103,8 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     const tempo = three.find((x) => x.label === "Tempo")!
     expect(tempo.value).not.toBeNull()
     expect(tempo.hint).toBe("")
-    expect(t("Eingeschossen?").hint).toBe("ab 3 Probeschüssen mit Lage vor der Wertung")
-    // ein Training nur aus Probe ist kein Einschießen (Prüfung, Probe 6)
-    const probes = CARD.filter((s) => s.kind === "probe")
-    const training = overviewTiles(analysisInput(probes, "decimal", LP_10M)).at(-1)!
-    expect(training.value).toBeNull()
-    expect(training.hint).toBe("Training nur mit Probe")
+    expect(t("Ausreißer").value).toBeNull()
+    expect(t("Ausreißer").hint).toBe("ab 5 Schuss mit Lage")
   })
 
   it("fehlt einem Schuss der Wert, nennt die Kachel Ergebnis den Ø und den Grund", () => {
@@ -310,38 +303,6 @@ describe("Beobachtungen in Worten", () => {
     )
   })
 
-  it("Probe gegen Wertung ohne Verstellung", () => {
-    const flag = sentences.find((s) => s.icon === "flag")
-    expect(flag?.text).toMatch(/^Probe: Ø \d+,\d\d je Schuss gegen \d+,\d\d in der Wertung\./)
-    expect(sentences.map((s) => s.text).join(" ")).not.toContain("Verstellung")
-  })
-
-  it("echt versetzte letzte Probe: Richtung und Abstand, keine Behauptung über die Wertung", () => {
-    // fünf Probeschüsse eng um (3 | 3) mm, danach die Wertung der Testkarte (Prüfung, Probe 1)
-    const offset = CARD.map((s, i) =>
-      i >= 4 && i < 9
-        ? { ...s, xUm: 3000 + (i % 2 ? 100 : -100), yUm: 3000 + (i % 3) * 100 - 100 }
-        : s
-    )
-    const zeroed = sighterZeroed(offset)!
-    expect(zeroed.real).toBe(true)
-    const text = observations(analysisInput(offset, "decimal", LP_10M)).find(
-      (s) => s.icon === "flag"
-    )!.text
-    expect(text).toContain(
-      `Die letzten fünf Probeschüsse lagen sicher neben der Mitte (rechts oben, ${formatValue(zeroed.offsetUm / 1000, 2)} mm).`
-    )
-    expect(text).not.toContain("Wertung begann")
-  })
-
-  it("drei Probeschüsse: der Satz nennt drei", () => {
-    const three = CARD.filter((s, i) => s.kind === "match" || i >= 6)
-    const text = observations(analysisInput(three, "decimal", LP_10M)).find(
-      (s) => s.icon === "flag"
-    )!.text
-    expect(text).toContain("Bei den letzten drei Probeschüssen ist kein Versatz nachweisbar.")
-  })
-
   it("der Trend nennt den Wert je Schuss alle zehn Schuss und je Zehnerserie das Zehnfache", () => {
     const trend = cardTrend(base, "decimal")!
     const text = sentences.find((s) => s.icon === "trend")!.text
@@ -352,6 +313,18 @@ describe("Beobachtungen in Worten", () => {
         ? `um ${formatValue(Math.abs(trend.perTenShots), 2)} Ringe alle zehn Schuss, eine Zehnerserie um ${formatValue(Math.abs(trend.perTenShots * 10), 1)} Ringe`
         : `Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss, je Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe`
     )
+  })
+
+  it("kein Satz zu Probe gegen Wertung (U4: wie am Ausdruck)", () => {
+    expect(sentences.map((s) => s.text).join(" ")).not.toMatch(/Probe/)
+  })
+
+  it("ein Ausreißer-freier Abend: die Kachel sagt „keiner“", () => {
+    const calm = CARD.filter((s) => s.kind === "match").slice(0, 20)
+    const input = analysisInput(calm, "decimal", LP_10M)
+    expect(outliers(input.base)!.flagged).toHaveLength(0)
+    const tile = overviewTiles(input).find((t) => t.label === "Ausreißer")!
+    expect([tile.value, tile.hint]).toEqual(["0", "keiner fällt aus der Gruppe"])
   })
 
   it("ohne drei Wertungsschüsse keine Sätze", () => {

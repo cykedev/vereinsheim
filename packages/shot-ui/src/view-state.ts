@@ -8,10 +8,8 @@ import type { SeriesKey, Selection, Whole } from "./types"
 export type Layer = "mpi" | "circle" | "numbers" | "ellipse"
 
 export interface ViewState {
-  /** die ganze Scheibe (mit oder ohne Probe) oder genau eine Serie bzw. die Probe */
+  /** die ganze Scheibe oder genau eine Serie */
   selection: Selection
-  /** Grundauswahl der Scheibe (`defaultWhole`): dorthin führt ein zweiter Tipp auf dieselbe Serie */
-  home: Whole
   /** der angetippte Schuss mit seiner Serie (null: ohne Serie), damit er mit der Auswahl wegfallen kann */
   chosen: { index: number; series: SeriesKey | null } | null
   view: "target" | "group"
@@ -25,20 +23,19 @@ export type ViewAction =
   | { type: "choose"; shot: number; series: SeriesKey | null }
   /**
    * einen Schuss zeigen, etwa aus dem Lineal eines Diagramms: wählt ohne Umschalten; liegt er außerhalb der
-   * Auswahl, gilt wieder die Grundauswahl, damit er zu sehen ist (Plan L1)
+   * Auswahl, gilt wieder die ganze Scheibe, damit er zu sehen ist (Plan L1)
    */
   | { type: "show"; shot: number; series: SeriesKey | null }
   | { type: "setView"; view: ViewState["view"] }
   | { type: "toggle"; layer: Layer }
   | { type: "setScoring"; scoring: Scoring }
-  /** neue Scheibe: Auswahl auf ihre Grundauswahl, Schuss und Ausschnitt zurück; Wertung, Ebenen bleiben */
-  | { type: "reset"; home?: Whole }
+  /** neue Scheibe: Auswahl auf die ganze Scheibe, Schuss und Ausschnitt zurück; Wertung, Ebenen bleiben */
+  | { type: "reset" }
 
 /** Ebenen wie in der Spielwiese: Schwerpunkt und Streukreis an, Nummern und Ellipse aus */
 export function initialViewState(overrides: Partial<ViewState> = {}): ViewState {
   return {
     selection: "all",
-    home: "all",
     chosen: null,
     view: "target",
     layers: { mpi: true, circle: true, numbers: false, ellipse: false },
@@ -47,24 +44,21 @@ export function initialViewState(overrides: Partial<ViewState> = {}): ViewState 
   }
 }
 
-/**
- * Gehört eine Serie zur Auswahl? „all“ nimmt alles, „match“ alles außer der Probe (auch Wertung ohne
- * Serie, null); eine einzelne Serie nur sich selbst.
- */
+/** Gehört eine Serie zur Auswahl? „all“ nimmt alles (auch einen Schuss ohne Serie, null), eine Serie nur sich */
 export const isSelected = (selection: Selection, key: SeriesKey | null) =>
-  selection === "all" || (selection === "match" ? key !== "probe" : selection === key)
+  selection === "all" || selection === key
 
 export function viewReducer(state: ViewState, action: ViewAction): ViewState {
   switch (action.type) {
     case "select":
     case "selectWhole": {
-      // Tippen wählt genau diese Serie; dieselbe noch einmal führt zur Grundauswahl zurück
+      // Tippen wählt genau diese Serie; dieselbe noch einmal zeigt wieder die ganze Scheibe
       const selection: Selection =
         action.type === "selectWhole"
           ? action.whole
           : state.selection !== action.series
             ? action.series
-            : state.home
+            : "all"
       const chosen =
         state.chosen && isSelected(selection, state.chosen.series) ? state.chosen : null
       return { ...state, selection, chosen }
@@ -80,7 +74,7 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
     case "show":
       return {
         ...state,
-        selection: isSelected(state.selection, action.series) ? state.selection : state.home,
+        selection: isSelected(state.selection, action.series) ? state.selection : "all",
         chosen: { index: action.shot, series: action.series },
       }
     case "setView":
@@ -89,15 +83,7 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return { ...state, layers: { ...state.layers, [action.layer]: !state.layers[action.layer] } }
     case "setScoring":
       return { ...state, scoring: action.scoring }
-    case "reset": {
-      const home = action.home ?? "all"
-      return {
-        ...state,
-        selection: home,
-        home,
-        chosen: null,
-        view: "target",
-      }
-    }
+    case "reset":
+      return { ...state, selection: "all", chosen: null, view: "target" }
   }
 }

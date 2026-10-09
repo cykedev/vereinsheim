@@ -20,7 +20,6 @@ import {
   pauseRecovery,
   periodTrend,
   ringLossSplit,
-  sighterZeroed,
   sigmaEstimate,
   type PeriodCard,
 } from "@vereinsheim/shot-core/analysis"
@@ -127,20 +126,18 @@ const out = (id: string, text: string) => lines.push(`${id.padEnd(4)} ${text}`)
 // B0: Anteil einer runden Normalgruppe innerhalb von σ und 2σ (Rayleigh, exakt)
 out("B0", `innerhalb σ ${share(1 - Math.exp(-0.5), 1)}, innerhalb 2σ ${share(1 - Math.exp(-2), 1)}`)
 
-// B1: ganz normale Scheiben (rund, zentriert, ohne Trend, 5 Probe- + n Wertungsschüsse): mindestens ein
-// Befund unter „echt“, „gestreckt“, Ausreißer, Trend klar, Probe echt neben der Mitte
+// B1: ganz normale Scheiben (rund, zentriert, ohne Trend, n Wertungsschüsse wie am Ausdruck, U4): mindestens ein
+// Befund unter „sicher versetzt“, „gestreckt“, Ausreißer, Trend klar
 for (const n of [20, 40, 60]) {
   let hits = 0
   const times = 20_000
   repeat(times, 1000 + n, (rand) => {
-    const probe = card(rand, { ...LG, n: 5, kind: "probe" })
-    const match = card(rand, { ...LG, n, firstSeq: 6, startMs: 300_000 })
+    const match = card(rand, { ...LG, n })
     const found =
       mpiConfidence(match)?.real === true ||
       groupShape(match)?.elongated === true ||
       (outliers(match)?.flagged.length ?? 0) > 0 ||
-      cardTrend(match, "decimal")?.clear === true ||
-      sighterZeroed([...probe, ...match])?.real === true
+      cardTrend(match, "decimal")?.clear === true
     if (found) hits++
   })
   out(
@@ -250,17 +247,6 @@ for (const [label, base, seed] of [
   }
 }
 
-// B7: „Eingeschossen?“ mit 5 Probeschüssen, Versatz 1σ und 2σ
-for (const factor of [1, 2]) {
-  let hits = 0
-  repeat(5_000, 7000 + factor, (rand) => {
-    const probe = card(rand, { ...LG, n: 5, kind: "probe", mx: factor * 1500 })
-    const match = card(rand, { ...LG, n: 20, firstSeq: 6, startMs: 300_000 })
-    if (sighterZeroed([...probe, ...match])?.real) hits++
-  })
-  out("B7", `5 Probeschüsse, Versatz ${factor}σ: echt in ${share(hits, 5_000)}`)
-}
-
 // B8: von Neumann ohne Wandern, 95-%-Spanne
 for (const n of [10, 40]) {
   const values: number[] = []
@@ -317,20 +303,6 @@ for (const [label, base, seed] of [
   out(
     "B10",
     `Wiedereinstieg ${label}: ${num(quantile(deltas, 0.025))} bis ${num(quantile(deltas, 0.975))} Ringe`
-  )
-}
-
-// B11: σ aus 5 Probe- gegen 40 Wertungsschüsse bei gleicher Präzision, 95-%-Spanne des Verhältnisses
-{
-  const ratios: number[] = []
-  repeat(5_000, 11_000, (rand) => {
-    const probe = sigmaEstimate(card(rand, { ...LG, n: 5 }))
-    const match = sigmaEstimate(card(rand, { ...LG, n: 40 }))
-    if (probe && match) ratios.push(probe.sigma / match.sigma)
-  })
-  out(
-    "B11",
-    `σ Probe/Wertung (5 gegen 40): ${num(quantile(ratios, 0.025))} bis ${num(quantile(ratios, 0.975))}`
   )
 }
 
@@ -549,22 +521,6 @@ const perShot = metric("result.decimalMean")
   out(
     "B20",
     `Scheiben im Formband (60 Scheiben, ab der zehnten): Median ${pct(quantile(inside, 0.5))}, 95 % zwischen ${pct(quantile(inside, 0.025))} und ${pct(quantile(inside, 0.975))}`
-  )
-}
-
-// B21: Versatz Probe → Wertung ohne jede Verschiebung (D3, Prüfung 9. Oktober 2026): n Probe- und
-// 40 Wertungsschüsse um dieselbe Mitte, Abstand der Schwerpunkte in σ
-for (const n of [5, 3]) {
-  const offsets: number[] = []
-  repeat(5_000, 21_000 + n, (rand) => {
-    const probe = card(rand, { ...LG, n, kind: "probe" })
-    const match = card(rand, { ...LG, n: 40, firstSeq: n + 1, startMs: 300_000 })
-    const zeroed = sighterZeroed([...probe, ...match])
-    if (zeroed?.matchOffsetUm != null) offsets.push(zeroed.matchOffsetUm / LG.sx)
-  })
-  out(
-    "B21",
-    `Versatz Probe → Wertung ohne Verschiebung, ${n} Probe- und 40 Wertungsschüsse: Median ${num(quantile(offsets, 0.5))} σ, 95. Perzentil ${num(quantile(offsets, 0.95))} σ (${offsets.length} Läufe)`
   )
 }
 

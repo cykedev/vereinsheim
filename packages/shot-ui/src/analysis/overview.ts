@@ -4,9 +4,9 @@
 import {
   cardTrend,
   mpiConfidence,
+  outliers,
   ringLossSplit,
   shareAtLeast,
-  sighterZeroed,
   sigmaEstimate,
   tempoSpread,
 } from "@vereinsheim/shot-core/analysis"
@@ -43,7 +43,7 @@ const tile = (
 })
 
 export function overviewTiles(input: AnalysisInput): OverviewTile[] {
-  const { all, base, card, scoring, target } = input
+  const { base, card, scoring, target } = input
   const digits = scoring === "rings" ? 0 : 1
   const rings = (v: number) => formatValue(v, digits)
   const metric = (key: string) => computeMetric(inScoring(metricByKey(key)!, scoring), base)
@@ -57,7 +57,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
   // Abstände über die ganze Karte: eine späte Probe ist keine Lücke (SF-04)
   const pace = tempoSpread(base, card)
   const tempoMedian = computeMetric(metricByKey("time.intervalMedian")!, base, card)
-  const zeroed = sighterZeroed(all)
+  const flagged = outliers(base)
   const key = scoring === "rings" ? "rings" : "decimal"
   const mm2 = (um: number) => formatValue(um / 1000, 2)
 
@@ -142,20 +142,19 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       pace ? `die Hälfte in ${formatValue(pace.iqrMs / 1000, 0)} s` : "",
       "ab 3 Schuss mit Zeit"
     ),
-    // D3 (User, 9. Oktober 2026): das Urteil statt des Abstands Probe → Wertung, der auch ohne jede
-    // Verschiebung bei etwa einem halben σ liegt (B21); die Zahl steht im Reiter Probe mit diesem Hinweis.
-    // Ein Training nur aus Probe ist kein Einschießen (Prüfung, Probe 6).
+    // U4, D6: statt „Eingeschossen?“ (Probe neben Wertung gibt es nicht mehr) die Ausreißer, wie viele und welche;
+    // was sie kosten, steht einmal in der Beobachtung
     tile(
-      "Eingeschossen?",
-      "eingeschossen",
-      input.basis === "nur Probe" || !zeroed ? null : zeroed.real ? "versetzt" : "unklar",
+      "Ausreißer",
+      "ausreisser",
+      flagged ? String(flagged.flagged.length) : null,
       "",
-      zeroed
-        ? `${zeroed.real ? "sicher neben der Mitte" : "kein Versatz nachweisbar"} · letzte ${zeroed.n} Probeschüsse`
+      flagged
+        ? flagged.flagged.length === 0
+          ? "keiner fällt aus der Gruppe"
+          : `${flagged.flagged.length === 1 ? "Schuss" : "Schüsse"} ${flagged.flagged.map((o) => o.number).join(", ")}`
         : "",
-      input.basis === "nur Probe"
-        ? "Training nur mit Probe"
-        : "ab 3 Probeschüssen mit Lage vor der Wertung"
+      "ab 5 Schuss mit Lage"
     ),
   ]
 }

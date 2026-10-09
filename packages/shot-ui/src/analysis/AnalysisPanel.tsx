@@ -27,11 +27,9 @@ export const ANALYSIS_TABS: readonly { value: AnalysisTab; label: string }[] = [
   { value: "precision", label: "Präzision" },
   { value: "position", label: "Lage" },
   { value: "time", label: "Zeit und Verlauf" },
-  { value: "sighters", label: "Probe" },
 ]
 
 const BASIS_TEXT: Readonly<Record<AnalysisBasis, string>> = {
-  "ohne Probe": "über alle Schüsse ohne Probe",
   "nur Probe": "über alle Probeschüsse",
   alle: "über alle Schüsse",
 }
@@ -45,9 +43,9 @@ const FLAG_WORDS: Readonly<Record<string, readonly [string, string]>> = {
 const counted = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 /**
- * „Datenlage: 40 Wertungsschüsse · 9 Probeschüsse · alle mit Lage, Zeit und Wert · Wertung in Zehnteln“ (Q1). In
- * Zehnteln zählt ein Schuss ohne Zehntel mit, auch wenn er einen Ring hat; ein Training nur aus Probe heißt so
- * (Prüfung, Probe 7, 8 und 10).
+ * „Datenlage: 40 Wertungsschüsse · alle mit Lage, Zeit und Wert · Wertung in Zehnteln“ (Q1). In Zehnteln zählt ein
+ * Schuss ohne Zehntel mit, auch wenn er einen Ring hat; ein Training nur aus Probe heißt so (Prüfung, Probe 7, 8 und
+ * 10). Eine Probe neben Wertung gibt es nicht mehr (U4: wie am Ausdruck).
  */
 function coverageText(
   shots: readonly MetricShot[],
@@ -73,10 +71,7 @@ function coverageText(
   const kinds =
     basis === "nur Probe"
       ? [`${counted(probe, "Probeschuss", "Probeschüsse")}, als Training wie Wertung gezählt`]
-      : [
-          counted(shots.length - probe, "Wertungsschuss", "Wertungsschüsse"),
-          counted(probe, "Probeschuss", "Probeschüsse"),
-        ]
+      : [counted(shots.length, "Wertungsschuss", "Wertungsschüsse")]
   return [
     `Datenlage: ${kinds.join(" · ")}`,
     missing.length ? missing.join(" · ") : "alle mit Lage, Zeit und Wert",
@@ -243,7 +238,7 @@ export function AnalysisPanel({
       {shots.length > 0 && (
         <div data-coverage="true" className="flex items-start justify-between gap-2">
           <p className="text-[13px] text-muted-foreground">
-            {coverageText(shots, state.scoring, input.basis)}
+            {coverageText(input.all, state.scoring, input.basis)}
           </p>
           {onHelp && (
             <HelpButton label="Datenlage" helpId="datenlage" onClick={() => onHelp("datenlage")} />

@@ -302,48 +302,6 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     minimum: "R50 ab 5 Schuss in der Serie, der Versatz ab 2.",
     formula: "Versatz = |Schwerpunkt der Serie − Schwerpunkt der Scheibe|",
   },
-  // ---------- Probe
-  {
-    id: "probe-umfang",
-    title: "Umfang der Probe",
-    theme: "sighters",
-    catalog: ["S2"],
-    metrics: [],
-    short: "Wie viele Probeschüsse du gebraucht hast und wie lange die Probe dauerte.",
-    what: "Wie viele Probeschüsse du vor dem ersten Wertungsschuss abgegeben hast, auch in Blöcken zu zehn, wie lange die Probe dauerte und wie viel Zeit vom ersten Probeschuss bis zum ersten Wertungsschuss verging.",
-    caution:
-      "Probe nach Beginn der Wertung zählt hier nicht, und Platzhalter bringen keine Zeit mit.",
-    minimum: "Ab 1 Probeschuss.",
-  },
-  {
-    id: "probe-gegen-wertung",
-    title: "Probe gegen Wertung",
-    theme: "sighters",
-    catalog: ["S3"],
-    metrics: [],
-    short: "Wie deine ganze Probe gegen die Wertung abschneidet.",
-    what: "Durchschnitt, R50 und σ der ganzen Probe vor der Wertung gegen die Wertung.",
-    read: "σ ist der fairere Vergleich: R50 fällt bei wenigen Schüssen etwas zu klein aus, und die Probe hat meist weniger Schüsse.",
-    caution:
-      "Lagen deine ersten Probeschüsse woanders, etwa vor einer Korrektur am Anschlag, machen sie σ und R50 der Probe größer, ohne dass du unpräziser warst. Ein Fehlschuss zählt bei σ mit und bläht es auf; R50 lässt ihn weg. Mit wenigen Probeschüssen ist auch σ unsicher: Bei gleicher Präzision liegt σ aus fünf Probeschüssen zufällig zwischen etwa der Hälfte und dem Anderthalbfachen von σ der Wertung.",
-    minimum: "σ ab 3, R50 ab 5 Schuss je Seite.",
-  },
-  {
-    id: "eingeschossen",
-    title: "Eingeschossen?",
-    theme: "sighters",
-    catalog: ["S1", "S4"],
-    metrics: [],
-    short: "Ob deine letzten Probeschüsse neben der Mitte lagen.",
-    what: "Ein Test deiner letzten bis zu fünf Probeschüsse mit Lage vor der Wertung: Lagen sie echt neben der Mitte? Dazu im Reiter Probe der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.",
-    read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Über die Wertung sagt das Urteil nichts; ihre Lage prüft „Ist die Lage versetzt?“ im Reiter Lage.",
-    caution:
-      "„Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in knapp zwei von drei Fällen auf. Auch der Abstand Probe → Wertung ist unsicher: Ohne jede Verschiebung liegt er bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen über gut einem σ, bei drei etwa 0,7 σ und über knapp anderthalb σ. Darum zeigt der Überblick nur das Urteil.",
-    minimum:
-      "Ab 3 Probeschüssen mit Lage, der Abstand zur Wertung zusätzlich ab 3 Wertungsschüssen mit Lage.",
-    formula:
-      "Hotelling-T² über die letzten bis zu fünf Probeschüsse mit Lage; Versatz = |m Probe − m Wertung|",
-  },
   // ---------- Datenlage
   {
     id: "datenlage",

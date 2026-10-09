@@ -26,7 +26,7 @@ import { CardContextBar } from "@vereinsheim/shot-ui/nav/CardContextBar"
 import { contextCardIds, neighbours } from "@vereinsheim/shot-ui/nav/context"
 import { backLabel, backRoute, siblingRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import { urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
-import { defaultWhole, probeOnlyAsMatch, shotLabels } from "@vereinsheim/shot-ui/shots"
+import { asOnPrintout, shotLabels } from "@vereinsheim/shot-ui/shots"
 import { TargetControls, type Others } from "@vereinsheim/shot-ui/target/TargetControls"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import type { SeriesKey } from "@vereinsheim/shot-ui/types"
@@ -45,9 +45,12 @@ import { exposeForTest, underTest } from "./testHook"
 
 type Mode = "view" | "set"
 
-/** die Schüsse einer Karte, wie die Bausteine sie bekommen: nur Probe ist Training und zeigt sich wie Wertung */
+/**
+ * die Schüsse einer Karte, wie die Bausteine sie bekommen: wie am Ausdruck (U4), mit Wertung nur die Wertung, nur Probe
+ * ist Training und zeigt sich wie Wertung
+ */
 const cardShots = (targetId: TargetId, raw: readonly RawShot[]) =>
-  probeOnlyAsMatch(toMetricShots(TARGETS[targetId], raw))
+  asOnPrintout(toMetricShots(TARGETS[targetId], raw))
 
 /** Anker in die Adresse schreiben, ohne zu scrollen; in der Skriptprüfung bleibt `#pruefen` stehen */
 function writeHash(hash: string) {
@@ -121,13 +124,7 @@ export function CardView({
   // ohne Anker, wie `openCard` sie baut (Review N1)
   const [tabInAddress, setTabInAddress] = useState(() => !opened && !!parseHash(loadAnchor())?.tab)
   const [state, dispatch] = useReducer(viewReducer, undefined, () => {
-    // Grundauswahl der ersten Karte: ohne Probe, wenn es Probe und Wertung gibt
-    const home = defaultWhole(
-      cardShots(opened?.target ?? "lp-10m", opened?.raw ?? rawSample("lp-10m", "forty"))
-    )
     return initialViewState({
-      selection: home,
-      home,
       // eine aus dem Zeitraum geöffnete Scheibe übernimmt dessen Wertung (D6), sonst die gemerkte (Review N1)
       scoring: opened
         ? opened.route.scoring
@@ -182,7 +179,7 @@ export function CardView({
     setRaw(nextRaw)
     setPop(null)
     hide()
-    dispatch({ type: "reset", home: defaultWhole(cardShots(nextTarget, nextRaw)) })
+    dispatch({ type: "reset" })
   }
 
   const place = (event: MouseEvent<HTMLDivElement>) => {
@@ -259,7 +256,7 @@ export function CardView({
       scoring: "decimal",
       anchor: null,
     }),
-    selection: state.selection === state.home ? null : state.selection,
+    selection: state.selection === "all" ? null : state.selection,
     shot: state.chosen ? (shotLabels(shots)[state.chosen.index] ?? null) : null,
     scoring: state.scoring,
     anchor: tabInAddress ? { section: "analysis", tab } : null,

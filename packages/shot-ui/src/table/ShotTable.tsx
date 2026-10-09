@@ -32,9 +32,8 @@ function intervalText(ms: number | null): string {
   return ms > PAUSE_THRESHOLD_MS ? durationText(ms) : `${formatValue(ms / 1000, 0)} s`
 }
 
-/** Name einer Gruppe in der Tabelle: Probe, Serie n oder Wertung ohne Serie */
-const groupTitle = (key: SeriesKey | null) =>
-  key === "probe" ? "Probe" : key === null ? "ohne Serie" : `Serie ${key}`
+/** Name einer Gruppe in der Tabelle: Serie n oder ohne Serie */
+const groupTitle = (key: SeriesKey | null) => (key === null ? "ohne Serie" : `Serie ${key}`)
 
 /** Teiler wie im Fachkern und auf dem Ausdruck; ohne gültigen Abstand ein Strich */
 function teilerText(shot: MetricShot): string {
@@ -120,7 +119,6 @@ export function ShotTable({
             )}
             {group.indices.map((i) => {
               const shot = shots[i]
-              const probe = shot.kind === "probe"
               const chosen = state.chosen?.index === i
               const color = shot.ring === null ? "var(--paper-line)" : scoreColor(shot.ring)
               const choose = onChoose ? () => onChoose(i, seriesKeyOf(shot)) : undefined
@@ -141,7 +139,7 @@ export function ShotTable({
                     <button
                       type="button"
                       aria-pressed={chosen}
-                      aria-label={`${probe ? "Probe" : "Schuss"} ${labels[i]} wählen`}
+                      aria-label={`Schuss ${labels[i]} wählen`}
                       onClick={(event) => {
                         // die Zeile wählt sonst ein zweites Mal
                         event.stopPropagation()
@@ -156,9 +154,7 @@ export function ShotTable({
                     <span
                       aria-hidden="true"
                       className="mr-1.5 inline-block size-2.5 rounded-full align-middle"
-                      style={
-                        probe ? { boxShadow: `inset 0 0 0 1.5px ${color}` } : { background: color }
-                      }
+                      style={{ background: color }}
                     />
                     {/* feste Breite: „10,4“ und „9,0“ sind verschieden breit, die Punkte stehen trotzdem untereinander */}
                     <span className="inline-block min-w-[4ch] text-right">

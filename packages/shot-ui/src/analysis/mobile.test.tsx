@@ -104,19 +104,18 @@ describe("Analyse auf dem Telefon", () => {
 })
 
 describe("Bedienelemente auf dem Telefon", () => {
-  it("„Alle“ und „Ohne Probe“ in derselben Optik wie am Desktop", () => {
+  it("„Alle“ in derselben Optik wie am Desktop, kein „Ohne Probe“ mehr (U4)", () => {
     const html = renderToStaticMarkup(
       createElement(SeriesStrip, {
         target: LP_10M,
-        shots: CARD,
-        state: initialViewState({ selection: "match", home: "match" }),
+        shots: BASE,
+        state: initialViewState({ selection: 2 }),
         onSelect: () => {},
         onSelectWhole: () => {},
       })
     )
-    for (const label of ["Alle", "Ohne Probe"]) {
-      expect(html).toMatch(new RegExp(`<button[^>]*>${label}</button>`))
-      expect(html).not.toMatch(new RegExp(`<button[^>]*min-h-11[^>]*>${label}</button>`))
-    }
+    expect(html).toMatch(/<button[^>]*>Alle<\/button>/)
+    expect(html).not.toMatch(/<button[^>]*min-h-11[^>]*>Alle<\/button>/)
+    expect(html).not.toContain("Ohne Probe")
   })
 })

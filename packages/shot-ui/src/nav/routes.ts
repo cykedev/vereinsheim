@@ -227,27 +227,28 @@ export interface CardRoute {
   page: "card"
   id: string
   origin: CardOrigin
-  /** null: die Grundauswahl der Scheibe (`defaultWhole`) */
+  /** null: die ganze Scheibe */
   selection: Selection | null
-  /** Nummer wie `shotLabels` („23“, „P3“) */
+  /** Nummer wie `shotLabels` („23“) */
   shot: string | null
   scoring: Scoring
   anchor: PageAnchor | null
 }
 
-const SHOT = /^P?[1-9]\d*$/
+const SHOT = /^[1-9]\d*$/
 /** Serien bis 999: eine längere Zahl ist keine Serie (sonst stünde 1e+23 in der Adresse) */
 const SERIES = /^[1-9]\d{0,2}$/
 
-/** die Probe heißt in der Adresse englisch `sighters`, im Zustand `probe` */
+/**
+ * die ganze Scheibe oder eine Serie; „ohne Probe“ (`match`) und die Probe (`sighters`) gibt es seit U4 nicht mehr und
+ * gelten wie alles Ungültige als Vorgabe
+ */
 function selectionOf(value: string | null): Selection | null {
-  if (value === "all" || value === "match") return value
-  if (value === "sighters") return "probe"
+  if (value === "all") return value
   return value && SERIES.test(value) ? Number(value) : null
 }
 
-const selectionText = (selection: Selection) =>
-  selection === "probe" ? "sighters" : String(selection)
+const selectionText = (selection: Selection) => String(selection)
 
 function originFrom(params: URLSearchParams): CardOrigin {
   switch (params.get("from")) {

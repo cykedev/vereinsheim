@@ -30,7 +30,7 @@ export interface CardResultProps {
 }
 
 /**
- * Ergebnis der ganzen Scheibe: groß aus dem Fachkern, darunter Wertungsschüsse und Probe, Zehner, Innenzehner
+ * Ergebnis der ganzen Scheibe: groß aus dem Fachkern, darunter die Schusszahl (wie am Ausdruck ohne Probe), Zehner, Innenzehner
  * und bester Teiler, dazu die Wertung. Nicht über die Auswahl (D1 in `plans/2026-10-08-spiegel-shot-ui-kacheln.md`).
  * Auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung (`CardPage`, User, 8. Oktober 2026). Ohne Wert ein
  * Strich mit Grund wie die Kachel.
@@ -38,7 +38,6 @@ export interface CardResultProps {
 export function CardResult({ shots, state, scoring, className }: CardResultProps) {
   const total = computeMetric(inScoring(metricByKey("result.decimal")!, state.scoring), shots)
   const count = shots.filter((s) => s.kind === "match").length
-  const probe = shots.length - count
   return (
     <div className={cn("grid content-start gap-3", className)}>
       <div className="grid gap-1">
@@ -51,9 +50,7 @@ export function CardResult({ shots, state, scoring, className }: CardResultProps
           )}
         </p>
         <p className="text-[13px] text-muted-foreground">
-          {total !== null
-            ? `${count} Schuss${probe ? ` + ${probe} Probe` : ""}`
-            : noResultReason(shots, state.scoring)}
+          {total !== null ? `${count} Schuss` : noResultReason(shots, state.scoring)}
         </p>
         {count > 0 && (
           <dl

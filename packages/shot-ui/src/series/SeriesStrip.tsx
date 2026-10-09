@@ -15,12 +15,12 @@ import { isSelected, type ViewState } from "../view-state"
 
 export interface SeriesStripProps {
   target: TargetImage
-  /** alle Schüsse der Scheibe in Abgabefolge (`inShotOrder`) */
+  /** die Schüsse der Scheibe wie am Ausdruck (`asOnPrintout`) in Abgabefolge (`inShotOrder`) */
   shots: readonly MetricShot[]
   state: ViewState
   /** Tippen auf eine kleine Scheibe wählt genau diese Serie; dieselbe noch einmal zeigt wieder alle */
   onSelect?: (key: SeriesKey) => void
-  /** die ganze Scheibe wählen: „Alle“ mit Probe oder „Ohne Probe“ (nur, wenn es beides gibt) */
+  /** „Alle“: die ganze Scheibe wählen */
   onSelectWhole?: (whole: Whole) => void
   className?: string
 }
@@ -35,9 +35,10 @@ interface Block {
 }
 
 /**
- * Serien als kleine Scheiben (spiegel-ui-design): je Serie und für die Probe eine kleine Scheibe, alle im
- * gleichen Ausschnitt um die Mitte, darunter das Serienergebnis in der gewählten Wertung. Jede Kachel ist
- * ein Schalter für die Auswahl; „Alle“ setzt zurück. Die Kacheln füllen die Zeilen gleichmäßig.
+ * Serien als kleine Scheiben (spiegel-ui-design): je Serie eine kleine Scheibe, alle im gleichen Ausschnitt um die
+ * Mitte, darunter das Serienergebnis in der gewählten Wertung. Jede Kachel ist ein Schalter für die Auswahl; „Alle“
+ * setzt zurück. Die Kacheln füllen die Zeilen gleichmäßig. Keine Probe-Kachel: Eine Scheibe ist wie am Ausdruck (U4);
+ * ein Training nur aus Probe hat Serien mit dem Probe-Eck.
  */
 export function SeriesStrip({
   target,
@@ -51,17 +52,6 @@ export function SeriesStrip({
 
   const blocks = useMemo<Block[]>(() => {
     const result: Block[] = []
-    const probes = shots.flatMap((shot, i) => (shot.kind === "probe" ? [i] : []))
-    if (probes.length) {
-      result.push({
-        key: "probe",
-        title: "Probe",
-        value: String(probes.length),
-        unit: "Schuss",
-        sub: "",
-        indices: probes,
-      })
-    }
     for (const point of seriesCurve(shots, state.scoring)) {
       result.push({
         key: point.series,
@@ -89,8 +79,7 @@ export function SeriesStrip({
   if (!blocks.length) return null
 
   const columns = tileColumns(blocks.length, width || 300)
-  const whole = state.selection === "all" || state.selection === "match"
-  const mixed = shots.some((s) => s.kind === "probe") && shots.some((s) => s.kind !== "probe")
+  const whole = state.selection === "all"
   const wholeButton = (value: Whole, label: string) => (
     <button
       type="button"
@@ -106,10 +95,7 @@ export function SeriesStrip({
     <div className={cn("grid gap-2.5", className)}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-[13px] text-muted-foreground">Serien</span>
-        <div className="flex flex-wrap gap-1.5">
-          {wholeButton("all", "Alle")}
-          {mixed && wholeButton("match", "Ohne Probe")}
-        </div>
+        <div className="flex flex-wrap gap-1.5">{wholeButton("all", "Alle")}</div>
       </div>
       <div
         ref={measure}
@@ -117,7 +103,7 @@ export function SeriesStrip({
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 104px))` }}
       >
         {blocks.map((block) => {
-          // ganze Scheibe: keine Kachel gedrückt, ohne Probe die Probe blass; eine Serie: nur sie gedrückt
+          // ganze Scheibe: keine Kachel gedrückt; eine Serie: nur sie gedrückt, die übrigen blass
           const pressed = !whole && isSelected(state.selection, block.key)
           const dim = !isSelected(state.selection, block.key)
           const label = `${block.title}: ${block.value}${block.unit ? ` ${block.unit}` : ""}${
@@ -143,8 +129,7 @@ export function SeriesStrip({
                 view={view}
                 shots={block.indices.map((i) => shots[i])}
                 probeCorner={
-                  block.key === "probe" ||
-                  (block.indices.length > 0 && block.indices.every((i) => isProbeShot(shots[i])))
+                  block.indices.length > 0 && block.indices.every((i) => isProbeShot(shots[i]))
                 }
                 dim={dim}
               />

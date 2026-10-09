@@ -14,15 +14,15 @@ export const READING_GUIDE: readonly GuideItem[] = [
   },
   {
     title: "„Sicher“ und „kann Zufall sein“",
-    text: "„Sicher“ heißt: Reiner Zufall brächte ein so deutliches Ergebnis nur in 5 von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede fünfte ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen Ausreißer. „Kann Zufall sein“ heißt nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht, um es zu zeigen oder auszuschließen. Mehr Schüsse oder mehrere Scheiben klären es. „Passt“ an der Lage heißt dasselbe: kein Versatz belegt. Auf den Karten heißt das auch „nicht klar“ oder „kein Versatz nachweisbar“; es ist ein ehrliches Ergebnis, kein Fehler.",
+    text: "„Sicher“ heißt: Reiner Zufall brächte ein so deutliches Ergebnis nur in 5 von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede sechste ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen Ausreißer. „Kann Zufall sein“ heißt nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht, um es zu zeigen oder auszuschließen. Mehr Schüsse oder mehrere Scheiben klären es. „Passt“ an der Lage heißt dasselbe: kein Versatz belegt. Auf den Karten heißt das auch „nicht klar“ oder „kein Versatz nachweisbar“; es ist ein ehrliches Ergebnis, kein Fehler.",
   },
   {
     title: "Ganze Ringe oder Zehntel",
     text: "Auf der Scheibe oben umschalten, für Liste, Start und Fortschritt in Profil; jede Auswertung über Werte gibt es in beiden, nur die Zehntelverteilung allein in Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10); beim Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich bleiben Zehner, Innenzehner und Zehnerquote.",
   },
   {
-    title: "Probe und Wertung",
-    text: "Lage, Streuung und Tempo der Analyse rechnen über die Wertung, ohne Probe; gibt es nur Probe, über die Probe. Die Probe hat einen eigenen Reiter: „Probe gegen Wertung“ nimmt die ganze Probe vor der Wertung, „Eingeschossen?“ ihre letzten bis zu fünf Schüsse. Eine Scheibe nur mit Probe ist Training: Spiegel zeigt sie wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn und Ergebnis; das schwarze Eck oben rechts an den kleinen Scheiben der Serien erinnert daran, dass es Probe ist.",
+    title: "Wie am Ausdruck",
+    text: "Eine Scheibe in Spiegel ist, was der Ausdruck zeigt: Mit dem ersten Wertungsschuss löscht die Anlage die Probe, also rechnet Spiegel über die Wertung. Eine Scheibe nur mit Probe ist Training: Spiegel zeigt sie wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn und Ergebnis; das schwarze Eck oben rechts an der Scheibe und an den kleinen Scheiben der Serien erinnert daran, dass es Probe ist.",
   },
   {
     title: "Nummern",
@@ -50,12 +50,7 @@ export const VIEW_HELP: readonly ViewHelp[] = [
     id: "beobachtungen",
     title: "Beobachtungen in Worten",
     what: "Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die Karten.",
-    read: "„Sicher“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall brächte das nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.",
-  },
-  {
-    id: "probe-auf-der-scheibe",
-    title: "Probe auf der Scheibe",
-    what: "Die Probeschüsse um die Mitte, hohl gezeichnet, dazu der Schwerpunkt der Wertung als kleiner geviertelter Kreis.",
+    read: "„Sicher“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall brächte das nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil mehrere Tests laufen, trifft es bei etwa jeder sechsten ganz normalen Scheibe einmal zufällig zu.",
   },
 ]
 

@@ -125,10 +125,10 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| S1 | Versatz Probe → Wertung | Schwerpunkt der letzten bis zu fünf Probeschüsse mit Lage gegen die Wertung, in S4 (`matchOffsetUm`); bis Oktober 2026 eine eigene Registry-Kennzahl. Auch ohne jede Verschiebung im Median 0,56 σ, in 5 von 100 Fällen über 1,16 σ (B21): Der Überblick zeigt deshalb nur das Urteil von S4, die Zahl steht im Reiter Probe mit diesem Hinweis (D3, User, 9. Oktober 2026) | Scheibe | A | SP-1.12 |
-| S2 | Probe-Umfang | Zahl bis zum ersten Wertungsschuss, Blöcke à zehn, Dauer, Zeit bis zum ersten Wertungsschuss | Scheibe, Zeitraum | A | SP-1.10 |
-| S3 | Probe-Qualität | Ø, R50 und σ̂ der ganzen Probe vor der Wertung gegen die Wertung; R50 hängt an n, σ̂ kaum | Scheibe, Zeitraum | B | SP-1.10 |
-| S4 | Eingeschossen? | Lage der letzten bis zu fünf Probeschüsse mit Lage (drei bis fünf, Texte nennen ihr n), Vertrauensbereich wie L3; „kein Versatz nachweisbar“ heißt nicht „eingeschossen“ | Scheibe | C | SP-1.10 |
+| S1 | Versatz Probe → Wertung | **entfernt (U4, 9. Oktober 2026):** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt (U4) |
+| S2 | Probe-Umfang | **entfernt (U4, 9. Oktober 2026):** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt (U4) |
+| S3 | Probe-Qualität | **entfernt (U4, 9. Oktober 2026):** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt (U4) |
+| S4 | Eingeschossen? | **entfernt (U4, 9. Oktober 2026):** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt (U4) |
 | S5 | Visierverstellungen | **entfernt (Oktober 2026):** Spiegel fragt keine Visierverstellung ab, das ist zu viel Komplexität für ihren Nutzen (User, 8. Oktober 2026) | – | – | entfernt (SP-1.8) |
 
 ### 8 Langzeit und Trend
@@ -228,7 +228,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 2. „Dein Schwerpunkt liegt 1,8 mm links, bei 40 Schuss ist das kein Zufall. Läge die Gruppe in der Mitte, brächten 40 weitere Schuss zusammen etwa 2,4 Ringe mehr (rund 0,06 je Schuss).“ — nur wenn L3 „echt“ sagt und n ≥ 10 (L4, Leave-one-out).
 3. „Die letzten zehn Schuss waren je Schuss 0,21 schwächer als die ersten zehn, in 6 deiner letzten 8 Trainings war das so.“ — als Muster erst ab fünf Scheiben.
 4. „Drei Abreißer nach rechts unten kosteten dich 2,1 Ringe.“
-5. „Deine Probe war enger als die Wertung (R50 1,6 gegen 2,3 mm).“ — gleiches n.
+5. ~~„Deine Probe war enger als die Wertung (R50 1,6 gegen 2,3 mm).“~~ — entfiel mit U4 (keine Probe neben Wertung).
 6. „Diese Scheibe liegt über 85 % deiner letzten 50.“ — ab 10 Scheiben (C4); „besser“ nur, wo höher besser ist.
 7. „Seit dem neuen Munitionslos ist dein σ 0,2 mm kleiner, das liegt noch in der normalen Schwankung.“
 
@@ -238,9 +238,9 @@ Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-he
 
 ```
 B0   innerhalb σ 39,3 %, innerhalb 2σ 86,5 %
-B1   20 Schuss: 21,6 % mit Befund, also etwa jede 5.
-B1   40 Schuss: 21,4 % mit Befund, also etwa jede 5.
-B1   60 Schuss: 22,0 % mit Befund, also etwa jede 5.
+B1   20 Schuss: 17,3 % mit Befund, also etwa jede 6.
+B1   40 Schuss: 17,1 % mit Befund, also etwa jede 6.
+B1   60 Schuss: 17,5 % mit Befund, also etwa jede 6.
 B2   Ausreißer-Fehlalarm rund: 10: 4,7 %, 20: 4,1 %, 40: 4,2 %, 60: 4,1 %
 B2   Ausreißer-Fehlalarm a/b 2: 10: 10,9 %, 20: 14,1 %, 40: 15,5 %, 60: 17,5 %
 B3   Streukreis 40 gegen 10 Schuss: +32 %
@@ -252,8 +252,6 @@ B6   LG σ 1,5 mm, 20 Schuss: Fehlalarm Zehntel 4,0 %, ganze Ringe 3,7 %; Nachla
 B6   LG σ 1,5 mm, 40 Schuss: Fehlalarm Zehntel 4,8 %, ganze Ringe 4,8 %; Nachlassen erkannt Zehntel 29,6 %, ganze Ringe 27,2 %
 B6   LP σ 15 mm, 20 Schuss: Fehlalarm Zehntel 4,5 %, ganze Ringe 4,7 %; Nachlassen erkannt Zehntel 15,9 %, ganze Ringe 16,6 %
 B6   LP σ 15 mm, 40 Schuss: Fehlalarm Zehntel 5,0 %, ganze Ringe 4,9 %; Nachlassen erkannt Zehntel 30,9 %, ganze Ringe 30,2 %
-B7   5 Probeschüsse, Versatz 1σ: echt in 21,8 %
-B7   5 Probeschüsse, Versatz 2σ: echt in 62,9 %
 B8   von Neumann, 10 Schuss: 1,15 bis 2,80
 B8   von Neumann, 40 Schuss: 1,57 bis 2,41
 B9   Ermüdung LG σ 1,5 mm: Δ Ø -0,34 bis 0,35 Ringe, Δ R50 -57 bis 57 %
@@ -262,7 +260,6 @@ B9   Ermüdung LP σ 15 mm: Δ Ø -1,07 bis 1,11 Ringe, Δ R50 -59 bis 57 %
 B9   Ermüdung LP σ 15 mm, ganze Ringe: Δ Ø -1,10 bis 1,10 Ringe
 B10  Wiedereinstieg LG σ 1,5 mm: -0,49 bis 0,42 Ringe
 B10  Wiedereinstieg LP σ 15 mm: -1,52 bis 1,33 Ringe
-B11  σ Probe/Wertung (5 gegen 40): 0,54 bis 1,57
 B12  Serien-Versatz zur Scheibe: im Mittel 0,35 σ
 B13  Richtungsuhr, 30 Schuss: stärkster Keil im Median ×2,0
 B14  10 Schuss, 1 bei 5σ: mindestens einer erkannt in 86,2 %
@@ -283,8 +280,6 @@ B19  gleich, Urteil trotz gleicher Streuung: 5/5 3,6 % (bedeutsam 62,3 %), 10/10
 B19  σ 1,5 → 1,3 mm, „höher“ erkannt: 5/5 55,5 % (bedeutsam 99,1 %), 10/10 94,2 % (bedeutsam 99,8 %), 20/20 100,0 % (bedeutsam 100,0 %), 30/30 100,0 % (bedeutsam 100,0 %); Δ Ø je Schuss im Mittel 0,101
 B19  σ 1,5 → 1,45 mm, „höher“ erkannt: 5/5 5,7 % (bedeutsam 69,3 %), 10/10 13,2 % (bedeutsam 63,3 %), 20/20 21,8 % (bedeutsam 64,2 %), 30/30 31,2 % (bedeutsam 65,5 %); Δ Ø je Schuss im Mittel 0,025
 B20  Scheiben im Formband (60 Scheiben, ab der zehnten): Median 68,6 %, 95 % zwischen 56,9 % und 80,4 %
-B21  Versatz Probe → Wertung ohne Verschiebung, 5 Probe- und 40 Wertungsschüsse: Median 0,56 σ, 95. Perzentil 1,16 σ (5000 Läufe)
-B21  Versatz Probe → Wertung ohne Verschiebung, 3 Probe- und 40 Wertungsschüsse: Median 0,72 σ, 95. Perzentil 1,46 σ (5000 Läufe)
 ```
 
 Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05, bis Oktober 2026), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.

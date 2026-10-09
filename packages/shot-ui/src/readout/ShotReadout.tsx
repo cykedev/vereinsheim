@@ -32,25 +32,21 @@ export function ShotReadout({ shots, state, className }: ShotReadoutProps) {
       </section>
     )
   }
-  const { shot, label, chosen, kindWord, distanceUm: distance, teiler } = model
+  const { shot, label, chosen, distanceUm: distance, teiler } = model
   return (
     <section aria-live="polite" aria-label="Ablesung" className={cn("grid gap-2", className)}>
       <p className="text-[13px] text-muted-foreground">
-        {`${kindWord} ${label} · ${chosen ? "angetippt" : "letzter Schuss"}`}
+        {`Schuss ${label} · ${chosen ? "angetippt" : "letzter Schuss"}`}
       </p>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
         {/* Wert in Schriftfarbe, die Ringwert-Farbe als Punkt davor: Gold und Türkis hätten als Schrift auf
-            Weiß zu wenig Kontrast; die Probe hohl wie auf der Scheibe */}
+            Weiß zu wenig Kontrast */}
         <p className="flex items-center gap-3">
           {shot.ring !== null && (
             <span
               aria-hidden="true"
               className="inline-block size-4 shrink-0 rounded-full"
-              style={
-                shot.kind === "probe"
-                  ? { boxShadow: `inset 0 0 0 2px ${scoreColor(shot.ring)}` }
-                  : { background: scoreColor(shot.ring) }
-              }
+              style={{ background: scoreColor(shot.ring) }}
             />
           )}
           <span className="font-display text-5xl leading-none font-bold tabular-nums">

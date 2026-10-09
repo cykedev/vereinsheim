@@ -19,7 +19,7 @@ const render = (state: ViewState, others: Others = "dim") =>
       onHelp: noop,
     })
   )
-const base = initialViewState({ selection: "all", home: "all" })
+const base = initialViewState({ selection: "all" })
 /** die Knöpfe in Reihenfolge des Markups: Name und gedrückt */
 const buttons = (html: string) =>
   [...html.matchAll(/<button[^>]*aria-label="([^"]+)"(?: aria-pressed="(true|false)")?/g)].map(

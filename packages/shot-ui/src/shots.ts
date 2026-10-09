@@ -2,8 +2,8 @@
 // den Fachkern (`shotNumbers`, `selectShots`), keine eigene Filterlogik.
 
 import {
+  asOnPrintout as asOnPrintoutInCore,
   inShotOrder,
-  probeOnlyAsMatch as probeOnlyAsMatchInCore,
   selectShots,
   shotDistanceUm,
   shotNumbers,
@@ -13,42 +13,40 @@ import {
 } from "@vereinsheim/shot-core/metrics"
 
 import { formatValue } from "./format"
-import type { SeriesKey, Selection, Whole } from "./types"
+import type { SeriesKey, Selection } from "./types"
 import { isSelected } from "./view-state"
 
 /**
- * Eine Karte nur mit Probe ist Training (User, 8. Oktober 2026): Sie verhält sich genau wie Wertung, auch
- * optisch. Die Regel kommt aus dem Fachkern (`probeOnlyAsMatch` in `metrics`, dieselbe wie für Zeiträume):
- * jeder Probeschuss wird Wertungsschuss, in Serien zu zehn nach der Abgabefolge; Reihenfolge der Liste und alle
- * übrigen Angaben bleiben. Hier kommt nur `fromProbe` dazu, das sich die Herkunft merkt (für das Probe-Eck,
- * der Fachkern kennt das Feld nicht). Folgt Wertung, bleibt die Probe Probe und die Karte unverändert. Die
- * Seite wendet das einmal an, bevor sie die Bausteine füttert.
+ * Eine Scheibe wie am Ausdruck (U4; ADR-027): mit Wertung nur die Wertungsschüsse, eine Karte nur mit Probe ist
+ * Training und verhält sich genau wie Wertung, auch optisch (User, 8. Oktober 2026). Die Regel kommt aus dem
+ * Fachkern (`asOnPrintout` in `metrics`, dieselbe wie für Zeiträume): Reihenfolge der Liste und alle übrigen Angaben
+ * bleiben. Hier kommt nur `fromProbe` dazu, das sich bei einem Training die Herkunft merkt (für das Probe-Eck, der
+ * Fachkern kennt das Feld nicht). Die Seite wendet das einmal an, bevor sie die Bausteine füttert.
  */
-export function probeOnlyAsMatch(shots: readonly MetricShot[]): readonly MetricShot[] {
-  const converted = probeOnlyAsMatchInCore(shots)
-  if (converted === shots) return shots
-  return converted.map((shot) => ({ ...shot, fromProbe: true }))
+export function asOnPrintout(shots: readonly MetricShot[]): readonly MetricShot[] {
+  const printed = asOnPrintoutInCore(shots)
+  if (printed === shots || shots.some((shot) => shot.kind === "match")) return printed
+  return printed.map((shot) => ({ ...shot, fromProbe: true }))
 }
 
 /** die Wertungsschüsse einer Karte, bei nur Probe die Probe wie Wertung (Zeile, Ablesung, kleine Scheibe) */
 export const matchShots = (shots: readonly MetricShot[]): readonly MetricShot[] =>
-  probeOnlyAsMatch(shots).filter((s) => s.kind === "match")
+  asOnPrintout(shots)
 
-/** ein Probeschuss, auch einer, den `probeOnlyAsMatch` als Training wie Wertung zeigt (für das Probe-Eck) */
+/** ein Probeschuss, auch einer, den `asOnPrintout` als Training wie Wertung zeigt (für das Probe-Eck) */
 export const isProbeShot = (shot: MetricShot) =>
   shot.kind === "probe" || (shot as { fromProbe?: boolean }).fromProbe === true
 
 /**
- * Serie eines Schusses: die Probe oder die Nummer der Serie. Ein Wertungsschuss ohne Serie gehört zu
- * keiner (null) und zählt nur bei „alle“, wie im Fachkern, wo `seriesCurve` ihn auslässt.
+ * Serie eines Schusses: ihre Nummer. Ein Schuss ohne Serie gehört zu keiner (null) und zählt nur bei „alle“, wie im
+ * Fachkern, wo `seriesCurve` ihn auslässt.
  */
-export const seriesKeyOf = (shot: MetricShot): SeriesKey | null =>
-  shot.kind === "probe" ? "probe" : shot.series
+export const seriesKeyOf = (shot: MetricShot): SeriesKey | null => shot.series
 
-/** Beschriftung je Schuss: Probe „P1“, „P2“ …, Wertung „1“, „2“ …, in Abgabefolge je Art */
+/** Beschriftung je Schuss: „1“, „2“ … in Abgabefolge (nach `asOnPrintout` gibt es keine Probe neben Wertung) */
 export function shotLabels(shots: readonly MetricShot[]): string[] {
   const numbers = shotNumbers(shots)
-  return shots.map((shot) => `${shot.kind === "probe" ? "P" : ""}${numbers.get(shot) ?? "?"}`)
+  return shots.map((shot) => `${numbers.get(shot) ?? "?"}`)
 }
 
 /** Wert in der gewählten Wertung („10,4“ bzw. „10“); ohne Wert ein Strich */
@@ -78,18 +76,8 @@ export const hasValidPosition = (shot: MetricShot) =>
   selectShots([shot], { need: "position" }).length > 0
 
 /**
- * Grundauswahl einer Scheibe: ohne Probe, wenn es Probe und Wertung gibt (richtige Zahlen der Wertung),
- * sonst alle. Die Seite gibt sie bei einer neuen Scheibe an `reset`.
- */
-export function defaultWhole(shots: readonly MetricShot[]): Whole {
-  const probe = shots.some((shot) => shot.kind === "probe")
-  const match = shots.some((shot) => shot.kind !== "probe")
-  return probe && match ? "match" : "all"
-}
-
-/**
- * Die Gruppe für Streukreis, Ellipse, Schwerpunkt und den Ausschnitt „Gruppe“: die Schüsse der Auswahl
- * mit gültiger Lage, bei „alle“ mit der Probe, bei „ohne Probe“ ohne.
+ * Die Gruppe für Streukreis, Ellipse, Schwerpunkt und den Ausschnitt „Gruppe“: die Schüsse der Auswahl mit gültiger
+ * Lage.
  */
 export function groupShots(shots: readonly MetricShot[], selection: Selection): MetricShot[] {
   const chosen = shots.filter((shot) => isSelected(selection, seriesKeyOf(shot)))
@@ -97,8 +85,8 @@ export function groupShots(shots: readonly MetricShot[], selection: Selection): 
 }
 
 /**
- * Die Schüsse der Auswahl für Kennzahlen, bei „alle“ mit der Probe. Ohne Filter auf die Lage, denn jede
- * Kennzahl wählt über `computeMetric` selbst, was sie braucht (auch, ob sie Probe zählt, SF-01).
+ * Die Schüsse der Auswahl für Kennzahlen. Ohne Filter auf die Lage, denn jede Kennzahl wählt über `computeMetric`
+ * selbst, was sie braucht.
  */
 export function selectionShots(shots: readonly MetricShot[], selection: Selection): MetricShot[] {
   return shots.filter((shot) => isSelected(selection, seriesKeyOf(shot)))

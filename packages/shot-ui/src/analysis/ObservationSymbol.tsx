@@ -19,7 +19,6 @@ const ICONS: Readonly<Record<ObservationIcon, string[]>> = {
   trend: ["M3 16.5l5.5-5.5 4 4L20 7.5", "M14.5 7.5H20V13"],
   pause: ["M12 3.5a8.5 8.5 0 1 0 0 17a8.5 8.5 0 1 0 0-17", "M10 9v6M14 9v6"],
   clock: ["M12 3.5a8.5 8.5 0 1 0 0 17a8.5 8.5 0 1 0 0-17", "M12 7.5V12l3 2"],
-  flag: ["M5.5 21V4h11l-2.2 4 2.2 4h-11"],
 }
 
 export function ObservationSymbol({ icon }: { icon: ObservationIcon }) {

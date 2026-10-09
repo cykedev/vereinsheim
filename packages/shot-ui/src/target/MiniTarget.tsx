@@ -3,7 +3,7 @@ import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { cn } from "@vereinsheim/lib/utils"
 
 import { caliberRadius, probeCorner, scoreColor, SHOT_FILL_OPACITY } from "../geometry"
-import { hasPosition, seriesKeyOf } from "../shots"
+import { hasPosition } from "../shots"
 import type { ViewBox } from "../types"
 
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
@@ -73,18 +73,7 @@ export function MiniTarget({
         const x = mm(shot.xUm as number)
         const y = -mm(shot.yUm as number)
         const color = shot.ring === null ? "var(--paper-line)" : scoreColor(shot.ring)
-        return seriesKeyOf(shot) === "probe" ? (
-          <circle
-            key={i}
-            cx={x}
-            cy={y}
-            r={calR * 0.92}
-            fill="none"
-            stroke={color}
-            strokeWidth={1.25}
-            {...HAIR}
-          />
-        ) : (
+        return (
           <circle
             key={i}
             cx={x}

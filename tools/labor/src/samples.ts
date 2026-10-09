@@ -25,8 +25,8 @@ export interface Sample {
 
 const FORTY: Sample = {
   id: "forty",
-  label: "40 Schuss mit Probe",
-  hint: "Erfundene Scheibe: neun Probeschüsse (die ersten vier weit daneben), 40 Wertungsschüsse, nach Schuss 20 eine Pause; bei der Luftpistole senkrecht gestreckt und mit einem Abreißer (Schuss 27). Als amtliche Wertung angenommen: Zehntel.",
+  label: "40 Schuss",
+  hint: "Erfundene Scheibe wie am Ausdruck: 40 Wertungsschüsse, nach Schuss 20 eine Pause; bei der Luftpistole senkrecht gestreckt und mit einem Abreißer (Schuss 27). Als amtliche Wertung angenommen: Zehntel.",
   official: "decimal",
 }
 
@@ -87,9 +87,10 @@ export function gauss(rand: () => number) {
 }
 
 /**
- * 40 Schuss mit Probe: neun Probeschüsse (die ersten vier weit daneben), 40
- * Wertungsschüsse in vier Serien, nach Schuss 20 vier Minuten Pause, in der letzten Serie etwas mehr
- * Streuung. LP senkrecht gestreckt (σx 8 mm, σy 12,8 mm) mit einem Abreißer (Schuss 27), LG rund.
+ * 40 Schuss wie am Ausdruck (U4, D5): 40 Wertungsschüsse in vier Serien, nach Schuss 20 vier Minuten Pause, in der
+ * letzten Serie etwas mehr Streuung. LP senkrecht gestreckt (σx 8 mm, σy 12,8 mm) mit einem Abreißer (Schuss 27), LG
+ * rund. Die neun Probeschüsse davor werden weiter gezogen, aber nicht ausgegeben: So bleiben Zufallsfolge und Werte
+ * dieselben wie in der Spielwiese und der Testkarte von `shot-ui`.
  */
 function forty(targetId: TargetId): RawShot[] {
   const lg = targetId === "lg-10m"
@@ -122,7 +123,7 @@ function forty(targetId: TargetId): RawShot[] {
     })
     t += i === 19 ? 240_000 : pace * Math.exp(0.2 * gauss(rand))
   }
-  return shots
+  return shots.filter((shot) => shot.kind === "match")
 }
 
 /** Training nur mit Probe: 60 Probeschüsse ohne Wertung, nach Schuss 30 gut drei Minuten Pause */

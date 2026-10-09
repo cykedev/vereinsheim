@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { caliberRadius, screenSizes, targetView, unitsPerPixel } from "../geometry"
-import { probeOnlyAsMatch } from "../shots"
+import { asOnPrintout } from "../shots"
 import { initialViewState, type ViewState } from "../view-state"
 import { TargetView } from "./TargetView"
 
@@ -27,16 +27,16 @@ const shot = (
   series,
 })
 
-// zwei Probeschüsse, Serie 1 mit drei, Serie 2 mit zwei Schuss (LP, Lagen in µm)
+// wie am Ausdruck (U4): Serie 1 mit drei, Serie 2 mit zwei Schuss (LP, Lagen in µm)
 const CARD = [
-  shot("probe", null, 14000, -9000, 96),
-  shot("probe", null, 1000, 2000, 104),
   shot("match", 1, 0, 0, 109),
   shot("match", 1, 2000, 1000, 105),
   shot("match", 1, -1500, 2500, 103),
   shot("match", 2, 3000, -2000, 101),
   shot("match", 2, 2500, -1500, 102),
 ]
+// ein Training nur aus Probe
+const PROBES = [shot("probe", null, 14000, -9000, 96), shot("probe", null, 1000, 2000, 104)]
 
 const render = (state: Partial<ViewState> = {}, others?: "dim" | "hide") =>
   renderToStaticMarkup(
@@ -61,9 +61,9 @@ describe("TargetView: Ebenen", () => {
     expect(layers).toEqual(["target", "shots", "overlays"])
   })
 
-  it("jeder Treffer trägt seine Nummer, Probe unter Wertung, sonst Abgabefolge", () => {
+  it("jeder Treffer trägt seine Nummer, in Abgabefolge", () => {
     const html = render()
-    expect(shotOrder(html)).toEqual(["P1", "P2", "1", "2", "3", "4", "5"])
+    expect(shotOrder(html)).toEqual(["1", "2", "3", "4", "5"])
     // Kreis und Nummer stehen zusammen in der Gruppe des Schusses
     expect(html).toMatch(
       /<g data-shot="2"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*>(?:<\/circle>)?<text data-number="2"[^>]*>2<\/text><\/g>/
@@ -102,8 +102,8 @@ describe("TargetView: Auswahl und Antippen", () => {
 
   it("gewählte Serie normal und oben, die übrigen blass, ohne Nummer und nicht antippbar", () => {
     const html = render({ selection: 2 })
-    expect(shotOrder(html)).toEqual(["P1", "P2", "1", "2", "3", "4", "5"])
-    for (const label of ["P1", "P2", "1", "2", "3"]) {
+    expect(shotOrder(html)).toEqual(["1", "2", "3", "4", "5"])
+    for (const label of ["1", "2", "3"]) {
       // grau statt Ringwert-Farbe, ohne Kante: nur die Auswahl trägt Farbe
       expect(html).toMatch(
         new RegExp(
@@ -124,7 +124,7 @@ describe("TargetView: Auswahl und Antippen", () => {
 
   it("blasse Schüsse liegen unter der Auswahl, auch wenn sie später kamen", () => {
     // Serie 1 gewählt: die blassen Schüsse 4 und 5 von Serie 2 rutschen unter 1 bis 3
-    expect(shotOrder(render({ selection: 1 }))).toEqual(["P1", "P2", "4", "5", "1", "2", "3"])
+    expect(shotOrder(render({ selection: 1 }))).toEqual(["4", "5", "1", "2", "3"])
   })
 
   it("Streukreis um die Treffer: durch die Zentren plus halbes Kaliber und 2 px Luft", () => {
@@ -134,10 +134,7 @@ describe("TargetView: Auswahl und Antippen", () => {
     const centers = smallestEnclosingCircle(
       CARD.filter((s) => s.kind === "match").map((s) => ({ xUm: s.xUm!, yUm: s.yUm! }))
     )
-    // ohne Probe: der Streukreis um die Wertung
-    const r = Number(
-      /data-overlay="spread"[^>]*r="([^"]+)"/.exec(render({ selection: "match" }))?.[1]
-    )
+    const r = Number(/data-overlay="spread"[^>]*r="([^"]+)"/.exec(render())?.[1])
     expect(centers).not.toBeNull()
     expect(r).toBeCloseTo(centers!.radiusUm / 1000 + caliberRadius(LP_10M) + gap, 9)
   })
@@ -154,7 +151,7 @@ describe("TargetView: Auswahl und Antippen", () => {
   })
 
   it("der angetippte Schuss liegt ganz oben, mit Ring", () => {
-    const html = render({ chosen: { index: 3, series: 1 } })
+    const html = render({ chosen: { index: 1, series: 1 } })
     expect(shotOrder(html).at(-1)).toBe("2")
     expect(html).toMatch(/<g data-shot="2" data-chosen="true"/)
     expect(html).toContain('data-ring="chosen"')
@@ -162,7 +159,7 @@ describe("TargetView: Auswahl und Antippen", () => {
 
   it("der angetippte Schuss trägt seine Nummer auch ohne die Ebene „Nummern“", () => {
     const html = render({
-      chosen: { index: 3, series: 1 },
+      chosen: { index: 1, series: 1 },
       layers: { mpi: true, circle: true, numbers: false, ellipse: false },
     })
     expect([...html.matchAll(/data-number="([^"]+)"/g)].map((m) => m[1])).toEqual(["2"])
@@ -170,9 +167,16 @@ describe("TargetView: Auswahl und Antippen", () => {
 
   it("hohle Treffer zeigen auf der ganzen Fläche die Hand, blasse gar nicht", () => {
     // fill="none" nimmt sonst nur den Rand als Fläche für den Mauszeiger; gewählt wird über nearestShot
-    const html = render({ selection: "probe" })
+    const blind = { ...shot("match", 2, 500, 500, 100), decimalTenths: null, ring: null }
+    const html = renderToStaticMarkup(
+      createElement(TargetView, {
+        target: LP_10M,
+        shots: [...CARD, blind],
+        state: initialViewState({ selection: 2 }),
+      })
+    )
     expect(html).toMatch(
-      /<g data-shot="P1"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*fill="none"[^>]*pointer-events="visible"/
+      /<g data-shot="6"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*fill="none"[^>]*pointer-events="visible"/
     )
     expect(html).toMatch(/<g data-shot="1" data-faded="true"[^>]*pointer-events="none"/)
     expect(html).not.toMatch(
@@ -193,50 +197,34 @@ describe("TargetView: Auswahl und Antippen", () => {
 })
 
 describe("TargetView: Probe und Scheibe", () => {
-  it("zeigt die Scheibe Probe, trägt sie das schwarze Eck oben rechts, unter den Treffern", () => {
-    const probe = render({ selection: "probe" })
-    expect(probe).toMatch(
-      /data-layer="target"[\s\S]*?<polygon data-probe-corner="true"[^>]*fill="var\(--spiegel\)"/
-    )
-    // das Eck gehört zur Scheibe, die Treffer liegen darüber
-    expect(probe.indexOf("data-probe-corner")).toBeLessThan(probe.indexOf('data-layer="shots"'))
-    // Probe und Wertung zusammen: kein Eck
-    expect(render()).not.toContain("data-probe-corner")
-    // eine Karte nur mit Probe, die niemand als Training umgedeutet hat: Eck
-    const onlyProbe = renderToStaticMarkup(
-      createElement(TargetView, {
-        target: LP_10M,
-        shots: CARD.filter((s) => s.kind === "probe"),
-        state: initialViewState(),
-      })
-    )
-    expect(onlyProbe).toContain("data-probe-corner")
-    // eine Trainingskarte (nur Probe, wie Wertung gezeigt) trägt das Eck trotzdem
+  it("ein Training nur aus Probe trägt das schwarze Eck oben rechts, unter den Treffern", () => {
     const training = renderToStaticMarkup(
       createElement(TargetView, {
         target: LP_10M,
-        shots: probeOnlyAsMatch(CARD.filter((s) => s.kind === "probe")),
+        shots: asOnPrintout(PROBES),
         state: initialViewState(),
       })
     )
-    expect(training).toContain("data-probe-corner")
+    expect(training).toMatch(
+      /data-layer="target"[\s\S]*?<polygon data-probe-corner="true"[^>]*fill="var\(--spiegel\)"/
+    )
+    // das Eck gehört zur Scheibe, die Treffer liegen darüber
+    expect(training.indexOf("data-probe-corner")).toBeLessThan(
+      training.indexOf('data-layer="shots"')
+    )
+    // eine Scheibe mit Wertung: kein Eck
+    expect(render()).not.toContain("data-probe-corner")
+    // eine Karte nur mit Probe, die niemand als Training umgedeutet hat: auch Eck
+    const onlyProbe = renderToStaticMarkup(
+      createElement(TargetView, { target: LP_10M, shots: PROBES, state: initialViewState() })
+    )
+    expect(onlyProbe).toContain("data-probe-corner")
     // ohne Schüsse kein Eck
     expect(
       renderToStaticMarkup(
         createElement(TargetView, { target: LP_10M, shots: [], state: initialViewState() })
       )
     ).not.toContain("data-probe-corner")
-  })
-
-  it("Probe hohl und durchgezogen", () => {
-    const html = render()
-    for (const label of ["P1", "P2"]) {
-      expect(html).toMatch(
-        new RegExp(
-          `<g data-shot="${label}"[^>]*>(?:<title>[^<]*<\\/title>)?<circle(?![^>]*stroke-dasharray)[^>]*fill="none"`
-        )
-      )
-    }
   })
 
   it("Wertung gefüllt in der Ringwert-Farbe, leicht durchscheinend, Rand als Haarlinie", () => {
@@ -247,7 +235,7 @@ describe("TargetView: Probe und Scheibe", () => {
   })
 
   it("Farben nur aus den Design-2-Tokens, keine festen Werte", () => {
-    const html = render({ chosen: { index: 3, series: 1 } })
+    const html = render({ chosen: { index: 1, series: 1 } })
     expect(html).not.toMatch(/(?:fill|stroke)="(?:#|rgb)/)
     expect(html).toContain('fill="var(--shot-number)"')
     expect(html).toContain('stroke="var(--shot-number-halo)"')
@@ -257,10 +245,17 @@ describe("TargetView: Probe und Scheibe", () => {
 
   it("ein Bild mit Satz für Screenreader", () => {
     expect(render()).toMatch(
-      /<svg[^>]*role="img"[^>]*aria-label="Luftpistole 10 m: 5 Wertungsschüsse, 2 Probeschüsse"/
+      /<svg[^>]*role="img"[^>]*aria-label="Luftpistole 10 m: 5 Wertungsschüsse"/
     )
     expect(render({ selection: 2 })).toContain("gewählt: Serie 2")
-    expect(render({ selection: "probe" })).toContain("gewählt: Probe")
+    const training = renderToStaticMarkup(
+      createElement(TargetView, {
+        target: LP_10M,
+        shots: asOnPrintout(PROBES),
+        state: initialViewState(),
+      })
+    )
+    expect(training).toContain('aria-label="Luftpistole 10 m: 2 Probeschüsse als Training"')
   })
 
   it("Luftgewehr: die Zehn ist ein weißer Punkt, LP: der Innenzehner gestrichelt", () => {

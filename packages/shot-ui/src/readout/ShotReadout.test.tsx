@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { formatValue } from "../format"
+import { asOnPrintout } from "../shots"
 import { initialViewState, type ViewState } from "../view-state"
 import { ShotReadout } from "./ShotReadout"
 
@@ -33,7 +34,11 @@ const CARD = [
   shot("match", -300, -400, 109, true),
 ]
 
-const render = (state: Partial<ViewState> = {}, shots: readonly MetricShot[] = CARD) =>
+// die Seite gibt die Karte wie am Ausdruck weiter (U4): ohne die Probe
+const render = (
+  state: Partial<ViewState> = {},
+  shots: readonly MetricShot[] = asOnPrintout(CARD)
+) =>
   renderToStaticMarkup(
     createElement(ShotReadout, { shots, state: { ...initialViewState(), ...state } })
   )
@@ -53,16 +58,12 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
       /<span aria-hidden="true"[^>]*style="background:var\(--score-10\)"[\s\S]*?>10,9</
     )
     expect(html).not.toContain("color:var(--score")
-    // die Probe hohl wie auf der Scheibe
-    expect(render({ chosen: { index: 0, series: "probe" } })).toContain(
-      "box-shadow:inset 0 0 0 2px var(--score-10)"
-    )
+    // kein hohler Punkt mehr: eine Probe neben Wertung gibt es nicht (U4)
+    expect(html).not.toContain("box-shadow")
   })
 
-  it("angetippt: dieser Schuss, Probe mit P", () => {
-    expect(text(render({ chosen: { index: 0, series: "probe" } }))).toContain(
-      "Probe P1 · angetippt"
-    )
+  it("angetippt: dieser Schuss", () => {
+    expect(text(render({ chosen: { index: 0, series: 1 } }))).toContain("Schuss 1 · angetippt")
   })
 
   it("die andere Wertung klein daneben", () => {
@@ -74,7 +75,7 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
 
   it("Innenzehner und Fehlschuss benannt", () => {
     expect(text(render())).toContain("Innenzehner")
-    expect(text(render({ chosen: { index: 2, series: 1 } }))).toContain("Fehlschuss")
+    expect(text(render({ chosen: { index: 1, series: 1 } }))).toContain("Fehlschuss")
   })
 
   it("Teiler und Abstand aus der Lage des Schusses, ohne x/y (User, 8. Oktober 2026)", () => {
@@ -82,7 +83,7 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
     expect(t).toContain(`Teiler ${formatValue(distanceUm(-300, -400) / 10, 1)}`)
     expect(t).toContain("Abstand zur Mitte 0,50 mm")
     expect(t).not.toContain("x / y")
-    expect(text(render({ chosen: { index: 1, series: 1 } }))).toContain(
+    expect(text(render({ chosen: { index: 0, series: 1 } }))).toContain(
       "Abstand zur Mitte 14,00 mm"
     )
   })
@@ -100,7 +101,7 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
   })
 
   it("ohne Lage keine Angaben zur Lage", () => {
-    const t = text(render({ chosen: { index: 2, series: 1 } }))
+    const t = text(render({ chosen: { index: 1, series: 1 } }))
     expect(t).not.toContain("Teiler")
     expect(t).not.toContain("Abstand")
   })

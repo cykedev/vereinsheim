@@ -201,15 +201,23 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
     expect(cardToParams(direct)).toEqual([])
   })
 
-  it("Auswahl: ganze Scheibe, Wertung, Probe oder eine Serie; Schuss als Nummer wie shotLabels", () => {
+  it("Auswahl: ganze Scheibe oder eine Serie; Schuss als Nummer wie shotLabels", () => {
     const read = (search: string) => cardFromParts("c1", new URLSearchParams(search), "")
     expect(read("series=all").selection).toBe("all")
-    expect(read("series=match").selection).toBe("match")
-    expect(read("series=sighters&shot=P3").selection).toBe("probe")
-    expect(read("series=sighters&shot=P3").shot).toBe("P3")
-    for (const bad of ["series=0", "series=-1", "series=02", "series=zwei"])
+    expect(read("series=3&shot=23").selection).toBe(3)
+    expect(read("series=3&shot=23").shot).toBe("23")
+    // „ohne Probe“ und die Probe gibt es seit U4 nicht mehr: alte Adressen gelten als Vorgabe, ohne Fehler
+    for (const bad of [
+      "series=0",
+      "series=-1",
+      "series=02",
+      "series=zwei",
+      "series=match",
+      "series=sighters",
+    ])
       expect(read(bad).selection).toBeNull()
-    for (const bad of ["shot=0", "shot=P", "shot=p3", "shot=3a"]) expect(read(bad).shot).toBeNull()
+    for (const bad of ["shot=0", "shot=P", "shot=p3", "shot=3a", "shot=P3"])
+      expect(read(bad).shot).toBeNull()
   })
 
   it("ein Anker ohne Bedeutung zählt nicht; ein Abschnitt ohne Reiter bleibt ein Abschnitt", () => {
@@ -247,15 +255,15 @@ describe("die ganze Adresse (D3)", () => {
         },
       ],
       [
-        "/cards/c42?from=start&series=sighters#sighters",
+        "/cards/c42?from=start&series=2#position",
         {
           page: "card",
           id: "c42",
           origin: { from: "start" },
-          selection: "probe",
+          selection: 2,
           shot: null,
           scoring: "decimal",
-          anchor: { section: "analysis", tab: "sighters" },
+          anchor: { section: "analysis", tab: "position" },
         },
       ],
       [
@@ -398,8 +406,8 @@ describe("die ganze Adresse (D3)", () => {
       ),
     ]
     for (const origin of origins)
-      for (const selection of [null, "match", "probe", 2] as const)
-        for (const shot of [null, "23", "P3"])
+      for (const selection of [null, "all", 2] as const)
+        for (const shot of [null, "23", "7"])
           for (const scoring of ["decimal", "rings"] as const)
             for (const anchor of [
               null,

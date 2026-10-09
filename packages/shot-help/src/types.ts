@@ -2,14 +2,7 @@
 // Fehlschlüsse. Die Texte sind deutsch, in „du“-Form und ohne Formeln vor den Worten.
 
 /** Thema der Oberfläche, nach dem die Erklärungen gruppiert sind */
-export type HelpTheme =
-  | "result"
-  | "precision"
-  | "position"
-  | "time"
-  | "sighters"
-  | "coverage"
-  | "period"
+export type HelpTheme = "result" | "precision" | "position" | "time" | "coverage" | "period"
 
 /** Erklärung einer Karte: deckt Katalog-IDs und Registry-Kennzahlen ab */
 export interface HelpTopic {

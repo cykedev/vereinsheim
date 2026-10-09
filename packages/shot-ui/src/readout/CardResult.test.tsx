@@ -30,10 +30,10 @@ const result = (scoring: "decimal" | "rings") =>
   computeMetric(inScoring(metricByKey("result.decimal")!, scoring), CARD)!
 
 describe("Ergebnis der Scheibe", () => {
-  it("groß aus dem Fachkern, darunter Wertung und Probe, dazu der Umschalter", () => {
+  it("groß aus dem Fachkern, darunter die Schusszahl wie am Ausdruck (U4), dazu der Umschalter", () => {
     const html = render()
     expect(text(html)).toContain(`${formatValue(result("decimal"), 1)} Ringe`)
-    expect(html).toMatch(/<p class="[^"]*">40 Schuss \+ 9 Probe<\/p>/)
+    expect(html).toMatch(/<p class="[^"]*">40 Schuss<\/p>/)
     expect(text(html)).toContain("UMSCHALTER")
   })
 

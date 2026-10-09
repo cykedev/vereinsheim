@@ -38,7 +38,6 @@ export const TAB_ANCHORS: Readonly<Record<AnalysisTab, string>> = {
   precision: "precision",
   position: "position",
   time: "time",
-  sighters: "sighters",
 }
 
 export interface PageAnchor {

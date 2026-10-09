@@ -6,7 +6,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { probeOnlyAsMatch } from "../shots"
+import { asOnPrintout } from "../shots"
 import { initialViewState } from "../view-state"
 import { AnalysisPanel, ANALYSIS_TABS } from "./AnalysisPanel"
 import { analysisInput } from "./input"
@@ -57,21 +57,21 @@ const render = (shots: readonly MetricShot[], extra: Record<string, unknown> = {
   )
 
 describe("analysisInput: worüber die Analyse rechnet", () => {
-  it("mit Wertung über alle Schüsse ohne Probe", () => {
+  it("mit Wertung über die Scheibe wie am Ausdruck, ohne die Probe (U4)", () => {
     const input = analysisInput(CARD, "decimal", LP_10M)
     expect(input.base).toEqual(CARD.slice(2))
-    expect(input.all).toBe(CARD)
-    expect(input.basis).toBe("ohne Probe")
+    expect(input.all).toEqual(CARD.slice(2))
+    expect(input.basis).toBe("alle")
   })
 
-  it("nur Probe: über alle Probeschüsse, auch ohne probeOnlyAsMatch der Seite", () => {
+  it("nur Probe: über alle Probeschüsse, auch ohne asOnPrintout der Seite", () => {
     const probes = CARD.slice(0, 2)
     const input = analysisInput(probes, "decimal", LP_10M)
     expect(input.base).toHaveLength(2)
     expect(input.base.every((s) => s.kind === "match")).toBe(true)
     expect(input.basis).toBe("nur Probe")
     // schon umgedeutet: dasselbe
-    expect(analysisInput(probeOnlyAsMatch(probes), "decimal", LP_10M).basis).toBe("nur Probe")
+    expect(analysisInput(asOnPrintout(probes), "decimal", LP_10M).basis).toBe("nur Probe")
   })
 
   it("nur Wertung: über alle Schüsse", () => {
@@ -80,20 +80,13 @@ describe("analysisInput: worüber die Analyse rechnet", () => {
 })
 
 describe("AnalysisPanel", () => {
-  it("sechs Reiter in der Reihenfolge der Spielwiese", () => {
+  it("fünf Reiter in der Reihenfolge der Spielwiese, kein Reiter „Probe“ (U4)", () => {
     const html = render(CARD)
     const labels = [...html.matchAll(/<button[^>]*role="radio"[^>]*>([^<]+)<\/button>/g)].map(
       (m) => m[1]
     )
     expect(labels).toEqual(ANALYSIS_TABS.map((t) => t.label))
-    expect(labels).toEqual([
-      "Überblick",
-      "Ergebnis",
-      "Präzision",
-      "Lage",
-      "Zeit und Verlauf",
-      "Probe",
-    ])
+    expect(labels).toEqual(["Überblick", "Ergebnis", "Präzision", "Lage", "Zeit und Verlauf"])
     expect(html).toContain('aria-label="Thema"')
   })
 
@@ -111,9 +104,9 @@ describe("AnalysisPanel", () => {
   })
 
   it("der Kopf nennt die Grundlage", () => {
-    expect(render(CARD)).toContain("über alle Schüsse ohne Probe")
+    expect(render(CARD)).toContain("Analyse über alle Schüsse<")
     expect(render(CARD.slice(0, 2))).toContain("über alle Probeschüsse")
-    expect(render(probeOnlyAsMatch(CARD.slice(0, 2)))).toContain("über alle Probeschüsse")
+    expect(render(asOnPrintout(CARD.slice(0, 2)))).toContain("über alle Probeschüsse")
     expect(render(CARD.slice(2))).toContain("Analyse über alle Schüsse<")
   })
 
@@ -124,7 +117,7 @@ describe("AnalysisPanel", () => {
       .replace(/\s+/g, " ")
     // ganze Wörter und Einzahl (Prüfung, Probe 10)
     expect(text).toContain(
-      "Datenlage: 4 Wertungsschüsse · 2 Probeschüsse · 1 ohne Zeit · 1 verdächtiger Schuss · Wertung in Zehnteln"
+      "Datenlage: 4 Wertungsschüsse · 1 ohne Zeit · 1 verdächtiger Schuss · Wertung in Zehnteln"
     )
     const misses = [
       ...CARD,
@@ -139,7 +132,7 @@ describe("AnalysisPanel", () => {
       "ohne Zehntel"
     )
     // ein Training zählt die Probe wie Wertung, die Datenlage sagt das (Prüfung, Probe 8)
-    const training = render(probeOnlyAsMatch(CARD.slice(0, 2)))
+    const training = render(asOnPrintout(CARD.slice(0, 2)))
     expect(training).toContain("Datenlage: 2 Probeschüsse, als Training wie Wertung gezählt")
     expect(training).not.toContain("0 Wertungsschüsse")
     expect(render(CARD.slice(0, 1).map((s) => ({ ...s, firedAtMs: 0 })))).toContain(
@@ -156,7 +149,7 @@ describe("AnalysisPanel", () => {
   })
 
   it("auf einer Trainingskarte zählt die Datenlage die Probe als Probe", () => {
-    const text = render(probeOnlyAsMatch(CARD.slice(0, 2)))
+    const text = render(asOnPrintout(CARD.slice(0, 2)))
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
     expect(text).toContain("Datenlage: 2 Probeschüsse, als Training wie Wertung gezählt")
@@ -197,12 +190,5 @@ describe("Lineal und Scheibe (Plan L1, D4)", () => {
     const chosen = { index: seventh, series: 1 } as const
     expect(renderTab("time", { chosen, onChoose: () => {} })).toContain(">Auf der Scheibe<")
     expect(renderTab("time", { chosen })).not.toContain(">Auf der Scheibe<")
-  })
-
-  it("ein Probeschuss gehört nicht zur Grundlage: kein Lineal", () => {
-    const probe = card.findIndex((s) => s.kind === "probe")
-    expect(renderTab("time", { chosen: { index: probe, series: "probe" } })).not.toContain(
-      'data-chosen="true"'
-    )
   })
 })

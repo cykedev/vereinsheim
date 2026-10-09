@@ -34,7 +34,7 @@ import { useAnimatedViewBox, useElementWidth } from "./useAnimatedViewBox"
 
 export interface TargetViewProps {
   target: TargetImage
-  /** alle Schüsse der Scheibe in Abgabefolge (`inShotOrder`), Probe und Wertung */
+  /** die Schüsse der Scheibe wie am Ausdruck (`asOnPrintout`) in Abgabefolge (`inShotOrder`) */
   shots: readonly MetricShot[]
   state: ViewState
   /**
@@ -65,9 +65,7 @@ const point = (shot: MetricShot): Point => ({ xUm: shot.xUm as number, yUm: shot
 const mm = (um: number) => um / 1000
 
 function selectionText(state: ViewState): string {
-  if (state.selection === "all") return ""
-  if (state.selection === "match") return ", gewählt: ohne Probe"
-  return `, gewählt: ${state.selection === "probe" ? "Probe" : `Serie ${state.selection}`}`
+  return state.selection === "all" ? "" : `, gewählt: Serie ${state.selection}`
 }
 
 /**
@@ -108,14 +106,13 @@ export function TargetView({
   const confidence = state.layers.ellipse ? mpiConfidence(group) : null
   const center = state.layers.mpi && group.length >= 2 ? centroid(groupPoints) : null
 
-  const matchCount = shots.filter((shot) => shot.kind === "match").length
-  const probeCount = shots.length - matchCount
-  const label = `${target.label}: ${matchCount} Wertungsschüsse${
-    probeCount ? `, ${probeCount} Probeschüsse` : ""
+  // ein Training nur aus Probe heißt so (U4: eine Probe neben Wertung gibt es nicht mehr)
+  const training = shots.length > 0 && shots.every(isProbeShot)
+  const label = `${target.label}: ${shots.length} ${
+    training ? "Probeschüsse als Training" : "Wertungsschüsse"
   }${selectionText(state)}`
 
-  // die Scheibe zeigt Probe, wenn alle Schüsse der Auswahl Probeschüsse sind (etwa die Probe gewählt oder
-  // eine Trainingskarte nur mit Probe)
+  // die Scheibe zeigt das Probe-Eck, wenn alle Schüsse der Auswahl aus der Probe stammen (Training nur aus Probe)
   const shown = shots.filter((_, i) => selectedAt(i))
   const showsProbe = shown.length > 0 && shown.every(isProbeShot)
 
@@ -226,7 +223,6 @@ export function TargetView({
       <g data-layer="shots">
         {order.map((i) => {
           const shot = shots[i]
-          const probe = shot.kind === "probe"
           const faded = !selectedAt(i)
           const isChosen = i === chosen
           const x = mm(shot.xUm as number)
@@ -248,35 +244,21 @@ export function TargetView({
               pointerEvents={faded ? "none" : undefined}
               style={onChoose && !faded ? { cursor: "pointer" } : undefined}
             >
-              <title>{`${probe ? "Probe" : "Schuss"} ${labels[i]}: ${formatScore(shot, state.scoring)}`}</title>
-              {probe ? (
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={calR * 0.92}
-                  fill="none"
-                  stroke={color}
-                  strokeWidth={1.5}
-                  pointerEvents={hitArea}
-                  className={i === popIndex ? "shot-ui-pop" : undefined}
-                  {...HAIR}
-                />
-              ) : (
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={calR}
-                  fill={shot.ring === null ? "none" : color}
-                  fillOpacity={SHOT_FILL_OPACITY}
-                  // ohne Wert ist der Rand das ganze Zeichen: blass grau statt ganz weg
-                  stroke={faded ? (shot.ring === null ? FADED_COLOR : "none") : "var(--shot-edge)"}
-                  strokeWidth={1}
-                  strokeDasharray={shot.ring === null ? "2 2" : undefined}
-                  pointerEvents={hitArea}
-                  className={i === popIndex ? "shot-ui-pop" : undefined}
-                  {...HAIR}
-                />
-              )}
+              <title>{`Schuss ${labels[i]}: ${formatScore(shot, state.scoring)}`}</title>
+              <circle
+                cx={x}
+                cy={y}
+                r={calR}
+                fill={shot.ring === null ? "none" : color}
+                fillOpacity={SHOT_FILL_OPACITY}
+                // ohne Wert ist der Rand das ganze Zeichen: blass grau statt ganz weg
+                stroke={faded ? (shot.ring === null ? FADED_COLOR : "none") : "var(--shot-edge)"}
+                strokeWidth={1}
+                strokeDasharray={shot.ring === null ? "2 2" : undefined}
+                pointerEvents={hitArea}
+                className={i === popIndex ? "shot-ui-pop" : undefined}
+                {...HAIR}
+              />
               {/* der angetippte Schuss zeigt seine Nummer immer, die übrigen mit der Ebene */}
               {(state.layers.numbers || isChosen) && !faded && (
                 <text

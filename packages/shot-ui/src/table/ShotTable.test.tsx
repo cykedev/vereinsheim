@@ -31,11 +31,9 @@ const shot = (
   series,
 })
 
-// Probe P1, P2; Serie 1: 1–3, Serie 2: 4–5. Nach Schuss 2 fehlt seq 6 (Lücke), vor Schuss 4 vier Minuten
-// Pause, Schuss 5 ohne Lage
+// wie am Ausdruck, ohne Probe (U4); Serie 1: 1–3, Serie 2: 4–5. Nach Schuss 2 fehlt seq 5 (Lücke), vor Schuss 4
+// vier Minuten Pause, Schuss 5 ohne Lage
 const CARD = [
-  shot(1, "probe", null, 6000, 98, 0),
-  shot(2, "probe", null, 1500, 104, 50),
   shot(3, "match", 1, 300, 108, 100, true),
   shot(4, "match", 1, 2000, 103, 145),
   shot(6, "match", 1, -1200, 105, 200),
@@ -65,7 +63,7 @@ const rows = (html: string) =>
 
 describe("Intervalle aus dem Fachkern", () => {
   it("Abstand zum vorigen Schuss der Karte; der erste und nach einer Lücke keiner", () => {
-    expect(shotIntervals(CARD)).toEqual([null, 50_000, 50_000, 45_000, null, 240_000, 52_000])
+    expect(shotIntervals(CARD)).toEqual([null, 45_000, null, 240_000, 52_000])
   })
 
   it("in Abgabefolge, auch wenn die Liste anders steht", () => {
@@ -74,21 +72,20 @@ describe("Intervalle aus dem Fachkern", () => {
 })
 
 describe("ShotTable", () => {
-  it("neuester Schuss oben, Probe mit P", () => {
-    expect(rows(render()).map((r) => r[0])).toEqual(["5", "4", "3", "2", "1", "P2", "P1"])
+  it("neuester Schuss oben, keine „P“-Nummern (U4)", () => {
+    expect(rows(render()).map((r) => r[0])).toEqual(["5", "4", "3", "2", "1"])
   })
 
-  it("folgt der Auswahl: nur die Zeilen der gewählten Serie oder der Probe", () => {
+  it("folgt der Auswahl: nur die Zeilen der gewählten Serie", () => {
     expect(rows(render({ selection: 2 })).map((r) => r[0])).toEqual(["5", "4"])
-    expect(rows(render({ selection: "probe" })).map((r) => r[0])).toEqual(["P2", "P1"])
   })
 
   it("Trenner zwischen den Serien, neueste zuerst; bei einer Serie keiner", () => {
     const groups = (html: string) =>
       [...html.matchAll(/<th[^>]*scope="rowgroup"[^>]*>([^<]+)<\/th>/g)].map((m) => m[1])
-    expect(groups(render())).toEqual(["Serie 2", "Serie 1", "Probe"])
+    expect(groups(render())).toEqual(["Serie 2", "Serie 1"])
     // jede Gruppe ein eigener tbody mit ihren Zeilen
-    expect([...render().matchAll(/<tbody>/g)]).toHaveLength(3)
+    expect([...render().matchAll(/<tbody>/g)]).toHaveLength(2)
     expect(groups(render({ selection: 2 }))).toEqual([])
   })
 
@@ -119,12 +116,12 @@ describe("ShotTable", () => {
   })
 
   it("Teiler wie der Fachkern: gemessener Abstand vor der Lage, ohne Lage auch, verdächtig keiner", () => {
-    const measured = { ...CARD[2], distanceUm: 3317, xUm: 0, yUm: 3318 }
-    const pdfOnly = { ...CARD[3], xUm: null, yUm: null, distanceUm: 5000 }
-    const placeholder = { ...CARD[4], xUm: 0, yUm: 0, flags: ["verdaechtig"] }
+    const measured = { ...CARD[0], distanceUm: 3317, xUm: 0, yUm: 3318 }
+    const pdfOnly = { ...CARD[1], xUm: null, yUm: null, distanceUm: 5000 }
+    const placeholder = { ...CARD[2], xUm: 0, yUm: 0, flags: ["verdaechtig"] }
     const html = renderToStaticMarkup(
       createElement(ShotTable, {
-        shots: [CARD[0], CARD[1], measured, pdfOnly, placeholder],
+        shots: [measured, pdfOnly, placeholder],
         state: initialViewState(),
       })
     )
@@ -137,7 +134,7 @@ describe("ShotTable", () => {
   it("Intervalle in Sekunden, über drei Minuten als Pause in Minuten und Sekunden, nach einer Lücke keins", () => {
     const r = rows(render())
     // „3:20 min“ statt auf ganze Minuten gerundet (Prüfung, Zeit 7)
-    expect(r.map((row) => row[4])).toEqual(["52 s", "4:00 min", "–", "45 s", "50 s", "50 s", "–"])
+    expect(r.map((row) => row[4])).toEqual(["52 s", "4:00 min", "–", "45 s", "–"])
   })
 
   it("Pause erst über drei Minuten: genau 180 s bleibt in Sekunden", () => {
@@ -171,18 +168,18 @@ describe("ShotTable", () => {
   })
 
   it("jede Zeile ist ein Knopf; der angetippte Schuss ist gedrückt und hervorgehoben", () => {
-    const html = render({ chosen: { index: 3, series: 1 } })
+    const html = render({ chosen: { index: 1, series: 1 } })
     expect([...html.matchAll(/<button[^>]*aria-pressed="true"[^>]*>/g)]).toHaveLength(1)
     expect(html).toMatch(/<tr data-row="2"[^>]*data-chosen="true"[\s\S]*?aria-pressed="true"/)
-    expect([...html.matchAll(/<button[^>]*aria-pressed="false"/g)]).toHaveLength(6)
+    expect([...html.matchAll(/<button[^>]*aria-pressed="false"/g)]).toHaveLength(4)
     expect(html).toContain('aria-label="Schuss 2 wählen"')
-    expect(html).toContain('aria-label="Probe P1 wählen"')
+    expect(html).not.toContain("Probe")
   })
 
-  it("Farbpunkt in der Ringwert-Farbe, Probe hohl", () => {
+  it("Farbpunkt in der Ringwert-Farbe, keiner hohl", () => {
     const html = render()
     expect(html).toMatch(/<tr data-row="1"[\s\S]*?background:var\(--score-10\)/)
-    expect(html).toMatch(/<tr data-row="P1"[\s\S]*?box-shadow:inset 0 0 0 1.5px var\(--score-9\)/)
+    expect(html).not.toContain("box-shadow")
   })
 })
 

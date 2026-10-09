@@ -4,7 +4,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { formatTotal, probeOnlyAsMatch } from "../shots"
+import { asOnPrintout, formatTotal } from "../shots"
 import { initialViewState, type ViewState } from "../view-state"
 import { SeriesStrip } from "./SeriesStrip"
 
@@ -24,12 +24,14 @@ const shot = (
   series,
 })
 
-// drei Probeschüsse, Serie 1 voll mit zehnmal 10,5, Serie 2 läuft mit siebenmal 10,0
-const CARD = [
+// drei Probeschüsse, Serie 1 voll mit zehnmal 10,5, Serie 2 läuft mit siebenmal 10,0; die Seite gibt die Karte
+// wie am Ausdruck weiter (U4): ohne die Probe
+const RAW = [
   ...[0, 1, 2].map((i) => shot("probe", null, 5000 + i * 1000, 95)),
   ...Array.from({ length: 10 }, (_, i) => shot("match", 1, i * 300, 105)),
   ...Array.from({ length: 7 }, (_, i) => shot("match", 2, -i * 300, 100)),
 ]
+const CARD = asOnPrintout(RAW)
 
 const render = (state: Partial<ViewState> = {}) =>
   renderToStaticMarkup(
@@ -51,12 +53,12 @@ describe("Summen in der gewählten Wertung", () => {
 })
 
 describe("SeriesStrip", () => {
-  it("Probe zuerst, dann die Serien mit Ergebnis; die laufende Serie mit Zahl der Schüsse", () => {
+  it("die Serien mit Ergebnis, keine Probe-Kachel; die laufende Serie mit Zahl der Schüsse", () => {
     const html = render()
     const titles = [...html.matchAll(/<span data-title="true"[^>]*>([^<]+)<\/span>/g)].map(
       (m) => m[1]
     )
-    expect(titles).toEqual(["Probe", "Serie 1", "Serie 2"])
+    expect(titles).toEqual(["Serie 1", "Serie 2"])
     expect(html).toMatch(/Serie 1[\s\S]*?105,0/)
     expect(html).toMatch(/Serie 2[\s\S]*?70,0[\s\S]*?7 von 10 Schuss/)
   })
@@ -69,7 +71,7 @@ describe("SeriesStrip", () => {
 
   it("alle kleinen Scheiben im selben Ausschnitt um die Mitte", () => {
     const boxes = [...render().matchAll(/<svg[^>]*viewBox="([^"]+)"/g)].map((m) => m[1])
-    expect(boxes).toHaveLength(3)
+    expect(boxes).toHaveLength(2)
     expect(new Set(boxes).size).toBe(1)
   })
 
@@ -78,22 +80,21 @@ describe("SeriesStrip", () => {
     expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*>Alle<\/button>/)
     expect([
       ...html.matchAll(/<button[^>]*data-series="[^"]+"[^>]*aria-pressed="false"/g),
-    ]).toHaveLength(3)
+    ]).toHaveLength(2)
   })
 
   it("bei einer gewählten Serie ist nur ihre Kachel gedrückt, die übrigen blass", () => {
     const html = render({ selection: 2 })
     expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Alle<\/button>/)
     expect(html).toMatch(/data-series="2"[^>]*aria-pressed="true"/)
-    expect(html).toMatch(/data-series="probe"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
     expect(html).toMatch(/data-series="1"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
   })
 
-  it("die kleine Scheibe der Probe trägt das Probe-Eck, die Serien nicht", () => {
+  it("wie am Ausdruck: keine Probe-Kachel, kein „Ohne Probe“, kein Probe-Eck an den Serien (U4)", () => {
     const html = render()
-    const probe = html.split('data-series="1"')[0]
-    expect(probe).toContain("data-probe-corner")
-    expect(html.slice(html.indexOf('data-series="1"'))).not.toContain("data-probe-corner")
+    expect(html).not.toContain('data-series="probe"')
+    expect(html).not.toContain("Ohne Probe")
+    expect(html).not.toContain("data-probe-corner")
   })
 
   it("Trainingskarte (nur Probe, wie Wertung): jede Serie trägt das Probe-Eck", () => {
@@ -104,7 +105,7 @@ describe("SeriesStrip", () => {
     const html = renderToStaticMarkup(
       createElement(SeriesStrip, {
         target: LP_10M,
-        shots: probeOnlyAsMatch(probes),
+        shots: asOnPrintout(probes),
         state: initialViewState(),
       })
     )
@@ -113,18 +114,10 @@ describe("SeriesStrip", () => {
     expect(tiles.every((m) => m[0].includes("data-probe-corner"))).toBe(true)
   })
 
-  it("Probe hohl und durchgezogen", () => {
-    const probe = render().split('data-series="1"')[0]
-    expect(probe).not.toContain("stroke-dasharray")
-    expect([
-      ...probe.matchAll(/<circle[^>]*fill="none"[^>]*stroke="var\(--score-9\)"/g),
-    ]).toHaveLength(3)
-  })
-
   it("jede Kachel hat einen Satz für Screenreader, das Bild darin schweigt", () => {
     const html = render()
     expect(html).toMatch(
-      /<button[^>]*aria-label="Probe: 3 Schuss"[^>]*>\s*<svg[^>]*aria-hidden="true"/
+      /<button[^>]*aria-label="Serie 1: 105,0"[^>]*>\s*<svg[^>]*aria-hidden="true"/
     )
     expect(render()).toMatch(/<button[^>]*aria-label="Serie 2: 70,0, 7 von 10 Schuss"/)
     expect(html).not.toContain('role="img"')
@@ -146,26 +139,5 @@ describe("SeriesStrip", () => {
       })
     )
     expect(html).toMatch(/<circle[^>]*fill="none"[^>]*stroke-dasharray="2 2"/)
-  })
-
-  it("„Alle“ und „Ohne Probe“, wenn es beides gibt; gedrückt ist die gewählte ganze Scheibe", () => {
-    const html = render({ selection: "match", home: "match" })
-    expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Alle<\/button>/)
-    expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*>Ohne Probe<\/button>/)
-    // ohne Probe: die Probe blass, keine Serie gedrückt
-    expect(html).toMatch(/data-series="probe"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
-    expect(html).not.toMatch(/data-series="1"[^>]*data-dim="true"/)
-    expect(html).not.toMatch(/data-series="[^"]+"[^>]*aria-pressed="true"/)
-    // nur Wertung: kein „Ohne Probe“
-    const matchOnly = renderToStaticMarkup(
-      createElement(SeriesStrip, {
-        target: LP_10M,
-        shots: CARD.filter((s) => s.kind === "match"),
-        state: initialViewState(),
-        onSelect: () => {},
-        onSelectWhole: () => {},
-      })
-    )
-    expect(matchOnly).not.toContain("Ohne Probe")
   })
 })

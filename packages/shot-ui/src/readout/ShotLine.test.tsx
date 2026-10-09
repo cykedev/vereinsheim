@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { directionWords, formatValue } from "../format"
+import { asOnPrintout } from "../shots"
 import { initialViewState, type ViewState } from "../view-state"
 import { readoutModel } from "./readout"
 import { ShotLine } from "./ShotLine"
@@ -38,7 +39,8 @@ const text = (html: string) =>
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-const line = (state: Partial<ViewState> = {}, shots: readonly MetricShot[] = CARD) =>
+// die Seite gibt die Karte wie am Ausdruck weiter (U4): ohne die Probe
+const line = (state: Partial<ViewState> = {}, shots: readonly MetricShot[] = asOnPrintout(CARD)) =>
   text(
     renderToStaticMarkup(
       createElement(ShotLine, { shots, state: { ...initialViewState(), ...state } })
@@ -63,13 +65,13 @@ describe("Ablesezeile (D2)", () => {
     expect(card()).toContain("8,7")
   })
 
-  it("der angetippte Schuss statt des letzten, die Probe mit P", () => {
-    expect(line({ chosen: { index: 0, series: "probe" } })).toMatch(/^Probe P1 · 10,4 · Teiler/)
+  it("der angetippte Schuss statt des letzten", () => {
+    expect(line({ chosen: { index: 0, series: 1 } })).toMatch(/^Schuss 1 · 9,6 · Teiler/)
   })
 
   it("in ganzen Ringen der Ring, ohne Lage nur Nummer und Wert", () => {
     expect(line({ scoring: "rings" })).toMatch(/^Schuss 3 · 8 · Teiler/)
-    expect(line({ chosen: { index: 2, series: 1 } })).toBe("Schuss 2 · 0,0 · Fehlschuss")
+    expect(line({ chosen: { index: 1, series: 1 } })).toBe("Schuss 2 · 0,0 · Fehlschuss")
   })
 
   it("Innenzehner wie auf der Karte", () => {

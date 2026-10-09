@@ -32,11 +32,7 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   seriesSpread: ["I5"],
   mpiPath: ["I6"],
   longestRun: ["I10"],
-  // Probe und Datenlage
-  sightersBeforeMatch: ["S2"],
-  sighterSummary: ["S2"],
-  sighterComparison: ["S3"],
-  sighterZeroed: ["S1", "S4"],
+  // Datenlage (die Auswertung der Probe S1–S4 entfiel mit U4: eine Scheibe ist wie am Ausdruck)
   dataCoverage: ["Q1"],
   // Über viele Scheiben (Plan L2)
   cardValues: ["T1"],

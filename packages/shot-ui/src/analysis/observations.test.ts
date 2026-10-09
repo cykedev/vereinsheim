@@ -48,10 +48,9 @@ describe("die wichtigsten Beobachtungen für den Kopf (U1, D4)", () => {
       o("trend", true),
       o("pause", false),
       o("clock", false),
-      o("flag", true),
     ])
     expect(key.map((k) => k.icon)).toEqual(["position", "outlier", "trend"])
-    expect(keyObservations([o("position", true), o("flag", true)], 1).map((k) => k.icon)).toEqual([
+    expect(keyObservations([o("position", true), o("trend", true)], 1).map((k) => k.icon)).toEqual([
       "position",
     ])
   })
@@ -70,11 +69,11 @@ describe("was auffällt, an echten Scheiben", () => {
   const all = observations(analysisInput(CARD, "decimal", LP_10M))
   const notable = (icon: ObservationIcon, list = all) => list.find((x) => x.icon === icon)?.notable
 
-  it("Beispielscheibe „40 Schuss mit Probe“: die Lage und der Ausreißer Schuss 27, sonst nichts", () => {
+  it("Beispielscheibe „40 Schuss“: die Lage und der Ausreißer Schuss 27, sonst nichts", () => {
     expect(notable("position")).toBe(true)
     expect(notable("outlier")).toBe(true)
-    // da, aber nicht auffällig: Präzision, Pause, Tempo immer; der Trend ist nicht klar, die Probe ohne Versatz
-    for (const icon of ["spread", "pause", "clock", "trend", "flag"] as const)
+    // da, aber nicht auffällig: Präzision, Pause, Tempo immer; der Trend ist nicht klar
+    for (const icon of ["spread", "pause", "clock", "trend"] as const)
       expect(notable(icon)).toBe(false)
     const key = keyObservations(all)
     expect(key.map((k) => k.icon)).toEqual(["position", "outlier"])
@@ -84,18 +83,9 @@ describe("was auffällt, an echten Scheiben", () => {
     expect(key[1].text).toBe("Schuss 27 fällt als Ausreißer aus der Gruppe.")
   })
 
-  it("ein klarer Trend und eine Probe echt neben der Mitte fallen auf", () => {
+  it("ein klarer Trend fällt auf", () => {
     let k = 0
-    let p = 0
-    const shifted = CARD.map((s) => {
-      if (s.kind === "probe") {
-        // die Probe eng beieinander, 6 mm rechts: echt neben der Mitte (Streuung in beide Richtungen, sonst ist
-        // die Lage nicht zu schätzen)
-        const x = 6000 + (p % 3) * 150
-        const y = (((p++ * 7) % 5) - 2) * 120
-        const score = scoreFromCoordinates(LP_10M, x, y)
-        return { ...s, xUm: x, yUm: y, decimalTenths: score.decimalTenths, ring: score.ring }
-      }
+    const shifted = CARD.filter((s) => s.kind === "match").map((s) => {
       // die Wertung wandert Schuss für Schuss nach außen: klar fallend
       const x = k * 400
       const y = (((k++ * 3) % 5) - 2) * 150
@@ -105,15 +95,7 @@ describe("was auffällt, an echten Scheiben", () => {
     const list = observations(analysisInput(shifted, "decimal", LP_10M))
     expect(list.find((x) => x.icon === "trend")?.text).toMatch(/^Über die Scheibe klar fallend/)
     expect(notable("trend", list)).toBe(true)
-    expect(list.find((x) => x.icon === "flag")?.text).toContain("lagen sicher neben der Mitte")
-    expect(notable("flag", list)).toBe(true)
-    // im Kopf steht bei der Probe, was auffällt, nicht der Vergleich der Mittel (Review U1, B1)
-    const key = keyObservations(list, 6)
-    expect(key.map((k) => k.icon)).toEqual(["position", "trend", "flag"])
-    expect(key.find((k) => k.icon === "flag")?.text).toMatch(
-      /^Die letzten fünf Probeschüsse lagen sicher neben der Mitte \(rechts, \d+,\d{2} mm\)\.$/
-    )
-    expect(keyObservations(list).map((k) => k.icon)).toEqual(["position", "trend", "flag"])
+    expect(keyObservations(list, 6).map((k) => k.icon)).toEqual(["position", "trend"])
   })
 })
 

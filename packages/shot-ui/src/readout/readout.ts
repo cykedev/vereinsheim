@@ -12,9 +12,8 @@ export interface ReadoutModel {
   index: number
   /** angetippt statt letzter Schuss */
   chosen: boolean
-  /** Nummer wie auf der Scheibe („23“, „P3“) */
+  /** Nummer wie auf der Scheibe („23“) */
   label: string
-  kindWord: "Probe" | "Schuss"
   /** wie im Fachkern: gemessener Abstand vor der Lage; verdächtige Schüsse ohne Abstand und Lage (SF-15) */
   distanceUm: number | null
   teiler: number | null
@@ -33,7 +32,6 @@ export function readoutModel(shots: readonly MetricShot[], state: ViewState): Re
     index,
     chosen: !!chosenShot,
     label: shotLabels(shots)[index],
-    kindWord: shot.kind === "probe" ? "Probe" : "Schuss",
     distanceUm,
     teiler: distanceUm === null ? null : teilerFromDistanceUm(distanceUm),
     placed: hasValidPosition(shot),

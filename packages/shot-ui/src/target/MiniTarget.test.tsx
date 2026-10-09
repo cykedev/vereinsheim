@@ -22,7 +22,7 @@ const SHOTS = [
   shot("match", 0, 105),
   shot("match", 800, 98),
   shot("match", null, 90),
-  shot("probe", 1500, 95),
+  shot("match", 1500, 95),
 ]
 const render = (props: Partial<Parameters<typeof MiniTarget>[0]> = {}) =>
   renderToStaticMarkup(
@@ -35,12 +35,12 @@ const render = (props: Partial<Parameters<typeof MiniTarget>[0]> = {}) =>
   )
 
 describe("MiniTarget", () => {
-  it("ein Treffer je Schuss mit Lage, Wertung gefüllt in Ringwert-Farbe, Probe als Ring", () => {
+  it("ein Treffer je Schuss mit Lage, gefüllt in Ringwert-Farbe (U4: keine Probe als Ring)", () => {
     const html = render()
     expect([...html.matchAll(/<circle cx=/g)]).toHaveLength(3)
     expect(html).toMatch(/<circle cx="0" cy="0"[^>]*fill="var\(--score-10\)"/)
     expect(html).toMatch(/<circle cx="0.8" cy="0"[^>]*fill="var\(--score-9\)"/)
-    expect(html).toMatch(/<circle cx="1.5" cy="0"[^>]*fill="none" stroke="var\(--score-9\)"/)
+    expect(html).toMatch(/<circle cx="1.5" cy="0"[^>]*fill="var\(--score-9\)"/)
   })
 
   it("nur Bild: aria-hidden, Ecke der Probe und blass nur auf Wunsch", () => {

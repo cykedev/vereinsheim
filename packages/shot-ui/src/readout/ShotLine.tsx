@@ -26,7 +26,7 @@ export function ShotLine({
   const model = readoutModel(shots, state)
   const parts = model
     ? [
-        `${model.kindWord} ${model.label}`,
+        `Schuss ${model.label}`,
         readoutValue(model, state.scoring),
         model.teiler === null ? null : `Teiler ${formatValue(model.teiler, 1)}`,
         // wie die Karte: Abstand zur Mitte statt x/y (Prüfung, Lage 12)
@@ -52,11 +52,7 @@ export function ShotLine({
         <span
           aria-hidden="true"
           className="mr-0.5 inline-block size-3 shrink-0 rounded-full"
-          style={
-            model.shot.kind === "probe"
-              ? { boxShadow: `inset 0 0 0 2px ${scoreColor(model.shot.ring)}` }
-              : { background: scoreColor(model.shot.ring) }
-          }
+          style={{ background: scoreColor(model.shot.ring) }}
         />
       )}
       {model

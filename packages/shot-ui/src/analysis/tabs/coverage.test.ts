@@ -47,11 +47,10 @@ describe("Hilfe in der Analyse", () => {
     }
   })
 
-  it("die Oberflächen-Hilfen Beobachtungen und Probe auf der Scheibe mit ihrem „?“", () => {
-    for (const id of ["beobachtungen", "probe-auf-der-scheibe"]) {
-      expect(VIEW_HELP.map((v) => v.id)).toContain(id)
-      expect(count(id), id).toBe(1)
-    }
+  it("die Oberflächen-Hilfe Beobachtungen mit ihrem „?“ (die Probe auf der Scheibe entfiel mit U4)", () => {
+    expect(VIEW_HELP.map((v) => v.id)).toContain("beobachtungen")
+    expect(count("beobachtungen")).toBe(1)
+    expect(VIEW_HELP.map((v) => v.id)).not.toContain("probe-auf-der-scheibe")
   })
 
   it("keine Karte doppelt, kein „Was heißt das?“ mehr in der Analyse", () => {
