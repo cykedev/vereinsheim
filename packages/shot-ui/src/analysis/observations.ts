@@ -80,7 +80,8 @@ export function observations(input: AnalysisInput): Observation[] {
   const confidence = mpiConfidence(base)
   if (confidence) {
     if (confidence.real) {
-      let text = `Die Lage ist echt: Der Schwerpunkt liegt ${directionWords(confidence.center)} neben der Mitte, mit 95 % kein Zufall.`
+      // Alltagsworte (U3, D2): „Gruppe“ statt „Schwerpunkt“, „sicher“ statt „mit 95 %“; die Fachbegriffe im Blatt
+      let text = `Deine Gruppe liegt ${directionWords(confidence.center)} neben der Mitte; das ist sicher kein Zufall.`
       const split = ringLossSplit(base, target)
       if (split?.reliable) {
         // die Summe über alle Schüsse mit Lage, darum mit ihrem n und je Schuss (Prüfung, Ergebnis 1)
@@ -95,7 +96,7 @@ export function observations(input: AnalysisInput): Observation[] {
       out.push({
         icon: "position",
         notable: true,
-        text: `Der Schwerpunkt liegt ${mm(Math.hypot(confidence.center.xUm, confidence.center.yUm))} neben der Mitte; vom Zufall ist das nicht zu unterscheiden. Ein Versatz ist nicht belegt.`,
+        text: `Deine Gruppe liegt ${mm(Math.hypot(confidence.center.xUm, confidence.center.yUm))} neben der Mitte; das kann Zufall sein, ein Versatz ist nicht belegt.`,
       })
     }
   }
@@ -106,10 +107,10 @@ export function observations(input: AnalysisInput): Observation[] {
     out.push({
       icon: "spread",
       notable: false,
-      text: `Präzision σ ${formatValue(sigma.sigma / 1000, 2)} mm, mit 95 % zwischen ${formatValue(sigma.low / 1000, 2)} und ${formatValue(sigma.high / 1000, 2)} mm.${
+      text: `Streuung ${formatValue(sigma.sigma / 1000, 2)} mm, sicher zwischen ${formatValue(sigma.low / 1000, 2)} und ${formatValue(sigma.high / 1000, 2)} mm.${
         r50 === null
           ? ""
-          : ` Die Hälfte der Treffer liegt innerhalb von ${formatValue(ringWidths(r50 * 1000, target), 2)} Ringbreiten um den Schwerpunkt.`
+          : ` Die Hälfte der Treffer liegt innerhalb von ${formatValue(ringWidths(r50 * 1000, target), 2)} Ringbreiten um die Mitte der Gruppe.`
       }`,
     })
   }
@@ -151,9 +152,12 @@ export function observations(input: AnalysisInput): Observation[] {
         Math.abs(d) < 0.005
           ? "genau im Schnitt der ersten zehn"
           : `im Schnitt ${formatValue(Math.abs(d), 2)} Ringe je Schuss ${d < 0 ? "unter" : "über"} den ersten zehn (zusammen ${ringsSigned(d * 10, scoring === "rings" ? 0 : 1)})`
-      text += ` Die letzten zehn Schuss lagen ${where}${
-        tired.deltaR50Um !== null ? `, R50 ${formatSigned(tired.deltaR50Um / 1000, 2)} mm` : ""
-      }. Ein Muster zeigt erst der Vergleich über mehrere Scheiben.`
+      // „die Gruppe weiter/enger“ statt „R50 ±…“ (U3, D2)
+      const group =
+        tired.deltaR50Um === null
+          ? ""
+          : `, die Gruppe ${formatValue(Math.abs(tired.deltaR50Um) / 1000, 2)} mm ${tired.deltaR50Um >= 0 ? "weiter" : "enger"}`
+      text += ` Die letzten zehn Schuss lagen ${where}${group}. Ein Muster zeigt erst der Vergleich über mehrere Scheiben.`
     }
     out.push({ icon: "trend", text, notable: trend.clear })
   }
@@ -183,7 +187,7 @@ export function observations(input: AnalysisInput): Observation[] {
     out.push({
       icon: "clock",
       notable: false,
-      text: `Tempo: im Median ${formatValue(pace.medianMs / 1000, 0)} s je Schuss; die mittlere Hälfte der Abstände liegt in einem Fenster von ${formatValue(pace.iqrMs / 1000, 0)} s.`,
+      text: `Tempo: meist ${formatValue(pace.medianMs / 1000, 0)} s je Schuss; die Hälfte der Abstände liegt in einem Fenster von ${formatValue(pace.iqrMs / 1000, 0)} s.`,
     })
   }
 
@@ -197,7 +201,7 @@ export function observations(input: AnalysisInput): Observation[] {
       // nur, was der Test über die Probe sagt, nichts über die Wertung; mit ihrem n (Prüfung, Probe 1 und 5)
       const last = countWord(zeroed.n)
       if (zeroed.real)
-        head = `Die letzten ${last} Probeschüsse lagen echt neben der Mitte (${directionName(zeroed.center)}, ${mm(zeroed.offsetUm)}).`
+        head = `Die letzten ${last} Probeschüsse lagen sicher neben der Mitte (${directionName(zeroed.center)}, ${mm(zeroed.offsetUm)}).`
       text += head
         ? ` ${head}`
         : ` Bei den letzten ${last} Probeschüssen ist kein Versatz nachweisbar.`

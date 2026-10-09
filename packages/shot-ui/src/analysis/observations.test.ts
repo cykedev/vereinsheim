@@ -78,7 +78,9 @@ describe("was auffällt, an echten Scheiben", () => {
       expect(notable(icon)).toBe(false)
     const key = keyObservations(all)
     expect(key.map((k) => k.icon)).toEqual(["position", "outlier"])
-    expect(key[0].text).toMatch(/^Die Lage ist echt: .* mit 95 % kein Zufall\.$/)
+    expect(key[0].text).toMatch(
+      /^Deine Gruppe liegt .* neben der Mitte; das ist sicher kein Zufall\.$/
+    )
     expect(key[1].text).toBe("Schuss 27 fällt als Ausreißer aus der Gruppe.")
   })
 
@@ -103,14 +105,31 @@ describe("was auffällt, an echten Scheiben", () => {
     const list = observations(analysisInput(shifted, "decimal", LP_10M))
     expect(list.find((x) => x.icon === "trend")?.text).toMatch(/^Über die Scheibe klar fallend/)
     expect(notable("trend", list)).toBe(true)
-    expect(list.find((x) => x.icon === "flag")?.text).toContain("lagen echt neben der Mitte")
+    expect(list.find((x) => x.icon === "flag")?.text).toContain("lagen sicher neben der Mitte")
     expect(notable("flag", list)).toBe(true)
     // im Kopf steht bei der Probe, was auffällt, nicht der Vergleich der Mittel (Review U1, B1)
     const key = keyObservations(list, 6)
     expect(key.map((k) => k.icon)).toEqual(["position", "trend", "flag"])
     expect(key.find((k) => k.icon === "flag")?.text).toMatch(
-      /^Die letzten fünf Probeschüsse lagen echt neben der Mitte \(rechts, \d+,\d{2} mm\)\.$/
+      /^Die letzten fünf Probeschüsse lagen sicher neben der Mitte \(rechts, \d+,\d{2} mm\)\.$/
     )
     expect(keyObservations(list).map((k) => k.icon)).toEqual(["position", "trend", "flag"])
+  })
+})
+
+describe("Sätze in Alltagsworten (U3, D2)", () => {
+  it("keine Fachbegriffe: kein σ, R50, „95 %“, Median, Schwerpunkt", () => {
+    const texts = observations(analysisInput(fortyCard(), "decimal", LP_10M)).map((o) => o.text)
+    for (const text of texts)
+      for (const term of ["σ", "R50", "95 %", "Median", "Schwerpunkt", "mittlere Hälfte"])
+        expect(text, term).not.toContain(term)
+    const spread = texts.find((t) => t.startsWith("Streuung "))
+    expect(spread).toMatch(
+      /^Streuung \d+,\d{2} mm, sicher zwischen \d+,\d{2} und \d+,\d{2} mm\. Die Hälfte der Treffer liegt innerhalb von \d+,\d{2} Ringbreiten um die Mitte der Gruppe\.$/
+    )
+    // Ermüdung: die Gruppe weiter oder enger statt R50
+    expect(texts.find((t) => t.includes("Die letzten zehn Schuss"))).toMatch(
+      /, die Gruppe \d+,\d{2} mm (weiter|enger)\./
+    )
   })
 })

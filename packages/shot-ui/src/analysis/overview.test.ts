@@ -157,7 +157,9 @@ describe("Beobachtungen in Worten", () => {
     expect(sentences.length).toBeGreaterThanOrEqual(5)
     expect(sentences[0].icon).toBe("position")
     expect(sentences[0].text).toMatch(
-      mpiConfidence(base)!.real ? /^Die Lage ist echt/ : /vom Zufall nicht zu unterscheiden/
+      mpiConfidence(base)!.real
+        ? /^Deine Gruppe liegt .* neben der Mitte; das ist sicher kein Zufall\./
+        : /das kann Zufall sein/
     )
     expect(sentences.map((s) => s.icon)).toContain("spread")
   })
@@ -208,7 +210,7 @@ describe("Beobachtungen in Worten", () => {
     )
     const text = observations(analysisInput(centered, "decimal", LP_10M))[0].text
     expect(text).toMatch(
-      /vom Zufall ist das nicht zu unterscheiden\. Ein Versatz ist nicht belegt\.$/
+      /^Deine Gruppe liegt [\d,]+ mm neben der Mitte; das kann Zufall sein, ein Versatz ist nicht belegt\.$/
     )
   })
 
@@ -244,7 +246,7 @@ describe("Beobachtungen in Worten", () => {
     const median = formatValue(pace.medianMs / 1000, 0)
     expect(median).not.toBe(formatValue(tempoSpread(late.base)!.medianMs / 1000, 0))
     const clock = observations(late).find((s) => s.icon === "clock")!.text
-    expect(clock).toContain(`Tempo: im Median ${median} s je Schuss`)
+    expect(clock).toContain(`Tempo: meist ${median} s je Schuss`)
   })
 
   it("die Pause vor Schuss 21: bis zu drei Schüsse danach, je Schuss gegen die übrigen", () => {
@@ -273,7 +275,7 @@ describe("Beobachtungen in Worten", () => {
     const tired = fatigue(base, "decimal")!
     const text = sentences.find((s) => s.icon === "trend")!.text
     expect(text).toContain(
-      `Die letzten zehn Schuss lagen im Schnitt ${formatValue(Math.abs(tired.deltaRings), 2)} Ringe je Schuss ${tired.deltaRings < 0 ? "unter" : "über"} den ersten zehn (zusammen ${formatSigned(tired.deltaRings * 10, 1)} Ringe), R50 ${formatSigned(tired.deltaR50Um! / 1000, 2)} mm.`
+      `Die letzten zehn Schuss lagen im Schnitt ${formatValue(Math.abs(tired.deltaRings), 2)} Ringe je Schuss ${tired.deltaRings < 0 ? "unter" : "über"} den ersten zehn (zusammen ${formatSigned(tired.deltaRings * 10, 1)} Ringe), die Gruppe ${formatValue(Math.abs(tired.deltaR50Um!) / 1000, 2)} mm ${tired.deltaR50Um! >= 0 ? "weiter" : "enger"}.`
     )
   })
 
@@ -296,7 +298,7 @@ describe("Beobachtungen in Worten", () => {
       (s) => s.icon === "flag"
     )!.text
     expect(text).toContain(
-      `Die letzten fünf Probeschüsse lagen echt neben der Mitte (rechts oben, ${formatValue(zeroed.offsetUm / 1000, 2)} mm).`
+      `Die letzten fünf Probeschüsse lagen sicher neben der Mitte (rechts oben, ${formatValue(zeroed.offsetUm / 1000, 2)} mm).`
     )
     expect(text).not.toContain("Wertung begann")
   })
