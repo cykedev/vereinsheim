@@ -238,6 +238,15 @@ describe("Beobachtungen in Worten", () => {
     expect(pause?.text).toMatch(/^Nach der Pause vor Schuss 21 lagen die Schüsse danach/)
   })
 
+  it("Tempo-Satz über eine späte Probe mitten im Takt: keine Lücke (SF-04)", () => {
+    const late = analysisInput(withSighterAfter(CARD, 7), "decimal", LP_10M)
+    const pace = tempoSpread(late.base, late.card)!
+    const median = formatValue(pace.medianMs / 1000, 0)
+    expect(median).not.toBe(formatValue(tempoSpread(late.base)!.medianMs / 1000, 0))
+    const clock = observations(late).find((s) => s.icon === "clock")!.text
+    expect(clock).toContain(`Tempo: im Median ${median} s je Schuss`)
+  })
+
   it("die Pause vor Schuss 21: bis zu drei Schüsse danach, je Schuss gegen die übrigen", () => {
     // nicht „unter dem Schnitt der Scheibe“ und nicht „die nächsten drei“ (Prüfung, Zeit 1)
     const delta = pauseRecovery(base, "decimal")!.effects[0].deltaRings!

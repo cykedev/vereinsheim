@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from "vitest"
 import { directionWords, formatValue } from "../../format"
 import { initialViewState, type Layer } from "../../view-state"
 import { analysisInput } from "../input"
-import { fortyCard } from "../testCard"
+import { fortyCard, withSighterAfter } from "../testCard"
 import { cardHtml, cardText, renderTab } from "../testPanel"
 import { positionCards } from "./PositionTab"
 
@@ -122,6 +122,14 @@ describe("Reiter Lage", () => {
     expect(cardText(html, "lage-echt")).toContain(
       "Auf der Scheibe gilt die Ellipse für die Auswahl dort; dieses Urteil für alle Wertungsschüsse."
     )
+  })
+
+  it("Drift über eine späte Probe: die Probe ist keine Lücke (SF-04)", () => {
+    const shots = withSighterAfter(CARD, 7)
+    const base = shots.filter((s) => s.kind === "match")
+    const withCard = formatValue(drift(base, shots)!.vonNeumann, 2)
+    expect(withCard).not.toBe(formatValue(drift(base)!.vonNeumann, 2))
+    expect(cardText(renderTab("position", { shots }), "drift-und-wanderung")).toContain(withCard)
   })
 
   it("Wandern und Pfad: was unter und über 2 heißt, wie weit Serien ohne Wandern liegen", () => {

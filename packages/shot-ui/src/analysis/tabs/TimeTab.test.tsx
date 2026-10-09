@@ -75,6 +75,21 @@ describe("Reiter Zeit und Verlauf, Diagramme", () => {
     expect(all(verlauf, /data-pause-line="(\d+)"/g).map(Number)).toEqual([21])
     const rhythmus = cardHtml(html, "rhythmus")
     expect(all(rhythmus, /data-interval="(\d+)" data-pause="true"/g).map(Number)).toEqual([21])
+    expect(cardText(html, "pausen")).toContain("Vor Schuss 21")
+  })
+
+  it("eine späte Probe mitten im Takt ist keine Lücke: Median und Tempo-Streuung (SF-04)", () => {
+    // nach Wertungsschuss 7: Median und Anteil der Streuung unterscheiden sich mit und ohne Karte
+    const shots = withSighterAfter(fortyCard(), 7)
+    const base = shots.filter((s) => s.kind === "match")
+    const median = metricByKey("time.intervalMedian")!
+    const withCard = formatValue(computeMetric(median, base, shots)!, 0)
+    expect(withCard).not.toBe(formatValue(computeMetric(median, base)!, 0))
+    const relative = percentText(tempoSpread(base, shots)!.relative!)
+    expect(relative).not.toBe(percentText(tempoSpread(base)!.relative!))
+    const text = cardText(renderTab("time", { shots }), "tempo-und-dauer")
+    expect(text).toContain(`${withCard} s`)
+    expect(text).toContain(`(${relative} vom Median)`)
   })
 
   it("wenige Schüsse oder ohne Zeit: der Grund statt eines Diagramms", () => {
