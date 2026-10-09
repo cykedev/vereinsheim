@@ -26,6 +26,7 @@
     "./target/MpiMark": "./src/target/MpiMark.tsx",
     "./target/MiniTarget": "./src/target/MiniTarget.tsx",
     "./analysis/parts": "./src/analysis/parts.tsx",
+    "./analysis/charts/frame": "./src/analysis/charts/frame.tsx",
     "./analysis/AnalysisPanel": "./src/analysis/AnalysisPanel.tsx",
     "./analysis/input": "./src/analysis/input.ts",
     "./analysis/overview": "./src/analysis/overview.ts",

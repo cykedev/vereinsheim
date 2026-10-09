@@ -9,6 +9,7 @@ import {
   type MetricShot,
 } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
+import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { FALLACIES, READING_GUIDE, VIEW_HELP } from "@vereinsheim/shot-help/guide"
 import { GLOSSARY } from "@vereinsheim/shot-help/glossary"
 import { helpForMetric, helpTopic } from "@vereinsheim/shot-help/lookup"
@@ -17,6 +18,9 @@ import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
 import { observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { overviewTiles } from "@vereinsheim/shot-ui/analysis/overview"
 import { formatValue } from "@vereinsheim/shot-ui/format"
+import { periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
+import { periodSentence, verdictText } from "@vereinsheim/shot-ui/period/sentence"
+import type { PeriodState } from "@vereinsheim/shot-ui/period/state"
 import { TILE_KEYS } from "@vereinsheim/shot-ui/metrics/MetricTiles"
 import { selectionShots, shotIntervals, shotLabels } from "@vereinsheim/shot-ui/shots"
 import type { ViewState } from "@vereinsheim/shot-ui/view-state"
@@ -43,12 +47,16 @@ const TOOLS = {
   READING_GUIDE,
   GLOSSARY,
   FALLACIES,
+  // Seite eines Zeitraums (Plan L3): Modell und Worte zum Nachrechnen
+  period: { periodModel, periodSentence, verdictText },
 }
 
 export interface LaborHook {
-  shots: readonly MetricShot[]
-  state: ViewState
-  target: TargetImage
+  shots?: readonly MetricShot[]
+  state?: ViewState
+  target?: TargetImage
+  /** die Seite eines Zeitraums: Scheiben der Familie, Zustand, Modell */
+  period?: { cards: readonly PeriodCard[]; state: PeriodState; model: PeriodModel }
   tools: typeof TOOLS
 }
 
@@ -66,5 +74,10 @@ export const underTest = () => TEST_AT_LOAD
 
 /** den aktuellen Stand für die Skriptprüfung ablegen; außerhalb von #pruefen nichts */
 export function exposeForTest(shots: readonly MetricShot[], state: ViewState, target: TargetImage) {
-  if (underTest()) window.__labor = { shots, state, target, tools: TOOLS }
+  if (underTest()) window.__labor = { ...window.__labor, shots, state, target, tools: TOOLS }
+}
+
+/** den Stand der Seite eines Zeitraums für die Skriptprüfung ablegen; außerhalb von #pruefen nichts */
+export function exposePeriodForTest(period: NonNullable<LaborHook["period"]>) {
+  if (underTest()) window.__labor = { ...window.__labor, period, tools: TOOLS }
 }

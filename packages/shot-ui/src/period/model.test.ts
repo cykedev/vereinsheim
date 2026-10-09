@@ -127,7 +127,7 @@ describe("Vergleich und Satz", () => {
     const m = model(now)
     expect(m.ownAverage?.average?.delta).toBeCloseTo(-2.5, 12)
     expect(periodSentence(m)).toBe(
-      "Deine letzte Scheibe lag 2,50 unter deinem Schnitt der 30 Tage davor."
+      "Deine neueste Scheibe lag 2,50 unter deinem Schnitt der 30 Tage davor."
     )
     expect(periodSentence(model(now.slice(0, 2)))).toBeNull()
   })

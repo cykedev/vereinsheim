@@ -5,6 +5,7 @@ import {
   DAY_MS,
   inRange,
   isoWeekKey,
+  rangeDays,
   resolveRange,
   ROLLING_CHOICES,
   weekLabel,
@@ -87,6 +88,15 @@ describe("Zeiträume", () => {
     )
     expect(compareRange({ type: "named", id: "weg" }, range, context)).toBeNull()
     expect(compareRange({ type: "none" }, range, context)).toBeNull()
+  })
+
+  it("erster und letzter Tag in Worten", () => {
+    expect(rangeDays(resolveRange({ type: "rolling", days: 90 }, context), TZ)).toBe(
+      "02.07.2026 – 30.09.2026"
+    )
+    expect(rangeDays(resolveRange({ type: "named", id: "lm" }, context), TZ)).toBe(
+      "01.05.2026 – 30.06.2026"
+    )
   })
 
   it("im Zeitraum: Anfang eingeschlossen, Ende nicht", () => {

@@ -131,3 +131,9 @@ export function isoWeekKey(isoDate: string): string {
 
 /** „KW 29“ */
 export const weekLabel = (key: string) => `KW ${Number(key.slice(6))}`
+
+/** „02.07.2026 – 30.09.2026“: erster und letzter Tag des Zeitraums in der Zeitzone */
+export function rangeDays(range: DateRange, timeZone: string): string {
+  const day = (ms: number) => formatDateOnly(new Date(ms), timeZone)
+  return `${day(range.fromMs)} – ${day(range.toMs - 1)}`
+}
