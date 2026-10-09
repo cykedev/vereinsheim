@@ -30,7 +30,7 @@ import {
 } from "react"
 
 import { CardView, type OpenedCard } from "./CardView"
-import type { LaborMode, LaborView, Theme } from "./LaborHeader"
+import type { LaborMode, LaborView, Theme } from "./LaborPanel"
 import { ListView } from "./ListView"
 import { PeriodView } from "./PeriodView"
 import { PlaceholderView, type PlaceholderPage } from "./PlaceholderView"
@@ -242,16 +242,11 @@ export function App({ commit }: { commit: string }) {
       scrollTo(0, 0)
     } else go(appRoute.current ?? listRoute)
   }
-  const header = {
-    commit,
-    mode,
-    view,
-    onView: changeView,
-    theme,
-    onTheme: (next: Theme) => {
-      store.set("theme", next)
-      setTheme(next)
-    },
+  // was das Blatt „Labor“ braucht; die Darstellung ist eine Einstellung der App (Seitenleiste, Profil)
+  const header = { commit, mode, view, onView: changeView }
+  const changeTheme = (next: Theme) => {
+    store.set("theme", next)
+    setTheme(next)
   }
   const onExplain = useCallback((next: boolean) => {
     store.set("help", next ? "1" : "0")
@@ -266,7 +261,7 @@ export function App({ commit }: { commit: string }) {
         links={areaLinks({ cards: listRoute, progress: progressHere }, period.family)}
         openCount={OPEN_EXAMPLES.length}
         isAdmin
-        sidebarFooter={<ThemeSwitch theme={theme} onTheme={header.onTheme} />}
+        sidebarFooter={<ThemeSwitch theme={theme} onTheme={changeTheme} />}
       >
         {mode === "card" ? (
           <CardView
@@ -290,7 +285,7 @@ export function App({ commit }: { commit: string }) {
         ) : mode === "start" ? (
           <StartView header={header} scoring={devicesScoring()} family={period.family} />
         ) : (
-          <PlaceholderView header={header} page={mode} theme={theme} onTheme={header.onTheme} />
+          <PlaceholderView header={header} page={mode} theme={theme} onTheme={changeTheme} />
         )}
       </AppFrame>
       <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />

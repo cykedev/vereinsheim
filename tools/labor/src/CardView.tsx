@@ -37,7 +37,7 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 import { useCallback, useEffect, useMemo, useReducer, useState, type MouseEvent } from "react"
 
-import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
+import { LaborPanel, type LaborPanelProps } from "./LaborPanel"
 
 import { rawSample, SAMPLES, toMetricShots, type RawShot, type SampleId } from "./samples"
 import { NAMED_PERIODS, season, SEASON_NOW_MS, SEASON_TIME_ZONE } from "./season"
@@ -81,7 +81,7 @@ export interface OpenedCard {
 
 export interface CardViewProps {
   /** der Kopf des Labors ohne Umschalter und Hinweis */
-  header: Omit<LaborHeaderProps, "children" | "hint">
+  header: Omit<LaborPanelProps, "children" | "hint" | "address">
   explain: boolean
   onExplain: (explain: boolean) => void
   onHelp: (helpId: string | null) => void
@@ -289,7 +289,7 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborHeader
+      <LaborPanel
         {...header}
         address={urlFromRoute(route)}
         hint={opened ? `${opened.label} aus der erfundenen Saison.` : sample.hint}
@@ -334,7 +334,7 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
             onChange={setSetKind}
           />
         )}
-      </LaborHeader>
+      </LaborPanel>
 
       {opened && (
         <CardContextBar

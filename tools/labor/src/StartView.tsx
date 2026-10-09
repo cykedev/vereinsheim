@@ -10,7 +10,7 @@ import { startModel } from "@vereinsheim/shot-ui/start/model"
 import { OpenBox, type OpenItem } from "@vereinsheim/shot-ui/start/OpenBox"
 import { useEffect, useMemo } from "react"
 
-import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
+import { LaborPanel, type LaborPanelProps } from "./LaborPanel"
 import {
   FAMILIES,
   NAMED_PERIODS,
@@ -40,7 +40,7 @@ export const OPEN_EXAMPLES: readonly OpenItem[] = [
 const labelOf = (family: string) => FAMILIES.find((f) => f.value === family)?.label ?? family
 
 export interface StartViewProps {
-  header: Omit<LaborHeaderProps, "children" | "hint">
+  header: Omit<LaborPanelProps, "children" | "hint" | "address">
   /** Wertung des Geräts (Start hat keine eigene) */
   scoring: Scoring
   /** die zuletzt gewählte Familie, für die Form */
@@ -76,7 +76,7 @@ export function StartView({ header, scoring, family }: StartViewProps) {
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborHeader
+      <LaborPanel
         {...header}
         hint="Start aus den echten Bausteinen, über die erfundene Saison: „Offen“ mit zwei Beispielen, der letzte Abend im Formband, die Form der letzten 90 Tage."
       />

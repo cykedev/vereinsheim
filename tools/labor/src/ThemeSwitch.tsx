@@ -1,6 +1,6 @@
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 
-import type { Theme } from "./LaborHeader"
+import type { Theme } from "./LaborPanel"
 
 /**
  * Darstellung System, Hell, Dunkel (Labor näher an der App, D2): eine Einstellung der App, am Desktop unten in der

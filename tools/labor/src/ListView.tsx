@@ -9,7 +9,7 @@ import { listOnEvening, openCard, progressFromList } from "@vereinsheim/shot-ui/
 import { urlFromRoute, type ListQuery, type ListRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { useEffect, useMemo } from "react"
 
-import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
+import { LaborPanel, type LaborPanelProps } from "./LaborPanel"
 import {
   FAMILIES,
   NAMED_PERIODS,
@@ -21,7 +21,7 @@ import {
 import { exposeListForTest } from "./testHook"
 
 export interface ListViewProps {
-  header: Omit<LaborHeaderProps, "children" | "hint">
+  header: Omit<LaborPanelProps, "children" | "hint" | "address">
   query: ListQuery
   onQuery: (query: ListQuery) => void
   /** Wertung des Geräts (die Liste hat keine eigene) */
@@ -64,7 +64,7 @@ export function ListView({ header, query, onQuery, scoring }: ListViewProps) {
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborHeader
+      <LaborPanel
         {...header}
         address={urlFromRoute({ page: "cards", query, evening: null })}
         hint="Die erfundene Saison nach Abend: an zwei Abenden zwei Scheiben Luftpistole, an drei Samstagen Luftgewehr und Luftpistole am selben Abend."

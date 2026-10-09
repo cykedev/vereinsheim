@@ -36,6 +36,8 @@ addEventListener("load", async () => {
             a.getAttribute("aria-label") === label ||
             a.getAttribute("aria-label")?.startsWith(`${label},`))
       )
+    // das Blatt der Hilfe ist das letzte <dialog> der Seite; davor stehen das der Labor-Werkzeuge und je Seite weitere
+    const helpSheet = () => $$("dialog").at(-1)
     const zoom = () => button("Auf Gruppe zoomen")
     // Adressen (Plan N1): die Zeile im Kopf, in Teile wie `location`, hin und zurück über den Prüfhaken
     const addr = () => txt($("[data-address]")).trim()
@@ -144,9 +146,10 @@ addEventListener("load", async () => {
 
     // ---------- Kopf und Ausgangslage (LP, 40 Schuss mit Probe)
     check(
-      "Kopf: Stand gesetzt",
-      /Stand [0-9a-f]{7}/.test(txt($("header"))),
-      txt($("header")).slice(-40)
+      "Labor: der Stand steht im Blatt der Labor-Werkzeuge, kein Labor-Kopf auf der Seite",
+      /Stand [0-9a-f]{7}/.test(txt($("[data-labor-panel]"))) &&
+        !$$("h1").some((h) => txt(h).includes("Die Bausteine im Einsatz")),
+      txt($("[data-labor-panel]")).slice(0, 40)
     )
     const [x0, , w0] = view()
     check(
@@ -780,13 +783,13 @@ addEventListener("load", async () => {
     await click(targetHelpButton, 100)
     check(
       "„?“ an der Scheibe öffnet die Erklärung „Trefferbild“ als Blatt",
-      !!$("dialog")?.open && txt($("dialog h2")).startsWith("Trefferbild"),
-      txt($("dialog h2"))
+      !!helpSheet()?.open && txt($("h2", helpSheet())).startsWith("Trefferbild"),
+      txt($("h2", helpSheet()))
     )
-    await click($('button[aria-label="Schließen"]', $("dialog")), 100)
+    await click($('button[aria-label="Schließen"]', helpSheet()), 100)
 
     const sigmaHelp = () => $('[data-metric="group.sigma"] button[aria-label^="Erklärung"]')
-    const sheet = () => $("dialog")
+    const sheet = () => helpSheet()
     const sigmaTopic = L().tools.helpForMetric("group.sigma")
     sigmaHelp().focus()
     await click(sigmaHelp(), 100)
@@ -1443,13 +1446,13 @@ addEventListener("load", async () => {
       const entry = T().helpTopic(id) ?? T().VIEW_HELP.find((v) => v.id === id)
       await click(first, 100)
       if (
-        !$("dialog").open ||
-        txt($("dialog h2")) !== entry.title ||
-        !txt($("dialog")).includes(entry.what)
+        !helpSheet().open ||
+        txt($("h2", helpSheet())) !== entry.title ||
+        !txt(helpSheet()).includes(entry.what)
       ) {
         sheetProblems.push(`${label}: ${id}`)
       }
-      await click($('button[aria-label="Schließen"]', $("dialog")), 100)
+      await click($('button[aria-label="Schließen"]', helpSheet()), 100)
     }
     check("Hilfe: jede Karte hat ihr „?“", withoutHelp.length === 0, withoutHelp.join(", "))
     const wantedHelp = [
@@ -1878,7 +1881,9 @@ addEventListener("load", async () => {
       (b) => txt(b) === "Auf der Scheibe"
     )
     if (rulerShow) await frameClick(rulerPhone, rulerShow, 400)
-    const rulerPill = [...rd.querySelectorAll("button")].find((b) => txt(b).startsWith("Zurück zu"))
+    const rulerPill = [...rd.querySelectorAll("button")].find(
+      (b) => txt(b).startsWith("Zurück zu") && !b.closest("[data-labor-panel]")
+    )
     check(
       "Telefon: „Auf der Scheibe“ springt zur Scheibe, die Pille führt zurück zu „Zeit und Verlauf“",
       !!rulerShow &&
@@ -1946,7 +1951,7 @@ addEventListener("load", async () => {
     )
     phoneHelp?.dispatchEvent(new MouseEvent("click", { bubbles: true }))
     await wait(150)
-    const phoneSheet = doc?.querySelector("dialog")
+    const phoneSheet = doc ? [...doc.querySelectorAll("dialog")].at(-1) : null
     const phoneRect = phoneSheet?.getBoundingClientRect()
     check(
       "Handy: Blatt von unten über die volle Breite",
@@ -2033,7 +2038,9 @@ addEventListener("load", async () => {
     smallEllipse.focus()
     await frameClick(small, smallEllipse, 1500)
     const pillButton = () =>
-      [...sd.querySelectorAll("button")].find((b) => txt(b).startsWith("Zurück zu"))
+      [...sd.querySelectorAll("button")].find(
+        (b) => txt(b).startsWith("Zurück zu") && !b.closest("[data-labor-panel]")
+      )
     const jumped = sd.querySelector('[data-section="target"]').getBoundingClientRect().top
     check(
       "Handy 375 px: Ellipse aus „Lage“ bringt die Scheibe ins Bild und die Pille",
@@ -3063,7 +3070,7 @@ addEventListener("load", async () => {
       )
       phone.remove()
       await click(area("Fortschritt"), 300)
-      await click(button("Beispiele"), 300)
+      await click(button("Beispielscheiben öffnen", $("[data-labor-panel]")), 300)
       // #numbers gibt es auf beiden Seiten: es öffnet die zuletzt gewählte Ansicht, hier die Scheibe (Review)
       const reload = await openFrame(1280, 900, "#numbers")
       check(

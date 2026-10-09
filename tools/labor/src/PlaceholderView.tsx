@@ -1,6 +1,6 @@
 import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 
-import { LaborHeader, type LaborHeaderProps, type Theme } from "./LaborHeader"
+import { LaborPanel, type LaborPanelProps, type Theme } from "./LaborPanel"
 import { ThemeSwitch } from "./ThemeSwitch"
 
 /** die Bereiche, die das Labor nur andeutet (Plan N3, D7; Start seit N5 echt) */
@@ -33,7 +33,7 @@ export function PlaceholderView({
   theme,
   onTheme,
 }: {
-  header: Omit<LaborHeaderProps, "children" | "hint">
+  header: Omit<LaborPanelProps, "children" | "hint" | "address">
   page: PlaceholderPage
   /** Darstellung: in Profil, wo die Einstellung in der App lebt (Labor näher an der App, D2) */
   theme: Theme
@@ -42,7 +42,7 @@ export function PlaceholderView({
   const { title, sentence } = TEXT[page]
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborHeader
+      <LaborPanel
         {...header}
         hint="Platzhalter: Der Rahmen ist echt, der Inhalt dieses Bereichs folgt."
       />

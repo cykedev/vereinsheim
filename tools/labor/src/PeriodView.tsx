@@ -27,7 +27,7 @@ import { useCallback, useEffect, useMemo } from "react"
 import { listFromProgress, openCard, progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import { urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 
-import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
+import { LaborPanel, type LaborPanelProps } from "./LaborPanel"
 import {
   FAMILIES,
   NAMED_PERIODS,
@@ -43,7 +43,7 @@ const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
 const TZ = SEASON_TIME_ZONE
 
 export interface PeriodViewProps {
-  header: Omit<LaborHeaderProps, "children" | "hint">
+  header: Omit<LaborPanelProps, "children" | "hint" | "address">
   state: PeriodState
   dispatch: (action: PeriodAction) => void
   explain: boolean
@@ -133,7 +133,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborHeader
+      <LaborPanel
         {...header}
         address={urlFromRoute(progressRoute(state, null))}
         hint="Erfundene Saison vom 6. April bis 27. September 2026: Luftgewehr mit Formknick im Juni und neuer Munition ab August, Luftpistole; „jetzt“ ist der 30. September."
