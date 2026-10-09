@@ -58,9 +58,18 @@ export function backRoute(card: CardRoute): Route {
   }
 }
 
-/** die vorige oder nächste Scheibe im selben Kontext: Herkunft, Wertung und Abschnitt bleiben (D6) */
+/**
+ * die vorige oder nächste Scheibe im selben Kontext: Herkunft, Wertung und Abschnitt bleiben (D6); der Reiter der
+ * Analyse nicht, eine Scheibe beginnt mit dem ersten (User, 9. Oktober 2026)
+ */
 export function siblingRoute(card: CardRoute, id: string): CardRoute {
-  return { ...card, id, selection: null, shot: null }
+  return {
+    ...card,
+    id,
+    selection: null,
+    shot: null,
+    anchor: card.anchor ? { section: card.anchor.section } : null,
+  }
 }
 
 /** „Alle in Scheiben zeigen“ (D7): Familie, Art und Zeitraum des Fortschritts; „Alles“ ist die ganze Liste */

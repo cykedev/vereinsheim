@@ -102,7 +102,7 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
       key: "beobachtungen",
       wide: true,
       element: (
-        <AnalysisCard help="beobachtungen" ids="aus den Zahlen" explain={explain} onHelp={onHelp}>
+        <AnalysisCard help="beobachtungen" tag="aus den Zahlen" explain={explain} onHelp={onHelp}>
           {sentences.length ? (
             <ul className="grid gap-2.5 text-[14px] leading-relaxed">
               {sentences.map((sentence) => (

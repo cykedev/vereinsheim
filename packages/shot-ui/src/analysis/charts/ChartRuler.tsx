@@ -66,10 +66,22 @@ export function useRuler(
     "aria-valuemin": 0,
     "aria-valuemax": xs.length,
     "aria-valuenow": index === null ? 0 : index + 1,
-    style: { touchAction: "pan-y", cursor: "crosshair", userSelect: "none" },
+    // Safari kennt `user-select` nur mit Präfix: ohne markiert Ziehen Text (User, 9. Oktober 2026)
+    style: {
+      touchAction: "pan-y",
+      cursor: "crosshair",
+      userSelect: "none",
+      WebkitUserSelect: "none",
+    },
     onPointerDown: (event) => {
       // nur die Haupttaste (Finger, Stift, linke Maustaste) wählt
       if (event.button !== 0) return
+      // mit der Maus beginnt sonst eine Textauswahl, die beim Ziehen über die Seite wandert; der Fokus (Pfeiltasten)
+      // kommt dann nicht mehr vom Browser, also selbst setzen
+      if (event.pointerType === "mouse") {
+        event.preventDefault()
+        event.currentTarget.focus({ preventScroll: true })
+      }
       const i = at(event)
       try {
         event.currentTarget.setPointerCapture(event.pointerId)

@@ -98,7 +98,7 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
     expect(backRoute(direct)).toEqual({ page: "cards", query: DEFAULT_LIST, evening: null })
   })
 
-  it("Blättern behält Herkunft, Wertung und Abschnitt und verliert Auswahl und Schuss", () => {
+  it("Blättern behält Herkunft, Wertung und Abschnitt und verliert Auswahl, Schuss und Reiter", () => {
     const card = {
       ...openCard(PROGRESS, "c42"),
       selection: 2,
@@ -110,7 +110,14 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
       id: "c43",
       selection: null,
       shot: null,
+      anchor: { section: "analysis" },
     })
+    // die nächste Scheibe öffnet die Analyse mit dem ersten Reiter (User, 9. Oktober 2026)
+    expect(urlFromRoute(siblingRoute(card, "c43"))).toMatch(/#analysis$/)
+    expect(siblingRoute({ ...card, anchor: { section: "numbers" } }, "c43").anchor).toEqual({
+      section: "numbers",
+    })
+    expect(siblingRoute({ ...card, anchor: null }, "c43").anchor).toBeNull()
   })
 
   it("Querverweise: Familie, Art und Zeitraum gehen mit; eine Liste ohne Zeitraum wird „Alles“", () => {

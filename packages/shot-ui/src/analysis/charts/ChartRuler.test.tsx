@@ -1,6 +1,6 @@
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { RULER_HINT, RulerMark, RulerReadout, useRuler, ValuesTable } from "./ChartRuler"
 
@@ -90,5 +90,45 @@ describe("Lineal: Index außerhalb der Werte", () => {
   it("gilt als keine Wahl, statt auf einen fehlenden Wert zu zeigen", () => {
     expect(renderToStaticMarkup(h(Few, { preset: 5 }))).toContain("keine")
     expect(renderToStaticMarkup(h(Few, { preset: 1 }))).toContain("Index 1")
+  })
+})
+
+describe("Lineal ohne Textauswahl (User, 9. Oktober 2026)", () => {
+  let props: ReturnType<typeof useRuler>["svgProps"] | null = null
+  function Capture() {
+    const { svgProps } = useRuler([10, 20, 30], 600)
+    props = svgProps
+    return h("svg", svgProps)
+  }
+  const html = renderToStaticMarkup(h(Capture))
+  const press = (pointerType: string) => {
+    const event = {
+      button: 0,
+      pointerType,
+      pointerId: 1,
+      clientX: 100,
+      preventDefault: vi.fn(),
+      currentTarget: {
+        focus: vi.fn(),
+        setPointerCapture: () => {},
+        getBoundingClientRect: () => ({ left: 0, width: 600 }),
+      },
+    }
+    props?.onPointerDown?.(event as never)
+    return event
+  }
+
+  it("auch mit Präfix für Safari", () => {
+    expect(html).toContain("user-select:none")
+    expect(html).toContain("-webkit-user-select:none")
+  })
+
+  it("die Maus beginnt keine Auswahl und fokussiert das Diagramm selbst; ein Finger scrollt weiter", () => {
+    const mouse = press("mouse")
+    expect(mouse.preventDefault).toHaveBeenCalled()
+    expect(mouse.currentTarget.focus).toHaveBeenCalledWith({ preventScroll: true })
+    const touch = press("touch")
+    expect(touch.preventDefault).not.toHaveBeenCalled()
+    expect(touch.currentTarget.focus).not.toHaveBeenCalled()
   })
 })

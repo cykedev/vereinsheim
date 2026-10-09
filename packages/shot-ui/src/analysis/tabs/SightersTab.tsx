@@ -175,7 +175,7 @@ export function sighterCards({ input, explain, onHelp }: CardContext): CardSpec[
     {
       key: "probe-auf-der-scheibe",
       element: (
-        <AnalysisCard help="probe-auf-der-scheibe" ids="" explain={explain} onHelp={onHelp}>
+        <AnalysisCard help="probe-auf-der-scheibe" explain={explain} onHelp={onHelp}>
           {summary && sightersWithPosition ? (
             <>
               <ChartSlot height={260}>

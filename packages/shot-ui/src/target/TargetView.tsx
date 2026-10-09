@@ -150,7 +150,8 @@ export function TargetView({
       role="img"
       aria-label={label}
       viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
-      className={className}
+      // Tippen auf die Scheibe markiert nicht die Ringzahlen (User, 9. Oktober 2026)
+      className={`select-none ${className ?? ""}`}
       onClick={tap}
     >
       <style>{`

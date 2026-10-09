@@ -31,7 +31,12 @@ export function ChartSlot({
   const [measured, ref] = useElementWidth()
   const width = Math.round(measured) || FALLBACK_WIDTH
   return (
-    <div ref={ref} className="w-full min-w-0" style={{ minHeight: height }}>
+    // Tippen und Ziehen im Diagramm markiert keinen Text, auch kein langes Drücken auf dem Telefon (User, 9. Oktober 2026)
+    <div
+      ref={ref}
+      className="w-full min-w-0 select-none [-webkit-touch-callout:none]"
+      style={{ minHeight: height }}
+    >
       {children(width)}
     </div>
   )
@@ -59,7 +64,7 @@ export function ChartSvg({
       height={height}
       role={svgProps?.role ?? "img"}
       aria-label={label}
-      className="block h-auto w-full overflow-visible font-mono text-xs font-medium [&_text]:fill-muted-foreground [&_text[data-value]]:fill-foreground-2 [&_text[data-value]]:font-semibold"
+      className="block h-auto w-full overflow-visible select-none font-mono text-xs font-medium [&_text]:fill-muted-foreground [&_text[data-value]]:fill-foreground-2 [&_text[data-value]]:font-semibold"
     >
       {children}
     </svg>

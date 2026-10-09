@@ -28,7 +28,7 @@ const render = (element: Parameters<typeof renderToStaticMarkup>[0]) =>
   renderToStaticMarkup(element)
 
 describe("AnalysisCard", () => {
-  it("Titel, Katalog-IDs mit „ · “, Kurzsatz als title und „?“ im Kopf statt „Was heißt das?“ (D3)", () => {
+  it("Titel, Kurzsatz als title und „?“ im Kopf statt „Was heißt das?“ (D3), keine Katalog-IDs", () => {
     const topic = helpTopic("masse-der-gruppe")!
     const html = render(
       createElement(AnalysisCard, {
@@ -41,9 +41,10 @@ describe("AnalysisCard", () => {
     expect(html).toMatch(
       new RegExp(`<h3[^>]*title="${topic.short}"[^>]*><span>${topic.title}</span>`)
     )
-    expect(html).toContain(
-      `<span class="font-mono text-xs font-semibold tracking-wide text-muted-foreground">${topic.catalog.join(" · ")}</span>`
-    )
+    // die Verweise in den Katalog („E1 · E2“) interessieren nicht (User, 9. Oktober 2026)
+    expect(topic.catalog.length).toBeGreaterThan(0)
+    for (const id of topic.catalog) expect(html).not.toContain(id)
+    expect(html).not.toContain("font-mono")
     expect(html).toMatch(
       new RegExp(
         `<button[^>]*aria-label="Erklärung: ${topic.title}"[^>]*data-help="masse-der-gruppe"`
@@ -73,12 +74,12 @@ describe("AnalysisCard", () => {
     expect(html).not.toContain("<button")
   })
 
-  it("Oberflächen-Hilfe: Titel aus VIEW_HELP, eigene IDs, kein Kurzsatz", () => {
+  it("Oberflächen-Hilfe: Titel aus VIEW_HELP, eigener Zusatz, kein Kurzsatz", () => {
     const view = VIEW_HELP.find((v) => v.id === "beobachtungen")!
     const html = render(
       createElement(AnalysisCard, {
         help: "beobachtungen",
-        ids: "aus den Zahlen",
+        tag: "aus den Zahlen",
         explain: false,
         children: "x",
       })

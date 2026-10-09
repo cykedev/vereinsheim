@@ -15,8 +15,8 @@ export interface AnalysisCardProps {
   help?: string
   /** Titel, wenn er nicht aus der Erklärung kommt */
   title?: string
-  /** Katalog-IDs im Kopf; ohne Angabe die des Themas, mit „ · “ verbunden */
-  ids?: string
+  /** kleiner Zusatz im Kopf, etwa „aus den Zahlen“; keine Katalog-IDs, die interessieren nicht (User, 9. Oktober 2026) */
+  tag?: string
   /** breite Karte: steht allein, nicht im Raster */
   wide?: boolean
   /** Schalter „Erklärungen“: der Kurzsatz steht sichtbar unter dem Titel */
@@ -26,11 +26,11 @@ export interface AnalysisCardProps {
   children: ReactNode
 }
 
-/** Eine Karte der Analyse: Kopf mit Titel, Katalog-IDs und „?“, mit „Erklärungen“ der Kurzsatz, dann Inhalt */
+/** Eine Karte der Analyse: Kopf mit Titel, Zusatz und „?“, mit „Erklärungen“ der Kurzsatz, dann Inhalt */
 export function AnalysisCard({
   help,
   title,
-  ids,
+  tag,
   wide,
   explain,
   onHelp,
@@ -38,7 +38,6 @@ export function AnalysisCard({
 }: AnalysisCardProps) {
   const topic = help ? helpTopic(help) : undefined
   const heading = title ?? (help ? helpEntry(help).title : "")
-  const catalog = ids ?? (topic ? topic.catalog.join(" · ") : "")
   return (
     <article
       data-card={help}
@@ -51,11 +50,7 @@ export function AnalysisCard({
           className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3 gap-y-1 font-display text-base leading-tight font-bold"
         >
           <span>{heading}</span>
-          {catalog && (
-            <span className="font-mono text-xs font-semibold tracking-wide text-muted-foreground">
-              {catalog}
-            </span>
-          )}
+          {tag && <span className="text-xs font-semibold text-muted-foreground">{tag}</span>}
         </h3>
         {help && onHelp && (
           <HelpButton label={heading} helpId={help} onClick={() => onHelp(help)} />
