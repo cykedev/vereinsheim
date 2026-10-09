@@ -50,6 +50,7 @@
     "./start/model": "./src/start/model.ts",
     "./start/sentence": "./src/start/sentence.ts",
     "./start/FormStrip": "./src/start/FormStrip.tsx",
+    "./start/EveningBlock": "./src/start/EveningBlock.tsx",
     "./period/calendar": "./src/period/calendar.ts",
     "./period/state": "./src/period/state.ts",
     "./period/model": "./src/period/model.ts",
