@@ -67,7 +67,13 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
 10. **Der ganze Zustand steht in der Adresse, mit englischen Pfaden** (wie Treffsicher `/sessions`):
     - Filter, Zeitraum, Vergleich, Wahl und Herkunft stehen als Query.
     - Browser-Zurück und geteilte Links stellen alles wieder her.
-    - Die Anker bleiben deutsch, wie gebaut (`#lage`, `#verlauf`).
+    - Auch die Anker sind englisch (User, 9. Oktober 2026, Nachtrag: „deutsch sieht das seltsam aus“): `#target`,
+      `#shots`, `#numbers`, `#analysis`, die Reiter `#overview` … `#sighters`, im Fortschritt `#history`, `#cards`.
+      Die Beschriftungen auf der Seite bleiben deutsch.
+    - Ids sind erzeugte Ids aus der Datenbank, nie Namen: Scheiben (`[A-Za-z0-9_-]+`, etwa cuid oder UUID) und
+      benannte Zeiträume (klein, Ziffern, Bindestriche, nicht `30d`, `90d`, `12m`, `all`, `previous`). Die Familie
+      ist die des Fachkerns (`lg-freihand`, `lg-auflage`, `lp-freihand`, `lp-auflage`); Freihand und Auflage sind
+      getrennt (SF-65).
 11. **Am Desktop eine Seitenleiste** mit denselben Bereichen ab 1024 px, jede Seite in voller Breite daneben. Keine
     Liste neben der Scheibe, keine Kopfzeile nach [[navigation-pattern]].
 12. **Nach dem Scan auf die Scheibe:** Vorschau, Bestätigen, dann die Seite der neuen Scheibe. „←“ führt in die
@@ -100,9 +106,9 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
 | Bereich | Telefon | Desktop | Adresse |
 |---|---|---|---|
 | Start | untere Leiste, Zähler für Offen | Seitenleiste | `/` |
-| Scheiben | untere Leiste | Seitenleiste | `/cards?family=lg-10m&kind=&flag=` |
+| Scheiben | untere Leiste | Seitenleiste | `/cards?family=lp-auflage&kind=training&flag=nur-pdf#2026-09-25` |
 | Scannen | Mitte der unteren Leiste, erhaben | „QR scannen“, „Link einfügen“ | `/scan` |
-| Fortschritt | untere Leiste | Seitenleiste | `/progress?range=90d&family=lg-10m&kind=&probe=1&compare=previous&pick=<id>#verlauf` |
+| Fortschritt | untere Leiste | Seitenleiste | `/progress?range=12m&compare=previous&family=lg-freihand&sighters=0&pick=<id>#history` |
 | Profil | untere Leiste, darin Admin | Seitenleiste | `/profile` |
 | Admin | in Profil | letzter Eintrag | `/admin/…` |
 
@@ -110,7 +116,7 @@ Seiten ohne eigenen Bereich:
 
 | Seite | Adresse |
 |---|---|
-| Scheibe | `/cards/<id>?from=list\|start\|progress&series=2&shot=23#lage` |
+| Scheibe | `/cards/<id>?from=progress&family=lg-freihand&series=2&shot=23#position` |
 | Vergleich zweier Scheiben | `/compare?a=<id>&b=<id>` (C2), oder als Zeitraum aus je einer Scheibe ([[spiegel-langzeit]]) |
 | Offen | `/open` |
 | Papierkorb | `/profile/trash` |
@@ -130,28 +136,35 @@ Plan `plans/2026-10-09-spiegel-routen.md`, Branch `feat/spiegel-routen`.
   `urlFromRoute`.
   - Kanonisch: Vorgaben fallen weg, Schlüssel in fester Reihenfolge.
   - Ungültiges gilt als Vorgabe; eine unbekannte Seite ist `unknown` mit ihrem Pfad, nie ein Fehler.
-  - Belegt durch zwölf Handwerte und eine Rundreise über gut 3 000 Routen.
+  - Belegt durch zwölf Handwerte und eine Rundreise über mehr als 20 000 Routen.
+  - `routeFromHref` liest eine ganze Adresse als Zeichenkette; `isCardId` und `isNamedPeriodId` sagen, welche Ids
+    taugen (Review N1).
 - **Werte:**
   - `range`: `30d`, `90d` (Vorgabe), `12m`, `all`, `JJJJ-MM-TT..JJJJ-MM-TT` oder die Id eines benannten Zeitraums;
     die festen Werte gehen vor.
   - `compare`: `previous` oder eine Id.
   - Filter: `family`, `kind` (`training`, `competition`), `flag`.
-  - Darstellung: `probe=0`, `scoring=rings`, `metric` (`sigma`, `tens`, `tempo`), `view` (`cards`, `months`).
+  - Darstellung: `sighters=0` (Training nur aus Probe nicht mitzählen), `scoring=rings`, `metric` (`sigma`, `tens`,
+    `tempo`), `view` (`cards`, `months`).
   - Wahl: `pick` mit der Id einer Scheibe.
   - Scheibe: `from` (`list`, `start`, `progress`) mit den Schlüsseln der Herkunft, ohne `pick`, dazu `series`
-    (`all`, `match`, `probe`, Serie), `shot` (Nummer wie auf der Scheibe, `23`, `P3`).
-  - Die Liste trägt den Abend als Anker (`#2026-09-25`).
+    (`all`, `match`, `sighters`, Serie bis 999), `shot` (Nummer wie auf der Scheibe, `23`, `P3`). Die Reihenfolge:
+    `from` mit den Schlüsseln der Herkunft, dann `series`, `shot`, `scoring`.
+  - Anker englisch: `#target`, `#shots`, `#numbers`, `#analysis`, Reiter `#overview` … `#sighters`, Fortschritt
+    `#history`, `#cards`; die Liste trägt den Abend (`#2026-09-25`).
 - **Nicht in der Adresse:** wie gezeichnet wird (Ebenen, Ausschnitt, Thema, Erklärungen). Das bleibt Einstellung im
   Gerät.
 - **`@vereinsheim/shot-ui/nav/navigate`:**
   - `openCard` (die Herkunft trägt ihren Zustand, die Wertung trägt die Scheibe).
   - `backRoute` (zurück mit der Scheibe gewählt), `backLabel` („Letzte 90 Tage“, „Neue Munition“, „Start“,
     „Scheiben“), `siblingRoute` (Blättern behält Herkunft, Wertung und Abschnitt).
-  - `listFromProgress` und `progressFromList`.
+  - `listFromProgress` und `progressFromList` (ohne Wertung der Liste gilt die des Geräts, wie bei `openCard`).
   - `progressRoute` und `periodStateFromRoute`; dazu die Aktion `restore` des `periodReducer`.
 - **Labor:**
   - Im Artifact kommt nur ein einfacher Anker an. Das Labor zeigt die Adresse deshalb nur an („Adresse in der App“),
     baut den Rückweg aber aus ihr. Die Wertung der Scheibe kommt mit zurück.
+  - Eine geöffnete Scheibe übernimmt die Wertung des Zeitraums und beginnt ohne Anker.
+  - Die Saison nutzt die Familien des Fachkerns und erzeugte Ids für Scheiben und benannte Zeiträume.
   - Die Skriptprüfung rechnet jede gezeigte Adresse hin und zurück.
 - **Für N3 offen:** echte Navigation in einem Router, Browser-Zurück, „‹ vorige · nächste ›“ mit Daten. Der Anker
   des Abends wird in der Liste (N2) gesetzt.

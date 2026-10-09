@@ -1,5 +1,5 @@
 // Adressen von Spiegel (Plan N1, `vault/spiegel/spiegel-navigation.md`): reine Funktionen von der Adresse zum
-// Zustand und zurück. Pfade und Schlüssel englisch, Anker deutsch; Vorgaben fallen weg, Ungültiges gilt als
+// Zustand und zurück. Pfade, Schlüssel und Anker englisch; Vorgaben fallen weg, Ungültiges gilt als
 // Vorgabe, nie ein Fehler (D2). Im Artifact kommt nur ein einfacher Anker an, das Labor zeigt die Adresse nur.
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"

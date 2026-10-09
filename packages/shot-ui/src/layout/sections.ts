@@ -1,5 +1,6 @@
 // Abschnitte der Seite einer Scheibe und ihre Anker (Plan Schritt 4, D1 und D7). Ein Anker ist ein einfaches
-// Wort ohne `=`: Im Artifact kommt nur so einer an. Reiter-Anker öffnen den Reiter und führen zur Analyse.
+// englisches Wort ohne `=` wie Pfade und Schlüssel der Adresse (User, 9. Oktober 2026): Im Artifact kommt nur so
+// einer an. Reiter-Anker öffnen den Reiter und führen zur Analyse.
 
 import type { AnalysisTab } from "../analysis/tabs"
 

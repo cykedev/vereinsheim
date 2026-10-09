@@ -30,7 +30,7 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`); in einer Seite mit zwei Blättern ist das der Hilfe
   das letzte `<dialog>`.
 - **Zwei Ansichten** (Plan L3): „Ansicht: Scheibe | Zeitraum“ im Labor-Kopf (`LaborHeader`), gemerkt in
-  `labor.mode`; ein Anker der Zeitraum-Seite (`#verlauf` …) öffnet sie. `App` hält, was beide teilen
+  `labor.mode`; ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie. `App` hält, was beide teilen
   (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
   Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums. „Scheibe öffnen“ zeigt eine
   Scheibe der Saison in „Scheibe“, „Zurück zu „…““ (nach dem Zeitraum benannt) stellt Zeitraum, Vergleich, Wahl und

@@ -127,7 +127,8 @@ Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` 
 - **Sprung zur Scheibe mit Rücksprung:** Schaltet der Knopf „Vertrauensellipse“ in der Analyse oder eine Zeile der
   Schusstabelle die Scheibe und ist sie außer Sicht, springt die Seite zu ihr und zeigt die Pille
   „Zurück zu „Lage““. Gesprungen wird sofort wie bei Ankern, nicht gleitend.
-- **Adresse:** Abschnitte und Reiter als einfache Anker (`#scheibe` … `#analyse`, `#ueberblick` … `#probe`); ein
+- **Adresse:** Abschnitte und Reiter als einfache, englische Anker (`#target` … `#analysis`, `#overview` …
+  `#sighters`; [[spiegel-navigation]]); ein
   Reiter-Anker öffnet den Reiter, ein Reiterwechsel schreibt den Anker.
 - **Optik wie am Desktop:** Umschalter, Chips und Knöpfe behalten auf dem Telefon ihre Höhe (User,
   8. Oktober 2026).
