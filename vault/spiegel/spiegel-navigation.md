@@ -256,17 +256,27 @@ Plan `plans/2026-10-09-spiegel-start.md`, Branch `feat/spiegel-start`. Drei Entw
 - **Aufbau:** „Offen (n)“ (im Labor zwei Beispiele), je Familie des letzten Abends ein Block, darunter eine Zeile
   „Form, letzte 90 Tage“ für die zuletzt gewählte Familie.
 - **Der Block** (`EveningBlock`):
-  - der Satz: „Ein Abend in deiner Form: 0,09 über deinem Schnitt.“; „stark“ oder „schwächer“ nur außerhalb des
-    Bands;
+  - der Satz: „Im Formband: 0,09 über deinem Schnitt.“, „Über dem Formband: …“, „Unter dem Formband: …“; er ordnet
+    ein und wertet nicht (nach dem Review, siehe unten);
   - Tag, Familie, Scheiben, Schuss;
   - der Ø je Schuss des Abends groß, dazu der Abstand zum Schnitt der fünf Scheiben davor;
   - der Streifen der letzten 20 Scheiben mit Formband;
   - die Scheiben als Kacheln (kleine Scheibe 56 px);
   - neue Rekorde, nur wenn der Abend welche aufgestellt hat;
   - „Abend in Scheiben ›“.
-- **Einheit ist die Scheibe** (Regel des Fachkerns): Der Streifen zeigt Scheiben, nicht Abende. Das Band ist das des
-  Fortschritts, seine Mitte der Schnitt der fünf Scheiben vor dem Abend. Der „Platz unter den letzten 20 Abenden“ aus
-  dem Entwurf entfällt.
+- **Einheit ist die Scheibe** (Regel des Fachkerns): Der Streifen zeigt Scheiben, nicht Abende. Der „Platz unter den
+  letzten 20 Abenden“ aus dem Entwurf entfällt.
+- **Nach dem Review (User, 9. Oktober 2026):**
+  - Das Band ist das des Verlaufs im Fortschritt über alle Scheiben, an der letzten Scheibe des Abends und mit ihr
+    gerechnet. Start und Fortschritt sagen so dasselbe.
+  - Die erste Fassung nahm das Band der Scheiben davor. Es war für einen neuen Abend zu schmal: Ein gewöhnlicher Abend
+    fiel in vier von zehn Fällen heraus und hieß „stark“ oder „schwächer“, und Start widersprach dem Fortschritt an 13
+    von 103 Abenden. Deshalb ordnet der Satz jetzt nur ein.
+  - **Breite** wie die übrigen Seiten (User: „die Breite passt nicht“): Raster der Seite eines Zeitraums, links die
+    Abende, rechts „Offen“ und die Form.
+  - Kacheln 12,5 rem breit; im Streifen heißt der Abend „Abend“, nicht „heute“.
+  - Die Saison des Labors hat einen Mischabend als letzten Abend, damit Blättern, zwei Blöcke und zwei Kacheln geprüft
+    sind.
 - **Wege:** Eine Kachel öffnet die Scheibe mit Herkunft Start („← Start“). Blättern geht durch die Scheiben des
   letzten Abends, über alle Familien.
 - **Offen:** „Läuft gerade“ und echte offene Fälle (N6, N7).
