@@ -130,7 +130,7 @@ export function App({ commit }: { commit: string }) {
   const [opened, setOpened] = useState<OpenedCard | null>(null)
   // je Bereich die letzte Scrollstelle mit ihrer Adresse: zur selben Adresse zurück heißt an dieselbe Stelle (D4)
   const scrolls = useRef(new Map<"cards" | "progress", { key: string; y: number }>())
-  // wohin „App“ aus den Beispielen zurückführt
+  // wohin „Zurück zur App“ aus den Beispielen führt
   const appRoute = useRef<Route | null>(null)
   useTheme(theme)
   useEffect(() => store.set("period.family", period.family), [period.family])

@@ -42,10 +42,6 @@ export function PlaceholderView({
   const { title, sentence } = TEXT[page]
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborPanel
-        {...header}
-        hint="Platzhalter: Der Rahmen ist echt, der Inhalt dieses Bereichs folgt."
-      />
       <section data-placeholder={page} className="grid max-w-2xl gap-3">
         <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
           {title}
@@ -64,6 +60,11 @@ export function PlaceholderView({
           </RouteLink>
         )}
       </section>
+      {/* zuletzt: der Knopf steht unten rechts, also auch zuletzt in der Tab-Folge (Review) */}
+      <LaborPanel
+        {...header}
+        hint="Platzhalter: Der Rahmen ist echt, der Inhalt dieses Bereichs folgt."
+      />
     </div>
   )
 }

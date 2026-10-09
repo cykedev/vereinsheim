@@ -64,11 +64,6 @@ export function ListView({ header, query, onQuery, scoring }: ListViewProps) {
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborPanel
-        {...header}
-        address={urlFromRoute({ page: "cards", query, evening: null })}
-        hint="Die erfundene Saison nach Abend: an zwei Abenden zwei Scheiben Luftpistole, an drei Samstagen Luftgewehr und Luftpistole am selben Abend."
-      />
       <section data-card-list-page className="grid max-w-4xl gap-4">
         <ListHeader
           familyLabel={familyLabel}
@@ -95,6 +90,12 @@ export function ListView({ header, query, onQuery, scoring }: ListViewProps) {
           otherFamilyRoute={(family, day) => listOnEvening(query, family, day)}
         />
       </section>
+      {/* zuletzt: der Knopf steht unten rechts, also auch zuletzt in der Tab-Folge (Review) */}
+      <LaborPanel
+        {...header}
+        address={urlFromRoute({ page: "cards", query, evening: null })}
+        hint="Die erfundene Saison nach Abend: an zwei Abenden zwei Scheiben Luftpistole, an drei Samstagen Luftgewehr und Luftpistole am selben Abend."
+      />
     </div>
   )
 }

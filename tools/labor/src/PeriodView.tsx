@@ -133,11 +133,6 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborPanel
-        {...header}
-        address={urlFromRoute(progressRoute(state, null))}
-        hint="Erfundene Saison vom 6. April bis 27. September 2026: Luftgewehr mit Formknick im Juni und neuer Munition ab August, Luftpistole; „jetzt“ ist der 30. September."
-      />
       <PeriodPage
         header={
           <PeriodHeader
@@ -310,6 +305,12 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
         ]}
       />
       <ReturnPill label={pill?.label ?? null} onReturn={back} onDismiss={close} />
+      {/* zuletzt: der Knopf steht unten rechts, also auch zuletzt in der Tab-Folge (Review) */}
+      <LaborPanel
+        {...header}
+        address={urlFromRoute(progressRoute(state, null))}
+        hint="Erfundene Saison vom 6. April bis 27. September 2026: Luftgewehr mit Formknick im Juni und neuer Munition ab August, Luftpistole; „jetzt“ ist der 30. September."
+      />
     </div>
   )
 }

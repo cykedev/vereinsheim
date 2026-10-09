@@ -76,10 +76,6 @@ export function StartView({ header, scoring, family }: StartViewProps) {
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborPanel
-        {...header}
-        hint="Der letzte Abend der erfundenen Saison ist Samstag, der 26. September: ein Wettkampf Luftgewehr und zwei Scheiben Luftpistole. „Offen“ zeigt zwei Beispiele."
-      />
       <section data-start-page className="grid gap-4">
         <h1 className="sr-only">Start</h1>
         <StartPage
@@ -106,6 +102,11 @@ export function StartView({ header, scoring, family }: StartViewProps) {
           }
         />
       </section>
+      {/* zuletzt: der Knopf steht unten rechts, also auch zuletzt in der Tab-Folge (Review) */}
+      <LaborPanel
+        {...header}
+        hint="Der letzte Abend der erfundenen Saison ist Samstag, der 26. September: ein Wettkampf Luftgewehr und zwei Scheiben Luftpistole. „Offen“ zeigt zwei Beispiele."
+      />
     </div>
   )
 }

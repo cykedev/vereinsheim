@@ -80,7 +80,7 @@ export interface OpenedCard {
 }
 
 export interface CardViewProps {
-  /** der Kopf des Labors ohne Umschalter und Hinweis */
+  /** die Angaben für die Labor-Werkzeuge ohne Umschalter und Hinweis */
   header: Omit<LaborPanelProps, "children" | "hint" | "address">
   explain: boolean
   onExplain: (explain: boolean) => void
@@ -101,12 +101,13 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
   const [setKind, setSetKind] = useState<RawShot["kind"]>("match")
   const [others, setOthers] = useState<Others>("dim")
   const [pop, setPop] = useState<number | null>(null)
-  // Reiter: der Anker in der Adresse vor dem gemerkten (Plan Schritt 4, D7)
-  const [tab, setTab] = useState<AnalysisTab>(() => {
-    const anchored = typeof location === "undefined" ? undefined : parseHash(location.hash)?.tab
-    const saved = store.get("tab")
-    return anchored ?? ANALYSIS_TABS.find((t) => t.value === saved)?.value ?? "overview"
-  })
+  // Reiter: eine Scheibe beginnt immer mit dem ersten (User, 9. Oktober 2026), nur ein Anker in der Adresse beim
+  // Laden öffnet einen anderen. Kein gemerkter Reiter: der vorige stünde sonst auf der nächsten Scheibe
+  const [tab, setTab] = useState<AnalysisTab>(
+    () =>
+      (opened || typeof location === "undefined" ? undefined : parseHash(location.hash)?.tab) ??
+      ANALYSIS_TABS[0].value
+  )
   // der Reiter gehört erst in die Adresse, wenn er gewählt ist oder mit ihr kam: eine geöffnete Scheibe beginnt oben
   // ohne Anker, wie `openCard` sie baut (Review N1)
   const [tabInAddress, setTabInAddress] = useState(
@@ -234,7 +235,6 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
     [choose, jumpTo]
   )
   const changeTab = useCallback((next: AnalysisTab) => {
-    store.set("tab", next)
     setTab(next)
     setTabInAddress(true)
     writeHash(hashFor("analysis", next))
@@ -289,53 +289,6 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-      <LaborPanel
-        {...header}
-        address={urlFromRoute(route)}
-        hint={opened ? `${opened.label} aus der erfundenen Saison.` : sample.hint}
-      >
-        {opened ? null : (
-          <>
-            <Segmented
-              label="Scheibe"
-              value={targetId}
-              options={[
-                { value: "lp-10m", label: "Luftpistole" },
-                { value: "lg-10m", label: "Luftgewehr" },
-              ]}
-              onChange={(id) => load(id, sampleId)}
-            />
-            <Segmented
-              label="Beispiel"
-              value={sample.id}
-              options={samples.map((s) => ({ value: s.id, label: s.label }))}
-              onChange={(id) => load(targetId, id)}
-            />
-          </>
-        )}
-        {/* nur im Labor: die App setzt keine Schüsse */}
-        <Segmented
-          label="Tippen"
-          value={mode}
-          options={[
-            { value: "view", label: "Ansehen" },
-            { value: "set", label: "Setzen" },
-          ]}
-          onChange={setMode}
-        />
-        {mode === "set" && (
-          <Segmented
-            label="Neuer Schuss"
-            value={setKind}
-            options={[
-              { value: "match", label: "Wertung" },
-              { value: "probe", label: "Probe" },
-            ]}
-            onChange={setSetKind}
-          />
-        )}
-      </LaborPanel>
-
       {opened && (
         <CardContextBar
           back={backRoute(route)}
@@ -470,6 +423,54 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
         ]}
       />
       <ReturnPill label={pill?.label ?? null} onReturn={back} onDismiss={close} />
+      {/* zuletzt: der Knopf steht unten rechts, also auch zuletzt in der Tab-Folge (Review) */}
+      <LaborPanel
+        {...header}
+        address={urlFromRoute(route)}
+        hint={opened ? `${opened.label} aus der erfundenen Saison.` : sample.hint}
+        active={mode === "set" ? "Setzen" : undefined}
+      >
+        {opened ? null : (
+          <>
+            <Segmented
+              label="Scheibe"
+              value={targetId}
+              options={[
+                { value: "lp-10m", label: "Luftpistole" },
+                { value: "lg-10m", label: "Luftgewehr" },
+              ]}
+              onChange={(id) => load(id, sampleId)}
+            />
+            <Segmented
+              label="Beispiel"
+              value={sample.id}
+              options={samples.map((s) => ({ value: s.id, label: s.label }))}
+              onChange={(id) => load(targetId, id)}
+            />
+          </>
+        )}
+        {/* nur im Labor: die App setzt keine Schüsse */}
+        <Segmented
+          label="Tippen"
+          value={mode}
+          options={[
+            { value: "view", label: "Ansehen" },
+            { value: "set", label: "Setzen" },
+          ]}
+          onChange={setMode}
+        />
+        {mode === "set" && (
+          <Segmented
+            label="Neuer Schuss"
+            value={setKind}
+            options={[
+              { value: "match", label: "Wertung" },
+              { value: "probe", label: "Probe" },
+            ]}
+            onChange={setSetKind}
+          />
+        )}
+      </LaborPanel>
     </div>
   )
 }
