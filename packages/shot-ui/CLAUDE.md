@@ -63,6 +63,8 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/period/PeriodResult`       | `src/period/PeriodResult.tsx`      | Ergebnis-Box: Ø je Schuss der Scheiben, Wertungsschüsse, beste Scheibe je Schusszahl, Vergleich mit Urteil                                                                                                                                                                                            |
 | `@vereinsheim/shot-ui/period/PeriodTiles`        | `src/period/PeriodTiles.tsx`       | Zahlen über den Zeitraum (Mittel je Scheibe) mit Vergleichswert                                                                                                                                                                                                                                       |
 | `@vereinsheim/shot-ui/period/PeriodInsights`     | `src/period/PeriodInsights.tsx`    | Analyse in L3: „Gegen deinen Schnitt“ und „Rekorde“ (`recordRows`)                                                                                                                                                                                                                                    |
+| `@vereinsheim/shot-ui/nav/routes`                | `src/nav/routes.ts`                | Adressen (Plan N1): `Route`, `routeFromUrl`, `urlFromRoute`, `ListQuery`, `ProgressQuery`, `CardRoute` mit Herkunft, Codecs je Schlüssel                                                                                                                                                              |
+| `@vereinsheim/shot-ui/nav/navigate`              | `src/nav/navigate.ts`              | Wege: `openCard`, `backRoute`, `backLabel`, `siblingRoute`, `listFromProgress`, `progressFromList`, `progressRoute`, `periodStateFromRoute`                                                                                                                                                           |
 
 ## Regeln
 
@@ -98,6 +100,12 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   `scroll-mt-14` für die 56 px hohe Leiste. Was außerhalb der Scheibe die Scheibe ändert, springt über
   `useReturnJump` zu ihr. Die Schalter der Scheibe liegen in ihren Ecken (`TargetControls`), nicht als Leiste. Ohne Schüsse zeigt die Seite neben der Scheibe nur `NoShots`, keine leeren Kästen
   und keine Kacheln voller Striche (`empty`).
+- **Zustand in der Adresse** (Plan N1, `plans/2026-10-09-spiegel-routen.md`, `vault/spiegel/spiegel-navigation.md`): Pfade
+  und Schlüssel englisch, Anker deutsch. In die Adresse gehört, _was_ man sieht (Seite, Filter, Zeitraum, Vergleich,
+  Wahl, Serie, Schuss als Nummer wie `shotLabels`, Wertung, Abschnitt), nicht _wie_ es gezeichnet ist (Ebenen,
+  Ausschnitt, Thema, Erklärungen). Vorgaben fallen weg, Schlüssel stehen in fester Reihenfolge, Ungültiges gilt als
+  Vorgabe, nie ein Fehler. Seiten bauen Adressen und Wege nur über `nav/routes` und `nav/navigate`. Im Artifact kommt
+  nur ein einfacher Anker an (`#lage`); das Labor zeigt die Adresse deshalb nur an.
 - **Seite eines Zeitraums aus `PeriodPage`** (Plan L3, `plans/2026-10-09-spiegel-zeitraum-seite.md`): Kopf
   (`PeriodHeader` mit `PeriodControls`), Sprungleiste mit `PERIOD_SECTIONS`, links der Verlauf (`PeriodChart`)
   und der Umfang (`VolumeChart`), rechts Ergebnis (`PeriodResult`), Ablesung (`CardReadout`, auf dem Telefon
