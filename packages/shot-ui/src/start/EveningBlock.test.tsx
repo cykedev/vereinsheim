@@ -96,6 +96,13 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(html).toMatch(/data-evening-label="true"[^>]*>Fr 25\.09\.</)
   })
 
+  it("die Kacheln nennen die Wertung beim Namen des Schalters: „18,8 Zehntel · 18 ganze Ringe“ (U5, D5)", () => {
+    const tile = html.slice(html.indexOf('data-start-card="a"'))
+    const tileText = text(tile.slice(0, tile.indexOf("</a>")))
+    expect(tileText).toMatch(/\d+,\d Zehntel · \d+ ganze Ringe$/)
+    expect(tile).toMatch(/aria-label="[^"]*Ergebnis \d+,\d Zehntel, \d+ ganze Ringe"/)
+  })
+
   it("die Disziplin steht als Überschrift oben im Block, mit dem Symbol der Disziplinen (Rückmeldung des Users)", () => {
     expect(html).toMatch(
       /<h2 id="evening-lp-freihand"[^>]*>[\s\S]*?<svg[\s\S]*?<\/svg>Luftpistole<\/h2>/
@@ -118,7 +125,7 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
       ["/cards/b?from=start&amp;scoring=rings", "b"],
     ])
     expect(html).toMatch(/data-start-card="a"[\s\S]*?class="[^"]*size-14/)
-    expect(text(html)).toContain("18:00 · Training 18,8 18")
+    expect(text(html)).toContain("18:00 · Training 18,8 Zehntel · 18 ganze Ringe")
   })
 
   it("neue Rekorde nur, wenn der Abend welche hält; der Link in die Liste mit dem Abend", () => {

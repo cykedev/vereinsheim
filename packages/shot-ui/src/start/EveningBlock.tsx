@@ -127,18 +127,21 @@ export function EveningBlock({
           const card = cards.get(row.id)
           const placed = card ? matchShots(card.shots).filter(hasPosition) : []
           const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
+          // die Wertung beim Namen (U5, D5): vorn die amtliche (sonst die des Geräts), daneben die andere
+          const name = (scoring: typeof row.resultScoring) =>
+            scoring === "rings" ? "ganze Ringe" : "Zehntel"
           const result =
             row.result === null ? "–" : formatValue(row.result, digits(row.resultScoring))
           const second =
             row.otherResult === null
               ? null
-              : formatValue(row.otherResult, digits(other(row.resultScoring)))
+              : `${formatValue(row.otherResult, digits(other(row.resultScoring)))} ${name(other(row.resultScoring))}`
           return (
             <li key={row.id}>
               <RouteLink
                 route={cardRoute(row.id)}
                 data-start-card={row.id}
-                aria-label={`Scheibe um ${time}, ${KIND[row.kind]}, Ergebnis ${result}${second ? `, ${second} in der anderen Wertung` : ""}`}
+                aria-label={`Scheibe um ${time}, ${KIND[row.kind]}, Ergebnis ${result}${row.result === null ? "" : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
                 className="flex items-center gap-3 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {placed.length ? (
@@ -160,9 +163,14 @@ export function EveningBlock({
                     <span data-result className="text-[17px] font-semibold">
                       {result}
                     </span>
+                    {row.result !== null && (
+                      <span className="text-[13px] text-muted-foreground">
+                        {name(row.resultScoring)}
+                      </span>
+                    )}
                     {second && (
                       <span data-other-result className="text-xs text-muted-foreground">
-                        {second}
+                        {`· ${second}`}
                       </span>
                     )}
                   </span>

@@ -29,7 +29,8 @@ const SCORING_IN: Readonly<Record<Scoring, string>> = {
 
 /** auf dem Telefon ohne Uhrzeit, Abstand und Schusszahl; ab 32rem Breite der Liste (Container) mit (D5) */
 const WIDE = "hidden @min-[32rem]:table-cell"
-const CELL = "px-2 py-1"
+// am Telefon enger: zwei Spalten für die Wertungen brauchen den Platz (U5, D5); ab 32rem wie zuvor
+const CELL = "px-1 py-1 @min-[32rem]:px-2"
 
 /** die Schüsse der kleinen Scheibe: die Wertung, bei nur Probe die Probe wie Wertung, nur mit Lage */
 const placedShots = (card: PeriodCard) => matchShots(card.shots).filter(hasPosition)
@@ -141,8 +142,11 @@ export function EveningList({
                     <th scope="col" className="px-1 py-1.5 text-center font-medium">
                       Art
                     </th>
-                    <th scope="col" className={cn(CELL, "py-1.5 text-left font-medium")}>
-                      Ergebnis
+                    <th scope="col" className={cn(CELL, "py-1.5 text-right font-medium")}>
+                      Ganze Ringe
+                    </th>
+                    <th scope="col" className={cn(CELL, "py-1.5 text-right font-medium")}>
+                      Zehntel
                     </th>
                     <th scope="col" className={cn(CELL, "py-1.5 text-right font-medium")}>
                       Ø je Schuss
@@ -187,7 +191,10 @@ export function EveningList({
                             {/* jede Zeile hat ihre Datumszelle (das Hervorheben bleibt ein Rechteck), das Datum
                                 steht nur in der ersten des Abends (User, 9. Oktober 2026) */}
                             {i === 0 ? (
-                              <th scope="row" className={cn(CELL, "text-left font-semibold")}>
+                              <th
+                                scope="row"
+                                className={cn(CELL, "text-left font-semibold whitespace-nowrap")}
+                              >
                                 {formatWeekdayDay(noonOf(evening.day, timeZone), timeZone)}
                               </th>
                             ) : (
@@ -221,18 +228,28 @@ export function EveningList({
                             <td className="px-1 py-1 text-center text-muted-foreground">
                               <KindMark kind={row.kind} />
                             </td>
-                            <td className={CELL}>
-                              <span className="flex items-baseline gap-1.5 whitespace-nowrap">
-                                <span data-result className="font-semibold">
-                                  {resultText(row.result, row.resultScoring)}
-                                </span>
-                                {row.otherResult !== null && (
-                                  <span data-other-result className="text-xs text-muted-foreground">
-                                    {resultText(row.otherResult, otherScoring(row))}
-                                  </span>
-                                )}
-                              </span>
-                            </td>
+                            {/* beide Wertungen mit Namen in eigenen Spalten, die amtliche fett (U5, D5) */}
+                            {(["rings", "decimal"] as const).map((scoring) => {
+                              const value =
+                                row.resultScoring === scoring ? row.result : row.otherResult
+                              const official = row.official && row.resultScoring === scoring
+                              return (
+                                <td
+                                  key={scoring}
+                                  {...{
+                                    [scoring === "rings" ? "data-rings" : "data-decimal"]: true,
+                                  }}
+                                  data-official={official || undefined}
+                                  className={cn(
+                                    CELL,
+                                    "text-right whitespace-nowrap",
+                                    official ? "font-semibold" : "text-foreground-2"
+                                  )}
+                                >
+                                  {resultText(value, scoring)}
+                                </td>
+                              )
+                            })}
                             <td data-mean className={cn(CELL, "text-right")}>
                               {row.mean === null ? "–" : formatValue(row.mean, digits.mean)}
                             </td>
@@ -250,7 +267,7 @@ export function EveningList({
                       })}
                       {evening.others.length > 0 && (
                         <tr>
-                          <td colSpan={8} className="px-1 pb-1.5 text-right">
+                          <td colSpan={9} className="px-1 pb-1.5 text-right">
                             {evening.others.map((other) => (
                               <RouteLink
                                 key={other.family}
@@ -268,6 +285,9 @@ export function EveningList({
                   )
                 })}
               </table>
+              <p data-official-legend className="px-2 pt-1.5 pb-0.5 text-xs text-muted-foreground">
+                Fett: amtliche Wertung der Scheibe.
+              </p>
             </div>
           </section>
         )

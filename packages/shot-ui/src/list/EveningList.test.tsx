@@ -70,14 +70,17 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     expect(html).toMatch(/<th scope="row"[^>]*>So 27\.09\.<\/th>/)
     expect(html.match(/scope="row"/g)).toHaveLength(2)
     expect(html).not.toContain("rowSpan")
-    expect(html).toMatch(/<tr data-card-row="b"[^>]*><td class="px-2 py-1"><\/td>/)
-    expect(html).toMatch(/<td colSpan="8" class="[^"]*text-right"><a [^>]*data-other-family/)
+    expect(html).toMatch(
+      /<tr data-card-row="b"[^>]*><td class="px-1 py-1 @min-\[32rem\]:px-2"><\/td>/
+    )
+    expect(html).toMatch(/<td colSpan="9" class="[^"]*text-right"><a [^>]*data-other-family/)
     expect(text(html)).not.toMatch(/\d Scheiben? · \d+ Schuss auch/)
     for (const head of [
       "Datum",
       "Uhrzeit",
       "Art",
-      "Ergebnis",
+      "Ganze Ringe",
+      "Zehntel",
       "Ø je Schuss",
       "zum Schnitt",
       "Schuss",
@@ -102,8 +105,12 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     expect(text(rowA)).toContain("18:30 Training")
     expect(rowA).toContain('<span class="sr-only">Training</span>')
     expect(rowA).not.toMatch(/>T</)
-    expect(rowA).toMatch(/data-result[^>]*>30,0</)
-    expect(rowA).toMatch(/data-other-result[^>]*>29</)
+    // Ergebnis mit Namen der Wertung (U5, D5): Spalten „Ringe“ und „Zehntel“, ohne amtliche keine fett
+    expect(rowA).toMatch(/data-rings[^>]*>29</)
+    expect(rowA).toMatch(/data-decimal[^>]*>30,0</)
+    expect(rowA).not.toContain("data-official")
+    expect(html).toMatch(/<th[^>]*>Ganze Ringe<\/th><th[^>]*>Zehntel<\/th>/)
+    expect(html).not.toMatch(/<th[^>]*>Ergebnis<\/th>/)
     expect(rowA).toMatch(/data-mean[^>]*>10,00</)
     expect(rowA).toContain("<svg")
     // vor b liegen d (9,9) und a (10,0): 10,2 − 9,95 = +0,25; vor a nur d: +0,10
@@ -117,19 +124,27 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
   })
 
   it("in ganzen Ringen das ganzzahlige Ergebnis; ein Abstand unter null mit echtem Minus", () => {
-    expect(render("rings")).toMatch(/data-card-row="a"[\s\S]*?data-result[^>]*>29</)
+    // die Spalten bleiben, die Wertung der Liste ändert nur Ø und Abstand
+    expect(render("rings")).toMatch(
+      /data-card-row="a"[\s\S]*?data-rings[^>]*>29<[\s\S]*?data-decimal[^>]*>30,0</
+    )
     expect(render("rings")).toContain("Ergebnis 29 in ganzen Ringen, 30,0 in Zehnteln, Ø")
   })
 
-  it("die amtliche Wertung steht vorn und heißt so", () => {
+  it("die amtliche Wertung ist fett und heißt so, eine Zeile unter der Karte erklärt es (U5, D5)", () => {
     const official = render("decimal", [
       {
         card: periodCard("o", 1, [100, 102, 98], { official: "rings", startedAtMs: at(16, 30) }),
         family: "lg-freihand",
       },
     ])
-    expect(official).toMatch(/data-result[^>]*>29</)
-    expect(official).toMatch(/data-other-result[^>]*>30,0</)
+    expect(official).toMatch(
+      /<td data-rings="true" data-official="true" class="[^"]*font-semibold[^"]*">29</
+    )
+    expect(official).toMatch(/<td data-decimal="true" class="(?![^"]*font-semibold)[^"]*">30,0</)
+    expect(official).toMatch(
+      /<p data-official-legend[^>]*>Fett: amtliche Wertung der Scheibe\.<\/p>/
+    )
     expect(official).toContain("Ergebnis 29 amtlich in ganzen Ringen, 30,0 in Zehnteln")
     const lower = render("decimal", [
       { card: periodCard("x", 2, [103]), family: "lg-freihand" },

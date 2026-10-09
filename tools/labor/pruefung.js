@@ -3041,27 +3041,31 @@ addEventListener("load", async () => {
         const delta = before.length
           ? meanValues[i].value - before.reduce((s, v) => s + v.value, 0) / before.length
           : null
-        // vorn die amtliche Wertung, ohne sie die der Liste (hier Zehntel), daneben die andere; nur Probe prüft der
-        // Test des Modells
-        const front = card.official ?? "decimal"
-        const back = front === "rings" ? "decimal" : "rings"
+        // beide Wertungen in eigenen Spalten, die amtliche fett (U5, D5); nur Probe prüft der Test des Modells
         const resultIn = (scoring) =>
           tools.computeMetric(
             tools.inScoring(tools.metricByKey("result.decimal"), scoring),
             card.shots
           )
         const shown = (scoring) => nf(resultIn(scoring), scoring === "rings" ? 0 : 1)
+        const officialCell = $("[data-official]", el)
         const ok =
           (row.kind === "probe" ||
-            (txt($("[data-result]", el)) === shown(front) &&
-              txt($("[data-other-result]", el)) === shown(back))) &&
+            (txt($("[data-rings]", el)) === shown("rings") &&
+              txt($("[data-decimal]", el)) === shown("decimal") &&
+              (card.official
+                ? !!officialCell &&
+                  officialCell.hasAttribute(
+                    card.official === "rings" ? "data-rings" : "data-decimal"
+                  )
+                : !officialCell))) &&
           txt($("[data-mean]", el)) === nf(meanValues[i].value, 2) &&
           txt($("[data-delta]", el)) === (delta === null ? "–" : signed2(delta))
         if (!ok) wrongRows.push(row.id)
       }
       const shownRows = evenings.slice(0, 12).flatMap((e) => e.rows)
       check(
-        "Liste: Ergebnis in beiden Wertungen (amtlich vorn), Ø und Abstand je Zeile wie im Fachkern",
+        "Liste: Ergebnis in beiden Wertungen mit Namen (amtlich fett), Ø und Abstand je Zeile wie im Fachkern",
         wrongRows.length === 0 &&
           shownRows.some((r) => r.resultScoring === "rings" && r.official) &&
           shownRows.some((r) => r.resultScoring === "decimal" && r.official),
@@ -3155,11 +3159,15 @@ addEventListener("load", async () => {
           Li().model.evenings.every((e) => e.day >= "2026-08-01"),
         `${txt($("[data-range-chip]"))} · ${addr()}`
       )
-      // ohne amtliche Wertung (nur Probe) steht die der Liste vorn: hier ganze Ringe
+      // ohne amtliche Wertung (nur Probe) ist keine fett, die ganzen Ringe stehen trotzdem in ihrer Spalte
       const probeFront = Li()
         .model.evenings.flatMap((e) => e.rows)
         .filter((r) => !r.official)
-        .map((r) => txt($(`[data-card-row="${r.id}"] [data-result]`)))
+        .map((r) =>
+          $(`[data-card-row="${r.id}"] [data-official]`)
+            ? "fett"
+            : txt($(`[data-card-row="${r.id}"] [data-rings]`))
+        )
       const listScoring = Li().model.scoring
       await click(link("Verlauf dieser Filter"), 400)
       check(
