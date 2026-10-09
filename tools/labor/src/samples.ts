@@ -69,7 +69,7 @@ export const SAMPLES: Readonly<Record<TargetId, readonly Sample[]>> = {
 /** fester Beginn, damit die Beispiele immer gleich sind (2. Oktober 2026, 19:00 Uhr MESZ) */
 const START_MS = Date.UTC(2026, 9, 2, 17, 0)
 
-function mulberry32(seed: number) {
+export function mulberry32(seed: number) {
   let a = seed >>> 0
   return () => {
     a = (a + 0x6d2b79f5) >>> 0
@@ -80,7 +80,7 @@ function mulberry32(seed: number) {
   }
 }
 
-function gauss(rand: () => number) {
+export function gauss(rand: () => number) {
   let u = 0
   while (u === 0) u = rand()
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand())
