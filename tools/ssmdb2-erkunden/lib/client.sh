@@ -17,8 +17,13 @@ JETZT_SQL="NOW()"                      # NOW(3), wenn der Server Millisekunden k
 ZEITGRENZE_SQL=""                      # Zeitgrenze je Abfrage der Checkliste, je nach Server
 
 # Sucht einen MySQL-Client. $1 = 1 erzwingt Docker. Rückgabe 1, wenn keiner da ist.
+# Läuft je Aufruf mehrfach (Selbsttest, Verbinden): Reste eines früheren Treffers nicht übernehmen,
+# sonst macht der zweite Aufruf aus dem Docker-Rückfall einen lokalen Client, den es nicht gibt.
 client_finden() {
   local b
+  CLIENT_MODUS=""
+  MYSQL_BIN=""
+  DUMP_BIN=""
   if [ "${1:-0}" != 1 ]; then
     for b in mariadb mysql; do
       if command -v "$b" >/dev/null 2>&1; then MYSQL_BIN=$b; break; fi

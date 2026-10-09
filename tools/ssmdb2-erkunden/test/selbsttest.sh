@@ -95,6 +95,19 @@ kein_passwort_in_ausgabe() {
   ! grep -r -F 'pass\wort' "$AUSGABE" >/dev/null
 }
 
+# Ohne lokalen Client fällt die Suche auf Docker zurück, auch beim zweiten Aufruf im selben Lauf.
+# Die Läufe unten erzwingen Docker (--docker) und gehen an diesem Pfad vorbei.
+docker_rueckfall_zweimal() (
+  # shellcheck disable=SC2123  # absichtlich leer: weder mariadb noch mysql auffindbar
+  PATH=/nicht-vorhanden
+  # shellcheck disable=SC2329  # gerufen aus client_finden
+  docker() { return 0; }
+  # shellcheck source=SCRIPTDIR/../lib/client.sh
+  . "$WERKZEUG/lib/client.sh"
+  client_finden 0 && client_finden 0 && [ "$CLIENT_MODUS" = docker ]
+)
+pruefe "ohne lokalen Client zweimal Docker gefunden" docker_rueckfall_zweimal
+
 echo "Testanlage starten ($IMAGE)"
 anlage_starten
 
