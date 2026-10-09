@@ -11,13 +11,13 @@ import { asOnPrintout, isProbeShot } from "../shots"
 export type AnalysisBasis = "nur Probe" | "alle"
 
 export interface AnalysisInput {
-  /** die Schüsse der Karte wie am Ausdruck (für die Datenlage) */
+  /** die Schüsse der Karte wie am Ausdruck (für die Datenlage); gleich `base`, eigener Name für die Lesbarkeit */
   all: readonly MetricShot[]
   /** die Schüsse, über die die Analyse rechnet: Wertung, bei nur Probe die Probe als Wertung */
   base: readonly MetricShot[]
   /**
-   * die ganze Karte für Abstände: gibt die Seite eine Karte mit Probe zwischen Wertung, reißt die Probe keine Lücke
-   * (SF-04); sonst dieselbe wie `base`
+   * die ganze Karte für Abstände: die rohe Karte (`context`) mit einer Probe zwischen Wertung, damit sie keine Lücke
+   * reißt (SF-04, Review U4); ohne Wertung dieselbe wie `base`
    */
   card: readonly MetricShot[]
   basis: AnalysisBasis
@@ -25,13 +25,18 @@ export interface AnalysisInput {
   target: TargetImage
 }
 
+/**
+ * `shots` wie die Seite sie zeigt (meist schon durch `asOnPrintout`), `context` die rohe Karte davor; ohne Angabe
+ * dieselbe Liste
+ */
 export function analysisInput(
   shots: readonly MetricShot[],
   scoring: Scoring,
-  target: TargetImage
+  target: TargetImage,
+  context: readonly MetricShot[] = shots
 ): AnalysisInput {
   const base = asOnPrintout(shots)
   const basis: AnalysisBasis = base.length > 0 && base.every(isProbeShot) ? "nur Probe" : "alle"
-  const card = shots.some((shot) => shot.kind === "match") ? shots : base
+  const card = context.some((shot) => shot.kind === "match") ? context : base
   return { all: base, base, card, basis, scoring, target }
 }

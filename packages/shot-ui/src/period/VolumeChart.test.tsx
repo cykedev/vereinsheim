@@ -25,8 +25,8 @@ describe("Umfang je Woche (D15)", () => {
 
   it("das Lineal nennt Schüsse mit Probe, Scheiben und Tage; Tabelle mit allen Wochen", () => {
     // Woche als Datum ihres Montags (U3, D6), keine Kalenderwoche
-    expect(weekText(WEEKS[0])).toBe("Woche ab 06.07.2026: 140 Schuss mit Probe, 3 Scheiben, 2 Tage")
-    expect(weekText(WEEKS[2])).toBe("Woche ab 20.07.2026: 40 Schuss mit Probe, 1 Scheibe, 1 Tag")
+    expect(weekText(WEEKS[0])).toBe("Woche ab 06.07.2026: 140 Schuss, 3 Scheiben, 2 Tage")
+    expect(weekText(WEEKS[2])).toBe("Woche ab 20.07.2026: 40 Schuss, 1 Scheibe, 1 Tag")
     expect(weekText(WEEKS[1])).toBe("Woche ab 13.07.2026: kein Training")
     expect(html).toContain(">06.07.2026</th>")
     expect([...html.matchAll(/<tr class="border-t/g)]).toHaveLength(3)

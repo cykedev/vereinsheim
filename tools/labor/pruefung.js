@@ -198,8 +198,7 @@ addEventListener("load", async () => {
         /scale\(([^)]+)\)/.exec($('[data-overlay="mpi"]', svg()).getAttribute("transform"))[1]
       ) * pxPerMm()
     check("Schwerpunkt 5–8 px", mpiPx >= 4.99 && mpiPx <= 8.01, mpiPx.toFixed(2))
-    const allMatch = hits().filter((g) => !g.dataset.shot.startsWith("P"))
-    const gapAll = spreadGapPx(allMatch)
+    const gapAll = spreadGapPx(hits())
     check(
       "Streukreis um die Treffer, 2 px Luft",
       gapAll !== null && near(gapAll, 2, 0.05),
@@ -663,8 +662,9 @@ addEventListener("load", async () => {
     await click(inLabor("Wertung"))
     await setAt(0, 0)
     check(
-      "Nur Probe plus eine Wertung: wie am Ausdruck nur noch die Wertung, ohne Probe-Eck",
+      "Nur Probe plus eine Wertung: wie am Ausdruck nur noch die Wertung, ohne Probe-Eck; der neue Schuss ploppt",
       labelsOf(hits()).join() === "1" &&
+        !!$('[data-shot="1"] circle.shot-ui-pop', svg()) &&
         $$("[data-series]")
           .map((t) => t.dataset.series)
           .join() === "1" &&
@@ -977,15 +977,15 @@ addEventListener("load", async () => {
       sentences[0]
     )
     // U4, D6: die Ausreißer statt „Eingeschossen?“: wie viele und welche, wie der Fachkern sie markiert
+    // die Kachel zählt nur, welche es sind, steht in Kopf und Beobachtung (Review U4, wie die Lage in U3)
     const flaggedTile = S().outliers(base())
+    const flaggedCount = flaggedTile?.flagged.length ?? -1
     check(
-      "Überblick: „Ausreißer“ zählt die markierten Schüsse und nennt sie, kein „Eingeschossen?“",
+      "Überblick: „Ausreißer“ zählt die markierten Schüsse, ohne Nummern, kein „Eingeschossen?“",
       !!flaggedTile &&
-        ovValue("Ausreißer") === String(flaggedTile.flagged.length) &&
+        ovValue("Ausreißer") === (flaggedCount ? String(flaggedCount) : "keiner") &&
         ovHint("Ausreißer") ===
-          (flaggedTile.flagged.length
-            ? `${flaggedTile.flagged.length === 1 ? "Schuss" : "Schüsse"} ${flaggedTile.flagged.map((o) => o.number).join(", ")}`
-            : "keiner fällt aus der Gruppe") &&
+          (flaggedCount > 1 ? "fallen aus der Gruppe" : "fällt aus der Gruppe") &&
         !ovTile("Eingeschossen?"),
       `${ovValue("Ausreißer")} · ${ovHint("Ausreißer")}`
     )

@@ -3,6 +3,7 @@
 
 import {
   asOnPrintout as asOnPrintoutInCore,
+  contextOf,
   inShotOrder,
   selectShots,
   shotDistanceUm,
@@ -95,11 +96,15 @@ export function selectionShots(shots: readonly MetricShot[], selection: Selectio
 /**
  * Abstand jedes Schusses zum vorigen der Karte in ms, über `stepsInOrder` wie `analysis/timing`: null beim
  * ersten, nach einer Lücke in der Abgabefolge, ohne Zeit und bei einem Rücksprung der Uhr. Geordnet wird
- * selbst (`inShotOrder`); der Abstand gilt zum vorigen Schuss der Karte, auch bei Auswahl.
+ * selbst (`inShotOrder`); der Abstand gilt zum vorigen Schuss der Karte, auch bei Auswahl. `context` ist die rohe Karte
+ * vor `asOnPrintout`: eine Probe zwischen Wertung reißt dann keine Lücke (SF-04, Review U4).
  */
-export function shotIntervals(shots: readonly MetricShot[]): (number | null)[] {
+export function shotIntervals(
+  shots: readonly MetricShot[],
+  context?: readonly MetricShot[]
+): (number | null)[] {
   // erst in Abgabefolge ordnen; das Ergebnis gehört je Schuss, also gilt es für jede Reihenfolge der Liste
-  const steps = stepsInOrder(inShotOrder(shots))
+  const steps = stepsInOrder(inShotOrder(shots), context ? contextOf(shots, context) : undefined)
   const byShot = new Map<MetricShot, number | null>()
   steps.forEach((step, i) => {
     const now = step.shot.firedAtMs

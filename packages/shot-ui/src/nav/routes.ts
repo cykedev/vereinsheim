@@ -13,7 +13,7 @@ import {
 } from "../layout/sections"
 import { DEFAULT_CHOICE, type CompareChoice, type PeriodChoice } from "../period/calendar"
 import type { CardKind, PeriodMetricKey } from "../period/state"
-import type { Selection } from "../types"
+import type { SeriesKey } from "../types"
 
 /** Id eines benannten Zeitraums, einer Familie oder eines Merkmals: klein, Ziffern, Bindestriche */
 const SLUG = /^[a-z0-9][a-z0-9-]*$/
@@ -227,8 +227,8 @@ export interface CardRoute {
   page: "card"
   id: string
   origin: CardOrigin
-  /** null: die ganze Scheibe */
-  selection: Selection | null
+  /** eine Serie; null: die ganze Scheibe (die Vorgabe, eine Schreibweise) */
+  selection: SeriesKey | null
   /** Nummer wie `shotLabels` („23“) */
   shot: string | null
   scoring: Scoring
@@ -240,15 +240,14 @@ const SHOT = /^[1-9]\d*$/
 const SERIES = /^[1-9]\d{0,2}$/
 
 /**
- * die ganze Scheibe oder eine Serie; „ohne Probe“ (`match`) und die Probe (`sighters`) gibt es seit U4 nicht mehr und
- * gelten wie alles Ungültige als Vorgabe
+ * eine Serie; die ganze Scheibe ist die Vorgabe und steht nicht in der Adresse. `all`, „ohne Probe“ (`match`) und die
+ * Probe (`sighters`, seit U4 entfallen) gelten wie alles Ungültige als Vorgabe
  */
-function selectionOf(value: string | null): Selection | null {
-  if (value === "all") return value
+function selectionOf(value: string | null): SeriesKey | null {
   return value && SERIES.test(value) ? Number(value) : null
 }
 
-const selectionText = (selection: Selection) => String(selection)
+const selectionText = (selection: SeriesKey) => String(selection)
 
 function originFrom(params: URLSearchParams): CardOrigin {
   switch (params.get("from")) {

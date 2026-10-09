@@ -20,6 +20,7 @@ import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
 import { directionName, formatSigned, formatValue } from "../format"
+import { asOnPrintout } from "../shots"
 import { analysisInput } from "./input"
 import { observations } from "./observations"
 import { overviewTiles } from "./overview"
@@ -82,7 +83,8 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(flagged.flagged.map((o) => o.number)).toEqual([27])
     expect(tile("Ausreißer").value).toBe("1")
     expect(tile("Ausreißer").unit).toBe("")
-    expect(tile("Ausreißer").hint).toBe("Schuss 27")
+    // die Nummer steht im Kopf und in der Beobachtung, die Kachel zählt nur (Review U4, wie die Lage in U3)
+    expect(tile("Ausreißer").hint).toBe("fällt aus der Gruppe")
   })
 
   it("in ganzen Ringen ein ganzzahliges Ergebnis", () => {
@@ -150,6 +152,28 @@ describe("Überblick mit einer späten Probe (SF-04)", () => {
     expect(tempo.hint).toBe(
       `die Hälfte in ${formatValue(tempoSpread(late.base, late.card)!.iqrMs / 1000, 0)} s`
     )
+  })
+})
+
+describe("auf dem Weg der Seite: gedruckte Karte, die rohe als Kontext (SF-04, Review U4)", () => {
+  const page = (raw: ReturnType<typeof withSighterAfter>) =>
+    analysisInput(asOnPrintout(raw), "decimal", LP_10M, raw)
+
+  it("eine späte Probe mitten im Takt: dasselbe Tempo wie über die rohe Karte", () => {
+    const raw = withSighterAfter(CARD, 7)
+    const tempo = (i: ReturnType<typeof analysisInput>) =>
+      overviewTiles(i).find((t) => t.label === "Tempo")!.value
+    expect(page(raw).base.some((s) => s.kind === "probe")).toBe(false)
+    expect(tempo(page(raw))).toBe(tempo(analysisInput(raw, "decimal", LP_10M)))
+    // ohne Kontext risse die Probe eine Lücke
+    expect(tempo(analysisInput(asOnPrintout(raw), "decimal", LP_10M))).not.toBe(tempo(page(raw)))
+  })
+
+  it("eine späte Probe in der Pause vor Schuss 21: der Satz zur Pause bleibt", () => {
+    const twenty = CARD.filter((s) => s.kind === "match")[19]
+    const raw = withSighterAfter(CARD, 20, (twenty.firedAtMs as number) + 200_000)
+    const pause = observations(page(raw)).find((s) => s.icon === "pause")
+    expect(pause?.text).toMatch(/^Nach der Pause vor Schuss 21 lagen die Schüsse danach/)
   })
 })
 
@@ -324,7 +348,7 @@ describe("Beobachtungen in Worten", () => {
     const input = analysisInput(calm, "decimal", LP_10M)
     expect(outliers(input.base)!.flagged).toHaveLength(0)
     const tile = overviewTiles(input).find((t) => t.label === "Ausreißer")!
-    expect([tile.value, tile.hint]).toEqual(["0", "keiner fällt aus der Gruppe"])
+    expect([tile.value, tile.hint]).toEqual(["keiner", "fällt aus der Gruppe"])
   })
 
   it("ohne drei Wertungsschüsse keine Sätze", () => {

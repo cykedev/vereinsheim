@@ -4,6 +4,7 @@
 // Monate und Tage ordnet er zu, denn die Anzeige-Zeitzone liegt in der App (D1).
 
 import {
+  asOnPrintout,
   computeMetric,
   eligibleShots,
   inScoring,
@@ -189,7 +190,8 @@ export interface VolumeBucket {
 }
 
 /**
- * Trainingsumfang je Abschnitt (T6, D9): Schüsse mit Probe, Scheiben und Tage. Keine Netto-Zeit, sie folgt
+ * Trainingsumfang je Abschnitt (T6, D9): Schüsse wie am Ausdruck (`asOnPrintout`, U4: die Wertung, bei einem Training
+ * nur aus Probe seine Probe), Scheiben und Tage. Keine Netto-Zeit, sie folgt
  * aus den Abständen. Abschnitte in der Folge ihrer ersten Scheibe. Anders als die übrigen Auswertungen zählt
  * der Umfang jede Scheibe, auch eine nur mit Probe (D8 gilt für Werte, nicht für den Umfang); Training oder
  * Wettkampf wählt der Aufrufer.
@@ -201,7 +203,8 @@ export function trainingVolume(
 ): VolumeBucket[] {
   return [...groupBy(byStart(cards), (card) => bucketOf(card.startedAtMs))].map(([key, group]) => ({
     key,
-    shots: group.reduce((sum, card) => sum + card.shots.length, 0),
+    // wie am Ausdruck (U4): eine Probe neben Wertung zeigt keine Seite, ein Training nur aus Probe zählt (Review U4)
+    shots: group.reduce((sum, card) => sum + asOnPrintout(card.shots).length, 0),
     cards: group.length,
     days: new Set(group.map((card) => dayOf(card.startedAtMs))).size,
   }))

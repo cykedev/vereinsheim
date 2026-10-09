@@ -13,8 +13,10 @@ import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
 
 export interface ShotTableProps {
-  /** alle Schüsse der Scheibe in Abgabefolge (`inShotOrder`) */
+  /** alle Schüsse der Scheibe in Abgabefolge (`inShotOrder`), wie am Ausdruck */
   shots: readonly MetricShot[]
+  /** die rohe Karte vor `asOnPrintout`, für Abstände: eine Probe zwischen Wertung reißt keine Lücke (SF-04) */
+  context?: readonly MetricShot[]
   state: ViewState
   /** Zeile gewählt: derselbe Schuss wie beim Antippen auf der Scheibe */
   onChoose?: (index: number, series: SeriesKey | null) => void
@@ -49,6 +51,7 @@ function teilerText(shot: MetricShot): string {
  */
 export function ShotTable({
   shots,
+  context,
   state,
   onChoose,
   collapseAfter = 10,
@@ -57,7 +60,7 @@ export function ShotTable({
   const [expanded, setExpanded] = useState(false)
   const tableId = useId()
   const labels = useMemo(() => shotLabels(shots), [shots])
-  const intervals = useMemo(() => shotIntervals(shots), [shots])
+  const intervals = useMemo(() => shotIntervals(shots, context), [shots, context])
   const indices = shots
     .map((_, i) => i)
     .filter((i) => isSelected(state.selection, seriesKeyOf(shots[i])))

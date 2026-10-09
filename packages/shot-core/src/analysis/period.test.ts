@@ -170,16 +170,18 @@ describe("Boden und Decke je Abschnitt, Trainingsumfang (T5, T6)", () => {
     expect(periodBuckets(five.slice(0, 4), week)[0].p10).toBeNull()
   })
 
-  it("Umfang: Schüsse mit Probe, Scheiben und Tage je Woche", () => {
+  it("Umfang: Schüsse wie am Ausdruck (U4), Scheiben und Tage je Woche; ein Training zählt seine Probe", () => {
     const cards = [
+      // eine Probe vor der Wertung zeigt keine Seite mehr: Sie zählt nicht (Review U4)
       card("a", 1, [100, 100], { shot: (i) => (i === 0 ? { kind: "probe", series: null } : {}) }),
       card("b", 1, [90, 92, 95]),
       card("c", 3, [95]),
-      card("d", 8, [95, 96]),
+      // ein Training nur aus Probe zählt wie Wertung
+      card("d", 8, [95, 96], { shot: () => ({ kind: "probe", series: null }) }),
     ]
     const day = (ms: number) => String(Math.floor(ms / DAY))
     expect(trainingVolume(cards, week, day)).toEqual([
-      { key: "0", shots: 6, cards: 3, days: 2 },
+      { key: "0", shots: 5, cards: 3, days: 2 },
       { key: "1", shots: 2, cards: 1, days: 1 },
     ])
   })

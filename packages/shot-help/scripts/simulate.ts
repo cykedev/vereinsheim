@@ -20,7 +20,6 @@ import {
   pauseRecovery,
   periodTrend,
   ringLossSplit,
-  sigmaEstimate,
   type PeriodCard,
 } from "@vereinsheim/shot-core/analysis"
 import { centroid, covarianceEllipse } from "@vereinsheim/shot-core/geometry"

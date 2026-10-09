@@ -65,7 +65,7 @@ export function renderTopic(topic: HelpTopic): string {
   return lines.join("\n")
 }
 
-/** Eine Erklärung zur Oberfläche (Trefferbild, Beobachtungen, Probe auf der Scheibe) als Block */
+/** Eine Erklärung zur Oberfläche (Trefferbild, Beobachtungen) als Block */
 function renderView(view: ViewHelp): string {
   const lines = [`**${view.title}**`, wrapText(`- *Was:* ${view.what}`, WIDTH, "  ")]
   if (view.read) lines.push(wrapText(`- *So liest du es:* ${view.read}`, WIDTH, "  "))

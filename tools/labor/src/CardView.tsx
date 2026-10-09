@@ -145,6 +145,8 @@ export function CardView({
   const target = TARGETS[targetId]
   // nur Probe ist Training und zeigt sich wie Wertung; erst mit Wertung trennt sich die Probe ab
   const shots = useMemo(() => cardShots(targetId, raw), [targetId, raw])
+  // die rohe Karte vor `asOnPrintout` als Kontext für Abstände: eine Probe zwischen Wertung reißt keine Lücke (SF-04)
+  const context = useMemo(() => toMetricShots(TARGETS[targetId], raw), [targetId, raw])
   const samples = SAMPLES[targetId]
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0]
   useEffect(() => exposeForTest(shots, state, target), [shots, state, target])
@@ -195,8 +197,13 @@ export function CardView({
       firedAtMs: (raw.at(-1)?.firedAtMs ?? Date.UTC(2026, 9, 2, 17, 0)) + 45_000,
       kind: setKind,
     }
-    setRaw([...raw, shot])
-    setPop(raw.length)
+    const next = [...raw, shot]
+    setRaw(next)
+    // der neue Schuss in der gedruckten Liste: nach einer Wertung fällt eine Probe weg wie am Ausdruck (U4), dann
+    // ploppt nichts (Review U4)
+    const printed = cardShots(targetId, next)
+    const kept = shot.kind === "match" || !raw.some((s) => s.kind === "match")
+    setPop(kept ? printed.length - 1 : null)
   }
 
   // stabile Rückrufe: die Analyse rechnet ihre Karten nur neu, wenn sich ihre Eingaben ändern
@@ -399,6 +406,7 @@ export function CardView({
                   key={`${targetId}:${sample.id}`}
                   className="md:min-h-0"
                   shots={shots}
+                  context={context}
                   state={state}
                   onChoose={chooseFromTable}
                 />
@@ -414,6 +422,7 @@ export function CardView({
                 // je Karte neu eingehängt: das Lineal fängt ohne Wahl an
                 key={`${targetId}:${sample.id}`}
                 shots={shots}
+                context={context}
                 state={state}
                 target={target}
                 tab={tab}
@@ -480,6 +489,11 @@ export function CardView({
             ]}
             onChange={setSetKind}
           />
+        )}
+        {mode === "set" && setKind === "probe" && raw.some((s) => s.kind === "match") && (
+          <p data-probe-note className="text-[13px] text-muted-foreground">
+            Nach dem ersten Wertungsschuss zeigt Spiegel keine Probe mehr, wie am Ausdruck.
+          </p>
         )}
       </LaborPanel>
     </div>

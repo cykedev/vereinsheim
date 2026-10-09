@@ -141,7 +141,8 @@ describe("Reiter Präzision", () => {
     const few = renderTab("precision", { shots: BASE.slice(0, 2) })
     expect(cardText(few, "praezision-sigma")).toContain("ab 3 Schuss")
     expect(cardText(few, "form-der-gruppe")).toContain("ab 3 Schuss")
-    expect(cardText(few, "ausreisser")).toContain("ab 5 Schuss")
+    // derselbe Grund wie an der Kachel im Überblick (Review U4, `reasons.ts`)
+    expect(cardText(few, "ausreisser")).toContain("ab 5 Schuss mit Lage")
     const calm = [...BASE.keys()]
       .map((k) => BASE.slice(k, k + 5))
       .find((shots) => shots.length === 5 && outliers(shots)!.flagged.length === 0)!

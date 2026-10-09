@@ -217,7 +217,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 - **Gleiches n:** Streukreis, Extreme Spread und längste Folge wachsen mit n, der beste Teiler sinkt mit n (Streukreis über 40 gegen 10 Schuss +32 %, B3); R50 fällt bei kleinem n leicht zu klein aus (bei 10 Schuss −4 %, B4; der Faktor √((n − 1)/n) gilt genau nur für den mittleren Radius). σ̂ ist das stabilste Maß für Verläufe über unterschiedliche Schusszahlen.
 - **Robust als Standard in Verläufen:** Median, R50, MAD, Quantilbänder.
 - **Nur Gleiches vergleichen:** gleiche Familie, gleiche Wertung; mm-Werte von LG und LP nie.
-- **Viele Vergleiche erzeugen Zufallstreffer:** Mindest-n, Korrektur (Holm oder Benjamini-Hochberg) oder nur als Hinweis formulieren. Auf einer Scheibe laufen fünf Tests (Lage, Form, Ausreißer, Trend, Probe): Etwa jede fünfte ganz normale Scheibe zeigt irgendwo einen Befund (B1).
+- **Viele Vergleiche erzeugen Zufallstreffer:** Mindest-n, Korrektur (Holm oder Benjamini-Hochberg) oder nur als Hinweis formulieren. Auf einer Scheibe laufen vier Tests (Lage, Form, Ausreißer, Trend; der Test der Probe entfiel mit U4): Etwa jede sechste ganz normale Scheibe zeigt irgendwo einen Befund (B1).
 - **Regression zur Mitte und Auswahl:** Nach einem Rekord ist die nächste Scheibe meist schwächer; „beste Serie“ und korrigiertes Ergebnis sind aus denselben Daten gewählt und optimistisch.
 - **Bedeutsamkeit zusätzlich zur Signifikanz:** lohnend ab 0,3 × der Streuung der Scheiben (Hopkins), aber nur neben einem Urteil: Ohne Veränderung trifft es bei 5 gegen 5 Scheiben oft zu (T3, B19); „nicht nachweisbar“ ist ehrlich.
 - **Transparenz:** jede Zahl mit n, Zeitraum, Filter und Kennzahl-Version; Modellwerte als Modell gekennzeichnet.

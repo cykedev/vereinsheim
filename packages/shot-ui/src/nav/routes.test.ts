@@ -203,7 +203,8 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
 
   it("Auswahl: ganze Scheibe oder eine Serie; Schuss als Nummer wie shotLabels", () => {
     const read = (search: string) => cardFromParts("c1", new URLSearchParams(search), "")
-    expect(read("series=all").selection).toBe("all")
+    // die ganze Scheibe ist die Vorgabe und fällt weg: eine Schreibweise (Review U4)
+    expect(read("series=all").selection).toBeNull()
     expect(read("series=3&shot=23").selection).toBe(3)
     expect(read("series=3&shot=23").shot).toBe("23")
     // „ohne Probe“ und die Probe gibt es seit U4 nicht mehr: alte Adressen gelten als Vorgabe, ohne Fehler
@@ -406,7 +407,7 @@ describe("die ganze Adresse (D3)", () => {
       ),
     ]
     for (const origin of origins)
-      for (const selection of [null, "all", 2] as const)
+      for (const selection of [null, 2] as const)
         for (const shot of [null, "23", "7"])
           for (const scoring of ["decimal", "rings"] as const)
             for (const anchor of [

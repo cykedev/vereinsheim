@@ -34,7 +34,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/analysis/overview`          | `src/analysis/overview.ts`           | `overviewTiles`: die acht Kacheln des Überblicks aus dem Fachkern, ohne Wert der Grund                                                                                                                                                                                                                                                               |
 | `@vereinsheim/shot-ui/analysis/observations`      | `src/analysis/observations.ts`       | `observations`: Beobachtungen in Worten, nur mit Wert, ohne Visier, je mit `notable` (fällt auf); `keyObservations` (Lage zuerst, dann die auffälligen, höchstens drei, je ihr erster Satz), `firstSentence`                                                                                                                                         |
 | `@vereinsheim/shot-ui/analysis/ObservationSymbol` | `src/analysis/ObservationSymbol.tsx` | Symbol einer Beobachtung, im Überblick und im Kopf der Scheibe                                                                                                                                                                                                                                                                                       |
-| `@vereinsheim/shot-ui/layout/sections`            | `src/layout/sections.ts`             | Abschnitte der Seite und Anker (englisch: `#target` … `#analysis`, Reiter `#overview` … `#sighters`, Zeitraum `#history`, `#cards`): `PAGE_SECTIONS`, `TAB_ANCHORS`, `parseHash`, `hashFor`                                                                                                                                                          |
+| `@vereinsheim/shot-ui/layout/sections`            | `src/layout/sections.ts`             | Abschnitte der Seite und Anker (englisch: `#target` … `#analysis`, Reiter `#overview` … `#time`, Zeitraum `#history`, `#cards`): `PAGE_SECTIONS`, `TAB_ANCHORS`, `parseHash`, `hashFor`                                                                                                                                                              |
 | `@vereinsheim/shot-ui/layout/SectionNav`          | `src/layout/SectionNav.tsx`          | Sprungleiste „Scheibe · Schüsse · Analyse“ (im Zeitraum vier Abschnitte), klebt oben, aktiver Abschnitt hervorgehoben, auf dem Telefon gleiche Felder je Abschnitt                                                                                                                                                                                   |
 | `@vereinsheim/shot-ui/layout/useActiveSection`    | `src/layout/useActiveSection.ts`     | aktiver Abschnitt beim Scrollen gemessen, `activeSection` (spätester, dessen Anfang die Leiste erreicht hat)                                                                                                                                                                                                                                         |
 | `@vereinsheim/shot-ui/layout/CardPage`            | `src/layout/CardPage.tsx`            | Rahmen der Seite: Telefon eine Spalte; ab 768 px links Scheibe und `under` (Serien) passend ins Fenster (`useTargetFit`), rechts `result` als Box, `aside`, `beside`, darunter `below`; ohne Schüsse nur `empty`                                                                                                                                     |
@@ -106,15 +106,16 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Wertung, eine Karte ohne Wertung erscheint wie Wertung (mit Probe-Eck). Es gibt keine Probe neben Wertung: keine
   Probe-Kachel, kein „Ohne Probe“, keinen Reiter „Probe“, keine „P“-Nummern. Die Bausteine prüfen das nicht selbst.
 - **Die Analyse rechnet über `analysisInput`:** die Scheibe wie am Ausdruck, bei nur Probe die Probe; nicht über
-  die Auswahl an der Scheibe. Abstände (Pausen, Rhythmus, Tempo, Drift, Zeit-Kennzahlen) bekommen `card` mit: gibt
-  die Seite eine Karte mit Probe zwischen Wertung, reißt diese keine Lücke (SF-04).
+  die Auswahl an der Scheibe. Abstände (Pausen, Rhythmus, Tempo, Drift, Zeit-Kennzahlen) bekommen `card` mit: Die
+  Seite gibt `AnalysisPanel` und `ShotTable` die rohe Karte als `context`, dann reißt eine Probe zwischen Wertung keine
+  Lücke (SF-04, Review U4); Seite und Fortschritt (`cardShots`) zählen so dieselben Abstände.
 - **Karten und Diagramme der Analyse:** schmale Karten im Raster aus Zeilen, zu zweit erst ab 820 px Breite
   des Kartenbereichs (Container, gleich hoch, jeder Abstand 16 px), keine CSS-Spalten. In der Seite aus
   `CardPage` steht die Analyse ab 768 px in voller Breite unter der Scheibe (`below`). Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
   (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`: Einzelwerte liest das
   Lineal (`analysis/charts/ChartRuler.tsx`: `useRuler`, Zeile über dem Diagramm, „Werte als Tabelle“), reine
   Hilfen in `analysis/charts/ruler.ts`. Ziehen ändert die Scheibe nicht; „Auf der Scheibe“ (`onChoose` der
-  Analyse) zeigt den Schuss über die Aktion `show` (ohne Umschalten, Auswahl bei Bedarf auf die Grundauswahl) und
+  Analyse) zeigt den Schuss über die Aktion `show` (ohne Umschalten, Auswahl bei Bedarf auf die ganze Scheibe) und
   springt zu ihr. Die Seite hängt `AnalysisPanel` je Karte neu ein (`key`), damit kein Lineal eine alte Wahl
   mitnimmt. Diagramme und Scheibe sind nicht markierbar (`select-none` an `ChartSlot`, `ChartSvg`, `TargetView`; das
   Lineal setzt `WebkitUserSelect` und verhindert mit der Maus den Beginn einer Auswahl, User, 9. Oktober 2026).
@@ -219,7 +220,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   aus dem Fachkern. Die Skriptprüfung des Labors sucht die Fachbegriffe (`JARGON`).
 - **Zahl und Bezug zusammen** (Prüfung, 9. Oktober 2026, D4): Jede Zahl, die über mehrere Schüsse summiert, nennt
   ihr n („40 weitere Schuss … zusammen“), jede, die je Schuss gilt, sagt „je Schuss“, bei Serien steht „Ringe“
-  dabei; „1 Ring“ über `ringsText`. Eine Zahl, die auch ohne jeden Effekt groß ausfällt (Versatz Probe → Wertung),
+  dabei; „1 Ring“ über `ringsText`. Eine Zahl, die auch ohne jeden Effekt groß ausfällt (bis U4 der Versatz Probe → Wertung),
   steht nur mit diesem Hinweis und nie allein im Überblick. Gründe ohne Wert gleich in Box, Kachel und Reiter
   (`src/reasons.ts`, nicht exportiert: `noResultReason`, `meanWithCount`, `NO_FULL_POSITION`). Keine Hinweise
   zum Visier (User, 9. Oktober 2026).

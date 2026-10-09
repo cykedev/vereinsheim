@@ -116,8 +116,10 @@ function layout(cards: readonly CardSpec[]): ReactNode[] {
 }
 
 export interface AnalysisPanelProps {
-  /** alle Schüsse der Karte, wie die Bausteine sie bekommen */
+  /** alle Schüsse der Karte, wie die Bausteine sie bekommen (wie am Ausdruck, `asOnPrintout`) */
   shots: readonly MetricShot[]
+  /** die rohe Karte vor `asOnPrintout`, für Abstände: eine Probe zwischen Wertung reißt keine Lücke (SF-04) */
+  context?: readonly MetricShot[]
   state: ViewState
   target: TargetImage
   tab: AnalysisTab
@@ -139,12 +141,13 @@ export interface AnalysisPanelProps {
 }
 
 /**
- * Die Analyse einer Scheibe (Spielwiese, SP-1.10) in sechs Reitern. Sie rechnet über alle Schüsse ohne
- * Probe, bei nur Probe über die Probe (D1), nicht über die Auswahl an der Scheibe. Unter jedem Reiter die
- * Datenlage, das Glossar und die typischen Fehlschlüsse aus `shot-help`.
+ * Die Analyse einer Scheibe (Spielwiese, SP-1.10) in fünf Reitern. Sie rechnet über die Scheibe wie am Ausdruck, bei
+ * nur Probe über die Probe (D1, U4), nicht über die Auswahl an der Scheibe. Unter jedem Reiter die Datenlage, das
+ * Glossar und die typischen Fehlschlüsse aus `shot-help`.
  */
 export function AnalysisPanel({
   shots,
+  context,
   state,
   target,
   tab,
@@ -158,8 +161,8 @@ export function AnalysisPanel({
 }: AnalysisPanelProps) {
   const regionId = useId()
   const input = useMemo(
-    () => analysisInput(shots, state.scoring, target),
-    [shots, state.scoring, target]
+    () => analysisInput(shots, state.scoring, target, context),
+    [shots, state.scoring, target, context]
   )
   // der auf der Scheibe gewählte Schuss, wenn er zur Grundlage gehört: Nur „Zeit und Verlauf“ hat ein Lineal,
   // das ihn zeigt; in den anderen Reitern ändert ein angetippter Schuss die Karten nicht

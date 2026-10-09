@@ -45,8 +45,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   nur mit Probe ist Training: Spiegel zeigt sie wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn
   und Ergebnis; das schwarze Eck oben rechts an der Scheibe und an den kleinen Scheiben der Serien
   erinnert daran, dass es Probe ist.
-- **Nummern.** Wertungsschüsse heißen 1, 2, 3 …, Probeschüsse P1, P2 …, in der Reihenfolge der
-  Abgabe. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.
+- **Nummern.** Schüsse heißen 1, 2, 3 … in der Reihenfolge der Abgabe, ein Training nur aus Probe
+  ebenso. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.
 - **Median statt Durchschnitt.** Wo „Median“ steht, zählt der mittlere Wert: Die Hälfte liegt
   darüber, die Hälfte darunter. Ein einzelner Ausreißer verschiebt ihn kaum, den Durchschnitt (Ø)
   schon.
@@ -57,8 +57,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Trefferbild**
 - *Was:* Jeder Treffer in Kalibergröße, gefärbt nach seinem Ring: 10 rot, 9 gold, 8 türkis, 7 und
-  weniger violett. Probeschüsse sind hohl. Die Treffer sind leicht durchscheinend, damit du siehst,
-  wo sie sich überlagern.
+  weniger violett. Ein Training nur aus Probe trägt oben rechts ein schwarzes Eck. Die Treffer sind
+  leicht durchscheinend, damit du siehst, wo sie sich überlagern.
 - *So liest du es:* Die Knöpfe in den Ecken blenden ein: unten links den Schwerpunkt (kleiner
   schwarz-weiß geviertelter Kreis, der Mittelpunkt deiner Treffer) und den Streukreis (blauer Ring
   um alle Treffer; seine Zahl misst Mitte zu Mitte), unten rechts die Vertrauensellipse
@@ -366,9 +366,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 ## Datenlage
 
 **Datenlage (Q1)**
-- *Was:* Wie viele Wertungs- und Probeschüsse die Scheibe hat; Lage, Zeit und Wert zählen über
-  beide: wie vielen davon Lage, Zeit oder Wert fehlen und welche Schüsse markiert sind (Fehlschuss,
-  verdächtig). Eine Scheibe nur mit Probe steht als Training da, wie Wertung gezählt.
+- *Was:* Wie viele Wertungsschüsse die Scheibe hat, wie vielen davon Lage, Zeit oder Wert fehlen und
+  welche Schüsse markiert sind (Fehlschuss, verdächtig). Eine Scheibe nur mit Probe steht als
+  Training da, ihre Probeschüsse wie Wertung gezählt.
 - *So liest du es:* Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei
   Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es
   kein Ergebnis, keine Zahl der Zehner und Innenzehner und keine Summe seiner Serie; Ø und Quoten
@@ -401,8 +401,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   davor`
 
 **Trainingsumfang (T6)**
-- *Was:* Je Woche die Zahl deiner Schüsse mit Probe, deiner Scheiben und der Tage, an denen du
-  geschossen hast, auch Wochen ohne Training.
+- *Was:* Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Trainings nur aus Probe zählen mit),
+  deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training.
 - *So liest du es:* Der Umfang sagt nichts über die Güte. Leg ihn neben den Verlauf: Liegen deine
   Scheiben in Wochen mit sehr vielen Schüssen öfter unter dem Formband, kann das Ermüdung sein.
 - *Vorsicht:* Hier zählt die Probe mit, das Ergebnis oben zählt nur Wertungsschüsse. Eine Netto-Zeit

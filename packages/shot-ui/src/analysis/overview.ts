@@ -13,7 +13,14 @@ import {
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
 import { directionName, formatSigned, formatValue, percentText } from "../format"
-import { meanWithCount, NO_CENTER, NO_FULL_POSITION, noResultReason, valuedWord } from "../reasons"
+import {
+  meanWithCount,
+  NO_CENTER,
+  NO_FULL_POSITION,
+  NO_OUTLIERS,
+  noResultReason,
+  valuedWord,
+} from "../reasons"
 import type { AnalysisInput } from "./input"
 import { shownRingLoss } from "./ringLoss"
 
@@ -142,19 +149,19 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       pace ? `die Hälfte in ${formatValue(pace.iqrMs / 1000, 0)} s` : "",
       "ab 3 Schuss mit Zeit"
     ),
-    // U4, D6: statt „Eingeschossen?“ (Probe neben Wertung gibt es nicht mehr) die Ausreißer, wie viele und welche;
-    // was sie kosten, steht einmal in der Beobachtung
+    // U4, D6: statt „Eingeschossen?“ (Probe neben Wertung gibt es nicht mehr) die Zahl der Ausreißer; welche es sind
+    // und was sie kosten, steht einmal in Kopf und Beobachtung (Review U4, wie die Lage in U3)
     tile(
       "Ausreißer",
       "ausreisser",
-      flagged ? String(flagged.flagged.length) : null,
+      flagged ? (flagged.flagged.length ? String(flagged.flagged.length) : "keiner") : null,
       "",
       flagged
-        ? flagged.flagged.length === 0
-          ? "keiner fällt aus der Gruppe"
-          : `${flagged.flagged.length === 1 ? "Schuss" : "Schüsse"} ${flagged.flagged.map((o) => o.number).join(", ")}`
+        ? flagged.flagged.length > 1
+          ? "fallen aus der Gruppe"
+          : "fällt aus der Gruppe"
         : "",
-      "ab 5 Schuss mit Lage"
+      NO_OUTLIERS
     ),
   ]
 }

@@ -19,6 +19,8 @@ describe("Abschnitte und Anker (D7)", () => {
     }
     expect(hashFor("analysis", "position")).toBe("#position")
     expect(parseHash("#time")).toEqual({ section: "analysis", tab: "time" })
+    // den Reiter „Probe“ gibt es seit U4 nicht mehr: ein alter Anker gilt als Vorgabe (Review U4)
+    expect(parseHash("#sighters")).toBeNull()
   })
 
   it("nur einfache Anker ohne = (im Artifact kommt nur so einer an), alle verschieden", () => {

@@ -66,6 +66,13 @@ describe("Intervalle aus dem Fachkern", () => {
     expect(shotIntervals(CARD)).toEqual([null, 45_000, null, 240_000, 52_000])
   })
 
+  it("mit der rohen Karte als Kontext reißt eine Probe zwischen Wertung keine Lücke (SF-04, Review U4)", () => {
+    // Probe als seq 5 zwischen Schuss 2 (seq 4) und Schuss 3 (seq 6): auf der gedruckten Karte fehlt sie
+    const raw = [...CARD.slice(0, 2), shot(5, "probe", null, 0, 100, 170), ...CARD.slice(2)]
+    expect(shotIntervals(CARD)[2]).toBeNull()
+    expect(shotIntervals(CARD, raw)[2]).toBe(55_000)
+  })
+
   it("in Abgabefolge, auch wenn die Liste anders steht", () => {
     expect(shotIntervals([...CARD].reverse())).toEqual(shotIntervals(CARD).reverse())
   })

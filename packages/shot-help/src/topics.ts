@@ -310,7 +310,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["Q1"],
     metrics: [],
     short: "Auf welcher Grundlage die Zahlen stehen.",
-    what: "Wie viele Wertungs- und Probeschüsse die Scheibe hat; Lage, Zeit und Wert zählen über beide: wie vielen davon Lage, Zeit oder Wert fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig). Eine Scheibe nur mit Probe steht als Training da, wie Wertung gezählt.",
+    what: "Wie viele Wertungsschüsse die Scheibe hat, wie vielen davon Lage, Zeit oder Wert fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig). Eine Scheibe nur mit Probe steht als Training da, ihre Probeschüsse wie Wertung gezählt.",
     read: "Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es kein Ergebnis, keine Zahl der Zehner und Innenzehner und keine Summe seiner Serie; Ø und Quoten rechnen ohne ihn. Ein verdächtiger Schuss zählt nur mit seinem Wert, auch wenn er eine Lage oder Zeit hat.",
     caution:
       "In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat; die Datenlage nennt ihn „ohne Zehntel“.",
@@ -337,7 +337,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["T6"],
     metrics: [],
     short: "Wie viel du trainierst: Schüsse, Scheiben und Tage je Woche.",
-    what: "Je Woche die Zahl deiner Schüsse mit Probe, deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training.",
+    what: "Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Trainings nur aus Probe zählen mit), deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training.",
     read: "Der Umfang sagt nichts über die Güte. Leg ihn neben den Verlauf: Liegen deine Scheiben in Wochen mit sehr vielen Schüssen öfter unter dem Formband, kann das Ermüdung sein.",
     caution:
       "Hier zählt die Probe mit, das Ergebnis oben zählt nur Wertungsschüsse. Eine Netto-Zeit zeigt Spiegel nicht: Sie folgt aus den Abständen zwischen den Schüssen, die du auf jeder Scheibe siehst.",

@@ -35,6 +35,9 @@ export function meanWithCount(
 /** Ohne Schwerpunkt und Test: unter drei Schuss mit Lage oder alle auf einer Linie (`mpiConfidence` ist null) */
 export const NO_CENTER = "ab 3 Schuss mit Lage (nicht alle auf einer Linie)"
 
+/** ohne Prüfung auf Ausreißer: der Fachkern (`outliers`) braucht fünf Schüsse mit Lage; Kachel und Reiter gleich */
+export const NO_OUTLIERS = "ab 5 Schuss mit Lage"
+
 /** Wie die Schüsse heißen, über die der Ø ohne Ergebnis rechnet: in Zehnteln die mit Zehntel, sonst mit Ring */
 export const valuedWord = (scoring: Scoring) => (scoring === "decimal" ? "mit Zehntel" : "mit Ring")
 

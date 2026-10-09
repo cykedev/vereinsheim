@@ -70,7 +70,7 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
     - Filter, Zeitraum, Vergleich, Wahl und Herkunft stehen als Query.
     - Browser-Zurück und geteilte Links stellen alles wieder her.
     - Auch die Anker sind englisch (User, 9. Oktober 2026, Nachtrag: „deutsch sieht das seltsam aus“): `#target`,
-      `#shots`, `#analysis`, die Reiter `#overview` … `#sighters`, im Fortschritt `#history`, `#cards`, `#numbers`
+      `#shots`, `#analysis`, die Reiter `#overview` … `#time` (`#sighters` entfiel mit U4), im Fortschritt `#history`, `#cards`, `#numbers`
       (die Scheibe hat seit U1 keinen Abschnitt „Zahlen“, [[spiegel-durchsicht]]).
       Die Beschriftungen auf der Seite bleiben deutsch.
     - Ids sind erzeugte Ids aus der Datenbank, nie Namen: Scheiben (`[A-Za-z0-9_-]+`, etwa cuid oder UUID) und
@@ -151,9 +151,9 @@ Plan `plans/2026-10-09-spiegel-routen.md`, Branch `feat/spiegel-routen`.
     `tempo`), `view` (`cards`, `months`).
   - Wahl: `pick` mit der Id einer Scheibe.
   - Scheibe: `from` (`list`, `start`, `progress`) mit den Schlüsseln der Herkunft, ohne `pick`, dazu `series`
-    (`all`, `match`, `sighters`, Serie bis 999), `shot` (Nummer wie auf der Scheibe, `23`, `P3`). Die Reihenfolge:
+    (Serie bis 999; die ganze Scheibe ist die Vorgabe und fehlt, `match` und `sighters` entfielen mit U4), `shot` (Nummer wie auf der Scheibe, `23`). Die Reihenfolge:
     `from` mit den Schlüsseln der Herkunft, dann `series`, `shot`, `scoring`.
-  - Anker englisch: `#target`, `#shots`, `#analysis`, Reiter `#overview` … `#sighters`, Fortschritt `#history`,
+  - Anker englisch: `#target`, `#shots`, `#analysis`, Reiter `#overview` … `#time`, Fortschritt `#history`,
     `#cards`, `#numbers`; die Liste trägt den Abend (`#2026-09-25`).
 - **Nicht in der Adresse:** wie gezeichnet wird (Ebenen, Ausschnitt, Thema, Erklärungen). Das bleibt Einstellung im
   Gerät.

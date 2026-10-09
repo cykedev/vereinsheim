@@ -59,6 +59,16 @@ describe("Wortwahl wie auf der Seite (U3, D9)", () => {
     for (const text of texts) expect(text).not.toMatch(/„(echt|Echt|unklar|Unklar)/)
   })
 
+  it("keine Probe neben Wertung in der Hilfe: keine „P“-Nummern, keine hohle Probe, Datenlage wie die Zeile (U4)", () => {
+    const texts = allTexts()
+    for (const text of texts) {
+      expect(text).not.toMatch(/P1, P2|Probeschüsse sind hohl|Wertungs- und Probeschüsse/)
+    }
+    expect(READING_GUIDE.find((i) => i.title === "Nummern")?.text).toContain(
+      "ein Training nur aus Probe ebenso"
+    )
+  })
+
   it("der Einstieg zitiert einen Bereich so, wie ihn die Seite zeigt", () => {
     expect(READING_GUIDE.map((i) => i.text).join(" ")).toContain(
       "„Streuung 1,12 mm, sicher zwischen 0,94 und 1,36 mm“"

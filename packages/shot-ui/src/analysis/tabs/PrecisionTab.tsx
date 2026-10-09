@@ -12,6 +12,7 @@ import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/me
 import { axisText, formatValue, ringsText } from "../../format"
 import { ChartSlot } from "../charts/frame"
 import { ShapeChart } from "../charts/ShapeChart"
+import { NO_OUTLIERS } from "../../reasons"
 import { AnalysisCard, IntervalBar, KeyValues, Muted, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
 
@@ -205,7 +206,7 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
               </Note>
             </>
           ) : (
-            <Note>ab 5 Schuss</Note>
+            <Note>{NO_OUTLIERS}</Note>
           )}
         </AnalysisCard>
       ),
