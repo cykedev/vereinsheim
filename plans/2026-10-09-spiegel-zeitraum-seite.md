@@ -55,7 +55,7 @@ Vorschläge aus dem Konzept zu Ende gedacht. Wer etwas anders will, sagt es bei 
 - **D5 Filter im Kopf:**
   - Familie: Pflicht, ein Segment-Umschalter mit den Familien, die es gibt.
   - Art: Alle, Training oder Wettkampf.
-  - Schalter-Chip „mit Training nur aus Probe“, aus (D8 aus L2: `includeProbeOnly`).
+  - Schalter-Chip „mit Training nur aus Probe“ (D8 aus L2: `includeProbeOnly`); seit 9. Oktober 2026 an als Vorgabe, denn so trainieren die meisten (User).
   - Wertung: `ScoringSwitch` in der Ergebnis-Box wie auf der Scheibe.
 - **D6 Vergleich:**
   - Im selben Blatt „vergleichen mit“: ohne (Vorgabe), „Zeitraum davor“ (gleich lang, direkt davor) oder ein

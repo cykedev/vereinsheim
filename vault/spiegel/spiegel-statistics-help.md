@@ -468,8 +468,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Wettkampf; sie gelten über alle deine Scheiben, nicht nur über den gewählten Zeitraum.
 - *Vorsicht:* Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem
   Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der
-  Wertung. Eine Trainingsscheibe nur mit Probe zählt nur, wenn du das einschaltest; dann gilt ihre
-  Probe wie Wertung, in Serien zu zehn. Ebenso eine Scheibe, deren Probe du als Wertung zählst.
+  Wertung. Eine Trainingsscheibe nur mit Probe zählt mit, solange „mit Training nur aus Probe“ an
+  ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine Scheibe, deren
+  Probe du als Wertung zählst.
 - *Mindestzahl:* Ab 1 Scheibe, die beste Form ab 5 Scheiben.
 
 ## Glossar

@@ -182,6 +182,8 @@ Das Konzept oben genauer, wie es im Labor steht (Entscheidungen D1–D18 im Plan
   einem Urteil.
 - **Analyse in L3:** „Gegen deinen Schnitt“ (über alle Scheiben der Familie bis zur neuesten im Zeitraum) und
   „Rekorde“ (über alle Scheiben der Familie). Reiter kommen mit L4 und L5.
+- **Training nur aus Probe** zählt als Vorgabe mit (Schalter „mit Training nur aus Probe“ an), denn so
+  trainieren die meisten (User, 9. Oktober 2026); im Fachkern bleibt `includeProbeOnly` eine Option, die Seite setzt sie als Vorgabe.
 - **Nicht in L3:** „Als Zeitraum speichern“ (L6), Kalender (T7), Trendsteigung (T4), Langzeit-Trefferbild (L4).
 
 ## Vorgaben (vom User bestätigt, 8. Oktober 2026)

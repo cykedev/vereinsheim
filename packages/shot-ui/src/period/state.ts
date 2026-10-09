@@ -20,7 +20,9 @@ export interface PeriodState {
   /** Disziplin-Familie, Pflicht; die Seite filtert die Scheiben danach */
   family: string
   kind: CardKind
-  /** Training nur aus Probe mitzählen (L2, D8) */
+  /**
+   * Training nur aus Probe mitzählen (L2, D8); Vorgabe an, denn so trainieren die meisten (User, 9. Oktober 2026)
+   */
   includeProbeOnly: boolean
   scoring: Scoring
   metric: PeriodMetricKey
@@ -50,7 +52,7 @@ export function initialPeriodState(
     choice: DEFAULT_CHOICE,
     compare: { type: "none" },
     kind: "all",
-    includeProbeOnly: false,
+    includeProbeOnly: true,
     scoring: "decimal",
     metric: "result.decimalMean",
     view: null,

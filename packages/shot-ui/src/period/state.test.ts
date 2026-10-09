@@ -6,13 +6,13 @@ const base = initialPeriodState({ family: "lg-10m" })
 const chosen: PeriodState = { ...base, chosen: "k12" }
 
 describe("Zustand der Seite eines Zeitraums", () => {
-  it("Vorgaben: 90 Tage, ohne Vergleich, alle Arten, Zehntel, Ø je Schuss", () => {
+  it("Vorgaben: 90 Tage, ohne Vergleich, alle Arten, Training nur aus Probe zählt, Zehntel, Ø je Schuss", () => {
     expect(base).toEqual({
       choice: { type: "rolling", days: 90 },
       compare: { type: "none" },
       family: "lg-10m",
       kind: "all",
-      includeProbeOnly: false,
+      includeProbeOnly: true,
       scoring: "decimal",
       metric: "result.decimalMean",
       view: null,
@@ -27,7 +27,7 @@ describe("Zustand der Seite eines Zeitraums", () => {
       [{ type: "setCompare", compare: { type: "previous" } }, { compare: { type: "previous" } }],
       [{ type: "setFamily", family: "lp-10m" }, { family: "lp-10m" }],
       [{ type: "setKind", kind: "competition" }, { kind: "competition" }],
-      [{ type: "setIncludeProbeOnly", include: true }, { includeProbeOnly: true }],
+      [{ type: "setIncludeProbeOnly", include: false }, { includeProbeOnly: false }],
       [{ type: "setScoring", scoring: "rings" }, { scoring: "rings" }],
       [{ type: "setMetric", metric: "group.sigma" }, { metric: "group.sigma" }],
       [{ type: "setView", view: "months" }, { view: "months" }],
@@ -43,7 +43,7 @@ describe("Zustand der Seite eines Zeitraums", () => {
       { type: "setChoice", choice: { type: "rolling", days: 30 } },
       { type: "setFamily", family: "lp-10m" },
       { type: "setKind", kind: "training" },
-      { type: "setIncludeProbeOnly", include: true },
+      { type: "setIncludeProbeOnly", include: false },
     ]
     for (const action of changes)
       expect(periodReducer(chosen, action).chosen, action.type).toBeNull()

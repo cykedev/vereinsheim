@@ -261,10 +261,11 @@ describe("Befunde aus dem Review (9. Oktober 2026)", () => {
 
   it("eine neueste Scheibe: Ablesung, Satz und „gegen deinen Schnitt“ meinen dieselbe", () => {
     // die Scheibe nur aus Probe zählt ohne den Schalter nicht: die neueste mit Wert ist c
-    const m = model([...THREE, probe])
+    const m = model([...THREE, probe], { includeProbeOnly: false })
     expect(m.reading?.card.id).toBe("c")
     expect(m.ownAverage?.last.id).toBe("c")
-    expect(model([...THREE, probe], { includeProbeOnly: true }).reading?.card.id).toBe("p")
+    // mit dem Schalter (der Vorgabe) zählt sie und ist die neueste
+    expect(model([...THREE, probe]).reading?.card.id).toBe("p")
   })
 
   it("Ergebnis, Vergleich und eigener Schnitt bleiben im Ø je Schuss, auch wenn der Verlauf σ zeigt", () => {
@@ -293,8 +294,8 @@ describe("Befunde aus dem Review (9. Oktober 2026)", () => {
     expect(isProbeOnly(probe)).toBe(true)
     expect(isProbeOnly(THREE[0])).toBe(false)
     expect(isProbeOnly(periodCard("leer", 1, []))).toBe(false)
-    expect(model([...THREE, probe]).excludedProbeOnly).toBe(1)
-    expect(model([...THREE, probe], { includeProbeOnly: true }).excludedProbeOnly).toBe(0)
+    expect(model([...THREE, probe], { includeProbeOnly: false }).excludedProbeOnly).toBe(1)
+    expect(model([...THREE, probe]).excludedProbeOnly).toBe(0)
   })
 
   it("Ablesung aus dem Modell und einer Wahl, ohne das Modell neu zu rechnen", () => {

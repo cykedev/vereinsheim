@@ -421,7 +421,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe, meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner, längste Folge von Zehnern und deine beste Form: der höchste Schnitt je Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe und die Zahl der 10,9, Zehner und Innenzehner führt Spiegel je Schusszahl, die beste Serie je Serienlänge, denn 40 und 60 Schuss sind nicht vergleichbar.",
     read: "Bei Gleichstand bleibt der frühere Rekord, denn er hat ihn zuerst gesetzt. Rekorde gibt es je Wertung (Zehntel oder ganze Ringe) und wahlweise nur für Training oder nur für Wettkampf; sie gelten über alle deine Scheiben, nicht nur über den gewählten Zeitraum.",
     caution:
-      "Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der Wertung. Eine Trainingsscheibe nur mit Probe zählt nur, wenn du das einschaltest; dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine Scheibe, deren Probe du als Wertung zählst.",
+      "Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der Wertung. Eine Trainingsscheibe nur mit Probe zählt mit, solange „mit Training nur aus Probe“ an ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine Scheibe, deren Probe du als Wertung zählst.",
     minimum: "Ab 1 Scheibe, die beste Form ab 5 Scheiben.",
   },
 ]
