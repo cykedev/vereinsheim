@@ -15,8 +15,12 @@
 // als Regeln, nicht als Abschrift der Liste. Bekannte 10-m-Disziplinen mit eigener Scheibe stehen mit
 // `target: null` im Katalog, damit der Name sie nicht auf die Standardscheibe zieht: Kyffhäuser (1062),
 // 12-kreisig (1064), Löwenbräu-Finale (7401, 7402) und LP5 (0216, DSB 2.16 mit Fallscheibe).
-// Offen (SP-0.6): ob „LG/LP Training Spiegel“ (19110000, 19210000) in Ringen wertet oder mit
-// Meytons Trainingsscheibe nur Treffer zählt; bis dahin gilt die Standardscheibe.
+//
+// Belegt an der Vereinsanlage (Kopie vom 9. Oktober 2026), ebenfalls ohne Scheibe: Vereinsspiele wie
+// Schach, Balken, Dart, Lotto, Dreieck, Blanko und Spiegel (Regeln 8000 bis 8154, hier 8000 bis 8199,
+// lieber unbekannt als falsch gewertet), Meytons LP- und LG-Trainingsscheibe (9001, 9002) und „LG
+// Training Spiegel“ des Vereins (0119 mit 000); sie werten 0,0 bis 1,9 statt Ringe. Offen bleibt
+// Meytons „LG/LP Training Spiegel“ unter 19110000 und 19210000; bis dahin gilt dort die Standardscheibe.
 
 import { TARGETS, type TargetId, type Weapon } from "./targets"
 
@@ -65,7 +69,11 @@ function ruleRange(from: number, to: number): string[] {
 
 // Reihenfolge zählt: Die ISSF-Finale (0610 mit 220) stehen vor der allgemeinen Zeile mit 0610.
 const CATALOG: readonly CatalogEntry[] = [
-  { rules: ["1062", "1064", "7401", "7402", "0216"], target: null },
+  {
+    rules: ["1062", "1064", "7401", "7402", "0216", ...ruleRange(8000, 8199), "9001", "9002"],
+    target: null,
+  },
+  { rules: ["0119"], shotCode: 0, target: null },
   { rules: ["0610", "0612", "0614", "0616"], shotCode: 220, target: "lg-10m" },
   { rules: ["0611", "0613", "0615", "0617"], shotCode: 220, target: "lp-10m" },
   {

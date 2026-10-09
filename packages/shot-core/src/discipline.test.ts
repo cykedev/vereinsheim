@@ -94,6 +94,30 @@ describe("resolveTarget", () => {
     }
   })
 
+  it("Vereinsspiele und Meytons Trainingsscheiben bleiben unbekannt, trotz LG/LP im Namen (SF-70)", () => {
+    // Kopie der Vereinsanlage vom 9. Oktober 2026: Auf der Standardscheibe passten diese Disziplinen
+    // fast nie (0 bis 17 von bis zu 390 Schüssen); die Trainingsscheiben werten 0,0 bis 1,9.
+    for (const [id, name] of [
+      [18051010, "LG Schach 6x6"],
+      [18000200, "LG Balken 5,5x90 mm"],
+      [18054010, "LG Dart"],
+      [18104200, "LP Dreieck 60x60 mm"],
+      [18106200, "LP Spiegel"],
+      [18151010, "LP Schach 6x6"],
+      [19001000, "LP-Trainingsscheibe"],
+      [19002000, "LG-Trainingsscheibe"],
+      [10119000, "LG Training Spiegel"],
+    ] as const) {
+      expect(resolve(id, name), `${id} ${name}`).toEqual({ targetId: null, source: "unknown" })
+    }
+  })
+
+  it("Varianten des Vereins auf der Standardscheibe bleiben dort (Kopie vom 9. Oktober 2026)", () => {
+    expect(resolve(19110040, "LG 40 alt")).toEqual({ targetId: "lg-10m", source: "catalog" })
+    expect(resolve(19200020, "Kranzl LG")).toEqual({ targetId: "lg-10m", source: "name" })
+    expect(resolve(19000010, "LG 40 nachhalten")).toEqual({ targetId: "lg-10m", source: "name" })
+  })
+
   it("auch eine französische Luftpistole mit Liga-ähnlicher Nummer bleibt unbekannt", () => {
     expect(resolve(10516140, "Pistolet air 5 40")).toEqual({ targetId: null, source: "unknown" })
   })
