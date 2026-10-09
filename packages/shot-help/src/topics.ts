@@ -402,18 +402,18 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: "gegen-den-schnitt",
-    title: "Gegen deinen Schnitt",
+    title: "Abstand zum Schnitt davor",
     theme: "period",
     catalog: ["C4"],
     metrics: [],
-    short: "Wie deine neueste Scheibe zu deinen letzten Wochen passt.",
-    what: "Die neueste Scheibe im Zeitraum gegen den Schnitt deiner Scheiben aus den 30 Tagen davor, dazu ihr Platz unter deinen letzten 50 Scheiben, im Ø je Schuss. Gezählt werden alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.",
-    read: "Der Platz ist ein Perzentil: Bei 71 % lagen 35 deiner letzten 50 Scheiben unter ihr; sie selbst und gleiche Werte zählen zur Hälfte, deine beste steht deshalb bei 99 %. Gibt es noch keine 50, gilt der Platz unter so vielen, wie es gibt.",
+    short: "Wie deine Scheibe zum Schnitt deiner fünf Scheiben davor passt.",
+    what: "Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf Scheiben davor, in derselben Disziplin und Art. Die Scheibe selbst zählt nicht mit. Gezählt werden alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.",
+    read: "+0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. Dieselbe Zahl steht in der Liste der Scheiben, auf Start und in der Ablesung im Fortschritt; ein Bezug für eine Scheibe überall.",
     caution:
       "Eine Scheibe ist eine Scheibe: Ein Abstand zum Schnitt, der in deinem Formband bleibt, ist normal.",
-    minimum: "Der Schnitt ab 3 Scheiben in den 30 Tagen davor, der Platz ab 10 Scheiben.",
+    minimum: "Ab der zweiten Scheibe; mit weniger als fünf davor über so viele, wie es gibt.",
     formula:
-      "Δ = Wert der neuesten Scheibe − Mittel der Scheiben aus den 30 Tagen davor; Perzentil = (kleinere + ½ · gleiche) / Zahl der letzten 50, die neueste Scheibe eingeschlossen",
+      "Δ = Ø je Schuss der Scheibe − Mittel der Ø je Schuss der bis zu fünf Scheiben davor, ohne sie selbst",
   },
   {
     id: "rekorde",

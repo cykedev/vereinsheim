@@ -36,6 +36,13 @@ const render = (props: Partial<Parameters<typeof CardReadout>[0]> = {}) =>
   )
 
 describe("Ablesung einer Scheibe (D9)", () => {
+  it("„?“ am Abstand zum Schnitt davor, nur mit `onHelp` (U2, D2)", () => {
+    expect(render({ onHelp: () => {} })).toMatch(
+      /data-delta="true"[\s\S]*?<button type="button" aria-label="Erklärung: Abstand zum Schnitt davor" data-help="gegen-den-schnitt"/
+    )
+    expect(render()).not.toContain('data-help="gegen-den-schnitt"')
+  })
+
   it("gewählt: Datum, Art, Wert, Schusszahl, Abstand zum Schnitt davor, Formband, kleine Scheibe", () => {
     const html = render()
     expect(html).toContain("Gewählte Scheibe")

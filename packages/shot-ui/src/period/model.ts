@@ -2,7 +2,6 @@
 // Bausteine zeichnen nur, was hier steht; Datum und Zeitzone über `@vereinsheim/lib/format` (D16).
 
 import {
-  againstOwnAverage,
   cardValues,
   comparePeriods,
   periodBuckets,
@@ -10,7 +9,6 @@ import {
   periodTrend,
   trainingVolume,
   type CardValue,
-  type OwnAverage,
   type PeriodBucket,
   type PeriodCard,
   type PeriodComparison,
@@ -126,10 +124,10 @@ export interface PeriodModel {
   /** jede ISO-Woche im Zeitraum, auch ohne Scheibe */
   weeks: (VolumeBucket & { label: string })[]
   /**
-   * die neueste Scheibe im Zeitraum gegen den eigenen Schnitt, im Ø je Schuss, über alle Scheiben der Familie
-   * bis zu ihr (30 Tage davor, Platz unter den letzten 50)
+   * die neueste Scheibe im Zeitraum mit Ø je Schuss (die der Ablesung ohne Wahl); null ohne. Ihren Abstand zum Schnitt
+   * der fünf davor tragen `deltas` (U2, D2: ein Bezug für eine Scheibe)
    */
-  ownAverage: (OwnAverage & { pool: number }) | null
+  newest: string | null
   records: PeriodRecords
   summary: {
     mean: number | null
@@ -157,18 +155,15 @@ export const isProbeOnly = (card: PeriodCard) =>
   card.shots.length > 0 && card.shots.every((s) => s.kind === "probe")
 
 /**
- * Die Ablesung zu einer Wahl: die gewählte Scheibe, wenn sie im Zeitraum liegt, sonst die neueste mit Ø je Schuss
- * (wie im Satz und bei „gegen deinen Schnitt“), sonst die neueste. Getrennt vom Modell, damit eine neue Wahl es
- * nicht neu rechnet.
+ * Die Ablesung zu einer Wahl: die gewählte Scheibe, wenn sie im Zeitraum liegt, sonst die neueste mit Ø je Schuss,
+ * sonst die neueste. Getrennt vom Modell, damit eine neue Wahl es nicht neu rechnet.
  */
 export function periodReading(
-  model: Pick<PeriodModel, "cards" | "trend" | "ownAverage">,
+  model: Pick<PeriodModel, "cards" | "trend" | "newest">,
   chosen: string | null
 ): PeriodReading | null {
   const picked = chosen ? model.cards.find((c) => c.id === chosen) : undefined
-  const newest = model.ownAverage
-    ? model.cards.find((c) => c.id === model.ownAverage?.last.id)
-    : undefined
+  const newest = model.newest ? model.cards.find((c) => c.id === model.newest) : undefined
   const card = picked ?? newest ?? model.cards.at(-1)
   if (!card) return null
   return {
@@ -184,15 +179,6 @@ const mean = (values: readonly CardValue[]) =>
 /** zeitliche Folge, bei gleichem Beginn nach Id (wie im Fachkern); eine Regel für Zeitraum und Liste */
 export const byStart = (a: PeriodCard, b: PeriodCard) =>
   a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-
-/** Platz unter so vielen letzten Scheiben (C4) */
-const PERCENTILE_POOL = 50
-
-/** gegen den eigenen Schnitt, mit der Zahl der Scheiben, unter denen der Platz gilt (bis zu 50) */
-function ownAverageOf(values: readonly CardValue[]) {
-  const own = againstOwnAverage(values)
-  return own ? { ...own, pool: Math.min(PERCENTILE_POOL, values.length) } : null
-}
 
 /** die bis zu fünf Scheiben davor, wie der gleitende Schnitt (D2) */
 const DELTA_WINDOW = 5
@@ -267,8 +253,7 @@ export function periodModel(input: {
     }
   })
 
-  // Scheiben der Familie in der Art der Seite, auch vor dem Zeitraum: für den Abstand zum Schnitt davor und
-  // für „gegen deinen Schnitt“ (Platz unter den letzten 50, nicht nur im Zeitraum)
+  // Scheiben der Familie in der Art der Seite, auch vor dem Zeitraum: für den Abstand zum Schnitt davor
   const family = input.cards.filter(ofKind).sort(byStart)
   const familyValues = cardValues(family, chartMetric, scoring, options)
   const deltas = deltasBefore(familyValues, inPeriod)
@@ -337,11 +322,6 @@ export function periodModel(input: {
       lastDays: all ? FORM_DAYS : null,
     }
   })()
-  const familyPerShot = cardValues(family, summaryMetric, scoring, options)
-  const newest = perShot.at(-1)
-  const upToNewest = newest
-    ? familyPerShot.slice(0, familyPerShot.findIndex((v) => v.id === newest.id) + 1)
-    : []
 
   const model: Omit<PeriodModel, "reading"> = {
     range,
@@ -359,7 +339,7 @@ export function periodModel(input: {
     months,
     deltas,
     weeks,
-    ownAverage: ownAverageOf(upToNewest),
+    newest: perShot.at(-1)?.id ?? null,
     records: periodRecords(input.cards, scoring, {
       kind: state.kind === "all" ? undefined : state.kind,
       includeProbeOnly: state.includeProbeOnly,

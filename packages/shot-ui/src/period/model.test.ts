@@ -266,17 +266,14 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     expect(model(many).deltas.get("k10")?.n).toBe(5)
   })
 
-  it("gegen den Schnitt über alle Scheiben der Familie bis zur neuesten im Zeitraum", () => {
+  it("die neueste Scheibe ist die des Zeitraums, nicht die von heute (kein „gegen deinen Schnitt“ mehr, U2)", () => {
     // benannter Zeitraum Mai bis Juni: die neueste Scheibe dort, nicht die von heute
     const may = [100, 101, 102, 103].map((t, i) => periodCard(`m${i}`, 120 - i, [t]))
     const today = periodCard("heute", 1, [80])
     const m = model([...may, today], { choice: { type: "named", id: "lm" } })
-    expect(m.ownAverage?.last.id).toBe("m3")
-    expect(m.ownAverage?.average).toMatchObject({ n: 3 })
-    // Perzentil über die letzten 50 der Familie, nicht nur über den Zeitraum
-    const long = Array.from({ length: 30 }, (_, i) => periodCard(`f${i}`, 200 - i, [95]))
-    const short = model([...long, ...THREE], { choice: { type: "rolling", days: 30 } })
-    expect(short.ownAverage?.percentile).not.toBeNull()
+    expect(m.newest).toBe("m3")
+    expect(m.reading?.card.id).toBe("m3")
+    expect("ownAverage" in m).toBe(false)
   })
 
   it("Ablesung: gewählte Scheibe, sonst die neueste", () => {
@@ -310,11 +307,11 @@ describe("Befunde aus dem Review (9. Oktober 2026)", () => {
     expect(model(THREE, { compare: { type: "previous" } }).compareShared).toBe(0)
   })
 
-  it("eine neueste Scheibe: Ablesung, Satz und „gegen deinen Schnitt“ meinen dieselbe", () => {
+  it("eine neueste Scheibe: die Ablesung meint die neueste mit Wert", () => {
     // die Scheibe nur aus Probe zählt ohne den Schalter nicht: die neueste mit Wert ist c
     const m = model([...THREE, probe], { includeProbeOnly: false })
     expect(m.reading?.card.id).toBe("c")
-    expect(m.ownAverage?.last.id).toBe("c")
+    expect(m.newest).toBe("c")
     // mit dem Schalter (der Vorgabe) zählt sie und ist die neueste
     expect(model([...THREE, probe]).reading?.card.id).toBe("p")
   })
@@ -328,7 +325,8 @@ describe("Befunde aus dem Review (9. Oktober 2026)", () => {
     const sigma = model(cards, { metric: "group.sigma" })
     expect(sigma.metric.key).toBe("group.sigma")
     expect(sigma.summary).toEqual(mean.summary)
-    expect(sigma.ownAverage).toEqual(mean.ownAverage)
+    expect(sigma.newest).toEqual(mean.newest)
+    expect(sigma.form).toEqual(mean.form)
     const now = [60, 70, 80, 90, 100].map((t, i) =>
       periodCard(`n${i}`, 10 + i, [t, t, t], { spreadUm: 100 * (i + 1) })
     )

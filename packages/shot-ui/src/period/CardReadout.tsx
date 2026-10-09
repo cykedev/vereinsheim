@@ -11,6 +11,7 @@ import { groupView } from "../geometry"
 import { RouteLink } from "../nav/RouteLink"
 import type { CardRoute } from "../nav/routes"
 import { hasPosition, matchShots } from "../shots"
+import { HelpButton } from "../help/HelpButton"
 import { MiniTarget } from "../target/MiniTarget"
 import { isProbeOnly } from "./model"
 
@@ -29,6 +30,8 @@ export interface CardReadoutProps {
   chosen: boolean
   /** die Adresse einer Scheibe aus diesem Fortschritt (`openCard` mit ihm als Herkunft) */
   cardRoute: (id: string) => CardRoute
+  /** „?“ am Abstand zum Schnitt davor (U2, D2); ohne kein „?“ */
+  onHelp?: (id: string) => void
   className?: string
 }
 
@@ -60,6 +63,7 @@ export function CardReadout({
   timeZone,
   chosen,
   cardRoute,
+  onHelp,
   className,
 }: CardReadoutProps) {
   const shots = shownShots(card)
@@ -92,9 +96,18 @@ export function CardReadout({
           </p>
           <p>{`${shots.length} Schuss${isProbeOnly(card) ? " (Probe als Training)" : ""}`}</p>
           {value && (
-            <p data-delta className="tabular-nums">
-              {delta ? deltaText(delta, metric.decimals) : "erste Scheibe, kein Schnitt davor"}
-            </p>
+            <div className="flex items-start justify-between gap-2">
+              <p data-delta className="tabular-nums">
+                {delta ? deltaText(delta, metric.decimals) : "erste Scheibe, kein Schnitt davor"}
+              </p>
+              {onHelp && (
+                <HelpButton
+                  label="Abstand zum Schnitt davor"
+                  helpId="gegen-den-schnitt"
+                  onClick={() => onHelp("gegen-den-schnitt")}
+                />
+              )}
+            </div>
           )}
           {inBand !== null && (
             <p data-in-band={inBand}>

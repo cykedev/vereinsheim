@@ -59,14 +59,32 @@ describe("Analyse über den Zeitraum (D12)", () => {
       })
     )
 
-  it("gegen deinen Schnitt: neueste Scheibe, Schnitt der 30 Tage davor, Platz unter den letzten n", () => {
-    // n0 (6,0, vor 10 Tagen) gegen n1 … n4 (7,0 … 10,0): Schnitt 8,5, Abstand −2,5; fünf Scheiben, kein Platz
+  it("keine Karte „Gegen deinen Schnitt“: die Ablesung sagt den Abstand zu den fünf davor (U2, D2)", () => {
     const html = render(now)
-    expect(html).toContain('data-help="gegen-den-schnitt"')
-    expect(html).toMatch(/Neueste Scheibe[\s\S]*?6,00 am 20\.09\.2026/)
-    expect(html).toMatch(/Schnitt der 30 Tage davor[\s\S]*?8,50 \(4 Scheiben\)/)
-    expect(html).toMatch(/Abstand[\s\S]*?−2,50/)
-    expect(html).toMatch(/Platz unter deinen letzten 50[\s\S]*?ab 10 Scheiben/)
+    expect(html).not.toContain('data-help="gegen-den-schnitt"')
+    expect(html).not.toContain("Gegen deinen Schnitt")
+    expect(html).not.toContain("Platz unter deinen letzten")
+  })
+
+  it("Rekorde: oben höchstens fünf aus dem Zeitraum, alle zugeklappt darunter (U2, D5)", () => {
+    // nur Scheiben im Zeitraum: jeder Rekord liegt darin, oben stehen trotzdem höchstens fünf
+    const m = model(now)
+    const all = recordRows(m.records, "decimal")
+    const here = new Set(m.cards.map((c) => c.id))
+    const html = render(now)
+    const top = html.slice(html.indexOf("data-records-new"), html.indexOf("data-all-records"))
+    const topKeys = [...top.matchAll(/data-record="([^"]+)"/g)].map((r) => r[1])
+    const expected = all.filter((r) => here.has(r.record.cardId)).map((r) => r.key)
+    expect(expected.length).toBeGreaterThan(5)
+    expect(topKeys).toEqual(expected.slice(0, 5))
+    expect(html).toMatch(
+      /<details data-all-records="true"[^>]*><summary[^>]*>Alle Rekorde \((\d+)\)<\/summary>/
+    )
+    expect(Number(/Alle Rekorde \((\d+)\)/.exec(html)?.[1])).toBe(all.length)
+    // ohne Rekord im Zeitraum der Satz, die Rekorde bleiben zugeklappt erreichbar
+    const empty = render(now, { choice: { type: "free", from: "2026-01-01", to: "2026-01-31" } })
+    expect(empty).toContain("Im Zeitraum kein neuer Rekord.")
+    expect(empty).toContain("data-all-records")
   })
 
   it("Rekorde in der Reihenfolge des Katalogs, außerhalb des Zeitraums nicht wählbar", () => {
@@ -86,9 +104,9 @@ describe("Analyse über den Zeitraum (D12)", () => {
     expect(html).toMatch(/aria-label="beste Form \(Ø über fünf Scheiben\) vom [\d.]+ zeigen"/)
   })
 
-  it("ohne Scheiben: Hinweise statt leerer Karten", () => {
+  it("ohne Scheiben: der Hinweis statt einer leeren Karte", () => {
     const html = render([])
-    expect(html).toContain("Keine Scheibe im Zeitraum.")
     expect(html).toContain("Noch kein Rekord")
+    expect(html).not.toContain("data-all-records")
   })
 })

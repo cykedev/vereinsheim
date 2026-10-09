@@ -473,18 +473,18 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Mittel im Vergleichszeitraum; bedeutsam, wenn |Δ| ≥ 0,3 · gepoolte Standardabweichung der
   Scheibenwerte`
 
-**Gegen deinen Schnitt (C4)**
-- *Was:* Die neueste Scheibe im Zeitraum gegen den Schnitt deiner Scheiben aus den 30 Tagen davor,
-  dazu ihr Platz unter deinen letzten 50 Scheiben, im Ø je Schuss. Gezählt werden alle deine
-  Scheiben davor, nicht nur die im gewählten Zeitraum.
-- *So liest du es:* Der Platz ist ein Perzentil: Bei 71 % lagen 35 deiner letzten 50 Scheiben unter
-  ihr; sie selbst und gleiche Werte zählen zur Hälfte, deine beste steht deshalb bei 99 %. Gibt es
-  noch keine 50, gilt der Platz unter so vielen, wie es gibt.
+**Abstand zum Schnitt davor (C4)**
+- *Was:* Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf
+  Scheiben davor, in derselben Disziplin und Art. Die Scheibe selbst zählt nicht mit. Gezählt werden
+  alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.
+- *So liest du es:* +0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. Dieselbe
+  Zahl steht in der Liste der Scheiben, auf Start und in der Ablesung im Fortschritt; ein Bezug für
+  eine Scheibe überall.
 - *Vorsicht:* Eine Scheibe ist eine Scheibe: Ein Abstand zum Schnitt, der in deinem Formband bleibt,
   ist normal.
-- *Mindestzahl:* Der Schnitt ab 3 Scheiben in den 30 Tagen davor, der Platz ab 10 Scheiben.
-- *Formel:* `Δ = Wert der neuesten Scheibe − Mittel der Scheiben aus den 30 Tagen davor; Perzentil =
-  (kleinere + ½ · gleiche) / Zahl der letzten 50, die neueste Scheibe eingeschlossen`
+- *Mindestzahl:* Ab der zweiten Scheibe; mit weniger als fünf davor über so viele, wie es gibt.
+- *Formel:* `Δ = Ø je Schuss der Scheibe − Mittel der Ø je Schuss der bis zu fünf Scheiben davor,
+  ohne sie selbst`
 
 **Rekorde (R1, R2, R3, R4, R5, R6, R7, R8)**
 - *Was:* Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe,
