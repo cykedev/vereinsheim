@@ -127,4 +127,11 @@ describe("Platz für die Scheibe (useTargetFit)", () => {
     expect(targetRoom(600, 549, 300)).toBeNull()
     expect(targetRoom(375, 470, 271)).toBeNull()
   })
+
+  it("über der unteren Leiste (Plan N3, D2): ihr Platz geht von der Fensterhöhe ab", () => {
+    // Tablet hochkant: 1024 px Fenster, 72 px Leiste
+    expect(targetRoom(1024, 900, 640, 72)).toBe(1024 - 56 - 16 - 72 - 260)
+    expect(targetRoom(1024, 900, 640, 0)).toBe(targetRoom(1024, 900, 640))
+    expect(targetRoom(600, 540, 300, 72)).toBeNull()
+  })
 })

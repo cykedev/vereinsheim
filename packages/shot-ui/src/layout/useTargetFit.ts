@@ -17,8 +17,14 @@ const WIDE = "(min-width: 768px)"
  * der Scheibe. Bleibt weniger als `MIN_TARGET_PX`, null: Dann bleibt die Scheibe so groß, wie sie allein passt,
  * und die Serien folgen darunter.
  */
-export function targetRoom(viewportHeight: number, columnHeight: number, boxHeight: number) {
-  const room = Math.floor(viewportHeight - NAV_PX - AIR_PX - (columnHeight - boxHeight))
+export function targetRoom(
+  viewportHeight: number,
+  columnHeight: number,
+  boxHeight: number,
+  /** Platz der unteren Leiste des Rahmens (`--app-bar`, Plan N3, D2) */
+  barPx = 0
+) {
+  const room = Math.floor(viewportHeight - NAV_PX - AIR_PX - barPx - (columnHeight - boxHeight))
   return room >= MIN_TARGET_PX ? room : null
 }
 
@@ -43,7 +49,9 @@ export function useTargetFit(): {
           ? targetRoom(
               window.innerHeight,
               node.getBoundingClientRect().height,
-              box.getBoundingClientRect().height
+              box.getBoundingClientRect().height,
+              // im Rahmen der App nimmt die untere Leiste unten Platz weg; ohne Rahmen 0
+              parseFloat(getComputedStyle(node).getPropertyValue("--app-bar")) || 0
             )
           : null
       setRoom((prev) => (prev !== null && next !== null && Math.abs(prev - next) < 1 ? prev : next))

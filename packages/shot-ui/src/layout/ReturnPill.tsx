@@ -1,8 +1,9 @@
 "use client"
 
 /**
- * Pille „Zurück zu „Lage““ (Plan Schritt 4, D6): unten mittig über dem sicheren Rand des Telefons, nachdem
- * eine Aktion außerhalb der Scheibe zur Scheibe gesprungen ist. Ein Tipp springt zurück, das Kreuz schließt.
+ * Pille „Zurück zu „Lage““ (Plan Schritt 4, D6): unten mittig über dem sicheren Rand des Telefons und über der
+ * unteren Leiste des Rahmens (`--app-bar`, Plan N3), nachdem eine Aktion außerhalb der Scheibe zur Scheibe
+ * gesprungen ist. Ein Tipp springt zurück, das Kreuz schließt.
  * Immer eingehängt: Der Bereich für Screenreader muss schon da sein, wenn der Sprung angesagt wird; ein
  * Bereich, der mit der Pille erst entsteht, wird oft nicht vorgelesen. Ohne `label` nur dieser Bereich, leer.
  */
@@ -21,7 +22,7 @@ export function ReturnPill({
         {label ? `Zur Scheibe gesprungen. „Zurück zu „${label}““ steht unten.` : ""}
       </div>
       {label && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[calc(1rem+var(--app-bar,0px)+env(safe-area-inset-bottom))]">
           <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-border bg-card py-1 pr-1 pl-1 shadow-xl">
             <button
               type="button"

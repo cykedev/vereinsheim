@@ -43,6 +43,8 @@ describe("Rücksprung-Pille", () => {
   it("unten mittig, über dem sicheren Rand, mit Text und Schließen in 40 px", () => {
     expect(html).toMatch(/class="[^"]*fixed inset-x-0 bottom-0[^"]*"/)
     expect(html).toContain("env(safe-area-inset-bottom)")
+    // über der unteren Leiste des Rahmens (Plan N3, D2); ohne Rahmen 0 px
+    expect(html).toContain("pb-[calc(1rem+var(--app-bar,0px)+env(safe-area-inset-bottom))]")
     expect(html).toMatch(/<button type="button"[^>]*>Zurück zu „Lage“<\/button>/)
     expect(html).toMatch(/<button type="button" aria-label="Schließen"[^>]*class="[^"]*size-10/)
   })
