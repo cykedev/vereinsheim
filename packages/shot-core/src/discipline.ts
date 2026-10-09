@@ -16,11 +16,12 @@
 // `target: null` im Katalog, damit der Name sie nicht auf die Standardscheibe zieht: Kyffhäuser (1062),
 // 12-kreisig (1064), Löwenbräu-Finale (7401, 7402) und LP5 (0216, DSB 2.16 mit Fallscheibe).
 //
-// Belegt an der Vereinsanlage (Kopie vom 9. Oktober 2026), ebenfalls ohne Scheibe: Vereinsspiele wie
-// Schach, Balken, Dart, Lotto, Dreieck, Blanko und Spiegel (Regeln 8000 bis 8154, hier 8000 bis 8199,
-// lieber unbekannt als falsch gewertet), Meytons LP- und LG-Trainingsscheibe (9001, 9002) und „LG
-// Training Spiegel“ des Vereins (0119 mit 000). Die Trainingsscheiben werten 0,0 bis 1,9 statt Ringe,
-// die Vereinsspiele auch mit negativen Zehnteln. Offen bleibt
+// Belegt an einer Vereinsanlage (Kopie vom 9. Oktober 2026), ebenfalls ohne Scheibe: Meytons
+// Vereinsspiele wie Schach, Balken, Dart, Lotto, Dreieck, Blanko und Spiegel (Regeln 8000 bis 8154, nur
+// der belegte Bereich) und Meytons LP- und LG-Trainingsscheibe (9001, 9002). Die Trainingsscheiben werten
+// 0,0 bis 1,9 statt Ringe, die Spiele auch mit negativen Zehnteln. Vereinseigene Disziplinen ohne
+// Scheibe (dort etwa „LG Training Spiegel“ unter 10119000) stehen nicht im Katalog, sondern in der
+// Admin-Zuordnung mit `targetId: null` (ADR-029: nichts Vereinsspezifisches im Code). Offen bleibt
 // Meytons „LG/LP Training Spiegel“ unter 19110000 und 19210000; bis dahin gilt dort die Standardscheibe.
 
 import { TARGETS, type TargetId, type Weapon } from "./targets"
@@ -41,7 +42,8 @@ export interface ParsedDisciplineId {
 export interface AdminMapping {
   disciplineId: number
   name: string
-  targetId: TargetId
+  /** null: Disziplin mit eigener Scheibe, die die Bibliothek nicht kennt (bleibt ohne Scheibenbild) */
+  targetId: TargetId | null
 }
 
 export type ResolutionSource = "admin" | "catalog" | "name" | "unknown"
@@ -71,10 +73,9 @@ function ruleRange(from: number, to: number): string[] {
 // Reihenfolge zählt: Die ISSF-Finale (0610 mit 220) stehen vor der allgemeinen Zeile mit 0610.
 const CATALOG: readonly CatalogEntry[] = [
   {
-    rules: ["1062", "1064", "7401", "7402", "0216", ...ruleRange(8000, 8199), "9001", "9002"],
+    rules: ["1062", "1064", "7401", "7402", "0216", ...ruleRange(8000, 8154), "9001", "9002"],
     target: null,
   },
-  { rules: ["0119"], shotCode: 0, target: null },
   { rules: ["0610", "0612", "0614", "0616"], shotCode: 220, target: "lg-10m" },
   { rules: ["0611", "0613", "0615", "0617"], shotCode: 220, target: "lp-10m" },
   {

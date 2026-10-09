@@ -78,7 +78,7 @@ Handbuchstände: V5 (08/2023) → V7 (03/2024): `SportpassID` von `int(11)` auf 
 | Wertungsmodus `0` (unbekannt), womöglich bei Probe oder Altdaten; in zwei Jahren nie vorgekommen, Modus 5 nur beim Königsschießen | Admin gibt Modus 0 je Disziplin frei, Zähler im Heartbeat |
 | Schüsse über der Soll-Zahl stehen mit echter Lage, aber Wert 0, `Text` „0F“ oder „inv“ und Teiler 2147483647 (Platzhalter) in der Ablage | Platzhalter-Teiler als „kein Abstand“ lesen; Schuss amtlich 0, nicht in Kennzahlen der Lage (SF-08) |
 | Probe steht erst seit September 2026 in der Ablage; ältere Scheiben haben nur Wertung | Historie ohne Probe; reine Probe-Trainings vor September 2026 fehlen ganz |
-| Vereinsspiele (Schach, Balken, Dart, Lotto, Dreieck, Blanko, Spiegel; Regel 8000 bis 8154) und Meytons Trainingsscheiben (`19001000`, `19002000`, `10119000`, Werte 0,0 bis 1,9) tragen „LG“/„LP“ im Namen, haben aber eigene Scheiben; negative Zehntel nur dort | im Katalog von `shot-core` als bekannt ohne Scheibe, nie über den Namen (SF-70) |
+| Vereinsspiele (Schach, Balken, Dart, Lotto, Dreieck, Blanko, Spiegel; Regel 8000 bis 8154) und Meytons Trainingsscheiben (`19001000`, `19002000`, `10119000`, Werte 0,0 bis 1,9) tragen „LG“/„LP“ im Namen, haben aber eigene Scheiben; negative Zehntel nur dort | Meytons Spiele (8000 bis 8154) und Trainingsscheiben (9001, 9002) im Katalog von `shot-core` ohne Scheibe; vereinseigene wie `10119000` über die Admin-Zuordnung „ohne Scheibe“ (SF-70) |
 | Die SportpassID steht als Kopie in jeder Scheibe; eine später nachgepflegte Nummer fehlt in alten Scheiben | rückwirkend nur mit Namensvorschlag und Bestätigung |
 
 ## Erkundung vor Ort

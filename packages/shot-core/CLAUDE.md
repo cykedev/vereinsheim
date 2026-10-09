@@ -44,8 +44,10 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - Kein `server-only`, keine Node-APIs, kein `"use server"`; Just-in-time wie `packages/lib`. Eine
   Next-App, die das Paket nutzt, braucht es in `transpilePackages` (`packages/config/next/index.mjs`).
 - Bekannte Disziplinen mit eigener Scheibe stehen als Nullzeile im Katalog (`target: null`) und bleiben
-  unbekannt, bis die Bibliothek ihre Scheibe kennt; dazu gehören die Vereinsspiele (Regeln 8000 bis 8199)
-  und Meytons Trainingsscheiben, die „LG“/„LP“ im Namen tragen.
+  unbekannt, bis die Bibliothek ihre Scheibe kennt; dazu gehören Meytons Vereinsspiele (Regeln 8000 bis
+  8154, nur der belegte Bereich) und Trainingsscheiben, die „LG“/„LP“ im Namen tragen. Vereinseigene
+  Disziplinen ohne Scheibe stehen nicht im Katalog, sondern in der Admin-Zuordnung mit `targetId: null`
+  (ADR-029).
 - Was nicht hier liegt: Zeichnen (`shot-ui`, SP-1.8), die Skalen der SSMDB2-Felder (Adapter in
   SP-1.6).
 - **Kennzahlen nur über `defineMetric`**, mit Katalog-ID (`catalogId`), Test und festem Erwartungswert

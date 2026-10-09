@@ -104,12 +104,27 @@ describe("resolveTarget", () => {
       [18104200, "LP Dreieck 60x60 mm"],
       [18106200, "LP Spiegel"],
       [18151010, "LP Schach 6x6"],
+      [18154010, "LP Dart"],
       [19001000, "LP-Trainingsscheibe"],
       [19002000, "LG-Trainingsscheibe"],
-      [10119000, "LG Training Spiegel"],
     ] as const) {
       expect(resolve(id, name), `${id} ${name}`).toEqual({ targetId: null, source: "unknown" })
     }
+    // Nur der belegte Bereich bis 8154; dahinter gilt wieder der Name.
+    expect(resolve(18155010, "LG Neues Spiel")).toEqual({ targetId: "lg-10m", source: "name" })
+  })
+
+  it("eine Vereinsdisziplin ohne Scheibe legt der Admin fest, nicht der Katalog (ADR-029)", () => {
+    // „LG Training Spiegel“ des Vereins (10119000) wertet 0,0 bis 1,9; über den Namen landete sie auf
+    // der Standardscheibe. Vereinseigene Nummern gehören nicht in den Code.
+    expect(resolve(10119000, "LG Training Spiegel")).toEqual({ targetId: "lg-10m", source: "name" })
+    const mappings: AdminMapping[] = [
+      { disciplineId: 10119000, name: "LG Training Spiegel", targetId: null },
+    ]
+    expect(resolve(10119000, "LG Training Spiegel", mappings)).toEqual({
+      targetId: null,
+      source: "admin",
+    })
   })
 
   it("Varianten des Vereins auf der Standardscheibe bleiben dort (Kopie vom 9. Oktober 2026)", () => {

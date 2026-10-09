@@ -40,7 +40,7 @@ relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]", "[[spiegel-bridge]]"
 39 Disziplinen. Gegen das Modell „Grenze + 10 µm, strikt“ stimmen in allen Katalog-Disziplinen (LG/LP 20, 40, 60, „alt“, Auflage, Liga) **43.000 von 43.000** Zehnteln und Innenzehnern; nach der reinen Regel 41.649 (SF-75). Über den Namen landeten in `shot-core` bis zum 9. Oktober 2026 auf der Standardscheibe, obwohl sie eigene Scheiben haben und fast nie passen (seitdem Nullzeilen im Katalog):
 
 - **Vereinsspiele** (Regel 8000 bis 8154, DisziplinID `18…`): Schach 6x6, Schach-Lotto, Dart, Balken, Dreieck, Blanko, Spiegel, je für LG und LP;
-- **Meytons Trainingsscheiben** (`19001000`, `19002000`, `10119000` „LG Training Spiegel“): Werte 0,0 bis 1,9 statt Ringe;
+- **Meytons Trainingsscheiben** (`19001000`, `19002000`) und die Vereinsdisziplin `10119000` „LG Training Spiegel“: Werte 0,0 bis 1,9 statt Ringe; die Vereinsdisziplin gehört in die Admin-Zuordnung, nicht in den Katalog ([[adr-029]]);
 - **Zimmerstutzen** (`10199005`) bleibt schon heute ohne Scheibe.
 
 Passend über den Namen: „König LG/LP“ (Wertung verdeckt), „Kranzl LG“, „LG 40 nachhalten“ (je alle Schüsse gleich).
