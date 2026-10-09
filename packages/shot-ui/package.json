@@ -61,6 +61,7 @@
     "./nav/routes": "./src/nav/routes.ts",
     "./nav/navigate": "./src/nav/navigate.ts",
     "./nav/areas": "./src/nav/areas.ts",
+    "./nav/context": "./src/nav/context.ts",
     "./list/evenings": "./src/list/evenings.ts",
     "./list/EveningList": "./src/list/EveningList.tsx",
     "./list/ListControls": "./src/list/ListControls.tsx",
