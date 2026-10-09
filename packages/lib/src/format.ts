@@ -75,6 +75,54 @@ export function formatShortDate(date: Date, timeZone: string): string {
   )
 }
 
+/** "Jul" — Diagramm-Achse mit Monatsauflösung. */
+export function formatMonthShort(date: Date, timeZone: string): string {
+  return dateTimeFormat({ month: "short" }, timeZone).format(date)
+}
+
+/** "Juli 2026" */
+export function formatMonthYear(date: Date, timeZone: string): string {
+  return dateTimeFormat({ month: "long", year: "numeric" }, timeZone).format(date)
+}
+
+/** Versatz der Zone zu UTC in ms zum Zeitpunkt `ms` (Wanduhr der Zone minus UTC). */
+function zoneOffsetMs(ms: number, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(new Date(ms))
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0)
+  const wall = Date.UTC(
+    part("year"),
+    part("month") - 1,
+    part("day"),
+    part("hour"),
+    part("minute"),
+    part("second")
+  )
+  return wall - Math.floor(ms / 1000) * 1000
+}
+
+/**
+ * Beginn des Kalendertags `isoDate` ("2026-07-15") in der Zone, in ms (UTC). Der Versatz wird an der
+ * gefundenen Zeit nachgeprüft, damit es auch am Tag der Zeitumstellung stimmt (der Tag beginnt dann noch in
+ * der Zeit davor).
+ */
+export function zonedDayStartMs(isoDate: string, timeZone: string): number {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate)
+  if (!match) throw new RangeError(`${isoDate} ist kein Tag der Form JJJJ-MM-TT`)
+  const midnightUtc = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+  const first = midnightUtc - zoneOffsetMs(midnightUtc, timeZone)
+  return midnightUtc - zoneOffsetMs(first, timeZone)
+}
+
 /** "2026-09-09" — sortierbar, für Dateinamen. */
 export function formatIsoDate(date: Date, timeZone: string): string {
   const parts = dateTimeFormat(

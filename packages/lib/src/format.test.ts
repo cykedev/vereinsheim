@@ -9,8 +9,11 @@ import {
   formatNumber,
   formatIsoDate,
   formatLongDateTime,
+  formatMonthShort,
+  formatMonthYear,
   formatShortDate,
   formatShortDay,
+  zonedDayStartMs,
 } from "./format"
 
 // 2026-09-08T22:30:00Z ist in Europe/Berlin (UTC+2) bereits der 09.09.2026, 00:30.
@@ -100,5 +103,37 @@ describe("formatNumber", () => {
   it("haengt nicht an der Locale des Browsers", () => {
     // Der Wert ist unabhaengig von navigator.language / System-Locale.
     expect(formatNumber(1234.5)).not.toBe("1,234.5")
+  })
+})
+
+describe("formatMonthShort und formatMonthYear", () => {
+  const july = new Date(Date.UTC(2026, 6, 15, 12))
+  it("kurzer und langer Monat in der Zielzeitzone", () => {
+    expect(formatMonthShort(july, "Europe/Berlin")).toBe("Jul")
+    expect(formatMonthShort(new Date(Date.UTC(2026, 8, 15, 12)), "Europe/Berlin")).toBe("Sep")
+    expect(formatMonthYear(july, "Europe/Berlin")).toBe("Juli 2026")
+  })
+  it("der Monatswechsel folgt der Zeitzone", () => {
+    // 31.07., 22:30 UTC ist in Berlin schon der 1. August
+    const edge = new Date(Date.UTC(2026, 6, 31, 22, 30))
+    expect(formatMonthShort(edge, "Europe/Berlin")).toBe("Aug")
+    expect(formatMonthShort(edge, "UTC")).toBe("Jul")
+  })
+})
+
+describe("zonedDayStartMs", () => {
+  it("Beginn des Kalendertags in Sommer- und Winterzeit", () => {
+    expect(zonedDayStartMs("2026-07-15", "Europe/Berlin")).toBe(Date.UTC(2026, 6, 14, 22))
+    expect(zonedDayStartMs("2026-01-15", "Europe/Berlin")).toBe(Date.UTC(2026, 0, 14, 23))
+  })
+  it("am Tag der Zeitumstellung beginnt der Tag in der Zeit davor", () => {
+    expect(zonedDayStartMs("2026-03-29", "Europe/Berlin")).toBe(Date.UTC(2026, 2, 28, 23))
+    expect(zonedDayStartMs("2026-10-25", "Europe/Berlin")).toBe(Date.UTC(2026, 9, 24, 22))
+  })
+  it("in UTC Mitternacht UTC", () => {
+    expect(zonedDayStartMs("2026-07-15", "UTC")).toBe(Date.UTC(2026, 6, 15))
+  })
+  it("kein gültiger Tag: Fehler", () => {
+    expect(() => zonedDayStartMs("2026-7-15", "UTC")).toThrow(RangeError)
   })
 })
