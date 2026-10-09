@@ -51,7 +51,10 @@
     "./period/PeriodChart": "./src/period/PeriodChart.tsx",
     "./period/VolumeChart": "./src/period/VolumeChart.tsx",
     "./period/CardReadout": "./src/period/CardReadout.tsx",
-    "./period/CardList": "./src/period/CardList.tsx"
+    "./period/CardList": "./src/period/CardList.tsx",
+    "./period/PeriodPicker": "./src/period/PeriodPicker.tsx",
+    "./period/PeriodHeader": "./src/period/PeriodHeader.tsx",
+    "./period/PeriodResult": "./src/period/PeriodResult.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
