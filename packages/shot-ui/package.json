@@ -47,7 +47,8 @@
     "./period/calendar": "./src/period/calendar.ts",
     "./period/state": "./src/period/state.ts",
     "./period/model": "./src/period/model.ts",
-    "./period/sentence": "./src/period/sentence.ts"
+    "./period/sentence": "./src/period/sentence.ts",
+    "./period/PeriodChart": "./src/period/PeriodChart.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

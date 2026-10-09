@@ -30,11 +30,22 @@ const KEY_STEPS: Readonly<Record<string, number>> = {
  * Tastatur Pfeil links/rechts, Pos1/Ende, Escape; das Diagramm meldet sich dafür als Schieberegler (APG-Muster),
  * `aria-valuetext` setzt das Diagramm. `xs` sind die x-Positionen der Werte in Pixeln des SVG, `width` dessen
  * Breite; `preset` setzt die Wahl, sobald es sich ändert (die Scheibe gibt den Schuss vor, D4). Ein Index
- * außerhalb von `xs` gilt als keine Wahl; die Seite hängt die Analyse ohnehin je Karte neu ein.
+ * außerhalb von `xs` gilt als keine Wahl; die Seite hängt die Analyse ohnehin je Karte neu ein. `onPick` meldet jede
+ * Wahl durch Tippen, Ziehen oder Tastatur (auch das Aufheben), nicht die Vorgabe über `preset`: So kann eine Seite
+ * die Wahl teilen (Verlauf eines Zeitraums, Plan L3), ohne dass ihre eigene Vorgabe zurückkommt.
  */
-export function useRuler(xs: readonly number[], width: number, preset: number | null = null) {
-  const [chosen, setIndex] = useState<number | null>(preset)
-  useEffect(() => setIndex(preset), [preset])
+export function useRuler(
+  xs: readonly number[],
+  width: number,
+  preset: number | null = null,
+  onPick?: (index: number | null) => void
+) {
+  const [chosen, setChosen] = useState<number | null>(preset)
+  const pick = (i: number | null) => {
+    setChosen(i)
+    onPick?.(i)
+  }
+  useEffect(() => setChosen(preset), [preset])
   const index = chosen !== null && chosen < xs.length ? chosen : null
   const drag = useRef<{ again: boolean; moved: boolean; before: number | null } | null>(null)
   const at = (event: PointerEvent<SVGSVGElement>) =>
@@ -57,23 +68,23 @@ export function useRuler(xs: readonly number[], width: number, preset: number | 
         // ein ausgelöstes Ereignis ohne echten Zeiger: ohne Fangen geht es auch
       }
       drag.current = { again: i !== null && i === index, moved: false, before: index }
-      setIndex(i)
+      if (i !== index) pick(i)
     },
     onPointerMove: (event) => {
       if (!drag.current) return
       const i = at(event)
       if (i === index) return
       drag.current.moved = true
-      setIndex(i)
+      pick(i)
     },
     onPointerUp: () => {
       const gesture = drag.current
       drag.current = null
-      if (gesture?.again && !gesture.moved) setIndex(null)
+      if (gesture?.again && !gesture.moved) pick(null)
     },
     // der Browser scrollt: die Berührung war kein Ablesen
     onPointerCancel: () => {
-      if (drag.current) setIndex(drag.current.before)
+      if (drag.current && drag.current.before !== index) pick(drag.current.before)
       drag.current = null
     },
     onLostPointerCapture: () => {
@@ -85,14 +96,14 @@ export function useRuler(xs: readonly number[], width: number, preset: number | 
       const delta = KEY_STEPS[event.key]
       if (delta !== undefined) {
         event.preventDefault()
-        setIndex(stepIndex(index, delta, xs.length))
+        pick(stepIndex(index, delta, xs.length))
       } else if (event.key === "Escape" && index !== null) {
         event.preventDefault()
-        setIndex(null)
+        pick(null)
       }
     },
   }
-  return { index, setIndex, svgProps }
+  return { index, svgProps }
 }
 
 /**
