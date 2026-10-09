@@ -64,7 +64,7 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
       "Fr 25.09. · 2 Scheiben · 3 Schuss",
       "data-evening-sentence",
       "data-evening-mean",
-      "data-evening-delta",
+      "data-evening-reference",
       "data-form-strip",
       "data-start-card",
       "data-evening-list-link",
@@ -73,7 +73,9 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect([...order].sort((a, b) => a - b)).toEqual(order)
     expect(text(html)).toContain("0,20 über dem Schnitt der 5 Scheiben davor.")
     expect(html).toMatch(/data-evening-mean[^>]*>9,20</)
-    expect(text(html)).toContain("+0,20 zum Schnitt der 5 Scheiben davor")
+    // der Bezug statt des Abstands, der schon im Satz steht (U5, D2)
+    expect(text(html)).toContain("Schnitt der 5 Scheiben davor: 9,00")
+    expect(text(html)).not.toContain("+0,20 zum Schnitt")
   })
 
   it("mit Band eine Legende unter dem Streifen, ohne Band keine (U3, D8)", () => {

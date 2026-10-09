@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { EveningBlock } from "./model"
-import { eveningDeltaText, eveningSentence } from "./sentence"
+import { eveningReferenceText, eveningSentence } from "./sentence"
 
 const block = (patch: Partial<EveningBlock>): EveningBlock => ({
   family: "lp-freihand",
@@ -61,17 +61,11 @@ describe("Satz über dem Abend (Plan N5, D4)", () => {
     ).toBeNull()
   })
 
-  it("Abstand unter der großen Zahl, mit dem Band, wo es eins gibt", () => {
-    expect(eveningDeltaText(block({}))).toBe("+0,09 zum Schnitt der 5 Scheiben davor · im Formband")
-    expect(eveningDeltaText(block({ mean: 9.31, verdict: "above" }))).toBe(
-      "+0,36 zum Schnitt der 5 Scheiben davor · über dem Formband"
-    )
-    expect(eveningDeltaText(block({ mean: 8.6, verdict: "below" }))).toBe(
-      "−0,35 zum Schnitt der 5 Scheiben davor · unter dem Formband"
-    )
+  it("unter der großen Zahl der Bezug, nicht noch einmal der Abstand aus dem Satz (U5, D2)", () => {
+    expect(eveningReferenceText(block({}))).toBe("Schnitt der 5 Scheiben davor: 8,95")
     expect(
-      eveningDeltaText(block({ band: null, verdict: null, average: { value: 9, n: 1 } }))
-    ).toBe("+0,04 zum Schnitt der Scheibe davor")
-    expect(eveningDeltaText(block({ average: null }))).toBeNull()
+      eveningReferenceText(block({ band: null, verdict: null, average: { value: 9, n: 1 } }))
+    ).toBe("Schnitt der Scheibe davor: 9,00")
+    expect(eveningReferenceText(block({ average: null }))).toBeNull()
   })
 })

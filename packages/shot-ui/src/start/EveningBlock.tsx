@@ -16,7 +16,7 @@ import { hasPosition, matchShots } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
 import { FormStrip } from "./FormStrip"
 import type { EveningBlock as EveningBlockModel } from "./model"
-import { eveningDeltaText, eveningSentence } from "./sentence"
+import { eveningReferenceText, eveningSentence } from "./sentence"
 
 const KIND: Readonly<Record<ListRow["kind"], string>> = {
   training: "Training",
@@ -70,7 +70,7 @@ export function EveningBlock({
   )
   const count = block.rows.length
   const sentence = eveningSentence(block, familyLabel)
-  const delta = eveningDeltaText(block)
+  const reference = eveningReferenceText(block)
   return (
     <section
       data-evening-block={block.family}
@@ -109,9 +109,9 @@ export function EveningBlock({
           </span>
           <span className="text-[14px] text-muted-foreground">Ø je Schuss</span>
         </p>
-        {delta && (
-          <p data-evening-delta className="text-[14px] text-foreground-2 tabular-nums">
-            {delta}
+        {reference && (
+          <p data-evening-reference className="text-[14px] text-foreground-2 tabular-nums">
+            {reference}
           </p>
         )}
       </div>

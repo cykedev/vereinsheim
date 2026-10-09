@@ -1,9 +1,9 @@
-// Der Satz über dem letzten Abend und der Abstand unter seiner großen Zahl (Plan N5, D3, D4). Der Satz ordnet ein wie
+// Der Satz über dem letzten Abend und der Bezug unter seiner großen Zahl (Plan N5, D3, D4; U5, D2). Der Satz ordnet ein wie
 // die Ablesung im Fortschritt (im, über, unter dem Formband) und wertet nicht: Ein Band von ± einer typischen
 // Schwankung lässt jeden dritten gewöhnlichen Abend draußen, „stark“ wäre dafür kein ehrliches Wort (Review N5,
 // Regel „Ehrlich statt scheingenau“ des Fachkerns). Ohne Band nur der Abstand.
 
-import { formatSigned, formatValue } from "../format"
+import { formatValue } from "../format"
 import type { EveningBlock } from "./model"
 
 /** unter diesem Abstand zeigten zwei Stellen 0,00: „genau dein Schnitt“ */
@@ -16,12 +16,6 @@ const LEAD: Readonly<Record<NonNullable<EveningBlock["verdict"]>, string>> = {
   within: "Im Formband",
   above: "Über dem Formband",
   below: "Unter dem Formband",
-}
-
-const BAND: Readonly<Record<NonNullable<EveningBlock["verdict"]>, string>> = {
-  within: "im Formband",
-  above: "über dem Formband",
-  below: "unter dem Formband",
 }
 
 /**
@@ -46,9 +40,11 @@ export function eveningSentence(block: EveningBlock, familyLabel: string): strin
     : `${lead}: ${distance} ${side} deinem Schnitt.`
 }
 
-/** „+0,09 zum Schnitt der 5 Scheiben davor · im Formband“; null ohne Schnitt oder Wert */
-export function eveningDeltaText(block: EveningBlock): string | null {
-  if (block.mean === null || !block.average) return null
-  const text = `${formatSigned(block.mean - block.average.value, 2)} zum Schnitt ${before(block.average.n)}`
-  return block.verdict ? `${text} · ${BAND[block.verdict]}` : text
+/**
+ * „Schnitt der 5 Scheiben davor: 9,05“ unter der großen Zahl (U5, D2): der Bezug des Satzes; den Abstand und das Band
+ * sagt schon der Satz. Null ohne Schnitt
+ */
+export function eveningReferenceText(block: EveningBlock): string | null {
+  if (!block.average) return null
+  return `Schnitt ${before(block.average.n)}: ${formatValue(block.average.value, 2)}`
 }
