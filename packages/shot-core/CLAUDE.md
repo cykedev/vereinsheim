@@ -29,6 +29,11 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - **Exakte Wertung, kein Epsilon.** `scoring.ts` vergleicht ganzzahlig (x² + y² gegen b(k)², Abstand
   auf 0,01 µm gerundet). Die naive Formel `floor((11 − d ÷ W) · 10)` liegt an neun Grenzen je Scheibe
   einen Zehntel zu tief (Test „Grenzen“).
+- **Wertung wie Meyton, nicht wie die Regel.** Jede Grenze (Zehntel, Fehlschuss, Innenzehner) liegt um
+  `MEYTON_TOLERANCE_UM` = 10 µm weiter außen, und der Abstand muss darunter liegen (strikt). Belegt an
+  43 000 von 43 000 Schüssen der Vereinsanlage (SF-75); die Tests „Abend vom 9. Oktober 2026“ nutzen
+  die 40 eigenen Schüsse des Users (`__fixtures__/meyton-2026-10-09.ts`) und vier Grenzabstände, die T
+  auf 10 µm festlegen. Die Scheibenbilder bleiben regelgerecht, gezeichnet wird ohne Toleranz.
 - **Disziplinen über die ganze DisziplinID** (Regelnummer und Schusscode), nie über Regelbereiche
   allein: 0610 ist LP Liga und ISSF-Luftgewehr-Finale, 0100 die französische Luftpistole (SF-70).
   Danach der Name (ganzes Wort LG/LP), dann unbekannt. Der Katalog nennt nur Regeln, er schreibt die
@@ -38,7 +43,8 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - Kein `server-only`, keine Node-APIs, kein `"use server"`; Just-in-time wie `packages/lib`. Eine
   Next-App, die das Paket nutzt, braucht es in `transpilePackages` (`packages/config/next/index.mjs`).
 - Bekannte Disziplinen mit eigener Scheibe stehen als Nullzeile im Katalog (`target: null`) und bleiben
-  unbekannt, bis die Bibliothek ihre Scheibe kennt.
+  unbekannt, bis die Bibliothek ihre Scheibe kennt; dazu gehören die Vereinsspiele (Regeln 8000 bis 8199)
+  und Meytons Trainingsscheiben, die „LG“/„LP“ im Namen tragen.
 - Was nicht hier liegt: Zeichnen (`shot-ui`, SP-1.8), die Skalen der SSMDB2-Felder (Adapter in
   SP-1.6).
 - **Kennzahlen nur über `defineMetric`**, mit Katalog-ID (`catalogId`), Test und festem Erwartungswert

@@ -60,7 +60,7 @@ Gezeichnet wird daraus eine SVG-Scheibe (Papier, Spiegel, Ringlinien, Ringzahlen
 
 ## Wertung
 
-Meyton wertet über den inneren Trefferrand und schneidet Nachkommastellen zugunsten des Schützen ab. Laut eigener Angabe misst Meyton auf 1/100 mm; der Teiler hat aber eine bzw. zwei Nachkommastellen davon. Ob die Wertung den genaueren Abstand oder die gerundete Lage nutzt, prüft SP-0.6 an Schüssen nahe einer Grenze; davon hängt die Auflösung ab, die die Gegenprobe ansetzt.
+Meyton wertet über den inneren Trefferrand und schneidet Nachkommastellen zugunsten des Schützen ab. Laut eigener Angabe misst Meyton auf 1/100 mm; der Teiler hat aber eine bzw. zwei Nachkommastellen davon. Lage und genauer Abstand ergeben an 640 Schüssen nahe und fern jeder Grenze dasselbe (9. Oktober 2026). **Meyton legt jede Grenze 10 µm großzügiger als die Regel:** Ein Schuss erreicht einen Wert, wenn sein Abstand unter Grenze + 10 µm liegt, beim Innenzehner ebenso. So stimmen 43 000 von 43 000 Schüssen der Vereinsanlage aus zwei Jahren, Luftgewehr wie Luftpistole; nach der reinen Regel lägen gut 3 % ein Zehntel zu tief (SF-75, [[src-ssmdb2-kopie-2026-10-09]]).
 
 > Zehntel = 10 + (Zehnerradius + halbes Kaliber − Abstand) ÷ Ringabstand, auf eine Stelle abgeschnitten, höchstens 10,9. Ganzring = abgeschnittener Zehntelwert; unter 1 ist ein Fehlschuss.
 
@@ -87,4 +87,4 @@ Diese Werte sind die ersten Testfälle für `packages/shot-core` (SP-1.1).
 
 ## Umsetzung
 
-`packages/shot-core` (SP-1.1, Oktober 2026) setzt diese Note um: Scheibenbilder über `defineTarget` in ganzen µm, die Wertung aus Lage oder Abstand, die Auflösung der DisziplinID und die Gegenprobe. Gerechnet wird exakt und ganzzahlig: Die Zehntelgrenzen b(k) = R − (k − 100) · W ÷ 10 liegen auf ganzen µm. Die naive Gleitkomma-Formel `floor((11 − d ÷ W) · 10)` liegt an neun Grenzen je Scheibe einen Zehntel zu tief, etwa bei d = 63,2 mm auf der Luftpistole. Die Gegenprobe zählt einen Nachbarwert als Grenzfall, wenn er innerhalb der Messauflösung erreichbar ist (Lage 1/100 mm, Teiler 1/10 davon).
+`packages/shot-core` (SP-1.1, Oktober 2026) setzt diese Note um: Scheibenbilder über `defineTarget` in ganzen µm, die Wertung aus Lage oder Abstand, die Auflösung der DisziplinID und die Gegenprobe. Gerechnet wird exakt und ganzzahlig: Die Zehntelgrenzen b(k) = R + 10 µm − (k − 100) · W ÷ 10 liegen auf ganzen µm, verglichen wird strikt (`MEYTON_TOLERANCE_UM`). Die naive Gleitkomma-Formel `floor((11 − d ÷ W) · 10)` liegt an neun Grenzen je Scheibe einen Zehntel zu tief, etwa bei d = 63,2 mm auf der Luftpistole. Die Gegenprobe zählt einen Nachbarwert als Grenzfall, wenn er innerhalb der Messauflösung erreichbar ist (Lage 1/100 mm, Teiler 1/10 davon).
