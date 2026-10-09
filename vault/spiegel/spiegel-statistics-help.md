@@ -508,8 +508,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 - **Schwerpunkt:** Mittelpunkt aller Treffer (Meyton: Trefferlage).
 - **Streukreis:** Kleinster Kreis um alle Trefferzentren, Mitte zu Mitte; die Zahl ist sein
-  Durchmesser. Meyton druckt einen „Trefferkreis“; ob er genau dasselbe misst, prüft Spiegel noch an
-  Rohdaten.
+  Durchmesser. Meytons „Trefferkreis“ ist derselbe Kreis plus ein Kaliber (4,5 mm), deshalb größer.
 - **Vertrauensellipse:** Bereich um den gemessenen Schwerpunkt, in dem der wahre Schwerpunkt mit
   großer Sicherheit (95 %) liegt. Liegt die Scheibenmitte darin, ist ein Versatz nicht belegt. Sie
   schrumpft mit der Schusszahl, die Gruppe nicht.

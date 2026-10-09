@@ -6,7 +6,7 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
   { term: "Schwerpunkt", text: "Mittelpunkt aller Treffer (Meyton: Trefferlage)." },
   {
     term: "Streukreis",
-    text: "Kleinster Kreis um alle Trefferzentren, Mitte zu Mitte; die Zahl ist sein Durchmesser. Meyton druckt einen „Trefferkreis“; ob er genau dasselbe misst, prüft Spiegel noch an Rohdaten.",
+    text: "Kleinster Kreis um alle Trefferzentren, Mitte zu Mitte; die Zahl ist sein Durchmesser. Meytons „Trefferkreis“ ist derselbe Kreis plus ein Kaliber (4,5 mm), deshalb größer.",
   },
   {
     term: "Vertrauensellipse",
