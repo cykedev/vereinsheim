@@ -30,13 +30,13 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 - **Ziel:** wissen, was in unserer Ablage steht.
 - **Umfang:** SQL-Checkliste aus [[meyton-ssmdb2]] vor oder nach einem Trainingsabend: Struktur, Engine, Indizes und Abfragekosten, Spaltentypen, Wertungsmodi je Disziplin, mehrdeutige SportpassIDs, Disziplin-Varianten, `--frei--`-Scheiben; dazu, ob das Gerätenetz ausgehend Internet hat. Die Versuche am Stand folgen im Schießprotokoll (SP-0.6) am selben Abend. Der SSMDB2-Dienst ist aktiv. Fragen: Landen Trainings ohne Starter in der Ablage (den QR gibt es immer, ohne Ablage gäbe es aber nur das PDF-Ergebnis)? Skalen der Ring-Felder? Achsenrichtung? Teiler-Einheiten? Wie weit reicht die Historie? Bleiben Probeschüsse nach der Wertung? Größte SportpassID (Überlauf)? Uhrabweichung? Liegen die PDF-Ausdrucke auch auf der Freigabe `ERGEBNIS`?
 - **Abnahme:** Antworten (ohne Namen) in [[meyton-ssmdb2]], [[spiegel-open-questions]] und [[spiegel-edge-cases]] eingetragen; Sonderfälle, die sich bestätigen oder erledigen, dort nachgezogen.
-- **Hängt ab von:** nichts. **Status:** Werkzeug bereit (`tools/ssmdb2-erkunden`, [[ssmdb2-erkundung]], Oktober 2026), der Abend steht aus.
+- **Hängt ab von:** nichts. **Status:** erledigt (9. Oktober 2026): Checkliste und Kopie nach einem Trainingsabend ([[src-ssmdb2-kopie-2026-10-09]]); Antworten in [[meyton-ssmdb2]], [[spiegel-open-questions]] und [[spiegel-edge-cases]]. Offen nur: ob das Gerätenetz sicher selbst Internet hat (Gateway 192.168.10.x lieferte es, die Schnittstelle ist unklar) und ob Ausdrucke auf der Freigabe `ERGEBNIS` liegen (als Gast abgelehnt).
 
 ### SP-0.2 QR-ID prüfen
 - **Ziel:** bestätigen, dass die ID im Fuß des Ausdrucks die ScheibenID ist (den QR gibt es laut Verein immer).
 - **Umfang:** Abfrage aus [[meyton-printout]] mit `ff914420` → −7257056; dazu eine Scheibe ohne Starter schießen, ihren QR scannen und die ID nachschlagen. Prüfen, ob Meyton kleine IDs mit führenden Nullen auf acht Zeichen füllt (alle drei bekannten liegen über 0x10000000; sonst wären sie für das Muster unsichtbar).
 - **Abnahme:** [[adr-028]] bestätigt oder angepasst.
-- **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** offen.
+- **Hängt ab von:** SP-0.1 (gleicher Abend). **Status:** zum großen Teil erledigt (9. Oktober 2026): ID im Fuß = ScheibenID, in [[adr-028]] bestätigt. Offen: Scheibe ohne Starter, führende Nullen bei IDs unter 0x10000000.
 
 ### SP-0.3 Messlatte DISAG M-Qnect (optional)
 - **Ziel:** sehen, was die ShotsApp mit unserer Anlage kann.
