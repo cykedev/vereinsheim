@@ -41,9 +41,13 @@ export function periodSentence(model: PeriodModel): string | null {
       return `Für einen Vergleich mit ${other.dative} sind es zu wenige Scheiben.`
     }
     if (Math.abs(c.delta) < LEVEL) return `Dein Ø je Schuss liegt gleichauf mit ${other.dative}.`
-    const proven = c.verdict === "unclear" ? "nicht nachweisbar" : "nachweisbar"
+    // „…, nicht nachweisbar“ klang wie ein Widerspruch zur Zahl davor (Prüfung, 9. Oktober 2026)
+    const proven =
+      c.verdict === "unclear"
+        ? "der Unterschied ist aber nicht nachweisbar"
+        : "der Unterschied ist nachweisbar"
     const direction = c.delta > 0 ? "höher" : "tiefer"
-    return `Dein Ø je Schuss liegt ${formatValue(Math.abs(c.delta), 2)} ${direction} als ${other.als}, ${proven}.`
+    return `Dein Ø je Schuss liegt ${formatValue(Math.abs(c.delta), 2)} ${direction} als ${other.als}; ${proven}.`
   }
   const average = model.ownAverage?.average
   if (!average) return null

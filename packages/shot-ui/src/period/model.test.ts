@@ -37,13 +37,25 @@ describe("Modell der Seite: Zeitraum, Werte, Ergebnis", () => {
     expect(m.values.map((v) => v.value)).toEqual([10, 9.1, 9.5])
   })
 
-  it("Ergebnis: Mittel der Scheiben, nicht der Schüsse; beste Scheibe", () => {
+  it("Ergebnis: Mittel der Scheiben, nicht der Schüsse", () => {
     // je Scheibe 10,0 / 9,1 / 9,5 → 9,5333; über alle fünf Schüsse wären es 9,54
     const { summary } = model(THREE)
     expect(summary.mean).toBeCloseTo(28.6 / 3, 12)
     expect(summary.cards).toBe(3)
     expect(summary.shots).toBe(5)
-    expect(summary.best?.id).toBe("a")
+  })
+
+  it("beste Scheibe unter der häufigsten Schusszahl, bei Gleichstand die längere", () => {
+    // zwei Scheiben zu 2 Schuss, eine zu 1: die beste zu 2 Schuss ist a (10,0), nicht c
+    expect(model(THREE).summary.best).toMatchObject({ id: "a", shots: 2 })
+    // eine kurze Scheibe mit 10,5 schlägt die längeren nicht
+    const cards = [
+      periodCard("kurz", 1, [105]),
+      periodCard("l1", 2, [100, 98, 96]),
+      periodCard("l2", 3, [99, 99, 99]),
+      periodCard("k2", 4, [90]),
+    ]
+    expect(model(cards).summary.best).toMatchObject({ id: "l2", shots: 3 })
   })
 
   it("die erste Kachel ist Ø je Schuss mit demselben Mittel", () => {
@@ -81,7 +93,7 @@ describe("Vergleich und Satz", () => {
     expect(m.comparison?.delta).toBeCloseTo(5, 12)
     expect(m.tiles[0].compare?.comparison?.verdict).toBe("higher")
     expect(periodSentence(m)).toBe(
-      "Dein Ø je Schuss liegt 5,00 höher als im Zeitraum davor, nachweisbar."
+      "Dein Ø je Schuss liegt 5,00 höher als im Zeitraum davor; der Unterschied ist nachweisbar."
     )
   })
 
@@ -89,7 +101,7 @@ describe("Vergleich und Satz", () => {
     // 6,0 … 10,0 gegen 6,5 … 10,5: 0,50 tiefer, ohne Urteil
     const near = [65, 75, 85, 95, 105].map((t, i) => periodCard(`v${i}`, 100 + i, [t]))
     expect(periodSentence(model([...now, ...near], { compare: { type: "previous" } }))).toBe(
-      "Dein Ø je Schuss liegt 0,50 tiefer als im Zeitraum davor, nicht nachweisbar."
+      "Dein Ø je Schuss liegt 0,50 tiefer als im Zeitraum davor; der Unterschied ist aber nicht nachweisbar."
     )
     const same = [60, 70, 80, 90, 100].map((t, i) => periodCard(`v${i}`, 100 + i, [t]))
     const flat = model([...now, ...same], { compare: { type: "previous" } })
@@ -106,7 +118,7 @@ describe("Vergleich und Satz", () => {
     // die Scheiben 100 bis 104 Tage vor jetzt liegen zwischen dem 18. und 22. Juni, in „Vorbereitung“
     const m = model([...now, ...before], { compare: { type: "named", id: "lm" } })
     expect(periodSentence(m)).toBe(
-      "Dein Ø je Schuss liegt 5,00 höher als in „Vorbereitung“, nachweisbar."
+      "Dein Ø je Schuss liegt 5,00 höher als in „Vorbereitung“; der Unterschied ist nachweisbar."
     )
   })
 
@@ -155,6 +167,25 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     expect(model(many, { compare: { type: "previous" } }).view).toBe("cards")
   })
 
+  it("Boden und Decke nach der Richtung der Kennzahl", () => {
+    // zehn Scheiben im September mit verschieden weiten Gruppen: σ unterscheidet sich je Scheibe
+    const rich = Array.from({ length: 10 }, (_, i) =>
+      periodCard(`r${i}`, 5 + i, [95, 96, 97, 98, 99], { spreadUm: 100 * (i + 1) })
+    )
+    const mean = model(rich).months[0]
+    expect(mean.floor).toBe(mean.p10)
+    expect(mean.ceiling).toBe(mean.p90)
+    // bei σ ist kleiner besser: der Boden ist das P90 (die weitesten Scheiben)
+    const sigma = model(rich, { metric: "group.sigma" }).months[0]
+    expect(sigma.p90).toBeGreaterThan(sigma.p10 as number)
+    expect(sigma.floor).toBe(sigma.p90)
+    expect(sigma.ceiling).toBe(sigma.p10)
+    // beim Tempo gibt es kein besser: keine Namen, nur die Spanne
+    const tempo = model(rich, { metric: "time.intervalMedian" }).months[0]
+    expect(tempo.floor).toBeNull()
+    expect(tempo.ceiling).toBeNull()
+  })
+
   it("Monate mit Namen in der Zeitzone", () => {
     const { months } = model(many)
     expect(months.map((m) => m.label)).toEqual(["Juli 2026", "August 2026", "September 2026"])
@@ -169,6 +200,32 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     expect(weeks.at(-1)).toMatchObject({ shots: 3, cards: 2, days: 2 })
     expect(weeks.at(-2)).toMatchObject({ shots: 2, cards: 1, days: 1 })
     expect(weeks[0]).toMatchObject({ shots: 0, cards: 0, days: 0 })
+  })
+
+  it("Abstand zum Schnitt der bis zu fünf Scheiben davor, ohne sie selbst, auch vor dem Zeitraum", () => {
+    // alt (10,9) liegt vor dem Zeitraum und zählt für a mit; b gegen alt und a, c gegen alt, a und b
+    const { deltas } = model(THREE)
+    expect(deltas.get("a")).toEqual({ delta: expect.closeTo(10 - 10.9, 12), n: 1 })
+    expect(deltas.get("b")?.delta).toBeCloseTo(9.1 - (10.9 + 10) / 2, 12)
+    expect(deltas.get("c")).toEqual({ delta: expect.closeTo(9.5 - 30 / 3, 12), n: 3 })
+    expect(deltas.has("alt")).toBe(false)
+    // die erste Scheibe der Familie hat keinen Schnitt davor
+    expect(model(THREE.slice(0, 3)).deltas.has("a")).toBe(false)
+    // höchstens fünf davor
+    expect(model(many).deltas.get("k10")?.n).toBe(5)
+  })
+
+  it("gegen den Schnitt über alle Scheiben der Familie bis zur neuesten im Zeitraum", () => {
+    // benannter Zeitraum Mai bis Juni: die neueste Scheibe dort, nicht die von heute
+    const may = [100, 101, 102, 103].map((t, i) => periodCard(`m${i}`, 120 - i, [t]))
+    const today = periodCard("heute", 1, [80])
+    const m = model([...may, today], { choice: { type: "named", id: "lm" } })
+    expect(m.ownAverage?.last.id).toBe("m3")
+    expect(m.ownAverage?.average).toMatchObject({ n: 3 })
+    // Perzentil über die letzten 50 der Familie, nicht nur über den Zeitraum
+    const long = Array.from({ length: 30 }, (_, i) => periodCard(`f${i}`, 200 - i, [95]))
+    const short = model([...long, ...THREE], { choice: { type: "rolling", days: 30 } })
+    expect(short.ownAverage?.percentile).not.toBeNull()
   })
 
   it("Ablesung: gewählte Scheibe, sonst die neueste", () => {

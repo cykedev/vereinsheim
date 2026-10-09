@@ -9,18 +9,18 @@ import { DAY_MS } from "./calendar"
 export const NOW = Date.UTC(2026, 8, 30, 10)
 export const TZ = "Europe/Berlin"
 
-/** eine Scheibe `daysAgo` Tage vor jetzt, Zehntelwerte in Abgabefolge, Lagen nebeneinander */
+/** eine Scheibe `daysAgo` Tage vor jetzt, Zehntelwerte in Abgabefolge, Lagen nebeneinander im Abstand `spreadUm` */
 export function periodCard(
   id: string,
   daysAgo: number,
   tenths: readonly number[],
-  extra: Partial<PeriodCard> & { probe?: boolean } = {}
+  extra: Partial<PeriodCard> & { probe?: boolean; spreadUm?: number } = {}
 ): PeriodCard {
-  const { probe, ...rest } = extra
+  const { probe, spreadUm = 100, ...rest } = extra
   const startedAtMs = NOW - daysAgo * DAY_MS
   const shots: MetricShot[] = tenths.map((t, i) => ({
     seq: i + 1,
-    xUm: 100 * i,
+    xUm: spreadUm * i,
     yUm: 0,
     decimalTenths: t,
     ring: Math.floor(t / 10),

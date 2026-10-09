@@ -91,13 +91,36 @@ export interface PeriodModel {
   /** Vergleich im Ø je Schuss (Ergebnis-Box, Satz): a der Vergleich, b der Zeitraum; Δ = Zeitraum − Vergleich */
   comparison: PeriodComparison | null
   view: "cards" | "months"
-  months: (PeriodBucket & { label: string; atMs: number })[]
+  /**
+   * je Monat Median, P10 und P90 (T5); Boden und Decke nach der Richtung der Kennzahl: Ist höher besser, ist der
+   * Boden das P10, ist kleiner besser (σ), das P90; ohne Richtung (Tempo) keine, nur die Spanne
+   */
+  months: (PeriodBucket & {
+    label: string
+    atMs: number
+    floor: number | null
+    ceiling: number | null
+  })[]
+  /**
+   * Abstand jeder Scheibe im Zeitraum zum Schnitt der bis zu fünf Scheiben davor (in der Familie, auch vor dem
+   * Zeitraum), ohne sie selbst; die erste Scheibe der Familie hat keinen
+   */
+  deltas: Map<string, { delta: number; n: number }>
   /** jede ISO-Woche im Zeitraum, auch ohne Scheibe */
   weeks: (VolumeBucket & { label: string })[]
-  /** die letzte Scheibe gegen den eigenen Schnitt, im Ø je Schuss */
+  /**
+   * die neueste Scheibe im Zeitraum gegen den eigenen Schnitt, im Ø je Schuss, über alle Scheiben der Familie
+   * bis zu ihr (30 Tage davor, Platz unter den letzten 50)
+   */
   ownAverage: OwnAverage | null
   records: PeriodRecords
-  summary: { mean: number | null; cards: number; shots: number; best: CardValue | null }
+  summary: {
+    mean: number | null
+    cards: number
+    shots: number
+    /** beste Scheibe (Ø je Schuss) unter der häufigsten Schusszahl, bei Gleichstand der längeren */
+    best: (CardValue & { shots: number }) | null
+  }
   tiles: PeriodTile[]
   /** gewählte oder neueste Scheibe mit ihrem Punkt im Verlauf; null ohne Scheiben */
   reading: { card: PeriodCard; point: TrendPoint | null; chosen: boolean } | null
@@ -108,6 +131,9 @@ const mean = (values: readonly CardValue[]) =>
 
 const byStart = (a: PeriodCard, b: PeriodCard) =>
   a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+
+/** die bis zu fünf Scheiben davor, wie der gleitende Schnitt (D2) */
+const DELTA_WINDOW = 5
 
 /** jede ISO-Woche vom Beginn bis zum Ende des Zeitraums (höchstens bis jetzt), in der Zeitzone */
 function weekKeys(range: DateRange, nowMs: number, timeZone: string): string[] {
@@ -146,9 +172,28 @@ export function periodModel(input: {
   const compareValues = otherCards ? cardValues(otherCards, chartMetric, scoring, options) : null
 
   const day = (ms: number) => formatIsoDate(new Date(ms), timeZone)
+  const better = chartMetric.better
   const months = periodBuckets(values, (ms) => day(ms).slice(0, 7)).map((bucket) => {
     const atMs = zonedDayStartMs(`${bucket.key}-01`, timeZone)
-    return { ...bucket, atMs, label: formatMonthYear(new Date(atMs), timeZone) }
+    return {
+      ...bucket,
+      atMs,
+      label: formatMonthYear(new Date(atMs), timeZone),
+      floor: better === "higher" ? bucket.p10 : better === "lower" ? bucket.p90 : null,
+      ceiling: better === "higher" ? bucket.p90 : better === "lower" ? bucket.p10 : null,
+    }
+  })
+
+  // Scheiben der Familie in der Art der Seite, auch vor dem Zeitraum: für den Abstand zum Schnitt davor und
+  // für „gegen deinen Schnitt“ (Platz unter den letzten 50, nicht nur im Zeitraum)
+  const family = input.cards.filter(ofKind).sort(byStart)
+  const inPeriod = new Set(cards.map((c) => c.id))
+  const familyValues = cardValues(family, chartMetric, scoring, options)
+  const deltas = new Map<string, { delta: number; n: number }>()
+  familyValues.forEach((value, i) => {
+    if (!i || !inPeriod.has(value.id)) return
+    const before = familyValues.slice(Math.max(0, i - DELTA_WINDOW), i)
+    deltas.set(value.id, { delta: value.value - (mean(before) as number), n: before.length })
   })
   const volume = new Map(
     trainingVolume(cards, (ms) => isoWeekKey(day(ms)), day).map((w) => [w.key, w])
@@ -177,9 +222,21 @@ export function periodModel(input: {
     }
   })
 
-  const perShot = cardValues(cards, metricByKey(SUMMARY_KEY) as MetricDefinition, scoring, options)
+  const summaryMetric = metricByKey(SUMMARY_KEY) as MetricDefinition
+  const perShot = cardValues(cards, summaryMetric, scoring, options)
+  // beste Scheibe nur unter gleicher Schusszahl: eine kurze Scheibe hat leichter einen hohen Ø (wie R1)
+  const counts = new Map<number, number>()
+  for (const value of perShot) counts.set(value.n, (counts.get(value.n) ?? 0) + 1)
+  const usual = [...counts].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]?.[0]
   let best: CardValue | null = null
-  for (const value of perShot) if (!best || value.value > best.value) best = value
+  for (const value of perShot) {
+    if (value.n === usual && (!best || value.value > best.value)) best = value
+  }
+  const familyPerShot = cardValues(family, summaryMetric, scoring, options)
+  const newest = perShot.at(-1)
+  const upToNewest = newest
+    ? familyPerShot.slice(0, familyPerShot.findIndex((v) => v.id === newest.id) + 1)
+    : []
 
   const chosenCard = state.chosen ? cards.find((c) => c.id === state.chosen) : undefined
   const readingCard = chosenCard ?? cards.at(-1)
@@ -195,8 +252,9 @@ export function periodModel(input: {
     comparison: tiles[0].compare?.comparison ?? null,
     view: other ? "cards" : (state.view ?? (values.length >= MONTH_VIEW_FROM ? "months" : "cards")),
     months,
+    deltas,
     weeks,
-    ownAverage: againstOwnAverage(perShot),
+    ownAverage: againstOwnAverage(upToNewest),
     records: periodRecords(input.cards, scoring, {
       kind: state.kind === "all" ? undefined : state.kind,
       includeProbeOnly: state.includeProbeOnly,
@@ -205,7 +263,7 @@ export function periodModel(input: {
       mean: mean(perShot),
       cards: perShot.length,
       shots: perShot.reduce((sum, v) => sum + v.n, 0),
-      best,
+      best: best ? { ...best, shots: best.n } : null,
     },
     tiles,
     reading: readingCard
