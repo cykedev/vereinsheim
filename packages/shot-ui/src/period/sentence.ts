@@ -23,36 +23,34 @@ export function verdictText(
 const LEVEL = 0.005
 
 /**
- * Ein Satz zum Zeitraum (D14), immer über den Ø je Schuss wie die Ergebnis-Box: mit Vergleich der Unterschied
- * mit „nachweisbar“ nur bei einem Urteil, sonst die letzte Scheibe gegen den Schnitt der 30 Tage davor, sonst
- * keiner.
+ * Ein Satz zum Zeitraum (D14, U2 D1): Er beantwortet „Werde ich besser?“ im Ø je Schuss wie die Ergebnis-Box. Er
+ * vergleicht mit dem gewählten Vergleich, sonst still mit dem Zeitraum davor, bei „Alles“ die letzten 90 Tage mit den
+ * 90 davor (`PeriodModel.form`); „nachweisbar“ nur bei einem Urteil. Ohne Scheiben keiner.
  */
-export function periodSentence(model: PeriodModel): string | null {
-  if (model.compareRange) {
-    const other =
-      model.compareRange.label === PREVIOUS_LABEL
-        ? { dative: "dem Zeitraum davor", als: "im Zeitraum davor" }
-        : {
-            dative: `„${model.compareRange.label}“`,
-            als: `in „${model.compareRange.label}“`,
-          }
-    const c = model.comparison
-    if (!c || c.test === null) {
-      return `Für einen Vergleich mit ${other.dative} sind es zu wenige Scheiben.`
-    }
-    if (Math.abs(c.delta) < LEVEL) return `Dein Ø je Schuss liegt gleichauf mit ${other.dative}.`
-    // „…, nicht nachweisbar“ klang wie ein Widerspruch zur Zahl davor (Prüfung, 9. Oktober 2026)
-    const proven =
-      c.verdict === "unclear"
-        ? "der Unterschied ist aber nicht nachweisbar"
-        : "der Unterschied ist nachweisbar"
-    const direction = c.delta > 0 ? "höher" : "tiefer"
-    return `Dein Ø je Schuss liegt ${formatValue(Math.abs(c.delta), 2)} ${direction} als ${other.als}; ${proven}.`
+export function periodSentence(model: Pick<PeriodModel, "form">): string | null {
+  const form = model.form
+  if (!form) return null
+  const days = form.lastDays
+  const other = days
+    ? { dative: `den ${days} Tagen davor`, als: `in den ${days} Tagen davor` }
+    : form.label === PREVIOUS_LABEL
+      ? { dative: "dem Zeitraum davor", als: "im Zeitraum davor" }
+      : { dative: `„${form.label}“`, als: `in „${form.label}“` }
+  const subject = days
+    ? `In den letzten ${days} Tagen liegt dein Ø je Schuss`
+    : "Dein Ø je Schuss liegt"
+  const c = form.comparison
+  if (!c || c.test === null) {
+    return days
+      ? `Für einen Vergleich der letzten ${days} Tage mit den ${days} Tagen davor sind es zu wenige Scheiben.`
+      : `Für einen Vergleich mit ${other.dative} sind es zu wenige Scheiben.`
   }
-  const average = model.ownAverage?.average
-  if (!average) return null
-  if (Math.abs(average.delta) < LEVEL) {
-    return "Deine neueste Scheibe lag im Ø je Schuss genau auf deinem Schnitt der 30 Tage davor."
-  }
-  return `Deine neueste Scheibe lag im Ø je Schuss ${formatValue(Math.abs(average.delta), 2)} ${average.delta > 0 ? "über" : "unter"} deinem Schnitt der 30 Tage davor.`
+  if (Math.abs(c.delta) < LEVEL) return `${subject} gleichauf mit ${other.dative}.`
+  // „…, nicht nachweisbar“ klang wie ein Widerspruch zur Zahl davor (Prüfung, 9. Oktober 2026)
+  const proven =
+    c.verdict === "unclear"
+      ? "der Unterschied ist aber nicht nachweisbar"
+      : "der Unterschied ist nachweisbar"
+  const direction = c.delta > 0 ? "höher" : "tiefer"
+  return `${subject} ${formatValue(Math.abs(c.delta), 2)} ${direction} als ${other.als}; ${proven}.`
 }

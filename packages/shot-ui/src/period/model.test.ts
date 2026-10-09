@@ -122,14 +122,30 @@ describe("Vergleich und Satz", () => {
     )
   })
 
-  it("ohne Vergleich: die letzte Scheibe gegen den Schnitt der 30 Tage davor", () => {
-    // die letzte Scheibe (vor 10 Tagen) hat 6,0; davor 7,0 / 8,0 / 9,0 / 10,0 in den 30 Tagen → Schnitt 8,5
-    const m = model(now)
-    expect(m.ownAverage?.average?.delta).toBeCloseTo(-2.5, 12)
-    expect(periodSentence(m)).toBe(
-      "Deine neueste Scheibe lag im Ø je Schuss 2,50 unter deinem Schnitt der 30 Tage davor."
+  it("ohne gewählten Vergleich: still gegen den Zeitraum davor (U2, D1), nie die 30 Tage", () => {
+    expect(periodSentence(model([...now, ...before]))).toBe(
+      "Dein Ø je Schuss liegt 5,00 höher als im Zeitraum davor; der Unterschied ist nachweisbar."
     )
-    expect(periodSentence(model(now.slice(0, 2)))).toBeNull()
+    // ohne Scheiben im Zeitraum davor kein Vergleich
+    expect(periodSentence(model(now))).toBe(
+      "Für einen Vergleich mit dem Zeitraum davor sind es zu wenige Scheiben."
+    )
+    expect(periodSentence(model([]))).toBeNull()
+    for (const m of [model(now), model([...now, ...before])])
+      expect(periodSentence(m)).not.toContain("30 Tage")
+  })
+
+  it("„Alles“: die letzten 90 Tage gegen die 90 davor, und der Satz sagt es", () => {
+    expect(periodSentence(model([...now, ...before], { choice: { type: "all" } }))).toBe(
+      "In den letzten 90 Tagen liegt dein Ø je Schuss 5,00 höher als in den 90 Tagen davor; der Unterschied ist nachweisbar."
+    )
+    expect(periodSentence(model(now, { choice: { type: "all" } }))).toBe(
+      "Für einen Vergleich der letzten 90 Tage mit den 90 Tagen davor sind es zu wenige Scheiben."
+    )
+    const same = [60, 70, 80, 90, 100].map((t, i) => periodCard(`v${i}`, 100 + i, [t]))
+    expect(periodSentence(model([...now, ...same], { choice: { type: "all" } }))).toBe(
+      "In den letzten 90 Tagen liegt dein Ø je Schuss gleichauf mit den 90 Tagen davor."
+    )
   })
 
   it("Urteil in Worten: Richtung, besser oder schwächer, bedeutsam nur mit Urteil", () => {
