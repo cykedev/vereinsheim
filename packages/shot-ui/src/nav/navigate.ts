@@ -3,6 +3,8 @@
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
+import { resolveRange, type NamedPeriod } from "../period/calendar"
+
 import {
   DEFAULT_LIST,
   DEFAULT_PROGRESS,
@@ -76,4 +78,19 @@ export function progressFromList(list: ListRoute): ProgressRoute {
     query: { ...DEFAULT_PROGRESS, family, kind, choice: range ?? { type: "all" } },
     section: null,
   }
+}
+
+/**
+ * Name des Rückwegs (D8): „Start“, „Scheiben“ oder der Zeitraum wie in der Seite eines Zeitraums („Letzte 90 Tage“,
+ * „Neue Munition“, „01.05.2026 – 30.06.2026“). Der Name hängt nicht von „jetzt“ ab; benannte Zeiträume und die
+ * Anzeige-Zeitzone kommen von der Seite.
+ */
+export function backLabel(
+  card: CardRoute,
+  context: { named: readonly NamedPeriod[]; timeZone: string }
+): string {
+  const origin = card.origin
+  if (origin?.from === "start") return "Start"
+  if (origin?.from !== "progress") return "Scheiben"
+  return resolveRange(origin.query.choice, { ...context, nowMs: 0, firstMs: null }).label
 }

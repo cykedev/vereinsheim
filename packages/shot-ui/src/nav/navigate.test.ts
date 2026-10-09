@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { backRoute, listFromProgress, openCard, progressFromList, siblingRoute } from "./navigate"
+import {
+  backLabel,
+  backRoute,
+  listFromProgress,
+  openCard,
+  progressFromList,
+  siblingRoute,
+} from "./navigate"
 import {
   DEFAULT_LIST,
   DEFAULT_PROGRESS,
@@ -126,5 +133,31 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
       progressFromList({ ...LIST, query: { ...LIST.query, range: { type: "rolling", days: 30 } } })
         .query.choice
     ).toEqual({ type: "rolling", days: 30 })
+  })
+})
+
+describe("Beschriftung des Rückwegs (D8)", () => {
+  const context = {
+    named: [{ id: "neue-munition", name: "Neue Munition", from: "2026-08-01", to: null }],
+    timeZone: "Europe/Berlin",
+  }
+  const fromProgress = (choice: ProgressRoute["query"]["choice"]) =>
+    openCard({ ...PROGRESS, query: { ...PROGRESS.query, choice } }, "c42")
+
+  it("der Zeitraum mit seinem Namen wie in der Seite eines Zeitraums", () => {
+    expect(backLabel(fromProgress({ type: "rolling", days: 90 }), context)).toBe("Letzte 90 Tage")
+    expect(backLabel(fromProgress({ type: "all" }), context)).toBe("Alles")
+    expect(backLabel(fromProgress({ type: "named", id: "neue-munition" }), context)).toBe(
+      "Neue Munition"
+    )
+    expect(
+      backLabel(fromProgress({ type: "free", from: "2026-05-01", to: "2026-06-30" }), context)
+    ).toBe("01.05.2026 – 30.06.2026")
+  })
+
+  it("Start, Liste und ein direkter Link", () => {
+    expect(backLabel(openCard({ page: "start" }, "c1"), context)).toBe("Start")
+    expect(backLabel(openCard(LIST, "c1"), context)).toBe("Scheiben")
+    expect(backLabel(openCard({ page: "scan" }, "c1"), context)).toBe("Scheiben")
   })
 })
