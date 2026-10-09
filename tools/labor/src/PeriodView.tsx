@@ -1,4 +1,5 @@
-import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
+import type { FamilyId } from "@vereinsheim/shot-core/discipline"
+import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
 import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
@@ -28,12 +29,20 @@ import { progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import { urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 
 import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
-import { NAMED_PERIODS, season, SEASON_NOW_MS, SEASON_TIME_ZONE, type SeasonCard } from "./season"
+import {
+  NAMED_PERIODS,
+  season,
+  SEASON_NOW_MS,
+  SEASON_TIME_ZONE,
+  targetOfFamily,
+  type SeasonCard,
+} from "./season"
 import { exposePeriodForTest } from "./testHook"
 
-const FAMILIES: readonly { value: TargetId; label: string }[] = [
-  { value: "lg-10m", label: "Luftgewehr" },
-  { value: "lp-10m", label: "Luftpistole" },
+/** die Familien der Saison wie im Fachkern; Auflage gibt es in ihr nicht */
+const FAMILIES: readonly { value: FamilyId; label: string }[] = [
+  { value: "lg-freihand", label: "Luftgewehr" },
+  { value: "lp-freihand", label: "Luftpistole" },
 ]
 const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
 const TZ = SEASON_TIME_ZONE
@@ -89,7 +98,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
     [base, state.chosen]
   )
   useEffect(() => exposePeriodForTest({ cards: family.map((c) => c.card), state, model }))
-  const target = TARGETS[state.family as TargetId]
+  const target = TARGETS[targetOfFamily(state.family)]
   const sentence = periodSentence(model)
   const reading = model.reading
   const readingValue = reading ? (model.values.find((v) => v.id === reading.card.id) ?? null) : null

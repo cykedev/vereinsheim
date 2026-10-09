@@ -2096,7 +2096,7 @@ addEventListener("load", async () => {
       check(
         "Zeitraum: Vorgabe „Letzte 90 Tage“ über Luftgewehr",
         txt($("[data-period-header] h1")) === "Letzte 90 Tage" &&
-          P().state.family === "lg-10m" &&
+          P().state.family === "lg-freihand" &&
           P().state.choice.days === 90
       )
       const boxValue = txt($("[data-result-box] [data-period-result]")).split("R")[0].trim()
@@ -2292,7 +2292,7 @@ addEventListener("load", async () => {
           same(progressRoute.query, P().state) &&
           progressAddress.includes(`range=${P().state.choice.id}`) &&
           progressAddress.includes("compare=") &&
-          progressAddress.includes("family=lg-10m") &&
+          progressAddress.includes("family=lg-freihand") &&
           progressAddress.includes(`pick=${chosenId}`),
         progressAddress
       )
@@ -2441,9 +2441,11 @@ addEventListener("load", async () => {
       const recordCards = Object.values(records).flatMap((r) =>
         !r ? [] : "cardId" in r ? [r.cardId] : Object.values(r).map((x) => x.cardId)
       )
+      const printoutOnly = P().cards.find((c) => c.flags?.includes("nur-pdf"))?.id
       check(
         "Zeitraum: die Scheibe nur aus dem Ausdruck setzt keinen Rekord",
-        recordCards.length > 0 && !recordCards.includes("lg-10m-2026-05-23")
+        !!printoutOnly && recordCards.length > 0 && !recordCards.includes(printoutOnly),
+        printoutOnly ?? "keine Scheibe nur aus dem Ausdruck"
       )
 
       // Telefon und Desktop in eigenen Fenstern (die Ansicht ist gemerkt, der Anker hält sie fest)

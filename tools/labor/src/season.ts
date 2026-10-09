@@ -4,14 +4,18 @@
 // Sommerzeit (UTC+2): Uhrzeiten ohne Zeitzonen-Rechnung.
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
+import type { FamilyId } from "@vereinsheim/shot-core/discipline"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
 import { gauss, mulberry32, toMetricShots, type RawShot } from "./samples"
 
 export interface SeasonCard {
+  /** erzeugt wie eine Id aus der Datenbank, nicht aus Datum oder Namen (User, 9. Oktober 2026) */
   id: string
-  family: TargetId
+  /** Disziplin-Familie wie im Fachkern; die Saison kennt nur Freihand */
+  family: FamilyId
+  target: TargetId
   /** wie in der Ansicht „Scheibe“: „Training vom 12.07.2026“ */
   label: string
   raw: RawShot[]
@@ -22,10 +26,36 @@ export interface SeasonCard {
 export const SEASON_NOW_MS = Date.UTC(2026, 8, 30, 10)
 export const SEASON_TIME_ZONE = "Europe/Berlin"
 
+/** benannte Zeiträume mit erzeugter Id, nie aus dem Namen abgeleitet (Review N1) */
 export const NAMED_PERIODS: readonly NamedPeriod[] = [
-  { id: "lm", name: "Vorbereitung Landesmeisterschaft", from: "2026-05-01", to: "2026-06-30" },
-  { id: "muni", name: "Neue Munition", from: "2026-08-01", to: null },
+  {
+    id: "p4k8w2m1",
+    name: "Vorbereitung Landesmeisterschaft",
+    from: "2026-05-01",
+    to: "2026-06-30",
+  },
+  { id: "p9q3x7d5", name: "Neue Munition", from: "2026-08-01", to: null },
 ]
+
+/** die Familie einer Scheibe der Saison: nur Freihand */
+const FAMILY_OF: Readonly<Record<TargetId, FamilyId>> = {
+  "lg-10m": "lg-freihand",
+  "lp-10m": "lp-freihand",
+}
+
+/** die Scheibe zu einer Familie, für das Zeichnen; Luftpistole bei `lp-*`, sonst Luftgewehr */
+export const targetOfFamily = (family: string): TargetId =>
+  family.startsWith("lp-") ? "lp-10m" : "lg-10m"
+
+/** eine Id wie aus der Datenbank: fest aus Scheibe und Tag (FNV-1a), aber ohne beides lesbar zu zeigen */
+function cardId(target: TargetId, day: string): string {
+  let hash = 0x811c9dc5
+  for (const char of `${target}/${day}`) {
+    hash ^= char.charCodeAt(0)
+    hash = Math.imul(hash, 0x01000193) >>> 0
+  }
+  return `c${hash.toString(36).padStart(7, "0")}`
+}
 
 const FIRST_DAY = Date.UTC(2026, 3, 6)
 const LAST_DAY = Date.UTC(2026, 8, 27)
@@ -56,14 +86,15 @@ const TRAINING: Readonly<Record<string, { days: readonly number[]; skip: number 
 }
 const VACATION = ["2026-08-03", "2026-08-16"]
 /** diese Scheibe gibt es nur als Ausdruck (Merkmal `nur-pdf`): sie setzt keinen Rekord */
-const PRINTOUT_ONLY = "lg-10m-2026-05-23"
+/** die Scheibe nur aus dem Ausdruck: Luftgewehr am 23. Mai */
+export const PRINTOUT_ONLY_ID = cardId("lg-10m", "2026-05-23")
 
 const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10)
 const german = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}.${day.slice(0, 4)}`
 
 /** Streuung je Richtung in µm: Luftgewehr 1,5 mm, im Juni 1,9 mm, ab August 1,3 mm; Luftpistole 12 mm */
-function sigmaUm(family: TargetId, day: string): number {
-  if (family === "lp-10m") return 12_000
+function sigmaUm(target: TargetId, day: string): number {
+  if (target === "lp-10m") return 12_000
   if (day >= "2026-08-01") return 1300
   if (day.startsWith("2026-06")) return 1900
   return 1500
@@ -71,16 +102,16 @@ function sigmaUm(family: TargetId, day: string): number {
 
 function makeCard(
   rand: () => number,
-  family: TargetId,
+  target: TargetId,
   day: string,
   kind: PeriodCard["kind"],
   count: number,
   probeOnly: boolean
 ): SeasonCard {
-  const sigma = sigmaUm(family, day)
+  const sigma = sigmaUm(target, day)
   // ein kleiner Versatz je Abend, wie am Stand
   const [mx, my] = [0.3 * sigma * gauss(rand), 0.3 * sigma * gauss(rand)]
-  const pace = (family === "lg-10m" ? 45 : 55) * 1000
+  const pace = (target === "lg-10m" ? 45 : 55) * 1000
   const [y, m, d] = day.split("-").map(Number)
   const startedAtMs = Date.UTC(y, m - 1, d, (kind === "competition" ? 10 : 18) - OFFSET_H, 30)
   const at = (k: number) => Math.round((k + sigma * gauss(rand)) / 10) * 10
@@ -98,10 +129,11 @@ function makeCard(
     t += 60_000
     shoot("match", count)
   }
-  const id = `${family}-${day}`
+  const id = cardId(target, day)
   return {
     id,
-    family,
+    family: FAMILY_OF[target],
+    target,
     label: `${kind === "competition" ? "Wettkampf" : "Training"} vom ${german(day)}`,
     raw,
     card: {
@@ -109,8 +141,8 @@ function makeCard(
       startedAtMs,
       kind,
       complete: true,
-      ...(id === PRINTOUT_ONLY ? { flags: ["nur-pdf"] } : {}),
-      shots: toMetricShots(TARGETS[family], raw),
+      ...(id === PRINTOUT_ONLY_ID ? { flags: ["nur-pdf"] } : {}),
+      shots: toMetricShots(TARGETS[target], raw),
     },
   }
 }
@@ -122,24 +154,27 @@ export function season(): readonly SeasonCard[] {
   if (cached) return cached
   const rand = mulberry32(20261009)
   const cards: SeasonCard[] = []
-  for (const family of ["lg-10m", "lp-10m"] as const) {
+  for (const target of ["lg-10m", "lp-10m"] as const) {
     let trainings = 0
     for (let ms = FIRST_DAY; ms <= LAST_DAY; ms += DAY) {
       const day = iso(ms)
       const weekday = new Date(ms).getUTCDay()
-      if (COMPETITIONS[family].includes(day)) {
-        cards.push(makeCard(rand, family, day, "competition", 40, false))
+      if (COMPETITIONS[target].includes(day)) {
+        cards.push(makeCard(rand, target, day, "competition", 40, false))
         continue
       }
-      if (!TRAINING[family].days.includes(weekday)) continue
+      if (!TRAINING[target].days.includes(weekday)) continue
       if (day >= VACATION[0] && day <= VACATION[1]) continue
-      if (rand() < TRAINING[family].skip) continue
+      if (rand() < TRAINING[target].skip) continue
       trainings++
       const count = [20, 30, 40, 60][Math.floor(rand() * 4)]
       // jede achte Trainingsscheibe nur Probe (Umschalten vergessen oder bewusst)
-      cards.push(makeCard(rand, family, day, "training", count, trainings % 8 === 0))
+      cards.push(makeCard(rand, target, day, "training", count, trainings % 8 === 0))
     }
   }
-  cached = cards.sort((a, b) => a.card.startedAtMs - b.card.startedAtMs || (a.id < b.id ? -1 : 1))
+  // bei gleicher Zeit Luftgewehr vor Luftpistole, wie vor den erzeugten Ids
+  cached = cards.sort(
+    (a, b) => a.card.startedAtMs - b.card.startedAtMs || (a.target < b.target ? -1 : 1)
+  )
   return cached
 }

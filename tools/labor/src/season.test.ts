@@ -2,12 +2,14 @@ import { cardValues, comparePeriods } from "@vereinsheim/shot-core/analysis"
 import { metricByKey } from "@vereinsheim/shot-core/metrics"
 import { describe, expect, it } from "vitest"
 
-import { NAMED_PERIODS, season, SEASON_NOW_MS } from "./season"
+import { isCardId, isNamedPeriodId } from "@vereinsheim/shot-ui/nav/routes"
+
+import { NAMED_PERIODS, PRINTOUT_ONLY_ID, season, SEASON_NOW_MS } from "./season"
 
 const sigma = metricByKey("group.sigma")!
 const DAY = 86_400_000
-const lg = season().filter((c) => c.family === "lg-10m")
-const lp = season().filter((c) => c.family === "lp-10m")
+const lg = season().filter((c) => c.family === "lg-freihand")
+const lp = season().filter((c) => c.family === "lp-freihand")
 const between = (from: string, to: string) =>
   lg.filter(
     (c) =>
@@ -70,5 +72,20 @@ describe("Saison im Labor (Plan L3, D17)", () => {
     const result = comparePeriods(pick(from - length, from), pick(from, SEASON_NOW_MS + 1))
     expect(result?.verdict).toBe("lower")
     expect(length).toBeGreaterThan(50 * DAY)
+  })
+
+  it("Ids wie aus der Datenbank: eindeutig, gültig in der Adresse, ohne Datum oder Scheibe (User, 9. Oktober 2026)", () => {
+    const ids = season().map((c) => c.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const id of ids) {
+      expect(isCardId(id), id).toBe(true)
+      expect(id).not.toMatch(/2026|10m/)
+    }
+    for (const period of NAMED_PERIODS) expect(isNamedPeriodId(period.id), period.id).toBe(true)
+    expect(
+      season()
+        .filter((c) => c.card.flags?.includes("nur-pdf"))
+        .map((c) => c.id)
+    ).toEqual([PRINTOUT_ONLY_ID])
   })
 })

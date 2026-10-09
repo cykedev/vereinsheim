@@ -47,7 +47,7 @@ export function App({ commit }: { commit: string }) {
   const [helpId, setHelpId] = useState<string | null>(null)
   const [period, dispatch] = useReducer(periodReducer, undefined, () =>
     initialPeriodState({
-      family: store.get("period.family") === "lp-10m" ? "lp-10m" : "lg-10m",
+      family: store.get("period.family") === "lp-freihand" ? "lp-freihand" : "lg-freihand",
       scoring: store.get("scoring") === "rings" ? "rings" : "decimal",
     })
   )
@@ -80,7 +80,7 @@ export function App({ commit }: { commit: string }) {
       setOpened({
         id: card.id,
         label: card.label,
-        target: card.family,
+        target: card.target,
         raw: card.raw,
         route: openCardRoute(progressRoute(period, null), card.id),
       })
