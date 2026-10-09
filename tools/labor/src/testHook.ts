@@ -61,7 +61,12 @@ export interface LaborHook {
   target?: TargetImage
   /** die Seite eines Zeitraums: Scheiben der Familie, Zustand, Modell */
   period?: { cards: readonly PeriodCard[]; state: PeriodState; model: PeriodModel }
-  list?: { model: CardListModel; query: ListQuery }
+  list?: {
+    model: CardListModel
+    query: ListQuery
+    cards: readonly PeriodCard[]
+    families: Record<string, string>
+  }
   tools: typeof TOOLS
 }
 
@@ -88,6 +93,6 @@ export function exposePeriodForTest(period: NonNullable<LaborHook["period"]>) {
 }
 
 /** die Scheiben-Liste (Plan N2): Modell und Filter zum Nachrechnen */
-export function exposeListForTest(list: { model: CardListModel; query: ListQuery }) {
+export function exposeListForTest(list: NonNullable<LaborHook["list"]>) {
   if (underTest()) window.__labor = { ...window.__labor, list, tools: TOOLS }
 }

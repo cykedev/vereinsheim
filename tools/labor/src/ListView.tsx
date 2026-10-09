@@ -59,7 +59,15 @@ export function ListView({
       ),
     [all, query, scoring]
   )
-  useEffect(() => exposeListForTest({ model, query }))
+  // die Scheiben und ihre Familien, damit die Prüfung Ergebnis, Ø und Abstand selbst nachrechnet
+  useEffect(() =>
+    exposeListForTest({
+      model,
+      query,
+      cards: all.map((c) => c.card),
+      families: Object.fromEntries(all.map((c) => [c.id, c.family])),
+    })
+  )
   const family = model.family ?? FAMILIES[0].value
   const familyLabel = FAMILIES.find((f) => f.value === family)?.label ?? family
 

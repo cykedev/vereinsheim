@@ -2526,6 +2526,161 @@ addEventListener("load", async () => {
         near(tallPeriod.top, 56, 3) && tallPeriod.active === "Zahlen",
         `${Math.round(tallPeriod.top)} ${tallPeriod.active}`
       )
+      // ---------- Scheiben-Liste (Plan N2, Task 9)
+      const Li = () => L().list
+      const listRows = () => $$("[data-card-row]").map((r) => r.dataset.cardRow)
+      await click(button("Scheiben"), 400)
+      const evenings = Li().model.evenings
+      check(
+        "Liste: Abende neueste zuerst, die Scheiben eines Abends in zeitlicher Folge, wie im Modell",
+        evenings.length > 20 &&
+          $$("[data-evening]")
+            .map((e) => e.dataset.evening)
+            .join() === evenings.map((e) => e.day).join() &&
+          evenings.every((e, i) => !i || evenings[i - 1].day > e.day) &&
+          evenings.every((e) =>
+            e.rows.every((r, i) => !i || e.rows[i - 1].startedAtMs <= r.startedAtMs)
+          ) &&
+          listRows().join() === evenings.flatMap((e) => e.rows.map((r) => r.id)).join(),
+        `${evenings.length} Abende`
+      )
+      // Ergebnis, Ø und Abstand selbst nachgerechnet: Familie lg-freihand, alle Arten, Zehntel
+      const familyCards = Li()
+        .cards.filter((c) => Li().families[c.id] === Li().model.family)
+        .sort((a, b) => a.startedAtMs - b.startedAtMs)
+      const meanValues = tools.analysis.cardValues(
+        familyCards,
+        tools.metricByKey("result.decimalMean"),
+        "decimal",
+        { includeProbeOnly: true }
+      )
+      // mit Vorzeichen auf zwei Stellen, eine gerundete Null ohne (wie die Bausteine)
+      const signed2 = (v) => `${Number(v.toFixed(2)) > 0 ? "+" : ""}${nf(v, 2)}`
+      const wrongRows = []
+      for (const row of evenings.slice(0, 12).flatMap((e) => e.rows)) {
+        const card = familyCards.find((c) => c.id === row.id)
+        const el = $(`[data-card-row="${row.id}"]`)
+        const i = meanValues.findIndex((v) => v.id === row.id)
+        const before = meanValues.slice(Math.max(0, i - 5), i)
+        const delta = before.length
+          ? meanValues[i].value - before.reduce((s, v) => s + v.value, 0) / before.length
+          : null
+        const result =
+          row.kind === "probe"
+            ? null
+            : tools.computeMetric(
+                tools.inScoring(tools.metricByKey("result.decimal"), "decimal"),
+                card.shots
+              )
+        const ok =
+          (row.kind === "probe" || txt($("[data-result]", el)) === nf(result, 1)) &&
+          txt($("[data-mean]", el)) === nf(meanValues[i].value, 2) &&
+          txt($("[data-delta]", el)) === (delta === null ? "–" : signed2(delta))
+        if (!ok) wrongRows.push(row.id)
+      }
+      check(
+        "Liste: Ergebnis, Ø und Abstand je Zeile wie im Fachkern",
+        wrongRows.length === 0,
+        wrongRows.join(" ")
+      )
+      const listAddress = addr()
+      check(
+        "Liste: die Adresse nennt die Familie",
+        listAddress === "/cards?family=lg-freihand" && routeOf(listAddress).page === "cards",
+        listAddress
+      )
+      // Mischabend: der Hinweis wechselt die Familie und springt zum Abend
+      const mixed = $("[data-other-family]")
+      const mixedDay = mixed?.closest("[data-evening]")?.dataset.evening
+      await click(mixed, 300)
+      const mixedTop = document.getElementById(mixedDay)?.getBoundingClientRect().top ?? -1
+      check(
+        "Liste: ein Mischabend nennt die andere Familie, Antippen wechselt sie und zeigt den Abend",
+        !!mixedDay &&
+          Li().query.family === "lp-freihand" &&
+          addr() === "/cards?family=lp-freihand" &&
+          !!$(`[data-evening="${mixedDay}"]`) &&
+          mixedTop >= 0 &&
+          mixedTop < window.innerHeight,
+        `${mixedDay} · ${addr()} · ${Math.round(mixedTop)}`
+      )
+      await click(button("Luftgewehr", $("[data-list-controls]")), 300)
+      // Art: nur Wettkämpfe
+      await click(button("Wettkampf", $("[data-list-controls]")), 300)
+      const kinds = Li().model.evenings.flatMap((e) => e.rows.map((r) => r.kind))
+      check(
+        "Liste: Art „Wettkampf“ zeigt nur Wettkämpfe",
+        kinds.length === 11 &&
+          kinds.every((k) => k === "competition") &&
+          addr().includes("kind=competition"),
+        `${kinds.length} · ${addr()}`
+      )
+      await click(button("Alle", $("[data-list-controls]")), 300)
+      // Öffnen und zurück: Filter und Scrollstelle bleiben
+      const openId = Li().model.evenings[6].rows[0].id
+      $(`[data-card-row="${openId}"]`).scrollIntoView({ block: "center" })
+      await wait(50)
+      const listY = window.scrollY
+      await click($(`[data-card-row="${openId}"]`), 500)
+      check(
+        "Liste: eine Zeile öffnet die Scheibe mit der Liste als Herkunft",
+        addr().startsWith(`/cards/${openId}?from=list&family=lg-freihand`) &&
+          routeOf(addr()).origin?.from === "list" &&
+          !!button("Zurück zu „Scheiben“"),
+        addr()
+      )
+      await click(button("Zurück zu „Scheiben“"), 500)
+      check(
+        "Liste: „Zurück“ stellt Filter und Scrollstelle wieder her",
+        !!$("[data-card-list-page]") &&
+          addr() === listAddress &&
+          listY > 0 &&
+          near(window.scrollY, listY, 5),
+        `${addr()} · ${Math.round(window.scrollY)} / ${Math.round(listY)}`
+      )
+      // Querverweise: Liste → Zeitraum „Alles“, Zeitraum → Liste mit Zeitraum-Chip
+      await click(button("Verlauf dieser Filter"), 400)
+      check(
+        "Liste: „Verlauf dieser Filter“ öffnet den Zeitraum „Alles“ der Familie",
+        P()?.state.family === "lg-freihand" &&
+          P().state.choice.type === "all" &&
+          addr().startsWith("/progress?range=all&family=lg-freihand"),
+        addr()
+      )
+      await choose("Neue Munition")
+      await click(button("Alle in Scheiben zeigen"), 400)
+      check(
+        "Zeitraum: „Alle in Scheiben zeigen“ zeigt die Liste mit dem Zeitraum als Chip",
+        !!$("[data-card-list-page]") &&
+          txt($("[data-range-chip]")).startsWith("Neue Munition") &&
+          addr().startsWith("/cards?range=") &&
+          Li().model.evenings.every((e) => e.day >= "2026-08-01"),
+        `${txt($("[data-range-chip]"))} · ${addr()}`
+      )
+      await click(button("Zeitraum entfernen"), 300)
+      check(
+        "Liste: „×“ entfernt den Zeitraum",
+        !$("[data-range-chip]") && addr() === listAddress,
+        addr()
+      )
+      // Telefon 375 px mit einem Abend als Anker: kein seitliches Scrollen, ohne Uhrzeit, Abstand und Schuss
+      const phoneDay = Li().model.evenings[2].day
+      const phone = await openFrame(375, 812, `#${phoneDay}`)
+      const pd = phone.contentDocument
+      const pw = phone.contentWindow
+      const phoneRow = pd.querySelector("[data-card-row]")
+      const hiddenCells = phoneRow
+        ? [...phoneRow.children].filter((c) => pw.getComputedStyle(c).display === "none").length
+        : -1
+      check(
+        "Liste, Telefon 375 px: der Anker eines Abends öffnet die Liste, kein seitliches Scrollen, drei Spalten weniger",
+        !!pd.querySelector("[data-card-list-page]") &&
+          pd.documentElement.scrollWidth <= 375 &&
+          hiddenCells === 3,
+        `${pd.documentElement.scrollWidth} · ${hiddenCells}`
+      )
+      phone.remove()
+      await click(button("Zeitraum"), 300)
       await click(button("Scheibe"), 300)
       // #numbers gibt es auf beiden Seiten: es öffnet die zuletzt gewählte Ansicht, hier die Scheibe (Review)
       const reload = await openFrame(1280, 900, "#numbers")
