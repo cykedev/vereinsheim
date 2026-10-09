@@ -150,9 +150,11 @@ describe("Reiter Ergebnis", () => {
     expect(points).toEqual(cons.series.filter((p) => p.total !== null).map((p) => p.series))
     const text = cardText(html, "serien-und-konstanz")
     expect(text).toContain(`Verglichen ${cons.compared} von ${cons.series.length} Serien`)
-    expect(text).toContain(`Streuung der Serien ${formatValue(cons.sd!, 2)} Ringe`)
+    // „Streuung“ heißt sonst die Gruppe auf der Scheibe (Prüfung, Ergebnis 8)
+    expect(text).toContain(`Abweichung der Serien ${formatValue(cons.sd!, 2)} Ringe (SD)`)
     expect(text).toContain(`Spanne ${formatValue(cons.range!, 1)} Ringe`)
-    expect(text).toContain(`Schwankung je Schuss ${formatValue(cons.mad!, 2)} Ringe`)
+    expect(text).toContain(`Abweichung je Schuss ${formatValue(cons.shotSd!, 2)} Ringe (SD)`)
+    expect(text).not.toContain("MAD")
     expect(html).not.toMatch(/data-series-point="\d+" data-short/)
   })
 

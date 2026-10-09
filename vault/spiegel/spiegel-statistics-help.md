@@ -119,16 +119,19 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Formel:* `Teiler = Abstand zur Mitte in 1/100 mm`
 
 **Serien und Konstanz (E10, I1)**
-- *Was:* Das Ergebnis jeder Serie, wie stark die Serien schwanken (Standardabweichung, Spanne) und
-  wie stark ein einzelner Schuss typischerweise schwankt (MAD).
+- *Was:* Das Ergebnis jeder Serie, wie stark die Serien voneinander abweichen (Standardabweichung,
+  Spanne) und wie stark ein einzelner Schuss um deinen Schnitt schwankt (Standardabweichung der
+  Schusswerte).
 - *So liest du es:* Kleine Spanne heißt gleichmäßig. Die Spanne wächst aber mit der Zahl der Serien;
   Scheiben mit verschieden vielen Serien vergleichst du über die Standardabweichung. Verglichen
   werden nur Serien der häufigsten Länge; fehlt einem Schuss der Wert, hat seine Serie keine Summe.
 - *Was du tun kannst:* Fällt eine Serie ab, sieh im Reiter „Zeit und Verlauf“ nach, ob davor eine
   Pause lag („Pausen und Wiedereinstieg“) oder ob es zum Ende hin nachlässt („Ermüdung“).
 - *Vorsicht:* Wie gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.
-- *Mindestzahl:* Ab 1 Schuss, die Schwankung ab 2 Serien gleicher Länge.
-- *Formel:* `SD und Spanne der Serien gleicher Länge; MAD = Median |vᵢ − Median v|`
+- *Mindestzahl:* Ab 1 Schuss; die Abweichung je Schuss ab 2, SD und Spanne der Serien ab 2 Serien
+  gleicher Länge.
+- *Formel:* `SD und Spanne der Serien gleicher Länge; Abweichung je Schuss = SD der Schusswerte (n −
+  1)`
 
 **Quoten mit Unsicherheit (E4, E5, E11, I10)**
 - *Was:* Der Anteil deiner Schüsse ab einer Schwelle (Zehner, ab 9,0, ab 10,5) mit 95-%-Bereich,

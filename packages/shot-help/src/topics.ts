@@ -70,12 +70,14 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["E10", "I1"],
     metrics: [],
     short: "Das Ergebnis jeder Serie und wie gleichmäßig du über die Serien schießt.",
-    what: "Das Ergebnis jeder Serie, wie stark die Serien schwanken (Standardabweichung, Spanne) und wie stark ein einzelner Schuss typischerweise schwankt (MAD).",
+    what: "Das Ergebnis jeder Serie, wie stark die Serien voneinander abweichen (Standardabweichung, Spanne) und wie stark ein einzelner Schuss um deinen Schnitt schwankt (Standardabweichung der Schusswerte).",
     read: "Kleine Spanne heißt gleichmäßig. Die Spanne wächst aber mit der Zahl der Serien; Scheiben mit verschieden vielen Serien vergleichst du über die Standardabweichung. Verglichen werden nur Serien der häufigsten Länge; fehlt einem Schuss der Wert, hat seine Serie keine Summe.",
     act: "Fällt eine Serie ab, sieh im Reiter „Zeit und Verlauf“ nach, ob davor eine Pause lag („Pausen und Wiedereinstieg“) oder ob es zum Ende hin nachlässt („Ermüdung“).",
     caution: "Wie gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.",
-    minimum: "Ab 1 Schuss, die Schwankung ab 2 Serien gleicher Länge.",
-    formula: "SD und Spanne der Serien gleicher Länge; MAD = Median |vᵢ − Median v|",
+    minimum:
+      "Ab 1 Schuss; die Abweichung je Schuss ab 2, SD und Spanne der Serien ab 2 Serien gleicher Länge.",
+    formula:
+      "SD und Spanne der Serien gleicher Länge; Abweichung je Schuss = SD der Schusswerte (n − 1)",
   },
   {
     id: "quoten",

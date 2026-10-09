@@ -166,7 +166,7 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
                 rows={[
                   ["Verglichen", `${consistency.compared} von ${consistency.series.length} Serien`],
                   [
-                    "Streuung der Serien",
+                    "Abweichung der Serien",
                     consistency.sd === null ? (
                       "–"
                     ) : (
@@ -183,13 +183,13 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
                       : `${formatValue(consistency.range, digits)} Ringe`,
                   ],
                   [
-                    "Schwankung je Schuss",
-                    consistency.mad === null ? (
+                    "Abweichung je Schuss",
+                    consistency.shotSd === null ? (
                       "–"
                     ) : (
                       <>
-                        {`${formatValue(consistency.mad, 2)} Ringe`}
-                        <span className="font-normal text-muted-foreground"> (MAD)</span>
+                        {`${formatValue(consistency.shotSd, 2)} Ringe`}
+                        <span className="font-normal text-muted-foreground"> (SD)</span>
                       </>
                     ),
                   ],

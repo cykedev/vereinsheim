@@ -101,7 +101,23 @@ describe("Konstanz und Quoten (E10, E4, E11)", () => {
     expect(consistency?.compared).toBe(4)
     expect(consistency?.sd).toBeCloseTo(Math.sqrt(8.75 / 3), 9)
     expect(consistency?.range).toBeCloseTo(4, 9)
-    expect(consistency?.mad).toBeCloseTo(0.1, 9)
+    // SD der 45 Schusswerte (n − 1): 15 × 10,0, je 10 × 10,2 · 9,8 · 10,1, Ø 451/45;
+    // Σ(v − Ø)² = 0,877778, durch 44, Wurzel
+    expect(consistency?.shotSd).toBeCloseTo(0.14124, 5)
+  })
+
+  it("Abweichung je Schuss: SD der Schusswerte, ab 2 Schuss mit Wert (E10)", () => {
+    // 10,0 · 9,0 · 10,0 · 9,0: Ø 9,5, Σ(v − Ø)² = 1, durch 3, Wurzel
+    const four = [100, 90, 100, 90].map((tenths, i) => ({
+      ...MATCH[0],
+      decimalTenths: tenths,
+      ring: Math.floor(tenths / 10),
+      innerTen: false,
+      seq: i + 1,
+      series: 1,
+    }))
+    expect(seriesConsistency(four, "decimal")?.shotSd).toBeCloseTo(Math.sqrt(1 / 3), 9)
+    expect(seriesConsistency(four.slice(0, 1), "decimal")?.shotSd).toBeNull()
   })
 
   it("eine Serie mit fehlendem Wert hat keine Summe und zählt nicht für die Konstanz", () => {
@@ -122,7 +138,9 @@ describe("Konstanz und Quoten (E10, E4, E11)", () => {
     expect(consistency?.series.map((s) => s.total)).toEqual([100, 100, 90, 100, 50])
     expect(consistency?.sd).toBe(5)
     expect(consistency?.range).toBe(10)
-    expect(consistency?.mad).toBe(0)
+    // 35 × 10, 10 × 9: Ø 440/45, Σ(v − Ø)² = 7,777778, durch 44, Wurzel. Der MAD wäre hier 0:
+    // In ganzen Ringen ist er beim Luftgewehr fast immer 0 (Prüfung, 9. Oktober 2026).
+    expect(consistency?.shotSd).toBeCloseTo(0.42044, 5)
   })
 
   it("Quote über Schwelle mit Wilson-Intervall", () => {

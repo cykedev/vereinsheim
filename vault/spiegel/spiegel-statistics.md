@@ -47,7 +47,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | E7 | Teiler-Schnitt und -Median | **entfernt (Oktober 2026):** läuft mit dem Ø je Schuss (E2) zu r = −0,998, weil der Zehntelwert linear im Abstand ist | – | – | entfernt (SP-1.12) |
 | E8 | Beste und weiteste Teiler | je drei mit Schussnummer, wie auf dem Ausdruck | Serie, Scheibe | B | SP-1.10 |
 | E9 | Ringverlust | n·10 − ΣRing bzw. n·10,9 − Σvᵢ; seit Oktober 2026 als `total` in L4 (Lage + Streuung), keine eigene Auswertung mehr; nur, wenn jeder Wertungsschuss eine Lage hat und keiner verdächtig ist, sonst wäre es eine Teilsumme (SF-07) | Serie, Scheibe | B | SP-1.10, SP-1.12 |
-| E10 | Konstanz | SD und Spanne der Serien gleicher Länge, MAD der vᵢ | Scheibe, Zeitraum | A | SP-1.10 |
+| E10 | Konstanz | SD und Spanne der Serien gleicher Länge, Abweichung je Schuss = SD der vᵢ (n − 1), ab 2 Schuss mit Wert; bis Oktober 2026 der MAD, der in ganzen Ringen beim Luftgewehr fast immer 0 war (User, 9. Oktober 2026) | Scheibe, Zeitraum | A | SP-1.10 |
 | E11 | Anteil über Schwelle | Anteil vᵢ ≥ s mit Wilson-Intervall | Serie, Scheibe, Zeitraum | B | SP-1.10 |
 
 ### 2 Trefferbild und Präzision

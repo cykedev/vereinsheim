@@ -14,7 +14,7 @@ import {
   type ShotKind,
 } from "../metrics"
 import { teilerFromDistanceUm } from "../scoring"
-import { mad, wilson } from "../stats"
+import { wilson } from "../stats"
 import { MAX_DECIMAL_TENTHS } from "../targets"
 import { seriesCurve, type SeriesPoint } from "./course"
 import { valueNeed, valueRings, valueTenths } from "./values"
@@ -85,8 +85,12 @@ export interface SeriesConsistency {
   /** Standardabweichung und Spanne der verglichenen Serien in Ringen */
   sd: number | null
   range: number | null
-  /** MAD der einzelnen Schusswerte in Ringen */
-  mad: number | null
+  /**
+   * Abweichung je Schuss (E10): Standardabweichung der Schusswerte in der Wertung (n − 1), in Ringen,
+   * ab 2 Schuss mit Wert. Sagt, wie stark ein einzelner Schuss um den Schnitt schwankt; anders als der
+   * MAD in ganzen Ringen auch beim Luftgewehr nicht fast immer 0 (User, 9. Oktober 2026).
+   */
+  shotSd: number | null
 }
 
 /**
@@ -109,7 +113,7 @@ export function seriesConsistency(
     compared: totals.length,
     sd: totals.length >= 2 ? standardDeviation(totals) : null,
     range: totals.length >= 2 ? Math.max(...totals) - Math.min(...totals) : null,
-    mad: mad(valued.map((shot) => valueRings(shot, scoring))),
+    shotSd: standardDeviation(valued.map((shot) => valueRings(shot, scoring))),
   }
 }
 
