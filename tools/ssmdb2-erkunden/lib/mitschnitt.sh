@@ -21,6 +21,9 @@ MITSCHNITT_TAKT_MAX=8
 MITSCHNITT_LANGSAM_MS=300
 MITSCHNITT_BASIS_MS=0
 MITSCHNITT_NETZ_S=10        # Abstand des Netzes über Treffer.Zeitstempel; 60 bei Vollscan, 0 = aus
+# Fenster für den Abend im laufenden Betrieb (Phase abend): nur Scheiben lesen, die sich in den letzten
+# N Minuten geändert haben, und das Fenster jede Minute nachziehen. 0 = aus (Protokoll: alle seit Start).
+MITSCHNITT_FENSTER_MIN=0
 
 # Die Fehlerzeile einer Client-Ausgabe: Der MariaDB-Client schreibt zuerst die Anweisung, dann ERROR.
 _fehlerzeile() {
@@ -51,6 +54,39 @@ _ids_vereinigen() {
   printf '%s' "$liste" | tr -s ' ' | sed 's/^ //; s/ $//'
 }
 
+# Zieht den Beginn des Fensters nach: jüngster Eintrag oder Server-Uhr, was früher ist, minus
+# MITSCHNITT_FENSTER_MIN (wie mitschnitt_vorpruefen). Nie zurück; bei einem Fehler bleibt $1.
+_fenster_seit() {
+  local neu
+  neu=$(sql_text "SELECT LEAST(NOW(), COALESCE(MAX(Zeitstempel), NOW())) - INTERVAL $MITSCHNITT_FENSTER_MIN MINUTE
+    AS seit FROM Scheiben" 2>/dev/null | sed -n 2p || true)
+  if [ -n "$neu" ] && [[ "$neu" > "$1" ]]; then printf '%s\n' "$neu"; else printf '%s\n' "$1"; fi
+}
+
+# Behält von den IDs $1 die, deren Scheibe oder Treffer sich seit $2 geändert haben; liest über den
+# Primärschlüssel, kein Vollscan. Bei einem Fehler bleiben alle (lieber zu viel lesen als verlieren).
+_ids_aktiv() {
+  local liste antwort
+  [ -n "$1" ] || return 0
+  liste=$(printf '%s' "$1" | tr ' ' ',')
+  if antwort=$(sql_text "SELECT ScheibenID FROM Scheiben WHERE ScheibenID IN ($liste) AND Zeitstempel >= '$2'
+      UNION SELECT ScheibenID FROM Treffer WHERE ScheibenID IN ($liste)
+      GROUP BY ScheibenID HAVING MAX(Zeitstempel) >= '$2'" 2>/dev/null); then
+    printf '%s\n' "$antwort" | sed 1d | _ids_vereinigen ""
+  else
+    printf '%s' "$1"
+  fi
+}
+
+# IDs aus $1, die in $2 fehlen (Leerzeichen-Listen).
+_ids_ohne() {
+  local id weg=""
+  for id in $1; do
+    case " $2 " in *" $id "*) ;; *) weg="$weg $id" ;; esac
+  done
+  printf '%s' "${weg# }"
+}
+
 # Übernimmt neue Zeilen der Marker-Datei; $1 = schon übernommene Zeilen, Ausgabe = neue Anzahl.
 _marker_uebernehmen() {
   local erledigt=$1 gesamt
@@ -74,13 +110,26 @@ _stand_sql() {
 }
 
 _mitschnitt_schleife() {
-  local seit=$1 takt=1 schnell=0 ids="" vorher="" marker=0 letztes_netz=0
-  local stand t0 dauer anlage koerper neu
+  local seit=$1 takt=1 schnell=0 ids="" vorher="" marker=0 letztes_netz=0 letztes_fenster
+  local stand t0 dauer anlage koerper neu aktiv
+  letztes_fenster=$(jetzt_ms)
   while [ ! -f "$MITSCHNITT_STOP" ]; do
     marker=$(_marker_uebernehmen "$marker")
+    # Abend: Fenster jede Minute nachziehen und Scheiben ohne Änderung darin nicht mehr lesen. Das
+    # Ereignis nennt sie, damit eine ausgeschiedene Scheibe nicht als gelöscht gelesen wird.
+    if [ "$MITSCHNITT_FENSTER_MIN" -gt 0 ] && [ $(($(jetzt_ms) - letztes_fenster)) -ge 60000 ]; then
+      letztes_fenster=$(jetzt_ms)
+      seit=$(_fenster_seit "$seit")
+      aktiv=$(_ids_aktiv "$ids" "$seit")
+      if [ "$aktiv" != "$ids" ]; then
+        mitschnitt_ereignis "fenster seit=$seit ausgeschieden=$(_ids_ohne "$ids" "$aktiv" | tr ' ' ',')"
+        ids=$aktiv
+      fi
+      letztes_netz=0
+    fi
     if ! neu=$(sql_text "SELECT ScheibenID FROM Scheiben WHERE Zeitstempel >= '$seit'" 2>&1); then
       mitschnitt_ereignis "fehler $(_fehlerzeile "$neu")"
-      sleep "$takt"
+      _nach_fehler "$takt"
       continue
     fi
     ids=$(printf '%s\n' "$neu" | sed 1d | _ids_vereinigen "$ids")
@@ -123,11 +172,23 @@ _mitschnitt_schleife() {
         fi
       else
         mitschnitt_ereignis "fehler $(_fehlerzeile "$stand")"
+        _nach_fehler 0
       fi
     fi
     sleep "$takt"
   done
   _marker_uebernehmen "$marker" >/dev/null
+}
+
+# Nach einem Fehler: Am Abend den Docker-Client wiederbeleben, falls er weg ist, und nicht im
+# Sekundentakt gegen eine fehlende Verbindung laufen. $1 = Pause (0 = keine).
+_nach_fehler() {
+  if [ "$MITSCHNITT_FENSTER_MIN" -gt 0 ]; then
+    if client_wiederbeleben; then mitschnitt_ereignis "client neu gestartet"; fi
+    sleep 5
+  elif [ "$1" -gt 0 ]; then
+    sleep "$1"
+  fi
 }
 
 # Grundlast einer Abfrage: das Schnellste von drei SELECT 1.
@@ -184,7 +245,7 @@ mitschnitt_starten() {
   rm -f "$MITSCHNITT_STOP"
   : >"$MITSCHNITT_MARKER"
   MITSCHNITT_BASIS_MS=$(_grundlast_messen)
-  mitschnitt_ereignis "start seit=$MITSCHNITT_SEIT basis_ms=$MITSCHNITT_BASIS_MS netz_s=$MITSCHNITT_NETZ_S"
+  mitschnitt_ereignis "start seit=$MITSCHNITT_SEIT basis_ms=$MITSCHNITT_BASIS_MS netz_s=$MITSCHNITT_NETZ_S fenster_min=$MITSCHNITT_FENSTER_MIN"
   # Ohne stdin: Der Mitschnitt darf nie Eingaben des Users lesen.
   _mitschnitt_schleife "$MITSCHNITT_SEIT" </dev/null &
   MITSCHNITT_PID=$!
@@ -195,7 +256,8 @@ mitschnitt_status() {
   local staende fehler lauf="läuft"
   # Nur ab dem letzten Start zählen: Ein fortgesetzter Lauf schreibt in dieselbe Datei.
   staende=$(awk '/^# start / { n = 0 } /^# stand / { n++ } END { print n + 0 }' "$MITSCHNITT_DATEI" 2>/dev/null || echo 0)
-  fehler=$(awk '/^# start / { f = "" } /^# fehler / { f = substr($0, 3, 118) } END { print f }' "$MITSCHNITT_DATEI" 2>/dev/null || true)
+  # Ein Fehler zählt nur, bis wieder ein Stand kommt; sonst stünde er nach einem Aussetzer den ganzen Abend da.
+  fehler=$(awk '/^# (start|stand) / { f = "" } /^# fehler / { f = substr($0, 3, 118) } END { print f }' "$MITSCHNITT_DATEI" 2>/dev/null || true)
   if [ -n "$MITSCHNITT_PID" ] && ! kill -0 "$MITSCHNITT_PID" 2>/dev/null; then lauf="STEHT"; fi
   info "Mitschnitt: ${staende:-0} Stände, $lauf${fehler:+, zuletzt: $fehler}"
   [ "${staende:-0}" -gt 0 ]

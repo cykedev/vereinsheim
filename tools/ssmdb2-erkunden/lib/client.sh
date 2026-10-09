@@ -95,6 +95,15 @@ client_starten() {
     --entrypoint sleep "$DOCKER_IMAGE" infinity >/dev/null
 }
 
+# Startet den Client-Container neu, wenn er nicht mehr läuft (etwa nach einem Neustart von Docker
+# Desktop). Rückgabe 0 nur, wenn er neu gestartet wurde.
+client_wiederbeleben() {
+  [ "$CLIENT_MODUS" = docker ] || return 1
+  if [ "$(docker inspect -f '{{.State.Running}}' "$DOCKER_CLIENT" 2>/dev/null)" = true ]; then return 1; fi
+  docker rm -f "$DOCKER_CLIENT" >/dev/null 2>&1 || true
+  client_starten 2>/dev/null
+}
+
 client_aufraeumen() {
   if [ "$CLIENT_MODUS" = docker ]; then
     docker rm -f "$DOCKER_CLIENT" >/dev/null 2>&1 || true

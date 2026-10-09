@@ -4,6 +4,7 @@
 #   erkunden.sh [Optionen] [Phase …]
 #
 # Phasen: selbsttest verbinden checkliste dump protokoll abschluss (ohne Angabe: alle, mit Rückfragen)
+#         abend: Mitschnitt im laufenden Betrieb ohne Eingaben, bis Ctrl-C (nur auf Zuruf, nicht in "alle")
 # Optionen:
 #   --host HOST       Meyton-Server (Vorgabe 192.168.10.200)
 #   --port PORT       (Vorgabe 3306)
@@ -74,7 +75,7 @@ while [ $# -gt 0 ]; do
     --docker) DOCKER_ERZWINGEN=1; shift ;;
     --docker-netz) DOCKER_NETZ=$2; shift 2 ;;
     --auto) AUTO=1; shift ;;
-    -h | --help) sed -n '2,17p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,16p' "$0"; exit 0 ;;
     -*) fehler "unbekannte Option: $1" ;;
     *) break ;;
   esac
@@ -368,6 +369,53 @@ phase_protokoll() {
   info "Protokoll geschrieben: $AUSGABE/bericht/schritte.md, $AUSGABE/bericht/protokoll.tsv"
 }
 
+# ---------------------------------------------------------------- Phase abend
+
+# Mitschnitt über einen ganzen Abend im laufenden Betrieb: einmal bestätigen, dann ohne Eingaben, bis
+# Ctrl-C. Rücksicht auf die Anlage, die live wertet: nur Scheiben mit Änderung in den letzten
+# 90 Minuten, und kein Netz über Treffer, wenn es die ganze Tabelle lesen müsste.
+ABEND_ENDE=0
+phase_abend() {
+  local runde=0
+  verbindung_sicherstellen
+  info "Abend-Mitschnitt: liest im laufenden Betrieb mit, bis du Ctrl-C drückst."
+  info "Terminal offen lassen, Mac am Netzteil und aufgeklappt."
+  frage_ja "Mitschnitt für den ganzen Abend jetzt starten?" || {
+    warnung "Abend-Mitschnitt übersprungen"
+    return 0
+  }
+  MITSCHNITT_DATEI="$AUSGABE/privat/protokoll-roh.tsv"
+  MITSCHNITT_FENSTER_MIN="${ERKUNDEN_FENSTER_MIN:-90}"
+  mitschnitt_vorpruefen || fehler "Der Mitschnitt kann nicht lesen (siehe oben)"
+  if [ "$MITSCHNITT_NETZ_S" -ge 60 ]; then
+    MITSCHNITT_NETZ_S=0
+    warnung "Netz über Treffer aus: Es müsste die ganze Tabelle lesen, im Betrieb zu riskant."
+  fi
+  mitschnitt_starten
+  ABEND_ENDE=0
+  trap 'ABEND_ENDE=1' INT TERM
+  info "Läuft seit $(date +%H:%M). Alle 5 Minuten eine Statuszeile. Beenden: Ctrl-C."
+  while [ "$ABEND_ENDE" = 0 ]; do
+    sleep 5 || true
+    if ! kill -0 "$MITSCHNITT_PID" 2>/dev/null; then
+      warnung "Der Mitschnitt ist stehen geblieben."
+      break
+    fi
+    runde=$((runde + 1))
+    if [ $((runde % 60)) = 0 ]; then
+      printf '%s ' "$(date +%H:%M)" >&2
+      mitschnitt_status || true
+    fi
+  done
+  trap - INT TERM
+  info "Mitschnitt beenden …"
+  mitschnitt_stoppen
+  protokoll_anonymisieren
+  mitschnitt_status || true
+  info "Abend-Mitschnitt geschrieben: $AUSGABE/bericht/protokoll.tsv"
+  info "Wenn niemand mehr schießt: $0 --ausgabe $AUSGABE checkliste dump abschluss"
+}
+
 # ---------------------------------------------------------------- Phase abschluss
 
 # Sucht Namen und Sportpassnummern aus der Ablage als ganze Wörter in bericht/. Meldet nur Anzahlen
@@ -410,6 +458,8 @@ liesmich_zeile() {
 phase_abschluss() {
   verbindung_sicherstellen
   local liesmich="$AUSGABE/bericht/LIESMICH.md" pruefung
+  # Falls ein Mitschnitt hart beendet wurde (Terminal zu, Mac aus): Pseudonyme aus dem Rohprotokoll.
+  protokoll_anonymisieren
   if frage_ja "Schießt niemand mehr? Checkliste ein zweites Mal ausführen (mit den Scheiben von heute)?"; then
     checkliste_schreiben "$AUSGABE/bericht/antworten-danach.md"
   fi
@@ -459,7 +509,8 @@ for phase in $PHASEN; do
     dump) phase_dump ;;
     protokoll) phase_protokoll ;;
     abschluss) phase_abschluss ;;
-    *) fehler "unbekannte Phase: $phase (bekannt: $ALLE_PHASEN)" ;;
+    abend) phase_abend ;;
+    *) fehler "unbekannte Phase: $phase (bekannt: $ALLE_PHASEN abend)" ;;
   esac
 done
 if [ -n "$AUSGABE" ]; then info "Ausgabe: $AUSGABE"; fi
