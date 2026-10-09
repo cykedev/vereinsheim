@@ -1698,8 +1698,9 @@ addEventListener("load", async () => {
     check(
       "„Alle Beobachtungen“ öffnet den Überblick, die Karte „Beobachtungen“ steht unter den Leisten, Fokus am Reiter",
       moreTab === "Überblick" &&
-        moreTop >= 109 &&
-        moreTop <= 900 - 120 &&
+        // unter den Leisten oder, wenn die Seite darunter endet, so weit es geht (ganz unten gescrollt)
+        (near(moreTop, 112, 3) ||
+          (moreTop > 112 && dw.scrollY + dw.innerHeight >= dd.documentElement.scrollHeight - 2)) &&
         dd.activeElement?.getAttribute("aria-checked") === "true" &&
         txt(dd.activeElement) === "Überblick",
       `${moreTab} · ${moreTop.toFixed(0)} · ${dd.activeElement?.tagName} ${txt(dd.activeElement ?? dd.body).slice(0, 12)}`
@@ -2089,7 +2090,11 @@ addEventListener("load", async () => {
         ?.getBoundingClientRect().top
       check(
         "Handy 390 px: „Alle Beobachtungen“ bringt die Karte „Beobachtungen“ sichtbar unter die Reiterleiste",
-        phoneMore !== undefined && phoneMore >= 53 && phoneMore <= 900 - 72 - 120,
+        phoneMore !== undefined &&
+          (near(phoneMore, 56, 3) ||
+            (phoneMore > 56 &&
+              frame.contentWindow.scrollY + frame.contentWindow.innerHeight >=
+                doc.documentElement.scrollHeight - 2)),
         String(Math.round(phoneMore ?? -1))
       )
     }
