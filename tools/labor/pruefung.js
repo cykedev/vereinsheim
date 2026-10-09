@@ -2913,6 +2913,98 @@ addEventListener("load", async () => {
         `${areasOf(rail).join()} · Seite ab ${Math.round(railLeft)} · unten ${railPad} · ${rd2.documentElement.scrollWidth}`
       )
       railFrame.remove()
+
+      // ---------- Start (Plan N5)
+      await click(area("Start"), 500)
+      const St = () => L().start
+      const startBlock = St()?.model.blocks[0]
+      const blockEl = startBlock ? $(`[data-evening-block="${startBlock.family}"]`) : null
+      // die große Zahl selbst nachgerechnet: Ø je Schuss über alle Wertungsschüsse des Abends dieser Familie
+      const eveningIds = new Set(startBlock?.rows.map((r) => r.id) ?? [])
+      const eveningShots = (St()?.cards ?? [])
+        .filter((c) => eveningIds.has(c.id))
+        .flatMap((c) => c.shots.filter((x) => x.kind === "match"))
+      const eveningMean = tools.computeMetric(
+        tools.inScoring(tools.metricByKey("result.decimalMean"), "decimal"),
+        eveningShots
+      )
+      const lead = {
+        within: "Ein Abend in deiner Form",
+        above: "Ein starker Abend",
+        below: "Ein schwächerer Abend",
+      }
+      const sentenceText = txt($("h2", blockEl)).trim()
+      check(
+        "Start: der letzte Abend mit seiner Zahl, nachgerechnet, und dem Satz, der zum Urteil passt",
+        !!$("[data-start-page]") &&
+          !!blockEl &&
+          eveningMean !== null &&
+          txt($("[data-evening-mean]", blockEl)) === tools.formatValue(eveningMean, 2) &&
+          (startBlock.verdict
+            ? sentenceText.startsWith(lead[startBlock.verdict])
+            : !Object.values(lead).some((l) => sentenceText.startsWith(l))),
+        `${startBlock?.day} ${startBlock?.family} · ${txt($("[data-evening-mean]", blockEl))} · ${sentenceText}`
+      )
+      check(
+        "Start: der Streifen zeigt die letzten Scheiben, die des Abends hervorgehoben",
+        $$("[data-strip-dot]", blockEl).length === startBlock.strip.length &&
+          $$('[data-strip-dot][data-tonight="true"]', blockEl).length ===
+            startBlock.strip.filter((x) => x.tonight).length &&
+          startBlock.strip.filter((x) => x.tonight).length === startBlock.rows.length,
+        `${startBlock.strip.length} Punkte`
+      )
+      const startLinks = $$("[data-start-page] a[href]").map((a) => a.getAttribute("href"))
+      check(
+        "Start: Offen mit zwei Einträgen und dem Zähler am Rahmen; jede Adresse übersteht Lesen und Schreiben",
+        $$("[data-open-item]").length === 2 &&
+          txt($("[data-app-sidebar] [data-badge]")) === "2" &&
+          startLinks.length > 0 &&
+          startLinks.every(roundTrips),
+        `${startLinks.length} Links`
+      )
+      // Telefon 390 px: kein seitliches Scrollen, die Kacheln mindestens 56 px hoch
+      const startPhone = await openFrame(390, 844)
+      const sp = startPhone.contentDocument
+      const tile = sp.querySelector("[data-start-card]")
+      check(
+        "Start, Telefon 390 px: kein seitliches Scrollen, die Kachel mit kleiner Scheibe von 56 px",
+        !!sp.querySelector("[data-start-page]") &&
+          sp.documentElement.scrollWidth <= 390 &&
+          (tile?.getBoundingClientRect().height ?? 0) >= 56,
+        `${sp.documentElement.scrollWidth} · Kachel ${Math.round(tile?.getBoundingClientRect().height ?? 0)}`
+      )
+      startPhone.remove()
+      // eine Kachel öffnet die Scheibe mit Start als Herkunft; Blättern im Abend, zurück nach Start
+      const startOrder = St()
+        .model.blocks.flatMap((b) => b.rows)
+        .sort((a, b) => a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : 1))
+        .map((r) => r.id)
+      const firstTile = startBlock.rows[0].id
+      await click($(`[data-start-card="${firstTile}"]`), 500)
+      const fromStart = addr()
+      const at0 = startOrder.indexOf(firstTile)
+      const pageId = (el) => (el ? routeOf(el.getAttribute("href")).id : null)
+      check(
+        "Start: eine Kachel öffnet die Scheibe mit Start als Herkunft; Blättern durch den Abend; zurück heißt „Start“",
+        fromStart.startsWith(`/cards/${firstTile}?from=start`) &&
+          pageId(link("Vorige Scheibe")) === (startOrder[at0 - 1] ?? null) &&
+          pageId(link("Nächste Scheibe")) === (startOrder[at0 + 1] ?? null) &&
+          !!link("Zurück zu „Start“"),
+        `${fromStart} · ${startOrder.join(" ")}`
+      )
+      await click(link("Zurück zu „Start“"), 500)
+      const formHref = $("[data-form-line]")?.getAttribute("href") ?? ""
+      const formRoute = formHref ? routeOf(formHref) : null
+      await click($("[data-form-line]"), 500)
+      check(
+        "Start: zurück nach Start; die Form-Zeile führt in den Fortschritt mit Familie und Vergleich mit davor",
+        formRoute?.page === "progress" &&
+          formRoute.query.compare.type === "previous" &&
+          P()?.state.compare.type === "previous" &&
+          P()?.state.family === formRoute.query.family,
+        `${formHref} · ${P()?.state.family}`
+      )
+      await click(area("Scheiben"), 400)
       // Telefon 375 px mit einem Abend als Anker: kein seitliches Scrollen, ohne Uhrzeit, Abstand und Schuss
       const phoneDay = Li().model.evenings[2].day
       const phone = await openFrame(375, 812, `#${phoneDay}`)
