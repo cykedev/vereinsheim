@@ -1,7 +1,6 @@
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
-import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import { HelpButton } from "@vereinsheim/shot-ui/help/HelpButton"
 import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
@@ -36,7 +35,6 @@ import {
   SEASON_TIME_ZONE,
   targetOfFamily,
 } from "./season"
-import { store } from "./store"
 import { exposePeriodForTest } from "./testHook"
 
 const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
@@ -114,17 +112,8 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
     [dispatch, jumpTo, state.chosen]
   )
 
-  const scoring = (
-    <ScoringSwitch
-      scoring={state.scoring}
-      onChange={(next) => {
-        // die Wertung des Geräts wie auf der Seite einer Scheibe: Liste und „Verlauf dieser Filter“ nehmen sie mit
-        store.set("scoring", next)
-        dispatch({ type: "setScoring", scoring: next })
-      }}
-    />
-  )
-  const result = <PeriodResult model={model} timeZone={TZ} scoring={scoring} onHelp={onHelp} />
+  // kein Schalter der Wertung (U2, D4): der Fortschritt zeigt die Wertung des Geräts, sie steht in Profil
+  const result = <PeriodResult model={model} timeZone={TZ} onHelp={onHelp} />
   const familyLabel = FAMILIES.find((f) => f.value === state.family)?.label ?? ""
   // Training nur aus Probe zählt nur mit dem Schalter (L2, D8): sonst steht es in der Liste, aber nicht im Ergebnis
   const excluded = model.excludedProbeOnly
@@ -251,6 +240,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
                 timeZone={TZ}
                 chosen={reading.chosen}
                 cardRoute={cardRoute}
+                onHelp={onHelp}
               />
             </div>
           )

@@ -252,6 +252,11 @@ export function App({ commit }: { commit: string }) {
     store.set("theme", next)
     setTheme(next)
   }
+  // die Wertung des Geräts (U2, D4): eine Einstellung in Profil; der Fortschritt folgt ihr, Liste und Start lesen sie
+  const changeScoring = (next: Scoring) => {
+    store.set("scoring", next)
+    changePeriod({ type: "setScoring", scoring: next })
+  }
   const onExplain = useCallback((next: boolean) => {
     store.set("help", next ? "1" : "0")
     setExplain(next)
@@ -289,7 +294,14 @@ export function App({ commit }: { commit: string }) {
         ) : mode === "start" ? (
           <StartView header={header} scoring={devicesScoring()} family={period.family} />
         ) : (
-          <PlaceholderView header={header} page={mode} theme={theme} onTheme={changeTheme} />
+          <PlaceholderView
+            header={header}
+            page={mode}
+            theme={theme}
+            onTheme={changeTheme}
+            scoring={devicesScoring()}
+            onScoring={changeScoring}
+          />
         )}
       </AppFrame>
       <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />

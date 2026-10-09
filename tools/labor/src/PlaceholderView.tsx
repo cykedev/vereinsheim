@@ -1,4 +1,6 @@
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
+import { Segmented } from "@vereinsheim/ui/design2/segmented"
 
 import { LaborPanel, type LaborPanelProps, type Theme } from "./LaborPanel"
 import { ThemeSwitch } from "./ThemeSwitch"
@@ -32,12 +34,17 @@ export function PlaceholderView({
   page,
   theme,
   onTheme,
+  scoring,
+  onScoring,
 }: {
   header: Omit<LaborPanelProps, "children" | "hint" | "address">
   page: PlaceholderPage
   /** Darstellung: in Profil, wo die Einstellung in der App lebt (Labor näher an der App, D2) */
   theme: Theme
   onTheme: (theme: Theme) => void
+  /** Wertung des Geräts (U2, D4): Zehntel oder ganze Ringe für Liste, Start und Fortschritt */
+  scoring: Scoring
+  onScoring: (scoring: Scoring) => void
 }) {
   const { title, sentence } = TEXT[page]
   return (
@@ -49,6 +56,20 @@ export function PlaceholderView({
         <p className="text-foreground-2">{sentence}</p>
         {page === "profile" && (
           <ThemeSwitch theme={theme} onTheme={onTheme} className="justify-self-start" />
+        )}
+        {page === "profile" && (
+          <div data-scoring-setting className="grid justify-self-start gap-1.5">
+            <span className="text-xs font-semibold text-muted-foreground">Wertung</span>
+            <Segmented
+              label="Wertung"
+              value={scoring}
+              options={[
+                { value: "decimal", label: "Zehntel" },
+                { value: "rings", label: "Ganze Ringe" },
+              ]}
+              onChange={onScoring}
+            />
+          </div>
         )}
         {page === "profile" && (
           <RouteLink
