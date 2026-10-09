@@ -47,10 +47,13 @@ const FAMILY_OF: Readonly<Record<TargetId, FamilyId>> = {
 export const targetOfFamily = (family: string): TargetId =>
   family.startsWith("lp-") ? "lp-10m" : "lg-10m"
 
-/** eine Id wie aus der Datenbank: fest aus Scheibe und Tag (FNV-1a), aber ohne beides lesbar zu zeigen */
-function cardId(target: TargetId, day: string): string {
+/**
+ * eine Id wie aus der Datenbank: fest aus Scheibe, Tag und Platz am Abend (FNV-1a), aber ohne das lesbar zu zeigen;
+ * Platz 0 ergibt die Id von vor N2
+ */
+function cardId(target: TargetId, day: string, slot = 0): string {
   let hash = 0x811c9dc5
-  for (const char of `${target}/${day}`) {
+  for (const char of slot ? `${target}/${day}/${slot}` : `${target}/${day}`) {
     hash ^= char.charCodeAt(0)
     hash = Math.imul(hash, 0x01000193) >>> 0
   }
@@ -106,14 +109,18 @@ function makeCard(
   day: string,
   kind: PeriodCard["kind"],
   count: number,
-  probeOnly: boolean
+  probeOnly: boolean,
+  /** weitere Scheibe am Abend: Platz und Beginn in Ortszeit (Plan N2, D9) */
+  extra: { slot: number; hour: number; minute: number } | null = null
 ): SeasonCard {
   const sigma = sigmaUm(target, day)
   // ein kleiner Versatz je Abend, wie am Stand
   const [mx, my] = [0.3 * sigma * gauss(rand), 0.3 * sigma * gauss(rand)]
   const pace = (target === "lg-10m" ? 45 : 55) * 1000
   const [y, m, d] = day.split("-").map(Number)
-  const startedAtMs = Date.UTC(y, m - 1, d, (kind === "competition" ? 10 : 18) - OFFSET_H, 30)
+  const startedAtMs = extra
+    ? Date.UTC(y, m - 1, d, extra.hour - OFFSET_H, extra.minute)
+    : Date.UTC(y, m - 1, d, (kind === "competition" ? 10 : 18) - OFFSET_H, 30)
   const at = (k: number) => Math.round((k + sigma * gauss(rand)) / 10) * 10
   const raw: RawShot[] = []
   let t = startedAtMs
@@ -129,7 +136,7 @@ function makeCard(
     t += 60_000
     shoot("match", count)
   }
-  const id = cardId(target, day)
+  const id = cardId(target, day, extra?.slot ?? 0)
   return {
     id,
     family: FAMILY_OF[target],
@@ -172,6 +179,29 @@ export function season(): readonly SeasonCard[] {
       cards.push(makeCard(rand, target, day, "training", count, trainings % 8 === 0))
     }
   }
+  // Abende mit mehreren Scheiben (Plan N2, D9), mit eigenem Zufall, damit alles davor gleich bleibt: eine zweite
+  // Luftpistole an ihren letzten zwei Trainingstagen, und Mischabende an den letzten drei Samstagen mit Luftgewehr
+  const extra = mulberry32(20261010)
+  const dayOf = (c: SeasonCard) => iso(c.card.startedAtMs)
+  const trainingDays = (target: TargetId) => [
+    ...new Set(cards.filter((c) => c.target === target && c.card.kind === "training").map(dayOf)),
+  ]
+  const pistolDays = trainingDays("lp-10m")
+  for (const day of pistolDays.slice(-2)) {
+    cards.push(
+      makeCard(extra, "lp-10m", day, "training", 20, false, { slot: 1, hour: 19, minute: 30 })
+    )
+  }
+  const pistolOn = new Set(cards.filter((c) => c.target === "lp-10m").map(dayOf))
+  const saturdays = trainingDays("lg-10m").filter(
+    (day) => new Date(`${day}T12:00:00Z`).getUTCDay() === 6 && !pistolOn.has(day)
+  )
+  for (const day of saturdays.slice(-3)) {
+    cards.push(
+      makeCard(extra, "lp-10m", day, "training", 30, false, { slot: 0, hour: 20, minute: 0 })
+    )
+  }
+
   // bei gleicher Zeit Luftgewehr vor Luftpistole, wie vor den erzeugten Ids
   cached = cards.sort(
     (a, b) => a.card.startedAtMs - b.card.startedAtMs || (a.target < b.target ? -1 : 1)

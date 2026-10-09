@@ -88,4 +88,33 @@ describe("Saison im Labor (Plan L3, D17)", () => {
         .map((c) => c.id)
     ).toEqual([PRINTOUT_ONLY_ID])
   })
+
+  it("Abende mit zwei Scheiben und Mischabende; das Luftgewehr bleibt gleich (Plan N2, D9)", () => {
+    // Fingerabdruck des Luftgewehrs vor N2: 81 Scheiben, Ids, Beginn, Schusszahl, erste Lage
+    const key = lg
+      .map((c) => `${c.id}:${c.card.startedAtMs}:${c.card.shots.length}:${c.card.shots[0]?.xUm}`)
+      .join("|")
+    let hash = 0x811c9dc5
+    for (const char of key) {
+      hash ^= char.charCodeAt(0)
+      hash = Math.imul(hash, 0x01000193) >>> 0
+    }
+    expect(lg).toHaveLength(81)
+    expect(hash.toString(16)).toBe("7552ea3c")
+    expect(lp).toHaveLength(44)
+    // Abende in MESZ (die Saison liegt ganz in der Sommerzeit)
+    const day = (c: (typeof lg)[number]) =>
+      new Date(c.card.startedAtMs + 2 * 3_600_000).toISOString().slice(0, 10)
+    const count = (cards: typeof lg) =>
+      cards.reduce((m, c) => m.set(day(c), (m.get(day(c)) ?? 0) + 1), new Map<string, number>())
+    const lpDays = count(lp)
+    expect([...lpDays.values()].filter((n) => n === 2)).toHaveLength(2)
+    // Mischabende: dazu schon die gemeinsamen Wettkampftage; neu sind drei Trainings der Luftpistole an Samstagen
+    // mit Luftgewehr
+    const lgDays = count(lg)
+    const mixedTraining = lp.filter((c) => c.card.kind === "training" && lgDays.has(day(c)))
+    expect(mixedTraining).toHaveLength(3)
+    for (const c of mixedTraining)
+      expect(new Date(`${day(c)}T12:00:00Z`).getUTCDay(), day(c)).toBe(6)
+  })
 })
