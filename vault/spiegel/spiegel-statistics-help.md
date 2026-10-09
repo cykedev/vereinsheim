@@ -326,6 +326,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Das Tempo ist der Median der Abstände zwischen zwei Schüssen; Pausen über drei Minuten
   zählen nicht. Die Tempo-Streuung sagt, wie gleichmäßig das ist: Die mittlere Hälfte deiner
   Abstände liegt in einem Fenster dieser Breite. Dazu die Dauer vom ersten bis zum letzten Schuss.
+  Schießt du zwischendurch Probe, zählt der Abstand von Wertungsschuss zu Wertungsschuss.
 - *Vorsicht:* Gleichmäßiger ist nicht automatisch besser. Die Streuung ist ein Merkmal, das du mit
   deinem Ergebnis vergleichen kannst.
 - *Mindestzahl:* Tempo ab 3 Schuss mit Zeit, die Tempo-Streuung ab 4, die Dauer ab 2.
@@ -334,7 +335,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Pausen und Wiedereinstieg (Z4)**
 - *Was:* Jede Pause über drei Minuten und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr
-  oder weniger Ringe brachten als deine übrigen Schüsse.
+  oder weniger Ringe brachten als deine übrigen Schüsse. Probeschüsse in der Pause gehören zur
+  Pause.
 - *Vorsicht:* Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis
   zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je
   Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.

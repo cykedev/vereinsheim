@@ -253,7 +253,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["Z1", "Z2", "Z3"],
     metrics: ["time.intervalMedian", "time.tempoSpread", "time.duration"],
     short: "Dein typischer Abstand zwischen zwei Schüssen und wie lange die Scheibe dauerte.",
-    what: "Das Tempo ist der Median der Abstände zwischen zwei Schüssen; Pausen über drei Minuten zählen nicht. Die Tempo-Streuung sagt, wie gleichmäßig das ist: Die mittlere Hälfte deiner Abstände liegt in einem Fenster dieser Breite. Dazu die Dauer vom ersten bis zum letzten Schuss.",
+    what: "Das Tempo ist der Median der Abstände zwischen zwei Schüssen; Pausen über drei Minuten zählen nicht. Die Tempo-Streuung sagt, wie gleichmäßig das ist: Die mittlere Hälfte deiner Abstände liegt in einem Fenster dieser Breite. Dazu die Dauer vom ersten bis zum letzten Schuss. Schießt du zwischendurch Probe, zählt der Abstand von Wertungsschuss zu Wertungsschuss.",
     caution:
       "Gleichmäßiger ist nicht automatisch besser. Die Streuung ist ein Merkmal, das du mit deinem Ergebnis vergleichen kannst.",
     minimum: "Tempo ab 3 Schuss mit Zeit, die Tempo-Streuung ab 4, die Dauer ab 2.",
@@ -267,7 +267,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["Z4"],
     metrics: [],
     short: "Deine Pausen und ob die Schüsse danach besser oder schwächer waren als deine übrigen.",
-    what: "Jede Pause über drei Minuten und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr oder weniger Ringe brachten als deine übrigen Schüsse.",
+    what: "Jede Pause über drei Minuten und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr oder weniger Ringe brachten als deine übrigen Schüsse. Probeschüsse in der Pause gehören zur Pause.",
     caution:
       "Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.",
     minimum: "Pausen ab 2 Wertungsschüssen mit Zeit; was danach kam, nur über Schüsse mit Wert.",

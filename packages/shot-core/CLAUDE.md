@@ -18,7 +18,7 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 | `@vereinsheim/shot-core/verify`     | `src/verify.ts`     | `checkShot`, `verifyCard`, `suggestTargets`, `rescore` (Neu-Wertung)                                                                                                                                                                                                                   |
 | `@vereinsheim/shot-core/geometry`   | `src/geometry.ts`   | Schwerpunkt, Streukreis, `extremeSpread`, Radien, Streuung, Ellipse                                                                                                                                                                                                                    |
 | `@vereinsheim/shot-core/time`       | `src/time.ts`       | `tempo` in Abgabefolge: Intervalle, Pausen über 180 s, Lücken, Uhrsprünge                                                                                                                                                                                                              |
-| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `METRICS`, `metricByKey`, `computeMetric`, `eligibleShots`, `selectShots`, `inScoring`, `inShotOrder`, `shotNumbers`, `probeOnlyAsMatch`, `shotSteps`, `stepsInOrder`, `timesWithGaps`, `timesInOrder`, `shotDistanceUm`, `FLAG_*`                                     |
+| `@vereinsheim/shot-core/metrics`    | `src/metrics.ts`    | `defineMetric`, `METRICS`, `metricByKey`, `computeMetric`, `eligibleShots`, `selectShots`, `inScoring`, `inShotOrder`, `shotNumbers`, `probeOnlyAsMatch`, `shotSteps`, `stepsInOrder`, `contextOf`, `ShotContext`, `timesWithGaps`, `timesInOrder`, `shotDistanceUm`, `FLAG_*`         |
 | `@vereinsheim/shot-core/stats`      | `src/stats.ts`      | Quantil, Median, MAD, IQR, Wilson, lnΓ, c4, χ²- und F-Quantile, Theil-Sen, Mann-Kendall, Ausgleichsgerade, Mann-Whitney, zweiseitiges p der Normalverteilung                                                                                                                           |
 | `@vereinsheim/shot-core/analysis`   | `src/analysis/*.ts` | Analyse einer Scheibe: Ergebnis, Präzision, Lage, Zeit, Verlauf, Probe, Datenlage; über viele Scheiben (`period.ts`: Werte je Scheibe, Verlauf, Formband, Boden und Decke, Umfang, Vergleich, eigener Schnitt) und Rekorde (`records.ts`); `ANALYSIS_CATALOG` (Funktion → Katalog-IDs) |
 
@@ -50,7 +50,10 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   (SF-60), das n liefert `eligibleShots`. `compute` nie direkt aufrufen.
 - **Reihenfolge ist die Abgabefolge** (`seq`, SF-30): `inShotOrder`; `tempo` erwartet die Zeiten in
   Abgabefolge und zählt einen Rücksprung der Uhr weder als Intervall noch als Pause; fehlt ein Schuss
-  mitten in der Folge (Sprung in `seq`), zählt der Abstand daneben nicht.
+  mitten in der Folge (Sprung in `seq`), zählt der Abstand daneben nicht. Füllen den Sprung auf der Karte
+  nur Schüsse der anderen Art (Probe zwischen Wertung, SF-04), ist er keine Lücke; dafür braucht die
+  Rechnung die ganze Karte: `card` an `computeMetric`, `pauseRecovery`, `rhythmProfile`, `tempoSpread`,
+  `drift`, sonst `contextOf`.
 - **`toBeCloseTo` nimmt null als 0.** Wo eine Kennzahl 0 ergeben soll, erst `not.toBeNull()` prüfen
   (Helfer `expectNear` in `metrics.test.ts`).
 - **Ganze Ringe und Zehntel sind immer umschaltbar.** Jede wertbasierte Kennzahl gibt es in beiden
