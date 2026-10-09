@@ -1,6 +1,29 @@
+"use client"
+
 import { cn } from "@vereinsheim/lib/utils"
+import type { MouseEvent } from "react"
 
 import { PAGE_SECTIONS } from "./sections"
+
+/**
+ * Sprung zum Abschnitt ohne den Sprung des Browsers: In einer `data:`-Seite (Vorschau) oder einem Rahmen mit
+ * Sandbox blockt der Browser die Navigation zum Anker, dann sprang die Leiste nirgends hin (User, 9. Oktober
+ * 2026). Die Leiste scrollt selbst, sofort wie zuvor, und schreibt den Anker, wo der Browser es erlaubt. Ein
+ * Klick mit Taste (neuer Tab) bleibt dem Browser.
+ */
+export function jumpToSection(event: MouseEvent<HTMLAnchorElement>, id: string) {
+  if (event.defaultPrevented || event.button !== 0) return
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  const target = document.getElementById(id)
+  if (!target) return
+  event.preventDefault()
+  target.scrollIntoView({ block: "start" })
+  try {
+    history.pushState(null, "", `#${id}`)
+  } catch {
+    // ohne Verlauf (data:-Seite, Sandbox) gilt der Sprung ohne Anker in der Adresse
+  }
+}
 
 /**
  * Sprungleiste (Plan Schritt 4, D1): klebt unter dem Kopf am oberen Rand, vier Anker zu den Abschnitten,
@@ -31,6 +54,7 @@ export function SectionNav({
           <a
             key={section.id}
             href={`#${section.id}`}
+            onClick={(event) => jumpToSection(event, section.id)}
             aria-current={active === section.id ? "location" : undefined}
             className="rounded-full px-3.5 py-2 text-center text-[13px] leading-none font-semibold whitespace-nowrap text-foreground-2 max-sm:px-1 focus-visible:outline-2 focus-visible:outline-ring aria-[current=location]:bg-primary aria-[current=location]:text-primary-foreground"
           >

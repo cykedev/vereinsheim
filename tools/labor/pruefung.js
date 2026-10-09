@@ -1500,7 +1500,13 @@ addEventListener("load", async () => {
         "#scheibe,#schuesse,#zahlen,#analyse"
     )
     // „Zahlen“ ist kürzer als das Fenster: nach dem Sprung trotzdem genau „Zahlen“ aktiv, nicht die Analyse
-    sectionNav.querySelector('a[href="#zahlen"]').click()
+    // die Leiste scrollt selbst: auch in einer data:-Vorschau, wo der Browser den Sprung zum Anker blockt
+    const jumpClick = new dw.MouseEvent("click", { bubbles: true, cancelable: true, button: 0 })
+    sectionNav.querySelector('a[href="#zahlen"]').dispatchEvent(jumpClick)
+    check(
+      "Sprungleiste: der Klick springt selbst, nicht über den Browser",
+      jumpClick.defaultPrevented
+    )
     await wait(300)
     dw.dispatchEvent(new dw.Event("scroll"))
     await wait(100)
