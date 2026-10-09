@@ -13,7 +13,8 @@ import type { CardRoute } from "../nav/routes"
 import { hasPosition, matchShots } from "../shots"
 import { HelpButton } from "../help/HelpButton"
 import { MiniTarget } from "../target/MiniTarget"
-import { isProbeOnly } from "./model"
+import { KIND_TEXT } from "../list/KindMark"
+import { cardKind, isProbeOnly } from "./model"
 
 export interface CardReadoutProps {
   card: PeriodCard
@@ -42,8 +43,7 @@ export interface CardReadoutProps {
 const explainsDelta = (metric: Readonly<MetricDefinition>) => metric.key === "result.decimalMean"
 
 /** „Training“, „Wettkampf“, „Training nur Probe“ */
-export const cardKindText = (card: PeriodCard) =>
-  card.kind === "competition" ? "Wettkampf" : isProbeOnly(card) ? "Training nur Probe" : "Training"
+export const cardKindText = (card: PeriodCard) => KIND_TEXT[cardKind(card)]
 
 /** „+0,03 zum Schnitt der 5 Scheiben davor“, „… der Scheibe davor“ */
 export function deltaText(delta: { delta: number; n: number }, decimals: number): string {

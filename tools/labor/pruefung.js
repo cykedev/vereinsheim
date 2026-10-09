@@ -2970,6 +2970,26 @@ addEventListener("load", async () => {
       const listRows = () => $$("[data-card-row]").map((r) => r.dataset.cardRow)
       await click(area("Scheiben"), 400)
       const evenings = Li().model.evenings
+      // Art ohne Kürzel (U3, D7): Wettkampf als Pokal, Training ohne Zeichen, Training nur aus Probe als „Probe“
+      const kindCells = $$("[data-card-row] td[title]")
+      const seen = (td) =>
+        [...td.childNodes]
+          .filter((n) => !(n.classList && n.classList.contains("sr-only")))
+          .map((n) => n.textContent)
+          .join("")
+          .trim()
+      const byKind = (title) => kindCells.filter((td) => td.title === title)
+      check(
+        "Liste: Art als Pokal, ohne Zeichen oder „Probe“, keine Kürzel",
+        byKind("Wettkampf").length > 0 &&
+          byKind("Wettkampf").every((td) => !!$("svg.lucide-trophy", td) && seen(td) === "") &&
+          byKind("Training").length > 0 &&
+          byKind("Training").every((td) => !$("svg", td) && seen(td) === "") &&
+          byKind("Training nur Probe").length > 0 &&
+          byKind("Training nur Probe").every((td) => seen(td) === "Probe") &&
+          kindCells.every((td) => !/^[TWP]$/.test(seen(td))),
+        `${byKind("Wettkampf").length} Wettkampf · ${byKind("Training").length} Training · ${byKind("Training nur Probe").length} nur Probe`
+      )
       check(
         "Liste: Abende neueste zuerst, die Scheiben eines Abends in zeitlicher Folge, wie im Modell",
         evenings.length > 20 &&

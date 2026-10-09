@@ -19,17 +19,12 @@ import { RouteLink, shouldIntercept, useRouteNavigate } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
 import { MiniTarget } from "../target/MiniTarget"
 import { eveningsByMonth, type CardListModel, type ListRow } from "./evenings"
+import { KIND_TEXT, KindMark } from "./KindMark"
 
 /** die Wertung im Namen der Zeile */
 const SCORING_IN: Readonly<Record<Scoring, string>> = {
   decimal: "in Zehnteln",
   rings: "in ganzen Ringen",
-}
-
-const KIND: Readonly<Record<ListRow["kind"], { short: string; text: string }>> = {
-  training: { short: "T", text: "Training" },
-  competition: { short: "W", text: "Wettkampf" },
-  probe: { short: "P", text: "Training nur Probe" },
 }
 
 /** auf dem Telefon ohne Uhrzeit, Abstand und Schusszahl; ab 32rem Breite der Liste (Container) mit (D5) */
@@ -93,7 +88,7 @@ export function EveningList({
     [
       formatWeekdayDate(noonOf(day, timeZone), timeZone),
       time,
-      KIND[row.kind].text,
+      KIND_TEXT[row.kind],
       row.result === null
         ? "ohne Ergebnis"
         : `Ergebnis ${resultText(row.result, row.resultScoring)}${row.official ? " amtlich" : ""} ${SCORING_IN[row.resultScoring]}`,
@@ -175,7 +170,6 @@ export function EveningList({
                       {evening.rows.map((row, i) => {
                         const card = cards.get(row.id)
                         const placed = card ? placedShots(card) : []
-                        const kind = KIND[row.kind]
                         const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
                         return (
                           <tr
@@ -226,9 +220,9 @@ export function EveningList({
                             <td className={cn(CELL, WIDE, "text-foreground-2")}>{time}</td>
                             <td
                               className="px-1 py-1 text-center text-muted-foreground"
-                              title={kind.text}
+                              title={KIND_TEXT[row.kind]}
                             >
-                              {kind.short}
+                              <KindMark kind={row.kind} />
                             </td>
                             <td className={CELL}>
                               <span className="flex items-baseline gap-1.5 whitespace-nowrap">

@@ -98,7 +98,10 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
       /<tr data-card-row="a"[^>]*><th[^>]*>[^<]*<\/th><td[^>]*><a href="\/cards\/a\?from=list&amp;family=lg-freihand" aria-label=/
     )
     const rowA = html.slice(html.indexOf('data-card-row="a"'), html.indexOf('data-card-row="b"'))
-    expect(text(rowA)).toContain("18:30 T")
+    // die Art ohne Kürzel (U3, D7): Training hat kein Zeichen, nur den Namen für den Screenreader
+    expect(text(rowA)).toContain("18:30 Training")
+    expect(rowA).toContain('<span class="sr-only">Training</span>')
+    expect(rowA).not.toMatch(/>T</)
     expect(rowA).toMatch(/data-result[^>]*>30,0</)
     expect(rowA).toMatch(/data-other-result[^>]*>29</)
     expect(rowA).toMatch(/data-mean[^>]*>10,00</)

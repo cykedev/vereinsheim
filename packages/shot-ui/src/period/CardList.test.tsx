@@ -49,6 +49,13 @@ describe("Liste der Scheiben (D10)", () => {
     // die erste Scheibe hat keinen Schnitt davor
     expect(html).toMatch(/data-card-row="k0"[\s\S]*?9,00<\/td><td[^>]*>–</)
     expect(html).toMatch(/data-card-row="k2"[\s\S]*?title="Wettkampf"/)
+    // Art ohne Kürzel (U3, D7): der Wettkampf als Pokal, ein Training ohne Zeichen
+    const rowOf = (id: string) =>
+      html.slice(html.indexOf(`data-card-row="${id}"`)).split("</tr>")[0]
+    expect(rowOf("k2")).toContain("lucide-trophy")
+    expect(rowOf("k1")).not.toContain("lucide-trophy")
+    expect(rowOf("k1")).toContain('<span class="sr-only">Training</span>')
+    expect(html).not.toMatch(/aria-hidden="true">[TWP]</)
   })
 
   it("die gewählte Zeile ist markiert", () => {

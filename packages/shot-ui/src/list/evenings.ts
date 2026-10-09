@@ -9,7 +9,7 @@ import { formatIsoDate, formatTimeOfDay, zonedDayStartMs } from "@vereinsheim/li
 
 import type { ListQuery } from "../nav/routes"
 import { inRange, resolveRange, type DateRange, type NamedPeriod } from "../period/calendar"
-import { byStart, deltasBefore, isProbeOnly } from "../period/model"
+import { byStart, cardKind, deltasBefore, isProbeOnly, type CardKind } from "../period/model"
 import { matchShots } from "../shots"
 
 /** eine Scheibe mit ihrer Familie (die Liste filtert nach ihr) */
@@ -22,7 +22,7 @@ export interface ListRow {
   id: string
   startedAtMs: number
   /** Training, Wettkampf oder Training nur aus Probe */
-  kind: "training" | "competition" | "probe"
+  kind: CardKind
   /**
    * Ergebnis in der Wertung, die vorn steht: der amtlichen der Scheibe, ohne sie der Wertung der Liste; nur Probe
    * rechnet wie Wertung und ist nie amtlich. null ohne Wert
@@ -170,7 +170,7 @@ export function cardListModel(
     const row: ListRow = {
       id: card.id,
       startedAtMs: card.startedAtMs,
-      kind: card.kind === "competition" ? "competition" : isProbeOnly(card) ? "probe" : "training",
+      kind: cardKind(card),
       result: computeMetric(resultMetric(resultScoring), shots),
       resultScoring,
       official: official !== undefined,

@@ -9,8 +9,9 @@ import { useId, useMemo, useState } from "react"
 import { formatSigned, formatValue } from "../format"
 import { RouteLink } from "../nav/RouteLink"
 import type { ListRoute } from "../nav/routes"
+import { KindMark } from "../list/KindMark"
 import { cardKindText } from "./CardReadout"
-import { isProbeOnly } from "./model"
+import { cardKind, isProbeOnly } from "./model"
 
 export interface CardListProps {
   /** Scheiben des Zeitraums in ihrer Folge (älteste zuerst) */
@@ -28,12 +29,6 @@ export interface CardListProps {
   /** „Alle in Scheiben zeigen“: die Scheiben-Liste mit Familie, Art und Zeitraum (Plan N2, D8; `listFromProgress`) */
   showAll?: ListRoute
   className?: string
-}
-
-const KIND_SHORT: Record<string, string> = {
-  Training: "T",
-  Wettkampf: "W",
-  "Training nur Probe": "P",
 }
 
 /**
@@ -135,8 +130,7 @@ export function CardList({
                   </button>
                 </td>
                 <td className="px-1 py-1.5 text-center text-muted-foreground" title={kind}>
-                  <span aria-hidden="true">{KIND_SHORT[kind]}</span>
-                  <span className="sr-only">{kind}</span>
+                  <KindMark kind={cardKind(card)} />
                 </td>
                 <td className="px-2 py-1.5 text-right">
                   {value ? formatValue(value.value, metric.decimals) : "–"}

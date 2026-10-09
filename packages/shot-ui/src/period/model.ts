@@ -156,6 +156,12 @@ export interface PeriodReading {
 export const isProbeOnly = (card: PeriodCard) =>
   card.shots.length > 0 && card.shots.every((s) => s.kind === "probe")
 
+/** Art einer Scheibe in den Listen (U3, D7): Wettkampf, Training, Training nur aus Probe */
+export type CardKind = "training" | "competition" | "probe"
+
+export const cardKind = (card: PeriodCard): CardKind =>
+  card.kind === "competition" ? "competition" : isProbeOnly(card) ? "probe" : "training"
+
 /**
  * Die Ablesung zu einer Wahl: die gewählte Scheibe, wenn sie im Zeitraum liegt, sonst die neueste mit Ø je Schuss,
  * sonst die neueste. Getrennt vom Modell, damit eine neue Wahl es nicht neu rechnet.
