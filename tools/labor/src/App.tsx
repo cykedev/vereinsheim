@@ -34,6 +34,7 @@ import type { LaborMode, LaborView, Theme } from "./LaborHeader"
 import { ListView } from "./ListView"
 import { PeriodView } from "./PeriodView"
 import { PlaceholderView, type PlaceholderPage } from "./PlaceholderView"
+import { OPEN_EXAMPLES, StartView } from "./StartView"
 import { season, SEASON_TIME_ZONE } from "./season"
 import { store } from "./store"
 
@@ -41,7 +42,7 @@ import { store } from "./store"
 const EVENING_ANCHOR = /^#\d{4}-\d{2}-\d{2}$/
 
 /** die Bereiche, die das Labor nur als Platzhalter zeigt (Plan N3, D7) */
-const PLACEHOLDERS: readonly PlaceholderPage[] = ["start", "scan", "profile", "admin"]
+const PLACEHOLDERS: readonly PlaceholderPage[] = ["scan", "profile", "admin"]
 const isPlaceholder = (mode: string): mode is PlaceholderPage =>
   (PLACEHOLDERS as readonly string[]).includes(mode)
 
@@ -85,7 +86,10 @@ export function App({ commit }: { commit: string }) {
     // ein Abend (#2026-09-25) öffnet die Scheiben-Liste (Plan N2, D1)
     if (EVENING_ANCHOR.test(hash)) return "list"
     const saved = store.get("mode")
-    return saved === "period" || saved === "list" || (saved && isPlaceholder(saved))
+    return saved === "period" ||
+      saved === "list" ||
+      saved === "start" ||
+      (saved && isPlaceholder(saved))
       ? saved
       : "card"
   })
@@ -213,7 +217,7 @@ export function App({ commit }: { commit: string }) {
       return
     }
     const page = next.page === "open" ? "start" : next.page === "trash" ? "profile" : next.page
-    if (isPlaceholder(page)) {
+    if (page === "start" || isPlaceholder(page)) {
       leave()
       setOpened(null)
       show(page)
@@ -259,7 +263,7 @@ export function App({ commit }: { commit: string }) {
       <AppFrame
         current={current}
         links={areaLinks({ cards: listRoute, progress: progressHere }, period.family)}
-        openCount={2}
+        openCount={OPEN_EXAMPLES.length}
         isAdmin
       >
         {mode === "card" ? (
@@ -281,6 +285,8 @@ export function App({ commit }: { commit: string }) {
             explain={explain}
             onHelp={setHelpId}
           />
+        ) : mode === "start" ? (
+          <StartView header={header} scoring={devicesScoring()} family={period.family} />
         ) : (
           <PlaceholderView header={header} page={mode} />
         )}

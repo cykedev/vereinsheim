@@ -19,6 +19,7 @@ import { observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { overviewTiles } from "@vereinsheim/shot-ui/analysis/overview"
 import { formatValue } from "@vereinsheim/shot-ui/format"
 import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
+import type { StartModel } from "@vereinsheim/shot-ui/start/model"
 import { routeFromUrl, urlFromRoute, type ListQuery } from "@vereinsheim/shot-ui/nav/routes"
 import { periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
 import { periodSentence, verdictText } from "@vereinsheim/shot-ui/period/sentence"
@@ -61,6 +62,8 @@ export interface LaborHook {
   target?: TargetImage
   /** die Seite eines Zeitraums: Scheiben der Familie, Zustand, Modell */
   period?: { cards: readonly PeriodCard[]; state: PeriodState; model: PeriodModel }
+  /** Start (Plan N5): das Modell zum Nachrechnen */
+  start?: { model: StartModel; cards: readonly PeriodCard[] }
   list?: {
     model: CardListModel
     query: ListQuery
@@ -90,6 +93,11 @@ export function exposeForTest(shots: readonly MetricShot[], state: ViewState, ta
 /** den Stand der Seite eines Zeitraums für die Skriptprüfung ablegen; außerhalb von #pruefen nichts */
 export function exposePeriodForTest(period: NonNullable<LaborHook["period"]>) {
   if (underTest()) window.__labor = { ...window.__labor, period, tools: TOOLS }
+}
+
+/** Start (Plan N5): Modell und Scheiben zum Nachrechnen */
+export function exposeStartForTest(start: NonNullable<LaborHook["start"]>) {
+  if (underTest()) window.__labor = { ...window.__labor, start, tools: TOOLS }
 }
 
 /** die Scheiben-Liste (Plan N2): Modell und Filter zum Nachrechnen */

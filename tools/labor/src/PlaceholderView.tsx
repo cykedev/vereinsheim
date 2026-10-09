@@ -2,15 +2,10 @@ import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 
 import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
 
-/** die Bereiche, die das Labor nur andeutet (Plan N3, D7) */
-export type PlaceholderPage = "start" | "scan" | "profile" | "admin"
+/** die Bereiche, die das Labor nur andeutet (Plan N3, D7; Start seit N5 echt) */
+export type PlaceholderPage = "scan" | "profile" | "admin"
 
 const TEXT: Readonly<Record<PlaceholderPage, { title: string; sentence: string }>> = {
-  start: {
-    title: "Start",
-    sentence:
-      "Start kommt mit N5: Offen, der letzte Abend, neue Rekorde und die Form der letzten 90 Tage.",
-  },
   scan: {
     title: "QR scannen",
     sentence:
@@ -28,7 +23,7 @@ const TEXT: Readonly<Record<PlaceholderPage, { title: string; sentence: string }
 }
 
 /**
- * Platzhalter für Start, Scannen, Profil und Admin im Labor: der Bereich mit dem Schritt, der ihn bringt. Profil
+ * Platzhalter für Scannen, Profil und Admin im Labor: der Bereich mit dem Schritt, der ihn bringt. Profil
  * enthält „Admin“, wie auf dem Telefon (Entscheidung 16).
  */
 export function PlaceholderView({
