@@ -78,7 +78,7 @@ export function StartView({ header, scoring, family }: StartViewProps) {
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
       <LaborPanel
         {...header}
-        hint="Start aus den echten Bausteinen, über die erfundene Saison: „Offen“ mit zwei Beispielen, der letzte Abend im Formband, die Form der letzten 90 Tage."
+        hint="Der letzte Abend der erfundenen Saison ist Samstag, der 26. September: ein Wettkampf Luftgewehr und zwei Scheiben Luftpistole. „Offen“ zeigt zwei Beispiele."
       />
       <section data-start-page className="grid gap-4">
         <h1 className="sr-only">Start</h1>

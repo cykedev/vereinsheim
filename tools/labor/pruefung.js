@@ -3070,6 +3070,17 @@ addEventListener("load", async () => {
         laborText.slice(0, 60)
       )
       const themeIn = (root) => $("[data-theme-switch]", root)
+      // der Umschalter passt in die Seitenleiste (innen 12 px Rand), nichts steht über
+      const sideBox = $("[data-app-sidebar]").getBoundingClientRect()
+      const sideSwitch = $('[role="radiogroup"]', themeIn($("[data-app-sidebar]")))
+      const sideSwitchBox = sideSwitch?.getBoundingClientRect()
+      check(
+        "Darstellung: der Umschalter passt in die Seitenleiste, kein Knopf steht über",
+        !!sideSwitchBox &&
+          sideSwitchBox.right <= sideBox.right - 12 &&
+          sideSwitch.scrollWidth <= sideSwitch.clientWidth,
+        `${Math.round(sideSwitchBox?.right ?? 0)} ≤ ${Math.round(sideBox.right - 12)}`
+      )
       const wasDark = document.documentElement.classList.contains("dark")
       await click(button("Dunkel", themeIn($("[data-app-sidebar]"))), 150)
       const dark = document.documentElement.classList.contains("dark")

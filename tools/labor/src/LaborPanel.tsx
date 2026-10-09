@@ -27,10 +27,11 @@ const ABOUT: Readonly<Record<LaborMode, string>> = {
     "Die Seite eines Zeitraums aus den echten Bausteinen, über eine erfundene Saison: Verlauf, Umfang, Liste, Zahlen, Analyse.",
   start:
     "Start aus den echten Bausteinen: was offen ist, der letzte Abend im Formband und die Form der letzten 90 Tage.",
-  scan: "Ein Bereich der App, der noch ein Platzhalter ist.",
+  scan: "Scannen: Der QR-Code eines Meyton-Ausdrucks ordnet die Scheibe zu, mit dem Ausdruck als Beleg.",
   profile:
-    "Ein Bereich der App, der noch ein Platzhalter ist; die Darstellung lässt sich hier schon wählen.",
-  admin: "Ein Bereich der App, der noch ein Platzhalter ist.",
+    "Profil mit der Darstellung (System, Hell, Dunkel); auf dem Telefon steht hier auch Admin.",
+  admin:
+    "Admin sieht nur ein Admin: in der Seitenleiste als letzter Eintrag, auf dem Telefon in Profil.",
 }
 
 /**

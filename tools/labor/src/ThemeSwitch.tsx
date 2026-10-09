@@ -4,7 +4,8 @@ import type { Theme } from "./LaborPanel"
 
 /**
  * Darstellung System, Hell, Dunkel (Labor näher an der App, D2): eine Einstellung der App, am Desktop unten in der
- * Seitenleiste, auf dem Telefon in Profil.
+ * Seitenleiste, auf dem Telefon in Profil. Die drei Knöpfe teilen sich die Breite, damit der Umschalter in die
+ * schmale Seitenleiste passt.
  */
 export function ThemeSwitch({
   theme,
@@ -27,6 +28,7 @@ export function ThemeSwitch({
           { value: "dark", label: "Dunkel" },
         ]}
         onChange={onTheme}
+        className="w-full [&>button]:flex-1 [&>button]:px-2"
       />
     </div>
   )
