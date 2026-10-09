@@ -61,7 +61,8 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
   it("Satz, Meta, große Zahl, Abstand, Streifen, Kacheln, Link in der Reihenfolge", () => {
     const order = [
       "<h2",
-      "Fr 25.09. · Luftpistole · 2 Scheiben · 3 Schuss",
+      "Fr 25.09. · 2 Scheiben · 3 Schuss",
+      "data-evening-sentence",
       "data-evening-mean",
       "data-evening-delta",
       "data-form-strip",
@@ -73,6 +74,17 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(text(html)).toContain("0,20 über dem Schnitt der 5 Scheiben davor.")
     expect(html).toMatch(/data-evening-mean[^>]*>9,20</)
     expect(text(html)).toContain("+0,20 zum Schnitt der 5 Scheiben davor")
+  })
+
+  it("die Disziplin steht als Überschrift oben im Block, mit dem Symbol der Disziplinen (Rückmeldung des Users)", () => {
+    expect(html).toMatch(
+      /<h2 id="evening-lp-freihand"[^>]*>[\s\S]*?<svg[\s\S]*?<\/svg>Luftpistole<\/h2>/
+    )
+    expect(html).toMatch(/<h2[^>]*class="[^"]*text-\[17px\][^"]*font-semibold/)
+    // der Satz bleibt groß, aber nicht die Überschrift
+    expect(html).toMatch(
+      /<p data-evening-sentence="true" class="font-display[^"]*">0,20 über dem Schnitt/
+    )
   })
 
   it("jede Scheibe eine Kachel mit großer kleiner Scheibe, Link mit Start als Herkunft", () => {

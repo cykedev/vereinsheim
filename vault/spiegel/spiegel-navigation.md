@@ -275,6 +275,8 @@ Plan `plans/2026-10-09-spiegel-start.md`, Branch `feat/spiegel-start`. Drei Entw
   - **Breite** wie die übrigen Seiten (User: „die Breite passt nicht“): Raster der Seite eines Zeitraums, links die
     Abende, rechts „Offen“ und die Form.
   - Kacheln 12,5 rem breit; im Streifen heißt der Abend „Abend“, nicht „heute“.
+  - Die Disziplin steht als Überschrift oben im Block, mit dem Symbol der Disziplinen (User: „dass es Luftgewehr und
+    Luftpistole sind, ist kaum zu erkennen“); Tag und Umfang daneben, der Satz darunter.
   - Die Saison des Labors hat einen Mischabend als letzten Abend, damit Blättern, zwei Blöcke und zwei Kacheln geprüft
     sind.
 - **Wege:** Eine Kachel öffnet die Scheibe mit Herkunft Start („← Start“). Blättern geht durch die Scheiben des

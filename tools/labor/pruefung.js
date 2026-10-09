@@ -2933,7 +2933,7 @@ addEventListener("load", async () => {
         above: "Über dem Formband",
         below: "Unter dem Formband",
       }
-      const sentenceText = txt($("h2", blockEl)).trim()
+      const sentenceText = txt($("[data-evening-sentence]", blockEl)).trim()
       check(
         "Start: der letzte Abend mit seiner Zahl, nachgerechnet, und dem Satz, der zum Urteil passt",
         !!$("[data-start-page]") &&
@@ -2973,6 +2973,10 @@ addEventListener("load", async () => {
       check(
         "Start: der Mischabend in zwei Blöcken, die beiden Kacheln der Luftpistole nebeneinander",
         blocks.map((b) => b.family).join() === "lg-freihand,lp-freihand" &&
+          // die Disziplin als Überschrift jedes Blocks (Rückmeldung des Users)
+          $$("[data-evening-block] h2")
+            .map((h) => txt(h).trim())
+            .join() === "Luftgewehr,Luftpistole" &&
           pistolTiles.length === 2 &&
           Math.abs(pistolTiles[0].top - pistolTiles[1].top) < 1 &&
           pistolTiles[1].left > pistolTiles[0].right,

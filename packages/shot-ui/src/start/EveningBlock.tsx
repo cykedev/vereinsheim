@@ -5,6 +5,7 @@ import { inScoring, metricByKey, type Scoring } from "@vereinsheim/shot-core/met
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { formatTimeOfDay, formatWeekdayDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
+import { Target } from "lucide-react"
 
 import { formatValue } from "../format"
 import { groupView } from "../geometry"
@@ -76,17 +77,28 @@ export function EveningBlock({
       aria-labelledby={`${titleId} ${metaId}`}
       className={cn("grid gap-4 rounded-2xl border border-border bg-card p-4 sm:p-5", className)}
     >
-      <div className="grid gap-1.5">
+      {/* die Disziplin als Überschrift oben: bei einem Mischabend unterscheiden sich die Blöcke auf einen Blick
+          (User, 9. Oktober 2026: „kaum zu erkennen“); Symbol der Disziplinen wie conventions §4 */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2
           id={titleId}
-          className="font-display text-[1.45rem] leading-tight font-bold tracking-tight text-balance"
+          className="inline-flex items-center gap-2 text-[17px] font-semibold tracking-tight"
         >
-          {sentence ?? `Der Abend mit ${familyLabel}`}
+          <Target aria-hidden="true" className="size-[18px] shrink-0 self-center text-primary" />
+          {familyLabel}
         </h2>
-        <p id={metaId} className="text-[13px] text-muted-foreground">
-          {`${date} · ${familyLabel} · ${count} ${count === 1 ? "Scheibe" : "Scheiben"} · ${block.shots} Schuss`}
+        <p id={metaId} className="text-[13px] text-muted-foreground tabular-nums">
+          {`${date} · ${count} ${count === 1 ? "Scheibe" : "Scheiben"} · ${block.shots} Schuss`}
         </p>
       </div>
+      {sentence && (
+        <p
+          data-evening-sentence
+          className="font-display text-[1.45rem] leading-tight font-bold tracking-tight text-balance"
+        >
+          {sentence}
+        </p>
+      )}
       <div className="grid gap-1">
         <p className="flex flex-wrap items-baseline gap-x-2">
           <span
