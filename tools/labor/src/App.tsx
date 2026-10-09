@@ -1,20 +1,37 @@
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { HelpSheet } from "@vereinsheim/shot-ui/help/HelpSheet"
 import { parsePeriodHash } from "@vereinsheim/shot-ui/layout/sections"
 import {
   backRoute,
+  listFromProgress,
   openCard as openCardRoute,
   periodStateFromRoute,
+  progressFromList,
   progressRoute,
 } from "@vereinsheim/shot-ui/nav/navigate"
-import { routeFromHref, urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
+import {
+  DEFAULT_LIST,
+  routeFromHref,
+  urlFromRoute,
+  type CardRoute,
+  type ListQuery,
+  type Route,
+} from "@vereinsheim/shot-ui/nav/routes"
 import { initialPeriodState, periodReducer } from "@vereinsheim/shot-ui/period/state"
 import { useCallback, useEffect, useReducer, useState } from "react"
 
 import { CardView, type OpenedCard } from "./CardView"
 import type { LaborMode, Theme } from "./LaborHeader"
+import { ListView } from "./ListView"
 import { PeriodView } from "./PeriodView"
 import type { SeasonCard } from "./season"
 import { store } from "./store"
+
+/** ein Abend als Anker der Scheiben-Liste (Plan N2, D1) */
+const EVENING_ANCHOR = /^#\d{4}-\d{2}-\d{2}$/
+
+/** die Wertung des Geräts, gemerkt von der Seite einer Scheibe; die Liste hat keine eigene */
+const devicesScoring = (): Scoring => (store.get("scoring") === "rings" ? "rings" : "decimal")
 
 function useTheme(theme: Theme) {
   useEffect(() => {
@@ -38,9 +55,13 @@ function useTheme(theme: Theme) {
 export function App({ commit }: { commit: string }) {
   const [mode, setMode] = useState<LaborMode>(() => {
     // nur die Anker, die es allein auf der Seite eines Zeitraums gibt; #numbers und #analysis haben beide Seiten
-    const anchor = typeof location === "undefined" ? null : parsePeriodHash(location.hash)
+    const hash = typeof location === "undefined" ? "" : location.hash
+    const anchor = parsePeriodHash(hash)
     if (anchor === "history" || anchor === "cards") return "period"
-    return store.get("mode") === "period" ? "period" : "card"
+    // ein Abend (#2026-09-25) öffnet die Scheiben-Liste (Plan N2, D1)
+    if (EVENING_ANCHOR.test(hash)) return "list"
+    const saved = store.get("mode")
+    return saved === "period" || saved === "list" ? saved : "card"
   })
   const [theme, setTheme] = useState<Theme>(() => (store.get("theme") as Theme | null) ?? "system")
   const [explain, setExplain] = useState(() => store.get("help") === "1")
@@ -51,10 +72,23 @@ export function App({ commit }: { commit: string }) {
       scoring: store.get("scoring") === "rings" ? "rings" : "decimal",
     })
   )
+  const [list, setList] = useState<ListQuery>(() => ({
+    ...DEFAULT_LIST,
+    family: store.get("period.family") === "lp-freihand" ? "lp-freihand" : "lg-freihand",
+  }))
   const [opened, setOpened] = useState<OpenedCard | null>(null)
   const [returnTo, setReturnTo] = useState<number | null>(null)
   useTheme(theme)
   useEffect(() => store.set("period.family", period.family), [period.family])
+  // mit einem Abend als Anker geladen: nach dem Einhängen der Liste zu ihm springen
+  useEffect(() => {
+    const hash = typeof location === "undefined" ? "" : location.hash
+    if (EVENING_ANCHOR.test(hash)) {
+      requestAnimationFrame(() =>
+        document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" })
+      )
+    }
+  }, [])
 
   const changeMode = useCallback((next: LaborMode) => {
     store.set("mode", next)
@@ -74,22 +108,28 @@ export function App({ commit }: { commit: string }) {
   }
   // Öffnen und Zurück über die Adressen (Plan N1): Die Scheibe trägt den Zustand des Zeitraums, „Zurück“ baut ihn
   // aus ihrer Adresse neu; nur die Scrollstelle gehört nicht in die Adresse und bleibt im Speicher
-  const openCard = useCallback(
-    (card: SeasonCard) => {
-      setReturnTo(window.scrollY)
-      setOpened({
-        id: card.id,
-        label: card.label,
-        target: card.target,
-        raw: card.raw,
-        route: openCardRoute(progressRoute(period, null), card.id),
-      })
-      setMode("card")
-      requestAnimationFrame(() => scrollTo(0, 0))
-    },
-    [period]
+  const open = useCallback((card: SeasonCard, from: Route) => {
+    setReturnTo(window.scrollY)
+    setOpened({
+      id: card.id,
+      label: card.label,
+      target: card.target,
+      raw: card.raw,
+      route: openCardRoute(from, card.id, devicesScoring()),
+    })
+    setMode("card")
+    requestAnimationFrame(() => scrollTo(0, 0))
+  }, [])
+  const openFromPeriod = useCallback(
+    (card: SeasonCard) => open(card, progressRoute(period, null)),
+    [open, period]
   )
-  const backToPeriod = useCallback(
+  const openFromList = useCallback(
+    (card: SeasonCard) => open(card, { page: "cards", query: list, evening: null }),
+    [open, list]
+  )
+  // zurück dorthin, woher die Scheibe kam: in den Zeitraum oder in die Liste, gebaut aus ihrer Adresse
+  const goBack = useCallback(
     (route: CardRoute) => {
       const y = returnTo
       // über die gezeigte Zeichenkette, wie ein Link in der App: Lesen und Schreiben laufen mit (Review N1)
@@ -97,14 +137,37 @@ export function App({ commit }: { commit: string }) {
       const back = backRoute(shown.page === "card" ? shown : route)
       if (back.page === "progress") {
         dispatch({ type: "restore", state: periodStateFromRoute(back, period.family) })
+        setMode("period")
+      } else {
+        if (back.page === "cards")
+          setList({ ...back.query, family: back.query.family ?? list.family })
+        setMode("list")
       }
       setOpened(null)
-      setMode("period")
       // nach dem Einhängen der Seite an die gemerkte Stelle
       requestAnimationFrame(() => scrollTo(0, y ?? 0))
     },
-    [returnTo, period.family]
+    [returnTo, period.family, list.family]
   )
+  // Querverweise (Plan N2, D8): Liste → Zeitraum und Zeitraum → Liste
+  const toProgress = useCallback(() => {
+    const target = progressFromList({ page: "cards", query: list, evening: null }, devicesScoring())
+    dispatch({ type: "restore", state: periodStateFromRoute(target, period.family) })
+    store.set("mode", "period")
+    setMode("period")
+    scrollTo(0, 0)
+  }, [list, period.family])
+  const toList = useCallback(() => {
+    setList(listFromProgress(progressRoute(period, null)).query)
+    store.set("mode", "list")
+    setMode("list")
+    scrollTo(0, 0)
+  }, [period])
+  // ein Mischabend: die andere Familie zeigen und zu diesem Abend springen (D3)
+  const showFamily = useCallback((family: string, day: string) => {
+    setList((current) => ({ ...current, family }))
+    requestAnimationFrame(() => document.getElementById(day)?.scrollIntoView({ block: "start" }))
+  }, [])
   const onExplain = useCallback((next: boolean) => {
     store.set("help", next ? "1" : "0")
     setExplain(next)
@@ -120,7 +183,17 @@ export function App({ commit }: { commit: string }) {
           onExplain={onExplain}
           onHelp={setHelpId}
           opened={opened}
-          onBack={backToPeriod}
+          onBack={goBack}
+        />
+      ) : mode === "list" ? (
+        <ListView
+          header={header}
+          query={list}
+          onQuery={setList}
+          scoring={devicesScoring()}
+          onOpen={openFromList}
+          onProgress={toProgress}
+          onFamily={showFamily}
         />
       ) : (
         <PeriodView
@@ -129,7 +202,8 @@ export function App({ commit }: { commit: string }) {
           dispatch={dispatch}
           explain={explain}
           onHelp={setHelpId}
-          onOpen={openCard}
+          onOpen={openFromPeriod}
+          onShowAll={toList}
         />
       )}
       <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />

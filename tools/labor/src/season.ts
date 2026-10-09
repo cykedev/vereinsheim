@@ -43,6 +43,12 @@ const FAMILY_OF: Readonly<Record<TargetId, FamilyId>> = {
   "lp-10m": "lp-freihand",
 }
 
+/** die Familien der Saison wie im Fachkern, mit Namen; Auflage gibt es in ihr nicht */
+export const FAMILIES: readonly { value: FamilyId; label: string }[] = [
+  { value: "lg-freihand", label: "Luftgewehr" },
+  { value: "lp-freihand", label: "Luftpistole" },
+]
+
 /** die Scheibe zu einer Familie, für das Zeichnen; Luftpistole bei `lp-*`, sonst Luftgewehr */
 export const targetOfFamily = (family: string): TargetId =>
   family.startsWith("lp-") ? "lp-10m" : "lg-10m"

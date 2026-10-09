@@ -59,7 +59,11 @@
     "./period/PeriodTiles": "./src/period/PeriodTiles.tsx",
     "./period/PeriodInsights": "./src/period/PeriodInsights.tsx",
     "./nav/routes": "./src/nav/routes.ts",
-    "./nav/navigate": "./src/nav/navigate.ts"
+    "./nav/navigate": "./src/nav/navigate.ts",
+    "./list/evenings": "./src/list/evenings.ts",
+    "./list/EveningList": "./src/list/EveningList.tsx",
+    "./list/ListControls": "./src/list/ListControls.tsx",
+    "./controls/CardFilters": "./src/controls/CardFilters.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

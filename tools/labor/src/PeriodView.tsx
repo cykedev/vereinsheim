@@ -1,4 +1,3 @@
-import type { FamilyId } from "@vereinsheim/shot-core/discipline"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
@@ -30,6 +29,7 @@ import { urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 
 import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
 import {
+  FAMILIES,
   NAMED_PERIODS,
   season,
   SEASON_NOW_MS,
@@ -39,11 +39,6 @@ import {
 } from "./season"
 import { exposePeriodForTest } from "./testHook"
 
-/** die Familien der Saison wie im Fachkern; Auflage gibt es in ihr nicht */
-const FAMILIES: readonly { value: FamilyId; label: string }[] = [
-  { value: "lg-freihand", label: "Luftgewehr" },
-  { value: "lp-freihand", label: "Luftpistole" },
-]
 const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
 const TZ = SEASON_TIME_ZONE
 
@@ -55,6 +50,8 @@ export interface PeriodViewProps {
   onHelp: (helpId: string | null) => void
   /** „Scheibe öffnen“: die Scheibe in der Ansicht „Scheibe“ zeigen */
   onOpen: (card: SeasonCard) => void
+  /** „Alle in Scheiben zeigen“: die Scheiben-Liste mit Familie, Art und Zeitraum (Plan N2, D8) */
+  onShowAll: () => void
 }
 
 /**
@@ -62,7 +59,15 @@ export interface PeriodViewProps {
  * Seite, alles Gerechnete aus `periodModel`, die Bausteine aus `shot-ui/period`. Der Zustand kommt aus `App`, damit
  * „Zurück zum Zeitraum“ Filter und Wahl wiederfindet.
  */
-export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }: PeriodViewProps) {
+export function PeriodView({
+  header,
+  state,
+  dispatch,
+  explain,
+  onHelp,
+  onOpen,
+  onShowAll,
+}: PeriodViewProps) {
   const active = useActiveSection(PERIOD_IDS)
   const { pill, jumpTo, back, close } = useReturnJump()
   const all = season()
@@ -285,6 +290,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
                   timeZone={TZ}
                   chosen={state.chosen}
                   onChoose={chooseFromList}
+                  onShowAll={onShowAll}
                 />
               </div>
             ),
