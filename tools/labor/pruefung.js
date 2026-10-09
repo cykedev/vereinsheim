@@ -24,7 +24,9 @@ addEventListener("load", async () => {
       )
     // Wege sind seit N3 Links mit Adresse (`RouteLink`), gefunden nach Text oder Namen
     const link = (label, root = document) =>
-      $$("a", root).find((a) => txt(a).trim() === label || a.getAttribute("aria-label") === label)
+      $$("a[href]", root).find(
+        (a) => txt(a).trim() === label || a.getAttribute("aria-label") === label
+      )
     // ein Bereich der Navigation (Plan N3): der sichtbare Eintrag des Rahmens mit diesem Text oder Namen
     const area = (label, root = document) =>
       $$("[data-app-frame] nav a", root).find(
@@ -2885,13 +2887,19 @@ addEventListener("load", async () => {
       const railFrame = await openFrame(812, 375)
       const rd2 = railFrame.contentDocument
       const rail = rd2.querySelector("[data-app-rail]")
+      const railMain = rd2.querySelector("[data-app-content]")
+      const railLeft =
+        rd2.querySelector("[data-app-content] > *")?.getBoundingClientRect().left ?? 0
+      const railPad = parseFloat(railFrame.contentWindow.getComputedStyle(railMain).paddingBottom)
       check(
-        "Rahmen 812 × 375: schmale Leiste links, keine untere Leiste, kein seitliches Scrollen",
+        "Rahmen 812 × 375: schmale Leiste links, die Seite rechts davon, unten kein Platz für eine Leiste",
         shown(rail) &&
           areasOf(rail).join() === "start,cards,scan,progress,profile" &&
           !shown(rd2.querySelector("[data-app-bar]")) &&
+          railLeft >= 64 &&
+          railPad === 0 &&
           rd2.documentElement.scrollWidth <= 812,
-        `${areasOf(rail).join()} · ${rd2.documentElement.scrollWidth}`
+        `${areasOf(rail).join()} · Seite ab ${Math.round(railLeft)} · unten ${railPad} · ${rd2.documentElement.scrollWidth}`
       )
       railFrame.remove()
       // Telefon 375 px mit einem Abend als Anker: kein seitliches Scrollen, ohne Uhrzeit, Abstand und Schuss

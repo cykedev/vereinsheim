@@ -18,7 +18,15 @@ import {
   type PeriodAction,
   type PeriodState,
 } from "@vereinsheim/shot-ui/period/state"
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react"
 
 import { CardView, type OpenedCard } from "./CardView"
 import type { LaborMode, LaborView, Theme } from "./LaborHeader"
@@ -210,8 +218,11 @@ export function App({ commit }: { commit: string }) {
       requestAnimationFrame(() => scrollTo(0, 0))
     }
   }
+  // der Provider bleibt gleich, seine Links rufen immer das aktuelle `go` (nach dem Rendern gesetzt, nicht dabei)
   const goRef = useRef(go)
-  goRef.current = go
+  useLayoutEffect(() => {
+    goRef.current = go
+  })
   const links = useMemo(() => ({ navigate: (route: Route) => goRef.current(route) }), [])
 
   const changeView = (next: LaborView) => {
@@ -239,16 +250,7 @@ export function App({ commit }: { commit: string }) {
     store.set("help", next ? "1" : "0")
     setExplain(next)
   }, [])
-  const current: Area | null =
-    mode === "list"
-      ? "cards"
-      : mode === "period"
-        ? "progress"
-        : mode === "card"
-          ? opened
-            ? areaOf(opened.route)
-            : null
-          : mode
+  const current: Area | null = view === "samples" ? null : areaOf(currentRoute())
 
   return (
     <RouteLinkProvider value={links}>

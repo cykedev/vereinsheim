@@ -27,7 +27,6 @@ export interface ListControlsProps {
   /** Name des Zeitraums aus „Alle in Scheiben zeigen“ (`resolveRange`); null: alle Abende */
   rangeLabel: string | null
   onQuery: (query: ListQuery) => void
-  /** „Verlauf dieser Filter“: in den Fortschritt (D8) */
   /** „Verlauf dieser Filter“: der Fortschritt mit Familie, Art und Zeitraum der Liste (`progressFromList`) */
   progress: ProgressRoute
 }

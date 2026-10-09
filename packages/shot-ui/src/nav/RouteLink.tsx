@@ -64,7 +64,9 @@ export function RouteLink({ route, children, onClick, ...rest }: RouteLinkProps)
       ...rest,
       onClick: (event: MouseEvent<HTMLAnchorElement>) => {
         onClick?.(event)
-        if (event.defaultPrevented || !navigate || !shouldIntercept(event)) return
+        // ein eigenes Ziel (neuer Tab, Download) bleibt beim Browser, wie bei next/link
+        const ownTarget = rest.target !== undefined && rest.target !== "_self"
+        if (event.defaultPrevented || !navigate || ownTarget || !shouldIntercept(event)) return
         event.preventDefault()
         navigate(route)
       },

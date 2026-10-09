@@ -15,7 +15,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import { formatSigned, formatValue } from "../format"
 import { groupView } from "../geometry"
 import { hasPosition, matchShots } from "../shots"
-import { RouteLink, useRouteNavigate } from "../nav/RouteLink"
+import { RouteLink, shouldIntercept, useRouteNavigate } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
 import { MiniTarget } from "../target/MiniTarget"
 import { eveningsByMonth, type CardListModel, type ListRow } from "./evenings"
@@ -182,8 +182,10 @@ export function EveningList({
                             key={row.id}
                             data-card-row={row.id}
                             onClick={(event) => {
-                              // der Link der kleinen Scheibe geht selbst (auch mit Strg in einen neuen Tab)
-                              if ((event.target as Element).closest("a")) return
+                              // der Link der kleinen Scheibe geht selbst; mit Strg, Cmd, Shift oder Alt bleibt die
+                              // Zeile stehen (einen neuen Tab öffnet der Link, nicht die Zeile)
+                              if ((event.target as Element).closest("a") || !shouldIntercept(event))
+                                return
                               go(cardRoute(row.id))
                             }}
                             className="cursor-pointer hover:bg-surface-2"

@@ -42,9 +42,10 @@ describe("Rückweg und Blättern über der Scheibe (Plan N3, D5)", () => {
       h(CardContextBar, { back, backText: "Scheiben", prev: card("w2"), next: null })
     )
     expect(html).toMatch(
-      /<span aria-disabled="true" data-pager="next"[^>]*text-muted-foreground[^>]*>nächste<svg[\s\S]*?<\/svg><\/span>/
+      /<a role="link" aria-disabled="true" aria-label="Nächste Scheibe" data-pager="next"[^>]*text-muted-foreground[^>]*>nächste<svg[\s\S]*?<\/svg><\/a>/
     )
-    expect(html.match(/<a /g)).toHaveLength(2)
+    // ein gesperrter Link ohne Adresse, wie ihn Screenreader ansagen (Review N3)
+    expect(html.match(/<a href=/g)).toHaveLength(2)
   })
 
   it("ohne Kontext (direkter Link) nur der Rückweg", () => {

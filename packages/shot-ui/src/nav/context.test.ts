@@ -90,6 +90,63 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     ])
   })
 
+  it("ohne Familie in der Herkunft gilt die Familie der Scheibe selbst (Review N3)", () => {
+    const pistol: ListInputCard[] = [
+      ...INPUT,
+      { card: periodCard("p2", 2, [96]), family: "lp-freihand" },
+      { card: periodCard("p3", 1, [97]), family: "lp-freihand" },
+    ]
+    const input = { ...context, cards: pistol }
+    expect(contextCardIds(card("p2", fromList({ family: null })), input)).toEqual([
+      "p1",
+      "p2",
+      "p3",
+    ])
+    const { chosen: _c, scoring: _s, ...query } = { ...DEFAULT_PROGRESS, family: null }
+    expect(
+      contextCardIds(
+        card("p2", { from: "progress", query: { ...query, choice: { type: "all" } } }),
+        input
+      )
+    ).toEqual(["p1", "p2", "p3"])
+  })
+
+  it("Liste mit Zeitraum und Merkmal: genau ihre Zeilen", () => {
+    const flagged: ListInputCard[] = INPUT.map((c) =>
+      c.card.id === "w2" || c.card.id === "t3"
+        ? { ...c, card: { ...c.card, flags: ["nur-pdf"] } }
+        : c
+    )
+    const input = { ...context, cards: flagged }
+    expect(contextCardIds(card("w2", fromList({ flag: "nur-pdf" })), input)).toEqual(["w2", "t3"])
+    expect(
+      contextCardIds(
+        card("t2", fromList({ range: { type: "free", from: "2026-09-23", to: "2026-09-25" } })),
+        input
+      )
+    ).toEqual(["w1", "t2", "w2"])
+  })
+
+  it("Fortschritt ohne „nur Probe“: Trainings nur aus Probe bleiben im Kontext, wie in seiner Liste", () => {
+    const probe: ListInputCard[] = [
+      ...INPUT,
+      { card: periodCard("pp", 2, [95], { probe: true }), family: "lg-freihand" },
+    ]
+    const {
+      chosen: _c,
+      scoring: _s,
+      ...query
+    } = {
+      ...DEFAULT_PROGRESS,
+      family: "lg-freihand",
+      includeProbeOnly: false,
+      choice: { type: "all" as const },
+    }
+    expect(
+      contextCardIds(card("t3", { from: "progress", query }), { ...context, cards: probe })
+    ).toEqual(["t1", "w1", "t2", "w2", "w3", "t3", "pp"])
+  })
+
   it("ohne Herkunft und von Start: kein Blättern", () => {
     expect(contextCardIds(card("w2", null), context)).toBeNull()
     expect(contextCardIds(card("w2", { from: "start" }), context)).toBeNull()

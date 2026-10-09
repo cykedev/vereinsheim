@@ -48,7 +48,6 @@ export interface PeriodViewProps {
   dispatch: (action: PeriodAction) => void
   explain: boolean
   onHelp: (helpId: string | null) => void
-  /** „Scheibe öffnen“: die Scheibe in der Ansicht „Scheibe“ zeigen */
 }
 
 /**

@@ -228,14 +228,21 @@ Plan `plans/2026-10-09-spiegel-app-rahmen.md`, Branch `feat/spiegel-app-rahmen`.
 - **Links statt Rückrufe:**
   - `RouteLink` mit der Adresse aus `urlFromRoute` für Zeile der Liste, Hinweis auf andere Familien, „Verlauf dieser
     Filter“, „Alle in Scheiben zeigen“, „Scheibe öffnen“, Rückweg, Blättern und Navigation.
-  - Ein Provider fängt im Labor den Klick ab. **Für N7:** die App setzt `next/link` als Komponente des Providers,
-    `navigate` entfällt.
+  - Ein Provider fängt im Labor den Klick ab. **Für N7:** die App setzt `next/link` als Komponente des Providers
+    (Vorladen) und `navigate = (route) => router.push(urlFromRoute(route))`; ohne `navigate` lädt ein Klick auf eine
+    ganze Zeile der Liste die Seite neu (Review N3).
 - **Bereiche merken sich ihren Zustand** wie Reiter (`areaLinks`): Filter, Zeitraum und die zuletzt gewählte Familie,
   im Labor auch die Scrollstelle.
 - **Rückweg und Blättern** (`CardContextBar`):
   - „← Scheiben“ bzw. „← Letzte 90 Tage“, dazu „‹ vorige · nächste ›“ in zeitlicher Folge der Scheiben der Herkunft
     (`contextCardIds`); vorige ist die ältere.
   - Am Ende ausgegraut. Ohne Herkunft und von Start kein Blättern (Start kommt mit N5).
+- **Nach dem Review:**
+  - Der Inhalt ist `<main>` und steht vor der unteren Leiste; im Querformat bleibt der sichere Rand frei.
+  - Ohne Familie in der Herkunft blättert die Scheibe in ihrer eigenen Familie.
+  - Admin offen markiert auf dem Telefon Profil.
+  - Ein gesperrter Schritt ist ein gesperrter Link.
+  - Die Leisten haben keine Schrift unter `text-xs`.
 - **Labor:**
   - „Labor: App | Beispiele“ statt der alten Ansichten.
   - Start, Scannen, Profil und Admin sind Platzhalter mit dem Schritt, der sie bringt.

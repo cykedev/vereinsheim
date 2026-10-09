@@ -57,19 +57,27 @@ export function AppFrame({ current, links, openCount, isAdmin, children }: AppFr
         data-badge
         aria-hidden="true"
         className={cn(
-          "min-w-4 rounded-full bg-primary px-1 text-center text-[10px] leading-4 font-semibold text-primary-foreground tabular-nums",
+          "min-w-[1.125rem] rounded-full bg-primary px-1 text-center text-xs leading-[1.125rem] font-semibold text-primary-foreground tabular-nums",
           className
         )}
       >
         {openCount}
       </span>
     ) : null
-  const link = (area: Area, className: string, content: ReactNode, label?: string) => (
+  // auf dem Telefon steckt Admin in Profil: ist Admin offen, ist dort Profil der Bereich (Entscheidung 16)
+  const inBar = current === "admin" ? "profile" : current
+  const link = (
+    area: Area,
+    className: string,
+    content: ReactNode,
+    label?: string,
+    active: Area | null = current
+  ) => (
     <RouteLink
       key={area}
       route={links[area]}
       data-area={area}
-      aria-current={current === area ? "page" : undefined}
+      aria-current={active === area ? "page" : undefined}
       aria-label={label ?? name(area)}
       className={cn("cursor-pointer focus-visible:outline-2 focus-visible:outline-ring", className)}
     >
@@ -100,13 +108,13 @@ export function AppFrame({ current, links, openCount, isAdmin, children }: AppFr
       <nav
         aria-label="Bereiche"
         data-app-sidebar
-        className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col gap-1 border-r border-border bg-card px-3 py-5 lg:flex"
+        className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col gap-1 overflow-y-auto border-r border-border bg-card px-3 py-5 lg:flex"
       >
         <p className="px-3 pb-4 font-display text-xl font-bold tracking-tight">Spiegel</p>
         {(["start", "cards", "progress"] as const).map(sideEntry)}
         {link(
           "scan",
-          "mt-3 flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[14px] font-semibold text-primary-foreground hover:opacity-90",
+          "mt-3 flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[14px] font-semibold text-primary-foreground hover:opacity-90 aria-[current=page]:ring-2 aria-[current=page]:ring-ring aria-[current=page]:ring-offset-2 aria-[current=page]:ring-offset-card",
           <>
             <ScanQrCode aria-hidden="true" className="size-[18px]" />
             QR scannen
@@ -116,6 +124,44 @@ export function AppFrame({ current, links, openCount, isAdmin, children }: AppFr
         {sideEntry("profile")}
         {isAdmin && sideEntry("admin")}
       </nav>
+
+      <nav
+        aria-label="Bereiche"
+        data-app-rail
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-2 border-r border-border bg-card py-3 pl-[env(safe-area-inset-left)]",
+          "max-lg:[@media(max-height:499px)]:flex"
+        )}
+      >
+        {BAR.map((area) => {
+          const { label, Icon } = ITEMS[area]
+          return link(
+            area,
+            area === "scan"
+              ? "flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground aria-[current=page]:ring-2 aria-[current=page]:ring-ring aria-[current=page]:ring-offset-2 aria-[current=page]:ring-offset-card"
+              : "relative flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-2 aria-[current=page]:bg-accent-wash aria-[current=page]:text-primary",
+            <>
+              <Icon aria-hidden="true" className="size-5" />
+              {badge(area, "absolute top-0.5 right-0.5")}
+            </>,
+            name(area) ?? label,
+            inBar
+          )
+        })}
+      </nav>
+
+      {/* der Inhalt vor der unteren Leiste: sie steht fest unten, im Fokus und für Screenreader kommt sie danach */}
+      <main
+        data-app-content
+        className={cn(
+          "lg:pl-56",
+          "max-lg:[@media(max-height:499px)]:pl-[calc(4rem+env(safe-area-inset-left))]",
+          "max-lg:[@media(max-height:499px)]:pr-[env(safe-area-inset-right)]",
+          "pb-[calc(var(--app-bar)+env(safe-area-inset-bottom))]"
+        )}
+      >
+        {children}
+      </main>
 
       <nav
         aria-label="Bereiche"
@@ -133,61 +179,29 @@ export function AppFrame({ current, links, openCount, isAdmin, children }: AppFr
                 <div key={area} className="flex justify-center">
                   {link(
                     area,
-                    "-mt-4 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background",
+                    "-mt-4 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background aria-[current=page]:ring-accent-wash",
                     <Icon aria-hidden="true" className="size-6" />,
-                    label
+                    label,
+                    inBar
                   )}
                 </div>
               )
             return link(
               area,
-              "flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold text-muted-foreground aria-[current=page]:text-primary",
+              "flex flex-col items-center justify-center gap-0.5 text-xs font-semibold text-muted-foreground aria-[current=page]:text-primary",
               <>
                 <span className="relative">
                   <Icon aria-hidden="true" className="size-5" />
                   {badge(area, "absolute -top-1.5 -right-2.5")}
                 </span>
                 {short}
-              </>
+              </>,
+              undefined,
+              inBar
             )
           })}
         </div>
       </nav>
-
-      <nav
-        aria-label="Bereiche"
-        data-app-rail
-        className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center gap-2 border-r border-border bg-card py-3",
-          "max-lg:[@media(max-height:499px)]:flex"
-        )}
-      >
-        {BAR.map((area) => {
-          const { label, Icon } = ITEMS[area]
-          return link(
-            area,
-            area === "scan"
-              ? "flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground"
-              : "relative flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-2 aria-[current=page]:bg-accent-wash aria-[current=page]:text-primary",
-            <>
-              <Icon aria-hidden="true" className="size-5" />
-              {badge(area, "absolute top-0.5 right-0.5")}
-            </>,
-            name(area) ?? label
-          )
-        })}
-      </nav>
-
-      <div
-        data-app-content
-        className={cn(
-          "lg:pl-56",
-          "max-lg:[@media(max-height:499px)]:pl-16",
-          "pb-[calc(var(--app-bar)+env(safe-area-inset-bottom))]"
-        )}
-      >
-        {children}
-      </div>
     </div>
   )
 }

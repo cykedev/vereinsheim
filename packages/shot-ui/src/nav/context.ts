@@ -33,8 +33,11 @@ export interface ContextInput {
  */
 export function contextCardIds(card: CardRoute, input: ContextInput): string[] | null {
   const origin = card.origin
+  // ohne Familie in der Herkunft die der Scheibe selbst: nur sie enthält die Scheibe sicher (Review N3)
+  const own = input.cards.find((c) => c.card.id === card.id)?.family ?? input.cards[0]?.family
   if (origin?.from === "list") {
-    const model = cardListModel(input.cards, origin.query, {
+    const query = { ...origin.query, family: origin.query.family ?? own ?? null }
+    const model = cardListModel(input.cards, query, {
       timeZone: input.timeZone,
       nowMs: input.nowMs,
       named: input.named,
@@ -50,8 +53,7 @@ export function contextCardIds(card: CardRoute, input: ContextInput): string[] |
   if (origin?.from === "progress") {
     const back = backRoute(card)
     if (back.page !== "progress") return null
-    // ohne Familie in der Herkunft die erste der Eingabe, wie in `cardListModel`
-    const state = periodStateFromRoute(back, input.cards[0]?.family ?? "")
+    const state = periodStateFromRoute(back, own ?? "")
     const model = periodModel({
       cards: input.cards.filter((c) => c.family === state.family).map((c) => c.card),
       state: { ...state, chosen: null },

@@ -1,6 +1,6 @@
 import { createElement as h, type ReactNode } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { RouteLink, RouteLinkProvider, shouldIntercept } from "./RouteLink"
 import { DEFAULT_LIST, type Route } from "./routes"
@@ -36,6 +36,60 @@ describe("Links mit Adressen (Plan N3, D3)", () => {
       )
     )
     expect(html).toBe('<span data-href="/appcards">Scheiben</span>')
+  })
+
+  it("der Klick: mit navigate abgefangen; ein eigener onClick mit preventDefault, ein Ziel außer _self und ohne Provider nicht", () => {
+    // die Komponente des Providers fängt die Props ab, ohne DOM
+    let onClick: ((event: unknown) => void) | undefined
+    const Capture = (props: { onClick: (event: unknown) => void; children?: ReactNode }) => {
+      onClick = props.onClick
+      return h("a", null, props.children)
+    }
+    const event = () => {
+      const e = {
+        button: 0,
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+        defaultPrevented: false,
+        preventDefault: vi.fn(() => {
+          e.defaultPrevented = true
+        }),
+      }
+      return e
+    }
+    const run = (
+      value: { navigate?: (route: Route) => void },
+      props: Record<string, unknown> = {}
+    ) => {
+      renderToStaticMarkup(
+        h(
+          RouteLinkProvider,
+          { value: { ...value, component: Capture } },
+          h(RouteLink, { route: LIST, ...props }, "Scheiben")
+        )
+      )
+      const e = event()
+      onClick?.(e)
+      return e
+    }
+    const navigate = vi.fn()
+    const plain = run({ navigate })
+    expect(navigate).toHaveBeenCalledWith(LIST)
+    expect(plain.preventDefault).toHaveBeenCalledOnce()
+
+    navigate.mockClear()
+    run({ navigate }, { onClick: (e: { preventDefault: () => void }) => e.preventDefault() })
+    expect(navigate).not.toHaveBeenCalled()
+
+    navigate.mockClear()
+    const blank = run({ navigate }, { target: "_blank" })
+    expect(navigate).not.toHaveBeenCalled()
+    expect(blank.preventDefault).not.toHaveBeenCalled()
+
+    const none = run({})
+    expect(none.preventDefault).not.toHaveBeenCalled()
   })
 
   it("abgefangen wird nur ein einfacher Klick mit der linken Taste", () => {

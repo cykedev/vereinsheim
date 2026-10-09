@@ -61,9 +61,16 @@ export function CardContextBar({
         {content}
       </RouteLink>
     ) : (
-      <span aria-disabled="true" data-pager={which} className={cn(STEP, "text-muted-foreground")}>
+      // ohne Ziel ein gesperrter Link ohne Adresse: so sagen Screenreader ihn an (ein <span> mit aria-disabled nicht)
+      <a
+        role="link"
+        aria-disabled="true"
+        aria-label={which === "prev" ? "Vorige Scheibe" : "Nächste Scheibe"}
+        data-pager={which}
+        className={cn(STEP, "text-muted-foreground")}
+      >
         {content}
-      </span>
+      </a>
     )
   }
 

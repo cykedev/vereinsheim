@@ -71,7 +71,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/nav/CardContextBar`        | `src/nav/CardContextBar.tsx`       | über dem Kopf der Scheibe: Rückweg mit Namen, „‹ vorige · nächste ›“, am Ende ausgegraut                                                                                                                                                                                                                                                               |
 | `@vereinsheim/shot-ui/layout/AppFrame`           | `src/layout/AppFrame.tsx`          | Rahmen der App: Seitenleiste ab 1024 px, untere Leiste mit Scannen in der Mitte, schmale Leiste im Querformat, `--app-bar`                                                                                                                                                                                                                             |
 | `@vereinsheim/shot-ui/list/evenings`             | `src/list/evenings.ts`             | Scheiben-Liste (Plan N2): `eveningDay` (Tag der Zone, vor 4 Uhr der Vortag), `cardListModel` (Abende, Zeilen mit Ergebnis in beiden Wertungen, Ø, Abstand, Schuss, andere Familien, Merkmale), `eveningsByMonth`                                                                                                                                       |
-| `@vereinsheim/shot-ui/list/EveningList`          | `src/list/EveningList.tsx`         | je Monat Karte mit Tabelle, Abende als Gruppe mit Anker, Hinweis auf andere Familien, kleine Scheibe als Knopf                                                                                                                                                                                                                                         |
+| `@vereinsheim/shot-ui/list/EveningList`          | `src/list/EveningList.tsx`         | je Monat Karte mit Tabelle, Abende als Gruppe mit Anker, Hinweis auf andere Familien, kleine Scheibe als Link                                                                                                                                                                                                                                          |
 | `@vereinsheim/shot-ui/list/ListControls`         | `src/list/ListControls.tsx`        | Filter der Liste: `CardFilters`, Merkmal, Zeitraum-Chip, „Verlauf dieser Filter“                                                                                                                                                                                                                                                                       |
 | `@vereinsheim/shot-ui/list/ListHeader`           | `src/list/ListHeader.tsx`          | Kopf der Liste: Titel wie im Zeitraum, Familie und Zahl der Scheiben, darunter die Filter                                                                                                                                                                                                                                                              |
 | `@vereinsheim/shot-ui/controls/CardFilters`      | `src/controls/CardFilters.tsx`     | Familie und Art als Segmente, geteilt von Zeitraum und Liste; `KIND_OPTIONS`                                                                                                                                                                                                                                                                           |
@@ -129,7 +129,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   - Die Zeile zeigt Ergebnis, Ø, den Abstand zum Schnitt der fünf Scheiben davor (`deltasBefore`) und die
     Schusszahl. Der Abstand rechnet über Familie und Art mit Trainings nur aus Probe, vor dem Zeitraum und ohne
     Merkmal; das ist der Abstand im Zeitraum mit seiner Grundeinstellung (Kennzahl Ø je Schuss, nur Probe dabei).
-    Stellen aus den Kennzahlen (`model.digits`). Die ganze Zeile öffnet die Scheibe; ihr Knopf ist die kleine Scheibe
+    Stellen aus den Kennzahlen (`model.digits`). Die ganze Zeile öffnet die Scheibe; ihr Link ist die kleine Scheibe
     und nennt Datum und Werte mit Bedeutung als Namen.
   - Ein gewähltes Merkmal bleibt in `flags`, auch wenn die Familie es nicht hat (sonst ließe es sich nicht lösen).
   - Unter 32rem Breite des Bereichs fallen Uhrzeit, Abstand und Schusszahl weg.
@@ -145,19 +145,27 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   - Wege zwischen Seiten sind `RouteLink`s mit der Adresse aus `urlFromRoute`, nie Rückrufe. Bausteine nehmen dafür
     Routen (`cardRoute`, `progress`, `showAll`, `otherFamilyRoute`). Wo kein Link sein kann (die ganze Zeile einer
     Tabelle), geht es über `useRouteNavigate`; der Link darin geht selbst.
-  - Der `RouteLinkProvider` fängt im Labor jeden Klick ab (`navigate`); die App setzt `next/link` als `component`
-    (N7). Ein Klick mit Strg, Cmd, Shift, Alt oder anderer Taste bleibt beim Browser.
+  - Der `RouteLinkProvider` fängt im Labor jeden Klick ab (`navigate`). Die App (N7) setzt beides: `next/link` als
+    `component` (Vorladen) **und** `navigate = (route) => router.push(urlFromRoute(route))`. Ohne `navigate` lädt
+    `useRouteNavigate` (die ganze Zeile der Liste) die Seite neu; `next/link` übergeht einen Klick, den `RouteLink`
+    schon mit `preventDefault` behandelt hat. Der Wert des Providers hält Funktionen, er braucht eine
+    Client-Komponente. Ein Klick mit Strg, Cmd, Shift, Alt, anderer Taste oder auf ein `target` außer `_self` bleibt
+    beim Browser.
   - `AppFrame`: Seitenleiste ab 1024 px; darunter die untere Leiste (Start · Scheiben · Scannen · Fortschritt · Profil,
     Scannen erhaben in der Mitte); im Querformat des Telefons (unter 500 px hoch) eine schmale Leiste links.
   - Admin sieht nur ein Admin: in der Seitenleiste als letzter Eintrag, auf dem Telefon in Profil.
   - Die Wurzel setzt `--app-bar` (72 px mit unterer Leiste, sonst 0 px). `ReturnPill`, der Abstand der Seite und
     `useTargetFit` richten sich danach.
+  - Der Inhalt ist `<main>` und steht im DOM vor der unteren Leiste (Fokus-Reihenfolge); Seiten setzen kein eigenes
+    `<main>`. Die schmale Leiste und der Inhalt halten im Querformat den sicheren Rand frei.
+  - Ist Admin offen, ist auf dem Telefon Profil markiert. Schrift nicht unter `text-xs`, auch in den Leisten.
   - Klassen mit Varianten (`max-lg:[@media(max-height:499px)]:`) stehen wörtlich im Quelltext. Tailwind findet keine
     zusammengesetzten Klassen (`${KONSTANTE}:hidden`).
   - Symbole aus `lucide-react` (Katalog): Start `House`, Scheiben `List`, Scannen `ScanQrCode`, Fortschritt
     `ChartLine`, Profil `CircleUser`, Admin `Shield`. Spiegel hat kein Marken-Symbol.
   - Bereiche merken sich ihren Zustand wie Reiter (`areaLinks`). Die Scheibe blättert in zeitlicher Folge der
-    Scheiben ihrer Herkunft (`contextCardIds`), ohne Wischen.
+    Scheiben ihrer Herkunft (`contextCardIds`), ohne Wischen. Ohne Familie in der Herkunft gilt die der Scheibe.
+    Ohne Ziel ist ein Schritt ein gesperrter Link (`<a role="link" aria-disabled>` ohne `href`).
 - **Seite eines Zeitraums aus `PeriodPage`** (Plan L3, `plans/2026-10-09-spiegel-zeitraum-seite.md`): Kopf
   (`PeriodHeader` mit `PeriodControls`), Sprungleiste mit `PERIOD_SECTIONS`, links der Verlauf (`PeriodChart`)
   und der Umfang (`VolumeChart`), rechts Ergebnis (`PeriodResult`), Ablesung (`CardReadout`, auf dem Telefon
