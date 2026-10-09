@@ -76,8 +76,8 @@ export function positionCards({
                 </ToggleChip>
               </div>
               <Note>
-                Die Ellipse umschließt mit 95 % den wahren Schwerpunkt. Liegt die Mitte darin, gibt
-                es keinen Grund, das Visier zu verstellen.
+                Die Ellipse umschließt mit 95 % den wahren Schwerpunkt. Liegt die Mitte darin, ist
+                ein Versatz nicht belegt.
               </Note>
             </>
           ) : (
@@ -212,7 +212,7 @@ function RingLoss({
           ],
           ["Ist", `${rings(split.actual[keyName])} Ringe`],
           [
-            "Mit korrigiertem Visier",
+            "Gruppe in der Mitte",
             <>
               {`${rings(split.centered[keyName])} Ringe`}
               <Muted> (geschätzt)</Muted>
@@ -229,8 +229,8 @@ function RingLoss({
       </div>
       <Note>
         Jeder Treffer um den Schwerpunkt der übrigen verschoben und neu gewertet: So schätzt
-        Spiegel, was eine Korrektur auf den nächsten Schüssen bringt. Belastbar erst ab 10 Schuss,
-        wenn die Lage echt ist und die Korrektur gewinnt; nie amtlich.
+        Spiegel, was dieselben Schüsse mit der Gruppe in der Mitte brächten. Belastbar erst ab 10
+        Schuss, wenn die Lage echt ist und die Mitte Ringe bringt; nie amtlich.
       </Note>
     </>
   )

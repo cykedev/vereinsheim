@@ -71,7 +71,7 @@ export const FALLACIES: readonly GuideItem[] = [
   },
   {
     title: "„Unklar“ ist ein Ergebnis",
-    text: "Es sagt: Diese Schüsse zeigen nichts, was über den Zufall hinausgeht. Vielleicht gibt es nichts, vielleicht ist es für diese Schusszahl zu klein. Wer trotzdem am Visier dreht, korrigiert oft den Zufall und verliert dabei im Mittel Ringe.",
+    text: "Es sagt: Diese Schüsse zeigen nichts, was über den Zufall hinausgeht. Vielleicht gibt es nichts, vielleicht ist es für diese Schusszahl zu klein. Wer trotzdem auf einen Versatz reagiert, den der Zufall erklärt, verschiebt seine Gruppe oft weg von der Mitte und verliert dabei im Mittel Ringe.",
   },
   {
     title: "Nach einem Rekord kommt meist eine schwächere Scheibe",

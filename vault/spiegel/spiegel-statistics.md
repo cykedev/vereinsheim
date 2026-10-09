@@ -18,7 +18,7 @@ Der User will ein Profi-Werkzeug, „das mir viele gute Informationen zeigt, mit
 
 - **Viel, aber geordnet, und nichts doppelt:** Statistiken nach Themen, das Wichtigste (Priorität A) zuerst, der Rest auf Antippen. Eine Zahl, die aus einer anderen folgt oder dasselbe nur verrauschter misst, fällt weg (Oktober 2026, Maßstab Sa); die Zeile bleibt mit Grund, die ID wird nie wiederverwendet.
 - **Ehrlich:** Jede Zahl steht auf einer sichtbaren Grundlage (n, Zeitraum, Filter). Unter der Mindestzahl steht „–“ mit Grund, Unsicherheit wird gezeigt, und „unklar“ ist ein normales Ergebnis.
-- **Handlungsnah:** Wo es geht, sagt die Statistik, was zu tun ist („Lage echt, zentriert wären es 2,4 Ringe mehr“) statt nur Zahlen zu liefern.
+- **Handlungsnah:** Wo es geht, sagt die Statistik, was zu tun ist („Lage echt; läge die Gruppe in der Mitte, brächten 40 weitere Schuss zusammen etwa 2,4 Ringe mehr“) statt nur Zahlen zu liefern.
 - **Messdaten, kein Tagebuch:** Ziele, Absicht, Reflexion und Befinden bleiben laut [[adr-026]] in Treffsicher. Spiegel liefert die Messung, Übungen mit messbarem Kriterium und die Auswertung.
 
 ## Notation
@@ -72,14 +72,14 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | L1 | Schwerpunkt (Meyton: Trefferlage) | m mit Richtung; ohne Trennung nach Visierverstellungen, die Spiegel nicht abfragt (SF-63) | Serie, Scheibe, Zeitraum | A | SP-1.10 |
 | L2 | Schwerpunkt-Abstand | |m|; der Schwerpunkt selbst ist unsicher (aus 10 Schuss ≈ 0,4σ) | Serie, Scheibe, Zeitraum | A | vorhanden |
 | L3 | Ist die Lage echt? | Hotelling-T² gegen F(2, n−2), 95-%-Ellipse um m | Scheibe, Zeitraum | A | SP-1.10 |
-| L4 | Ringe durch Lage gegen Streuung | jeder Treffer um den Schwerpunkt der übrigen verschoben (Leave-one-out, (pᵢ − m) · n/(n − 1)) und neu gewertet: Lage- und Streuungsverlust, zusammen E9. Schätzt, was eine Korrektur auf neuen Schüssen bringt (B5); in der Stichprobe zentriert zeigte er ohne jeden Versatz im Mittel +0,38 Ringe Scheingewinn (LG σ 1,5 mm). Erst ab 10 Schuss, wenn L3 „echt“ sagt und die Korrektur gewinnt; nie amtlich | Serie, Scheibe, Zeitraum | A | SP-1.10, SP-1.12 |
+| L4 | Ringe durch Lage gegen Streuung | jeder Treffer um den Schwerpunkt der übrigen verschoben (Leave-one-out, (pᵢ − m) · n/(n − 1)) und neu gewertet: Lage- und Streuungsverlust, zusammen E9. Schätzt, was die Gruppe in der Mitte auf neuen Schüssen brächte (B5), als Summe über die n Schüsse mit Lage, darum in Texten mit n und je Schuss; in der Stichprobe zentriert zeigte er ohne jeden Versatz im Mittel +0,38 Ringe Scheingewinn (LG σ 1,5 mm). Erst ab 10 Schuss, wenn L3 „echt“ sagt und die Mitte Ringe bringt; nie amtlich | Serie, Scheibe, Zeitraum | A | SP-1.10, SP-1.12 |
 | L5 | Lageanteil am Fehler | **entfernt (Oktober 2026):** dieselbe Aussage wie der Lage-Verlust aus L4, nur in Prozent vom Quadrat; die Lesehilfe „10 %: kein Thema“ widersprach L3 | – | – | entfernt (SP-1.12) |
 | L6 | Richtungsuhr | Anteil je Uhrzeit (30°-Sektor) um die Mitte oder um m; aussagekräftig ab 30 Schuss, darunter nur ein Bild | Scheibe, Zeitraum | B | SP-1.10 |
 | L7 | Ausreißerrichtung | Richtungsuhr der schwächsten 10 % relativ zu m | Zeitraum | B | SP-2.7 |
 | L8 | Drift in der Abgabefolge | von-Neumann-Verhältnis je Sprung normiert (≈ 2 unabhängig, < 2 Wandern); ohne Urteil, weil es bei kleinem n stark streut (B8). Ø und größter Sprung entfallen (Oktober 2026, im Mittel √π · σ) | Scheibe | C | SP-1.10 |
 | L9 | Langzeit-Trefferbild | alle Schüsse eines Zeitraums als Dichte, je Familie; dazu die Form über mehrere Scheiben (Kovarianz je Scheibe um ihren eigenen Schwerpunkt, gepoolt), die eine leichte Streckung (a/b 1,2–1,3) erst sichtbar macht | Zeitraum | B | SP-2.7 |
 | L10 | Lage über Zeit | Schwerpunkt je Scheibe als Wolke mit Pfad, nach n gewichtet | Zeitraum | B | SP-2.7 |
-| L11 | Visierkorrektur in Klicks | −m / Klickweg; nur wenn L3 „echt“ sagt | Scheibe | C | SP-2.3 (Ausrüstung) |
+| L11 | Visierkorrektur in Klicks | **entfernt (Oktober 2026):** keine Hinweise zum Visier; Spiegel rechnet, was die Lage kostet (L4), nicht, was man verstellen soll (User, 9. Oktober 2026) | – | – | entfernt (SP-1.12) |
 
 ### 4 Verteilung
 
@@ -225,7 +225,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 ## Beobachtungen in Worten (Beispiele)
 
 1. „Serie 3 war deine engste (R50 1,9 mm), Serie 4 streut 34 % weiter.“ — nur bei gleicher Schusszahl und wenn ein Test den Unterschied zeigt; 20 % Unterschied erreichen zwei gleich gute Zehnerserien oft zufällig (Nutzen-Prüfung, Oktober 2026).
-2. „Dein Schwerpunkt liegt 1,8 mm links, bei 40 Schuss ist das kein Zufall. Mit korrigiertem Visier brächten die nächsten Schüsse etwa 2,4 Ringe mehr.“ — nur wenn L3 „echt“ sagt und n ≥ 10 (L4, Leave-one-out).
+2. „Dein Schwerpunkt liegt 1,8 mm links, bei 40 Schuss ist das kein Zufall. Läge die Gruppe in der Mitte, brächten 40 weitere Schuss zusammen etwa 2,4 Ringe mehr (rund 0,06 je Schuss).“ — nur wenn L3 „echt“ sagt und n ≥ 10 (L4, Leave-one-out).
 3. „Die letzten zehn Schuss waren je Schuss 0,21 schwächer als die ersten zehn, in 6 deiner letzten 8 Trainings war das so.“ — als Muster erst ab fünf Scheiben.
 4. „Drei Abreißer nach rechts unten kosteten dich 2,1 Ringe.“
 5. „Deine Probe war enger als die Wertung (R50 1,6 gegen 2,3 mm).“ — gleiches n.

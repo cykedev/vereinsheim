@@ -75,21 +75,27 @@ describe("Reiter Lage", () => {
     expect(onToggleLayer).toHaveBeenCalledWith("ellipse")
   })
 
-  it("Ringverlust nach Ursache: Balken Lage und Streuung, Ist, korrigiert, Urteil", () => {
+  it("Ringverlust nach Ursache: Balken Lage und Streuung, Ist, in der Mitte, Urteil", () => {
     const split = ringLossSplit(BASE, LP_10M)!
     const text = cardText(html, "ringverlust-nach-ursache")
     expect(text).toContain(`Lage ${formatValue(split.positionLoss.decimal, 1)}`)
     expect(text).toContain(`Streuung ${formatValue(split.spreadLoss.decimal, 1)}`)
     expect(text).toContain(`Ringverlust ${formatValue(split.total!.decimal, 1)} Ringe`)
     expect(text).toContain(`Ist ${formatValue(split.actual.decimal, 1)} Ringe`)
-    expect(text).toContain(
-      `Mit korrigiertem Visier ${formatValue(split.centered.decimal, 1)} Ringe`
-    )
+    expect(text).toContain(`Gruppe in der Mitte ${formatValue(split.centered.decimal, 1)} Ringe`)
     expect(text).toContain(split.reliable ? "belastbar" : "unsicher")
     const pos = Math.max(0, split.positionLoss.decimal)
     const spr = Math.max(0, split.spreadLoss.decimal)
     expect(styleOf(cardHtml(html, "ringverlust-nach-ursache"), 'data-split="spread"')).toBe(
       `width:${(spr / (pos + spr || 1)) * 100}%`
+    )
+  })
+
+  it("kein Visier und keine Korrektur: der Reiter rechnet, er rät nicht zum Verstellen", () => {
+    // User, 9. Oktober 2026: „visier raus“
+    expect(html).not.toMatch(/Visier|Korrektur|verstellen/)
+    expect(cardText(html, "lage-echt")).toContain(
+      "Liegt die Mitte darin, ist ein Versatz nicht belegt."
     )
   })
 

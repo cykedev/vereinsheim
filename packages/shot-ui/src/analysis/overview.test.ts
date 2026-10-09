@@ -1,11 +1,13 @@
 import {
   cardTrend,
   mpiConfidence,
+  ringLossSplit,
   shareAtLeast,
   sighterZeroed,
   sigmaEstimate,
   tempoSpread,
 } from "@vereinsheim/shot-core/analysis"
+import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
@@ -85,6 +87,56 @@ describe("Beobachtungen in Worten", () => {
       mpiConfidence(base)!.real ? /^Die Lage ist echt/ : /vom Zufall nicht zu unterscheiden/
     )
     expect(sentences.map((s) => s.icon)).toContain("spread")
+  })
+
+  it("Lage echt: der Gewinn in der Mitte mit seinem n und je Schuss, ohne Visier", () => {
+    // 2,8 Ringe sind die Summe über 40 Schuss, nicht der Gewinn eines Schusses (Prüfung, Ergebnis 1)
+    expect(ringLossSplit(base, LP_10M)!.reliable).toBe(true)
+    expect(sentences[0].text).toContain(
+      "Läge die Gruppe in der Mitte, brächten 40 weitere Schuss zusammen etwa 2,8 Ringe mehr (rund 0,07 je Schuss)."
+    )
+    const rings = observations(analysisInput(CARD, "rings", LP_10M))
+    expect(rings[0].text).toContain(
+      "brächten 40 weitere Schuss zusammen etwa 4 Ringe mehr (rund 0,10 je Schuss)."
+    )
+    for (const s of [...sentences, ...rings]) expect(s.text).not.toMatch(/Visier|Korrektur/)
+  })
+
+  it("Lage echt, in ganzen Ringen ohne Gewinn: die Mitte brächte keine Ringe", () => {
+    // zwölf Treffer eng um (2 | 0) mm: echt versetzt, aber jeder schon eine Zehn auf der Luftpistole
+    const shots = Array.from({ length: 12 }, (_, i) => {
+      const xUm = 2000 + (i % 2 ? 200 : -200) * (1 + (i % 3))
+      const yUm = (i % 4 < 2 ? 200 : -200) * (1 + (i % 3))
+      const score = scoreFromCoordinates(LP_10M, xUm, yUm)
+      return {
+        seq: i + 1,
+        xUm,
+        yUm,
+        decimalTenths: score.decimalTenths,
+        ring: score.ring,
+        innerTen: score.innerTen,
+        firedAtMs: null,
+        kind: "match" as const,
+        series: 1,
+      }
+    })
+    const split = ringLossSplit(shots, LP_10M)!
+    expect(split.reliable).toBe(true)
+    expect(split.positionLoss.rings).toBe(0)
+    const text = observations(analysisInput(shots, "rings", LP_10M))[0].text
+    expect(text).toContain("In der Mitte brächte die Gruppe keine Ringe mehr.")
+  })
+
+  it("Lage nicht echt: kein Grund zum Verstellen, nur kein Beleg", () => {
+    const centered = CARD.map((s) =>
+      s.kind === "match" && s.xUm !== null && s.yUm !== null
+        ? { ...s, xUm: s.xUm + 3500, yUm: s.yUm - 2200 }
+        : s
+    )
+    const text = observations(analysisInput(centered, "decimal", LP_10M))[0].text
+    expect(text).toMatch(
+      /vom Zufall ist das nicht zu unterscheiden\. Ein Versatz ist nicht belegt\.$/
+    )
   })
 
   it("die Pause vor Schuss 21 erkannt", () => {

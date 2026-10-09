@@ -164,8 +164,8 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: ["group.mpiDistance"],
     short: "Wo dein Schwerpunkt liegt und ob der Versatz mehr als Zufall ist.",
     what: "Der Schwerpunkt ist der Mittelpunkt aller Treffer, auf der Scheibe der kleine schwarz-weiß geviertelte Kreis. Er ist selbst nur geschätzt: Die Vertrauensellipse zeigt, wo dein wahrer Schwerpunkt mit großer Sicherheit liegt. Ein Test (Hotelling) prüft, ob der Versatz zur Mitte mehr als Zufall ist; er sagt dasselbe wie die Ellipse: Liegt die Mitte darin, ist der Versatz nicht belegt.",
-    read: "Die Lage steht als Abstand und Richtung zur Mitte da, etwa 0,72 mm, davon 0,6 mm rechts und 0,4 mm tief. „Echt versetzt“: Eine Korrektur an Visier oder Anschlag kann sich lohnen. „Vom Zufall nicht zu unterscheiden“: nicht am Visier drehen, auch wenn der Schwerpunkt neben der Mitte liegt. Die Ellipse hat die Form deiner Gruppe und schrumpft mit der Schusszahl: Ihre Halbachse ist bei 10 Schuss etwa so groß wie deine Streuung σ, bei 40 Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.",
-    act: "Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele Ringe eine Korrektur etwa bringt.",
+    read: "Die Lage steht als Abstand und Richtung zur Mitte da, etwa 0,72 mm, davon 0,6 mm rechts und 0,4 mm tief. „Echt versetzt“: Der Versatz ist größer, als der Zufall bei dieser Schusszahl erklärt. „Vom Zufall nicht zu unterscheiden“: Er kann Zufall sein, auch wenn der Schwerpunkt sichtbar neben der Mitte liegt. Die Ellipse hat die Form deiner Gruppe und schrumpft mit der Schusszahl: Ihre Halbachse ist bei 10 Schuss etwa so groß wie deine Streuung σ, bei 40 Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.",
+    act: "Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele Ringe sie etwa kostet.",
     minimum: "Schwerpunkt ab 2 Schuss, der Test ab 3.",
     formula: "T² = n · m′ S⁻¹ m gegen 2(n − 1)/(n − 2) · F₀,₉₅(2, n − 2)",
   },
@@ -175,12 +175,11 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     theme: "position",
     catalog: ["E9", "L4"],
     metrics: [],
-    short:
-      "Wie viele Ringe dir zum Höchstwert fehlen und wie viele davon eine Korrektur der Lage brächte.",
+    short: "Wie viele Ringe dir zum Höchstwert fehlen und wie viele davon die Lage kostet.",
     what: "Dein Ringverlust ist, was dir zum Höchstwert fehlt (10 je Schuss, in Zehnteln 10,9). Spiegel teilt ihn auf: Jeder Treffer wird um den Schwerpunkt der übrigen Schüsse verschoben und neu gewertet. Was das bringt, ist der Verlust durch die Lage, der Rest der Verlust durch die Streuung.",
-    read: "Großer Lage-Anteil: Visier oder Anschlag. Großer Streuungs-Anteil: Präzision. Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der Schusszahl.",
+    read: "Großer Lage-Anteil: Die Gruppe sitzt neben der Mitte. Großer Streuungs-Anteil: Präzision. Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der Schusszahl.",
     caution:
-      "Ohne echten Versatz ist der Lage-Anteil meist leicht negativ: Eine Korrektur würde dann Ringe kosten. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Korrektur etwas bringt. Gewertet wird aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig, gibt es keinen Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.",
+      "Ohne echten Versatz ist der Lage-Anteil meist leicht negativ, in ganzen Ringen oft 0: Die Gruppe um den gemessenen Versatz zu verschieben, würde dann Ringe kosten. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Gruppe in der Mitte Ringe bringt. Gewertet wird aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig, gibt es keinen Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.",
     minimum:
       "Ab 2 Schuss mit Lage, belastbar ab 10; den Ringverlust gibt es nur, wenn jeder Wertungsschuss eine Lage hat.",
     formula:

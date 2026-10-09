@@ -226,13 +226,13 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   als Zufall ist; er sagt dasselbe wie die Ellipse: Liegt die Mitte darin, ist der Versatz nicht
   belegt.
 - *So liest du es:* Die Lage steht als Abstand und Richtung zur Mitte da, etwa 0,72 mm, davon 0,6 mm
-  rechts und 0,4 mm tief. „Echt versetzt“: Eine Korrektur an Visier oder Anschlag kann sich lohnen.
-  „Vom Zufall nicht zu unterscheiden“: nicht am Visier drehen, auch wenn der Schwerpunkt neben der
-  Mitte liegt. Die Ellipse hat die Form deiner Gruppe und schrumpft mit der Schusszahl: Ihre
-  Halbachse ist bei 10 Schuss etwa so groß wie deine Streuung σ, bei 40 Schuss etwa 0,4 σ. Sie zeigt
-  nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.
+  rechts und 0,4 mm tief. „Echt versetzt“: Der Versatz ist größer, als der Zufall bei dieser
+  Schusszahl erklärt. „Vom Zufall nicht zu unterscheiden“: Er kann Zufall sein, auch wenn der
+  Schwerpunkt sichtbar neben der Mitte liegt. Die Ellipse hat die Form deiner Gruppe und schrumpft
+  mit der Schusszahl: Ihre Halbachse ist bei 10 Schuss etwa so groß wie deine Streuung σ, bei 40
+  Schuss etwa 0,4 σ. Sie zeigt nicht, wo deine Schüsse liegen, nur wo ihr Mittelpunkt liegen kann.
 - *Was du tun kannst:* Ist die Lage echt versetzt, zeigt „Ringverlust nach Ursache“, wie viele Ringe
-  eine Korrektur etwa bringt.
+  sie etwa kostet.
 - *Mindestzahl:* Schwerpunkt ab 2 Schuss, der Test ab 3.
 - *Formel:* `T² = n · m′ S⁻¹ m gegen 2(n − 1)/(n − 2) · F₀,₉₅(2, n − 2)`
 
@@ -241,12 +241,14 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Spiegel teilt ihn auf: Jeder Treffer wird um den Schwerpunkt der übrigen Schüsse verschoben und
   neu gewertet. Was das bringt, ist der Verlust durch die Lage, der Rest der Verlust durch die
   Streuung.
-- *So liest du es:* Großer Lage-Anteil: Visier oder Anschlag. Großer Streuungs-Anteil: Präzision.
-  Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der Schusszahl.
-- *Vorsicht:* Ohne echten Versatz ist der Lage-Anteil meist leicht negativ: Eine Korrektur würde
-  dann Ringe kosten. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Korrektur etwas
-  bringt. Gewertet wird aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig,
-  gibt es keinen Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.
+- *So liest du es:* Großer Lage-Anteil: Die Gruppe sitzt neben der Mitte. Großer Streuungs-Anteil:
+  Präzision. Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der
+  Schusszahl.
+- *Vorsicht:* Ohne echten Versatz ist der Lage-Anteil meist leicht negativ, in ganzen Ringen oft 0:
+  Die Gruppe um den gemessenen Versatz zu verschieben, würde dann Ringe kosten. Belastbar erst ab 10
+  Schuss, wenn die Lage echt ist und die Gruppe in der Mitte Ringe bringt. Gewertet wird aus der
+  Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig, gibt es keinen Ringverlust, nur
+  die Aufteilung über die übrigen. Nie amtlich.
 - *Mindestzahl:* Ab 2 Schuss mit Lage, belastbar ab 10; den Ringverlust gibt es nur, wenn jeder
   Wertungsschuss eine Lage hat.
 - *Formel:* `Ringverlust = n · 10,9 − Σ vᵢ bzw. n · 10 − Σ Ringᵢ; zentriert: (pᵢ − m) · n/(n − 1),
@@ -515,7 +517,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
    Für Vergleiche σ nehmen.
 3. **„Unklar“ ist ein Ergebnis.** Es sagt: Diese Schüsse zeigen nichts, was über den Zufall
    hinausgeht. Vielleicht gibt es nichts, vielleicht ist es für diese Schusszahl zu klein. Wer
-   trotzdem am Visier dreht, korrigiert oft den Zufall und verliert dabei im Mittel Ringe.
+   trotzdem auf einen Versatz reagiert, den der Zufall erklärt, verschiebt seine Gruppe oft weg von
+   der Mitte und verliert dabei im Mittel Ringe.
 4. **Nach einem Rekord kommt meist eine schwächere Scheibe.** Das ist meist Statistik (Regression
    zur Mitte) und für sich kein Zeichen von Formverlust.
 5. **Ganze Ringe verstecken Feinheiten.** 10,0 und 10,9 sind beide eine 10; für die Analyse sind

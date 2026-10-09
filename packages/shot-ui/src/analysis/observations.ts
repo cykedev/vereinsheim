@@ -47,17 +47,18 @@ export function observations(input: AnalysisInput): Observation[] {
       let text = `Die Lage ist echt: Der Schwerpunkt liegt ${directionWords(confidence.center)} neben der Mitte, mit 95 % kein Zufall.`
       const split = ringLossSplit(base, target)
       if (split?.reliable) {
+        // die Summe über alle Schüsse mit Lage, darum mit ihrem n und je Schuss (Prüfung, Ergebnis 1)
         const gain = split.positionLoss[scoring === "rings" ? "rings" : "decimal"]
         text +=
           gain > 0
-            ? ` Mit korrigiertem Visier brächten die nächsten Schüsse etwa ${rings(gain)} ${gain === 1 ? "Ring" : "Ringe"} mehr.`
-            : " Eine Korrektur brächte keine Ringe."
+            ? ` Läge die Gruppe in der Mitte, brächten ${split.n} weitere Schuss zusammen etwa ${rings(gain)} ${gain === 1 ? "Ring" : "Ringe"} mehr (rund ${formatValue(gain / split.n, 2)} je Schuss).`
+            : " In der Mitte brächte die Gruppe keine Ringe mehr."
       }
       out.push({ icon: "position", text })
     } else {
       out.push({
         icon: "position",
-        text: `Der Schwerpunkt liegt ${mm(Math.hypot(confidence.center.xUm, confidence.center.yUm))} neben der Mitte; vom Zufall ist das nicht zu unterscheiden. Die Daten geben keinen Grund, das Visier zu verstellen.`,
+        text: `Der Schwerpunkt liegt ${mm(Math.hypot(confidence.center.xUm, confidence.center.yUm))} neben der Mitte; vom Zufall ist das nicht zu unterscheiden. Ein Versatz ist nicht belegt.`,
       })
     }
   }
