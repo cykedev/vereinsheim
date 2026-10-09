@@ -70,7 +70,8 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
     - Filter, Zeitraum, Vergleich, Wahl und Herkunft stehen als Query.
     - Browser-Zurück und geteilte Links stellen alles wieder her.
     - Auch die Anker sind englisch (User, 9. Oktober 2026, Nachtrag: „deutsch sieht das seltsam aus“): `#target`,
-      `#shots`, `#numbers`, `#analysis`, die Reiter `#overview` … `#sighters`, im Fortschritt `#history`, `#cards`.
+      `#shots`, `#analysis`, die Reiter `#overview` … `#sighters`, im Fortschritt `#history`, `#cards`, `#numbers`
+      (die Scheibe hat seit U1 keinen Abschnitt „Zahlen“, [[spiegel-durchsicht]]).
       Die Beschriftungen auf der Seite bleiben deutsch.
     - Ids sind erzeugte Ids aus der Datenbank, nie Namen: Scheiben (`[A-Za-z0-9_-]+`, etwa cuid oder UUID) und
       benannte Zeiträume (klein, Ziffern, Bindestriche, nicht `30d`, `90d`, `12m`, `all`, `previous`). Die Familie
@@ -152,8 +153,8 @@ Plan `plans/2026-10-09-spiegel-routen.md`, Branch `feat/spiegel-routen`.
   - Scheibe: `from` (`list`, `start`, `progress`) mit den Schlüsseln der Herkunft, ohne `pick`, dazu `series`
     (`all`, `match`, `sighters`, Serie bis 999), `shot` (Nummer wie auf der Scheibe, `23`, `P3`). Die Reihenfolge:
     `from` mit den Schlüsseln der Herkunft, dann `series`, `shot`, `scoring`.
-  - Anker englisch: `#target`, `#shots`, `#numbers`, `#analysis`, Reiter `#overview` … `#sighters`, Fortschritt
-    `#history`, `#cards`; die Liste trägt den Abend (`#2026-09-25`).
+  - Anker englisch: `#target`, `#shots`, `#analysis`, Reiter `#overview` … `#sighters`, Fortschritt `#history`,
+    `#cards`, `#numbers`; die Liste trägt den Abend (`#2026-09-25`).
 - **Nicht in der Adresse:** wie gezeichnet wird (Ebenen, Ausschnitt, Thema, Erklärungen). Das bleibt Einstellung im
   Gerät.
 - **`@vereinsheim/shot-ui/nav/navigate`:**
@@ -351,8 +352,8 @@ Telefon (eine Spalte, untere Leiste immer da, außer im Auswahlmodus)
         ▼                                  ▼
 ┌──────── Scheibe (CardPage) ─────────┐   ┌──── Fortschritt (PeriodPage) ────┐
 │ ← Scheiben        ‹ vorige nächste ›│   │ Letzte 90 Tage ▾ · LG · vergl. … │
-│ Kopf, Ergebnis, Satz                │◀──│ Liste → „Scheibe öffnen“          │
-│ Scheibe · Schüsse · Zahlen · Analyse│──▶│ „Alle in Scheiben zeigen“ → Liste │
+│ Kopf, Ergebnis, Beobachtungen       │◀──│ Liste → „Scheibe öffnen“          │
+│ Scheibe · Schüsse · Analyse         │──▶│ „Alle in Scheiben zeigen“ → Liste │
 └─────────────────────────────────────┘   └──────────────────────────────────┘
   Auswahl: [Vergleichen (2)] [Im Verlauf] [Ausnehmen] [Nicht meine] [Löschen]
   Scan ⌖ → Vorschau → Bestätigen → Scheibe (← Liste, neue Scheibe markiert)

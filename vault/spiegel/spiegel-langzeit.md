@@ -85,7 +85,7 @@ Seite eines Zeitraums. Die bisher geplante eigene Seite **Vergleich** geht im ei
 
 ### Sprungleiste
 
-„Verlauf · Scheiben · Zahlen · Analyse“, vier Felder wie auf der Scheibe.
+„Verlauf · Scheiben · Zahlen · Analyse“, vier Felder in derselben Leiste wie auf der Scheibe.
 
 ### Verlauf (oben, fest im Bild ab 768 px)
 

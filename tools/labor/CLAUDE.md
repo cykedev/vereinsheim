@@ -50,10 +50,13 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
     „Labor-Werkzeuge, Setzen aktiv“, `active`). Nach dem Wechsel App ↔ Beispiele steht der Fokus auf dem neuen Knopf.
   - **Darstellung** (System, Hell, Dunkel, `ThemeSwitch`): in Profil, am Desktop zusätzlich unten in der Seitenleiste (`AppFrame.sidebarFooter`, neben der Navigation). Die
     drei Knöpfe teilen sich dort die Breite.
-  - Die Ansicht steht in `labor.mode`. Ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie, ein Abend
+  - Die Ansicht steht in `labor.mode`. Ein Anker der Zeitraum-Seite (`#history`, `#cards`, seit U1 auch `#numbers`)
+    öffnet sie, ein Abend
     (`#2026-09-25`) die Scheiben-Liste.
   - **Router im Speicher:** Jeder Link (`RouteLink`) landet über den `RouteLinkProvider` in `go(route)` in `App`, wie
     ein Seitenwechsel: öffnen, Rückweg, Blättern, Querverweise, Navigation.
+  - **Anker beim Laden** gilt nur für die erste Ansicht (`loadAnchor`; `leave()` ruft `leaveFirstView`): Danach trägt
+    die Adresse noch den Anker der vorigen Seite (Sprungleiste, Reiter), und eine neue Seite beginnt oben (User, 9. Oktober 2026: „Beispielscheibe öffnen springt gleich zur Analyse“).
   - **Scrollstelle:** Jeder Bereich merkt sie sich mit seiner Adresse (ohne Wahl und Wertung). Wer zu derselben
     Adresse zurückkehrt, landet an derselben Stelle, sonst oben.
   - Eine Scheibe der Saison zeigt über `CardPage` die `CardContextBar` (Rückweg, vorige, nächste). Die Liste hat keine eigene Wertung: Sie nimmt die des Geräts (`scoring` im
@@ -78,7 +81,10 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
 - **Seite aus `CardPage`** (Plan Schritt 4): die Seite einer Scheibe wie in der App. Was nur das Labor hat (Scheibe,
   Beispiel, Ansehen/Setzen, Neuer Schuss, der Hinweis zum Beispiel), steht im Blatt der Labor-Werkzeuge; „Übrige
   blass/aus“ ist ein Eckknopf der Scheibe. Reiter: eine Scheibe beginnt mit dem ersten (User, 9. Oktober 2026), nur ein Anker beim Laden der Beispiele öffnet einen anderen; kein gemerkter Reiter. In der Prüfung schreibt
-  das Labor keinen Anker, und `underTest()` hält `#pruefen` beim Laden fest.
+  das Labor keinen Anker, und `underTest()` hält `#pruefen` beim Laden fest. Seit U1
+  (`plans/2026-10-09-spiegel-scheibe-entschlacken.md`) ohne Abschnitt „Zahlen“: Der Schalter „Erklärungen“ steht im
+  Kopf der Analyse (`AnalysisPanel.action`), der Kopf der Scheibe zeigt die wichtigsten Beobachtungen
+  (`keyObservations`) mit „Alle Beobachtungen ›“; die Prüfung vergleicht sie mit `tools.keyObservations`.
 - **Prüfung der Seite:** Desktop in einem Rahmen von 1280 × 900 (das Fenster der Prüfung ist über 2000 px hoch),
   Telefon bei 390 und 375 px, Querformat 812 × 375. `scrollWhileStuck` scrollt in den Bereich, in dem die
   Scheibe klebt; Knöpfe nur mit Symbol (Ecken der Scheibe) findet `button` über ihren Namen. Headless-Chrome

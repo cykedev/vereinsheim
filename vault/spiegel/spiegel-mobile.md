@@ -21,8 +21,13 @@ relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statisti
 
 ## Ebenen der Information
 
-1. **Auf einen Blick:** Ergebnis, Serienwerte, Trefferbild, letzter oder angetippter Schuss, ein Satz.
-2. **Genauer:** zehn Kacheln (folgen der Auswahl), Schusstabelle, Analyse in sechs Reitern mit etwa 23 Karten und neun Diagrammen.
+1. **Auf einen Blick:** Ergebnis, Serienwerte, Trefferbild, letzter oder angetippter Schuss, die wichtigsten
+   Beobachtungen in Worten (seit U1 bis zu drei, die Lage zuerst).
+2. **Genauer:** Schusstabelle, Analyse in sechs Reitern mit 25 Karten; der Überblick ist die Zahlen-Ansicht. Die zehn
+   Kacheln „Trefferbild in Zahlen“, die der Auswahl folgten, entfielen mit U1.
+
+Seit der Durchsicht vom 9. Oktober 2026 gilt die Leitlinie „drei Ebenen“ (Antwort, Belege, Werkzeug) aus
+[[spiegel-durchsicht]].
 3. **Erklärung:** Kurzsatz, „Was heißt das?“, Formel, Einstieg, Datenlage, Glossar, Fehlschlüsse ([[spiegel-statistics-help]]).
 
 ## Prinzipien
@@ -51,9 +56,10 @@ relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statisti
 
 ## Empfehlung für den Seitenaufbau
 
-**Eine Seite mit Sprungleiste.** Sobald der Kopf weggescrollt ist, erscheint oben „Scheibe · Schüsse · Zahlen · Analyse“; in der Analyse zeigt dieselbe Leiste die Themen (nie zwei Leisten). Aktionen mit Wirkung auf die Scheibe springen zur Scheibe und blenden „Zurück zu …“ ein. Abschnitt und Thema stehen in der Adresse (`#position`, englisch wie alle Anker, [[spiegel-navigation]]), damit Zurück und geteilte Links gehen. Eine untere Abschnittsleiste scheidet aus, dort sitzt die App-Navigation ([[spiegel-ui-design]]). Ausweg, falls die Seite zu lang wirkt: die Analyse als eigene Ansicht.
+**Eine Seite mit Sprungleiste.** Sobald der Kopf weggescrollt ist, erscheint oben „Scheibe · Schüsse · Analyse“ (bis U1
+mit „Zahlen“); in der Analyse zeigt dieselbe Leiste die Themen (nie zwei Leisten). Aktionen mit Wirkung auf die Scheibe springen zur Scheibe und blenden „Zurück zu …“ ein. Abschnitt und Thema stehen in der Adresse (`#position`, englisch wie alle Anker, [[spiegel-navigation]]), damit Zurück und geteilte Links gehen. Eine untere Abschnittsleiste scheidet aus, dort sitzt die App-Navigation ([[spiegel-ui-design]]). Ausweg, falls die Seite zu lang wirkt: die Analyse als eigene Ansicht.
 
-Reihenfolge auf dem Telefon: Kopf mit Ergebnis, Scheibe mit Ablesezeile, Serien und Übersicht, Schüsse (ohne eigenen Scrollkasten, „Alle zeigen“), Kacheln, Analyse mit Überblick.
+Reihenfolge auf dem Telefon: Kopf mit Ergebnis und den wichtigsten Beobachtungen, Scheibe mit Ablesezeile, Serien und Übersicht, Schüsse (ohne eigenen Scrollkasten, „Alle zeigen“), Analyse mit Überblick.
 
 **Diagramme:** Ablesen durch Antippen oder Ziehen (Lineal), die Werte stehen fest über dem Diagramm, im Verlauf wählt das zugleich den Schuss auf der Scheibe. Jedes Diagramm bekommt seine Kernaussage als Label und „Werte als Tabelle“.
 

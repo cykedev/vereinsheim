@@ -99,8 +99,8 @@ Befunde in [[spiegel-mobile]]). Bausteine unter `@vereinsheim/shot-ui/layout/*` 
   Innenzehner und bester Teiler, dazu die Wertung ganze Ringe/Zehntel; alles über die ganze Scheibe. Auf dem
   Telefon im Kopf (erster Bildschirm), ab 768 px als Box rechts über der Ablesung. Die frühere Übersicht als
   eigene Karte wiederholte Ergebnis und Schusszahl und ist darin aufgegangen (User, 8. Oktober 2026).
-- **Sprungleiste** (`SectionNav`) unter dem Kopf, klebt oben: „Scheibe · Schüsse · Zahlen · Analyse“ als Anker,
-  auf dem Telefon vier gleich breite Felder, nie angeschnitten. Aktiv ist der späteste Abschnitt, dessen Anfang
+- **Sprungleiste** (`SectionNav`) unter dem Kopf, klebt oben: „Scheibe · Schüsse · Analyse“ als Anker (der
+  Abschnitt „Zahlen“ entfiel mit U1, [[spiegel-durchsicht]]), auf dem Telefon gleich breite Felder, nie angeschnitten. Aktiv ist der späteste Abschnitt, dessen Anfang
   die Leiste erreicht hat (bis 40 px darunter, beim Scrollen gemessen); so ist nach einem Sprung genau dieser
   Abschnitt aktiv, auch wenn er kürzer ist als das Fenster. In der Analyse deckt auf dem Telefon ihre
   Reiterleiste die Sprungleiste ab.
