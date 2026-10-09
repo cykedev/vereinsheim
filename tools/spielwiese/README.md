@@ -13,7 +13,8 @@ Die Vorlage bleibt wie Version 13, auch wo der Fachkern weiter ist: Seit Oktober
 Gruppe ohne die Ausreißer, das Formdiagramm der Spielwiese zentriert aber auf alle Punkte. Nach einem neuen
 Bau säße die Ellipse dort versetzt; das Labor zeigt es richtig. Ebenso liest die Vorlage `cons.mad`, das der
 Fachkern seit dem 9. Oktober 2026 als `shotSd` liefert (Abweichung je Schuss als SD): Nach einem neuen Bau stünde
-dort „NaN Ringe (MAD)“.
+dort „NaN Ringe (MAD)“. Seit U4 (9. Oktober 2026, Scheibe wie am Ausdruck) fehlen dem Fachkern `sighterZeroed` und
+`sighterComparison`: Der Reiter „Probe“ und die Skriptprüfung (`harness.js`) liefen nach einem neuen Bau ins Leere.
 
 ## Herkunft
 
