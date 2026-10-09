@@ -18,7 +18,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/target/TargetControls`     | `src/target/TargetControls.tsx`    | Knöpfe in den Ecken der Scheibe: Ausschnitt, übrige blass/aus, „?“, Schwerpunkt, Streukreis, Ellipse, Nummern                                                                                                                                                                                         |
 | `@vereinsheim/shot-ui/target/useAnimatedViewBox` | `src/target/useAnimatedViewBox.ts` | weicher Übergang des Ausschnitts (340 ms), `useElementWidth`                                                                                                                                                                                                                                          |
 | `@vereinsheim/shot-ui/series/SeriesStrip`        | `src/series/SeriesStrip.tsx`       | Serien als kleine Scheiben im gleichen Ausschnitt, Serienergebnis, als Schalter für die Auswahl, dazu „Alle“                                                                                                                                                                                          |
-| `@vereinsheim/shot-ui/format`                    | `src/format.ts`                    | `formatValue`, `formatSigned`, `unitText`, `directionText`, `directionWords`, `durationText`, `percentText`: feste Stellen, Komma, echtes Minus, ohne `Intl`                                                                                                                                          |
+| `@vereinsheim/shot-ui/format`                    | `src/format.ts`                    | `formatValue`, `formatSigned`, `ringsText` („1 Ring“), `unitText`, `directionText`, `directionWords`, `directionName` (ohne Zahl), `axisText` (Achse in Uhrzeiten), `countWord`, `durationText`, `percentText`: feste Stellen, Komma, echtes Minus, ohne `Intl`                                       |
 | `@vereinsheim/shot-ui/metrics/MetricTiles`       | `src/metrics/MetricTiles.tsx`      | Kacheln „Trefferbild in Zahlen“ über die Auswahl: Wert, Einheit, kurze Angabe, Kurzsatz als Titel, optional „?“                                                                                                                                                                                       |
 | `@vereinsheim/shot-ui/readout/ShotReadout`       | `src/readout/ShotReadout.tsx`      | Ablesung, kompakt: angetippter oder letzter Schuss, Wert mit Ringwert-Farbe, andere Wertung, Teiler, Abstand (kein x/y)                                                                                                                                                                               |
 | `@vereinsheim/shot-ui/table/ShotTable`           | `src/table/ShotTable.tsx`          | Schusstabelle: neuester oben, folgt der Auswahl, Zeile wählt den Schuss (Weg per Tastatur), Intervalle mit Lücke und Pause                                                                                                                                                                            |
@@ -107,6 +107,12 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Vergleich urteilt nur mit Test, „bedeutsam“ steht nur neben einem Urteil (`verdictText`). Der Abstand zum
   Schnitt ist der zu den bis zu fünf Scheiben davor, ohne die Scheibe selbst; Boden und Decke folgen der
   Richtung der Kennzahl (Prüfung, 9. Oktober 2026).
+- **Zahl und Bezug zusammen** (Prüfung, 9. Oktober 2026, D4): Jede Zahl, die über mehrere Schüsse summiert, nennt
+  ihr n („40 weitere Schuss … zusammen“), jede, die je Schuss gilt, sagt „je Schuss“, bei Serien steht „Ringe“
+  dabei; „1 Ring“ über `ringsText`. Eine Zahl, die auch ohne jeden Effekt groß ausfällt (Versatz Probe → Wertung),
+  steht nur mit diesem Hinweis und nie allein im Überblick. Gründe ohne Wert gleich in Box, Kachel und Reiter
+  (`src/reasons.ts`, nicht exportiert: `noResultReason`, `meanWithCount`, `NO_FULL_POSITION`). Keine Hinweise
+  zum Visier (User, 9. Oktober 2026).
 - **Erklärungen als Blatt:** Karten der Analyse, Kacheln und die Scheibe tragen ein „?“ (`HelpButton` mit
   `helpId`), die Seite öffnet `HelpSheet`; „Erklärungen“ zeigt nur Kurzsätze. Kein „Was heißt das?“ zwischen
   den Zahlen (Plan Schritt 4, D3).

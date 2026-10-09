@@ -91,12 +91,13 @@ addEventListener("load", async () => {
     }
     const tilesMatch = () => tileKeys().filter((key) => tileValue(key) !== expectedTile(key))
     const tableRows = () => $$("#shot-table tr[data-row]")
-    const intervalText = (ms) =>
-      ms === null
-        ? "–"
-        : ms > 180000
-          ? `${L().tools.formatValue(ms / 60000, 0)} min`
-          : `${L().tools.formatValue(ms / 1000, 0)} s`
+    // Pausen über drei Minuten als m:ss, nicht auf ganze Minuten gerundet (Prüfung, Zeit 7)
+    const intervalText = (ms) => {
+      if (ms === null) return "–"
+      if (ms <= 180000) return `${L().tools.formatValue(ms / 1000, 0)} s`
+      const seconds = Math.round(ms / 1000)
+      return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} min`
+    }
 
     await wait(400)
 
@@ -638,7 +639,7 @@ addEventListener("load", async () => {
       "Ganze Ringe: Kacheln, Kopf und Tabelle in Ringen",
       L().state.scoring === "rings" &&
         tilesMatch().length === 0 &&
-        txt($('[data-metric="result.decimalMean"]')).includes("in ganzen Ringen") &&
+        txt($('[data-metric="result.decimalMean"]')).includes("ganze Ringe") &&
         /^\d+(?![\d,])/.test(txt($("[data-result]")).trim()) &&
         txt($("#shot-table th:nth-child(2)")) === "Ring",
       tilesMatch().join(" ")
@@ -856,10 +857,31 @@ addEventListener("load", async () => {
       "Beobachtungen: Pause vor Schuss 21 erkannt",
       sentences.some((s) => s.includes("Pause vor Schuss 21"))
     )
+    // der Gewinn in der Mitte ist eine Summe: mit n und je Schuss, ohne Visier (Prüfung, Ergebnis 1, D1)
+    const split = S().ringLossSplit(base(), L().target)
+    const gain = split.positionLoss.decimal
+    check(
+      "Beobachtungen: Lage-Satz mit n und je Schuss, kein Visier",
+      !split.reliable ||
+        (sentences[0].includes(
+          `Läge die Gruppe in der Mitte, brächten ${split.n} weitere Schuss zusammen etwa ${nf(gain, 1)} Ringe mehr (rund ${nf(gain / split.n, 2)} je Schuss).`
+        ) &&
+          !/Visier/.test(sentences.join(" "))),
+      sentences[0]
+    )
+    // D3: das Urteil von S4 statt des Abstands Probe → Wertung
+    const zeroedTile = S().sighterZeroed(L().shots)
+    check(
+      "Überblick: „Eingeschossen?“ zeigt das Urteil, keine Zahl",
+      ovValue("Eingeschossen?") === (zeroedTile.real ? "versetzt" : "unklar") &&
+        ovHint("Eingeschossen?") ===
+          `${zeroedTile.real ? "echt neben der Mitte" : "kein Versatz nachweisbar"} · letzte ${zeroedTile.n} Probeschüsse`,
+      `${ovValue("Eingeschossen?")} · ${ovHint("Eingeschossen?")}`
+    )
     check(
       "Datenlage-Zeile",
       txt($("[data-coverage] p", A())).startsWith(
-        "Datenlage: 40 Wertung · 9 Probe · alle mit Lage, Zeit und Wert"
+        "Datenlage: 40 Wertungsschüsse · 9 Probeschüsse · alle mit Lage, Zeit und Wert"
       ),
       txt($("[data-coverage] p", A()))
     )
@@ -887,6 +909,15 @@ addEventListener("load", async () => {
       `${histSvg.getAttribute("width")} / ${histSvg.parentElement.getBoundingClientRect().width}`
     )
     check("Ergebnis: Serienkurve mit vier Serien", $$("[data-series-point]", A()).length === 4)
+    // E10 als Standardabweichung je Schuss, nicht als MAD (User, 9. Oktober 2026)
+    const consistency = S().seriesConsistency(base(), "decimal")
+    check(
+      "Ergebnis: Abweichung je Schuss (SD) statt MAD",
+      ctext("serien-und-konstanz").includes(
+        `Abweichung je Schuss${nf(consistency.shotSd, 2)} Ringe (SD)`
+      ) && !ctext("serien-und-konstanz").includes("MAD"),
+      ctext("serien-und-konstanz")
+    )
     check(
       "Ergebnis: zwei Quoten mit 95-%-Bereich",
       $$("[data-share]", A()).length === 2 && $$("[data-share] [data-range]", A()).length === 2
@@ -1034,6 +1065,13 @@ addEventListener("load", async () => {
     check(
       "Lage: von Neumann",
       ctext("drift-und-wanderung").includes(nf(S().drift(base()).vonNeumann, 2))
+    )
+    check(
+      "Lage: „Gruppe in der Mitte“ statt korrigiertem Visier",
+      ctext("ringverlust-nach-ursache").includes(
+        `Gruppe in der Mitte${nf(split.centered.decimal, 1)} Ringe`
+      ) && !/Visier|Korrektur/.test(txt(A())),
+      ctext("ringverlust-nach-ursache")
     )
 
     await tab("Zeit und Verlauf")
@@ -1229,11 +1267,16 @@ addEventListener("load", async () => {
     check("Probe: Umfang 9", ctext("probe-umfang").includes("9 (1 Block à zehn)"))
     const zeroed = S().sighterZeroed(L().shots)
     check(
-      "Probe: „Eingeschossen?“ über die letzten fünf",
+      "Probe: „Eingeschossen?“ über die letzten fünf, die Zahl mit dem Hinweis aus B21",
       zeroed.n === 5 &&
+        ctext("eingeschossen").includes("Lage der letzten fünf Probeschüsse") &&
         ctext("eingeschossen").includes(
           `Versatz Probe → Wertung${nf(zeroed.matchOffsetUm / 1000, 2)} mm`
-        )
+        ) &&
+        ctext("eingeschossen").includes(
+          "Auch ohne jede Verschiebung liegt der Abstand zur Wertung bei fünf Probeschüssen meist bei etwa einem halben σ"
+        ),
+      ctext("eingeschossen")
     )
     check(
       "Probe: auf der Scheibe in Abgabefolge",
@@ -1270,7 +1313,7 @@ addEventListener("load", async () => {
     }
     await click(button("Luftpistole"), 200)
     await click(button("40 Schuss mit Probe"), 200)
-    check("keine Visierverstellung auf der Seite", !/Verstellung|verstellt/.test(pageText()))
+    check("keine Visierverstellung auf der Seite", !/Verstellung|verstellt|Visier/.test(pageText()))
 
     // Abstände: zwischen Blöcken und Karten 16 px, Karten einer Zeile mit gleicher Unterkante
     const BOXES =

@@ -35,6 +35,9 @@ dokumentation und hilfe, auch in der anwendung, das ist wichtig“. Plan:
   `shot-core` hat kein Build-Skript, der Schritt ist leer, aber sein Hash folgt dem Quellcode. Ohne ihn
   liefe `test` nach einer Änderung in `shot-core` aus dem Cache, und eine neue Auswertung ohne Erklärung
   bliebe grün.
+- **Keine Hinweise zum Visier** (User, 9. Oktober 2026): Spiegel rechnet, was die Lage kostet, nicht, ob oder wie
+  man verstellt; kein Text nennt Visier oder Klicks (Test `style.test.ts`). Zahlen mit Bezug: „je Schuss“, über
+  wie viele Schüsse, „Ringe“ bei Serien.
 - **Belege nachrechnen:** Eine Zahl aus einer Simulation steht nur in einem Text, wenn
   `pnpm --filter @vereinsheim/shot-help simulate` sie ausgibt (Katalog, „Belege aus Simulationen“).
   Ändert sich eine Auswertung in `shot-core` oder ein Text mit Zahl, das Skript neu laufen lassen und
