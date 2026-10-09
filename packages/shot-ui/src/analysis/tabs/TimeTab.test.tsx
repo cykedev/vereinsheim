@@ -13,7 +13,7 @@ import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/me
 import { describe, expect, it } from "vitest"
 
 import { durationText, formatSigned, formatValue, percentText } from "../../format"
-import { fortyCard } from "../testCard"
+import { fortyCard, withSighterAfter } from "../testCard"
 import { cardHtml, cardText, renderTab } from "../testPanel"
 
 const BASE = fortyCard().filter((s) => s.kind === "match")
@@ -66,26 +66,15 @@ describe("Reiter Zeit und Verlauf, Diagramme", () => {
     expect(card).toContain('data-median="true"')
   })
 
-  // bekannter Fehler, Plan plans/2026-10-09-spiegel-seq-luecke.md: Task 3 macht daraus `it`
-  it.fails("eine späte Probe in der Pause vor Schuss 21 verdeckt die Pause nicht (SF-04)", () => {
-    // Wertungsschuss 20 hat seq 29, 21 hat seq 30; die Probe nimmt seq 30, alles danach rückt um eins
+  it("eine späte Probe in der Pause vor Schuss 21 verdeckt die Pause nicht (SF-04)", () => {
     const card = fortyCard()
-    const at = card.findIndex((s) => s.seq === 30)
-    const before = card[at - 1]
-    const sighter = {
-      ...before,
-      kind: "probe" as const,
-      series: null,
-      seq: 30,
-      firedAtMs: (before.firedAtMs as number) + 200_000,
-    }
-    const shots = [
-      ...card.slice(0, at),
-      sighter,
-      ...card.slice(at).map((s) => ({ ...s, seq: (s.seq as number) + 1 })),
-    ]
-    const verlauf = cardHtml(renderTab("time", { shots }), "verlauf-und-trend")
+    const twenty = card.filter((s) => s.kind === "match")[19]
+    const shots = withSighterAfter(card, 20, (twenty.firedAtMs as number) + 200_000)
+    const html = renderTab("time", { shots })
+    const verlauf = cardHtml(html, "verlauf-und-trend")
     expect(all(verlauf, /data-pause-line="(\d+)"/g).map(Number)).toEqual([21])
+    const rhythmus = cardHtml(html, "rhythmus")
+    expect(all(rhythmus, /data-interval="(\d+)" data-pause="true"/g).map(Number)).toEqual([21])
   })
 
   it("wenige Schüsse oder ohne Zeit: der Grund statt eines Diagramms", () => {

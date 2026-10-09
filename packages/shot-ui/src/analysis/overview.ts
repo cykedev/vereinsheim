@@ -42,7 +42,7 @@ const tile = (
 })
 
 export function overviewTiles(input: AnalysisInput): OverviewTile[] {
-  const { all, base, scoring, target } = input
+  const { all, base, card, scoring, target } = input
   const digits = scoring === "rings" ? 0 : 1
   const rings = (v: number) => formatValue(v, digits)
   const metric = (key: string) => computeMetric(inScoring(metricByKey(key)!, scoring), base)
@@ -53,8 +53,9 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
   const confidence = mpiConfidence(base)
   const split = ringLossSplit(base, target)
   const trend = cardTrend(base, scoring)
-  const pace = tempoSpread(base)
-  const tempoMedian = computeMetric(metricByKey("time.intervalMedian")!, base)
+  // Abstände über die ganze Karte: eine späte Probe ist keine Lücke (SF-04)
+  const pace = tempoSpread(base, card)
+  const tempoMedian = computeMetric(metricByKey("time.intervalMedian")!, base, card)
   const zeroed = sighterZeroed(all)
   const key = scoring === "rings" ? "rings" : "decimal"
   const mm2 = (um: number) => formatValue(um / 1000, 2)

@@ -19,17 +19,20 @@ const PAD = { left: 36, right: 12, top: 18, bottom: 26 }
 export function RhythmChart({
   width,
   shots,
+  card = shots,
   chosenNumber = null,
   onShow,
 }: {
   width: number
   shots: readonly MetricShot[]
+  /** die ganze Karte, aus der `shots` stammen: eine späte Probe ist keine Lücke (SF-04) */
+  card?: readonly MetricShot[]
   /** Nummer des auf der Scheibe gewählten Schusses: das Lineal steht auf dem Abstand vor ihm */
   chosenNumber?: number | null
   /** „Auf der Scheibe“: den Schuss mit dieser Nummer dort zeigen */
   onShow?: (number: number) => void
 }) {
-  const profile = rhythmProfile(shots, 5)
+  const profile = rhythmProfile(shots, 5, card)
   const timed = profile.filter((p) => p.intervalMs !== null)
   // x vor dem Ausstieg ohne Abstände: das Lineal braucht die Positionen in jedem Fall (Regeln der Hooks)
   const n = profile.length ? profile[profile.length - 1].number : 1

@@ -16,6 +16,11 @@ export interface AnalysisInput {
   all: readonly MetricShot[]
   /** die Schüsse, über die die Analyse rechnet: Wertung, bei nur Probe die Probe als Wertung */
   base: readonly MetricShot[]
+  /**
+   * die ganze Karte in der Form von `base` (bei nur Probe die Probe als Wertung), für Abstände: eine späte
+   * Probe zwischen zwei Wertungsschüssen ist keine Lücke (SF-04)
+   */
+  card: readonly MetricShot[]
   basis: AnalysisBasis
   scoring: Scoring
   target: TargetImage
@@ -31,5 +36,5 @@ export function analysisInput(
     probe > 0 && probe < shots.length ? "ohne Probe" : probe > 0 ? "nur Probe" : "alle"
   const match = shots.filter((shot) => shot.kind === "match")
   const base = match.length ? match : probeOnlyAsMatch(shots)
-  return { all: shots, base, basis, scoring, target }
+  return { all: shots, base, card: match.length ? shots : base, basis, scoring, target }
 }

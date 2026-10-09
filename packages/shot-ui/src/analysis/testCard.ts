@@ -73,3 +73,34 @@ export function fortyCard(target: TargetImage = LP_10M): MetricShot[] {
     }
   })
 }
+
+/**
+ * Die Karte mit einer späten Probe nach Wertungsschuss `matchNumber` (SF-04): Lage wie der Schuss davor,
+ * ohne Serie, zur Zeit `atMs` oder in der Mitte des Abstands zum nächsten Schuss; `seq` danach rückt um eins.
+ */
+export function withSighterAfter(
+  card: readonly MetricShot[],
+  matchNumber: number,
+  atMs?: number
+): MetricShot[] {
+  const at =
+    card.findIndex(
+      (s, i) =>
+        s.kind === "match" &&
+        card.slice(0, i + 1).filter((t) => t.kind === "match").length === matchNumber
+    ) + 1
+  const before = card[at - 1]
+  const firedAtMs = atMs ?? ((before.firedAtMs as number) + (card[at].firedAtMs as number)) / 2
+  const sighter: MetricShot = {
+    ...before,
+    kind: "probe",
+    series: null,
+    seq: (before.seq as number) + 1,
+    firedAtMs,
+  }
+  return [
+    ...card.slice(0, at),
+    sighter,
+    ...card.slice(at).map((s) => ({ ...s, seq: (s.seq as number) + 1 })),
+  ]
+}

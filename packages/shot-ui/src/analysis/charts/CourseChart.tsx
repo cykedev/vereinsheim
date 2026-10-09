@@ -22,12 +22,15 @@ const PAD = { left: 30, right: 12, top: 24, bottom: 26 }
 export function CourseChart({
   width,
   shots,
+  card = shots,
   scoring,
   chosenNumber = null,
   onShow,
 }: {
   width: number
   shots: readonly MetricShot[]
+  /** die ganze Karte, aus der `shots` stammen: eine späte Probe ist keine Lücke (SF-04) */
+  card?: readonly MetricShot[]
   scoring: Scoring
   /** Nummer des auf der Scheibe gewählten Schusses */
   chosenNumber?: number | null
@@ -65,7 +68,7 @@ export function CourseChart({
   }
   const series = [...ranges].sort((a, b) => a[1][0] - b[1][0])
   // eine Pause kurz vor Schluss mit nur wertlosen Schüssen danach läge hinter dem letzten Punkt (Review)
-  const pauses = (pauseRecovery(shots, scoring)?.effects ?? []).filter(
+  const pauses = (pauseRecovery(shots, scoring, card)?.effects ?? []).filter(
     (effect) => effect.afterShot <= maxN
   )
   const step = maxN > 30 ? 10 : 5

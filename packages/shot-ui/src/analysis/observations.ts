@@ -44,7 +44,7 @@ export interface Observation {
 }
 
 export function observations(input: AnalysisInput): Observation[] {
-  const { all, base, scoring, target } = input
+  const { all, base, card, scoring, target } = input
   const out: Observation[] = []
   const rings = (v: number) => formatValue(v, scoring === "rings" ? 0 : 1)
   const mm = (um: number) => `${formatValue(um / 1000, 2)} mm`
@@ -127,7 +127,7 @@ export function observations(input: AnalysisInput): Observation[] {
     out.push({ icon: "trend", text })
   }
 
-  const recovery = pauseRecovery(base, scoring)
+  const recovery = pauseRecovery(base, scoring, card)
   if (recovery?.effects.length) {
     // gegen die übrigen Schüsse und je Schuss, bis zu drei danach (Prüfung, Zeit 1); ohne vergleichbaren
     // Wert sagt der Satz das, statt „im Schnitt“ (Plan D8)
@@ -146,7 +146,7 @@ export function observations(input: AnalysisInput): Observation[] {
     })
   }
 
-  const pace = tempoSpread(base)
+  const pace = tempoSpread(base, card)
   if (pace) {
     out.push({
       icon: "clock",

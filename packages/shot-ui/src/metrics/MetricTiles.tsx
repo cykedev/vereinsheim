@@ -3,6 +3,7 @@
 import { centroid } from "@vereinsheim/shot-core/geometry"
 import {
   computeMetric,
+  contextOf,
   eligibleShots,
   inScoring,
   inShotOrder,
@@ -155,8 +156,9 @@ export function MetricTiles({
   )
   const context: HintContext = {
     center,
-    pauses: tempo(timesInOrder(selectShots(inShotOrder(selected), { need: "time" }))).pausesMs
-      .length,
+    pauses: tempo(
+      timesInOrder(selectShots(inShotOrder(selected), { need: "time" }), contextOf(selected, shots))
+    ).pausesMs.length,
     scoring: state.scoring,
   }
   const mixed = shots.some((s) => s.kind === "probe") && shots.some((s) => s.kind !== "probe")
@@ -192,7 +194,8 @@ export function MetricTiles({
           const definition = metricByKey(key)
           if (!definition) return null
           const metric = inScoring(definition, state.scoring)
-          const value = computeMetric(metric, selected)
+          // die ganze Karte für Abstände: eine späte Probe ist keine Lücke (SF-04)
+          const value = computeMetric(metric, selected, shots)
           const label = key === "group.mpiDistance" ? "Schwerpunkt" : metric.label
           const unit = unitText(metric.unit)
           const short = helpForMetric(key)?.short

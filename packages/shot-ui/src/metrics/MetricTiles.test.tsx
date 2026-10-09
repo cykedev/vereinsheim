@@ -10,6 +10,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { directionText, formatValue } from "../format"
+import { fortyCard, withSighterAfter } from "../analysis/testCard"
 import { selectionShots } from "../shots"
 import { initialViewState, type ViewState } from "../view-state"
 import { MetricTiles, TILE_KEYS } from "./MetricTiles"
@@ -168,6 +169,22 @@ describe("Kacheln „Trefferbild in Zahlen“", () => {
       "1 Pause über 3 min nicht gezählt"
     )
     expect(tileText(render({ selection: 1 }), "time.intervalMedian")).not.toContain("Pause")
+  })
+
+  it("ohne Probe: eine späte Probe ist keine Lücke, weder im Tempo noch bei den Pausen (SF-04)", () => {
+    const card = fortyCard()
+    const twenty = card.filter((s) => s.kind === "match")[19]
+    const paused = withSighterAfter(card, 20, (twenty.firedAtMs as number) + 200_000)
+    expect(
+      tileText(render({ selection: "match" }, undefined, paused), "time.intervalMedian")
+    ).toContain("1 Pause über 3 min nicht gezählt")
+    const mid = withSighterAfter(card, 5)
+    const median = metricByKey("time.intervalMedian")!
+    const withCard = formatValue(computeMetric(median, selectionShots(mid, "match"), mid)!, 0)
+    expect(withCard).not.toBe(formatValue(computeMetric(median, selectionShots(mid, "match"))!, 0))
+    expect(
+      tileText(render({ selection: "match" }, undefined, mid), "time.intervalMedian")
+    ).toContain(withCard)
   })
 
   it("ein verdächtiger Platzhalter verschiebt weder Richtung noch Pausen (SF-15)", () => {

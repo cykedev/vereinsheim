@@ -27,10 +27,10 @@ export function positionCards({
   onToggleLayer,
   onHelp,
 }: CardContext): CardSpec[] {
-  const { base, scoring, target } = input
+  const { base, card, scoring, target } = input
   const confidence = mpiConfidence(base)
   const split = ringLossSplit(base, target)
-  const wander = drift(base)
+  const wander = drift(base, card)
   const digits = scoring === "rings" ? 0 : 1
   const rings = (v: number) => formatValue(v, digits)
   const key = scoring === "rings" ? "rings" : "decimal"

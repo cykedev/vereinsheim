@@ -47,7 +47,7 @@ export function timeCards({
   chosenShot,
   onShowShot,
 }: CardContext): CardSpec[] {
-  const { base, scoring } = input
+  const { base, card, scoring } = input
   // Lineal in Verlauf und Rhythmus: auf dem Schuss der Scheibe, „Auf der Scheibe“ zurück (Plan L1, D4)
   const numbers = shotNumbers(base)
   const chosenNumber = chosenShot ? (numbers.get(chosenShot) ?? null) : null
@@ -58,13 +58,14 @@ export function timeCards({
       }
     : undefined
   const trend = cardTrend(base, scoring)
-  const profile = rhythmProfile(base)
+  // Abstände über die ganze Karte: eine späte Probe ist keine Lücke (SF-04)
+  const profile = rhythmProfile(base, 5, card)
   const timed = profile.filter((p) => p.intervalMs !== null).length
-  const pace = tempoSpread(base)
-  const duration = computeMetric(inScoring(metricByKey("time.duration")!, scoring), base)
+  const pace = tempoSpread(base, card)
+  const duration = computeMetric(inScoring(metricByKey("time.duration")!, scoring), base, card)
   // der Median wie die Kachel an der Scheibe ab 3 Schuss mit Zeit, die Streuung ab 4 (Prüfung, Zeit 6)
-  const medianSeconds = computeMetric(metricByKey("time.intervalMedian")!, base)
-  const recovery = pauseRecovery(base, scoring)
+  const medianSeconds = computeMetric(metricByKey("time.intervalMedian")!, base, card)
+  const recovery = pauseRecovery(base, scoring, card)
   const tired = fatigue(base, scoring)
   const series = seriesCurve(base, scoring)
   const spreads = seriesSpread(base)
@@ -85,6 +86,7 @@ export function timeCards({
                   <CourseChart
                     width={width}
                     shots={base}
+                    card={card}
                     scoring={scoring}
                     chosenNumber={chosenNumber}
                     onShow={onShow}
@@ -134,6 +136,7 @@ export function timeCards({
                   <RhythmChart
                     width={width}
                     shots={base}
+                    card={card}
                     chosenNumber={chosenNumber}
                     onShow={onShow}
                   />

@@ -23,7 +23,7 @@ import { formatSigned, formatValue } from "../format"
 import { analysisInput } from "./input"
 import { observations } from "./observations"
 import { overviewTiles } from "./overview"
-import { fortyCard } from "./testCard"
+import { fortyCard, withSighterAfter } from "./testCard"
 
 const CARD = fortyCard()
 const input = analysisInput(CARD, "decimal", LP_10M)
@@ -135,6 +135,21 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
   })
 })
 
+describe("Überblick mit einer späten Probe (SF-04)", () => {
+  it("Tempo von Wertungsschuss zu Wertungsschuss, die Probe dazwischen ist keine Lücke", () => {
+    const late = analysisInput(withSighterAfter(CARD, 5), "decimal", LP_10M)
+    const median = metricByKey("time.intervalMedian")!
+    const tempo = overviewTiles(late).find((t) => t.label === "Tempo")!
+    const withCard = formatValue(computeMetric(median, late.base, late.card)!, 0)
+    expect(tempo.value).toBe(withCard)
+    // ohne die Karte fiele der Abstand über die Probe weg: ein anderer Median
+    expect(withCard).not.toBe(formatValue(computeMetric(median, late.base)!, 0))
+    expect(tempo.hint).toBe(
+      `Median · mittlere Hälfte in ${formatValue(tempoSpread(late.base, late.card)!.iqrMs / 1000, 0)} s`
+    )
+  })
+})
+
 describe("Beobachtungen in Worten", () => {
   const sentences = observations(input)
 
@@ -212,6 +227,15 @@ describe("Beobachtungen in Worten", () => {
       (s) => s.icon === "outlier"
     )!.text
     expect(both).toMatch(/^Die Schüsse 27, 31 fallen als Ausreißer aus der Gruppe\. Sie kosten /)
+  })
+
+  it("eine späte Probe in der Pause vor Schuss 21 verdeckt sie nicht (SF-04)", () => {
+    const twenty = CARD.filter((s) => s.kind === "match")[19]
+    const late = withSighterAfter(CARD, 20, (twenty.firedAtMs as number) + 200_000)
+    const pause = observations(analysisInput(late, "decimal", LP_10M)).find(
+      (s) => s.icon === "pause"
+    )
+    expect(pause?.text).toMatch(/^Nach der Pause vor Schuss 21 lagen die Schüsse danach/)
   })
 
   it("die Pause vor Schuss 21: bis zu drei Schüsse danach, je Schuss gegen die übrigen", () => {
