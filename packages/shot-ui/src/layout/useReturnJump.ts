@@ -5,8 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { isOutOfView, shouldDismiss, type ReturnState } from "./jump"
 
 /**
- * Sprung zur Scheibe mit Rücksprung (Plan Schritt 4, D6). `jumpTo(element, label)` scrollt nur, wenn das
- * Element außer Sicht ist, merkt die Ausgangsstelle und zeigt die Pille; `back` scrollt zurück. Die Pille
+ * Sprung zur Scheibe mit Rücksprung (Plan Schritt 4, D6). `jumpTo(element, label, shown)` scrollt nur, wenn
+ * `shown` (ohne Angabe das Element) außer Sicht ist, an den Anfang des Elements, merkt die Ausgangsstelle und zeigt
+ * die Pille; `back` scrollt zurück. `shown` braucht es, wo das Ziel klebt: Ein klebendes Element ist fast immer im
+ * Bild, auch wenn das, was man sehen soll, längst darüber liegt. Die Pille
  * verschwindet auch, wenn man selbst zurückscrollt. Gesprungen wird sofort, wie bei den Ankern der
  * Sprungleiste: Glattes Scrollen über Tausende Pixel läuft in einem verborgenen Fenster verspätet und in der
  * Skriptprüfung gar nicht; die Pille gibt die Orientierung. Der Fokus bleibt beim auslösenden Knopf: `back`
@@ -19,9 +21,10 @@ export function useReturnJump(topInset = 56) {
   const trigger = useRef<HTMLElement | null>(null)
 
   const jumpTo = useCallback(
-    (element: Element | null, label: string) => {
+    (element: Element | null, label: string, shown: Element | null = element) => {
       if (!element) return
-      if (!isOutOfView(element.getBoundingClientRect(), window.innerHeight, topInset)) return
+      if (!isOutOfView((shown ?? element).getBoundingClientRect(), window.innerHeight, topInset))
+        return
       const origin = window.scrollY
       state.current = { origin, away: false }
       const focused = document.activeElement

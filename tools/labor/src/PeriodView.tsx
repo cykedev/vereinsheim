@@ -107,7 +107,13 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
   const chooseFromRecord = useCallback(
     (id: string) => {
       if (state.chosen !== id) dispatch({ type: "choose", id })
-      jumpTo(document.querySelector('[data-section="history"]'), "Analyse")
+      // nach oben zur gewählten Scheibe (User, 9. Oktober 2026): an den Anfang von Verlauf und Ablesung, sobald die
+      // Ablesung (am Telefon die Zeile unter dem Verlauf) außer Sicht ist. Nicht der Verlauf allein: Er klebt ab
+      // 768 px und ist in einem hohen Fenster noch im Bild, wenn die Ablesung längst darüber liegt
+      const shown = [...document.querySelectorAll("[data-card-readout], [data-card-line]")].find(
+        (el) => el.getClientRects().length > 0
+      )
+      jumpTo(document.getElementById("history"), "Analyse", shown ?? null)
     },
     [dispatch, jumpTo, state.chosen]
   )

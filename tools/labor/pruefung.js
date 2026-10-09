@@ -803,7 +803,7 @@ addEventListener("load", async () => {
 
     // die Erklärung einer Kennzahl am „?“ ihrer Kachel im Überblick (seit U1 die Zahlen-Ansicht der Seite)
     const sigmaHelp = () =>
-      $('section[aria-label="Analyse"] [data-tile="Präzision σ"] button[aria-label^="Erklärung"]')
+      $('section[aria-label="Analyse"] [data-tile="Streuung"] button[aria-label^="Erklärung"]')
     const sheet = () => helpSheet()
     const sigmaTopic = L().tools.helpForMetric("group.sigma")
     sigmaHelp().focus()
@@ -918,10 +918,10 @@ addEventListener("load", async () => {
       base()
     )
     check(
-      "Überblick: Ergebnis und σ direkt aus dem Fachkern",
+      "Überblick: Ergebnis und Streuung (σ) direkt aus dem Fachkern",
       ovValue("Ergebnis") === nf(resultTotal, 1) &&
-        ovValue("Präzision σ") === nf(S().sigmaEstimate(base()).sigma / 1000, 2),
-      `${ovValue("Ergebnis")} · ${ovValue("Präzision σ")}`
+        ovValue("Streuung") === nf(S().sigmaEstimate(base()).sigma / 1000, 2),
+      `${ovValue("Ergebnis")} · ${ovValue("Streuung")}`
     )
     const sentences = $$("[data-observation]", A()).map((li) => txt(li).trim())
     const model = T().observations(input())
@@ -933,7 +933,10 @@ addEventListener("load", async () => {
     const conf = S().mpiConfidence(base())
     check(
       "Beobachtungen: Lage-Satz passt zu Hotelling",
-      (conf.real ? /^Die Lage ist echt/ : /vom Zufall nicht zu unterscheiden/).test(sentences[0]),
+      (conf.real
+        ? /^Deine Gruppe liegt .* das ist sicher kein Zufall\./
+        : /das kann Zufall sein/
+      ).test(sentences[0]),
       sentences[0]
     )
     check(
@@ -958,7 +961,7 @@ addEventListener("load", async () => {
       "Überblick: „Eingeschossen?“ zeigt das Urteil, keine Zahl",
       ovValue("Eingeschossen?") === (zeroedTile.real ? "versetzt" : "unklar") &&
         ovHint("Eingeschossen?") ===
-          `${zeroedTile.real ? "echt neben der Mitte" : "kein Versatz nachweisbar"} · letzte ${zeroedTile.n} Probeschüsse`,
+          `${zeroedTile.real ? "sicher neben der Mitte" : "kein Versatz nachweisbar"} · letzte ${zeroedTile.n} Probeschüsse`,
       `${ovValue("Eingeschossen?")} · ${ovHint("Eingeschossen?")}`
     )
     check(
@@ -2239,7 +2242,7 @@ addEventListener("load", async () => {
     small.remove()
 
     // im hohen Fenster: ein Abschnitt erreicht die Leiste und ist aktiv (der letzte Abschnitt ist fensterhoch)
-    const tallJump = async (hash, label = "Zahlen", id = "numbers") => {
+    const tallJump = async (hash, label = "Zahlen", id = "numbers", then) => {
       const f = await openFrame(1440, 1400, hash)
       const d = f.contentDocument
       const w = f.contentWindow
@@ -2252,8 +2255,34 @@ addEventListener("load", async () => {
       await wait(100)
       const top = d.getElementById(id).getBoundingClientRect().top
       const active = d.querySelector('nav[aria-label="Abschnitte"] [aria-current]')?.textContent
+      const after = await then?.(f)
       f.remove()
-      return { top, active }
+      return { top, active, after }
+    }
+    // „zeigen“ an einem Rekord springt nach oben zur gewählten Scheibe (User, 9. Oktober 2026): am Desktop die
+    // Ablesung, am Telefon die Ablesezeile unter dem Verlauf, ganz im Bild unter der Sprungleiste
+    const recordJump = async (f, shown) => {
+      const d = f.contentDocument
+      const w = f.contentWindow
+      const button = [...d.querySelectorAll("[data-records-new] [data-record] button")].find(
+        (b) => !b.disabled
+      )
+      const cardId = button?.closest("[data-record]")?.dataset.recordCard
+      button?.scrollIntoView({ block: "center" })
+      if (button) await frameClick(f, button, 200)
+      const el = d.querySelector(shown)
+      const box = el?.getBoundingClientRect()
+      const bottomEdge = w.innerHeight - (w.innerWidth < 1024 ? 72 : 0)
+      return {
+        ok:
+          !!cardId &&
+          el?.getAttribute(shown.slice(1, -1)) === cardId &&
+          box.top >= 56 - 2 &&
+          box.bottom <= bottomEdge + 2,
+        detail: box
+          ? `${cardId} · ${Math.round(box.top)}–${Math.round(box.bottom)} / ${bottomEdge}`
+          : "keine Ablesung",
+      }
     }
     // ---------- Seite eines Zeitraums (Plan L3, Task 15)
     {
@@ -2448,6 +2477,22 @@ addEventListener("load", async () => {
           txt($("[data-all-records] summary")) === `Alle Rekorde (${rowsNow.length})` &&
           !$("[data-all-records]").open,
         `${newRecords.length} oben · ${allRecords.length} alle`
+      )
+      // „zeigen“ an einem Rekord wählt seine Scheibe für Verlauf, Ablesung und Liste (User, 9. Oktober 2026)
+      const recordRow = newRecords.find(
+        (r) => rowsNow.find((x) => x.key === r.dataset.record)?.record.cardId !== P().state.chosen
+      )
+      const recordCard = rowsNow.find((x) => x.key === recordRow?.dataset.record)?.record.cardId
+      await click($("button", recordRow), 200)
+      check(
+        "Zeitraum: „zeigen“ an einem Rekord wählt seine Scheibe, die Ablesung zeigt sie",
+        !!recordCard &&
+          P().state.chosen === recordCard &&
+          M().reading?.card.id === recordCard &&
+          !!$(
+            `[data-card-row="${recordCard}"][aria-selected="true"], [data-card-row="${recordCard}"][data-chosen]`
+          ),
+        `${recordCard} · gewählt ${P().state.chosen} · Ablesung ${M().reading?.card.id}`
       )
 
       // Lineal und Liste teilen die Wahl
@@ -2796,6 +2841,14 @@ addEventListener("load", async () => {
         const w = f.contentWindow
         const rows = [...d.querySelectorAll("[data-card-row]")]
         const visibleRows = rows.filter((r) => w.getComputedStyle(r).display !== "none")
+        // Länge des Fortschritts am Telefon 390 × 844 (Durchsicht: 4,7 Bildschirme zu 772 px)
+        const screens = d.documentElement.scrollHeight / (height - 72)
+        if (width === 390)
+          check(
+            "Zeitraum, Telefon 390 × 844: kürzer als vorher (4,7 Bildschirme)",
+            !!d.querySelector("[data-period-header]") && screens < 4.7,
+            screens.toFixed(2)
+          )
         const line = d.querySelector("[data-card-line]")
         const nav = d.querySelector('nav[aria-label="Abschnitte"] > div')
         check(
@@ -2844,18 +2897,17 @@ addEventListener("load", async () => {
             near(sheetRect.width, d.documentElement.clientWidth, 2),
           `${Math.round(sheetRect.bottom)} ${Math.round(sheetRect.width)}`
         )
+        sheet.close()
+        if (width === 390) {
+          const jump = await recordJump(f, "[data-card-line]")
+          check(
+            "Zeitraum, Telefon 390 px: „zeigen“ an einem Rekord springt zur gewählten Scheibe",
+            jump.ok,
+            jump.detail
+          )
+        }
         f.remove()
       }
-      // Länge des Fortschritts am Telefon 390 × 844 (Durchsicht: 4,7 Bildschirme zu 772 px)
-      const periodLength = await openFrame(390, 844, "#history")
-      const periodScreens = periodLength.contentDocument.documentElement.scrollHeight / (844 - 72)
-      const periodIsShown = !!periodLength.contentDocument.querySelector("[data-period-header]")
-      periodLength.remove()
-      check(
-        "Zeitraum, Telefon 390 × 844: kürzer als vorher (4,7 Bildschirme)",
-        periodIsShown && periodScreens < 4.7,
-        periodScreens.toFixed(2)
-      )
       const desk2 = await openFrame(1280, 900, "#history")
       const d2 = desk2.contentDocument
       const w2 = desk2.contentWindow
@@ -2879,11 +2931,18 @@ addEventListener("load", async () => {
           d2.documentElement.scrollWidth <= 1280
       )
       desk2.remove()
-      const tallPeriod = await tallJump("#history")
+      const tallPeriod = await tallJump("#history", "Zahlen", "numbers", (f) =>
+        recordJump(f, "[data-card-readout]")
+      )
       check(
         "Zeitraum, hohes Fenster 1440 × 1400: „Zahlen“ erreicht die Leiste und ist aktiv",
         near(tallPeriod.top, 56, 3) && tallPeriod.active === "Zahlen",
         `${Math.round(tallPeriod.top)} ${tallPeriod.active}`
+      )
+      check(
+        "Zeitraum, hohes Fenster 1440 × 1400: „zeigen“ an einem Rekord springt zur gewählten Scheibe",
+        tallPeriod.after.ok,
+        tallPeriod.after.detail
       )
       // ---------- Scheiben-Liste (Plan N2, Task 9)
       const Li = () => L().list

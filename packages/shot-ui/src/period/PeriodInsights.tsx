@@ -48,6 +48,7 @@ export function PeriodInsights({
       <li
         key={r.key}
         data-record={r.key}
+        data-record-card={r.record.cardId}
         className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3"
       >
         <span className="min-w-0">
