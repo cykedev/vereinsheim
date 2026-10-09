@@ -6,15 +6,9 @@ import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { cn } from "@vereinsheim/lib/utils"
 import { useMemo } from "react"
 
-import {
-  caliberRadius,
-  probeCorner,
-  scoreColor,
-  seriesTileView,
-  SHOT_FILL_OPACITY,
-  tileColumns,
-} from "../geometry"
+import { seriesTileView, tileColumns } from "../geometry"
 import { formatTotal, hasPosition, isProbeShot, seriesKeyOf } from "../shots"
+import { MiniTarget } from "../target/MiniTarget"
 import { useElementWidth } from "../target/useAnimatedViewBox"
 import type { SeriesKey, Whole } from "../types"
 import { isSelected, type ViewState } from "../view-state"
@@ -39,9 +33,6 @@ interface Block {
   sub: string
   indices: number[]
 }
-
-const HAIR = { vectorEffect: "non-scaling-stroke" } as const
-const mm = (um: number) => um / 1000
 
 /**
  * Serien als kleine Scheiben (spiegel-ui-design): je Serie und für die Probe eine kleine Scheibe, alle im
@@ -97,9 +88,6 @@ export function SeriesStrip({
 
   if (!blocks.length) return null
 
-  const half = view.w / 2
-  const calR = caliberRadius(target)
-  const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
   const columns = tileColumns(blocks.length, width || 300)
   const whole = state.selection === "all" || state.selection === "match"
   const mixed = shots.some((s) => s.kind === "probe") && shots.some((s) => s.kind !== "probe")
@@ -150,79 +138,16 @@ export function SeriesStrip({
               )}
             >
               {/* blass tritt nur das Bild zurück; die Schrift behält ihren Kontrast */}
-              <svg
-                viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
-                aria-hidden="true"
-                className={cn(
-                  "block aspect-square h-auto w-full rounded-lg border border-border",
-                  dim && "opacity-55"
-                )}
-              >
-                <rect x={view.x} y={view.y} width={view.w} height={view.w} fill="var(--paper)" />
-                {(block.key === "probe" ||
-                  (block.indices.length > 0 &&
-                    block.indices.every((i) => isProbeShot(shots[i])))) && (
-                  <polygon
-                    data-probe-corner="true"
-                    points={probeCorner(view)}
-                    fill="var(--spiegel)"
-                  />
-                )}
-                <circle r={blackR} fill="var(--spiegel)" />
-                {target.weapon === "lg" && (
-                  <circle r={mm(target.ringRadiiUm[9])} fill="var(--paper)" />
-                )}
-                {target.ringRadiiUm.map((radiusUm, i) => {
-                  const r = mm(radiusUm)
-                  if (r > half * 1.5 || (i === 9 && target.weapon === "lg")) return null
-                  return (
-                    <circle
-                      key={i}
-                      r={r}
-                      fill="none"
-                      stroke={
-                        i + 1 >= target.blackFromRing ? "var(--spiegel-line)" : "var(--paper-line)"
-                      }
-                      strokeWidth={0.75}
-                      opacity={0.7}
-                      {...HAIR}
-                    />
-                  )
-                })}
-                {block.indices
-                  .filter((i) => hasPosition(shots[i]))
-                  .map((i) => {
-                    const shot = shots[i]
-                    const x = mm(shot.xUm as number)
-                    const y = -mm(shot.yUm as number)
-                    const color = shot.ring === null ? "var(--paper-line)" : scoreColor(shot.ring)
-                    return seriesKeyOf(shot) === "probe" ? (
-                      <circle
-                        key={i}
-                        cx={x}
-                        cy={y}
-                        r={calR * 0.92}
-                        fill="none"
-                        stroke={color}
-                        strokeWidth={1.25}
-                        {...HAIR}
-                      />
-                    ) : (
-                      <circle
-                        key={i}
-                        cx={x}
-                        cy={y}
-                        r={calR}
-                        fill={shot.ring === null ? "none" : color}
-                        fillOpacity={SHOT_FILL_OPACITY}
-                        stroke="var(--shot-edge)"
-                        strokeWidth={1}
-                        strokeDasharray={shot.ring === null ? "2 2" : undefined}
-                        {...HAIR}
-                      />
-                    )
-                  })}
-              </svg>
+              <MiniTarget
+                target={target}
+                view={view}
+                shots={block.indices.map((i) => shots[i])}
+                probeCorner={
+                  block.key === "probe" ||
+                  (block.indices.length > 0 && block.indices.every((i) => isProbeShot(shots[i])))
+                }
+                dim={dim}
+              />
               <span className="grid gap-px text-xs leading-tight text-muted-foreground">
                 <span data-title="true">{block.title}</span>
                 <b className="font-display text-[15px] font-bold text-foreground tabular-nums">
