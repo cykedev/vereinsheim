@@ -4,7 +4,13 @@
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
-import { hashFor, parseHash, type PageAnchor } from "../layout/sections"
+import {
+  hashFor,
+  parseHash,
+  parsePeriodHash,
+  type PageAnchor,
+  type PeriodSection,
+} from "../layout/sections"
 import { DEFAULT_CHOICE, type CompareChoice, type PeriodChoice } from "../period/calendar"
 import type { CardKind, PeriodMetricKey } from "../period/state"
 import type { Selection } from "../types"
@@ -275,3 +281,130 @@ export function cardToParams(card: CardRoute): Param[] {
 /** Anker der Seite einer Scheibe; ohne Abschnitt keiner */
 export const cardHash = (card: CardRoute) =>
   card.anchor ? hashFor(card.anchor.section, card.anchor.tab) : ""
+
+/** jede Seite von Spiegel (D3); was keine ist, ist `unknown` mit ihrem Pfad */
+export type Route =
+  | { page: "start" }
+  /** `evening`: der Abend als ISO-Tag aus dem Anker (`#2026-09-25`) */
+  | { page: "cards"; query: ListQuery; evening: string | null }
+  | CardRoute
+  | { page: "progress"; query: ProgressQuery; section: PeriodSection | null }
+  | { page: "compare"; origin: CardOrigin; a: string; b: string }
+  | { page: "scan" }
+  | { page: "open" }
+  | { page: "profile" }
+  | { page: "trash" }
+  | { page: "admin"; section: string | null }
+  | { page: "unknown"; path: string }
+
+export type ListRoute = Extract<Route, { page: "cards" }>
+export type ProgressRoute = Extract<Route, { page: "progress" }>
+
+/** Pfad in Teile; ein Schrägstrich am Ende zählt nicht; ein kaputtes `%` ergibt null */
+function segmentsOf(pathname: string): string[] | null {
+  try {
+    return pathname
+      .split("/")
+      .filter(Boolean)
+      .map((segment) => decodeURIComponent(segment))
+  } catch {
+    return null
+  }
+}
+
+/** die Route einer Adresse aus Pfad, Query und Anker, wie `location` sie liefert (mit oder ohne `?`, `#`) */
+export function routeFromUrl(pathname: string, search: string, hash: string): Route {
+  const unknown: Route = { page: "unknown", path: pathname }
+  const segments = segmentsOf(pathname)
+  if (!segments) return unknown
+  const params = new URLSearchParams(search)
+  const word = hash.replace(/^#/, "")
+  const [first, second, ...rest] = segments
+  if (rest.length) return unknown
+  switch (first) {
+    case undefined:
+      return { page: "start" }
+    case "cards":
+      if (second === undefined) {
+        return {
+          page: "cards",
+          query: listQueryFromParams(params),
+          evening: isDay(word) ? word : null,
+        }
+      }
+      return ID.test(second) ? cardFromParts(second, params, hash) : unknown
+    case "progress":
+      return second === undefined
+        ? {
+            page: "progress",
+            query: progressQueryFromParams(params),
+            section: parsePeriodHash(hash),
+          }
+        : unknown
+    case "compare": {
+      const a = idOrNull(params.get("a"))
+      const b = idOrNull(params.get("b"))
+      return second === undefined && a && b
+        ? { page: "compare", origin: originFrom(params), a, b }
+        : unknown
+    }
+    case "scan":
+    case "open":
+      return second === undefined ? { page: first } : unknown
+    case "profile":
+      if (second === undefined) return { page: "profile" }
+      return second === "trash" ? { page: "trash" } : unknown
+    case "admin":
+      if (second === undefined) return { page: "admin", section: null }
+      return SLUG.test(second) ? { page: "admin", section: second } : unknown
+    default:
+      return unknown
+  }
+}
+
+const withQuery = (path: string, params: readonly Param[], hash = "") =>
+  `${path}${
+    params.length
+      ? `?${params.map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join("&")}`
+      : ""
+  }${hash}`
+
+/** die kanonische Adresse einer Route (D2): Vorgaben fehlen, Schlüssel in fester Reihenfolge */
+export function urlFromRoute(route: Route): string {
+  switch (route.page) {
+    case "start":
+      return "/"
+    case "cards":
+      return withQuery(
+        "/cards",
+        listQueryToParams(route.query),
+        route.evening ? `#${route.evening}` : ""
+      )
+    case "card":
+      return withQuery(
+        `/cards/${encodeURIComponent(route.id)}`,
+        cardToParams(route),
+        cardHash(route)
+      )
+    case "progress":
+      return withQuery(
+        "/progress",
+        progressQueryToParams(route.query),
+        route.section ? `#${route.section}` : ""
+      )
+    case "compare":
+      return withQuery("/compare", [...originPairs(route.origin), ["a", route.a], ["b", route.b]])
+    case "scan":
+      return "/scan"
+    case "open":
+      return "/open"
+    case "profile":
+      return "/profile"
+    case "trash":
+      return "/profile/trash"
+    case "admin":
+      return route.section ? `/admin/${route.section}` : "/admin"
+    case "unknown":
+      return route.path
+  }
+}

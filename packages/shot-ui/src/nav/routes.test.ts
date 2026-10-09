@@ -15,7 +15,12 @@ import {
   listQueryToParams,
   progressQueryFromParams,
   progressQueryToParams,
+  routeFromUrl,
+  urlFromRoute,
+  type CardOrigin,
+  type ListQuery,
   type ProgressQuery,
+  type Route,
 } from "./routes"
 
 const query = (pairs: readonly (readonly [string, string])[]) =>
@@ -210,5 +215,184 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
     expect(card.anchor).toEqual({ section: "zahlen" })
     expect(cardHash(card)).toBe("#zahlen")
     expect(cardHash({ ...card, anchor: null })).toBe("")
+  })
+})
+
+/** eine Adresse in ihre Teile, wie `location` sie liefert */
+function parts(url: string): [string, string, string] {
+  const hashAt = url.indexOf("#")
+  const hash = hashAt < 0 ? "" : url.slice(hashAt)
+  const rest = hashAt < 0 ? url : url.slice(0, hashAt)
+  const searchAt = rest.indexOf("?")
+  return searchAt < 0 ? [rest, "", hash] : [rest.slice(0, searchAt), rest.slice(searchAt), hash]
+}
+const route = (url: string) => routeFromUrl(...parts(url))
+
+describe("die ganze Adresse (D3)", () => {
+  it("zwölf Adressen mit Handwerten, je Seite mindestens eine, in beide Richtungen", () => {
+    const table: [string, Route][] = [
+      ["/", { page: "start" }],
+      ["/cards", { page: "cards", query: DEFAULT_LIST, evening: null }],
+      [
+        "/cards?family=lg-10m&kind=training#2026-09-25",
+        {
+          page: "cards",
+          query: { ...DEFAULT_LIST, family: "lg-10m", kind: "training" },
+          evening: "2026-09-25",
+        },
+      ],
+      [
+        "/cards/c42?from=start&series=probe#probe",
+        {
+          page: "card",
+          id: "c42",
+          origin: { from: "start" },
+          selection: "probe",
+          shot: null,
+          scoring: "decimal",
+          anchor: { section: "analyse", tab: "sighters" },
+        },
+      ],
+      [
+        "/cards/c42",
+        {
+          page: "card",
+          id: "c42",
+          origin: null,
+          selection: null,
+          shot: null,
+          scoring: "decimal",
+          anchor: null,
+        },
+      ],
+      ["/progress", { page: "progress", query: DEFAULT_PROGRESS, section: null }],
+      [
+        "/progress?range=neue-munition&compare=previous&family=lg-10m&pick=c9#verlauf",
+        {
+          page: "progress",
+          query: {
+            ...DEFAULT_PROGRESS,
+            choice: { type: "named", id: "neue-munition" },
+            compare: { type: "previous" },
+            family: "lg-10m",
+            chosen: "c9",
+          },
+          section: "verlauf",
+        },
+      ],
+      [
+        "/compare?from=list&family=lg-10m&a=c1&b=c2",
+        {
+          page: "compare",
+          origin: { from: "list", query: { ...DEFAULT_LIST, family: "lg-10m" } },
+          a: "c1",
+          b: "c2",
+        },
+      ],
+      ["/scan", { page: "scan" }],
+      ["/open", { page: "open" }],
+      ["/profile/trash", { page: "trash" }],
+      ["/admin/bridges", { page: "admin", section: "bridges" }],
+    ]
+    expect(table).toHaveLength(12)
+    for (const [url, expected] of table) {
+      expect(route(url), url).toEqual(expected)
+      expect(urlFromRoute(expected), url).toBe(url)
+    }
+    expect(urlFromRoute({ page: "profile" })).toBe("/profile")
+    expect(urlFromRoute({ page: "admin", section: null })).toBe("/admin")
+  })
+
+  it("kanonisch: vertauschte Schlüssel, Vorgaben und ein Schrägstrich am Ende ergeben dieselbe Route", () => {
+    const canonical = "/progress?family=lg-10m&kind=training&pick=c1#scheiben"
+    const messy = route("/progress/?pick=c1&range=90d&kind=training&probe=1&family=lg-10m#scheiben")
+    expect(messy).toEqual(route(canonical))
+    expect(urlFromRoute(messy)).toBe(canonical)
+    expect(route("/cards/")).toEqual(route("/cards"))
+  })
+
+  it("Unbekanntes und Ungültiges: eine eigene Route, nie ein Fehler", () => {
+    expect(route("/settings")).toEqual({ page: "unknown", path: "/settings" })
+    expect(route("/cards/a%20b").page).toBe("unknown")
+    expect(route("/cards/%E0%A4%A").page).toBe("unknown")
+    expect(route("/cards/c1/extra").page).toBe("unknown")
+    expect(route("/compare?a=c1").page).toBe("unknown")
+    expect(route("/admin/Bridges").page).toBe("unknown")
+    expect(route("/cards#2026-02-30")).toEqual({
+      page: "cards",
+      query: DEFAULT_LIST,
+      evening: null,
+    })
+    expect(urlFromRoute({ page: "unknown", path: "/settings" })).toBe("/settings")
+  })
+
+  it("Rundreise über alle Kombinationen: jede Route übersteht Schreiben und Lesen unverändert", () => {
+    const lists: ListQuery[] = []
+    for (const family of [null, "lg-10m"])
+      for (const kind of ["all", "training"] as const)
+        for (const flag of [null, "nur-pdf"])
+          for (const range of [
+            null,
+            { type: "rolling", days: 30 } as const,
+            { type: "free", from: "2026-05-01", to: "2026-06-30" } as const,
+          ])
+            lists.push({ family, kind, flag, range })
+    const progresses: ProgressQuery[] = []
+    for (const choice of [
+      DEFAULT_CHOICE,
+      { type: "all" } as const,
+      { type: "named", id: "neue-munition" } as const,
+    ])
+      for (const compare of [
+        { type: "none" } as const,
+        { type: "previous" } as const,
+        { type: "named", id: "saison-2025" } as const,
+      ])
+        for (const family of [null, "lp-10m"])
+          for (const kind of ["all", "competition"] as const)
+            for (const includeProbeOnly of [true, false])
+              for (const scoring of ["decimal", "rings"] as const)
+                for (const metric of ["result.decimalMean", "group.sigma"] as const)
+                  for (const view of [null, "months"] as const)
+                    for (const chosen of [null, "c9"])
+                      progresses.push({
+                        choice,
+                        compare,
+                        family,
+                        kind,
+                        includeProbeOnly,
+                        scoring,
+                        metric,
+                        view,
+                        chosen,
+                      })
+    const origins: CardOrigin[] = [
+      null,
+      { from: "start" },
+      ...lists.slice(0, 8).map((query) => ({ from: "list" as const, query })),
+      ...progresses
+        .filter((_, i) => i % 97 === 0)
+        .map(({ chosen: _c, scoring: _s, ...query }) => ({ from: "progress" as const, query })),
+    ]
+    const routes: Route[] = [
+      ...lists.flatMap((query) =>
+        [null, "2026-09-25"].map((evening) => ({ page: "cards" as const, query, evening }))
+      ),
+      ...progresses.flatMap((query) =>
+        [null, "verlauf" as const].map((section) => ({ page: "progress" as const, query, section }))
+      ),
+    ]
+    for (const origin of origins)
+      for (const selection of [null, "match", "probe", 2] as const)
+        for (const shot of [null, "23", "P3"])
+          for (const scoring of ["decimal", "rings"] as const)
+            for (const anchor of [
+              null,
+              { section: "zahlen" } as const,
+              { section: "analyse", tab: "position" } as const,
+            ])
+              routes.push({ page: "card", id: "c42", origin, selection, shot, scoring, anchor })
+    expect(routes.length).toBeGreaterThan(3000)
+    for (const r of routes) expect(route(urlFromRoute(r))).toEqual(r)
   })
 })
