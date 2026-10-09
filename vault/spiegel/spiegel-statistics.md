@@ -234,7 +234,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 
 ## Belege aus Simulationen
 
-Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026), B19 mit einer kleinen Veränderung und dem Unterschied je Schuss, B9 auch in ganzen Ringen, B21 neu (Prüfung, 9. Oktober 2026; alle übrigen Zeilen im neuen Lauf unverändert):
+Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026), B19 mit einer kleinen Veränderung und dem Unterschied je Schuss, B9 auch in ganzen Ringen, B21 neu (Prüfung, 9. Oktober 2026), Wertung mit Meytons Toleranz von 10 µm (SF-75, 9. Oktober 2026; dadurch neu B6, B10, B19, B20, alle übrigen Zeilen unverändert):
 
 ```
 B0   innerhalb σ 39,3 %, innerhalb 2σ 86,5 %
@@ -248,9 +248,9 @@ B4   R50 bei 10 Schuss: -4,3 % gegen den Grenzwert
 B5   LG σ 1,5 mm, 40 Schuss, ohne Versatz: Lage-Verlust im Mittel -0,38 Ringe
 B5   LP σ 15 mm, 40 Schuss, ohne Versatz: Lage-Verlust im Mittel -1,20 Ringe
 B5   LG, Versatz 0,5σ, 40 Schuss: angezeigt 1,45, Gewinn auf neuer Scheibe 1,47
-B6   LG σ 1,5 mm, 20 Schuss: Fehlalarm Zehntel 3,8 %, ganze Ringe 3,7 %; Nachlassen erkannt Zehntel 15,6 %, ganze Ringe 14,4 %
-B6   LG σ 1,5 mm, 40 Schuss: Fehlalarm Zehntel 4,7 %, ganze Ringe 4,8 %; Nachlassen erkannt Zehntel 29,6 %, ganze Ringe 27,3 %
-B6   LP σ 15 mm, 20 Schuss: Fehlalarm Zehntel 4,6 %, ganze Ringe 4,7 %; Nachlassen erkannt Zehntel 15,9 %, ganze Ringe 16,6 %
+B6   LG σ 1,5 mm, 20 Schuss: Fehlalarm Zehntel 4,0 %, ganze Ringe 3,7 %; Nachlassen erkannt Zehntel 15,6 %, ganze Ringe 14,4 %
+B6   LG σ 1,5 mm, 40 Schuss: Fehlalarm Zehntel 4,8 %, ganze Ringe 4,8 %; Nachlassen erkannt Zehntel 29,6 %, ganze Ringe 27,2 %
+B6   LP σ 15 mm, 20 Schuss: Fehlalarm Zehntel 4,5 %, ganze Ringe 4,7 %; Nachlassen erkannt Zehntel 15,9 %, ganze Ringe 16,6 %
 B6   LP σ 15 mm, 40 Schuss: Fehlalarm Zehntel 5,0 %, ganze Ringe 4,9 %; Nachlassen erkannt Zehntel 30,9 %, ganze Ringe 30,2 %
 B7   5 Probeschüsse, Versatz 1σ: echt in 21,8 %
 B7   5 Probeschüsse, Versatz 2σ: echt in 62,9 %
@@ -261,7 +261,7 @@ B9   Ermüdung LG σ 1,5 mm, ganze Ringe: Δ Ø -0,40 bis 0,40 Ringe
 B9   Ermüdung LP σ 15 mm: Δ Ø -1,07 bis 1,11 Ringe, Δ R50 -59 bis 57 %
 B9   Ermüdung LP σ 15 mm, ganze Ringe: Δ Ø -1,10 bis 1,10 Ringe
 B10  Wiedereinstieg LG σ 1,5 mm: -0,49 bis 0,42 Ringe
-B10  Wiedereinstieg LP σ 15 mm: -1,52 bis 1,32 Ringe
+B10  Wiedereinstieg LP σ 15 mm: -1,52 bis 1,33 Ringe
 B11  σ Probe/Wertung (5 gegen 40): 0,54 bis 1,57
 B12  Serien-Versatz zur Scheibe: im Mittel 0,35 σ
 B13  Richtungsuhr, 30 Schuss: stärkster Keil im Median ×2,0
@@ -279,10 +279,10 @@ B18  als gestreckt gemeldet, rund (alt → ohne Ausreißer): 10: 5,0 % → 4,1 %
 B18  als gestreckt gemeldet, a/b 2 (alt → ohne Ausreißer): 10: 35,5 % → 30,3 %, 20: 74,1 % → 68,7 %, 40: 97,4 % → 96,0 %
 B18  als gestreckt gemeldet, a/b 3 (alt → ohne Ausreißer): 10: 77,8 % → 66,5 %, 20: 98,9 % → 96,7 %
 B18  als gestreckt gemeldet, rund mit Abreißern (alt → ohne Ausreißer): 10: 13,4 % → 6,3 %, 20: 15,8 % → 7,6 %, 40: 13,0 % → 7,8 %
-B19  gleich, Urteil trotz gleicher Streuung: 5/5 3,6 % (bedeutsam 61,5 %), 10/10 3,8 % (bedeutsam 50,5 %), 20/20 5,3 % (bedeutsam 36,4 %), 30/30 4,9 % (bedeutsam 23,7 %); Δ Ø je Schuss im Mittel 0,000
-B19  σ 1,5 → 1,3 mm, „höher“ erkannt: 5/5 55,5 % (bedeutsam 99,0 %), 10/10 94,3 % (bedeutsam 99,8 %), 20/20 100,0 % (bedeutsam 100,0 %), 30/30 100,0 % (bedeutsam 100,0 %); Δ Ø je Schuss im Mittel 0,101
-B19  σ 1,5 → 1,45 mm, „höher“ erkannt: 5/5 5,8 % (bedeutsam 69,8 %), 10/10 12,8 % (bedeutsam 63,7 %), 20/20 21,8 % (bedeutsam 64,1 %), 30/30 31,4 % (bedeutsam 65,7 %); Δ Ø je Schuss im Mittel 0,025
-B20  Scheiben im Formband (60 Scheiben, ab der zehnten): Median 68,6 %, 95 % zwischen 58,8 % und 80,4 %
+B19  gleich, Urteil trotz gleicher Streuung: 5/5 3,6 % (bedeutsam 62,3 %), 10/10 3,6 % (bedeutsam 50,7 %), 20/20 5,0 % (bedeutsam 36,2 %), 30/30 4,7 % (bedeutsam 24,1 %); Δ Ø je Schuss im Mittel 0,000
+B19  σ 1,5 → 1,3 mm, „höher“ erkannt: 5/5 55,5 % (bedeutsam 99,1 %), 10/10 94,2 % (bedeutsam 99,8 %), 20/20 100,0 % (bedeutsam 100,0 %), 30/30 100,0 % (bedeutsam 100,0 %); Δ Ø je Schuss im Mittel 0,101
+B19  σ 1,5 → 1,45 mm, „höher“ erkannt: 5/5 5,7 % (bedeutsam 69,3 %), 10/10 13,2 % (bedeutsam 63,3 %), 20/20 21,8 % (bedeutsam 64,2 %), 30/30 31,2 % (bedeutsam 65,5 %); Δ Ø je Schuss im Mittel 0,025
+B20  Scheiben im Formband (60 Scheiben, ab der zehnten): Median 68,6 %, 95 % zwischen 56,9 % und 80,4 %
 B21  Versatz Probe → Wertung ohne Verschiebung, 5 Probe- und 40 Wertungsschüsse: Median 0,56 σ, 95. Perzentil 1,16 σ (5000 Läufe)
 B21  Versatz Probe → Wertung ohne Verschiebung, 3 Probe- und 40 Wertungsschüsse: Median 0,72 σ, 95. Perzentil 1,46 σ (5000 Läufe)
 ```
