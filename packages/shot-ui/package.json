@@ -48,6 +48,7 @@
     "./readout/CardResult": "./src/readout/CardResult.tsx",
     "./readout/cardMeta": "./src/readout/cardMeta.ts",
     "./start/model": "./src/start/model.ts",
+    "./start/sentence": "./src/start/sentence.ts",
     "./period/calendar": "./src/period/calendar.ts",
     "./period/state": "./src/period/state.ts",
     "./period/model": "./src/period/model.ts",
