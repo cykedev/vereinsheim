@@ -3372,6 +3372,15 @@ addEventListener("load", async () => {
             : !Object.values(lead).some((l) => sentenceText.startsWith(l))),
         `${startBlock?.day} ${startBlock?.family} · ${txt($("[data-evening-mean]", blockEl))} · ${sentenceText}`
       )
+      // Legende am Formband (U3, D8): ein Satz unter dem Streifen, nur mit Band
+      check(
+        "Start: unter dem Streifen „Das Band zeigt deine übliche Schwankung.“, nur mit Band",
+        !!startBlock?.band &&
+          St().model.blocks.every(
+            (b) => !!$(`[data-evening-block="${b.family}"] [data-form-legend]`) === !!b.band
+          ) &&
+          txt($("[data-form-legend]", blockEl)) === "Das Band zeigt deine übliche Schwankung."
+      )
       check(
         "Start: der Streifen zeigt die letzten Scheiben, die des Abends hervorgehoben",
         $$("[data-strip-dot]", blockEl).length === startBlock.strip.length &&
