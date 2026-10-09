@@ -862,11 +862,11 @@ addEventListener("load", async () => {
     const gain = split.positionLoss.decimal
     check(
       "Beobachtungen: Lage-Satz mit n und je Schuss, kein Visier",
-      !split.reliable ||
-        (sentences[0].includes(
+      split.reliable &&
+        sentences[0].includes(
           `Läge die Gruppe in der Mitte, brächten ${split.n} weitere Schuss zusammen etwa ${nf(gain, 1)} Ringe mehr (rund ${nf(gain / split.n, 2)} je Schuss).`
         ) &&
-          !/Visier/.test(sentences.join(" "))),
+        !/Visier/.test(sentences.join(" ")),
       sentences[0]
     )
     // D3: das Urteil von S4 statt des Abstands Probe → Wertung

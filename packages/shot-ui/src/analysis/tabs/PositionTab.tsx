@@ -5,7 +5,7 @@ import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 import type { ReactNode } from "react"
 
 import { directionWords, formatValue, ringsText } from "../../format"
-import { NO_FULL_POSITION } from "../../reasons"
+import { NO_CENTER, NO_FULL_POSITION } from "../../reasons"
 import { ChartSlot } from "../charts/frame"
 import { PathChart } from "../charts/PathChart"
 import { AnalysisCard, KeyValues, Muted, Note, Verdict } from "../parts"
@@ -79,7 +79,7 @@ export function positionCards({
               </Note>
             </>
           ) : (
-            <Note>ab 3 Schuss mit Lage (nicht alle auf einer Linie)</Note>
+            <Note>{NO_CENTER}</Note>
           )}
         </AnalysisCard>
       ),

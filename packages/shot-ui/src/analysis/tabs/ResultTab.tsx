@@ -12,7 +12,7 @@ import {
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
 import { formatValue, percentText, ringsText } from "../../format"
-import { meanWithCount, noResultReason } from "../../reasons"
+import { meanWithCount, noResultReason, valuedWord } from "../../reasons"
 import { DecimalHistogram } from "../charts/DecimalHistogram"
 import { ChartSlot } from "../charts/frame"
 import { RingBars } from "../charts/RingBars"
@@ -102,7 +102,7 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
                     // ohne Ergebnis über die Schüsse mit Wert, wie die Hilfe sagt (Prüfung, Ergebnis 3)
                     <>
                       {formatValue(mean.mean, 2)}
-                      <Muted>{` über ${mean.n} Schuss mit Wert`}</Muted>
+                      <Muted>{` über ${mean.n} Schuss ${valuedWord(scoring)}`}</Muted>
                     </>
                   ) : (
                     formatValue(mean.mean, 2)

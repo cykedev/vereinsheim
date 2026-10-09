@@ -33,6 +33,12 @@ export function ringsText(value: number, decimals: number): string {
   return `${text} ${text.replace(MINUS, "") === "1" ? "Ring" : "Ringe"}`
 }
 
+/** Ringe mit Vorzeichen wie `formatSigned`: „−1 Ring“, „+2 Ringe“ */
+export function ringsSigned(value: number, decimals: number): string {
+  const text = formatSigned(value, decimals)
+  return `${text} ${text.replace(/^[+−]/, "") === "1" ? "Ring" : "Ringe"}`
+}
+
 /** Einheit einer Kennzahl zum Anzeigen; der Teiler steht ohne Einheit */
 export function unitText(unit: string): string {
   return unit === "Teiler" ? "" : unit

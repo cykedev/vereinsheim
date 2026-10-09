@@ -103,6 +103,8 @@ export function pauseRecovery(
   const meanOf = (list: readonly number[]) => list.reduce((sum, v) => sum + v, 0) / list.length
   const effects: PauseEffect[] = []
   let totalPauseMs = 0
+  // ohne einen messbaren Abstand (Lücken, Rücksprung der Uhr) weder Pause noch „keine Pause“
+  if (steps.every((step) => step.intervalMs === null)) return null
   steps.forEach((step, i) => {
     if (step.intervalMs === null || step.intervalMs <= PAUSE_THRESHOLD_MS) return
     totalPauseMs += step.intervalMs

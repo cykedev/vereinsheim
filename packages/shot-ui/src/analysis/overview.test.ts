@@ -58,9 +58,15 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     // Ringe je Schuss alle zehn Schuss, nicht „je 10“ (Prüfung, Zeit 3)
     expect(tile("Trend").unit).toBe("Ringe")
     expect(tile("Trend").hint).toBe(
-      `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} · ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (95 %)` : "nicht klar"}`
+      `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe · ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (95 %)` : "nicht klar"}`
     )
-    expect(tile("Tempo").value).toBe(formatValue(tempoSpread(base)!.medianMs / 1000, 0))
+    // der Median wie Reiter und Kachel an der Scheibe: aus der Registry, ab 3 Schuss mit Zeit (Review)
+    expect(tile("Tempo").value).toBe(
+      formatValue(computeMetric(metricByKey("time.intervalMedian")!, base)!, 0)
+    )
+    expect(tile("Tempo").hint).toBe(
+      `Median · mittlere Hälfte in ${formatValue(tempoSpread(base)!.iqrMs / 1000, 0)} s`
+    )
     // D3: das Urteil von S4 statt des Abstands, der auch ohne Verschiebung groß ausfällt (B21)
     const zeroed = sighterZeroed(CARD)!
     expect(tile("Eingeschossen?").value).toBe(zeroed.real ? "versetzt" : "unklar")
@@ -82,8 +88,14 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     const t = (label: string) => few.find((x) => x.label === label)!
     expect(t("Präzision σ").value).toBeNull()
     expect(t("Präzision σ").hint).toBe("ab 3 Schuss")
+    // wie der Reiter Lage: drei auf einer Linie haben keinen Test (Review)
+    expect(t("Lage").hint).toBe("ab 3 Schuss mit Lage (nicht alle auf einer Linie)")
     expect(t("Trend").hint).toBe("ab 10 Schuss")
-    expect(t("Tempo").hint).toBe("ab 4 Schuss mit Zeit")
+    expect(t("Tempo").hint).toBe("ab 3 Schuss mit Zeit")
+    const three = overviewTiles(analysisInput(CARD.slice(9, 12), "decimal", LP_10M))
+    const tempo = three.find((x) => x.label === "Tempo")!
+    expect(tempo.value).not.toBeNull()
+    expect(tempo.hint).toBe("Median")
     expect(t("Eingeschossen?").hint).toBe("ab 3 Probeschüssen mit Lage vor der Wertung")
     // ein Training nur aus Probe ist kein Einschießen (Prüfung, Probe 6)
     const probes = CARD.filter((s) => s.kind === "probe")
@@ -102,7 +114,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     const t = overviewTiles(input).find((x) => x.label === "Ergebnis")!
     expect(t.value).toBeNull()
     expect(t.hint).toBe(
-      `Ø ${formatValue(mean, 2)} je Schuss (39 mit Wert) · nicht jeder Schuss mit Wert`
+      `Ø ${formatValue(mean, 2)} je Schuss (39 mit Zehntel) · nicht jeder Schuss mit Wert`
     )
     const tenthless = CARD.map((s, i) => (i === 20 ? { ...s, decimalTenths: null } : s))
     expect(
@@ -212,6 +224,16 @@ describe("Beobachtungen in Worten", () => {
       )
     )
     expect(pause).not.toContain("Schnitt der Scheibe")
+  })
+
+  it("haben die Schüsse nach der Pause keinen Wert, sagt der Satz das statt einer Zahl", () => {
+    // Wertungsschüsse 21 bis 23 ohne Zehntel: die Pause bleibt, die Wirkung fehlt (Review)
+    const blind = CARD.map((s, i) => (i >= 29 && i <= 31 ? { ...s, decimalTenths: null } : s))
+    const pause = observations(analysisInput(blind, "decimal", LP_10M)).find(
+      (s) => s.icon === "pause"
+    )!.text
+    expect(pause).toMatch(/^Nach der Pause vor Schuss 21 fehlen Werte zum Vergleich\./)
+    expect(pause).not.toContain("NaN")
   })
 
   it("Ermüdung je Schuss und zusammen über zehn Schuss (Prüfung, Zeit 4)", () => {

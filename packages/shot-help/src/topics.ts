@@ -73,7 +73,8 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Das Ergebnis jeder Serie, wie stark die Serien voneinander abweichen (Standardabweichung, Spanne) und wie stark ein einzelner Schuss um deinen Schnitt schwankt (Standardabweichung der Schusswerte).",
     read: "Kleine Spanne heißt gleichmäßig. Die Spanne wächst aber mit der Zahl der Serien; Scheiben mit verschieden vielen Serien vergleichst du über die Standardabweichung. Verglichen werden nur Serien der häufigsten Länge; fehlt einem Schuss der Wert, hat seine Serie keine Summe.",
     act: "Fällt eine Serie ab, sieh im Reiter „Zeit und Verlauf“ nach, ob davor eine Pause lag („Pausen und Wiedereinstieg“) oder ob es zum Ende hin nachlässt („Ermüdung“).",
-    caution: "Wie gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.",
+    caution:
+      "Ein einzelner Fehlschuss oder Abreißer hebt die Abweichung je Schuss deutlich. Wie gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.",
     minimum:
       "Ab 1 Schuss; die Abweichung je Schuss ab 2, SD und Spanne der Serien ab 2 Serien gleicher Länge.",
     formula:
@@ -337,7 +338,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Ein Test deiner letzten bis zu fünf Probeschüsse mit Lage vor der Wertung: Lagen sie echt neben der Mitte? Dazu im Reiter Probe der Abstand zwischen ihrem Schwerpunkt und dem der Wertung.",
     read: "„Echt neben der Mitte“: Deine letzten Probeschüsse lagen daneben. Über die Wertung sagt das Urteil nichts; ihre Lage prüft „Ist die Lage echt?“ im Reiter Lage.",
     caution:
-      "„Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in knapp zwei von drei Fällen auf. Auch der Abstand Probe → Wertung ist unsicher: Ohne jede Verschiebung liegt er bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen über gut einem σ. Darum zeigt der Überblick nur das Urteil.",
+      "„Kein Versatz nachweisbar“ heißt nicht „eingeschossen“: Fünf Schüsse erkennen nur einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in knapp zwei von drei Fällen auf. Auch der Abstand Probe → Wertung ist unsicher: Ohne jede Verschiebung liegt er bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen über gut einem σ, bei drei etwa 0,7 σ und über knapp anderthalb σ. Darum zeigt der Überblick nur das Urteil.",
     minimum:
       "Ab 3 Probeschüssen mit Lage, der Abstand zur Wertung zusätzlich ab 3 Wertungsschüssen mit Lage.",
     formula:

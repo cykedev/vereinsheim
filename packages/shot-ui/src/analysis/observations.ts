@@ -24,6 +24,7 @@ import {
   directionWords,
   formatSigned,
   formatValue,
+  ringsSigned,
   ringsText,
 } from "../format"
 import type { AnalysisInput } from "./input"
@@ -58,7 +59,7 @@ export function observations(input: AnalysisInput): Observation[] {
         const gain = split.positionLoss[scoring === "rings" ? "rings" : "decimal"]
         text +=
           gain > 0
-            ? ` Läge die Gruppe in der Mitte, brächten ${split.n} weitere Schuss zusammen etwa ${rings(gain)} ${gain === 1 ? "Ring" : "Ringe"} mehr (rund ${formatValue(gain / split.n, 2)} je Schuss).`
+            ? ` Läge die Gruppe in der Mitte, brächten ${split.n} weitere Schuss zusammen etwa ${ringsText(gain, scoring === "rings" ? 0 : 1)} mehr (rund ${formatValue(gain / split.n, 2)} je Schuss).`
             : " In der Mitte brächte die Gruppe keine Ringe mehr."
       }
       out.push({ icon: "position", text })
@@ -118,7 +119,7 @@ export function observations(input: AnalysisInput): Observation[] {
       const where =
         Math.abs(d) < 0.005
           ? "genau im Schnitt der ersten zehn"
-          : `im Schnitt ${formatValue(Math.abs(d), 2)} Ringe je Schuss ${d < 0 ? "unter" : "über"} den ersten zehn (zusammen ${formatSigned(d * 10, scoring === "rings" ? 0 : 1)} Ringe)`
+          : `im Schnitt ${formatValue(Math.abs(d), 2)} Ringe je Schuss ${d < 0 ? "unter" : "über"} den ersten zehn (zusammen ${ringsSigned(d * 10, scoring === "rings" ? 0 : 1)})`
       text += ` Die letzten zehn Schuss lagen ${where}${
         tired.deltaR50Um !== null ? `, R50 ${formatSigned(tired.deltaR50Um / 1000, 2)} mm` : ""
       }. Ein Muster zeigt erst der Vergleich über mehrere Scheiben.`

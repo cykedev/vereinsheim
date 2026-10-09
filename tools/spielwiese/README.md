@@ -11,7 +11,9 @@ Verhalten; ihre Prüfungen werden Schritt für Schritt Prüfungen des Labors.
 
 Die Vorlage bleibt wie Version 13, auch wo der Fachkern weiter ist: Seit Oktober 2026 rechnet die Form der
 Gruppe ohne die Ausreißer, das Formdiagramm der Spielwiese zentriert aber auf alle Punkte. Nach einem neuen
-Bau säße die Ellipse dort versetzt; das Labor zeigt es richtig.
+Bau säße die Ellipse dort versetzt; das Labor zeigt es richtig. Ebenso liest die Vorlage `cons.mad`, das der
+Fachkern seit dem 9. Oktober 2026 als `shotSd` liefert (Abweichung je Schuss als SD): Nach einem neuen Bau stünde
+dort „NaN Ringe (MAD)“.
 
 ## Herkunft
 

@@ -32,6 +32,12 @@ export function meanWithCount(
   return mean === null ? null : { mean, n: eligibleShots(metric, shots).length }
 }
 
+/** Ohne Schwerpunkt und Test: unter drei Schuss mit Lage oder alle auf einer Linie (`mpiConfidence` ist null) */
+export const NO_CENTER = "ab 3 Schuss mit Lage (nicht alle auf einer Linie)"
+
+/** Wie die Schüsse heißen, über die der Ø ohne Ergebnis rechnet: in Zehnteln die mit Zehntel, sonst mit Ring */
+export const valuedWord = (scoring: Scoring) => (scoring === "decimal" ? "mit Zehntel" : "mit Ring")
+
 /** Ringverlust ohne Summe: Einem Wertungsschuss fehlt die Lage, oder er ist verdächtig und zählt nicht (SF-15) */
 export const NO_FULL_POSITION =
   "nicht jeder Wertungsschuss mit gültiger Lage (fehlt oder verdächtig)"

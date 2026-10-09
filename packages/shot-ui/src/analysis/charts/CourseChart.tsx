@@ -64,7 +64,10 @@ export function CourseChart({
     ranges.set(shot.series, [Math.min(r[0], n), Math.max(r[1], n)])
   }
   const series = [...ranges].sort((a, b) => a[1][0] - b[1][0])
-  const pauses = pauseRecovery(shots, scoring)?.effects ?? []
+  // eine Pause kurz vor Schluss mit nur wertlosen Schüssen danach läge hinter dem letzten Punkt (Review)
+  const pauses = (pauseRecovery(shots, scoring)?.effects ?? []).filter(
+    (effect) => effect.afterShot <= maxN
+  )
   const step = maxN > 30 ? 10 : 5
   const ticks: number[] = []
   for (let n = 1; n <= maxN; n++) if (n === 1 || n % step === 0) ticks.push(n)

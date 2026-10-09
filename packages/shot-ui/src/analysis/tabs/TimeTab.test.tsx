@@ -138,7 +138,7 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     expect(text).toContain(`Letzte zehn Ø ${formatValue(tired.lastMeanRings, 2)}`)
     // der Unterschied ist je Schuss; zehn Schuss verlieren das Zehnfache (Prüfung, Zeit 4)
     expect(text).toContain(
-      `Unterschied je Schuss ${formatSigned(tired.deltaRings, 2)} Ringe (zehn Schuss: ${formatSigned(tired.deltaRings * 10, 1)})`
+      `Unterschied je Schuss ${formatSigned(tired.deltaRings, 2)} Ringe (zehn Schuss: ${formatSigned(tired.deltaRings * 10, 1)} Ringe)`
     )
     expect(text).toContain(`R50 letzte gegen erste ${formatSigned(tired.deltaR50Um! / 1000, 2)} mm`)
     expect(cardText(renderTab("time", { shots: BASE.slice(0, 19) }), "ermuedung")).toContain(

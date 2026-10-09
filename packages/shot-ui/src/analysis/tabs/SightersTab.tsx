@@ -160,7 +160,7 @@ export function sighterCards({ input, explain, onHelp }: CardContext): CardSpec[
               {zeroed.matchOffsetUm !== null && (
                 // D3 (User, 9. Oktober 2026), Zahlen aus B21
                 <Note>
-                  {`Aus ${countWord(zeroed.n)} Probeschüssen ist ihr Schwerpunkt unsicher: Auch ohne jede Verschiebung liegt der Abstand zur Wertung bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen über gut einem σ.`}
+                  {`Aus ${countWord(zeroed.n)} Probeschüssen ist ihr Schwerpunkt unsicher: Auch ohne jede Verschiebung liegt der Abstand zur Wertung bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen über gut einem σ${zeroed.n < 5 ? "; bei weniger mehr, bei drei etwa 0,7 σ und in 5 von 100 Fällen über knapp anderthalb σ" : ""}.`}
                 </Note>
               )}
             </>

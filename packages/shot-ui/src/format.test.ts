@@ -8,6 +8,7 @@ import {
   formatSigned,
   formatValue,
   percentText,
+  ringsSigned,
   ringsText,
   unitText,
 } from "./format"
@@ -72,6 +73,13 @@ describe("Ringe mit Zahl", () => {
     expect(ringsText(2, 0)).toBe("2 Ringe")
     expect(ringsText(1, 1)).toBe("1,0 Ringe")
     expect(ringsText(0.04, 0)).toBe("0 Ringe")
+  })
+
+  it("mit Vorzeichen ebenso: „−1 Ring“, „+2 Ringe“", () => {
+    expect(ringsSigned(-1, 0)).toBe("−1 Ring")
+    expect(ringsSigned(1, 0)).toBe("+1 Ring")
+    expect(ringsSigned(2, 0)).toBe("+2 Ringe")
+    expect(ringsSigned(-3.8, 1)).toBe("−3,8 Ringe")
   })
 })
 

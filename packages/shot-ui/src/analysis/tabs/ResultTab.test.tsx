@@ -111,7 +111,8 @@ describe("Reiter Ergebnis", () => {
     const mean = computeMetric(inScoring(metricByKey("result.decimalMean")!, "decimal"), blind)!
     const text = cardText(render("decimal", blind), "ergebnis")
     expect(text).toContain("Ergebnis – nicht jeder Schuss mit Wert")
-    expect(text).toContain(`Ø je Schuss ${formatValue(mean, 2)} über 39 Schuss mit Wert`)
+    // in Zehnteln zählen die Schüsse mit Zehntel; ein Schuss nur mit Ring hat einen Wert (Review)
+    expect(text).toContain(`Ø je Schuss ${formatValue(mean, 2)} über 39 Schuss mit Zehntel`)
     expect(text).toContain("Schuss 40")
   })
 

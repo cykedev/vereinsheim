@@ -131,7 +131,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   werden nur Serien der häufigsten Länge; fehlt einem Schuss der Wert, hat seine Serie keine Summe.
 - *Was du tun kannst:* Fällt eine Serie ab, sieh im Reiter „Zeit und Verlauf“ nach, ob davor eine
   Pause lag („Pausen und Wiedereinstieg“) oder ob es zum Ende hin nachlässt („Ermüdung“).
-- *Vorsicht:* Wie gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.
+- *Vorsicht:* Ein einzelner Fehlschuss oder Abreißer hebt die Abweichung je Schuss deutlich. Wie
+  gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.
 - *Mindestzahl:* Ab 1 Schuss; die Abweichung je Schuss ab 2, SD und Spanne der Serien ab 2 Serien
   gleicher Länge.
 - *Formel:* `SD und Spanne der Serien gleicher Länge; Abweichung je Schuss = SD der Schusswerte (n −
@@ -392,7 +393,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   einen deutlichen Versatz. Selbst ein Versatz so groß wie zweimal deine Streuung σ fällt nur in
   knapp zwei von drei Fällen auf. Auch der Abstand Probe → Wertung ist unsicher: Ohne jede
   Verschiebung liegt er bei fünf Probeschüssen meist bei etwa einem halben σ, in 5 von 100 Fällen
-  über gut einem σ. Darum zeigt der Überblick nur das Urteil.
+  über gut einem σ, bei drei etwa 0,7 σ und über knapp anderthalb σ. Darum zeigt der Überblick nur
+  das Urteil.
 - *Mindestzahl:* Ab 3 Probeschüssen mit Lage, der Abstand zur Wertung zusätzlich ab 3
   Wertungsschüssen mit Lage.
 - *Formel:* `Hotelling-T² über die letzten bis zu fünf Probeschüsse mit Lage; Versatz = |m Probe − m

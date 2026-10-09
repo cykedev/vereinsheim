@@ -68,6 +68,10 @@ describe("Reiter Probe", () => {
     const text = cardText(renderTab("sighters", { shots: three }), "eingeschossen")
     expect(text).toContain("Lage der letzten drei Probeschüsse")
     expect(text).toContain("Aus drei Probeschüssen ist ihr Schwerpunkt unsicher")
+    // B21 auch für drei: 0,72 σ, 95. Perzentil 1,46 σ (Review)
+    expect(text).toContain(
+      "bei weniger mehr, bei drei etwa 0,7 σ und in 5 von 100 Fällen über knapp anderthalb σ."
+    )
     expect(text).not.toContain("fünf Probeschüssen mit Lage")
   })
 

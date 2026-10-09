@@ -13,7 +13,7 @@ import {
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
 import { directionWords, formatSigned, formatValue, percentText } from "../format"
-import { meanWithCount, NO_FULL_POSITION, noResultReason } from "../reasons"
+import { meanWithCount, NO_CENTER, NO_FULL_POSITION, noResultReason, valuedWord } from "../reasons"
 import type { AnalysisInput } from "./input"
 
 export interface OverviewTile {
@@ -54,6 +54,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
   const split = ringLossSplit(base, target)
   const trend = cardTrend(base, scoring)
   const pace = tempoSpread(base)
+  const tempoMedian = computeMetric(metricByKey("time.intervalMedian")!, base)
   const zeroed = sighterZeroed(all)
   const key = scoring === "rings" ? "rings" : "decimal"
   const mm2 = (um: number) => formatValue(um / 1000, 2)
@@ -66,7 +67,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       "Ringe",
       `Ø ${mean === null ? "–" : formatValue(mean.mean, 2)} je Schuss · ${base.length} Schuss`,
       // ohne Ergebnis den Ø über die Schüsse mit Wert, wie die Hilfe sagt (Prüfung, Ergebnis 3)
-      `${mean ? `Ø ${formatValue(mean.mean, 2)} je Schuss (${mean.n} mit Wert) · ` : ""}${noResultReason(base, scoring)}`
+      `${mean ? `Ø ${formatValue(mean.mean, 2)} je Schuss (${mean.n} ${valuedWord(scoring)}) · ` : ""}${noResultReason(base, scoring)}`
     ),
     tile(
       "Zehnerquote",
@@ -94,7 +95,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       confidence
         ? `${directionWords(confidence.center)} · T² ${formatValue(confidence.t2, 1)}, Grenze ${formatValue(confidence.critical, 1)}`
         : "",
-      "ab 3 Schuss"
+      NO_CENTER
     ),
     tile(
       "Ringverlust",
@@ -113,7 +114,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       // der Wert je Schuss, über zehn Schuss; die Serie ändert sich um das Zehnfache (Prüfung, Zeit 3)
       "Ringe",
       trend
-        ? `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} · ${
+        ? `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe · ${
             trend.clear
               ? `klar ${trend.direction === "up" ? "steigend" : "fallend"} (95 %)`
               : "nicht klar"
@@ -124,10 +125,11 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
     tile(
       "Tempo",
       "tempo-und-dauer",
-      pace ? formatValue(pace.medianMs / 1000, 0) : null,
+      // der Median wie im Reiter Zeit und an der Scheibe ab 3 Schuss mit Zeit, die Streuung ab 4 (Review)
+      tempoMedian === null ? null : formatValue(tempoMedian, 0),
       "s",
-      pace ? `Median · mittlere Hälfte in ${formatValue(pace.iqrMs / 1000, 0)} s` : "",
-      "ab 4 Schuss mit Zeit"
+      pace ? `Median · mittlere Hälfte in ${formatValue(pace.iqrMs / 1000, 0)} s` : "Median",
+      "ab 3 Schuss mit Zeit"
     ),
     // D3 (User, 9. Oktober 2026): das Urteil statt des Abstands Probe → Wertung, der auch ohne jede
     // Verschiebung bei etwa einem halben σ liegt (B21); die Zahl steht im Reiter Probe mit diesem Hinweis.

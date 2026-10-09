@@ -60,6 +60,17 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     expect(blind?.meanDelta).toBeNull()
   })
 
+  it("haben die Schüsse nach der Pause alle keinen Wert, gibt es keine Wirkung, aber die Pause", () => {
+    // Schüsse 7 bis 9 ohne Zehntel, die übrigen mit: kein Schnitt danach, also null (nicht NaN)
+    const blind = EVENING.map((shot, i) =>
+      i >= 6 && i <= 8 ? { ...shot, decimalTenths: null } : shot
+    )
+    const recovery = pauseRecovery(blind, "decimal")
+    expect(recovery?.pauses).toBe(1)
+    expect(recovery?.effects).toEqual([{ afterShot: 7, deltaRings: null }])
+    expect(recovery?.meanDelta).toBeNull()
+  })
+
   it("fehlt dem Schuss nach der Pause der Wert, bleibt die Pause (Prüfung, Grenzfall SF-18)", () => {
     // Schuss 7 ohne Zehntel: Die Pause davor zeigt der Rhythmus weiter; die Wirkung rechnet über die
     // Schüsse mit Wert: danach 9,7 · 9,9 (Ø 9,8) gegen die übrigen sieben (Ø 719/70): −33/70 Ringe
@@ -81,6 +92,8 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     expect(pauseRecovery([], "decimal")).toBeNull()
     // ein Schuss hat keinen Abstand: weder Pause noch „keine Pause“
     expect(pauseRecovery(EVENING.slice(0, 1), "decimal")).toBeNull()
+    // zwei Schüsse mit Zeit, aber kein messbarer Abstand (Schuss dazwischen fehlt, SF-30): ebenso
+    expect(pauseRecovery([EVENING[0], EVENING[2]], "decimal")).toBeNull()
   })
 
   it("gleitender Median der Intervalle; eine Pause zählt nicht hinein", () => {

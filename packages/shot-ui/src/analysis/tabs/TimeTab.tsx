@@ -14,7 +14,7 @@ import {
 import { computeMetric, inScoring, metricByKey, shotNumbers } from "@vereinsheim/shot-core/metrics"
 import type { ReactNode } from "react"
 
-import { durationText, formatSigned, formatValue, percentText } from "../../format"
+import { durationText, formatSigned, formatValue, percentText, ringsSigned } from "../../format"
 import { CourseChart } from "../charts/CourseChart"
 import { ChartSlot } from "../charts/frame"
 import { RhythmChart } from "../charts/RhythmChart"
@@ -243,7 +243,7 @@ export function timeCards({
                     "Unterschied je Schuss",
                     <>
                       {`${formatSigned(tired.deltaRings, 2)} Ringe`}
-                      <Muted>{` (zehn Schuss: ${formatSigned(tired.deltaRings * 10, digits)})`}</Muted>
+                      <Muted>{` (zehn Schuss: ${ringsSigned(tired.deltaRings * 10, digits)})`}</Muted>
                     </>,
                   ],
                   tired.deltaR50Um !== null && [
