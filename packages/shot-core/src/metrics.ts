@@ -272,6 +272,18 @@ export function probeOnlyAsMatch<T extends MetricShot>(shots: readonly T[]): rea
   }))
 }
 
+/**
+ * Eine Scheibe wie am Ausdruck (U4, D1; ADR-027, Leitregel 3 in `spiegel-edge-cases`): Meyton löscht die Probe mit dem
+ * ersten Wertungsschuss, also hat eine Scheibe mit Wertung nur die Wertungsschüsse; eine Probe zwischen Wertung (SF-04)
+ * fällt ebenso weg. Eine Karte nur mit Probe ist Training (`probeOnlyAsMatch`). Reihenfolge der Liste und alle Angaben
+ * bleiben; ohne Probe neben Wertung ist es dieselbe Liste. Die eine Regel für die Seite einer Scheibe und für Zeiträume.
+ */
+export function asOnPrintout<T extends MetricShot>(shots: readonly T[]): readonly T[] {
+  if (!shots.some((shot) => shot.kind === "match")) return probeOnlyAsMatch(shots)
+  if (shots.every((shot) => shot.kind === "match")) return shots
+  return shots.filter((shot) => shot.kind === "match")
+}
+
 // ---------------------------------------------------------------------------------------------
 // Hilfen für die Definitionen. Die Filter in computeMetric garantieren die nötigen Angaben.
 

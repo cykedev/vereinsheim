@@ -11,6 +11,7 @@ import {
   inShotOrder,
   METRICS,
   metricByKey,
+  asOnPrintout,
   probeOnlyAsMatch,
   shotNumbers,
   timesInOrder,
@@ -474,6 +475,44 @@ describe("probeOnlyAsMatch", () => {
     expect(probeOnlyAsMatch(card)).toBe(card)
     const empty: MetricShot[] = []
     expect(probeOnlyAsMatch(empty)).toBe(empty)
+  })
+})
+
+describe("asOnPrintout (U4, D1: eine Scheibe wie am Ausdruck)", () => {
+  it("mit Wertung bleiben nur die Wertungsschüsse, in der Reihenfolge der Liste, unverändert", () => {
+    const card = asOnPrintout(CARD)
+    expect(card).toEqual(MATCH)
+    card.forEach((shot, i) => expect(shot).toBe(MATCH[i]))
+  })
+
+  it("Probe zwischen Wertung (SF-04) fällt ebenso weg", () => {
+    const mixed = [
+      PROBE[0],
+      PROBE[1],
+      PROBE[2],
+      MATCH[0],
+      MATCH[1],
+      PROBE[3],
+      PROBE[4],
+      MATCH[2],
+      MATCH[3],
+    ]
+    expect(asOnPrintout(mixed)).toEqual([MATCH[0], MATCH[1], MATCH[2], MATCH[3]])
+  })
+
+  it("nur Probe ist Training: wie `probeOnlyAsMatch`, Serien zu zehn", () => {
+    const probes: MetricShot[] = Array.from({ length: 60 }, (_, i) => ({ ...PROBE[0], seq: i + 1 }))
+    const card = asOnPrintout(probes)
+    expect(card).toEqual(probeOnlyAsMatch(probes))
+    expect(card.map((s) => s.series)).toEqual(
+      Array.from({ length: 60 }, (_, i) => Math.floor(i / 10) + 1)
+    )
+  })
+
+  it("nur Wertung oder ohne Schüsse: dieselbe Liste", () => {
+    expect(asOnPrintout(MATCH)).toBe(MATCH)
+    const empty: MetricShot[] = []
+    expect(asOnPrintout(empty)).toBe(empty)
   })
 })
 

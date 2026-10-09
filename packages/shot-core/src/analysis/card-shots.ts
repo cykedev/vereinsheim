@@ -2,7 +2,7 @@
 // der Scheiben. Nicht über `./index` exportiert: eine Hilfe für `period.ts` und `records.ts`, keine
 // Auswertung.
 
-import { probeOnlyAsMatch, type MetricShot } from "../metrics"
+import { asOnPrintout, type MetricShot } from "../metrics"
 
 export interface CardShots {
   /** die Wertungsschüsse: für Kennzahlen der Registry und die Schusszahl */
@@ -16,19 +16,19 @@ export interface CardShots {
 }
 
 /**
- * Die Schüsse einer Scheibe, die zählen. Hat sie nur Probe, mit `includeProbeOnly` die Probe wie Wertung
- * (`probeOnlyAsMatch`, dieselbe Regel wie auf der Seite einer Scheibe, SF-01); sonst null, die Scheibe zählt
- * nicht. Eine Scheibe ohne Schüsse zählt nie.
+ * Die Schüsse einer Scheibe, die zählen, wie am Ausdruck (`asOnPrintout`, U4): mit Wertung nur die Wertung. Die ganze
+ * Karte bleibt dabei Kontext für Abstände und Nummern, damit eine Probe zwischen Wertung keine Lücke reißt (SF-04, U4
+ * D4). Hat sie nur Probe, mit `includeProbeOnly` die Probe wie Wertung (dieselbe Regel wie auf der Seite einer
+ * Scheibe, SF-01); sonst null, die Scheibe zählt nicht. Eine Scheibe ohne Schüsse zählt nie.
  */
 export function cardShots(
   shots: readonly MetricShot[],
   includeProbeOnly = false
 ): CardShots | null {
-  const match = shots.filter((shot) => shot.kind === "match")
-  if (match.length) return { match, whole: shots }
-  if (!includeProbeOnly || !shots.length) return null
-  const converted = probeOnlyAsMatch(shots)
-  return { match: converted, whole: converted }
+  if (!shots.length) return null
+  const printed = asOnPrintout(shots)
+  if (shots.some((shot) => shot.kind === "match")) return { match: printed, whole: shots }
+  return includeProbeOnly ? { match: printed, whole: printed } : null
 }
 
 /** Scheiben in ihrer Folge: nach Beginn, bei Gleichstand nach Kennung */
