@@ -29,8 +29,11 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   eines Zeitraums dazu `period` (Scheiben, Zustand, Modell) und `tools.period`. Die Prüfung braucht seit L3 mehr
   als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`); in einer Seite mit zwei Blättern ist das der Hilfe
   das letzte `<dialog>`.
-- **Zwei Ansichten** (Plan L3): „Ansicht: Scheibe | Zeitraum“ im Labor-Kopf (`LaborHeader`), gemerkt in
-  `labor.mode`; ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie. `App` hält, was beide teilen
+- **Drei Ansichten** (Plan L3, N2): „Ansicht: Scheiben | Scheibe | Zeitraum“ im Labor-Kopf (`LaborHeader`), gemerkt
+  in `labor.mode`; ein Anker der Zeitraum-Seite (`#history`, `#cards`) öffnet sie, ein Abend (`#2026-09-25`) die
+  Scheiben-Liste (`ListView`). Aus der Liste öffnet eine Zeile die Scheibe mit der Liste als Herkunft, „Zurück zu
+  „Scheiben““ stellt Filter und Scrollstelle wieder her; „Verlauf dieser Filter“ und „Alle in Scheiben zeigen“
+  wechseln zwischen Liste und Zeitraum. `App` hält, was beide teilen
   (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
   Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums. „Scheibe öffnen“ zeigt eine
   Scheibe der Saison in „Scheibe“, „Zurück zu „…““ (nach dem Zeitraum benannt) stellt Zeitraum, Vergleich, Wahl und
@@ -42,7 +45,8 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   bleibt im Speicher. Die Prüfung rechnet jede gezeigte Adresse hin und zurück (`tools.nav`).
 - **Saison** (`src/season.ts`): erfunden, Seed 20261009; Luftgewehr 81 Scheiben vom 6. April bis 27. September
   2026 (Formknick im Juni σ 1,9 mm, neue Munition ab 1. August σ 1,3 mm, Urlaub 3.–16. August, eine Scheibe
-  `nur-pdf`, Trainings nur aus Probe), Luftpistole 39; benannt „Vorbereitung Landesmeisterschaft“ und „Neue
+  `nur-pdf`, Trainings nur aus Probe), Luftpistole 44 (seit N2 fünf mehr aus eigenem Zufall: an zwei Abenden zwei
+  Scheiben, drei Samstage mit Luftgewehr am selben Abend; das Luftgewehr bleibt gleich, Fingerabdruck im Test); benannt „Vorbereitung Landesmeisterschaft“ und „Neue
   Munition“; „jetzt“ ist der 30. September 2026, 12:00 Uhr MESZ (die Saison liegt ganz in der Sommerzeit).
 - **Seite aus `CardPage`** (Plan Schritt 4): Labor-Kopf mit Scheibe, Beispiel und „Darstellung“ (nicht „Thema“,
   das ist die Reiterleiste), darunter die Seite einer Scheibe wie in der App. Was nur das Labor hat

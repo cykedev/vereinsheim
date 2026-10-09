@@ -65,6 +65,10 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/period/PeriodInsights`     | `src/period/PeriodInsights.tsx`    | Analyse in L3: „Gegen deinen Schnitt“ und „Rekorde“ (`recordRows`)                                                                                                                                                                                                                                    |
 | `@vereinsheim/shot-ui/nav/routes`                | `src/nav/routes.ts`                | Adressen (Plan N1): `Route`, `routeFromUrl`, `routeFromHref`, `urlFromRoute`, `isCardId`, `isNamedPeriodId`, `ListQuery`, `ProgressQuery`, `CardRoute` mit Herkunft, Codecs je Schlüssel                                                                                                              |
 | `@vereinsheim/shot-ui/nav/navigate`              | `src/nav/navigate.ts`              | Wege: `openCard`, `backRoute`, `backLabel`, `siblingRoute`, `listFromProgress`, `progressFromList`, `progressRoute`, `periodStateFromRoute`                                                                                                                                                           |
+| `@vereinsheim/shot-ui/list/evenings`             | `src/list/evenings.ts`             | Scheiben-Liste (Plan N2): `eveningDay` (Tag der Zone, vor 4 Uhr der Vortag), `cardListModel` (Abende, Zeilen mit Ergebnis, Ø, Abstand, Schuss, andere Familien, Merkmale)                                                                                                                             |
+| `@vereinsheim/shot-ui/list/EveningList`          | `src/list/EveningList.tsx`         | Abende mit Kopf und Anker, Hinweis auf andere Familien, Zeilen als Knopf mit kleiner Scheibe                                                                                                                                                                                                          |
+| `@vereinsheim/shot-ui/list/ListControls`         | `src/list/ListControls.tsx`        | Filter der Liste: `CardFilters`, Merkmal, Zeitraum-Chip, „Verlauf dieser Filter“                                                                                                                                                                                                                      |
+| `@vereinsheim/shot-ui/controls/CardFilters`      | `src/controls/CardFilters.tsx`     | Familie und Art als Segmente, geteilt von Zeitraum und Liste; `KIND_OPTIONS`                                                                                                                                                                                                                          |
 
 ## Regeln
 
@@ -102,6 +106,14 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   `scroll-mt-14` für die 56 px hohe Leiste. Was außerhalb der Scheibe die Scheibe ändert, springt über
   `useReturnJump` zu ihr. Die Schalter der Scheibe liegen in ihren Ecken (`TargetControls`), nicht als Leiste. Ohne Schüsse zeigt die Seite neben der Scheibe nur `NoShots`, keine leeren Kästen
   und keine Kacheln voller Striche (`empty`).
+- **Scheiben-Liste nach Abend** (Plan N2, `plans/2026-10-09-spiegel-scheiben-liste.md`):
+  - Ein Abend ist Konto und Tag in der Anzeige-Zeitzone; eine Scheibe vor 4 Uhr zählt zum Vortag.
+  - Alle Scheiben eines Abends stehen gleichberechtigt in zeitlicher Folge, die Abende neueste zuerst. Kein
+    Einklappen „kleiner“ Scheiben, bis echte Daten zeigen, ob es Nebenscheiben gibt.
+  - Die Familie ist Pflicht; andere Familien des Abends nennt der Kopf („auch 1 Scheibe Luftpistole ›“).
+  - Die Zeile zeigt Ergebnis, Ø, den Abstand zum Schnitt der fünf Scheiben davor (`deltasBefore`, wie im Zeitraum)
+    und die Schusszahl. Die ganze Zeile öffnet die Scheibe.
+  - Unter 32rem Breite des Bereichs fallen Uhrzeit, Abstand und Schusszahl weg.
 - **Zustand in der Adresse** (Plan N1, `plans/2026-10-09-spiegel-routen.md`, `vault/spiegel/spiegel-navigation.md`): Pfade,
   Schlüssel und Anker englisch. In die Adresse gehört, _was_ man sieht (Seite, Filter, Zeitraum, Vergleich,
   Wahl, Serie, Schuss als Nummer wie `shotLabels`, Wertung, Abschnitt), nicht _wie_ es gezeichnet ist (Ebenen,

@@ -55,7 +55,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-08 | Mehr Wertungsschüsse, als die DisziplinID sagt | Abschluss und Serienzählung brechen | Merkmal `ueber-soll`; Abschluss nie allein über die Schusszahl | Fixture |
 | SF-09 | Schusszahl `000` oder Vereinsvariante mit beliebiger Endziffer | Die Scheibe schließt sofort oder nie | Schusszahl nur als Hinweis; Zustand statt Abschluss | SQL-Checkliste; belegt: Meytons „LG/LP Training Spiegel“ (19110000, 19210000) |
 | SF-10 | Lange Pause mitten im Training | Scheibe gilt zu früh als fertig | Ruhend nach zehn Minuten, ein neuer Schuss öffnet sie wieder | Fixture |
-| SF-11 | Mehrere Scheiben an einem Abend (Aufwärmen, Neustart, „LG Probe + 10 Wertung“) | Der Schütze denkt in Abenden, sieht aber viele kleine Scheiben | Einheit = Schütze und Tag; Liste nach Abend gruppiert | Fixture |
+| SF-11 | Mehrere Scheiben an einem Abend (Aufwärmen, Neustart, „LG Probe + 10 Wertung“) | Der Schütze denkt in Abenden, sieht aber viele kleine Scheiben | Einheit = Schütze und Tag; Liste nach Abend gruppiert (seit N2, [[spiegel-navigation]]; vor 4 Uhr zählt zum Vortag). Einklappen von Nebenscheiben offen, bis echte Daten zeigen, ob es sie gibt | Fixture |
 | SF-12 | Zwei Schützen nacheinander auf einer Scheibe | Mischdaten | Teilen an einem Schuss, verankert über den Fingerabdruck, nicht die Nummer | Fixture |
 | SF-13 | Training ohne Starter heißt in der Ablage womöglich `--frei--` | Der bisher empfohlene Filter verwirft genau diese Trainings, der QR-Weg findet nichts | Nur Scheiben ohne Treffer weglassen, nie nach Namen filtern | SQL-Checkliste, Schießprotokoll |
 
