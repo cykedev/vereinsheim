@@ -38,6 +38,11 @@ addEventListener("load", async () => {
       )
     // das Blatt der Hilfe ist das letzte <dialog> der Seite; davor stehen das der Labor-Werkzeuge und je Seite weitere
     const helpSheet = () => $$("dialog").at(-1)
+    // Knöpfe im Blatt der Labor-Werkzeuge (Beispielscheibe, Beispiel, Tippen, Neuer Schuss), auch geschlossen; nur dort
+    // gesucht, damit ein gleich benannter Knopf der Seite (Reiter „Probe“) nicht dazwischenkommt (Review)
+    const inLabor = (label) => button(label, $("[data-labor-panel]"))
+    // die Darstellung unten in der Seitenleiste
+    const sideTheme = (label) => button(label, $("[data-app-sidebar] [data-theme-switch]"))
     const zoom = () => button("Auf Gruppe zoomen")
     // Adressen (Plan N1): die Zeile im Kopf, in Teile wie `location`, hin und zurück über den Prüfhaken
     const addr = () => txt($("[data-address]")).trim()
@@ -145,11 +150,17 @@ addEventListener("load", async () => {
     await wait(400)
 
     // ---------- Kopf und Ausgangslage (LP, 40 Schuss mit Probe)
+    // ohne Labor-Kopf steht der Kopf der Seite oben (Inhalt beginnt nach 28 px Abstand); mit dem alten Kopf lag er
+    // weit über 200 px tiefer
+    const pageHeadTop = (selector) => {
+      scrollTo(0, 0)
+      return Math.round($(selector)?.getBoundingClientRect().top ?? 999)
+    }
+    const sampleHeadTop = pageHeadTop("[data-card-header]")
     check(
-      "Labor: der Stand steht im Blatt der Labor-Werkzeuge, kein Labor-Kopf auf der Seite",
-      /Stand [0-9a-f]{7}/.test(txt($("[data-labor-panel]"))) &&
-        !$$("h1").some((h) => txt(h).includes("Die Bausteine im Einsatz")),
-      txt($("[data-labor-panel]")).slice(0, 40)
+      "Labor: der Stand steht im Blatt der Labor-Werkzeuge, die Beispielscheibe beginnt oben mit ihrem Kopf",
+      /Stand [0-9a-f]{7}/.test(txt($("[data-labor-panel]"))) && sampleHeadTop < 80,
+      `${txt($("[data-labor-panel]")).slice(0, 20)} · Kopf ${sampleHeadTop}`
     )
     const [x0, , w0] = view()
     check(
@@ -576,7 +587,18 @@ addEventListener("load", async () => {
     )
 
     // ---------- Setzen
-    await click(button("Setzen"))
+    const laborKnob = () => $("[data-labor-button]")
+    const idleKnob = [laborKnob().getAttribute("aria-label"), laborKnob().dataset.active]
+    await click(inLabor("Setzen"))
+    check(
+      "Labor: „Setzen“ wirkt bei geschlossenem Blatt weiter, der Knopf zeigt es (Name und Punkt)",
+      idleKnob[0] === "Labor-Werkzeuge" &&
+        idleKnob[1] === undefined &&
+        laborKnob().getAttribute("aria-label") === "Labor-Werkzeuge, Setzen aktiv" &&
+        laborKnob().dataset.active === "Setzen" &&
+        !!laborKnob().querySelector("span.bg-primary"),
+      `${idleKnob.join("/")} → ${laborKnob().getAttribute("aria-label")}`
+    )
     // Klick genau auf die Mitte der Scheibe (0 | 0), umgerechnet wie im Labor über die Bildschirm-Matrix
     const mid = new DOMPoint(0, 0).matrixTransform(svg().getScreenCTM())
     svg().dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: mid.x, clientY: mid.y }))
@@ -597,11 +619,17 @@ addEventListener("load", async () => {
         txt($("#readout")).includes("10,9"),
       txt($("#readout")).slice(0, 60)
     )
-    await click(button("Ansehen"))
+    await click(inLabor("Ansehen"))
+    check(
+      "Labor: mit „Ansehen“ ist der Knopf wieder neutral",
+      laborKnob().getAttribute("aria-label") === "Labor-Werkzeuge" &&
+        laborKnob().dataset.active === undefined &&
+        !laborKnob().querySelector("span.bg-primary")
+    )
 
     // ---------- leere Scheibe Schuss für Schuss: die Serienleiste erscheint erst mit dem ersten Schuss und
     // misst dann ihre Breite (sonst stünden die Kacheln in schmalen Zeilen für 300 px)
-    await click(button("Leer"), 100)
+    await click(inLabor("Leer"), 100)
     check(
       "Leer: keine Treffer, statt leerer Kästen nur der Hinweis neben der Scheibe",
       hits().length === 0 &&
@@ -611,15 +639,15 @@ addEventListener("load", async () => {
         !$('nav[aria-label="Abschnitte"]') &&
         !$("[data-result]")
     )
-    await click(button("Setzen"))
+    await click(inLabor("Setzen"))
     const setAt = async (x, y) => {
       const p = new DOMPoint(x, y).matrixTransform(svg().getScreenCTM())
       svg().dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: p.x, clientY: p.y }))
       await wait(30)
     }
-    await click(button("Probe"))
+    await click(inLabor("Probe"))
     await setAt(4, -4)
-    await click(button("Wertung"))
+    await click(inLabor("Wertung"))
     for (let i = 0; i < 31; i++) await setAt(((i % 7) - 3) * 2, (Math.floor(i / 7) - 2) * 2)
     await wait(200)
     const fresh = $$("[data-series]")
@@ -629,11 +657,11 @@ addEventListener("load", async () => {
       fresh.map((t) => t.dataset.series).join() === "probe,1,2,3,4" && freshRows.size === 1,
       `${fresh.length} Kacheln, ${freshRows.size} Zeilen`
     )
-    await click(button("Ansehen"))
-    await click(button("40 Schuss mit Probe"), 100)
+    await click(inLabor("Ansehen"))
+    await click(inLabor("40 Schuss mit Probe"), 100)
 
     // ---------- nur Probe (Training): wie Wertung, bis eine Wertung dazukommt
-    await click(button("60 Probe"), 100)
+    await click(inLabor("60 Probe"), 100)
     check(
       "Nur Probe: Schüsse 1 bis 60, gefüllt wie Wertung, mit Probe-Eck auf Scheibe und Serien",
       labelsOf(hits()).join() === Array.from({ length: 60 }, (_, i) => `${i + 1}`).join() &&
@@ -657,8 +685,8 @@ addEventListener("load", async () => {
       groupTitles().join(" | ")
     )
     // eine Wertung dazu: Ab jetzt trennt Spiegel Probe und Wertung
-    await click(button("Setzen"))
-    await click(button("Wertung"))
+    await click(inLabor("Setzen"))
+    await click(inLabor("Wertung"))
     await setAt(0, 0)
     check(
       "Nur Probe plus eine Wertung: Probe P1 bis P60, Wertung 1",
@@ -671,8 +699,8 @@ addEventListener("load", async () => {
         .map((t) => t.dataset.series)
         .join()
     )
-    await click(button("Ansehen"))
-    await click(button("40 Schuss mit Probe"), 100)
+    await click(inLabor("Ansehen"))
+    await click(inLabor("40 Schuss mit Probe"), 100)
 
     // ---------- Wertung, Scheibe, Thema
     await click(button("Ganze Ringe"))
@@ -699,14 +727,14 @@ addEventListener("load", async () => {
     )
     await click(button("Zehntel"))
     // eine andere Scheibe steht sofort, ohne Gleiten
-    await click(button("Luftgewehr"), 60)
+    await click(inLabor("Luftgewehr"), 60)
     const [, , wLg] = view()
     check(
       "Luftgewehr: eigene Scheibe, Zehnerserie wählbar",
-      near(wLg, 53.5, 1e-6) && !!button("Zehnerserie"),
+      near(wLg, 53.5, 1e-6) && !!inLabor("Zehnerserie"),
       `${wLg}`
     )
-    await click(button("Zehnerserie"))
+    await click(inLabor("Zehnerserie"))
     check(
       "Zehnerserie: zehn Treffer, keine Probe",
       hits().length === 10 && !$("[data-series='probe']")
@@ -723,18 +751,18 @@ addEventListener("load", async () => {
     )
     if (inside) await tapAt(inside)
     await click(zoom(), 700)
-    await click(button("Luftpistole"), 60)
+    await click(inLabor("Luftpistole"), 60)
     // eine andere Karte derselben Scheibe steht ebenso sofort: aus der Gruppe direkt auf die ganze Scheibe
     await click(zoom(), 700)
     const [, , wGroup] = view()
-    await click(button("Ausdruck vom 2. Oktober"), 60)
+    await click(inLabor("Ausdruck vom 2. Oktober"), 60)
     const [, , wNext] = view()
     check(
       "andere Karte derselben Scheibe: sofort im neuen Ausschnitt",
       wGroup < 171 && near(wNext, 171.05, 1e-6),
       `${wGroup.toFixed(2)} → ${wNext}`
     )
-    await click(button("40 Schuss mit Probe"), 60)
+    await click(inLabor("40 Schuss mit Probe"), 60)
     // die Seite selbst folgt dem Thema, auch unter der Grundformatierung des Artifacts
     const tokenColor = (name) => {
       const probe = document.createElement("div")
@@ -745,7 +773,7 @@ addEventListener("load", async () => {
       return color
     }
     const page = () => getComputedStyle(document.body)
-    await click(button("Dunkel"))
+    await click(sideTheme("Dunkel"))
     check(
       "Thema dunkel: Seite dunkel, Schrift aus dem Design",
       document.documentElement.classList.contains("dark") &&
@@ -754,14 +782,14 @@ addEventListener("load", async () => {
         page().fontFamily.includes("Geist"),
       `${page().backgroundColor} / ${tokenColor("background")}, ${page().fontFamily.slice(0, 20)}`
     )
-    await click(button("Hell"))
+    await click(sideTheme("Hell"))
     check(
       "Thema hell: Seite hell aus dem Design",
       !document.documentElement.classList.contains("dark") &&
         page().backgroundColor === tokenColor("background"),
       `${page().backgroundColor} / ${tokenColor("background")}`
     )
-    await click(button("System"))
+    await click(sideTheme("System"))
 
     // ---------- Hilfe
     // Plan Schritt 4, D3: Erklärungen als Blatt über „?“, der Schalter zeigt nur Kurzsätze
@@ -840,8 +868,8 @@ addEventListener("load", async () => {
       return copy.textContent
     }
     const TABS = ["Überblick", "Ergebnis", "Präzision", "Lage", "Zeit und Verlauf", "Probe"]
-    await click(button("Luftpistole"), 150)
-    await click(button("40 Schuss mit Probe"), 150)
+    await click(inLabor("Luftpistole"), 150)
+    await click(inLabor("40 Schuss mit Probe"), 150)
     await click(button("Zehntel"), 100)
     const A = () => $('section[aria-label="Analyse"]')
     const tabBar = () => $('[role="radiogroup"][aria-label="Thema"]', A())
@@ -867,6 +895,25 @@ addEventListener("load", async () => {
         .join() === TABS.join()
     )
 
+    // keine Verweise in den Katalog („E1 · E2“) im Kopf der Karten, in keinem Reiter (User, 9. Oktober 2026)
+    const catalogHeads = (root) =>
+      $$("[data-card] h3", root)
+        .filter((h) => /\b[A-Z]\d{1,2}\b/.test(txt(h)) || !!h.querySelector(".font-mono"))
+        .map((h) => txt(h))
+    const cardHeads = []
+    for (const label of TABS) {
+      await tab(label)
+      cardHeads.push(...$$("[data-card] h3", A()))
+      cardHeads.push(...catalogHeads(A()).map((t) => `!${t}`))
+    }
+    check(
+      "Analyse: keine Katalog-Verweise im Kopf der Karten, in allen sechs Reitern",
+      cardHeads.length > 20 && !cardHeads.some((h) => typeof h === "string"),
+      cardHeads
+        .filter((h) => typeof h === "string")
+        .slice(0, 3)
+        .join(" | ") || `${cardHeads.length} Karten`
+    )
     await tab("Überblick")
     const ovTiles = T().overviewTiles(input())
     const shownTiles = $$("[data-tile]", A())
@@ -1035,8 +1082,8 @@ addEventListener("load", async () => {
     )
 
     // zwei nahe Abreißer: einzeln geprüft verdeckten sie sich, schrittweise fallen beide auf
-    await click(button("Luftgewehr"), 200)
-    await click(button("Zwei Abreißer"), 200)
+    await click(inLabor("Luftgewehr"), 200)
+    await click(inLabor("Zwei Abreißer"), 200)
     await tab("Präzision")
     const pairFlagged = S()
       .outliers(base())
@@ -1083,8 +1130,8 @@ addEventListener("load", async () => {
       "Zwei Abreißer: die Beobachtung nennt beide",
       txt(A()).includes("Die Schüsse 9, 10 fallen als Ausreißer aus der Gruppe")
     )
-    await click(button("Luftpistole"), 200)
-    await click(button("40 Schuss mit Probe"), 200)
+    await click(inLabor("Luftpistole"), 200)
+    await click(inLabor("40 Schuss mit Probe"), 200)
 
     await tab("Lage")
     check(
@@ -1165,6 +1212,36 @@ addEventListener("load", async () => {
       await pointer("pointerup", n)
     }
     check("Lineal: ohne Wahl der Hinweis", courseLine().includes("Tippe oder ziehe im Diagramm"))
+    // Ziehen mit der Maus beginnt keine Textauswahl; Diagramm und Scheibe sind nicht markierbar (User, 9. Oktober 2026)
+    const mouseDown = new PointerEvent("pointerdown", {
+      bubbles: true,
+      cancelable: true,
+      pointerType: "mouse",
+      button: 0,
+      pointerId: 7,
+      clientX: courseSvg().getBoundingClientRect().left + 10,
+      clientY: courseSvg().getBoundingClientRect().top + 10,
+    })
+    courseSvg().dispatchEvent(mouseDown)
+    courseSvg().dispatchEvent(
+      new PointerEvent("pointerup", { bubbles: true, pointerType: "mouse", pointerId: 7 })
+    )
+    await wait(30)
+    const unselectable = (el) => !!el && getComputedStyle(el).userSelect === "none"
+    check(
+      "Diagramme: Ziehen mit der Maus markiert keinen Text, Diagramm samt Rahmen und Scheibe nicht markierbar",
+      mouseDown.defaultPrevented &&
+        document.activeElement === courseSvg() &&
+        unselectable(courseSvg()) &&
+        unselectable(courseSvg().parentElement) &&
+        unselectable(svg()),
+      `${mouseDown.defaultPrevented} ${document.activeElement?.tagName} ${getComputedStyle(courseSvg().parentElement).userSelect}`
+    )
+    // die Wahl dieses Klicks wieder aufheben, damit die folgenden Prüfungen ohne Wahl beginnen
+    if (!courseLine().includes("Tippe oder ziehe im Diagramm")) {
+      courseSvg().dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+      await wait(30)
+    }
     await tapPoint(23)
     check(
       "Lineal: Antippen von Punkt 23 nennt ihn und zeigt die Linie",
@@ -1266,13 +1343,13 @@ addEventListener("load", async () => {
     )
     await tapPoint(33)
     const before33 = courseLine()
-    await click(button("Luftgewehr"), 150)
+    await click(inLabor("Luftgewehr"), 150)
     check(
       "Lineal: eine Wahl bleibt bei ihrer Karte, die neue Karte fängt ohne Wahl an",
       before33.includes("Schuss 33 · ") && courseLine().includes("Tippe oder ziehe"),
       `${before33.slice(0, 12)} → ${courseLine().slice(0, 16)}`
     )
-    await click(button("Luftpistole"), 150)
+    await click(inLabor("Luftpistole"), 150)
     await tab("Ergebnis")
     const lastBar = $$("[data-tenth]", $('svg[aria-label^="Zehntelverteilung"]', A())).at(-1)
     await pointer(
@@ -1288,8 +1365,8 @@ addEventListener("load", async () => {
       Number(lastBar.getAttribute("x")) + Number(lastBar.getAttribute("width")) / 2
     )
     const barLine = txt($("[data-readout]", lastBar.ownerSVGElement.parentElement))
-    await click(button("Luftgewehr"), 150)
-    await click(button("Zehnerserie"), 150)
+    await click(inLabor("Luftgewehr"), 150)
+    await click(inLabor("Zehnerserie"), 150)
     const freshLine = txt(
       $("[data-readout]", $('svg[aria-label^="Zehntelverteilung"]', A()).parentElement)
     )
@@ -1300,8 +1377,8 @@ addEventListener("load", async () => {
         !/NaN|undefined/.test(txt(A())),
       `${barLine} → ${freshLine.slice(0, 20)}`
     )
-    await click(button("Luftpistole"), 150)
-    await click(button("40 Schuss mit Probe"), 150)
+    await click(inLabor("Luftpistole"), 150)
+    await click(inLabor("40 Schuss mit Probe"), 150)
     const decimalSvg = $('svg[aria-label^="Zehntelverteilung"]', A())
     check(
       "Tabelle: Zehntel-Säulen, eine Zeile je belegtem Zehntel",
@@ -1357,7 +1434,7 @@ addEventListener("load", async () => {
       return { n: boxes.length, hits, inside }
     }
     for (const gun of ["Luftpistole", "Luftgewehr"]) {
-      if (gun === "Luftgewehr") await click(button("Luftgewehr"), 200)
+      if (gun === "Luftgewehr") await click(inLabor("Luftgewehr"), 200)
       const probe = sighterLabels()
       check(
         `Probe ${gun}: Nummern ohne Überlappung, alle im Bild`,
@@ -1365,8 +1442,8 @@ addEventListener("load", async () => {
         `${probe.n} · ${probe.hits.join(" ") || "frei"} · ${probe.inside ? "im Bild" : "ragt hinaus"}`
       )
     }
-    await click(button("Luftpistole"), 200)
-    await click(button("40 Schuss mit Probe"), 200)
+    await click(inLabor("Luftpistole"), 200)
+    await click(inLabor("40 Schuss mit Probe"), 200)
     check("keine Visierverstellung auf der Seite", !/Verstellung|verstellt|Visier/.test(pageText()))
 
     // Abstände: zwischen Blöcken und Karten 16 px, Karten einer Zeile mit gleicher Unterkante
@@ -1511,7 +1588,7 @@ addEventListener("load", async () => {
     check("Hilfe: Schalter nimmt die Kurzsätze wieder weg", $$("[data-short]", A()).length === 0)
 
     // die übrigen Beispiele
-    await click(button("60 Probe"), 200)
+    await click(inLabor("60 Probe"), 200)
     await tab("Ergebnis")
     check(
       "60 Probe: volle Analyse über die Probe, sechs Serien",
@@ -1520,17 +1597,17 @@ addEventListener("load", async () => {
         $$("[data-series-point]", A()).length === 6,
       txt($("p", A()))
     )
-    await click(button("Ausdruck vom 2. Oktober"), 200)
+    await click(inLabor("Ausdruck vom 2. Oktober"), 200)
     await tab("Überblick")
     check(
       "Ausdruck: Trend erst ab 10 Schuss",
       ovValue("Trend") === "–" && ovHint("Trend") === "ab 10 Schuss",
       `${ovValue("Trend")} ${ovHint("Trend")}`
     )
-    await click(button("Leer"), 200)
+    await click(inLabor("Leer"), 200)
     check("Leer: keine Analyse, der Hinweis neben der Scheibe", !A() && !!$("[data-no-shots]"))
-    await click(button("Luftgewehr"), 200)
-    await click(button("40 Schuss mit Probe"), 200)
+    await click(inLabor("Luftgewehr"), 200)
+    await click(inLabor("40 Schuss mit Probe"), 200)
     await tab("Ergebnis")
     check(
       "LG: Quoten ab 10,0 und ab 10,5",
@@ -1538,8 +1615,8 @@ addEventListener("load", async () => {
         .map((e) => e.dataset.share)
         .join() === "ab 10,0,ab 10,5"
     )
-    await click(button("Luftpistole"), 200)
-    await click(button("40 Schuss mit Probe"), 200)
+    await click(inLabor("Luftpistole"), 200)
+    await click(inLabor("40 Schuss mit Probe"), 200)
     await tab("Überblick")
 
     // Analyse auf dem Telefon: keine Seite breiter als der Bildschirm, die Reiter in einer Zeile, der gewählte
@@ -1891,6 +1968,21 @@ addEventListener("load", async () => {
         txt(rulerPill).includes("Zeit und Verlauf") &&
         rd.querySelector('[data-section="target"]').getBoundingClientRect().top < 400,
       rulerPill ? txt(rulerPill) : rulerShow ? "keine Pille" : "kein Knopf"
+    )
+    // der Knopf der Labor-Werkzeuge steht über der Pille, nicht darunter (Review: 5 px Überlappung bei 360 px)
+    const pillBox = rulerPill?.parentElement.getBoundingClientRect()
+    const knobBox = rd.querySelector("[data-labor-button]")?.getBoundingClientRect()
+    const overlaps =
+      !!pillBox &&
+      !!knobBox &&
+      pillBox.left < knobBox.right &&
+      knobBox.left < pillBox.right &&
+      pillBox.top < knobBox.bottom &&
+      knobBox.top < pillBox.bottom
+    check(
+      "Telefon: der Knopf der Labor-Werkzeuge liegt nicht über der Pille",
+      !!pillBox && !!knobBox && !overlaps && knobBox.bottom <= pillBox.top,
+      `Pille ${Math.round(pillBox?.left ?? 0)}–${Math.round(pillBox?.right ?? 0)} / ${Math.round(pillBox?.top ?? 0)}, Knopf ${Math.round(knobBox?.left ?? 0)}–${Math.round(knobBox?.right ?? 0)} / ${Math.round(knobBox?.bottom ?? 0)}`
     )
     const pillBottom = rulerPill?.parentElement.getBoundingClientRect().bottom ?? 9999
     check(
@@ -2840,8 +2932,16 @@ addEventListener("load", async () => {
       const prevId = idOf(link("Vorige Scheibe"))
       const nextId = idOf(link("Nächste Scheibe"))
       const contextLinks = $$("[data-card-context] a").map((a) => a.getAttribute("href"))
+      // ein anderer Reiter als der erste, dann blättern: die nächste Scheibe beginnt mit „Überblick“ (User, 9. Oktober 2026)
+      const themes = () => $('[role="radiogroup"][aria-label="Thema"]')
+      const checkedTheme = () => txt($('[aria-checked="true"]', themes()))
+      await click(button("Lage", themes()), 150)
+      const before = checkedTheme()
       await click(link("Nächste Scheibe"), 500)
       const pagedTo = routeOf(addr())
+      const afterPaging = checkedTheme()
+      // auch eine Scheibe, die man aus der Liste neu öffnet, beginnt mit dem ersten Reiter
+      await click(button("Präzision", themes()), 150)
       await click(link("Zurück zu „Scheiben“"), 500)
       check(
         "Blättern aus der Liste: vorige und nächste sind die zeitlichen Nachbarn mit denselben Filtern, zurück in die Liste",
@@ -2856,6 +2956,15 @@ addEventListener("load", async () => {
         `${prevId} ‹ ${middle} › ${nextId} · ${addr()}`
       )
       await click($(`[data-card-row="${competitionIds.at(-1)}"]`), 500)
+      check(
+        "Reiter: blättern und eine andere Scheibe öffnen beginnt immer mit dem ersten Reiter, ohne Reiter in der Adresse",
+        before === "Lage" &&
+          afterPaging === "Überblick" &&
+          !pagedTo.anchor?.tab &&
+          checkedTheme() === "Überblick" &&
+          !routeOf(addr()).anchor?.tab,
+        `${before} → ${afterPaging}, geöffnet ${checkedTheme()}`
+      )
       check(
         "Blättern: bei der neuesten Scheibe ist „nächste“ ausgegraut",
         !link("Nächste Scheibe") &&
@@ -3069,6 +3178,25 @@ addEventListener("load", async () => {
           !laborDialog().open,
         laborText.slice(0, 60)
       )
+      // keine Ansicht hat einen Labor-Kopf: der Kopf der Seite steht oben (Labor näher an der App, D1)
+      const tops = {}
+      for (const [name, selector] of [
+        ["Start", "[data-start-page]"],
+        ["Scheiben", "[data-list-header]"],
+        ["Fortschritt", "[data-period-header]"],
+      ]) {
+        await click(area(name), 300)
+        tops[name] = pageHeadTop(selector)
+        if (name === "Fortschritt") tops.catalog = catalogHeads(document).length
+      }
+      await click(area("Scheiben"), 300)
+      check(
+        "Labor: Start, Scheiben und Fortschritt beginnen oben mit ihrem Kopf, kein Labor-Kopf davor; im Fortschritt keine Katalog-Verweise",
+        Object.keys(tops).length === 4 &&
+          ["Start", "Scheiben", "Fortschritt"].every((name) => tops[name] < 80) &&
+          tops.catalog === 0,
+        JSON.stringify(tops)
+      )
       const themeIn = (root) => $("[data-theme-switch]", root)
       // der Umschalter passt in die Seitenleiste (innen 12 px Rand), nichts steht über
       const sideBox = $("[data-app-sidebar]").getBoundingClientRect()
@@ -3081,12 +3209,13 @@ addEventListener("load", async () => {
           sideSwitch.scrollWidth <= sideSwitch.clientWidth,
         `${Math.round(sideSwitchBox?.right ?? 0)} ≤ ${Math.round(sideBox.right - 12)}`
       )
-      const wasDark = document.documentElement.classList.contains("dark")
+      const wasTheme = txt($('[aria-checked="true"]', themeIn($("[data-app-sidebar]"))))
       await click(button("Dunkel", themeIn($("[data-app-sidebar]"))), 150)
       const dark = document.documentElement.classList.contains("dark")
       await click(button("Hell", themeIn($("[data-app-sidebar]"))), 150)
       const light = !document.documentElement.classList.contains("dark")
-      await click(button(wasDark ? "Dunkel" : "Hell", themeIn($("[data-app-sidebar]"))), 150)
+      // genau die Wahl davor zurück (auch „System“), sonst bliebe sie für die späteren Rahmen gespeichert
+      await click(button(wasTheme, themeIn($("[data-app-sidebar]"))), 150)
       await click(area("Profil"), 300)
       const themeInProfile = !!themeIn($('[data-placeholder="profile"]'))
       await click(area("Scheiben"), 300)
@@ -3095,15 +3224,24 @@ addEventListener("load", async () => {
         dark && light && themeInProfile,
         `${dark} ${light} ${themeInProfile}`
       )
-      // die Beispielscheiben über das Blatt, zurück zur App in den letzten Bereich
-      await click(button("Beispielscheiben öffnen", $("[data-labor-panel]")), 400)
-      const inSamples =
-        !!$("[data-card-header]") && !!button("Zurück zur App", $("[data-labor-panel]"))
-      await click(button("Zurück zur App", $("[data-labor-panel]")), 400)
+      // die Beispielscheiben über das offene Blatt, zurück zur App in den letzten Bereich; danach kein Blatt mehr offen
+      // und der Fokus auf dem neuen Knopf (Review)
+      await click($("[data-labor-button]"), 200)
+      const sheetOpen = !!$(":modal")
+      await click(inLabor("Beispielscheiben öffnen"), 400)
+      const inSamples = !!$("[data-card-header]") && !!inLabor("Zurück zur App") && !$(":modal")
+      const focusInSamples = document.activeElement?.hasAttribute("data-labor-button")
+      await click($("[data-labor-button]"), 200)
+      await click(inLabor("Zurück zur App"), 400)
       check(
-        "Labor: „Beispielscheiben öffnen“ zeigt die Beispiele, „Zurück zur App“ kehrt in die Liste zurück",
-        inSamples && !!$("[data-card-list-page]"),
-        addr()
+        "Labor: „Beispielscheiben öffnen“ zeigt die Beispiele, „Zurück zur App“ kehrt in die Liste zurück, Blatt zu, Fokus am Knopf",
+        sheetOpen &&
+          inSamples &&
+          focusInSamples &&
+          !!$("[data-card-list-page]") &&
+          !$(":modal") &&
+          document.activeElement?.hasAttribute("data-labor-button"),
+        `${sheetOpen} ${inSamples} ${focusInSamples} ${document.activeElement?.tagName} · ${addr()}`
       )
       // Telefon 390 px: der Knopf steht über der unteren Leiste
       const laborPhone = await openFrame(390, 844)
