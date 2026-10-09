@@ -188,6 +188,25 @@ function ownAverageOf(values: readonly CardValue[]) {
 /** die bis zu fünf Scheiben davor, wie der gleitende Schnitt (D2) */
 const DELTA_WINDOW = 5
 
+/**
+ * Abstand jedes Werts zum Mittel der bis zu `window` Werte davor, ohne den Wert selbst (Prüfung, 9. Oktober 2026);
+ * der erste hat keinen. Mit `ids` nur für diese Werte, gerechnet über alle davor, auch außerhalb des Zeitraums.
+ * Geteilt von der Seite eines Zeitraums und der Scheiben-Liste (Plan N2).
+ */
+export function deltasBefore(
+  values: readonly CardValue[],
+  ids: ReadonlySet<string> | null,
+  window = DELTA_WINDOW
+): Map<string, { delta: number; n: number }> {
+  const deltas = new Map<string, { delta: number; n: number }>()
+  values.forEach((value, i) => {
+    if (!i || (ids && !ids.has(value.id))) return
+    const before = values.slice(Math.max(0, i - window), i)
+    deltas.set(value.id, { delta: value.value - (mean(before) as number), n: before.length })
+  })
+  return deltas
+}
+
 /** jede ISO-Woche vom Beginn bis zum Ende des Zeitraums (höchstens bis jetzt), in der Zeitzone */
 function weekKeys(range: DateRange, nowMs: number, timeZone: string): string[] {
   const end = Math.min(range.toMs, nowMs + 1) - 1
@@ -243,12 +262,7 @@ export function periodModel(input: {
   // für „gegen deinen Schnitt“ (Platz unter den letzten 50, nicht nur im Zeitraum)
   const family = input.cards.filter(ofKind).sort(byStart)
   const familyValues = cardValues(family, chartMetric, scoring, options)
-  const deltas = new Map<string, { delta: number; n: number }>()
-  familyValues.forEach((value, i) => {
-    if (!i || !inPeriod.has(value.id)) return
-    const before = familyValues.slice(Math.max(0, i - DELTA_WINDOW), i)
-    deltas.set(value.id, { delta: value.value - (mean(before) as number), n: before.length })
-  })
+  const deltas = deltasBefore(familyValues, inPeriod)
   const volume = new Map(
     trainingVolume(cards, (ms) => isoWeekKey(day(ms)), day).map((w) => [w.key, w])
   )

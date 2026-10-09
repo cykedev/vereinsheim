@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { NamedPeriod } from "./calendar"
-import { isProbeOnly, periodModel, periodReading, PERIOD_TILE_KEYS } from "./model"
+import { deltasBefore, isProbeOnly, periodModel, periodReading, PERIOD_TILE_KEYS } from "./model"
 import { periodSentence, verdictText } from "./sentence"
 import { initialPeriodState, type PeriodState } from "./state"
 import { NOW, periodCard, TZ } from "./testSeason"
@@ -303,5 +303,33 @@ describe("Befunde aus dem Review (9. Oktober 2026)", () => {
     expect(periodReading(m, "a")).toMatchObject({ card: { id: "a" }, chosen: true })
     expect(periodReading(m, null)).toMatchObject({ card: { id: "c" }, chosen: false })
     expect(periodReading(m, "weg")).toMatchObject({ card: { id: "c" }, chosen: false })
+  })
+})
+
+describe("Abstand zum Schnitt der Scheiben davor (Plan N2, Task 1)", () => {
+  const values = [100, 102, 98, 101, 100, 103, 99].map((v, i) => ({
+    id: `c${i + 1}`,
+    atMs: i,
+    value: v / 10,
+    n: 1,
+  }))
+
+  it("je Wert ab dem zweiten der Abstand zum Mittel der bis zu fünf davor", () => {
+    const deltas = deltasBefore(values, null)
+    expect(deltas.has("c1")).toBe(false)
+    expect(deltas.get("c2")?.n).toBe(1)
+    expect(deltas.get("c2")?.delta).toBeCloseTo(0.2, 9)
+    // c6: 10,3 − Ø(10,0 · 10,2 · 9,8 · 10,1 · 10,0) = 10,3 − 10,02
+    expect(deltas.get("c6")?.n).toBe(5)
+    expect(deltas.get("c6")?.delta).toBeCloseTo(0.28, 9)
+    // c7: nur die fünf davor (c2 bis c6), nicht c1: 9,9 − 10,08
+    expect(deltas.get("c7")?.n).toBe(5)
+    expect(deltas.get("c7")?.delta).toBeCloseTo(-0.18, 9)
+  })
+
+  it("mit Ids nur für diese, gerechnet über alle davor", () => {
+    const deltas = deltasBefore(values, new Set(["c3"]))
+    expect([...deltas.keys()]).toEqual(["c3"])
+    expect(deltas.get("c3")?.delta).toBeCloseTo(9.8 - 10.1, 9)
   })
 })
