@@ -54,7 +54,9 @@
     "./period/CardList": "./src/period/CardList.tsx",
     "./period/PeriodPicker": "./src/period/PeriodPicker.tsx",
     "./period/PeriodHeader": "./src/period/PeriodHeader.tsx",
-    "./period/PeriodResult": "./src/period/PeriodResult.tsx"
+    "./period/PeriodResult": "./src/period/PeriodResult.tsx",
+    "./period/PeriodTiles": "./src/period/PeriodTiles.tsx",
+    "./period/PeriodInsights": "./src/period/PeriodInsights.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

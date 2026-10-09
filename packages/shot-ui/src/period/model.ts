@@ -47,7 +47,10 @@ export const PERIOD_CHART_METRICS: readonly { key: PeriodMetricKey; label: strin
   { key: "time.intervalMedian", label: "Tempo" },
 ]
 
-/** Kacheln über den Zeitraum (D11): nur Kennzahlen, die nicht an der Schusszahl hängen */
+/**
+ * Kacheln über den Zeitraum (D11): nur Kennzahlen, die nicht an der Schusszahl hängen; sechs, damit sie auf dem
+ * Telefon (zwei Spalten) und am Desktop (drei) jede Zeile füllen
+ */
 export const PERIOD_TILE_KEYS = [
   "result.decimalMean",
   "result.tensRate",
@@ -55,7 +58,6 @@ export const PERIOD_TILE_KEYS = [
   "group.sdX",
   "group.sdY",
   "time.intervalMedian",
-  "time.tempoSpread",
 ] as const
 
 /** ab so vielen Scheiben zeigt der Verlauf je Monat, bis der Schütze selbst wählt (D7) */
@@ -112,7 +114,7 @@ export interface PeriodModel {
    * die neueste Scheibe im Zeitraum gegen den eigenen Schnitt, im Ø je Schuss, über alle Scheiben der Familie
    * bis zu ihr (30 Tage davor, Platz unter den letzten 50)
    */
-  ownAverage: OwnAverage | null
+  ownAverage: (OwnAverage & { pool: number }) | null
   records: PeriodRecords
   summary: {
     mean: number | null
@@ -131,6 +133,15 @@ const mean = (values: readonly CardValue[]) =>
 
 const byStart = (a: PeriodCard, b: PeriodCard) =>
   a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+
+/** Platz unter so vielen letzten Scheiben (C4) */
+const PERCENTILE_POOL = 50
+
+/** gegen den eigenen Schnitt, mit der Zahl der Scheiben, unter denen der Platz gilt (bis zu 50) */
+function ownAverageOf(values: readonly CardValue[]) {
+  const own = againstOwnAverage(values)
+  return own ? { ...own, pool: Math.min(PERCENTILE_POOL, values.length) } : null
+}
 
 /** die bis zu fünf Scheiben davor, wie der gleitende Schnitt (D2) */
 const DELTA_WINDOW = 5
@@ -254,7 +265,7 @@ export function periodModel(input: {
     months,
     deltas,
     weeks,
-    ownAverage: againstOwnAverage(upToNewest),
+    ownAverage: ownAverageOf(upToNewest),
     records: periodRecords(input.cards, scoring, {
       kind: state.kind === "all" ? undefined : state.kind,
       includeProbeOnly: state.includeProbeOnly,
