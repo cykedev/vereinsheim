@@ -11,13 +11,14 @@ import {
 } from "@vereinsheim/shot-core/analysis"
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
-import { formatValue, percentText } from "../../format"
+import { formatValue, percentText, ringsText } from "../../format"
+import { meanWithCount, noResultReason } from "../../reasons"
 import { DecimalHistogram } from "../charts/DecimalHistogram"
 import { ChartSlot } from "../charts/frame"
 import { RingBars } from "../charts/RingBars"
 import { SeriesChart } from "../charts/SeriesChart"
 import type { AnalysisInput } from "../input"
-import { AnalysisCard, IntervalBar, KeyValues, Note } from "../parts"
+import { AnalysisCard, IntervalBar, KeyValues, Muted, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
 
 /** Schwellen der Quoten (Spielwiese `resultTab`): ganze Ringe, sonst nach Waffe */
@@ -61,7 +62,7 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
   const { base, scoring } = input
   const metric = (key: string) => computeMetric(inScoring(metricByKey(key)!, scoring), base)
   const total = metric("result.decimal")
-  const mean = metric("result.decimalMean")
+  const mean = meanWithCount(base, scoring)
   const dist = ringDistribution(base)
   const hist = decimalHistogram(base)
   const extremes = shotExtremes(base)
@@ -78,13 +79,35 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
       key: "ergebnis",
       element: (
         <AnalysisCard help="ergebnis" explain={explain} onHelp={onHelp}>
-          {total === null ? (
-            <Note>{base.length ? "nicht jeder Schuss mit Wert" : "ab 1 Schuss"}</Note>
+          {base.length === 0 ? (
+            <Note>ab 1 Schuss</Note>
           ) : (
             <KeyValues
               rows={[
-                ["Ergebnis", `${formatValue(total, digits)} Ringe`],
-                ["Ø je Schuss", mean === null ? "–" : formatValue(mean, 2)],
+                [
+                  "Ergebnis",
+                  total === null ? (
+                    <>
+                      –<Muted>{` ${noResultReason(base, scoring)}`}</Muted>
+                    </>
+                  ) : (
+                    ringsText(total, digits)
+                  ),
+                ],
+                [
+                  "Ø je Schuss",
+                  mean === null ? (
+                    "–"
+                  ) : total === null ? (
+                    // ohne Ergebnis über die Schüsse mit Wert, wie die Hilfe sagt (Prüfung, Ergebnis 3)
+                    <>
+                      {formatValue(mean.mean, 2)}
+                      <Muted>{` über ${mean.n} Schuss mit Wert`}</Muted>
+                    </>
+                  ) : (
+                    formatValue(mean.mean, 2)
+                  ),
+                ],
                 ["Schuss", String(base.length)],
               ]}
             />
@@ -144,7 +167,7 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
               </Note>
             </>
           ) : (
-            <Note>ab 1 Schuss mit Lage</Note>
+            <Note>ab 1 Schuss mit Teiler</Note>
           )}
         </AnalysisCard>
       ),
@@ -178,9 +201,7 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
                   ],
                   [
                     "Spanne",
-                    consistency.range === null
-                      ? "–"
-                      : `${formatValue(consistency.range, digits)} Ringe`,
+                    consistency.range === null ? "–" : ringsText(consistency.range, digits),
                   ],
                   [
                     "Abweichung je Schuss",

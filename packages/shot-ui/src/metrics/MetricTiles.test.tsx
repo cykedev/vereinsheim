@@ -123,6 +123,23 @@ describe("Kacheln „Trefferbild in Zahlen“", () => {
     ).not.toContain("–")
   })
 
+  it("Ergebnis-Kennzahlen zählen nur Wertung: mit Probe in der Auswahl steht das dabei", () => {
+    // Prüfung, Ergebnis 7: „über alle Schüsse mit Probe“, aber Ø und Zehnerquote zählen ohne sie
+    const all = render({ selection: "all" })
+    expect(tileText(all, "result.decimalMean")).toContain("Zehntelwertung · ohne Probe")
+    expect(tileText(all, "result.tensRate")).toContain("Anteil der Zehner · ohne Probe")
+    expect(tileText(all, "group.sigma")).not.toContain("ohne Probe")
+    expect(tileText(render({ selection: "match" }), "result.decimalMean")).not.toContain(
+      "ohne Probe"
+    )
+    expect(
+      tileText(render({ selection: "all", scoring: "rings" }), "result.decimalMean")
+    ).toContain("ganze Ringe · ohne Probe")
+    const probe = render({ selection: "probe" })
+    expect(tileText(probe, "result.decimalMean")).toContain("– zählt nur Wertungsschüsse")
+    expect(probe).not.toContain("nur 0 zählen")
+  })
+
   it("abhängig von der Schusszahl genau bei den Kennzahlen, die es sind", () => {
     const html = render()
     for (const key of TILE_KEYS) {

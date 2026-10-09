@@ -16,6 +16,12 @@ export function formatSigned(value: number, decimals: number): string {
   return value > 0 && Number(Math.abs(value).toFixed(decimals)) !== 0 ? `+${text}` : text
 }
 
+/** Ringe mit Zahl: „1 Ring“ nur, wenn genau 1 dasteht (auch −1), sonst „Ringe“ („1,0 Ringe“, „0 Ringe“) */
+export function ringsText(value: number, decimals: number): string {
+  const text = formatValue(value, decimals)
+  return `${text} ${text.replace(MINUS, "") === "1" ? "Ring" : "Ringe"}`
+}
+
 /** Einheit einer Kennzahl zum Anzeigen; der Teiler steht ohne Einheit */
 export function unitText(unit: string): string {
   return unit === "Teiler" ? "" : unit

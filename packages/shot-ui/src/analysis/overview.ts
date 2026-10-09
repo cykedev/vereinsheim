@@ -13,6 +13,7 @@ import {
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
 import { directionWords, formatSigned, formatValue, percentText } from "../format"
+import { meanWithCount, NO_FULL_POSITION, noResultReason } from "../reasons"
 import type { AnalysisInput } from "./input"
 
 export interface OverviewTile {
@@ -46,7 +47,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
   const rings = (v: number) => formatValue(v, digits)
   const metric = (key: string) => computeMetric(inScoring(metricByKey(key)!, scoring), base)
   const total = metric("result.decimal")
-  const mean = metric("result.decimalMean")
+  const mean = meanWithCount(base, scoring)
   const tens = shareAtLeast(base, scoring, 100)
   const sigma = sigmaEstimate(base)
   const confidence = mpiConfidence(base)
@@ -63,8 +64,9 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       "ergebnis",
       total === null ? null : rings(total),
       "Ringe",
-      `Ø ${mean === null ? "–" : formatValue(mean, 2)} je Schuss · ${base.length} Schuss`,
-      base.length ? "nicht jeder Schuss mit Wert" : "ab 1 Schuss"
+      `Ø ${mean === null ? "–" : formatValue(mean.mean, 2)} je Schuss · ${base.length} Schuss`,
+      // ohne Ergebnis den Ø über die Schüsse mit Wert, wie die Hilfe sagt (Prüfung, Ergebnis 3)
+      `${mean ? `Ø ${formatValue(mean.mean, 2)} je Schuss (${mean.n} mit Wert) · ` : ""}${noResultReason(base, scoring)}`
     ),
     tile(
       "Zehnerquote",
@@ -102,7 +104,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       split
         ? `Lage ${rings(split.positionLoss[key])} · Streuung ${rings(split.spreadLoss[key])}${split.reliable ? "" : " · Aufteilung unsicher"}`
         : "",
-      split ? "nicht jeder Wertungsschuss mit Lage" : "ab 2 Schuss mit Lage"
+      split ? NO_FULL_POSITION : "ab 2 Schuss mit Lage"
     ),
     tile(
       "Trend",

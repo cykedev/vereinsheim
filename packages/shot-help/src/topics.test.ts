@@ -1,5 +1,6 @@
 import { ANALYSIS_CATALOG } from "@vereinsheim/shot-core/analysis"
 import { METRICS } from "@vereinsheim/shot-core/metrics"
+import { wilson } from "@vereinsheim/shot-core/stats"
 import { describe, expect, it } from "vitest"
 
 import { helpForCatalog, helpForMetric } from "./lookup"
@@ -82,5 +83,18 @@ describe("HELP_TOPICS: Bezüge und Ordnung", () => {
     expect(order.every((value) => value >= 0)).toBe(true)
     expect(order.every((value, i) => i === 0 || value >= order[i - 1])).toBe(true)
     expect(new Set(order).size).toBe(THEME_ORDER.length)
+  })
+})
+
+describe("Zahlen in Texten, exakt nachgerechnet", () => {
+  const text = (id: string) => JSON.stringify(HELP_TOPICS.find((topic) => topic.id === id))
+
+  it("Quoten: 20 Zehner aus 40 Schuss, 95-%-Bereich etwa 35 % bis 65 % (Wilson)", () => {
+    const range = wilson(20, 40)!
+    expect(Math.round(range.low * 100)).toBe(35)
+    expect(Math.round(range.high * 100)).toBe(65)
+    expect(text("quoten")).toContain(
+      "Bei 20 Zehnern aus 40 Schuss reicht er etwa von 35 % bis 65 %."
+    )
   })
 })

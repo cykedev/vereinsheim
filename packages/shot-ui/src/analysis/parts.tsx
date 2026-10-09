@@ -133,6 +133,11 @@ export function Disclosure({
   )
 }
 
+/** Zusatz neben einem Wert in einer Zeile von `KeyValues`, zurückgenommen */
+export function Muted({ children }: { children: ReactNode }) {
+  return <span className="font-normal text-muted-foreground">{children}</span>
+}
+
 /** Hinweis unter einem Wert oder Diagramm, zurückgenommen in voller `muted-foreground`-Farbe */
 export function Note({ children }: { children: ReactNode }) {
   return <p className="text-[12.5px] leading-snug text-muted-foreground">{children}</p>

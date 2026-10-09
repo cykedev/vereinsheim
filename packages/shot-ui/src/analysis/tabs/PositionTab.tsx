@@ -4,16 +4,13 @@ import { drift, mpiConfidence, mpiPath, ringLossSplit } from "@vereinsheim/shot-
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 import type { ReactNode } from "react"
 
-import { directionWords, formatValue } from "../../format"
+import { directionWords, formatValue, ringsText } from "../../format"
+import { NO_FULL_POSITION } from "../../reasons"
 import { ChartSlot } from "../charts/frame"
 import { PathChart } from "../charts/PathChart"
-import { AnalysisCard, KeyValues, Note, Verdict } from "../parts"
+import { AnalysisCard, KeyValues, Muted, Note, Verdict } from "../parts"
 import { ClockCard } from "./ClockCard"
 import type { CardContext, CardSpec } from "./index"
-
-const Muted = ({ children }: { children: ReactNode }) => (
-  <span className="font-normal text-muted-foreground">{children}</span>
-)
 
 /** Ellipse als Symbol des Schalters */
 const EllipseIcon = () => (
@@ -167,6 +164,9 @@ function RingLoss({
   const pos = Math.max(0, split.positionLoss[keyName])
   const spr = Math.max(0, split.spreadLoss[keyName])
   const sum = pos + spr || 1
+  const digits = keyName === "rings" ? 0 : 1
+  // ohne Ringverlust rechnen Ist und Mitte über weniger Schüsse: das steht dabei (Prüfung, Ergebnis 5)
+  const over = split.total ? "" : ` (${split.n} Schuss mit Lage)`
   return (
     <>
       <div
@@ -201,20 +201,20 @@ function RingLoss({
             "Ringverlust",
             split.total ? (
               <>
-                {`${rings(split.total[keyName])} Ringe`}
+                {ringsText(split.total[keyName], digits)}
                 <Muted> zum Höchstwert</Muted>
               </>
             ) : (
               <>
-                –<Muted> nicht jeder Wertungsschuss hat eine Lage</Muted>
+                –<Muted>{` ${NO_FULL_POSITION}`}</Muted>
               </>
             ),
           ],
-          ["Ist", `${rings(split.actual[keyName])} Ringe`],
+          [`Ist${over}`, ringsText(split.actual[keyName], digits)],
           [
-            "Gruppe in der Mitte",
+            `Gruppe in der Mitte${over}`,
             <>
-              {`${rings(split.centered[keyName])} Ringe`}
+              {ringsText(split.centered[keyName], digits)}
               <Muted> (geschätzt)</Muted>
             </>,
           ],

@@ -18,7 +18,7 @@ import {
 } from "@vereinsheim/shot-core/analysis"
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
-import { directionWords, formatSigned, formatValue } from "../format"
+import { directionWords, formatSigned, formatValue, ringsText } from "../format"
 import type { AnalysisInput } from "./input"
 
 export type ObservationIcon =
@@ -80,12 +80,14 @@ export function observations(input: AnalysisInput): Observation[] {
   if (flagged) {
     const loss = outlierLoss(base, scoring)
     const numbers = flagged.flagged.map((o) => o.number)
+    const one = numbers.length === 1
+    const ringsOf = (v: number) => ringsText(v, scoring === "rings" ? 0 : 1)
     const lossText =
       !loss || !loss.count
         ? ""
         : loss.loss >= 0
-          ? ` Sie kosten ${rings(loss.loss)} Ringe gegen deinen typischen Schuss.`
-          : ` Sie bringen ${rings(-loss.loss)} Ringe mehr als dein typischer Schuss, weil sie zur Mitte hin liegen.`
+          ? ` ${one ? "Er kostet" : "Sie kosten"} ${ringsOf(loss.loss)} gegen deinen typischen Schuss.`
+          : ` ${one ? "Er bringt" : "Sie bringen"} ${ringsOf(-loss.loss)} mehr als dein typischer Schuss, weil ${one ? "er" : "sie"} zur Mitte hin ${one ? "liegt" : "liegen"}.`
     out.push({
       icon: "outlier",
       text: numbers.length

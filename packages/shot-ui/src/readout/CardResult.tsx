@@ -8,6 +8,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
 import { formatValue } from "../format"
+import { noResultReason } from "../reasons"
 import type { ViewState } from "../view-state"
 
 /**
@@ -52,9 +53,7 @@ export function CardResult({ shots, state, scoring, className }: CardResultProps
         <p className="text-[13px] text-muted-foreground">
           {total !== null
             ? `${count} Schuss${probe ? ` + ${probe} Probe` : ""}`
-            : count
-              ? "nicht jeder Schuss mit Wert"
-              : "ab 1 Schuss"}
+            : noResultReason(shots, state.scoring)}
         </p>
         {count > 0 && (
           <dl

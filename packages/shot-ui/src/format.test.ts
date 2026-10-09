@@ -6,6 +6,7 @@ import {
   formatSigned,
   formatValue,
   percentText,
+  ringsText,
   unitText,
 } from "./format"
 
@@ -29,6 +30,16 @@ describe("Zahlen wie in der Spielwiese: feste Stellen, Komma, echtes Minus", () 
     expect(formatSigned(1.5, 1)).toBe("+1,5")
     expect(formatSigned(-1.5, 1)).toBe("−1,5")
     expect(formatSigned(0.01, 1)).toBe("0,0")
+  })
+})
+
+describe("Ringe mit Zahl", () => {
+  it("ein Ring nur bei genau 1, sonst Ringe (Prüfung, Grammatik)", () => {
+    expect(ringsText(1, 0)).toBe("1 Ring")
+    expect(ringsText(-1, 0)).toBe("−1 Ring")
+    expect(ringsText(2, 0)).toBe("2 Ringe")
+    expect(ringsText(1, 1)).toBe("1,0 Ringe")
+    expect(ringsText(0.04, 0)).toBe("0 Ringe")
   })
 })
 

@@ -1,4 +1,5 @@
 import { drift, mpiConfidence, mpiPath, ringLossSplit } from "@vereinsheim/shot-core/analysis"
+import { FLAG_SUSPICIOUS } from "@vereinsheim/shot-core/metrics"
 import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 import { isValidElement, type ReactNode } from "react"
@@ -96,6 +97,24 @@ describe("Reiter Lage", () => {
     expect(html).not.toMatch(/Visier|Korrektur|verstellen/)
     expect(cardText(html, "lage-echt")).toContain(
       "Liegt die Mitte darin, ist ein Versatz nicht belegt."
+    )
+  })
+
+  it("ohne Ringverlust: Ist und Mitte nennen ihr n, der Grund nennt den verdächtigen Schuss", () => {
+    // Prüfung, Ergebnis 5 und 6: ein verdächtiger Schuss mit Lage zählt nicht (SF-15)
+    const suspicious = CARD.map((s, i) => (i === 20 ? { ...s, flags: [FLAG_SUSPICIOUS] } : s))
+    const split = ringLossSplit(
+      suspicious.filter((s) => s.kind === "match"),
+      LP_10M
+    )!
+    expect(split.total).toBeNull()
+    const text = cardText(renderTab("position", { shots: suspicious }), "ringverlust-nach-ursache")
+    expect(text).toContain(
+      "Ringverlust – nicht jeder Wertungsschuss mit gültiger Lage (fehlt oder verdächtig)"
+    )
+    expect(text).toContain(`Ist (39 Schuss mit Lage) ${formatValue(split.actual.decimal, 1)} Ringe`)
+    expect(text).toContain(
+      `Gruppe in der Mitte (39 Schuss mit Lage) ${formatValue(split.centered.decimal, 1)} Ringe`
     )
   })
 

@@ -8,6 +8,12 @@ import {
   tempoSpread,
 } from "@vereinsheim/shot-core/analysis"
 import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
+import {
+  computeMetric,
+  FLAG_SUSPICIOUS,
+  inScoring,
+  metricByKey,
+} from "@vereinsheim/shot-core/metrics"
 import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
@@ -67,13 +73,34 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(t("Probe → Wertung").hint).toBe("ab 3 Probe- und 3 Wertungsschüssen")
   })
 
-  it("fehlt einem Schuss der Wert, nennt die Kachel Ergebnis das statt der Mindestzahl", () => {
+  it("fehlt einem Schuss der Wert, nennt die Kachel Ergebnis den Ø und den Grund", () => {
     const blind = CARD.map((s, i) => (i === 20 ? { ...s, decimalTenths: null, ring: null } : s))
-    const t = overviewTiles(analysisInput(blind, "decimal", LP_10M)).find(
-      (x) => x.label === "Ergebnis"
+    const input = analysisInput(blind, "decimal", LP_10M)
+    const mean = computeMetric(
+      inScoring(metricByKey("result.decimalMean")!, "decimal"),
+      input.base
+    )!
+    const t = overviewTiles(input).find((x) => x.label === "Ergebnis")!
+    expect(t.value).toBeNull()
+    expect(t.hint).toBe(
+      `Ø ${formatValue(mean, 2)} je Schuss (39 mit Wert) · nicht jeder Schuss mit Wert`
+    )
+    const tenthless = CARD.map((s, i) => (i === 20 ? { ...s, decimalTenths: null } : s))
+    expect(
+      overviewTiles(analysisInput(tenthless, "decimal", LP_10M)).find(
+        (x) => x.label === "Ergebnis"
+      )!.hint
+    ).toMatch(/ · nicht jeder Schuss mit Zehntel · auf ganze Ringe schalten$/)
+  })
+
+  it("ein verdächtiger Schuss mit Lage: kein Ringverlust, der Grund nennt beides", () => {
+    // Prüfung, Ergebnis 6: der Schuss hat eine Lage, zählt aber nicht (SF-15)
+    const suspicious = CARD.map((s, i) => (i === 20 ? { ...s, flags: [FLAG_SUSPICIOUS] } : s))
+    const t = overviewTiles(analysisInput(suspicious, "decimal", LP_10M)).find(
+      (x) => x.label === "Ringverlust"
     )!
     expect(t.value).toBeNull()
-    expect(t.hint).toBe("nicht jeder Schuss mit Wert")
+    expect(t.hint).toBe("nicht jeder Wertungsschuss mit gültiger Lage (fehlt oder verdächtig)")
   })
 })
 
@@ -137,6 +164,23 @@ describe("Beobachtungen in Worten", () => {
     expect(text).toMatch(
       /vom Zufall ist das nicht zu unterscheiden\. Ein Versatz ist nicht belegt\.$/
     )
+  })
+
+  it("ein Ausreißer: „Er kostet“, mehrere: „Sie kosten“ (Prüfung, Grammatik)", () => {
+    const outlier = sentences.find((s) => s.icon === "outlier")!.text
+    expect(outlier).toMatch(
+      /^Schuss 27 fällt als Ausreißer aus der Gruppe\. Er kostet \d+,\d Ringe? gegen deinen typischen Schuss\.$/
+    )
+    const far = scoreFromCoordinates(LP_10M, 27000, -33000)
+    const two = CARD.map((s, i) =>
+      i === 9 + 30
+        ? { ...s, xUm: 27000, yUm: -33000, decimalTenths: far.decimalTenths, ring: far.ring }
+        : s
+    )
+    const both = observations(analysisInput(two, "decimal", LP_10M)).find(
+      (s) => s.icon === "outlier"
+    )!.text
+    expect(both).toMatch(/^Die Schüsse 27, 31 fallen als Ausreißer aus der Gruppe\. Sie kosten /)
   })
 
   it("die Pause vor Schuss 21 erkannt", () => {

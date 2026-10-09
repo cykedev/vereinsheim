@@ -82,7 +82,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Probeschüsse zählen nicht mit.
 - *So liest du es:* Der Ø je Schuss vergleicht Scheiben mit verschiedener Schusszahl fair, das
   Ergebnis nur Scheiben mit gleich vielen Schüssen. Oben schaltest du zwischen ganzen Ringen und
-  Zehnteln um. Was dir zum Höchstwert fehlt, zeigt „Ringverlust nach Ursache“.
+  Zehnteln um. Was dir zum Höchstwert fehlt, zeigt „Ringverlust nach Ursache“ (Reiter „Lage“).
 - *Vorsicht:* Fehlt einem Schuss der Wert, gibt es kein Ergebnis: Eine Summe über einen Teil der
   Schüsse wäre keins. Den Ø gibt es trotzdem, über die Schüsse mit Wert.
 - *Mindestzahl:* Ab 1 Schuss.
@@ -101,7 +101,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Dieselbe Zählung in Zehnteln, jede Säule ein Wert (10,4, 10,5 …). Es gibt sie nur in der
   Zehntelwertung.
 - *So liest du es:* Sie zeigt, wo innerhalb der Ringe deine Schüsse liegen. Viele Werte knapp unter
-  einer Ringgrenze (9,8, 9,9) kosten in ganzen Ringen jeweils einen Ring.
+  einer Ringgrenze (9,8, 9,9) zählen in ganzen Ringen nur 9; ein, zwei Zehntel mehr, und es wäre
+  jeweils ein Ring mehr.
 - *Vorsicht:* Einzelne Säulen sind bei einer Scheibe Zufall; aussagekräftig ist die Gesamtform, etwa
   viele Werte knapp unter einer Ringgrenze.
 - *Mindestzahl:* Ab 1 Schuss.
@@ -115,7 +116,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Vorsicht:* Ein verdächtiger Schuss (Platzhalter, Handeintrag) zählt hier nicht: Er trägt nur den
   amtlichen Wert, nicht deine Leistung. Der beste Teiler wird mit mehr Schüssen besser; vergleiche
   ihn nur bei gleicher Schusszahl.
-- *Mindestzahl:* Ab 1 Schuss mit Lage.
+- *Mindestzahl:* Ab 1 Schuss mit Teiler.
 - *Formel:* `Teiler = Abstand zur Mitte in 1/100 mm`
 
 **Serien und Konstanz (E10, I1)**
@@ -134,10 +135,11 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   1)`
 
 **Quoten mit Unsicherheit (E4, E5, E11, I10)**
-- *Was:* Der Anteil deiner Schüsse ab einer Schwelle (Zehner, ab 9,0, ab 10,5) mit 95-%-Bereich,
-  dazu die Zahl deiner Zehner und Innenzehner und die längste Folge ab 10,0.
+- *Was:* Der Anteil deiner Schüsse ab einer Schwelle (Zehner; Luftgewehr auch ab 10,5, Luftpistole
+  ab 9,0; in ganzen Ringen Ring 10 und ab Ring 9) mit 95-%-Bereich und die längste Folge ab 10,0.
 - *So liest du es:* Der Punkt ist gemessen, der Balken zeigt, wo dein wahrer Anteil wahrscheinlich
-  liegt. Bei 40 Schuss ist er noch breit: Bei 20 Treffern von 40 reicht er etwa von 35 % bis 65 %.
+  liegt. Bei 40 Schuss ist er noch breit: Bei 20 Zehnern aus 40 Schuss reicht er etwa von 35 % bis
+  65 %.
 - *Vorsicht:* Liegen die Balken zweier Abende nicht übereinander, ist der Unterschied echt.
   Überlappen sie sich nur ein Stück, kann er trotzdem echt sein; liegt der Punkt des einen Abends im
   Balken des anderen, ist er nicht belegt. Innenzehner von Gewehr und Pistole sind nicht

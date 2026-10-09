@@ -66,6 +66,10 @@ describe("Ergebnis der Scheibe", () => {
     const blind = match.map((s, i) => (i === 20 ? { ...s, decimalTenths: null, ring: null } : s))
     expect(text(render({ shots: blind }))).toContain("– nicht jeder Schuss mit Wert")
     expect(text(render({ shots: [] }))).toContain("– ab 1 Schuss")
+    const tenthless = match.map((s, i) => (i === 20 ? { ...s, decimalTenths: null } : s))
+    expect(text(render({ shots: tenthless }))).toContain(
+      "– nicht jeder Schuss mit Zehntel · auf ganze Ringe schalten"
+    )
     expect(render({ shots: [] })).not.toContain("Kennzahlen der Scheibe")
   })
 })

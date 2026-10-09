@@ -105,20 +105,44 @@ describe("Reiter Ergebnis", () => {
     expect(cardText(text, "quoten")).toMatch(/· \d+\/40/)
   })
 
-  it("fehlt einem Schuss der Wert, sagt die Karte Ergebnis das", () => {
+  it("fehlt einem Schuss der Wert, kein Ergebnis, aber der Ø über die Schüsse mit Wert", () => {
+    // die Hilfe sagt „Den Ø gibt es trotzdem“ (Prüfung, Ergebnis 3)
     const blind = BASE.map((s, i) => (i === 5 ? { ...s, decimalTenths: null, ring: null } : s))
-    expect(cardText(render("decimal", blind), "ergebnis")).toContain("nicht jeder Schuss mit Wert")
+    const mean = computeMetric(inScoring(metricByKey("result.decimalMean")!, "decimal"), blind)!
+    const text = cardText(render("decimal", blind), "ergebnis")
+    expect(text).toContain("Ergebnis – nicht jeder Schuss mit Wert")
+    expect(text).toContain(`Ø je Schuss ${formatValue(mean, 2)} über 39 Schuss mit Wert`)
+    expect(text).toContain("Schuss 40")
   })
 
-  it("ohne Schuss mit Lage keine Teiler", () => {
+  it("fehlen nur Zehntel, rät die Karte zu ganzen Ringen (Prüfung, Ergebnis 4)", () => {
+    const tenthless = BASE.map((s, i) => (i === 5 ? { ...s, decimalTenths: null } : s))
+    expect(cardText(render("decimal", tenthless), "ergebnis")).toContain(
+      "Ergebnis – nicht jeder Schuss mit Zehntel · auf ganze Ringe schalten"
+    )
+    expect(cardText(render("rings", tenthless), "ergebnis")).toMatch(/Ergebnis \d+ Ringe/)
+  })
+
+  it("eine Spanne von genau einem Ring heißt „1 Ring“", () => {
+    // Serie 2 einen Ring tiefer: 10 Schuss, einer mit 9 statt 10
+    const ones = BASE.slice(0, 20).map((s, i) => ({
+      ...s,
+      decimalTenths: i === 15 ? 95 : 100,
+      ring: i === 15 ? 9 : 10,
+    }))
+    expect(cardText(render("rings", ones), "serien-und-konstanz")).toContain("Spanne 1 Ring ")
+  })
+
+  it("ohne Schuss mit Lage oder Teiler keine Teiler", () => {
     const noPosition = BASE.slice(0, 3).map((s) => ({
       ...s,
       xUm: null,
       yUm: null,
       distanceUm: null,
     }))
+    // der gemessene Teiler reicht, die Lage braucht es nicht (Prüfung, Ergebnis 15)
     expect(cardText(render("decimal", noPosition), "extreme-und-teiler")).toContain(
-      "ab 1 Schuss mit Lage"
+      "ab 1 Schuss mit Teiler"
     )
   })
 

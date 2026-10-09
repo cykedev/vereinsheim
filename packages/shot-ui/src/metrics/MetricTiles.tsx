@@ -53,7 +53,7 @@ const HINTS: Readonly<Record<string, (c: HintContext) => string>> = {
     c.pauses
       ? `${c.pauses} ${c.pauses === 1 ? "Pause" : "Pausen"} über 3 min nicht gezählt`
       : "Median der Abstände",
-  "result.decimalMean": (c) => (c.scoring === "rings" ? "in ganzen Ringen" : "in Zehnteln"),
+  "result.decimalMean": (c) => (c.scoring === "rings" ? "ganze Ringe" : "Zehntelwertung"),
   "group.sigma": () => "Rayleigh-σ, kaum von n abhängig",
   "result.tensRate": () => "Anteil der Zehner",
   "time.tempoSpread": () => "IQR der Intervalle",
@@ -75,6 +75,10 @@ type Metric = NonNullable<ReturnType<typeof metricByKey>>
  * Daten wie Zeiten, Lage oder Zehntel (SF-18, SF-61); „ab n Schuss“ nur, wenn es wirklich an der Zahl liegt.
  */
 function missingReason(metric: Metric, selected: readonly MetricShot[]): string {
+  // die Probe gewählt, die Kennzahl zählt nur Wertung: kein „nur 0 zählen“ (Prüfung, Ergebnis 7)
+  if (selected.length && selected.every((shot) => !metric.appliesTo.includes(shot.kind))) {
+    return "zählt nur Wertungsschüsse"
+  }
   if (selected.length < metric.minShots) return `ab ${metric.minShots} Schuss`
   const needs = ([] as MetricNeed[]).concat(metric.needs ?? [])
   const short = needs
@@ -192,10 +196,12 @@ export function MetricTiles({
           const label = key === "group.mpiDistance" ? "Schwerpunkt" : metric.label
           const unit = unitText(metric.unit)
           const short = helpForMetric(key)?.short
+          // Ø und Zehnerquote zählen nur Wertung, auch wenn die Auswahl Probe einschließt
+          const skipsProbe = selected.some((shot) => !metric.appliesTo.includes(shot.kind))
           const why =
             value === null
               ? missingReason(metric, selected)
-              : `${HINTS[key]?.(context) ?? ""}${metric.nSensitive ? " · abhängig von der Schusszahl" : ""}`
+              : `${HINTS[key]?.(context) ?? ""}${skipsProbe ? " · ohne Probe" : ""}${metric.nSensitive ? " · abhängig von der Schusszahl" : ""}`
           return (
             <div
               key={key}
