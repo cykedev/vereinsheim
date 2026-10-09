@@ -95,9 +95,12 @@ export function observations(input: AnalysisInput): Observation[] {
 
   const trend = cardTrend(base, scoring)
   if (trend) {
+    // die Steigung gilt für den Wert je Schuss, über zehn Schuss: nicht je Schuss, nicht für die Summe der Serie
+    // eine Zehnerserie ändert sich um das Zehnfache: so lässt sich die Zahl an den Serienergebnissen prüfen
+    const perSeries = formatSigned(trend.perTenShots * 10, 1)
     let text = trend.clear
-      ? `Über die Scheibe klar ${trend.direction === "up" ? "steigend" : "fallend"}: ${formatSigned(trend.perTenShots, 2)} Ringe je zehn Schuss.`
-      : `Kein klarer Trend über die Scheibe (${formatSigned(trend.perTenShots, 2)} Ringe je zehn Schuss).`
+      ? `Über die Scheibe klar ${trend.direction === "up" ? "steigend" : "fallend"}: Der Wert je Schuss ${trend.direction === "up" ? "steigt" : "sinkt"} um ${formatValue(Math.abs(trend.perTenShots), 2)} Ringe alle zehn Schuss, eine Zehnerserie um ${formatValue(Math.abs(trend.perTenShots * 10), 1)} Ringe.`
+      : `Kein klarer Trend über die Scheibe (Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss, je Zehnerserie ${perSeries}).`
     const tired = fatigue(base, scoring)
     if (tired) {
       text += ` Die letzten zehn Schuss: ${formatSigned(tired.deltaRings, 2)} Ringe gegen die ersten zehn${

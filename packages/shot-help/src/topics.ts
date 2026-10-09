@@ -223,13 +223,13 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["I3", "I4"],
     metrics: [],
     short: "Wie sich deine Werte über die Scheibe entwickeln.",
-    what: "Jeder Punkt ist ein Schuss, die Linie der Schnitt der letzten zehn (gestrichelt, solange es noch keine zehn sind). Der Trend ist eine Ausgleichsgerade durch alle Schüsse; die Zahl sagt, wie viele Ringe du je 10 Schuss zulegst oder verlierst.",
+    what: "Jeder Punkt ist ein Schuss, die Linie der Schnitt der letzten zehn (gestrichelt, solange es noch keine zehn sind). Der Trend ist eine Ausgleichsgerade durch alle Schüsse; die Zahl sagt, um wie viele Ringe der Wert eines Schusses alle 10 Schuss steigt oder sinkt. Bei −0,24 ist ein Schuss also zehn Schuss später im Schnitt 0,24 Ringe schwächer, eine ganze Serie 2,4 Ringe.",
     read: "„Klar fallend“ heißt: Ein so deutlicher Abfall entstünde durch Zufall allein höchstens in 5 von 100 Scheiben; „klar steigend“ gilt ebenso nach oben. Sonst ist der Trend „nicht klar“, auch wenn die Linie etwas fällt oder steigt.",
     caution:
       "Selbst ein deutliches Nachlassen zeigt eine einzelne Scheibe selten als „klar“. Beim Luftgewehr, wo fast alle Schüsse 9 oder 10 sind, ist ein Trend in ganzen Ringen etwas seltener klar. Zeigen Test und Gerade in verschiedene Richtungen (etwa wegen eines sehr schwachen letzten Schusses), gibt es kein Urteil.",
     minimum: "Ab 1 Schuss, der Trend ab 10.",
     formula:
-      "gleitender Schnitt über die letzten 10; Trend: Steigung der Ausgleichsgeraden je 10 Schuss; „klar“ nach Mann-Kendall mit Korrektur für gleiche Werte (95 %), wenn die Gerade dieselbe Richtung zeigt",
+      "gleitender Schnitt über die letzten 10; Trend: Steigung der Ausgleichsgeraden (Ringe je Schuss) mal 10; „klar“ nach Mann-Kendall mit Korrektur für gleiche Werte (95 %), wenn die Gerade dieselbe Richtung zeigt",
   },
   {
     id: "rhythmus",

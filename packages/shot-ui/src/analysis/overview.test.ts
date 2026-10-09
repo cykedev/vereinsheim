@@ -99,6 +99,18 @@ describe("Beobachtungen in Worten", () => {
     expect(sentences.map((s) => s.text).join(" ")).not.toContain("Verstellung")
   })
 
+  it("der Trend nennt den Wert je Schuss alle zehn Schuss und je Zehnerserie das Zehnfache", () => {
+    const trend = cardTrend(base, "decimal")!
+    const text = sentences.find((s) => s.icon === "trend")!.text
+    // nicht „Ringe je zehn Schuss“: das las sich als Summe der Serie (User, 9. Oktober 2026)
+    expect(text).not.toContain("je zehn Schuss")
+    expect(text).toContain(
+      trend.clear
+        ? `um ${formatValue(Math.abs(trend.perTenShots), 2)} Ringe alle zehn Schuss, eine Zehnerserie um ${formatValue(Math.abs(trend.perTenShots * 10), 1)} Ringe`
+        : `Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss, je Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)}`
+    )
+  })
+
   it("ohne drei Wertungsschüsse keine Sätze", () => {
     expect(observations(analysisInput(CARD.slice(9, 11), "decimal", LP_10M))).toEqual([])
   })

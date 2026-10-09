@@ -93,7 +93,8 @@ export function fatigue(
 }
 
 /**
- * Trend in der Scheibe (I3): Steigung der Ausgleichsgeraden je zehn Schuss; „klar“ nach
+ * Trend in der Scheibe (I3): Steigung der Ausgleichsgeraden mal zehn, also wie sich der Wert je Schuss über
+ * zehn Schuss ändert (nicht die Summe einer Serie); „klar“ nach
  * Mann-Kendall mit Korrektur für gleiche Werte (zweiseitig, 95 %), dann mit Richtung. Zeigt die
  * Gerade in die andere Richtung als der Test (ein sehr schwacher Schuss am Rand kann sie kippen),
  * gibt es kein Urteil: Neben „klar steigend“ stünde sonst eine fallende Zahl. Ab 10 Schuss. Die
