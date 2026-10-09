@@ -41,6 +41,28 @@ export type ObservationIcon =
 export interface Observation {
   icon: ObservationIcon
   text: string
+  /**
+   * fällt auf und gehört in den Kopf der Seite (U1, D4): die Lage immer, Ausreißer nur wenn es welche gibt, ein Trend
+   * nur wenn er klar ist, die Probe nur wenn sie echt neben der Mitte lag; Präzision, Pausen und Tempo nie
+   */
+  notable: boolean
+}
+
+/** der erste Satz: bis zum Punkt, auf den ein Leerzeichen und ein Großbuchstabe folgen (ein Komma in Zahlen trennt nicht) */
+export function firstSentence(text: string): string {
+  return text.split(/(?<=\.) (?=[A-ZÄÖÜ])/)[0]
+}
+
+/**
+ * Die wichtigsten Beobachtungen für den Kopf der Seite (U1, D4): die Lage zuerst, dann die auffälligen in ihrer
+ * Reihenfolge, höchstens `max`, je ihr erster Satz. Ohne Lage nur die auffälligen, ohne beides keine.
+ */
+export function keyObservations(list: readonly Observation[], max = 3): Observation[] {
+  const position = list.find((o) => o.icon === "position")
+  const rest = list.filter((o) => o.icon !== "position" && o.notable)
+  return [...(position ? [position] : []), ...rest]
+    .slice(0, max)
+    .map((o) => ({ ...o, text: firstSentence(o.text) }))
 }
 
 export function observations(input: AnalysisInput): Observation[] {
@@ -62,10 +84,11 @@ export function observations(input: AnalysisInput): Observation[] {
             ? ` Läge die Gruppe in der Mitte, brächten ${split.n} weitere Schuss zusammen etwa ${ringsText(gain, scoring === "rings" ? 0 : 1)} mehr (rund ${formatValue(gain / split.n, 2)} je Schuss).`
             : " In der Mitte brächte die Gruppe keine Ringe mehr."
       }
-      out.push({ icon: "position", text })
+      out.push({ icon: "position", text, notable: true })
     } else {
       out.push({
         icon: "position",
+        notable: true,
         text: `Der Schwerpunkt liegt ${mm(Math.hypot(confidence.center.xUm, confidence.center.yUm))} neben der Mitte; vom Zufall ist das nicht zu unterscheiden. Ein Versatz ist nicht belegt.`,
       })
     }
@@ -76,6 +99,7 @@ export function observations(input: AnalysisInput): Observation[] {
     const r50 = computeMetric(inScoring(metricByKey("group.r50")!, scoring), base)
     out.push({
       icon: "spread",
+      notable: false,
       text: `Präzision σ ${formatValue(sigma.sigma / 1000, 2)} mm, mit 95 % zwischen ${formatValue(sigma.low / 1000, 2)} und ${formatValue(sigma.high / 1000, 2)} mm.${
         r50 === null
           ? ""
@@ -98,6 +122,7 @@ export function observations(input: AnalysisInput): Observation[] {
           : ` ${one ? "Er bringt" : "Sie bringen"} ${ringsOf(-loss.loss)} mehr als dein typischer Schuss, weil ${one ? "er" : "sie"} zur Mitte hin ${one ? "liegt" : "liegen"}.`
     out.push({
       icon: "outlier",
+      notable: numbers.length > 0,
       text: numbers.length
         ? `${numbers.length === 1 ? `Schuss ${numbers[0]} fällt` : `Die Schüsse ${numbers.join(", ")} fallen`} als Ausreißer aus der Gruppe.${lossText}`
         : `Keine Ausreißer.${lossText}`,
@@ -124,7 +149,7 @@ export function observations(input: AnalysisInput): Observation[] {
         tired.deltaR50Um !== null ? `, R50 ${formatSigned(tired.deltaR50Um / 1000, 2)} mm` : ""
       }. Ein Muster zeigt erst der Vergleich über mehrere Scheiben.`
     }
-    out.push({ icon: "trend", text })
+    out.push({ icon: "trend", text, notable: trend.clear })
   }
 
   const recovery = pauseRecovery(base, scoring, card)
@@ -142,6 +167,7 @@ export function observations(input: AnalysisInput): Observation[] {
     const text = recovery.effects.map((e) => effect(e.afterShot, e.deltaRings)).join("; ")
     out.push({
       icon: "pause",
+      notable: false,
       text: `${text[0].toUpperCase()}${text.slice(1)}. Drei Schuss sind wenig; ein Urteil braucht mehrere Abende.`,
     })
   }
@@ -150,6 +176,7 @@ export function observations(input: AnalysisInput): Observation[] {
   if (pace) {
     out.push({
       icon: "clock",
+      notable: false,
       text: `Tempo: im Median ${formatValue(pace.medianMs / 1000, 0)} s je Schuss; die mittlere Hälfte der Abstände liegt in einem Fenster von ${formatValue(pace.iqrMs / 1000, 0)} s.`,
     })
   }
@@ -165,7 +192,7 @@ export function observations(input: AnalysisInput): Observation[] {
         ? ` Die letzten ${last} Probeschüsse lagen echt neben der Mitte (${directionName(zeroed.center)}, ${mm(zeroed.offsetUm)}).`
         : ` Bei den letzten ${last} Probeschüssen ist kein Versatz nachweisbar.`
     }
-    out.push({ icon: "flag", text })
+    out.push({ icon: "flag", text, notable: zeroed?.real === true })
   }
 
   return out

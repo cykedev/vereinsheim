@@ -6,7 +6,7 @@ import {
   type AnalysisTab,
 } from "@vereinsheim/shot-ui/analysis/AnalysisPanel"
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
-import { observations } from "@vereinsheim/shot-ui/analysis/observations"
+import { keyObservations, observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { CardPage } from "@vereinsheim/shot-ui/layout/CardPage"
@@ -139,11 +139,11 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
   const samples = SAMPLES[targetId]
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0]
   useEffect(() => exposeForTest(shots, state, target), [shots, state, target])
-  // ein Satz im Kopf: der erste Satz der ersten Beobachtung der Analyse
-  const sentence = useMemo(() => {
-    const first = observations(analysisInput(shots, state.scoring, target))[0]?.text
-    return first ? first.split(/(?<=\.) (?=[A-ZÄÖÜ])/)[0] : null
-  }, [shots, state.scoring, target])
+  // im Kopf die wichtigsten Beobachtungen der Analyse, die Lage zuerst (U1, D4)
+  const headObservations = useMemo(
+    () => keyObservations(observations(analysisInput(shots, state.scoring, target))),
+    [shots, state.scoring, target]
+  )
 
   // Anker beim Laden: zum Abschnitt; Reiter-Anker auch beim Wechsel der Adresse: Reiter öffnen, zur Analyse
   useEffect(() => {
@@ -300,7 +300,12 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
             title={target.label}
             meta={opened ? opened.meta : [sample.label]}
             result={empty ? null : result}
-            sentence={sentence}
+            observations={headObservations}
+            onMore={() => {
+              // „Alle Beobachtungen“: der Überblick der Analyse, oben an ihrem Anfang
+              changeTab("overview")
+              showSection("analysis")
+            }}
           />
         }
         nav={<SectionNav active={active} />}
