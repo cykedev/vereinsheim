@@ -22,6 +22,15 @@ addEventListener("load", async () => {
       $$("button", root).find(
         (b) => txt(b).trim() === label || b.getAttribute("aria-label") === label
       )
+    // Ebene 1 und 2 sprechen Alltag (U3, D1): Fachbegriffe stehen nur im Blatt „?“ und in den Reitern. „unklar“ fehlt
+    // hier, weil „Eingeschossen?“ es bis U4 noch zeigt; „rechts“ trifft `\becht` nicht
+    const JARGON = /σ|R50|T²|95 ?%|Median|mittlere Hälfte|bedeutsam|Hotelling|\bechte?\b|KW \d/
+    const jargonIn = (...els) =>
+      els
+        .filter(Boolean)
+        .map((el) => txt(el))
+        .join(" ")
+        .match(JARGON)?.[0] ?? null
     // Wege sind seit N3 Links mit Adresse (`RouteLink`), gefunden nach Text oder Namen
     const link = (label, root = document) =>
       $$("a[href]", root).find(
@@ -961,6 +970,17 @@ addEventListener("load", async () => {
     check(
       "Beobachtungen: Pause vor Schuss 21 erkannt",
       sentences.some((s) => s.includes("Pause vor Schuss 21"))
+    )
+    // Kopf und Überblick ohne Fachbegriffe (U3, D1)
+    const cardJargon = jargonIn(
+      $("[data-card-header]"),
+      ...$$("[data-tile]", A()),
+      ...$$("[data-observation]", A())
+    )
+    check(
+      "Kopf und Überblick: keine Fachbegriffe (σ, R50, T², 95 %, Median, echt)",
+      !cardJargon,
+      cardJargon ?? ""
     )
     // der Gewinn in der Mitte ist eine Summe: mit n und je Schuss, ohne Visier (Prüfung, Ergebnis 1, D1)
     const split = S().ringLossSplit(base(), L().target)
@@ -2472,6 +2492,18 @@ addEventListener("load", async () => {
       )
       // ein Bezug für eine Scheibe (U2, D2): keine Karte „Gegen deinen Schnitt“, das „?“ steht an der Ablesung
       check("Zeitraum: keine Karte „Gegen deinen Schnitt“", !$('[data-card="gegen-den-schnitt"]'))
+      const periodJargon = jargonIn(
+        $("[data-period-header]"),
+        $("[data-result-box]"),
+        ...$$("[data-period-tile]"),
+        $("#card-list"),
+        $('[data-section="history"]')
+      )
+      check(
+        "Zeitraum: Kopf, Ergebnis, Zahlen, Liste und Verlauf ohne Fachbegriffe",
+        !periodJargon,
+        periodJargon ?? ""
+      )
       await click($('[data-card-readout] button[data-help="gegen-den-schnitt"]'), 120)
       const readoutHelp = txt($("h2", helpSheet()))
       await click($('button[aria-label="Schließen"]', helpSheet()), 80)
@@ -3009,6 +3041,8 @@ addEventListener("load", async () => {
           kindCells.every((td) => !/^[TWP]$/.test(seen(td))),
         `${byKind("Wettkampf").length} Wettkampf · ${byKind("Training").length} Training · ${byKind("Training nur Probe").length} nur Probe`
       )
+      const listJargon = jargonIn($("main"))
+      check("Liste: ohne Fachbegriffe", !listJargon, listJargon ?? "")
       check(
         "Liste: Abende neueste zuerst, die Scheiben eines Abends in zeitlicher Folge, wie im Modell",
         evenings.length > 20 &&
@@ -3391,6 +3425,8 @@ addEventListener("load", async () => {
             : !Object.values(lead).some((l) => sentenceText.startsWith(l))),
         `${startBlock?.day} ${startBlock?.family} · ${txt($("[data-evening-mean]", blockEl))} · ${sentenceText}`
       )
+      const startJargon = jargonIn($("[data-start-page]"))
+      check("Start: ohne Fachbegriffe", !startJargon, startJargon ?? "")
       // Legende am Formband (U3, D8): ein Satz unter dem Streifen, nur mit Band
       check(
         "Start: unter dem Streifen „Das Band zeigt deine übliche Schwankung.“, nur mit Band",
