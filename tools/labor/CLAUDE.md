@@ -35,6 +35,11 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   Scheibe; `CardView` ist die Seite einer Scheibe, `PeriodView` die eines Zeitraums. „Scheibe öffnen“ zeigt eine
   Scheibe der Saison in „Scheibe“, „Zurück zum Zeitraum“ stellt Zeitraum, Vergleich, Wahl und Scrollstelle wieder
   her.
+- **Adresse** (Plan N1, `nav/routes` und `nav/navigate` aus `shot-ui`): Der Kopf zeigt „Adresse in der App: …“
+  (`data-address`) für den Zeitraum und die Scheibe. Im Artifact kommt nur ein einfacher Anker an, deshalb führt das
+  Labor die Adresse nicht als URL. „Scheibe öffnen“ baut die Adresse der Scheibe mit dem Zeitraum als Herkunft, „Zurück
+  zu „…““ stellt den Zeitraum aus ihr wieder her (`restore`), die Wertung der Scheibe kommt mit. Nur die Scrollstelle
+  bleibt im Speicher. Die Prüfung rechnet jede gezeigte Adresse hin und zurück (`tools.nav`).
 - **Saison** (`src/season.ts`): erfunden, Seed 20261009; Luftgewehr 81 Scheiben vom 6. April bis 27. September
   2026 (Formknick im Juni σ 1,9 mm, neue Munition ab 1. August σ 1,3 mm, Urlaub 3.–16. August, eine Scheibe
   `nur-pdf`, Trainings nur aus Probe), Luftpistole 39; benannt „Vorbereitung Landesmeisterschaft“ und „Neue

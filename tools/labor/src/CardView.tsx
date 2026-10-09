@@ -23,7 +23,9 @@ import { ShotLine } from "@vereinsheim/shot-ui/readout/ShotLine"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
-import { defaultWhole, probeOnlyAsMatch } from "@vereinsheim/shot-ui/shots"
+import { backLabel } from "@vereinsheim/shot-ui/nav/navigate"
+import { urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
+import { defaultWhole, probeOnlyAsMatch, shotLabels } from "@vereinsheim/shot-ui/shots"
 import { TargetControls, type Others } from "@vereinsheim/shot-ui/target/TargetControls"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import type { SeriesKey } from "@vereinsheim/shot-ui/types"
@@ -35,6 +37,7 @@ import { useCallback, useEffect, useMemo, useReducer, useState, type MouseEvent 
 import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
 
 import { rawSample, SAMPLES, toMetricShots, type RawShot, type SampleId } from "./samples"
+import { NAMED_PERIODS, SEASON_TIME_ZONE } from "./season"
 import { store } from "./store"
 import { exposeForTest, underTest } from "./testHook"
 
@@ -60,12 +63,13 @@ function showSection(id: string) {
   requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "start" }))
 }
 
-/** eine Scheibe aus der Saison, geöffnet aus der Seite eines Zeitraums */
+/** eine Scheibe aus der Saison, geöffnet aus der Seite eines Zeitraums, mit ihrer Adresse (Plan N1) */
 export interface OpenedCard {
   id: string
   label: string
   target: TargetId
   raw: RawShot[]
+  route: CardRoute
 }
 
 export interface CardViewProps {
@@ -76,8 +80,8 @@ export interface CardViewProps {
   onHelp: (helpId: string | null) => void
   /** eine Scheibe aus der Saison statt eines Beispiels */
   opened?: OpenedCard | null
-  /** zurück zur Seite des Zeitraums */
-  onBack?: () => void
+  /** zurück zur Seite des Zeitraums, mit der Adresse der Scheibe, wie sie gerade ist (Wertung, Auswahl, Reiter) */
+  onBack?: (route: CardRoute) => void
 }
 
 /**
@@ -227,6 +231,25 @@ export function CardView({
     writeHash(hashFor("analyse", next))
   }, [])
 
+  // die Adresse, die die App hätte (Plan N1): Beispiele ohne Herkunft, eine geöffnete Scheibe mit ihrer; die
+  // Grundauswahl fällt weg, der Schuss steht als Nummer, der Reiter als Anker
+  const route: CardRoute = {
+    ...(opened?.route ?? {
+      page: "card",
+      id: `${targetId}-${sampleId}`,
+      origin: null,
+      selection: null,
+      shot: null,
+      scoring: "decimal",
+      anchor: null,
+    }),
+    selection: state.selection === state.home ? null : state.selection,
+    shot: state.chosen ? (shotLabels(shots)[state.chosen.index] ?? null) : null,
+    scoring: state.scoring,
+    anchor: { section: "analyse", tab },
+  }
+  const backText = `Zurück zu „${backLabel(route, { named: NAMED_PERIODS, timeZone: SEASON_TIME_ZONE })}“`
+
   const empty = shots.length === 0
   const scoringSwitch = (
     <ScoringSwitch
@@ -245,12 +268,13 @@ export function CardView({
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
       <LaborHeader
         {...header}
+        address={urlFromRoute(route)}
         hint={opened ? `${opened.label} aus der erfundenen Saison.` : sample.hint}
       >
         {opened ? (
           <button
             type="button"
-            onClick={onBack}
+            onClick={() => onBack?.(route)}
             className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-accent-wash px-3 py-1.5 text-[13px] leading-none font-semibold focus-visible:outline-2 focus-visible:outline-ring"
           >
             <svg
@@ -265,7 +289,7 @@ export function CardView({
             >
               <path d="M15 6l-6 6 6 6" />
             </svg>
-            Zurück zum Zeitraum
+            {backText}
           </button>
         ) : (
           <>

@@ -14,6 +14,11 @@ export interface LaborHeaderProps {
   children?: ReactNode
   /** Hinweis zum Beispiel unter den Umschaltern */
   hint: string
+  /**
+   * die Adresse, die die App für diese Ansicht hätte (Plan N1). Im Artifact kommt nur ein einfacher Anker an, das
+   * Labor zeigt sie deshalb nur an.
+   */
+  address?: string
 }
 
 /** Kopf des Labors: was es ist, der Stand, die Ansicht (Scheibe oder Zeitraum), die Darstellung und je Ansicht ihre Umschalter */
@@ -25,6 +30,7 @@ export function LaborHeader({
   onTheme,
   children,
   hint,
+  address,
 }: LaborHeaderProps) {
   return (
     <header className="grid gap-2.5">
@@ -72,6 +78,14 @@ export function LaborHeader({
       <p id="sample-hint" className="max-w-[46rem] text-[13px] text-muted-foreground">
         {hint}
       </p>
+      {address && (
+        <p className="max-w-[46rem] text-[13px] text-muted-foreground">
+          Adresse in der App:{" "}
+          <code data-address className="font-mono text-xs break-all text-foreground-2">
+            {address}
+          </code>
+        </p>
+      )}
     </header>
   )
 }

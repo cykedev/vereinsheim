@@ -23,6 +23,31 @@ addEventListener("load", async () => {
         (b) => txt(b).trim() === label || b.getAttribute("aria-label") === label
       )
     const zoom = () => button("Auf Gruppe zoomen")
+    // Adressen (Plan N1): die Zeile im Kopf, in Teile wie `location`, hin und zurück über den Prüfhaken
+    const addr = () => txt($("[data-address]")).trim()
+    const urlParts = (url) => {
+      const h = url.indexOf("#")
+      const hash = h < 0 ? "" : url.slice(h)
+      const rest = h < 0 ? url : url.slice(0, h)
+      const q = rest.indexOf("?")
+      return q < 0 ? [rest, "", hash] : [rest.slice(0, q), rest.slice(q), hash]
+    }
+    const seenAddresses = new Set()
+    const routeOf = (url) => {
+      seenAddresses.add(url)
+      return L().tools.nav.routeFromUrl(...urlParts(url))
+    }
+    const sortKeys = (v) =>
+      Array.isArray(v)
+        ? v.map(sortKeys)
+        : v && typeof v === "object"
+          ? Object.fromEntries(
+              Object.keys(v)
+                .sort()
+                .map((k) => [k, sortKeys(v[k])])
+            )
+          : v
+    const same = (a, b) => JSON.stringify(sortKeys(a)) === JSON.stringify(sortKeys(b))
     const click = async (el, ms = 60) => {
       el.dispatchEvent(new MouseEvent("click", { bubbles: true }))
       await wait(ms)
@@ -407,6 +432,13 @@ addEventListener("load", async () => {
       "Schwerpunkt der Auswahl",
       near(mpiAt[0], mean[0], 1e-6) && near(mpiAt[1], mean[1], 1e-6),
       `${mpiAt} / ${mean}`
+    )
+    check(
+      "Adresse: Beispiel ohne Herkunft, Serie 2 steht darin, der Reiter als Anker",
+      /^\/cards\/lp-10m-forty\?series=2(&|#)/.test(addr()) &&
+        routeOf(addr()).selection === 2 &&
+        routeOf(addr()).anchor?.section === "analyse",
+      addr()
     )
     check(
       "Kacheln folgen der Auswahl (Serie 2)",
@@ -1038,6 +1070,11 @@ addEventListener("load", async () => {
     await click(button("40 Schuss mit Probe"), 200)
 
     await tab("Lage")
+    check(
+      "Adresse: der Reiter Lage als Anker",
+      addr().endsWith("#lage") && routeOf(addr()).anchor?.tab === "position",
+      addr()
+    )
     check(
       "Lage: ein Keil je besetzter Stunde",
       $$("[data-hour]", card("richtungsuhr")).length ===
@@ -2249,7 +2286,40 @@ addEventListener("load", async () => {
       scrollTo(0, 700)
       await wait(50)
       const scrolledTo = window.scrollY
+      const progressAddress = addr()
+      const progressRoute = routeOf(progressAddress)
+      check(
+        "Adresse: der Zeitraum mit Vergleich, Familie und Wahl, gleich dem Zustand der Seite",
+        progressRoute.page === "progress" &&
+          same(progressRoute.query, P().state) &&
+          progressAddress.includes(`range=${P().state.choice.id}`) &&
+          progressAddress.includes("compare=") &&
+          progressAddress.includes("family=lg-10m") &&
+          progressAddress.includes(`pick=${chosenId}`),
+        progressAddress
+      )
       await click(button("Scheibe öffnen", $("[data-card-readout]")), 500)
+      const openedAddress = addr()
+      check(
+        "Adresse: die geöffnete Scheibe trägt den Zeitraum als Herkunft, ohne `pick`",
+        openedAddress.startsWith(`/cards/${chosenId}?from=progress&range=${P().state.choice.id}`) &&
+          !openedAddress.includes("pick=") &&
+          routeOf(openedAddress).origin?.from === "progress",
+        openedAddress
+      )
+      check(
+        "Adresse: der Rückweg heißt nach dem Zeitraum",
+        !!button("Zurück zu „Neue Munition“") && !button("Zurück zum Zeitraum")
+      )
+      await click($('[data-series="2"]'), 120)
+      check(
+        "Adresse: Serie 2 der geöffneten Scheibe steht darin, die Herkunft bleibt",
+        addr().includes("series=2") && routeOf(addr()).origin?.from === "progress",
+        addr()
+      )
+      // die Wertung trägt die Scheibe; sie kommt über die Adresse mit zurück (ohne „restore“ bliebe Zehntel)
+      await click(button("Ganze Ringe"), 150)
+      check("Adresse: ganze Ringe auf der Scheibe", addr().includes("scoring=rings"), addr())
       const matchShots = (L().shots ?? []).filter((s) => s.kind === "match")
       const openedMean = tools.computeMetric(
         tools.inScoring(tools.metricByKey("result.decimalMean"), "decimal"),
@@ -2263,17 +2333,30 @@ addEventListener("load", async () => {
           tools.formatValue(openedMean, 2) === listValue,
         `${matchShots.length}/${listShots} ${listValue}`
       )
-      await click(button("Zurück zum Zeitraum"), 500)
+      await click(button("Zurück zu „Neue Munition“"), 500)
       check(
-        "Zeitraum: „Zurück zum Zeitraum“ kehrt an die Stelle zurück",
+        "Zeitraum: „Zurück“ kehrt an die Stelle zurück",
         scrolledTo > 0 && near(window.scrollY, scrolledTo, 5),
         `${Math.round(window.scrollY)} / ${Math.round(scrolledTo)}`
       )
       check(
-        "Zeitraum: „Zurück zum Zeitraum“ stellt Zeitraum, Vergleich und Wahl wieder her",
+        "Zeitraum: „Zurück“ stellt aus der Adresse Zeitraum, Vergleich und Wahl wieder her",
         txt($("[data-period-header] h1")) === "Neue Munition" &&
           !!$("[data-compare-chip]") &&
-          P().state.chosen === chosenId
+          P().state.chosen === chosenId &&
+          P().state.scoring === "rings" &&
+          same(routeOf(addr()).query, { ...progressRoute.query, scoring: "rings" }),
+        `${addr()} / ${progressAddress}`
+      )
+      await click(button("Zehntel"), 150)
+      check("Adresse: zurück auf Zehntel wie vor dem Öffnen", addr() === progressAddress, addr())
+      const brokenAddresses = [...seenAddresses].filter(
+        (url) => L().tools.nav.urlFromRoute(L().tools.nav.routeFromUrl(...urlParts(url))) !== url
+      )
+      check(
+        "Adresse: jede gezeigte Adresse übersteht Lesen und Schreiben unverändert",
+        seenAddresses.size >= 5 && brokenAddresses.length === 0,
+        `${seenAddresses.size} gesehen · ${brokenAddresses.join(" ")}`
       )
       await click(button("Vergleich entfernen"), 200)
       check("Zeitraum: „×“ entfernt den Vergleich", !$("[data-compare-chip]") && !M().compareRange)

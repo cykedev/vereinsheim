@@ -24,6 +24,9 @@ import { VolumeChart } from "@vereinsheim/shot-ui/period/VolumeChart"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { useCallback, useEffect, useMemo } from "react"
 
+import { progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
+import { urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
+
 import { LaborHeader, type LaborHeaderProps } from "./LaborHeader"
 import { NAMED_PERIODS, season, SEASON_NOW_MS, SEASON_TIME_ZONE, type SeasonCard } from "./season"
 import { exposePeriodForTest } from "./testHook"
@@ -131,6 +134,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp, onOpen }:
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
       <LaborHeader
         {...header}
+        address={urlFromRoute(progressRoute(state, null))}
         hint="Erfundene Saison vom 6. April bis 27. September 2026: Luftgewehr mit Formknick im Juni und neuer Munition ab August, Luftpistole; „jetzt“ ist der 30. September."
       />
       <PeriodPage

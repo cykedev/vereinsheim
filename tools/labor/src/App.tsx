@@ -1,5 +1,12 @@
 import { HelpSheet } from "@vereinsheim/shot-ui/help/HelpSheet"
 import { parsePeriodHash } from "@vereinsheim/shot-ui/layout/sections"
+import {
+  backRoute,
+  openCard as openCardRoute,
+  periodStateFromRoute,
+  progressRoute,
+} from "@vereinsheim/shot-ui/nav/navigate"
+import type { CardRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { initialPeriodState, periodReducer } from "@vereinsheim/shot-ui/period/state"
 import { useCallback, useEffect, useReducer, useState } from "react"
 
@@ -65,19 +72,37 @@ export function App({ commit }: { commit: string }) {
       setTheme(next)
     },
   }
-  const openCard = useCallback((card: SeasonCard) => {
-    setReturnTo(window.scrollY)
-    setOpened({ id: card.id, label: card.label, target: card.family, raw: card.raw })
-    setMode("card")
-    requestAnimationFrame(() => scrollTo(0, 0))
-  }, [])
-  const backToPeriod = useCallback(() => {
-    const y = returnTo
-    setOpened(null)
-    setMode("period")
-    // nach dem Einhängen der Seite an die gemerkte Stelle
-    requestAnimationFrame(() => scrollTo(0, y ?? 0))
-  }, [returnTo])
+  // Öffnen und Zurück über die Adressen (Plan N1): Die Scheibe trägt den Zustand des Zeitraums, „Zurück“ baut ihn
+  // aus ihrer Adresse neu; nur die Scrollstelle gehört nicht in die Adresse und bleibt im Speicher
+  const openCard = useCallback(
+    (card: SeasonCard) => {
+      setReturnTo(window.scrollY)
+      setOpened({
+        id: card.id,
+        label: card.label,
+        target: card.family,
+        raw: card.raw,
+        route: openCardRoute(progressRoute(period, null), card.id),
+      })
+      setMode("card")
+      requestAnimationFrame(() => scrollTo(0, 0))
+    },
+    [period]
+  )
+  const backToPeriod = useCallback(
+    (route: CardRoute) => {
+      const y = returnTo
+      const back = backRoute(route)
+      if (back.page === "progress") {
+        dispatch({ type: "restore", state: periodStateFromRoute(back, period.family) })
+      }
+      setOpened(null)
+      setMode("period")
+      // nach dem Einhängen der Seite an die gemerkte Stelle
+      requestAnimationFrame(() => scrollTo(0, y ?? 0))
+    },
+    [returnTo, period.family]
+  )
   const onExplain = useCallback((next: boolean) => {
     store.set("help", next ? "1" : "0")
     setExplain(next)
