@@ -34,6 +34,8 @@
     "./layout/SectionNav": "./src/layout/SectionNav.tsx",
     "./layout/useActiveSection": "./src/layout/useActiveSection.ts",
     "./layout/CardPage": "./src/layout/CardPage.tsx",
+    "./layout/PeriodPage": "./src/layout/PeriodPage.tsx",
+    "./layout/SectionBlock": "./src/layout/SectionBlock.tsx",
     "./layout/jump": "./src/layout/jump.ts",
     "./layout/useReturnJump": "./src/layout/useReturnJump.ts",
     "./layout/ReturnPill": "./src/layout/ReturnPill.tsx",

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 
 import { PAGE_SECTIONS, type PageSection } from "./sections"
 
-const IDS = new Set<string>(PAGE_SECTIONS.map((section) => section.id))
+const PAGE_IDS: readonly PageSection[] = PAGE_SECTIONS.map((section) => section.id)
 
 /** ein Abschnitt zählt, sobald sein Anfang die Leiste erreicht hat: 56 px Leiste plus 40 px Luft */
 const LINE_PX = 96
@@ -17,10 +17,10 @@ const LINE_PX = 96
  * Scheibe ab. Oben auf der Seite, bevor einer die Leiste erreicht, der erste; am Ende der Seite der letzte, denn
  * ein kurzer letzter Abschnitt erreicht die Leiste sonst nie.
  */
-export function activeSection(
-  boxes: readonly { id: PageSection; top: number }[],
+export function activeSection<T extends string>(
+  boxes: readonly { id: T; top: number }[],
   atBottom = false
-): PageSection | null {
+): T | null {
   if (!boxes.length) return null
   if (atBottom) return boxes[boxes.length - 1].id
   const started = boxes.filter((b) => b.top < LINE_PX)
@@ -29,18 +29,23 @@ export function activeSection(
 
 /**
  * Aktiver Abschnitt für die Sprungleiste: misst bei jedem Scrollen und jeder Größenänderung die Kästen der
- * Elemente mit `data-section` (vier Stück, in Seitenreihenfolge). Ein Scroll-Ereignis statt eines
+ * Elemente mit `data-section` aus `ids` (vier Stück, in Seitenreihenfolge; ohne Angabe die der Scheibe). Ein Scroll-Ereignis statt eines
  * `IntersectionObserver`: dessen Rückrufe bleiben in einem verborgenen Fenster und in der Skriptprüfung aus.
  * Ohne Fenster (Server) null.
  */
-export function useActiveSection(): PageSection | null {
-  const [active, setActive] = useState<PageSection | null>(null)
+export function useActiveSection<T extends string = PageSection>(
+  ids: readonly T[] = PAGE_IDS as readonly T[]
+): T | null {
+  const [active, setActive] = useState<T | null>(null)
+  // als Text in die Abhängigkeiten: ein neues Feld mit denselben Ids misst nicht neu
+  const key = ids.join(" ")
   useEffect(() => {
+    const wanted = new Set<string>(key.split(" "))
     const measure = () => {
       const boxes = [...document.querySelectorAll<HTMLElement>("[data-section]")]
-        .filter((node) => IDS.has(node.dataset.section ?? ""))
+        .filter((node) => wanted.has(node.dataset.section ?? ""))
         .map((node) => ({
-          id: node.dataset.section as PageSection,
+          id: node.dataset.section as T,
           top: node.getBoundingClientRect().top,
         }))
       const root = document.documentElement
@@ -54,6 +59,6 @@ export function useActiveSection(): PageSection | null {
       window.removeEventListener("scroll", measure)
       window.removeEventListener("resize", measure)
     }
-  }, [])
+  }, [key])
   return active
 }

@@ -4,10 +4,11 @@ import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
 import { PAGE_COLUMNS } from "./columns"
+import { SectionBlock, type PageSectionBlock } from "./SectionBlock"
 import type { PageSection } from "./sections"
 import { useTargetFit } from "./useTargetFit"
 
-type Section = { id: Exclude<PageSection, "scheibe">; node: ReactNode }
+type Section = PageSectionBlock<Exclude<PageSection, "scheibe">>
 
 export interface CardPageProps {
   /** Kopf mit Ergebnis (CardHeader) */
@@ -32,22 +33,6 @@ export interface CardPageProps {
    */
   empty?: ReactNode
   className?: string
-}
-
-function SectionBlock({ section, fill }: { section: Section; fill?: boolean }) {
-  return (
-    <div
-      id={section.id}
-      data-section={section.id}
-      // füllt ab 768 px die übrige Höhe der Spalte, ohne selbst Höhe zu verlangen (Größe enthalten)
-      className={cn(
-        "min-w-0 scroll-mt-14",
-        fill && "md:min-h-60 md:flex-1 md:basis-0 md:[contain:size]"
-      )}
-    >
-      {section.node}
-    </div>
-  )
 }
 
 /**

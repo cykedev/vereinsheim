@@ -14,6 +14,22 @@ export const PAGE_SECTIONS = [
 
 export type PageSection = (typeof PAGE_SECTIONS)[number]["id"]
 
+/** Abschnitte der Seite eines Zeitraums (Plan L3, D2): der Verlauf steht, wo auf der Scheibe die Scheibe steht */
+export const PERIOD_SECTIONS = [
+  { id: "verlauf", label: "Verlauf" },
+  { id: "scheiben", label: "Scheiben" },
+  { id: "zahlen", label: "Zahlen" },
+  { id: "analyse", label: "Analyse" },
+] as const
+
+export type PeriodSection = (typeof PERIOD_SECTIONS)[number]["id"]
+
+/** Abschnitt der Seite eines Zeitraums aus `location.hash`; Unbekanntes null */
+export function parsePeriodHash(hash: string): PeriodSection | null {
+  const word = hash.replace(/^#/, "")
+  return PERIOD_SECTIONS.find((s) => s.id === word)?.id ?? null
+}
+
 export const TAB_ANCHORS: Readonly<Record<AnalysisTab, string>> = {
   overview: "ueberblick",
   result: "ergebnis",

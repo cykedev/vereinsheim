@@ -1,6 +1,6 @@
 import { cn } from "@vereinsheim/lib/utils"
 
-import { PAGE_SECTIONS, type PageSection } from "./sections"
+import { PAGE_SECTIONS } from "./sections"
 
 /**
  * Sprungleiste (Plan Schritt 4, D1): klebt unter dem Kopf am oberen Rand, vier Anker zu den Abschnitten,
@@ -9,9 +9,12 @@ import { PAGE_SECTIONS, type PageSection } from "./sections"
  */
 export function SectionNav({
   active,
+  sections = PAGE_SECTIONS,
   className,
 }: {
-  active: PageSection | null
+  active: string | null
+  /** Abschnitte in Seitenreihenfolge; ohne Angabe die der Seite einer Scheibe */
+  sections?: readonly { id: string; label: string }[]
   className?: string
 }) {
   return (
@@ -24,7 +27,7 @@ export function SectionNav({
       )}
     >
       <div className="inline-flex rounded-full border border-border bg-surface-2 p-[3px] max-sm:grid max-sm:w-full max-sm:grid-cols-4">
-        {PAGE_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <a
             key={section.id}
             href={`#${section.id}`}
