@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest"
 
 import { card, DAY } from "../__fixtures__/period"
 import { FLAG_SUSPICIOUS } from "../metrics"
-import { periodRecords, recordEligible, RECORD_EXCLUDING_FLAGS } from "./records"
+import {
+  FLAG_COUNTED_AS_MATCH,
+  periodRecords,
+  recordEligible,
+  RECORD_EXCLUDING_FLAGS,
+} from "./records"
 
 const tens = (count: number, tenths = 100) => Array<number>(count).fill(tenths)
 /** Abstand zur Mitte je Schuss: der Teiler ist ein Zehntel davon */
@@ -222,5 +227,16 @@ describe("Rekorde (R1–R8)", () => {
     const withProbe = periodRecords(cards, "decimal", { includeProbeOnly: true })
     expect(withProbe.bestTeiler).toMatchObject({ cardId: "p", value: 2, detail: "Schuss 13" })
     expect(withProbe.bestSeries[10]).toMatchObject({ cardId: "p", value: 100, detail: "Serie 2" })
+  })
+
+  it("Probe, die als Wertung zählt (SF-05), nur mit includeProbeOnly", () => {
+    const cards = [
+      card("a", 1, tens(10, 95)),
+      card("w", 2, tens(10), { flags: [FLAG_COUNTED_AS_MATCH] }),
+    ]
+    expect(periodRecords(cards, "decimal").bestCard[10].cardId).toBe("a")
+    expect(periodRecords(cards, "decimal", { includeProbeOnly: true }).bestCard[10].cardId).toBe(
+      "w"
+    )
   })
 })

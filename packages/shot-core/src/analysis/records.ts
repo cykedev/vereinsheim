@@ -19,6 +19,11 @@ import { decimalHistogram, shotExtremes } from "./result"
 
 /** Merkmale, mit denen eine Scheibe für Rekorde nicht zählt (SF-66) */
 export const RECORD_EXCLUDING_FLAGS = ["nur-pdf", "neu-gewertet", "ausgenommen"] as const
+/**
+ * Probe, die der Schütze nachträglich als Wertung zählt (SF-05, nicht amtlich): für Rekorde wie eine Scheibe nur
+ * mit Probe, also nur mit `includeProbeOnly` (User, 9. Oktober 2026)
+ */
+export const FLAG_COUNTED_AS_MATCH = "als-wertung-gezaehlt"
 
 /** Serie zu zehn für die engste Serie (R4) */
 const TIGHT_SERIES = 10
@@ -106,7 +111,8 @@ function seriesShots(shots: readonly MetricShot[]): [number, MetricShot[]][] {
 /**
  * Rekorde über die Scheiben, die zählen (`recordEligible`), in der gewählten Wertung (R1–R8, D7); wahlweise
  * nur Training oder nur Wettkampf. Eine Scheibe nur mit Probe zählt nur mit `includeProbeOnly`, dann über
- * die Probe wie Wertung (D8). Zählungen (R5–R7) setzen erst ab einem Treffer einen Rekord.
+ * die Probe wie Wertung (D8); ebenso eine Scheibe, deren Probe der Schütze als Wertung zählt (SF-05). Zählungen
+ * (R5–R7) setzen erst ab einem Treffer einen Rekord.
  */
 export function periodRecords(
   cards: readonly PeriodCard[],
@@ -114,7 +120,10 @@ export function periodRecords(
   options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean } = {}
 ): PeriodRecords {
   const counted = byStart(cards).filter(
-    (card) => recordEligible(card) && (options.kind === undefined || card.kind === options.kind)
+    (card) =>
+      recordEligible(card) &&
+      (options.kind === undefined || card.kind === options.kind) &&
+      (options.includeProbeOnly || !(card.flags ?? []).includes(FLAG_COUNTED_AS_MATCH))
   )
   const result = inScoring(RESULT, scoring)
   const bestCard: Record<number, RecordRef> = {}
