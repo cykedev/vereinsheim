@@ -22,11 +22,11 @@ addEventListener("load", async () => {
       $$("button", root).find(
         (b) => txt(b).trim() === label || b.getAttribute("aria-label") === label
       )
-    // Ebene 1 und 2 sprechen Alltag (U3, D1): Fachbegriffe stehen nur im Blatt „?“ und in den Reitern. „unklar“ fehlt
-    // hier, weil „Eingeschossen?“ es bis U4 noch zeigt; „rechts“ trifft `\becht` nicht
+    // Ebene 1 und 2 sprechen Alltag (U3, D1): Fachbegriffe stehen nur im Blatt „?“ und in den Reitern; seit U4 auch
+    // kein „unklar“ mehr („Eingeschossen?“ entfiel); „rechts“ trifft `\becht` nicht
     // „95 %“ nur als Sicherheit („mit 95 %“, „95 %:“), nicht als Quote; „echt“ auch groß und gebeugt (Review U3)
     const JARGON =
-      /σ|R50|T²|mit 95 ?%|95 ?%:|Median|P10|P90|mittlere Hälfte|bedeutsam|Hotelling|\b[Ee]cht(e[nmrs]?)?\b|KW \d/
+      /σ|R50|T²|mit 95 ?%|95 ?%:|Median|P10|P90|mittlere Hälfte|bedeutsam|Hotelling|\b[Ee]cht(e[nmrs]?)?\b|\b[Uu]nklar\b|KW \d/
     // ohne Blätter (`<dialog>`): das der Labor-Werkzeuge spricht über das Labor („aus den echten Bausteinen“)
     const jargonIn = (...els) =>
       els
@@ -155,7 +155,7 @@ addEventListener("load", async () => {
 
     await wait(400)
 
-    // ---------- Kopf und Ausgangslage (LP, 40 Schuss mit Probe)
+    // ---------- Kopf und Ausgangslage (LP, 40 Schuss wie am Ausdruck, U4)
     // ohne Labor-Kopf steht der Kopf der Seite oben (Inhalt beginnt nach 28 px Abstand); mit dem alten Kopf lag er
     // weit über 200 px tiefer
     const pageHeadTop = (selector) => {
@@ -175,21 +175,9 @@ addEventListener("load", async () => {
       `${w0}`
     )
     check(
-      "Scheibe: 49 Treffer, 9 Probe zuerst, dann 1 bis 40",
-      labelsOf(hits()).join() ===
-        [
-          ...Array.from({ length: 9 }, (_, i) => `P${i + 1}`),
-          ...Array.from({ length: 40 }, (_, i) => `${i + 1}`),
-        ].join()
-    )
-    const probes = hits().filter((g) => g.dataset.shot.startsWith("P"))
-    check(
-      "Probe hohl",
-      probes.every((g) => circleOf(g).getAttribute("fill") === "none")
-    )
-    check(
-      "Probe durchgezogen, nie gestrichelt",
-      probes.every((g) => !circleOf(g).getAttribute("stroke-dasharray"))
+      "Scheibe: 40 Treffer, 1 bis 40, keine Probe neben Wertung (U4: wie am Ausdruck)",
+      labelsOf(hits()).join() === Array.from({ length: 40 }, (_, i) => `${i + 1}`).join() &&
+        hits().every((g) => circleOf(g).getAttribute("fill") !== "none")
     )
     const matchCircle = circleOf(hits().find((g) => g.dataset.shot === "1"))
     check(
@@ -220,9 +208,10 @@ addEventListener("load", async () => {
     check("Ablesung: letzter Schuss", txt($("#readout")).includes("Schuss 40 · letzter Schuss"))
     const head = () => txt($("[data-card-header]"))
     check(
-      "Kopf: Ergebnis 365,2, 40 Schuss + 9 Probe und 9 Zehner wie in der Spielwiese",
+      "Kopf: Ergebnis 365,2, 40 Schuss ohne Probe und 9 Zehner wie in der Spielwiese",
       txt($("[data-result]")).includes("365,2") &&
-        head().includes("40 Schuss + 9 Probe") &&
+        head().includes("40 Schuss") &&
+        !head().includes("Probe") &&
         /Zehner\s*9/.test(head()),
       head().slice(0, 160)
     )
@@ -235,7 +224,7 @@ addEventListener("load", async () => {
 
     // ---------- „Zahlen“ entfiel (U1): kein Abschnitt, keine Kacheln „Trefferbild in Zahlen“; der Überblick der
     // Analyse ist die Zahlen-Ansicht
-    check("Prüfhaken des Labors da", !!L() && L().shots.length === 49)
+    check("Prüfhaken des Labors da", !!L() && L().shots.length === 40)
     check(
       "U1: keine Kacheln „Trefferbild in Zahlen“, kein Abschnitt #numbers",
       !$('section[aria-label="Trefferbild in Zahlen"]') &&
@@ -271,20 +260,21 @@ addEventListener("load", async () => {
       headObservations.map(txt).join(" | ")
     )
 
-    // ---------- Grundauswahl: Probe und Wertung, also ohne Probe
+    // ---------- Grundauswahl: die ganze Scheibe (U4: kein „Ohne Probe“, keine Probe-Kachel)
     check(
-      "Grundauswahl ohne Probe: „Ohne Probe“ gedrückt, Probe blass, Wertung kräftig",
-      L().state.selection === "match" &&
-        button("Ohne Probe")?.getAttribute("aria-pressed") === "true" &&
-        button("Alle").getAttribute("aria-pressed") === "false" &&
-        hits().every((g) => !!g.dataset.faded === g.dataset.shot.startsWith("P"))
+      "Grundauswahl: die ganze Scheibe, „Alle“ gedrückt, kein „Ohne Probe“, keine Probe-Kachel",
+      L().state.selection === "all" &&
+        !button("Ohne Probe") &&
+        !$('[data-series="probe"]') &&
+        button("Alle").getAttribute("aria-pressed") === "true" &&
+        hits().every((g) => !g.dataset.faded)
     )
 
     // ---------- Schusstabelle
     const labelsAll = L().tools.shotLabels(L().shots)
     const intervalsAll = L().tools.shotIntervals(L().shots)
     check(
-      "Tabelle ohne Probe: 40 Zeilen, neuester oben, Schuss 1 unten",
+      "Tabelle: 40 Zeilen, neuester oben, Schuss 1 unten",
       tableRows().length === 40 &&
         tableRows()[0].dataset.row === "40" &&
         tableRows().at(-1).dataset.row === "1"
@@ -306,17 +296,6 @@ addEventListener("load", async () => {
       groupTitles().join() === "Serie 4,Serie 3,Serie 2,Serie 1",
       groupTitles().join(" | ")
     )
-    await click(button("Alle"))
-    check(
-      "Alle mit Probe: 49 Zeilen bis P1, Probe als eigene Gruppe",
-      tableRows().length === 49 &&
-        tableRows().at(-1).dataset.row === "P1" &&
-        groupTitles().at(-1) === "Probe" &&
-        L().state.selection === "all" &&
-        hits().every((g) => !g.dataset.faded),
-      `${tableRows().length} Zeilen, ${groupTitles().join(" | ")}`
-    )
-    await click(button("Ohne Probe"))
     const dotLefts = new Set(
       tableRows().map((tr) =>
         Math.round($("td:nth-child(2) span[aria-hidden]", tr).getBoundingClientRect().left)
@@ -370,25 +349,24 @@ addEventListener("load", async () => {
         hits().indexOf(hits().find((g) => g.dataset.shot === "1"))
     )
 
-    // ---------- Antippen (mit Probe, damit auch Probeschüsse wählbar sind)
-    await click(button("Alle"))
+    // ---------- Antippen (am Abreißer Schuss 27, der abseits liegt; bis U4 an der Probe P1)
     // Ein Tipp wählt den nächsten Treffer der Auswahl, bis 20 px neben seiner Mitte: Auf dem Handy misst ein
     // Treffer auf der ganzen Scheibe nur wenige Pixel. Chrome kürzt synthetische Koordinaten auf ganze Pixel.
-    await tapAt(centerOf("P1"))
+    await tapAt(centerOf("27"))
     check(
-      "Tipp auf die Mitte eines hohlen Probeschusses wählt ihn",
-      txt($("#readout")).includes("Probe P1 · angetippt"),
+      "Tipp auf die Mitte eines Treffers wählt ihn",
+      txt($("#readout")).includes("Schuss 27 · angetippt"),
       txt($("#readout")).slice(0, 40)
     )
-    await tapAt(centerOf("P1"))
-    const nextToP1 = beside("P1", 14)
-    if (nextToP1) await tapAt(nextToP1)
+    await tapAt(centerOf("27"))
+    const nextTo27 = beside("27", 14)
+    if (nextTo27) await tapAt(nextTo27)
     check(
       "Tipp 14 px neben einen Treffer wählt ihn",
-      !!nextToP1 && txt($("#readout")).includes("Probe P1 · angetippt"),
-      nextToP1 ? txt($("#readout")).slice(0, 40) : "keine freie Stelle neben P1"
+      !!nextTo27 && txt($("#readout")).includes("Schuss 27 · angetippt"),
+      nextTo27 ? txt($("#readout")).slice(0, 40) : "keine freie Stelle neben Schuss 27"
     )
-    if (nextToP1) await tapAt(nextToP1)
+    if (nextTo27) await tapAt(nextTo27)
     const [vx, vy] = view()
     const far = toScreen(vx + 2, vy + 2)
     await tapAt([far.x, far.y])
@@ -415,8 +393,6 @@ addEventListener("load", async () => {
       "zweites Antippen nimmt ihn zurück",
       !$("[data-chosen]", svg()) && txt($("#readout")).includes("letzter Schuss")
     )
-
-    await click(button("Ohne Probe"))
 
     // ---------- Auswahl einer Serie
     const tile = (key) => $(`[data-series="${key}"]`)
@@ -515,9 +491,9 @@ addEventListener("load", async () => {
     )
     await click(tile("3"), 700)
     check(
-      "dieselbe Serie noch einmal führt zur Grundauswahl zurück (ohne Probe)",
-      hits().every((g) => !!g.dataset.faded === g.dataset.shot.startsWith("P")) &&
-        button("Ohne Probe").getAttribute("aria-pressed") === "true"
+      "dieselbe Serie noch einmal führt zur ganzen Scheibe zurück",
+      hits().every((g) => !g.dataset.faded) &&
+        button("Alle").getAttribute("aria-pressed") === "true"
     )
     await click(tile("4"))
     await click(button("Alle"), 700)
@@ -547,34 +523,16 @@ addEventListener("load", async () => {
     // ---------- Serien als kleine Scheiben
     const tiles = $$("[data-series]")
     check(
-      "Serien: Probe und vier Serien",
-      tiles.map((t) => t.dataset.series).join() === "probe,1,2,3,4"
+      "Serien: vier Serien, keine Probe-Kachel (U4)",
+      tiles.map((t) => t.dataset.series).join() === "1,2,3,4"
     )
     const boxes = new Set(tiles.map((t) => $("svg", t).getAttribute("viewBox")))
     check("Serien: alle im selben Ausschnitt", boxes.size === 1)
-    // Probescheibe: das schwarze Eck oben rechts, wie es Konvention ist
+    // Probe-Eck nur an einem Training nur aus Probe (Abschnitt „Nur Probe“), nie an einer Scheibe mit Wertung
     check(
-      "Probe-Eck: die kleine Scheibe der Probe hat es, die Serien nicht",
-      !!$('[data-series="probe"] [data-probe-corner]') &&
-        tiles.slice(1).every((t) => !$("[data-probe-corner]", t))
+      "Probe-Eck: weder an den Serien noch an der Scheibe einer Wertung",
+      tiles.every((t) => !$("[data-probe-corner]", t)) && !$("[data-probe-corner]", svg())
     )
-    check(
-      "Probe-Eck: Probe und Wertung zusammen auf der Scheibe ohne",
-      !$("[data-probe-corner]", svg())
-    )
-    await click(tile("probe"))
-    const corner = $("[data-probe-corner]", svg())
-    const cornerBox = corner?.getBoundingClientRect()
-    const svgBox = svg().getBoundingClientRect()
-    check(
-      "Probe-Eck: Probe gewählt, Eck oben rechts auf der Scheibe",
-      !!corner &&
-        near(cornerBox.right, svgBox.right, 1) &&
-        near(cornerBox.top, svgBox.top, 1) &&
-        corner.getAttribute("fill") === "var(--spiegel)",
-      corner ? `${cornerBox.right.toFixed(0)}/${svgBox.right.toFixed(0)}` : "kein Eck"
-    )
-    await click(button("Alle"))
     const rows = new Map()
     for (const t of tiles) {
       const top = Math.round(t.getBoundingClientRect().top)
@@ -585,10 +543,6 @@ addEventListener("load", async () => {
       "Serien: gleich volle Zeilen, keine allein",
       counts.length === 1 || Math.min(...counts) >= Math.max(...counts) - 1,
       counts.join("+")
-    )
-    check(
-      "Serien: Probe mit Zahl der Schüsse, ohne Verstellung",
-      txt(tile("probe")).includes("9 Schuss") && !txt(tile("probe")).includes("Verstellung")
     )
 
     // ---------- Setzen
@@ -657,13 +611,16 @@ addEventListener("load", async () => {
     await wait(200)
     const fresh = $$("[data-series]")
     const freshRows = new Set(fresh.map((t) => Math.round(t.getBoundingClientRect().top)))
+    // der Probeschuss vor der Wertung fällt weg wie am Ausdruck (U4): vier Serien, keine Probe-Kachel
     check(
-      "Leer gesetzt: Probe und vier Serien in einer Zeile",
-      fresh.map((t) => t.dataset.series).join() === "probe,1,2,3,4" && freshRows.size === 1,
-      `${fresh.length} Kacheln, ${freshRows.size} Zeilen`
+      "Leer gesetzt: vier Serien in einer Zeile, der Probeschuss vor der Wertung fällt weg",
+      fresh.map((t) => t.dataset.series).join() === "1,2,3,4" &&
+        freshRows.size === 1 &&
+        hits().length === 31,
+      `${fresh.length} Kacheln, ${freshRows.size} Zeilen, ${hits().length} Treffer`
     )
     await click(inLabor("Ansehen"))
-    await click(inLabor("40 Schuss mit Probe"), 100)
+    await click(inLabor("40 Schuss"), 100)
 
     // ---------- nur Probe (Training): wie Wertung, bis eine Wertung dazukommt
     await click(inLabor("60 Probe"), 100)
@@ -673,6 +630,18 @@ addEventListener("load", async () => {
         hits().every((g) => circleOf(g).getAttribute("fill") !== "none") &&
         !!$("[data-probe-corner]", svg()) &&
         $$("[data-series]").every((t) => !!$("[data-probe-corner]", t))
+    )
+    // das Eck oben rechts auf der Scheibe, wie es Konvention ist (bis U4 an der gewählten Probe geprüft)
+    const corner = $("[data-probe-corner]", svg())
+    const cornerBox = corner?.getBoundingClientRect()
+    const svgBox = svg().getBoundingClientRect()
+    check(
+      "Probe-Eck: oben rechts auf der Scheibe, in der Farbe des Spiegels",
+      !!corner &&
+        near(cornerBox.right, svgBox.right, 1) &&
+        near(cornerBox.top, svgBox.top, 1) &&
+        corner.getAttribute("fill") === "var(--spiegel)",
+      corner ? `${cornerBox.right.toFixed(0)}/${svgBox.right.toFixed(0)}` : "kein Eck"
     )
     check(
       "Nur Probe: sechs Serien zu zehn ohne Probe-Kachel, Kopf mit Ergebnis",
@@ -689,29 +658,27 @@ addEventListener("load", async () => {
         tableRows().some((tr) => txt(tr.lastElementChild).includes("min")),
       groupTitles().join(" | ")
     )
-    // eine Wertung dazu: Ab jetzt trennt Spiegel Probe und Wertung
+    // eine Wertung dazu: wie am Ausdruck löscht der erste Wertungsschuss die Probe (U4)
     await click(inLabor("Setzen"))
     await click(inLabor("Wertung"))
     await setAt(0, 0)
     check(
-      "Nur Probe plus eine Wertung: Probe P1 bis P60, Wertung 1",
-      hits().filter((g) => g.dataset.shot.startsWith("P")).length === 60 &&
-        !!hits().find((g) => g.dataset.shot === "1") &&
+      "Nur Probe plus eine Wertung: wie am Ausdruck nur noch die Wertung, ohne Probe-Eck",
+      labelsOf(hits()).join() === "1" &&
         $$("[data-series]")
           .map((t) => t.dataset.series)
-          .join() === "probe,1",
-      $$("[data-series]")
+          .join() === "1" &&
+        !$("[data-probe-corner]", svg()),
+      `${labelsOf(hits()).join()} · ${$$("[data-series]")
         .map((t) => t.dataset.series)
-        .join()
+        .join()}`
     )
     await click(inLabor("Ansehen"))
-    await click(inLabor("40 Schuss mit Probe"), 100)
+    await click(inLabor("40 Schuss"), 100)
 
     // ---------- Wertung, Scheibe, Thema
     await click(button("Ganze Ringe"))
-    const seriesValues = $$("[data-series] b")
-      .slice(1)
-      .map((b) => txt(b).trim())
+    const seriesValues = $$("[data-series] b").map((b) => txt(b).trim())
     check(
       "Ganze Ringe: Serien als ganze Zahlen",
       seriesValues.every((v) => /^\d+$/.test(v)),
@@ -766,7 +733,7 @@ addEventListener("load", async () => {
       wGroup < 171 && near(wNext, 171.05, 1e-6),
       `${wGroup.toFixed(2)} → ${wNext}`
     )
-    await click(inLabor("40 Schuss mit Probe"), 60)
+    await click(inLabor("40 Schuss"), 60)
     // die Seite selbst folgt dem Thema, auch unter der Grundformatierung des Artifacts
     const tokenColor = (name) => {
       const probe = document.createElement("div")
@@ -870,9 +837,10 @@ addEventListener("load", async () => {
       for (const el of copy.querySelectorAll("script, style")) el.remove()
       return copy.textContent
     }
-    const TABS = ["Überblick", "Ergebnis", "Präzision", "Lage", "Zeit und Verlauf", "Probe"]
+    // fünf Reiter, kein Reiter „Probe“ (U4: wie am Ausdruck)
+    const TABS = ["Überblick", "Ergebnis", "Präzision", "Lage", "Zeit und Verlauf"]
     await click(inLabor("Luftpistole"), 150)
-    await click(inLabor("40 Schuss mit Probe"), 150)
+    await click(inLabor("40 Schuss"), 150)
     await click(button("Zehntel"), 100)
     const A = () => $('section[aria-label="Analyse"]')
     const tabBar = () => $('[role="radiogroup"][aria-label="Thema"]', A())
@@ -892,7 +860,7 @@ addEventListener("load", async () => {
     const ovValue = (label) => txt(ovTile(label).children[1].childNodes[0])
     const ovHint = (label) => txt(ovTile(label).children[2])
     check(
-      "Analyse: sechs Reiter in der Reihenfolge der Spielwiese",
+      "Analyse: fünf Reiter in der Reihenfolge der Spielwiese, kein Reiter „Probe“",
       $$('[role="radio"]', tabBar())
         .map((b) => txt(b))
         .join() === TABS.join()
@@ -1008,19 +976,23 @@ addEventListener("load", async () => {
         !/Visier/.test(sentences.join(" ")),
       sentences[0]
     )
-    // D3: das Urteil von S4 statt des Abstands Probe → Wertung
-    const zeroedTile = S().sighterZeroed(L().shots)
+    // U4, D6: die Ausreißer statt „Eingeschossen?“: wie viele und welche, wie der Fachkern sie markiert
+    const flaggedTile = S().outliers(base())
     check(
-      "Überblick: „Eingeschossen?“ zeigt das Urteil, keine Zahl",
-      ovValue("Eingeschossen?") === (zeroedTile.real ? "versetzt" : "unklar") &&
-        ovHint("Eingeschossen?") ===
-          `${zeroedTile.real ? "sicher neben der Mitte" : "kein Versatz nachweisbar"} · letzte ${zeroedTile.n} Probeschüsse`,
-      `${ovValue("Eingeschossen?")} · ${ovHint("Eingeschossen?")}`
+      "Überblick: „Ausreißer“ zählt die markierten Schüsse und nennt sie, kein „Eingeschossen?“",
+      !!flaggedTile &&
+        ovValue("Ausreißer") === String(flaggedTile.flagged.length) &&
+        ovHint("Ausreißer") ===
+          (flaggedTile.flagged.length
+            ? `${flaggedTile.flagged.length === 1 ? "Schuss" : "Schüsse"} ${flaggedTile.flagged.map((o) => o.number).join(", ")}`
+            : "keiner fällt aus der Gruppe") &&
+        !ovTile("Eingeschossen?"),
+      `${ovValue("Ausreißer")} · ${ovHint("Ausreißer")}`
     )
     check(
       "Datenlage-Zeile",
       txt($("[data-coverage] p", A())).startsWith(
-        "Datenlage: 40 Wertungsschüsse · 9 Probeschüsse · alle mit Lage, Zeit und Wert"
+        "Datenlage: 40 Wertungsschüsse · alle mit Lage, Zeit und Wert"
       ),
       txt($("[data-coverage] p", A()))
     )
@@ -1174,7 +1146,7 @@ addEventListener("load", async () => {
       txt(A()).includes("Die Schüsse 9, 10 fallen als Ausreißer aus der Gruppe")
     )
     await click(inLabor("Luftpistole"), 200)
-    await click(inLabor("40 Schuss mit Probe"), 200)
+    await click(inLabor("40 Schuss"), 200)
 
     await tab("Lage")
     check(
@@ -1421,7 +1393,7 @@ addEventListener("load", async () => {
       `${barLine} → ${freshLine.slice(0, 20)}`
     )
     await click(inLabor("Luftpistole"), 150)
-    await click(inLabor("40 Schuss mit Probe"), 150)
+    await click(inLabor("40 Schuss"), 150)
     const decimalSvg = $('svg[aria-label^="Zehntelverteilung"]', A())
     check(
       "Tabelle: Zehntel-Säulen, eine Zeile je belegtem Zehntel",
@@ -1437,56 +1409,6 @@ addEventListener("load", async () => {
       `${$$("tbody tr", clockSvg.parentElement).length} / ${$$("[data-hour]", clockSvg).length}`
     )
 
-    await tab("Probe")
-    check("Probe: Umfang 9", ctext("probe-umfang").includes("9 (1 Block à zehn)"))
-    const zeroed = S().sighterZeroed(L().shots)
-    check(
-      "Probe: „Eingeschossen?“ über die letzten fünf, die Zahl mit dem Hinweis aus B21",
-      zeroed.n === 5 &&
-        ctext("eingeschossen").includes("Lage der letzten fünf Probeschüsse") &&
-        ctext("eingeschossen").includes(
-          `Versatz Probe → Wertung${nf(zeroed.matchOffsetUm / 1000, 2)} mm`
-        ) &&
-        ctext("eingeschossen").includes(
-          "Auch ohne jede Verschiebung liegt der Abstand zur Wertung bei fünf Probeschüssen meist bei etwa einem halben σ"
-        ),
-      ctext("eingeschossen")
-    )
-    check(
-      "Probe: auf der Scheibe in Abgabefolge",
-      $$("[data-sighter]", A())
-        .map((g) => g.dataset.sighter)
-        .join() === "P1,P2,P3,P4,P5,P6,P7,P8,P9"
-    )
-    // Nummern mit echter Schriftbreite: keine überlappt eine andere (1 px Toleranz), alle im Bild
-    const sighterLabels = () => {
-      const chart = $('svg[aria-label="Probeschüsse um die Mitte"]', A())
-      const boxes = $$("[data-sighter-label]", chart).map((t) => t.getBBox())
-      const view = chart.viewBox.baseVal
-      const hits = []
-      boxes.forEach((a, i) =>
-        boxes.slice(i + 1).forEach((b, j) => {
-          const dx = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)
-          const dy = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y)
-          if (dx > 1 && dy > 1) hits.push(`P${i + 1}/P${i + j + 2}`)
-        })
-      )
-      const inside = boxes.every(
-        (b) => b.x >= 0 && b.y >= 0 && b.x + b.width <= view.width && b.y + b.height <= view.height
-      )
-      return { n: boxes.length, hits, inside }
-    }
-    for (const gun of ["Luftpistole", "Luftgewehr"]) {
-      if (gun === "Luftgewehr") await click(inLabor("Luftgewehr"), 200)
-      const probe = sighterLabels()
-      check(
-        `Probe ${gun}: Nummern ohne Überlappung, alle im Bild`,
-        probe.n === 9 && probe.hits.length === 0 && probe.inside,
-        `${probe.n} · ${probe.hits.join(" ") || "frei"} · ${probe.inside ? "im Bild" : "ragt hinaus"}`
-      )
-    }
-    await click(inLabor("Luftpistole"), 200)
-    await click(inLabor("40 Schuss mit Probe"), 200)
     check("keine Visierverstellung auf der Seite", !/Verstellung|verstellt|Visier/.test(pageText()))
 
     // Abstände: zwischen Blöcken und Karten 16 px, Karten einer Zeile mit gleicher Unterkante
@@ -1581,7 +1503,6 @@ addEventListener("load", async () => {
         .HELP_TOPICS.filter((t) => t.theme !== "period")
         .map((t) => t.id),
       "beobachtungen",
-      "probe-auf-der-scheibe",
     ]
     check(
       "Hilfe: jedes Thema hat seinen Platz",
@@ -1650,7 +1571,7 @@ addEventListener("load", async () => {
     await click(inLabor("Leer"), 200)
     check("Leer: keine Analyse, der Hinweis neben der Scheibe", !A() && !!$("[data-no-shots]"))
     await click(inLabor("Luftgewehr"), 200)
-    await click(inLabor("40 Schuss mit Probe"), 200)
+    await click(inLabor("40 Schuss"), 200)
     await tab("Ergebnis")
     check(
       "LG: Quoten ab 10,0 und ab 10,5",
@@ -1659,7 +1580,7 @@ addEventListener("load", async () => {
         .join() === "ab 10,0,ab 10,5"
     )
     await click(inLabor("Luftpistole"), 200)
-    await click(inLabor("40 Schuss mit Probe"), 200)
+    await click(inLabor("40 Schuss"), 200)
     await tab("Überblick")
 
     // Analyse auf dem Telefon: keine Seite breiter als der Bildschirm, die Reiter in einer Zeile, der gewählte
@@ -1937,17 +1858,18 @@ addEventListener("load", async () => {
       flat.remove()
     }
     // Tablet (unter 1024 px breit): die untere Leiste nimmt 72 px, Scheibe und Serien enden darüber (Plan N3, D2).
-    // 660 px hoch, damit die Höhe die Scheibe begrenzt und nicht die Breite: ohne Abzug der Leiste reichten die
-    // Serien unter sie
-    const tablet = await openFrame(768, 660)
+    // 700 px hoch, damit die Höhe die Scheibe begrenzt und nicht die Breite: ohne Abzug der Leiste reichten die
+    // Serien unter sie. Seit U4 sind es vier statt fünf Serien-Kacheln, jede breiter und höher; bei 660 px bliebe für
+    // die Scheibe weniger als `MIN_TARGET_PX`, dann folgen die Serien gewollt darunter
+    const tablet = await openFrame(768, 700)
     scrollToRegion(tablet.contentWindow)
     await wait(100)
     const tabletBox = tablet.contentDocument.getElementById("target-box").getBoundingClientRect()
     const tabletSeries = tablet.contentDocument.getElementById("series").getBoundingClientRect()
     check(
-      "768 × 660: Scheibe und Serien enden über der unteren Leiste",
-      tabletBox.bottom <= 660 - 72 && tabletSeries.bottom <= 660 - 72,
-      `Scheibe bis ${tabletBox.bottom.toFixed(0)}, Serien bis ${tabletSeries.bottom.toFixed(0)} von ${660 - 72}`
+      "768 × 700: Scheibe und Serien enden über der unteren Leiste",
+      tabletBox.bottom <= 700 - 72 && tabletSeries.bottom <= 700 - 72,
+      `Scheibe bis ${tabletBox.bottom.toFixed(0)}, Serien bis ${tabletSeries.bottom.toFixed(0)} von ${700 - 72}`
     )
     tablet.remove()
 
