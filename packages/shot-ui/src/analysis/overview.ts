@@ -107,8 +107,9 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       "ringverlust-nach-ursache",
       split?.total ? rings(split.total[key]) : null,
       "Ringe",
+      // ein Lage-Anteil unter null ist kein Gewinn: Die Gruppe sitzt schon gut (U3, D10, Grund im Reiter Lage)
       split
-        ? `Lage ${rings(split.positionLoss[key])} · Streuung ${rings(split.spreadLoss[key])}${split.reliable ? "" : " · Aufteilung unsicher"}`
+        ? `Lage ${split.positionLoss[key] <= 0 ? "kostet nichts" : rings(split.positionLoss[key])} · Streuung ${rings(split.spreadLoss[key])}${split.reliable ? "" : " · Aufteilung unsicher"}`
         : "",
       split ? NO_FULL_POSITION : "ab 2 Schuss mit Lage"
     ),

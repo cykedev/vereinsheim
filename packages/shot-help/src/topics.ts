@@ -183,7 +183,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Dein Ringverlust ist, was dir zum Höchstwert fehlt (10 je Schuss, in Zehnteln 10,9). Spiegel teilt ihn auf: Jeder Treffer wird um den Schwerpunkt der übrigen Schüsse verschoben und neu gewertet. Was das bringt, ist der Verlust durch die Lage, der Rest der Verlust durch die Streuung.",
     read: "Großer Lage-Anteil: Die Gruppe sitzt neben der Mitte. Großer Streuungs-Anteil: Präzision. Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der Schusszahl.",
     caution:
-      "Ohne echten Versatz ist der Lage-Anteil meist leicht negativ, in ganzen Ringen oft 0: Die Gruppe um den gemessenen Versatz zu verschieben, würde dann Ringe kosten. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Gruppe in der Mitte Ringe bringt. Gewertet wird aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig, gibt es keinen Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.",
+      "Ohne echten Versatz ist der Lage-Anteil meist leicht negativ, in ganzen Ringen oft 0: Die Gruppe um den gemessenen Versatz zu verschieben, würde dann Ringe kosten; Spiegel schreibt dann „Lage kostet nichts“. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Gruppe in der Mitte Ringe bringt. Gewertet wird aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig, gibt es keinen Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.",
     minimum:
       "Ab 2 Schuss mit Lage, belastbar ab 10; den Ringverlust gibt es nur, wenn jeder Wertungsschuss eine Lage hat.",
     formula:

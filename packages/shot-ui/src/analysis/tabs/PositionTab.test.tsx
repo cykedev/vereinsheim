@@ -143,7 +143,7 @@ describe("Reiter Lage", () => {
     )
   })
 
-  it("negativer Lage-Anteil: Vorzeichen auch für den Screenreader und eine Notiz", () => {
+  it("negativer Lage-Anteil: „Lage kostet nichts“, die Zahl mit ihrem Grund in einem Satz (U3, D10)", () => {
     // Prüfung, Lage 8: die Gruppe sitzt um die Mitte, das Verschieben um den Zufallsversatz kostet
     const calm = BASE.map((s) =>
       s.xUm === null || s.yUm === null ? s : { ...s, xUm: s.xUm + 3500, yUm: s.yUm - 2200 }
@@ -152,12 +152,17 @@ describe("Reiter Lage", () => {
     expect(split.positionLoss.decimal).toBeLessThan(0)
     const card = cardHtml(renderTab("position", { shots: calm }), "ringverlust-nach-ursache")
     expect(card).toContain(
-      `aria-label="Lage ${formatValue(split.positionLoss.decimal, 1)}, Streuung ${formatValue(split.spreadLoss.decimal, 1)} Ringe"`
+      `aria-label="Lage kostet nichts, Streuung ${formatValue(split.spreadLoss.decimal, 1)} Ringe"`
     )
-    expect(cardText(renderTab("position", { shots: calm }), "ringverlust-nach-ursache")).toContain(
-      "Lage negativ: Eine Verschiebung um den gemessenen Versatz würde Ringe kosten."
+    const text = cardText(renderTab("position", { shots: calm }), "ringverlust-nach-ursache")
+    expect(text).toContain("Lage kostet nichts")
+    // die Legende nennt keine Zahl, nur der Satz mit dem Grund
+    expect(text).toContain("Lage kostet nichts Streuung")
+    expect(text).toContain(
+      `Deine Gruppe sitzt schon gut; in die Mitte geschoben brächte sie rechnerisch nichts (Lage ${formatValue(split.positionLoss.decimal, 1)} Ringe).`
     )
-    expect(cardText(html, "ringverlust-nach-ursache")).not.toContain("Lage negativ")
+    expect(cardText(html, "ringverlust-nach-ursache")).not.toContain("kostet nichts")
+    expect(cardText(html, "ringverlust-nach-ursache")).not.toContain("sitzt schon gut")
   })
 
   it("Drift: von-Neumann auf der Skala, Pfad mit einer Marke je Serie", () => {

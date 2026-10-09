@@ -172,12 +172,16 @@ function RingLoss({
   const digits = keyName === "rings" ? 0 : 1
   // ohne Ringverlust rechnen Ist und Mitte über weniger Schüsse: das steht dabei (Prüfung, Ergebnis 5)
   const over = split.total ? "" : ` (${split.n} Schuss mit Lage)`
+  // ein Lage-Anteil bis null kostet nichts (U3, D10): die Mitte ohne den Schuss selbst ist etwas weiter, ein
+  // Ausreißer zieht den Schwerpunkt; die Zahl steht mit diesem Grund im Satz darunter
+  const position = split.positionLoss[keyName]
+  const positionText = position <= 0 ? "Lage kostet nichts" : `Lage ${rings(position)}`
   return (
     <>
       <div
         role="img"
-        // die Werte, nicht die Breiten: ein negativer Lage-Anteil ist kein „0“ (Prüfung, Lage 8)
-        aria-label={`Lage ${rings(split.positionLoss[keyName])}, Streuung ${rings(split.spreadLoss[keyName])} Ringe`}
+        // die Werte, nicht die Breiten; ein negativer Lage-Anteil heißt „kostet nichts“, die Zahl im Satz darunter
+        aria-label={`${positionText}, Streuung ${rings(split.spreadLoss[keyName])} Ringe`}
         className="flex h-3 gap-0.5 overflow-hidden rounded-md bg-surface-2"
       >
         <span
@@ -194,7 +198,7 @@ function RingLoss({
       <div className="flex flex-wrap items-center gap-x-[18px] gap-y-1.5 text-[13px] text-muted-foreground">
         <span className="inline-flex items-center gap-[7px]">
           <i className="size-2.5 rounded-sm bg-warning" />
-          {`Lage ${rings(split.positionLoss[keyName])}`}
+          {positionText}
         </span>
         <span className="inline-flex items-center gap-[7px]">
           <i className="size-2.5 rounded-sm bg-primary" />
@@ -233,8 +237,8 @@ function RingLoss({
           <Verdict tone="none">unsicher</Verdict>
         )}
       </div>
-      {split.positionLoss[keyName] < 0 && (
-        <Note>Lage negativ: Eine Verschiebung um den gemessenen Versatz würde Ringe kosten.</Note>
+      {position < 0 && (
+        <Note>{`Deine Gruppe sitzt schon gut; in die Mitte geschoben brächte sie rechnerisch nichts (Lage ${rings(position)} Ringe).`}</Note>
       )}
       <Note>
         Jeder Treffer um den Schwerpunkt der übrigen verschoben und neu gewertet: So schätzt

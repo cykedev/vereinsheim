@@ -31,6 +31,12 @@ describe("Wortwahl wie auf der Seite (U3, D9)", () => {
     for (const text of allTexts()) expect(text).not.toMatch(/bedeutsam/i)
   })
 
+  it("der Ringverlust erklärt „Lage kostet nichts“ (U3, D10)", () => {
+    expect(helpTopic("ringverlust-nach-ursache")?.caution).toContain(
+      "Spiegel schreibt dann „Lage kostet nichts“"
+    )
+  })
+
   it("der Einstieg zitiert einen Bereich so, wie ihn die Seite zeigt", () => {
     expect(READING_GUIDE.map((i) => i.text).join(" ")).toContain(
       "„Streuung 1,12 mm, sicher zwischen 0,94 und 1,36 mm“"

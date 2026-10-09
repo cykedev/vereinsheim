@@ -212,6 +212,21 @@ describe("Beobachtungen in Worten", () => {
     expect(text).toContain("In der Mitte brächte die Gruppe keine Ringe mehr.")
   })
 
+  it("ein Lage-Anteil unter null heißt „Lage kostet nichts“ (U3, D10)", () => {
+    // die Gruppe um die Mitte geschoben: in die Mitte verschoben brächte sie rechnerisch nichts
+    const centered = CARD.map((s) =>
+      s.kind === "match" && s.xUm !== null && s.yUm !== null
+        ? { ...s, xUm: s.xUm + 3500, yUm: s.yUm - 2200 }
+        : s
+    )
+    const input = analysisInput(centered, "decimal", LP_10M)
+    const split = ringLossSplit(input.base, LP_10M)!
+    expect(split.positionLoss.decimal).toBeLessThan(0)
+    const hint = overviewTiles(input).find((t) => t.label === "Ringverlust")!.hint
+    expect(hint).toMatch(/^Lage kostet nichts · Streuung [\d,]+/)
+    expect(hint).not.toContain("−")
+  })
+
   it("Lage nicht echt: kein Grund zum Verstellen, nur kein Beleg", () => {
     const centered = CARD.map((s) =>
       s.kind === "match" && s.xUm !== null && s.yUm !== null

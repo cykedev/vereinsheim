@@ -923,6 +923,16 @@ addEventListener("load", async () => {
         ovValue("Streuung") === nf(S().sigmaEstimate(base()).sigma / 1000, 2),
       `${ovValue("Ergebnis")} · ${ovValue("Streuung")}`
     )
+    // ein Lage-Anteil bis null heißt „kostet nichts“, nie ein Gewinn (U3, D10)
+    const lossSplit = S().ringLossSplit(base(), L().target)
+    const lossPosition = lossSplit.positionLoss.decimal
+    check(
+      "Überblick: Ringverlust nennt die Lage mit Zahl oder „Lage kostet nichts“",
+      ovHint("Ringverlust").startsWith(
+        lossPosition <= 0 ? "Lage kostet nichts · " : `Lage ${nf(lossPosition, 1)} · `
+      ),
+      ovHint("Ringverlust")
+    )
     const sentences = $$("[data-observation]", A()).map((li) => txt(li).trim())
     const model = T().observations(input())
     check(

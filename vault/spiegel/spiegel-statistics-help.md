@@ -260,10 +260,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Präzision. Der Ringverlust ist die Zahl, die du kleiner machen willst; er wächst mit der
   Schusszahl.
 - *Vorsicht:* Ohne echten Versatz ist der Lage-Anteil meist leicht negativ, in ganzen Ringen oft 0:
-  Die Gruppe um den gemessenen Versatz zu verschieben, würde dann Ringe kosten. Belastbar erst ab 10
-  Schuss, wenn die Lage echt ist und die Gruppe in der Mitte Ringe bringt. Gewertet wird aus der
-  Lage: Fehlt einem Wertungsschuss die Lage oder ist er verdächtig, gibt es keinen Ringverlust, nur
-  die Aufteilung über die übrigen. Nie amtlich.
+  Die Gruppe um den gemessenen Versatz zu verschieben, würde dann Ringe kosten; Spiegel schreibt
+  dann „Lage kostet nichts“. Belastbar erst ab 10 Schuss, wenn die Lage echt ist und die Gruppe in
+  der Mitte Ringe bringt. Gewertet wird aus der Lage: Fehlt einem Wertungsschuss die Lage oder ist
+  er verdächtig, gibt es keinen Ringverlust, nur die Aufteilung über die übrigen. Nie amtlich.
 - *Mindestzahl:* Ab 2 Schuss mit Lage, belastbar ab 10; den Ringverlust gibt es nur, wenn jeder
   Wertungsschuss eine Lage hat.
 - *Formel:* `Ringverlust = n · 10,9 − Σ vᵢ bzw. n · 10 − Σ Ringᵢ; zentriert: (pᵢ − m) · n/(n − 1),
