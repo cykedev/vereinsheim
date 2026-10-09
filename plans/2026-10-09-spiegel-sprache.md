@@ -80,6 +80,17 @@ Die Lage steht dazu dreimal mit denselben Zahlen: im Kopf, in der Kachel „Lage
     statt „Lage −0,4“.
   - Die Karte „Ringverlust nach Ursache“ nennt die Zahl mit einem Satz zum Grund: „Deine Gruppe sitzt schon gut; in
     die Mitte geschoben brächte sie rechnerisch nichts (Lage −0,4 Ringe).“
+- **D11 Urteil der Lage in Alltagsworten** (User während der Umsetzung, 9. Oktober 2026: „Lage unklar ist auch seltsam
+  und schwer zu verstehen“):
+  - Kachel „Lage“: „versetzt“ mit der Richtung darunter („links oben“) oder „passt“ mit „kein Versatz belegt“, statt
+    „echt“ und „unklar“.
+  - Kachel „Eingeschossen?“: „versetzt“ oder „passt“ statt „unklar“.
+  - Etiketten der Reiter: Lage „sicher versetzt“ / „kann Zufall sein“, Probe „sicher neben der Mitte“ / „kein Versatz
+    belegt“.
+  - Hilfe: Thema `lage-echt` heißt „Ist die Lage versetzt?“ (Id bleibt); Einstieg „„Sicher“ und „kann Zufall sein““;
+    Texte, die die alten Etiketten zitieren, nennen die neuen.
+- **Nebenbei (Fehler, User, 9. Oktober 2026):** „zeigen“ an einem Rekord sprang in einem hohen Fenster nicht zur
+  gewählten Scheibe (der Verlauf klebt und galt als im Bild). Behoben in `d4db2a5` (`jumpTo` mit `shown`).
 
 ## Dateien
 
@@ -116,11 +127,15 @@ Die Lage steht dazu dreimal mit denselben Zahlen: im Kopf, in der Kachel „Lage
 9. **Lage kostet nichts (D10):**
    - Tests: Kachel und Karte mit einem Lage-Anteil ≤ 0 (konstruierte Gruppe fast mittig mit Ausreißer);
    - dann `overview.ts` und `PositionTab.tsx` (`RingLoss`).
-10. **Skriptprüfung:**
+10. **Lage passt (D11):**
+    - Tests auf Kacheln, Etiketten und Hilfe (zuerst rot);
+    - dann `overview.ts`, `PositionTab.tsx`, `SightersTab.tsx`, `shot-help` (`topics.ts`, `guide.ts`), Leitfaden neu
+      erzeugen.
+11. **Skriptprüfung:**
    - Texte und Bezeichnungen nachziehen;
    - neu: Kopf und Überblick ohne σ, R50, T², „95 %“;
    - Gegenprobe: alter Lage-Satz rot.
-11. **Doku:**
+12. **Doku:**
     - `packages/shot-ui/CLAUDE.md`;
     - Vault: Durchsicht U3 erledigt; `spiegel-ui-design` Wortwahl.
 
