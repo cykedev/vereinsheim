@@ -67,25 +67,33 @@ describe("Form, letzte 90 Tage (Plan N5, D7)", () => {
     },
   }
 
-  it("eine Zeile mit Ø, Abstand und Urteil, als Link in den Fortschritt mit dem Vergleich", () => {
+  const line = (f: StartForm) =>
+    text(renderToStaticMarkup(h(FormLine, { form: f, familyLabel: "Luftgewehr" })))
+
+  it("zwei Zeilen, Titel und ein Satz mit Urteil, als Link in den Fortschritt mit dem Vergleich (U5, D4)", () => {
     const html = renderToStaticMarkup(h(FormLine, { form, familyLabel: "Luftgewehr" }))
     expect(html).toMatch(
       /^<a href="\/progress\?compare=previous&amp;family=lg-freihand" data-form-line="true"/
     )
-    expect(text(html)).toBe(
-      "Form, letzte 90 Tage · Luftgewehr: Ø 10,27 je Schuss · +0,03 gegen den Zeitraum davor · kein klarer Unterschied ›"
+    expect(html).toMatch(/<span[^>]*data-form-title[^>]*>Form der letzten 90 Tage<\/span>/)
+    expect(line(form)).toBe(
+      "Form der letzten 90 Tage Luftgewehr: Ø 10,27 je Schuss, kein klarer Unterschied zu den 90 Tagen davor (+0,03). ›"
+    )
+  })
+
+  it("mit Urteil: „deutlich besser als in den 90 Tagen davor“", () => {
+    const better: StartForm = {
+      ...form,
+      comparison: { ...form.comparison!, delta: 0.15, verdict: "higher", meaningful: true },
+    }
+    expect(line(better)).toBe(
+      "Form der letzten 90 Tage Luftgewehr: Ø 10,27 je Schuss, deutlich besser als in den 90 Tagen davor (+0,15). ›"
     )
   })
 
   it("ohne Vergleich „zu wenige Scheiben“, ohne Wert nichts", () => {
-    expect(
-      text(
-        renderToStaticMarkup(
-          h(FormLine, { form: { ...form, comparison: null }, familyLabel: "Luftgewehr" })
-        )
-      )
-    ).toBe(
-      "Form, letzte 90 Tage · Luftgewehr: Ø 10,27 je Schuss · gegen den Zeitraum davor: zu wenige Scheiben ›"
+    expect(line({ ...form, comparison: null })).toBe(
+      "Form der letzten 90 Tage Luftgewehr: Ø 10,27 je Schuss; für einen Vergleich mit den 90 Tagen davor zu wenige Scheiben. ›"
     )
     expect(
       renderToStaticMarkup(
