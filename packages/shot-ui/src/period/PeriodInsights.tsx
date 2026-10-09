@@ -52,7 +52,7 @@ export function PeriodInsights({
         className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3"
       >
         <span className="min-w-0">
-          <span className="text-muted-foreground">{r.label}</span>{" "}
+          <span className="text-muted-foreground">{`${r.label}: `}</span>
           <span className="font-semibold tabular-nums">{r.value}</span>
           <span className="text-muted-foreground">
             {` · ${date(r.record.atMs)}${r.record.detail ? ` · ${r.record.detail}` : ""}`}

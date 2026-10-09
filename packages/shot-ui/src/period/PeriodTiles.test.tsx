@@ -93,17 +93,25 @@ describe("Analyse über den Zeitraum (D12)", () => {
     const old = periodCard("alt", 200, [109, 109, 109])
     const m = model([...now, old])
     const rows = recordRows(m.records, "decimal")
-    expect(rows[0]).toMatchObject({ key: "R1:3", label: "Ergebnis, 3 Schuss", value: "32,7 Ringe" })
+    // ganze Worte, gezeigt als „Bezeichnung: Wert“ (U5, D3)
+    expect(rows[0]).toMatchObject({
+      key: "R1:3",
+      label: "Bestes Ergebnis (3 Schuss)",
+      value: "32,7 Ringe",
+    })
+    expect(rows.find((r) => r.key === "R3")?.label).toBe("Bester Teiler")
+    expect(rows.find((r) => r.key === "R8")?.label).toBe("Beste Form (Ø über 5 Scheiben)")
     expect(rows.map((r) => r.key)).toContain("R3")
     const html = render([...now, old])
     expect(html).toMatch(
       /data-record="R1:3"[\s\S]*?disabled=""[^>]*title="außerhalb des Zeitraums"/
     )
     expect(html).toMatch(/data-record="R8"[\s\S]*?zeigen<\/button>/)
+    expect(html).toMatch(/data-record="R3"[\s\S]*?>Bester Teiler: <\/span>/)
     expect(html).toMatch(
-      /aria-label="Ergebnis, 3 Schuss vom \d\d\.\d\d\.\d{4}: außerhalb des Zeitraums"/
+      /aria-label="Bestes Ergebnis \(3 Schuss\) vom \d\d\.\d\d\.\d{4}: außerhalb des Zeitraums"/
     )
-    expect(html).toMatch(/aria-label="beste Form \(Ø über fünf Scheiben\) vom [\d.]+ zeigen"/)
+    expect(html).toMatch(/aria-label="Beste Form \(Ø über 5 Scheiben\) vom [\d.]+ zeigen"/)
   })
 
   it("ohne Scheiben: der Hinweis statt einer leeren Karte", () => {

@@ -181,12 +181,12 @@ export function EveningBlock({
             {block.records.map((row) => (
               <li key={row.key} className="flex items-baseline justify-between gap-3">
                 <span className="min-w-0 text-foreground-2">
-                  {`${row.label} `}
+                  {`${row.label}: `}
                   <span className="font-semibold text-foreground tabular-nums">{row.value}</span>
                 </span>
                 <RouteLink
                   route={recordRoute(row.record.cardId)}
-                  aria-label={`${row.label} ${row.value} zeigen`}
+                  aria-label={`${row.label}: ${row.value} zeigen`}
                   className="shrink-0 font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   zeigen

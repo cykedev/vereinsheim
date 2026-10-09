@@ -119,7 +119,7 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(html).toContain("data-new-records")
     // der Rekord öffnet in seiner Wertung (hier Zehntel, ohne Schlüssel), die Kachel in der der Kachel (Review N5)
     expect(html).toMatch(
-      /Neue Rekorde[\s\S]*?<a href="\/cards\/[ab]\?from=start" aria-label="[^"]+ zeigen"[^>]*>zeigen<\/a>/
+      /Neue Rekorde[\s\S]*?: <span[\s\S]*?<a href="\/cards\/[ab]\?from=start" aria-label="[^"]+: [^"]+ zeigen"[^>]*>zeigen<\/a>/
     )
     expect(html).toMatch(/aria-labelledby="evening-lp-freihand evening-lp-freihand-meta"/)
     expect(html).toMatch(

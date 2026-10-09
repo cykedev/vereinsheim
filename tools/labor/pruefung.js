@@ -2828,10 +2828,12 @@ addEventListener("load", async () => {
       const records = M().records
       const teilerRow = $('[data-record="R3"]')
       check(
-        "Zeitraum: bester Teiler wie im Fachkern",
+        "Zeitraum: Bester Teiler wie im Fachkern, als „Bezeichnung: Wert“ (U5, D3)",
         !!records.bestTeiler &&
           !!teilerRow &&
-          txt(teilerRow).includes(`bester Teiler ${tools.formatValue(records.bestTeiler.value, 1)}`)
+          txt(teilerRow).includes(
+            `Bester Teiler: ${tools.formatValue(records.bestTeiler.value, 1)}`
+          )
       )
       const recordCards = Object.values(records).flatMap((r) =>
         !r ? [] : "cardId" in r ? [r.cardId] : Object.values(r).map((x) => x.cardId)

@@ -1,5 +1,6 @@
 // Zeilen der Rekorde R1–R8 (Plan L3, D12): Bezeichnung und Wert in der Wertung, rein, ohne React, damit Modelle wie
-// das von Start sie nutzen können, ohne eine Client-Komponente zu laden (Review N5).
+// das von Start sie nutzen können, ohne eine Client-Komponente zu laden (Review N5). Seit U5 (D3) in ganzen Worten,
+// gezeigt als „Bezeichnung: Wert“: „Meiste 10,9 (20 Schuss): 1“ statt „meiste 10,9, 20 Schuss 1“.
 
 import type { RecordRef } from "@vereinsheim/shot-core/analysis"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
@@ -41,26 +42,26 @@ export function recordRows(records: PeriodModel["records"], scoring: Scoring): R
   const rings = (r: RecordRef) => `${formatValue(r.value, ringDigits)} Ringe`
   const count = (r: RecordRef) => String(r.value)
   return [
-    ...perKey(records.bestCard, (k) => `Ergebnis, ${k} Schuss`, rings, "R1"),
-    ...perKey(records.bestSeries, (k) => `beste Serie zu ${k}`, rings, "R2"),
-    ...one(records.bestTeiler, "R3", "bester Teiler", (r) => formatValue(r.value, 1)),
+    ...perKey(records.bestCard, (k) => `Bestes Ergebnis (${k} Schuss)`, rings, "R1"),
+    ...perKey(records.bestSeries, (k) => `Beste Serie (${k} Schuss)`, rings, "R2"),
+    ...one(records.bestTeiler, "R3", "Bester Teiler", (r) => formatValue(r.value, 1)),
     ...one(
       records.tightestSeries,
       "R4s",
-      "engste Serie zu 10 (Streukreis)",
-      (r) => `${formatValue(r.value, 1)} mm`
+      "Engste Serie (10 Schuss)",
+      (r) => `${formatValue(r.value, 1)} mm Streukreis`
     ),
     ...perKey(
       records.tightestCard,
-      (k) => `engste Scheibe, ${k} Schuss`,
-      (r) => `${formatValue(r.value, 1)} mm`,
+      (k) => `Engste Scheibe (${k} Schuss)`,
+      (r) => `${formatValue(r.value, 1)} mm Streukreis`,
       "R4"
     ),
-    ...perKey(records.mostPerfect, (k) => `meiste 10,9, ${k} Schuss`, count, "R5"),
-    ...perKey(records.mostTens, (k) => `meiste Zehner, ${k} Schuss`, count, "R6z"),
-    ...perKey(records.mostInnerTens, (k) => `meiste Innenzehner, ${k} Schuss`, count, "R6i"),
-    ...one(records.longestTenRun, "R7", "längste Zehnerfolge", (r) => `${r.value} Schuss`),
-    ...one(records.bestForm, "R8", "beste Form (Ø über fünf Scheiben)", (r) =>
+    ...perKey(records.mostPerfect, (k) => `Meiste 10,9 (${k} Schuss)`, count, "R5"),
+    ...perKey(records.mostTens, (k) => `Meiste Zehner (${k} Schuss)`, count, "R6z"),
+    ...perKey(records.mostInnerTens, (k) => `Meiste Innenzehner (${k} Schuss)`, count, "R6i"),
+    ...one(records.longestTenRun, "R7", "Längste Zehnerfolge", (r) => `${r.value} Schuss`),
+    ...one(records.bestForm, "R8", "Beste Form (Ø über 5 Scheiben)", (r) =>
       formatValue(r.value, 2)
     ),
   ]
