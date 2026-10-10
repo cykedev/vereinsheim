@@ -7,6 +7,7 @@ import {
   FLAG_SUSPICIOUS,
   METRICS,
   inScoring,
+  inShotOrder,
   type MetricDefinition,
   type Scoring,
 } from "../metrics"
@@ -75,8 +76,13 @@ export function projectionVersion(
   return `p${PROJECTION_VERSION}-${fnv1a(parts.join("|"))}`
 }
 
-/** die Projektion einer Scheibe aus ihren Schüssen, für beide Wertungen und mit Probe (gefiltert wird beim Lesen) */
-export function cardProjection(card: PeriodCard): CardProjection {
+/**
+ * die Projektion einer Scheibe aus ihren Schüssen, für beide Wertungen und mit Probe (gefiltert wird beim Lesen). Die
+ * Schüsse erst in Abgabefolge: Der Streukreis (Welzl) rechnet je nach Folge in der letzten Stelle anders, und die
+ * gespeicherte Projektion soll nicht davon abhängen, in welcher Folge der Aufrufer sie liefert.
+ */
+export function cardProjection(input: PeriodCard): CardProjection {
+  const card: PeriodCard = { ...input, shots: inShotOrder(input.shots) }
   const values: CardProjection["values"] = {}
   for (const metric of CARD_METRICS) {
     const [value] = cardValues([card], metric, metric.scoring ?? "decimal", {
@@ -105,6 +111,8 @@ export function projectedValues(
   scoring: Scoring,
   options: { includeProbeOnly?: boolean } = {}
 ): CardValue[] {
+  if (!metric.scopes.includes("card"))
+    throw new RangeError(`${metric.key}: keine Kennzahl der Ebene Scheibe, nicht in der Projektion`)
   const key = inScoring(metric, scoring).key
   return byStart(cards).flatMap((card) => {
     if (card.projection.probeOnly && !options.includeProbeOnly) return []

@@ -15,6 +15,13 @@ import { FLAG_COUNTED_AS_MATCH, periodRecords } from "./records"
 
 const DAY = 86_400_000
 
+/** FNV-1a über 32 Bit: ein Fingerabdruck der Ausgabe, ohne Node-Typen im Paket */
+function fnv1a(text: string): string {
+  let hash = 0x811c9dc5
+  for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193)
+  return (hash >>> 0).toString(16).padStart(8, "0")
+}
+
 /** die echten Scheiben des Users (Lage und Werte, Zeiten erzeugt), ab 20 Schuss */
 const own: PeriodCard[] = [...new Set(OWN_SHOTS.map((s) => s.card))].flatMap((n) => {
   const rows = OWN_SHOTS.filter((s) => s.card === n)
@@ -122,6 +129,25 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     const bumped = METRICS.map((m, i) => (i === 0 ? { ...m, version: m.version + 1 } : m))
     expect(projectionVersion(bumped)).not.toBe(base)
     expect(cardProjection(CARDS[0]).version).toBe(base)
+  })
+
+  it("unabhängig von der Folge, in der die Schüsse kommen (Abgabefolge zählt)", () => {
+    for (const c of CARDS) {
+      const shuffled = [...c.shots].reverse()
+      for (let i = 0; i < shuffled.length; i += 3) shuffled.push(...shuffled.splice(i, 1))
+      expect(cardProjection({ ...c, shots: shuffled }), c.id).toEqual(cardProjection(c))
+    }
+  })
+
+  it("Version und Ausgabe hängen zusammen: Ändert sich die Ausgabe, muss die Version steigen", () => {
+    const json = JSON.stringify(CARDS.map((c) => ({ ...cardProjection(c), version: undefined })))
+    const output = `${json.length}-${fnv1a(json)}`
+    // Wird dieser Test rot, rechnet die Projektion anders als die gespeicherten: PROJECTION_VERSION (oder die
+    // `version` der geänderten Kennzahl) erhöhen, damit `refreshProjections` sie neu rechnet, dann beide Werte setzen.
+    expect({ version: projectionVersion(), output }).toEqual({
+      version: "p1-26104e11",
+      output: "43901-8d09670d",
+    })
   })
 
   it("Umfang und Merkmale der Projektion", () => {

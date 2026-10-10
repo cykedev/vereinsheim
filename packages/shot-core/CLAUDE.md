@@ -78,8 +78,11 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   Projektion rechnet beide Wertungen und mit Probe; gefiltert wird beim Lesen wie in `cardValues` und `periodRecords`.
   `projection.test.ts` hält die Gleichheit an den echten Scheiben und jedem Sonderfall fest. Ändert sich eine Formel,
   steigt ihre `version` und damit `projectionVersion()`; ändert sich ein Kandidat oder die Form der Projektion, steigt
-  `PROJECTION_VERSION`. Eine neue Filterregel in `periodRecords` oder `cardValues` braucht dieselbe in
-  `projectedRecords`/`projectedValues` und eine Testscheibe, an der sie greift.
+  `PROJECTION_VERSION`. Das gilt auch für geteilte Logik dahinter (`cardShots`, `asOnPrintout`, Rundung, Streukreis):
+  Ein Test schreibt Version und Ausgabe an den Fixtures fest und wird rot, wenn sich nur die Ausgabe ändert. Die
+  Projektion rechnet in Abgabefolge (`inShotOrder`), unabhängig von der Folge der Eingabe. Eine neue Filterregel in
+  `periodRecords` oder `cardValues` braucht dieselbe in `projectedRecords`/`projectedValues` und eine Testscheibe, an
+  der sie greift.
 - **`toBeCloseTo` nimmt null als 0.** Wo eine Kennzahl 0 ergeben soll, erst `not.toBeNull()` prüfen
   (Helfer `expectNear` in `metrics.test.ts`).
 - **Eine Scheibe wie am Ausdruck** (U4, [[adr-027]]): `asOnPrintout` gibt mit Wertung nur die Wertungsschüsse
