@@ -189,21 +189,24 @@ model DeleteLock {
 
 // Konto eines erwachsenen Mitglieds; keine Selbstregistrierung, Admin legt an ([[spiegel-privacy]])
 model User {
-  id             String        @id @default(cuid())
-  name           String?
-  email          String        @unique
-  passwordHash   String
+  id                 String        @id @default(cuid())
+  name               String?
+  email              String        @unique
+  passwordHash       String
   // steigt bei Passwortwechsel und Reset: ältere Sitzungen (JWT) gelten nicht mehr
-  sessionVersion Int           @default(0)
-  role           UserRole      @default(USER)
+  sessionVersion     Int           @default(0)
+  role               UserRole      @default(USER)
   // deaktiviert statt gelöscht
-  isActive       Boolean       @default(true)
+  isActive           Boolean       @default(true)
+  // ein Passwort vom Admin (neues Konto, Zurücksetzen) muss der Schütze ersetzen, bevor er Daten sieht: sonst kennte der
+  // Admin es und sähe seine Schüsse ([[spiegel-privacy]])
+  mustChangePassword Boolean       @default(false)
   // SportpassIDs der Zuordnung (mehrere je Konto, SF-39) kommen mit SP-1.7
-  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
-  cards          Card[]
-  periods        NamedPeriod[]
-  deleteLocks    DeleteLock[]
+  createdAt          DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime      @updatedAt @db.Timestamptz(3)
+  cards              Card[]
+  periods            NamedPeriod[]
+  deleteLocks        DeleteLock[]
 }
 
 // benannter Zeitraum des Schützen („Vorbereitung Landesmeisterschaft“), Tage in der Anzeige-Zone

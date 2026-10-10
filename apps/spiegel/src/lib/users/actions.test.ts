@@ -5,7 +5,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import { db } from "@/lib/db"
 
-const mocks = vi.hoisted(() => ({ session: null as null | { user: { id: string; role: string } } }))
+const mocks = vi.hoisted(() => ({
+  session: null as null | { user: { id: string; role: string; mustChangePassword?: boolean } },
+}))
 vi.mock("@/lib/auth-helpers", () => ({
   getAuthSession: async () => mocks.session,
   isAdmin: (role: string) => role === "ADMIN",
@@ -40,11 +42,15 @@ beforeEach(() => {
 })
 
 describe("createUser", () => {
-  it("nur ein angemeldeter Admin", async () => {
+  it("nur ein angemeldeter Admin, der sein Passwort vom Admin schon ersetzt hat", async () => {
     mocks.session = null
     expect(await createUser(null, form({}))).toEqual({ error: "Nicht angemeldet" })
     mocks.session = { user: { id: adminId, role: "USER" } }
     expect(await createUser(null, form({}))).toEqual({ error: "Keine Berechtigung" })
+    mocks.session = { user: { id: adminId, role: "ADMIN", mustChangePassword: true } }
+    expect(await createUser(null, form({}))).toEqual({
+      error: "Bitte zuerst das eigene Passwort ändern.",
+    })
   })
 
   it("legt ein Konto an: E-Mail normalisiert, Passwort als Hash; doppelt geht nicht", async () => {
@@ -56,7 +62,13 @@ describe("createUser", () => {
     }
     expect(await createUser(null, form(fields))).toEqual({ success: true })
     const user = await db.user.findUniqueOrThrow({ where: { email: mail("neu") } })
-    expect(user).toMatchObject({ name: "Neu", role: "USER", isActive: true })
+    // das Passwort kennt der Admin: erst ersetzen, dann Daten
+    expect(user).toMatchObject({
+      name: "Neu",
+      role: "USER",
+      isActive: true,
+      mustChangePassword: true,
+    })
     expect(await bcrypt.compare("vorlaeufig-1234", user.passwordHash)).toBe(true)
     expect(await createUser(null, form(fields))).toEqual({
       error: "Diese E-Mail-Adresse wird bereits verwendet.",
@@ -91,6 +103,7 @@ describe("updateUser", () => {
     expect(result).toEqual({ success: true })
     const after = await db.user.findUniqueOrThrow({ where: { id: user.id } })
     expect(after.sessionVersion).toBe(user.sessionVersion + 1)
+    expect(after.mustChangePassword).toBe(true)
     expect(await bcrypt.compare("neu-und-lang-12", after.passwordHash)).toBe(true)
   })
 

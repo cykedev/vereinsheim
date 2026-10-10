@@ -1,6 +1,7 @@
 "use client"
 
 import { signOut } from "next-auth/react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -71,6 +72,12 @@ export function ProfileScreen({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/profile/password"
+            className="rounded-full border border-line-strong px-3.5 py-2 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            Passwort ändern
+          </Link>
           {isAdmin && (
             <RouteLink
               route={{ page: "admin", section: null }}

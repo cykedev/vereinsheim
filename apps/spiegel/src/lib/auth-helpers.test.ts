@@ -77,6 +77,18 @@ describe("getAuthSession", () => {
     expect(await getAuthSession()).toBeNull()
   })
 
+  it("mit einem Passwort vom Admin geht jede Seite erst zur Passwortseite, nur sie selbst nicht", async () => {
+    mocks.getServerSession.mockResolvedValue(sessionOf(site.ownerId, 0))
+    await db.user.update({ where: { id: site.ownerId }, data: { mustChangePassword: true } })
+    try {
+      await expect(requireSession()).rejects.toThrow("redirect /profile/password")
+      await expect(requireAdmin()).rejects.toThrow("redirect /profile/password")
+      expect((await requireSession({ passwordChange: true })).user.mustChangePassword).toBe(true)
+    } finally {
+      await db.user.update({ where: { id: site.ownerId }, data: { mustChangePassword: false } })
+    }
+  })
+
   it("requireSession leitet ohne gültige Sitzung zur Anmeldung", async () => {
     mocks.getServerSession.mockResolvedValue(null)
     await expect(requireSession()).rejects.toThrow("redirect /login")

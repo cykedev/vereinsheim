@@ -9,6 +9,8 @@ declare module "next-auth" {
       id: string
       role: string
       sessionVersion: number
+      /** aus der Datenbank (`getAuthSession`): ein Passwort vom Admin, das der Schütze erst ersetzen muss */
+      mustChangePassword?: boolean
     } & DefaultSession["user"]
   }
 }

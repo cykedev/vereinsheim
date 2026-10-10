@@ -19,6 +19,7 @@ async function adminId(): Promise<string | ActionResult> {
   const session = await getAuthSession()
   if (!session) return { error: "Nicht angemeldet" }
   if (!isAdmin(session.user.role)) return { error: "Keine Berechtigung" }
+  if (session.user.mustChangePassword) return { error: "Bitte zuerst das eigene Passwort ändern." }
   return session.user.id
 }
 
@@ -47,6 +48,8 @@ export async function createUser(
       email,
       passwordHash: await bcrypt.hash(parsed.data.tempPassword, BCRYPT_COST),
       role: parsed.data.role,
+      // das Passwort kennt der Admin: bei der ersten Anmeldung ersetzen
+      mustChangePassword: true,
     },
   })
   revalidatePath("/admin/users")
@@ -101,7 +104,9 @@ export async function updateUser(
       email,
       role: parsed.data.role,
       isActive: parsed.data.isActive,
-      ...(tempPassword ? { passwordHash: await bcrypt.hash(tempPassword, BCRYPT_COST) } : {}),
+      ...(tempPassword
+        ? { passwordHash: await bcrypt.hash(tempPassword, BCRYPT_COST), mustChangePassword: true }
+        : {}),
       ...(endSessions ? { sessionVersion: { increment: 1 } } : {}),
     },
   })

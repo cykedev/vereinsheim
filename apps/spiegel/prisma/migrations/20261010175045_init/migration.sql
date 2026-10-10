@@ -127,6 +127,7 @@ CREATE TABLE "User" (
     "sessionVersion" INTEGER NOT NULL DEFAULT 0,
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "mustChangePassword" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ(3) NOT NULL,
 
