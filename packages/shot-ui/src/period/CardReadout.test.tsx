@@ -71,9 +71,15 @@ describe("Ablesung einer Scheibe (D9)", () => {
     expect(render({ point: { ...point, band: null } })).not.toContain("Formband")
   })
 
-  it("ohne Lage keine kleine Scheibe", () => {
+  it("ohne Lage keine kleine Scheibe; während die Lagen laden, ein leerer Platz", () => {
     expect(render({ marks: [] })).toContain("ohne Lage")
     expect(render({ marks: [] })).not.toMatch(/<svg viewBox=/)
+    const loading = render({ marks: null })
+    expect(loading).not.toContain("ohne Lage")
+    expect(loading).not.toMatch(/<svg viewBox=/)
+    expect(loading).toMatch(
+      /<span aria-hidden="true" data-marks-loading="true" class="[^"]*aspect-square/
+    )
   })
 
   it("ohne Wert ein Strich, kein Abstand", () => {

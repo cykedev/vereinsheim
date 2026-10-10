@@ -386,3 +386,34 @@ export function periodModel(input: {
   }
   return { ...model, reading: periodReading(model, state.chosen) }
 }
+
+/** eine Scheibe für den Browser: die Projektion ohne Werte und Rekorde (die Bausteine lesen Art und Schusszahl) */
+const lightCard = (card: ProjectedCard): ProjectedCard => ({
+  ...card,
+  projection: {
+    version: card.projection.version,
+    probeOnly: card.projection.probeOnly,
+    suspicious: card.projection.suspicious,
+    printedShots: card.projection.printedShots,
+    values: {},
+    records: { decimal: null, rings: null },
+  },
+})
+
+/**
+ * Das Modell für den Browser (Fortschritt in der App, SP-1.8): Rechnet der Server `periodModel`, gehen die Scheiben ohne
+ * die Werte und Rekorde ihrer Projektion mit. Die Bausteine (`PeriodChart`, `CardList`, `CardReadout`, `PeriodResult`,
+ * `PeriodInsights`) lesen von einer Scheibe nur Id, Beginn, Art, „nur Probe“ und Schusszahl; die Werte der Kennzahl
+ * stehen in `values`. Ein Test hält fest, dass sie damit dasselbe zeichnen. Auf dem leichten Modell nicht neu rechnen.
+ */
+export function lightPeriodModel(model: PeriodModel): PeriodModel {
+  const cards = model.cards.map(lightCard)
+  const byId = new Map(cards.map((card) => [card.id, card]))
+  return {
+    ...model,
+    cards,
+    reading: model.reading
+      ? { ...model.reading, card: byId.get(model.reading.card.id) ?? lightCard(model.reading.card) }
+      : null,
+  }
+}

@@ -18,8 +18,11 @@ import { cardKind, isProbeOnly } from "./model"
 
 export interface CardReadoutProps {
   card: ProjectedCard
-  /** die Lagen der Scheibe für die kleine Scheibe (`markShots(cardMarks(…))`); leer: „ohne Lage“ */
-  marks: readonly MarkShot[]
+  /**
+   * die Lagen der Scheibe für die kleine Scheibe (`markShots(cardMarks(…))`); leer: „ohne Lage“; null: sie laden noch
+   * (die App holt sie zu einer neuen Wahl nach), ein leerer Platz gleicher Größe
+   */
+  marks: readonly MarkShot[] | null
   target: TargetImage
   /** Wert der Kennzahl des Verlaufs; null: die Scheibe hat keinen */
   value: CardValue | null
@@ -119,7 +122,13 @@ export function CardReadout({
             </p>
           )}
         </div>
-        {marks.length > 0 ? (
+        {marks === null ? (
+          <span
+            aria-hidden="true"
+            data-marks-loading="true"
+            className="block aspect-square w-full"
+          />
+        ) : marks.length > 0 ? (
           <MiniTarget target={target} view={groupView(target, marks)} shots={marks} />
         ) : (
           <p className="text-[13px] text-muted-foreground">ohne Lage</p>
