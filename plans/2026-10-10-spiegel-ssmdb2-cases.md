@@ -29,7 +29,7 @@ aktuell; ein eigener Befehl spielt die Fälle in `mariadb:11` ein und liest nach
   | 1 | Zehntel mit Punkt („10.1“) |
   | 2 | ganzer Ring („9“), Innenzehner „10*“ |
   | 5 | „***“, mit Ring und Zehntel 0, Teiler vorhanden |
-  | 7 | Zehntel und Teiler in 1/10 mm („9.9 851T“, `Teiler01` 8510) |
+  | 7 | Zehntel und Teiler in 1/100 mm („9.9 851T“, `Teiler01` 8510) |
   | 8 | Ring und Teiler („9 995T“) |
 
 - **Probe** hat eigene Zeilen in `Serien` (Stellung 0, Serien zu zehn); `Treffer.Serie` zählt je Stellung.
