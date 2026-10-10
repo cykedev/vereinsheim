@@ -18,7 +18,7 @@ CREATE TABLE "Site" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "timeZone" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Site_pkey" PRIMARY KEY ("id")
 );
@@ -28,7 +28,7 @@ CREATE TABLE "Source" (
     "id" SERIAL NOT NULL,
     "siteId" INTEGER NOT NULL,
     "epoch" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Source_pkey" PRIMARY KEY ("id")
 );
@@ -41,8 +41,8 @@ CREATE TABLE "Bridge" (
     "tokenHash" TEXT NOT NULL,
     "version" TEXT,
     "lastSeenAt" TIMESTAMPTZ(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "revokedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "revokedAt" TIMESTAMPTZ(3),
 
     CONSTRAINT "Bridge_pkey" PRIMARY KEY ("id")
 );
@@ -54,8 +54,8 @@ CREATE TABLE "RawRow" (
     "scheibenId" INTEGER NOT NULL,
     "table" TEXT NOT NULL,
     "checksum" TEXT NOT NULL,
-    "values" JSONB NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "values" JSON NOT NULL,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "RawRow_pkey" PRIMARY KEY ("id")
 );
@@ -64,7 +64,7 @@ CREATE TABLE "RawRow" (
 CREATE TABLE "RawColumnSet" (
     "id" SERIAL NOT NULL,
     "checksum" TEXT NOT NULL,
-    "columns" JSONB NOT NULL,
+    "columns" JSON NOT NULL,
 
     CONSTRAINT "RawColumnSet_pkey" PRIMARY KEY ("id")
 );
@@ -75,6 +75,8 @@ CREATE TABLE "RawSnapshot" (
     "sourceId" INTEGER NOT NULL,
     "scheibenId" INTEGER NOT NULL,
     "sequence" BIGINT NOT NULL,
+    "lastSequence" BIGINT NOT NULL,
+    "lastObservedAt" TIMESTAMPTZ(3) NOT NULL,
     "bridgeId" INTEGER,
     "contractVersion" INTEGER NOT NULL,
     "sourceVersion" TEXT,
@@ -95,8 +97,10 @@ CREATE TABLE "Tombstone" (
     "id" SERIAL NOT NULL,
     "sourceId" INTEGER NOT NULL,
     "scheibenId" INTEGER NOT NULL,
+    "cycle" INTEGER NOT NULL DEFAULT 0,
+    "startedAt" TIMESTAMPTZ(3) NOT NULL,
     "reason" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Tombstone_pkey" PRIMARY KEY ("id")
 );
@@ -107,7 +111,9 @@ CREATE TABLE "DeleteLock" (
     "userId" TEXT NOT NULL,
     "sourceId" INTEGER NOT NULL,
     "scheibenId" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "cycle" INTEGER NOT NULL DEFAULT 0,
+    "startedAt" TIMESTAMPTZ(3) NOT NULL,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "DeleteLock_pkey" PRIMARY KEY ("id")
 );
@@ -118,9 +124,8 @@ CREATE TABLE "User" (
     "name" TEXT,
     "email" TEXT NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'USER',
-    "sportpassId" BIGINT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -132,7 +137,7 @@ CREATE TABLE "NamedPeriod" (
     "name" TEXT NOT NULL,
     "from" DATE NOT NULL,
     "to" DATE,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "NamedPeriod_pkey" PRIMARY KEY ("id")
 );
@@ -163,6 +168,8 @@ CREATE TABLE "Card" (
     "id" TEXT NOT NULL,
     "sourceId" INTEGER,
     "scheibenId" INTEGER,
+    "cycle" INTEGER NOT NULL DEFAULT 0,
+    "lastSequence" BIGINT,
     "ownerId" TEXT,
     "sportpassId" BIGINT,
     "disciplineId" INTEGER NOT NULL,
@@ -173,13 +180,12 @@ CREATE TABLE "Card" (
     "kind" "CardKind" NOT NULL,
     "state" "CardState" NOT NULL,
     "complete" BOOLEAN NOT NULL,
-    "official" "Scoring",
     "flags" TEXT[],
     "origin" "CardOrigin" NOT NULL,
     "currentRevisionId" BIGINT,
-    "deletedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMPTZ(3),
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ(3) NOT NULL,
 
     CONSTRAINT "Card_pkey" PRIMARY KEY ("id")
 );
@@ -192,7 +198,7 @@ CREATE TABLE "CardRevision" (
     "contentHash" TEXT NOT NULL,
     "rawSnapshotId" BIGINT,
     "reason" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "CardRevision_pkey" PRIMARY KEY ("id")
 );
@@ -230,7 +236,7 @@ CREATE TABLE "CardProjection" (
     "printedShots" INTEGER NOT NULL,
     "values" JSONB NOT NULL,
     "records" JSONB NOT NULL,
-    "computedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "computedAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "CardProjection_pkey" PRIMARY KEY ("cardId")
 );
@@ -244,7 +250,7 @@ CREATE TABLE "Printout" (
     "size" INTEGER NOT NULL,
     "footerId" TEXT,
     "printedAt" TIMESTAMPTZ(3),
-    "storedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "storedAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Printout_pkey" PRIMARY KEY ("id")
 );
@@ -265,10 +271,13 @@ CREATE UNIQUE INDEX "RawColumnSet_checksum_key" ON "RawColumnSet"("checksum");
 CREATE UNIQUE INDEX "RawSnapshot_sourceId_scheibenId_sequence_key" ON "RawSnapshot"("sourceId", "scheibenId", "sequence");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Tombstone_sourceId_scheibenId_key" ON "Tombstone"("sourceId", "scheibenId");
+CREATE UNIQUE INDEX "Tombstone_sourceId_scheibenId_cycle_key" ON "Tombstone"("sourceId", "scheibenId", "cycle");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "DeleteLock_userId_sourceId_scheibenId_key" ON "DeleteLock"("userId", "sourceId", "scheibenId");
+CREATE INDEX "DeleteLock_sourceId_scheibenId_idx" ON "DeleteLock"("sourceId", "scheibenId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DeleteLock_userId_sourceId_scheibenId_cycle_key" ON "DeleteLock"("userId", "sourceId", "scheibenId", "cycle");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
@@ -295,7 +304,7 @@ CREATE INDEX "Card_ownerId_startedAt_idx" ON "Card"("ownerId", "startedAt");
 CREATE INDEX "Card_sportpassId_idx" ON "Card"("sportpassId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Card_sourceId_scheibenId_key" ON "Card"("sourceId", "scheibenId");
+CREATE UNIQUE INDEX "Card_sourceId_scheibenId_cycle_key" ON "Card"("sourceId", "scheibenId", "cycle");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CardRevision_cardId_number_key" ON "CardRevision"("cardId", "number");
@@ -308,6 +317,9 @@ CREATE UNIQUE INDEX "Shot_revisionId_stellung_treffer_key" ON "Shot"("revisionId
 
 -- CreateIndex
 CREATE INDEX "CardProjection_version_idx" ON "CardProjection"("version");
+
+-- CreateIndex
+CREATE INDEX "Printout_footerId_idx" ON "Printout"("footerId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Printout_cardId_sha256_key" ON "Printout"("cardId", "sha256");

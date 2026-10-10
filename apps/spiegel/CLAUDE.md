@@ -47,8 +47,11 @@ nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` 
   `@vereinsheim/ssmdb2-cases/frozen` (als Empfangszeit die Beobachtungszeit: die Fälle sind teils auf Tage nach heute
   datiert). `refreshProjections` in Tests nur mit `sourceId`.
 - **Prisma 7 wie Ringwerk:** Client in `src/generated/prisma` (gitignored), `@prisma/adapter-pg`, keine URL im Schema.
-  Nach einer Schemaänderung `prisma generate`, sonst meldet der Client unbekannte Felder. `migrate dev` läuft nur
-  interaktiv: die Migration mit `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script`
-  erzeugen, als `prisma/migrations/<Zeit>_<Name>/migration.sql` ablegen, mit `prisma migrate deploy` anwenden.
-  `prisma migrate reset` verlangt eine ausdrückliche Zustimmung des Users; nie umgehen.
+  Nach einer Schemaänderung `prisma generate`, sonst meldet der Client unbekannte Felder.
+- **Bis zum ersten Deploy (SP-1.9) genau eine Migration** (User, 10. Oktober 2026): `prisma/migrations/*_init`. Eine
+  Schemaänderung ersetzt sie, statt eine zweite anzulegen: `prisma migrate diff --from-empty --to-schema
+prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/migration.sql`, gegengeprüft in einem
+  Wegwerf-Postgres (`migrate diff --from-config-datasource` gegen das Schema leer). Die Dev-Datenbank zieht der User
+  nach (`pnpm --filter spiegel exec prisma migrate reset --force`); ein Agent setzt sie nicht zurück, Prisma und der
+  Auto-Modus verlangen dafür den User. Ab dem ersten Deploy nur noch neue Migrationen.
 - Ausgabe in Werkzeugen über `process.stdout.write`, nicht `console.log` (Lint).

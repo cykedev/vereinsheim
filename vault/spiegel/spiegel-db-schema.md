@@ -85,4 +85,4 @@ Die Übersichten rechnen mit `projectedValues` und `projectedRecords`; was dabei
 - Anmeldung, Admin, Ratenbegrenzung, Speicher des leeren Skeletts unter 256 MB (SP-1.6 a Teil 2).
 - Modelle von Liste, Fortschritt und Start auf `ProjectedCard` (SP-1.8).
 - Noch nicht im Schema: Stand, Schützen-Identität, SportpassIDs und Zuordnung mit Protokoll (SP-1.7), amtliche Summen je Serie, Einheit, Notiz, Tag, Ausrüstung ([[spiegel-data-model]]).
-- Drei Migrationen statt einer (`init`, `raw_snapshot_last_sequence`, `review_fixes`): `migrate dev` läuft nur interaktiv und ein Zurücksetzen der Dev-Datenbank verlangt die Zustimmung des Users; bis zum ersten Deploy (SP-1.9) lassen sie sich zusammenfassen.
+- **Eine Migration bis zum ersten Deploy** (User, 10. Oktober 2026): Bis SP-1.9 ersetzt jede Schemaänderung die eine Migration `init`, statt eine weitere anzulegen; die Dev-Datenbank setzt der User danach zurück. Ab dem ersten Deploy nur noch neue Migrationen.
