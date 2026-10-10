@@ -94,7 +94,7 @@ export function ListView({ header, query, onQuery, scoring }: ListViewProps) {
       <LaborPanel
         {...header}
         address={urlFromRoute({ page: "cards", query, evening: null })}
-        hint="Die Scheiben nach Abend: Luftpistole sind deine echten aus der Vereinsanlage (mit mehreren Scheiben am 12. November 2024 und am 25. September 2026), das Luftgewehr ist erfunden."
+        hint="Die Scheiben nach Abend: Luftpistole sind deine echten aus der Vereinsanlage (mit mehreren Scheiben am 12. November 2024 und am 25. September 2026), das Luftgewehr ist erfunden, bis auf zwei deiner Scheiben (24. Oktober 2025, 9. Januar 2026)."
       />
     </div>
   )

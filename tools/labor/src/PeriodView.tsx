@@ -308,7 +308,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
       <LaborPanel
         {...header}
         address={urlFromRoute(progressRoute(state, null))}
-        hint="Erfundene Saison vom 6. April bis 27. September 2026: Luftgewehr mit Formknick im Juni und neuer Munition ab August, Luftpistole; „jetzt“ ist der 30. September."
+        hint="Luftpistole: deine echten Scheiben vom 18. Oktober 2024 bis 9. Oktober 2026. Luftgewehr erfunden vom 6. April bis 27. September 2026 (Formknick im Juni, neue Munition ab August), dazu zwei deiner Scheiben; „jetzt“ ist der 10. Oktober."
       />
     </div>
   )

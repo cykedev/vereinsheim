@@ -1,13 +1,11 @@
-import { cardValues, comparePeriods } from "@vereinsheim/shot-core/analysis"
+import { cardValues, comparePeriods, recordEligible } from "@vereinsheim/shot-core/analysis"
 import { metricByKey } from "@vereinsheim/shot-core/metrics"
-import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
-import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
 import { eveningDay } from "@vereinsheim/shot-ui/list/evenings"
 import { isCardId, isNamedPeriodId } from "@vereinsheim/shot-ui/nav/routes"
 
-import { OWN_CARDS } from "./ownCards"
+import { OWN_CARDS, type OwnCard } from "./ownCards"
 import {
   NAMED_PERIODS,
   ownCardOmitted,
@@ -23,7 +21,7 @@ const lg = season().filter((c) => c.family === "lg-freihand")
 const lp = season().filter((c) => c.family === "lp-freihand")
 /** das erfundene Luftgewehr bis zum 27. September, wie vor den echten Scheiben */
 const invented = lg.filter(
-  (c) => !c.own && c.card.startedAtMs < Date.parse("2026-09-28T00:00:00+02:00")
+  (c) => c.own === undefined && c.card.startedAtMs < Date.parse("2026-09-28T00:00:00+02:00")
 )
 /** der Abend einer Scheibe in Berlin */
 const evening = (c: (typeof lg)[number]) => eveningDay(c.card.startedAtMs, SEASON_TIME_ZONE)
@@ -46,7 +44,7 @@ const meanSigma = (cards: typeof lg) => {
 describe("Saison im Labor (Plan L3, D17)", () => {
   it("Luftgewehr erfunden und zwei echte, Luftpistole nur echt; keine nach jetzt, immer gleich", () => {
     expect(lg).toHaveLength(85)
-    expect(lg.filter((c) => c.own).map((c) => c.own)).toEqual([18, 25])
+    expect(lg.filter((c) => c.own !== undefined).map((c) => c.own)).toEqual([18, 25])
     expect(lp).toHaveLength(30)
     expect(lp.every((c) => c.own !== undefined && c.card.kind === "training")).toBe(true)
     expect(season().every((c) => c.card.startedAtMs < SEASON_NOW_MS)).toBe(true)
@@ -58,20 +56,34 @@ describe("Saison im Labor (Plan L3, D17)", () => {
     expect(shown).toHaveLength(32)
     for (const c of shown) {
       const own = OWN_CARDS.find((o) => o.n === c.own)!
+      // Zehntel und Innenzehner sind Meytons eigene, das Labor rechnet sie aus der Lage
       expect(
-        c.card.shots.map((s) => s.decimalTenths),
+        c.card.shots.map((s) => [s.decimalTenths, s.innerTen]),
         `Scheibe ${own.n}`
-      ).toEqual(
-        own.shots.map((s) => scoreFromCoordinates(TARGETS[c.target], s.xUm, s.yUm).decimalTenths)
-      )
-      expect(
-        c.card.shots.map((s) => s.decimalTenths),
-        `Scheibe ${own.n}`
-      ).toEqual(own.shots.map((s) => s.decimalTenths))
-      expect(c.card.shots.map((s) => s.kind)).toEqual(
-        own.shots.map((s) => (s.stellung === 1 ? "match" : "probe"))
-      )
+      ).toEqual(own.shots.map((s) => [s.decimalTenths, s.innerTen]))
     }
+  })
+
+  it("ein Ausdruck als unabhängiger Anker (vault/meyton/meyton-printout.md)", () => {
+    const printout = season().find((c) => c.own === 35)!
+    const match = printout.card.shots.filter((s) => s.kind === "match")
+    const sum = (shots: typeof match, key: "ring" | "decimalTenths") =>
+      shots.reduce((total, s) => total + (s[key] ?? 0), 0)
+    // 352 (371,4), Serien …, Innenzehner 2
+    expect(sum(match, "ring")).toBe(352)
+    expect(sum(match, "decimalTenths")).toBe(3714)
+    expect(
+      [1, 2, 3, 4].map((k) =>
+        sum(
+          match.filter((s) => s.series === k),
+          "ring"
+        )
+      )
+    ).toEqual([88, 88, 88, 88])
+    expect(match.filter((s) => s.innerTen)).toHaveLength(2)
+    // „Wertung …“ im Kopf ist der letzte Schuss. Für die Winterzeit gibt es keinen
+    // solchen Anker; dort prüft nur der Abend (unten), dass die Zeiten in UTC stehen.
+    expect(new Date(match.at(-1)!.firedAtMs!).toISOString().slice(0, 16)).toBe("2026-01-01T17:00")
   })
 
   it("weggelassen: ohne Scheibenbild (Zimmerstutzen, Schach) und verdeckt (König, SF-19)", () => {
@@ -82,27 +94,41 @@ describe("Saison im Labor (Plan L3, D17)", () => {
       [12, "LP Schach 6x6", "ohne Scheibenbild"],
       [21, "König LP", "verdeckt"],
     ])
+    // verdeckt ist auch die Anzeigeart 10 (Lage sichtbar), ab dem ersten Wertungsschuss (SF-19, SF-74)
+    const lp40 = OWN_CARDS.find((o) => o.n === 36)!
+    const hidden = (display: number): OwnCard => ({
+      ...lp40,
+      shots: lp40.shots.map((s, i) => (i === 5 ? { ...s, display } : s)),
+    })
+    expect(ownCardOmitted(hidden(10))).toBe("verdeckt")
+    expect(ownCardOmitted(hidden(5))).toBe("verdeckt")
+    expect(ownCardOmitted(hidden(2))).toBeNull()
   })
 
-  it("amtliche Wertung aus der Anzeigeart, unvollständig mit Merkmal und nicht für Rekorde", () => {
+  it("amtliche Wertung aus der Disziplin, nie aus der Anzeigeart (SF-74); unvollständig mit Merkmal, ohne Rekord", () => {
     const byOwn = (n: number) => season().find((c) => c.own === n)!.card
+    // Luftpistole in ganzen Ringen wie am Ausdruck vom 2. Oktober („352 (371,4)“)
     expect(byOwn(36).official).toBe("rings")
-    // LP 20 mit Anzeigeart 7 (Zehntel und bester Teiler)
-    expect(byOwn(27).official).toBe("decimal")
-    // nur Probe hat keine
+    // LP 20 mit der Anzeigeart 7 (Zehntel und bester Teiler) am Monitor: trotzdem ganze Ringe
+    expect(byOwn(27).official).toBe("rings")
+    // nur Probe hat keine, die Trainings des Luftgewehrs sind unbekannt
     expect(byOwn(30).official).toBeUndefined()
+    expect(byOwn(18).official).toBeUndefined()
+    expect(byOwn(25).official).toBeUndefined()
     expect(byOwn(36)).toMatchObject({ complete: true })
     expect(byOwn(36).flags).toBeUndefined()
     // 25 von 40 und 40 von 60
     for (const n of [29, 28]) {
       expect(byOwn(n).complete, `Scheibe ${n}`).toBe(false)
       expect(byOwn(n).flags).toEqual(["unvollstaendig"])
+      expect(recordEligible(byOwn(n)), `Scheibe ${n}`).toBe(false)
     }
+    expect(recordEligible(byOwn(36))).toBe(true)
     // ein Training nur aus Probe ist fertig, seine Zahl ist die der Probe
     expect(byOwn(33).complete).toBe(true)
   })
 
-  it("Zeiten in Berlin, Sommer- und Winterzeit; der letzte Abend ist ein Mischabend", () => {
+  it("Zeiten aus den Daten in UTC, Abende in Berlin; der letzte Abend ist ein Mischabend", () => {
     const byOwn = (n: number) => season().find((c) => c.own === n)!
     // Ortszeit des Stands nach UTC: 19:13 MESZ (UTC+2), 19:54 MEZ (UTC+1), 19:17 MESZ
     expect(utc(byOwn(3))).toBe("2024-10-18T17:13:33.990Z")
@@ -204,7 +230,7 @@ describe("Saison im Labor (Plan L3, D17)", () => {
 
   it("amtliche Wertung des erfundenen Luftgewehrs: Wettkampf in ganzen Ringen, Training in Zehnteln, nur Probe ohne", () => {
     const probeOnly = (c: (typeof lg)[number]) => c.card.shots.every((s) => s.kind === "probe")
-    for (const c of lg.filter((c) => !c.own)) {
+    for (const c of lg.filter((c) => c.own === undefined)) {
       const expected = probeOnly(c)
         ? undefined
         : c.card.kind === "competition"

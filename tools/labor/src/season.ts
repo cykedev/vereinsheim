@@ -14,7 +14,7 @@ import {
   type FamilyId,
 } from "@vereinsheim/shot-core/discipline"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
-import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
+import { TARGETS, type TargetId, type Weapon } from "@vereinsheim/shot-core/targets"
 import { eveningDay } from "@vereinsheim/shot-ui/list/evenings"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
@@ -173,35 +173,44 @@ function makeCard(
   }
 }
 
-/** Anzeigeart der Wertungsschüsse (`Treffer.Wertung`) → amtliche Wertung, wie `PeriodCard.official` sie beschreibt */
-const OFFICIAL_BY_DISPLAY: Readonly<Record<number, Scoring>> = {
-  1: "decimal",
-  7: "decimal",
-  2: "rings",
-  8: "rings",
+/**
+ * verdeckt am Monitor (5 komplett, 10 mit sichtbarer Lage): Eine solche Scheibe bleibt ab dem ersten verdeckten
+ * Wertungsschuss in der Brücke, bis der Admin sie freigibt (SF-19, SF-74)
+ */
+const HIDDEN_DISPLAYS: ReadonlySet<number> = new Set([5, 10])
+
+/**
+ * amtliche Wertung einer echten Scheibe, nie aus der Anzeigeart (`Treffer.Wertung`, SF-74). Platzhalter für den Adapter
+ * (SP-1.6), der sie aus der Disziplin liest: Luftpistole in ganzen Ringen wie am Ausdruck vom 2. Oktober 2026
+ * („352 (371,4)“), die Trainings des Luftgewehrs unbekannt; nur Probe hat keine
+ */
+const OFFICIAL_BY_WEAPON: Readonly<Partial<Record<Weapon, Scoring>>> = { lp: "rings" }
+
+/** das Scheibenbild einer echten Scheibe oder warum sie nicht im Labor steht */
+function ownTarget(own: OwnCard): TargetId | "ohne Scheibenbild" | "verdeckt" {
+  const target = resolveTarget({ disciplineId: own.disciplineId, name: own.discipline }).targetId
+  if (!target) return "ohne Scheibenbild"
+  if (own.shots.some((shot) => shot.stellung === 1 && HIDDEN_DISPLAYS.has(shot.display)))
+    return "verdeckt"
+  return target
 }
-/** komplett verdeckt (Königsschießen): bleibt in der Brücke, bis der Admin sie freigibt (SF-19) */
-const HIDDEN_DISPLAY = 5
 
 /** warum eine echte Scheibe nicht im Labor steht; null, wenn sie dabei ist */
 export function ownCardOmitted(own: OwnCard): "ohne Scheibenbild" | "verdeckt" | null {
-  if (!resolveTarget({ disciplineId: own.disciplineId, name: own.discipline }).targetId)
-    return "ohne Scheibenbild"
-  if (own.shots.some((shot) => shot.stellung === 1 && shot.display === HIDDEN_DISPLAY))
-    return "verdeckt"
-  return null
+  const target = ownTarget(own)
+  return target === "ohne Scheibenbild" || target === "verdeckt" ? target : null
 }
 
 /**
  * die echten Scheiben des Users als Scheiben der Saison: Scheibenbild und Familie aus dem Fachkern (über den Namen der
- * Disziplin), alle Training (in der Anlage „Direktbelegung“ ohne Status), amtliche Wertung aus der Anzeigeart, wenn
- * alle Wertungsschüsse sie teilen, unvollständig mit Merkmal (SF-07)
+ * Disziplin), alle Training (in der Anlage „Direktbelegung“ ohne Status), amtliche Wertung nach der Waffe
+ * (`OFFICIAL_BY_WEAPON`), unvollständig mit Merkmal (SF-07)
  */
 function ownSeasonCards(): SeasonCard[] {
   const slots = new Map<string, number>()
   return OWN_CARDS.flatMap((own) => {
-    if (ownCardOmitted(own)) return []
-    const target = resolveTarget({ disciplineId: own.disciplineId, name: own.discipline }).targetId!
+    const target = ownTarget(own)
+    if (target === "ohne Scheibenbild" || target === "verdeckt") return []
     const family = suggestFamily({
       targetId: target,
       disciplineId: own.disciplineId,
@@ -219,10 +228,7 @@ function ownSeasonCards(): SeasonCard[] {
       kind: shot.stellung === 1 ? "match" : "probe",
     }))
     const match = own.shots.filter((shot) => shot.stellung === 1)
-    const displays = new Set<Scoring | undefined>(
-      match.map((shot) => OFFICIAL_BY_DISPLAY[shot.display])
-    )
-    const official = displays.size === 1 ? [...displays][0] : undefined
+    const official = match.length ? OFFICIAL_BY_WEAPON[TARGETS[target].weapon] : undefined
     const completeness = classifyCompleteness({
       sighterShots: own.shots.length - match.length,
       matchShots: match.length,

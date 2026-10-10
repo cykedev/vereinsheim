@@ -53,8 +53,8 @@ export interface PeriodCard {
   /** Merkmale der Scheibe, etwa "nur-pdf", "neu-gewertet", "ausgenommen" */
   flags?: readonly string[]
   /**
-   * amtliche Wertung der Scheibe, wie die Quelle sie liefert (Meyton: `Treffer.Wertung` der Wertungsschüsse, 1 und 7
-   * Zehntel, 2 und 8 ganze Ringe); fehlt, wenn sie unbekannt ist (Modus 0, andere Modi, ein Ausdruck ohne Angabe)
+   * amtliche Wertung der Scheibe, die der Disziplin (Meyton druckt nach ihr); nie aus `Treffer.Wertung`, das ist die
+   * umschaltbare Anzeigeart am Monitor (SF-74). Fehlt, wenn sie unbekannt ist (der Adapter, SP-1.6, klärt die Quelle)
    */
   official?: Scoring
   shots: readonly MetricShot[]

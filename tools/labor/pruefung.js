@@ -3238,6 +3238,17 @@ addEventListener("load", async () => {
       await click($('button[aria-label="Schließen"]', rangeSheet), 100)
       // die Disziplin bleibt beim Wechsel über die Leiste oben, in beide Richtungen (User, 9. Oktober 2026)
       await click(button("Luftpistole", $("[data-list-controls]")), 300)
+      // deine echten Scheiben (10. Oktober 2026): 30 Scheiben Luftpistole, am 12. November 2024 drei an einem Abend,
+      // die erste um 19:54 Winterzeit (MEZ), gezeigt über den Formatierer der Zone
+      const pistolRows = Li().model.evenings.flatMap((e) => e.rows)
+      const nov12Rows = [
+        ...($('tbody[id="2024-11-12"]')?.querySelectorAll("[data-card-row]") ?? []),
+      ]
+      check(
+        "Liste: die echten Scheiben der Luftpistole, drei am 12. November 2024, die erste um 19:54 (Winterzeit)",
+        pistolRows.length === 30 && nov12Rows.length === 3 && txt(nov12Rows[0]).includes("19:54"),
+        `${pistolRows.length} Scheiben · ${nov12Rows.length} am 12.11.2024 · ${nov12Rows[0] ? txt(nov12Rows[0]).trim().slice(0, 40) : "–"}`
+      )
       await click(area("Fortschritt"), 400)
       const periodFamily = P()?.state.family
       await click(button("Luftgewehr", $("[data-period-controls]")), 300)
@@ -3257,8 +3268,10 @@ addEventListener("load", async () => {
       const roundTrips = (href) =>
         L().tools.nav.urlFromRoute(L().tools.nav.routeFromUrl(...urlParts(href))) === href
       // Bereiche merken sich ihren Zustand (D4): Art und Familie bleiben, der Link trägt die Familie
+      // die Luftpistole sind echte Trainings (keine Wettkämpfe): mit „Training“ zeigt die Liste Zeilen
       await click(button("Luftpistole", $("[data-list-controls]")), 300)
-      await click(button("Wettkampf", $("[data-list-controls]")), 300)
+      await click(button("Training", $("[data-list-controls]")), 300)
+      const trainingRows = $$("[data-card-row]").length
       const progressHref = area("Fortschritt")?.getAttribute("href") ?? ""
       await click(area("Fortschritt"), 400)
       const familyThere = P()?.state.family
@@ -3268,8 +3281,9 @@ addEventListener("load", async () => {
         progressHref.includes("family=lp-freihand") &&
           familyThere === "lp-freihand" &&
           Li().query.family === "lp-freihand" &&
-          Li().query.kind === "competition",
-        `${progressHref} · ${familyThere} · ${addr()}`
+          Li().query.kind === "training" &&
+          trainingRows > 0,
+        `${progressHref} · ${familyThere} · ${addr()} · ${trainingRows} Zeilen`
       )
       // und die Scrollstelle, wenn man zur selben Adresse zurückkehrt
       await click(button("Luftgewehr", $("[data-list-controls]")), 300)

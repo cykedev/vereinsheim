@@ -81,9 +81,11 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   - **Luftpistole echt:** die Scheiben des Users aus der Vereinsanlage (`src/ownCards.ts`, aus der privaten Kopie vom 9. Oktober 2026, mit Zustimmung und auf Wunsch des Users mit Datum und Schusszeiten, ohne Name, Sportpass und
     ScheibenID; ADR-029). 30 Trainings vom 18. Oktober 2024 bis 9. Oktober 2026, dazu die zwei Scheiben Luftgewehr des Users.
     Scheibenbild und Familie kommen aus dem Fachkern (`resolveTarget`, `suggestFamily` über den Namen der Disziplin).
-    Weggelassen: ohne Scheibenbild (Zimmerstutzen, „LP Schach 6x6“) und verdeckt („König LP“, SF-19).
-    Amtliche Wertung aus der Anzeigeart der Wertungsschüsse; unvollständige tragen `unvollstaendig` (SF-07). Der Test
-    prüft, dass jeder Wert aus der Lage gleich Meytons ist. `ownCards.ts` ist einmalig erzeugt, nicht von Hand ändern.
+    Weggelassen: ohne Scheibenbild (Zimmerstutzen, „LP Schach 6x6“) und verdeckt (Anzeigeart 5 oder 10, „König LP“,
+    SF-19).
+    Amtliche Wertung nie aus der Anzeigeart (SF-74), bis zum Adapter (SP-1.6) nach der Waffe: Luftpistole in ganzen
+    Ringen wie am Ausdruck vom 2. Oktober, das Luftgewehr unbekannt. Unvollständige tragen `unvollstaendig` (SF-07).
+    Der Test prüft, dass jeder Wert aus der Lage gleich Meytons ist, und nimmt den Ausdruck vom 2. Oktober als Anker. `ownCards.ts` ist einmalig erzeugt, nicht von Hand ändern.
   - **Luftgewehr erfunden,** Seed 20261009: 81 Scheiben vom 6. April bis 27. September 2026 (Formknick im Juni σ 1,9 mm,
     neue Munition ab 1. August σ 1,3 mm, Urlaub 3.–16. August, eine Scheibe `nur-pdf`, Trainings nur aus Probe),
     amtlich Wettkampf in ganzen Ringen, Training in Zehnteln, nur Probe ohne; Fingerabdruck im Test.

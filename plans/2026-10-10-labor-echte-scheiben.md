@@ -21,8 +21,8 @@ Ohne Name, Sportpass und ScheibenID.
   - Die echten Scheiben kommen über den Fachkern dazu: Scheibenbild über `resolveTarget` (Name der Disziplin),
     Familie über `suggestFamily`. Ohne Scheibenbild (Zimmerstutzen, „LP Schach 6x6“) oder verdeckt (Anzeigeart 5,
     „König LP“, SF-19) bleibt eine Scheibe weg.
-  - Art Training (alle „Direktbelegung“ ohne Status). Amtliche Wertung aus der Anzeigeart der Wertungsschüsse (1, 7
-    Zehntel; 2, 8 ganze Ringe; gemischt keine), wie `PeriodCard.official` es beschreibt.
+  - Art Training (alle „Direktbelegung“ ohne Status). Amtliche Wertung: zuerst aus der Anzeigeart; nach dem Review
+    nie aus ihr (SF-74), bis SP-1.6 nach der Waffe (Luftpistole ganze Ringe wie am Ausdruck, Luftgewehr unbekannt).
   - Vollständigkeit über `classifyCompleteness` mit der Schusszahl der Disziplin; unvollständig ergibt
     `complete: false` und das Merkmal `unvollstaendig` (SF-07).
   - Ids wie bisher über `cardId(Scheibe, Tag, Platz am Abend)`.

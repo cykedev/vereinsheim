@@ -191,8 +191,9 @@ Plan `plans/2026-10-09-spiegel-scheiben-liste.md`, Branch `feat/spiegel-scheiben
     Fortschritt zeigen“ (U5).
   - `CardFilters`: Familie und Art, geteilt mit dem Zeitraum.
   - Im Fortschritt „Alle in Scheiben zeigen“.
-- **Labor:** Ansicht „Scheiben“ mit der Saison. Die Luftpistole hat seit N2 Abende mit zwei Scheiben und drei
-  Mischabende an Samstagen.
+- **Labor:** Ansicht „Scheiben“ mit der Saison. Die Luftpistole sind seit 10. Oktober 2026 die echten Scheiben des
+  Users (mehrere an einem Abend am 12. November 2024 und 25. September 2026); vorher hatte eine erfundene Luftpistole
+  Abende mit zwei Scheiben und Mischabende an Samstagen.
 - **Offen, „kleine“ Scheiben (SF-11):** Der User kannte das Konzept nicht (9. Oktober 2026); Einklappen entfällt. Ob
   Nebenscheiben (Einschießen, Neustart, Abbruch) im Verein vorkommen und ob sie im Fortschritt zählen, entscheiden
   wir mit echten Daten (Schießprotokoll, SP-0.6).
