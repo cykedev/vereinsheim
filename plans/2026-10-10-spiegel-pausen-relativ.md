@@ -35,7 +35,8 @@ An der LP 60 zeigt sie eine Pause nach jeder Zehnerserie (vor Schuss 11, 21, 31)
   - Reiter „Zeit“: Die Karte „Pausen und Wiedereinstieg“ nennt die Schwelle („Pause: mehr als 1:45 min, das
     2,5-Fache deines Takts von 42 s“), ohne Pause „Keine Pause“.
   - Der Rhythmus sagt „Pausen zählen nicht hinein“.
-  - Schusstabelle: Abstände ab einer Minute als m:ss, eine Pause als solche markiert (mit derselben Schwelle).
+  - Schusstabelle: eine Pause (mit derselben Schwelle) als m:ss mit „Pause“, andere Abstände in Sekunden (nach dem
+    Review so entschieden: m:ss heißt Pause, wie im Reiter „Zeit“).
 - **Hilfe** (`shot-help`): Definition in „Tempo“, „Rhythmus“, „Pausen und Wiedereinstieg“ neu, Leitfaden neu
   erzeugt.
 - **Vault:** `spiegel-metrics.md`, SF-62 in `spiegel-edge-cases.md`, Z1/Z4/Z5 in `spiegel-statistics.md`.

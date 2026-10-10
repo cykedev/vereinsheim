@@ -47,7 +47,7 @@ const TWO_PACES: MetricShot[] = GAPS.reduce<number[]>(
 describe("Pause relativ zum Takt der Karte (User, 10. Oktober 2026)", () => {
   it("Z4 erkennt 110 s bei einem Takt von 30 s und nennt die Schwelle", () => {
     const recovery = pauseRecovery(TWO_PACES, "decimal")
-    expect(recovery?.thresholdMs).toBe(75_000)
+    expect(recovery?.rule).toEqual({ thresholdMs: 75_000, typicalMs: 30_000, basis: "takt" })
     expect(recovery?.effects.map((e) => e.afterShot)).toEqual([15])
   })
 

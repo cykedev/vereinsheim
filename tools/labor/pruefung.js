@@ -145,9 +145,9 @@ addEventListener("load", async () => {
     // Prüfhaken des Labors (#pruefen): Schüsse, Zustand und die Funktionen des Fachkerns
     const L = () => window.__labor
     const tableRows = () => $$("#shot-table tr[data-row]")
-    // Pausen über drei Minuten als m:ss, nicht auf ganze Minuten gerundet (Prüfung, Zeit 7)
-    // eine Pause liegt über der Schwelle der Karte (relativ zum Takt, User, 10. Oktober 2026)
-    const intervalText = (ms, pauseAboveMs = 180000) => {
+    // Abstände in Sekunden, eine Pause (über der Schwelle der Karte, relativ zum Takt, User, 10. Oktober 2026) als m:ss
+    // mit „Pause“, nicht auf ganze Minuten gerundet (Prüfung, Zeit 7)
+    const intervalText = (ms, pauseAboveMs) => {
       if (ms === null) return "–"
       if (ms <= pauseAboveMs) return `${L().tools.formatValue(ms / 1000, 0)} s`
       const seconds = Math.round(ms / 1000)
@@ -284,7 +284,7 @@ addEventListener("load", async () => {
         txt(tr.lastElementChild).trim() !==
         intervalText(
           intervalsAll[labelsAll.indexOf(tr.dataset.row)],
-          L().tools.shotPauseThreshold(L().shots)
+          L().tools.shotPauseThreshold(L().shots, L().context)
         )
     )
     check(

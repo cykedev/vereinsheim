@@ -68,6 +68,8 @@ const TOOLS = {
 
 export interface LaborHook {
   shots?: readonly MetricShot[]
+  /** die rohe Karte vor `asOnPrintout` (Kontext für Abstände und Pausen) */
+  context?: readonly MetricShot[]
   state?: ViewState
   target?: TargetImage
   /** die Seite eines Zeitraums: Scheiben der Familie, Zustand, Modell */
@@ -96,8 +98,15 @@ const TEST_AT_LOAD = typeof location !== "undefined" && location.hash === "#prue
 export const underTest = () => TEST_AT_LOAD
 
 /** den aktuellen Stand für die Skriptprüfung ablegen; außerhalb von #pruefen nichts */
-export function exposeForTest(shots: readonly MetricShot[], state: ViewState, target: TargetImage) {
-  if (underTest()) window.__labor = { ...window.__labor, shots, state, target, tools: TOOLS }
+export function exposeForTest(
+  shots: readonly MetricShot[],
+  state: ViewState,
+  target: TargetImage,
+  /** die rohe Karte vor `asOnPrintout`, wie Tabelle und Analyse sie bekommen */
+  context: readonly MetricShot[]
+) {
+  if (underTest())
+    window.__labor = { ...window.__labor, shots, context, state, target, tools: TOOLS }
 }
 
 /** den Stand der Seite eines Zeitraums für die Skriptprüfung ablegen; außerhalb von #pruefen nichts */

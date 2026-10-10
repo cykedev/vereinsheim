@@ -4,7 +4,9 @@
 // sonst verzerrt sie das Bild (SF-62). Pause ist ein Abstand, der deutlich länger ist als der eigene Takt: über dem
 // 2,5-Fachen des Medians der Abstände, mindestens eine Minute; über drei Minuten immer (Gespräch, Scheibenwechsel).
 // Unter fünf Abständen gibt es keinen eigenen Takt, dann gilt nur die feste Grenze (User, 10. Oktober 2026: an den
-// eigenen Scheiben fand die feste Grenze 3 von 906 Abständen, die relative die 10, die dem User auffielen).
+// eigenen Scheiben fand die feste Grenze 3 von 906 Abständen, die relative die 10, die dem User auffielen). Der Median
+// nimmt alle Abstände bis drei Minuten, auch die, die danach als Pause gelten: Wenige Pausen verschieben ihn kaum
+// (LP 60 des Users: 42,6 statt 42,3 s); ist die Hälfte der Abstände lang, wird die Schwelle drei Minuten.
 // Ein negativer Abstand heißt, die Uhr ist zurückgesprungen; er zählt weder als Intervall noch als Pause. `null`
 // markiert eine Lücke (ein Schuss ohne brauchbare Zeit): Die Abstände daneben zählen nicht, sonst würden zwei
 // Intervalle zu einer Pause.
@@ -58,15 +60,38 @@ export function gapsOf(firedAtMs: readonly (number | null)[]): number[] {
 }
 
 /**
- * die Schwelle für eine Pause aus den Abständen einer Schussfolge: das 2,5-Fache des Medians der Abstände bis drei
- * Minuten, mindestens eine, höchstens drei Minuten; unter fünf solchen Abständen drei Minuten
+ * worauf die Schwelle beruht: der eigene Takt (`takt`), die Mindestminute (`mindestens`), die feste Grenze, weil schon
+ * der Takt lang ist (`hoechstens`), oder zu wenige Abstände für einen Takt (`fest`)
  */
-export function pauseThresholdMs(gapsMs: readonly number[]): number {
-  const usual = gapsMs.filter((gap) => gap <= PAUSE_ALWAYS_MS)
-  if (usual.length < PAUSE_MIN_INTERVALS) return PAUSE_ALWAYS_MS
-  const relative = PAUSE_FACTOR * (median(usual) as number)
-  return Math.min(PAUSE_ALWAYS_MS, Math.max(PAUSE_MIN_MS, relative))
+export type PauseBasis = "takt" | "mindestens" | "hoechstens" | "fest"
+
+export interface PauseRule {
+  /** ab hier (ausschließlich) ist ein Abstand eine Pause; ganze Sekunden */
+  thresholdMs: number
+  /** der übliche Abstand: Median der Abstände bis drei Minuten; null unter fünf */
+  typicalMs: number | null
+  basis: PauseBasis
 }
+
+/**
+ * die Regel für Pausen aus den Abständen einer Schussfolge: das 2,5-Fache des Medians der Abstände bis drei Minuten,
+ * auf ganze Sekunden, mindestens eine, höchstens drei Minuten; unter fünf solchen Abständen drei Minuten
+ */
+export function pauseRule(gapsMs: readonly number[]): PauseRule {
+  const usual = gapsMs.filter((gap) => gap <= PAUSE_ALWAYS_MS)
+  if (usual.length < PAUSE_MIN_INTERVALS)
+    return { thresholdMs: PAUSE_ALWAYS_MS, typicalMs: null, basis: "fest" }
+  const typicalMs = median(usual) as number
+  // ganze Sekunden: Schwelle und angezeigte Abstände zeigen dieselbe Zahl
+  const relative = Math.round((PAUSE_FACTOR * typicalMs) / 1000) * 1000
+  if (relative < PAUSE_MIN_MS) return { thresholdMs: PAUSE_MIN_MS, typicalMs, basis: "mindestens" }
+  if (relative > PAUSE_ALWAYS_MS)
+    return { thresholdMs: PAUSE_ALWAYS_MS, typicalMs, basis: "hoechstens" }
+  return { thresholdMs: relative, typicalMs, basis: "takt" }
+}
+
+/** die Schwelle für eine Pause aus den Abständen einer Schussfolge (`pauseRule`) */
+export const pauseThresholdMs = (gapsMs: readonly number[]) => pauseRule(gapsMs).thresholdMs
 
 /**
  * `firedAtMs` in Abgabefolge; `null` (oder eine ungültige Zahl) ist eine Lücke. Ohne `thresholdMs` gilt die Schwelle

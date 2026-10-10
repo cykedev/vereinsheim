@@ -59,8 +59,11 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   (SF-60), das n liefert `eligibleShots`. `compute` nie direkt aufrufen.
 - **Pausen relativ zum eigenen Takt** (User, 10. Oktober 2026, `plans/2026-10-10-spiegel-pausen-relativ.md`): Pause ist
   ein Abstand über dem 2,5-Fachen des Medians der Abstände bis drei Minuten, mindestens 60 s, über drei Minuten immer;
-  unter fünf Abständen nur die drei Minuten. Die Regel steht nur in `time.ts`. Eine Auswahl nimmt die Schwelle ihrer
-  ganzen Karte (`pauseThresholdOf`), damit eine Serie dieselben Pausen sieht wie die Scheibe.
+  unter fünf Abständen nur die drei Minuten; die Schwelle steht auf ganzen Sekunden. Die Regel steht nur in `time.ts`
+  (`pauseRule` mit Grundlage `takt`, `mindestens`, `hoechstens`, `fest`). Eine Auswahl nimmt die Regel ihrer ganzen
+  Karte (`pauseRuleOf`, `pauseThresholdOf`), nur aus Schüssen mit gültiger Zeit, damit eine Serie dieselben Pausen
+  sieht wie die Scheibe. Hat die Karte keinen Schuss der Arten der Auswahl (nur Probe, als Wertung gezeigt), gilt die
+  Auswahl selbst, nie still drei Minuten.
 - **Reihenfolge ist die Abgabefolge** (`seq`, SF-30): `inShotOrder`; `tempo` erwartet die Zeiten in
   Abgabefolge und zählt einen Rücksprung der Uhr weder als Intervall noch als Pause; fehlt ein Schuss
   mitten in der Folge (Sprung in `seq`), zählt der Abstand daneben nicht. Füllen den Sprung auf der Karte
@@ -95,7 +98,7 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   Katalog-IDs in `ANALYSIS_CATALOG` (Test erzwingt das), und `@vereinsheim/shot-help` braucht für jede
   dieser IDs eine Erklärung (Test dort). Ohne Erklärung bleibt das Gate rot.
 - **Simulation nachziehen:** Ändert sich eine Auswertung, die eine Zahl in einem Hilfetext belegt
-  (Trend, Ringverlust, Ausreißer, Form, σ, Probe, Vergleich zweier Zeiträume, Formband),
+  (Trend, Ringverlust, Ausreißer, Form, σ, Probe, Vergleich zweier Zeiträume, Formband, Wiedereinstieg nach Pausen),
   `pnpm --filter @vereinsheim/shot-help simulate`
   laufen lassen und den Block „Belege aus Simulationen“ in `vault/spiegel/spiegel-statistics.md` samt den
   zitierenden Texten angleichen. Das Gate prüft das nicht (Laufzeit, Zufallszahlen).

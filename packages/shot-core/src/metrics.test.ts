@@ -14,7 +14,9 @@ import {
   asOnPrintout,
   probeOnlyAsMatch,
   shotNumbers,
+  pauseThresholdOf,
   timesInOrder,
+  FLAG_SUSPICIOUS,
   type MetricDefinition,
   type MetricShot,
 } from "./metrics"
@@ -399,6 +401,56 @@ describe("Lücken in der Abgabefolge (SF-04, SF-30)", () => {
     expect(def("time.intervalMedian").version).toBe(3)
     expect(def("time.tempoSpread").version).toBe(3)
     expect(def("time.duration").version).toBe(2)
+  })
+})
+
+describe("Pausen mit der Schwelle der Karte (Z1, Z2; User, 10. Oktober 2026)", () => {
+  /** Schüsse mit den Abständen `gaps` (in s), Serie 1 bis Schuss 10 */
+  const timed = (gaps: readonly number[], kind: MetricShot["kind"] = "match") =>
+    gaps
+      .reduce<number[]>((times, gap) => [...times, times.at(-1)! + gap], [0])
+      .map(
+        (s, i): MetricShot => ({
+          ...MATCH[0],
+          seq: i + 1,
+          kind,
+          series: kind === "match" ? (i < 10 ? 1 : 2) : null,
+          firedAtMs: s * 1000,
+        })
+      )
+  // Serie 1 im Takt von 30 s, dann 30 s; Serie 2: 30, fünfmal 90, dreimal 30. Die Karte: 14 × 30 und 5 × 90, Median
+  // 30 s, Schwelle 75 s, die 90 s sind Pausen. Serie 2 allein: Median 90 s, Schwelle 180 s, keine Pause.
+  const CARD20 = timed([...Array(10).fill(30), 30, 90, 90, 90, 90, 90, 30, 30, 30])
+  const SERIES2 = CARD20.slice(10)
+
+  it("Tempo und Tempo-Streuung einer Serie mit der Schwelle der ganzen Karte", () => {
+    const tempoOf = (card?: readonly MetricShot[]) =>
+      computeMetric(def("time.intervalMedian"), SERIES2, card)
+    const spreadOf = (card?: readonly MetricShot[]) =>
+      computeMetric(def("time.tempoSpread"), SERIES2, card)
+    expect(tempoOf(CARD20)).toBe(30)
+    expect(spreadOf(CARD20)).not.toBeNull()
+    expect(spreadOf(CARD20)).toBe(0)
+    // Gegenprobe: ohne Karte gilt der Takt der Serie
+    expect(tempoOf()).toBe(90)
+    expect(spreadOf()).toBe(60)
+  })
+
+  it("eine Karte nur aus Probe, als Wertung gezeigt: die Schwelle aus der Auswahl, nie still drei Minuten", () => {
+    const raw = timed([40, 40, 40, 40, 120, 40, 40, 40], "probe")
+    const printed = probeOnlyAsMatch(raw)
+    expect(pauseThresholdOf(printed, contextOf(printed, raw))).toBe(100_000)
+    expect(pauseThresholdOf(printed, contextOf(printed, printed))).toBe(100_000)
+  })
+
+  it("nur Schüsse mit gültiger Zeit zählen in den Takt, wie in jeder Zeit-Auswertung (SF-15)", () => {
+    // Schuss 3 ist verdächtig: ohne ihn gibt es nur drei Abstände, also die feste Grenze; mit ihm wären es fünf
+    const card = timed([30, 15, 15, 30, 30]).map((shot, i) =>
+      i === 2 ? { ...shot, flags: [FLAG_SUSPICIOUS] } : shot
+    )
+    const match = selectShots(card, { need: "time" })
+    expect(match).toHaveLength(5)
+    expect(pauseThresholdOf(match, contextOf(match, card))).toBe(180_000)
   })
 })
 

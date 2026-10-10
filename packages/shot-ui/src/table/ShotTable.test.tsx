@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { formatValue } from "../format"
-import { shotIntervals } from "../shots"
+import { asOnPrintout, shotIntervals } from "../shots"
 import { initialViewState, type ViewState } from "../view-state"
 import { ShotTable } from "./ShotTable"
 
@@ -158,6 +158,29 @@ describe("ShotTable", () => {
     // neueste Zeile oben: der Abstand vor Schuss 6 steht in der zweiten Zeile
     expect(table([40, 40, 40, 40, 120, 40])[1]).toBe("2:00 min Pause")
     expect(table([60, 60, 60, 60, 120, 60])[1]).toBe("120 s")
+  })
+
+  it("mit der rohen Karte als Kontext: nur Probe (wie Wertung gezeigt) und eine Probe zwischen Wertung (SF-04)", () => {
+    const rowText = (shots: readonly MetricShot[], context: MetricShot[], row: string) => {
+      const html = renderToStaticMarkup(
+        createElement(ShotTable, { shots, context, state: initialViewState() })
+      )
+      const start = html.indexOf(`<tr data-row="${row}"`)
+      return rows(html.slice(start, html.indexOf("</tr>", start) + 5))[0][4]
+    }
+    // nur Probe im Takt von 40 s, 120 s vor Schuss 6: Schwelle 100 s aus der Probe selbst, nicht still 180 s
+    const raw = [0, 40, 80, 120, 160, 280, 320, 360, 400].map((at, i) =>
+      shot(i + 1, "probe", null, 0, 100, at)
+    )
+    expect(rowText(asOnPrintout(raw), raw, "6")).toBe("2:00 min Pause")
+    // Wertung im Takt von 40 s, eine Probe zwischen Schuss 3 und 4: kein Loch, also fünf Abstände, Schwelle 100 s,
+    // die 120 s eine Pause. Ohne die Karte wäre es ein Loch: vier Abstände, nur die feste Grenze, keine Pause
+    const card = [
+      ...[0, 40, 80].map((at, i) => shot(i + 1, "match", 1, 0, 100, at)),
+      shot(4, "probe", null, 0, 100, 140),
+      ...[200, 240, 280].map((at, i) => shot(i + 5, "match", 1, 0, 100, at)),
+    ]
+    expect(rowText(asOnPrintout(card), card, "4")).toBe("2:00 min Pause")
   })
 
   it("Pause erst über drei Minuten: genau 180 s bleibt in Sekunden", () => {

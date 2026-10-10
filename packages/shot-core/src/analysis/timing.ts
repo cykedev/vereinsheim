@@ -3,11 +3,12 @@
 // in Abgabefolge; fehlt ein Schuss oder springt die Uhr zurück, zählt der Abstand nicht (SF-30). Eine
 // Probe zwischen zwei Wertungsschüssen ist keine Lücke, wenn die ganze Karte mitkommt (`card`, SF-04).
 // Pause ist ein Abstand deutlich länger als der Takt der Karte (`time.ts`: über dem 2,5-Fachen des Medians, mindestens
-// eine, über drei Minuten immer); alle Auswertungen nehmen dieselbe Schwelle der Karte (`pauseThresholdOf`).
+// eine Minute, über drei Minuten immer); alle Auswertungen nehmen dieselbe Schwelle der Karte (`pauseThresholdOf`).
 
 import {
   contextOf,
   inShotOrder,
+  pauseRuleOf,
   pauseThresholdOf,
   selectShots,
   shotNumbers,
@@ -19,7 +20,7 @@ import {
   type ShotKind,
 } from "../metrics"
 import { iqr, median } from "../stats"
-import { tempo } from "../time"
+import { tempo, type PauseRule } from "../time"
 import { valueNeed, valueTenths } from "./values"
 
 const MATCH: readonly ShotKind[] = ["match"]
@@ -104,8 +105,8 @@ export function pauseRecovery(
 ): {
   pauses: number
   totalPauseMs: number
-  /** ab hier (ausschließlich) ist ein Abstand eine Pause: aus dem Takt der Karte */
-  thresholdMs: number
+  /** was als Pause gilt: Schwelle, üblicher Abstand und Grundlage, aus dem Takt der Karte */
+  rule: PauseRule
   effects: PauseEffect[]
   meanDelta: number | null
 } | null {
@@ -114,7 +115,7 @@ export function pauseRecovery(
   // eine Pause braucht einen Abstand, also zwei Schüsse mit Zeit
   if (selected.length < 2) return null
   const context = { card, kinds: MATCH }
-  const thresholdMs = pauseThresholdOf(selected, context)
+  const rule = pauseRuleOf(selected, context)
   const steps = intervals(selected, shotNumbers(shots), context)
   const values = steps.map((step) =>
     withValue.has(step.shot) ? valueTenths(step.shot, scoring) : null
@@ -126,7 +127,7 @@ export function pauseRecovery(
   // ohne einen messbaren Abstand (Lücken, Rücksprung der Uhr) weder Pause noch „keine Pause“
   if (steps.every((step) => step.intervalMs === null)) return null
   steps.forEach((step, i) => {
-    if (step.intervalMs === null || step.intervalMs <= thresholdMs) return
+    if (step.intervalMs === null || step.intervalMs <= rule.thresholdMs) return
     totalPauseMs += step.intervalMs
     const next = valued(values.slice(i, i + 3))
     const rest = valued([...values.slice(0, i), ...values.slice(i + 3)])
@@ -139,7 +140,7 @@ export function pauseRecovery(
   return {
     pauses: effects.length,
     totalPauseMs,
-    thresholdMs,
+    rule,
     effects,
     meanDelta: deltas.length ? meanOf(deltas) : null,
   }

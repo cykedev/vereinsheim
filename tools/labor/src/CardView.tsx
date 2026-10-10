@@ -151,11 +151,12 @@ export function CardView({
   const context = useMemo(() => toMetricShots(TARGETS[targetId], raw), [targetId, raw])
   const samples = SAMPLES[targetId]
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0]
-  useEffect(() => exposeForTest(shots, state, target), [shots, state, target])
+  useEffect(() => exposeForTest(shots, state, target, context), [shots, state, target, context])
   // im Kopf die wichtigsten Beobachtungen der Analyse, die Lage zuerst (U1, D4)
   const headObservations = useMemo(
-    () => keyObservations(observations(analysisInput(shots, state.scoring, target))),
-    [shots, state.scoring, target]
+    // mit der rohen Karte wie die Analyse darunter: dieselben Abstände und Pausen (Review Pausen)
+    () => keyObservations(observations(analysisInput(shots, state.scoring, target, context))),
+    [shots, state.scoring, target, context]
   )
 
   // Anker beim Laden: zum Abschnitt; Reiter-Anker auch beim Wechsel der Adresse: Reiter öffnen, zur Analyse

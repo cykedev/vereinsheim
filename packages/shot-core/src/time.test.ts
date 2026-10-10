@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   gapsOf,
+  pauseRule,
   PAUSE_ALWAYS_MS,
   PAUSE_FACTOR,
   PAUSE_MIN_INTERVALS,
@@ -55,6 +56,30 @@ describe("tempo", () => {
     expect(pauseThresholdMs([s(40), s(40), s(40), s(40)])).toBe(s(180))
     // der Median nur über Abstände bis 180 s: mit ihnen allen wäre er 190 s und die Schwelle 180 s
     expect(pauseThresholdMs([...five(30), ...Array.from({ length: 6 }, () => s(190))])).toBe(s(75))
+    // genau 180 s gehört noch dazu: sechs Abstände, Median 30 s
+    expect(pauseThresholdMs([s(30), s(30), s(30), s(30), s(180)])).toBe(s(75))
+    // auf ganze Sekunden: Median 42,6 s ergibt 106,5 s, also 107 s
+    expect(pauseThresholdMs([...five(42.6)])).toBe(s(107))
+  })
+
+  it("Grundlage der Schwelle: Takt, Mindestminute, feste Grenze oder zu wenige Abstände", () => {
+    const five = (seconds: number) => Array.from({ length: 5 }, () => s(seconds))
+    expect(pauseRule(five(40))).toEqual({ thresholdMs: s(100), typicalMs: s(40), basis: "takt" })
+    expect(pauseRule(five(20))).toEqual({
+      thresholdMs: s(60),
+      typicalMs: s(20),
+      basis: "mindestens",
+    })
+    expect(pauseRule(five(90))).toEqual({
+      thresholdMs: s(180),
+      typicalMs: s(90),
+      basis: "hoechstens",
+    })
+    expect(pauseRule(five(40).slice(1))).toEqual({
+      thresholdMs: s(180),
+      typicalMs: null,
+      basis: "fest",
+    })
   })
 
   it("Abstände einer Folge: ohne Lücken und Rücksprünge", () => {

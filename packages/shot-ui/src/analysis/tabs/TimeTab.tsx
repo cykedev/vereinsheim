@@ -1,6 +1,12 @@
 "use client"
 
-import { PAUSE_ALWAYS_MS, PAUSE_FACTOR, PAUSE_MIN_MS } from "@vereinsheim/shot-core/time"
+import {
+  PAUSE_ALWAYS_MS,
+  PAUSE_FACTOR,
+  PAUSE_MIN_INTERVALS,
+  PAUSE_MIN_MS,
+  type PauseRule,
+} from "@vereinsheim/shot-core/time"
 import {
   cardTrend,
   fatigue,
@@ -38,13 +44,28 @@ function LegendItem({ children, label }: { children: ReactNode; label: string })
 const TEMPO_MISSING = "ab 4 Schuss mit Zeit"
 
 /**
+ * was als Pause gilt, nach der Grundlage der Schwelle (User, 10. Oktober 2026); Zahlen aus der Regel in `shot-core/time`.
+ * Der übliche Abstand ist der Median aller Abstände bis drei Minuten, nicht das Tempo darüber (das zählt ohne Pausen)
+ */
+export function pauseRuleText(rule: PauseRule): string {
+  const over = `Als Pause gilt ein Abstand über ${durationText(rule.thresholdMs)}`
+  const typical = rule.typicalMs === null ? "" : `${formatValue(rule.typicalMs / 1000, 1)} s`
+  switch (rule.basis) {
+    case "takt":
+      return `${over}: das ${formatValue(PAUSE_FACTOR, 1)}-Fache deines üblichen Abstands von ${typical}.`
+    case "mindestens":
+      return `${over}: Das ${formatValue(PAUSE_FACTOR, 1)}-Fache deines üblichen Abstands von ${typical} wäre kürzer, eine Pause dauert aber mindestens ${durationText(PAUSE_MIN_MS)}.`
+    case "hoechstens":
+      return `${over}: Dein üblicher Abstand von ${typical} ist lang; über ${durationText(PAUSE_ALWAYS_MS)} ist es immer eine Pause.`
+    case "fest":
+      return `${over}: Deinen üblichen Abstand gibt es erst ab ${PAUSE_MIN_INTERVALS} Abständen.`
+  }
+}
+
+/**
  * Zeit und Verlauf: Verlauf und Trend, Rhythmus, Tempo und Dauer, Pausen, Ermüdung, Serien im
  * Vergleich, über die Grundlage
  */
-
-/** was als Pause gilt, mit der Schwelle der Karte (User, 10. Oktober 2026); Zahlen aus der Regel in `shot-core/time` */
-const pauseRule = (thresholdMs: number) =>
-  `Als Pause gilt ein Abstand über ${durationText(thresholdMs)}: das ${formatValue(PAUSE_FACTOR, 1)}-Fache deines üblichen Abstands, mindestens ${PAUSE_MIN_MS / 60_000} Minute, über ${PAUSE_ALWAYS_MS / 60_000} Minuten immer.`
 
 export function timeCards({
   input,
@@ -231,10 +252,13 @@ export function timeCards({
                 „Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen
                 Schüsse. Drei Schuss sind wenig; ein Muster zeigt der Vergleich über Abende.
               </Note>
-              <Note>{pauseRule(recovery.thresholdMs)}</Note>
+              <Note>{pauseRuleText(recovery.rule)}</Note>
             </>
           ) : (
-            <Note>{`Keine Pause: kein Abstand über ${durationText(recovery.thresholdMs)}.`}</Note>
+            <>
+              <Note>{`Keine Pause: kein Abstand über ${durationText(recovery.rule.thresholdMs)}.`}</Note>
+              <Note>{pauseRuleText(recovery.rule)}</Note>
+            </>
           )}
         </AnalysisCard>
       ),

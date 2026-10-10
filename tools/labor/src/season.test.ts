@@ -94,9 +94,9 @@ describe("Saison im Labor (Plan L3, D17)", () => {
   it("Pausen relativ zum Takt an der echten LP 60: nach jeder Zehnerserie (User, 10. Oktober 2026)", () => {
     const lp60 = season().find((c) => c.own === 28)!.card
     const recovery = pauseRecovery(lp60.shots, "rings")!
-    // Takt 43 s, Schwelle 2,5-fach: 1:47,5 min; die feste Grenze von 3 Minuten fand nur eine
-    expect(recovery.thresholdMs).toBeGreaterThan(100_000)
-    expect(recovery.thresholdMs).toBeLessThan(110_000)
+    // Median der 38 Abstände bis 3 Minuten (42,505 + 42,706) / 2 = 42,6055 s, 2,5-fach 106,51 s, auf ganze Sekunden
+    // 107 s; die feste Grenze von 3 Minuten fand nur eine der drei Pausen
+    expect(recovery.rule).toEqual({ thresholdMs: 107_000, typicalMs: 42_605.5, basis: "takt" })
     expect(recovery.effects.map((e) => e.afterShot)).toEqual([11, 21, 31])
   })
 

@@ -32,7 +32,7 @@ import {
 } from "./geometry"
 import { teilerFromDistanceUm } from "./scoring"
 import { c4, iqr } from "./stats"
-import { gapsOf, pauseThresholdMs, tempo } from "./time"
+import { gapsOf, pauseRule, tempo, type PauseRule } from "./time"
 
 export type ShotKind = "match" | "probe"
 export type MetricUnit = "Ringe" | "Teiler" | "mm" | "s" | "Schuss" | "%"
@@ -391,13 +391,19 @@ export function timesInOrder(
 }
 
 /**
- * die Schwelle für Pausen aus dem Takt der ganzen Karte, in den Arten der Auswahl (`time.ts`): Eine Serie sieht so
- * dieselben Pausen wie die Scheibe. Ohne Karte aus den Schüssen selbst
+ * die Regel für Pausen aus dem Takt der ganzen Karte, in den Arten der Auswahl (`time.ts`): Eine Serie sieht so
+ * dieselben Pausen wie die Scheibe. Es zählen nur Schüsse mit gültiger Zeit, wie in jeder Zeit-Auswertung (SF-15). Hat
+ * die Karte keinen Schuss dieser Arten (nur Probe, als Wertung gezeigt), gilt die Auswahl selbst; ohne Karte ebenso
  */
-export function pauseThresholdOf(shots: readonly MetricShot[], context?: ShotContext): number {
-  const base = context ? context.card.filter((shot) => context.kinds.includes(shot.kind)) : shots
-  return pauseThresholdMs(gapsOf(timesWithGaps(base, context)))
+export function pauseRuleOf(shots: readonly MetricShot[], context?: ShotContext): PauseRule {
+  const own = context ? selectShots(context.card, { kinds: context.kinds, need: "time" }) : []
+  if (own.length) return pauseRule(gapsOf(timesWithGaps(own, context)))
+  return pauseRule(gapsOf(timesWithGaps(selectShots(shots, { need: "time" }))))
 }
+
+/** die Schwelle für Pausen der Karte (`pauseRuleOf`) */
+export const pauseThresholdOf = (shots: readonly MetricShot[], context?: ShotContext) =>
+  pauseRuleOf(shots, context).thresholdMs
 
 const pace = (shots: readonly MetricShot[], context?: ShotContext) =>
   tempo(timesWithGaps(shots, context), pauseThresholdOf(shots, context))
