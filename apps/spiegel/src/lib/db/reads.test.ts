@@ -14,7 +14,13 @@ import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import { writeRevision } from "./cards"
-import { cardWithShots, familyCards, latestCardStart, ownerCards } from "./reads"
+import {
+  cardWithShots,
+  familyCards,
+  latestCardStart,
+  ownerCards,
+  ownerCardsWithShots,
+} from "./reads"
 
 const db = createPrismaClient()
 let site: TestSite
@@ -158,6 +164,27 @@ describe("Start", () => {
       site.familyId,
       otherFamilyId,
     ])
+  })
+})
+
+describe("ownerCardsWithShots (Übergang bis SP-1.8)", () => {
+  it("alle eigenen, nicht gelöschten Scheiben mit Schüssen, Familie und Scheibenbild, nach Beginn", async () => {
+    const cards = await ownerCardsWithShots(db, site.ownerId)
+    expect(cards).toHaveLength(31)
+    expect(cards.map((c) => c.startedAtMs)).toEqual(
+      [...cards.map((c) => c.startedAtMs)].sort((a, b) => a - b)
+    )
+    expect(cards.every((c) => c.shots.length > 0)).toBe(true)
+    const families = await db.family.findMany({
+      where: { id: { in: [site.familyId, otherFamilyId] } },
+      select: { slug: true },
+    })
+    expect(new Set(cards.map((c) => c.family?.slug))).toEqual(new Set(families.map((f) => f.slug)))
+    // Scheibenbild aus der Disziplin: LP mit, das LG des Tests ohne
+    const lp = cards.find((c) => c.disciplineId === site.disciplineId)!
+    expect(lp).toMatchObject({ targetId: "lp-10m", discipline: "LP 40", official: "rings" })
+    expect(cards.find((c) => c.disciplineId === otherDisciplineId)?.targetId).toBeNull()
+    expect(await ownerCardsWithShots(db, "jemand-anderes")).toEqual([])
   })
 })
 

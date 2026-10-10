@@ -3,6 +3,7 @@
 // Schüsse, die der aktuellen Revision.
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
+import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import type { CardProjection, ProjectedCard } from "@vereinsheim/shot-core/projection"
 
 import type { CardState, Prisma, Scoring } from "@/generated/prisma/client"
@@ -130,39 +131,81 @@ export async function latestCardStart(db: Db, ownerId: string): Promise<number |
   return latest?.startedAt.getTime() ?? null
 }
 
+const PAGE_CARD_SELECT = {
+  id: true,
+  startedAt: true,
+  kind: true,
+  complete: true,
+  flags: true,
+  disciplineId: true,
+  discipline: { select: { name: true, targetId: true, officialScoring: true } },
+  family: { select: { slug: true, name: true } },
+  currentRevision: {
+    select: { number: true, shots: { orderBy: { seq: "asc" } } },
+  },
+} satisfies Prisma.CardSelect
+
+type PageCardRow = Prisma.CardGetPayload<{ select: typeof PAGE_CARD_SELECT }>
+
 /**
- * Seite einer Scheibe: die Scheibe mit den Schüssen ihrer aktuellen Revision in Abgabefolge, nur für ihren Besitzer;
- * null, wenn es sie nicht gibt, sie gelöscht ist oder einem anderen gehört
+ * Eine Scheibe für die Seiten: wie der Fachkern sie braucht (`PeriodCard` mit den Schüssen der aktuellen Revision in
+ * Abgabefolge), dazu Revision, Disziplin, Scheibenbild und Familie
+ */
+export interface PageCard extends PeriodCard {
+  revision: number
+  disciplineId: number
+  discipline: string
+  /** Scheibenbild aus der Disziplin; null, solange es unbekannt ist */
+  targetId: TargetId | null
+  family: { slug: string; name: string } | null
+}
+
+function toPageCard(row: PageCardRow): PageCard | null {
+  if (!row.currentRevision) return null
+  return {
+    id: row.id,
+    startedAtMs: row.startedAt.getTime(),
+    kind: row.kind,
+    complete: row.complete,
+    flags: row.flags,
+    ...(row.discipline.officialScoring ? { official: row.discipline.officialScoring } : {}),
+    revision: row.currentRevision.number,
+    disciplineId: row.disciplineId,
+    discipline: row.discipline.name,
+    targetId: isTargetId(row.discipline.targetId) ? row.discipline.targetId : null,
+    family: row.family,
+    shots: row.currentRevision.shots.map(shotFromRow).map(toMetricShot),
+  }
+}
+
+const isTargetId = (value: string | null): value is TargetId =>
+  value !== null && Object.hasOwn(TARGETS, value)
+
+/**
+ * Seite einer Scheibe: die Scheibe mit den Schüssen ihrer aktuellen Revision, nur für ihren Besitzer; null, wenn es
+ * sie nicht gibt, sie gelöscht ist oder einem anderen gehört
  */
 export async function cardWithShots(
   db: Db,
   query: { cardId: string; ownerId: string }
-): Promise<(PeriodCard & { revision: number; disciplineId: number }) | null> {
-  const card = await db.card.findFirst({
+): Promise<PageCard | null> {
+  const row = await db.card.findFirst({
     where: { id: query.cardId, ownerId: query.ownerId, deletedAt: null },
-    select: {
-      id: true,
-      startedAt: true,
-      kind: true,
-      complete: true,
-      flags: true,
-      discipline: { select: { officialScoring: true } },
-      disciplineId: true,
-      currentRevision: {
-        select: { number: true, shots: { orderBy: { seq: "asc" } } },
-      },
-    },
+    select: PAGE_CARD_SELECT,
   })
-  if (!card?.currentRevision) return null
-  return {
-    id: card.id,
-    startedAtMs: card.startedAt.getTime(),
-    kind: card.kind,
-    complete: card.complete,
-    flags: card.flags,
-    ...(card.discipline.officialScoring ? { official: card.discipline.officialScoring } : {}),
-    disciplineId: card.disciplineId,
-    revision: card.currentRevision.number,
-    shots: card.currentRevision.shots.map(shotFromRow).map(toMetricShot),
-  }
+  return row ? toPageCard(row) : null
+}
+
+/**
+ * Übergang bis SP-1.8 (ADR-031, Folgen): Start und Liste rechnen in `shot-ui` noch aus Schüssen, und die kleinen
+ * Scheiben der Liste brauchen die Lagen. Bis die Modelle die Projektion nehmen, lädt dieser Zugriff alle Scheiben
+ * des Schützen mit Schüssen, nach Beginn. Für die Übersichten danach: `familyCards`.
+ */
+export async function ownerCardsWithShots(db: Db, ownerId: string): Promise<PageCard[]> {
+  const rows = await db.card.findMany({
+    where: { ownerId, deletedAt: null, currentRevisionId: { not: null } },
+    orderBy: [{ startedAt: "asc" }, { id: "asc" }],
+    select: PAGE_CARD_SELECT,
+  })
+  return rows.flatMap((row) => toPageCard(row) ?? [])
 }
