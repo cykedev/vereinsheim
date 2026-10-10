@@ -89,3 +89,12 @@ export function wait(sim: Sim, card: Card, ms: number) {
 export function away(sim: Sim, ms: number) {
   sim.advance(ms)
 }
+
+/** die Uhr bis `ms` vorstellen (nie zurück), ohne Lebenszeichen */
+export function until(sim: Sim, ms: number) {
+  if (ms < sim.now) throw new Error("Die Uhr geht nicht zurück")
+  sim.advance(ms - sim.now)
+}
+
+/** Minuten in ms */
+export const minutes = (n: number) => n * 60_000
