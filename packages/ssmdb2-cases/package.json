@@ -1,0 +1,37 @@
+{
+  "name": "@vereinsheim/ssmdb2-cases",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./schema": "./src/schema.ts",
+    "./values": "./src/values.ts",
+    "./ablage": "./src/ablage.ts",
+    "./stand": "./src/stand.ts",
+    "./output": "./src/output.ts",
+    "./expected": "./src/expected.ts",
+    "./cases": "./src/cases/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "cases": "tsx tools/write-cases.ts && prettier --write cases",
+    "replay": "tsx tools/replay.ts"
+  },
+  "prettier": "@vereinsheim/config/prettier",
+  "dependencies": {
+    "@vereinsheim/ingest-contract": "workspace:*",
+    "@vereinsheim/shot-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@vereinsheim/config": "workspace:*",
+    "prettier": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
