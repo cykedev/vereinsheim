@@ -3,9 +3,19 @@
 
 const MINUS = "−"
 
+/**
+ * Der Betrag auf `decimals` Stellen, die Hälfte kaufmännisch von der Null weg. Erst auf zwölf gültige Stellen, damit
+ * das Rauschen der Gleitkommazahl nicht entscheidet: 362,6 Ringe auf 40 Schuss sind genau 9,065, gerechnet einmal
+ * 9,06500…1, einmal 9,06499…5; `toFixed` allein zeigte dann 9,07 oder 9,06 (aufgefallen mit der Projektion, SP-1.8).
+ */
+function roundedText(abs: number, decimals: number): string {
+  const factor = 10 ** decimals
+  return (Math.round(Number((abs * factor).toPrecision(12))) / factor).toFixed(decimals)
+}
+
 /** feste Nachkommastellen; eine auf 0 gerundete Zahl ohne Minus */
 export function formatValue(value: number, decimals: number): string {
-  const text = Math.abs(value).toFixed(decimals)
+  const text = roundedText(Math.abs(value), decimals)
   const zero = Number(text) === 0
   return `${value < 0 && !zero ? MINUS : ""}${text.replace(".", ",")}`
 }
@@ -13,7 +23,7 @@ export function formatValue(value: number, decimals: number): string {
 /** mit Vorzeichen für Abweichungen („+1,5“, „−1,5“); eine gerundete Null ohne Vorzeichen */
 export function formatSigned(value: number, decimals: number): string {
   const text = formatValue(value, decimals)
-  return value > 0 && Number(Math.abs(value).toFixed(decimals)) !== 0 ? `+${text}` : text
+  return value > 0 && Number(roundedText(value, decimals)) !== 0 ? `+${text}` : text
 }
 
 /**

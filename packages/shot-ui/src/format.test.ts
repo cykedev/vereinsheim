@@ -25,6 +25,18 @@ describe("Zahlen wie in der Spielwiese: feste Stellen, Komma, echtes Minus", () 
     expect(formatValue(-0.04, 1)).toBe("0,0")
   })
 
+  it("die Hälfte kaufmännisch von der Null weg, egal wie die Gleitkommazahl sie trifft", () => {
+    // 362,6 Ringe auf 40 Schuss sind genau 9,065: einmal als 9,06500…1, einmal als 9,06499…5 gerechnet
+    expect(formatValue(3626 / 10 / 40, 2)).toBe("9,07")
+    expect(formatValue(Math.round((3626 / 10 / 40) * 1e9) / 1e9, 2)).toBe("9,07")
+    expect(formatValue(-9.065, 2)).toBe("−9,07")
+    expect(formatValue(1.005, 2)).toBe("1,01")
+    expect(formatValue(0.125, 2)).toBe("0,13")
+    expect(formatValue(9.0649, 2)).toBe("9,06")
+    expect(formatSigned(0.005, 2)).toBe("+0,01")
+    expect(formatSigned(-0.004, 2)).toBe("0,00")
+  })
+
   it("kein Tausenderpunkt, wie auf dem Ausdruck (Teiler 3831,0)", () => {
     expect(formatValue(3831, 1)).toBe("3831,0")
   })
