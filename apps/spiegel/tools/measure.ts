@@ -277,10 +277,11 @@ async function main() {
     out(`| Start: Modell und Lagen des Abends | ${kb(await startPage())} |`)
     out(`| Liste „Alles“: Modell und Lagen aller gezeigten | ${kb(await listPage())} |`)
     // die Abstände sind eine Map, die JSON nicht mitzählt: als Einträge, wie sie an den Browser gehen
-    const { progress } = await progressPage()
+    const { progress, families } = await progressPage()
     const progressJson = {
       ...progress,
       model: { ...progress!.model, deltas: [...progress!.model.deltas] },
+      families,
     }
     out(`| Fortschritt „Alles“: leichtes Modell und Lagen der Ablesung | ${kb(progressJson)} |`)
 

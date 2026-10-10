@@ -68,7 +68,7 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   zurück, ein Feldfehler löschte sonst die Eingaben.
 - **instrumentation:** den Node-Teil nur im Zweig `NEXT_RUNTIME === "nodejs"` laden (`instrumentation-node.ts`); Next
   bündelt die Datei auch für Edge, und dort fehlt `fs` für `pg`.
-- **Wertung des Geräts** als Cookie (`spiegel-scoring`, `src/lib/device*.ts`): Start und Liste rendern auf dem Server.
+- **Wertung des Geräts** als Cookie (`spiegel-scoring`, `src/lib/device*.ts`): Start, Liste und Fortschritt rendern auf dem Server.
   Der Name steht in `device-cookie.ts` ohne Importe, damit die Client-Seite nicht `next/headers` zieht.
 - **Projektion nur aus dem Fachkern.** `cardProjection` und `cardMarks` rechnen, die App speichert. Steigt eine
   Kennzahl-`version` oder `PROJECTION_VERSION`, holt `refreshProjections` die veralteten nach (auch die einer früheren

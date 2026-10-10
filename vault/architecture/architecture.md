@@ -52,7 +52,7 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── packages/shot-help/     @vereinsheim/shot-help — Hilfe zu jeder Kennzahl und Auswertung in
 │                           einfacher Sprache (Themen, Einstieg, Glossar, Fehlschlüsse); Quelle für App
 │                           und Vault-Leitfaden, den `pnpm --filter @vereinsheim/shot-help docs` erzeugt
-│                           (SP-1.11); noch von keiner App genutzt.
+│                           (SP-1.11); apps/spiegel nutzt sie über shot-ui und im Fortschritt.
 ├── packages/shot-ui/       @vereinsheim/shot-ui — Bausteine von Spiegel als React-Komponenten: Scheibe
 │                           (Nummern in Ebenen, Auswahl), Serien als kleine Scheiben, Kennzahl-Kacheln,
 │                           Ablesung, Kopf mit Ergebnis, Schusstabelle, Wertung, Hilfe (Blatt), Zustand der
@@ -62,7 +62,7 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           Scheiben-Liste nach Abend (`list`, N2), Rahmen der App mit Links und
 │                           Blättern (`AppFrame`, `RouteLink`, N3), Start mit dem letzten Abend im
 │                           Formband (`start`, N5); Design 2 (ADR-030, Oktober 2026);
-│                           im Labor erprobt; Start, Liste, Scheibe und Rahmen nutzt apps/spiegel.
+│                           im Labor erprobt; Start, Liste, Scheibe, Zeitraum und Rahmen nutzt apps/spiegel.
 ├── tools/labor/            Labor: Scheiben-Liste, Seite einer Scheibe und eines Zeitraums aus den echten Bausteinen, mit
 │                           Beispielscheiben, den echten Scheiben des Users (Luftpistole, zwei Luftgewehr) und sonst
 │                           erfundenem Luftgewehr,

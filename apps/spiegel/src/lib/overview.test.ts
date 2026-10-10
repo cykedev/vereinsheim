@@ -140,6 +140,8 @@ describe("progressPageData", () => {
       { ...context, scoring: "rings" }
     )
     expect(progress!.state).toMatchObject({ family: lgFamily.slug, scoring: "rings" })
+    // gerechnet in ganzen Ringen, nicht in der Wertung der Adresse
+    expect(progress!.model.metric.key).toBe("result.ringsMean")
     expect(progress!.model.cards.map((c) => c.id).sort()).toEqual([...ids.lg].sort())
     expect(Object.keys(progress!.marks)).toEqual([progress!.model.reading!.card.id])
     // leicht: ohne Werte, Rekorde und Felder der App

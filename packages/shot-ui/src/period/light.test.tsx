@@ -115,6 +115,20 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
       expect(page(light, chosen)).toEqual(page(full, chosen))
   })
 
+  it("auch ohne Vergleich, je Scheibe und je Monat", () => {
+    for (const view of ["cards", "months"] as const) {
+      const plain = periodModel({
+        cards: RAW.map(projected),
+        state: { ...initialPeriodState({ family: "lg-10m" }), view },
+        nowMs: NOW,
+        timeZone: TZ,
+        named: [],
+      })
+      for (const chosen of [null, "k5"])
+        expect(page(lightPeriodModel(plain), chosen), view).toEqual(page(plain, chosen))
+    }
+  })
+
   it("ohne Funktionen: das Modell geht vom Server zum Browser", () => {
     const functions: string[] = []
     const walk = (value: unknown, path: string) => {

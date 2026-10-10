@@ -325,13 +325,18 @@ eigenen Scheiben:
   (`lightPeriodModel`: Scheiben ohne Werte und Rekorde ihrer Projektion, die Kennzahl ohne Rechnung).
 - **Filter schreiben die Adresse:** Zeitraum, Vergleich, Familie, Art, „nur Probe“, Kennzahl und Darstellung; die Seite
   rechnet neu.
-- **Die Wahl bleibt im Browser:** Verlauf, Liste oder Rekord ändern nur die Ablesung und schreiben `pick` mit
-  `replaceState`, ohne Weg zum Server. Die kleine Scheibe der Ablesung holt ihre Lagen nach (`cardMarksAction`); bis
-  dahin steht ein leerer Platz.
+- **Die Wahl bleibt im Browser:** Verlauf, Liste oder Rekord ändern nur die Ablesung, ohne Weg zum Server. `pick`
+  geht erst in die Adresse, wenn die Wahl 250 ms ruht, und nie während eine Navigation läuft. Das Lineal meldet jede
+  Bewegung, und Browser begrenzen `replaceState`. Die kleine Scheibe der Ablesung holt ihre Lagen nach (`cardMarksAction`,
+  ebenfalls verzögert); bis dahin steht ein leerer Platz. Beim Laden gilt `pick` der Adresse, auch nach Zurück im
+  Browser.
+- **Filter ohne Sprung:** `router.push` mit `scroll: false` in einer Transition. Die Schalter stehen im Verlauf, der ab
+  768 px klebt.
+- **Familie geteilt:** `AppShell` merkt sich die zuletzt gewählte Familie aus Liste und Fortschritt (`areaLinks`), wie
+  im Labor.
 - **Zahlen wie im Labor:** „Alles“ über die echten Luftpistolen-Scheiben ergibt dasselbe Ergebnis, dieselben sechs
   Kacheln und dieselben 16 Rekorde.
-- **Ohne:** „Erklärungen“ (die Kurzsätze der Analyse) gibt es im Fortschritt der App noch nicht; das „?“ an jeder Zahl
-  öffnet die Hilfe.
+- **„Erklärungen“** über der Analyse schaltet ihre Kurzsätze an, wie auf der Seite einer Scheibe.
 
 ## Labor näher an der App (9. Oktober 2026)
 

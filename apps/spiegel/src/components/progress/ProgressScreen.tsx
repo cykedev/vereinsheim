@@ -1,13 +1,13 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 
 import { markShots, type CardMark, type MarkShot } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
-import { HelpButton } from "@vereinsheim/shot-ui/help/HelpButton"
+import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
 import { SectionNav } from "@vereinsheim/shot-ui/layout/SectionNav"
@@ -15,7 +15,7 @@ import { PERIOD_SECTIONS, type PeriodSection } from "@vereinsheim/shot-ui/layout
 import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { listFromProgress, openCard, progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
-import { urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
+import { isCardId, urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { rangeDays } from "@vereinsheim/shot-ui/period/calendar"
 import { CardList } from "@vereinsheim/shot-ui/period/CardList"
 import { CardLine, CardReadout } from "@vereinsheim/shot-ui/period/CardReadout"
@@ -37,6 +37,7 @@ import {
 } from "@vereinsheim/shot-ui/period/state"
 import { VolumeChart } from "@vereinsheim/shot-ui/period/VolumeChart"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
+import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { useHelp } from "@/components/shell/HelpContext"
 import { Page } from "@/components/shell/Page"
@@ -46,6 +47,9 @@ import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
 
 const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
+/** so lange ruht die Wahl, bevor sie in die Adresse geht bzw. ihre Lagen geholt werden */
+const ADDRESS_DELAY_MS = 250
+const MARKS_DELAY_MS = 150
 
 /**
  * die Adresse des Fortschritts: ohne Wertung, sie ist die des Geräts (Cookie) und gehört nicht in die Adresse; ein
@@ -58,7 +62,7 @@ const addressOf = (state: PeriodState) =>
  * Fortschritt (N7, Plan `plans/2026-10-10-spiegel-fortschritt.md`): die Seite eines Zeitraums wie im Labor, das Modell
  * hat der Server gerechnet (`periodModel` aus den Projektionen, leicht gemacht). Filter schreiben die Adresse und
  * rechnen auf dem Server neu; eine Wahl (Verlauf, Liste, Rekord) bleibt im Browser: Sie ändert die Ablesung, schreibt
- * `pick` mit `replaceState` und holt die Lagen der kleinen Scheibe nach (`cardMarksAction`).
+ * `pick` verzögert mit `replaceState` und holt die Lagen der kleinen Scheibe nach (`cardMarksAction`).
  */
 export function ProgressScreen({
   model: base,
@@ -81,13 +85,29 @@ export function ProgressScreen({
   const { timeZone, named, scoring } = context
   const active = useActiveSection(PERIOD_IDS)
   const { pill, jumpTo, back, close } = useReturnJump()
+  const [explain, setExplain] = useState(false)
 
-  // die Wahl lebt im Browser; ein neuer Stand vom Server (Filter) bringt seine eigene mit
-  const [chosen, setChosen] = useState(state.chosen)
+  const search = useSearchParams()
+  const [pending, startTransition] = useTransition()
+
+  // die Lagen der kleinen Scheibe: die vom Server, weitere zu einer neuen Wahl nachgeholt und gemerkt
+  const [marks, setMarks] = useState<ReadonlyMap<string, readonly MarkShot[]>>(() =>
+    marksById(initialMarks)
+  )
+  // die Wahl lebt im Browser. Beim ersten Zeichnen gilt `pick` der Adresse: Nach Zurück im Browser zeigt der Router den
+  // Stand vom Server ohne die Wahl, die Adresse trägt sie (Review). Ein neuer Stand vom Server (Filter) bringt seine
+  // eigene Wahl und die Lagen ihrer Ablesung mit
+  const [chosen, setChosen] = useState(() => {
+    const pick = search.get("pick")
+    return pick && isCardId(pick) ? pick : state.chosen
+  })
   const [seen, setSeen] = useState(state)
+  const [dirty, setDirty] = useState(false)
   if (seen !== state) {
     setSeen(state)
     setChosen(state.chosen)
+    setDirty(false)
+    setMarks((previous) => new Map([...previous, ...marksById(initialMarks)]))
   }
   const current: PeriodState = useMemo(() => ({ ...state, chosen }), [state, chosen])
   const model = useMemo(() => ({ ...base, reading: periodReading(base, chosen) }), [base, chosen])
@@ -96,39 +116,52 @@ export function ProgressScreen({
     (action: PeriodAction) => {
       const next = periodReducer(current, action)
       if (action.type === "choose" || action.type === "pick") {
+        // das Lineal meldet jede Bewegung: nur die Ablesung, die Adresse folgt verzögert (unten)
         setChosen(next.chosen)
-        window.history.replaceState(null, "", `${addressOf(next)}${window.location.hash}`)
+        setDirty(true)
         return
       }
-      router.push(addressOf(next))
+      // die Seite bleibt, wo sie ist (die Schalter stehen im Verlauf, der ab 768 px klebt)
+      startTransition(() => router.push(addressOf(next), { scroll: false }))
     },
     [current, router]
   )
 
-  // die Lagen der kleinen Scheibe: die vom Server, weitere zu einer neuen Wahl nachgeholt und gemerkt
-  const [marks, setMarks] = useState<ReadonlyMap<string, readonly MarkShot[]>>(() =>
-    marksById(initialMarks)
-  )
+  // die Wahl in die Adresse, erst wenn sie ruht: Ein Zug über den Verlauf wählt bei jeder Bewegung, und Browser
+  // begrenzen `replaceState` (Safari wirft). Nicht während eine Navigation läuft, sonst bricht der Router sie ab (Review)
+  const address = useMemo(() => addressOf(current), [current])
+  useEffect(() => {
+    if (!dirty || pending) return
+    const timer = setTimeout(() => {
+      window.history.replaceState(null, "", `${address}${window.location.hash}`)
+    }, ADDRESS_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [address, dirty, pending])
+
   const reading = model.reading
   const readingId = reading?.card.id ?? null
+  // die Lagen der Ablesung, erst wenn die Wahl ruht; eine Antwort gilt für ihre Scheibe, auch wenn schon eine andere
+  // gewählt ist. Ein Fehler wird nicht gemerkt, die nächste Wahl versucht es wieder (Review)
   useEffect(() => {
     if (!readingId || marks.has(readingId)) return
-    let live = true
-    const keep = (shots: readonly MarkShot[]) => {
-      if (live) setMarks((previous) => new Map(previous).set(readingId, shots))
-    }
-    cardMarksAction(readingId)
-      .then((found) => keep(found ? markShots(found) : []))
-      .catch(() => keep([]))
-    return () => {
-      live = false
-    }
+    const timer = setTimeout(() => {
+      cardMarksAction(readingId)
+        .then((result) => {
+          if ("success" in result)
+            setMarks((previous) =>
+              new Map(previous).set(readingId, result.data ? markShots(result.data) : [])
+            )
+        })
+        .catch(() => {})
+    }, MARKS_DELAY_MS)
+    return () => clearTimeout(timer)
   }, [readingId, marks])
 
   const readingValue = reading ? (model.values.find((v) => v.id === reading.card.id) ?? null) : null
-  // die Wege als Adressen: eine Scheibe mit diesem Fortschritt als Herkunft, „Alle in Scheiben zeigen“
+  // die Wege als Adressen: eine Scheibe mit diesem Fortschritt als Herkunft, in der Wertung des Geräts (`openCard`
+  // nimmt bei Herkunft Fortschritt dessen Wertung); „Alle in Scheiben zeigen“ ohne Wertung
+  const cardRoute = (id: string) => openCard(progressRoute(current, null), id)
   const here = progressRoute({ ...current, scoring: "decimal" }, null)
-  const cardRoute = (id: string) => openCard(here, id, scoring)
   const chooseFromList = useCallback(
     (id: string) => {
       // nur eine neue Wahl holt den Verlauf ins Bild, das Abwählen nicht
@@ -323,14 +356,21 @@ export function ProgressScreen({
           {
             id: "analysis",
             node: (
-              <PeriodInsights
-                model={model}
-                scoring={scoring}
-                timeZone={timeZone}
-                explain={false}
-                onHelp={onHelp}
-                onChoose={chooseFromRecord}
-              />
+              <div className="grid gap-2">
+                <div className="flex justify-end">
+                  <ToggleChip pressed={explain} icon={<HelpIcon />} onPressedChange={setExplain}>
+                    Erklärungen
+                  </ToggleChip>
+                </div>
+                <PeriodInsights
+                  model={model}
+                  scoring={scoring}
+                  timeZone={timeZone}
+                  explain={explain}
+                  onHelp={onHelp}
+                  onChoose={chooseFromRecord}
+                />
+              </div>
             ),
           },
         ]}

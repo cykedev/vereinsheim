@@ -39,6 +39,12 @@ export function AppShell({ isAdmin, children }: { isAdmin: boolean; children: Re
   if (route.page === "progress" && memoryKey(route) !== memoryKey(memory.progress))
     setMemory({ ...memory, progress: { ...route, section: null } })
 
+  // die zuletzt gewählte Familie: Scheiben und Fortschritt teilen sie wie im Labor (User, 9. Oktober 2026, `areaLinks`)
+  const [family, setFamily] = useState<string | null>(null)
+  const routeFamily =
+    route.page === "cards" || route.page === "progress" ? route.query.family : null
+  if (routeFamily && routeFamily !== family) setFamily(routeFamily)
+
   const [helpId, setHelpId] = useState<string | null>(null)
   const links = useMemo(
     () => ({
@@ -54,7 +60,7 @@ export function AppShell({ isAdmin, children }: { isAdmin: boolean; children: Re
         <AppFrame
           // Unterseiten von Admin (Konten) kennt das Routen-Modell nicht; sie gehören zu Admin
           current={areaOf(route) ?? (pathname.startsWith("/admin/") ? "admin" : null)}
-          links={areaLinks(memory, null)}
+          links={areaLinks(memory, family)}
           openCount={0}
           isAdmin={isAdmin}
           sidebarFooter={<ThemeSwitch />}

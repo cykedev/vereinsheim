@@ -95,6 +95,8 @@ Liste rechnen sie auf dem Server; an den Browser gehen nur das Modell und die La
 | an den Browser, Liste „Alles“ | dasselbe | 1.040 KB (30 Zeilen je Monat, Lagen jeder Zeile) |
 | Start auf dem Server (lesen, rechnen, Lagen) | – | 70 ms |
 | Liste „Alles“ auf dem Server | – | 69 ms, davon 42 ms Lesen |
+| Fortschritt „Alles“ auf dem Server (lesen, rechnen, leicht machen) | – | 64 ms |
+| an den Browser, Fortschritt „Alles“ | dasselbe | 936 KB (leichtes Modell: eine Zeile je Scheibe für Liste und Verlauf, Werte, Abstände; Lagen nur der Ablesung) |
 
 Zwei Befunde beim Umbau:
 - **Datum je Zeile:** `@vereinsheim/lib/format` baute für jeden Aufruf einen neuen `Intl.DateTimeFormat`, etwa 70 µs.

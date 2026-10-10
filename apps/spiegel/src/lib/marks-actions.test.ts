@@ -8,7 +8,7 @@ import { createTestSite, type TestSite } from "../../test/fixtures"
 import { toMetricShot, writeRevision } from "./db/cards"
 
 const mocks = vi.hoisted(() => ({
-  session: null as null | { user: { id: string; role: string } },
+  session: null as null | { user: { id: string; role: string; mustChangePassword?: boolean } },
 }))
 vi.mock("@/lib/auth-helpers", () => ({ getAuthSession: async () => mocks.session }))
 
@@ -42,15 +42,18 @@ afterAll(async () => {
 })
 
 describe("cardMarksAction", () => {
-  it("die Lagen der eigenen Scheibe; fremde, gelöschte, unbekannte und ohne Sitzung keine", async () => {
+  it("die Lagen der eigenen Scheibe; fremde, gelöschte und unbekannte keine; ohne Sitzung ein Fehler", async () => {
     mocks.session = { user: { id: site.ownerId, role: "USER" } }
-    expect(await cardMarksAction(own)).toEqual(cardMarks(shots))
-    expect(await cardMarksAction(trash)).toBeNull()
-    expect(await cardMarksAction("gibt-es-nicht")).toBeNull()
-    expect(await cardMarksAction(42 as unknown as string)).toBeNull()
+    expect(await cardMarksAction(own)).toEqual({ success: true, data: cardMarks(shots) })
+    expect(await cardMarksAction(trash)).toEqual({ success: true, data: null })
+    expect(await cardMarksAction("gibt-es-nicht")).toEqual({ success: true, data: null })
+    expect(await cardMarksAction("../x")).toEqual({ success: true, data: null })
+    expect(await cardMarksAction(42 as unknown as string)).toEqual({ success: true, data: null })
     mocks.session = { user: { id: "jemand-anderes", role: "ADMIN" } }
-    expect(await cardMarksAction(own)).toBeNull()
+    expect(await cardMarksAction(own)).toEqual({ success: true, data: null })
+    mocks.session = { user: { id: site.ownerId, role: "USER", mustChangePassword: true } }
+    expect(await cardMarksAction(own)).toHaveProperty("error")
     mocks.session = null
-    expect(await cardMarksAction(own)).toBeNull()
+    expect(await cardMarksAction(own)).toHaveProperty("error")
   })
 })
