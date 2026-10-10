@@ -3,10 +3,9 @@ import { afterAll, describe, expect, it } from "vitest"
 
 import { LOGIN_RATE_LIMIT_CONFIG } from "@vereinsheim/lib/auth/rate-limit/config"
 import { createLoginRateLimitService } from "@vereinsheim/lib/auth/rate-limit/limiter"
+import { createDbStore } from "@vereinsheim/lib/auth/rate-limit/stores"
 
 import { db } from "@/lib/db"
-
-import { createDbStore } from "./store"
 
 // Gegen die Dev-Datenbank, mit eigenen Schlüsseln: Die Anmeldung läuft in Produktion über diesen Store, die Tests der
 // übrigen App über den im Speicher. Nie `resetForTests` hier, das leerte die ganze Tabelle.
@@ -21,7 +20,11 @@ afterAll(async () => {
 
 describe("Ratenbegrenzung über die Datenbank", () => {
   it("sperrt eine E-Mail nach fünf Fehlversuchen und gibt sie nach der Sperrzeit frei", async () => {
-    const service = createLoginRateLimitService(createDbStore(), LOGIN_RATE_LIMIT_CONFIG)
+    // der Store aus der Bibliothek gegen die echte Tabelle: passt der Prisma-Delegate auf die Schnittstelle?
+    const service = createLoginRateLimitService(
+      createDbStore(db.loginRateLimitBucket),
+      LOGIN_RATE_LIMIT_CONFIG
+    )
     const nowMs = Date.now()
     for (let i = 0; i < LOGIN_RATE_LIMIT_CONFIG.maxAttemptsPerEmail; i++) {
       const state = await service.checkLoginAllowed(email, null, nowMs + i)
