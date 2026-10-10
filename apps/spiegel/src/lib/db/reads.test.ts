@@ -102,7 +102,7 @@ describe("familyCards", () => {
       [FLAG_COUNTED_AS_MATCH],
     ])
     // amtliche Wertung von der Disziplin (SF-74), nur mit Wertungsschüssen
-    expect(new Set(cards.map((c) => c.official))).toEqual(new Set(["rings", null]))
+    expect(new Set(cards.map((c) => c.official))).toEqual(new Set(["rings", undefined]))
     for (const card of cards) expect(card).not.toHaveProperty("shots")
     expect(cards.every((c) => c.familyId === site.familyId)).toBe(true)
   })
@@ -205,7 +205,7 @@ describe("cardWithShots", () => {
     const overview = await familyCards(db, { ownerId: site.ownerId, familyId: site.familyId })
     const probeOnly = overview.find((c) => c.projection.probeOnly)!
     const withMatch = overview.find((c) => !c.projection.probeOnly)!
-    expect(probeOnly.official).toBeNull()
+    expect(probeOnly).not.toHaveProperty("official")
     expect(withMatch.official).toBe("rings")
     const page = await cardWithShots(db, { cardId: probeOnly.id, ownerId: site.ownerId })
     expect(page).not.toHaveProperty("official")
@@ -215,7 +215,7 @@ describe("cardWithShots", () => {
 
   it("ohne amtliche Wertung an der Disziplin keine an der Scheibe", async () => {
     const [lg] = await familyCards(db, { ownerId: site.ownerId, familyId: otherFamilyId })
-    expect(lg.official).toBeNull()
+    expect(lg).not.toHaveProperty("official")
     expect(await cardWithShots(db, { cardId: lg.id, ownerId: site.ownerId })).not.toHaveProperty(
       "official"
     )

@@ -7,7 +7,7 @@ import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import type { CardProjection, ProjectedCard } from "@vereinsheim/shot-core/projection"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
-import type { CardState, Prisma, Scoring } from "@/generated/prisma/client"
+import type { CardState, Prisma } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
 import { shotFromRow, toMetricShot } from "./cards"
@@ -16,8 +16,6 @@ import { shotFromRow, toMetricShot } from "./cards"
 export interface OverviewCard extends ProjectedCard {
   disciplineId: number
   familyId: number | null
-  /** amtliche Wertung der Disziplin (SF-74); null unbekannt. Training nur aus Probe hat keine, das wertet das Modell */
-  official: Scoring | null
   state: CardState
   stand: string | null
 }
@@ -66,8 +64,10 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         kind: row.kind,
         complete: row.complete,
         flags: row.flags,
-        // nur Probe ist Training und hat keine amtliche Wertung (wie im Labor)
-        official: projection.probeOnly ? null : row.discipline.officialScoring,
+        // amtliche Wertung der Disziplin (SF-74), wenn bekannt; nur Probe ist Training und hat keine (wie im Labor)
+        ...(!projection.probeOnly && row.discipline.officialScoring
+          ? { official: row.discipline.officialScoring }
+          : {}),
         state: row.state,
         stand: row.stand,
         disciplineId: row.disciplineId,

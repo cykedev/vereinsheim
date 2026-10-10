@@ -2,12 +2,26 @@ import { describe, expect, it } from "vitest"
 
 import { card } from "../__fixtures__/period"
 import { OWN_SHOTS } from "../__fixtures__/meyton-eigene-scheiben"
-import { FLAG_SUSPICIOUS, METRICS, type MetricShot } from "../metrics"
-import { cardValues, type PeriodCard } from "./period"
 import {
+  FLAG_SUSPICIOUS,
+  METRICS,
+  asOnPrintout,
+  computeMetric,
+  inScoring,
+  inShotOrder,
+  metricByKey,
+  type MetricShot,
+} from "../metrics"
+import { cardValues, trainingVolume, type PeriodCard } from "./period"
+import {
+  cardMarks,
   cardProjection,
+  markShots,
+  pooledMean,
+  projectCard,
   projectedRecords,
   projectedValues,
+  projectedVolume,
   projectionVersion,
   type ProjectedCard,
 } from "./projection"
@@ -80,14 +94,7 @@ const special: PeriodCard[] = [
 ]
 const CARDS = [...own, ...special]
 
-const PROJECTED: ProjectedCard[] = CARDS.map((c) => ({
-  id: c.id,
-  startedAtMs: c.startedAtMs,
-  kind: c.kind,
-  complete: c.complete,
-  flags: c.flags ?? [],
-  projection: cardProjection(c),
-}))
+const PROJECTED: ProjectedCard[] = CARDS.map(projectCard)
 
 describe("Projektion je Scheibe (ADR-031)", () => {
   it("die Testmenge ist reich genug: echte Scheiben und jeder Sonderfall", () => {
@@ -140,13 +147,16 @@ describe("Projektion je Scheibe (ADR-031)", () => {
   })
 
   it("Version und Ausgabe hängen zusammen: Ändert sich die Ausgabe, muss die Version steigen", () => {
-    const json = JSON.stringify(CARDS.map((c) => ({ ...cardProjection(c), version: undefined })))
+    // die Lagen gehören dazu: Sie werden mit derselben Version gespeichert
+    const json = JSON.stringify(
+      CARDS.map((c) => ({ ...cardProjection(c), version: undefined, marks: cardMarks(c.shots) }))
+    )
     const output = `${json.length}-${fnv1a(json)}`
     // Wird dieser Test rot, rechnet die Projektion anders als die gespeicherten: PROJECTION_VERSION (oder die
     // `version` der geänderten Kennzahl) erhöhen, damit `refreshProjections` sie neu rechnet, dann beide Werte setzen.
     expect({ version: projectionVersion(), output }).toEqual({
-      version: "p1-26104e11",
-      output: "43901-8d09670d",
+      version: "p2-26104e11",
+      output: "57741-0a6c3183",
     })
   })
 
@@ -155,4 +165,91 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     expect(probe).toMatchObject({ probeOnly: true, suspicious: false, printedShots: 10 })
     expect(cardProjection(special[2]).suspicious).toBe(true)
   })
+})
+
+describe("projectCard", () => {
+  it("Merkmale der Scheibe und ihre Projektion; die amtliche Wertung nur, wenn sie bekannt ist", () => {
+    const official = { ...special[4], official: "rings" as const, flags: ["x"] }
+    expect(projectCard(official)).toEqual({
+      id: "match",
+      startedAtMs: official.startedAtMs,
+      kind: "competition",
+      complete: true,
+      flags: ["x"],
+      official: "rings",
+      projection: cardProjection(official),
+    })
+    expect(projectCard(special[0])).not.toHaveProperty("official")
+    expect(projectCard(special[0]).flags).toEqual([])
+  })
+})
+
+describe("Lagen für die kleinen Scheiben", () => {
+  const shot = (over: Partial<MetricShot>): MetricShot => ({
+    seq: 1,
+    xUm: 0,
+    yUm: 0,
+    decimalTenths: 100,
+    ring: 10,
+    innerTen: false,
+    firedAtMs: 0,
+    kind: "match",
+    series: 1,
+    ...over,
+  })
+
+  it("wie am Ausdruck, in Abgabefolge, auf 10 µm, ohne Lage weg, ohne Wert ohne Ring", () => {
+    const marks = cardMarks([
+      shot({ seq: 3, xUm: 1234, yUm: -5675, ring: 9 }),
+      shot({ seq: 1, xUm: -4, yUm: 6, ring: 10 }),
+      shot({ seq: 2, xUm: null, yUm: null }),
+      shot({ seq: 4, xUm: 100, yUm: 200, ring: null, decimalTenths: null }),
+      shot({ seq: 5, xUm: 999, yUm: 999, kind: "probe", series: null }),
+    ])
+    expect(marks).toEqual([
+      [0, 1, 10],
+      [123, -567, 9],
+      [10, 20, null],
+    ])
+    expect(markShots(marks)).toEqual([
+      { xUm: 0, yUm: 10, ring: 10 },
+      { xUm: 1230, yUm: -5670, ring: 9 },
+      { xUm: 100, yUm: 200, ring: null },
+    ])
+  })
+
+  it("nur Probe zeigt die Probe; an den echten Scheiben höchstens 5 µm neben der Lage", () => {
+    expect(cardMarks(special[0].shots)).toHaveLength(10)
+    for (const c of own) {
+      const shown = inShotOrder(asOnPrintout(c.shots))
+      const drawn = markShots(cardMarks(c.shots))
+      expect(drawn).toHaveLength(shown.length)
+      drawn.forEach((mark, i) => {
+        expect(Math.abs(mark.xUm - (shown[i].xUm as number))).toBeLessThanOrEqual(5)
+        expect(Math.abs(mark.yUm - (shown[i].yUm as number))).toBeLessThanOrEqual(5)
+        expect(mark.ring).toBe(shown[i].ring)
+      })
+    }
+  })
+})
+
+describe("Umfang und Ø über mehrere Scheiben aus der Projektion", () => {
+  it("projectedVolume wie trainingVolume", () => {
+    const week = (ms: number) => String(Math.floor(ms / (7 * DAY)))
+    const day = (ms: number) => String(Math.floor(ms / DAY))
+    expect(projectedVolume(PROJECTED, week, day)).toEqual(trainingVolume(CARDS, week, day))
+  })
+
+  it.each(["decimal", "rings"] as const)(
+    "pooledMean wie computeMetric über die Schüsse zusammen (%s)",
+    (scoring) => {
+      const metric = inScoring(metricByKey("result.decimalMean")!, scoring)
+      const groups = [CARDS, own.slice(0, 3), special, [special[0]], [special[3], special[5]]]
+      for (const group of groups) {
+        const shots = group.flatMap((c) => [...asOnPrintout(c.shots)])
+        expect(pooledMean(group.map(projectCard), scoring)).toBe(computeMetric(metric, shots))
+      }
+      expect(pooledMean([], scoring)).toBeNull()
+    }
+  )
 })

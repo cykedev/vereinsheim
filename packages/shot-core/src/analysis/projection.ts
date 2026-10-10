@@ -6,13 +6,16 @@
 import {
   FLAG_SUSPICIOUS,
   METRICS,
+  asOnPrintout,
   inScoring,
   inShotOrder,
+  metricByKey,
   type MetricDefinition,
+  type MetricShot,
   type Scoring,
 } from "../metrics"
 import { byStart, cardShots } from "./card-shots"
-import { cardValues, type CardValue, type PeriodCard } from "./period"
+import { cardValues, type CardValue, type PeriodCard, type VolumeBucket } from "./period"
 import {
   FLAG_COUNTED_AS_MATCH,
   RECORD_EXCLUDING_FLAGS,
@@ -23,10 +26,11 @@ import {
 } from "./records"
 
 /**
- * Stand der Rechnung, die nicht in den Versionen der Kennzahlen steht: Form der Projektion und die Kandidaten der
- * Rekorde (`cardRecordCandidates`). Erhöhen, wenn sich eins davon ändert; dann werden alle Projektionen neu gerechnet.
+ * Stand der Rechnung, die nicht in den Versionen der Kennzahlen steht: Form der Projektion, die Kandidaten der Rekorde
+ * (`cardRecordCandidates`) und die Lagen (`cardMarks`), die mit ihr gespeichert werden. Erhöhen, wenn sich eins davon
+ * ändert; dann werden alle Projektionen neu gerechnet. 2: Lagen für die kleinen Scheiben (Oktober 2026).
  */
-const PROJECTION_VERSION = 1
+const PROJECTION_VERSION = 2
 
 const CARD_METRICS = METRICS.filter((metric) => metric.scopes.includes("card"))
 
@@ -52,6 +56,8 @@ export interface ProjectedCard {
   kind: PeriodCard["kind"]
   complete: boolean
   flags: readonly string[]
+  /** amtliche Wertung der Disziplin wie `PeriodCard.official`; fehlt, wenn sie unbekannt ist */
+  official?: Scoring
   projection: CardProjection
 }
 
@@ -102,6 +108,102 @@ export function cardProjection(input: PeriodCard): CardProjection {
       rings: cardRecordCandidates(card, "rings", true),
     },
   }
+}
+
+/** eine Scheibe mit Schüssen als Eingabe der Übersichten: ihre Merkmale und ihre Projektion (Labor, Tests) */
+export function projectCard(card: PeriodCard): ProjectedCard {
+  return {
+    id: card.id,
+    startedAtMs: card.startedAtMs,
+    kind: card.kind,
+    complete: card.complete,
+    flags: card.flags ?? [],
+    ...(card.official ? { official: card.official } : {}),
+    projection: cardProjection(card),
+  }
+}
+
+/** Raster der Lagen: 10 µm, weit unter einem Pixel der kleinen Scheiben */
+const MARK_UM = 10
+
+/** Lage eines Schusses für die kleinen Scheiben: x und y in 10 µm, der Ring; ohne Wert null */
+export type CardMark = readonly [x: number, y: number, ring: number | null]
+
+/** was eine kleine Scheibe von einem Schuss zeichnet */
+export interface MarkShot {
+  xUm: number
+  yUm: number
+  ring: number | null
+}
+
+const finite = (value: number | null | undefined): value is number =>
+  typeof value === "number" && Number.isFinite(value)
+
+/**
+ * Die Lagen einer Scheibe für die kleinen Scheiben der Übersichten: die Schüsse wie am Ausdruck (`asOnPrintout`, bei
+ * nur Probe die Probe), in Abgabefolge, nur mit Lage. Gespeichert neben der Projektion und nur für die gezeigten
+ * Scheiben gelesen; rund 0,6 KB bei 40 Schuss statt aller Angaben jedes Schusses.
+ */
+export function cardMarks(shots: readonly MetricShot[]): CardMark[] {
+  return inShotOrder(asOnPrintout(shots)).flatMap((shot): CardMark[] =>
+    finite(shot.xUm) && finite(shot.yUm)
+      ? [
+          [
+            Math.round(shot.xUm / MARK_UM) || 0,
+            Math.round(shot.yUm / MARK_UM) || 0,
+            shot.ring ?? null,
+          ],
+        ]
+      : []
+  )
+}
+
+/** die Lagen zurück in µm, wie `MiniTarget` sie zeichnet */
+export function markShots(marks: readonly CardMark[]): MarkShot[] {
+  return marks.map(([x, y, ring]) => ({ xUm: x * MARK_UM, yUm: y * MARK_UM, ring }))
+}
+
+/** wie `trainingVolume`, aus den Projektionen: Schüsse wie am Ausdruck sind `printedShots` */
+export function projectedVolume(
+  cards: readonly ProjectedCard[],
+  bucketOf: (atMs: number) => string,
+  dayOf: (atMs: number) => string
+): VolumeBucket[] {
+  const buckets = new Map<string, { shots: number; cards: number; days: Set<string> }>()
+  for (const card of byStart(cards)) {
+    const key = bucketOf(card.startedAtMs)
+    const bucket = buckets.get(key) ?? { shots: 0, cards: 0, days: new Set<string>() }
+    bucket.shots += card.projection.printedShots
+    bucket.cards += 1
+    bucket.days.add(dayOf(card.startedAtMs))
+    buckets.set(key, bucket)
+  }
+  return [...buckets].map(([key, b]) => ({
+    key,
+    shots: b.shots,
+    cards: b.cards,
+    days: b.days.size,
+  }))
+}
+
+/**
+ * Ø je Schuss über alle Schüsse mehrerer Scheiben zusammen, nicht das Mittel der Mittel: wie `computeMetric` mit dem
+ * Ø je Schuss über ihre Schüsse wie am Ausdruck (nur Probe zählt). Aus Wert und n je Scheibe wird die Summe zurück auf
+ * das Raster der Wertung gerundet (Zehntel bzw. ganze Ringe); so ist sie exakt, obwohl der Wert gerundet gespeichert
+ * ist. null ohne Schuss mit Wert.
+ */
+export function pooledMean(cards: readonly ProjectedCard[], scoring: Scoring): number | null {
+  const key = inScoring(metricByKey("result.decimalMean") as MetricDefinition, scoring).key
+  const step = scoring === "decimal" ? 10 : 1
+  let units = 0
+  let n = 0
+  for (const card of cards) {
+    const entry = card.projection.values[key]
+    if (!entry) continue
+    units += Math.round(entry.value * entry.n * step)
+    n += entry.n
+  }
+  return n ? units / step / n : null
 }
 
 /** wie `cardValues`, aus den Projektionen */
