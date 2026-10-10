@@ -13,7 +13,7 @@ try {
 }
 
 const fp = input?.tool_input?.file_path
-const m = fp && String(fp).match(/(?:^|\/)apps\/(ringwerk|treffsicher)\/(.+\.(?:ts|tsx))$/)
+const m = fp && String(fp).match(/(?:^|\/)apps\/(ringwerk|treffsicher|spiegel)\/(.+\.(?:ts|tsx))$/)
 if (!m) process.exit(0) // nur App-TS/TSX-Quelldateien
 
 const app = m[1]
