@@ -160,7 +160,8 @@ Ingest-API selbst keinen Inhalt schreiben, prüft SP-1.6b.
 
 Synthetisch ([[adr-029]]): Name `Muster`, SportpassID `12345678`, Spalten nach [[meyton-ssmdb2]] für
 6.0.2, Typen nach Handbuch geschätzt, bis SP-0.6 das echte Schema bringt. Werte plausibel, aber nicht
-nach `shot-core` gerechnet; Fälle je Sonderfall bringt der Generator (SP-1.0b).
+nach `shot-core` gerechnet. Fälle je Sonderfall im echten Schema, mit Werten aus `shot-core`, liegen seit dem 10. Oktober
+2026 in `packages/ssmdb2-cases` (`cases/v1/<SF-ID>`, SP-1.0b).
 
 | Datei | Inhalt |
 |---|---|
@@ -172,4 +173,4 @@ nach `shot-core` gerechnet; Fälle je Sonderfall bringt der Generator (SP-1.0b).
 ## Noch nicht im Vertrag
 
 Kopplung, Aufträge und Heartbeat (SP-1.4b, SP-1.6b), Zeilen-Hashes für die Zeilenversionen (SP-1.6b,
-mit derselben `canonicalize`), Fälle je Sonderfall in MySQL (SP-1.0b).
+mit derselben `canonicalize`).

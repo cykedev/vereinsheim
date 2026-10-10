@@ -31,6 +31,27 @@ relates_to: ["[[spiegel-bridge]]", "[[spiegel-ingest-pipeline]]"]
 
 Dazu eine Tabelle `Version` mit der Schema-Version. **Beim Verein** (Kopie vom 9. Oktober 2026, [[src-ssmdb2-kopie-2026-10-09]]): InnoDB, nur diese Primärschlüssel, kein Index auf `Zeitstempel`; `Serien` und `Treffer` hängen per Fremdschlüssel mit `ON DELETE CASCADE ON UPDATE CASCADE` an `Scheiben`. Zwei Jahre Historie sind klein: 1.532 Scheiben, 45.008 Treffer, gepackt 1 MB.
 
+Das Schema der Kopie (nur DDL) steht in `packages/ssmdb2-cases/schema/ssmdb2.sql`: **alle Spalten NOT NULL**,
+Namen `StarterlistenID`, `KlassenID`, `VereinsID`, `MannschaftsID`, `RanglistenID`, `GruppenID`, Textspalten
+`varchar(36)`, `Status varchar(72)`, `StandNr` und `Trefferzahl` `smallint(6)`, `utf8mb3`; `Version` hat eine Spalte
+`Versionsnummer int(11)` mit dem Wert 9.
+
+**Felder im Training** (eigene Scheiben des Users in der Kopie): `Startzeit` „0000-00-00 00:00:00“, `Status` leer,
+`Starterliste` „Direktbelegung“ (oder leer mit ID 0), `Rangliste` etwa „Training-LP“, `Gruppe` leer mit ID 0,
+`StandNrText` die Standnummer als Text. Ohne Wertungsschuss sind `Trefferzahl`, `TotalRing` und `TotalRing01` 0 und
+beide `BesterTeiler` 2147483647. Die Probe hat eigene Zeilen in `Serien` (Stellung 0, Serien zu zehn).
+
+**`Text` je Anzeigeart:**
+
+| Anzeigeart | `Text` |
+|---|---|
+| 1 | „10.1“ |
+| 2 | „9“, Innenzehner „10*“ |
+| 5 (verdeckt) | „***“ bei Ring und Zehntel 0; der Teiler bleibt |
+| 7 | „9.9 851T“ (Teiler in 1/100 mm, abgeschnitten) |
+| 8 | „9 995T“ |
+| über der Soll-Zahl | „0F“ |
+
 ## DisziplinID
 
 Achtstellig: 1. Ziffer Entfernung (1 = 10 m, 2 = 15 m, 3 = 25 m, 4 = 50 m, 5 = 100 m, 6 = 300 m, 7 = sonstige), Ziffern 2–5 Regelnummer, letzte drei Ziffern Zahl der Wertungsschüsse. Beispiel `40180060` = 50 m, Regel 1.80 (KK liegend), 60 Schuss. Nur bei DSB-Disziplinen sind die Ziffern 2–5 die DSB-Regel; Training, Liga und ISSF nutzen Meyton-eigene Nummern ([[spiegel-target-library]]).

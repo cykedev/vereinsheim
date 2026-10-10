@@ -40,6 +40,9 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── packages/ingest-contract/ @vereinsheim/ingest-contract — Vertrag Brücke ↔ Spiegel: Snapshot v1
 │                           (Zod, daraus JSON-Schema), Prüfsumme über RFC 8785, Testvektoren und
 │                           eingefrorene Beispiele (SP-1.0a); noch von keiner App genutzt.
+├── packages/ssmdb2-cases/  @vereinsheim/ssmdb2-cases — Sonderfall-Testdaten (SP-1.0b): echtes SSMDB2-Schema,
+│                           Baukasten, der wie Meyton schreibt, 30 Fälle mit Snapshots v1, SQL je Schritt und
+│                           erwartetem Ergebnis unter `cases/v1`; `replay` spielt sie in mariadb:11 ab.
 ├── packages/shot-help/     @vereinsheim/shot-help — Hilfe zu jeder Kennzahl und Auswertung in
 │                           einfacher Sprache (Themen, Einstieg, Glossar, Fehlschlüsse); Quelle für App
 │                           und Vault-Leitfaden, den `pnpm --filter @vereinsheim/shot-help docs` erzeugt

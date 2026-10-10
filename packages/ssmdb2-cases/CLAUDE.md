@@ -1,12 +1,54 @@
 # @vereinsheim/ssmdb2-cases — Claude Scope-Notiz
 
-Sonderfall-Testdaten für Brücke und Spiegel (SP-1.0 b, Oktober 2026, `plans/2026-10-10-spiegel-ssmdb2-cases.md`): je
-Sonderfall mit SSMDB2-Bezug eine erfundene Ablage im echten Schema als Folge von Ständen, mit Snapshots v1, SQL je
-Schritt und erwartetem Ergebnis. Fachwissen: `vault/meyton/meyton-ssmdb2.md`, `vault/spiegel/spiegel-edge-cases.md`.
+Sonderfall-Testdaten für Brücke und Spiegel (SP-1.0 b, 10. Oktober 2026, `plans/2026-10-10-spiegel-ssmdb2-cases.md`):
+je Sonderfall mit Bezug zur Ablage eine erfundene SSMDB2 im echten Schema als Folge von Ständen, mit Snapshots v1,
+SQL je Schritt und von Hand geschriebenem erwartetem Ergebnis. Die Brücke (SP-1.4) und das Einlesen (SP-1.6) werden
+an ihnen abgenommen. Fachwissen: `vault/meyton/meyton-ssmdb2.md`, `vault/spiegel/spiegel-edge-cases.md`,
+`vault/spiegel/spiegel-ingest-contract.md`.
+
+## Befehle
+
+| Befehl                                           | Zweck                                                                        |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `pnpm --filter @vereinsheim/ssmdb2-cases cases`  | Fälle nach `cases/v1/<SF-ID>/` schreiben (nach jeder Änderung an einem Fall) |
+| `pnpm --filter @vereinsheim/ssmdb2-cases replay` | Fälle in `mariadb:11` abspielen und wie die Brücke lesen (Docker, ~20 s)     |
+
+## Exporte
+
+| Export                               | Datei                | Inhalt                                                                                                                                                 |
+| ------------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@vereinsheim/ssmdb2-cases/schema`   | `src/schema.ts`      | `COLUMNS` (Spalte → `COLUMN_TYPE` je Tabelle), `PRIMARY_KEYS`, `SCHEMA_VERSION` (9), Zeilentypen; folgt `schema/ssmdb2.sql`                            |
+| `@vereinsheim/ssmdb2-cases/values`   | `src/values.ts`      | `shotValues` (Ring, Zehntel, Innenzehner, Teiler aus der Lage), `displayText` je Anzeigeart, `overTargetValues`, `hiddenValues`                        |
+| `@vereinsheim/ssmdb2-cases/ablage`   | `src/ablage.ts`      | die Ablage im Speicher (Version, Scheiben, Serien, Treffer), `trefferOf`, `serienOf`, `deleteScheibe` (Kaskade)                                        |
+| `@vereinsheim/ssmdb2-cases/stand`    | `src/stand.ts`       | der Baukasten: `Sim` (Uhr, Lesungen), `Card` (Schuss, Handeintrag, Neustart der Probe, Anzeigeart, Korrektur, Löschen, Riss), `scheibenIdAt`, `MUSTER` |
+| `@vereinsheim/ssmdb2-cases/output`   | `src/output.ts`      | `readingSnapshots` (Snapshot v1 je Lesung und Scheibe), `stepSql` (Anweisungen vom vorigen Stand), `textCell`, `sqlLiteral`                            |
+| `@vereinsheim/ssmdb2-cases/expected` | `src/expected.ts`    | `ExpectedCard` (was die Brücke tut, Schüsse je Lesung, Merkmale, Vollständigkeit, zählende Schüsse), `numbers`                                         |
+| `@vereinsheim/ssmdb2-cases/cases`    | `src/cases/index.ts` | `CASES` (30 Fälle), `runCase`                                                                                                                          |
 
 ## Regeln
 
-- **Nur erfundene Daten** (ADR-029): Namen „Muster“, Sportpass 12345678, kein Verein, keine echte ScheibenID.
-- **Das Schema ist das echte** (`schema/ssmdb2.sql`, Kopie vom 9. Oktober 2026); `src/schema.ts` folgt ihm, ein Test
-  hält beide gleich.
+- **Nur erfundene Personen** (ADR-029): „Muster“, Sportpass 12345678, Verein „SV Musterstadt“; ein Test listet alle
+  Personen der Snapshots. Erfundene ScheibenIDs aus einem erfundenen Zählerstart (`BOOT`).
+- **Das Schema ist das echte** (`schema/ssmdb2.sql`, `SHOW CREATE TABLE` der Kopie vom 9. Oktober 2026, nur DDL); ein
+  Test hält `src/schema.ts` gleich, `replay` vergleicht mit `information_schema`.
+- **Der Baukasten schreibt wie beobachtet**:
+  - Probe weg mit dem ersten Wertungsschuss, beim Neustart mit dem ersten neuen Probeschuss.
+  - Über der Soll-Zahl Wert 0, „0F“ und Platzhalter-Teiler.
+  - Verdeckt (5): Wert 0, „\*\*\*“, Teiler bleibt.
+  - `Text` je Anzeigeart, Lebenszeichen, Uhr je Stand, ScheibenID als Millisekundenzähler.
+  - Ohne Wertung `BesterTeiler` 2147483647.
+  - **Annahmen** sind im Code markiert: Korrektur, Löschen mit Nachrücken, `Text` bei 0 und 10, „Hand“. Das
+    Schießprotokoll (SP-0.6) kann sie ändern.
+- **Werte aus dem Fachkern** (`shotValues` über `scoreFromCoordinates` mit Meytons Toleranz), nie von Hand.
+- **Das erwartete Ergebnis ist eine Vorgabe**, von Hand geschrieben, nicht aus Brücke oder Adapter gerechnet:
+  - Ein Test hält es gegen die Daten: Schüsse je Lesung, zählende Nummern, Vollständigkeit über `classifyCompleteness`,
+    gesendete Lesungen nach der Regel „zwei gleiche hintereinander“.
+  - Angenommen ist, dass nur Sportpass 12345678 zugestimmt hat.
+- **Eingefroren** unter `cases/v1/`, nicht von Prettier geformt (`.prettierignore`), eine Zeile je Tabellenzeile.
+  - Nach einer Änderung `cases` laufen lassen; der Test meldet sonst „Fälle veraltet“.
+  - Sobald Brücke oder Adapter an den Fällen hängen, nur ergänzen (neue Fälle, `cases/v2` bei neuem Vertrag), wie bei
+    `ingest-contract`.
+- **Sommerzeit:** Die Fälle liegen zwischen 29. März und 25. Oktober 2026 (Ortszeit = UTC + 2 h im Baukasten), ein Test
+  prüft es.
+- Werkzeuge unter `tools/`, nicht `scripts/` (im Autopiloten geschützt).
 - Nach Änderungen: `pnpm check`; `format:check` prüft auch diese Datei.
