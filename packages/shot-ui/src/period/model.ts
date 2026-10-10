@@ -63,6 +63,12 @@ export const PERIOD_TILE_KEYS = [
   "time.intervalMedian",
 ] as const
 
+/**
+ * eine Kennzahl, wie die Seite sie zeigt: ihre Angaben ohne `compute`. Funktionen gehen nicht vom Server zum Browser
+ * (Fortschritt in der App), die Bausteine lesen nur Schlüssel, Name, Einheit, Stellen und Richtung
+ */
+export type PeriodMetric = Readonly<Omit<MetricDefinition, "compute">>
+
 /** ab so vielen Scheiben zeigt der Verlauf je Monat, bis der Schütze selbst wählt (D7) */
 export const MONTH_VIEW_FROM = 60
 
@@ -89,8 +95,8 @@ export interface PeriodModel {
   compareRange: DateRange | null
   /** Scheiben im Zeitraum nach Art, in ihrer Folge (Beginn, Id) */
   cards: ProjectedCard[]
-  /** die Kennzahl des Verlaufs in der Wertung der Seite */
-  metric: Readonly<MetricDefinition>
+  /** die Kennzahl des Verlaufs in der Wertung der Seite, ohne ihre Rechnung (das Modell geht vom Server zum Browser) */
+  metric: PeriodMetric
   values: CardValue[]
   trend: { points: TrendPoint[]; spread: number | null }
   /** Werte der Kennzahl im Vergleichszeitraum, für den Verlauf; null ohne Vergleich */
@@ -357,7 +363,7 @@ export function periodModel(input: {
     cards,
     metric: (() => {
       // der Name auf der Seite (U3, D4): Achse, Liste und Ablesung sagen „Streuung“, nicht „Präzision σ“
-      const shown = inScoring(chartMetric, scoring)
+      const { compute: _compute, ...shown } = inScoring(chartMetric, scoring)
       return { ...shown, label: metricLabel(shown) }
     })(),
     values,

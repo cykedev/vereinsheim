@@ -1,7 +1,6 @@
 "use client"
 
 import type { CardValue } from "@vereinsheim/shot-core/analysis"
-import type { MetricDefinition } from "@vereinsheim/shot-core/metrics"
 import type { ProjectedCard } from "@vereinsheim/shot-core/projection"
 import { formatShortDate } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
@@ -11,7 +10,7 @@ import { formatSigned, formatValue } from "../format"
 import { RouteLink } from "../nav/RouteLink"
 import type { ListRoute } from "../nav/routes"
 import { KindMark } from "../list/KindMark"
-import { cardKind } from "./model"
+import { cardKind, type PeriodMetric } from "./model"
 
 export interface CardListProps {
   /** Scheiben des Zeitraums in ihrer Folge (älteste zuerst) */
@@ -20,7 +19,7 @@ export interface CardListProps {
   values: readonly CardValue[]
   /** Abstand zum Schnitt der Scheiben davor (`PeriodModel.deltas`) */
   deltas: ReadonlyMap<string, { delta: number; n: number }>
-  metric: Readonly<MetricDefinition>
+  metric: PeriodMetric
   timeZone: string
   chosen: string | null
   onChoose?: (id: string) => void

@@ -1,7 +1,6 @@
 "use client"
 
 import type { CardValue, TrendPoint } from "@vereinsheim/shot-core/analysis"
-import type { MetricDefinition } from "@vereinsheim/shot-core/metrics"
 import type { MarkShot, ProjectedCard } from "@vereinsheim/shot-core/projection"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { formatDateOnly, formatShortDay } from "@vereinsheim/lib/format"
@@ -14,7 +13,7 @@ import type { CardRoute } from "../nav/routes"
 import { HelpButton } from "../help/HelpButton"
 import { MiniTarget } from "../target/MiniTarget"
 import { KIND_TEXT } from "../list/KindMark"
-import { cardKind, isProbeOnly } from "./model"
+import { cardKind, isProbeOnly, type PeriodMetric } from "./model"
 
 export interface CardReadoutProps {
   card: ProjectedCard
@@ -30,7 +29,7 @@ export interface CardReadoutProps {
   point: TrendPoint | null
   /** Abstand zum Schnitt der Scheiben davor (`PeriodModel.deltas`); fehlt bei der ersten */
   delta: { delta: number; n: number } | undefined
-  metric: Readonly<MetricDefinition>
+  metric: PeriodMetric
   timeZone: string
   /** gewählt oder, ohne Wahl, die neueste */
   chosen: boolean
@@ -45,7 +44,7 @@ export interface CardReadoutProps {
  * Das „?“ am Abstand erklärt den Abstand im Ø je Schuss (Thema „Abstand zum Schnitt davor“); zeigt der Verlauf eine
  * andere Kennzahl, gilt die Erklärung nicht (Review U2)
  */
-const explainsDelta = (metric: Readonly<MetricDefinition>) => metric.key === "result.decimalMean"
+const explainsDelta = (metric: PeriodMetric) => metric.key === "result.decimalMean"
 
 /** „Training“, „Wettkampf“, „Training nur Probe“ */
 export const cardKindText = (card: ProjectedCard) => KIND_TEXT[cardKind(card)]

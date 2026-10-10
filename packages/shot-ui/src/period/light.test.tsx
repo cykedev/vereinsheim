@@ -115,6 +115,19 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
       expect(page(light, chosen)).toEqual(page(full, chosen))
   })
 
+  it("ohne Funktionen: das Modell geht vom Server zum Browser", () => {
+    const functions: string[] = []
+    const walk = (value: unknown, path: string) => {
+      if (typeof value === "function") functions.push(path)
+      else if (value instanceof Map) value.forEach((v, k) => walk(v, `${path}.${String(k)}`))
+      else if (value && typeof value === "object")
+        for (const [key, v] of Object.entries(value)) walk(v, `${path}.${key}`)
+    }
+    walk(light, "model")
+    expect(functions).toEqual([])
+    expect(light.metric).toMatchObject({ key: "result.decimalMean", label: "Ø je Schuss" })
+  })
+
   it("das leichte Modell ist kleiner", () => {
     expect(JSON.stringify(light.cards).length).toBeLessThan(JSON.stringify(full.cards).length / 3)
   })
