@@ -178,7 +178,8 @@ if (process.env.NODE_ENV !== "production") {
 
 ### DoS-Schutz (verbindlich)
 
-- **Login-Rate-Limit**: In-Memory Buckets pro E-Mail und pro IP (`maxAttemptsPerEmail=5`, `maxAttemptsPerIp=30`, Fenster/Blockdauer je 15 Minuten)
+- **Login-Rate-Limit**: Buckets pro E-Mail und pro IP in der Datenbank (`LoginRateLimitBucket`, in Tests im Speicher; `maxAttemptsPerEmail=5`, `maxAttemptsPerIp=30`, Fenster/Blockdauer je 15 Minuten). Anmeldeablauf, Store und Admin-Auswertung aus `@vereinsheim/lib/auth/*` (gemeinsam mit Ringwerk und Spiegel, Oktober 2026)
+- **Gleich lange Antwort**: Eine unbekannte oder deaktivierte E-Mail kostet so viel Zeit wie eine bekannte (bcrypt gegen einen festen Hash, `authorizeCredentials`), die Antwortzeit verrät keine Konten
 - **Login-Rate-Limit Speichergrenze**: Maximale Anzahl Buckets konfigurierbar (`AUTH_RATE_LIMIT_MAX_BUCKETS`, Standard 10'000), älteste Buckets werden bei Erreichen der Grenze verdrängt
 - **Proxy-Header-Vertrauen**: IP-basierte Limits nutzen `x-real-ip`/`x-forwarded-for` nur wenn `AUTH_TRUST_PROXY_HEADERS=true` gesetzt ist (sicherer Default: aus)
 - **Meyton-URL-Import**:

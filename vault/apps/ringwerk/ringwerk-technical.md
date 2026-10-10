@@ -117,8 +117,11 @@ part_of: ["[[ringwerk]]"]
 
 - Methode: **E-Mail + Passwort** via NextAuth.js v4
 - Passwörter: gehasht mit **bcrypt**, niemals im Klartext
-- Login-Rate-Limit: In-Memory-Buckets pro E-Mail und pro IP (ausgelegt auf 5–10 gleichzeitige Nutzer)
+- Login-Rate-Limit: Buckets pro E-Mail und pro IP in der Datenbank (`LoginRateLimitBucket`, in Tests im Speicher)
   - Max. 5 Versuche/E-Mail, 30 Versuche/IP, Fenster 15 Min.
+- Anmeldeablauf, Store und Admin-Auswertung der Sperren aus `@vereinsheim/lib/auth/*` (gemeinsam mit Treffsicher und
+  Spiegel, Oktober 2026). Eine unbekannte oder deaktivierte E-Mail kostet so viel Zeit wie eine bekannte (bcrypt gegen
+  einen festen Hash), die Antwortzeit verrät keine Konten
 - **Session-Invalidierung** bei Passwortänderung (ältere JWT-Sessions ungültig)
 - Passwort-Self-Service: nur eingeloggt + aktuelles Passwort
 - Passwort vergessen: nur Admin-Reset, kein E-Mail-Flow

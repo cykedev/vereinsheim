@@ -29,8 +29,9 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors
 │                           (+ getErrorMessage), useUnsavedChangesGuard, useNavigationConfirm
 │                           (Phase 4/Zyklus 1); dateTime (server-only) + format (isomorph, Locale de-DE,
-│                           Zeitzone als Parameter) sowie der reine Auth-Kern auth/validation +
-│                           auth/rate-limit/* (September 2026).
+│                           Zeitzone als Parameter) sowie der Auth-Kern auth/validation +
+│                           auth/rate-limit/* (September 2026); Anmeldeablauf, IP aus Proxy-Headern, Store
+│                           und Admin-Auswertung der Sperren für alle drei Apps (Oktober 2026).
 ├── packages/ui/            @vereinsheim/ui — geteilte UI-Schicht: ui-Primitives (inkl. table + skeleton)
 │                           + 4 shell/ + admin/ (Login-Rate-Limit-Oberfläche) + theme.css (Tailwind-Theme,
 │                           semantische Tokens success/warning/info/rank-1..3, App-Akzent via data-app).

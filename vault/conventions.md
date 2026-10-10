@@ -39,7 +39,10 @@ Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichun
   die Form-Hooks `useUnsavedChangesGuard` + `useNavigationConfirm`, `dateTime` (server-only, liefert
   `getDisplayTimeZone`) und seit September 2026 `format` (**isomorphe** Anzeige-Formatierung, auch für
   Client-Komponenten) sowie der reine Auth-Kern `auth/validation` +
-  `auth/rate-limit/{config,limiter,normalization,types,adminTypes}`. Import via
+  `auth/rate-limit/{config,limiter,normalization,types,adminTypes}`, seit Oktober 2026 auch Anmeldeablauf
+(`auth/credentials`, mit gleich langer Antwort für unbekannte Konten), IP aus Proxy-Headern (`auth/client-ip`), Store
+(`auth/rate-limit/stores`, Tabelle als Schnittstelle) und Admin-Auswertung der Sperren (`auth/rate-limit/admin`) für
+alle drei Apps. Import via
   `@vereinsheim/lib/<subpath>`; Logik ändert man **im Paket**, nicht in den Apps.
 - Diese Datei: `docs/shared-conventions.md`
 

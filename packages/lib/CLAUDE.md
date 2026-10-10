@@ -29,5 +29,25 @@ Module sind nicht mehr im `consistency-check.sh`-Gate).
 Zusätzlich hier: `format` (isomorphe Anzeige-Formatierung, **ohne** `server-only` — auch für
 Client-Komponenten; `dateTime` re-exportiert `formatDateOnly` daraus) sowie der **reine Auth-Kern**:
 `auth/validation` (Login-/Passwortregeln) und `auth/rate-limit/{config,limiter,normalization,types}`.
-Am Prisma-Client hängende Teile bleiben app-lokal (`auth-rate-limit/store.ts`, `auth.ts`,
-`auth-helpers.ts`, `startup.ts`) — der Store bekommt seinen Client von der App.
+Am Prisma-Client hängende Teile bleiben app-lokal (`auth.ts` mit den NextAuth-Optionen, `auth-helpers.ts`,
+`startup.ts`, die Server Actions).
+
+## Nachtrag (Oktober 2026): gemeinsamer Anmeldecode
+
+Was die drei Apps kopiert hatten, liegt hier (nur Server, ohne Prisma und ohne bcrypt):
+
+| Export                                    | Inhalt                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `@vereinsheim/lib/auth/client-ip`         | `extractClientIp(headers, trustProxyHeaders)`: x-real-ip vor x-forwarded-for, Ports, IPv6   |
+| `@vereinsheim/lib/auth/credentials`       | `authorizeCredentials(credentials, headers, deps)` mit Zeitausgleich (`TIMING_HASH`)        |
+| `@vereinsheim/lib/auth/rate-limit/stores` | `createInMemoryStore`, `createDbStore(table)`, `createStoreForEnv(table, nodeEnv)`          |
+| `@vereinsheim/lib/auth/rate-limit/admin`  | Schlüssel prüfen, `loadBlockedLoginBuckets`, `loadLoginRateLimitInsights`, `EMPTY_INSIGHTS` |
+
+- **Die Tabelle kommt als Schnittstelle** (`LoginRateLimitBucketDelegate`): `db.loginRateLimitBucket` aus dem Prisma-Client
+  jeder App passt darauf. Braucht der Store eine neue Abfrage, zuerst die Schnittstelle erweitern; die Tests prüfen gegen
+  eine Tabelle im Speicher, die genau diese Abfragen auswertet.
+- **Abhängigkeiten werden übergeben:** Konto-Suche, Passwortvergleich (bcrypt bleibt in den Apps), Ratenbegrenzung und
+  das Vertrauen in Proxy-Header (`AUTH_TRUST_PROXY_HEADERS`). Die NextAuth-Optionen und Callbacks bleiben je App.
+- **Zeitausgleich:** Für eine unbekannte oder deaktivierte E-Mail vergleicht `authorizeCredentials` gegen `TIMING_HASH`
+  (bcrypt, Kosten 12 wie die echten Hashes), sonst verrät die Antwortzeit, welche Konten es gibt. Einen neuen Hash nur
+  mit denselben Kosten erzeugen.

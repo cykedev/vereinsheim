@@ -47,8 +47,9 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
 - **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
   Admins. Admin verwaltet Konten und sieht keine fremden Schüsse.
 - **Anmeldung wie Ringwerk:** `getAuthSession` prüft gegen die Datenbank (aktiv, `sessionVersion`, einmal je Anfrage
-  über `cache`), Server Actions geben `ActionResult` zurück (nie werfen). Neue Rolle, neuer Status oder neues Passwort
-  beenden die Sitzungen eines Kontos (das JWT trägt die Rolle).
+  über `cache`), Server Actions geben `ActionResult` zurück (nie werfen). Ablauf von `authorize`, Store und
+  Admin-Auswertung der Sperren kommen aus `@vereinsheim/lib/auth/*`, gemeinsam mit Ringwerk und Treffsicher. Neue
+  Rolle, neuer Status oder neues Passwort beenden die Sitzungen eines Kontos (das JWT trägt die Rolle).
 - **Admin-Daten prüfen selbst:** jede Admin-Seite und jede Admin-Abfrage ruft `requireAdmin`; das Layout allein schützt
   die Daten einer Seite nicht (Next: bei Navigation im Client läuft es nicht erneut).
 - **Passwort vom Admin:** `mustChangePassword` (beim Anlegen und Zurücksetzen). `requireSession` leitet jede Seite zur
