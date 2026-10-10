@@ -18,7 +18,7 @@ import { cardWithShots, familyCards, latestCardStart, ownerCards } from "../src/
 import type { Db } from "../src/lib/db"
 import { DEV_DATABASE_URL } from "../test/dev-database"
 import { createTestSite } from "../test/fixtures"
-import { generateSeason } from "../test/generate"
+import { generateSeason, liveStates } from "../test/generate"
 
 const args = process.argv.slice(2)
 const option = (name: string, fallback: number) => {
@@ -137,7 +137,8 @@ async function main() {
         select: { id: true, currentRevision: { select: { shots: true } } },
       })
     const full: PeriodCard[] = []
-    for (const { id } of overview) full.push((await cardWithShots(db, id))!)
+    const one = (cardId: string) => cardWithShots(db, { cardId, ownerId: site.ownerId })
+    for (const { id } of overview) full.push((await one(id))!)
     const mean = metricByKey("result.decimalMean") as MetricDefinition
 
     // offener Durchgang: die Brücke schickt nach jedem Schuss den ganzen Stand (SF-03)
@@ -151,16 +152,22 @@ async function main() {
       ownerId: site.ownerId,
       scheibenIdBase: 900_000,
     }).find((input) => input.card.kind === "competition")!
+    // wie an der Anlage: erst die Probe, der erste Wertungsschuss löscht sie (SF-03)
+    const states = liveStates(live)
     const perShot: number[] = []
-    for (let n = 1; n <= live.shots.length; n++) {
+    for (const shots of states) {
       const t = performance.now()
-      await writeRevision(db, { ...live, shots: live.shots.slice(0, n) })
+      await writeRevision(db, { ...live, shots })
       perShot.push(performance.now() - t)
     }
     perShot.sort((a, b) => a - b)
     const liveCard = await db.card.findUniqueOrThrow({
       where: {
-        sourceId_scheibenId: { sourceId: site.sourceId, scheibenId: live.card.scheibenId! },
+        sourceId_scheibenId_cycle: {
+          sourceId: site.sourceId,
+          scheibenId: live.card.scheibenId!,
+          cycle: 0,
+        },
       },
       select: { _count: { select: { shots: true, revisions: true } } },
     })
@@ -168,7 +175,7 @@ async function main() {
     const rows: [string, number][] = [
       ["Schreiben je Scheibe (Revision, Schüsse, Projektion)", writeMs / (CARDS + OTHERS)],
       [
-        `offener Durchgang: ein Schuss mehr (${live.shots.length} Stände; danach ` +
+        `offener Durchgang: ein Schuss mehr (${states.length} Stände mit Probe; danach ` +
           `${liveCard._count.revisions} Revision, ${liveCard._count.shots} Schusszeilen)`,
         perShot[Math.floor(perShot.length / 2)],
       ],
@@ -181,10 +188,11 @@ async function main() {
         "dieselbe Übersicht direkt über pg (eine Abfrage mit Join, ohne Prisma)",
         await median(() =>
           pool.query(
-            `SELECT c.id, c."startedAt", c.kind, c.complete, c.flags, c.official, c.state, c.stand,
-                    c."disciplineId", c."familyId", p.version, p."probeOnly", p.suspicious,
+            `SELECT c.id, c."startedAt", c.kind, c.complete, c.flags, d."officialScoring", c.state,
+                    c.stand, c."disciplineId", c."familyId", p.version, p."probeOnly", p.suspicious,
                     p."printedShots", p.values, p.records
                FROM "Card" c JOIN "CardProjection" p ON p."cardId" = c.id
+               JOIN "Discipline" d ON d.id = c."disciplineId"
               WHERE c."ownerId" = $1 AND c."familyId" = $2 AND c."deletedAt" IS NULL
               ORDER BY c."startedAt", c.id`,
             [site.ownerId, site.familyId]
@@ -198,7 +206,7 @@ async function main() {
           return ownerCards(db, { ownerId: site.ownerId, fromMs: latest - DAY_MS / 2 })
         }),
       ],
-      ["Seite einer Scheibe: Schüsse der Revision", await median(() => cardWithShots(db, sample))],
+      ["Seite einer Scheibe: Schüsse der Revision", await median(() => one(sample))],
       ["ohne Projektion: alle Schüsse der Familie laden", await median(allShots)],
       [
         "Rechnen aus der Projektion: Ø je Scheibe und Rekorde",
@@ -238,7 +246,9 @@ async function main() {
     await explain("Start: der Abend", (client) =>
       ownerCards(client, { ownerId: site.ownerId, fromMs: lastMs - DAY_MS / 2 })
     )
-    await explain("Seite einer Scheibe", (client) => cardWithShots(client, sample))
+    await explain("Seite einer Scheibe", (client) =>
+      cardWithShots(client, { cardId: sample, ownerId: site.ownerId })
+    )
   } finally {
     if (!KEEP) {
       await site.remove()

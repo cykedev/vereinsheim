@@ -8,7 +8,7 @@ import { frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
 import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
-import { loadSnapshotData, storeSnapshot } from "./raw"
+import { loadSnapshotData, MAX_SEQUENCE_AHEAD_MS, storeSnapshot } from "./raw"
 
 const db = createPrismaClient()
 let site: TestSite
@@ -32,6 +32,12 @@ function snapshotsOf(caseId: string): SnapshotV1[] {
   )
 }
 
+/** ablegen, als käme der Snapshot gerade an (die Fälle sind teils auf Tage nach heute datiert) */
+const store = (snapshot: SnapshotV1) =>
+  storeSnapshot(db, { sourceId: site.sourceId }, snapshot, {
+    nowMs: Date.parse(snapshot.observedAt),
+  })
+
 const rowCount = (snapshot: SnapshotV1) =>
   snapshot.data.scheiben.rows.length +
   snapshot.data.serien.rows.length +
@@ -45,8 +51,7 @@ describe("storeSnapshot", () => {
   it("SF-71: derselbe Stand nach einer Lücke legt keine Zeile neu ab", async () => {
     const snapshots = snapshotsOf("SF-71")
     const results = []
-    for (const snapshot of snapshots)
-      results.push(await storeSnapshot(db, { sourceId: site.sourceId }, snapshot))
+    for (const snapshot of snapshots) results.push(await store(snapshot))
     // jede Lesung ist ein anderer Stand als die vorige, also gespeichert
     expect(results.map((r) => r.outcome)).toEqual([
       "stored",
@@ -72,8 +77,7 @@ describe("storeSnapshot", () => {
   it("SF-72: derselbe Stand gleich danach ist kein neuer Snapshot", async () => {
     const snapshots = snapshotsOf("SF-72")
     const results = []
-    for (const snapshot of snapshots)
-      results.push(await storeSnapshot(db, { sourceId: site.sourceId }, snapshot))
+    for (const snapshot of snapshots) results.push(await store(snapshot))
     expect(results.map((r) => r.outcome)).toEqual(["stored", "unchanged", "stored"])
     const scheibenId = snapshots[0].scheibenId
     expect(await db.rawSnapshot.count({ where: { sourceId: site.sourceId, scheibenId } })).toBe(2)
@@ -89,7 +93,7 @@ describe("storeSnapshot", () => {
     const snapshots = snapshotsOf("SF-03")
     let total = 0
     for (const snapshot of snapshots) {
-      const result = await storeSnapshot(db, { sourceId: site.sourceId }, snapshot)
+      const result = await store(snapshot)
       expect(result.outcome).toBe("stored")
       if (result.outcome === "stored") total += result.newRows
     }
@@ -117,6 +121,44 @@ describe("storeSnapshot", () => {
       "stale"
     )
     expect(await db.rawSnapshot.count({ where: { sourceId: site.sourceId, scheibenId } })).toBe(1)
+  })
+
+  it("ein Stand aus der Zukunft wird abgelehnt und friert die Scheibe nicht ein", async () => {
+    const [first] = snapshotsOf("SF-03")
+    const nowMs = Date.UTC(2026, 9, 10, 12)
+    const ahead = { ...first, scheibenId: 777_002, sequence: nowMs + MAX_SEQUENCE_AHEAD_MS + 1 }
+    expect(await storeSnapshot(db, { sourceId: site.sourceId }, ahead, { nowMs })).toEqual({
+      outcome: "future",
+      sequence: BigInt(ahead.sequence),
+    })
+    const now = { ...first, scheibenId: 777_002, sequence: nowMs }
+    expect((await storeSnapshot(db, { sourceId: site.sourceId }, now, { nowMs })).outcome).toBe(
+      "stored"
+    )
+  })
+
+  it("ein Nullzeichen in einer Zelle (der Vertrag erlaubt es) wird gespeichert und kommt unverändert zurück", async () => {
+    const [first] = snapshotsOf("SF-03")
+    const [row] = first.data.scheiben.rows
+    const name = Object.keys(row).find((key) => row[key] !== null)!
+    const data = {
+      ...first.data,
+      scheiben: { ...first.data.scheiben, rows: [{ ...row, [name]: "a\u0000b" }] },
+    }
+    const parsed = parseSnapshot({
+      ...first,
+      scheibenId: 777_003,
+      data,
+      checksum: computeChecksum(data),
+    })
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    const result = await storeSnapshot(db, { sourceId: site.sourceId }, parsed.value)
+    expect(result.outcome).toBe("stored")
+    if (result.outcome !== "stored") return
+    const loaded = await loadSnapshotData(db, result.snapshotId)
+    expect(loaded.data.scheiben.rows[0][name]).toBe("a\u0000b")
+    expect(computeChecksum(loaded.data)).toBe(parsed.value.checksum)
   })
 
   it("jeder gespeicherte Snapshot lässt sich mit gleicher Prüfsumme wieder zusammensetzen", async () => {

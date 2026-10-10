@@ -19,6 +19,13 @@ type TableName = (typeof TABLES)[number]
 
 const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex")
 
+/**
+ * so weit darf die Folgenummer (ms seit 1970, Uhr der Brücke) vor der Empfangszeit liegen. Ein Stand aus der Zukunft
+ * würde jeden späteren richtig gestempelten als veraltet abweisen und die Scheibe still einfrieren; er wird abgelehnt,
+ * die Brücke sieht den Fehler.
+ */
+export const MAX_SEQUENCE_AHEAD_MS = 10 * 60_000
+
 export type StoreResult =
   /** neu gespeichert, mit so vielen neuen Zeilen */
   | { outcome: "stored"; snapshotId: bigint; newRows: number }
@@ -26,6 +33,8 @@ export type StoreResult =
   | { outcome: "unchanged"; snapshotId: bigint }
   /** älter als der zuletzt gesehene Stand (SF-26): nichts geändert */
   | { outcome: "stale"; latestSequence: bigint }
+  /** Folgenummer weiter als `MAX_SEQUENCE_AHEAD_MS` in der Zukunft: abgelehnt, nichts geändert */
+  | { outcome: "future"; sequence: bigint }
 
 export interface StoreTarget {
   sourceId: number
@@ -35,17 +44,20 @@ export interface StoreTarget {
 /**
  * Einen Snapshot ablegen, den der Vertrag schon geprüft hat (`parseSnapshot`). Eine Transaktion je Scheibe, gesperrt
  * über ein Advisory-Lock auf Quelle und ScheibenID, damit zwei Stände derselben Scheibe nicht gleichzeitig entscheiden,
- * welcher der neueste ist.
+ * welcher der neueste ist. `writeRevision` nimmt dasselbe Lock. Der Schlüsselraum `(int, int)` gehört in der Datenbank
+ * `spiegel` allein diesem Paar (Quelle, ScheibenID); ein anderes Advisory-Lock braucht die Ein-Schlüssel-Form.
  */
 export async function storeSnapshot(
   db: Db,
   target: StoreTarget,
-  snapshot: SnapshotV1
+  snapshot: SnapshotV1,
+  { nowMs = Date.now() }: { nowMs?: number } = {}
 ): Promise<StoreResult> {
   const { sourceId } = target
   const { scheibenId } = snapshot
   const sequence = BigInt(snapshot.sequence)
   const observedAt = new Date(snapshot.observedAt)
+  if (snapshot.sequence > nowMs + MAX_SEQUENCE_AHEAD_MS) return { outcome: "future", sequence }
 
   return db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
@@ -149,9 +161,14 @@ export async function loadSnapshotData(
   })
   const valuesOf = new Map(rows.map((r) => [r.id, r.values as RowV1]))
   const columns = snapshot.columnSet.columns as Record<TableName, TableV1["columns"]>
+  const rowOf = (id: bigint) => {
+    const values = valuesOf.get(id)
+    if (!values) throw new Error(`Snapshot ${snapshotId}: Zeile ${id} fehlt`)
+    return values
+  }
   const table = (name: TableName, rowIds: readonly bigint[]): TableV1 => ({
     columns: columns[name],
-    rows: rowIds.map((id) => valuesOf.get(id)!),
+    rows: rowIds.map(rowOf),
   })
   return {
     checksum: snapshot.checksum,

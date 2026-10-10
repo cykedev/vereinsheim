@@ -1,6 +1,7 @@
 // Erfundene Scheiben für die Tests der Zugriffe und die Messung (tools/measure.ts): fester Seed, Luftpistole, Werte
 // aus der Lage über den Fachkern. Mischung wie ein aktiver Schütze: Training mit Probe, Training nur aus Probe,
-// Wettkampf; drei Scheiben je Abend, Abende über die Jahre verteilt.
+// Wettkampf; drei Scheiben je Abend, Abende über die Jahre verteilt. Wie an der Anlage löscht der erste
+// Wertungsschuss die Probe (SF-03): Die fertige Scheibe hat dann nur Wertung, `liveStates` zeigt den Weg dorthin.
 
 import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { LP_10M } from "@vereinsheim/shot-core/targets"
@@ -49,10 +50,15 @@ function shapeOf(rand: () => number): Shape {
   return { kind: "competition", probe: 10, match: 40 }
 }
 
+/** eine erfundene Scheibe: der fertige Stand und die Probe, die Meyton mit dem ersten Wertungsschuss löschte */
+export interface GeneratedCard extends RevisionInput {
+  probeBefore: readonly ShotInput[]
+}
+
 /** die Scheiben einer Saison als Revisionen zum Schreiben, in zeitlicher Folge */
-export function generateSeason(options: SeasonOptions): RevisionInput[] {
+export function generateSeason(options: SeasonOptions): GeneratedCard[] {
   const rand = random(options.seed)
-  const inputs: RevisionInput[] = []
+  const inputs: GeneratedCard[] = []
   for (let i = 0; i < options.cards; i++) {
     const evening = Math.floor(i / 3)
     const startedAtMs =
@@ -89,6 +95,7 @@ export function generateSeason(options: SeasonOptions): RevisionInput[] {
       })
     }
     const probeOnly = shape.match === 0
+    const match = shots.filter((shot) => shot.stellung !== 0)
     inputs.push({
       card: {
         sourceId: options.sourceId,
@@ -101,13 +108,22 @@ export function generateSeason(options: SeasonOptions): RevisionInput[] {
         kind: shape.kind,
         state: "final",
         complete: true,
-        official: probeOnly ? null : "rings",
         flags: [],
         origin: "raw",
       },
-      shots,
+      shots: probeOnly ? shots : match,
+      probeBefore: probeOnly ? [] : shots.filter((shot) => shot.stellung === 0),
       reason: "ingest",
     })
   }
   return inputs
+}
+
+/**
+ * Die Stände, die die Brücke von einem offenen Durchgang schickt, einer je Schuss: erst die wachsende Probe, mit dem
+ * ersten Wertungsschuss ohne Probe (SF-03), dann die wachsende Wertung
+ */
+export function liveStates(card: GeneratedCard): ShotInput[][] {
+  const grow = (shots: readonly ShotInput[]) => shots.map((_, i) => shots.slice(0, i + 1))
+  return [...grow(card.probeBefore), ...grow(card.shots)]
 }

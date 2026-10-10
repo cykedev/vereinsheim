@@ -1,5 +1,5 @@
 // Testdaten für die Zugriffe: je Testdatei eine eigene Anlage mit Quelle, Familie, Disziplin und Schütze, mit
-// zufälligem Namen; `remove` löscht alles wieder (Kaskade über die Anlage).
+// zufälligem Namen; `remove` löscht alles wieder (Scheiben der Disziplinen, dann Kaskade über die Anlage).
 
 import { randomUUID } from "node:crypto"
 
@@ -37,6 +37,8 @@ export async function createTestSite(db: Db, label: string): Promise<TestSite> {
     disciplineId: discipline.id,
     ownerId: owner.id,
     remove: async () => {
+      // Scheiben nur aus dem PDF hängen an keiner Quelle; die Kaskade über die Anlage erreicht sie nicht
+      await db.card.deleteMany({ where: { discipline: { siteId: site.id } } })
       await db.site.delete({ where: { id: site.id } })
       await db.user.delete({ where: { id: owner.id } })
       await db.family.delete({ where: { id: family.id } })

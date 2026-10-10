@@ -1,7 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
-import { cardValues, periodRecords, type PeriodCard } from "@vereinsheim/shot-core/analysis"
-import { metricByKey, type MetricDefinition } from "@vereinsheim/shot-core/metrics"
+import {
+  cardValues,
+  FLAG_COUNTED_AS_MATCH,
+  periodRecords,
+  type PeriodCard,
+} from "@vereinsheim/shot-core/analysis"
+import { FLAG_SUSPICIOUS, metricByKey, type MetricDefinition } from "@vereinsheim/shot-core/metrics"
 import { projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
 
 import { createPrismaClient } from "@/lib/db"
@@ -28,16 +33,26 @@ beforeAll(async () => {
     })
   ).id
   const common = { sourceId: site.sourceId, ownerId: site.ownerId, everyDays: 4 }
-  // 30 Scheiben LP über 40 Abende, dazu am letzten Abend eine Scheibe LG
-  for (const input of generateSeason({
+  // 30 Scheiben LP über 40 Abende, darunter je eine unvollständige, ausgenommene, verdächtige und als Wertung
+  // gezählte (sie prüfen die Filter der Rekorde durch die Datenbank), dazu am letzten Abend eine Scheibe LG
+  const lp = generateSeason({
     ...common,
     seed: 7,
     cards: 30,
     firstMs: FIRST_MS,
     disciplineId: site.disciplineId,
     scheibenIdBase: 2000,
-  }))
-    await writeRevision(db, input)
+  })
+  const special: Record<number, (input: (typeof lp)[number]) => (typeof lp)[number]> = {
+    4: (input) => ({ ...input, card: { ...input.card, complete: false } }),
+    7: (input) => ({ ...input, card: { ...input.card, flags: ["ausgenommen"] } }),
+    10: (input) => ({
+      ...input,
+      shots: input.shots.map((shot, i) => (i === 2 ? { ...shot, flags: [FLAG_SUSPICIOUS] } : shot)),
+    }),
+    13: (input) => ({ ...input, card: { ...input.card, flags: [FLAG_COUNTED_AS_MATCH] } }),
+  }
+  for (const [i, input] of lp.entries()) await writeRevision(db, special[i]?.(input) ?? input)
   const [lg] = generateSeason({
     ...common,
     seed: 8,
@@ -69,7 +84,17 @@ describe("familyCards", () => {
   it("die Scheiben der Familie nach Beginn, ohne Schüsse und ohne gelöschte", async () => {
     const cards = await familyCards(db, { ownerId: site.ownerId, familyId: site.familyId })
     expect(cards).toHaveLength(30)
-    expect(cards.map((c) => c.startedAtMs)).toEqual([...cards.map((c) => c.startedAtMs)].sort())
+    expect(cards.map((c) => c.startedAtMs)).toEqual(
+      [...cards.map((c) => c.startedAtMs)].sort((a, b) => a - b)
+    )
+    expect(cards.filter((c) => !c.complete)).toHaveLength(1)
+    expect(cards.filter((c) => c.projection.suspicious)).toHaveLength(1)
+    expect(cards.map((c) => c.flags).filter((f) => f.length)).toEqual([
+      ["ausgenommen"],
+      [FLAG_COUNTED_AS_MATCH],
+    ])
+    // amtliche Wertung von der Disziplin (SF-74)
+    expect(new Set(cards.map((c) => c.official))).toEqual(new Set(["rings"]))
     for (const card of cards) expect(card).not.toHaveProperty("shots")
     expect(cards.every((c) => c.familyId === site.familyId)).toBe(true)
   })
@@ -90,7 +115,8 @@ describe("familyCards", () => {
   it("Werte und Rekorde aus der Datenbank gleich der Rechnung aus den Schüssen", async () => {
     const overview = await familyCards(db, { ownerId: site.ownerId, familyId: site.familyId })
     const cards: PeriodCard[] = []
-    for (const { id } of overview) cards.push((await cardWithShots(db, id))!)
+    for (const { id } of overview)
+      cards.push((await cardWithShots(db, { cardId: id, ownerId: site.ownerId }))!)
     expect(overview.filter((c) => c.projection.probeOnly).length).toBeGreaterThan(0)
     expect(overview.filter((c) => c.kind === "competition").length).toBeGreaterThan(0)
 
@@ -102,7 +128,12 @@ describe("familyCards", () => {
             cardValues(cards, metric, scoring, { includeProbeOnly })
           )
       }
-      for (const options of [{}, { includeProbeOnly: true }, { kind: "competition" as const }])
+      for (const options of [
+        {},
+        { includeProbeOnly: true },
+        { kind: "competition" as const },
+        { kind: "training" as const, includeProbeOnly: true },
+      ])
         expect(projectedRecords(overview, scoring, options)).toEqual(
           periodRecords(cards, scoring, options)
         )
@@ -129,11 +160,23 @@ describe("Start", () => {
 })
 
 describe("cardWithShots", () => {
-  it("eine gelöschte oder unbekannte Scheibe gibt es nicht", async () => {
+  it("eine gelöschte, unbekannte oder fremde Scheibe gibt es nicht", async () => {
     const trash = await db.card.findFirstOrThrow({
       where: { sourceId: site.sourceId, deletedAt: { not: null } },
     })
-    expect(await cardWithShots(db, trash.id)).toBeNull()
-    expect(await cardWithShots(db, "keine")).toBeNull()
+    const ownerId = site.ownerId
+    expect(await cardWithShots(db, { cardId: trash.id, ownerId })).toBeNull()
+    expect(await cardWithShots(db, { cardId: "keine", ownerId })).toBeNull()
+    const [own] = await familyCards(db, { ownerId, familyId: site.familyId })
+    expect(await cardWithShots(db, { cardId: own.id, ownerId })).not.toBeNull()
+    expect(await cardWithShots(db, { cardId: own.id, ownerId: "jemand-anderes" })).toBeNull()
+  })
+
+  it("ohne amtliche Wertung an der Disziplin keine an der Scheibe", async () => {
+    const [lg] = await familyCards(db, { ownerId: site.ownerId, familyId: otherFamilyId })
+    expect(lg.official).toBeNull()
+    expect(await cardWithShots(db, { cardId: lg.id, ownerId: site.ownerId })).not.toHaveProperty(
+      "official"
+    )
   })
 })

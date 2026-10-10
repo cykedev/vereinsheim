@@ -126,13 +126,15 @@ ok "Dev-Postgres bereit (localhost:5432)"
 # Shadow-DB an und scheitert ohne dieses Recht mit P3014. dev/db-init vergibt es beim ERSTEN
 # Start mit — dieser idempotente Nachzug holt bestehende Volumes auf denselben Stand.
 # Prod migriert via `migrate deploy` und braucht keine Shadow-DB (db-init/ bleibt ohne).
-# Spiegel kam nach dem ersten Start dazu (SP-1.6 a): bestehende Volumes bekommen Rolle und DB hier nachgezogen.
-if ! docker compose -f "$DEV_COMPOSE_FILE" exec -T db psql -U postgres -d postgres -tAc \
-	"SELECT 1 FROM pg_roles WHERE rolname = 'spiegel'" | grep -q 1; then
-	docker compose -f "$DEV_COMPOSE_FILE" exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d postgres \
-		-c "CREATE USER spiegel WITH PASSWORD 'spiegel' CREATEDB;" \
-		-c "CREATE DATABASE spiegel OWNER spiegel;" \
-		-c "REVOKE ALL ON DATABASE spiegel FROM PUBLIC;" >/dev/null
+# Spiegel kam nach dem ersten Start dazu (SP-1.6 a): bestehende Volumes bekommen Rolle und DB hier nachgezogen,
+# beides getrennt geprüft (ein abgebrochener Lauf kann die Rolle ohne Datenbank hinterlassen).
+dev_psql() { docker compose -f "$DEV_COMPOSE_FILE" exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d postgres "$@"; }
+if ! dev_psql -tAc "SELECT 1 FROM pg_roles WHERE rolname = 'spiegel'" | grep -q 1; then
+	dev_psql -c "CREATE USER spiegel WITH PASSWORD 'spiegel' CREATEDB;" >/dev/null
+	ok "Dev-Rolle spiegel angelegt"
+fi
+if ! dev_psql -tAc "SELECT 1 FROM pg_database WHERE datname = 'spiegel'" | grep -q 1; then
+	dev_psql -c "CREATE DATABASE spiegel OWNER spiegel;" -c "REVOKE ALL ON DATABASE spiegel FROM PUBLIC;" >/dev/null
 	ok "Dev-DB spiegel angelegt"
 fi
 docker compose -f "$DEV_COMPOSE_FILE" exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d postgres \

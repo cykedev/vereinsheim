@@ -14,6 +14,7 @@ import { shotFromRow, toMetricShot } from "./cards"
 export interface OverviewCard extends ProjectedCard {
   disciplineId: number
   familyId: number | null
+  /** amtliche Wertung der Disziplin (SF-74); null unbekannt. Training nur aus Probe hat keine, das wertet das Modell */
   official: Scoring | null
   state: CardState
   stand: string | null
@@ -25,11 +26,11 @@ const OVERVIEW_SELECT = {
   kind: true,
   complete: true,
   flags: true,
-  official: true,
   state: true,
   stand: true,
   disciplineId: true,
   familyId: true,
+  discipline: { select: { officialScoring: true } },
   projection: {
     select: {
       version: true,
@@ -63,7 +64,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         kind: row.kind,
         complete: row.complete,
         flags: row.flags,
-        official: row.official,
+        official: row.discipline.officialScoring,
         state: row.state,
         stand: row.stand,
         disciplineId: row.disciplineId,
@@ -129,35 +130,37 @@ export async function latestCardStart(db: Db, ownerId: string): Promise<number |
   return latest?.startedAt.getTime() ?? null
 }
 
-/** Seite einer Scheibe: die Scheibe mit den Schüssen ihrer aktuellen Revision in Abgabefolge; null, wenn es sie nicht gibt */
+/**
+ * Seite einer Scheibe: die Scheibe mit den Schüssen ihrer aktuellen Revision in Abgabefolge, nur für ihren Besitzer;
+ * null, wenn es sie nicht gibt, sie gelöscht ist oder einem anderen gehört
+ */
 export async function cardWithShots(
   db: Db,
-  cardId: string
+  query: { cardId: string; ownerId: string }
 ): Promise<(PeriodCard & { revision: number; disciplineId: number }) | null> {
-  const card = await db.card.findUnique({
-    where: { id: cardId },
+  const card = await db.card.findFirst({
+    where: { id: query.cardId, ownerId: query.ownerId, deletedAt: null },
     select: {
       id: true,
       startedAt: true,
       kind: true,
       complete: true,
       flags: true,
-      official: true,
+      discipline: { select: { officialScoring: true } },
       disciplineId: true,
-      deletedAt: true,
       currentRevision: {
         select: { number: true, shots: { orderBy: { seq: "asc" } } },
       },
     },
   })
-  if (!card || card.deletedAt || !card.currentRevision) return null
+  if (!card?.currentRevision) return null
   return {
     id: card.id,
     startedAtMs: card.startedAt.getTime(),
     kind: card.kind,
     complete: card.complete,
     flags: card.flags,
-    ...(card.official ? { official: card.official } : {}),
+    ...(card.discipline.officialScoring ? { official: card.discipline.officialScoring } : {}),
     disciplineId: card.disciplineId,
     revision: card.currentRevision.number,
     shots: card.currentRevision.shots.map(shotFromRow).map(toMetricShot),

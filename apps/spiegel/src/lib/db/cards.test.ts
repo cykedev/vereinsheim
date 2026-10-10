@@ -3,20 +3,23 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
 
 import { createPrismaClient } from "@/lib/db"
-import { generateSeason } from "../../../test/generate"
+import { generateSeason, liveStates, type GeneratedCard } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import {
-  appendedShots,
+  CardIdentityConflictError,
   refreshProjections,
   setDisciplineFamily,
+  shotChange,
   toMetricShot,
   writeRevision,
+  type ShotInput,
 } from "./cards"
 import { cardWithShots } from "./reads"
 
 const db = createPrismaClient()
 let site: TestSite
+const DAY_MS = 86_400_000
 
 beforeAll(async () => {
   site = await createTestSite(db, "cards")
@@ -26,9 +29,9 @@ afterAll(async () => {
   await db.$disconnect()
 })
 
-const season = (cards: number, scheibenIdBase: number) =>
+const season = (cards: number, scheibenIdBase: number, seed = 20261010) =>
   generateSeason({
-    seed: 20261010,
+    seed,
     cards,
     firstMs: Date.UTC(2026, 0, 5, 17, 30),
     everyDays: 3,
@@ -38,19 +41,27 @@ const season = (cards: number, scheibenIdBase: number) =>
     scheibenIdBase,
   })
 
-async function projectionOf(cardId: string) {
-  return db.cardProjection.findUniqueOrThrow({ where: { cardId } })
+/** die erste Scheibe einer kleinen Saison mit der gewünschten Form */
+function cardWhere(scheibenIdBase: number, wanted: (card: GeneratedCard) => boolean) {
+  const card = season(12, scheibenIdBase).find(wanted)
+  if (!card) throw new Error("keine passende Scheibe im Seed")
+  return card
 }
+const withProbe = (card: GeneratedCard) => card.probeBefore.length > 0
+const probeOnly = (card: GeneratedCard) => card.shots.every((shot) => shot.stellung === 0)
+
+const projectionOf = (cardId: string) => db.cardProjection.findUniqueOrThrow({ where: { cardId } })
+const shotsOf = (cardId: string) => cardWithShots(db, { cardId, ownerId: site.ownerId })
 
 describe("writeRevision", () => {
   it("schreibt Schüsse und Projektion, die Seite der Scheibe liest dieselben Schüsse", async () => {
     const [input] = season(1, 1000)
     const result = await writeRevision(db, input)
-    expect(result).toMatchObject({ number: 1, created: true, appended: 0 })
+    expect(result).toMatchObject({ number: 1, change: "created", added: input.shots.length })
 
-    const card = await cardWithShots(db, result.cardId)
+    const card = await shotsOf(result.cardId)
     expect(card?.shots).toEqual(input.shots.map(toMetricShot))
-    expect(card).toMatchObject({ kind: input.card.kind, complete: true, revision: 1 })
+    expect(card).toMatchObject({ kind: input.card.kind, revision: 1, official: "rings" })
 
     const stored = await projectionOf(result.cardId)
     const expected = cardProjection(card!)
@@ -58,10 +69,9 @@ describe("writeRevision", () => {
     expect(stored.version).toBe(projectionVersion())
     expect(stored.values).toEqual(expected.values)
     expect(stored.records).toEqual(JSON.parse(JSON.stringify(expected.records)))
-    expect(stored.printedShots).toBe(expected.printedShots)
   })
 
-  it("dieselben Schüsse in anderer Folge: keine neue Revision, die Merkmale der Scheibe ändern sich trotzdem", async () => {
+  it("dieselben Schüsse in anderer Folge: unverändert, die Merkmale der Scheibe ändern sich trotzdem", async () => {
     const [input] = season(1, 1100)
     const first = await writeRevision(db, input)
     const again = await writeRevision(db, {
@@ -69,101 +79,273 @@ describe("writeRevision", () => {
       card: { ...input.card, flags: ["ausgenommen"] },
       shots: [...input.shots].reverse(),
     })
-    expect(again).toEqual({ ...first, created: false, appended: 0 })
+    expect(again).toEqual({ ...first, change: "unchanged", added: 0, removed: 0 })
     expect(await db.cardRevision.count({ where: { cardId: first.cardId } })).toBe(1)
     const card = await db.card.findUniqueOrThrow({ where: { id: first.cardId } })
     expect(card.flags).toEqual(["ausgenommen"])
   })
 
-  it("ein geänderter Schuss ergibt Revision 2; die vorige bleibt, unveränderte Schüsse behalten ihren Fingerabdruck", async () => {
-    const [input] = season(1, 1200)
+  it("ein korrigierter Wertungsschuss ergibt Revision 2; die vorige bleibt, unveränderte Schüsse behalten ihren Fingerabdruck", async () => {
+    const input = cardWhere(1200, (c) => !probeOnly(c))
     const first = await writeRevision(db, input)
     const changed = input.shots.map((shot, i) =>
       i === input.shots.length - 1
         ? { ...shot, decimalTenths: 109, ring: 10, innerTen: true }
         : shot
     )
-    const second = await writeRevision(db, { ...input, shots: changed, reason: "neu-gewertet" })
-    expect(second).toMatchObject({ number: 2, created: true, cardId: first.cardId })
+    const second = await writeRevision(db, { ...input, shots: changed, reason: "korrektur" })
+    expect(second).toMatchObject({ number: 2, change: "created", cardId: first.cardId })
 
     const card = await db.card.findUniqueOrThrow({ where: { id: first.cardId } })
     expect(card.currentRevisionId).toBe(second.revisionId)
     expect(await db.shot.count({ where: { cardId: first.cardId } })).toBe(2 * input.shots.length)
     const [{ fingerprint }] = await db.shot.findMany({
-      where: { revisionId: first.revisionId, seq: 1 },
+      where: { revisionId: first.revisionId, seq: input.shots[0].seq },
       select: { fingerprint: true },
     })
     expect(await db.shot.count({ where: { cardId: first.cardId, fingerprint } })).toBe(2)
     expect((await projectionOf(first.cardId)).revisionId).toBe(second.revisionId)
-    expect((await cardWithShots(db, first.cardId))?.shots.at(-1)?.decimalTenths).toBe(109)
+    expect((await shotsOf(first.cardId))?.shots.at(-1)?.decimalTenths).toBe(109)
   })
-})
 
-describe("appendedShots", () => {
-  const shots = () => season(1, 1600)[0].shots
-  it("nur neue Schüsse: genau die neuen", () => {
-    const all = shots()
-    expect(appendedShots(all.slice(0, 5), all.slice(0, 8))).toEqual(all.slice(5, 8))
+  it("Besitzer bleibt beim Aktualisieren; Sportpass bleibt, wenn er fehlt, und wird nur mit null geleert", async () => {
+    const [input] = season(1, 1300)
+    const card = { ...input.card, sportpassId: BigInt(12_345_678) }
+    const { cardId } = await writeRevision(db, { ...input, card })
+    await writeRevision(db, {
+      ...input,
+      card: { ...card, ownerId: null, sportpassId: undefined, flags: ["x"] },
+    })
+    let row = await db.card.findUniqueOrThrow({ where: { id: cardId } })
+    expect(row.ownerId).toBe(site.ownerId)
+    expect(row.sportpassId).toBe(BigInt(12_345_678))
+    await writeRevision(db, { ...input, card: { ...card, sportpassId: null } })
+    row = await db.card.findUniqueOrThrow({ where: { id: cardId } })
+    expect(row.sportpassId).toBeNull()
   })
-  it("ein bisheriger Schuss geändert oder weg, auch wenn neue dazukommen: Korrektur", () => {
-    const all = shots()
-    const changed = all.slice(0, 8).map((s, i) => (i === 2 ? { ...s, decimalTenths: 0 } : s))
-    expect(appendedShots(all.slice(0, 5), changed)).toBeNull()
-    const flagged = all.slice(0, 8).map((s, i) => (i === 2 ? { ...s, flags: ["verdaechtig"] } : s))
-    expect(appendedShots(all.slice(0, 5), flagged)).toBeNull()
-    expect(appendedShots(all.slice(0, 5), [...all.slice(1, 5), ...all.slice(5, 8)])).toBeNull()
-  })
-  it("gleich viele oder doppelte Schlüssel: keine Ergänzung", () => {
-    const all = shots()
-    expect(appendedShots(all.slice(0, 5), all.slice(0, 5))).toBeNull()
-    expect(appendedShots(all.slice(0, 5), [...all.slice(0, 5), all[0]])).toBeNull()
-  })
-})
 
-describe("offener Durchgang (SF-03)", () => {
-  it("kommen nur Schüsse dazu, wächst die aktuelle Revision; eine Korrektur ergibt eine neue", async () => {
+  it("Scheibe nur aus dem PDF: ohne Quelle angelegt, später mit ihren Rohdaten verbunden; eine andere Kennung ist ein Fehler", async () => {
+    const [input] = season(1, 1400)
+    const pdfShots: ShotInput[] = input.shots.map((shot) => ({
+      ...shot,
+      xUm: null,
+      yUm: null,
+      distanceTenthsUm: null,
+      firedAtMs: null,
+      displayMode: null,
+    }))
+    const pdf = await writeRevision(db, {
+      card: { ...input.card, sourceId: null, scheibenId: null, origin: "pdf" },
+      shots: pdfShots,
+      reason: "qr",
+    })
+    let row = await db.card.findUniqueOrThrow({ where: { id: pdf.cardId } })
+    expect(row).toMatchObject({ sourceId: null, scheibenId: null, origin: "pdf" })
+
+    const raw = await writeRevision(db, { ...input, cardId: pdf.cardId })
+    expect(raw).toMatchObject({ cardId: pdf.cardId, number: 2, change: "created" })
+    row = await db.card.findUniqueOrThrow({ where: { id: pdf.cardId } })
+    expect(row).toMatchObject({ sourceId: site.sourceId, scheibenId: 1400, origin: "raw" })
+    // ein späterer Stand aus dem PDF nimmt die Rohdaten nicht wieder weg
+    await writeRevision(db, {
+      cardId: pdf.cardId,
+      card: { ...input.card, sourceId: null, scheibenId: null, origin: "pdf" },
+      shots: input.shots,
+      reason: "qr",
+    })
+    expect(await db.card.findUniqueOrThrow({ where: { id: pdf.cardId } })).toMatchObject({
+      sourceId: site.sourceId,
+      origin: "raw",
+    })
+    await expect(
+      writeRevision(db, { ...input, cardId: pdf.cardId, card: { ...input.card, scheibenId: 9 } })
+    ).rejects.toThrow(RangeError)
+    await expect(writeRevision(db, { ...input, cardId: "keine" })).rejects.toThrow()
+  })
+
+  it("doppelte Stellung und Treffer sind ein Fehler", async () => {
     const [input] = season(1, 1500)
-    const total = input.shots.length
-    let last
-    for (let n = 1; n <= total; n++)
-      last = await writeRevision(db, { ...input, shots: input.shots.slice(0, n) })
-    expect(last).toMatchObject({ number: 1, created: false, appended: 1 })
-    const { cardId } = last!
-    expect(await db.cardRevision.count({ where: { cardId } })).toBe(1)
-    expect(await db.shot.count({ where: { cardId } })).toBe(total)
-    expect((await cardWithShots(db, cardId))?.shots).toEqual(input.shots.map(toMetricShot))
-    const projection = await projectionOf(cardId)
-    expect(projection.printedShots).toBe(
-      cardProjection((await cardWithShots(db, cardId))!).printedShots
-    )
+    await expect(
+      writeRevision(db, { ...input, shots: [...input.shots, input.shots[0]] })
+    ).rejects.toThrow(RangeError)
+  })
+})
 
-    // ein Schuss fällt weg (Meyton nimmt ihn zurück): neue Revision, die vorige bleibt vollständig
-    const fewer = await writeRevision(db, { ...input, shots: input.shots.slice(0, total - 1) })
-    expect(fewer).toMatchObject({ number: 2, created: true, appended: 0 })
-    expect(await db.shot.count({ where: { cardId } })).toBe(2 * total - 1)
+describe("offener Durchgang (SF-03, SF-67, SF-72)", () => {
+  it("Probe, dann Wertung: eine Revision; der erste Wertungsschuss löscht die Probe, wie am Ausdruck", async () => {
+    const input = cardWhere(2000, withProbe)
+    const states = liveStates(input)
+    const results = []
+    for (const shots of states) results.push(await writeRevision(db, { ...input, shots }))
+    const probeCount = input.probeBefore.length
+    expect(results[0].change).toBe("created")
+    expect(results.slice(1).every((r) => r.change === "updated" && r.number === 1)).toBe(true)
+    // der Stand mit dem ersten Wertungsschuss: die Probe weg, ein Schuss dazu
+    expect(results[probeCount]).toMatchObject({ added: 1, removed: probeCount })
+
+    const { cardId } = results[0]
+    expect(await db.cardRevision.count({ where: { cardId } })).toBe(1)
+    expect(await db.shot.count({ where: { cardId } })).toBe(input.shots.length)
+    const card = await shotsOf(cardId)
+    expect(card?.shots).toEqual(input.shots.map(toMetricShot))
+    expect((await projectionOf(cardId)).values).toEqual(cardProjection(card!).values)
+  })
+
+  it("Neustart der Probe (SF-72): dieselbe Revision, nur der neue Block bleibt", async () => {
+    const input = cardWhere(2100, probeOnly)
+    const first = await writeRevision(db, input)
+    // neu begonnen: wieder Treffer 1, an anderer Stelle und später
+    const restart: ShotInput[] = [
+      {
+        ...input.shots[0],
+        seq: 1,
+        xUm: 1230,
+        yUm: -450,
+        firedAtMs: input.shots.at(-1)!.firedAtMs! + 60_000,
+      },
+    ]
+    const result = await writeRevision(db, { ...input, shots: restart })
+    expect(result).toMatchObject({
+      cardId: first.cardId,
+      number: 1,
+      change: "updated",
+      added: 1,
+      removed: input.shots.length,
+    })
+    expect(await db.shot.count({ where: { cardId: first.cardId } })).toBe(1)
+  })
+
+  it("fehlt danach ein Wertungsschuss, ist das eine Korrektur: Revision 2", async () => {
+    const input = cardWhere(2200, (c) => !probeOnly(c))
+    await writeRevision(db, input)
+    const result = await writeRevision(db, { ...input, shots: input.shots.slice(0, -1) })
+    expect(result).toMatchObject({ number: 2, change: "created" })
+  })
+})
+
+describe("shotChange", () => {
+  // reine Funktion: ohne Anlage, die Kennungen spielen keine Rolle
+  const input = generateSeason({
+    seed: 1,
+    cards: 12,
+    firstMs: 0,
+    everyDays: 1,
+    sourceId: 0,
+    disciplineId: 0,
+    ownerId: "-",
+    scheibenIdBase: 0,
+  }).find((card) => card.shots.every((shot) => shot.stellung !== 0))!
+  const shots = input.shots
+  const probe = (n: number): ShotInput => ({ ...shots[0], stellung: 0, treffer: n, series: null })
+
+  it("gleiche Schüsse, neue Schüsse, Probe weg", () => {
+    expect(shotChange(shots, shots)).toEqual({ kind: "same" })
+    expect(shotChange(shots.slice(0, 3), shots.slice(0, 5))).toEqual({
+      kind: "update",
+      add: shots.slice(3, 5),
+      remove: [],
+    })
+    expect(shotChange([probe(1), probe(2)], shots.slice(0, 1))).toEqual({
+      kind: "update",
+      add: shots.slice(0, 1),
+      remove: [probe(1), probe(2)],
+    })
+  })
+
+  it("ein Wertungsschuss geändert oder weg ist eine Korrektur, auch wenn neue dazukommen", () => {
+    const changed = shots.slice(0, 5).map((s, i) => (i === 2 ? { ...s, decimalTenths: 0 } : s))
+    expect(shotChange(shots.slice(0, 3), changed)).toEqual({ kind: "correction" })
+    const flagged = shots
+      .slice(0, 5)
+      .map((s, i) => (i === 2 ? { ...s, flags: ["verdaechtig"] } : s))
+    expect(shotChange(shots.slice(0, 3), flagged)).toEqual({ kind: "correction" })
+    expect(shotChange(shots.slice(0, 3), shots.slice(1, 5))).toEqual({ kind: "correction" })
+  })
+
+  it("doppelte Stellung und Treffer sind ein Fehler", () => {
+    expect(() => shotChange([], [shots[0], shots[0]])).toThrow(RangeError)
+  })
+})
+
+describe("Folgenummer (SF-26)", () => {
+  it("ein älterer Snapshot ändert weder Schüsse noch Merkmale", async () => {
+    const input = cardWhere(2400, (c) => !probeOnly(c))
+    const first = await writeRevision(db, { ...input, sequence: 10 })
+    const older = await writeRevision(db, {
+      ...input,
+      card: { ...input.card, flags: ["alt"] },
+      shots: input.shots.slice(0, 3),
+      sequence: 9,
+    })
+    expect(older).toMatchObject({ cardId: first.cardId, change: "stale", number: 1 })
+    const row = await db.card.findUniqueOrThrow({ where: { id: first.cardId } })
+    expect(row.flags).toEqual([])
+    expect(row.lastSequence).toBe(BigInt(10))
+    expect(await db.shot.count({ where: { cardId: first.cardId } })).toBe(input.shots.length)
+    expect((await writeRevision(db, { ...input, sequence: 11 })).change).toBe("unchanged")
+    expect((await db.card.findUniqueOrThrow({ where: { id: first.cardId } })).lastSequence).toBe(
+      BigInt(11)
+    )
+  })
+})
+
+describe("wiederkehrende ScheibenID (SF-77)", () => {
+  it("Wochen später mit anderen Schüssen: Konflikt statt stillem Zusammenführen; der nächste Zyklus ist eine eigene Scheibe", async () => {
+    const [a, b] = season(2, 2500)
+    const first = await writeRevision(db, a)
+    const later = {
+      ...b,
+      card: {
+        ...b.card,
+        scheibenId: a.card.scheibenId,
+        startedAtMs: a.card.startedAtMs + 50 * DAY_MS,
+      },
+    }
+    await expect(writeRevision(db, later)).rejects.toThrow(CardIdentityConflictError)
+    const next = await writeRevision(db, { ...later, card: { ...later.card, cycle: 1 } })
+    expect(next.cardId).not.toBe(first.cardId)
+    expect(next.change).toBe("created")
+    // dieselben Schüsse mit verschobenem Beginn sind dieselbe Scheibe
+    const moved = await writeRevision(db, {
+      ...a,
+      card: { ...a.card, startedAtMs: a.card.startedAtMs + 50 * DAY_MS },
+    })
+    expect(moved).toMatchObject({ cardId: first.cardId, change: "unchanged" })
   })
 })
 
 describe("refreshProjections", () => {
-  it("rechnet veraltete Projektionen neu", async () => {
-    const [input] = season(1, 1300)
-    const { cardId } = await writeRevision(db, input)
-    const before = await projectionOf(cardId)
-    await db.cardProjection.update({
-      where: { cardId },
+  it("rechnet veraltete Projektionen nach, nur in der gewählten Quelle", async () => {
+    const [a, b] = season(2, 2600)
+    const ids = [(await writeRevision(db, a)).cardId, (await writeRevision(db, b)).cardId]
+    const before = await projectionOf(ids[0])
+    await db.cardProjection.updateMany({
+      where: { cardId: { in: ids } },
       data: { version: "p0-alt", values: {} },
     })
-    // auch Scheiben anderer Testdateien können veraltet sein: so lange, bis keine mehr übrig ist
-    while ((await refreshProjections(db, { limit: 50 })) > 0);
-    const after = await projectionOf(cardId)
+    expect(await refreshProjections(db, { sourceId: site.sourceId })).toBe(2)
+    expect(await refreshProjections(db, { sourceId: site.sourceId })).toBe(0)
+    const after = await projectionOf(ids[0])
     expect(after.version).toBe(projectionVersion())
     expect(after.values).toEqual(before.values)
+  })
+
+  it("eine Projektion einer früheren Revision gilt als veraltet", async () => {
+    const input = cardWhere(2700, (c) => !probeOnly(c))
+    const first = await writeRevision(db, input)
+    const second = await writeRevision(db, { ...input, shots: input.shots.slice(0, -1) })
+    await db.cardProjection.update({
+      where: { cardId: first.cardId },
+      data: { revisionId: first.revisionId },
+    })
+    expect(await refreshProjections(db, { sourceId: site.sourceId })).toBe(1)
+    expect((await projectionOf(first.cardId)).revisionId).toBe(second.revisionId)
   })
 })
 
 describe("setDisciplineFamily", () => {
   it("die Scheiben ziehen mit der Familie ihrer Disziplin mit", async () => {
-    const [input] = season(1, 1400)
+    const [input] = season(1, 2800)
     const { cardId } = await writeRevision(db, input)
     const other = await db.family.create({ data: { name: `Andere ${cardId}` } })
     try {

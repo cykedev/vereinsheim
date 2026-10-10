@@ -14,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="de">
-      <body className="bg-background text-foreground antialiased">{children}</body>
+      <body className="bg-background text-foreground antialiased">
+        {/* App-Shell: Rand im Layout, nie in der Seite (Konventionen §3) */}
+        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      </body>
     </html>
   )
 }

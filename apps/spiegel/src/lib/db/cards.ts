@@ -1,6 +1,6 @@
-// Scheiben mit Revisionen und Projektion (ADR-031). Eine Revision ist ein Satz Schüsse; gleicher Inhalt ergibt keine
-// neue. Mit jeder neuen Revision entsteht die Projektion neu (shot-core `cardProjection`), damit Liste, Fortschritt
-// und Start ohne Schüsse auskommen.
+// Scheiben mit Revisionen und Projektion (ADR-031). Eine Revision ist ein Satz Schüsse; eine neue entsteht nur bei einer
+// Korrektur der Wertung (SF-67). Mit jeder Änderung an den Schüssen entsteht die Projektion neu (shot-core
+// `cardProjection`), damit Liste, Fortschritt und Start ohne Schüsse auskommen.
 
 import { createHash } from "node:crypto"
 
@@ -9,7 +9,7 @@ import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
 
-import type { CardKind, CardOrigin, CardState, Prisma, Scoring } from "@/generated/prisma/client"
+import { Prisma, type CardKind, type CardOrigin, type CardState } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
 
@@ -39,8 +39,14 @@ export interface ShotInput {
 export interface CardInput {
   sourceId: number | null
   scheibenId: number | null
+  /**
+   * Zyklus der ScheibenID (SF-77): Meyton zählt sie als Millisekunden-Zähler, der nach etwa 49,7 Tagen wiederkehrt.
+   * Standard 0; meldet `writeRevision` einen `CardIdentityConflictError`, nimmt der Adapter den nächsten.
+   */
+  cycle?: number
   /** nur beim Anlegen; die Zuordnung ändert eine Revision nicht */
   ownerId?: string | null
+  /** fehlt: nicht anfassen; null: leeren (Drei-Wege-Semantik, conventions §9) */
   sportpassId?: bigint | null
   disciplineId: number
   stand: string | null
@@ -49,29 +55,50 @@ export interface CardInput {
   kind: CardKind
   state: CardState
   complete: boolean
-  official: Scoring | null
   flags: readonly string[]
   origin: CardOrigin
 }
 
 export interface RevisionInput {
-  /** die Scheibe; ohne `cardId` über Quelle und ScheibenID gefunden oder neu angelegt */
+  /** die Scheibe; ohne `cardId` über Quelle, ScheibenID und Zyklus gefunden oder neu angelegt */
   card: CardInput
   cardId?: string
   shots: readonly ShotInput[]
   reason: string
   rawSnapshotId?: bigint | null
+  /** Folgenummer des Snapshots (SF-26): eine, die nicht über der zuletzt geschriebenen liegt, ändert nichts */
+  sequence?: bigint | number
 }
+
+/**
+ * `created`: neue Revision (eine Korrektur der Wertung oder die erste); `updated`: dieselbe Revision mit neuen oder
+ * weggefallenen Schüssen (offener Durchgang, Probe gelöscht oder neu begonnen, SF-03, SF-72); `unchanged`: dieselben
+ * Schüsse, nur die Merkmale der Scheibe aktualisiert; `stale`: ein älterer Snapshot, nichts geändert.
+ */
+export type RevisionChange = "created" | "updated" | "unchanged" | "stale"
 
 export interface RevisionResult {
   cardId: string
   revisionId: bigint
   number: number
-  /** false: keine neue Revision (dieselben Schüsse oder nur neue dazu); die Merkmale der Scheibe sind aktualisiert */
-  created: boolean
-  /** an die aktuelle Revision angehängte Schüsse: ein offener Durchgang, der wächst (SF-03) */
-  appended: number
+  change: RevisionChange
+  added: number
+  removed: number
 }
+
+/** eine ScheibenID, die schon zu einer anderen Scheibe gehört (SF-77): der Adapter nimmt den nächsten Zyklus */
+export class CardIdentityConflictError extends Error {
+  constructor(
+    readonly cardId: string,
+    readonly cycle: number
+  ) {
+    super(`Scheibe ${cardId}: dieselbe ScheibenID im Zyklus ${cycle}, aber eine andere Scheibe`)
+    this.name = "CardIdentityConflictError"
+  }
+}
+
+/** so weit auseinander kann der Beginn derselben Scheibe nicht liegen; die ID kehrt erst nach 49,7 Tagen wieder */
+const RECURRENCE_MIN_MS = 7 * 86_400_000
 
 const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex")
 
@@ -97,7 +124,8 @@ export function toMetricShot(shot: ShotInput): MetricShot {
   }
 }
 
-const shotKey = (shot: ShotInput) => `${shot.stellung}:${shot.treffer}`
+const shotKey = (shot: Pick<ShotInput, "stellung" | "treffer">) =>
+  `${shot.stellung}:${shot.treffer}`
 const shotContent = (shot: ShotInput) => canonicalize({ ...shot, flags: [...shot.flags].sort() })
 
 /** Inhalt einer Revision: die Schüsse nach Stellung und Treffer, unabhängig von der Folge der Eingabe */
@@ -106,22 +134,34 @@ function contentHash(shots: readonly ShotInput[]): string {
   return sha256(`[${sorted.map(shotContent).join(",")}]`)
 }
 
+function assertUniqueShots(shots: readonly ShotInput[]): void {
+  if (new Set(shots.map(shotKey)).size !== shots.length)
+    throw new RangeError("Schüsse mit doppelter Stellung und Treffer")
+}
+
+export type ShotChange =
+  | { kind: "same" }
+  /** dieselbe Revision: Schüsse dazu, Probe weg oder neu (SF-03, SF-72) */
+  | { kind: "update"; add: ShotInput[]; remove: ShotInput[] }
+  /** ein Wertungsschuss geändert oder weg: neue Revision (SF-67) */
+  | { kind: "correction" }
+
 /**
- * Die neuen Schüsse, wenn `next` alle bisherigen unverändert enthält und nur Schüsse dazukommen (ein offener Durchgang
- * nach jedem Schuss); sonst null: Ein geänderter oder fehlender Schuss ist eine Korrektur und braucht eine neue Revision.
+ * Was der neue Stand gegenüber der aktuellen Revision ist. Eine Korrektur ist nur eine geänderte oder fehlende
+ * Wertungszeile (SF-67). Die Probe dagegen kommt und geht: Meyton löscht sie mit dem ersten Wertungsschuss (SF-03) und
+ * beim Neustart (SF-72, die Nummern beginnen wieder bei 1); das ist der Normalfall, wie am Ausdruck.
  */
-export function appendedShots(
-  current: readonly ShotInput[],
-  next: readonly ShotInput[]
-): ShotInput[] | null {
+export function shotChange(current: readonly ShotInput[], next: readonly ShotInput[]): ShotChange {
+  assertUniqueShots(next)
   const nextByKey = new Map(next.map((shot) => [shotKey(shot), shot]))
-  if (nextByKey.size !== next.length || next.length <= current.length) return null
-  for (const shot of current) {
-    const same = nextByKey.get(shotKey(shot))
-    if (!same || shotContent(same) !== shotContent(shot)) return null
-  }
-  const known = new Set(current.map(shotKey))
-  return next.filter((shot) => !known.has(shotKey(shot)))
+  const currentByKey = new Map(current.map((shot) => [shotKey(shot), shot]))
+  const differs = (a: ShotInput | undefined, b: ShotInput) =>
+    !a || shotContent(a) !== shotContent(b)
+  if (current.some((shot) => shot.stellung !== 0 && differs(nextByKey.get(shotKey(shot)), shot)))
+    return { kind: "correction" }
+  const add = next.filter((shot) => differs(currentByKey.get(shotKey(shot)), shot))
+  const remove = current.filter((shot) => differs(nextByKey.get(shotKey(shot)), shot))
+  return add.length || remove.length ? { kind: "update", add, remove } : { kind: "same" }
 }
 
 function shotRows(revisionId: bigint, cardId: string, shots: readonly ShotInput[]) {
@@ -145,11 +185,9 @@ function shotRows(revisionId: bigint, cardId: string, shots: readonly ShotInput[
   }))
 }
 
-function cardColumns(card: CardInput, familyId: number | null) {
+/** Merkmale, die jeder Stand neu setzt; die Kennung (Quelle, ScheibenID, Zyklus) und der Besitzer nicht */
+function cardFeatures(card: CardInput, familyId: number | null) {
   return {
-    sourceId: card.sourceId,
-    scheibenId: card.scheibenId,
-    sportpassId: card.sportpassId ?? null,
     disciplineId: card.disciplineId,
     familyId,
     stand: card.stand,
@@ -158,98 +196,204 @@ function cardColumns(card: CardInput, familyId: number | null) {
     kind: card.kind,
     state: card.state,
     complete: card.complete,
-    official: card.official,
     flags: [...card.flags],
-    origin: card.origin,
+    ...(card.sportpassId === undefined ? {} : { sportpassId: card.sportpassId }),
   }
 }
 
-async function findCard(tx: Tx, input: RevisionInput) {
-  if (input.cardId) return tx.card.findUnique({ where: { id: input.cardId }, select: { id: true } })
+const EXISTING_SELECT = {
+  id: true,
+  sourceId: true,
+  scheibenId: true,
+  cycle: true,
+  origin: true,
+  startedAt: true,
+  lastSequence: true,
+  currentRevision: { select: { id: true, number: true, contentHash: true } },
+} satisfies Prisma.CardSelect
+
+async function findCard(tx: Tx, input: RevisionInput, cycle: number) {
+  if (input.cardId)
+    return tx.card.findUniqueOrThrow({ where: { id: input.cardId }, select: EXISTING_SELECT })
   const { sourceId, scheibenId } = input.card
   if (sourceId === null || scheibenId === null) return null
   return tx.card.findUnique({
-    where: { sourceId_scheibenId: { sourceId, scheibenId } },
-    select: { id: true },
+    where: { sourceId_scheibenId_cycle: { sourceId, scheibenId, cycle } },
+    select: EXISTING_SELECT,
   })
 }
 
 /**
- * Den Stand einer Scheibe schreiben: Merkmale aktualisieren; kommen nur Schüsse dazu, die aktuelle Revision ergänzen,
- * sonst bei anderen Schüssen eine neue Revision anlegen; jeweils mit neuer Projektion. Eine Transaktion; die Zeile der
- * Scheibe ist gesperrt, damit zwei Schreiber nicht dieselbe Nummer vergeben.
+ * Den Stand einer Scheibe schreiben, in einer Transaktion:
+ * - gesperrt über dasselbe Advisory-Lock wie die Ablage der Rohdaten (Quelle, ScheibenID), dann die Familie der
+ *   Disziplin (`FOR SHARE`, gegen `setDisciplineFamily`) und die Zeile der Scheibe;
+ * - ein Snapshot mit nicht größerer Folgenummer als der zuletzt geschriebene ändert nichts (SF-26);
+ * - gleiche Schüsse: nur die Merkmale; Schüsse dazu oder Probe weg: dieselbe Revision; eine Korrektur der Wertung: eine
+ *   neue, die vorige bleibt. Jede Änderung an den Schüssen rechnet die Projektion neu.
  */
 export async function writeRevision(db: Db, input: RevisionInput): Promise<RevisionResult> {
+  assertUniqueShots(input.shots)
   const hash = contentHash(input.shots)
-  return db.$transaction(async (tx) => {
-    const { familyId } = await tx.discipline.findUniqueOrThrow({
-      where: { id: input.card.disciplineId },
-      select: { familyId: true },
-    })
-    const columns = cardColumns(input.card, familyId)
-    const existing = await findCard(tx, input)
-    const cardId = existing
-      ? (await tx.card.update({ where: { id: existing.id }, data: columns, select: { id: true } }))
-          .id
-      : (
-          await tx.card.create({
-            data: { ...columns, ownerId: input.card.ownerId ?? null },
-            select: { id: true },
-          })
-        ).id
-    await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${cardId} FOR UPDATE`
+  const sequence = input.sequence === undefined ? null : BigInt(input.sequence)
+  const { sourceId, scheibenId } = input.card
+  const cycle = input.card.cycle ?? 0
 
-    const { currentRevision } = await tx.card.findUniqueOrThrow({
-      where: { id: cardId },
-      select: { currentRevision: { select: { id: true, number: true, contentHash: true } } },
-    })
-    if (currentRevision?.contentHash === hash)
-      return {
-        cardId,
-        revisionId: currentRevision.id,
-        number: currentRevision.number,
-        created: false,
-        appended: 0,
-      }
-    if (currentRevision) {
-      const stored = await tx.shot.findMany({ where: { revisionId: currentRevision.id } })
-      const added = appendedShots(stored.map(shotFromRow), input.shots)
-      if (added) {
-        await tx.shot.createMany({ data: shotRows(currentRevision.id, cardId, added) })
-        await tx.cardRevision.update({
-          where: { id: currentRevision.id },
-          data: {
-            contentHash: hash,
-            ...(input.rawSnapshotId ? { rawSnapshotId: input.rawSnapshotId } : {}),
-          },
-        })
-        await saveProjection(tx, cardId, currentRevision.id, input.shots.map(toMetricShot))
-        return {
-          cardId,
-          revisionId: currentRevision.id,
-          number: currentRevision.number,
-          created: false,
-          appended: added.length,
-        }
-      }
+  return db.$transaction(async (tx) => {
+    if (sourceId !== null && scheibenId !== null)
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
+    const [discipline] = await tx.$queryRaw<{ familyId: number | null }[]>`
+      SELECT "familyId" FROM "Discipline" WHERE id = ${input.card.disciplineId} FOR SHARE`
+    if (!discipline) throw new RangeError(`Disziplin ${input.card.disciplineId} fehlt`)
+    const features = cardFeatures(input.card, discipline.familyId)
+
+    const existing = await findCard(tx, input, cycle)
+    if (!existing) {
+      const { id: cardId } = await tx.card.create({
+        data: {
+          ...features,
+          sourceId,
+          scheibenId,
+          cycle,
+          origin: input.card.origin,
+          ownerId: input.card.ownerId ?? null,
+          lastSequence: sequence,
+        },
+        select: { id: true },
+      })
+      return newRevision(tx, cardId, 1, input, hash)
     }
 
-    const number = (currentRevision?.number ?? 0) + 1
-    const revision = await tx.cardRevision.create({
-      data: {
+    const cardId = existing.id
+    await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${cardId} FOR UPDATE`
+    const current = existing.currentRevision
+    if (
+      current &&
+      sequence !== null &&
+      existing.lastSequence !== null &&
+      sequence <= existing.lastSequence
+    )
+      return {
         cardId,
-        number,
-        contentHash: hash,
-        rawSnapshotId: input.rawSnapshotId ?? null,
-        reason: input.reason,
+        revisionId: current.id,
+        number: current.number,
+        change: "stale",
+        added: 0,
+        removed: 0,
+      }
+
+    const stored = current
+      ? await tx.shot.findMany({ where: { revisionId: current.id }, orderBy: { seq: "asc" } })
+      : []
+    if (
+      !input.cardId &&
+      Math.abs(existing.startedAt.getTime() - input.card.startedAtMs) > RECURRENCE_MIN_MS
+    ) {
+      // dieselbe ScheibenID, aber ein Beginn Wochen entfernt: nur dieselbe Scheibe, wenn ein Schuss wiederkehrt
+      const known = new Set(stored.map((row) => row.fingerprint))
+      if (!input.shots.some((shot) => known.has(shotFingerprint(shot))))
+        throw new CardIdentityConflictError(cardId, cycle)
+    }
+    await tx.card.update({
+      where: { id: cardId },
+      data: {
+        ...features,
+        ...identityUpdate(existing, input.card, cycle),
+        ...(sequence === null ? {} : { lastSequence: sequence }),
       },
-      select: { id: true },
     })
-    await tx.shot.createMany({ data: shotRows(revision.id, cardId, input.shots) })
-    await tx.card.update({ where: { id: cardId }, data: { currentRevisionId: revision.id } })
-    await saveProjection(tx, cardId, revision.id, input.shots.map(toMetricShot))
-    return { cardId, revisionId: revision.id, number, created: true, appended: 0 }
+
+    if (!current) return newRevision(tx, cardId, 1, input, hash)
+    if (current.contentHash === hash)
+      return {
+        cardId,
+        revisionId: current.id,
+        number: current.number,
+        change: "unchanged",
+        added: 0,
+        removed: 0,
+      }
+    const change = shotChange(stored.map(shotFromRow), input.shots)
+    if (change.kind !== "update") return newRevision(tx, cardId, current.number + 1, input, hash)
+
+    const idOf = new Map(stored.map((row) => [shotKey(row), row.id]))
+    await tx.shot.deleteMany({
+      where: { id: { in: change.remove.map((shot) => idOf.get(shotKey(shot))!) } },
+    })
+    await tx.shot.createMany({ data: shotRows(current.id, cardId, change.add) })
+    await tx.cardRevision.update({
+      where: { id: current.id },
+      data: {
+        contentHash: hash,
+        ...(input.rawSnapshotId ? { rawSnapshotId: input.rawSnapshotId } : {}),
+      },
+    })
+    await saveProjection(tx, cardId, current.id, input.shots.map(toMetricShot))
+    return {
+      cardId,
+      revisionId: current.id,
+      number: current.number,
+      change: "updated",
+      added: change.add.length,
+      removed: change.remove.length,
+    }
   })
+}
+
+/**
+ * Die Kennung ändert ein Stand nicht; nur eine Scheibe aus dem PDF bekommt beim ersten Snapshot ihre Rohdaten (Herkunft
+ * dann „raw“). Eine andere Kennung als die vorhandene ist ein Fehler, kein stilles Umhängen.
+ */
+function identityUpdate(
+  existing: {
+    id: string
+    sourceId: number | null
+    scheibenId: number | null
+    cycle: number
+    origin: CardOrigin
+  },
+  card: CardInput,
+  cycle: number
+) {
+  if (card.sourceId === null || card.scheibenId === null) return {}
+  if (existing.sourceId === null)
+    return { sourceId: card.sourceId, scheibenId: card.scheibenId, cycle, origin: "raw" as const }
+  if (
+    existing.sourceId !== card.sourceId ||
+    existing.scheibenId !== card.scheibenId ||
+    existing.cycle !== cycle
+  )
+    throw new RangeError(`Scheibe ${existing.id}: andere Quelle, ScheibenID oder anderer Zyklus`)
+  return {}
+}
+
+async function newRevision(
+  tx: Tx,
+  cardId: string,
+  number: number,
+  input: RevisionInput,
+  hash: string
+): Promise<RevisionResult> {
+  const revision = await tx.cardRevision.create({
+    data: {
+      cardId,
+      number,
+      contentHash: hash,
+      rawSnapshotId: input.rawSnapshotId ?? null,
+      reason: input.reason,
+    },
+    select: { id: true },
+  })
+  await tx.shot.createMany({ data: shotRows(revision.id, cardId, input.shots) })
+  await tx.card.update({ where: { id: cardId }, data: { currentRevisionId: revision.id } })
+  await saveProjection(tx, cardId, revision.id, input.shots.map(toMetricShot))
+  return {
+    cardId,
+    revisionId: revision.id,
+    number,
+    change: "created",
+    added: input.shots.length,
+    removed: 0,
+  }
 }
 
 /** die Projektion einer Revision speichern; sie hängt nur an den Schüssen */
@@ -280,27 +424,36 @@ async function saveProjection(
 }
 
 /**
- * Projektionen neu rechnen, deren Version veraltet ist (eine Kennzahl hat eine neue `version`) oder die fehlen; in
- * Stapeln, damit ein Lauf nach einem Update die Datenbank nicht lange sperrt. Gibt die Zahl der neu gerechneten zurück.
+ * Projektionen neu rechnen, die veraltet sind (andere `version`, weil eine Kennzahl oder die Rechnung dahinter sich
+ * geändert hat), zu einer früheren Revision gehören oder fehlen; je Scheibe in einer Transaktion unter der Sperre ihrer
+ * Zeile, wie `writeRevision`, damit ein gleichzeitiger neuer Stand nicht von einer alten Projektion überschrieben wird.
+ * In Stapeln; wahlweise nur eine Quelle. Gibt die Zahl der neu gerechneten zurück.
  */
-export async function refreshProjections(db: Db, { limit = 200 } = {}): Promise<number> {
+export async function refreshProjections(
+  db: Db,
+  { limit = 200, sourceId }: { limit?: number; sourceId?: number } = {}
+): Promise<number> {
   const version = projectionVersion()
-  const stale = await db.card.findMany({
-    where: {
-      currentRevisionId: { not: null },
-      OR: [{ projection: null }, { projection: { version: { not: version } } }],
-    },
-    take: limit,
-    select: { id: true, currentRevisionId: true },
-  })
-  for (const { id, currentRevisionId } of stale) {
-    const shots = await db.shot.findMany({
-      where: { revisionId: currentRevisionId! },
-      orderBy: { seq: "asc" },
+  const onlySource =
+    sourceId === undefined ? Prisma.empty : Prisma.sql`AND c."sourceId" = ${sourceId}`
+  const stale = await db.$queryRaw<{ id: string }[]>`
+    SELECT c.id FROM "Card" c LEFT JOIN "CardProjection" p ON p."cardId" = c.id
+     WHERE c."currentRevisionId" IS NOT NULL
+       AND (p."cardId" IS NULL OR p.version <> ${version} OR p."revisionId" <> c."currentRevisionId")
+       ${onlySource}
+     ORDER BY c.id
+     LIMIT ${limit}`
+  for (const { id } of stale) {
+    await db.$transaction(async (tx) => {
+      const [card] = await tx.$queryRaw<{ currentRevisionId: bigint | null }[]>`
+        SELECT "currentRevisionId" FROM "Card" WHERE id = ${id} FOR UPDATE`
+      if (!card?.currentRevisionId) return
+      const shots = await tx.shot.findMany({
+        where: { revisionId: card.currentRevisionId },
+        orderBy: { seq: "asc" },
+      })
+      await saveProjection(tx, id, card.currentRevisionId, shots.map(shotFromRow).map(toMetricShot))
     })
-    await db.$transaction((tx) =>
-      saveProjection(tx, id, currentRevisionId!, shots.map(shotFromRow).map(toMetricShot))
-    )
   }
   return stale.length
 }

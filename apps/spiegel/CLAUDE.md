@@ -24,23 +24,31 @@ nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` 
   `reads.ts` liest für die Ansichten. Seiten und Server Actions rufen nur diese Funktionen, nie Prisma direkt auf Schüsse.
 - **Übersichten lesen keine Schüsse.** Liste, Fortschritt und Start nehmen `familyCards`/`ownerCards` (Scheibe mit
   Projektion) und rechnen mit `projectedValues`/`projectedRecords` aus `@vereinsheim/shot-core/projection`. Nur die
-  Seite einer Scheibe lädt Schüsse (`cardWithShots`). Messung: „Alles“ 38 ms statt 234 ms Laden plus 50 ms Rechnen.
+  Seite einer Scheibe lädt Schüsse (`cardWithShots`, immer mit `ownerId`). Messung: „Alles“ 39 ms statt 200 ms Laden
+  plus 48 ms Rechnen.
 - **Projektion nur aus dem Fachkern.** `cardProjection` rechnet, die App speichert. Steigt eine Kennzahl-`version` oder
-  `PROJECTION_VERSION`, holt `refreshProjections` die veralteten in Stapeln nach.
-- **Revisionen sind Korrekturen.** Kommen nur Schüsse dazu (offener Durchgang nach jedem Schuss, SF-03), wächst die
-  aktuelle Revision (`appendedShots`); ein geänderter oder fehlender Schuss ergibt eine neue, die vorige bleibt.
-  Derselbe Inhalt ergibt keine (Inhalts-Prüfsumme). Merkmale der Scheibe (Zustand, Merkmale, Wertung) stehen in der
-  Zeile der Scheibe, nicht in der Revision.
-- **Rohdaten als Zeilenversionen.** Gleiche Prüfsumme wie der letzte Stand: nichts Neues, nur `lastSequence` steigt;
-  kleinere Folgenummer als `lastSequence`: veraltet (SF-26). Ohne `lastSequence` überholte ein verspäteter Stand den
-  wiederholten neueren.
+  `PROJECTION_VERSION`, holt `refreshProjections` die veralteten nach (auch die einer früheren Revision), je Scheibe
+  unter der Sperre ihrer Zeile.
+- **Revisionen sind Korrekturen der Wertung** (SF-67, `shotChange`): Eine neue entsteht nur, wenn sich eine
+  Wertungszeile ändert oder wegfällt. Neue Schüsse und die Probe, die Meyton beim ersten Wertungsschuss löscht (SF-03)
+  oder neu beginnt (SF-72), ändern die aktuelle Revision; die Scheibe ist so, wie am Ausdruck. Merkmale der Scheibe
+  (Zustand, vollständig, Merkmale) stehen in ihrer Zeile, die amtliche Wertung an der Disziplin (SF-74).
+- **Reihenfolge und Kennung:** `storeSnapshot` und `writeRevision` nehmen dasselbe Advisory-Lock (Quelle, ScheibenID).
+  Ein Stand mit nicht größerer Folgenummer als `RawSnapshot.lastSequence` bzw. `Card.lastSequence` ändert nichts
+  (SF-26), einer mehr als zehn Minuten in der Zukunft wird abgelehnt. Dieselbe ScheibenID Wochen später ohne gemeinsamen
+  Schuss ist ein `CardIdentityConflictError`: der nächste Zyklus (`cycle`, SF-77). Die Kennung einer Scheibe ändert ein
+  Stand nie, außer eine Scheibe aus dem PDF bekommt ihre Rohdaten.
 - **Familie mitgeführt:** `Card.familyId` kopiert die Familie der Disziplin für den Index; umhängen nur über
   `setDisciplineFamily` (eine Transaktion mit den Scheiben).
 - **Tests gegen die Dev-Datenbank:** je Datei eine eigene Anlage (`test/fixtures.ts`, `createTestSite`), am Ende
-  gelöscht (Kaskade über die Anlage, dazu Schütze und Familie); Dateien laufen nacheinander (`fileParallelism: false`).
-  Testscheiben aus `test/generate.ts` (fester Seed, Werte aus der Lage über den Fachkern), echte Snapshot-Folgen aus
-  `@vereinsheim/ssmdb2-cases/frozen`. Nach einer Schemaänderung `prisma generate`, sonst meldet der Client unbekannte
-  Felder.
+  gelöscht (Scheiben der Disziplinen, Kaskade über die Anlage, dazu Schütze und Familie); Dateien laufen nacheinander
+  (`fileParallelism: false`). Testscheiben aus `test/generate.ts` (fester Seed, Werte aus der Lage über den Fachkern,
+  Probe beim ersten Wertungsschuss gelöscht, `liveStates` für den offenen Durchgang), echte Snapshot-Folgen aus
+  `@vereinsheim/ssmdb2-cases/frozen` (als Empfangszeit die Beobachtungszeit: die Fälle sind teils auf Tage nach heute
+  datiert). `refreshProjections` in Tests nur mit `sourceId`.
 - **Prisma 7 wie Ringwerk:** Client in `src/generated/prisma` (gitignored), `@prisma/adapter-pg`, keine URL im Schema.
-  `prisma migrate reset` verlangt eine ausdrückliche Zustimmung des Users; nie umgehen, stattdessen eine neue Migration.
+  Nach einer Schemaänderung `prisma generate`, sonst meldet der Client unbekannte Felder. `migrate dev` läuft nur
+  interaktiv: die Migration mit `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script`
+  erzeugen, als `prisma/migrations/<Zeit>_<Name>/migration.sql` ablegen, mit `prisma migrate deploy` anwenden.
+  `prisma migrate reset` verlangt eine ausdrückliche Zustimmung des Users; nie umgehen.
 - Ausgabe in Werkzeugen über `process.stdout.write`, nicht `console.log` (Lint).
