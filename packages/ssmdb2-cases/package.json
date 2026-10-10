@@ -11,7 +11,8 @@
     "./stand": "./src/stand.ts",
     "./output": "./src/output.ts",
     "./expected": "./src/expected.ts",
-    "./cases": "./src/cases/index.ts"
+    "./cases": "./src/cases/index.ts",
+    "./frozen": "./src/frozen.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
