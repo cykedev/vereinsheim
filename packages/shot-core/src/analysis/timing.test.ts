@@ -28,6 +28,43 @@ const LATE_SIGHTER: MetricShot[] = [
 ]
 const LATE_SIGHTER_MATCH = LATE_SIGHTER.filter((shot) => shot.kind === "match")
 
+// 20 Wertungsschüsse: Serie 1 im Takt von 30 s, Serie 2 im Takt von 50 s mit 110 s vor Schuss 15. Die Karte hat den
+// Median 30 s, also die Schwelle 75 s: 110 s ist eine Pause. Serie 2 allein hätte den Median 50 s und die Schwelle
+// 125 s; dann wäre es keine.
+const GAPS = [...Array(10).fill(30), 50, 50, 50, 110, 50, 50, 50, 50, 50]
+const TWO_PACES: MetricShot[] = GAPS.reduce<number[]>(
+  (times, gap) => [...times, times.at(-1)! + gap],
+  [0]
+).map((s, i) => ({
+  ...MATCH[0],
+  seq: i + 1,
+  series: i < 10 ? 1 : 2,
+  firedAtMs: s * 1000,
+  decimalTenths: 100,
+  ring: 10,
+}))
+
+describe("Pause relativ zum Takt der Karte (User, 10. Oktober 2026)", () => {
+  it("Z4 erkennt 110 s bei einem Takt von 30 s und nennt die Schwelle", () => {
+    const recovery = pauseRecovery(TWO_PACES, "decimal")
+    expect(recovery?.thresholdMs).toBe(75_000)
+    expect(recovery?.effects.map((e) => e.afterShot)).toEqual([15])
+  })
+
+  it("eine Serie nimmt die Schwelle der ganzen Karte, nicht ihre eigene", () => {
+    const second = TWO_PACES.slice(10)
+    const pauses = (points: ReturnType<typeof rhythmProfile>) =>
+      points.filter((p) => p.pause).map((p) => p.number)
+    // Nummern innerhalb der Auswahl: Schuss 15 der Karte ist der fünfte der Serie
+    expect(pauses(rhythmProfile(second, 5, TWO_PACES))).toEqual([5])
+    // Gegenprobe: ohne Karte gilt der Takt der Serie, 110 s bleibt unter 125 s
+    expect(pauses(rhythmProfile(second))).toEqual([])
+    // die Streuung des Tempos ohne die Pause
+    expect(tempoSpread(second, TWO_PACES)?.n).toBe(8)
+    expect(tempoSpread(second)?.n).toBe(9)
+  })
+})
+
 describe("Tempo-Konstanz (Z2)", () => {
   it("IQR der Intervalle ohne Pause, auch relativ zum Median", () => {
     const spread = tempoSpread(EVENING)

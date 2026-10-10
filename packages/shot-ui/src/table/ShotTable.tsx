@@ -2,7 +2,7 @@
 
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { teilerFromDistanceUm } from "@vereinsheim/shot-core/scoring"
-import { PAUSE_THRESHOLD_MS } from "@vereinsheim/shot-core/time"
+import { PAUSE_ALWAYS_MS } from "@vereinsheim/shot-core/time"
 import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, useState } from "react"
 
@@ -31,7 +31,7 @@ export interface ShotTableProps {
  */
 function intervalText(ms: number | null): string {
   if (ms === null) return "–"
-  return ms > PAUSE_THRESHOLD_MS ? durationText(ms) : `${formatValue(ms / 1000, 0)} s`
+  return ms > PAUSE_ALWAYS_MS ? durationText(ms) : `${formatValue(ms / 1000, 0)} s`
 }
 
 /** Name einer Gruppe in der Tabelle: Serie n oder ohne Serie */

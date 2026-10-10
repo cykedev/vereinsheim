@@ -32,7 +32,7 @@ import {
 } from "./geometry"
 import { teilerFromDistanceUm } from "./scoring"
 import { c4, iqr } from "./stats"
-import { tempo } from "./time"
+import { gapsOf, pauseThresholdMs, tempo } from "./time"
 
 export type ShotKind = "match" | "probe"
 export type MetricUnit = "Ringe" | "Teiler" | "mm" | "s" | "Schuss" | "%"
@@ -390,8 +390,17 @@ export function timesInOrder(
   return timesOf(stepsInOrder(ordered, context))
 }
 
+/**
+ * die Schwelle für Pausen aus dem Takt der ganzen Karte, in den Arten der Auswahl (`time.ts`): Eine Serie sieht so
+ * dieselben Pausen wie die Scheibe. Ohne Karte aus den Schüssen selbst
+ */
+export function pauseThresholdOf(shots: readonly MetricShot[], context?: ShotContext): number {
+  const base = context ? context.card.filter((shot) => context.kinds.includes(shot.kind)) : shots
+  return pauseThresholdMs(gapsOf(timesWithGaps(base, context)))
+}
+
 const pace = (shots: readonly MetricShot[], context?: ShotContext) =>
-  tempo(timesWithGaps(shots, context))
+  tempo(timesWithGaps(shots, context), pauseThresholdOf(shots, context))
 
 const BOTH: readonly ShotKind[] = ["match", "probe"]
 const MATCH_ONLY: readonly ShotKind[] = ["match"]
@@ -666,7 +675,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 0,
     scopes: SERIES_AND_CARD,
     better: "none",
-    version: 2,
+    // 3: Pausen relativ zum Takt der Karte (Oktober 2026)
+    version: 3,
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: false,
@@ -684,7 +694,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     scopes: SERIES_AND_CARD,
     // konstanter ist nicht automatisch besser (Katalog Z2)
     better: "none",
-    version: 2,
+    // 3: Pausen relativ zum Takt der Karte (Oktober 2026)
+    version: 3,
     appliesTo: BOTH,
     minShots: 4,
     nSensitive: false,

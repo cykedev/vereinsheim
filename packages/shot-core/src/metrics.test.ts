@@ -395,10 +395,10 @@ describe("Lücken in der Abgabefolge (SF-04, SF-30)", () => {
     }
   })
 
-  it("die Zeit-Kennzahlen rechnen seit der Regel in Version 2", () => {
-    for (const key of ["time.intervalMedian", "time.tempoSpread", "time.duration"]) {
-      expect(def(key).version).toBe(2)
-    }
+  it("die Zeit-Kennzahlen rechnen seit der Regel in Version 2, Tempo und Streuung seit den relativen Pausen in 3", () => {
+    expect(def("time.intervalMedian").version).toBe(3)
+    expect(def("time.tempoSpread").version).toBe(3)
+    expect(def("time.duration").version).toBe(2)
   })
 })
 

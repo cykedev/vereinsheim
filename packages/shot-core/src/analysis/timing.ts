@@ -2,11 +2,13 @@
 // Schussnummer (Katalog Z2, Z4, Z5); die Dauer (Z3) liefert die Registry (`time.duration`). Zeiten
 // in Abgabefolge; fehlt ein Schuss oder springt die Uhr zurück, zählt der Abstand nicht (SF-30). Eine
 // Probe zwischen zwei Wertungsschüssen ist keine Lücke, wenn die ganze Karte mitkommt (`card`, SF-04).
-// Intervalle über drei Minuten sind Pausen.
+// Pause ist ein Abstand deutlich länger als der Takt der Karte (`time.ts`: über dem 2,5-Fachen des Medians, mindestens
+// eine, über drei Minuten immer); alle Auswertungen nehmen dieselbe Schwelle der Karte (`pauseThresholdOf`).
 
 import {
   contextOf,
   inShotOrder,
+  pauseThresholdOf,
   selectShots,
   shotNumbers,
   stepsInOrder,
@@ -17,7 +19,7 @@ import {
   type ShotKind,
 } from "../metrics"
 import { iqr, median } from "../stats"
-import { PAUSE_THRESHOLD_MS, tempo } from "../time"
+import { tempo } from "../time"
 import { valueNeed, valueTenths } from "./values"
 
 const MATCH: readonly ShotKind[] = ["match"]
@@ -64,7 +66,8 @@ export function tempoSpread(
   shots: readonly MetricShot[],
   card: readonly MetricShot[] = shots
 ): { n: number; iqrMs: number; medianMs: number; relative: number | null } | null {
-  const pace = tempo(timesInOrder(timed(shots), contextOf(shots, card)))
+  const context = contextOf(shots, card)
+  const pace = tempo(timesInOrder(timed(shots), context), pauseThresholdOf(shots, context))
   if (pace.intervalsMs.length < 3) return null
   const spread = iqr(pace.intervalsMs) as number
   const center = median(pace.intervalsMs) as number
@@ -101,6 +104,8 @@ export function pauseRecovery(
 ): {
   pauses: number
   totalPauseMs: number
+  /** ab hier (ausschließlich) ist ein Abstand eine Pause: aus dem Takt der Karte */
+  thresholdMs: number
   effects: PauseEffect[]
   meanDelta: number | null
 } | null {
@@ -108,7 +113,9 @@ export function pauseRecovery(
   const selected = selectShots(inShotOrder(shots), { kinds: MATCH, need: "time" })
   // eine Pause braucht einen Abstand, also zwei Schüsse mit Zeit
   if (selected.length < 2) return null
-  const steps = intervals(selected, shotNumbers(shots), { card, kinds: MATCH })
+  const context = { card, kinds: MATCH }
+  const thresholdMs = pauseThresholdOf(selected, context)
+  const steps = intervals(selected, shotNumbers(shots), context)
   const values = steps.map((step) =>
     withValue.has(step.shot) ? valueTenths(step.shot, scoring) : null
   )
@@ -119,7 +126,7 @@ export function pauseRecovery(
   // ohne einen messbaren Abstand (Lücken, Rücksprung der Uhr) weder Pause noch „keine Pause“
   if (steps.every((step) => step.intervalMs === null)) return null
   steps.forEach((step, i) => {
-    if (step.intervalMs === null || step.intervalMs <= PAUSE_THRESHOLD_MS) return
+    if (step.intervalMs === null || step.intervalMs <= thresholdMs) return
     totalPauseMs += step.intervalMs
     const next = valued(values.slice(i, i + 3))
     const rest = valued([...values.slice(0, i), ...values.slice(i + 3)])
@@ -132,6 +139,7 @@ export function pauseRecovery(
   return {
     pauses: effects.length,
     totalPauseMs,
+    thresholdMs,
     effects,
     meanDelta: deltas.length ? meanOf(deltas) : null,
   }
@@ -157,8 +165,10 @@ export function rhythmProfile(
     throw new RangeError(`Fenster ${window} ist keine ganze Zahl ab 1`)
   }
   const recent: number[] = []
-  return intervals(timed(shots), shotNumbers(shots), contextOf(shots, card)).map((step) => {
-    const pause = step.intervalMs !== null && step.intervalMs > PAUSE_THRESHOLD_MS
+  const context = contextOf(shots, card)
+  const thresholdMs = pauseThresholdOf(shots, context)
+  return intervals(timed(shots), shotNumbers(shots), context).map((step) => {
+    const pause = step.intervalMs !== null && step.intervalMs > thresholdMs
     if (step.intervalMs !== null && !pause) {
       recent.push(step.intervalMs)
       if (recent.length > window) recent.shift()
