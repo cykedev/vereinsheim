@@ -1,0 +1,2 @@
+-- SF-05, Lesung 2: Stand frei
+-- keine Änderung

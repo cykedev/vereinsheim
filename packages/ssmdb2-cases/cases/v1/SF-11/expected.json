@@ -1,0 +1,78 @@
+{
+  "id": "SF-11",
+  "title": "Mehrere Scheiben an einem Abend",
+  "description": "Drei Scheiben LP 20 am selben Stand: 19:00, 20:30 und 00:30 Uhr. Alle gehören zum Abend des 11. Oktober, auch die nach Mitternacht (vor 4 Uhr zählt zum Vortag).",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-11T17:15:00.000Z",
+      "note": "erste Scheibe"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-11T18:45:00.000Z",
+      "note": "zweite Scheibe"
+    },
+    {
+      "reading": 3,
+      "observedAt": "2026-10-11T22:45:00.000Z",
+      "note": "dritte Scheibe nach Mitternacht"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1860156429,
+      "bridge": "senden",
+      "shots": [
+        [0, 20],
+        [0, 20],
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Abend 11. Oktober 2026."
+      ]
+    },
+    {
+      "scheibenId": 1865556429,
+      "bridge": "senden",
+      "shots": [
+        null,
+        [0, 20],
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Abend 11. Oktober 2026."
+      ]
+    },
+    {
+      "scheibenId": 1879956429,
+      "bridge": "senden",
+      "shots": [
+        null,
+        null,
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Abend 11. Oktober 2026: um 00:30 Uhr, vor 4 Uhr, also zum Vortag."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+[
+  {
+    "reading": 1,
+    "observedAt": "2026-10-17T17:00:45.000Z",
+    "snapshots": [
+      {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "9",
+        "epoch": 1,
+        "scheibenId": -1916410867,
+        "sequence": 1,
+        "observedAt": "2026-10-17T17:00:45.000Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Starterliste": "varchar(36)",
+              "StarterlistenID": "int(11)",
+              "Startzeit": "datetime",
+              "StartNr": "int(11)",
+              "Nachname": "varchar(36)",
+              "Vorname": "varchar(36)",
+              "Geschlecht": "enum('male','female','unknown')",
+              "Land": "varchar(3)",
+              "SportpassID": "bigint(20)",
+              "StandNr": "smallint(6)",
+              "StandNrText": "varchar(36)",
+              "Disziplin": "varchar(36)",
+              "DisziplinID": "int(11)",
+              "Klasse": "varchar(36)",
+              "KlassenID": "int(11)",
+              "Verein": "varchar(36)",
+              "VereinsID": "int(11)",
+              "Mannschaft": "varchar(36)",
+              "MannschaftsID": "int(11)",
+              "Rangliste": "varchar(36)",
+              "RanglistenID": "int(11)",
+              "Gruppe": "varchar(36)",
+              "GruppenID": "int(11)",
+              "Status": "varchar(72)",
+              "Trefferzahl": "smallint(6)",
+              "TotalRing": "int(11)",
+              "TotalRing01": "int(11)",
+              "BesterTeiler01": "int(11)",
+              "BesterTeiler001": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {"ScheibenID":"-1916410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"9","StandNrText":"9","Disziplin":"König LP","DisziplinID":"19100001","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"König-LP","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"1","TotalRing":"0","TotalRing01":"0","BesterTeiler01":"3324","BesterTeiler001":"33242","Zeitstempel":"2026-10-17 19:00:00"}
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "smallint(6)",
+              "Serie": "smallint(6)",
+              "Ring": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": [
+              {"ScheibenID":"-1916410867","Stellung":"1","Serie":"1","Ring":"0","Ring01":"0"}
+            ]
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "smallint(6)",
+              "Treffer": "smallint(6)",
+              "Serie": "smallint(6)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Innenzehner": "tinyint(1)",
+              "Wertung": "int(11)",
+              "Text": "varchar(36)",
+              "Ring": "int(11)",
+              "Ring01": "int(11)",
+              "Teiler01": "int(11)",
+              "Teiler001": "int(11)",
+              "Zeitstempel": "datetime",
+              "Millisekunden": "smallint(6)"
+            },
+            "rows": [
+              {"ScheibenID":"-1916410867","Stellung":"1","Treffer":"1","Serie":"1","x":"310","y":"-120","Innenzehner":"0","Wertung":"5","Text":"***","Ring":"0","Ring01":"0","Teiler01":"3324","Teiler001":"33242","Zeitstempel":"2026-10-17 19:00:00","Millisekunden":"0"}
+            ]
+          }
+        },
+        "checksum": "sha256:6cc497a2b9b250ac37b5a813c3f8fb98168336166a7539c2576271203c5c738e"
+      }
+    ]
+  }
+]

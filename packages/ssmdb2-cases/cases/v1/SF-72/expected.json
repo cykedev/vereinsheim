@@ -1,0 +1,45 @@
+{
+  "id": "SF-72",
+  "title": "Neustart der Probe",
+  "description": "Acht Probeschüsse, dann ein Neustart der Probe: Mit dem ersten neuen Schuss sind die alten weg, die Nummern beginnen wieder bei 1, die ScheibenID bleibt.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-06T17:06:00.000Z",
+      "note": "8 Probeschüsse"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-06T17:07:30.000Z",
+      "note": "Neustart, noch kein neuer Schuss: die alte Probe steht noch"
+    },
+    {
+      "reading": 3,
+      "observedAt": "2026-10-06T17:11:15.000Z",
+      "note": "5 neue Probeschüsse, die alten sind weg"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1428156429,
+      "bridge": "senden",
+      "shots": [
+        [8, 0],
+        [8, 0],
+        [5, 0]
+      ],
+      "flags": [
+        "nur-probe"
+      ],
+      "completeness": "nur-probe",
+      "counted": {
+        "stellung": 0,
+        "numbers": [1, 2, 3, 4, 5]
+      },
+      "notes": [
+        "Wie am Ausdruck nur der letzte Block (Leitregel 3).",
+        "Schuss 1 nach dem Neustart ist ein anderer Schuss als Schuss 1 davor: Abgleich über den Fingerabdruck (Zeit, Millisekunden, Lage), nicht die Nummer."
+      ]
+    }
+  ]
+}

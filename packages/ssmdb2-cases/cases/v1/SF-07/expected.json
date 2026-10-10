@@ -1,0 +1,59 @@
+{
+  "id": "SF-07",
+  "title": "Abgebrochene Scheibe",
+  "description": "LG 40 nach 10 Schuss abgebrochen, am selben Stand unter einer neuen ScheibenID fortgesetzt (so am 9. Oktober 2026 beobachtet). Zwei Scheiben, die erste unvollständig.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-07T17:07:30.000Z",
+      "note": "10 von 40, dann abgebrochen"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-07T17:30:00.000Z",
+      "note": "neue Scheibe, 20 Schuss"
+    },
+    {
+      "reading": 3,
+      "observedAt": "2026-10-07T17:45:00.000Z",
+      "note": "neue Scheibe, 40 Schuss"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1514556429,
+      "bridge": "senden",
+      "shots": [
+        [0, 10],
+        [0, 10],
+        [0, 10]
+      ],
+      "flags": [
+        "unvollstaendig"
+      ],
+      "completeness": "unvollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      },
+      "notes": [
+        "Summen nur für vollständige Scheiben, sonst Werte je Schuss; kein Zusammenfügen mit der Folgescheibe."
+      ]
+    },
+    {
+      "scheibenId": 1515456429,
+      "bridge": "senden",
+      "shots": [
+        null,
+        [0, 20],
+        [0, 40]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+      }
+    }
+  ]
+}

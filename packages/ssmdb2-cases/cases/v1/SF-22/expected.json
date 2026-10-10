@@ -1,0 +1,39 @@
+{
+  "id": "SF-22",
+  "title": "Löschung mit Nachrücken",
+  "description": "LG 20, Schuss 5 wird gelöscht; die Schüsse 6 bis 20 rücken auf 5 bis 19 nach (Annahme, nicht beobachtet). Wer über die Nummer abgleicht, zeigt auf den falschen Schuss.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-20T17:15:00.000Z",
+      "note": "20 Schuss"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-20T17:17:00.000Z",
+      "note": "Schuss 5 gelöscht, die übrigen nachgerückt"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": -1657210867,
+      "bridge": "senden",
+      "shots": [
+        [0, 20],
+        [0, 19]
+      ],
+      "flags": [
+        "korrigiert",
+        "unvollstaendig"
+      ],
+      "completeness": "unvollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+      },
+      "notes": [
+        "Schuss 6 der ersten Lesung ist Schuss 5 der zweiten: Abgleich über den Fingerabdruck (Zeit, Millisekunden, Lage); Notizen und Teilungen hängen an ihm."
+      ]
+    }
+  ]
+}

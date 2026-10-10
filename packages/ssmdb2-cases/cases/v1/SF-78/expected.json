@@ -1,0 +1,30 @@
+{
+  "id": "SF-78",
+  "title": "Starterliste „Trash“",
+  "description": "Ein gewöhnliches Training, das in der Starterliste „Trash“ steht (an der Vereinsanlage jede fünfte Scheibe), mit Namen und Sportpass.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-09-28T17:15:00.000Z",
+      "note": "Training in „Trash“"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 736956429,
+      "bridge": "senden",
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Nie nach der Starterliste filtern; zugeordnet wird über den Sportpass."
+      ]
+    }
+  ]
+}

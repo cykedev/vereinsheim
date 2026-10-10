@@ -1,0 +1,28 @@
+{
+  "id": "SF-19",
+  "title": "Verdeckte Wertung beim Königsschießen",
+  "description": "„König LP“ mit einem Schuss, komplett verdeckt (Anzeigeart 5): „***“, Ring und Zehntel 0, der Teiler steht trotzdem in der Ablage (so beobachtet).",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-17T17:00:45.000Z",
+      "note": "ein verdeckter Schuss"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": -1916410867,
+      "bridge": "zurueckhalten",
+      "reason": "verdeckt ab dem ersten Schuss: Die Scheibe bleibt samt Kopfzeile in der Brücke, bis der Admin freigibt",
+      "shots": [
+        [0, 1]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1]
+      }
+    }
+  ]
+}

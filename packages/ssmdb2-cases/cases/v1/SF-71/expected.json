@@ -1,0 +1,50 @@
+{
+  "id": "SF-71",
+  "title": "Zerrissene Lesung",
+  "description": "LP 40, fertig. Meyton schreibt die Scheibe neu (Löschen und Einfügen, Kaskade): Eine Lesung erwischt die Kopfzeile mit 40 Treffern, aber keine Zeile in `Treffer` und `Serien`.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-22T17:30:00.000Z",
+      "note": "40 Schuss"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-22T17:30:01.000Z",
+      "note": "zerrissen: Kopfzeile ohne Treffer"
+    },
+    {
+      "reading": 3,
+      "observedAt": "2026-10-22T17:30:02.000Z",
+      "note": "wieder ganz"
+    },
+    {
+      "reading": 4,
+      "observedAt": "2026-10-22T17:30:03.000Z",
+      "note": "unverändert"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": -1484410867,
+      "bridge": "senden",
+      "shots": [
+        [0, 40],
+        [0, 0],
+        [0, 40],
+        [0, 40]
+      ],
+      "sentReadings": [3],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+      },
+      "notes": [
+        "Gesendet wird erst, wenn zwei Lesungen hintereinander gleich sind: Lesung 3 und 4.",
+        "Lesung 2 ist keine Löschung: Fehlen ist keine Löschung (Leitregel 4)."
+      ]
+    }
+  ]
+}

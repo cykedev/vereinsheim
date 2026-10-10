@@ -1,0 +1,38 @@
+{
+  "id": "SF-05",
+  "title": "Umschalten vergessen",
+  "description": "40 Schuss Luftgewehr, alle in der Probe: Der Schütze hat vergessen, auf Wertung zu schalten. Die Ablage zeigt ein Training nur aus Probe.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-05T17:30:00.000Z",
+      "note": "40 Probeschüsse"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-05T17:40:00.000Z",
+      "note": "Stand frei"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1341756429,
+      "bridge": "senden",
+      "shots": [
+        [40, 0],
+        [40, 0]
+      ],
+      "flags": [
+        "nur-probe"
+      ],
+      "completeness": "nur-probe",
+      "counted": {
+        "stellung": 0,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+      },
+      "notes": [
+        "„Als Wertung zählen“ (Merkmal `als-wertung-gezaehlt`) ist eine Aktion des Schützen in Spiegel, nicht des Einlesens."
+      ]
+    }
+  ]
+}

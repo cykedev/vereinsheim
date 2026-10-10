@@ -1,0 +1,36 @@
+{
+  "id": "SF-09",
+  "title": "Disziplin ohne Schusszahl",
+  "description": "Ein Training auf einer Disziplin mit Schusscode 000 (19110000, so an der Vereinsanlage belegt): Ohne Soll gibt es keinen Abschluss über die Zahl.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-09T17:18:45.000Z",
+      "note": "25 Schuss"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-09T17:38:45.000Z",
+      "note": "Stand frei"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1687356429,
+      "bridge": "senden",
+      "shots": [
+        [0, 25],
+        [0, 25]
+      ],
+      "flags": [],
+      "completeness": "offen",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+      },
+      "notes": [
+        "Zustand über das Lebenszeichen: offen, ruhend nach 5 Minuten ohne, endgültig nach 12 Stunden ohne Änderung."
+      ]
+    }
+  ]
+}

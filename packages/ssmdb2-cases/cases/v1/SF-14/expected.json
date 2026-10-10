@@ -1,0 +1,35 @@
+{
+  "id": "SF-14",
+  "title": "Fehlschuss und Treffer weit außen",
+  "description": "LG 20 mit einem Fehlschuss (Schuss 7, 26 mm neben der Mitte, Wert 0) und einem Treffer weit außen (Schuss 15). Zoom und Streukreis dürfen daran nicht explodieren.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-12T17:15:00.000Z",
+      "note": "20 Schuss"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1946556429,
+      "bridge": "senden",
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "shotFlags": {
+        "1/7": [
+          "fehlschuss"
+        ]
+      },
+      "notes": [
+        "Schuss 15 ist ein Treffer (2,9), kein Fehlschuss; Ausreißer erkennt die Analyse, nicht das Einlesen."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "id": "SF-23",
+  "title": "Ablage geleert",
+  "description": "Zwei Scheiben, dann wird der Server neu aufgesetzt: Die Ablage ist leer, der Zähler der ScheibenIDs beginnt von vorn, die erste neue Scheibe hat eine kleine ID.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-21T17:55:00.000Z",
+      "note": "zwei Scheiben"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-22T17:00:00.000Z",
+      "note": "Ablage leer"
+    },
+    {
+      "reading": 3,
+      "observedAt": "2026-10-22T17:45:00.000Z",
+      "note": "erste Scheibe nach dem Neuaufsetzen"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": -1570810867,
+      "bridge": "senden",
+      "shots": [
+        [0, 20],
+        null,
+        null
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Verschwindet alles auf einmal, ist das keine Löschung: ein Hinweis, keine Merkmale an den Scheiben (Leitregel 4)."
+      ]
+    },
+    {
+      "scheibenId": -1568410867,
+      "bridge": "senden",
+      "shots": [
+        [0, 20],
+        null,
+        null
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      }
+    },
+    {
+      "scheibenId": 1800000,
+      "bridge": "senden",
+      "shots": [
+        null,
+        null,
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Eine neue Epoche gilt erst nach Bestätigung durch den Admin; die Snapshots hier tragen noch Epoche 1."
+      ]
+    }
+  ]
+}

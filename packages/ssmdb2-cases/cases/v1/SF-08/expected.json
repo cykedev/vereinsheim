@@ -1,0 +1,39 @@
+{
+  "id": "SF-08",
+  "title": "Mehr Wertungsschüsse als die Disziplin",
+  "description": "LG 40 mit 46 Wertungsschüssen: Die Schüsse 41 bis 46 stehen mit echter Lage, aber Wert 0, „0F“ und Platzhalter-Teiler 2147483647; `Trefferzahl` zählt sie mit.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-08T17:30:00.000Z",
+      "note": "40 Schuss"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-08T17:34:30.000Z",
+      "note": "46 Schuss"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1600956429,
+      "bridge": "senden",
+      "shots": [
+        [0, 40],
+        [0, 46]
+      ],
+      "flags": [
+        "ueber-soll"
+      ],
+      "completeness": "ueber-soll",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46]
+      },
+      "notes": [
+        "Schüsse 41 bis 46: Platzhalter-Teiler heißt „kein Abstand“; amtlich 0, nicht in Kennzahlen der Lage, keine Gegenprobe (aus der Lage wären sie bis 10,6).",
+        "Abschluss nie allein über die Schusszahl: Nach 40 kann weiter geschossen werden."
+      ]
+    }
+  ]
+}

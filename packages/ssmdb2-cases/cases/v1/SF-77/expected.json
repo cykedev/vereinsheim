@@ -1,0 +1,50 @@
+{
+  "id": "SF-77",
+  "title": "ScheibenID läuft über",
+  "description": "Zwei Scheiben an einem Abend: die erste kurz vor dem Überlauf des Millisekundenzählers (ID nahe 2³¹), die zweite danach mit negativer ID. Die neuere hat die kleinere ID.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-09-26T17:15:00.000Z",
+      "note": "erste Scheibe"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-09-26T18:15:00.000Z",
+      "note": "zweite Scheibe nach dem Überlauf"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 2147183648,
+      "bridge": "senden",
+      "shots": [
+        [0, 20],
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      }
+    },
+    {
+      "scheibenId": -2144183648,
+      "bridge": "senden",
+      "shots": [
+        null,
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Kein Wasserstand über die ID: Schlüssel ist Quelle, Epoche und ScheibenID; kehrt eine ID wieder, entscheidet der Fingerabdruck der Schüsse."
+      ]
+    }
+  ]
+}

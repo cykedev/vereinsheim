@@ -1,0 +1,33 @@
+{
+  "id": "SF-73",
+  "title": "Jeder Stand hat seine Uhr",
+  "description": "LP 40 an einem Stand, dessen Uhr 663 s nachgeht (so an Stand 20 beobachtet): Schüsse und Lebenszeichen tragen die Zeit des Stands.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-09-25T17:30:00.000Z",
+      "note": "40 Schuss, Uhr 11 Minuten zurück"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 477756429,
+      "bridge": "senden",
+      "shots": [
+        [0, 40]
+      ],
+      "flags": [
+        "uhr-abweichung"
+      ],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+      },
+      "notes": [
+        "Versatz je Stand: Beobachtung minus Lebenszeichen, hier 663 s; ab einer Minute Merkmal.",
+        "Abstände zwischen den Schüssen gelten; Datum und Uhrzeit nicht blind übernehmen."
+      ]
+    }
+  ]
+}

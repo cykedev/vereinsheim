@@ -1,0 +1,30 @@
+{
+  "id": "SF-18",
+  "title": "Ganzring-Disziplin",
+  "description": "LP 20 nach DSB-Regel 2.10, gewertet in ganzen Ringen; die Ablage hat dazu die Zehntel (`Ring01`).",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-16T17:15:00.000Z",
+      "note": "20 Schuss"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": -2002810867,
+      "bridge": "senden",
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Amtlich ganze Ringe aus der Disziplin, nie aus `Treffer.Wertung` (SF-74); die Zehntel stehen daneben."
+      ]
+    }
+  ]
+}

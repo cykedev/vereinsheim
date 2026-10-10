@@ -1,0 +1,38 @@
+{
+  "id": "SF-21",
+  "title": "Korrektur durch die Standaufsicht",
+  "description": "LG 20, nach dem Ende ändert die Standaufsicht Schuss 8 (Lage und Wert). Wie Meyton korrigiert, ist nicht beobachtet; angenommen ist: dieselbe Zeile, neue Lage und Werte, Zeit bleibt.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-19T17:15:00.000Z",
+      "note": "20 Schuss"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-19T17:18:00.000Z",
+      "note": "Schuss 8 korrigiert"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": -1743610867,
+      "bridge": "senden",
+      "shots": [
+        [0, 20],
+        [0, 20]
+      ],
+      "flags": [
+        "korrigiert"
+      ],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Ein geänderter Wertungsschuss ergibt eine neue Revision; die Wertung folgt dem neuesten Snapshot."
+      ]
+    }
+  ]
+}

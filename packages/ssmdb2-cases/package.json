@@ -18,7 +18,7 @@
     "test": "vitest run",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "cases": "tsx tools/write-cases.ts && prettier --write cases",
+    "cases": "tsx tools/write-cases.ts",
     "replay": "tsx tools/replay.ts"
   },
   "prettier": "@vereinsheim/config/prettier",

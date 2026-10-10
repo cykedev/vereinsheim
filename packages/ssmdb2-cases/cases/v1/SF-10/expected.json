@@ -1,0 +1,43 @@
+{
+  "id": "SF-10",
+  "title": "Lange Pause mitten im Training",
+  "description": "LP 40: 20 Schuss, dann zwölf Minuten Pause am belegten Stand, dann 20 Schuss. Das Lebenszeichen läuft weiter, die Scheibe bleibt offen.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-10T17:15:00.000Z",
+      "note": "20 Schuss"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-10T17:21:00.000Z",
+      "note": "6 Minuten ohne Schuss, das Lebenszeichen läuft"
+    },
+    {
+      "reading": 3,
+      "observedAt": "2026-10-10T17:42:00.000Z",
+      "note": "40 Schuss"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1773756429,
+      "bridge": "senden",
+      "shots": [
+        [0, 20],
+        [0, 20],
+        [0, 40]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+      },
+      "notes": [
+        "Lesung 2: kein Schuss seit 6 Minuten, aber das Lebenszeichen ist frisch: offen, nicht ruhend.",
+        "Lesung 2 unterscheidet sich von Lesung 1 nur im Lebenszeichen (`Scheiben.Zeitstempel`)."
+      ]
+    }
+  ]
+}

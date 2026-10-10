@@ -1,0 +1,32 @@
+{
+  "id": "SF-17",
+  "title": "Unbekannte Disziplin",
+  "description": "Eine erfundene Vereinsdisziplin (10198020, „Vereinsdisziplin“) ohne LG oder LP im Namen, geschossen auf der Luftgewehrscheibe.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-15T17:15:00.000Z",
+      "note": "20 Schuss"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": -2089210867,
+      "bridge": "senden",
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [
+        "disziplin-unbekannt"
+      ],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Kein Scheibenbild aus Katalog oder Name; die Gegenprobe schlägt die Luftgewehrscheibe vor, der Admin bestätigt, bis dahin ein neutrales Raster."
+      ]
+    }
+  ]
+}

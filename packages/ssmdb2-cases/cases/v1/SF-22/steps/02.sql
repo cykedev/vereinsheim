@@ -1,0 +1,20 @@
+-- SF-22, Lesung 2: Schuss 5 gelöscht, die übrigen nachgerückt
+DELETE FROM `Treffer` WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 20;
+UPDATE `Scheiben` SET `Trefferzahl` = 19, `TotalRing` = 1870, `TotalRing01` = 1955 WHERE `ScheibenID` = -1657210867;
+UPDATE `Serien` SET `Ring01` = 1022 WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Serie` = 1;
+UPDATE `Serien` SET `Ring` = 89, `Ring01` = 933 WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Serie` = 2;
+UPDATE `Treffer` SET `x` = 205, `y` = -45, `Innenzehner` = 0, `Text` = '10.1', `Ring01` = 101, `Teiler01` = 2099, `Teiler001` = 20988, `Zeitstempel` = '2026-10-20 19:03:45' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 5;
+UPDATE `Treffer` SET `x` = -12, `y` = 11, `Innenzehner` = 1, `Text` = '10.9', `Ring01` = 109, `Teiler01` = 163, `Teiler001` = 1628, `Zeitstempel` = '2026-10-20 19:04:30' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 6;
+UPDATE `Treffer` SET `x` = -91, `y` = 43, `Text` = '10.6', `Ring01` = 106, `Teiler01` = 1006, `Teiler001` = 10065, `Zeitstempel` = '2026-10-20 19:05:15' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 7;
+UPDATE `Treffer` SET `x` = -281, `y` = 55, `Innenzehner` = 0, `Text` = '9.8', `Ring` = 90, `Ring01` = 98, `Teiler01` = 2863, `Teiler001` = 28633, `Zeitstempel` = '2026-10-20 19:06:00' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 8;
+UPDATE `Treffer` SET `x` = 366, `y` = -168, `Text` = '9.3', `Ring01` = 93, `Teiler01` = 4027, `Teiler001` = 40272, `Zeitstempel` = '2026-10-20 19:06:45' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 9;
+UPDATE `Treffer` SET `x` = -53, `y` = 87, `Innenzehner` = 1, `Text` = '10.5', `Ring` = 100, `Ring01` = 105, `Teiler01` = 1019, `Teiler001` = 10187, `Zeitstempel` = '2026-10-20 19:07:30' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 10;
+UPDATE `Treffer` SET `x` = -171, `y` = 43, `Text` = '10.2', `Ring01` = 102, `Teiler01` = 1763, `Teiler001` = 17632, `Zeitstempel` = '2026-10-20 19:08:15' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 11;
+UPDATE `Treffer` SET `x` = 97, `y` = 22, `Text` = '10.6', `Ring01` = 106, `Teiler01` = 995, `Teiler001` = 9946, `Zeitstempel` = '2026-10-20 19:09:00' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 12;
+UPDATE `Treffer` SET `x` = 135, `y` = 114, `Text` = '10.2', `Ring01` = 102, `Teiler01` = 1767, `Teiler001` = 17669, `Zeitstempel` = '2026-10-20 19:09:45' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 13;
+UPDATE `Treffer` SET `x` = 127, `y` = -12, `Text` = '10.4', `Ring01` = 104, `Teiler01` = 1276, `Teiler001` = 12757, `Zeitstempel` = '2026-10-20 19:10:30' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 14;
+UPDATE `Treffer` SET `x` = 39, `y` = 142, `Teiler01` = 1473, `Teiler001` = 14726, `Zeitstempel` = '2026-10-20 19:11:15' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 15;
+UPDATE `Treffer` SET `x` = -103, `y` = -230, `Innenzehner` = 0, `Text` = '9.9', `Ring` = 90, `Ring01` = 99, `Teiler01` = 2520, `Teiler001` = 25201, `Zeitstempel` = '2026-10-20 19:12:00' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 16;
+UPDATE `Treffer` SET `x` = 15, `y` = -47, `Innenzehner` = 1, `Text` = '10.8', `Ring` = 100, `Ring01` = 108, `Teiler01` = 493, `Teiler001` = 4934, `Zeitstempel` = '2026-10-20 19:12:45' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 17;
+UPDATE `Treffer` SET `x` = 11, `y` = -138, `Text` = '10.4', `Ring01` = 104, `Teiler01` = 1384, `Teiler001` = 13844, `Zeitstempel` = '2026-10-20 19:13:30' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 18;
+UPDATE `Treffer` SET `x` = -78, `y` = 112, `Teiler01` = 1365, `Teiler001` = 13648, `Zeitstempel` = '2026-10-20 19:14:15' WHERE `ScheibenID` = -1657210867 AND `Stellung` = 1 AND `Treffer` = 19;

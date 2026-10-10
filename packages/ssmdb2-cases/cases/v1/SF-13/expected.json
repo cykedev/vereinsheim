@@ -1,0 +1,44 @@
+{
+  "id": "SF-13",
+  "title": "Ohne Starter",
+  "description": "Ein freier Stand mit dem Platzhalter „--frei--“ ohne Schuss und eine Scheibe „unknown, unknown“ in der Starterliste „Trash“, mit Sportpass und 20 Schuss (an der Vereinsanlage 112-mal).",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-09-27T17:20:00.000Z",
+      "note": "freier Stand und unbekannter Schütze"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 650556429,
+      "bridge": "auslassen",
+      "reason": "ohne Treffer",
+      "shots": [
+        [0, 0]
+      ],
+      "flags": [],
+      "completeness": "leer",
+      "counted": {
+        "stellung": 0,
+        "numbers": []
+      }
+    },
+    {
+      "scheibenId": 650856429,
+      "bridge": "senden",
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "„unknown“ ist kein Name: nie nach dem Namen filtern, nur Scheiben ohne Treffer auslassen; zugeordnet wird über den Sportpass."
+      ]
+    }
+  ]
+}

@@ -49,8 +49,11 @@ export function runCase(definition: CaseDefinition): CaseOutput {
   }
 }
 
-/** erfundener Start des Zählers der ScheibenIDs: 20. September 2026; IDs der Fälle danach positiv und steigend */
-export const BOOT = Date.UTC(2026, 8, 20, 4)
+/**
+ * erfundener Start des Zählers der ScheibenIDs: 20. September 2026, krumm, damit die IDs nicht rund aussehen; die IDs
+ * der Fälle sind danach positiv und steigend
+ */
+export const BOOT = Date.UTC(2026, 8, 20, 4, 17, 23, 571)
 /** die ScheibenID, die Meyton zu dieser Zeit vergäbe */
 export const idAt = (ms: number) => scheibenIdAt(BOOT, ms)
 /** ein Abend der Fälle um 19:00 Uhr MESZ */

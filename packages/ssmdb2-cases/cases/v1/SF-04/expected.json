@@ -1,0 +1,37 @@
+{
+  "id": "SF-04",
+  "title": "Zurück von Wertung auf Probe",
+  "description": "Zehn Wertungsschüsse, dann drei Probeschüsse, dann wieder Wertung. Die Probe nach der Wertung steht zeitlich zwischen den Wertungsschüssen 10 und 11 und verschwindet mit Schuss 11.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-04T17:12:00.000Z",
+      "note": "10 Wertung, danach 3 Probe"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-04T17:19:30.000Z",
+      "note": "20 Wertung, die Probe ist wieder weg"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1255356429,
+      "bridge": "senden",
+      "shots": [
+        [3, 10],
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Lesung 1: zwischen Probe und Wertung zählt die Zeit, je Stellung die Nummer (Leitregel 2).",
+        "Abstände von Wertungsschuss 10 zu 11 gelten trotz der Probe dazwischen (keine Lücke, `stepsInOrder`)."
+      ]
+    }
+  ]
+}

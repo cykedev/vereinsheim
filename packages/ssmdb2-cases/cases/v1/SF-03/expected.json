@@ -1,0 +1,43 @@
+{
+  "id": "SF-03",
+  "title": "Probe weg mit dem ersten Wertungsschuss",
+  "description": "Fünf Probeschüsse, dann Wertung: Meyton löscht die Probe in derselben Lesung, in der der erste Wertungsschuss steht. Das ist der Normalfall, keine Korrektur.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-03T17:03:45.000Z",
+      "note": "5 Probeschüsse"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-03T17:04:30.000Z",
+      "note": "1 Wertungsschuss, die Probe ist weg"
+    },
+    {
+      "reading": 3,
+      "observedAt": "2026-10-03T17:18:45.000Z",
+      "note": "20 Wertungsschüsse"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 1168956429,
+      "bridge": "senden",
+      "shots": [
+        [5, 0],
+        [0, 1],
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Die Probe steht nur in Lesung 1; Spiegel sammelt sie nicht über Lesungen (Leitregel 3).",
+        "Lesung 2 ist keine Korrektur: Probe verschwindet, Wertung kommt dazu."
+      ]
+    }
+  ]
+}

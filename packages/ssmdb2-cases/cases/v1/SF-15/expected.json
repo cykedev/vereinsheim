@@ -1,0 +1,36 @@
+{
+  "id": "SF-15",
+  "title": "Handeintrag",
+  "description": "LG 20, Schuss 12 von Hand eingetragen: 9,5 bei Lage 0/0 und Teiler 0. Die Gegenprobe aus der Lage ergäbe 10,9: Der Schuss ist verdächtig.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-13T17:15:00.000Z",
+      "note": "20 Schuss, Schuss 12 von Hand"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 2032956429,
+      "bridge": "senden",
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "shotFlags": {
+        "1/12": [
+          "verdaechtig"
+        ]
+      },
+      "notes": [
+        "Verdächtig: nicht gezeichnet, kein Rekord; die Scheibe zählt weiter.",
+        "Der beste Teiler der Kopfzeile ist 0 (vom Handeintrag) und taugt nicht als Rekord."
+      ]
+    }
+  ]
+}

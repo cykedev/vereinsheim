@@ -1,0 +1,44 @@
+{
+  "id": "SF-01",
+  "title": "Nur Probe",
+  "description": "Ein Training nur aus Probe: 20 Schuss in zwei Serien, dann ist der Stand frei. Die Kopfzeile zählt 0 Treffer und 0 Ringe; Spiegel nimmt es trotzdem als Training.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-01T17:07:30.000Z",
+      "note": "10 Probeschüsse"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-01T17:15:00.000Z",
+      "note": "20 Probeschüsse"
+    },
+    {
+      "reading": 3,
+      "observedAt": "2026-10-01T17:21:00.000Z",
+      "note": "Stand frei, nichts geändert"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 996156429,
+      "bridge": "senden",
+      "shots": [
+        [10, 0],
+        [20, 0],
+        [20, 0]
+      ],
+      "flags": [
+        "nur-probe"
+      ],
+      "completeness": "nur-probe",
+      "counted": {
+        "stellung": 0,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Kein Filter auf `Trefferzahl` oder `TotalRing`: Beide sind 0."
+      ]
+    }
+  ]
+}

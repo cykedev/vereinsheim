@@ -1,0 +1,30 @@
+{
+  "id": "SF-16",
+  "title": "Falsche Disziplin gewählt",
+  "description": "Ein Luftgewehr-Schütze auf LP 20: Die enge Gruppe ergibt auf der Pistolenscheibe lauter Zehnen. Werte und Lage passen zueinander, die Gegenprobe ist grün, der Verlauf wäre trotzdem falsch.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-10-14T17:15:00.000Z",
+      "note": "20 Schuss"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 2119356429,
+      "bridge": "senden",
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Das Einlesen erkennt das nicht; „Disziplin korrigieren“ wertet aus x/y als Luftgewehr neu (Merkmal `neu-gewertet`, nicht amtlich)."
+      ]
+    }
+  ]
+}
