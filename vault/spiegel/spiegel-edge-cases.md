@@ -35,7 +35,7 @@ Der **Zustand** einer Scheibe ist offen (ihr Lebenszeichen läuft, der Stand ist
 
 ## Katalog
 
-Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1), Schießprotokoll (SP-0.6), Fixture oder Test (SP-1.0 und das jeweilige Feature). „Fixture“ heißt seit dem 10. Oktober 2026 für die 30 Fälle mit Bezug zur Ablage: `packages/ssmdb2-cases`, `cases/v1/<SF-ID>` mit Snapshots, SQL je Schritt und erwartetem Ergebnis. Viele Risiken beruhen auf Vermutungen über unsere Anlage; die beiden Erkundungen bestätigen oder erledigen sie.
+Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1), Schießprotokoll (SP-0.6), Fixture oder Test (SP-1.0 und das jeweilige Feature). Die Fälle mit Bezug zur Ablage (der Zuschnitt von SP-1.0 b und SF-32) liegen seit dem 10. Oktober 2026 in `packages/ssmdb2-cases`, `cases/v1/<SF-ID>`, mit Snapshots, SQL je Schritt und erwartetem Ergebnis; wo die Spalte „Fixture“ nennt, ist bei diesen Fällen dieses Paket gemeint. Viele Risiken beruhen auf Vermutungen über unsere Anlage; die beiden Erkundungen bestätigen oder erledigen sie.
 
 ### Probe und Wertung
 

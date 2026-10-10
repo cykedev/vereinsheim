@@ -47,10 +47,10 @@ beide `BesterTeiler` 2147483647. Die Probe hat eigene Zeilen in `Serien` (Stellu
 |---|---|
 | 1 | „10.1“ |
 | 2 | „9“, Innenzehner „10*“ |
-| 5 (verdeckt) | „***“ bei Ring und Zehntel 0; der Teiler bleibt |
+| 5 (verdeckt) | „***“; Lage und Teiler bleiben, der Wert bei 15 von 25 Königsscheiben auch |
 | 7 | „9.9 851T“ (Teiler in 1/100 mm, abgeschnitten) |
 | 8 | „9 995T“ |
-| über der Soll-Zahl | „0F“ |
+| über der Soll-Zahl | „0F“ oder „inv“ |
 
 ## DisziplinID
 

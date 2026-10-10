@@ -161,7 +161,10 @@ Ingest-API selbst keinen Inhalt schreiben, prüft SP-1.6b.
 Synthetisch ([[adr-029]]): Name `Muster`, SportpassID `12345678`, Spalten nach [[meyton-ssmdb2]] für
 6.0.2, Typen nach Handbuch geschätzt, bis SP-0.6 das echte Schema bringt. Werte plausibel, aber nicht
 nach `shot-core` gerechnet. Fälle je Sonderfall im echten Schema, mit Werten aus `shot-core`, liegen seit dem 10. Oktober
-2026 in `packages/ssmdb2-cases` (`cases/v1/<SF-ID>`, SP-1.0b).
+2026 in `packages/ssmdb2-cases` (`cases/v1/<SF-ID>`, SP-1.0b). Das echte Schema weicht von den Beispielen ab: Namen
+`StarterlistenID`, `KlassenID`, `VereinsID` statt `StarterlisteID`, `KlasseID`, `VereinID`, `Status varchar(72)`
+statt `int(11)`, alle Spalten NOT NULL; die Probe hat eigene Zeilen in `Serien` (in `nur-probe.json` fehlen sie). Die
+Beispiele bleiben eingefroren (nur ergänzen); für Tests gegen das echte Schema gelten die Fälle.
 
 | Datei | Inhalt |
 |---|---|
