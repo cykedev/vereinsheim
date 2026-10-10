@@ -1,62 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  createDbStore,
-  createInMemoryStore,
-  createStoreForEnv,
-  type LoginRateLimitBucketDelegate,
-  type LoginRateLimitBucketRow,
-} from "./stores"
+import { bucketTable } from "./__fixtures__/table"
+import { createDbStore, createInMemoryStore, createStoreForEnv } from "./stores"
 import type { LoginRateLimitStore } from "./types"
-
-/**
- * eine Tabelle `LoginRateLimitBucket` im Speicher, die die Schnittstelle erfüllt: genau die Abfragen, die der Store
- * schickt (wie Prisma sie auswerten würde)
- */
-function fakeTable() {
-  const rows = new Map<string, LoginRateLimitBucketRow>()
-  const order = (a: LoginRateLimitBucketRow, b: LoginRateLimitBucketRow) =>
-    a.lastAttemptAt.getTime() - b.lastAttemptAt.getTime() || (a.key < b.key ? -1 : 1)
-  const table: LoginRateLimitBucketDelegate = {
-    async findUnique({ where }) {
-      return rows.get(where.key) ?? null
-    },
-    async findMany({ where, take }) {
-      let found = [...rows.values()]
-      if (where && "key" in where) found = found.filter((r) => where.key.in.includes(r.key))
-      if (where && "blockedUntil" in where)
-        found = found.filter((r) => r.blockedUntil && r.blockedUntil > where.blockedUntil.gt)
-      if (where && "lastAttemptAt" in where)
-        found = found.filter((r) => r.lastAttemptAt >= where.lastAttemptAt.gte)
-      found.sort(order)
-      return take === undefined ? found : found.slice(0, take)
-    },
-    async upsert({ where, create, update }) {
-      const existing = rows.get(where.key)
-      rows.set(where.key, existing ? { ...existing, ...update } : create)
-      return null
-    },
-    async deleteMany({ where }) {
-      for (const row of [...rows.values()]) {
-        const hit =
-          !("key" in where) && !("lastAttemptAt" in where)
-            ? true
-            : "key" in where
-              ? typeof where.key === "string"
-                ? row.key === where.key
-                : where.key.in.includes(row.key)
-              : row.lastAttemptAt < where.lastAttemptAt.lt &&
-                (row.blockedUntil === null || row.blockedUntil < where.lastAttemptAt.lt)
-        if (hit) rows.delete(row.key)
-      }
-      return null
-    },
-    async count() {
-      return rows.size
-    },
-  }
-  return { table, rows }
-}
 
 const bucket = (attempts: number, at: number, blockedUntil = 0) => ({
   attempts,
@@ -71,7 +17,9 @@ async function sharedBehaviour(store: LoginRateLimitStore) {
   await store.set("email:a@example.com", bucket(2, 10))
   await store.set("email:b@example.com", bucket(1, 5, 50))
   await store.set("ip:198.51.100.1", bucket(3, 30))
-  expect(await store.count()).toBe(3)
+  // seit 15 nicht mehr gesperrt: geht beim Aufräumen bis 20 mit
+  await store.set("email:c@example.com", bucket(5, 4, 15))
+  expect(await store.count()).toBe(4)
   expect(await store.get("email:a@example.com")).toEqual(bucket(2, 10))
   expect(await store.get("email:b@example.com")).toEqual(bucket(1, 5, 50))
   expect(await store.get("email:fehlt")).toBeNull()
@@ -81,10 +29,11 @@ async function sharedBehaviour(store: LoginRateLimitStore) {
   await store.set("email:a@example.com", bucket(4, 12))
   expect(await store.get("email:a@example.com")).toEqual(bucket(4, 12))
 
-  // aufräumen bis 20: a (12) und b (letzter Versuch 5) sind alt, aber b ist bis 50 gesperrt und bleibt
+  // aufräumen bis 20: a (12), b (5) und c (4) sind alt; b ist bis 50 gesperrt und bleibt, c nur bis 15
   await store.deleteExpired(20)
   expect(await store.get("email:a@example.com")).toBeNull()
   expect(await store.get("email:b@example.com")).not.toBeNull()
+  expect(await store.get("email:c@example.com")).toBeNull()
 
   await store.deleteMany(["email:b@example.com"])
   await store.delete("ip:198.51.100.1")
@@ -108,11 +57,11 @@ describe("createInMemoryStore", () => {
 
 describe("createDbStore", () => {
   it("dasselbe Verhalten über die Tabelle", async () => {
-    await sharedBehaviour(createDbStore(fakeTable().table))
+    await sharedBehaviour(createDbStore(bucketTable().table))
   })
 
   it("rechnet Zeiten in Datum um, keine Sperre als null", async () => {
-    const { table, rows } = fakeTable()
+    const { table, rows } = bucketTable()
     const store = createDbStore(table)
     await store.set("email:a@example.com", bucket(1, 1_000))
     await store.set("email:b@example.com", bucket(5, 2_000, 9_000))
@@ -127,11 +76,20 @@ describe("createDbStore", () => {
     expect(await store.getOldestKeys(1)).toEqual(["email:a@example.com"])
     expect(await store.getMany([])).toEqual(new Map())
   })
+
+  it("die ältesten nach dem letzten Versuch, nicht in der Folge des Schreibens", async () => {
+    const store = createDbStore(bucketTable().table)
+    await store.set("c", bucket(1, 30))
+    await store.set("a", bucket(1, 20))
+    await store.set("b", bucket(1, 10))
+    expect(await store.getOldestKeys(2)).toEqual(["b", "a"])
+    expect(await store.getOldestKeys(0)).toEqual([])
+  })
 })
 
 describe("createStoreForEnv", () => {
   it("in Tests im Speicher, sonst über die Tabelle", async () => {
-    const { table, rows } = fakeTable()
+    const { table, rows } = bucketTable()
     await createStoreForEnv(table, "test").set("k", bucket(1, 1))
     expect(rows.size).toBe(0)
     await createStoreForEnv(table, "production").set("k", bucket(1, 1))

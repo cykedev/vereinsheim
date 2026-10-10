@@ -16,18 +16,25 @@ import type { ActionResult } from "@/lib/types"
 // Sperren der Anmeldung für Admins. Die Auswertung liegt in `@vereinsheim/lib/auth/rate-limit/admin`; hier bleiben die
 // Server Actions mit der Rollenprüfung (eine geteilte Datei darf keine Server Action re-exportieren).
 
-async function isAdminSession(): Promise<boolean> {
+/**
+ * null für einen Admin, der loslegen darf; sonst der Fehler. Wie die Kontoverwaltung (`users/actions.ts`): Ein Admin mit
+ * Passwort vom Admin ändert erst das eigene (die Seiten leiten ihn über `requireAdmin` ohnehin dorthin).
+ */
+async function adminRefusal(): Promise<ActionResult | null> {
   const session = await getAuthSession()
-  return !!session && isAdmin(session.user.role) && !session.user.mustChangePassword
+  if (!session || !isAdmin(session.user.role)) return { error: "Keine Berechtigung." }
+  if (session.user.mustChangePassword) return { error: "Bitte zuerst das eigene Passwort ändern." }
+  return null
 }
 
 export async function getAdminLoginRateLimitInsights(): Promise<AdminLoginRateLimitInsights> {
-  if (!(await isAdminSession())) return EMPTY_INSIGHTS
+  if (await adminRefusal()) return EMPTY_INSIGHTS
   return loadLoginRateLimitInsights(db.loginRateLimitBucket, new Date())
 }
 
 export async function clearLoginRateLimitBucket(bucketKey: string): Promise<ActionResult> {
-  if (!(await isAdminSession())) return { error: "Keine Berechtigung." }
+  const refusal = await adminRefusal()
+  if (refusal) return refusal
   const key = typeof bucketKey === "string" ? bucketKey.trim() : ""
   if (!isLoginRateLimitKey(key)) return { error: "Ungültiger Rate-Limit-Schlüssel." }
   await db.loginRateLimitBucket.deleteMany({ where: { key } })

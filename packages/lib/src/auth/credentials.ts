@@ -46,7 +46,9 @@ export interface AuthorizeDeps {
 
 /**
  * Das Konto zu E-Mail und Passwort oder null. Jeder Fehler sieht gleich aus (gesperrt, unbekannt, deaktiviert,
- * falsches Passwort) und dauert gleich lang: Das erschwert das Ausforschen von Konten.
+ * falsches Passwort). Unbekannt, deaktiviert und falsches Passwort dauern gleich lang (bcrypt gegen `TIMING_HASH`): Das
+ * erschwert das Ausforschen von Konten. Eine Sperre antwortet schneller, verrät aber kein Konto, denn auch unbekannte
+ * E-Mails werden gesperrt.
  */
 export async function authorizeCredentials(
   credentials: { email?: string; password?: string } | undefined,

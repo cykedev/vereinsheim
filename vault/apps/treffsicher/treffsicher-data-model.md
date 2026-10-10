@@ -126,7 +126,7 @@ UPLOAD_DIR=                 # Pfad zum Upload-Verzeichnis (Standard: /app/upload
 ADMIN_EMAIL=                # E-Mail des ersten Admin-Accounts (wird beim ersten Start angelegt)
 ADMIN_PASSWORD=             # Passwort des ersten Admin-Accounts (min. 12 Zeichen)
 AUTH_TRUST_PROXY_HEADERS=   # true nur bei vertrauenswürdigem Reverse Proxy (für IP-Rate-Limit)
-AUTH_RATE_LIMIT_MAX_BUCKETS= # Max. In-Memory Buckets für Login-Rate-Limit (Standard: 10000)
+AUTH_RATE_LIMIT_MAX_BUCKETS= # Max. Buckets für Login-Rate-Limit, Tabelle `LoginRateLimitBucket` (Standard: 10000)
 PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS=         # true: bekannte P3009-Fälle automatisch auflösen
 PRISMA_AUTO_RESOLVE_UNKNOWN_FAILED_MIGRATIONS= # false (sicherer Default): unbekannte Fälle stoppen
 ```

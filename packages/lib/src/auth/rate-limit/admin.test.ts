@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest"
 
+import { bucketTable } from "./__fixtures__/table"
 import {
+  BLOCKED_LIMIT,
   isLoginRateLimitKey,
+  loadBlockedLoginBuckets,
   loadLoginRateLimitInsights,
   parseLoginRateLimitKey,
+  TOP_NOISY_LIMIT,
   toAdminBucket,
 } from "./admin"
-import type { LoginRateLimitBucketDelegate, LoginRateLimitBucketRow } from "./stores"
+import type { LoginRateLimitBucketRow } from "./stores"
 
 const row = (key: string, attempts: number, lastMs: number, blockedMs: number | null = null) => ({
   key,
@@ -54,25 +58,7 @@ describe("loadLoginRateLimitInsights", () => {
       row("ip:198.51.100.1", 2, now.getTime() - 2 * hour),
       row("unlesbar", 7, now.getTime() - hour),
     ]
-    const calls: unknown[] = []
-    const table = {
-      async count(args?: { where?: { blockedUntil: { gt: Date } } }) {
-        return args?.where
-          ? rows.filter((r) => r.blockedUntil && r.blockedUntil > args.where!.blockedUntil.gt)
-              .length
-          : rows.length
-      },
-      async findMany(args: Parameters<LoginRateLimitBucketDelegate["findMany"]>[0]) {
-        calls.push(args.where)
-        const where = args.where
-        let found = rows
-        if (where && "blockedUntil" in where)
-          found = found.filter((r) => r.blockedUntil && r.blockedUntil > where.blockedUntil.gt)
-        if (where && "lastAttemptAt" in where)
-          found = found.filter((r) => r.lastAttemptAt >= where.lastAttemptAt.gte)
-        return [...found].sort((a, b) => b.attempts - a.attempts)
-      },
-    } as unknown as LoginRateLimitBucketDelegate
+    const { table } = bucketTable(rows)
     const insights = await loadLoginRateLimitInsights(table, now)
     expect(insights.totalBucketCount).toBe(4)
     expect(insights.activeBlockedCount).toBe(1)
@@ -82,6 +68,48 @@ describe("loadLoginRateLimitInsights", () => {
       "email:aktiv@example.com",
       "ip:198.51.100.1",
     ])
-    expect(calls).toContainEqual({ lastAttemptAt: { gte: new Date(now.getTime() - 24 * hour) } })
+  })
+
+  it("die lautesten zuerst, bei Gleichstand der jüngere, dann nach Schlüssel; höchstens zehn", async () => {
+    const now = new Date(Date.UTC(2026, 9, 10, 12))
+    const at = (minutes: number) => now.getTime() - minutes * 60_000
+    const rows = [
+      row("email:b@example.com", 3, at(10)),
+      row("email:a@example.com", 3, at(10)),
+      row("email:jung@example.com", 3, at(5)),
+      row("email:viel@example.com", 4, at(50)),
+      ...Array.from({ length: 12 }, (_, i) => row(`email:leise-${i}@example.com`, 1, at(i))),
+    ]
+    const { topNoisyBuckets } = await loadLoginRateLimitInsights(bucketTable(rows).table, now)
+    expect(topNoisyBuckets).toHaveLength(TOP_NOISY_LIMIT)
+    expect(topNoisyBuckets.slice(0, 5).map((b) => b.identifier)).toEqual([
+      "viel@example.com",
+      "jung@example.com",
+      "a@example.com",
+      "b@example.com",
+      "leise-0@example.com",
+    ])
+  })
+})
+
+describe("loadBlockedLoginBuckets", () => {
+  it("nur aktive Sperren, die bald endende zuerst, höchstens 200", async () => {
+    const now = new Date(Date.UTC(2026, 9, 10, 12))
+    const t = now.getTime()
+    const rows = [
+      row("email:spaet@example.com", 5, t - 1000, t + 9000),
+      row("email:bald@example.com", 5, t - 2000, t + 1000),
+      row("email:vorbei@example.com", 5, t - 3000, t - 1),
+      row("email:frei@example.com", 2, t - 500),
+    ]
+    const blocked = await loadBlockedLoginBuckets(bucketTable(rows).table, now)
+    expect(blocked.map((b) => b.identifier)).toEqual(["bald@example.com", "spaet@example.com"])
+
+    const many = Array.from({ length: BLOCKED_LIMIT + 5 }, (_, i) =>
+      row(`email:x${i}@example.com`, 5, t - 1000, t + 1000 + i)
+    )
+    const limited = await loadBlockedLoginBuckets(bucketTable(many).table, now)
+    expect(limited).toHaveLength(BLOCKED_LIMIT)
+    expect(limited[0].identifier).toBe("x0@example.com")
   })
 })

@@ -44,8 +44,11 @@ Was die drei Apps kopiert hatten, liegt hier (nur Server, ohne Prisma und ohne b
 | `@vereinsheim/lib/auth/rate-limit/admin`  | Schlüssel prüfen, `loadBlockedLoginBuckets`, `loadLoginRateLimitInsights`, `EMPTY_INSIGHTS` |
 
 - **Die Tabelle kommt als Schnittstelle** (`LoginRateLimitBucketDelegate`): `db.loginRateLimitBucket` aus dem Prisma-Client
-  jeder App passt darauf. Braucht der Store eine neue Abfrage, zuerst die Schnittstelle erweitern; die Tests prüfen gegen
-  eine Tabelle im Speicher, die genau diese Abfragen auswertet.
+  jeder App passt darauf. Braucht der Store eine neue Abfrage, zuerst die Schnittstelle erweitern. Die Tests prüfen gegen
+  eine Tabelle im Speicher (`auth/rate-limit/__fixtures__/table.ts`), die Bedingungen, Sortierung und `take` wie Prisma
+  auf Postgres auswertet und bei einem unbekannten Feld oder Operator wirft. Dass die Zeile der Bibliothek genau zum
+  Schema passt, prüft je App `src/lib/auth-rate-limit/schema.test.ts` in `tsc` (eine Spalte, die das Schema nicht hat,
+  sähe die Schnittstelle allein nicht).
 - **Abhängigkeiten werden übergeben:** Konto-Suche, Passwortvergleich (bcrypt bleibt in den Apps), Ratenbegrenzung und
   das Vertrauen in Proxy-Header (`AUTH_TRUST_PROXY_HEADERS`). Die NextAuth-Optionen und Callbacks bleiben je App.
 - **Zeitausgleich:** Für eine unbekannte oder deaktivierte E-Mail vergleicht `authorizeCredentials` gegen `TIMING_HASH`
