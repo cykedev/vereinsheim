@@ -14,7 +14,8 @@
     "./time": "./src/time.ts",
     "./metrics": "./src/metrics.ts",
     "./stats": "./src/stats.ts",
-    "./analysis": "./src/analysis/index.ts"
+    "./analysis": "./src/analysis/index.ts",
+    "./projection": "./src/analysis/projection.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

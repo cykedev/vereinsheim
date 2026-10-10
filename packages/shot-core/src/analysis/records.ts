@@ -109,23 +109,94 @@ function seriesShots(shots: readonly MetricShot[]): [number, MetricShot[]][] {
 }
 
 /**
- * Rekorde über die Scheiben, die zählen (`recordEligible`), in der gewählten Wertung (R1–R8, D7); wahlweise
- * nur Training oder nur Wettkampf. Eine Scheibe nur mit Probe zählt nur mit `includeProbeOnly`, dann über
- * die Probe wie Wertung (D8); ebenso eine Scheibe, deren Probe der Schütze als Wertung zählt (SF-05). Zählungen
- * (R5–R7) setzen erst ab einem Treffer einen Rekord.
+ * was eine Scheibe zu den Rekorden beiträgt (R1–R7), einmal aus ihren Schüssen gerechnet, und ihr Ø je Schuss für
+ * die beste Form (R8). So lassen sich Rekorde aus gespeicherten Werten je Scheibe zusammenführen (Projektion), statt
+ * jeden Schuss zu laden. Null, wenn die Scheibe keine zählenden Schüsse hat (nur Probe ohne `includeProbeOnly`)
  */
-export function periodRecords(
-  cards: readonly PeriodCard[],
+export interface RecordCandidates {
+  /** Schusszahl der zählenden Wertung (Schlüssel für R1, R4, R5, R6) */
+  n: number
+  result: number | null
+  /** ab einem Treffer; sonst null */
+  tens: number | null
+  innerTens: number | null
+  /** nur in Zehnteln */
+  perfect: number | null
+  /** Streukreis der ganzen Scheibe, nur wenn jeder Schuss eine Lage hat */
+  tightest: number | null
+  /** beste Serie voller Länge (die häufigste Serienlänge), bei Gleichstand die frühere */
+  bestSeries: { length: number; value: number; series: number } | null
+  /** engste volle Serie zu zehn */
+  tightestSeries: { value: number; series: number } | null
+  bestTeiler: { value: number; shot: number } | null
+  longestTenRun: { length: number; start: number } | null
+  /** Ø je Schuss wie `cardValues` (R8) */
+  mean: { value: number; n: number } | null
+}
+
+export function cardRecordCandidates(
+  card: PeriodCard,
   scoring: Scoring,
-  options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean } = {}
-): PeriodRecords {
-  const counted = byStart(cards).filter(
-    (card) =>
-      recordEligible(card) &&
-      (options.kind === undefined || card.kind === options.kind) &&
-      (options.includeProbeOnly || !(card.flags ?? []).includes(FLAG_COUNTED_AS_MATCH))
-  )
-  const result = inScoring(RESULT, scoring)
+  includeProbeOnly = false
+): RecordCandidates | null {
+  const chosen = cardShots(card.shots, includeProbeOnly)
+  if (!chosen) return null
+  // Kennzahlen der Registry über die Wertungsschüsse; Auswertungen, die selbst auswählen und nummerieren,
+  // über die ganze Karte (erst ordnen, dann auswählen)
+  const { match: shots, whole } = chosen
+  const n = shots.length
+  const count = (value: number | null) => (value === null || value < 1 ? null : value)
+
+  const curve = seriesCurve(whole, scoring)
+  const full = modalLength(curve.map((s) => s.shots))
+  let bestSeries: RecordCandidates["bestSeries"] = null
+  for (const s of curve) {
+    if (s.shots !== full || s.total === null) continue
+    if (!bestSeries || s.total > bestSeries.value)
+      bestSeries = { length: s.shots, value: s.total, series: s.series }
+  }
+  let tightestSeries: RecordCandidates["tightestSeries"] = null
+  for (const [series, group] of seriesShots(whole)) {
+    // eine volle Serie zu zehn, und jeder Schuss mit Lage
+    if (group.length !== TIGHT_SERIES || eligibleShots(ENCLOSING, group).length !== group.length) {
+      continue
+    }
+    const diameter = computeMetric(ENCLOSING, group)
+    if (diameter !== null && (!tightestSeries || diameter < tightestSeries.value))
+      tightestSeries = { value: diameter, series }
+  }
+  const best = shotExtremes(whole)?.bestTeiler[0]
+  const run = longestRun(whole, scoring, TEN_TENTHS)
+  const mean = cardValues([card], MEAN, scoring, { includeProbeOnly })[0]
+  return {
+    n,
+    result: computeMetric(inScoring(RESULT, scoring), shots),
+    tens: count(computeMetric(TENS, shots)),
+    innerTens: count(computeMetric(INNER_TENS, shots)),
+    perfect:
+      scoring === "decimal" ? count(decimalHistogram(whole).counts[MAX_DECIMAL_TENTHS]) : null,
+    tightest: eligibleShots(ENCLOSING, shots).length === n ? computeMetric(ENCLOSING, shots) : null,
+    bestSeries,
+    tightestSeries,
+    bestTeiler: best ? { value: best.teiler, shot: best.number } : null,
+    longestTenRun:
+      run.length >= 1 && run.start !== null ? { length: run.length, start: run.start } : null,
+    mean: mean ? { value: mean.value, n: mean.n } : null,
+  }
+}
+
+/** eine Scheibe mit ihren Kandidaten, in der Folge der Scheiben */
+export interface RecordEntry {
+  id: string
+  atMs: number
+  candidates: RecordCandidates
+}
+
+/**
+ * Rekorde aus den Kandidaten der Scheiben, die zählen, in der Folge ihres Beginns: Nur ein echt besserer Wert
+ * ersetzt einen Rekord, bei Gleichstand gilt der frühere (D7)
+ */
+export function combineRecords(entries: readonly RecordEntry[]): PeriodRecords {
   const bestCard: Record<number, RecordRef> = {}
   const tightestCard: Record<number, RecordRef> = {}
   const mostPerfect: Record<number, RecordRef> = {}
@@ -136,17 +207,11 @@ export function periodRecords(
   let tightestSeries: RecordRef | null = null
   let longestTenRun: RecordRef | null = null
 
-  for (const card of counted) {
-    const counted = cardShots(card.shots, options.includeProbeOnly)
-    if (!counted) continue
-    // Kennzahlen der Registry über die Wertungsschüsse; Auswertungen, die selbst auswählen und nummerieren,
-    // über die ganze Karte (erst ordnen, dann auswählen)
-    const { match: shots, whole } = counted
-    const n = shots.length
+  for (const { id, atMs, candidates: c } of entries) {
     const ref = (value: number, detail?: string): RecordRef => ({
       value,
-      cardId: card.id,
-      atMs: card.startedAtMs,
+      cardId: id,
+      atMs,
       ...(detail === undefined ? {} : { detail }),
     })
     const put = (
@@ -158,50 +223,31 @@ export function periodRecords(
     ) => {
       if (value !== null && beats(value, table[key], better)) table[key] = ref(value, detail)
     }
-    const perCount = (table: Record<number, RecordRef>, value: number | null, better: Better) =>
-      put(table, n, value, better)
-    const count = (value: number | null) => (value === null || value < 1 ? null : value)
-
-    perCount(bestCard, computeMetric(result, shots), "higher")
-    perCount(mostTens, count(computeMetric(TENS, shots)), "higher")
-    perCount(mostInnerTens, count(computeMetric(INNER_TENS, shots)), "higher")
-    if (scoring === "decimal") {
-      perCount(mostPerfect, count(decimalHistogram(whole).counts[MAX_DECIMAL_TENTHS]), "higher")
-    }
-    const enclosing = computeMetric(ENCLOSING, shots)
-    if (eligibleShots(ENCLOSING, shots).length === n) perCount(tightestCard, enclosing, "lower")
-
-    const curve = seriesCurve(whole, scoring)
-    const full = modalLength(curve.map((s) => s.shots))
-    for (const s of curve) {
-      if (s.shots === full) put(bestSeries, s.shots, s.total, "higher", `Serie ${s.series}`)
-    }
-    for (const [series, group] of seriesShots(whole)) {
-      // eine volle Serie zu zehn, und jeder Schuss mit Lage
-      if (
-        group.length !== TIGHT_SERIES ||
-        eligibleShots(ENCLOSING, group).length !== group.length
-      ) {
-        continue
-      }
-      const diameter = computeMetric(ENCLOSING, group)
-      if (diameter !== null && beats(diameter, tightestSeries, "lower")) {
-        tightestSeries = ref(diameter, `Serie ${series}`)
-      }
-    }
-
-    const best = shotExtremes(whole)?.bestTeiler[0]
-    if (best && beats(best.teiler, bestTeiler, "lower")) {
-      bestTeiler = ref(best.teiler, `Schuss ${best.number}`)
-    }
-    const run = longestRun(whole, scoring, TEN_TENTHS)
-    if (run.length >= 1 && beats(run.length, longestTenRun, "higher")) {
-      longestTenRun = ref(run.length, `ab Schuss ${run.start}`)
-    }
+    put(bestCard, c.n, c.result, "higher")
+    put(mostTens, c.n, c.tens, "higher")
+    put(mostInnerTens, c.n, c.innerTens, "higher")
+    put(mostPerfect, c.n, c.perfect, "higher")
+    put(tightestCard, c.n, c.tightest, "lower")
+    if (c.bestSeries)
+      put(
+        bestSeries,
+        c.bestSeries.length,
+        c.bestSeries.value,
+        "higher",
+        `Serie ${c.bestSeries.series}`
+      )
+    if (c.tightestSeries && beats(c.tightestSeries.value, tightestSeries, "lower"))
+      tightestSeries = ref(c.tightestSeries.value, `Serie ${c.tightestSeries.series}`)
+    if (c.bestTeiler && beats(c.bestTeiler.value, bestTeiler, "lower"))
+      bestTeiler = ref(c.bestTeiler.value, `Schuss ${c.bestTeiler.shot}`)
+    if (c.longestTenRun && beats(c.longestTenRun.length, longestTenRun, "higher"))
+      longestTenRun = ref(c.longestTenRun.length, `ab Schuss ${c.longestTenRun.start}`)
   }
 
   let bestForm: RecordRef | null = null
-  const values = cardValues(counted, MEAN, scoring, { includeProbeOnly: options.includeProbeOnly })
+  const values = entries.flatMap(({ id, atMs, candidates }) =>
+    candidates.mean ? [{ id, atMs, value: candidates.mean.value, n: candidates.mean.n }] : []
+  )
   for (const point of periodTrend(values).points) {
     if (!point.partial && beats(point.mean, bestForm, "higher")) {
       bestForm = { value: point.mean, cardId: point.id, atMs: point.atMs }
@@ -220,4 +266,30 @@ export function periodRecords(
     longestTenRun,
     bestForm,
   }
+}
+
+/**
+ * Rekorde über die Scheiben, die zählen (`recordEligible`), in der gewählten Wertung (R1–R8, D7); wahlweise
+ * nur Training oder nur Wettkampf. Eine Scheibe nur mit Probe zählt nur mit `includeProbeOnly`, dann über
+ * die Probe wie Wertung (D8); ebenso eine Scheibe, deren Probe der Schütze als Wertung zählt (SF-05). Zählungen
+ * (R5–R7) setzen erst ab einem Treffer einen Rekord. Aus Kandidaten je Scheibe (`cardRecordCandidates`)
+ * zusammengeführt (`combineRecords`)
+ */
+export function periodRecords(
+  cards: readonly PeriodCard[],
+  scoring: Scoring,
+  options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean } = {}
+): PeriodRecords {
+  const counted = byStart(cards).filter(
+    (card) =>
+      recordEligible(card) &&
+      (options.kind === undefined || card.kind === options.kind) &&
+      (options.includeProbeOnly || !(card.flags ?? []).includes(FLAG_COUNTED_AS_MATCH))
+  )
+  return combineRecords(
+    counted.flatMap((card) => {
+      const candidates = cardRecordCandidates(card, scoring, options.includeProbeOnly)
+      return candidates ? [{ id: card.id, atMs: card.startedAtMs, candidates }] : []
+    })
+  )
 }
