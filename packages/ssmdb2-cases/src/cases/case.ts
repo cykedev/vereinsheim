@@ -27,6 +27,8 @@ export interface CaseOutput {
   /** je Lesung die Anweisungen vom vorigen Stand (beim ersten: alles anlegen) */
   sql: string[]
   expected: readonly ExpectedCard[]
+  /** die Ablage jeder Lesung */
+  states: Ablage[]
   /** die Ablage der letzten Lesung */
   last: Ablage
 }
@@ -42,6 +44,7 @@ export function runCase(definition: CaseDefinition): CaseOutput {
     readings: readingSnapshots(sim.readings),
     sql: sim.readings.map((r, i) => stepSql(i ? sim.readings[i - 1].ablage : null, r.ablage)),
     expected: definition.expected,
+    states: sim.readings.map((r) => r.ablage),
     last: sim.readings.at(-1)!.ablage,
   }
 }

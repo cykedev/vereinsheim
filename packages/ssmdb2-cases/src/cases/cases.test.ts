@@ -40,11 +40,26 @@ describe.each(CASES.map((c) => [c.id, c] as const))("%s", (_id, definition) => {
           ]
         })
       ).toEqual(expected.shots)
-      const scheibe = output.last.scheiben.get(scheibenId)
-      if (expected.bridge === "auslassen" && !scheibe) return
-      expect(scheibe, "Scheibe in der letzten Lesung").toBeDefined()
-      const probe = trefferOf(output.last, scheibenId, 0)
-      const match = trefferOf(output.last, scheibenId, 1)
+      // gesendet wird die erste von zwei gleichen Lesungen hintereinander, wenn sie neu ist (SF-71)
+      if (expected.sentReadings) {
+        const sums = output.readings.map(
+          (r) => r.snapshots.find((x) => x.scheibenId === scheibenId)?.checksum ?? null
+        )
+        const sent: number[] = []
+        let last: string | null = null
+        for (let i = 0; i + 1 < sums.length; i++)
+          if (sums[i] && sums[i] === sums[i + 1] && sums[i] !== last) {
+            sent.push(i + 1)
+            last = sums[i]
+          }
+        expect(sent).toEqual([...expected.sentReadings])
+      }
+      // der Stand der letzten Lesung, in der die Scheibe steht
+      const state = output.states.findLast((s) => s.scheiben.has(scheibenId))
+      expect(state, "Scheibe in einer Lesung").toBeDefined()
+      const scheibe = state!.scheiben.get(scheibenId)
+      const probe = trefferOf(state!, scheibenId, 0)
+      const match = trefferOf(state!, scheibenId, 1)
       // wie am Ausdruck: mit Wertung die Wertung, sonst die Probe
       const counted = match.length ? match : probe
       expect(expected.counted.stellung).toBe(match.length ? 1 : 0)

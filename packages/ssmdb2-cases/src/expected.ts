@@ -21,10 +21,10 @@ export interface ExpectedCard {
   sentReadings?: readonly number[]
   /** Probe und Wertung in jeder Lesung (Zahl der Zeilen in `Treffer`); null, wo die Scheibe nicht in der Ablage steht */
   shots: readonly (readonly [probe: number, match: number] | null)[]
-  /** Merkmale der Scheibe nach dem Einlesen, im Stand der letzten Lesung */
+  /** Merkmale der Scheibe nach dem Einlesen, im Stand der letzten Lesung, in der sie steht */
   flags: readonly string[]
   completeness: Completeness
-  /** wie am Ausdruck: die zählenden Schüsse (Stellung und Nummern) in der letzten Lesung */
+  /** wie am Ausdruck: die zählenden Schüsse (Stellung und Nummern) in der letzten Lesung, in der sie steht */
   counted: { stellung: 0 | 1; numbers: readonly number[] }
   /** Merkmale je Schuss, nach Stellung und Nummer („1/41“) */
   shotFlags?: Readonly<Record<string, readonly string[]>>
