@@ -69,8 +69,9 @@ describe("Schemas", () => {
     const ok = { name: "A", email: "a@b.de", role: "ADMIN", isActive: "false", tempPassword: "" }
     expect(UpdateUserSchema.parse(ok)).toMatchObject({ isActive: false, tempPassword: "" })
     expect(UpdateUserSchema.safeParse({ ...ok, tempPassword: "kurz" }).success).toBe(false)
+    // nicht getrimmt, wie Anlegen und Anmeldung
     expect(UpdateUserSchema.parse({ ...ok, tempPassword: " lang-genug-123 " }).tempPassword).toBe(
-      "lang-genug-123"
+      " lang-genug-123 "
     )
   })
 })

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 
 import { normalizeLoginEmail } from "@vereinsheim/lib/auth/validation"
 
+import { Prisma } from "@/generated/prisma/client"
 import { getAuthSession, isAdmin } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
 import { BCRYPT_COST } from "@/lib/startup"
@@ -14,6 +15,12 @@ import { accountChangeBlocked, CreateUserSchema, UpdateUserSchema } from "./rule
 
 // Kontenverwaltung für Admins, wie Ringwerk (ohne Protokoll, das kommt mit der Zuordnung, SP-1.7). Keine Ausnahme
 // nach außen: jede Antwort ist ein ActionResult.
+
+const EMAIL_TAKEN = "Diese E-Mail-Adresse wird bereits verwendet."
+
+/** Prisma-Fehlercode, wenn es einer ist */
+const prismaCode = (error: unknown) =>
+  error instanceof Prisma.PrismaClientKnownRequestError ? error.code : null
 
 async function adminId(): Promise<string | ActionResult> {
   const session = await getAuthSession()
@@ -40,18 +47,24 @@ export async function createUser(
   const email = normalizeLoginEmail(parsed.data.email)
   if (!email) return { error: "Ungültige E-Mail-Adresse." }
   if (await db.user.findUnique({ where: { email }, select: { id: true } }))
-    return { error: "Diese E-Mail-Adresse wird bereits verwendet." }
+    return { error: EMAIL_TAKEN }
 
-  await db.user.create({
-    data: {
-      name: parsed.data.name,
-      email,
-      passwordHash: await bcrypt.hash(parsed.data.tempPassword, BCRYPT_COST),
-      role: parsed.data.role,
-      // das Passwort kennt der Admin: bei der ersten Anmeldung ersetzen
-      mustChangePassword: true,
-    },
-  })
+  try {
+    await db.user.create({
+      data: {
+        name: parsed.data.name,
+        email,
+        passwordHash: await bcrypt.hash(parsed.data.tempPassword, BCRYPT_COST),
+        role: parsed.data.role,
+        // das Passwort kennt der Admin: bei der ersten Anmeldung ersetzen
+        mustChangePassword: true,
+      },
+    })
+  } catch (error) {
+    // zwei gleichzeitige Anfragen mit derselben E-Mail: die zweite scheitert am eindeutigen Schlüssel
+    if (prismaCode(error) === "P2002") return { error: EMAIL_TAKEN }
+    throw error
+  }
   revalidatePath("/admin/users")
   return { success: true }
 }
@@ -80,36 +93,54 @@ export async function updateUser(
   const email = normalizeLoginEmail(parsed.data.email)
   if (!email) return { error: "Ungültige E-Mail-Adresse." }
   if (await db.user.findFirst({ where: { email, NOT: { id } }, select: { id: true } }))
-    return { error: "Diese E-Mail-Adresse wird bereits verwendet." }
-
-  const blocked = accountChangeBlocked({
-    actorId: actor,
-    target,
-    next: { role: parsed.data.role, isActive: parsed.data.isActive },
-    otherActiveAdmins: await db.user.count({
-      where: { role: "ADMIN", isActive: true, NOT: { id } },
-    }),
-  })
-  if (blocked) return { error: blocked }
+    return { error: EMAIL_TAKEN }
 
   const { tempPassword } = parsed.data
+  // vor der Transaktion: bcrypt dauert, die Transaktion soll kurz bleiben
+  const passwordHash = tempPassword ? await bcrypt.hash(tempPassword, BCRYPT_COST) : null
   // neues Passwort, neue Rolle oder neuer Status beenden die Sitzungen des Kontos: Das JWT trägt die Rolle, und ein
   // herabgestuftes Konto käme sonst mit der alten noch durch proxy.ts (Review)
   const endSessions =
-    !!tempPassword || parsed.data.role !== target.role || parsed.data.isActive !== target.isActive
-  await db.user.update({
-    where: { id },
-    data: {
-      name: parsed.data.name,
-      email,
-      role: parsed.data.role,
-      isActive: parsed.data.isActive,
-      ...(tempPassword
-        ? { passwordHash: await bcrypt.hash(tempPassword, BCRYPT_COST), mustChangePassword: true }
-        : {}),
-      ...(endSessions ? { sessionVersion: { increment: 1 } } : {}),
-    },
-  })
+    !!passwordHash || parsed.data.role !== target.role || parsed.data.isActive !== target.isActive
+  try {
+    // Prüfen und Ändern in einer Transaktion (Konventionen §9): Zwei Admins, die sich gleichzeitig herabstufen, sähen
+    // sonst beide noch einen anderen aktiven Admin
+    const blocked = await db.$transaction(
+      async (tx) => {
+        const blocked = accountChangeBlocked({
+          actorId: actor,
+          target,
+          next: { role: parsed.data.role, isActive: parsed.data.isActive },
+          otherActiveAdmins: await tx.user.count({
+            where: { role: "ADMIN", isActive: true, NOT: { id } },
+          }),
+        })
+        if (blocked) return blocked
+        await tx.user.update({
+          where: { id },
+          data: {
+            name: parsed.data.name,
+            email,
+            role: parsed.data.role,
+            isActive: parsed.data.isActive,
+            ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
+            ...(endSessions ? { sessionVersion: { increment: 1 } } : {}),
+          },
+        })
+        return null
+      },
+      { isolationLevel: "Serializable" }
+    )
+    if (blocked) return { error: blocked }
+  } catch (error) {
+    const code = prismaCode(error)
+    if (code === "P2002") return { error: EMAIL_TAKEN }
+    if (code === "P2034")
+      return {
+        error: "Gleichzeitig wurde ein anderes Konto geändert. Bitte noch einmal speichern.",
+      }
+    throw error
+  }
   revalidatePath("/admin/users")
   return { success: true }
 }

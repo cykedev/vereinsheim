@@ -14,6 +14,8 @@ import { AUTH_SECRET } from "@/lib/auth-secret"
 // CSRF-Schutz: Next.js Server Actions sind durch den Same-Origin-Check des Browsers geschützt.
 // NextAuth prüft zusätzlich den Origin-Header bei POST-Requests. Ein manueller CSRF-Token
 // ist deshalb nicht nötig — der Schutz ist im Framework implizit vorhanden.
+/** bcrypt-Hash (Kosten 12) eines zufälligen Werts, den niemand kennt: Vergleichsziel ohne Konto */
+const TIMING_HASH = "$2b$12$8gH/lIbar6PMu5jjPCh9BO6ru13ubQrRmkqp1/Y8H7Zlqf4u6vwbi"
 const TRUST_PROXY_HEADERS_FOR_RATE_LIMIT = process.env.AUTH_TRUST_PROXY_HEADERS === "true"
 const MAX_IP_HEADER_LENGTH = 512
 // Konservativer Default:
@@ -136,6 +138,8 @@ export const authOptions: NextAuthOptions = {
         // Kein Nutzer gefunden oder Passwort falsch — gleiche Fehlermeldung für beide Fälle
         // (verhindert User-Enumeration: kein Hinweis ob E-Mail existiert oder Passwort falsch ist)
         if (!user || !user.isActive) {
+          // gleich lange wie mit Konto: sonst verriete die fehlende bcrypt-Zeit, welche E-Mails es gibt (Review)
+          await bcrypt.compare(credentials.password, TIMING_HASH)
           await registerFailedLoginAttempt(
             rateLimitState.normalizedEmail,
             rateLimitState.normalizedIp

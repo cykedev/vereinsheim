@@ -26,11 +26,27 @@ const DEMO_PASSWORD = "spiegel-demo-konto"
 
 const out = (text = "") => process.stdout.write(`${text}\n`)
 
+/**
+ * nur gegen die lokale Dev-Datenbank: tsx setzt kein NODE_ENV, und eine fremde DATABASE_URL bekäme sonst eigene Scheiben
+ * und ein Demo-Konto mit einem Passwort aus dem Repo (Review); `--force` für eine andere lokale Datenbank
+ */
+function assertDevDatabase(url: string, force: boolean) {
+  const { hostname, pathname } = new URL(url)
+  const local = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname)
+  if (!local || (pathname !== "/spiegel" && !force))
+    throw new Error(
+      `seed:own nur gegen die lokale Dev-Datenbank spiegel (nicht ${hostname}${pathname})`
+    )
+}
+
 async function main() {
   if (process.env.NODE_ENV === "production") throw new Error("seed:own nur in der Entwicklung")
   const args = process.argv.slice(2)
   const demo = args.includes("--demo")
-  const emailArg = args.includes("--email") ? args[args.indexOf("--email") + 1] : undefined
+  const at = args.indexOf("--email")
+  const emailArg = at >= 0 ? args[at + 1] : undefined
+  if (at >= 0 && (!emailArg || emailArg.startsWith("--")))
+    throw new Error("--email braucht eine Adresse")
   const email = normalizeLoginEmail(
     demo ? DEMO_EMAIL : (emailArg ?? process.env.SEED_ADMIN_EMAIL ?? "")
   )
@@ -39,7 +55,9 @@ async function main() {
       "Kein Konto: --email <adresse> angeben oder SEED_ADMIN_EMAIL in apps/spiegel/.env setzen"
     )
 
-  const db = createPrismaClient(process.env.DATABASE_URL ?? DEV_DATABASE_URL)
+  const url = process.env.DATABASE_URL ?? DEV_DATABASE_URL
+  assertDevDatabase(url, args.includes("--force"))
+  const db = createPrismaClient(url)
   try {
     const owner = demo
       ? await db.user.upsert({

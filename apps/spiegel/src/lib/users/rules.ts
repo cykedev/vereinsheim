@@ -36,9 +36,10 @@ export const UpdateUserSchema = z.object({
   email,
   role,
   isActive: z.enum(["true", "false"]).transform((v) => v === "true"),
+  // nicht getrimmt, wie beim Anlegen und bei der Anmeldung: ein Leerzeichen am Rand gehört zum Passwort; leer heißt kein
+  // Wechsel
   tempPassword: z
     .string()
-    .transform((v) => v.trim())
     .refine((v) => v.length === 0 || v.length >= MIN_PASSWORD_LENGTH, {
       message: `Mindestens ${MIN_PASSWORD_LENGTH} Zeichen`,
     })

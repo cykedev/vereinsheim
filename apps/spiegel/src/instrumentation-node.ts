@@ -10,6 +10,8 @@ export async function registerNode() {
     })
     if (result === "created")
       console.warn(`Admin-Konto angelegt für ${process.env.SEED_ADMIN_EMAIL}`)
+    if (result === "restored")
+      console.warn(`Kein aktiver Admin: ${process.env.SEED_ADMIN_EMAIL} ist wieder Admin`)
     if (result === "missing-env")
       console.warn("SEED_ADMIN_EMAIL oder SEED_ADMIN_PASSWORD fehlt: kein Admin-Konto angelegt")
   } catch (error) {

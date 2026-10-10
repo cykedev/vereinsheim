@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useActionState, useEffect, useState } from "react"
 
@@ -134,6 +135,7 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
           onChange={setRole}
           className="justify-self-start"
         />
+        <FieldError id="role-error" message={getFieldError(state, "role")} />
       </div>
       {user && (
         <div className="grid gap-1.5">
@@ -149,6 +151,7 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
             onChange={setActive}
             className="justify-self-start"
           />
+          <FieldError id="isActive-error" message={getFieldError(state, "isActive")} />
         </div>
       )}
       {general && (
@@ -160,15 +163,12 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
         <Button type="submit" className="h-10" disabled={pending}>
           {pending ? "Speichern…" : user ? "Speichern" : "Konto anlegen"}
         </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-10"
-          onClick={() => router.back()}
-          disabled={pending}
+        <Link
+          href="/admin/users"
+          className="inline-flex h-10 items-center rounded-md px-4 text-sm font-medium text-foreground-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
         >
           Abbrechen
-        </Button>
+        </Link>
       </div>
     </form>
   )
