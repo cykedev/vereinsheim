@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     ...base.transpilePackages,
     "@vereinsheim/shot-core",
+    "@vereinsheim/shot-ui",
+    "@vereinsheim/shot-help",
     "@vereinsheim/ingest-contract",
   ],
 }

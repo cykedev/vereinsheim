@@ -187,18 +187,23 @@ model DeleteLock {
 // Konten
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Anmeldung, Admin und Ratenbegrenzung folgen in SP-1.6 a Teil 2
+// Konto eines erwachsenen Mitglieds; keine Selbstregistrierung, Admin legt an ([[spiegel-privacy]])
 model User {
-  id          String        @id @default(cuid())
-  name        String?
-  email       String        @unique
-  role        UserRole      @default(USER)
+  id             String        @id @default(cuid())
+  name           String?
+  email          String        @unique
+  passwordHash   String
+  // steigt bei Passwortwechsel und Reset: ältere Sitzungen (JWT) gelten nicht mehr
+  sessionVersion Int           @default(0)
+  role           UserRole      @default(USER)
+  // deaktiviert statt gelöscht
+  isActive       Boolean       @default(true)
   // SportpassIDs der Zuordnung (mehrere je Konto, SF-39) kommen mit SP-1.7
-  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt   DateTime      @updatedAt @db.Timestamptz(3)
-  cards       Card[]
-  periods     NamedPeriod[]
-  deleteLocks DeleteLock[]
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+  cards          Card[]
+  periods        NamedPeriod[]
+  deleteLocks    DeleteLock[]
 }
 
 // benannter Zeitraum des Schützen („Vorbereitung Landesmeisterschaft“), Tage in der Anzeige-Zone
@@ -214,6 +219,21 @@ model NamedPeriod {
   @@index([ownerId])
 }
 
+// Brute-Force-Schutz der Anmeldung (`@vereinsheim/lib/auth/rate-limit`), wie Ringwerk
+model LoginRateLimitBucket {
+  // „email:<normalisiert>“ oder „ip:<normalisiert>“
+  key             String    @id
+  attempts        Int
+  windowStartedAt DateTime  @db.Timestamptz(3)
+  blockedUntil    DateTime? @db.Timestamptz(3)
+  lastAttemptAt   DateTime  @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([lastAttemptAt])
+  @@index([blockedUntil])
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Disziplinen
 // ─────────────────────────────────────────────────────────────────────────────
@@ -221,7 +241,10 @@ model NamedPeriod {
 // was in Verläufen zusammen zählt, etwa LP Freihand (LP 40, LP 40 alt, LP Training)
 model Family {
   id          Int          @id @default(autoincrement())
-  name        String       @unique
+  // Kennung aus dem Fachkern (`FamilyId`, etwa „lp-freihand“), steht in der Adresse
+  slug        String       @unique
+  // Anzeige, etwa „Luftpistole“
+  name        String
   disciplines Discipline[]
   cards       Card[]
 }

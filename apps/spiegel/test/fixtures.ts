@@ -18,7 +18,9 @@ export async function createTestSite(db: Db, label: string): Promise<TestSite> {
   const tag = `${label}-${randomUUID().slice(0, 8)}`
   const site = await db.site.create({ data: { name: `Test ${tag}`, timeZone: "Europe/Berlin" } })
   const source = await db.source.create({ data: { siteId: site.id, epoch: 1 } })
-  const family = await db.family.create({ data: { name: `LP Freihand ${tag}` } })
+  const family = await db.family.create({
+    data: { slug: `lp-freihand-${tag}`, name: `Luftpistole ${tag}` },
+  })
   const discipline = await db.discipline.create({
     data: {
       siteId: site.id,
@@ -29,7 +31,10 @@ export async function createTestSite(db: Db, label: string): Promise<TestSite> {
       officialScoring: "rings",
     },
   })
-  const owner = await db.user.create({ data: { email: `${tag}@example.com`, name: "Test" } })
+  // ohne gültigen Hash: Testkonten melden sich nie an
+  const owner = await db.user.create({
+    data: { email: `${tag}@example.com`, name: "Test", passwordHash: "-" },
+  })
   return {
     siteId: site.id,
     sourceId: source.id,

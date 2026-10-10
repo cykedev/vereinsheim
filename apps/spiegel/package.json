@@ -15,19 +15,27 @@
     "test:watch": "vitest",
     "check-types": "tsc --noEmit",
     "db:generate": "prisma generate",
-    "measure": "tsx tools/measure.ts"
+    "measure": "tsx tools/measure.ts",
+    "seed:own": "tsx tools/seed-own.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "catalog:",
     "@prisma/client": "catalog:",
     "@vereinsheim/ingest-contract": "workspace:*",
+    "@vereinsheim/lib": "workspace:*",
     "@vereinsheim/shot-core": "workspace:*",
+    "@vereinsheim/shot-help": "workspace:*",
+    "@vereinsheim/shot-ui": "workspace:*",
     "@vereinsheim/ui": "workspace:*",
+    "bcryptjs": "catalog:",
+    "lucide-react": "catalog:",
     "next": "catalog:",
+    "next-auth": "catalog:",
     "pg": "catalog:",
     "prisma": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",
@@ -36,6 +44,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vereinsheim/config": "workspace:*",
+    "@vereinsheim/labor": "workspace:*",
     "@vereinsheim/ssmdb2-cases": "workspace:*",
     "dotenv": "catalog:",
     "eslint": "catalog:",

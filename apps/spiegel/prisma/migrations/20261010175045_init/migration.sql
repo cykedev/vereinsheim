@@ -123,7 +123,10 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "name" TEXT,
     "email" TEXT NOT NULL,
+    "passwordHash" TEXT NOT NULL,
+    "sessionVersion" INTEGER NOT NULL DEFAULT 0,
     "role" "UserRole" NOT NULL DEFAULT 'USER',
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ(3) NOT NULL,
 
@@ -143,8 +146,22 @@ CREATE TABLE "NamedPeriod" (
 );
 
 -- CreateTable
+CREATE TABLE "LoginRateLimitBucket" (
+    "key" TEXT NOT NULL,
+    "attempts" INTEGER NOT NULL,
+    "windowStartedAt" TIMESTAMPTZ(3) NOT NULL,
+    "blockedUntil" TIMESTAMPTZ(3),
+    "lastAttemptAt" TIMESTAMPTZ(3) NOT NULL,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ(3) NOT NULL,
+
+    CONSTRAINT "LoginRateLimitBucket_pkey" PRIMARY KEY ("key")
+);
+
+-- CreateTable
 CREATE TABLE "Family" (
     "id" SERIAL NOT NULL,
+    "slug" TEXT NOT NULL,
     "name" TEXT NOT NULL,
 
     CONSTRAINT "Family_pkey" PRIMARY KEY ("id")
@@ -286,7 +303,13 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE INDEX "NamedPeriod_ownerId_idx" ON "NamedPeriod"("ownerId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Family_name_key" ON "Family"("name");
+CREATE INDEX "LoginRateLimitBucket_lastAttemptAt_idx" ON "LoginRateLimitBucket"("lastAttemptAt");
+
+-- CreateIndex
+CREATE INDEX "LoginRateLimitBucket_blockedUntil_idx" ON "LoginRateLimitBucket"("blockedUntil");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Family_slug_key" ON "Family"("slug");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Discipline_siteId_meytonId_name_key" ON "Discipline"("siteId", "meytonId", "name");

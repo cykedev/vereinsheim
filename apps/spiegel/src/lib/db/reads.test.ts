@@ -25,7 +25,9 @@ const DAY_MS = 86_400_000
 
 beforeAll(async () => {
   site = await createTestSite(db, "reads")
-  const family = await db.family.create({ data: { name: `LG ${site.siteId}` } })
+  const family = await db.family.create({
+    data: { slug: `lg-freihand-${site.siteId}`, name: `Luftgewehr ${site.siteId}` },
+  })
   otherFamilyId = family.id
   otherDisciplineId = (
     await db.discipline.create({

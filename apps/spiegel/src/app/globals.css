@@ -1,5 +1,14 @@
 @import "tailwindcss";
 @import "@vereinsheim/ui/design2.css";
 
-/* Klassen aus der App und aus den Bausteinen von shot-ui (ab SP-1.8) */
+/* Klassen aus der App und aus den Bausteinen von shot-ui */
 @source "../";
+@source "../../../../packages/shot-ui/src";
+
+/* Schriften selbst gehostet über next/font (Root-Layout); die Namen aus design2.css bleiben als Rückfall */
+@theme {
+  --font-display: var(--font-archivo), "Archivo", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-sans: var(--font-geist), "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    var(--font-geist-mono), "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}

@@ -234,15 +234,33 @@ importers:
       '@vereinsheim/ingest-contract':
         specifier: workspace:*
         version: link:../../packages/ingest-contract
+      '@vereinsheim/lib':
+        specifier: workspace:*
+        version: link:../../packages/lib
       '@vereinsheim/shot-core':
         specifier: workspace:*
         version: link:../../packages/shot-core
+      '@vereinsheim/shot-help':
+        specifier: workspace:*
+        version: link:../../packages/shot-help
+      '@vereinsheim/shot-ui':
+        specifier: workspace:*
+        version: link:../../packages/shot-ui
       '@vereinsheim/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      bcryptjs:
+        specifier: 'catalog:'
+        version: 3.0.3
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.33.0(react@19.2.8)
       next:
         specifier: 'catalog:'
         version: 16.3.2(@babel/core@7.29.7)(@types/node@24.13.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      next-auth:
+        specifier: 'catalog:'
+        version: 4.24.15(next@16.3.2(@types/node@24.13.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       pg:
         specifier: 'catalog:'
         version: 8.23.0
@@ -255,6 +273,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.8(react@19.2.8)
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       '@tailwindcss/postcss':
         specifier: 'catalog:'
@@ -274,6 +295,9 @@ importers:
       '@vereinsheim/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@vereinsheim/labor':
+        specifier: workspace:*
+        version: link:../../tools/labor
       '@vereinsheim/ssmdb2-cases':
         specifier: workspace:*
         version: link:../../packages/ssmdb2-cases

@@ -105,7 +105,11 @@ async function main() {
     for (const input of inputs) await writeRevision(db, input)
     for (let m = 0; m < MEMBERS; m++) {
       const member = await db.user.create({
-        data: { email: `messung-${site.siteId}-${m}@example.com`, name: `Mitglied ${m + 1}` },
+        data: {
+          email: `messung-${site.siteId}-${m}@example.com`,
+          name: `Mitglied ${m + 1}`,
+          passwordHash: "-",
+        },
       })
       members.push(member.id)
       const others = generateSeason({

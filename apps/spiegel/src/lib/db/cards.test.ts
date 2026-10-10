@@ -347,7 +347,7 @@ describe("setDisciplineFamily", () => {
   it("die Scheiben ziehen mit der Familie ihrer Disziplin mit", async () => {
     const [input] = season(1, 2800)
     const { cardId } = await writeRevision(db, input)
-    const other = await db.family.create({ data: { name: `Andere ${cardId}` } })
+    const other = await db.family.create({ data: { slug: `andere-${cardId}`, name: "Andere" } })
     try {
       expect(await setDisciplineFamily(db, site.disciplineId, other.id)).toBeGreaterThanOrEqual(1)
       expect((await db.card.findUniqueOrThrow({ where: { id: cardId } })).familyId).toBe(other.id)
