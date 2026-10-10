@@ -157,7 +157,9 @@ Lesereihenfolge). Gebaut wird **ein Feature pro Session** aus
 Entscheidungen ADR-026–031, Meyton-Wissen unter [`vault/meyton/`](vault/meyton). Erster Code: der Fachkern
 [`packages/shot-core`](packages/shot-core) (SP-1.1: Scheibenbilder, Wertung, Disziplinen, Gegenprobe). Seit SP-1.6 a
 Teil 1 (Oktober 2026) gibt es [`apps/spiegel`](apps/spiegel) (Dev-Port 3002, Dev-DB `spiegel`) mit Schema, Zugriffen
-und Projektion je Scheibe ([ADR-031](vault/decisions/adr-031.md)); noch ohne Anmeldung und ohne Deploy (SP-1.9).
+und Projektion je Scheibe ([ADR-031](vault/decisions/adr-031.md)); seit Teil 2 mit Anmeldung und Konten, seit N7 mit
+Start, Scheiben und der Seite einer Scheibe aus `shot-ui` (die eigenen Scheiben: `pnpm --filter spiegel seed:own`).
+Noch ohne Deploy (SP-1.9).
 
 ## Wenn du etwas änderst
 

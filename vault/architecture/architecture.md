@@ -21,8 +21,9 @@ CodeGraph-MCP (`codegraph_explore`). Diese Datei ist die schnelle Karte, kein Vo
 vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/ringwerk/          Liga & Wettkämpfe (Next.js 16, Prisma 7, NextAuth v4)  → :3000
 ├── apps/treffsicher/       Trainings-App      (Next.js 16, Prisma 7, NextAuth v4)  → :3001
-├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7)  → :3002; bisher Schema, Zugriffe
-│                           und Messung (SP-1.6 a Teil 1, ADR-031), noch ohne Anmeldung und ohne Deploy.
+├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7, NextAuth v4)  → :3002; Schema,
+│                           Zugriffe und Projektion (SP-1.6 a, ADR-031), Anmeldung und Konten, Start, Scheiben,
+│                           Seite einer Scheibe und Profil aus shot-ui (N7, erster Teil); noch ohne Deploy (SP-1.9).
 ├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig/eslint/prettier/
 │                           postcss/next (Phase 2).
 ├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors
@@ -59,7 +60,7 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           Scheiben-Liste nach Abend (`list`, N2), Rahmen der App mit Links und
 │                           Blättern (`AppFrame`, `RouteLink`, N3), Start mit dem letzten Abend im
 │                           Formband (`start`, N5); Design 2 (ADR-030, Oktober 2026);
-│                           im Labor erprobt, noch von keiner App genutzt.
+│                           im Labor erprobt; Start, Liste, Scheibe und Rahmen nutzt apps/spiegel.
 ├── tools/labor/            Labor: Scheiben-Liste, Seite einer Scheibe und eines Zeitraums aus den echten Bausteinen, mit
 │                           Beispielscheiben, den echten Scheiben des Users (Luftpistole, zwei Luftgewehr) und sonst
 │                           erfundenem Luftgewehr,

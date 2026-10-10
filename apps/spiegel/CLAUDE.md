@@ -3,29 +3,59 @@
 Dritte App im Monorepo: Schussrohdaten der Meyton-Anlage (SSMDB2) über eine lokale Brücke, Zuordnung per
 Sportpass-Opt-in und Meyton-QR ([`vault/spiegel/spiegel.md`](../../vault/spiegel/spiegel.md)). Seit SP-1.6 a Teil 1
 (Oktober 2026) stehen Datenbank, Zugriffe und Messung ([ADR-031](../../vault/decisions/adr-031.md),
-[`spiegel-db-schema`](../../vault/spiegel/spiegel-db-schema.md)); Anmeldung, Admin und Ratenbegrenzung folgen in Teil 2,
-die Ansichten in SP-1.8, der Deploy-Vertrag (`compose.yml`, `Caddyfile`, `db-init/`) in SP-1.9.
+[`spiegel-db-schema`](../../vault/spiegel/spiegel-db-schema.md)); seit Teil 2 Anmeldung, Admin und Ratenbegrenzung,
+seit N7 (erster Teil) Start, Scheiben, die Seite einer Scheibe und Profil mit echten Daten
+([`spiegel-navigation`](../../vault/spiegel/spiegel-navigation.md)). Der Deploy-Vertrag (`compose.yml`, `Caddyfile`,
+`db-init/`) folgt in SP-1.9.
 
 ## Befehle
 
-| Befehl                                                     | Zweck                                                              |
-| ---------------------------------------------------------- | ------------------------------------------------------------------ |
-| `pnpm dev --filter spiegel`                                | Dev-Server auf :3002                                               |
-| `pnpm --filter spiegel exec prisma migrate dev --name <x>` | Schema ändern (braucht `.env` mit `DATABASE_URL`)                  |
-| `pnpm --filter spiegel test`                               | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`              |
-| `pnpm --filter spiegel measure`                            | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate |
+| Befehl                                                     | Zweck                                                                                                      |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `pnpm dev --filter spiegel`                                | Dev-Server auf :3002                                                                                       |
+| `pnpm --filter spiegel exec prisma migrate dev --name <x>` | Schema ändern (braucht `.env` mit `DATABASE_URL`)                                                          |
+| `pnpm --filter spiegel test`                               | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                      |
+| `pnpm --filter spiegel measure`                            | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                         |
+| `pnpm --filter spiegel seed:own`                           | die echten Scheiben des Users in die Dev-Datenbank, dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`) |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
-nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`).
+nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den
+Beispiel-Secret (`src/lib/auth-secret.ts`, nur außerhalb von Produktion). Das erste Admin-Konto legt der Server beim Start
+an (`src/instrumentation.ts`, aus `SEED_ADMIN_*`); danach `seed:own`. Für Prüfungen im Browser: `seed:own --demo`, dann
+mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das eigene Konto.
+
+## Aufbau
+
+- `src/app/login` ohne Rahmen; `src/app/(app)/*` mit Anmeldepflicht (`requireSession` im Layout, `proxy.ts` davor):
+  Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Profil, Platzhalter (Fortschritt, Scannen, Offen), Admin
+  `/admin/users`.
+- Seiten sind Server-Komponenten: Sitzung, Daten (`src/lib/db/reads.ts`), Kontext (`pageContext`: Zone, „jetzt“,
+  Wertung des Geräts, benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
+  bauen Routen und Rückrufe (Funktionen gehen nicht vom Server zum Client), wie die Ansichten im Labor.
+- `AppShell`: `AppFrame` mit `next/link`, Bereich aus der Adresse, letzte Adresse je Bereich, Blatt der Hilfe
+  (`useHelp`). Darstellung über `ThemeProvider` (Skript vor dem Zeichnen, `localStorage`).
 
 ## Regeln
 
 - **Schichten** (`src/lib/db/`): `raw.ts` legt Rohdaten ab, `cards.ts` schreibt Scheiben, Revisionen und Projektion,
   `reads.ts` liest für die Ansichten. Seiten und Server Actions rufen nur diese Funktionen, nie Prisma direkt auf Schüsse.
-- **Übersichten lesen keine Schüsse.** Liste, Fortschritt und Start nehmen `familyCards`/`ownerCards` (Scheibe mit
-  Projektion) und rechnen mit `projectedValues`/`projectedRecords` aus `@vereinsheim/shot-core/projection`. Nur die
-  Seite einer Scheibe lädt Schüsse (`cardWithShots`, immer mit `ownerId`). Messung: „Alles“ 39 ms statt 200 ms Laden
-  plus 48 ms Rechnen.
+- **Übersichten lesen keine Schüsse** (Ziel, ADR-031): Liste, Fortschritt und Start nehmen `familyCards`/`ownerCards`
+  (Scheibe mit Projektion) und rechnen mit `projectedValues`/`projectedRecords`. Messung: „Alles“ 39 ms statt 200 ms
+  Laden plus 48 ms Rechnen. **Übergang:** Start, Liste und das Blättern laden noch `ownerCardsWithShots`, weil die
+  Modelle in `shot-ui` aus Schüssen rechnen; vor dem ersten Deploy auf die Projektion umstellen (SP-1.8). Nur die Seite
+  einer Scheibe lädt Schüsse auf Dauer (`cardWithShots`, immer mit `ownerId`).
+- **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
+  Admins. Admin verwaltet Konten und sieht keine fremden Schüsse.
+- **Anmeldung wie Ringwerk:** `getAuthSession` prüft gegen die Datenbank (aktiv, `sessionVersion`), Server Actions geben
+  `ActionResult` zurück (nie werfen). Abmelden mit `signOut({ redirect: false })` und eigener Navigation: Mit Umleitung
+  baut `next-auth/react` die Adresse aus `NEXTAUTH_URL`, ohne sie `localhost:3000` (Ringwerk), am Handy über die
+  Netzadresse ins Leere. `proxy.ts` lässt alles unter `_next/` frei (sonst fängt es die Verbindung des Dev-Servers ab).
+- **Formulare mit Server Action gesteuert** (`value` + `onChange`): React setzt ungesteuerte Felder nach dem Absenden
+  zurück, ein Feldfehler löschte sonst die Eingaben.
+- **instrumentation:** den Node-Teil nur im Zweig `NEXT_RUNTIME === "nodejs"` laden (`instrumentation-node.ts`); Next
+  bündelt die Datei auch für Edge, und dort fehlt `fs` für `pg`.
+- **Wertung des Geräts** als Cookie (`spiegel-scoring`, `src/lib/device*.ts`): Start und Liste rendern auf dem Server.
+  Der Name steht in `device-cookie.ts` ohne Importe, damit die Client-Seite nicht `next/headers` zieht.
 - **Projektion nur aus dem Fachkern.** `cardProjection` rechnet, die App speichert. Steigt eine Kennzahl-`version` oder
   `PROJECTION_VERSION`, holt `refreshProjections` die veralteten nach (auch die einer früheren Revision), je Scheibe
   unter der Sperre ihrer Zeile.
@@ -54,4 +84,7 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   Wegwerf-Postgres (`migrate diff --from-config-datasource` gegen das Schema leer). Die Dev-Datenbank zieht der User
   nach (`pnpm --filter spiegel exec prisma migrate reset --force`); ein Agent setzt sie nicht zurück, Prisma und der
   Auto-Modus verlangen dafür den User. Ab dem ersten Deploy nur noch neue Migrationen.
+- **Speicher** im Container messen, nicht auf dem Mac (macOS zählt anders; 765 MB auf dem Mac waren 227 MiB im
+  Container): Standalone-Build in `node:24-alpine` mit `--memory=256m`, anmelden, Seiten abrufen, `docker stats`
+  (10. Oktober 2026: 117 MiB nach dem Start, 213 bis 227 MiB unter Last).
 - Ausgabe in Werkzeugen über `process.stdout.write`, nicht `console.log` (Lint).

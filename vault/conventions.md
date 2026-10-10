@@ -248,6 +248,11 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   abhängige Daten still verwaisen, statt zu scheitern (Beispiel:
   `apps/ringwerk/src/lib/matchups/actions.ts`).
 
+- **Formulare mit Server Action gesteuert halten**: React 19 setzt ein `<form action={…}>` nach dem Absenden zurück;
+  ungesteuerte Felder (`defaultValue`) sind danach leer, ein Feldfehler löschte die Eingaben. Felder mit `value` und
+  `onChange` (wie die Nutzerformulare in Ringwerk) behalten sie. Aufgefallen in Spiegel (Kontenverwaltung, Oktober 2026)
+  bei der Prüfung im Browser, kein Test sah es.
+
 - **Nach `pnpm add` in einer App `pnpm install --frozen-lockfile`**: `pnpm --filter <app> add`
   kann Peer-Varianten neu auflösen, ohne die `node_modules`-Links der **anderen** App
   nachzuziehen. Deren Gate fällt dann mit `Cannot find package …` aus, obwohl der Diff sauber ist.

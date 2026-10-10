@@ -297,6 +297,24 @@ Plan `plans/2026-10-09-spiegel-start.md`, Branch `feat/spiegel-start`. Drei Entw
   letzten Abends, über alle Familien.
 - **Offen:** „Läuft gerade“ und echte offene Fälle (N6, N7).
 
+## Umgesetzt in N7, erster Teil (10. Oktober 2026)
+
+In `apps/spiegel` (Plan `plans/2026-10-10-spiegel-erste-seiten.md`), mit den echten Scheiben des Users in der
+Dev-Datenbank (`pnpm --filter spiegel seed:own`):
+
+- **Rahmen:** `AppShell` (Client) legt `AppFrame` um jede Seite der Gruppe `(app)`. Links sind `next/link`, Klicks
+  laufen über den Router (`RouteLinkProvider`). Der Bereich kommt aus der Adresse (`areaOf`), Unterseiten von Admin
+  zählen zu Admin. Die letzte Adresse je Bereich (Scheiben, Fortschritt) merkt sich die Hülle. Das Blatt der Hilfe
+  öffnet jede Seite über `useHelp`.
+- **Seiten:** Start (`/`), Scheiben (`/cards`, Filter in der Adresse, die Familie ohne Angabe die der neuesten Scheibe),
+  Scheibe (`/cards/<id>`: Wertung, Serie und Schuss aus der Adresse und dorthin zurück, Reiter im Anker, Rückweg und
+  Blättern im Kontext der Herkunft vom Server). Profil mit Darstellung, Wertung des Geräts und Abmelden. Fortschritt,
+  Scannen und Offen sind Platzhalter.
+- **Wertung des Geräts** als Cookie (`spiegel-scoring`), weil Start und Liste auf dem Server rendern; die Seite einer
+  Scheibe schreibt sie beim Umschalten mit.
+- **Übergang:** Start und Liste laden alle Scheiben mit Schüssen (`ownerCardsWithShots`), bis die Modelle die
+  Projektion nehmen ([[adr-031]]). Vor dem ersten Deploy umstellen ([[spiegel-roadmap]], SP-1.9).
+
 ## Labor näher an der App (9. Oktober 2026)
 
 Plan `plans/2026-10-09-spiegel-labor-wie-app.md`. Der Labor-Kopf ist weg, die Seiten beginnen wie in der App, damit
