@@ -12,6 +12,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev", "--filter", "treffsicher"],
       "port": 3001
+    },
+    {
+      "name": "spiegel",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--filter", "spiegel"],
+      "port": 3002
     }
   ]
 }
