@@ -11,12 +11,12 @@ import { Pool } from "pg"
 import { cardValues, periodRecords, type PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { metricByKey, type MetricDefinition } from "@vereinsheim/shot-core/metrics"
 import { projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
-import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
+import { DEFAULT_LIST, DEFAULT_PROGRESS } from "@vereinsheim/shot-ui/nav/routes"
 
 import { PrismaClient } from "../src/generated/prisma/client"
 import { writeRevision } from "../src/lib/db/cards"
 import { cardWithShots, familyCards, latestCardStart, ownerCards } from "../src/lib/db/reads"
-import { listPageData, startPageData } from "../src/lib/overview"
+import { listPageData, progressPageData, startPageData } from "../src/lib/overview"
 import type { Db } from "../src/lib/db"
 import { DEV_DATABASE_URL } from "../test/dev-database"
 import { createTestSite } from "../test/fixtures"
@@ -157,6 +157,13 @@ async function main() {
     }
     const startPage = () => startPageData(db, site.ownerId, pageContext)
     const listPage = () => listPageData(db, site.ownerId, DEFAULT_LIST, pageContext)
+    const progressPage = () =>
+      progressPageData(
+        db,
+        site.ownerId,
+        { ...DEFAULT_PROGRESS, choice: { type: "all" } },
+        pageContext
+      )
 
     // offener Durchgang: die Brücke schickt nach jedem Schuss den ganzen Stand (SF-03)
     const live = generateSeason({
@@ -228,6 +235,10 @@ async function main() {
         "Liste „Alles“ auf dem Server: lesen, Modell rechnen, Lagen der gezeigten",
         await median(listPage),
       ],
+      [
+        "Fortschritt „Alles“ auf dem Server: lesen, Modell rechnen, leicht machen",
+        await median(progressPage),
+      ],
       ["Seite einer Scheibe: Schüsse der Revision", await median(() => one(sample))],
       ["ohne Projektion: alle Schüsse der Familie laden", await median(allShots)],
       [
@@ -265,6 +276,13 @@ async function main() {
     out(`| vorher: alle Scheiben der Familie mit Schüssen | ${kb(full)} |`)
     out(`| Start: Modell und Lagen des Abends | ${kb(await startPage())} |`)
     out(`| Liste „Alles“: Modell und Lagen aller gezeigten | ${kb(await listPage())} |`)
+    // die Abstände sind eine Map, die JSON nicht mitzählt: als Einträge, wie sie an den Browser gehen
+    const { progress } = await progressPage()
+    const progressJson = {
+      ...progress,
+      model: { ...progress!.model, deltas: [...progress!.model.deltas] },
+    }
+    out(`| Fortschritt „Alles“: leichtes Modell und Lagen der Ablesung | ${kb(progressJson)} |`)
 
     await explain("Fortschritt „Alles“", (client) => familyCards(client, owner))
     await explain("Fortschritt 90 Tage", (client) =>

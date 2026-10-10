@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
-import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
+import { DEFAULT_LIST, DEFAULT_PROGRESS } from "@vereinsheim/shot-ui/nav/routes"
 
 import { createPrismaClient } from "@/lib/db"
 import { generateSeason } from "../../test/generate"
 import { createTestSite, type TestSite } from "../../test/fixtures"
 import { writeRevision } from "./db/cards"
-import { listPageData, startPageData } from "./overview"
+import { listPageData, progressPageData, startPageData } from "./overview"
 
 const db = createPrismaClient()
 let site: TestSite
@@ -126,5 +126,47 @@ describe("listPageData", () => {
   it("ohne eigene Scheiben keine Liste", async () => {
     const empty = await listPageData(db, "jemand-ohne-scheiben", DEFAULT_LIST, context)
     expect(empty).toEqual({ list: null, families: [] })
+  })
+})
+
+describe("progressPageData", () => {
+  const all = { ...DEFAULT_PROGRESS, choice: { type: "all" as const } }
+
+  it("die Familie der neuesten Scheibe, die Wertung des Geräts, die Lagen nur der Ablesung", async () => {
+    const { progress } = await progressPageData(
+      db,
+      site.ownerId,
+      { ...all, family: "gibt-es-nicht", scoring: "decimal" },
+      { ...context, scoring: "rings" }
+    )
+    expect(progress!.state).toMatchObject({ family: lgFamily.slug, scoring: "rings" })
+    expect(progress!.model.cards.map((c) => c.id).sort()).toEqual([...ids.lg].sort())
+    expect(Object.keys(progress!.marks)).toEqual([progress!.model.reading!.card.id])
+    // leicht: ohne Werte, Rekorde und Felder der App
+    for (const card of progress!.model.cards) {
+      expect(card.projection.values).toEqual({})
+      expect(card).not.toHaveProperty("family")
+    }
+  })
+
+  it("eine Wahl aus der Adresse ist die Ablesung; gelöschte und fremde Scheiben nie", async () => {
+    const lp = (await startPageData(db, site.ownerId, context)).families[1].value
+    const chosen = ids.lp[2]
+    const { progress } = await progressPageData(
+      db,
+      site.ownerId,
+      { ...all, family: lp, chosen },
+      context
+    )
+    expect(progress!.model.reading).toMatchObject({ chosen: true, card: { id: chosen } })
+    expect(Object.keys(progress!.marks)).toEqual([chosen])
+    const lg = await progressPageData(db, site.ownerId, { ...all, family: lgFamily.slug }, context)
+    const shown = lg.progress!.model.cards.map((c) => c.id)
+    expect(shown).not.toContain(ids.trash)
+    expect(shown).not.toContain(ids.foreign)
+    expect(await progressPageData(db, "jemand-ohne-scheiben", all, context)).toEqual({
+      progress: null,
+      families: [],
+    })
   })
 })

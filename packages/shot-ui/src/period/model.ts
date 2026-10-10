@@ -393,9 +393,17 @@ export function periodModel(input: {
   return { ...model, reading: periodReading(model, state.chosen) }
 }
 
-/** eine Scheibe für den Browser: die Projektion ohne Werte und Rekorde (die Bausteine lesen Art und Schusszahl) */
+/**
+ * eine Scheibe für den Browser: nur die Felder von `ProjectedCard` (eine App reicht mehr herein, etwa Familie und Stand),
+ * die Projektion ohne Werte und Rekorde (die Bausteine lesen Art und Schusszahl)
+ */
 const lightCard = (card: ProjectedCard): ProjectedCard => ({
-  ...card,
+  id: card.id,
+  startedAtMs: card.startedAtMs,
+  kind: card.kind,
+  complete: card.complete,
+  flags: card.flags,
+  ...(card.official ? { official: card.official } : {}),
   projection: {
     version: card.projection.version,
     probeOnly: card.projection.probeOnly,

@@ -128,6 +128,24 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
     expect(light.metric).toMatchObject({ key: "result.decimalMean", label: "Ø je Schuss" })
   })
 
+  it("nur die Felder einer projizierten Scheibe, auch wenn die App mehr hereinreicht", () => {
+    const withExtras = periodModel({
+      cards: RAW.map((card) => ({
+        ...projected(card),
+        stand: "3",
+        family: { slug: "lg", name: "LG" },
+      })),
+      state: initialPeriodState({ family: "lg-10m" }),
+      nowMs: NOW,
+      timeZone: TZ,
+      named: [],
+    })
+    const card = lightPeriodModel(withExtras).cards[0]
+    expect(Object.keys(card).sort()).toEqual(
+      ["complete", "flags", "id", "kind", "projection", "startedAtMs"].sort()
+    )
+  })
+
   it("das leichte Modell ist kleiner", () => {
     expect(JSON.stringify(light.cards).length).toBeLessThan(JSON.stringify(full.cards).length / 3)
   })
