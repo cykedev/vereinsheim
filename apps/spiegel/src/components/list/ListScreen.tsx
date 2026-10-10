@@ -17,6 +17,8 @@ import {
   type ListRoute,
 } from "@vereinsheim/shot-ui/nav/routes"
 
+import { NoCards } from "@/components/shell/NoCards"
+import { Page } from "@/components/shell/Page"
 import type { PageCard } from "@/lib/db/reads"
 import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
@@ -39,11 +41,14 @@ export function ListScreen({
   const search = useSearchParams()
   const { timeZone, nowMs, named, scoring } = context
   const query: ListQuery = useMemo(() => {
-    const parsed = routeFromUrl(pathname, search.size ? `?${search.toString()}` : "", "")
+    // nicht `search.size`: fehlt in Safari vor 17 (Review)
+    const qs = search.toString()
+    const parsed = routeFromUrl(pathname, qs ? `?${qs}` : "", "")
     return parsed.page === "cards" ? parsed.query : DEFAULT_LIST
   }, [pathname, search])
-  // ohne Familie in der Adresse die der neuesten Scheibe; die Adresse bleibt ohne
-  const family = query.family ?? families[0]?.value ?? null
+  // ohne Familie in der Adresse, oder einer ohne eigene Scheiben, die der neuesten Scheibe; die Adresse bleibt, wie sie ist
+  const option = families.find((f) => f.value === query.family) ?? families[0]
+  const family = option?.value ?? null
   const route: ListRoute = { page: "cards", query, evening: null }
 
   const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards])
@@ -56,7 +61,6 @@ export function ListScreen({
       ),
     [cards, query, family, timeZone, nowMs, named, scoring]
   )
-  const option = families.find((f) => f.value === family)
   const onQuery = (next: ListQuery) =>
     router.push(urlFromRoute({ page: "cards", query: next, evening: null }))
   // öffnen in der Wertung, die die Zeile vorn zeigt (die amtliche, sonst die des Geräts)
@@ -64,18 +68,13 @@ export function ListScreen({
 
   if (!option)
     return (
-      <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
-        <section className="rounded-2xl border border-border bg-card p-6">
-          <h1 className="font-display text-xl font-bold tracking-tight">Noch keine Scheiben</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Sobald die Brücke deine Scheiben bringt oder du einen Ausdruck scannst, stehen sie hier.
-          </p>
-        </section>
-      </div>
+      <Page>
+        <NoCards />
+      </Page>
     )
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
+    <Page>
       <section data-card-list-page className="grid max-w-4xl gap-4">
         <ListHeader
           familyLabel={option.label}
@@ -102,6 +101,6 @@ export function ListScreen({
           otherFamilyRoute={(other, day) => listOnEvening(query, other, day)}
         />
       </section>
-    </div>
+    </Page>
   )
 }

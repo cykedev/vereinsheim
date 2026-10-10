@@ -10,6 +10,8 @@ import { EveningBlock } from "@vereinsheim/shot-ui/start/EveningBlock"
 import { FormLine } from "@vereinsheim/shot-ui/start/FormLine"
 import { startModel } from "@vereinsheim/shot-ui/start/model"
 
+import { NoCards } from "@/components/shell/NoCards"
+import { Page } from "@/components/shell/Page"
 import type { PageCard } from "@/lib/db/reads"
 import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
@@ -48,17 +50,11 @@ export function StartScreen({
   const recordRoute = (id: string) => openCard({ page: "start" }, id, scoring)
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
+    <Page>
       <section data-start-page className="grid gap-4">
         <h1 className="sr-only">Start</h1>
         {model.blocks.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <h2 className="font-display text-xl font-bold tracking-tight">Noch keine Scheiben</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Sobald die Brücke deine Scheiben bringt oder du einen Ausdruck scannst, stehen sie
-              hier.
-            </p>
-          </div>
+          <NoCards />
         ) : (
           <StartPage
             evenings={model.blocks.map((block) => {
@@ -92,6 +88,6 @@ export function StartScreen({
           />
         )}
       </section>
-    </div>
+    </Page>
   )
 }

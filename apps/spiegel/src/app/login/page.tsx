@@ -13,7 +13,7 @@ export default async function LoginPage({
 }) {
   const params = await searchParams
   return (
-    <div className="flex min-h-dvh items-center justify-center px-4 py-8">
+    <main className="flex min-h-dvh items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1 text-center">
           <p className="font-display text-3xl font-bold tracking-tight">Spiegel</p>
@@ -24,6 +24,6 @@ export default async function LoginPage({
           passwordChanged={params.passwordChanged === "1"}
         />
       </div>
-    </div>
+    </main>
   )
 }

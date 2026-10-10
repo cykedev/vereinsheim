@@ -39,14 +39,19 @@ export default async function CardRoutePage({
   const route = routeFromUrl(`/cards/${encodeURIComponent(id)}`, searchOf(await searchParams), "")
   if (route.page !== "card") notFound()
   const context = await pageContext(ownerId)
-  // Übergang bis SP-1.8: der Kontext zum Blättern rechnet aus allen eigenen Scheiben
-  const all = listable(await ownerCardsWithShots(db, ownerId))
-  const ids = contextCardIds(route, {
-    cards: all.map((c) => ({ card: c, family: c.family!.slug })),
-    nowMs: context.nowMs,
-    timeZone: context.timeZone,
-    named: context.named,
-  })
+  // Übergang bis SP-1.8: der Kontext zum Blättern rechnet aus allen eigenen Scheiben, nur mit Herkunft
+  const ids =
+    route.origin === null
+      ? null
+      : contextCardIds(route, {
+          cards: listable(await ownerCardsWithShots(db, ownerId)).map((c) => ({
+            card: c,
+            family: c.family!.slug,
+          })),
+          nowMs: context.nowMs,
+          timeZone: context.timeZone,
+          named: context.named,
+        })
   return (
     <CardScreen
       card={card}

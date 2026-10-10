@@ -47,8 +47,8 @@ export function createInMemoryStore(): LoginRateLimitStore {
       return [...loginBuckets.entries()]
         .sort((a, b) => {
           // Referenz auf "letzte Relevanz" statt nur Erstellzeit:
-          // wir entfernen zuerst Bucket-Eintraege mit der aeltesten Relevanz,
-          // unabhaengig davon ob sie nur alt oder bereits blockiert waren.
+          // wir entfernen zuerst Bucket-Einträge mit der ältesten Relevanz,
+          // unabhängig davon ob sie nur alt oder bereits blockiert waren.
           const aRef = Math.max(a[1].blockedUntil, a[1].lastAttemptAt)
           const bRef = Math.max(b[1].blockedUntil, b[1].lastAttemptAt)
           return aRef - bRef
@@ -162,9 +162,9 @@ export function createDbStore(): LoginRateLimitStore {
       await db.loginRateLimitBucket.deleteMany({
         where: {
           lastAttemptAt: { lt: cutoff },
-          // Aktive Sperren nicht vorzeitig wegraeumen:
-          // aktive Sperren muessen erhalten bleiben, auch wenn der letzte Versuch
-          // bereits laenger zurueckliegt.
+          // Aktive Sperren nicht vorzeitig wegräumen:
+          // aktive Sperren müssen erhalten bleiben, auch wenn der letzte Versuch
+          // bereits länger zurückliegt.
           OR: [{ blockedUntil: null }, { blockedUntil: { lt: cutoff } }],
         },
       })
@@ -176,8 +176,8 @@ export function createDbStore(): LoginRateLimitStore {
 }
 
 export function createRateLimitStoreForCurrentEnv(): LoginRateLimitStore {
-  // Umgebungsabhaengiger Store:
+  // Umgebungsabhängiger Store:
   // Produktion braucht persistente Buckets (mehrere Requests/Instanzen),
-  // Tests brauchen isolierte und schnell resetbare Buckets.
+  // Tests brauchen isolierte und schnell zurücksetzbare Buckets.
   return process.env.NODE_ENV === "test" ? createInMemoryStore() : createDbStore()
 }

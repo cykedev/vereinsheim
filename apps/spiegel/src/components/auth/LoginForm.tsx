@@ -57,6 +57,8 @@ export function LoginForm({
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           disabled={pending}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "login-error" : undefined}
         />
       </div>
       <div className="space-y-2">
@@ -69,10 +71,12 @@ export function LoginForm({
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           disabled={pending}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "login-error" : undefined}
         />
       </div>
       {error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p id="login-error" role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}

@@ -11,14 +11,14 @@ import {
 import { normalizeLoginEmail } from "@vereinsheim/lib/auth/validation"
 import { AUTH_SECRET } from "@/lib/auth-secret"
 
-// CSRF-Schutz: Next.js Server Actions sind durch den Same-Origin-Check des Browsers geschuetzt.
-// NextAuth prueft zusaetzlich den Origin-Header bei POST-Requests. Ein manueller CSRF-Token
-// ist deshalb nicht noetig — der Schutz ist im Framework implizit vorhanden.
+// CSRF-Schutz: Next.js Server Actions sind durch den Same-Origin-Check des Browsers geschützt.
+// NextAuth prüft zusätzlich den Origin-Header bei POST-Requests. Ein manueller CSRF-Token
+// ist deshalb nicht nötig — der Schutz ist im Framework implizit vorhanden.
 const TRUST_PROXY_HEADERS_FOR_RATE_LIMIT = process.env.AUTH_TRUST_PROXY_HEADERS === "true"
 const MAX_IP_HEADER_LENGTH = 512
 // Konservativer Default:
 // Proxy-Header werden nur vertraut, wenn Deploy-Umgebung das explizit erlaubt.
-// Sonst koennte ein Client eigene IPs in Headern faken.
+// Sonst könnte ein Client eigene IPs in Headern faken.
 
 function getHeaderValue(
   headers: Record<string, unknown> | undefined,
@@ -69,9 +69,9 @@ function extractTrustedIpFromHeader(rawHeader: string | null): string | null {
   if (rawHeader.length > MAX_IP_HEADER_LENGTH) return null
 
   for (const part of rawHeader.split(",")) {
-    // x-forwarded-for kann mehrere Eintraege enthalten.
+    // x-forwarded-for kann mehrere Einträge enthalten.
     // In x-forwarded-for kann eine Kette stehen; wir nutzen den ersten
-    // parsbaren Kandidaten statt blind den kompletten Header zu vertrauen.
+    // lesbaren Kandidaten statt blind den kompletten Header zu vertrauen.
     const parsed = parseClientIpCandidate(part)
     if (parsed) return parsed
   }
@@ -98,7 +98,7 @@ function extractClientIpHeader(req: { headers?: Record<string, unknown> }): stri
   return null
 }
 
-// NextAuth v4 Konfiguration, wie Ringwerk: ausschliesslich E-Mail und Passwort, kein OAuth, kein Magic Link.
+// NextAuth v4 Konfiguration, wie Ringwerk: ausschließlich E-Mail und Passwort, kein OAuth, kein Magic Link.
 // Keine Selbstregistrierung; Konten legt der Admin an ([[spiegel-privacy]]).
 export const authOptions: NextAuthOptions = {
   secret: AUTH_SECRET,
@@ -124,7 +124,7 @@ export const authOptions: NextAuthOptions = {
         if (!rateLimitState.allowed) {
           // Einheitliches Fehlerverhalten:
           // Gleiches Verhalten bei allen Login-Fehlern erschwert User-Enumeration
-          // und gibt keine Information ueber Sperr- oder Nutzerstatus preis.
+          // und gibt keine Information über Sperr- oder Nutzerstatus preis.
           return null
         }
 

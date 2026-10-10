@@ -26,10 +26,11 @@ export function AppShell({ isAdmin, children }: { isAdmin: boolean; children: Re
   const router = useRouter()
   const pathname = usePathname()
   const search = useSearchParams()
-  const route = useMemo(
-    () => routeFromUrl(pathname, search.size ? `?${search.toString()}` : "", ""),
-    [pathname, search]
-  )
+  const route = useMemo(() => {
+    // nicht `search.size`: fehlt in Safari vor 17 (Review)
+    const qs = search.toString()
+    return routeFromUrl(pathname, qs ? `?${qs}` : "", "")
+  }, [pathname, search])
 
   // die letzte Adresse je Bereich: beim Rendern nachgeführt (Zustand aus der vorigen Darstellung, React-Muster)
   const [memory, setMemory] = useState<AreaMemory>({ cards: null, progress: null })

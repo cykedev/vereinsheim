@@ -8,6 +8,7 @@ import { AdminLoginRateLimitTable } from "@/components/admin/AdminLoginRateLimit
 import { requireAdmin } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
 import { getUsers, type UserSummary } from "@/lib/users/queries"
+import { Page } from "@/components/shell/Page"
 
 export const metadata: Metadata = { title: "Konten" }
 
@@ -39,7 +40,7 @@ export default async function AdminUsersRoute() {
   const [users, insights] = await Promise.all([getUsers(), getAdminLoginRateLimitInsights()])
   const timeZone = getDisplayTimeZone()
   return (
-    <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
+    <Page>
       <section className="grid max-w-3xl gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="grid gap-1">
@@ -77,6 +78,6 @@ export default async function AdminUsersRoute() {
         <h2 className="text-[15px] font-semibold">Anmeldeversuche</h2>
         <LoginRateLimitInsights insights={insights} displayTimeZone={timeZone} />
       </section>
-    </div>
+    </Page>
   )
 }

@@ -66,7 +66,8 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         kind: row.kind,
         complete: row.complete,
         flags: row.flags,
-        official: row.discipline.officialScoring,
+        // nur Probe ist Training und hat keine amtliche Wertung (wie im Labor)
+        official: projection.probeOnly ? null : row.discipline.officialScoring,
         state: row.state,
         stand: row.stand,
         disciplineId: row.disciplineId,
@@ -163,13 +164,17 @@ export interface PageCard extends PeriodCard {
 
 function toPageCard(row: PageCardRow): PageCard | null {
   if (!row.currentRevision) return null
+  // nur Probe ist Training und hat keine amtliche Wertung (wie im Labor)
+  const official = row.currentRevision.shots.some((shot) => shot.stellung !== 0)
+    ? row.discipline.officialScoring
+    : null
   return {
     id: row.id,
     startedAtMs: row.startedAt.getTime(),
     kind: row.kind,
     complete: row.complete,
     flags: row.flags,
-    ...(row.discipline.officialScoring ? { official: row.discipline.officialScoring } : {}),
+    ...(official ? { official } : {}),
     revision: row.currentRevision.number,
     disciplineId: row.disciplineId,
     discipline: row.discipline.name,

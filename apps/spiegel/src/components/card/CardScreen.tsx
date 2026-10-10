@@ -42,7 +42,9 @@ import {
 } from "@vereinsheim/shot-ui/view-state"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
+import { Page } from "@/components/shell/Page"
 import { useHelp } from "@/components/shell/HelpContext"
+import { nextCardAddress } from "@/lib/card-address"
 import type { PageCard } from "@/lib/db/reads"
 import { rememberScoring } from "@/lib/device-client"
 import type { PageContext } from "@/lib/page-context"
@@ -108,7 +110,11 @@ export function CardScreen({
   const hash = useHash()
   // der Reiter: gewählt, sonst aus dem Anker beim Laden, sonst der erste (eine Scheibe beginnt mit ihm)
   const [chosenTab, setChosenTab] = useState<AnalysisTab | null>(null)
-  const tab: AnalysisTab = chosenTab ?? parseHash(hash)?.tab ?? ANALYSIS_TABS[0].value
+  // der zuletzt im Anker gesehene Reiter bleibt, wenn die Sprungleiste „#shots“ schreibt (Review)
+  const hashTab = parseHash(hash)?.tab ?? null
+  const [seenTab, setSeenTab] = useState<AnalysisTab | null>(null)
+  if (hashTab && hashTab !== seenTab) setSeenTab(hashTab)
+  const tab: AnalysisTab = chosenTab ?? hashTab ?? seenTab ?? ANALYSIS_TABS[0].value
   const active = useActiveSection()
   const { pill, jumpTo, back, close } = useReturnJump()
 
@@ -133,11 +139,11 @@ export function CardScreen({
     anchor: chosenTab ? { section: "analysis", tab: chosenTab } : null,
   }
   const address = urlFromRoute(route)
+  const anchorChosen = route.anchor !== null
   useEffect(() => {
-    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`
-    if (address !== current && !(route.anchor === null && current.startsWith(address)))
-      window.history.replaceState(null, "", address)
-  }, [address, route.anchor])
+    const next = nextCardAddress(window.location, address, anchorChosen)
+    if (next) window.history.replaceState(null, "", next)
+  }, [address, anchorChosen])
 
   const toggle = useCallback((layer: Layer) => dispatch({ type: "toggle", layer }), [])
   const choose = useCallback(
@@ -186,7 +192,7 @@ export function CardScreen({
   const result = <CardResult shots={shots} state={state} scoring={scoringSwitch} />
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
+    <Page>
       <CardContextBar
         back={backRoute(route)}
         backText={backLabel(route, { named: pageContext.named, timeZone: pageContext.timeZone })}
@@ -311,6 +317,6 @@ export function CardScreen({
         ]}
       />
       <ReturnPill label={pill?.label ?? null} onReturn={back} onDismiss={close} />
-    </div>
+    </Page>
   )
 }

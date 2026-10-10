@@ -9,6 +9,7 @@ import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 import { Button } from "@vereinsheim/ui/button"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 
+import { Page } from "@/components/shell/Page"
 import { ThemeSwitch } from "@/components/theme/ThemeSwitch"
 import { rememberScoring } from "@/lib/device-client"
 
@@ -39,7 +40,7 @@ export function ProfileScreen({
   }
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
+    <Page>
       <section data-profile className="grid max-w-2xl gap-6">
         <div className="grid gap-1">
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
@@ -95,6 +96,6 @@ export function ProfileScreen({
           </Button>
         </div>
       </section>
-    </div>
+    </Page>
   )
 }
