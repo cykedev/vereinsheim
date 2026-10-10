@@ -21,6 +21,8 @@ CodeGraph-MCP (`codegraph_explore`). Diese Datei ist die schnelle Karte, kein Vo
 vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/ringwerk/          Liga & Wettkämpfe (Next.js 16, Prisma 7, NextAuth v4)  → :3000
 ├── apps/treffsicher/       Trainings-App      (Next.js 16, Prisma 7, NextAuth v4)  → :3001
+├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7)  → :3002; bisher Schema, Zugriffe
+│                           und Messung (SP-1.6 a Teil 1, ADR-031), noch ohne Anmeldung und ohne Deploy.
 ├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig/eslint/prettier/
 │                           postcss/next (Phase 2).
 ├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors
@@ -33,16 +35,17 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           semantische Tokens success/warning/info/rank-1..3, App-Akzent via data-app).
 ├── packages/shot-core/     @vereinsheim/shot-core — Spiegel-Fachkern: Scheibenbilder, Wertung wie Meyton,
 │                           Disziplinen, Gegenprobe (SP-1.1), Geometrie und Kennzahlen-Registry (SP-1.2),
-│                           Analyse einer Scheibe (SP-1.10);
-│                           noch von keiner App genutzt.
+│                           Analyse einer Scheibe (SP-1.10), Projektion je Scheibe für die Datenbank
+│                           (`./projection`, SP-1.6 a); die Projektion nutzt apps/spiegel.
 ├── packages/meyton-pdf/    @vereinsheim/meyton-pdf — liest aus Meyton-Ausdrucken (PDF) nur ID im Fuß und
 │                           Erstellzeit, ohne Layout-Wissen (SP-1.3, Oktober 2026); noch von keiner App genutzt.
 ├── packages/ingest-contract/ @vereinsheim/ingest-contract — Vertrag Brücke ↔ Spiegel: Snapshot v1
 │                           (Zod, daraus JSON-Schema), Prüfsumme über RFC 8785, Testvektoren und
-│                           eingefrorene Beispiele (SP-1.0a); noch von keiner App genutzt.
+│                           eingefrorene Beispiele (SP-1.0a); apps/spiegel nutzt Typen und kanonische Form.
 ├── packages/ssmdb2-cases/  @vereinsheim/ssmdb2-cases — Sonderfall-Testdaten (SP-1.0b): echtes SSMDB2-Schema,
 │                           Baukasten, der wie Meyton schreibt, 31 Fälle mit Snapshots v1, SQL je Schritt und
-│                           erwartetem Ergebnis unter `cases/v1`; `replay` spielt sie in MariaDB 10.6 ab.
+│                           erwartetem Ergebnis unter `cases/v1`; `replay` spielt sie in MariaDB 10.6 ab;
+│                           `./frozen` liest die eingefrorenen Snapshots (Tests von apps/spiegel).
 ├── packages/shot-help/     @vereinsheim/shot-help — Hilfe zu jeder Kennzahl und Auswertung in
 │                           einfacher Sprache (Themen, Einstieg, Glossar, Fehlschlüsse); Quelle für App
 │                           und Vault-Leitfaden, den `pnpm --filter @vereinsheim/shot-help docs` erzeugt

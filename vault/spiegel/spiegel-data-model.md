@@ -5,7 +5,7 @@ title: "Spiegel — Kanonisches Datenmodell"
 aliases: [datenmodell, spiegel-schema, kanonisches-modell]
 keywords: [datenmodell, schema, entitäten, prisma, anlage, quelle, epoche, brücke, stand, schützen-identität, konto, zuordnung, rohdatensatz, scheibe, stellung, serie, schuss, disziplin, scheibenbild, kennzahlwert, notiz, tag, ausrüstung, mikrometer, einheiten, revision, merkmale, zustand, disziplin-familie, ereignis, nur pdf]
 part_of: ["[[spiegel]]"]
-relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spiegel-metrics]]", "[[spiegel-edge-cases]]"]
+relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spiegel-metrics]]", "[[spiegel-edge-cases]]", "[[spiegel-db-schema]]"]
 ---
 
 **TL;DR** Ein quellen-neutrales Modell: Rohdatensätze bleiben unverändert, daraus entsteht die kanonische Scheibe mit Stellungen, Serien und Schüssen; Kennzahlwerte sind eine neu berechenbare Projektion. Koordinaten in Mikrometern, amtliche Werte so wie die Quelle sie liefert, Zeit in UTC mit Millisekunden.
@@ -30,7 +30,7 @@ relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spi
 | Disziplin | Meyton-Disziplin: DisziplinID und Name, Regelnummer, Schusszahl (`000` vermutlich offen), Serienlänge, Stellungen, Familie | Anlage + DisziplinID + Name (Vereinsvarianten können dieselbe ID tragen) |
 | Disziplin-Familie | was in Verläufen zusammen zählt, zum Beispiel LP Freihand (LP 40, LP 40 alt, LP Training); Auflage getrennt | id |
 | Scheibenbild | Geometrie je Stellung, versioniert ([[spiegel-target-library]]) | id + Version |
-| Kennzahlwert | berechneter Wert je Ebene ([[spiegel-metrics]]) | Scheibe + Revision + Ebene + Kennzahl + Version |
+| Kennzahlwert | berechneter Wert je Ebene ([[spiegel-metrics]]); gespeichert als Projektion je Scheibe: alle Kennzahlen der Ebene Scheibe in beiden Wertungen und die Rekord-Kandidaten ([[adr-031]], [[spiegel-db-schema]]) | Scheibe (mit Revision und Version der Projektion) |
 | Einheit | ein Schütze an einem Tag mit seinen zusammenhängenden Scheiben (Aufwärmen, Abbruch, Disziplinwechsel) | Konto + Tag |
 | Notiz, Tag, Ausrüstung, Ereignis | Kontext für Vergleiche (Munitionslos, Griff, Brille); ein Ereignis „Visier verstellt“ gibt es nicht (User, 8. Oktober 2026) | id; an Schüssen über die Schusszeit verankert |
 
@@ -60,7 +60,7 @@ type Shot = {
 - **Amtliche Werte** (Ring, Zehntel, Teiler, Innenzehner) so, wie die Quelle sie liefert; die Skala je Quellfeld steht im Adapter ([[spiegel-ingest-pipeline]]).
 - **Amtliche Wertung der Scheibe** aus der Disziplin, nie aus `Treffer.Wertung`: Das ist die Anzeigeart am Monitor, die der Schütze umschalten kann; gedruckt wird nach der Disziplin (SF-74, Abend-Mitschnitt vom 9. Oktober 2026; bis dahin stand hier der Wertungsmodus der Wertungsschüsse). Woher der Adapter sie liest, klärt SP-1.6; unbekannt bleibt sie leer. Im Fachkern `PeriodCard.official`; die Scheiben-Liste zeigt sie vorn ([[spiegel-navigation]]). Training nur aus Probe hat keine.
 - **Zeit** in UTC mit Millisekunden; der Rohwert (Ortszeit ohne Zone) bleibt im Rohdatensatz.
-- **Revisionen:** Korrekturen erzeugen eine neue Revision; die vorige bleibt nachvollziehbar.
+- **Revisionen:** Korrekturen erzeugen eine neue Revision; die vorige bleibt nachvollziehbar. Kommen nur Schüsse dazu (offener Durchgang, SF-03), wächst die aktuelle Revision ([[adr-031]]).
 - **Herkunft:** Eine Scheibe kann zuerst nur aus dem PDF bestehen (QR-Scan, Brücke gerade aus oder fremde Anlage) und später um Rohdaten ergänzt werden.
 - **Nur aus dem PDF:** Solche Ergebnisse haben Werte je Schuss, aber keine Lage und keine Zeit; Kennzahlen, die eine Lage brauchen, entfallen dort.
 - **Merkmale und Zustand** einer Scheibe sowie die Regeln für Probe, Reihenfolge und Löschungen stehen in [[spiegel-edge-cases]].

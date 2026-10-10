@@ -31,7 +31,7 @@ Features, die Deploy-Vertrag, Schema oder ADRs berühren, laufen interaktiv stat
 2. [[spiegel-architecture]] — Komponenten, Datenfluss, Einbindung ins Vereinsheim, Open-Source-Betrieb.
 3. [[spiegel-bridge]] und [[spiegel-ingest-pipeline]] — der Weg der Daten aus dem Schützenhaus; [[spiegel-ingest-contract]] — der Vertrag dazwischen (Snapshot, Prüfsumme, Testvektoren).
 4. [[spiegel-assignment]] — wem eine Scheibe gehört und wann das feststeht.
-5. [[spiegel-data-model]], [[spiegel-target-library]], [[spiegel-metrics]] — der Fachkern; [[spiegel-statistics]] — der Statistik-Katalog (was Spiegel auswertet und wann); [[spiegel-statistics-help]] — jede Auswertung in einfacher Sprache erklärt, Quelle der Hilfe in der App.
+5. [[spiegel-data-model]], [[spiegel-target-library]], [[spiegel-metrics]] — der Fachkern; [[spiegel-db-schema]] — die Datenbank (Schema, Zugriffe, Messung); [[spiegel-statistics]] — der Statistik-Katalog (was Spiegel auswertet und wann); [[spiegel-statistics-help]] — jede Auswertung in einfacher Sprache erklärt, Quelle der Hilfe in der App.
 6. [[spiegel-edge-cases]] — Sonderfälle und Fallstricke mit IDs (SF-xx), Grundlage der Testdaten und Abnahmen.
 7. [[spiegel-ui-design]] — Design 2, Navigation, Bildschirme, Farben; [[spiegel-mobile]] — Spiegel auf dem Telefon (Entwurf); [[spiegel-langzeit]] — über viele Scheiben: Zeitraum, Verlauf, Vergleich (Entwurf); [[spiegel-navigation]] — Einstieg, Scheiben-Liste, Auswahl, Adressen und Löschen (entschieden 9. Oktober 2026). [[spiegel-durchsicht]] — Bedienbarkeit und Komplexität, Leitlinie „drei Ebenen“ (9. Oktober 2026).
 8. [[spiegel-privacy]] — Datenschutz, Rollen, verdeckte Wertung.
@@ -48,6 +48,7 @@ Alles über die Meyton-Anlage steht im Thema [[meyton]]: die Datenbank [[meyton-
 - [[adr-028]] — Zuordnung per Meyton-QR mit Original-PDF, Sportpass automatisch, Fundbüro als Rückfall.
 - [[adr-029]] — Apache-2.0 für das ganze Monorepo, Spiegel als selbst gehostete Software je Verein.
 - [[adr-030]] — Design 2 mit Spiegel als Pilot (angenommen am 8. Oktober 2026).
+- [[adr-031]] — Datenbank: Rohdaten als Zeilenversionen, Revisionen als Korrekturen, Projektion je Scheibe (10. Oktober 2026).
 
 ## Material
 

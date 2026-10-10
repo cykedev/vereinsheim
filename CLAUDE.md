@@ -32,7 +32,7 @@ Onboarding in dieser Reihenfolge:
 
 1. [`README.md`](README.md) — Status, Bedienkonzept, Quick Reference
 2. [`vault/overview.md`](vault/overview.md) — Anforderungen, Zielarchitektur, Sizing
-3. [`vault/decisions/`](vault/decisions) — **Wichtig**: alle ADRs (adr-001…adr-030) mit
+3. [`vault/decisions/`](vault/decisions) — **Wichtig**: alle ADRs (adr-001…adr-031) mit
    Begründung ([`decisions.md`](vault/decisions/decisions.md) als MOC). Bevor du etwas
    vorschlägst, das eine ADR berührt: prüfe, ob die ADR den Vorschlag schon adressiert.
 4. [`vault/monorepo/monorepo.md`](vault/monorepo/monorepo.md) — Monorepo-Migration
@@ -154,8 +154,10 @@ ADR-006).
 Source (Apache-2.0). Einstieg: [`vault/spiegel/spiegel.md`](vault/spiegel/spiegel.md) (Plan,
 Lesereihenfolge). Gebaut wird **ein Feature pro Session** aus
 [`vault/spiegel/spiegel-roadmap.md`](vault/spiegel/spiegel-roadmap.md) (IDs `SP-x.y`, je über `/plan`).
-Entscheidungen ADR-026–030, Meyton-Wissen unter [`vault/meyton/`](vault/meyton). Erster Code: der Fachkern
-[`packages/shot-core`](packages/shot-core) (SP-1.1: Scheibenbilder, Wertung, Disziplinen, Gegenprobe).
+Entscheidungen ADR-026–031, Meyton-Wissen unter [`vault/meyton/`](vault/meyton). Erster Code: der Fachkern
+[`packages/shot-core`](packages/shot-core) (SP-1.1: Scheibenbilder, Wertung, Disziplinen, Gegenprobe). Seit SP-1.6 a
+Teil 1 (Oktober 2026) gibt es [`apps/spiegel`](apps/spiegel) (Dev-Port 3002, Dev-DB `spiegel`) mit Schema, Zugriffen
+und Projektion je Scheibe ([ADR-031](vault/decisions/adr-031.md)); noch ohne Anmeldung und ohne Deploy (SP-1.9).
 
 ## Wenn du etwas änderst
 

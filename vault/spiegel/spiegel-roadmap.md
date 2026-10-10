@@ -109,7 +109,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** `apps/spiegel` nach Vereinsheim-Muster (Auth, Admin, Rate-Limit), Design-2-Tokens, Datenmodell ([[spiegel-data-model]]), Ingest-API mit Geräte-Token und Vertrag in `packages/ingest-contract`, Rohdaten-Store, Adapter `meyton-ssmdb2@9` mit Skalen, Zeitzone, Epochen, Revisionen ([[spiegel-ingest-pipeline]]).
 - **Schnitt:** a) App-Skelett, Datenmodell und Design-2-Tokens, Speicher des leeren Skeletts lokal unter `mem_limit` 256 MB gemessen; b) Ingest-API, Rohdaten-Store als Zeilenversionen und Adapter.
 - **Abnahme:** Snapshot rein → kanonische Scheibe raus, auch bei Korrektur und Epochenwechsel; `/check` grün; Sonderfälle SF-01, SF-02, SF-03, SF-04, SF-07, SF-08, SF-09, SF-15, SF-21, SF-22, SF-23, SF-25, SF-26, SF-28, SF-29, SF-30, SF-31, SF-59, SF-67, SF-69.
-- **Hängt ab von:** SP-1.0, SP-1.1. **Status:** offen.
+- **Hängt ab von:** SP-1.0, SP-1.1. **Status:** in Arbeit. a) Teil 1 erledigt (10. Oktober 2026, `plans/2026-10-10-spiegel-datenmodell.md`, [[adr-031]], [[spiegel-db-schema]]): `apps/spiegel` als Gerüst (Next 16, Prisma 7, Design-2-Tokens, Dev-Port 3002, Dev-Datenbank `spiegel`), Schema mit Rohdaten als Zeilenversionen, Revisionen und Projektion je Scheibe, Zugriffe mit Tests gegen die Dev-Datenbank, Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`; der Rohdaten-Store aus b) ist damit schon da. Teil 2 offen: Anmeldung, Admin, Ratenbegrenzung, Speicher des leeren Skeletts. b) offen: Ingest-API und Adapter.
 
 ### SP-1.7 Zuordnung: Opt-in per Sportpass, Meyton-QR, Admin
 - **Ziel:** jede Scheibe findet ihren Besitzer ([[spiegel-assignment]]).
