@@ -216,6 +216,34 @@ export class Card {
    * Disziplin Wert 0 und Platzhalter-Teiler (SF-08); verdeckt (Anzeigeart 5) Wert 0 (SF-19).
    */
   shot(stellung: 0 | 1, x: number, y: number, options: { clock?: number } = {}): TrefferRow {
+    return this.insert(stellung, options.clock, (over) => ({ x, y, ...this.valuesAt(x, y, over) }))
+  }
+
+  /** Handeintrag oder Platzhalter (SF-15): Wert gesetzt, Lage 0/0, Teiler 0, `Text` „Hand“ (der Text ist eine Annahme) */
+  handEntry(stellung: 0 | 1, ring01: number): TrefferRow {
+    return this.insert(stellung, undefined, () => ({
+      x: 0,
+      y: 0,
+      Ring: Math.floor(ring01 / 10) * 10,
+      Ring01: ring01,
+      Innenzehner: 0,
+      Teiler01: 0,
+      Teiler001: 0,
+      Wertung: this.display,
+      Text: "Hand",
+    }))
+  }
+
+  private insert(
+    stellung: 0 | 1,
+    clock: number | undefined,
+    content: (
+      over: boolean
+    ) => Omit<
+      TrefferRow,
+      "ScheibenID" | "Stellung" | "Treffer" | "Serie" | "Zeitstempel" | "Millisekunden"
+    >
+  ): TrefferRow {
     const ablage = this.sim.ablage
     if (stellung === 1 && trefferOf(ablage, this.id, 0).length) this.deleteStellung(0)
     if (stellung === 0 && this.restartPending) {
@@ -226,15 +254,13 @@ export class Card {
     const nr = existing.length ? Math.max(...existing.map((t) => t.Treffer)) + 1 : 1
     const planned = parseDisciplineId(this.setup.disziplinId).plannedShots
     const over = stellung === 1 && planned !== null && existing.length >= planned
-    const ms = this.standMs(options.clock)
+    const ms = this.standMs(clock)
     const row: TrefferRow = {
       ScheibenID: this.id,
       Stellung: stellung,
       Treffer: nr,
       Serie: Math.ceil(nr / 10),
-      x,
-      y,
-      ...this.valuesAt(x, y, over),
+      ...content(over),
       Zeitstempel: localDatetime(ms),
       Millisekunden: ((ms % 1000) + 1000) % 1000,
     }

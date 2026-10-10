@@ -151,6 +151,24 @@ describe("Baukasten: ein Stand schreibt wie Meyton", () => {
     expect(sim.ablage).toEqual(whole)
   })
 
+  it("Handeintrag (SF-15): Wert gesetzt, Lage 0/0, Teiler 0, „Hand“; zählt wie ein Wertungsschuss", () => {
+    const sim = new Sim(START)
+    const card = lp(sim)
+    card.shot(1, 300, 400)
+    card.handEntry(1, 95)
+    expect(trefferOf(sim.ablage, 1001, 1)[1]).toMatchObject({
+      Treffer: 2,
+      x: 0,
+      y: 0,
+      Ring: 90,
+      Ring01: 95,
+      Teiler01: 0,
+      Teiler001: 0,
+      Text: "Hand",
+    })
+    expect(sim.ablage.scheiben.get(1001)).toMatchObject({ Trefferzahl: 2, BesterTeiler01: 0 })
+  })
+
   it("Korrektur und Löschung mit Nachrücken (SF-21, SF-22; Annahme)", () => {
     const sim = new Sim(START)
     const card = sim.card({
