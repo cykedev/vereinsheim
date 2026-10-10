@@ -46,8 +46,15 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   einer Scheibe lädt Schüsse auf Dauer (`cardWithShots`, immer mit `ownerId`).
 - **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
   Admins. Admin verwaltet Konten und sieht keine fremden Schüsse.
-- **Anmeldung wie Ringwerk:** `getAuthSession` prüft gegen die Datenbank (aktiv, `sessionVersion`), Server Actions geben
-  `ActionResult` zurück (nie werfen). Abmelden mit `signOut({ redirect: false })` und eigener Navigation: Mit Umleitung
+- **Anmeldung wie Ringwerk:** `getAuthSession` prüft gegen die Datenbank (aktiv, `sessionVersion`, einmal je Anfrage
+  über `cache`), Server Actions geben `ActionResult` zurück (nie werfen). Neue Rolle, neuer Status oder neues Passwort
+  beenden die Sitzungen eines Kontos (das JWT trägt die Rolle).
+- **Admin-Daten prüfen selbst:** jede Admin-Seite und jede Admin-Abfrage ruft `requireAdmin`; das Layout allein schützt
+  die Daten einer Seite nicht (Next: bei Navigation im Client läuft es nicht erneut).
+- **Passwort vom Admin:** `mustChangePassword` (beim Anlegen und Zurücksetzen). `requireSession` leitet jede Seite zur
+  Passwortseite, bevor sie Daten lädt; nur die Passwortseite und das Layout der App rufen mit `passwordChange: true`
+  (das Layout läuft auch für die Passwortseite und leitete sie sonst auf sich selbst um, Test).
+- **Nach der Anmeldung** nur Pfade derselben Herkunft (`safeCallback`, aufgelöst wie im Browser). Abmelden mit `signOut({ redirect: false })` und eigener Navigation: Mit Umleitung
   baut `next-auth/react` die Adresse aus `NEXTAUTH_URL`, ohne sie `localhost:3000` (Ringwerk), am Handy über die
   Netzadresse ins Leere. `proxy.ts` lässt alles unter `_next/` frei (sonst fängt es die Verbindung des Dev-Servers ab).
 - **Formulare mit Server Action gesteuert** (`value` + `onChange`): React setzt ungesteuerte Felder nach dem Absenden
@@ -86,5 +93,7 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   Auto-Modus verlangen dafür den User. Ab dem ersten Deploy nur noch neue Migrationen.
 - **Speicher** im Container messen, nicht auf dem Mac (macOS zählt anders; 765 MB auf dem Mac waren 227 MiB im
   Container): Standalone-Build in `node:24-alpine` mit `--memory=256m`, anmelden, Seiten abrufen, `docker stats`
-  (10. Oktober 2026: 117 MiB nach dem Start, 213 bis 227 MiB unter Last).
+  (10. Oktober 2026, nach dem Review: 57 MiB nach dem Start, 147 bis 152 MiB unter Last). Dafür einen eigenen
+  `NEXTAUTH_SECRET` setzen: Produktion verweigert den Beispielwert aus `.env.example`.
+- **seed:own** nur gegen die lokale Dev-Datenbank `spiegel` (prüft die Adresse, `--force` für eine andere lokale).
 - Ausgabe in Werkzeugen über `process.stdout.write`, nicht `console.log` (Lint).
