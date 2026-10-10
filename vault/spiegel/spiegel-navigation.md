@@ -308,13 +308,30 @@ Dev-Datenbank (`pnpm --filter spiegel seed:own`):
   öffnet jede Seite über `useHelp`.
 - **Seiten:** Start (`/`), Scheiben (`/cards`, Filter in der Adresse, die Familie ohne Angabe die der neuesten Scheibe),
   Scheibe (`/cards/<id>`: Wertung, Serie und Schuss aus der Adresse und dorthin zurück, Reiter im Anker, Rückweg und
-  Blättern im Kontext der Herkunft vom Server). Profil mit Darstellung, Wertung des Geräts und Abmelden. Fortschritt,
-  Scannen und Offen sind Platzhalter.
+  Blättern im Kontext der Herkunft vom Server). Profil mit Darstellung, Wertung des Geräts und Abmelden. Scannen und
+  Offen sind Platzhalter; Fortschritt seit N7, zweiter Teil (unten).
 - **Wertung des Geräts** als Cookie (`spiegel-scoring`), weil Start und Liste auf dem Server rendern; die Seite einer
   Scheibe schreibt sie beim Umschalten mit.
 - **Auf der Projektion** (SP-1.8, 10. Oktober 2026): Start, Liste und das Blättern lesen die Scheiben mit Projektion
   (`ownerCards`) und rechnen auf dem Server; an den Browser gehen das Modell und die Lagen der gezeigten Scheiben
   ([[adr-031]], [[spiegel-db-schema]]).
+
+## Umgesetzt in N7, zweiter Teil: Fortschritt (10. Oktober 2026)
+
+Plan `plans/2026-10-10-spiegel-fortschritt.md`. `/progress` zeigt die Seite eines Zeitraums wie im Labor, mit den
+eigenen Scheiben:
+- **Rechnen:** Der Server liest die Abfrage aus der Adresse und rechnet `periodModel` aus den Projektionen
+  (`progressPageData` in `src/lib/overview.ts`), mit der Wertung des Geräts. An den Browser geht das leichte Modell
+  (`lightPeriodModel`: Scheiben ohne Werte und Rekorde ihrer Projektion, die Kennzahl ohne Rechnung).
+- **Filter schreiben die Adresse:** Zeitraum, Vergleich, Familie, Art, „nur Probe“, Kennzahl und Darstellung; die Seite
+  rechnet neu.
+- **Die Wahl bleibt im Browser:** Verlauf, Liste oder Rekord ändern nur die Ablesung und schreiben `pick` mit
+  `replaceState`, ohne Weg zum Server. Die kleine Scheibe der Ablesung holt ihre Lagen nach (`cardMarksAction`); bis
+  dahin steht ein leerer Platz.
+- **Zahlen wie im Labor:** „Alles“ über die echten Luftpistolen-Scheiben ergibt dasselbe Ergebnis, dieselben sechs
+  Kacheln und dieselben 16 Rekorde.
+- **Ohne:** „Erklärungen“ (die Kurzsätze der Analyse) gibt es im Fortschritt der App noch nicht; das „?“ an jeder Zahl
+  öffnet die Hilfe.
 
 ## Labor näher an der App (9. Oktober 2026)
 

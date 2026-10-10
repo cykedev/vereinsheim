@@ -140,6 +140,10 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   kleinen Scheiben (`EveningList`, `EveningBlock`, `CardReadout`) bekommen ihre Lagen als `marks` (Id → `MarkShot[]`,
   `markShots(cardMarks(…))`); `MiniTarget` braucht nur Lage und Ring. Die Tests projizieren ihre Scheiben (`projected`,
   `marksOf` in `period/testSeason.ts`) und behalten ihre Erwartungen: Was grün bleibt, rechnet wie aus den Schüssen.
+- **Modell des Zeitraums für den Browser** (Fortschritt in der App): `lightPeriodModel` behält von jeder Scheibe nur die
+  Felder von `ProjectedCard` und leert Werte und Rekorde ihrer Projektion; `PeriodModel.metric` ist ein `PeriodMetric`
+  ohne `compute`. So geht das Modell vom Server zum Browser (keine Funktion darin, Test). `CardReadout.marks: null` heißt
+  „Lagen laden“ (leerer Platz), ein leeres Array „ohne Lage“.
 - **Scheiben-Liste nach Abend** (Plan N2, `plans/2026-10-09-spiegel-scheiben-liste.md`):
   - Ein Abend ist Konto und Tag in der Anzeige-Zeitzone; eine Scheibe vor 4 Uhr zählt zum Vortag.
   - Alle Scheiben eines Abends stehen gleichberechtigt in zeitlicher Folge, die Abende neueste zuerst. Kein

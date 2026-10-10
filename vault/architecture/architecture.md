@@ -23,8 +23,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/treffsicher/       Trainings-App      (Next.js 16, Prisma 7, NextAuth v4)  → :3001
 ├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7, NextAuth v4)  → :3002; Schema,
 │                           Zugriffe und Projektion (SP-1.6 a, ADR-031), Anmeldung und Konten, Start, Scheiben,
-│                           Seite einer Scheibe und Profil aus shot-ui (N7, erster Teil); Start, Liste und Blättern
-│                           rechnen auf dem Server aus der Projektion (SP-1.8); noch ohne Deploy (SP-1.9).
+│                           Seite einer Scheibe, Fortschritt und Profil aus shot-ui (N7); Start, Liste, Fortschritt
+│                           und Blättern rechnen auf dem Server aus der Projektion (SP-1.8); noch ohne Deploy (SP-1.9).
 ├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig/eslint/prettier/
 │                           postcss/next (Phase 2).
 ├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors

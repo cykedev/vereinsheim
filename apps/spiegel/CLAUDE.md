@@ -27,8 +27,8 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
 ## Aufbau
 
 - `src/app/login` ohne Rahmen; `src/app/(app)/*` mit Anmeldepflicht (`requireSession` im Layout, `proxy.ts` davor):
-  Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Profil, Platzhalter (Fortschritt, Scannen, Offen), Admin
-  `/admin/users`.
+  Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Profil, Platzhalter (Scannen, Offen),
+  Admin `/admin/users`.
 - Seiten sind Server-Komponenten: Sitzung, Daten (`src/lib/db/reads.ts`), Kontext (`pageContext`: Zone, „jetzt“,
   Wertung des Geräts, benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
   bauen Routen und Rückrufe (Funktionen gehen nicht vom Server zum Client), wie die Ansichten im Labor.
@@ -46,6 +46,10 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   `src/lib/search.ts`), ein Filter schreibt die Adresse, und die Seite rechnet neu. Gemessen bei 1.564 Scheiben: Start
   70 ms und 5 KB statt 8 MB an den Browser ([[spiegel-db-schema]]). Nur die Seite einer Scheibe lädt Schüsse
   (`cardWithShots`, immer mit `ownerId`).
+- **Fortschritt** (`/progress`): Der Server rechnet `periodModel` über `progressPageData` (`src/lib/overview.ts`, wie
+  Start und Liste) und gibt `lightPeriodModel` weiter. Filter gehen über `router.push`; die Wahl (Verlauf, Liste, Rekord)
+  bleibt im Browser und schreibt `pick` mit `replaceState`, die Lagen der Ablesung holt `cardMarksAction`
+  (`src/lib/marks-actions.ts`) nach. Die Wertung ist die des Geräts; ein `scoring` in der Adresse gilt nicht.
 - **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
   Admins. Admin verwaltet Konten und sieht keine fremden Schüsse.
 - **Anmeldung wie Ringwerk:** `getAuthSession` prüft gegen die Datenbank (aktiv, `sessionVersion`, einmal je Anfrage
