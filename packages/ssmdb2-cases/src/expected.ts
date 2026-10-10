@@ -1,5 +1,6 @@
 // Das erwartete Ergebnis eines Falls: von Hand geschrieben, als Vorgabe für die Brücke (SP-1.4) und das Einlesen
 // (SP-1.6), nicht aus deren Logik gerechnet. Ein Test hält es gegen die erzeugten Daten (Nummern, Vollständigkeit).
+// Angenommen ist: Der erfundene Sportpass 12345678 („Muster“) hat zugestimmt (Opt-in, ADR-028), kein anderer.
 
 import type { Completeness } from "@vereinsheim/shot-core/discipline"
 
@@ -9,7 +10,7 @@ export type BridgeAction =
   | "senden"
   /** in der Brücke lassen, bis der Admin freigibt (verdeckt, Wertungsmodus 0) */
   | "zurueckhalten"
-  /** gar nicht schicken (Scheibe ohne Treffer) */
+  /** gar nicht schicken: ohne Treffer, oder ohne Sportpass mit Zustimmung (dann nur über den QR-Code) */
   | "auslassen"
 
 export interface ExpectedCard {
