@@ -12,11 +12,15 @@
     "./hooks/useUnsavedChangesGuard": "./src/hooks/useUnsavedChangesGuard.ts",
     "./hooks/useNavigationConfirm": "./src/hooks/useNavigationConfirm.ts",
     "./auth/validation": "./src/auth/validation.ts",
+    "./auth/client-ip": "./src/auth/client-ip.ts",
+    "./auth/credentials": "./src/auth/credentials.ts",
     "./auth/rate-limit/config": "./src/auth/rate-limit/config.ts",
     "./auth/rate-limit/limiter": "./src/auth/rate-limit/limiter.ts",
     "./auth/rate-limit/normalization": "./src/auth/rate-limit/normalization.ts",
     "./auth/rate-limit/types": "./src/auth/rate-limit/types.ts",
-    "./auth/rate-limit/adminTypes": "./src/auth/rate-limit/adminTypes.ts"
+    "./auth/rate-limit/adminTypes": "./src/auth/rate-limit/adminTypes.ts",
+    "./auth/rate-limit/admin": "./src/auth/rate-limit/admin.ts",
+    "./auth/rate-limit/stores": "./src/auth/rate-limit/stores.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
