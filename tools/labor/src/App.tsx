@@ -189,6 +189,7 @@ export function App({ commit }: { commit: string }) {
         official: card.card.official,
         meta: cardMeta(card.card, SEASON_TIME_ZONE),
         route: next,
+        own: card.own !== undefined,
       })
       show("card")
       requestAnimationFrame(() => scrollTo(0, 0))

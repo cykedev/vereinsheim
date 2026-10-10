@@ -79,6 +79,8 @@ export interface OpenedCard {
   official?: Scoring
   /** Metazeile im Kopf: Art, Datum, Uhrzeit (`cardMeta`) */
   meta: string[]
+  /** eine echte Scheibe des Users (Luftpistole und zwei Luftgewehr), sonst erfunden */
+  own: boolean
 }
 
 export interface CardViewProps {
@@ -447,7 +449,13 @@ export function CardView({
       <LaborPanel
         {...header}
         address={urlFromRoute(route)}
-        hint={opened ? `${opened.label} aus der erfundenen Saison.` : sample.hint}
+        hint={
+          opened
+            ? opened.own
+              ? `${opened.label}: eine deiner echten Scheiben aus der Vereinsanlage.`
+              : `${opened.label} aus dem erfundenen Luftgewehr.`
+            : sample.hint
+        }
         active={mode === "set" ? "Setzen" : undefined}
       >
         {opened ? null : (

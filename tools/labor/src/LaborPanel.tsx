@@ -23,10 +23,10 @@ export interface LaborPanelProps {
 }
 
 const ABOUT: Readonly<Record<LaborMode, string>> = {
-  list: "Die Scheiben-Liste aus den echten Bausteinen, über die erfundene Saison: jeder Abend mit seinen Scheiben, neueste zuerst.",
+  list: "Die Scheiben-Liste aus den echten Bausteinen, über deine echten Scheiben (Luftpistole) und ein erfundenes Luftgewehr: jeder Abend mit seinen Scheiben, neueste zuerst.",
   card: "Die Seite einer Scheibe aus den echten Bausteinen, mit dem Fachkern gerechnet. Mit „Setzen“ lassen sich eigene Schüsse tippen, auf jeder Scheibe.",
   period:
-    "Die Seite eines Zeitraums aus den echten Bausteinen, über eine erfundene Saison: Verlauf, Umfang, Liste, Zahlen, Analyse.",
+    "Die Seite eines Zeitraums aus den echten Bausteinen, über deine echten Scheiben (Luftpistole) und ein erfundenes Luftgewehr: Verlauf, Umfang, Liste, Zahlen, Analyse.",
   start:
     "Start aus den echten Bausteinen: was offen ist, der letzte Abend im Formband und die Form der letzten 90 Tage.",
   scan: "Scannen: Der QR-Code eines Meyton-Ausdrucks ordnet die Scheibe zu, mit dem Ausdruck als Beleg.",

@@ -3502,30 +3502,31 @@ addEventListener("load", async () => {
           startLinks.every(roundTrips),
         `${startLinks.length} Links`
       )
-      // der letzte Abend ist ein Mischabend (Review N5): zwei Blöcke, die Kacheln der Luftpistole nebeneinander
+      // der letzte Abend ist ein Mischabend (Review N5): deine echte Luftpistole, danach zwei erfundene Scheiben
+      // Luftgewehr, deren Kacheln nebeneinander
       const blocks = St().model.blocks
       const tilesOf = (root, family) =>
         [...root.querySelectorAll(`[data-evening-block="${family}"] [data-start-card]`)].map((a) =>
           a.getBoundingClientRect()
         )
-      const pistolTiles = tilesOf(document, "lp-freihand")
+      const rifleTiles = tilesOf(document, "lg-freihand")
       check(
-        "Start: der Mischabend in zwei Blöcken, die beiden Kacheln der Luftpistole nebeneinander",
-        blocks.map((b) => b.family).join() === "lg-freihand,lp-freihand" &&
+        "Start: der Mischabend in zwei Blöcken, die echte Luftpistole zuerst, die beiden Kacheln des Luftgewehrs nebeneinander",
+        blocks.map((b) => b.family).join() === "lp-freihand,lg-freihand" &&
           // die Disziplin als Überschrift jedes Blocks (Rückmeldung des Users)
           $$("[data-evening-block] h2")
             .map((h) => txt(h).trim())
-            .join() === "Luftgewehr,Luftpistole" &&
-          pistolTiles.length === 2 &&
-          Math.abs(pistolTiles[0].top - pistolTiles[1].top) < 1 &&
-          pistolTiles[1].left > pistolTiles[0].right,
+            .join() === "Luftpistole,Luftgewehr" &&
+          rifleTiles.length === 2 &&
+          Math.abs(rifleTiles[0].top - rifleTiles[1].top) < 1 &&
+          rifleTiles[1].left > rifleTiles[0].right,
         `${blocks.map((b) => `${b.family}:${b.rows.length}`).join(" ")}`
       )
       // Telefon 390 px: kein seitliches Scrollen, die Kacheln mindestens 56 px hoch
       const startPhone = await openFrame(390, 844)
       const sp = startPhone.contentDocument
       const tile = sp.querySelector("[data-start-card]")
-      const phoneTiles = tilesOf(sp, "lp-freihand")
+      const phoneTiles = tilesOf(sp, "lg-freihand")
       check(
         "Start, Telefon 390 px: kein seitliches Scrollen, die Kachel mit kleiner Scheibe von 56 px, keine Kachel zu schmal",
         !!sp.querySelector("[data-start-page]") &&

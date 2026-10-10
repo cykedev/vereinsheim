@@ -55,7 +55,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           Formband (`start`, N5); Design 2 (ADR-030, Oktober 2026);
 │                           im Labor erprobt, noch von keiner App genutzt.
 ├── tools/labor/            Labor: Scheiben-Liste, Seite einer Scheibe und eines Zeitraums aus den echten Bausteinen, mit
-│                           Beispielscheiben und einer erfundenen Saison, gebaut zu einer HTML-Datei (Artifact),
+│                           Beispielscheiben, den echten Scheiben des Users (Luftpistole) und erfundenem Luftgewehr,
+│                           gebaut zu einer HTML-Datei (Artifact),
 │                           Skriptprüfung in Headless-Chrome (`pruefen`).
 ├── tools/spielwiese/       Vorlage und Skriptprüfung der Spielwiese (Prototyp, Referenz bis zur Portierung).
 ├── tools/ssmdb2-erkunden/  Erkundung der Meyton-SSMDB2 vor Ort (SP-0.1/0.6): Checkliste, Kopie, Schießprotokoll;

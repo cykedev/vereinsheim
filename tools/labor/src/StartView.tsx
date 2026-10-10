@@ -105,7 +105,7 @@ export function StartView({ header, scoring, family }: StartViewProps) {
       {/* zuletzt: der Knopf steht unten rechts, also auch zuletzt in der Tab-Folge (Review) */}
       <LaborPanel
         {...header}
-        hint="Der letzte Abend der erfundenen Saison ist Samstag, der 26. September: ein Wettkampf Luftgewehr und zwei Scheiben Luftpistole. „Offen“ zeigt zwei Beispiele."
+        hint="Der letzte Abend ist dein echter Freitag, der 9. Oktober (Luftpistole), dazu zwei erfundene Scheiben Luftgewehr. „Offen“ zeigt zwei Beispiele."
       />
     </div>
   )

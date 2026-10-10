@@ -77,13 +77,21 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   Labor die Adresse nicht als URL. „Scheibe öffnen“ baut die Adresse der Scheibe mit dem Zeitraum als Herkunft, „Zurück
   zu „…““ stellt den Zeitraum aus ihr wieder her (`restore`), die Wertung der Scheibe kommt mit. Nur die Scrollstelle
   bleibt im Speicher. Die Prüfung rechnet jede gezeigte Adresse hin und zurück (`tools.nav`).
-- **Saison** (`src/season.ts`): erfunden, Seed 20261009; Luftgewehr 81 Scheiben vom 6. April bis 27. September
-  2026 (Formknick im Juni σ 1,9 mm, neue Munition ab 1. August σ 1,3 mm, Urlaub 3.–16. August, eine Scheibe
-  `nur-pdf`, Trainings nur aus Probe), Luftpistole 46 (seit N2 fünf mehr aus eigenem Zufall: an zwei Abenden zwei
-  Scheiben, drei Samstage mit Luftgewehr am selben Abend; seit N5 zwei am letzten Abend, einem Mischabend mit dem
-  Wettkampf des Luftgewehrs; das Luftgewehr bleibt gleich, Fingerabdruck im Test); amtliche Wertung je Scheibe (Luftpistole und Wettkampf ganze Ringe, Training Luftgewehr Zehntel, nur
-  Probe keine); benannt „Vorbereitung Landesmeisterschaft“ und „Neue
-  Munition“; „jetzt“ ist der 30. September 2026, 12:00 Uhr MESZ (die Saison liegt ganz in der Sommerzeit).
+- **Saison** (`src/season.ts`, `plans/2026-10-10-labor-echte-scheiben.md`):
+  - **Luftpistole echt:** die Scheiben des Users aus der Vereinsanlage (`src/ownCards.ts`, aus der privaten Kopie vom 9. Oktober 2026, mit Zustimmung und auf Wunsch des Users mit Datum und Schusszeiten, ohne Name, Sportpass und
+    ScheibenID; ADR-029). 30 Trainings vom 18. Oktober 2024 bis 9. Oktober 2026, dazu die zwei Scheiben Luftgewehr des Users.
+    Scheibenbild und Familie kommen aus dem Fachkern (`resolveTarget`, `suggestFamily` über den Namen der Disziplin).
+    Weggelassen: ohne Scheibenbild (Zimmerstutzen, „LP Schach 6x6“) und verdeckt („König LP“, SF-19).
+    Amtliche Wertung aus der Anzeigeart der Wertungsschüsse; unvollständige tragen `unvollstaendig` (SF-07). Der Test
+    prüft, dass jeder Wert aus der Lage gleich Meytons ist. `ownCards.ts` ist einmalig erzeugt, nicht von Hand ändern.
+  - **Luftgewehr erfunden,** Seed 20261009: 81 Scheiben vom 6. April bis 27. September 2026 (Formknick im Juni σ 1,9 mm,
+    neue Munition ab 1. August σ 1,3 mm, Urlaub 3.–16. August, eine Scheibe `nur-pdf`, Trainings nur aus Probe),
+    amtlich Wettkampf in ganzen Ringen, Training in Zehnteln, nur Probe ohne; Fingerabdruck im Test.
+  - **Mischabend:** Der letzte Abend ist der echte 9. Oktober, mit zwei erfundenen LG-Trainings danach (20:00, 20:45),
+    damit Start zwei Blöcke und Kacheln nebeneinander zeigt.
+  - Benannt „Vorbereitung Landesmeisterschaft“ und „Neue Munition“. „Jetzt“ ist der 10. Oktober 2026, 12:00 Uhr
+    MESZ. Das erfundene Luftgewehr liegt ganz in der Sommerzeit; die echten Scheiben tragen ihre Zeit in UTC
+    (Winterzeit von November bis März).
 - **Seite aus `CardPage`** (Plan Schritt 4): die Seite einer Scheibe wie in der App. Was nur das Labor hat (Scheibe,
   Beispiel, Ansehen/Setzen, Neuer Schuss, der Hinweis zum Beispiel), steht im Blatt der Labor-Werkzeuge; „Übrige
   blass/aus“ ist ein Eckknopf der Scheibe. Reiter: eine Scheibe beginnt mit dem ersten (User, 9. Oktober 2026), nur ein Anker beim Laden der Beispiele öffnet einen anderen; kein gemerkter Reiter. In der Prüfung schreibt

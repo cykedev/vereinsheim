@@ -1,13 +1,24 @@
-// Erfundene Saison für die Seite eines Zeitraums (Plan L3, D17): Luftgewehr etwa 80 Scheiben vom 6. April bis
-// 27. September 2026 mit Formknick im Juni und neuer Munition ab 1. August, Luftpistole etwa 40 Scheiben. Fester
-// Seed, Lagen auf 1/100 mm wie bei Meyton, kein echter Ausdruck (ADR-029). Die ganze Saison liegt in der
-// Sommerzeit (UTC+2): Uhrzeiten ohne Zeitzonen-Rechnung.
+// Saison des Labors (Plan L3, D17; `plans/2026-10-10-labor-echte-scheiben.md`): Die Luftpistole sind die echten Scheiben
+// des Users aus der Vereinsanlage (`ownCards.ts`, mit Zustimmung des Users, Oktober 2024 bis 9. Oktober 2026), dazu die
+// zwei Scheiben Luftgewehr. Das übrige Luftgewehr ist erfunden: etwa 80 Scheiben vom 6. April bis 27. September 2026 mit
+// Formknick im Juni und neuer Munition ab 1. August, fester Seed, Lagen auf 1/100 mm wie bei Meyton. Das erfundene
+// Luftgewehr liegt ganz in der Sommerzeit (UTC+2) und kommt ohne Zeitzonen-Rechnung aus; die echten Scheiben tragen
+// ihre Zeit in UTC.
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
-import type { FamilyId } from "@vereinsheim/shot-core/discipline"
+import {
+  classifyCompleteness,
+  parseDisciplineId,
+  resolveTarget,
+  suggestFamily,
+  type FamilyId,
+} from "@vereinsheim/shot-core/discipline"
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
+import { eveningDay } from "@vereinsheim/shot-ui/list/evenings"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
+import { OWN_CARDS, type OwnCard } from "./ownCards"
 import { gauss, mulberry32, toMetricShots, type RawShot } from "./samples"
 
 export interface SeasonCard {
@@ -20,10 +31,12 @@ export interface SeasonCard {
   label: string
   raw: RawShot[]
   card: PeriodCard
+  /** die Nummer einer echten Scheibe des Users (`OwnCard.n`); fehlt bei erfundenen */
+  own?: number
 }
 
-/** „jetzt“ im Labor: 30. September 2026, 12:00 Uhr MESZ */
-export const SEASON_NOW_MS = Date.UTC(2026, 8, 30, 10)
+/** „jetzt“ im Labor: 10. Oktober 2026, 12:00 Uhr MESZ, der Tag nach dem letzten echten Abend */
+export const SEASON_NOW_MS = Date.UTC(2026, 9, 10, 10)
 export const SEASON_TIME_ZONE = "Europe/Berlin"
 
 /** benannte Zeiträume mit erzeugter Id, nie aus dem Namen abgeleitet (Review N1) */
@@ -86,12 +99,10 @@ const COMPETITIONS: Readonly<Record<string, readonly string[]>> = {
     "2026-09-19",
     "2026-09-26",
   ],
-  "lp-10m": ["2026-04-25", "2026-05-16", "2026-06-13", "2026-07-11", "2026-08-29", "2026-09-12"],
 }
 /** Trainingstage (0 Sonntag … 6 Samstag) und wie oft ein Abend ausfällt */
 const TRAINING: Readonly<Record<string, { days: readonly number[]; skip: number }>> = {
   "lg-10m": { days: [1, 2, 4, 6], skip: 0.15 },
-  "lp-10m": { days: [3, 5], skip: 0.25 },
 }
 const VACATION = ["2026-08-03", "2026-08-16"]
 /** diese Scheibe gibt es nur als Ausdruck (Merkmal `nur-pdf`): sie setzt keinen Rekord */
@@ -101,9 +112,8 @@ export const PRINTOUT_ONLY_ID = cardId("lg-10m", "2026-05-23")
 const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10)
 const german = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}.${day.slice(0, 4)}`
 
-/** Streuung je Richtung in µm: Luftgewehr 1,5 mm, im Juni 1,9 mm, ab August 1,3 mm; Luftpistole 12 mm */
-function sigmaUm(target: TargetId, day: string): number {
-  if (target === "lp-10m") return 12_000
+/** Streuung je Richtung in µm, nur Luftgewehr: 1,5 mm, im Juni 1,9 mm, ab August 1,3 mm */
+function sigmaUm(day: string): number {
   if (day >= "2026-08-01") return 1300
   if (day.startsWith("2026-06")) return 1900
   return 1500
@@ -119,7 +129,7 @@ function makeCard(
   /** weitere Scheibe am Abend: Platz und Beginn in Ortszeit (Plan N2, D9) */
   extra: { slot: number; hour: number; minute: number } | null = null
 ): SeasonCard {
-  const sigma = sigmaUm(target, day)
+  const sigma = sigmaUm(day)
   // ein kleiner Versatz je Abend, wie am Stand
   const [mx, my] = [0.3 * sigma * gauss(rand), 0.3 * sigma * gauss(rand)]
   const pace = (target === "lg-10m" ? 45 : 55) * 1000
@@ -155,14 +165,89 @@ function makeCard(
       kind,
       complete: true,
       ...(id === PRINTOUT_ONLY_ID ? { flags: ["nur-pdf"] } : {}),
-      // amtliche Wertung wie am Stand: Luftpistole und Rundenwettkämpfe in ganzen Ringen, Training Luftgewehr in
-      // Zehnteln; nur Probe hat keine (die Saison zieht dafür keinen Zufall, alles andere bleibt gleich)
-      ...(probeOnly
-        ? {}
-        : { official: target === "lp-10m" || kind === "competition" ? "rings" : "decimal" }),
+      // amtliche Wertung wie am Stand: Rundenwettkämpfe in ganzen Ringen, Training in Zehnteln; nur Probe hat keine
+      // (die Saison zieht dafür keinen Zufall, alles andere bleibt gleich)
+      ...(probeOnly ? {} : { official: kind === "competition" ? "rings" : "decimal" }),
       shots: toMetricShots(TARGETS[target], raw),
     },
   }
+}
+
+/** Anzeigeart der Wertungsschüsse (`Treffer.Wertung`) → amtliche Wertung, wie `PeriodCard.official` sie beschreibt */
+const OFFICIAL_BY_DISPLAY: Readonly<Record<number, Scoring>> = {
+  1: "decimal",
+  7: "decimal",
+  2: "rings",
+  8: "rings",
+}
+/** komplett verdeckt (Königsschießen): bleibt in der Brücke, bis der Admin sie freigibt (SF-19) */
+const HIDDEN_DISPLAY = 5
+
+/** warum eine echte Scheibe nicht im Labor steht; null, wenn sie dabei ist */
+export function ownCardOmitted(own: OwnCard): "ohne Scheibenbild" | "verdeckt" | null {
+  if (!resolveTarget({ disciplineId: own.disciplineId, name: own.discipline }).targetId)
+    return "ohne Scheibenbild"
+  if (own.shots.some((shot) => shot.stellung === 1 && shot.display === HIDDEN_DISPLAY))
+    return "verdeckt"
+  return null
+}
+
+/**
+ * die echten Scheiben des Users als Scheiben der Saison: Scheibenbild und Familie aus dem Fachkern (über den Namen der
+ * Disziplin), alle Training (in der Anlage „Direktbelegung“ ohne Status), amtliche Wertung aus der Anzeigeart, wenn
+ * alle Wertungsschüsse sie teilen, unvollständig mit Merkmal (SF-07)
+ */
+function ownSeasonCards(): SeasonCard[] {
+  const slots = new Map<string, number>()
+  return OWN_CARDS.flatMap((own) => {
+    if (ownCardOmitted(own)) return []
+    const target = resolveTarget({ disciplineId: own.disciplineId, name: own.discipline }).targetId!
+    const family = suggestFamily({
+      targetId: target,
+      disciplineId: own.disciplineId,
+      name: own.discipline,
+    })
+    const startedAtMs = Date.parse(own.startedAt)
+    const day = eveningDay(startedAtMs, SEASON_TIME_ZONE)
+    const slot = slots.get(`${target}/${day}`) ?? 0
+    slots.set(`${target}/${day}`, slot + 1)
+    const id = cardId(target, day, slot)
+    const raw: RawShot[] = own.shots.map((shot) => ({
+      xUm: shot.xUm,
+      yUm: shot.yUm,
+      firedAtMs: startedAtMs + shot.offsetMs,
+      kind: shot.stellung === 1 ? "match" : "probe",
+    }))
+    const match = own.shots.filter((shot) => shot.stellung === 1)
+    const displays = new Set<Scoring | undefined>(
+      match.map((shot) => OFFICIAL_BY_DISPLAY[shot.display])
+    )
+    const official = displays.size === 1 ? [...displays][0] : undefined
+    const completeness = classifyCompleteness({
+      sighterShots: own.shots.length - match.length,
+      matchShots: match.length,
+      plannedShots: parseDisciplineId(own.disciplineId).plannedShots,
+    })
+    return [
+      {
+        id,
+        family,
+        target,
+        label: `Training vom ${german(day)}`,
+        raw,
+        own: own.n,
+        card: {
+          id,
+          startedAtMs,
+          kind: "training",
+          complete: completeness !== "unvollstaendig",
+          ...(completeness === "unvollstaendig" ? { flags: ["unvollstaendig"] } : {}),
+          ...(official ? { official } : {}),
+          shots: toMetricShots(TARGETS[target], raw),
+        },
+      },
+    ]
+  })
 }
 
 let cached: readonly SeasonCard[] | null = null
@@ -172,57 +257,35 @@ export function season(): readonly SeasonCard[] {
   if (cached) return cached
   const rand = mulberry32(20261009)
   const cards: SeasonCard[] = []
-  for (const target of ["lg-10m", "lp-10m"] as const) {
-    let trainings = 0
-    for (let ms = FIRST_DAY; ms <= LAST_DAY; ms += DAY) {
-      const day = iso(ms)
-      const weekday = new Date(ms).getUTCDay()
-      if (COMPETITIONS[target].includes(day)) {
-        cards.push(makeCard(rand, target, day, "competition", 40, false))
-        continue
-      }
-      if (!TRAINING[target].days.includes(weekday)) continue
-      if (day >= VACATION[0] && day <= VACATION[1]) continue
-      if (rand() < TRAINING[target].skip) continue
-      trainings++
-      const count = [20, 30, 40, 60][Math.floor(rand() * 4)]
-      // jede achte Trainingsscheibe nur Probe (Umschalten vergessen oder bewusst)
-      cards.push(makeCard(rand, target, day, "training", count, trainings % 8 === 0))
+  const target = "lg-10m"
+  let trainings = 0
+  for (let ms = FIRST_DAY; ms <= LAST_DAY; ms += DAY) {
+    const day = iso(ms)
+    const weekday = new Date(ms).getUTCDay()
+    if (COMPETITIONS[target].includes(day)) {
+      cards.push(makeCard(rand, target, day, "competition", 40, false))
+      continue
     }
+    if (!TRAINING[target].days.includes(weekday)) continue
+    if (day >= VACATION[0] && day <= VACATION[1]) continue
+    if (rand() < TRAINING[target].skip) continue
+    trainings++
+    const count = [20, 30, 40, 60][Math.floor(rand() * 4)]
+    // jede achte Trainingsscheibe nur Probe (Umschalten vergessen oder bewusst)
+    cards.push(makeCard(rand, target, day, "training", count, trainings % 8 === 0))
   }
-  // Abende mit mehreren Scheiben (Plan N2, D9), mit eigenem Zufall, damit alles davor gleich bleibt: eine zweite
-  // Luftpistole an ihren letzten zwei Trainingstagen, und Mischabende an den letzten drei Samstagen mit Luftgewehr
+  const own = ownSeasonCards()
+  cards.push(...own)
+  // der letzte Abend als Mischabend (Review N5): zwei erfundene Scheiben Luftgewehr am Abend der neuesten echten
+  // Scheibe, damit Start zwei Blöcke, Kacheln nebeneinander und Blättern über beide Familien zeigt; mit eigenem
+  // Zufall, damit das Luftgewehr davor gleich bleibt. Der Abend liegt noch in der Sommerzeit (bis 25. Oktober).
   const extra = mulberry32(20261010)
-  const dayOf = (c: SeasonCard) => iso(c.card.startedAtMs)
-  const trainingDays = (target: TargetId) => [
-    ...new Set(cards.filter((c) => c.target === target && c.card.kind === "training").map(dayOf)),
-  ]
-  const pistolDays = trainingDays("lp-10m")
-  for (const day of pistolDays.slice(-2)) {
-    cards.push(
-      makeCard(extra, "lp-10m", day, "training", 20, false, { slot: 1, hour: 19, minute: 30 })
-    )
-  }
-  const pistolOn = new Set(cards.filter((c) => c.target === "lp-10m").map(dayOf))
-  const saturdays = trainingDays("lg-10m").filter(
-    (day) => new Date(`${day}T12:00:00Z`).getUTCDay() === 6 && !pistolOn.has(day)
-  )
-  for (const day of saturdays.slice(-3)) {
-    cards.push(
-      makeCard(extra, "lp-10m", day, "training", 30, false, { slot: 0, hour: 20, minute: 0 })
-    )
-  }
-  // der letzte Abend als Mischabend (Review N5): zwei Scheiben Luftpistole am Abend des letzten Luftgewehrs, damit
-  // Start zwei Blöcke, Kacheln nebeneinander und Blättern über beide Familien zeigt; aus demselben eigenen Zufall,
-  // nach allen anderen, damit alles davor gleich bleibt
-  const lastRifleDay = dayOf(cards.filter((c) => c.target === "lg-10m").at(-1)!)
+  const lastDay = eveningDay(Math.max(...own.map((c) => c.card.startedAtMs)), SEASON_TIME_ZONE)
   for (const [slot, hour, minute] of [
     [0, 20, 0],
     [1, 20, 45],
   ] as const) {
-    cards.push(
-      makeCard(extra, "lp-10m", lastRifleDay, "training", 20, false, { slot, hour, minute })
-    )
+    cards.push(makeCard(extra, "lg-10m", lastDay, "training", 20, false, { slot, hour, minute }))
   }
 
   // bei gleicher Zeit Luftgewehr vor Luftpistole, wie vor den erzeugten Ids

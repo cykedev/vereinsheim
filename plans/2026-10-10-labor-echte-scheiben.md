@@ -2,12 +2,12 @@
 
 ## Kontext
 
-Der User will seine eigenen Scheiben im Labor sehen und die erfundenen Luftpistolen-Scheiben los sein (10. Oktober
+Der User will die eigenen Scheiben im Labor sehen und die erfundenen Luftpistolen-Scheiben los sein (10. Oktober
 2026: „nimm meine echten scheiben ins labor. entferne die anderen LP scheiben“, dann „nimm die echten daten von mir
 einfach“). Das Fixture in `shot-core` (`meyton-eigene-scheiben.ts`) hat weder Datum noch Uhrzeit; ohne sie gibt es keine
 Abende, keinen Verlauf und kein Tempo. Deshalb kommen die Scheiben neu aus der privaten Kopie der SSMDB2 vom 9. Oktober
 2026, mit Datum und Schusszeiten. ADR-029 schließt echte personenbezogene Daten im öffentlichen Repo aus; die eigenen
-Daten des Users mit seiner Zustimmung sind die Ausnahme (seit 9. Oktober für das Fixture, jetzt mit Datum und Uhrzeit).
+Daten des Users mit Zustimmung des Users sind die Ausnahme (seit 9. Oktober für das Fixture, jetzt mit Datum und Uhrzeit).
 Ohne Name, Sportpass und ScheibenID.
 
 ## Ansatz
