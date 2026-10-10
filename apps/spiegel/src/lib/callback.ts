@@ -1,16 +1,23 @@
+/** steht für die eigene Herkunft, wenn keine bekannt ist (lokal ohne NEXTAUTH_URL) */
+const PLACEHOLDER = "http://spiegel.invalid"
+
 /**
  * Wohin nach der Anmeldung: nur ein Pfad dieser App. NextAuth hängt die ursprüngliche Adresse als `callbackUrl` an,
- * auch als volle URL; eine fremde Herkunft oder `//…` würde nach außen umleiten (Open Redirect).
+ * auch als volle URL. Aufgelöst wird wie im Browser (`new URL`), sonst schlüpft „/\t/evil.com“ durch: Der Parser
+ * entfernt Tab und Zeilenumbruch, übrig bleibt „//evil.com“ (Open Redirect, Review). Nur dieselbe Herkunft bleibt.
  */
 export function safeCallback(raw: string | undefined | null, origin: string | undefined): string {
   if (!raw) return "/"
-  if (raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\")) return raw
+  let base: URL
   try {
-    const url = new URL(raw)
-    if (origin && url.origin === new URL(origin).origin)
-      return `${url.pathname}${url.search}${url.hash}`
+    base = new URL(origin ?? PLACEHOLDER)
   } catch {
-    // keine gültige URL
+    base = new URL(PLACEHOLDER)
   }
-  return "/"
+  try {
+    const url = new URL(raw, base)
+    return url.origin === base.origin ? `${url.pathname}${url.search}${url.hash}` : "/"
+  } catch {
+    return "/"
+  }
 }

@@ -94,6 +94,23 @@ describe("updateUser", () => {
     expect(await bcrypt.compare("neu-und-lang-12", after.passwordHash)).toBe(true)
   })
 
+  it("eine neue Rolle oder ein neuer Status beendet die Sitzungen; nur der Name nicht", async () => {
+    const user = await db.user.create({
+      data: { email: mail("rolle"), passwordHash: "-", role: "ADMIN" },
+    })
+    const fields = { name: "", email: mail("rolle"), isActive: "true", tempPassword: "" }
+    await updateUser(user.id, null, form({ ...fields, role: "USER" }))
+    expect((await db.user.findUniqueOrThrow({ where: { id: user.id } })).sessionVersion).toBe(1)
+    await updateUser(user.id, null, form({ ...fields, role: "USER", isActive: "false" }))
+    expect((await db.user.findUniqueOrThrow({ where: { id: user.id } })).sessionVersion).toBe(2)
+    await updateUser(
+      user.id,
+      null,
+      form({ ...fields, name: "Nur Name", role: "USER", isActive: "false" })
+    )
+    expect((await db.user.findUniqueOrThrow({ where: { id: user.id } })).sessionVersion).toBe(2)
+  })
+
   it("das eigene Konto nicht deaktivieren; fremde E-Mail nicht übernehmen", async () => {
     expect(
       await updateUser(

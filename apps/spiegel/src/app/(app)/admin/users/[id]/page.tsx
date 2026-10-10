@@ -2,12 +2,14 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { UserForm } from "@/components/admin/UserForm"
+import { requireAdmin } from "@/lib/auth-helpers"
 import { updateUser } from "@/lib/users/actions"
 import { getUser } from "@/lib/users/queries"
 
 export const metadata: Metadata = { title: "Konto" }
 
 export default async function EditUserRoute({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin()
   const { id } = await params
   const user = await getUser(id)
   if (!user) notFound()

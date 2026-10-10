@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
 
 /** ein Konto, wie die Verwaltung es zeigt (ohne Passwort) */
@@ -11,8 +12,9 @@ export interface UserSummary {
 
 const SELECT = { id: true, name: true, email: true, role: true, isActive: true } as const
 
-/** alle Konten, aktive zuerst, nach Name und E-Mail (nur für Admin-Seiten) */
+/** alle Konten, aktive zuerst, nach Name und E-Mail (nur für Admins, prüft selbst) */
 export async function getUsers(): Promise<UserSummary[]> {
+  await requireAdmin()
   return db.user.findMany({
     select: SELECT,
     orderBy: [{ isActive: "desc" }, { name: "asc" }, { email: "asc" }],
@@ -20,5 +22,6 @@ export async function getUsers(): Promise<UserSummary[]> {
 }
 
 export async function getUser(id: string): Promise<UserSummary | null> {
+  await requireAdmin()
   return db.user.findUnique({ where: { id }, select: SELECT })
 }

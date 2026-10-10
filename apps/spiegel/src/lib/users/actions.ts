@@ -90,6 +90,10 @@ export async function updateUser(
   if (blocked) return { error: blocked }
 
   const { tempPassword } = parsed.data
+  // neues Passwort, neue Rolle oder neuer Status beenden die Sitzungen des Kontos: Das JWT trägt die Rolle, und ein
+  // herabgestuftes Konto käme sonst mit der alten noch durch proxy.ts (Review)
+  const endSessions =
+    !!tempPassword || parsed.data.role !== target.role || parsed.data.isActive !== target.isActive
   await db.user.update({
     where: { id },
     data: {
@@ -97,13 +101,8 @@ export async function updateUser(
       email,
       role: parsed.data.role,
       isActive: parsed.data.isActive,
-      // ein neues Passwort beendet alle Sitzungen des Kontos (sessionVersion)
-      ...(tempPassword
-        ? {
-            passwordHash: await bcrypt.hash(tempPassword, BCRYPT_COST),
-            sessionVersion: { increment: 1 },
-          }
-        : {}),
+      ...(tempPassword ? { passwordHash: await bcrypt.hash(tempPassword, BCRYPT_COST) } : {}),
+      ...(endSessions ? { sessionVersion: { increment: 1 } } : {}),
     },
   })
   revalidatePath("/admin/users")

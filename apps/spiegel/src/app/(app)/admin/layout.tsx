@@ -1,10 +1,7 @@
-import { redirect } from "next/navigation"
+import { requireAdmin } from "@/lib/auth-helpers"
 
-import { isAdmin, requireSession } from "@/lib/auth-helpers"
-
-// Admin nur für Admins (zweite Schicht hinter proxy.ts, mit der Rolle aus der Datenbank)
+// Admin nur für Admins: eine Schicht von mehreren (proxy.ts, jede Seite und Abfrage prüft selbst, `requireAdmin`)
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await requireSession()
-  if (!isAdmin(session.user.role)) redirect("/")
+  await requireAdmin()
   return children
 }

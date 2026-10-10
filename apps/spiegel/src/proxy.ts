@@ -23,5 +23,5 @@ export default proxy
 
 export const config = {
   // alles unter _next (Dateien, Bilder, die Verbindung des Dev-Servers für Neuladen) bleibt frei
-  matcher: ["/((?!login|api/auth|_next/|favicon.ico|icon.svg).*)"],
+  matcher: ["/((?!login(?:/|$)|api/auth(?:/|$)|_next/|favicon.ico$|icon.svg$).*)"],
 }

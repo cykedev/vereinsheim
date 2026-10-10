@@ -5,6 +5,7 @@ import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsights"
 
 import { AdminLoginRateLimitTable } from "@/components/admin/AdminLoginRateLimitTable"
+import { requireAdmin } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
 import { getUsers, type UserSummary } from "@/lib/users/queries"
 
@@ -34,6 +35,7 @@ function UserRow({ user }: { user: UserSummary }) {
 
 // Konten (Admin): Liste, neues Konto, Sperren der Anmeldung
 export default async function AdminUsersRoute() {
+  await requireAdmin()
   const [users, insights] = await Promise.all([getUsers(), getAdminLoginRateLimitInsights()])
   const timeZone = getDisplayTimeZone()
   return (

@@ -17,7 +17,13 @@ describe("safeCallback", () => {
     expect(safeCallback("//example.com/x", origin)).toBe("/")
     expect(safeCallback("/\\example.com", origin)).toBe("/")
     expect(safeCallback("javascript:alert(1)", origin)).toBe("/")
+    // Tab, Zeilenumbruch: der Parser entfernt sie, aus „/\t/x“ wird „//x“ (Review)
+    expect(safeCallback("/\t/evil.com", origin)).toBe("/")
+    expect(safeCallback("/\n/evil.com", origin)).toBe("/")
+    expect(safeCallback("/\r\n/evil.com", origin)).toBe("/")
     expect(safeCallback(undefined, origin)).toBe("/")
     expect(safeCallback("http://localhost:3002/x", undefined)).toBe("/")
+    // ohne bekannte Herkunft bleiben Pfade dieser App
+    expect(safeCallback("/cards", undefined)).toBe("/cards")
   })
 })

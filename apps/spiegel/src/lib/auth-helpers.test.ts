@@ -15,7 +15,7 @@ vi.mock("next-auth", async (original) => ({
 }))
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }))
 
-const { getAuthSession, requireSession } = await import("./auth-helpers")
+const { getAuthSession, requireAdmin, requireSession } = await import("./auth-helpers")
 
 const db = createPrismaClient()
 let site: TestSite
@@ -43,11 +43,20 @@ describe("getAuthSession", () => {
   it("gültig: Name und Rolle aus der Datenbank, nicht aus dem Token", async () => {
     mocks.getServerSession.mockResolvedValue(sessionOf(site.ownerId, 0))
     const session = await getAuthSession()
+    const { email } = await db.user.findUniqueOrThrow({ where: { id: site.ownerId } })
     expect(session?.user).toMatchObject({
       id: site.ownerId,
       name: "Aus der Datenbank",
       role: "USER",
+      email,
     })
+  })
+
+  it("requireAdmin: ein Schütze mit Admin im Token geht zum Start (die Rolle kommt aus der Datenbank)", async () => {
+    mocks.getServerSession.mockResolvedValue(sessionOf(site.ownerId, 0, "ADMIN"))
+    await expect(requireAdmin()).rejects.toThrow("redirect /")
+    await db.user.update({ where: { id: site.ownerId }, data: { role: "ADMIN" } })
+    expect((await requireAdmin()).user.role).toBe("ADMIN")
   })
 
   it("deaktiviertes Konto, andere sessionVersion, unbekanntes Konto oder keine Sitzung: null", async () => {
