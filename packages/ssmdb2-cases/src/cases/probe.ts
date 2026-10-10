@@ -26,6 +26,7 @@ export const SF_01 = defineCase({
     {
       scheibenId: SF01_ID,
       bridge: "senden",
+      sentReadings: [1, 2],
       shots: [
         [10, 0],
         [20, 0],
@@ -61,6 +62,7 @@ export const SF_02 = defineCase({
     {
       scheibenId: SF02_ID,
       bridge: "senden",
+      sentReadings: [1, 2, 3],
       shots: [
         [60, 0],
         [0, 20],
@@ -99,6 +101,7 @@ export const SF_03 = defineCase({
     {
       scheibenId: SF03_ID,
       bridge: "senden",
+      sentReadings: [1, 2, 3],
       shots: [
         [5, 0],
         [0, 1],
@@ -122,7 +125,7 @@ export const SF_04 = defineCase({
   id: "SF-04",
   title: "Zurück von Wertung auf Probe",
   description:
-    "Zehn Wertungsschüsse, dann drei Probeschüsse, dann wieder Wertung. Die Probe nach der Wertung steht zeitlich zwischen den Wertungsschüssen 10 und 11 und verschwindet mit Schuss 11.",
+    "Zehn Wertungsschüsse, dann drei Probeschüsse, dann wieder Wertung. Angenommen, nicht beobachtet (Schießprotokoll SP-0.6): Die Probe nach der Wertung beginnt wieder bei 1 und verschwindet mit Wertungsschuss 11.",
   start: SF04_START,
   run(sim) {
     const card = sim.card({ ...LP20, scheibenId: SF04_ID, standNr: 5 })
@@ -137,6 +140,7 @@ export const SF_04 = defineCase({
     {
       scheibenId: SF04_ID,
       bridge: "senden",
+      sentReadings: [1, 2],
       shots: [
         [3, 10],
         [0, 20],
@@ -172,6 +176,7 @@ export const SF_05 = defineCase({
     {
       scheibenId: SF05_ID,
       bridge: "senden",
+      sentReadings: [1],
       shots: [
         [40, 0],
         [40, 0],
@@ -209,6 +214,7 @@ export const SF_72 = defineCase({
     {
       scheibenId: SF72_ID,
       bridge: "senden",
+      sentReadings: [1, 3],
       shots: [
         [8, 0],
         [8, 0],

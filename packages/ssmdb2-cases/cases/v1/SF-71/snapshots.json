@@ -1,7 +1,7 @@
 [
   {
     "reading": 1,
-    "observedAt": "2026-10-22T17:30:00.000Z",
+    "observedAt": "2026-10-22T17:30:19.421Z",
     "snapshots": [
       {
         "contractVersion": 1,
@@ -9,8 +9,8 @@
         "sourceVersion": "9",
         "epoch": 1,
         "scheibenId": -1484410867,
-        "sequence": 1,
-        "observedAt": "2026-10-22T17:30:00.000Z",
+        "sequence": 1792690219421,
+        "observedAt": "2026-10-22T17:30:19.421Z",
         "sessionTimeZone": "+00:00",
         "data": {
           "scheiben": {
@@ -48,7 +48,7 @@
               "Zeitstempel": "datetime"
             },
             "rows": [
-              {"ScheibenID":"-1484410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"6","StandNrText":"6","Disziplin":"LP 40 alt","DisziplinID":"19210040","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"Training","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"40","TotalRing":"3690","TotalRing01":"3870","BesterTeiler01":"1240","BesterTeiler001":"12397","Zeitstempel":"2026-10-22 19:29:15"}
+              {"ScheibenID":"-1484410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"6","StandNrText":"6","Disziplin":"LP 40 alt","DisziplinID":"19210040","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"Training","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"40","TotalRing":"3690","TotalRing01":"3870","BesterTeiler01":"1240","BesterTeiler001":"12397","Zeitstempel":"2026-10-22 19:29:33"}
             ]
           },
           "serien": {
@@ -86,55 +86,55 @@
             },
             "rows": [
               {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"1","Serie":"1","x":"-490","y":"-1905","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"85","Teiler01":"19670","Teiler001":"196701","Zeitstempel":"2026-10-22 19:00:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"2","Serie":"1","x":"-999","y":"-1576","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18660","Teiler001":"186595","Zeitstempel":"2026-10-22 19:00:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"3","Serie":"1","x":"707","y":"-75","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7110","Teiler001":"71097","Zeitstempel":"2026-10-22 19:01:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"4","Serie":"1","x":"-1767","y":"-304","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"87","Teiler01":"17930","Teiler001":"179296","Zeitstempel":"2026-10-22 19:02:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"5","Serie":"1","x":"328","y":"1358","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13970","Teiler001":"139705","Zeitstempel":"2026-10-22 19:03:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"6","Serie":"1","x":"1401","y":"1212","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18525","Teiler001":"185250","Zeitstempel":"2026-10-22 19:03:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"7","Serie":"1","x":"-760","y":"579","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9554","Teiler001":"95543","Zeitstempel":"2026-10-22 19:04:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"8","Serie":"1","x":"-797","y":"568","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"9787","Teiler001":"97869","Zeitstempel":"2026-10-22 19:05:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"9","Serie":"1","x":"-776","y":"98","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"100","Teiler01":"7822","Teiler001":"78216","Zeitstempel":"2026-10-22 19:06:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"10","Serie":"1","x":"122","y":"305","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3285","Teiler001":"32850","Zeitstempel":"2026-10-22 19:06:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"11","Serie":"2","x":"425","y":"1303","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13706","Teiler001":"137056","Zeitstempel":"2026-10-22 19:07:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"12","Serie":"2","x":"623","y":"830","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10378","Teiler001":"103780","Zeitstempel":"2026-10-22 19:08:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"13","Serie":"2","x":"-1283","y":"54","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"93","Teiler01":"12841","Teiler001":"128414","Zeitstempel":"2026-10-22 19:09:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"14","Serie":"2","x":"1238","y":"861","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"15080","Teiler001":"150797","Zeitstempel":"2026-10-22 19:09:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"15","Serie":"2","x":"543","y":"-317","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6288","Teiler001":"62876","Zeitstempel":"2026-10-22 19:10:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"16","Serie":"2","x":"1383","y":"237","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"14032","Teiler001":"140316","Zeitstempel":"2026-10-22 19:11:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"17","Serie":"2","x":"526","y":"742","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9095","Teiler001":"90953","Zeitstempel":"2026-10-22 19:12:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"18","Serie":"2","x":"654","y":"985","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"95","Teiler01":"11823","Teiler001":"118235","Zeitstempel":"2026-10-22 19:12:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"19","Serie":"2","x":"-228","y":"457","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5107","Teiler001":"51072","Zeitstempel":"2026-10-22 19:13:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"20","Serie":"2","x":"-38","y":"-118","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1240","Teiler001":"12397","Zeitstempel":"2026-10-22 19:14:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"21","Serie":"3","x":"234","y":"-472","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5268","Teiler001":"52682","Zeitstempel":"2026-10-22 19:15:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"22","Serie":"3","x":"286","y":"257","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3845","Teiler001":"38451","Zeitstempel":"2026-10-22 19:15:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"23","Serie":"3","x":"13","y":"160","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1605","Teiler001":"16053","Zeitstempel":"2026-10-22 19:16:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"24","Serie":"3","x":"-583","y":"1073","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"94","Teiler01":"12212","Teiler001":"122115","Zeitstempel":"2026-10-22 19:17:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"25","Serie":"3","x":"1386","y":"508","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"14762","Teiler001":"147616","Zeitstempel":"2026-10-22 19:18:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"26","Serie":"3","x":"-582","y":"-273","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"6428","Teiler001":"64285","Zeitstempel":"2026-10-22 19:18:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"27","Serie":"3","x":"162","y":"-398","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"104","Teiler01":"4297","Teiler001":"42971","Zeitstempel":"2026-10-22 19:19:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"28","Serie":"3","x":"-390","y":"1540","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"90","Teiler01":"15886","Teiler001":"158862","Zeitstempel":"2026-10-22 19:20:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"29","Serie":"3","x":"-610","y":"-159","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6304","Teiler001":"63038","Zeitstempel":"2026-10-22 19:21:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"30","Serie":"3","x":"622","y":"-1496","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16202","Teiler001":"162015","Zeitstempel":"2026-10-22 19:21:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"31","Serie":"4","x":"433","y":"-236","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"4931","Teiler001":"49314","Zeitstempel":"2026-10-22 19:22:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"32","Serie":"4","x":"1687","y":"-901","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"19125","Teiler001":"191253","Zeitstempel":"2026-10-22 19:23:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"33","Serie":"4","x":"-864","y":"-321","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9217","Teiler001":"92170","Zeitstempel":"2026-10-22 19:24:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"34","Serie":"4","x":"-984","y":"232","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10110","Teiler001":"101098","Zeitstempel":"2026-10-22 19:24:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"35","Serie":"4","x":"520","y":"207","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5597","Teiler001":"55969","Zeitstempel":"2026-10-22 19:25:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"36","Serie":"4","x":"831","y":"-62","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"99","Teiler01":"8333","Teiler001":"83331","Zeitstempel":"2026-10-22 19:26:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"37","Serie":"4","x":"-260","y":"-1047","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"96","Teiler01":"10788","Teiler001":"107880","Zeitstempel":"2026-10-22 19:27:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"38","Serie":"4","x":"-631","y":"-326","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7102","Teiler001":"71024","Zeitstempel":"2026-10-22 19:27:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"39","Serie":"4","x":"1630","y":"194","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16415","Teiler001":"164150","Zeitstempel":"2026-10-22 19:28:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"40","Serie":"4","x":"517","y":"156","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5400","Teiler001":"54002","Zeitstempel":"2026-10-22 19:29:15","Millisekunden":"0"}
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"2","Serie":"1","x":"-999","y":"-1576","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18660","Teiler001":"186595","Zeitstempel":"2026-10-22 19:00:45","Millisekunden":"945"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"3","Serie":"1","x":"707","y":"-75","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7110","Teiler001":"71097","Zeitstempel":"2026-10-22 19:01:30","Millisekunden":"960"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"4","Serie":"1","x":"-1767","y":"-304","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"87","Teiler01":"17930","Teiler001":"179296","Zeitstempel":"2026-10-22 19:02:16","Millisekunden":"18"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"5","Serie":"1","x":"328","y":"1358","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13970","Teiler001":"139705","Zeitstempel":"2026-10-22 19:03:01","Millisekunden":"529"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"6","Serie":"1","x":"1401","y":"1212","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18525","Teiler001":"185250","Zeitstempel":"2026-10-22 19:03:46","Millisekunden":"943"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"7","Serie":"1","x":"-760","y":"579","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9554","Teiler001":"95543","Zeitstempel":"2026-10-22 19:04:32","Millisekunden":"10"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"8","Serie":"1","x":"-797","y":"568","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"9787","Teiler001":"97869","Zeitstempel":"2026-10-22 19:05:17","Millisekunden":"661"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"9","Serie":"1","x":"-776","y":"98","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"100","Teiler01":"7822","Teiler001":"78216","Zeitstempel":"2026-10-22 19:06:03","Millisekunden":"290"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"10","Serie":"1","x":"122","y":"305","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3285","Teiler001":"32850","Zeitstempel":"2026-10-22 19:06:48","Millisekunden":"588"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"11","Serie":"2","x":"425","y":"1303","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13706","Teiler001":"137056","Zeitstempel":"2026-10-22 19:07:34","Millisekunden":"51"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"12","Serie":"2","x":"623","y":"830","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10378","Teiler001":"103780","Zeitstempel":"2026-10-22 19:08:19","Millisekunden":"513"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"13","Serie":"2","x":"-1283","y":"54","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"93","Teiler01":"12841","Teiler001":"128414","Zeitstempel":"2026-10-22 19:09:05","Millisekunden":"120"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"14","Serie":"2","x":"1238","y":"861","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"15080","Teiler001":"150797","Zeitstempel":"2026-10-22 19:09:50","Millisekunden":"409"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"15","Serie":"2","x":"543","y":"-317","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6288","Teiler001":"62876","Zeitstempel":"2026-10-22 19:10:35","Millisekunden":"800"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"16","Serie":"2","x":"1383","y":"237","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"14032","Teiler001":"140316","Zeitstempel":"2026-10-22 19:11:21","Millisekunden":"724"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"17","Serie":"2","x":"526","y":"742","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9095","Teiler001":"90953","Zeitstempel":"2026-10-22 19:12:07","Millisekunden":"474"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"18","Serie":"2","x":"654","y":"985","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"95","Teiler01":"11823","Teiler001":"118235","Zeitstempel":"2026-10-22 19:12:52","Millisekunden":"786"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"19","Serie":"2","x":"-228","y":"457","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5107","Teiler001":"51072","Zeitstempel":"2026-10-22 19:13:37","Millisekunden":"877"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"20","Serie":"2","x":"-38","y":"-118","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1240","Teiler001":"12397","Zeitstempel":"2026-10-22 19:14:23","Millisekunden":"498"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"21","Serie":"3","x":"234","y":"-472","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5268","Teiler001":"52682","Zeitstempel":"2026-10-22 19:15:08","Millisekunden":"554"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"22","Serie":"3","x":"286","y":"257","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3845","Teiler001":"38451","Zeitstempel":"2026-10-22 19:15:54","Millisekunden":"512"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"23","Serie":"3","x":"13","y":"160","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1605","Teiler001":"16053","Zeitstempel":"2026-10-22 19:16:39","Millisekunden":"699"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"24","Serie":"3","x":"-583","y":"1073","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"94","Teiler01":"12212","Teiler001":"122115","Zeitstempel":"2026-10-22 19:17:25","Millisekunden":"286"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"25","Serie":"3","x":"1386","y":"508","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"14762","Teiler001":"147616","Zeitstempel":"2026-10-22 19:18:10","Millisekunden":"726"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"26","Serie":"3","x":"-582","y":"-273","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"6428","Teiler001":"64285","Zeitstempel":"2026-10-22 19:18:55","Millisekunden":"792"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"27","Serie":"3","x":"162","y":"-398","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"104","Teiler01":"4297","Teiler001":"42971","Zeitstempel":"2026-10-22 19:19:40","Millisekunden":"917"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"28","Serie":"3","x":"-390","y":"1540","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"90","Teiler01":"15886","Teiler001":"158862","Zeitstempel":"2026-10-22 19:20:26","Millisekunden":"653"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"29","Serie":"3","x":"-610","y":"-159","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6304","Teiler001":"63038","Zeitstempel":"2026-10-22 19:21:11","Millisekunden":"903"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"30","Serie":"3","x":"622","y":"-1496","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16202","Teiler001":"162015","Zeitstempel":"2026-10-22 19:21:57","Millisekunden":"402"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"31","Serie":"4","x":"433","y":"-236","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"4931","Teiler001":"49314","Zeitstempel":"2026-10-22 19:22:42","Millisekunden":"436"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"32","Serie":"4","x":"1687","y":"-901","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"19125","Teiler001":"191253","Zeitstempel":"2026-10-22 19:23:28","Millisekunden":"319"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"33","Serie":"4","x":"-864","y":"-321","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9217","Teiler001":"92170","Zeitstempel":"2026-10-22 19:24:13","Millisekunden":"843"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"34","Serie":"4","x":"-984","y":"232","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10110","Teiler001":"101098","Zeitstempel":"2026-10-22 19:24:59","Millisekunden":"818"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"35","Serie":"4","x":"520","y":"207","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5597","Teiler001":"55969","Zeitstempel":"2026-10-22 19:25:45","Millisekunden":"650"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"36","Serie":"4","x":"831","y":"-62","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"99","Teiler01":"8333","Teiler001":"83331","Zeitstempel":"2026-10-22 19:26:31","Millisekunden":"433"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"37","Serie":"4","x":"-260","y":"-1047","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"96","Teiler01":"10788","Teiler001":"107880","Zeitstempel":"2026-10-22 19:27:16","Millisekunden":"924"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"38","Serie":"4","x":"-631","y":"-326","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7102","Teiler001":"71024","Zeitstempel":"2026-10-22 19:28:02","Millisekunden":"721"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"39","Serie":"4","x":"1630","y":"194","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16415","Teiler001":"164150","Zeitstempel":"2026-10-22 19:28:48","Millisekunden":"178"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"40","Serie":"4","x":"517","y":"156","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5400","Teiler001":"54002","Zeitstempel":"2026-10-22 19:29:33","Millisekunden":"574"}
             ]
           }
         },
-        "checksum": "sha256:153ad53565454b5d111edb29eee30c03615181d47d4cd61cbab9c73b9cc64835"
+        "checksum": "sha256:46f0ecfa96dc5fc403a191e3a36fcc37d19bd8132107635ecd9157c86d21c12c"
       }
     ]
   },
   {
     "reading": 2,
-    "observedAt": "2026-10-22T17:30:01.000Z",
+    "observedAt": "2026-10-22T17:30:20.421Z",
     "snapshots": [
       {
         "contractVersion": 1,
@@ -142,8 +142,8 @@
         "sourceVersion": "9",
         "epoch": 1,
         "scheibenId": -1484410867,
-        "sequence": 2,
-        "observedAt": "2026-10-22T17:30:01.000Z",
+        "sequence": 1792690220421,
+        "observedAt": "2026-10-22T17:30:20.421Z",
         "sessionTimeZone": "+00:00",
         "data": {
           "scheiben": {
@@ -181,7 +181,7 @@
               "Zeitstempel": "datetime"
             },
             "rows": [
-              {"ScheibenID":"-1484410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"6","StandNrText":"6","Disziplin":"LP 40 alt","DisziplinID":"19210040","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"Training","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"40","TotalRing":"3690","TotalRing01":"3870","BesterTeiler01":"1240","BesterTeiler001":"12397","Zeitstempel":"2026-10-22 19:29:15"}
+              {"ScheibenID":"-1484410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"6","StandNrText":"6","Disziplin":"LP 40 alt","DisziplinID":"19210040","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"Training","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"40","TotalRing":"3690","TotalRing01":"3870","BesterTeiler01":"1240","BesterTeiler001":"12397","Zeitstempel":"2026-10-22 19:29:33"}
             ]
           },
           "serien": {
@@ -215,13 +215,13 @@
             "rows": []
           }
         },
-        "checksum": "sha256:7b3962640f5ceac4e5a617fb80a5085f6c96120b6fcf7a221a440a3617e334f2"
+        "checksum": "sha256:f056040c5d0294263e960dd4e7dcc9326d9dc602e09d198acccc0b661132c9e6"
       }
     ]
   },
   {
     "reading": 3,
-    "observedAt": "2026-10-22T17:30:02.000Z",
+    "observedAt": "2026-10-22T17:30:21.421Z",
     "snapshots": [
       {
         "contractVersion": 1,
@@ -229,8 +229,8 @@
         "sourceVersion": "9",
         "epoch": 1,
         "scheibenId": -1484410867,
-        "sequence": 3,
-        "observedAt": "2026-10-22T17:30:02.000Z",
+        "sequence": 1792690221421,
+        "observedAt": "2026-10-22T17:30:21.421Z",
         "sessionTimeZone": "+00:00",
         "data": {
           "scheiben": {
@@ -268,7 +268,7 @@
               "Zeitstempel": "datetime"
             },
             "rows": [
-              {"ScheibenID":"-1484410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"6","StandNrText":"6","Disziplin":"LP 40 alt","DisziplinID":"19210040","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"Training","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"40","TotalRing":"3690","TotalRing01":"3870","BesterTeiler01":"1240","BesterTeiler001":"12397","Zeitstempel":"2026-10-22 19:29:15"}
+              {"ScheibenID":"-1484410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"6","StandNrText":"6","Disziplin":"LP 40 alt","DisziplinID":"19210040","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"Training","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"40","TotalRing":"3690","TotalRing01":"3870","BesterTeiler01":"1240","BesterTeiler001":"12397","Zeitstempel":"2026-10-22 19:29:33"}
             ]
           },
           "serien": {
@@ -306,55 +306,55 @@
             },
             "rows": [
               {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"1","Serie":"1","x":"-490","y":"-1905","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"85","Teiler01":"19670","Teiler001":"196701","Zeitstempel":"2026-10-22 19:00:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"2","Serie":"1","x":"-999","y":"-1576","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18660","Teiler001":"186595","Zeitstempel":"2026-10-22 19:00:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"3","Serie":"1","x":"707","y":"-75","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7110","Teiler001":"71097","Zeitstempel":"2026-10-22 19:01:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"4","Serie":"1","x":"-1767","y":"-304","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"87","Teiler01":"17930","Teiler001":"179296","Zeitstempel":"2026-10-22 19:02:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"5","Serie":"1","x":"328","y":"1358","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13970","Teiler001":"139705","Zeitstempel":"2026-10-22 19:03:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"6","Serie":"1","x":"1401","y":"1212","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18525","Teiler001":"185250","Zeitstempel":"2026-10-22 19:03:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"7","Serie":"1","x":"-760","y":"579","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9554","Teiler001":"95543","Zeitstempel":"2026-10-22 19:04:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"8","Serie":"1","x":"-797","y":"568","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"9787","Teiler001":"97869","Zeitstempel":"2026-10-22 19:05:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"9","Serie":"1","x":"-776","y":"98","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"100","Teiler01":"7822","Teiler001":"78216","Zeitstempel":"2026-10-22 19:06:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"10","Serie":"1","x":"122","y":"305","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3285","Teiler001":"32850","Zeitstempel":"2026-10-22 19:06:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"11","Serie":"2","x":"425","y":"1303","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13706","Teiler001":"137056","Zeitstempel":"2026-10-22 19:07:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"12","Serie":"2","x":"623","y":"830","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10378","Teiler001":"103780","Zeitstempel":"2026-10-22 19:08:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"13","Serie":"2","x":"-1283","y":"54","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"93","Teiler01":"12841","Teiler001":"128414","Zeitstempel":"2026-10-22 19:09:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"14","Serie":"2","x":"1238","y":"861","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"15080","Teiler001":"150797","Zeitstempel":"2026-10-22 19:09:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"15","Serie":"2","x":"543","y":"-317","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6288","Teiler001":"62876","Zeitstempel":"2026-10-22 19:10:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"16","Serie":"2","x":"1383","y":"237","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"14032","Teiler001":"140316","Zeitstempel":"2026-10-22 19:11:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"17","Serie":"2","x":"526","y":"742","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9095","Teiler001":"90953","Zeitstempel":"2026-10-22 19:12:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"18","Serie":"2","x":"654","y":"985","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"95","Teiler01":"11823","Teiler001":"118235","Zeitstempel":"2026-10-22 19:12:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"19","Serie":"2","x":"-228","y":"457","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5107","Teiler001":"51072","Zeitstempel":"2026-10-22 19:13:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"20","Serie":"2","x":"-38","y":"-118","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1240","Teiler001":"12397","Zeitstempel":"2026-10-22 19:14:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"21","Serie":"3","x":"234","y":"-472","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5268","Teiler001":"52682","Zeitstempel":"2026-10-22 19:15:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"22","Serie":"3","x":"286","y":"257","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3845","Teiler001":"38451","Zeitstempel":"2026-10-22 19:15:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"23","Serie":"3","x":"13","y":"160","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1605","Teiler001":"16053","Zeitstempel":"2026-10-22 19:16:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"24","Serie":"3","x":"-583","y":"1073","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"94","Teiler01":"12212","Teiler001":"122115","Zeitstempel":"2026-10-22 19:17:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"25","Serie":"3","x":"1386","y":"508","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"14762","Teiler001":"147616","Zeitstempel":"2026-10-22 19:18:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"26","Serie":"3","x":"-582","y":"-273","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"6428","Teiler001":"64285","Zeitstempel":"2026-10-22 19:18:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"27","Serie":"3","x":"162","y":"-398","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"104","Teiler01":"4297","Teiler001":"42971","Zeitstempel":"2026-10-22 19:19:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"28","Serie":"3","x":"-390","y":"1540","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"90","Teiler01":"15886","Teiler001":"158862","Zeitstempel":"2026-10-22 19:20:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"29","Serie":"3","x":"-610","y":"-159","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6304","Teiler001":"63038","Zeitstempel":"2026-10-22 19:21:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"30","Serie":"3","x":"622","y":"-1496","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16202","Teiler001":"162015","Zeitstempel":"2026-10-22 19:21:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"31","Serie":"4","x":"433","y":"-236","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"4931","Teiler001":"49314","Zeitstempel":"2026-10-22 19:22:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"32","Serie":"4","x":"1687","y":"-901","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"19125","Teiler001":"191253","Zeitstempel":"2026-10-22 19:23:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"33","Serie":"4","x":"-864","y":"-321","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9217","Teiler001":"92170","Zeitstempel":"2026-10-22 19:24:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"34","Serie":"4","x":"-984","y":"232","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10110","Teiler001":"101098","Zeitstempel":"2026-10-22 19:24:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"35","Serie":"4","x":"520","y":"207","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5597","Teiler001":"55969","Zeitstempel":"2026-10-22 19:25:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"36","Serie":"4","x":"831","y":"-62","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"99","Teiler01":"8333","Teiler001":"83331","Zeitstempel":"2026-10-22 19:26:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"37","Serie":"4","x":"-260","y":"-1047","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"96","Teiler01":"10788","Teiler001":"107880","Zeitstempel":"2026-10-22 19:27:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"38","Serie":"4","x":"-631","y":"-326","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7102","Teiler001":"71024","Zeitstempel":"2026-10-22 19:27:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"39","Serie":"4","x":"1630","y":"194","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16415","Teiler001":"164150","Zeitstempel":"2026-10-22 19:28:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"40","Serie":"4","x":"517","y":"156","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5400","Teiler001":"54002","Zeitstempel":"2026-10-22 19:29:15","Millisekunden":"0"}
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"2","Serie":"1","x":"-999","y":"-1576","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18660","Teiler001":"186595","Zeitstempel":"2026-10-22 19:00:45","Millisekunden":"945"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"3","Serie":"1","x":"707","y":"-75","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7110","Teiler001":"71097","Zeitstempel":"2026-10-22 19:01:30","Millisekunden":"960"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"4","Serie":"1","x":"-1767","y":"-304","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"87","Teiler01":"17930","Teiler001":"179296","Zeitstempel":"2026-10-22 19:02:16","Millisekunden":"18"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"5","Serie":"1","x":"328","y":"1358","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13970","Teiler001":"139705","Zeitstempel":"2026-10-22 19:03:01","Millisekunden":"529"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"6","Serie":"1","x":"1401","y":"1212","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18525","Teiler001":"185250","Zeitstempel":"2026-10-22 19:03:46","Millisekunden":"943"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"7","Serie":"1","x":"-760","y":"579","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9554","Teiler001":"95543","Zeitstempel":"2026-10-22 19:04:32","Millisekunden":"10"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"8","Serie":"1","x":"-797","y":"568","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"9787","Teiler001":"97869","Zeitstempel":"2026-10-22 19:05:17","Millisekunden":"661"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"9","Serie":"1","x":"-776","y":"98","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"100","Teiler01":"7822","Teiler001":"78216","Zeitstempel":"2026-10-22 19:06:03","Millisekunden":"290"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"10","Serie":"1","x":"122","y":"305","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3285","Teiler001":"32850","Zeitstempel":"2026-10-22 19:06:48","Millisekunden":"588"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"11","Serie":"2","x":"425","y":"1303","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13706","Teiler001":"137056","Zeitstempel":"2026-10-22 19:07:34","Millisekunden":"51"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"12","Serie":"2","x":"623","y":"830","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10378","Teiler001":"103780","Zeitstempel":"2026-10-22 19:08:19","Millisekunden":"513"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"13","Serie":"2","x":"-1283","y":"54","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"93","Teiler01":"12841","Teiler001":"128414","Zeitstempel":"2026-10-22 19:09:05","Millisekunden":"120"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"14","Serie":"2","x":"1238","y":"861","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"15080","Teiler001":"150797","Zeitstempel":"2026-10-22 19:09:50","Millisekunden":"409"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"15","Serie":"2","x":"543","y":"-317","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6288","Teiler001":"62876","Zeitstempel":"2026-10-22 19:10:35","Millisekunden":"800"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"16","Serie":"2","x":"1383","y":"237","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"14032","Teiler001":"140316","Zeitstempel":"2026-10-22 19:11:21","Millisekunden":"724"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"17","Serie":"2","x":"526","y":"742","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9095","Teiler001":"90953","Zeitstempel":"2026-10-22 19:12:07","Millisekunden":"474"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"18","Serie":"2","x":"654","y":"985","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"95","Teiler01":"11823","Teiler001":"118235","Zeitstempel":"2026-10-22 19:12:52","Millisekunden":"786"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"19","Serie":"2","x":"-228","y":"457","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5107","Teiler001":"51072","Zeitstempel":"2026-10-22 19:13:37","Millisekunden":"877"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"20","Serie":"2","x":"-38","y":"-118","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1240","Teiler001":"12397","Zeitstempel":"2026-10-22 19:14:23","Millisekunden":"498"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"21","Serie":"3","x":"234","y":"-472","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5268","Teiler001":"52682","Zeitstempel":"2026-10-22 19:15:08","Millisekunden":"554"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"22","Serie":"3","x":"286","y":"257","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3845","Teiler001":"38451","Zeitstempel":"2026-10-22 19:15:54","Millisekunden":"512"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"23","Serie":"3","x":"13","y":"160","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1605","Teiler001":"16053","Zeitstempel":"2026-10-22 19:16:39","Millisekunden":"699"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"24","Serie":"3","x":"-583","y":"1073","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"94","Teiler01":"12212","Teiler001":"122115","Zeitstempel":"2026-10-22 19:17:25","Millisekunden":"286"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"25","Serie":"3","x":"1386","y":"508","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"14762","Teiler001":"147616","Zeitstempel":"2026-10-22 19:18:10","Millisekunden":"726"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"26","Serie":"3","x":"-582","y":"-273","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"6428","Teiler001":"64285","Zeitstempel":"2026-10-22 19:18:55","Millisekunden":"792"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"27","Serie":"3","x":"162","y":"-398","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"104","Teiler01":"4297","Teiler001":"42971","Zeitstempel":"2026-10-22 19:19:40","Millisekunden":"917"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"28","Serie":"3","x":"-390","y":"1540","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"90","Teiler01":"15886","Teiler001":"158862","Zeitstempel":"2026-10-22 19:20:26","Millisekunden":"653"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"29","Serie":"3","x":"-610","y":"-159","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6304","Teiler001":"63038","Zeitstempel":"2026-10-22 19:21:11","Millisekunden":"903"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"30","Serie":"3","x":"622","y":"-1496","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16202","Teiler001":"162015","Zeitstempel":"2026-10-22 19:21:57","Millisekunden":"402"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"31","Serie":"4","x":"433","y":"-236","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"4931","Teiler001":"49314","Zeitstempel":"2026-10-22 19:22:42","Millisekunden":"436"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"32","Serie":"4","x":"1687","y":"-901","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"19125","Teiler001":"191253","Zeitstempel":"2026-10-22 19:23:28","Millisekunden":"319"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"33","Serie":"4","x":"-864","y":"-321","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9217","Teiler001":"92170","Zeitstempel":"2026-10-22 19:24:13","Millisekunden":"843"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"34","Serie":"4","x":"-984","y":"232","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10110","Teiler001":"101098","Zeitstempel":"2026-10-22 19:24:59","Millisekunden":"818"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"35","Serie":"4","x":"520","y":"207","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5597","Teiler001":"55969","Zeitstempel":"2026-10-22 19:25:45","Millisekunden":"650"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"36","Serie":"4","x":"831","y":"-62","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"99","Teiler01":"8333","Teiler001":"83331","Zeitstempel":"2026-10-22 19:26:31","Millisekunden":"433"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"37","Serie":"4","x":"-260","y":"-1047","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"96","Teiler01":"10788","Teiler001":"107880","Zeitstempel":"2026-10-22 19:27:16","Millisekunden":"924"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"38","Serie":"4","x":"-631","y":"-326","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7102","Teiler001":"71024","Zeitstempel":"2026-10-22 19:28:02","Millisekunden":"721"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"39","Serie":"4","x":"1630","y":"194","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16415","Teiler001":"164150","Zeitstempel":"2026-10-22 19:28:48","Millisekunden":"178"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"40","Serie":"4","x":"517","y":"156","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5400","Teiler001":"54002","Zeitstempel":"2026-10-22 19:29:33","Millisekunden":"574"}
             ]
           }
         },
-        "checksum": "sha256:153ad53565454b5d111edb29eee30c03615181d47d4cd61cbab9c73b9cc64835"
+        "checksum": "sha256:46f0ecfa96dc5fc403a191e3a36fcc37d19bd8132107635ecd9157c86d21c12c"
       }
     ]
   },
   {
     "reading": 4,
-    "observedAt": "2026-10-22T17:30:03.000Z",
+    "observedAt": "2026-10-22T17:30:22.421Z",
     "snapshots": [
       {
         "contractVersion": 1,
@@ -362,8 +362,8 @@
         "sourceVersion": "9",
         "epoch": 1,
         "scheibenId": -1484410867,
-        "sequence": 4,
-        "observedAt": "2026-10-22T17:30:03.000Z",
+        "sequence": 1792690222421,
+        "observedAt": "2026-10-22T17:30:22.421Z",
         "sessionTimeZone": "+00:00",
         "data": {
           "scheiben": {
@@ -401,7 +401,98 @@
               "Zeitstempel": "datetime"
             },
             "rows": [
-              {"ScheibenID":"-1484410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"6","StandNrText":"6","Disziplin":"LP 40 alt","DisziplinID":"19210040","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"Training","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"40","TotalRing":"3690","TotalRing01":"3870","BesterTeiler01":"1240","BesterTeiler001":"12397","Zeitstempel":"2026-10-22 19:29:15"}
+              {"ScheibenID":"-1484410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"6","StandNrText":"6","Disziplin":"LP 40 alt","DisziplinID":"19210040","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"Training","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"40","TotalRing":"3690","TotalRing01":"3870","BesterTeiler01":"1240","BesterTeiler001":"12397","Zeitstempel":"2026-10-22 19:29:33"}
+            ]
+          },
+          "serien": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "smallint(6)",
+              "Serie": "smallint(6)",
+              "Ring": "int(11)",
+              "Ring01": "int(11)"
+            },
+            "rows": []
+          },
+          "treffer": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Stellung": "smallint(6)",
+              "Treffer": "smallint(6)",
+              "Serie": "smallint(6)",
+              "x": "int(11)",
+              "y": "int(11)",
+              "Innenzehner": "tinyint(1)",
+              "Wertung": "int(11)",
+              "Text": "varchar(36)",
+              "Ring": "int(11)",
+              "Ring01": "int(11)",
+              "Teiler01": "int(11)",
+              "Teiler001": "int(11)",
+              "Zeitstempel": "datetime",
+              "Millisekunden": "smallint(6)"
+            },
+            "rows": [
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"1","Serie":"1","x":"-490","y":"-1905","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"85","Teiler01":"19670","Teiler001":"196701","Zeitstempel":"2026-10-22 19:00:00","Millisekunden":"0"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"2","Serie":"1","x":"-999","y":"-1576","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18660","Teiler001":"186595","Zeitstempel":"2026-10-22 19:00:45","Millisekunden":"945"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"3","Serie":"1","x":"707","y":"-75","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7110","Teiler001":"71097","Zeitstempel":"2026-10-22 19:01:30","Millisekunden":"960"}
+            ]
+          }
+        },
+        "checksum": "sha256:a4cdb325ff2dc10fed168d837828128775b1a295828920e3f69d2e8b3f3de10f"
+      }
+    ]
+  },
+  {
+    "reading": 5,
+    "observedAt": "2026-10-22T17:30:23.421Z",
+    "snapshots": [
+      {
+        "contractVersion": 1,
+        "source": "meyton-ssmdb2",
+        "sourceVersion": "9",
+        "epoch": 1,
+        "scheibenId": -1484410867,
+        "sequence": 1792690223421,
+        "observedAt": "2026-10-22T17:30:23.421Z",
+        "sessionTimeZone": "+00:00",
+        "data": {
+          "scheiben": {
+            "columns": {
+              "ScheibenID": "int(11)",
+              "Starterliste": "varchar(36)",
+              "StarterlistenID": "int(11)",
+              "Startzeit": "datetime",
+              "StartNr": "int(11)",
+              "Nachname": "varchar(36)",
+              "Vorname": "varchar(36)",
+              "Geschlecht": "enum('male','female','unknown')",
+              "Land": "varchar(3)",
+              "SportpassID": "bigint(20)",
+              "StandNr": "smallint(6)",
+              "StandNrText": "varchar(36)",
+              "Disziplin": "varchar(36)",
+              "DisziplinID": "int(11)",
+              "Klasse": "varchar(36)",
+              "KlassenID": "int(11)",
+              "Verein": "varchar(36)",
+              "VereinsID": "int(11)",
+              "Mannschaft": "varchar(36)",
+              "MannschaftsID": "int(11)",
+              "Rangliste": "varchar(36)",
+              "RanglistenID": "int(11)",
+              "Gruppe": "varchar(36)",
+              "GruppenID": "int(11)",
+              "Status": "varchar(72)",
+              "Trefferzahl": "smallint(6)",
+              "TotalRing": "int(11)",
+              "TotalRing01": "int(11)",
+              "BesterTeiler01": "int(11)",
+              "BesterTeiler001": "int(11)",
+              "Zeitstempel": "datetime"
+            },
+            "rows": [
+              {"ScheibenID":"-1484410867","Starterliste":"Direktbelegung","StarterlistenID":"6","Startzeit":"0000-00-00 00:00:00","StartNr":"1000","Nachname":"Muster","Vorname":"Max","Geschlecht":"male","Land":"GER","SportpassID":"12345678","StandNr":"6","StandNrText":"6","Disziplin":"LP 40 alt","DisziplinID":"19210040","Klasse":"Herren I","KlassenID":"10","Verein":"SV Musterstadt","VereinsID":"999999","Mannschaft":"Musterstadt","MannschaftsID":"999","Rangliste":"Training","RanglistenID":"19","Gruppe":"","GruppenID":"0","Status":"","Trefferzahl":"40","TotalRing":"3690","TotalRing01":"3870","BesterTeiler01":"1240","BesterTeiler001":"12397","Zeitstempel":"2026-10-22 19:29:33"}
             ]
           },
           "serien": {
@@ -439,49 +530,49 @@
             },
             "rows": [
               {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"1","Serie":"1","x":"-490","y":"-1905","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"85","Teiler01":"19670","Teiler001":"196701","Zeitstempel":"2026-10-22 19:00:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"2","Serie":"1","x":"-999","y":"-1576","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18660","Teiler001":"186595","Zeitstempel":"2026-10-22 19:00:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"3","Serie":"1","x":"707","y":"-75","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7110","Teiler001":"71097","Zeitstempel":"2026-10-22 19:01:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"4","Serie":"1","x":"-1767","y":"-304","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"87","Teiler01":"17930","Teiler001":"179296","Zeitstempel":"2026-10-22 19:02:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"5","Serie":"1","x":"328","y":"1358","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13970","Teiler001":"139705","Zeitstempel":"2026-10-22 19:03:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"6","Serie":"1","x":"1401","y":"1212","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18525","Teiler001":"185250","Zeitstempel":"2026-10-22 19:03:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"7","Serie":"1","x":"-760","y":"579","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9554","Teiler001":"95543","Zeitstempel":"2026-10-22 19:04:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"8","Serie":"1","x":"-797","y":"568","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"9787","Teiler001":"97869","Zeitstempel":"2026-10-22 19:05:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"9","Serie":"1","x":"-776","y":"98","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"100","Teiler01":"7822","Teiler001":"78216","Zeitstempel":"2026-10-22 19:06:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"10","Serie":"1","x":"122","y":"305","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3285","Teiler001":"32850","Zeitstempel":"2026-10-22 19:06:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"11","Serie":"2","x":"425","y":"1303","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13706","Teiler001":"137056","Zeitstempel":"2026-10-22 19:07:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"12","Serie":"2","x":"623","y":"830","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10378","Teiler001":"103780","Zeitstempel":"2026-10-22 19:08:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"13","Serie":"2","x":"-1283","y":"54","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"93","Teiler01":"12841","Teiler001":"128414","Zeitstempel":"2026-10-22 19:09:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"14","Serie":"2","x":"1238","y":"861","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"15080","Teiler001":"150797","Zeitstempel":"2026-10-22 19:09:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"15","Serie":"2","x":"543","y":"-317","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6288","Teiler001":"62876","Zeitstempel":"2026-10-22 19:10:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"16","Serie":"2","x":"1383","y":"237","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"14032","Teiler001":"140316","Zeitstempel":"2026-10-22 19:11:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"17","Serie":"2","x":"526","y":"742","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9095","Teiler001":"90953","Zeitstempel":"2026-10-22 19:12:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"18","Serie":"2","x":"654","y":"985","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"95","Teiler01":"11823","Teiler001":"118235","Zeitstempel":"2026-10-22 19:12:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"19","Serie":"2","x":"-228","y":"457","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5107","Teiler001":"51072","Zeitstempel":"2026-10-22 19:13:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"20","Serie":"2","x":"-38","y":"-118","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1240","Teiler001":"12397","Zeitstempel":"2026-10-22 19:14:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"21","Serie":"3","x":"234","y":"-472","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5268","Teiler001":"52682","Zeitstempel":"2026-10-22 19:15:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"22","Serie":"3","x":"286","y":"257","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3845","Teiler001":"38451","Zeitstempel":"2026-10-22 19:15:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"23","Serie":"3","x":"13","y":"160","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1605","Teiler001":"16053","Zeitstempel":"2026-10-22 19:16:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"24","Serie":"3","x":"-583","y":"1073","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"94","Teiler01":"12212","Teiler001":"122115","Zeitstempel":"2026-10-22 19:17:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"25","Serie":"3","x":"1386","y":"508","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"14762","Teiler001":"147616","Zeitstempel":"2026-10-22 19:18:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"26","Serie":"3","x":"-582","y":"-273","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"6428","Teiler001":"64285","Zeitstempel":"2026-10-22 19:18:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"27","Serie":"3","x":"162","y":"-398","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"104","Teiler01":"4297","Teiler001":"42971","Zeitstempel":"2026-10-22 19:19:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"28","Serie":"3","x":"-390","y":"1540","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"90","Teiler01":"15886","Teiler001":"158862","Zeitstempel":"2026-10-22 19:20:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"29","Serie":"3","x":"-610","y":"-159","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6304","Teiler001":"63038","Zeitstempel":"2026-10-22 19:21:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"30","Serie":"3","x":"622","y":"-1496","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16202","Teiler001":"162015","Zeitstempel":"2026-10-22 19:21:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"31","Serie":"4","x":"433","y":"-236","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"4931","Teiler001":"49314","Zeitstempel":"2026-10-22 19:22:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"32","Serie":"4","x":"1687","y":"-901","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"19125","Teiler001":"191253","Zeitstempel":"2026-10-22 19:23:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"33","Serie":"4","x":"-864","y":"-321","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9217","Teiler001":"92170","Zeitstempel":"2026-10-22 19:24:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"34","Serie":"4","x":"-984","y":"232","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10110","Teiler001":"101098","Zeitstempel":"2026-10-22 19:24:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"35","Serie":"4","x":"520","y":"207","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5597","Teiler001":"55969","Zeitstempel":"2026-10-22 19:25:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"36","Serie":"4","x":"831","y":"-62","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"99","Teiler01":"8333","Teiler001":"83331","Zeitstempel":"2026-10-22 19:26:15","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"37","Serie":"4","x":"-260","y":"-1047","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"96","Teiler01":"10788","Teiler001":"107880","Zeitstempel":"2026-10-22 19:27:00","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"38","Serie":"4","x":"-631","y":"-326","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7102","Teiler001":"71024","Zeitstempel":"2026-10-22 19:27:45","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"39","Serie":"4","x":"1630","y":"194","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16415","Teiler001":"164150","Zeitstempel":"2026-10-22 19:28:30","Millisekunden":"0"},
-              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"40","Serie":"4","x":"517","y":"156","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5400","Teiler001":"54002","Zeitstempel":"2026-10-22 19:29:15","Millisekunden":"0"}
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"2","Serie":"1","x":"-999","y":"-1576","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18660","Teiler001":"186595","Zeitstempel":"2026-10-22 19:00:45","Millisekunden":"945"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"3","Serie":"1","x":"707","y":"-75","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7110","Teiler001":"71097","Zeitstempel":"2026-10-22 19:01:30","Millisekunden":"960"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"4","Serie":"1","x":"-1767","y":"-304","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"87","Teiler01":"17930","Teiler001":"179296","Zeitstempel":"2026-10-22 19:02:16","Millisekunden":"18"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"5","Serie":"1","x":"328","y":"1358","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13970","Teiler001":"139705","Zeitstempel":"2026-10-22 19:03:01","Millisekunden":"529"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"6","Serie":"1","x":"1401","y":"1212","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"18525","Teiler001":"185250","Zeitstempel":"2026-10-22 19:03:46","Millisekunden":"943"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"7","Serie":"1","x":"-760","y":"579","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9554","Teiler001":"95543","Zeitstempel":"2026-10-22 19:04:32","Millisekunden":"10"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"8","Serie":"1","x":"-797","y":"568","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"9787","Teiler001":"97869","Zeitstempel":"2026-10-22 19:05:17","Millisekunden":"661"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"9","Serie":"1","x":"-776","y":"98","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"100","Teiler01":"7822","Teiler001":"78216","Zeitstempel":"2026-10-22 19:06:03","Millisekunden":"290"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"10","Serie":"1","x":"122","y":"305","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3285","Teiler001":"32850","Zeitstempel":"2026-10-22 19:06:48","Millisekunden":"588"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"11","Serie":"2","x":"425","y":"1303","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"13706","Teiler001":"137056","Zeitstempel":"2026-10-22 19:07:34","Millisekunden":"51"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"12","Serie":"2","x":"623","y":"830","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10378","Teiler001":"103780","Zeitstempel":"2026-10-22 19:08:19","Millisekunden":"513"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"13","Serie":"2","x":"-1283","y":"54","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"93","Teiler01":"12841","Teiler001":"128414","Zeitstempel":"2026-10-22 19:09:05","Millisekunden":"120"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"14","Serie":"2","x":"1238","y":"861","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"15080","Teiler001":"150797","Zeitstempel":"2026-10-22 19:09:50","Millisekunden":"409"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"15","Serie":"2","x":"543","y":"-317","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6288","Teiler001":"62876","Zeitstempel":"2026-10-22 19:10:35","Millisekunden":"800"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"16","Serie":"2","x":"1383","y":"237","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"92","Teiler01":"14032","Teiler001":"140316","Zeitstempel":"2026-10-22 19:11:21","Millisekunden":"724"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"17","Serie":"2","x":"526","y":"742","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9095","Teiler001":"90953","Zeitstempel":"2026-10-22 19:12:07","Millisekunden":"474"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"18","Serie":"2","x":"654","y":"985","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"95","Teiler01":"11823","Teiler001":"118235","Zeitstempel":"2026-10-22 19:12:52","Millisekunden":"786"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"19","Serie":"2","x":"-228","y":"457","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5107","Teiler001":"51072","Zeitstempel":"2026-10-22 19:13:37","Millisekunden":"877"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"20","Serie":"2","x":"-38","y":"-118","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1240","Teiler001":"12397","Zeitstempel":"2026-10-22 19:14:23","Millisekunden":"498"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"21","Serie":"3","x":"234","y":"-472","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5268","Teiler001":"52682","Zeitstempel":"2026-10-22 19:15:08","Millisekunden":"554"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"22","Serie":"3","x":"286","y":"257","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"105","Teiler01":"3845","Teiler001":"38451","Zeitstempel":"2026-10-22 19:15:54","Millisekunden":"512"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"23","Serie":"3","x":"13","y":"160","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"108","Teiler01":"1605","Teiler001":"16053","Zeitstempel":"2026-10-22 19:16:39","Millisekunden":"699"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"24","Serie":"3","x":"-583","y":"1073","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"94","Teiler01":"12212","Teiler001":"122115","Zeitstempel":"2026-10-22 19:17:25","Millisekunden":"286"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"25","Serie":"3","x":"1386","y":"508","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"91","Teiler01":"14762","Teiler001":"147616","Zeitstempel":"2026-10-22 19:18:10","Millisekunden":"726"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"26","Serie":"3","x":"-582","y":"-273","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"6428","Teiler001":"64285","Zeitstempel":"2026-10-22 19:18:55","Millisekunden":"792"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"27","Serie":"3","x":"162","y":"-398","Innenzehner":"1","Wertung":"2","Text":"10*","Ring":"100","Ring01":"104","Teiler01":"4297","Teiler001":"42971","Zeitstempel":"2026-10-22 19:19:40","Millisekunden":"917"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"28","Serie":"3","x":"-390","y":"1540","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"90","Teiler01":"15886","Teiler001":"158862","Zeitstempel":"2026-10-22 19:20:26","Millisekunden":"653"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"29","Serie":"3","x":"-610","y":"-159","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"102","Teiler01":"6304","Teiler001":"63038","Zeitstempel":"2026-10-22 19:21:11","Millisekunden":"903"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"30","Serie":"3","x":"622","y":"-1496","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16202","Teiler001":"162015","Zeitstempel":"2026-10-22 19:21:57","Millisekunden":"402"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"31","Serie":"4","x":"433","y":"-236","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"4931","Teiler001":"49314","Zeitstempel":"2026-10-22 19:22:42","Millisekunden":"436"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"32","Serie":"4","x":"1687","y":"-901","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"86","Teiler01":"19125","Teiler001":"191253","Zeitstempel":"2026-10-22 19:23:28","Millisekunden":"319"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"33","Serie":"4","x":"-864","y":"-321","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"98","Teiler01":"9217","Teiler001":"92170","Zeitstempel":"2026-10-22 19:24:13","Millisekunden":"843"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"34","Serie":"4","x":"-984","y":"232","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"97","Teiler01":"10110","Teiler001":"101098","Zeitstempel":"2026-10-22 19:24:59","Millisekunden":"818"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"35","Serie":"4","x":"520","y":"207","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5597","Teiler001":"55969","Zeitstempel":"2026-10-22 19:25:45","Millisekunden":"650"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"36","Serie":"4","x":"831","y":"-62","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"99","Teiler01":"8333","Teiler001":"83331","Zeitstempel":"2026-10-22 19:26:31","Millisekunden":"433"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"37","Serie":"4","x":"-260","y":"-1047","Innenzehner":"0","Wertung":"2","Text":"9","Ring":"90","Ring01":"96","Teiler01":"10788","Teiler001":"107880","Zeitstempel":"2026-10-22 19:27:16","Millisekunden":"924"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"38","Serie":"4","x":"-631","y":"-326","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"101","Teiler01":"7102","Teiler001":"71024","Zeitstempel":"2026-10-22 19:28:02","Millisekunden":"721"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"39","Serie":"4","x":"1630","y":"194","Innenzehner":"0","Wertung":"2","Text":"8","Ring":"80","Ring01":"89","Teiler01":"16415","Teiler001":"164150","Zeitstempel":"2026-10-22 19:28:48","Millisekunden":"178"},
+              {"ScheibenID":"-1484410867","Stellung":"1","Treffer":"40","Serie":"4","x":"517","y":"156","Innenzehner":"0","Wertung":"2","Text":"10","Ring":"100","Ring01":"103","Teiler01":"5400","Teiler001":"54002","Zeitstempel":"2026-10-22 19:29:33","Millisekunden":"574"}
             ]
           }
         },
-        "checksum": "sha256:153ad53565454b5d111edb29eee30c03615181d47d4cd61cbab9c73b9cc64835"
+        "checksum": "sha256:46f0ecfa96dc5fc403a191e3a36fcc37d19bd8132107635ecd9157c86d21c12c"
       }
     ]
   }

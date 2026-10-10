@@ -40,10 +40,11 @@ export function caseFiles(output: CaseOutput): Record<string, string> {
       id: output.id,
       title: output.title,
       description: output.description,
-      readings: output.readings.map(({ reading, observedAt, note }) => ({
+      readings: output.readings.map(({ reading, observedAt, note, transient }) => ({
         reading,
         observedAt,
         note,
+        ...(transient ? { transient } : {}),
       })),
       cards: output.expected,
     })}\n`,
@@ -56,8 +57,10 @@ export function caseFiles(output: CaseOutput): Record<string, string> {
     )}\n`,
   }
   output.sql.forEach((sql, i) => {
+    // je Datei eine Sitzung: Zeichensatz fest (Namen wie „König LP“); geschrieben für MariaDB ab 10.6 wie an der Anlage
+    const body = sql ? `SET NAMES utf8mb4;\n${sql}` : "-- keine Änderung\n"
     files[`${dir}/steps/${pad(i + 1)}.sql`] =
-      `-- ${output.id}, Lesung ${i + 1}: ${output.readings[i].note}\n${sql || "-- keine Änderung\n"}`
+      `-- ${output.id}, Lesung ${i + 1}: ${output.readings[i].note}\n${body}`
   })
   return files
 }

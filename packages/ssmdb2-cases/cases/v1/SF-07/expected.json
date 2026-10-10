@@ -5,17 +5,17 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-07T17:07:30.000Z",
+      "observedAt": "2026-10-07T17:07:36.668Z",
       "note": "10 von 40, dann abgebrochen"
     },
     {
       "reading": 2,
-      "observedAt": "2026-10-07T17:30:00.000Z",
+      "observedAt": "2026-10-07T17:30:11.229Z",
       "note": "neue Scheibe, 20 Schuss"
     },
     {
       "reading": 3,
-      "observedAt": "2026-10-07T17:45:00.000Z",
+      "observedAt": "2026-10-07T17:45:18.943Z",
       "note": "neue Scheibe, 40 Schuss"
     }
   ],
@@ -23,6 +23,7 @@
     {
       "scheibenId": 1514556429,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
         [0, 10],
         [0, 10],
@@ -43,6 +44,7 @@
     {
       "scheibenId": 1515456429,
       "bridge": "senden",
+      "sentReadings": [2, 3],
       "shots": [
         null,
         [0, 20],

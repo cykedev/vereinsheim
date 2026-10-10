@@ -63,11 +63,15 @@ describe("Snapshots je Lesung", () => {
       sourceVersion: "9",
       epoch: 1,
       scheibenId: -7257056,
-      sequence: 1,
+      sequence: Date.parse("2026-10-09T17:00:40.000Z"),
       observedAt: "2026-10-09T17:00:40.000Z",
       sessionTimeZone: "+00:00",
     })
-    expect([second.sequence, third.sequence]).toEqual([2, 3])
+    // Folgenummer = Beobachtungszeit in ms (SF-26)
+    expect([second.sequence, third.sequence]).toEqual([
+      Date.parse("2026-10-09T17:01:40.000Z"),
+      Date.parse("2026-10-09T17:01:45.000Z"),
+    ])
     // ohne Änderung dieselbe Prüfsumme, mit der Wertung eine andere
     expect(third.checksum).toBe(second.checksum)
     expect(second.checksum).not.toBe(first.checksum)

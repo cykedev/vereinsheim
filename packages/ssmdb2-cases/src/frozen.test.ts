@@ -16,12 +16,12 @@ function filesOnDisk(dir: string): string[] {
   )
 }
 
-/** die Sonderfälle mit SSMDB2-Bezug aus dem Zuschnitt (Roadmap SP-1.0 b) */
+/** die Sonderfälle mit SSMDB2-Bezug aus dem Zuschnitt (Roadmap SP-1.0 b), dazu SF-32 aus der Abnahme der Brücke */
 const REQUIRED = [
   ...["01", "02", "03", "04", "05", "72"],
   ...["07", "08", "09", "10", "11", "13"],
   ...["14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "71", "74"],
-  ...["30", "73", "77", "78"],
+  ...["30", "32", "73", "77", "78"],
   ...["35", "36"],
 ].map((n) => `SF-${n}`)
 
@@ -35,8 +35,8 @@ describe("eingefrorene Fälle (cases/v1)", () => {
       expect(readFileSync(join(root, path), "utf8"), `${STALE} (${path})`).toBe(content)
   })
 
-  it("jeder Sonderfall des Zuschnitts hat genau einen Fall", () => {
-    expect(REQUIRED).toHaveLength(30)
+  it("jeder Sonderfall des Zuschnitts und SF-32 hat genau einen Fall", () => {
+    expect(REQUIRED).toHaveLength(31)
     expect(CASES.map((c) => c.id).sort()).toEqual([...REQUIRED].sort())
   })
 
@@ -53,6 +53,7 @@ describe("eingefrorene Fälle (cases/v1)", () => {
     }
     expect([...people].sort()).toEqual([
       "--frei--||0|SV Musterstadt|999999",
+      "Beispiel|Anna|12345678|SV Musterstadt|999999",
       "Beispiel|Anna|2147483647|SV Musterstadt|999999",
       "Muster|Erika|12345678|SV Musterstadt|999999",
       "Muster|Max|0|SV Musterstadt|999999",

@@ -1,0 +1,48 @@
+{
+  "id": "SF-32",
+  "title": "Zeit als Paar, nicht als Summe",
+  "description": "Zwei Stände, der letzte Schuss an Stand 1 um 19:20:05,900, an Stand 2 um 19:20:06,100. Als Zahl gerechnet (`Zeitstempel + Millisekunden`) wirkt der an Stand 2 älter.",
+  "readings": [
+    {
+      "reading": 1,
+      "observedAt": "2026-09-23T17:20:40.000Z",
+      "note": "beide fertig"
+    }
+  ],
+  "cards": [
+    {
+      "scheibenId": 304956429,
+      "bridge": "senden",
+      "sentReadings": [1],
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Zeitstempel und Millisekunden immer als Paar vergleichen: 19:20:06,100 ist neuer als 19:20:05,900."
+      ]
+    },
+    {
+      "scheibenId": 304956430,
+      "bridge": "senden",
+      "sentReadings": [1],
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Zeitstempel und Millisekunden immer als Paar vergleichen: 19:20:06,100 ist neuer als 19:20:05,900."
+      ]
+    }
+  ]
+}

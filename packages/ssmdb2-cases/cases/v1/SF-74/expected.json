@@ -5,17 +5,17 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-23T17:15:00.000Z",
+      "observedAt": "2026-10-23T17:15:08.743Z",
       "note": "20 Schuss in ganzen Ringen"
     },
     {
       "reading": 2,
-      "observedAt": "2026-10-23T17:15:00.000Z",
+      "observedAt": "2026-10-23T17:15:13.743Z",
       "note": "Serie 2 auf Zehntel mit Teiler umgeschaltet"
     },
     {
       "reading": 3,
-      "observedAt": "2026-10-23T17:30:00.000Z",
+      "observedAt": "2026-10-23T17:30:23.053Z",
       "note": "40 Schuss"
     }
   ],
@@ -23,6 +23,8 @@
     {
       "scheibenId": -1398010867,
       "bridge": "senden",
+      "sentReadings": [1, 2, 3],
+      "official": "rings",
       "shots": [
         [0, 20],
         [0, 20],

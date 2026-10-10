@@ -3,23 +3,31 @@
 // Angenommen ist: Der erfundene Sportpass 12345678 („Muster“) hat zugestimmt (Opt-in, ADR-028), kein anderer.
 
 import type { Completeness } from "@vereinsheim/shot-core/discipline"
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
 /** was die Brücke mit einer Scheibe tut */
 export type BridgeAction =
   /** schicken, sobald zwei Lesungen hintereinander gleich sind (SF-71) */
   | "senden"
-  /** in der Brücke lassen, bis der Admin freigibt (verdeckt, Wertungsmodus 0) */
+  /** ab dem ersten verdeckten Wertungsschuss (Anzeigeart 5, 10) oder Modus 0 in der Brücke lassen, bis der Admin freigibt */
   | "zurueckhalten"
-  /** gar nicht schicken: ohne Treffer, oder ohne Sportpass mit Zustimmung (dann nur über den QR-Code) */
+  /** nie schicken: ohne Treffer */
   | "auslassen"
+  /** nicht von selbst: ohne Sportpass mit Zustimmung; nur über den QR-Code oder „Scheibe holen“ */
+  | "nur-qr"
 
 export interface ExpectedCard {
   scheibenId: number
   bridge: BridgeAction
   /** warum zurückgehalten oder ausgelassen */
   reason?: string
-  /** die Lesungen (ab 1), deren Snapshot die Brücke schickt; nur, wo der Fall das prüft */
-  sentReadings?: readonly number[]
+  /**
+   * die Lesungen (ab 1), deren Snapshot die Brücke schickt: jede nicht flüchtige Lesung mit neuem Stand; bei
+   * „zurueckhalten“ nur die vor dem ersten verdeckten Schuss, sonst keine
+   */
+  sentReadings: readonly number[]
+  /** amtliche Wertung aus der Disziplin, wo der Fall sie festhält (nie aus `Treffer.Wertung`, SF-74) */
+  official?: Scoring
   /** Probe und Wertung in jeder Lesung (Zahl der Zeilen in `Treffer`); null, wo die Scheibe nicht in der Ablage steht */
   shots: readonly (readonly [probe: number, match: number] | null)[]
   /** Merkmale der Scheibe nach dem Einlesen, im Stand der letzten Lesung, in der sie steht */

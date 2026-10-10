@@ -5,15 +5,22 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-09-25T17:30:00.000Z",
-      "note": "40 Schuss, Uhr 11 Minuten zurück"
+      "observedAt": "2026-09-25T17:30:17.737Z",
+      "note": "40 Schuss"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-09-25T17:30:47.737Z",
+      "note": "Stand belegt, das Lebenszeichen läuft 11 Minuten hinter der Beobachtung"
     }
   ],
   "cards": [
     {
       "scheibenId": 477756429,
       "bridge": "senden",
+      "sentReadings": [1, 2],
       "shots": [
+        [0, 40],
         [0, 40]
       ],
       "flags": [

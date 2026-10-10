@@ -1,16 +1,16 @@
 {
   "id": "SF-04",
   "title": "Zurück von Wertung auf Probe",
-  "description": "Zehn Wertungsschüsse, dann drei Probeschüsse, dann wieder Wertung. Die Probe nach der Wertung steht zeitlich zwischen den Wertungsschüssen 10 und 11 und verschwindet mit Schuss 11.",
+  "description": "Zehn Wertungsschüsse, dann drei Probeschüsse, dann wieder Wertung. Angenommen, nicht beobachtet (Schießprotokoll SP-0.6): Die Probe nach der Wertung beginnt wieder bei 1 und verschwindet mit Wertungsschuss 11.",
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-04T17:12:00.000Z",
+      "observedAt": "2026-10-04T17:12:05.236Z",
       "note": "10 Wertung, danach 3 Probe"
     },
     {
       "reading": 2,
-      "observedAt": "2026-10-04T17:19:30.000Z",
+      "observedAt": "2026-10-04T17:19:42.872Z",
       "note": "20 Wertung, die Probe ist wieder weg"
     }
   ],
@@ -18,6 +18,7 @@
     {
       "scheibenId": 1255356429,
       "bridge": "senden",
+      "sentReadings": [1, 2],
       "shots": [
         [3, 10],
         [0, 20]

@@ -31,6 +31,7 @@ export const SF_07 = defineCase({
     {
       scheibenId: SF07_A,
       bridge: "senden",
+      sentReadings: [1],
       shots: [
         [0, 10],
         [0, 10],
@@ -46,6 +47,7 @@ export const SF_07 = defineCase({
     {
       scheibenId: SF07_B,
       bridge: "senden",
+      sentReadings: [2, 3],
       shots: [null, [0, 20], [0, 40]],
       flags: [],
       completeness: "vollstaendig",
@@ -74,6 +76,7 @@ export const SF_08 = defineCase({
     {
       scheibenId: SF08_ID,
       bridge: "senden",
+      sentReadings: [1, 2],
       shots: [
         [0, 40],
         [0, 46],
@@ -81,6 +84,7 @@ export const SF_08 = defineCase({
       flags: ["ueber-soll"],
       completeness: "ueber-soll",
       counted: { stellung: 1, numbers: numbers(1, 46) },
+      shotFlags: Object.fromEntries(numbers(41, 46).map((n) => [`1/${n}`, ["ueber-soll"]])),
       notes: [
         "Schüsse 41 bis 46: Platzhalter-Teiler heißt „kein Abstand“; amtlich 0, nicht in Kennzahlen der Lage, keine Gegenprobe (aus der Lage wären sie bis 10,6).",
         "Abschluss nie allein über die Schusszahl: Nach 40 kann weiter geschossen werden.",
@@ -96,7 +100,7 @@ export const SF_09 = defineCase({
   id: "SF-09",
   title: "Disziplin ohne Schusszahl",
   description:
-    "Ein Training auf einer Disziplin mit Schusscode 000 (19110000, so an der Vereinsanlage belegt): Ohne Soll gibt es keinen Abschluss über die Zahl.",
+    "Ein Training auf einer Disziplin mit Schusscode 000 (19110000 aus Meytons Standardliste im Handbuch; an der Vereinsanlage nicht beobachtet, Wertung in Ringen angenommen): Ohne Soll gibt es keinen Abschluss über die Zahl.",
   start: SF09_START,
   run(sim) {
     const card = sim.card({
@@ -115,6 +119,7 @@ export const SF_09 = defineCase({
     {
       scheibenId: SF09_ID,
       bridge: "senden",
+      sentReadings: [1],
       shots: [
         [0, 25],
         [0, 25],
@@ -152,6 +157,7 @@ export const SF_10 = defineCase({
     {
       scheibenId: SF10_ID,
       bridge: "senden",
+      sentReadings: [1, 2, 3],
       shots: [
         [0, 20],
         [0, 20],
@@ -199,6 +205,7 @@ export const SF_11 = defineCase({
     {
       scheibenId: SF11_A,
       bridge: "senden",
+      sentReadings: [1],
       shots: [
         [0, 20],
         [0, 20],
@@ -212,6 +219,7 @@ export const SF_11 = defineCase({
     {
       scheibenId: SF11_B,
       bridge: "senden",
+      sentReadings: [2],
       shots: [null, [0, 20], [0, 20]],
       flags: [],
       completeness: "vollstaendig",
@@ -221,6 +229,7 @@ export const SF_11 = defineCase({
     {
       scheibenId: SF11_C,
       bridge: "senden",
+      sentReadings: [3],
       shots: [null, null, [0, 20]],
       flags: [],
       completeness: "vollstaendig",

@@ -63,7 +63,13 @@ export function group(
   ])
 }
 
-/** Lagen schießen, zwischen zwei Schüssen `paceMs` vergehen lassen (das Lebenszeichen läuft mit dem Schuss) */
+/** ein fester Rest unter einer Sekunde aus der Lage: Die Millisekunden sind echt verteilt (0 bis 999) */
+const jitter = (x: number, y: number) => (((x * 7919 + y * 104729) % 1000) + 1000) % 1000
+
+/**
+ * Lagen schießen, zwischen zwei Schüssen gut `paceMs` vergehen lassen, mit Millisekunden; das Lebenszeichen läuft mit
+ * dem Schuss
+ */
 export function fire(
   sim: Sim,
   card: Card,
@@ -73,7 +79,7 @@ export function fire(
 ) {
   for (const [x, y] of positions) {
     card.shot(stellung, x, y)
-    sim.advance(paceMs)
+    sim.advance(paceMs + jitter(x, y))
   }
 }
 

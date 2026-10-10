@@ -5,7 +5,7 @@ import { LG_10M, LP_10M } from "@vereinsheim/shot-core/targets"
 
 import { numbers } from "../expected"
 import { defineCase, evening, idAt } from "./case"
-import { fire, group, LG20, LP20 } from "./helpers"
+import { fire, group, LG20, LP20, minutes, until } from "./helpers"
 
 const SF14_START = evening(12)
 const SF14_ID = idAt(SF14_START)
@@ -28,6 +28,7 @@ export const SF_14 = defineCase({
     {
       scheibenId: SF14_ID,
       bridge: "senden",
+      sentReadings: [1],
       shots: [[0, 20]],
       flags: [],
       completeness: "vollstaendig",
@@ -61,6 +62,7 @@ export const SF_15 = defineCase({
     {
       scheibenId: SF15_ID,
       bridge: "senden",
+      sentReadings: [1],
       shots: [[0, 20]],
       flags: [],
       completeness: "vollstaendig",
@@ -92,6 +94,7 @@ export const SF_16 = defineCase({
     {
       scheibenId: SF16_ID,
       bridge: "senden",
+      sentReadings: [1],
       shots: [[0, 20]],
       flags: [],
       completeness: "vollstaendig",
@@ -128,6 +131,7 @@ export const SF_17 = defineCase({
     {
       scheibenId: SF17_ID,
       bridge: "senden",
+      sentReadings: [1],
       shots: [[0, 20]],
       flags: ["disziplin-unbekannt"],
       completeness: "vollstaendig",
@@ -157,6 +161,8 @@ export const SF_18 = defineCase({
     {
       scheibenId: SF18_ID,
       bridge: "senden",
+      sentReadings: [1],
+      official: "rings",
       shots: [[0, 20]],
       flags: [],
       completeness: "vollstaendig",
@@ -170,12 +176,16 @@ export const SF_18 = defineCase({
 
 const SF19_START = evening(17)
 const SF19_ID = idAt(SF19_START)
+const SF19_PROBE_AT = SF19_START + minutes(20)
+const SF19_PROBE = idAt(SF19_PROBE_AT)
+const SF19_MIXED_AT = SF19_START + minutes(60)
+const SF19_MIXED = idAt(SF19_MIXED_AT)
 
 export const SF_19 = defineCase({
   id: "SF-19",
   title: "Verdeckte Wertung beim Königsschießen",
   description:
-    "„König LP“ mit einem Schuss, komplett verdeckt (Anzeigeart 5): „***“, Ring und Zehntel 0, der Teiler steht trotzdem in der Ablage (so beobachtet).",
+    "Verdeckte Wertung (Anzeigeart 5): „***“, Lage und Teiler bleiben, der Wert bei 15 von 25 Königsscheiben der Kopie auch. Drei Scheiben: König ohne Wert, König mit sichtbarer Probe und Wert hinter „***“, und eine Serie sichtbar, dann verdeckt.",
   start: SF19_START,
   run(sim) {
     const card = sim.card({
@@ -188,18 +198,65 @@ export const SF_19 = defineCase({
       person: { Rangliste: "König-LP" },
     })
     fire(sim, card, 1, [[310, -120]])
-    sim.read("ein verdeckter Schuss")
+    sim.read("ein verdeckter Schuss ohne Wert")
+    until(sim, SF19_PROBE_AT)
+    const probe = sim.card({
+      disziplinId: 19100001,
+      disziplin: "König LP",
+      target: LP_10M,
+      display: 2,
+      scheibenId: SF19_PROBE,
+      standNr: 10,
+      hiddenKeepsValue: true,
+      person: { Rangliste: "König-LP" },
+    })
+    fire(sim, probe, 0, group(3, 1901, 800))
+    sim.read("Königsscheibe: drei sichtbare Probeschüsse")
+    probe.setDisplay(5)
+    fire(sim, probe, 1, [[-150, 260]])
+    sim.read("Königsscheibe: Wertungsschuss verdeckt, der Wert steht dahinter")
+    until(sim, SF19_MIXED_AT)
+    const mixed = sim.card({ ...LP20, scheibenId: SF19_MIXED, standNr: 11, hiddenKeepsValue: true })
+    fire(sim, mixed, 1, group(10, 1902, 800))
+    sim.read("Serie 1 sichtbar")
+    mixed.setDisplay(5, 2)
+    fire(sim, mixed, 1, group(10, 1903, 800))
+    sim.read("Serie 2 verdeckt")
   },
   expected: [
     {
       scheibenId: SF19_ID,
       bridge: "zurueckhalten",
+      sentReadings: [],
       reason:
         "verdeckt ab dem ersten Schuss: Die Scheibe bleibt samt Kopfzeile in der Brücke, bis der Admin freigibt",
-      shots: [[0, 1]],
+      shots: [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1]],
       flags: [],
       completeness: "vollstaendig",
       counted: { stellung: 1, numbers: [1] },
+    },
+    {
+      scheibenId: SF19_PROBE,
+      bridge: "zurueckhalten",
+      sentReadings: [2],
+      reason: "die sichtbare Probe geht, ab dem verdeckten Wertungsschuss bleibt die Scheibe in der Brücke",
+      shots: [null, [3, 0], [0, 1], [0, 1], [0, 1]],
+      flags: [],
+      completeness: "vollstaendig",
+      counted: { stellung: 1, numbers: [1] },
+      notes: [
+        "Hinter „***“ steht der Wert: Er darf vor der Freigabe die Brücke nicht verlassen, auch nicht in der Kopfzeile (`TotalRing`).",
+      ],
+    },
+    {
+      scheibenId: SF19_MIXED,
+      bridge: "zurueckhalten",
+      sentReadings: [4],
+      reason: "Serie 1 sichtbar und gesendet, ab dem ersten verdeckten Schuss in Serie 2 bleibt die ganze Scheibe in der Brücke",
+      shots: [null, null, null, [0, 10], [0, 20]],
+      flags: [],
+      completeness: "vollstaendig",
+      counted: { stellung: 1, numbers: numbers(1, 20) },
     },
   ],
 })
@@ -222,6 +279,7 @@ export const SF_20 = defineCase({
     {
       scheibenId: SF20_ID,
       bridge: "zurueckhalten",
+      sentReadings: [],
       reason:
         "Wertungsmodus 0: Der Admin gibt ihn je Disziplin frei, das Lebenszeichen zählt, was wartet",
       shots: [[0, 20]],

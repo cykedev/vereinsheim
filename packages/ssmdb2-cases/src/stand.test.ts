@@ -78,7 +78,7 @@ describe("Baukasten: ein Stand schreibt wie Meyton", () => {
       TotalRing01: 218,
       BesterTeiler01: 0,
     })
-    // zurück auf Probe (SF-04): neue Probe ab 1, mit dem nächsten Wertungsschuss wieder weg
+    // zurück auf Probe (SF-04, Annahme): neue Probe ab 1, mit dem nächsten Wertungsschuss wieder weg
     card.shot(0, 0, 0)
     expect(trefferOf(sim.ablage, 1001, 0).map((t) => t.Treffer)).toEqual([1])
     card.shot(1, 0, 0)
@@ -131,6 +131,42 @@ describe("Baukasten: ein Stand schreibt wie Meyton", () => {
     expect(trefferOf(sim.ablage, 1001, 1)[0].Zeitstempel).toBe("2026-10-09 18:48:57")
   })
 
+  it("Uhrsprung (SF-30): Versatz stellen, auch die Kopfzeile trägt die falsche Zeit", () => {
+    const sim = new Sim(START)
+    const card = lp(sim, { clockOffsetMs: Date.UTC(2009, 6, 9, 17) - START })
+    expect(sim.ablage.scheiben.get(1001)!.Zeitstempel).toBe("2009-07-09 19:00:00")
+    card.shot(1, 0, 0)
+    card.setClockOffset(0)
+    sim.advance(1_234)
+    card.shot(1, 0, 0)
+    expect(trefferOf(sim.ablage, 1001, 1).map((t) => [t.Zeitstempel, t.Millisekunden])).toEqual([
+      ["2009-07-09 19:00:00", 0],
+      ["2026-10-09 19:00:01", 234],
+    ])
+  })
+
+  it("verdeckt mit Wert (SF-19, 15 von 25 Königsscheiben): „***“, der Wert bleibt in der Ablage", () => {
+    const sim = new Sim(START)
+    const card = lp(sim, { display: 5, hiddenKeepsValue: true })
+    card.shot(1, 0, 0)
+    expect(trefferOf(sim.ablage, 1001, 1)[0]).toMatchObject({
+      Text: "***",
+      Ring01: 109,
+      Wertung: 5,
+    })
+    expect(sim.ablage.scheiben.get(1001)!.TotalRing01).toBe(109)
+  })
+
+  it("Lesungen: streng steigende Beobachtungszeit, flüchtige markiert", () => {
+    const sim = new Sim(START)
+    lp(sim)
+    sim.read("a")
+    expect(() => sim.read("b")).toThrow()
+    sim.advance(1)
+    sim.read("c", { transient: true })
+    expect(sim.readings.map((r) => r.transient)).toEqual([false, true])
+  })
+
   it("ScheibenID als Millisekundenzähler: vorzeichenbehaftet, Überlauf nach 2³² ms", () => {
     expect(scheibenIdAt(0, 1000)).toBe(1000)
     expect(scheibenIdAt(0, 2 ** 31)).toBe(-(2 ** 31))
@@ -147,6 +183,12 @@ describe("Baukasten: ein Stand schreibt wie Meyton", () => {
     expect(trefferOf(sim.ablage, 1001, 1)).toEqual([])
     expect(serienOf(sim.ablage, 1001, 1)).toEqual([])
     expect(sim.ablage.scheiben.has(1001)).toBe(true)
+    card.mend()
+    expect(sim.ablage).toEqual(whole)
+    // teilweise (beobachtet 36 → 3): die ersten Treffer bleiben, die Serien fehlen
+    card.tear(1)
+    expect(trefferOf(sim.ablage, 1001, 1).map((t) => t.Treffer)).toEqual([1])
+    expect(serienOf(sim.ablage, 1001, 1)).toEqual([])
     card.mend()
     expect(sim.ablage).toEqual(whole)
   })

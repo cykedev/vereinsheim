@@ -5,17 +5,17 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-11T17:15:00.000Z",
+      "observedAt": "2026-10-11T17:15:10.752Z",
       "note": "erste Scheibe"
     },
     {
       "reading": 2,
-      "observedAt": "2026-10-11T18:45:00.000Z",
+      "observedAt": "2026-10-11T18:45:10.574Z",
       "note": "zweite Scheibe"
     },
     {
       "reading": 3,
-      "observedAt": "2026-10-11T22:45:00.000Z",
+      "observedAt": "2026-10-11T22:45:08.684Z",
       "note": "dritte Scheibe nach Mitternacht"
     }
   ],
@@ -23,6 +23,7 @@
     {
       "scheibenId": 1860156429,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
         [0, 20],
         [0, 20],
@@ -41,6 +42,7 @@
     {
       "scheibenId": 1865556429,
       "bridge": "senden",
+      "sentReadings": [2],
       "shots": [
         null,
         [0, 20],
@@ -59,6 +61,7 @@
     {
       "scheibenId": 1879956429,
       "bridge": "senden",
+      "sentReadings": [3],
       "shots": [
         null,
         null,

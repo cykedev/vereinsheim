@@ -1,16 +1,16 @@
 {
   "id": "SF-09",
   "title": "Disziplin ohne Schusszahl",
-  "description": "Ein Training auf einer Disziplin mit Schusscode 000 (19110000, so an der Vereinsanlage belegt): Ohne Soll gibt es keinen Abschluss über die Zahl.",
+  "description": "Ein Training auf einer Disziplin mit Schusscode 000 (19110000 aus Meytons Standardliste im Handbuch; an der Vereinsanlage nicht beobachtet, Wertung in Ringen angenommen): Ohne Soll gibt es keinen Abschluss über die Zahl.",
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-09T17:18:45.000Z",
+      "observedAt": "2026-10-09T17:18:59.103Z",
       "note": "25 Schuss"
     },
     {
       "reading": 2,
-      "observedAt": "2026-10-09T17:38:45.000Z",
+      "observedAt": "2026-10-09T17:38:59.103Z",
       "note": "Stand frei"
     }
   ],
@@ -18,6 +18,7 @@
     {
       "scheibenId": 1687356429,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
         [0, 25],
         [0, 25]

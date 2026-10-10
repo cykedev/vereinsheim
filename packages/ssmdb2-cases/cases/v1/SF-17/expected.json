@@ -5,7 +5,7 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-15T17:15:00.000Z",
+      "observedAt": "2026-10-15T17:15:07.467Z",
       "note": "20 Schuss"
     }
   ],
@@ -13,6 +13,7 @@
     {
       "scheibenId": -2089210867,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
         [0, 20]
       ],

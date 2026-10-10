@@ -5,17 +5,22 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-21T17:55:00.000Z",
+      "observedAt": "2026-10-21T17:55:10.070Z",
       "note": "zwei Scheiben"
     },
     {
       "reading": 2,
+      "observedAt": "2026-10-21T18:05:10.070Z",
+      "note": "unverändert"
+    },
+    {
+      "reading": 3,
       "observedAt": "2026-10-22T17:00:00.000Z",
       "note": "Ablage leer"
     },
     {
-      "reading": 3,
-      "observedAt": "2026-10-22T17:45:00.000Z",
+      "reading": 4,
+      "observedAt": "2026-10-22T17:45:08.745Z",
       "note": "erste Scheibe nach dem Neuaufsetzen"
     }
   ],
@@ -23,7 +28,9 @@
     {
       "scheibenId": -1570810867,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
+        [0, 20],
         [0, 20],
         null,
         null
@@ -41,7 +48,9 @@
     {
       "scheibenId": -1568410867,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
+        [0, 20],
         [0, 20],
         null,
         null
@@ -56,7 +65,9 @@
     {
       "scheibenId": 1800000,
       "bridge": "senden",
+      "sentReadings": [4],
       "shots": [
+        null,
         null,
         null,
         [0, 20]

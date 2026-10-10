@@ -45,23 +45,22 @@ export interface ReadingOutput {
   /** Nummer der Lesung, ab 1 */
   reading: number
   note: string
+  /** nur eine Abfrage lang zu sehen (SF-71) */
+  transient: boolean
   observedAt: string
   /** je Scheibe in der Ablage ein Snapshot, nach ScheibenID */
   snapshots: SnapshotV1[]
 }
 
 /**
- * je Lesung und Scheibe ein Snapshot v1. Die Folgenummer zählt je Scheibe die Lesungen, in denen sie in der Ablage
- * steht; Epoche 1. Ob die Brücke ihn sendet, sagt das erwartete Ergebnis, nicht diese Ausgabe.
+ * je Lesung und Scheibe ein Snapshot v1. Die Folgenummer ist die Beobachtungszeit in ms (wie in der Brücke, SF-26),
+ * die Epoche 1. Ob die Brücke ihn sendet, sagt das erwartete Ergebnis, nicht diese Ausgabe.
  */
 export function readingSnapshots(readings: readonly Reading[]): ReadingOutput[] {
-  const sequence = new Map<number, number>()
   return readings.map((reading, i) => {
     const observedAt = new Date(reading.observedAtMs).toISOString()
     const ids = [...reading.ablage.scheiben.keys()].sort((a, b) => a - b)
     const snapshots = ids.map((scheibenId): SnapshotV1 => {
-      const next = (sequence.get(scheibenId) ?? 0) + 1
-      sequence.set(scheibenId, next)
       const data = snapshotData(reading.ablage, scheibenId)
       return {
         contractVersion: 1,
@@ -69,14 +68,20 @@ export function readingSnapshots(readings: readonly Reading[]): ReadingOutput[] 
         sourceVersion: String(reading.ablage.version),
         epoch: 1,
         scheibenId,
-        sequence: next,
+        sequence: reading.observedAtMs,
         observedAt,
         sessionTimeZone: SESSION_TIME_ZONE,
         data,
         checksum: computeChecksum(data),
       }
     })
-    return { reading: i + 1, note: reading.note, observedAt, snapshots }
+    return {
+      reading: i + 1,
+      note: reading.note,
+      transient: reading.transient,
+      observedAt,
+      snapshots,
+    }
   })
 }
 
@@ -121,7 +126,8 @@ const byKey = (table: Table) => (a: Row, b: Row) => {
 /**
  * die Anweisungen, die `before` in `after` überführen (ohne `before`: alles anlegen, mit `Version`). Erst löschen
  * (Treffer, Serien, dann Scheiben; die Kaskade nähme sie ohnehin mit), dann Scheiben anlegen oder ändern, dann Serien
- * und Treffer. Ohne Unterschied leer.
+ * und Treffer. Ohne Unterschied leer. Ein Schlüssel, der wiederkehrt (Neustart der Probe), wird ein `UPDATE`, wo
+ * Meyton löscht und einfügt; der Stand danach ist derselbe.
  */
 export function stepSql(before: Ablage | null, after: Ablage): string {
   const lines: string[] = []

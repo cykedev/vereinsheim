@@ -1,20 +1,45 @@
 {
   "id": "SF-19",
   "title": "Verdeckte Wertung beim Königsschießen",
-  "description": "„König LP“ mit einem Schuss, komplett verdeckt (Anzeigeart 5): „***“, Ring und Zehntel 0, der Teiler steht trotzdem in der Ablage (so beobachtet).",
+  "description": "Verdeckte Wertung (Anzeigeart 5): „***“, Lage und Teiler bleiben, der Wert bei 15 von 25 Königsscheiben der Kopie auch. Drei Scheiben: König ohne Wert, König mit sichtbarer Probe und Wert hinter „***“, und eine Serie sichtbar, dann verdeckt.",
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-17T17:00:45.000Z",
-      "note": "ein verdeckter Schuss"
+      "observedAt": "2026-10-17T17:00:45.410Z",
+      "note": "ein verdeckter Schuss ohne Wert"
+    },
+    {
+      "reading": 2,
+      "observedAt": "2026-10-17T17:22:15.837Z",
+      "note": "Königsscheibe: drei sichtbare Probeschüsse"
+    },
+    {
+      "reading": 3,
+      "observedAt": "2026-10-17T17:23:01.527Z",
+      "note": "Königsscheibe: Wertungsschuss verdeckt, der Wert steht dahinter"
+    },
+    {
+      "reading": 4,
+      "observedAt": "2026-10-17T18:07:34.913Z",
+      "note": "Serie 1 sichtbar"
+    },
+    {
+      "reading": 5,
+      "observedAt": "2026-10-17T18:15:09.090Z",
+      "note": "Serie 2 verdeckt"
     }
   ],
   "cards": [
     {
       "scheibenId": -1916410867,
       "bridge": "zurueckhalten",
+      "sentReadings": [],
       "reason": "verdeckt ab dem ersten Schuss: Die Scheibe bleibt samt Kopfzeile in der Brücke, bis der Admin freigibt",
       "shots": [
+        [0, 1],
+        [0, 1],
+        [0, 1],
+        [0, 1],
         [0, 1]
       ],
       "flags": [],
@@ -22,6 +47,47 @@
       "counted": {
         "stellung": 1,
         "numbers": [1]
+      }
+    },
+    {
+      "scheibenId": -1915210867,
+      "bridge": "zurueckhalten",
+      "sentReadings": [2],
+      "reason": "die sichtbare Probe geht, ab dem verdeckten Wertungsschuss bleibt die Scheibe in der Brücke",
+      "shots": [
+        null,
+        [3, 0],
+        [0, 1],
+        [0, 1],
+        [0, 1]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1]
+      },
+      "notes": [
+        "Hinter „***“ steht der Wert: Er darf vor der Freigabe die Brücke nicht verlassen, auch nicht in der Kopfzeile (`TotalRing`)."
+      ]
+    },
+    {
+      "scheibenId": -1912810867,
+      "bridge": "zurueckhalten",
+      "sentReadings": [4],
+      "reason": "Serie 1 sichtbar und gesendet, ab dem ersten verdeckten Schuss in Serie 2 bleibt die ganze Scheibe in der Brücke",
+      "shots": [
+        null,
+        null,
+        null,
+        [0, 10],
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
       }
     }
   ]

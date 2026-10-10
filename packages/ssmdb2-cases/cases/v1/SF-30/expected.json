@@ -1,11 +1,11 @@
 {
   "id": "SF-30",
   "title": "Uhrsprung mitten in der Scheibe",
-  "description": "LG 20: Die ersten drei Schüsse tragen den 9. Juli 2009, dann stimmt die Uhr des Stands wieder. Die Nummern folgen der Abgabe, die Zeit nicht.",
+  "description": "LG 20: Die Uhr des Stands steht zu Beginn auf dem 9. Juli 2009, nach Schuss 3 springt sie auf die richtige Zeit vor. Kopfzeile und die ersten drei Schüsse tragen 2009.",
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-09-24T17:15:00.000Z",
+      "observedAt": "2026-09-24T17:15:07.518Z",
       "note": "20 Schuss, die ersten drei mit falscher Uhr"
     }
   ],
@@ -13,6 +13,7 @@
     {
       "scheibenId": 391356429,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
         [0, 20]
       ],
@@ -25,8 +26,8 @@
         "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
       },
       "notes": [
-        "Je Stellung zählt die Nummer, nicht die Zeit; der Widerspruch ergibt das Merkmal.",
-        "Der Abstand von Schuss 3 zu 4 ist kein Intervall (Rücksprung der Uhr, `tempo`)."
+        "Datum der Schüsse 1 bis 3 um Jahre neben der Beobachtung: Merkmal; Reihenfolge je Stellung nach der Nummer.",
+        "Der Abstand von Schuss 3 zu 4 (elf Jahre) ist kein Intervall und keine Pause."
       ]
     }
   ]

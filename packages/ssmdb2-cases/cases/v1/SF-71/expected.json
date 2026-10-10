@@ -1,27 +1,34 @@
 {
   "id": "SF-71",
   "title": "Zerrissene Lesung",
-  "description": "LP 40, fertig. Meyton schreibt die Scheibe neu (Löschen und Einfügen, Kaskade): Eine Lesung erwischt die Kopfzeile mit 40 Treffern, aber keine Zeile in `Treffer` und `Serien`.",
+  "description": "LP 40, fertig. Meyton schreibt die Scheibe neu (Löschen und Einfügen, Kaskade): Eine Lesung erwischt die Kopfzeile mit 40 Treffern, aber keine Zeile in `Treffer` und `Serien`; eine spätere nur 3 Treffer (beobachtet: 36 → 3).",
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-22T17:30:00.000Z",
+      "observedAt": "2026-10-22T17:30:19.421Z",
       "note": "40 Schuss"
     },
     {
       "reading": 2,
-      "observedAt": "2026-10-22T17:30:01.000Z",
-      "note": "zerrissen: Kopfzeile ohne Treffer"
+      "observedAt": "2026-10-22T17:30:20.421Z",
+      "note": "zerrissen: Kopfzeile ohne Treffer",
+      "transient": true
     },
     {
       "reading": 3,
-      "observedAt": "2026-10-22T17:30:02.000Z",
+      "observedAt": "2026-10-22T17:30:21.421Z",
       "note": "wieder ganz"
     },
     {
       "reading": 4,
-      "observedAt": "2026-10-22T17:30:03.000Z",
-      "note": "unverändert"
+      "observedAt": "2026-10-22T17:30:22.421Z",
+      "note": "zerrissen: nur 3 Treffer",
+      "transient": true
+    },
+    {
+      "reading": 5,
+      "observedAt": "2026-10-22T17:30:23.421Z",
+      "note": "wieder ganz"
     }
   ],
   "cards": [
@@ -32,9 +39,10 @@
         [0, 40],
         [0, 0],
         [0, 40],
+        [0, 3],
         [0, 40]
       ],
-      "sentReadings": [3],
+      "sentReadings": [1],
       "flags": [],
       "completeness": "vollstaendig",
       "counted": {
@@ -42,8 +50,8 @@
         "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
       },
       "notes": [
-        "Gesendet wird erst, wenn zwei Lesungen hintereinander gleich sind: Lesung 3 und 4.",
-        "Lesung 2 ist keine Löschung: Fehlen ist keine Löschung (Leitregel 4)."
+        "Lesung 2 und 4 sind flüchtig: Die Brücke sieht sie nur einmal und schickt sie nicht (zwei gleiche Lesungen hintereinander).",
+        "Fehlen ist keine Löschung (Leitregel 4); danach ist der Stand wie in Lesung 1, also nichts Neues zu schicken."
       ]
     }
   ]

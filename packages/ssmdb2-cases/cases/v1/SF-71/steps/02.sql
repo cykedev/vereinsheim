@@ -1,4 +1,5 @@
 -- SF-71, Lesung 2: zerrissen: Kopfzeile ohne Treffer
+SET NAMES utf8mb4;
 DELETE FROM `Treffer` WHERE `ScheibenID` = -1484410867 AND `Stellung` = 1 AND `Treffer` = 1;
 DELETE FROM `Treffer` WHERE `ScheibenID` = -1484410867 AND `Stellung` = 1 AND `Treffer` = 2;
 DELETE FROM `Treffer` WHERE `ScheibenID` = -1484410867 AND `Stellung` = 1 AND `Treffer` = 3;

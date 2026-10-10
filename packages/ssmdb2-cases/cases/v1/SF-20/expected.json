@@ -5,7 +5,7 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-18T17:15:00.000Z",
+      "observedAt": "2026-10-18T17:15:09.884Z",
       "note": "20 Schuss im Modus 0"
     }
   ],
@@ -13,6 +13,7 @@
     {
       "scheibenId": -1830010867,
       "bridge": "zurueckhalten",
+      "sentReadings": [],
       "reason": "Wertungsmodus 0: Der Admin gibt ihn je Disziplin frei, das Lebenszeichen zählt, was wartet",
       "shots": [
         [0, 20]

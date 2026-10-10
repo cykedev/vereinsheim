@@ -5,17 +5,17 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-10T17:15:00.000Z",
+      "observedAt": "2026-10-10T17:15:10.479Z",
       "note": "20 Schuss"
     },
     {
       "reading": 2,
-      "observedAt": "2026-10-10T17:21:00.000Z",
+      "observedAt": "2026-10-10T17:21:10.479Z",
       "note": "6 Minuten ohne Schuss, das Lebenszeichen läuft"
     },
     {
       "reading": 3,
-      "observedAt": "2026-10-10T17:42:00.000Z",
+      "observedAt": "2026-10-10T17:42:18.122Z",
       "note": "40 Schuss"
     }
   ],
@@ -23,6 +23,7 @@
     {
       "scheibenId": 1773756429,
       "bridge": "senden",
+      "sentReadings": [1, 2, 3],
       "shots": [
         [0, 20],
         [0, 20],

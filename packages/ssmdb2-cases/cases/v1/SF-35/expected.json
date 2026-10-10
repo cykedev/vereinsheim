@@ -1,19 +1,20 @@
 {
   "id": "SF-35",
   "title": "Gekappter Sportpass",
-  "description": "Zwei Schützen mit verschiedenen Namen und derselben SportpassID 2147483647: eine zu lange Nummer, gekappt auf das Maximum von `int(11)` (an der Vereinsanlage seit `bigint(20)` nicht mehr).",
+  "description": "Zwei Schützen mit derselben SportpassID 2147483647 (eine zu lange Nummer, gekappt auf das Maximum von `int(11)`; an der Vereinsanlage nie beobachtet, dort `bigint(20)`), und zwei Namen unter der zugestimmten Nummer 12345678.",
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-09-29T18:00:00.000Z",
-      "note": "zwei Schützen, ein Sportpass"
+      "observedAt": "2026-09-29T19:30:08.881Z",
+      "note": "gekappte Nummer und eine Nummer mit zwei Namen"
     }
   ],
   "cards": [
     {
       "scheibenId": 823356429,
-      "bridge": "auslassen",
-      "reason": "SportpassID 2147483647 steht auf der Sperrliste (gekappt, mehrere Namen): keine Zuordnung per Opt-in, nur über den QR-Code",
+      "bridge": "nur-qr",
+      "sentReadings": [],
+      "reason": "SportpassID 2147483647 steht auf der Sperrliste (gekappt): keine Zuordnung per Opt-in, nur über den QR-Code",
       "shots": [
         [0, 20]
       ],
@@ -26,8 +27,9 @@
     },
     {
       "scheibenId": 826056429,
-      "bridge": "auslassen",
-      "reason": "SportpassID 2147483647 steht auf der Sperrliste (gekappt, mehrere Namen): keine Zuordnung per Opt-in, nur über den QR-Code",
+      "bridge": "nur-qr",
+      "sentReadings": [],
+      "reason": "SportpassID 2147483647 steht auf der Sperrliste (gekappt): keine Zuordnung per Opt-in, nur über den QR-Code",
       "shots": [
         [0, 20]
       ],
@@ -37,6 +39,40 @@
         "stellung": 1,
         "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
       }
+    },
+    {
+      "scheibenId": 828756429,
+      "bridge": "senden",
+      "sentReadings": [1],
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Dieselbe zugestimmte Nummer mit zwei Namen: Die Brücke schickt beide, Spiegel ordnet nicht automatisch zu und meldet es dem Admin."
+      ]
+    },
+    {
+      "scheibenId": 831456429,
+      "bridge": "senden",
+      "sentReadings": [1],
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Dieselbe zugestimmte Nummer mit zwei Namen: Die Brücke schickt beide, Spiegel ordnet nicht automatisch zu und meldet es dem Admin."
+      ]
     }
   ]
 }

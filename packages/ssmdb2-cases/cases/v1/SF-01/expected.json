@@ -5,17 +5,17 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-01T17:07:30.000Z",
+      "observedAt": "2026-10-01T17:07:35.198Z",
       "note": "10 Probeschüsse"
     },
     {
       "reading": 2,
-      "observedAt": "2026-10-01T17:15:00.000Z",
+      "observedAt": "2026-10-01T17:15:10.599Z",
       "note": "20 Probeschüsse"
     },
     {
       "reading": 3,
-      "observedAt": "2026-10-01T17:21:00.000Z",
+      "observedAt": "2026-10-01T17:21:10.599Z",
       "note": "Stand frei, nichts geändert"
     }
   ],
@@ -23,6 +23,7 @@
     {
       "scheibenId": 996156429,
       "bridge": "senden",
+      "sentReadings": [1, 2],
       "shots": [
         [10, 0],
         [20, 0],

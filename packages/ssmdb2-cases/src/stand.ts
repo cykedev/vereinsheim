@@ -99,6 +99,11 @@ export interface CardSetup {
   display: Display
   /** Uhr des Stands gegen die Beobachtung (SF-73), Standard 0 */
   clockOffsetMs?: number
+  /**
+   * verdeckt (Anzeigeart 5) mit Wert: so bei 15 von 25 Königsscheiben der Kopie; ohne diese Angabe Wert 0 wie bei den
+   * übrigen 10
+   */
+  hiddenKeepsValue?: boolean
   person?: Partial<Person>
 }
 
@@ -107,6 +112,11 @@ export interface Reading {
   /** Beobachtungszeit (UTC) */
   observedAtMs: number
   note: string
+  /**
+   * flüchtig: nur eine Abfrage lang zu sehen (zerrissene Lesung, SF-71). Jede andere Lesung steht für einen Stand,
+   * den die Brücke mindestens zweimal hintereinander gleich liest
+   */
+  transient: boolean
   ablage: Ablage
 }
 
@@ -130,8 +140,16 @@ export class Sim {
   }
 
   /** lesen wie die Brücke: der ganze Stand der Ablage zu dieser Zeit */
-  read(note: string) {
-    this.readings.push({ observedAtMs: this.now, note, ablage: structuredClone(this.ablage) })
+  read(note: string, options: { transient?: boolean } = {}) {
+    const last = this.readings.at(-1)
+    if (last && last.observedAtMs >= this.now)
+      throw new Error("Lesungen brauchen eine streng steigende Beobachtungszeit (Folgenummer)")
+    this.readings.push({
+      observedAtMs: this.now,
+      note,
+      transient: options.transient ?? false,
+      ablage: structuredClone(this.ablage),
+    })
   }
 
   /** die Ablage leeren (Server neu aufgesetzt, SF-23) */
@@ -145,6 +163,7 @@ const HIDDEN: ReadonlySet<Display> = new Set([5])
 /** eine Scheibe an einem Stand */
 export class Card {
   private display: Display
+  private clockOffsetMs: number
   private restartPending = false
   private torn: { serien: SerienRow[]; treffer: TrefferRow[] } | null = null
 
@@ -153,6 +172,7 @@ export class Card {
     readonly setup: CardSetup
   ) {
     this.display = setup.display
+    this.clockOffsetMs = setup.clockOffsetMs ?? 0
     const person = { ...MUSTER, ...setup.person }
     const row: ScheibenRow = {
       ScheibenID: setup.scheibenId,
@@ -202,7 +222,12 @@ export class Card {
 
   /** Uhr des Stands: Beobachtungszeit plus Versatz, oder eine feste Zeit (Uhrsprung, SF-30) */
   private standMs(clock?: number) {
-    return clock ?? this.sim.now + (this.setup.clockOffsetMs ?? 0)
+    return clock ?? this.sim.now + this.clockOffsetMs
+  }
+
+  /** die Uhr des Stands stellen: Versatz gegen die Beobachtung (Uhrsprung, SF-30) */
+  setClockOffset(ms: number) {
+    this.clockOffsetMs = ms
   }
 
   /** Lebenszeichen: `Scheiben.Zeitstempel` läuft, solange der Stand belegt ist, auch ohne Schuss */
@@ -211,9 +236,11 @@ export class Card {
   }
 
   /**
-   * ein Schuss in die Ablage. Der erste Wertungsschuss löscht die Probe (SF-03, auch nach einem Wechsel zurück auf
-   * Probe, SF-04); nach einem Neustart der Probe löscht ihr erster Schuss die alte (SF-72). Über der Schusszahl der
-   * Disziplin Wert 0 und Platzhalter-Teiler (SF-08); verdeckt (Anzeigeart 5) Wert 0 (SF-19).
+   * ein Schuss in die Ablage. Der erste Wertungsschuss löscht die Probe (SF-03); nach einem Neustart der Probe löscht
+   * ihr erster Schuss die alte (SF-72). Über der Schusszahl der Disziplin Wert 0 und Platzhalter-Teiler (SF-08), in
+   * ihrer eigenen Serie (Annahme); verdeckt (Anzeigeart 5) Wert 0, außer mit `hiddenKeepsValue` (SF-19).
+   * Annahme, nicht beobachtet (SF-04): Probe nach einem Wechsel zurück von Wertung beginnt wieder bei 1 und verschwindet
+   * mit dem nächsten Wertungsschuss.
    */
   shot(stellung: 0 | 1, x: number, y: number, options: { clock?: number } = {}): TrefferRow {
     return this.insert(stellung, options.clock, (over) => ({ x, y, ...this.valuesAt(x, y, over) }))
@@ -275,7 +302,10 @@ export class Card {
     this.restartPending = true
   }
 
-  /** Anzeigeart am Monitor umschalten: `Wertung` und `Text` der Wertung (oder einer Serie) neu, die Werte nicht (SF-74) */
+  /**
+   * Anzeigeart am Monitor umschalten: `Wertung` und `Text` der Wertung (oder einer Serie) neu, die Werte nicht (SF-74).
+   * Dass die Probe dabei bleibt, wie sie ist, ist eine Annahme
+   */
   setDisplay(display: Display, serie?: number) {
     this.display = display
     for (const row of trefferOf(this.sim.ablage, this.id, 1)) {
@@ -285,7 +315,11 @@ export class Card {
     }
   }
 
-  /** Korrektur durch die Standaufsicht: Lage und Werte eines Schusses neu, Zeit bleibt (SF-21; Annahme) */
+  /**
+   * Korrektur durch die Standaufsicht: Lage und Werte eines Schusses neu, Zeit bleibt (SF-21; Annahme). Auch das
+   * Lebenszeichen bleibt (Annahme): Eine Brücke, die nur bei neuem `Scheiben.Zeitstempel` liest, sieht die Korrektur
+   * erst beim Abgleich der letzten Tage
+   */
   correct(stellung: 0 | 1, nr: number, x: number, y: number) {
     const row = this.sim.ablage.treffer.get(
       trefferKey({ ScheibenID: this.id, Stellung: stellung, Treffer: nr })
@@ -295,7 +329,7 @@ export class Card {
     this.refresh()
   }
 
-  /** einen Schuss löschen; die späteren rücken nach (SF-22; Annahme) */
+  /** einen Schuss löschen; die späteren rücken nach, das Lebenszeichen bleibt (SF-22; beides Annahme) */
   remove(stellung: 0 | 1, nr: number) {
     const ablage = this.sim.ablage
     const rows = trefferOf(ablage, this.id, stellung)
@@ -308,10 +342,14 @@ export class Card {
     this.refresh()
   }
 
-  /** zerrissene Lesung (SF-71): Meyton schreibt die Scheibe neu, für einen Augenblick fehlen Treffer und Serien */
-  tear() {
+  /**
+   * zerrissene Lesung (SF-71): Meyton schreibt die Scheibe neu, für einen Augenblick fehlen die Serien und alle Treffer
+   * bis auf die ersten `keep` (beobachtet: alle, oder 36 → 3). Dass die Serien dabei ganz fehlen, ist eine Annahme
+   */
+  tear(keep = 0) {
     const ablage = this.sim.ablage
-    this.torn = { serien: serienOf(ablage, this.id), treffer: trefferOf(ablage, this.id) }
+    const treffer = trefferOf(ablage, this.id)
+    this.torn = { serien: serienOf(ablage, this.id), treffer: treffer.slice(keep) }
     for (const row of this.torn.serien) ablage.serien.delete(serienKey(row))
     for (const row of this.torn.treffer) ablage.treffer.delete(trefferKey(row))
   }
@@ -330,7 +368,8 @@ export class Card {
     over: boolean
   ): ShotValues & Pick<TrefferRow, "Wertung" | "Text"> {
     const base = over ? overTargetValues() : shotValues(this.setup.target, x, y)
-    const values = HIDDEN.has(this.display) ? hiddenValues(base) : base
+    const values =
+      HIDDEN.has(this.display) && !this.setup.hiddenKeepsValue ? hiddenValues(base) : base
     return { ...values, Wertung: this.display, Text: displayText(this.display, values, over) }
   }
 

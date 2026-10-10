@@ -46,7 +46,7 @@ export function overTargetValues(): ShotValues {
   }
 }
 
-/** verdeckt (Anzeigeart 5, SF-19): Wert 0, der Teiler bleibt (belegt beim Königsschießen) */
+/** verdeckt (Anzeigeart 5, SF-19) ohne Wert: Ring und Zehntel 0, Lage und Teiler bleiben (10 von 25 Königsscheiben der Kopie) */
 export function hiddenValues(values: ShotValues): ShotValues {
   return { ...values, Ring: 0, Ring01: 0, Innenzehner: 0 }
 }
@@ -57,7 +57,7 @@ const teiler = (values: ShotValues) => `${Math.floor(values.Teiler01 / 10)}T`
 
 /**
  * `Text` je Anzeigeart: „10.1“ (1), „9“ und „10*“ (2), „9.9 851T“ (7), „9 995T“ (8), „***“ (5, 10), über der Soll-Zahl
- * „0F“. Für 0 und 10 nicht beobachtet: leer und „***“ sind Annahmen.
+ * „0F“ (beobachtet auch „inv“). Annahmen: leer bei 0, „***“ bei 10, „0.0“ und „0“ beim Fehlschuss.
  */
 export function displayText(display: Display, values: ShotValues, overTarget = false): string {
   if (overTarget) return "0F"

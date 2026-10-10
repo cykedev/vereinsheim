@@ -1,9 +1,10 @@
 // Spielt die eingefrorenen Fälle in eine echte MariaDB ein und liest nach jedem Schritt wie die Brücke:
 //   pnpm --filter @vereinsheim/ssmdb2-cases replay
-// Startet `mariadb:11` (Docker) mit `schema/ssmdb2.sql`, vergleicht die Spaltentypen aus `information_schema` mit
+// Startet MariaDB (Docker) mit `schema/ssmdb2.sql`, vergleicht die Spaltentypen aus `information_schema` mit
 // `src/schema.ts`, spielt je Fall die Schritte `steps/NN.sql` ein und liest danach jede Scheibe in einer lesenden
 // Transaktion (`SELECT *` nach Primärschlüssel, Zellen als Text). Die Prüfsumme muss die des eingefrorenen Snapshots
-// sein. Nicht im `pnpm check` (braucht Docker, rund eine Minute). Bild: REPLAY_DOCKER_IMAGE (Standard mariadb:11).
+// sein. Nicht im `pnpm check` (braucht Docker, rund 20 s). Bild: REPLAY_DOCKER_IMAGE, Standard `mariadb:10.6` wie an der
+// Vereinsanlage (MariaDB 10.6.20); die Schritte setzen eine Null-Zeit (`0000-00-00`) und laufen nicht auf MySQL 8.
 
 import { execFileSync, spawnSync } from "node:child_process"
 import { readdirSync, readFileSync } from "node:fs"
@@ -17,7 +18,9 @@ import { COLUMNS, PRIMARY_KEYS, TABLES, type Table } from "../src/schema"
 import { CASES_DIR } from "../src/freeze"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
-const IMAGE = process.env.REPLAY_DOCKER_IMAGE ?? "mariadb:11"
+const IMAGE = process.env.REPLAY_DOCKER_IMAGE ?? "mariadb:10.6"
+/** jeder Aufruf von Docker höchstens so lange */
+const CALL_TIMEOUT_MS = 60_000
 const CONTAINER = `ssmdb2-cases-${process.pid}`
 
 /** SQL an die Datenbank (Text auf stdin), Ausgabe im Batch-Format ohne Kopf und ohne Escapes */
@@ -38,7 +41,7 @@ function sql(input: string, database = "SSMDB2"): string {
       "--raw",
       database,
     ],
-    { input, encoding: "utf8" }
+    { input, encoding: "utf8", timeout: CALL_TIMEOUT_MS }
   )
   if (result.status !== 0)
     throw new Error(`SQL fehlgeschlagen: ${result.stderr}\n${input.slice(0, 500)}`)
@@ -57,20 +60,39 @@ function start() {
     IMAGE,
     "--skip-ssl",
   ])
-  for (let i = 0; i < 60; i++) {
-    const probe = spawnSync("docker", [
-      "exec",
-      CONTAINER,
-      "mariadb",
-      "--skip-ssl",
-      "-uroot",
-      "-proot",
-      "-e",
-      "SELECT 1",
-    ])
-    if (probe.status === 0) break
-    execFileSync("sleep", ["1"])
+  // bereit erst, wenn der eigentliche Server läuft: Der Socket gehört beim Start einem Init-Server, der danach neu
+  // startet. `healthcheck.sh` kennt den Unterschied; ohne es über TCP, das der Init-Server nicht öffnet
+  const ready = () => {
+    const health = spawnSync(
+      "docker",
+      ["exec", CONTAINER, "healthcheck.sh", "--connect", "--innodb_initialized"],
+      { timeout: CALL_TIMEOUT_MS }
+    )
+    if (health.status === 0) return true
+    const tcp = spawnSync(
+      "docker",
+      [
+        "exec",
+        CONTAINER,
+        "mariadb",
+        "--skip-ssl",
+        "--protocol=tcp",
+        "-h127.0.0.1",
+        "-uroot",
+        "-proot",
+        "-e",
+        "SELECT 1",
+      ],
+      { timeout: CALL_TIMEOUT_MS }
+    )
+    return tcp.status === 0
   }
+  let up = false
+  for (let i = 0; i < 90 && !up; i++) {
+    up = ready()
+    if (!up) execFileSync("sleep", ["1"])
+  }
+  if (!up) throw new Error(`MariaDB (${IMAGE}) nach 90 s nicht bereit`)
   sql("CREATE DATABASE SSMDB2;", "mysql")
   sql(readFileSync(join(root, "schema/ssmdb2.sql"), "utf8"))
 }
@@ -161,6 +183,7 @@ function replayCase(id: string): string[] {
 
 process.on("exit", stop)
 process.on("SIGINT", () => process.exit(130))
+process.on("SIGTERM", () => process.exit(143))
 start()
 const problems = checkColumns()
 const ids = readdirSync(join(root, CASES_DIR)).sort()

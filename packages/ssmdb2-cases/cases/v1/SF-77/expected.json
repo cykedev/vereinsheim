@@ -5,12 +5,12 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-09-26T17:15:00.000Z",
+      "observedAt": "2026-09-26T17:15:12.576Z",
       "note": "erste Scheibe"
     },
     {
       "reading": 2,
-      "observedAt": "2026-09-26T18:15:00.000Z",
+      "observedAt": "2026-09-26T18:15:09.318Z",
       "note": "zweite Scheibe nach dem Überlauf"
     }
   ],
@@ -18,6 +18,7 @@
     {
       "scheibenId": 2147183648,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
         [0, 20],
         [0, 20]
@@ -32,6 +33,7 @@
     {
       "scheibenId": -2144183648,
       "bridge": "senden",
+      "sentReadings": [2],
       "shots": [
         null,
         [0, 20]

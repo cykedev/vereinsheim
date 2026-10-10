@@ -1,4 +1,5 @@
 -- SF-74, Lesung 2: Serie 2 auf Zehntel mit Teiler umgeschaltet
+SET NAMES utf8mb4;
 UPDATE `Treffer` SET `Wertung` = 7, `Text` = '9.3 1291T' WHERE `ScheibenID` = -1398010867 AND `Stellung` = 1 AND `Treffer` = 11;
 UPDATE `Treffer` SET `Wertung` = 7, `Text` = '9.4 1271T' WHERE `ScheibenID` = -1398010867 AND `Stellung` = 1 AND `Treffer` = 12;
 UPDATE `Treffer` SET `Wertung` = 7, `Text` = '10.1 697T' WHERE `ScheibenID` = -1398010867 AND `Stellung` = 1 AND `Treffer` = 13;

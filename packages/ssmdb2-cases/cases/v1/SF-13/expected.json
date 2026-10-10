@@ -1,11 +1,11 @@
 {
   "id": "SF-13",
   "title": "Ohne Starter",
-  "description": "Ein freier Stand mit dem Platzhalter „--frei--“ ohne Schuss und eine Scheibe „unknown, unknown“ in der Starterliste „Trash“, mit Sportpass und 20 Schuss (an der Vereinsanlage 112-mal).",
+  "description": "Ein freier Stand „--frei--“ ohne Schuss, einer mit 20 Schuss ohne Sportpass, und eine Scheibe „unknown, unknown“ in der Starterliste „Trash“ mit Sportpass und 20 Schuss (an der Vereinsanlage 112-mal; „--frei--“ dort nie).",
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-09-27T17:20:00.000Z",
+      "observedAt": "2026-09-27T17:35:06.100Z",
       "note": "freier Stand und unbekannter Schütze"
     }
   ],
@@ -13,6 +13,7 @@
     {
       "scheibenId": 650556429,
       "bridge": "auslassen",
+      "sentReadings": [],
       "reason": "ohne Treffer",
       "shots": [
         [0, 0]
@@ -25,8 +26,27 @@
       }
     },
     {
-      "scheibenId": 650856429,
+      "scheibenId": 650556430,
+      "bridge": "nur-qr",
+      "sentReadings": [],
+      "reason": "„--frei--“ mit Schüssen, aber ohne Sportpass: nur über den QR-Code oder „Scheibe holen“",
+      "shots": [
+        [0, 20]
+      ],
+      "flags": [],
+      "completeness": "vollstaendig",
+      "counted": {
+        "stellung": 1,
+        "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      },
+      "notes": [
+        "Nie nach dem Namen filtern: Auch „--frei--“ kann ein Training sein."
+      ]
+    },
+    {
+      "scheibenId": 651756429,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
         [0, 20]
       ],

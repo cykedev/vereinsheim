@@ -5,17 +5,17 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-10-02T17:30:00.000Z",
+      "observedAt": "2026-10-02T17:30:25.309Z",
       "note": "60 Probeschüsse, noch keine Wertung"
     },
     {
       "reading": 2,
-      "observedAt": "2026-10-02T17:45:00.000Z",
+      "observedAt": "2026-10-02T17:45:34.385Z",
       "note": "20 Wertungsschüsse, die Probe ist weg"
     },
     {
       "reading": 3,
-      "observedAt": "2026-10-02T18:00:00.000Z",
+      "observedAt": "2026-10-02T18:00:42.097Z",
       "note": "40 Wertungsschüsse"
     }
   ],
@@ -23,6 +23,7 @@
     {
       "scheibenId": 1082556429,
       "bridge": "senden",
+      "sentReadings": [1, 2, 3],
       "shots": [
         [60, 0],
         [0, 20],

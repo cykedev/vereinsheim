@@ -5,14 +5,15 @@
   "readings": [
     {
       "reading": 1,
-      "observedAt": "2026-09-30T18:15:00.000Z",
+      "observedAt": "2026-09-30T18:15:11.713Z",
       "note": "ohne und mit Sportpass"
     }
   ],
   "cards": [
     {
       "scheibenId": 909756429,
-      "bridge": "auslassen",
+      "bridge": "nur-qr",
+      "sentReadings": [],
       "reason": "ohne Sportpass: rückwirkend nur mit Namensvorschlag und Bestätigung, oder über den QR-Code",
       "shots": [
         [0, 20]
@@ -27,6 +28,7 @@
     {
       "scheibenId": 913356429,
       "bridge": "senden",
+      "sentReadings": [1],
       "shots": [
         [0, 20]
       ],

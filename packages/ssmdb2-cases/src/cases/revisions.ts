@@ -26,6 +26,7 @@ export const SF_21 = defineCase({
     {
       scheibenId: SF21_ID,
       bridge: "senden",
+      sentReadings: [1, 2],
       shots: [
         [0, 20],
         [0, 20],
@@ -61,6 +62,7 @@ export const SF_22 = defineCase({
     {
       scheibenId: SF22_ID,
       bridge: "senden",
+      sentReadings: [1, 2],
       shots: [
         [0, 20],
         [0, 19],
@@ -97,6 +99,8 @@ export const SF_23 = defineCase({
     const b = sim.card({ ...LG20, scheibenId: SF23_B, standNr: 5 })
     fire(sim, b, 1, group(20, 2302, 150))
     sim.read("zwei Scheiben")
+    sim.advance(minutes(10))
+    sim.read("unverändert")
     until(sim, SF23_RESET)
     sim.clear()
     sim.read("Ablage leer")
@@ -109,7 +113,8 @@ export const SF_23 = defineCase({
     {
       scheibenId: SF23_A,
       bridge: "senden",
-      shots: [[0, 20], null, null],
+      sentReadings: [1],
+      shots: [[0, 20], [0, 20], null, null],
       flags: [],
       completeness: "vollstaendig",
       counted: { stellung: 1, numbers: numbers(1, 20) },
@@ -120,7 +125,8 @@ export const SF_23 = defineCase({
     {
       scheibenId: SF23_B,
       bridge: "senden",
-      shots: [[0, 20], null, null],
+      sentReadings: [1],
+      shots: [[0, 20], [0, 20], null, null],
       flags: [],
       completeness: "vollstaendig",
       counted: { stellung: 1, numbers: numbers(1, 20) },
@@ -128,7 +134,8 @@ export const SF_23 = defineCase({
     {
       scheibenId: SF23_C,
       bridge: "senden",
-      shots: [null, null, [0, 20]],
+      sentReadings: [4],
+      shots: [null, null, null, [0, 20]],
       flags: [],
       completeness: "vollstaendig",
       counted: { stellung: 1, numbers: numbers(1, 20) },
@@ -146,7 +153,7 @@ export const SF_71 = defineCase({
   id: "SF-71",
   title: "Zerrissene Lesung",
   description:
-    "LP 40, fertig. Meyton schreibt die Scheibe neu (Löschen und Einfügen, Kaskade): Eine Lesung erwischt die Kopfzeile mit 40 Treffern, aber keine Zeile in `Treffer` und `Serien`.",
+    "LP 40, fertig. Meyton schreibt die Scheibe neu (Löschen und Einfügen, Kaskade): Eine Lesung erwischt die Kopfzeile mit 40 Treffern, aber keine Zeile in `Treffer` und `Serien`; eine spätere nur 3 Treffer (beobachtet: 36 → 3).",
   start: SF71_START,
   run(sim) {
     const card = sim.card({ ...LP40, scheibenId: SF71_ID, standNr: 6 })
@@ -154,30 +161,29 @@ export const SF_71 = defineCase({
     sim.read("40 Schuss")
     sim.advance(1_000)
     card.tear()
-    sim.read("zerrissen: Kopfzeile ohne Treffer")
+    sim.read("zerrissen: Kopfzeile ohne Treffer", { transient: true })
     card.mend()
     sim.advance(1_000)
     sim.read("wieder ganz")
     sim.advance(1_000)
-    sim.read("unverändert")
+    card.tear(3)
+    sim.read("zerrissen: nur 3 Treffer", { transient: true })
+    card.mend()
+    sim.advance(1_000)
+    sim.read("wieder ganz")
   },
   expected: [
     {
       scheibenId: SF71_ID,
       bridge: "senden",
-      shots: [
-        [0, 40],
-        [0, 0],
-        [0, 40],
-        [0, 40],
-      ],
-      sentReadings: [3],
+      shots: [[0, 40], [0, 0], [0, 40], [0, 3], [0, 40]],
+      sentReadings: [1],
       flags: [],
       completeness: "vollstaendig",
       counted: { stellung: 1, numbers: numbers(1, 40) },
       notes: [
-        "Gesendet wird erst, wenn zwei Lesungen hintereinander gleich sind: Lesung 3 und 4.",
-        "Lesung 2 ist keine Löschung: Fehlen ist keine Löschung (Leitregel 4).",
+        "Lesung 2 und 4 sind flüchtig: Die Brücke sieht sie nur einmal und schickt sie nicht (zwei gleiche Lesungen hintereinander).",
+        "Fehlen ist keine Löschung (Leitregel 4); danach ist der Stand wie in Lesung 1, also nichts Neues zu schicken.",
       ],
     },
   ],
@@ -196,6 +202,7 @@ export const SF_74 = defineCase({
     const card = sim.card({ ...LP40, scheibenId: SF74_ID, standNr: 7 })
     fire(sim, card, 1, group(20, 7401, 800))
     sim.read("20 Schuss in ganzen Ringen")
+    sim.advance(5_000)
     card.setDisplay(7, 2)
     sim.read("Serie 2 auf Zehntel mit Teiler umgeschaltet")
     fire(sim, card, 1, group(20, 7402, 800))
@@ -205,6 +212,8 @@ export const SF_74 = defineCase({
     {
       scheibenId: SF74_ID,
       bridge: "senden",
+      sentReadings: [1, 2, 3],
+      official: "rings",
       shots: [
         [0, 20],
         [0, 20],
