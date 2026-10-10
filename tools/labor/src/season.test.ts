@@ -1,4 +1,9 @@
-import { cardValues, comparePeriods, recordEligible } from "@vereinsheim/shot-core/analysis"
+import {
+  cardValues,
+  comparePeriods,
+  pauseRecovery,
+  recordEligible,
+} from "@vereinsheim/shot-core/analysis"
 import { metricByKey } from "@vereinsheim/shot-core/metrics"
 import { describe, expect, it } from "vitest"
 
@@ -84,6 +89,15 @@ describe("Saison im Labor (Plan L3, D17)", () => {
     // „Wertung …“ im Kopf ist der letzte Schuss. Für die Winterzeit gibt es keinen
     // solchen Anker; dort prüft nur der Abend (unten), dass die Zeiten in UTC stehen.
     expect(new Date(match.at(-1)!.firedAtMs!).toISOString().slice(0, 16)).toBe("2026-01-01T17:00")
+  })
+
+  it("Pausen relativ zum Takt an der echten LP 60: nach jeder Zehnerserie (User, 10. Oktober 2026)", () => {
+    const lp60 = season().find((c) => c.own === 28)!.card
+    const recovery = pauseRecovery(lp60.shots, "rings")!
+    // Takt 43 s, Schwelle 2,5-fach: 1:47,5 min; die feste Grenze von 3 Minuten fand nur eine
+    expect(recovery.thresholdMs).toBeGreaterThan(100_000)
+    expect(recovery.thresholdMs).toBeLessThan(110_000)
+    expect(recovery.effects.map((e) => e.afterShot)).toEqual([11, 21, 31])
   })
 
   it("weggelassen: ohne Scheibenbild (Zimmerstutzen, Schach) und verdeckt (König, SF-19)", () => {

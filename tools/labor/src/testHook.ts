@@ -27,7 +27,12 @@ import { recordRows } from "@vereinsheim/shot-ui/period/records"
 import { periodSentence, verdictText } from "@vereinsheim/shot-ui/period/sentence"
 import { weekLabel } from "@vereinsheim/shot-ui/period/calendar"
 import type { PeriodState } from "@vereinsheim/shot-ui/period/state"
-import { selectionShots, shotIntervals, shotLabels } from "@vereinsheim/shot-ui/shots"
+import {
+  selectionShots,
+  shotIntervals,
+  shotLabels,
+  shotPauseThreshold,
+} from "@vereinsheim/shot-ui/shots"
 import type { ViewState } from "@vereinsheim/shot-ui/view-state"
 
 const TOOLS = {
@@ -39,6 +44,7 @@ const TOOLS = {
   directionName,
   selectionShots,
   shotIntervals,
+  shotPauseThreshold,
   shotLabels,
   // Analyse (Schritt 3): die Auswertungen des Fachkerns und die Modelle des Überblicks zum Nachrechnen
   analysis,

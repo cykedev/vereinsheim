@@ -2,13 +2,19 @@
 
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { teilerFromDistanceUm } from "@vereinsheim/shot-core/scoring"
-import { PAUSE_ALWAYS_MS } from "@vereinsheim/shot-core/time"
 import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, useState } from "react"
 
 import { durationText, formatValue } from "../format"
 import { scoreColor } from "../geometry"
-import { formatScore, seriesKeyOf, shotDistance, shotIntervals, shotLabels } from "../shots"
+import {
+  formatScore,
+  seriesKeyOf,
+  shotDistance,
+  shotIntervals,
+  shotLabels,
+  shotPauseThreshold,
+} from "../shots"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
 
@@ -26,12 +32,12 @@ export interface ShotTableProps {
 }
 
 /**
- * Intervall: Sekunden, über drei Minuten als Pause in Minuten und Sekunden wie im Reiter Zeit („3:20 min“, nicht
- * auf ganze Minuten gerundet; Prüfung, Zeit 7), ohne Abstand ein Strich
+ * Intervall: Sekunden; eine Pause (über der Schwelle der Karte, wie im Reiter Zeit) in Minuten und Sekunden mit
+ * „Pause“ („3:20 min Pause“, nicht auf ganze Minuten gerundet; Prüfung, Zeit 7); ohne Abstand ein Strich
  */
-function intervalText(ms: number | null): string {
+function intervalText(ms: number | null, pauseAboveMs: number): string {
   if (ms === null) return "–"
-  return ms > PAUSE_ALWAYS_MS ? durationText(ms) : `${formatValue(ms / 1000, 0)} s`
+  return ms > pauseAboveMs ? `${durationText(ms)} Pause` : `${formatValue(ms / 1000, 0)} s`
 }
 
 /** Name einer Gruppe in der Tabelle: Serie n oder ohne Serie */
@@ -61,6 +67,7 @@ export function ShotTable({
   const tableId = useId()
   const labels = useMemo(() => shotLabels(shots), [shots])
   const intervals = useMemo(() => shotIntervals(shots, context), [shots, context])
+  const pauseAboveMs = useMemo(() => shotPauseThreshold(shots, context), [shots, context])
   const indices = shots
     .map((_, i) => i)
     .filter((i) => isSelected(state.selection, seriesKeyOf(shots[i])))
@@ -174,7 +181,7 @@ export function ShotTable({
                   </td>
                   <td className="px-2 py-1.5 text-right">{teilerText(shot)}</td>
                   <td className="px-2 py-1.5 text-right text-muted-foreground">
-                    {intervalText(intervals[i])}
+                    {intervalText(intervals[i], pauseAboveMs)}
                   </td>
                 </tr>
               )

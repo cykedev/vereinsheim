@@ -146,11 +146,12 @@ addEventListener("load", async () => {
     const L = () => window.__labor
     const tableRows = () => $$("#shot-table tr[data-row]")
     // Pausen über drei Minuten als m:ss, nicht auf ganze Minuten gerundet (Prüfung, Zeit 7)
-    const intervalText = (ms) => {
+    // eine Pause liegt über der Schwelle der Karte (relativ zum Takt, User, 10. Oktober 2026)
+    const intervalText = (ms, pauseAboveMs = 180000) => {
       if (ms === null) return "–"
-      if (ms <= 180000) return `${L().tools.formatValue(ms / 1000, 0)} s`
+      if (ms <= pauseAboveMs) return `${L().tools.formatValue(ms / 1000, 0)} s`
       const seconds = Math.round(ms / 1000)
-      return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} min`
+      return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} min Pause`
     }
 
     await wait(400)
@@ -281,7 +282,10 @@ addEventListener("load", async () => {
     const wrongIntervals = tableRows().filter(
       (tr) =>
         txt(tr.lastElementChild).trim() !==
-        intervalText(intervalsAll[labelsAll.indexOf(tr.dataset.row)])
+        intervalText(
+          intervalsAll[labelsAll.indexOf(tr.dataset.row)],
+          L().tools.shotPauseThreshold(L().shots)
+        )
     )
     check(
       "Tabelle: Intervalle wie shotIntervals, Pause in Minuten",

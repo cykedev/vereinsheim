@@ -1,5 +1,6 @@
 "use client"
 
+import { PAUSE_ALWAYS_MS, PAUSE_FACTOR, PAUSE_MIN_MS } from "@vereinsheim/shot-core/time"
 import {
   cardTrend,
   fatigue,
@@ -40,6 +41,11 @@ const TEMPO_MISSING = "ab 4 Schuss mit Zeit"
  * Zeit und Verlauf: Verlauf und Trend, Rhythmus, Tempo und Dauer, Pausen, Ermüdung, Serien im
  * Vergleich, über die Grundlage
  */
+
+/** was als Pause gilt, mit der Schwelle der Karte (User, 10. Oktober 2026); Zahlen aus der Regel in `shot-core/time` */
+const pauseRule = (thresholdMs: number) =>
+  `Als Pause gilt ein Abstand über ${durationText(thresholdMs)}: das ${formatValue(PAUSE_FACTOR, 1)}-Fache deines üblichen Abstands, mindestens ${PAUSE_MIN_MS / 60_000} Minute, über ${PAUSE_ALWAYS_MS / 60_000} Minuten immer.`
+
 export function timeCards({
   input,
   explain,
@@ -144,7 +150,7 @@ export function timeCards({
               </ChartSlot>
               <Note>
                 Säule: Abstand zum vorigen Schuss; Linie: Median der letzten fünf Abstände, Pausen
-                über drei Minuten zählen nicht hinein.
+                zählen nicht hinein.
               </Note>
             </>
           ) : (
@@ -225,9 +231,10 @@ export function timeCards({
                 „Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen
                 Schüsse. Drei Schuss sind wenig; ein Muster zeigt der Vergleich über Abende.
               </Note>
+              <Note>{pauseRule(recovery.thresholdMs)}</Note>
             </>
           ) : (
-            <Note>Keine Pause über drei Minuten.</Note>
+            <Note>{`Keine Pause: kein Abstand über ${durationText(recovery.thresholdMs)}.`}</Note>
           )}
         </AnalysisCard>
       ),

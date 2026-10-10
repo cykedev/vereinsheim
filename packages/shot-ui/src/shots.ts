@@ -5,6 +5,7 @@ import {
   asOnPrintout as asOnPrintoutInCore,
   contextOf,
   inShotOrder,
+  pauseThresholdOf,
   selectShots,
   shotDistanceUm,
   shotNumbers,
@@ -99,6 +100,18 @@ export function selectionShots(shots: readonly MetricShot[], selection: Selectio
  * selbst (`inShotOrder`); der Abstand gilt zum vorigen Schuss der Karte, auch bei Auswahl. `context` ist die rohe Karte
  * vor `asOnPrintout`: eine Probe zwischen Wertung reißt dann keine Lücke (SF-04, Review U4).
  */
+/**
+ * die Schwelle für Pausen, wie in der Analyse: aus dem Takt der ganzen Karte (`pauseThresholdOf`). Eine Karte nur aus
+ * Probe erscheint wie Wertung (U4); dann gilt die Folge selbst, wie `analysisInput` es hält
+ */
+export function shotPauseThreshold(
+  shots: readonly MetricShot[],
+  context?: readonly MetricShot[]
+): number {
+  const card = context?.some((shot) => shot.kind === "match") ? context : shots
+  return pauseThresholdOf(shots, contextOf(shots, card))
+}
+
 export function shotIntervals(
   shots: readonly MetricShot[],
   context?: readonly MetricShot[]

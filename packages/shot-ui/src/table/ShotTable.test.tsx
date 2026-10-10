@@ -138,10 +138,26 @@ describe("ShotTable", () => {
     expect(teiler["3"]).toBe("–")
   })
 
-  it("Intervalle in Sekunden, über drei Minuten als Pause in Minuten und Sekunden, nach einer Lücke keins", () => {
+  it("Intervalle in Sekunden, eine Pause in Minuten und Sekunden mit „Pause“, nach einer Lücke keins", () => {
     const r = rows(render())
     // „3:20 min“ statt auf ganze Minuten gerundet (Prüfung, Zeit 7)
-    expect(r.map((row) => row[4])).toEqual(["52 s", "4:00 min", "–", "45 s", "–"])
+    expect(r.map((row) => row[4])).toEqual(["52 s", "4:00 min Pause", "–", "45 s", "–"])
+  })
+
+  it("Pause relativ zum Takt der Karte: 120 s bei 40 s Takt ja, bei 60 s Takt nicht (User, 10. Oktober 2026)", () => {
+    const paced = (gaps: number[]) =>
+      gaps
+        .reduce<number[]>((times, gap) => [...times, times.at(-1)! + gap], [0])
+        .map((at, i) => shot(i + 1, "match", 1, 0, 100, at))
+    const table = (gaps: number[]) =>
+      rows(
+        renderToStaticMarkup(
+          createElement(ShotTable, { shots: paced(gaps), state: initialViewState() })
+        )
+      ).map((r) => r[4])
+    // neueste Zeile oben: der Abstand vor Schuss 6 steht in der zweiten Zeile
+    expect(table([40, 40, 40, 40, 120, 40])[1]).toBe("2:00 min Pause")
+    expect(table([60, 60, 60, 60, 120, 60])[1]).toBe("120 s")
   })
 
   it("Pause erst über drei Minuten: genau 180 s bleibt in Sekunden", () => {
@@ -155,14 +171,14 @@ describe("ShotTable", () => {
         state: initialViewState(),
       })
     )
-    expect(rows(html).map((r) => r[4])).toEqual(["3:00 min", "180 s", "–"])
+    expect(rows(html).map((r) => r[4])).toEqual(["3:00 min Pause", "180 s", "–"])
     const longer = renderToStaticMarkup(
       createElement(ShotTable, {
         shots: [shot(1, "match", 1, 0, 100, 0), shot(2, "match", 1, 0, 100, 200)],
         state: initialViewState(),
       })
     )
-    expect(rows(longer).map((r) => r[4])).toEqual(["3:20 min", "–"])
+    expect(rows(longer).map((r) => r[4])).toEqual(["3:20 min Pause", "–"])
   })
 
   it("der Stern hat einen Text für Screenreader", () => {

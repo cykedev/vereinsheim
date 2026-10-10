@@ -153,8 +153,15 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     )
     const one = renderTab("time", { shots: BASE.slice(0, 1) })
     expect(cardText(one, "pausen")).toContain("ab 2 Schuss mit Zeit")
+    // die Schwelle der Karte steht dabei, mit und ohne Pause (User, 10. Oktober 2026)
+    expect(text).toContain(
+      `Als Pause gilt ein Abstand über ${durationText(recovery.thresholdMs)}: das 2,5-Fache deines üblichen Abstands, mindestens 1 Minute, über 3 Minuten immer.`
+    )
     const calm = renderTab("time", { shots: BASE.slice(0, 20) })
-    expect(cardText(calm, "pausen")).toContain("Keine Pause über drei Minuten.")
+    const calmRecovery = pauseRecovery(BASE.slice(0, 20), "decimal")!
+    expect(cardText(calm, "pausen")).toContain(
+      `Keine Pause: kein Abstand über ${durationText(calmRecovery.thresholdMs)}.`
+    )
   })
 
   it("Ermüdung erst ab 20 Wertungsschüssen", () => {
