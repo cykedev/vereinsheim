@@ -164,6 +164,29 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     expect(html).not.toContain("dark:")
   })
 
+  it("jede kleine Scheibe zeichnet die Lagen ihrer eigenen Zeile; ein Schuss ohne Wert gestrichelt", () => {
+    const edge = /stroke="var\(--shot-edge\)"/g
+    const row = (html: string, id: string) => {
+      const start = html.indexOf(`data-card-row="${id}"`)
+      const next = html.indexOf("data-card-row=", start + 1)
+      return html.slice(start, next < 0 ? undefined : next)
+    }
+    const withoutValue = periodCard("n", 2, [100, 101, 99, 102], { startedAtMs: at(19) })
+    const placeholder: PeriodCard = {
+      ...withoutValue,
+      shots: withoutValue.shots.map((shot, i) =>
+        i === 1 ? { ...shot, ring: null, decimalTenths: null } : shot
+      ),
+    }
+    const html = render("decimal", [...INPUT, { card: placeholder, family: "lg-freihand" }])
+    expect(row(html, "a").match(edge)).toHaveLength(3)
+    expect(row(html, "b").match(edge)).toHaveLength(2)
+    expect(row(html, "d").match(edge)).toHaveLength(1)
+    expect(row(html, "n").match(edge)).toHaveLength(4)
+    expect(row(html, "n").match(/stroke-dasharray="2 2"/g)).toHaveLength(1)
+    expect(row(html, "a")).not.toContain("stroke-dasharray")
+  })
+
   it("ohne Scheiben ein Satz statt einer leeren Liste", () => {
     expect(text(render("decimal", []))).toBe("Keine Scheiben für diese Filter.")
   })

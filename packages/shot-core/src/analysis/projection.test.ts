@@ -253,3 +253,76 @@ describe("Umfang und Ø über mehrere Scheiben aus der Projektion", () => {
     }
   )
 })
+
+describe("Grenzfälle der Projektion (Review, 10. Oktober 2026)", () => {
+  // eigene Liste, nicht in `special`: Der Fingerabdruck der Ausgabe soll sich nicht ändern, nur weil Fälle dazukommen
+  const base = card("rand", 110, [100, 101, 99, 102])
+  const EDGE: PeriodCard[] = [
+    { ...base, id: "leer", shots: [] },
+    {
+      ...base,
+      id: "ohne-wert",
+      shots: base.shots.map((s, i) => (i === 1 ? { ...s, decimalTenths: null, ring: null } : s)),
+    },
+    {
+      ...base,
+      id: "ohne-lage",
+      shots: base.shots.map((s, i) => (i === 2 ? { ...s, xUm: null, yUm: null } : s)),
+    },
+    {
+      ...base,
+      id: "nur-ringe",
+      shots: base.shots.map((s) => ({ ...s, decimalTenths: null })),
+    },
+    {
+      ...base,
+      id: "probe-ohne-wert",
+      shots: base.shots.map((s, i) => ({
+        ...s,
+        kind: "probe" as const,
+        series: null,
+        ...(i === 0 ? { decimalTenths: null, ring: null } : {}),
+      })),
+    },
+  ]
+  const projected = EDGE.map(projectCard)
+
+  it.each(["decimal", "rings"] as const)(
+    "Werte, Rekorde und Ø wie aus den Schüssen (%s)",
+    (scoring) => {
+      for (const metric of METRICS.filter((m) => m.scopes.includes("card")))
+        for (const includeProbeOnly of [false, true])
+          expect(
+            projectedValues(projected, metric, scoring, { includeProbeOnly }),
+            `${metric.key} ${includeProbeOnly}`
+          ).toEqual(cardValues(EDGE, metric, scoring, { includeProbeOnly }))
+      expect(projectedRecords(projected, scoring, { includeProbeOnly: true })).toEqual(
+        periodRecords(EDGE, scoring, { includeProbeOnly: true })
+      )
+      const metric = inScoring(metricByKey("result.decimalMean")!, scoring)
+      for (const c of EDGE)
+        expect(pooledMean([projectCard(c)], scoring), c.id).toBe(
+          computeMetric(metric, [...asOnPrintout(c.shots)])
+        )
+      expect(pooledMean(projected, scoring)).toBe(
+        computeMetric(
+          metric,
+          EDGE.flatMap((c) => [...asOnPrintout(c.shots)])
+        )
+      )
+    }
+  )
+
+  it("Schusszahl, Umfang und Lagen", () => {
+    for (const [i, c] of EDGE.entries()) {
+      expect(projected[i].projection.printedShots, c.id).toBe(asOnPrintout(c.shots).length)
+      const placed = asOnPrintout(c.shots).filter((s) => s.xUm !== null && s.yUm !== null)
+      expect(cardMarks(c.shots), c.id).toHaveLength(placed.length)
+    }
+    expect(projected.map((c) => c.projection.probeOnly)).toEqual([true, false, false, false, true])
+    const week = (ms: number) => String(Math.floor(ms / (7 * DAY)))
+    const day = (ms: number) => String(Math.floor(ms / DAY))
+    expect(projectedVolume(projected, week, day)).toEqual(trainingVolume(EDGE, week, day))
+    expect(cardMarks(EDGE[1].shots)[1]).toEqual([10, 0, null])
+  })
+})

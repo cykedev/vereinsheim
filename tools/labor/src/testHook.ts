@@ -17,7 +17,7 @@ import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
 import { keyObservations, observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { overviewTiles } from "@vereinsheim/shot-ui/analysis/overview"
-import { directionName, formatValue } from "@vereinsheim/shot-ui/format"
+import { directionName, formatSigned, formatValue } from "@vereinsheim/shot-ui/format"
 import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import type { StartModel } from "@vereinsheim/shot-ui/start/model"
 import { routeFromUrl, urlFromRoute, type ListQuery } from "@vereinsheim/shot-ui/nav/routes"
@@ -41,6 +41,7 @@ const TOOLS = {
   metricByKey,
   helpForMetric,
   formatValue,
+  formatSigned,
   directionName,
   selectionShots,
   shotIntervals,

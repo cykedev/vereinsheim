@@ -3079,8 +3079,9 @@ addEventListener("load", async () => {
         "decimal",
         { includeProbeOnly: true }
       )
-      // mit Vorzeichen auf zwei Stellen, eine gerundete Null ohne (wie die Bausteine)
-      const signed2 = (v) => `${Number(v.toFixed(2)) > 0 ? "+" : ""}${nf(v, 2)}`
+      // mit Vorzeichen auf zwei Stellen, eine gerundete Null ohne: die Regel der Bausteine selbst (an einer Hälfte wich
+      // eine eigene Prüfung mit `toFixed` ab, Review)
+      const signed2 = (v) => tools.formatSigned(v, 2)
       const wrongRows = []
       for (const row of evenings.slice(0, 12).flatMap((e) => e.rows)) {
         const card = familyCards.find((c) => c.id === row.id)

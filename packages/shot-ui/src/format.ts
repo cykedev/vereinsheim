@@ -10,6 +10,8 @@ const MINUS = "−"
  */
 function roundedText(abs: number, decimals: number): string {
   const factor = 10 ** decimals
+  // ab 10^12 trüge die Rundung auf zwölf Stellen Ziffern ab; so große Werte gibt es hier nicht, `toFixed` bleibt richtig
+  if (!(abs * factor < 1e12)) return abs.toFixed(decimals)
   return (Math.round(Number((abs * factor).toPrecision(12))) / factor).toFixed(decimals)
 }
 

@@ -51,3 +51,16 @@ describe("MiniTarget", () => {
     expect(render({ dim: true })).toContain("opacity-55")
   })
 })
+
+describe("Ausschnitt auf 1 µm", () => {
+  it("Server und Browser zeichnen denselben Ausschnitt, auch wenn er in der letzten Stelle abweicht", () => {
+    const html = (x: number, y: number, w: number) =>
+      renderToStaticMarkup(
+        createElement(MiniTarget, { target: LG_10M, view: { x, y, w }, shots: [] })
+      )
+    const server = html(-40.616908819539134, -53.32336744961411, 109.34488645316945)
+    const browser = html(-40.61690881953914, -53.32336744961412, 109.34488645316947)
+    expect(server).toBe(browser)
+    expect(server).toContain('viewBox="-40.617 -53.323 109.345 109.345"')
+  })
+})

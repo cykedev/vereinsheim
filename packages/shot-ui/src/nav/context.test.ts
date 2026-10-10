@@ -93,6 +93,27 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     ])
   })
 
+  it("eine Familie ohne eigene Scheiben in der Herkunft gilt wie keine: die der Scheibe (Review SP-1.8)", () => {
+    const pistol: ListInputCard[] = [
+      ...INPUT,
+      { card: card_("p2", 2, [96]), family: "lp-freihand" },
+      { card: card_("p3", 1, [97]), family: "lp-freihand" },
+    ]
+    const input = { ...context, cards: pistol }
+    expect(contextCardIds(card("p2", fromList({ family: "lp-auflage" })), input)).toEqual([
+      "p1",
+      "p2",
+      "p3",
+    ])
+    const { chosen: _c, scoring: _s, ...query } = { ...DEFAULT_PROGRESS, family: "lp-auflage" }
+    expect(
+      contextCardIds(
+        card("p3", { from: "progress", query: { ...query, choice: { type: "all" } } }),
+        input
+      )
+    ).toEqual(["p1", "p2", "p3"])
+  })
+
   it("ohne Familie in der Herkunft gilt die Familie der Scheibe selbst (Review N3)", () => {
     const pistol: ListInputCard[] = [
       ...INPUT,

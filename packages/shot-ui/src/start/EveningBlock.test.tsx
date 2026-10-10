@@ -149,6 +149,15 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(text(html)).toContain("18:00 · Training 18,8 Zehntel · 18 ganze Ringe")
   })
 
+  it("jede Kachel zeichnet die Lagen ihrer eigenen Scheibe", () => {
+    const tile = (id: string) => {
+      const start = html.indexOf(`data-start-card="${id}"`)
+      return html.slice(start, html.indexOf("</a>", start))
+    }
+    expect(tile("a").match(/stroke="var\(--shot-edge\)"/g)).toHaveLength(2)
+    expect(tile("b").match(/stroke="var\(--shot-edge\)"/g)).toHaveLength(1)
+  })
+
   it("neue Rekorde nur, wenn der Abend welche hält; der Link in die Liste mit dem Abend", () => {
     expect(html).toContain("data-new-records")
     // der Rekord öffnet in seiner Wertung (hier Zehntel, ohne Schlüssel), die Kachel in der der Kachel (Review N5)

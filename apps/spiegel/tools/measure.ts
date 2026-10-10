@@ -11,20 +11,12 @@ import { Pool } from "pg"
 import { cardValues, periodRecords, type PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { metricByKey, type MetricDefinition } from "@vereinsheim/shot-core/metrics"
 import { projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
-import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
-import { startModel } from "@vereinsheim/shot-ui/start/model"
 
 import { PrismaClient } from "../src/generated/prisma/client"
 import { writeRevision } from "../src/lib/db/cards"
-import {
-  cardWithShots,
-  familyCards,
-  latestCardStart,
-  marksOfCards,
-  ownerCards,
-} from "../src/lib/db/reads"
-import { familiesOf, listable, withFamily } from "../src/lib/pages"
+import { cardWithShots, familyCards, latestCardStart, ownerCards } from "../src/lib/db/reads"
+import { listPageData, startPageData } from "../src/lib/overview"
 import type { Db } from "../src/lib/db"
 import { DEV_DATABASE_URL } from "../test/dev-database"
 import { createTestSite } from "../test/fixtures"
@@ -163,24 +155,8 @@ async function main() {
       named: [],
       scoring: "decimal" as const,
     }
-    const startPage = async () => {
-      const shown = listable(await ownerCards(db, { ownerId: site.ownerId }))
-      const families = familiesOf(shown)
-      const model = startModel({
-        ...pageContext,
-        cards: withFamily(shown),
-        family: families[0]?.value ?? "",
-      })
-      const ids = model.blocks.flatMap((block) => block.rows.map((row) => row.id))
-      return { model, marks: await marksOfCards(db, { ownerId: site.ownerId, ids }) }
-    }
-    const listPage = async () => {
-      const shown = listable(await ownerCards(db, { ownerId: site.ownerId }))
-      const family = familiesOf(shown)[0].value
-      const model = cardListModel(withFamily(shown), { ...DEFAULT_LIST, family }, pageContext)
-      const ids = model.evenings.flatMap((evening) => evening.rows.map((row) => row.id))
-      return { model, marks: await marksOfCards(db, { ownerId: site.ownerId, ids }) }
-    }
+    const startPage = () => startPageData(db, site.ownerId, pageContext)
+    const listPage = () => listPageData(db, site.ownerId, DEFAULT_LIST, pageContext)
 
     // offener Durchgang: die Brücke schickt nach jedem Schuss den ganzen Stand (SF-03)
     const live = generateSeason({

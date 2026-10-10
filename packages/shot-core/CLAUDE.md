@@ -2,8 +2,8 @@
 
 Fachkern von Spiegel (SP-1.1, Oktober 2026): Scheibenbilder als Daten, Wertung wie Meyton,
 Meyton-Disziplinen und die Gegenprobe; seit SP-1.2 auch Geometrie, Tempo und die
-Kennzahlen-Registry, seit SP-1.10 die Analyse einer Scheibe (`stats`, `analysis`). Reine Funktionen ohne Dependencies, isomorph (Server und Client). Noch hängt
-keine App daran; der Spiegel-Ingest (SP-1.6) und die Ansichten (SP-1.8) bauen darauf auf.
+Kennzahlen-Registry, seit SP-1.10 die Analyse einer Scheibe (`stats`, `analysis`). Reine Funktionen ohne Dependencies, isomorph (Server und Client). `apps/spiegel`
+nutzt ihn für Projektion und Lagen beim Schreiben, die Ansichten (`shot-ui`) für alles Gerechnete.
 Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-metrics.md`,
 `vault/spiegel/spiegel-statistics.md` (Katalog), Sonderfälle: `vault/spiegel/spiegel-edge-cases.md`.
 

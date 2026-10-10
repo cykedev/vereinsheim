@@ -8,6 +8,11 @@ import type { ViewBox } from "../types"
 
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 const mm = (um: number) => um / 1000
+/**
+ * der Ausschnitt auf 1 µm: Server und Browser rechnen ihn in der letzten Stelle verschieden (`Math.hypot` im Streukreis),
+ * und das gezeichnete HTML passte beim Hydrieren nicht (Übersichten auf dem Server, SP-1.8)
+ */
+const fixed = (value: number) => Math.round(value * 1000) / 1000
 
 export interface MiniTargetProps {
   target: TargetImage
@@ -27,17 +32,18 @@ export interface MiniTargetProps {
 
 /**
  * Kleine Scheibe (aus den Serien, `SeriesStrip`): Papier, Spiegel, Ringe als Haarlinien, Treffer in
- * Kalibergröße und Ringwert-Farbe, Probe als Ring; ohne Wert gestrichelt. Nur Bild (`aria-hidden`), die
+ * Kalibergröße und Ringwert-Farbe, ohne Wert gestrichelt. Nur Bild (`aria-hidden`), die
  * Worte stehen daneben. Auch in der Ablesung einer Scheibe auf der Seite eines Zeitraums.
  */
 export function MiniTarget({
   target,
-  view,
+  view: computed,
   shots,
   probeCorner: corner = false,
   dim = false,
   className,
 }: MiniTargetProps) {
+  const view = { x: fixed(computed.x), y: fixed(computed.y), w: fixed(computed.w) }
   const half = view.w / 2
   const calR = caliberRadius(target)
   const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])

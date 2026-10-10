@@ -433,50 +433,99 @@ async function saveProjection(
  */
 export async function refreshProjections(
   db: Db,
-  { limit = 200, sourceId }: { limit?: number; sourceId?: number } = {}
+  {
+    limit = 200,
+    sourceId,
+    exclude = [],
+    onFailure,
+  }: {
+    limit?: number
+    sourceId?: number
+    /** Scheiben, die hier nicht noch einmal versucht werden (sie sind in diesem Lauf schon gescheitert) */
+    exclude?: readonly string[]
+    /** mit: eine scheiternde Scheibe wird gemeldet und übergangen; ohne: der Fehler bricht ab */
+    onFailure?: (cardId: string, error: unknown) => void
+  } = {}
 ): Promise<number> {
   const version = projectionVersion()
   const onlySource =
     sourceId === undefined ? Prisma.empty : Prisma.sql`AND c."sourceId" = ${sourceId}`
+  const notExcluded = exclude.length ? Prisma.sql`AND c.id <> ALL(${[...exclude]})` : Prisma.empty
   const stale = await db.$queryRaw<{ id: string }[]>`
     SELECT c.id FROM "Card" c LEFT JOIN "CardProjection" p ON p."cardId" = c.id
      WHERE c."currentRevisionId" IS NOT NULL
        AND (p."cardId" IS NULL OR p.version <> ${version} OR p."revisionId" <> c."currentRevisionId")
        ${onlySource}
+       ${notExcluded}
      ORDER BY c.id
      LIMIT ${limit}`
+  let done = 0
   for (const { id } of stale) {
-    await db.$transaction(async (tx) => {
-      const [card] = await tx.$queryRaw<{ currentRevisionId: bigint | null }[]>`
-        SELECT "currentRevisionId" FROM "Card" WHERE id = ${id} FOR UPDATE`
-      if (!card?.currentRevisionId) return
-      const shots = await tx.shot.findMany({
-        where: { revisionId: card.currentRevisionId },
-        orderBy: { seq: "asc" },
+    try {
+      await db.$transaction(async (tx) => {
+        const [card] = await tx.$queryRaw<{ currentRevisionId: bigint | null }[]>`
+          SELECT "currentRevisionId" FROM "Card" WHERE id = ${id} FOR UPDATE`
+        if (!card?.currentRevisionId) return
+        const shots = await tx.shot.findMany({
+          where: { revisionId: card.currentRevisionId },
+          orderBy: { seq: "asc" },
+        })
+        await saveProjection(
+          tx,
+          id,
+          card.currentRevisionId,
+          shots.map(shotFromRow).map(toMetricShot)
+        )
       })
-      await saveProjection(tx, id, card.currentRevisionId, shots.map(shotFromRow).map(toMetricShot))
-    })
+      done++
+    } catch (error) {
+      if (!onFailure) throw error
+      onFailure(id, error)
+    }
   }
-  return stale.length
+  return done
 }
 
 /** so viele Stapel höchstens: Schutz vor einer Schleife, falls eine Projektion veraltet bliebe */
 const MAX_REFRESH_ROUNDS = 10_000
 
 /**
- * Alle veralteten Projektionen nachrechnen, in Stapeln von `refreshProjections`, bis ein Stapel nicht mehr voll ist. Der
+ * Alle veralteten Projektionen nachrechnen, in Stapeln von `refreshProjections`, bis ein Stapel nicht mehr voll ist; eine
+ * Scheibe, an der die Rechnung scheitert, wird gemeldet und in diesem Lauf nicht noch einmal versucht. Der
  * Server ruft das beim Start (`instrumentation-node.ts`), damit eine neue `projectionVersion` (neue Kennzahl, neue Form
  * der Projektion) ohne Zutun in den Übersichten ankommt. Gibt die Zahl der neu gerechneten zurück.
  */
 export async function refreshStaleProjections(
   db: Db,
-  { batch = 200, sourceId }: { batch?: number; sourceId?: number } = {}
+  {
+    batch = 200,
+    sourceId,
+    onFailure = (cardId: string, error: unknown) =>
+      console.error(`Projektion der Scheibe ${cardId} nicht gerechnet:`, error),
+  }: {
+    batch?: number
+    sourceId?: number
+    /** eine Scheibe, an der die Rechnung scheitert: gemeldet, übergangen, beim nächsten Start wieder versucht */
+    onFailure?: (cardId: string, error: unknown) => void
+  } = {}
 ): Promise<number> {
+  // eine scheiternde Scheibe stünde in jedem Stapel wieder vorn (nach Id) und hielte alle nach ihr auf (Review)
+  const failed = new Set<string>()
   let total = 0
   for (let round = 0; round < MAX_REFRESH_ROUNDS; round++) {
-    const done = await refreshProjections(db, { limit: batch, sourceId })
+    let failures = 0
+    const done = await refreshProjections(db, {
+      limit: batch,
+      sourceId,
+      exclude: [...failed],
+      onFailure: (cardId, error) => {
+        failed.add(cardId)
+        failures++
+        onFailure(cardId, error)
+      },
+    })
     total += done
-    if (done < batch) break
+    if (done + failures < batch) break
   }
   return total
 }

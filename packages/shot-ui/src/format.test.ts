@@ -35,6 +35,8 @@ describe("Zahlen wie in der Spielwiese: feste Stellen, Komma, echtes Minus", () 
     expect(formatValue(9.0649, 2)).toBe("9,06")
     expect(formatSigned(0.005, 2)).toBe("+0,01")
     expect(formatSigned(-0.004, 2)).toBe("0,00")
+    // sehr große Werte verlieren keine Ziffern
+    expect(formatValue(123456789012.34, 2)).toBe("123456789012,34")
   })
 
   it("kein Tausenderpunkt, wie auf dem Ausdruck (Teiler 3831,0)", () => {

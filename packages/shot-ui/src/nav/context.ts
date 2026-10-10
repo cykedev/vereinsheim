@@ -33,10 +33,14 @@ export interface ContextInput {
  */
 export function contextCardIds(card: CardRoute, input: ContextInput): string[] | null {
   const origin = card.origin
-  // ohne Familie in der Herkunft die der Scheibe selbst: nur sie enthält die Scheibe sicher (Review N3)
+  // ohne Familie in der Herkunft die der Scheibe selbst: nur sie enthält die Scheibe sicher (Review N3). Eine Familie ohne
+  // eigene Scheiben gilt wie keine; Liste und Fortschritt zeigen dann auch eine andere (Review SP-1.8)
   const own = input.cards.find((c) => c.card.id === card.id)?.family ?? input.cards[0]?.family
+  const known = new Set(input.cards.map((c) => c.family))
+  const familyOf = (family: string | null) =>
+    family !== null && known.has(family) ? family : (own ?? null)
   if (origin?.from === "list") {
-    const query = { ...origin.query, family: origin.query.family ?? own ?? null }
+    const query = { ...origin.query, family: familyOf(origin.query.family) }
     const model = cardListModel(input.cards, query, {
       timeZone: input.timeZone,
       nowMs: input.nowMs,
@@ -53,7 +57,8 @@ export function contextCardIds(card: CardRoute, input: ContextInput): string[] |
   if (origin?.from === "progress") {
     const back = backRoute(card)
     if (back.page !== "progress") return null
-    const state = periodStateFromRoute(back, own ?? "")
+    const fromRoute = periodStateFromRoute(back, own ?? "")
+    const state = { ...fromRoute, family: familyOf(fromRoute.family) ?? fromRoute.family }
     const model = periodModel({
       cards: input.cards.filter((c) => c.family === state.family).map((c) => c.card),
       state: { ...state, chosen: null },
