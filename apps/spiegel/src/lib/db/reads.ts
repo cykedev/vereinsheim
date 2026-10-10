@@ -5,6 +5,7 @@
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import type { CardProjection, ProjectedCard } from "@vereinsheim/shot-core/projection"
+import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
 import type { CardState, Prisma, Scoring } from "@/generated/prisma/client"
 
@@ -208,4 +209,18 @@ export async function ownerCardsWithShots(db: Db, ownerId: string): Promise<Page
     select: PAGE_CARD_SELECT,
   })
   return rows.flatMap((row) => toPageCard(row) ?? [])
+}
+
+/** benannte Zeiträume des Schützen („Vorbereitung Landesmeisterschaft“), Tage als ISO-Datum */
+export async function namedPeriods(db: Db, ownerId: string): Promise<NamedPeriod[]> {
+  const rows = await db.namedPeriod.findMany({
+    where: { ownerId },
+    orderBy: [{ from: "asc" }, { name: "asc" }],
+  })
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    from: row.from.toISOString().slice(0, 10),
+    to: row.to ? row.to.toISOString().slice(0, 10) : null,
+  }))
 }

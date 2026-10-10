@@ -22,5 +22,6 @@ export const proxy = withAuth({
 export default proxy
 
 export const config = {
-  matcher: ["/((?!login|api/auth|_next/static|_next/image|favicon.ico|icon.svg).*)"],
+  // alles unter _next (Dateien, Bilder, die Verbindung des Dev-Servers für Neuladen) bleibt frei
+  matcher: ["/((?!login|api/auth|_next/|favicon.ico|icon.svg).*)"],
 }
