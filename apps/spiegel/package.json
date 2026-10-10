@@ -1,0 +1,48 @@
+{
+  "name": "spiegel",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "prettier": "@vereinsheim/config/prettier",
+  "scripts": {
+    "dev": "next dev --webpack --port 3002",
+    "build": "next build",
+    "start": "next start --port 3002",
+    "lint": "eslint src tools test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check-types": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "measure": "tsx tools/measure.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "catalog:",
+    "@prisma/client": "catalog:",
+    "@vereinsheim/ingest-contract": "workspace:*",
+    "@vereinsheim/shot-core": "workspace:*",
+    "@vereinsheim/ui": "workspace:*",
+    "next": "catalog:",
+    "pg": "catalog:",
+    "prisma": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vereinsheim/config": "workspace:*",
+    "@vereinsheim/ssmdb2-cases": "workspace:*",
+    "dotenv": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tailwindcss": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

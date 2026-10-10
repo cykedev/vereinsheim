@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@import "@vereinsheim/ui/design2.css";
+
+/* Klassen aus der App und aus den Bausteinen von shot-ui (ab SP-1.8) */
+@source "../";

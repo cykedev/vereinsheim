@@ -1,0 +1,371 @@
+// Spiegel (SP-1.6 a, ADR-031): Rohdaten als Zeilenversionen, kanonische Scheiben mit Revisionen und eine
+// Projektion je Scheibe für die Übersichten. Logisches Modell: vault/spiegel/spiegel-data-model.md.
+// Prisma 7: Client lokal generiert, Import über "@/generated/prisma/client".
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// Prisma 7: url nicht im Schema; Verbindung über @prisma/adapter-pg in src/lib/db.ts
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Scoring {
+  decimal
+  rings
+}
+
+enum CardKind {
+  training
+  competition
+}
+
+// offen (es kommen noch Schüsse), ruhend (seit einer Weile still), endgültig (SF-66)
+enum CardState {
+  open
+  resting
+  final
+}
+
+// Rohdaten der Anlage oder nur ein gescannter Ausdruck (QR, fremde Anlage)
+enum CardOrigin {
+  raw
+  pdf
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Anlage, Quelle, Brücke
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Schießstand eines Vereins; eine reicht im Normalfall (ADR-029, keine Mandanten)
+model Site {
+  id          Int          @id @default(autoincrement())
+  name        String
+  // IANA-Zone der Anlage: Meyton speichert Ortszeit ohne Zone
+  timeZone    String
+  createdAt   DateTime     @default(now())
+  sources     Source[]
+  bridges     Bridge[]
+  disciplines Discipline[]
+}
+
+// eine SSMDB2-Instanz in einer Epoche (Ablage geleert, neuer Server: neue Epoche, SF-23). ScheibenIDs sind nur
+// innerhalb einer Quelle eindeutig.
+model Source {
+  id         Int           @id @default(autoincrement())
+  siteId     Int
+  site       Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  epoch      Int
+  createdAt  DateTime      @default(now())
+  snapshots  RawSnapshot[]
+  rows       RawRow[]
+  cards      Card[]
+  tombstones Tombstone[]
+  locks      DeleteLock[]
+
+  @@unique([siteId, epoch])
+}
+
+// gekoppeltes Gerät an der Anlage; nur der Hash des Tokens wird gespeichert
+model Bridge {
+  id           Int       @id @default(autoincrement())
+  siteId       Int
+  site         Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name         String
+  tokenHash    String    @unique
+  version      String?
+  lastSeenAt   DateTime? @db.Timestamptz(3)
+  createdAt    DateTime  @default(now())
+  revokedAt    DateTime?
+  snapshots    RawSnapshot[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rohdaten (unverändert, SF-25 bis SF-27)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// eine Zeile einer SSMDB2-Tabelle in einer Fassung: neu gespeichert nur, wenn es sie mit diesem Inhalt für die
+// Scheibe noch nicht gibt. Ein Snapshot verweist auf seine Zeilen (`RawSnapshot.rowIds`).
+model RawRow {
+  id         BigInt   @id @default(autoincrement())
+  sourceId   Int
+  source     Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  scheibenId Int
+  // "scheiben", "serien" oder "treffer"
+  table      String
+  // sha256 über die kanonische Form der Zeile (RFC 8785)
+  checksum   String
+  values     Json
+  createdAt  DateTime @default(now())
+
+  @@unique([sourceId, scheibenId, table, checksum])
+}
+
+// Spaltenlisten (Name → Typ) der drei Tabellen; ändern sich nur mit der Meyton-Version
+model RawColumnSet {
+  id        Int           @id @default(autoincrement())
+  checksum  String        @unique
+  columns   Json
+  snapshots RawSnapshot[]
+}
+
+// ein Stand einer Scheibe von der Brücke (Snapshot v1): die Hülle und die Verweise auf die Zeilen
+model RawSnapshot {
+  id              BigInt       @id @default(autoincrement())
+  sourceId        Int
+  source          Source       @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  scheibenId      Int
+  // Folgenummer der Brücke, streng steigend (SF-26): die erste, mit der dieser Stand kam
+  sequence        BigInt
+  // die letzte, mit der derselbe Stand wieder kam; ein späterer Snapshot mit kleinerer Nummer ist veraltet
+  lastSequence    BigInt
+  lastObservedAt  DateTime     @db.Timestamptz(3)
+  bridgeId        Int?
+  bridge          Bridge?      @relation(fields: [bridgeId], references: [id], onDelete: SetNull)
+  contractVersion Int
+  sourceVersion   String?
+  sessionTimeZone String
+  observedAt      DateTime     @db.Timestamptz(3)
+  receivedAt      DateTime     @default(now()) @db.Timestamptz(3)
+  // Prüfsumme über data wie im Vertrag (`computeChecksum`)
+  checksum        String
+  columnSetId     Int
+  columnSet       RawColumnSet @relation(fields: [columnSetId], references: [id])
+  // RawRow-Ids je Tabelle, in kanonischer Folge der Zeilen
+  scheibenRowIds  BigInt[]
+  serienRowIds    BigInt[]
+  trefferRowIds   BigInt[]
+  revisions       CardRevision[]
+
+  @@unique([sourceId, scheibenId, sequence])
+}
+
+// abgelehnte oder fremde Scheibe, die nicht wiederkommen darf; die Brücke kennt sie auch
+model Tombstone {
+  id         Int      @id @default(autoincrement())
+  sourceId   Int
+  source     Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  scheibenId Int
+  reason     String
+  createdAt  DateTime @default(now())
+
+  @@unique([sourceId, scheibenId])
+}
+
+// eigene, endgültig gelöschte Scheibe: nicht von selbst wieder annehmen; ausdrückliches Holen hebt die Sperre auf
+model DeleteLock {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceId   Int
+  source     Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  scheibenId Int
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, sourceId, scheibenId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Konten
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Anmeldung, Admin und Ratenbegrenzung folgen in SP-1.6 a Teil 2
+model User {
+  id           String        @id @default(cuid())
+  name         String?
+  email        String        @unique
+  role         UserRole      @default(USER)
+  // Opt-in für die Zuordnung über den Sportpass (ADR-028)
+  sportpassId  BigInt?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  cards        Card[]
+  periods      NamedPeriod[]
+  deleteLocks  DeleteLock[]
+}
+
+// benannter Zeitraum des Schützen („Vorbereitung Landesmeisterschaft“), Tage in der Anzeige-Zone
+model NamedPeriod {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  from      DateTime @db.Date
+  to        DateTime? @db.Date
+  createdAt DateTime @default(now())
+
+  @@index([ownerId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Disziplinen
+// ─────────────────────────────────────────────────────────────────────────────
+
+// was in Verläufen zusammen zählt, etwa LP Freihand (LP 40, LP 40 alt, LP Training)
+model Family {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  disciplines Discipline[]
+  cards       Card[]
+}
+
+// Meyton-Disziplin; Vereinsvarianten können dieselbe DisziplinID tragen (SF-70)
+model Discipline {
+  id              Int      @id @default(autoincrement())
+  siteId          Int
+  site            Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  meytonId        Int
+  name            String
+  familyId        Int?
+  family          Family?  @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  // Scheibenbild aus shot-core (`TARGETS`); null: unbekannt (ADR-029)
+  targetId        String?
+  // amtliche Wertung (SF-74); null: unbekannt
+  officialScoring Scoring?
+  cards           Card[]
+
+  @@unique([siteId, meytonId, name])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scheiben
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ein Durchgang. Aus Rohdaten: Quelle + ScheibenID eindeutig; nur aus dem PDF: ohne beides.
+model Card {
+  id                String          @id @default(cuid())
+  sourceId          Int?
+  source            Source?         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  scheibenId        Int?
+  // null, solange niemand die Scheibe zugeordnet hat
+  ownerId           String?
+  owner             User?           @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  // wie Meyton den Schützen kennt; für die Zuordnung über den Sportpass
+  sportpassId       BigInt?
+  disciplineId      Int
+  // NoAction statt Restrict: prüft am Ende der Anweisung, damit das Löschen einer Anlage über die Quelle kaskadiert
+  discipline        Discipline      @relation(fields: [disciplineId], references: [id], onDelete: NoAction)
+  // Familie der Disziplin, hier mitgeführt für den Index der Übersichten; ändert die Admin-Zuordnung die
+  // Familie, zieht sie die Scheiben mit (`setDisciplineFamily`)
+  familyId          Int?
+  family            Family?         @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  stand             String?
+  startedAt         DateTime        @db.Timestamptz(3)
+  endedAt           DateTime?       @db.Timestamptz(3)
+  kind              CardKind
+  state             CardState
+  // endgültig und mit voller Schusszahl (SF-66)
+  complete          Boolean
+  official          Scoring?
+  flags             String[]
+  origin            CardOrigin
+  currentRevisionId BigInt?         @unique
+  currentRevision   CardRevision?   @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
+  // Papierkorb: 30 Tage, danach endgültig gelöscht und gesperrt (DeleteLock)
+  deletedAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  revisions         CardRevision[]  @relation("Revisions")
+  shots             Shot[]
+  projection        CardProjection?
+  printouts         Printout[]
+
+  @@unique([sourceId, scheibenId])
+  // Liste, Fortschritt, Blättern: Scheiben eines Schützen in einer Familie nach Beginn
+  @@index([ownerId, familyId, startedAt])
+  // Start: der letzte Abend über alle Familien
+  @@index([ownerId, startedAt])
+  @@index([sportpassId])
+}
+
+// ein Stand der Scheibe; Korrekturen erzeugen eine neue Revision, die vorige bleibt
+model CardRevision {
+  id            BigInt       @id @default(autoincrement())
+  cardId        String
+  card          Card         @relation("Revisions", fields: [cardId], references: [id], onDelete: Cascade)
+  number        Int
+  // sha256 über Schüsse und Merkmale: gleicher Inhalt, keine neue Revision
+  contentHash   String
+  rawSnapshotId BigInt?
+  rawSnapshot   RawSnapshot? @relation(fields: [rawSnapshotId], references: [id], onDelete: SetNull)
+  reason        String
+  createdAt     DateTime     @default(now())
+  shots         Shot[]
+  currentOf     Card?        @relation("CurrentRevision")
+
+  @@unique([cardId, number])
+}
+
+// ein Schuss in einer Revision
+model Shot {
+  id               BigInt       @id @default(autoincrement())
+  revisionId       BigInt
+  revision         CardRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  cardId           String
+  card             Card         @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  // Abgabefolge über die ganze Scheibe (SF-30)
+  seq              Int
+  // Stellung, 0 = Probe
+  stellung         Int
+  treffer          Int
+  series           Int?
+  // Lage in µm, x nach rechts, y nach oben; null nur aus dem PDF
+  xUm              Int?
+  yUm              Int?
+  ring             Int?
+  decimalTenths    Int?
+  // Abstand zur Mitte in 0,1 µm, wie Meyton `Teiler001`
+  distanceTenthsUm Int?
+  innerTen         Boolean
+  // Anzeigeart am Monitor (Treffer.Wertung), nie die amtliche Wertung (SF-74)
+  displayMode      Int?
+  firedAt          DateTime?    @db.Timestamptz(3)
+  flags            String[]
+  // über Revisionen hinweg derselbe Schuss: Zeit mit ms und Lage
+  fingerprint      String
+
+  @@unique([revisionId, stellung, treffer])
+  @@index([cardId, fingerprint])
+}
+
+// Kennzahlen und Rekord-Kandidaten der aktuellen Revision (shot-core `cardProjection`), für Liste, Fortschritt und
+// Start ohne Schüsse; neu gerechnet beim Schreiben einer Revision und wenn `version` veraltet ist
+model CardProjection {
+  cardId       String   @id
+  card         Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  revisionId   BigInt
+  version      String
+  probeOnly    Boolean
+  suspicious   Boolean
+  printedShots Int
+  values       Json
+  records      Json
+  computedAt   DateTime @default(now())
+
+  @@index([version])
+}
+
+// gespeicherter Meyton-Ausdruck mit gelesener ID im Fuß und Erstellzeit (meyton-pdf)
+model Printout {
+  id          String    @id @default(cuid())
+  cardId      String
+  card        Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  sha256      String
+  fileName    String
+  size        Int
+  footerId    String?
+  printedAt   DateTime? @db.Timestamptz(3)
+  storedAt    DateTime  @default(now())
+
+  @@unique([cardId, sha256])
+}

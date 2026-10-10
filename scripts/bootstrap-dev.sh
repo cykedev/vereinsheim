@@ -31,7 +31,7 @@ cd "$REPO_DIR"
 CODEGRAPH_PKG="@colbymchenry/codegraph"
 CODEGRAPH_VERSION="1.0.1"
 DEV_COMPOSE_FILE="$REPO_DIR/docker-compose.dev.yml"
-APPS=(ringwerk treffsicher)
+APPS=(ringwerk treffsicher spiegel)
 
 # ---------- Ausgabe ----------
 if [[ -t 1 ]]; then
@@ -126,8 +126,17 @@ ok "Dev-Postgres bereit (localhost:5432)"
 # Shadow-DB an und scheitert ohne dieses Recht mit P3014. dev/db-init vergibt es beim ERSTEN
 # Start mit — dieser idempotente Nachzug holt bestehende Volumes auf denselben Stand.
 # Prod migriert via `migrate deploy` und braucht keine Shadow-DB (db-init/ bleibt ohne).
+# Spiegel kam nach dem ersten Start dazu (SP-1.6 a): bestehende Volumes bekommen Rolle und DB hier nachgezogen.
+if ! docker compose -f "$DEV_COMPOSE_FILE" exec -T db psql -U postgres -d postgres -tAc \
+	"SELECT 1 FROM pg_roles WHERE rolname = 'spiegel'" | grep -q 1; then
+	docker compose -f "$DEV_COMPOSE_FILE" exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d postgres \
+		-c "CREATE USER spiegel WITH PASSWORD 'spiegel' CREATEDB;" \
+		-c "CREATE DATABASE spiegel OWNER spiegel;" \
+		-c "REVOKE ALL ON DATABASE spiegel FROM PUBLIC;" >/dev/null
+	ok "Dev-DB spiegel angelegt"
+fi
 docker compose -f "$DEV_COMPOSE_FILE" exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d postgres \
-	-c 'ALTER ROLE ringwerk CREATEDB;' -c 'ALTER ROLE treffsicher CREATEDB;' >/dev/null
+	-c 'ALTER ROLE ringwerk CREATEDB;' -c 'ALTER ROLE treffsicher CREATEDB;' -c 'ALTER ROLE spiegel CREATEDB;' >/dev/null
 ok "Dev-Rollen dürfen Shadow-DBs anlegen (prisma migrate dev)"
 
 # ---------- 6) .env je App (nur wenn fehlend — nie überschreiben) ----------
@@ -157,7 +166,7 @@ echo
 echo "${BOLD}${GREEN}Fertig.${RESET} Die Workstation ist arbeitsfähig."
 echo
 echo "  Nächste Schritte:"
-echo "    pnpm dev      ${DIM}# beide Apps: ringwerk :3000, treffsicher :3001${RESET}"
+echo "    pnpm dev      ${DIM}# alle Apps: ringwerk :3000, treffsicher :3001, spiegel :3002${RESET}"
 echo "    pnpm check    ${DIM}# alle 5 Quality-Gates${RESET}"
 echo
 echo "  ${DIM}Für VPS-Deploy separat: ./scripts/vereinsheim local-setup${RESET}"

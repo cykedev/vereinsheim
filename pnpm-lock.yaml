@@ -223,6 +223,82 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.2)(vite@8.0.16(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
 
+  apps/spiegel:
+    dependencies:
+      '@prisma/adapter-pg':
+        specifier: 'catalog:'
+        version: 7.9.1
+      '@prisma/client':
+        specifier: 'catalog:'
+        version: 7.9.1(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3)
+      '@vereinsheim/ingest-contract':
+        specifier: workspace:*
+        version: link:../../packages/ingest-contract
+      '@vereinsheim/shot-core':
+        specifier: workspace:*
+        version: link:../../packages/shot-core
+      '@vereinsheim/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: 'catalog:'
+        version: 16.3.2(@babel/core@7.29.7)(@types/node@24.13.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      pg:
+        specifier: 'catalog:'
+        version: 8.23.0
+      prisma:
+        specifier: 'catalog:'
+        version: 7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.8
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: 'catalog:'
+        version: 4.3.3
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.2
+      '@types/pg':
+        specifier: 'catalog:'
+        version: 8.23.1
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.4(@types/react@19.2.18)
+      '@vereinsheim/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@vereinsheim/ssmdb2-cases':
+        specifier: workspace:*
+        version: link:../../packages/ssmdb2-cases
+      dotenv:
+        specifier: 'catalog:'
+        version: 17.4.2
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.8.4
+      tailwindcss:
+        specifier: 'catalog:'
+        version: 4.3.3
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.12
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.2)(vite@8.0.16(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
+
   apps/treffsicher:
     dependencies:
       '@hookform/resolvers':
