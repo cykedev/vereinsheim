@@ -1,8 +1,18 @@
 import { db } from "@/lib/db"
+import { refreshStaleProjections } from "@/lib/db/cards"
 import { ensureSeedAdmin } from "@/lib/startup"
 
-/** das erste Admin-Konto anlegen, falls es keines gibt; ohne Datenbank startet der Server trotzdem */
+/**
+ * Beim Start: das erste Admin-Konto anlegen, falls es keines gibt, und veraltete Projektionen im Hintergrund nachrechnen
+ * (ADR-031: nach einer neuen `projectionVersion`; die Übersichten lesen bis dahin die alte). Ohne Datenbank startet der
+ * Server trotzdem.
+ */
 export async function registerNode() {
+  void refreshStaleProjections(db)
+    .then((count) => {
+      if (count) console.warn(`${count} Projektionen beim Start neu gerechnet`)
+    })
+    .catch((error: unknown) => console.error("Projektionen beim Start nicht nachgerechnet:", error))
   try {
     const result = await ensureSeedAdmin(db, {
       email: process.env.SEED_ADMIN_EMAIL,

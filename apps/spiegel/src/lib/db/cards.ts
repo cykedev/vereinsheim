@@ -7,7 +7,7 @@ import { createHash } from "node:crypto"
 import { canonicalize } from "@vereinsheim/ingest-contract/canonical"
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
-import { cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
+import { cardMarks, cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
 
 import { Prisma, type CardKind, type CardOrigin, type CardState } from "@/generated/prisma/client"
 
@@ -414,6 +414,8 @@ async function saveProjection(
     printedShots: projection.printedShots,
     values: projection.values,
     records: projection.records as unknown as Prisma.InputJsonObject,
+    // die Lagen für die kleinen Scheiben der Übersichten, gelesen nur für die gezeigten Scheiben (`cardMarks` in reads)
+    marks: cardMarks(shots) as unknown as Prisma.InputJsonArray,
     computedAt: new Date(),
   }
   await tx.cardProjection.upsert({
@@ -456,6 +458,27 @@ export async function refreshProjections(
     })
   }
   return stale.length
+}
+
+/** so viele Stapel höchstens: Schutz vor einer Schleife, falls eine Projektion veraltet bliebe */
+const MAX_REFRESH_ROUNDS = 10_000
+
+/**
+ * Alle veralteten Projektionen nachrechnen, in Stapeln von `refreshProjections`, bis ein Stapel nicht mehr voll ist. Der
+ * Server ruft das beim Start (`instrumentation-node.ts`), damit eine neue `projectionVersion` (neue Kennzahl, neue Form
+ * der Projektion) ohne Zutun in den Übersichten ankommt. Gibt die Zahl der neu gerechneten zurück.
+ */
+export async function refreshStaleProjections(
+  db: Db,
+  { batch = 200, sourceId }: { batch?: number; sourceId?: number } = {}
+): Promise<number> {
+  let total = 0
+  for (let round = 0; round < MAX_REFRESH_ROUNDS; round++) {
+    const done = await refreshProjections(db, { limit: batch, sourceId })
+    total += done
+    if (done < batch) break
+  }
+  return total
 }
 
 /** ein gespeicherter Schuss als Eingabe */

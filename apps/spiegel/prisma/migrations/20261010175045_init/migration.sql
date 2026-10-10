@@ -254,6 +254,7 @@ CREATE TABLE "CardProjection" (
     "printedShots" INTEGER NOT NULL,
     "values" JSONB NOT NULL,
     "records" JSONB NOT NULL,
+    "marks" JSONB NOT NULL,
     "computedAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "CardProjection_pkey" PRIMARY KEY ("cardId")

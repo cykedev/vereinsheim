@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
-import { cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
+import { cardMarks, cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
 
 import { createPrismaClient } from "@/lib/db"
 import { generateSeason, liveStates, type GeneratedCard } from "../../../test/generate"
@@ -9,6 +9,7 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import {
   CardIdentityConflictError,
   refreshProjections,
+  refreshStaleProjections,
   setDisciplineFamily,
   shotChange,
   toMetricShot,
@@ -69,6 +70,9 @@ describe("writeRevision", () => {
     expect(stored.version).toBe(projectionVersion())
     expect(stored.values).toEqual(expected.values)
     expect(stored.records).toEqual(JSON.parse(JSON.stringify(expected.records)))
+    // die Lagen für die kleinen Scheiben der Übersichten, wie der Fachkern sie aus den Schüssen macht
+    expect(stored.marks).toEqual(cardMarks(card!.shots))
+    expect((stored.marks as unknown[]).length).toBeGreaterThan(0)
   })
 
   it("dieselben Schüsse in anderer Folge: unverändert, die Merkmale der Scheibe ändern sich trotzdem", async () => {
@@ -321,13 +325,29 @@ describe("refreshProjections", () => {
     const before = await projectionOf(ids[0])
     await db.cardProjection.updateMany({
       where: { cardId: { in: ids } },
-      data: { version: "p0-alt", values: {} },
+      data: { version: "p0-alt", values: {}, marks: [] },
     })
     expect(await refreshProjections(db, { sourceId: site.sourceId })).toBe(2)
     expect(await refreshProjections(db, { sourceId: site.sourceId })).toBe(0)
     const after = await projectionOf(ids[0])
     expect(after.version).toBe(projectionVersion())
     expect(after.values).toEqual(before.values)
+    expect(after.marks).toEqual(before.marks)
+  })
+
+  it("beim Start alle veralteten in Stapeln, bis keine übrig ist", async () => {
+    const inputs = season(3, 2800)
+    const ids: string[] = []
+    for (const input of inputs) ids.push((await writeRevision(db, input)).cardId)
+    await db.cardProjection.updateMany({
+      where: { cardId: { in: ids } },
+      data: { version: "p1-alt", marks: [] },
+    })
+    expect(await refreshStaleProjections(db, { batch: 1, sourceId: site.sourceId })).toBe(3)
+    expect(await refreshStaleProjections(db, { batch: 1, sourceId: site.sourceId })).toBe(0)
+    const rows = await db.cardProjection.findMany({ where: { cardId: { in: ids } } })
+    expect(rows.every((row) => row.version === projectionVersion())).toBe(true)
+    expect(rows.every((row) => (row.marks as unknown[]).length > 0)).toBe(true)
   })
 
   it("eine Projektion einer früheren Revision gilt als veraltet", async () => {

@@ -386,6 +386,8 @@ model CardProjection {
   printedShots Int
   values       Json
   records      Json
+  /// Lagen der Schüsse wie am Ausdruck für die kleinen Scheiben (`cardMarks`, je [x, y, Ring] in 10 µm)
+  marks        Json
   computedAt   DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([version])
