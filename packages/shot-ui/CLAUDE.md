@@ -98,7 +98,9 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Statistik im Baustein: Auch Hinweise rechnen über dieselben Schüsse wie der Wert (Platzhalter nach SF-15
   nicht mit Lage, Zeit oder Abstand).
 - **Zahlen formatiert `./format`** (feste Stellen, Komma, echtes Minus, ohne `Intl`, wie auf dem
-  Ausdruck); kein `toFixed(…).replace(…)` in Komponenten. Datum und Uhrzeit über `@vereinsheim/lib/format`
+  Ausdruck); kein `toFixed(…).replace(…)` in Komponenten. `formatValue` rundet die Hälfte kaufmännisch von der Null
+  weg, auch wenn die Gleitkommazahl knapp darunter liegt (erst auf zwölf gültige Stellen, dann runden). `toFixed`
+  allein zeigte 9,065 je nach Rechenweg als 9,06 oder 9,07. Datum und Uhrzeit über `@vereinsheim/lib/format`
   mit der Zeitzone als Parameter.
 - **Client-Komponenten** mit `"use client"`, Daten kommen als Props; kein Laden von Daten im Baustein.
 - **Wie am Ausdruck, nur Probe ist Training** (U4, `plans/2026-10-09-spiegel-probe-wie-ausdruck.md`, [[adr-027]]):
@@ -130,6 +132,14 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   `scroll-mt-14` für die 56 px hohe Leiste. Was außerhalb der Scheibe die Scheibe ändert, springt über
   `useReturnJump` zu ihr. Die Schalter der Scheibe liegen in ihren Ecken (`TargetControls`), nicht als Leiste. Ohne Schüsse zeigt die Seite neben der Scheibe nur `NoShots`, keine leeren Kästen
   und keine Kacheln voller Striche (`empty`).
+- **Übersichten auf der Projektion** (SP-1.8, ADR-031, `plans/2026-10-10-spiegel-projektion-uebersichten.md`):
+  `cardListModel`, `startModel`, `periodModel`, `contextCardIds` und `lastEvening` nehmen `ProjectedCard` aus
+  `shot-core/projection`, nie Schüsse. Werte kommen aus der Projektion (`projectedValues`, `projectedRecords`,
+  `projectedVolume`), die Schusszahl aus `printedShots`, der Ø eines Abends aus `pooledMean`; „nur Probe“ ist
+  `isProbeOnly` (Projektion), auf der Seite einer Scheibe `probeOnlyShots` (Schüsse), die Art beider `kindOf`. Die
+  kleinen Scheiben (`EveningList`, `EveningBlock`, `CardReadout`) bekommen ihre Lagen als `marks` (Id → `MarkShot[]`,
+  `markShots(cardMarks(…))`); `MiniTarget` braucht nur Lage und Ring. Die Tests projizieren ihre Scheiben (`projected`,
+  `marksOf` in `period/testSeason.ts`) und behalten ihre Erwartungen: Was grün bleibt, rechnet wie aus den Schüssen.
 - **Scheiben-Liste nach Abend** (Plan N2, `plans/2026-10-09-spiegel-scheiben-liste.md`):
   - Ein Abend ist Konto und Tag in der Anzeige-Zeitzone; eine Scheibe vor 4 Uhr zählt zum Vortag.
   - Alle Scheiben eines Abends stehen gleichberechtigt in zeitlicher Folge, die Abende neueste zuerst. Kein

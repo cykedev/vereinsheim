@@ -39,11 +39,13 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
 
 - **Schichten** (`src/lib/db/`): `raw.ts` legt Rohdaten ab, `cards.ts` schreibt Scheiben, Revisionen und Projektion,
   `reads.ts` liest für die Ansichten. Seiten und Server Actions rufen nur diese Funktionen, nie Prisma direkt auf Schüsse.
-- **Übersichten lesen keine Schüsse** (Ziel, ADR-031): Liste, Fortschritt und Start nehmen `familyCards`/`ownerCards`
-  (Scheibe mit Projektion) und rechnen mit `projectedValues`/`projectedRecords`. Messung: „Alles“ 39 ms statt 200 ms
-  Laden plus 48 ms Rechnen. **Übergang:** Start, Liste und das Blättern laden noch `ownerCardsWithShots`, weil die
-  Modelle in `shot-ui` aus Schüssen rechnen; vor dem ersten Deploy auf die Projektion umstellen (SP-1.8). Nur die Seite
-  einer Scheibe lädt Schüsse auf Dauer (`cardWithShots`, immer mit `ownerId`).
+- **Übersichten lesen keine Schüsse** (ADR-031, seit SP-1.8): Start, Liste und das Blättern nehmen `ownerCards` (Scheibe
+  mit Projektion, Familie, Scheibenbild) und rechnen die Modelle aus `shot-ui` **auf dem Server**. An den Browser gehen
+  nur das Modell und die Lagen der gezeigten Scheiben (`marksOfCards`, `src/lib/marks.ts`); die Hülle baut Routen und
+  öffnet eine Scheibe in `row.resultScoring`. Die Liste liest ihre Abfrage auf dem Server (`searchOf` in
+  `src/lib/search.ts`), ein Filter schreibt die Adresse, und die Seite rechnet neu. Gemessen bei 1.564 Scheiben: Start
+  70 ms und 5 KB statt 8 MB an den Browser ([[spiegel-db-schema]]). Nur die Seite einer Scheibe lädt Schüsse
+  (`cardWithShots`, immer mit `ownerId`).
 - **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
   Admins. Admin verwaltet Konten und sieht keine fremden Schüsse.
 - **Anmeldung wie Ringwerk:** `getAuthSession` prüft gegen die Datenbank (aktiv, `sessionVersion`, einmal je Anfrage
@@ -64,9 +66,9 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   bündelt die Datei auch für Edge, und dort fehlt `fs` für `pg`.
 - **Wertung des Geräts** als Cookie (`spiegel-scoring`, `src/lib/device*.ts`): Start und Liste rendern auf dem Server.
   Der Name steht in `device-cookie.ts` ohne Importe, damit die Client-Seite nicht `next/headers` zieht.
-- **Projektion nur aus dem Fachkern.** `cardProjection` rechnet, die App speichert. Steigt eine Kennzahl-`version` oder
-  `PROJECTION_VERSION`, holt `refreshProjections` die veralteten nach (auch die einer früheren Revision), je Scheibe
-  unter der Sperre ihrer Zeile.
+- **Projektion nur aus dem Fachkern.** `cardProjection` und `cardMarks` rechnen, die App speichert. Steigt eine
+  Kennzahl-`version` oder `PROJECTION_VERSION`, holt `refreshProjections` die veralteten nach (auch die einer früheren
+  Revision), je Scheibe unter der Sperre ihrer Zeile; beim Start des Servers `refreshStaleProjections` im Hintergrund.
 - **Revisionen sind Korrekturen der Wertung** (SF-67, `shotChange`): Eine neue entsteht nur, wenn sich eine
   Wertungszeile ändert oder wegfällt. Neue Schüsse und die Probe, die Meyton beim ersten Wertungsschuss löscht (SF-03)
   oder neu beginnt (SF-72), ändern die aktuelle Revision; die Scheibe ist so, wie am Ausdruck. Merkmale der Scheibe

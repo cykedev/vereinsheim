@@ -255,6 +255,12 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   `onChange` (wie die Nutzerformulare in Ringwerk) behalten sie. Aufgefallen in Spiegel (Kontenverwaltung, Oktober 2026)
   bei der Prüfung im Browser, kein Test sah es.
 
+- **Runden an der Hälfte nicht `toFixed` überlassen**: `toFixed` rundet die Binärzahl. 362,6 Ringe auf 40 Schuss sind
+  genau 9,065, gerechnet einmal 9,06500…1 (zeigt 9,07), einmal 9,06499…5 (zeigt 9,06). Bei 40 Schuss liegt jede vierte
+  Scheibe auf so einer Hälfte. Aufgefallen beim Vergleich der Liste vor und nach der Projektion: Nur der Rechenweg
+  hatte sich geändert, und zwei Zeilen zeigten anders. `formatValue` in `shot-ui` rundet deshalb erst auf zwölf
+  gültige Stellen und dann kaufmännisch.
+
 - **Nach `pnpm add` in einer App `pnpm install --frozen-lockfile`**: `pnpm --filter <app> add`
   kann Peer-Varianten neu auflösen, ohne die `node_modules`-Links der **anderen** App
   nachzuziehen. Deren Gate fällt dann mit `Cannot find package …` aus, obwohl der Diff sauber ist.

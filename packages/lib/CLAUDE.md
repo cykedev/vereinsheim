@@ -23,6 +23,9 @@ Module sind nicht mehr im `consistency-check.sh`-Gate).
 - **Verhalten/Logik ändert man HIER**, nicht in App-Kopien — sonst entsteht wieder Drift.
 - `dateTime` (server-only) seit Juni 2026 ebenfalls geteilt via `@vereinsheim/lib/dateTime` — das Paket setzt dafür `types: ["node", "react"]` + devDeps `@types/node`/`server-only`.
 - Nach Änderungen: `pnpm check` (alle 5 Gates über beide Apps) muss grün sein.
+- **`format` hält seine Formatter vor** (je Format und Zeitzone ein `Intl.DateTimeFormat`, Zahlen einmal): Einen zu bauen
+  kostet rund 70 µs, und Listen formatieren je Zeile (Spiegel, Oktober 2026: Start bei 1.564 Scheiben von 319 auf 70 ms).
+  Neue Formate laufen über `dateTimeFormat(…)`, kein `new Intl.…` in einer Funktion.
 
 ## Nachtrag (September 2026)
 

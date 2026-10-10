@@ -45,16 +45,18 @@ relates_to: ["[[spiegel-data-model]]", "[[spiegel-ingest-pipeline]]", "[[spiegel
   - Dieselbe ScheibenID mit einem Beginn mehr als sieben Tage entfernt und ohne gemeinsamen Fingerabdruck: `CardIdentityConflictError`; der Adapter nimmt den nächsten Zyklus.
   - Merkmale (Zustand, vollständig, Merkmale, Beginn, Stand) setzt jeder Stand neu; Kennung und Besitzer nicht. Eine Scheibe aus dem PDF bekommt beim ersten Snapshot ihre Quelle (Herkunft dann „raw“); eine andere Kennung ist ein Fehler. `sportpassId`: fehlt heißt nicht anfassen, `null` heißt leeren.
   - Schüsse (`shotChange`): gleich → `unchanged`; eine Wertungszeile geändert oder weg → `created`, eine neue Revision (SF-67); sonst → `updated` in derselben Revision: neue Schüsse dazu, Probe weg (SF-03) oder neu begonnen (SF-72).
-- **Projektion** (`cardProjection` aus `@vereinsheim/shot-core/projection`): rund 1,5 KB je Scheibe, neu mit jeder Änderung an den Schüssen. `refreshProjections` rechnet veraltete nach (andere `version`, andere Revision als die aktuelle, fehlend), je Scheibe unter der Sperre ihrer Zeile, wahlweise nur eine Quelle.
+- **Projektion** (`cardProjection` aus `@vereinsheim/shot-core/projection`): rund 1,5 KB je Scheibe, neu mit jeder Änderung an den Schüssen. `refreshProjections` rechnet veraltete nach (andere `version`, andere Revision als die aktuelle, fehlend), je Scheibe unter der Sperre ihrer Zeile, wahlweise nur eine Quelle. `refreshStaleProjections` ruft es in Stapeln, bis keine übrig ist; der Server startet das beim Start im Hintergrund (`instrumentation-node.ts`), so kommt eine neue Version ohne Zutun in den Übersichten an.
+- **Lagen** (`CardProjection.marks`, seit SP-1.8): die Schüsse wie am Ausdruck mit Lage, je `[x, y, Ring]` in 10 µm (`cardMarks`), rund 0,6 KB bei 40 Schuss. Sie zeichnen die kleinen Scheiben in Liste und Start und werden mit der Projektion gerechnet (`PROJECTION_VERSION` 2), aber nur für die gezeigten Scheiben gelesen.
 
 ## Lesen
 
 | Ansicht | Zugriff | Index |
 |---|---|---|
 | Liste, Fortschritt | `familyCards(ownerId, familyId, Zeitraum)` | `Card(ownerId, familyId, startedAt)` oder `Card(ownerId, startedAt)`, dazu `CardProjection` über den Primärschlüssel |
-| Start | `latestCardStart`, dann `ownerCards` über den Abend | `Card(ownerId, startedAt)` rückwärts |
+| Start, Liste, Blättern (SP-1.8) | `ownerCards(ownerId)`: alle eigenen Scheiben mit Projektion, Familie und Scheibenbild; die Seite rechnet das Modell auf dem Server | `Card(ownerId, startedAt)` |
+| kleine Scheiben | `marksOfCards(ownerId, ids)`: die Lagen der gezeigten Scheiben | `CardProjection` über den Primärschlüssel |
+| Start (nur der Abend, Messung) | `latestCardStart`, dann `ownerCards` über den Abend | `Card(ownerId, startedAt)` rückwärts |
 | Seite einer Scheibe | `cardWithShots(cardId, ownerId)`: `PageCard` mit Disziplin, Scheibenbild und Familie | `Card` und `CardRevision` über den Primärschlüssel, `Shot(revisionId, …)` |
-| Übergang bis SP-1.8: Start, Liste, Blättern | `ownerCardsWithShots(ownerId)`: alle eigenen Scheiben mit Schüssen | `Card(ownerId, startedAt)` |
 
 Die Übersichten rechnen mit `projectedValues` und `projectedRecords`; was dabei herauskommt, ist gleich der Rechnung aus den Schüssen (Test in `packages/shot-core/src/analysis/projection.test.ts` und an der Datenbank in `reads.test.ts`, mit unvollständiger, ausgenommener, verdächtiger und als Wertung gezählter Scheibe). Eine gelöschte Scheibe (Papierkorb, `deletedAt`) fehlt in jeder Übersicht und auf ihrer Seite; die Seite einer Scheibe gibt es nur für ihren Besitzer.
 
@@ -80,10 +82,28 @@ Die Übersichten rechnen mit `projectedValues` und `projectedRecords`; was dabei
 - **Platz** (ein Lauf auf leerer Datenbank, mit Indizes): Schüsse rund 40 MB für 3.764 Scheiben, Projektionen rund 8 MB, Scheiben 2 MB.
 - Ohne Datenbank kostete dieselbe Seite aus Schüssen 82 bis 362 ms reine Rechnung (Plan `plans/2026-10-10-spiegel-datenmodell.md`).
 
+## Start und Liste auf der Projektion (SP-1.8, 10. Oktober 2026)
+
+Plan `plans/2026-10-10-spiegel-projektion-uebersichten.md`. Die Modelle in `shot-ui` nehmen `ProjectedCard`. Start und
+Liste rechnen sie auf dem Server; an den Browser gehen nur das Modell und die Lagen der gezeigten Scheiben. Gemessen mit
+`pnpm --filter spiegel measure`: 1.564 Scheiben, 47.355 Schuss, dazu 2.200 Scheiben anderer Mitglieder, Median über
+7 Läufe.
+
+| | vorher | jetzt |
+| --- | --- | --- |
+| an den Browser, Start | alle Scheiben mit Schüssen, 7.982 KB | 5 KB |
+| an den Browser, Liste „Alles“ | dasselbe | 1.040 KB (30 Zeilen je Monat, Lagen jeder Zeile) |
+| Start auf dem Server (lesen, rechnen, Lagen) | – | 70 ms |
+| Liste „Alles“ auf dem Server | – | 69 ms, davon 42 ms Lesen |
+
+Zwei Befunde beim Umbau:
+- **Datum je Zeile:** `@vereinsheim/lib/format` baute für jeden Aufruf einen neuen `Intl.DateTimeFormat`, etwa 70 µs.
+  Allein der Abend jeder Scheibe kostete so 107 ms; mit vorgehaltenen Formattern sank Start von 319 auf 70 ms.
+- **Rundung an der Hälfte:** 9,065 zeigte `toFixed` je nach Rechenweg als 9,06 oder 9,07. `formatValue` rundet seitdem
+  kaufmännisch, unabhängig vom Rauschen der Gleitkommazahl.
+
 ## Offen
 
 - Adapter Snapshot → Scheibe (fängt `CardIdentityConflictError` und nimmt den nächsten Zyklus; prüft Grabstein und Löschsperre über Beginn und Zyklus), Ingest-API mit Geräte-Token (Ergebnisse mit `bigint` vor JSON umwandeln), Zähler für `stale` und `future` (SP-1.6 b, [[spiegel-ingest-pipeline]]). Tests mit den eingefrorenen Folgen SF-03 und SF-72 durch den Adapter.
-- Start und Liste auf die Projektion umstellen (SP-1.8) und `ownerCardsWithShots` streichen, vor dem ersten Deploy: Gemessen im Container mit 256 MB (10. Oktober 2026, 32 Scheiben) lief Spiegel zuerst mit 117 MiB nach dem Start und 213 bis 227 MiB unter Last, nach den Korrekturen aus dem Review mit 57 und 147 bis 152 MiB, ohne Abbruch; mit vielen Scheiben trüge jede Seite aber alle Schüsse.
-- Modelle von Liste, Fortschritt und Start auf `ProjectedCard` (SP-1.8).
 - Noch nicht im Schema: Stand, Schützen-Identität, SportpassIDs und Zuordnung mit Protokoll (SP-1.7), amtliche Summen je Serie, Einheit, Notiz, Tag, Ausrüstung ([[spiegel-data-model]]).
 - **Eine Migration bis zum ersten Deploy** (User, 10. Oktober 2026): Bis SP-1.9 ersetzt jede Schemaänderung die eine Migration `init`, statt eine weitere anzulegen; die Dev-Datenbank setzt der User danach zurück. Ab dem ersten Deploy nur noch neue Migrationen.

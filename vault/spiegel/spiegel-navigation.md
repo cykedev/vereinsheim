@@ -312,8 +312,9 @@ Dev-Datenbank (`pnpm --filter spiegel seed:own`):
   Scannen und Offen sind Platzhalter.
 - **Wertung des Geräts** als Cookie (`spiegel-scoring`), weil Start und Liste auf dem Server rendern; die Seite einer
   Scheibe schreibt sie beim Umschalten mit.
-- **Übergang:** Start und Liste laden alle Scheiben mit Schüssen (`ownerCardsWithShots`), bis die Modelle die
-  Projektion nehmen ([[adr-031]]). Vor dem ersten Deploy umstellen ([[spiegel-roadmap]], SP-1.9).
+- **Auf der Projektion** (SP-1.8, 10. Oktober 2026): Start, Liste und das Blättern lesen die Scheiben mit Projektion
+  (`ownerCards`) und rechnen auf dem Server; an den Browser gehen das Modell und die Lagen der gezeigten Scheiben
+  ([[adr-031]], [[spiegel-db-schema]]).
 
 ## Labor näher an der App (9. Oktober 2026)
 
