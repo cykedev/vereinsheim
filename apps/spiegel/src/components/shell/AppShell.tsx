@@ -51,7 +51,8 @@ export function AppShell({ isAdmin, children }: { isAdmin: boolean; children: Re
     <RouteLinkProvider value={links}>
       <HelpContext.Provider value={setHelpId}>
         <AppFrame
-          current={areaOf(route)}
+          // Unterseiten von Admin (Konten) kennt das Routen-Modell nicht; sie gehören zu Admin
+          current={areaOf(route) ?? (pathname.startsWith("/admin/") ? "admin" : null)}
           links={areaLinks(memory, null)}
           openCount={0}
           isAdmin={isAdmin}
