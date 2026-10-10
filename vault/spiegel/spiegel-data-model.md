@@ -60,7 +60,7 @@ type Shot = {
 - **Amtliche Werte** (Ring, Zehntel, Teiler, Innenzehner) so, wie die Quelle sie liefert; die Skala je Quellfeld steht im Adapter ([[spiegel-ingest-pipeline]]).
 - **Amtliche Wertung der Scheibe** aus der Disziplin, nie aus `Treffer.Wertung`: Das ist die Anzeigeart am Monitor, die der Schütze umschalten kann; gedruckt wird nach der Disziplin (SF-74, Abend-Mitschnitt vom 9. Oktober 2026; bis dahin stand hier der Wertungsmodus der Wertungsschüsse). Woher der Adapter sie liest, klärt SP-1.6; unbekannt bleibt sie leer. Im Fachkern `PeriodCard.official`; die Scheiben-Liste zeigt sie vorn ([[spiegel-navigation]]). Training nur aus Probe hat keine.
 - **Zeit** in UTC mit Millisekunden; der Rohwert (Ortszeit ohne Zone) bleibt im Rohdatensatz.
-- **Revisionen:** Korrekturen erzeugen eine neue Revision; die vorige bleibt nachvollziehbar. Kommen nur Schüsse dazu (offener Durchgang, SF-03), wächst die aktuelle Revision ([[adr-031]]).
+- **Revisionen:** Korrekturen der Wertung erzeugen eine neue Revision; die vorige bleibt nachvollziehbar. Neue Schüsse und die Probe, die Meyton löscht oder neu beginnt (SF-03, SF-72), ändern die aktuelle Revision (SF-67, [[adr-031]]).
 - **Herkunft:** Eine Scheibe kann zuerst nur aus dem PDF bestehen (QR-Scan, Brücke gerade aus oder fremde Anlage) und später um Rohdaten ergänzt werden.
 - **Nur aus dem PDF:** Solche Ergebnisse haben Werte je Schuss, aber keine Lage und keine Zeit; Kennzahlen, die eine Lage brauchen, entfallen dort.
 - **Merkmale und Zustand** einer Scheibe sowie die Regeln für Probe, Reihenfolge und Löschungen stehen in [[spiegel-edge-cases]].
