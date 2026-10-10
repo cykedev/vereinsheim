@@ -1,0 +1,341 @@
+"use client"
+
+import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useMemo, useState } from "react"
+
+import { markShots, type CardMark, type MarkShot } from "@vereinsheim/shot-core/projection"
+import { TARGETS } from "@vereinsheim/shot-core/targets"
+import { helpForMetric } from "@vereinsheim/shot-help/lookup"
+import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
+import { HelpButton } from "@vereinsheim/shot-ui/help/HelpButton"
+import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
+import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
+import { SectionNav } from "@vereinsheim/shot-ui/layout/SectionNav"
+import { PERIOD_SECTIONS, type PeriodSection } from "@vereinsheim/shot-ui/layout/sections"
+import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
+import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
+import { listFromProgress, openCard, progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
+import { urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
+import { rangeDays } from "@vereinsheim/shot-ui/period/calendar"
+import { CardList } from "@vereinsheim/shot-ui/period/CardList"
+import { CardLine, CardReadout } from "@vereinsheim/shot-ui/period/CardReadout"
+import {
+  periodReading,
+  PERIOD_CHART_METRICS,
+  type PeriodModel,
+} from "@vereinsheim/shot-ui/period/model"
+import { PeriodChart } from "@vereinsheim/shot-ui/period/PeriodChart"
+import { PeriodControls, PeriodHeader } from "@vereinsheim/shot-ui/period/PeriodHeader"
+import { PeriodInsights } from "@vereinsheim/shot-ui/period/PeriodInsights"
+import { PeriodResult } from "@vereinsheim/shot-ui/period/PeriodResult"
+import { PeriodTiles } from "@vereinsheim/shot-ui/period/PeriodTiles"
+import { periodSentence } from "@vereinsheim/shot-ui/period/sentence"
+import {
+  periodReducer,
+  type PeriodAction,
+  type PeriodState,
+} from "@vereinsheim/shot-ui/period/state"
+import { VolumeChart } from "@vereinsheim/shot-ui/period/VolumeChart"
+import { Segmented } from "@vereinsheim/ui/design2/segmented"
+
+import { useHelp } from "@/components/shell/HelpContext"
+import { Page } from "@/components/shell/Page"
+import { cardMarksAction } from "@/lib/marks-actions"
+import { marksById } from "@/lib/marks"
+import type { PageContext } from "@/lib/page-context"
+import type { FamilyOption } from "@/lib/pages"
+
+const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
+
+/**
+ * die Adresse des Fortschritts: ohne Wertung, sie ist die des Geräts (Cookie) und gehört nicht in die Adresse; ein
+ * `scoring` darin gilt beim Laden nicht
+ */
+const addressOf = (state: PeriodState) =>
+  urlFromRoute(progressRoute({ ...state, scoring: "decimal" }, null))
+
+/**
+ * Fortschritt (N7, Plan `plans/2026-10-10-spiegel-fortschritt.md`): die Seite eines Zeitraums wie im Labor, das Modell
+ * hat der Server gerechnet (`periodModel` aus den Projektionen, leicht gemacht). Filter schreiben die Adresse und
+ * rechnen auf dem Server neu; eine Wahl (Verlauf, Liste, Rekord) bleibt im Browser: Sie ändert die Ablesung, schreibt
+ * `pick` mit `replaceState` und holt die Lagen der kleinen Scheibe nach (`cardMarksAction`).
+ */
+export function ProgressScreen({
+  model: base,
+  state,
+  marks: initialMarks,
+  families,
+  context,
+}: {
+  /** leichtes Modell vom Server, mit der Ablesung zur Wahl der Adresse */
+  model: PeriodModel
+  state: PeriodState
+  /** die Lagen der Scheibe, die die Ablesung beim Laden zeigt */
+  marks: Record<string, CardMark[]>
+  families: FamilyOption[]
+  context: PageContext
+}) {
+  const router = useRouter()
+  const help = useHelp()
+  const onHelp = useCallback((id: string | null) => id && help(id), [help])
+  const { timeZone, named, scoring } = context
+  const active = useActiveSection(PERIOD_IDS)
+  const { pill, jumpTo, back, close } = useReturnJump()
+
+  // die Wahl lebt im Browser; ein neuer Stand vom Server (Filter) bringt seine eigene mit
+  const [chosen, setChosen] = useState(state.chosen)
+  const [seen, setSeen] = useState(state)
+  if (seen !== state) {
+    setSeen(state)
+    setChosen(state.chosen)
+  }
+  const current: PeriodState = useMemo(() => ({ ...state, chosen }), [state, chosen])
+  const model = useMemo(() => ({ ...base, reading: periodReading(base, chosen) }), [base, chosen])
+
+  const dispatch = useCallback(
+    (action: PeriodAction) => {
+      const next = periodReducer(current, action)
+      if (action.type === "choose" || action.type === "pick") {
+        setChosen(next.chosen)
+        window.history.replaceState(null, "", `${addressOf(next)}${window.location.hash}`)
+        return
+      }
+      router.push(addressOf(next))
+    },
+    [current, router]
+  )
+
+  // die Lagen der kleinen Scheibe: die vom Server, weitere zu einer neuen Wahl nachgeholt und gemerkt
+  const [marks, setMarks] = useState<ReadonlyMap<string, readonly MarkShot[]>>(() =>
+    marksById(initialMarks)
+  )
+  const reading = model.reading
+  const readingId = reading?.card.id ?? null
+  useEffect(() => {
+    if (!readingId || marks.has(readingId)) return
+    let live = true
+    const keep = (shots: readonly MarkShot[]) => {
+      if (live) setMarks((previous) => new Map(previous).set(readingId, shots))
+    }
+    cardMarksAction(readingId)
+      .then((found) => keep(found ? markShots(found) : []))
+      .catch(() => keep([]))
+    return () => {
+      live = false
+    }
+  }, [readingId, marks])
+
+  const readingValue = reading ? (model.values.find((v) => v.id === reading.card.id) ?? null) : null
+  // die Wege als Adressen: eine Scheibe mit diesem Fortschritt als Herkunft, „Alle in Scheiben zeigen“
+  const here = progressRoute({ ...current, scoring: "decimal" }, null)
+  const cardRoute = (id: string) => openCard(here, id, scoring)
+  const chooseFromList = useCallback(
+    (id: string) => {
+      // nur eine neue Wahl holt den Verlauf ins Bild, das Abwählen nicht
+      if (id !== chosen) jumpTo(document.querySelector('[data-section="history"]'), "Scheiben")
+      dispatch({ type: "choose", id })
+    },
+    [dispatch, jumpTo, chosen]
+  )
+  const chooseFromRecord = useCallback(
+    (id: string) => {
+      if (chosen !== id) dispatch({ type: "choose", id })
+      // nach oben zur gewählten Scheibe: an den Anfang von Verlauf und Ablesung, sobald die Ablesung außer Sicht ist
+      const shown = [...document.querySelectorAll("[data-card-readout], [data-card-line]")].find(
+        (el) => el.getClientRects().length > 0
+      )
+      jumpTo(document.getElementById("history"), "Analyse", shown ?? null)
+    },
+    [dispatch, jumpTo, chosen]
+  )
+
+  const option = families.find((f) => f.value === state.family)
+  const target = TARGETS[option?.targetId ?? "lp-10m"]
+  const result = <PeriodResult model={model} timeZone={timeZone} onHelp={onHelp} />
+  const sentence = periodSentence(model)
+  // Training nur aus Probe zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis
+  const excluded = model.excludedProbeOnly
+  const cardsText = `${model.cards.length} Scheiben${excluded ? `, ${excluded} nur Probe nicht gezählt` : ""}`
+  const empty = model.cards.length === 0
+
+  return (
+    <Page>
+      <PeriodPage
+        header={
+          <PeriodHeader
+            title={model.range.label}
+            meta={[option?.label ?? "", cardsText, rangeDays(model.range, timeZone)]}
+            controls={
+              <PeriodControls
+                state={current}
+                dispatch={dispatch}
+                range={model.range}
+                compareRange={model.compareRange}
+                named={named}
+                timeZone={timeZone}
+                families={families}
+              />
+            }
+            result={empty ? null : result}
+            sentence={empty ? null : sentence}
+          />
+        }
+        nav={<SectionNav active={active} sections={PERIOD_SECTIONS} />}
+        empty={
+          empty ? (
+            <p className="rounded-2xl border border-border bg-card p-4 text-[14px] text-foreground-2">
+              Keine Scheibe in diesem Zeitraum. Wähle oben einen längeren Zeitraum oder eine andere
+              Art.
+            </p>
+          ) : undefined
+        }
+        chart={
+          <div className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-3.5">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+              <Segmented
+                label="Kennzahl"
+                value={state.metric}
+                options={PERIOD_CHART_METRICS.map((m) => ({ value: m.key, label: m.label }))}
+                onChange={(metric) => dispatch({ type: "setMetric", metric })}
+                scroll
+              />
+              <div className="ml-auto flex items-center gap-2">
+                {!model.compareRange && (
+                  <Segmented
+                    label="Darstellung des Verlaufs"
+                    value={model.view}
+                    options={[
+                      { value: "cards", label: "je Scheibe" },
+                      { value: "months", label: "je Monat" },
+                    ]}
+                    onChange={(view) => dispatch({ type: "setView", view })}
+                  />
+                )}
+                <HelpButton
+                  label="Verlauf und Form"
+                  helpId="verlauf-und-form"
+                  onClick={() => onHelp("verlauf-und-form")}
+                />
+              </div>
+            </div>
+            <ChartSlot height={300}>
+              {(width) => (
+                <PeriodChart
+                  // je Menge der Scheiben, Darstellung und Kennzahl neu: das Lineal fängt ohne Wahl an
+                  key={`${state.family}:${state.kind}:${state.includeProbeOnly}:${model.range.fromMs}:${model.range.toMs}:${state.metric}:${model.view}:${model.compareRange?.fromMs ?? ""}`}
+                  width={width}
+                  model={model}
+                  timeZone={timeZone}
+                  chosen={chosen}
+                  onChoose={(id) => dispatch({ type: "pick", id })}
+                />
+              )}
+            </ChartSlot>
+            {reading && (
+              <CardLine
+                className="md:hidden"
+                card={reading.card}
+                value={readingValue}
+                delta={model.deltas.get(reading.card.id)}
+                metric={model.metric}
+                timeZone={timeZone}
+                cardRoute={cardRoute}
+                onHelp={onHelp}
+              />
+            )}
+          </div>
+        }
+        under={
+          <div className="grid gap-2 rounded-2xl border border-border bg-card p-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-display text-base font-bold">Umfang je Woche</h2>
+              <HelpButton
+                label="Trainingsumfang"
+                helpId="trainingsumfang"
+                onClick={() => onHelp("trainingsumfang")}
+              />
+            </div>
+            <ChartSlot height={170}>
+              {(width) => (
+                <VolumeChart
+                  key={`${state.family}:${state.kind}:${model.range.fromMs}:${model.range.toMs}`}
+                  width={width}
+                  weeks={model.weeks}
+                />
+              )}
+            </ChartSlot>
+          </div>
+        }
+        result={result}
+        aside={
+          reading && (
+            <div className="rounded-2xl border border-border bg-card p-4 max-md:hidden">
+              <CardReadout
+                card={reading.card}
+                marks={marks.get(reading.card.id) ?? null}
+                target={target}
+                value={readingValue}
+                point={reading.point}
+                delta={model.deltas.get(reading.card.id)}
+                metric={model.metric}
+                timeZone={timeZone}
+                chosen={reading.chosen}
+                cardRoute={cardRoute}
+                onHelp={onHelp}
+              />
+            </div>
+          )
+        }
+        beside={[
+          {
+            id: "cards",
+            node: (
+              <div
+                id="card-list"
+                className="rounded-2xl border border-border bg-card p-2 md:flex md:max-h-full md:flex-col"
+              >
+                <CardList
+                  className="md:min-h-0"
+                  cards={model.cards}
+                  values={model.values}
+                  deltas={model.deltas}
+                  metric={model.metric}
+                  timeZone={timeZone}
+                  chosen={chosen}
+                  onChoose={chooseFromList}
+                  showAll={listFromProgress(here)}
+                />
+              </div>
+            ),
+          },
+        ]}
+        below={[
+          {
+            id: "numbers",
+            node: (
+              <PeriodTiles
+                tiles={model.tiles}
+                compareLabel={model.compareRange?.label ?? null}
+                onHelp={(key) => onHelp(helpForMetric(key)?.id ?? null)}
+              />
+            ),
+          },
+          {
+            id: "analysis",
+            node: (
+              <PeriodInsights
+                model={model}
+                scoring={scoring}
+                timeZone={timeZone}
+                explain={false}
+                onHelp={onHelp}
+                onChoose={chooseFromRecord}
+              />
+            ),
+          },
+        ]}
+      />
+      <ReturnPill label={pill?.label ?? null} onReturn={back} onDismiss={close} />
+    </Page>
+  )
+}
