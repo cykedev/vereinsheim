@@ -11,10 +11,20 @@ import { Pool } from "pg"
 import { cardValues, periodRecords, type PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { metricByKey, type MetricDefinition } from "@vereinsheim/shot-core/metrics"
 import { projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
+import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
+import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
+import { startModel } from "@vereinsheim/shot-ui/start/model"
 
 import { PrismaClient } from "../src/generated/prisma/client"
 import { writeRevision } from "../src/lib/db/cards"
-import { cardWithShots, familyCards, latestCardStart, ownerCards } from "../src/lib/db/reads"
+import {
+  cardWithShots,
+  familyCards,
+  latestCardStart,
+  marksOfCards,
+  ownerCards,
+} from "../src/lib/db/reads"
+import { familiesOf, listable, withFamily } from "../src/lib/pages"
 import type { Db } from "../src/lib/db"
 import { DEV_DATABASE_URL } from "../test/dev-database"
 import { createTestSite } from "../test/fixtures"
@@ -145,6 +155,33 @@ async function main() {
     for (const { id } of overview) full.push((await one(id))!)
     const mean = metricByKey("result.decimalMean") as MetricDefinition
 
+    // Start und Liste wie die Seiten (SP-1.8): Scheiben mit Projektion lesen, das Modell auf dem Server rechnen, die
+    // Lagen der gezeigten Scheiben lesen; an den Browser geht nur, was die Funktion zurückgibt
+    const pageContext = {
+      timeZone: "Europe/Berlin",
+      nowMs: lastMs + DAY_MS,
+      named: [],
+      scoring: "decimal" as const,
+    }
+    const startPage = async () => {
+      const shown = listable(await ownerCards(db, { ownerId: site.ownerId }))
+      const families = familiesOf(shown)
+      const model = startModel({
+        ...pageContext,
+        cards: withFamily(shown),
+        family: families[0]?.value ?? "",
+      })
+      const ids = model.blocks.flatMap((block) => block.rows.map((row) => row.id))
+      return { model, marks: await marksOfCards(db, { ownerId: site.ownerId, ids }) }
+    }
+    const listPage = async () => {
+      const shown = listable(await ownerCards(db, { ownerId: site.ownerId }))
+      const family = familiesOf(shown)[0].value
+      const model = cardListModel(withFamily(shown), { ...DEFAULT_LIST, family }, pageContext)
+      const ids = model.evenings.flatMap((evening) => evening.rows.map((row) => row.id))
+      return { model, marks: await marksOfCards(db, { ownerId: site.ownerId, ids }) }
+    }
+
     // offener Durchgang: die Brücke schickt nach jedem Schuss den ganzen Stand (SF-03)
     const live = generateSeason({
       seed: 42,
@@ -210,6 +247,11 @@ async function main() {
           return ownerCards(db, { ownerId: site.ownerId, fromMs: latest - DAY_MS / 2 })
         }),
       ],
+      ["Start auf dem Server: lesen, Modell rechnen, Lagen des Abends", await median(startPage)],
+      [
+        "Liste „Alles“ auf dem Server: lesen, Modell rechnen, Lagen der gezeigten",
+        await median(listPage),
+      ],
       ["Seite einer Scheibe: Schüsse der Revision", await median(() => one(sample))],
       ["ohne Projektion: alle Schüsse der Familie laden", await median(allShots)],
       [
@@ -241,6 +283,12 @@ async function main() {
     out("\n| Tabelle | Größe |\n| --- | --- |")
     for (const r of sizes.rows) out(`| ${r.relname} | ${r.size} |`)
     out(`\nProjektion je Scheibe im Mittel: ${projection.rows[0].bytes} Byte (Werte und Rekorde)`)
+    // was an den Browser geht, als JSON: vorher alle Scheiben mit Schüssen, jetzt Modell und Lagen der gezeigten
+    const kb = (value: unknown) => (JSON.stringify(value).length / 1024).toFixed(0)
+    out("\n| an den Browser (JSON) | KB |\n| --- | --- |")
+    out(`| vorher: alle Scheiben der Familie mit Schüssen | ${kb(full)} |`)
+    out(`| Start: Modell und Lagen des Abends | ${kb(await startPage())} |`)
+    out(`| Liste „Alles“: Modell und Lagen aller gezeigten | ${kb(await listPage())} |`)
 
     await explain("Fortschritt „Alles“", (client) => familyCards(client, owner))
     await explain("Fortschritt 90 Tage", (client) =>

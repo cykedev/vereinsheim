@@ -11,11 +11,23 @@
 /** Eine Locale für beide Apps. Zeitzonen-Default ist Europe/Berlin (siehe ./dateTime). */
 export const APP_LOCALE = "de-DE"
 
+/**
+ * je Format und Zeitzone ein Formatter: ein `Intl.DateTimeFormat` zu bauen kostet rund 70 µs, und Listen über viele
+ * Scheiben formatieren je Zeile (Spiegel, 1.564 Scheiben: 107 ms nur für den Abend jeder Scheibe, Oktober 2026)
+ */
+const dateTimeFormats = new Map<string, Intl.DateTimeFormat>()
+
 function dateTimeFormat(
   options: Intl.DateTimeFormatOptions,
   timeZone: string
 ): Intl.DateTimeFormat {
-  return new Intl.DateTimeFormat(APP_LOCALE, { ...options, timeZone })
+  const key = `${timeZone}|${JSON.stringify(options)}`
+  let format = dateTimeFormats.get(key)
+  if (!format) {
+    format = new Intl.DateTimeFormat(APP_LOCALE, { ...options, timeZone })
+    dateTimeFormats.set(key, format)
+  }
+  return format
 }
 
 /** "08.09.2026" */
@@ -160,9 +172,12 @@ export function formatIsoDate(date: Date, timeZone: string): string {
   return `${part("year")}-${part("month")}-${part("day")}`
 }
 
+const integerFormat = new Intl.NumberFormat(APP_LOCALE, { maximumFractionDigits: 0 })
+const numberFormat = new Intl.NumberFormat(APP_LOCALE)
+
 /** Ganzzahl mit deutschem Tausenderpunkt: 1234 → "1.234". */
 export function formatInteger(value: number): string {
-  return new Intl.NumberFormat(APP_LOCALE, { maximumFractionDigits: 0 }).format(value)
+  return integerFormat.format(value)
 }
 
 /**
@@ -173,5 +188,5 @@ export function formatInteger(value: number): string {
  * "1.234,5" anzeigt.
  */
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat(APP_LOCALE).format(value)
+  return numberFormat.format(value)
 }
