@@ -78,6 +78,79 @@ export const PRIMARY_KEYS = {
   Treffer: ["ScheibenID", "Stellung", "Treffer"],
 } as const satisfies Record<Table, readonly string[]>
 
-export type ScheibenRow = Record<keyof typeof SCHEIBEN, string | number>
-export type SerienRow = Record<keyof typeof SERIEN, number>
-export type TrefferRow = Record<keyof typeof TREFFER, string | number>
+/** eine Zeile von `Scheiben`; Zahlen für Ganzzahlspalten, Text für Text, Datum und Aufzählung */
+export interface ScheibenRow {
+  ScheibenID: number
+  Starterliste: string
+  StarterlistenID: number
+  /** im Training immer „0000-00-00 00:00:00“ */
+  Startzeit: string
+  StartNr: number
+  Nachname: string
+  Vorname: string
+  Geschlecht: "male" | "female" | "unknown"
+  Land: string
+  SportpassID: number
+  StandNr: number
+  StandNrText: string
+  Disziplin: string
+  DisziplinID: number
+  Klasse: string
+  KlassenID: number
+  Verein: string
+  VereinsID: number
+  Mannschaft: string
+  MannschaftsID: number
+  Rangliste: string
+  RanglistenID: number
+  Gruppe: string
+  GruppenID: number
+  Status: string
+  Trefferzahl: number
+  TotalRing: number
+  TotalRing01: number
+  BesterTeiler01: number
+  BesterTeiler001: number
+  /** Lebenszeichen in der Ortszeit des Stands, „YYYY-MM-DD HH:MM:SS“ */
+  Zeitstempel: string
+}
+
+export interface SerienRow {
+  ScheibenID: number
+  Stellung: number
+  Serie: number
+  /** ganze Ringe */
+  Ring: number
+  /** Zehntel */
+  Ring01: number
+}
+
+export interface TrefferRow {
+  ScheibenID: number
+  /** 0 Probe, 1 Wertung */
+  Stellung: number
+  Treffer: number
+  Serie: number
+  /** 1/100 mm */
+  x: number
+  y: number
+  Innenzehner: number
+  Wertung: number
+  Text: string
+  /** ganzer Ring mal zehn */
+  Ring: number
+  Ring01: number
+  Teiler01: number
+  Teiler001: number
+  Zeitstempel: string
+  Millisekunden: number
+}
+
+type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
+type Assert<T extends true> = T
+/** die Zeilentypen haben genau die Spalten des Schemas (zur Übersetzungszeit geprüft) */
+export type RowsMatchColumns = Assert<
+  Same<keyof ScheibenRow, keyof typeof SCHEIBEN> &
+    Same<keyof SerienRow, keyof typeof SERIEN> &
+    Same<keyof TrefferRow, keyof typeof TREFFER>
+>
