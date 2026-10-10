@@ -1,21 +1,12 @@
 // Modell von Start (Plan N5, `vault/spiegel/spiegel-navigation.md`, Entscheidung 1): der letzte Abend je Familie im
-// Formband, neue Rekorde und die Form der letzten 90 Tage. Reine Funktion; alle Zahlen aus dem Fachkern. Einheit ist
+// Formband, neue Rekorde und die Form der letzten 90 Tage. Reine Funktion; alle Zahlen aus dem Fachkern, aus den
+// Projektionen der Scheiben (ADR-031, SP-1.8). Einheit ist
 // die Scheibe (Regel „Über viele Scheiben“): Der Streifen zeigt Scheiben, das Band ist das des Fortschritts, seine
 // Mitte der gleitende Schnitt bis zum Abend; der Satz misst gegen den Schnitt der fünf Scheiben davor (Entscheidung 13).
 
-import {
-  cardValues,
-  periodRecords,
-  periodTrend,
-  type PeriodComparison,
-} from "@vereinsheim/shot-core/analysis"
-import {
-  computeMetric,
-  inScoring,
-  metricByKey,
-  type MetricShot,
-  type Scoring,
-} from "@vereinsheim/shot-core/metrics"
+import { periodTrend, type PeriodComparison } from "@vereinsheim/shot-core/analysis"
+import { metricByKey, type Scoring } from "@vereinsheim/shot-core/metrics"
+import { pooledMean, projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
 
 import { cardListModel, lastEvening, type ListInputCard, type ListRow } from "../list/evenings"
 import { progressRoute } from "../nav/navigate"
@@ -24,7 +15,6 @@ import type { NamedPeriod } from "../period/calendar"
 import { byStart, periodModel } from "../period/model"
 import { recordRows, type RecordRow } from "../period/records"
 import { initialPeriodState } from "../period/state"
-import { matchShots } from "../shots"
 
 /** so viele Scheiben vor dem Abend ergeben den Schnitt (Entscheidung 13) */
 const BEFORE = 5
@@ -104,7 +94,6 @@ export function startModel(input: StartInput): StartModel {
   if (!last) return { day: null, blocks: [], form: null }
   const { day, cards: tonight } = last
   const families = [...new Set(tonight.map((c) => c.family))]
-  const meanMetric = inScoring(metricByKey("result.decimalMean")!, input.scoring)
   const context = {
     timeZone: input.timeZone,
     nowMs: input.nowMs,
@@ -120,10 +109,11 @@ export function startModel(input: StartInput): StartModel {
     const rows =
       cardListModel(all, { ...DEFAULT_LIST, family }, context).evenings.find((e) => e.day === day)
         ?.rows ?? []
-    const shots: MetricShot[] = evening.flatMap((card) => [...matchShots(card.shots)])
-    const mean = shots.length ? computeMetric(meanMetric, shots) : null
+    // Schüsse wie am Ausdruck; der Ø über alle zusammen, nicht das Mittel der Mittel
+    const shots = evening.reduce((sum, card) => sum + card.projection.printedShots, 0)
+    const mean = pooledMean(evening, input.scoring)
     // Werte je Scheibe in der Wertung, nur Probe dabei (wie im Fortschritt mit seiner Grundeinstellung)
-    const values = cardValues(ofFamily, metricByKey("result.decimalMean")!, input.scoring, {
+    const values = projectedValues(ofFamily, metricByKey("result.decimalMean")!, input.scoring, {
       includeProbeOnly: true,
     })
     // der Abend ist der neueste Tag: davor liegt alles, was vor seiner ersten Scheibe beginnt
@@ -153,14 +143,14 @@ export function startModel(input: StartInput): StartModel {
       band: p.band,
     }))
     const records = recordRows(
-      periodRecords(ofFamily, input.scoring, { includeProbeOnly: true }),
+      projectedRecords(ofFamily, input.scoring, { includeProbeOnly: true }),
       input.scoring
     ).filter((row) => ids.has(row.record.cardId))
     return {
       family,
       day,
       rows,
-      shots: shots.length,
+      shots,
       mean,
       cardsBefore: ofFamily.filter((c) => c.startedAtMs < firstMs).length,
       average,

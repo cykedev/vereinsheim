@@ -1,77 +1,64 @@
 "use client"
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useMemo } from "react"
 
+import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
-import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
+import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { EveningList } from "@vereinsheim/shot-ui/list/EveningList"
 import { ListControls } from "@vereinsheim/shot-ui/list/ListControls"
 import { ListHeader } from "@vereinsheim/shot-ui/list/ListHeader"
 import { listOnEvening, openCard, progressFromList } from "@vereinsheim/shot-ui/nav/navigate"
-import {
-  DEFAULT_LIST,
-  routeFromUrl,
-  urlFromRoute,
-  type ListQuery,
-  type ListRoute,
-} from "@vereinsheim/shot-ui/nav/routes"
+import { urlFromRoute, type ListQuery, type ListRoute } from "@vereinsheim/shot-ui/nav/routes"
 
 import { NoCards } from "@/components/shell/NoCards"
 import { Page } from "@/components/shell/Page"
-import type { PageCard } from "@/lib/db/reads"
+import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
 
 /**
- * Die Scheiben nach Abend (N2, N7): Filter aus der Adresse (`/cards?family=…&range=…#Abend`), alles Gerechnete aus
- * `cardListModel`, die Bausteine aus `shot-ui/list`. Ein Filter schreibt die Adresse neu (Zurück findet ihn wieder).
+ * Die Scheiben nach Abend (N2, N7): Filter aus der Adresse (`/cards?family=…&range=…#Abend`), das Modell hat die Seite
+ * auf dem Server gerechnet (`cardListModel` aus den Projektionen), die Bausteine aus `shot-ui/list`. Ein Filter schreibt
+ * die Adresse neu (Zurück findet ihn wieder), und die Seite rechnet neu.
  */
 export function ListScreen({
-  cards,
+  list,
+  query,
   families,
   context,
 }: {
-  cards: PageCard[]
+  /** null ohne Scheiben */
+  list: { model: CardListModel; marks: Record<string, CardMark[]>; option: FamilyOption } | null
+  query: ListQuery
   families: FamilyOption[]
   context: PageContext
 }) {
   const router = useRouter()
-  const pathname = usePathname()
-  const search = useSearchParams()
-  const { timeZone, nowMs, named, scoring } = context
-  const query: ListQuery = useMemo(() => {
-    // nicht `search.size`: fehlt in Safari vor 17 (Review)
-    const qs = search.toString()
-    const parsed = routeFromUrl(pathname, qs ? `?${qs}` : "", "")
-    return parsed.page === "cards" ? parsed.query : DEFAULT_LIST
-  }, [pathname, search])
-  // ohne Familie in der Adresse, oder einer ohne eigene Scheiben, die der neuesten Scheibe; die Adresse bleibt, wie sie ist
-  const option = families.find((f) => f.value === query.family) ?? families[0]
-  const family = option?.value ?? null
+  const { timeZone, scoring } = context
   const route: ListRoute = { page: "cards", query, evening: null }
-
-  const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards])
-  const model = useMemo(
-    () =>
-      cardListModel(
-        cards.map((card) => ({ card, family: card.family!.slug })),
-        { ...query, family },
-        { timeZone, nowMs, named, scoring }
-      ),
-    [cards, query, family, timeZone, nowMs, named, scoring]
-  )
-  const onQuery = (next: ListQuery) =>
-    router.push(urlFromRoute({ page: "cards", query: next, evening: null }))
+  const marks = useMemo(() => marksById(list?.marks ?? {}), [list?.marks])
   // öffnen in der Wertung, die die Zeile vorn zeigt (die amtliche, sonst die des Geräts)
-  const cardRoute = (id: string) => openCard(route, id, byId.get(id)?.official ?? scoring)
-
-  if (!option)
+  const resultScoring = useMemo(
+    () =>
+      new Map<string, Scoring>(
+        (list?.model.evenings ?? []).flatMap((e) => e.rows.map((r) => [r.id, r.resultScoring]))
+      ),
+    [list?.model]
+  )
+  if (!list)
     return (
       <Page>
         <NoCards />
       </Page>
     )
+
+  const { model, option } = list
+  const onQuery = (next: ListQuery) =>
+    router.push(urlFromRoute({ page: "cards", query: next, evening: null }))
+  const cardRoute = (id: string) => openCard(route, id, resultScoring.get(id) ?? scoring)
 
   return (
     <Page>
@@ -93,7 +80,7 @@ export function ListScreen({
         />
         <EveningList
           model={model}
-          cards={byId}
+          marks={marks}
           target={TARGETS[option.targetId]}
           families={families}
           timeZone={timeZone}

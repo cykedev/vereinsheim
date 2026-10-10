@@ -1,4 +1,3 @@
-import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { StartPage } from "@vereinsheim/shot-ui/layout/StartPage"
@@ -14,9 +13,11 @@ import { LaborPanel, type LaborPanelProps } from "./LaborPanel"
 import {
   FAMILIES,
   NAMED_PERIODS,
+  projectedSeason,
   season,
   SEASON_NOW_MS,
   SEASON_TIME_ZONE,
+  seasonMarks,
   targetOfFamily,
 } from "./season"
 import { exposeStartForTest } from "./testHook"
@@ -54,18 +55,18 @@ export interface StartViewProps {
 export function StartView({ header, scoring, family }: StartViewProps) {
   const all = season()
   const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all])
-  const cards = useMemo(() => new Map<string, PeriodCard>(all.map((c) => [c.id, c.card])), [all])
+  const projected = projectedSeason()
   const model = useMemo(
     () =>
       startModel({
-        cards: all.map((c) => ({ card: c.card, family: c.family })),
+        cards: projected.map((c) => ({ card: c.card, family: c.family })),
         timeZone: SEASON_TIME_ZONE,
         nowMs: SEASON_NOW_MS,
         named: NAMED_PERIODS,
         scoring,
         family,
       }),
-    [all, scoring, family]
+    [projected, scoring, family]
   )
   useEffect(() => exposeStartForTest({ model, cards: all.map((c) => c.card) }))
   // eine Kachel öffnet die Scheibe in der Wertung, die sie vorn zeigt (die amtliche, sonst die des Geräts)
@@ -85,7 +86,7 @@ export function StartView({ header, scoring, family }: StartViewProps) {
               key={block.family}
               block={block}
               familyLabel={labelOf(block.family)}
-              cards={cards}
+              marks={seasonMarks()}
               target={TARGETS[targetOfFamily(block.family)]}
               timeZone={SEASON_TIME_ZONE}
               cardRoute={cardRoute}

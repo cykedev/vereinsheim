@@ -62,7 +62,7 @@ export function formatTotal(total: number | null, scoring: Scoring): string {
   return total === null ? "–" : formatValue(total, scoring === "rings" ? 0 : 1)
 }
 
-export const hasPosition = (shot: MetricShot) =>
+export const hasPosition = (shot: Pick<MetricShot, "xUm" | "yUm">) =>
   shot.xUm !== null && shot.yUm !== null && Number.isFinite(shot.xUm) && Number.isFinite(shot.yUm)
 
 /**

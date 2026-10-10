@@ -7,6 +7,13 @@
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import {
+  cardMarks,
+  markShots,
+  projectCard,
+  type MarkShot,
+  type ProjectedCard,
+} from "@vereinsheim/shot-core/projection"
+import {
   classifyCompleteness,
   parseDisciplineId,
   resolveTarget,
@@ -299,4 +306,26 @@ export function season(): readonly SeasonCard[] {
     (a, b) => a.card.startedAtMs - b.card.startedAtMs || (a.target < b.target ? -1 : 1)
   )
   return cached
+}
+
+/** eine Scheibe der Saison, wie die Übersichten sie nehmen: mit Projektion statt Schüssen */
+export type ProjectedSeasonCard = Omit<SeasonCard, "card"> & { card: ProjectedCard }
+
+let projectedCache: readonly ProjectedSeasonCard[] | null = null
+
+/**
+ * Die Saison als Eingabe der Übersichten (Liste, Start, Fortschritt, Blättern): jede Scheibe mit ihrer Projektion, wie
+ * die App sie aus der Datenbank liest (ADR-031, SP-1.8); einmal gerechnet
+ */
+export function projectedSeason(): readonly ProjectedSeasonCard[] {
+  projectedCache ??= season().map((c) => ({ ...c, card: projectCard(c.card) }))
+  return projectedCache
+}
+
+let marksCache: ReadonlyMap<string, readonly MarkShot[]> | null = null
+
+/** die Lagen der kleinen Scheiben nach Id, auf demselben Weg wie in der App (`cardMarks`, `markShots`) */
+export function seasonMarks(): ReadonlyMap<string, readonly MarkShot[]> {
+  marksCache ??= new Map(season().map((c) => [c.id, markShots(cardMarks(c.card.shots))]))
+  return marksCache
 }

@@ -1,7 +1,7 @@
 "use client"
 
-import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { inScoring, metricByKey, type Scoring } from "@vereinsheim/shot-core/metrics"
+import type { MarkShot } from "@vereinsheim/shot-core/projection"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { formatTimeOfDay, formatWeekdayDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
@@ -12,7 +12,6 @@ import { groupView } from "../geometry"
 import type { ListRow } from "../list/evenings"
 import { RouteLink } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
-import { hasPosition, matchShots } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
 import { FormStrip } from "./FormStrip"
 import type { EveningBlock as EveningBlockModel } from "./model"
@@ -31,8 +30,8 @@ const other = (scoring: Scoring): Scoring => (scoring === "rings" ? "decimal" : 
 export interface EveningBlockProps {
   block: EveningBlockModel
   familyLabel: string
-  /** die Scheiben nach Id, für die kleinen Scheiben */
-  cards: ReadonlyMap<string, PeriodCard>
+  /** die Lagen nach Id, für die kleinen Scheiben (`markShots(cardMarks(…))`); ohne Eintrag bleibt der Platz leer */
+  marks: ReadonlyMap<string, readonly MarkShot[]>
   /** das Scheibenbild der Familie */
   target: TargetImage
   timeZone: string
@@ -54,7 +53,7 @@ export interface EveningBlockProps {
 export function EveningBlock({
   block,
   familyLabel,
-  cards,
+  marks,
   target,
   timeZone,
   cardRoute,
@@ -127,8 +126,7 @@ export function EveningBlock({
       </div>
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-2">
         {block.rows.map((row) => {
-          const card = cards.get(row.id)
-          const placed = card ? matchShots(card.shots).filter(hasPosition) : []
+          const placed = marks.get(row.id) ?? []
           const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
           // die Wertung beim Namen (U5, D5): vorn die amtliche (sonst die des Geräts), daneben die andere
           const name = (scoring: typeof row.resultScoring) =>
@@ -150,10 +148,7 @@ export function EveningBlock({
                 {placed.length ? (
                   <MiniTarget
                     target={target}
-                    view={groupView(
-                      target,
-                      placed.map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
-                    )}
+                    view={groupView(target, placed)}
                     shots={placed}
                     className="size-14 shrink-0"
                   />

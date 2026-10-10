@@ -1,19 +1,22 @@
 import { describe, expect, it } from "vitest"
 
 import type { ListInputCard } from "../list/evenings"
-import { NOW, periodCard, TZ } from "../period/testSeason"
+import { NOW, periodCard, projected, TZ } from "../period/testSeason"
 import { contextCardIds, neighbours } from "./context"
 import { DEFAULT_LIST, DEFAULT_PROGRESS, type CardRoute, type ListQuery } from "./routes"
 
+/** eine Scheibe mit Projektion, wie Liste und Fortschritt sie nehmen */
+const card_ = (...args: Parameters<typeof periodCard>) => projected(periodCard(...args))
+
 // Luftgewehr vom 22. bis 27. September (12:00 MESZ), Training und Wettkampf gemischt, dazu eine Luftpistole
 const INPUT: ListInputCard[] = [
-  { card: periodCard("t1", 8, [100]), family: "lg-freihand" },
-  { card: periodCard("w1", 7, [101], { kind: "competition" }), family: "lg-freihand" },
-  { card: periodCard("t2", 6, [102]), family: "lg-freihand" },
-  { card: periodCard("w2", 5, [99], { kind: "competition" }), family: "lg-freihand" },
-  { card: periodCard("w3", 4, [100], { kind: "competition" }), family: "lg-freihand" },
-  { card: periodCard("t3", 3, [98]), family: "lg-freihand" },
-  { card: periodCard("p1", 5, [95]), family: "lp-freihand" },
+  { card: card_("t1", 8, [100]), family: "lg-freihand" },
+  { card: card_("w1", 7, [101], { kind: "competition" }), family: "lg-freihand" },
+  { card: card_("t2", 6, [102]), family: "lg-freihand" },
+  { card: card_("w2", 5, [99], { kind: "competition" }), family: "lg-freihand" },
+  { card: card_("w3", 4, [100], { kind: "competition" }), family: "lg-freihand" },
+  { card: card_("t3", 3, [98]), family: "lg-freihand" },
+  { card: card_("p1", 5, [95]), family: "lp-freihand" },
 ]
 const context = { cards: INPUT, nowMs: NOW, timeZone: TZ, named: [] }
 const card = (id: string, origin: CardRoute["origin"]): CardRoute => ({
@@ -93,8 +96,8 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
   it("ohne Familie in der Herkunft gilt die Familie der Scheibe selbst (Review N3)", () => {
     const pistol: ListInputCard[] = [
       ...INPUT,
-      { card: periodCard("p2", 2, [96]), family: "lp-freihand" },
-      { card: periodCard("p3", 1, [97]), family: "lp-freihand" },
+      { card: card_("p2", 2, [96]), family: "lp-freihand" },
+      { card: card_("p3", 1, [97]), family: "lp-freihand" },
     ]
     const input = { ...context, cards: pistol }
     expect(contextCardIds(card("p2", fromList({ family: null })), input)).toEqual([
@@ -130,7 +133,7 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
   it("Fortschritt ohne „nur Probe“: Trainings nur aus Probe bleiben im Kontext, wie in seiner Liste", () => {
     const probe: ListInputCard[] = [
       ...INPUT,
-      { card: periodCard("pp", 2, [95], { probe: true }), family: "lg-freihand" },
+      { card: card_("pp", 2, [95], { probe: true }), family: "lg-freihand" },
     ]
     const {
       chosen: _c,
@@ -156,11 +159,11 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     const evening: ListInputCard[] = [
       ...INPUT,
       {
-        card: periodCard("pe", 0, [96], { startedAtMs: Date.UTC(2026, 8, 27, 16) }),
+        card: card_("pe", 0, [96], { startedAtMs: Date.UTC(2026, 8, 27, 16) }),
         family: "lp-freihand",
       },
       {
-        card: periodCard("late", 0, [99], { startedAtMs: Date.UTC(2026, 8, 27, 23) }),
+        card: card_("late", 0, [99], { startedAtMs: Date.UTC(2026, 8, 27, 23) }),
         family: "lg-freihand",
       },
     ]

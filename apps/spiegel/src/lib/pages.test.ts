@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { PageCard } from "@/lib/db/reads"
+import type { OverviewCard } from "@/lib/db/reads"
 
 import { familiesOf, listable } from "./pages"
 
@@ -9,18 +9,26 @@ const card = (
   day: number,
   family: string | null,
   targetId: "lp-10m" | null
-): PageCard => ({
+): OverviewCard => ({
   id,
   startedAtMs: day * 86_400_000,
   kind: "training",
   complete: true,
   flags: [],
-  shots: [],
-  revision: 1,
   disciplineId: 1,
-  discipline: "LP 40",
+  familyId: null,
+  state: "final",
+  stand: null,
   targetId,
   family: family ? { slug: family, name: family.toUpperCase() } : null,
+  projection: {
+    version: "p",
+    probeOnly: false,
+    suspicious: false,
+    printedShots: 0,
+    values: {},
+    records: { decimal: null, rings: null },
+  },
 })
 
 describe("familiesOf", () => {

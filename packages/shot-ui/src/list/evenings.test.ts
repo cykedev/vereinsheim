@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import { listOnEvening } from "../nav/navigate"
 import { DEFAULT_LIST, type ListQuery } from "../nav/routes"
-import { NOW, periodCard, TZ } from "../period/testSeason"
+import { NOW, periodCard, projected, TZ } from "../period/testSeason"
 import {
   cardListModel,
   eveningDay,
@@ -13,8 +13,8 @@ import {
 } from "./evenings"
 
 const at = (hourUtc: number, minute = 0, day = 29) => Date.UTC(2026, 8, day, hourUtc, minute)
-const lg = (card: PeriodCard): ListInputCard => ({ card, family: "lg-freihand" })
-const lp = (card: PeriodCard): ListInputCard => ({ card, family: "lp-freihand" })
+const lg = (card: PeriodCard): ListInputCard => ({ card: projected(card), family: "lg-freihand" })
+const lp = (card: PeriodCard): ListInputCard => ({ card: projected(card), family: "lp-freihand" })
 const context = { timeZone: TZ, nowMs: NOW, named: [], scoring: "decimal" as const }
 const query = (patch: Partial<ListQuery> = {}): ListQuery => ({
   ...DEFAULT_LIST,
@@ -68,6 +68,8 @@ describe("Abende der Scheiben-Liste (Plan N2, D1–D5)", () => {
     expect(row.kind).toBe("training")
     const rings = cardListModel(INPUT, query(), { ...context, scoring: "rings" })
     expect(rings.evenings[1].rows[0].result).toBe(29)
+    // der Ø folgt der Wertung der Liste: 10 + 10 + 9 ganze Ringe sind 9,67 je Schuss, nicht 10,0
+    expect(rings.evenings[1].rows[0].mean).toBeCloseTo(29 / 3, 9)
     const probe = cardListModel(
       [lg(periodCard("p", 1, [100, 104], { startedAtMs: at(10), probe: true }))],
       query(),

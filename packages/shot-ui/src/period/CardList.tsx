@@ -1,7 +1,8 @@
 "use client"
 
-import type { CardValue, PeriodCard } from "@vereinsheim/shot-core/analysis"
+import type { CardValue } from "@vereinsheim/shot-core/analysis"
 import type { MetricDefinition } from "@vereinsheim/shot-core/metrics"
+import type { ProjectedCard } from "@vereinsheim/shot-core/projection"
 import { formatShortDate } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, useState } from "react"
@@ -10,11 +11,11 @@ import { formatSigned, formatValue } from "../format"
 import { RouteLink } from "../nav/RouteLink"
 import type { ListRoute } from "../nav/routes"
 import { KindMark } from "../list/KindMark"
-import { cardKind, isProbeOnly } from "./model"
+import { cardKind } from "./model"
 
 export interface CardListProps {
   /** Scheiben des Zeitraums in ihrer Folge (älteste zuerst) */
-  cards: readonly PeriodCard[]
+  cards: readonly ProjectedCard[]
   /** Werte der Kennzahl des Verlaufs */
   values: readonly CardValue[]
   /** Abstand zum Schnitt der Scheiben davor (`PeriodModel.deltas`) */
@@ -96,9 +97,8 @@ export function CardList({
             const picked = chosen === card.id
             const date = formatShortDate(new Date(card.startedAtMs), timeZone)
             const choose = onChoose ? () => onChoose(card.id) : undefined
-            const count = isProbeOnly(card)
-              ? card.shots.length
-              : card.shots.filter((s) => s.kind === "match").length
+            // wie am Ausdruck: die Wertung, bei nur Probe die Probe
+            const count = card.projection.printedShots
             return (
               <tr
                 key={card.id}

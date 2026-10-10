@@ -5,7 +5,8 @@
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { formatTimeOfDay, formatWeekdayDate } from "@vereinsheim/lib/format"
 
-import { cardKindText } from "../period/CardReadout"
+import { KIND_TEXT } from "../list/KindMark"
+import { kindOf, probeOnlyShots } from "../period/model"
 
 /**
  * „Wettkampf · Sa 26.09.2026 · 10:30“ als Teile für `CardHeader` (`meta`). Das Datum ist der Kalendertag des Beginns;
@@ -13,5 +14,6 @@ import { cardKindText } from "../period/CardReadout"
  */
 export function cardMeta(card: PeriodCard, timeZone: string): string[] {
   const at = new Date(card.startedAtMs)
-  return [cardKindText(card), formatWeekdayDate(at, timeZone), formatTimeOfDay(at, timeZone)]
+  const kind = KIND_TEXT[kindOf(card.kind, probeOnlyShots(card.shots))]
+  return [kind, formatWeekdayDate(at, timeZone), formatTimeOfDay(at, timeZone)]
 }

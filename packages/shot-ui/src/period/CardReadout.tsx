@@ -1,7 +1,8 @@
 "use client"
 
-import type { CardValue, PeriodCard, TrendPoint } from "@vereinsheim/shot-core/analysis"
+import type { CardValue, TrendPoint } from "@vereinsheim/shot-core/analysis"
 import type { MetricDefinition } from "@vereinsheim/shot-core/metrics"
+import type { MarkShot, ProjectedCard } from "@vereinsheim/shot-core/projection"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { formatDateOnly, formatShortDay } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
@@ -10,14 +11,15 @@ import { formatSigned, formatValue, unitText } from "../format"
 import { groupView } from "../geometry"
 import { RouteLink } from "../nav/RouteLink"
 import type { CardRoute } from "../nav/routes"
-import { hasPosition, matchShots } from "../shots"
 import { HelpButton } from "../help/HelpButton"
 import { MiniTarget } from "../target/MiniTarget"
 import { KIND_TEXT } from "../list/KindMark"
 import { cardKind, isProbeOnly } from "./model"
 
 export interface CardReadoutProps {
-  card: PeriodCard
+  card: ProjectedCard
+  /** die Lagen der Scheibe für die kleine Scheibe (`markShots(cardMarks(…))`); leer: „ohne Lage“ */
+  marks: readonly MarkShot[]
   target: TargetImage
   /** Wert der Kennzahl des Verlaufs; null: die Scheibe hat keinen */
   value: CardValue | null
@@ -43,16 +45,13 @@ export interface CardReadoutProps {
 const explainsDelta = (metric: Readonly<MetricDefinition>) => metric.key === "result.decimalMean"
 
 /** „Training“, „Wettkampf“, „Training nur Probe“ */
-export const cardKindText = (card: PeriodCard) => KIND_TEXT[cardKind(card)]
+export const cardKindText = (card: ProjectedCard) => KIND_TEXT[cardKind(card)]
 
 /** „+0,03 zum Schnitt der 5 Scheiben davor“, „… der Scheibe davor“ */
 export function deltaText(delta: { delta: number; n: number }, decimals: number): string {
   const before = delta.n === 1 ? "der Scheibe davor" : `der ${delta.n} Scheiben davor`
   return `${formatSigned(delta.delta, decimals)} zum Schnitt ${before}`
 }
-
-/** die Schüsse, die die kleine Scheibe zeigt: die Wertung, bei nur Probe die Probe wie Wertung */
-const shownShots = (card: PeriodCard) => matchShots(card.shots)
 
 /**
  * Ablesung einer Scheibe auf der Seite eines Zeitraums (Plan L3, D9): Datum und Art, der Wert der Kennzahl, die
@@ -61,6 +60,7 @@ const shownShots = (card: PeriodCard) => matchShots(card.shots)
  */
 export function CardReadout({
   card,
+  marks,
   target,
   value,
   point,
@@ -72,8 +72,6 @@ export function CardReadout({
   onHelp,
   className,
 }: CardReadoutProps) {
-  const shots = shownShots(card)
-  const placed = shots.filter(hasPosition)
   const unit = unitText(metric.unit)
   const band = point?.band ?? null
   const inBand = band && value ? value.value >= band.low && value.value <= band.high : null
@@ -100,7 +98,7 @@ export function CardReadout({
           <p className="text-muted-foreground">
             {value ? metric.label : `${metric.label}: ohne Wert`}
           </p>
-          <p>{`${shots.length} Schuss${isProbeOnly(card) ? " (Probe als Training)" : ""}`}</p>
+          <p>{`${card.projection.printedShots} Schuss${isProbeOnly(card) ? " (Probe als Training)" : ""}`}</p>
           {value && (
             <div className="flex items-start justify-between gap-2">
               <p data-delta className="tabular-nums">
@@ -121,15 +119,8 @@ export function CardReadout({
             </p>
           )}
         </div>
-        {placed.length > 0 ? (
-          <MiniTarget
-            target={target}
-            view={groupView(
-              target,
-              placed.map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
-            )}
-            shots={placed}
-          />
+        {marks.length > 0 ? (
+          <MiniTarget target={target} view={groupView(target, marks)} shots={marks} />
         ) : (
           <p className="text-[13px] text-muted-foreground">ohne Lage</p>
         )}

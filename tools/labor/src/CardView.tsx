@@ -38,7 +38,7 @@ import { useCallback, useEffect, useMemo, useReducer, useState, type MouseEvent 
 import { LaborPanel, type LaborPanelProps } from "./LaborPanel"
 
 import { rawSample, SAMPLES, toMetricShots, type RawShot, type SampleId } from "./samples"
-import { NAMED_PERIODS, season, SEASON_NOW_MS, SEASON_TIME_ZONE } from "./season"
+import { NAMED_PERIODS, projectedSeason, SEASON_NOW_MS, SEASON_TIME_ZONE } from "./season"
 import { loadAnchor } from "./loadAnchor"
 import { store } from "./store"
 import { exposeForTest, underTest } from "./testHook"
@@ -276,7 +276,7 @@ export function CardView({
     () =>
       opened
         ? contextCardIds(opened.route, {
-            cards: season().map((c) => ({ card: c.card, family: c.family })),
+            cards: projectedSeason().map((c) => ({ card: c.card, family: c.family })),
             nowMs: SEASON_NOW_MS,
             timeZone: SEASON_TIME_ZONE,
             named: NAMED_PERIODS,

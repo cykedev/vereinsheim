@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest"
 
 import type { ListInputCard } from "../list/evenings"
 import { urlFromRoute } from "../nav/routes"
-import { NOW, periodCard, TZ } from "../period/testSeason"
+import { NOW, periodCard, projected, TZ } from "../period/testSeason"
 import { startModel } from "./model"
 
 const DAY = 86_400_000
 /** Ortszeit MESZ (UTC+2) am Tag `day` im September 2026 */
 const at = (day: number, hour: number, minute = 0) => Date.UTC(2026, 8, day, hour - 2, minute)
-const lg = (card: PeriodCard): ListInputCard => ({ card, family: "lg-freihand" })
-const lp = (card: PeriodCard): ListInputCard => ({ card, family: "lp-freihand" })
+const lg = (card: PeriodCard): ListInputCard => ({ card: projected(card), family: "lg-freihand" })
+const lp = (card: PeriodCard): ListInputCard => ({ card: projected(card), family: "lp-freihand" })
 const context = { timeZone: TZ, nowMs: NOW, named: [], scoring: "decimal" as const }
 const model = (cards: ListInputCard[], family: string | null = "lg-freihand") =>
   startModel({ ...context, cards, family })

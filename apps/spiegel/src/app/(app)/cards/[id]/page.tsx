@@ -7,20 +7,12 @@ import { routeFromUrl } from "@vereinsheim/shot-ui/nav/routes"
 import { CardScreen } from "@/components/card/CardScreen"
 import { requireSession } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
-import { cardWithShots, ownerCardsWithShots } from "@/lib/db/reads"
+import { cardWithShots, ownerCards } from "@/lib/db/reads"
 import { pageContext } from "@/lib/page-context"
-import { listable } from "@/lib/pages"
+import { listable, withFamily } from "@/lib/pages"
+import { searchOf } from "@/lib/search"
 
 export const metadata: Metadata = { title: "Scheibe" }
-
-/** die Abfrage der Adresse als Text, wie `routeFromUrl` sie liest */
-function searchOf(params: Record<string, string | string[] | undefined>): string {
-  const search = new URLSearchParams()
-  for (const [key, value] of Object.entries(params))
-    for (const one of Array.isArray(value) ? value : value === undefined ? [] : [value])
-      search.append(key, one)
-  return search.size ? `?${search.toString()}` : ""
-}
 
 // Seite einer Scheibe: nur die eigene; Rückweg und Blättern im Kontext der Herkunft (Liste, Start, Fortschritt)
 export default async function CardRoutePage({
@@ -39,15 +31,12 @@ export default async function CardRoutePage({
   const route = routeFromUrl(`/cards/${encodeURIComponent(id)}`, searchOf(await searchParams), "")
   if (route.page !== "card") notFound()
   const context = await pageContext(ownerId)
-  // Übergang bis SP-1.8: der Kontext zum Blättern rechnet aus allen eigenen Scheiben, nur mit Herkunft
+  // der Kontext zum Blättern aus den Projektionen der eigenen Scheiben (ohne Schüsse), nur mit Herkunft
   const ids =
     route.origin === null
       ? null
       : contextCardIds(route, {
-          cards: listable(await ownerCardsWithShots(db, ownerId)).map((c) => ({
-            card: c,
-            family: c.family!.slug,
-          })),
+          cards: withFamily(listable(await ownerCards(db, { ownerId }))),
           nowMs: context.nowMs,
           timeZone: context.timeZone,
           named: context.named,

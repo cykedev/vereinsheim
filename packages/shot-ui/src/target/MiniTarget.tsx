@@ -13,8 +13,11 @@ export interface MiniTargetProps {
   target: TargetImage
   /** Ausschnitt in mm, etwa `seriesTileView` oder `groupView` */
   view: ViewBox
-  /** die Treffer, die sie zeigt; ohne Lage fallen sie weg, Probe als Ring */
-  shots: readonly MetricShot[]
+  /**
+   * die Treffer, die sie zeigt; ohne Lage fallen sie weg. Sie braucht nur Lage und Ring: Schüsse oder die kompakten
+   * Lagen der Übersichten (`MarkShot` aus `shot-core/projection`)
+   */
+  shots: readonly Pick<MetricShot, "xUm" | "yUm" | "ring">[]
   /** Ecke oben rechts in der Farbe des Spiegels: eine Kachel der Probe */
   probeCorner?: boolean
   /** blass: nur das Bild tritt zurück */

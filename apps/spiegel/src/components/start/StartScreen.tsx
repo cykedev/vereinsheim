@@ -2,51 +2,51 @@
 
 import { useMemo } from "react"
 
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
+import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { StartPage } from "@vereinsheim/shot-ui/layout/StartPage"
 import { openCard } from "@vereinsheim/shot-ui/nav/navigate"
 import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
 import { EveningBlock } from "@vereinsheim/shot-ui/start/EveningBlock"
 import { FormLine } from "@vereinsheim/shot-ui/start/FormLine"
-import { startModel } from "@vereinsheim/shot-ui/start/model"
+import type { StartModel } from "@vereinsheim/shot-ui/start/model"
 
 import { NoCards } from "@/components/shell/NoCards"
 import { Page } from "@/components/shell/Page"
-import type { PageCard } from "@/lib/db/reads"
+import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
 
 /**
  * Start (N5, N7): je Familie des letzten Abends der Abend im Formband, die Form; „Offen“ kommt mit der Zuordnung
- * (SP-1.7). Wie im Labor gerechnet (`startModel`), mit den Scheiben aus der Datenbank.
+ * (SP-1.7). Das Modell hat die Seite auf dem Server gerechnet (`startModel` aus den Projektionen).
  */
 export function StartScreen({
-  cards,
+  model,
+  marks: compact,
   families,
   context,
 }: {
-  cards: PageCard[]
+  model: StartModel
+  /** die Lagen der Scheiben des Abends, kompakt nach Id */
+  marks: Record<string, CardMark[]>
   families: FamilyOption[]
   context: PageContext
 }) {
-  const { timeZone, nowMs, named, scoring } = context
-  const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards])
+  const { timeZone, scoring } = context
+  const marks = useMemo(() => marksById(compact), [compact])
   const familyOf = useMemo(() => new Map(families.map((f) => [f.value, f])), [families])
-  const model = useMemo(
-    () =>
-      startModel({
-        cards: cards.map((card) => ({ card, family: card.family!.slug })),
-        timeZone,
-        nowMs,
-        named,
-        scoring,
-        family: families[0]?.value ?? "",
-      }),
-    [cards, families, timeZone, nowMs, named, scoring]
-  )
   // eine Kachel öffnet die Scheibe in der Wertung, die sie vorn zeigt (die amtliche, sonst die des Geräts)
+  const resultScoring = useMemo(
+    () =>
+      new Map<string, Scoring>(
+        model.blocks.flatMap((block) => block.rows.map((row) => [row.id, row.resultScoring]))
+      ),
+    [model]
+  )
   const cardRoute = (id: string) =>
-    openCard({ page: "start" }, id, byId.get(id)?.official ?? scoring)
+    openCard({ page: "start" }, id, resultScoring.get(id) ?? scoring)
   const recordRoute = (id: string) => openCard({ page: "start" }, id, scoring)
 
   return (
@@ -64,7 +64,7 @@ export function StartScreen({
                   key={block.family}
                   block={block}
                   familyLabel={family?.label ?? block.family}
-                  cards={byId}
+                  marks={marks}
                   target={TARGETS[family?.targetId ?? "lp-10m"]}
                   timeZone={timeZone}
                   cardRoute={cardRoute}

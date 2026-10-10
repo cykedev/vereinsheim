@@ -2,6 +2,13 @@
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
+import {
+  cardMarks,
+  markShots,
+  projectCard,
+  type MarkShot,
+  type ProjectedCard,
+} from "@vereinsheim/shot-core/projection"
 
 import { DAY_MS } from "./calendar"
 
@@ -31,3 +38,10 @@ export function periodCard(
   }))
   return { id, startedAtMs, kind: "training", complete: true, shots, ...rest }
 }
+
+/** die Scheibe als Eingabe der Übersichten: Merkmale und Projektion (wie die App sie aus der Datenbank liest) */
+export const projected = (card: PeriodCard): ProjectedCard => projectCard(card)
+
+/** die Lagen der kleinen Scheiben nach Id, wie die App sie zu den gezeigten Scheiben liest */
+export const marksOf = (cards: readonly PeriodCard[]): Map<string, MarkShot[]> =>
+  new Map(cards.map((card) => [card.id, markShots(cardMarks(card.shots))]))

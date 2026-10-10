@@ -1,4 +1,3 @@
-import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
@@ -13,9 +12,11 @@ import { LaborPanel, type LaborPanelProps } from "./LaborPanel"
 import {
   FAMILIES,
   NAMED_PERIODS,
+  projectedSeason,
   season,
   SEASON_NOW_MS,
   SEASON_TIME_ZONE,
+  seasonMarks,
   targetOfFamily,
 } from "./season"
 import { exposeListForTest } from "./testHook"
@@ -35,20 +36,20 @@ export interface ListViewProps {
  */
 export function ListView({ header, query, onQuery, scoring }: ListViewProps) {
   const all = season()
+  const projected = projectedSeason()
   const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all])
   // die Wege als Adressen (Plan N3, D3): öffnen in der Wertung, die die Zeile vorn zeigt (die amtliche, sonst die
   // des Geräts), „Im Fortschritt zeigen“ (im Blatt „Filter“), eine andere Familie am selben Abend
   const route: ListRoute = { page: "cards", query, evening: null }
   const cardRoute = (id: string) => openCard(route, id, byId.get(id)?.card.official ?? scoring)
-  const cards = useMemo(() => new Map<string, PeriodCard>(all.map((c) => [c.id, c.card])), [all])
   const model = useMemo(
     () =>
       cardListModel(
-        all.map((c) => ({ card: c.card, family: c.family })),
+        projected.map((c) => ({ card: c.card, family: c.family })),
         query,
         { timeZone: SEASON_TIME_ZONE, nowMs: SEASON_NOW_MS, named: NAMED_PERIODS, scoring }
       ),
-    [all, query, scoring]
+    [projected, query, scoring]
   )
   // die Scheiben und ihre Familien, damit die Prüfung Ergebnis, Ø und Abstand selbst nachrechnet
   useEffect(() =>
@@ -82,7 +83,7 @@ export function ListView({ header, query, onQuery, scoring }: ListViewProps) {
         />
         <EveningList
           model={model}
-          cards={cards}
+          marks={seasonMarks()}
           target={TARGETS[targetOfFamily(family)]}
           families={FAMILIES}
           timeZone={SEASON_TIME_ZONE}

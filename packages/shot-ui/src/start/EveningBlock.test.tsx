@@ -4,18 +4,19 @@ import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import type { ListInputCard } from "../list/evenings"
 import { openCard } from "../nav/navigate"
 import { DEFAULT_LIST } from "../nav/routes"
-import { NOW, periodCard, TZ } from "../period/testSeason"
+import { marksOf, NOW, periodCard, projected, TZ } from "../period/testSeason"
 import { EveningBlock } from "./EveningBlock"
 import { startModel } from "./model"
 
 const at = (day: number, hour: number) => Date.UTC(2026, 8, day, hour - 2)
-const lp = (card: PeriodCard): ListInputCard => ({ card, family: "lp-freihand" })
-const render = (cards: ListInputCard[]) => {
+/** Scheiben mit Schüssen: das Modell bekommt ihre Projektion, die kleinen Scheiben ihre Lagen */
+type Raw = { card: PeriodCard; family: string }
+const lp = (card: PeriodCard): Raw => ({ card, family: "lp-freihand" })
+const render = (cards: Raw[]) => {
   const model = startModel({
-    cards,
+    cards: cards.map((c) => ({ ...c, card: projected(c.card) })),
     timeZone: TZ,
     nowMs: NOW,
     named: [],
@@ -27,7 +28,7 @@ const render = (cards: ListInputCard[]) => {
     h(EveningBlock, {
       block,
       familyLabel: "Luftpistole",
-      cards: new Map(cards.map((c) => [c.card.id, c.card])),
+      marks: marksOf(cards.map((c) => c.card)),
       target: LP_10M,
       timeZone: TZ,
       cardRoute: (id: string) => openCard({ page: "start" }, id, "rings"),

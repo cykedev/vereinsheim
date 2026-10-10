@@ -1,10 +1,10 @@
 // Lesen für die Ansichten (ADR-031): Liste, Fortschritt und Start lesen Scheiben mit ihrer Projektion und ohne Schüsse
-// (Index `Card(ownerId, familyId, startedAt)` bzw. `Card(ownerId, startedAt)`); nur die Seite einer Scheibe lädt
-// Schüsse, die der aktuellen Revision.
+// (Index `Card(ownerId, familyId, startedAt)` bzw. `Card(ownerId, startedAt)`), die kleinen Scheiben nur die Lagen der
+// gezeigten (`marksOfCards`); nur die Seite einer Scheibe lädt Schüsse, die der aktuellen Revision.
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
-import type { CardProjection, ProjectedCard } from "@vereinsheim/shot-core/projection"
+import type { CardMark, CardProjection, ProjectedCard } from "@vereinsheim/shot-core/projection"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
 import type { CardState, Prisma } from "@/generated/prisma/client"
@@ -12,10 +12,14 @@ import type { CardState, Prisma } from "@/generated/prisma/client"
 import type { Db } from "../db"
 import { shotFromRow, toMetricShot } from "./cards"
 
-/** eine Scheibe für die Übersichten: Merkmale und Projektion */
+/** eine Scheibe für die Übersichten: Merkmale und Projektion, dazu Familie und Scheibenbild für Filter und Bild */
 export interface OverviewCard extends ProjectedCard {
   disciplineId: number
   familyId: number | null
+  /** Familie der Disziplin (Kennung in der Adresse, Name); null, solange keine zugeordnet ist */
+  family: { slug: string; name: string } | null
+  /** Scheibenbild der Disziplin; null, solange es unbekannt ist */
+  targetId: TargetId | null
   state: CardState
   stand: string | null
 }
@@ -30,7 +34,8 @@ const OVERVIEW_SELECT = {
   stand: true,
   disciplineId: true,
   familyId: true,
-  discipline: { select: { officialScoring: true } },
+  family: { select: { slug: true, name: true } },
+  discipline: { select: { officialScoring: true, targetId: true } },
   projection: {
     select: {
       version: true,
@@ -72,6 +77,8 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         stand: row.stand,
         disciplineId: row.disciplineId,
         familyId: row.familyId,
+        family: row.family,
+        targetId: isTargetId(row.discipline.targetId) ? row.discipline.targetId : null,
         projection,
       },
     ]
@@ -203,17 +210,20 @@ export async function cardWithShots(
 }
 
 /**
- * Übergang bis SP-1.8 (ADR-031, Folgen): Start und Liste rechnen in `shot-ui` noch aus Schüssen, und die kleinen
- * Scheiben der Liste brauchen die Lagen. Bis die Modelle die Projektion nehmen, lädt dieser Zugriff alle Scheiben
- * des Schützen mit Schüssen, nach Beginn. Für die Übersichten danach: `familyCards`.
+ * Die Lagen der kleinen Scheiben (`cardMarks` der Projektion) für die Scheiben, die eine Seite zeigt, nur eigene und
+ * nicht gelöschte; nach Id. Eine Übersicht liest sie getrennt, damit Start für die Rechnung über die ganze Familie nicht
+ * die Lagen jeder Scheibe lädt.
  */
-export async function ownerCardsWithShots(db: Db, ownerId: string): Promise<PageCard[]> {
-  const rows = await db.card.findMany({
-    where: { ownerId, deletedAt: null, currentRevisionId: { not: null } },
-    orderBy: [{ startedAt: "asc" }, { id: "asc" }],
-    select: PAGE_CARD_SELECT,
+export async function marksOfCards(
+  db: Db,
+  query: { ownerId: string; ids: readonly string[] }
+): Promise<Record<string, CardMark[]>> {
+  if (!query.ids.length) return {}
+  const rows = await db.cardProjection.findMany({
+    where: { cardId: { in: [...query.ids] }, card: { ownerId: query.ownerId, deletedAt: null } },
+    select: { cardId: true, marks: true },
   })
-  return rows.flatMap((row) => toPageCard(row) ?? [])
+  return Object.fromEntries(rows.map((row) => [row.cardId, row.marks as unknown as CardMark[]]))
 }
 
 /** benannte Zeiträume des Schützen („Vorbereitung Landesmeisterschaft“), Tage als ISO-Datum */

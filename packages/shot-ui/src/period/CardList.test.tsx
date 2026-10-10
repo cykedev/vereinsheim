@@ -7,7 +7,7 @@ import { DEFAULT_LIST, type ListRoute } from "../nav/routes"
 import { CardList } from "./CardList"
 import { periodModel } from "./model"
 import { initialPeriodState } from "./state"
-import { NOW, periodCard, TZ } from "./testSeason"
+import { NOW, periodCard, projected, TZ } from "./testSeason"
 
 const metric = metricByKey("result.decimalMean")!
 const render = (count: number, chosen: string | null = null, showAll?: ListRoute) => {
@@ -15,7 +15,7 @@ const render = (count: number, chosen: string | null = null, showAll?: ListRoute
     periodCard(`k${i}`, 40 - i, [90 + i, 90 + i], { kind: i === 2 ? "competition" : "training" })
   )
   const model = periodModel({
-    cards,
+    cards: cards.map(projected),
     state: initialPeriodState({ family: "lg-10m" }),
     nowMs: NOW,
     timeZone: TZ,

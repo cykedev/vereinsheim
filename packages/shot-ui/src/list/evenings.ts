@@ -1,22 +1,30 @@
 // Abende der Scheiben-Liste (Plan N2, `vault/spiegel/spiegel-navigation.md`): reine Funktionen. Ein Abend ist Konto
 // und Tag in der Anzeige-Zeitzone, eine Scheibe vor 4 Uhr zählt zum Vortag (D1). Alle Scheiben eines Abends stehen
 // gleichberechtigt in zeitlicher Folge, die Abende neueste zuerst (D2); die Familie ist Pflicht, andere Familien des
-// Abends nennt der Kopf (D3). Zahlen nur aus dem Fachkern.
+// Abends nennt der Kopf (D3). Zahlen nur aus dem Fachkern, aus der Projektion jeder Scheibe (ADR-031, SP-1.8).
 
-import { cardValues, type PeriodCard } from "@vereinsheim/shot-core/analysis"
-import { computeMetric, inScoring, metricByKey, type Scoring } from "@vereinsheim/shot-core/metrics"
+import {
+  inScoring,
+  metricByKey,
+  type MetricDefinition,
+  type Scoring,
+} from "@vereinsheim/shot-core/metrics"
+import { projectedValues, type ProjectedCard } from "@vereinsheim/shot-core/projection"
 import { formatIsoDate, formatTimeOfDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 
 import type { ListQuery } from "../nav/routes"
 import { inRange, resolveRange, type DateRange, type NamedPeriod } from "../period/calendar"
 import { byStart, cardKind, deltasBefore, isProbeOnly, type CardKind } from "../period/model"
-import { matchShots } from "../shots"
 
-/** eine Scheibe mit ihrer Familie (die Liste filtert nach ihr) */
+/** eine Scheibe mit Projektion und ihrer Familie (die Liste filtert nach ihr) */
 export interface ListInputCard {
-  card: PeriodCard
+  card: ProjectedCard
   family: string
 }
+
+/** der Wert einer Kennzahl der Scheibe in der Wertung aus ihrer Projektion; null ohne Wert */
+const projected = (card: ProjectedCard, metric: Readonly<MetricDefinition>, scoring: Scoring) =>
+  card.projection.values[inScoring(metric, scoring).key]?.value ?? null
 
 export interface ListRow {
   id: string
@@ -146,7 +154,7 @@ export function cardListModel(
     : null
   const shown = ofKind.filter(
     (card) =>
-      (!query.flag || (card.flags ?? []).includes(query.flag)) &&
+      (!query.flag || card.flags.includes(query.flag)) &&
       (!range || inRange(card.startedAtMs, range))
   )
 
@@ -155,7 +163,7 @@ export function cardListModel(
   const meanMetric = inScoring(metricByKey("result.decimalMean")!, context.scoring)
   // der Abstand rechnet über die Familie in der Art, auch vor dem Zeitraum (wie die Seite eines Zeitraums)
   const deltas = deltasBefore(
-    cardValues(ofKind, metricByKey("result.decimalMean")!, context.scoring, {
+    projectedValues(ofKind, metricByKey("result.decimalMean")!, context.scoring, {
       includeProbeOnly: true,
     }),
     new Set(shown.map((c) => c.id))
@@ -164,20 +172,20 @@ export function cardListModel(
   const days = new Map<string, Evening>()
   for (const card of shown) {
     const day = eveningDay(card.startedAtMs, context.timeZone)
-    const shots = matchShots(card.shots)
     const official = isProbeOnly(card) ? undefined : card.official
     const resultScoring = official ?? context.scoring
+    // Werte wie am Ausdruck (die Wertung, bei nur Probe die Probe): so rechnet die Projektion
     const row: ListRow = {
       id: card.id,
       startedAtMs: card.startedAtMs,
       kind: cardKind(card),
-      result: computeMetric(resultMetric(resultScoring), shots),
+      result: projected(card, resultMetric(resultScoring), resultScoring),
       resultScoring,
       official: official !== undefined,
-      otherResult: computeMetric(resultMetric(other(resultScoring)), shots),
-      mean: computeMetric(meanMetric, shots),
+      otherResult: projected(card, resultMetric(other(resultScoring)), other(resultScoring)),
+      mean: projected(card, meanMetric, context.scoring),
       delta: deltas.get(card.id) ?? null,
-      shots: shots.length,
+      shots: card.projection.printedShots,
     }
     const evening = days.get(day) ?? { day, rows: [], shots: 0, others: [] }
     evening.rows.push(row)
@@ -202,7 +210,7 @@ export function cardListModel(
     evenings: [...days.values()].sort((a, b) => (a.day < b.day ? 1 : -1)),
     // ein gewähltes Merkmal bleibt wählbar, auch wenn die Familie es nicht hat (sonst ließe es sich nicht lösen)
     flags: [
-      ...new Set([...ofFamily.flatMap((c) => c.flags ?? []), ...(query.flag ? [query.flag] : [])]),
+      ...new Set([...ofFamily.flatMap((c) => c.flags), ...(query.flag ? [query.flag] : [])]),
     ].sort(),
     cards: shown.length,
     scoring: context.scoring,

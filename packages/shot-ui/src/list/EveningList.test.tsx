@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest"
 
 import { listOnEvening, openCard } from "../nav/navigate"
 import { DEFAULT_LIST, type ListRoute } from "../nav/routes"
-import { NOW, periodCard, TZ } from "../period/testSeason"
-import { cardListModel, type ListInputCard } from "./evenings"
+import { marksOf, NOW, periodCard, projected, TZ } from "../period/testSeason"
+import { cardListModel } from "./evenings"
 import { EveningList } from "./EveningList"
 
 const LIST: ListRoute = {
@@ -17,7 +17,9 @@ const LIST: ListRoute = {
 }
 
 const at = (hourUtc: number, minute = 0, day = 29) => Date.UTC(2026, 8, day, hourUtc, minute)
-const INPUT: ListInputCard[] = [
+/** Scheiben mit Schüssen: das Modell bekommt ihre Projektion, die kleinen Scheiben ihre Lagen */
+type RawInput = { card: PeriodCard; family: string }[]
+const INPUT: RawInput = [
   { card: periodCard("a", 1, [100, 102, 98], { startedAtMs: at(16, 30) }), family: "lg-freihand" },
   { card: periodCard("b", 1, [101, 103], { startedAtMs: at(17, 45) }), family: "lg-freihand" },
   { card: periodCard("c", 1, [95, 97], { startedAtMs: at(18) }), family: "lp-freihand" },
@@ -27,16 +29,16 @@ const FAMILIES = [
   { value: "lg-freihand", label: "Luftgewehr" },
   { value: "lp-freihand", label: "Luftpistole" },
 ]
-const render = (scoring: "decimal" | "rings" = "decimal", input = INPUT) => {
+const render = (scoring: "decimal" | "rings" = "decimal", input: RawInput = INPUT) => {
   const model = cardListModel(
-    input,
+    input.map((c) => ({ ...c, card: projected(c.card) })),
     { ...DEFAULT_LIST, family: "lg-freihand" },
     { timeZone: TZ, nowMs: NOW, named: [], scoring }
   )
   return renderToStaticMarkup(
     h(EveningList, {
       model,
-      cards: new Map<string, PeriodCard>(input.map((c) => [c.card.id, c.card])),
+      marks: marksOf(input.map((c) => c.card)),
       target: LG_10M,
       families: FAMILIES,
       timeZone: TZ,

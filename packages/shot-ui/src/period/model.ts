@@ -1,25 +1,29 @@
 // Modell der Seite eines Zeitraums (Plan L3, D3): alles, was die Seite zeigt, aus dem Fachkern (L2). Die
-// Bausteine zeichnen nur, was hier steht; Datum und Zeitzone über `@vereinsheim/lib/format` (D16).
+// Bausteine zeichnen nur, was hier steht; Datum und Zeitzone über `@vereinsheim/lib/format` (D16). Es rechnet aus den
+// Projektionen der Scheiben, nie aus Schüssen (ADR-031, SP-1.8): `projectedValues`, `projectedRecords`, `projectedVolume`.
 
 import {
-  cardValues,
   comparePeriods,
   periodBuckets,
-  periodRecords,
   periodTrend,
-  trainingVolume,
   type CardValue,
   type PeriodBucket,
-  type PeriodCard,
   type PeriodComparison,
   type PeriodRecords,
   type TrendPoint,
   type VolumeBucket,
 } from "@vereinsheim/shot-core/analysis"
 import {
+  projectedRecords,
+  projectedValues,
+  projectedVolume,
+  type ProjectedCard,
+} from "@vereinsheim/shot-core/projection"
+import {
   inScoring,
   metricByKey,
   type MetricDefinition,
+  type MetricShot,
   type MetricUnit,
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
@@ -84,7 +88,7 @@ export interface PeriodModel {
   range: DateRange
   compareRange: DateRange | null
   /** Scheiben im Zeitraum nach Art, in ihrer Folge (Beginn, Id) */
-  cards: PeriodCard[]
+  cards: ProjectedCard[]
   /** die Kennzahl des Verlaufs in der Wertung der Seite */
   metric: Readonly<MetricDefinition>
   values: CardValue[]
@@ -147,20 +151,30 @@ export interface PeriodModel {
 }
 
 export interface PeriodReading {
-  card: PeriodCard
+  card: ProjectedCard
   point: TrendPoint | null
   chosen: boolean
 }
 
-/** eine Scheibe nur aus Probe (Training): eine Regel für Modell und Bausteine */
-export const isProbeOnly = (card: PeriodCard) =>
-  card.shots.length > 0 && card.shots.every((s) => s.kind === "probe")
+/**
+ * eine Scheibe nur aus Probe (Training): eine Regel für Modell und Bausteine. Mit mindestens einem Schuss: eine Scheibe
+ * ohne Schuss ist keine Probe
+ */
+export const isProbeOnly = (card: ProjectedCard) =>
+  card.projection.probeOnly && card.projection.printedShots > 0
 
 /** Art einer Scheibe in den Listen (U3, D7): Wettkampf, Training, Training nur aus Probe */
 export type CardKind = "training" | "competition" | "probe"
 
-export const cardKind = (card: PeriodCard): CardKind =>
-  card.kind === "competition" ? "competition" : isProbeOnly(card) ? "probe" : "training"
+export const cardKind = (card: ProjectedCard): CardKind => kindOf(card.kind, isProbeOnly(card))
+
+/** die Art aus Wettkampf oder Training und „nur Probe“: eine Regel für die Übersichten und die Seite einer Scheibe */
+export const kindOf = (kind: ProjectedCard["kind"], probeOnly: boolean): CardKind =>
+  kind === "competition" ? "competition" : probeOnly ? "probe" : "training"
+
+/** „nur Probe“ aus den Schüssen, für die Seite einer Scheibe (sie hat Schüsse statt Projektion); wie `isProbeOnly` */
+export const probeOnlyShots = (shots: readonly Pick<MetricShot, "kind">[]) =>
+  shots.length > 0 && shots.every((s) => s.kind === "probe")
 
 /**
  * Die Ablesung zu einer Wahl: die gewählte Scheibe, wenn sie im Zeitraum liegt, sonst die neueste mit Ø je Schuss,
@@ -185,8 +199,10 @@ const mean = (values: readonly CardValue[]) =>
   values.length ? values.reduce((sum, v) => sum + v.value, 0) / values.length : null
 
 /** zeitliche Folge, bei gleichem Beginn nach Id (wie im Fachkern); eine Regel für Zeitraum und Liste */
-export const byStart = (a: PeriodCard, b: PeriodCard) =>
-  a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+export const byStart = (
+  a: Pick<ProjectedCard, "id" | "startedAtMs">,
+  b: Pick<ProjectedCard, "id" | "startedAtMs">
+) => a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
 
 /** die bis zu fünf Scheiben davor, wie der gleitende Schnitt (D2) */
 const DELTA_WINDOW = 5
@@ -222,8 +238,8 @@ function weekKeys(range: DateRange, nowMs: number, timeZone: string): string[] {
 }
 
 export function periodModel(input: {
-  /** alle Scheiben einer Familie */
-  cards: readonly PeriodCard[]
+  /** alle Scheiben einer Familie, mit Projektion */
+  cards: readonly ProjectedCard[]
   state: PeriodState
   nowMs: number
   timeZone: string
@@ -232,7 +248,7 @@ export function periodModel(input: {
   const { state, nowMs, timeZone, named } = input
   const options = { includeProbeOnly: state.includeProbeOnly }
   const scoring: Scoring = state.scoring
-  const ofKind = (card: PeriodCard) => state.kind === "all" || card.kind === state.kind
+  const ofKind = (card: ProjectedCard) => state.kind === "all" || card.kind === state.kind
   const firstMs = input.cards.length ? Math.min(...input.cards.map((c) => c.startedAtMs)) : null
   const range = resolveRange(state.choice, { nowMs, timeZone, named, firstMs })
   const other = compareRange(state.compare, range, { nowMs, timeZone, named })
@@ -244,9 +260,11 @@ export function periodModel(input: {
   const otherCards = otherAll ? otherAll.filter((c) => !inPeriod.has(c.id)) : null
 
   const chartMetric = metricByKey(state.metric) as Readonly<MetricDefinition>
-  const values = cardValues(cards, chartMetric, scoring, options)
+  const values = projectedValues(cards, chartMetric, scoring, options)
   const trend = periodTrend(values)
-  const compareValues = otherCards ? cardValues(otherCards, chartMetric, scoring, options) : null
+  const compareValues = otherCards
+    ? projectedValues(otherCards, chartMetric, scoring, options)
+    : null
 
   const day = (ms: number) => formatIsoDate(new Date(ms), timeZone)
   const better = chartMetric.better
@@ -263,10 +281,10 @@ export function periodModel(input: {
 
   // Scheiben der Familie in der Art der Seite, auch vor dem Zeitraum: für den Abstand zum Schnitt davor
   const family = input.cards.filter(ofKind).sort(byStart)
-  const familyValues = cardValues(family, chartMetric, scoring, options)
+  const familyValues = projectedValues(family, chartMetric, scoring, options)
   const deltas = deltasBefore(familyValues, inPeriod)
   const volume = new Map(
-    trainingVolume(cards, (ms) => isoWeekKey(day(ms)), day).map((w) => [w.key, w])
+    projectedVolume(cards, (ms) => isoWeekKey(day(ms)), day).map((w) => [w.key, w])
   )
   const weeks = weekKeys(range, nowMs, timeZone).map((key) => ({
     ...(volume.get(key) ?? { key, shots: 0, cards: 0, days: 0 }),
@@ -276,8 +294,8 @@ export function periodModel(input: {
   const tiles: PeriodTile[] = PERIOD_TILE_KEYS.map((key) => {
     const base = metricByKey(key) as Readonly<MetricDefinition>
     const metric = inScoring(base, scoring)
-    const own = cardValues(cards, base, scoring, options)
-    const theirs = otherCards ? cardValues(otherCards, base, scoring, options) : null
+    const own = projectedValues(cards, base, scoring, options)
+    const theirs = otherCards ? projectedValues(otherCards, base, scoring, options) : null
     return {
       key,
       label: metricLabel(metric),
@@ -293,7 +311,7 @@ export function periodModel(input: {
   })
 
   const summaryMetric = metricByKey(SUMMARY_KEY) as MetricDefinition
-  const perShot = cardValues(cards, summaryMetric, scoring, options)
+  const perShot = projectedValues(cards, summaryMetric, scoring, options)
   // beste Scheibe nur unter gleicher Schusszahl: eine kurze Scheibe hat leichter einen hohen Ø (wie R1)
   const counts = new Map<number, number>()
   for (const value of perShot) counts.set(value.n, (counts.get(value.n) ?? 0) + 1)
@@ -325,8 +343,8 @@ export function periodModel(input: {
     const previousCards = within(previous).filter((c) => !ownIds.has(c.id))
     return {
       comparison: comparePeriods(
-        cardValues(previousCards, summaryMetric, scoring, options),
-        cardValues(ownCards, summaryMetric, scoring, options)
+        projectedValues(previousCards, summaryMetric, scoring, options),
+        projectedValues(ownCards, summaryMetric, scoring, options)
       ),
       label: previous.label,
       lastDays: all ? FORM_DAYS : null,
@@ -354,7 +372,7 @@ export function periodModel(input: {
     deltas,
     weeks,
     newest: perShot.at(-1)?.id ?? null,
-    records: periodRecords(input.cards, scoring, {
+    records: projectedRecords(input.cards, scoring, {
       kind: state.kind === "all" ? undefined : state.kind,
       includeProbeOnly: state.includeProbeOnly,
     }),

@@ -1,7 +1,7 @@
 "use client"
 
-import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
+import type { MarkShot } from "@vereinsheim/shot-core/projection"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import {
   formatMonthYear,
@@ -14,7 +14,6 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue } from "../format"
 import { groupView } from "../geometry"
-import { hasPosition, matchShots } from "../shots"
 import { RouteLink, shouldIntercept, useRouteNavigate } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
 import { MiniTarget } from "../target/MiniTarget"
@@ -32,17 +31,17 @@ const WIDE = "hidden @min-[32rem]:table-cell"
 // am Telefon enger: zwei Spalten für die Wertungen brauchen den Platz (U5, D5); ab 32rem wie zuvor
 const CELL = "px-1 py-1 @min-[32rem]:px-2"
 
-/** die Schüsse der kleinen Scheibe: die Wertung, bei nur Probe die Probe wie Wertung, nur mit Lage */
-const placedShots = (card: PeriodCard) => matchShots(card.shots).filter(hasPosition)
-
 /** Mittag des Tages: das Datum eines Abends, unabhängig von der Zeitumstellung */
 const noonOf = (day: string, timeZone: string) =>
   new Date(zonedDayStartMs(day, timeZone) + 12 * 3_600_000)
 
 export interface EveningListProps {
   model: CardListModel
-  /** die Scheiben nach Id, für die kleinen Scheiben */
-  cards: ReadonlyMap<string, PeriodCard>
+  /**
+   * die Lagen nach Id, für die kleinen Scheiben (`markShots(cardMarks(…))`: wie am Ausdruck, nur mit Lage); ohne
+   * Eintrag bleibt der Platz leer
+   */
+  marks: ReadonlyMap<string, readonly MarkShot[]>
   /** das Scheibenbild der Familie */
   target: TargetImage
   /** Namen der Familien für den Hinweis auf andere Familien des Abends */
@@ -63,7 +62,7 @@ export interface EveningListProps {
  */
 export function EveningList({
   model,
-  cards,
+  marks,
   target,
   families,
   timeZone,
@@ -172,8 +171,7 @@ export function EveningList({
                       className="scroll-mt-14 border-t border-border"
                     >
                       {evening.rows.map((row, i) => {
-                        const card = cards.get(row.id)
-                        const placed = card ? placedShots(card) : []
+                        const placed = marks.get(row.id) ?? []
                         const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
                         return (
                           <tr
@@ -209,13 +207,7 @@ export function EveningList({
                                 {placed.length ? (
                                   <MiniTarget
                                     target={target}
-                                    view={groupView(
-                                      target,
-                                      placed.map((s) => ({
-                                        xUm: s.xUm as number,
-                                        yUm: s.yUm as number,
-                                      }))
-                                    )}
+                                    view={groupView(target, placed)}
                                     shots={placed}
                                     className="size-8"
                                   />

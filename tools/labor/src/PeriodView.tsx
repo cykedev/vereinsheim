@@ -30,9 +30,11 @@ import { LaborPanel, type LaborPanelProps } from "./LaborPanel"
 import {
   FAMILIES,
   NAMED_PERIODS,
+  projectedSeason,
   season,
   SEASON_NOW_MS,
   SEASON_TIME_ZONE,
+  seasonMarks,
   targetOfFamily,
 } from "./season"
 import { exposePeriodForTest } from "./testHook"
@@ -63,7 +65,9 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
   const base = useMemo(
     () =>
       periodModel({
-        cards: family.map((c) => c.card),
+        cards: projectedSeason()
+          .filter((c) => c.family === state.family)
+          .map((c) => c.card),
         state: {
           choice,
           compare,
@@ -241,6 +245,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
             <div className="rounded-2xl border border-border bg-card p-4 max-md:hidden">
               <CardReadout
                 card={reading.card}
+                marks={seasonMarks().get(reading.card.id) ?? []}
                 target={target}
                 value={readingValue}
                 point={reading.point}

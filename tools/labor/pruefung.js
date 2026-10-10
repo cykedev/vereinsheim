@@ -2269,7 +2269,12 @@ addEventListener("load", async () => {
       const M = () => P().model
       const tools = L().tools
       const mean = (vs) => (vs.length ? vs.reduce((s, v) => s + v.value, 0) / vs.length : null)
-      const valuesOf = (key, cards = M().cards) =>
+      // die Scheiben des Modells mit ihren Schüssen: das Modell rechnet aus der Projektion, die Prüfung aus den Schüssen
+      const shotCards = () => {
+        const ids = new Set(M().cards.map((c) => c.id))
+        return P().cards.filter((c) => ids.has(c.id))
+      }
+      const valuesOf = (key, cards = shotCards()) =>
         tools.analysis.cardValues(cards, tools.metricByKey(key), P().state.scoring, {
           includeProbeOnly: P().state.includeProbeOnly,
         })

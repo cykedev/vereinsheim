@@ -7,20 +7,14 @@ import {
   type PeriodCard,
 } from "@vereinsheim/shot-core/analysis"
 import { FLAG_SUSPICIOUS, metricByKey, type MetricDefinition } from "@vereinsheim/shot-core/metrics"
-import { projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
+import { cardMarks, projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
 
 import { createPrismaClient } from "@/lib/db"
 import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import { writeRevision } from "./cards"
-import {
-  cardWithShots,
-  familyCards,
-  latestCardStart,
-  ownerCards,
-  ownerCardsWithShots,
-} from "./reads"
+import { cardWithShots, familyCards, latestCardStart, marksOfCards, ownerCards } from "./reads"
 
 const db = createPrismaClient()
 let site: TestSite
@@ -167,24 +161,37 @@ describe("Start", () => {
   })
 })
 
-describe("ownerCardsWithShots (Übergang bis SP-1.8)", () => {
-  it("alle eigenen, nicht gelöschten Scheiben mit Schüssen, Familie und Scheibenbild, nach Beginn", async () => {
-    const cards = await ownerCardsWithShots(db, site.ownerId)
+describe("Übersichten (SP-1.8)", () => {
+  it("alle eigenen, nicht gelöschten Scheiben mit Projektion, Familie und Scheibenbild, nach Beginn", async () => {
+    const cards = await ownerCards(db, { ownerId: site.ownerId })
     expect(cards).toHaveLength(31)
     expect(cards.map((c) => c.startedAtMs)).toEqual(
       [...cards.map((c) => c.startedAtMs)].sort((a, b) => a - b)
     )
-    expect(cards.every((c) => c.shots.length > 0)).toBe(true)
     const families = await db.family.findMany({
       where: { id: { in: [site.familyId, otherFamilyId] } },
       select: { slug: true },
     })
     expect(new Set(cards.map((c) => c.family?.slug))).toEqual(new Set(families.map((f) => f.slug)))
     // Scheibenbild aus der Disziplin: LP mit, das LG des Tests ohne
-    const lp = cards.find((c) => c.disciplineId === site.disciplineId)!
-    expect(lp).toMatchObject({ targetId: "lp-10m", discipline: "LP 40", official: "rings" })
+    const lp = cards.find((c) => c.disciplineId === site.disciplineId && !c.projection.probeOnly)!
+    expect(lp).toMatchObject({ targetId: "lp-10m", official: "rings" })
     expect(cards.find((c) => c.disciplineId === otherDisciplineId)?.targetId).toBeNull()
-    expect(await ownerCardsWithShots(db, "jemand-anderes")).toEqual([])
+    expect(await ownerCards(db, { ownerId: "jemand-anderes" })).toEqual([])
+  })
+
+  it("die Lagen der kleinen Scheiben nur für die verlangten, eigenen und nicht gelöschten Scheiben", async () => {
+    const [a, b] = await familyCards(db, { ownerId: site.ownerId, familyId: site.familyId })
+    const trash = await db.card.findFirstOrThrow({
+      where: { sourceId: site.sourceId, deletedAt: { not: null } },
+    })
+    const marks = await marksOfCards(db, { ownerId: site.ownerId, ids: [a.id, b.id, trash.id] })
+    expect(Object.keys(marks).sort()).toEqual([a.id, b.id].sort())
+    const shots = (await cardWithShots(db, { cardId: a.id, ownerId: site.ownerId }))!.shots
+    expect(marks[a.id]).toEqual(cardMarks(shots))
+    expect(marks[a.id].length).toBe(a.projection.printedShots)
+    expect(await marksOfCards(db, { ownerId: "jemand-anderes", ids: [a.id] })).toEqual({})
+    expect(await marksOfCards(db, { ownerId: site.ownerId, ids: [] })).toEqual({})
   })
 })
 
@@ -209,7 +216,7 @@ describe("cardWithShots", () => {
     expect(withMatch.official).toBe("rings")
     const page = await cardWithShots(db, { cardId: probeOnly.id, ownerId: site.ownerId })
     expect(page).not.toHaveProperty("official")
-    const all = await ownerCardsWithShots(db, site.ownerId)
+    const all = await ownerCards(db, { ownerId: site.ownerId })
     expect(all.find((c) => c.id === probeOnly.id)).not.toHaveProperty("official")
   })
 

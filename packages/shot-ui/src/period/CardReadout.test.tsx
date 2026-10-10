@@ -5,16 +5,19 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { CardLine, CardReadout, cardKindText, deltaText } from "./CardReadout"
-import { periodCard, TZ } from "./testSeason"
+import { marksOf, periodCard, projected, TZ } from "./testSeason"
 
 const metric = metricByKey("result.decimalMean")!
-const card = periodCard("k1", 2, [100, 102, 98], { kind: "competition" })
+const raw = periodCard("k1", 2, [100, 102, 98], { kind: "competition" })
+const card = projected(raw)
+const marks = marksOf([raw]).get("k1")!
 const value = { id: "k1", atMs: card.startedAtMs, value: 10, n: 3 }
 const point = { ...value, mean: 9.9, partial: false, band: { low: 9.6, high: 10.2 } }
 const render = (props: Partial<Parameters<typeof CardReadout>[0]> = {}) =>
   renderToStaticMarkup(
     createElement(CardReadout, {
       card,
+      marks,
       target: LG_10M,
       value,
       point,
@@ -68,6 +71,11 @@ describe("Ablesung einer Scheibe (D9)", () => {
     expect(render({ point: { ...point, band: null } })).not.toContain("Formband")
   })
 
+  it("ohne Lage keine kleine Scheibe", () => {
+    expect(render({ marks: [] })).toContain("ohne Lage")
+    expect(render({ marks: [] })).not.toMatch(/<svg viewBox=/)
+  })
+
   it("ohne Wert ein Strich, kein Abstand", () => {
     const html = render({ value: null })
     expect(html).toContain("Ø je Schuss: ohne Wert")
@@ -75,8 +83,10 @@ describe("Ablesung einer Scheibe (D9)", () => {
   })
 
   it("Art und Abstand in Worten", () => {
-    expect(cardKindText(periodCard("t", 1, [100]))).toBe("Training")
-    expect(cardKindText(periodCard("p", 1, [100], { probe: true }))).toBe("Training nur Probe")
+    expect(cardKindText(projected(periodCard("t", 1, [100])))).toBe("Training")
+    expect(cardKindText(projected(periodCard("p", 1, [100], { probe: true })))).toBe(
+      "Training nur Probe"
+    )
     expect(deltaText({ delta: -0.05, n: 1 }, 2)).toBe("−0,05 zum Schnitt der Scheibe davor")
   })
 })

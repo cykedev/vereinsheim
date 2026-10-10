@@ -8,7 +8,7 @@ import { PeriodControls, PeriodHeader } from "./PeriodHeader"
 import { choiceValid, filterSummary, namedSpan, PeriodPicker } from "./PeriodPicker"
 import { PeriodResult } from "./PeriodResult"
 import { initialPeriodState, type PeriodState } from "./state"
-import { NOW, periodCard, TZ } from "./testSeason"
+import { NOW, periodCard, projected, TZ } from "./testSeason"
 
 const NAMED: NamedPeriod[] = [
   { id: "lm", name: "Vorbereitung Landesmeisterschaft", from: "2026-05-01", to: "2026-06-30" },
@@ -169,7 +169,13 @@ describe("Filter und Kopf (D5, D14)", () => {
 
 describe("Ergebnis-Box (D13)", () => {
   const model = (cards: ReturnType<typeof periodCard>[], partial: Partial<PeriodState> = {}) =>
-    periodModel({ cards, state: state(partial), nowMs: NOW, timeZone: TZ, named: NAMED })
+    periodModel({
+      cards: cards.map(projected),
+      state: state(partial),
+      nowMs: NOW,
+      timeZone: TZ,
+      named: NAMED,
+    })
   const render = (m: ReturnType<typeof model>) =>
     renderToStaticMarkup(
       h(PeriodResult, {
