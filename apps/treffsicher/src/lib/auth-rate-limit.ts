@@ -1,9 +1,11 @@
 import { LOGIN_RATE_LIMIT_CONFIG } from "@vereinsheim/lib/auth/rate-limit/config"
 import { createLoginRateLimitService } from "@vereinsheim/lib/auth/rate-limit/limiter"
-import { createRateLimitStoreForCurrentEnv } from "@/lib/auth-rate-limit/store"
+import { createStoreForEnv } from "@vereinsheim/lib/auth/rate-limit/stores"
 import type { LoginRateLimitCheck } from "@vereinsheim/lib/auth/rate-limit/types"
+import { db } from "@/lib/db"
 
-const rateLimitStore = createRateLimitStoreForCurrentEnv()
+// In Tests im Speicher, sonst in der Datenbank; Store und Dienst liegen in `@vereinsheim/lib`.
+const rateLimitStore = createStoreForEnv(db.loginRateLimitBucket, process.env.NODE_ENV)
 const rateLimitService = createLoginRateLimitService(rateLimitStore, LOGIN_RATE_LIMIT_CONFIG)
 
 export { LOGIN_RATE_LIMIT_CONFIG }

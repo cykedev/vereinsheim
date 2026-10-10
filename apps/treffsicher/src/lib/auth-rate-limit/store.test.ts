@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { createRateLimitStoreForCurrentEnv } from "@/lib/auth-rate-limit/store"
+import { createStoreForEnv } from "@vereinsheim/lib/auth/rate-limit/stores"
+import { db } from "@/lib/db"
+
+// der Store aus der Bibliothek, wie `auth-rate-limit.ts` ihn baut
+const createRateLimitStoreForCurrentEnv = () =>
+  createStoreForEnv(db.loginRateLimitBucket, process.env.NODE_ENV)
 
 describe("createRateLimitStoreForCurrentEnv (test env)", () => {
   it("liefert einen funktionalen In-Memory-Store", async () => {
