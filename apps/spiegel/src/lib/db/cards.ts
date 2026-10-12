@@ -12,6 +12,7 @@ import { cardMarks, cardProjection, projectionVersion } from "@vereinsheim/shot-
 import { Prisma, type CardKind, type CardOrigin, type CardState } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
+import { standScoringOf } from "../scoring"
 
 type Tx = Prisma.TransactionClient
 
@@ -185,8 +186,11 @@ function shotRows(revisionId: bigint, cardId: string, shots: readonly ShotInput[
   }))
 }
 
-/** Merkmale, die jeder Stand neu setzt; die Kennung (Quelle, ScheibenID, Zyklus) und der Besitzer nicht */
-function cardFeatures(card: CardInput, familyId: number | null) {
+/**
+ * Merkmale, die jeder Stand neu setzt, auch die Wertung wie am Stand aus den Schüssen; die Kennung (Quelle, ScheibenID,
+ * Zyklus), der Besitzer und die gewählte Wertung nicht
+ */
+function cardFeatures(card: CardInput, shots: readonly ShotInput[], familyId: number | null) {
   return {
     disciplineId: card.disciplineId,
     familyId,
@@ -196,6 +200,7 @@ function cardFeatures(card: CardInput, familyId: number | null) {
     kind: card.kind,
     state: card.state,
     complete: card.complete,
+    standScoring: standScoringOf(shots),
     flags: [...card.flags],
     ...(card.sportpassId === undefined ? {} : { sportpassId: card.sportpassId }),
   }
@@ -244,7 +249,7 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
     const [discipline] = await tx.$queryRaw<{ familyId: number | null }[]>`
       SELECT "familyId" FROM "Discipline" WHERE id = ${input.card.disciplineId} FOR SHARE`
     if (!discipline) throw new RangeError(`Disziplin ${input.card.disciplineId} fehlt`)
-    const features = cardFeatures(input.card, discipline.familyId)
+    const features = cardFeatures(input.card, input.shots, discipline.familyId)
 
     const existing = await findCard(tx, input, cycle)
     if (!existing) {

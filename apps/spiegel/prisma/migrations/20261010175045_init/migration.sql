@@ -169,6 +169,15 @@ CREATE TABLE "Family" (
 );
 
 -- CreateTable
+CREATE TABLE "FamilyScoring" (
+    "userId" TEXT NOT NULL,
+    "familyId" INTEGER NOT NULL,
+    "scoring" "Scoring" NOT NULL,
+
+    CONSTRAINT "FamilyScoring_pkey" PRIMARY KEY ("userId","familyId")
+);
+
+-- CreateTable
 CREATE TABLE "Discipline" (
     "id" SERIAL NOT NULL,
     "siteId" INTEGER NOT NULL,
@@ -198,6 +207,8 @@ CREATE TABLE "Card" (
     "kind" "CardKind" NOT NULL,
     "state" "CardState" NOT NULL,
     "complete" BOOLEAN NOT NULL,
+    "standScoring" "Scoring",
+    "scoringChoice" "Scoring",
     "flags" TEXT[],
     "origin" "CardOrigin" NOT NULL,
     "currentRevisionId" BIGINT,
@@ -378,6 +389,12 @@ ALTER TABLE "DeleteLock" ADD CONSTRAINT "DeleteLock_sourceId_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "NamedPeriod" ADD CONSTRAINT "NamedPeriod_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FamilyScoring" ADD CONSTRAINT "FamilyScoring_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FamilyScoring" ADD CONSTRAINT "FamilyScoring_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "Family"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Discipline" ADD CONSTRAINT "Discipline_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site"("id") ON DELETE CASCADE ON UPDATE CASCADE;

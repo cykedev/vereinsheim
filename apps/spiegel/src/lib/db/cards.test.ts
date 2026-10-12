@@ -89,6 +89,21 @@ describe("writeRevision", () => {
     expect(card.flags).toEqual(["ausgenommen"])
   })
 
+  it("die Wertung wie am Stand folgt der Anzeigeart der Schüsse; ohne Zehntel und ganze Ringe null", async () => {
+    const [input] = season(1, 1150)
+    const standOf = async (cardId: string) =>
+      (await db.card.findUniqueOrThrow({ where: { id: cardId } })).standScoring
+    const withMode = (displayMode: number | null) =>
+      input.shots.map((shot) => ({ ...shot, displayMode }))
+
+    const first = await writeRevision(db, input)
+    expect(await standOf(first.cardId)).toBe("decimal")
+    await writeRevision(db, { ...input, shots: withMode(8) })
+    expect(await standOf(first.cardId)).toBe("rings")
+    await writeRevision(db, { ...input, shots: withMode(null) })
+    expect(await standOf(first.cardId)).toBeNull()
+  })
+
   it("ein korrigierter Wertungsschuss ergibt Revision 2; die vorige bleibt, unveränderte Schüsse behalten ihren Fingerabdruck", async () => {
     const input = cardWhere(1200, (c) => !probeOnly(c))
     const first = await writeRevision(db, input)

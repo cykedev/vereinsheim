@@ -189,24 +189,25 @@ model DeleteLock {
 
 // Konto eines erwachsenen Mitglieds; keine Selbstregistrierung, Admin legt an ([[spiegel-privacy]])
 model User {
-  id                 String        @id @default(cuid())
+  id                 String          @id @default(cuid())
   name               String?
-  email              String        @unique
+  email              String          @unique
   passwordHash       String
   // steigt bei Passwortwechsel und Reset: ältere Sitzungen (JWT) gelten nicht mehr
-  sessionVersion     Int           @default(0)
-  role               UserRole      @default(USER)
+  sessionVersion     Int             @default(0)
+  role               UserRole        @default(USER)
   // deaktiviert statt gelöscht
-  isActive           Boolean       @default(true)
+  isActive           Boolean         @default(true)
   // ein Passwort vom Admin (neues Konto, Zurücksetzen) muss der Schütze ersetzen, bevor er Daten sieht: sonst kennte der
   // Admin es und sähe seine Schüsse ([[spiegel-privacy]])
-  mustChangePassword Boolean       @default(false)
+  mustChangePassword Boolean         @default(false)
   // SportpassIDs der Zuordnung (mehrere je Konto, SF-39) kommen mit SP-1.7
-  createdAt          DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime      @updatedAt @db.Timestamptz(3)
+  createdAt          DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime        @updatedAt @db.Timestamptz(3)
   cards              Card[]
   periods            NamedPeriod[]
   deleteLocks        DeleteLock[]
+  familyScorings     FamilyScoring[]
 }
 
 // benannter Zeitraum des Schützen („Vorbereitung Landesmeisterschaft“), Tage in der Anzeige-Zone
@@ -243,13 +244,26 @@ model LoginRateLimitBucket {
 
 // was in Verläufen zusammen zählt, etwa LP Freihand (LP 40, LP 40 alt, LP Training)
 model Family {
-  id          Int          @id @default(autoincrement())
+  id          Int             @id @default(autoincrement())
   // Kennung aus dem Fachkern (`FamilyId`, etwa „lp-freihand“), steht in der Adresse
-  slug        String       @unique
+  slug        String          @unique
   // Anzeige, etwa „Luftpistole“
   name        String
   disciplines Discipline[]
   cards       Card[]
+  scorings    FamilyScoring[]
+}
+
+// Wertung einer Familie für die Schnitte des Schützen (Liste, Start, Fortschritt), umgestellt und automatisch
+// gespeichert; ohne Zeile die häufigste Wertung ihrer Scheiben (`familyScoringOf`)
+model FamilyScoring {
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId Int
+  family   Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  scoring  Scoring
+
+  @@id([userId, familyId])
 }
 
 // Meyton-Disziplin; Vereinsvarianten können dieselbe DisziplinID tragen (SF-70)
@@ -303,6 +317,11 @@ model Card {
   state             CardState
   // endgültig und mit voller Schusszahl (SF-66); die amtliche Wertung steht an der Disziplin (SF-74)
   complete          Boolean
+  // wie am Stand: die häufigste Anzeigeart der Schüsse wie am Ausdruck (`standScoringOf`); null: keine Zehntel oder
+  // ganzen Ringe gezeigt
+  standScoring      Scoring?
+  // vom Schützen auf der Seite der Scheibe gewählt; null: die Vorgabe (`cardScoring`)
+  scoringChoice     Scoring?
   flags             String[]
   origin            CardOrigin
   currentRevisionId BigInt?         @unique
