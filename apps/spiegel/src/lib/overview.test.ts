@@ -19,7 +19,6 @@ const context = {
   timeZone: "Europe/Berlin",
   nowMs: FIRST_MS + 40 * DAY_MS,
   named: [],
-  scoring: "decimal" as const,
 }
 
 beforeAll(async () => {
@@ -132,15 +131,18 @@ describe("listPageData", () => {
 describe("progressPageData", () => {
   const all = { ...DEFAULT_PROGRESS, choice: { type: "all" as const } }
 
-  it("die Familie der neuesten Scheibe, die Wertung des Geräts, die Lagen nur der Ablesung", async () => {
+  it("die Familie der neuesten Scheibe in ihrer Wertung, die Lagen nur der Ablesung", async () => {
+    await db.familyScoring.create({
+      data: { userId: site.ownerId, familyId: lgFamily.id, scoring: "rings" },
+    })
     const { progress } = await progressPageData(
       db,
       site.ownerId,
       { ...all, family: "gibt-es-nicht", scoring: "decimal" },
-      { ...context, scoring: "rings" }
-    )
+      context
+    ).finally(() => db.familyScoring.deleteMany({ where: { userId: site.ownerId } }))
     expect(progress!.state).toMatchObject({ family: lgFamily.slug, scoring: "rings" })
-    // gerechnet in ganzen Ringen, nicht in der Wertung der Adresse
+    // gerechnet in der Wertung der Familie, nicht in der Wertung der Adresse
     expect(progress!.model.metric.key).toBe("result.ringsMean")
     expect(progress!.model.cards.map((c) => c.id).sort()).toEqual([...ids.lg].sort())
     expect(Object.keys(progress!.marks)).toEqual([progress!.model.reading!.card.id])
@@ -170,5 +172,72 @@ describe("progressPageData", () => {
       progress: null,
       families: [],
     })
+  })
+})
+
+describe("Wertung je Familie (Plan `plans/2026-10-12-spiegel-wertung.md`)", () => {
+  const all = { ...DEFAULT_PROGRESS, choice: { type: "all" as const } }
+  const scorings = async () => {
+    const lp = (await startPageData(db, site.ownerId, context)).families[1].value
+    const start = await startPageData(db, site.ownerId, context)
+    const list = (family: string) =>
+      listPageData(db, site.ownerId, { ...DEFAULT_LIST, family }, context)
+    const progress = (family: string) =>
+      progressPageData(db, site.ownerId, { ...all, family }, context)
+    return {
+      start: start.model.blocks.map((block) => [block.family, block.scoring]),
+      form: start.model.form?.route.query.scoring,
+      list: {
+        lg: (await list(lgFamily.slug)).list?.model.scoring,
+        lp: (await list(lp)).list?.model.scoring,
+      },
+      progress: {
+        lg: (await progress(lgFamily.slug)).progress?.state.scoring,
+        lp: (await progress(lp)).progress?.state.scoring,
+      },
+    }
+  }
+
+  it("ohne Speicher die häufigste Wertung ihrer Scheiben, gespeichert die gespeicherte; Start je Block", async () => {
+    try {
+      // die Testscheiben zeigen am Stand Zehntel; das Luftgewehr hat keine amtliche Wertung
+      expect(await scorings()).toEqual({
+        start: [[lgFamily.slug, "decimal"]],
+        form: "decimal",
+        list: { lg: "decimal", lp: expect.any(String) },
+        progress: { lg: "decimal", lp: expect.any(String) },
+      })
+      // beide Scheiben LG auf ganze Ringe gestellt: die häufigste ist ganze Ringe
+      await db.card.updateMany({ where: { id: { in: ids.lg } }, data: { scoringChoice: "rings" } })
+      expect(await scorings()).toMatchObject({
+        start: [[lgFamily.slug, "rings"]],
+        list: { lg: "rings" },
+        progress: { lg: "rings" },
+      })
+      // gespeichert geht vor; die andere Familie bleibt, wie sie ist
+      await db.familyScoring.create({
+        data: { userId: site.ownerId, familyId: lgFamily.id, scoring: "decimal" },
+      })
+      await db.familyScoring.create({
+        data: { userId: site.ownerId, familyId: site.familyId, scoring: "rings" },
+      })
+      expect(await scorings()).toEqual({
+        start: [[lgFamily.slug, "decimal"]],
+        form: "decimal",
+        list: { lg: "decimal", lp: "rings" },
+        progress: { lg: "decimal", lp: "rings" },
+      })
+      // ein anderer Schütze sieht seine eigene Wertung, nicht diese
+      const foreign = await listPageData(
+        db,
+        otherOwner,
+        { ...DEFAULT_LIST, family: lgFamily.slug },
+        context
+      )
+      expect(foreign.list?.model.scoring).toBe("decimal")
+    } finally {
+      await db.card.updateMany({ where: { id: { in: ids.lg } }, data: { scoringChoice: null } })
+      await db.familyScoring.deleteMany({ where: { userId: site.ownerId } })
+    }
   })
 })

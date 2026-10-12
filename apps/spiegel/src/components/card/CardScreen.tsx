@@ -1,7 +1,16 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useReducer, useState, useSyncExternalStore } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react"
 
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import type { MetricShot, Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import {
@@ -51,7 +60,7 @@ import { Page } from "@/components/shell/Page"
 import { useHelp } from "@/components/shell/HelpContext"
 import { nextCardAddress } from "@/lib/card-address"
 import type { PageCard } from "@/lib/db/reads"
-import { rememberScoring } from "@/lib/device-client"
+import { setCardScoring } from "@/lib/scoring-actions"
 import { rememberTargetDisplay, savedTargetDisplay } from "@/lib/target-display-client"
 
 /** der Cookie meldet keine Änderung; gelesen wird bei jedem Zeichnen */
@@ -77,15 +86,16 @@ const useHash = () =>
 
 /**
  * der Zustand der Ansicht aus der Adresse (Wertung, Serie, gewählter Schuss als Nummer wie `shotLabels`) und den Ebenen
- * der gemerkten Darstellung
+ * der gemerkten Darstellung; ohne Wertung in der Adresse die der Scheibe
  */
 function stateFromRoute(
   route: CardRoute,
   shots: readonly MetricShot[],
-  display: TargetDisplay
+  display: TargetDisplay,
+  scoring: Scoring
 ): ViewState {
   let state = initialViewState({
-    scoring: route.scoring ?? undefined,
+    scoring: route.scoring ?? scoring,
     layers: display.layers,
     view: display.view,
   })
@@ -98,9 +108,10 @@ function stateFromRoute(
 }
 
 /**
- * Die Seite einer Scheibe (N7): wie im Labor (`CardView`), mit der Scheibe aus der Datenbank. Wertung, Serie und
- * Schuss stehen in der Adresse (Reload und Zurück finden sie wieder), der Reiter der Analyse im Anker; Rückweg und
- * Blättern im Kontext der Herkunft rechnet der Server (`near`).
+ * Die Seite einer Scheibe (N7): wie im Labor (`CardView`), mit der Scheibe aus der Datenbank. Serie und Schuss stehen in
+ * der Adresse (Reload und Zurück finden sie wieder), der Reiter der Analyse im Anker; Rückweg und Blättern im Kontext der
+ * Herkunft rechnet der Server (`near`). Die Seite öffnet in der Wertung der Adresse, sonst der der Scheibe; Umschalten
+ * speichert sie an der Scheibe (`setCardScoring`), die Adresse trägt sie nur, solange sie nicht die der Scheibe ist.
  */
 export function CardScreen({
   card,
@@ -126,8 +137,10 @@ export function CardScreen({
   const context = card.shots
 
   const [state, dispatch] = useReducer(viewReducer, undefined, () =>
-    stateFromRoute(initialRoute, shots, display)
+    stateFromRoute(initialRoute, shots, display, card.scoring)
   )
+  const [, startSaving] = useTransition()
+  const [scoringError, setScoringError] = useState<string | null>(null)
   const [others, setOthers] = useState<Others>(display.others)
   // Nach Zurück und Vor bringt Next die Seite mit der Darstellung ihres ersten Besuchs (aus dem Cache, ohne Server).
   // Es gilt die gemerkte aus dem Cookie im Browser; beim Hydrieren die vom Server, damit das HTML passt (Review)
@@ -172,7 +185,7 @@ export function CardScreen({
     ...initialRoute,
     selection: state.selection === "all" ? null : state.selection,
     shot: state.chosen ? (shotLabels(shots)[state.chosen.index] ?? null) : null,
-    scoring: state.scoring,
+    scoring: state.scoring === card.scoring ? null : state.scoring,
     anchor: chosenTab ? { section: "analysis", tab: chosenTab } : null,
   }
   const address = urlFromRoute(route)
@@ -239,14 +252,26 @@ export function CardScreen({
     setChosenTab(next)
     window.history.replaceState(null, "", hashFor("analysis", next))
   }, [])
+  // die Wertung der Scheibe: gezeigt sofort, gespeichert an der Scheibe (Liste und Start zeigen sie danach vorn)
   const changeScoring = (scoring: Scoring) => {
-    rememberScoring(scoring)
     dispatch({ type: "setScoring", scoring })
+    setScoringError(null)
+    startSaving(async () => {
+      const result = await setCardScoring(card.id, scoring)
+      if ("error" in result) setScoringError(getErrorMessage(result) ?? null)
+    })
   }
 
   const empty = shots.length === 0
   const scoringSwitch = (
-    <ScoringSwitch scoring={state.scoring} official={card.official} onChange={changeScoring} />
+    <div className="grid gap-1.5">
+      <ScoringSwitch scoring={state.scoring} official={card.official} onChange={changeScoring} />
+      {scoringError && (
+        <p role="alert" className="text-sm text-destructive">
+          {scoringError}
+        </p>
+      )}
+    </div>
   )
   // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung
   const result = <CardResult shots={shots} state={state} scoring={scoringSwitch} />

@@ -5,40 +5,28 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
-import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 import { Button } from "@vereinsheim/ui/button"
-import { Segmented } from "@vereinsheim/ui/design2/segmented"
 
 import { Page } from "@/components/shell/Page"
 import { ThemeSwitch } from "@/components/theme/ThemeSwitch"
-import { rememberScoring } from "@/lib/device-client"
 
 /**
- * Profil: Konto, Einstellungen des Geräts (Darstellung, Wertung für Liste, Start und Fortschritt), Admin für Admins,
- * Abmelden. Zuordnung über den Sportpass, Freigaben, Export und Papierkorb kommen mit SP-1.7.
+ * Profil: Konto, Einstellung des Geräts (Darstellung), Admin für Admins, Abmelden. Die Wertung hat jede Scheibe und jede
+ * Familie selbst (Seite der Scheibe, Liste, Fortschritt). Zuordnung über den Sportpass, Freigaben, Export und Papierkorb
+ * kommen mit SP-1.7.
  */
 export function ProfileScreen({
   name,
   email,
   isAdmin,
-  scoring: initialScoring,
 }: {
   name: string | null
   email: string
   isAdmin: boolean
-  scoring: Scoring
 }) {
   const router = useRouter()
-  const [scoring, setScoring] = useState(initialScoring)
   const [leaving, setLeaving] = useState(false)
-
-  const changeScoring = (next: Scoring) => {
-    setScoring(next)
-    rememberScoring(next)
-    // Liste und Start rechnen auf dem Server: neu laden, damit sie der Wahl folgen
-    router.refresh()
-  }
 
   return (
     <Page>
@@ -56,19 +44,6 @@ export function ProfileScreen({
         <div className="grid gap-4 rounded-2xl border border-border bg-card p-4">
           <h2 className="text-[15px] font-semibold">Dieses Gerät</h2>
           <ThemeSwitch className="max-w-xs" />
-          <div data-scoring-setting className="grid max-w-xs gap-1.5">
-            <span className="text-xs font-semibold text-muted-foreground">Wertung</span>
-            <Segmented
-              label="Wertung"
-              value={scoring}
-              options={[
-                { value: "decimal", label: "Zehntel" },
-                { value: "rings", label: "Ganze Ringe" },
-              ]}
-              onChange={changeScoring}
-              className="w-full [&>button]:flex-1"
-            />
-          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

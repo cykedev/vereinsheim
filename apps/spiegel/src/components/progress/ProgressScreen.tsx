@@ -1,12 +1,15 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useOptimistic, useState, useTransition } from "react"
 
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { markShots, type CardMark, type MarkShot } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
+import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
@@ -45,6 +48,7 @@ import { cardMarksAction } from "@/lib/marks-actions"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
+import { setFamilyScoring } from "@/lib/scoring-actions"
 
 const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
 /** so lange ruht die Wahl, bevor sie in die Adresse geht bzw. ihre Lagen geholt werden */
@@ -52,7 +56,7 @@ const ADDRESS_DELAY_MS = 250
 const MARKS_DELAY_MS = 150
 
 /**
- * die Adresse des Fortschritts: ohne Wertung, sie ist die des Geräts (Cookie) und gehört nicht in die Adresse; ein
+ * die Adresse des Fortschritts: ohne Wertung, sie ist die der Familie (gespeichert) und gehört nicht in die Adresse; ein
  * `scoring` darin gilt beim Laden nicht
  */
 const addressOf = (state: PeriodState) =>
@@ -62,7 +66,9 @@ const addressOf = (state: PeriodState) =>
  * Fortschritt (N7, Plan `plans/2026-10-10-spiegel-fortschritt.md`): die Seite eines Zeitraums wie im Labor, das Modell
  * hat der Server gerechnet (`periodModel` aus den Projektionen, leicht gemacht). Filter schreiben die Adresse und
  * rechnen auf dem Server neu; eine Wahl (Verlauf, Liste, Rekord) bleibt im Browser: Sie ändert die Ablesung, schreibt
- * `pick` verzögert mit `replaceState` und holt die Lagen der kleinen Scheibe nach (`cardMarksAction`).
+ * `pick` verzögert mit `replaceState` und holt die Lagen der kleinen Scheibe nach (`cardMarksAction`). Gerechnet wird in
+ * der Wertung der Familie; der Schalter in der Ergebnis-Box speichert sie (`setFamilyScoring`), danach rechnet der Server
+ * neu.
  */
 export function ProgressScreen({
   model: base,
@@ -82,7 +88,19 @@ export function ProgressScreen({
   const router = useRouter()
   const help = useHelp()
   const onHelp = useCallback((id: string | null) => id && help(id), [help])
-  const { timeZone, named, scoring } = context
+  const { timeZone, named } = context
+  // die Wertung der Familie: gezeigt, sobald gewählt; das Modell vom Server folgt nach dem Speichern
+  const [, startSaving] = useTransition()
+  const [scoring, showScoring] = useOptimistic<Scoring>(state.scoring)
+  const [scoringError, setScoringError] = useState<string | null>(null)
+  const changeScoring = (next: Scoring) => {
+    setScoringError(null)
+    startSaving(async () => {
+      showScoring(next)
+      const result = await setFamilyScoring(state.family, next)
+      if ("error" in result) setScoringError(getErrorMessage(result) ?? null)
+    })
+  }
   const active = useActiveSection(PERIOD_IDS)
   const { pill, jumpTo, back, close } = useReturnJump()
   const [explain, setExplain] = useState(false)
@@ -158,8 +176,8 @@ export function ProgressScreen({
   }, [readingId, marks])
 
   const readingValue = reading ? (model.values.find((v) => v.id === reading.card.id) ?? null) : null
-  // die Wege als Adressen: eine Scheibe mit diesem Fortschritt als Herkunft, in der Wertung des Geräts (`openCard`
-  // nimmt bei Herkunft Fortschritt dessen Wertung); „Alle in Scheiben zeigen“ ohne Wertung
+  // die Wege als Adressen: eine Scheibe mit diesem Fortschritt als Herkunft, in ihrer Wertung; „Alle in Scheiben zeigen“
+  // ohne Wertung
   const cardRoute = (id: string) => openCard(progressRoute(current, null), id)
   const here = progressRoute({ ...current, scoring: "decimal" }, null)
   const chooseFromList = useCallback(
@@ -184,7 +202,23 @@ export function ProgressScreen({
 
   const option = families.find((f) => f.value === state.family)
   const target = TARGETS[option?.targetId ?? "lp-10m"]
-  const result = <PeriodResult model={model} timeZone={timeZone} onHelp={onHelp} />
+  const result = (
+    <PeriodResult
+      model={model}
+      timeZone={timeZone}
+      onHelp={onHelp}
+      scoring={
+        <div className="grid gap-1.5">
+          <ScoringSwitch scoring={scoring} onChange={changeScoring} />
+          {scoringError && (
+            <p role="alert" className="text-sm text-destructive">
+              {scoringError}
+            </p>
+          )}
+        </div>
+      }
+    />
+  )
   const sentence = periodSentence(model)
   // Training nur aus Probe zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis
   const excluded = model.excludedProbeOnly
@@ -364,7 +398,7 @@ export function ProgressScreen({
                 </div>
                 <PeriodInsights
                   model={model}
-                  scoring={scoring}
+                  scoring={state.scoring}
                   timeZone={timeZone}
                   explain={explain}
                   onHelp={onHelp}

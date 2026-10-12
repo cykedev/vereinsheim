@@ -1,11 +1,22 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useReducer, useSyncExternalStore } from "react"
+import {
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useReducer,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react"
+
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
+import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { EveningList } from "@vereinsheim/shot-ui/list/EveningList"
 import { ListControls } from "@vereinsheim/shot-ui/list/ListControls"
@@ -24,6 +35,7 @@ import { Page } from "@/components/shell/Page"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
+import { setFamilyScoring } from "@/lib/scoring-actions"
 
 /**
  * auf Änderungen der Adresse hören: der Anker (`hashchange`), Zurück und Vor (`popstate`) und, wo es sie gibt, jede
@@ -50,7 +62,9 @@ const onList = () => window.location.pathname === "/cards"
 /**
  * Die Scheiben nach Abend (N2, N7): Filter aus der Adresse (`/cards?family=…&range=…#Abend`), das Modell hat die Seite
  * auf dem Server gerechnet (`cardListModel` aus den Projektionen), die Bausteine aus `shot-ui/list`. Ein Filter schreibt
- * die Adresse neu (Zurück findet ihn wieder), und die Seite rechnet neu.
+ * die Adresse neu (Zurück findet ihn wieder), und die Seite rechnet neu. Vorn steht die Wertung jeder Scheibe; Ø und
+ * Abstand rechnen in der Wertung der Familie, der Schalter speichert sie (`setFamilyScoring`), danach rechnet die Seite
+ * neu.
  */
 export function ListScreen({
   list,
@@ -68,8 +82,12 @@ export function ListScreen({
   context: PageContext
 }) {
   const router = useRouter()
-  const { timeZone, scoring } = context
+  const { timeZone } = context
   const route: ListRoute = { page: "cards", query, evening: null }
+  // die Wertung der Familie: gezeigt, sobald gewählt; die Seite vom Server folgt nach dem Speichern
+  const [, startSaving] = useTransition()
+  const [scoring, showScoring] = useOptimistic<Scoring>(list?.model.scoring ?? "decimal")
+  const [scoringError, setScoringError] = useState<string | null>(null)
   const marks = useMemo(() => marksById(list?.marks ?? {}), [list?.marks])
   // wohin man kam, aus der Adresse im Browser (sie ist maßgeblich, auch nach Zurück): der Abend aus dem Anker (den sieht
   // der Server nicht) und die Scheibe aus `pick`
@@ -107,14 +125,6 @@ export function ListScreen({
       row.scrollIntoView({ block: "center" })
   }, [pick])
 
-  // öffnen in der Wertung, die die Zeile vorn zeigt (die amtliche, sonst die des Geräts)
-  const resultScoring = useMemo(
-    () =>
-      new Map<string, Scoring>(
-        (list?.model.evenings ?? []).flatMap((e) => e.rows.map((r) => [r.id, r.resultScoring]))
-      ),
-    [list?.model]
-  )
   if (!list)
     return (
       <Page>
@@ -125,7 +135,16 @@ export function ListScreen({
   const { model, option } = list
   const onQuery = (next: ListQuery) =>
     router.push(urlFromRoute({ page: "cards", query: next, evening: null }))
-  const cardRoute = (id: string) => openCard(route, id, resultScoring.get(id) ?? scoring)
+  // eine Scheibe öffnet in ihrer Wertung
+  const cardRoute = (id: string) => openCard(route, id)
+  const changeScoring = (next: Scoring) => {
+    setScoringError(null)
+    startSaving(async () => {
+      showScoring(next)
+      const result = await setFamilyScoring(option.value, next)
+      if ("error" in result) setScoringError(getErrorMessage(result) ?? null)
+    })
+  }
 
   return (
     <Page>
@@ -134,15 +153,25 @@ export function ListScreen({
           familyLabel={option.label}
           cards={model.cards}
           controls={
-            <ListControls
-              query={query}
-              family={option.value}
-              families={families}
-              flags={model.flags}
-              rangeLabel={model.range?.label ?? null}
-              onQuery={onQuery}
-              progress={progressFromList(route, scoring)}
-            />
+            <div className="grid gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <ListControls
+                  query={query}
+                  family={option.value}
+                  families={families}
+                  flags={model.flags}
+                  rangeLabel={model.range?.label ?? null}
+                  onQuery={onQuery}
+                  progress={progressFromList(route)}
+                />
+                <ScoringSwitch scoring={scoring} onChange={changeScoring} />
+              </div>
+              {scoringError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {scoringError}
+                </p>
+              )}
+            </div>
           }
         />
         <EveningList

@@ -153,7 +153,6 @@ async function main() {
       timeZone: "Europe/Berlin",
       nowMs: lastMs + DAY_MS,
       named: [],
-      scoring: "decimal" as const,
     }
     const startPage = () => startPageData(db, site.ownerId, pageContext)
     const listPage = () => listPageData(db, site.ownerId, DEFAULT_LIST, pageContext)

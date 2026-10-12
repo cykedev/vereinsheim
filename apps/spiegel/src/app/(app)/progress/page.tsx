@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Fortschritt" }
 
 // Fortschritt: die Seite eines Zeitraums über die eigenen Scheiben einer Familie. Filter stehen in der Adresse; die Seite
 // rechnet `periodModel` auf dem Server aus den Projektionen (ADR-031) und gibt dem Browser das leichte Modell und die
-// Lagen der Scheibe, die die Ablesung zeigt. Die Wertung ist die des Geräts.
+// Lagen der Scheibe, die die Ablesung zeigt. Gerechnet in der Wertung der Familie.
 export default async function ProgressRoute({
   searchParams,
 }: {

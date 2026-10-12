@@ -34,20 +34,12 @@ export function StartScreen({
   families: FamilyOption[]
   context: PageContext
 }) {
-  const { timeZone, scoring } = context
+  const { timeZone } = context
   const marks = useMemo(() => marksById(compact), [compact])
   const familyOf = useMemo(() => new Map(families.map((f) => [f.value, f])), [families])
-  // eine Kachel öffnet die Scheibe in der Wertung, die sie vorn zeigt (die amtliche, sonst die des Geräts)
-  const resultScoring = useMemo(
-    () =>
-      new Map<string, Scoring>(
-        model.blocks.flatMap((block) => block.rows.map((row) => [row.id, row.resultScoring]))
-      ),
-    [model]
-  )
-  const cardRoute = (id: string) =>
-    openCard({ page: "start" }, id, resultScoring.get(id) ?? scoring)
-  const recordRoute = (id: string) => openCard({ page: "start" }, id, scoring)
+  // eine Kachel öffnet die Scheibe in ihrer Wertung, ein Rekord in der, in der er steht (der seines Blocks)
+  const cardRoute = (id: string) => openCard({ page: "start" }, id)
+  const recordRoute = (id: string, scoring: Scoring) => openCard({ page: "start" }, id, scoring)
 
   return (
     <Page>
