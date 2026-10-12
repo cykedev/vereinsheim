@@ -56,7 +56,10 @@ const listKey = (query: ListQuery) => urlFromRoute({ page: "cards", query, eveni
 const progressKey = (state: PeriodState) =>
   urlFromRoute(progressRoute({ ...state, chosen: null, scoring: "decimal" }, null))
 
-/** die Wertung des Geräts, gemerkt von der Seite einer Scheibe und eines Zeitraums; die Liste hat keine eigene */
+/**
+ * die Wertung des Labors (Profil): die Wertung jeder Familie (Liste, Start, Fortschritt) und der Scheibe ohne amtliche;
+ * das Labor kennt keine Datenbank, die App speichert je Familie und Scheibe
+ */
 const devicesScoring = (): Scoring => (store.get("scoring") === "rings" ? "rings" : "decimal")
 
 function useTheme(theme: Theme) {
@@ -243,7 +246,8 @@ export function App({ commit }: { commit: string }) {
       return
     }
     if (next.page === "progress") {
-      const state = periodStateFromRoute(next, period.family)
+      // in der Wertung des Labors, wie die App in der der Familie; eine Wertung in der Adresse gilt nicht
+      const state = { ...periodStateFromRoute(next, period.family), scoring: devicesScoring() }
       leave()
       changePeriod({ type: "restore", state })
       setOpened(null)
@@ -284,7 +288,7 @@ export function App({ commit }: { commit: string }) {
     store.set("theme", next)
     setTheme(next)
   }
-  // die Wertung des Geräts (U2, D4): eine Einstellung in Profil; der Fortschritt folgt ihr, Liste und Start lesen sie
+  // die Wertung des Labors (U2, D4): eine Einstellung in Profil; der Fortschritt folgt ihr, Liste und Start lesen sie
   const changeScoring = (next: Scoring) => {
     store.set("scoring", next)
     changePeriod({ type: "setScoring", scoring: next })
@@ -311,7 +315,6 @@ export function App({ commit }: { commit: string }) {
             explain={explain}
             onExplain={onExplain}
             onHelp={setHelpId}
-            onScoring={changeScoring}
             opened={opened}
           />
         ) : mode === "list" ? (

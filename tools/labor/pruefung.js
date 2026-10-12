@@ -2695,6 +2695,10 @@ addEventListener("load", async () => {
       const scrolledTo = window.scrollY
       const progressAddress = addr()
       const progressRoute = routeOf(progressAddress)
+      // die Scheibe öffnet in ihrer Wertung: im Labor die amtliche, sonst die des Labors (Plan
+      // `plans/2026-10-12-spiegel-wertung.md`)
+      const chosenOfficial = M().cards.find((c) => c.id === chosenId)?.official
+      const laborScoring = P().state.scoring
       check(
         "Adresse: der Zeitraum mit Vergleich, Familie und Wahl, gleich dem Zustand der Seite",
         progressRoute.page === "progress" &&
@@ -2715,6 +2719,12 @@ addEventListener("load", async () => {
         openedAddress
       )
       check(
+        "Adresse: die Scheibe öffnet in ihrer Wertung, ohne Wertung in der Adresse",
+        L().state.scoring === (chosenOfficial ?? laborScoring) &&
+          !openedAddress.includes("scoring="),
+        `${L().state.scoring} · ${openedAddress}`
+      )
+      check(
         "Adresse: der Rückweg heißt nach dem Zeitraum",
         !!link("Zurück zu „Neue Munition“") && !link("Zurück zum Zeitraum")
       )
@@ -2724,9 +2734,15 @@ addEventListener("load", async () => {
         addr().includes("series=2") && routeOf(addr()).origin?.from === "progress",
         addr()
       )
-      // die Wertung trägt die Scheibe; sie kommt über die Adresse mit zurück (ohne „restore“ bliebe Zehntel)
-      await click(button("Ganze Ringe"), 150)
-      check("Adresse: ganze Ringe auf der Scheibe", addr().includes("scoring=rings"), addr())
+      // die Wertung gehört der Scheibe: umgeschaltet steht sie in ihrer Adresse, „Zurück“ lässt den Fortschritt in der
+      // Wertung des Labors
+      const otherScoring = L().state.scoring === "rings" ? "decimal" : "rings"
+      await click(button(otherScoring === "rings" ? "Ganze Ringe" : "Zehntel"), 150)
+      check(
+        "Adresse: die umgeschaltete Wertung auf der Scheibe",
+        L().state.scoring === otherScoring && addr().includes(`scoring=${otherScoring}`),
+        addr()
+      )
       const matchShots = (L().shots ?? []).filter((s) => s.kind === "match")
       const openedMean = tools.computeMetric(
         tools.inScoring(tools.metricByKey("result.decimalMean"), "decimal"),
@@ -2765,8 +2781,8 @@ addEventListener("load", async () => {
         txt($("[data-period-header] h1")) === "Neue Munition" &&
           txt($("[data-period-chip]")).includes("mit Zeitraum davor") &&
           P().state.chosen === chosenId &&
-          P().state.scoring === "rings" &&
-          same(routeOf(addr()).query, { ...progressRoute.query, scoring: "rings" }),
+          P().state.scoring === laborScoring &&
+          same(routeOf(addr()).query, progressRoute.query),
         `${addr()} / ${progressAddress}`
       )
       // im Fortschritt kein Schalter der Wertung mehr (U2, D4): zurück auf Zehntel über Profil
@@ -2787,8 +2803,8 @@ addEventListener("load", async () => {
       )
       await click(link("Scheibe öffnen", $("[data-card-readout]")), 500)
       check(
-        "Adresse: ganze Ringe aus dem Zeitraum gelten auf der geöffneten Scheibe",
-        L().state.scoring === "rings" && addr().includes("scoring=rings"),
+        "Adresse: die geöffnete Scheibe zeigt ihre Wertung (amtlich, sonst die des Labors), ohne Wertung in der Adresse",
+        L().state.scoring === (chosenOfficial ?? "rings") && !addr().includes("scoring="),
         `${L().state.scoring} · ${addr()}`
       )
       check("Adresse: eine geöffnete Scheibe beginnt ohne Anker", !addr().includes("#"), addr())
@@ -3120,14 +3136,15 @@ addEventListener("load", async () => {
         const delta = before.length
           ? meanValues[i].value - before.reduce((s, v) => s + v.value, 0) / before.length
           : null
-        // beide Wertungen in eigenen Spalten, die amtliche fett (U5, D5); nur Probe prüft der Test des Modells
+        // beide Wertungen in eigenen Spalten, die der Scheibe fett (im Labor die amtliche; U5, D5); nur Probe prüft der
+        // Test des Modells
         const resultIn = (scoring) =>
           tools.computeMetric(
             tools.inScoring(tools.metricByKey("result.decimal"), scoring),
             card.shots
           )
         const shown = (scoring) => nf(resultIn(scoring), scoring === "rings" ? 0 : 1)
-        const officialCell = $("[data-official]", el)
+        const officialCell = $("[data-card-scoring]", el)
         const ok =
           (row.kind === "probe" ||
             (txt($("[data-rings]", el)) === shown("rings") &&
@@ -3144,10 +3161,10 @@ addEventListener("load", async () => {
       }
       const shownRows = evenings.slice(0, 12).flatMap((e) => e.rows)
       check(
-        "Liste: Ergebnis in beiden Wertungen mit Namen (amtlich fett), Ø und Abstand je Zeile wie im Fachkern",
+        "Liste: Ergebnis in beiden Wertungen mit Namen (Wertung der Scheibe fett), Ø und Abstand je Zeile wie im Fachkern",
         wrongRows.length === 0 &&
-          shownRows.some((r) => r.resultScoring === "rings" && r.official) &&
-          shownRows.some((r) => r.resultScoring === "decimal" && r.official),
+          shownRows.some((r) => r.resultScoring === "rings" && r.ofCard) &&
+          shownRows.some((r) => r.resultScoring === "decimal" && r.ofCard),
         wrongRows.join(" ")
       )
       const listAddress = addr()
@@ -3256,9 +3273,9 @@ addEventListener("load", async () => {
       // ohne amtliche Wertung (nur Probe) ist keine fett, die ganzen Ringe stehen trotzdem in ihrer Spalte
       const probeFront = Li()
         .model.evenings.flatMap((e) => e.rows)
-        .filter((r) => !r.official)
+        .filter((r) => !r.ofCard)
         .map((r) =>
-          $(`[data-card-row="${r.id}"] [data-official]`)
+          $(`[data-card-row="${r.id}"] [data-card-scoring]`)
             ? "fett"
             : txt($(`[data-card-row="${r.id}"] [data-rings]`))
         )
@@ -3707,19 +3724,20 @@ addEventListener("load", async () => {
         dark && light && themeInProfile,
         `${dark} ${light} ${themeInProfile}`
       )
-      // Fehler (Review U2): Die Wertung, die eine Scheibe umschaltet, ist die des Geräts; der Fortschritt folgt ihr, auch
-      // wenn man über die Navigation hinkommt (er hat keinen Schalter mehr und zeigt nicht, welche gilt)
+      // Die Wertung, die eine Scheibe umschaltet, gehört ihr (Plan `plans/2026-10-12-spiegel-wertung.md`, löst den Fehler
+      // aus Review U2 ab): Der Fortschritt bleibt in der Wertung des Labors, auch über die Navigation
+      await deviceScoring("Zehntel")
       await click(area("Start"), 300)
       await click($("[data-start-card]"), 500)
-      await click(button("Ganze Ringe"), 150)
+      await click(button(L().state.scoring === "rings" ? "Zehntel" : "Ganze Ringe"), 150)
+      const switchedCard = L().state.scoring
       await click(area("Fortschritt"), 400)
       const followedScoring = P().state.scoring
       const followedAddress = addr()
-      await deviceScoring("Zehntel")
       check(
-        "Wertung: „Ganze Ringe“ auf einer Scheibe, dann über die Navigation in den Fortschritt: ganze Ringe",
-        followedScoring === "rings" && followedAddress.includes("scoring=rings"),
-        `${followedScoring} · ${followedAddress}`
+        "Wertung: umgeschaltet auf einer Scheibe gilt nur dort, der Fortschritt bleibt in der Wertung des Labors",
+        followedScoring === "decimal" && !followedAddress.includes("scoring="),
+        `${switchedCard} · ${followedScoring} · ${followedAddress}`
       )
       // Fehler (User, 9. Oktober 2026): Die Sprungleiste schreibt #analysis in die Adresse; die Beispielscheibe las ihn
       // beim Öffnen wie einen Anker beim Laden und begann bei der Analyse. Sie beginnt oben mit dem ersten Reiter

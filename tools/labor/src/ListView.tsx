@@ -40,11 +40,10 @@ export interface ListViewProps {
 export function ListView({ header, query, onQuery, scoring, evening, pick }: ListViewProps) {
   const all = season()
   const projected = projectedSeason()
-  const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all])
-  // die Wege als Adressen (Plan N3, D3): öffnen in der Wertung, die die Zeile vorn zeigt (die amtliche, sonst die
-  // des Geräts), „Im Fortschritt zeigen“ (im Blatt „Filter“), eine andere Familie am selben Abend
+  // die Wege als Adressen (Plan N3, D3): öffnen in der Wertung der Scheibe, „Im Fortschritt zeigen“ (im Blatt
+  // „Filter“), eine andere Familie am selben Abend
   const route: ListRoute = { page: "cards", query, evening: null }
-  const cardRoute = (id: string) => openCard(route, id, byId.get(id)?.card.official ?? scoring)
+  const cardRoute = (id: string) => openCard(route, id)
   const model = useMemo(
     () =>
       cardListModel(

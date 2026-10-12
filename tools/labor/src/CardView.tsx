@@ -95,11 +95,6 @@ export interface CardViewProps {
   explain: boolean
   onExplain: (explain: boolean) => void
   onHelp: (helpId: string | null) => void
-  /**
-   * die Wertung des Geräts setzen (Review U2): eine Stelle in `App` schreibt Speicher und Zeitraum, damit der
-   * Fortschritt ihr folgt, auch über die Navigation
-   */
-  onScoring: (scoring: Scoring) => void
   /** eine Scheibe aus der Saison statt eines Beispiels */
   opened?: OpenedCard | null
 }
@@ -108,14 +103,12 @@ export interface CardViewProps {
  * Die Seite einer Scheibe im Labor (bis L3 die ganze App): Beispiele oder eine Scheibe aus der Saison, Ansehen und
  * Setzen, Anker, Analyse. Der Zustand gilt je Scheibe; die Seite eines Zeitraums hält ihren eigenen in `App`.
  */
-export function CardView({
-  header,
-  explain,
-  onExplain,
-  onHelp,
-  onScoring,
-  opened = null,
-}: CardViewProps) {
+export function CardView({ header, explain, onExplain, onHelp, opened = null }: CardViewProps) {
+  // die Wertung der Scheibe: das Labor kennt keine Datenbank, also die amtliche, sonst die des Labors (Profil). Umschalten
+  // gilt nur für diese Scheibe (Plan `plans/2026-10-12-spiegel-wertung.md`)
+  const [ownScoring] = useState<Scoring>(
+    () => opened?.official ?? (store.get("scoring") === "rings" ? "rings" : "decimal")
+  )
   const [targetId, setTargetId] = useState<TargetId>(opened?.target ?? "lp-10m")
   const [sampleId, setSampleId] = useState<SampleId>("forty")
   const [raw, setRaw] = useState<RawShot[]>(() => opened?.raw ?? rawSample("lp-10m", "forty"))
@@ -136,9 +129,7 @@ export function CardView({
   const [state, dispatch] = useReducer(viewReducer, undefined, () => {
     return initialViewState({
       // eine aus dem Zeitraum geöffnete Scheibe übernimmt dessen Wertung (D6), sonst die gemerkte (Review N1)
-      scoring:
-        (opened ? (opened.route.scoring ?? opened.official) : null) ??
-        (store.get("scoring") === "rings" ? "rings" : "decimal"),
+      scoring: opened?.route.scoring ?? ownScoring,
       layers: saved.layers,
       view: saved.view,
     })
@@ -288,7 +279,8 @@ export function CardView({
     }),
     selection: state.selection === "all" ? null : state.selection,
     shot: state.chosen ? (shotLabels(shots)[state.chosen.index] ?? null) : null,
-    scoring: state.scoring,
+    // wie in der App: die Adresse trägt die Wertung nur, solange sie nicht die der Scheibe ist
+    scoring: state.scoring === ownScoring ? null : state.scoring,
     anchor: tabInAddress ? { section: "analysis", tab } : null,
   }
   // Rückweg und Blättern im Kontext (Plan N3, D5): die Scheiben, aus denen sie geöffnet wurde, in zeitlicher Folge
@@ -312,10 +304,7 @@ export function CardView({
     <ScoringSwitch
       scoring={state.scoring}
       official={opened ? opened.official : sample.official}
-      onChange={(scoring) => {
-        onScoring(scoring)
-        dispatch({ type: "setScoring", scoring })
-      }}
+      onChange={(scoring) => dispatch({ type: "setScoring", scoring })}
     />
   )
   // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung

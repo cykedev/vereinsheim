@@ -54,7 +54,6 @@ export interface StartViewProps {
  */
 export function StartView({ header, scoring, family }: StartViewProps) {
   const all = season()
-  const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all])
   const projected = projectedSeason()
   const model = useMemo(
     () =>
@@ -69,11 +68,9 @@ export function StartView({ header, scoring, family }: StartViewProps) {
     [projected, scoring, family]
   )
   useEffect(() => exposeStartForTest({ model, cards: all.map((c) => c.card) }))
-  // eine Kachel öffnet die Scheibe in der Wertung, die sie vorn zeigt (die amtliche, sonst die des Geräts)
-  const cardRoute = (id: string) =>
-    openCard({ page: "start" }, id, byId.get(id)?.card.official ?? scoring)
-  // ein Rekord öffnet in der Wertung, in der er steht (der des Geräts)
-  const recordRoute = (id: string) => openCard({ page: "start" }, id, scoring)
+  // eine Kachel öffnet die Scheibe in ihrer Wertung, ein Rekord in der, in der er steht (der seines Blocks)
+  const cardRoute = (id: string) => openCard({ page: "start" }, id)
+  const recordRoute = (id: string, scoring: Scoring) => openCard({ page: "start" }, id, scoring)
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">
