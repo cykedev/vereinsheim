@@ -241,3 +241,25 @@ describe("Wertung je Familie (Plan `plans/2026-10-12-spiegel-wertung.md`)", () =
     }
   })
 })
+
+describe("Art der Scheibe (Plan `plans/2026-10-12-spiegel-art.md`)", () => {
+  it("der Filter „Art“ der Liste nimmt die gewählte Art vor der Art der Quelle", async () => {
+    const lp = (await startPageData(db, site.ownerId, context)).families[1].value
+    const list = async (kind: "training" | "competition") =>
+      rowIds(
+        (await listPageData(db, site.ownerId, { ...DEFAULT_LIST, family: lp, kind }, context)).list
+          ?.model.evenings ?? []
+      )
+    const cards = await db.card.findMany({ where: { id: { in: ids.lp } } })
+    const training = cards.find((c) => c.kind === "training")!
+    expect(await list("training")).toContain(training.id)
+    expect(await list("competition")).not.toContain(training.id)
+    await db.card.update({ where: { id: training.id }, data: { kindChoice: "competition" } })
+    try {
+      expect(await list("competition")).toContain(training.id)
+      expect(await list("training")).not.toContain(training.id)
+    } finally {
+      await db.card.update({ where: { id: training.id }, data: { kindChoice: null } })
+    }
+  })
+})

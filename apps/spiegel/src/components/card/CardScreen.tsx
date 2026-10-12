@@ -22,6 +22,7 @@ import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { CardContextBar } from "@vereinsheim/shot-ui/nav/CardContextBar"
 import { backLabel, backRoute, siblingRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import { urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
+import { probeOnlyShots } from "@vereinsheim/shot-ui/period/model"
 import { cardMeta } from "@vereinsheim/shot-ui/readout/cardMeta"
 import { CardHeader } from "@vereinsheim/shot-ui/readout/CardHeader"
 import { CardResult } from "@vereinsheim/shot-ui/readout/CardResult"
@@ -46,11 +47,13 @@ import {
 } from "@vereinsheim/shot-ui/view-state"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
+import { KindControl } from "@/components/shell/KindControl"
 import { Page } from "@/components/shell/Page"
 import { ScoringControl } from "@/components/shell/ScoringControl"
 import { useHelp } from "@/components/shell/HelpContext"
 import { addressScoring, nextCardAddress } from "@/lib/card-address"
 import type { PageCard } from "@/lib/db/reads"
+import { setCardKind } from "@/lib/card-kind-actions"
 import { setCardScoring } from "@/lib/scoring-actions"
 import { rememberTargetDisplay, savedTargetDisplay } from "@/lib/target-display-client"
 
@@ -130,6 +133,13 @@ export function CardScreen({
   const [state, dispatch] = useReducer(viewReducer, undefined, () =>
     stateFromRoute(initialRoute, shots, display, card.scoring)
   )
+  // Die Seite folgt der Wertung der Scheibe, wenn sie sich auf dem Server ändert: Die Art verschiebt die Vorgabe
+  // (Training → Wettkampf: von „wie am Stand“ auf amtlich). Eine selbst gewählte ist gespeichert und damit dieselbe
+  const [seenScoring, setSeenScoring] = useState(card.scoring)
+  if (card.scoring !== seenScoring) {
+    setSeenScoring(card.scoring)
+    dispatch({ type: "setScoring", scoring: card.scoring })
+  }
   const [others, setOthers] = useState<Others>(display.others)
   // Nach Zurück und Vor bringt Next die Seite mit der Darstellung ihres ersten Besuchs (aus dem Cache, ohne Server).
   // Es gilt die gemerkte aus dem Cookie im Browser; beim Hydrieren die vom Server, damit das HTML passt (Review)
@@ -242,14 +252,20 @@ export function CardScreen({
     window.history.replaceState(null, "", hashFor("analysis", next))
   }, [])
   const empty = shots.length === 0
-  // die Wertung der Scheibe: gezeigt sofort, gespeichert an der Scheibe (Liste und Start zeigen sie danach vorn)
+  // Wertung und Art der Scheibe: gezeigt sofort, gespeichert an der Scheibe (Liste und Start zeigen sie danach); eine
+  // Scheibe nur aus Probe ist Training und hat keinen Schalter der Art
   const scoringSwitch = (
-    <ScoringControl
-      scoring={state.scoring}
-      official={card.official}
-      save={(scoring) => setCardScoring(card.id, scoring)}
-      onShow={(scoring) => dispatch({ type: "setScoring", scoring })}
-    />
+    <div className="grid gap-2">
+      <ScoringControl
+        scoring={state.scoring}
+        official={card.official}
+        save={(scoring) => setCardScoring(card.id, scoring)}
+        onShow={(scoring) => dispatch({ type: "setScoring", scoring })}
+      />
+      {!probeOnlyShots(card.shots) && (
+        <KindControl kind={card.kind} save={(kind) => setCardKind(card.id, kind)} />
+      )}
+    </div>
   )
   // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung
   const result = <CardResult shots={shots} state={state} scoring={scoringSwitch} />
