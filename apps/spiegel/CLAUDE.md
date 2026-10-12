@@ -83,11 +83,17 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
     Vorn in Liste und Start steht die Wertung der Scheibe.
   - Umschalten speichert über Server Actions (`src/lib/scoring-actions.ts`, nur eigene Scheiben bzw. Familien mit eigenen
     Scheiben, danach `revalidatePath`): auf der Seite einer Scheibe `setCardScoring`, in Liste und Fortschritt
-    `setFamilyScoring`. Alle drei über `ScoringControl` (`src/components/shell/`): gezeigt sofort, ein Tippen auf die
-    gezeigte speichert nichts, ein Fehler (auch ein abgelehnter Aufruf, `saveScoring`) steht als Text darunter statt im
-    Error-Boundary. Die Seite einer Scheibe öffnet in `route.scoring ?? card.scoring`; die Adresse trägt die Wertung
+    `setFamilyScoring`. Alle drei über `ScoringControl` (`src/components/shell/`, auf dem Hook `useSavedChoice`): gezeigt
+    sofort, ein Tippen auf die gezeigte speichert nichts, ein Fehler (auch ein abgelehnter Aufruf, `saveChoice`) steht als
+    Text darunter statt im Error-Boundary. Die Seite einer Scheibe öffnet in `route.scoring ?? card.scoring`; die Adresse trägt die Wertung
     nur, solange sie nicht die der Scheibe ist (`addressScoring`).
-  - Die Art (`Card.kind`) ist bisher überall „training“; sie festzulegen ist ein eigener Punkt ([[spiegel-roadmap]]).
+- **Art der Scheibe wie die Wertung** (User, 12. Oktober 2026, `plans/2026-10-12-spiegel-art.md`): `Card.kind` ist die Art
+  der Quelle (jeder Stand schreibt sie, heute `seed:own` mit „training“, später der Adapter), `Card.kindChoice` die Wahl des
+  Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? kind` (`kindOfRow` in `reads.ts`), in Übersicht, Seite und
+  Vorgabe der Wertung. Umstellen auf der Seite einer Scheibe (`KindControl` unter der Wertung, `setCardKind` in
+  `src/lib/card-kind-actions.ts`); eine Scheibe nur aus Probe ist Training und hat keinen Schalter. Ändert die Art die
+  Vorgabe der Wertung, folgt die Seite (`seenScoring` in `CardScreen`). `Status` der SSMDB2 ist an der Vereinsanlage leer
+  ([[meyton-ssmdb2]]); ein Vorschlag aus der `Rangliste` kommt mit dem Adapter ([[spiegel-roadmap]]).
 - **Darstellung der Scheibe gemerkt** (User, 12. Oktober 2026): Ebenen, „übrige blass/aus“ und Ausschnitt (ganze
   Scheibe oder Gruppe) als Cookie
   `spiegel-target` (`src/lib/target-display*.ts`, Format aus `@vereinsheim/shot-ui/target/display`). Die Seite einer

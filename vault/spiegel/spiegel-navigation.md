@@ -3,7 +3,7 @@ id: spiegel-navigation
 type: concept
 title: "Spiegel — Navigation, Einstieg und Auswahl"
 aliases: [navigation-spiegel, einstieg, scheiben-liste-konzept, app-rahmen]
-keywords: [navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung]
+keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-langzeit]]", "[[spiegel-assignment]]", "[[spiegel-mobile]]", "[[spiegel-roadmap]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]", "[[navigation-pattern]]"]
@@ -402,6 +402,21 @@ aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-lan
   sonst in dieser; ihr Schalter gilt nur für sie.
 - **Offen:** Die Art der Scheibe (`Card.kind`) ist bisher überall „Training“; sie festzulegen ist ein eigener Punkt
   ([[spiegel-roadmap]], „Offene Einzelpunkte“).
+
+## Art der Scheibe (12. Oktober 2026)
+
+Plan `plans/2026-10-12-spiegel-art.md`, mit dem User entschieden („ja passt“).
+
+- **Quelle und Wahl:** Die Art der Quelle (`Card.kind`, heute „Training“ aus `seed:own`, später der Adapter) und die Wahl
+  des Schützen (`Card.kindChoice`). Es gilt die Wahl, sonst die Quelle; neue Lesungen der Brücke schreiben nur die Quelle.
+- **Was folgt:** Filter „Art“ in Liste und Fortschritt, der Pokal in der Liste, die Metazeile der Scheibe, die Rekorde
+  „nur Wettkampf“ und die Vorgabe der Wertung (Wettkampf in der amtlichen). Eine gewählte Wertung bleibt.
+- **Bedienung:** auf der Seite einer Scheibe in der Ergebnis-Box unter der Wertung „Training | Wettkampf“, automatisch
+  gespeichert wie die Wertung. Ändert die Art die Vorgabe der Wertung, zeigt die Seite die neue. Eine Scheibe nur aus
+  Probe ist Training und hat keinen Schalter.
+- **Ohne Wahl** gilt die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); ein Vorschlag aus
+  der `Rangliste` kommt mit dem Adapter ([[spiegel-roadmap]]).
+- **Nicht hier:** mehrere Scheiben auf einmal markieren (Auswahl, N4).
 
 ## Labor näher an der App (9. Oktober 2026)
 

@@ -212,13 +212,13 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
 - **Wertung je Scheibe und je Familie statt des Geräts** (Wunsch des Users vom 12. Oktober 2026): erledigt am
   12. Oktober 2026 nach Plan `plans/2026-10-12-spiegel-wertung.md` ([[spiegel-navigation]], „Wertung je Scheibe und je
   Familie“). Eine gewählte Wertung bleibt fest, ohne Weg zurück zur Vorgabe (so entschieden).
-- **Art der Scheibe (Wettkampf oder Training) festlegen und speichern** (User, 12. Oktober 2026): Die Information
-  kommt sonst von nirgendwo. Die Spalte `Card.kind` gibt es, gesetzt wird sie bisher nur von `seed:own` (alle
-  „training“). Gebraucht für die Wertung je Scheibe (`plans/2026-10-12-spiegel-wertung.md`: Wettkampf amtlich, Training
-  wie am Stand), den Filter „Art“ in Liste und Fortschritt und Wettkampf gegen Training (W1–W4). Der User markiert die
-  Scheibe auf ihrer Seite; die Wahl muss neue Lesungen der Brücke überstehen (der Adapter, SP-1.6b, überschreibt sie
-  nicht). Zu klären: ob `Status` der SSMDB2 (RWK, Liga, Heim, Gast, [[meyton-ssmdb2]]) an der Vereinsanlage gefüllt ist
-  und als Vorschlag taugt, und was ohne Wahl gilt.
+- **Art der Scheibe (Wettkampf oder Training) festlegen und speichern** (User, 12. Oktober 2026): umgesetzt nach Plan
+  `plans/2026-10-12-spiegel-art.md` ([[spiegel-navigation]], „Art der Scheibe“): Wahl auf der Seite der Scheibe
+  (`Card.kindChoice`), übersteht neue Lesungen; ohne Wahl die Art der Quelle, vorerst Training. `Status` ist an der
+  Vereinsanlage leer und taugt nicht als Vorschlag ([[meyton-ssmdb2]]).
+- **Vorschlag der Art aus der `Rangliste`** (aus dem Punkt davor, 12. Oktober 2026): Der Admin ordnet Ranglisten des
+  Vereins („Training-LP“, „RWK_…“, „LG Vereinsmeister“, …) einer Art zu ([[adr-029]]); der Adapter (SP-1.6 b) setzt
+  damit `Card.kind`. Die Wahl des Schützen geht weiter vor.
 - **Speicher im Container** seit der Projektion der Übersichten nicht neu gemessen (Vorgehen in `apps/spiegel/CLAUDE.md`).
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.

@@ -62,6 +62,11 @@ Meytons Standardlisten stehen im Handbuch „Disziplin erstellen“ ([[src-meyto
 
 - **Status** (Scheiben): RWK, Liga, Heim, Gast, S (Stammschütze), E (Ersatz), F (festgeschossener Ersatz), AK (außer Konkurrenz), Einlage (Preisschießen), GMM/BMM (ISSF-Finale), I (ungültig). Daraus lässt sich Training gegen Wettkampf ableiten.
 - **Status** ist im Training leer; `Starterliste` heißt dort „Direktbelegung“ oder ist leer (9. Oktober 2026).
+- **An der Vereinsanlage ist `Status` bei allen 1.532 Scheiben leer** (Kopie vom 9. Oktober 2026, ausgewertet am
+  12. Oktober), auch bei Rundenwettkampf, Vereinsmeisterschaft und Preisschießen. Die Art lässt sich daraus nicht ableiten.
+  Bedeutung trägt die `Rangliste`, ein freier Text des Vereins („Training-LP“, „Uebung-LG“, „RWK_Verein_LG1“,
+  „LG Vereinsmeister“, „Jahrespreis“, „Kranzl“, „König-LP“); als Vorschlag der Art nur über eine Zuordnung des Admins
+  ([[adr-029]]).
 - **Wertung** (Treffer, seit 5.2) ist die **Anzeigeart am Monitor**, nicht die Wertung der Disziplin: Schaltet der Schütze um, schreibt Meyton `Wertung` und `Text` für ganze Serien oder die ganze Scheibe neu, Werte und Lage bleiben; gedruckt wird trotzdem nach der Disziplin (SF-74). Codes: 0 unbekannt, 1 Zehntel, 2 ganze Ringe, 3 Teiler, 4 Trefferumkreis, **5 komplett verdeckt** (kein Wert, keine Lage), 6 Schweizer 100er, 7 Zehntel + bester Teiler, 8 ganze Ringe + bester Teiler, 9 Zehntelteiler, **10 verdeckt** (Lage sichtbar), 11 Hundertstelteiler, 12 Nachkommastelle.
 
 ## Versionen
