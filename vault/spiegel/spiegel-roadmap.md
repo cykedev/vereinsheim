@@ -224,3 +224,10 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
   (`ThemeProvider`).
 - **Labor-Artifact** zeigt noch nicht die Markierung in der Liste und die Rekorde als Zeilen: neu bauen und unter
   derselben Adresse veröffentlichen (`tools/labor/CLAUDE.md`).
+- **Aufräumen** (User, 12. Oktober 2026): Labor (`tools/labor`), Spielwiese (`tools/spielwiese`) und was nur für
+  sie da ist, werden bald nicht mehr gebraucht, seit die App selbst läuft, und sind womöglich schon nicht mehr
+  deckungsgleich mit ihr.
+  - Vor dem Entfernen prüfen, was die App noch braucht. Die Skriptprüfung des Labors (`pruefen`) deckt heute Bedienung
+    ab, die sonst kein Test sieht.
+  - Was davon bleiben soll, wandert in Tests der App oder von `shot-ui`.
+  - Danach Verweise nachziehen: Architekturkarte, `CLAUDE.md`-Dateien, [[conventions]] §10, Turbo-Tasks.
