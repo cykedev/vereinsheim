@@ -30,7 +30,7 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Profil, Platzhalter (Scannen, Offen),
   Admin `/admin/users`.
 - Seiten sind Server-Komponenten: Sitzung, Daten (`src/lib/db/reads.ts`), Kontext (`pageContext`: Zone, „jetzt“,
-  Wertung des Geräts, benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
+  benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
   bauen Routen und Rückrufe (Funktionen gehen nicht vom Server zum Client), wie die Ansichten im Labor.
 - `AppShell`: `AppFrame` mit `next/link`, Bereich aus der Adresse, letzte Adresse je Bereich, Blatt der Hilfe
   (`useHelp`). Darstellung über `ThemeProvider` (Skript vor dem Zeichnen, `localStorage`).
@@ -41,15 +41,15 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   `reads.ts` liest für die Ansichten. Seiten und Server Actions rufen nur diese Funktionen, nie Prisma direkt auf Schüsse.
 - **Übersichten lesen keine Schüsse** (ADR-031, seit SP-1.8): Start, Liste und das Blättern nehmen `ownerCards` (Scheibe
   mit Projektion, Familie, Scheibenbild) und rechnen die Modelle aus `shot-ui` **auf dem Server**. An den Browser gehen
-  nur das Modell und die Lagen der gezeigten Scheiben (`marksOfCards`, `src/lib/marks.ts`); die Hülle baut Routen und
-  öffnet eine Scheibe in `row.resultScoring`. Die Liste liest ihre Abfrage auf dem Server (`searchOf` in
+  nur das Modell und die Lagen der gezeigten Scheiben (`marksOfCards`, `src/lib/marks.ts`); die Hülle baut Routen, eine
+  Scheibe öffnet ohne Wertung in der Adresse (in ihrer). Die Liste liest ihre Abfrage auf dem Server (`searchOf` in
   `src/lib/search.ts`), ein Filter schreibt die Adresse, und die Seite rechnet neu. Gemessen bei 1.564 Scheiben: Start
   70 ms und 5 KB statt 8 MB an den Browser ([[spiegel-db-schema]]). Nur die Seite einer Scheibe lädt Schüsse
   (`cardWithShots`, immer mit `ownerId`).
 - **Fortschritt** (`/progress`): Der Server rechnet `periodModel` über `progressPageData` (`src/lib/overview.ts`, wie
   Start und Liste) und gibt `lightPeriodModel` weiter. Filter gehen über `router.push`; die Wahl (Verlauf, Liste, Rekord)
   bleibt im Browser und schreibt `pick` mit `replaceState`, die Lagen der Ablesung holt `cardMarksAction`
-  (`src/lib/marks-actions.ts`) nach. Die Wertung ist die des Geräts; ein `scoring` in der Adresse gilt nicht.
+  (`src/lib/marks-actions.ts`) nach. Gerechnet in der Wertung der Familie; ein `scoring` in der Adresse gilt nicht.
 - **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
   Admins. Admin verwaltet Konten und sieht keine fremden Schüsse.
 - **Anmeldung wie Ringwerk:** `getAuthSession` prüft gegen die Datenbank (aktiv, `sessionVersion`, einmal je Anfrage
@@ -71,8 +71,19 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   tag“. Taucht die Warnung wieder auf, ist sie eine Folgemeldung: den Hydrierungsfehler suchen (12. Oktober 2026).
 - **instrumentation:** den Node-Teil nur im Zweig `NEXT_RUNTIME === "nodejs"` laden (`instrumentation-node.ts`); Next
   bündelt die Datei auch für Edge, und dort fehlt `fs` für `pg`.
-- **Wertung des Geräts** als Cookie (`spiegel-scoring`, `src/lib/device*.ts`): Start, Liste und Fortschritt rendern auf dem Server.
-  Der Name steht in `device-cookie.ts` ohne Importe, damit die Client-Seite nicht `next/headers` zieht.
+- **Wertung je Scheibe und je Familie, keine des Geräts** (User, 12. Oktober 2026, `plans/2026-10-12-spiegel-wertung.md`):
+  - Die Regel ist eine reine Funktion (`src/lib/scoring.ts`). Die **Scheibe**: gewählt (`Card.scoringChoice`), sonst
+    Wettkampf in der amtlichen der Disziplin, Training wie am Stand (`Card.standScoring`, die häufigste Anzeigeart der
+    Schüsse wie am Ausdruck, `writeRevision` setzt sie), ohne beides Zehntel. Die **Familie**: gespeichert
+    (`FamilyScoring`), sonst die häufigste ihrer Scheiben, bei Gleichstand Zehntel.
+  - Die Zugriffe liefern `OverviewCard.scoring` und `PageCard.scoring`, `familyScorings` die gespeicherten nach Kennung.
+    `overview.ts` rechnet jede Familie in ihrer: in der Liste Ø und Abstand, auf Start jeden Block, den Fortschritt.
+    Vorn in Liste und Start steht die Wertung der Scheibe.
+  - Umschalten speichert über Server Actions (`src/lib/scoring-actions.ts`, nur eigene Scheiben bzw. Familien mit eigenen
+    Scheiben, danach `revalidatePath`): auf der Seite einer Scheibe `setCardScoring`, in Liste und Fortschritt
+    `setFamilyScoring`. Die Seite einer Scheibe öffnet in `route.scoring ?? card.scoring`; die Adresse trägt die Wertung
+    nur, solange sie nicht die der Scheibe ist.
+  - Die Art (`Card.kind`) ist bisher überall „training“; sie festzulegen ist ein eigener Punkt ([[spiegel-roadmap]]).
 - **Darstellung der Scheibe gemerkt** (User, 12. Oktober 2026): Ebenen, „übrige blass/aus“ und Ausschnitt (ganze
   Scheibe oder Gruppe) als Cookie
   `spiegel-target` (`src/lib/target-display*.ts`, Format aus `@vereinsheim/shot-ui/target/display`). Die Seite einer

@@ -3,7 +3,7 @@ id: spiegel-navigation
 type: concept
 title: "Spiegel — Navigation, Einstieg und Auswahl"
 aliases: [navigation-spiegel, einstieg, scheiben-liste-konzept, app-rahmen]
-keywords: [navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor]
+keywords: [navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-langzeit]]", "[[spiegel-assignment]]", "[[spiegel-mobile]]", "[[spiegel-roadmap]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]", "[[navigation-pattern]]"]
@@ -164,8 +164,10 @@ Plan `plans/2026-10-09-spiegel-routen.md`, Branch `feat/spiegel-routen`.
 - **`@vereinsheim/shot-ui/nav/navigate`:**
   - `openCard` (die Herkunft trägt ihren Zustand, die Wertung trägt die Scheibe).
   - `backRoute` (zurück mit der Scheibe gewählt), `backLabel` („Letzte 90 Tage“, „Neue Munition“, „Start“,
-    „Scheiben“), `siblingRoute` (Blättern behält Herkunft, Wertung und Abschnitt, nicht den Reiter).
-  - `listFromProgress` und `progressFromList` (ohne Wertung der Liste gilt die des Geräts, wie bei `openCard`).
+    „Scheiben“), `siblingRoute` (Blättern behält Herkunft, Wertung und Abschnitt, nicht den Reiter; seit dem 12. Oktober 2026
+    auch nicht die Wertung, die nächste Scheibe öffnet in ihrer).
+  - `listFromProgress` und `progressFromList` (ohne Wertung der Liste gilt die des Geräts, wie bei `openCard`; seit dem
+    12. Oktober 2026 rechnet der Fortschritt in der Wertung der Familie, siehe „Wertung je Scheibe und je Familie“).
   - `progressRoute` und `periodStateFromRoute`; dazu die Aktion `restore` des `periodReducer`.
 - **Labor:**
   - Im Artifact kommt nur ein einfacher Anker an. Das Labor zeigt die Adresse deshalb nur an („Adresse in der App“),
@@ -208,7 +210,8 @@ Plan `plans/2026-10-09-spiegel-scheiben-liste.md`, Branch `feat/spiegel-scheiben
   [[meyton-ssmdb2]]); die Scheibe trägt sie als `official` (1 und 7 Zehntel, 2 und 8 ganze Ringe, sonst unbekannt).
   Ohne amtliche Wertung (Training nur aus Probe, Modus 0) steht die Wertung des Geräts vorn. Ø und Abstand bleiben in
   einer Wertung für die ganze Liste, damit die Spalte vergleichbar bleibt. Eine Zeile öffnet die Scheibe in der
-  Wertung, die sie vorn zeigt.
+  Wertung, die sie vorn zeigt. _Seit dem 12. Oktober 2026 steht vorn die Wertung der Scheibe, Ø und Abstand in der der
+  Familie (unten)._
 - **Die Disziplin bleibt beim Wechsel zwischen Scheiben und Fortschritt** (User, 9. Oktober 2026), auch über die
   Navigation, nicht nur über die Querverweise. Für N3: Die Links der Navigation zu „Scheiben“ und „Fortschritt“ tragen
   die zuletzt gewählte Familie.
@@ -217,7 +220,7 @@ Plan `plans/2026-10-09-spiegel-scheiben-liste.md`, Branch `feat/spiegel-scheiben
     (`listOnEvening`) lässt deshalb Art und Merkmal fallen; so steht der versprochene Abend sicher in der Liste.
   - Ein gewähltes Merkmal bleibt wählbar, auch wenn die Familie es nicht hat; sonst ließe es sich nicht lösen.
   - Die Liste hat keine eigene Wertung, sie nimmt die des Geräts. Jede Umschaltung schreibt diese, auch die im
-    Fortschritt.
+    Fortschritt. _Abgelöst am 12. Oktober 2026 (unten)._
   - Jede Zeile nennt ihre Werte mit Bedeutung als Namen des Knopfs für Screenreader. Den Kopf der Seite zeichnet
     `ListHeader`, die Abende sind Überschriften zweiter Ebene.
 - **Für N3:** echte Navigation und Blättern mit Daten; die Zeile wird dann ein Link.
@@ -311,7 +314,7 @@ Dev-Datenbank (`pnpm --filter spiegel seed:own`):
   Blättern im Kontext der Herkunft vom Server). Profil mit Darstellung, Wertung des Geräts und Abmelden. Scannen und
   Offen sind Platzhalter; Fortschritt seit N7, zweiter Teil (unten).
 - **Wertung des Geräts** als Cookie (`spiegel-scoring`), weil Start und Liste auf dem Server rendern; die Seite einer
-  Scheibe schreibt sie beim Umschalten mit.
+  Scheibe schreibt sie beim Umschalten mit. _Entfallen am 12. Oktober 2026 (unten)._
 - **Darstellung der Scheibe** (Ebenen, übrige blass/aus) als Cookie (`spiegel-target`, User, 12. Oktober 2026), nicht in
   `localStorage`: Den Cookie liest der Server, die Scheibe steht schon im ersten Bild richtig. Aus `localStorage` käme
   sie erst nach dem Hydrieren, jede Scheibe spränge beim Öffnen von der Vorgabe auf die eigene Darstellung.
@@ -327,7 +330,8 @@ Dev-Datenbank (`pnpm --filter spiegel seed:own`):
 Plan `plans/2026-10-10-spiegel-fortschritt.md`. `/progress` zeigt die Seite eines Zeitraums wie im Labor, mit den
 eigenen Scheiben:
 - **Rechnen:** Der Server liest die Abfrage aus der Adresse und rechnet `periodModel` aus den Projektionen
-  (`progressPageData` in `src/lib/overview.ts`), mit der Wertung des Geräts. An den Browser geht das leichte Modell
+  (`progressPageData` in `src/lib/overview.ts`), mit der Wertung des Geräts (seit dem 12. Oktober 2026 der Familie). An
+  den Browser geht das leichte Modell
   (`lightPeriodModel`: Scheiben ohne Werte und Rekorde ihrer Projektion, die Kennzahl ohne Rechnung).
 - **Filter schreiben die Adresse:** Zeitraum, Vergleich, Familie, Art, „nur Probe“, Kennzahl und Darstellung; die Seite
   rechnet neu.
@@ -364,6 +368,36 @@ Wahl (`bg-accent-wash`):
   die gespeicherte Seite mit ihrer alten Abfrage her. Die Navigation API meldet einen Wechsel synchron, auch aus dem
   `useInsertionEffect`, in dem Next die Adresse schreibt; dort darf React nicht neu zeichnen („useInsertionEffect must
   not schedule updates“), deshalb erst im nächsten Microtask.
+
+## Wertung je Scheibe und je Familie (12. Oktober 2026)
+
+Der User: Eine Wertung des Geräts passt nicht, die Wertung hängt an Disziplin und Modus; neben den Vorgaben soll man sie
+je Scheibe umstellen können, automatisch gespeichert. Plan `plans/2026-10-12-spiegel-wertung.md`. Löst Entscheidung 2
+aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-langzeit]] ab.
+
+- **Wertung einer Scheibe:** gewählt, sonst die Vorgabe „wie am Stand“:
+  - Wettkampf: die amtliche der Disziplin (so druckt Meyton, SF-74), sonst wie am Stand.
+  - Training: wie am Stand, sonst die amtliche.
+  - Ohne beides: Zehntel.
+
+  „Wie am Stand“ ist die häufigste Anzeigeart der Schüsse wie am Ausdruck (`Treffer.Wertung`, 1 und 7 Zehntel, 2 und 8
+  ganze Ringe, [[meyton-ssmdb2]]); bei Gleichstand die des letzten Schusses. Andere Codes (Teiler, verdeckt) zählen
+  nicht.
+- **Wertung einer Familie** für die Schnitte: gespeichert, sonst die häufigste ihrer Scheiben, bei Gleichstand Zehntel.
+  In ihr rechnen in der Liste Ø und Abstand, auf Start jeder Block (Ø des Abends, Schnitt, Band, Verlauf, Rekorde) und
+  die Form, der Fortschritt.
+- **Vorn in Liste und Start** steht die Wertung der Scheibe, fett, darunter „Fett: Wertung der Scheibe.“
+- **Umschalten speichert:**
+  - Auf der Seite einer Scheibe die Wertung der Scheibe. Liste und Start zeigen sie danach vorn.
+  - In der Liste (neben den Filtern) und im Fortschritt (Ergebnis-Box) die Wertung der Familie; danach rechnet die Seite
+    neu. Profil hat keine Wertung mehr.
+- **Adresse:** Die Seite einer Scheibe trägt `scoring` nur, solange die gezeigte Wertung nicht die der Scheibe ist (ein
+  Rekord öffnet in der Wertung, in der er steht). Ohne Angabe gilt die der Scheibe; Liste, Start, Fortschritt und
+  Blättern öffnen ohne. Der Fortschritt hat keine Wertung in der Adresse.
+- **Labor:** ohne Datenbank. Seine eine Wertung (Profil) ist die jeder Familie, eine Scheibe öffnet in der amtlichen,
+  sonst in dieser; ihr Schalter gilt nur für sie.
+- **Offen:** Die Art der Scheibe (`Card.kind`) ist bisher überall „Training“; sie festzulegen ist ein eigener Punkt
+  ([[spiegel-roadmap]], „Offene Einzelpunkte“).
 
 ## Labor näher an der App (9. Oktober 2026)
 

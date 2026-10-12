@@ -157,10 +157,11 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
     Tabelle; ein Abend ist ein `tbody` mit dem ISO-Tag als Anker. Jede Zeile hat ihre Datumszelle, das Datum steht nur in
     der ersten (kein `rowSpan`: sonst ist das Hervorheben beim Überfahren kein Rechteck); keine Zahl je Abend; der
     Hinweis auf andere Familien ist eine kleine, rechtsbündige Zeile darunter.
-  - Ergebnis in beiden Wertungen mit Namen (U5): Spalten „Ganze Ringe“ und „Zehntel“, die amtliche der Scheibe
-    (`PeriodCard.official`) fett, darunter „Fett: amtliche Wertung der Scheibe.“ (nur wenn im Monat etwas fett ist; in
-    der Kachel auf Start bricht das Ergebnis nur zwischen den Wertungen um); das Modell liefert weiter
-    `resultScoring`, `official`, `otherResult`. Ø und Abstand in der Wertung der Liste.
+  - Ergebnis in beiden Wertungen mit Namen (U5): Spalten „Ganze Ringe“ und „Zehntel“, die Wertung der Scheibe fett
+    (`ProjectedCard.scoring`, ohne sie wie im Labor die amtliche, seit 12. Oktober 2026), darunter „Fett: Wertung der
+    Scheibe.“ (nur wenn im Monat etwas fett ist; in der Kachel auf Start bricht das Ergebnis nur zwischen den Wertungen
+    um); das Modell liefert `resultScoring`, `ofCard` (Markup `data-card-scoring`), `otherResult`. Ø und Abstand in der
+    Wertung der Liste (in der App die der Familie).
   - Die Zeile zeigt Ergebnis, Ø, den Abstand zum Schnitt der fünf Scheiben davor (`deltasBefore`) und die
     Schusszahl. Der Abstand rechnet über Familie und Art mit Trainings nur aus Probe, vor dem Zeitraum und ohne
     Merkmal; das ist der Abstand im Zeitraum mit seiner Grundeinstellung (Kennzahl Ø je Schuss, nur Probe dabei).
@@ -178,7 +179,9 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Vorgabe, nie ein Fehler. Seiten bauen Adressen und Wege nur über `nav/routes` und `nav/navigate`. Im Artifact kommt
   nur ein einfacher Anker an (`#position`); das Labor zeigt die Adresse deshalb nur an. Ids sind erzeugte Ids, nie
   Namen (`isCardId`, `isNamedPeriodId`; benannte Zeiträume nicht `30d`, `90d`, `12m`, `all`, `previous`), die Familie
-  die des Fachkerns (`lg-freihand` …).
+  die des Fachkerns (`lg-freihand` …). Die Wertung einer Scheibe (`CardRoute.scoring`) hat keine Vorgabe: ohne Angabe
+  null, die Scheibe öffnet in ihrer; `scoring=decimal` steht ausdrücklich da. `openCard` gibt ohne Rekord null,
+  `siblingRoute` setzt null, `backRoute` führt ohne Wertung in den Fortschritt (12. Oktober 2026).
 - **Rahmen und Links** (Plan N3, `plans/2026-10-09-spiegel-app-rahmen.md`):
   - Wege zwischen Seiten sind `RouteLink`s mit der Adresse aus `urlFromRoute`, nie Rückrufe. Bausteine nehmen dafür
     Routen (`cardRoute`, `progress`, `showAll`, `otherFamilyRoute`). Wo kein Link sein kann (die ganze Zeile einer
@@ -219,8 +222,10 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
     ± einer typischen Schwankung lässt jeden dritten gewöhnlichen Abend draußen. „Dein erster Abend“ nur ohne
     Scheiben davor.
   - Der letzte Abend steht an einer Stelle (`lastEvening` in `list/evenings`), für Start und das Blättern von Start.
-  - Rekorde: `recordRows` liegt rein in `period/records` (ohne React), ein Rekord öffnet in seiner Wertung; gezeigt
-    als „Bezeichnung: Wert“ in ganzen Worten (U5).
+  - Rekorde: `recordRows` liegt rein in `period/records` (ohne React), ein Rekord öffnet in seiner Wertung
+    (`recordRoute(id, block.scoring)`); gezeigt als „Bezeichnung: Wert“ in ganzen Worten (U5).
+  - Jeder Block rechnet in der Wertung seiner Familie (`scoringOf(family)`, `EveningBlock.scoring`), die Form in der
+    ihrer; Kacheln öffnen die Scheibe ohne Wertung, in ihrer (12. Oktober 2026).
   - Neue Rekorde sind die, deren Scheibe am Abend liegt.
   - Kacheln öffnen die Scheibe mit Herkunft Start; geblättert wird durch den letzten Abend, über alle Familien.
 - **Seite eines Zeitraums aus `PeriodPage`** (Plan L3, `plans/2026-10-09-spiegel-zeitraum-seite.md`): Kopf
@@ -228,7 +233,8 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   und der Umfang (`VolumeChart`), rechts Ergebnis (`PeriodResult`), Ablesung (`CardReadout`, auf dem Telefon
   `CardLine`) und Liste (`CardList`), darunter Zahlen (`PeriodTiles`) und Analyse (`PeriodInsights`). Seit U2
   (`plans/2026-10-09-spiegel-fortschritt-besser.md`): eine Zeile Bedienung (Familie und Chip, alles Übrige im Blatt
-  „Filter“), kein Schalter der Wertung (die des Geräts), der Satz beantwortet „Werde ich besser?“ (`form`), für eine
+  „Filter“), die Wertung kommt von außen (in der App die der Familie mit Schalter im Platz `scoring` der Ergebnis-Box,
+  im Labor die des Labors), der Satz beantwortet „Werde ich besser?“ (`form`), für eine
   Scheibe gilt nur der Abstand zum Schnitt der fünf davor. Zustand
   (`periodReducer`) und alles Gerechnete (`periodModel`) sind reine Funktionen; die Komponenten zeichnen nur.
   Verlauf, Liste und Ablesung teilen die Wahl (`chosen`); das Lineal meldet nur eigene Wahlen (`onPick`). Ein

@@ -57,9 +57,11 @@ einen statischen Server auf `dist/` (Port 4173), die Seite ist `/preview.html`.
     „Labor-Werkzeuge, Setzen aktiv“, `active`). Nach dem Wechsel App ↔ Beispiele steht der Fokus auf dem neuen Knopf.
   - **Darstellung** (System, Hell, Dunkel, `ThemeSwitch`): in Profil, am Desktop zusätzlich unten in der Seitenleiste (`AppFrame.sidebarFooter`, neben der Navigation). Die
     drei Knöpfe teilen sich dort die Breite.
-  - **Wertung** (Zehntel, Ganze Ringe) seit U2 als Einstellung des Geräts in Profil (`data-scoring-setting`, `App.changeScoring`):
-    der Fortschritt hat keinen Schalter mehr und folgt ihr; die Scheibe behält ihren. Die Prüfung schaltet sie über
-    `deviceScoring(…)` (Profil und zurück), Filter des Fortschritts über `applyFilters({ kind, compare, probe })`.
+  - **Wertung** (Zehntel, Ganze Ringe) in Profil (`data-scoring-setting`, `App.changeScoring`), seit dem 12. Oktober 2026
+    die Wertung jeder Familie: Das Labor kennt keine Datenbank, die App speichert je Familie. Der Fortschritt hat keinen
+    Schalter und folgt ihr, auch nach „Zurück“ aus einer Scheibe. Eine Scheibe öffnet in der amtlichen, sonst in dieser;
+    ihr Schalter gilt nur für sie. Die Prüfung schaltet sie über `deviceScoring(…)` (Profil und zurück), Filter des
+    Fortschritts über `applyFilters({ kind, compare, probe })`.
   - Die Ansicht steht in `labor.mode`. Ein Anker der Zeitraum-Seite (`#history`, `#cards`, seit U1 auch `#numbers`)
     öffnet sie, ein Abend
     (`#2026-09-25`) die Scheiben-Liste.
@@ -69,8 +71,8 @@ einen statischen Server auf `dist/` (Port 4173), die Seite ist `/preview.html`.
     die Adresse noch den Anker der vorigen Seite (Sprungleiste, Reiter), und eine neue Seite beginnt oben (User, 9. Oktober 2026: „Beispielscheibe öffnen springt gleich zur Analyse“).
   - **Scrollstelle:** Jeder Bereich merkt sie sich mit seiner Adresse (ohne Wahl und Wertung). Wer zu derselben
     Adresse zurückkehrt, landet an derselben Stelle, sonst oben.
-  - Eine Scheibe der Saison zeigt über `CardPage` die `CardContextBar` (Rückweg, vorige, nächste). Die Liste hat keine eigene Wertung: Sie nimmt die des Geräts (`scoring` im
-    Speicher), die Scheibe und Zeitraum beim Umschalten schreiben. Die Familie teilen Liste und Zeitraum
+  - Eine Scheibe der Saison zeigt über `CardPage` die `CardContextBar` (Rückweg, vorige, nächste). Die Liste rechnet Ø und Abstand in der Wertung des
+    Labors (`scoring` im Speicher), vorn steht die amtliche. Die Familie teilen Liste und Zeitraum
     (`changeList`, `changePeriod` in `App`): wer sie in einem wählt, findet sie im anderen wieder, auch über die Leiste
     oben; Filter, Zeitraum und Scrollstelle bleiben je Ansicht. `App` hält, was beide teilen
     (Darstellung, Erklärungen, Blatt der Hilfe), den Zustand des Zeitraums (`periodReducer`) und die geöffnete
@@ -79,7 +81,7 @@ einen statischen Server auf `dist/` (Port 4173), die Seite ist `/preview.html`.
   „Adresse in der App: …“
   (`data-address`) für den Zeitraum und die Scheibe. Im Artifact kommt nur ein einfacher Anker an, deshalb führt das
   Labor die Adresse nicht als URL. „Scheibe öffnen“ baut die Adresse der Scheibe mit dem Zeitraum als Herkunft, „Zurück
-  zu „…““ stellt den Zeitraum aus ihr wieder her (`restore`), die Wertung der Scheibe kommt mit. Nur die Scrollstelle
+  zu „…““ stellt den Zeitraum aus ihr wieder her (`restore`), die Wertung bleibt die des Labors. Nur die Scrollstelle
   bleibt im Speicher. Die Prüfung rechnet jede gezeigte Adresse hin und zurück (`tools.nav`).
 - **Saison** (`src/season.ts`, `plans/2026-10-10-labor-echte-scheiben.md`):
   - **Luftpistole echt:** die Scheiben des Users aus der Vereinsanlage (`src/ownCards.ts`, aus der privaten Kopie vom 9. Oktober 2026, mit Zustimmung und auf Wunsch des Users mit Datum und Schusszeiten, ohne Name, Sportpass und

@@ -102,7 +102,8 @@ Die Analyse hat 25 Karten:
 1. Der Abschnitt „Zahlen“ auf der Scheibe entfällt, der Überblick der Analyse übernimmt. Das dreht die Sprungleiste
    aus Schritt 4 zurück.
 2. Zehntel und ganze Ringe stehen nur noch auf der Scheibe und als Einstellung des Geräts in Profil. Die Liste zeigt
-   weiter beide Wertungen.
+   weiter beide Wertungen. _Abgelöst am 12. Oktober 2026:_ keine Wertung des Geräts mehr, jede Scheibe und jede Familie
+   hat ihre, umstellbar und gespeichert ([[spiegel-navigation]], „Wertung je Scheibe und je Familie“).
 3. Fachbegriffe wie σ und R50 nur im Blatt „?“.
 4. Umsetzung in der Reihenfolge U1 bis U5 (U4 kam am 9. Oktober dazu, siehe unten).
 

@@ -197,7 +197,9 @@ Aus der Durchsicht ([[spiegel-durchsicht]], Plan `plans/2026-10-09-spiegel-forts
   den letzten 50) entfiel; ihr „?“ steht an der Ablesung („Abstand zum Schnitt davor“).
 - **Eine Zeile Bedienung:** Familie als Segment, dahinter ein Chip („Letzte 90 Tage · Training · mit Zeitraum
   davor“), der das Blatt „Filter“ öffnet: Zeitraum, Vergleich, Art, „Trainings nur aus Probe mitzählen“.
-- **Kein Schalter der Wertung:** Der Fortschritt zeigt die Wertung des Geräts; sie steht in Profil.
+- **Kein Schalter der Wertung:** Der Fortschritt zeigt die Wertung des Geräts; sie steht in Profil. _Abgelöst am
+  12. Oktober 2026:_ Der Fortschritt rechnet in der Wertung der Familie und hat dafür einen Schalter in der Ergebnis-Box,
+  automatisch gespeichert ([[spiegel-navigation]], „Wertung je Scheibe und je Familie“).
 - **Rekorde:** oben höchstens fünf aus dem Zeitraum, darunter zugeklappt „Alle Rekorde (n)“.
   - Die ganze Zeile eines Rekords ist der Knopf, mit Linien dazwischen wie in der Liste der Scheiben. Ein „zeigen“ allein
     am rechten Rand ließ nicht erkennen, zu welchem Rekord es gehört (User, 12. Oktober 2026).

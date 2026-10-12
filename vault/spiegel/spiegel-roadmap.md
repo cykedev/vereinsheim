@@ -209,9 +209,9 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht in git, deshalb hier.
 
-- **Wertung je Scheibe und je Familie statt des Geräts** (Wunsch des Users vom 12. Oktober 2026): Plan
-  `plans/2026-10-12-spiegel-wertung.md` auf Branch `feat/spiegel-wertung`, Aufgabe 1 von 8 erledigt (Regel
-  `apps/spiegel/src/lib/scoring.ts`). Ab Aufgabe 2 (Schema) weiter; die Dev-Datenbank setzt der User danach zurück.
+- **Wertung je Scheibe und je Familie statt des Geräts** (Wunsch des Users vom 12. Oktober 2026): umgesetzt nach Plan
+  `plans/2026-10-12-spiegel-wertung.md` auf Branch `feat/spiegel-wertung` ([[spiegel-navigation]], „Wertung je Scheibe
+  und je Familie“); Merge nach dem Review.
 - **Art der Scheibe (Wettkampf oder Training) festlegen und speichern** (User, 12. Oktober 2026): Die Information
   kommt sonst von nirgendwo. Die Spalte `Card.kind` gibt es, gesetzt wird sie bisher nur von `seed:own` (alle
   „training“). Gebraucht für die Wertung je Scheibe (`plans/2026-10-12-spiegel-wertung.md`: Wettkampf amtlich, Training
