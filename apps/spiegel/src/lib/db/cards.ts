@@ -9,7 +9,13 @@ import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { cardMarks, cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
 
-import { Prisma, type CardKind, type CardOrigin, type CardState } from "@/generated/prisma/client"
+import {
+  Prisma,
+  type CardKind,
+  type CardOrigin,
+  type CardState,
+  type Scoring,
+} from "@/generated/prisma/client"
 
 import type { Db } from "../db"
 import { standScoringOf } from "../scoring"
@@ -582,4 +588,40 @@ export async function setDisciplineFamily(
     const { count } = await tx.card.updateMany({ where: { disciplineId }, data: { familyId } })
     return count
   })
+}
+
+/**
+ * Die gewählte Wertung einer Scheibe setzen (Seite der Scheibe): nur die eigene, nicht gelöschte; false, wenn es sie für
+ * den Schützen nicht gibt
+ */
+export async function chooseCardScoring(
+  db: Db,
+  query: { cardId: string; ownerId: string; scoring: Scoring }
+): Promise<boolean> {
+  const { count } = await db.card.updateMany({
+    where: { id: query.cardId, ownerId: query.ownerId, deletedAt: null },
+    data: { scoringChoice: query.scoring },
+  })
+  return count === 1
+}
+
+/**
+ * Die Wertung einer Familie für die Schnitte des Schützen speichern: nur eine Familie, in der er eigene, nicht gelöschte
+ * Scheiben hat; false sonst
+ */
+export async function saveFamilyScoring(
+  db: Db,
+  query: { familySlug: string; ownerId: string; scoring: Scoring }
+): Promise<boolean> {
+  const family = await db.family.findFirst({
+    where: { slug: query.familySlug, cards: { some: { ownerId: query.ownerId, deletedAt: null } } },
+    select: { id: true },
+  })
+  if (!family) return false
+  await db.familyScoring.upsert({
+    where: { userId_familyId: { userId: query.ownerId, familyId: family.id } },
+    create: { userId: query.ownerId, familyId: family.id, scoring: query.scoring },
+    update: { scoring: query.scoring },
+  })
+  return true
 }
