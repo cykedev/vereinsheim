@@ -23,7 +23,8 @@ Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichun
   der Theme-Kern liegt im Paket). shadcn-CLI läuft weiter im App-Kontext.
 - **Geteilt via `@vereinsheim/config`** (packages/config, seit Phase 2 — Drift dort **strukturell
   unmöglich**, daher *nicht* mehr im Gate): `tsconfig.json`, `eslint.config.mjs`, `.prettierrc`,
-  `postcss.config.mjs`, `next.config.ts`. Die App-Dateien sind nur noch dünne `extends`/Re-Export-Stubs
+  `postcss.config.mjs`, `next.config.ts`, seit Oktober 2026 auch `vitest.config.ts` (inkl. `server-only`-Alias
+  auf einen Stub im Paket; die App ergänzt Eigenheiten wie `fileParallelism` per `mergeConfig`). Die App-Dateien sind nur noch dünne `extends`/Re-Export-Stubs
   (`.prettierrc` → `package.json`-Feld); Verhalten/Regeln ändert man **im Paket**, nicht in den Apps.
 - Error-Boundaries: `src/app/error.tsx`, `src/app/(app)/error.tsx`, `src/app/not-found.tsx`
 - **Geteilt via `@vereinsheim/ui`** (packages/ui, seit Phase 4 / Zyklus 2 — Drift **strukturell
@@ -53,8 +54,6 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 - `src/components/app/admin/AdminLoginRateLimitTable.tsx` — dünner Wrapper um
   `@vereinsheim/ui/admin/LoginRateLimitTable`; app-lokal, weil eine geteilte Datei keine
   Server Action re-exportieren darf.
-- `test/server-only-stub.ts` — der Vitest-Stub. **Offen:** die Vitest-Basiskonfiguration
-  (inkl. `server-only`-Alias) nach `@vereinsheim/config` ziehen, dann entfallen Stub und Alias.
 
 ## 2. Komponenten-Kanon
 

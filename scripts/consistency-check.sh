@@ -24,14 +24,14 @@ warn=0
 
 # Geteilte Dateien, die in BEIDEN Repos byte-identisch sein MÜSSEN.
 # Fast die gesamte geteilte Schicht liegt inzwischen in packages/*: tsconfig/eslint/
-# prettier/postcss/next.config in @vereinsheim/config (Phase 2); cn/forms/fieldErrors +
+# prettier/postcss/next.config/vitest in @vereinsheim/config (Phase 2); cn/forms/fieldErrors +
 # Form-Hooks in @vereinsheim/lib (Zyklus 1); die ui/-Primitives, shell/-Komponenten und
 # der globals.css-Theme-Kern (@vereinsheim/ui/theme.css) in @vereinsheim/ui (Zyklus 2) —
 # Drift dort strukturell unmöglich. Hier bleibt nur, was Next/shadcn als app-lokale Dateien
 # erzwingen (alle trivial + byte-identisch): components.json, der dünne globals.css-Stub,
 # die Error-Boundaries + not-found. Dazu seit September 2026 der Wrapper um die geteilte
 # Rate-Limit-Oberfläche (app-lokal, weil eine geteilte Datei keine Server Action
-# re-exportieren darf) und der Vitest-Stub für `server-only`.
+# re-exportieren darf).
 MUST_MATCH=(
   components.json
   src/app/globals.css
@@ -39,7 +39,6 @@ MUST_MATCH=(
   "src/app/(app)/error.tsx"
   src/app/not-found.tsx
   src/components/app/admin/AdminLoginRateLimitTable.tsx
-  test/server-only-stub.ts
 )
 # Hinweis: vault/conventions.md ist seit der Harness-Konsolidierung EINE
 # Quelle am Root (vault/conventions.md) — nicht mehr pro App dupliziert.

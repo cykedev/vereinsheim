@@ -13,6 +13,7 @@ nicht mehr im `consistency-check.sh`-Gate).
 | `@vereinsheim/config/prettier` | `prettier/index.json` | `package.json`-Feld `"prettier"` |
 | `@vereinsheim/config/postcss` | `postcss/index.mjs` | `postcss.config.mjs` re-exportiert |
 | `@vereinsheim/config/next` | `next/index.mjs` (+ `index.d.ts`) | `next.config.ts` ruft `createNextConfig(__dirname)` |
+| `@vereinsheim/config/vitest` | `vitest/index.mjs` (+ `index.d.ts`, `server-only-stub.mjs`) | `vitest.config.ts` ruft `createVitestConfig(__dirname)`, Eigenheiten per `mergeConfig` |
 
 ## Regeln
 
@@ -27,6 +28,10 @@ nicht mehr im `consistency-check.sh`-Gate).
   Phase 4 Zyklus 2 auch `@vereinsheim/ui`): sie liefern TS/TSX-Source ohne Build-Step, Next transpiliert
   sie just-in-time. Neue geteilte Pakete hier eintragen; die `.d.ts` (`transpilePackages: string[]`) in
   Sync halten.
+- **vitest-Factory** setzt Umgebung, Worker-Cap, Ausschlüsse (`.next`, Worktrees) und die Aliase `@` (aus `appDir`)
+  und `server-only` (leerer Stub im Paket). Eigenheiten der App (`dotenv`, `passWithNoTests`, `fileParallelism`)
+  bleiben im App-Stub. Die `.d.ts` ist selbst-enthalten wie bei `next` (kein `import from "vitest"`); `vitest` ist
+  devDependency, weil die Factory `configDefaults` liest.
 - **Kein `"use server"`** in diesem Paket (geteilte Dateien dürfen keine Server-Action-Re-Exports sein,
   monorepo-plan §9).
 - `globals.css` + `components.json` sind **app-lokal** (Phase 4) — gehören NICHT hierher.

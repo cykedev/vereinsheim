@@ -12,10 +12,17 @@
     "./next": {
       "types": "./next/index.d.ts",
       "default": "./next/index.mjs"
+    },
+    "./vitest": {
+      "types": "./vitest/index.d.ts",
+      "default": "./vitest/index.mjs"
     }
   },
   "dependencies": {
     "eslint": "catalog:",
     "eslint-config-next": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }
