@@ -109,6 +109,11 @@ export function App({ commit }: { commit: string }) {
     ...DEFAULT_LIST,
     family: store.get("period.family") === "lp-freihand" ? "lp-freihand" : "lg-freihand",
   }))
+  // wohin man in die Liste kam: der Abend aus dem Anker, die Scheibe aus `pick` (markiert)
+  const [listMark, setListMark] = useState<{ evening: string | null; pick: string | null }>({
+    evening: null,
+    pick: null,
+  })
   // eine Disziplin für „Scheiben“ und „Zeitraum“: wer sie in einem wählt, findet sie im anderen wieder, auch über
   // die Leiste oben (User, 9. Oktober 2026); Filter, Zeitraum und Scrollstelle bleiben je Ansicht
   const changeList = useCallback(
@@ -140,11 +145,21 @@ export function App({ commit }: { commit: string }) {
   // das nicht zu sehen ist, bekommt keinen; Review N2)
   useEffect(() => {
     const hash = typeof location === "undefined" ? "" : location.hash
-    if (EVENING_ANCHOR.test(hash))
+    if (EVENING_ANCHOR.test(hash)) {
+      setListMark({ evening: hash.slice(1), pick: null })
       document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" })
+    }
   }, [])
 
-  const listRoute = useMemo(() => ({ page: "cards" as const, query: list, evening: null }), [list])
+  const listRoute = useMemo(
+    () => ({
+      page: "cards" as const,
+      query: list,
+      evening: null,
+      ...(listMark.pick ? { pick: listMark.pick } : {}),
+    }),
+    [list, listMark.pick]
+  )
   const progressHere = useMemo(() => progressRoute(period, null), [period])
   const view: LaborView = mode === "card" && !opened ? "samples" : "app"
   // die Adresse der gezeigten Seite der App
@@ -204,10 +219,17 @@ export function App({ commit }: { commit: string }) {
       const saved = scrolls.current.get("cards")
       const y = saved?.key === listKey(query) ? saved.y : 0
       const evening = next.evening
+      const pick = next.pick ?? null
+      // wohin man kommt, ist markiert: der Abend aus dem Anker, die Scheibe aus `pick` (12. Oktober 2026)
+      setListMark({ evening, pick })
       requestAnimationFrame(() =>
-        evening
-          ? document.getElementById(evening)?.scrollIntoView({ block: "start" })
-          : scrollTo(0, y)
+        pick
+          ? document
+              .querySelector(`[data-card-row="${CSS.escape(pick)}"]`)
+              ?.scrollIntoView({ block: "center" })
+          : evening
+            ? document.getElementById(evening)?.scrollIntoView({ block: "start" })
+            : scrollTo(0, y)
       )
       return
     }
@@ -284,7 +306,18 @@ export function App({ commit }: { commit: string }) {
             opened={opened}
           />
         ) : mode === "list" ? (
-          <ListView header={header} query={list} onQuery={changeList} scoring={devicesScoring()} />
+          <ListView
+            header={header}
+            query={list}
+            onQuery={(query) => {
+              // ein Filter verlässt den Abend und die Scheibe, von der man kam
+              setListMark({ evening: null, pick: null })
+              changeList(query)
+            }}
+            scoring={devicesScoring()}
+            evening={listMark.evening}
+            pick={listMark.pick}
+          />
         ) : mode === "period" ? (
           <PeriodView
             header={header}

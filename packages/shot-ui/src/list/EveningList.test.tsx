@@ -29,7 +29,11 @@ const FAMILIES = [
   { value: "lg-freihand", label: "Luftgewehr" },
   { value: "lp-freihand", label: "Luftpistole" },
 ]
-const render = (scoring: "decimal" | "rings" = "decimal", input: RawInput = INPUT) => {
+const render = (
+  scoring: "decimal" | "rings" = "decimal",
+  input: RawInput = INPUT,
+  marked: { evening?: string | null; pick?: string | null } = {}
+) => {
   const model = cardListModel(
     input.map((c) => ({ ...c, card: projected(c.card) })),
     { ...DEFAULT_LIST, family: "lg-freihand" },
@@ -45,6 +49,7 @@ const render = (scoring: "decimal" | "rings" = "decimal", input: RawInput = INPU
       cardRoute: (id: string) => openCard(LIST, id),
       otherFamilyRoute: (family: string, day: string) =>
         listOnEvening({ ...DEFAULT_LIST, family: "lg-freihand" }, family, day),
+      ...marked,
     })
   )
 }
@@ -185,6 +190,25 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     expect(row(html, "n").match(edge)).toHaveLength(4)
     expect(row(html, "n").match(/stroke-dasharray="2 2"/g)).toHaveLength(1)
     expect(row(html, "a")).not.toContain("stroke-dasharray")
+  })
+
+  it("markiert, wohin man kommt: die Zeilen des Abends aus dem Anker, die Scheibe aus `pick`", () => {
+    const tr = (html: string) =>
+      [...html.matchAll(/<tr data-card-row="([^"]+)"([^>]*)>/g)].map(([, id, rest]) => ({
+        id,
+        marked: rest.includes("data-marked") && rest.includes("bg-accent-wash"),
+        current: rest.includes('aria-current="true"'),
+      }))
+    // a und b am 29.09., d am 27.09.
+    expect(tr(render("decimal", INPUT, { evening: "2026-09-29" }))).toEqual([
+      { id: "a", marked: true, current: false },
+      { id: "b", marked: true, current: false },
+      { id: "d", marked: false, current: false },
+    ])
+    expect(tr(render("decimal", INPUT, { pick: "d" })).filter((r) => r.marked)).toEqual([
+      { id: "d", marked: true, current: true },
+    ])
+    expect(tr(render()).some((r) => r.marked || r.current)).toBe(false)
   })
 
   it("ohne Scheiben ein Satz statt einer leeren Liste", () => {

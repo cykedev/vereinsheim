@@ -23,5 +23,7 @@ export default async function CardsRoute({
   const query = route.page === "cards" ? route.query : DEFAULT_LIST
   const context = await pageContext(session.user.id)
   const { list, families } = await listPageData(db, session.user.id, query, context)
-  return <ListScreen list={list} query={query} families={families} context={context} />
+  // eine markierte Scheibe (Rückweg aus ihr, „Alle in Scheiben zeigen“); den Abend aus dem Anker liest die Hülle
+  const pick = route.page === "cards" ? (route.pick ?? null) : null
+  return <ListScreen list={list} query={query} pick={pick} families={families} context={context} />
 }

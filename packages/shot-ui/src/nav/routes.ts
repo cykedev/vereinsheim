@@ -308,8 +308,11 @@ export const cardHash = (card: CardRoute) =>
 /** jede Seite von Spiegel (D3); was keine ist, ist `unknown` mit ihrem Pfad */
 export type Route =
   | { page: "start" }
-  /** `evening`: der Abend als ISO-Tag aus dem Anker (`#2026-09-25`) */
-  | { page: "cards"; query: ListQuery; evening: string | null }
+  /**
+   * `evening`: der Abend als ISO-Tag aus dem Anker (`#2026-09-25`); `pick`: eine markierte Scheibe (`pick=<id>`, vom
+   * Rückweg aus ihr oder aus dem Fortschritt), fehlt ohne
+   */
+  | { page: "cards"; query: ListQuery; evening: string | null; pick?: string }
   | CardRoute
   | { page: "progress"; query: ProgressQuery; section: PeriodSection | null }
   | { page: "compare"; origin: CardOrigin; a: string; b: string }
@@ -349,10 +352,12 @@ export function routeFromUrl(pathname: string, search: string, hash: string): Ro
       return { page: "start" }
     case "cards":
       if (second === undefined) {
+        const pick = idOrNull(params.get("pick"))
         return {
           page: "cards",
           query: listQueryFromParams(params),
           evening: isDay(word) ? word : null,
+          ...(pick ? { pick } : {}),
         }
       }
       return ID.test(second) ? cardFromParts(second, params, hash) : unknown
@@ -400,7 +405,7 @@ export function urlFromRoute(route: Route): string {
     case "cards":
       return withQuery(
         "/cards",
-        listQueryToParams(route.query),
+        [...listQueryToParams(route.query), ...(route.pick ? [["pick", route.pick] as const] : [])],
         route.evening ? `#${route.evening}` : ""
       )
     case "card":

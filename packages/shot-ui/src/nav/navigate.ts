@@ -50,7 +50,9 @@ export function backRoute(card: CardRoute): Route {
   const origin = card.origin
   if (!origin) return { page: "cards", query: DEFAULT_LIST, evening: null }
   if (origin.from === "start") return { page: "start" }
-  if (origin.from === "list") return { page: "cards", query: origin.query, evening: null }
+  // zurück in die Liste: die Scheibe ist dort markiert (Rückmeldung des Users, 12. Oktober 2026)
+  if (origin.from === "list")
+    return { page: "cards", query: origin.query, evening: null, pick: card.id }
   return {
     page: "progress",
     query: { ...origin.query, scoring: card.scoring, chosen: card.id },
@@ -74,11 +76,13 @@ export function siblingRoute(card: CardRoute, id: string): CardRoute {
 
 /** „Alle in Scheiben zeigen“ (D7): Familie, Art und Zeitraum des Fortschritts; „Alles“ ist die ganze Liste */
 export function listFromProgress(progress: ProgressRoute): ListRoute {
-  const { family, kind, choice } = progress.query
+  const { family, kind, choice, chosen } = progress.query
   return {
     page: "cards",
     query: { family, kind, flag: null, range: choice.type === "all" ? null : choice },
     evening: null,
+    // die Wahl des Fortschritts ist in der Liste markiert
+    ...(chosen ? { pick: chosen } : {}),
   }
 }
 

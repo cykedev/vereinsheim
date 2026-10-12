@@ -50,6 +50,8 @@ describe("Bereiche der Navigation (Plan N3, D1, D4)", () => {
         page: "cards",
         query: { ...DEFAULT_LIST, family: "lg-freihand", kind: "competition" },
         evening: "2026-09-12",
+        // eine markierte Scheibe der Liste fällt beim Wechsel der Bereiche weg, wie der Abend
+        pick: "c9",
       },
       progress: {
         page: "progress",

@@ -136,6 +136,24 @@ describe("Liste und Fortschritt als Query (D4)", () => {
   })
 })
 
+describe("die Liste mit einer gewählten Scheibe", () => {
+  it("`pick` hin und zurück, mit Abend; nur als Id, sonst fällt es weg", () => {
+    const route = routeFromUrl("/cards", "?family=lg-10m&pick=c42", "#2026-09-25")
+    expect(route).toEqual({
+      page: "cards",
+      query: { ...DEFAULT_LIST, family: "lg-10m" },
+      evening: "2026-09-25",
+      pick: "c42",
+    })
+    expect(urlFromRoute(route)).toBe("/cards?family=lg-10m&pick=c42#2026-09-25")
+    expect(routeFromUrl("/cards", "?pick=..%2Fx", "")).toEqual({
+      page: "cards",
+      query: DEFAULT_LIST,
+      evening: null,
+    })
+  })
+})
+
 describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
   it("aus dem Fortschritt mit Serie, Schuss und Reiter, und zurückgeschrieben dieselbe Zeichenkette", () => {
     const card = cardFromParts(

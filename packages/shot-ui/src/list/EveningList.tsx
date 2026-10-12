@@ -51,6 +51,10 @@ export interface EveningListProps {
   cardRoute: (id: string) => CardRoute
   /** die Liste einer anderen Familie an diesem Abend (`listOnEvening`, D3) */
   otherFamilyRoute: (family: string, day: string) => ListRoute
+  /** der Abend, zu dem man kam (Anker): seine Zeilen sind markiert */
+  evening?: string | null
+  /** die Scheibe, von der man kam (`pick`): ihre Zeile ist markiert und `aria-current` */
+  pick?: string | null
   className?: string
 }
 
@@ -68,6 +72,8 @@ export function EveningList({
   timeZone,
   cardRoute,
   otherFamilyRoute,
+  evening: markedEvening = null,
+  pick = null,
   className,
 }: EveningListProps) {
   const go = useRouteNavigate()
@@ -172,11 +178,14 @@ export function EveningList({
                     >
                       {evening.rows.map((row, i) => {
                         const placed = marks.get(row.id) ?? []
+                        const marked = evening.day === markedEvening || row.id === pick
                         const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
                         return (
                           <tr
                             key={row.id}
                             data-card-row={row.id}
+                            data-marked={marked || undefined}
+                            aria-current={row.id === pick ? "true" : undefined}
                             onClick={(event) => {
                               // der Link der kleinen Scheibe geht selbst; mit Strg, Cmd, Shift oder Alt bleibt die
                               // Zeile stehen (einen neuen Tab öffnet der Link, nicht die Zeile)
@@ -184,7 +193,11 @@ export function EveningList({
                                 return
                               go(cardRoute(row.id))
                             }}
-                            className="cursor-pointer hover:bg-surface-2"
+                            className={cn(
+                              "cursor-pointer hover:bg-surface-2",
+                              // wohin man kam, wie die Wahl im Fortschritt (Rückmeldung des Users, 12. Oktober 2026)
+                              marked && "bg-accent-wash"
+                            )}
                           >
                             {/* jede Zeile hat ihre Datumszelle (das Hervorheben bleibt ein Rechteck), das Datum
                                 steht nur in der ersten des Abends (User, 9. Oktober 2026) */}

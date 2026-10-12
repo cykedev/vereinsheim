@@ -338,6 +338,20 @@ eigenen Scheiben:
   Kacheln und dieselben 16 Rekorde.
 - **„Erklärungen“** über der Analyse schaltet ihre Kurzsätze an, wie auf der Seite einer Scheibe.
 
+## Markiert, wohin man in die Liste kommt (12. Oktober 2026)
+
+Rückmeldung des User: „wenn man zu einer scheibe in scheiben navigiert (z.b. zeige abend in scheiben) dann weiss man
+nicht welche das ist“. Plan `plans/2026-10-12-spiegel-liste-markierung.md`; die Liste markiert wie der Fortschritt seine
+Wahl (`bg-accent-wash`):
+- **Abend aus dem Anker** (von Start „Abend in Scheiben ›“, vom Hinweis auf andere Familien): Seine Zeilen sind
+  markiert. Die App liest den Anker im Browser, der Server sieht ihn nicht.
+- **Scheibe über `pick`** (`/cards?…&pick=<id>`):
+  - Gesetzt vom Rückweg „← Scheiben“ aus einer Scheibe und von „Alle in Scheiben zeigen“ mit einer Wahl im Fortschritt.
+  - Die Zeile ist markiert, trägt `aria-current` und steht in der Mitte des Fensters.
+  - Ein Filter, „Im Fortschritt zeigen“ und der Wechsel der Bereiche lassen `pick` fallen.
+  - Damit ist Entscheidung 12 („die neue Scheibe ist dort markiert“) für den Rückweg schon da; der Scan setzt `pick` mit
+    SP-1.7.
+
 ## Labor näher an der App (9. Oktober 2026)
 
 Plan `plans/2026-10-09-spiegel-labor-wie-app.md`. Der Labor-Kopf ist weg, die Seiten beginnen wie in der App, damit

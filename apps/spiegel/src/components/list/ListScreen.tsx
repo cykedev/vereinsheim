@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
@@ -11,7 +11,12 @@ import { EveningList } from "@vereinsheim/shot-ui/list/EveningList"
 import { ListControls } from "@vereinsheim/shot-ui/list/ListControls"
 import { ListHeader } from "@vereinsheim/shot-ui/list/ListHeader"
 import { listOnEvening, openCard, progressFromList } from "@vereinsheim/shot-ui/nav/navigate"
-import { urlFromRoute, type ListQuery, type ListRoute } from "@vereinsheim/shot-ui/nav/routes"
+import {
+  routeFromUrl,
+  urlFromRoute,
+  type ListQuery,
+  type ListRoute,
+} from "@vereinsheim/shot-ui/nav/routes"
 
 import { NoCards } from "@/components/shell/NoCards"
 import { Page } from "@/components/shell/Page"
@@ -27,12 +32,15 @@ import type { FamilyOption } from "@/lib/pages"
 export function ListScreen({
   list,
   query,
+  pick,
   families,
   context,
 }: {
   /** null ohne Scheiben */
   list: { model: CardListModel; marks: Record<string, CardMark[]>; option: FamilyOption } | null
   query: ListQuery
+  /** die Scheibe, von der man kam: markiert und in die Mitte geholt */
+  pick: string | null
   families: FamilyOption[]
   context: PageContext
 }) {
@@ -40,6 +48,25 @@ export function ListScreen({
   const { timeZone, scoring } = context
   const route: ListRoute = { page: "cards", query, evening: null }
   const marks = useMemo(() => marksById(list?.marks ?? {}), [list?.marks])
+  // der Abend aus dem Anker (von Start, vom Hinweis auf andere Familien): Der Server sieht den Anker nicht, bis zum
+  // ersten Effekt gilt keiner, damit das gezeichnete HTML beim Hydrieren passt
+  const [evening, setEvening] = useState<string | null>(null)
+  useEffect(() => {
+    const read = () => {
+      const route = routeFromUrl("/cards", "", window.location.hash)
+      setEvening(route.page === "cards" ? route.evening : null)
+    }
+    read()
+    window.addEventListener("hashchange", read)
+    return () => window.removeEventListener("hashchange", read)
+  }, [list?.model])
+  // die Scheibe, von der man kam, in die Mitte
+  useEffect(() => {
+    if (!pick) return
+    document
+      .querySelector(`[data-card-row="${CSS.escape(pick)}"]`)
+      ?.scrollIntoView({ block: "center" })
+  }, [pick, list?.model])
   // öffnen in der Wertung, die die Zeile vorn zeigt (die amtliche, sonst die des Geräts)
   const resultScoring = useMemo(
     () =>
@@ -86,6 +113,8 @@ export function ListScreen({
           timeZone={timeZone}
           cardRoute={cardRoute}
           otherFamilyRoute={(other, day) => listOnEvening(query, other, day)}
+          evening={evening}
+          pick={pick}
         />
       </section>
     </Page>

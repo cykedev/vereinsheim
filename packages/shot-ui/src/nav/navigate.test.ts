@@ -83,11 +83,11 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
     })
   })
 
-  it("aus der Liste öffnen und zurück ergibt dieselbe Liste; der Abend fällt weg", () => {
+  it("aus der Liste öffnen und zurück ergibt dieselbe Liste mit der Scheibe gewählt; der Abend fällt weg", () => {
     const card = openCard(LIST, "c7")
     expect(card.origin).toEqual({ from: "list", query: LIST.query })
     expect(card.scoring).toBe("decimal")
-    expect(backRoute(card)).toEqual({ ...LIST, evening: null })
+    expect(backRoute(card)).toEqual({ ...LIST, evening: null, pick: "c7" })
   })
 
   it("von Start und als direkter Link; die Wertung des Geräts geht vor, wo die Herkunft keine hat", () => {
@@ -130,7 +130,12 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
         range: { type: "named", id: "neue-munition" },
       },
       evening: null,
+      // die Wahl des Fortschritts ist in der Liste markiert
+      pick: "c3",
     })
+    expect(
+      listFromProgress({ ...PROGRESS, query: { ...PROGRESS.query, chosen: null } })
+    ).not.toHaveProperty("pick")
     expect(
       listFromProgress({ ...PROGRESS, query: { ...PROGRESS.query, choice: { type: "all" } } }).query
         .range

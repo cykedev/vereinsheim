@@ -27,6 +27,9 @@ export interface ListViewProps {
   onQuery: (query: ListQuery) => void
   /** Wertung des Geräts (die Liste hat keine eigene) */
   scoring: Scoring
+  /** der Abend, zu dem man kam (Anker), und die Scheibe, von der man kam (`pick`): markiert */
+  evening: string | null
+  pick: string | null
 }
 
 /**
@@ -34,7 +37,7 @@ export interface ListViewProps {
  * Bausteine aus `shot-ui/list`. Der Zustand (Filter) kommt aus `App`, damit „Zurück zu „Scheiben““ ihn wiederfindet;
  * die Adresse zeigt, wie die App ihn schriebe.
  */
-export function ListView({ header, query, onQuery, scoring }: ListViewProps) {
+export function ListView({ header, query, onQuery, scoring, evening, pick }: ListViewProps) {
   const all = season()
   const projected = projectedSeason()
   const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all])
@@ -89,6 +92,8 @@ export function ListView({ header, query, onQuery, scoring }: ListViewProps) {
           timeZone={SEASON_TIME_ZONE}
           cardRoute={cardRoute}
           otherFamilyRoute={(family, day) => listOnEvening(query, family, day)}
+          evening={evening}
+          pick={pick}
         />
       </section>
       {/* zuletzt: der Knopf steht unten rechts, also auch zuletzt in der Tab-Folge (Review) */}

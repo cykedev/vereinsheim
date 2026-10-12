@@ -166,6 +166,9 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
     Stellen aus den Kennzahlen (`model.digits`). Die ganze Zeile öffnet die Scheibe; ihr Link ist die kleine Scheibe
     und nennt Datum und Werte mit Bedeutung als Namen.
   - Ein gewähltes Merkmal bleibt in `flags`, auch wenn die Familie es nicht hat (sonst ließe es sich nicht lösen).
+  - Wohin man kommt, ist markiert (`bg-accent-wash`, `data-marked`): die Zeilen des Abends aus dem Anker (`evening`)
+    und die Scheibe aus `ListRoute.pick` (`aria-current`). `pick` setzen `backRoute` und `listFromProgress`; Filter,
+    `listOnEvening` und `areaLinks` lassen es fallen (12. Oktober 2026).
   - Unter 32rem Breite des Bereichs fallen Uhrzeit, Abstand und Schusszahl weg.
 - **Zustand in der Adresse** (Plan N1, `plans/2026-10-09-spiegel-routen.md`, `vault/spiegel/spiegel-navigation.md`): Pfade,
   Schlüssel und Anker englisch. In die Adresse gehört, _was_ man sieht (Seite, Filter, Zeitraum, Vergleich,
