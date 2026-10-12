@@ -204,3 +204,23 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 ### SP-4.4 Weitere Quellen
 - DISAG, neue Meyton-Linie ESTANX, Handeingabe als weitere Adapter ([[meyton-interfaces]]). **Status:** offen.
+
+## Offene Einzelpunkte (Stand 12. Oktober 2026)
+
+Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht in git, deshalb hier.
+
+- **Wertung je Scheibe und je Familie statt des Geräts** (Wunsch des Users vom 12. Oktober 2026): Plan
+  `plans/2026-10-12-spiegel-wertung.md` auf Branch `feat/spiegel-wertung`, Aufgabe 1 von 8 erledigt (Regel
+  `apps/spiegel/src/lib/scoring.ts`). Ab Aufgabe 2 (Schema) weiter; die Dev-Datenbank setzt der User danach zurück.
+- **Vitest-Basiskonfiguration nach `@vereinsheim/config`**, inkl. `server-only`-Alias: Danach entfallen
+  `test/server-only-stub.ts` in allen drei Apps und sein Eintrag in `scripts/consistency-check.sh`
+  ([[conventions]] §1).
+- **Labor `pruefen` endet selten mit Exit-Code 1 ohne Bericht**; die Wiederholung ist grün. Die Ausgabe eines solchen
+  Laufs festhalten und die Ursache suchen.
+- **Speicher im Container** seit der Projektion der Übersichten nicht neu gemessen (Vorgehen in `apps/spiegel/CLAUDE.md`).
+- **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
+  einer anderen Form der Daten.
+- **Warnung „Encountered a script tag“** im Browser-Log: das Skript der Darstellung vor dem ersten Zeichnen
+  (`ThemeProvider`).
+- **Labor-Artifact** zeigt noch nicht die Markierung in der Liste und die Rekorde als Zeilen: neu bauen und unter
+  derselben Adresse veröffentlichen (`tools/labor/CLAUDE.md`).
