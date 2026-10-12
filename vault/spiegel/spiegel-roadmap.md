@@ -232,8 +232,6 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
 - **Auf einem echten iPhone prüfen** (bisher nur Emulation in Chrome): VoiceOver, sicherer Rand unten, Ziehen am
   Diagramm-Lineal gegen senkrechtes Scrollen (`touch-action`, [[spiegel-mobile]]).
 - **Leseprobe der Hilfe** (Abnahme von SP-1.11): Die Texte hat noch niemand ohne Statistik-Wissen gelesen.
-- **JSON-Schema des Vertrags** (`packages/ingest-contract`) mit einem unabhängigen Validator (etwa ajv) prüfen; bisher
-  ist nur belegt, dass die Datei dem Zod-Export entspricht.
 - **Zwei ältere Beobachtungen nachprüfen** (8./9. Oktober, seither viel umgebaut): Bei 768 × 660 passten die Serien
   nicht neben die untere Leiste (die Prüfung läuft seither bei 768 × 700); über dem Diagramm des Fortschritts standen
   Kennzahl und „je Scheibe/je Monat“ in zwei Zeilen.

@@ -37,6 +37,9 @@ SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
 - **JSON-Schema wird erzeugt**, nie von Hand editiert: `pnpm --filter @vereinsheim/ingest-contract
 schema`; ein Test hält es gleich. Das Tool liegt bewusst unter `tools/` (nicht `scripts/`, das ist im
   Autopilot geschützt).
+- **ajv prüft das geschriebene Schema unabhängig** (Draft 2020-12, strict, `src/jsonSchema.test.ts`):
+  Beispiele gelten, ungültige Snapshots fallen. Was JSON-Schema nicht ausdrücken kann, steht als Liste
+  `onlyParser` im Test; ein neuer ungültiger Fall gehört in eine der beiden Gruppen.
 - Sonderzeichen in Tests aus Codeeinheiten bauen (`String.fromCharCode`), nicht als `\u`-Escape im
   Quelltext: Beim Schreiben über Werkzeuge wurden solche Escapes schon zu Rohzeichen dekodiert.
 - `zod` und `tsx` kamen über einen Handeintrag in `pnpm-lock.yaml` dazu; `pnpm add` hätte Peer-Varianten

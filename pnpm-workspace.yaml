@@ -37,6 +37,8 @@ catalog:
   sonner: "2.0.8"
   tailwind-merge: "3.6.0"
   zod: "4.4.3"
+  ajv: "8.20.0"
+  ajv-formats: "3.0.1"
   # --- dev (in beiden Apps, identische Version) ---
   "@tailwindcss/postcss": "4.3.3"
   "@types/node": "24.13.2"

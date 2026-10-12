@@ -23,6 +23,8 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@vereinsheim/config": "workspace:*",
+    "ajv": "catalog:",
+    "ajv-formats": "catalog:",
     "prettier": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",

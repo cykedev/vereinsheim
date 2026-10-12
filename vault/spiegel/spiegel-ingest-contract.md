@@ -21,7 +21,7 @@ Diese Note ist die Spezifikation für jede Implementierung, auch die Brücke in 
 | Was | Datei in `packages/ingest-contract` |
 |---|---|
 | Schema (Quelle) | `src/v1/snapshot.ts` (Zod) |
-| JSON-Schema, erzeugt | `schema/snapshot-v1.schema.json`, `schema/snapshot-batch-v1.schema.json` |
+| JSON-Schema, erzeugt | `schema/snapshot-v1.schema.json`, `schema/snapshot-batch-v1.schema.json`; mit ajv gegen Beispiele und ungültige Snapshots geprüft (`src/jsonSchema.test.ts`) |
 | Kanonische Form | `src/canonical.ts` |
 | Prüfsumme | `src/checksum.ts` |
 | Annehmen und prüfen | `src/parse.ts` |
