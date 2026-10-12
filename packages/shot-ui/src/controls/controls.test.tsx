@@ -17,6 +17,17 @@ describe("ScoringSwitch", () => {
     expect(html).toMatch(/aria-checked="true"[^>]*>Ganze Ringe</)
   })
 
+  it("ein eigener Name, wo der Schalter nur einen Teil der Seite umstellt", () => {
+    const html = renderToStaticMarkup(
+      createElement(ScoringSwitch, {
+        scoring: "rings",
+        label: "Wertung für Ø und Abstand",
+        onChange: () => {},
+      })
+    )
+    expect(html).toContain('aria-label="Wertung für Ø und Abstand"')
+  })
+
   it("die amtliche Wertung bleibt als Hinweis sichtbar, auch nach dem Umschalten", () => {
     expect(scoring("decimal", "decimal")).toContain("amtlich: Zehntel")
     expect(scoring("decimal", "rings")).toContain("amtlich: ganze Ringe")

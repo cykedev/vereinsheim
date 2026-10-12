@@ -26,6 +26,11 @@ const KIND: Readonly<Record<ListRow["kind"], string>> = {
 /** Stellen des Ergebnisses in einer Wertung, aus der Kennzahl */
 const digits = (scoring: Scoring) => inScoring(metricByKey("result.decimal")!, scoring).decimals
 const other = (scoring: Scoring): Scoring => (scoring === "rings" ? "decimal" : "rings")
+/** die Wertung des Blocks an der großen Zahl: Blöcke verschiedener Familien können verschieden rechnen (Review) */
+const SCORING_IN: Readonly<Record<Scoring, string>> = {
+  decimal: "in Zehnteln",
+  rings: "in ganzen Ringen",
+}
 
 export interface EveningBlockProps {
   block: EveningBlockModel
@@ -107,7 +112,7 @@ export function EveningBlock({
           >
             {block.mean === null ? "–" : formatValue(block.mean, 2)}
           </span>
-          <span className="text-[14px] text-muted-foreground">Ø je Schuss</span>
+          <span className="text-[14px] text-muted-foreground">{`Ø je Schuss ${SCORING_IN[block.scoring]}`}</span>
         </p>
         {reference && (
           <p data-evening-reference className="text-[14px] text-foreground-2 tabular-nums">
@@ -128,7 +133,7 @@ export function EveningBlock({
         {block.rows.map((row) => {
           const placed = marks.get(row.id) ?? []
           const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
-          // die Wertung beim Namen (U5, D5): vorn die amtliche (sonst die des Geräts), daneben die andere
+          // die Wertung beim Namen (U5, D5): vorn die der Scheibe (im Labor die amtliche), daneben die andere
           const name = (scoring: typeof row.resultScoring) =>
             scoring === "rings" ? "ganze Ringe" : "Zehntel"
           const result =

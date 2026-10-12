@@ -42,7 +42,7 @@ export function PlaceholderView({
   /** Darstellung: in Profil, wo die Einstellung in der App lebt (Labor näher an der App, D2) */
   theme: Theme
   onTheme: (theme: Theme) => void
-  /** Wertung des Geräts (U2, D4): Zehntel oder ganze Ringe für Liste, Start und Fortschritt */
+  /** Wertung des Labors: Zehntel oder ganze Ringe für jede Familie (Liste, Start, Fortschritt) */
   scoring: Scoring
   onScoring: (scoring: Scoring) => void
 }) {

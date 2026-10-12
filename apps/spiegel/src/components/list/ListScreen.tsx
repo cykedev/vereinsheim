@@ -1,22 +1,10 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import {
-  useEffect,
-  useMemo,
-  useOptimistic,
-  useReducer,
-  useState,
-  useSyncExternalStore,
-  useTransition,
-} from "react"
-
-import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
+import { useEffect, useMemo, useReducer, useSyncExternalStore } from "react"
 
 import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
-import type { Scoring } from "@vereinsheim/shot-core/metrics"
-import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { EveningList } from "@vereinsheim/shot-ui/list/EveningList"
 import { ListControls } from "@vereinsheim/shot-ui/list/ListControls"
@@ -32,6 +20,7 @@ import {
 
 import { NoCards } from "@/components/shell/NoCards"
 import { Page } from "@/components/shell/Page"
+import { ScoringControl } from "@/components/shell/ScoringControl"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
@@ -84,10 +73,6 @@ export function ListScreen({
   const router = useRouter()
   const { timeZone } = context
   const route: ListRoute = { page: "cards", query, evening: null }
-  // die Wertung der Familie: gezeigt, sobald gewählt; die Seite vom Server folgt nach dem Speichern
-  const [, startSaving] = useTransition()
-  const [scoring, showScoring] = useOptimistic<Scoring>(list?.model.scoring ?? "decimal")
-  const [scoringError, setScoringError] = useState<string | null>(null)
   const marks = useMemo(() => marksById(list?.marks ?? {}), [list?.marks])
   // wohin man kam, aus der Adresse im Browser (sie ist maßgeblich, auch nach Zurück): der Abend aus dem Anker (den sieht
   // der Server nicht) und die Scheibe aus `pick`
@@ -137,14 +122,6 @@ export function ListScreen({
     router.push(urlFromRoute({ page: "cards", query: next, evening: null }))
   // eine Scheibe öffnet in ihrer Wertung
   const cardRoute = (id: string) => openCard(route, id)
-  const changeScoring = (next: Scoring) => {
-    setScoringError(null)
-    startSaving(async () => {
-      showScoring(next)
-      const result = await setFamilyScoring(option.value, next)
-      if ("error" in result) setScoringError(getErrorMessage(result) ?? null)
-    })
-  }
 
   return (
     <Page>
@@ -153,24 +130,23 @@ export function ListScreen({
           familyLabel={option.label}
           cards={model.cards}
           controls={
-            <div className="grid gap-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <ListControls
-                  query={query}
-                  family={option.value}
-                  families={families}
-                  flags={model.flags}
-                  rangeLabel={model.range?.label ?? null}
-                  onQuery={onQuery}
-                  progress={progressFromList(route)}
-                />
-                <ScoringSwitch scoring={scoring} onChange={changeScoring} />
-              </div>
-              {scoringError && (
-                <p role="alert" className="text-sm text-destructive">
-                  {scoringError}
-                </p>
-              )}
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <ListControls
+                query={query}
+                family={option.value}
+                families={families}
+                flags={model.flags}
+                rangeLabel={model.range?.label ?? null}
+                onQuery={onQuery}
+                progress={progressFromList(route)}
+              />
+              {/* die fette Spalte gehört der Scheibe; die Familie stellt Ø und Abstand um */}
+              <ScoringControl
+                key={option.value}
+                scoring={model.scoring}
+                label="Wertung für Ø und Abstand"
+                save={(scoring) => setFamilyScoring(option.value, scoring)}
+              />
             </div>
           }
         />

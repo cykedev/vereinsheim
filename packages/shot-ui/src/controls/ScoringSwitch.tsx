@@ -10,6 +10,8 @@ export interface ScoringSwitchProps {
   scoring: Scoring
   /** amtliche Wertung der Scheibe, wenn bekannt; bleibt als Hinweis sichtbar */
   official?: Scoring
+  /** Name der Wahl; „Wertung“, wo nicht nur ein Teil der Seite umgestellt wird */
+  label?: string
   onChange: (scoring: Scoring) => void
   className?: string
 }
@@ -18,11 +20,17 @@ export interface ScoringSwitchProps {
  * Wertung umschalten (spiegel-ui-design „Ganze Ringe oder Zehntel, jederzeit“): Zehntel oder ganze Ringe,
  * daneben die amtliche Wertung als Hinweis, auch wenn umgeschaltet ist.
  */
-export function ScoringSwitch({ scoring, official, onChange, className }: ScoringSwitchProps) {
+export function ScoringSwitch({
+  scoring,
+  official,
+  label = "Wertung",
+  onChange,
+  className,
+}: ScoringSwitchProps) {
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       <Segmented
-        label="Wertung"
+        label={label}
         value={scoring}
         options={[
           { value: "decimal", label: LABELS.decimal },

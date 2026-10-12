@@ -122,7 +122,8 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
     [dispatch, jumpTo, state.chosen]
   )
 
-  // kein Schalter der Wertung (U2, D4): der Fortschritt zeigt die Wertung des Geräts, sie steht in Profil
+  // kein Schalter der Wertung: der Fortschritt zeigt die Wertung des Labors, sie steht in Profil (die App hat hier den
+  // Schalter der Familie)
   const result = <PeriodResult model={model} timeZone={TZ} onHelp={onHelp} />
   const familyLabel = FAMILIES.find((f) => f.value === state.family)?.label ?? ""
   // Training nur aus Probe zählt nur mit dem Schalter (L2, D8): sonst steht es in der Liste, aber nicht im Ergebnis

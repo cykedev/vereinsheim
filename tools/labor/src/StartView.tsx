@@ -42,7 +42,7 @@ const labelOf = (family: string) => FAMILIES.find((f) => f.value === family)?.la
 
 export interface StartViewProps {
   header: Omit<LaborPanelProps, "children" | "hint" | "address">
-  /** Wertung des Geräts (Start hat keine eigene) */
+  /** Wertung des Labors (Profil), die jeder Familie: das Labor kennt keine Datenbank */
   scoring: Scoring
   /** die zuletzt gewählte Familie, für die Form */
   family: string

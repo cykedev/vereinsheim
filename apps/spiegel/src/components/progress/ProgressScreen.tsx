@@ -1,15 +1,12 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useMemo, useOptimistic, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 
-import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
-import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { markShots, type CardMark, type MarkShot } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
-import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
@@ -44,6 +41,7 @@ import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { useHelp } from "@/components/shell/HelpContext"
 import { Page } from "@/components/shell/Page"
+import { ScoringControl } from "@/components/shell/ScoringControl"
 import { cardMarksAction } from "@/lib/marks-actions"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
@@ -89,18 +87,6 @@ export function ProgressScreen({
   const help = useHelp()
   const onHelp = useCallback((id: string | null) => id && help(id), [help])
   const { timeZone, named } = context
-  // die Wertung der Familie: gezeigt, sobald gewählt; das Modell vom Server folgt nach dem Speichern
-  const [, startSaving] = useTransition()
-  const [scoring, showScoring] = useOptimistic<Scoring>(state.scoring)
-  const [scoringError, setScoringError] = useState<string | null>(null)
-  const changeScoring = (next: Scoring) => {
-    setScoringError(null)
-    startSaving(async () => {
-      showScoring(next)
-      const result = await setFamilyScoring(state.family, next)
-      if ("error" in result) setScoringError(getErrorMessage(result) ?? null)
-    })
-  }
   const active = useActiveSection(PERIOD_IDS)
   const { pill, jumpTo, back, close } = useReturnJump()
   const [explain, setExplain] = useState(false)
@@ -208,14 +194,11 @@ export function ProgressScreen({
       timeZone={timeZone}
       onHelp={onHelp}
       scoring={
-        <div className="grid gap-1.5">
-          <ScoringSwitch scoring={scoring} onChange={changeScoring} />
-          {scoringError && (
-            <p role="alert" className="text-sm text-destructive">
-              {scoringError}
-            </p>
-          )}
-        </div>
+        <ScoringControl
+          key={state.family}
+          scoring={state.scoring}
+          save={(scoring) => setFamilyScoring(state.family, scoring)}
+        />
       }
     />
   )

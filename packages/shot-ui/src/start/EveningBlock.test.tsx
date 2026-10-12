@@ -14,13 +14,13 @@ const at = (day: number, hour: number) => Date.UTC(2026, 8, day, hour - 2)
 /** Scheiben mit Schüssen: das Modell bekommt ihre Projektion, die kleinen Scheiben ihre Lagen */
 type Raw = { card: PeriodCard; family: string }
 const lp = (card: PeriodCard): Raw => ({ card, family: "lp-freihand" })
-const render = (cards: Raw[]) => {
+const render = (cards: Raw[], scoring: "decimal" | "rings" = "decimal") => {
   const model = startModel({
     cards: cards.map((c) => ({ ...c, card: projected(c.card) })),
     timeZone: TZ,
     nowMs: NOW,
     named: [],
-    scoringOf: () => "decimal",
+    scoringOf: () => scoring,
     family: null,
   })
   const block = model.blocks[0]
@@ -75,6 +75,9 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect([...order].sort((a, b) => a - b)).toEqual(order)
     expect(text(html)).toContain("0,20 über dem Schnitt der 5 Scheiben davor.")
     expect(html).toMatch(/data-evening-mean[^>]*>9,20</)
+    // jeder Block rechnet in der Wertung seiner Familie und nennt sie (Review, 12. Oktober 2026)
+    expect(text(html)).toContain("9,20 Ø je Schuss in Zehnteln")
+    expect(text(render(CARDS, "rings"))).toContain("Ø je Schuss in ganzen Ringen")
     // der Bezug statt des Abstands, der schon im Satz steht (U5, D2)
     expect(text(html)).toContain("Schnitt der 5 Scheiben davor: 9,00")
     expect(text(html)).not.toContain("+0,20 zum Schnitt")

@@ -1,16 +1,7 @@
 "use client"
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useState,
-  useSyncExternalStore,
-  useTransition,
-} from "react"
+import { useCallback, useEffect, useMemo, useReducer, useState, useSyncExternalStore } from "react"
 
-import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import type { MetricShot, Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import {
@@ -20,7 +11,6 @@ import {
 } from "@vereinsheim/shot-ui/analysis/AnalysisPanel"
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
 import { keyObservations, observations } from "@vereinsheim/shot-ui/analysis/observations"
-import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
 import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { CardPage } from "@vereinsheim/shot-ui/layout/CardPage"
 import { NoShots } from "@vereinsheim/shot-ui/layout/NoShots"
@@ -57,8 +47,9 @@ import {
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { Page } from "@/components/shell/Page"
+import { ScoringControl } from "@/components/shell/ScoringControl"
 import { useHelp } from "@/components/shell/HelpContext"
-import { nextCardAddress } from "@/lib/card-address"
+import { addressScoring, nextCardAddress } from "@/lib/card-address"
 import type { PageCard } from "@/lib/db/reads"
 import { setCardScoring } from "@/lib/scoring-actions"
 import { rememberTargetDisplay, savedTargetDisplay } from "@/lib/target-display-client"
@@ -139,8 +130,6 @@ export function CardScreen({
   const [state, dispatch] = useReducer(viewReducer, undefined, () =>
     stateFromRoute(initialRoute, shots, display, card.scoring)
   )
-  const [, startSaving] = useTransition()
-  const [scoringError, setScoringError] = useState<string | null>(null)
   const [others, setOthers] = useState<Others>(display.others)
   // Nach Zurück und Vor bringt Next die Seite mit der Darstellung ihres ersten Besuchs (aus dem Cache, ohne Server).
   // Es gilt die gemerkte aus dem Cookie im Browser; beim Hydrieren die vom Server, damit das HTML passt (Review)
@@ -185,7 +174,7 @@ export function CardScreen({
     ...initialRoute,
     selection: state.selection === "all" ? null : state.selection,
     shot: state.chosen ? (shotLabels(shots)[state.chosen.index] ?? null) : null,
-    scoring: state.scoring === card.scoring ? null : state.scoring,
+    scoring: addressScoring(state.scoring, card.scoring),
     anchor: chosenTab ? { section: "analysis", tab: chosenTab } : null,
   }
   const address = urlFromRoute(route)
@@ -252,26 +241,15 @@ export function CardScreen({
     setChosenTab(next)
     window.history.replaceState(null, "", hashFor("analysis", next))
   }, [])
-  // die Wertung der Scheibe: gezeigt sofort, gespeichert an der Scheibe (Liste und Start zeigen sie danach vorn)
-  const changeScoring = (scoring: Scoring) => {
-    dispatch({ type: "setScoring", scoring })
-    setScoringError(null)
-    startSaving(async () => {
-      const result = await setCardScoring(card.id, scoring)
-      if ("error" in result) setScoringError(getErrorMessage(result) ?? null)
-    })
-  }
-
   const empty = shots.length === 0
+  // die Wertung der Scheibe: gezeigt sofort, gespeichert an der Scheibe (Liste und Start zeigen sie danach vorn)
   const scoringSwitch = (
-    <div className="grid gap-1.5">
-      <ScoringSwitch scoring={state.scoring} official={card.official} onChange={changeScoring} />
-      {scoringError && (
-        <p role="alert" className="text-sm text-destructive">
-          {scoringError}
-        </p>
-      )}
-    </div>
+    <ScoringControl
+      scoring={state.scoring}
+      official={card.official}
+      save={(scoring) => setCardScoring(card.id, scoring)}
+      onShow={(scoring) => dispatch({ type: "setScoring", scoring })}
+    />
   )
   // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung
   const result = <CardResult shots={shots} state={state} scoring={scoringSwitch} />

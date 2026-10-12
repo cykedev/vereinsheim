@@ -10,7 +10,7 @@ import { verdictText } from "./sentence"
 export interface PeriodResultProps {
   model: Pick<PeriodModel, "summary" | "comparison" | "compareRange" | "compareShared">
   timeZone: string
-  /** Umschalter ganze Ringe/Zehntel; im Fortschritt seit U2 keiner, er zeigt die Wertung des Geräts (D4) */
+  /** Umschalter ganze Ringe/Zehntel; in der App die Wertung der Familie (gespeichert), im Labor keiner */
   scoring?: ReactNode
   onHelp?: (id: string) => void
   className?: string

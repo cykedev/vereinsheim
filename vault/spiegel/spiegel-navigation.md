@@ -311,7 +311,7 @@ Dev-Datenbank (`pnpm --filter spiegel seed:own`):
   öffnet jede Seite über `useHelp`.
 - **Seiten:** Start (`/`), Scheiben (`/cards`, Filter in der Adresse, die Familie ohne Angabe die der neuesten Scheibe),
   Scheibe (`/cards/<id>`: Wertung, Serie und Schuss aus der Adresse und dorthin zurück, Reiter im Anker, Rückweg und
-  Blättern im Kontext der Herkunft vom Server). Profil mit Darstellung, Wertung des Geräts und Abmelden. Scannen und
+  Blättern im Kontext der Herkunft vom Server). Profil mit Darstellung, Wertung des Geräts (entfallen am 12. Oktober 2026) und Abmelden. Scannen und
   Offen sind Platzhalter; Fortschritt seit N7, zweiter Teil (unten).
 - **Wertung des Geräts** als Cookie (`spiegel-scoring`), weil Start und Liste auf dem Server rendern; die Seite einer
   Scheibe schreibt sie beim Umschalten mit. _Entfallen am 12. Oktober 2026 (unten)._
@@ -386,7 +386,11 @@ aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-lan
 - **Wertung einer Familie** für die Schnitte: gespeichert, sonst die häufigste ihrer Scheiben, bei Gleichstand Zehntel.
   In ihr rechnen in der Liste Ø und Abstand, auf Start jeder Block (Ø des Abends, Schnitt, Band, Verlauf, Rekorde) und
   die Form, der Fortschritt.
-- **Vorn in Liste und Start** steht die Wertung der Scheibe, fett, darunter „Fett: Wertung der Scheibe.“
+- **Vorn in Liste und Start** steht die Wertung der Scheibe; in der Liste fett, mit „Fett: Wertung der Scheibe.“ unter
+  dem Monat. Die große Zahl auf Start nennt die Wertung ihres Blocks („Ø je Schuss in Zehnteln“), weil Blöcke
+  verschiedener Familien verschieden rechnen können.
+- **Ein Tippen auf die schon gezeigte Wertung speichert nichts** (Review): sonst stünde die Vorgabe als Wahl fest. Einen
+  Weg zurück zur Vorgabe gibt es nicht.
 - **Umschalten speichert:**
   - Auf der Seite einer Scheibe die Wertung der Scheibe. Liste und Start zeigen sie danach vorn.
   - In der Liste (neben den Filtern) und im Fortschritt (Ergebnis-Box) die Wertung der Familie; danach rechnet die Seite

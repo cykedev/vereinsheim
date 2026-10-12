@@ -25,7 +25,7 @@ export interface ListViewProps {
   header: Omit<LaborPanelProps, "children" | "hint" | "address">
   query: ListQuery
   onQuery: (query: ListQuery) => void
-  /** Wertung des Geräts (die Liste hat keine eigene) */
+  /** Wertung des Labors (Profil): Ø und Abstand; vorn die amtliche der Scheibe */
   scoring: Scoring
   /** der Abend, zu dem man kam (Anker), und die Scheibe, von der man kam (`pick`): markiert */
   evening: string | null

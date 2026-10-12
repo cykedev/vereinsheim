@@ -37,7 +37,8 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
 
 ## Regeln
 
-- **Schichten** (`src/lib/db/`): `raw.ts` legt Rohdaten ab, `cards.ts` schreibt Scheiben, Revisionen und Projektion,
+- **Schichten** (`src/lib/db/`): `raw.ts` legt Rohdaten ab, `cards.ts` schreibt Scheiben, Revisionen und Projektion
+  (dazu die gewählten Wertungen, auch `FamilyScoring`),
   `reads.ts` liest für die Ansichten. Seiten und Server Actions rufen nur diese Funktionen, nie Prisma direkt auf Schüsse.
 - **Übersichten lesen keine Schüsse** (ADR-031, seit SP-1.8): Start, Liste und das Blättern nehmen `ownerCards` (Scheibe
   mit Projektion, Familie, Scheibenbild) und rechnen die Modelle aus `shot-ui` **auf dem Server**. An den Browser gehen
@@ -74,15 +75,18 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
 - **Wertung je Scheibe und je Familie, keine des Geräts** (User, 12. Oktober 2026, `plans/2026-10-12-spiegel-wertung.md`):
   - Die Regel ist eine reine Funktion (`src/lib/scoring.ts`). Die **Scheibe**: gewählt (`Card.scoringChoice`), sonst
     Wettkampf in der amtlichen der Disziplin, Training wie am Stand (`Card.standScoring`, die häufigste Anzeigeart der
-    Schüsse wie am Ausdruck, `writeRevision` setzt sie), ohne beides Zehntel. Die **Familie**: gespeichert
+    Schüsse wie am Ausdruck, `writeRevision` setzt sie bei jedem Stand), ohne beides Zehntel. Anders als die Projektion
+    hat `standScoring` keine Version: Ändert sich die Regel, rechnet erst ein neuer Stand (Brücke, `seed:own`) nach. Die **Familie**: gespeichert
     (`FamilyScoring`), sonst die häufigste ihrer Scheiben, bei Gleichstand Zehntel.
   - Die Zugriffe liefern `OverviewCard.scoring` und `PageCard.scoring`, `familyScorings` die gespeicherten nach Kennung.
     `overview.ts` rechnet jede Familie in ihrer: in der Liste Ø und Abstand, auf Start jeden Block, den Fortschritt.
     Vorn in Liste und Start steht die Wertung der Scheibe.
   - Umschalten speichert über Server Actions (`src/lib/scoring-actions.ts`, nur eigene Scheiben bzw. Familien mit eigenen
     Scheiben, danach `revalidatePath`): auf der Seite einer Scheibe `setCardScoring`, in Liste und Fortschritt
-    `setFamilyScoring`. Die Seite einer Scheibe öffnet in `route.scoring ?? card.scoring`; die Adresse trägt die Wertung
-    nur, solange sie nicht die der Scheibe ist.
+    `setFamilyScoring`. Alle drei über `ScoringControl` (`src/components/shell/`): gezeigt sofort, ein Tippen auf die
+    gezeigte speichert nichts, ein Fehler (auch ein abgelehnter Aufruf, `saveScoring`) steht als Text darunter statt im
+    Error-Boundary. Die Seite einer Scheibe öffnet in `route.scoring ?? card.scoring`; die Adresse trägt die Wertung
+    nur, solange sie nicht die der Scheibe ist (`addressScoring`).
   - Die Art (`Card.kind`) ist bisher überall „training“; sie festzulegen ist ein eigener Punkt ([[spiegel-roadmap]]).
 - **Darstellung der Scheibe gemerkt** (User, 12. Oktober 2026): Ebenen, „übrige blass/aus“ und Ausschnitt (ganze
   Scheibe oder Gruppe) als Cookie

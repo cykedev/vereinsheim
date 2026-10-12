@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { nextCardAddress } from "./card-address"
+import { addressScoring, nextCardAddress } from "./card-address"
 
 const at = (pathname: string, search = "", hash = "") => ({ pathname, search, hash })
 
@@ -35,5 +35,14 @@ describe("nextCardAddress", () => {
         true
       )
     ).toBeNull()
+  })
+})
+
+describe("addressScoring", () => {
+  it("die Wertung steht nur in der Adresse, solange sie nicht die der Scheibe ist", () => {
+    expect(addressScoring("rings", "rings")).toBeNull()
+    expect(addressScoring("decimal", "decimal")).toBeNull()
+    expect(addressScoring("rings", "decimal")).toBe("rings")
+    expect(addressScoring("decimal", "rings")).toBe("decimal")
   })
 })
