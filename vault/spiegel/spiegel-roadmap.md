@@ -224,6 +224,12 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
   (`ThemeProvider`).
 - **Labor-Artifact** zeigt noch nicht die Markierung in der Liste und die Rekorde als Zeilen: neu bauen und unter
   derselben Adresse veröffentlichen (`tools/labor/CLAUDE.md`).
+- **Ausschnitt der Scheibe wird nicht gemerkt** (User, 12. Oktober 2026): ganze Scheibe oder „Auf Gruppe zoomen“.
+  Anders als Ebenen und „übrige blass/aus“ steht der Ausschnitt nicht im Cookie `spiegel-target`; beim Merken der
+  Darstellung war er bewusst ausgenommen („gehört zur einzelnen Scheibe“, `apps/spiegel/CLAUDE.md`). Dazu gehören:
+  - `view` in `TargetDisplay` (`shot-ui/target/display`) aufnehmen, auf der Seite einer Scheibe und im Labor schreiben;
+  - `reset` im Reducer (`shot-ui/view-state`) setzt `view` beim Wechsel der Scheibe auf „target“ und müsste ihn
+    behalten.
 - **Lint für die Pakete:** Nur die drei Apps haben `lint`. `packages/*` (darunter `shot-core`, `shot-ui`) und
   `tools/labor` werden nicht gelintet, die Hook-Regeln von React in `shot-ui` prüft niemand.
 - **Auf einem echten iPhone prüfen** (bisher nur Emulation in Chrome): VoiceOver, sicherer Rand unten, Ziehen am
