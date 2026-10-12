@@ -212,6 +212,13 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
 - **Wertung je Scheibe und je Familie statt des Geräts** (Wunsch des Users vom 12. Oktober 2026): Plan
   `plans/2026-10-12-spiegel-wertung.md` auf Branch `feat/spiegel-wertung`, Aufgabe 1 von 8 erledigt (Regel
   `apps/spiegel/src/lib/scoring.ts`). Ab Aufgabe 2 (Schema) weiter; die Dev-Datenbank setzt der User danach zurück.
+- **Art der Scheibe (Wettkampf oder Training) festlegen und speichern** (User, 12. Oktober 2026): Die Information
+  kommt sonst von nirgendwo. Die Spalte `Card.kind` gibt es, gesetzt wird sie bisher nur von `seed:own` (alle
+  „training“). Gebraucht für die Wertung je Scheibe (`plans/2026-10-12-spiegel-wertung.md`: Wettkampf amtlich, Training
+  wie am Stand), den Filter „Art“ in Liste und Fortschritt und Wettkampf gegen Training (W1–W4). Der User markiert die
+  Scheibe auf ihrer Seite; die Wahl muss neue Lesungen der Brücke überstehen (der Adapter, SP-1.6b, überschreibt sie
+  nicht). Zu klären: ob `Status` der SSMDB2 (RWK, Liga, Heim, Gast, [[meyton-ssmdb2]]) an der Vereinsanlage gefüllt ist
+  und als Vorschlag taugt, und was ohne Wahl gilt.
 - **Speicher im Container** seit der Projektion der Übersichten nicht neu gemessen (Vorgehen in `apps/spiegel/CLAUDE.md`).
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.
