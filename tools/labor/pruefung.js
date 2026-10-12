@@ -3133,15 +3133,19 @@ addEventListener("load", async () => {
       const mixedDay = mixed?.closest("[data-evening]")?.dataset.evening
       await click(mixed, 300)
       const mixedTop = document.getElementById(mixedDay)?.getBoundingClientRect().top ?? -1
+      // der Abend, zu dem man kam, ist markiert, und nur er (12. Oktober 2026)
+      const markedRows = $$("[data-card-row][data-marked]")
       check(
-        "Liste: ein Mischabend nennt die andere Familie, Antippen wechselt sie und zeigt den Abend",
+        "Liste: ein Mischabend nennt die andere Familie, Antippen wechselt sie, zeigt und markiert den Abend",
         !!mixedDay &&
           Li().query.family === "lp-freihand" &&
           addr() === "/cards?family=lp-freihand" &&
           !!$(`[data-evening="${mixedDay}"]`) &&
           mixedTop >= 0 &&
-          mixedTop < window.innerHeight,
-        `${mixedDay} · ${addr()} · ${Math.round(mixedTop)}`
+          mixedTop < window.innerHeight &&
+          markedRows.length > 0 &&
+          markedRows.every((r) => r.closest("[data-evening]")?.dataset.evening === mixedDay),
+        `${mixedDay} · ${addr()} · ${Math.round(mixedTop)} · ${markedRows.length} markiert`
       )
       await click(button("Luftgewehr", $("[data-list-controls]")), 300)
       // Art: nur Wettkämpfe; öffnen und zurück behält die Art (Review)
@@ -3155,16 +3159,27 @@ addEventListener("load", async () => {
         `${kinds.length} · ${addr()}`
       )
       const competitionAddress = addr()
-      await click($(`[data-card-row="${Li().model.evenings[1].rows[0].id}"]`), 500)
+      const competitionId = Li().model.evenings[1].rows[0].id
+      await click($(`[data-card-row="${competitionId}"]`), 500)
       await click(link("Zurück zu „Scheiben“"), 500)
+      // die Scheibe, von der man kam, ist markiert und steht in der Adresse (12. Oktober 2026)
+      const backRow = $(`[data-card-row="${competitionId}"]`)
       check(
-        "Liste: „Zurück“ aus einer gefilterten Liste behält die Art",
+        "Liste: „Zurück“ aus einer gefilterten Liste behält die Art und markiert die Scheibe",
         !!$("[data-card-list-page]") &&
-          addr() === competitionAddress &&
-          Li().query.kind === "competition",
+          addr() === `${competitionAddress}&pick=${competitionId}` &&
+          Li().query.kind === "competition" &&
+          backRow?.hasAttribute("data-marked") &&
+          backRow?.getAttribute("aria-current") === "true" &&
+          $$("[data-card-row][data-marked]").length === 1,
         addr()
       )
       await click(button("Alle", $("[data-list-controls]")), 300)
+      check(
+        "Liste: ein Filter nimmt die Markierung weg",
+        $$("[data-card-row][data-marked]").length === 0 && !addr().includes("pick="),
+        addr()
+      )
       // Öffnen und zurück: Filter und Scrollstelle bleiben
       // ein Abend weit unten, damit die Seite scrollen muss (das Fenster der Prüfung ist über 2000 px hoch)
       const openId = Li().model.evenings[40].rows[0].id
@@ -3183,7 +3198,7 @@ addEventListener("load", async () => {
       check(
         "Liste: „Zurück“ stellt Filter und Scrollstelle wieder her",
         !!$("[data-card-list-page]") &&
-          addr() === listAddress &&
+          addr() === `${listAddress}&pick=${openId}` &&
           listY > 0 &&
           near(window.scrollY, listY, 5),
         `${addr()} · ${Math.round(window.scrollY)} / ${Math.round(listY)}`

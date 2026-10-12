@@ -34,8 +34,10 @@ export function AppShell({ isAdmin, children }: { isAdmin: boolean; children: Re
 
   // die letzte Adresse je Bereich: beim Rendern nachgeführt (Zustand aus der vorigen Darstellung, React-Muster)
   const [memory, setMemory] = useState<AreaMemory>({ cards: null, progress: null })
-  if (route.page === "cards" && memoryKey(route) !== memoryKey(memory.cards))
-    setMemory({ ...memory, cards: { ...route, evening: null } })
+  // die Liste ohne Abend und ohne die markierte Scheibe (`pick`): die Markierung gilt nur für den Weg, der sie setzt
+  const cards =
+    route.page === "cards" ? { page: "cards" as const, query: route.query, evening: null } : null
+  if (cards && memoryKey(cards) !== memoryKey(memory.cards)) setMemory({ ...memory, cards })
   if (route.page === "progress" && memoryKey(route) !== memoryKey(memory.progress))
     setMemory({ ...memory, progress: { ...route, section: null } })
 

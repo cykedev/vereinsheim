@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useReducer, useSyncExternalStore } from "react"
 
 import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
@@ -12,6 +12,7 @@ import { ListControls } from "@vereinsheim/shot-ui/list/ListControls"
 import { ListHeader } from "@vereinsheim/shot-ui/list/ListHeader"
 import { listOnEvening, openCard, progressFromList } from "@vereinsheim/shot-ui/nav/navigate"
 import {
+  isCardId,
   routeFromUrl,
   urlFromRoute,
   type ListQuery,
@@ -25,6 +26,28 @@ import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
 
 /**
+ * auf Änderungen der Adresse hören: der Anker (`hashchange`), Zurück und Vor (`popstate`) und, wo es sie gibt, jede
+ * Navigation über die Navigation API (auch `pushState` mit nur neuem Anker, Review)
+ */
+function subscribeLocation(onChange: () => void) {
+  // die Navigation API meldet synchron, auch aus dem `useInsertionEffect`, in dem Next die Adresse schreibt; dort darf
+  // React nicht neu zeichnen, deshalb erst danach
+  const later = () => queueMicrotask(onChange)
+  window.addEventListener("hashchange", onChange)
+  window.addEventListener("popstate", onChange)
+  const navigation = (window as { navigation?: EventTarget }).navigation
+  navigation?.addEventListener("currententrychange", later)
+  return () => {
+    window.removeEventListener("hashchange", onChange)
+    window.removeEventListener("popstate", onChange)
+    navigation?.removeEventListener("currententrychange", later)
+  }
+}
+
+/** solange die Liste noch steht, die Adresse aber schon die nächste Seite trägt, gilt sie nicht */
+const onList = () => window.location.pathname === "/cards"
+
+/**
  * Die Scheiben nach Abend (N2, N7): Filter aus der Adresse (`/cards?family=…&range=…#Abend`), das Modell hat die Seite
  * auf dem Server gerechnet (`cardListModel` aus den Projektionen), die Bausteine aus `shot-ui/list`. Ein Filter schreibt
  * die Adresse neu (Zurück findet ihn wieder), und die Seite rechnet neu.
@@ -32,15 +55,15 @@ import type { FamilyOption } from "@/lib/pages"
 export function ListScreen({
   list,
   query,
-  pick,
+  serverSearch,
   families,
   context,
 }: {
   /** null ohne Scheiben */
   list: { model: CardListModel; marks: Record<string, CardMark[]>; option: FamilyOption } | null
   query: ListQuery
-  /** die Scheibe, von der man kam: markiert und in die Mitte geholt */
-  pick: string | null
+  /** die Abfrage der Adresse, wie der Server sie sah (für das erste Bild) */
+  serverSearch: string
   families: FamilyOption[]
   context: PageContext
 }) {
@@ -48,25 +71,42 @@ export function ListScreen({
   const { timeZone, scoring } = context
   const route: ListRoute = { page: "cards", query, evening: null }
   const marks = useMemo(() => marksById(list?.marks ?? {}), [list?.marks])
-  // der Abend aus dem Anker (von Start, vom Hinweis auf andere Familien): Der Server sieht den Anker nicht, bis zum
-  // ersten Effekt gilt keiner, damit das gezeichnete HTML beim Hydrieren passt
-  const [evening, setEvening] = useState<string | null>(null)
-  useEffect(() => {
-    const read = () => {
-      const route = routeFromUrl("/cards", "", window.location.hash)
-      setEvening(route.page === "cards" ? route.evening : null)
-    }
-    read()
-    window.addEventListener("hashchange", read)
-    return () => window.removeEventListener("hashchange", read)
-  }, [list?.model])
-  // die Scheibe, von der man kam, in die Mitte
+  // wohin man kam, aus der Adresse im Browser (sie ist maßgeblich, auch nach Zurück): der Abend aus dem Anker (den sieht
+  // der Server nicht) und die Scheibe aus `pick`
+  // nach jeder neuen Seite vom Server die Adresse noch einmal lesen: Beim Zeichnen der neuen Seite steht sie noch nicht,
+  // und ohne Navigation API meldet das kein Ereignis
+  const [, reread] = useReducer((n: number) => n + 1, 0)
+  useEffect(() => reread(), [list?.model, serverSearch])
+  const hash = useSyncExternalStore(
+    subscribeLocation,
+    () => (onList() ? window.location.hash : ""),
+    () => ""
+  )
+  const evening = useMemo(() => {
+    const route = routeFromUrl("/cards", "", hash)
+    return route.page === "cards" ? route.evening : null
+  }, [hash])
+  // `pick` aus `location`, nicht aus `useSearchParams`: Nach Zurück im Browser stellt Next die gespeicherte Seite mit
+  // ihrer alten Abfrage her, die Adresse trägt aber die Scheibe, von der man kam. Beim Hydrieren gilt die Abfrage vom
+  // Server, damit das HTML passt
+  const search = useSyncExternalStore(
+    subscribeLocation,
+    () => (onList() ? window.location.search : serverSearch),
+    () => serverSearch
+  )
+  const pick = useMemo(() => {
+    const picked = new URLSearchParams(search).get("pick")
+    return picked && isCardId(picked) ? picked : null
+  }, [search])
+  // die Scheibe, von der man kam, ins Bild, wenn sie es nicht schon ist (sonst bleibt die Stelle des Browsers)
   useEffect(() => {
     if (!pick) return
-    document
-      .querySelector(`[data-card-row="${CSS.escape(pick)}"]`)
-      ?.scrollIntoView({ block: "center" })
-  }, [pick, list?.model])
+    const row = document.querySelector(`[data-card-row="${CSS.escape(pick)}"]`)
+    const rect = row?.getBoundingClientRect()
+    if (row && rect && (rect.top < 0 || rect.bottom > window.innerHeight))
+      row.scrollIntoView({ block: "center" })
+  }, [pick])
+
   // öffnen in der Wertung, die die Zeile vorn zeigt (die amtliche, sonst die des Geräts)
   const resultScoring = useMemo(
     () =>
@@ -115,6 +155,10 @@ export function ListScreen({
           otherFamilyRoute={(other, day) => listOnEvening(query, other, day)}
           evening={evening}
           pick={pick}
+          onOpen={(id) =>
+            // vor dem Öffnen die Scheibe in die Adresse der Liste: Zurück im Browser markiert dann sie (Review)
+            window.history.replaceState(null, "", urlFromRoute({ ...route, pick: id }))
+          }
         />
       </section>
     </Page>

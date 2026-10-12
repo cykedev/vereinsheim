@@ -55,6 +55,11 @@ export interface EveningListProps {
   evening?: string | null
   /** die Scheibe, von der man kam (`pick`): ihre Zeile ist markiert und `aria-current` */
   pick?: string | null
+  /**
+   * kurz bevor eine Zeile ihre Scheibe öffnet (Klick auf Zeile oder kleine Scheibe, ohne Strg und Co.): Die App schreibt
+   * damit `pick` in die Adresse der Liste, dann markiert auch das Zurück des Browsers die Scheibe, von der man kommt
+   */
+  onOpen?: (id: string) => void
   className?: string
 }
 
@@ -74,6 +79,7 @@ export function EveningList({
   otherFamilyRoute,
   evening: markedEvening = null,
   pick = null,
+  onOpen,
   className,
 }: EveningListProps) {
   const go = useRouteNavigate()
@@ -191,12 +197,14 @@ export function EveningList({
                               // Zeile stehen (einen neuen Tab öffnet der Link, nicht die Zeile)
                               if ((event.target as Element).closest("a") || !shouldIntercept(event))
                                 return
+                              onOpen?.(row.id)
                               go(cardRoute(row.id))
                             }}
                             className={cn(
-                              "cursor-pointer hover:bg-surface-2",
-                              // wohin man kam, wie die Wahl im Fortschritt (Rückmeldung des Users, 12. Oktober 2026)
-                              marked && "bg-accent-wash"
+                              "cursor-pointer",
+                              // wohin man kam, wie die Wahl im Fortschritt (Rückmeldung des Users, 12. Oktober 2026);
+                              // das Überfahren nimmt die Markierung nicht weg (Review)
+                              marked ? "bg-accent-wash" : "hover:bg-surface-2"
                             )}
                           >
                             {/* jede Zeile hat ihre Datumszelle (das Hervorheben bleibt ein Rechteck), das Datum
@@ -215,6 +223,11 @@ export function EveningList({
                               <RouteLink
                                 route={cardRoute(row.id)}
                                 aria-label={rowName(row, evening.day, time)}
+                                // die Zeile kann keinen Fokus nehmen, der Link schon: hier wird „aktuell“ angesagt
+                                aria-current={row.id === pick ? "true" : undefined}
+                                onClick={(event) => {
+                                  if (shouldIntercept(event)) onOpen?.(row.id)
+                                }}
                                 className="block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-ring"
                               >
                                 {placed.length ? (

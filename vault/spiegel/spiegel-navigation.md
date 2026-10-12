@@ -349,8 +349,15 @@ Wahl (`bg-accent-wash`):
   - Gesetzt vom Rückweg „← Scheiben“ aus einer Scheibe und von „Alle in Scheiben zeigen“ mit einer Wahl im Fortschritt.
   - Die Zeile ist markiert, trägt `aria-current` und steht in der Mitte des Fensters.
   - Ein Filter, „Im Fortschritt zeigen“ und der Wechsel der Bereiche lassen `pick` fallen.
+  - Wer eine Scheibe aus der Liste öffnet, schreibt sie vorher als `pick` in die Adresse der Liste (`replaceState`):
+    Zurück im Browser markiert dann sie.
   - Damit ist Entscheidung 12 („die neue Scheibe ist dort markiert“) für den Rückweg schon da; der Scan setzt `pick` mit
     SP-1.7.
+- **In der App aus `location`** (Review): Anker und `pick` liest die Hülle über `useSyncExternalStore` aus der
+  Adresse im Browser, beim Hydrieren gilt die Abfrage vom Server. `useSearchParams` reicht nicht: Nach Zurück stellt Next
+  die gespeicherte Seite mit ihrer alten Abfrage her. Die Navigation API meldet einen Wechsel synchron, auch aus dem
+  `useInsertionEffect`, in dem Next die Adresse schreibt; dort darf React nicht neu zeichnen („useInsertionEffect must
+  not schedule updates“), deshalb erst im nächsten Microtask.
 
 ## Labor näher an der App (9. Oktober 2026)
 

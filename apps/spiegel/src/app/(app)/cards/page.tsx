@@ -19,11 +19,19 @@ export default async function CardsRoute({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const session = await requireSession()
-  const route = routeFromUrl("/cards", searchOf(await searchParams), "")
+  const search = searchOf(await searchParams)
+  const route = routeFromUrl("/cards", search, "")
   const query = route.page === "cards" ? route.query : DEFAULT_LIST
   const context = await pageContext(session.user.id)
   const { list, families } = await listPageData(db, session.user.id, query, context)
-  // eine markierte Scheibe (Rückweg aus ihr, „Alle in Scheiben zeigen“); den Abend aus dem Anker liest die Hülle
-  const pick = route.page === "cards" ? (route.pick ?? null) : null
-  return <ListScreen list={list} query={query} pick={pick} families={families} context={context} />
+  // was markiert ist (Abend aus dem Anker, Scheibe aus `pick`), liest die Hülle aus der Adresse
+  return (
+    <ListScreen
+      list={list}
+      query={query}
+      serverSearch={search}
+      families={families}
+      context={context}
+    />
+  )
 }

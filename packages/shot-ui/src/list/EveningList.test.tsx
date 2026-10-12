@@ -205,9 +205,13 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
       { id: "b", marked: true, current: false },
       { id: "d", marked: false, current: false },
     ])
-    expect(tr(render("decimal", INPUT, { pick: "d" })).filter((r) => r.marked)).toEqual([
-      { id: "d", marked: true, current: true },
+    // a teilt den Abend mit b: nur a ist markiert, nicht der ganze Abend (Review)
+    expect(tr(render("decimal", INPUT, { pick: "a" })).filter((r) => r.marked)).toEqual([
+      { id: "a", marked: true, current: true },
     ])
+    const picked = render("decimal", INPUT, { pick: "a" })
+    expect(picked).toMatch(/<a href="\/cards\/a[^"]*"[^>]*aria-current="true"/)
+    expect(picked).not.toMatch(/data-marked[^>]*class="[^"]*hover:bg-surface-2/)
     expect(tr(render()).some((r) => r.marked || r.current)).toBe(false)
   })
 

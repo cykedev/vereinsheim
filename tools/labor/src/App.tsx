@@ -151,15 +151,7 @@ export function App({ commit }: { commit: string }) {
     }
   }, [])
 
-  const listRoute = useMemo(
-    () => ({
-      page: "cards" as const,
-      query: list,
-      evening: null,
-      ...(listMark.pick ? { pick: listMark.pick } : {}),
-    }),
-    [list, listMark.pick]
-  )
+  const listRoute = useMemo(() => ({ page: "cards" as const, query: list, evening: null }), [list])
   const progressHere = useMemo(() => progressRoute(period, null), [period])
   const view: LaborView = mode === "card" && !opened ? "samples" : "app"
   // die Adresse der gezeigten Seite der App
@@ -222,15 +214,15 @@ export function App({ commit }: { commit: string }) {
       const pick = next.pick ?? null
       // wohin man kommt, ist markiert: der Abend aus dem Anker, die Scheibe aus `pick` (12. Oktober 2026)
       setListMark({ evening, pick })
-      requestAnimationFrame(() =>
-        pick
-          ? document
-              .querySelector(`[data-card-row="${CSS.escape(pick)}"]`)
-              ?.scrollIntoView({ block: "center" })
-          : evening
-            ? document.getElementById(evening)?.scrollIntoView({ block: "start" })
-            : scrollTo(0, y)
-      )
+      requestAnimationFrame(() => {
+        if (evening) document.getElementById(evening)?.scrollIntoView({ block: "start" })
+        else scrollTo(0, y)
+        // die Scheibe, von der man kam, ins Bild, wenn sie es nicht schon ist (wie in der App)
+        const row = pick ? document.querySelector(`[data-card-row="${CSS.escape(pick)}"]`) : null
+        const rect = row?.getBoundingClientRect()
+        if (row && rect && (rect.top < 0 || rect.bottom > innerHeight))
+          row.scrollIntoView({ block: "center" })
+      })
       return
     }
     if (next.page === "progress") {
