@@ -104,6 +104,25 @@ describe("writeRevision", () => {
     expect(await standOf(first.cardId)).toBeNull()
   })
 
+  it("die gewählte Art übersteht einen neuen Stand; der Stand schreibt nur die Art der Quelle", async () => {
+    const [input] = season(1, 1170)
+    const { cardId } = await writeRevision(db, {
+      ...input,
+      card: { ...input.card, kind: "training" },
+    })
+    await db.card.update({ where: { id: cardId }, data: { kindChoice: "competition" } })
+    await writeRevision(db, {
+      ...input,
+      card: { ...input.card, kind: "training", flags: ["ausgenommen"] },
+    })
+    const card = await db.card.findUniqueOrThrow({ where: { id: cardId } })
+    expect([card.kind, card.kindChoice, card.flags]).toEqual([
+      "training",
+      "competition",
+      ["ausgenommen"],
+    ])
+  })
+
   it("ein korrigierter Wertungsschuss ergibt Revision 2; die vorige bleibt, unveränderte Schüsse behalten ihren Fingerabdruck", async () => {
     const input = cardWhere(1200, (c) => !probeOnly(c))
     const first = await writeRevision(db, input)

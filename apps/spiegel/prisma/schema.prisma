@@ -314,6 +314,8 @@ model Card {
   startedAt         DateTime        @db.Timestamptz(3)
   endedAt           DateTime?       @db.Timestamptz(3)
   kind              CardKind
+  // vom Schützen auf der Seite der Scheibe gewählt; null: die Art der Quelle (`kind`). Ein Stand schreibt nur `kind`
+  kindChoice        CardKind?
   state             CardState
   // endgültig und mit voller Schusszahl (SF-66); die amtliche Wertung steht an der Disziplin (SF-74)
   complete          Boolean

@@ -205,6 +205,7 @@ CREATE TABLE "Card" (
     "startedAt" TIMESTAMPTZ(3) NOT NULL,
     "endedAt" TIMESTAMPTZ(3),
     "kind" "CardKind" NOT NULL,
+    "kindChoice" "CardKind",
     "state" "CardState" NOT NULL,
     "complete" BOOLEAN NOT NULL,
     "standScoring" "Scoring",
