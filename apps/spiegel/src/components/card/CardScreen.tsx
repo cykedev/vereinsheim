@@ -84,7 +84,11 @@ function stateFromRoute(
   shots: readonly MetricShot[],
   display: TargetDisplay
 ): ViewState {
-  let state = initialViewState({ scoring: route.scoring, layers: display.layers })
+  let state = initialViewState({
+    scoring: route.scoring,
+    layers: display.layers,
+    view: display.view,
+  })
   if (route.selection !== null)
     state = viewReducer(state, { type: "select", series: route.selection })
   const index = route.shot ? shotLabels(shots).indexOf(route.shot) : -1
@@ -111,7 +115,7 @@ export function CardScreen({
   near: { prev: string | null; next: string | null } | null
   paging: boolean
   context: PageContext
-  /** die gemerkte Darstellung der Scheibe (Cookie), Anfang der Ebenen und von „übrige blass/aus“ */
+  /** die gemerkte Darstellung der Scheibe (Cookie), Anfang der Ebenen, von „übrige blass/aus“ und des Ausschnitts */
   display: TargetDisplay
 }) {
   const onHelp = useHelp()
@@ -136,6 +140,7 @@ export function CardScreen({
     setSeen(saved)
     const next = parseTargetDisplay(saved)
     dispatch({ type: "setLayers", layers: next.layers })
+    dispatch({ type: "setView", view: next.view })
     setOthers(next.others)
   }
   const [explain, setExplain] = useState(false)
@@ -181,17 +186,25 @@ export function CardScreen({
   // nie beim Öffnen: sonst überschriebe eine Seite aus dem Cache die zuletzt gewählte (Review)
   const toggle = useCallback(
     (layer: Layer) => {
-      rememberTargetDisplay({ layers: { ...state.layers, [layer]: !state.layers[layer] }, others })
+      const layers = { ...state.layers, [layer]: !state.layers[layer] }
+      rememberTargetDisplay({ layers, others, view: state.view })
       dispatch({ type: "toggle", layer })
     },
-    [state.layers, others]
+    [state.layers, state.view, others]
   )
   const changeOthers = useCallback(
     (next: Others) => {
-      rememberTargetDisplay({ layers: state.layers, others: next })
+      rememberTargetDisplay({ layers: state.layers, others: next, view: state.view })
       setOthers(next)
     },
-    [state.layers]
+    [state.layers, state.view]
+  )
+  const changeView = useCallback(
+    (view: ViewState["view"]) => {
+      rememberTargetDisplay({ layers: state.layers, others, view })
+      dispatch({ type: "setView", view })
+    },
+    [state.layers, others]
   )
   const choose = useCallback(
     (index: number, series: SeriesKey | null) => dispatch({ type: "choose", shot: index, series }),
@@ -295,7 +308,7 @@ export function CardScreen({
                 state={state}
                 others={others}
                 onToggle={toggle}
-                onView={(view) => dispatch({ type: "setView", view })}
+                onView={changeView}
                 onOthers={changeOthers}
                 onHelp={() => onHelp("trefferbild")}
               />

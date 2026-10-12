@@ -99,14 +99,15 @@ describe("Ausschnitt, Ebenen, Wertung", () => {
     expect(viewReducer(start, { type: "setScoring", scoring: "rings" }).scoring).toBe("rings")
   })
 
-  it("neue Scheibe: alles zurück bis auf Wertung und Ebenen", () => {
+  it("neue Scheibe: alles zurück bis auf Wertung, Ebenen und Ausschnitt", () => {
     let s: ViewState = viewReducer(start, { type: "select", series: 2 })
     s = viewReducer(s, { type: "setScoring", scoring: "rings" })
+    s = viewReducer(s, { type: "setView", view: "group" })
     s = viewReducer(s, { type: "toggle", layer: "numbers" })
     s = viewReducer(s, { type: "reset" })
     expect(s.selection).toBe("all")
     expect(s.chosen).toBeNull()
-    expect(s.view).toBe("target")
+    expect(s.view).toBe("group")
     expect(s.scoring).toBe("rings")
     expect(s.layers.numbers).toBe(!start.layers.numbers)
   })

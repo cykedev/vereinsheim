@@ -727,16 +727,20 @@ addEventListener("load", async () => {
     if (inside) await tapAt(inside)
     await click(zoom(), 700)
     await click(inLabor("Luftpistole"), 60)
-    // eine andere Karte derselben Scheibe steht ebenso sofort: aus der Gruppe direkt auf die ganze Scheibe
+    // eine andere Karte derselben Scheibe steht ebenso sofort; der Ausschnitt bleibt gemerkt (User, 12. Oktober
+    // 2026): aus der einen Gruppe direkt auf die der neuen Karte
     await click(zoom(), 700)
     const [, , wGroup] = view()
     await click(inLabor("Ausdruck vom 2. Oktober"), 60)
     const [, , wNext] = view()
+    await wait(700)
+    const [, , wSettled] = view()
     check(
-      "andere Karte derselben Scheibe: sofort im neuen Ausschnitt",
-      wGroup < 171 && near(wNext, 171.05, 1e-6),
-      `${wGroup.toFixed(2)} → ${wNext}`
+      "andere Karte derselben Scheibe: sofort im neuen Ausschnitt, weiter auf der Gruppe",
+      wGroup < 171 && wNext < 171 && Math.abs(wNext - wGroup) > 0.5 && near(wSettled, wNext, 1e-6),
+      `${wGroup.toFixed(2)} → ${wNext.toFixed(2)}, danach ${wSettled.toFixed(2)}`
     )
+    await click(zoom(), 700)
     await click(inLabor("40 Schuss"), 60)
     // die Seite selbst folgt dem Thema, auch unter der Grundformatierung des Artifacts
     const tokenColor = (name) => {

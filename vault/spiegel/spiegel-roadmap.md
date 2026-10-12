@@ -212,8 +212,6 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
 - **Wertung je Scheibe und je Familie statt des Geräts** (Wunsch des Users vom 12. Oktober 2026): Plan
   `plans/2026-10-12-spiegel-wertung.md` auf Branch `feat/spiegel-wertung`, Aufgabe 1 von 8 erledigt (Regel
   `apps/spiegel/src/lib/scoring.ts`). Ab Aufgabe 2 (Schema) weiter; die Dev-Datenbank setzt der User danach zurück.
-- **Labor `pruefen` endet selten mit Exit-Code 1 ohne Bericht**; die Wiederholung ist grün. Die Ausgabe eines solchen
-  Laufs festhalten und die Ursache suchen.
 - **Speicher im Container** seit der Projektion der Übersichten nicht neu gemessen (Vorgehen in `apps/spiegel/CLAUDE.md`).
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.
@@ -221,14 +219,11 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
   (`ThemeProvider`).
 - **Labor-Artifact** zeigt noch nicht die Markierung in der Liste und die Rekorde als Zeilen: neu bauen und unter
   derselben Adresse veröffentlichen (`tools/labor/CLAUDE.md`).
-- **Ausschnitt der Scheibe wird nicht gemerkt** (User, 12. Oktober 2026): ganze Scheibe oder „Auf Gruppe zoomen“.
-  Anders als Ebenen und „übrige blass/aus“ steht der Ausschnitt nicht im Cookie `spiegel-target`; beim Merken der
-  Darstellung war er bewusst ausgenommen („gehört zur einzelnen Scheibe“, `apps/spiegel/CLAUDE.md`). Dazu gehören:
-  - `view` in `TargetDisplay` (`shot-ui/target/display`) aufnehmen, auf der Seite einer Scheibe und im Labor schreiben;
-  - `reset` im Reducer (`shot-ui/view-state`) setzt `view` beim Wechsel der Scheibe auf „target“ und müsste ihn
-    behalten.
 - **Lint für die Pakete:** Nur die drei Apps haben `lint`. `packages/*` (darunter `shot-core`, `shot-ui`) und
-  `tools/labor` werden nicht gelintet, die Hook-Regeln von React in `shot-ui` prüft niemand.
+  `tools/labor` werden nicht gelintet, die Hook-Regeln von React in `shot-ui` prüft niemand. Probe mit der geteilten
+  Konfiguration (12. Oktober 2026): `shot-ui` 39 Fehler (24 ungenutzte Variablen, 8 `react/no-children-prop`, dazu
+  `react-hooks/refs`, `set-state-in-effect`, `globals`), `ui` 3, `tools/labor` 2; `shot-core`, `lib`, `meyton-pdf`
+  ohne Fehler, sonst nur `no-console`-Warnungen.
 - **Auf einem echten iPhone prüfen** (bisher nur Emulation in Chrome): VoiceOver, sicherer Rand unten, Ziehen am
   Diagramm-Lineal gegen senkrechtes Scrollen (`touch-action`, [[spiegel-mobile]]).
 - **Leseprobe der Hilfe** (Abnahme von SP-1.11): Die Texte hat noch niemand ohne Statistik-Wissen gelesen.

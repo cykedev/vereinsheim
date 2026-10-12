@@ -165,6 +165,23 @@ export function App({ commit }: { commit: string }) {
           : mode === "admin"
             ? { page: "admin", section: null }
             : { page: mode }
+  // der Sprung nach einem Seitenwechsel läuft nach dem Commit (Layout-Effekt), nicht erst im nächsten Frame: In
+  // Headless-Chrome kam der Frame manchmal erst nach Sekunden, und ein Sprung vor der neuen Seite wird gekappt
+  // (12. Oktober 2026). Rendert nichts neu, springt der nächste Frame
+  const afterCommit = useRef<(() => void) | null>(null)
+  useLayoutEffect(() => {
+    const jump = afterCommit.current
+    afterCommit.current = null
+    jump?.()
+  })
+  const jumpAfterCommit = (jump: () => void) => {
+    afterCommit.current = jump
+    requestAnimationFrame(() => {
+      if (afterCommit.current !== jump) return
+      afterCommit.current = null
+      jump()
+    })
+  }
   // die Scrollstelle des Bereichs, den man verlässt
   const leave = () => {
     // ein Wechsel der Ansicht: der Anker beim Laden gilt nicht mehr, die neue Seite beginnt oben
@@ -199,7 +216,7 @@ export function App({ commit }: { commit: string }) {
         own: card.own !== undefined,
       })
       show("card")
-      requestAnimationFrame(() => scrollTo(0, 0))
+      jumpAfterCommit(() => scrollTo(0, 0))
       return
     }
     if (next.page === "cards") {
@@ -214,7 +231,7 @@ export function App({ commit }: { commit: string }) {
       const pick = next.pick ?? null
       // wohin man kommt, ist markiert: der Abend aus dem Anker, die Scheibe aus `pick` (12. Oktober 2026)
       setListMark({ evening, pick })
-      requestAnimationFrame(() => {
+      jumpAfterCommit(() => {
         if (evening) document.getElementById(evening)?.scrollIntoView({ block: "start" })
         else scrollTo(0, y)
         // die Scheibe, von der man kam, ins Bild, wenn sie es nicht schon ist (wie in der App)
@@ -233,7 +250,7 @@ export function App({ commit }: { commit: string }) {
       show("period")
       const saved = scrolls.current.get("progress")
       const y = saved?.key === progressKey(state) ? saved.y : 0
-      requestAnimationFrame(() => scrollTo(0, y))
+      jumpAfterCommit(() => scrollTo(0, y))
       return
     }
     const page = next.page === "open" ? "start" : next.page === "trash" ? "profile" : next.page
@@ -241,7 +258,7 @@ export function App({ commit }: { commit: string }) {
       leave()
       setOpened(null)
       show(page)
-      requestAnimationFrame(() => scrollTo(0, 0))
+      jumpAfterCommit(() => scrollTo(0, 0))
     }
   }
   // der Provider bleibt gleich, seine Links rufen immer das aktuelle `go` (nach dem Rendern gesetzt, nicht dabei)

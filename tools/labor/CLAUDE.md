@@ -34,10 +34,11 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
   `window.__labor` (Prüfhaken) liefert Schüsse, Zustand, Scheibe, die Funktionen des Fachkerns (auch die
   Analyse), `analysisInput`, `overviewTiles`, `observations` und die Hilfe-Daten zum Nachrechnen, auf der Seite
   eines Zeitraums dazu `period` (Scheiben, Zustand, Modell) und `tools.period`, auf der Scheiben-Liste `list` (Modell,
-  Filter, Scheiben, Familie je Id), auf Start `start` (Modell, Scheiben). Die Prüfung braucht seit L3 mehr
-  als 40 s virtuelle Zeit (Budget 90 s in `scripts/pruefen.ts`) und liegt seit U3 nahe daran: Neue Prüfungen nutzen
-  vorhandene Rahmen (`openFrame`, `tallJump(…, then)`), statt eigene zu öffnen; reißt das Budget, endet der Lauf mit
-  „Kein Bericht“. `scripts/` ist für den Autopiloten geschützt.
+  Filter, Scheiben, Familie je Id), auf Start `start` (Modell, Scheiben). Die Prüfung braucht rund 90 s virtuelle
+  Zeit (12. Oktober 2026: 89 s, gemessen mit `performance.now()` am Ende), das Budget in `scripts/pruefen.ts` ist
+  150 s; mit 90 s riss sie es bei kleinen Schwankungen und endete selten mit „Kein Bericht“. Neue Prüfungen nutzen
+  trotzdem vorhandene Rahmen (`openFrame`, `tallJump(…, then)`), statt eigene zu öffnen; reißt das Budget, endet der
+  Lauf mit „Kein Bericht“. `scripts/` ist für den Autopiloten geschützt.
   In den Rahmen der Prüfung (außerhalb des Bilds, `left:-9999px`) kam ein Sprung über `requestAnimationFrame` beim
   Laden nicht an; was beim Laden zu einem Anker springen soll, springt deshalb im Effekt sofort (Review N2).
 - **Die App im Rahmen** (Plan L3, N2, N3): `AppFrame` umgibt jede Ansicht; die Navigation wechselt die Bereiche

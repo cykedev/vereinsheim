@@ -31,7 +31,7 @@ export type ViewAction =
   /** die gemerkten Ebenen übernehmen (Darstellung als Voreinstellung); gleiche lassen den Zustand stehen */
   | { type: "setLayers"; layers: Readonly<Record<Layer, boolean>> }
   | { type: "setScoring"; scoring: Scoring }
-  /** neue Scheibe: Auswahl auf die ganze Scheibe, Schuss und Ausschnitt zurück; Wertung, Ebenen bleiben */
+  /** neue Scheibe: Auswahl auf die ganze Scheibe, Schuss zurück; Wertung, Ebenen und Ausschnitt bleiben */
   | { type: "reset" }
 
 /** Ebenen wie in der Spielwiese: Schwerpunkt und Streukreis an, Nummern und Ellipse aus */
@@ -93,6 +93,6 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
     case "setScoring":
       return { ...state, scoring: action.scoring }
     case "reset":
-      return { ...state, selection: "all", chosen: null, view: "target" }
+      return { ...state, selection: "all", chosen: null }
   }
 }

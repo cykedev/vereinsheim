@@ -31,7 +31,12 @@ import { parseTargetDisplay, serializeTargetDisplay } from "@vereinsheim/shot-ui
 import { TargetControls, type Others } from "@vereinsheim/shot-ui/target/TargetControls"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import type { SeriesKey } from "@vereinsheim/shot-ui/types"
-import { initialViewState, viewReducer, type Layer } from "@vereinsheim/shot-ui/view-state"
+import {
+  initialViewState,
+  viewReducer,
+  type Layer,
+  type ViewState,
+} from "@vereinsheim/shot-ui/view-state"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 import { useCallback, useEffect, useMemo, useReducer, useState, type MouseEvent } from "react"
@@ -137,6 +142,7 @@ export function CardView({
           ? "rings"
           : "decimal",
       layers: saved.layers,
+      view: saved.view,
     })
   })
   const active = useActiveSection()
@@ -211,17 +217,27 @@ export function CardView({
   const toggle = useCallback(
     (layer: Layer) => {
       const layers = { ...state.layers, [layer]: !state.layers[layer] }
-      store.set("display", serializeTargetDisplay({ layers, others }))
+      store.set("display", serializeTargetDisplay({ layers, others, view: state.view }))
       dispatch({ type: "toggle", layer })
     },
-    [state.layers, others]
+    [state.layers, state.view, others]
   )
   const setOthers = useCallback(
     (next: Others) => {
-      store.set("display", serializeTargetDisplay({ layers: state.layers, others: next }))
+      store.set(
+        "display",
+        serializeTargetDisplay({ layers: state.layers, others: next, view: state.view })
+      )
       setOthersState(next)
     },
-    [state.layers]
+    [state.layers, state.view]
+  )
+  const setView = useCallback(
+    (view: ViewState["view"]) => {
+      store.set("display", serializeTargetDisplay({ layers: state.layers, others, view }))
+      dispatch({ type: "setView", view })
+    },
+    [state.layers, others]
   )
   const choose = useCallback(
     (index: number, series: SeriesKey | null) => dispatch({ type: "choose", shot: index, series }),
@@ -373,7 +389,7 @@ export function CardView({
                 state={state}
                 others={others}
                 onToggle={toggle}
-                onView={(view) => dispatch({ type: "setView", view })}
+                onView={setView}
                 onOthers={setOthers}
                 onHelp={() => onHelp("trefferbild")}
               />

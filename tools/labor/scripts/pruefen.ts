@@ -36,8 +36,9 @@ function dumpDom(url: string): Promise<string> {
       "--no-first-run",
       "--allow-file-access-from-files",
       `--user-data-dir=${profile}`,
-      // seit der Seite eines Zeitraums (L3) braucht die Prüfung mehr als 40 s virtuelle Zeit
-      "--virtual-time-budget=90000",
+      // die Prüfung braucht rund 90 s virtuelle Zeit (12. Oktober 2026: 89 s); mit 90 s Budget riss sie es bei
+      // kleinen Schwankungen und endete selten ohne Bericht. Echte Laufzeit bleibt bei wenigen Sekunden
+      "--virtual-time-budget=150000",
       "--window-size=1280,2200",
       "--dump-dom",
       url,
