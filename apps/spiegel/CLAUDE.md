@@ -66,6 +66,9 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   Netzadresse ins Leere. `proxy.ts` lässt alles unter `_next/` frei (sonst fängt es die Verbindung des Dev-Servers ab).
 - **Formulare mit Server Action gesteuert** (`value` + `onChange`): React setzt ungesteuerte Felder nach dem Absenden
   zurück, ein Feldfehler löschte sonst die Eingaben.
+- **Skript im `<head>` nur aus dem HTML** (`ThemeScript`): Es rendert nur auf dem Server und beim Hydrieren. Nach einem
+  Hydrierungsfehler baut React die ganze Wurzel samt `<head>` im Client neu und warnte sonst „Encountered a script
+  tag“. Taucht die Warnung wieder auf, ist sie eine Folgemeldung: den Hydrierungsfehler suchen (12. Oktober 2026).
 - **instrumentation:** den Node-Teil nur im Zweig `NEXT_RUNTIME === "nodejs"` laden (`instrumentation-node.ts`); Next
   bündelt die Datei auch für Edge, und dort fehlt `fs` für `pg`.
 - **Wertung des Geräts** als Cookie (`spiegel-scoring`, `src/lib/device*.ts`): Start, Liste und Fortschritt rendern auf dem Server.

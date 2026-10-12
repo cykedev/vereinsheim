@@ -222,8 +222,6 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
 - **Speicher im Container** seit der Projektion der Übersichten nicht neu gemessen (Vorgehen in `apps/spiegel/CLAUDE.md`).
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.
-- **Warnung „Encountered a script tag“** im Browser-Log: das Skript der Darstellung vor dem ersten Zeichnen
-  (`ThemeProvider`).
 - **Labor-Artifact** zeigt noch nicht die Markierung in der Liste und die Rekorde als Zeilen: neu bauen und unter
   derselben Adresse veröffentlichen (`tools/labor/CLAUDE.md`).
 - **Lint für die Pakete:** Nur die drei Apps haben `lint`. `packages/*` (darunter `shot-core`, `shot-ui`) und

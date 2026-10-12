@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Archivo, Geist, Geist_Mono } from "next/font/google"
 
 import { ThemeProvider } from "@/components/theme/ThemeProvider"
-import { THEME_SCRIPT } from "@/components/theme/theme"
+import { ThemeScript } from "@/components/theme/ThemeScript"
 
 import "./globals.css"
 
@@ -31,7 +31,7 @@ export default function RootLayout({
       className={`${archivo.variable} ${geist.variable} ${geistMono.variable}`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <ThemeScript />
       </head>
       <body className="bg-background font-sans text-foreground antialiased">
         <ThemeProvider>{children}</ThemeProvider>
