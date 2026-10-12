@@ -2,6 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { KindSwitch } from "./KindSwitch"
 import { ScoringSwitch } from "./ScoringSwitch"
 
 const scoring = (value: "decimal" | "rings", official?: "decimal" | "rings") =>
@@ -32,5 +33,16 @@ describe("ScoringSwitch", () => {
     expect(scoring("decimal", "decimal")).toContain("amtlich: Zehntel")
     expect(scoring("decimal", "rings")).toContain("amtlich: ganze Ringe")
     expect(scoring("rings")).not.toContain("amtlich")
+  })
+})
+
+describe("KindSwitch", () => {
+  it("Training oder Wettkampf als Wahl „Art“", () => {
+    const html = renderToStaticMarkup(
+      createElement(KindSwitch, { kind: "competition", onChange: () => {} })
+    )
+    expect(html).toContain('aria-label="Art"')
+    expect(html).toMatch(/aria-checked="false"[^>]*>Training</)
+    expect(html).toMatch(/aria-checked="true"[^>]*>Wettkampf</)
   })
 })

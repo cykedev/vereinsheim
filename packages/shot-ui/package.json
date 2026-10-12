@@ -18,6 +18,7 @@
     "./labels": "./src/labels.ts",
     "./readout/ShotReadout": "./src/readout/ShotReadout.tsx",
     "./table/ShotTable": "./src/table/ShotTable.tsx",
+    "./controls/KindSwitch": "./src/controls/KindSwitch.tsx",
     "./controls/ScoringSwitch": "./src/controls/ScoringSwitch.tsx",
     "./help/HelpBody": "./src/help/HelpBody.tsx",
     "./help/HelpButton": "./src/help/HelpButton.tsx",
