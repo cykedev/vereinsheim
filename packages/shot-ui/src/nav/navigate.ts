@@ -20,10 +20,10 @@ import {
 
 /**
  * Die Scheibe `id`, geöffnet von `from`: Die Liste und der Fortschritt geben ihren Zustand mit, der Fortschritt ohne
- * Wahl (das ist die Scheibe selbst) und ohne Wertung (die trägt die Scheibe, sie übernimmt seine). Von anderen Seiten
- * keine Herkunft; dort gilt `scoring`, die Wertung des Geräts.
+ * Wahl (das ist die Scheibe selbst) und ohne Wertung. Von anderen Seiten keine Herkunft. Ohne `scoring` öffnet die
+ * Scheibe in ihrer Wertung; nur ein Rekord gibt seine mit (Plan `plans/2026-10-12-spiegel-wertung.md`).
  */
-export function openCard(from: Route, id: string, scoring: Scoring = "decimal"): CardRoute {
+export function openCard(from: Route, id: string, scoring: Scoring | null = null): CardRoute {
   let origin: CardOrigin = null
   if (from.page === "cards") origin = { from: "list", query: from.query }
   else if (from.page === "start") origin = { from: "start" }
@@ -37,14 +37,15 @@ export function openCard(from: Route, id: string, scoring: Scoring = "decimal"):
     origin,
     selection: null,
     shot: null,
-    scoring: from.page === "progress" ? from.query.scoring : scoring,
+    scoring,
     anchor: null,
   }
 }
 
 /**
- * Wohin „Zurück“ führt: in den Fortschritt mit dieser Scheibe gewählt und der Wertung der Scheibe, in die Liste
- * (ohne Sprung zum Abend), nach Start; von einem direkten Link in die Liste.
+ * Wohin „Zurück“ führt: in den Fortschritt mit dieser Scheibe gewählt, in die Liste (ohne Sprung zum Abend), nach
+ * Start; von einem direkten Link in die Liste. Die Wertung der Scheibe bleibt bei ihr: Der Fortschritt rechnet in der
+ * Wertung der Familie, seine Adresse trägt keine.
  */
 export function backRoute(card: CardRoute): Route {
   const origin = card.origin
@@ -55,14 +56,14 @@ export function backRoute(card: CardRoute): Route {
     return { page: "cards", query: origin.query, evening: null, pick: card.id }
   return {
     page: "progress",
-    query: { ...origin.query, scoring: card.scoring, chosen: card.id },
+    query: { ...origin.query, scoring: DEFAULT_PROGRESS.scoring, chosen: card.id },
     section: null,
   }
 }
 
 /**
- * die vorige oder nächste Scheibe im selben Kontext: Herkunft, Wertung und Abschnitt bleiben (D6); der Reiter der
- * Analyse nicht, eine Scheibe beginnt mit dem ersten (User, 9. Oktober 2026)
+ * die vorige oder nächste Scheibe im selben Kontext: Herkunft und Abschnitt bleiben (D6); der Reiter der Analyse nicht,
+ * eine Scheibe beginnt mit dem ersten (User, 9. Oktober 2026), und in ihrer Wertung
  */
 export function siblingRoute(card: CardRoute, id: string): CardRoute {
   return {
@@ -70,6 +71,7 @@ export function siblingRoute(card: CardRoute, id: string): CardRoute {
     id,
     selection: null,
     shot: null,
+    scoring: null,
     anchor: card.anchor ? { section: card.anchor.section } : null,
   }
 }

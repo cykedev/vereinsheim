@@ -58,6 +58,11 @@ export interface ProjectedCard {
   flags: readonly string[]
   /** amtliche Wertung der Disziplin wie `PeriodCard.official`; fehlt, wenn sie unbekannt ist */
   official?: Scoring
+  /**
+   * die Wertung der Scheibe (in der App gewählt, sonst die Vorgabe aus Art, amtlicher Wertung und Anzeige am Stand);
+   * fehlt im Labor, dort gilt die amtliche
+   */
+  scoring?: Scoring
   projection: CardProjection
 }
 

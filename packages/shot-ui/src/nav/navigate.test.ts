@@ -41,7 +41,7 @@ const LIST: ListRoute = {
 }
 
 describe("Wege zwischen den Seiten (D6, D7)", () => {
-  it("aus dem Fortschritt öffnen: Herkunft ohne Wahl und Wertung, die Wertung trägt die Scheibe", () => {
+  it("aus dem Fortschritt öffnen: Herkunft ohne Wahl und Wertung, die Scheibe öffnet in ihrer Wertung", () => {
     const card = openCard(PROGRESS, "c42")
     expect(card).toEqual({
       page: "card",
@@ -60,56 +60,58 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
       },
       selection: null,
       shot: null,
-      scoring: "rings",
+      scoring: null,
       anchor: null,
     })
     expect(urlFromRoute(card)).toBe(
-      "/cards/c42?from=progress&range=neue-munition&compare=previous&family=lg-10m&kind=training&metric=sigma&scoring=rings"
+      "/cards/c42?from=progress&range=neue-munition&compare=previous&family=lg-10m&kind=training&metric=sigma"
     )
   })
 
-  it("Rundreise: öffnen und zurück ergibt denselben Fortschritt, gewählt ist die Scheibe", () => {
+  it("Rundreise: öffnen und zurück ergibt denselben Fortschritt, gewählt ist die Scheibe; die Wertung hat die Familie", () => {
     const back = backRoute(openCard(PROGRESS, "c42"))
     expect(back).toEqual({
       ...PROGRESS,
-      query: { ...PROGRESS.query, chosen: "c42" },
+      query: { ...PROGRESS.query, scoring: DEFAULT_PROGRESS.scoring, chosen: "c42" },
       section: null,
     })
-    // auf der Scheibe die Wertung gewechselt: sie kommt mit zurück
-    const switched = { ...openCard(PROGRESS, "c42"), scoring: "decimal" as const }
-    expect(backRoute(switched)).toMatchObject({
-      page: "progress",
-      query: { scoring: "decimal", chosen: "c42" },
-    })
+    // auf der Scheibe die Wertung gewechselt: die gehört der Scheibe, nicht dem Fortschritt
+    const switched = { ...openCard(PROGRESS, "c42"), scoring: "rings" as const }
+    expect(backRoute(switched)).toEqual(back)
   })
 
   it("aus der Liste öffnen und zurück ergibt dieselbe Liste mit der Scheibe gewählt; der Abend fällt weg", () => {
     const card = openCard(LIST, "c7")
     expect(card.origin).toEqual({ from: "list", query: LIST.query })
-    expect(card.scoring).toBe("decimal")
+    expect(card.scoring).toBeNull()
     expect(backRoute(card)).toEqual({ ...LIST, evening: null, pick: "c7" })
   })
 
-  it("von Start und als direkter Link; die Wertung des Geräts geht vor, wo die Herkunft keine hat", () => {
+  it("von Start und als direkter Link; eine Wertung nur, wenn der Weg eine gibt (ein Rekord)", () => {
     expect(backRoute(openCard({ page: "start" }, "c1"))).toEqual({ page: "start" })
+    expect(openCard({ page: "start" }, "c1").scoring).toBeNull()
+    expect(openCard({ page: "start" }, "c1", "rings").scoring).toBe("rings")
     const direct = openCard({ page: "scan" }, "c1", "rings")
     expect(direct.origin).toBeNull()
     expect(direct.scoring).toBe("rings")
     expect(backRoute(direct)).toEqual({ page: "cards", query: DEFAULT_LIST, evening: null })
   })
 
-  it("Blättern behält Herkunft, Wertung und Abschnitt und verliert Auswahl, Schuss und Reiter", () => {
+  it("Blättern behält Herkunft und Abschnitt und verliert Auswahl, Schuss, Reiter und Wertung", () => {
     const card = {
       ...openCard(PROGRESS, "c42"),
       selection: 2,
       shot: "23",
+      scoring: "rings",
       anchor: { section: "analysis", tab: "position" },
     } as const
+    // die nächste Scheibe öffnet in ihrer Wertung (Plan `plans/2026-10-12-spiegel-wertung.md`)
     expect(siblingRoute(card, "c43")).toEqual({
       ...card,
       id: "c43",
       selection: null,
       shot: null,
+      scoring: null,
       anchor: { section: "analysis" },
     })
     // die nächste Scheibe öffnet die Analyse mit dem ersten Reiter (User, 9. Oktober 2026)

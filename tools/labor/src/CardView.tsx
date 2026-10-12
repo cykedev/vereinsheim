@@ -136,11 +136,9 @@ export function CardView({
   const [state, dispatch] = useReducer(viewReducer, undefined, () => {
     return initialViewState({
       // eine aus dem Zeitraum geöffnete Scheibe übernimmt dessen Wertung (D6), sonst die gemerkte (Review N1)
-      scoring: opened
-        ? opened.route.scoring
-        : store.get("scoring") === "rings"
-          ? "rings"
-          : "decimal",
+      scoring:
+        (opened ? (opened.route.scoring ?? opened.official) : null) ??
+        (store.get("scoring") === "rings" ? "rings" : "decimal"),
       layers: saved.layers,
       view: saved.view,
     })

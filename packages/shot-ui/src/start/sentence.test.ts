@@ -5,6 +5,7 @@ import { eveningReferenceText, eveningSentence, formLegend } from "./sentence"
 
 const block = (patch: Partial<EveningBlock>): EveningBlock => ({
   family: "lp-freihand",
+  scoring: "decimal",
   day: "2026-09-25",
   rows: [],
   shots: 60,

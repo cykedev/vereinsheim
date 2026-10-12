@@ -178,7 +178,7 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
       },
       selection: 2,
       shot: "23",
-      scoring: "decimal",
+      scoring: null,
       anchor: { section: "analysis", tab: "position" },
     })
     expect(query(cardToParams(card))).toBe("from=progress&family=lg-10m&series=2&shot=23")
@@ -217,6 +217,17 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
     const direct = cardFromParts("c7", new URLSearchParams("from=liste&family=lp-10m"), "")
     expect(direct.origin).toBeNull()
     expect(cardToParams(direct)).toEqual([])
+  })
+
+  it("Wertung: ohne Angabe die der Scheibe (null), sonst wie in der Adresse; Ungültiges gilt als ohne", () => {
+    const read = (search: string) => cardFromParts("c1", new URLSearchParams(search), "")
+    expect(read("").scoring).toBeNull()
+    expect(read("scoring=rings").scoring).toBe("rings")
+    expect(read("scoring=decimal").scoring).toBe("decimal")
+    expect(read("scoring=zehntel").scoring).toBeNull()
+    // Zehntel ist keine Vorgabe mehr: gewählt steht es in der Adresse
+    expect(query(cardToParams(read("scoring=decimal")))).toBe("scoring=decimal")
+    expect(cardToParams(read(""))).toEqual([])
   })
 
   it("Auswahl: ganze Scheibe oder eine Serie; Schuss als Nummer wie shotLabels", () => {
@@ -281,7 +292,7 @@ describe("die ganze Adresse (D3)", () => {
           origin: { from: "start" },
           selection: 2,
           shot: null,
-          scoring: "decimal",
+          scoring: null,
           anchor: { section: "analysis", tab: "position" },
         },
       ],
@@ -293,7 +304,7 @@ describe("die ganze Adresse (D3)", () => {
           origin: null,
           selection: null,
           shot: null,
-          scoring: "decimal",
+          scoring: null,
           anchor: null,
         },
       ],
@@ -427,7 +438,7 @@ describe("die ganze Adresse (D3)", () => {
     for (const origin of origins)
       for (const selection of [null, 2] as const)
         for (const shot of [null, "23", "7"])
-          for (const scoring of ["decimal", "rings"] as const)
+          for (const scoring of [null, "decimal", "rings"] as const)
             for (const anchor of [
               null,
               { section: "shots" } as const,
@@ -473,7 +484,7 @@ describe("Grammatik der Ids und Grenzfälle (Review)", () => {
       origin: { from: "progress", query: full },
       selection: null,
       shot: null,
-      scoring: "decimal",
+      scoring: null,
       anchor: null,
     })
     expect(url).toBe("/cards/c1?from=progress&family=lg-freihand")

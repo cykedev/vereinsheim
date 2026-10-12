@@ -404,6 +404,7 @@ const lightCard = (card: ProjectedCard): ProjectedCard => ({
   complete: card.complete,
   flags: card.flags,
   ...(card.official ? { official: card.official } : {}),
+  ...(card.scoring ? { scoring: card.scoring } : {}),
   projection: {
     version: card.projection.version,
     probeOnly: card.projection.probeOnly,

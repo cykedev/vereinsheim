@@ -63,7 +63,7 @@ export function StartView({ header, scoring, family }: StartViewProps) {
         timeZone: SEASON_TIME_ZONE,
         nowMs: SEASON_NOW_MS,
         named: NAMED_PERIODS,
-        scoring,
+        scoringOf: () => scoring,
         family,
       }),
     [projected, scoring, family]

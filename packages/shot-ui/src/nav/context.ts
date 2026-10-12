@@ -45,7 +45,8 @@ export function contextCardIds(card: CardRoute, input: ContextInput): string[] |
       timeZone: input.timeZone,
       nowMs: input.nowMs,
       named: input.named,
-      scoring: card.scoring,
+      // die Wertung ändert nicht, welche Scheiben die Liste zeigt
+      scoring: "decimal",
     })
     const ids = new Set(model.evenings.flatMap((e) => e.rows.map((r) => r.id)))
     return input.cards

@@ -143,6 +143,9 @@ const idOrNull = (value: string | null) => (value && ID.test(value) ? value : nu
 const kindOf = (value: string | null): CardKind =>
   value === "training" || value === "competition" ? value : "all"
 const scoringOf = (value: string | null): Scoring => (value === "rings" ? "rings" : "decimal")
+/** die Wertung einer Scheibe hat keine Vorgabe: ohne Angabe gilt die der Scheibe */
+const cardScoringOf = (value: string | null): Scoring | null =>
+  value === "rings" || value === "decimal" ? value : null
 
 /** nur die Schlüssel, deren Wert nicht die Vorgabe ist, in der Reihenfolge der Liste */
 const present = (pairs: readonly (readonly [string, string | null])[]): Param[] =>
@@ -231,7 +234,8 @@ export interface CardRoute {
   selection: SeriesKey | null
   /** Nummer wie `shotLabels` („23“) */
   shot: string | null
-  scoring: Scoring
+  /** gewählte Wertung; null: die der Scheibe (Plan `plans/2026-10-12-spiegel-wertung.md`), so öffnen Liste, Start, Blättern */
+  scoring: Scoring | null
   anchor: PageAnchor | null
 }
 
@@ -284,7 +288,7 @@ export function cardFromParts(id: string, params: URLSearchParams, hash: string)
     origin: originFrom(params),
     selection: selectionOf(params.get("series")),
     shot: SHOT.test(params.get("shot") ?? "") ? (params.get("shot") as string) : null,
-    scoring: scoringOf(params.get("scoring")),
+    scoring: cardScoringOf(params.get("scoring")),
     anchor: parseHash(hash),
   }
 }
@@ -296,7 +300,7 @@ export function cardToParams(card: CardRoute): Param[] {
     ...present([
       ["series", card.selection === null ? null : selectionText(card.selection)],
       ["shot", card.shot],
-      ["scoring", card.scoring === "rings" ? "rings" : null],
+      ["scoring", card.scoring],
     ]),
   ]
 }

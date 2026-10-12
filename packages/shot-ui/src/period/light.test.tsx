@@ -158,6 +158,18 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
     expect(Object.keys(card).sort()).toEqual(
       ["complete", "flags", "id", "kind", "projection", "startedAtMs"].sort()
     )
+    // amtliche Wertung und die der Scheibe gehören zur projizierten Scheibe und bleiben
+    const scored = periodModel({
+      cards: RAW.map((card) => ({ ...projected(card), official: "rings", scoring: "decimal" })),
+      state: initialPeriodState({ family: "lg-10m" }),
+      nowMs: NOW,
+      timeZone: TZ,
+      named: [],
+    })
+    expect(lightPeriodModel(scored).cards[0]).toMatchObject({
+      official: "rings",
+      scoring: "decimal",
+    })
   })
 
   it("das leichte Modell ist kleiner", () => {

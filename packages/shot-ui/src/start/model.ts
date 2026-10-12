@@ -26,6 +26,8 @@ export type { RecordRow }
 /** ein Block auf Start: der letzte Abend einer Familie (D2–D6) */
 export interface EveningBlock {
   family: string
+  /** die Wertung der Familie: in ihr rechnen Zahl, Streifen, Ø der Zeilen und Rekorde; ein Rekord öffnet in ihr */
+  scoring: Scoring
   /** ISO-Tag des Abends */
   day: string
   /** die Scheiben des Abends wie in der Liste (Ergebnis in beiden Wertungen, Ø, Abstand) */
@@ -83,7 +85,11 @@ export interface StartInput {
   timeZone: string
   nowMs: number
   named: readonly NamedPeriod[]
-  scoring: Scoring
+  /**
+   * die Wertung einer Familie (in der App gespeichert, sonst die häufigste ihrer Scheiben): jeder Block und die Form
+   * rechnen in ihrer (Plan `plans/2026-10-12-spiegel-wertung.md`)
+   */
+  scoringOf: (family: string) => Scoring
   /** die zuletzt gewählte Familie, für die Form */
   family: string | null
 }
@@ -94,14 +100,15 @@ export function startModel(input: StartInput): StartModel {
   if (!last) return { day: null, blocks: [], form: null }
   const { day, cards: tonight } = last
   const families = [...new Set(tonight.map((c) => c.family))]
-  const context = {
-    timeZone: input.timeZone,
-    nowMs: input.nowMs,
-    named: input.named,
-    scoring: input.scoring,
-  }
 
   const blocks = families.map((family): EveningBlock => {
+    const scoring = input.scoringOf(family)
+    const context = {
+      timeZone: input.timeZone,
+      nowMs: input.nowMs,
+      named: input.named,
+      scoring,
+    }
     const ofFamily = all.filter((c) => c.family === family).map((c) => c.card)
     const evening = tonight.filter((c) => c.family === family).map((c) => c.card)
     const ids = new Set(evening.map((c) => c.id))
@@ -111,9 +118,9 @@ export function startModel(input: StartInput): StartModel {
         ?.rows ?? []
     // Schüsse wie am Ausdruck; der Ø über alle zusammen, nicht das Mittel der Mittel
     const shots = evening.reduce((sum, card) => sum + card.projection.printedShots, 0)
-    const mean = pooledMean(evening, input.scoring)
+    const mean = pooledMean(evening, scoring)
     // Werte je Scheibe in der Wertung, nur Probe dabei (wie im Fortschritt mit seiner Grundeinstellung)
-    const values = projectedValues(ofFamily, metricByKey("result.decimalMean")!, input.scoring, {
+    const values = projectedValues(ofFamily, metricByKey("result.decimalMean")!, scoring, {
       includeProbeOnly: true,
     })
     // der Abend ist der neueste Tag: davor liegt alles, was vor seiner ersten Scheibe beginnt
@@ -143,11 +150,12 @@ export function startModel(input: StartInput): StartModel {
       band: p.band,
     }))
     const records = recordRows(
-      projectedRecords(ofFamily, input.scoring, { includeProbeOnly: true }),
-      input.scoring
+      projectedRecords(ofFamily, scoring, { includeProbeOnly: true }),
+      scoring
     ).filter((row) => ids.has(row.record.cardId))
     return {
       family,
+      scoring,
       day,
       rows,
       shots,
@@ -165,10 +173,10 @@ export function startModel(input: StartInput): StartModel {
   return { day, blocks, form: family ? formOf(all, family, input) : null }
 }
 
-/** Form der letzten 90 Tage gegen die 90 Tage davor, wie der Fortschritt mit diesem Vergleich (D7) */
+/** Form der letzten 90 Tage gegen die 90 Tage davor, wie der Fortschritt mit diesem Vergleich (D7), in der Wertung der Familie */
 function formOf(all: readonly ListInputCard[], family: string, input: StartInput): StartForm {
   const state = {
-    ...initialPeriodState({ family, scoring: input.scoring }),
+    ...initialPeriodState({ family, scoring: input.scoringOf(family) }),
     compare: { type: "previous" as const },
   }
   const model = periodModel({

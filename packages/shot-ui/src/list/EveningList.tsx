@@ -103,7 +103,7 @@ export function EveningList({
       KIND_TEXT[row.kind],
       row.result === null
         ? "ohne Ergebnis"
-        : `Ergebnis ${resultText(row.result, row.resultScoring)}${row.official ? " amtlich" : ""} ${SCORING_IN[row.resultScoring]}`,
+        : `Ergebnis ${resultText(row.result, row.resultScoring)} ${SCORING_IN[row.resultScoring]}${row.ofCard ? " (Wertung der Scheibe)" : ""}`,
       row.otherResult === null
         ? null
         : `${resultText(row.otherResult, otherScoring(row))} ${SCORING_IN[otherScoring(row)]}`,
@@ -246,22 +246,22 @@ export function EveningList({
                             <td className="px-1 py-1 text-center text-muted-foreground">
                               <KindMark kind={row.kind} />
                             </td>
-                            {/* beide Wertungen mit Namen in eigenen Spalten, die amtliche fett (U5, D5) */}
+                            {/* beide Wertungen mit Namen in eigenen Spalten, die der Scheibe fett (U5, D5) */}
                             {(["rings", "decimal"] as const).map((scoring) => {
                               const value =
                                 row.resultScoring === scoring ? row.result : row.otherResult
-                              const official = row.official && row.resultScoring === scoring
+                              const ofCard = row.ofCard && row.resultScoring === scoring
                               return (
                                 <td
                                   key={scoring}
                                   {...{
                                     [scoring === "rings" ? "data-rings" : "data-decimal"]: true,
                                   }}
-                                  data-official={official || undefined}
+                                  data-card-scoring={ofCard || undefined}
                                   className={cn(
                                     CELL,
                                     "text-right whitespace-nowrap",
-                                    official ? "font-semibold" : "text-foreground-2"
+                                    ofCard ? "font-semibold" : "text-foreground-2"
                                   )}
                                 >
                                   {resultText(value, scoring)}
@@ -304,12 +304,12 @@ export function EveningList({
                 })}
               </table>
               {/* nur mit Fettem im Monat (Review U5) */}
-              {month.evenings.some((evening) => evening.rows.some((row) => row.official)) && (
+              {month.evenings.some((evening) => evening.rows.some((row) => row.ofCard)) && (
                 <p
-                  data-official-legend
+                  data-card-scoring-legend
                   className="px-2 pt-1.5 pb-0.5 text-xs text-muted-foreground"
                 >
-                  Fett: amtliche Wertung der Scheibe.
+                  Fett: Wertung der Scheibe.
                 </p>
               )}
             </div>

@@ -20,7 +20,7 @@ const render = (cards: Raw[]) => {
     timeZone: TZ,
     nowMs: NOW,
     named: [],
-    scoring: "decimal",
+    scoringOf: () => "decimal",
     family: null,
   })
   const block = model.blocks[0]
@@ -31,8 +31,9 @@ const render = (cards: Raw[]) => {
       marks: marksOf(cards.map((c) => c.card)),
       target: LP_10M,
       timeZone: TZ,
-      cardRoute: (id: string) => openCard({ page: "start" }, id, "rings"),
-      recordRoute: (id: string) => openCard({ page: "start" }, id),
+      cardRoute: (id: string) => openCard({ page: "start" }, id),
+      recordRoute: (id: string, scoring: "decimal" | "rings") =>
+        openCard({ page: "start" }, id, scoring),
       listRoute: {
         page: "cards",
         query: { ...DEFAULT_LIST, family: block.family },
@@ -142,8 +143,8 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
         m[2],
       ])
     ).toEqual([
-      ["/cards/a?from=start&amp;scoring=rings", "a"],
-      ["/cards/b?from=start&amp;scoring=rings", "b"],
+      ["/cards/a?from=start", "a"],
+      ["/cards/b?from=start", "b"],
     ])
     expect(html).toMatch(/data-start-card="a"[\s\S]*?class="[^"]*size-14/)
     expect(text(html)).toContain("18:00 · Training 18,8 Zehntel · 18 ganze Ringe")
@@ -162,7 +163,7 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(html).toContain("data-new-records")
     // der Rekord öffnet in seiner Wertung (hier Zehntel, ohne Schlüssel), die Kachel in der der Kachel (Review N5)
     expect(html).toMatch(
-      /Neue Rekorde[\s\S]*?: <span[\s\S]*?<a href="\/cards\/[ab]\?from=start" aria-label="[^"]+: [^"]+ zeigen"[^>]*>zeigen<\/a>/
+      /Neue Rekorde[\s\S]*?: <span[\s\S]*?<a href="\/cards\/[ab]\?from=start&amp;scoring=decimal" aria-label="[^"]+: [^"]+ zeigen"[^>]*>zeigen<\/a>/
     )
     expect(html).toMatch(/aria-labelledby="evening-lp-freihand evening-lp-freihand-meta"/)
     expect(html).toMatch(

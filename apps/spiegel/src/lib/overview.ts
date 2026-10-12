@@ -30,7 +30,7 @@ export async function startPageData(
     timeZone: context.timeZone,
     nowMs: context.nowMs,
     named: context.named,
-    scoring: context.scoring,
+    scoringOf: () => context.scoring,
     family: families[0]?.value ?? "",
   })
   const ids = model.blocks.flatMap((block) => block.rows.map((row) => row.id))

@@ -85,7 +85,7 @@ function stateFromRoute(
   display: TargetDisplay
 ): ViewState {
   let state = initialViewState({
-    scoring: route.scoring,
+    scoring: route.scoring ?? undefined,
     layers: display.layers,
     view: display.view,
   })

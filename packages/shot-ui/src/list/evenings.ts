@@ -32,13 +32,13 @@ export interface ListRow {
   /** Training, Wettkampf oder Training nur aus Probe */
   kind: CardKind
   /**
-   * Ergebnis in der Wertung, die vorn steht: der amtlichen der Scheibe, ohne sie der Wertung der Liste; nur Probe
-   * rechnet wie Wertung und ist nie amtlich. null ohne Wert
+   * Ergebnis in der Wertung, die vorn steht: der Wertung der Scheibe (`ProjectedCard.scoring`), ohne sie (Labor) der
+   * amtlichen, ohne beide der Wertung der Liste; nur Probe rechnet wie Wertung und ist nie amtlich. null ohne Wert
    */
   result: number | null
   resultScoring: Scoring
-  /** die vordere Wertung ist die amtliche der Scheibe */
-  official: boolean
+  /** die vordere Wertung ist die der Scheibe (fett) */
+  ofCard: boolean
   /** Ergebnis in der anderen Wertung, klein daneben */
   otherResult: number | null
   /** Ø je Schuss in der Wertung der Liste (eine für alle Zeilen, damit die Spalte vergleichbar bleibt) */
@@ -66,7 +66,7 @@ export interface CardListModel {
   flags: string[]
   /** gezeigte Scheiben */
   cards: number
-  /** Wertung der Liste: Ø und Abstand, vorn beim Ergebnis ohne amtliche Wertung */
+  /** Wertung der Liste (in der App die der Familie): Ø und Abstand, vorn beim Ergebnis ohne Wertung der Scheibe */
   scoring: Scoring
   /** Stellen aus den Kennzahlen: Ergebnis je Wertung, Ø in der Wertung der Liste; der Abstand hat die des Ø */
   digits: { result: Record<Scoring, number>; mean: number }
@@ -172,8 +172,8 @@ export function cardListModel(
   const days = new Map<string, Evening>()
   for (const card of shown) {
     const day = eveningDay(card.startedAtMs, context.timeZone)
-    const official = isProbeOnly(card) ? undefined : card.official
-    const resultScoring = official ?? context.scoring
+    const ofCard = card.scoring ?? (isProbeOnly(card) ? undefined : card.official)
+    const resultScoring = ofCard ?? context.scoring
     // Werte wie am Ausdruck (die Wertung, bei nur Probe die Probe): so rechnet die Projektion
     const row: ListRow = {
       id: card.id,
@@ -181,7 +181,7 @@ export function cardListModel(
       kind: cardKind(card),
       result: projected(card, resultMetric(resultScoring), resultScoring),
       resultScoring,
-      official: official !== undefined,
+      ofCard: ofCard !== undefined,
       otherResult: projected(card, resultMetric(other(resultScoring)), other(resultScoring)),
       mean: projected(card, meanMetric, context.scoring),
       delta: deltas.get(card.id) ?? null,

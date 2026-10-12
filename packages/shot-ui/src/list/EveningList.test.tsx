@@ -18,7 +18,7 @@ const LIST: ListRoute = {
 
 const at = (hourUtc: number, minute = 0, day = 29) => Date.UTC(2026, 8, day, hourUtc, minute)
 /** Scheiben mit Schüssen: das Modell bekommt ihre Projektion, die kleinen Scheiben ihre Lagen */
-type RawInput = { card: PeriodCard; family: string }[]
+type RawInput = { card: PeriodCard; family: string; scoring?: "decimal" | "rings" }[]
 const INPUT: RawInput = [
   { card: periodCard("a", 1, [100, 102, 98], { startedAtMs: at(16, 30) }), family: "lg-freihand" },
   { card: periodCard("b", 1, [101, 103], { startedAtMs: at(17, 45) }), family: "lg-freihand" },
@@ -35,7 +35,10 @@ const render = (
   marked: { evening?: string | null; pick?: string | null } = {}
 ) => {
   const model = cardListModel(
-    input.map((c) => ({ ...c, card: projected(c.card) })),
+    input.map((c) => ({
+      family: c.family,
+      card: { ...projected(c.card), ...(c.scoring ? { scoring: c.scoring } : {}) },
+    })),
     { ...DEFAULT_LIST, family: "lg-freihand" },
     { timeZone: TZ, nowMs: NOW, named: [], scoring }
   )
@@ -112,10 +115,10 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     expect(text(rowA)).toContain("18:30 Training")
     expect(rowA).toContain('<span class="sr-only">Training</span>')
     expect(rowA).not.toMatch(/>T</)
-    // Ergebnis mit Namen der Wertung (U5, D5): Spalten „Ringe“ und „Zehntel“, ohne amtliche keine fett
+    // Ergebnis mit Namen der Wertung (U5, D5): Spalten „Ringe“ und „Zehntel“, ohne Wertung der Scheibe keine fett
     expect(rowA).toMatch(/data-rings[^>]*>29</)
     expect(rowA).toMatch(/data-decimal[^>]*>30,0</)
-    expect(rowA).not.toContain("data-official")
+    expect(rowA).not.toContain("data-card-scoring")
     expect(html).toMatch(/<th[^>]*>Ganze Ringe<\/th><th[^>]*>Zehntel<\/th>/)
     expect(html).not.toMatch(/<th[^>]*>Ergebnis<\/th>/)
     expect(rowA).toMatch(/data-mean[^>]*>10,00</)
@@ -138,23 +141,37 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     expect(render("rings")).toContain("Ergebnis 29 in ganzen Ringen, 30,0 in Zehnteln, Ø")
   })
 
-  it("die amtliche Wertung ist fett und heißt so, eine Zeile unter der Karte erklärt es (U5, D5)", () => {
+  it("die Wertung der Scheibe ist fett und heißt so, eine Zeile unter der Karte erklärt es (U5, D5)", () => {
     const official = render("decimal", [
       {
         card: periodCard("o", 1, [100, 102, 98], { official: "rings", startedAtMs: at(16, 30) }),
         family: "lg-freihand",
       },
     ])
+    // im Labor ohne Wertung der Scheibe: die amtliche
     expect(official).toMatch(
-      /<td data-rings="true" data-official="true" class="[^"]*font-semibold[^"]*">29</
+      /<td data-rings="true" data-card-scoring="true" class="[^"]*font-semibold[^"]*">29</
     )
     expect(official).toMatch(/<td data-decimal="true" class="(?![^"]*font-semibold)[^"]*">30,0</)
-    expect(official).toMatch(
-      /<p data-official-legend[^>]*>Fett: amtliche Wertung der Scheibe\.<\/p>/
+    expect(official).toMatch(/<p data-card-scoring-legend[^>]*>Fett: Wertung der Scheibe\.<\/p>/)
+    expect(official).toContain(
+      "Ergebnis 29 in ganzen Ringen (Wertung der Scheibe), 30,0 in Zehnteln"
     )
-    expect(official).toContain("Ergebnis 29 amtlich in ganzen Ringen, 30,0 in Zehnteln")
-    // ohne amtliche Wertung im Monat keine Erklärung für Fettes, das es nicht gibt (Review U5)
-    expect(html).not.toContain("data-official-legend")
+    // gewählt in Zehnteln, obwohl amtlich ganze Ringe: Zehntel fett und vorn
+    const chosen = render("rings", [
+      {
+        card: periodCard("o", 1, [100, 102, 98], { official: "rings", startedAtMs: at(16, 30) }),
+        family: "lg-freihand",
+        scoring: "decimal",
+      },
+    ])
+    expect(chosen).toMatch(
+      /<td data-decimal="true" data-card-scoring="true" class="[^"]*font-semibold[^"]*">30,0</
+    )
+    expect(chosen).toMatch(/<td data-rings="true" class="(?![^"]*font-semibold)[^"]*">29</)
+    expect(chosen).toContain("Ergebnis 30,0 in Zehnteln (Wertung der Scheibe), 29 in ganzen Ringen")
+    // ohne Wertung der Scheibe im Monat keine Erklärung für Fettes, das es nicht gibt (Review U5)
+    expect(html).not.toContain("data-card-scoring-legend")
     const lower = render("decimal", [
       { card: periodCard("x", 2, [103]), family: "lg-freihand" },
       { card: periodCard("y", 1, [100]), family: "lg-freihand" },

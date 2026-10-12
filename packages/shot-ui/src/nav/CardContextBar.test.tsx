@@ -15,7 +15,7 @@ const card = (id: string): CardRoute => ({
   origin,
   selection: null,
   shot: null,
-  scoring: "decimal",
+  scoring: null,
   anchor: null,
 })
 const back: Route = { page: "cards", query: origin.query, evening: null }

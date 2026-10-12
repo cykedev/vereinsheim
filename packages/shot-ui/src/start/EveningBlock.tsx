@@ -35,10 +35,10 @@ export interface EveningBlockProps {
   /** das Scheibenbild der Familie */
   target: TargetImage
   timeZone: string
-  /** die Adresse einer Scheibe von Start (`openCard({ page: "start" }, …)`), in der Wertung, die die Kachel vorn zeigt */
+  /** die Adresse einer Scheibe von Start (`openCard({ page: "start" }, …)`); sie öffnet in ihrer Wertung */
   cardRoute: (id: string) => CardRoute
-  /** die Adresse der Scheibe eines Rekords, in der Wertung, in der der Rekord steht (Review N5) */
-  recordRoute: (id: string) => CardRoute
+  /** die Adresse der Scheibe eines Rekords, in der Wertung, in der der Rekord steht (die des Blocks, Review N5) */
+  recordRoute: (id: string, scoring: Scoring) => CardRoute
   /** die Liste dieser Familie mit dem Abend als Anker */
   listRoute: ListRoute
   className?: string
@@ -198,7 +198,7 @@ export function EveningBlock({
                   <span className="font-semibold text-foreground tabular-nums">{row.value}</span>
                 </span>
                 <RouteLink
-                  route={recordRoute(row.record.cardId)}
+                  route={recordRoute(row.record.cardId, block.scoring)}
                   aria-label={`${row.label}: ${row.value} zeigen`}
                   className="shrink-0 font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
                 >

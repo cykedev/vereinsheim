@@ -11,7 +11,7 @@ const DAY = 86_400_000
 const at = (day: number, hour: number, minute = 0) => Date.UTC(2026, 8, day, hour - 2, minute)
 const lg = (card: PeriodCard): ListInputCard => ({ card: projected(card), family: "lg-freihand" })
 const lp = (card: PeriodCard): ListInputCard => ({ card: projected(card), family: "lp-freihand" })
-const context = { timeZone: TZ, nowMs: NOW, named: [], scoring: "decimal" as const }
+const context = { timeZone: TZ, nowMs: NOW, named: [], scoringOf: () => "decimal" as const }
 const model = (cards: ListInputCard[], family: string | null = "lg-freihand") =>
   startModel({ ...context, cards, family })
 /** `count` Scheiben vor dem 20. September, je ein Schuss, abwechselnd 10,0 und 10,2 */
@@ -98,11 +98,47 @@ describe("Start: der letzte Abend (Plan N5, D1–D6)", () => {
   it("in ganzen Ringen: Zahl und Streifen in Ringen", () => {
     // 9,9 und 10,1: in Zehnteln 10,0 je Schuss, in ganzen Ringen (9 + 10) / 2 = 9,5
     const cards = [lg(periodCard("r", 0, [99, 101], { startedAtMs: at(29, 18) }))]
-    const rings = startModel({ ...context, scoring: "rings", cards, family: null }).blocks[0]
+    const rings = startModel({ ...context, scoringOf: () => "rings", cards, family: null })
+      .blocks[0]
+    expect(rings.scoring).toBe("rings")
     expect(rings.mean).not.toBeNull()
     expect(rings.mean).toBeCloseTo(9.5, 9)
     expect(rings.strip[0].value).toBeCloseTo(9.5, 9)
     expect(model(cards).blocks[0].mean).toBeCloseTo(10, 9)
+  })
+
+  it("jeder Block in der Wertung seiner Familie: Zahl, Streifen, Ø der Zeilen, Rekorde und Form", () => {
+    // 9,9 und 10,1: in Zehnteln 10,0 je Schuss, in ganzen Ringen (9 + 10) / 2 = 9,5
+    const cards = [
+      lg(periodCard("g", 0, [99, 101], { startedAtMs: at(29, 18) })),
+      lp(periodCard("p", 0, [99, 101], { startedAtMs: at(29, 19) })),
+    ]
+    const asked: string[] = []
+    const m = startModel({
+      ...context,
+      scoringOf: (family) => {
+        asked.push(family)
+        return family === "lg-freihand" ? "rings" : "decimal"
+      },
+      cards,
+      family: "lg-freihand",
+    })
+    const [lgBlock, lpBlock] = m.blocks
+    expect([lgBlock.family, lgBlock.scoring, lpBlock.family, lpBlock.scoring]).toEqual([
+      "lg-freihand",
+      "rings",
+      "lp-freihand",
+      "decimal",
+    ])
+    expect(lgBlock.mean).toBeCloseTo(9.5, 9)
+    expect(lgBlock.strip[0].value).toBeCloseTo(9.5, 9)
+    expect(lgBlock.rows[0].mean).toBeCloseTo(9.5, 9)
+    expect(lgBlock.records.find((r) => r.key === "R1:2")?.value).toBe("19 Ringe")
+    expect(lpBlock.mean).toBeCloseTo(10, 9)
+    expect(lpBlock.rows[0].mean).toBeCloseTo(10, 9)
+    expect(lpBlock.records.find((r) => r.key === "R1:2")?.value).toBe("20,0 Ringe")
+    expect(m.form?.mean).toBeCloseTo(9.5, 9)
+    expect(new Set(asked)).toEqual(new Set(["lg-freihand", "lp-freihand"]))
   })
 
   it("ein Training nur aus Probe zählt wie Wertung, in der Zahl und im Streifen", () => {

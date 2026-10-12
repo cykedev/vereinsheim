@@ -231,7 +231,7 @@ describe("Scheiben-Liste nach dem Review (N2)", () => {
     expect(cardListModel(INPUT, query(), { ...context, scoring: "rings" }).scoring).toBe("rings")
   })
 
-  it("beide Ergebnisse: vorn die amtliche Wertung der Scheibe, ohne sie die der Liste", () => {
+  it("beide Ergebnisse: ohne Wertung der Scheibe (Labor) vorn die amtliche, ohne sie die der Liste", () => {
     // 100 + 102 + 98: 30,0 in Zehnteln, 10 + 10 + 9 = 29 in ganzen Ringen
     const cards = [
       lg(periodCard("r", 3, [100, 102, 98], { official: "rings" })),
@@ -247,14 +247,14 @@ describe("Scheiben-Liste nach dem Review (N2)", () => {
     expect(byId("decimal", "r")).toMatchObject({
       result: 29,
       resultScoring: "rings",
-      official: true,
+      ofCard: true,
       mean: 10,
     })
     expect(byId("decimal", "r").otherResult).toBeCloseTo(30.0, 9)
     // amtlich Zehntel: 30,0 vorn, auch wenn die Liste ganze Ringe zeigt
     expect(byId("rings", "z")).toMatchObject({
       resultScoring: "decimal",
-      official: true,
+      ofCard: true,
       otherResult: 29,
     })
     expect(byId("rings", "z").result).toBeCloseTo(30.0, 9)
@@ -262,10 +262,34 @@ describe("Scheiben-Liste nach dem Review (N2)", () => {
     expect(byId("rings", "u")).toMatchObject({
       result: 29,
       resultScoring: "rings",
-      official: false,
+      ofCard: false,
     })
     expect(byId("decimal", "u")).toMatchObject({ resultScoring: "decimal", otherResult: 29 })
     // nur Probe ist nie amtlich, auch wenn die Quelle eine Wertung nennt
-    expect(byId("decimal", "p")).toMatchObject({ resultScoring: "decimal", official: false })
+    expect(byId("decimal", "p")).toMatchObject({ resultScoring: "decimal", ofCard: false })
+  })
+
+  it("vorn die Wertung der Scheibe, vor der amtlichen, auch bei nur Probe; Ø und Abstand in der Wertung der Liste", () => {
+    const withScoring = (card: PeriodCard, scoring: "decimal" | "rings"): ListInputCard => ({
+      card: { ...projected(card), scoring },
+      family: "lg-freihand",
+    })
+    const cards = [
+      withScoring(periodCard("w", 3, [100, 102, 98], { official: "rings" }), "decimal"),
+      withScoring(periodCard("t", 2, [100, 102, 98]), "rings"),
+      withScoring(periodCard("p", 0, [100, 102, 98], { probe: true }), "rings"),
+    ]
+    const rows = (scoring: "decimal" | "rings") =>
+      cardListModel(cards, query(), { ...context, scoring }).evenings.flatMap((e) => e.rows)
+    const byId = (scoring: "decimal" | "rings", id: string) =>
+      rows(scoring).find((r) => r.id === id)!
+    // auf Zehntel gestellt, obwohl amtlich ganze Ringe: 30,0 vorn; der Ø in der Wertung der Liste
+    expect(byId("rings", "w")).toMatchObject({ resultScoring: "decimal", ofCard: true })
+    expect(byId("rings", "w").result).toBeCloseTo(30.0, 9)
+    expect(byId("rings", "w").mean).toBeCloseTo(29 / 3, 9)
+    expect(byId("rings", "w").otherResult).toBe(29)
+    expect(byId("decimal", "t")).toMatchObject({ result: 29, resultScoring: "rings", ofCard: true })
+    expect(byId("decimal", "t").mean).toBeCloseTo(10, 9)
+    expect(byId("decimal", "p")).toMatchObject({ result: 29, resultScoring: "rings", ofCard: true })
   })
 })

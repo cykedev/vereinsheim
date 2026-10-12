@@ -25,7 +25,7 @@ const card = (id: string, origin: CardRoute["origin"]): CardRoute => ({
   origin,
   selection: null,
   shot: null,
-  scoring: "decimal",
+  scoring: null,
   anchor: null,
 })
 const fromList = (patch: Partial<ListQuery>): CardRoute["origin"] => ({
