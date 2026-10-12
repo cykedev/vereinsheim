@@ -2,7 +2,7 @@
 id: next-dist-dir-shared-with-dev-server
 type: incident
 title: "Gate und next dev teilen .next — check-types rot ohne Diff"
-keywords: [distDir, .next, NEXT_DIST_DIR, next dev, pnpm check, TS2307, routes.js, validator.ts, Gate rot ohne Diff, Dev-Server, Fast Refresh, --force, ungecacht, Wettrennen, concurrency]
+keywords: [distDir, .next, NEXT_DIST_DIR, next dev, pnpm check, TS2307, routes.js, validator.ts, Gate rot ohne Diff, Dev-Server, Fast Refresh, --force, ungecacht, Wettrennen, concurrency, .next/dev, turbo cache, outputs, altes Bundle, Hydrierung, hydration mismatch, veraltet]
 tags: [incident, gates]
 relates_to: ["[[monorepo]]", "[[ringwerk]]", "[[treffsicher]]"]
 part_of: ["[[incidents]]"]
@@ -33,6 +33,16 @@ genau das Fenster für `TS2307`. `next-env.d.ts` importiert diese Dateien, desha
 einfach auslassen. Der Docker-Build (`turbo run build`) enthält `check-types` nicht und bleibt gleich;
 Pakete ohne `build` warten auf nichts. Danach fünf ungecachte Läufe grün, zwei davon unter CPU-Last,
 ohne messbaren Zeitverlust (10,6–11,1 s gegen vorher 10,8–12,3 s). Der Dev-Server-Fall oben bleibt.
+
+**Vierter Effekt, Turbo-Cache (2026-10-12, Spiegel):** Die Build-Ausgaben `".next/**", "!.next/cache/**"` schlossen
+`.next/dev` ein, die Client-Bundles eines laufenden `next dev` (seit Next 16 dort). Ein `pnpm check` mit Cache-Treffer
+legte ein altes Abbild davon zurück, auch das Stop-Gate am Ende jedes Turns. Der Dev-Server lieferte danach Start mit
+Code von vor einer Änderung in `shot-ui` aus; jeder frische Tab meldete eine Hydrierungswarnung (Server
+`?from=start`, Browser `?from=start&scoring=rings`), Neustart half nicht. Belegt: Der Cache-Eintrag (209 MB) enthielt
+`apps/spiegel/.next/dev/static/chunks/app/(app)/page.js` mit dem alten Code. **Behoben (`turbo.json`):**
+`"!.next/dev/**"` in den Ausgaben von `build`; der Eintrag hat jetzt 18 MB, kein `.next/dev`, `.next/standalone` ist
+vollständig. Erkennen: Zeigt der Browser Werte, die nur alter Code liefern kann, zuerst den Text der geladenen Chunks
+prüfen; dann Dev-Server stoppen, `.next` räumen, neu starten.
 
 **Sofort-Regel:** Dev-Server vor einem Gate-Lauf stoppen; nach einem abgebrochenen Build erst
 `.next` räumen (Server gestoppt), dann Server neu starten. Steht auch in den Skills `/check` und
