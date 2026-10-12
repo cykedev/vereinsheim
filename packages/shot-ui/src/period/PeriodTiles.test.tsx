@@ -118,11 +118,12 @@ describe("Analyse über den Zeitraum (D12)", () => {
     const outside = items.find((r) => r.key === "R1:3")
     expect(outside?.card).toBe("alt")
     expect(outside?.html).not.toContain("<button")
-    expect(outside?.html).toContain("außerhalb")
+    expect(outside?.html).toContain('title="außerhalb des Zeitraums"')
+    expect(outside?.html).toContain('außerhalb<span class="sr-only"> des Zeitraums</span>')
     // im Zeitraum: die ganze Zeile ist der Knopf, sein Name ist sein Inhalt (Bezeichnung, Wert, Datum, „zeigen“)
     const form = items.find((r) => r.key === "R8")?.html ?? ""
     expect(form).toMatch(
-      /^<li[^>]*><button type="button" aria-pressed="false"[^>]*>[\s\S]*Beste Form \(Ø über 5 Scheiben\): [\s\S]*zeigen[\s\S]*<\/button><\/li>$/
+      /^<li[^>]*><button type="button"[^>]*>[\s\S]*Beste Form \(Ø über 5 Scheiben\): [\s\S]*zeigen[\s\S]*<\/button><\/li>$/
     )
     expect(form).not.toContain("aria-label")
     expect(html).toMatch(/data-record="R3"[\s\S]*?>Bester Teiler: <\/span>/)
@@ -131,7 +132,7 @@ describe("Analyse über den Zeitraum (D12)", () => {
   it("Rekorde der gewählten Scheibe markiert, „gezeigt“ statt „zeigen“; ohne Wahl keiner (User, 12. Oktober 2026)", () => {
     const records = recordItems(render(now))
     expect(records.length).toBeGreaterThan(0)
-    expect(records.every((r) => r.html.includes('aria-pressed="false"'))).toBe(true)
+    expect(records.some((r) => r.html.includes("aria-current"))).toBe(false)
     expect(records.some((r) => r.html.includes("gezeigt"))).toBe(false)
 
     // die Scheibe mit den meisten Rekorden wählen, die anderen bleiben unmarkiert
@@ -142,7 +143,8 @@ describe("Analyse über den Zeitraum (D12)", () => {
     expect(marked.some((r) => r.card !== chosen)).toBe(true)
     for (const r of marked) {
       const mine = r.card === chosen
-      expect(r.html.includes('aria-pressed="true"'), r.key).toBe(mine)
+      expect(r.html.includes('aria-current="true"'), r.key).toBe(mine)
+      expect(r.html.includes("aria-pressed"), r.key).toBe(false)
       expect(r.html.includes("bg-accent-wash"), r.key).toBe(mine)
       expect(/>gezeigt</.test(r.html), r.key).toBe(mine)
       expect(/>zeigen</.test(r.html), r.key).toBe(!mine)

@@ -51,7 +51,7 @@ export function PeriodInsights({
   const recent = rows.filter((row) => inPeriod.has(row.record.cardId)).slice(0, NEW_RECORDS)
   const row = (r: RecordRow) => {
     const here = inPeriod.has(r.record.cardId)
-    const shown = here && r.record.cardId === chosen
+    const shown = r.record.cardId === chosen
     const text = (
       <span className="min-w-0">
         <span className="text-muted-foreground">{`${r.label}: `}</span>
@@ -67,11 +67,12 @@ export function PeriodInsights({
         {here && onChoose ? (
           <button
             type="button"
-            aria-pressed={shown}
+            // kein `aria-pressed`: ein zweiter Klick nimmt die Wahl nicht zurück, er springt nur (wie `pick` in der Liste)
+            aria-current={shown ? "true" : undefined}
             onClick={() => onChoose(r.record.cardId)}
             className={cn(
               line,
-              "cursor-pointer rounded text-left focus-visible:outline-2 focus-visible:outline-ring",
+              "cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-ring",
               shown ? "bg-accent-wash" : "hover:bg-surface-2"
             )}
           >
@@ -88,7 +89,13 @@ export function PeriodInsights({
         ) : (
           <div className={line}>
             {text}
-            <span className="text-[12.5px] text-muted-foreground">{here ? "" : "außerhalb"}</span>
+            {here ? (
+              <span />
+            ) : (
+              <span title="außerhalb des Zeitraums" className="text-[12.5px] text-muted-foreground">
+                außerhalb<span className="sr-only"> des Zeitraums</span>
+              </span>
+            )}
           </div>
         )}
       </li>

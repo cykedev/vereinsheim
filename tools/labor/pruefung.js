@@ -2243,9 +2243,7 @@ addEventListener("load", async () => {
     const recordJump = async (f, shown) => {
       const d = f.contentDocument
       const w = f.contentWindow
-      const button = [...d.querySelectorAll("[data-records-new] [data-record] button")].find(
-        (b) => !b.disabled
-      )
+      const button = d.querySelector("[data-records-new] [data-record] button")
       const cardId = button?.closest("[data-record]")?.dataset.recordCard
       button?.scrollIntoView({ block: "center" })
       if (button) await frameClick(f, button, 200)
@@ -2507,14 +2505,14 @@ addEventListener("load", async () => {
               !!button &&
               button.getBoundingClientRect().width >=
                 button.closest("[data-records-new]").getBoundingClientRect().width - 1 &&
-              button.getAttribute("aria-pressed") === String(mine) &&
+              button.getAttribute("aria-current") === (mine ? "true" : null) &&
               txt(button).endsWith(mine ? "gezeigt" : "zeigen")
             )
           }),
         recordButtons
           .map(
             ({ card, button }) =>
-              `${card === recordCard ? "*" : ""}${button?.getAttribute("aria-pressed")}:${txt(button).slice(-7)}`
+              `${card === recordCard ? "*" : ""}${button?.getAttribute("aria-current")}:${txt(button).slice(-7)}`
           )
           .join(" ")
       )
