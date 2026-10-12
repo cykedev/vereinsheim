@@ -11,6 +11,7 @@ import { cardWithShots, ownerCards } from "@/lib/db/reads"
 import { pageContext } from "@/lib/page-context"
 import { listable, withFamily } from "@/lib/pages"
 import { searchOf } from "@/lib/search"
+import { targetDisplay } from "@/lib/target-display"
 
 export const metadata: Metadata = { title: "Scheibe" }
 
@@ -48,6 +49,7 @@ export default async function CardRoutePage({
       near={ids ? neighbours(ids, id) : null}
       paging={ids !== null}
       context={context}
+      display={await targetDisplay()}
     />
   )
 }

@@ -25,6 +25,7 @@
     "./help/HelpSheet": "./src/help/HelpSheet.tsx",
     "./target/MpiMark": "./src/target/MpiMark.tsx",
     "./target/MiniTarget": "./src/target/MiniTarget.tsx",
+    "./target/display": "./src/target/display.ts",
     "./analysis/parts": "./src/analysis/parts.tsx",
     "./analysis/charts/frame": "./src/analysis/charts/frame.tsx",
     "./analysis/AnalysisPanel": "./src/analysis/AnalysisPanel.tsx",

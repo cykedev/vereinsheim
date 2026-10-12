@@ -32,6 +32,7 @@ import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
 import { asOnPrintout, shotLabels } from "@vereinsheim/shot-ui/shots"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
 import { TargetControls, type Others } from "@vereinsheim/shot-ui/target/TargetControls"
+import type { TargetDisplay } from "@vereinsheim/shot-ui/target/display"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import type { SeriesKey } from "@vereinsheim/shot-ui/types"
 import {
@@ -47,6 +48,7 @@ import { useHelp } from "@/components/shell/HelpContext"
 import { nextCardAddress } from "@/lib/card-address"
 import type { PageCard } from "@/lib/db/reads"
 import { rememberScoring } from "@/lib/device-client"
+import { rememberTargetDisplay } from "@/lib/target-display-client"
 import type { PageContext } from "@/lib/page-context"
 
 /** einen Abschnitt ins Bild holen (nach dem Laden mit Anker und nach einem Reiter-Anker) */
@@ -66,9 +68,16 @@ const useHash = () =>
     () => ""
   )
 
-/** der Zustand der Ansicht aus der Adresse: Wertung, Serie und gewählter Schuss (Nummer wie `shotLabels`) */
-function stateFromRoute(route: CardRoute, shots: readonly MetricShot[]): ViewState {
-  let state = initialViewState({ scoring: route.scoring })
+/**
+ * der Zustand der Ansicht aus der Adresse (Wertung, Serie, gewählter Schuss als Nummer wie `shotLabels`) und den Ebenen
+ * der gemerkten Darstellung
+ */
+function stateFromRoute(
+  route: CardRoute,
+  shots: readonly MetricShot[],
+  display: TargetDisplay
+): ViewState {
+  let state = initialViewState({ scoring: route.scoring, layers: display.layers })
   if (route.selection !== null)
     state = viewReducer(state, { type: "select", series: route.selection })
   const index = route.shot ? shotLabels(shots).indexOf(route.shot) : -1
@@ -88,12 +97,15 @@ export function CardScreen({
   near,
   paging,
   context: pageContext,
+  display,
 }: {
   card: PageCard
   route: CardRoute
   near: { prev: string | null; next: string | null } | null
   paging: boolean
   context: PageContext
+  /** die gemerkte Darstellung der Scheibe (Cookie), Anfang der Ebenen und von „übrige blass/aus“ */
+  display: TargetDisplay
 }) {
   const onHelp = useHelp()
   const target = TARGETS[card.targetId ?? "lp-10m"]
@@ -103,9 +115,13 @@ export function CardScreen({
   const context = card.shots
 
   const [state, dispatch] = useReducer(viewReducer, undefined, () =>
-    stateFromRoute(initialRoute, shots)
+    stateFromRoute(initialRoute, shots, display)
   )
-  const [others, setOthers] = useState<Others>("dim")
+  const [others, setOthers] = useState<Others>(display.others)
+  // jede Änderung der Darstellung ist die neue Voreinstellung (User, 12. Oktober 2026)
+  useEffect(() => {
+    rememberTargetDisplay({ layers: state.layers, others })
+  }, [state.layers, others])
   const [explain, setExplain] = useState(false)
   const hash = useHash()
   // der Reiter: gewählt, sonst aus dem Anker beim Laden, sonst der erste (eine Scheibe beginnt mit ihm)

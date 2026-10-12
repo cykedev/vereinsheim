@@ -115,7 +115,14 @@ export function CardView({
   const [raw, setRaw] = useState<RawShot[]>(() => opened?.raw ?? rawSample("lp-10m", "forty"))
   const [mode, setMode] = useState<Mode>("view")
   const [setKind, setSetKind] = useState<RawShot["kind"]>("match")
-  const [others, setOthers] = useState<Others>("dim")
+  // wie die Ebenen gemerkt (User, 12. Oktober 2026): die Darstellung ist die Voreinstellung
+  const [others, setOthersState] = useState<Others>(() =>
+    store.get("others") === "hide" ? "hide" : "dim"
+  )
+  const setOthers = useCallback((next: Others) => {
+    store.set("others", next)
+    setOthersState(next)
+  }, [])
   const [pop, setPop] = useState<number | null>(null)
   // Reiter: eine Scheibe beginnt immer mit dem ersten (User, 9. Oktober 2026), nur ein Anker in der Adresse beim
   // Laden öffnet einen anderen. Kein gemerkter Reiter: der vorige stünde sonst auf der nächsten Scheibe
