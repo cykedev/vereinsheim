@@ -19,6 +19,7 @@ const card = (
   familyId: null,
   state: "final",
   stand: null,
+  scoring: "decimal",
   targetId,
   family: family ? { slug: family, name: family.toUpperCase() } : null,
   projection: {

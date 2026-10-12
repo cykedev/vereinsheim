@@ -14,7 +14,14 @@ import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import { writeRevision } from "./cards"
-import { cardWithShots, familyCards, latestCardStart, marksOfCards, ownerCards } from "./reads"
+import {
+  cardWithShots,
+  familyCards,
+  familyScorings,
+  latestCardStart,
+  marksOfCards,
+  ownerCards,
+} from "./reads"
 
 const db = createPrismaClient()
 let site: TestSite
@@ -226,5 +233,44 @@ describe("cardWithShots", () => {
     expect(await cardWithShots(db, { cardId: lg.id, ownerId: site.ownerId })).not.toHaveProperty(
       "official"
     )
+  })
+})
+
+describe("Wertung der Scheibe", () => {
+  it("Wettkampf in der amtlichen, Training wie am Stand, die Wahl vor der Vorgabe; Übersicht und Seite gleich", async () => {
+    const ownerId = site.ownerId
+    const cards = await familyCards(db, { ownerId, familyId: site.familyId })
+    // die Testscheiben zeigen am Stand Zehntel (Anzeigeart 1), die Disziplin wertet amtlich ganze Ringe
+    expect(cards.some((c) => c.kind === "competition" && c.official)).toBe(true)
+    expect(cards.some((c) => c.kind === "training")).toBe(true)
+    for (const card of cards)
+      expect(card.scoring).toBe(card.kind === "competition" && card.official ? "rings" : "decimal")
+    const [lg] = await familyCards(db, { ownerId, familyId: otherFamilyId })
+    expect(lg.scoring).toBe("decimal")
+
+    const competition = cards.find((c) => c.kind === "competition" && c.official)!
+    const training = cards.find((c) => c.kind === "training" && !c.projection.probeOnly)!
+    expect((await cardWithShots(db, { cardId: competition.id, ownerId }))?.scoring).toBe("rings")
+    expect((await cardWithShots(db, { cardId: training.id, ownerId }))?.scoring).toBe("decimal")
+    await db.card.update({ where: { id: training.id }, data: { scoringChoice: "rings" } })
+    try {
+      const all = await ownerCards(db, { ownerId })
+      expect(all.find((c) => c.id === training.id)?.scoring).toBe("rings")
+      expect((await cardWithShots(db, { cardId: training.id, ownerId }))?.scoring).toBe("rings")
+    } finally {
+      await db.card.update({ where: { id: training.id }, data: { scoringChoice: null } })
+    }
+  })
+})
+
+describe("familyScorings", () => {
+  it("die gespeicherten Wertungen der Familien eines Schützen nach Kennung, nur seine", async () => {
+    expect(await familyScorings(db, site.ownerId)).toEqual({})
+    await db.familyScoring.create({
+      data: { userId: site.ownerId, familyId: otherFamilyId, scoring: "rings" },
+    })
+    const { slug } = await db.family.findUniqueOrThrow({ where: { id: otherFamilyId } })
+    expect(await familyScorings(db, site.ownerId)).toEqual({ [slug]: "rings" })
+    expect(await familyScorings(db, "jemand-anderes")).toEqual({})
   })
 })

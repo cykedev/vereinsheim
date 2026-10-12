@@ -3,6 +3,7 @@
 // gezeigten (`marksOfCards`); nur die Seite einer Scheibe lädt Schüsse, die der aktuellen Revision.
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import type { CardMark, CardProjection, ProjectedCard } from "@vereinsheim/shot-core/projection"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
@@ -10,6 +11,7 @@ import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 import type { CardState, Prisma } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
+import { cardScoring } from "../scoring"
 import { shotFromRow, toMetricShot } from "./cards"
 
 /** eine Scheibe für die Übersichten: Merkmale und Projektion, dazu Familie und Scheibenbild für Filter und Bild */
@@ -22,6 +24,8 @@ export interface OverviewCard extends ProjectedCard {
   targetId: TargetId | null
   state: CardState
   stand: string | null
+  /** die Wertung der Scheibe: gewählt, sonst die Vorgabe (`cardScoring`) */
+  scoring: Scoring
 }
 
 const OVERVIEW_SELECT = {
@@ -32,6 +36,8 @@ const OVERVIEW_SELECT = {
   flags: true,
   state: true,
   stand: true,
+  standScoring: true,
+  scoringChoice: true,
   disciplineId: true,
   familyId: true,
   family: { select: { slug: true, name: true } },
@@ -62,6 +68,8 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
       values: row.projection.values as CardProjection["values"],
       records: row.projection.records as unknown as CardProjection["records"],
     }
+    // amtliche Wertung der Disziplin (SF-74), wenn bekannt; nur Probe ist Training und hat keine (wie im Labor)
+    const official = projection.probeOnly ? null : row.discipline.officialScoring
     return [
       {
         id: row.id,
@@ -69,12 +77,10 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         kind: row.kind,
         complete: row.complete,
         flags: row.flags,
-        // amtliche Wertung der Disziplin (SF-74), wenn bekannt; nur Probe ist Training und hat keine (wie im Labor)
-        ...(!projection.probeOnly && row.discipline.officialScoring
-          ? { official: row.discipline.officialScoring }
-          : {}),
+        ...(official ? { official } : {}),
         state: row.state,
         stand: row.stand,
+        scoring: scoringOfRow(row, official),
         disciplineId: row.disciplineId,
         familyId: row.familyId,
         family: row.family,
@@ -84,6 +90,12 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
     ]
   })
 }
+
+/** die Wertung einer Scheibe aus ihrer Zeile, mit der amtlichen, wie die Scheibe sie zeigt */
+const scoringOfRow = (
+  row: Pick<OverviewRow, "kind" | "standScoring" | "scoringChoice">,
+  official: Scoring | null
+) => cardScoring({ kind: row.kind, official, stand: row.standScoring, choice: row.scoringChoice })
 
 /** von `fromMs` (eingeschlossen) bis `toMs` (ausgeschlossen), beides wahlweise */
 export interface MsRange {
@@ -146,6 +158,8 @@ const PAGE_CARD_SELECT = {
   kind: true,
   complete: true,
   flags: true,
+  standScoring: true,
+  scoringChoice: true,
   disciplineId: true,
   discipline: { select: { name: true, targetId: true, officialScoring: true } },
   family: { select: { slug: true, name: true } },
@@ -167,6 +181,8 @@ export interface PageCard extends PeriodCard {
   /** Scheibenbild aus der Disziplin; null, solange es unbekannt ist */
   targetId: TargetId | null
   family: { slug: string; name: string } | null
+  /** die Wertung der Scheibe: gewählt, sonst die Vorgabe (`cardScoring`); mit ihr öffnet die Seite */
+  scoring: Scoring
 }
 
 function toPageCard(row: PageCardRow): PageCard | null {
@@ -187,6 +203,7 @@ function toPageCard(row: PageCardRow): PageCard | null {
     discipline: row.discipline.name,
     targetId: isTargetId(row.discipline.targetId) ? row.discipline.targetId : null,
     family: row.family,
+    scoring: scoringOfRow(row, official),
     shots: row.currentRevision.shots.map(shotFromRow).map(toMetricShot),
   }
 }
@@ -224,6 +241,15 @@ export async function marksOfCards(
     select: { cardId: true, marks: true },
   })
   return Object.fromEntries(rows.map((row) => [row.cardId, row.marks as unknown as CardMark[]]))
+}
+
+/** die gespeicherten Wertungen der Familien eines Schützen (`FamilyScoring`) nach Kennung; ohne Zeile fehlt die Familie */
+export async function familyScorings(db: Db, ownerId: string): Promise<Record<string, Scoring>> {
+  const rows = await db.familyScoring.findMany({
+    where: { userId: ownerId },
+    select: { scoring: true, family: { select: { slug: true } } },
+  })
+  return Object.fromEntries(rows.map((row) => [row.family.slug, row.scoring]))
 }
 
 /** benannte Zeiträume des Schützen („Vorbereitung Landesmeisterschaft“), Tage als ISO-Datum */
