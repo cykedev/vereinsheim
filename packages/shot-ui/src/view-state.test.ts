@@ -85,6 +85,15 @@ describe("Ausschnitt, Ebenen, Wertung", () => {
     expect(s.layers).toEqual({ ...start.layers, numbers: !start.layers.numbers })
   })
 
+  it("gemerkte Ebenen übernehmen: nur die Ebenen, gleiche lassen den Zustand stehen (Review Darstellung)", () => {
+    const chosen: ViewState = viewReducer(start, { type: "select", series: 2 })
+    const layers = { mpi: false, circle: true, numbers: true, ellipse: true }
+    const s = viewReducer(chosen, { type: "setLayers", layers })
+    expect(s.layers).toEqual(layers)
+    expect({ ...s, layers: chosen.layers }).toEqual(chosen)
+    expect(viewReducer(s, { type: "setLayers", layers: { ...layers } })).toBe(s)
+  })
+
   it("Ausschnitt und Wertung", () => {
     expect(viewReducer(start, { type: "setView", view: "group" }).view).toBe("group")
     expect(viewReducer(start, { type: "setScoring", scoring: "rings" }).scoring).toBe("rings")

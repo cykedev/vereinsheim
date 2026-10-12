@@ -32,7 +32,11 @@ import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
 import { asOnPrintout, shotLabels } from "@vereinsheim/shot-ui/shots"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
 import { TargetControls, type Others } from "@vereinsheim/shot-ui/target/TargetControls"
-import type { TargetDisplay } from "@vereinsheim/shot-ui/target/display"
+import {
+  parseTargetDisplay,
+  serializeTargetDisplay,
+  type TargetDisplay,
+} from "@vereinsheim/shot-ui/target/display"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import type { SeriesKey } from "@vereinsheim/shot-ui/types"
 import {
@@ -48,7 +52,10 @@ import { useHelp } from "@/components/shell/HelpContext"
 import { nextCardAddress } from "@/lib/card-address"
 import type { PageCard } from "@/lib/db/reads"
 import { rememberScoring } from "@/lib/device-client"
-import { rememberTargetDisplay } from "@/lib/target-display-client"
+import { rememberTargetDisplay, savedTargetDisplay } from "@/lib/target-display-client"
+
+/** der Cookie meldet keine Änderung; gelesen wird bei jedem Zeichnen */
+const noSubscribe = () => () => {}
 import type { PageContext } from "@/lib/page-context"
 
 /** einen Abschnitt ins Bild holen (nach dem Laden mit Anker und nach einem Reiter-Anker) */
@@ -118,10 +125,19 @@ export function CardScreen({
     stateFromRoute(initialRoute, shots, display)
   )
   const [others, setOthers] = useState<Others>(display.others)
-  // jede Änderung der Darstellung ist die neue Voreinstellung (User, 12. Oktober 2026)
-  useEffect(() => {
-    rememberTargetDisplay({ layers: state.layers, others })
-  }, [state.layers, others])
+  // Nach Zurück und Vor bringt Next die Seite mit der Darstellung ihres ersten Besuchs (aus dem Cache, ohne Server).
+  // Es gilt die gemerkte aus dem Cookie im Browser; beim Hydrieren die vom Server, damit das HTML passt (Review)
+  const saved = useSyncExternalStore(noSubscribe, savedTargetDisplay, () =>
+    serializeTargetDisplay(display)
+  )
+  // verglichen mit der Darstellung, mit der die Seite kam: beim Hydrieren gleich, nach Zurück womöglich nicht
+  const [seen, setSeen] = useState(() => serializeTargetDisplay(display))
+  if (saved !== seen) {
+    setSeen(saved)
+    const next = parseTargetDisplay(saved)
+    dispatch({ type: "setLayers", layers: next.layers })
+    setOthers(next.others)
+  }
   const [explain, setExplain] = useState(false)
   const hash = useHash()
   // der Reiter: gewählt, sonst aus dem Anker beim Laden, sonst der erste (eine Scheibe beginnt mit ihm)
@@ -161,7 +177,22 @@ export function CardScreen({
     if (next) window.history.replaceState(null, "", next)
   }, [address, anchorChosen])
 
-  const toggle = useCallback((layer: Layer) => dispatch({ type: "toggle", layer }), [])
+  // jede Änderung der Darstellung ist die neue Voreinstellung (User, 12. Oktober 2026); gemerkt nur beim Umschalten,
+  // nie beim Öffnen: sonst überschriebe eine Seite aus dem Cache die zuletzt gewählte (Review)
+  const toggle = useCallback(
+    (layer: Layer) => {
+      rememberTargetDisplay({ layers: { ...state.layers, [layer]: !state.layers[layer] }, others })
+      dispatch({ type: "toggle", layer })
+    },
+    [state.layers, others]
+  )
+  const changeOthers = useCallback(
+    (next: Others) => {
+      rememberTargetDisplay({ layers: state.layers, others: next })
+      setOthers(next)
+    },
+    [state.layers]
+  )
   const choose = useCallback(
     (index: number, series: SeriesKey | null) => dispatch({ type: "choose", shot: index, series }),
     []
@@ -265,7 +296,7 @@ export function CardScreen({
                 others={others}
                 onToggle={toggle}
                 onView={(view) => dispatch({ type: "setView", view })}
-                onOthers={setOthers}
+                onOthers={changeOthers}
                 onHelp={() => onHelp("trefferbild")}
               />
             </div>

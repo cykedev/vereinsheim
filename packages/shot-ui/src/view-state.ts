@@ -28,6 +28,8 @@ export type ViewAction =
   | { type: "show"; shot: number; series: SeriesKey | null }
   | { type: "setView"; view: ViewState["view"] }
   | { type: "toggle"; layer: Layer }
+  /** die gemerkten Ebenen übernehmen (Darstellung als Voreinstellung); gleiche lassen den Zustand stehen */
+  | { type: "setLayers"; layers: Readonly<Record<Layer, boolean>> }
   | { type: "setScoring"; scoring: Scoring }
   /** neue Scheibe: Auswahl auf die ganze Scheibe, Schuss und Ausschnitt zurück; Wertung, Ebenen bleiben */
   | { type: "reset" }
@@ -81,6 +83,13 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return { ...state, view: action.view }
     case "toggle":
       return { ...state, layers: { ...state.layers, [action.layer]: !state.layers[action.layer] } }
+    case "setLayers": {
+      const layers = action.layers
+      const same = (Object.keys(state.layers) as Layer[]).every(
+        (l) => state.layers[l] === layers[l]
+      )
+      return same ? state : { ...state, layers: { ...layers } }
+    }
     case "setScoring":
       return { ...state, scoring: action.scoring }
     case "reset":

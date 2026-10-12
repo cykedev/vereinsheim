@@ -27,6 +27,7 @@ import { contextCardIds, neighbours } from "@vereinsheim/shot-ui/nav/context"
 import { backLabel, backRoute, siblingRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import { urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { asOnPrintout, shotLabels } from "@vereinsheim/shot-ui/shots"
+import { parseTargetDisplay, serializeTargetDisplay } from "@vereinsheim/shot-ui/target/display"
 import { TargetControls, type Others } from "@vereinsheim/shot-ui/target/TargetControls"
 import { TargetView } from "@vereinsheim/shot-ui/target/TargetView"
 import type { SeriesKey } from "@vereinsheim/shot-ui/types"
@@ -115,14 +116,9 @@ export function CardView({
   const [raw, setRaw] = useState<RawShot[]>(() => opened?.raw ?? rawSample("lp-10m", "forty"))
   const [mode, setMode] = useState<Mode>("view")
   const [setKind, setSetKind] = useState<RawShot["kind"]>("match")
-  // wie die Ebenen gemerkt (User, 12. Oktober 2026): die Darstellung ist die Voreinstellung
-  const [others, setOthersState] = useState<Others>(() =>
-    store.get("others") === "hide" ? "hide" : "dim"
-  )
-  const setOthers = useCallback((next: Others) => {
-    store.set("others", next)
-    setOthersState(next)
-  }, [])
+  // die Darstellung ist die Voreinstellung (User, 12. Oktober 2026), im Format der App (`target/display`)
+  const [saved] = useState(() => parseTargetDisplay(store.get("display")))
+  const [others, setOthersState] = useState<Others>(saved.others)
   const [pop, setPop] = useState<number | null>(null)
   // Reiter: eine Scheibe beginnt immer mit dem ersten (User, 9. Oktober 2026), nur ein Anker in der Adresse beim
   // Laden öffnet einen anderen. Kein gemerkter Reiter: der vorige stünde sonst auf der nächsten Scheibe
@@ -140,12 +136,7 @@ export function CardView({
         : store.get("scoring") === "rings"
           ? "rings"
           : "decimal",
-      layers: {
-        mpi: store.get("mpi") !== "0",
-        circle: store.get("circle") !== "0",
-        numbers: store.get("numbers") === "1",
-        ellipse: store.get("ellipse") === "1",
-      },
+      layers: saved.layers,
     })
   })
   const active = useActiveSection()
@@ -219,8 +210,16 @@ export function CardView({
   // stabile Rückrufe: die Analyse rechnet ihre Karten nur neu, wenn sich ihre Eingaben ändern
   const toggle = useCallback(
     (layer: Layer) => {
-      store.set(layer, state.layers[layer] ? "0" : "1")
+      const layers = { ...state.layers, [layer]: !state.layers[layer] }
+      store.set("display", serializeTargetDisplay({ layers, others }))
       dispatch({ type: "toggle", layer })
+    },
+    [state.layers, others]
+  )
+  const setOthers = useCallback(
+    (next: Others) => {
+      store.set("display", serializeTargetDisplay({ layers: state.layers, others: next }))
+      setOthersState(next)
     },
     [state.layers]
   )

@@ -9,12 +9,6 @@ import { TARGET_DISPLAY_COOKIE } from "@/lib/target-display-cookie"
  * Vorgabe. Auf dem Server gelesen, damit die Scheibe schon im ersten Bild richtig steht.
  */
 export async function targetDisplay(): Promise<TargetDisplay> {
-  const value = (await cookies()).get(TARGET_DISPLAY_COOKIE)?.value
-  let text = value ?? null
-  try {
-    text = value ? decodeURIComponent(value) : null
-  } catch {
-    // schon entschlüsselt oder kaputt: `parseTargetDisplay` fällt auf die Vorgabe
-  }
-  return parseTargetDisplay(text)
+  // Next gibt den Wert schon entschlüsselt (`encodeURIComponent` beim Schreiben)
+  return parseTargetDisplay((await cookies()).get(TARGET_DISPLAY_COOKIE)?.value)
 }

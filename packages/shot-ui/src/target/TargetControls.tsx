@@ -5,9 +5,9 @@ import type { ReactNode } from "react"
 
 import { HelpIcon } from "../help/HelpButton"
 import type { Layer, ViewState } from "../view-state"
+import type { Others } from "./display"
 
-/** wie die Schüsse außerhalb der Auswahl erscheinen: blass oder gar nicht */
-export type Others = "dim" | "hide"
+export type { Others } from "./display"
 
 export interface TargetControlsProps {
   state: ViewState

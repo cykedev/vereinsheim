@@ -3,8 +3,10 @@
 // jede Änderung schreibt sie neu. Der Ausschnitt gehört zur einzelnen Scheibe und bleibt draußen. Reine Funktionen: wo
 // gespeichert wird, entscheidet die App (Cookie) bzw. das Labor (`localStorage`).
 
-import type { Others } from "./TargetControls"
 import { initialViewState, type Layer } from "../view-state"
+
+/** wie die Schüsse außerhalb der Auswahl erscheinen: blass oder gar nicht */
+export type Others = "dim" | "hide"
 
 export interface TargetDisplay {
   layers: Readonly<Record<Layer, boolean>>
@@ -26,7 +28,7 @@ export function parseTargetDisplay(text: string | null | undefined): TargetDispl
   } catch {
     value = null
   }
-  const object = value && typeof value === "object" && !Array.isArray(value) ? value : {}
+  const object = value && typeof value === "object" ? value : {}
   const saved = object as { layers?: unknown; others?: unknown }
   const layers =
     saved.layers && typeof saved.layers === "object"
@@ -41,7 +43,10 @@ export function parseTargetDisplay(text: string | null | undefined): TargetDispl
           : DEFAULT_TARGET_DISPLAY.layers[layer],
       ])
     ) as Record<Layer, boolean>,
-    others: saved.others === "dim" || saved.others === "hide" ? saved.others : "dim",
+    others:
+      saved.others === "dim" || saved.others === "hide"
+        ? saved.others
+        : DEFAULT_TARGET_DISPLAY.others,
   }
 }
 

@@ -72,8 +72,9 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   Der Name steht in `device-cookie.ts` ohne Importe, damit die Client-Seite nicht `next/headers` zieht.
 - **Darstellung der Scheibe gemerkt** (User, 12. Oktober 2026): Ebenen und „übrige blass/aus“ als Cookie
   `spiegel-target` (`src/lib/target-display*.ts`, Format aus `@vereinsheim/shot-ui/target/display`). Die Seite einer
-  Scheibe liest ihn auf dem Server, damit das erste Bild stimmt; jede Änderung schreibt ihn neu. Der Ausschnitt gehört zur
-  Scheibe und wird nicht gemerkt.
+  Scheibe liest ihn auf dem Server, damit das erste Bild stimmt; jede Änderung schreibt ihn neu, das Öffnen nie (nach
+  Zurück bringt Next die alte Darstellung aus dem Cache; die Seite übernimmt dann die gemerkte). Der Ausschnitt gehört
+  zur Scheibe und wird nicht gemerkt.
 - **Projektion nur aus dem Fachkern.** `cardProjection` und `cardMarks` rechnen, die App speichert. Steigt eine
   Kennzahl-`version` oder `PROJECTION_VERSION`, holt `refreshProjections` die veralteten nach (auch die einer früheren
   Revision), je Scheibe unter der Sperre ihrer Zeile; beim Start des Servers `refreshStaleProjections` im Hintergrund.

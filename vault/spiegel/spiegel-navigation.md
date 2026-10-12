@@ -312,6 +312,12 @@ Dev-Datenbank (`pnpm --filter spiegel seed:own`):
   Offen sind Platzhalter; Fortschritt seit N7, zweiter Teil (unten).
 - **Wertung des Geräts** als Cookie (`spiegel-scoring`), weil Start und Liste auf dem Server rendern; die Seite einer
   Scheibe schreibt sie beim Umschalten mit.
+- **Darstellung der Scheibe** (Ebenen, übrige blass/aus) als Cookie (`spiegel-target`, User, 12. Oktober 2026), nicht in
+  `localStorage`: Den Cookie liest der Server, die Scheibe steht schon im ersten Bild richtig. Aus `localStorage` käme
+  sie erst nach dem Hydrieren, jede Scheibe spränge beim Öffnen von der Vorgabe auf die eigene Darstellung.
+  - Geschrieben nur beim Umschalten, nie beim Öffnen: Nach Zurück und Vor bringt Next die Seite aus dem Cache mit der
+    Darstellung ihres ersten Besuchs, und ein Schreiben beim Öffnen überschrieb die zuletzt gewählte (Review).
+  - Eine Seite aus dem Cache übernimmt die gemerkte über `useSyncExternalStore` (beim Hydrieren gilt die vom Server).
 - **Auf der Projektion** (SP-1.8, 10. Oktober 2026): Start, Liste und das Blättern lesen die Scheiben mit Projektion
   (`ownerCards`) und rechnen auf dem Server; an den Browser gehen das Modell und die Lagen der gezeigten Scheiben
   ([[adr-031]], [[spiegel-db-schema]]).
