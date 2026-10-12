@@ -14,6 +14,9 @@ neu veröffentlichen). Plan: `plans/2026-10-08-spiegel-shot-ui-fundament.md`; Vo
 | `pnpm --filter @vereinsheim/labor build`   | `dist/labor.html` (für das Artifact) und `dist/preview.html` (Browser) |
 | `pnpm --filter @vereinsheim/labor pruefen` | Skriptprüfung in Headless-Chrome (`pruefung.js`), `--alle` zeigt jede  |
 
+Im Browser-Fenster von Claude Code öffnet `file://` nicht; `preview_start` mit `labor` (`.claude/launch.json`) startet
+einen statischen Server auf `dist/` (Port 4173), die Seite ist `/preview.html`.
+
 ## Regeln
 
 - **Nur echte Bausteine:** Das Labor zeichnet und rechnet nichts selbst. Was es zeigen soll, kommt als

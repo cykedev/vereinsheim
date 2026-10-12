@@ -18,6 +18,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev", "--filter", "spiegel"],
       "port": 3002
+    },
+    {
+      "name": "labor",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4173", "--bind", "127.0.0.1", "--directory", "tools/labor/dist"],
+      "port": 4173
     }
   ]
 }

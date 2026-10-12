@@ -227,9 +227,12 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
 - **Auf einem echten iPhone prüfen** (bisher nur Emulation in Chrome): VoiceOver, sicherer Rand unten, Ziehen am
   Diagramm-Lineal gegen senkrechtes Scrollen (`touch-action`, [[spiegel-mobile]]).
 - **Leseprobe der Hilfe** (Abnahme von SP-1.11): Die Texte hat noch niemand ohne Statistik-Wissen gelesen.
-- **Zwei ältere Beobachtungen nachprüfen** (8./9. Oktober, seither viel umgebaut): Bei 768 × 660 passten die Serien
-  nicht neben die untere Leiste (die Prüfung läuft seither bei 768 × 700); über dem Diagramm des Fortschritts standen
-  Kennzahl und „je Scheibe/je Monat“ in zwei Zeilen.
+- **Über dem Verlauf des Fortschritts zwei Zeilen** unter 1440 px Breite (nachgeprüft 12. Oktober 2026 im Labor):
+  Kennzahl in der ersten, „je Scheibe/je Monat“ mit „?“ rechtsbündig in der zweiten; nichts angeschnitten. Die
+  beiden Umschalter brauchen gut 520 px, die linke Spalte hat bei 1280 px rund 480. Offen, ob eine Zeile gewünscht
+  ist (kürzere Namen oder schmalere Umschalter). Die andere Beobachtung vom 8./9. Oktober (bei 768 × 660 passen die
+  Serien nicht neben die untere Leiste) ist gewollt: Für die Scheibe blieben 274 px, weniger als `MIN_TARGET_PX`
+  (280), dann folgen die Serien darunter.
 - **Aufräumen** (User, 12. Oktober 2026): Labor (`tools/labor`), Spielwiese (`tools/spielwiese`) und was nur für
   sie da ist, werden bald nicht mehr gebraucht, seit die App selbst läuft, und sind womöglich schon nicht mehr
   deckungsgleich mit ihr.
