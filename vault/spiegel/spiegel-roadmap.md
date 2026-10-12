@@ -224,6 +224,16 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
   (`ThemeProvider`).
 - **Labor-Artifact** zeigt noch nicht die Markierung in der Liste und die Rekorde als Zeilen: neu bauen und unter
   derselben Adresse veröffentlichen (`tools/labor/CLAUDE.md`).
+- **Lint für die Pakete:** Nur die drei Apps haben `lint`. `packages/*` (darunter `shot-core`, `shot-ui`) und
+  `tools/labor` werden nicht gelintet, die Hook-Regeln von React in `shot-ui` prüft niemand.
+- **Auf einem echten iPhone prüfen** (bisher nur Emulation in Chrome): VoiceOver, sicherer Rand unten, Ziehen am
+  Diagramm-Lineal gegen senkrechtes Scrollen (`touch-action`, [[spiegel-mobile]]).
+- **Leseprobe der Hilfe** (Abnahme von SP-1.11): Die Texte hat noch niemand ohne Statistik-Wissen gelesen.
+- **JSON-Schema des Vertrags** (`packages/ingest-contract`) mit einem unabhängigen Validator (etwa ajv) prüfen; bisher
+  ist nur belegt, dass die Datei dem Zod-Export entspricht.
+- **Zwei ältere Beobachtungen nachprüfen** (8./9. Oktober, seither viel umgebaut): Bei 768 × 660 passten die Serien
+  nicht neben die untere Leiste (die Prüfung läuft seither bei 768 × 700); über dem Diagramm des Fortschritts standen
+  Kennzahl und „je Scheibe/je Monat“ in zwei Zeilen.
 - **Aufräumen** (User, 12. Oktober 2026): Labor (`tools/labor`), Spielwiese (`tools/spielwiese`) und was nur für
   sie da ist, werden bald nicht mehr gebraucht, seit die App selbst läuft, und sind womöglich schon nicht mehr
   deckungsgleich mit ihr.
