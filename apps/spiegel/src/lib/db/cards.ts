@@ -625,3 +625,21 @@ export async function saveFamilyScoring(
   })
   return true
 }
+
+/**
+ * Die gewählte Art einer Scheibe setzen (Seite der Scheibe): nur die eigene, nicht gelöschte; eine Scheibe nur aus Probe
+ * ist immer Training. `missing`, wenn es sie für den Schützen nicht gibt
+ */
+export async function chooseCardKind(
+  db: Db,
+  query: { cardId: string; ownerId: string; kind: CardKind }
+): Promise<"saved" | "missing" | "probeOnly"> {
+  const own = { id: query.cardId, ownerId: query.ownerId, deletedAt: null }
+  // Prüfen und Schreiben in einem Befehl; erst wenn nichts geschrieben wurde, nachsehen, warum
+  const { count } = await db.card.updateMany({
+    where: { ...own, NOT: { projection: { is: { probeOnly: true } } } },
+    data: { kindChoice: query.kind },
+  })
+  if (count === 1) return "saved"
+  return (await db.card.count({ where: own })) ? "probeOnly" : "missing"
+}

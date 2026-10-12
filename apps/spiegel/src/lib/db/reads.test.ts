@@ -13,7 +13,7 @@ import { createPrismaClient } from "@/lib/db"
 import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
-import { writeRevision } from "./cards"
+import { chooseCardKind, writeRevision } from "./cards"
 import {
   cardWithShots,
   familyCards,
@@ -272,5 +272,67 @@ describe("familyScorings", () => {
     const { slug } = await db.family.findUniqueOrThrow({ where: { id: otherFamilyId } })
     expect(await familyScorings(db, site.ownerId)).toEqual({ [slug]: "rings" })
     expect(await familyScorings(db, "jemand-anderes")).toEqual({})
+  })
+})
+
+describe("Art der Scheibe", () => {
+  it("die gewählte Art vor der Art der Quelle, in Übersicht und Seite; die Vorgabe der Wertung folgt ihr", async () => {
+    const ownerId = site.ownerId
+    const cards = await familyCards(db, { ownerId, familyId: site.familyId })
+    const training = cards.find((c) => c.kind === "training" && !c.projection.probeOnly)!
+    // Training: wie am Stand (die Testscheiben zeigen Zehntel)
+    expect(training.scoring).toBe("decimal")
+    await db.card.update({ where: { id: training.id }, data: { kindChoice: "competition" } })
+    try {
+      const overview = (await ownerCards(db, { ownerId })).find((c) => c.id === training.id)!
+      const page = (await cardWithShots(db, { cardId: training.id, ownerId }))!
+      // Wettkampf: amtlich (die Disziplin wertet ganze Ringe)
+      expect([overview.kind, overview.scoring]).toEqual(["competition", "rings"])
+      expect([page.kind, page.scoring]).toEqual(["competition", "rings"])
+      // eine gewählte Wertung bleibt
+      await db.card.update({ where: { id: training.id }, data: { scoringChoice: "decimal" } })
+      expect((await cardWithShots(db, { cardId: training.id, ownerId }))?.scoring).toBe("decimal")
+    } finally {
+      await db.card.update({
+        where: { id: training.id },
+        data: { kindChoice: null, scoringChoice: null },
+      })
+    }
+  })
+})
+
+describe("chooseCardKind", () => {
+  it("nur die eigene, nicht gelöschte Scheibe mit Wertungsschüssen; nur Probe bleibt Training", async () => {
+    const ownerId = site.ownerId
+    const cards = await familyCards(db, { ownerId, familyId: site.familyId })
+    const own = cards.find((c) => !c.projection.probeOnly)!
+    const probeOnly = cards.find((c) => c.projection.probeOnly)!
+    const trash = await db.card.findFirstOrThrow({
+      where: { sourceId: site.sourceId, deletedAt: { not: null } },
+    })
+    const choiceOf = async (id: string) =>
+      (await db.card.findUniqueOrThrow({ where: { id } })).kindChoice
+    try {
+      expect(await chooseCardKind(db, { cardId: own.id, ownerId, kind: "competition" })).toBe(
+        "saved"
+      )
+      expect(await choiceOf(own.id)).toBe("competition")
+      expect(
+        await chooseCardKind(db, { cardId: own.id, ownerId: "jemand-anderes", kind: "training" })
+      ).toBe("missing")
+      expect(await chooseCardKind(db, { cardId: trash.id, ownerId, kind: "competition" })).toBe(
+        "missing"
+      )
+      expect(await chooseCardKind(db, { cardId: "keine", ownerId, kind: "competition" })).toBe(
+        "missing"
+      )
+      expect(await chooseCardKind(db, { cardId: probeOnly.id, ownerId, kind: "competition" })).toBe(
+        "probeOnly"
+      )
+      expect(await choiceOf(probeOnly.id)).toBeNull()
+      expect(await choiceOf(own.id)).toBe("competition")
+    } finally {
+      await db.card.update({ where: { id: own.id }, data: { kindChoice: null } })
+    }
   })
 })

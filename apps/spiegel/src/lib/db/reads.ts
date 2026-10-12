@@ -32,6 +32,7 @@ const OVERVIEW_SELECT = {
   id: true,
   startedAt: true,
   kind: true,
+  kindChoice: true,
   complete: true,
   flags: true,
   state: true,
@@ -74,7 +75,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
       {
         id: row.id,
         startedAtMs: row.startedAt.getTime(),
-        kind: row.kind,
+        kind: kindOfRow(row),
         complete: row.complete,
         flags: row.flags,
         ...(official ? { official } : {}),
@@ -91,11 +92,20 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
   })
 }
 
-/** die Wertung einer Scheibe aus ihrer Zeile, mit der amtlichen, wie die Scheibe sie zeigt */
+/** die geltende Art einer Scheibe: gewählt, sonst die der Quelle (ein Stand schreibt nur `kind`) */
+const kindOfRow = (row: Pick<OverviewRow, "kind" | "kindChoice">) => row.kindChoice ?? row.kind
+
+/** die Wertung einer Scheibe aus ihrer Zeile, mit der geltenden Art und der amtlichen, wie die Scheibe sie zeigt */
 const scoringOfRow = (
-  row: Pick<OverviewRow, "kind" | "standScoring" | "scoringChoice">,
+  row: Pick<OverviewRow, "kind" | "kindChoice" | "standScoring" | "scoringChoice">,
   official: Scoring | null
-) => cardScoring({ kind: row.kind, official, stand: row.standScoring, choice: row.scoringChoice })
+) =>
+  cardScoring({
+    kind: kindOfRow(row),
+    official,
+    stand: row.standScoring,
+    choice: row.scoringChoice,
+  })
 
 /** von `fromMs` (eingeschlossen) bis `toMs` (ausgeschlossen), beides wahlweise */
 export interface MsRange {
@@ -156,6 +166,7 @@ const PAGE_CARD_SELECT = {
   id: true,
   startedAt: true,
   kind: true,
+  kindChoice: true,
   complete: true,
   flags: true,
   standScoring: true,
@@ -194,7 +205,7 @@ function toPageCard(row: PageCardRow): PageCard | null {
   return {
     id: row.id,
     startedAtMs: row.startedAt.getTime(),
-    kind: row.kind,
+    kind: kindOfRow(row),
     complete: row.complete,
     flags: row.flags,
     ...(official ? { official } : {}),
