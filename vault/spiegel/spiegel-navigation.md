@@ -390,7 +390,7 @@ aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-lan
   dem Monat. Die große Zahl auf Start nennt die Wertung ihres Blocks („Ø je Schuss in Zehnteln“), weil Blöcke
   verschiedener Familien verschieden rechnen können.
 - **Ein Tippen auf die schon gezeigte Wertung speichert nichts** (Review): sonst stünde die Vorgabe als Wahl fest. Einen
-  Weg zurück zur Vorgabe gibt es nicht.
+  Weg zurück zur Vorgabe gibt es nicht, auch keinen geplanten (User, 12. Oktober 2026: „es bleibt dabei“).
 - **Umschalten speichert:**
   - Auf der Seite einer Scheibe die Wertung der Scheibe. Liste und Start zeigen sie danach vorn.
   - In der Liste (neben den Filtern) und im Fortschritt (Ergebnis-Box) die Wertung der Familie; danach rechnet die Seite
