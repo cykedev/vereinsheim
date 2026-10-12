@@ -369,6 +369,7 @@ export function ProgressScreen({
                   explain={explain}
                   onHelp={onHelp}
                   onChoose={chooseFromRecord}
+                  chosen={chosen}
                 />
               </div>
             ),

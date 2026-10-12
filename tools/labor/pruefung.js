@@ -2491,6 +2491,33 @@ addEventListener("load", async () => {
           ),
         `${recordCard} · gewählt ${P().state.chosen} · Ablesung ${M().reading?.card.id}`
       )
+      // welcher Rekord was zeigt (User, 12. Oktober 2026): die ganze Zeile ist der Knopf, die Rekorde der gewählten
+      // Scheibe sind markiert und sagen „gezeigt“, alle anderen „zeigen“
+      const recordButtons = $$("[data-records-new] [data-record]").map((r) => ({
+        card: r.dataset.recordCard,
+        button: $("button", r),
+      }))
+      check(
+        "Zeitraum: Rekorde der gewählten Scheibe markiert („gezeigt“), die übrigen „zeigen“, ganze Zeile als Knopf",
+        recordButtons.some((r) => r.card === recordCard) &&
+          recordButtons.some((r) => r.card !== recordCard) &&
+          recordButtons.every(({ card, button }) => {
+            const mine = card === recordCard
+            return (
+              !!button &&
+              button.getBoundingClientRect().width >=
+                button.closest("[data-records-new]").getBoundingClientRect().width - 1 &&
+              button.getAttribute("aria-pressed") === String(mine) &&
+              txt(button).endsWith(mine ? "gezeigt" : "zeigen")
+            )
+          }),
+        recordButtons
+          .map(
+            ({ card, button }) =>
+              `${card === recordCard ? "*" : ""}${button?.getAttribute("aria-pressed")}:${txt(button).slice(-7)}`
+          )
+          .join(" ")
+      )
 
       // Umfang je Woche: die Achse nennt den Montag jeder Woche, keine Kalenderwoche (U3, D6)
       const weekTicks = $$('svg[aria-label="Schüsse je Woche"] text')

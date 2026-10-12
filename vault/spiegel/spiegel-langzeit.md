@@ -199,6 +199,10 @@ Aus der Durchsicht ([[spiegel-durchsicht]], Plan `plans/2026-10-09-spiegel-forts
   davor“), der das Blatt „Filter“ öffnet: Zeitraum, Vergleich, Art, „Trainings nur aus Probe mitzählen“.
 - **Kein Schalter der Wertung:** Der Fortschritt zeigt die Wertung des Geräts; sie steht in Profil.
 - **Rekorde:** oben höchstens fünf aus dem Zeitraum, darunter zugeklappt „Alle Rekorde (n)“.
+  - Die ganze Zeile eines Rekords ist der Knopf, mit Linien dazwischen wie in der Liste der Scheiben. Ein „zeigen“ allein
+    am rechten Rand ließ nicht erkennen, zu welchem Rekord es gehört (User, 12. Oktober 2026).
+  - Die Rekorde der gewählten Scheibe sind markiert und sagen „gezeigt“. Liegt die Scheibe außerhalb des Zeitraums,
+    steht „außerhalb“ ohne Knopf.
 - Auf dem Telefon (390 × 844) 3,97 statt 4,7 Bildschirme.
 
 ## Vorgaben (vom User bestätigt, 8. Oktober 2026)

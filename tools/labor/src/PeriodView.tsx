@@ -303,6 +303,7 @@ export function PeriodView({ header, state, dispatch, explain, onHelp }: PeriodV
                 explain={explain}
                 onHelp={onHelp}
                 onChoose={chooseFromRecord}
+                chosen={state.chosen}
               />
             ),
           },

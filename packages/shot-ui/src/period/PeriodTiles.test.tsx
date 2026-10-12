@@ -49,7 +49,11 @@ describe("Zahlen über den Zeitraum (D11)", () => {
 })
 
 describe("Analyse über den Zeitraum (D12)", () => {
-  const render = (cards: ReturnType<typeof periodCard>[], partial: Partial<PeriodState> = {}) =>
+  const render = (
+    cards: ReturnType<typeof periodCard>[],
+    partial: Partial<PeriodState> = {},
+    chosen: string | null = null
+  ) =>
     renderToStaticMarkup(
       h(PeriodInsights, {
         model: model(cards, partial),
@@ -58,7 +62,13 @@ describe("Analyse über den Zeitraum (D12)", () => {
         explain: false,
         onHelp: () => {},
         onChoose: () => {},
+        chosen,
       })
+    )
+  /** die Zeilen der Rekorde (Liste oben und alle), je Zeile ihr Markup */
+  const recordItems = (html: string) =>
+    [...html.matchAll(/<li data-record="([^"]+)" data-record-card="([^"]+)"[\s\S]*?<\/li>/g)].map(
+      (m) => ({ key: m[1], card: m[2], html: m[0] })
     )
 
   it("keine Karte „Gegen deinen Schnitt“: die Ablesung sagt den Abstand zu den fünf davor (U2, D2)", () => {
@@ -103,15 +113,40 @@ describe("Analyse über den Zeitraum (D12)", () => {
     expect(rows.find((r) => r.key === "R8")?.label).toBe("Beste Form (Ø über 5 Scheiben)")
     expect(rows.map((r) => r.key)).toContain("R3")
     const html = render([...now, old])
-    expect(html).toMatch(
-      /data-record="R1:3"[\s\S]*?disabled=""[^>]*title="außerhalb des Zeitraums"/
+    const items = recordItems(html)
+    // außerhalb: kein Knopf, nur der Hinweis
+    const outside = items.find((r) => r.key === "R1:3")
+    expect(outside?.card).toBe("alt")
+    expect(outside?.html).not.toContain("<button")
+    expect(outside?.html).toContain("außerhalb")
+    // im Zeitraum: die ganze Zeile ist der Knopf, sein Name ist sein Inhalt (Bezeichnung, Wert, Datum, „zeigen“)
+    const form = items.find((r) => r.key === "R8")?.html ?? ""
+    expect(form).toMatch(
+      /^<li[^>]*><button type="button" aria-pressed="false"[^>]*>[\s\S]*Beste Form \(Ø über 5 Scheiben\): [\s\S]*zeigen[\s\S]*<\/button><\/li>$/
     )
-    expect(html).toMatch(/data-record="R8"[\s\S]*?zeigen<\/button>/)
+    expect(form).not.toContain("aria-label")
     expect(html).toMatch(/data-record="R3"[\s\S]*?>Bester Teiler: <\/span>/)
-    expect(html).toMatch(
-      /aria-label="Bestes Ergebnis \(3 Schuss\) vom \d\d\.\d\d\.\d{4}: außerhalb des Zeitraums"/
-    )
-    expect(html).toMatch(/aria-label="Beste Form \(Ø über 5 Scheiben\) vom [\d.]+ zeigen"/)
+  })
+
+  it("Rekorde der gewählten Scheibe markiert, „gezeigt“ statt „zeigen“; ohne Wahl keiner (User, 12. Oktober 2026)", () => {
+    const records = recordItems(render(now))
+    expect(records.length).toBeGreaterThan(0)
+    expect(records.every((r) => r.html.includes('aria-pressed="false"'))).toBe(true)
+    expect(records.some((r) => r.html.includes("gezeigt"))).toBe(false)
+
+    // die Scheibe mit den meisten Rekorden wählen, die anderen bleiben unmarkiert
+    const count = new Map<string, number>()
+    for (const r of records) count.set(r.card, (count.get(r.card) ?? 0) + 1)
+    const [chosen] = [...count].sort((a, b) => b[1] - a[1])[0]
+    const marked = recordItems(render(now, {}, chosen))
+    expect(marked.some((r) => r.card !== chosen)).toBe(true)
+    for (const r of marked) {
+      const mine = r.card === chosen
+      expect(r.html.includes('aria-pressed="true"'), r.key).toBe(mine)
+      expect(r.html.includes("bg-accent-wash"), r.key).toBe(mine)
+      expect(/>gezeigt</.test(r.html), r.key).toBe(mine)
+      expect(/>zeigen</.test(r.html), r.key).toBe(!mine)
+    }
   })
 
   it("ohne Scheiben: der Hinweis statt einer leeren Karte", () => {

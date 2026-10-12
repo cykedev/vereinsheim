@@ -17,6 +17,8 @@ export interface PeriodInsightsProps {
   onHelp?: (id: string) => void
   /** ein Rekord wählt seine Scheibe, wenn sie im Zeitraum liegt */
   onChoose?: (id: string) => void
+  /** die gewählte Scheibe des Zeitraums: ihre Rekorde sind markiert und sagen „gezeigt“ */
+  chosen?: string | null
   className?: string
 }
 
@@ -28,6 +30,10 @@ const NEW_RECORDS = 5
  * Scheiben der Familie). Oben höchstens fünf, deren Scheibe im Zeitraum liegt, darunter zugeklappt alle; ein Rekord
  * zeigt seine Scheibe, wenn sie im Zeitraum liegt. „Gegen deinen Schnitt“ entfiel mit U2 (D2): Den Abstand zum Schnitt
  * der fünf davor sagt die Ablesung.
+ *
+ * Die ganze Zeile ist der Knopf, mit Linien dazwischen wie in der Liste der Scheiben: Ein „zeigen“ allein am rechten
+ * Rand ließ nicht erkennen, zu welchem Rekord es gehört (User, 12. Oktober 2026). Die Rekorde der gewählten Scheibe sind
+ * markiert.
  */
 export function PeriodInsights({
   model,
@@ -36,6 +42,7 @@ export function PeriodInsights({
   explain,
   onHelp,
   onChoose,
+  chosen = null,
   className,
 }: PeriodInsightsProps) {
   const inPeriod = new Set(model.cards.map((c) => c.id))
@@ -44,37 +51,51 @@ export function PeriodInsights({
   const recent = rows.filter((row) => inPeriod.has(row.record.cardId)).slice(0, NEW_RECORDS)
   const row = (r: RecordRow) => {
     const here = inPeriod.has(r.record.cardId)
-    return (
-      <li
-        key={r.key}
-        data-record={r.key}
-        data-record-card={r.record.cardId}
-        className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3"
-      >
-        <span className="min-w-0">
-          <span className="text-muted-foreground">{`${r.label}: `}</span>
-          <span className="font-semibold tabular-nums">{r.value}</span>
-          <span className="text-muted-foreground">
-            {` · ${date(r.record.atMs)}${r.record.detail ? ` · ${r.record.detail}` : ""}`}
-          </span>
+    const shown = here && r.record.cardId === chosen
+    const text = (
+      <span className="min-w-0">
+        <span className="text-muted-foreground">{`${r.label}: `}</span>
+        <span className="font-semibold tabular-nums">{r.value}</span>
+        <span className="text-muted-foreground">
+          {` · ${date(r.record.atMs)}${r.record.detail ? ` · ${r.record.detail}` : ""}`}
         </span>
-        <button
-          type="button"
-          aria-label={
-            here
-              ? `${r.label} vom ${date(r.record.atMs)} zeigen`
-              : `${r.label} vom ${date(r.record.atMs)}: außerhalb des Zeitraums`
-          }
-          disabled={!here || !onChoose}
-          title={here ? undefined : "außerhalb des Zeitraums"}
-          onClick={() => onChoose?.(r.record.cardId)}
-          className="cursor-pointer rounded text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default disabled:text-muted-foreground disabled:no-underline"
-        >
-          {here ? "zeigen" : "außerhalb"}
-        </button>
+      </span>
+    )
+    const line = "grid w-full grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-2 py-1.5"
+    return (
+      <li key={r.key} data-record={r.key} data-record-card={r.record.cardId}>
+        {here && onChoose ? (
+          <button
+            type="button"
+            aria-pressed={shown}
+            onClick={() => onChoose(r.record.cardId)}
+            className={cn(
+              line,
+              "cursor-pointer rounded text-left focus-visible:outline-2 focus-visible:outline-ring",
+              shown ? "bg-accent-wash" : "hover:bg-surface-2"
+            )}
+          >
+            {text}
+            <span
+              className={cn(
+                "text-[12.5px] font-semibold",
+                shown ? "text-foreground-2" : "text-primary"
+              )}
+            >
+              {shown ? "gezeigt" : "zeigen"}
+            </span>
+          </button>
+        ) : (
+          <div className={line}>
+            {text}
+            <span className="text-[12.5px] text-muted-foreground">{here ? "" : "außerhalb"}</span>
+          </div>
+        )}
       </li>
     )
   }
+  // Linien zwischen den Rekorden; die Zeilen reichen um ihren Innenabstand über den Rand, der Text bleibt bündig
+  const list = "-mx-2 grid divide-y divide-border text-[13px]"
   return (
     <section aria-label="Analyse" className={cn("@container grid gap-4", className)}>
       <div className="grid min-w-0 gap-1">
@@ -85,7 +106,7 @@ export function PeriodInsights({
         {rows.length ? (
           <>
             {recent.length ? (
-              <ul data-records-new className="grid gap-1.5 text-[13px]">
+              <ul data-records-new className={list}>
                 {recent.map(row)}
               </ul>
             ) : (
@@ -95,7 +116,7 @@ export function PeriodInsights({
               <summary className="cursor-pointer text-[13px] font-semibold text-primary">
                 {`Alle Rekorde (${rows.length})`}
               </summary>
-              <ul data-records className="mt-2 grid gap-1.5 text-[13px]">
+              <ul data-records className={cn(list, "mt-2")}>
                 {rows.map(row)}
               </ul>
             </details>
