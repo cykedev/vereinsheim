@@ -14,6 +14,8 @@ import { randomBytes } from "node:crypto"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 
+import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
+
 import { Browser, type Page } from "./pruefen/browser"
 import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
 
@@ -117,6 +119,21 @@ async function pickCard(page: Page): Promise<string> {
 }
 
 const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol
+/** Themen der Hilfe über viele Scheiben (Seite eines Zeitraums) */
+const PERIOD_TOPICS = HELP_TOPICS.filter((t) => t.theme === "period").map((t) => t.id)
+/**
+ * Fachbegriffe, die auf den ersten beiden Ebenen nicht stehen dürfen (U3, `plans/2026-10-09-spiegel-sprache.md`): σ, R50,
+ * T², „95 %“ als Sicherheit, Median, P10/P90, „mittlere Hälfte“, bedeutsam, Hotelling, echt, unklar, Kalenderwochen.
+ * Erst im Blatt „?“ und in den Karten der Reiter. Aus der Skriptprüfung des Labors übernommen.
+ */
+const JARGON =
+  "/σ|R50|T²|mit 95 ?%|95 ?%:|Median|P10|P90|mittlere Hälfte|bedeutsam|Hotelling|\\b[Ee]cht(e[nmrs]?)?\\b|\\b[Uu]nklar\\b|KW \\d/"
+/** der erste Fachbegriff im Text der Elemente (ohne Blätter), oder null */
+const jargonIn = (selectors: string) =>
+  `(() => { const text = $$(${JSON.stringify(selectors)}).map((el) => { const copy = el.cloneNode(true)
+    copy.querySelectorAll("dialog").forEach((d) => d.remove()); return txt(copy) }).join(" ")
+    return text.match(${JARGON})?.[0] ?? null })()`
+
 /** Anker der Reiter; beim Blättern fällt der Reiter weg, der Abschnitt („#analysis“) bleibt (`siblingRoute`) */
 const TAB_ANCHORS = ["#overview", "#result", "#precision", "#position", "#time"]
 
@@ -221,6 +238,13 @@ async function desktopCard(page: Page, href: string) {
       more.checked === "true",
     more
   )
+
+  const cardJargon = await page.ev<string | null>(
+    jargonIn(
+      '[data-card-header], section[aria-label="Analyse"] [data-tile], section[aria-label="Analyse"] [data-observation]'
+    )
+  )
+  check("Kopf und Überblick der Scheibe: keine Fachbegriffe", cardJargon === null, cardJargon ?? "")
 
   // Blatt der Hilfe: Karte rechts, Fokus zurück, Escape, Tipp hinein und daneben
   await page.ev(`scrollTo(0, 0)`)
@@ -553,6 +577,62 @@ async function phoneNoSideScroll(page: Page) {
   }
 }
 
+async function language(page: Page) {
+  await page.viewport(1280, 900)
+  for (const [path, selectors] of [
+    ["/", "[data-start-page]"],
+    ["/cards", "main"],
+    [
+      "/progress",
+      '[data-period-header], [data-result-box], [data-period-tile], [data-card-readout], #card-list, [data-section="history"]',
+    ],
+  ] as const) {
+    await page.goto(`${BASE}${path}`)
+    const found = await page.ev<string | null>(jargonIn(selectors))
+    check(`${path}: keine Fachbegriffe auf den ersten Ebenen`, found === null, found ?? "")
+  }
+  await page.goto(`${BASE}/progress`)
+  if (await page.ev<boolean>(`!!button("je Monat")`)) {
+    await page.click(`button("je Monat")`, { settle: 600 })
+    const month = await page.ev<string | null>(jargonIn('[data-section="history"]'))
+    check("/progress je Monat: keine Fachbegriffe", month === null, month ?? "")
+  }
+
+  // jedes Thema der Hilfe über viele Scheiben hat einen Platz im Fortschritt (sonst prüft das kein Test)
+  // manche erscheinen nur in einem Zustand: der Vergleich nur mit Vergleich, der Abstand zum Schnitt an einer Scheibe
+  // mit Scheiben davor; gesammelt wird über die Zustände
+  const shown = new Set<string>()
+  const collect = async () => {
+    for (const id of await page.ev<string[]>(`$$("[data-help]").map((el) => el.dataset.help)`))
+      shown.add(id)
+  }
+  await page.goto(`${BASE}/progress`)
+  await collect()
+  const middle = await page.ev<string | null>(`(() => { const rows = $$("[data-card-row]")
+    return rows[Math.floor(rows.length / 2)]?.dataset.cardRow ?? null })()`)
+  if (middle) {
+    await page.click(`$('[data-card-row="${middle}"] button')`, { settle: 500 })
+    await collect()
+  }
+  await page.click(`$("[data-period-chip]")`, { settle: 300 })
+  await page.click(
+    `$$("[data-period-picker] fieldset").find((f) => txt($("legend", f)) === "Vergleichen mit")
+      .querySelectorAll("label")[1]`,
+    { settle: 150 }
+  )
+  await page.click(`button("Übernehmen", $("[data-period-picker]").closest("dialog"))`, {
+    settle: 300,
+  })
+  await page.waitFor(`!!$("[data-result-box] [data-comparison]")`, 10_000)
+  await collect()
+  const missing = PERIOD_TOPICS.filter((id) => !shown.has(id))
+  check(
+    "Fortschritt: jedes Thema der Hilfe über viele Scheiben hat ein „?“",
+    missing.length === 0,
+    missing.join(", ")
+  )
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Blättern, Rückwege
 // ─────────────────────────────────────────────────────────────────────────────
@@ -808,6 +888,7 @@ async function main() {
     await section("Blättern", () => paging(page, href))
     await section("Rückwege", () => backPaths(page))
     await section("Fortschritt", () => progress(page))
+    await section("Sprache und Hilfe", () => language(page))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
   } catch (error) {
