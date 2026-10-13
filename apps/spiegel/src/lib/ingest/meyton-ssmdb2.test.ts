@@ -183,6 +183,34 @@ describe("Adapter im Einzelnen", () => {
     expect(adaptSnapshot(extra, context).kind).toBe("card")
   })
 
+  it("TIMESTAMP statt datetime hängt an der Sitzungs-Zeitzone: Quarantäne statt raten (SF-31)", () => {
+    const data = {
+      ...snapshot.data,
+      treffer: {
+        ...snapshot.data.treffer,
+        columns: { ...snapshot.data.treffer.columns, Zeitstempel: "timestamp" },
+      },
+    }
+    const result = adaptSnapshot({ ...snapshot, data, checksum: computeChecksum(data) }, context)
+    expect(result).toEqual({
+      kind: "quarantine",
+      problems: ["treffer.Zeitstempel hat einen anderen Typ"],
+    })
+  })
+
+  it("ohne Messung am Stand gilt die Uhr der Anlage aus dem Heartbeat, erst ab fünf Minuten (SF-29)", () => {
+    const at = (siteClockOffsetMs: number | null) => {
+      const result = adaptSnapshot(snapshot, { ...context, siteClockOffsetMs })
+      if (result.kind !== "card") throw new Error("keine Scheibe")
+      return result.card.startedAtMs
+    }
+    const base = at(null)
+    // die Anlage geht sechs Minuten vor: Beginn sechs Minuten früher
+    expect(at(6 * 60_000)).toBe(base - 6 * 60_000)
+    // vier Minuten gleicht Spiegel nicht aus
+    expect(at(4 * 60_000)).toBe(base)
+  })
+
   it("Zustand: offen, solange das Lebenszeichen läuft; ruhend nach fünf Minuten, endgültig nach zwölf Stunden", () => {
     const at = (offsetMs: number): SnapshotV1 => ({
       ...snapshot,

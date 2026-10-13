@@ -191,6 +191,26 @@ describe("ingestBatch", () => {
     expect(source.confirmedAt).toBeNull()
   })
 
+  it("unbekanntes Schema: Rohdaten abgelegt und markiert, keine Scheibe (SF-25)", async () => {
+    const expected = frozenExpected("SF-07").cards[0]
+    const [snapshot] = sent("SF-07", expected.scheibenId)
+    const data = {
+      ...snapshot.data,
+      treffer: {
+        ...snapshot.data.treffer,
+        columns: { ...snapshot.data.treffer.columns, x: "double" },
+      },
+    }
+    const odd: SnapshotV1 = { ...snapshot, data, checksum: computeChecksum(data) }
+    expect((await ingest([odd]))[0].outcome).toBe("quarantined")
+    const raw = await db.rawSnapshot.findFirstOrThrow({
+      where: { sourceId: site.sourceId, scheibenId: expected.scheibenId },
+    })
+    expect(raw.quarantine).toBe("treffer.x hat einen anderen Typ")
+    expect(raw.adapterVersion).toBeNull()
+    expect(await cardOf(expected.scheibenId)).toBeNull()
+  })
+
   it("nur das Lebenszeichen bewegt: vermerkt, die Scheibe wieder offen, kein neuer Stand", async () => {
     const expected = frozenExpected("SF-10").cards[0]
     const snapshots = sent("SF-10", expected.scheibenId)
