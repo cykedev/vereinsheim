@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { KindToggle } from "./KindToggle"
+import { ScoringSegment } from "./ScoringSegment"
 import { ScoringToggle } from "./ScoringToggle"
 
 describe("ScoringToggle: der Bruch im weichen Kreis", () => {
@@ -81,8 +82,33 @@ describe("KindToggle: der Pokal im weichen Kreis", () => {
     expect(training).toMatch(/<path d="m2 2 20 20"><\/path><\/svg>/)
     const competition = html("competition")
     expect(competition).toContain('aria-label="Art: Wettkampf, auf Training umstellen"')
-    expect(competition).toMatch(/class="[^"]*\bbg-warning-wash\b[^"]*\btext-gold\b/)
+    expect(competition).toMatch(/class="[^"]*\bbg-gold-wash\b[^"]*\btext-gold\b/)
     expect(competition).toContain("data-kind-toggle")
     expect(competition).not.toContain("<mask")
+  })
+})
+
+describe("ScoringSegment: die Wertung als beschriftete Auswahl in einer Filterzeile (User, 13. Oktober 2026)", () => {
+  const html = (scoring: "rings" | "decimal") =>
+    renderToStaticMarkup(
+      createElement(ScoringSegment, {
+        scoring,
+        prefix: "Ø in",
+        label: "Wertung für Ø und Abstand",
+        onChange: () => {},
+      })
+    )
+
+  it("davor der Bezug, dann „Ganze Ringe | Zehntel“, die gezeigte gewählt", () => {
+    const rings = html("rings")
+    expect(rings).toMatch(
+      /^<span data-scoring-segment="rings" class="inline-flex items-center gap-2">/
+    )
+    expect(rings).toMatch(/<span aria-hidden="true"[^>]*>Ø in<\/span><div role="radiogroup"/)
+    expect(rings).toContain('aria-label="Wertung für Ø und Abstand"')
+    expect(rings).toMatch(/aria-checked="true"[^>]*>Ganze Ringe<\/button>/)
+    expect(rings).toMatch(/aria-checked="false"[^>]*>Zehntel<\/button>/)
+    expect(rings.indexOf("Ganze Ringe")).toBeLessThan(rings.indexOf("Zehntel"))
+    expect(html("decimal")).toMatch(/aria-checked="true"[^>]*>Zehntel<\/button>/)
   })
 })

@@ -7,7 +7,7 @@ import { markShots, type CardMark, type MarkShot } from "@vereinsheim/shot-core/
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
-import { ScoringToggle } from "@vereinsheim/shot-ui/controls/ScoringToggle"
+import { ScoringSegment } from "@vereinsheim/shot-ui/controls/ScoringSegment"
 import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
@@ -84,7 +84,7 @@ export function ProgressScreen({
   const help = useHelp()
   const onHelp = useCallback((id: string | null) => id && help(id), [help])
   const { timeZone, named } = context
-  // die Wertung der Familie als Kreis in der Zeile der Filter
+  // die Wertung der Familie als Auswahl in der Zeile der Filter
   const familyScoring = useSavedChoice({
     value: state.scoring,
     scope: state.family,
@@ -219,7 +219,12 @@ export function ProgressScreen({
                   timeZone={timeZone}
                   families={families}
                   actions={
-                    <ScoringToggle scoring={familyScoring.shown} onChange={familyScoring.change} />
+                    <ScoringSegment
+                      scoring={familyScoring.shown}
+                      prefix="Wertung"
+                      label="Wertung"
+                      onChange={familyScoring.change}
+                    />
                   }
                 />
                 {familyScoring.error && (
