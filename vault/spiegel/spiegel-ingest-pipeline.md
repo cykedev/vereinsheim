@@ -101,9 +101,9 @@ Gegenprobe, Vollständigkeit, `disziplin-unbekannt`, Uhr des Stands (Versatz am 
 Merkmal, ab fünf Minuten Beginn und Ende verschoben, Schusszeiten bleiben), Uhrsprung, Zustand, Quarantäne bei fehlender
 oder umgetypter Spalte, Art aus `Status`. `korrigiert` und `uhr-abweichung` hält `writeRevision` dauerhaft an der
 Scheibe. Eine umgeschaltete Anzeigeart ist keine Korrektur (SF-74, `shotChange`). Die Disziplin legt das Einlesen mit
-Scheibenbild und Familie aus dem Fachkern an, die amtliche Wertung bleibt unbekannt, bis der Admin sie setzt. Offen:
-Schüsse über der Soll-Zahl gehen mit Wert 0 und echter Lage in die Kennzahlen der Lage ein (der Fachkern kennt
-`ueber-soll` noch nicht als Ausschluss), die Zuordnung der `Rangliste` zu einer Art.
+Scheibenbild und Familie aus dem Fachkern an, die amtliche Wertung bleibt unbekannt, bis der Admin sie setzt. Seit dem
+13. Oktober 2026 schließt der Fachkern Schüsse über der Soll-Zahl aus Lage und Abstand aus (SF-08), und das Einlesen legt
+jede `Rangliste` als `Ranking` an, deren Art der Admin zuordnet.
 
 - **Skalen je Feld** aus einer Tabelle, festgenagelt durch Tests am echten Datensatz ([[meyton-ssmdb2]]).
 - **Zeit:** Ortszeit ohne Zone plus Millisekunden → UTC mit der Zeitzone der Anlage; der Rohwert bleibt erhalten. Die Sitzungs-Zeitzone der Brücke kommt mit, falls `Zeitstempel` ein `TIMESTAMP` ist (SF-31). Die Uhrabweichung aus dem Heartbeat wird mit ihrem Messzeitpunkt gespeichert und erst ab fünf Minuten ausgeglichen, jeweils mit der nächstgelegenen Messung (SF-29).

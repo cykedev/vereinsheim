@@ -95,11 +95,12 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
     Block seinen Kreis (`ScoredEveningBlock` in `StartScreen`). Die Seite einer Scheibe öffnet in `route.scoring ?? card.scoring`; die Adresse trägt die Wertung
     nur, solange sie nicht die der Scheibe ist (`addressScoring`).
 - **Art der Scheibe wie die Wertung** (User, 12. Oktober 2026, `plans/2026-10-12-spiegel-art.md`): `Card.kind` ist die Art
-  der Quelle (jeder Stand schreibt sie, heute `seed:own` mit „training“, später der Adapter), `Card.kindChoice` die Wahl des
+  der Quelle (jeder Stand schreibt sie: der Adapter aus `Status`, `seed:own` „training“), `Card.kindChoice` die Wahl des
   Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? ranking.kind ?? kind` (`kindOfRow` in `reads.ts`, der einzige
   Weg zur Art), in Übersicht, Seite und Vorgabe der Wertung. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
   Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, „Anlage und Brücken“); die
-  Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. Umstellen auf der Seite einer Scheibe (`KindToggle`, Pokal im weichen Kreis vor dem der Wertung,
+  Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. Bei einer Scheibe nur aus Probe zählt die Rangliste nicht
+  (Training, nicht umstellbar). Umstellen auf der Seite einer Scheibe (`KindToggle`, Pokal im weichen Kreis vor dem der Wertung,
   `setCardKind` in `src/lib/card-kind-actions.ts`); eine Scheibe nur aus Probe ist Training und hat keinen Kreis der Art. Ändert die Art die
   Vorgabe der Wertung, folgt die Seite (`seenScoring` in `CardScreen`). `Status` der SSMDB2 ist an der Vereinsanlage leer
   ([[meyton-ssmdb2]]). Sitzung und
