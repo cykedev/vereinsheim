@@ -37,8 +37,8 @@
   --color-warning-wash: var(--warning-wash);
   --color-gold: var(--gold);
   --color-gold-line: var(--gold-line);
+  --color-gold-wash: var(--gold-wash);
   --color-quiet: var(--quiet);
-  --color-ink-wash: var(--ink-wash);
   --color-info: var(--info);
   --color-paper: var(--paper);
   --color-paper-line: var(--paper-line);
@@ -103,14 +103,13 @@
   --warning-wash: rgba(233, 177, 12, 0.16);
   /* Gold eines Zeichens (Pokal) auf `warning-wash`: goldener als `warning` (ein Text-Token), 3,5 : 1 */
   --gold: #a87800;
-  /* Rahmen um Gold (der Kreis „Wettkampf“) */
+  /* Rahmen um Gold und die goldene Tönung deckend auf der Kartenfläche (der Kreis „Wettkampf“): auf Seite und Karte
+     gleich, `gold` darauf 3,5 : 1 */
   --gold-line: rgba(168, 120, 0, 0.35);
-  /* leises Zeichen (etwa ein Pokal „aus“) auf `ink-wash`: heller als `muted-foreground`, auf Seite und Karte noch
-     3,2 : 1; nie für Text */
-  --quiet: #76829a;
-  /* durchscheinende Tönung (weicher Kreis): dunkelt jeden Grund gleich ab, auf Karte und Seite derselbe Kreis; eine
-     feste Fläche wie `surface-2` war auf der Karte dunkler, auf der Seite heller als der Grund */
-  --ink-wash: rgba(16, 28, 48, 0.045);
+  --gold-wash: #fbf3d8;
+  /* leises Zeichen (etwa ein Pokal „aus“) auf der Kartenfläche: heller als `muted-foreground`, noch 3,6 : 1; nie für
+     Text */
+  --quiet: #7c889b;
   --info: #1f5fd1;
   /* Die Scheibe ist ein Gegenstand: gleiche Farben in beiden Themes. */
   --paper: #f2f2ee;
@@ -171,8 +170,8 @@
   --warning-wash: rgba(233, 177, 12, 0.12);
   --gold: #f1c453;
   --gold-line: rgba(241, 196, 83, 0.35);
-  --quiet: #6b778f;
-  --ink-wash: rgba(205, 220, 245, 0.07);
+  --gold-wash: #2e2d23;
+  --quiet: #66728a;
   --info: #9ccaff;
 }
 

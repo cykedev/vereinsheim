@@ -25,20 +25,22 @@ describe("RoundToggle: weicher Kreis (Design 2)", () => {
     expect(html).toContain('data-kind="training"')
     expect(html).toMatch(/class="[^"]*\bsize-8\b[^"]*\brounded-full\b/)
     // leise (Token `quiet`, 3 : 1 auf der Fläche): eine Randinformation (User, 13. Oktober 2026)
-    // durchscheinend getönt: auf Karte und Seite derselbe Kreis; keine feste Fläche (User, 13. Oktober 2026)
-    expect(html).toMatch(/class="[^"]*\bbg-ink-wash\b[^"]*\btext-quiet\b/)
+    // innen die Kartenfläche, kräftiger Rahmen: auf der grauen Seite ein Knopf, auf der Karte ein Ring (User,
+    // 13. Oktober 2026)
+    expect(html).toMatch(/class="[^"]*\bborder-line-strong bg-card text-quiet\b/)
     expect(html).not.toContain("bg-surface-2")
     expect(html).toContain("[&amp;_svg]:stroke-[1.75]")
-    // der leichte Rahmen immer, wie ein Segment-Umschalter (User, 13. Oktober 2026)
-    expect(html).toMatch(/class="[^"]*\brounded-full border border-border\b/)
+    // tailwind-merge lässt nur einen Rahmen stehen
+    expect(html).toMatch(/class="[^"]*\brounded-full border\b/)
+    expect(html).not.toContain("border-border")
     expect(html).toContain(">P</button>")
   })
 
   it("Gold: goldene Tönung und das Gold-Token (goldener als das Text-Token `warning`)", () => {
     const html = render("gold")
-    expect(html).toMatch(/class="[^"]*\bborder-gold-line bg-warning-wash text-gold\b/)
-    // tailwind-merge ersetzt den neutralen Rahmen durch den goldenen
-    expect(html).not.toContain("border-border")
-    expect(html).not.toContain("bg-ink-wash")
+    // deckend auf der Kartenfläche getönt: auf Seite und Karte gleich
+    expect(html).toMatch(/class="[^"]*\bborder-gold-line bg-gold-wash text-gold\b/)
+    expect(html).not.toContain("border-line-strong")
+    expect(html).not.toContain("bg-card")
   })
 })
