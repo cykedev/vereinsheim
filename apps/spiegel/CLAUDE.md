@@ -10,15 +10,16 @@ seit N7 (erster Teil) Start, Scheiben, die Seite einer Scheibe und Profil mit ec
 
 ## Befehle
 
-| Befehl                                                     | Zweck                                                                                                      |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `pnpm dev --filter spiegel`                                | Dev-Server auf :3002                                                                                       |
-| `pnpm --filter spiegel exec prisma migrate dev --name <x>` | Schema ändern (braucht `.env` mit `DATABASE_URL`)                                                          |
-| `pnpm --filter spiegel test`                               | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                      |
-| `pnpm --filter spiegel measure`                            | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                         |
-| `pnpm --filter spiegel seed:own`                           | die echten Scheiben des Users in die Dev-Datenbank, dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`) |
-| `pnpm --filter spiegel pruefen`                            | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)  |
-| `pnpm --filter spiegel ingest-load`                        | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)   |
+| Befehl                                                     | Zweck                                                                                                       |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `pnpm dev --filter spiegel`                                | Dev-Server auf :3002                                                                                        |
+| `pnpm --filter spiegel exec prisma migrate dev --name <x>` | Schema ändern (braucht `.env` mit `DATABASE_URL`)                                                           |
+| `pnpm --filter spiegel test`                               | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                       |
+| `pnpm --filter spiegel measure`                            | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                          |
+| `pnpm --filter spiegel seed:own`                           | die echten Scheiben des Users in die Dev-Datenbank, dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`)  |
+| `pnpm --filter spiegel pruefen`                            | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)   |
+| `pnpm --filter spiegel ingest-load`                        | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)    |
+| `pnpm --filter spiegel bridge-e2e`                         | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB und drei Fällen (`--keep`) |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den

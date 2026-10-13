@@ -96,13 +96,13 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** `apps/spiegel-bridge` nach [[spiegel-bridge]], ohne eigenen Zustand ([[adr-027]], Änderung vom 8. Oktober 2026): Kopplung, Leser mit Read-only-Transaktionen, Änderungserkennung, Snapshots mit Prüfsumme, Upload mit Wiederholung statt Warteschlange, Heartbeat, Statusseite; ohne Probe-Puffer, Snapshot erst nach zwei gleichen Lesungen, Änderungen je ScheibenID über den zuletzt gesehenen Zeitstempel ([[adr-027]], Änderung vom 9. Oktober 2026); Betrieb mit Abschalten nach dem Training (Nachholen beim Start ab dem Wasserstand in Spiegel).
 - **Schnitt:** a) Leser, Änderungserkennung und Snapshots, nur lokal; b) Kopplung, Upload und Heartbeat; c) Nachholen beim Start, Updates, Statusseite.
 - **Abnahme:** gegen eine lokale MySQL mit SSMDB2-Schema und den Fällen aus SP-1.0, Ausfalltests (Netz weg, DB weg, Stecker ziehen während des Uploads; danach nichts auf der Platte außer der Konfiguration), einmal an der echten Anlage; Sonderfälle SF-02, SF-03, SF-07, SF-08, SF-10, SF-23, SF-24, SF-25, SF-26, SF-31, SF-32, SF-33, SF-49, SF-50, SF-51, SF-52, SF-53, SF-54, SF-55, SF-57, SF-58.
-- **Hängt ab von:** SP-0.4, SP-1.0. **Status:** a) erledigt (13. Oktober 2026, `plans/2026-10-13-spiegel-bruecke-leser.md`, `apps/spiegel-bridge`): Leser in Go, Änderungserkennung im Arbeitsspeicher, Snapshots v1 mit Prüfsumme aus einer eigenen kanonischen Form; abgenommen an allen 31 Fällen in MariaDB 10.6 und 11 (`pnpm --filter spiegel-bridge replay`), dazu eine neue Spalte während des Laufs (SF-25), Anlage nicht erreichbar, gescheiterte Runde (SF-24). Offen: b) Kopplung, Upload, Heartbeat; c) Nachholen, Updates, Statusseite; einmal an der echten Anlage.
+- **Hängt ab von:** SP-0.4, SP-1.0. **Status:** a) erledigt (13. Oktober 2026, `plans/2026-10-13-spiegel-bruecke-leser.md`, `apps/spiegel-bridge`): Leser in Go, Änderungserkennung im Arbeitsspeicher, Snapshots v1 mit Prüfsumme aus einer eigenen kanonischen Form; abgenommen an allen 31 Fällen in MariaDB 10.6 und 11 (`pnpm --filter spiegel-bridge replay`), dazu eine neue Spalte während des Laufs (SF-25), Anlage nicht erreichbar, gescheiterte Runde (SF-24). b) erledigt (13. Oktober 2026, `plans/2026-10-13-spiegel-bruecke-upload.md`): `pair` und `run`, Konfiguration als einzige Datei (atomar, 0600), Upload ohne Warteschlange (gesendet erst mit der Antwort), Drossel des Lebenszeichens, `Retry-After`, Heartbeat; dazu die Filter aus SP-1.5 (Zustimmung, verdeckt, gesperrt), damit nichts ohne Zustimmung das Schützenhaus verlässt. Ende zu Ende gegen den eigenen Build (`pnpm --filter spiegel bridge-e2e`). Offen: c) Nachholen ab dem Wasserstand, Abgleich, Updates, Statusseite, Dienst für systemd; eine neue Epoche bei einem Reset; einmal an der echten Anlage.
 
 ### SP-1.5 Brücke v1: Opt-in, Aufträge, verdeckte Wertung
 - **Ziel:** nur das Richtige verlässt das Schützenhaus.
 - **Umfang:** Liste gehashter SportpassIDs mit Opt-in, Live-Upload passender Scheiben; Aufträge per Abfrage (Vorschau und Scheibe per ID, Fundbüro-Liste, Nachladen); Grabsteine; Modus 5 und 10 nie, Modus 0 erst nach Freigabe je Disziplin.
 - **Abnahme:** Tests zu Filter, Verdeckung und Aufträgen; keine Scheibe ohne Opt-in oder Auftrag verlässt das Gerät; Sonderfälle SF-13, SF-19, SF-20, SF-28, SF-38, SF-41, SF-59.
-- **Hängt ab von:** SP-1.4. **Status:** offen.
+- **Hängt ab von:** SP-1.4. **Status:** Filter erledigt (13. Oktober 2026, mit SP-1.4 b): Zustimmung, Verdeckung (5, 10, Modus 0 ohne Freigabe), Grabsteine und Löschsperren, ohne Zustand kein Upload (SF-13, SF-19, SF-20, SF-28, SF-38, SF-59). Offen: Aufträge (Vorschau und Scheibe per ID, Fundbüro, Nachladen; SF-41), Freigabe von Modus 0 je Disziplin.
 
 ### SP-1.6 Spiegel-App: Skelett, Ingest-API, Normalisierung
 - **Ziel:** Spiegel nimmt Daten an und versteht sie.
@@ -234,8 +234,7 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
   Fachkern; solche Schüsse zählen mit Wert 0 und Zeit, aber nicht in Lage und Abstand (Schwerpunkt, Streuung, Streukreis,
   bester Teiler). Mit Lage wäre ein Schuss nahe der Mitte der beste Teiler geworden. Die sieben Kennzahlen der Lage und
   des Abstands stehen auf Version 2; die Projektionen rechnet der Server beim nächsten Start neu.
-- **Brücke (SP-1.4 b):** Änderungen nur am Lebenszeichen höchstens alle 30 s schicken ([[spiegel-bridge]]), `Retry-After`
-  beachten, Zustand über `GET /state`.
+- **Brücke (SP-1.4 b):** erledigt am 13. Oktober 2026 (Drossel des Lebenszeichens auf 30 s, `Retry-After`, Zustand über `GET /state`).
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.
 - **Lint für die Pakete:** erledigt am 13. Oktober 2026. Jedes Paket unter `packages/*` (außer `config`) hat `lint`

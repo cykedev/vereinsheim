@@ -113,4 +113,21 @@ Teil a (SP-1.4 a, `plans/2026-10-13-spiegel-bruecke-leser.md`): Leser, Änderung
   aus `information_schema` (ein neuer Typ reist sofort mit).
 - Eine Scheibe, die 24 Stunden nicht in der Ablage stand, vergisst die Brücke; Fehlen ist nie eine Löschung.
 - Abgenommen an allen 31 Sonderfällen in MariaDB 10.6 und 11: jeder Snapshot bit-gleich mit dem eingefrorenen, gesendet
-  genau die Lesungen der Vorgabe. Die Drossel auf 30 s für reine Lebenszeichen kommt mit dem Upload (Teil b).
+  genau die Lesungen der Vorgabe.
+
+Teil b (SP-1.4 b, `plans/2026-10-13-spiegel-bruecke-upload.md`): `spiegel-bridge pair` und `run`.
+
+- **Konfiguration** als JSON (Adresse, Brücken-Id, Token, Zugang zur SSMDB2), geschrieben nur beim Koppeln, atomar mit
+  Rechten 0600; Ort `/etc/spiegel-bridge/config.json` bzw. `%ProgramData%\spiegel-bridge\config.json`.
+- **Filter am Rand** (aus SP-1.5 vorgezogen): nur Scheiben mit Zustimmung (Hash der SportpassID aus `GET /state`), keine
+  mit verdecktem Schuss oder Modus 0 (die ganze Scheibe ab dem ersten, im Heartbeat je Anzeigeart gezählt), keine
+  gesperrten. Dieselben Regeln, nach denen Spiegel verwirft: Was Spiegel nicht nehmen darf, verlässt das Gerät nicht.
+- **Upload ohne Warteschlange:** Ein Stand gilt erst mit der Antwort von Spiegel als gesendet; bis dahin liest die Brücke
+  die Scheibe jede Runde neu. Nur-Lebenszeichen höchstens alle 30 s. `Retry-After` bei 429 und 503, 413 teilt den
+  Stapel, 401 beendet den Lauf (neu koppeln).
+- **Heartbeat** jede Minute mit Status, Rückstau, Uhrabweichung der Anlage (`NOW(3)`), zurückgehaltenen Scheiben und
+  Fingerabdruck; ein möglicher Reset wird gemeldet, eine neue Epoche eröffnet die Brücke nicht von selbst.
+- **Ende zu Ende** (`pnpm --filter spiegel bridge-e2e`): eigener Build, MariaDB, SF-03, SF-13 und SF-19 mit Zeiten von
+  jetzt; es kommen genau die erlaubten Stände an, je eine Scheibe beim Konto mit Zustimmung. Nebenbei gelernt: Mit den
+  Datumsangaben der Fälle (Tage zurück) misst Spiegel Tage Uhrversatz und schaltet eine Scheibe über den Heartbeat
+  endgültig, bevor der nächste Stand kommt; der wird dann ein neuer Zyklus. Ein echter Abend hat das nicht.
