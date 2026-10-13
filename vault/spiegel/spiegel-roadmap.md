@@ -224,12 +224,14 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
   `plans/2026-10-12-spiegel-art.md` ([[spiegel-navigation]], „Art der Scheibe“): Wahl auf der Seite der Scheibe
   (`Card.kindChoice`), übersteht neue Lesungen; ohne Wahl die Art der Quelle, vorerst Training. `Status` ist an der
   Vereinsanlage leer und taugt nicht als Vorschlag ([[meyton-ssmdb2]]).
-- **Vorschlag der Art aus der `Rangliste`** (aus dem Punkt davor, 12. Oktober 2026): Der Admin ordnet Ranglisten des
-  Vereins („Training-LP“, „RWK_…“, „LG Vereinsmeister“, …) einer Art zu ([[adr-029]]); der Adapter (SP-1.6 b) setzt
-  damit `Card.kind`. Die Wahl des Schützen geht weiter vor.
-- **Dev-Datenbank nachziehen:** Die Schemaänderung der Ingest-API ersetzt die eine Migration (bis SP-1.9). Die
-  Dev-Datenbank hat die neuen Tabellen und Spalten schon (additiv, ohne Datenverlust); ihre Migrationshistorie passt erst
-  nach `pnpm --filter spiegel exec prisma migrate reset --force` und `seed:own` wieder (User).
+- **Art aus der `Rangliste`** (aus dem Punkt davor, 12. Oktober 2026): erledigt am 13. Oktober 2026 nach Plan
+  `plans/2026-10-13-spiegel-rangliste.md`. Das Einlesen legt jede Rangliste der Anlage beim ersten Sehen an (`Ranking`,
+  ohne Art) und hängt die Scheibe daran; der Admin ordnet auf „Anlage und Brücken“ Training oder Wettkampf zu
+  ([[adr-029]]). Die Art gilt beim Lesen (`kindOfRow`): Wahl des Schützen, sonst die der Rangliste, sonst die der Quelle;
+  eine geänderte Zuordnung wirkt sofort auf alle Scheiben.
+- **Dev-Datenbank nachziehen:** Die Schemaänderung der Rangliste ersetzt die eine Migration (bis SP-1.9). Die
+  Dev-Datenbank hat Tabelle und Spalte schon (additiv, ohne Datenverlust, 13. Oktober 2026); ihre Migrationshistorie passt
+  erst nach `pnpm --filter spiegel exec prisma migrate reset --force` und `seed:own` wieder (User).
 - **Schüsse über der Soll-Zahl** (SF-08): erledigt am 13. Oktober 2026. `FLAG_OVER_TARGET` (`ueber-soll`) steht im
   Fachkern; solche Schüsse zählen mit Wert 0 und Zeit, aber nicht in Lage und Abstand (Schwerpunkt, Streuung, Streukreis,
   bester Teiler). Mit Lage wäre ein Schuss nahe der Mitte der beste Teiler geworden. Die sieben Kennzahlen der Lage und

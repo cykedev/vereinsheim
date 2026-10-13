@@ -96,11 +96,13 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
     nur, solange sie nicht die der Scheibe ist (`addressScoring`).
 - **Art der Scheibe wie die Wertung** (User, 12. Oktober 2026, `plans/2026-10-12-spiegel-art.md`): `Card.kind` ist die Art
   der Quelle (jeder Stand schreibt sie, heute `seed:own` mit „training“, später der Adapter), `Card.kindChoice` die Wahl des
-  Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? kind` (`kindOfRow` in `reads.ts`), in Übersicht, Seite und
-  Vorgabe der Wertung. Umstellen auf der Seite einer Scheibe (`KindToggle`, Pokal im weichen Kreis vor dem der Wertung,
+  Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? ranking.kind ?? kind` (`kindOfRow` in `reads.ts`, der einzige
+  Weg zur Art), in Übersicht, Seite und Vorgabe der Wertung. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
+  Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, „Anlage und Brücken“); die
+  Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. Umstellen auf der Seite einer Scheibe (`KindToggle`, Pokal im weichen Kreis vor dem der Wertung,
   `setCardKind` in `src/lib/card-kind-actions.ts`); eine Scheibe nur aus Probe ist Training und hat keinen Kreis der Art. Ändert die Art die
   Vorgabe der Wertung, folgt die Seite (`seenScoring` in `CardScreen`). `Status` der SSMDB2 ist an der Vereinsanlage leer
-  ([[meyton-ssmdb2]]); ein Vorschlag aus der `Rangliste` kommt mit dem Adapter ([[spiegel-roadmap]]). Sitzung und
+  ([[meyton-ssmdb2]]). Sitzung und
   Kennung prüfen die Actions über `src/lib/action-guards.ts`.
 - **Darstellung der Scheibe gemerkt** (User, 12. Oktober 2026): Ebenen, „übrige blass/aus“ und Ausschnitt (ganze
   Scheibe oder Gruppe) als Cookie

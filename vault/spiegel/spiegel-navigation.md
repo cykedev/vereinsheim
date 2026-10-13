@@ -417,8 +417,9 @@ Plan `plans/2026-10-12-spiegel-art.md`, mit dem User entschieden („ja passt“
 - **Bedienung:** auf der Seite einer Scheibe in der Ergebnis-Box unter der Wertung „Training | Wettkampf“, automatisch
   gespeichert wie die Wertung (seit dem 13. Oktober 2026 ein Pokal im weichen Kreis, unten). Ändert die Art die Vorgabe der Wertung, zeigt die Seite die neue. Eine Scheibe nur aus
   Probe ist Training und hat keinen Schalter.
-- **Ohne Wahl** gilt die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); ein Vorschlag aus
-  der `Rangliste` kommt mit dem Adapter ([[spiegel-roadmap]]).
+- **Ohne Wahl** gilt die Art der `Rangliste`, die der Admin zugeordnet hat (seit 13. Oktober 2026, „Anlage und Brücken“),
+  sonst die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); eine Rangliste ohne
+  Zuordnung gilt als Training.
 - **Blättern:** Die Scheibe selbst bleibt in ihrem Kontext, auch wenn sie nach dem Umstellen nicht mehr zum Filter der
   Herkunft passt (`contextCardIds`, Review); sonst risse das Blättern aus einer Liste „Training“ ab.
 - **Nicht hier:** mehrere Scheiben auf einmal markieren (Auswahl, N4).
