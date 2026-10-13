@@ -36,7 +36,14 @@ function ScoredEveningBlock(props: Omit<EveningBlockProps, "actions" | "notice">
   return (
     <EveningBlock
       {...props}
-      actions={<ScoringToggle scoring={familyScoring.shown} onChange={familyScoring.change} />}
+      actions={
+        // je Block ein eigener Name; der Kreis stellt Ø, Band und Rekorde um, die Kacheln zeigen die Wertung der Scheibe
+        <ScoringToggle
+          label={`Wertung für Ø (${props.familyLabel})`}
+          scoring={familyScoring.shown}
+          onChange={familyScoring.change}
+        />
+      }
       notice={
         familyScoring.error && (
           <p role="alert" className="text-sm text-destructive">

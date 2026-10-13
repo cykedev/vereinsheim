@@ -29,6 +29,12 @@ export function useSavedChoice<T extends string>({
   const [, startSaving] = useTransition()
   const [optimistic, show] = useOptimistic<Scoped<T>>({ scope, value })
   const [error, setError] = useState<Scoped<string | null> | null>(null)
+  // ein Wechsel räumt die Meldung, auch für den Weg zurück; eine, die danach noch eintrifft, hält `inScope` fern
+  const [seenScope, setSeenScope] = useState(scope)
+  if (scope !== seenScope) {
+    setSeenScope(scope)
+    setError(null)
+  }
   const shown = inScope(optimistic, scope, value)
   const change = (next: T) => {
     if (next === shown) return
