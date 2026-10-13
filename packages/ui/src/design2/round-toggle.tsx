@@ -21,9 +21,10 @@ interface RoundToggleProps extends DataAttributes {
 
 /**
  * Weicher Kreis (Design 2, Plan `plans/2026-10-13-spiegel-symbole.md`): ein Zustand als Zeichen, ein Tippen schaltet um.
- * 32 px, gefüllt in der Flächenfarbe mit leichtem Rahmen wie ein Segment-Umschalter (auf der Seitenfläche verschwand
- * der Kreis ohne; User, 13. Oktober 2026: „vielleicht ist der leichte rahmen immer gut“), das Zeichen leise (`quiet`,
- * eine Randinformation); Gold nur für das Hervorgehobene. Für Einstellungen neben einer großen Zahl oder in einer
+ * 32 px, durchscheinend getönt (`ink-wash`) mit leichtem Rahmen: auf Karte und Seite derselbe Kreis (User, 13. Oktober
+ * 2026: „das muss auf cards und auch ohne gut aussehen“; eine feste Fläche war auf der Karte dunkler, auf der Seite
+ * heller als der Grund). Das Zeichen leise (`quiet`, eine Randinformation); Gold mit goldenem Rahmen nur für das
+ * Hervorgehobene. Für Einstellungen neben einer großen Zahl oder in einer
  * Zeile mit Filtern (Art, Wertung), wo ein Segment-Umschalter zu viel Platz nähme.
  */
 export function RoundToggle({
@@ -45,8 +46,8 @@ export function RoundToggle({
       className={cn(
         "relative inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border transition-colors focus-visible:outline-2 focus-visible:outline-ring [&_svg]:size-[17px] [&_svg]:shrink-0 [&_svg]:stroke-[1.75]",
         tone === "gold"
-          ? "bg-warning-wash text-gold"
-          : "bg-surface-2 text-quiet hover:bg-accent-wash hover:text-muted-foreground",
+          ? "border-gold-line bg-warning-wash text-gold"
+          : "bg-ink-wash text-quiet hover:bg-accent-wash hover:text-muted-foreground",
         className
       )}
     >
