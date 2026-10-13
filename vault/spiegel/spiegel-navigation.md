@@ -449,13 +449,16 @@ Kreise.
 - **Ort:**
   - Seite einer Scheibe: Pokal und Bruch rechts in der Zeile des Ergebnisses (Platz `actions` von `CardResult`; nur
     Probe: nur der Bruch), am Telefon im Kopf, ab 768 px in der Box;
-  - Liste und Fortschritt: kein Kreis, sondern eine beschriftete Auswahl rechtsbündig in der Zeile der Filter
-    (`ScoringSegment` in `ListControls`, `PeriodControls`), auf allen Größen: in der Liste „Ø in [Ganze Ringe | Zehntel]“
-    (sie ändert Ø und Abstand, nicht die Spalten der Ergebnisse), im Fortschritt „Wertung [Ganze Ringe | Zehntel]“ (die
-    ganze Seite). Vorher stand dort ein Kreis, in der Liste zuerst neben dem Titel, im Fortschritt in der Ergebnis-Box
-    (User: „in die selbe zeile wie die filter“, „rechts ausgerichtet“, dann „vielleicht muss es bei den listen auch eine
-    auswahl ganze ringe oder zehntel sein, statt dem icon. weil es sprechender ist und der platz da ist und der direkte
-    bezug fehlt“). Regel: in einer Filterzeile eine beschriftete Auswahl, direkt neben einer Zahl der Kreis;
+  - Liste und Fortschritt: kein Kreis, sondern ein Wechsel-Chip direkt nach dem Chip „Filter“ (`ScoringChip` in
+    `ListControls`, `PeriodControls`): in Worten mit Bezug und ⇄, neutral umrandet (der blaue Chip öffnet ein Blatt), ein
+    Tippen stellt um. In der Liste „Ø in ganzen Ringen“ / „Ø in Zehnteln“ (er ändert Ø und Abstand, nicht die Spalten
+    der Ergebnisse), im Fortschritt „In ganzen Ringen“ / „In Zehnteln“ (die ganze Seite). Am Telefon steht er neben dem
+    Chip „Filter“ in der zweiten Zeile. Der Weg dahin (User, 13. Oktober 2026): ein Kreis neben dem Titel bzw. in der
+    Ergebnis-Box, dann „in die selbe zeile wie die filter“; dann „vielleicht muss es bei den listen auch eine auswahl
+    ganze ringe oder zehntel sein … weil es sprechender ist … und der direkte bezug fehlt“; die Auswahl „Ø in [Ganze
+    Ringe | Zehntel]“ brach am Telefon in eine dritte Zeile um („wenn dann noch mehr disziplinen da sind haben wir noch
+    weniger platz“); aus drei Skizzen der Wechsel-Chip. Regel: in einer Filterzeile ein Chip in Worten, direkt neben
+    einer Zahl der Kreis;
   - Start: neben dem Ø je Block (der Block ist eine Karte, keine Filter), dort entfällt „in ganzen Ringen“ im Text.
 - **Liste:** der Pokal in der Spalte „Art“ 16 px in Gold (vorher 14 px grau, der User sah ihn nicht).
 - **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`, auf

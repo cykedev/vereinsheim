@@ -85,8 +85,8 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
     Scheiben, danach `revalidatePath`): auf der Seite einer Scheibe `setCardScoring`, in Liste und Fortschritt
     `setFamilyScoring`. Bedient auf der Seite einer Scheibe und auf Start als weicher Kreis neben der großen Zahl
     (`ScoringToggle` aus `shot-ui`, Plan `plans/2026-10-13-spiegel-symbole.md`), in Liste und Fortschritt als
-    beschriftete Auswahl rechtsbündig in der Zeile der Filter (`ScoringSegment`, Fehler darunter); jede Hülle führt ihre
-    Wahl einmal
+    Wechsel-Chip in Worten nach dem Chip „Filter“ (`ScoringChip`, Fehler unter den Filtern); jede Hülle führt ihre Wahl
+    einmal
     über `useSavedChoice` (`src/components/shell/`), Kopf am Telefon und Box teilen sie: gezeigt sofort, ein Fehler (auch
     ein abgelehnter Aufruf, `saveChoice`) steht als Text im Platz `notice` statt im Error-Boundary. Auf Start trägt jeder
     Block seinen Kreis (`ScoredEveningBlock` in `StartScreen`). Die Seite einer Scheibe öffnet in `route.scoring ?? card.scoring`; die Adresse trägt die Wertung
