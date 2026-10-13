@@ -83,7 +83,7 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     // jeder Block rechnet in der Wertung seiner Familie und nennt sie (Review, 12. Oktober 2026)
     expect(text(html)).toContain("9,20 Ø je Schuss in Zehnteln")
     expect(text(render(CARDS, "rings"))).toContain("Ø je Schuss in ganzen Ringen")
-    // mit dem Kreis daneben nennt der Kreis die Wertung; ein Hinweis unten (Plan `plans/2026-10-13-spiegel-symbole.md`)
+    // mit dem Kreis daneben nennt der Kreis die Wertung; ein Hinweis darunter (Plan `plans/2026-10-13-spiegel-symbole.md`)
     const withToggle = render(CARDS, "decimal", {
       actions: h("span", { "data-kreis": true }),
       notice: h("p", { role: "alert" }, "HINWEIS"),
@@ -93,9 +93,11 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(withToggle).toMatch(
       /data-evening-mean[\s\S]*?<\/p><div data-evening-actions[^>]*><span data-kreis/
     )
+    // der Hinweis unter Zahl und Bezug, vor dem Verlauf (Review, 13. Oktober 2026)
     expect(withToggle.indexOf("HINWEIS")).toBeGreaterThan(
-      withToggle.indexOf("data-evening-list-link")
+      withToggle.indexOf("data-evening-reference")
     )
+    expect(withToggle.indexOf("HINWEIS")).toBeLessThan(withToggle.indexOf("data-form-strip"))
     // der Bezug statt des Abstands, der schon im Satz steht (U5, D2)
     expect(text(html)).toContain("Schnitt der 5 Scheiben davor: 9,00")
     expect(text(html)).not.toContain("+0,20 zum Schnitt")

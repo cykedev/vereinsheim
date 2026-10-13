@@ -29,6 +29,9 @@ addEventListener("load", async () => {
     const scoringTo = async (value, wait = 100) => {
       for (let i = 0; i < 2 && scoringToggle()?.dataset.scoring !== value; i++)
         await click(scoringToggle(), wait)
+      // still aufzugeben verdeckte einen Kreis, der nicht umstellt (Review)
+      if (scoringToggle()?.dataset.scoring !== value)
+        throw new Error(`Wertung ließ sich nicht auf ${value} stellen`)
     }
     // Ebene 1 und 2 sprechen Alltag (U3, D1): Fachbegriffe stehen nur im Blatt „?“ und in den Reitern; seit U4 auch
     // kein „unklar“ mehr („Eingeschossen?“ entfiel); „rechts“ trifft `\becht` nicht
@@ -704,13 +707,15 @@ addEventListener("load", async () => {
         txt($("#shot-table th:nth-child(2)")) === "Ring",
       txt($('[data-tile="Ergebnis"]'))
     )
-    // die amtliche Wertung nennt der Kreis in seinem Namen, nur wenn sie gezeigt ist (kein Punkt, User, 13. Oktober 2026)
+    // die amtliche Wertung nennt der Kreis in seinem Namen: gezeigt im Zustand, sonst in der Wirkung (kein Punkt, User,
+    // 13. Oktober 2026; Review)
     const ringsLabel = scoringToggle()?.getAttribute("aria-label") ?? ""
     await scoringTo("decimal")
     const decimalLabel = scoringToggle()?.getAttribute("aria-label") ?? ""
     check(
-      "amtliche Wertung im Namen des Kreises, nur wenn sie gezeigt ist",
-      !ringsLabel.includes("amtlich") && decimalLabel.includes("Zehntel, amtlich"),
+      "amtliche Wertung im Namen des Kreises, im Zustand oder in der Wirkung",
+      ringsLabel.includes("ganze Ringe, auf Zehntel (amtlich) umstellen") &&
+        decimalLabel.includes("Zehntel, amtlich, auf ganze Ringe umstellen"),
       `${ringsLabel} · ${decimalLabel}`
     )
     // eine andere Scheibe steht sofort, ohne Gleiten

@@ -24,12 +24,15 @@ describe("ScoringToggle: der Bruch im weichen Kreis", () => {
     expect(rings).toContain('aria-label="Wertung: ganze Ringe, auf Zehntel umstellen"')
   })
 
-  it("die amtliche nennt sich so, nur wenn sie gezeigt ist; ein eigener Name für einen Teil der Seite", () => {
+  it("die amtliche nennt sich so, gezeigt im Zustand, sonst in der Wirkung; ein eigener Name für einen Teil der Seite", () => {
     expect(html({ scoring: "rings", official: "rings" })).toContain(
       'aria-label="Wertung: ganze Ringe, amtlich, auf Zehntel umstellen"'
     )
     expect(html({ scoring: "rings", official: "rings" })).toContain('title="Ganze Ringe, amtlich"')
-    expect(html({ scoring: "decimal", official: "rings" })).not.toContain("amtlich")
+    expect(html({ scoring: "decimal", official: "rings" })).toContain(
+      'aria-label="Wertung: Zehntel, auf ganze Ringe (amtlich) umstellen"'
+    )
+    expect(html({ scoring: "decimal", official: "rings" })).toContain('title="Zehntel"')
     expect(html({ label: "Wertung für Ø und Abstand" })).toContain(
       'aria-label="Wertung für Ø und Abstand: Zehntel, auf ganze Ringe umstellen"'
     )

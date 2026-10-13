@@ -301,7 +301,7 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
 
   const empty = shots.length === 0
   // die Wertung als Kreis neben der Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`); die Art steht im Labor fest
-  const scoringSwitch = (
+  const scoringToggle = (
     <ScoringToggle
       scoring={state.scoring}
       official={opened ? opened.official : sample.official}
@@ -309,7 +309,7 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
     />
   )
   // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung
-  const result = <CardResult shots={shots} state={state} actions={scoringSwitch} />
+  const result = <CardResult shots={shots} state={state} actions={scoringToggle} />
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">

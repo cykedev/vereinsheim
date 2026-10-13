@@ -136,6 +136,8 @@ export function EveningBlock({
             {reference}
           </p>
         )}
+        {/* der Hinweis zum Kreis gleich darunter, nicht am Ende des Blocks (Review, 13. Oktober 2026) */}
+        {notice}
       </div>
       <div className="grid gap-1.5">
         <FormStrip strip={block.strip} band={block.band} dateLabel={date} />
@@ -238,7 +240,6 @@ export function EveningBlock({
       >
         Abend in Scheiben ›
       </RouteLink>
-      {notice}
     </section>
   )
 }
