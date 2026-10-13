@@ -74,7 +74,19 @@ type clock struct{ t time.Time }
 func (c *clock) now() time.Time          { return c.t }
 func (c *clock) advance(d time.Duration) { c.t = c.t.Add(d) }
 func start() *clock                      { return &clock{time.Date(2026, 10, 13, 18, 0, 0, 0, time.UTC)} }
+
+// tick liest eine Runde, und Spiegel bestätigt jeden Snapshot (der Upload gelingt)
 func tick(t *testing.T, w *Watcher, m *memory) Result {
+	t.Helper()
+	r := tickUndelivered(t, w, m)
+	for _, s := range r.Snapshots {
+		w.Delivered(s)
+	}
+	return r
+}
+
+// tickUndelivered liest eine Runde, ohne dass ein Upload gelingt
+func tickUndelivered(t *testing.T, w *Watcher, m *memory) Result {
 	t.Helper()
 	r, err := w.Tick(context.Background(), m)
 	if err != nil {
@@ -380,5 +392,80 @@ func TestSkippedReportedOncePerState(t *testing.T) {
 	}
 	if reported != 1 {
 		t.Fatalf("%d Meldungen", reported)
+	}
+}
+
+func TestUndeliveredIsReadAndSentAgain(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 3, "100")
+	tickUndelivered(t, w, m)
+	c.advance(time.Second)
+	if r := tickUndelivered(t, w, m); len(r.Snapshots) != 1 || r.Backlog != 1 {
+		t.Fatalf("erster Versuch: %d Snapshots, Rückstau %d", len(r.Snapshots), r.Backlog)
+	}
+	// der Upload scheiterte; eine Stunde später ist die Scheibe nicht mehr aktiv, wartet aber noch
+	c.advance(time.Hour)
+	r := tickUndelivered(t, w, m)
+	if len(r.Snapshots) != 1 || r.Backlog != 1 {
+		t.Fatalf("neu gelesen und erneut: %d Snapshots, Rückstau %d", len(r.Snapshots), r.Backlog)
+	}
+	w.Delivered(r.Snapshots[0])
+	c.advance(time.Second)
+	if r := tickUndelivered(t, w, m); len(r.Snapshots) != 0 || r.Backlog != 0 {
+		t.Fatalf("bestätigt: %d Snapshots, Rückstau %d", len(r.Snapshots), r.Backlog)
+	}
+}
+
+func TestLifesignOnlyAtMostEvery30Seconds(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 3, "100")
+	tick(t, w, m)
+	c.advance(time.Second)
+	tick(t, w, m)
+	sent := 0
+	// 65 s lang alle 5 s ein Lebenszeichen, jede Sekunde eine Runde: gesendet nach 31 und 61 s (30 s nach dem vorigen)
+	for second := 1; second <= 65; second++ {
+		if second%5 == 0 {
+			m.stamps[7] = fmt.Sprintf("2026-10-13 18:01:%02d", second%60)
+			d := m.data[7]
+			d.Scheiben.Columns["Zeitstempel"] = "datetime"
+			d.Scheiben.Rows[0]["Zeitstempel"] = text(m.stamps[7])
+			m.data[7] = d
+		}
+		c.advance(time.Second)
+		sent += len(tick(t, w, m).Snapshots)
+	}
+	if sent != 2 {
+		t.Fatalf("%d Stände mit nur neuem Lebenszeichen in 65 s, erwartet 2", sent)
+	}
+	// ein Schuss geht sofort
+	m.put(7, "2026-10-13 18:02:01", 4, "100")
+	d := m.data[7]
+	d.Scheiben.Columns["Zeitstempel"] = "datetime"
+	d.Scheiben.Rows[0]["Zeitstempel"] = text(m.stamps[7])
+	m.data[7] = d
+	c.advance(time.Second)
+	tick(t, w, m)
+	c.advance(time.Second)
+	if got := ids(tick(t, w, m)); len(got) != 1 {
+		t.Fatalf("Schuss: %v", got)
+	}
+}
+
+func TestResendAfterNewConsent(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 3, "100")
+	tick(t, w, m)
+	c.advance(time.Second)
+	tick(t, w, m)
+	c.advance(2 * time.Hour)
+	w.Resend(w.Known())
+	tick(t, w, m)
+	c.advance(time.Second)
+	if got := ids(tick(t, w, m)); len(got) != 1 {
+		t.Fatalf("erneut: %v", got)
 	}
 }

@@ -316,3 +316,38 @@ func (r *Reader) readTable(ctx context.Context, conn *sql.Conn, query, table, ke
 	}
 	return rows.Err()
 }
+
+// Fingerprint ist der Fingerabdruck der Quelle für den Heartbeat (SF-23): Version, Zahl der Scheiben und Treffer, ältestes
+// Lebenszeichen. Nur Zahlen und ein Zeitstempel, nie Inhalte.
+type Fingerprint struct {
+	Version     *string
+	Scheiben    int
+	Treffer     int
+	OldestStamp *string
+}
+
+// Fingerprint liest den Fingerabdruck in einer eigenen kurzen Transaktion; einmal je Heartbeat, nicht je Runde.
+func (r *Reader) Fingerprint(ctx context.Context) (Fingerprint, error) {
+	conn, err := r.db.Conn(ctx)
+	if err != nil {
+		return Fingerprint{}, err
+	}
+	defer conn.Close()
+	if _, err := conn.ExecContext(ctx, "START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY"); err != nil {
+		return Fingerprint{}, err
+	}
+	defer func() { _, _ = conn.ExecContext(context.WithoutCancel(ctx), "ROLLBACK") }()
+	var f Fingerprint
+	f.Version = readVersion(ctx, conn)
+	var oldest sql.NullString
+	if err := conn.QueryRowContext(ctx, "SELECT COUNT(*), MIN(`Zeitstempel`) FROM `Scheiben`").Scan(&f.Scheiben, &oldest); err != nil {
+		return Fingerprint{}, err
+	}
+	if oldest.Valid {
+		f.OldestStamp = &oldest.String
+	}
+	if err := conn.QueryRowContext(ctx, "SELECT COUNT(*) FROM `Treffer`").Scan(&f.Treffer); err != nil {
+		return Fingerprint{}, err
+	}
+	return f, nil
+}

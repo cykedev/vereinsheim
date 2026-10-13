@@ -1,16 +1,18 @@
-// spiegel-bridge liest die Meyton-Ablage (SSMDB2) und baut Snapshots für Spiegel (ADR-027, vault/spiegel/spiegel-bridge.md).
-// Teil a (SP-1.4 a): nur lokal, ohne Upload.
+// spiegel-bridge liest die Meyton-Ablage (SSMDB2) und bringt Snapshots zu Spiegel (ADR-027, vault/spiegel/spiegel-bridge.md).
 //
-//	spiegel-bridge watch --dsn 'user:pass@tcp(192.168.10.200:3306)/SSMDB2'   im Takt lesen, je Snapshot eine Zeile
-//	spiegel-bridge watch --once --json                                       eine Runde, volle Snapshots als JSON
+//	spiegel-bridge pair --url https://spiegel.example --code ABCDE-FGHJK --dsn 'user:pass@tcp(192.168.10.200:3306)/SSMDB2'
+//	spiegel-bridge run                                                       Betrieb: lesen, filtern, hochladen, Heartbeat
+//	spiegel-bridge watch --dsn …                                             nur lokal lesen, je Snapshot eine Zeile
 //	spiegel-bridge version
 //
-// Die DSN kommt auch aus SPIEGEL_BRIDGE_DSN. Auf die Platte schreibt die Brücke nichts.
+// `--config` nennt die Konfiguration (sonst /etc/spiegel-bridge/config.json bzw. %ProgramData%); sie ist das Einzige,
+// was die Brücke auf die Platte schreibt, und nur beim Koppeln. Die DSN für `watch` auch aus SPIEGEL_BRIDGE_DSN.
 package main
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -19,6 +21,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/api"
+	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/config"
+	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/run"
 	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/ssmdb2"
 	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/watch"
 )
@@ -43,6 +48,10 @@ func main() {
 		fmt.Println(version)
 	case "watch":
 		os.Exit(runWatch(os.Args[2:], os.Stdout, os.Stderr))
+	case "pair":
+		os.Exit(runPair(os.Args[2:], os.Stdout, os.Stderr))
+	case "run":
+		os.Exit(runRun(os.Args[2:], os.Stderr))
 	default:
 		usage(os.Stderr)
 		os.Exit(2)
@@ -50,7 +59,10 @@ func main() {
 }
 
 func usage(w io.Writer) {
-	fmt.Fprintln(w, "spiegel-bridge watch [--dsn DSN] [--epoch N] [--once] [--json] | spiegel-bridge version")
+	fmt.Fprintln(w, "spiegel-bridge pair --url URL --code CODE --dsn DSN [--name NAME] [--config PATH]")
+	fmt.Fprintln(w, "spiegel-bridge run [--config PATH]")
+	fmt.Fprintln(w, "spiegel-bridge watch [--dsn DSN] [--epoch N] [--once] [--json]")
+	fmt.Fprintln(w, "spiegel-bridge version")
 }
 
 // logger schreibt Meldungen nur mit Zahlen und festen Codes (SF-59).
@@ -157,4 +169,96 @@ func runWatch(args []string, stdout, stderr io.Writer) int {
 		case <-time.After(wait):
 		}
 	}
+}
+
+// runPair löst einen Kopplungscode ein und schreibt die Konfiguration. Vorher prüft es, ob sie sich schreiben lässt:
+// Ein eingelöster Code ist verbraucht.
+func runPair(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("pair", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	path := flags.String("config", config.DefaultPath(), "Ort der Konfiguration")
+	url := flags.String("url", "", "Adresse von Spiegel (https://…)")
+	code := flags.String("code", "", "Kopplungscode aus Admin → Anlage und Brücken")
+	name := flags.String("name", "", "Name des Geräts (sonst der vom Admin)")
+	dsn := flags.String("dsn", os.Getenv("SPIEGEL_BRIDGE_DSN"), "Zugang zur SSMDB2")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	log := logger{stderr}
+	if *url == "" || *code == "" || *dsn == "" {
+		log.log("pair-arguments-missing")
+		return 2
+	}
+	if _, err := ssmdb2.Open(*dsn); err != nil {
+		log.log("dsn-invalid")
+		return 2
+	}
+	client, err := api.New(*url, "")
+	if err != nil {
+		log.log(err.Error())
+		return 2
+	}
+	if err := config.CheckWritable(*path); err != nil {
+		log.log(err.Error())
+		return 1
+	}
+	var deviceName *string
+	if *name != "" {
+		deviceName = name
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	res, err := client.Pair(ctx, api.PairRequest{ContractVersion: 1, Code: *code, Name: deviceName, BridgeVersion: version})
+	if err != nil {
+		log.log("pair-failed", "code", err.Error())
+		return 1
+	}
+	if err := config.Save(*path, config.Config{URL: *url, BridgeID: res.BridgeID, Token: res.Token, DSN: *dsn}); err != nil {
+		// der Code ist verbraucht: neuen erzeugen und die Brücke in Spiegel widerrufen
+		log.log("pair-config-failed", "code", err.Error(), "bridge", res.BridgeID)
+		return 1
+	}
+	fmt.Fprintf(stdout, "gekoppelt: Brücke %d an %q\n", res.BridgeID, res.Site.Name)
+	return 0
+}
+
+// runRun ist der Betrieb. Exit 3: Token widerrufen, neu koppeln.
+func runRun(args []string, stderr io.Writer) int {
+	flags := flag.NewFlagSet("run", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	path := flags.String("config", config.DefaultPath(), "Ort der Konfiguration")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	log := logger{stderr}
+	cfg, err := config.Load(*path)
+	if err != nil {
+		log.log(err.Error())
+		return 2
+	}
+	reader, err := ssmdb2.Open(cfg.DSN)
+	if err != nil {
+		log.log("dsn-invalid")
+		return 2
+	}
+	defer reader.Close()
+	client, err := api.New(cfg.URL, cfg.Token)
+	if err != nil {
+		log.log(err.Error())
+		return 2
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	log.log("start", "version", version, "bridge", cfg.BridgeID)
+	runner := run.New(version, reader, client, log.log, watch.Defaults, nil)
+	if err := runner.Run(ctx); err != nil {
+		if errors.Is(err, run.ErrUnauthorized) {
+			log.log("unauthorized", "hint", "neu-koppeln")
+			return 3
+		}
+		log.log("stopped", "code", err.Error())
+		return 1
+	}
+	log.log("stop")
+	return 0
 }

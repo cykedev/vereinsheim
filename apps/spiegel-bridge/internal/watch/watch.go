@@ -27,7 +27,8 @@ type Round struct {
 	Cards           map[int32]contract.Data
 	SourceVersion   *string
 	SessionTimeZone string
-	// `NOW(3)` der Anlage in der Sitzungszone (UTC) als Text; nil ohne Messung. Verankert das Startfenster.
+	// `NOW(3)` der Anlage in der Sitzungszone (UTC) als Text; nil ohne Messung. Verankert das Startfenster und misst die
+	// Uhrabweichung im Heartbeat (SF-29).
 	SourceNow *string
 }
 
@@ -50,16 +51,22 @@ type Config struct {
 	MaxCards int
 	// eine Scheibe, die so lange nicht mehr in der Ablage stand, vergisst die Brücke (Fehlen ist keine Löschung, SF-24)
 	ForgetAfter time.Duration
+	// ein Stand, der sich vom gesendeten nur im Lebenszeichen unterscheidet, höchstens so oft
+	LifesignEvery time.Duration
 }
 
 // Defaults sind die Regeln aus dem Plan.
 var Defaults = Config{
-	Epoch:       1,
-	ActiveFor:   20 * time.Minute,
-	StartWindow: 12 * time.Hour,
-	MaxCards:    50,
-	ForgetAfter: 24 * time.Hour,
+	Epoch:         1,
+	ActiveFor:     20 * time.Minute,
+	StartWindow:   12 * time.Hour,
+	MaxCards:      50,
+	ForgetAfter:   24 * time.Hour,
+	LifesignEvery: 30 * time.Second,
 }
+
+// LifesignColumn ist die Spalte des Lebenszeichens in `Scheiben`.
+const LifesignColumn = "Zeitstempel"
 
 type card struct {
 	stamp   string
@@ -68,9 +75,12 @@ type card struct {
 	dirty   bool      // neu oder bewegt, seit der letzten Lesung nicht gelesen (das Budget reichte nicht)
 	readAt  time.Time // zuletzt ganz gelesen
 	last    string    // Prüfsumme der vorigen Lesung
-	waiting bool      // die vorige Lesung ist ein neuer Stand mit Treffern und wartet auf eine zweite gleiche
-	sent    string    // Prüfsumme des zuletzt gemeldeten Stands
-	skipped string    // Code, mit dem die letzte Lesung übersprungen wurde (einmal melden)
+	waiting bool      // ein neuer Stand mit Treffern, noch nicht von Spiegel bestätigt
+	sent    string    // Prüfsumme des zuletzt bestätigten Stands
+	// dessen Prüfsumme ohne Lebenszeichen und wann er bestätigt wurde (Drossel des Lebenszeichens)
+	sentContent string
+	sentAt      time.Time
+	skipped     string // Code, mit dem die letzte Lesung übersprungen wurde (einmal melden)
 }
 
 // Skip ist eine Scheibe, die die Runde nicht melden kann, mit festem Code ohne Inhalt (SF-59).
@@ -88,6 +98,10 @@ type Result struct {
 	Read, Cards int
 	// etwas bewegt sich oder wartet auf Bestätigung: die nächste Runde bald
 	Busy bool
+	// Scheiben mit neuem Stand, die Spiegel noch nicht bestätigt hat (Heartbeat)
+	Backlog int
+	// `NOW(3)` der Anlage in UTC beim Lesen, als Text; nil ohne Messung
+	SourceNow *string
 }
 
 // Watcher hält den Arbeitsspeicher der Erkennung. Nicht nebenläufig benutzen.
@@ -211,7 +225,7 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		return Result{}, err
 	}
 
-	result := Result{Read: len(round.Cards), Cards: len(round.Lifesigns)}
+	result := Result{Read: len(round.Cards), Cards: len(round.Lifesigns), SourceNow: round.SourceNow}
 	for _, l := range round.Lifesigns {
 		dirty := w.dirty(l, from)
 		c, known := w.cards[l.ID]
@@ -267,12 +281,17 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		c.last = sum
 		// nur ein neuer Stand (nach einer zerrissenen Lesung kommt oft der alte wieder) und ohne Treffer nie (SF-13)
 		fresh := sum != c.sent && len(data.Treffer.Rows) > 0
+		// bis Spiegel ihn bestätigt (`Delivered`), wartet ein neuer Stand und wird jede Runde neu gelesen: ohne
+		// Warteschlange schickt die Brücke nach einem gescheiterten Upload, was sie dann liest (ADR-027)
+		c.waiting = fresh
 		// zwei gleiche Lesungen hintereinander (SF-71)
-		c.waiting = fresh && !stable
 		if !fresh || !stable {
 			continue
 		}
-		c.sent = sum
+		// nur das Lebenszeichen bewegt: höchstens alle `LifesignEvery` (Spiegel legt dafür ohnehin keine Zeilen an)
+		if content := contentChecksum(data); content != "" && content == c.sentContent && now.Sub(c.sentAt) < w.cfg.LifesignEvery {
+			continue
+		}
 		result.Snapshots = append(result.Snapshots, contract.Snapshot{
 			ContractVersion: contract.ContractVersion,
 			Source:          contract.Source,
@@ -297,6 +316,9 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			delete(w.cards, id)
 			continue
 		}
+		if c.waiting && c.seenAt.Equal(now) {
+			result.Backlog++
+		}
 		// nur, was in dieser Runde in der Ablage stand: Eine gelöschte Scheibe, die noch wartete, hielte die Brücke sonst
 		// einen Tag lang im Sekundentakt
 		if c.seenAt.Equal(now) && (c.waiting || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute)) {
@@ -304,4 +326,64 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		}
 	}
 	return result, nil
+}
+
+// Delivered: Spiegel hat den Stand endgültig beantwortet, oder die Brücke schickt ihn bewusst nicht (Filter). Er geht
+// nicht noch einmal hinaus, bis sich die Scheibe ändert.
+func (w *Watcher) Delivered(s contract.Snapshot) {
+	c := w.cards[s.ScheibenID]
+	if c == nil {
+		return
+	}
+	c.sent = s.Checksum
+	c.waiting = c.last != s.Checksum && c.last != ""
+	c.sentContent, c.sentAt = contentChecksum(s.Data), w.now()
+}
+
+// Resend vergisst den bestätigten Stand dieser Scheiben, damit die nächsten Runden sie neu lesen und schicken (eine
+// neue Zustimmung, eine bestätigte Epoche). Was die Brücke nicht mehr im Speicher hat, holt erst das Nachholen (Teil c).
+func (w *Watcher) Resend(ids []int32) {
+	for _, id := range ids {
+		if c := w.cards[id]; c != nil {
+			c.sent, c.sentContent, c.last, c.dirty = "", "", "", true
+		}
+	}
+}
+
+// Known nennt die Scheiben im Speicher.
+func (w *Watcher) Known() []int32 {
+	ids := make([]int32, 0, len(w.cards))
+	for id := range w.cards {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+// SetEpoch setzt die Epoche für die nächsten Snapshots (aus dem Zustand in Spiegel).
+func (w *Watcher) SetEpoch(epoch int) { w.cfg.Epoch = epoch }
+
+// contentChecksum ist die Prüfsumme ohne `Scheiben.Zeitstempel`: Zwei Stände mit derselben unterscheiden sich nur im
+// Lebenszeichen. Leer, wenn sie sich nicht rechnen lässt.
+func contentChecksum(d contract.Data) string {
+	if len(d.Scheiben.Rows) != 1 {
+		return ""
+	}
+	row := contract.Row{}
+	for k, v := range d.Scheiben.Rows[0] {
+		if k != LifesignColumn {
+			row[k] = v
+		}
+	}
+	columns := map[string]string{}
+	for k, v := range d.Scheiben.Columns {
+		if k != LifesignColumn {
+			columns[k] = v
+		}
+	}
+	d.Scheiben = contract.Table{Columns: columns, Rows: []contract.Row{row}}
+	sum, err := contract.Checksum(d)
+	if err != nil {
+		return ""
+	}
+	return sum
 }

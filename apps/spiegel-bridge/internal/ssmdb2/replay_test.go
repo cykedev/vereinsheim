@@ -182,7 +182,10 @@ func TestReplayCases(t *testing.T) {
 		t.Run(expected.ID, func(t *testing.T) {
 			exec1(t, db, "DELETE FROM Scheiben; DELETE FROM Version")
 			var clock time.Time
-			w := watch.New(watch.Defaults, func() time.Time { return clock })
+			// die Vorgabe der Fälle schickt jeden neuen Stand; die Drossel des Lebenszeichens prüft watch_test.go
+			cfg := watch.Defaults
+			cfg.LifesignEvery = 0
+			w := watch.New(cfg, func() time.Time { return clock })
 			sent := map[int32][]int{}
 			for i, step := range steps {
 				exec1(t, db, string(readFile(t, step)))
@@ -208,6 +211,8 @@ func TestReplayCases(t *testing.T) {
 						t.Errorf("Lesung %d: Scheibe %d übersprungen (%s)", reading.Reading, skip.ID, skip.Code)
 					}
 					for _, s := range result.Snapshots {
+						// Spiegel bestätigt jeden Stand (der Upload gelingt)
+						w.Delivered(s)
 						output = append(output, s.Summary())
 						sent[s.ScheibenID] = append(sent[s.ScheibenID], reading.Reading)
 						if err := contract.Validate(s); err != nil {
@@ -279,7 +284,7 @@ func TestReplayColumnsChangeWhileRunning(t *testing.T) {
 	defer reader.Close()
 	clock := time.Date(2026, 10, 13, 18, 0, 0, 0, time.UTC)
 	w := watch.New(watch.Defaults, func() time.Time { return clock })
-	// zwei Runden
+	// zwei Runden, Spiegel bestätigt jeden Stand
 	rounds := func() []contract.Snapshot {
 		var out []contract.Snapshot
 		for range 2 {
@@ -287,6 +292,9 @@ func TestReplayColumnsChangeWhileRunning(t *testing.T) {
 			result, err := w.Tick(context.Background(), reader)
 			if err != nil {
 				t.Fatal(Code(err))
+			}
+			for _, s := range result.Snapshots {
+				w.Delivered(s)
 			}
 			out = append(out, result.Snapshots...)
 		}

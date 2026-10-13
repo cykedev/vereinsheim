@@ -2,9 +2,10 @@
 
 Die Brücke im Schützenhaus (SP-1.4, [ADR-027](../../vault/decisions/adr-027.md),
 [`spiegel-bridge`](../../vault/spiegel/spiegel-bridge.md)): liest die Meyton-Ablage (SSMDB2) nur lesend und baut
-Snapshots v1 für Spiegel. **Go**, ein statisches Binary ohne Laufzeit (SP-0.4, 13. Oktober 2026). Seit Teil a
-(`plans/2026-10-13-spiegel-bruecke-leser.md`): Leser, Änderungserkennung und Snapshots, nur lokal. Kopplung, Upload und
-Heartbeat folgen in Teil b, Nachholen und Updates in c, Opt-in und Verdeckung in SP-1.5.
+Snapshots v1 für Spiegel. **Go**, ein statisches Binary ohne Laufzeit (SP-0.4, 13. Oktober 2026). Teil a
+(`plans/2026-10-13-spiegel-bruecke-leser.md`): Leser, Änderungserkennung und Snapshots. Teil b
+(`plans/2026-10-13-spiegel-bruecke-upload.md`): Kopplung, Upload, Heartbeat und die Filter aus SP-1.5 (Zustimmung,
+verdeckt, gesperrt). Offen: Nachholen, Updates, Statusseite, Dienst (c), Aufträge (SP-1.5).
 
 ## Befehle
 
@@ -14,6 +15,9 @@ Heartbeat folgen in Teil b, Nachholen und Updates in c, Opt-in und Verdeckung in
 | `pnpm --filter spiegel-bridge replay`     | Abnahme: alle Fälle aus `ssmdb2-cases` in `mariadb:10.6` (Docker), nicht im Gate (~5 s)       |
 | `pnpm --filter spiegel-bridge build`      | Binaries nach `dist/` für linux/arm64, linux/amd64, windows/amd64                             |
 | `go run ./cmd/spiegel-bridge watch`       | lokal lesen; je Snapshot eine Zeile ohne Personenfelder, `--json` volle Snapshots, `--once`   |
+| `spiegel-bridge pair --url --code`        | koppeln (Code aus Admin → Anlage und Brücken), schreibt die Konfiguration (0600, atomar)      |
+| `spiegel-bridge run`                      | Betrieb: Zustand, Runden, Filter, Upload, Heartbeat; Exit 3 bei widerrufenem Token            |
+| `pnpm --filter spiegel bridge-e2e`        | Ende zu Ende gegen den eigenen Build von Spiegel (:3012), MariaDB und drei Fälle (`--keep`)   |
 
 Den Zugang zur SSMDB2 über `SPIEGEL_BRIDGE_DSN` geben, nicht über `--dsn`: Ein Passwort in der Befehlszeile steht in `ps`
 und im Verlauf der Shell. `REPLAY_DOCKER_IMAGE=mariadb:11` prüft gegen MariaDB 11,
@@ -27,7 +31,11 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
 | `internal/contract`  | Snapshot v1, kanonische Form (RFC 8785, eigene Serialisierung), Prüfsumme, Grenzen, `Validate`, `Summary` |
 | `internal/watch`     | Änderungserkennung im Arbeitsspeicher: Wahl der Scheiben je Runde, zwei gleiche Lesungen, Hülle           |
 | `internal/ssmdb2`    | Leser über `database/sql` und `go-sql-driver/mysql`; `Code` für Fehler ohne Inhalt                         |
-| `cmd/spiegel-bridge` | `watch` (Takt 1 s, wenn sich etwas bewegt, sonst 30 s), `version`                                         |
+| `internal/api`       | Client der API v1 (Kopplung, Zustand, Stapel, Heartbeat), `CheckURL` (HTTPS, `http` nur für localhost)    |
+| `internal/config`    | die Konfiguration, das Einzige auf der Platte: `Save` atomar mit 0600, `Load`, `CheckWritable`             |
+| `internal/filter`    | wer hinaus darf: Zustimmung (`SportpassHash`), verdeckt, gesperrt; Regeln wie in Spiegel                   |
+| `internal/run`       | der Betrieb: `Step` je Runde, Upload ohne Warteschlange, Pausen, Heartbeat                                 |
+| `cmd/spiegel-bridge` | `pair`, `run`, `watch` (Takt 1 s, wenn sich etwas bewegt, sonst 30 s), `version`                          |
 
 ## Regeln
 
@@ -56,4 +64,18 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
 - **Nichts auf die Platte, keine Personenfelder in der Ausgabe** (SF-59): Meldungen nur mit Zahlen und Codes
   (`ssmdb2.Code`, nie `err.Error()` des Treibers), Snapshots als `Summary`; `--json` ist für die Prüfung vor Ort und
   gibt die vollen Daten aus. Der Replay-Test sucht die Namen der Fälle in der Ausgabe.
-- Nach Änderungen: `pnpm check` (vom Repo-Root) und `pnpm --filter spiegel-bridge replay`.
+- **Erst bestätigt ist gesendet** (Teil b): `Watcher.Delivered` nach einem endgültigen Ergebnis von Spiegel (alle außer
+  `future` und `epoch-unconfirmed`) oder wenn der Filter die Scheibe zurückhält. Bis dahin wartet sie und wird jede
+  Runde neu gelesen; nach einem gescheiterten Upload geht hinaus, was dann in der Ablage steht (keine Warteschlange).
+  Ein Stand, der sich vom bestätigten nur im Lebenszeichen unterscheidet, höchstens alle 30 s (`LifesignEvery`).
+- **Filter wie Spiegel** (`internal/filter`): dieselben Regeln wie `ingest.ts` und `hasHeldShot` (Zustimmung über den
+  Hash aus `GET /state`, `Wertung` 0, 5, 10 oder unlesbar hält die ganze Scheibe, Sperre derselben ID bis 30 Tage um den
+  Beginn). Ändert sich eine Regel in Spiegel, hier mitziehen. Ohne Zustand lädt die Brücke nichts hoch (SF-38); eine neue
+  Zustimmung oder bestätigte Epoche schickt, was noch im Speicher ist (`Resend`).
+- **Antworten:** 429/503 `Retry-After` abwarten, 413 teilen, 401 beendet (`ErrUnauthorized`, Exit 3), 400 verwirft den
+  Stapel (Fehler der Brücke), Netz und 5xx mit Pause 5 s bis 60 s. Je Stapel eine Zeile `batch` mit den Ergebnissen
+  als Zahlen.
+- **Heartbeat** jede Minute, der erste nach der ersten Runde, nie mit Namen oder Nummern; `possible-reset` nur gemeldet
+  (die Zahl der Scheiben fällt um mehr als die Hälfte), eine neue Epoche eröffnet die Brücke nicht (Plan D8).
+- Nach Änderungen: `pnpm check` (vom Repo-Root), `pnpm --filter spiegel-bridge replay` und bei Upload oder Filter
+  `pnpm --filter spiegel bridge-e2e` (nach `pnpm --filter spiegel build`).
