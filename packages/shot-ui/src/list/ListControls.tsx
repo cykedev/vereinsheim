@@ -2,7 +2,7 @@
 
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { Sheet } from "@vereinsheim/ui/design2/sheet"
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 
 import { CardFilters, KIND_OPTIONS } from "../controls/CardFilters"
 import { RouteLink } from "../nav/RouteLink"
@@ -31,6 +31,11 @@ export interface ListControlsProps {
   onQuery: (query: ListQuery) => void
   /** „Im Fortschritt zeigen“: der Fortschritt mit Familie, Art und Zeitraum der Liste (`progressFromList`) */
   progress: ProgressRoute
+  /**
+   * Kreise in der Zeile der Filter, rechtsbündig (in der App die Wertung der Familie; User, 13. Oktober 2026: „muss in
+   * die selbe zeile wie die filter“, „rechts ausgerichtet“)
+   */
+  actions?: ReactNode
 }
 
 /** Was der Chip zeigt (U5, D6): was von der Vorgabe abweicht, sonst „Alle Scheiben“ */
@@ -78,6 +83,7 @@ export function ListControlsView({
   rangeLabel,
   onQuery,
   progress,
+  actions,
   open,
   onOpen,
   onClose,
@@ -111,6 +117,11 @@ export function ListControlsView({
           <path d="M6 9l6 6 6-6" />
         </svg>
       </button>
+      {actions && (
+        <div data-list-actions className="ml-auto flex items-center gap-1.5">
+          {actions}
+        </div>
+      )}
       <Sheet open={open} onClose={onClose} title="Filter">
         <div data-list-filter className="grid gap-4">
           <div className="grid gap-1.5">

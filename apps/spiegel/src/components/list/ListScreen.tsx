@@ -138,13 +138,6 @@ export function ListScreen({
         <ListHeader
           familyLabel={option.label}
           cards={model.cards}
-          actions={
-            <ScoringToggle
-              scoring={familyScoring.shown}
-              label="Wertung für Ø und Abstand"
-              onChange={familyScoring.change}
-            />
-          }
           controls={
             <ListControls
               query={query}
@@ -154,6 +147,14 @@ export function ListScreen({
               rangeLabel={model.range?.label ?? null}
               onQuery={onQuery}
               progress={progressFromList(route)}
+              // die Wertung der Familie in der Zeile der Filter (User, 13. Oktober 2026)
+              actions={
+                <ScoringToggle
+                  scoring={familyScoring.shown}
+                  label="Wertung für Ø und Abstand"
+                  onChange={familyScoring.change}
+                />
+              }
             />
           }
         />

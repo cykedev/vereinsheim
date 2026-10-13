@@ -128,6 +128,27 @@ describe("Filter und Kopf (D5, D14)", () => {
       })
     )
 
+  it("ein Kreis in der Zeile nach dem Chip, rechtsbündig, wie in der Liste (User, 13. Oktober 2026)", () => {
+    const html = renderToStaticMarkup(
+      h(PeriodControls, {
+        state: state({}),
+        dispatch: () => {},
+        range: RANGE,
+        compareRange: null,
+        named: NAMED,
+        timeZone: TZ,
+        families: [{ value: "lg-10m", label: "Luftgewehr" }],
+        actions: h("span", { "data-kreis": true }),
+      })
+    )
+    expect(html).toMatch(/data-period-controls[^>]*class="flex flex-wrap items-center gap-2"/)
+    expect(html).toMatch(
+      /<div data-period-actions="true" class="ml-auto flex items-center gap-1\.5"><span data-kreis/
+    )
+    expect(html.indexOf("data-kreis")).toBeGreaterThan(html.indexOf("data-period-chip"))
+    expect(controls({}, null)).not.toContain("data-period-actions")
+  })
+
   it("eine Zeile: Familie (erst ab zwei) und der Chip; Art, Probe-Training und Vergleich im Blatt (U2, D3)", () => {
     const html = controls({}, null)
     expect(html).not.toContain('aria-label="Art"')
@@ -181,8 +202,6 @@ describe("Ergebnis-Box (D13)", () => {
       h(PeriodResult, {
         model: m,
         timeZone: TZ,
-        actions: h("p", null, "WERTUNG"),
-        notice: h("p", { role: "alert" }, "HINWEIS"),
         onHelp: () => {},
       })
     )
@@ -195,11 +214,8 @@ describe("Ergebnis-Box (D13)", () => {
     expect(html).toContain("5 Scheiben · 10 Wertungsschüsse")
     // die beste (10,0) ist die älteste der fünf, 14 Tage vor jetzt
     expect(html).toMatch(/beste Scheibe zu 2 Schuss [\s\S]*10,00[\s\S]*am 16\.09\.2026/)
-    // die Wertung in der Zeile der Zahl, der Hinweis unten (Plan `plans/2026-10-13-spiegel-symbole.md`)
-    expect(html).toMatch(
-      /<p data-period-result[\s\S]*?<\/p><div data-result-actions[^>]*><p>WERTUNG<\/p>/
-    )
-    expect(html.indexOf("HINWEIS")).toBeGreaterThan(html.indexOf("beste Scheibe"))
+    // keine Kreise in der Box: die Wertung der Familie steht in der Zeile der Filter (User, 13. Oktober 2026)
+    expect(html).not.toContain("data-scoring-toggle")
     expect(html).not.toContain("data-comparison")
   })
 

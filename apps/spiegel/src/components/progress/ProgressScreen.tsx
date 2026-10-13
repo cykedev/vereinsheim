@@ -84,7 +84,7 @@ export function ProgressScreen({
   const help = useHelp()
   const onHelp = useCallback((id: string | null) => id && help(id), [help])
   const { timeZone, named } = context
-  // die Wertung der Familie als Kreis in der Ergebnis-Box; eine Wahl für Kopf und Box
+  // die Wertung der Familie als Kreis in der Zeile der Filter
   const familyScoring = useSavedChoice({
     value: state.scoring,
     scope: state.family,
@@ -192,21 +192,7 @@ export function ProgressScreen({
 
   const option = families.find((f) => f.value === state.family)
   const target = TARGETS[option?.targetId ?? "lp-10m"]
-  const result = (
-    <PeriodResult
-      model={model}
-      timeZone={timeZone}
-      onHelp={onHelp}
-      actions={<ScoringToggle scoring={familyScoring.shown} onChange={familyScoring.change} />}
-      notice={
-        familyScoring.error && (
-          <p role="alert" className="text-sm text-destructive">
-            {familyScoring.error}
-          </p>
-        )
-      }
-    />
-  )
+  const result = <PeriodResult model={model} timeZone={timeZone} onHelp={onHelp} />
   const sentence = periodSentence(model)
   // Training nur aus Probe zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis
   const excluded = model.excludedProbeOnly
@@ -221,15 +207,27 @@ export function ProgressScreen({
             title={model.range.label}
             meta={[option?.label ?? "", cardsText, rangeDays(model.range, timeZone)]}
             controls={
-              <PeriodControls
-                state={current}
-                dispatch={dispatch}
-                range={model.range}
-                compareRange={model.compareRange}
-                named={named}
-                timeZone={timeZone}
-                families={families}
-              />
+              // die Wertung der Familie in der Zeile der Filter wie in der Liste, ein Fehler darunter (User,
+              // 13. Oktober 2026)
+              <div className="grid gap-2">
+                <PeriodControls
+                  state={current}
+                  dispatch={dispatch}
+                  range={model.range}
+                  compareRange={model.compareRange}
+                  named={named}
+                  timeZone={timeZone}
+                  families={families}
+                  actions={
+                    <ScoringToggle scoring={familyScoring.shown} onChange={familyScoring.change} />
+                  }
+                />
+                {familyScoring.error && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {familyScoring.error}
+                  </p>
+                )}
+              </div>
             }
             result={empty ? null : result}
             sentence={empty ? null : sentence}

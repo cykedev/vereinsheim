@@ -17,7 +17,7 @@ const render = (tone?: "default" | "gold") =>
   )
 
 describe("RoundToggle: weicher Kreis (Design 2)", () => {
-  it("ein Knopf mit Namen und Titel, 32 px rund, ohne Rand, in der Flächenfarbe, das Zeichen leise", () => {
+  it("ein Knopf mit Namen und Titel, 32 px rund, leichter Rahmen, in der Flächenfarbe, das Zeichen leise", () => {
     const html = render()
     expect(html).toMatch(/^<button type="button"/)
     expect(html).toContain('aria-label="Art: Training, auf Wettkampf umstellen"')
@@ -27,7 +27,8 @@ describe("RoundToggle: weicher Kreis (Design 2)", () => {
     // leise (Token `quiet`, 3 : 1 auf der Fläche): eine Randinformation (User, 13. Oktober 2026)
     expect(html).toMatch(/class="[^"]*\bbg-surface-2\b[^"]*\btext-quiet\b/)
     expect(html).toContain("[&amp;_svg]:stroke-[1.75]")
-    expect(html).not.toMatch(/\bborder\b/)
+    // der leichte Rahmen immer, wie ein Segment-Umschalter (User, 13. Oktober 2026)
+    expect(html).toMatch(/class="[^"]*\brounded-full border border-border\b/)
     expect(html).toContain(">P</button>")
   })
 

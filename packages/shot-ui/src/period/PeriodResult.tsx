@@ -1,6 +1,5 @@
 import { formatDateOnly, formatInteger } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
-import type { ReactNode } from "react"
 
 import { formatSigned, formatValue } from "../format"
 import { HelpButton } from "../help/HelpButton"
@@ -10,10 +9,6 @@ import { verdictText } from "./sentence"
 export interface PeriodResultProps {
   model: Pick<PeriodModel, "summary" | "comparison" | "compareRange" | "compareShared">
   timeZone: string
-  /** Kreise rechts in der Zeile der großen Zahl: in der App die Wertung der Familie (gespeichert), im Labor keiner */
-  actions?: ReactNode
-  /** ein Hinweis unten, etwa ein Fehler beim Speichern */
-  notice?: ReactNode
   onHelp?: (id: string) => void
   className?: string
 }
@@ -23,37 +18,23 @@ export interface PeriodResultProps {
  * groß, darunter Scheiben und Wertungsschüsse und die beste Scheibe unter der häufigsten Schusszahl; mit Vergleich
  * der Unterschied mit Urteil („deutlich“ nur neben einem Urteil, U3). Auf dem Telefon im Kopf, ab 768 px als Box.
  */
-export function PeriodResult({
-  model,
-  timeZone,
-  actions,
-  notice,
-  onHelp,
-  className,
-}: PeriodResultProps) {
+export function PeriodResult({ model, timeZone, onHelp, className }: PeriodResultProps) {
   const { summary, comparison, compareRange, compareShared } = model
   const best = summary.best
   return (
     <div className={cn("grid content-start gap-3", className)}>
       <div className="grid gap-1">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-          <p
-            data-period-result
-            className="font-display text-[2.6rem] leading-none font-bold tabular-nums"
-          >
-            {summary.mean === null ? "–" : formatValue(summary.mean, 2)}
-            {summary.mean !== null && (
-              <small className="ml-2 font-sans text-[15px] font-medium text-muted-foreground">
-                Ringe Ø je Schuss
-              </small>
-            )}
-          </p>
-          {actions && (
-            <div data-result-actions className="ml-auto flex shrink-0 items-center gap-1.5">
-              {actions}
-            </div>
+        <p
+          data-period-result
+          className="font-display text-[2.6rem] leading-none font-bold tabular-nums"
+        >
+          {summary.mean === null ? "–" : formatValue(summary.mean, 2)}
+          {summary.mean !== null && (
+            <small className="ml-2 font-sans text-[15px] font-medium text-muted-foreground">
+              Ringe Ø je Schuss
+            </small>
           )}
-        </div>
+        </p>
         <p className="text-[13px] text-muted-foreground">
           {summary.cards
             ? `${summary.cards} ${summary.cards === 1 ? "Scheibe" : "Scheiben"} · ${formatInteger(summary.shots)} Wertungsschüsse`
@@ -96,7 +77,6 @@ export function PeriodResult({
           </p>
         )}
       </div>
-      {notice}
     </div>
   )
 }

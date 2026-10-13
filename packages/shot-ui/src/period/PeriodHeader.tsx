@@ -18,6 +18,11 @@ export interface PeriodControlsProps {
   timeZone: string
   /** Disziplin-Familien, die es gibt (Pflicht, D5) */
   families: readonly { value: string; label: string }[]
+  /**
+   * Kreise in der Zeile der Filter, rechtsbündig, wie in der Liste (in der App die Wertung der Familie; User,
+   * 13. Oktober 2026: „beim fortschritt kann die 1 1/10 immer in die filter bar“, „rechts ausgerichtet“)
+   */
+  actions?: ReactNode
 }
 
 /**
@@ -32,6 +37,7 @@ export function PeriodControls({
   named,
   timeZone,
   families,
+  actions,
 }: PeriodControlsProps) {
   return (
     <div data-period-controls className="flex flex-wrap items-center gap-2">
@@ -52,6 +58,11 @@ export function PeriodControls({
         // eine Aktion für das ganze Blatt (Review U2)
         onApply={(filters) => dispatch({ type: "setFilters", filters })}
       />
+      {actions && (
+        <div data-period-actions className="ml-auto flex items-center gap-1.5">
+          {actions}
+        </div>
+      )}
     </div>
   )
 }
