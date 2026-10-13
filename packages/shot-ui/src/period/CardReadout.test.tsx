@@ -44,6 +44,10 @@ describe("Ablesung einer Scheibe (D9)", () => {
       /data-delta="true"[\s\S]*?<button type="button" aria-label="Erklärung: Abstand zum Schnitt davor" data-help="gegen-den-schnitt"/
     )
     expect(render()).not.toContain('data-help="gegen-den-schnitt"')
+    // auch in ganzen Ringen (die Luftpistole rechnet so; gefunden von der Skriptprüfung der App, 13. Oktober 2026)
+    expect(render({ onHelp: () => {}, metric: metricByKey("result.ringsMean")! })).toContain(
+      'data-help="gegen-den-schnitt"'
+    )
     // die Erklärung gilt dem Ø je Schuss; zeigt der Verlauf eine andere Kennzahl, kein „?“ (Review U2)
     expect(render({ onHelp: () => {}, metric: metricByKey("group.sigma")! })).not.toContain(
       'data-help="gegen-den-schnitt"'
