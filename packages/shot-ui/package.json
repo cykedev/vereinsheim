@@ -63,6 +63,7 @@
     "./period/model": "./src/period/model.ts",
     "./period/sentence": "./src/period/sentence.ts",
     "./period/PeriodChart": "./src/period/PeriodChart.tsx",
+    "./period/PeriodChartBar": "./src/period/PeriodChartBar.tsx",
     "./period/VolumeChart": "./src/period/VolumeChart.tsx",
     "./period/CardReadout": "./src/period/CardReadout.tsx",
     "./period/CardList": "./src/period/CardList.tsx",

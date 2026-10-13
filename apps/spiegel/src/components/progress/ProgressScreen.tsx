@@ -20,12 +20,9 @@ import { isCardId, urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { rangeDays } from "@vereinsheim/shot-ui/period/calendar"
 import { CardList } from "@vereinsheim/shot-ui/period/CardList"
 import { CardLine, CardReadout } from "@vereinsheim/shot-ui/period/CardReadout"
-import {
-  periodReading,
-  PERIOD_CHART_METRICS,
-  type PeriodModel,
-} from "@vereinsheim/shot-ui/period/model"
+import { periodReading, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
 import { PeriodChart } from "@vereinsheim/shot-ui/period/PeriodChart"
+import { PeriodChartBar } from "@vereinsheim/shot-ui/period/PeriodChartBar"
 import { PeriodControls, PeriodHeader } from "@vereinsheim/shot-ui/period/PeriodHeader"
 import { PeriodInsights } from "@vereinsheim/shot-ui/period/PeriodInsights"
 import { PeriodResult } from "@vereinsheim/shot-ui/period/PeriodResult"
@@ -37,7 +34,6 @@ import {
   type PeriodState,
 } from "@vereinsheim/shot-ui/period/state"
 import { VolumeChart } from "@vereinsheim/shot-ui/period/VolumeChart"
-import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { useHelp } from "@/components/shell/HelpContext"
@@ -250,33 +246,13 @@ export function ProgressScreen({
         }
         chart={
           <div className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-3.5">
-            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-              <Segmented
-                label="Kennzahl"
-                value={state.metric}
-                options={PERIOD_CHART_METRICS.map((m) => ({ value: m.key, label: m.label }))}
-                onChange={(metric) => dispatch({ type: "setMetric", metric })}
-                scroll
-              />
-              <div className="ml-auto flex items-center gap-2">
-                {!model.compareRange && (
-                  <Segmented
-                    label="Darstellung des Verlaufs"
-                    value={model.view}
-                    options={[
-                      { value: "cards", label: "je Scheibe" },
-                      { value: "months", label: "je Monat" },
-                    ]}
-                    onChange={(view) => dispatch({ type: "setView", view })}
-                  />
-                )}
-                <HelpButton
-                  label="Verlauf und Form"
-                  helpId="verlauf-und-form"
-                  onClick={() => onHelp("verlauf-und-form")}
-                />
-              </div>
-            </div>
+            <PeriodChartBar
+              metric={state.metric}
+              view={model.compareRange ? null : model.view}
+              onMetric={(metric) => dispatch({ type: "setMetric", metric })}
+              onView={(view) => dispatch({ type: "setView", view })}
+              onHelp={() => onHelp("verlauf-und-form")}
+            />
             <ChartSlot height={300}>
               {(width) => (
                 <PeriodChart
