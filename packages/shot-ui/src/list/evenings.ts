@@ -10,10 +10,15 @@ import {
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
 import { projectedValues, type ProjectedCard } from "@vereinsheim/shot-core/projection"
-import { formatIsoDate, formatTimeOfDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 
 import type { ListQuery } from "../nav/routes"
-import { inRange, resolveRange, type DateRange, type NamedPeriod } from "../period/calendar"
+import {
+  eveningDay,
+  inRange,
+  resolveRange,
+  type DateRange,
+  type NamedPeriod,
+} from "../period/calendar"
 import { byStart, cardKind, deltasBefore, isProbeOnly, type CardKind } from "../period/model"
 
 /** eine Scheibe mit Projektion und ihrer Familie (die Liste filtert nach ihr) */
@@ -122,19 +127,8 @@ export interface CardListContext {
   scoring: Scoring
 }
 
-/** Training bis 4 Uhr nachts gehört zum Abend davor (D1) */
-const EVENING_STARTS = "04:00"
-
-/**
- * der Abend einer Scheibe als ISO-Tag in der Zone; vor 4 Uhr der Vortag. Es zählt die Uhrzeit der Zone, nicht vier
- * Stunden absolut: an den Tagen der Zeitumstellung hat die Nacht 23 oder 25 Stunden (Review N2).
- */
-export function eveningDay(startedAtMs: number, timeZone: string): string {
-  const at = new Date(startedAtMs)
-  const day = formatIsoDate(at, timeZone)
-  if (formatTimeOfDay(at, timeZone) >= EVENING_STARTS) return day
-  return formatIsoDate(new Date(zonedDayStartMs(day, timeZone) - 1), timeZone)
-}
+/** der Abend einer Scheibe (D1); seit dem Kalender (T7) in `period/calendar`, hier weiter exportiert */
+export { eveningDay } from "../period/calendar"
 
 export function cardListModel(
   input: readonly ListInputCard[],

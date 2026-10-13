@@ -2,7 +2,13 @@
 // Vergleichszeitraum; ISO-Wochen (gerechnet ohne `Intl`, benannt nach ihrem Montag über `@vereinsheim/lib/format`).
 // Tage beginnen in der Anzeige-Zeitzone (`zonedDayStartMs`).
 
-import { formatDateOnly, formatShortDay, zonedDayStartMs } from "@vereinsheim/lib/format"
+import {
+  formatDateOnly,
+  formatIsoDate,
+  formatShortDay,
+  formatTimeOfDay,
+  zonedDayStartMs,
+} from "@vereinsheim/lib/format"
 
 export const DAY_MS = 86_400_000
 
@@ -155,4 +161,18 @@ export const weekDate = (key: string) => formatDateOnly(mondayNoon(key), "UTC")
 export function rangeDays(range: DateRange, timeZone: string): string {
   const day = (ms: number) => formatDateOnly(new Date(ms), timeZone)
   return `${day(range.fromMs)} – ${day(range.toMs - 1)}`
+}
+
+/** Training bis 4 Uhr nachts gehört zum Abend davor (D1) */
+const EVENING_STARTS = "04:00"
+
+/**
+ * der Abend einer Scheibe als ISO-Tag in der Zone; vor 4 Uhr der Vortag. Es zählt die Uhrzeit der Zone, nicht vier
+ * Stunden absolut: an den Tagen der Zeitumstellung hat die Nacht 23 oder 25 Stunden (Review N2).
+ */
+export function eveningDay(startedAtMs: number, timeZone: string): string {
+  const at = new Date(startedAtMs)
+  const day = formatIsoDate(at, timeZone)
+  if (formatTimeOfDay(at, timeZone) >= EVENING_STARTS) return day
+  return formatIsoDate(new Date(zonedDayStartMs(day, timeZone) - 1), timeZone)
 }

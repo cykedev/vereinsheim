@@ -290,6 +290,22 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     expect(weeks[0]).toMatchObject({ shots: 0, cards: 0, days: 0 })
   })
 
+  it("Kalender (T7): Zeitraum bis heute, Trainingstage je Abend wie die Liste, Wettkampf gezählt", () => {
+    // NOW ist der 30. September, 12 Uhr Ortszeit; eine Scheibe um 1:30 Uhr gehört zum Abend davor
+    const late = periodCard("spät", 0, [100], {
+      startedAtMs: Date.UTC(2026, 8, 28, 23, 30),
+      kind: "competition",
+    })
+    const { calendar } = model([...THREE, late])
+    expect(calendar.from).toBe("2026-07-02")
+    expect(calendar.to).toBe("2026-09-30")
+    expect(calendar.days).toEqual([
+      { key: "2026-09-27", shots: 2, cards: 1, competition: 0 },
+      { key: "2026-09-28", shots: 3, cards: 2, competition: 1 },
+      { key: "2026-09-29", shots: 1, cards: 1, competition: 0 },
+    ])
+  })
+
   it("Abstand zum Schnitt der bis zu fünf Scheiben davor, ohne sie selbst, auch vor dem Zeitraum", () => {
     // alt (10,9) liegt vor dem Zeitraum und zählt für a mit; b gegen alt und a, c gegen alt, a und b
     const { deltas } = model(THREE)

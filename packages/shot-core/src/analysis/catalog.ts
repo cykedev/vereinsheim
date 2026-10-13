@@ -38,7 +38,8 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   cardValues: ["T1"],
   periodTrend: ["T1", "T2"],
   periodBuckets: ["T5"],
-  trainingVolume: ["T6"],
+  // je Woche (T6) oder je Abend für den Kalender (T7)
+  trainingVolume: ["T6", "T7"],
   comparePeriods: ["C3", "T3"],
   againstOwnAverage: ["C4"],
   recordEligible: ["R1"],

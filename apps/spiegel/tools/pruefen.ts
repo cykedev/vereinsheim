@@ -800,6 +800,41 @@ async function progress(page: Page) {
     )
   }
 
+  // Kalender der Trainingstage (T7): umschalten, ein Tag führt an seinen Abend in der Liste
+  await page.goto(`${BASE}/progress?range=all`)
+  await page.click(
+    `$$('[aria-label="Umfang zeigen als"] button').find((b) => txt(b) === "Kalender")`,
+    {
+      settle: 300,
+    }
+  )
+  const day = await page.ev<{
+    key: string
+    label: string
+    right: number
+    box: number
+  } | null>(`(() => {
+    const days = $$("[data-day]"); const last = days.at(-1); if (!last) return null
+    const r = last.getBoundingClientRect(), box = last.closest(".overflow-x-auto").getBoundingClientRect()
+    return { key: last.dataset.day, label: last.getAttribute("aria-label"), right: r.right, box: box.right }
+  })()`)
+  check(
+    "Kalender: Trainingstage mit Namen, die jüngsten anfangs im Bild",
+    !!day && /\d+ Schuss/.test(day.label) && day.right <= day.box + 1,
+    day ?? "keine Trainingstage"
+  )
+  if (day) {
+    await page.click(`$('[data-day="${day.key}"]')`, { settle: 600 })
+    await page.waitFor(`location.pathname === "/cards"`, 10_000)
+    await page.wait(500)
+    check(
+      "Kalender: ein Tag öffnet die Liste an diesem Abend, markiert",
+      await page.ev<boolean>(`location.hash === "#${day.key}" && $$('[data-marked]').length > 0`),
+      await page.ev<string>(`location.pathname + location.search + location.hash`)
+    )
+    await page.goto(`${BASE}/progress`)
+  }
+
   // Blatt „Filter“: nicht übernommene freie Tage gelten beim nächsten Öffnen nicht (Review)
   const dates = `$$('[data-period-picker] input[type="date"]')`
   const setDate = (i: number, value: string) =>

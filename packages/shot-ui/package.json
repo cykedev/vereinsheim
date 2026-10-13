@@ -66,6 +66,7 @@
     "./period/PeriodChart": "./src/period/PeriodChart.tsx",
     "./period/PeriodChartBar": "./src/period/PeriodChartBar.tsx",
     "./period/VolumeChart": "./src/period/VolumeChart.tsx",
+    "./period/CalendarChart": "./src/period/CalendarChart.tsx",
     "./period/CardReadout": "./src/period/CardReadout.tsx",
     "./period/CardList": "./src/period/CardList.tsx",
     "./period/PeriodPicker": "./src/period/PeriodPicker.tsx",

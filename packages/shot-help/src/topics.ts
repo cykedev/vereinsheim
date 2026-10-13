@@ -335,10 +335,11 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     id: "trainingsumfang",
     title: "Trainingsumfang",
     theme: "period",
-    catalog: ["T6"],
+    catalog: ["T6", "T7"],
     metrics: [],
-    short: "Wie viel du trainierst: Schüsse, Scheiben und Tage je Woche.",
-    what: "Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Trainings nur aus Probe zählen mit), deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training.",
+    short:
+      "Wie viel du trainierst: Schüsse, Scheiben und Tage je Woche, im Kalender jeder Trainingstag.",
+    what: "Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Trainings nur aus Probe zählen mit), deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training. Der Kalender zeigt jeden Tag des Zeitraums: getönt nach deinen Schüssen an dem Abend, mit goldenem Rand, wenn ein Wettkampf dabei war. Ein Tippen führt zu dem Abend in deinen Scheiben.",
     read: "Der Umfang sagt nichts über die Güte. Leg ihn neben den Verlauf: Liegen deine Scheiben in Wochen mit sehr vielen Schüssen öfter unter dem Formband, kann das Ermüdung sein.",
     caution:
       "Hier zählt die Probe mit, das Ergebnis oben zählt nur Wertungsschüsse. Eine Netto-Zeit zeigt Spiegel nicht: Sie folgt aus den Abständen zwischen den Schüssen, die du auf jeder Scheibe siehst.",

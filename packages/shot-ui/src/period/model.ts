@@ -33,6 +33,7 @@ import { metricLabel } from "../labels"
 import {
   compareRange,
   DAY_MS,
+  eveningDay,
   inRange,
   isoWeekKey,
   resolveRange,
@@ -135,6 +136,8 @@ export interface PeriodModel {
   deltas: Map<string, { delta: number; n: number }>
   /** jede ISO-Woche im Zeitraum, auch ohne Scheibe */
   weeks: (VolumeBucket & { label: string })[]
+  /** Trainingstage für den Kalender (T7): erster und letzter Tag des Zeitraums (höchstens heute), Tage mit Scheiben */
+  calendar: { from: string; to: string; days: CalendarDay[] }
   /**
    * die neueste Scheibe im Zeitraum mit Ø je Schuss (die der Ablesung ohne Wahl); null ohne. Ihren Abstand zum Schnitt
    * der fünf davor tragen `deltas` (U2, D2: ein Bezug für eine Scheibe)
@@ -230,6 +233,31 @@ export function deltasBefore(
     deltas.set(value.id, { delta: value.value - (mean(before) as number), n: before.length })
   })
   return deltas
+}
+
+/** ein Trainingstag: der Abend (vor 4 Uhr der Vortag, wie in der Liste), Schüsse wie am Ausdruck, Scheiben, davon Wettkampf */
+export interface CalendarDay {
+  key: string
+  shots: number
+  cards: number
+  competition: number
+}
+
+/**
+ * die Tage des Kalenders aus den Scheiben des Zeitraums: der Umfang des Fachkerns (`projectedVolume`, T6/T7) je Abend wie
+ * die Liste (`eveningDay`), dazu die Zahl der Wettkämpfe
+ */
+function calendarDays(cards: readonly ProjectedCard[], timeZone: string): CalendarDay[] {
+  const evening = (ms: number) => eveningDay(ms, timeZone)
+  const competition = new Map<string, number>()
+  for (const card of cards)
+    if (card.kind === "competition") {
+      const key = evening(card.startedAtMs)
+      competition.set(key, (competition.get(key) ?? 0) + 1)
+    }
+  return projectedVolume(cards, evening, evening)
+    .map(({ key, shots, cards }) => ({ key, shots, cards, competition: competition.get(key) ?? 0 }))
+    .sort((a, b) => (a.key < b.key ? -1 : 1))
 }
 
 /** jede ISO-Woche vom Beginn bis zum Ende des Zeitraums (höchstens bis jetzt), in der Zeitzone */
@@ -377,6 +405,11 @@ export function periodModel(input: {
     months,
     deltas,
     weeks,
+    calendar: {
+      from: formatIsoDate(new Date(range.fromMs), timeZone),
+      to: formatIsoDate(new Date(Math.min(range.toMs, nowMs + 1) - 1), timeZone),
+      days: calendarDays(cards, timeZone),
+    },
     newest: perShot.at(-1)?.id ?? null,
     records: projectedRecords(input.cards, scoring, {
       kind: state.kind === "all" ? undefined : state.kind,

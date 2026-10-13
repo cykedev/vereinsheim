@@ -34,6 +34,8 @@ import {
   type PeriodState,
 } from "@vereinsheim/shot-ui/period/state"
 import { VolumeChart } from "@vereinsheim/shot-ui/period/VolumeChart"
+import { CalendarChart } from "@vereinsheim/shot-ui/period/CalendarChart"
+import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { useHelp } from "@/components/shell/HelpContext"
@@ -94,6 +96,8 @@ export function ProgressScreen({
   const active = useActiveSection(PERIOD_IDS)
   const { pill, jumpTo, back, close } = useReturnJump()
   const [explain, setExplain] = useState(false)
+  // Umfang als Säulen je Woche oder als Kalender der Trainingstage (T7); wie gezeichnet, nicht in der Adresse
+  const [volumeView, setVolumeView] = useState<"weeks" | "calendar">("weeks")
 
   const search = useSearchParams()
   const [pending, startTransition] = useTransition()
@@ -285,23 +289,45 @@ export function ProgressScreen({
         }
         under={
           <div className="grid gap-2 rounded-2xl border border-border bg-card p-3.5">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="font-display text-base font-bold">Umfang je Woche</h2>
-              <HelpButton
-                label="Trainingsumfang"
-                helpId="trainingsumfang"
-                onClick={() => onHelp("trainingsumfang")}
-              />
-            </div>
-            <ChartSlot height={170}>
-              {(width) => (
-                <VolumeChart
-                  key={`${state.family}:${state.kind}:${model.range.fromMs}:${model.range.toMs}`}
-                  width={width}
-                  weeks={model.weeks}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="font-display text-base font-bold">
+                {volumeView === "weeks" ? "Umfang je Woche" : "Trainingstage"}
+              </h2>
+              <div className="flex items-center gap-2">
+                <Segmented
+                  label="Umfang zeigen als"
+                  options={[
+                    { value: "weeks", label: "Wochen" },
+                    { value: "calendar", label: "Kalender" },
+                  ]}
+                  value={volumeView}
+                  onChange={setVolumeView}
                 />
-              )}
-            </ChartSlot>
+                <HelpButton
+                  label="Trainingsumfang"
+                  helpId="trainingsumfang"
+                  onClick={() => onHelp("trainingsumfang")}
+                />
+              </div>
+            </div>
+            {volumeView === "weeks" ? (
+              <ChartSlot height={170}>
+                {(width) => (
+                  <VolumeChart
+                    key={`${state.family}:${state.kind}:${model.range.fromMs}:${model.range.toMs}`}
+                    width={width}
+                    weeks={model.weeks}
+                  />
+                )}
+              </ChartSlot>
+            ) : (
+              <CalendarChart
+                from={model.calendar.from}
+                to={model.calendar.to}
+                days={model.calendar.days}
+                dayRoute={(day) => ({ ...listFromProgress(here), evening: day })}
+              />
+            )}
           </div>
         }
         result={result}
