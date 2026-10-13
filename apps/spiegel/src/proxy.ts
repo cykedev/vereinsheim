@@ -3,7 +3,7 @@ import { withAuth } from "next-auth/middleware"
 import { AUTH_SECRET } from "@/lib/auth-secret"
 
 // Next.js 16: Datei-Konvention „proxy.ts“ statt „middleware.ts“. Alles braucht eine Anmeldung außer der Seite
-// selbst, NextAuth und statischen Dateien; /admin nur für Admins. Seiten prüfen die Sitzung zusätzlich gegen die
+// selbst, NextAuth, der Ingest-API (Geräte-Token) und statischen Dateien; /admin nur für Admins. Seiten prüfen die Sitzung zusätzlich gegen die
 // Datenbank (`requireSession`), weil das JWT ein deaktiviertes Konto nicht kennt.
 export const proxy = withAuth({
   secret: AUTH_SECRET,
@@ -23,5 +23,8 @@ export default proxy
 
 export const config = {
   // alles unter _next (Dateien, Bilder, die Verbindung des Dev-Servers für Neuladen) bleibt frei
-  matcher: ["/((?!login(?:/|$)|api/auth(?:/|$)|_next/|favicon.ico$|icon.svg$).*)"],
+  // die Ingest-API meldet Brücken über ihren Geräte-Token an, nicht über eine Sitzung
+  matcher: [
+    "/((?!login(?:/|$)|api/auth(?:/|$)|api/ingest(?:/|$)|_next/|favicon.ico$|icon.svg$).*)",
+  ],
 }
