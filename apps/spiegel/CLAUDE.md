@@ -17,12 +17,13 @@ seit N7 (erster Teil) Start, Scheiben, die Seite einer Scheibe und Profil mit ec
 | `pnpm --filter spiegel test`                               | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                      |
 | `pnpm --filter spiegel measure`                            | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                         |
 | `pnpm --filter spiegel seed:own`                           | die echten Scheiben des Users in die Dev-Datenbank, dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`) |
+| `pnpm --filter spiegel pruefen`                            | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)  |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den
 Beispiel-Secret (`src/lib/auth-secret.ts`, nur außerhalb von Produktion). Das erste Admin-Konto legt der Server beim Start
 an (`src/instrumentation.ts`, aus `SEED_ADMIN_*`); danach `seed:own`. Für Prüfungen im Browser: `seed:own --demo`, dann
-mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das eigene Konto.
+mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für das eigene Konto.
 
 ## Aufbau
 
@@ -31,7 +32,7 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   Admin `/admin/users`.
 - Seiten sind Server-Komponenten: Sitzung, Daten (`src/lib/db/reads.ts`), Kontext (`pageContext`: Zone, „jetzt“,
   benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
-  bauen Routen und Rückrufe (Funktionen gehen nicht vom Server zum Client), wie die Ansichten im Labor.
+  bauen Routen und Rückrufe (Funktionen gehen nicht vom Server zum Client).
 - `AppShell`: `AppFrame` mit `next/link`, Bereich aus der Adresse, letzte Adresse je Bereich, Blatt der Hilfe
   (`useHelp`). Darstellung über `ThemeProvider` (Skript vor dem Zeichnen, `localStorage`).
 
@@ -139,3 +140,17 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   `NEXTAUTH_SECRET` setzen: Produktion verweigert den Beispielwert aus `.env.example`.
 - **seed:own** nur gegen die lokale Dev-Datenbank `spiegel` (prüft die Adresse, `--force` für eine andere lokale).
 - Ausgabe in Werkzeugen über `process.stdout.write`, nicht `console.log` (Lint).
+- **Skriptprüfung der App** (`tools/pruefen.ts`, `tools/pruefen/browser.ts`; Plan `plans/2026-10-13-aufraeumen-labor.md`,
+  ersetzt seit 13. Oktober 2026 die des Labors): Chrome headless über das DevTools-Protokoll mit dem `WebSocket` von Node,
+  ohne Abhängigkeit; Klicks, Ziehen und Tasten sind echte Eingaben (`Input.dispatch*`), Fokus und `next/link` verhalten
+  sich wie beim Menschen. Angemeldet mit dem Demo-Konto (vorher `seed:own --demo`). Geprüft wird ohne feste Zahlen
+  (echte Daten): Sprungleiste, Kleben, Rücksprung mit Pille, „Alle Beobachtungen“, Blatt der Hilfe, Lineal mit Zeiger
+  und Tastatur, Platz der Scheibe bei mehreren Fenstergrößen, kein seitliches Scrollen am Telefon, Anker beim Laden,
+  Blättern, Rückwege, Rekorde, Blatt „Filter“, Fachbegriffe auf den ersten Ebenen, ein „?“ je Thema des Fortschritts,
+  keine Skriptfehler. Nicht im Gate (braucht Chrome, Server, Daten). Nach Änderungen an Bedienung oder Bausteinen:
+  `pnpm build` (oder `pnpm check`), dann `pruefen --start`, damit die Prüfung den eigenen Stand sieht und nicht einen
+  Dev-Server aus einem anderen Checkout. Neue Bedienung bekommt eine Prüfung dort. Eine Taste, die die Seite nicht nimmt,
+  meldet `window.__keys` (Lauscher ganz außen; Alt+Pfeil wird dort abgefangen, sonst ginge der Browser zurück).
+- **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
+  rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
+  nächsten (gefunden von der Skriptprüfung, 13. Oktober 2026).

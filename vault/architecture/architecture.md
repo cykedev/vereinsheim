@@ -62,13 +62,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           Scheiben-Liste nach Abend (`list`, N2), Rahmen der App mit Links und
 │                           Blättern (`AppFrame`, `RouteLink`, N3), Start mit dem letzten Abend im
 │                           Formband (`start`, N5); Design 2 (ADR-030, Oktober 2026);
-│                           im Labor erprobt; Start, Liste, Scheibe, Zeitraum und Rahmen nutzt apps/spiegel.
-├── tools/labor/            Labor: Scheiben-Liste, Seite einer Scheibe und eines Zeitraums aus den echten Bausteinen, mit
-│                           Beispielscheiben, den echten Scheiben des Users (Luftpistole, zwei Luftgewehr) und sonst
-│                           erfundenem Luftgewehr,
-│                           gebaut zu einer HTML-Datei (Artifact),
-│                           Skriptprüfung in Headless-Chrome (`pruefen`).
-├── tools/spielwiese/       Vorlage und Skriptprüfung der Spielwiese (Prototyp, Referenz bis zur Portierung).
+│                           Start, Liste, Scheibe, Zeitraum und Rahmen nutzt apps/spiegel; Bedienung im Browser prüft
+│                           `pnpm --filter spiegel pruefen` (Labor und Spielwiese entfernt, 13. Oktober 2026).
 ├── tools/ssmdb2-erkunden/  Erkundung der Meyton-SSMDB2 vor Ort (SP-0.1/0.6): Checkliste, Kopie, Schießprotokoll;
 │                           Bash, nur lesend, Selbsttest gegen mariadb:11 (Oktober 2026).
 ├── docs/                   spec, decisions (ADRs), monorepo-plan, operations, plan,

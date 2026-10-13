@@ -279,7 +279,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 - **Allgemeine Bausteine** unter `@vereinsheim/ui/design2/*` (Segment-Umschalter, Schalter-Chip, weicher Kreis
   `round-toggle` für eine Einstellung neben einer großen Zahl oder in einer Filterzeile: 32 px, innen die Kartenfläche, Rahmen
   `line-strong`, Gold nur für das Hervorgehobene); was
-  den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, erprobt im Labor (`tools/labor`,
-  Skriptprüfung `pnpm --filter @vereinsheim/labor pruefen`).
+  den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, mit Markup-Tests; die Bedienung im Browser prüft
+  die Skriptprüfung der App (`pnpm --filter spiegel pruefen`, seit 13. Oktober 2026 statt des Labors).
 - Ringwerk und Treffsicher bleiben auf `theme.css` und ihrem Drift-Gate; Spiegel ist davon
   ausgenommen, bis beide Apps auf Design 2 umziehen.

@@ -2,8 +2,8 @@
 
 Die Bausteine von Spiegel als echte React-Komponenten: Scheibe, Serien als kleine Scheiben und was
 folgt (Pläne `plans/2026-10-08-spiegel-shot-ui-fundament.md` und `…-kacheln.md`, ADR-030, Roadmap
-SP-1.8). Vorbild ist die Spielwiese (`tools/spielwiese`), ausprobiert wird im Labor (`tools/labor`);
-später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
+SP-1.8). Vorbild war die Spielwiese, erprobt wurde bis Oktober 2026 im Labor (beide entfernt); heute setzt
+`apps/spiegel` die Bausteine mit echten Daten ein, ihre Bedienung prüft `pnpm --filter spiegel pruefen`.
 
 ## Exporte
 
@@ -50,7 +50,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/readout/CardHeader`         | `src/readout/CardHeader.tsx`         | Kopf der Seite im Raster der Seite: Titel, Metazeile, auf dem Telefon das Ergebnis, die wichtigsten Beobachtungen (`keyObservations`; auf dem Telefon nur die erste) und „Alle Beobachtungen ›“ (`onMore`)                                                                                                                                                                                                 |
 | `@vereinsheim/shot-ui/readout/CardResult`         | `src/readout/CardResult.tsx`         | Ergebnis der ganzen Scheibe: groß, Schusszahl, Zehner, Innenzehner, bester Teiler (`RESULT_FACTS`), Wertung                                                                                                                                                                                                                                                                                                |
 | `@vereinsheim/shot-ui/readout/cardMeta`           | `src/readout/cardMeta.ts`            | Metazeile im Kopf einer Scheibe: Art, Wochentag mit Datum, Uhrzeit (wie die Liste), Datum des Kalendertags                                                                                                                                                                                                                                                                                                 |
-| `@vereinsheim/shot-ui/target/display`             | `src/target/display.ts`              | Darstellung der Scheibe als Voreinstellung: `TargetDisplay` (Ebenen, übrige blass/aus, Ausschnitt), `DEFAULT_TARGET_DISPLAY`, `parseTargetDisplay` (kaputt oder alt Feld für Feld die Vorgabe), `serializeTargetDisplay`; wo gespeichert wird, entscheidet die App bzw. das Labor                                                                                                                          |
+| `@vereinsheim/shot-ui/target/display`             | `src/target/display.ts`              | Darstellung der Scheibe als Voreinstellung: `TargetDisplay` (Ebenen, übrige blass/aus, Ausschnitt), `DEFAULT_TARGET_DISPLAY`, `parseTargetDisplay` (kaputt oder alt Feld für Feld die Vorgabe), `serializeTargetDisplay`; wo gespeichert wird, entscheidet die App                                                                                                                                         |
 | `@vereinsheim/shot-ui/target/MiniTarget`          | `src/target/MiniTarget.tsx`          | kleine Scheibe (aus den Serien herausgelöst): Papier, Ringe, Treffer (ohne Wert gestrichelt), Ausschnitt auf 1 µm; braucht je Schuss nur Lage und Ring (`MarkShot`); Serien, Liste, Start, Ablesung einer Scheibe im Zeitraum                                                                                                                                                                              |
 | `@vereinsheim/shot-ui/analysis/charts/frame`      | `src/analysis/charts/frame.tsx`      | `ChartSlot` (misst die Breite), `ChartSvg`, `crisp`, `niceStep`                                                                                                                                                                                                                                                                                                                                            |
 | `@vereinsheim/shot-ui/layout/SectionBlock`        | `src/layout/SectionBlock.tsx`        | Abschnitt mit Anker und `data-section`, `fill` für die Spalte (aus `CardPage`)                                                                                                                                                                                                                                                                                                                             |
@@ -170,7 +170,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
     der ersten (kein `rowSpan`: sonst ist das Hervorheben beim Überfahren kein Rechteck); keine Zahl je Abend; der
     Hinweis auf andere Familien ist eine kleine, rechtsbündige Zeile darunter.
   - Ergebnis in beiden Wertungen mit Namen (U5): Spalten „Ganze Ringe“ und „Zehntel“, die Wertung der Scheibe fett
-    (`ProjectedCard.scoring`, ohne sie wie im Labor die amtliche, seit 12. Oktober 2026), darunter „Fett: Wertung der
+    (`ProjectedCard.scoring`, ohne sie die amtliche, seit 12. Oktober 2026), darunter „Fett: Wertung der
     Scheibe.“ (nur wenn im Monat etwas fett ist; in der Kachel auf Start bricht das Ergebnis nur zwischen den Wertungen
     um); das Modell liefert `resultScoring`, `ofCard` (Markup `data-card-scoring`), `otherResult`. Ø und Abstand in der
     Wertung der Liste (in der App die der Familie).
@@ -188,8 +188,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Schlüssel und Anker englisch. In die Adresse gehört, _was_ man sieht (Seite, Filter, Zeitraum, Vergleich,
   Wahl, Serie, Schuss als Nummer wie `shotLabels`, Wertung, Abschnitt), nicht _wie_ es gezeichnet ist (Ebenen,
   Ausschnitt, Thema, Erklärungen). Vorgaben fallen weg, Schlüssel stehen in fester Reihenfolge, Ungültiges gilt als
-  Vorgabe, nie ein Fehler. Seiten bauen Adressen und Wege nur über `nav/routes` und `nav/navigate`. Im Artifact kommt
-  nur ein einfacher Anker an (`#position`); das Labor zeigt die Adresse deshalb nur an. Ids sind erzeugte Ids, nie
+  Vorgabe, nie ein Fehler. Seiten bauen Adressen und Wege nur über `nav/routes` und `nav/navigate`. Ids sind erzeugte Ids, nie
   Namen (`isCardId`, `isNamedPeriodId`; benannte Zeiträume nicht `30d`, `90d`, `12m`, `all`, `previous`), die Familie
   die des Fachkerns (`lg-freihand` …). Die Wertung einer Scheibe (`CardRoute.scoring`) hat keine Vorgabe: ohne Angabe
   null, die Scheibe öffnet in ihrer; `scoring=decimal` steht ausdrücklich da. `openCard` gibt ohne Rekord null,
@@ -198,7 +197,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   - Wege zwischen Seiten sind `RouteLink`s mit der Adresse aus `urlFromRoute`, nie Rückrufe. Bausteine nehmen dafür
     Routen (`cardRoute`, `progress`, `showAll`, `otherFamilyRoute`). Wo kein Link sein kann (die ganze Zeile einer
     Tabelle), geht es über `useRouteNavigate`; der Link darin geht selbst.
-  - Der `RouteLinkProvider` fängt im Labor jeden Klick ab (`navigate`). Die App (N7) setzt beides: `next/link` als
+  - Der `RouteLinkProvider` kann jeden Klick abfangen (`navigate`). Die App (N7) setzt beides: `next/link` als
     `component` (Vorladen) **und** `navigate = (route) => router.push(urlFromRoute(route))`. Ohne `navigate` lädt
     `useRouteNavigate` (die ganze Zeile der Liste) die Seite neu; `next/link` übergeht einen Klick, den `RouteLink`
     schon mit `preventDefault` behandelt hat. Der Wert des Providers hält Funktionen, er braucht eine
@@ -246,7 +245,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   `CardLine`) und Liste (`CardList`), darunter Zahlen (`PeriodTiles`) und Analyse (`PeriodInsights`). Seit U2
   (`plans/2026-10-09-spiegel-fortschritt-besser.md`): eine Zeile Bedienung (Familie und Chip, alles Übrige im Blatt
   „Filter“), die Wertung kommt von außen (in der App die der Familie als `ScoringChip` in der Zeile der Filter,
-  `PeriodControls.actions`; im Labor die des Labors), der Satz beantwortet „Werde ich besser?“ (`form`), für eine
+  `PeriodControls.actions`), der Satz beantwortet „Werde ich besser?“ (`form`), für eine
   Scheibe gilt nur der Abstand zum Schnitt der fünf davor. Zustand
   (`periodReducer`) und alles Gerechnete (`periodModel`) sind reine Funktionen; die Komponenten zeichnen nur.
   Verlauf, Liste und Ablesung teilen die Wahl (`chosen`); das Lineal meldet nur eigene Wahlen (`onPick`). Ein
@@ -257,7 +256,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Beobachtungen, Start, Fortschritt (Kopf, Ergebnis, Zahlen, Verlauf) und Listen sagen „Streuung“, „Tempo“,
   „sicher zwischen …“, „deutlich besser“, „passt“/„versetzt“; σ, R50, T², Median, „95 %“ und „echt“ nur im Blatt
   „?“ und in den Karten der Reiter. Namen von Kennzahlen auf der Seite über `metricLabel`, nie direkt `metric.label`
-  aus dem Fachkern. Die Skriptprüfung des Labors sucht die Fachbegriffe (`JARGON`).
+  aus dem Fachkern. Die Skriptprüfung der App sucht sie auf den echten Seiten (`JARGON` in `apps/spiegel/tools/pruefen.ts`).
 - **Zahl und Bezug zusammen** (Prüfung, 9. Oktober 2026, D4): Jede Zahl, die über mehrere Schüsse summiert, nennt
   ihr n („40 weitere Schuss … zusammen“), jede, die je Schuss gilt, sagt „je Schuss“, bei Serien steht „Ringe“
   dabei; „1 Ring“ über `ringsText`. Eine Zahl, die auch ohne jeden Effekt groß ausfällt (bis U4 der Versatz Probe → Wertung),
@@ -274,7 +273,8 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   Ausweg für das Telefon, nicht für den Desktop (User, 8. Oktober 2026).
 - **Farben nur aus den Design-2-Tokens** (`@vereinsheim/ui/design2.css`), keine Palette-Klassen, keine
   `dark:`-Varianten; die Scheibe ist in beiden Themes gleich.
-- Markup-Tests mit `renderToStaticMarkup` in der Node-Umgebung; Bedienung prüft die Skriptprüfung des
-  Labors (`pnpm --filter @vereinsheim/labor pruefen`).
+- Markup-Tests mit `renderToStaticMarkup` in der Node-Umgebung; Bedienung prüft die Skriptprüfung der App
+  (`pnpm --filter spiegel pruefen`: echte Klicks und Tasten in Chrome gegen die laufende App, mit `--start` gegen ihren
+  Build; nicht im Gate).
 - JIT-Paket wie `shot-core`: Eine Next-App braucht es in `transpilePackages`.
 - Nach Änderungen: `pnpm check`; `format:check` prüft auch diese Datei.

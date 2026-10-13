@@ -472,6 +472,8 @@ Kreise.
 
 ## Labor näher an der App (9. Oktober 2026)
 
+Geschichte: Das Labor ist seit dem 13. Oktober 2026 entfernt; die Bedienung prüft `pnpm --filter spiegel pruefen` an der App.
+
 Plan `plans/2026-10-09-spiegel-labor-wie-app.md`. Der Labor-Kopf ist weg, die Seiten beginnen wie in der App, damit
 wir die Usability beurteilen können. Was nur das Labor hat (Stand, Adresse, Beispielscheiben, Schüsse setzen), liegt
 hinter einem kleinen Knopf „Labor-Werkzeuge“.

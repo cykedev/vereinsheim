@@ -121,14 +121,14 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ### SP-1.8 Scheiben-Liste und Session-Detail
 - **Ziel:** das, was der Prototyp verspricht.
 - **Umfang:** Liste nach Trainingsabend; Session-Detail mit Trefferbild (Overlays, Zoom), Serien und Probe-Blöcken als kleine Scheiben, Schusstabelle, Wiedergabe, Kennzahl-Kacheln, Bereich „Analyse“ mit den Auswertungen aus SP-1.10, Beobachtung, Original-PDF, Merkmalen und Aktionen an der Scheibe ([[spiegel-ui-design]]); Umschalter ganze Ringe/Zehntel überall; Zeichenregeln aus „Zeichnen der Scheibe“; `packages/shot-ui`.
-- **Abnahme:** Sichtprüfung gegen das Labor (`tools/labor`) und die Spielwiese, für Bildschirme ohne Vorbild dort gegen `vault/_attachments/spiegel-konzept.html`, auf Handy und Desktop, dunkel und, falls der Hellmodus in Phase 1 kommt, hell ([[spiegel-open-questions]]); Markup-Tests; Skriptprüfung des Labors grün; Sonderfälle SF-01, SF-02, SF-05, SF-07, SF-11, SF-16, SF-18, SF-61.
+- **Abnahme:** Sichtprüfung in der App, für Bildschirme ohne Vorbild gegen `vault/_attachments/spiegel-konzept.html`, auf Handy und Desktop, dunkel und, falls der Hellmodus in Phase 1 kommt, hell ([[spiegel-open-questions]]); Markup-Tests; Skriptprüfung der App (`pnpm --filter spiegel pruefen`) grün (bis 13. Oktober 2026 die des Labors); Sonderfälle SF-01, SF-02, SF-05, SF-07, SF-11, SF-16, SF-18, SF-61.
 - **Hängt ab von:** SP-1.2, SP-1.6, SP-1.11 (Hilfe an jeder Zahl). **Status:** in Arbeit (Oktober 2026): Die Bausteine entstehen schon jetzt in `packages/shot-ui` und werden im Labor erprobt, ein Plan je Schritt. Schritt 1 (Design-2-Tokens, Scheibe mit Nummern in Ebenen und Auswahl, Serien als Schalter, Zustand, Labor), Schritt 2 (Kacheln, Ablesung und Übersicht, Schusstabelle mit Trennern je Serie, Wertung, Hilfe mit Blatt, Tippen auf den nächsten Schuss) und Schritt 3 (Analyse in sechs Reitern mit Karten und Diagrammen, über die Wertung ohne Probe, [[spiegel-ui-design]]) sind erledigt; „Visier verstellt“ ist auf Wunsch des Users gestrichen. Schritt 4 (Seitenaufbau für Telefon, Tablet und Desktop: Kopf mit Ergebnis, Sprungleiste, Scheibe fest ab 768 px, Hilfe als Blatt, Rücksprung zur Scheibe, Anker in der Adresse; [[spiegel-mobile]]) ist erledigt; Schritt 5 (Diagramm-Lineal: Werte per Antippen, „Werte als Tabelle“, „Auf der Scheibe“; [[spiegel-mobile]]) ist erledigt; es folgen Zoom, Wiedergabe und Vergleiche. Navigation, Einstieg und Scheiben-Liste sind entschieden ([[spiegel-navigation]], 9. Oktober 2026) und kommen als Schritte N1 (Routen-Modell, erledigt 9. Oktober 2026: `shot-ui/nav`), N2 (Abende und Liste, erledigt 9. Oktober 2026: `shot-ui/list`), N3 (App-Rahmen, erledigt 9. Oktober 2026: `AppFrame`, `RouteLink`, Blättern), N4 (Auswahl), N5 (Start im Labor, erledigt 9. Oktober 2026: `shot-ui/start`); N6 hängt an SP-1.7. N7 in Teilen erledigt (10. Oktober 2026, `plans/2026-10-10-spiegel-erste-seiten.md`): In `apps/spiegel` stehen Start, Scheiben-Liste und die Seite einer Scheibe mit den echten Scheiben des Users aus der Dev-Datenbank, dazu Profil (Darstellung, Wertung des Geräts, Abmelden); Scannen und Offen sind Platzhalter. Seit dem 10. Oktober 2026 auch Fortschritt in der App (`plans/2026-10-10-spiegel-fortschritt.md`, N7 zweiter Teil): die Seite eines Zeitraums aus der Projektion, die Wahl im Browser; offen in N7 sind Scannen und Offen (SP-1.7). Start, Liste und Blättern stehen seit dem 10. Oktober 2026 auf der Projektion (`plans/2026-10-10-spiegel-projektion-uebersichten.md`, [[adr-031]]): Die Modelle in `shot-ui` nehmen `ProjectedCard`, die App rechnet sie auf dem Server, die kleinen Scheiben zeichnen kompakte Lagen aus der Projektion. Bei 1.564 Scheiben gehen an den Browser 5 KB (Start) bzw. 1 MB (Liste „Alles“) statt 8 MB ([[spiegel-db-schema]]).
 
 ### SP-1.9 Betrieb: Deploy und Selbst-Hosting
 - **Ziel:** Spiegel läuft auf dem VPS und ist für andere Vereine betreibbar.
 - **Umfang:** dritte DB und Owner mit idempotentem Anlage-Schritt, `app-spiegel` und `migrate-spiegel` in `compose.yml`, Caddy-Subdomain und Ingest-Endpunkt, Backups inklusive PDF-Speicher, CLI; ohne VPS-Upgrade: `mem_limit` für Spiegel (Ziel 256 MB), Deploys nacheinander, Messung von Ruhe- und Deploy-Spitze auf dem VPS S mit 2 GB ([[adr-026]]); Compose-Beispiel und Doku für Selbst-Hoster ([[adr-029]]).
 - **Abnahme:** Deploy auf dem VPS, Speicher bleibt in Ruhe und beim Deploy unter der Grenze, Restore-Probe, Selbst-Hosting-Beispiel startet lokal; Sonderfälle SF-67, SF-68.
-- **Hängt ab von:** SP-1.6; Start und Liste auf der Projektion (SP-1.8, erledigt 10. Oktober 2026). Geschützte Pfade, interaktiv. **Status:** offen. Vorher klären: `apps/spiegel` hängt als Entwickler-Abhängigkeit an `@vereinsheim/labor` (die eigenen Scheiben für `seed:own`), `turbo prune spiegel` nähme das Labor mit ins Image; die Daten in ein kleines Paket ziehen oder das Seed-Werkzeug aus dem Build nehmen.
+- **Hängt ab von:** SP-1.6; Start und Liste auf der Projektion (SP-1.8, erledigt 10. Oktober 2026). Geschützte Pfade, interaktiv. **Status:** offen. Geklärt (13. Oktober 2026): Die eigenen Scheiben für `seed:own` liegen in `apps/spiegel/tools/own-cards-data.ts`, das Labor ist entfernt; `turbo prune spiegel` nimmt kein Labor mehr mit.
 
 ### SP-1.10 Fachkern: Analyse einer Scheibe
 - **Ziel:** alles, was eine einzelne Scheibe hergibt, als Profi-Analyse rechnen, ohne Datenbank und ohne Historie ([[spiegel-statistics]]).
@@ -222,13 +222,11 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
 - **Speicher im Container** seit der Projektion der Übersichten nicht neu gemessen (Vorgehen in `apps/spiegel/CLAUDE.md`).
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.
-- **Labor-Artifact** zeigt noch nicht die Markierung in der Liste und die Rekorde als Zeilen: neu bauen und unter
-  derselben Adresse veröffentlichen (`tools/labor/CLAUDE.md`).
 - **Lint für die Pakete:** Nur die drei Apps haben `lint`. `packages/*` (darunter `shot-core`, `shot-ui`) und
-  `tools/labor` werden nicht gelintet, die Hook-Regeln von React in `shot-ui` prüft niemand. Probe mit der geteilten
-  Konfiguration (12. Oktober 2026): `shot-ui` 39 Fehler (24 ungenutzte Variablen, 8 `react/no-children-prop`, dazu
-  `react-hooks/refs`, `set-state-in-effect`, `globals`), `ui` 3, `tools/labor` 2; `shot-core`, `lib`, `meyton-pdf`
-  ohne Fehler, sonst nur `no-console`-Warnungen.
+  das frühere Labor wurden nicht gelintet, die Hook-Regeln von React in `shot-ui` prüft niemand. Probe mit der
+  geteilten Konfiguration (12. Oktober 2026): `shot-ui` 39 Fehler (24 ungenutzte Variablen, 8 `react/no-children-prop`,
+  dazu `react-hooks/refs`, `set-state-in-effect`, `globals`), `ui` 3; `shot-core`, `lib`, `meyton-pdf` ohne Fehler,
+  sonst nur `no-console`-Warnungen.
 - **Auf einem echten iPhone prüfen** (bisher nur Emulation in Chrome): VoiceOver, sicherer Rand unten, Ziehen am
   Diagramm-Lineal gegen senkrechtes Scrollen (`touch-action`, [[spiegel-mobile]]).
 - **Leseprobe der Hilfe** (Abnahme von SP-1.11): Die Texte hat noch niemand ohne Statistik-Wissen gelesen.
@@ -238,10 +236,9 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
   ist (kürzere Namen oder schmalere Umschalter). Die andere Beobachtung vom 8./9. Oktober (bei 768 × 660 passen die
   Serien nicht neben die untere Leiste) ist gewollt: Für die Scheibe blieben 274 px, weniger als `MIN_TARGET_PX`
   (280), dann folgen die Serien darunter.
-- **Aufräumen** (User, 12. Oktober 2026): Labor (`tools/labor`), Spielwiese (`tools/spielwiese`) und was nur für
-  sie da ist, werden bald nicht mehr gebraucht, seit die App selbst läuft, und sind womöglich schon nicht mehr
-  deckungsgleich mit ihr.
-  - Vor dem Entfernen prüfen, was die App noch braucht. Die Skriptprüfung des Labors (`pruefen`) deckt heute Bedienung
-    ab, die sonst kein Test sieht.
-  - Was davon bleiben soll, wandert in Tests der App oder von `shot-ui`.
-  - Danach Verweise nachziehen: Architekturkarte, `CLAUDE.md`-Dateien, [[conventions]] §10, Turbo-Tasks.
+- **Aufräumen** (User, 12. Oktober 2026): erledigt am 13. Oktober 2026 nach Plan `plans/2026-10-13-aufraeumen-labor.md`.
+  Labor (`tools/labor`) und Spielwiese (`tools/spielwiese`) sind entfernt. Von den 322 Prüfungen des Labors waren 62 %
+  schon durch Tests abgedeckt, 8 % prüften nur das Labor; die Bedienung, die nur ein Browser sieht, prüft jetzt
+  `pnpm --filter spiegel pruefen` an der App selbst (echte Klicks und Tasten, 60 Prüfungen). Sie fand zwei Fehler, beide
+  behoben: Beim Blättern übernahm die nächste Scheibe den Reiter der vorigen, und das „?“ am Abstand zum Schnitt davor
+  fehlte in ganzen Ringen. Die eigenen Scheiben für `seed:own` liegen in `apps/spiegel/tools/own-cards-data.ts`.

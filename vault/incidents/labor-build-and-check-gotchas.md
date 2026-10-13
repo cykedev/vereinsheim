@@ -10,6 +10,8 @@ part_of: ["[[incidents]]"]
 
 **TL;DR** Drei Fallen beim Bauen und Prüfen des Labors (`tools/labor`), alle am 9. Oktober 2026 aufgetreten:
 
+**Erledigt (13. Oktober 2026):** Das Labor ist entfernt (Plan `plans/2026-10-13-aufraeumen-labor.md`); die Bedienung prüft `pnpm --filter spiegel pruefen` an der App. Die Note bleibt als Geschichte.
+
 1. **Alter Stand-Stempel nach `pnpm check`:** Das Gate baut das Labor über Turbo und stellt `dist/labor.html` und
    `dist/preview.html` aus dem Cache wieder her, wenn sich die Eingaben nicht geändert haben, samt Stempel des
    Laufs, der den Cache gefüllt hat (etwa `e10ff16-dirty`). Für das Artifact oder eine Sichtprüfung deshalb direkt

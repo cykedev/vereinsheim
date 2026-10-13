@@ -12,6 +12,8 @@ part_of: ["[[incidents]]"]
 Vorschau der Claude-App zeigt `tools/labor/dist/preview.html` als `data:`-Seite, und dort blockt der Browser die
 Navigation zu einem Anker („Not allowed to navigate top frame to data URL“). `localStorage` wirft dort ebenfalls.
 
+**Erledigt (13. Oktober 2026):** Das Labor ist entfernt (Plan `plans/2026-10-13-aufraeumen-labor.md`); die Bedienung prüft `pnpm --filter spiegel pruefen` an der App. Die Note bleibt als Geschichte.
+
 **Konsequenz:** Navigation innerhalb einer Seite nicht dem Browser überlassen, sondern selbst scrollen:
 `event.preventDefault()`, `element.scrollIntoView({ block: "start" })` (respektiert `scroll-mt-*`), den Anker nur
 in `try { history.pushState(…) } catch {}` schreiben; Klicks mit Taste (neuer Tab) dem Browser lassen
