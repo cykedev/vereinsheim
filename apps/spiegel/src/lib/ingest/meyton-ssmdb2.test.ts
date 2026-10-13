@@ -136,6 +136,22 @@ describe("Adapter im Einzelnen", () => {
     expect(shot.displayMode).toBe(Number(row.Wertung))
   })
 
+  it("Rangliste als Text für die Zuordnung des Admins, leer als null; die Art aus Status", () => {
+    const result = adaptSnapshot(snapshot, context)
+    if (result.kind !== "card") throw new Error("keine Scheibe")
+    expect(result.card.ranking).toBe(snapshot.data.scheiben.rows[0].Rangliste)
+    expect(result.card.kind).toBe("training")
+    const head = { ...snapshot.data.scheiben.rows[0], Rangliste: "  ", Status: "RWK" }
+    const other = {
+      ...snapshot,
+      data: { ...snapshot.data, scheiben: { ...snapshot.data.scheiben, rows: [head] } },
+    }
+    const adapted = adaptSnapshot(other, context)
+    if (adapted.kind !== "card") throw new Error("keine Scheibe")
+    expect(adapted.card.ranking).toBeNull()
+    expect(adapted.card.kind).toBe("competition")
+  })
+
   it("Zeit: Ortszeit der Anlage nach UTC, Sekunde und Millisekunden als Paar (SF-32)", () => {
     const result = adaptSnapshot(snapshot, context)
     if (result.kind !== "card") throw new Error("keine Scheibe")

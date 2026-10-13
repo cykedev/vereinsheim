@@ -110,6 +110,21 @@ async function isBlocked(db: Db, sourceId: number, snapshot: SnapshotV1): Promis
 }
 
 /** die Disziplin der Anlage; neu angelegt mit dem, was der Fachkern über sie weiß (D20) */
+/**
+ * die Rangliste der Anlage (`Ranking`), beim ersten Sehen angelegt, noch ohne Art; ihre Art ordnet der Admin zu und gilt
+ * beim Lesen (`kindOfRow`). Ohne Rangliste null.
+ */
+async function rankingFor(db: Db, siteId: number, name: string | null): Promise<number | null> {
+  if (!name) return null
+  const ranking = await db.ranking.upsert({
+    where: { siteId_name: { siteId, name } },
+    create: { siteId, name },
+    update: {},
+    select: { id: true },
+  })
+  return ranking.id
+}
+
 async function disciplineFor(
   db: Db,
   siteId: number,
@@ -262,6 +277,7 @@ async function adaptAndWrite(
   )
     return quarantine(db, stored.snapshotId, "SportpassID oder Besitzer gewechselt")
   const discipline = known ?? (await disciplineFor(db, target.siteId, card.discipline))
+  const rankingId = await rankingFor(db, target.siteId, card.ranking)
   try {
     await writeRevision(db, {
       card: {
@@ -275,6 +291,7 @@ async function adaptAndWrite(
         startedAtMs: card.startedAtMs,
         endedAtMs: card.endedAtMs,
         kind: card.kind,
+        rankingId,
         state: card.state,
         complete: isComplete(card.state, card.flags),
         flags: card.flags,

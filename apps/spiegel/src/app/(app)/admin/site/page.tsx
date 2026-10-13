@@ -7,6 +7,7 @@ import {
   BridgeItem,
   ConfirmEpochButton,
   PairBridgeForm,
+  RankingItem,
   SiteForm,
 } from "@/components/admin/SiteForms"
 import { Page } from "@/components/shell/Page"
@@ -49,6 +50,25 @@ export default async function AdminSiteRoute() {
               )}
             </section>
             <PairBridgeForm />
+            <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+              <h2 className="text-[15px] font-semibold">Ranglisten</h2>
+              <p className="text-sm text-muted-foreground">
+                Meyton nennt zu jeder Scheibe eine Rangliste des Vereins. Ordne zu, welche Wettkampf
+                sind; ohne Zuordnung gilt Training. Wer eine Scheibe selbst umstellt, behält seine
+                Wahl.
+              </p>
+              {overview.rankings.length ? (
+                <ul className="divide-y divide-border rounded-xl border border-border">
+                  {overview.rankings.map((ranking) => (
+                    <RankingItem key={ranking.id} ranking={ranking} />
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Die Ranglisten erscheinen mit den ersten Scheiben der Brücke.
+                </p>
+              )}
+            </section>
             <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
               <h2 className="text-[15px] font-semibold">Epochen der Ablage</h2>
               {overview.sources.length ? (

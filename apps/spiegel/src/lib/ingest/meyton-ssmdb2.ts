@@ -202,7 +202,10 @@ export interface AdaptedCard {
   stand: string | null
   startedAtMs: number
   endedAtMs: number | null
+  /** Art aus `Status`; die Zuordnung der Rangliste durch den Admin geht vor (beim Lesen, `kindOfRow`) */
   kind: "training" | "competition"
+  /** `Rangliste` der SSMDB2, ein freier Text des Vereins; null, wenn leer */
+  ranking: string | null
   state: "open" | "resting" | "final"
   completeness: Completeness
   /** Merkmale aus diesem Stand; dauerhafte (`korrigiert`, `uhr-abweichung`) hält `writeRevision` fest */
@@ -448,6 +451,7 @@ export function adaptSnapshot(snapshot: SnapshotV1, context: AdapterContext): Ad
       endedAtMs,
       // `Status` ist an der Vereinsanlage immer leer; sonst steht dort RWK, Liga, … ([[meyton-ssmdb2]])
       kind: text(head, "Status").trim() ? "competition" : "training",
+      ranking: text(head, "Rangliste").trim() || null,
       state,
       completeness,
       flags,

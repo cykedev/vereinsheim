@@ -23,10 +23,19 @@ export interface BridgeRow {
   heldBack: string | null
 }
 
+/** eine Rangliste der Anlage mit der Art, die der Admin ihr gibt; null: nicht zugeordnet (dann gilt Training) */
+export interface RankingRow {
+  id: number
+  name: string
+  kind: "training" | "competition" | null
+  cards: number
+}
+
 export interface SiteOverview {
   site: { id: number; name: string; timeZone: string } | null
   sources: { id: number; epoch: number; confirmedAt: string | null; snapshots: number }[]
   bridges: BridgeRow[]
+  rankings: RankingRow[]
 }
 
 const when = (date: Date | null, timeZone: string) => (date ? formatDateTime(date, timeZone) : null)
@@ -38,8 +47,8 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
     orderBy: { id: "asc" },
     select: { id: true, name: true, timeZone: true },
   })
-  if (!site) return { site: null, sources: [], bridges: [] }
-  const [sources, bridges] = await Promise.all([
+  if (!site) return { site: null, sources: [], bridges: [], rankings: [] }
+  const [sources, bridges, rankings] = await Promise.all([
     db.source.findMany({
       where: { siteId: site.id },
       orderBy: { epoch: "asc" },
@@ -48,6 +57,11 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
     db.bridge.findMany({
       where: { siteId: site.id },
       orderBy: [{ revokedAt: { sort: "asc", nulls: "first" } }, { createdAt: "desc" }],
+    }),
+    db.ranking.findMany({
+      where: { siteId: site.id },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, kind: true, _count: { select: { cards: true } } },
     }),
   ])
   return {
@@ -77,6 +91,12 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
         heldBack: heldBackText(heartbeat?.heldBack ?? []),
       }
     }),
+    rankings: rankings.map((r) => ({
+      id: r.id,
+      name: r.name,
+      kind: r.kind,
+      cards: r._count.cards,
+    })),
   }
 }
 

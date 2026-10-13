@@ -60,6 +60,8 @@ export interface CardInput {
   startedAtMs: number
   endedAtMs: number | null
   kind: CardKind
+  /** die Rangliste der SSMDB2 (`Ranking`); fehlt: nicht anfassen (`seed:own`, PDF) */
+  rankingId?: number | null
   state: CardState
   complete: boolean
   flags: readonly string[]
@@ -234,6 +236,7 @@ function cardFeatures(card: CardInput, shots: readonly ShotInput[], familyId: nu
     standScoring: standScoringOf(shots),
     flags: [...card.flags],
     ...(card.sportpassId === undefined ? {} : { sportpassId: card.sportpassId }),
+    ...(card.rankingId === undefined ? {} : { rankingId: card.rankingId }),
     ...(card.lifesignAtMs === undefined
       ? {}
       : { lifesignAt: card.lifesignAtMs === null ? null : new Date(card.lifesignAtMs) }),

@@ -13,7 +13,7 @@ vi.mock("@/lib/auth-helpers", () => ({
 }))
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }))
 
-const { addSportpass, pairBridge, removeSportpass, revokeBridgeAction, saveSite } =
+const { addSportpass, pairBridge, removeSportpass, revokeBridgeAction, saveSite, setRankingKind } =
   await import("./site-actions")
 
 const tag = randomUUID().slice(0, 8)
@@ -78,6 +78,30 @@ describe("Anlage und Brücken (Admin)", () => {
     const stored = await db.bridgePairing.findFirstOrThrow({ where: { name: `Pi ${tag}` } })
     expect(stored.createdById).toBe(adminId)
     expect(JSON.stringify(stored)).not.toContain(result.data.code.replace("-", ""))
+  })
+})
+
+describe("Art einer Rangliste (Admin)", () => {
+  it("Wettkampf, Training oder offen; nur ein Admin, nur bekannte Arten", async () => {
+    const site = await db.site.findFirstOrThrow({ orderBy: { id: "asc" }, select: { id: true } })
+    const ranking = await db.ranking.create({ data: { siteId: site.id, name: `RWK ${tag}` } })
+    try {
+      expect(await setRankingKind(ranking.id, "competition")).toEqual({ success: true })
+      expect((await db.ranking.findUniqueOrThrow({ where: { id: ranking.id } })).kind).toBe(
+        "competition"
+      )
+      expect(await setRankingKind(ranking.id, "open")).toEqual({ success: true })
+      expect((await db.ranking.findUniqueOrThrow({ where: { id: ranking.id } })).kind).toBeNull()
+      expect(await setRankingKind(ranking.id, "liga")).toEqual({ error: "Unbekannte Art." })
+      expect(await setRankingKind(-1, "training")).toEqual({ error: "Unbekannte Rangliste." })
+      mocks.session = { user: { id: shooterId, role: "USER" } }
+      expect(await setRankingKind(ranking.id, "training")).toEqual({
+        error: "Keine Berechtigung",
+      })
+      expect((await db.ranking.findUniqueOrThrow({ where: { id: ranking.id } })).kind).toBeNull()
+    } finally {
+      await db.ranking.delete({ where: { id: ranking.id } })
+    }
   })
 })
 

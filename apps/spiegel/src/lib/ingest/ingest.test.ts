@@ -81,6 +81,12 @@ describe("ingestBatch", () => {
       where: { sourceId: site.sourceId, scheibenId: expected.scheibenId },
     })
     expect(raw.every((r) => r.adapterVersion === "meyton-ssmdb2@9")).toBe(true)
+    // die Rangliste der SSMDB2 ist angelegt und an der Scheibe, noch ohne Art (die ordnet der Admin zu)
+    const ranking = await db.ranking.findFirstOrThrow({
+      where: { siteId: site.siteId, cards: { some: { id: card!.id } } },
+    })
+    expect(ranking.name).toBe(snapshots.at(-1)!.data.scheiben.rows[0].Rangliste)
+    expect(ranking.kind).toBeNull()
   })
 
   it("im Stapel deutet der Adapter je Scheibe nur den neuesten Stand; jeder Stand wird abgelegt", async () => {

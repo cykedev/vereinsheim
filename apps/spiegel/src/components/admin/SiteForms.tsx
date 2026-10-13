@@ -10,8 +10,16 @@ import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
 
-import type { BridgeRow, SiteOverview } from "@/lib/admin/site"
-import { confirmEpoch, pairBridge, revokeBridgeAction, saveSite } from "@/lib/admin/site-actions"
+import { Segmented } from "@vereinsheim/ui/design2/segmented"
+
+import type { BridgeRow, RankingRow, SiteOverview } from "@/lib/admin/site"
+import {
+  confirmEpoch,
+  pairBridge,
+  revokeBridgeAction,
+  saveSite,
+  setRankingKind,
+} from "@/lib/admin/site-actions"
 
 const CARD = "grid gap-4 rounded-2xl border border-border bg-card p-5"
 
@@ -236,5 +244,57 @@ export function ConfirmEpochButton({ sourceId, epoch }: { sourceId: number; epoc
         }
       />
     </>
+  )
+}
+
+type RankingChoice = "open" | "training" | "competition"
+
+const RANKING_OPTIONS = [
+  { value: "open", label: "Offen" },
+  { value: "training", label: "Training" },
+  { value: "competition", label: "Wettkampf" },
+] as const
+
+/** eine Rangliste mit ihrer Art; gespeichert sofort, wie die Wahl auf der Seite einer Scheibe */
+export function RankingItem({ ranking }: { ranking: RankingRow }) {
+  const router = useRouter()
+  const [shown, setShown] = useState<RankingChoice>(ranking.kind ?? "open")
+  const [error, setError] = useState<string | null>(null)
+  const [, startTransition] = useTransition()
+  return (
+    <li
+      className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+      data-ranking={ranking.id}
+    >
+      <span className="grid min-w-0">
+        <span className="truncate text-[15px] font-semibold">{ranking.name}</span>
+        <span className="text-[13px] text-muted-foreground">
+          {ranking.cards === 1 ? "1 Scheibe" : `${ranking.cards} Scheiben`}
+          {shown === "open" ? " · gilt als Training" : ""}
+        </span>
+        {error && (
+          <span role="alert" className="text-[13px] text-destructive">
+            {error}
+          </span>
+        )}
+      </span>
+      <Segmented
+        label={`Art der Rangliste ${ranking.name}`}
+        options={RANKING_OPTIONS}
+        value={shown}
+        onChange={(value) => {
+          const before = shown
+          setShown(value)
+          setError(null)
+          startTransition(async () => {
+            const result = await setRankingKind(ranking.id, value)
+            if ("error" in result) {
+              setShown(before)
+              setError(getErrorMessage(result) ?? "Nicht gespeichert.")
+            } else router.refresh()
+          })
+        }}
+      />
+    </li>
   )
 }

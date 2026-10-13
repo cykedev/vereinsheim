@@ -157,3 +157,24 @@ export async function removeSportpass(consentId: number): Promise<ActionResult> 
   revalidatePath(`/admin/users/${consent.userId}`)
   return { success: true }
 }
+
+const RANKING_KINDS = ["training", "competition", "open"] as const
+
+/**
+ * Art einer Rangliste („RWK_…“ ist Wettkampf); `open` hebt die Zuordnung auf. Gilt beim Lesen für jede Scheibe der
+ * Rangliste, deren Art der Schütze nicht selbst gewählt hat ([[meyton-ssmdb2]]: `Status` ist an der Anlage leer).
+ */
+export async function setRankingKind(rankingId: number, kind: string): Promise<ActionResult> {
+  const actor = await adminActor()
+  if ("error" in actor) return actor
+  if (!Number.isSafeInteger(rankingId)) return { error: "Unbekannte Rangliste." }
+  if (!(RANKING_KINDS as readonly string[]).includes(kind)) return { error: "Unbekannte Art." }
+  const updated = await db.ranking.updateMany({
+    where: { id: rankingId },
+    data: { kind: kind === "open" ? null : (kind as "training" | "competition") },
+  })
+  if (updated.count === 0) return { error: "Unbekannte Rangliste." }
+  // Liste, Start und Fortschritt rechnen die Art beim Lesen
+  revalidatePath("/", "layout")
+  return { success: true }
+}

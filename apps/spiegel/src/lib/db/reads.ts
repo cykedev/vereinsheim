@@ -33,6 +33,7 @@ const OVERVIEW_SELECT = {
   startedAt: true,
   kind: true,
   kindChoice: true,
+  ranking: { select: { kind: true } },
   complete: true,
   flags: true,
   state: true,
@@ -92,12 +93,16 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
   })
 }
 
-/** die geltende Art einer Scheibe: gewählt, sonst die der Quelle (ein Stand schreibt nur `kind`) */
-const kindOfRow = (row: Pick<OverviewRow, "kind" | "kindChoice">) => row.kindChoice ?? row.kind
+/**
+ * die geltende Art einer Scheibe: gewählt, sonst die Zuordnung ihrer Rangliste durch den Admin, sonst die der Quelle (ein
+ * Stand schreibt nur `kind` und die Rangliste). Die Zuordnung gilt beim Lesen: Ändert der Admin sie, folgen alle Scheiben.
+ */
+export const kindOfRow = (row: Pick<OverviewRow, "kind" | "kindChoice" | "ranking">) =>
+  row.kindChoice ?? row.ranking?.kind ?? row.kind
 
 /** die Wertung einer Scheibe aus ihrer Zeile, mit der geltenden Art und der amtlichen, wie die Scheibe sie zeigt */
 const scoringOfRow = (
-  row: Pick<OverviewRow, "kind" | "kindChoice" | "standScoring" | "scoringChoice">,
+  row: Pick<OverviewRow, "kind" | "kindChoice" | "ranking" | "standScoring" | "scoringChoice">,
   official: Scoring | null
 ) =>
   cardScoring({
@@ -167,6 +172,7 @@ const PAGE_CARD_SELECT = {
   startedAt: true,
   kind: true,
   kindChoice: true,
+  ranking: { select: { kind: true } },
   complete: true,
   flags: true,
   standScoring: true,

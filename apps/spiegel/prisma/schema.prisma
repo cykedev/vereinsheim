@@ -59,6 +59,7 @@ model Site {
   sources     Source[]
   bridges     Bridge[]
   disciplines Discipline[]
+  rankings    Ranking[]
   pairings    BridgePairing[]
   clock       ClockReading[]
   consents    SportpassConsent[]
@@ -352,6 +353,19 @@ model Discipline {
   @@unique([siteId, meytonId, name])
 }
 
+// eine `Rangliste` der Anlage, ein freier Text des Vereins; das Einlesen legt sie beim ersten Sehen an. Ihre Art ordnet
+// der Admin zu (an der Vereinsanlage ist `Status` immer leer, [[meyton-ssmdb2]]); null: nicht zugeordnet
+model Ranking {
+  id     Int       @id @default(autoincrement())
+  siteId Int
+  site   Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name   String
+  kind   CardKind?
+  cards  Card[]
+
+  @@unique([siteId, name])
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Scheiben
 // ─────────────────────────────────────────────────────────────────────────────
@@ -382,8 +396,12 @@ model Card {
   startedAt         DateTime        @db.Timestamptz(3)
   endedAt           DateTime?       @db.Timestamptz(3)
   kind              CardKind
-  // vom Schützen auf der Seite der Scheibe gewählt; null: die Art der Quelle (`kind`). Ein Stand schreibt nur `kind`
+  // vom Schützen auf der Seite der Scheibe gewählt; null: die Art der Rangliste, sonst die der Quelle (`kind`). Ein
+  // Stand schreibt nur `kind` und `rankingId`
   kindChoice        CardKind?
+  // die `Rangliste` der SSMDB2 („Training-LP“, „RWK_…“); ihre Art ordnet der Admin zu
+  rankingId         Int?
+  ranking           Ranking?        @relation(fields: [rankingId], references: [id], onDelete: SetNull)
   state             CardState
   // endgültig und mit voller Schusszahl (SF-66); die amtliche Wertung steht an der Disziplin (SF-74)
   complete          Boolean

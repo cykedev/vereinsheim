@@ -238,6 +238,16 @@ CREATE TABLE "Discipline" (
 );
 
 -- CreateTable
+CREATE TABLE "Ranking" (
+    "id" SERIAL NOT NULL,
+    "siteId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "kind" "CardKind",
+
+    CONSTRAINT "Ranking_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Card" (
     "id" TEXT NOT NULL,
     "sourceId" INTEGER,
@@ -253,6 +263,7 @@ CREATE TABLE "Card" (
     "endedAt" TIMESTAMPTZ(3),
     "kind" "CardKind" NOT NULL,
     "kindChoice" "CardKind",
+    "rankingId" INTEGER,
     "state" "CardState" NOT NULL,
     "complete" BOOLEAN NOT NULL,
     "standScoring" "Scoring",
@@ -393,6 +404,9 @@ CREATE UNIQUE INDEX "Family_slug_key" ON "Family"("slug");
 CREATE UNIQUE INDEX "Discipline_siteId_meytonId_name_key" ON "Discipline"("siteId", "meytonId", "name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Ranking_siteId_name_key" ON "Ranking"("siteId", "name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Card_currentRevisionId_key" ON "Card"("currentRevisionId");
 
 -- CreateIndex
@@ -486,6 +500,9 @@ ALTER TABLE "Discipline" ADD CONSTRAINT "Discipline_siteId_fkey" FOREIGN KEY ("s
 ALTER TABLE "Discipline" ADD CONSTRAINT "Discipline_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "Family"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Ranking" ADD CONSTRAINT "Ranking_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Card" ADD CONSTRAINT "Card_sourceId_fkey" FOREIGN KEY ("sourceId") REFERENCES "Source"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -496,6 +513,9 @@ ALTER TABLE "Card" ADD CONSTRAINT "Card_disciplineId_fkey" FOREIGN KEY ("discipl
 
 -- AddForeignKey
 ALTER TABLE "Card" ADD CONSTRAINT "Card_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "Family"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Card" ADD CONSTRAINT "Card_rankingId_fkey" FOREIGN KEY ("rankingId") REFERENCES "Ranking"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Card" ADD CONSTRAINT "Card_currentRevisionId_fkey" FOREIGN KEY ("currentRevisionId") REFERENCES "CardRevision"("id") ON DELETE SET NULL ON UPDATE CASCADE;
