@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { KindToggle } from "./KindToggle"
-import { ScoringSegment } from "./ScoringSegment"
+import { ScoringChip } from "./ScoringChip"
 import { ScoringToggle } from "./ScoringToggle"
 
 describe("ScoringToggle: der Bruch im weichen Kreis", () => {
@@ -88,27 +88,38 @@ describe("KindToggle: der Pokal im weichen Kreis", () => {
   })
 })
 
-describe("ScoringSegment: die Wertung als beschriftete Auswahl in einer Filterzeile (User, 13. Oktober 2026)", () => {
+describe("ScoringChip: die Wertung als Wechsel-Chip in einer Filterzeile (User, 13. Oktober 2026)", () => {
+  const TEXTS = { rings: "Ø in ganzen Ringen", decimal: "Ø in Zehnteln" } as const
   const html = (scoring: "rings" | "decimal") =>
     renderToStaticMarkup(
-      createElement(ScoringSegment, {
+      createElement(ScoringChip, {
         scoring,
-        prefix: "Ø in",
+        texts: TEXTS,
         label: "Wertung für Ø und Abstand",
         onChange: () => {},
       })
     )
 
-  it("davor der Bezug, dann „Ganze Ringe | Zehntel“, die gezeigte gewählt", () => {
+  it("in Worten mit Bezug, ⇄ davor, Name mit Zustand und Wirkung", () => {
+    const rings = html("rings")
+    expect(rings).toMatch(/^<button type="button"/)
+    expect(rings).toContain(
+      'aria-label="Wertung für Ø und Abstand: ganze Ringe, auf Zehntel umstellen"'
+    )
+    expect(rings).toMatch(/lucide-arrow-right-left[\s\S]*<\/svg>Ø in ganzen Ringen<\/button>$/)
+    expect(rings).toContain('data-scoring="rings"')
+    expect(html("decimal")).toContain(">Ø in Zehnteln</button>")
+    expect(html("decimal")).toContain(
+      'aria-label="Wertung für Ø und Abstand: Zehntel, auf ganze Ringe umstellen"'
+    )
+  })
+
+  it("so groß wie der Chip „Filter“, neutral umrandet (der blaue öffnet ein Blatt), bricht nicht um", () => {
     const rings = html("rings")
     expect(rings).toMatch(
-      /^<span data-scoring-segment="rings" class="inline-flex items-center gap-2">/
+      /class="[^"]*\brounded-full border border-line-strong bg-card px-3 py-1\.5 text-\[13px\] leading-tight font-semibold\b/
     )
-    expect(rings).toMatch(/<span aria-hidden="true"[^>]*>Ø in<\/span><div role="radiogroup"/)
-    expect(rings).toContain('aria-label="Wertung für Ø und Abstand"')
-    expect(rings).toMatch(/aria-checked="true"[^>]*>Ganze Ringe<\/button>/)
-    expect(rings).toMatch(/aria-checked="false"[^>]*>Zehntel<\/button>/)
-    expect(rings.indexOf("Ganze Ringe")).toBeLessThan(rings.indexOf("Zehntel"))
-    expect(html("decimal")).toMatch(/aria-checked="true"[^>]*>Zehntel<\/button>/)
+    expect(rings).toContain("whitespace-nowrap")
+    expect(rings).not.toContain("border-primary")
   })
 })

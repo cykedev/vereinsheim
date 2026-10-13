@@ -19,8 +19,8 @@ export interface PeriodControlsProps {
   /** Disziplin-Familien, die es gibt (Pflicht, D5) */
   families: readonly { value: string; label: string }[]
   /**
-   * Kreise in der Zeile der Filter, rechtsbündig, wie in der Liste (in der App die Wertung der Familie; User,
-   * 13. Oktober 2026: „beim fortschritt kann die 1 1/10 immer in die filter bar“, „rechts ausgerichtet“)
+   * weitere Chips in der Zeile der Filter, nach dem Chip „Filter“, wie in der Liste (in der App die Wertung der Familie
+   * als Wechsel-Chip; User, 13. Oktober 2026)
    */
   actions?: ReactNode
 }
@@ -59,7 +59,7 @@ export function PeriodControls({
         onApply={(filters) => dispatch({ type: "setFilters", filters })}
       />
       {actions && (
-        <div data-period-actions className="ml-auto flex items-center gap-1.5">
+        <div data-period-actions className="flex items-center gap-1.5">
           {actions}
         </div>
       )}

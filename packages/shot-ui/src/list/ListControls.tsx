@@ -32,8 +32,8 @@ export interface ListControlsProps {
   /** „Im Fortschritt zeigen“: der Fortschritt mit Familie, Art und Zeitraum der Liste (`progressFromList`) */
   progress: ProgressRoute
   /**
-   * Kreise in der Zeile der Filter, rechtsbündig (in der App die Wertung der Familie; User, 13. Oktober 2026: „muss in
-   * die selbe zeile wie die filter“, „rechts ausgerichtet“)
+   * weitere Chips in der Zeile der Filter, nach dem Chip „Filter“ (in der App die Wertung der Familie als Wechsel-Chip;
+   * User, 13. Oktober 2026)
    */
   actions?: ReactNode
 }
@@ -118,7 +118,7 @@ export function ListControlsView({
         </svg>
       </button>
       {actions && (
-        <div data-list-actions className="ml-auto flex items-center gap-1.5">
+        <div data-list-actions className="flex items-center gap-1.5">
           {actions}
         </div>
       )}

@@ -7,7 +7,7 @@ import { markShots, type CardMark, type MarkShot } from "@vereinsheim/shot-core/
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
-import { ScoringSegment } from "@vereinsheim/shot-ui/controls/ScoringSegment"
+import { ScoringChip } from "@vereinsheim/shot-ui/controls/ScoringChip"
 import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
@@ -84,7 +84,7 @@ export function ProgressScreen({
   const help = useHelp()
   const onHelp = useCallback((id: string | null) => id && help(id), [help])
   const { timeZone, named } = context
-  // die Wertung der Familie als Auswahl in der Zeile der Filter
+  // die Wertung der Familie als Wechsel-Chip in der Zeile der Filter
   const familyScoring = useSavedChoice({
     value: state.scoring,
     scope: state.family,
@@ -219,9 +219,9 @@ export function ProgressScreen({
                   timeZone={timeZone}
                   families={families}
                   actions={
-                    <ScoringSegment
+                    <ScoringChip
                       scoring={familyScoring.shown}
-                      prefix="Wertung"
+                      texts={{ rings: "In ganzen Ringen", decimal: "In Zehnteln" }}
                       label="Wertung"
                       onChange={familyScoring.change}
                     />

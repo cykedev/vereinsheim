@@ -128,7 +128,7 @@ describe("Filter und Kopf (D5, D14)", () => {
       })
     )
 
-  it("ein Kreis in der Zeile nach dem Chip, rechtsbündig, wie in der Liste (User, 13. Oktober 2026)", () => {
+  it("ein weiterer Chip in der Zeile nach dem Chip „Filter“, wie in der Liste (User, 13. Oktober 2026)", () => {
     const html = renderToStaticMarkup(
       h(PeriodControls, {
         state: state({}),
@@ -143,7 +143,7 @@ describe("Filter und Kopf (D5, D14)", () => {
     )
     expect(html).toMatch(/data-period-controls[^>]*class="flex flex-wrap items-center gap-2"/)
     expect(html).toMatch(
-      /<div data-period-actions="true" class="ml-auto flex items-center gap-1\.5"><span data-kreis/
+      /<div data-period-actions="true" class="flex items-center gap-1\.5"><span data-kreis/
     )
     expect(html.indexOf("data-kreis")).toBeGreaterThan(html.indexOf("data-period-chip"))
     expect(controls({}, null)).not.toContain("data-period-actions")

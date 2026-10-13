@@ -7,7 +7,7 @@ import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { EveningList } from "@vereinsheim/shot-ui/list/EveningList"
-import { ScoringSegment } from "@vereinsheim/shot-ui/controls/ScoringSegment"
+import { ScoringChip } from "@vereinsheim/shot-ui/controls/ScoringChip"
 import { ListControls } from "@vereinsheim/shot-ui/list/ListControls"
 import { ListHeader } from "@vereinsheim/shot-ui/list/ListHeader"
 import { listOnEvening, openCard, progressFromList } from "@vereinsheim/shot-ui/nav/navigate"
@@ -147,12 +147,12 @@ export function ListScreen({
               rangeLabel={model.range?.label ?? null}
               onQuery={onQuery}
               progress={progressFromList(route)}
-              // die Wertung der Familie beschriftet in der Zeile der Filter: Sie gilt für Ø und Abstand, nicht für die
+              // die Wertung der Familie als Wechsel-Chip neben dem Filter: Sie gilt für Ø und Abstand, nicht für die
               // Ergebnisse (User, 13. Oktober 2026: „sprechender … der direkte bezug fehlt“)
               actions={
-                <ScoringSegment
+                <ScoringChip
                   scoring={familyScoring.shown}
-                  prefix="Ø in"
+                  texts={{ rings: "Ø in ganzen Ringen", decimal: "Ø in Zehnteln" }}
                   label="Wertung für Ø und Abstand"
                   onChange={familyScoring.change}
                 />

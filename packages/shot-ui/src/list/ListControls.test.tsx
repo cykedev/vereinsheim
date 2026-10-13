@@ -58,7 +58,7 @@ const view = (patch: Partial<ListControlsProps> = {}) =>
   ListControlsView({ ...props(patch), open: false, onOpen: () => {}, onClose: () => {} })
 
 describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)", () => {
-  it("ein Kreis in der Zeile nach dem Chip, rechtsbündig (User, 13. Oktober 2026: „in die selbe zeile wie die filter“)", () => {
+  it("ein weiterer Chip in der Zeile nach dem Chip „Filter“ (User, 13. Oktober 2026: „in die selbe zeile wie die filter“)", () => {
     const html = renderToStaticMarkup(
       h(ListControls, props({ actions: h("span", { "data-kreis": true }) }))
     )
@@ -67,7 +67,7 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
       /^<div data-list-controls="true" class="flex flex-wrap items-center gap-2">/
     )
     expect(row).toMatch(
-      /data-list-chip="true"[\s\S]*<\/button><div data-list-actions="true" class="ml-auto flex items-center gap-1\.5"><span data-kreis/
+      /data-list-chip="true"[\s\S]*<\/button><div data-list-actions="true" class="flex items-center gap-1\.5"><span data-kreis/
     )
   })
 
