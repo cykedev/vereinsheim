@@ -237,11 +237,13 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
   beachten, Zustand über `GET /state`.
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.
-- **Lint für die Pakete:** Nur die drei Apps haben `lint`. `packages/*` (darunter `shot-core`, `shot-ui`) und
-  das frühere Labor wurden nicht gelintet, die Hook-Regeln von React in `shot-ui` prüft niemand. Probe mit der
-  geteilten Konfiguration (12. Oktober 2026): `shot-ui` 39 Fehler (24 ungenutzte Variablen, 8 `react/no-children-prop`,
-  dazu `react-hooks/refs`, `set-state-in-effect`, `globals`), `ui` 3; `shot-core`, `lib`, `meyton-pdf` ohne Fehler,
-  sonst nur `no-console`-Warnungen.
+- **Lint für die Pakete:** erledigt am 13. Oktober 2026. Jedes Paket unter `packages/*` (außer `config`) hat `lint`
+  mit `@vereinsheim/config/eslint/package` (die Regeln der Apps ohne Next-Seiten; `children` als Prop nur in Tests,
+  weil `createElement` ohne JSX es bei Pflicht-`children` so verlangt), das Gate prüft sie mit, der Hook nach jeder
+  Änderung auch. Gemeinsam gilt seitdem `ignoreRestSiblings` (`const { a: _a, ...rest }`). In `shot-ui` behoben:
+  ungenutzte Importe, die Vorgabe des Lineals ohne Effekt (`useRuler`), die Breite ohne Messung im Effekt
+  (`useElementWidth`, der Beobachter meldet sie beim Anmelden), `useTargetFit` ausgepackt (der Compiler hielt
+  `fit.style` für einen Ref). Werkzeuge schreiben über `process.stdout.write` wie die der Apps.
 - **Auf einem echten iPhone prüfen** (bisher nur Emulation in Chrome): VoiceOver, sicherer Rand unten, Ziehen am
   Diagramm-Lineal gegen senkrechtes Scrollen (`touch-action`, [[spiegel-mobile]]).
 - **Leseprobe der Hilfe** (Abnahme von SP-1.11): Die Texte hat noch niemand ohne Statistik-Wissen gelesen.

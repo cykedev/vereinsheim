@@ -61,7 +61,7 @@ Eine geteilte Agent-Harness am Root — **ein Satz für beide Apps**:
 - **Hooks** (`.claude/settings.json` + `.claude/hooks/`, Composite-Dispatcher `pretool.mjs`/`stop.mjs`):
   **Stop-Gate** blockt das Turn-Ende, bis `pnpm check` grün ist; **Stop-Graph-Sync** (`graph-sync.mjs`,
   ADR-025) validiert am Turn-Ende den Vault via `vault-lint.mjs` und **blockt** bei invalidem Vault
-  (Schema/Anker/`keywords`); **PostToolUse-Lint** (eslint auf die editierte App-Datei);
+  (Schema/Anker/`keywords`); **PostToolUse-Lint** (eslint auf die editierte App- oder Paket-Datei);
   **PreToolUse-Security-Guard** (verweigert echte `.env`/`.vereinsheim.local` + katastrophale `rm -rf`;
   **nudged** einmalig pro Session Richtung CodeGraph bei `grep`/`find`); **Autopilot-Guard** (ADR-023, nur
   aktiv bei Marker `.claude/.autopilot-active`) verweigert im autonomen `/implement` geschützte Pfade
