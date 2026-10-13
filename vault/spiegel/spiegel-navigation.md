@@ -431,8 +431,10 @@ Kreise.
   Merkmal `frac`). Die Ziffern von Hand hoch- und tiefzustellen misslang (Tailwind verschiebt `sup`/`sub` schon), die
   tiefgestellten Zeichen ₀–₉ fehlen in den geladenen Teilen von Geist (User, 13. Oktober 2026). Ein Tippen stellt auf die
   andere. Ob die gezeigte die amtliche ist, sagen Name und Tooltip; ein Punkt dafür erklärte sich nicht.
-- **Art** (`KindToggle`): Pokal, Training gedämpft, Wettkampf gold auf goldener Tönung; ohne Strich (`lucide-react` hat
-  keinen durchgestrichenen Pokal).
+- **Art** (`KindToggle`): Pokal, Training durchgestrichen (der Strich schneidet über eine Maske eine Lücke, wie die
+  „-off“-Symbole von lucide; `lucide-react` hat keinen solchen Pokal), Wettkampf gold auf goldener Tönung.
+- **Leise** (User: „die 1 wirkt sehr präsent ist aber ja nur eine randinfo“): Zeichen im Token `quiet` (3,3 : 1 auf
+  der Fläche, nie für Text), Linie 1,75; „1“ und ⅒ in `muted-foreground`, mittelstark.
 - **Ort:** rechts in der Zeile der großen Zahl bzw. des Titels (Platz `actions`), umbricht bei Platzmangel:
   - Seite einer Scheibe: Pokal und Bruch neben dem Ergebnis (nur Probe: nur der Bruch);
   - Fortschritt: der Bruch in der Ergebnis-Box; Liste: neben „Scheiben“ („Wertung für Ø und Abstand“); Start: neben dem

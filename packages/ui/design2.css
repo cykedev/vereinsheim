@@ -36,6 +36,7 @@
   --color-warning: var(--warning);
   --color-warning-wash: var(--warning-wash);
   --color-gold: var(--gold);
+  --color-quiet: var(--quiet);
   --color-info: var(--info);
   --color-paper: var(--paper);
   --color-paper-line: var(--paper-line);
@@ -100,6 +101,8 @@
   --warning-wash: rgba(233, 177, 12, 0.16);
   /* Gold eines Zeichens (Pokal) auf `warning-wash`: goldener als `warning` (ein Text-Token), 3,5 : 1 */
   --gold: #a87800;
+  /* leises Zeichen (etwa ein Pokal „aus“) auf `surface-2`: heller als `muted-foreground`, noch 3,3 : 1; nie für Text */
+  --quiet: #7c889b;
   --info: #1f5fd1;
   /* Die Scheibe ist ein Gegenstand: gleiche Farben in beiden Themes. */
   --paper: #f2f2ee;
@@ -159,6 +162,7 @@
   --warning: #f1c453;
   --warning-wash: rgba(233, 177, 12, 0.12);
   --gold: #f1c453;
+  --quiet: #66728a;
   --info: #9ccaff;
 }
 

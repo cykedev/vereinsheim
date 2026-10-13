@@ -45,7 +45,7 @@ export function ScoringToggle({
       <span
         aria-hidden="true"
         className={cn(
-          "text-base leading-none font-semibold text-foreground-2",
+          "text-base leading-none font-medium text-muted-foreground",
           scoring === "decimal" && "diagonal-fractions"
         )}
       >

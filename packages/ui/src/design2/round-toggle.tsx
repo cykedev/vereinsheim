@@ -21,7 +21,8 @@ interface RoundToggleProps extends DataAttributes {
 
 /**
  * Weicher Kreis (Design 2, Plan `plans/2026-10-13-spiegel-symbole.md`): ein Zustand als Zeichen, ein Tippen schaltet um.
- * 32 px, gefüllt in der Flächenfarbe, ohne Rand; Gold nur für das Hervorgehobene. Für Einstellungen neben einer großen
+ * 32 px, gefüllt in der Flächenfarbe, ohne Rand, das Zeichen leise (`quiet`, eine Randinformation); Gold nur für das
+ * Hervorgehobene. Für Einstellungen neben einer großen
  * Zahl (Art, Wertung), wo ein Segment-Umschalter zu viel Platz nähme.
  */
 export function RoundToggle({
@@ -41,10 +42,10 @@ export function RoundToggle({
       onClick={onClick}
       {...data}
       className={cn(
-        "relative inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-ring [&_svg]:size-[17px] [&_svg]:shrink-0",
+        "relative inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-ring [&_svg]:size-[17px] [&_svg]:shrink-0 [&_svg]:stroke-[1.75]",
         tone === "gold"
           ? "bg-warning-wash text-gold"
-          : "bg-surface-2 text-muted-foreground hover:bg-accent-wash hover:text-foreground-2",
+          : "bg-surface-2 text-quiet hover:bg-accent-wash hover:text-muted-foreground",
         className
       )}
     >

@@ -35,6 +35,11 @@ describe("ScoringToggle: der Bruch im weichen Kreis", () => {
     )
   })
 
+  it("leise: das Zeichen in muted-foreground, mittelstark (eine Randinformation)", () => {
+    expect(html()).toMatch(/<span[^>]*class="[^"]*\bfont-medium\b[^"]*\btext-muted-foreground\b/)
+    expect(html()).not.toContain("font-semibold")
+  })
+
   it("keine Schrift unter text-xs im Bruch", () => {
     expect(html()).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/)
   })
@@ -48,11 +53,15 @@ describe("KindToggle: der Pokal im weichen Kreis", () => {
     const training = html("training")
     expect(training).toContain('aria-label="Art: Training, auf Wettkampf umstellen"')
     expect(training).toContain('data-kind="training"')
-    expect(training).toContain("text-muted-foreground")
-    expect(training).toContain("lucide-trophy")
+    expect(training).toContain("text-quiet")
+    // Training durchgestrichen: der Strich schneidet eine Lücke in den Pokal (Maske), wie die „-off“-Symbole von lucide
+    expect(training).toContain("lucide-trophy-off")
+    expect(training).toMatch(/<mask id="[^"]+">[\s\S]*<\/mask><g mask="url\(#[^)]+\)">/)
+    expect(training).toMatch(/<path d="m2 2 20 20"><\/path><\/svg>/)
     const competition = html("competition")
     expect(competition).toContain('aria-label="Art: Wettkampf, auf Training umstellen"')
     expect(competition).toMatch(/class="[^"]*\bbg-warning-wash\b[^"]*\btext-gold\b/)
     expect(competition).toContain("data-kind-toggle")
+    expect(competition).not.toContain("<mask")
   })
 })

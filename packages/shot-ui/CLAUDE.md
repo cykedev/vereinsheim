@@ -96,8 +96,8 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 - **Design-2-Bausteine aus `@vereinsheim/ui/design2`** (Segment-Umschalter, Schalter-Chip, Blatt, weicher Kreis), nicht
   nachbauen.
 - **Einstellungen neben einer Zahl als weicher Kreis** (Plan `plans/2026-10-13-spiegel-symbole.md`): `ScoringToggle`
-  (1 bzw. ⅒ als Bruch der Schrift, nie mit `sup`/`sub`: die verschiebt Tailwind schon) und `KindToggle` (Pokal, Token
-  `gold`) auf `RoundToggle`, im Platz `actions` von `CardResult`, `PeriodResult`,
+  (1 bzw. ⅒ als Bruch der Schrift, nie mit `sup`/`sub`: die verschiebt Tailwind schon) und `KindToggle` (Pokal, Training
+  durchgestrichen über eine Maske, Wettkampf im Token `gold`) auf `RoundToggle` (Zeichen leise, Token `quiet`), im Platz `actions` von `CardResult`, `PeriodResult`,
   `ListHeader`, `EveningBlock` (rechts in der Zeile der Zahl bzw. des Titels); ein Hinweis dazu in `notice`. Der Name
   sagt Zustand und Wirkung („Wertung: Zehntel, auf ganze Ringe umstellen“), „amtlich“ nur, wenn gezeigt.
 - **Zahlen nur aus dem Fachkern** (`@vereinsheim/shot-core`), Erklärungen nur aus `@vereinsheim/shot-help`.
