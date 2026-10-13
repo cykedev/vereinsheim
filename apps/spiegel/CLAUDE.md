@@ -18,6 +18,7 @@ seit N7 (erster Teil) Start, Scheiben, die Seite einer Scheibe und Profil mit ec
 | `pnpm --filter spiegel measure`                            | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                         |
 | `pnpm --filter spiegel seed:own`                           | die echten Scheiben des Users in die Dev-Datenbank, dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`) |
 | `pnpm --filter spiegel pruefen`                            | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)  |
+| `pnpm --filter spiegel ingest-load`                        | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)   |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den
@@ -151,6 +152,24 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   `pnpm build` (oder `pnpm check`), dann `pruefen --start`, damit die Prüfung den eigenen Stand sieht und nicht einen
   Dev-Server aus einem anderen Checkout. Neue Bedienung bekommt eine Prüfung dort. Eine Taste, die die Seite nicht nimmt,
   meldet `window.__keys` (Lauscher ganz außen; Alt+Pfeil wird dort abgefangen, sonst ginge der Browser zurück).
+- **Ingest-API** (SP-1.6 b, `plans/2026-10-13-spiegel-ingest.md`, [[spiegel-ingest-pipeline]]): Route Handler unter
+  `src/app/api/ingest/v1/` reichen nur an `src/lib/ingest/http.ts` durch (Handler nehmen `Request`, geben `Response`,
+  testbar ohne Next). Dort erst die Grenzen (Token, Ratenbegrenzung, höchstens zwei Stapel, Bytegrenze, Vertrag), dann
+  `ingestBatch` (`ingest.ts`: Epoche, Zustimmung, Sperren, verdeckt, Ablage, Adapter je Scheibe nur für den neuesten
+  Stand). Kopplung, Token, Heartbeat und Zustand in `bridges.ts`, der Adapter in `meyton-ssmdb2.ts` (reine Funktion,
+  Tests an allen Fällen von `ssmdb2-cases`).
+  - **Nichts ohne Zustimmung speichern:** Was nicht zu einer bestätigten SportpassID der Anlage passt, verwirft das
+    Einlesen, bevor `storeSnapshot` läuft. Eine neue Regel dort braucht einen Test, der zeigt, dass nichts abgelegt wird.
+  - **Logs nur mit Zahlen und festen Codes** (`Log` in `http.ts`), unerwartete Fehler nur mit ihrem Namen: Die Meldungen
+    von Prisma enthalten Werte. Der Test in `http.test.ts` schickt einen Namen durch jede Fehlerart.
+  - **Lebenszeichen** (`LIFESIGN` in `raw.ts`): ein Stand, der sich nur in `Scheiben.Zeitstempel` unterscheidet, wird
+    am letzten vermerkt, ohne Zeile und ohne Adapter ([[adr-031]], Änderung vom 13. Oktober 2026).
+  - **Zustände** schaltet der Heartbeat weiter (`advanceCardStates`), `complete` gilt erst endgültig. `writeRevision` hält
+    `korrigiert` und `uhr-abweichung` dauerhaft; eine andere Anzeigeart ist keine Korrektur (`sameScoring`, SF-74).
+  - **Admin → Anlage und Brücken** (`/admin/site`): Anlage, Brücken koppeln (Code nur in der Antwort der Action) und
+    widerrufen, Epochen bestätigen; SportpassIDs am Konto (`/admin/users/[id]`), das Profil zeigt die eigenen.
+  - Tests gegen die Dev-Datenbank: `createTestSite` legt die Epoche bestätigt an; der Admin arbeitet auf der ersten
+    Anlage (ADR-029: eine je Installation).
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten (gefunden von der Skriptprüfung, 13. Oktober 2026).

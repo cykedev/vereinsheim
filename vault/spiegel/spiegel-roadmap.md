@@ -109,7 +109,13 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** `apps/spiegel` nach Vereinsheim-Muster (Auth, Admin, Rate-Limit), Design-2-Tokens, Datenmodell ([[spiegel-data-model]]), Ingest-API mit Geräte-Token und Vertrag in `packages/ingest-contract`, Rohdaten-Store, Adapter `meyton-ssmdb2@9` mit Skalen, Zeitzone, Epochen, Revisionen ([[spiegel-ingest-pipeline]]).
 - **Schnitt:** a) App-Skelett, Datenmodell und Design-2-Tokens, Speicher des leeren Skeletts lokal unter `mem_limit` 256 MB gemessen; b) Ingest-API, Rohdaten-Store als Zeilenversionen und Adapter.
 - **Abnahme:** Snapshot rein → kanonische Scheibe raus, auch bei Korrektur und Epochenwechsel; `/check` grün; Sonderfälle SF-01, SF-02, SF-03, SF-04, SF-07, SF-08, SF-09, SF-15, SF-21, SF-22, SF-23, SF-25, SF-26, SF-28, SF-29, SF-30, SF-31, SF-59, SF-67, SF-69.
-- **Hängt ab von:** SP-1.0, SP-1.1. **Status:** in Arbeit. a) Teil 1 erledigt (10. Oktober 2026, `plans/2026-10-10-spiegel-datenmodell.md`, [[adr-031]], [[spiegel-db-schema]]): `apps/spiegel` als Gerüst (Next 16, Prisma 7, Design-2-Tokens, Dev-Port 3002, Dev-Datenbank `spiegel`), Schema mit Rohdaten als Zeilenversionen, Revisionen und Projektion je Scheibe, Zugriffe mit Tests gegen die Dev-Datenbank, Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`; der Rohdaten-Store aus b) ist damit schon da. Teil 2 erledigt (10. Oktober 2026, `plans/2026-10-10-spiegel-erste-seiten.md`): Anmeldung wie Ringwerk (NextAuth, `sessionVersion`, Ratenbegrenzung über die Datenbank, Seed-Admin beim Start), Kontenverwaltung für Admins (Rollen Admin und Schütze), eigenes Passwort ändern (ein Passwort vom Admin muss vor dem ersten Blick auf Daten ersetzt werden, [[spiegel-privacy]]), Speicher in einem Container mit 256 MB gemessen: zuerst 117 MiB nach dem Start und 213 bis 227 MiB unter Last, nach den Korrekturen aus dem Review 57 und 147 bis 152 MiB, kein Abbruch ([[spiegel-db-schema]]). b) offen: Ingest-API und Adapter.
+- **Hängt ab von:** SP-1.0, SP-1.1. **Status:** erledigt bis auf die Aufträge (13. Oktober 2026). a) Teil 1 erledigt (10. Oktober 2026, `plans/2026-10-10-spiegel-datenmodell.md`, [[adr-031]], [[spiegel-db-schema]]): `apps/spiegel` als Gerüst (Next 16, Prisma 7, Design-2-Tokens, Dev-Port 3002, Dev-Datenbank `spiegel`), Schema mit Rohdaten als Zeilenversionen, Revisionen und Projektion je Scheibe, Zugriffe mit Tests gegen die Dev-Datenbank, Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`; der Rohdaten-Store aus b) ist damit schon da. Teil 2 erledigt (10. Oktober 2026, `plans/2026-10-10-spiegel-erste-seiten.md`): Anmeldung wie Ringwerk (NextAuth, `sessionVersion`, Ratenbegrenzung über die Datenbank, Seed-Admin beim Start), Kontenverwaltung für Admins (Rollen Admin und Schütze), eigenes Passwort ändern (ein Passwort vom Admin muss vor dem ersten Blick auf Daten ersetzt werden, [[spiegel-privacy]]), Speicher in einem Container mit 256 MB gemessen: zuerst 117 MiB nach dem Start und 213 bis 227 MiB unter Last, nach den Korrekturen aus dem Review 57 und 147 bis 152 MiB, kein Abbruch ([[spiegel-db-schema]]). b) erledigt (13. Oktober 2026, `plans/2026-10-13-spiegel-ingest.md`, [[spiegel-ingest-pipeline]]): Vertrag um die API v1
+erweitert (Kopplung, Heartbeat, Zustand, Antworten, gehashte SportpassIDs mit Python-Vektoren), Adapter `meyton-ssmdb2@9`
+als reine Funktion an allen 31 Fällen abgenommen, Endpunkte `pair`, `snapshots`, `heartbeat`, `state` mit Geräte-Token,
+Bytegrenze, Ratenbegrenzung und höchstens zwei Stapeln gleichzeitig, Zustimmung am Server (bis SP-1.7 a trägt der Admin
+die SportpassID ein), Lebenszeichen ohne neue Zeilen ([[adr-031]], Änderung vom 13. Oktober 2026), Zustände über den
+Heartbeat, Epochen mit Bestätigung, Admin-Seite „Anlage und Brücken“, Lastskript `ingest-load`. Die Abnahme nennt je
+Sonderfall den Test im Bericht. Offen: Aufträge (`commands`, mit SP-1.5 und SP-1.7).
 
 ### SP-1.7 Zuordnung: Opt-in per Sportpass, Meyton-QR, Admin
 - **Ziel:** jede Scheibe findet ihren Besitzer ([[spiegel-assignment]]).
@@ -205,7 +211,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ### SP-4.4 Weitere Quellen
 - DISAG, neue Meyton-Linie ESTANX, Handeingabe als weitere Adapter ([[meyton-interfaces]]). **Status:** offen.
 
-## Offene Einzelpunkte (Stand 12. Oktober 2026)
+## Offene Einzelpunkte (Stand 13. Oktober 2026)
 
 Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht in git, deshalb hier.
 
@@ -219,7 +225,14 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
 - **Vorschlag der Art aus der `Rangliste`** (aus dem Punkt davor, 12. Oktober 2026): Der Admin ordnet Ranglisten des
   Vereins („Training-LP“, „RWK_…“, „LG Vereinsmeister“, …) einer Art zu ([[adr-029]]); der Adapter (SP-1.6 b) setzt
   damit `Card.kind`. Die Wahl des Schützen geht weiter vor.
-- **Speicher im Container** seit der Projektion der Übersichten nicht neu gemessen (Vorgehen in `apps/spiegel/CLAUDE.md`).
+- **Dev-Datenbank nachziehen:** Die Schemaänderung der Ingest-API ersetzt die eine Migration (bis SP-1.9). Die
+  Dev-Datenbank hat die neuen Tabellen und Spalten schon (additiv, ohne Datenverlust); ihre Migrationshistorie passt erst
+  nach `pnpm --filter spiegel exec prisma migrate reset --force` und `seed:own` wieder (User).
+- **Schüsse über der Soll-Zahl** (SF-08) gehen mit Wert 0 und echter Lage in die Kennzahlen der Lage ein: `shot-core`
+  kennt `ueber-soll` noch nicht als Ausschluss wie `verdaechtig`. Eine eigene Regel im Fachkern, mit neuer Version der
+  betroffenen Kennzahlen.
+- **Brücke (SP-1.4):** Änderungen nur am Lebenszeichen höchstens alle 30 s schicken ([[spiegel-bridge]]), `Retry-After`
+  beachten, Zustand über `GET /state`.
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.
 - **Lint für die Pakete:** Nur die drei Apps haben `lint`. `packages/*` (darunter `shot-core`, `shot-ui`) und

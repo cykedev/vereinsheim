@@ -30,7 +30,8 @@ documented_in: ["[[src-ssmdb2-abend-2026-10-09]]", "[[src-ssmdb2-kopie-2026-10-0
 ## Einrichten
 
 1. Gerät ans Gerätenetz anschließen (Meyton und Internet, siehe oben).
-2. In Spiegel unter Admin → Anlagen „Brücke koppeln“: Spiegel zeigt einen einmaligen Kopplungscode.
+2. In Spiegel unter Admin → Anlage und Brücken „Brücke koppeln“: Spiegel zeigt einen Kopplungscode („ABCDE-FGHJK“),
+   15 Minuten gültig und einmal einlösbar (gebaut 13. Oktober 2026, [[spiegel-ingest-pipeline]]).
 3. Brücke installieren (Ziel: eine Datei plus Dienst, siehe Technik) und dabei Spiegel-Adresse und Kopplungscode eintragen. Eine Statusseite braucht es dafür nicht; aus dem Gäste-LAN wäre sie ohnehin nicht erreichbar.
 4. Der Assistent in Spiegel testet über die Brücke den SSMDB2-Zugang und zeigt die letzten Scheiben ohne Namen.
 5. Fertig: „Anlage online, letzter Schuss vor 2 Minuten“.
@@ -46,6 +47,13 @@ documented_in: ["[[src-ssmdb2-abend-2026-10-09]]", "[[src-ssmdb2-kopie-2026-10-0
 - **Snapshots:** immer der vollständige Stand einer Scheibe (Scheibe, Serien, Treffer) mit Prüfsumme, Folgenummer und Beobachtungszeit; Korrekturen kommen als neue Revision, und ein älterer Stand überholt nie einen neueren (SF-26). Die Folgenummer ist die Beobachtungszeit in Millisekunden, innerhalb eines Laufs streng steigend gehalten; einen Zähler auf der Platte gibt es nicht.
 - **Zustand statt Abschluss:** Eine Scheibe ist offen, solange ihr Lebenszeichen läuft, und ruhend nach fünf Minuten ohne Lebenszeichen (gemessen an der Beobachtungszeit, nicht an der Uhr des Stands); ein neues Lebenszeichen öffnet sie wieder. Das Lebenszeichen endet beim Freigeben des Stands, 16 s bis 17,5 min nach dem letzten Schuss. Endgültig wird sie erst, wenn die Anlage dazwischen aus war, oder nach zwölf Stunden ohne Änderung. Die Schusszahl aus der DisziplinID ist nur ein Hinweis, und gegen sie zählen nur Wertungsschüsse; sonst wäre LP 40 mit 60 Probeschüssen vor dem ersten Wertungsschuss „fertig“ (SF-02, SF-07, SF-08, SF-10).
 - **Kein eigener Zustand** ([[adr-027]], Änderung vom 8. Oktober 2026): keine Warteschlange, keine Datenbank, auf der Platte nur die Konfiguration (Adresse, Geräte-Token). Scheitert ein Upload, liest die Brücke beim nächsten Durchgang neu und schickt erneut, in kleinen Stapeln; Spiegel verwirft unveränderte Stände an der Prüfsumme. Bremst Spiegel per Ratenbegrenzung, wartet die Brücke so lange, wie Spiegel vorgibt (SF-58).
+- **Nur das Lebenszeichen geändert** (Empfehlung seit dem 13. Oktober 2026): Solange sich an einer Scheibe nur
+  `Zeitstempel` bewegt, reicht ein Snapshot alle 30 s; Schüsse und andere Änderungen gehen sofort. Spiegel verlässt sich
+  nicht darauf: Es legt einen Stand, der sich nur im Lebenszeichen unterscheidet, ohnehin ohne neue Zeilen ab
+  ([[spiegel-ingest-pipeline]], „Lebenszeichen ohne neue Zeilen“). Vorher prüft Spiegel Bytegrenze und Ratenbegrenzung;
+  bei 429 oder 503 wartet die Brücke `Retry-After`.
+- **Zustand beim Start** über `GET /api/ingest/v1/state`: Epoche, gehashte SportpassIDs (`sportpassHash` über
+  `Scheiben.SportpassID`), Grabsteine und Löschsperren, Wasserstand; danach alle paar Minuten neu.
 - **Heartbeat:** jede Minute Version, Rückstau, letzter DB-Kontakt, Dauer der Abfragen, Uhrabweichung der Anlage (`SELECT NOW()` gegen NTP), zurückgehaltene Scheiben je Wertungsmodus und ein Fingerabdruck der Quelle (`Version`, Zeilenzahlen, älteste Zeitstempel).
 - **Aufträge** (per Abfrage alle 2 s): Vorschau einer Scheibe per ID (QR-Weg) und die ganze Scheibe erst, wenn Spiegel sie nach der Gegenprobe anfordert (SF-41); Fundbüro-Liste liefern, Zeitraum nachladen, Diagnose als feste Liste ohne Personenfelder senden. Kein freies SQL.
 - **Datensparsamkeit:** nur Scheiben mit Opt-in (gehashte SportpassIDs der Zustimmenden) oder ausdrücklich angefragte. Die Liste lädt die Brücke bei jedem Start von Spiegel und hält sie im Arbeitsspeicher; ohne aktuelle Liste lädt sie nichts automatisch hoch (SF-38). Abgelehnte oder gelöschte Scheiben bekommt sie mit der Liste als Grabsteine und lädt sie nie wieder hoch (SF-28).

@@ -109,6 +109,21 @@ Zwei Befunde beim Umbau:
 - **Rundung an der Hälfte:** 9,065 zeigte `toFixed` je nach Rechenweg als 9,06 oder 9,07. `formatValue` rundet seitdem
   kaufmännisch, unabhängig vom Rauschen der Gleitkommazahl.
 
+## Last der Ingest-API (SP-1.6 b, 13. Oktober 2026)
+
+Gemessen mit `pnpm --filter spiegel ingest-load` gegen den Standalone-Build in `node:24-alpine` mit `--memory=256m`
+(Speicher aus `docker stats`), Dev-Datenbank auf dem Mac:
+
+| Lauf | Ergebnis |
+|---|---|
+| 12 belegte Stände, 20 min Abend in Echtzeit (Probe, 40 Schuss im Takt der Anlage, Lebenszeichen alle 7 s) | 983 Anfragen, 1.744 Stände, keine 429/503; p50 27 ms, p95 56 ms, höchstens 172 ms; Container 102–120 MiB (86 MiB nach dem Start) |
+| davon reine Lebenszeichen | 1.421 (81 %), vermerkt ohne Zeile; abgelegt 323 Stände mit 969 Zeilen |
+| schlimmster Fall: zwei Stapel à 3,66 MiB gleichzeitig (100 neue Scheiben à 280 Schuss) | beide 200, 12 s, Spitze 185 MiB |
+
+Folgerung: Ein Abend mit einem Dutzend Schützen mit Zustimmung kostet Spiegel wenig; die Grenzen (4 MiB, zwei Stapel
+gleichzeitig) halten den schlimmsten Fall unter 256 MB. Die Brücke sollte ein reines Lebenszeichen trotzdem höchstens
+alle 30 s schicken ([[spiegel-bridge]]): Jede Anfrage kostet eine Anmeldung und eine Abfrage.
+
 ## Offen
 
 - Adapter Snapshot → Scheibe (fängt `CardIdentityConflictError` und nimmt den nächsten Zyklus; prüft Grabstein und Löschsperre über Beginn und Zyklus), Ingest-API mit Geräte-Token (Ergebnisse mit `bigint` vor JSON umwandeln), Zähler für `stale` und `future` (SP-1.6 b, [[spiegel-ingest-pipeline]]). Tests mit den eingefrorenen Folgen SF-03 und SF-72 durch den Adapter.

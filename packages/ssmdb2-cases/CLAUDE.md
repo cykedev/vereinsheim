@@ -24,6 +24,7 @@ an ihnen abgenommen. Fachwissen: `vault/meyton/meyton-ssmdb2.md`, `vault/spiegel
 | `@vereinsheim/ssmdb2-cases/output`   | `src/output.ts`      | `readingSnapshots` (Snapshot v1 je Lesung und Scheibe), `stepSql` (Anweisungen vom vorigen Stand), `textCell`, `sqlLiteral`                            |
 | `@vereinsheim/ssmdb2-cases/expected` | `src/expected.ts`    | `ExpectedCard` (was die Brücke tut, Schüsse je Lesung, Merkmale, Vollständigkeit, zählende Schüsse), `numbers`                                         |
 | `@vereinsheim/ssmdb2-cases/cases`    | `src/cases/index.ts` | `CASES` (31 Fälle), `runCase`                                                                                                                          |
+| `@vereinsheim/ssmdb2-cases/frozen`   | `src/frozen.ts`      | eingefrorene Fälle ohne MariaDB: `frozenReadings`, `frozenExpected` (Vorgabe), `frozenCaseIds`; Tests des Adapters und des Einlesens in Spiegel        |
 
 ## Regeln
 

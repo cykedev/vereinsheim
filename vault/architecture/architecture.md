@@ -24,7 +24,9 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7, NextAuth v4)  → :3002; Schema,
 │                           Zugriffe und Projektion (SP-1.6 a, ADR-031), Anmeldung und Konten, Start, Scheiben,
 │                           Seite einer Scheibe, Fortschritt und Profil aus shot-ui (N7); Start, Liste, Fortschritt
-│                           und Blättern rechnen auf dem Server aus der Projektion (SP-1.8); noch ohne Deploy (SP-1.9).
+│                           und Blättern rechnen auf dem Server aus der Projektion (SP-1.8); Ingest-API v1 für die Brücke
+│                           mit Kopplung, Geräte-Token, Adapter `meyton-ssmdb2@9` und Admin „Anlage und Brücken“
+│                           (SP-1.6 b); noch ohne Deploy (SP-1.9).
 ├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig/eslint/prettier/
 │                           postcss/next (Phase 2).
 ├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors
@@ -44,7 +46,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           Erstellzeit, ohne Layout-Wissen (SP-1.3, Oktober 2026); noch von keiner App genutzt.
 ├── packages/ingest-contract/ @vereinsheim/ingest-contract — Vertrag Brücke ↔ Spiegel: Snapshot v1
 │                           (Zod, daraus JSON-Schema), Prüfsumme über RFC 8785, Testvektoren und
-│                           eingefrorene Beispiele (SP-1.0a); apps/spiegel nutzt Typen und kanonische Form.
+│                           eingefrorene Beispiele (SP-1.0a); seit SP-1.6 b auch die API v1 (Kopplung, Heartbeat,
+│                           Zustand, Antworten); apps/spiegel nimmt darüber an.
 ├── packages/ssmdb2-cases/  @vereinsheim/ssmdb2-cases — Sonderfall-Testdaten (SP-1.0b): echtes SSMDB2-Schema,
 │                           Baukasten, der wie Meyton schreibt, 31 Fälle mit Snapshots v1, SQL je Schritt und
 │                           erwartetem Ergebnis unter `cases/v1`; `replay` spielt sie in MariaDB 10.6 ab;

@@ -173,7 +173,23 @@ Beispiele bleiben eingefroren (nur ergänzen); für Tests gegen das echte Schema
 | `korrektur-seq1.json`, `korrektur-seq2.json` | dieselbe Scheibe, ein Treffer korrigiert: andere Prüfsumme |
 | `unveraendert-seq3.json` | wie seq2, später erneut gelesen: neue Folgenummer, gleiche Prüfsumme |
 
-## Noch nicht im Vertrag
+## API v1 neben dem Snapshot (SP-1.6 b, 13. Oktober 2026)
 
-Kopplung, Aufträge und Heartbeat (SP-1.4b, SP-1.6b), Zeilen-Hashes für die Zeilenversionen (SP-1.6b,
-mit derselben `canonicalize`).
+`src/v1/api.ts` (Export `@vereinsheim/ingest-contract/api`), JSON-Schemas unter `schema/*-v1.schema.json`, eingefrorene
+Beispiele unter `examples/api-v1/` (Dateiname = Schema, nur ergänzen). Anfragen nimmt Spiegel über
+`parseApi(schema, input)` an (Version, `__proto__`, Fehler ohne Inhalt wie beim Snapshot).
+
+| Schema | Inhalt |
+|---|---|
+| `pairRequestV1` / `pairResponseV1` | Kopplungscode (zehn Zeichen aus Crockfords Base32, „ABCDE-FGHJK“, Trenner und Schreibweise egal, `normalizePairingCode`), Name, Version → Brücken-Id, Token `spgl_` + 43 Zeichen Base64url, Anlage |
+| `heartbeatV1` / `heartbeatResponseV1` | Version, Beginn des Laufs, Sendezeit, Status, Rückstau, letzter DB-Kontakt, Dauer der Abfragen, Uhrabweichung der Anlage (Anlage minus Brücke), Zurückgehaltenes je Anzeigeart, Fingerabdruck der Quelle ohne Personen → Serverzeit |
+| `stateResponseV1` | Anlage, bestätigte Epoche, gehashte SportpassIDs mit Zustimmung und ihr Salz, Grabsteine und Löschsperren (ScheibenID und Beginn), Wasserstand |
+| `snapshotsResponseV1` | Ergebnis je Snapshot in der Folge des Stapels (`SNAPSHOT_OUTCOMES`, bei `discarded` ein Grund) |
+| `errorResponseV1` | fester Code (`API_ERROR_CODES`), fester Satz, `retryAfterSeconds`, bei `invalid` die Fehler des Vertrags |
+
+**Gehashte SportpassID** (`sportpassHash`, Export `./sportpass`): SHA-256 (Hex, klein) über
+`spiegel-sportpass-v1:<salt>:<SportpassID dezimal ohne führende Nullen>`, das Salz je Anlage aus `state`. Testvektoren aus
+einer unabhängigen Python-Rechnung (`test-vectors/sportpass-v1.json`). Der Hash hält die Nummern aus Logs und
+Mitschnitten; wer Liste und Salz hat, kann zwölf Stellen durchprobieren.
+
+**Noch nicht im Vertrag:** Aufträge (`commands`, SP-1.5, SP-1.7).
