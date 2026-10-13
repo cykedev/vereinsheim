@@ -22,6 +22,8 @@ import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { CardContextBar } from "@vereinsheim/shot-ui/nav/CardContextBar"
 import { backLabel, backRoute, siblingRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import { urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
+import { KindToggle } from "@vereinsheim/shot-ui/controls/KindToggle"
+import { ScoringToggle } from "@vereinsheim/shot-ui/controls/ScoringToggle"
 import { probeOnlyShots } from "@vereinsheim/shot-ui/period/model"
 import { cardMeta } from "@vereinsheim/shot-ui/readout/cardMeta"
 import { CardHeader } from "@vereinsheim/shot-ui/readout/CardHeader"
@@ -47,9 +49,8 @@ import {
 } from "@vereinsheim/shot-ui/view-state"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
-import { KindControl } from "@/components/shell/KindControl"
 import { Page } from "@/components/shell/Page"
-import { ScoringControl } from "@/components/shell/ScoringControl"
+import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { useHelp } from "@/components/shell/HelpContext"
 import { addressScoring, nextCardAddress } from "@/lib/card-address"
 import type { PageCard } from "@/lib/db/reads"
@@ -251,24 +252,49 @@ export function CardScreen({
     setChosenTab(next)
     window.history.replaceState(null, "", hashFor("analysis", next))
   }, [])
+  // Wertung und Art: je eine Wahl für die ganze Seite, Kopf am Telefon und Box teilen sie
+  const scoringChoice = useSavedChoice(
+    state.scoring,
+    (scoring) => setCardScoring(card.id, scoring),
+    "Die Wertung ließ sich nicht speichern.",
+    (scoring) => dispatch({ type: "setScoring", scoring })
+  )
+  const kindChoice = useSavedChoice(
+    card.kind,
+    (kind) => setCardKind(card.id, kind),
+    "Die Art ließ sich nicht speichern."
+  )
   const empty = shots.length === 0
-  // Wertung und Art der Scheibe: gezeigt sofort, gespeichert an der Scheibe (Liste und Start zeigen sie danach); eine
-  // Scheibe nur aus Probe ist Training und hat keinen Schalter der Art
-  const scoringSwitch = (
-    <div className="grid gap-2">
-      <ScoringControl
+  // Art und Wertung als Kreise neben der Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`): gezeigt sofort, gespeichert
+  // an der Scheibe. Eine Scheibe nur aus Probe ist Training und hat keinen Kreis der Art
+  const actions = (
+    <>
+      {!probeOnlyShots(card.shots) && (
+        <KindToggle kind={kindChoice.shown} onChange={kindChoice.change} />
+      )}
+      <ScoringToggle
         scoring={state.scoring}
         official={card.official}
-        save={(scoring) => setCardScoring(card.id, scoring)}
-        onShow={(scoring) => dispatch({ type: "setScoring", scoring })}
+        onChange={scoringChoice.change}
       />
-      {!probeOnlyShots(card.shots) && (
-        <KindControl kind={card.kind} save={(kind) => setCardKind(card.id, kind)} />
-      )}
-    </div>
+    </>
   )
-  // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung
-  const result = <CardResult shots={shots} state={state} actions={scoringSwitch} />
+  const saveError = kindChoice.error ?? scoringChoice.error
+  // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung; beide zeigen dieselbe Wahl (Review)
+  const result = (
+    <CardResult
+      shots={shots}
+      state={state}
+      actions={actions}
+      notice={
+        saveError && (
+          <p role="alert" className="text-sm text-destructive">
+            {saveError}
+          </p>
+        )
+      }
+    />
+  )
 
   return (
     <Page>

@@ -7,6 +7,7 @@ import { markShots, type CardMark, type MarkShot } from "@vereinsheim/shot-core/
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
+import { ScoringToggle } from "@vereinsheim/shot-ui/controls/ScoringToggle"
 import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
@@ -41,7 +42,7 @@ import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { useHelp } from "@/components/shell/HelpContext"
 import { Page } from "@/components/shell/Page"
-import { ScoringControl } from "@/components/shell/ScoringControl"
+import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { cardMarksAction } from "@/lib/marks-actions"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
@@ -87,6 +88,12 @@ export function ProgressScreen({
   const help = useHelp()
   const onHelp = useCallback((id: string | null) => id && help(id), [help])
   const { timeZone, named } = context
+  // die Wertung der Familie als Kreis in der Ergebnis-Box; eine Wahl für Kopf und Box
+  const familyScoring = useSavedChoice(
+    state.scoring,
+    (scoring) => setFamilyScoring(state.family, scoring),
+    "Die Wertung ließ sich nicht speichern."
+  )
   const active = useActiveSection(PERIOD_IDS)
   const { pill, jumpTo, back, close } = useReturnJump()
   const [explain, setExplain] = useState(false)
@@ -193,12 +200,13 @@ export function ProgressScreen({
       model={model}
       timeZone={timeZone}
       onHelp={onHelp}
-      actions={
-        <ScoringControl
-          key={state.family}
-          scoring={state.scoring}
-          save={(scoring) => setFamilyScoring(state.family, scoring)}
-        />
+      actions={<ScoringToggle scoring={familyScoring.shown} onChange={familyScoring.change} />}
+      notice={
+        familyScoring.error && (
+          <p role="alert" className="text-sm text-destructive">
+            {familyScoring.error}
+          </p>
+        )
       }
     />
   )

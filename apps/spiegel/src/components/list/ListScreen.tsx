@@ -7,6 +7,7 @@ import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import type { CardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { EveningList } from "@vereinsheim/shot-ui/list/EveningList"
+import { ScoringToggle } from "@vereinsheim/shot-ui/controls/ScoringToggle"
 import { ListControls } from "@vereinsheim/shot-ui/list/ListControls"
 import { ListHeader } from "@vereinsheim/shot-ui/list/ListHeader"
 import { listOnEvening, openCard, progressFromList } from "@vereinsheim/shot-ui/nav/navigate"
@@ -20,7 +21,7 @@ import {
 
 import { NoCards } from "@/components/shell/NoCards"
 import { Page } from "@/components/shell/Page"
-import { ScoringControl } from "@/components/shell/ScoringControl"
+import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
@@ -73,6 +74,12 @@ export function ListScreen({
   const router = useRouter()
   const { timeZone } = context
   const route: ListRoute = { page: "cards", query, evening: null }
+  // die Wertung der Familie (Ø und Abstand) als Kreis neben dem Titel; die fette Spalte gehört der Scheibe
+  const familyScoring = useSavedChoice(
+    list?.model.scoring ?? "decimal",
+    (scoring) => setFamilyScoring(list?.option.value ?? "", scoring),
+    "Die Wertung ließ sich nicht speichern."
+  )
   const marks = useMemo(() => marksById(list?.marks ?? {}), [list?.marks])
   // wohin man kam, aus der Adresse im Browser (sie ist maßgeblich, auch nach Zurück): der Abend aus dem Anker (den sieht
   // der Server nicht) und die Scheibe aus `pick`
@@ -129,27 +136,30 @@ export function ListScreen({
         <ListHeader
           familyLabel={option.label}
           cards={model.cards}
+          actions={
+            <ScoringToggle
+              scoring={familyScoring.shown}
+              label="Wertung für Ø und Abstand"
+              onChange={familyScoring.change}
+            />
+          }
           controls={
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <ListControls
-                query={query}
-                family={option.value}
-                families={families}
-                flags={model.flags}
-                rangeLabel={model.range?.label ?? null}
-                onQuery={onQuery}
-                progress={progressFromList(route)}
-              />
-              {/* die fette Spalte gehört der Scheibe; die Familie stellt Ø und Abstand um */}
-              <ScoringControl
-                key={option.value}
-                scoring={model.scoring}
-                label="Wertung für Ø und Abstand"
-                save={(scoring) => setFamilyScoring(option.value, scoring)}
-              />
-            </div>
+            <ListControls
+              query={query}
+              family={option.value}
+              families={families}
+              flags={model.flags}
+              rangeLabel={model.range?.label ?? null}
+              onQuery={onQuery}
+              progress={progressFromList(route)}
+            />
           }
         />
+        {familyScoring.error && (
+          <p role="alert" className="text-sm text-destructive">
+            {familyScoring.error}
+          </p>
+        )}
         <EveningList
           model={model}
           marks={marks}
