@@ -60,8 +60,10 @@ einen statischen Server auf `dist/` (Port 4173), die Seite ist `/preview.html`.
   - **Wertung** (Zehntel, Ganze Ringe) in Profil (`data-scoring-setting`, `App.changeScoring`), seit dem 12. Oktober 2026
     die Wertung jeder Familie: Das Labor kennt keine Datenbank, die App speichert je Familie. Der Fortschritt hat keinen
     Schalter und folgt ihr, auch nach „Zurück“ aus einer Scheibe. Eine Scheibe öffnet in der amtlichen, sonst in dieser;
-    ihr Schalter gilt nur für sie. Die Prüfung schaltet sie über `deviceScoring(…)` (Profil und zurück), Filter des
-    Fortschritts über `applyFilters({ kind, compare, probe })`.
+    ihr Kreis (`ScoringToggle` neben dem Ergebnis, seit 13. Oktober 2026) gilt nur für sie. Die Prüfung schaltet die
+    Wertung des Labors über `deviceScoring(…)` (Profil und zurück), die einer Scheibe über `scoringTo(…)` (tippt den
+    sichtbaren `[data-scoring-toggle]`, bis `data-scoring` passt), Filter des Fortschritts über
+    `applyFilters({ kind, compare, probe })`.
   - Die Ansicht steht in `labor.mode`. Ein Anker der Zeitraum-Seite (`#history`, `#cards`, seit U1 auch `#numbers`)
     öffnet sie, ein Abend
     (`#2026-09-25`) die Scheiben-Liste.

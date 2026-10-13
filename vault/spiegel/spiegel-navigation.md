@@ -394,7 +394,7 @@ aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-lan
 - **Umschalten speichert:**
   - Auf der Seite einer Scheibe die Wertung der Scheibe. Liste und Start zeigen sie danach vorn.
   - In der Liste (neben den Filtern) und im Fortschritt (Ergebnis-Box) die Wertung der Familie; danach rechnet die Seite
-    neu. Profil hat keine Wertung mehr.
+    neu. Profil hat keine Wertung mehr. Seit dem 13. Oktober 2026 als Kreise (unten, „Art und Wertung als Symbole“).
 - **Adresse:** Die Seite einer Scheibe trägt `scoring` nur, solange die gezeigte Wertung nicht die der Scheibe ist (ein
   Rekord öffnet in der Wertung, in der er steht). Ohne Angabe gilt die der Scheibe; Liste, Start, Fortschritt und
   Blättern öffnen ohne. Der Fortschritt hat keine Wertung in der Adresse.
@@ -411,13 +411,34 @@ Plan `plans/2026-10-12-spiegel-art.md`, mit dem User entschieden („ja passt“
 - **Was folgt:** Filter „Art“ in Liste und Fortschritt, der Pokal in der Liste, die Metazeile der Scheibe, die Rekorde
   „nur Wettkampf“ und die Vorgabe der Wertung (Wettkampf in der amtlichen). Eine gewählte Wertung bleibt.
 - **Bedienung:** auf der Seite einer Scheibe in der Ergebnis-Box unter der Wertung „Training | Wettkampf“, automatisch
-  gespeichert wie die Wertung. Ändert die Art die Vorgabe der Wertung, zeigt die Seite die neue. Eine Scheibe nur aus
+  gespeichert wie die Wertung (seit dem 13. Oktober 2026 ein Pokal im weichen Kreis, unten). Ändert die Art die Vorgabe der Wertung, zeigt die Seite die neue. Eine Scheibe nur aus
   Probe ist Training und hat keinen Schalter.
 - **Ohne Wahl** gilt die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); ein Vorschlag aus
   der `Rangliste` kommt mit dem Adapter ([[spiegel-roadmap]]).
 - **Blättern:** Die Scheibe selbst bleibt in ihrem Kontext, auch wenn sie nach dem Umstellen nicht mehr zum Filter der
   Herkunft passt (`contextCardIds`, Review); sonst risse das Blättern aus einer Liste „Training“ ab.
 - **Nicht hier:** mehrere Scheiben auf einmal markieren (Auswahl, N4).
+
+## Art und Wertung als Symbole (13. Oktober 2026)
+
+Plan `plans/2026-10-13-spiegel-symbole.md`. Der User fand die Segment-Schalter zu breit und wollte „ein icon oben rechts in
+der box … eleganter und spart platz und könnte sich überall konsistent durchziehen“; aus drei Skizzen gewählt: weiche
+Kreise.
+
+- **Ein Baustein:** `RoundToggle` (`@vereinsheim/ui/design2/round-toggle`), 32 px, gefüllt in der Flächenfarbe, ohne Rand;
+  Gold (`warning`) nur für das Hervorgehobene.
+- **Wertung** (`ScoringToggle`): der Bruch aus der Typografie, ¹⁄₁ ganze Ringe, ¹⁄₁₀ Zehntel; ein Tippen stellt auf die
+  andere. Ob die gezeigte die amtliche ist, sagen Name und Tooltip; ein Punkt dafür erklärte sich nicht.
+- **Art** (`KindToggle`): Pokal, Training gedämpft, Wettkampf gold auf goldener Tönung; ohne Strich (`lucide-react` hat
+  keinen durchgestrichenen Pokal).
+- **Ort:** rechts in der Zeile der großen Zahl bzw. des Titels (Platz `actions`), umbricht bei Platzmangel:
+  - Seite einer Scheibe: Pokal und Bruch neben dem Ergebnis (nur Probe: nur der Bruch);
+  - Fortschritt: der Bruch in der Ergebnis-Box; Liste: neben „Scheiben“ („Wertung für Ø und Abstand“); Start: neben dem
+    Ø je Block, dort entfällt „in ganzen Ringen“ im Text.
+- **Liste:** der Pokal in der Spalte „Art“ 16 px in Gold (vorher 14 px grau, der User sah ihn nicht).
+- **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`.
+- **Labor:** der Bruch auf der Seite einer Scheibe; Liste, Start und Fortschritt ohne Kreise (seine Wertung steht in
+  Profil).
 
 ## Labor näher an der App (9. Oktober 2026)
 

@@ -6,13 +6,13 @@ globals.css-Theme-Kern — Drift damit **strukturell unmöglich**.
 
 ## Was hier liegt
 
-| Export                           | Inhalt                                                                                                          |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `@vereinsheim/ui/<name>`         | `src/ui/<name>.tsx` — 17 shadcn-Primitives (button, card, dialog, …)                                            |
-| `@vereinsheim/ui/shell/<name>`   | `src/shell/<name>.tsx` — ConfirmDialog, DetailActionBar, PageHeader, Providers                                  |
-| `@vereinsheim/ui/theme.css`      | `theme.css` — Tailwind-Theme-Kern (@custom-variant, @theme, :root, .dark, @layer) + `@source` aufs Paket        |
-| `@vereinsheim/ui/design2.css`    | `design2.css` — Design 2 für Spiegel (ADR-030): eigene Tokens, hell auf `:root`, dunkel unter `.dark`           |
-| `@vereinsheim/ui/design2/<name>` | `src/design2/<name>.tsx` — Design-2-Bausteine: `segmented` (Segment-Umschalter), `toggle-chip`, `sheet` (Blatt) |
+| Export                           | Inhalt                                                                                                                                          |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@vereinsheim/ui/<name>`         | `src/ui/<name>.tsx` — 17 shadcn-Primitives (button, card, dialog, …)                                                                            |
+| `@vereinsheim/ui/shell/<name>`   | `src/shell/<name>.tsx` — ConfirmDialog, DetailActionBar, PageHeader, Providers                                                                  |
+| `@vereinsheim/ui/theme.css`      | `theme.css` — Tailwind-Theme-Kern (@custom-variant, @theme, :root, .dark, @layer) + `@source` aufs Paket                                        |
+| `@vereinsheim/ui/design2.css`    | `design2.css` — Design 2 für Spiegel (ADR-030): eigene Tokens, hell auf `:root`, dunkel unter `.dark`                                           |
+| `@vereinsheim/ui/design2/<name>` | `src/design2/<name>.tsx` — Design-2-Bausteine: `segmented` (Segment-Umschalter), `toggle-chip`, `sheet` (Blatt), `round-toggle` (weicher Kreis) |
 
 ## Regeln
 
