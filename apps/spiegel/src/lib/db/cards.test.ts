@@ -55,6 +55,24 @@ const projectionOf = (cardId: string) => db.cardProjection.findUniqueOrThrow({ w
 const shotsOf = (cardId: string) => cardWithShots(db, { cardId, ownerId: site.ownerId })
 
 describe("writeRevision", () => {
+  it("die Rangliste: ein Stand ohne Angabe (seed:own, PDF) lässt sie, die Seite liest ihre Art (Review)", async () => {
+    const input = cardWhere(1150, (c) => !probeOnly(c))
+    const ranking = await db.ranking.create({
+      data: { siteId: site.siteId, name: "RWK Test", kind: "competition" },
+    })
+    const first = await writeRevision(db, {
+      ...input,
+      card: { ...input.card, rankingId: ranking.id },
+    })
+    // ein späterer Stand ohne `rankingId` (fehlt: nicht anfassen)
+    await writeRevision(db, { ...input, card: { ...input.card, flags: ["ausgenommen"] } })
+    const card = await db.card.findUniqueOrThrow({ where: { id: first.cardId } })
+    expect(card.rankingId).toBe(ranking.id)
+    expect((await shotsOf(first.cardId))?.kind).toBe("competition")
+    await db.ranking.update({ where: { id: ranking.id }, data: { kind: null } })
+    expect((await shotsOf(first.cardId))?.kind).toBe("training")
+  })
+
   it("schreibt Schüsse und Projektion, die Seite der Scheibe liest dieselben Schüsse", async () => {
     const [input] = season(1, 1000)
     const result = await writeRevision(db, input)

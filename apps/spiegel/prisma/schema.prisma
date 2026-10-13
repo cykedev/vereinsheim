@@ -434,6 +434,8 @@ model Card {
   @@index([ownerId, startedAt])
   // Heartbeat: offene und ruhende Scheiben einer Quelle weiterschalten
   @@index([sourceId, state])
+  // Zählen je Rangliste im Admin, `SET NULL` beim Löschen einer Rangliste
+  @@index([rankingId])
   @@index([sportpassId])
 }
 

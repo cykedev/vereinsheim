@@ -5,13 +5,13 @@ import { useActionState, useEffect, useState, useTransition } from "react"
 
 import { getErrorMessage, getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
+import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { FieldError } from "@vereinsheim/ui/field-error"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
 
-import { Segmented } from "@vereinsheim/ui/design2/segmented"
-
+import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import type { BridgeRow, RankingRow, SiteOverview } from "@/lib/admin/site"
 import {
   confirmEpoch,
@@ -255,12 +255,14 @@ const RANKING_OPTIONS = [
   { value: "competition", label: "Wettkampf" },
 ] as const
 
-/** eine Rangliste mit ihrer Art; gespeichert sofort, wie die Wahl auf der Seite einer Scheibe */
+/** eine Rangliste mit ihrer Art; gespeichert sofort wie die Wahl auf der Seite einer Scheibe (`useSavedChoice`) */
 export function RankingItem({ ranking }: { ranking: RankingRow }) {
-  const router = useRouter()
-  const [shown, setShown] = useState<RankingChoice>(ranking.kind ?? "open")
-  const [error, setError] = useState<string | null>(null)
-  const [, startTransition] = useTransition()
+  const choice = useSavedChoice<RankingChoice>({
+    value: ranking.kind ?? "open",
+    scope: String(ranking.id),
+    save: (value) => setRankingKind(ranking.id, value),
+    notSaved: "Die Art der Rangliste wurde nicht gespeichert.",
+  })
   return (
     <li
       className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
@@ -270,30 +272,19 @@ export function RankingItem({ ranking }: { ranking: RankingRow }) {
         <span className="truncate text-[15px] font-semibold">{ranking.name}</span>
         <span className="text-[13px] text-muted-foreground">
           {ranking.cards === 1 ? "1 Scheibe" : `${ranking.cards} Scheiben`}
-          {shown === "open" ? " · gilt als Training" : ""}
+          {choice.shown === "open" ? " · nicht zugeordnet" : ""}
         </span>
-        {error && (
+        {choice.error && (
           <span role="alert" className="text-[13px] text-destructive">
-            {error}
+            {choice.error}
           </span>
         )}
       </span>
       <Segmented
         label={`Art der Rangliste ${ranking.name}`}
         options={RANKING_OPTIONS}
-        value={shown}
-        onChange={(value) => {
-          const before = shown
-          setShown(value)
-          setError(null)
-          startTransition(async () => {
-            const result = await setRankingKind(ranking.id, value)
-            if ("error" in result) {
-              setShown(before)
-              setError(getErrorMessage(result) ?? "Nicht gespeichert.")
-            } else router.refresh()
-          })
-        }}
+        value={choice.shown}
+        onChange={choice.change}
       />
     </li>
   )

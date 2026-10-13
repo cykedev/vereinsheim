@@ -419,6 +419,9 @@ CREATE INDEX "Card_ownerId_startedAt_idx" ON "Card"("ownerId", "startedAt");
 CREATE INDEX "Card_sourceId_state_idx" ON "Card"("sourceId", "state");
 
 -- CreateIndex
+CREATE INDEX "Card_rankingId_idx" ON "Card"("rankingId");
+
+-- CreateIndex
 CREATE INDEX "Card_sportpassId_idx" ON "Card"("sportpassId");
 
 -- CreateIndex

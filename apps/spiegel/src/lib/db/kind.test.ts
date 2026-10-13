@@ -12,12 +12,14 @@ describe("geltende Art einer Scheibe", () => {
       kindChoice,
       ranking: ranking === undefined ? null : { kind: ranking },
     })
-    expect(kindOfRow(row(null, undefined))).toBe("training")
-    expect(kindOfRow(row(null, null))).toBe("training")
-    expect(kindOfRow(row(null, "competition"))).toBe("competition")
-    expect(kindOfRow(row("training", "competition"))).toBe("training")
+    expect(kindOfRow(row(null, undefined), false)).toBe("training")
+    expect(kindOfRow(row(null, null), false)).toBe("training")
+    expect(kindOfRow(row(null, "competition"), false)).toBe("competition")
+    expect(kindOfRow(row("training", "competition"), false)).toBe("training")
     expect(
-      kindOfRow({ kind: "competition", kindChoice: null, ranking: { kind: "training" } })
+      kindOfRow({ kind: "competition", kindChoice: null, ranking: { kind: "training" } }, false)
     ).toBe("training")
+    // nur Probe ist Training, auch in einer Wettkampf-Rangliste (der Schütze kann es dort nicht umstellen)
+    expect(kindOfRow(row(null, "competition"), true)).toBe("training")
   })
 })

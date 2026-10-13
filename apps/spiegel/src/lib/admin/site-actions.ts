@@ -169,11 +169,15 @@ export async function setRankingKind(rankingId: number, kind: string): Promise<A
   if ("error" in actor) return actor
   if (!Number.isSafeInteger(rankingId)) return { error: "Unbekannte Rangliste." }
   if (!(RANKING_KINDS as readonly string[]).includes(kind)) return { error: "Unbekannte Art." }
-  const updated = await db.ranking.updateMany({
-    where: { id: rankingId },
-    data: { kind: kind === "open" ? null : (kind as "training" | "competition") },
-  })
-  if (updated.count === 0) return { error: "Unbekannte Rangliste." }
+  try {
+    const updated = await db.ranking.updateMany({
+      where: { id: rankingId },
+      data: { kind: kind === "open" ? null : (kind as "training" | "competition") },
+    })
+    if (updated.count === 0) return { error: "Unbekannte Rangliste." }
+  } catch {
+    return { error: "Die Art der Rangliste konnte nicht gespeichert werden." }
+  }
   // Liste, Start und Fortschritt rechnen die Art beim Lesen
   revalidatePath("/", "layout")
   return { success: true }

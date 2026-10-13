@@ -53,9 +53,9 @@ export default async function AdminSiteRoute() {
             <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
               <h2 className="text-[15px] font-semibold">Ranglisten</h2>
               <p className="text-sm text-muted-foreground">
-                Meyton nennt zu jeder Scheibe eine Rangliste des Vereins. Ordne zu, welche Wettkampf
-                sind; ohne Zuordnung gilt Training. Wer eine Scheibe selbst umstellt, behält seine
-                Wahl.
+                Meyton nennt zu jeder Scheibe eine Rangliste des Vereins. Ordne zu, welche als
+                Wettkampf gelten; ohne Zuordnung bleibt es Training. Wer eine Scheibe selbst
+                umstellt, behält seine Wahl, und eine Scheibe nur aus Probe ist immer Training.
               </p>
               {overview.rankings.length ? (
                 <ul className="divide-y divide-border rounded-xl border border-border">

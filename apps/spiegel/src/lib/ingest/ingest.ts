@@ -109,7 +109,6 @@ async function isBlocked(db: Db, sourceId: number, snapshot: SnapshotV1): Promis
   return tombstones + locks > 0
 }
 
-/** die Disziplin der Anlage; neu angelegt mit dem, was der Fachkern über sie weiß (D20) */
 /**
  * die Rangliste der Anlage (`Ranking`), beim ersten Sehen angelegt, noch ohne Art; ihre Art ordnet der Admin zu und gilt
  * beim Lesen (`kindOfRow`). Ohne Rangliste null.
@@ -125,6 +124,7 @@ async function rankingFor(db: Db, siteId: number, name: string | null): Promise<
   return ranking.id
 }
 
+/** die Disziplin der Anlage; neu angelegt mit dem, was der Fachkern über sie weiß (D20) */
 async function disciplineFor(
   db: Db,
   siteId: number,
