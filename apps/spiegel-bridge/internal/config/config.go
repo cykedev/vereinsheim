@@ -99,6 +99,11 @@ func Save(path string, c Config) error {
 	if err := os.Rename(tmp.Name(), path); err != nil {
 		return errors.New("config-write")
 	}
+	// auch das Verzeichnis: sonst kann nach einem Stromausfall die Datei fehlen, obwohl der Code schon verbraucht ist
+	if d, err := os.Open(dir); err == nil {
+		_ = d.Sync()
+		d.Close()
+	}
 	return nil
 }
 

@@ -239,7 +239,7 @@ describe("Zustand der Brücke", () => {
     expect(state.epoch).toBe(1)
     expect(state.sportpass.hashes).toEqual([sportpassHash(state.sportpass.salt, BigInt(12345678))])
     expect(state.blocked).toEqual([
-      { scheibenId: -7, startedAt: new Date(NOW - 86_400_000).toISOString() },
+      { scheibenId: -7, startedAt: new Date(NOW - 86_400_000).toISOString(), epoch: 1 },
     ])
     // das Salz bleibt
     expect((await bridgeState(db, site.siteId, NOW)).sportpass.salt).toBe(state.sportpass.salt)

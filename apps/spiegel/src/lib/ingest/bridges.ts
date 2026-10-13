@@ -266,14 +266,14 @@ export async function bridgeState(
         source: { siteId },
         startedAt: { gte: new Date(nowMs - BLOCKED_WINDOW_MS) },
       },
-      select: { scheibenId: true, startedAt: true },
+      select: { scheibenId: true, startedAt: true, source: { select: { epoch: true } } },
     }),
     db.deleteLock.findMany({
       where: {
         source: { siteId },
         startedAt: { gte: new Date(nowMs - BLOCKED_WINDOW_MS) },
       },
-      select: { scheibenId: true, startedAt: true },
+      select: { scheibenId: true, startedAt: true, source: { select: { epoch: true } } },
     }),
     // über den Index (Quelle, letzte Beobachtung): je Quelle der jüngste Stand, nicht alle Stände (Review)
     db.source.findMany({ where: { siteId }, select: { id: true } }).then((sources) =>
@@ -289,7 +289,10 @@ export async function bridgeState(
     ),
   ])
   const blocked = new Map(
-    [...tombstones, ...locks].map((b) => [`${b.scheibenId}:${b.startedAt.getTime()}`, b])
+    [...tombstones, ...locks].map((b) => [
+      `${b.source.epoch}:${b.scheibenId}:${b.startedAt.getTime()}`,
+      b,
+    ])
   )
   const newest = Math.max(0, ...watermark.map((w) => w?.lastObservedAt.getTime() ?? 0))
   return {
@@ -302,6 +305,7 @@ export async function bridgeState(
     blocked: [...blocked.values()].map((b) => ({
       scheibenId: b.scheibenId,
       startedAt: b.startedAt.toISOString(),
+      epoch: b.source.epoch,
     })),
     watermark: newest ? new Date(newest).toISOString() : null,
   }

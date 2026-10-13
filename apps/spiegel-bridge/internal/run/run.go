@@ -6,7 +6,9 @@ package run
 import (
 	"context"
 	"errors"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	// Zonen eingebaut: ein Pi mit schlankem System oder Windows hat keine Zonendatenbank
@@ -32,10 +34,20 @@ const (
 	FuturePause = time.Minute
 	// Nachholen beim Start: ab einem Tag vor dem Wasserstand, damit der letzte Abend samt späten Korrekturen dabei ist
 	CatchUpMargin = 24 * time.Hour
+	// so alt darf der Zustand (Zustimmungen, Sperren) höchstens sein, sonst lädt die Brücke nichts hoch
+	MaxStateAge = time.Hour
+	// was das Schema des Heartbeats an Uhrabweichung annimmt (zehn Jahre); eine Uhr auf 2000 gälte sonst nie
+	maxClockOffset = 10 * 365 * 24 * time.Hour
 	// Stapel: Spiegel nimmt 50 Snapshots und 4 MiB
 	BatchSnapshots = contract.MaxBatchSnapshots
 	BatchBytes     = 3*1024*1024 + 512*1024
 )
+
+// issueIndex findet den Snapshot in einem Fehlerpfad von Spiegel (`snapshots[3].data…`).
+var issueIndex = regexp.MustCompile(`^snapshots\[(\d+)\]`)
+
+// errStateWaiting: Der Zustand wird nach einem Fehler erst später wieder gefragt.
+var errStateWaiting = errors.New("state-waiting")
 
 // ErrUnauthorized: Spiegel kennt das Token nicht mehr (widerrufen). Die Brücke hört auf; neu koppeln.
 var ErrUnauthorized = errors.New("unauthorized")
@@ -88,7 +100,12 @@ type Runner struct {
 	lastHeartbeat time.Time
 	lastScheiben  int
 	possibleReset bool
+	resetFrom     int
 	catchUpSet    bool
+	// Zustand: nach einem Fehler erst wieder ab hier fragen (Spiegel nimmt sechs Anfragen je Minute)
+	stateRetryAt  time.Time
+	stateFailures int
+	staleLogged   bool
 }
 
 // catchUpFrom rechnet den Wasserstand in Spiegel (Beobachtung, UTC) in ein Lebenszeichen der Anlage um: Meyton schreibt
@@ -151,14 +168,28 @@ func (r *Runner) refreshState(ctx context.Context, now time.Time) error {
 	if r.state != nil && now.Sub(r.stateAt) < StateEvery {
 		return nil
 	}
+	if now.Before(r.stateRetryAt) {
+		return errStateWaiting
+	}
 	state, err := r.spiegel.State(ctx)
 	if err != nil {
 		if unauthorized(err) {
 			return ErrUnauthorized
 		}
-		r.log("state-failed", "code", code(err))
+		r.stateFailures++
+		wait := RetryFirst
+		for i := 1; i < r.stateFailures && wait < RetryMax; i++ {
+			wait *= 2
+		}
+		var apiErr *api.Error
+		if errors.As(err, &apiErr) {
+			wait = max(wait, apiErr.RetryAfter)
+		}
+		r.stateRetryAt = now.Add(min(wait, api.MaxRetryAfter))
+		r.log("state-failed", "code", code(err), "failures", r.stateFailures)
 		return err
 	}
+	r.stateFailures, r.stateRetryAt, r.staleLogged = 0, time.Time{}, false
 	previous := r.state
 	r.state, r.stateAt, r.rules = &state, now, filter.NewRules(state)
 	epoch := 1
@@ -196,8 +227,7 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 			return 0, err
 		}
 		if r.state == nil {
-			r.failures++
-			return r.backoff(), nil
+			return max(r.stateRetryAt.Sub(now), time.Second), nil
 		}
 	}
 
@@ -208,6 +238,8 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 			r.log("catch-up", "from", strings.ReplaceAll(from, " ", "T"))
 		}
 	}
+	// gemessen neben `NOW(3)`: nicht am Beginn des Schritts, vor einem womöglich langsamen Zustand
+	roundAt := r.now()
 	began := time.Now()
 	result, err := r.watcher.Tick(ctx, r.src)
 	took := time.Since(began)
@@ -230,8 +262,15 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 	r.queryMs = &ms
 	if result.SourceNow != nil {
 		if source, err := time.Parse("2006-01-02 15:04:05.000", *result.SourceNow); err == nil {
-			offset := source.Sub(now).Milliseconds()
-			r.clockOffset = &offset
+			d := source.Sub(roundAt.Add(took / 2))
+			if d > maxClockOffset || d < -maxClockOffset {
+				// eine Uhr der Anlage auf 2000 o. ä.: nicht melden, sonst lehnte Spiegel jeden Heartbeat ab
+				r.clockOffset = nil
+				r.log("clock-offset-out-of-range")
+			} else {
+				offset := d.Milliseconds()
+				r.clockOffset = &offset
+			}
 		}
 	}
 	for _, skip := range result.Skipped {
@@ -244,6 +283,12 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 		delete(r.held, s.ScheibenID)
 		delete(r.noConsent, s.ScheibenID)
 		if decision.Send {
+			// was gegen den Vertrag verstößt, nimmt Spiegel ohnehin nicht; nicht den ganzen Stapel daran scheitern lassen
+			if err := contract.Validate(s); err != nil {
+				r.log("snapshot-invalid", "scheibe", s.ScheibenID, "code", code(err))
+				r.watcher.Delivered(s)
+				continue
+			}
 			outgoing = append(outgoing, s)
 			continue
 		}
@@ -256,7 +301,13 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 			r.noConsent[s.ScheibenID] = true
 		}
 	}
-	if len(outgoing) > 0 && !now.Before(r.pauseUntil) {
+	// ein zu alter Zustand (Zustimmungen könnten widerrufen sein): nichts hochladen, bis er wieder gelingt
+	stale := now.Sub(r.stateAt) > MaxStateAge
+	if stale && !r.staleLogged {
+		r.staleLogged = true
+		r.log("state-stale")
+	}
+	if len(outgoing) > 0 && !stale && !now.Before(r.pauseUntil) {
 		if err := r.upload(ctx, outgoing); err != nil {
 			return 0, err
 		}
@@ -344,6 +395,10 @@ func (r *Runner) send(ctx context.Context, batch []contract.Snapshot) error {
 			case res.Final():
 				r.watcher.Delivered(s)
 				delete(r.unconfirmed, s.ScheibenID)
+				// Spiegel kannte keine Zustimmung (die Liste der Brücke war alt): kommt sie, geht die Scheibe erneut
+				if res.Outcome == "discarded" && res.Reason == "no-consent" {
+					r.noConsent[s.ScheibenID] = true
+				}
 			case res.Outcome == "epoch-unconfirmed":
 				// bis der Admin die Epoche bestätigt; danach schickt `refreshState` sie neu (SF-23)
 				r.watcher.Delivered(s)
@@ -368,6 +423,9 @@ func (r *Runner) send(ctx context.Context, batch []contract.Snapshot) error {
 			if err := r.send(ctx, batch[:half]); err != nil {
 				return err
 			}
+			if r.now().Before(r.pauseUntil) {
+				return nil
+			}
 			return r.send(ctx, batch[half:])
 		}
 		r.log("card-too-large", "scheibe", batch[0].ScheibenID)
@@ -380,8 +438,18 @@ func (r *Runner) send(ctx context.Context, batch []contract.Snapshot) error {
 	case apiErr.Status == 400:
 		// ein Fehler der Brücke selbst; neu schicken hülfe nicht
 		r.log("batch-rejected", "snapshots", len(batch), "issues", len(apiErr.Issues))
-		for _, s := range batch {
-			r.watcher.Delivered(s)
+		// nur die genannten Snapshots verwerfen; die übrigen kommen mit der nächsten Lesung wieder
+		named := map[int]bool{}
+		for _, issue := range apiErr.Issues {
+			if m := issueIndex.FindStringSubmatch(issue.Path); m != nil {
+				i, _ := strconv.Atoi(m[1])
+				named[i] = true
+			}
+		}
+		for i, s := range batch {
+			if len(named) == 0 || named[i] {
+				r.watcher.Delivered(s)
+			}
 		}
 	default:
 		r.failures++
@@ -396,10 +464,10 @@ func (r *Runner) status() string {
 	switch {
 	case r.dbStatus != "":
 		return r.dbStatus
-	case r.possibleReset:
-		return "possible-reset"
 	case r.uploadFailing:
 		return "delayed"
+	case r.possibleReset:
+		return "possible-reset"
 	}
 	return "ok"
 }
@@ -418,10 +486,31 @@ func (r *Runner) heartbeat(ctx context.Context, now time.Time, dbReachable bool)
 			fingerprint = &api.SourceFingerprint{Version: f.Version, Scheiben: f.Scheiben, Treffer: f.Treffer, OldestStamp: f.OldestStamp}
 			// viele Scheiben auf einmal weg: Ablage geleert oder ein neuer Server (SF-23); nur melden (Plan D8)
 			if r.lastScheiben >= 10 && f.Scheiben*2 < r.lastScheiben && !r.possibleReset {
-				r.possibleReset = true
+				r.possibleReset, r.resetFrom = true, r.lastScheiben
 				r.log("possible-reset", "before", r.lastScheiben, "now", f.Scheiben)
 			}
+			// die Scheiben sind wieder da (ein falscher Alarm): nicht mehr melden
+			if r.possibleReset && f.Scheiben*2 >= r.resetFrom {
+				r.possibleReset = false
+			}
 			r.lastScheiben = f.Scheiben
+		}
+	}
+	// was die Erkennung vergessen hat (einen Tag nicht in der Ablage), zählt nicht mehr
+	known := map[int32]bool{}
+	for _, id := range r.watcher.Known() {
+		known[id] = true
+	}
+	for _, m := range []map[int32]bool{r.noConsent, r.unconfirmed} {
+		for id := range m {
+			if !known[id] {
+				delete(m, id)
+			}
+		}
+	}
+	for id := range r.held {
+		if !known[id] {
+			delete(r.held, id)
 		}
 	}
 	held := map[int]int{}

@@ -35,6 +35,11 @@ const blockWindow = 30 * 24 * time.Hour
 
 var digits = regexp.MustCompile(`^\d+$`)
 
+// wie `int()` im Adapter von Spiegel: nur `-?\d+` und eine sichere Ganzzahl; „+3“ oder „3.0“ gelten als unlesbar
+var integer = regexp.MustCompile(`^-?\d+$`)
+
+const maxSafeInteger = 1<<53 - 1
+
 // SportpassHash ist der Hash der Zustimmungsliste: SHA-256 (Hex, klein) über
 // `spiegel-sportpass-v1:<salt>:<SportpassID dezimal ohne führende Nullen>`; leer, wenn die ID keine positive Zahl ist.
 func SportpassHash(salt, sportpassID string) string {
@@ -61,17 +66,17 @@ type Decision struct {
 type Rules struct {
 	salt    string
 	consent map[string]bool
-	blocked map[int32][]time.Time
+	blocked map[int32][]api.Blocked
 }
 
 // NewRules bereitet den Zustand vor.
 func NewRules(state api.State) *Rules {
-	r := &Rules{salt: state.Sportpass.Salt, consent: map[string]bool{}, blocked: map[int32][]time.Time{}}
+	r := &Rules{salt: state.Sportpass.Salt, consent: map[string]bool{}, blocked: map[int32][]api.Blocked{}}
 	for _, h := range state.Sportpass.Hashes {
 		r.consent[h] = true
 	}
 	for _, b := range state.Blocked {
-		r.blocked[b.ScheibenID] = append(r.blocked[b.ScheibenID], b.StartedAt)
+		r.blocked[b.ScheibenID] = append(r.blocked[b.ScheibenID], b)
 	}
 	return r
 }
@@ -93,18 +98,23 @@ func (r *Rules) Decide(s contract.Snapshot) Decision {
 		return Decision{Reason: NoConsent}
 	}
 	for _, row := range s.Data.Treffer.Rows {
-		mode, err := strconv.Atoi(cell(row, "Wertung"))
-		if err != nil {
+		text := cell(row, "Wertung")
+		mode, err := strconv.Atoi(text)
+		if !integer.MatchString(text) || err != nil || mode > maxSafeInteger || mode < -maxSafeInteger {
 			return Decision{Reason: Hidden, Mode: UnreadableMode}
 		}
 		if HeldDisplayModes[mode] {
 			return Decision{Reason: Hidden, Mode: mode}
 		}
 	}
-	if starts := r.blocked[s.ScheibenID]; len(starts) > 0 {
+	if blocks := r.blocked[s.ScheibenID]; len(blocks) > 0 {
 		at := startHint(s)
-		for _, started := range starts {
-			if d := started.Sub(at); d <= blockWindow && d >= -blockWindow {
+		for _, b := range blocks {
+			// Spiegel prüft nur Sperren der Quelle (Epoche) des Snapshots; nach einem Reset beginnen die IDs neu
+			if b.Epoch != nil && *b.Epoch != s.Epoch {
+				continue
+			}
+			if d := b.StartedAt.Sub(at); d <= blockWindow && d >= -blockWindow {
 				return Decision{Reason: Blocked}
 			}
 		}

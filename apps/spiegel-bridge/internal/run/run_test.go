@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -22,6 +24,7 @@ func text(s string) *string { return &s }
 
 // ablage ist die SSMDB2 im Speicher.
 type ablage struct {
+	now    *string // Uhr der Anlage
 	stamps map[int32]string
 	data   map[int32]contract.Data
 	fail   error
@@ -39,7 +42,7 @@ func (a *ablage) Round(_ context.Context, choose func([]watch.Lifesign, *string)
 	for _, id := range choose(lifesigns, nil) {
 		cards[id] = a.data[id]
 	}
-	return watch.Round{Lifesigns: lifesigns, Cards: cards, SessionTimeZone: "+00:00", SourceVersion: text("9")}, nil
+	return watch.Round{Lifesigns: lifesigns, Cards: cards, SessionTimeZone: "+00:00", SourceVersion: text("9"), SourceNow: a.now}, nil
 }
 
 func (a *ablage) Fingerprint(context.Context) (ssmdb2.Fingerprint, error) {
@@ -212,9 +215,7 @@ func TestFailedUploadIsReadAndSentAgain(t *testing.T) {
 	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
 		t.Fatalf("neu gelesen und geschickt: %s", got)
 	}
-	if hb := f.sp.heartbeats[0]; hb.Status != "ok" && hb.Status != "delayed" {
-		t.Fatalf("Status %s", hb.Status)
-	}
+
 	for range 3 {
 		f.step()
 	}
@@ -331,8 +332,14 @@ func TestDatabaseDownIsReportedNotDeletion(t *testing.T) {
 	f.ablage.fail = errors.New("dial tcp: connection refused")
 	f.clock = f.clock.Add(HeartbeatEvery)
 	f.step()
-	hb := f.sp.heartbeats[len(f.sp.heartbeats)-1]
-	if hb.Status != "db-error" && hb.Status != "db-unreachable" {
+	if hb := f.sp.heartbeats[len(f.sp.heartbeats)-1]; hb.Status != "db-error" {
+		t.Fatalf("Status %s", hb.Status)
+	}
+	// ein Netzfehler heißt: Anlage nicht erreichbar
+	f.ablage.fail = &net.OpError{Op: "dial", Net: "tcp", Err: errors.New("refused")}
+	f.clock = f.clock.Add(HeartbeatEvery)
+	f.step()
+	if hb := f.sp.heartbeats[len(f.sp.heartbeats)-1]; hb.Status != "db-unreachable" {
 		t.Fatalf("Status %s", hb.Status)
 	}
 	f.ablage.fail = nil
@@ -429,5 +436,153 @@ func TestCatchUpAfterStart(t *testing.T) {
 	sent := fmt.Sprint(f.sp.sent())
 	if !strings.Contains(sent, "1") || !strings.Contains(sent, "2") {
 		t.Fatalf("gesendet %s", sent)
+	}
+}
+
+func TestUploadFailingIsReportedDelayed(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "12345678", "1", 3)
+	for range 10 {
+		f.sp.errs = append(f.sp.errs, &api.Error{Code: "network"})
+	}
+	f.step()
+	f.step()
+	f.clock = f.clock.Add(HeartbeatEvery)
+	f.step()
+	if hb := f.sp.heartbeats[len(f.sp.heartbeats)-1]; hb.Status != "delayed" || hb.Backlog != 1 {
+		t.Fatalf("Heartbeat %+v", hb)
+	}
+}
+
+func TestServiceUnavailableIsHonoured(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "12345678", "1", 3)
+	// länger als die Pause nach einem Netzfehler (5 s): nur `Retry-After` erklärt sie
+	f.sp.errs = []error{&api.Error{Status: 503, Code: "busy", RetryAfter: 40 * time.Second}}
+	f.step()
+	if wait := f.step(); wait < 40*time.Second {
+		t.Fatalf("Pause %v", wait)
+	}
+}
+
+func TestRejectedBatchDropsOnlyTheNamedSnapshot(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "12345678", "1", 3)
+	f.ablage.put(2, "12345678", "1", 4)
+	rejected := &api.Error{Status: 400, Code: "invalid"}
+	rejected.Issues = append(rejected.Issues, struct {
+		Path string `json:"path"`
+		Code string `json:"code"`
+	}{Path: "snapshots[0].data.treffer.rows[2]", Code: "custom"})
+	f.sp.errs = []error{rejected}
+	f.step()
+	f.step() // Stapel [2, 1] (die jüngste zuerst), Index 0 verworfen
+	for range 3 {
+		f.step()
+	}
+	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
+		t.Fatalf("gesendet %s", got)
+	}
+}
+
+func TestSingleTooLargeIsDropped(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "12345678", "1", 3)
+	f.sp.errs = []error{&api.Error{Status: 413, Code: "too-large"}}
+	f.step()
+	f.step()
+	for range 3 {
+		f.step()
+	}
+	if len(f.sp.sent()) != 0 || !strings.Contains(strings.Join(f.logs, " "), "card-too-large") {
+		t.Fatalf("gesendet %v, Log %v", f.sp.sent(), f.logs)
+	}
+}
+
+func TestStateFailureWaits(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "12345678", "1", 3)
+	f.step()
+	calls := 0
+	f.sp.stateErr = &api.Error{Status: 429, Code: "rate-limited", RetryAfter: 10 * time.Second}
+	f.clock = f.clock.Add(StateEvery)
+	counting := &countingSpiegel{spiegel: f.sp, calls: &calls}
+	f.runner.spiegel = counting
+	begin := f.clock
+	// ein belegter Stand: Runden jede Sekunde
+	for i := 0; f.clock.Sub(begin) < 30*time.Second; i++ {
+		f.ablage.stamps[1] = fmt.Sprintf("2026-10-13 21:00:%02d", i%60)
+		f.step()
+	}
+	if calls > 3 {
+		t.Fatalf("%d Abfragen des Zustands in 30 s", calls)
+	}
+}
+
+type countingSpiegel struct {
+	*spiegel
+	calls *int
+}
+
+func (c *countingSpiegel) State(ctx context.Context) (api.State, error) {
+	*c.calls++
+	return c.spiegel.State(ctx)
+}
+
+func TestStaleStateStopsUploads(t *testing.T) {
+	f := setup(t, "12345678")
+	f.step()
+	f.sp.stateErr = &api.Error{Code: "network"}
+	f.clock = f.clock.Add(MaxStateAge + time.Minute)
+	f.ablage.put(1, "12345678", "1", 3)
+	for range 4 {
+		f.step()
+	}
+	if len(f.sp.sent()) != 0 {
+		t.Fatal("mit einem Zustand älter als eine Stunde nichts hochladen")
+	}
+	f.sp.stateErr = nil
+	f.clock = f.clock.Add(RetryMax)
+	for range 4 {
+		f.step()
+	}
+	if len(f.sp.sent()) != 1 {
+		t.Fatal("mit frischem Zustand wieder")
+	}
+}
+
+func TestClockOffsetBoundedAndMeasured(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.now = text("2026-10-13 18:00:02.500")
+	f.step()
+	// gemessen gegen die Mitte der Runde: ein paar Mikrosekunden der echten Abfrage gehen ab
+	if hb := f.sp.heartbeats[0]; hb.SourceClockOffsetMs == nil || *hb.SourceClockOffsetMs < 2490 || *hb.SourceClockOffsetMs > 2500 {
+		t.Fatalf("Versatz %v", *hb.SourceClockOffsetMs)
+	}
+	f.ablage.now = text("2000-01-01 00:00:00.000")
+	f.clock = f.clock.Add(HeartbeatEvery)
+	f.step()
+	if hb := f.sp.heartbeats[len(f.sp.heartbeats)-1]; hb.SourceClockOffsetMs != nil {
+		t.Fatalf("Uhr auf 2000: %v", *hb.SourceClockOffsetMs)
+	}
+}
+
+func TestHeartbeatMatchesTheSchema(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "12345678", "5", 3)
+	f.step()
+	f.step()
+	f.clock = f.clock.Add(HeartbeatEvery)
+	f.step()
+	hb := f.sp.heartbeats[len(f.sp.heartbeats)-1]
+	instant := regexp.MustCompile(`^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$`)
+	if !instant.MatchString(hb.RunStartedAt) || !instant.MatchString(hb.SentAt) || hb.LastDBContactAt == nil || !instant.MatchString(*hb.LastDBContactAt) {
+		t.Fatalf("Zeiten %+v", hb)
+	}
+	if hb.ContractVersion != 1 || hb.BridgeVersion == "" || hb.Status != "ok" || hb.QueryMs == nil || *hb.QueryMs < 0 {
+		t.Fatalf("%+v", hb)
+	}
+	if fmt.Sprint(hb.HeldBack) != "[{5 1}]" || hb.SourceFingerprint == nil || *hb.SourceFingerprint.Version != "9" {
+		t.Fatalf("%+v", hb)
 	}
 }

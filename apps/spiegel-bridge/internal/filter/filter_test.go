@@ -86,6 +86,8 @@ func TestDecide(t *testing.T) {
 		{"verdeckt 10", snapshot(1, "12345678", []string{"10"}, stamp), Decision{Reason: Hidden, Mode: 10}},
 		{"Modus 0 ohne Freigabe (SF-20)", snapshot(1, "12345678", []string{"0"}, stamp), Decision{Reason: Hidden, Mode: 0}},
 		{"Wertung unlesbar", snapshot(1, "12345678", []string{"x"}, stamp), Decision{Reason: Hidden, Mode: UnreadableMode}},
+		{"Wertung mit Plus wie in Spiegel unlesbar", snapshot(1, "12345678", []string{"+3"}, stamp), Decision{Reason: Hidden, Mode: UnreadableMode}},
+		{"Wertung über 2^53", snapshot(1, "12345678", []string{"9007199254740993"}, stamp), Decision{Reason: Hidden, Mode: UnreadableMode}},
 		{"gesperrt (SF-28)", snapshot(9, "12345678", []string{"1"}, stamp), Decision{Reason: Blocked}},
 		{"dieselbe ID 49 Tage später (SF-77)", snapshot(9, "12345678", []string{"1"}, []string{"2026-12-01 20:00:00"}), Decision{Send: true}},
 		{"gesperrt, ohne Schusszeit die Beobachtung", snapshot(9, "12345678", []string{"1"}, []string{"0000-00-00 00:00:00"}), Decision{Reason: Blocked}},
@@ -102,5 +104,27 @@ func TestStartHintIgnoresClockJump(t *testing.T) {
 	s := snapshot(9, "12345678", []string{"1", "1", "1"}, []string{"2009-01-01 00:00:00", "2026-12-01 20:00:00", "2026-12-01 20:05:00"})
 	if got := startHint(s); !got.Equal(time.Date(2026, 12, 1, 20, 0, 0, 0, time.UTC)) {
 		t.Fatalf("%v", got)
+	}
+}
+
+func TestBlockedOnlyInItsEpoch(t *testing.T) {
+	one, two := 1, 2
+	at := time.Date(2026, 10, 13, 18, 0, 0, 0, time.UTC)
+	stamp := []string{"2026-10-13 20:00:00"}
+	r := rules(api.Blocked{ScheibenID: 9, StartedAt: at, Epoch: &one}, api.Blocked{ScheibenID: 8, StartedAt: at})
+	s := snapshot(9, "12345678", []string{"1"}, stamp)
+	s.Epoch = 2
+	if got := r.Decide(s); !got.Send {
+		t.Fatalf("Sperre der Epoche 1 gilt nicht in Epoche 2 (SF-23): %+v", got)
+	}
+	s.Epoch = 1
+	if got := r.Decide(s); got.Reason != Blocked {
+		t.Fatalf("in ihrer Epoche: %+v", got)
+	}
+	// ohne Epoche (älterer Spiegel) gilt die Sperre in jeder
+	s = snapshot(8, "12345678", []string{"1"}, stamp)
+	s.Epoch = two
+	if got := r.Decide(s); got.Reason != Blocked {
+		t.Fatalf("ohne Epoche: %+v", got)
 	}
 }

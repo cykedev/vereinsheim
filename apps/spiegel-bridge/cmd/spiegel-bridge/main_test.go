@@ -79,3 +79,21 @@ func TestPairAsksForTheDSN(t *testing.T) {
 		t.Fatal("das Passwort steht in der Ausgabe")
 	}
 }
+
+func TestPasswordNeverInUsage(t *testing.T) {
+	t.Setenv("SPIEGEL_BRIDGE_DSN", "u:geheim@tcp(192.168.10.200:3306)/SSMDB2")
+	for _, run := range []func([]string, *bytes.Buffer) int{
+		func(args []string, errs *bytes.Buffer) int {
+			return pair(args, strings.NewReader(""), &bytes.Buffer{}, errs)
+		},
+		func(args []string, errs *bytes.Buffer) int { return runWatch(args, &bytes.Buffer{}, errs) },
+	} {
+		var errs bytes.Buffer
+		if code := run([]string{"--unbekannt"}, &errs); code != 2 {
+			t.Fatalf("Exit %d", code)
+		}
+		if strings.Contains(errs.String(), "geheim") {
+			t.Fatalf("Passwort in der Hilfe: %s", errs.String())
+		}
+	}
+}

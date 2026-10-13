@@ -92,3 +92,26 @@ func TestHeartbeatShape(t *testing.T) {
 		}
 	}
 }
+
+func TestNoRedirectAndRetryCap(t *testing.T) {
+	var hits []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits = append(hits, r.URL.Path+" "+r.Header.Get("authorization"))
+		if r.URL.Path == "/api/ingest/v1/state" {
+			http.Redirect(w, r, "/anderswo", http.StatusFound)
+			return
+		}
+		w.Header().Set("retry-after", "86400")
+		w.WriteHeader(503)
+	}))
+	defer server.Close()
+	c, _ := New(strings.Replace(server.URL, "127.0.0.1", "localhost", 1), "spgl_x")
+	_, err := c.State(context.Background())
+	if err == nil || len(hits) != 1 {
+		t.Fatalf("Weiterleitung gefolgt: %v %v", hits, err)
+	}
+	err = c.Heartbeat(context.Background(), Heartbeat{})
+	if e, ok := err.(*Error); !ok || e.RetryAfter != MaxRetryAfter {
+		t.Fatalf("%#v", err)
+	}
+}

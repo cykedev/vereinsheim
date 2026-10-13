@@ -24,6 +24,9 @@ const prefix = "/api/ingest/v1"
 // höchstens so viel Antwort lesen; der Zustand mit 100.000 Hashes wäre rund 7 MB
 const maxResponseBytes = 16 << 20
 
+// MaxRetryAfter begrenzt, wie lange die Brücke auf ein `Retry-After` wartet.
+const MaxRetryAfter = 10 * time.Minute
+
 // Site ist die Anlage, wie Spiegel sie kennt.
 type Site struct {
 	Name     string `json:"name"`
@@ -49,6 +52,8 @@ type PairResponse struct {
 type Blocked struct {
 	ScheibenID int32     `json:"scheibenId"`
 	StartedAt  time.Time `json:"startedAt"`
+	// Epoche der Sperre (seit 13. Oktober 2026); nil von einem älteren Spiegel: gilt dann für jede
+	Epoch *int `json:"epoch"`
 }
 
 // State ist `GET /state`: was die Brücke im Arbeitsspeicher hält.
@@ -154,7 +159,11 @@ func New(base, token string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{base: checked, token: token, http: &http.Client{Timeout: 60 * time.Second}}, nil
+	return &Client{base: checked, token: token, http: &http.Client{
+		Timeout: 60 * time.Second,
+		// keine Weiterleitung: Sie könnte das Token an eine andere Adresse oder über http tragen
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}}, nil
 }
 
 func (c *Client) do(ctx context.Context, method, path string, body any, into any) error {
@@ -215,6 +224,8 @@ func (c *Client) do(ctx context.Context, method, path string, body any, into any
 	if seconds, err := strconv.Atoi(res.Header.Get("retry-after")); err == nil && seconds > 0 {
 		apiErr.RetryAfter = time.Duration(seconds) * time.Second
 	}
+	// eine fehlerhafte Antwort darf die Brücke nicht für Tage anhalten
+	apiErr.RetryAfter = min(apiErr.RetryAfter, MaxRetryAfter)
 	return apiErr
 }
 

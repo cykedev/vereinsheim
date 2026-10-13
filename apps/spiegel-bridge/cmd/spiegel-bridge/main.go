@@ -19,6 +19,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -81,13 +82,17 @@ func (l logger) log(code string, pairs ...any) {
 func runWatch(args []string, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("watch", flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	dsn := flags.String("dsn", os.Getenv("SPIEGEL_BRIDGE_DSN"), "Zugang zur SSMDB2 (go-sql-driver/mysql)")
+	// die Umgebung erst nach dem Lesen der Optionen: als Vorgabe stünde das Passwort in der Hilfe (SF-59)
+	dsn := flags.String("dsn", "", "Zugang zur SSMDB2 (go-sql-driver/mysql; besser SPIEGEL_BRIDGE_DSN)")
 	epoch := flags.Int("epoch", watch.Defaults.Epoch, "Epoche der Quelle")
 	once := flags.Bool("once", false, "nur bis alles bestätigt ist (höchstens drei Runden im Sekundentakt)")
 	asJSON := flags.Bool("json", false, "volle Snapshots als JSON-Zeilen (enthalten Namen)")
 	maxCards := flags.Int("max-cards", watch.Defaults.MaxCards, "höchstens so viele Scheiben je Runde ganz lesen")
 	if err := flags.Parse(args); err != nil {
 		return 2
+	}
+	if *dsn == "" {
+		*dsn = os.Getenv("SPIEGEL_BRIDGE_DSN")
 	}
 	log := logger{stderr}
 	if *dsn == "" {
@@ -194,14 +199,22 @@ func pair(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	url := flags.String("url", "", "Adresse von Spiegel (https://…)")
 	code := flags.String("code", "", "Kopplungscode aus Admin → Anlage und Brücken")
 	name := flags.String("name", "", "Name des Geräts (sonst der vom Admin)")
-	dsn := flags.String("dsn", os.Getenv("SPIEGEL_BRIDGE_DSN"), "Zugang zur SSMDB2")
+	dsn := flags.String("dsn", "", "Zugang zur SSMDB2 (besser SPIEGEL_BRIDGE_DSN oder abgefragt)")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
 	log := logger{stderr}
+	// unter Windows gälten 0600 und 0700 nicht: Token und Passwort wären für jeden Benutzer lesbar
+	if runtime.GOOS == "windows" {
+		log.log("pair-unsupported-on-windows")
+		return 2
+	}
 	if *url == "" || *code == "" {
 		log.log("pair-arguments-missing")
 		return 2
+	}
+	if *dsn == "" {
+		*dsn = os.Getenv("SPIEGEL_BRIDGE_DSN")
 	}
 	if *dsn == "" {
 		*dsn = readDSN(stdin, stderr)

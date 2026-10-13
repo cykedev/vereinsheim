@@ -119,7 +119,16 @@ export const stateResponseV1 = z
       salt: z.string().regex(/^[0-9a-f]{32}$/),
       hashes: z.array(z.string().regex(/^[0-9a-f]{64}$/)).max(100_000),
     }),
-    blocked: z.array(z.strictObject({ scheibenId: z.int32(), startedAt: instant })).max(100_000),
+    /** `epoch` seit 13. Oktober 2026 (additiv): Eine Sperre gilt nur in ihrer Epoche; nach einem Reset (SF-23) beginnen die IDs neu */
+    blocked: z
+      .array(
+        z.strictObject({
+          scheibenId: z.int32(),
+          startedAt: instant,
+          epoch: z.int().min(1).optional(),
+        })
+      )
+      .max(100_000),
     /** jüngste Beobachtungszeit, die Spiegel von dieser Anlage hat; Nachholen beim Start ab hier (SF-55) */
     watermark: instant.nullable(),
   })
