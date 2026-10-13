@@ -9,7 +9,6 @@ import { cn } from "@vereinsheim/lib/utils"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { useId, useMemo, type ReactNode } from "react"
 
-import { HelpIcon } from "../help/HelpButton"
 import { HelpButton } from "../help/HelpButton"
 import { isProbeShot, seriesKeyOf } from "../shots"
 import type { SeriesKey } from "../types"

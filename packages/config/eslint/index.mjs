@@ -11,7 +11,8 @@ const eslintConfig = defineConfig([
     rules: {
       // Ungenutzte Variablen sind ein Fehler — verhindert toten Code
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "error",
+      // ausgenommen Geschwister eines Rests: `const { a: _a, ...rest } = x` lässt bewusst `a` weg
+      "@typescript-eslint/no-unused-vars": ["error", { ignoreRestSiblings: true }],
       // console.log() ist verboten im Code, console.error/warn erlaubt für Fehlerlogging
       "no-console": ["warn", { allow: ["error", "warn"] }],
       // any-Typen verbieten — lieber unknown mit expliziter Prüfung

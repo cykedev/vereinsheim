@@ -2,7 +2,6 @@
 
 import { drift, mpiConfidence, mpiPath, ringLossSplit } from "@vereinsheim/shot-core/analysis"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
-import type { ReactNode } from "react"
 
 import { directionWords, formatValue, ringsText } from "../../format"
 import { NO_CENTER, NO_FULL_POSITION } from "../../reasons"

@@ -7,6 +7,7 @@
   "exports": {
     "./tsconfig/nextjs.json": "./tsconfig/nextjs.json",
     "./eslint": "./eslint/index.mjs",
+    "./eslint/package": "./eslint/package.mjs",
     "./prettier": "./prettier/index.json",
     "./postcss": "./postcss/index.mjs",
     "./next": {

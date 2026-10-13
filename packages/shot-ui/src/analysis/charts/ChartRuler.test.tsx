@@ -94,13 +94,20 @@ describe("Lineal: Index außerhalb der Werte", () => {
 })
 
 describe("Lineal ohne Textauswahl (User, 9. Oktober 2026)", () => {
-  let props: ReturnType<typeof useRuler>["svgProps"] | null = null
-  function Capture() {
+  type SvgProps = ReturnType<typeof useRuler>["svgProps"]
+  let props: SvgProps | null = null
+  function Capture({ onProps }: { onProps: (svgProps: SvgProps) => void }) {
     const { svgProps } = useRuler([10, 20, 30], 600)
-    props = svgProps
+    onProps(svgProps)
     return h("svg", svgProps)
   }
-  const html = renderToStaticMarkup(h(Capture))
+  const html = renderToStaticMarkup(
+    h(Capture, {
+      onProps: (svgProps) => {
+        props = svgProps
+      },
+    })
+  )
   const press = (pointerType: string) => {
     const event = {
       button: 0,

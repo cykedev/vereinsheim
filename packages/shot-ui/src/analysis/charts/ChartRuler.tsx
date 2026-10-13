@@ -1,14 +1,7 @@
 "use client"
 
 import { cn } from "@vereinsheim/lib/utils"
-import {
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type PointerEvent,
-  type SVGProps,
-} from "react"
+import { useRef, useState, type KeyboardEvent, type PointerEvent, type SVGProps } from "react"
 
 import { crisp } from "./frame"
 import { nearestIndex, stepIndex, toSvgX } from "./ruler"
@@ -41,11 +34,16 @@ export function useRuler(
   onPick?: (index: number | null) => void
 ) {
   const [chosen, setChosen] = useState<number | null>(preset)
+  const [lastPreset, setLastPreset] = useState(preset)
+  if (preset !== lastPreset) {
+    // eine neue Vorgabe gilt im selben Rendern, ohne Effekt und zweites Bild
+    setLastPreset(preset)
+    setChosen(preset)
+  }
   const pick = (i: number | null) => {
     setChosen(i)
     onPick?.(i)
   }
-  useEffect(() => setChosen(preset), [preset])
   const index = chosen !== null && chosen < xs.length ? chosen : null
   // eine Berührung: Wahl beim Aufsetzen (`start`), davor (`before`); gemeldet (`committed`) wird sie erst beim
   // Loslassen oder bei der ersten Bewegung, damit ein Wischen, das der Browser als Scrollen übernimmt, die Wahl der

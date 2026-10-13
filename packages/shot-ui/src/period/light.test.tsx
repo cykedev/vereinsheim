@@ -1,4 +1,3 @@
-import { metricByKey } from "@vereinsheim/shot-core/metrics"
 import { LG_10M } from "@vereinsheim/shot-core/targets"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"

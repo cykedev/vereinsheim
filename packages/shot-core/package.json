@@ -19,6 +19,7 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
+    "lint": "eslint .",
     "test": "vitest run",
     "format:check": "prettier --check .",
     "format": "prettier --write ."
@@ -26,6 +27,7 @@
   "prettier": "@vereinsheim/config/prettier",
   "devDependencies": {
     "@vereinsheim/config": "workspace:*",
+    "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

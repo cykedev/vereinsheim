@@ -1,5 +1,5 @@
 import { VIEW_HELP } from "@vereinsheim/shot-help/guide"
-import { helpForMetric, helpTopic } from "@vereinsheim/shot-help/lookup"
+import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { renderTopic } from "@vereinsheim/shot-help/markdown"
 import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
 import { createElement } from "react"

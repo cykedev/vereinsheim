@@ -52,7 +52,6 @@ export function keyObservations(list: readonly Observation[], max = 3): Observat
 export function observations(input: AnalysisInput): Observation[] {
   const { base, card, scoring, target } = input
   const out: Observation[] = []
-  const rings = (v: number) => formatValue(v, scoring === "rings" ? 0 : 1)
   const mm = (um: number) => `${formatValue(um / 1000, 2)} mm`
 
   const confidence = mpiConfidence(base)

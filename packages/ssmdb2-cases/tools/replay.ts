@@ -17,6 +17,8 @@ import type { SnapshotDataV1, SnapshotV1 } from "@vereinsheim/ingest-contract/sn
 import { COLUMNS, PRIMARY_KEYS, TABLES, type Table } from "../src/schema"
 import { CASES_DIR } from "../src/freeze"
 
+const out = (text = "") => process.stdout.write(`${text}\n`)
+
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
 const IMAGE = process.env.REPLAY_DOCKER_IMAGE ?? "mariadb:10.6"
 /** jeder Aufruf von Docker höchstens so lange */
@@ -191,13 +193,13 @@ let steps = 0
 for (const id of ids) {
   const found = replayCase(id)
   steps += readdirSync(join(root, CASES_DIR, id, "steps")).length
-  console.log(`${found.length ? "FEHLER" : "ok    "} ${id}`)
+  out(`${found.length ? "FEHLER" : "ok    "} ${id}`)
   problems.push(...found)
 }
 if (problems.length) {
   console.error(problems.join("\n"))
   process.exit(1)
 }
-console.log(
+out(
   `${ids.length} Fälle, ${steps} Schritte: jede Lesung wie eingefroren, Spalten wie src/schema.ts`
 )

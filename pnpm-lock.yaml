@@ -466,6 +466,9 @@ importers:
       ajv-formats:
         specifier: 'catalog:'
         version: 3.0.1(ajv@8.20.0)
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
         version: 3.8.4
@@ -497,6 +500,9 @@ importers:
       '@vereinsheim/config':
         specifier: workspace:*
         version: link:../config
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
         version: 3.8.4
@@ -522,6 +528,9 @@ importers:
       '@vereinsheim/config':
         specifier: workspace:*
         version: link:../config
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
         version: 3.8.4
@@ -537,6 +546,9 @@ importers:
       '@vereinsheim/config':
         specifier: workspace:*
         version: link:../config
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
         version: 3.8.4
@@ -558,6 +570,9 @@ importers:
       '@vereinsheim/shot-core':
         specifier: workspace:*
         version: link:../shot-core
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
         version: 3.8.4
@@ -598,6 +613,9 @@ importers:
       '@vereinsheim/config':
         specifier: workspace:*
         version: link:../config
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
         version: 3.8.4
@@ -629,6 +647,9 @@ importers:
       '@vereinsheim/config':
         specifier: workspace:*
         version: link:../config
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
         version: 3.8.4
@@ -684,6 +705,9 @@ importers:
       '@vereinsheim/config':
         specifier: workspace:*
         version: link:../config
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
         version: 3.8.4

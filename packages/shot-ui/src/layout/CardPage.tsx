@@ -57,15 +57,15 @@ export function CardPage({
   empty,
   className,
 }: CardPageProps) {
-  const fit = useTargetFit()
+  const { ref: fitTarget, style: fitStyle } = useTargetFit()
   if (empty) {
     return (
       <div className={cn("grid gap-5", className)}>
         {header}
         <div id="target" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
           <div
-            ref={fit.ref}
-            style={fit.style}
+            ref={fitTarget}
+            style={fitStyle}
             data-section="target"
             className="grid min-w-0 scroll-mt-14 content-start gap-7"
           >
@@ -85,8 +85,8 @@ export function CardPage({
           {/* scroll-mt-14 auch hier: der Sprung aus der Analyse zielt auf die Scheibe selbst; klebt, falls
               die rechte Spalte einmal länger ist */}
           <div
-            ref={fit.ref}
-            style={fit.style}
+            ref={fitTarget}
+            style={fitStyle}
             data-section="target"
             className="grid min-w-0 scroll-mt-14 content-start gap-7 md:sticky md:top-14 md:self-start"
           >

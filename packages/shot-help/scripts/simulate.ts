@@ -523,4 +523,4 @@ const perShot = metric("result.decimalMean")
   )
 }
 
-console.log(lines.join("\n"))
+process.stdout.write(`${lines.join("\n")}\n`)

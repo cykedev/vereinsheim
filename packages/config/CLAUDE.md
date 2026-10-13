@@ -10,6 +10,7 @@ nicht mehr im `consistency-check.sh`-Gate).
 | --- | --- | --- |
 | `@vereinsheim/config/tsconfig/nextjs.json` | `tsconfig/nextjs.json` | `tsconfig.json` `extends` (App behält nur `paths`/`include`/`exclude`) |
 | `@vereinsheim/config/eslint` | `eslint/index.mjs` | `eslint.config.mjs` re-exportiert |
+| `@vereinsheim/config/eslint/package` | `eslint/package.mjs` | `eslint.config.mjs` jedes Pakets (ohne Next-Seiten, React fest 19.2, `children` als Prop in Tests erlaubt) |
 | `@vereinsheim/config/prettier` | `prettier/index.json` | `package.json`-Feld `"prettier"` |
 | `@vereinsheim/config/postcss` | `postcss/index.mjs` | `postcss.config.mjs` re-exportiert |
 | `@vereinsheim/config/next` | `next/index.mjs` (+ `index.d.ts`) | `next.config.ts` ruft `createNextConfig(__dirname)` |

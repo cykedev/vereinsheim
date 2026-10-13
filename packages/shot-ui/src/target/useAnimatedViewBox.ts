@@ -63,6 +63,7 @@ export function useAnimatedViewBox(wanted: ViewBox, instantKey = ""): ViewBox {
       clearTimeout(done)
     }
     // nur die Zahlen zählen: ein neues Objekt mit demselben Ausschnitt startet keine Bewegung
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wanted.x, wanted.y, wanted.w, instantKey])
   return current
 }
@@ -75,9 +76,8 @@ export function useElementWidth(): [number, (node: Element | null) => void] {
   const [node, setNode] = useState<Element | null>(null)
   const [width, setWidth] = useState(0)
   useEffect(() => {
-    if (!node) return
-    setWidth(node.getBoundingClientRect().width)
-    if (typeof ResizeObserver === "undefined") return
+    // der Beobachter meldet die Breite gleich beim Anmelden, vor dem nächsten Bild
+    if (!node || typeof ResizeObserver === "undefined") return
     const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width))
     observer.observe(node)
     return () => observer.disconnect()

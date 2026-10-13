@@ -16,6 +16,7 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
+    "lint": "eslint .",
     "test": "vitest run",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@vereinsheim/config": "workspace:*",
+    "eslint": "catalog:",
     "prettier": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
