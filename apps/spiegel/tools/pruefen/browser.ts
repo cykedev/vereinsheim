@@ -40,41 +40,66 @@ export class Browser {
         else waiting?.resolve(message.result)
       } else for (const listener of this.listeners) listener(message)
     })
+    // stirbt Chrome mitten im Lauf, hängt sonst jeder offene Aufruf, bis die Zeit der Prüfung abläuft (Review)
+    const fail = () => {
+      this.closed = true
+      for (const waiting of this.pending.values()) waiting.reject(new Error("Chrome ist weg"))
+      this.pending.clear()
+    }
+    socket.addEventListener("close", fail)
+    socket.addEventListener("error", fail)
   }
+
+  private closed = false
 
   static async launch(): Promise<Browser> {
     const profile = mkdtempSync(join(tmpdir(), "spiegel-pruefen-"))
-    const chrome = spawn(CHROME, [
-      "--headless=new",
-      "--disable-gpu",
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--remote-debugging-port=0",
-      `--user-data-dir=${profile}`,
-      "about:blank",
-    ])
-    let port: string | null = null
-    for (let i = 0; i < 100 && !port; i++) {
-      await wait(100)
-      try {
-        port = readFileSync(join(profile, "DevToolsActivePort"), "utf8").split("\n")[0]
-      } catch {
-        // Chrome schreibt die Datei erst nach dem Start
+    // ohne Pipes: niemand liest sie, und eine volle Pipe hielte Chrome an (Review)
+    const chrome = spawn(
+      CHROME,
+      [
+        "--headless=new",
+        "--disable-gpu",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--remote-debugging-port=0",
+        `--user-data-dir=${profile}`,
+        "about:blank",
+      ],
+      { stdio: "ignore" }
+    )
+    let failed: Error | null = null
+    chrome.once("error", (error) => (failed = error))
+    try {
+      let port: string | null = null
+      for (let i = 0; i < 100 && !port && !failed; i++) {
+        await wait(100)
+        try {
+          port = readFileSync(join(profile, "DevToolsActivePort"), "utf8").split("\n")[0]
+        } catch {
+          // Chrome schreibt die Datei erst nach dem Start
+        }
       }
+      if (!port) throw new Error(`Chrome startet nicht (${CHROME}); CHROME_PATH setzen`)
+      const version = (await (await fetch(`http://127.0.0.1:${port}/json/version`)).json()) as {
+        webSocketDebuggerUrl: string
+      }
+      const socket = new WebSocket(version.webSocketDebuggerUrl)
+      await new Promise((resolve, reject) => {
+        socket.addEventListener("open", resolve, { once: true })
+        socket.addEventListener("error", reject, { once: true })
+      })
+      return new Browser(chrome, socket, profile)
+    } catch (error) {
+      // nichts zurücklassen: kein Chrome, kein Profil im Temp-Verzeichnis (Review)
+      chrome.kill("SIGKILL")
+      rmSync(profile, { recursive: true, force: true })
+      throw error
     }
-    if (!port) throw new Error(`Chrome startet nicht (${CHROME}); CHROME_PATH setzen`)
-    const version = (await (await fetch(`http://127.0.0.1:${port}/json/version`)).json()) as {
-      webSocketDebuggerUrl: string
-    }
-    const socket = new WebSocket(version.webSocketDebuggerUrl)
-    await new Promise((resolve, reject) => {
-      socket.addEventListener("open", resolve, { once: true })
-      socket.addEventListener("error", reject, { once: true })
-    })
-    return new Browser(chrome, socket, profile)
   }
 
   send<T = unknown>(method: string, params: Record<string, unknown> = {}, sessionId?: string) {
+    if (this.closed) return Promise.reject(new Error("Chrome ist weg"))
     const id = this.nextId++
     this.socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }))
     return new Promise<T>((resolve, reject) => {
@@ -102,7 +127,8 @@ export class Browser {
 
   async close(): Promise<void> {
     try {
-      await this.send("Browser.close")
+      // höchstens zwei Sekunden: ein hängendes Chrome soll das Ende der Prüfung nicht aufhalten
+      await Promise.race([this.send("Browser.close"), wait(2_000)])
     } catch {
       // schon zu
     }
@@ -131,7 +157,7 @@ const KEYS: Record<string, { code: string; keyCode: number }> = {
 }
 
 export class Page {
-  /** Fehler im Fenster (unbehandelte Ausnahmen und `console.error`), je Adresse */
+  /** Fehler im Fenster (unbehandelte Ausnahmen und `console.error`) über den ganzen Lauf */
   readonly errors: string[] = []
   private width = 1280
   private height = 900

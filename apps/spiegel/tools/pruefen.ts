@@ -11,7 +11,7 @@
 
 import { spawn, type ChildProcess } from "node:child_process"
 import { randomBytes } from "node:crypto"
-import { existsSync } from "node:fs"
+import { existsSync, statSync } from "node:fs"
 import { join } from "node:path"
 
 import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
@@ -23,6 +23,8 @@ const APP_DIR = join(__dirname, "..")
 /** mit `--start`: der eigene Produktions-Server aus `.next` dieses Checkouts (nach `build` bzw. `pnpm check`) */
 const START = process.argv.includes("--start")
 const START_PORT = 3012
+/** `BASE_URL` darf nur mit diesem Schalter auf einen nicht lokalen Server zeigen */
+const ANY_HOST = process.argv.includes("--fremder-host")
 const BASE = (
   START ? `http://localhost:${START_PORT}` : (process.env.BASE_URL ?? "http://localhost:3002")
 ).replace(/\/$/, "")
@@ -32,8 +34,17 @@ const BASE = (
  * anderen Checkouts. Eigener Secret (Produktion verweigert den Beispielwert), die Datenbank aus `.env`.
  */
 async function startServer(): Promise<ChildProcess> {
-  if (!existsSync(join(APP_DIR, ".next", "BUILD_ID")))
+  const buildId = join(APP_DIR, ".next", "BUILD_ID")
+  if (!existsSync(buildId))
     throw new Error("kein Build: erst pnpm --filter spiegel build (oder pnpm check)")
+  const minutes = Math.round((Date.now() - statSync(buildId).mtimeMs) / 60_000)
+  out(`Build von vor ${minutes} min (pnpm --filter spiegel build für den aktuellen Stand)`)
+  // antwortet auf dem Port schon etwas, prüfte die Prüfung still einen fremden Stand (Review)
+  const taken = await fetch(`${BASE}/login`).then(
+    () => true,
+    () => false
+  )
+  if (taken) throw new Error(`${BASE} ist schon belegt; den anderen Server erst beenden`)
   const server = spawn(
     join(APP_DIR, "node_modules", ".bin", "next"),
     ["start", "--port", String(START_PORT)],
@@ -45,10 +56,15 @@ async function startServer(): Promise<ChildProcess> {
         NEXTAUTH_SECRET: randomBytes(32).toString("hex"),
         NEXTAUTH_URL: BASE,
       },
-      stdio: "ignore",
+      stdio: ["ignore", "ignore", "pipe"],
     }
   )
-  for (let i = 0; i < 120; i++) {
+  // die letzten Zeilen der Fehlerausgabe, damit ein Fehlstart sagt, warum (fehlende .env, Datenbank)
+  let stderr = ""
+  server.stderr?.on("data", (chunk: Buffer) => {
+    stderr = (stderr + chunk.toString()).slice(-2_000)
+  })
+  for (let i = 0; i < 120 && server.exitCode === null; i++) {
     try {
       if ((await fetch(`${BASE}/login`)).ok) return server
     } catch {
@@ -57,7 +73,7 @@ async function startServer(): Promise<ChildProcess> {
     await new Promise((resolve) => setTimeout(resolve, 500))
   }
   server.kill()
-  throw new Error(`Server auf ${BASE} startet nicht`)
+  throw new Error(`Server auf ${BASE} startet nicht${stderr ? `: ${stderr.trim()}` : ""}`)
 }
 const out = (text = "") => process.stdout.write(`${text}\n`)
 
@@ -867,17 +883,22 @@ async function progress(page: Page) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const server = START ? await startServer() : null
-  const browser = await Browser.launch()
-  // die ganze Prüfung höchstens fünf Minuten; hängt etwas, steht es im Bericht statt ewig zu warten
+  let server: ChildProcess | null = null
+  let browser: Browser | null = null
+  // die ganze Prüfung höchstens fünf Minuten; hängt etwas, steht es im Bericht und der Lauf endet hart mit 1
   const guard = setTimeout(() => {
     check("Prüfung: Zeit überschritten", false, "5 min")
     report()
     server?.kill()
-    void browser.close().finally(() => process.exit(1))
+    void browser?.close()
+    setTimeout(() => process.exit(1), 3_000).unref()
   }, 300_000)
-
   try {
+    // das Demo-Konto meldet sich an; gegen einen fremden Server nur mit ausdrücklichem Schalter (Review)
+    if (!ANY_HOST && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(BASE))
+      throw new Error(`${BASE} ist kein lokaler Server; --fremder-host, wenn das gewollt ist`)
+    server = START ? await startServer() : null
+    browser = await Browser.launch()
     const page = await browser.newPage()
     await login(page)
     const href = await pickCard(page)
@@ -894,10 +915,9 @@ async function main() {
   } catch (error) {
     check("Prüfung: Abbruch", false, error instanceof Error ? error.message : String(error))
   } finally {
-    await browser.close()
+    await browser?.close()
     server?.kill()
   }
-
   clearTimeout(guard)
   process.exit(report() ? 1 : 0)
 }

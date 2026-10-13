@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest"
 
-import { addressScoring, nextCardAddress } from "./card-address"
+import { addressScoring, nextCardAddress, ownHash } from "./card-address"
 
 const at = (pathname: string, search = "", hash = "") => ({ pathname, search, hash })
+
+describe("ownHash", () => {
+  it("der Anker nur auf der eigenen Adresse: beim Blättern trägt die Adresse noch den der vorigen Scheibe", () => {
+    expect(ownHash({ pathname: "/cards/b", hash: "#position" }, "/cards/b")).toBe("#position")
+    expect(ownHash({ pathname: "/cards/a", hash: "#position" }, "/cards/b")).toBe("")
+    expect(ownHash({ pathname: "/cards/b", hash: "" }, "/cards/b")).toBe("")
+  })
+})
 
 describe("nextCardAddress", () => {
   it("zurück zur Vorgabe (ganze Scheibe, Zehntel) schreibt die kürzere Adresse, der Anker bleibt", () => {

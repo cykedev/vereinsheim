@@ -41,10 +41,10 @@ export interface CardReadoutProps {
 }
 
 /**
- * Das „?“ am Abstand erklärt den Abstand im Ø je Schuss (Thema „Abstand zum Schnitt davor“); zeigt der Verlauf eine
- * andere Kennzahl, gilt die Erklärung nicht (Review U2)
+ * Das „?“ am Abstand erklärt den Abstand im Ø je Schuss (Thema „Abstand zum Schnitt davor“), in Zehnteln und in ganzen
+ * Ringen (beide Wertungen sind immer umschaltbar); zeigt der Verlauf eine andere Kennzahl, gilt die Erklärung nicht
+ * (Review U2)
  */
-/** die Erklärung gilt dem Ø je Schuss, in Zehnteln und in ganzen Ringen (beide Wertungen sind immer umschaltbar) */
 const explainsDelta = (metric: PeriodMetric) =>
   metric.key === "result.decimalMean" || metric.key === "result.ringsMean"
 

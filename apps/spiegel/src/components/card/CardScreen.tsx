@@ -52,7 +52,7 @@ import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 import { Page } from "@/components/shell/Page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { useHelp } from "@/components/shell/HelpContext"
-import { addressScoring, nextCardAddress } from "@/lib/card-address"
+import { addressScoring, nextCardAddress, ownHash } from "@/lib/card-address"
 import type { PageCard } from "@/lib/db/reads"
 import { setCardKind } from "@/lib/card-kind-actions"
 import { setCardScoring } from "@/lib/scoring-actions"
@@ -72,15 +72,11 @@ const subscribeHash = (listener: () => void) => {
   window.addEventListener("hashchange", listener)
   return () => window.removeEventListener("hashchange", listener)
 }
-/**
- * Nur der Anker der eigenen Adresse: Beim Blättern rendert Next die nächste Scheibe, solange die Adresse noch die der
- * vorigen ist; deren Anker („#position“) wäre sonst der Reiter der nächsten (gefunden von der Skriptprüfung der App,
- * 13. Oktober 2026).
- */
+/** nur der Anker der eigenen Adresse (`ownHash`) */
 const useHash = (path: string) =>
   useSyncExternalStore(
     subscribeHash,
-    () => (window.location.pathname === path ? window.location.hash : ""),
+    () => ownHash(window.location, path),
     () => ""
   )
 
@@ -182,8 +178,10 @@ export function CardScreen({
 
   // Anker beim Laden: zum Abschnitt
   useEffect(() => {
-    const anchor = parseHash(window.location.hash)
+    const anchor = parseHash(ownHash(window.location, ownPath))
     if (anchor) showSection(anchor.section)
+    // nur beim Einhängen; je Scheibe neu (`key`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // die Adresse, wie sie den Zustand beschreibt; ohne Neuladen nachgeführt, damit Reload und Zurück ihn finden
