@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "contractVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "bridgeVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "runStartedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+    },
+    "sentAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ok", "delayed", "db-unreachable", "db-error", "possible-reset"]
+    },
+    "backlog": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    "lastDbContactAt": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "queryMs": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sourceClockOffsetMs": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": -315360000000,
+          "maximum": 315360000000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "heldBack": {
+      "maxItems": 32,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "displayMode": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "cards": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          }
+        },
+        "required": ["displayMode", "cards"],
+        "additionalProperties": false
+      }
+    },
+    "sourceFingerprint": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "version": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scheiben": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            "treffer": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            "oldestStamp": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": ["version", "scheiben", "treffer", "oldestStamp"],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "contractVersion",
+    "bridgeVersion",
+    "runStartedAt",
+    "sentAt",
+    "status",
+    "backlog",
+    "lastDbContactAt",
+    "queryMs",
+    "sourceClockOffsetMs",
+    "heldBack",
+    "sourceFingerprint"
+  ],
+  "additionalProperties": false,
+  "title": "Spiegel-Heartbeat v1"
+}

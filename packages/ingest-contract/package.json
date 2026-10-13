@@ -10,7 +10,9 @@
     "./snapshot": "./src/v1/snapshot.ts",
     "./limits": "./src/limits.ts",
     "./versions": "./src/versions.ts",
-    "./parse": "./src/parse.ts"
+    "./parse": "./src/parse.ts",
+    "./api": "./src/v1/api.ts",
+    "./sportpass": "./src/sportpass.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

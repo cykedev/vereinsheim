@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "unauthorized",
+            "rate-limited",
+            "busy",
+            "too-large",
+            "unsupported-media-type",
+            "invalid",
+            "invalid-code",
+            "not-found",
+            "internal"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryAfterSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": ["code", "message"],
+      "additionalProperties": false
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": ["path", "code"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["error"],
+  "additionalProperties": false,
+  "title": "Spiegel-Fehler v1"
+}

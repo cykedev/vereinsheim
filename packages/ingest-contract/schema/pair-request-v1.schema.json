@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "contractVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32
+    },
+    "name": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "bridgeVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    }
+  },
+  "required": ["contractVersion", "code", "name", "bridgeVersion"],
+  "additionalProperties": false,
+  "title": "Spiegel-Kopplung v1 (Anfrage)"
+}

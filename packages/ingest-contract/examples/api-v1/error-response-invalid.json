@@ -1,0 +1,4 @@
+{
+  "error": { "code": "invalid", "message": "Die Lieferung entspricht nicht dem Vertrag." },
+  "issues": [{ "path": "snapshots[1].checksum", "code": "checksum-mismatch" }]
+}

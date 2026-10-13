@@ -1,5 +1,14 @@
 import { z } from "zod"
 
+import {
+  errorResponseV1,
+  heartbeatResponseV1,
+  heartbeatV1,
+  pairRequestV1,
+  pairResponseV1,
+  snapshotsResponseV1,
+  stateResponseV1,
+} from "./v1/api"
 import { snapshotBatchV1, snapshotV1 } from "./v1/snapshot"
 
 /**
@@ -11,11 +20,17 @@ import { snapshotBatchV1, snapshotV1 } from "./v1/snapshot"
 export const SCHEMA_FILES = {
   "snapshot-v1.schema.json": snapshotV1,
   "snapshot-batch-v1.schema.json": snapshotBatchV1,
+  "snapshots-response-v1.schema.json": snapshotsResponseV1,
+  "pair-request-v1.schema.json": pairRequestV1,
+  "pair-response-v1.schema.json": pairResponseV1,
+  "heartbeat-v1.schema.json": heartbeatV1,
+  "heartbeat-response-v1.schema.json": heartbeatResponseV1,
+  "state-response-v1.schema.json": stateResponseV1,
+  "error-response-v1.schema.json": errorResponseV1,
 } as const
 
 export function renderJsonSchemas(): Record<keyof typeof SCHEMA_FILES, unknown> {
-  return {
-    "snapshot-v1.schema.json": z.toJSONSchema(SCHEMA_FILES["snapshot-v1.schema.json"]),
-    "snapshot-batch-v1.schema.json": z.toJSONSchema(SCHEMA_FILES["snapshot-batch-v1.schema.json"]),
-  }
+  return Object.fromEntries(
+    Object.entries(SCHEMA_FILES).map(([file, schema]) => [file, z.toJSONSchema(schema)])
+  ) as Record<keyof typeof SCHEMA_FILES, unknown>
 }

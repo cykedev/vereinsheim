@@ -1,4 +1,4 @@
-import type { z } from "zod"
+import type { z, ZodType } from "zod"
 
 import { computeChecksum } from "./checksum"
 import { LIMITS } from "./limits"
@@ -144,4 +144,26 @@ export function parseSnapshotBatch(input: unknown): ParseResult<{ snapshots: Sna
   return issues.length > 0
     ? { ok: false, issues: limited(issues) }
     : { ok: true, value: { snapshots: values } }
+}
+
+/**
+ * Eine Anfrage der API außer dem Stapel (`pair`, `heartbeat`) gegen ihr Schema prüfen, mit Fehlern ohne Inhalt wie beim
+ * Snapshot. Auch hier `__proto__` verboten: Zod verwürfe ihn still.
+ */
+export function parseApi<T>(schema: ZodType<T>, input: unknown): ParseResult<T> {
+  if (!isPlainObject(input)) return { ok: false, issues: [{ path: "", code: "invalid_type" }] }
+  if (!isSupportedContractVersion(input.contractVersion)) {
+    return {
+      ok: false,
+      issues: [{ path: "contractVersion", code: CONTRACT_ISSUE.unsupportedVersion }],
+    }
+  }
+  const forbidden = findForbiddenKey(input, [])
+  if (forbidden) {
+    return { ok: false, issues: [{ path: safePath(forbidden), code: CONTRACT_ISSUE.forbiddenKey }] }
+  }
+  const parsed = schema.safeParse(input)
+  return parsed.success
+    ? { ok: true, value: parsed.data }
+    : { ok: false, issues: limited(toIssues(parsed.error, "")) }
 }

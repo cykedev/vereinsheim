@@ -3,7 +3,8 @@
 Vertrag zwischen Brücke und Spiegel (SP-1.0a, Oktober 2026): Snapshot-Format v1, kanonische Form,
 Prüfsumme, Testvektoren, eingefrorene Beispiele und der Parser, mit dem Spiegel Lieferungen annimmt.
 Die Spezifikation für andere Sprachen (die Brücke, vermutlich Go) steht in
-`vault/spiegel/spiegel-ingest-contract.md`. Noch nutzt keine App das Paket. Sonderfälle: SF-25, SF-26,
+`vault/spiegel/spiegel-ingest-contract.md`. Seit SP-1.6 b (Oktober 2026) auch die übrige API v1 (Kopplung, Heartbeat,
+Zustand, Antworten, Fehler); `apps/spiegel` nimmt darüber an. Sonderfälle: SF-25, SF-26,
 SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
 
 ## Exporte
@@ -16,6 +17,8 @@ SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
 | `@vereinsheim/ingest-contract/canonical` | `src/canonical.ts`   | `canonicalize` (RFC 8785), `compareUtf16`                       |
 | `@vereinsheim/ingest-contract/limits`    | `src/limits.ts`      | `LIMITS`                                                        |
 | `@vereinsheim/ingest-contract/versions`  | `src/versions.ts`    | `CURRENT_CONTRACT_VERSION`, `SUPPORTED_CONTRACT_VERSIONS`       |
+| `@vereinsheim/ingest-contract/api`       | `src/v1/api.ts`      | Kopplung, Heartbeat, Zustand, Antworten, Fehlercodes (API v1)   |
+| `@vereinsheim/ingest-contract/sportpass` | `src/sportpass.ts`   | `sportpassHash(salt, id)` für die Liste der Zustimmungen        |
 
 ## Regeln
 
@@ -29,6 +32,9 @@ SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
   Prüfsumme an der Zahlenformatierung der jeweiligen Sprache.
 - **Der Vertrag kennt keine Meyton-Spalten.** Spaltenprüfungen gehören in den Adapter (SP-1.6b), der in
   Quarantäne legt statt abzulehnen (SF-25).
+- **API v1 neben dem Snapshot** (`src/v1/api.ts`): Beispiele unter `examples/api-v1/` (Dateiname = Schema, nur
+  ergänzen), JSON-Schemas mit, Anfragen über `parseApi(schema, input)` (Version, `__proto__`, Fehler ohne Inhalt).
+  Vektoren des Sportpass-Hashes aus Python (`test-vectors/sportpass-v1.json`).
 - **Annehmen nur über `parseSnapshot`/`parseSnapshotBatch`**, nie direkt über `snapshotV1`: Davor
   liegen Versionsprüfung und das Verbot von `__proto__` (Zod verwirft den Schlüssel still), danach die
   Prüfsumme. Längen zählen in UTF-16-Codeeinheiten (Zod), nicht in Codepoints (JSON-Schema).

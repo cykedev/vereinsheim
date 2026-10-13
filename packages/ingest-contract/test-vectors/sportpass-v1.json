@@ -1,0 +1,31 @@
+{
+  "description": "SportpassID-Hash v1: sha256 hex über 'spiegel-sportpass-v1:<salt>:<SportpassID dezimal ohne führende Nullen>'. Erzeugt mit Python hashlib, unabhängig vom TypeScript-Code.",
+  "salt": "0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+  "vectors": [
+    {
+      "input": "12345678",
+      "decimal": "12345678",
+      "hash": "f80f0364b1fe2c184903848cd481e81e69a4b60e5fbb44f51cc78371525f6168"
+    },
+    {
+      "input": "1",
+      "decimal": "1",
+      "hash": "d9cdfa03aa663d44161e5d7662b620f386c47e47d4c02feb593ff17cbf111ec6"
+    },
+    {
+      "input": "999999999999",
+      "decimal": "999999999999",
+      "hash": "f6ea895df769eef9ca0d9af2c0b6bcc0a067f03ca0a1f8d497191a00bcb72293"
+    },
+    {
+      "input": "00042",
+      "decimal": "42",
+      "hash": "4389ab45fc8a3d399383e651269d8ac18a362d1f3eb89bbcc75f98f269caed2f"
+    },
+    {
+      "input": "2147483647",
+      "decimal": "2147483647",
+      "hash": "571a5c93a5eb511256b715c4c20fb500918a62ae9cd3f80815026da9e29cbdda"
+    }
+  ]
+}

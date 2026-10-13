@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "rate-limited",
+    "message": "Zu viele Anfragen. Bitte später erneut senden.",
+    "retryAfterSeconds": 7
+  }
+}

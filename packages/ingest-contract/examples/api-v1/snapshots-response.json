@@ -1,0 +1,7 @@
+{
+  "results": [
+    { "index": 0, "scheibenId": -7257056, "outcome": "stored" },
+    { "index": 1, "scheibenId": -7257056, "outcome": "lifesign" },
+    { "index": 2, "scheibenId": 1093412, "outcome": "discarded", "reason": "no-consent" }
+  ]
+}
