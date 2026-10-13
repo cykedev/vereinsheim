@@ -5,7 +5,8 @@ Die Brücke im Schützenhaus (SP-1.4, [ADR-027](../../vault/decisions/adr-027.md
 Snapshots v1 für Spiegel. **Go**, ein statisches Binary ohne Laufzeit (SP-0.4, 13. Oktober 2026). Teil a
 (`plans/2026-10-13-spiegel-bruecke-leser.md`): Leser, Änderungserkennung und Snapshots. Teil b
 (`plans/2026-10-13-spiegel-bruecke-upload.md`): Kopplung, Upload, Heartbeat und die Filter aus SP-1.5 (Zustimmung,
-verdeckt, gesperrt). Offen: Nachholen, Updates, Statusseite, Dienst (c), Aufträge (SP-1.5).
+verdeckt, gesperrt). Teil c (`plans/2026-10-13-spiegel-bruecke-betrieb.md`): Nachholen beim Start ab dem Wasserstand,
+Dienst für systemd mit `deploy/install.sh`. Offen: Selbst-Update, Statusseite, Dienst unter Windows, Aufträge (SP-1.5).
 
 ## Befehle
 
@@ -75,6 +76,14 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
 - **Antworten:** 429/503 `Retry-After` abwarten, 413 teilen, 401 beendet (`ErrUnauthorized`, Exit 3), 400 verwirft den
   Stapel (Fehler der Brücke), Netz und 5xx mit Pause 5 s bis 60 s. Je Stapel eine Zeile `batch` mit den Ergebnissen
   als Zahlen.
+- **Nachholen beim Start** (SF-55): aus `state.watermark` (UTC) minus einem Tag in der Zone der Anlage
+  (`catchUpFrom`, Zonen eingebaut über `time/tzdata`) wird ein Lebenszeichen; Scheiben davor im Startfenster liest die
+  Erkennung einmal (`SetCatchUpFrom`, Rang 3), aber erst, wenn 20 Minuten nichts mehr läuft (SF-52), und hält den Takt
+  bis dahin nicht hoch. Ohne Wasserstand (erste Brücke) nichts; die Historie ist SP-2.5.
+- **Dienst** (`deploy/`): `install.sh` legt Binary, Benutzer, `/etc/spiegel-bridge` (0700) und die Unit an; die Unit
+  läuft ohne Rechte, mit schreibgeschütztem System, 128 MB, kein Neustart bei Exit 2 und 3. `pair` fragt den Zugang
+  zur SSMDB2 auf stdin ab, wenn weder `--dsn` noch die Umgebung ihn nennen. Geprüft in `debian:12` mit
+  `systemd-analyze verify`.
 - **Heartbeat** jede Minute, der erste nach der ersten Runde, nie mit Namen oder Nummern; `possible-reset` nur gemeldet
   (die Zahl der Scheiben fällt um mehr als die Hälfte), eine neue Epoche eröffnet die Brücke nicht (Plan D8).
 - Nach Änderungen: `pnpm check` (vom Repo-Root), `pnpm --filter spiegel-bridge replay` und bei Upload oder Filter

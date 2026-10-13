@@ -133,6 +133,9 @@ Teil b (SP-1.4 b, `plans/2026-10-13-spiegel-bruecke-upload.md`): `spiegel-bridge
   Stapel, 401 beendet den Lauf (neu koppeln).
 - **Heartbeat** jede Minute mit Status, Rückstau, Uhrabweichung der Anlage (`NOW(3)`), zurückgehaltenen Scheiben und
   Fingerabdruck; ein möglicher Reset wird gemeldet, eine neue Epoche eröffnet die Brücke nicht von selbst.
+- **Nachholen beim Start** (Teil c, SF-55): ab einem Tag vor dem Wasserstand, den Spiegel meldet, in der Zone der Anlage;
+  gelesen wird das erst, wenn 20 Minuten nichts läuft (SF-52). Damit ist der letzte Abend samt späten Korrekturen beim
+  nächsten Start abgeglichen. Was Spiegel schon hat, kommt als „unverändert“ zurück.
 - **Ende zu Ende** (`pnpm --filter spiegel bridge-e2e`): eigener Build, MariaDB, SF-03, SF-13 und SF-19 mit Zeiten von
   jetzt; es kommen genau die erlaubten Stände an, je eine Scheibe beim Konto mit Zustimmung. Nebenbei gelernt: Mit den
   Datumsangaben der Fälle (Tage zurück) misst Spiegel Tage Uhrversatz und schaltet eine Scheibe über den Heartbeat
