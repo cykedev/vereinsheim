@@ -89,11 +89,12 @@ export function ProgressScreen({
   const onHelp = useCallback((id: string | null) => id && help(id), [help])
   const { timeZone, named } = context
   // die Wertung der Familie als Kreis in der Ergebnis-Box; eine Wahl für Kopf und Box
-  const familyScoring = useSavedChoice(
-    state.scoring,
-    (scoring) => setFamilyScoring(state.family, scoring),
-    "Die Wertung ließ sich nicht speichern."
-  )
+  const familyScoring = useSavedChoice({
+    value: state.scoring,
+    scope: state.family,
+    save: (scoring) => setFamilyScoring(state.family, scoring),
+    notSaved: "Die Wertung ließ sich nicht speichern.",
+  })
   const active = useActiveSection(PERIOD_IDS)
   const { pill, jumpTo, back, close } = useReturnJump()
   const [explain, setExplain] = useState(false)

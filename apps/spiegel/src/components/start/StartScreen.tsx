@@ -27,11 +27,12 @@ import { setFamilyScoring } from "@/lib/scoring-actions"
  */
 function ScoredEveningBlock(props: Omit<EveningBlockProps, "actions" | "notice">) {
   const { block } = props
-  const familyScoring = useSavedChoice(
-    block.scoring,
-    (scoring) => setFamilyScoring(block.family, scoring),
-    "Die Wertung ließ sich nicht speichern."
-  )
+  const familyScoring = useSavedChoice({
+    value: block.scoring,
+    scope: block.family,
+    save: (scoring) => setFamilyScoring(block.family, scoring),
+    notSaved: "Die Wertung ließ sich nicht speichern.",
+  })
   return (
     <EveningBlock
       {...props}

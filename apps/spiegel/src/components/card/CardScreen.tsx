@@ -253,17 +253,19 @@ export function CardScreen({
     window.history.replaceState(null, "", hashFor("analysis", next))
   }, [])
   // Wertung und Art: je eine Wahl für die ganze Seite, Kopf am Telefon und Box teilen sie
-  const scoringChoice = useSavedChoice(
-    state.scoring,
-    (scoring) => setCardScoring(card.id, scoring),
-    "Die Wertung ließ sich nicht speichern.",
-    (scoring) => dispatch({ type: "setScoring", scoring })
-  )
-  const kindChoice = useSavedChoice(
-    card.kind,
-    (kind) => setCardKind(card.id, kind),
-    "Die Art ließ sich nicht speichern."
-  )
+  const scoringChoice = useSavedChoice({
+    value: state.scoring,
+    scope: card.id,
+    save: (scoring) => setCardScoring(card.id, scoring),
+    notSaved: "Die Wertung ließ sich nicht speichern.",
+    onShow: (scoring) => dispatch({ type: "setScoring", scoring }),
+  })
+  const kindChoice = useSavedChoice({
+    value: card.kind,
+    scope: card.id,
+    save: (kind) => setCardKind(card.id, kind),
+    notSaved: "Die Art ließ sich nicht speichern.",
+  })
   const empty = shots.length === 0
   // Art und Wertung als Kreise neben der Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`): gezeigt sofort, gespeichert
   // an der Scheibe. Eine Scheibe nur aus Probe ist Training und hat keinen Kreis der Art

@@ -75,11 +75,13 @@ export function ListScreen({
   const { timeZone } = context
   const route: ListRoute = { page: "cards", query, evening: null }
   // die Wertung der Familie (Ø und Abstand) als Kreis neben dem Titel; die fette Spalte gehört der Scheibe
-  const familyScoring = useSavedChoice(
-    list?.model.scoring ?? "decimal",
-    (scoring) => setFamilyScoring(list?.option.value ?? "", scoring),
-    "Die Wertung ließ sich nicht speichern."
-  )
+  const family = list?.option.value ?? ""
+  const familyScoring = useSavedChoice({
+    value: list?.model.scoring ?? "decimal",
+    scope: family,
+    save: (scoring) => setFamilyScoring(family, scoring),
+    notSaved: "Die Wertung ließ sich nicht speichern.",
+  })
   const marks = useMemo(() => marksById(list?.marks ?? {}), [list?.marks])
   // wohin man kam, aus der Adresse im Browser (sie ist maßgeblich, auch nach Zurück): der Abend aus dem Anker (den sieht
   // der Server nicht) und die Scheibe aus `pick`

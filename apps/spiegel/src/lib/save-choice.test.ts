@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { saveChoice } from "./save-choice"
+import { inScope, saveChoice } from "./save-choice"
 
 const NOT_SAVED = "Die Wertung ließ sich nicht speichern."
 
@@ -41,5 +41,17 @@ describe("saveChoice", () => {
     expect(await saveChoice(offline, "competition", "Die Art ließ sich nicht speichern.")).toBe(
       "Die Art ließ sich nicht speichern."
     )
+  })
+})
+
+describe("inScope", () => {
+  it("ein Wert gilt nur für seine Familie: nach dem Wechsel kein alter Fehler, keine alte Wahl", () => {
+    const failed = { scope: "lp-freihand", value: "Die Wertung ließ sich nicht speichern." }
+    expect(inScope(failed, "lp-freihand", null)).toBe("Die Wertung ließ sich nicht speichern.")
+    expect(inScope(failed, "lg-freihand", null)).toBeNull()
+    expect(inScope({ scope: "lp-freihand", value: "rings" }, "lg-freihand", "decimal")).toBe(
+      "decimal"
+    )
+    expect(inScope(null, "lp-freihand", "decimal")).toBe("decimal")
   })
 })

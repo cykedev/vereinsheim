@@ -19,3 +19,11 @@ export async function saveChoice<T>(
     return notSaved
   }
 }
+
+/** Ein Wert mit dem, wofür er gilt (Scheibe, Familie) */
+export type Scoped<V> = { scope: string; value: V }
+
+/** Der Wert, wenn er für `scope` gilt, sonst `otherwise`: Nach dem Wechsel der Familie zeigt die Hülle deren Wahl */
+export function inScope<V>(entry: Scoped<V> | null, scope: string, otherwise: V): V {
+  return entry !== null && entry.scope === scope ? entry.value : otherwise
+}
