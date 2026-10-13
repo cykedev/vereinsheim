@@ -145,6 +145,7 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
       Math.abs(bridge.clockOffsetSeconds) >= 60 &&
       `Uhr der Anlage ${bridge.clockOffsetSeconds > 0 ? "+" : ""}${bridge.clockOffsetSeconds} s`,
     bridge.backlog ? `${bridge.backlog} Scheiben im Rückstau` : null,
+    bridge.heldBack,
   ].filter(Boolean)
   return (
     <li

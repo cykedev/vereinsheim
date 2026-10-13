@@ -19,6 +19,8 @@ export interface BridgeRow {
   /** Anlage minus Brücke aus dem letzten Heartbeat, in Sekunden */
   clockOffsetSeconds: number | null
   backlog: number | null
+  /** zurückgehaltene Scheiben aus dem letzten Heartbeat in Worten (SF-19, SF-20); null ohne */
+  heldBack: string | null
 }
 
 export interface SiteOverview {
@@ -72,9 +74,28 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
             ? null
             : Math.round(heartbeat.sourceClockOffsetMs / 1000),
         backlog: heartbeat?.backlog ?? null,
+        heldBack: heldBackText(heartbeat?.heldBack ?? []),
       }
     }),
   }
+}
+
+const scheiben = (n: number) => (n === 1 ? "1 Scheibe" : `${n} Scheiben`)
+
+/**
+ * Was die Brücke zurückhält, in Worten: verdeckt (Anzeigeart 5 und 10) geht nie hinaus, Anzeigeart 0 erst nach einer
+ * Freigabe je Disziplin (SF-19, SF-20). Ohne zurückgehaltene Scheiben null.
+ */
+export function heldBackText(heldBack: HeartbeatV1["heldBack"]): string | null {
+  const count = (modes: number[]) =>
+    heldBack.filter((h) => modes.includes(h.displayMode)).reduce((sum, h) => sum + h.cards, 0)
+  const hidden = count([5, 10])
+  const unknown = heldBack.reduce((sum, h) => sum + h.cards, 0) - hidden
+  const parts = [
+    hidden ? `${scheiben(hidden)} verdeckt zurückgehalten` : "",
+    unknown ? `${scheiben(unknown)} mit Anzeigeart 0 zurückgehalten` : "",
+  ].filter(Boolean)
+  return parts.length ? parts.join(" · ") : null
 }
 
 export interface ConsentRow {
