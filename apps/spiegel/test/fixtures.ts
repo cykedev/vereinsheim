@@ -17,7 +17,10 @@ export interface TestSite {
 export async function createTestSite(db: Db, label: string): Promise<TestSite> {
   const tag = `${label}-${randomUUID().slice(0, 8)}`
   const site = await db.site.create({ data: { name: `Test ${tag}`, timeZone: "Europe/Berlin" } })
-  const source = await db.source.create({ data: { siteId: site.id, epoch: 1 } })
+  // bestätigte Epoche: aus einer unbestätigten nimmt das Einlesen nichts an (SF-23)
+  const source = await db.source.create({
+    data: { siteId: site.id, epoch: 1, confirmedAt: new Date() },
+  })
   const family = await db.family.create({
     data: { slug: `lp-freihand-${tag}`, name: `Luftpistole ${tag}` },
   })

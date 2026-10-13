@@ -194,7 +194,10 @@ export interface AdaptedCard {
   completeness: Completeness
   /** Merkmale aus diesem Stand; dauerhafte (`korrigiert`, `uhr-abweichung`) hält `writeRevision` fest */
   flags: string[]
-  /** Lebenszeichen als Text und als Zeitpunkt (UTC, um den Versatz verschoben) */
+  /**
+   * Lebenszeichen als Text, und wann es sich zuletzt bewegt hat: läuft es, die Beobachtungszeit (Uhr der Brücke, nach
+   * NTP); sonst geschätzt aus dem Lebenszeichen selbst, um den Versatz verschoben. Grundlage des Zustands.
+   */
   lifesign: string | null
   lifesignAtMs: number | null
   /** Versatz der Uhr des Stands, wenn gemessen oder gemerkt */
@@ -395,7 +398,11 @@ export function adaptSnapshot(snapshot: SnapshotV1, context: AdapterContext): Ad
     flags.push(FLAG_CLOCK)
 
   const times = shots.map((s) => s.firedAtMs).filter((t): t is number => plausible(t))
-  const lifesignAtMs = lifesignWallMs === null ? null : lifesignWallMs + correction
+  const lifesignAtMs = beating
+    ? observedMs
+    : lifesignWallMs === null
+      ? null
+      : lifesignWallMs + correction
   const startedAtMs =
     (times.length ? Math.min(...times) : (lifesignWallMs ?? observedMs)) + correction
   const endedAtMs = times.length ? Math.max(...times) + correction : null
