@@ -1,0 +1,34 @@
+# Dienst der Spiegel-Brücke (systemd). Installiert von install.sh; Konfiguration aus `spiegel-bridge pair`.
+[Unit]
+Description=Spiegel-Brücke: liest die Meyton-Ablage und schickt Snapshots an Spiegel
+Documentation=https://github.com/cykedev/vereinsheim/tree/main/apps/spiegel-bridge
+# TLS braucht die richtige Zeit; ein Pi ohne Echtzeituhr kennt sie erst nach der Synchronisierung
+Wants=network-online.target time-sync.target
+After=network-online.target time-sync.target
+
+[Service]
+Type=simple
+User=spiegel-bridge
+ExecStart=/usr/local/bin/spiegel-bridge run --config /etc/spiegel-bridge/config.json
+# Anlage aus, Netz weg: neu starten. Exit 2 (Konfiguration fehlt) und 3 (Token widerrufen) brauchen einen Menschen.
+Restart=on-failure
+RestartSec=10
+RestartPreventExitStatus=2 3
+# nur lesen, nur ausgehend, nichts schreiben (ADR-027)
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=
+MemoryMax=128M
+
+[Install]
+WantedBy=multi-user.target

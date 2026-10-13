@@ -10,6 +10,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -18,6 +19,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -174,6 +176,18 @@ func runWatch(args []string, stdout, stderr io.Writer) int {
 // runPair löst einen Kopplungscode ein und schreibt die Konfiguration. Vorher prüft es, ob sie sich schreiben lässt:
 // Ein eingelöster Code ist verbraucht.
 func runPair(args []string, stdout, stderr io.Writer) int {
+	return pair(args, os.Stdin, stdout, stderr)
+}
+
+// readDSN liest den Zugang zur SSMDB2 als eine Zeile, wenn weder `--dsn` noch SPIEGEL_BRIDGE_DSN ihn nennen: Ein Passwort
+// in der Befehlszeile stünde in `ps` und im Verlauf der Shell.
+func readDSN(stdin io.Reader, stderr io.Writer) string {
+	fmt.Fprint(stderr, "Zugang zur SSMDB2 (user:passwort@tcp(adresse:3306)/SSMDB2): ")
+	line, _ := bufio.NewReader(stdin).ReadString('\n')
+	return strings.TrimSpace(line)
+}
+
+func pair(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("pair", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	path := flags.String("config", config.DefaultPath(), "Ort der Konfiguration")
@@ -185,8 +199,15 @@ func runPair(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	log := logger{stderr}
-	if *url == "" || *code == "" || *dsn == "" {
+	if *url == "" || *code == "" {
 		log.log("pair-arguments-missing")
+		return 2
+	}
+	if *dsn == "" {
+		*dsn = readDSN(stdin, stderr)
+	}
+	if *dsn == "" {
+		log.log("dsn-missing")
 		return 2
 	}
 	if _, err := ssmdb2.Open(*dsn); err != nil {

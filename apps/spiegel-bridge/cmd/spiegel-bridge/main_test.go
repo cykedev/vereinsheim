@@ -57,3 +57,25 @@ func TestPairWritesConfigOnlyOnSuccess(t *testing.T) {
 		t.Fatal("das Token steht in der Ausgabe")
 	}
 }
+
+func TestPairAsksForTheDSN(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"bridgeId":5,"token":"spgl_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ","site":{"name":"SV Musterstadt","timeZone":"Europe/Berlin"}}`))
+	}))
+	defer server.Close()
+	t.Setenv("SPIEGEL_BRIDGE_DSN", "")
+	path := filepath.Join(t.TempDir(), "config.json")
+	url := strings.Replace(server.URL, "127.0.0.1", "localhost", 1)
+	var out, errs bytes.Buffer
+	stdin := strings.NewReader("u:geheim@tcp(192.168.10.200:3306)/SSMDB2\n")
+	if code := pair([]string{"--config", path, "--url", url, "--code", "ABCDE-FGHJK"}, stdin, &out, &errs); code != 0 {
+		t.Fatalf("Exit %d: %s", code, errs.String())
+	}
+	c, err := config.Load(path)
+	if err != nil || c.DSN != "u:geheim@tcp(192.168.10.200:3306)/SSMDB2" {
+		t.Fatalf("%+v %v", c, err)
+	}
+	if strings.Contains(out.String()+errs.String(), "geheim") {
+		t.Fatal("das Passwort steht in der Ausgabe")
+	}
+}
