@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { parseSnapshot } from "@vereinsheim/ingest-contract/parse"
 
 import { CASES } from "./cases/index"
-import { frozenReadings } from "./frozen"
+import { frozenCaseIds, frozenExpected, frozenReadings } from "./frozen"
 
 describe("frozenReadings", () => {
   it("liest jeden Fall, und jeder Snapshot erfüllt den Vertrag", () => {
@@ -25,5 +25,16 @@ describe("frozenReadings", () => {
 
   it("nur Fall-Kennungen", () => {
     expect(() => frozenReadings("../package")).toThrow(RangeError)
+  })
+
+  it("frozenExpected: die Vorgabe jedes Falls, gleich der im Code", () => {
+    expect(frozenCaseIds().sort()).toEqual(CASES.map((c) => c.id).sort())
+    for (const definition of CASES) {
+      const frozen = frozenExpected(definition.id)
+      expect(frozen.id).toBe(definition.id)
+      expect(frozen.cards.map((c) => c.scheibenId)).toEqual(
+        definition.expected.map((c) => c.scheibenId)
+      )
+    }
   })
 })

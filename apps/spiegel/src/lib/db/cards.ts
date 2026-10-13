@@ -135,6 +135,17 @@ const shotKey = (shot: Pick<ShotInput, "stellung" | "treffer">) =>
   `${shot.stellung}:${shot.treffer}`
 const shotContent = (shot: ShotInput) => canonicalize({ ...shot, flags: [...shot.flags].sort() })
 
+/**
+ * Derselbe Wertungsschuss, auch wenn die Anzeigeart anders ist: Schaltet der Schütze am Monitor um, schreibt
+ * Meyton `Wertung` und `Text` neu, Werte und Lage bleiben (SF-74); das ist keine Korrektur, nur eine Änderung der
+ * aktuellen Revision.
+ */
+function sameScoring(a: ShotInput | undefined, b: ShotInput): boolean {
+  if (!a) return false
+  const scoring = (shot: ShotInput) => shotContent({ ...shot, displayMode: null })
+  return scoring(a) === scoring(b)
+}
+
 /** Inhalt einer Revision: die Schüsse nach Stellung und Treffer, unabhängig von der Folge der Eingabe */
 function contentHash(shots: readonly ShotInput[]): string {
   const sorted = [...shots].sort((a, b) => a.stellung - b.stellung || a.treffer - b.treffer)
@@ -164,7 +175,9 @@ export function shotChange(current: readonly ShotInput[], next: readonly ShotInp
   const currentByKey = new Map(current.map((shot) => [shotKey(shot), shot]))
   const differs = (a: ShotInput | undefined, b: ShotInput) =>
     !a || shotContent(a) !== shotContent(b)
-  if (current.some((shot) => shot.stellung !== 0 && differs(nextByKey.get(shotKey(shot)), shot)))
+  if (
+    current.some((shot) => shot.stellung !== 0 && !sameScoring(nextByKey.get(shotKey(shot)), shot))
+  )
     return { kind: "correction" }
   const add = next.filter((shot) => differs(currentByKey.get(shotKey(shot)), shot))
   const remove = current.filter((shot) => differs(nextByKey.get(shotKey(shot)), shot))

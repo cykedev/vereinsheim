@@ -300,6 +300,13 @@ describe("shotChange", () => {
     expect(shotChange(shots.slice(0, 3), shots.slice(1, 5))).toEqual({ kind: "correction" })
   })
 
+  it("eine andere Anzeigeart am Monitor ist keine Korrektur, nur eine Änderung der Revision (SF-74)", () => {
+    const switched = shots.slice(0, 3).map((s) => ({ ...s, displayMode: 7 }))
+    const change = shotChange(shots.slice(0, 3), switched)
+    expect(change.kind).toBe("update")
+    if (change.kind === "update") expect(change.add).toHaveLength(3)
+  })
+
   it("doppelte Stellung und Treffer sind ein Fehler", () => {
     expect(() => shotChange([], [shots[0], shots[0]])).toThrow(RangeError)
   })

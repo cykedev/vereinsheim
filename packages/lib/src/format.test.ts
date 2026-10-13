@@ -17,6 +17,7 @@ import {
   formatWeekdayDate,
   formatWeekdayDay,
   zonedDayStartMs,
+  zonedWallTimeMs,
 } from "./format"
 
 // 2026-09-08T22:30:00Z ist in Europe/Berlin (UTC+2) bereits der 09.09.2026, 00:30.
@@ -162,5 +163,38 @@ describe("formatWeekdayDate und formatTimeOfDay (Spiegel, Abende der Scheiben-Li
   it("Uhrzeit in Stunden und Minuten, in der Zeitzone", () => {
     expect(formatTimeOfDay(new Date(Date.UTC(2026, 8, 29, 16, 30)), "Europe/Berlin")).toBe("18:30")
     expect(formatTimeOfDay(new Date(Date.UTC(2026, 8, 29, 22, 30)), "Europe/Berlin")).toBe("00:30")
+  })
+})
+
+describe("zonedWallTimeMs", () => {
+  const wall = (y: number, mo: number, d: number, h: number, mi = 0, sec = 0, ms = 0) =>
+    Date.UTC(y, mo - 1, d, h, mi, sec, ms)
+
+  it("Sommer- und Winterzeit in Berlin, Millisekunden bleiben", () => {
+    expect(zonedWallTimeMs(wall(2026, 10, 9, 19, 5, 41, 381), "Europe/Berlin")).toBe(
+      Date.UTC(2026, 9, 9, 17, 5, 41, 381)
+    )
+    expect(zonedWallTimeMs(wall(2026, 1, 15, 19), "Europe/Berlin")).toBe(Date.UTC(2026, 0, 15, 18))
+    expect(zonedWallTimeMs(wall(2026, 7, 1, 12), "UTC")).toBe(Date.UTC(2026, 6, 1, 12))
+  })
+
+  it("doppelte Stunde im Herbst: die frühere (noch Sommerzeit)", () => {
+    // 25. Oktober 2026: 03:00 MESZ wird 02:00 MEZ; 02:30 gibt es zweimal (00:30 und 01:30 UTC)
+    expect(zonedWallTimeMs(wall(2026, 10, 25, 2, 30), "Europe/Berlin")).toBe(
+      Date.UTC(2026, 9, 25, 0, 30)
+    )
+    expect(zonedWallTimeMs(wall(2026, 10, 25, 3, 30), "Europe/Berlin")).toBe(
+      Date.UTC(2026, 9, 25, 2, 30)
+    )
+  })
+
+  it("ausgefallene Stunde im Frühjahr: hinter der Lücke", () => {
+    // 29. März 2026: 02:00 MEZ wird 03:00 MESZ; 02:30 gibt es nicht und gilt als 03:30 MESZ (01:30 UTC)
+    expect(zonedWallTimeMs(wall(2026, 3, 29, 2, 30), "Europe/Berlin")).toBe(
+      Date.UTC(2026, 2, 29, 1, 30)
+    )
+    expect(zonedWallTimeMs(wall(2026, 3, 29, 1, 59), "Europe/Berlin")).toBe(
+      Date.UTC(2026, 2, 29, 0, 59)
+    )
   })
 })

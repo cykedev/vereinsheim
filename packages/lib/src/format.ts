@@ -161,6 +161,21 @@ export function zonedDayStartMs(isoDate: string, timeZone: string): number {
   return midnightUtc - zoneOffsetMs(first, timeZone)
 }
 
+/**
+ * Eine Wanduhrzeit der Zone ohne Angabe der Zone (etwa Meytons `datetime`, [[meyton-ssmdb2]]) als Zeitpunkt in ms (UTC).
+ * `wallMs` sind die Felder der Wanduhr, als wären sie UTC (`Date.UTC(jahr, monat, tag, …)`). Doppelt vorhandene Zeiten
+ * (Umstellung im Herbst) gelten als die frühere, ausgefallene (im Frühjahr) mit dem Versatz davor, landen also hinter der
+ * Lücke: 02:30 am 29. März 2026 in Berlin ist 03:30 MESZ.
+ */
+export function zonedWallTimeMs(wallMs: number, timeZone: string): number {
+  const before = zoneOffsetMs(wallMs - 86_400_000, timeZone)
+  const after = zoneOffsetMs(wallMs + 86_400_000, timeZone)
+  const fits = [wallMs - before, wallMs - after].filter(
+    (candidate) => zoneOffsetMs(candidate, timeZone) === wallMs - candidate
+  )
+  return fits.length ? Math.min(...fits) : wallMs - before
+}
+
 /** "2026-09-09" — sortierbar, für Dateinamen. */
 export function formatIsoDate(date: Date, timeZone: string): string {
   const parts = dateTimeFormat(
