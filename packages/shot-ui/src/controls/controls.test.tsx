@@ -44,5 +44,7 @@ describe("KindSwitch", () => {
     expect(html).toContain('aria-label="Art"')
     expect(html).toMatch(/aria-checked="false"[^>]*>Training</)
     expect(html).toMatch(/aria-checked="true"[^>]*>Wettkampf</)
+    // wie die Wertung in einem Flex-Rahmen, sonst zöge ein Raster das Segment auf die ganze Breite
+    expect(html).toMatch(/^<div class="flex flex-wrap items-center gap-2"><div role="radiogroup"/)
   })
 })
