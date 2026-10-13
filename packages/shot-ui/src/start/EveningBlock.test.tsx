@@ -14,7 +14,11 @@ const at = (day: number, hour: number) => Date.UTC(2026, 8, day, hour - 2)
 /** Scheiben mit Schüssen: das Modell bekommt ihre Projektion, die kleinen Scheiben ihre Lagen */
 type Raw = { card: PeriodCard; family: string }
 const lp = (card: PeriodCard): Raw => ({ card, family: "lp-freihand" })
-const render = (cards: Raw[], scoring: "decimal" | "rings" = "decimal") => {
+const render = (
+  cards: Raw[],
+  scoring: "decimal" | "rings" = "decimal",
+  extra: { actions?: ReturnType<typeof h>; notice?: ReturnType<typeof h> } = {}
+) => {
   const model = startModel({
     cards: cards.map((c) => ({ ...c, card: projected(c.card) })),
     timeZone: TZ,
@@ -39,6 +43,7 @@ const render = (cards: Raw[], scoring: "decimal" | "rings" = "decimal") => {
         query: { ...DEFAULT_LIST, family: block.family },
         evening: block.day,
       },
+      ...extra,
     })
   )
 }
@@ -78,6 +83,19 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     // jeder Block rechnet in der Wertung seiner Familie und nennt sie (Review, 12. Oktober 2026)
     expect(text(html)).toContain("9,20 Ø je Schuss in Zehnteln")
     expect(text(render(CARDS, "rings"))).toContain("Ø je Schuss in ganzen Ringen")
+    // mit dem Kreis daneben nennt der Kreis die Wertung; ein Hinweis unten (Plan `plans/2026-10-13-spiegel-symbole.md`)
+    const withToggle = render(CARDS, "decimal", {
+      actions: h("span", { "data-kreis": true }),
+      notice: h("p", { role: "alert" }, "HINWEIS"),
+    })
+    expect(text(withToggle)).toContain("9,20 Ø je Schuss")
+    expect(text(withToggle)).not.toContain("in Zehnteln")
+    expect(withToggle).toMatch(
+      /data-evening-mean[\s\S]*?<\/p><div data-evening-actions[^>]*><span data-kreis/
+    )
+    expect(withToggle.indexOf("HINWEIS")).toBeGreaterThan(
+      withToggle.indexOf("data-evening-list-link")
+    )
     // der Bezug statt des Abstands, der schon im Satz steht (U5, D2)
     expect(text(html)).toContain("Schnitt der 5 Scheiben davor: 9,00")
     expect(text(html)).not.toContain("+0,20 zum Schnitt")

@@ -268,7 +268,7 @@ export function CardScreen({
     </div>
   )
   // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung
-  const result = <CardResult shots={shots} state={state} scoring={scoringSwitch} />
+  const result = <CardResult shots={shots} state={state} actions={scoringSwitch} />
 
   return (
     <Page>

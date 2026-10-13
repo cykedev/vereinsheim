@@ -24,31 +24,40 @@ export const RESULT_FACTS = [
 export interface CardResultProps {
   shots: readonly MetricShot[]
   state: ViewState
-  /** Umschalter ganze Ringe/Zehntel */
-  scoring: ReactNode
+  /** Kreise (Art, Wertung) rechts in der Zeile der großen Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`) */
+  actions?: ReactNode
+  /** ein Hinweis unten, etwa ein Fehler beim Speichern */
+  notice?: ReactNode
   className?: string
 }
 
 /**
  * Ergebnis der ganzen Scheibe: groß aus dem Fachkern, darunter die Schusszahl (wie am Ausdruck ohne Probe), Zehner, Innenzehner
- * und bester Teiler, dazu die Wertung. Nicht über die Auswahl (D1 in `plans/2026-10-08-spiegel-shot-ui-kacheln.md`).
+ * und bester Teiler; rechts neben der Zahl die Kreise der Einstellungen. Nicht über die Auswahl (D1 in `plans/2026-10-08-spiegel-shot-ui-kacheln.md`).
  * Auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung (`CardPage`, User, 8. Oktober 2026). Ohne Wert ein
  * Strich mit Grund wie die Kachel.
  */
-export function CardResult({ shots, state, scoring, className }: CardResultProps) {
+export function CardResult({ shots, state, actions, notice, className }: CardResultProps) {
   const total = computeMetric(inScoring(metricByKey("result.decimal")!, state.scoring), shots)
   const count = shots.filter((s) => s.kind === "match").length
   return (
     <div className={cn("grid content-start gap-3", className)}>
       <div className="grid gap-1">
-        <p data-result className="font-display text-[2.6rem] leading-none font-bold tabular-nums">
-          {total === null ? "–" : formatValue(total, state.scoring === "rings" ? 0 : 1)}
-          {total !== null && (
-            <small className="ml-2 font-sans text-[15px] font-medium text-muted-foreground">
-              Ringe
-            </small>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <p data-result className="font-display text-[2.6rem] leading-none font-bold tabular-nums">
+            {total === null ? "–" : formatValue(total, state.scoring === "rings" ? 0 : 1)}
+            {total !== null && (
+              <small className="ml-2 font-sans text-[15px] font-medium text-muted-foreground">
+                Ringe
+              </small>
+            )}
+          </p>
+          {actions && (
+            <div data-result-actions className="ml-auto flex shrink-0 items-center gap-1.5">
+              {actions}
+            </div>
           )}
-        </p>
+        </div>
         <p className="text-[13px] text-muted-foreground">
           {total !== null ? `${count} Schuss` : noResultReason(shots, state.scoring)}
         </p>
@@ -72,7 +81,7 @@ export function CardResult({ shots, state, scoring, className }: CardResultProps
           </dl>
         )}
       </div>
-      {scoring}
+      {notice}
     </div>
   )
 }

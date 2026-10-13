@@ -14,7 +14,7 @@ const render = (props: Partial<Parameters<typeof CardResult>[0]> = {}) =>
     createElement(CardResult, {
       shots: CARD,
       state: initialViewState(),
-      scoring: createElement("span", null, "UMSCHALTER"),
+      actions: createElement("span", null, "UMSCHALTER"),
       ...props,
     })
   )
@@ -35,6 +35,15 @@ describe("Ergebnis der Scheibe", () => {
     expect(text(html)).toContain(`${formatValue(result("decimal"), 1)} Ringe`)
     expect(html).toMatch(/<p class="[^"]*">40 Schuss<\/p>/)
     expect(text(html)).toContain("UMSCHALTER")
+  })
+
+  it("die Kreise in der Zeile der Zahl, rechts; ein Hinweis unten (Plan `plans/2026-10-13-spiegel-symbole.md`)", () => {
+    const html = render({ notice: createElement("p", { role: "alert" }, "HINWEIS") })
+    expect(html).toMatch(
+      /<div class="flex[^"]*justify-between[^"]*"><p data-result[\s\S]*?<\/p><div data-result-actions[^>]*><span>UMSCHALTER<\/span><\/div><\/div>/
+    )
+    expect(html.indexOf("HINWEIS")).toBeGreaterThan(html.indexOf("bester Teiler"))
+    expect(render({ actions: undefined })).not.toContain("data-result-actions")
   })
 
   it("in ganzen Ringen das ganzzahlige Ergebnis", () => {
@@ -63,11 +72,13 @@ describe("Ergebnis der Scheibe", () => {
   it("ohne Probe nur die Wertung; ohne Wert ein Strich mit Grund, ohne Schuss keine Kennzahlen", () => {
     const match = CARD.filter((s) => s.kind === "match")
     expect(render({ shots: match })).toMatch(/<p class="[^"]*">40 Schuss<\/p>/)
+    // ohne Kreise: der Grund folgt dem Strich
+    const plain = (shots: typeof match) => text(render({ shots, actions: undefined }))
     const blind = match.map((s, i) => (i === 20 ? { ...s, decimalTenths: null, ring: null } : s))
-    expect(text(render({ shots: blind }))).toContain("– nicht jeder Schuss mit Wert")
-    expect(text(render({ shots: [] }))).toContain("– ab 1 Schuss")
+    expect(plain(blind)).toContain("– nicht jeder Schuss mit Wert")
+    expect(plain([])).toContain("– ab 1 Schuss")
     const tenthless = match.map((s, i) => (i === 20 ? { ...s, decimalTenths: null } : s))
-    expect(text(render({ shots: tenthless }))).toContain(
+    expect(plain(tenthless)).toContain(
       "– nicht jeder Schuss mit Zehntel · auf ganze Ringe schalten"
     )
     expect(render({ shots: [] })).not.toContain("Kennzahlen der Scheibe")

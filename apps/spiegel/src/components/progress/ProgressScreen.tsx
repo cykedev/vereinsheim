@@ -193,7 +193,7 @@ export function ProgressScreen({
       model={model}
       timeZone={timeZone}
       onHelp={onHelp}
-      scoring={
+      actions={
         <ScoringControl
           key={state.family}
           scoring={state.scoring}

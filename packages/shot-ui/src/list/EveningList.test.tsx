@@ -9,6 +9,7 @@ import { DEFAULT_LIST, type ListRoute } from "../nav/routes"
 import { marksOf, NOW, periodCard, projected, TZ } from "../period/testSeason"
 import { cardListModel } from "./evenings"
 import { EveningList } from "./EveningList"
+import { KindMark } from "./KindMark"
 
 const LIST: ListRoute = {
   page: "cards",
@@ -234,5 +235,13 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
 
   it("ohne Scheiben ein Satz statt einer leeren Liste", () => {
     expect(text(render("decimal", []))).toBe("Keine Scheiben für diese Filter.")
+  })
+})
+
+describe("KindMark: der Pokal gold und gut zu sehen (Plan `plans/2026-10-13-spiegel-symbole.md`)", () => {
+  it("Wettkampf als goldener Pokal in 16 px, Training ohne Zeichen", () => {
+    const competition = renderToStaticMarkup(h(KindMark, { kind: "competition" }))
+    expect(competition).toMatch(/lucide-trophy[^"]*\bsize-4\b[^"]*\btext-warning\b/)
+    expect(renderToStaticMarkup(h(KindMark, { kind: "training" }))).not.toContain("<svg")
   })
 })

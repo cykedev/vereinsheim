@@ -308,7 +308,7 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
     />
   )
   // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung
-  const result = <CardResult shots={shots} state={state} scoring={scoringSwitch} />
+  const result = <CardResult shots={shots} state={state} actions={scoringSwitch} />
 
   return (
     <div className="mx-auto grid max-w-7xl gap-7 px-4 pt-7 pb-24">

@@ -181,7 +181,8 @@ describe("Ergebnis-Box (D13)", () => {
       h(PeriodResult, {
         model: m,
         timeZone: TZ,
-        scoring: h("p", null, "WERTUNG"),
+        actions: h("p", null, "WERTUNG"),
+        notice: h("p", { role: "alert" }, "HINWEIS"),
         onHelp: () => {},
       })
     )
@@ -194,7 +195,11 @@ describe("Ergebnis-Box (D13)", () => {
     expect(html).toContain("5 Scheiben · 10 Wertungsschüsse")
     // die beste (10,0) ist die älteste der fünf, 14 Tage vor jetzt
     expect(html).toMatch(/beste Scheibe zu 2 Schuss [\s\S]*10,00[\s\S]*am 16\.09\.2026/)
-    expect(html).toContain("WERTUNG")
+    // die Wertung in der Zeile der Zahl, der Hinweis unten (Plan `plans/2026-10-13-spiegel-symbole.md`)
+    expect(html).toMatch(
+      /<p data-period-result[\s\S]*?<\/p><div data-result-actions[^>]*><p>WERTUNG<\/p>/
+    )
+    expect(html.indexOf("HINWEIS")).toBeGreaterThan(html.indexOf("beste Scheibe"))
     expect(html).not.toContain("data-comparison")
   })
 

@@ -6,6 +6,7 @@ import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { formatTimeOfDay, formatWeekdayDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 import { Target } from "lucide-react"
+import type { ReactNode } from "react"
 
 import { formatValue } from "../format"
 import { groupView } from "../geometry"
@@ -46,6 +47,10 @@ export interface EveningBlockProps {
   recordRoute: (id: string, scoring: Scoring) => CardRoute
   /** die Liste dieser Familie mit dem Abend als Anker */
   listRoute: ListRoute
+  /** Kreise rechts neben der großen Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`): die Wertung der Familie */
+  actions?: ReactNode
+  /** ein Hinweis unten, etwa ein Fehler beim Speichern */
+  notice?: ReactNode
   className?: string
 }
 
@@ -64,6 +69,8 @@ export function EveningBlock({
   cardRoute,
   recordRoute,
   listRoute,
+  actions,
+  notice,
   className,
 }: EveningBlockProps) {
   const titleId = `evening-${block.family}`
@@ -105,15 +112,25 @@ export function EveningBlock({
         </p>
       )}
       <div className="grid gap-1">
-        <p className="flex flex-wrap items-baseline gap-x-2">
-          <span
-            data-evening-mean
-            className="font-display text-[2.6rem] leading-none font-bold tracking-tight tabular-nums"
-          >
-            {block.mean === null ? "–" : formatValue(block.mean, 2)}
-          </span>
-          <span className="text-[14px] text-muted-foreground">{`Ø je Schuss ${SCORING_IN[block.scoring]}`}</span>
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            <span
+              data-evening-mean
+              className="font-display text-[2.6rem] leading-none font-bold tracking-tight tabular-nums"
+            >
+              {block.mean === null ? "–" : formatValue(block.mean, 2)}
+            </span>
+            {/* mit Kreis nennt der Kreis die Wertung, ohne (Labor) der Text */}
+            <span className="text-[14px] text-muted-foreground">
+              {actions ? "Ø je Schuss" : `Ø je Schuss ${SCORING_IN[block.scoring]}`}
+            </span>
+          </p>
+          {actions && (
+            <div data-evening-actions className="ml-auto flex shrink-0 items-center gap-1.5">
+              {actions}
+            </div>
+          )}
+        </div>
         {reference && (
           <p data-evening-reference className="text-[14px] text-foreground-2 tabular-nums">
             {reference}
@@ -221,6 +238,7 @@ export function EveningBlock({
       >
         Abend in Scheiben ›
       </RouteLink>
+      {notice}
     </section>
   )
 }
