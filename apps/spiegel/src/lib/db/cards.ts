@@ -194,7 +194,7 @@ function shotRows(revisionId: bigint, cardId: string, shots: readonly ShotInput[
 
 /**
  * Merkmale, die jeder Stand neu setzt, auch die Wertung wie am Stand aus den Schüssen; die Kennung (Quelle, ScheibenID,
- * Zyklus), der Besitzer und die gewählte Wertung nicht
+ * Zyklus), der Besitzer, die gewählte Wertung und die gewählte Art nicht
  */
 function cardFeatures(card: CardInput, shots: readonly ShotInput[], familyId: number | null) {
   return {

@@ -13,7 +13,7 @@ import { createPrismaClient } from "@/lib/db"
 import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
-import { chooseCardKind, writeRevision } from "./cards"
+import { chooseCardKind, refreshProjections, writeRevision } from "./cards"
 import {
   cardWithShots,
   familyCards,
@@ -334,5 +334,20 @@ describe("chooseCardKind", () => {
     } finally {
       await db.card.update({ where: { id: own.id }, data: { kindChoice: null } })
     }
+  })
+
+  it("eine Scheibe, deren Projektion noch fehlt, lässt sich markieren; danach ist sie wieder gerechnet", async () => {
+    const ownerId = site.ownerId
+    const [first] = await familyCards(db, { ownerId, familyId: site.familyId })
+    await db.cardProjection.delete({ where: { cardId: first.id } })
+    try {
+      expect(await chooseCardKind(db, { cardId: first.id, ownerId, kind: "competition" })).toBe(
+        "saved"
+      )
+    } finally {
+      await db.card.update({ where: { id: first.id }, data: { kindChoice: null } })
+      await refreshProjections(db, { sourceId: site.sourceId })
+    }
+    expect((await familyCards(db, { ownerId, familyId: site.familyId }))[0].id).toBe(first.id)
   })
 })

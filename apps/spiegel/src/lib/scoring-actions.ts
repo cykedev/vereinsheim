@@ -3,9 +3,8 @@
 import { revalidatePath } from "next/cache"
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
-import { isCardId } from "@vereinsheim/shot-ui/nav/routes"
 
-import { getAuthSession } from "@/lib/auth-helpers"
+import { isCardIdInput, shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import { chooseCardScoring, saveFamilyScoring } from "@/lib/db/cards"
 import type { ActionResult } from "@/lib/types"
@@ -16,20 +15,13 @@ import type { ActionResult } from "@/lib/types"
 
 const isScoring = (value: unknown): value is Scoring => value === "decimal" || value === "rings"
 
-/** die Sitzung eines Schützen, der Daten sehen darf; ohne Sitzung oder mit Passwort vom Admin null */
-async function shooter() {
-  const session = await getAuthSession()
-  return session && !session.user.mustChangePassword ? session.user.id : null
-}
-
 /** die gewählte Wertung einer eigenen Scheibe speichern */
 export async function setCardScoring(cardId: string, scoring: Scoring): Promise<ActionResult> {
   try {
-    const ownerId = await shooter()
+    const ownerId = await shooterId()
     if (!ownerId) return { error: "Nicht angemeldet" }
     if (!isScoring(scoring)) return { error: "Unbekannte Wertung." }
-    if (typeof cardId !== "string" || cardId.length > 64 || !isCardId(cardId))
-      return { error: "Die Scheibe gibt es nicht." }
+    if (!isCardIdInput(cardId)) return { error: "Die Scheibe gibt es nicht." }
     if (!(await chooseCardScoring(db, { cardId, ownerId, scoring })))
       return { error: "Die Scheibe gibt es nicht." }
     revalidatePath("/", "layout")
@@ -45,7 +37,7 @@ export async function setFamilyScoring(
   scoring: Scoring
 ): Promise<ActionResult> {
   try {
-    const ownerId = await shooter()
+    const ownerId = await shooterId()
     if (!ownerId) return { error: "Nicht angemeldet" }
     if (!isScoring(scoring)) return { error: "Unbekannte Wertung." }
     if (typeof familySlug !== "string" || familySlug.length > 64)

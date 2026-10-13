@@ -1,9 +1,7 @@
 "use server"
 
 import type { CardMark } from "@vereinsheim/shot-core/projection"
-import { isCardId } from "@vereinsheim/shot-ui/nav/routes"
-
-import { getAuthSession } from "@/lib/auth-helpers"
+import { isCardIdInput, shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import { marksOfCards } from "@/lib/db/reads"
 import type { ActionResult } from "@/lib/types"
@@ -15,11 +13,10 @@ import type { ActionResult } from "@/lib/types"
  */
 export async function cardMarksAction(cardId: string): Promise<ActionResult<CardMark[] | null>> {
   try {
-    const session = await getAuthSession()
-    if (!session || session.user.mustChangePassword) return { error: "Nicht angemeldet" }
-    if (typeof cardId !== "string" || cardId.length > 64 || !isCardId(cardId))
-      return { success: true, data: null }
-    const marks = await marksOfCards(db, { ownerId: session.user.id, ids: [cardId] })
+    const ownerId = await shooterId()
+    if (!ownerId) return { error: "Nicht angemeldet" }
+    if (!isCardIdInput(cardId)) return { success: true, data: null }
+    const marks = await marksOfCards(db, { ownerId, ids: [cardId] })
     return { success: true, data: marks[cardId] ?? null }
   } catch {
     return { error: "Die Lagen ließen sich nicht laden." }

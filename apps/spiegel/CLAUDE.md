@@ -38,7 +38,7 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
 ## Regeln
 
 - **Schichten** (`src/lib/db/`): `raw.ts` legt Rohdaten ab, `cards.ts` schreibt Scheiben, Revisionen und Projektion
-  (dazu die gewählten Wertungen, auch `FamilyScoring`),
+  (dazu die gewählten Wertungen, auch `FamilyScoring`, und die gewählte Art),
   `reads.ts` liest für die Ansichten. Seiten und Server Actions rufen nur diese Funktionen, nie Prisma direkt auf Schüsse.
 - **Übersichten lesen keine Schüsse** (ADR-031, seit SP-1.8): Start, Liste und das Blättern nehmen `ownerCards` (Scheibe
   mit Projektion, Familie, Scheibenbild) und rechnen die Modelle aus `shot-ui` **auf dem Server**. An den Browser gehen
@@ -93,7 +93,8 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   Vorgabe der Wertung. Umstellen auf der Seite einer Scheibe (`KindControl` unter der Wertung, `setCardKind` in
   `src/lib/card-kind-actions.ts`); eine Scheibe nur aus Probe ist Training und hat keinen Schalter. Ändert die Art die
   Vorgabe der Wertung, folgt die Seite (`seenScoring` in `CardScreen`). `Status` der SSMDB2 ist an der Vereinsanlage leer
-  ([[meyton-ssmdb2]]); ein Vorschlag aus der `Rangliste` kommt mit dem Adapter ([[spiegel-roadmap]]).
+  ([[meyton-ssmdb2]]); ein Vorschlag aus der `Rangliste` kommt mit dem Adapter ([[spiegel-roadmap]]). Sitzung und
+  Kennung prüfen die Actions über `src/lib/action-guards.ts`.
 - **Darstellung der Scheibe gemerkt** (User, 12. Oktober 2026): Ebenen, „übrige blass/aus“ und Ausschnitt (ganze
   Scheibe oder Gruppe) als Cookie
   `spiegel-target` (`src/lib/target-display*.ts`, Format aus `@vereinsheim/shot-ui/target/display`). Die Seite einer

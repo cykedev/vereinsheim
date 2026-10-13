@@ -2,10 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 
-import { isCardId } from "@vereinsheim/shot-ui/nav/routes"
-
 import type { CardKind } from "@/generated/prisma/client"
-import { getAuthSession } from "@/lib/auth-helpers"
+import { isCardIdInput, shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import { chooseCardKind } from "@/lib/db/cards"
 import type { ActionResult } from "@/lib/types"
@@ -20,12 +18,11 @@ const isKind = (value: unknown): value is CardKind =>
 /** die gewählte Art einer eigenen Scheibe speichern; eine Scheibe nur aus Probe bleibt Training */
 export async function setCardKind(cardId: string, kind: CardKind): Promise<ActionResult> {
   try {
-    const session = await getAuthSession()
-    if (!session || session.user.mustChangePassword) return { error: "Nicht angemeldet" }
+    const ownerId = await shooterId()
+    if (!ownerId) return { error: "Nicht angemeldet" }
     if (!isKind(kind)) return { error: "Unbekannte Art." }
-    if (typeof cardId !== "string" || cardId.length > 64 || !isCardId(cardId))
-      return { error: "Die Scheibe gibt es nicht." }
-    const result = await chooseCardKind(db, { cardId, ownerId: session.user.id, kind })
+    if (!isCardIdInput(cardId)) return { error: "Die Scheibe gibt es nicht." }
+    const result = await chooseCardKind(db, { cardId, ownerId, kind })
     if (result === "missing") return { error: "Die Scheibe gibt es nicht." }
     if (result === "probeOnly") return { error: "Eine Scheibe nur aus Probe ist Training." }
     revalidatePath("/", "layout")
