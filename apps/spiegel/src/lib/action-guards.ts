@@ -14,3 +14,12 @@ export async function shooterId(): Promise<string | null> {
 /** eine Kennung einer Scheibe aus dem Browser: Text in der Form erzeugter Ids, nicht länger als 64 Zeichen */
 export const isCardIdInput = (value: unknown): value is string =>
   typeof value === "string" && value.length <= 64 && isCardId(value)
+
+/** ein Admin, der handeln darf (eigenes Passwort schon gesetzt); sonst der Grund als Text */
+export async function adminActor(): Promise<{ id: string } | { error: string }> {
+  const session = await getAuthSession()
+  if (!session) return { error: "Nicht angemeldet" }
+  if (session.user.role !== "ADMIN") return { error: "Keine Berechtigung" }
+  if (session.user.mustChangePassword) return { error: "Bitte zuerst das eigene Passwort ändern." }
+  return { id: session.user.id }
+}

@@ -1,7 +1,11 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
+
+import { SportpassSection } from "@/components/admin/SportpassSection"
 import { UserForm } from "@/components/admin/UserForm"
+import { consentsOfUser } from "@/lib/admin/site"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { updateUser } from "@/lib/users/actions"
 import { getUser } from "@/lib/users/queries"
@@ -20,6 +24,10 @@ export default async function EditUserRoute({ params }: { params: Promise<{ id: 
         {user.name ?? user.email}
       </h1>
       <UserForm action={updateUser.bind(null, user.id)} user={user} />
+      <SportpassSection
+        userId={user.id}
+        consents={await consentsOfUser(user.id, getDisplayTimeZone())}
+      />
     </Page>
   )
 }

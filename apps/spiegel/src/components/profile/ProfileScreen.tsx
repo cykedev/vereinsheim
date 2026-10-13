@@ -20,10 +20,13 @@ export function ProfileScreen({
   name,
   email,
   isAdmin,
+  sportpass,
 }: {
   name: string | null
   email: string
   isAdmin: boolean
+  /** SportpassIDs mit Zustimmung: nur deren Scheiben kommen von der Brücke */
+  sportpass: { id: number; sportpassId: string; siteName: string }[]
 }) {
   const router = useRouter()
   const [leaving, setLeaving] = useState(false)
@@ -39,6 +42,30 @@ export function ProfileScreen({
             {name ? `${name} · ` : ""}
             {email}
           </p>
+        </div>
+
+        <div data-sportpass className="grid gap-2 rounded-2xl border border-border bg-card p-4">
+          <h2 className="text-[15px] font-semibold">Sportpass</h2>
+          {sportpass.length ? (
+            <>
+              <p className="text-sm text-foreground-2">
+                Deine Scheiben mit diesen SportpassIDs kommen von selbst aus dem Schützenhaus.
+              </p>
+              <ul className="grid gap-1">
+                {sportpass.map((entry) => (
+                  <li key={entry.id} className="text-sm">
+                    <span className="font-mono tabular-nums">{entry.sportpassId}</span>
+                    <span className="text-muted-foreground"> · {entry.siteName}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="text-sm text-foreground-2">
+              Noch keine SportpassID. Wenn du zustimmst, trägt ein Admin sie ein; dann kommen deine
+              Scheiben von selbst.
+            </p>
+          )}
         </div>
 
         <div className="grid gap-4 rounded-2xl border border-border bg-card p-4">

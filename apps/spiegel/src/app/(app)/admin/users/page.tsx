@@ -5,6 +5,7 @@ import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsights"
 
 import { AdminLoginRateLimitTable } from "@/components/admin/AdminLoginRateLimitTable"
+import { AdminTabs } from "@/components/admin/AdminTabs"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
 import { getUsers, type UserSummary } from "@/lib/users/queries"
@@ -42,6 +43,7 @@ export default async function AdminUsersRoute() {
   return (
     <Page>
       <section className="grid max-w-3xl gap-4">
+        <AdminTabs current="users" />
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="grid gap-1">
             <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
