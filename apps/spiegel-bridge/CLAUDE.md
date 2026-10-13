@@ -73,9 +73,17 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   Hash aus `GET /state`, `Wertung` 0, 5, 10 oder unlesbar hält die ganze Scheibe, Sperre derselben ID bis 30 Tage um den
   Beginn). Ändert sich eine Regel in Spiegel, hier mitziehen. Ohne Zustand lädt die Brücke nichts hoch (SF-38); eine neue
   Zustimmung oder bestätigte Epoche schickt, was noch im Speicher ist (`Resend`).
-- **Antworten:** 429/503 `Retry-After` abwarten, 413 teilen, 401 beendet (`ErrUnauthorized`, Exit 3), 400 verwirft den
-  Stapel (Fehler der Brücke), Netz und 5xx mit Pause 5 s bis 60 s. Je Stapel eine Zeile `batch` mit den Ergebnissen
-  als Zahlen.
+- **Antworten:** 429/503 `Retry-After` abwarten (höchstens 10 min), 413 teilen (nach einer Pause nicht weiter), 401
+  beendet (`ErrUnauthorized`, Exit 3), 400 verwirft nur die in `issues` genannten Snapshots (`snapshots[i]`), Netz und
+  5xx mit Pause 5 s bis 60 s. Vor dem Stapel prüft `contract.Validate` jeden Snapshot. Keine Weiterleitungen (das Token
+  bliebe im Kopf). Je Stapel eine Zeile `batch` mit den Ergebnissen als Zahlen.
+- **Zustand:** nach einem Fehler erst nach Pause (5 s bis 60 s oder `Retry-After`) neu fragen; älter als eine Stunde, lädt
+  die Brücke nichts hoch (Zustimmungen könnten widerrufen sein). Sperren gelten nur in ihrer Epoche (`blocked[].epoch`).
+- **Uhr der Anlage** gemessen neben `NOW(3)` (Mitte der Runde); über zehn Jahre daneben (Uhr auf 2000) wird nicht
+  gemeldet, sonst lehnte Spiegel jeden Heartbeat ab.
+- **Geheimnisse:** `--dsn` hat keine Vorgabe aus der Umgebung (die stünde sonst in der Hilfe); die Umgebung gilt erst
+  nach dem Lesen der Optionen. `pair` unter Windows gesperrt, bis die Konfiguration dort eine ACL bekommt (0600 gilt
+  nicht).
 - **Nachholen beim Start** (SF-55): aus `state.watermark` (UTC) minus einem Tag in der Zone der Anlage
   (`catchUpFrom`, Zonen eingebaut über `time/tzdata`) wird ein Lebenszeichen; Scheiben davor im Startfenster liest die
   Erkennung einmal (`SetCatchUpFrom`, Rang 3), aber erst, wenn 20 Minuten nichts mehr läuft (SF-52), und hält den Takt
@@ -85,6 +93,7 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   zur SSMDB2 auf stdin ab, wenn weder `--dsn` noch die Umgebung ihn nennen. Geprüft in `debian:12` mit
   `systemd-analyze verify`.
 - **Heartbeat** jede Minute, der erste nach der ersten Runde, nie mit Namen oder Nummern; `possible-reset` nur gemeldet
-  (die Zahl der Scheiben fällt um mehr als die Hälfte), eine neue Epoche eröffnet die Brücke nicht (Plan D8).
+  (die Zahl der Scheiben fällt um mehr als die Hälfte; zurückgenommen, wenn sie wiederkommen; `delayed` geht vor), eine
+  neue Epoche eröffnet die Brücke nicht (Plan D8). Zurückgehaltene zählen nur Scheiben, die die Erkennung noch kennt.
 - Nach Änderungen: `pnpm check` (vom Repo-Root), `pnpm --filter spiegel-bridge replay` und bei Upload oder Filter
   `pnpm --filter spiegel bridge-e2e` (nach `pnpm --filter spiegel build`).

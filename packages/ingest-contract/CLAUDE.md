@@ -2,7 +2,7 @@
 
 Vertrag zwischen Brücke und Spiegel (SP-1.0a, Oktober 2026): Snapshot-Format v1, kanonische Form,
 Prüfsumme, Testvektoren, eingefrorene Beispiele und der Parser, mit dem Spiegel Lieferungen annimmt.
-Die Spezifikation für andere Sprachen (die Brücke, vermutlich Go) steht in
+Die Spezifikation für andere Sprachen (die Brücke in Go, `apps/spiegel-bridge`) steht in
 `vault/spiegel/spiegel-ingest-contract.md`. Seit SP-1.6 b (Oktober 2026) auch die übrige API v1 (Kopplung, Heartbeat,
 Zustand, Antworten, Fehler); `apps/spiegel` nimmt darüber an. Sonderfälle: SF-25, SF-26,
 SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
@@ -34,7 +34,8 @@ SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
   Quarantäne legt statt abzulehnen (SF-25).
 - **API v1 neben dem Snapshot** (`src/v1/api.ts`): Beispiele unter `examples/api-v1/` (Dateiname = Schema, nur
   ergänzen), JSON-Schemas mit, Anfragen über `parseApi(schema, input)` (Version, `__proto__`, Fehler ohne Inhalt).
-  Vektoren des Sportpass-Hashes aus Python (`test-vectors/sportpass-v1.json`).
+  Vektoren des Sportpass-Hashes aus Python (`test-vectors/sportpass-v1.json`). Additiv seit 13. Oktober 2026:
+  `blocked[].epoch` im Zustand (optional, Spiegel schickt es immer): Eine Sperre gilt nur in ihrer Epoche (SF-23).
 - **Annehmen nur über `parseSnapshot`/`parseSnapshotBatch`**, nie direkt über `snapshotV1`: Davor
   liegen Versionsprüfung und das Verbot von `__proto__` (Zod verwirft den Schlüssel still), danach die
   Prüfsumme. Längen zählen in UTF-16-Codeeinheiten (Zod), nicht in Codepoints (JSON-Schema).
