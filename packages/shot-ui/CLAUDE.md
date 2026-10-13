@@ -24,6 +24,7 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
 | `@vereinsheim/shot-ui/table/ShotTable`            | `src/table/ShotTable.tsx`            | Schusstabelle: neuester oben, folgt der Auswahl, Zeile wählt den Schuss (Weg per Tastatur), Intervalle mit Lücke und Pause (relativ zum Takt der Karte, „1:50 min Pause“; andere Abstände in Sekunden)                                                                                                                                                                                                     |
 | `@vereinsheim/shot-ui/controls/KindToggle`        | `src/controls/KindToggle.tsx`        | Art der Scheibe als Pokal im weichen Kreis, Training gedämpft, Wettkampf gold; bei nur Probe zeigt die Seite ihn nicht                                                                                                                                                                                                                                                                                     |
 | `@vereinsheim/shot-ui/controls/ScoringToggle`     | `src/controls/ScoringToggle.tsx`     | Wertung im weichen Kreis: 1 für ganze Ringe, ⅒ für Zehntel (Bruch von Geist, `diagonal-fractions`); „amtlich“ im Namen (Zustand oder Wirkung)                                                                                                                                                                                                                                                              |
+| `@vereinsheim/shot-ui/controls/ScoringSegment`    | `src/controls/ScoringSegment.tsx`    | Wertung als beschriftete Auswahl für eine Filterzeile: davor der Bezug („Ø in“, „Wertung“), dann „Ganze Ringe \| Zehntel“                                                                                                                                                                                                                                                                                  |
 | `@vereinsheim/shot-ui/help/HelpBody`              | `src/help/HelpBody.tsx`              | Erklärung aus `shot-help`: Felder in der Reihenfolge des Leitfadens (`HELP_FIELDS`), Formel zugeklappt                                                                                                                                                                                                                                                                                                     |
 | `@vereinsheim/shot-ui/help/HelpDetails`           | `src/help/HelpDetails.tsx`           | „Was heißt das?“ unter einer Karte, `helpEntry(id)` (Thema oder Oberfläche)                                                                                                                                                                                                                                                                                                                                |
 | `@vereinsheim/shot-ui/help/HelpButton`            | `src/help/HelpButton.tsx`            | „?“-Knopf mit Namen, `HelpIcon`                                                                                                                                                                                                                                                                                                                                                                            |
@@ -98,10 +99,11 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   nachbauen.
 - **Einstellungen neben einer Zahl als weicher Kreis** (Plan `plans/2026-10-13-spiegel-symbole.md`): `ScoringToggle`
   (1 bzw. ⅒ als Bruch der Schrift, nie mit `sup`/`sub`: die verschiebt Tailwind schon) und `KindToggle` (Pokal, Training
-  durchgestrichen über eine Maske, Wettkampf im Token `gold`) auf `RoundToggle` (Zeichen leise, Token `quiet`, leichter
-  Rahmen). Was nur die Zahl betrifft, steht rechts in ihrer Zeile (Platz `actions` von `CardResult`, `EveningBlock`, ein
-  Hinweis in `notice`, auf Start unter Zahl und Bezug); was für die ganze Seite gilt, rechtsbündig in der Zeile der
-  Filter (`actions` von `ListControls`, `PeriodControls`; den Hinweis setzt die App unter die Filter). Der Name
+  durchgestrichen über eine Maske, Wettkampf im Token `gold`) auf `RoundToggle` (Zeichen leise, Token `quiet`, innen die
+  Kartenfläche, Rahmen `line-strong`), rechts in der Zeile der Zahl (Platz `actions` von `CardResult`, `EveningBlock`, ein
+  Hinweis in `notice`, auf Start unter Zahl und Bezug). In einer Filterzeile dagegen eine beschriftete Auswahl:
+  `ScoringSegment` („Ø in“ bzw. „Wertung“, dann „Ganze Ringe | Zehntel“) rechtsbündig in `actions` von `ListControls`,
+  `PeriodControls` (den Hinweis setzt die App unter die Filter). Der Name des Kreises
   sagt Zustand und Wirkung („Wertung: Zehntel, auf ganze Ringe umstellen“) und nennt die amtliche: gezeigt im Zustand,
   sonst in der Wirkung („auf ganze Ringe (amtlich) umstellen“).
 - **Zahlen nur aus dem Fachkern** (`@vereinsheim/shot-core`), Erklärungen nur aus `@vereinsheim/shot-help`.
@@ -243,8 +245,8 @@ später setzt `apps/spiegel` dieselben Bausteine mit echten Daten ein.
   und der Umfang (`VolumeChart`), rechts Ergebnis (`PeriodResult`), Ablesung (`CardReadout`, auf dem Telefon
   `CardLine`) und Liste (`CardList`), darunter Zahlen (`PeriodTiles`) und Analyse (`PeriodInsights`). Seit U2
   (`plans/2026-10-09-spiegel-fortschritt-besser.md`): eine Zeile Bedienung (Familie und Chip, alles Übrige im Blatt
-  „Filter“), die Wertung kommt von außen (in der App die der Familie als Kreis rechts in der Zeile der Filter,
-  `PeriodControls.actions`; im Labor die des Labors), der Satz beantwortet „Werde ich besser?“ (`form`), für eine
+  „Filter“), die Wertung kommt von außen (in der App die der Familie als `ScoringSegment` rechts in der Zeile der
+  Filter, `PeriodControls.actions`; im Labor die des Labors), der Satz beantwortet „Werde ich besser?“ (`form`), für eine
   Scheibe gilt nur der Abstand zum Schnitt der fünf davor. Zustand
   (`periodReducer`) und alles Gerechnete (`periodModel`) sind reine Funktionen; die Komponenten zeichnen nur.
   Verlauf, Liste und Ablesung teilen die Wahl (`chosen`); das Lineal meldet nur eigene Wahlen (`onPick`). Ein

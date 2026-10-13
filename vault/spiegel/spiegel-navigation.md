@@ -389,8 +389,9 @@ aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-lan
 - **Vorn in Liste und Start** steht die Wertung der Scheibe; in der Liste fett, mit „Fett: Wertung der Scheibe.“ unter
   dem Monat. Die große Zahl auf Start zeigt die Wertung ihres Blocks im Kreis daneben, weil Blöcke verschiedener
   Familien verschieden rechnen können (im Labor ohne Kreis als Text: „Ø je Schuss in Zehnteln“).
-- **Jedes Umschalten ist eine Wahl:** Mit dem Kreis stellt jedes Tippen um; wer einmal hin und zurück tippt, hat die
-  Wertung gewählt, und eine Scheibe folgt danach nicht mehr der Vorgabe ihrer Art (Review, 13. Oktober 2026). Einen
+- **Jedes Umschalten ist eine Wahl:** Mit dem Kreis (Scheibe, Start) stellt jedes Tippen um; wer einmal hin und zurück
+  tippt, hat die Wertung gewählt, und eine Scheibe folgt danach nicht mehr der Vorgabe ihrer Art (Review, 13. Oktober
+  2026). In der Auswahl von Liste und Fortschritt speichert ein Tippen auf die gezeigte Wertung nichts. Einen
   Weg zurück zur Vorgabe gibt es nicht, auch keinen geplanten (User, 12. Oktober 2026: „es bleibt dabei“).
 - **Umschalten speichert:**
   - Auf der Seite einer Scheibe die Wertung der Scheibe. Liste und Start zeigen sie danach vorn.
@@ -428,13 +429,13 @@ Plan `plans/2026-10-13-spiegel-symbole.md`. Der User fand die Segment-Schalter z
 der box … eleganter und spart platz und könnte sich überall konsistent durchziehen“; aus drei Skizzen gewählt: weiche
 Kreise.
 
-- **Ein Baustein:** `RoundToggle` (`@vereinsheim/ui/design2/round-toggle`), 32 px, durchscheinend getönt (Token
-  `ink-wash`) mit leichtem Rahmen; Gold (Token `gold`: hell `#a87800`, dunkel `#f1c453`, auf `warning-wash`, Rahmen
-  `gold-line`) nur für das Hervorgehobene. Zuerst ohne Rahmen; auf der grauen Seitenfläche (Kopf am Telefon, Liste)
-  verschwand der Kreis (User: „dort braucht es einen rahmen“, dann „vielleicht ist der leichte rahmen immer gut“).
-  Danach mit fester Füllung `surface-2`: hell dunkler als die Karte, aber heller als die Seite, also auf der Karte ein
-  Fleck, auf der Seite ein Loch (User: „das muss auf cards und auch ohne gut aussehen“). Die Tönung dunkelt jeden Grund
-  gleich ab; aus vier Varianten gewählt (Tönung und Linie).
+- **Ein Baustein:** `RoundToggle` (`@vereinsheim/ui/design2/round-toggle`), 32 px, innen die Kartenfläche (hell weiß)
+  mit Rahmen `line-strong`: auf der grauen Seite ein klarer Knopf, auf der Karte ein Ring. Gold (Token `gold`: hell
+  `#a87800`, dunkel `#f1c453`) auf `gold-wash` (die goldene Tönung deckend auf der Kartenfläche) mit Rahmen `gold-line`,
+  nur für das Hervorgehobene. Der Weg dahin (User, 13. Oktober 2026): ohne Rahmen verschwand der Kreis auf der grauen
+  Seite („dort braucht es einen rahmen“); die Fläche `surface-2` war hell dunkler als die Karte, aber heller als die
+  Seite, ein Fleck auf der einen, ein Loch auf der anderen („das muss auf cards und auch ohne gut aussehen“); eine
+  durchscheinende Tönung war auf Grau zu kontrastarm („wenn sie auf grau sind innen weiss“).
 - **Wertung** (`ScoringToggle`): „1“ für ganze Ringe, ⅒ für Zehntel, gesetzt von Geist selbst (`diagonal-fractions`, das
   Merkmal `frac`). Die Ziffern von Hand hoch- und tiefzustellen misslang (Tailwind verschiebt `sup`/`sub` schon), die
   tiefgestellten Zeichen ₀–₉ fehlen in den geladenen Teilen von Geist (User, 13. Oktober 2026). Ein Tippen stellt auf die
@@ -448,10 +449,13 @@ Kreise.
 - **Ort:**
   - Seite einer Scheibe: Pokal und Bruch rechts in der Zeile des Ergebnisses (Platz `actions` von `CardResult`; nur
     Probe: nur der Bruch), am Telefon im Kopf, ab 768 px in der Box;
-  - Liste und Fortschritt: der Bruch rechtsbündig in der Zeile der Filter (`ListControls`, `PeriodControls`; in der
-    Liste „Wertung für Ø und Abstand“), auf allen Größen. Er gilt für die ganze Seite wie die Filter; vorher stand er in
-    der Liste neben dem Titel und im Fortschritt in der Ergebnis-Box (User: „in die selbe zeile wie die filter“,
-    „rechts ausgerichtet“, „dann ist das konsistent zu scheiben“);
+  - Liste und Fortschritt: kein Kreis, sondern eine beschriftete Auswahl rechtsbündig in der Zeile der Filter
+    (`ScoringSegment` in `ListControls`, `PeriodControls`), auf allen Größen: in der Liste „Ø in [Ganze Ringe | Zehntel]“
+    (sie ändert Ø und Abstand, nicht die Spalten der Ergebnisse), im Fortschritt „Wertung [Ganze Ringe | Zehntel]“ (die
+    ganze Seite). Vorher stand dort ein Kreis, in der Liste zuerst neben dem Titel, im Fortschritt in der Ergebnis-Box
+    (User: „in die selbe zeile wie die filter“, „rechts ausgerichtet“, dann „vielleicht muss es bei den listen auch eine
+    auswahl ganze ringe oder zehntel sein, statt dem icon. weil es sprechender ist und der platz da ist und der direkte
+    bezug fehlt“). Regel: in einer Filterzeile eine beschriftete Auswahl, direkt neben einer Zahl der Kreis;
   - Start: neben dem Ø je Block (der Block ist eine Karte, keine Filter), dort entfällt „in ganzen Ringen“ im Text.
 - **Liste:** der Pokal in der Spalte „Art“ 16 px in Gold (vorher 14 px grau, der User sah ihn nicht).
 - **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`, auf

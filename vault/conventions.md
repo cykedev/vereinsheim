@@ -270,15 +270,15 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 
 - **Tokens aus `@vereinsheim/ui/design2.css`** statt `theme.css`: dieselben Namen, die die
   ui-Primitives nutzen, dazu Design-2-eigene (`surface-2`, `line-strong`, `foreground-2`, `*-wash`, `gold` (ein Zeichen in Gold, goldener als das
-  Text-Token `warning`), `quiet` (ein leises Zeichen, 3,2 : 1 auf `ink-wash`, nie für Text), `ink-wash` (durchscheinende neutrale Tönung, auf Karte
-  und Seite gleich), `gold-line` (Rahmen um Gold),
+  Text-Token `warning`), `quiet` (ein leises Zeichen, 3,6 : 1 auf der Kartenfläche, nie für Text), `gold-wash` (goldene Tönung deckend auf der
+  Kartenfläche), `gold-line` (Rahmen um Gold),
   `paper`, `spiegel`, `score-10` … `score-7`, `overlay`). Hell auf `:root`, dunkel unter `.dark`
   (Klassen-Strategie); jede Farbe, die wechselt, steht in beiden Blöcken (Test `tokens.test.ts`). Die
   Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich.
 - Auch in Design 2 **keine Palette-Klassen und keine `dark:`-Varianten**: Farbe kommt aus den Tokens.
 - **Allgemeine Bausteine** unter `@vereinsheim/ui/design2/*` (Segment-Umschalter, Schalter-Chip, weicher Kreis
-  `round-toggle` für eine Einstellung neben einer großen Zahl oder in einer Filterzeile: 32 px, Flächenfarbe, leichter
-  Rahmen, Gold nur für das Hervorgehobene); was
+  `round-toggle` für eine Einstellung neben einer großen Zahl oder in einer Filterzeile: 32 px, innen die Kartenfläche, Rahmen
+  `line-strong`, Gold nur für das Hervorgehobene); was
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, erprobt im Labor (`tools/labor`,
   Skriptprüfung `pnpm --filter @vereinsheim/labor pruefen`).
 - Ringwerk und Treffsicher bleiben auf `theme.css` und ihrem Drift-Gate; Spiegel ist davon
