@@ -141,7 +141,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | T4 | Trendsteigung | Theil-Sen je Monat mit Intervall; nicht in die Zukunft verlängern | Zeitraum | B | SP-2.7 |
 | T5 | Boden und Decke | P10, Median und P90 der Scheibenwerte je Abschnitt (Monat), P10 und P90 ab fünf Scheiben; Boden ist das schwächere Ende (beim Ø P10, bei σ P90), beim Tempo nur die Spanne (Prüfung, 9. Oktober 2026) | Zeitraum | B | SP-2.1, Fachkern L2 (`periodBuckets`) |
 | T6 | Trainingsumfang | Schüsse (Probe und Wertung), Scheiben und Tage je Woche; keine Netto-Zeit, sie folgt aus den Abständen | Zeitraum | A | SP-2.1, Fachkern L2 (`trainingVolume`) |
-| T7 | Kalender | Trainingstage als Kalender | Zeitraum | B | SP-2.1 |
+| T7 | Kalender | Trainingstage als Kalender; je Abend (vor 4 Uhr der Vortag) wie Umfang und Liste, gerechnet über `trainingVolume`/`projectedVolume` (`periodModel.calendar`, 13. Oktober 2026) | Zeitraum | B | SP-2.1 |
 | T8 | Erfolgsserien | Wochen in Folge mit Training, Scheiben über dem eigenen Schnitt | Zeitraum | C | SP-2.8 |
 
 ### 9 Rekorde und Meilensteine

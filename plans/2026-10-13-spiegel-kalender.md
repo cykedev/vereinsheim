@@ -19,6 +19,19 @@ vor. Ohne Rückfrage gestaltet; der User kann es nach dem Merge ansehen und verw
 - **D5 Bedienung:** jeder Trainingstag ein Link an seinen Abend in der Liste (`listFromProgress` mit Anker), Name mit
   Tag, Scheiben, Schüssen und Wettkampf; scrollt in sich, anfangs die jüngsten Wochen.
 
+## Nach der Review (13. Oktober 2026)
+
+- **Je Abend für Wochen und Kalender:** Der Umfang je Woche zählte nach Kalendertag, der Kalender nach Abend; eine
+  Scheibe am Montag um 0:30 Uhr stand in zwei Wochen. Jetzt beide über `eveningDay`, die Wochenfolge aus `weeksBetween`.
+- **Erster Tag:** Eine Scheibe vor 4 Uhr am ersten Tag gehört zum Vortag; der Kalender beginnt dann dort (sie fiel sonst
+  aus dem Raster und zählte unten trotzdem).
+- **Ohne die Wahl des Verlaufs** in die Liste (sonst war dort eine fremde Scheibe markiert).
+- **Unterste Stufe kräftiger** (`/45` statt `/30`: zu leer daneben kaum zu unterscheiden), Fokusring nicht abgeschnitten,
+  Monatsnamen ohne Überlappung.
+- **Bewusst so:** Felder von 13 px (Dichte wie am Desktop, Regel „auf dem Telefon dieselbe Optik“); jeder Trainingstag
+  ist ein Tabstopp, auch bei „Alles“. Wer viele Tage hat, springt mit der Sprungleiste weiter. Eine Scheibe ohne Schüsse
+  zählt als Trainingstag mit 0 Schuss, wie im Umfang je Woche.
+
 ## Prüfung
 
 Tests für Modell (Abend vor 4 Uhr, Wettkampf) und Baustein (Wochen über Jahreswechsel, Stufen, Links, Rand),
