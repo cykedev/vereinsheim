@@ -1,0 +1,19 @@
+{
+  "name": "spiegel-bridge",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "lint": "go vet ./... && go vet -tags replay ./...",
+    "format:check": "test -z \"$(gofmt -l .)\" || (gofmt -l . && exit 1)",
+    "format": "gofmt -w .",
+    "test": "go test ./...",
+    "check-types": "go build ./...",
+    "build": "sh tools/build.sh",
+    "replay": "go test -tags replay -count=1 -v -run TestReplay ./internal/ssmdb2/"
+  },
+  "devDependencies": {
+    "@vereinsheim/ingest-contract": "workspace:*",
+    "@vereinsheim/ssmdb2-cases": "workspace:*"
+  }
+}

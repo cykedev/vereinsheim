@@ -1,0 +1,283 @@
+// Package watch erkennt Änderungen in der Ablage und baut daraus Snapshots (SP-1.4 a,
+// plans/2026-10-13-spiegel-bruecke-leser.md): ohne eigenen Zustand auf der Platte, nur im Arbeitsspeicher (ADR-027).
+//
+// Eine Runde liest in einer Transaktion das Lebenszeichen aller Scheiben und dann die Scheiben ganz, die neu sind,
+// deren Lebenszeichen sich bewegt hat, die noch auf Bestätigung warten oder die aktiv sind. Ein Snapshot entsteht,
+// wenn zwei Lesungen hintereinander gleich sind (SF-71) und sich vom zuletzt gemeldeten Stand unterscheiden.
+package watch
+
+import (
+	"context"
+	"sort"
+	"time"
+
+	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/contract"
+)
+
+// Lifesign ist `Scheiben.Zeitstempel` einer Scheibe, als Text wie im Textprotokoll. Er steigt alle 5 bis 10 s, solange
+// der Stand belegt ist (SF-50), kommt aber von der Uhr des Stands (SF-73): verglichen wird nur auf Gleichheit.
+type Lifesign struct {
+	ID    int32
+	Stamp string
+}
+
+// Round ist, was eine Runde aus der Ablage gelesen hat: alle Lebenszeichen und die gewählten Scheiben ganz.
+type Round struct {
+	Lifesigns       []Lifesign
+	Cards           map[int32]contract.Data
+	SourceVersion   *string
+	SessionTimeZone string
+}
+
+// Source liest eine Runde in einer kurzen lesenden Transaktion (SF-51). `choose` bekommt die Lebenszeichen und nennt
+// die Scheiben, die ganz gelesen werden; sie stehen danach in `Round.Cards`.
+type Source interface {
+	Round(ctx context.Context, choose func([]Lifesign) []int32) (Round, error)
+}
+
+// Config sind die Regeln der Erkennung; `Defaults` sind die des Plans.
+type Config struct {
+	// Epoche der Quelle (SF-23); in Teil b aus dem Zustand in Spiegel
+	Epoch int
+	// so lange nach der letzten Bewegung des Lebenszeichens wird eine Scheibe jede Runde ganz gelesen: fängt Korrektur
+	// und Löschen ohne neues Lebenszeichen (SF-21, SF-22)
+	ActiveFor time.Duration
+	// beim Start gelten Scheiben bis so weit vor dem jüngsten Lebenszeichen als neu (nicht gegen die eigene Uhr, SF-73)
+	StartWindow time.Duration
+	// höchstens so viele Scheiben je Runde ganz lesen (SF-52)
+	MaxCards int
+	// eine Scheibe, die so lange nicht mehr in der Ablage stand, vergisst die Brücke (Fehlen ist keine Löschung, SF-24)
+	ForgetAfter time.Duration
+}
+
+// Defaults sind die Regeln aus dem Plan.
+var Defaults = Config{
+	Epoch:       1,
+	ActiveFor:   20 * time.Minute,
+	StartWindow: 12 * time.Hour,
+	MaxCards:    50,
+	ForgetAfter: 24 * time.Hour,
+}
+
+type card struct {
+	stamp   string
+	movedAt time.Time // Uhr der Brücke; null: seit dem Start nicht bewegt
+	seenAt  time.Time
+	dirty   bool      // neu oder bewegt, seit der letzten Lesung nicht gelesen (das Budget reichte nicht)
+	readAt  time.Time // zuletzt ganz gelesen
+	last    string    // Prüfsumme der vorigen Lesung
+	waiting bool      // die vorige Lesung ist ein neuer Stand mit Treffern und wartet auf eine zweite gleiche
+	sent    string    // Prüfsumme des zuletzt gemeldeten Stands
+}
+
+// Skip ist eine Scheibe, die die Runde nicht melden kann, mit festem Code ohne Inhalt (SF-59).
+type Skip struct {
+	ID   int32
+	Code string
+}
+
+// Result ist das Ergebnis einer Runde.
+type Result struct {
+	Snapshots []contract.Snapshot
+	// Scheiben, die gegen den Vertrag verstoßen (zu lang, ungültige Bytes): gehen nicht hinaus, der Heartbeat meldet sie
+	Skipped []Skip
+	// gelesene Scheiben und alle Lebenszeichen
+	Read, Cards int
+	// etwas bewegt sich oder wartet auf Bestätigung: die nächste Runde bald
+	Busy bool
+}
+
+// Watcher hält den Arbeitsspeicher der Erkennung. Nicht nebenläufig benutzen.
+type Watcher struct {
+	cfg     Config
+	now     func() time.Time
+	cards   map[int32]*card
+	started bool
+	lastSeq int64
+}
+
+// New legt eine Erkennung an; `now` ist die Uhr der Brücke (nil: die Systemuhr).
+func New(cfg Config, now func() time.Time) *Watcher {
+	if now == nil {
+		now = time.Now
+	}
+	return &Watcher{cfg: cfg, now: now, cards: map[int32]*card{}}
+}
+
+const stampLayout = "2006-01-02 15:04:05"
+
+// startFrom ist beim ersten Lauf das älteste Lebenszeichen, das noch als neu gilt: das Startfenster vor dem jüngsten.
+// `YYYY-MM-DD HH:MM:SS` sortiert als Text wie als Zeit; ohne lesbares Lebenszeichen gilt alles als neu.
+func (w *Watcher) startFrom(lifesigns []Lifesign) string {
+	newest := ""
+	for _, l := range lifesigns {
+		if l.Stamp > newest {
+			newest = l.Stamp
+		}
+	}
+	t, err := time.Parse(stampLayout, newest)
+	if err != nil {
+		return ""
+	}
+	return t.Add(-w.cfg.StartWindow).Format(stampLayout)
+}
+
+// dirty: Die Scheibe ist neu oder ihr Lebenszeichen hat sich bewegt, seit sie zuletzt gelesen wurde.
+func (w *Watcher) dirty(l Lifesign, from string) bool {
+	c, known := w.cards[l.ID]
+	switch {
+	case !w.started:
+		return l.Stamp >= from
+	case !known:
+		return true
+	default:
+		return c.dirty || c.stamp != l.Stamp
+	}
+}
+
+// plan wählt die Scheiben einer Runde, ohne den Speicher zu ändern; erst eine gelungene Runde übernimmt ihn. Reihenfolge:
+// was auf Bestätigung wartet, dann was sich bewegt hat (die jüngsten zuerst, SF-52), dann die aktiven, die am längsten
+// nicht gelesen wurden. So verhungert keine Scheibe am Budget.
+func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32 {
+	type pick struct {
+		id     int32
+		rank   int
+		stamp  string
+		readAt time.Time
+	}
+	var picks []pick
+	for _, l := range lifesigns {
+		c := w.cards[l.ID]
+		p := pick{id: l.ID, stamp: l.Stamp, rank: -1}
+		switch {
+		case c != nil && c.waiting:
+			p.rank = 0
+		case w.dirty(l, from):
+			p.rank = 1
+		case c != nil && !c.movedAt.IsZero() && now.Sub(c.movedAt) < w.cfg.ActiveFor:
+			p.rank, p.readAt = 2, c.readAt
+		}
+		if p.rank >= 0 {
+			picks = append(picks, p)
+		}
+	}
+	sort.SliceStable(picks, func(i, j int) bool {
+		a, b := picks[i], picks[j]
+		if a.rank != b.rank {
+			return a.rank < b.rank
+		}
+		if a.rank == 2 && !a.readAt.Equal(b.readAt) {
+			return a.readAt.Before(b.readAt)
+		}
+		return a.stamp > b.stamp
+	})
+	if len(picks) > w.cfg.MaxCards {
+		picks = picks[:w.cfg.MaxCards]
+	}
+	ids := make([]int32, len(picks))
+	for i, p := range picks {
+		ids[i] = p.id
+	}
+	return ids
+}
+
+// Tick liest eine Runde. Scheitert sie, ändert sich nichts: keine Lesung, keine Bestätigung, keine Löschung (SF-24).
+func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
+	now := w.now()
+	var chosen []int32
+	var from string
+	round, err := src.Round(ctx, func(lifesigns []Lifesign) []int32 {
+		if !w.started {
+			from = w.startFrom(lifesigns)
+		}
+		chosen = w.plan(now, lifesigns, from)
+		return chosen
+	})
+	if err != nil {
+		return Result{}, err
+	}
+
+	result := Result{Read: len(round.Cards), Cards: len(round.Lifesigns)}
+	for _, l := range round.Lifesigns {
+		dirty := w.dirty(l, from)
+		c, known := w.cards[l.ID]
+		if !known {
+			c = &card{}
+			w.cards[l.ID] = c
+		}
+		// bewegt hat sich, was neu oder geändert ist; beim Start nur, was im Startfenster liegt
+		if (known && c.stamp != l.Stamp) || (!known && dirty) {
+			c.movedAt = now
+		}
+		c.stamp, c.dirty, c.seenAt = l.Stamp, dirty, now
+	}
+	w.started = true
+	for _, id := range chosen {
+		if c := w.cards[id]; c != nil {
+			c.dirty, c.readAt = false, now
+		}
+	}
+
+	seq := now.UnixMilli()
+	if seq <= w.lastSeq {
+		seq = w.lastSeq + 1
+	}
+	for _, id := range chosen {
+		data, ok := round.Cards[id]
+		c := w.cards[id]
+		if !ok || c == nil {
+			continue
+		}
+		if err := contract.ValidateData(data); err != nil {
+			code := "invalid"
+			if issue, ok := err.(*contract.Issue); ok {
+				code = issue.Code
+			}
+			result.Skipped = append(result.Skipped, Skip{ID: id, Code: code})
+			c.last, c.waiting = "", false
+			continue
+		}
+		sum, err := contract.Checksum(data)
+		if err != nil {
+			result.Skipped = append(result.Skipped, Skip{ID: id, Code: "malformed-string"})
+			c.last, c.waiting = "", false
+			continue
+		}
+		stable := sum == c.last
+		c.last = sum
+		// nur ein neuer Stand (nach einer zerrissenen Lesung kommt oft der alte wieder) und ohne Treffer nie (SF-13)
+		fresh := sum != c.sent && len(data.Treffer.Rows) > 0
+		// zwei gleiche Lesungen hintereinander (SF-71)
+		c.waiting = fresh && !stable
+		if !fresh || !stable {
+			continue
+		}
+		c.sent = sum
+		result.Snapshots = append(result.Snapshots, contract.Snapshot{
+			ContractVersion: contract.ContractVersion,
+			Source:          contract.Source,
+			SourceVersion:   round.SourceVersion,
+			Epoch:           w.cfg.Epoch,
+			ScheibenID:      id,
+			Sequence:        seq,
+			ObservedAt:      contract.ObservedAt(seq),
+			SessionTimeZone: round.SessionTimeZone,
+			Data:            data,
+			Checksum:        sum,
+		})
+	}
+	if len(result.Snapshots) > 0 {
+		w.lastSeq = seq
+	}
+
+	for id, c := range w.cards {
+		if now.Sub(c.seenAt) > w.cfg.ForgetAfter {
+			delete(w.cards, id)
+			continue
+		}
+		if c.waiting || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute) {
+			result.Busy = true
+		}
+	}
+	return result, nil
+}

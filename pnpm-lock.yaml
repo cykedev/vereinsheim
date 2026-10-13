@@ -326,6 +326,15 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.2)(vite@8.0.16(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
 
+  apps/spiegel-bridge:
+    devDependencies:
+      '@vereinsheim/ingest-contract':
+        specifier: workspace:*
+        version: link:../../packages/ingest-contract
+      '@vereinsheim/ssmdb2-cases':
+        specifier: workspace:*
+        version: link:../../packages/ssmdb2-cases
+
   apps/treffsicher:
     dependencies:
       '@hookform/resolvers':

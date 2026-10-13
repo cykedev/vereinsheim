@@ -48,7 +48,7 @@ die() {
 }
 
 # ---------- 1) Vorbedingungen (prüfen, nicht installieren) ----------
-step "Vorbedingungen prüfen (node, docker)"
+step "Vorbedingungen prüfen (node, go, docker)"
 
 if ! command -v node >/dev/null 2>&1; then
 	die "node nicht gefunden — Node >=24 nötig. Via nvm: 'nvm install && nvm use' (nutzt die .nvmrc)."
@@ -58,6 +58,16 @@ if [[ ! "$node_major" =~ ^[0-9]+$ || "$node_major" -lt 24 ]]; then
 	die "node $(node -v) ist zu alt oder nicht erkennbar — Node >=24 nötig. Via nvm: 'nvm install && nvm use' (nutzt die .nvmrc)."
 fi
 ok "node $(node -v)"
+
+# die Brücke (apps/spiegel-bridge) ist Go; das Gate ruft go vet, gofmt, go test, go build (go.mod verlangt 1.24)
+if ! command -v go >/dev/null 2>&1; then
+	die "go nicht gefunden — Go >=1.24 nötig (macOS: 'brew install go', sonst https://go.dev/dl)."
+fi
+go_minor="$(go env GOVERSION | sed -E 's/^go1\.([0-9]+).*/\1/')"
+if [[ ! "$go_minor" =~ ^[0-9]+$ || "$go_minor" -lt 24 ]]; then
+	die "$(go env GOVERSION) ist zu alt — Go >=1.24 nötig."
+fi
+ok "$(go env GOVERSION)"
 
 if ! command -v docker >/dev/null 2>&1; then
 	die "docker nicht gefunden — Docker Desktop (macOS) bzw. Docker Engine (Linux) zuerst installieren."
