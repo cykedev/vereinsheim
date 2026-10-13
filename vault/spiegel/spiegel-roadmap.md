@@ -134,7 +134,9 @@ Sonderfall den Test im Bericht. Offen: Aufträge (`commands`, mit SP-1.5 und SP-
 - **Ziel:** Spiegel läuft auf dem VPS und ist für andere Vereine betreibbar.
 - **Umfang:** dritte DB und Owner mit idempotentem Anlage-Schritt, `app-spiegel` und `migrate-spiegel` in `compose.yml`, Caddy-Subdomain und Ingest-Endpunkt, Backups inklusive PDF-Speicher, CLI; ohne VPS-Upgrade: `mem_limit` für Spiegel (Ziel 256 MB), Deploys nacheinander, Messung von Ruhe- und Deploy-Spitze auf dem VPS S mit 2 GB ([[adr-026]]); Compose-Beispiel und Doku für Selbst-Hoster ([[adr-029]]).
 - **Abnahme:** Deploy auf dem VPS, Speicher bleibt in Ruhe und beim Deploy unter der Grenze, Restore-Probe, Selbst-Hosting-Beispiel startet lokal; Sonderfälle SF-67, SF-68.
-- **Hängt ab von:** SP-1.6; Start und Liste auf der Projektion (SP-1.8, erledigt 10. Oktober 2026). Geschützte Pfade, interaktiv. **Status:** offen. Geklärt (13. Oktober 2026): Die eigenen Scheiben für `seed:own` liegen in `apps/spiegel/tools/own-cards-data.ts`, das Labor ist entfernt; `turbo prune spiegel` nimmt kein Labor mehr mit.
+- **Hängt ab von:** SP-1.6; Start und Liste auf der Projektion (SP-1.8, erledigt 10. Oktober 2026). Geschützte Pfade, interaktiv. **Status:** offen. Geklärt (13. Oktober 2026): Die eigenen Scheiben für `seed:own` liegen in `apps/spiegel/tools/own-cards-data.ts`, das Labor ist entfernt; `turbo prune spiegel` nimmt kein Labor mehr mit. Für die Ingest-API (SP-1.6 b): Caddy muss `X-Real-IP` selbst auf die echte Adresse setzen (`header_up`), bevor
+`AUTH_TRUST_PROXY_HEADERS` an ist, sonst umgeht ein Client die Ratenbegrenzung der Kopplung mit erfundenen Adressen
+(Review vom 13. Oktober 2026); der Ingest-Endpunkt braucht dieselbe Grenze der Anfragegröße auch in Caddy.
 
 ### SP-1.10 Fachkern: Analyse einer Scheibe
 - **Ziel:** alles, was eine einzelne Scheibe hergibt, als Profi-Analyse rechnen, ohne Datenbank und ohne Historie ([[spiegel-statistics]]).
