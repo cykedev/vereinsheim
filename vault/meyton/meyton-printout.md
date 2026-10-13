@@ -24,7 +24,7 @@ Beobachtet am Beispiel vom 2. Oktober 2026 (abgerufen am 5. Oktober):
 
 | Bereich | Beispiel | Nutzen |
 |---|---|---|
-| Kopf | Disziplin „LP 40 alt“, Klasse, StartNr, StandNr 8, Wertung 02.10.2026 19:51, Name mit #Nummer, Verein | Gegenprobe; #Nummer vermutlich die SportpassID |
+| Kopf | Disziplin „LP 40 alt“, Klasse, StartNr, StandNr 8, Wertung 02.10.2026 19:51, Name mit #Nummer, Verein | Gegenprobe; #Nummer ist die SportpassID zur Druckzeit (siehe unten); neben der Klasse der Modus beim Druck: „Probe“, „Wertung“, „Training“ oder „Vorbereitung/Probe“ |
 | Fuß | initialisiert 19:21, gedruckt 19:52, `ID: ff914420`, Seitenzahl | Wechsel auf Wertung, Druckzeit, ScheibenID |
 | Ergebnis | 352 (371,4), Serien …, Zähler …, Innenzehner 2 | Gegenprobe; auswärts das Ergebnis selbst |
 | Teiler | die drei besten und die drei weitesten mit Schussnummer | Gegenprobe der Formel ([[spiegel-target-library]]) |
@@ -46,6 +46,14 @@ Meral-IT hat für den XML-Export festgestellt, dass dessen hexadezimale ID die S
 SELECT CAST(CONV('ff914420', 16, 10) AS SIGNED) - 4294967296 AS scheiben_id;  -- nur bei Werten ab 80000000 abziehen
 SELECT ScheibenID, StandNr, Disziplin, TotalRing, TotalRing01 FROM Scheiben WHERE ScheibenID = -7257056;
 ```
+
+**Befunde an 72 Ausdrucken des Users** (13. Oktober 2026, [[src-ssmdb2-kopie-2026-10-09]]):
+
+- Dieselbe ID steht auf mehreren Ausdrucken, wenn auf einer Scheibe mehrmals gedruckt wird, auch nach einem Neustart
+  der Probe mit ganz anderem Ergebnis (SF-72). Eine ID meint also eine Scheibe, nicht einen Ausdruck.
+- Die #Nummer ist die SportpassID zur Druckzeit. Beim User war sie anfangs falsch eingetragen; die Ablage trägt bei
+  denselben Scheiben die später korrigierte Nummer. Die SportpassID einer alten Scheibe kann sich in der Ablage also
+  nachträglich ändern (wie, ist offen); ein Opt-in greift damit auch rückwirkend.
 
 ## Lesen in Spiegel
 

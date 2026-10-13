@@ -26,7 +26,7 @@ relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]", "[[spiegel-bridge]]"
 
 ## Inhalt
 
-- **Probe erst seit September 2026:** Bis August 2026 haben alle Scheiben Wertung und keine einen Probeschuss; seitdem 63 Scheiben nur mit Probe. Probeschüsse vom 22. September stehen am 9. Oktober noch vollständig da: Eine reine Probe überlebt Wochen.
+- **Probe erst seit September 2026:** Bis August 2026 haben alle Scheiben Wertung und keine einen Probeschuss; seitdem 63 Scheiben nur mit Probe. Der erste Probeschuss der ganzen Ablage stammt vom **22. September 2026, 19:22**. Probeschüsse vom 22. September stehen am 9. Oktober noch vollständig da: Eine reine Probe überlebt Wochen.
 - Bis zu 70 Schüsse je Scheibe (Vertrag: höchstens 2.000 Zeilen). `Trefferzahl`, `TotalRing`, `TotalRing01` und alle 4.635 Serien stimmen exakt mit den Treffern; auch die Probe hat Serien.
 - **Platzhalter:** kein `--frei--`, aber 112 Scheiben mit Nach- und Vorname `unknown`, alle in der Starterliste „Trash“ und alle mit Sportpassnummer. „Trash“ umfasst 299 Scheiben (rund 20 %); was eine Scheibe dorthin bringt, ist offen. Status ist überall leer; Wettkampf und Training unterscheiden Starterliste und Rangliste (etwa „Training-LG“, „Kranzl“, „Jahrespreis“, „Jugend Wettkampf“).
 - **Sportpass:** 1.517 von 1.532 Scheiben tragen eine Nummer, 215 verschiedene, keine mit mehreren Namen, die größte achtstellig (kein Überlauf, SF-35).
@@ -48,3 +48,23 @@ Passend über den Namen: „König LG/LP“ (Wertung verdeckt), „Kranzl LG“,
 ## Eigene Scheiben des Users
 
 36 Scheiben an 31 Abenden (11. Oktober 2024 bis 9. Oktober 2026), 839 Wertungs- und 130 Probeschüsse, davon 28 Scheiben LP 40 alt; alle mit seiner Sportpassnummer, keine nur mit dem Namen. Eine Erstbefüllung von Spiegel aus der Kopie ist damit möglich (Vorschlag SP-1.13 in [[spiegel-roadmap]]).
+
+## Ausdrucke des Users gegen die Ablage (13. Oktober 2026)
+
+Die IDs aus 72 Meyton-Ausdrucken des Users (März 2025 bis Oktober 2026, alle aus der Zeit der Kopie, fast alle LP 40
+alt am eigenen Stand) gegen die Kopie gesucht; die Ausdrucke bleiben auf dem Mac des Users ([[adr-029]]).
+
+- **11 stehen in der Ablage:** 9 Wertung, 2 reine Probe vom 22. und 29. September 2026. Der Import der eigenen Scheiben
+  (`seed:own`) ist damit vollständig.
+- **52 fehlen, und im Kopf des Ausdrucks steht „Probe“:** alle vor dem 22. September 2026. An diesen Abenden hat die
+  Kopie Scheiben anderer Schützen, am Stand des Users aber keine, auch nicht unter einer anderen ID. Eine reine
+  Probe-Scheibe hinterließ vor dem 22. September nichts in der Ablage.
+- **4 fehlen mit „Wertung“** und einer Mannschaft im Kopf: An diesen Tagen (keiner davon Dienstag oder Freitag) hat
+  die Kopie keinen einzigen Schuss, also Rundenwettkämpfe auf einer fremden Anlage.
+- **4 weitere** sind Meytons Trainingsscheibe oder „Vorbereitung/Probe“ ohne Datum.
+- **Dieselbe ID auf zwei Ausdrucken** mit verschiedenem Ergebnis: fünfmal. Zweimal (Juni und Juli 2025) sind es
+  eindeutig zwei ganze Probe-Trainings nach einem Neustart der Probe, beide gedruckt (SF-72).
+- **Aufbewahrung offen:** Ob Meyton eine reine Probe irgendwann löscht, zeigt eine Kopie allein nicht. Belegt sind
+  mindestens 17 Tage (22. September bis 9. Oktober); eine reine Probe vom 8. September 2026 fehlt, war aber
+  vielleicht nie gespeichert. Eine zweite Kopie einige Wochen später entscheidet es
+  ([[spiegel-open-questions]]).
