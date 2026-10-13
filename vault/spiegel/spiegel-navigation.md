@@ -438,7 +438,8 @@ Kreise.
 - **Art** (`KindToggle`): Pokal, Training durchgestrichen (der Strich schneidet über eine Maske eine Lücke, wie die
   „-off“-Symbole von lucide; `lucide-react` hat keinen solchen Pokal), Wettkampf gold auf goldener Tönung.
 - **Leise** (User: „die 1 wirkt sehr präsent ist aber ja nur eine randinfo“): Zeichen im Token `quiet` (3,3 : 1 auf
-  der Fläche, nie für Text), Linie 1,75; „1“ und ⅒ in `muted-foreground`, mittelstark.
+  der Fläche, nie für Text), Linie 1,75; „1“ und ⅒ in `muted-foreground`, mittelstark. Die „1“ in 13 px statt 16 px,
+  damit sie so ruhig wirkt wie die kleinen Ziffern des Bruchs (User: „dass sie optisch besser zur 1/10 passt“).
 - **Ort:** rechts in der Zeile der großen Zahl bzw. des Titels (Platz `actions`), umbricht bei Platzmangel:
   - Seite einer Scheibe: Pokal und Bruch neben dem Ergebnis (nur Probe: nur der Bruch);
   - Fortschritt: der Bruch in der Ergebnis-Box; Liste: neben „Scheiben“ („Wertung für Ø und Abstand“); Start: neben dem

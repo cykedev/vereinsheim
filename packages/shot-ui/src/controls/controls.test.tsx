@@ -43,8 +43,26 @@ describe("ScoringToggle: der Bruch im weichen Kreis", () => {
     expect(html()).not.toContain("font-semibold")
   })
 
-  it("keine Schrift unter text-xs im Bruch", () => {
-    expect(html()).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/)
+  it("die 1 kleiner als der Bruch gesetzt, so ruhig wie seine Ziffern (User, 13. Oktober 2026)", () => {
+    expect(html({ scoring: "rings" })).toMatch(
+      /<span[^>]*class="[^"]*\btext-\[13px\][^"]*"[^>]*>1<\/span>/
+    )
+    expect(html({ scoring: "rings" })).not.toContain("text-base")
+    // tailwind-merge striche `leading-none` hinter einer Schriftgröße
+    expect(html({ scoring: "rings" })).toMatch(
+      /<span[^>]*class="[^"]*\bleading-none\b[^"]*"[^>]*>1<\/span>/
+    )
+    expect(html({ scoring: "decimal" })).toMatch(
+      /<span[^>]*class="[^"]*\bleading-none\b[^"]*"[^>]*>1\/10<\/span>/
+    )
+    expect(html({ scoring: "decimal" })).toMatch(
+      /<span[^>]*class="[^"]*\btext-base diagonal-fractions\b[^"]*"[^>]*>1\/10<\/span>/
+    )
+  })
+
+  it("keine Schrift unter text-xs, weder im Bruch noch in der 1", () => {
+    expect(html({ scoring: "decimal" })).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/)
+    expect(html({ scoring: "rings" })).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/)
   })
 })
 

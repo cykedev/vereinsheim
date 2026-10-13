@@ -43,12 +43,13 @@ export function ScoringToggle({
       className={className}
     >
       {/* Zehntel als Bruch der Schrift (Geist `frac`): die tiefgestellten Zeichen ₀–₉ fehlen in den geladenen Teilen
-          von Geist; ganze Ringe als 1 (User, 13. Oktober 2026) */}
+          von Geist; ganze Ringe als 1, in 13 px so ruhig wie die kleinen Ziffern des Bruchs (User, 13. Oktober 2026) */}
       <span
         aria-hidden="true"
         className={cn(
-          "text-base leading-none font-medium text-muted-foreground",
-          scoring === "decimal" && "diagonal-fractions"
+          // die Größe zuerst: eine spätere Schriftgröße nimmt tailwind-merge als Zeilenhöhe und striche `leading-none`
+          scoring === "decimal" ? "text-base diagonal-fractions" : "text-[13px]",
+          "leading-none font-medium text-muted-foreground"
         )}
       >
         {scoring === "rings" ? "1" : "1/10"}
