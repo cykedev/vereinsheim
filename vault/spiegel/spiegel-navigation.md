@@ -426,8 +426,10 @@ der box … eleganter und spart platz und könnte sich überall konsistent durch
 Kreise.
 
 - **Ein Baustein:** `RoundToggle` (`@vereinsheim/ui/design2/round-toggle`), 32 px, gefüllt in der Flächenfarbe, ohne Rand;
-  Gold (`warning`) nur für das Hervorgehobene.
-- **Wertung** (`ScoringToggle`): der Bruch aus der Typografie, ¹⁄₁ ganze Ringe, ¹⁄₁₀ Zehntel; ein Tippen stellt auf die
+  Gold (Token `gold`: hell `#a87800`, dunkel `#f1c453`, auf `warning-wash`) nur für das Hervorgehobene.
+- **Wertung** (`ScoringToggle`): „1“ für ganze Ringe, ⅒ für Zehntel, gesetzt von Geist selbst (`diagonal-fractions`, das
+  Merkmal `frac`). Die Ziffern von Hand hoch- und tiefzustellen misslang (Tailwind verschiebt `sup`/`sub` schon), die
+  tiefgestellten Zeichen ₀–₉ fehlen in den geladenen Teilen von Geist (User, 13. Oktober 2026). Ein Tippen stellt auf die
   andere. Ob die gezeigte die amtliche ist, sagen Name und Tooltip; ein Punkt dafür erklärte sich nicht.
 - **Art** (`KindToggle`): Pokal, Training gedämpft, Wettkampf gold auf goldener Tönung; ohne Strich (`lucide-react` hat
   keinen durchgestrichenen Pokal).

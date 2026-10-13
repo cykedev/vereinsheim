@@ -269,7 +269,8 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 ## 10. Design 2 (nur Spiegel, ADR-030)
 
 - **Tokens aus `@vereinsheim/ui/design2.css`** statt `theme.css`: dieselben Namen, die die
-  ui-Primitives nutzen, dazu Design-2-eigene (`surface-2`, `line-strong`, `foreground-2`, `*-wash`,
+  ui-Primitives nutzen, dazu Design-2-eigene (`surface-2`, `line-strong`, `foreground-2`, `*-wash`, `gold` (ein Zeichen in Gold, goldener als das
+  Text-Token `warning`),
   `paper`, `spiegel`, `score-10` … `score-7`, `overlay`). Hell auf `:root`, dunkel unter `.dark`
   (Klassen-Strategie); jede Farbe, die wechselt, steht in beiden Blöcken (Test `tokens.test.ts`). Die
   Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich.
