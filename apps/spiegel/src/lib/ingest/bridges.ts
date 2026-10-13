@@ -17,7 +17,7 @@ import {
 import { sportpassHash } from "@vereinsheim/ingest-contract/sportpass"
 
 import type { Db } from "../db"
-import { FINAL_AFTER_MS, RESTING_AFTER_MS } from "./meyton-ssmdb2"
+import { FINAL_AFTER_MS, INCOMPLETE_FLAGS, RESTING_AFTER_MS } from "./meyton-ssmdb2"
 
 /** so lange gilt ein Kopplungscode */
 export const PAIRING_TTL_MS = 15 * 60_000
@@ -161,17 +161,21 @@ export async function advanceCardStates(
   siteId: number,
   { nowMs = Date.now(), runStartedAt }: { nowMs?: number; runStartedAt?: Date | null } = {}
 ): Promise<{ resting: number; final: number }> {
-  const finalBefore = new Date(
-    Math.max(nowMs - FINAL_AFTER_MS, runStartedAt ? runStartedAt.getTime() : 0)
-  )
+  // ein Lauf, der „in der Zukunft“ begann, schöbe die Grenze über jetzt hinaus (Review)
+  const runStart = runStartedAt ? Math.min(runStartedAt.getTime(), nowMs) : 0
+  const finalBefore = new Date(Math.max(nowMs - FINAL_AFTER_MS, runStart))
+  const incomplete = [...INCOMPLETE_FLAGS]
+  // ohne lesbares Lebenszeichen zählen Ende oder Beginn, sonst schaltete die Scheibe nie weiter (Review)
   const final = await db.$executeRaw`
-    UPDATE "Card" SET "state" = 'final', "complete" = NOT ('unvollstaendig' = ANY("flags")), "updatedAt" = now()
+    UPDATE "Card" SET "state" = 'final', "complete" = NOT ("flags" && ${incomplete}::text[]), "updatedAt" = now()
     WHERE "sourceId" IN (SELECT "id" FROM "Source" WHERE "siteId" = ${siteId})
-      AND "state" IN ('open', 'resting') AND "lifesignAt" < ${finalBefore}`
+      AND "state" IN ('open', 'resting')
+      AND COALESCE("lifesignAt", "endedAt", "startedAt") < ${finalBefore}`
   const resting = await db.$executeRaw`
     UPDATE "Card" SET "state" = 'resting', "updatedAt" = now()
     WHERE "sourceId" IN (SELECT "id" FROM "Source" WHERE "siteId" = ${siteId})
-      AND "state" = 'open' AND "lifesignAt" < ${new Date(nowMs - RESTING_AFTER_MS)}`
+      AND "state" = 'open'
+      AND COALESCE("lifesignAt", "endedAt", "startedAt") < ${new Date(nowMs - RESTING_AFTER_MS)}`
   return { resting, final }
 }
 
@@ -271,14 +275,23 @@ export async function bridgeState(
       },
       select: { scheibenId: true, startedAt: true },
     }),
-    db.rawSnapshot.aggregate({
-      where: { source: { siteId } },
-      _max: { lastObservedAt: true },
-    }),
+    // über den Index (Quelle, letzte Beobachtung): je Quelle der jüngste Stand, nicht alle Stände (Review)
+    db.source.findMany({ where: { siteId }, select: { id: true } }).then((sources) =>
+      Promise.all(
+        sources.map((source) =>
+          db.rawSnapshot.findFirst({
+            where: { sourceId: source.id },
+            orderBy: { lastObservedAt: "desc" },
+            select: { lastObservedAt: true },
+          })
+        )
+      )
+    ),
   ])
   const blocked = new Map(
     [...tombstones, ...locks].map((b) => [`${b.scheibenId}:${b.startedAt.getTime()}`, b])
   )
+  const newest = Math.max(0, ...watermark.map((w) => w?.lastObservedAt.getTime() ?? 0))
   return {
     site,
     epoch: epoch?.epoch ?? null,
@@ -290,6 +303,6 @@ export async function bridgeState(
       scheibenId: b.scheibenId,
       startedAt: b.startedAt.toISOString(),
     })),
-    watermark: watermark._max.lastObservedAt?.toISOString() ?? null,
+    watermark: newest ? new Date(newest).toISOString() : null,
   }
 }

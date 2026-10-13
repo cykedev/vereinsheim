@@ -21,18 +21,21 @@ const MUSTER = BigInt(12345678)
 /** die Stände einer Scheibe nacheinander durch den Adapter, wie Spiegel sie bekäme */
 function adaptAll(snapshots: readonly SnapshotV1[]) {
   let previousLifesign: string | null = null
+  let previousLifesignAtMs: number | null = null
   let previousClockOffsetMs: number | null = null
   const cards: AdaptedCard[] = []
   for (const snapshot of snapshots) {
     const result = adaptSnapshot(snapshot, {
       timeZone: TIME_ZONE,
       previousLifesign,
+      previousLifesignAtMs,
       previousClockOffsetMs,
       siteClockOffsetMs: null,
     })
     if (result.kind !== "card") throw new Error(`Quarantäne: ${result.problems.join(", ")}`)
     cards.push(result.card)
     previousLifesign = result.card.lifesign
+    previousLifesignAtMs = Date.parse(snapshot.observedAt)
     previousClockOffsetMs = result.card.clockOffsetMs
   }
   return cards
@@ -115,6 +118,7 @@ describe("Adapter im Einzelnen", () => {
   const context = {
     timeZone: TIME_ZONE,
     previousLifesign: null,
+    previousLifesignAtMs: null,
     previousClockOffsetMs: null,
     siteClockOffsetMs: null,
   }
@@ -183,6 +187,21 @@ describe("Adapter im Einzelnen", () => {
     expect(adaptSnapshot(extra, context).kind).toBe("card")
   })
 
+  it("nach einem Ausfall der Brücke misst die Beobachtung nicht die Uhr des Stands (Review)", () => {
+    // der vorige Stand vor einer Stunde gesehen, inzwischen weitergeschossen: kein Versatz, kein Merkmal
+    const result = adaptSnapshot(snapshot, {
+      ...context,
+      previousLifesign: "2026-01-01 00:00:00",
+      previousLifesignAtMs: Date.parse(snapshot.observedAt) - 3_600_000,
+    })
+    if (result.kind !== "card") throw new Error("keine Scheibe")
+    expect(result.card.clockOffsetMs).toBeNull()
+    expect(result.card.flags).not.toContain("uhr-abweichung")
+    expect(result.card.startedAtMs).toBe(
+      (adaptSnapshot(snapshot, context) as { card: { startedAtMs: number } }).card.startedAtMs
+    )
+  })
+
   it("TIMESTAMP statt datetime hängt an der Sitzungs-Zeitzone: Quarantäne statt raten (SF-31)", () => {
     const data = {
       ...snapshot.data,
@@ -218,7 +237,12 @@ describe("Adapter im Einzelnen", () => {
     })
     const lifesign = lifesignOf(snapshot)
     const state = (s: SnapshotV1, previousLifesign: string | null) => {
-      const result = adaptSnapshot(s, { ...context, previousLifesign })
+      // das vorige Lebenszeichen fünf Sekunden vor der Beobachtung gesehen
+      const result = adaptSnapshot(s, {
+        ...context,
+        previousLifesign,
+        previousLifesignAtMs: Date.parse(s.observedAt) - 5_000,
+      })
       return result.kind === "card" ? result.card.state : null
     }
     expect(state(at(0), "2026-01-01 00:00:00")).toBe("open")
@@ -235,7 +259,11 @@ describe("Adapter im Einzelnen", () => {
       observedAt: new Date(lifesignMs + 5_000 + minutes * 60_000).toISOString(),
     })
     const adapt = (s: SnapshotV1) => {
-      const result = adaptSnapshot(s, { ...context, previousLifesign: "2026-01-01 00:00:00" })
+      const result = adaptSnapshot(s, {
+        ...context,
+        previousLifesign: "2026-01-01 00:00:00",
+        previousLifesignAtMs: Date.parse(s.observedAt) - 5_000,
+      })
       if (result.kind !== "card") throw new Error("keine Scheibe")
       return result.card
     }

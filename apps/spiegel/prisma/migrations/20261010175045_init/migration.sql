@@ -360,6 +360,9 @@ CREATE UNIQUE INDEX "RawRow_sourceId_scheibenId_table_checksum_key" ON "RawRow"(
 CREATE UNIQUE INDEX "RawColumnSet_checksum_key" ON "RawColumnSet"("checksum");
 
 -- CreateIndex
+CREATE INDEX "RawSnapshot_sourceId_lastObservedAt_idx" ON "RawSnapshot"("sourceId", "lastObservedAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "RawSnapshot_sourceId_scheibenId_sequence_key" ON "RawSnapshot"("sourceId", "scheibenId", "sequence");
 
 -- CreateIndex

@@ -53,13 +53,22 @@ export function contentChecksumOf(data: SnapshotDataV1): string {
 export const lifesignOfData = (data: SnapshotDataV1): string | null =>
   data[LIFESIGN.table].rows[0]?.[LIFESIGN.column] ?? null
 
+/** was der Adapter über den Stand davor wissen muss: Lebenszeichen und wann es zuletzt beobachtet wurde */
+export interface PreviousLifesign {
+  previousLifesign: string | null
+  previousLifesignAtMs: number | null
+}
+
 export type StoreResult =
   /** neu gespeichert, mit so vielen neuen Zeilen; dazu das Lebenszeichen des Stands davor (für den Adapter) */
-  | { outcome: "stored"; snapshotId: bigint; newRows: number; previousLifesign: string | null }
-  /** derselbe Stand wie zuletzt; nur seine letzte Folgenummer steigt */
-  | { outcome: "unchanged"; snapshotId: bigint }
+  | ({ outcome: "stored"; snapshotId: bigint; newRows: number } & PreviousLifesign)
+  /**
+   * derselbe Stand wie zuletzt; nur seine letzte Folgenummer steigt. `handled`: der Stand ist gedeutet oder in
+   * Quarantäne; sonst holt das Einlesen die Deutung nach (Review: ein Fehler beim Deuten verlor ihn sonst für immer)
+   */
+  | { outcome: "unchanged"; snapshotId: bigint; handled: boolean }
   /** nur das Lebenszeichen hat sich bewegt: am letzten Stand vermerkt, keine Zeile neu (D1) */
-  | { outcome: "lifesign"; snapshotId: bigint; previousLifesign: string | null }
+  | ({ outcome: "lifesign"; snapshotId: bigint; handled: boolean } & PreviousLifesign)
   /** älter als der zuletzt gesehene Stand (SF-26): nichts geändert */
   | { outcome: "stale"; latestSequence: bigint }
   /** Folgenummer weiter als `MAX_SEQUENCE_AHEAD_MS` in der Zukunft: abgelehnt, nichts geändert */
@@ -99,15 +108,23 @@ export async function storeSnapshot(
         lastSequence: true,
         contentChecksum: true,
         lifesign: true,
+        lifesignAt: true,
+        adapterVersion: true,
+        quarantine: true,
       },
     })
+    const handled = !!latest && (latest.adapterVersion !== null || latest.quarantine !== null)
+    const previous: PreviousLifesign = {
+      previousLifesign: latest?.lifesign ?? null,
+      previousLifesignAtMs: latest?.lifesignAt?.getTime() ?? null,
+    }
     if (latest && latest.checksum === snapshot.checksum) {
       if (sequence > latest.lastSequence)
         await tx.rawSnapshot.update({
           where: { id: latest.id },
           data: { lastSequence: sequence, lastObservedAt: observedAt },
         })
-      return { outcome: "unchanged", snapshotId: latest.id }
+      return { outcome: "unchanged", snapshotId: latest.id, handled }
     }
     if (latest && sequence <= latest.lastSequence)
       return { outcome: "stale", latestSequence: latest.lastSequence }
@@ -124,7 +141,7 @@ export async function storeSnapshot(
           lifesignAt: observedAt,
         },
       })
-      return { outcome: "lifesign", snapshotId: latest.id, previousLifesign: latest.lifesign }
+      return { outcome: "lifesign", snapshotId: latest.id, handled, ...previous }
     }
 
     const columns = Object.fromEntries(TABLES.map((name) => [name, snapshot.data[name].columns]))
@@ -194,7 +211,7 @@ export async function storeSnapshot(
       outcome: "stored",
       snapshotId: saved.id,
       newRows: created.count,
-      previousLifesign: latest?.lifesign ?? null,
+      ...previous,
     }
   })
 }

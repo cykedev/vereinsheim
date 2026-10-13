@@ -211,6 +211,78 @@ describe("ingestBatch", () => {
     expect(await cardOf(expected.scheibenId)).toBeNull()
   })
 
+  it("eine andere SportpassID an derselben Scheibe: nichts geschrieben, in Quarantäne (Review, SF-37)", async () => {
+    const other = await db.user.create({
+      data: { email: `b-${site.siteId}@example.com`, passwordHash: "-" },
+    })
+    try {
+      await db.sportpassConsent.create({
+        data: {
+          userId: other.id,
+          siteId: site.siteId,
+          sportpassId: BigInt(87654321),
+          confirmedAt: new Date(),
+        },
+      })
+      const expected = frozenExpected("SF-02").cards[0]
+      const snapshots = sent("SF-02", expected.scheibenId)
+      await ingest(snapshots.slice(0, 1))
+      const before = await cardOf(expected.scheibenId)
+      expect(before?.ownerId).toBe(site.ownerId)
+      const last = snapshots.at(-1)!
+      const data = {
+        ...last.data,
+        scheiben: {
+          ...last.data.scheiben,
+          rows: last.data.scheiben.rows.map((row) => ({ ...row, SportpassID: "87654321" })),
+        },
+      }
+      const moved: SnapshotV1 = {
+        ...last,
+        sequence: Math.max(last.sequence, snapshots[0].sequence + 1),
+        data,
+        checksum: computeChecksum(data),
+      }
+      expect((await ingest([moved]))[0].outcome).toBe("quarantined")
+      const after = await cardOf(expected.scheibenId)
+      expect(after?.ownerId).toBe(site.ownerId)
+      expect(after?.sportpassId).toBe(MUSTER)
+      expect(after?.currentRevision?.shots.length).toBe(before?.currentRevision?.shots.length)
+    } finally {
+      await db.user.delete({ where: { id: other.id } })
+    }
+  })
+
+  it("eine Scheibe, die sich nicht schreiben lässt, hält die übrigen des Stapels nicht auf; Ungedeutetes wird nachgeholt (Review)", async () => {
+    const good = frozenExpected("SF-09").cards[0]
+    const [ok] = sent("SF-09", good.scheibenId)
+    const badSource = frozenExpected("SF-17").cards[0]
+    const [base] = sent("SF-17", badSource.scheibenId)
+    // zwei Zeilen mit derselben Stellung und Nummer: der Adapter liest sie, `writeRevision` lehnt sie ab
+    const rows = base.data.treffer.rows
+    const data = {
+      ...base.data,
+      treffer: { ...base.data.treffer, rows: [...rows, { ...rows[0], x: "17" }] },
+    }
+    const bad: SnapshotV1 = { ...base, data, checksum: computeChecksum(data) }
+    const results = await ingest([bad, ok].sort((a, b) => a.sequence - b.sequence))
+    const byId = new Map(results.map((r) => [r.scheibenId, r.outcome]))
+    expect(byId.get(bad.scheibenId)).toBe("quarantined")
+    expect(byId.get(ok.scheibenId)).toBe("stored")
+    expect(await cardOf(ok.scheibenId)).not.toBeNull()
+    // derselbe kaputte Stand noch einmal: endgültig, keine Schleife
+    expect((await ingest([{ ...bad, sequence: bad.sequence + 1 }]))[0].outcome).toBe("unchanged")
+
+    // ein gespeicherter, aber nie gedeuteter Stand (etwa nach einem Ausfall der Datenbank) wird beim nächsten Mal gedeutet
+    await db.card.deleteMany({ where: { sourceId: site.sourceId, scheibenId: ok.scheibenId } })
+    await db.rawSnapshot.updateMany({
+      where: { sourceId: site.sourceId, scheibenId: ok.scheibenId },
+      data: { adapterVersion: null },
+    })
+    expect((await ingest([{ ...ok, sequence: ok.sequence + 1 }]))[0].outcome).toBe("unchanged")
+    expect(await cardOf(ok.scheibenId)).not.toBeNull()
+  })
+
   it("nur das Lebenszeichen bewegt: vermerkt, die Scheibe wieder offen, kein neuer Stand", async () => {
     const expected = frozenExpected("SF-10").cards[0]
     const snapshots = sent("SF-10", expected.scheibenId)

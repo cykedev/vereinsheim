@@ -46,10 +46,23 @@ export const CLOCK_FLAG_MS = 60_000
 export const CLOCK_CORRECT_MS = 5 * 60_000
 /** eine Schusszeit so weit neben der des letzten Schusses ist ein Uhrsprung (SF-30) */
 const CLOCK_JUMP_MS = 86_400_000
+/**
+ * Das Lebenszeichen „läuft“ nur, wenn der vorige Stand vor höchstens so langer Zeit beobachtet wurde: Nach einem Ausfall
+ * der Brücke oder in einem neuen Zyklus der ScheibenID (SF-77) mäße die Beobachtung sonst die Dauer des Ausfalls statt
+ * der Uhr des Stands (Review). Die Brücke schickt ein reines Lebenszeichen höchstens alle 30 s.
+ */
+export const LIFESIGN_WINDOW_MS = 60_000
 /** ruhend nach so langer Zeit ohne Lebenszeichen (SF-10) */
 export const RESTING_AFTER_MS = 5 * 60_000
 /** endgültig nach so langer Zeit ohne Änderung ([[spiegel-bridge]], „Zustand statt Abschluss“) */
 export const FINAL_AFTER_MS = 12 * 3_600_000
+
+/** Merkmale, mit denen eine Scheibe nie vollständig ist; dieselbe Regel steht in SQL in `advanceCardStates` */
+export const INCOMPLETE_FLAGS = ["unvollstaendig", "leer"] as const
+
+/** endgültig und ohne fehlende Wertungsschüsse: erst dann zählt die Scheibe für Rekorde (SF-66) */
+export const isComplete = (state: "open" | "resting" | "final", flags: readonly string[]) =>
+  state === "final" && !INCOMPLETE_FLAGS.some((flag) => flags.includes(flag))
 
 type ColumnFamily = "int" | "datetime" | "text"
 
@@ -176,6 +189,8 @@ export interface AdapterContext {
   targetId?: TargetId | null
   /** Lebenszeichen des vorigen Stands dieser Scheibe als Text; null beim ersten */
   previousLifesign: string | null
+  /** wann dieses Lebenszeichen zuletzt beobachtet wurde (Uhr der Brücke) */
+  previousLifesignAtMs: number | null
   /** an der Scheibe gemerkter Versatz der Uhr des Stands (Beobachtung minus Lebenszeichen) */
   previousClockOffsetMs: number | null
   /** nächstgelegene Uhrabweichung der Anlage aus dem Heartbeat (Anlage minus Brücke), Rückfall ohne Messung */
@@ -304,7 +319,10 @@ export function adaptSnapshot(snapshot: SnapshotV1, context: AdapterContext): Ad
   const beating =
     lifesignWallMs !== null &&
     context.previousLifesign !== null &&
-    context.previousLifesign !== lifesign
+    context.previousLifesign !== lifesign &&
+    context.previousLifesignAtMs !== null &&
+    observedMs - context.previousLifesignAtMs >= 0 &&
+    observedMs - context.previousLifesignAtMs <= LIFESIGN_WINDOW_MS
   const measuredOffset = beating ? observedMs - (lifesignWallMs as number) : null
   const clockOffsetMs = measuredOffset ?? context.previousClockOffsetMs
   const correction =
@@ -389,7 +407,8 @@ export function adaptSnapshot(snapshot: SnapshotV1, context: AdapterContext): Ad
   if (
     completeness === "nur-probe" ||
     completeness === "unvollstaendig" ||
-    completeness === "ueber-soll"
+    completeness === "ueber-soll" ||
+    completeness === "leer"
   )
     flags.push(completeness)
   if (!targetId) flags.push(FLAG_UNKNOWN_DISCIPLINE)

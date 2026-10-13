@@ -203,8 +203,14 @@ export function ConfirmEpochButton({ sourceId, epoch }: { sourceId: number; epoc
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
   return (
     <>
+      {error && (
+        <span role="alert" className="text-[13px] text-destructive">
+          {error}
+        </span>
+      )}
       <Button
         type="button"
         variant="outline"
@@ -222,8 +228,9 @@ export function ConfirmEpochButton({ sourceId, epoch }: { sourceId: number; epoc
         confirmLabel="Bestätigen"
         onConfirm={() =>
           startTransition(async () => {
-            await confirmEpoch(sourceId)
-            router.refresh()
+            const result = await confirmEpoch(sourceId)
+            if ("error" in result) setError(getErrorMessage(result) ?? null)
+            else router.refresh()
           })
         }
       />

@@ -214,6 +214,8 @@ model RawSnapshot {
   revisions       CardRevision[]
 
   @@unique([sourceId, scheibenId, sequence])
+  // Wasserstand für die Brücke (`GET /state`): der jüngste Stand je Quelle, ohne alle zu lesen
+  @@index([sourceId, lastObservedAt])
 }
 
 // abgelehnte oder fremde Scheibe, die nicht wiederkommen darf; die Brücke kennt sie auch

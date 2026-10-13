@@ -129,6 +129,33 @@ describe("Grenzen (D3, D4)", () => {
     expect(limiter.take("a", 5_000)).toBeNull()
   })
 
+  it("die Eimer haben eine Obergrenze: der am längsten nicht genutzte fällt heraus", () => {
+    const limiter = new RateLimiter(1, 60_000, 3)
+    for (const key of ["a", "b", "c", "d"]) expect(limiter.take(key, 0)).toBeNull()
+    expect(limiter.size).toBe(3)
+    // „a“ ist herausgefallen und hat wieder einen Platz, „d“ nicht
+    expect(limiter.take("a", 0)).toBeNull()
+    expect(limiter.take("d", 0)).not.toBeNull()
+  })
+
+  it("falsche Tokens: nach 30 Versuchen 429, ohne die Datenbank zu fragen", async () => {
+    const limits = createLimits()
+    const statuses: number[] = []
+    for (let i = 0; i < 31; i++)
+      statuses.push(
+        (
+          await handleState(
+            new Request(`${BASE}/state`, {
+              headers: { authorization: `Bearer spgl_${"A".repeat(43)}` },
+            }),
+            deps(limits)
+          )
+        ).status
+      )
+    expect(statuses.slice(0, 30).every((s) => s === 401)).toBe(true)
+    expect(statuses[30]).toBe(429)
+  })
+
   it("ausgelastet: 503 mit Retry-After, ohne die Anfrage zu lesen", async () => {
     const limits = createLimits()
     const paired = await pair(limits)

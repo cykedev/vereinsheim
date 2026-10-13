@@ -172,6 +172,18 @@ describe("Heartbeat", () => {
     expect(await stateOf(partial.id)).toEqual({ state: "final", complete: false })
   })
 
+  it("ohne Lebenszeichen zählt der Beginn; eine leere Scheibe ist nie vollständig (Review)", async () => {
+    const none = await card(9301, "open", 0)
+    await db.card.update({
+      where: { id: none.id },
+      data: { lifesignAt: null, startedAt: new Date(NOW - 13 * 3_600_000) },
+    })
+    const empty = await card(9302, "resting", 13 * 3_600_000, ["leer"])
+    await advanceCardStates(db, site.siteId, { nowMs: NOW })
+    expect(await stateOf(none.id)).toEqual({ state: "final", complete: true })
+    expect(await stateOf(empty.id)).toEqual({ state: "final", complete: false })
+  })
+
   it("ein neuer Lauf der Brücke macht alles davor endgültig; die Uhr wird nur bei Änderung neu vermerkt", async () => {
     const paired = await pairedBridge()
     const before = await card(9201, "resting", 20 * 60_000)

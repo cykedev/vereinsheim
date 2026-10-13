@@ -10,20 +10,21 @@ import type { TargetId } from "@vereinsheim/shot-core/targets"
 
 import type { Db } from "../db"
 import { CardIdentityConflictError, writeRevision } from "../db/cards"
-import { storeSnapshot } from "../db/raw"
+import { storeSnapshot, type PreviousLifesign } from "../db/raw"
 import { FAMILY_NAMES } from "../families"
 import {
   adaptSnapshot,
   ADAPTER_VERSION,
   disciplineOf,
   hasHeldShot,
+  isComplete,
   schemaProblems,
   sportpassIdOf,
   type AdaptedCard,
 } from "./meyton-ssmdb2"
 
-/** so viele Zyklen einer ScheibenID probiert der Ablauf (SF-77: die ID kehrt nach rund 49,7 Tagen wieder) */
-const MAX_CYCLES = 3
+/** dieselbe Scheibe, wenn ihr Beginn so nah liegt; die ScheibenID kehrt erst nach rund 49,7 Tagen wieder (SF-77) */
+const SAME_CARD_MS = 7 * 86_400_000
 /** Grabsteine und Löschsperren gelten für eine ScheibenID, deren Beginn so nah liegt (dieselbe Scheibe, SF-28) */
 const BLOCK_WINDOW_MS = 30 * 86_400_000
 
@@ -76,9 +77,26 @@ async function consentsOf(db: Db, siteId: number): Promise<Map<string, string>> 
   return new Map(rows.map((r) => [r.sportpassId.toString(), r.userId]))
 }
 
-/** Grabstein oder Löschsperre für diese ScheibenID mit einem Beginn nahe der Beobachtung (SF-28) */
+/**
+ * Beginn der Scheibe, grob: der früheste plausible Schuss als Ortszeit (± die Zone). Genug, um Grabsteine und Löschsperren einer
+ * ScheibenID zuzuordnen, die erst nach 49,7 Tagen wiederkehrt; ohne Schuss die Beobachtung.
+ */
+function startHintMs(snapshot: SnapshotV1): number {
+  const times = snapshot.data.treffer.rows
+    .map((row) => Date.parse(`${(row.Zeitstempel ?? "").replace(" ", "T")}Z`))
+    .filter((t) => Number.isFinite(t) && t > Date.UTC(1971, 0, 1))
+  if (!times.length) return Date.parse(snapshot.observedAt)
+  // wie im Adapter: nur Zeiten nahe dem letzten Schuss, eine Uhr, die 2009 zeigte, verschöbe sonst alles (SF-30)
+  const last = Math.max(...times)
+  return Math.min(...times.filter((t) => last - t <= 86_400_000))
+}
+
+/**
+ * Grabstein oder Löschsperre für diese ScheibenID mit einem Beginn nahe dem der Scheibe (SF-28). Gemessen am Beginn,
+ * nicht an der Beobachtung: Liest die Brücke eine Scheibe Wochen später nach, gilt die Sperre trotzdem (Review).
+ */
 async function isBlocked(db: Db, sourceId: number, snapshot: SnapshotV1): Promise<boolean> {
-  const at = Date.parse(snapshot.observedAt)
+  const at = startHintMs(snapshot)
   const window = {
     gte: new Date(at - BLOCK_WINDOW_MS),
     lte: new Date(at + BLOCK_WINDOW_MS),
@@ -156,98 +174,123 @@ async function siteClockAt(db: Db, siteId: number, atMs: number): Promise<number
   return nearest?.offsetMs ?? null
 }
 
-/** die Scheibe der Kennung im jüngsten Zyklus, für den gemerkten Versatz der Uhr */
-async function latestCard(db: Db, sourceId: number, scheibenId: number) {
-  return db.card.findFirst({
+/** die Scheiben einer Kennung über alle Zyklen (SF-77), jüngster Zyklus zuerst */
+async function cardsOfKey(db: Db, sourceId: number, scheibenId: number) {
+  return db.card.findMany({
     where: { sourceId, scheibenId },
     orderBy: { cycle: "desc" },
-    select: { id: true, cycle: true, clockOffsetMs: true },
+    select: {
+      id: true,
+      cycle: true,
+      startedAt: true,
+      ownerId: true,
+      sportpassId: true,
+      clockOffsetMs: true,
+    },
   })
 }
 
-/** nur das Lebenszeichen bewegt: die Scheibe ist wieder offen (SF-10), sonst nichts (D1) */
+/**
+ * nur das Lebenszeichen bewegt: die Scheibe des jüngsten Zyklus ist wieder offen (SF-10), sonst nichts (D1). Das
+ * Lebenszeichen wandert nur vorwärts, auch wenn ein älterer Stand gleichzeitig geschrieben wird (Review).
+ */
 async function touchLifesign(db: Db, sourceId: number, scheibenId: number, atMs: number) {
-  const card = await latestCard(db, sourceId, scheibenId)
+  const [card] = await cardsOfKey(db, sourceId, scheibenId)
   if (!card) return
-  await db.card.update({
-    where: { id: card.id },
-    data: { lifesignAt: new Date(atMs), state: "open", complete: false },
-  })
+  const at = new Date(atMs)
+  await db.$executeRaw`
+    UPDATE "Card" SET "lifesignAt" = GREATEST(COALESCE("lifesignAt", ${at}), ${at}), "state" = 'open',
+      "complete" = false, "updatedAt" = now()
+    WHERE "id" = ${card.id}`
 }
 
-/** endgültig und nicht zu wenige Wertungsschüsse: erst dann zählt die Scheibe für Rekorde (SF-66) */
-const completeOf = (card: AdaptedCard) =>
-  card.state === "final" && card.completeness !== "unvollstaendig" && card.completeness !== "leer"
+/** Fehler beim Deuten, die bei jeder Wiederholung wiederkämen: Quarantäne statt erneut versuchen */
+const isDeterministic = (error: unknown) =>
+  error instanceof RangeError || error instanceof CardIdentityConflictError
 
-/** einen gespeicherten Stand deuten und als Scheibe schreiben; null: Quarantäne */
+type Handled = "stored" | "quarantined"
+
+async function quarantine(db: Db, snapshotId: bigint, reason: string): Promise<Handled> {
+  await db.rawSnapshot.update({ where: { id: snapshotId }, data: { quarantine: reason } })
+  return "quarantined"
+}
+
+/** einen gespeicherten Stand deuten und als Scheibe schreiben; `quarantined`, wenn das nicht geht oder nicht darf */
 async function adaptAndWrite(
   db: Db,
   target: IngestTarget,
   sourceId: number,
   ownerId: string,
   snapshot: SnapshotV1,
-  stored: { snapshotId: bigint; previousLifesign: string | null }
-): Promise<"stored" | "quarantined"> {
+  stored: { snapshotId: bigint } & PreviousLifesign
+): Promise<Handled> {
   const named = disciplineOf(snapshot)
   const problems = schemaProblems(snapshot)
-  if (!named || problems.length) {
-    await db.rawSnapshot.update({
-      where: { id: stored.snapshotId },
-      data: { quarantine: (problems.length ? problems : ["DisziplinID fehlt"]).join("; ") },
-    })
-    return "quarantined"
-  }
+  if (!named || problems.length)
+    return quarantine(
+      db,
+      stored.snapshotId,
+      (problems.length ? problems : ["DisziplinID fehlt"]).join("; ")
+    )
   const known = await db.discipline.findUnique({
     where: { siteId_meytonId_name: { siteId: target.siteId, ...named } },
-    select: { targetId: true },
+    select: { id: true, targetId: true },
   })
-  const previous = await latestCard(db, sourceId, snapshot.scheibenId)
+  const cards = await cardsOfKey(db, sourceId, snapshot.scheibenId)
   const result = adaptSnapshot(snapshot, {
     timeZone: target.timeZone,
     targetId: known ? (known.targetId as TargetId | null) : undefined,
     previousLifesign: stored.previousLifesign,
-    previousClockOffsetMs: previous?.clockOffsetMs ?? null,
+    previousLifesignAtMs: stored.previousLifesignAtMs,
+    previousClockOffsetMs: cards[0]?.clockOffsetMs ?? null,
     siteClockOffsetMs: await siteClockAt(db, target.siteId, Date.parse(snapshot.observedAt)),
   })
-  if (result.kind === "quarantine") {
-    await db.rawSnapshot.update({
-      where: { id: stored.snapshotId },
-      data: { quarantine: result.problems.join("; ") },
-    })
-    return "quarantined"
-  }
+  if (result.kind === "quarantine")
+    return quarantine(db, stored.snapshotId, result.problems.join("; "))
   const card = result.card
-  const discipline = await disciplineFor(db, target.siteId, card.discipline)
-  const input = {
-    card: {
-      sourceId,
-      scheibenId: card.scheibenId,
-      ownerId,
-      sportpassId: card.sportpassId,
-      disciplineId: discipline.id,
-      stand: card.stand,
-      startedAtMs: card.startedAtMs,
-      endedAtMs: card.endedAtMs,
-      kind: card.kind,
-      state: card.state,
-      complete: completeOf(card),
-      flags: card.flags,
-      origin: "raw" as const,
-      lifesignAtMs: card.lifesignAtMs,
-      clockOffsetMs: card.clockOffsetMs,
-    },
-    shots: card.shots,
-    reason: "snapshot",
-    rawSnapshotId: stored.snapshotId,
-    sequence: snapshot.sequence,
-  }
-  for (let cycle = previous?.cycle ?? 0; ; cycle++) {
-    try {
-      await writeRevision(db, { ...input, card: { ...input.card, cycle } })
-      break
-    } catch (error) {
-      if (!(error instanceof CardIdentityConflictError) || cycle + 1 >= MAX_CYCLES) throw error
-    }
+  // derselbe Durchgang ist die Scheibe eines Zyklus mit nahem Beginn; sonst ein neuer Zyklus (SF-77)
+  const same = cards.find((c) => Math.abs(c.startedAt.getTime() - card.startedAtMs) <= SAME_CARD_MS)
+  const cycle = same ? same.cycle : cards.length ? cards[0].cycle + 1 : 0
+  // eine Scheibe gehört dem, dessen Zustimmung sie brachte; trägt sie danach eine andere SportpassID, wird nichts
+  // geschrieben, sonst landeten fremde Schüsse beim ersten Besitzer (Review, SF-37). Der Admin klärt es.
+  if (
+    same &&
+    (same.ownerId !== ownerId ||
+      (same.sportpassId !== null &&
+        card.sportpassId !== null &&
+        same.sportpassId !== card.sportpassId))
+  )
+    return quarantine(db, stored.snapshotId, "SportpassID oder Besitzer gewechselt")
+  const discipline = known ?? (await disciplineFor(db, target.siteId, card.discipline))
+  try {
+    await writeRevision(db, {
+      card: {
+        sourceId,
+        scheibenId: card.scheibenId,
+        cycle,
+        ownerId,
+        sportpassId: card.sportpassId,
+        disciplineId: discipline.id,
+        stand: card.stand,
+        startedAtMs: card.startedAtMs,
+        endedAtMs: card.endedAtMs,
+        kind: card.kind,
+        state: card.state,
+        complete: isComplete(card.state, card.flags),
+        flags: card.flags,
+        origin: "raw",
+        lifesignAtMs: card.lifesignAtMs,
+        clockOffsetMs: card.clockOffsetMs,
+      },
+      shots: card.shots,
+      reason: "snapshot",
+      rawSnapshotId: stored.snapshotId,
+      sequence: snapshot.sequence,
+    })
+  } catch (error) {
+    if (isDeterministic(error))
+      return quarantine(db, stored.snapshotId, `nicht schreibbar: ${(error as Error).name}`)
+    throw error
   }
   await db.rawSnapshot.update({
     where: { id: stored.snapshotId },
@@ -269,7 +312,10 @@ export async function ingestBatch(
   const results: SnapshotResult[] = []
   const sources = new Map<number, SourceState>()
   const consents = await consentsOf(db, target.siteId)
-  /** je Scheibe der neueste gespeicherte Stand dieses Stapels, für den Adapter */
+  /**
+   * je Scheibe der neueste Stand dieses Stapels, den der Adapter deuten muss: neu gespeichert, oder schon da, aber noch
+   * nicht gedeutet (ein Fehler beim letzten Mal; Review)
+   */
   const toAdapt = new Map<
     string,
     {
@@ -277,11 +323,13 @@ export async function ingestBatch(
       snapshot: SnapshotV1
       sourceId: number
       ownerId: string
-      stored: { snapshotId: bigint; previousLifesign: string | null }
+      stored: { snapshotId: bigint } & PreviousLifesign
     }
   >()
   /** je Scheibe das zuletzt nur vermerkte Lebenszeichen */
   const lifesigns = new Map<string, { sourceId: number; scheibenId: number; atMs: number }>()
+  /** Sperren je Scheibe nur einmal je Stapel nachsehen (die meisten Stände sind Lebenszeichen derselben Scheiben) */
+  const blocked = new Map<string, boolean>()
 
   const order = snapshots
     .map((snapshot, index) => ({ snapshot, index }))
@@ -313,7 +361,9 @@ export async function ingestBatch(
       result("discarded", "hidden")
       continue
     }
-    if (await isBlocked(db, source.sourceId, snapshot)) {
+    const key = `${source.sourceId}:${snapshot.scheibenId}`
+    if (!blocked.has(key)) blocked.set(key, await isBlocked(db, source.sourceId, snapshot))
+    if (blocked.get(key)) {
       result("discarded", "blocked")
       continue
     }
@@ -323,42 +373,54 @@ export async function ingestBatch(
       snapshot,
       { nowMs }
     )
-    const key = `${source.sourceId}:${snapshot.scheibenId}`
-    if (stored.outcome === "stored") {
+    const adapt = (previous: PreviousLifesign) =>
       toAdapt.set(key, {
         index,
         snapshot,
         sourceId: source.sourceId,
         ownerId,
-        stored: { snapshotId: stored.snapshotId, previousLifesign: stored.previousLifesign },
+        stored: { snapshotId: (stored as { snapshotId: bigint }).snapshotId, ...previous },
       })
+    if (stored.outcome === "stored") {
+      adapt(stored)
       lifesigns.delete(key)
-    } else if (stored.outcome === "lifesign") {
-      lifesigns.set(key, {
-        sourceId: source.sourceId,
-        scheibenId: snapshot.scheibenId,
-        atMs: Date.parse(snapshot.observedAt),
-      })
+    } else if (stored.outcome === "unchanged" || stored.outcome === "lifesign") {
+      // noch nicht gedeutet: nachholen, mit dem Stand, wie er gespeichert ist (ohne Messung der Uhr)
+      if (!stored.handled) adapt({ previousLifesign: null, previousLifesignAtMs: null })
+      if (stored.outcome === "lifesign")
+        lifesigns.set(key, {
+          sourceId: source.sourceId,
+          scheibenId: snapshot.scheibenId,
+          atMs: Date.parse(snapshot.observedAt),
+        })
     }
     result(stored.outcome)
   }
 
+  // jede Scheibe für sich: ein Fehler bei einer hält die übrigen nicht auf (Review); ein unerwarteter Fehler (Datenbank)
+  // kommt am Ende als Fehler der Anfrage zurück, die Brücke wiederholt, und das Nachholen oben deutet dann
+  let failure: unknown = null
   for (const item of toAdapt.values()) {
-    const outcome = await adaptAndWrite(
-      db,
-      target,
-      item.sourceId,
-      item.ownerId,
-      item.snapshot,
-      item.stored
-    )
-    if (outcome === "quarantined") {
-      const entry = results.find((r) => r.index === item.index)
-      if (entry) entry.outcome = "quarantined"
+    try {
+      const outcome = await adaptAndWrite(
+        db,
+        target,
+        item.sourceId,
+        item.ownerId,
+        item.snapshot,
+        item.stored
+      )
+      if (outcome === "quarantined") {
+        const entry = results.find((r) => r.index === item.index)
+        if (entry) entry.outcome = "quarantined"
+      }
+    } catch (error) {
+      failure ??= error
     }
   }
   for (const { sourceId, scheibenId, atMs } of lifesigns.values())
     await touchLifesign(db, sourceId, scheibenId, atMs)
+  if (failure) throw failure
 
   return results.sort((a, b) => a.index - b.index)
 }

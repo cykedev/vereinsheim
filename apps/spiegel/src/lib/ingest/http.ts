@@ -140,28 +140,49 @@ export class RateLimiter {
 
   constructor(
     private readonly capacity: number,
-    private readonly windowMs: number
+    private readonly windowMs: number,
+    /** höchstens so viele Schlüssel; der älteste fällt heraus (Review: gefälschte Adressen ließen die Karte wachsen) */
+    private readonly maxKeys = 5_000
   ) {}
+
+  private level(key: string, nowMs: number): number {
+    const bucket = this.buckets.get(key)
+    if (!bucket) return this.capacity
+    return Math.min(
+      this.capacity,
+      bucket.tokens + (nowMs - bucket.at) * (this.capacity / this.windowMs)
+    )
+  }
+
+  private wait(tokens: number): number {
+    return Math.max(1, Math.ceil((1 - tokens) / (this.capacity / this.windowMs) / 1000))
+  }
+
+  /** ohne zu verbrauchen: null, wenn ein Platz frei ist, sonst die Sekunden bis dahin */
+  peek(key: string, nowMs = Date.now()): number | null {
+    const tokens = this.level(key, nowMs)
+    return tokens >= 1 ? null : this.wait(tokens)
+  }
 
   /** null: erlaubt; sonst die Sekunden bis zum nächsten freien Platz */
   take(key: string, nowMs = Date.now()): number | null {
-    const rate = this.capacity / this.windowMs
-    const bucket = this.buckets.get(key) ?? { tokens: this.capacity, at: nowMs }
-    const tokens = Math.min(this.capacity, bucket.tokens + (nowMs - bucket.at) * rate)
+    const tokens = this.level(key, nowMs)
+    // neu eingefügt steht der Schlüssel hinten; so ist der erste der am längsten nicht genutzte
+    this.buckets.delete(key)
+    if (this.buckets.size >= this.maxKeys) {
+      const oldest = this.buckets.keys().next().value
+      if (oldest !== undefined) this.buckets.delete(oldest)
+    }
     if (tokens >= 1) {
       this.buckets.set(key, { tokens: tokens - 1, at: nowMs })
-      this.sweep(nowMs)
       return null
     }
     this.buckets.set(key, { tokens, at: nowMs })
-    return Math.max(1, Math.ceil((1 - tokens) / rate / 1000))
+    return this.wait(tokens)
   }
 
-  /** volle Eimer vergessen, damit die Karte nicht wächst */
-  private sweep(nowMs: number) {
-    if (this.buckets.size < 1_000) return
-    for (const [key, bucket] of this.buckets)
-      if (nowMs - bucket.at >= this.windowMs) this.buckets.delete(key)
+  get size(): number {
+    return this.buckets.size
   }
 }
 
@@ -197,6 +218,8 @@ export interface Limits {
   state: RateLimiter
   pairPerIp: RateLimiter
   pairAll: RateLimiter
+  /** fehlgeschlagene Anmeldungen mit Token je Adresse: vor der Datenbank begrenzt (Review) */
+  authFailures: RateLimiter
   batches: Gate
 }
 
@@ -208,6 +231,7 @@ export function createLimits(): Limits {
     state: new RateLimiter(6, 60_000),
     pairPerIp: new RateLimiter(5, 15 * 60_000),
     pairAll: new RateLimiter(30, 15 * 60_000),
+    authFailures: new RateLimiter(30, 60_000),
     batches: new Gate(MAX_CONCURRENT_BATCHES),
   }
 }
@@ -222,26 +246,45 @@ function setup(deps: IngestDeps) {
     now: deps.now ?? Date.now,
     log: deps.log ?? stdoutLog,
     limits: { ...defaultLimits(), ...deps.limits },
+    trust: deps.trustProxyHeaders ?? false,
   }
 }
 
 const bearer = (request: Request) =>
   /^Bearer (.+)$/.exec(request.headers.get("authorization") ?? "")?.[1]?.trim() ?? null
 
-/** Anmeldung der Brücke und ihre Ratenbegrenzung; eine Antwort heißt: abgelehnt */
-async function admit(
+const clientKey = (request: Request, trust: boolean) =>
+  `ip:${extractClientIp(Object.fromEntries(request.headers), trust) ?? "unbekannt"}`
+
+/**
+ * Anmeldung der Brücke; eine Antwort heißt: abgelehnt. Wer zu oft mit falschem Token kommt, wird vor der Datenbank
+ * abgewiesen, damit eine Flut den Pool nicht bindet (Review).
+ */
+async function authenticate(
   request: Request,
-  deps: ReturnType<typeof setup>,
-  limiter: RateLimiter
+  deps: ReturnType<typeof setup>
 ): Promise<AuthenticatedBridge | Response> {
+  const key = clientKey(request, deps.trust)
+  const wait = deps.limits.authFailures.peek(key, deps.now())
+  if (wait !== null) return apiError("rate-limited", { retryAfterSeconds: wait })
   const bridge = await authenticateBridge(deps.db, bearer(request), deps.now())
-  if (!bridge) return apiError("unauthorized")
-  const wait = limiter.take(`bridge:${bridge.bridgeId}`, deps.now())
-  if (wait !== null) {
-    deps.log("ingest.rate-limited", { bridge: bridge.bridgeId, retryAfter: wait })
-    return apiError("rate-limited", { retryAfterSeconds: wait })
+  if (!bridge) {
+    deps.limits.authFailures.take(key, deps.now())
+    return apiError("unauthorized")
   }
   return bridge
+}
+
+/** die Ratenbegrenzung der Brücke; eine Antwort heißt: abgelehnt */
+function limit(
+  bridge: AuthenticatedBridge,
+  deps: ReturnType<typeof setup>,
+  limiter: RateLimiter
+): Response | null {
+  const wait = limiter.take(`bridge:${bridge.bridgeId}`, deps.now())
+  if (wait === null) return null
+  deps.log("ingest.rate-limited", { bridge: bridge.bridgeId, retryAfter: wait })
+  return apiError("rate-limited", { retryAfterSeconds: wait })
 }
 
 /** unerwartete Fehler: nur ihr Name ins Log, nie die Meldung (Prisma nennt darin Werte) */
@@ -258,19 +301,19 @@ function internal(deps: ReturnType<typeof setup>, event: string, error: unknown)
 /** `POST /api/ingest/v1/pair` */
 export async function handlePair(request: Request, deps: IngestDeps): Promise<Response> {
   const d = setup(deps)
-  const ip =
-    extractClientIp(Object.fromEntries(request.headers), deps.trustProxyHeaders ?? false) ??
-    "unbekannt"
-  const wait = d.limits.pairPerIp.take(`ip:${ip}`, d.now()) ?? d.limits.pairAll.take("all", d.now())
-  if (wait !== null) {
-    d.log("ingest.pair.rate-limited", { retryAfter: wait })
-    return apiError("rate-limited", { retryAfterSeconds: wait })
-  }
-  const body = await readJson(request, MAX_SMALL_BYTES)
-  if (!body.ok) return body.response
-  const parsed = parseApi(pairRequestV1, body.value)
-  if (!parsed.ok) return apiError("invalid", { issues: parsed.issues })
   try {
+    // erst der gemeinsame Eimer: gefälschte Adressen sollen ihn nicht umgehen (Review)
+    const wait =
+      d.limits.pairAll.take("all", d.now()) ??
+      d.limits.pairPerIp.take(clientKey(request, d.trust), d.now())
+    if (wait !== null) {
+      d.log("ingest.pair.rate-limited", { retryAfter: wait })
+      return apiError("rate-limited", { retryAfterSeconds: wait })
+    }
+    const body = await readJson(request, MAX_SMALL_BYTES)
+    if (!body.ok) return body.response
+    const parsed = parseApi(pairRequestV1, body.value)
+    if (!parsed.ok) return apiError("invalid", { issues: parsed.issues })
     const paired = await redeemPairing(d.db, { ...parsed.value, nowMs: d.now() })
     if (!paired) {
       d.log("ingest.pair.rejected")
@@ -286,14 +329,19 @@ export async function handlePair(request: Request, deps: IngestDeps): Promise<Re
 /** `POST /api/ingest/v1/snapshots` */
 export async function handleSnapshots(request: Request, deps: IngestDeps): Promise<Response> {
   const d = setup(deps)
-  const bridge = await admit(request, d, d.limits.snapshots)
-  if (bridge instanceof Response) return bridge
-  if (!d.limits.batches.tryEnter()) {
-    d.log("ingest.busy", { bridge: bridge.bridgeId })
-    return apiError("busy", { retryAfterSeconds: 2 })
-  }
-  const started = d.now()
+  let entered = false
   try {
+    const bridge = await authenticate(request, d)
+    if (bridge instanceof Response) return bridge
+    // erst der Platz, dann ein Token: wer nach 503 wartet, verbraucht keinen (Review)
+    if (!d.limits.batches.tryEnter()) {
+      d.log("ingest.busy", { bridge: bridge.bridgeId })
+      return apiError("busy", { retryAfterSeconds: 2 })
+    }
+    entered = true
+    const limited = limit(bridge, d, d.limits.snapshots)
+    if (limited) return limited
+    const started = d.now()
     const body = await readJson(request, MAX_SNAPSHOTS_BYTES)
     if (!body.ok) return body.response
     const parsed = parseSnapshotBatch(body.value)
@@ -315,6 +363,7 @@ export async function handleSnapshots(request: Request, deps: IngestDeps): Promi
       lifesign: count("lifesign"),
       unchanged: count("unchanged"),
       discarded: count("discarded"),
+      quarantined: count("quarantined"),
       ms: d.now() - started,
     })
     const response: SnapshotsResponseV1 = { results }
@@ -322,20 +371,22 @@ export async function handleSnapshots(request: Request, deps: IngestDeps): Promi
   } catch (error) {
     return internal(d, "ingest.snapshots.failed", error)
   } finally {
-    d.limits.batches.leave()
+    if (entered) d.limits.batches.leave()
   }
 }
 
 /** `POST /api/ingest/v1/heartbeat` */
 export async function handleHeartbeat(request: Request, deps: IngestDeps): Promise<Response> {
   const d = setup(deps)
-  const bridge = await admit(request, d, d.limits.heartbeat)
-  if (bridge instanceof Response) return bridge
-  const body = await readJson(request, MAX_SMALL_BYTES)
-  if (!body.ok) return body.response
-  const parsed = parseApi(heartbeatV1, body.value)
-  if (!parsed.ok) return apiError("invalid", { issues: parsed.issues })
   try {
+    const bridge = await authenticate(request, d)
+    if (bridge instanceof Response) return bridge
+    const limited = limit(bridge, d, d.limits.heartbeat)
+    if (limited) return limited
+    const body = await readJson(request, MAX_SMALL_BYTES)
+    if (!body.ok) return body.response
+    const parsed = parseApi(heartbeatV1, body.value)
+    if (!parsed.ok) return apiError("invalid", { issues: parsed.issues })
     await recordHeartbeat(d.db, bridge, parsed.value, d.now())
     const response: HeartbeatResponseV1 = { serverTime: new Date(d.now()).toISOString() }
     return json(response)
@@ -347,9 +398,11 @@ export async function handleHeartbeat(request: Request, deps: IngestDeps): Promi
 /** `GET /api/ingest/v1/state` */
 export async function handleState(request: Request, deps: IngestDeps): Promise<Response> {
   const d = setup(deps)
-  const bridge = await admit(request, d, d.limits.state)
-  if (bridge instanceof Response) return bridge
   try {
+    const bridge = await authenticate(request, d)
+    if (bridge instanceof Response) return bridge
+    const limited = limit(bridge, d, d.limits.state)
+    if (limited) return limited
     return json(await bridgeState(d.db, bridge.siteId, d.now()))
   } catch (error) {
     return internal(d, "ingest.state.failed", error)
