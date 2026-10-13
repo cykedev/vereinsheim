@@ -186,6 +186,11 @@ Das Konzept oben genauer, wie es im Labor steht (Entscheidungen D1–D18 im Plan
 - **Training nur aus Probe** zählt als Vorgabe mit (Schalter „mit Training nur aus Probe“ an), denn so
   trainieren die meisten (User, 9. Oktober 2026); im Fachkern bleibt `includeProbeOnly` eine Option, die Seite setzt sie als Vorgabe.
 - **Nicht in L3:** „Als Zeitraum speichern“ (L6), Kalender (T7), Trendsteigung (T4), Langzeit-Trefferbild (L4).
+- **Kalender (T7), 13. Oktober 2026:** im Kasten des Umfangs umschaltbar „Wochen | Kalender“. Je Woche eine Spalte
+  Montag bis Sonntag, ein Feld je Tag des Zeitraums (bis heute), getönt in vier Stufen nach den Schüssen des Abends
+  (relativ zum stärksten Tag), ein Abend mit Wettkampf mit goldenem Rand. Ein Trainingstag ist ein Link an seinen Abend
+  in der Liste (Anker, markiert); sein Name nennt Tag, Scheiben und Schüsse. Zu breit scrollt er in sich und zeigt
+  anfangs die jüngsten Wochen. Die Wahl der Ansicht steht nicht in der Adresse (wie gezeichnet).
 
 ### Nach U2 (9. Oktober 2026)
 

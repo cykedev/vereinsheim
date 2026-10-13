@@ -409,9 +409,11 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   umgekehrt), dazu der Median („Mitte“); Abstand zum Schnitt = Wert − Mittel der bis zu 5 Scheiben
   davor`
 
-**Trainingsumfang (T6)**
+**Trainingsumfang (T6, T7)**
 - *Was:* Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Trainings nur aus Probe zählen mit),
-  deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training.
+  deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training. Der Kalender
+  zeigt jeden Tag des Zeitraums: getönt nach deinen Schüssen an dem Abend, mit goldenem Rand, wenn
+  ein Wettkampf dabei war. Ein Tippen führt zu dem Abend in deinen Scheiben.
 - *So liest du es:* Der Umfang sagt nichts über die Güte. Leg ihn neben den Verlauf: Liegen deine
   Scheiben in Wochen mit sehr vielen Schüssen öfter unter dem Formband, kann das Ermüdung sein.
 - *Vorsicht:* Hier zählt die Probe mit, das Ergebnis oben zählt nur Wertungsschüsse. Eine Netto-Zeit
