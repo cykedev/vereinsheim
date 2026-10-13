@@ -14,7 +14,7 @@ governed_by: ["[[adr-027]]", "[[adr-029]]"]
 # Spiegel — Ingest-Vertrag (Snapshot v1)
 
 Diese Note ist die Spezifikation für jede Implementierung, auch die Brücke in einer anderen Sprache
-(vermutlich Go, SP-0.4). Verbindlich sind im Zweifel die Testvektoren im Paket.
+(Go seit dem 13. Oktober 2026, `apps/spiegel-bridge/internal/contract`, gegen dieselben Vektoren getestet). Verbindlich sind im Zweifel die Testvektoren im Paket.
 
 ## Wo was liegt
 

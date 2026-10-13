@@ -107,7 +107,10 @@ Teil a (SP-1.4 a, `plans/2026-10-13-spiegel-bruecke-leser.md`): Leser, Änderung
   Minuten** ein Lebenszeichen hatte (fängt Korrekturen ohne neues Lebenszeichen, SF-21, SF-22). Höchstens **50**
   Scheiben je Runde, wartende zuerst, dann die jüngsten, dann die am längsten nicht gelesenen.
 - Beim Start gilt als neu, was bis **12 Stunden** vor dem jüngsten Lebenszeichen liegt (nicht gegen die eigene Uhr:
-  die der Stände kann falsch gehen). Den Abgleich ab dem Wasserstand in Spiegel bringt Teil c.
+  die der Stände kann falsch gehen; ein Lebenszeichen mehr als einen Tag nach der Uhr der Anlage verankert das Fenster
+  nicht). Den Abgleich ab dem Wasserstand in Spiegel bringt Teil c.
+- Jede Runde in einer Transaktion unter REPEATABLE READ (sonst gälte `WITH CONSISTENT SNAPSHOT` nicht), mit den Spalten
+  aus `information_schema` (ein neuer Typ reist sofort mit).
 - Eine Scheibe, die 24 Stunden nicht in der Ablage stand, vergisst die Brücke; Fehlen ist nie eine Löschung.
 - Abgenommen an allen 31 Sonderfällen in MariaDB 10.6 und 11: jeder Snapshot bit-gleich mit dem eingefrorenen, gesendet
   genau die Lesungen der Vorgabe. Die Drossel auf 30 s für reine Lebenszeichen kommt mit dem Upload (Teil b).

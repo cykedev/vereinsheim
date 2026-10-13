@@ -99,4 +99,4 @@ Der Katalog steht in [[spiegel-edge-cases]].
 - **Was passiert beim Widerruf des Opt-ins mit schon hochgeladenen Scheiben?** → offen (13. Oktober 2026). Festgelegt ist nur, dass die Brücke danach nichts mehr hochlädt (SF-38); behalten oder löschen nicht.
 - **Darf der Admin fremde Scheiben löschen oder verwerfen?** → offen (13. Oktober 2026). Festgelegt sind Zuweisen und Umhängen mit Protokoll und keine Schussbilder ohne Freigabe ([[spiegel-assignment]], [[spiegel-privacy]]); zu klären vor SP-1.7 c.
 - **Gemeinsame Anmeldung für alle Apps?** → offen (SP-4.2).
-- **Brücke als einzelnes Binary ohne Docker und Node?** → gewünscht, endgültig in SP-0.4 ([[adr-027]]).
+- **Brücke als einzelnes Binary ohne Docker und Node?** → ja: Go, ein statisches Binary (SP-0.4, 13. Oktober 2026, [[adr-027]]).

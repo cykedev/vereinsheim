@@ -31,7 +31,7 @@ Rohdaten (Snapshot je Scheibe, unverändert) → Normalisierung (Adapter `meyton
 
 ```
 apps/spiegel/               Next.js-App: Konten, Ansichten, Ingest-API, Admin
-apps/spiegel-bridge/        Brücke fürs Schützenhaus (Technik offen, siehe adr-027)
+apps/spiegel-bridge/        Brücke fürs Schützenhaus (Go, ein statisches Binary, adr-027)
 packages/shot-core/         Scheibenbilder, Wertung, Geometrie, Kennzahlen-Registry (isomorph, rein)
 packages/shot-ui/           Scheibe (SVG), Overlays, Wiedergabe, Diagramme (React)
 packages/meyton-pdf/        Meyton-Ausdruck lesen (heute in Treffsicher und Ringwerk)
