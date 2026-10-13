@@ -50,6 +50,8 @@ export default async function CardRoutePage({
       paging={ids !== null}
       context={context}
       display={await targetDisplay()}
+      // je Scheibe neu eingehängt: Blättern bleibt in derselben Route, und Reiter, Wahl und Lineal gehören zur Scheibe
+      key={card.id}
     />
   )
 }

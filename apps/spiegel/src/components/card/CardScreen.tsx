@@ -72,10 +72,15 @@ const subscribeHash = (listener: () => void) => {
   window.addEventListener("hashchange", listener)
   return () => window.removeEventListener("hashchange", listener)
 }
-const useHash = () =>
+/**
+ * Nur der Anker der eigenen Adresse: Beim Blättern rendert Next die nächste Scheibe, solange die Adresse noch die der
+ * vorigen ist; deren Anker („#position“) wäre sonst der Reiter der nächsten (gefunden von der Skriptprüfung der App,
+ * 13. Oktober 2026).
+ */
+const useHash = (path: string) =>
   useSyncExternalStore(
     subscribeHash,
-    () => window.location.hash,
+    () => (window.location.pathname === path ? window.location.hash : ""),
     () => ""
   )
 
@@ -103,7 +108,7 @@ function stateFromRoute(
 }
 
 /**
- * Die Seite einer Scheibe (N7): wie im Labor (`CardView`), mit der Scheibe aus der Datenbank. Serie und Schuss stehen in
+ * Die Seite einer Scheibe (N7): aus den Bausteinen von `shot-ui`, mit der Scheibe aus der Datenbank. Serie und Schuss stehen in
  * der Adresse (Reload und Zurück finden sie wieder), der Reiter der Analyse im Anker; Rückweg und Blättern im Kontext der
  * Herkunft rechnet der Server (`near`). Die Seite öffnet in der Wertung der Adresse, sonst der der Scheibe; Umschalten
  * speichert sie an der Scheibe (`setCardScoring`), die Adresse trägt sie nur, solange sie nicht die der Scheibe ist.
@@ -157,7 +162,8 @@ export function CardScreen({
     setOthers(next.others)
   }
   const [explain, setExplain] = useState(false)
-  const hash = useHash()
+  const ownPath = `/cards/${encodeURIComponent(card.id)}`
+  const hash = useHash(ownPath)
   // der Reiter: gewählt, sonst aus dem Anker beim Laden, sonst der erste (eine Scheibe beginnt mit ihm)
   const [chosenTab, setChosenTab] = useState<AnalysisTab | null>(null)
   // der zuletzt im Anker gesehene Reiter bleibt, wenn die Sprungleiste „#shots“ schreibt (Review)
@@ -191,9 +197,11 @@ export function CardScreen({
   const address = urlFromRoute(route)
   const anchorChosen = route.anchor !== null
   useEffect(() => {
+    // nur die eigene Adresse fortschreiben, nie die einer Scheibe, von der aus geblättert wurde
+    if (window.location.pathname !== ownPath) return
     const next = nextCardAddress(window.location, address, anchorChosen)
     if (next) window.history.replaceState(null, "", next)
-  }, [address, anchorChosen])
+  }, [address, anchorChosen, ownPath])
 
   // jede Änderung der Darstellung ist die neue Voreinstellung (User, 12. Oktober 2026); gemerkt nur beim Umschalten,
   // nie beim Öffnen: sonst überschriebe eine Seite aus dem Cache die zuletzt gewählte (Review)
