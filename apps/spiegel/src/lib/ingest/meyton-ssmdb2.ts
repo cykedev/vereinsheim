@@ -17,7 +17,7 @@ import {
   type Completeness,
   type FamilyId,
 } from "@vereinsheim/shot-core/discipline"
-import { FLAG_MISS, FLAG_SUSPICIOUS } from "@vereinsheim/shot-core/metrics"
+import { FLAG_MISS, FLAG_OVER_TARGET, FLAG_SUSPICIOUS } from "@vereinsheim/shot-core/metrics"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { checkShot } from "@vereinsheim/shot-core/verify"
 
@@ -31,8 +31,6 @@ export const PLACEHOLDER_TEILER = 2147483647
 /** am Monitor verdeckt (5, 10) oder unbekannt (0): verlässt die Anlage nicht ohne Freigabe (SF-19, SF-20) */
 export const HELD_DISPLAY_MODES: ReadonlySet<number> = new Set([0, 5, 10])
 
-/** über der Soll-Zahl: echte Lage, Wert 0, Platzhalter-Teiler (SF-08) */
-export const FLAG_OVER_TARGET = "ueber-soll"
 /** Uhr des Stands geht falsch oder springt (SF-29, SF-30, SF-73) */
 export const FLAG_CLOCK = "uhr-abweichung"
 /** ohne Scheibenbild (SF-70) */

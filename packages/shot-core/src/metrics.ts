@@ -9,7 +9,8 @@
 // - Fehlt einem Schuss die nötige Angabe, fällt er weg. Summen und Zählungen geben dann keinen Wert,
 //   denn eine Summe über einen Teil der Schüsse ist kein Ergebnis (`onMissing`).
 // - Fehlschüsse lassen nur robuste Maße weg (SF-14). Verdächtige Schüsse (Platzhalter, Handeintrag)
-//   zählen nur mit ihrem amtlichen Wert, nie mit Lage, Abstand oder Zeit (SF-15).
+//   zählen nur mit ihrem amtlichen Wert, nie mit Lage, Abstand oder Zeit (SF-15). Schüsse über der
+//   Soll-Zahl zählen mit Wert 0 und Zeit, nie mit Lage oder Abstand (SF-08).
 // - `nSensitive` kennzeichnet Maße, die von der Schusszahl abhängen: Vergleiche nur bei gleichem n
 //   (SF-60); das n liefert `eligibleShots`. Auch R50 fällt bei kleinem n leicht zu klein aus (bei
 //   10 Schuss etwa 4 %); für Verläufe über verschiedene Schusszahlen taugt `group.sigma`.
@@ -44,6 +45,11 @@ export type Scoring = "rings" | "decimal"
 export const FLAG_MISS = "fehlschuss"
 /** Verdächtiger Schuss (Platzhalter, Handeintrag): nur sein amtlicher Wert zählt (SF-15) */
 export const FLAG_SUSPICIOUS = "verdaechtig"
+/**
+ * Schuss über der Soll-Zahl (SF-08): Meyton speichert ihn mit echter Lage, aber Wert 0 und ohne Abstand. Er zählt
+ * mit seinem amtlichen Wert 0 und seiner Zeit, nicht in Lage und Abstand (sonst zöge er Schwerpunkt und Streuung).
+ */
+export const FLAG_OVER_TARGET = "ueber-soll"
 
 export interface MetricShot {
   /**
@@ -64,7 +70,7 @@ export interface MetricShot {
   firedAtMs: number | null
   kind: ShotKind
   series: number | null
-  /** Merkmale; für Kennzahlen zählen FLAG_MISS und FLAG_SUSPICIOUS */
+  /** Merkmale; für Kennzahlen zählen FLAG_MISS, FLAG_SUSPICIOUS und FLAG_OVER_TARGET */
   flags?: readonly string[]
 }
 
@@ -174,6 +180,8 @@ function allowed(shot: MetricShot, filter: ShotFilter): boolean {
   const flags = shot.flags ?? []
   const valueOnly = filter.need === "ring" || filter.need === "decimal"
   if (!valueOnly && flags.includes(FLAG_SUSPICIOUS)) return false
+  const placed = filter.need === "position" || filter.need === "distance"
+  if (placed && flags.includes(FLAG_OVER_TARGET)) return false
   return !(filter.excludeMisses && flags.includes(FLAG_MISS))
 }
 
@@ -185,8 +193,8 @@ const counts = (metric: MetricDefinition, shot: MetricShot) =>
   })
 
 /**
- * Schüsse nach denselben Regeln wie die Registry: Art, verdächtige nur mit ihrem Wert (SF-15),
- * Fehlschüsse auf Wunsch weg (SF-14), gültige Angabe. Für Auswertungen, die keine Kennzahl sind.
+ * Schüsse nach denselben Regeln wie die Registry: Art, verdächtige nur mit ihrem Wert (SF-15), über der Soll-Zahl
+ * ohne Lage und Abstand (SF-08), Fehlschüsse auf Wunsch weg (SF-14), gültige Angabe. Für Auswertungen, die keine Kennzahl sind.
  */
 export function selectShots(shots: readonly MetricShot[], filter: ShotFilter): MetricShot[] {
   return shots.filter((shot) => allowed(shot, filter) && satisfies(shot, filter.need))
@@ -549,7 +557,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 1,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    version: 1,
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    version: 2,
     appliesTo: MATCH_ONLY,
     minShots: 1,
     nSensitive: true,
@@ -566,7 +575,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    version: 1,
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    version: 2,
     appliesTo: BOTH,
     minShots: 2,
     // Bei wenigen Schüssen streut der Schwerpunkt selbst: Der Abstand hängt von n ab.
@@ -587,7 +597,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 1,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    version: 1,
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    version: 2,
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: true,
@@ -607,7 +618,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    version: 1,
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    version: 2,
     appliesTo: BOTH,
     minShots: 5,
     nSensitive: true,
@@ -624,7 +636,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    version: 1,
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    version: 2,
     appliesTo: BOTH,
     minShots: 3,
     // Rayleigh-σ, erwartungstreu: σ̂ = √(Σr² / (2(n − 1))) / c4(2n − 1), kaum von n abhängig (Katalog P5).
@@ -647,7 +660,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    version: 1,
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    version: 2,
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: false,
@@ -664,7 +678,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    version: 1,
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    version: 2,
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: false,

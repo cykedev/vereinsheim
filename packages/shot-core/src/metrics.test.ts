@@ -16,6 +16,7 @@ import {
   shotNumbers,
   pauseThresholdOf,
   timesInOrder,
+  FLAG_OVER_TARGET,
   FLAG_SUSPICIOUS,
   type MetricDefinition,
   type MetricShot,
@@ -120,6 +121,43 @@ describe("Ergebnis-Kennzahlen", () => {
     expect(value("time.duration", card)).toBe(250)
     expect(value("result.decimal", card)).toBeCloseTo(51.8 + 8.7, 9)
     expect(value("result.rings", card)).toBe(57)
+  })
+
+  it("ein Schuss über der Soll-Zahl zählt mit Wert 0 und Zeit, nie mit Lage oder Abstand (SF-08)", () => {
+    // Meyton: echte Lage nahe der Mitte, Wert 0, Platzhalter-Teiler (der Adapter gibt keinen Abstand), 60 s später
+    const over: MetricShot = {
+      ...MATCH[5],
+      xUm: 0,
+      yUm: 500,
+      distanceUm: null,
+      decimalTenths: 0,
+      ring: 0,
+      innerTen: false,
+      firedAtMs: 610_000,
+      flags: [FLAG_OVER_TARGET],
+    }
+    const card = [...MATCH, over]
+    // mit Lage wäre er der beste Teiler (50,0) und zöge den Schwerpunkt zur Mitte
+    expect(value("result.bestTeiler", card)).toBeCloseTo(331.8, 9)
+    for (const key of [
+      "group.enclosingDiameter",
+      "group.mpiDistance",
+      "group.r50",
+      "group.sigma",
+      "group.sdX",
+      "group.sdY",
+    ]) {
+      expect(value(key, card), key).toBeCloseTo(value(key, MATCH) ?? Number.NaN, 9)
+    }
+    expect(eligibleShots(def("group.sigma"), card)).toHaveLength(6)
+    // Wert 0 und Zeit zählen: 46 Schuss am Stand sind 46 Schuss im Ergebnis
+    expect(value("result.decimal", card)).toBeCloseTo(51.8, 9)
+    expect(value("result.rings", card)).toBe(49)
+    expect(value("result.decimalMean", card)).toBeCloseTo(51.8 / 7, 9)
+    expect(value("time.duration", card)).toBe(310)
+    // Gegenprobe: ohne das Merkmal zählt die Lage
+    const unflagged = [...MATCH, { ...over, flags: [] }]
+    expect(value("result.bestTeiler", unflagged)).toBeCloseTo(50, 9)
   })
 
   it("ungültige Angaben gelten als fehlend, nicht als Zahl", () => {
@@ -468,7 +506,8 @@ describe("selectShots", () => {
       firedAtMs: 10_000_000,
       flags: ["verdaechtig"],
     }
-    const card = [...CARD, miss, placeholder]
+    const over: MetricShot = { ...MATCH[1], decimalTenths: 0, ring: 0, flags: ["ueber-soll"] }
+    const card = [...CARD, miss, placeholder, over]
     for (const metric of METRICS) {
       expect(
         selectShots(card, {

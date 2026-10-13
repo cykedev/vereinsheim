@@ -56,7 +56,8 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   Ändert sich eine Formel, steigt ihre `version`. `computeMetric` wendet die Regeln aus dem
   Sonderfall-Katalog an: `appliesTo` (SF-01), `needs` mit gültigen, endlichen Angaben, `onMissing`
   („null“ für Summen und Zählungen, SF-07), `minShots` (SF-61), Fehlschüsse nur bei `excludeMisses`
-  (SF-14), verdächtige Schüsse nur mit ihrem Wert (SF-15). `nSensitive` ist ein Hinweis für Vergleiche
+  (SF-14), verdächtige Schüsse nur mit ihrem Wert (SF-15), Schüsse über der Soll-Zahl mit Wert 0 und Zeit, ohne
+  Lage und Abstand (SF-08, `FLAG_OVER_TARGET`). `nSensitive` ist ein Hinweis für Vergleiche
   (SF-60), das n liefert `eligibleShots`. `compute` nie direkt aufrufen.
 - **Pausen relativ zum eigenen Takt** (User, 10. Oktober 2026, `plans/2026-10-10-spiegel-pausen-relativ.md`): Pause ist
   ein Abstand über dem 2,5-Fachen des Medians der Abstände bis drei Minuten, mindestens 60 s, über drei Minuten immer;
