@@ -376,6 +376,15 @@ export class Page {
     await wait(60)
   }
 
+  /** Bildschirmfoto des Fensters als PNG */
+  async screenshot(fullPage = false): Promise<Buffer> {
+    const { data } = await this.send<{ data: string }>("Page.captureScreenshot", {
+      format: "png",
+      captureBeyondViewport: fullPage,
+    })
+    return Buffer.from(data, "base64")
+  }
+
   async close(): Promise<void> {
     await this.browser.send("Target.closeTarget", { targetId: this.targetId })
   }

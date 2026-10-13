@@ -9,17 +9,14 @@
 //   pnpm --filter spiegel pruefen --start      startet den gebauten Stand dieses Checkouts auf :3012 und prüft ihn
 //   … --nur <abschnitt>                        nur Abschnitte, deren Name das Wort enthält
 
-import { spawn, type ChildProcess } from "node:child_process"
-import { randomBytes } from "node:crypto"
-import { existsSync, statSync } from "node:fs"
-import { join } from "node:path"
+import type { ChildProcess } from "node:child_process"
 
 import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
 
 import { Browser, type Page } from "./pruefen/browser"
+import { startServer } from "./pruefen/server"
 import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
 
-const APP_DIR = join(__dirname, "..")
 /** mit `--start`: der eigene Produktions-Server aus `.next` dieses Checkouts (nach `build` bzw. `pnpm check`) */
 const START = process.argv.includes("--start")
 const START_PORT = 3012
@@ -29,52 +26,6 @@ const BASE = (
   START ? `http://localhost:${START_PORT}` : (process.env.BASE_URL ?? "http://localhost:3002")
 ).replace(/\/$/, "")
 
-/**
- * den gebauten Stand dieses Checkouts starten, damit die Prüfung den eigenen Code sieht und keinen Dev-Server eines
- * anderen Checkouts. Eigener Secret (Produktion verweigert den Beispielwert), die Datenbank aus `.env`.
- */
-async function startServer(): Promise<ChildProcess> {
-  const buildId = join(APP_DIR, ".next", "BUILD_ID")
-  if (!existsSync(buildId))
-    throw new Error("kein Build: erst pnpm --filter spiegel build (oder pnpm check)")
-  const minutes = Math.round((Date.now() - statSync(buildId).mtimeMs) / 60_000)
-  out(`Build von vor ${minutes} min (pnpm --filter spiegel build für den aktuellen Stand)`)
-  // antwortet auf dem Port schon etwas, prüfte die Prüfung still einen fremden Stand (Review)
-  const taken = await fetch(`${BASE}/login`).then(
-    () => true,
-    () => false
-  )
-  if (taken) throw new Error(`${BASE} ist schon belegt; den anderen Server erst beenden`)
-  const server = spawn(
-    join(APP_DIR, "node_modules", ".bin", "next"),
-    ["start", "--port", String(START_PORT)],
-    {
-      cwd: APP_DIR,
-      env: {
-        ...process.env,
-        NODE_ENV: "production",
-        NEXTAUTH_SECRET: randomBytes(32).toString("hex"),
-        NEXTAUTH_URL: BASE,
-      },
-      stdio: ["ignore", "ignore", "pipe"],
-    }
-  )
-  // die letzten Zeilen der Fehlerausgabe, damit ein Fehlstart sagt, warum (fehlende .env, Datenbank)
-  let stderr = ""
-  server.stderr?.on("data", (chunk: Buffer) => {
-    stderr = (stderr + chunk.toString()).slice(-2_000)
-  })
-  for (let i = 0; i < 120 && server.exitCode === null; i++) {
-    try {
-      if ((await fetch(`${BASE}/login`)).ok) return server
-    } catch {
-      // noch nicht bereit
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-  }
-  server.kill()
-  throw new Error(`Server auf ${BASE} startet nicht${stderr ? `: ${stderr.trim()}` : ""}`)
-}
 const out = (text = "") => process.stdout.write(`${text}\n`)
 
 type Result = { ok: boolean; name: string; detail: string }
@@ -897,7 +848,7 @@ async function main() {
     // das Demo-Konto meldet sich an; gegen einen fremden Server nur mit ausdrücklichem Schalter (Review)
     if (!ANY_HOST && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(BASE))
       throw new Error(`${BASE} ist kein lokaler Server; --fremder-host, wenn das gewollt ist`)
-    server = START ? await startServer() : null
+    server = START ? await startServer(BASE, START_PORT, out) : null
     browser = await Browser.launch()
     const page = await browser.newPage()
     await login(page)

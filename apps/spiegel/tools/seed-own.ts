@@ -78,11 +78,14 @@ async function main() {
     const site =
       (await db.site.findFirst({ where: { name: DEV_SITE } })) ??
       (await db.site.create({ data: { name: DEV_SITE, timeZone: "Europe/Berlin" } }))
+    // bestätigt: Eine Brücke, die in der Entwicklung gegen die Dev-Anlage koppelt, soll gleich einliefern können (SF-23)
     const source = await db.source.upsert({
       where: { siteId_epoch: { siteId: site.id, epoch: 1 } },
-      create: { siteId: site.id, epoch: 1 },
+      create: { siteId: site.id, epoch: 1, confirmedAt: new Date() },
       update: {},
     })
+    if (!source.confirmedAt)
+      await db.source.update({ where: { id: source.id }, data: { confirmedAt: new Date() } })
 
     const { seeds, omitted } = ownCardSeeds()
     const changes: Record<RevisionChange, number> = {
