@@ -387,14 +387,17 @@ aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-lan
   In ihr rechnen in der Liste Ø und Abstand, auf Start jeder Block (Ø des Abends, Schnitt, Band, Verlauf, Rekorde) und
   die Form, der Fortschritt.
 - **Vorn in Liste und Start** steht die Wertung der Scheibe; in der Liste fett, mit „Fett: Wertung der Scheibe.“ unter
-  dem Monat. Die große Zahl auf Start nennt die Wertung ihres Blocks („Ø je Schuss in Zehnteln“), weil Blöcke
-  verschiedener Familien verschieden rechnen können.
-- **Ein Tippen auf die schon gezeigte Wertung speichert nichts** (Review): sonst stünde die Vorgabe als Wahl fest. Einen
+  dem Monat. Die große Zahl auf Start zeigt die Wertung ihres Blocks im Kreis daneben, weil Blöcke verschiedener
+  Familien verschieden rechnen können (im Labor ohne Kreis als Text: „Ø je Schuss in Zehnteln“).
+- **Jedes Umschalten ist eine Wahl:** Mit dem Kreis stellt jedes Tippen um; wer einmal hin und zurück tippt, hat die
+  Wertung gewählt, und eine Scheibe folgt danach nicht mehr der Vorgabe ihrer Art (Review, 13. Oktober 2026). Einen
   Weg zurück zur Vorgabe gibt es nicht, auch keinen geplanten (User, 12. Oktober 2026: „es bleibt dabei“).
 - **Umschalten speichert:**
   - Auf der Seite einer Scheibe die Wertung der Scheibe. Liste und Start zeigen sie danach vorn.
-  - In der Liste (neben den Filtern) und im Fortschritt (Ergebnis-Box) die Wertung der Familie; danach rechnet die Seite
-    neu. Profil hat keine Wertung mehr. Seit dem 13. Oktober 2026 als Kreise (unten, „Art und Wertung als Symbole“).
+  - In der Liste (neben dem Titel), im Fortschritt (Ergebnis-Box) und auf Start (je Block neben der großen Zahl) die
+    Wertung der Familie; danach rechnet die Seite neu. Profil hat keine Wertung mehr. Seit dem 13. Oktober 2026 als
+    Kreise (unten, „Art und Wertung als Symbole“). Eine Fehlermeldung gilt nur für ihre Familie: Nach dem Wechsel der
+    Familie steht sie nicht mehr da (Review, 13. Oktober 2026).
 - **Adresse:** Die Seite einer Scheibe trägt `scoring` nur, solange die gezeigte Wertung nicht die der Scheibe ist (ein
   Rekord öffnet in der Wertung, in der er steht). Ohne Angabe gilt die der Scheibe; Liste, Start, Fortschritt und
   Blättern öffnen ohne. Der Fortschritt hat keine Wertung in der Adresse.
@@ -430,7 +433,8 @@ Kreise.
 - **Wertung** (`ScoringToggle`): „1“ für ganze Ringe, ⅒ für Zehntel, gesetzt von Geist selbst (`diagonal-fractions`, das
   Merkmal `frac`). Die Ziffern von Hand hoch- und tiefzustellen misslang (Tailwind verschiebt `sup`/`sub` schon), die
   tiefgestellten Zeichen ₀–₉ fehlen in den geladenen Teilen von Geist (User, 13. Oktober 2026). Ein Tippen stellt auf die
-  andere. Ob die gezeigte die amtliche ist, sagen Name und Tooltip; ein Punkt dafür erklärte sich nicht.
+  andere. Ob die gezeigte die amtliche ist, sagen Name und Tooltip; ein Punkt dafür erklärte sich nicht. Ist die
+  amtliche die andere, nennt der Name sie in der Wirkung („auf ganze Ringe (amtlich) umstellen“, Review).
 - **Art** (`KindToggle`): Pokal, Training durchgestrichen (der Strich schneidet über eine Maske eine Lücke, wie die
   „-off“-Symbole von lucide; `lucide-react` hat keinen solchen Pokal), Wettkampf gold auf goldener Tönung.
 - **Leise** (User: „die 1 wirkt sehr präsent ist aber ja nur eine randinfo“): Zeichen im Token `quiet` (3,3 : 1 auf
@@ -440,9 +444,14 @@ Kreise.
   - Fortschritt: der Bruch in der Ergebnis-Box; Liste: neben „Scheiben“ („Wertung für Ø und Abstand“); Start: neben dem
     Ø je Block, dort entfällt „in ganzen Ringen“ im Text.
 - **Liste:** der Pokal in der Spalte „Art“ 16 px in Gold (vorher 14 px grau, der User sah ihn nicht).
-- **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`.
+- **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`, auf
+  Start gleich unter der Zahl, in der Liste unter dem Kopf.
 - **Labor:** der Bruch auf der Seite einer Scheibe; Liste, Start und Fortschritt ohne Kreise (seine Wertung steht in
   Profil).
+- **Bedienung über dem Verlauf** (`PeriodChartBar`, User: „die schalter verrutschen komisch“): Kennzahl, Darstellung
+  und „?“ in einer Zeile, wenn sie passen; sonst die Kennzahl oben, darunter die Darstellung links und das „?“ rechts.
+  Vorher rutschte „je Scheibe | je Monat“ allein rechts in eine zweite Zeile, sobald die Karte schmaler als rund 560 px
+  war (am Desktop bei 900 px Fenster). Gemessen an der Karte, nicht am Fenster.
 
 ## Labor näher an der App (9. Oktober 2026)
 
