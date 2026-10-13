@@ -125,6 +125,8 @@ describe("AnalysisPanel", () => {
       shot(7, "match", 0, 250_000, ["fehlschuss"]),
     ]
     expect(render(misses)).toContain("2 Fehlschüsse")
+    const over = [...CARD, shot(6, "match", 0, 200_000, ["ueber-soll"])]
+    expect(render(over)).toContain("1 Schuss über der Soll-Zahl")
     // in Zehnteln fehlt dem Schuss etwas, auch wenn er einen Ring hat (Prüfung, Probe 7)
     const tenthless = CARD.map((s, i) => (i === 3 ? { ...s, decimalTenths: null } : s))
     expect(render(tenthless)).toContain("1 ohne Zehntel")

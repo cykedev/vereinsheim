@@ -37,6 +37,8 @@ const BASIS_TEXT: Readonly<Record<AnalysisBasis, string>> = {
 const FLAG_WORDS: Readonly<Record<string, readonly [string, string]>> = {
   verdaechtig: ["verdächtiger Schuss", "verdächtige Schüsse"],
   fehlschuss: ["Fehlschuss", "Fehlschüsse"],
+  // zählt mit 0, aber nicht in Lage und Abstand (SF-08)
+  "ueber-soll": ["Schuss über der Soll-Zahl", "Schüsse über der Soll-Zahl"],
 }
 
 const counted = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
