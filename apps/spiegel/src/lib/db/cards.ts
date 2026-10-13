@@ -64,7 +64,19 @@ export interface CardInput {
   complete: boolean
   flags: readonly string[]
   origin: CardOrigin
+  /** zuletzt bewegtes Lebenszeichen (Adapter); fehlt: nicht anfassen */
+  lifesignAtMs?: number | null
+  /** Versatz der Uhr des Stands (Adapter, SF-73); fehlt: nicht anfassen */
+  clockOffsetMs?: number | null
 }
+
+/**
+ * Merkmale, die an der Scheibe bleiben, auch wenn ein späterer Stand sie nicht mehr zeigt: eine Korrektur bleibt eine
+ * Korrektur, und eine Uhr, die einmal falsch ging, kann es wieder (SF-21, SF-73).
+ */
+export const STICKY_FLAGS: readonly string[] = ["korrigiert", "uhr-abweichung"]
+/** eine neue Revision nach der ersten: die Standaufsicht hat korrigiert (SF-21) */
+export const FLAG_CORRECTED = "korrigiert"
 
 export interface RevisionInput {
   /** die Scheibe; ohne `cardId` über Quelle, ScheibenID und Zyklus gefunden oder neu angelegt */
@@ -222,11 +234,28 @@ function cardFeatures(card: CardInput, shots: readonly ShotInput[], familyId: nu
     standScoring: standScoringOf(shots),
     flags: [...card.flags],
     ...(card.sportpassId === undefined ? {} : { sportpassId: card.sportpassId }),
+    ...(card.lifesignAtMs === undefined
+      ? {}
+      : { lifesignAt: card.lifesignAtMs === null ? null : new Date(card.lifesignAtMs) }),
+    ...(card.clockOffsetMs === undefined ? {} : { clockOffsetMs: card.clockOffsetMs }),
   }
+}
+
+/** die Merkmale des neuen Stands, dazu die dauerhaften der Scheibe und `korrigiert` bei einer Korrektur */
+function withSticky(
+  flags: readonly string[],
+  existing: readonly string[],
+  corrected: boolean
+): string[] {
+  const out = new Set(flags)
+  for (const flag of existing) if (STICKY_FLAGS.includes(flag)) out.add(flag)
+  if (corrected) out.add(FLAG_CORRECTED)
+  return [...out]
 }
 
 const EXISTING_SELECT = {
   id: true,
+  flags: true,
   sourceId: true,
   scheibenId: true,
   cycle: true,
@@ -317,17 +346,22 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
       if (!input.shots.some((shot) => known.has(shotFingerprint(shot))))
         throw new CardIdentityConflictError(cardId, cycle)
     }
+    const change =
+      current && current.contentHash !== hash
+        ? shotChange(stored.map(shotFromRow), input.shots)
+        : null
     await tx.card.update({
       where: { id: cardId },
       data: {
         ...features,
+        flags: withSticky(features.flags, existing.flags, change?.kind === "correction"),
         ...identityUpdate(existing, input.card, cycle),
         ...(sequence === null ? {} : { lastSequence: sequence }),
       },
     })
 
     if (!current) return newRevision(tx, cardId, 1, input, hash)
-    if (current.contentHash === hash)
+    if (!change)
       return {
         cardId,
         revisionId: current.id,
@@ -336,7 +370,6 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
         added: 0,
         removed: 0,
       }
-    const change = shotChange(stored.map(shotFromRow), input.shots)
     if (change.kind !== "update") return newRevision(tx, cardId, current.number + 1, input, hash)
 
     const idOf = new Map(stored.map((row) => [shotKey(row), row.id]))

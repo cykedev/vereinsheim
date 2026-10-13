@@ -146,6 +146,37 @@ describe("writeRevision", () => {
     expect((await shotsOf(first.cardId))?.shots.at(-1)?.decimalTenths).toBe(109)
   })
 
+  it("eine Korrektur setzt „korrigiert“; dauerhafte Merkmale bleiben, auch wenn ein späterer Stand sie nicht zeigt", async () => {
+    const input = cardWhere(1250, (c) => !probeOnly(c))
+    const first = await writeRevision(db, {
+      ...input,
+      card: {
+        ...input.card,
+        flags: ["uhr-abweichung"],
+        lifesignAtMs: 1_000,
+        clockOffsetMs: 660_000,
+      },
+    })
+    const changed = input.shots.map((shot, i) =>
+      i === 0 ? { ...shot, decimalTenths: 0, ring: 0 } : shot
+    )
+    await writeRevision(db, { ...input, shots: changed, reason: "korrektur" })
+    const card = await db.card.findUniqueOrThrow({ where: { id: first.cardId } })
+    expect([...card.flags].sort()).toEqual(["korrigiert", "uhr-abweichung"])
+    // ohne Angabe bleiben Lebenszeichen und Versatz
+    expect(card.lifesignAt?.getTime()).toBe(1_000)
+    expect(card.clockOffsetMs).toBe(660_000)
+    // ein neuer Schuss danach ist keine Korrektur, die Merkmale bleiben
+    await writeRevision(db, {
+      ...input,
+      card: { ...input.card, flags: ["unvollstaendig"] },
+      shots: changed.slice(0, -1),
+      reason: "weniger",
+    })
+    const again = await db.card.findUniqueOrThrow({ where: { id: first.cardId } })
+    expect([...again.flags].sort()).toEqual(["korrigiert", "uhr-abweichung", "unvollstaendig"])
+  })
+
   it("Besitzer bleibt beim Aktualisieren; Sportpass bleibt, wenn er fehlt, und wird nur mit null geleert", async () => {
     const [input] = season(1, 1300)
     const card = { ...input.card, sportpassId: BigInt(12_345_678) }

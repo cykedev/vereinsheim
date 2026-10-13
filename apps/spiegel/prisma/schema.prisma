@@ -49,45 +49,101 @@ enum UserRole {
 
 // Schießstand eines Vereins; eine reicht im Normalfall (ADR-029, keine Mandanten)
 model Site {
-  id          Int          @id @default(autoincrement())
+  id          Int                @id @default(autoincrement())
   name        String
   // IANA-Zone der Anlage: Meyton speichert Ortszeit ohne Zone
   timeZone    String
-  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+  // Salz der gehashten SportpassIDs für die Brücke (`GET /state`, SF-38); entsteht beim ersten Abruf
+  consentSalt String?
+  createdAt   DateTime           @default(now()) @db.Timestamptz(3)
   sources     Source[]
   bridges     Bridge[]
   disciplines Discipline[]
+  pairings    BridgePairing[]
+  clock       ClockReading[]
+  consents    SportpassConsent[]
 }
 
 // eine SSMDB2-Instanz in einer Epoche (Ablage geleert, neuer Server: neue Epoche, SF-23). ScheibenIDs sind nur
 // innerhalb einer Quelle eindeutig.
 model Source {
-  id         Int           @id @default(autoincrement())
-  siteId     Int
-  site       Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  epoch      Int
-  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
-  snapshots  RawSnapshot[]
-  rows       RawRow[]
-  cards      Card[]
-  tombstones Tombstone[]
-  locks      DeleteLock[]
+  id          Int           @id @default(autoincrement())
+  siteId      Int
+  site        Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  epoch       Int
+  // vom Admin bestätigt (die erste Epoche einer Anlage gilt mit dem ersten Snapshot); unbestätigt nimmt Spiegel nichts an
+  confirmedAt DateTime?     @db.Timestamptz(3)
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  snapshots   RawSnapshot[]
+  rows        RawRow[]
+  cards       Card[]
+  tombstones  Tombstone[]
+  locks       DeleteLock[]
 
   @@unique([siteId, epoch])
 }
 
 // gekoppeltes Gerät an der Anlage; nur der Hash des Tokens wird gespeichert
 model Bridge {
-  id         Int           @id @default(autoincrement())
+  id              Int             @id @default(autoincrement())
+  siteId          Int
+  site            Site            @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name            String
+  tokenHash       String          @unique
+  version         String?
+  // höchstens einmal je Minute geschrieben (Last)
+  lastSeenAt      DateTime?       @db.Timestamptz(3)
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  revokedAt       DateTime?       @db.Timestamptz(3)
+  // Beginn des laufenden Laufs der Brücke; ein neuer Lauf heißt: die Anlage war aus (Zustand `final`)
+  runStartedAt    DateTime?       @db.Timestamptz(3)
+  lastHeartbeatAt DateTime?       @db.Timestamptz(3)
+  // der letzte Heartbeat (API v1, ohne Personen) für die Anzeige im Admin
+  heartbeat       Json?
+  snapshots       RawSnapshot[]
+  pairings        BridgePairing[]
+}
+
+// Einmal-Code zum Koppeln einer Brücke: nur gehasht, 15 Minuten gültig, einmal einlösbar
+model BridgePairing {
+  id          Int       @id @default(autoincrement())
+  siteId      Int
+  site        Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name        String
+  codeHash    String    @unique
+  expiresAt   DateTime  @db.Timestamptz(3)
+  usedAt      DateTime? @db.Timestamptz(3)
+  bridgeId    Int?
+  bridge      Bridge?   @relation(fields: [bridgeId], references: [id], onDelete: SetNull)
+  createdById String?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+}
+
+// Uhrabweichung der Anlage aus dem Heartbeat (Anlage minus Brücke), mit Messzeitpunkt (SF-29); neu nur bei Änderung
+model ClockReading {
+  id         Int      @id @default(autoincrement())
   siteId     Int
-  site       Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  name       String
-  tokenHash  String        @unique
-  version    String?
-  lastSeenAt DateTime?     @db.Timestamptz(3)
-  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
-  revokedAt  DateTime?     @db.Timestamptz(3)
-  snapshots  RawSnapshot[]
+  site       Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  measuredAt DateTime @db.Timestamptz(3)
+  offsetMs   Int
+
+  @@index([siteId, measuredAt])
+}
+
+// Zustimmung eines Kontos für eine SportpassID an einer Anlage (Opt-in, ADR-028): nur bestätigte zählen. Eine SportpassID
+// gehört an einer Anlage höchstens einem Konto; mehrdeutige ordnet Spiegel nie automatisch zu ([[spiegel-assignment]])
+model SportpassConsent {
+  id          Int       @id @default(autoincrement())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  siteId      Int
+  site        Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  sportpassId BigInt
+  confirmedAt DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@unique([siteId, sportpassId])
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -146,6 +202,15 @@ model RawSnapshot {
   scheibenRowIds  BigInt[]
   serienRowIds    BigInt[]
   trefferRowIds   BigInt[]
+  // Prüfsumme ohne das Lebenszeichen (`Scheiben.Zeitstempel`): gleich heißt, nur das Lebenszeichen hat sich bewegt
+  contentChecksum String?
+  // das zuletzt gesehene Lebenszeichen (Text) und wann es gesehen wurde (Beobachtungszeit)
+  lifesign        String?
+  lifesignAt      DateTime?      @db.Timestamptz(3)
+  // Adapter, der den Stand gedeutet hat; null: nicht gedeutet
+  adapterVersion  String?
+  // unbekanntes Schema (SF-25): warum keine Scheibe entstand
+  quarantine      String?
   revisions       CardRevision[]
 
   @@unique([sourceId, scheibenId, sequence])
@@ -189,25 +254,26 @@ model DeleteLock {
 
 // Konto eines erwachsenen Mitglieds; keine Selbstregistrierung, Admin legt an ([[spiegel-privacy]])
 model User {
-  id                 String          @id @default(cuid())
+  id                 String             @id @default(cuid())
   name               String?
-  email              String          @unique
+  email              String             @unique
   passwordHash       String
   // steigt bei Passwortwechsel und Reset: ältere Sitzungen (JWT) gelten nicht mehr
-  sessionVersion     Int             @default(0)
-  role               UserRole        @default(USER)
+  sessionVersion     Int                @default(0)
+  role               UserRole           @default(USER)
   // deaktiviert statt gelöscht
-  isActive           Boolean         @default(true)
+  isActive           Boolean            @default(true)
   // ein Passwort vom Admin (neues Konto, Zurücksetzen) muss der Schütze ersetzen, bevor er Daten sieht: sonst kennte der
   // Admin es und sähe seine Schüsse ([[spiegel-privacy]])
-  mustChangePassword Boolean         @default(false)
+  mustChangePassword Boolean            @default(false)
   // SportpassIDs der Zuordnung (mehrere je Konto, SF-39) kommen mit SP-1.7
-  createdAt          DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime        @updatedAt @db.Timestamptz(3)
+  createdAt          DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime           @updatedAt @db.Timestamptz(3)
   cards              Card[]
   periods            NamedPeriod[]
   deleteLocks        DeleteLock[]
   familyScorings     FamilyScoring[]
+  consents           SportpassConsent[]
 }
 
 // benannter Zeitraum des Schützen („Vorbereitung Landesmeisterschaft“), Tage in der Anzeige-Zone
@@ -330,6 +396,10 @@ model Card {
   currentRevision   CardRevision?   @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
   // Papierkorb: 30 Tage, danach endgültig gelöscht und gesperrt (DeleteLock)
   deletedAt         DateTime?       @db.Timestamptz(3)
+  // zuletzt bewegtes Lebenszeichen (Beobachtungszeit, um den Versatz verschoben); Grundlage des Zustands (SF-10)
+  lifesignAt        DateTime?       @db.Timestamptz(3)
+  // Versatz der Uhr des Stands, gemessen am laufenden Lebenszeichen (SF-73); ab fünf Minuten ausgeglichen
+  clockOffsetMs     Int?
   createdAt         DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime        @updatedAt @db.Timestamptz(3)
   revisions         CardRevision[]  @relation("Revisions")
@@ -342,6 +412,8 @@ model Card {
   @@index([ownerId, familyId, startedAt])
   // Start: der letzte Abend über alle Familien
   @@index([ownerId, startedAt])
+  // Heartbeat: offene und ruhende Scheiben einer Quelle weiterschalten
+  @@index([sourceId, state])
   @@index([sportpassId])
 }
 

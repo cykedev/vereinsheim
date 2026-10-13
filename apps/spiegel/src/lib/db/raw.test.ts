@@ -173,3 +173,68 @@ describe("storeSnapshot", () => {
     }
   })
 })
+
+describe("Lebenszeichen (Plan 2026-10-13-spiegel-ingest, D1)", () => {
+  /** derselbe Stand mit einem anderen Lebenszeichen und späterer Folgenummer */
+  const withLifesign = (snapshot: SnapshotV1, lifesign: string, laterMs: number): SnapshotV1 => {
+    const data = {
+      ...snapshot.data,
+      scheiben: {
+        ...snapshot.data.scheiben,
+        rows: snapshot.data.scheiben.rows.map((row) => ({ ...row, Zeitstempel: lifesign })),
+      },
+    }
+    const observedAt = new Date(Date.parse(snapshot.observedAt) + laterMs).toISOString()
+    return {
+      ...snapshot,
+      sequence: snapshot.sequence + laterMs,
+      observedAt,
+      data,
+      checksum: computeChecksum(data),
+    }
+  }
+
+  it("ändert sich nur das Lebenszeichen, entsteht keine Zeile und kein Snapshot; ein echter Stand danach schon", async () => {
+    const [first] = snapshotsOf("SF-10")
+    const id = first.scheibenId
+    await db.rawSnapshot.deleteMany({ where: { sourceId: site.sourceId, scheibenId: id } })
+    await db.rawRow.deleteMany({ where: { sourceId: site.sourceId, scheibenId: id } })
+    const stored = await store(first)
+    expect(stored.outcome).toBe("stored")
+    const rows = await storedRows(id)
+    const beat = withLifesign(first, "2026-06-01 20:00:07", 7_000)
+    const result = await store(beat)
+    expect(result).toMatchObject({
+      outcome: "lifesign",
+      previousLifesign: first.data.scheiben.rows[0].Zeitstempel,
+    })
+    expect(await storedRows(id)).toBe(rows)
+    expect(await db.rawSnapshot.count({ where: { sourceId: site.sourceId, scheibenId: id } })).toBe(
+      1
+    )
+    const latest = await db.rawSnapshot.findFirstOrThrow({
+      where: { sourceId: site.sourceId, scheibenId: id },
+    })
+    expect(latest.lifesign).toBe("2026-06-01 20:00:07")
+    expect(latest.lastSequence).toBe(BigInt(beat.sequence))
+    // dieselbe Lieferung noch einmal (Wiederholung der Brücke): wieder nur das Lebenszeichen, nichts Neues
+    expect((await store(beat)).outcome).toBe("stale")
+    // ein echter neuer Stand: der Schuss fällt weg, gespeichert, mit dem Lebenszeichen davor für den Adapter; neu ist nur
+    // die Zeile `Scheiben` mit dem zuletzt nur vermerkten Lebenszeichen
+    const fewer = {
+      ...beat,
+      sequence: beat.sequence + 5_000,
+      observedAt: new Date(Date.parse(beat.observedAt) + 5_000).toISOString(),
+      data: {
+        ...beat.data,
+        treffer: { ...beat.data.treffer, rows: beat.data.treffer.rows.slice(1) },
+      },
+    }
+    const real = { ...fewer, checksum: computeChecksum(fewer.data) }
+    expect(await store(real)).toMatchObject({
+      outcome: "stored",
+      newRows: 1,
+      previousLifesign: "2026-06-01 20:00:07",
+    })
+  })
+})

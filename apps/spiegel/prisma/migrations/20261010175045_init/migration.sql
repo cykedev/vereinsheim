@@ -18,6 +18,7 @@ CREATE TABLE "Site" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "timeZone" TEXT NOT NULL,
+    "consentSalt" TEXT,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Site_pkey" PRIMARY KEY ("id")
@@ -28,6 +29,7 @@ CREATE TABLE "Source" (
     "id" SERIAL NOT NULL,
     "siteId" INTEGER NOT NULL,
     "epoch" INTEGER NOT NULL,
+    "confirmedAt" TIMESTAMPTZ(3),
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Source_pkey" PRIMARY KEY ("id")
@@ -43,8 +45,48 @@ CREATE TABLE "Bridge" (
     "lastSeenAt" TIMESTAMPTZ(3),
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "revokedAt" TIMESTAMPTZ(3),
+    "runStartedAt" TIMESTAMPTZ(3),
+    "lastHeartbeatAt" TIMESTAMPTZ(3),
+    "heartbeat" JSONB,
 
     CONSTRAINT "Bridge_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BridgePairing" (
+    "id" SERIAL NOT NULL,
+    "siteId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "codeHash" TEXT NOT NULL,
+    "expiresAt" TIMESTAMPTZ(3) NOT NULL,
+    "usedAt" TIMESTAMPTZ(3),
+    "bridgeId" INTEGER,
+    "createdById" TEXT,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "BridgePairing_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ClockReading" (
+    "id" SERIAL NOT NULL,
+    "siteId" INTEGER NOT NULL,
+    "measuredAt" TIMESTAMPTZ(3) NOT NULL,
+    "offsetMs" INTEGER NOT NULL,
+
+    CONSTRAINT "ClockReading_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SportpassConsent" (
+    "id" SERIAL NOT NULL,
+    "userId" TEXT NOT NULL,
+    "siteId" INTEGER NOT NULL,
+    "sportpassId" BIGINT NOT NULL,
+    "confirmedAt" TIMESTAMPTZ(3),
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SportpassConsent_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -88,6 +130,11 @@ CREATE TABLE "RawSnapshot" (
     "scheibenRowIds" BIGINT[],
     "serienRowIds" BIGINT[],
     "trefferRowIds" BIGINT[],
+    "contentChecksum" TEXT,
+    "lifesign" TEXT,
+    "lifesignAt" TIMESTAMPTZ(3),
+    "adapterVersion" TEXT,
+    "quarantine" TEXT,
 
     CONSTRAINT "RawSnapshot_pkey" PRIMARY KEY ("id")
 );
@@ -214,6 +261,8 @@ CREATE TABLE "Card" (
     "origin" "CardOrigin" NOT NULL,
     "currentRevisionId" BIGINT,
     "deletedAt" TIMESTAMPTZ(3),
+    "lifesignAt" TIMESTAMPTZ(3),
+    "clockOffsetMs" INTEGER,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ(3) NOT NULL,
 
@@ -293,6 +342,18 @@ CREATE UNIQUE INDEX "Source_siteId_epoch_key" ON "Source"("siteId", "epoch");
 CREATE UNIQUE INDEX "Bridge_tokenHash_key" ON "Bridge"("tokenHash");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "BridgePairing_codeHash_key" ON "BridgePairing"("codeHash");
+
+-- CreateIndex
+CREATE INDEX "ClockReading_siteId_measuredAt_idx" ON "ClockReading"("siteId", "measuredAt");
+
+-- CreateIndex
+CREATE INDEX "SportpassConsent_userId_idx" ON "SportpassConsent"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SportpassConsent_siteId_sportpassId_key" ON "SportpassConsent"("siteId", "sportpassId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "RawRow_sourceId_scheibenId_table_checksum_key" ON "RawRow"("sourceId", "scheibenId", "table", "checksum");
 
 -- CreateIndex
@@ -338,6 +399,9 @@ CREATE INDEX "Card_ownerId_familyId_startedAt_idx" ON "Card"("ownerId", "familyI
 CREATE INDEX "Card_ownerId_startedAt_idx" ON "Card"("ownerId", "startedAt");
 
 -- CreateIndex
+CREATE INDEX "Card_sourceId_state_idx" ON "Card"("sourceId", "state");
+
+-- CreateIndex
 CREATE INDEX "Card_sportpassId_idx" ON "Card"("sportpassId");
 
 -- CreateIndex
@@ -366,6 +430,21 @@ ALTER TABLE "Source" ADD CONSTRAINT "Source_siteId_fkey" FOREIGN KEY ("siteId") 
 
 -- AddForeignKey
 ALTER TABLE "Bridge" ADD CONSTRAINT "Bridge_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BridgePairing" ADD CONSTRAINT "BridgePairing_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BridgePairing" ADD CONSTRAINT "BridgePairing_bridgeId_fkey" FOREIGN KEY ("bridgeId") REFERENCES "Bridge"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ClockReading" ADD CONSTRAINT "ClockReading_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SportpassConsent" ADD CONSTRAINT "SportpassConsent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SportpassConsent" ADD CONSTRAINT "SportpassConsent_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RawRow" ADD CONSTRAINT "RawRow_sourceId_fkey" FOREIGN KEY ("sourceId") REFERENCES "Source"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -435,3 +514,4 @@ ALTER TABLE "CardProjection" ADD CONSTRAINT "CardProjection_cardId_fkey" FOREIGN
 
 -- AddForeignKey
 ALTER TABLE "Printout" ADD CONSTRAINT "Printout_cardId_fkey" FOREIGN KEY ("cardId") REFERENCES "Card"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

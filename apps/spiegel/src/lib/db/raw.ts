@@ -5,6 +5,7 @@
 import { createHash } from "node:crypto"
 
 import { canonicalize, compareUtf16 } from "@vereinsheim/ingest-contract/canonical"
+import { computeChecksum } from "@vereinsheim/ingest-contract/checksum"
 import type {
   RowV1,
   SnapshotDataV1,
@@ -26,11 +27,39 @@ const sha256 = (text: string) => createHash("sha256").update(text, "utf8").diges
  */
 export const MAX_SEQUENCE_AHEAD_MS = 10 * 60_000
 
+/**
+ * Das Lebenszeichen der Quelle `meyton-ssmdb2`: `Scheiben.Zeitstempel` steigt alle 5 bis 10 s, solange der Stand belegt
+ * ist ([[meyton-ssmdb2]]). Ändert sich nur das, legt Spiegel nichts Neues ab (Plan `plans/2026-10-13-spiegel-ingest.md`,
+ * D1; Verfeinerung von [[adr-031]]): sonst entstünde je belegtem Stand alle paar Sekunden ein Snapshot.
+ */
+export const LIFESIGN = { table: "scheiben", column: "Zeitstempel" } as const
+
+/** die Prüfsumme des Stands ohne das Lebenszeichen, wie der Vertrag sie rechnet */
+export function contentChecksumOf(data: SnapshotDataV1): string {
+  const table = data[LIFESIGN.table]
+  if (!Object.hasOwn(table.columns, LIFESIGN.column)) return computeChecksum(data)
+  const without = <T extends Record<string, unknown>>(record: T) =>
+    Object.fromEntries(Object.entries(record).filter(([key]) => key !== LIFESIGN.column))
+  return computeChecksum({
+    ...data,
+    [LIFESIGN.table]: {
+      columns: without(table.columns) as TableV1["columns"],
+      rows: table.rows.map((row) => without(row) as RowV1),
+    },
+  })
+}
+
+/** das Lebenszeichen eines Snapshots als Text */
+export const lifesignOfData = (data: SnapshotDataV1): string | null =>
+  data[LIFESIGN.table].rows[0]?.[LIFESIGN.column] ?? null
+
 export type StoreResult =
-  /** neu gespeichert, mit so vielen neuen Zeilen */
-  | { outcome: "stored"; snapshotId: bigint; newRows: number }
+  /** neu gespeichert, mit so vielen neuen Zeilen; dazu das Lebenszeichen des Stands davor (für den Adapter) */
+  | { outcome: "stored"; snapshotId: bigint; newRows: number; previousLifesign: string | null }
   /** derselbe Stand wie zuletzt; nur seine letzte Folgenummer steigt */
   | { outcome: "unchanged"; snapshotId: bigint }
+  /** nur das Lebenszeichen hat sich bewegt: am letzten Stand vermerkt, keine Zeile neu (D1) */
+  | { outcome: "lifesign"; snapshotId: bigint; previousLifesign: string | null }
   /** älter als der zuletzt gesehene Stand (SF-26): nichts geändert */
   | { outcome: "stale"; latestSequence: bigint }
   /** Folgenummer weiter als `MAX_SEQUENCE_AHEAD_MS` in der Zukunft: abgelehnt, nichts geändert */
@@ -64,7 +93,13 @@ export async function storeSnapshot(
     const latest = await tx.rawSnapshot.findFirst({
       where: { sourceId, scheibenId },
       orderBy: { sequence: "desc" },
-      select: { id: true, checksum: true, lastSequence: true },
+      select: {
+        id: true,
+        checksum: true,
+        lastSequence: true,
+        contentChecksum: true,
+        lifesign: true,
+      },
     })
     if (latest && latest.checksum === snapshot.checksum) {
       if (sequence > latest.lastSequence)
@@ -76,6 +111,21 @@ export async function storeSnapshot(
     }
     if (latest && sequence <= latest.lastSequence)
       return { outcome: "stale", latestSequence: latest.lastSequence }
+
+    const contentChecksum = contentChecksumOf(snapshot.data)
+    const lifesign = lifesignOfData(snapshot.data)
+    if (latest && latest.contentChecksum === contentChecksum) {
+      await tx.rawSnapshot.update({
+        where: { id: latest.id },
+        data: {
+          lastSequence: sequence,
+          lastObservedAt: observedAt,
+          lifesign,
+          lifesignAt: observedAt,
+        },
+      })
+      return { outcome: "lifesign", snapshotId: latest.id, previousLifesign: latest.lifesign }
+    }
 
     const columns = Object.fromEntries(TABLES.map((name) => [name, snapshot.data[name].columns]))
     const columnsChecksum = sha256(canonicalize(columns))
@@ -93,15 +143,27 @@ export async function storeSnapshot(
         values: row,
       }))
     )
-    const created = await tx.rawRow.createMany({
-      data: rows.map((row) => ({ sourceId, scheibenId, ...row })),
-      skipDuplicates: true,
-    })
-    const stored = await tx.rawRow.findMany({
-      where: { sourceId, scheibenId, checksum: { in: [...new Set(rows.map((r) => r.checksum))] } },
-      select: { id: true, table: true, checksum: true },
-    })
-    const idOf = new Map(stored.map((r) => [`${r.table}:${r.checksum}`, r.id]))
+    // erst nachsehen, welche Zeilen es schon gibt, und nur die fehlenden schicken: ein offener Durchgang bringt mit
+    // jedem Schuss den ganzen Stand, neu ist davon meist eine Zeile (D6)
+    const lookup = (checksums: string[]) =>
+      tx.rawRow.findMany({
+        where: { sourceId, scheibenId, checksum: { in: checksums } },
+        select: { id: true, table: true, checksum: true },
+      })
+    const key = (r: { table: string; checksum: string }) => `${r.table}:${r.checksum}`
+    const known = await lookup([...new Set(rows.map((r) => r.checksum))])
+    const idOf = new Map(known.map((r) => [key(r), r.id]))
+    const seen = new Set(idOf.keys())
+    const missing = rows.filter((r) => !seen.has(key(r)) && seen.add(key(r)))
+    const created = missing.length
+      ? await tx.rawRow.createMany({
+          data: missing.map((row) => ({ sourceId, scheibenId, ...row })),
+          skipDuplicates: true,
+        })
+      : { count: 0 }
+    if (missing.length)
+      for (const r of await lookup([...new Set(missing.map((m) => m.checksum))]))
+        idOf.set(key(r), r.id)
     const idsOf = (table: TableName) =>
       rows.filter((r) => r.table === table).map((r) => idOf.get(`${table}:${r.checksum}`)!)
 
@@ -122,10 +184,18 @@ export async function storeSnapshot(
         scheibenRowIds: idsOf("scheiben"),
         serienRowIds: idsOf("serien"),
         trefferRowIds: idsOf("treffer"),
+        contentChecksum,
+        lifesign,
+        lifesignAt: observedAt,
       },
       select: { id: true },
     })
-    return { outcome: "stored", snapshotId: saved.id, newRows: created.count }
+    return {
+      outcome: "stored",
+      snapshotId: saved.id,
+      newRows: created.count,
+      previousLifesign: latest?.lifesign ?? null,
+    }
   })
 }
 
