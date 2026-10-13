@@ -276,8 +276,8 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich.
 - Auch in Design 2 **keine Palette-Klassen und keine `dark:`-Varianten**: Farbe kommt aus den Tokens.
 - **Allgemeine Bausteine** unter `@vereinsheim/ui/design2/*` (Segment-Umschalter, Schalter-Chip, weicher Kreis
-  `round-toggle` für eine Einstellung neben einer großen Zahl: 32 px, Flächenfarbe, ohne Rand, Gold nur für das
-  Hervorgehobene); was
+  `round-toggle` für eine Einstellung neben einer großen Zahl oder in einer Filterzeile: 32 px, Flächenfarbe, leichter
+  Rahmen, Gold nur für das Hervorgehobene); was
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, erprobt im Labor (`tools/labor`,
   Skriptprüfung `pnpm --filter @vereinsheim/labor pruefen`).
 - Ringwerk und Treffsicher bleiben auf `theme.css` und ihrem Drift-Gate; Spiegel ist davon

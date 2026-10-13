@@ -394,7 +394,7 @@ aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-lan
   Weg zurück zur Vorgabe gibt es nicht, auch keinen geplanten (User, 12. Oktober 2026: „es bleibt dabei“).
 - **Umschalten speichert:**
   - Auf der Seite einer Scheibe die Wertung der Scheibe. Liste und Start zeigen sie danach vorn.
-  - In der Liste (neben dem Titel), im Fortschritt (Ergebnis-Box) und auf Start (je Block neben der großen Zahl) die
+  - In Liste und Fortschritt (rechts in der Zeile der Filter) und auf Start (je Block neben der großen Zahl) die
     Wertung der Familie; danach rechnet die Seite neu. Profil hat keine Wertung mehr. Seit dem 13. Oktober 2026 als
     Kreise (unten, „Art und Wertung als Symbole“). Eine Fehlermeldung gilt nur für ihre Familie: Nach dem Wechsel der
     Familie steht sie nicht mehr da (Review, 13. Oktober 2026).
@@ -428,8 +428,10 @@ Plan `plans/2026-10-13-spiegel-symbole.md`. Der User fand die Segment-Schalter z
 der box … eleganter und spart platz und könnte sich überall konsistent durchziehen“; aus drei Skizzen gewählt: weiche
 Kreise.
 
-- **Ein Baustein:** `RoundToggle` (`@vereinsheim/ui/design2/round-toggle`), 32 px, gefüllt in der Flächenfarbe, ohne Rand;
-  Gold (Token `gold`: hell `#a87800`, dunkel `#f1c453`, auf `warning-wash`) nur für das Hervorgehobene.
+- **Ein Baustein:** `RoundToggle` (`@vereinsheim/ui/design2/round-toggle`), 32 px, gefüllt in der Flächenfarbe, mit
+  leichtem Rahmen wie ein Segment-Umschalter; Gold (Token `gold`: hell `#a87800`, dunkel `#f1c453`, auf `warning-wash`)
+  nur für das Hervorgehobene. Zuerst ohne Rahmen; auf der grauen Seitenfläche (Kopf am Telefon, Liste) verschwand der
+  Kreis (User: „dort braucht es einen rahmen“, dann „vielleicht ist der leichte rahmen immer gut“).
 - **Wertung** (`ScoringToggle`): „1“ für ganze Ringe, ⅒ für Zehntel, gesetzt von Geist selbst (`diagonal-fractions`, das
   Merkmal `frac`). Die Ziffern von Hand hoch- und tiefzustellen misslang (Tailwind verschiebt `sup`/`sub` schon), die
   tiefgestellten Zeichen ₀–₉ fehlen in den geladenen Teilen von Geist (User, 13. Oktober 2026). Ein Tippen stellt auf die
@@ -440,13 +442,17 @@ Kreise.
 - **Leise** (User: „die 1 wirkt sehr präsent ist aber ja nur eine randinfo“): Zeichen im Token `quiet` (3,3 : 1 auf
   der Fläche, nie für Text), Linie 1,75; „1“ und ⅒ in `muted-foreground`, mittelstark. Die „1“ in 13 px statt 16 px,
   damit sie so ruhig wirkt wie die kleinen Ziffern des Bruchs (User: „dass sie optisch besser zur 1/10 passt“).
-- **Ort:** rechts in der Zeile der großen Zahl bzw. des Titels (Platz `actions`), umbricht bei Platzmangel:
-  - Seite einer Scheibe: Pokal und Bruch neben dem Ergebnis (nur Probe: nur der Bruch);
-  - Fortschritt: der Bruch in der Ergebnis-Box; Liste: neben „Scheiben“ („Wertung für Ø und Abstand“); Start: neben dem
-    Ø je Block, dort entfällt „in ganzen Ringen“ im Text.
+- **Ort:**
+  - Seite einer Scheibe: Pokal und Bruch rechts in der Zeile des Ergebnisses (Platz `actions` von `CardResult`; nur
+    Probe: nur der Bruch), am Telefon im Kopf, ab 768 px in der Box;
+  - Liste und Fortschritt: der Bruch rechtsbündig in der Zeile der Filter (`ListControls`, `PeriodControls`; in der
+    Liste „Wertung für Ø und Abstand“), auf allen Größen. Er gilt für die ganze Seite wie die Filter; vorher stand er in
+    der Liste neben dem Titel und im Fortschritt in der Ergebnis-Box (User: „in die selbe zeile wie die filter“,
+    „rechts ausgerichtet“, „dann ist das konsistent zu scheiben“);
+  - Start: neben dem Ø je Block (der Block ist eine Karte, keine Filter), dort entfällt „in ganzen Ringen“ im Text.
 - **Liste:** der Pokal in der Spalte „Art“ 16 px in Gold (vorher 14 px grau, der User sah ihn nicht).
 - **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`, auf
-  Start gleich unter der Zahl, in der Liste unter dem Kopf.
+  Start gleich unter der Zahl, in Liste und Fortschritt unter den Filtern.
 - **Labor:** der Bruch auf der Seite einer Scheibe; Liste, Start und Fortschritt ohne Kreise (seine Wertung steht in
   Profil).
 - **Bedienung über dem Verlauf** (`PeriodChartBar`, User: „die schalter verrutschen komisch“): Kennzahl, Darstellung

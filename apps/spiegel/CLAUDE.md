@@ -84,7 +84,8 @@ mit dem Demo-Konto aus `tools/seed-own.ts` anmelden; danach `seed:own` für das 
   - Umschalten speichert über Server Actions (`src/lib/scoring-actions.ts`, nur eigene Scheiben bzw. Familien mit eigenen
     Scheiben, danach `revalidatePath`): auf der Seite einer Scheibe `setCardScoring`, in Liste und Fortschritt
     `setFamilyScoring`. Bedient als weicher Kreis (`ScoringToggle` aus `shot-ui`, Plan
-    `plans/2026-10-13-spiegel-symbole.md`) rechts neben der großen Zahl bzw. dem Titel; jede Hülle führt ihre Wahl einmal
+    `plans/2026-10-13-spiegel-symbole.md`): auf der Seite einer Scheibe rechts neben der großen Zahl, in Liste und
+    Fortschritt rechtsbündig in der Zeile der Filter (Fehler darunter); jede Hülle führt ihre Wahl einmal
     über `useSavedChoice` (`src/components/shell/`), Kopf am Telefon und Box teilen sie: gezeigt sofort, ein Fehler (auch
     ein abgelehnter Aufruf, `saveChoice`) steht als Text im Platz `notice` statt im Error-Boundary. Auf Start trägt jeder
     Block seinen Kreis (`ScoredEveningBlock` in `StartScreen`). Die Seite einer Scheibe öffnet in `route.scoring ?? card.scoring`; die Adresse trägt die Wertung
