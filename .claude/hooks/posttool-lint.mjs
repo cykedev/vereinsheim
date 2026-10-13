@@ -24,7 +24,7 @@ const dir = m[2] // apps/<app> bzw. packages/<paket>
 const rel = m[3] // pfad relativ zur App- bzw. Paket-Wurzel
 try {
   execSync(`pnpm exec eslint ${JSON.stringify(rel)}`, {
-    cwd: `${m[1]}${dir}` || ".",
+    cwd: `${m[1]}${dir}`,
     stdio: "pipe",
     timeout: 90000,
   })

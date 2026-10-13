@@ -27,12 +27,14 @@ type Round struct {
 	Cards           map[int32]contract.Data
 	SourceVersion   *string
 	SessionTimeZone string
+	// `NOW(3)` der Anlage in der Sitzungszone (UTC) als Text; nil ohne Messung. Verankert das Startfenster.
+	SourceNow *string
 }
 
-// Source liest eine Runde in einer kurzen lesenden Transaktion (SF-51). `choose` bekommt die Lebenszeichen und nennt
-// die Scheiben, die ganz gelesen werden; sie stehen danach in `Round.Cards`.
+// Source liest eine Runde in einer kurzen lesenden Transaktion (SF-51). `choose` bekommt die Lebenszeichen und die Uhr
+// der Anlage (`Round.SourceNow`) und nennt die Scheiben, die ganz gelesen werden; sie stehen danach in `Round.Cards`.
 type Source interface {
-	Round(ctx context.Context, choose func([]Lifesign) []int32) (Round, error)
+	Round(ctx context.Context, choose func(lifesigns []Lifesign, sourceNow *string) []int32) (Round, error)
 }
 
 // Config sind die Regeln der Erkennung; `Defaults` sind die des Plans.
@@ -68,6 +70,7 @@ type card struct {
 	last    string    // Prüfsumme der vorigen Lesung
 	waiting bool      // die vorige Lesung ist ein neuer Stand mit Treffern und wartet auf eine zweite gleiche
 	sent    string    // Prüfsumme des zuletzt gemeldeten Stands
+	skipped string    // Code, mit dem die letzte Lesung übersprungen wurde (einmal melden)
 }
 
 // Skip ist eine Scheibe, die die Runde nicht melden kann, mit festem Code ohne Inhalt (SF-59).
@@ -107,13 +110,24 @@ func New(cfg Config, now func() time.Time) *Watcher {
 const stampLayout = "2006-01-02 15:04:05"
 
 // startFrom ist beim ersten Lauf das älteste Lebenszeichen, das noch als neu gilt: das Startfenster vor dem jüngsten.
-// `YYYY-MM-DD HH:MM:SS` sortiert als Text wie als Zeit; ohne lesbares Lebenszeichen gilt alles als neu.
-func (w *Watcher) startFrom(lifesigns []Lifesign) string {
+// `YYYY-MM-DD HH:MM:SS` sortiert als Text wie als Zeit. Die Uhr eines einzelnen Stands kann vorgehen (SF-73): Was mehr als
+// einen Tag nach der Uhr der Anlage liegt, verankert das Fenster nicht (ein Tag deckt die Zone der Ortszeit ab). Ohne
+// lesbares Lebenszeichen und ohne Uhr gilt alles als neu.
+func (w *Watcher) startFrom(lifesigns []Lifesign, sourceNow *string) string {
+	limit := ""
+	if sourceNow != nil && len(*sourceNow) >= len(stampLayout) {
+		if t, err := time.Parse(stampLayout, (*sourceNow)[:len(stampLayout)]); err == nil {
+			limit = t.Add(24 * time.Hour).Format(stampLayout)
+		}
+	}
 	newest := ""
 	for _, l := range lifesigns {
-		if l.Stamp > newest {
+		if l.Stamp > newest && (limit == "" || l.Stamp <= limit) {
 			newest = l.Stamp
 		}
+	}
+	if newest == "" && sourceNow != nil && len(*sourceNow) >= len(stampLayout) {
+		newest = (*sourceNow)[:len(stampLayout)]
 	}
 	t, err := time.Parse(stampLayout, newest)
 	if err != nil {
@@ -186,9 +200,9 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 	now := w.now()
 	var chosen []int32
 	var from string
-	round, err := src.Round(ctx, func(lifesigns []Lifesign) []int32 {
+	round, err := src.Round(ctx, func(lifesigns []Lifesign, sourceNow *string) []int32 {
 		if !w.started {
-			from = w.startFrom(lifesigns)
+			from = w.startFrom(lifesigns, sourceNow)
 		}
 		chosen = w.plan(now, lifesigns, from)
 		return chosen
@@ -233,16 +247,22 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			if issue, ok := err.(*contract.Issue); ok {
 				code = issue.Code
 			}
-			result.Skipped = append(result.Skipped, Skip{ID: id, Code: code})
-			c.last, c.waiting = "", false
+			// einmal je Stand melden, nicht in jeder Runde, solange die Scheibe aktiv ist
+			if c.skipped != code {
+				result.Skipped = append(result.Skipped, Skip{ID: id, Code: code})
+			}
+			c.skipped, c.last, c.waiting = code, "", false
 			continue
 		}
 		sum, err := contract.Checksum(data)
 		if err != nil {
-			result.Skipped = append(result.Skipped, Skip{ID: id, Code: "malformed-string"})
-			c.last, c.waiting = "", false
+			if c.skipped != "malformed-string" {
+				result.Skipped = append(result.Skipped, Skip{ID: id, Code: "malformed-string"})
+			}
+			c.skipped, c.last, c.waiting = "malformed-string", "", false
 			continue
 		}
+		c.skipped = ""
 		stable := sum == c.last
 		c.last = sum
 		// nur ein neuer Stand (nach einer zerrissenen Lesung kommt oft der alte wieder) und ohne Treffer nie (SF-13)
@@ -260,7 +280,9 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			Epoch:           w.cfg.Epoch,
 			ScheibenID:      id,
 			Sequence:        seq,
-			ObservedAt:      contract.ObservedAt(seq),
+			// die echte Beobachtung, auch wenn die Folgenummer nach einem Rücksprung der Uhr weiterzählt: Spiegel misst
+			// an ihr den Versatz der Stände
+			ObservedAt:      contract.ObservedAt(now.UnixMilli()),
 			SessionTimeZone: round.SessionTimeZone,
 			Data:            data,
 			Checksum:        sum,
@@ -275,7 +297,9 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			delete(w.cards, id)
 			continue
 		}
-		if c.waiting || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute) {
+		// nur, was in dieser Runde in der Ablage stand: Eine gelöschte Scheibe, die noch wartete, hielte die Brücke sonst
+		// einen Tag lang im Sekundentakt
+		if c.seenAt.Equal(now) && (c.waiting || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute)) {
 			result.Busy = true
 		}
 	}

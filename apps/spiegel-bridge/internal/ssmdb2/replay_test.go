@@ -7,6 +7,7 @@
 //	pnpm --filter spiegel-bridge replay                     MariaDB 10.6 wie an der Vereinsanlage
 //	REPLAY_DOCKER_IMAGE=mariadb:11 pnpm --filter spiegel-bridge replay
 //	BRIDGE_TEST_DSN='root:…@tcp(127.0.0.1:3306)/' …         gegen einen laufenden Server (legt SSMDB2 neu an)
+//	REPLAY_SERVER_ARGS=--transaction-isolation=READ-COMMITTED …  mit anderer Einstellung der Anlage
 package ssmdb2
 
 import (
@@ -69,7 +70,10 @@ func server(t *testing.T) string {
 		image = "mariadb:10.6"
 	}
 	name := fmt.Sprintf("spiegel-bridge-replay-%d", os.Getpid())
-	docker(t, "run", "-d", "--rm", "--name", name, "-e", "MARIADB_ROOT_PASSWORD=root", "-p", "127.0.0.1::3306", image, "--skip-ssl")
+	args := []string{"run", "-d", "--rm", "--name", name, "-e", "MARIADB_ROOT_PASSWORD=root", "-p", "127.0.0.1::3306", image, "--skip-ssl"}
+	// etwa `--transaction-isolation=READ-COMMITTED`: Die Brücke stellt ihre Stufe selbst ein (SF-51)
+	args = append(args, strings.Fields(os.Getenv("REPLAY_SERVER_ARGS"))...)
+	docker(t, args...)
 	t.Cleanup(func() { _ = exec.Command("docker", "rm", "-f", name).Run() })
 	// bereit erst, wenn der eigentliche Server läuft (beim Start gehört der Socket einem Init-Server)
 	for i := 0; ; i++ {
@@ -257,9 +261,9 @@ func TestReplayCases(t *testing.T) {
 	t.Logf("%d Fälle, %d Snapshots", cases, len(output))
 }
 
-// Ein Meyton-Update fügt während des Laufs eine Spalte an (SF-25): Die Runde danach zählt nicht, die nächste liest die
-// Spalten neu, und die neue Spalte reist mit.
-func TestReplayColumnAddedWhileRunning(t *testing.T) {
+// Ein Meyton-Update fügt während des Laufs eine Spalte an oder ändert einen Typ (SF-25): Die Brücke liest die Spalten
+// jede Runde, die neue Spalte und der neue Typ reisen mit, und der Stand gilt als neu.
+func TestReplayColumnsChangeWhileRunning(t *testing.T) {
 	dsn := server(t)
 	root := admin(t, dsn, "")
 	exec1(t, root, "DROP DATABASE IF EXISTS SSMDB2; CREATE DATABASE SSMDB2")
@@ -275,30 +279,30 @@ func TestReplayColumnAddedWhileRunning(t *testing.T) {
 	defer reader.Close()
 	clock := time.Date(2026, 10, 13, 18, 0, 0, 0, time.UTC)
 	w := watch.New(watch.Defaults, func() time.Time { return clock })
-	tick := func() (watch.Result, error) {
-		clock = clock.Add(time.Second)
-		return w.Tick(context.Background(), reader)
+	// zwei Runden
+	rounds := func() []contract.Snapshot {
+		var out []contract.Snapshot
+		for range 2 {
+			clock = clock.Add(time.Second)
+			result, err := w.Tick(context.Background(), reader)
+			if err != nil {
+				t.Fatal(Code(err))
+			}
+			out = append(out, result.Snapshots...)
+		}
+		return out
 	}
-	if _, err := tick(); err != nil {
-		t.Fatal(Code(err))
+	if got := rounds(); len(got) != 1 {
+		t.Fatalf("Ausgang: %d Snapshots", len(got))
 	}
 	exec1(t, db, "ALTER TABLE Treffer ADD COLUMN Neu int(11) NOT NULL DEFAULT 7")
-	if _, err := tick(); Code(err) != "columns-changed" {
-		t.Fatalf("Fehler %q", Code(err))
+	got := rounds()
+	if len(got) != 1 || got[0].Data.Treffer.Columns["Neu"] != "int(11)" || *got[0].Data.Treffer.Rows[0]["Neu"] != "7" {
+		t.Fatalf("neue Spalte: %d Snapshots", len(got))
 	}
-	var snapshots []contract.Snapshot
-	for range 2 {
-		result, err := tick()
-		if err != nil {
-			t.Fatal(Code(err))
-		}
-		snapshots = append(snapshots, result.Snapshots...)
-	}
-	if len(snapshots) != 1 {
-		t.Fatalf("%d Snapshots", len(snapshots))
-	}
-	treffer := snapshots[0].Data.Treffer
-	if treffer.Columns["Neu"] != "int(11)" || *treffer.Rows[0]["Neu"] != "7" {
-		t.Fatalf("neue Spalte fehlt: %v", treffer.Columns)
+	exec1(t, db, "ALTER TABLE Treffer MODIFY COLUMN Neu bigint(20) NOT NULL DEFAULT 7")
+	got = rounds()
+	if len(got) != 1 || got[0].Data.Treffer.Columns["Neu"] != "bigint(20)" {
+		t.Fatalf("neuer Typ: %d Snapshots", len(got))
 	}
 }

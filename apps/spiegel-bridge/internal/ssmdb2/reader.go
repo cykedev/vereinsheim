@@ -40,6 +40,13 @@ type Reader struct {
 	columns map[string]map[string]string // Tabelle → Spalte → COLUMN_TYPE
 }
 
+// Der Treiber schreibt eigene Meldungen nach stderr (mit Adressen); die Brücke meldet nur Codes (SF-59).
+func init() { _ = mysql.SetLogger(mysql.Logger(silent{})) }
+
+type silent struct{}
+
+func (silent) Print(...any) {}
+
 // Open bereitet die Verbindung vor, ohne sie schon aufzubauen; die Brücke ist oft vor dem Meyton-Server wach.
 func Open(dsn string) (*Reader, error) {
 	cfg, err := mysql.ParseDSN(dsn)
@@ -56,6 +63,8 @@ func Open(dsn string) (*Reader, error) {
 	cfg.ParseTime = false
 	cfg.InterpolateParams = false
 	cfg.MultiStatements = false
+	// sonst hießen die Spalten `Tabelle.Spalte`, und jede Runde schiene geänderte Spalten zu haben
+	cfg.ColumnsWithAlias = false
 	cfg.Timeout = 5 * time.Second
 	cfg.ReadTimeout = 30 * time.Second
 	cfg.WriteTimeout = 30 * time.Second
@@ -103,6 +112,8 @@ type codeError string
 func (e codeError) Error() string { return string(e) }
 func (e codeError) Code() string  { return string(e) }
 
+// loadColumns liest Spalten und Typen. Jede Runde neu, in ihrer Transaktion: Ein Meyton-Update kann auch nur einen Typ
+// ändern (SF-25), und der Typ reist mit jedem Snapshot.
 func (r *Reader) loadColumns(ctx context.Context, conn *sql.Conn) error {
 	rows, err := conn.QueryContext(ctx,
 		"SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE FROM information_schema.COLUMNS "+
@@ -134,37 +145,50 @@ func (r *Reader) loadColumns(ctx context.Context, conn *sql.Conn) error {
 	return nil
 }
 
+// begin startet die lesende Transaktion. `WITH CONSISTENT SNAPSHOT` gilt nur unter REPEATABLE READ; stellt die Anlage
+// READ COMMITTED ein, sähe sonst jede Abfrage einen anderen Stand (SF-51). Deshalb die Stufe für diese Transaktion
+// ausdrücklich, das geht auf MariaDB 10.6 wie 11.
+func begin(ctx context.Context, conn *sql.Conn) error {
+	if _, err := conn.ExecContext(ctx, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"); err != nil {
+		return err
+	}
+	_, err := conn.ExecContext(ctx, "START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY")
+	return err
+}
+
 // Round liest eine Runde (watch.Source): Lebenszeichen aller Scheiben, dann die gewählten ganz, alles in einer
 // lesenden Transaktion mit konsistentem Schnappschuss.
-func (r *Reader) Round(ctx context.Context, choose func([]watch.Lifesign) []int32) (watch.Round, error) {
+func (r *Reader) Round(ctx context.Context, choose func([]watch.Lifesign, *string) []int32) (watch.Round, error) {
 	conn, err := r.db.Conn(ctx)
 	if err != nil {
 		return watch.Round{}, err
 	}
 	defer conn.Close()
-	if r.columns == nil {
-		if err := r.loadColumns(ctx, conn); err != nil {
-			return watch.Round{}, err
-		}
-	}
-	if _, err := conn.ExecContext(ctx, "START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY"); err != nil {
+	if err := begin(ctx, conn); err != nil {
 		return watch.Round{}, err
 	}
 	// lesend: ROLLBACK und COMMIT sind gleich; auch nach einem Fehler offen lassen hieße eine lange Transaktion
 	defer func() { _, _ = conn.ExecContext(context.WithoutCancel(ctx), "ROLLBACK") }()
+	if err := r.loadColumns(ctx, conn); err != nil {
+		return watch.Round{}, err
+	}
 
 	round := watch.Round{Cards: map[int32]contract.Data{}}
 	if err := conn.QueryRowContext(ctx, "SELECT @@session.time_zone").Scan(&round.SessionTimeZone); err != nil {
 		return watch.Round{}, err
 	}
 	round.SourceVersion = readVersion(ctx, conn)
+	var now sql.NullString
+	if err := conn.QueryRowContext(ctx, "SELECT NOW(3)").Scan(&now); err == nil && now.Valid {
+		round.SourceNow = &now.String
+	}
 
 	lifesigns, err := readLifesigns(ctx, conn)
 	if err != nil {
 		return watch.Round{}, err
 	}
 	round.Lifesigns = lifesigns
-	ids := choose(lifesigns)
+	ids := choose(lifesigns, round.SourceNow)
 	if len(ids) == 0 {
 		return round, nil
 	}
@@ -185,9 +209,6 @@ func (r *Reader) Round(ctx context.Context, choose func([]watch.Lifesign) []int3
 		// nur ganze Zahlen werden eingesetzt; Platzhalter schalteten auf das Binärprotokoll, das Datumswerte umdeutet
 		query := fmt.Sprintf("SELECT * FROM `%s` WHERE `ScheibenID` IN (%s)", t.name, in)
 		if err := r.readTable(ctx, conn, query, t.name, t.key, round.Cards); err != nil {
-			if errors.Is(err, ErrColumnsChanged) {
-				r.columns = nil
-			}
 			return watch.Round{}, err
 		}
 	}

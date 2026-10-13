@@ -13,10 +13,12 @@ Heartbeat folgen in Teil b, Nachholen und Updates in c, Opt-in und Verdeckung in
 | `pnpm --filter spiegel-bridge test`       | Go-Tests: Vertrag gegen die Vektoren aus Python, Erkennung mit einer Ablage im Speicher       |
 | `pnpm --filter spiegel-bridge replay`     | Abnahme: alle Fälle aus `ssmdb2-cases` in `mariadb:10.6` (Docker), nicht im Gate (~5 s)       |
 | `pnpm --filter spiegel-bridge build`      | Binaries nach `dist/` für linux/arm64, linux/amd64, windows/amd64                             |
-| `go run ./cmd/spiegel-bridge watch --dsn` | lokal lesen; je Snapshot eine Zeile ohne Personenfelder, `--json` volle Snapshots, `--once`   |
+| `go run ./cmd/spiegel-bridge watch`       | lokal lesen; je Snapshot eine Zeile ohne Personenfelder, `--json` volle Snapshots, `--once`   |
 
-`REPLAY_DOCKER_IMAGE=mariadb:11` prüft gegen MariaDB 11, `BRIDGE_TEST_DSN` gegen einen laufenden Server (legt `SSMDB2`
-neu an). Go ist Pflicht im Dev-Setup wie Node (`brew install go`); das Gate ruft `go vet`, `gofmt`, `go test`, `go build`.
+Den Zugang zur SSMDB2 über `SPIEGEL_BRIDGE_DSN` geben, nicht über `--dsn`: Ein Passwort in der Befehlszeile steht in `ps`
+und im Verlauf der Shell. `REPLAY_DOCKER_IMAGE=mariadb:11` prüft gegen MariaDB 11,
+`REPLAY_SERVER_ARGS=--transaction-isolation=READ-COMMITTED` mit anderer Einstellung der Anlage, `BRIDGE_TEST_DSN` gegen
+einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie Node (`brew install go`); das Gate ruft `go vet`, `gofmt`, `go test`, `go build`.
 
 ## Aufbau
 
@@ -36,12 +38,19 @@ neu an). Go ist Pflicht im Dev-Setup wie Node (`brew install go`); das Gate ruft
   eingesetzt werden nur ScheibenIDs als ganze Zahlen. Jede Runde eine Transaktion `WITH CONSISTENT SNAPSHOT, READ ONLY`,
   danach `ROLLBACK`. Zellen als `sql.RawBytes` → Text oder `nil`. Sitzung `time_zone '+00:00'`, `charset` über
   `mysql.Charset` (als Parameter setzt der Treiber v1.10 ihn als Systemvariable und scheitert).
-- **Alle Spalten** mit Typ aus `information_schema`; passt das Ergebnis nicht mehr, zählt die Runde nicht, die nächste
-  liest die Spalten neu (SF-25, Test `TestReplayColumnAddedWhileRunning`).
+- **Alle Spalten** mit Typ aus `information_schema`, jede Runde in ihrer Transaktion neu gelesen: Eine neue Spalte oder ein
+  neuer Typ reist sofort mit (SF-25, Test `TestReplayColumnsChangeWhileRunning`). Passt das Ergebnis nicht zur Liste,
+  zählt die Runde nicht.
+- **Transaktion:** vor jeder `SET TRANSACTION ISOLATION LEVEL REPEATABLE READ`; `WITH CONSISTENT SNAPSHOT` gilt nur dort,
+  und die Anlage könnte READ COMMITTED eingestellt haben. Der Treiber schreibt keine eigenen Meldungen
+  (`mysql.SetLogger`), `columnsWithAlias` ist aus.
 - **Erkennung** (`watch`): gelesen wird, was wartet (vorige Lesung neu, noch nicht bestätigt), was sich bewegt hat
   (neu oder Lebenszeichen anders, auch wenn das Budget von 50 Scheiben je Runde es verschob) und was aktiv ist
   (Lebenszeichen in den letzten 20 min, fängt Korrekturen ohne Lebenszeichen, SF-21, SF-22, SF-74). Beim Start gilt
-  als neu, was bis 12 h vor dem jüngsten Lebenszeichen liegt. Gesendet wird nach zwei gleichen Lesungen (SF-71), nur ein
+  als neu, was bis 12 h vor dem jüngsten Lebenszeichen liegt; Lebenszeichen mehr als einen Tag nach der Uhr der Anlage
+  (`NOW(3)`) verankern das Fenster nicht (ein vorgehender Stand, SF-73). `Busy` zählt nur Scheiben, die in der Runde in
+  der Ablage standen. `observedAt` ist die echte Beobachtung, nur die Folgenummer zählt nach einem Rücksprung der Uhr
+  weiter. Gesendet wird nach zwei gleichen Lesungen (SF-71), nur ein
   neuer Stand gegenüber dem zuletzt gemeldeten, nie ohne Treffer (SF-13). Eine gescheiterte Runde ändert nichts; Fehlen
   ist keine Löschung (SF-24). Jede Regel hat einen Fall, der ohne sie rot wird (Gegenproben im Bericht).
 - **Nichts auf die Platte, keine Personenfelder in der Ausgabe** (SF-59): Meldungen nur mit Zahlen und Codes

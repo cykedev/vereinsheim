@@ -13,6 +13,7 @@ import (
 
 // memory ist eine Ablage im Speicher: je Scheibe Lebenszeichen und Daten.
 type memory struct {
+	now    *string // Uhr der Anlage (`NOW(3)`)
 	stamps map[int32]string
 	data   map[int32]contract.Data
 	fail   error
@@ -28,12 +29,12 @@ func (m *memory) put(id int32, stamp string, shots int, value string) {
 	m.data[id] = cardData(id, shots, value)
 }
 
-func (m *memory) Round(_ context.Context, choose func([]Lifesign) []int32) (Round, error) {
+func (m *memory) Round(_ context.Context, choose func([]Lifesign, *string) []int32) (Round, error) {
 	var lifesigns []Lifesign
 	for id, stamp := range m.stamps {
 		lifesigns = append(lifesigns, Lifesign{ID: id, Stamp: stamp})
 	}
-	ids := choose(lifesigns)
+	ids := choose(lifesigns, m.now)
 	m.reads = append(m.reads, ids)
 	// die Abfrage der Zeilen scheitert erst nach der Wahl, mitten in der Runde
 	if m.fail != nil {
@@ -44,7 +45,7 @@ func (m *memory) Round(_ context.Context, choose func([]Lifesign) []int32) (Roun
 		cards[id] = m.data[id]
 	}
 	version := "9"
-	return Round{Lifesigns: lifesigns, Cards: cards, SourceVersion: &version, SessionTimeZone: "+00:00"}, nil
+	return Round{Lifesigns: lifesigns, Cards: cards, SourceVersion: &version, SessionTimeZone: "+00:00", SourceNow: m.now}, nil
 }
 
 func text(s string) *string { return &s }
@@ -313,5 +314,71 @@ func TestInvalidCardSkippedWithoutContent(t *testing.T) {
 	c.advance(time.Second)
 	if r := tick(t, w, m); len(r.Snapshots) != 0 {
 		t.Fatal("ungültige Bytes gehen nie hinaus")
+	}
+}
+
+func TestOneStandAheadDoesNotMoveTheStartWindow(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	// die Anlage zeigt 18:00 UTC (20:00 Ortszeit); Stand 2 geht zwei Tage vor (SF-73)
+	m.now = text("2026-10-13 18:00:00.000")
+	m.put(1, "2026-10-13 19:50:00", 5, "100")
+	m.put(2, "2026-10-15 09:00:00", 5, "100")
+	m.put(3, "2026-10-12 19:00:00", 5, "100")
+	tick(t, w, m)
+	if got := fmt.Sprint(m.reads[0]); got != "[2 1]" {
+		t.Fatalf("Startfenster am jüngsten plausiblen Lebenszeichen: %v", got)
+	}
+	// ohne Uhr der Anlage verankerte der vorgehende Stand das Fenster, und Scheibe 1 fehlte
+	m2, w2 := newMemory(), New(Defaults, c.now)
+	m2.put(1, "2026-10-13 19:50:00", 5, "100")
+	m2.put(2, "2026-10-15 09:00:00", 5, "100")
+	tick(t, w2, m2)
+	if got := fmt.Sprint(m2.reads[0]); got != "[2]" {
+		t.Fatalf("Gegenprobe ohne Uhr: %v", got)
+	}
+}
+
+func TestDeletedWaitingCardDoesNotKeepTheBridgeBusy(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 3, "100")
+	tick(t, w, m)
+	delete(m.stamps, 7)
+	c.advance(2 * time.Hour)
+	if r := tick(t, w, m); r.Busy {
+		t.Fatal("eine gelöschte, wartende Scheibe hält den Takt nicht bei einer Sekunde")
+	}
+}
+
+func TestObservedAtIsTheObservationAfterClockStepsBack(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 1, "100")
+	tick(t, w, m)
+	c.advance(time.Second)
+	tick(t, w, m)
+	c.advance(-time.Hour)
+	m.put(7, "2026-10-13 18:00:05", 2, "100")
+	tick(t, w, m)
+	s := tick(t, w, m).Snapshots[0]
+	if s.ObservedAt != contract.ObservedAt(c.t.UnixMilli()) {
+		t.Fatalf("observedAt %s, Uhr %s", s.ObservedAt, contract.ObservedAt(c.t.UnixMilli()))
+	}
+}
+
+func TestSkippedReportedOncePerState(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 1, "100")
+	bad := m.data[7]
+	bad.Scheiben.Rows[0]["Nachname"] = text(string([]byte{'M', 0xff}))
+	reported := 0
+	for range 5 {
+		reported += len(tick(t, w, m).Skipped)
+		c.advance(time.Second)
+	}
+	if reported != 1 {
+		t.Fatalf("%d Meldungen", reported)
 	}
 }

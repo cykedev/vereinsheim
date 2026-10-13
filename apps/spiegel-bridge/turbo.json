@@ -2,8 +2,24 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
+    "test": {
+      "dependsOn": ["db:generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/ingest-contract/test-vectors/**",
+        "$TURBO_ROOT$/packages/ingest-contract/examples/**"
+      ],
+      "passThroughEnv": ["GOPROXY", "GOFLAGS", "GOPRIVATE", "GONOSUMDB", "GOTOOLCHAIN"]
+    },
+    "lint": {
+      "passThroughEnv": ["GOPROXY", "GOFLAGS", "GOPRIVATE", "GONOSUMDB", "GOTOOLCHAIN"]
+    },
+    "check-types": {
+      "passThroughEnv": ["GOPROXY", "GOFLAGS", "GOPRIVATE", "GONOSUMDB", "GOTOOLCHAIN"]
+    },
     "build": {
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "passThroughEnv": ["GOPROXY", "GOFLAGS", "GOPRIVATE", "GONOSUMDB", "GOTOOLCHAIN"]
     }
   }
 }

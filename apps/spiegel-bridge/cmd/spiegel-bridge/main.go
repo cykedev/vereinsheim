@@ -69,7 +69,7 @@ func runWatch(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	dsn := flags.String("dsn", os.Getenv("SPIEGEL_BRIDGE_DSN"), "Zugang zur SSMDB2 (go-sql-driver/mysql)")
 	epoch := flags.Int("epoch", watch.Defaults.Epoch, "Epoche der Quelle")
-	once := flags.Bool("once", false, "nur eine Runde")
+	once := flags.Bool("once", false, "nur bis alles bestätigt ist (höchstens drei Runden im Sekundentakt)")
 	asJSON := flags.Bool("json", false, "volle Snapshots als JSON-Zeilen (enthalten Namen)")
 	maxCards := flags.Int("max-cards", watch.Defaults.MaxCards, "höchstens so viele Scheiben je Runde ganz lesen")
 	if err := flags.Parse(args); err != nil {
@@ -98,6 +98,8 @@ func runWatch(args []string, stdout, stderr io.Writer) int {
 	log.log("start", "version", version, "epoch", cfg.Epoch)
 
 	failures := 0
+	// ein Snapshot braucht zwei gleiche Lesungen (SF-71): `--once` liest deshalb, bis nichts mehr wartet, höchstens dreimal
+	onceRounds := 0
 	for {
 		began := time.Now()
 		roundCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
@@ -140,7 +142,11 @@ func runWatch(args []string, stdout, stderr io.Writer) int {
 			}
 		}
 		if *once {
-			return 0
+			onceRounds++
+			if err != nil || !result.Busy || onceRounds >= 3 {
+				return 0
+			}
+			wait = busyEvery
 		}
 		// eine langsame Abfrage streckt den Takt, statt die Anlage zu bremsen
 		wait = max(wait, 2*took)
