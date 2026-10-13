@@ -428,10 +428,13 @@ Plan `plans/2026-10-13-spiegel-symbole.md`. Der User fand die Segment-Schalter z
 der box … eleganter und spart platz und könnte sich überall konsistent durchziehen“; aus drei Skizzen gewählt: weiche
 Kreise.
 
-- **Ein Baustein:** `RoundToggle` (`@vereinsheim/ui/design2/round-toggle`), 32 px, gefüllt in der Flächenfarbe, mit
-  leichtem Rahmen wie ein Segment-Umschalter; Gold (Token `gold`: hell `#a87800`, dunkel `#f1c453`, auf `warning-wash`)
-  nur für das Hervorgehobene. Zuerst ohne Rahmen; auf der grauen Seitenfläche (Kopf am Telefon, Liste) verschwand der
-  Kreis (User: „dort braucht es einen rahmen“, dann „vielleicht ist der leichte rahmen immer gut“).
+- **Ein Baustein:** `RoundToggle` (`@vereinsheim/ui/design2/round-toggle`), 32 px, durchscheinend getönt (Token
+  `ink-wash`) mit leichtem Rahmen; Gold (Token `gold`: hell `#a87800`, dunkel `#f1c453`, auf `warning-wash`, Rahmen
+  `gold-line`) nur für das Hervorgehobene. Zuerst ohne Rahmen; auf der grauen Seitenfläche (Kopf am Telefon, Liste)
+  verschwand der Kreis (User: „dort braucht es einen rahmen“, dann „vielleicht ist der leichte rahmen immer gut“).
+  Danach mit fester Füllung `surface-2`: hell dunkler als die Karte, aber heller als die Seite, also auf der Karte ein
+  Fleck, auf der Seite ein Loch (User: „das muss auf cards und auch ohne gut aussehen“). Die Tönung dunkelt jeden Grund
+  gleich ab; aus vier Varianten gewählt (Tönung und Linie).
 - **Wertung** (`ScoringToggle`): „1“ für ganze Ringe, ⅒ für Zehntel, gesetzt von Geist selbst (`diagonal-fractions`, das
   Merkmal `frac`). Die Ziffern von Hand hoch- und tiefzustellen misslang (Tailwind verschiebt `sup`/`sub` schon), die
   tiefgestellten Zeichen ₀–₉ fehlen in den geladenen Teilen von Geist (User, 13. Oktober 2026). Ein Tippen stellt auf die
@@ -439,8 +442,8 @@ Kreise.
   amtliche die andere, nennt der Name sie in der Wirkung („auf ganze Ringe (amtlich) umstellen“, Review).
 - **Art** (`KindToggle`): Pokal, Training durchgestrichen (der Strich schneidet über eine Maske eine Lücke, wie die
   „-off“-Symbole von lucide; `lucide-react` hat keinen solchen Pokal), Wettkampf gold auf goldener Tönung.
-- **Leise** (User: „die 1 wirkt sehr präsent ist aber ja nur eine randinfo“): Zeichen im Token `quiet` (3,3 : 1 auf
-  der Fläche, nie für Text), Linie 1,75; „1“ und ⅒ in `muted-foreground`, mittelstark. Die „1“ in 13 px statt 16 px,
+- **Leise** (User: „die 1 wirkt sehr präsent ist aber ja nur eine randinfo“): Zeichen im Token `quiet` (mindestens 3,2 : 1
+  auf der Tönung, auf Seite und Karte, hell und dunkel; nie für Text), Linie 1,75; „1“ und ⅒ in `muted-foreground`, mittelstark. Die „1“ in 13 px statt 16 px,
   damit sie so ruhig wirkt wie die kleinen Ziffern des Bruchs (User: „dass sie optisch besser zur 1/10 passt“).
 - **Ort:**
   - Seite einer Scheibe: Pokal und Bruch rechts in der Zeile des Ergebnisses (Platz `actions` von `CardResult`; nur
