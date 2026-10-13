@@ -22,6 +22,14 @@ addEventListener("load", async () => {
       $$("button", root).find(
         (b) => txt(b).trim() === label || b.getAttribute("aria-label") === label
       )
+    // die Wertung über ihren Kreis (Plan `plans/2026-10-13-spiegel-symbole.md`): den sichtbaren tippen, bis sie stimmt
+    const scoringToggle = () =>
+      $$("[data-scoring-toggle]").find((b) => b.getClientRects().length > 0) ??
+      $("[data-scoring-toggle]")
+    const scoringTo = async (value, wait = 100) => {
+      for (let i = 0; i < 2 && scoringToggle()?.dataset.scoring !== value; i++)
+        await click(scoringToggle(), wait)
+    }
     // Ebene 1 und 2 sprechen Alltag (U3, D1): Fachbegriffe stehen nur im Blatt „?“ und in den Reitern; seit U4 auch
     // kein „unklar“ mehr („Eingeschossen?“ entfiel); „rechts“ trifft `\becht` nicht
     // „95 %“ nur als Sicherheit („mit 95 %“, „95 %:“), nicht als Quote; „echt“ auch groß und gebeugt (Review U3)
@@ -681,7 +689,7 @@ addEventListener("load", async () => {
     await click(inLabor("40 Schuss"), 100)
 
     // ---------- Wertung, Scheibe, Thema
-    await click(button("Ganze Ringe"))
+    await scoringTo("rings")
     const seriesValues = $$("[data-series] b").map((b) => txt(b).trim())
     check(
       "Ganze Ringe: Serien als ganze Zahlen",
@@ -696,11 +704,15 @@ addEventListener("load", async () => {
         txt($("#shot-table th:nth-child(2)")) === "Ring",
       txt($('[data-tile="Ergebnis"]'))
     )
+    // die amtliche Wertung nennt der Kreis in seinem Namen, nur wenn sie gezeigt ist (kein Punkt, User, 13. Oktober 2026)
+    const ringsLabel = scoringToggle()?.getAttribute("aria-label") ?? ""
+    await scoringTo("decimal")
+    const decimalLabel = scoringToggle()?.getAttribute("aria-label") ?? ""
     check(
-      "amtliche Wertung bleibt als Hinweis (im Kopf der Scheibe)",
-      txt($("[data-result]").closest("[data-card-header]")).includes("amtlich: Zehntel")
+      "amtliche Wertung im Namen des Kreises, nur wenn sie gezeigt ist",
+      !ringsLabel.includes("amtlich") && decimalLabel.includes("Zehntel, amtlich"),
+      `${ringsLabel} · ${decimalLabel}`
     )
-    await click(button("Zehntel"))
     // eine andere Scheibe steht sofort, ohne Gleiten
     await click(inLabor("Luftgewehr"), 60)
     const [, , wLg] = view()
@@ -849,7 +861,7 @@ addEventListener("load", async () => {
     const TABS = ["Überblick", "Ergebnis", "Präzision", "Lage", "Zeit und Verlauf"]
     await click(inLabor("Luftpistole"), 150)
     await click(inLabor("40 Schuss"), 150)
-    await click(button("Zehntel"), 100)
+    await scoringTo("decimal", 100)
     const A = () => $('section[aria-label="Analyse"]')
     const tabBar = () => $('[role="radiogroup"][aria-label="Thema"]', A())
     const tab = (label) => click(button(label, tabBar()), 120)
@@ -1042,7 +1054,7 @@ addEventListener("load", async () => {
       $$("[data-share]", A()).length === 2 && $$("[data-share] [data-range]", A()).length === 2
     )
 
-    await click(button("Ganze Ringe"), 120)
+    await scoringTo("rings", 120)
     check(
       "Ringe: Zehntelverteilung nur als Hinweis",
       $$("[data-tenth]", A()).length === 0 &&
@@ -1062,7 +1074,7 @@ addEventListener("load", async () => {
       "Ringe: Datenlage nennt die Wertung",
       txt($("[data-coverage] p", A())).includes("in ganzen Ringen")
     )
-    await click(button("Zehntel"), 120)
+    await scoringTo("decimal", 120)
 
     await tab("Präzision")
     const sigma = S().sigmaEstimate(base())
@@ -2737,7 +2749,7 @@ addEventListener("load", async () => {
       // die Wertung gehört der Scheibe: umgeschaltet steht sie in ihrer Adresse, „Zurück“ lässt den Fortschritt in der
       // Wertung des Labors
       const otherScoring = L().state.scoring === "rings" ? "decimal" : "rings"
-      await click(button(otherScoring === "rings" ? "Ganze Ringe" : "Zehntel"), 150)
+      await scoringTo(otherScoring, 150)
       check(
         "Adresse: die umgeschaltete Wertung auf der Scheibe",
         L().state.scoring === otherScoring && addr().includes(`scoring=${otherScoring}`),
@@ -2788,8 +2800,8 @@ addEventListener("load", async () => {
       // im Fortschritt kein Schalter der Wertung mehr (U2, D4): zurück auf Zehntel über Profil
       check(
         "Zeitraum: kein Schalter der Wertung im Fortschritt",
-        !button("Ganze Ringe", $("[data-app-content]")) &&
-          !button("Zehntel", $("[data-app-content]"))
+        !$("[data-scoring-toggle]", $("[data-app-content]")) &&
+          !$('[role="radiogroup"][aria-label="Wertung"]', $("[data-app-content]"))
       )
       await deviceScoring("Zehntel")
       check("Adresse: zurück auf Zehntel wie vor dem Öffnen", addr() === progressAddress, addr())
@@ -3729,7 +3741,7 @@ addEventListener("load", async () => {
       await deviceScoring("Zehntel")
       await click(area("Start"), 300)
       await click($("[data-start-card]"), 500)
-      await click(button(L().state.scoring === "rings" ? "Zehntel" : "Ganze Ringe"), 150)
+      await scoringTo(L().state.scoring === "rings" ? "decimal" : "rings", 150)
       const switchedCard = L().state.scoring
       await click(area("Fortschritt"), 400)
       const followedScoring = P().state.scoring

@@ -7,7 +7,7 @@ import {
 } from "@vereinsheim/shot-ui/analysis/AnalysisPanel"
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
 import { keyObservations, observations } from "@vereinsheim/shot-ui/analysis/observations"
-import { ScoringSwitch } from "@vereinsheim/shot-ui/controls/ScoringSwitch"
+import { ScoringToggle } from "@vereinsheim/shot-ui/controls/ScoringToggle"
 import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { CardPage } from "@vereinsheim/shot-ui/layout/CardPage"
 import { NoShots } from "@vereinsheim/shot-ui/layout/NoShots"
@@ -300,8 +300,9 @@ export function CardView({ header, explain, onExplain, onHelp, opened = null }: 
   const backText = backLabel(route, { named: NAMED_PERIODS, timeZone: SEASON_TIME_ZONE })
 
   const empty = shots.length === 0
+  // die Wertung als Kreis neben der Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`); die Art steht im Labor fest
   const scoringSwitch = (
-    <ScoringSwitch
+    <ScoringToggle
       scoring={state.scoring}
       official={opened ? opened.official : sample.official}
       onChange={(scoring) => dispatch({ type: "setScoring", scoring })}
