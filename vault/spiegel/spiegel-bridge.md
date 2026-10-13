@@ -32,7 +32,13 @@ documented_in: ["[[src-ssmdb2-abend-2026-10-09]]", "[[src-ssmdb2-kopie-2026-10-0
 1. Gerät ans Gerätenetz anschließen (Meyton und Internet, siehe oben).
 2. In Spiegel unter Admin → Anlage und Brücken „Brücke koppeln“: Spiegel zeigt einen Kopplungscode („ABCDE-FGHJK“),
    15 Minuten gültig und einmal einlösbar (gebaut 13. Oktober 2026, [[spiegel-ingest-pipeline]]).
-3. Brücke installieren (Ziel: eine Datei plus Dienst, siehe Technik) und dabei Spiegel-Adresse und Kopplungscode eintragen. Eine Statusseite braucht es dafür nicht; aus dem Gäste-LAN wäre sie ohnehin nicht erreichbar.
+3. Brücke installieren: eine Datei plus Dienst (seit dem 13. Oktober 2026, `apps/spiegel-bridge/deploy/`).
+   `sudo sh install.sh spiegel-bridge-linux-arm64` legt Binary, Benutzer `spiegel-bridge`, `/etc/spiegel-bridge` (0700)
+   und den Dienst an; `sudo -u spiegel-bridge /usr/local/bin/spiegel-bridge pair --url <Spiegel> --code <Code>` koppelt
+   und fragt den Zugang zur SSMDB2 ab (nicht in der Befehlszeile, sonst stünde das Passwort in `ps`);
+   `sudo systemctl enable --now spiegel-bridge` startet. Der Dienst läuft ohne Rechte, mit schreibgeschütztem System und
+   höchstens 128 MB; ohne Konfiguration oder mit widerrufenem Token startet er nicht immer wieder neu. Eine Statusseite
+   braucht es dafür nicht; aus dem Gäste-LAN wäre sie ohnehin nicht erreichbar. Windows: noch ohne Dienst.
 4. Der Assistent in Spiegel testet über die Brücke den SSMDB2-Zugang und zeigt die letzten Scheiben ohne Namen.
 5. Fertig: „Anlage online, letzter Schuss vor 2 Minuten“.
 
