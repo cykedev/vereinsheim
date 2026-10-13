@@ -7,6 +7,7 @@
   "exports": {
     "./theme.css": "./theme.css",
     "./design2.css": "./design2.css",
+    "./design2/round-toggle": "./src/design2/round-toggle.tsx",
     "./design2/segmented": "./src/design2/segmented.tsx",
     "./design2/sheet": "./src/design2/sheet.tsx",
     "./design2/toggle-chip": "./src/design2/toggle-chip.tsx",
