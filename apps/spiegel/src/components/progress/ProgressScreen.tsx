@@ -58,7 +58,7 @@ const addressOf = (state: PeriodState) =>
   urlFromRoute(progressRoute({ ...state, scoring: "decimal" }, null))
 
 /**
- * Fortschritt (N7, Plan `plans/2026-10-10-spiegel-fortschritt.md`): die Seite eines Zeitraums wie im Labor, das Modell
+ * Fortschritt (N7, Plan `plans/2026-10-10-spiegel-fortschritt.md`): die Seite eines Zeitraums aus `shot-ui`, das Modell
  * hat der Server gerechnet (`periodModel` aus den Projektionen, leicht gemacht). Filter schreiben die Adresse und
  * rechnen auf dem Server neu; eine Wahl (Verlauf, Liste, Rekord) bleibt im Browser: Sie ändert die Ablesung, schreibt
  * `pick` verzögert mit `replaceState` und holt die Lagen der kleinen Scheibe nach (`cardMarksAction`). Gerechnet wird in

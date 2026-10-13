@@ -231,7 +231,7 @@ describe("Scheiben-Liste nach dem Review (N2)", () => {
     expect(cardListModel(INPUT, query(), { ...context, scoring: "rings" }).scoring).toBe("rings")
   })
 
-  it("beide Ergebnisse: ohne Wertung der Scheibe (Labor) vorn die amtliche, ohne sie die der Liste", () => {
+  it("beide Ergebnisse: ohne Wertung der Scheibe vorn die amtliche, ohne sie die der Liste", () => {
     // 100 + 102 + 98: 30,0 in Zehnteln, 10 + 10 + 9 = 29 in ganzen Ringen
     const cards = [
       lg(periodCard("r", 3, [100, 102, 98], { official: "rings" })),

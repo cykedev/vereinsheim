@@ -1,6 +1,6 @@
 import { Page } from "./Page"
 
-/** ein Bereich, dessen Inhalt noch kommt: Titel und der Schritt, der ihn bringt (wie im Labor) */
+/** ein Bereich, dessen Inhalt noch kommt: Titel und der Schritt, der ihn bringt */
 export function Placeholder({ title, sentence }: { title: string; sentence: string }) {
   return (
     <Page>

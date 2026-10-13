@@ -120,7 +120,7 @@ export function EveningBlock({
             >
               {block.mean === null ? "–" : formatValue(block.mean, 2)}
             </span>
-            {/* mit Kreis nennt der Kreis die Wertung, ohne (Labor) der Text */}
+            {/* mit Kreis nennt der Kreis die Wertung, ohne der Text */}
             <span className="text-[14px] text-muted-foreground">
               {actions ? "Ø je Schuss" : `Ø je Schuss ${SCORING_IN[block.scoring]}`}
             </span>
@@ -152,7 +152,7 @@ export function EveningBlock({
         {block.rows.map((row) => {
           const placed = marks.get(row.id) ?? []
           const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
-          // die Wertung beim Namen (U5, D5): vorn die der Scheibe (im Labor die amtliche), daneben die andere
+          // die Wertung beim Namen (U5, D5): vorn die der Scheibe (ohne sie die amtliche), daneben die andere
           const name = (scoring: typeof row.resultScoring) =>
             scoring === "rings" ? "ganze Ringe" : "Zehntel"
           const result =

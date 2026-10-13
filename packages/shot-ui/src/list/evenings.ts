@@ -32,7 +32,7 @@ export interface ListRow {
   /** Training, Wettkampf oder Training nur aus Probe */
   kind: CardKind
   /**
-   * Ergebnis in der Wertung, die vorn steht: der Wertung der Scheibe (`ProjectedCard.scoring`), ohne sie (Labor) der
+   * Ergebnis in der Wertung, die vorn steht: der Wertung der Scheibe (`ProjectedCard.scoring`), ohne sie der
    * amtlichen, ohne beide der Wertung der Liste; nur Probe rechnet wie Wertung und ist nie amtlich. null ohne Wert
    */
   result: number | null

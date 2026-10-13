@@ -32,7 +32,7 @@ const BAR: readonly Area[] = ["start", "cards", "scan", "progress", "profile"]
 // Klassen stehen wörtlich da, Tailwind findet nur, was im Quelltext steht (nicht aus Konstanten zusammengesetzt).
 
 export interface AppFrameProps {
-  /** der Bereich der gezeigten Seite; null: keiner (etwa die Beispiele im Labor) */
+  /** der Bereich der gezeigten Seite; null: keiner */
   current: Area | null
   /** wohin jeder Eintrag führt (`areaLinks`) */
   links: Record<Area, Route>
@@ -40,7 +40,7 @@ export interface AppFrameProps {
   openCount: number
   /** nur ein Admin sieht Admin */
   isAdmin: boolean
-  /** unten in der Seitenleiste, etwa die Darstellung (Labor näher an der App, D2); nicht in den Leisten des Telefons */
+  /** unten in der Seitenleiste, etwa die Darstellung; nicht in den Leisten des Telefons */
   sidebarFooter?: ReactNode
   children?: ReactNode
 }

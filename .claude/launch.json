@@ -4,26 +4,32 @@
     {
       "name": "ringwerk",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev", "--filter", "ringwerk"],
+      "runtimeArgs": [
+        "dev",
+        "--filter",
+        "ringwerk"
+      ],
       "port": 3000
     },
     {
       "name": "treffsicher",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev", "--filter", "treffsicher"],
+      "runtimeArgs": [
+        "dev",
+        "--filter",
+        "treffsicher"
+      ],
       "port": 3001
     },
     {
       "name": "spiegel",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev", "--filter", "spiegel"],
+      "runtimeArgs": [
+        "dev",
+        "--filter",
+        "spiegel"
+      ],
       "port": 3002
-    },
-    {
-      "name": "labor",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "4173", "--bind", "127.0.0.1", "--directory", "tools/labor/dist"],
-      "port": 4173
     }
   ]
 }

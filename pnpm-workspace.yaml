@@ -1,8 +1,6 @@
 packages:
   - "apps/*"
   - "packages/*"
-  # Werkzeuge einzeln, damit nicht jedes Skript unter tools/ ins Gate kommt
-  - "tools/labor"
 
 # Catalog = zentrale Versionsquelle für geteilte Dependencies (ADR-015: Drift
 # strukturell lösen). Jede App referenziert "catalog:" statt einer literalen

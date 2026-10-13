@@ -1,5 +1,5 @@
-// Zustand der Scheibe als Reducer: was gewählt ist und wie gezeichnet wird. Dieselbe Verdrahtung nutzen
-// Labor und später die App; die Daten (Schüsse, Scheibenbild) kommen von außen.
+// Zustand der Scheibe als Reducer: was gewählt ist und wie gezeichnet wird. Die Verdrahtung macht
+// die App; die Daten (Schüsse, Scheibenbild) kommen von außen.
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 

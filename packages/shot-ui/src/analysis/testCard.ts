@@ -1,4 +1,4 @@
-// Testkarte für die Analyse: dieselbe erfundene Scheibe wie „40 Schuss“ im Labor (dort wie am Ausdruck ohne die
+// Testkarte für die Analyse: dieselbe erfundene Scheibe wie „40 Schuss“ im früheren Labor (dort wie am Ausdruck ohne die
 // neun Probeschüsse, die hier zuerst gezogen werden; `asOnPrintout` nimmt sie heraus) und in der
 // Spielwiese (fester Seed, Lagen auf 1/100 mm), damit Tests bekannte Werte prüfen können (Ergebnis 365,2,
 // Pause vor Schuss 21, Abreißer Schuss 27 bei der Luftpistole). Nur für Tests, nicht exportiert.

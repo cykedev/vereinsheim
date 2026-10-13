@@ -149,7 +149,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
         family: "lg-freihand",
       },
     ])
-    // im Labor ohne Wertung der Scheibe: die amtliche
+    // ohne Wertung der Scheibe: die amtliche
     expect(official).toMatch(
       /<td data-rings="true" data-card-scoring="true" class="[^"]*font-semibold[^"]*">29</
     )

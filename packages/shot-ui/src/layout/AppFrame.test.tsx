@@ -93,7 +93,7 @@ describe("Rahmen der App (Plan N3, D1, D2, D6)", () => {
     expect(marked("data-app-rail")).toEqual(["profile"])
   })
 
-  it("unten in der Seitenleiste ein Platz für Einstellungen, nur dort (Labor näher an der App, D2)", () => {
+  it("unten in der Seitenleiste ein Platz für Einstellungen, nur dort", () => {
     const footer = h("div", { "data-footer": true }, "DARSTELLUNG")
     const withFooter = render({ sidebarFooter: footer })
     // nach Admin, außerhalb der Navigation (eine Einstellung ist kein Weg), noch in der Seitenleiste

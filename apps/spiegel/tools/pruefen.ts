@@ -1,0 +1,836 @@
+// Skriptprüfung der App (Plan `plans/2026-10-13-aufraeumen-labor.md`, D2, D3): Bedienung, die kein Test im Node sieht
+// (echte Klicks und Tasten, Fokus, Blätter, Kleben und Springen, Geometrie bei mehreren Fenstergrößen, Anker, Rückwege),
+// gegen die laufende App mit dem Demo-Konto. Ersetzt die Skriptprüfung des Labors. Nicht im Gate: braucht Chrome, einen
+// laufenden Server und Daten. Ohne feste Zahlen, denn die App zeigt echte Scheiben; geprüft werden Struktur, Lage und
+// Gleichheiten.
+//
+//   pnpm --filter spiegel seed:own --demo      einmal: die Scheiben dem Demo-Konto
+//   pnpm --filter spiegel pruefen              gegen http://localhost:3002 (BASE_URL), `--alle` zeigt jede Prüfung
+//   pnpm --filter spiegel pruefen --start      startet den gebauten Stand dieses Checkouts auf :3012 und prüft ihn
+//   … --nur <abschnitt>                        nur Abschnitte, deren Name das Wort enthält
+
+import { spawn, type ChildProcess } from "node:child_process"
+import { randomBytes } from "node:crypto"
+import { existsSync } from "node:fs"
+import { join } from "node:path"
+
+import { Browser, type Page } from "./pruefen/browser"
+import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
+
+const APP_DIR = join(__dirname, "..")
+/** mit `--start`: der eigene Produktions-Server aus `.next` dieses Checkouts (nach `build` bzw. `pnpm check`) */
+const START = process.argv.includes("--start")
+const START_PORT = 3012
+const BASE = (
+  START ? `http://localhost:${START_PORT}` : (process.env.BASE_URL ?? "http://localhost:3002")
+).replace(/\/$/, "")
+
+/**
+ * den gebauten Stand dieses Checkouts starten, damit die Prüfung den eigenen Code sieht und keinen Dev-Server eines
+ * anderen Checkouts. Eigener Secret (Produktion verweigert den Beispielwert), die Datenbank aus `.env`.
+ */
+async function startServer(): Promise<ChildProcess> {
+  if (!existsSync(join(APP_DIR, ".next", "BUILD_ID")))
+    throw new Error("kein Build: erst pnpm --filter spiegel build (oder pnpm check)")
+  const server = spawn(
+    join(APP_DIR, "node_modules", ".bin", "next"),
+    ["start", "--port", String(START_PORT)],
+    {
+      cwd: APP_DIR,
+      env: {
+        ...process.env,
+        NODE_ENV: "production",
+        NEXTAUTH_SECRET: randomBytes(32).toString("hex"),
+        NEXTAUTH_URL: BASE,
+      },
+      stdio: "ignore",
+    }
+  )
+  for (let i = 0; i < 120; i++) {
+    try {
+      if ((await fetch(`${BASE}/login`)).ok) return server
+    } catch {
+      // noch nicht bereit
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+  server.kill()
+  throw new Error(`Server auf ${BASE} startet nicht`)
+}
+const out = (text = "") => process.stdout.write(`${text}\n`)
+
+type Result = { ok: boolean; name: string; detail: string }
+const results: Result[] = []
+const started = Date.now()
+function check(name: string, ok: boolean, detail: unknown = "") {
+  results.push({ ok, name, detail: typeof detail === "string" ? detail : JSON.stringify(detail) })
+}
+
+/** ein Abschnitt der Prüfung; bricht er ab, steht das als FAIL im Bericht, die übrigen laufen weiter */
+async function section(name: string, run: () => Promise<void>) {
+  const only = process.argv.indexOf("--nur")
+  if (only >= 0 && !name.toLowerCase().includes((process.argv[only + 1] ?? "").toLowerCase()))
+    return
+  try {
+    await run()
+  } catch (error) {
+    check(`${name}: Abbruch`, false, error instanceof Error ? error.message : String(error))
+  }
+}
+
+async function login(page: Page) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/login`, '$("form")')
+  const status = await page.ev<number>(`(async () => {
+    const { csrfToken } = await (await fetch("/api/auth/csrf")).json()
+    const body = new URLSearchParams({ csrfToken, email: ${JSON.stringify(DEMO_EMAIL)},
+      password: ${JSON.stringify(DEMO_PASSWORD)}, json: "true", callbackUrl: "/" })
+    const r = await fetch("/api/auth/callback/credentials", { method: "POST", body,
+      headers: { "content-type": "application/x-www-form-urlencoded" } })
+    return r.status
+  })()`)
+  await page.goto(`${BASE}/`)
+  const signedIn = await page.ev<boolean>(`location.pathname === "/"`)
+  if (status !== 200 || !signedIn)
+    throw new Error(
+      `Anmeldung mit dem Demo-Konto gescheitert (${status}); vorher pnpm --filter spiegel seed:own --demo`
+    )
+}
+
+/**
+ * eine Scheibe aus der Liste mit mindestens 30 Wertungsschüssen, die vorige und nächste hat (Blättern), und die
+ * Adresse ihrer Herkunft
+ */
+async function pickCard(page: Page): Promise<string> {
+  await page.goto(`${BASE}/cards`)
+  const hrefs = await page.ev<string[]>(
+    `[...new Set($$('a[href^="/cards/c"]').map((a) => a.getAttribute("href")))].slice(0, 12)`
+  )
+  for (const href of hrefs.slice(1)) {
+    await page.goto(`${BASE}${href}`)
+    const fit = await page.ev<boolean>(`$$("#shot-table tr[data-row]").length >= 30 &&
+      !!link("Vorige Scheibe") && !!link("Nächste Scheibe") && !!tab("Lage") &&
+      !$$("[data-card-header] *").some((el) => txt(el) === "Probe")`)
+    if (fit) return href
+  }
+  throw new Error("keine passende Scheibe mit 30 Schuss in der Liste des Demo-Kontos")
+}
+
+const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol
+/** Anker der Reiter; beim Blättern fällt der Reiter weg, der Abschnitt („#analysis“) bleibt (`siblingRoute`) */
+const TAB_ANCHORS = ["#overview", "#result", "#precision", "#position", "#time"]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Seite einer Scheibe am Desktop (1280 × 900)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function desktopCard(page: Page, href: string) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}${href}`)
+  const path = await page.ev<string>("location.pathname")
+
+  check(
+    "Sprungleiste: drei Anker in der Reihenfolge der Seite",
+    (await page.ev<string>(
+      `$$('nav[aria-label="Abschnitte"] a').map((a) => a.getAttribute("href")).join()`
+    )) === "#target,#shots,#analysis"
+  )
+  await page.click(`$('nav[aria-label="Abschnitte"] a[href="#analysis"]')`, { settle: 400 })
+  const jump = await page.ev<{ top: number; active: string; path: string }>(`({
+    top: $("#analysis").getBoundingClientRect().top,
+    active: $$('nav[aria-label="Abschnitte"] [aria-current]').map(txt).join(),
+    path: location.pathname,
+  })`)
+  check(
+    "Desktop: „Analyse“ in der Sprungleiste bringt die Analyse unter die Leiste, aktiv ist genau „Analyse“",
+    near(jump.top, 56, 3) && jump.active === "Analyse" && jump.path === path,
+    jump
+  )
+  await page.ev(`scrollBy(0, 600)`)
+  await page.wait(150)
+  const sticky = await page.ev<{ strip: number; nav: number }>(`({
+    strip: $('[role="radiogroup"][aria-label="Thema"]', analysis()).parentElement.getBoundingClientRect().top,
+    nav: sectionNav().getBoundingClientRect().top,
+  })`)
+  check(
+    "Desktop: die Reiterleiste klebt unter der Sprungleiste",
+    near(sticky.strip, 56, 1) && near(sticky.nav, 0, 1),
+    sticky
+  )
+
+  await page.ev(`scrollTo(0, $("#target").getBoundingClientRect().top + scrollY - 56)`)
+  await page.wait(150)
+  const grid = await page.ev<Record<string, ReturnType<typeof Object>>>(`({
+    box: rect($("#target-box")), series: rect($("#series")), table: rect($("#shot-table")),
+    readout: rect($("#readout")), scroller: (() => { const s = $("#shot-table > div"); return s.scrollHeight > s.clientHeight })(),
+  })`)
+  const { box, series, table, readout } = grid as Record<
+    string,
+    { top: number; bottom: number; left: number; right: number; width: number }
+  >
+  check(
+    "Desktop: Scheibe und Serien passen zusammen ins Fenster, die Schüsse enden mit den Serien",
+    series.top > box.bottom &&
+      series.bottom <= 900 - 15 &&
+      box.width >= 500 &&
+      near(table.bottom, series.bottom, 1) &&
+      grid.scroller === true,
+    `Scheibe ${Math.round(box.width)} px, Serien bis ${Math.round(series.bottom)}, Schüsse bis ${Math.round(table.bottom)}`
+  )
+  check(
+    "Desktop: Schuss und Schüsse rechts neben der Scheibe, die Serien unter ihr",
+    readout.left > box.right && table.left > box.right && series.right < readout.left
+  )
+  await page.ev(`$("#analysis").scrollIntoView({ behavior: "instant" })`)
+  await page.wait(100)
+  const gone = await page.ev<number>(`$('[data-section="target"]').getBoundingClientRect().bottom`)
+  check("Desktop: unter dem Raster scrollt die Scheibe mit weg", gone < 56, Math.round(gone))
+  await page.ev(`scrollTo(0, 3000)`)
+  await page.wait(100)
+  await page.click(`$('nav[aria-label="Abschnitte"] a[href="#target"]')`, { settle: 300 })
+  const back = await page.ev<number>(`$("#target").getBoundingClientRect().top`)
+  check(
+    "Desktop: „Scheibe“ in der Sprungleiste führt nach oben, auch wenn die Scheibe klebt",
+    near(back, 56, 3),
+    Math.round(back)
+  )
+
+  // „Alle Beobachtungen“ (Review U1): der Überblick, die Karte unter den Leisten, der Fokus auf dem Reiter
+  await page.ev(`scrollTo(0, 0)`)
+  await page.click(`tab("Lage")`)
+  await page.ev(`scrollTo(0, 0)`)
+  await page.wait(100)
+  await page.click(`$("[data-more-observations]")`, { settle: 500 })
+  const more = await page.ev<{
+    tab: string
+    top: number
+    bottom: boolean
+    focus: string
+    checked: string | null
+  }>(`({
+    tab: activeTab(),
+    top: card("beobachtungen")?.getBoundingClientRect().top ?? -1,
+    bottom: scrollY + innerHeight >= document.documentElement.scrollHeight - 2,
+    focus: txt(document.activeElement), checked: document.activeElement?.getAttribute("aria-checked"),
+  })`)
+  check(
+    "„Alle Beobachtungen“ öffnet den Überblick, die Karte „Beobachtungen“ unter den Leisten, Fokus am Reiter",
+    more.tab === "Überblick" &&
+      (near(more.top, 112, 3) || (more.top > 112 && more.bottom)) &&
+      more.focus === "Überblick" &&
+      more.checked === "true",
+    more
+  )
+
+  // Blatt der Hilfe: Karte rechts, Fokus zurück, Escape, Tipp hinein und daneben
+  await page.ev(`scrollTo(0, 0)`)
+  await page.click(`button("Erklärung: Trefferbild")`, { settle: 300 })
+  const opened = await page.ev<{
+    open: boolean
+    title: string
+    right: number
+    width: number
+    client: number
+  }>(`(() => {
+    const s = sheet(); const r = s?.getBoundingClientRect()
+    return { open: !!s, title: txt(s && $("h2", s)), right: r?.right ?? 0, width: r?.width ?? 0, client: document.documentElement.clientWidth }
+  })()`)
+  check(
+    "„?“ an der Scheibe öffnet die Erklärung „Trefferbild“ als Karte am rechten Rand",
+    opened.open &&
+      opened.title.startsWith("Trefferbild") &&
+      near(opened.right, opened.client - 16, 2) &&
+      near(opened.width, 416, 2),
+    opened
+  )
+  await page.click(`button("Schließen", sheet())`, { settle: 300 })
+  check(
+    "Schließen: Blatt zu, Fokus zurück auf dem „?“",
+    await page.ev<boolean>(
+      `!sheet() && document.activeElement?.getAttribute("aria-label") === "Erklärung: Trefferbild"`
+    )
+  )
+  await page.click(`button("Erklärung: Trefferbild")`, { settle: 300 })
+  await page.key("Escape")
+  await page.wait(200)
+  check("Escape schließt das Blatt", await page.ev<boolean>(`!sheet()`))
+  await page.click(`button("Erklärung: Trefferbild")`, { settle: 300 })
+  await page.click(`$("h2", sheet())`, { settle: 200 })
+  check("ein Tipp in das Blatt hinein lässt es offen", await page.ev<boolean>(`!!sheet()`))
+  await page.clickAt(200, 450)
+  await page.wait(300)
+  check("ein Tipp neben das Blatt schließt es", await page.ev<boolean>(`!sheet()`))
+
+  // Lineal (Plan L1): Tippen, Ziehen, zweites Tippen, Tastatur, Überfahren, „Auf der Scheibe“
+  await page.click(`tab("Zeit und Verlauf")`, { settle: 300 })
+  const course = `$('svg[aria-label="Wert je Schuss mit gleitendem Schnitt"]', card("verlauf-und-trend"))`
+  const line = () => page.ev<string>(`txt($("[data-readout]", card("verlauf-und-trend")))`)
+  await page.ev(`${course}.scrollIntoView({ block: "center", behavior: "instant" })`)
+  await page.wait(100)
+  const pointAt = (n: number) =>
+    page.ev<{ x: number; y: number }>(`(() => {
+      const svg = ${course}; const r = svg.getBoundingClientRect()
+      const cx = Number($('[data-course-point="${n}"]', svg).getAttribute("cx"))
+      return { x: r.left + (cx / svg.viewBox.baseVal.width) * r.width, y: r.top + r.height / 2 }
+    })()`)
+  const last = await page.ev<number>(`$$("[data-course-point]", ${course}).length`)
+  check("Lineal: ohne Wahl der Hinweis", (await line()).includes("Tippe oder ziehe"), await line())
+  const p23 = await pointAt(23)
+  await page.clickAt(p23.x, p23.y)
+  await page.wait(100)
+  check(
+    "Lineal: Antippen von Punkt 23 nennt ihn und zeigt die Linie",
+    (await line()).includes("Schuss 23 · ") &&
+      (await page.ev<boolean>(`!!$("[data-ruler]", ${course})`)),
+    (await line()).slice(0, 40)
+  )
+  check(
+    "Lineal: das Diagramm hat den Fokus und ist nicht markierbar",
+    await page.ev<boolean>(`document.activeElement === ${course} && getComputedStyle(${course}).userSelect === "none" &&
+      getComputedStyle(${course}).touchAction === "pan-y"`)
+  )
+  await page.drag([await pointAt(10), await pointAt(20), await pointAt(30)])
+  await page.wait(100)
+  check(
+    "Lineal: Ziehen von 10 bis 30 wandert mit",
+    (await line()).includes("Schuss 30 · "),
+    (await line()).slice(0, 30)
+  )
+  const p30 = await pointAt(30)
+  await page.clickAt(p30.x, p30.y)
+  await page.wait(100)
+  check(
+    "Lineal: zweites Tippen auf denselben Punkt hebt die Wahl auf",
+    (await line()).includes("Tippe oder ziehe") &&
+      !(await page.ev<boolean>(`!!$("[data-ruler]", ${course})`))
+  )
+  const p14 = await pointAt(14)
+  await page.clickAt(p14.x, p14.y)
+  await page.wait(100)
+  const keys: string[] = []
+  const lastKey = () => page.ev<{ key: string; taken: boolean }>(`window.__keys.at(-1)`)
+  await page.key("ArrowRight")
+  keys.push(await line())
+  await page.key("End")
+  keys.push(await line())
+  await page.key("ArrowLeft", ["alt"])
+  const alt = await lastKey()
+  keys.push(await line())
+  const y0 = await page.ev<number>("scrollY")
+  await page.key("ArrowDown")
+  const down = await lastKey()
+  await page.ev(`scrollTo(0, ${y0})`)
+  await page.key("Escape")
+  keys.push(await line())
+  await page.key("Escape")
+  const escape = await lastKey()
+  check(
+    "Lineal: Tastatur wandert, Escape hebt auf; Alt+Pfeil, Pfeil runter und Escape ohne Wahl bleiben dem Browser",
+    keys[0].includes("Schuss 15 · ") &&
+      keys[1].includes(`Schuss ${last} · `) &&
+      !alt.taken &&
+      keys[2].includes(`Schuss ${last} · `) &&
+      !down.taken &&
+      keys[3].includes("Tippe oder ziehe") &&
+      !escape.taken,
+    keys.map((k) => k.slice(0, 10)).join(" | ")
+  )
+  const p20 = await pointAt(20)
+  await page.hover(p20.x, p20.y)
+  await page.wait(80)
+  check("Lineal: Überfahren ohne Druck wählt nichts", (await line()).includes("Tippe oder ziehe"))
+  await page.clickAt(p14.x, p14.y)
+  await page.wait(100)
+  await page.click(`button("Auf der Scheibe", card("verlauf-und-trend"))`, { settle: 600 })
+  check(
+    "Lineal: „Auf der Scheibe“ wählt Schuss 14 dort",
+    (await page.ev<string>(`txt($("#readout"))`)).includes("Schuss 14 · angetippt"),
+    (await page.ev<string>(`txt($("#readout"))`)).slice(0, 40)
+  )
+  check(
+    "Desktop 1280: kein seitliches Scrollen",
+    await page.ev<boolean>(`document.documentElement.scrollWidth <= 1280`)
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Anker beim Laden, Platz für die Scheibe
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function anchorsAndFit(page: Page, href: string) {
+  await page.viewport(800, 900)
+  await page.goto(`${BASE}${href}#position`)
+  await page.wait(300)
+  const anchored = await page.ev<{ tab: string; top: number }>(
+    `({ tab: activeTab(), top: $("#analysis").getBoundingClientRect().top })`
+  )
+  check(
+    "Anker #position öffnet den Reiter Lage und zeigt die Analyse",
+    anchored.tab === "Lage" && anchored.top < 300,
+    anchored
+  )
+  await page.click(`tab("Zeit und Verlauf")`, { settle: 300 })
+  const hash = await page.ev<string>("location.hash")
+  check("Ein Reiterwechsel schreibt den Anker", hash === "#time", hash)
+
+  await page.viewport(375, 812)
+  await page.goto(`${BASE}${href}#shots`)
+  await page.wait(300)
+  const shotsTop = await page.ev<number>(`$("#shots").getBoundingClientRect().top`)
+  check(
+    "Anker #shots beim Laden: die Schüsse unter der Leiste",
+    near(shotsTop, 56, 3),
+    Math.round(shotsTop)
+  )
+
+  for (const [width, height, withSeries] of [
+    [812, 375, false],
+    [1024, 600, true],
+    [1024, 768, true],
+  ] as const) {
+    await page.viewport(width, height)
+    await page.goto(`${BASE}${href}`)
+    await page.ev(`scrollTo(0, $("#target").getBoundingClientRect().top + scrollY - 56)`)
+    await page.wait(150)
+    const fit = await page.ev<{ sw: number; top: number; bottom: number; series: number }>(`({
+      sw: document.documentElement.scrollWidth, top: $("#target-box").getBoundingClientRect().top,
+      bottom: $("#target-box").getBoundingClientRect().bottom, series: $("#series").getBoundingClientRect().bottom })`)
+    check(
+      `${width} × ${height}: kein seitliches Scrollen, die Scheibe passt unter die Leiste${withSeries ? ", die Serien darunter auch" : ""}`,
+      fit.sw <= width &&
+        near(fit.top - 15, 56, 1) &&
+        fit.bottom <= height &&
+        fit.series <= height === withSeries,
+      fit
+    )
+  }
+  await page.viewport(768, 700)
+  await page.goto(`${BASE}${href}`)
+  await page.ev(`scrollTo(0, $("#target").getBoundingClientRect().top + scrollY - 56)`)
+  await page.wait(150)
+  const tablet = await page.ev<{ box: number; series: number }>(`({
+    box: $("#target-box").getBoundingClientRect().bottom, series: $("#series").getBoundingClientRect().bottom })`)
+  check(
+    "768 × 700: Scheibe und Serien enden über der unteren Leiste",
+    tablet.box <= 700 - 72 && tablet.series <= 700 - 72,
+    tablet
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Telefon
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function phoneCard(page: Page, href: string) {
+  await page.viewport(375, 812)
+  await page.goto(`${BASE}${href}`)
+  const first = await page.ev<{ head: number; target: number; gap: number }>(`(() => {
+    const head = $("[data-card-header]").getBoundingClientRect().top
+    const target = $("#target-box").getBoundingClientRect().bottom
+    const gap = $("#series").getBoundingClientRect().top - $('[data-section="target"] > *').getBoundingClientRect().bottom
+    return { head, target, gap }
+  })()`)
+  check(
+    "Telefon 375 px: Kopf mit Ergebnis und Scheibe über der unteren Leiste, die Serien direkt danach",
+    first.target - first.head <= 812 - 72 && first.gap >= 0 && first.gap <= 30,
+    first
+  )
+  const tabs = await page.ev<string[]>(
+    `$$('[role="radiogroup"][aria-label="Thema"] [role="radio"]').map(txt)`
+  )
+  const wide: string[] = []
+  for (const label of tabs) {
+    await page.click(`tab(${JSON.stringify(label)})`, { settle: 250 })
+    const sw = await page.ev<{ sw: number; tabIn: boolean; widest: string[] }>(`(() => {
+      const strip = $('[role="radiogroup"][aria-label="Thema"]').getBoundingClientRect()
+      const t = tab(${JSON.stringify(label)}).getBoundingClientRect()
+      return { sw: document.documentElement.scrollWidth, tabIn: t.left >= strip.left - 1 && t.right <= strip.right + 1, widest: widest(375) }
+    })()`)
+    if (sw.sw > 375 || !sw.tabIn)
+      wide.push(`${label}: ${sw.sw} ${sw.tabIn ? "" : "Reiter außerhalb"} ${sw.widest.join(" | ")}`)
+  }
+  check(
+    "Telefon 375 px: kein seitliches Scrollen in keinem Reiter, der gewählte Reiter im Bild",
+    wide.length === 0,
+    wide.join(" · ")
+  )
+
+  // Rücksprung (D6): der Knopf der Ellipse aus „Lage“ holt die Scheibe, die Pille bringt zurück
+  await page.click(`tab("Lage")`, { settle: 250 })
+  await page.ev(
+    `($("#analysis").scrollIntoView({ block: "start", behavior: "instant" }), scrollBy(0, 200))`
+  )
+  await page.wait(250)
+  const origin = await page.ev<number>("scrollY")
+  const ellipse = `$$("button", card("lage-echt")).find((b) => txt(b).includes("Vertrauensellipse"))`
+  await page.click(ellipse, { scroll: false, settle: 1200 })
+  const jumped = await page.ev<{ top: number; pill: string; pillBottom: number }>(`({
+    top: $('[data-section="target"]').getBoundingClientRect().top, pill: txt(pill()),
+    pillBottom: pill()?.parentElement.getBoundingClientRect().bottom ?? 9999 })`)
+  check(
+    "Telefon: die Ellipse aus „Lage“ bringt die Scheibe ins Bild und die Pille „Zurück zu „Lage““ über der unteren Leiste",
+    near(jumped.top, 56, 3) && jumped.pill === "Zurück zu „Lage“" && jumped.pillBottom <= 812 - 72,
+    jumped
+  )
+  await page.click(`pill()`, { scroll: false, settle: 1200 })
+  const returned = await page.ev<{ y: number; pill: boolean; focus: boolean; live: boolean }>(`({
+    y: scrollY, pill: !!pill(), focus: document.activeElement === ${ellipse},
+    live: !!$('[role="status"][aria-live="polite"].sr-only') })`)
+  check(
+    "Telefon: die Pille bringt zurück und verschwindet, der Fokus liegt wieder auf dem Knopf, der Sprung war angesagt",
+    near(returned.y, origin, 60) && !returned.pill && returned.focus && returned.live,
+    { ...returned, origin }
+  )
+
+  // „Auf der Scheibe“ im Lineal: Sprung zur Scheibe, die Pille nennt den Reiter
+  await page.click(`tab("Zeit und Verlauf")`, { settle: 300 })
+  const course = `$('svg[aria-label="Wert je Schuss mit gleitendem Schnitt"]', card("verlauf-und-trend"))`
+  await page.ev(`${course}.scrollIntoView({ block: "center", behavior: "instant" })`)
+  await page.wait(150)
+  const p = await page.ev<{ x: number; y: number }>(`(() => {
+    const svg = ${course}; const r = svg.getBoundingClientRect()
+    const cx = Number($('[data-course-point="14"]', svg).getAttribute("cx"))
+    return { x: r.left + (cx / svg.viewBox.baseVal.width) * r.width, y: r.top + r.height / 2 }
+  })()`)
+  await page.clickAt(p.x, p.y)
+  await page.wait(150)
+  await page.click(`button("Auf der Scheibe", card("verlauf-und-trend"))`, { settle: 1000 })
+  const ruled = await page.ev<{ pill: string; top: number }>(
+    `({ pill: txt(pill()), top: $('[data-section="target"]').getBoundingClientRect().top })`
+  )
+  check(
+    "Telefon: „Auf der Scheibe“ springt zur Scheibe, die Pille führt zurück zu „Zeit und Verlauf“",
+    ruled.pill.includes("Zeit und Verlauf") && ruled.top < 400,
+    ruled
+  )
+  await page.click(`pill()`, { scroll: false, settle: 1000 })
+
+  // „Alle Beobachtungen“ auf dem Telefon und das Blatt von unten
+  await page.viewport(390, 844)
+  await page.goto(`${BASE}${href}`)
+  await page.click(`$("[data-more-observations]")`, { settle: 500 })
+  const more = await page.ev<{ top: number; bottom: boolean }>(`({
+    top: card("beobachtungen")?.getBoundingClientRect().top ?? -1,
+    bottom: scrollY + innerHeight >= document.documentElement.scrollHeight - 2 })`)
+  check(
+    "Telefon 390 px: „Alle Beobachtungen“ bringt die Karte „Beobachtungen“ sichtbar unter die Reiterleiste",
+    near(more.top, 56, 3) || (more.top > 56 && more.bottom),
+    more
+  )
+  await page.click(`$$('button[aria-label^="Erklärung"]', analysis()).find(visible)`, {
+    settle: 400,
+  })
+  const sheet = await page.ev<{
+    bottom: number
+    width: number
+    ch: number
+    cw: number
+  } | null>(`(() => {
+    const s = sheet(); if (!s) return null; const r = s.getBoundingClientRect()
+    return { bottom: r.bottom, width: r.width, ch: document.documentElement.clientHeight, cw: document.documentElement.clientWidth }
+  })()`)
+  check(
+    "Telefon: das Blatt der Hilfe kommt von unten über die volle Breite",
+    !!sheet && near(sheet.bottom, sheet.ch, 1) && near(sheet.width, sheet.cw, 1),
+    sheet ?? "kein Blatt"
+  )
+}
+
+async function phoneNoSideScroll(page: Page) {
+  for (const width of [390, 375]) {
+    await page.viewport(width, 844)
+    for (const path of ["/", "/cards", "/progress"]) {
+      await page.goto(`${BASE}${path}`)
+      const s = await page.ev<{ sw: number; widest: string[] }>(
+        `({ sw: document.documentElement.scrollWidth, widest: widest(${width}) })`
+      )
+      check(
+        `Telefon ${width} px: ${path} ohne seitliches Scrollen`,
+        s.sw <= width,
+        `${s.sw} ${s.widest.join(" | ")}`
+      )
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Blättern, Rückwege
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function paging(page: Page, href: string) {
+  await page.viewport(1280, 900)
+  // der Reiter einmal gewählt, einmal aus dem Anker beim Laden: beides gilt nur für diese Scheibe
+  await page.goto(`${BASE}${href}`)
+  await page.click(`tab("Lage")`, { settle: 300 })
+  const before0 = await page.ev<string>("location.pathname")
+  await page.click(`link("Nächste Scheibe")`, { settle: 300 })
+  await page.waitFor(
+    `location.pathname !== ${JSON.stringify(before0)} && !!tab("Überblick")`,
+    10_000
+  )
+  await page.wait(400)
+  const chosenNext = await page.ev<{ tab: string; hash: string }>(
+    `({ tab: activeTab(), hash: location.hash })`
+  )
+  check(
+    "Blättern nach einem gewählten Reiter: die nächste Scheibe beginnt mit „Überblick“",
+    chosenNext.tab === "Überblick" && !TAB_ANCHORS.includes(chosenNext.hash),
+    chosenNext
+  )
+  await page.goto(`${BASE}${href}#position`)
+  await page.wait(300)
+  const zoomed = () =>
+    page.ev<boolean>(`button("Auf Gruppe zoomen")?.getAttribute("aria-pressed") === "true"`)
+  if (!(await zoomed())) await page.click(`button("Auf Gruppe zoomen")`, { settle: 600 })
+  const before = await page.ev<string>("location.pathname")
+  await page.click(`link("Nächste Scheibe")`, { settle: 300 })
+  await page.waitFor(
+    `location.pathname !== ${JSON.stringify(before)} && hydrated($("[data-app-frame]"))`,
+    10_000
+  )
+  await page.waitFor(`!!tab("Überblick")`, 10_000)
+  await page.wait(400)
+  const next = await page.ev<{ path: string; tab: string; hash: string; viewBox: string }>(`({
+    path: location.pathname, tab: activeTab(), hash: location.hash,
+    viewBox: $("#target-box svg").getAttribute("viewBox") })`)
+  check(
+    "Blättern: die nächste Scheibe beginnt mit „Überblick“, ohne Reiter in der Adresse",
+    next.path !== before && next.tab === "Überblick" && !TAB_ANCHORS.includes(next.hash),
+    next
+  )
+  check("Blättern: der Ausschnitt „Gruppe“ bleibt", await zoomed())
+  await page.click(`tab("Zeit und Verlauf")`, { settle: 300 })
+  check(
+    "Blättern: das Lineal der neuen Scheibe beginnt ohne Wahl",
+    (await page.ev<string>(`txt($("[data-readout]", card("verlauf-und-trend")))`)).includes(
+      "Tippe oder ziehe"
+    )
+  )
+  // Ausschnitt zurück auf die ganze Scheibe (der Cookie gilt nur in diesem Profil, trotzdem sauber hinterlassen)
+  if (await zoomed()) await page.click(`button("Auf Gruppe zoomen")`, { settle: 300 })
+}
+
+async function backPaths(page: Page) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/cards`)
+  const links = await page.ev<number>(`$$('a[href^="/cards/c"]').length`)
+  const index = Math.min(links - 1, Math.max(8, Math.floor(links * 0.6)))
+  const target = await page.ev<string>(`$$('a[href^="/cards/c"]')[${index}].getAttribute("href")`)
+  const id = target.split("?")[0].split("/").at(-1)!
+  await page.click(`$$('a[href^="/cards/c"]')[${index}]`, { settle: 300 })
+  await page.waitFor(
+    `location.pathname === "/cards/${id}" && !!link("Zurück zu „Scheiben“")`,
+    10_000
+  )
+  await page.wait(300)
+  await page.click(`link("Zurück zu „Scheiben“")`, { settle: 300 })
+  await page.waitFor(`location.pathname === "/cards"`, 10_000)
+  await page.wait(600)
+  const row = await page.ev<{
+    marked: boolean
+    top: number
+    bottom: number
+    h: number
+  } | null>(`(() => {
+    const el = $('[aria-current][data-marked], tr[aria-current]')
+    if (!el) return null
+    const r = el.getBoundingClientRect()
+    return { marked: el.closest("tr")?.querySelector('a[href*="${id}"]') !== null, top: r.top, bottom: r.bottom, h: innerHeight }
+  })()`)
+  check(
+    "Zurück zu „Scheiben“: die geöffnete Scheibe ist markiert und im Bild",
+    !!row && row.marked && row.top >= 0 && row.bottom <= row.h,
+    row ?? "keine Markierung"
+  )
+
+  // Fortschritt → „Scheibe öffnen“ → „Zurück zu …“: wieder gewählt
+  await page.goto(`${BASE}/progress`)
+  const chosenBefore = await page.ev<string | null>(
+    `$("[data-card-readout]")?.dataset.cardReadout ?? null`
+  )
+  await page.click(`link("Scheibe öffnen", $("[data-card-readout]"))`, { settle: 300 })
+  await page.waitFor(
+    `location.pathname.startsWith("/cards/") && hydrated($("[data-app-frame]"))`,
+    10_000
+  )
+  await page.wait(300)
+  const backLink = await page.ev<string | null>(
+    `$$("a[href]").map((a) => a.getAttribute("aria-label") ?? "").find((l) => l.startsWith("Zurück zu")) ?? null`
+  )
+  if (!backLink) throw new Error("kein Rückweg auf der Scheibe")
+  await page.click(`link(${JSON.stringify(backLink)})`, { settle: 300 })
+  await page.waitFor(`location.pathname === "/progress" && !!$("[data-card-readout]")`, 10_000)
+  await page.wait(500)
+  const chosenAfter = await page.ev<string | null>(
+    `$("[data-card-readout]")?.dataset.cardReadout ?? null`
+  )
+  check(
+    "Fortschritt → Scheibe → zurück: die Ablesung zeigt wieder dieselbe Scheibe",
+    !!chosenBefore && chosenAfter === chosenBefore,
+    `${chosenBefore} → ${chosenAfter}`
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fortschritt
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function progress(page: Page) {
+  for (const [width, height, shown] of [
+    [390, 844, "[data-card-line]"],
+    [1440, 1400, "[data-card-readout]"],
+  ] as const) {
+    await page.viewport(width, height)
+    await page.goto(`${BASE}/progress`)
+    const record = await page.ev<string | null>(`(() => {
+      const chosen = $("[data-card-readout]")?.dataset.cardReadout
+      const row = $$("[data-records-new] [data-record]").find((r) => r.dataset.recordCard !== chosen)
+      return row?.dataset.recordCard ?? null
+    })()`)
+    if (!record) {
+      check(
+        `${width} px: „zeigen“ an einem Rekord`,
+        false,
+        "kein neuer Rekord in den Daten (nicht belegt)"
+      )
+      continue
+    }
+    await page.click(
+      `$$("[data-records-new] [data-record]").find((r) => r.dataset.recordCard === ${JSON.stringify(record)}).querySelector("button")`,
+      { settle: 600 }
+    )
+    const attr = shown.slice(1, -1)
+    const where = await page.ev<{
+      id: string | null
+      top: number
+      bottom: number
+      edge: number
+    } | null>(`(() => {
+      const el = $(${JSON.stringify(shown)}); if (!el) return null
+      const r = el.getBoundingClientRect()
+      return { id: el.getAttribute(${JSON.stringify(attr)}), top: r.top, bottom: r.bottom, edge: innerHeight - (innerWidth < 1024 ? 72 : 0) }
+    })()`)
+    check(
+      `${width} px: „zeigen“ an einem Rekord wählt die Scheibe, ihre Ablesung steht ganz im Bild unter der Sprungleiste`,
+      !!where && where.id === record && where.top >= 54 && where.bottom <= where.edge + 2,
+      where ?? "keine Ablesung"
+    )
+  }
+
+  // Verlauf und Liste teilen die Wahl
+  await page.viewport(1440, 1400)
+  await page.goto(`${BASE}/progress`)
+  const point = await page.ev<{ id: string; x: number; y: number } | null>(`(() => {
+    const points = $$("[data-card-point]")
+    const g = points[Math.floor(points.length / 2)]
+    if (!g) return null
+    const r = g.querySelector("circle:last-child").getBoundingClientRect()
+    return { id: g.dataset.cardPoint, x: r.left + r.width / 2, y: r.top + r.height / 2 }
+  })()`)
+  if (point) {
+    await page.ev(
+      `$('[data-card-point="${point.id}"]').scrollIntoView({ block: "center", behavior: "instant" })`
+    )
+    await page.wait(100)
+    const again = await page.ev<{ x: number; y: number }>(`(() => {
+      const r = $('[data-card-point="${point.id}"] circle:last-child').getBoundingClientRect()
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 } })()`)
+    await page.clickAt(again.x, again.y)
+    await page.wait(400)
+    check(
+      "Fortschritt: ein Tipp in den Verlauf wählt die Scheibe für Ablesung und Liste",
+      await page.ev<boolean>(`$("[data-card-readout]")?.dataset.cardReadout === ${JSON.stringify(point.id)} &&
+        $('[data-card-row="${point.id}"]')?.dataset.chosen === "true"`),
+      point.id
+    )
+  } else check("Fortschritt: Verlauf mit Punkten", false, "keine Punkte")
+  const rowId = await page.ev<string | null>(`$$("[data-card-row]")[2]?.dataset.cardRow ?? null`)
+  if (rowId) {
+    await page.click(`$('[data-card-row="${rowId}"] button')`, { settle: 400 })
+    check(
+      "Fortschritt: eine Zeile der Liste wählt die Scheibe und setzt das Lineal",
+      await page.ev<boolean>(`$('[data-card-point="${rowId}"]')?.dataset.chosen === "true"`)
+    )
+  }
+
+  // Blatt „Filter“: nicht übernommene freie Tage gelten beim nächsten Öffnen nicht (Review)
+  const dates = `$$('[data-period-picker] input[type="date"]')`
+  const setDate = (i: number, value: string) =>
+    page.ev(`(() => { const input = ${dates}[${i}]
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, ${JSON.stringify(value)})
+      input.dispatchEvent(new Event("input", { bubbles: true })) })()`)
+  const picker = `$("[data-period-picker]").closest("dialog")`
+  await page.click(`$("[data-period-chip]")`, { settle: 300 })
+  await page.click(`$$("[data-period-picker] label").find((l) => txt(l).startsWith("Frei"))`, {
+    settle: 150,
+  })
+  await setDate(0, "2026-07-01")
+  await setDate(1, "2026-07-31")
+  await page.wait(100)
+  await page.click(`button("Übernehmen", ${picker})`, { settle: 300 })
+  await page.waitFor(`location.search.includes("2026-07-31")`, 10_000)
+  await page.wait(500)
+  await page.click(`$("[data-period-chip]")`, { settle: 300 })
+  await setDate(1, "2026-07-15")
+  await page.wait(100)
+  await page.click(`button("Schließen", ${picker})`, { settle: 300 })
+  await page.click(`$("[data-period-chip]")`, { settle: 300 })
+  const kept = await page.ev<string>(`${dates}[1]?.value ?? ""`)
+  check(
+    "Blatt „Filter“: nicht übernommene freie Tage gelten beim nächsten Öffnen nicht",
+    kept === "2026-07-31",
+    kept
+  )
+  await page.click(`button("Schließen", ${picker})`, { settle: 200 })
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function main() {
+  const server = START ? await startServer() : null
+  const browser = await Browser.launch()
+  // die ganze Prüfung höchstens fünf Minuten; hängt etwas, steht es im Bericht statt ewig zu warten
+  const guard = setTimeout(() => {
+    check("Prüfung: Zeit überschritten", false, "5 min")
+    report()
+    server?.kill()
+    void browser.close().finally(() => process.exit(1))
+  }, 300_000)
+
+  try {
+    const page = await browser.newPage()
+    await login(page)
+    const href = await pickCard(page)
+    await section("Seite einer Scheibe am Desktop", () => desktopCard(page, href))
+    await section("Anker und Platz der Scheibe", () => anchorsAndFit(page, href))
+    await section("Seite einer Scheibe am Telefon", () => phoneCard(page, href))
+    await section("Telefon ohne seitliches Scrollen", () => phoneNoSideScroll(page))
+    await section("Blättern", () => paging(page, href))
+    await section("Rückwege", () => backPaths(page))
+    await section("Fortschritt", () => progress(page))
+    // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
+    check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
+  } catch (error) {
+    check("Prüfung: Abbruch", false, error instanceof Error ? error.message : String(error))
+  } finally {
+    await browser.close()
+    server?.kill()
+  }
+
+  clearTimeout(guard)
+  process.exit(report() ? 1 : 0)
+}
+
+/** schreibt den Bericht; true bei mindestens einem FAIL */
+function report(): boolean {
+  const all = process.argv.includes("--alle")
+  for (const r of results)
+    if (all || !r.ok) out(`${r.ok ? "OK  " : "FAIL"} ${r.name}${r.detail ? ` — ${r.detail}` : ""}`)
+  const fails = results.filter((r) => !r.ok).length
+  out(
+    `${fails} FAIL von ${results.length} (${((Date.now() - started) / 1000).toFixed(0)} s, ${BASE})`
+  )
+  return fails > 0
+}
+
+void main()

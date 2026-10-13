@@ -4,7 +4,7 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 
 import { useTheme } from "./ThemeProvider"
 
-/** Darstellung System, Hell, Dunkel wie im Labor: am Desktop unten in der Seitenleiste, auf dem Telefon in Profil */
+/** Darstellung System, Hell, Dunkel: am Desktop unten in der Seitenleiste, auf dem Telefon in Profil */
 export function ThemeSwitch({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme()
   return (

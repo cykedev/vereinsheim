@@ -215,7 +215,7 @@ describe("cardWithShots", () => {
     expect(await cardWithShots(db, { cardId: own.id, ownerId: "jemand-anderes" })).toBeNull()
   })
 
-  it("ein Training nur aus Probe hat keine amtliche Wertung, auch wenn die Disziplin eine hat (wie im Labor)", async () => {
+  it("ein Training nur aus Probe hat keine amtliche Wertung, auch wenn die Disziplin eine hat", async () => {
     const overview = await familyCards(db, { ownerId: site.ownerId, familyId: site.familyId })
     const probeOnly = overview.find((c) => c.projection.probeOnly)!
     const withMatch = overview.find((c) => !c.projection.probeOnly)!

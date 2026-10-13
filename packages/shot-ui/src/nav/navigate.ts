@@ -98,7 +98,7 @@ export function listOnEvening(query: ListQuery, family: string, day: string): Li
 
 /**
  * „Im Fortschritt zeigen“ im Blatt „Filter“ der Liste (D7, U5): Familie, Art und Zeitraum der Liste; ohne Zeitraum „Alles“. In der App rechnet der
- * Fortschritt in der Wertung der Familie; `scoring` gilt nur im Labor (seine eine Wertung).
+ * Fortschritt in der Wertung der Familie; ein `scoring` der Adresse gilt dort nicht.
  */
 export function progressFromList(list: ListRoute, scoring: Scoring = "decimal"): ProgressRoute {
   const { family, kind, range } = list.query

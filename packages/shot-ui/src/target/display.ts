@@ -1,7 +1,7 @@
 // Darstellung der Scheibe als Voreinstellung des Schützen (User, 12. Oktober 2026): die Ebenen, „übrige blass/aus“ und
 // der Ausschnitt (ganze Scheibe oder Gruppe). Sie gehört nicht in die Adresse (die hält fest, was man sieht, nicht wie
 // es gezeichnet ist), sondern in den Browser; jede Änderung schreibt sie neu. Reine Funktionen: wo gespeichert wird,
-// entscheidet die App (Cookie) bzw. das Labor (`localStorage`).
+// entscheidet die App (Cookie).
 
 import { initialViewState, type Layer, type ViewState } from "../view-state"
 

@@ -60,7 +60,7 @@ export interface ProjectedCard {
   official?: Scoring
   /**
    * die Wertung der Scheibe (in der App gewählt, sonst die Vorgabe aus Art, amtlicher Wertung und Anzeige am Stand);
-   * fehlt im Labor, dort gilt die amtliche
+   * fehlt sie (etwa in Tests), gilt die amtliche
    */
   scoring?: Scoring
   projection: CardProjection
@@ -115,7 +115,7 @@ export function cardProjection(input: PeriodCard): CardProjection {
   }
 }
 
-/** eine Scheibe mit Schüssen als Eingabe der Übersichten: ihre Merkmale und ihre Projektion (Labor, Tests) */
+/** eine Scheibe mit Schüssen als Eingabe der Übersichten: ihre Merkmale und ihre Projektion (Tests) */
 export function projectCard(card: PeriodCard): ProjectedCard {
   return {
     id: card.id,

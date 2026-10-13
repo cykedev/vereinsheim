@@ -41,7 +41,7 @@ export function AppShell({ isAdmin, children }: { isAdmin: boolean; children: Re
   if (route.page === "progress" && memoryKey(route) !== memoryKey(memory.progress))
     setMemory({ ...memory, progress: { ...route, section: null } })
 
-  // die zuletzt gewählte Familie: Scheiben und Fortschritt teilen sie wie im Labor (User, 9. Oktober 2026, `areaLinks`)
+  // die zuletzt gewählte Familie: Scheiben und Fortschritt teilen sie (User, 9. Oktober 2026, `areaLinks`)
   const [family, setFamily] = useState<string | null>(null)
   const routeFamily =
     route.page === "cards" || route.page === "progress" ? route.query.family : null

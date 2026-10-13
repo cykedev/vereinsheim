@@ -17,12 +17,10 @@ import { writeRevision, type RevisionChange } from "../src/lib/db/cards"
 import { FAMILY_NAMES } from "../src/lib/families"
 import { BCRYPT_COST } from "../src/lib/startup"
 import { DEV_DATABASE_URL } from "../test/dev-database"
+import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
 import { ownCardSeeds } from "./own-cards"
 
 const DEV_SITE = "Dev-Anlage"
-/** Demo-Konto nur für die Dev-Datenbank: Testzugang für die Prüfung der Seiten, kein echtes Geheimnis */
-const DEMO_EMAIL = "demo@example.com"
-const DEMO_PASSWORD = "spiegel-demo-konto"
 
 const out = (text = "") => process.stdout.write(`${text}\n`)
 

@@ -69,7 +69,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
       values: row.projection.values as CardProjection["values"],
       records: row.projection.records as unknown as CardProjection["records"],
     }
-    // amtliche Wertung der Disziplin (SF-74), wenn bekannt; nur Probe ist Training und hat keine (wie im Labor)
+    // amtliche Wertung der Disziplin (SF-74), wenn bekannt; nur Probe ist Training und hat keine
     const official = projection.probeOnly ? null : row.discipline.officialScoring
     return [
       {
@@ -198,7 +198,7 @@ export interface PageCard extends PeriodCard {
 
 function toPageCard(row: PageCardRow): PageCard | null {
   if (!row.currentRevision) return null
-  // nur Probe ist Training und hat keine amtliche Wertung (wie im Labor)
+  // nur Probe ist Training und hat keine amtliche Wertung
   const official = row.currentRevision.shots.some((shot) => shot.stellung !== 0)
     ? row.discipline.officialScoring
     : null

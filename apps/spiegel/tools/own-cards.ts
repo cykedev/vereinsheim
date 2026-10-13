@@ -1,9 +1,7 @@
-// Die echten Scheiben des Users (Labor, `@vereinsheim/labor/own-cards`, aus der privaten Kopie der Vereinsanlage vom
-// 9. Oktober 2026, mit Zustimmung des Users, ohne Name, Sportpass und ScheibenID) als Eingabe für `writeRevision`. Nur
-// für die Dev-Datenbank (`seed-own.ts`); in Produktion kommen Scheiben über die Brücke. Gefiltert wie im Labor: ohne
-// Scheibenbild (Zimmerstutzen, „LP Schach“) und verdeckt (Anzeigeart 5 oder 10, SF-19) nicht.
-
-import { OWN_CARDS, type OwnCard } from "@vereinsheim/labor/own-cards"
+// Die echten Scheiben des Users (`own-cards-data.ts`, aus der privaten Kopie der Vereinsanlage vom 9. Oktober 2026, mit
+// Zustimmung des Users, ohne Name, Sportpass und ScheibenID) als Eingabe für `writeRevision`. Nur für die
+// Dev-Datenbank (`seed-own.ts`); in Produktion kommen Scheiben über die Brücke. Weggelassen: ohne Scheibenbild
+// (Zimmerstutzen, „LP Schach“) und verdeckt (Anzeigeart 5 oder 10, SF-19).
 import {
   classifyCompleteness,
   parseDisciplineId,
@@ -16,20 +14,21 @@ import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { TARGETS, type TargetId, type Weapon } from "@vereinsheim/shot-core/targets"
 
 import type { CardInput, ShotInput } from "../src/lib/db/cards"
+import { OWN_CARDS, type OwnCard } from "./own-cards-data"
 
 /** verdeckt am Monitor: bleibt in der Brücke, bis der Admin freigibt (SF-19, SF-74) */
 const HIDDEN_DISPLAYS: ReadonlySet<number> = new Set([5, 10])
 
 /**
  * amtliche Wertung nach der Waffe, bis der Adapter (SP-1.6 b) sie aus der Disziplin liest: Luftpistole in ganzen Ringen
- * wie am Ausdruck vom 2. Oktober 2026, Luftgewehr unbekannt (wie im Labor)
+ * wie am Ausdruck vom 2. Oktober 2026, Luftgewehr unbekannt
  */
 const OFFICIAL_BY_WEAPON: Readonly<Partial<Record<Weapon, Scoring>>> = { lp: "rings" }
 
 export type OmittedReason = "ohne Scheibenbild" | "verdeckt"
 
 export interface OwnCardSeed {
-  /** laufende Nummer der Scheibe im Labor; zugleich die erfundene ScheibenID der Dev-Quelle */
+  /** laufende Nummer der Scheibe in `own-cards-data.ts`; zugleich die erfundene ScheibenID der Dev-Quelle */
   n: number
   discipline: {
     meytonId: number

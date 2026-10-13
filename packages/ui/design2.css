@@ -1,6 +1,6 @@
 /* Design 2 (ADR-030): Tokens für Spiegel, hell und dunkel. Eigenständig statt theme.css: Ringwerk und
    Treffsicher bleiben auf der heutigen Schicht. Gleiche Namen wie theme.css, damit die ui-Primitives
-   passen; dazu Design-2-eigene Tokens. Werte aus der Spielwiese (tools/spielwiese/template.html).
+   passen; dazu Design-2-eigene Tokens. Werte aus dem Prototyp (Spielwiese, bis Oktober 2026 im Repo).
    Hell auf :root, dunkel unter .dark (Klassen-Strategie wie next-themes); keine dark:-Varianten im Code. */
 
 @source "./src";

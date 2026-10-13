@@ -15,7 +15,7 @@ import { urlFromRoute, type Route } from "./routes"
 
 /**
  * Wie Links Adressen bilden und ob ein Klick abgefangen wird (Plan N3, D3). Ohne Provider: `<a>` mit der Adresse
- * aus `urlFromRoute`, der Browser folgt ihm. Das Labor fängt jeden Klick ab und wechselt die Ansicht (`navigate`);
+ * aus `urlFromRoute`, der Browser folgt ihm. Ein Provider kann jeden Klick abfangen (`navigate`);
  * die App setzt `next/link` als Komponente (N7).
  */
 export interface RouteLinkContextValue {
