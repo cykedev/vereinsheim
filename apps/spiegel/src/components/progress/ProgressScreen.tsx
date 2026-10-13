@@ -325,7 +325,11 @@ export function ProgressScreen({
                 from={model.calendar.from}
                 to={model.calendar.to}
                 days={model.calendar.days}
-                dayRoute={(day) => ({ ...listFromProgress(here), evening: day })}
+                dayRoute={(day) => {
+                  // an den Abend, ohne die Wahl des Verlaufs: sonst wäre in der Liste eine fremde Scheibe markiert (Review)
+                  const { pick: _pick, ...list } = listFromProgress(here)
+                  return { ...list, evening: day }
+                }}
               />
             )}
           </div>

@@ -6,18 +6,19 @@ import { useEffect, useRef } from "react"
 
 import type { Route } from "../nav/routes"
 import { RouteLink } from "../nav/RouteLink"
-import { DAY_MS, isoWeekKey, weekStartIso } from "./calendar"
+import { weeksBetween } from "./calendar"
 import type { CalendarDay } from "./model"
 
-/** Stufen der Tönung nach Schüssen, relativ zum stärksten Tag des Zeitraums; Klassen wörtlich (Tailwind) */
-const LEVELS = ["bg-primary/30", "bg-primary/50", "bg-primary/75", "bg-primary"] as const
+/**
+ * Stufen der Tönung nach Schüssen, relativ zum stärksten Tag des Zeitraums; Klassen wörtlich (Tailwind). Die unterste
+ * hebt sich deutlich von einem Tag ohne Training ab (Review: bei /30 nur 1,5 : 1)
+ */
+const LEVELS = ["bg-primary/45", "bg-primary/65", "bg-primary/85", "bg-primary"] as const
 
 /** Zeilen Montag bis Sonntag; beschriftet nur Mo, Mi, Fr (wie üblich, sonst zu eng) */
 const WEEKDAYS = ["Mo", "", "Mi", "", "Fr", "", ""] as const
 
 const noon = (iso: string) => new Date(`${iso}T12:00:00Z`)
-const addDays = (iso: string, days: number) =>
-  new Date(Date.parse(`${iso}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10)
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
@@ -33,17 +34,8 @@ export function dayLevel(shots: number, max: number): number {
   return Math.min(LEVELS.length - 1, Math.max(0, Math.ceil((shots / max) * LEVELS.length) - 1))
 }
 
-/** die Wochen (ISO, Montag) vom ersten bis zum letzten Tag, je mit ihren sieben Tagen */
-export function calendarWeeks(from: string, to: string): { key: string; days: string[] }[] {
-  const weeks: { key: string; days: string[] }[] = []
-  for (let monday = weekStartIso(isoWeekKey(from)); monday <= to; monday = addDays(monday, 7)) {
-    weeks.push({
-      key: isoWeekKey(monday),
-      days: Array.from({ length: 7 }, (_, i) => addDays(monday, i)),
-    })
-  }
-  return weeks
-}
+/** die Wochen des Kalenders (aus `period/calendar`, dieselben wie im Umfang je Woche) */
+export const calendarWeeks = weeksBetween
 
 /**
  * Kalender der Trainingstage (T7): je Woche eine Spalte, Montag bis Sonntag, getönt nach den Schüssen des Abends; ein
@@ -75,7 +67,7 @@ export function CalendarChart({
   return (
     <div className="grid gap-2">
       <div className="flex min-w-0 gap-1.5">
-        <div className="grid shrink-0 grid-rows-[16px_repeat(7,13px)] gap-[3px] text-xs leading-[13px] text-muted-foreground">
+        <div className="grid shrink-0 grid-rows-[16px_repeat(7,13px)] gap-[3px] py-1 text-xs leading-[13px] text-muted-foreground">
           <span aria-hidden />
           {WEEKDAYS.map((label, i) => (
             <span key={i} aria-hidden>
@@ -85,13 +77,20 @@ export function CalendarChart({
         </div>
         <div
           ref={scroller}
-          className="min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="min-w-0 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div role="group" aria-label="Trainingstage" className="flex gap-[3px]">
             {weeks.map((week, i) => {
-              // der Monat über der ersten Woche und über jeder, in der ein Monat beginnt
-              const first = week.days.find((d) => d.endsWith("-01") && d >= from && d <= to)
-              const label = i === 0 ? week.days.find((d) => d >= from) : first
+              // der Monat über jeder Woche, in der einer beginnt; über der ersten sonst ihr Monat, außer gleich danach beginnt
+              // einer (die Namen lägen übereinander)
+              const starts = (w: { days: string[] }) =>
+                w.days.find((d) => d.endsWith("-01") && d >= from && d <= to)
+              const first = starts(week)
+              const label =
+                first ??
+                (i === 0 && !(weeks[1] && starts(weeks[1]))
+                  ? week.days.find((d) => d >= from)
+                  : undefined)
               return (
                 <div
                   key={week.key}

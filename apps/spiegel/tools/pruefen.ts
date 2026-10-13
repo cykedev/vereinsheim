@@ -829,7 +829,10 @@ async function progress(page: Page) {
     await page.wait(500)
     check(
       "Kalender: ein Tag öffnet die Liste an diesem Abend, markiert",
-      await page.ev<boolean>(`location.hash === "#${day.key}" && $$('[data-marked]').length > 0`),
+      // markiert ist nur der Abend, keine Wahl aus dem Verlauf (Review)
+      await page.ev<boolean>(`location.hash === "#${day.key}" && !location.search.includes("pick=") &&
+        $$('[data-marked]').length > 0 &&
+        $$('[data-marked]').every((el) => el.closest("tbody")?.id === ${JSON.stringify(day.key)})`),
       await page.ev<string>(`location.pathname + location.search + location.hash`)
     )
     await page.goto(`${BASE}/progress`)

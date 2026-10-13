@@ -63,4 +63,20 @@ describe("Kalender der Trainingstage (T7)", () => {
     expect(html).toContain("2 Trainingstage · 120 Schuss")
     expect(html).toContain("Wettkampf")
   })
+
+  it("Monatsnamen: über jeder Woche, in der ein Monat beginnt; die erste nur, wenn danach keiner beginnt (Review)", () => {
+    const months = (from: string, to: string) =>
+      [
+        ...renderToStaticMarkup(
+          createElement(CalendarChart, { from, to, days: [], dayRoute })
+        ).matchAll(/data-week="([\dW-]+)"[^>]*><span[^>]*>([^<]*)<\/span>/g),
+      ]
+        .filter((m) => m[2])
+        .map((m) => `${m[1]}:${m[2]}`)
+    // ab dem 25. September: Woche 39 trüge „Sep“ über „Okt“ der nächsten, also nur Oktober
+    expect(months("2026-09-25", "2026-10-13")).toEqual(["2026-W40:Okt"])
+    // ab dem 28. September: Woche 40 enthält den 1. Oktober und heißt Oktober
+    expect(months("2026-09-28", "2026-10-13")).toEqual(["2026-W40:Okt"])
+    expect(months("2026-09-07", "2026-10-13")).toEqual(["2026-W37:Sep", "2026-W40:Okt"])
+  })
 })

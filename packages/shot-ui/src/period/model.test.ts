@@ -306,6 +306,26 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     ])
   })
 
+  it("Kalender und Wochen je Abend: eine Scheibe vor 4 Uhr am ersten Tag bleibt sichtbar, Montag 0:30 zählt zum Sonntag (Review)", () => {
+    // freier Zeitraum September; die erste Scheibe am 1. September um 1:30 Uhr Ortszeit gehört zum Abend des 31. August
+    const early = periodCard("früh", 0, [100], { startedAtMs: Date.UTC(2026, 7, 31, 23, 30) })
+    // Montag, 14. September, 0:30 Uhr Ortszeit: Abend des Sonntags, 13. September (KW 37, nicht KW 38)
+    const monday = periodCard("montag", 0, [100, 100], {
+      startedAtMs: Date.UTC(2026, 8, 13, 22, 30),
+    })
+    const { calendar, weeks } = model([early, monday], {
+      choice: { type: "free", from: "2026-09-01", to: "2026-09-30" },
+    })
+    expect(calendar.from).toBe("2026-08-31")
+    expect(calendar.days.map((d) => d.key)).toEqual(["2026-08-31", "2026-09-13"])
+    // dieselben Wochen wie der Kalender, die Scheibe vom Montag früh in der Woche des Sonntags
+    expect(weeks[0].key).toBe("2026-W36")
+    expect(weeks.find((w) => w.key === "2026-W37")).toMatchObject({ shots: 2, cards: 1, days: 1 })
+    expect(weeks.find((w) => w.key === "2026-W38")).toMatchObject({ shots: 0 })
+    // unten gezählt ist, was oben steht
+    expect(calendar.days.every((d) => d.key >= calendar.from && d.key <= calendar.to)).toBe(true)
+  })
+
   it("Abstand zum Schnitt der bis zu fünf Scheiben davor, ohne sie selbst, auch vor dem Zeitraum", () => {
     // alt (10,9) liegt vor dem Zeitraum und zählt für a mit; b gegen alt und a, c gegen alt, a und b
     const { deltas } = model(THREE)

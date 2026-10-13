@@ -32,12 +32,12 @@ import { formatIsoDate, formatMonthYear, zonedDayStartMs } from "@vereinsheim/li
 import { metricLabel } from "../labels"
 import {
   compareRange,
-  DAY_MS,
   eveningDay,
   inRange,
   isoWeekKey,
   resolveRange,
   weekLabel,
+  weeksBetween,
   type DateRange,
   type NamedPeriod,
 } from "./calendar"
@@ -260,15 +260,23 @@ function calendarDays(cards: readonly ProjectedCard[], timeZone: string): Calend
     .sort((a, b) => (a.key < b.key ? -1 : 1))
 }
 
-/** jede ISO-Woche vom Beginn bis zum Ende des Zeitraums (höchstens bis jetzt), in der Zeitzone */
-function weekKeys(range: DateRange, nowMs: number, timeZone: string): string[] {
-  const end = Math.min(range.toMs, nowMs + 1) - 1
-  const keys = new Set<string>()
-  for (let t = range.fromMs; t <= end; t += DAY_MS) {
-    keys.add(isoWeekKey(formatIsoDate(new Date(t), timeZone)))
+/**
+ * Tage des Zeitraums für Umfang und Kalender: vom ersten Tag (oder dem früheren Abend einer Scheibe vor 4 Uhr am ersten
+ * Tag, Review T7) bis zum letzten, höchstens heute
+ */
+function calendarOf(
+  range: DateRange,
+  nowMs: number,
+  cards: readonly ProjectedCard[],
+  timeZone: string
+): PeriodModel["calendar"] {
+  const days = calendarDays(cards, timeZone)
+  const first = formatIsoDate(new Date(range.fromMs), timeZone)
+  return {
+    from: days[0] && days[0].key < first ? days[0].key : first,
+    to: formatIsoDate(new Date(Math.min(range.toMs, nowMs + 1) - 1), timeZone),
+    days,
   }
-  keys.add(isoWeekKey(formatIsoDate(new Date(end), timeZone)))
-  return [...keys]
 }
 
 export function periodModel(input: {
@@ -317,10 +325,13 @@ export function periodModel(input: {
   const family = input.cards.filter(ofKind).sort(byStart)
   const familyValues = projectedValues(family, chartMetric, scoring, options)
   const deltas = deltasBefore(familyValues, inPeriod)
+  // je Abend wie die Liste (vor 4 Uhr der Vortag), für Wochen und Kalender gleich (Review T7)
+  const evening = (ms: number) => eveningDay(ms, timeZone)
   const volume = new Map(
-    projectedVolume(cards, (ms) => isoWeekKey(day(ms)), day).map((w) => [w.key, w])
+    projectedVolume(cards, (ms) => isoWeekKey(evening(ms)), evening).map((w) => [w.key, w])
   )
-  const weeks = weekKeys(range, nowMs, timeZone).map((key) => ({
+  const calendar = calendarOf(range, nowMs, cards, timeZone)
+  const weeks = weeksBetween(calendar.from, calendar.to).map(({ key }) => ({
     ...(volume.get(key) ?? { key, shots: 0, cards: 0, days: 0 }),
     label: weekLabel(key),
   }))
@@ -405,11 +416,7 @@ export function periodModel(input: {
     months,
     deltas,
     weeks,
-    calendar: {
-      from: formatIsoDate(new Date(range.fromMs), timeZone),
-      to: formatIsoDate(new Date(Math.min(range.toMs, nowMs + 1) - 1), timeZone),
-      days: calendarDays(cards, timeZone),
-    },
+    calendar,
     newest: perShot.at(-1)?.id ?? null,
     records: projectedRecords(input.cards, scoring, {
       kind: state.kind === "all" ? undefined : state.kind,

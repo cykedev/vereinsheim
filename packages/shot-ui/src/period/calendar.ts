@@ -176,3 +176,21 @@ export function eveningDay(startedAtMs: number, timeZone: string): string {
   if (formatTimeOfDay(at, timeZone) >= EVENING_STARTS) return day
   return formatIsoDate(new Date(zonedDayStartMs(day, timeZone) - 1), timeZone)
 }
+
+const addDays = (iso: string, days: number) =>
+  new Date(Date.parse(`${iso}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10)
+
+/**
+ * die ISO-Wochen vom ersten bis zum letzten Tag (ISO-Tage), je mit ihren sieben Tagen ab Montag; für den Umfang je Woche
+ * und den Kalender (T7), damit beide dieselben Wochen zeigen. Gerechnet auf Tagen, ohne Zeitzone.
+ */
+export function weeksBetween(from: string, to: string): { key: string; days: string[] }[] {
+  const weeks: { key: string; days: string[] }[] = []
+  for (let monday = weekStartIso(isoWeekKey(from)); monday <= to; monday = addDays(monday, 7)) {
+    weeks.push({
+      key: isoWeekKey(monday),
+      days: Array.from({ length: 7 }, (_, i) => addDays(monday, i)),
+    })
+  }
+  return weeks
+}
