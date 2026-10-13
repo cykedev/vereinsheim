@@ -400,8 +400,7 @@ aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-lan
   Blättern öffnen ohne. Der Fortschritt hat keine Wertung in der Adresse.
 - **Labor:** ohne Datenbank. Seine eine Wertung (Profil) ist die jeder Familie, eine Scheibe öffnet in der amtlichen,
   sonst in dieser; ihr Schalter gilt nur für sie.
-- **Offen:** Die Art der Scheibe (`Card.kind`) ist bisher überall „Training“; sie festzulegen ist ein eigener Punkt
-  ([[spiegel-roadmap]], „Offene Einzelpunkte“).
+- **Art der Scheibe:** seit dem 12. Oktober 2026 auf ihrer Seite festzulegen (Abschnitt „Art der Scheibe“ unten).
 
 ## Art der Scheibe (12. Oktober 2026)
 
@@ -416,6 +415,8 @@ Plan `plans/2026-10-12-spiegel-art.md`, mit dem User entschieden („ja passt“
   Probe ist Training und hat keinen Schalter.
 - **Ohne Wahl** gilt die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); ein Vorschlag aus
   der `Rangliste` kommt mit dem Adapter ([[spiegel-roadmap]]).
+- **Blättern:** Die Scheibe selbst bleibt in ihrem Kontext, auch wenn sie nach dem Umstellen nicht mehr zum Filter der
+  Herkunft passt (`contextCardIds`, Review); sonst risse das Blättern aus einer Liste „Training“ ab.
 - **Nicht hier:** mehrere Scheiben auf einmal markieren (Auswahl, N4).
 
 ## Labor näher an der App (9. Oktober 2026)

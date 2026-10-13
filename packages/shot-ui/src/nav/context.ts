@@ -29,7 +29,9 @@ export interface ContextInput {
 /**
  * Die Scheiben des Kontexts einer Scheibe in zeitlicher Folge: aus der Liste ihre Zeilen mit den Filtern der
  * Herkunft, aus dem Fortschritt die Scheiben seines Zeitraums nach seinem Zustand, von Start die des letzten Abends.
- * Ohne Herkunft null: dort gibt es kein Blättern.
+ * Die Scheibe selbst gehört immer dazu, an ihrer Stelle: Stellt man ihre Art um, passt sie womöglich nicht mehr zum
+ * Filter der Herkunft, und das Blättern risse ab (Review, Plan `plans/2026-10-12-spiegel-art.md`). Ohne Herkunft null:
+ * dort gibt es kein Blättern.
  */
 export function contextCardIds(card: CardRoute, input: ContextInput): string[] | null {
   const origin = card.origin
@@ -51,7 +53,7 @@ export function contextCardIds(card: CardRoute, input: ContextInput): string[] |
     const ids = new Set(model.evenings.flatMap((e) => e.rows.map((r) => r.id)))
     return input.cards
       .map((c) => c.card)
-      .filter((c) => ids.has(c.id))
+      .filter((c) => ids.has(c.id) || c.id === card.id)
       .sort(byStart)
       .map((c) => c.id)
   }
@@ -67,7 +69,10 @@ export function contextCardIds(card: CardRoute, input: ContextInput): string[] |
       timeZone: input.timeZone,
       named: input.named,
     })
-    return model.cards.map((c) => c.id)
+    const self = input.cards.find((c) => c.card.id === card.id)?.card
+    const cards =
+      self && !model.cards.some((c) => c.id === self.id) ? [...model.cards, self] : model.cards
+    return [...cards].sort(byStart).map((c) => c.id)
   }
   if (origin?.from === "start") {
     // Start zeigt den letzten Abend: geblättert wird durch seine Scheiben, über alle Familien (Plan N5, D8)

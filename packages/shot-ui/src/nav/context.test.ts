@@ -171,6 +171,33 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     ).toEqual(["t1", "w1", "t2", "w2", "w3", "t3", "pp"])
   })
 
+  it("die Scheibe selbst bleibt im Kontext, auch wenn sie nicht mehr zum Filter passt (Art umgestellt, Review)", () => {
+    // w2 ist ein Wettkampf, geöffnet aus der Liste „Training“: an ihrer Stelle in der zeitlichen Folge
+    expect(contextCardIds(card("w2", fromList({ kind: "training" })), context)).toEqual([
+      "t1",
+      "t2",
+      "w2",
+      "t3",
+    ])
+    const {
+      chosen: _c,
+      scoring: _s,
+      ...query
+    } = {
+      ...DEFAULT_PROGRESS,
+      family: "lg-freihand",
+      kind: "training" as const,
+      choice: { type: "free" as const, from: "2026-09-23", to: "2026-09-26" },
+    }
+    expect(contextCardIds(card("w2", { from: "progress", query }), context)).toEqual(["t2", "w2"])
+    // eine Scheibe, die es nicht gibt, kommt nicht dazu
+    expect(contextCardIds(card("x", fromList({ kind: "training" })), context)).toEqual([
+      "t1",
+      "t2",
+      "t3",
+    ])
+  })
+
   it("ohne Herkunft kein Blättern", () => {
     expect(contextCardIds(card("w2", null), context)).toBeNull()
   })
