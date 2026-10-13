@@ -230,9 +230,10 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
 - **Dev-Datenbank nachziehen:** Die Schemaänderung der Ingest-API ersetzt die eine Migration (bis SP-1.9). Die
   Dev-Datenbank hat die neuen Tabellen und Spalten schon (additiv, ohne Datenverlust); ihre Migrationshistorie passt erst
   nach `pnpm --filter spiegel exec prisma migrate reset --force` und `seed:own` wieder (User).
-- **Schüsse über der Soll-Zahl** (SF-08) gehen mit Wert 0 und echter Lage in die Kennzahlen der Lage ein: `shot-core`
-  kennt `ueber-soll` noch nicht als Ausschluss wie `verdaechtig`. Eine eigene Regel im Fachkern, mit neuer Version der
-  betroffenen Kennzahlen.
+- **Schüsse über der Soll-Zahl** (SF-08): erledigt am 13. Oktober 2026. `FLAG_OVER_TARGET` (`ueber-soll`) steht im
+  Fachkern; solche Schüsse zählen mit Wert 0 und Zeit, aber nicht in Lage und Abstand (Schwerpunkt, Streuung, Streukreis,
+  bester Teiler). Mit Lage wäre ein Schuss nahe der Mitte der beste Teiler geworden. Die sieben Kennzahlen der Lage und
+  des Abstands stehen auf Version 2; die Projektionen rechnet der Server beim nächsten Start neu.
 - **Brücke (SP-1.4):** Änderungen nur am Lebenszeichen höchstens alle 30 s schicken ([[spiegel-bridge]]), `Retry-After`
   beachten, Zustand über `GET /state`.
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
