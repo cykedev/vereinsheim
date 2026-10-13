@@ -46,7 +46,7 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 ### SP-0.4 Technik der Brücke entscheiden
 - **Ziel:** Sprache und Auslieferung festlegen.
 - **Umfang:** Go-Binary gegen Bun- oder Deno-Binary gegen Docker mit Node; Kriterien: eine Datei ohne Laufzeit, Raspberry Pi und Windows, Stromverlust, Selbst-Update, geteilter Vertrag. Empfehlung: Go mit „dummer“ Brücke ([[spiegel-bridge]]). Dazu der Ort: eigenes Gerät (ADR-027) oder, als Wunsch des Users, direkt auf dem Meyton-Rechner unter SUSE Linux ([[spiegel-open-questions]]).
-- **Abnahme:** Ergänzung in [[adr-027]]. **Status:** offen.
+- **Abnahme:** Ergänzung in [[adr-027]]. **Status:** Technik erledigt (13. Oktober 2026, autonom nach der Empfehlung, Bestätigung des Users beim Merge): Go, ein statisches Binary ([[adr-027]], Änderung vom 13. Oktober 2026). Der Ort bleibt offen; das Binary läuft auf beiden.
 
 ### SP-0.5 Einwilligung und Datenschutz
 - **Ziel:** rechtlich sauberer Start.
@@ -96,7 +96,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** `apps/spiegel-bridge` nach [[spiegel-bridge]], ohne eigenen Zustand ([[adr-027]], Änderung vom 8. Oktober 2026): Kopplung, Leser mit Read-only-Transaktionen, Änderungserkennung, Snapshots mit Prüfsumme, Upload mit Wiederholung statt Warteschlange, Heartbeat, Statusseite; ohne Probe-Puffer, Snapshot erst nach zwei gleichen Lesungen, Änderungen je ScheibenID über den zuletzt gesehenen Zeitstempel ([[adr-027]], Änderung vom 9. Oktober 2026); Betrieb mit Abschalten nach dem Training (Nachholen beim Start ab dem Wasserstand in Spiegel).
 - **Schnitt:** a) Leser, Änderungserkennung und Snapshots, nur lokal; b) Kopplung, Upload und Heartbeat; c) Nachholen beim Start, Updates, Statusseite.
 - **Abnahme:** gegen eine lokale MySQL mit SSMDB2-Schema und den Fällen aus SP-1.0, Ausfalltests (Netz weg, DB weg, Stecker ziehen während des Uploads; danach nichts auf der Platte außer der Konfiguration), einmal an der echten Anlage; Sonderfälle SF-02, SF-03, SF-07, SF-08, SF-10, SF-23, SF-24, SF-25, SF-26, SF-31, SF-32, SF-33, SF-49, SF-50, SF-51, SF-52, SF-53, SF-54, SF-55, SF-57, SF-58.
-- **Hängt ab von:** SP-0.4, SP-1.0. **Status:** offen.
+- **Hängt ab von:** SP-0.4, SP-1.0. **Status:** a) erledigt (13. Oktober 2026, `plans/2026-10-13-spiegel-bruecke-leser.md`, `apps/spiegel-bridge`): Leser in Go, Änderungserkennung im Arbeitsspeicher, Snapshots v1 mit Prüfsumme aus einer eigenen kanonischen Form; abgenommen an allen 31 Fällen in MariaDB 10.6 und 11 (`pnpm --filter spiegel-bridge replay`), dazu eine neue Spalte während des Laufs (SF-25), Anlage nicht erreichbar, gescheiterte Runde (SF-24). Offen: b) Kopplung, Upload, Heartbeat; c) Nachholen, Updates, Statusseite; einmal an der echten Anlage.
 
 ### SP-1.5 Brücke v1: Opt-in, Aufträge, verdeckte Wertung
 - **Ziel:** nur das Richtige verlässt das Schützenhaus.
@@ -234,7 +234,7 @@ Was zwischen den Features liegen blieb; die Berichte unter `reports/` sind nicht
   Fachkern; solche Schüsse zählen mit Wert 0 und Zeit, aber nicht in Lage und Abstand (Schwerpunkt, Streuung, Streukreis,
   bester Teiler). Mit Lage wäre ein Schuss nahe der Mitte der beste Teiler geworden. Die sieben Kennzahlen der Lage und
   des Abstands stehen auf Version 2; die Projektionen rechnet der Server beim nächsten Start neu.
-- **Brücke (SP-1.4):** Änderungen nur am Lebenszeichen höchstens alle 30 s schicken ([[spiegel-bridge]]), `Retry-After`
+- **Brücke (SP-1.4 b):** Änderungen nur am Lebenszeichen höchstens alle 30 s schicken ([[spiegel-bridge]]), `Retry-After`
   beachten, Zustand über `GET /state`.
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.

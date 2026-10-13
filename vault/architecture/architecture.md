@@ -27,6 +27,9 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           und Blättern rechnen auf dem Server aus der Projektion (SP-1.8); Ingest-API v1 für die Brücke
 │                           mit Kopplung, Geräte-Token, Adapter `meyton-ssmdb2@9` und Admin „Anlage und Brücken“
 │                           (SP-1.6 b); noch ohne Deploy (SP-1.9).
+├── apps/spiegel-bridge/    Brücke im Schützenhaus (Go, ein statisches Binary, ADR-027): liest die SSMDB2 nur lesend,
+│                           erkennt Änderungen und baut Snapshots v1 (SP-1.4 a, Oktober 2026, nur lokal); Tests gegen
+│                           die Vektoren von ingest-contract und die Fälle von ssmdb2-cases.
 ├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig/eslint/prettier/
 │                           postcss/next (Phase 2).
 ├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors

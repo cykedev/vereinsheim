@@ -3,7 +3,7 @@ id: spiegel-bridge
 type: subsystem
 title: "Spiegel — Brücke im Schützenhaus"
 aliases: [brücke, bridge, spiegel-bridge, meyton-bridge, lokaler-agent]
-keywords: [brücke, bridge, agent, raspberry pi, mini-pc, meyton-netz, ip-plan, workstation, router, read-only, select, polling, änderungserkennung, snapshot, prüfsumme, zustandslos, stateless, ohne zustand, heartbeat, kopplung, pairing, auftragskanal, fundbüro-seite, go binary, single binary, systemd, gäste-lan, gerätenetz, netztrennung, kopplungscode, probe-puffer, zustand, massenlöschung, fingerabdruck, selbst-update, lebenszeichen, zwei gleiche lesungen, zerrissene lesung, uhr je stand]
+keywords: [go, golang, apps/spiegel-bridge, brücke, bridge, agent, raspberry pi, mini-pc, meyton-netz, ip-plan, workstation, router, read-only, select, polling, änderungserkennung, snapshot, prüfsumme, zustandslos, stateless, ohne zustand, heartbeat, kopplung, pairing, auftragskanal, fundbüro-seite, go binary, single binary, systemd, gäste-lan, gerätenetz, netztrennung, kopplungscode, probe-puffer, zustand, massenlöschung, fingerabdruck, selbst-update, lebenszeichen, zwei gleiche lesungen, zerrissene lesung, uhr je stand]
 subsystem_of: ["[[spiegel-architecture]]"]
 governed_by: ["[[adr-027]]"]
 relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-ingest-contract]]", "[[spiegel-ingest-pipeline]]", "[[spiegel-assignment]]", "[[spiegel-edge-cases]]"]
@@ -90,6 +90,24 @@ In Meyton schreiben, einen Port ins Internet öffnen, Daten ohne Zustimmung oder
 | Meyton-Update ändert das Schema | Die Brücke liest weiter mit allen Spalten und meldet die Version; Spiegel bekommt bei Bedarf eine neue Adapter-Version (SF-25) |
 | Gerät oder SSD getauscht | neu koppeln, Nachholen ab dem letzten bestätigten Stand in Spiegel (SF-55) |
 
-## Technik (offen, SP-0.4)
+## Technik (entschieden 13. Oktober 2026, SP-0.4)
 
-Wunsch des Users: **ein einzelnes Binary ohne Docker und Node.** Weil die Brücke die Rohdaten unverändert weitergibt und alle Deutung in Spiegel passiert, trägt sie kaum Fachlogik. Das spricht für **Go** (statisches Binary für linux/arm64, linux/amd64 und Windows, wenig Speicher, Dienst über systemd). Der Vertrag zu Spiegel liegt dann als JSON-Schema plus gemeinsamen Beispiel-Dateien in `packages/ingest-contract`, die Go- und TypeScript-Tests gleichermaßen prüfen. Alternativen: Bun- oder Deno-Binary aus TypeScript (größer, enthält eine JS-Laufzeit), Docker mit Node (teilt Code direkt, braucht aber Docker).
+**Go**, ein statisches Binary ohne Laufzeit für linux/arm64, linux/amd64 und Windows (rund 6 MB), Dienst über systemd
+([[adr-027]], Änderung vom 13. Oktober 2026). Weil die Brücke die Rohdaten unverändert weitergibt und alle Deutung in
+Spiegel passiert, trägt sie kaum Fachlogik. Der Vertrag liegt als JSON-Schema, Testvektoren und Beispiele in
+`packages/ingest-contract`; die Go-Tests lesen dieselben Dateien.
+
+## Stand des Codes (`apps/spiegel-bridge`)
+
+Teil a (SP-1.4 a, `plans/2026-10-13-spiegel-bruecke-leser.md`): Leser, Änderungserkennung und Snapshots, nur lokal
+(`spiegel-bridge watch`). Wie oben beschrieben, mit diesen Zahlen:
+
+- Eine Runde liest in einer Transaktion `ScheibenID` und `Zeitstempel` aller Scheiben und dann ganz: was auf eine zweite
+  gleiche Lesung wartet, was sich bewegt hat (auch wenn es eine Runde warten musste) und was in den letzten **20
+  Minuten** ein Lebenszeichen hatte (fängt Korrekturen ohne neues Lebenszeichen, SF-21, SF-22). Höchstens **50**
+  Scheiben je Runde, wartende zuerst, dann die jüngsten, dann die am längsten nicht gelesenen.
+- Beim Start gilt als neu, was bis **12 Stunden** vor dem jüngsten Lebenszeichen liegt (nicht gegen die eigene Uhr:
+  die der Stände kann falsch gehen). Den Abgleich ab dem Wasserstand in Spiegel bringt Teil c.
+- Eine Scheibe, die 24 Stunden nicht in der Ablage stand, vergisst die Brücke; Fehlen ist nie eine Löschung.
+- Abgenommen an allen 31 Sonderfällen in MariaDB 10.6 und 11: jeder Snapshot bit-gleich mit dem eingefrorenen, gesendet
+  genau die Lesungen der Vorgabe. Die Drossel auf 30 s für reine Lebenszeichen kommt mit dem Upload (Teil b).
