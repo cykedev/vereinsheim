@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+	// Zonen eingebaut: ein Pi mit schlankem System oder Windows hat keine Zonendatenbank
+	_ "time/tzdata"
 
 	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/api"
 	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/contract"
@@ -28,6 +30,8 @@ const (
 	RetryMax   = 60 * time.Second
 	// eine Folgenummer zu weit in der Zukunft: die Uhr der Brücke geht vor; so lange nicht mehr schicken
 	FuturePause = time.Minute
+	// Nachholen beim Start: ab einem Tag vor dem Wasserstand, damit der letzte Abend samt späten Korrekturen dabei ist
+	CatchUpMargin = 24 * time.Hour
 	// Stapel: Spiegel nimmt 50 Snapshots und 4 MiB
 	BatchSnapshots = contract.MaxBatchSnapshots
 	BatchBytes     = 3*1024*1024 + 512*1024
@@ -84,6 +88,20 @@ type Runner struct {
 	lastHeartbeat time.Time
 	lastScheiben  int
 	possibleReset bool
+	catchUpSet    bool
+}
+
+// catchUpFrom rechnet den Wasserstand in Spiegel (Beobachtung, UTC) in ein Lebenszeichen der Anlage um: Meyton schreibt
+// Ortszeit. Ohne Wasserstand (die erste Brücke einer Anlage) wird nichts nachgeholt; die Historie ist SP-2.5.
+func catchUpFrom(state api.State) string {
+	if state.Watermark == nil {
+		return ""
+	}
+	loc, err := time.LoadLocation(state.Site.TimeZone)
+	if err != nil {
+		loc = time.UTC
+	}
+	return state.Watermark.Add(-CatchUpMargin).In(loc).Format("2006-01-02 15:04:05")
 }
 
 // New legt einen Lauf an; `now` nil heißt Systemuhr.
@@ -183,6 +201,13 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 		}
 	}
 
+	if !r.catchUpSet {
+		r.catchUpSet = true
+		if from := catchUpFrom(*r.state); from != "" {
+			r.watcher.SetCatchUpFrom(from)
+			r.log("catch-up", "from", strings.ReplaceAll(from, " ", "T"))
+		}
+	}
 	began := time.Now()
 	result, err := r.watcher.Tick(ctx, r.src)
 	took := time.Since(began)

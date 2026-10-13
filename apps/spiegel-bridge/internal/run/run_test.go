@@ -388,3 +388,46 @@ func TestBatches(t *testing.T) {
 		}
 	}
 }
+
+func TestCatchUpFromWatermarkInLocalTime(t *testing.T) {
+	var state api.State
+	state.Site.TimeZone = "Europe/Berlin"
+	if catchUpFrom(state) != "" {
+		t.Fatal("ohne Wasserstand nichts")
+	}
+	mark := time.Date(2026, 10, 9, 20, 4, 11, 0, time.UTC)
+	state.Watermark = &mark
+	// 20:04 UTC sind 22:04 Ortszeit (Sommerzeit), einen Tag davor
+	if got := catchUpFrom(state); got != "2026-10-08 22:04:11" {
+		t.Fatalf("%s", got)
+	}
+	state.Site.TimeZone = "Mars/Olympus"
+	if got := catchUpFrom(state); got != "2026-10-08 20:04:11" {
+		t.Fatalf("unbekannte Zone: %s", got)
+	}
+}
+
+func TestCatchUpAfterStart(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "12345678", "1", 3) // heute 20:03
+	old := f.ablage.data[1]
+	f.ablage.stamps[2], f.ablage.data[2] = "2026-10-12 21:00:00", old // der Abend davor, vor dem Startfenster
+	mark := time.Date(2026, 10, 12, 19, 30, 0, 0, time.UTC)
+	f.sp.state.Watermark = &mark
+	f.sp.state.Site.TimeZone = "Europe/Berlin"
+	// erst der laufende Stand; der Abend davor erst, wenn 20 Minuten nichts mehr läuft (SF-52), dann sofort
+	begin := f.clock
+	for f.clock.Sub(begin) < 19*time.Minute {
+		f.step()
+	}
+	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
+		t.Fatalf("während der Stand aktiv ist: %s", got)
+	}
+	for f.clock.Sub(begin) < 22*time.Minute {
+		f.step()
+	}
+	sent := fmt.Sprint(f.sp.sent())
+	if !strings.Contains(sent, "1") || !strings.Contains(sent, "2") {
+		t.Fatalf("gesendet %s", sent)
+	}
+}

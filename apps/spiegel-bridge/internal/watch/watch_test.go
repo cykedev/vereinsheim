@@ -469,3 +469,66 @@ func TestResendAfterNewConsent(t *testing.T) {
 		t.Fatalf("erneut: %v", got)
 	}
 }
+
+func TestCatchUpOnlyWhenNobodyShoots(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	// der vorige Abend (vor dem Startfenster, nach dem Wasserstand) und heute ein laufender Stand
+	m.put(1, "2026-10-09 21:00:00", 40, "100")
+	m.put(2, "2026-10-09 21:30:00", 40, "100")
+	m.put(3, "2026-10-01 20:00:00", 40, "100") // vor dem Wasserstand
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	w.SetCatchUpFrom("2026-10-08 22:00:00")
+	if r := tick(t, w, m); fmt.Sprint(m.reads[0]) != "[9]" || !r.Busy {
+		t.Fatalf("erst der laufende Stand: %v", m.reads[0])
+	}
+	// solange Stand 9 aktiv ist, wartet das Nachholen
+	for range 3 {
+		c.advance(time.Second)
+		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
+		tick(t, w, m)
+	}
+	for _, read := range m.reads {
+		for _, id := range read {
+			if id != 9 {
+				t.Fatalf("Nachholen während geschossen wird: %v", m.reads)
+			}
+		}
+	}
+	// 25 Minuten später ruht Stand 9: jetzt die Scheiben des vorigen Abends, die vor dem Wasserstand nicht
+	c.advance(25 * time.Minute)
+	sent := map[int32]bool{}
+	for range 3 {
+		for _, id := range ids(tick(t, w, m)) {
+			sent[id] = true
+		}
+		c.advance(time.Second)
+	}
+	if !sent[1] || !sent[2] || sent[3] {
+		t.Fatalf("nachgeholt: %v", sent)
+	}
+	if r := tick(t, w, m); r.Busy {
+		t.Fatal("nach dem Nachholen ruhig")
+	}
+}
+
+func TestCatchUpOnlyBeforeTheFirstRound(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(1, "2026-10-09 21:00:00", 40, "100")
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	tick(t, w, m)
+	w.SetCatchUpFrom("2026-10-08 22:00:00")
+	c.advance(time.Hour)
+	for range 3 {
+		tick(t, w, m)
+		c.advance(time.Second)
+	}
+	for _, read := range m.reads {
+		for _, id := range read {
+			if id == 1 {
+				t.Fatal("ein Wasserstand nach dem Start ändert nichts")
+			}
+		}
+	}
+}

@@ -72,11 +72,13 @@ type card struct {
 	stamp   string
 	movedAt time.Time // Uhr der Brücke; null: seit dem Start nicht bewegt
 	seenAt  time.Time
-	dirty   bool      // neu oder bewegt, seit der letzten Lesung nicht gelesen (das Budget reichte nicht)
-	readAt  time.Time // zuletzt ganz gelesen
-	last    string    // Prüfsumme der vorigen Lesung
-	waiting bool      // ein neuer Stand mit Treffern, noch nicht von Spiegel bestätigt
-	sent    string    // Prüfsumme des zuletzt bestätigten Stands
+	dirty   bool // neu oder bewegt, seit der letzten Lesung nicht gelesen (das Budget reichte nicht)
+	// beim Start vor dem Startfenster, aber nach dem Wasserstand in Spiegel: einmal lesen, wenn niemand schießt
+	backfill bool
+	readAt   time.Time // zuletzt ganz gelesen
+	last     string    // Prüfsumme der vorigen Lesung
+	waiting  bool      // ein neuer Stand mit Treffern, noch nicht von Spiegel bestätigt
+	sent     string    // Prüfsumme des zuletzt bestätigten Stands
 	// dessen Prüfsumme ohne Lebenszeichen und wann er bestätigt wurde (Drossel des Lebenszeichens)
 	sentContent string
 	sentAt      time.Time
@@ -111,6 +113,18 @@ type Watcher struct {
 	cards   map[int32]*card
 	started bool
 	lastSeq int64
+	// Nachholen beim Start ab hier (Lebenszeichen als Text), aus dem Wasserstand in Spiegel; leer: nur das Startfenster
+	catchUpFrom string
+	// in der letzten Runde bewegte sich etwas oder war aktiv: das Nachholen wartet und hält den Takt nicht hoch
+	live bool
+}
+
+// SetCatchUpFrom legt vor der ersten Runde fest, ab welchem Lebenszeichen nachgeholt wird (SF-55): was davor im
+// Startfenster fehlt, liest die Brücke einmal, sobald niemand schießt. Nach der ersten Runde ohne Wirkung.
+func (w *Watcher) SetCatchUpFrom(stamp string) {
+	if !w.started {
+		w.catchUpFrom = stamp
+	}
 }
 
 // New legt eine Erkennung an; `now` ist die Uhr der Brücke (nil: die Systemuhr).
@@ -151,6 +165,15 @@ func (w *Watcher) startFrom(lifesigns []Lifesign, sourceNow *string) string {
 }
 
 // dirty: Die Scheibe ist neu oder ihr Lebenszeichen hat sich bewegt, seit sie zuletzt gelesen wurde.
+// backfill: beim Start eine Scheibe vor dem Startfenster, aber nach dem Wasserstand in Spiegel (Nachholen, SF-55).
+func (w *Watcher) backfill(l Lifesign, from string) bool {
+	if w.started {
+		c := w.cards[l.ID]
+		return c != nil && c.backfill
+	}
+	return w.catchUpFrom != "" && l.Stamp >= w.catchUpFrom && l.Stamp < from
+}
+
 func (w *Watcher) dirty(l Lifesign, from string) bool {
 	c, known := w.cards[l.ID]
 	switch {
@@ -164,8 +187,9 @@ func (w *Watcher) dirty(l Lifesign, from string) bool {
 }
 
 // plan wählt die Scheiben einer Runde, ohne den Speicher zu ändern; erst eine gelungene Runde übernimmt ihn. Reihenfolge:
-// was auf Bestätigung wartet, dann was sich bewegt hat (die jüngsten zuerst, SF-52), dann die aktiven, die am längsten
-// nicht gelesen wurden. So verhungert keine Scheibe am Budget.
+// was auf Bestätigung wartet, dann was sich bewegt hat (die jüngsten zuerst), dann die aktiven, die am längsten nicht
+// gelesen wurden. So verhungert keine Scheibe am Budget. Nachzuholende kommen nur, wenn sonst nichts zu lesen ist:
+// ältere Scheiben nur, wenn gerade niemand schießt (SF-52).
 func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32 {
 	type pick struct {
 		id     int32
@@ -174,16 +198,23 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 		readAt time.Time
 	}
 	var picks []pick
+	// bewegt sich etwas oder ist eine Scheibe aktiv (auch eine, die gerade auf Bestätigung wartet), bleibt das Nachholen
+	// liegen
+	live := false
 	for _, l := range lifesigns {
 		c := w.cards[l.ID]
+		active := c != nil && !c.movedAt.IsZero() && now.Sub(c.movedAt) < w.cfg.ActiveFor
+		live = live || active || w.dirty(l, from)
 		p := pick{id: l.ID, stamp: l.Stamp, rank: -1}
 		switch {
 		case c != nil && c.waiting:
 			p.rank = 0
 		case w.dirty(l, from):
 			p.rank = 1
-		case c != nil && !c.movedAt.IsZero() && now.Sub(c.movedAt) < w.cfg.ActiveFor:
+		case active:
 			p.rank, p.readAt = 2, c.readAt
+		case w.backfill(l, from):
+			p.rank = 3
 		}
 		if p.rank >= 0 {
 			picks = append(picks, p)
@@ -199,6 +230,16 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 		}
 		return a.stamp > b.stamp
 	})
+	w.live = live
+	if live {
+		kept := picks[:0]
+		for _, p := range picks {
+			if p.rank != 3 {
+				kept = append(kept, p)
+			}
+		}
+		picks = kept
+	}
 	if len(picks) > w.cfg.MaxCards {
 		picks = picks[:w.cfg.MaxCards]
 	}
@@ -227,7 +268,7 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 
 	result := Result{Read: len(round.Cards), Cards: len(round.Lifesigns), SourceNow: round.SourceNow}
 	for _, l := range round.Lifesigns {
-		dirty := w.dirty(l, from)
+		dirty, backfill := w.dirty(l, from), w.backfill(l, from)
 		c, known := w.cards[l.ID]
 		if !known {
 			c = &card{}
@@ -238,11 +279,12 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			c.movedAt = now
 		}
 		c.stamp, c.dirty, c.seenAt = l.Stamp, dirty, now
+		c.backfill = backfill && !dirty
 	}
 	w.started = true
 	for _, id := range chosen {
 		if c := w.cards[id]; c != nil {
-			c.dirty, c.readAt = false, now
+			c.dirty, c.backfill, c.readAt = false, false, now
 		}
 	}
 
@@ -321,7 +363,7 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		}
 		// nur, was in dieser Runde in der Ablage stand: Eine gelöschte Scheibe, die noch wartete, hielte die Brücke sonst
 		// einen Tag lang im Sekundentakt
-		if c.seenAt.Equal(now) && (c.waiting || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute)) {
+		if c.seenAt.Equal(now) && (c.waiting || (c.backfill && !w.live) || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute)) {
 			result.Busy = true
 		}
 	}
