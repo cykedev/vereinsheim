@@ -1,5 +1,6 @@
 "use client"
 
+import { cn } from "@vereinsheim/lib/utils"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { RoundToggle } from "@vereinsheim/ui/design2/round-toggle"
 
@@ -18,7 +19,7 @@ export interface ScoringToggleProps {
 }
 
 /**
- * Wertung als Bruch im weichen Kreis (Plan `plans/2026-10-13-spiegel-symbole.md`): ¹⁄₁ ganze Ringe, ¹⁄₁₀ Zehntel; ein
+ * Wertung im weichen Kreis (Plan `plans/2026-10-13-spiegel-symbole.md`): 1 ganze Ringe, ⅒ Zehntel; ein
  * Tippen stellt auf die andere. Ob die gezeigte die amtliche ist, sagen Name und Tooltip (kein Punkt: er erklärte sich
  * nicht, User, 13. Oktober 2026).
  */
@@ -39,12 +40,16 @@ export function ScoringToggle({
       data-scoring={scoring}
       className={className}
     >
+      {/* Zehntel als Bruch der Schrift (Geist `frac`): die tiefgestellten Zeichen ₀–₉ fehlen in den geladenen Teilen
+          von Geist; ganze Ringe als 1 (User, 13. Oktober 2026) */}
       <span
         aria-hidden="true"
-        className="text-sm leading-none font-semibold tracking-[-0.04em] whitespace-nowrap text-foreground-2"
+        className={cn(
+          "text-base leading-none font-semibold text-foreground-2",
+          scoring === "decimal" && "diagonal-fractions"
+        )}
       >
-        <sup className="align-[4px] text-xs">1</sup>⁄
-        <sub className="align-[-2px] text-xs">{scoring === "rings" ? "1" : "10"}</sub>
+        {scoring === "rings" ? "1" : "1/10"}
       </span>
     </RoundToggle>
   )

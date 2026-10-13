@@ -21,7 +21,7 @@ export function KindMark({ kind }: { kind: CardKind }) {
       {kind !== "training" && (
         <span aria-hidden="true" title={KIND_TEXT[kind]}>
           {kind === "competition" ? (
-            <Trophy className="inline size-4 align-[-3px] text-warning" />
+            <Trophy className="inline size-4 align-[-3px] text-gold" />
           ) : (
             "Probe"
           )}

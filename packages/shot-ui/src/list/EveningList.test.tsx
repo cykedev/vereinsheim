@@ -241,7 +241,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
 describe("KindMark: der Pokal gold und gut zu sehen (Plan `plans/2026-10-13-spiegel-symbole.md`)", () => {
   it("Wettkampf als goldener Pokal in 16 px, Training ohne Zeichen", () => {
     const competition = renderToStaticMarkup(h(KindMark, { kind: "competition" }))
-    expect(competition).toMatch(/lucide-trophy[^"]*\bsize-4\b[^"]*\btext-warning\b/)
+    expect(competition).toMatch(/lucide-trophy[^"]*\bsize-4\b[^"]*\btext-gold\b/)
     expect(renderToStaticMarkup(h(KindMark, { kind: "training" }))).not.toContain("<svg")
   })
 })

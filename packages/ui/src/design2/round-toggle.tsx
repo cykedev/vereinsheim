@@ -43,7 +43,7 @@ export function RoundToggle({
       className={cn(
         "relative inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-ring [&_svg]:size-[17px] [&_svg]:shrink-0",
         tone === "gold"
-          ? "bg-warning-wash text-warning"
+          ? "bg-warning-wash text-gold"
           : "bg-surface-2 text-muted-foreground hover:bg-accent-wash hover:text-foreground-2",
         className
       )}

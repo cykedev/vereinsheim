@@ -11,15 +11,16 @@ describe("ScoringToggle: der Bruch im weichen Kreis", () => {
       createElement(ScoringToggle, { scoring: "decimal", onChange: () => {}, ...props })
     )
 
-  it("Zehntel als ¹⁄₁₀, ganze Ringe als ¹⁄₁; Name mit Zustand und Wirkung", () => {
+  it("Zehntel als Bruch der Schrift (1/10 mit diagonal-fractions), ganze Ringe als 1; Name mit Zustand und Wirkung", () => {
     const decimal = html()
-    expect(decimal).toMatch(/<sup[^>]*>1<\/sup>⁄<sub[^>]*>10<\/sub>/)
+    expect(decimal).toMatch(/<span[^>]*class="[^"]*\bdiagonal-fractions\b[^"]*"[^>]*>1\/10<\/span>/)
+    expect(decimal).not.toMatch(/<su[pb]/)
     expect(decimal).toContain('aria-label="Wertung: Zehntel, auf ganze Ringe umstellen"')
     expect(decimal).toContain('title="Zehntel"')
     expect(decimal).toContain('data-scoring="decimal"')
     expect(decimal).toContain("data-scoring-toggle")
     const rings = html({ scoring: "rings" })
-    expect(rings).toMatch(/<sup[^>]*>1<\/sup>⁄<sub[^>]*>1<\/sub>/)
+    expect(rings).toMatch(/<span[^>]*aria-hidden="true"[^>]*>1<\/span>/)
     expect(rings).toContain('aria-label="Wertung: ganze Ringe, auf Zehntel umstellen"')
   })
 
@@ -51,7 +52,7 @@ describe("KindToggle: der Pokal im weichen Kreis", () => {
     expect(training).toContain("lucide-trophy")
     const competition = html("competition")
     expect(competition).toContain('aria-label="Art: Wettkampf, auf Training umstellen"')
-    expect(competition).toMatch(/class="[^"]*\bbg-warning-wash\b[^"]*\btext-warning\b/)
+    expect(competition).toMatch(/class="[^"]*\bbg-warning-wash\b[^"]*\btext-gold\b/)
     expect(competition).toContain("data-kind-toggle")
   })
 })

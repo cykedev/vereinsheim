@@ -47,6 +47,7 @@ const THEMED = [
   "destructive-wash",
   "warning",
   "warning-wash",
+  "gold",
   "info",
 ]
 

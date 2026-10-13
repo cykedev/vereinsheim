@@ -29,9 +29,9 @@ describe("RoundToggle: weicher Kreis (Design 2)", () => {
     expect(html).toContain(">P</button>")
   })
 
-  it("Gold: goldene Tönung und Schrift aus den Tokens", () => {
+  it("Gold: goldene Tönung und das Gold-Token (goldener als das Text-Token `warning`)", () => {
     const html = render("gold")
-    expect(html).toMatch(/class="[^"]*\bbg-warning-wash\b[^"]*\btext-warning\b/)
+    expect(html).toMatch(/class="[^"]*\bbg-warning-wash\b[^"]*\btext-gold\b/)
     expect(html).not.toContain("bg-surface-2")
   })
 })
