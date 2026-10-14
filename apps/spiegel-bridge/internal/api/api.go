@@ -66,6 +66,14 @@ type State struct {
 	} `json:"sportpass"`
 	Blocked   []Blocked  `json:"blocked"`
 	Watermark *time.Time `json:"watermark"`
+	// offene Aufträge, ältere Scheiben einer Zustimmung nachzuladen (P2d, additiv); fehlt bei einem älteren Spiegel
+	History []HistoryRequest `json:"history"`
+}
+
+// HistoryRequest ist ein Auftrag zum Nachladen: die Id meldet die Brücke zurück, der Hash wie `Sportpass.Hashes`.
+type HistoryRequest struct {
+	ID            int    `json:"id"`
+	SportpassHash string `json:"sportpassHash"`
 }
 
 // Held zählt zurückgehaltene Scheiben einer Anzeigeart.
@@ -95,6 +103,8 @@ type Heartbeat struct {
 	SourceClockOffsetMs *int64             `json:"sourceClockOffsetMs"`
 	HeldBack            []Held             `json:"heldBack"`
 	SourceFingerprint   *SourceFingerprint `json:"sourceFingerprint"`
+	// erledigte Aufträge zum Nachladen (P2d, additiv): nur Ids, nie Nummern (SF-59)
+	HistoryDone []int `json:"historyDone,omitempty"`
 }
 
 // Result ist das Ergebnis eines Snapshots im Stapel.

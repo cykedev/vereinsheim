@@ -106,7 +106,16 @@ type Runner struct {
 	stateRetryAt  time.Time
 	stateFailures int
 	staleLogged   bool
+
+	// offene Aufträge zum Nachladen aus dem Zustand (P2d), die davon erledigten (Heartbeat) und die Hashes der
+	// SportpassIDs, einmal gerechnet je Zustand
+	history     []api.HistoryRequest
+	historyDone []int
+	hashOf      map[string]string
 }
+
+// MaxHistoryDone: so viele erledigte Aufträge nimmt der Heartbeat
+const MaxHistoryDone = 100
 
 // catchUpFrom rechnet den Wasserstand in Spiegel (Beobachtung, UTC) in ein Lebenszeichen der Anlage um: Meyton schreibt
 // Ortszeit. Ohne Wasserstand (die erste Brücke einer Anlage) wird nichts nachgeholt; die Historie ist SP-2.5.
@@ -192,6 +201,7 @@ func (r *Runner) refreshState(ctx context.Context, now time.Time) error {
 	r.stateFailures, r.stateRetryAt, r.staleLogged = 0, time.Time{}, false
 	previous := r.state
 	r.state, r.stateAt, r.rules = &state, now, filter.NewRules(state)
+	r.setHistory(state)
 	epoch := 1
 	if state.Epoch != nil {
 		epoch = *state.Epoch
@@ -209,6 +219,56 @@ func (r *Runner) refreshState(ctx context.Context, now time.Time) error {
 		r.noConsent = map[int32]bool{}
 	}
 	return nil
+}
+
+// setHistory übernimmt die offenen Aufträge zum Nachladen (P2d): Die Erkennung liest ihre Scheiben, wenn niemand schießt.
+func (r *Runner) setHistory(state api.State) {
+	if len(state.History) != len(r.history) {
+		r.log("history-requests", "open", len(state.History))
+	}
+	r.history, r.hashOf = state.History, map[string]string{}
+	if len(state.History) == 0 {
+		r.watcher.SetHistory(nil)
+		r.historyDone = nil
+		return
+	}
+	wanted := map[string]bool{}
+	for _, h := range state.History {
+		wanted[h.SportpassHash] = true
+	}
+	salt := state.Sportpass.Salt
+	r.watcher.SetHistory(func(sportpass string) bool { return wanted[r.hash(salt, sportpass)] })
+}
+
+func (r *Runner) hash(salt, sportpass string) string {
+	h, ok := r.hashOf[sportpass]
+	if !ok {
+		h = filter.SportpassHash(salt, sportpass)
+		r.hashOf[sportpass] = h
+	}
+	return h
+}
+
+// updateHistoryDone: Ein Auftrag ist erledigt, wenn keine seiner Scheiben in der Ablage mehr ungelesen ist oder auf
+// Spiegel wartet. Gemeldet wird er in jedem Heartbeat, bis Spiegel ihn nicht mehr nennt.
+func (r *Runner) updateHistoryDone() {
+	if len(r.history) == 0 || r.state == nil {
+		return
+	}
+	open := map[string]bool{}
+	for _, sportpass := range r.watcher.HistoryOpen() {
+		open[r.hash(r.state.Sportpass.Salt, sportpass)] = true
+	}
+	var done []int
+	for _, h := range r.history {
+		if !open[h.SportpassHash] && len(done) < MaxHistoryDone {
+			done = append(done, h.ID)
+		}
+	}
+	if len(done) != len(r.historyDone) {
+		r.log("history-done", "done", len(done), "open", len(r.history)-len(done))
+	}
+	r.historyDone = done
 }
 
 func keys(m map[int32]bool) []int32 {
@@ -313,6 +373,7 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 		}
 	}
 	r.backlog = result.Backlog
+	r.updateHistoryDone()
 
 	if err := r.heartbeat(ctx, now, true); err != nil {
 		return 0, err
@@ -534,6 +595,7 @@ func (r *Runner) heartbeat(ctx context.Context, now time.Time, dbReachable bool)
 		SourceClockOffsetMs: r.clockOffset,
 		HeldBack:            heldBack,
 		SourceFingerprint:   fingerprint,
+		HistoryDone:         r.historyDone,
 	}
 	if r.lastDB != nil {
 		at := iso(*r.lastDB)

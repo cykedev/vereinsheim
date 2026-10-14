@@ -36,7 +36,12 @@ func (a *ablage) Round(_ context.Context, choose func([]watch.Lifesign, *string)
 	}
 	var lifesigns []watch.Lifesign
 	for id, stamp := range a.stamps {
-		lifesigns = append(lifesigns, watch.Lifesign{ID: id, Stamp: stamp})
+		l := watch.Lifesign{ID: id, Stamp: stamp}
+		// die SportpassID der Zeile wie `readLifesigns` (P2d)
+		if rows := a.data[id].Scheiben.Rows; len(rows) == 1 {
+			l.Sportpass = rows[0]["SportpassID"]
+		}
+		lifesigns = append(lifesigns, l)
 	}
 	cards := map[int32]contract.Data{}
 	for _, id := range choose(lifesigns, nil) {
@@ -584,5 +589,121 @@ func TestHeartbeatMatchesTheSchema(t *testing.T) {
 	}
 	if fmt.Sprint(hb.HeldBack) != "[{5 1}]" || hb.SourceFingerprint == nil || *hb.SourceFingerprint.Version != "9" {
 		t.Fatalf("%+v", hb)
+	}
+}
+
+// old legt eine Scheibe von einem früheren Abend an (vor dem Startfenster, ohne Wasserstand also nie nachgeholt).
+func (a *ablage) old(id int32, sportpass, mode, stamp string) {
+	a.put(id, sportpass, mode, 3)
+	a.stamps[id] = stamp
+}
+
+// lastDone: die erledigten Aufträge im jüngsten Heartbeat
+func (f *fixture) lastDone() string {
+	if len(f.sp.heartbeats) == 0 {
+		return "keiner"
+	}
+	return fmt.Sprint(f.sp.heartbeats[len(f.sp.heartbeats)-1].HistoryDone)
+}
+
+// runFor macht Runden, bis die Uhr so weit ist; der Heartbeat jede Minute
+func (f *fixture) runFor(d time.Duration) {
+	end := f.clock.Add(d)
+	for f.clock.Before(end) {
+		f.step()
+	}
+}
+
+func TestHistoryLoadsOlderCardsOnlyWhenIdle(t *testing.T) {
+	f := setup(t, "12345678")
+	f.sp.state.History = []api.HistoryRequest{{ID: 7, SportpassHash: filter.SportpassHash(salt, "12345678")}}
+	f.ablage.put(1, "12345678", "1", 3)                     // der laufende Abend
+	f.ablage.old(2, "12345678", "1", "2025-05-01 19:00:00") // älter, angefordert
+	f.ablage.old(3, "12345678", "1", "2024-11-20 18:30:00") // älter, angefordert
+	f.ablage.old(4, "87654321", "1", "2025-05-02 19:00:00") // älter, ohne Auftrag und ohne Zustimmung
+	f.runFor(19 * time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
+		t.Fatalf("während der Stand aktiv ist: %s", got)
+	}
+	if f.lastDone() != "[]" {
+		t.Fatalf("schon erledigt: %s", f.lastDone())
+	}
+	f.runFor(4 * time.Minute)
+	sent := fmt.Sprint(f.sp.sent())
+	if !strings.Contains(sent, "2") || !strings.Contains(sent, "3") || strings.Contains(sent, "4") {
+		t.Fatalf("gesendet %s", sent)
+	}
+	f.runFor(2 * HeartbeatEvery)
+	if f.lastDone() != "[7]" {
+		t.Fatalf("erledigt %s", f.lastDone())
+	}
+}
+
+func TestHistoryHeldBackCardsCountAsDone(t *testing.T) {
+	f := setup(t, "12345678")
+	f.sp.state.History = []api.HistoryRequest{
+		{ID: 7, SportpassHash: filter.SportpassHash(salt, "12345678")},
+		// ein Auftrag ohne Scheiben in der Ablage ist gleich nach der ersten Runde erledigt
+		{ID: 8, SportpassHash: filter.SportpassHash(salt, "555")},
+	}
+	f.ablage.put(1, "87654321", "1", 3)                     // der laufende Abend, ohne Zustimmung
+	f.ablage.old(5, "12345678", "5", "2025-05-01 19:00:00") // verdeckt (SF-19)
+	f.ablage.old(6, "12345678", "1", "2025-05-03 19:00:00") // gesperrt
+	// die Sperre gilt um den Beginn aus den Schusszeiten (`put` schreibt sie auf den 13. Oktober)
+	f.sp.state.Blocked = []api.Blocked{{ScheibenID: 6, StartedAt: time.Date(2026, 10, 13, 20, 0, 0, 0, time.UTC)}}
+	f.step()
+	if f.lastDone() != "[8]" {
+		t.Fatalf("nach der ersten Runde %s", f.lastDone())
+	}
+	// erst wenn der laufende Abend 20 Minuten ruht
+	f.runFor(23 * time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[]" {
+		t.Fatalf("gesendet %s", got)
+	}
+	if f.lastDone() != "[7 8]" {
+		t.Fatalf("erledigt %s", f.lastDone())
+	}
+}
+
+func TestHistoryDoneOnlyAfterSpiegelAnswered(t *testing.T) {
+	f := setup(t, "12345678")
+	f.sp.state.History = []api.HistoryRequest{{ID: 7, SportpassHash: filter.SportpassHash(salt, "12345678")}}
+	f.ablage.put(1, "87654321", "1", 3) // der laufende Abend, ohne Zustimmung
+	f.ablage.old(2, "12345678", "1", "2025-05-01 19:00:00")
+	// Spiegel antwortet erst nicht (Netz), dann schon
+	for range 10 {
+		f.sp.errs = append(f.sp.errs, errors.New("netz"))
+	}
+	f.runFor(23 * time.Minute)
+	if f.lastDone() != "[]" || len(f.sp.errs) == 10 {
+		t.Fatalf("ohne Antwort erledigt: %s (%d Fehler übrig)", f.lastDone(), len(f.sp.errs))
+	}
+	f.sp.errs = nil
+	f.runFor(3 * time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[2]" {
+		t.Fatalf("gesendet %s", got)
+	}
+	f.runFor(2 * HeartbeatEvery)
+	if f.lastDone() != "[7]" {
+		t.Fatalf("erledigt %s", f.lastDone())
+	}
+}
+
+func TestHistoryRequestMidRunTakesEffect(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "87654321", "1", 3) // der laufende Abend, ohne Zustimmung: verankert das Startfenster
+	f.ablage.old(2, "12345678", "1", "2025-05-01 19:00:00")
+	f.runFor(3 * time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[]" {
+		t.Fatalf("ohne Auftrag %s", got)
+	}
+	f.sp.state.History = []api.HistoryRequest{{ID: 9, SportpassHash: filter.SportpassHash(salt, "12345678")}}
+	f.runFor(StateEvery + 20*time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[2]" {
+		t.Fatalf("nach dem neuen Auftrag %s", got)
+	}
+	f.runFor(2 * HeartbeatEvery)
+	if f.lastDone() != "[9]" {
+		t.Fatalf("erledigt %s", f.lastDone())
 	}
 }

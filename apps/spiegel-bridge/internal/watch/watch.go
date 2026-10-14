@@ -86,7 +86,12 @@ type card struct {
 	sentContent string
 	sentAt      time.Time
 	skipped     string // Code, mit dem die letzte Lesung übersprungen wurde (einmal melden)
+	// `Scheiben.SportpassID` aus dem Lebenszeichen; ein offener Auftrag zum Nachladen will sie (P2d)
+	sportpass *string
 }
+
+// handled: in diesem Lauf gelesen, kein Stand wartet auf Spiegel, und seither ist nichts neu zu lesen (P2d)
+func handled(c *card) bool { return !c.readAt.IsZero() && !c.waiting && !c.dirty }
 
 // Skip ist eine Scheibe, die die Runde nicht melden kann, mit festem Code ohne Inhalt (SF-59).
 type Skip struct {
@@ -120,6 +125,31 @@ type Watcher struct {
 	catchUpFrom string
 	// in der letzten Runde bewegte sich etwas oder war aktiv: das Nachholen wartet und hält den Takt nicht hoch
 	live bool
+	// offene Aufträge zum Nachladen (P2d): will ein Auftrag die Scheibe mit dieser SportpassID? nil: keiner
+	history func(sportpass string) bool
+	// Uhr der letzten gelungenen Runde: welche Scheiben in ihr in der Ablage standen
+	roundAt time.Time
+}
+
+// SetHistory legt fest, welche Scheiben offene Aufträge zum Nachladen wollen (P2d), nach ihrer SportpassID als Text;
+// nil heißt keiner. Gelesen werden sie wie das Nachholen: nur, wenn niemand schießt (SF-52), mit dem Budget je Runde.
+func (w *Watcher) SetHistory(wanted func(sportpass string) bool) { w.history = wanted }
+
+func (w *Watcher) wantsHistory(sportpass *string) bool {
+	return w.history != nil && sportpass != nil && w.history(*sportpass)
+}
+
+// HistoryOpen nennt die SportpassIDs (als Text) der Scheiben aus der letzten Runde, die ein Auftrag noch will: nicht
+// gelesen, oder ihr Stand wartet noch auf Spiegel. Kommt eine SportpassID nicht vor, ist ihr Auftrag erledigt, soweit
+// die Ablage reicht.
+func (w *Watcher) HistoryOpen() []string {
+	var out []string
+	for _, c := range w.cards {
+		if c.seenAt.Equal(w.roundAt) && w.wantsHistory(c.sportpass) && !handled(c) {
+			out = append(out, *c.sportpass)
+		}
+	}
+	return out
 }
 
 // SetCatchUpFrom legt vor der ersten Runde fest, ab welchem Lebenszeichen nachgeholt wird (SF-55): was davor im
@@ -218,6 +248,9 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 			p.rank, p.readAt = 2, c.readAt
 		case w.backfill(l, from):
 			p.rank = 3
+		// ein Auftrag zum Nachladen will sie (P2d): wie das Nachholen, nur im Leerlauf
+		case w.wantsHistory(l.Sportpass) && (c == nil || !handled(c)):
+			p.rank = 3
 		}
 		if p.rank >= 0 {
 			picks = append(picks, p)
@@ -281,10 +314,10 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		if (known && c.stamp != l.Stamp) || (!known && dirty) {
 			c.movedAt = now
 		}
-		c.stamp, c.dirty, c.seenAt = l.Stamp, dirty, now
+		c.stamp, c.dirty, c.seenAt, c.sportpass = l.Stamp, dirty, now, l.Sportpass
 		c.backfill = backfill && !dirty
 	}
-	w.started = true
+	w.started, w.roundAt = true, now
 	for _, id := range chosen {
 		if c := w.cards[id]; c != nil {
 			c.dirty, c.backfill, c.readAt = false, false, now
@@ -364,9 +397,11 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		if c.waiting && c.seenAt.Equal(now) {
 			result.Backlog++
 		}
+		// ein offener Auftrag zum Nachladen hält den Takt hoch, solange niemand schießt (P2d)
+		history := w.wantsHistory(c.sportpass) && !handled(c)
 		// nur, was in dieser Runde in der Ablage stand: Eine gelöschte Scheibe, die noch wartete, hielte die Brücke sonst
 		// einen Tag lang im Sekundentakt
-		if c.seenAt.Equal(now) && (c.waiting || (c.backfill && !w.live) || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute)) {
+		if c.seenAt.Equal(now) && (c.waiting || ((c.backfill || history) && !w.live) || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute)) {
 			result.Busy = true
 		}
 	}
