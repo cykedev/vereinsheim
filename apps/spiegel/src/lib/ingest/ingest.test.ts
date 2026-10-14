@@ -119,6 +119,43 @@ describe("ingestBatch", () => {
     expect([...card!.flags].sort()).toEqual([...expected.flags].sort())
   })
 
+  it("eine abgelehnte Zustimmung zählt nicht, auch mit altem Bestätigt: nichts gespeichert (SP-1.7 a)", async () => {
+    const other = await db.user.create({
+      data: { email: `r-${site.siteId}@example.com`, passwordHash: "-" },
+    })
+    try {
+      await db.sportpassConsent.create({
+        data: {
+          userId: other.id,
+          siteId: site.siteId,
+          sportpassId: BigInt(87654322),
+          confirmedAt: new Date(),
+          rejectedAt: new Date(),
+        },
+      })
+      const own = sent("SF-03", frozenExpected("SF-03").cards[0].scheibenId)[0]
+      const scheibenId = own.scheibenId + 2
+      const data = {
+        ...own.data,
+        scheiben: {
+          ...own.data.scheiben,
+          rows: own.data.scheiben.rows.map((row) => ({
+            ...row,
+            SportpassID: "87654322",
+            ScheibenID: String(scheibenId),
+          })),
+        },
+      }
+      const rejected: SnapshotV1 = { ...own, scheibenId, data, checksum: computeChecksum(data) }
+      expect(await ingest([rejected])).toEqual([
+        { index: 0, scheibenId, outcome: "discarded", reason: "no-consent" },
+      ])
+      expect(await db.rawSnapshot.count({ where: { sourceId: site.sourceId, scheibenId } })).toBe(0)
+    } finally {
+      await db.user.delete({ where: { id: other.id } })
+    }
+  })
+
   it("ohne Zustimmung, verdeckt oder gesperrt: verworfen und nichts gespeichert", async () => {
     const qr = frozenExpected("SF-13").cards.find((c) => c.bridge === "nur-qr")!
     const noConsent = all("SF-13", qr.scheibenId)

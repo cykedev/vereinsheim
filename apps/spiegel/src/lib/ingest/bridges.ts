@@ -258,7 +258,7 @@ export async function bridgeState(
       select: { epoch: true },
     }),
     db.sportpassConsent.findMany({
-      where: { siteId, confirmedAt: { not: null }, user: { isActive: true } },
+      where: { siteId, confirmedAt: { not: null }, rejectedAt: null, user: { isActive: true } },
       select: { sportpassId: true },
     }),
     db.tombstone.findMany({

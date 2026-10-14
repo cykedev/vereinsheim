@@ -68,10 +68,10 @@ async function sourceOf(db: Db, siteId: number, epoch: number): Promise<SourceSt
   return { sourceId: created.id, confirmed: created.confirmedAt !== null }
 }
 
-/** bestätigte Zustimmungen der Anlage: SportpassID → Konto */
+/** aktive Zustimmungen der Anlage (bestätigt, nicht abgelehnt; `consentStatus`): SportpassID → Konto */
 async function consentsOf(db: Db, siteId: number): Promise<Map<string, string>> {
   const rows = await db.sportpassConsent.findMany({
-    where: { siteId, confirmedAt: { not: null }, user: { isActive: true } },
+    where: { siteId, confirmedAt: { not: null }, rejectedAt: null, user: { isActive: true } },
     select: { sportpassId: true, userId: true },
   })
   return new Map(rows.map((r) => [r.sportpassId.toString(), r.userId]))

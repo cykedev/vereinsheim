@@ -214,7 +214,7 @@ describe("Heartbeat", () => {
 })
 
 describe("Zustand der Brücke", () => {
-  it("Epoche, gehashte SportpassIDs bestätigter Zustimmungen, Sperren, Wasserstand; gültig nach dem Vertrag", async () => {
+  it("Epoche, gehashte SportpassIDs aktiver Zustimmungen, Sperren, Wasserstand; gültig nach dem Vertrag", async () => {
     await db.sportpassConsent.createMany({
       data: [
         {
@@ -223,7 +223,27 @@ describe("Zustand der Brücke", () => {
           sportpassId: BigInt(12345678),
           confirmedAt: new Date(NOW),
         },
+        // wartend, abgelehnt (auch mit altem Bestätigt), zurückgegeben: keine geht an die Brücke (SP-1.7 a)
         { userId: site.ownerId, siteId: site.siteId, sportpassId: BigInt(555), confirmedAt: null },
+        {
+          userId: site.ownerId,
+          siteId: site.siteId,
+          sportpassId: BigInt(556),
+          rejectedAt: new Date(NOW),
+        },
+        {
+          userId: site.ownerId,
+          siteId: site.siteId,
+          sportpassId: BigInt(557),
+          confirmedAt: new Date(NOW),
+          rejectedAt: new Date(NOW),
+        },
+        {
+          userId: site.ownerId,
+          siteId: site.siteId,
+          sportpassId: BigInt(558),
+          returnedAt: new Date(NOW),
+        },
       ],
     })
     await db.tombstone.create({
