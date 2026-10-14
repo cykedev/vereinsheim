@@ -34,8 +34,8 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
   `spiegel`, Dienste `migrate-spiegel` (Netz `data`) und `app-spiegel` (Netze `web` und `data`), Images
   `<DOCKER_USER>/spiegel:<sha>` und `:latest`, `:<sha>-migrator` und `:latest-migrator`, Variablen mit `SPIEGEL_`,
   lokaler Port 3002 wie im Dev.
-- **D2 Speicher:** `app-spiegel` `mem_limit: 256m` (Ziel aus SP-1.9, gemessen 147 bis 152 MiB unter Last),
-  `migrate-spiegel` `256m` wie die anderen Migratoren. Gemessen wird im echten Image (T9).
+- **D2 Speicher:** `app-spiegel` `mem_limit: 256m` (Ziel aus SP-1.9, gemessen 147 bis 152 MiB unter Last) mit
+  Heap-Grenze, `migrate-spiegel` `192m` wie die anderen Migratoren (D8). Gemessen wird im echten Image (T9).
 - **D3 Caddy:** Block `{$SPIEGEL_HOST}` wie die anderen (`encode`, `import proxy_real_ip`), `request_body max_size 5MiB`.
   Das liegt knapp über der Grenze der App (4 MiB): Ein etwas zu großer Stapel bekommt die JSON-Antwort `too-large` der
   App, die die Brücke versteht. Alles darüber hält Caddy auf. Spiegel hat heute keinen Upload über Server Actions. Mit dem
@@ -65,6 +65,35 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
   `restore.sh`, `env-check`, `setup`, `status`, `rollback`, `local-*` kommen in P4. Bis P4 gemergt ist, wird nichts
   deployt.
 
+- **D8 Grenzen aller Dienste** (User, 14. Oktober 2026: „prüfe noch, ob die zugewiesenen ressourcen für die anderen
+  anwendungen so passen oder kleiner werden können“). Gemessen lokal mit den echten Images (Bericht T9):
+  - Ringwerk und Treffsicher brauchen nach dem Start rund 80 MiB, unter Last (Anmeldeseite) 100 bis 110 MiB. Die Spitze
+    von 155 bis 163 MiB fällt in den Start. Mit 192, 256 und 384 MB lief jede ohne Abbruch.
+  - Ein Migrator braucht beim Aufbau einer leeren Datenbank höchstens 130 MiB.
+  - Node 24 setzt den Heap bei 192, 256 und 384 MB Container-Grenze auf 259 MiB. Unter 384 MB räumt V8 also nicht
+    früher auf, der Kernel beendet die App zuerst. Deshalb kommt zur Grenze immer eine Heap-Grenze.
+  - Auf dem VPS (14. Oktober 2026, vom User gemessen; die Container laufen seit dem 5. Oktober, also neun Tage):
+
+    | Dienst | jetzt (Programm, Cache) | Spitze seit Start | Grenze |
+    | --- | ---: | ---: | ---: |
+    | Ringwerk | 155 MiB (146, 1) | 188 MiB | 384 MB |
+    | Treffsicher | 141 MiB (129, 4) | 163 MiB | 384 MB |
+    | Caddy (seit 14. Oktober) | 35 MiB (25, 9) | 44 MiB | 64 MB |
+    | Postgres | 54 MiB (4, 48) | 96 MiB | 384 MB |
+
+    RAM 1.870 MiB, belegt 890, verfügbar 980; die Container zusammen rund 385 MiB, für System und Docker also rund
+    500 MiB. Kein Swap, kein Container mit `OOMKilled`, keine Neustarts, keine OOM-Meldung im Kernel.
+
+  Neue Grenzen: `app-ringwerk`, `app-treffsicher`, `app-spiegel` je `mem_limit: 256m` mit `NODE_OPTIONS:
+  "--max-old-space-size=160"`; alle drei Migratoren `192m`; Caddy `64m` und Postgres `384m` bleiben (Postgres trägt
+  drei Datenbanken mit eigenen Verbindungen, fällt es aus, stehen alle Apps). Die Summe der Grenzen sinkt mit Spiegel
+  von 1.472 auf 1.216 MiB, beim Deploy mit einem Migrator von 1.728 auf 1.408 MiB. Neben System und Docker sind rund
+  1.370 MiB frei: Selbst wenn alle Dienste an ihre Grenze gingen, passt es außerhalb eines Deploys.
+
+  **Bedingung erfüllt:** Die Spitzen seit dem Start liegen bei Ringwerk (188 MiB) und Treffsicher (163 MiB) unter
+  200 MiB, gezählt samt Cache. Bis 256 MB bleiben 68 bzw. 93 MiB Luft. Eine Swap-Datei als Sicherheitsnetz kommt als
+  Empfehlung ins Runbook (P5, [[adr-026]] nennt sie als Option).
+
 ## Nicht in diesem Plan
 
 - PDF-Volume (kommt mit dem QR-Weg), Off-Site-Backup, Selbst-Hosting-Beispiel (SP-1.9 b).
@@ -86,7 +115,7 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
 | `apps/spiegel/public/.gitkeep`, `apps/spiegel/scripts/run-migrations-with-recovery.sh` | T1: neu (D4) |
 | `scripts/build-and-push.sh`, `scripts/vereinsheim` (`cmd_build`, `cmd_local_build`, Hilfe) | T2: drei Apps |
 | `db-init/01-users-and-dbs.sh` | T3: dritte Datenbank |
-| `compose.yml` | T4: `db`-Umgebung, `caddy`-Umgebung, `migrate-spiegel`, `app-spiegel` |
+| `compose.yml`, `vault/operations/vps-resource-sizing.md`, `vault/overview.md` | T4: `db`-Umgebung, `caddy`-Umgebung, `migrate-spiegel`, `app-spiegel`, Grenzen aller Dienste (D8) |
 | `Caddyfile` | T5: Block für Spiegel |
 | `.env.example`, `compose.local.yml` | T6 |
 | `scripts/db-ensure.sh` (neu), `scripts/vereinsheim` (`cmd_db_ensure`, Hilfe, Dispatch) | T7 |
@@ -128,7 +157,7 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
        DATABASE_URL: postgresql://spiegel:${SPIEGEL_DB_PASSWORD}@db:5432/spiegel
        PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS: "false"
      depends_on: { db: { condition: service_healthy } }
-     mem_limit: 256m
+     mem_limit: 192m
      logging: *default-logging
      networks: [data]
 
@@ -144,6 +173,7 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
        SEED_ADMIN_PASSWORD: ${SPIEGEL_SEED_ADMIN_PASSWORD}
        DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
        AUTH_TRUST_PROXY_HEADERS: "true"
+       NODE_OPTIONS: "--max-old-space-size=160"
      depends_on:
        db: { condition: service_healthy }
        migrate-spiegel: { condition: service_completed_successfully }
@@ -151,8 +181,11 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
      logging: *default-logging
      networks: [web, data]
    ```
-   (im Stil der Datei ausgeschrieben, nicht in Flow-Syntax). Prüfen: `docker compose --env-file .env.example config --quiet`
-   und dasselbe mit `-f compose.yml -f compose.local.yml`.
+   (im Stil der Datei ausgeschrieben, nicht in Flow-Syntax). Dazu die Grenzen aus D8: `app-ringwerk` und
+   `app-treffsicher` `mem_limit: 256m`, alle drei App-Dienste `NODE_OPTIONS: "--max-old-space-size=160"`, die drei
+   Migratoren `mem_limit: 192m`; `vault/operations/vps-resource-sizing.md` und die Tabelle in `vault/overview.md` mit
+   den neuen Grenzen und Messwerten. Prüfen: `docker compose --env-file .env.example config --quiet` und dasselbe mit
+   `-f compose.yml -f compose.local.yml`.
 5. **T5 Caddyfile:** Block `{$SPIEGEL_HOST}` mit `encode zstd gzip`, `request_body { max_size 5MiB }`,
    `reverse_proxy app-spiegel:3000 { import proxy_real_ip }`, ein Satz Kommentar zur Grenze (D3). Prüfen:
    `docker run --rm -e ACME_EMAIL=a@example.com -e RINGWERK_HOST=r.example.com -e TREFFSICHER_HOST=t.example.com
@@ -211,7 +244,8 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
      gestoppt) „angelegt“, danach `migrate-spiegel` und `app-spiegel` wieder grün;
    - Brücke: `BASE_URL=http://localhost:18082 DATABASE_URL=… pnpm --filter spiegel bridge-e2e` grün;
    - Speicher: `docker stats --no-stream` nach dem Start, dann `BASE_URL=… DATABASE_URL=… pnpm --filter spiegel
-     ingest-load --minutes 5 --docker vereinsheim-e2e-app-spiegel-1`; Spitze unter 256 MiB;
+     ingest-load --minutes 5 --docker vereinsheim-e2e-app-spiegel-1`; Spitze unter 256 MiB; danach für alle Dienste
+     `memory.peak` und `OOMKilled=false` (Grenzen aus D8), dazu die lokale Messung aus D8 und die Zahlen vom VPS;
    - Browser (Hintergrund-Tab): Anmeldung mit dem Seed-Admin der Wegwerf-`.env` über `http://localhost:18082`, Start lädt,
      keine Konsolenfehler.
    Danach `docker compose -p vereinsheim-e2e down -v` und die `vereinsheim-e2e/*`-Images löschen.
