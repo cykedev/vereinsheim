@@ -24,7 +24,7 @@ const row = (id: number, status: ConsentStatus, statusText: string): ConsentRow 
   consentVersion: "v1",
 })
 const render = (consents: ConsentRow[]) =>
-  renderToStaticMarkup(createElement(SportpassConsents, { consents, text: CONSENT_TEXTS.v1! }))
+  renderToStaticMarkup(createElement(SportpassConsents, { consents, version: "v1" }))
 
 describe("Sportpass im Profil", () => {
   it("je Zustimmung der Status in Worten und die passende Aktion", () => {
@@ -55,6 +55,8 @@ describe("Sportpass im Profil", () => {
     for (const paragraph of CONSENT_TEXTS.v1!.paragraphs)
       expect(html).toContain(paragraph.slice(0, 40))
     expect(html).toMatch(/<input type="checkbox"[^>]*name="agree"/)
+    // die Version des gezeigten Texts geht mit (Review)
+    expect(html).toMatch(/<input type="hidden" name="version" value="v1"/)
     const full = render([
       row(1, "active", "aktiv"),
       row(2, "requested", "w"),

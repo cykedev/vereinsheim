@@ -15,9 +15,10 @@ import type { ActionResult } from "@/lib/types"
 
 /**
  * Zustimmung für eine SportpassID (SP-1.7 a, D4): Nummer, der Hinweistext ganz zu lesen, ein Haken. Den Haken prüft
- * auch die Action; ohne ihn entsteht keine Zeile. Danach wartet die Zustimmung auf einen Admin.
+ * auch die Action; ohne ihn entsteht keine Zeile. Danach wartet die Zustimmung auf einen Admin. Die Version des gezeigten
+ * Texts geht mit; gilt inzwischen eine andere, legt die Action nichts an (Review).
  */
-export function ConsentForm({ text }: { text: ConsentText }) {
+export function ConsentForm({ version, text }: { version: string; text: ConsentText }) {
   const router = useRouter()
   const [sportpass, setSportpass] = useState("")
   const [agree, setAgree] = useState(false)
@@ -41,6 +42,7 @@ export function ConsentForm({ text }: { text: ConsentText }) {
 
   return (
     <form action={action} data-consent-form className="grid gap-3">
+      <input type="hidden" name="version" value={version} />
       <div className="grid gap-1.5">
         <Label htmlFor="consent-sportpass">SportpassID</Label>
         <Input

@@ -42,11 +42,17 @@ export function SportpassSection({ consents }: { consents: ConsentRow[] }) {
   )
 }
 
-type Pending = "reject" | "remove" | null
+type DialogKind = "reject" | "remove"
 
 function ConsentItem({ consent }: { consent: ConsentRow }) {
   const router = useRouter()
-  const [dialog, setDialog] = useState<Pending>(null)
+  // die Art bleibt beim Schließen stehen, damit der Dialog nicht beim Ausblenden den anderen Titel zeigt (Review)
+  const [dialog, setDialog] = useState<DialogKind>("remove")
+  const [open, setOpen] = useState(false)
+  const ask = (kind: DialogKind) => {
+    setDialog(kind)
+    setOpen(true)
+  }
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const run = (action: (id: number) => Promise<ActionResult>) =>
@@ -58,7 +64,7 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
         router.refresh()
       }
     })
-  const open = isOpenConsent(consent.status)
+  const undecided = isOpenConsent(consent.status)
 
   return (
     <li data-consent={consent.status} className="grid gap-2 px-3 py-2">
@@ -75,7 +81,7 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
         )}
       </span>
       <span className="flex flex-wrap gap-2">
-        {open && (
+        {undecided && (
           <>
             <Button
               type="button"
@@ -90,7 +96,7 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
               variant="ghost"
               className="h-10 text-destructive"
               disabled={pending}
-              onClick={() => setDialog("reject")}
+              onClick={() => ask("reject")}
             >
               Ablehnen
             </Button>
@@ -101,14 +107,14 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
           variant="ghost"
           className="h-10 text-destructive"
           disabled={pending}
-          onClick={() => setDialog("remove")}
+          onClick={() => ask("remove")}
         >
           Entfernen
         </Button>
       </span>
       <ConfirmDialog
-        open={dialog !== null}
-        onOpenChange={(next) => !next && setDialog(null)}
+        open={open}
+        onOpenChange={setOpen}
         title={
           dialog === "reject"
             ? `SportpassID ${consent.sportpassId} ablehnen?`

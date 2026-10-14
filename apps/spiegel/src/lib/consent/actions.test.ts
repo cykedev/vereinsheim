@@ -44,9 +44,11 @@ const asAdmin = () => {
 async function requested(userId = shooterId) {
   asShooter(userId)
   const id = sportpass()
-  expect(await requestSportpass(null, form({ sportpass: id, agree: "on" }))).toEqual({
-    success: true,
-  })
+  expect(await requestSportpass(null, form({ sportpass: id, agree: "on", version: "v1" }))).toEqual(
+    {
+      success: true,
+    }
+  )
   return db.sportpassConsent.findFirstOrThrow({
     where: { userId, sportpassId: BigInt(id) },
   })
@@ -86,7 +88,7 @@ describe("Zustimmung durch den Schützen", () => {
   it("ohne Haken keine Zeile, sondern ein Feldfehler", async () => {
     asShooter()
     const id = sportpass()
-    expect(await requestSportpass(null, form({ sportpass: id }))).toEqual({
+    expect(await requestSportpass(null, form({ sportpass: id, version: "v1" }))).toEqual({
       error: { agree: ["Bitte dem Hinweis zustimmen."] },
     })
     expect(await db.sportpassConsent.count({ where: { sportpassId: BigInt(id) } })).toBe(0)
@@ -94,11 +96,15 @@ describe("Zustimmung durch den Schützen", () => {
 
   it("nur Ziffern bis zwölf Stellen, ohne Anmeldung nichts", async () => {
     asShooter()
-    expect(await requestSportpass(null, form({ sportpass: "12a", agree: "on" }))).toEqual({
+    expect(
+      await requestSportpass(null, form({ sportpass: "12a", agree: "on", version: "v1" }))
+    ).toEqual({
       error: { sportpass: ["Eine SportpassID hat bis zu zwölf Ziffern."] },
     })
     mocks.session = null
-    expect(await requestSportpass(null, form({ sportpass: sportpass(), agree: "on" }))).toEqual({
+    expect(
+      await requestSportpass(null, form({ sportpass: sportpass(), agree: "on", version: "v1" }))
+    ).toEqual({
       error: "Nicht angemeldet",
     })
   })
@@ -109,7 +115,9 @@ describe("Zustimmung durch den Schützen", () => {
     await requested(userId)
     await requested(userId)
     asShooter(userId)
-    expect(await requestSportpass(null, form({ sportpass: sportpass(), agree: "on" }))).toEqual({
+    expect(
+      await requestSportpass(null, form({ sportpass: sportpass(), agree: "on", version: "v1" }))
+    ).toEqual({
       error: { sportpass: ["Höchstens drei SportpassIDs je Konto."] },
     })
     await db.sportpassConsent.deleteMany({ where: { userId } })
@@ -119,11 +127,73 @@ describe("Zustimmung durch den Schützen", () => {
     const taken = await requested(otherId)
     asShooter()
     expect(
-      await requestSportpass(null, form({ sportpass: taken.sportpassId.toString(), agree: "on" }))
+      await requestSportpass(
+        null,
+        form({ sportpass: taken.sportpassId.toString(), agree: "on", version: "v1" })
+      )
     ).toEqual({
       error: { sportpass: ["Diese SportpassID ist schon vergeben. Wende dich an einen Admin."] },
     })
     await db.sportpassConsent.delete({ where: { id: taken.id } })
+  })
+})
+
+describe("Grenzen der Zustimmung (Review)", () => {
+  it("die Version ist die des gezeigten Texts; ein veralteter Text legt nichts an", async () => {
+    asShooter()
+    const id = sportpass()
+    expect(
+      await requestSportpass(null, form({ sportpass: id, agree: "on", version: "v0" }))
+    ).toEqual({
+      error: "Der Hinweis hat sich geändert. Bitte die Seite neu laden und neu lesen.",
+    })
+    expect(await requestSportpass(null, form({ sportpass: id, agree: "on" }))).toEqual({
+      error: "Der Hinweis hat sich geändert. Bitte die Seite neu laden und neu lesen.",
+    })
+    expect(await db.sportpassConsent.count({ where: { sportpassId: BigInt(id) } })).toBe(0)
+  })
+
+  it("die eigene SportpassID noch einmal: ein eigener Hinweis", async () => {
+    const own = await requested()
+    asShooter()
+    expect(
+      await requestSportpass(
+        null,
+        form({ sportpass: own.sportpassId.toString(), agree: "on", version: "v1" })
+      )
+    ).toEqual({ error: { sportpass: ["Diese SportpassID steht schon in deinem Profil."] } })
+    await db.sportpassConsent.delete({ where: { id: own.id } })
+  })
+
+  it("höchstens drei, auch bei gleichzeitigem Absenden", async () => {
+    const userId = otherId
+    asShooter(userId)
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        requestSportpass(null, form({ sportpass: sportpass(), agree: "on", version: "v1" }))
+      )
+    )
+    expect(results.filter((r) => "success" in r)).toHaveLength(3)
+    expect(await db.sportpassConsent.count({ where: { userId } })).toBe(3)
+    await db.sportpassConsent.deleteMany({ where: { userId } })
+  })
+
+  it("mit einem Passwort vom Admin: weder zustimmen noch widerrufen noch entscheiden", async () => {
+    const consent = await requested()
+    const before = await db.sportpassConsent.count({ where: { userId: shooterId } })
+    mocks.session = { user: { id: shooterId, role: "USER", mustChangePassword: true } }
+    expect(
+      await requestSportpass(null, form({ sportpass: sportpass(), agree: "on", version: "v1" }))
+    ).toEqual({ error: "Nicht angemeldet" })
+    expect(await revokeSportpass(consent.id)).toEqual({ error: "Nicht angemeldet" })
+    mocks.session = { user: { id: adminId, role: "ADMIN", mustChangePassword: true } }
+    expect(await confirmConsent(consent.id)).toEqual({
+      error: "Bitte zuerst das eigene Passwort ändern.",
+    })
+    const unchanged = await db.sportpassConsent.findUniqueOrThrow({ where: { id: consent.id } })
+    expect(consentStatus(unchanged)).toBe("requested")
+    expect(await db.sportpassConsent.count({ where: { userId: shooterId } })).toBe(before)
+    await db.sportpassConsent.delete({ where: { id: consent.id } })
   })
 })
 

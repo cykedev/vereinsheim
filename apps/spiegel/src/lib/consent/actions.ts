@@ -37,13 +37,23 @@ function revalidateConsents(userId?: string) {
   if (userId) revalidatePath(`/admin/users/${userId}`)
 }
 
-/** der Schütze stimmt dem Hinweistext für eine SportpassID zu; danach wartet sie auf den Admin */
+/** gilt die Zustimmung einem anderen Text als dem, der jetzt gilt (neue Version zwischen Anzeige und Absenden) */
+const STALE_TEXT = "Der Hinweis hat sich geändert. Bitte die Seite neu laden und neu lesen."
+
+/** die Grenze je Konto hielt nicht: ein anderer Aufruf desselben Kontos war schneller (Sperre der Kontozeile) */
+class LimitReached extends Error {}
+
+/**
+ * Der Schütze stimmt dem Hinweistext für eine SportpassID zu; danach wartet sie auf den Admin. Das Formular schickt die
+ * Version des gezeigten Texts mit: So belegt die Zeile genau den gelesenen Wortlaut (Review).
+ */
 export async function requestSportpass(
   _previous: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
   const userId = await shooterId()
   if (!userId) return { error: "Nicht angemeldet" }
+  if (formData.get("version") !== CURRENT_CONSENT_VERSION) return { error: STALE_TEXT }
   const parsed = RequestSchema.safeParse({
     sportpass: formData.get("sportpass") ?? "",
     agree: formData.get("agree") ?? "",
@@ -51,26 +61,42 @@ export async function requestSportpass(
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
   const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true } })
   if (!site) return { error: "Spiegel ist noch nicht eingerichtet." }
-  if ((await db.sportpassConsent.count({ where: { userId } })) >= MAX_CONSENTS_PER_ACCOUNT)
-    return { error: { sportpass: ["Höchstens drei SportpassIDs je Konto."] } }
+  const sportpassId = BigInt(parsed.data.sportpass)
   try {
-    await db.sportpassConsent.create({
-      data: {
-        userId,
-        siteId: site.id,
-        sportpassId: BigInt(parsed.data.sportpass),
-        consentedAt: new Date(),
-        consentVersion: CURRENT_CONSENT_VERSION,
-      },
+    // Zählen und Anlegen in einer Transaktion unter der Sperre der Kontozeile: gleichzeitige Aufrufe desselben Kontos
+    // warten aufeinander, die Grenze hält ([[conventions]] §9, Review)
+    await db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`
+      if ((await tx.sportpassConsent.count({ where: { userId } })) >= MAX_CONSENTS_PER_ACCOUNT)
+        throw new LimitReached()
+      await tx.sportpassConsent.create({
+        data: {
+          userId,
+          siteId: site.id,
+          sportpassId,
+          consentedAt: new Date(),
+          consentVersion: CURRENT_CONSENT_VERSION,
+        },
+      })
     })
   } catch (error) {
-    // wem sie gehört, sagt die Meldung nicht
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")
+    if (error instanceof LimitReached)
+      return { error: { sportpass: ["Höchstens drei SportpassIDs je Konto."] } }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      // die eigene sagt das; wem eine fremde gehört, sagt die Meldung nicht
+      const own = await db.sportpassConsent.count({
+        where: { siteId: site.id, sportpassId, userId },
+      })
       return {
         error: {
-          sportpass: ["Diese SportpassID ist schon vergeben. Wende dich an einen Admin."],
+          sportpass: [
+            own
+              ? "Diese SportpassID steht schon in deinem Profil."
+              : "Diese SportpassID ist schon vergeben. Wende dich an einen Admin.",
+          ],
         },
       }
+    }
     throw error
   }
   revalidateConsents(userId)

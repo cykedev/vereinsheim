@@ -8,6 +8,7 @@ import type { DiscardReason, SnapshotOutcome } from "@vereinsheim/ingest-contrac
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
 import type { TargetId } from "@vereinsheim/shot-core/targets"
 
+import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
 import { CardIdentityConflictError, writeRevision } from "../db/cards"
 import { storeSnapshot, type PreviousLifesign } from "../db/raw"
@@ -71,7 +72,7 @@ async function sourceOf(db: Db, siteId: number, epoch: number): Promise<SourceSt
 /** aktive Zustimmungen der Anlage (bestätigt, nicht abgelehnt; `consentStatus`): SportpassID → Konto */
 async function consentsOf(db: Db, siteId: number): Promise<Map<string, string>> {
   const rows = await db.sportpassConsent.findMany({
-    where: { siteId, confirmedAt: { not: null }, rejectedAt: null, user: { isActive: true } },
+    where: { siteId, ...ACTIVE_CONSENT, user: { isActive: true } },
     select: { sportpassId: true, userId: true },
   })
   return new Map(rows.map((r) => [r.sportpassId.toString(), r.userId]))

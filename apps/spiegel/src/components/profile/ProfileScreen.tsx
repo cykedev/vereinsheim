@@ -11,7 +11,7 @@ import { Button } from "@vereinsheim/ui/button"
 import { Page } from "@/components/shell/Page"
 import { ThemeSwitch } from "@/components/theme/ThemeSwitch"
 import type { ConsentRow } from "@/lib/consent/queries"
-import { CONSENT_TEXTS, CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
+import { CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
 
 import { SportpassConsents } from "./SportpassConsents"
 
@@ -48,7 +48,7 @@ export function ProfileScreen({
           </p>
         </div>
 
-        <SportpassConsents consents={sportpass} text={CONSENT_TEXTS[CURRENT_CONSENT_VERSION]!} />
+        <SportpassConsents consents={sportpass} version={CURRENT_CONSENT_VERSION} />
 
         <div className="grid gap-4 rounded-2xl border border-border bg-card p-4">
           <h2 className="text-[15px] font-semibold">Dieses Gerät</h2>

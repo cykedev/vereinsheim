@@ -1,6 +1,6 @@
 // Zustände einer Zustimmung (SP-1.7 a, Plan `plans/2026-10-14-spiegel-optin.md`, D1): der Schütze stimmt zu, ein Admin
 // bestätigt oder lehnt ab, nach „Nicht meine“ bei der ersten Scheibe geht sie an ihn zurück. Nur `active` lädt die
-// Brücke hoch (`GET /state` und das Einlesen filtern auf `confirmedAt`). Reine Funktionen.
+// Brücke hoch (`GET /state` und das Einlesen filtern mit `ACTIVE_CONSENT`). Reine Funktionen.
 
 export type ConsentStatus = "requested" | "active" | "rejected" | "returned"
 
@@ -9,6 +9,12 @@ export interface ConsentDecisions {
   rejectedAt: Date | null
   returnedAt: Date | null
 }
+
+/**
+ * Der Filter für `active` in Abfragen, dieselbe Regel wie `consentStatus`: bestätigt und nicht abgelehnt. `GET /state` und
+ * das Einlesen nehmen ihn beide (Review: eine Stelle statt zwei Kopien).
+ */
+export const ACTIVE_CONSENT = { confirmedAt: { not: null }, rejectedAt: null } as const
 
 /** Vorrang: abgelehnt vor bestätigt vor zurückgegeben; ohne Entscheidung wartet sie */
 export function consentStatus(row: ConsentDecisions): ConsentStatus {

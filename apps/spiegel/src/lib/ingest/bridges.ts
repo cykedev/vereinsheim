@@ -16,6 +16,7 @@ import {
 } from "@vereinsheim/ingest-contract/api"
 import { sportpassHash } from "@vereinsheim/ingest-contract/sportpass"
 
+import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
 import { FINAL_AFTER_MS, INCOMPLETE_FLAGS, RESTING_AFTER_MS } from "./meyton-ssmdb2"
 
@@ -258,7 +259,7 @@ export async function bridgeState(
       select: { epoch: true },
     }),
     db.sportpassConsent.findMany({
-      where: { siteId, confirmedAt: { not: null }, rejectedAt: null, user: { isActive: true } },
+      where: { siteId, ...ACTIVE_CONSENT, user: { isActive: true } },
       select: { sportpassId: true },
     }),
     db.tombstone.findMany({

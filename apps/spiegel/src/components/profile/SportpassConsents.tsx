@@ -10,7 +10,7 @@ import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
 import { revokeSportpass } from "@/lib/consent/actions"
 import type { ConsentRow } from "@/lib/consent/queries"
 import { MAX_CONSENTS_PER_ACCOUNT, ownerActionOf } from "@/lib/consent/status"
-import type { ConsentText } from "@/lib/consent/texts"
+import { consentTextOf } from "@/lib/consent/texts"
 
 import { ConsentForm } from "./ConsentForm"
 
@@ -20,12 +20,13 @@ import { ConsentForm } from "./ConsentForm"
  */
 export function SportpassConsents({
   consents,
-  text,
+  version,
 }: {
   consents: ConsentRow[]
-  /** der Hinweistext der aktuellen Version */
-  text: ConsentText
+  /** die Version des Hinweistexts, der gezeigt und zugestimmt wird */
+  version: string
 }) {
+  const text = consentTextOf(version)
   return (
     <div data-sportpass className="grid gap-3 rounded-2xl border border-border bg-card p-4">
       <div className="grid gap-1">
@@ -42,7 +43,9 @@ export function SportpassConsents({
           ))}
         </ul>
       )}
-      {consents.length < MAX_CONSENTS_PER_ACCOUNT && <ConsentForm text={text} />}
+      {consents.length < MAX_CONSENTS_PER_ACCOUNT && text && (
+        <ConsentForm version={version} text={text} />
+      )}
     </div>
   )
 }
