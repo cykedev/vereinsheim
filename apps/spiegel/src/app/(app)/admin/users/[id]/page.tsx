@@ -5,7 +5,7 @@ import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 import { SportpassSection } from "@/components/admin/SportpassSection"
 import { UserForm } from "@/components/admin/UserForm"
-import { consentsOfUser } from "@/lib/admin/site"
+import { consentsOfUser } from "@/lib/consent/queries"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { updateUser } from "@/lib/users/actions"
 import { getUser } from "@/lib/users/queries"

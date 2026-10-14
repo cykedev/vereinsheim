@@ -4,8 +4,9 @@ import { formatDateTime } from "@vereinsheim/lib/format"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
 
-// Lesen für die Admin-Seite „Anlage“ (SP-1.6 b): Anlage, Epochen, Brücken mit ihrem letzten Heartbeat, Zustimmungen
-// eines Kontos. Jede Funktion prüft selbst (`requireAdmin`), das Layout allein schützt die Daten nicht.
+// Lesen für die Admin-Seite „Anlage“ (SP-1.6 b): Anlage, Epochen, Brücken mit ihrem letzten Heartbeat, Ranglisten
+// (Zustimmungen: `src/lib/consent/queries.ts`). Jede Funktion prüft selbst (`requireAdmin`), das Layout allein
+// schützt die Daten nicht.
 
 export interface BridgeRow {
   id: number
@@ -116,32 +117,4 @@ export function heldBackText(heldBack: HeartbeatV1["heldBack"]): string | null {
     unknown ? `${scheiben(unknown)} mit Anzeigeart 0 zurückgehalten` : "",
   ].filter(Boolean)
   return parts.length ? parts.join(" · ") : null
-}
-
-export interface ConsentRow {
-  id: number
-  sportpassId: string
-  siteName: string
-  confirmedAt: string | null
-}
-
-/** die SportpassIDs eines Kontos mit Zustimmung (Admin) */
-export async function consentsOfUser(userId: string, timeZone: string): Promise<ConsentRow[]> {
-  await requireAdmin()
-  return consentRows(userId, timeZone)
-}
-
-/** dieselben, für das eigene Profil: nur die des angemeldeten Kontos (der Aufrufer prüft die Sitzung) */
-export async function consentRows(userId: string, timeZone: string): Promise<ConsentRow[]> {
-  const rows = await db.sportpassConsent.findMany({
-    where: { userId },
-    orderBy: { createdAt: "asc" },
-    select: { id: true, sportpassId: true, confirmedAt: true, site: { select: { name: true } } },
-  })
-  return rows.map((r) => ({
-    id: r.id,
-    sportpassId: r.sportpassId.toString(),
-    siteName: r.site.name,
-    confirmedAt: when(r.confirmedAt, timeZone),
-  }))
 }

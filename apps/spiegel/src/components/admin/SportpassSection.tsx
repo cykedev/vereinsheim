@@ -9,7 +9,7 @@ import { FieldError } from "@vereinsheim/ui/field-error"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 
-import type { ConsentRow } from "@/lib/admin/site"
+import type { ConsentRow } from "@/lib/consent/queries"
 import { addSportpass, removeSportpass } from "@/lib/admin/site-actions"
 import type { ActionResult } from "@/lib/types"
 
@@ -52,7 +52,7 @@ export function SportpassSection({ userId, consents }: { userId: string; consent
                 <span className="font-mono tabular-nums">{consent.sportpassId}</span>
                 <span className="text-[13px] text-muted-foreground">
                   {consent.siteName}
-                  {consent.confirmedAt ? ` · seit ${consent.confirmedAt}` : " · nicht bestätigt"}
+                  {` · ${consent.statusText}`}
                 </span>
               </span>
               <Button

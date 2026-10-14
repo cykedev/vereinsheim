@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 import { ProfileScreen } from "@/components/profile/ProfileScreen"
-import { consentRows } from "@/lib/admin/site"
+import { consentRows } from "@/lib/consent/queries"
 import { isAdmin, requireSession } from "@/lib/auth-helpers"
 
 export const metadata: Metadata = { title: "Profil" }
@@ -16,7 +16,7 @@ export default async function ProfileRoute() {
       email={session.user.email ?? ""}
       isAdmin={isAdmin(session.user.role)}
       sportpass={(await consentRows(session.user.id, getDisplayTimeZone())).filter(
-        (entry) => entry.confirmedAt !== null
+        (entry) => entry.status === "active"
       )}
     />
   )
