@@ -83,7 +83,12 @@ CREATE TABLE "SportpassConsent" (
     "userId" TEXT NOT NULL,
     "siteId" INTEGER NOT NULL,
     "sportpassId" BIGINT NOT NULL,
+    "consentedAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "consentVersion" TEXT NOT NULL DEFAULT 'v1',
     "confirmedAt" TIMESTAMPTZ(3),
+    "rejectedAt" TIMESTAMPTZ(3),
+    "returnedAt" TIMESTAMPTZ(3),
+    "firstCardConfirmedAt" TIMESTAMPTZ(3),
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "SportpassConsent_pkey" PRIMARY KEY ("id")
@@ -255,6 +260,7 @@ CREATE TABLE "Card" (
     "cycle" INTEGER NOT NULL DEFAULT 0,
     "lastSequence" BIGINT,
     "ownerId" TEXT,
+    "ownerPending" BOOLEAN NOT NULL DEFAULT false,
     "sportpassId" BIGINT,
     "disciplineId" INTEGER NOT NULL,
     "familyId" INTEGER,

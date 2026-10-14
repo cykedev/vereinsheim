@@ -132,16 +132,28 @@ model ClockReading {
 }
 
 // Zustimmung eines Kontos für eine SportpassID an einer Anlage (Opt-in, ADR-028): nur bestätigte zählen. Eine SportpassID
-// gehört an einer Anlage höchstens einem Konto; mehrdeutige ordnet Spiegel nie automatisch zu ([[spiegel-assignment]])
+// gehört an einer Anlage höchstens einem Konto; mehrdeutige ordnet Spiegel nie automatisch zu ([[spiegel-assignment]]).
+// Der Schütze stimmt im Profil zu, ein Admin bestätigt oder lehnt ab (SP-1.7 a, Zustände in `src/lib/consent/status.ts`)
 model SportpassConsent {
-  id          Int       @id @default(autoincrement())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  siteId      Int
-  site        Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  sportpassId BigInt
-  confirmedAt DateTime? @db.Timestamptz(3)
-  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  id                   Int       @id @default(autoincrement())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  siteId               Int
+  site                 Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  sportpassId          BigInt
+  // wann der Schütze dem Hinweistext zugestimmt hat
+  consentedAt          DateTime  @default(now()) @db.Timestamptz(3)
+  // Version des Hinweistexts; der Wortlaut steht unveränderlich im Code (`CONSENT_TEXTS`)
+  consentVersion       String    @default("v1")
+  // vom Admin bestätigt: nur dann lädt die Brücke hoch
+  confirmedAt          DateTime? @db.Timestamptz(3)
+  // vom Admin abgelehnt; geht vor allem anderen
+  rejectedAt           DateTime? @db.Timestamptz(3)
+  // zurück beim Admin, weil die erste Scheibe „nicht meine“ war
+  returnedAt           DateTime? @db.Timestamptz(3)
+  // der Schütze hat die erste Scheibe als seine bestätigt; vorher wartet jede auf ihn (`Card.ownerPending`)
+  firstCardConfirmedAt DateTime? @db.Timestamptz(3)
+  createdAt            DateTime  @default(now()) @db.Timestamptz(3)
 
   @@unique([siteId, sportpassId])
   @@index([userId])
@@ -383,6 +395,8 @@ model Card {
   // null, solange niemand die Scheibe zugeordnet hat
   ownerId           String?
   owner             User?           @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  // der Besitz wartet auf die Bestätigung der ersten Scheibe; bis dahin zeigen die Übersichten sie nicht
+  ownerPending      Boolean         @default(false)
   // wie Meyton den Schützen kennt; für die Zuordnung über den Sportpass
   sportpassId       BigInt?
   disciplineId      Int
