@@ -181,7 +181,7 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
           {bridge.revoked && <span className="text-muted-foreground"> · getrennt</span>}
         </span>
         <span className="text-[13px] text-muted-foreground">
-          verbunden seit {bridge.createdAt}
+          verbunden am {bridge.createdAt}
           {facts.length ? ` · ${facts.join(" · ")}` : ""}
         </span>
         {error && (

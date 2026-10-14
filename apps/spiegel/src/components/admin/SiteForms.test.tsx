@@ -33,7 +33,7 @@ describe("Anlage und Brücke (Markup)", () => {
           id: 1,
           name: "Pi",
           version: "0.1.0",
-          createdAt: "13.10.2026, 18:00",
+          createdAt: "13.10.2026",
           lastSeenAt: null,
           lastHeartbeatAt: null,
           revoked: false,
@@ -45,6 +45,7 @@ describe("Anlage und Brücke (Markup)", () => {
       })
     )
     expect(bridge).toContain(">Trennen<")
+    expect(bridge).toContain("verbunden am 13.10.2026")
     const pair = renderToStaticMarkup(createElement(PairBridgeForm))
     expect(pair).toContain("Behandle ihn wie ein Passwort.")
     expect(pair).toContain("Brücke verbinden")

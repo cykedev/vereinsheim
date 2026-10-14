@@ -39,10 +39,13 @@ export function OpenScreen({
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
             Offen
           </h1>
-          <p className="text-foreground-2">
-            Spiegel hat Scheiben unter deiner Sportpassnummer geholt. Prüf die jüngste: Ist das
-            deine? Erst danach erscheinen deine Scheiben in Start, Scheiben und Fortschritt.
-          </p>
+          {/* ohne Wartendes kein „Spiegel hat Scheiben … geholt“ (Review P2f) */}
+          {items.length > 0 && (
+            <p className="text-foreground-2">
+              Spiegel hat Scheiben unter deiner Sportpassnummer geholt. Prüf die jüngste: Ist das
+              deine? Erst danach erscheinen deine Scheiben in Start, Scheiben und Fortschritt.
+            </p>
+          )}
         </div>
         {items.length ? (
           <ul className="grid gap-3">

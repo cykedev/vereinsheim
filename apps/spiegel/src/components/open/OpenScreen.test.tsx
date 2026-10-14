@@ -45,5 +45,8 @@ describe("Offen", () => {
     const html = render([])
     expect(html).toContain("Nichts zu prüfen.")
     expect(html).not.toContain("Ja, meine")
+    // die Einleitung nur, wenn etwas wartet (Review P2f)
+    expect(html).not.toContain("geholt")
+    expect(render([item(0)])).toContain("Spiegel hat Scheiben unter deiner Sportpassnummer geholt.")
   })
 })

@@ -27,14 +27,17 @@ function UserRow({ user, timeZone }: { user: UserListItem; timeZone: string }) {
           {user.name && (
             <span className="truncate text-[13px] text-muted-foreground">{user.email}</span>
           )}
+          {/* links unter dem Namen: rechts wurde die Zeile am Telefon zu breit (Review P2f) */}
+          <span className="grid text-[13px] text-muted-foreground">
+            <UserRowFacts user={user} timeZone={timeZone} />
+          </span>
         </span>
-        <span className="grid shrink-0 justify-items-end text-[13px] text-muted-foreground">
+        <span className="grid justify-items-end text-right text-[13px] text-muted-foreground">
           <span>
             {user.role === "ADMIN" ? "Admin" : "Schütze"}
             {user.isActive ? "" : " · deaktiviert"}
           </span>
           <span data-sportpass-state>{user.sportpass}</span>
-          <UserRowFacts user={user} timeZone={timeZone} />
         </span>
       </Link>
     </li>

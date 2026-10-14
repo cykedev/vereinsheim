@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, onTestFinished } from "vitest"
 
 import { stateResponseV1, type HeartbeatV1 } from "@vereinsheim/ingest-contract/api"
 import { sportpassHash } from "@vereinsheim/ingest-contract/sportpass"
@@ -291,6 +291,9 @@ describe("Aufträge zum Nachladen (P2d)", () => {
         isActive: false,
       },
     })
+    onTestFinished(async () => {
+      await db.user.delete({ where: { id: inactive.id } })
+    })
     const consent = (sportpassId: number, data: Record<string, unknown> = {}) =>
       db.sportpassConsent.create({
         data: {
@@ -340,7 +343,6 @@ describe("Aufträge zum Nachladen (P2d)", () => {
     const after = await bridgeState(db, own.siteId, NOW)
     expect(after.history).toEqual([])
     expect(after.blocked.map((b) => b.scheibenId)).toEqual([-12])
-    await db.user.delete({ where: { id: inactive.id } })
   })
 
   it("der Heartbeat vermerkt erledigte Aufträge nur an aktiven, offenen Zustimmungen dieser Anlage mit aktivem Konto und passendem since (D6, Review)", async () => {
@@ -369,6 +371,10 @@ describe("Aufträge zum Nachladen (P2d)", () => {
       })
     const inactive = await db.user.create({
       data: { email: `history-off-${own.siteId}@example.com`, passwordHash: "-", isActive: false },
+    })
+    // auch wenn eine Prüfung fällt: sonst bleibt das Konto in der Dev-Datenbank liegen
+    onTestFinished(async () => {
+      await db.user.delete({ where: { id: inactive.id } })
     })
     const since = new Date(NOW).toISOString()
     const reopened = new Date(NOW + 30_000)
@@ -412,6 +418,5 @@ describe("Aufträge zum Nachladen (P2d)", () => {
     )
     expect((await loadedAt(open.id))?.getTime()).toBe(NOW)
     expect((await loadedAt(lifted.id))?.getTime()).toBe(NOW + 60_000)
-    await db.user.delete({ where: { id: inactive.id } })
   })
 })

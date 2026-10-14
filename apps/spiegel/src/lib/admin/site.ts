@@ -1,5 +1,5 @@
 import type { HeartbeatV1 } from "@vereinsheim/ingest-contract/api"
-import { formatDateTime } from "@vereinsheim/lib/format"
+import { formatDateOnly, formatDateTime } from "@vereinsheim/lib/format"
 
 import { requireAdmin } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
@@ -12,6 +12,7 @@ export interface BridgeRow {
   id: number
   name: string
   version: string | null
+  /** nur der Tag: „verbunden am …“ (P2f, D3) */
   createdAt: string
   lastSeenAt: string | null
   lastHeartbeatAt: string | null
@@ -75,7 +76,7 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
         id: b.id,
         name: b.name,
         version: b.version,
-        createdAt: when(b.createdAt, timeZone)!,
+        createdAt: formatDateOnly(b.createdAt, timeZone),
         lastSeenAt: when(b.lastSeenAt, timeZone),
         lastHeartbeatAt: when(b.lastHeartbeatAt, timeZone),
         revoked: b.revokedAt !== null,
