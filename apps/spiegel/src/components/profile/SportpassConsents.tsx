@@ -5,8 +5,9 @@ import { useState, useTransition } from "react"
 
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
-import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
 
+import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { ownConsentRevoke, ownRejectionRemove } from "@/lib/admin/consequences"
 import { revokeSportpass } from "@/lib/consent/actions"
 import type { ConsentRow } from "@/lib/consent/queries"
 import { MAX_CONSENTS_PER_ACCOUNT, ownerActionOf } from "@/lib/consent/status"
@@ -80,19 +81,12 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
       >
         {label}
       </Button>
-      <ConfirmDialog
+      <DecisionDialog
+        decision={
+          revoke ? ownConsentRevoke({ sportpassId: consent.sportpassId }) : ownRejectionRemove()
+        }
         open={open}
         onOpenChange={setOpen}
-        title={
-          revoke ? `Zustimmung für ${consent.sportpassId} widerrufen?` : "Ablehnung entfernen?"
-        }
-        description={
-          revoke
-            ? "Danach kommen keine neuen Scheiben mehr. Was schon da ist, bleibt, bis du es löschst."
-            : "Danach kannst du die SportpassID neu eintragen."
-        }
-        confirmLabel={label}
-        destructive={revoke}
         onConfirm={() =>
           startTransition(async () => {
             const result = await revokeSportpass(consent.id)

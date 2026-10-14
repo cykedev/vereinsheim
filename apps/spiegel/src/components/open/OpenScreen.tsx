@@ -9,9 +9,10 @@ import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { groupView } from "@vereinsheim/shot-ui/geometry"
 import { MiniTarget } from "@vereinsheim/shot-ui/target/MiniTarget"
 import { Button } from "@vereinsheim/ui/button"
-import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
 
+import { DecisionDialog } from "@/components/shell/DecisionDialog"
 import { Page } from "@/components/shell/Page"
+import { notMine } from "@/lib/admin/consequences"
 import { confirmFirstCard, rejectFirstCard } from "@/lib/first-card-actions"
 import { marksById } from "@/lib/marks"
 import type { PendingItem } from "@/lib/open"
@@ -130,17 +131,14 @@ function PendingCard({ item, marks }: { item: PendingItem; marks: MarkShot[] }) 
           {error}
         </p>
       )}
-      <ConfirmDialog
+      <DecisionDialog
+        decision={notMine({
+          evening: item.when,
+          more: item.more,
+          sportpassId: item.sportpassId ?? "ohne Nummer",
+        })}
         open={open}
         onOpenChange={setOpen}
-        title="Nicht deine Scheibe?"
-        description={
-          item.more > 0
-            ? `Diese und ${scheiben(item.more)} unter derselben SportpassID werden entfernt und kommen nicht wieder. Die SportpassID prüft dann ein Admin.`
-            : "Die Scheibe wird entfernt und kommt nicht wieder. Die SportpassID prüft dann ein Admin."
-        }
-        confirmLabel="Nicht meine"
-        destructive
         onConfirm={() => run(rejectFirstCard)}
       />
     </li>
