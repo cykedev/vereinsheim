@@ -17,12 +17,26 @@
 #
 # Voraussetzungen: docker buildx, `pnpm install` im Repo-Root (turbo verfügbar),
 # DOCKER_USER gesetzt (siehe .env oder export).
+#
+# APPS wählt die Apps (Vorgabe alle drei), etwa `APPS="ringwerk treffsicher"` für einen
+# Hotfix, solange Spiegel nicht mitgehen soll: Ein Build bricht sonst beim ersten
+# Fehler ab, nachdem frühere Apps schon gepusht sind.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 : "${DOCKER_USER:?Set DOCKER_USER (Docker Hub user, e.g. cyke)}"
 PLATFORM="${PLATFORM:-linux/amd64}"
 PUSH="${PUSH:-1}"
+APPS="${APPS:-ringwerk treffsicher spiegel}"
+for app in $APPS; do
+	case "$app" in
+	ringwerk | treffsicher | spiegel) ;;
+	*)
+		echo "Unbekannte App in APPS: $app (ringwerk, treffsicher, spiegel)" >&2
+		exit 1
+		;;
+	esac
+done
 
 command -v pnpm >/dev/null || { echo "pnpm fehlt — der Monorepo-Build braucht pnpm." >&2; exit 1; }
 pnpm exec turbo --version >/dev/null 2>&1 || { echo "turbo fehlt — erst 'pnpm install' im Repo-Root." >&2; exit 1; }
@@ -103,20 +117,18 @@ build_app() {
 	done
 }
 
-build_app ringwerk
-build_app treffsicher
-build_app spiegel
+for app in $APPS; do
+	build_app "$app"
+done
 rm -rf out
 
 echo
 if [[ "$PUSH" == "1" ]]; then
 	echo "Done. Tags pushed to Docker Hub (sha=${SHA}):"
-	echo "  ${DOCKER_USER}/ringwerk:latest    (+ :${SHA})"
-	echo "  ${DOCKER_USER}/ringwerk:latest-migrator    (+ :${SHA}-migrator)"
-	echo "  ${DOCKER_USER}/treffsicher:latest    (+ :${SHA})"
-	echo "  ${DOCKER_USER}/treffsicher:latest-migrator    (+ :${SHA}-migrator)"
-	echo "  ${DOCKER_USER}/spiegel:latest    (+ :${SHA})"
-	echo "  ${DOCKER_USER}/spiegel:latest-migrator    (+ :${SHA}-migrator)"
+	for app in $APPS; do
+		echo "  ${DOCKER_USER}/${app}:latest    (+ :${SHA})"
+		echo "  ${DOCKER_USER}/${app}:latest-migrator    (+ :${SHA}-migrator)"
+	done
 	echo
 	echo "On the VPS, run: ./scripts/deploy.sh"
 else

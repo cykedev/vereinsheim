@@ -99,8 +99,11 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
 - PDF-Volume (kommt mit dem QR-Weg), Off-Site-Backup, Selbst-Hosting-Beispiel (SP-1.9 b).
 - Das Drift-Gate `consistency-check.sh` bleibt bei Ringwerk × Treffsicher (Spiegel ist ausgenommen, ADR-030).
 - `.env.local` des Users: Die neuen Schlüssel trägt der User selbst ein (Liste am Ende von T6).
-- Für das Runbook (P5): Der erste Push legt das Repository `<DOCKER_USER>/spiegel` auf Docker Hub neu an. Danach
-  prüfen, dass es öffentlich ist; der VPS holt die Images ohne Anmeldung ([[adr-005]]).
+- Für das Runbook (P5): Der nächste Release ohne `APPS` legt das Repository `<DOCKER_USER>/spiegel` auf Docker Hub
+  an (Review: nicht erst in P5). Danach prüfen, dass es öffentlich ist; der VPS holt die Images ohne Anmeldung
+  ([[adr-005]]). Bis Spiegel auf dem VPS bereit ist, Hotfixes mit `APPS="ringwerk treffsicher"`, und auf dem VPS kein
+  `git pull` dieses Stands, bevor das Image öffentlich auf Docker Hub liegt: Sonst scheitert `docker compose pull` bei
+  jedem Deploy.
 
 ## Required Docs
 

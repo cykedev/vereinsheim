@@ -270,6 +270,7 @@ cmd_help() {
 		  ${YELLOW}vereinsheim release${RESET}            Standard-Release von der lokalen Maschine
 		  ${YELLOW}vereinsheim remote status${RESET}      VPS-Stand ohne Login
 		  ${YELLOW}SKIP_BACKUP=1 vereinsheim deploy${RESET}  Deploy ohne Pre-Backup
+		  ${YELLOW}APPS="ringwerk" vereinsheim release${RESET}  nur diese Apps bauen + pushen
 	EOF
 }
 
