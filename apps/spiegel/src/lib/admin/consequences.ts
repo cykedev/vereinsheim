@@ -26,6 +26,8 @@ export function consentConfirm({
   sportpassId,
   returned = false,
   accountActive = true,
+  historyOpen = true,
+  notMine = 0,
 }: {
   who: string
   sportpassId: string
@@ -33,6 +35,10 @@ export function consentConfirm({
   returned?: boolean
   /** ein deaktiviertes Konto bekommt nichts, auch bestätigt */
   accountActive?: boolean
+  /** die älteren Scheiben sind noch nicht nachgeladen: Nach dem Bestätigen holt die Brücke sie (P2d, Review) */
+  historyOpen?: boolean
+  /** Scheiben unter der Nummer, als „nicht meine“ gemeldet (Grabsteine) */
+  notMine?: number
 }): Decision {
   return {
     title: `Zustimmung von ${who} bestätigen?`,
@@ -44,12 +50,13 @@ export function consentConfirm({
       : `Gehört ${sportpassId} in der Meyton-Schützenverwaltung zu ${who}? Wenn nicht: ablehnen.`,
     happens: [
       "Läuft die Brücke gerade, kommen neue Scheiben mit dieser Nummer innerhalb weniger Minuten, sonst beim nächsten Training.",
-      // das Nachladen (P2d); nach „nicht meine“ sind die älteren gesperrt, dort wäre der Satz falsch
-      ...(returned
-        ? []
-        : [
+      // das Nachladen (P2d): nur, solange es noch offen ist (Review: nach „nicht meine“ oft schon erledigt, nach dem
+      // Aufheben der Meldungen wieder offen)
+      ...(historyOpen
+        ? [
             "Auch ältere Scheiben mit dieser Nummer holt die Brücke nach, soweit Meyton sie noch hat, aber nur, wenn gerade niemand schießt.",
-          ]),
+          ]
+        : []),
       `Spiegel zeigt ${who} die jüngste zur Kontrolle; erst danach erscheinen die Scheiben im Konto.`,
       ...(accountActive
         ? []
@@ -58,7 +65,12 @@ export function consentConfirm({
     notHappening: [
       `Du siehst die Schüsse von ${who} nicht.`,
       "Scheiben mit verdeckter Wertung gehen nie hinaus.",
-      `Was ${who} gelöscht oder als „nicht meine“ gemeldet hat, kommt nicht wieder.`,
+      `Was ${who} gelöscht hat, kommt nicht wieder.`,
+      ...(notMine
+        ? [
+            `${notMine === 1 ? "Die 1 als „nicht meine“ gemeldete Scheibe kommt" : `Die ${notMine} als „nicht meine“ gemeldeten Scheiben kommen`} nicht wieder, solange du die Meldungen nicht aufhebst.`,
+          ]
+        : []),
     ],
     undo: `Jederzeit über „Entfernen“. Schon geschickte Scheiben bleiben bei ${who}.`,
     confirmLabel: "Bestätigen",
@@ -362,7 +374,8 @@ export function notMineLift({
 }): Decision {
   return {
     title: `Meldungen „nicht meine“ von ${who} aufheben?`,
-    about: `${who} hat ${scheiben(cards)} unter der SportpassID ${sportpassId} als „nicht meine“ gemeldet.`,
+    // neutral: Gemeldet haben kann auch ein früheres Konto mit dieser Nummer (Review)
+    about: `Unter der SportpassID ${sportpassId} ${cards === 1 ? "ist" : "sind"} ${scheiben(cards)} als „nicht meine“ gemeldet.`,
     check: `Hat ${who} gesagt, dass es doch die eigenen waren? Sonst nicht aufheben.`,
     happens: [
       consentActive
@@ -371,7 +384,7 @@ export function notMineLift({
       `${who} sieht sie zuerst in „Offen“ und bestätigt sie dort; bis dahin wartet auch jede neue Scheibe dieser Nummer.`,
     ],
     notHappening: [`Du siehst die Schüsse von ${who} nicht.`],
-    undo: `${who} meldet sie in „Offen“ wieder als „nicht meine“.`,
+    undo: `${who} kann sie in „Offen“ wieder als „nicht meine“ melden.`,
     confirmLabel: "Meldungen aufheben",
     destructive: false,
   }

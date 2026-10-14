@@ -24,6 +24,7 @@ const row = (id: number, status: ConsentStatus, notMine = 0): AdminConsentRow =>
   consentedAt: "14.10.2026, 20:00",
   consentVersion: "v1",
   history: null,
+  historyLoaded: false,
   notMine,
 })
 const item = (html: string, status: ConsentStatus) =>
@@ -63,12 +64,15 @@ describe("Zustimmungen am Konto (Admin)", () => {
       createElement(SportpassSection, {
         who: "Max Muster",
         accountActive: true,
-        consents: [row(1, "active", 2), row(2, "returned")],
+        consents: [row(1, "active", 2), row(2, "returned"), row(3, "rejected", 1)],
       })
     )
     expect(item(html, "active")).toContain("2 Scheiben als „nicht meine“")
     expect(item(html, "active")).toContain(">Meldungen aufheben<")
     expect(item(html, "returned")).not.toContain("Meldungen aufheben")
     expect(item(html, "returned")).not.toContain("data-consent-not-mine")
+    // abgelehnt: die Zeile ja, der Knopf nicht (Review)
+    expect(item(html, "rejected")).toContain("1 Scheibe als „nicht meine“")
+    expect(item(html, "rejected")).not.toContain("Meldungen aufheben")
   })
 })

@@ -17,8 +17,10 @@ export interface ConsentRow {
   statusText: string
   consentedAt: string
   consentVersion: string
-  /** nur bei aktiver Zustimmung: ob die älteren Scheiben schon nachgeladen sind (P2d, D10), sonst null */
+  /** nur bei aktiver Zustimmung eines aktiven Kontos: ob die älteren Scheiben schon nachgeladen sind (P2d, D10) */
   history: string | null
+  /** die älteren Scheiben sind nachgeladen (auch bei nicht aktiver Zustimmung; für den Dialog des Admins) */
+  historyLoaded: boolean
 }
 
 export interface OpenConsentRow {
@@ -46,6 +48,7 @@ export async function consentRows(userId: string, timeZone: string): Promise<Con
       returnedAt: true,
       historyLoadedAt: true,
       site: { select: { name: true } },
+      user: { select: { isActive: true } },
     },
   })
   return rows.map((r) => {
@@ -61,8 +64,10 @@ export async function consentRows(userId: string, timeZone: string): Promise<Con
       ),
       consentedAt: formatDateTime(r.consentedAt, timeZone),
       consentVersion: r.consentVersion,
+      historyLoaded: r.historyLoadedAt !== null,
+      // ein deaktiviertes Konto bekommt nichts, auch kein Nachladen (Review)
       history:
-        status !== "active"
+        status !== "active" || !r.user.isActive
           ? null
           : r.historyLoadedAt
             ? `ältere Scheiben nachgeladen am ${formatDateTime(r.historyLoadedAt, timeZone)}`

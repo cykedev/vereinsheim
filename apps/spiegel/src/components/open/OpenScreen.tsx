@@ -40,8 +40,8 @@ export function OpenScreen({
             Offen
           </h1>
           <p className="text-foreground-2">
-            Die erste Scheibe unter deiner SportpassID: Ist sie deine? Erst danach erscheinen deine
-            Scheiben in Start, Liste und Fortschritt.
+            Die jüngste Scheibe unter deiner SportpassID: Ist sie deine? Erst danach erscheinen
+            deine Scheiben in Start, Liste und Fortschritt.
           </p>
         </div>
         {items.length ? (

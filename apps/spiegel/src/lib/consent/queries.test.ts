@@ -61,6 +61,10 @@ describe("Zustimmungen lesen", () => {
       null,
       null,
     ])
+    // ein deaktiviertes Konto bekommt nichts, auch kein Nachladen (Review)
+    await db.user.update({ where: { id: shooterId }, data: { isActive: false } })
+    expect((await consentRows(shooterId, zone))[0]!.history).toBeNull()
+    await db.user.update({ where: { id: shooterId }, data: { isActive: true } })
   })
 
   it("offen für den Admin: wartende und zurückgegebene, ältere zuerst", async () => {

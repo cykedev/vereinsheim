@@ -47,7 +47,7 @@ describe("Folgen der Zustimmungen (Admin)", () => {
       notHappening: [
         "Du siehst die Schüsse von Max Muster nicht.",
         "Scheiben mit verdeckter Wertung gehen nie hinaus.",
-        "Was Max Muster gelöscht oder als „nicht meine“ gemeldet hat, kommt nicht wieder.",
+        "Was Max Muster gelöscht hat, kommt nicht wieder.",
       ],
       undo: "Jederzeit über „Entfernen“. Schon geschickte Scheiben bleiben bei Max Muster.",
       confirmLabel: "Bestätigen",
@@ -62,8 +62,21 @@ describe("Folgen der Zustimmungen (Admin)", () => {
       "Max Muster hat die erste Scheibe unter der SportpassID 12345678 als „nicht meine“ gemeldet; diese Scheiben sind entfernt. Bestätigst du, gilt die Nummer wieder für Max Muster."
     )
     expect(returned.check).toContain("Vielleicht wurde am Stand ein fremder Name gewählt.")
-    // nach „nicht meine“ sind die älteren gesperrt: kein Versprechen, sie nachzuladen
-    expect(returned.happens.join(" ")).not.toContain("ältere Scheiben")
+    // das Nachladen nur, solange es offen ist; die Meldungen „nicht meine“ als Zahl (Review P2d)
+    const loaded = consentConfirm({
+      who,
+      sportpassId,
+      returned: true,
+      historyOpen: false,
+      notMine: 2,
+    })
+    expect(loaded.happens.join(" ")).not.toContain("ältere Scheiben")
+    expect(loaded.notHappening).toContain(
+      "Die 2 als „nicht meine“ gemeldeten Scheiben kommen nicht wieder, solange du die Meldungen nicht aufhebst."
+    )
+    expect(consentConfirm({ who, sportpassId, notMine: 1 }).notHappening).toContain(
+      "Die 1 als „nicht meine“ gemeldete Scheibe kommt nicht wieder, solange du die Meldungen nicht aufhebst."
+    )
     expect(consentConfirm({ who, sportpassId, accountActive: false }).happens).toContain(
       "Solange das Konto von Max Muster deaktiviert ist, schickt die Brücke nichts."
     )
@@ -293,19 +306,21 @@ describe("Meldungen „nicht meine“ aufheben (P2d)", () => {
     wellFormed(d)
     expect(d).toEqual({
       title: "Meldungen „nicht meine“ von Max Muster aufheben?",
-      about: "Max Muster hat 3 Scheiben unter der SportpassID 12345678 als „nicht meine“ gemeldet.",
+      about: "Unter der SportpassID 12345678 sind 3 Scheiben als „nicht meine“ gemeldet.",
       check: "Hat Max Muster gesagt, dass es doch die eigenen waren? Sonst nicht aufheben.",
       happens: [
         "Die Brücke darf diese Scheiben wieder schicken und holt sie nach, soweit Meyton sie noch hat, wenn gerade niemand schießt.",
         "Max Muster sieht sie zuerst in „Offen“ und bestätigt sie dort; bis dahin wartet auch jede neue Scheibe dieser Nummer.",
       ],
       notHappening: ["Du siehst die Schüsse von Max Muster nicht."],
-      undo: "Max Muster meldet sie in „Offen“ wieder als „nicht meine“.",
+      undo: "Max Muster kann sie in „Offen“ wieder als „nicht meine“ melden.",
       confirmLabel: "Meldungen aufheben",
       destructive: false,
     })
     const later = notMineLift({ who, sportpassId, cards: 1, consentActive: false })
-    expect(later.about).toContain("1 Scheibe unter")
+    expect(later.about).toBe(
+      "Unter der SportpassID 12345678 ist 1 Scheibe als „nicht meine“ gemeldet."
+    )
     expect(later.happens[0]).toBe("Sie kommen erst, wenn die Zustimmung wieder bestätigt ist.")
   })
 })

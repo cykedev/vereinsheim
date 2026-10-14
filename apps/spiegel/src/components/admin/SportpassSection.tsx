@@ -100,6 +100,8 @@ function ConsentItem({
         ...subject,
         returned: consent.status === "returned",
         accountActive,
+        historyOpen: !consent.historyLoaded,
+        notMine: consent.notMine,
       }),
       action: confirmConsent,
     },
@@ -161,7 +163,8 @@ function ConsentItem({
             </Button>
           </>
         )}
-        {consent.notMine > 0 && (
+        {/* eine abgelehnte Zustimmung lässt sich nicht wieder bestätigen: Aufheben brächte dort nichts (Review) */}
+        {consent.notMine > 0 && consent.status !== "rejected" && (
           <Button
             type="button"
             variant="ghost"

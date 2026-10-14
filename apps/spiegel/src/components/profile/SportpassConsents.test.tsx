@@ -23,6 +23,7 @@ const row = (id: number, status: ConsentStatus, statusText: string): ConsentRow 
   consentedAt: "14.10.2026, 20:00",
   consentVersion: "v1",
   history: null,
+  historyLoaded: false,
 })
 const render = (consents: ConsentRow[]) =>
   renderToStaticMarkup(createElement(SportpassConsents, { consents, version: "v1" }))
