@@ -53,8 +53,8 @@ function Section({ title, lines, marker }: { title: string; lines: string[]; mar
 
 /**
  * Jede Aktion mit Folgen fragt hierüber (Regel „Kein Knopf ohne Folge“, `vault/conventions.md` §10). Die Texte kommen
- * aus `src/lib/admin/consequences.ts`. Der Fokus steht zuerst auf „Abbrechen“; die Beschreibung ist mit dem Dialog
- * verknüpft.
+ * aus `src/lib/admin/consequences.ts`. Der Fokus steht zuerst auf „Abbrechen“; der ganze Inhalt ist als Beschreibung
+ * mit dem Dialog verknüpft.
  */
 export function DecisionDialog({
   decision,
@@ -72,16 +72,24 @@ export function DecisionDialog({
       <AlertDialogContent className="max-h-[90dvh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle>{decision.title}</AlertDialogTitle>
-          <AlertDialogDescription>{decision.about}</AlertDialogDescription>
         </AlertDialogHeader>
-        <DecisionBody decision={decision} />
+        {/* der ganze Inhalt beschreibt den Dialog, nicht nur der erste Satz (Review): Screenreader lesen Prüfen und
+            Folgen mit */}
+        <AlertDialogDescription asChild>
+          <div className="grid gap-3">
+            <p className="text-sm text-foreground-2">{decision.about}</p>
+            <DecisionBody decision={decision} />
+          </div>
+        </AlertDialogDescription>
         <AlertDialogFooter>
           <AlertDialogCancel>Abbrechen</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className={
               decision.destructive
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                ? // Design 2 kennt kein `destructive-foreground`; `primary-foreground` ist auf `destructive` in
+                  // beiden Themes lesbar
+                  "bg-destructive text-primary-foreground hover:bg-destructive/90"
                 : undefined
             }
           >

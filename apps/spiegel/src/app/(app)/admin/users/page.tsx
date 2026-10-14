@@ -73,7 +73,7 @@ export default async function AdminUsersRoute() {
           <Link
             href="/admin"
             data-open-consents-link
-            className="justify-self-start rounded-full bg-gold-wash px-3.5 py-2 text-[13px] font-semibold text-gold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
+            className="justify-self-start rounded-full bg-warning-wash px-3.5 py-2 text-[13px] font-semibold text-warning hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
           >
             {consents.length === 1
               ? "1 Zustimmung wartet auf dich ›"

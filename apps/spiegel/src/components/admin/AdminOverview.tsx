@@ -46,7 +46,7 @@ export function AdminOverview({ model }: { model: AdminOverviewModel }) {
                 </span>
                 <Link
                   href={task.href}
-                  className="rounded-full bg-gold px-4 py-2 text-[13px] font-semibold text-background hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
+                  className="rounded-full bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   {task.action}
                 </Link>

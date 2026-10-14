@@ -248,7 +248,8 @@ export function RankingItem({ ranking }: { ranking: RankingRow }) {
       <Segmented
         label={`Art der Rangliste ${ranking.name}`}
         options={RANKING_OPTIONS}
-        value={saved}
+        // während gefragt und gespeichert wird, steht die Wahl da; Abbrechen zeigt wieder die gespeicherte (Review)
+        value={asking || pending ? wanted : saved}
         onChange={(value) => {
           if (pending || value === saved) return
           setWanted(value)

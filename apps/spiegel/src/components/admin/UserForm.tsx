@@ -16,7 +16,7 @@ import type { ActionResult } from "@/lib/types"
 import type { UserSummary } from "@/lib/users/queries"
 import type { Role } from "@/lib/users/rules"
 import { DecisionDialog } from "@/components/shell/DecisionDialog"
-import { accountChange, type Decision } from "@/lib/admin/consequences"
+import { accountChange, accountChangesOf, type Decision } from "@/lib/admin/consequences"
 
 import { AdminHelp } from "./AdminHelp"
 
@@ -78,11 +78,7 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
     user
       ? accountChange({
           who: user.name ?? user.email,
-          changes: {
-            ...(role !== user.role ? { role } : {}),
-            ...((active === "true") !== user.isActive ? { active: active === "true" } : {}),
-            ...(password !== "" ? { password: true } : {}),
-          },
+          changes: accountChangesOf(user, { role, active: active === "true", password }),
         })
       : null
 
@@ -219,8 +215,10 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
           open={asking}
           onOpenChange={setAsking}
           onConfirm={() => {
+            // das Absenden läuft synchron durch `onSubmit`; danach gilt die Freigabe nicht mehr (Review)
             confirmed.current = true
             formRef.current?.requestSubmit()
+            confirmed.current = false
           }}
         />
       )}
