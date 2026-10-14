@@ -83,6 +83,26 @@
           "type": "null"
         }
       ]
+    },
+    "history": {
+      "maxItems": 1000,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "sportpassHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": ["id", "sportpassHash"],
+        "additionalProperties": false
+      }
     }
   },
   "required": ["site", "epoch", "sportpass", "blocked", "watermark"],

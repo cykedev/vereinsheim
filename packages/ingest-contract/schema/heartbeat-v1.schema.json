@@ -134,6 +134,15 @@
           "type": "null"
         }
       ]
+    },
+    "historyDone": {
+      "maxItems": 100,
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991
+      }
     }
   },
   "required": [

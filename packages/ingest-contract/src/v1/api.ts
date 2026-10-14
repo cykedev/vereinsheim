@@ -97,6 +97,11 @@ export const heartbeatV1 = z
         oldestStamp: shortText.nullable(),
       })
       .nullable(),
+    /**
+     * additiv seit 14. Oktober 2026 (P2d): Aufträge aus `state.history`, die die Brücke in diesem Lauf abgearbeitet hat
+     * (jede passende Scheibe gemeldet); nur ihre Ids
+     */
+    historyDone: z.array(z.int().min(1)).max(100).optional(),
   })
   .meta({ title: "Spiegel-Heartbeat v1" })
 
@@ -131,6 +136,20 @@ export const stateResponseV1 = z
       .max(100_000),
     /** jüngste Beobachtungszeit, die Spiegel von dieser Anlage hat; Nachholen beim Start ab hier (SF-55) */
     watermark: instant.nullable(),
+    /**
+     * additiv seit 14. Oktober 2026 (P2d): offene Aufträge, die älteren Scheiben einer Zustimmung nachzuladen, soweit
+     * die Anlage sie hat und nur, wenn niemand schießt. `id` meldet die Brücke in `historyDone` zurück; der Hash wie in
+     * `sportpass.hashes`. Solange einer offen ist, enthält `blocked` alle Sperren, nicht nur die jüngsten.
+     */
+    history: z
+      .array(
+        z.strictObject({
+          id: z.int().min(1),
+          sportpassHash: z.string().regex(/^[0-9a-f]{64}$/),
+        })
+      )
+      .max(1_000)
+      .optional(),
   })
   .meta({ title: "Spiegel-Zustand der Brücke v1" })
 

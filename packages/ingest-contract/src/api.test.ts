@@ -14,6 +14,7 @@ import {
   pairRequestV1,
   PAIRING_CODE_ALPHABET,
   PAIRING_CODE_LENGTH,
+  stateResponseV1,
 } from "./v1/api"
 
 const load = (path: string): unknown =>
@@ -107,5 +108,32 @@ describe("sportpassHash (Testvektoren aus Python)", () => {
   it("keine Null und keine negativen Nummern", () => {
     expect(() => sportpassHash(vectors.salt, BigInt(0))).toThrow(RangeError)
     expect(() => sportpassHash(vectors.salt, -5)).toThrow(RangeError)
+  })
+})
+
+describe("Nachladen älterer Scheiben (additiv, P2d)", () => {
+  const state = load("examples/api-v1/state-response.json") as Record<string, unknown>
+  const heartbeat = load("examples/api-v1/heartbeat.json") as Record<string, unknown>
+  const hash = "f80f0364b1fe2c184903848cd481e81e69a4b60e5fbb44f51cc78371525f6168"
+
+  it("Zustand mit und ohne Aufträge; je Auftrag Id und Hash, nie eine Nummer", () => {
+    expect(stateResponseV1.safeParse(state).success).toBe(true)
+    expect(
+      stateResponseV1.safeParse({ ...state, history: [{ id: 7, sportpassHash: hash }] }).success
+    ).toBe(true)
+    for (const history of [
+      [{ id: 7, sportpassHash: "12345678" }],
+      [{ id: 0, sportpassHash: hash }],
+      [{ id: 7, sportpassHash: hash, sportpassId: "12345678" }],
+      Array.from({ length: 1_001 }, (_, i) => ({ id: i + 1, sportpassHash: hash })),
+    ])
+      expect(stateResponseV1.safeParse({ ...state, history }).success).toBe(false)
+  })
+
+  it("Heartbeat mit und ohne erledigte Aufträge; nur Ids ab 1, höchstens 100", () => {
+    expect(parseApi(heartbeatV1, heartbeat).ok).toBe(true)
+    expect(parseApi(heartbeatV1, { ...heartbeat, historyDone: [7, 9] }).ok).toBe(true)
+    for (const historyDone of [[0], [1.5], ["7"], Array.from({ length: 101 }, (_, i) => i + 1)])
+      expect(parseApi(heartbeatV1, { ...heartbeat, historyDone }).ok).toBe(false)
   })
 })
