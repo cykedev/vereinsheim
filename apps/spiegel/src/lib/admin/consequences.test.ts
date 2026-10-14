@@ -11,6 +11,7 @@ import {
   consentRemove,
   notMine,
   notMineLift,
+  OLD_WORDS,
   ownConsentRevoke,
   ownRejectionRemove,
   rankingKind,
@@ -344,9 +345,6 @@ describe("Löschen und Papierkorb", () => {
  * alten Wörter des Codes. Ob ein Text verständlich ist, prüft ein Mensch; dieser Test hält nur fest, dass die alten
  * Fehler nicht zurückkommen.
  */
-const OLD_WORDS =
-  /;|SportpassID|\bMeldung|\bAblage|[Kk]oppel|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|\bSperre|\bsperre/
-
 /** jeder Text eines Entscheids, ohne die Felder, die nur Code sind */
 const textsOf = (decision: Decision) =>
   [

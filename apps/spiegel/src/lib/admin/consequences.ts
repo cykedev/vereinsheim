@@ -7,6 +7,13 @@
 // Gedanke pro Satz, keine Semikolons, die Wörter des Users statt der des Codes (Sportpassnummer, zurückweisen, wieder
 // zulassen, Spiegel holt). Ein Test hält die alten Wörter fern (`consequences.test.ts`, „Schreibregeln“).
 
+/**
+ * Was in keinem sichtbaren Text mehr stehen darf (P2f, D5): Semikolons und die alten Wörter des Codes. Die Tests der
+ * Dialoge, Erklärungen, Zustände und der Übersicht prüfen dagegen.
+ */
+export const OLD_WORDS =
+  /;|SportpassID|\bMeldung|\bAblage|[Kk]oppel|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|[Ss]perre/
+
 export interface Decision {
   title: string
   /** worum es geht: wer, welche Nummer, welches Gerät, wie viele Scheiben */
