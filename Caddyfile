@@ -6,12 +6,21 @@
 	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
 }
 
+# X-Real-IP setzt Caddy selbst auf die echte Adresse: Caddy reicht einen vom Client
+# mitgeschickten Header sonst unverändert durch, und die Apps lesen ihn mit
+# AUTH_TRUST_PROXY_HEADERS=true zuerst (Ratenbegrenzung der Anmeldung).
+(proxy_real_ip) {
+	header_up X-Real-IP {remote_host}
+}
+
 {$RINGWERK_HOST} {
 	encode zstd gzip
 	request_body {
 		max_size 20MB
 	}
-	reverse_proxy app-ringwerk:3000
+	reverse_proxy app-ringwerk:3000 {
+		import proxy_real_ip
+	}
 }
 
 {$TREFFSICHER_HOST} {
@@ -19,5 +28,7 @@
 	request_body {
 		max_size 20MB
 	}
-	reverse_proxy app-treffsicher:3000
+	reverse_proxy app-treffsicher:3000 {
+		import proxy_real_ip
+	}
 }
