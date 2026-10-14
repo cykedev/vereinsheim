@@ -16,6 +16,7 @@ MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Überleben als normale Notes (kei
 - [[caddy-x-real-ip-passthrough]] — Caddy reicht ein gefälschtes X-Real-IP durch (Ratenbegrenzung umgangen, behoben mit `header_up`)
 - [[node-heap-above-container-limit]] — Node 24 setzt den Heap über eine kleine Container-Grenze (`--max-old-space-size` dazu)
 - [[postgres-image-loopback-trust]] — im Postgres-Image prüft 127.0.0.1 kein Passwort (Prüfung über `-h db`)
+- [[bash-errexit-in-or-list]] — `set -e` gilt nicht in einer Funktion links von `||` (jeder Schritt prüft selbst)
 - [[spiegel-dialog-texts-not-understood]] — Spiegel-Dialoge in der Sprache des Codes, für den Admin unverständlich (Schreibregeln, Textbuch)
 - [[data-url-preview-blocks-anchors]] — Vorschau als data:-Seite blockt Anker und Speicher
 - [[best-of-standings-direct-comparison-tiebreak]] — best-of-standings-direct-comparison-tiebreak
