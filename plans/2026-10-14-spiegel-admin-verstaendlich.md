@@ -28,6 +28,16 @@ Fachbegriffe stehen nicht in der Oberfläche: aus „Epoche“ wird „Neustart 
 
 ## Entscheidungen
 
+- **D0 Nur, was ein Mensch entscheiden muss** (User, 14. Oktober 2026, während der Umsetzung: „Neustart der Anlage: wie
+  kann das denn passieren? eigentlich wollte ich auf solche details nicht selber schauen müssen“): Der Admin zeigt als
+  Aufgabe nur Entscheidungen, die ein Mensch treffen muss (Zustimmungen, Ranglisten, Konten). Technisches regelt Spiegel
+  und zeigt es höchstens als Zustand. **Der Neustart der Anlage verschwindet aus der Oberfläche:** Die Brücke eröffnet
+  nie selbst eine neue Epoche (sie meldet nur `possible-reset`), und Spiegel braucht die Bestätigung nicht mehr (die
+  ScheibenID ist ein Zeitzähler, alte und neue Scheiben trennen Beginn und Zyklus, Fehlen ist nie Löschen). Kein Knopf,
+  keine Aufgabe; ein Verdacht der Brücke steht als Information an der Station „Brücke“. `ConfirmEpochButton` und die
+  Action `confirmEpoch` entfallen, die Epoche bleibt im Datenmodell (immer 1). Ersetzt im Katalog „Neustart der Anlage
+  bestätigen“ und im Abschnitt „?“ den Begriff „Neustart der Anlage“.
+
 - **D1 Folgen als Daten** (`src/lib/admin/consequences.ts`, rein): je Aktion eine Funktion, die einen `Decision`
   liefert: `{ title, about, check?, happens: string[], notHappening: string[], undo, confirmLabel, destructive }`. Eine
   Quelle für Dialog und Tests; die Komponenten erfinden keine Texte.
@@ -36,9 +46,8 @@ Fachbegriffe stehen nicht in der Oberfläche: aus „Epoche“ wird „Neustart 
   Abbrechen und die Aktion. Er ersetzt `ConfirmDialog` überall im Admin und in den Dialogen des Schützen (Widerrufen,
   Entfernen einer Ablehnung, Nicht meine), damit Schütze und Admin dieselbe Form sehen.
 - **D3 Übersicht** (`/admin`, erste Seite, Reiter „Übersicht · Konten · Anlage und Brücke“):
-  - oben **„Wartet auf dich (n)“**: offene Zustimmungen (je eine Zeile mit „Prüfen“, Link aufs Konto), ein
-    unbestätigter Neustart der Anlage, eine Brücke mit „Ablage geleert? Bitte prüfen“ oder Fehler, keine Anlage, keine
-    Brücke. Ohne Aufgaben der Satz „Nichts wartet auf dich.“;
+  - oben **„Wartet auf dich (n)“**: offene Zustimmungen (je eine Zeile mit „Prüfen“, Link aufs Konto), keine Anlage,
+    keine Brücke (D0: nur Entscheidungen und das Einrichten). Ohne Aufgaben der Satz „Nichts wartet auf dich.“;
   - darunter **der Weg einer Scheibe** in vier Stationen, je mit einem Satz, was sie tut, ihrem Stand und einem „?“:
     1. *Meyton-Anlage*: „Dort liegen alle Scheiben. Spiegel liest nur und ändert nie etwas.“ Stand: Name, eingerichtet
        oder „noch nicht eingerichtet“.
