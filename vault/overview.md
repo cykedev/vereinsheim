@@ -151,7 +151,7 @@ NAS-Staging-Setup (niedrig-Traffic-Vereinsbetrieb):
 | Caddy                   |       ~40 MB   |      64 M | —           |
 | Postgres 15 (shared)    |       ~80 MB[^pg] |    384 M | 1–2 GB Data |
 | Ringwerk (Next.js prod) |        188 MB  |     256 M | —           |
-| Treffsicher (Next.js)   |        163 MB  |     256 M | —           |
+| Treffsicher (Next.js)   |        163 MB  |     320 M | —           |
 | Spiegel (Next.js)       |        152 MB  |     256 M | —           |
 | Migrations (one-shot)   |   ~130 MB peak |     192 M | —           |
 | Uploads                 |              — |         — | 10–20 GB    |
@@ -161,8 +161,10 @@ NAS-Staging-Setup (niedrig-Traffic-Vereinsbetrieb):
 + ~10 MB pro Connection × typisch 10–20 aktive Connections: 250–350 MB.
 
 **Steady-State: ~0.9 GB RAM, ~25–40 GB Disk**. Seit P3 (Oktober 2026, drei Apps) summieren die Limits auf
-1.216 MiB, beim Deploy mit einem Migrator 1.408 MiB; neben System und Docker (~500 MiB) sind rund 1.370 MiB frei.
-Die Apps laufen mit Heap-Grenze (`NODE_OPTIONS=--max-old-space-size=160`, [[node-heap-above-container-limit]]).
+1.280 MiB; neben System und Docker (~500 MiB) sind rund 1.370 MiB frei. Beim Deploy starten heute alle drei
+Migratoren gleichzeitig (Grenzen dann 1.856 MiB), mit P4 nacheinander (1.472 MiB); real brauchen sie je höchstens
+130 MiB. Die Apps laufen mit Heap-Grenze (Ringwerk und Spiegel 160, Treffsicher 192,
+[[node-heap-above-container-limit]]).
 Spitzen seit dem Start und Herleitung: [[vps-resource-sizing]] (Messung vom 14. Oktober 2026).
 
 ### IONOS-Empfehlung

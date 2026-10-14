@@ -120,7 +120,8 @@ services:
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
       # Heap unter der Grenze des Containers: Node 24 setzt ihn bei 256m sonst auf 259 MiB
-      # (vault/incidents/node-heap-above-container-limit.md). Gilt für alle drei Apps.
+      # (vault/incidents/node-heap-above-container-limit.md). Gilt für alle drei Apps;
+      # Treffsicher hat mehr Luft (Uploads bis 10 MB, PDF-Import mit pdf.js im Prozess).
       NODE_OPTIONS: --max-old-space-size=160
     depends_on:
       db:
@@ -146,7 +147,7 @@ services:
       UPLOAD_DIR: /app/uploads
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
-      NODE_OPTIONS: --max-old-space-size=160
+      NODE_OPTIONS: --max-old-space-size=192
     volumes:
       - uploads_treffsicher:/app/uploads
     depends_on:
@@ -154,7 +155,7 @@ services:
         condition: service_healthy
       migrate-treffsicher:
         condition: service_completed_successfully
-    mem_limit: 256m
+    mem_limit: 320m
     logging: *default-logging
     networks:
       - web

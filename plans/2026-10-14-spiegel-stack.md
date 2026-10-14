@@ -90,6 +90,11 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
   von 1.472 auf 1.216 MiB, beim Deploy mit einem Migrator von 1.728 auf 1.408 MiB. Neben System und Docker sind rund
   1.370 MiB frei: Selbst wenn alle Dienste an ihre Grenze gingen, passt es außerhalb eines Deploys.
 
+  **Nach dem Review (14. Oktober 2026):** Treffsicher bekommt `320m` mit `--max-old-space-size=192`. Uploads bis
+  10 MB (Server Actions bis 12 MB) und der Meyton-Import mit pdf.js laufen im Prozess, und ob sie in den neun Tagen auf
+  dem VPS vorkamen, ist unbekannt. Summe 1.280 MiB. Beim Deploy starten mit dem heutigen `deploy.sh` alle drei
+  Migratoren gleichzeitig (Grenzen 1.856 MiB, real je höchstens 130 MiB), nacheinander erst mit P4.
+
   **Bedingung erfüllt:** Die Spitzen seit dem Start liegen bei Ringwerk (188 MiB) und Treffsicher (163 MiB) unter
   200 MiB, gezählt samt Cache. Bis 256 MB bleiben 68 bzw. 93 MiB Luft. Eine Swap-Datei als Sicherheitsnetz kommt als
   Empfehlung ins Runbook (P5, [[adr-026]] nennt sie als Option).
