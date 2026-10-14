@@ -244,7 +244,7 @@ func readVersion(ctx context.Context, conn *sql.Conn) *string {
 }
 
 func readLifesigns(ctx context.Context, conn *sql.Conn) ([]watch.Lifesign, error) {
-	rows, err := conn.QueryContext(ctx, "SELECT `ScheibenID`, `Zeitstempel` FROM `Scheiben`")
+	rows, err := conn.QueryContext(ctx, "SELECT `ScheibenID`, `Zeitstempel`, `SportpassID` FROM `Scheiben`")
 	if err != nil {
 		return nil, err
 	}
@@ -252,11 +252,17 @@ func readLifesigns(ctx context.Context, conn *sql.Conn) ([]watch.Lifesign, error
 	var out []watch.Lifesign
 	for rows.Next() {
 		var id int32
-		var stamp sql.RawBytes
-		if err := rows.Scan(&id, &stamp); err != nil {
+		var stamp, sportpass sql.RawBytes
+		if err := rows.Scan(&id, &stamp, &sportpass); err != nil {
 			return nil, err
 		}
-		out = append(out, watch.Lifesign{ID: id, Stamp: string(stamp)})
+		l := watch.Lifesign{ID: id, Stamp: string(stamp)}
+		// RawBytes gilt nur bis zur nächsten Zeile: als Text kopieren; NULL bleibt nil
+		if sportpass != nil {
+			text := string(sportpass)
+			l.Sportpass = &text
+		}
+		out = append(out, l)
 	}
 	return out, rows.Err()
 }

@@ -19,6 +19,9 @@ import (
 type Lifesign struct {
 	ID    int32
 	Stamp string
+	// `Scheiben.SportpassID` als Text, nil ohne (P2d): ordnet eine Scheibe einem Auftrag zum Nachladen zu, ohne sie ganz
+	// zu lesen
+	Sportpass *string
 }
 
 // Round ist, was eine Runde aus der Ablage gelesen hat: alle Lebenszeichen und die gewählten Scheiben ganz.

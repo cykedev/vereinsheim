@@ -189,6 +189,7 @@ func TestReplayCases(t *testing.T) {
 			sent := map[int32][]int{}
 			for i, step := range steps {
 				exec1(t, db, string(readFile(t, step)))
+				lifesignsCarrySportpass(t, db, reader)
 				reading := expected.Readings[i]
 				clock, err = time.Parse(time.RFC3339Nano, reading.ObservedAt)
 				if err != nil {
@@ -312,5 +313,49 @@ func TestReplayColumnsChangeWhileRunning(t *testing.T) {
 	got = rounds()
 	if len(got) != 1 || got[0].Data.Treffer.Columns["Neu"] != "bigint(20)" {
 		t.Fatalf("neuer Typ: %d Snapshots", len(got))
+	}
+}
+
+// lifesignsCarrySportpass: Jedes Lebenszeichen trägt die SportpassID seiner Zeile als Text, NULL als nil (P2d).
+func lifesignsCarrySportpass(t *testing.T, db *sql.DB, reader *Reader) {
+	t.Helper()
+	want := map[int32]*string{}
+	rows, err := db.Query("SELECT `ScheibenID`, CAST(`SportpassID` AS CHAR) FROM `Scheiben`")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for rows.Next() {
+		var id int32
+		var sportpass sql.NullString
+		if err := rows.Scan(&id, &sportpass); err != nil {
+			t.Fatal(err)
+		}
+		if sportpass.Valid {
+			want[id] = &sportpass.String
+		} else {
+			want[id] = nil
+		}
+	}
+	_ = rows.Close()
+	var got []watch.Lifesign
+	if _, err := reader.Round(context.Background(), func(l []watch.Lifesign, _ *string) []int32 {
+		got = l
+		return nil
+	}); err != nil {
+		t.Fatalf("Runde: %s", Code(err))
+	}
+	if len(got) != len(want) {
+		t.Fatalf("%d Lebenszeichen, %d Zeilen", len(got), len(want))
+	}
+	for _, l := range got {
+		w, ok := want[l.ID]
+		switch {
+		case !ok:
+			t.Errorf("Scheibe %d ohne Zeile", l.ID)
+		case (w == nil) != (l.Sportpass == nil):
+			t.Errorf("Scheibe %d: SportpassID %v, erwartet %v", l.ID, l.Sportpass, w)
+		case w != nil && *w != *l.Sportpass:
+			t.Errorf("Scheibe %d: SportpassID %q, erwartet %q", l.ID, *l.Sportpass, *w)
+		}
 	}
 }
