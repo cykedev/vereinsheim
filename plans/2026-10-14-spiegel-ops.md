@@ -71,6 +71,13 @@ Commit-Message vorher als fenced Block. Nichts geht auf den VPS (das ist P5).
   exportiert dann `COMPOSE_ENV_FILES` für seine `docker compose`-Aufrufe. Neu `tools/stack-e2e/ops.sh`: prüft gegen
   einen mit `--keep` stehenden Stack Deploy, Backup, Restore-Probe, Restore und Rollback, ohne `.env` im Repo.
 
+**Nach dem Review (14. Oktober 2026, `reports/2026-10-14-spiegel-ops-review.md`):** Die Liste der Apps steht in
+`scripts/lib/apps.sh` für CLI und Skripte (zu D1). Der Deploy (D3) nutzt kein `--wait` mehr: `up -d app-<app>`
+wartet über `depends_on` selbst auf den Migrator, `db` über `pg_isready`, jede App muss danach laufen; der letzte
+Abgleich startet die Migratoren nicht noch einmal (`--no-deps`); Rolle und Datenbank werden auch nach dem Start von
+`db` geprüft. Das Backup (D5) überspringt eine leere Datenbank (nach `db-ensure`, vor dem ersten Migrator) und sammelt
+Fehler je App.
+
 ## Nicht in diesem Plan
 
 - Der erste Deploy (P5, Runbook mit fertigen Befehlen für den User), Off-Site-Backup, Selbst-Hosting (SP-1.9 b).

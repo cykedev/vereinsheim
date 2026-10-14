@@ -42,7 +42,7 @@ Onboarding in dieser Reihenfolge:
 
 Nur wenn du Code änderst:
 - [`scripts/vereinsheim`](scripts/vereinsheim) — das CLI (~2000 Zeilen,
-  klar nach Sections gegliedert; die Apps stehen einmal oben in `APPS`)
+  klar nach Sections gegliedert; die Apps stehen einmal in `scripts/lib/apps.sh`)
 - [`compose.yml`](compose.yml), [`Caddyfile`](Caddyfile),
   [`db-init/01-users-and-dbs.sh`](db-init/01-users-and-dbs.sh)
 

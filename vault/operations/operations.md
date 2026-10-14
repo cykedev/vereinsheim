@@ -60,8 +60,9 @@ automatisch erkennen:
 | `.vereinsheim.local` | lokal     | VPS_HOST (SSH-Ziel), VPS_REPO_PATH, DOCKER_USER    |
 | `.env.local`         | lokal     | Platzhalter für den lokalen Stack; `local-pull` und `local-up` ergänzen fehlende Schlüssel |
 
-Die Apps stehen an einer Stelle im CLI (`APPS=(ringwerk treffsicher spiegel)`, Upload-Volume nur
-`UPLOAD_APPS=(treffsicher)`); Menüs, Tags, Backup, Restore und Deploy leiten sich daraus ab (P4, Oktober 2026).
+Die Apps stehen an einer Stelle, `scripts/lib/apps.sh` (`APPS=(ringwerk treffsicher spiegel)`, Upload-Volume nur
+`UPLOAD_APPS=(treffsicher)`); das CLI und alle Skripte (Deploy, Backup, Restore, Restore-Probe, `db-ensure`, Build)
+binden sie ein (P4, Oktober 2026).
 
 Die folgenden Abschnitte beschreiben **was technisch passiert**, damit du
 auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
