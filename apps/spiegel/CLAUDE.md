@@ -178,10 +178,11 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
     Anlage (ADR-029: eine je Installation).
 - **Zustimmung per Sportpass** (SP-1.7 a, `plans/2026-10-14-spiegel-optin.md`, `src/lib/consent/`): Zustände als reine
   Funktion `consentStatus` (wartet, aktiv, abgelehnt, zurück beim Admin; Ablehnung geht vor). Jeder Filter auf „aktiv“
-  prüft `confirmedAt: { not: null }, rejectedAt: null` (`GET /state`, Einlesen). Der Hinweistext steht unveränderlich in
-  `texts.ts` (`CONSENT_TEXTS`, ein Test hält den Hash von v1 fest); ein neuer Wortlaut ist eine neue Version, die Zeile
-  speichert `consentVersion`. Widerruf löscht die Zeile, die Scheiben bleiben (User, 14. Oktober 2026). Entscheidungen
-  des Admins tragen ihre Bedingung im `updateMany` selbst (zweimal → „Schon entschieden.“).
+  nimmt `ACTIVE_CONSENT` aus `status.ts` (`GET /state`, Einlesen), nie eine eigene Kopie. Der Hinweistext steht
+  unveränderlich in `texts.ts` (`CONSENT_TEXTS`, ein Test hält den Hash von v1 fest); ein neuer Wortlaut ist eine neue
+  Version, die Zeile speichert `consentVersion`. Widerruf löscht die Zeile, die Scheiben bleiben (User, 14. Oktober 2026). Entscheidungen
+  des Admins tragen ihre Bedingung im `updateMany` selbst (zweimal → „Schon entschieden.“). Das Formular schickt die
+  Version des gezeigten Texts mit; die Grenze von drei je Konto zählt und legt an unter der Sperre der Kontozeile.
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten (gefunden von der Skriptprüfung, 13. Oktober 2026).
