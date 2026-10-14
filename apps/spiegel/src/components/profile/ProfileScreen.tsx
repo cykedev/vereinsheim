@@ -17,20 +17,23 @@ import { SportpassConsents } from "./SportpassConsents"
 
 /**
  * Profil: Konto, Zustimmung per Sportpass (SP-1.7 a), Einstellung des Geräts (Darstellung), Admin für Admins, Abmelden.
- * Die Wertung hat jede Scheibe und jede Familie selbst (Seite der Scheibe, Liste, Fortschritt). Freigaben, Export und
- * Papierkorb kommen später.
+ * Die Wertung hat jede Scheibe und jede Familie selbst (Seite der Scheibe, Liste, Fortschritt). Dazu der Papierkorb (P2b);
+ * Freigaben und Export kommen später.
  */
 export function ProfileScreen({
   name,
   email,
   isAdmin,
   sportpass,
+  trashCount,
 }: {
   name: string | null
   email: string
   isAdmin: boolean
   /** die eigenen Zustimmungen per Sportpass; nur aktive bringen Scheiben von der Brücke */
   sportpass: ConsentRow[]
+  /** Scheiben im Papierkorb */
+  trashCount: number
 }) {
   const router = useRouter()
   const [leaving, setLeaving] = useState(false)
@@ -56,6 +59,12 @@ export function ProfileScreen({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <RouteLink
+            route={{ page: "trash" }}
+            className="rounded-full border border-line-strong px-3.5 py-2 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            {trashCount ? `Papierkorb (${trashCount})` : "Papierkorb"}
+          </RouteLink>
           <Link
             href="/profile/password"
             className="rounded-full border border-line-strong px-3.5 py-2 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"

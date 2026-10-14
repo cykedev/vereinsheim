@@ -362,6 +362,11 @@ export async function trashCards(db: Db, ownerId: string): Promise<TrashCard[]> 
   })
 }
 
+/** Zahl der Scheiben im Papierkorb (Link im Profil) */
+export async function trashCount(db: Db, ownerId: string): Promise<number> {
+  return db.card.count({ where: { ownerId, ownerPending: false, deletedAt: { not: null } } })
+}
+
 /**
  * was nicht von selbst wiederkommt (P2b, D8): eigene endgültig gelöschte Scheiben (weiche Sperre) und eigene Meldungen
  * „Nicht meine“ (Grabstein mit `userId`), nur Beginn und Zeitpunkt, keine Schussdaten; neueste zuerst

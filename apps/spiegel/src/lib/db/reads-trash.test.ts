@@ -5,7 +5,7 @@ import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import { writeRevision } from "./cards"
-import { blockedCards, ownCardState, ownerCards, trashCards } from "./reads"
+import { blockedCards, ownCardState, ownerCards, trashCards, trashCount } from "./reads"
 
 const db = createPrismaClient()
 const DAY_MS = 86_400_000
@@ -56,6 +56,7 @@ describe("Papierkorb lesen", () => {
   it("nur eigene gelöschte, zuletzt gelöschte zuerst, mit Ende der 30 Tage; Übersichten zeigen sie nicht", async () => {
     const trash = await trashCards(db, site.ownerId)
     expect(trash.map((t) => t.card.id)).toEqual([ids.newer, ids.older])
+    expect(await trashCount(db, site.ownerId)).toBe(2)
     for (const t of trash) expect(t.endsAtMs - t.deletedAtMs).toBe(30 * DAY_MS)
     const shown = (await ownerCards(db, { ownerId: site.ownerId })).map((c) => c.id)
     expect(shown).toEqual([ids.kept])

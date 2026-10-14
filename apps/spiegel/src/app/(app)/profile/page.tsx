@@ -4,6 +4,8 @@ import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 import { ProfileScreen } from "@/components/profile/ProfileScreen"
 import { consentRows } from "@/lib/consent/queries"
+import { db } from "@/lib/db"
+import { trashCount } from "@/lib/db/reads"
 import { isAdmin, requireSession } from "@/lib/auth-helpers"
 
 export const metadata: Metadata = { title: "Profil" }
@@ -16,6 +18,7 @@ export default async function ProfileRoute() {
       email={session.user.email ?? ""}
       isAdmin={isAdmin(session.user.role)}
       sportpass={await consentRows(session.user.id, getDisplayTimeZone())}
+      trashCount={await trashCount(db, session.user.id)}
     />
   )
 }
