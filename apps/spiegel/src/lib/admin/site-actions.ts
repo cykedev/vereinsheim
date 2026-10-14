@@ -6,14 +6,14 @@ import { z } from "zod"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { formatTimeOfDay } from "@vereinsheim/lib/format"
 
-import { Prisma } from "@/generated/prisma/client"
 import { adminActor } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import { createPairing, revokeBridge } from "@/lib/ingest/bridges"
 import type { ActionResult } from "@/lib/types"
 
-// Admin → Anlage (SP-1.6 b): Anlage anlegen und ändern, Brücke koppeln und widerrufen, Epoche bestätigen,
-// SportpassIDs mit Zustimmung an einem Konto. Jede Action prüft selbst (`adminActor`) und gibt ein ActionResult zurück.
+// Admin → Anlage (SP-1.6 b): Anlage anlegen und ändern, Brücke koppeln und widerrufen, Epoche bestätigen, Ranglisten
+// (Zustimmungen per Sportpass: `src/lib/consent/actions.ts`). Jede Action prüft selbst (`adminActor`) und gibt ein
+// ActionResult zurück.
 
 const isTimeZone = (value: string) => {
   try {
@@ -92,69 +92,6 @@ export async function confirmEpoch(sourceId: number): Promise<ActionResult> {
     data: { confirmedAt: new Date() },
   })
   revalidatePath("/admin/site")
-  return { success: true }
-}
-
-const SportpassSchema = z.object({
-  sportpass: z
-    .string()
-    .trim()
-    .regex(/^\d{1,12}$/, "Eine SportpassID hat bis zu zwölf Ziffern.")
-    // Zod prüft weiter, auch wenn das Muster schon nicht passt: erst die Ziffern, dann die Zahl
-    .refine(
-      (value) => !/^\d+$/.test(value) || BigInt(value) > BigInt(0),
-      "Eine SportpassID ist größer als 0."
-    ),
-})
-
-/**
- * Eine SportpassID mit Zustimmung an ein Konto (bis SP-1.7 a trägt sie der Admin nach der Zustimmung auf Papier ein).
- * Eine SportpassID gehört an einer Anlage höchstens einem Konto ([[spiegel-assignment]]).
- */
-export async function addSportpass(
-  userId: string,
-  _previous: ActionResult | null,
-  formData: FormData
-): Promise<ActionResult> {
-  const actor = await adminActor()
-  if ("error" in actor) return actor
-  const parsed = SportpassSchema.safeParse({ sportpass: formData.get("sportpass") ?? "" })
-  if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
-  const [site, user] = await Promise.all([
-    db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true } }),
-    db.user.findUnique({ where: { id: userId }, select: { id: true } }),
-  ])
-  if (!site) return { error: "Zuerst die Anlage anlegen." }
-  if (!user) return { error: "Unbekanntes Konto." }
-  try {
-    await db.sportpassConsent.create({
-      data: {
-        userId,
-        siteId: site.id,
-        sportpassId: BigInt(parsed.data.sportpass),
-        confirmedAt: new Date(),
-      },
-    })
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")
-      return { error: { sportpass: ["Diese SportpassID gehört schon zu einem Konto."] } }
-    throw error
-  }
-  revalidatePath(`/admin/users/${userId}`)
-  return { success: true }
-}
-
-export async function removeSportpass(consentId: number): Promise<ActionResult> {
-  const actor = await adminActor()
-  if ("error" in actor) return actor
-  if (!Number.isSafeInteger(consentId)) return { error: "Unbekannte Zustimmung." }
-  const consent = await db.sportpassConsent.findUnique({
-    where: { id: consentId },
-    select: { userId: true },
-  })
-  if (!consent) return { error: "Unbekannte Zustimmung." }
-  await db.sportpassConsent.deleteMany({ where: { id: consentId } })
-  revalidatePath(`/admin/users/${consent.userId}`)
   return { success: true }
 }
 

@@ -1,4 +1,4 @@
-import { randomInt, randomUUID } from "node:crypto"
+import { randomUUID } from "node:crypto"
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -13,15 +13,12 @@ vi.mock("@/lib/auth-helpers", () => ({
 }))
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }))
 
-const { addSportpass, pairBridge, removeSportpass, revokeBridgeAction, saveSite, setRankingKind } =
-  await import("./site-actions")
+const { pairBridge, revokeBridgeAction, saveSite, setRankingKind } = await import("./site-actions")
 
 const tag = randomUUID().slice(0, 8)
 let adminId: string
 let shooterId: string
 let createdSite: number | null = null
-/** eine SportpassID, die es in der Dev-Datenbank sicher nicht gibt (über zwölf Stellen hinaus nicht möglich) */
-const sportpass = String(900_000_000_000 + randomInt(99_999_999))
 
 const form = (fields: Record<string, string>) => {
   const data = new FormData()
@@ -102,23 +99,5 @@ describe("Art einer Rangliste (Admin)", () => {
     } finally {
       await db.ranking.delete({ where: { id: ranking.id } })
     }
-  })
-})
-
-describe("SportpassIDs mit Zustimmung (Admin)", () => {
-  it("eintragen, doppelt abgelehnt, entfernen; nur Ziffern bis zwölf Stellen", async () => {
-    expect(await addSportpass(shooterId, null, form({ sportpass: "12a" }))).toEqual({
-      error: { sportpass: ["Eine SportpassID hat bis zu zwölf Ziffern."] },
-    })
-    expect(await addSportpass(shooterId, null, form({ sportpass }))).toEqual({ success: true })
-    const consent = await db.sportpassConsent.findFirstOrThrow({ where: { userId: shooterId } })
-    expect(consent.sportpassId.toString()).toBe(sportpass)
-    expect(consent.confirmedAt).not.toBeNull()
-    expect(await addSportpass(adminId, null, form({ sportpass }))).toEqual({
-      error: { sportpass: ["Diese SportpassID gehört schon zu einem Konto."] },
-    })
-    expect(await removeSportpass(consent.id)).toEqual({ success: true })
-    expect(await db.sportpassConsent.count({ where: { userId: shooterId } })).toBe(0)
-    expect(await removeSportpass(consent.id)).toEqual({ error: "Unbekannte Zustimmung." })
   })
 })

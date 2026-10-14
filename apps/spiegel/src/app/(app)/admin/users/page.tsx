@@ -6,8 +6,10 @@ import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsi
 
 import { AdminLoginRateLimitTable } from "@/components/admin/AdminLoginRateLimitTable"
 import { AdminTabs } from "@/components/admin/AdminTabs"
+import { OpenConsents } from "@/components/admin/OpenConsents"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
+import { openConsents } from "@/lib/consent/queries"
 import { getUsers, type UserSummary } from "@/lib/users/queries"
 import { Page } from "@/components/shell/Page"
 
@@ -35,11 +37,15 @@ function UserRow({ user }: { user: UserSummary }) {
   )
 }
 
-// Konten (Admin): Liste, neues Konto, Sperren der Anmeldung
+// Konten (Admin): Liste, neues Konto, offene Zustimmungen per Sportpass, Sperren der Anmeldung
 export default async function AdminUsersRoute() {
   await requireAdmin()
-  const [users, insights] = await Promise.all([getUsers(), getAdminLoginRateLimitInsights()])
   const timeZone = getDisplayTimeZone()
+  const [users, insights, consents] = await Promise.all([
+    getUsers(),
+    getAdminLoginRateLimitInsights(),
+    openConsents(timeZone),
+  ])
   return (
     <Page>
       <section className="grid max-w-3xl gap-4">
@@ -60,6 +66,7 @@ export default async function AdminUsersRoute() {
             Neues Konto
           </Link>
         </div>
+        <OpenConsents consents={consents} />
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
           {users.map((user) => (
             <UserRow key={user.id} user={user} />
