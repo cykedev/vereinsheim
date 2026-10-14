@@ -131,8 +131,12 @@ describe("Folgen an Anlage und Brücke", () => {
     })
     expect(rankingKind({ ranking: "X", cards: 0, kind: "open" })).toMatchObject({
       title: "„X“ nicht zuordnen?",
+      about: "Noch keine Scheibe trägt die Rangliste „X“.",
       confirmLabel: "Nicht zuordnen",
     })
+    expect(rankingKind({ ranking: "X", cards: 0, kind: "open" }).happens[0]).toBe(
+      "Ihre Scheiben zählen als Training: in Liste, Fortschritt und bei der Wertung, die Spiegel vorschlägt."
+    )
   })
 
   it("Zeitzone: nur neu eingelesene Scheiben", () => {

@@ -133,11 +133,11 @@ export function rankingKind({
   const words = RANKING_WORDS[kind]
   return {
     title: `„${ranking}“ ${words.title}?`,
-    about: `Meyton nennt ${scheiben(cards)} mit der Rangliste „${ranking}“.`,
+    about: cards
+      ? `Meyton nennt ${scheiben(cards)} mit der Rangliste „${ranking}“.`
+      : `Noch keine Scheibe trägt die Rangliste „${ranking}“.`,
     happens: [
-      kind === "competition"
-        ? "Diese Scheiben zählen als Wettkampf: in Liste, Fortschritt und bei der Wertung, die Spiegel vorschlägt (Wettkampf in der amtlichen)."
-        : `Diese Scheiben zählen als ${words.counts}: in Liste, Fortschritt und bei der Wertung, die Spiegel vorschlägt.`,
+      `${cards ? "Diese Scheiben" : "Ihre Scheiben"} zählen als ${words.counts}: in Liste, Fortschritt und bei der Wertung, die Spiegel vorschlägt${kind === "competition" ? " (Wettkampf in der amtlichen)" : ""}.`,
       "Neue Scheiben dieser Rangliste ebenso.",
     ],
     notHappening: [
