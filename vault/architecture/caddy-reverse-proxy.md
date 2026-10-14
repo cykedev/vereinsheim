@@ -9,4 +9,4 @@ governed_by: ["[[adr-004]]"]
 documented_in: ["[[overview#Zielarchitektur]]"]
 ---
 
-**TL;DR** Caddy als Reverse Proxy, terminiert TLS (Let's Encrypt, Auto-Renew) und proxyt ringwerk.<domain>/treffsicher.<domain> auf die App-Container.
+**TL;DR** Caddy als Reverse Proxy, terminiert TLS (Let's Encrypt, Auto-Renew) und proxyt ringwerk.<domain>/treffsicher.<domain>/spiegel.<domain> auf die App-Container; jeder Host setzt `X-Real-IP` selbst (`proxy_real_ip`), Spiegel nimmt höchstens 5 MiB je Anfrage.

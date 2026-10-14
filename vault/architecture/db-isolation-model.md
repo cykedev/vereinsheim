@@ -10,4 +10,4 @@ part_of: ["[[architecture]]"]
 documented_in: ["[[architecture#Build & Deploy (ADR-005/006/007/015)]]"]
 ---
 
-**TL;DR** Ein Postgres-Container, zwei DBs + zwei Owner-User (ringwerk, treffsicher); Cross-DB-Zugriff technisch unmöglich.
+**TL;DR** Ein Postgres-Container, drei DBs + drei Owner-User (ringwerk, treffsicher, spiegel; Spiegel seit P3, Oktober 2026); Cross-DB-Zugriff technisch unmöglich. Auf einem laufenden System legt `scripts/db-ensure.sh` fehlende DBs an.

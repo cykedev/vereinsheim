@@ -5,21 +5,24 @@ Sportpass-Opt-in und Meyton-QR ([`vault/spiegel/spiegel.md`](../../vault/spiegel
 (Oktober 2026) stehen Datenbank, Zugriffe und Messung ([ADR-031](../../vault/decisions/adr-031.md),
 [`spiegel-db-schema`](../../vault/spiegel/spiegel-db-schema.md)); seit Teil 2 Anmeldung, Admin und Ratenbegrenzung,
 seit N7 (erster Teil) Start, Scheiben, die Seite einer Scheibe und Profil mit echten Daten
-([`spiegel-navigation`](../../vault/spiegel/spiegel-navigation.md)). Der Deploy-Vertrag (`compose.yml`, `Caddyfile`,
-`db-init/`) folgt in SP-1.9.
+([`spiegel-navigation`](../../vault/spiegel/spiegel-navigation.md)). Seit P3 (Oktober 2026, `plans/2026-10-14-spiegel-stack.md`)
+steht der Deploy-Vertrag: `migrate-spiegel` (192 MB) und `app-spiegel` (256 MB, Heap 160) in `compose.yml`, eine
+Subdomain mit höchstens 5 MiB je Anfrage im `Caddyfile`, die Datenbank aus `db-init/` bzw. `scripts/db-ensure.sh`.
+Lokal prüft `tools/stack-e2e/run.sh` alles Ende zu Ende; der Deploy folgt mit P4 und P5 (SP-1.9).
 
 ## Befehle
 
-| Befehl                                                     | Zweck                                                                                                       |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `pnpm dev --filter spiegel`                                | Dev-Server auf :3002                                                                                        |
-| `pnpm --filter spiegel exec prisma migrate dev --name <x>` | Schema ändern (braucht `.env` mit `DATABASE_URL`)                                                           |
-| `pnpm --filter spiegel test`                               | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                       |
-| `pnpm --filter spiegel measure`                            | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                          |
-| `pnpm --filter spiegel seed:own`                           | die echten Scheiben des Users in die Dev-Datenbank, dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`)  |
-| `pnpm --filter spiegel pruefen`                            | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)   |
-| `pnpm --filter spiegel ingest-load`                        | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)    |
-| `pnpm --filter spiegel bridge-e2e`                         | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB und drei Fällen (`--keep`) |
+| Befehl                                                     | Zweck                                                                                                                                                     |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev --filter spiegel`                                | Dev-Server auf :3002                                                                                                                                      |
+| `pnpm --filter spiegel exec prisma migrate dev --name <x>` | Schema ändern (braucht `.env` mit `DATABASE_URL`)                                                                                                         |
+| `pnpm --filter spiegel test`                               | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                                                                     |
+| `pnpm --filter spiegel measure`                            | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                                                                        |
+| `pnpm --filter spiegel seed:own`                           | die echten Scheiben des Users in die Dev-Datenbank, dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`)                                                |
+| `pnpm --filter spiegel pruefen`                            | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)                                                 |
+| `pnpm --filter spiegel ingest-load`                        | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)                                                  |
+| `pnpm --filter spiegel stack-probe`                        | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                               |
+| `pnpm --filter spiegel bridge-e2e`                         | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB und drei Fällen (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den
@@ -153,7 +156,9 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
 - **Speicher** im Container messen, nicht auf dem Mac (macOS zählt anders; 765 MB auf dem Mac waren 227 MiB im
   Container): Standalone-Build in `node:24-alpine` mit `--memory=256m`, anmelden, Seiten abrufen, `docker stats`
   (10. Oktober 2026, nach dem Review: 57 MiB nach dem Start, 147 bis 152 MiB unter Last). Dafür einen eigenen
-  `NEXTAUTH_SECRET` setzen: Produktion verweigert den Beispielwert aus `.env.example`.
+  `NEXTAUTH_SECRET` setzen: Produktion verweigert den Beispielwert aus `.env.example`. Mit dem echten Image und den
+  Grenzen aus `compose.yml`: `tools/stack-e2e/run.sh --load <min>` (14. Oktober 2026: Spitze 147 MiB, unter Last 108
+  bis 112 MiB).
 - **seed:own** nur gegen die lokale Dev-Datenbank `spiegel` (prüft die Adresse, `--force` für eine andere lokale).
 - Ausgabe in Werkzeugen über `process.stdout.write`, nicht `console.log` (Lint).
 - **Skriptprüfung der App** (`tools/pruefen.ts`, `tools/pruefen/browser.ts`; Plan `plans/2026-10-13-aufraeumen-labor.md`,

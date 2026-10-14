@@ -26,7 +26,7 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           Seite einer Scheibe, Fortschritt und Profil aus shot-ui (N7); Start, Liste, Fortschritt
 │                           und Blättern rechnen auf dem Server aus der Projektion (SP-1.8); Ingest-API v1 für die Brücke
 │                           mit Kopplung, Geräte-Token, Adapter `meyton-ssmdb2@9` und Admin „Anlage und Brücken“
-│                           (SP-1.6 b); noch ohne Deploy (SP-1.9).
+│                           (SP-1.6 b); Image und Stack seit P3 (Oktober 2026), Deploy offen (SP-1.9).
 ├── apps/spiegel-bridge/    Brücke im Schützenhaus (Go, ein statisches Binary, ADR-027): liest die SSMDB2 nur lesend,
 │                           erkennt Änderungen und baut Snapshots v1 (SP-1.4 a, Oktober 2026, nur lokal); Tests gegen
 │                           die Vektoren von ingest-contract und die Fälle von ssmdb2-cases.
@@ -76,9 +76,12 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           architecture (dies), shared-conventions, consistency
 ├── .claude/                Harness: settings(+hooks), skills/, agents/, context/, knowledge-graph.json
 ├── .mcp.json               codegraph + memory MCP (Knowledge-Graph, ADR-016)
-├── compose.yml + Caddyfile + db-init/        Prod-Deploy-Vertrag (VPS, unverändert)
-├── docker-compose.dev.yml  geteilter Dev-Postgres (DBs: ringwerk + treffsicher)
+├── compose.yml + Caddyfile + db-init/        Prod-Deploy-Vertrag (VPS): drei Apps, drei DBs (Spiegel seit P3)
+├── docker-compose.dev.yml  geteilter Dev-Postgres (DBs: ringwerk, treffsicher, spiegel)
 ├── Dockerfile              EIN parametrisiertes Build-File (turbo prune, --build-arg APP)
+├── tools/stack-e2e/        der ganze Stack lokal Ende zu Ende: eigene Images und eigenes Compose-Projekt, Caddy auf
+│                           Ports, Prüfungen samt Brücke und Last (P3, Oktober 2026)
+├── scripts/db-ensure.sh    fehlende App-Datenbanken auf dem laufenden System anlegen (`vereinsheim db-ensure`)
 ├── scripts/bootstrap-dev.sh  Dev-Onboarding: frische Workstation arbeitsfähig (Toolchain, codegraph, Dev-DB, .env, Schema; idempotent)
 └── scripts/vereinsheim     Ops-CLI (dev-setup/build/release/deploy/backup/restore/…)
 ```
@@ -88,13 +91,16 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 Lokaler Build aus dem Monorepo: `vereinsheim build` → `turbo prune <app> --docker` → Root-`Dockerfile`
 (deps→builder→runner/migrator) → Docker Hub (`<user>/<app>:<sha>` + `:<sha>-migrator` + `:latest*`).
 Der VPS pullt; `compose.yml` startet pro App `migrate-*` (one-shot `prisma migrate deploy`) **vor**
-`app-*` (Next standalone, `node server.js`). Caddy terminiert TLS und proxyt die zwei Subdomains.
+`app-*` (Next standalone, `node server.js`). Caddy terminiert TLS und proxyt die drei Subdomains. Grenzen seit P3:
+Apps 256 MB mit `--max-old-space-size=160`, Migratoren 192 MB, Caddy 64 MB, Postgres 384 MB ([[vps-resource-sizing]]).
+Lokal prüft `tools/stack-e2e/run.sh` den ganzen Stack mit den echten Images, bevor etwas auf den VPS geht.
 
 ```
 Internet ──443──> Caddy ─┬─ ringwerk.<domain>    → app-ringwerk:3000
-                         └─ treffsicher.<domain> → app-treffsicher:3000
+                         ├─ treffsicher.<domain> → app-treffsicher:3000
+                         └─ spiegel.<domain>     → app-spiegel:3000   (max. 5 MiB je Anfrage)
 Netze: web {caddy, app-*}   data {db, app-*, migrate-*}   (db NICHT im web-Netz, ADR-003)
-DB: 1 Postgres, 2 DBs + 2 Owner-User (ringwerk, treffsicher), Cross-DB technisch unmöglich (ADR-002)
+DB: 1 Postgres, 3 DBs + 3 Owner-User (ringwerk, treffsicher, spiegel), Cross-DB technisch unmöglich (ADR-002)
 ```
 
 ## Routen (Überblick)

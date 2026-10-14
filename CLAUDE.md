@@ -160,7 +160,8 @@ Teil 1 (Oktober 2026) gibt es [`apps/spiegel`](apps/spiegel) (Dev-Port 3002, Dev
 und Projektion je Scheibe ([ADR-031](vault/decisions/adr-031.md)); seit Teil 2 mit Anmeldung und Konten, seit N7 mit
 Start, Scheiben, der Seite einer Scheibe und Fortschritt aus `shot-ui`, gerechnet auf dem Server aus der Projektion (die
 eigenen Scheiben: `pnpm --filter spiegel seed:own`).
-Noch ohne Deploy (SP-1.9). Seit SP-1.4 a gibt es die Brücke [`apps/spiegel-bridge`](apps/spiegel-bridge) in **Go**
+Image und Stack stehen seit P3 (lokal Ende zu Ende geprüft, `tools/stack-e2e/run.sh`), der Deploy folgt (SP-1.9: P4 CLI und
+Backup, P5 Runbook). Seit SP-1.4 a gibt es die Brücke [`apps/spiegel-bridge`](apps/spiegel-bridge) in **Go**
 (SP-0.4, [ADR-027](vault/decisions/adr-027.md)); Go ist damit Pflicht im Dev-Setup, das Gate ruft `go vet`, `gofmt`,
 `go test` und `go build`.
 
