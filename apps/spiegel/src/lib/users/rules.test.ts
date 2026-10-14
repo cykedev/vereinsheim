@@ -22,14 +22,14 @@ describe("accountChangeBlocked", () => {
         next: { role: "USER", isActive: true },
         otherActiveAdmins: 0,
       })
-    ).toMatch(/letzte aktive Admin/)
+    ).toMatch(/immer einen aktiven Admin/)
     expect(
       accountChangeBlocked({
         ...base,
         next: { role: "ADMIN", isActive: false },
         otherActiveAdmins: 0,
       })
-    ).toMatch(/letzte aktive Admin/)
+    ).toMatch(/immer einen aktiven Admin/)
     expect(
       accountChangeBlocked({
         ...base,

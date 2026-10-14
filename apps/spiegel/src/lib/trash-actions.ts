@@ -13,8 +13,8 @@ import type { ActionResult } from "@/lib/types"
 // unter der Sperre der Zeile, Prüfung und Änderung in einer Transaktion (§9). Eine wartende Scheibe in „Offen“ hat
 // „Nicht meine“ und lässt sich hier nicht löschen.
 
-const MISSING = "Die Scheibe gibt es nicht."
-const NOT_IN_TRASH = "Die Scheibe liegt nicht im Papierkorb."
+const MISSING = "Diese Scheibe gibt es nicht mehr."
+const NOT_IN_TRASH = "Diese Scheibe liegt nicht mehr im Papierkorb."
 const FAILED = "Das ließ sich nicht speichern. Bitte noch einmal versuchen."
 
 /** die eigene, nicht wartende Scheibe, gesperrt wie beim Schreiben (`lockCard`); sonst null */
@@ -32,7 +32,7 @@ async function run(
   change: (tx: Prisma.TransactionClient, ownerId: string) => Promise<string | null>
 ): Promise<ActionResult> {
   const ownerId = await shooterId()
-  if (!ownerId) return { error: "Nicht angemeldet" }
+  if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
   if (!isCardIdInput(cardId)) return { error: MISSING }
   let error: string | null
   try {
@@ -50,7 +50,7 @@ export async function deleteCard(cardId: string): Promise<ActionResult> {
   return run(cardId, async (tx, ownerId) => {
     const card = await ownCard(tx, cardId, ownerId)
     if (!card) return MISSING
-    if (card.deletedAt) return "Schon gelöscht."
+    if (card.deletedAt) return "Diese Scheibe ist schon gelöscht."
     // die Bedingung auch im Befehl selbst (§9)
     const { count } = await tx.card.updateMany({
       where: { id: cardId, ownerId, ownerPending: false, deletedAt: null },
@@ -67,7 +67,7 @@ export async function restoreCard(cardId: string): Promise<ActionResult> {
     if (!card) return MISSING
     if (!card.deletedAt) return NOT_IN_TRASH
     if (trashEndsAt(card.deletedAt).getTime() <= Date.now())
-      return "Die 30 Tage sind um; die Scheibe lässt sich nicht mehr wiederherstellen."
+      return "Die 30 Tage sind um. Die Scheibe lässt sich nicht mehr wiederherstellen."
     const { count } = await tx.card.updateMany({
       where: { id: cardId, ownerId, deletedAt: card.deletedAt },
       data: { deletedAt: null },

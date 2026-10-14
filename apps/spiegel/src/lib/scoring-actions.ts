@@ -19,11 +19,11 @@ const isScoring = (value: unknown): value is Scoring => value === "decimal" || v
 export async function setCardScoring(cardId: string, scoring: Scoring): Promise<ActionResult> {
   try {
     const ownerId = await shooterId()
-    if (!ownerId) return { error: "Nicht angemeldet" }
+    if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
     if (!isScoring(scoring)) return { error: "Unbekannte Wertung." }
-    if (!isCardIdInput(cardId)) return { error: "Die Scheibe gibt es nicht." }
+    if (!isCardIdInput(cardId)) return { error: "Diese Scheibe gibt es nicht mehr." }
     if (!(await chooseCardScoring(db, { cardId, ownerId, scoring })))
-      return { error: "Die Scheibe gibt es nicht." }
+      return { error: "Diese Scheibe gibt es nicht mehr." }
     revalidatePath("/", "layout")
     return { success: true }
   } catch {
@@ -38,7 +38,7 @@ export async function setFamilyScoring(
 ): Promise<ActionResult> {
   try {
     const ownerId = await shooterId()
-    if (!ownerId) return { error: "Nicht angemeldet" }
+    if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
     if (!isScoring(scoring)) return { error: "Unbekannte Wertung." }
     if (typeof familySlug !== "string" || familySlug.length > 64)
       return { error: "Die Familie gibt es nicht." }

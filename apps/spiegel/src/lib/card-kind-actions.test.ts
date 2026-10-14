@@ -57,12 +57,14 @@ describe("setCardKind", () => {
     expect(await setCardKind(own, "training")).toEqual({ success: true })
     expect(await choiceOf(own)).toBe("training")
 
-    const missing = { error: "Die Scheibe gibt es nicht." }
+    const missing = { error: "Diese Scheibe gibt es nicht mehr." }
     expect(await setCardKind(trash, "competition")).toEqual(missing)
     expect(await choiceOf(trash)).toBeNull()
     expect(await setCardKind("gibt-es-nicht", "competition")).toEqual(missing)
     expect(await setCardKind(42 as unknown as string, "competition")).toEqual(missing)
-    expect(await setCardKind(own, "probe" as "training")).toEqual({ error: "Unbekannte Art." })
+    expect(await setCardKind(own, "probe" as "training")).toEqual({
+      error: "Das ließ sich nicht speichern. Bitte lade die Seite neu.",
+    })
     mocks.session = { user: { id: "jemand-anderes", role: "ADMIN" } }
     expect(await setCardKind(own, "competition")).toEqual(missing)
     expect(await choiceOf(own)).toBe("training")
@@ -78,9 +80,13 @@ describe("setCardKind", () => {
 
   it("ohne Sitzung oder mit Passwort vom Admin ein Fehler", async () => {
     mocks.session = null
-    expect(await setCardKind(own, "competition")).toEqual({ error: "Nicht angemeldet" })
+    expect(await setCardKind(own, "competition")).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
     mocks.session = { user: { id: site.ownerId, role: "USER", mustChangePassword: true } }
-    expect(await setCardKind(own, "competition")).toEqual({ error: "Nicht angemeldet" })
+    expect(await setCardKind(own, "competition")).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
     expect(await choiceOf(own)).toBe("training")
   })
 })

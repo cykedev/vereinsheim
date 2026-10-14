@@ -63,6 +63,8 @@ describe("changeOwnPassword", () => {
 
   it("ohne Sitzung nichts", async () => {
     mocks.session = null
-    expect(await changeOwnPassword(null, form("a", "b"))).toEqual({ error: "Nicht angemeldet" })
+    expect(await changeOwnPassword(null, form("a", "b"))).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
   })
 })

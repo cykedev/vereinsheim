@@ -19,11 +19,11 @@ const isKind = (value: unknown): value is CardKind =>
 export async function setCardKind(cardId: string, kind: CardKind): Promise<ActionResult> {
   try {
     const ownerId = await shooterId()
-    if (!ownerId) return { error: "Nicht angemeldet" }
-    if (!isKind(kind)) return { error: "Unbekannte Art." }
-    if (!isCardIdInput(cardId)) return { error: "Die Scheibe gibt es nicht." }
+    if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+    if (!isKind(kind)) return { error: "Das ließ sich nicht speichern. Bitte lade die Seite neu." }
+    if (!isCardIdInput(cardId)) return { error: "Diese Scheibe gibt es nicht mehr." }
     const result = await chooseCardKind(db, { cardId, ownerId, kind })
-    if (result === "missing") return { error: "Die Scheibe gibt es nicht." }
+    if (result === "missing") return { error: "Diese Scheibe gibt es nicht mehr." }
     if (result === "probeOnly") return { error: "Eine Scheibe nur aus Probe ist Training." }
     revalidatePath("/", "layout")
     return { success: true }

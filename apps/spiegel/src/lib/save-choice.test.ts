@@ -21,9 +21,13 @@ describe("saveChoice", () => {
   })
 
   it("ein Fehler der Action als Text, auch je Feld", async () => {
-    expect(await saveChoice(async () => ({ error: "Nicht angemeldet" }), "rings", NOT_SAVED)).toBe(
-      "Nicht angemeldet"
-    )
+    expect(
+      await saveChoice(
+        async () => ({ error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }),
+        "rings",
+        NOT_SAVED
+      )
+    ).toBe("Du bist nicht mehr angemeldet. Bitte melde dich neu an.")
     expect(
       await saveChoice(
         async () => ({ error: { scoring: ["Unbekannte Wertung."] } }),

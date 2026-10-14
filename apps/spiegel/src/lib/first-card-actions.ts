@@ -14,7 +14,7 @@ import type { ActionResult } from "@/lib/types"
 // erste Scheibe einer Zustimmung als seine bestätigt, wartet jede neue (`Card.ownerPending`) und steht nur in „Offen“.
 // Beide Actions gelten für alle wartenden Scheiben des Kontos unter derselben SportpassID.
 
-const MISSING = "Die Scheibe gibt es nicht."
+const MISSING = "Diese Scheibe gibt es nicht mehr."
 const FAILED = "Das ließ sich nicht speichern. Bitte noch einmal versuchen."
 
 /**
@@ -41,7 +41,7 @@ async function pendingCard(tx: Prisma.TransactionClient, cardId: string, ownerId
 /** „Ja, meine“: die Wartenden der SportpassID werden sichtbar, die erste Scheibe der Zustimmung gilt als bestätigt */
 export async function confirmFirstCard(cardId: string): Promise<ActionResult> {
   const ownerId = await shooterId()
-  if (!ownerId) return { error: "Nicht angemeldet" }
+  if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
   if (!isCardIdInput(cardId)) return { error: MISSING }
   try {
     const found = await db.$transaction(async (tx) => {
@@ -78,7 +78,7 @@ export async function confirmFirstCard(cardId: string): Promise<ActionResult> {
  */
 export async function rejectFirstCard(cardId: string): Promise<ActionResult> {
   const ownerId = await shooterId()
-  if (!ownerId) return { error: "Nicht angemeldet" }
+  if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
   if (!isCardIdInput(cardId)) return { error: MISSING }
   try {
     const found = await db.$transaction(async (tx) => {

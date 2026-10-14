@@ -27,7 +27,10 @@ const isTimeZone = (value: string) => {
 
 const SiteSchema = z.object({
   name: z.string().trim().min(1, "Bitte einen Namen eingeben.").max(80, "Höchstens 80 Zeichen."),
-  timeZone: z.string().trim().refine(isTimeZone, "Unbekannte Zeitzone, etwa Europe/Berlin."),
+  timeZone: z
+    .string()
+    .trim()
+    .refine(isTimeZone, "Diese Zeitzone kennt Spiegel nicht. In Deutschland: Europe/Berlin."),
 })
 
 export async function saveSite(
@@ -54,9 +57,7 @@ export async function saveSite(
   )
     return {
       error: {
-        timeZone: [
-          "Die Zeitzone lässt sich nur ändern, solange noch keine Scheibe eingelesen ist.",
-        ],
+        timeZone: ["Die Zeitzone lässt sich nicht mehr ändern, weil schon Scheiben da sind."],
       },
     }
   if (site) await db.site.update({ where: { id: site.id }, data: parsed.data })
@@ -80,7 +81,7 @@ export async function pairBridge(
   const parsed = PairSchema.safeParse({ name: formData.get("name") ?? "" })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
   const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true } })
-  if (!site) return { error: "Zuerst die Anlage anlegen." }
+  if (!site) return { error: "Richte zuerst die Meyton-Anlage ein." }
   const pairing = await createPairing(db, {
     siteId: site.id,
     name: parsed.data.name,
@@ -95,7 +96,8 @@ export async function pairBridge(
 export async function revokeBridgeAction(bridgeId: number): Promise<ActionResult> {
   const actor = await adminActor()
   if ("error" in actor) return actor
-  if (!Number.isSafeInteger(bridgeId)) return { error: "Unbekannte Brücke." }
+  if (!Number.isSafeInteger(bridgeId))
+    return { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
   await revokeBridge(db, bridgeId)
   revalidatePath("/admin/site")
   revalidatePath("/admin")
@@ -111,16 +113,19 @@ const RANKING_KINDS = ["training", "competition", "open"] as const
 export async function setRankingKind(rankingId: number, kind: string): Promise<ActionResult> {
   const actor = await adminActor()
   if ("error" in actor) return actor
-  if (!Number.isSafeInteger(rankingId)) return { error: "Unbekannte Rangliste." }
-  if (!(RANKING_KINDS as readonly string[]).includes(kind)) return { error: "Unbekannte Art." }
+  if (!Number.isSafeInteger(rankingId))
+    return { error: "Das ließ sich nicht speichern. Bitte lade die Seite neu." }
+  if (!(RANKING_KINDS as readonly string[]).includes(kind))
+    return { error: "Das ließ sich nicht speichern. Bitte lade die Seite neu." }
   try {
     const updated = await db.ranking.updateMany({
       where: { id: rankingId },
       data: { kind: kind === "open" ? null : (kind as "training" | "competition") },
     })
-    if (updated.count === 0) return { error: "Unbekannte Rangliste." }
+    if (updated.count === 0)
+      return { error: "Das ließ sich nicht speichern. Bitte lade die Seite neu." }
   } catch {
-    return { error: "Die Art der Rangliste konnte nicht gespeichert werden." }
+    return { error: "Das ließ sich nicht speichern. Bitte noch einmal versuchen." }
   }
   // Liste, Start und Fortschritt rechnen die Art beim Lesen
   revalidatePath("/", "layout")

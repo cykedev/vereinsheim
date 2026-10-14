@@ -77,9 +77,7 @@ describe("Zeitzone der Anlage (Review P2c)", () => {
       const other = site.timeZone === "Europe/Vienna" ? "Europe/Berlin" : "Europe/Vienna"
       expect(await saveSite(null, form({ name: site.name, timeZone: other }))).toEqual({
         error: {
-          timeZone: [
-            "Die Zeitzone lässt sich nur ändern, solange noch keine Scheibe eingelesen ist.",
-          ],
+          timeZone: ["Die Zeitzone lässt sich nicht mehr ändern, weil schon Scheiben da sind."],
         },
       })
       expect((await db.site.findUniqueOrThrow({ where: { id: site.id } })).timeZone).toBe(
@@ -100,8 +98,10 @@ describe("Zeitzone der Anlage (Review P2c)", () => {
 describe("Anlage und Brücken (Admin)", () => {
   it("nur ein Admin, der sein Passwort schon ersetzt hat", async () => {
     mocks.session = { user: { id: shooterId, role: "USER" } }
-    expect(await pairBridge(null, form({ name: "x" }))).toEqual({ error: "Keine Berechtigung" })
-    expect(await revokeBridgeAction(1)).toEqual({ error: "Keine Berechtigung" })
+    expect(await pairBridge(null, form({ name: "x" }))).toEqual({
+      error: "Das darf nur ein Admin.",
+    })
+    expect(await revokeBridgeAction(1)).toEqual({ error: "Das darf nur ein Admin." })
     mocks.session = { user: { id: adminId, role: "ADMIN", mustChangePassword: true } }
     expect(await saveSite(null, form({}))).toEqual({
       error: "Bitte zuerst das eigene Passwort ändern.",
@@ -110,7 +110,9 @@ describe("Anlage und Brücken (Admin)", () => {
 
   it("Zeitzone wird geprüft, bevor etwas geschrieben wird", async () => {
     const result = await saveSite(null, form({ name: "Verein", timeZone: "Mond/Krater" }))
-    expect(result).toEqual({ error: { timeZone: ["Unbekannte Zeitzone, etwa Europe/Berlin."] } })
+    expect(result).toEqual({
+      error: { timeZone: ["Diese Zeitzone kennt Spiegel nicht. In Deutschland: Europe/Berlin."] },
+    })
   })
 
   it("„Brücke koppeln“ gibt einen Code mit Uhrzeit, gespeichert ist nur sein Hash", async () => {
@@ -135,11 +137,15 @@ describe("Art einer Rangliste (Admin)", () => {
       )
       expect(await setRankingKind(ranking.id, "open")).toEqual({ success: true })
       expect((await db.ranking.findUniqueOrThrow({ where: { id: ranking.id } })).kind).toBeNull()
-      expect(await setRankingKind(ranking.id, "liga")).toEqual({ error: "Unbekannte Art." })
-      expect(await setRankingKind(-1, "training")).toEqual({ error: "Unbekannte Rangliste." })
+      expect(await setRankingKind(ranking.id, "liga")).toEqual({
+        error: "Das ließ sich nicht speichern. Bitte lade die Seite neu.",
+      })
+      expect(await setRankingKind(-1, "training")).toEqual({
+        error: "Das ließ sich nicht speichern. Bitte lade die Seite neu.",
+      })
       mocks.session = { user: { id: shooterId, role: "USER" } }
       expect(await setRankingKind(ranking.id, "training")).toEqual({
-        error: "Keine Berechtigung",
+        error: "Das darf nur ein Admin.",
       })
       expect((await db.ranking.findUniqueOrThrow({ where: { id: ranking.id } })).kind).toBeNull()
     } finally {

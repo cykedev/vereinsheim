@@ -20,13 +20,13 @@ const RequestSchema = z.object({
   sportpass: z
     .string()
     .trim()
-    .regex(/^\d{1,12}$/, "Eine SportpassID hat bis zu zwölf Ziffern.")
+    .regex(/^\d{1,12}$/, "Eine Sportpassnummer hat höchstens zwölf Ziffern.")
     // Zod prüft weiter, auch wenn das Muster schon nicht passt: erst die Ziffern, dann die Zahl
     .refine(
       (value) => !/^\d+$/.test(value) || BigInt(value) > BigInt(0),
-      "Eine SportpassID ist größer als 0."
+      "Bitte eine gültige Sportpassnummer eingeben."
     ),
-  agree: z.literal("on", { error: "Bitte dem Hinweis zustimmen." }),
+  agree: z.literal("on", { error: "Bitte setz das Häkchen, wenn du zustimmst." }),
 })
 
 const isConsentId = (value: unknown): value is number =>
@@ -54,7 +54,7 @@ export async function requestSportpass(
   formData: FormData
 ): Promise<ActionResult> {
   const userId = await shooterId()
-  if (!userId) return { error: "Nicht angemeldet" }
+  if (!userId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
   if (formData.get("version") !== CURRENT_CONSENT_VERSION) return { error: STALE_TEXT }
   const parsed = RequestSchema.safeParse({
     sportpass: formData.get("sportpass") ?? "",
@@ -62,7 +62,7 @@ export async function requestSportpass(
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
   const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true } })
-  if (!site) return { error: "Spiegel ist noch nicht eingerichtet." }
+  if (!site) return { error: "Richte zuerst die Meyton-Anlage ein." }
   const sportpassId = BigInt(parsed.data.sportpass)
   try {
     // Zählen und Anlegen in einer Transaktion unter der Sperre der Kontozeile: gleichzeitige Aufrufe desselben Kontos
@@ -83,7 +83,7 @@ export async function requestSportpass(
     })
   } catch (error) {
     if (error instanceof LimitReached)
-      return { error: { sportpass: ["Höchstens drei SportpassIDs je Konto."] } }
+      return { error: { sportpass: ["Du kannst höchstens drei Sportpassnummern eintragen."] } }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       // die eigene sagt das; wem eine fremde gehört, sagt die Meldung nicht
       const own = await db.sportpassConsent.count({
@@ -93,8 +93,8 @@ export async function requestSportpass(
         error: {
           sportpass: [
             own
-              ? "Diese SportpassID steht schon in deinem Profil."
-              : "Diese SportpassID ist schon vergeben. Wende dich an einen Admin.",
+              ? "Diese Sportpassnummer steht schon in deinem Profil."
+              : "Diese Sportpassnummer hat schon jemand eingetragen. Wende dich an einen Admin.",
           ],
         },
       }
@@ -111,10 +111,12 @@ export async function requestSportpass(
  */
 export async function revokeSportpass(consentId: number): Promise<ActionResult> {
   const userId = await shooterId()
-  if (!userId) return { error: "Nicht angemeldet" }
-  if (!isConsentId(consentId)) return { error: "Unbekannte Zustimmung." }
+  if (!userId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (!isConsentId(consentId))
+    return { error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu." }
   const { count } = await db.sportpassConsent.deleteMany({ where: { id: consentId, userId } })
-  if (count === 0) return { error: "Unbekannte Zustimmung." }
+  if (count === 0)
+    return { error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu." }
   revalidateConsents(userId)
   return { success: true }
 }
@@ -127,17 +129,19 @@ async function decide(
 ): Promise<ActionResult> {
   const actor = await adminActor()
   if ("error" in actor) return actor
-  if (!isConsentId(consentId)) return { error: "Unbekannte Zustimmung." }
+  if (!isConsentId(consentId))
+    return { error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu." }
   const consent = await db.sportpassConsent.findUnique({
     where: { id: consentId },
     select: { userId: true },
   })
-  if (!consent) return { error: "Unbekannte Zustimmung." }
+  if (!consent)
+    return { error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu." }
   const { count } = await db.sportpassConsent.updateMany({
     where: { id: consentId, ...where },
     data,
   })
-  if (count === 0) return { error: "Schon entschieden." }
+  if (count === 0) return { error: "Das hat gerade schon jemand entschieden. Lade die Seite neu." }
   revalidateConsents(consent.userId)
   return { success: true }
 }
@@ -161,12 +165,14 @@ export async function rejectConsent(consentId: number): Promise<ActionResult> {
 export async function removeConsent(consentId: number): Promise<ActionResult> {
   const actor = await adminActor()
   if ("error" in actor) return actor
-  if (!isConsentId(consentId)) return { error: "Unbekannte Zustimmung." }
+  if (!isConsentId(consentId))
+    return { error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu." }
   const consent = await db.sportpassConsent.findUnique({
     where: { id: consentId },
     select: { userId: true },
   })
-  if (!consent) return { error: "Unbekannte Zustimmung." }
+  if (!consent)
+    return { error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu." }
   await db.sportpassConsent.deleteMany({ where: { id: consentId } })
   revalidateConsents(consent.userId)
   return { success: true }
@@ -180,12 +186,14 @@ export async function removeConsent(consentId: number): Promise<ActionResult> {
 export async function liftNotMine(consentId: number): Promise<ActionResult> {
   const actor = await adminActor()
   if ("error" in actor) return actor
-  if (!isConsentId(consentId)) return { error: "Unbekannte Zustimmung." }
+  if (!isConsentId(consentId))
+    return { error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu." }
   const consent = await db.sportpassConsent.findUnique({
     where: { id: consentId },
     select: { userId: true, siteId: true, sportpassId: true },
   })
-  if (!consent) return { error: "Unbekannte Zustimmung." }
+  if (!consent)
+    return { error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu." }
   let lifted: number
   try {
     lifted = await db.$transaction(async (tx) => {
@@ -211,7 +219,7 @@ export async function liftNotMine(consentId: number): Promise<ActionResult> {
   } catch {
     return { error: "Das ließ sich nicht speichern. Bitte noch einmal versuchen." }
   }
-  if (lifted === 0) return { error: "Es gibt keine Meldungen „nicht meine“ mehr zu dieser Nummer." }
+  if (lifted === 0) return { error: "Unter dieser Nummer ist keine Scheibe mehr zurückgewiesen." }
   revalidateConsents(consent.userId)
   return { success: true }
 }

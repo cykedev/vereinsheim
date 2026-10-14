@@ -17,9 +17,9 @@ const name = z
 const email = z
   .string()
   .trim()
-  .email({ message: "Ungültige E-Mail-Adresse" })
+  .email({ message: "Bitte eine gültige E-Mail-Adresse eingeben." })
   .max(MAX_USER_EMAIL_LENGTH)
-const role = z.enum(ROLES, { message: "Ungültige Rolle" })
+const role = z.enum(ROLES, { message: "Das ließ sich nicht speichern. Bitte lade die Seite neu." })
 
 export const CreateUserSchema = z.object({
   name,
@@ -27,7 +27,7 @@ export const CreateUserSchema = z.object({
   tempPassword: z
     .string()
     .min(MIN_PASSWORD_LENGTH, `Mindestens ${MIN_PASSWORD_LENGTH} Zeichen`)
-    .max(MAX_PASSWORD_LENGTH, "Passwort ist zu lang"),
+    .max(MAX_PASSWORD_LENGTH, "Das Passwort ist zu lang."),
   role,
 })
 
@@ -43,7 +43,7 @@ export const UpdateUserSchema = z.object({
     .refine((v) => v.length === 0 || v.length >= MIN_PASSWORD_LENGTH, {
       message: `Mindestens ${MIN_PASSWORD_LENGTH} Zeichen`,
     })
-    .refine((v) => v.length <= MAX_PASSWORD_LENGTH, { message: "Passwort ist zu lang" }),
+    .refine((v) => v.length <= MAX_PASSWORD_LENGTH, { message: "Das Passwort ist zu lang." }),
 })
 
 /**
@@ -62,6 +62,6 @@ export function accountChangeBlocked(input: {
     return "Du kannst dein eigenes Konto nicht deaktivieren."
   const losesAdmin = next.role !== "ADMIN" || !next.isActive
   if (target.role === "ADMIN" && target.isActive && losesAdmin && otherActiveAdmins === 0)
-    return "Der letzte aktive Admin kann nicht herabgestuft oder deaktiviert werden."
+    return "Es muss immer einen aktiven Admin geben. Dieses Konto ist der letzte."
   return null
 }

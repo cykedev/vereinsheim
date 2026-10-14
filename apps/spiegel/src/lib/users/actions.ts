@@ -16,7 +16,7 @@ import { accountChangeBlocked, CreateUserSchema, UpdateUserSchema } from "./rule
 // Kontenverwaltung für Admins, wie Ringwerk (ohne Protokoll, das kommt mit der Zuordnung, SP-1.7). Keine Ausnahme
 // nach außen: jede Antwort ist ein ActionResult.
 
-const EMAIL_TAKEN = "Diese E-Mail-Adresse wird bereits verwendet."
+const EMAIL_TAKEN = "Diese E-Mail-Adresse hat schon ein anderes Konto."
 
 /** Prisma-Fehlercode, wenn es einer ist */
 const prismaCode = (error: unknown) =>
@@ -24,8 +24,8 @@ const prismaCode = (error: unknown) =>
 
 async function adminId(): Promise<string | ActionResult> {
   const session = await getAuthSession()
-  if (!session) return { error: "Nicht angemeldet" }
-  if (!isAdmin(session.user.role)) return { error: "Keine Berechtigung" }
+  if (!session) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (!isAdmin(session.user.role)) return { error: "Das darf nur ein Admin." }
   if (session.user.mustChangePassword) return { error: "Bitte zuerst das eigene Passwort ändern." }
   return session.user.id
 }
@@ -45,7 +45,7 @@ export async function createUser(
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
   const email = normalizeLoginEmail(parsed.data.email)
-  if (!email) return { error: "Ungültige E-Mail-Adresse." }
+  if (!email) return { error: "Bitte eine gültige E-Mail-Adresse eingeben." }
   if (await db.user.findUnique({ where: { email }, select: { id: true } }))
     return { error: EMAIL_TAKEN }
 
@@ -81,7 +81,7 @@ export async function updateUser(
     where: { id },
     select: { id: true, role: true, isActive: true },
   })
-  if (!target) return { error: "Konto nicht gefunden." }
+  if (!target) return { error: "Dieses Konto gibt es nicht mehr." }
   const parsed = UpdateUserSchema.safeParse({
     name: formData.get("name") ?? "",
     email: formData.get("email"),
@@ -91,7 +91,7 @@ export async function updateUser(
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
   const email = normalizeLoginEmail(parsed.data.email)
-  if (!email) return { error: "Ungültige E-Mail-Adresse." }
+  if (!email) return { error: "Bitte eine gültige E-Mail-Adresse eingeben." }
   if (await db.user.findFirst({ where: { email, NOT: { id } }, select: { id: true } }))
     return { error: EMAIL_TAKEN }
 

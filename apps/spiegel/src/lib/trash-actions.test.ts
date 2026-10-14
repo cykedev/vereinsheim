@@ -62,7 +62,7 @@ describe("deleteCard", () => {
     const id = await card()
     expect(await deleteCard(id)).toEqual({ success: true })
     expect((await stateOf(id))?.deletedAt).toBeInstanceOf(Date)
-    expect(await deleteCard(id)).toEqual({ error: "Schon gelöscht." })
+    expect(await deleteCard(id)).toEqual({ error: "Diese Scheibe ist schon gelöscht." })
   })
 
   it("fremde, wartende und unbekannte Scheiben nicht; ohne Sitzung nichts", async () => {
@@ -70,12 +70,14 @@ describe("deleteCard", () => {
     const foreign = await card({ ownerId: otherId })
     const pending = await card({ pending: true })
     for (const id of [foreign, pending, "c0000000000000000000unknown"])
-      expect(await deleteCard(id)).toEqual({ error: "Die Scheibe gibt es nicht." })
+      expect(await deleteCard(id)).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
     expect((await stateOf(foreign))?.deletedAt).toBeNull()
     expect((await stateOf(pending))?.deletedAt).toBeNull()
-    expect(await deleteCard("../x")).toEqual({ error: "Die Scheibe gibt es nicht." })
+    expect(await deleteCard("../x")).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
     mocks.session = null
-    expect(await deleteCard(foreign)).toEqual({ error: "Nicht angemeldet" })
+    expect(await deleteCard(foreign)).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
   })
 })
 
@@ -86,7 +88,9 @@ describe("restoreCard", () => {
     await deleteCard(id)
     expect(await restoreCard(id)).toEqual({ success: true })
     expect((await stateOf(id))?.deletedAt).toBeNull()
-    expect(await restoreCard(id)).toEqual({ error: "Die Scheibe liegt nicht im Papierkorb." })
+    expect(await restoreCard(id)).toEqual({
+      error: "Diese Scheibe liegt nicht mehr im Papierkorb.",
+    })
   })
 
   it("nach 30 Tagen nicht mehr; eine fremde nie", async () => {
@@ -97,13 +101,13 @@ describe("restoreCard", () => {
       data: { deletedAt: new Date(Date.now() - 31 * DAY_MS) },
     })
     expect(await restoreCard(late)).toEqual({
-      error: "Die 30 Tage sind um; die Scheibe lässt sich nicht mehr wiederherstellen.",
+      error: "Die 30 Tage sind um. Die Scheibe lässt sich nicht mehr wiederherstellen.",
     })
     expect((await stateOf(late))?.deletedAt).not.toBeNull()
 
     const foreign = await card({ ownerId: otherId })
     await db.card.update({ where: { id: foreign }, data: { deletedAt: new Date() } })
-    expect(await restoreCard(foreign)).toEqual({ error: "Die Scheibe gibt es nicht." })
+    expect(await restoreCard(foreign)).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
     expect((await stateOf(foreign))?.deletedAt).not.toBeNull()
   })
 })
@@ -113,7 +117,9 @@ describe("purgeCardNow", () => {
     asOwner()
     const id = await card()
     const { scheibenId } = await db.card.findUniqueOrThrow({ where: { id } })
-    expect(await purgeCardNow(id)).toEqual({ error: "Die Scheibe liegt nicht im Papierkorb." })
+    expect(await purgeCardNow(id)).toEqual({
+      error: "Diese Scheibe liegt nicht mehr im Papierkorb.",
+    })
     expect(await stateOf(id)).not.toBeNull()
 
     await deleteCard(id)
@@ -124,14 +130,14 @@ describe("purgeCardNow", () => {
         where: { userId: site.ownerId, sourceId: site.sourceId, scheibenId: scheibenId! },
       })
     ).toBe(1)
-    expect(await purgeCardNow(id)).toEqual({ error: "Die Scheibe gibt es nicht." })
+    expect(await purgeCardNow(id)).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
   })
 
   it("eine fremde nie", async () => {
     asOwner()
     const foreign = await card({ ownerId: otherId })
     await db.card.update({ where: { id: foreign }, data: { deletedAt: new Date() } })
-    expect(await purgeCardNow(foreign)).toEqual({ error: "Die Scheibe gibt es nicht." })
+    expect(await purgeCardNow(foreign)).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
     expect(await stateOf(foreign)).not.toBeNull()
   })
 })

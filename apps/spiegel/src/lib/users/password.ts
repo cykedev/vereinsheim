@@ -18,7 +18,7 @@ export async function changeOwnPassword(
   formData: FormData
 ): Promise<ActionResult> {
   const session = await getAuthSession()
-  if (!session) return { error: "Nicht angemeldet" }
+  if (!session) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
 
   const currentPassword = String(formData.get("currentPassword") ?? "")
   const newPassword = String(formData.get("newPassword") ?? "")
@@ -30,7 +30,7 @@ export async function changeOwnPassword(
     where: { id: session.user.id },
     select: { id: true, passwordHash: true },
   })
-  if (!user) return { error: "Konto nicht gefunden." }
+  if (!user) return { error: "Dieses Konto gibt es nicht mehr." }
   if (!(await bcrypt.compare(currentPassword, user.passwordHash)))
     return { error: "Das aktuelle Passwort stimmt nicht." }
 

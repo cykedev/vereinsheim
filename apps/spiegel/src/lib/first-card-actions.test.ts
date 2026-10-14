@@ -114,18 +114,22 @@ describe("Ja, meine", () => {
     const [foreign] = await cards(1, { ownerId: otherId })
     const [visible] = await cards(1, { pending: false })
     asOwner()
-    expect(await confirmFirstCard(foreign)).toEqual({ error: "Die Scheibe gibt es nicht." })
-    expect(await confirmFirstCard(visible)).toEqual({ error: "Die Scheibe gibt es nicht." })
-    expect(await confirmFirstCard("keine")).toEqual({ error: "Die Scheibe gibt es nicht." })
+    expect(await confirmFirstCard(foreign)).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
+    expect(await confirmFirstCard(visible)).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
+    expect(await confirmFirstCard("keine")).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
     expect((await db.card.findUniqueOrThrow({ where: { id: foreign } })).ownerPending).toBe(true)
   })
 
   it("ohne Anmeldung oder mit einem Passwort vom Admin nichts", async () => {
     await consent()
     const [card] = await cards(1)
-    expect(await confirmFirstCard(card)).toEqual({ error: "Nicht angemeldet" })
+    expect(await confirmFirstCard(card)).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
     mocks.session = { user: { id: site.ownerId, role: "USER", mustChangePassword: true } }
-    expect(await rejectFirstCard(card)).toEqual({ error: "Nicht angemeldet" })
+    expect(await rejectFirstCard(card)).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
     expect((await db.card.findUniqueOrThrow({ where: { id: card } })).ownerPending).toBe(true)
   })
 })
@@ -192,7 +196,7 @@ describe("Nicht meine", () => {
     await consent()
     const [foreign] = await cards(1, { ownerId: otherId })
     asOwner()
-    expect(await rejectFirstCard(foreign)).toEqual({ error: "Die Scheibe gibt es nicht." })
+    expect(await rejectFirstCard(foreign)).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
     expect(await db.card.count({ where: { id: foreign } })).toBe(1)
   })
 })

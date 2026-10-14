@@ -18,8 +18,8 @@ export const isCardIdInput = (value: unknown): value is string =>
 /** ein Admin, der handeln darf (eigenes Passwort schon gesetzt); sonst der Grund als Text */
 export async function adminActor(): Promise<{ id: string } | { error: string }> {
   const session = await getAuthSession()
-  if (!session) return { error: "Nicht angemeldet" }
-  if (session.user.role !== "ADMIN") return { error: "Keine Berechtigung" }
+  if (!session) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (session.user.role !== "ADMIN") return { error: "Das darf nur ein Admin." }
   if (session.user.mustChangePassword) return { error: "Bitte zuerst das eigene Passwort ändern." }
   return { id: session.user.id }
 }

@@ -61,7 +61,7 @@ describe("setCardScoring", () => {
     expect(await setCardScoring(own, "decimal")).toEqual({ success: true })
     expect(await choiceOf(own)).toBe("decimal")
 
-    const missing = { error: "Die Scheibe gibt es nicht." }
+    const missing = { error: "Diese Scheibe gibt es nicht mehr." }
     expect(await setCardScoring(trash, "rings")).toEqual(missing)
     expect(await choiceOf(trash)).toBeNull()
     expect(await setCardScoring("gibt-es-nicht", "rings")).toEqual(missing)
@@ -76,9 +76,13 @@ describe("setCardScoring", () => {
 
   it("ohne Sitzung oder mit Passwort vom Admin ein Fehler", async () => {
     mocks.session = null
-    expect(await setCardScoring(own, "rings")).toEqual({ error: "Nicht angemeldet" })
+    expect(await setCardScoring(own, "rings")).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
     mocks.session = { user: { id: site.ownerId, role: "USER", mustChangePassword: true } }
-    expect(await setCardScoring(own, "rings")).toEqual({ error: "Nicht angemeldet" })
+    expect(await setCardScoring(own, "rings")).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
     expect(await choiceOf(own)).toBe("decimal")
   })
 })
@@ -104,7 +108,9 @@ describe("setFamilyScoring", () => {
     mocks.session = { user: { id: "jemand-anderes", role: "USER" } }
     expect(await setFamilyScoring(familySlug, "rings")).toEqual(missing)
     mocks.session = null
-    expect(await setFamilyScoring(familySlug, "rings")).toEqual({ error: "Nicht angemeldet" })
+    expect(await setFamilyScoring(familySlug, "rings")).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
     mocks.session = { user: { id: site.ownerId, role: "USER" } }
     expect(await familyScorings(db, site.ownerId)).toEqual({ [familySlug]: "decimal" })
   })

@@ -44,9 +44,11 @@ beforeEach(() => {
 describe("createUser", () => {
   it("nur ein angemeldeter Admin, der sein Passwort vom Admin schon ersetzt hat", async () => {
     mocks.session = null
-    expect(await createUser(null, form({}))).toEqual({ error: "Nicht angemeldet" })
+    expect(await createUser(null, form({}))).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
     mocks.session = { user: { id: adminId, role: "USER" } }
-    expect(await createUser(null, form({}))).toEqual({ error: "Keine Berechtigung" })
+    expect(await createUser(null, form({}))).toEqual({ error: "Das darf nur ein Admin." })
     mocks.session = { user: { id: adminId, role: "ADMIN", mustChangePassword: true } }
     expect(await createUser(null, form({}))).toEqual({
       error: "Bitte zuerst das eigene Passwort ändern.",
@@ -71,7 +73,7 @@ describe("createUser", () => {
     })
     expect(await bcrypt.compare("vorlaeufig-1234", user.passwordHash)).toBe(true)
     expect(await createUser(null, form(fields))).toEqual({
-      error: "Diese E-Mail-Adresse wird bereits verwendet.",
+      error: "Diese E-Mail-Adresse hat schon ein anderes Konto.",
     })
   })
 
@@ -141,6 +143,6 @@ describe("updateUser", () => {
         null,
         form({ name: "", email: mail("admin"), role: "USER", isActive: "true", tempPassword: "" })
       )
-    ).toEqual({ error: "Diese E-Mail-Adresse wird bereits verwendet." })
+    ).toEqual({ error: "Diese E-Mail-Adresse hat schon ein anderes Konto." })
   })
 })

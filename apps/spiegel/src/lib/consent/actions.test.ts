@@ -113,7 +113,7 @@ describe("Zustimmung durch den Schützen", () => {
     expect(
       await requestSportpass(null, form({ sportpass: id, version: CURRENT_CONSENT_VERSION }))
     ).toEqual({
-      error: { agree: ["Bitte dem Hinweis zustimmen."] },
+      error: { agree: ["Bitte setz das Häkchen, wenn du zustimmst."] },
     })
     expect(await db.sportpassConsent.count({ where: { sportpassId: BigInt(id) } })).toBe(0)
   })
@@ -126,7 +126,7 @@ describe("Zustimmung durch den Schützen", () => {
         form({ sportpass: "12a", agree: "on", version: CURRENT_CONSENT_VERSION })
       )
     ).toEqual({
-      error: { sportpass: ["Eine SportpassID hat bis zu zwölf Ziffern."] },
+      error: { sportpass: ["Eine Sportpassnummer hat höchstens zwölf Ziffern."] },
     })
     mocks.session = null
     expect(
@@ -135,7 +135,7 @@ describe("Zustimmung durch den Schützen", () => {
         form({ sportpass: sportpass(), agree: "on", version: CURRENT_CONSENT_VERSION })
       )
     ).toEqual({
-      error: "Nicht angemeldet",
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
     })
   })
 
@@ -151,7 +151,7 @@ describe("Zustimmung durch den Schützen", () => {
         form({ sportpass: sportpass(), agree: "on", version: CURRENT_CONSENT_VERSION })
       )
     ).toEqual({
-      error: { sportpass: ["Höchstens drei SportpassIDs je Konto."] },
+      error: { sportpass: ["Du kannst höchstens drei Sportpassnummern eintragen."] },
     })
     await db.sportpassConsent.deleteMany({ where: { userId } })
   })
@@ -169,7 +169,11 @@ describe("Zustimmung durch den Schützen", () => {
         })
       )
     ).toEqual({
-      error: { sportpass: ["Diese SportpassID ist schon vergeben. Wende dich an einen Admin."] },
+      error: {
+        sportpass: [
+          "Diese Sportpassnummer hat schon jemand eingetragen. Wende dich an einen Admin.",
+        ],
+      },
     })
     await db.sportpassConsent.delete({ where: { id: taken.id } })
   })
@@ -202,7 +206,7 @@ describe("Grenzen der Zustimmung (Review)", () => {
           version: CURRENT_CONSENT_VERSION,
         })
       )
-    ).toEqual({ error: { sportpass: ["Diese SportpassID steht schon in deinem Profil."] } })
+    ).toEqual({ error: { sportpass: ["Diese Sportpassnummer steht schon in deinem Profil."] } })
     await db.sportpassConsent.delete({ where: { id: own.id } })
   })
 
@@ -231,8 +235,10 @@ describe("Grenzen der Zustimmung (Review)", () => {
         null,
         form({ sportpass: sportpass(), agree: "on", version: CURRENT_CONSENT_VERSION })
       )
-    ).toEqual({ error: "Nicht angemeldet" })
-    expect(await revokeSportpass(consent.id)).toEqual({ error: "Nicht angemeldet" })
+    ).toEqual({ error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." })
+    expect(await revokeSportpass(consent.id)).toEqual({
+      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+    })
     mocks.session = { user: { id: adminId, role: "ADMIN", mustChangePassword: true } }
     expect(await confirmConsent(consent.id)).toEqual({
       error: "Bitte zuerst das eigene Passwort ändern.",
@@ -248,7 +254,9 @@ describe("Widerruf", () => {
   it("nur die eigene; eine fremde bleibt", async () => {
     const foreign = await requested(otherId)
     asShooter()
-    expect(await revokeSportpass(foreign.id)).toEqual({ error: "Unbekannte Zustimmung." })
+    expect(await revokeSportpass(foreign.id)).toEqual({
+      error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu.",
+    })
     expect(await db.sportpassConsent.count({ where: { id: foreign.id } })).toBe(1)
     asShooter(otherId)
     expect(await revokeSportpass(foreign.id)).toEqual({ success: true })
@@ -279,14 +287,16 @@ describe("Entscheidung des Admins", () => {
   it("nur ein Admin bestätigt; zweimal ist schon entschieden", async () => {
     const consent = await requested()
     asShooter()
-    expect(await confirmConsent(consent.id)).toEqual({ error: "Keine Berechtigung" })
+    expect(await confirmConsent(consent.id)).toEqual({ error: "Das darf nur ein Admin." })
     asAdmin()
     expect(await confirmConsent(consent.id)).toEqual({ success: true })
     const active = await db.sportpassConsent.findUniqueOrThrow({ where: { id: consent.id } })
     expect(consentStatus(active)).toBe("active")
     // ein Auftrag zum Nachladen ist eröffnet (Review P2d)
     expect(active.historyRequestedAt).not.toBeNull()
-    expect(await confirmConsent(consent.id)).toEqual({ error: "Schon entschieden." })
+    expect(await confirmConsent(consent.id)).toEqual({
+      error: "Das hat gerade schon jemand entschieden. Lade die Seite neu.",
+    })
     await db.sportpassConsent.delete({ where: { id: consent.id } })
   })
 
@@ -298,8 +308,12 @@ describe("Entscheidung des Admins", () => {
     const rejected = await db.sportpassConsent.findUniqueOrThrow({ where: { id: consent.id } })
     expect(consentStatus(rejected)).toBe("rejected")
     expect(rejected.confirmedAt).toBeNull()
-    expect(await rejectConsent(consent.id)).toEqual({ error: "Schon entschieden." })
-    expect(await confirmConsent(consent.id)).toEqual({ error: "Schon entschieden." })
+    expect(await rejectConsent(consent.id)).toEqual({
+      error: "Das hat gerade schon jemand entschieden. Lade die Seite neu.",
+    })
+    expect(await confirmConsent(consent.id)).toEqual({
+      error: "Das hat gerade schon jemand entschieden. Lade die Seite neu.",
+    })
     // der Schütze entfernt die Ablehnung und kann neu eintragen
     asShooter()
     expect(await revokeSportpass(consent.id)).toEqual({ success: true })
@@ -323,8 +337,12 @@ describe("Entscheidung des Admins", () => {
     const consent = await requested()
     asAdmin()
     expect(await removeConsent(consent.id)).toEqual({ success: true })
-    expect(await removeConsent(consent.id)).toEqual({ error: "Unbekannte Zustimmung." })
-    expect(await confirmConsent(-1)).toEqual({ error: "Unbekannte Zustimmung." })
+    expect(await removeConsent(consent.id)).toEqual({
+      error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu.",
+    })
+    expect(await confirmConsent(-1)).toEqual({
+      error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu.",
+    })
   })
 })
 
@@ -367,7 +385,7 @@ describe("Meldungen „nicht meine“ aufheben (P2d)", () => {
     ]
     try {
       asShooter()
-      expect(await liftNotMine(consent.id)).toEqual({ error: "Keine Berechtigung" })
+      expect(await liftNotMine(consent.id)).toEqual({ error: "Das darf nur ein Admin." })
       asAdmin()
       expect(await liftNotMine(consent.id)).toEqual({ success: true })
       const ids = (rows: { id: number }[]) => ({ id: { in: rows.map((r) => r.id) } })
@@ -380,9 +398,11 @@ describe("Meldungen „nicht meine“ aufheben (P2d)", () => {
       expect(after.historyRequestedAt).not.toBeNull()
       expect(consentStatus(after)).toBe("active")
       expect(await liftNotMine(consent.id)).toEqual({
-        error: "Es gibt keine Meldungen „nicht meine“ mehr zu dieser Nummer.",
+        error: "Unter dieser Nummer ist keine Scheibe mehr zurückgewiesen.",
       })
-      expect(await liftNotMine(-1)).toEqual({ error: "Unbekannte Zustimmung." })
+      expect(await liftNotMine(-1)).toEqual({
+        error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu.",
+      })
     } finally {
       await db.tombstone.deleteMany({ where: { scheibenId: { lte: base, gt: base - 10 } } })
       await db.sportpassConsent.delete({ where: { id: consent.id } })
