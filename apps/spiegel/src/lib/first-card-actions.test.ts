@@ -30,15 +30,21 @@ const asOwner = (id = site.ownerId) => {
 /** Scheiben unter einer SportpassID schreiben, wartend oder nicht */
 async function cards(
   count: number,
-  { ownerId = site.ownerId, pending = true, sportpassId = SPORTPASS } = {}
+  {
+    ownerId = site.ownerId,
+    pending = true,
+    sportpassId = SPORTPASS,
+    sourceId = site.sourceId,
+    disciplineId = site.disciplineId,
+  } = {}
 ): Promise<string[]> {
   const inputs = generateSeason({
     seed: base,
     cards: count,
     firstMs: Date.UTC(2026, 5, 2, 17) + base * 60_000,
     everyDays: 1,
-    sourceId: site.sourceId,
-    disciplineId: site.disciplineId,
+    sourceId,
+    disciplineId,
     ownerId,
     scheibenIdBase: base,
   })
@@ -121,6 +127,34 @@ describe("Ja, meine", () => {
     mocks.session = { user: { id: site.ownerId, role: "USER", mustChangePassword: true } }
     expect(await rejectFirstCard(card)).toEqual({ error: "Nicht angemeldet" })
     expect((await db.card.findUniqueOrThrow({ where: { id: card } })).ownerPending).toBe(true)
+  })
+})
+
+describe("Grenzen (Review)", () => {
+  it("zweimal „Nicht meine“ zugleich wirft nicht: eines entfernt, das andere findet nichts mehr", async () => {
+    await consent()
+    const [card] = await cards(2)
+    asOwner()
+    const results = await Promise.all([rejectFirstCard(card), rejectFirstCard(card)])
+    expect(results.filter((r) => "success" in r)).toHaveLength(1)
+    expect(results.filter((r) => "error" in r)).toHaveLength(1)
+  })
+
+  it("eine Anlage bestätigt nur ihre Scheiben: dieselbe SportpassID an einer anderen bleibt wartend", async () => {
+    await consent()
+    const other = await createTestSite(db, "first-card-b")
+    try {
+      const [here] = await cards(1)
+      const [there] = await cards(1, { sourceId: other.sourceId, disciplineId: other.disciplineId })
+      asOwner()
+      expect(await confirmFirstCard(here)).toEqual({ success: true })
+      expect((await db.card.findUniqueOrThrow({ where: { id: there } })).ownerPending).toBe(true)
+      expect(await rejectFirstCard(there)).toEqual({ success: true })
+      expect(await db.card.count({ where: { id: here } })).toBe(1)
+    } finally {
+      await db.card.deleteMany({ where: { source: { siteId: other.siteId } } })
+      await other.remove()
+    }
   })
 })
 

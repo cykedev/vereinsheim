@@ -17,6 +17,7 @@ export default async function OpenRoute() {
   const marks = await marksOfCards(db, {
     ownerId: session.user.id,
     ids: pending.map((p) => p.card.id),
+    pending: true,
   })
   return <OpenScreen items={pendingItems(pending, getDisplayTimeZone())} marks={marks} />
 }

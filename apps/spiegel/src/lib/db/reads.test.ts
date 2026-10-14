@@ -249,6 +249,45 @@ describe("Wartende Scheiben (SP-1.7 a2)", () => {
     expect(await pendingFirstCards(db, "jemand-anderes")).toEqual([])
     expect(await pendingCount(db, "jemand-anderes")).toBe(0)
   })
+
+  it("die Lagen einer wartenden Scheibe nur für „Offen“ (Review)", async () => {
+    const [first] = await pendingFirstCards(db, site.ownerId)
+    const ownerId = site.ownerId
+    expect(await marksOfCards(db, { ownerId, ids: [first.card.id] })).toEqual({})
+    expect(
+      Object.keys(await marksOfCards(db, { ownerId, ids: [first.card.id], pending: true }))
+    ).toEqual([first.card.id])
+  })
+
+  it("dieselbe SportpassID an einer anderen Anlage ist ein eigener Eintrag (Review)", async () => {
+    const other = await createTestSite(db, "reads-b")
+    try {
+      const [input] = generateSeason({
+        sourceId: other.sourceId,
+        ownerId: site.ownerId,
+        everyDays: 1,
+        seed: 11,
+        cards: 1,
+        firstMs: PENDING_MS + 10 * DAY_MS,
+        disciplineId: other.disciplineId,
+        scheibenIdBase: 5100,
+      })
+      await writeRevision(db, {
+        ...input,
+        card: { ...input.card, ownerPending: true, sportpassId: BigInt(111) },
+      })
+      const first = await pendingFirstCards(db, site.ownerId)
+      expect(first.map((p) => [p.sportpassId, p.more])).toEqual([
+        ["111", 1],
+        ["222", 0],
+        ["111", 0],
+      ])
+      expect(await pendingCount(db, site.ownerId)).toBe(3)
+    } finally {
+      await db.card.deleteMany({ where: { source: { siteId: other.siteId } } })
+      await other.remove()
+    }
+  })
 })
 
 describe("cardWithShots", () => {

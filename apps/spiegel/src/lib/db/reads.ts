@@ -249,16 +249,20 @@ export async function cardWithShots(
 
 /**
  * Die Lagen der kleinen Scheiben (`cardMarks` der Projektion) für die Scheiben, die eine Seite zeigt, nur eigene und
- * nicht gelöschte; nach Id. Eine Übersicht liest sie getrennt, damit Start für die Rechnung über die ganze Familie nicht
+ * sichtbare (`pending`: nur wartende, für „Offen“); nach Id. Eine Übersicht liest sie getrennt, damit Start für die Rechnung über die ganze Familie nicht
  * die Lagen jeder Scheibe lädt.
  */
 export async function marksOfCards(
   db: Db,
-  query: { ownerId: string; ids: readonly string[] }
+  query: { ownerId: string; ids: readonly string[]; pending?: boolean }
 ): Promise<Record<string, CardMark[]>> {
   if (!query.ids.length) return {}
   const rows = await db.cardProjection.findMany({
-    where: { cardId: { in: [...query.ids] }, card: { ownerId: query.ownerId, deletedAt: null } },
+    where: {
+      cardId: { in: [...query.ids] },
+      // sichtbare; die wartenden nur ausdrücklich, für „Offen“ (Review SP-1.7 a2)
+      card: { ownerId: query.ownerId, ...(query.pending ? PENDING_CARD : VISIBLE_CARD) },
+    },
     select: { cardId: true, marks: true },
   })
   return Object.fromEntries(rows.map((row) => [row.cardId, row.marks as unknown as CardMark[]]))
@@ -294,43 +298,44 @@ export interface PendingFirstCard {
   more: number
 }
 
-/** „Offen“ (SP-1.7 a2): je SportpassID die älteste wartende Scheibe des Kontos, in der Folge ihres Beginns */
-export async function pendingFirstCards(db: Db, ownerId: string): Promise<PendingFirstCard[]> {
+/**
+ * Wartende Scheiben je Gruppe (Anlage und SportpassID; eine Nummer kann an zwei Anlagen vorkommen, Review), älteste
+ * zuerst. Nur Scheiben mit Projektion: „Offen“ zeigt sie, und die Zahl am Start-Symbol zählt dieselben Gruppen.
+ */
+async function pendingGroups(db: Db, ownerId: string) {
   const rows = await db.card.findMany({
-    where: { ownerId, ...PENDING_CARD },
+    where: { ownerId, ...PENDING_CARD, projection: { isNot: null } },
     orderBy: [{ startedAt: "asc" }, { id: "asc" }],
-    select: { id: true, sportpassId: true },
+    select: { id: true, sportpassId: true, source: { select: { siteId: true } } },
   })
-  const groups = new Map<string, { id: string; count: number }>()
+  const groups = new Map<string, { id: string; sportpassId: string | null; count: number }>()
   for (const row of rows) {
-    const key = row.sportpassId?.toString() ?? ""
+    const key = `${row.source?.siteId ?? ""}:${row.sportpassId?.toString() ?? ""}`
     const group = groups.get(key)
     if (group) group.count++
-    else groups.set(key, { id: row.id, count: 1 })
+    else groups.set(key, { id: row.id, sportpassId: row.sportpassId?.toString() ?? null, count: 1 })
   }
-  const firstIds = [...groups.values()].map((g) => g.id)
-  if (!firstIds.length) return []
+  return [...groups.values()]
+}
+
+/** „Offen“ (SP-1.7 a2): je Anlage und SportpassID die älteste wartende Scheibe des Kontos, in der Folge ihres Beginns */
+export async function pendingFirstCards(db: Db, ownerId: string): Promise<PendingFirstCard[]> {
+  const groups = await pendingGroups(db, ownerId)
+  if (!groups.length) return []
   const cards = toOverview(
     await db.card.findMany({
-      where: { id: { in: firstIds }, ownerId },
-      orderBy: [{ startedAt: "asc" }, { id: "asc" }],
+      where: { id: { in: groups.map((g) => g.id) }, ownerId },
       select: OVERVIEW_SELECT,
     })
   )
   const byId = new Map(cards.map((card) => [card.id, card]))
-  return [...groups.entries()].flatMap(([key, group]) => {
+  return groups.flatMap((group) => {
     const card = byId.get(group.id)
-    // ohne Projektion (noch nicht gerechnet) zeigt „Offen“ sie erst beim nächsten Aufruf
-    return card ? [{ sportpassId: key || null, card, more: group.count - 1 }] : []
+    return card ? [{ sportpassId: group.sportpassId, card, more: group.count - 1 }] : []
   })
 }
 
-/** die Zahl am Start-Symbol: wie viele SportpassIDs des Kontos eine wartende Scheibe haben */
+/** die Zahl am Start-Symbol: so viele Einträge hat „Offen“ */
 export async function pendingCount(db: Db, ownerId: string): Promise<number> {
-  const rows = await db.card.findMany({
-    where: { ownerId, ...PENDING_CARD },
-    distinct: ["sportpassId"],
-    select: { sportpassId: true },
-  })
-  return rows.length
+  return (await pendingGroups(db, ownerId)).length
 }

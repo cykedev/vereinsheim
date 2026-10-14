@@ -70,6 +70,7 @@ function PendingCard({ item, marks }: { item: PendingItem; marks: MarkShot[] }) 
   const target = TARGETS[item.targetId ?? "lp-10m"]
   const run = (action: (cardId: string) => ReturnType<typeof confirmFirstCard>) =>
     startTransition(async () => {
+      setError(null)
       const result = await action(item.cardId)
       if ("error" in result) setError(getErrorMessage(result) ?? null)
       else router.refresh()
