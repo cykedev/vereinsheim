@@ -27,7 +27,7 @@ const render = (items: PendingItem[]) =>
   renderToStaticMarkup(createElement(OpenScreen, { items, marks: {} }))
 
 describe("Offen", () => {
-  it("die älteste wartende Scheibe mit Abend, Stand, Familie, Schuss, Ergebnis und beiden Knöpfen", () => {
+  it("die gezeigte wartende Scheibe mit Abend, Stand, Familie, Schuss, Ergebnis und beiden Knöpfen", () => {
     const html = render([item(2)])
     expect(html).toContain("Di 13.10.2026 · 19:12")
     expect(html).toContain("Stand 6 · Luftpistole · 40 Schuss · 376 Ringe")

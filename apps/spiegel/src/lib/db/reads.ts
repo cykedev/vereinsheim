@@ -301,13 +301,14 @@ export interface PendingFirstCard {
 }
 
 /**
- * Wartende Scheiben je Gruppe (Anlage und SportpassID; eine Nummer kann an zwei Anlagen vorkommen, Review), älteste
- * zuerst. Nur Scheiben mit Projektion: „Offen“ zeigt sie, und die Zahl am Start-Symbol zählt dieselben Gruppen.
+ * Wartende Scheiben je Gruppe (Anlage und SportpassID; eine Nummer kann an zwei Anlagen vorkommen, Review), je Gruppe die
+ * jüngste, jüngste Gruppe zuerst: Mit dem Nachladen warten womöglich Scheiben aus Jahren, an den letzten Abend erinnert
+ * man sich (P2d, D7). Nur Scheiben mit Projektion: „Offen“ zeigt sie, und die Zahl am Start-Symbol zählt dieselben Gruppen.
  */
 async function pendingGroups(db: Db, ownerId: string) {
   const rows = await db.card.findMany({
     where: { ownerId, ...PENDING_CARD, projection: { isNot: null } },
-    orderBy: [{ startedAt: "asc" }, { id: "asc" }],
+    orderBy: [{ startedAt: "desc" }, { id: "asc" }],
     select: { id: true, sportpassId: true, source: { select: { siteId: true } } },
   })
   const groups = new Map<string, { id: string; sportpassId: string | null; count: number }>()
@@ -320,7 +321,7 @@ async function pendingGroups(db: Db, ownerId: string) {
   return [...groups.values()]
 }
 
-/** „Offen“ (SP-1.7 a2): je Anlage und SportpassID die älteste wartende Scheibe des Kontos, in der Folge ihres Beginns */
+/** „Offen“ (SP-1.7 a2): je Anlage und SportpassID die jüngste wartende Scheibe des Kontos, die jüngste zuerst (P2d) */
 export async function pendingFirstCards(db: Db, ownerId: string): Promise<PendingFirstCard[]> {
   const groups = await pendingGroups(db, ownerId)
   if (!groups.length) return []

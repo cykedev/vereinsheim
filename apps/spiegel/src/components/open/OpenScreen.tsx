@@ -20,8 +20,8 @@ import type { PendingItem } from "@/lib/open"
 const scheiben = (n: number) => (n === 1 ? "1 weitere Scheibe" : `${n} weitere Scheiben`)
 
 /**
- * „Offen“ (SP-1.7 a2, D3): je SportpassID die älteste wartende Scheibe mit „Ja, meine“ und „Nicht meine“. Erst danach
- * stehen die Scheiben in Start, Liste und Fortschritt.
+ * „Offen“ (SP-1.7 a2, D3): je SportpassID die jüngste wartende Scheibe (P2d) mit „Ja, meine“ und „Nicht meine“. Erst
+ * danach stehen die Scheiben in Start, Liste und Fortschritt.
  */
 export function OpenScreen({
   items,

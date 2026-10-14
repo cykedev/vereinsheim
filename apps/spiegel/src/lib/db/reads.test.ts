@@ -238,11 +238,18 @@ describe("Wartende Scheiben (SP-1.7 a2)", () => {
     expect(await cardWithShots(db, { cardId: pending[0].id, ownerId })).toBeNull()
   })
 
-  it("je SportpassID die älteste wartende, mit der Zahl der weiteren; gezählt je SportpassID", async () => {
+  it("je SportpassID die jüngste wartende, mit der Zahl der weiteren; gezählt je SportpassID (P2d)", async () => {
+    // mit der Historie warten womöglich Scheiben aus Jahren: an den letzten Abend erinnert man sich (D7)
+    const newest111 = await db.card.findFirstOrThrow({
+      where: { sourceId: site.sourceId, ownerPending: true, sportpassId: BigInt(111) },
+      orderBy: { startedAt: "desc" },
+      select: { startedAt: true },
+    })
+    expect(newest111.startedAt.getTime()).toBeGreaterThan(PENDING_MS)
     const first = await pendingFirstCards(db, site.ownerId)
     expect(first.map((p) => [p.sportpassId, p.more, p.card.startedAtMs])).toEqual([
-      ["111", 1, PENDING_MS],
       ["222", 0, PENDING_MS + 90 * 60_000],
+      ["111", 1, newest111.startedAt.getTime()],
     ])
     expect(first[0].card.family?.slug).toBeDefined()
     expect(await pendingCount(db, site.ownerId)).toBe(2)
@@ -278,9 +285,9 @@ describe("Wartende Scheiben (SP-1.7 a2)", () => {
       })
       const first = await pendingFirstCards(db, site.ownerId)
       expect(first.map((p) => [p.sportpassId, p.more])).toEqual([
-        ["111", 1],
-        ["222", 0],
         ["111", 0],
+        ["222", 0],
+        ["111", 1],
       ])
       expect(await pendingCount(db, site.ownerId)).toBe(3)
     } finally {
