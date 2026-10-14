@@ -56,11 +56,8 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
   const label = revoke ? "Widerrufen" : "Entfernen"
 
   return (
-    <li
-      data-consent={consent.status}
-      className="flex flex-wrap items-center justify-between gap-3 px-3 py-2"
-    >
-      <span className="grid">
+    <li data-consent={consent.status} className="flex items-center justify-between gap-3 px-3 py-2">
+      <span className="grid min-w-0">
         <span className="font-mono tabular-nums">{consent.sportpassId}</span>
         <span className="text-[13px] text-muted-foreground">
           {consent.siteName} · {consent.statusText}
@@ -74,7 +71,7 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
       <Button
         type="button"
         variant="ghost"
-        className="h-10 text-destructive"
+        className="h-10 shrink-0 text-destructive"
         disabled={pending}
         onClick={() => setOpen(true)}
       >
