@@ -1182,26 +1182,35 @@ cmd_status() {
 }
 
 # ---------- deploy ----------
+# Image-Tag-Schlüssel aller Apps: <APP>_TAG und <APP>_MIGRATOR_TAG, je eine Zeile
+tag_keys() {
+	local app upper
+	for app in "${APPS[@]}"; do
+		upper="$(tr '[:lower:]' '[:upper:]' <<<"$app")"
+		echo "${upper}_TAG"
+		echo "${upper}_MIGRATOR_TAG"
+	done
+}
+
 _check_image_tags() {
-	# Verifies that all four image-tag vars are set. Returns:
-	#   0 — alles gesetzt
+	# Prüft die Image-Tags aller Apps in der .env. Rückgabe:
+	#   0 — alle gesetzt
 	#   1 — keiner gesetzt (Erst-Deploy-Szenario, ruft Confirm auf)
 	#   2 — gemischt (Asymmetrie, abort)
-	local r_app r_mig t_app t_mig
-	r_app="$(read_env_var RINGWERK_TAG || true)"
-	r_mig="$(read_env_var RINGWERK_MIGRATOR_TAG || true)"
-	t_app="$(read_env_var TREFFSICHER_TAG || true)"
-	t_mig="$(read_env_var TREFFSICHER_MIGRATOR_TAG || true)"
-	local set_count=0
-	[[ -n "$r_app" ]] && set_count=$((set_count + 1))
-	[[ -n "$r_mig" ]] && set_count=$((set_count + 1))
-	[[ -n "$t_app" ]] && set_count=$((set_count + 1))
-	[[ -n "$t_mig" ]] && set_count=$((set_count + 1))
-	case "$set_count" in
-	4) return 0 ;;
-	0) return 1 ;;
-	*) return 2 ;;
-	esac
+	local key total=0 set_count=0
+	while read -r key; do
+		total=$((total + 1))
+		if [[ -n "$(read_env_var "$key" || true)" ]]; then
+			set_count=$((set_count + 1))
+		fi
+	done < <(tag_keys)
+	if ((set_count == total)); then
+		return 0
+	fi
+	if ((set_count == 0)); then
+		return 1
+	fi
+	return 2
 }
 
 cmd_deploy() {
@@ -1221,7 +1230,8 @@ cmd_deploy() {
 		}
 		;;
 	2)
-		err "Image-Tags asymmetrisch gesetzt — alle vier (RINGWERK_TAG, RINGWERK_MIGRATOR_TAG, TREFFSICHER_TAG, TREFFSICHER_MIGRATOR_TAG) müssen entweder gemeinsam gesetzt oder gemeinsam leer sein."
+		err "Image-Tags nur teilweise gesetzt. Alle $(tag_keys | wc -l | tr -d ' ') ($(tag_keys | paste -sd ' ' -)) müssen gemeinsam gesetzt oder gemeinsam leer sein."
+		info "Fehlende ergänzen: ./scripts/vereinsheim setup → Fehlende Schlüssel ergänzen"
 		return 1
 		;;
 	esac
@@ -1233,7 +1243,8 @@ cmd_deploy() {
 }
 
 # ---------- rollback ----------
-HISTORY_FILE="$REPO_DIR/logs/deploy-history.log"
+# HISTORY_FILE aus der Umgebung: Tests gegen den Teststack (tools/stack-e2e/ops.sh), wie in deploy.sh
+HISTORY_FILE="${HISTORY_FILE:-$REPO_DIR/logs/deploy-history.log}"
 
 _extract_tag() {
 	# Parse "KEY=VALUE" pair from a history line.
@@ -1269,7 +1280,8 @@ cmd_rollback() {
 		return 1
 	fi
 
-	mapfile -t entries < <(tac "$HISTORY_FILE" | head -5)
+	# die letzten fünf, neueste zuerst (awk statt tac: läuft auch auf macOS)
+	mapfile -t entries < <(awk '{ line[NR] = $0 } END { for (i = NR; i > 0 && i > NR - 5; i--) print line[i] }' "$HISTORY_FILE")
 	if ((${#entries[@]} < 2)); then
 		err "Nur ${#entries[@]} Deploy-Eintrag in History — kein Rollback-Ziel verfügbar."
 		info "Erst ab dem zweiten Deploy ist ein Rollback möglich."
@@ -1279,12 +1291,15 @@ cmd_rollback() {
 	echo
 	echo "${BOLD}Letzte Deployments${RESET}  ${DIM}(neueste oben, 1 = aktuell)${RESET}"
 	local i=1
+	local entry app upper tag shown
 	for entry in "${entries[@]}"; do
-		local ts r_app t_app
-		ts="$(awk '{print $1}' <<<"$entry")"
-		r_app="$(_extract_tag RINGWERK_TAG "$entry")"
-		t_app="$(_extract_tag TREFFSICHER_TAG "$entry")"
-		printf "  %d) %s   ringwerk=%s  treffsicher=%s\n" "$i" "$ts" "${r_app:-?}" "${t_app:-?}"
+		shown="$(awk '{print $1}' <<<"$entry")  "
+		for app in "${APPS[@]}"; do
+			upper="$(tr '[:lower:]' '[:upper:]' <<<"$app")"
+			tag="$(_extract_tag "${upper}_TAG" "$entry")"
+			shown+="  ${app}=${tag:-?}"
+		done
+		printf "  %d) %s\n" "$i" "$shown"
 		i=$((i + 1))
 	done
 
@@ -1306,24 +1321,34 @@ cmd_rollback() {
 	fi
 
 	local target="${entries[$((choice - 1))]}"
-	local new_r_app new_r_mig new_t_app new_t_mig
-	new_r_app="$(_extract_tag RINGWERK_TAG "$target")"
-	new_r_mig="$(_extract_tag RINGWERK_MIGRATOR_TAG "$target")"
-	new_t_app="$(_extract_tag TREFFSICHER_TAG "$target")"
-	new_t_mig="$(_extract_tag TREFFSICHER_MIGRATOR_TAG "$target")"
-
-	if [[ -z "$new_r_app" || -z "$new_r_mig" || -z "$new_t_app" || -z "$new_t_mig" ]]; then
-		err "Eintrag $choice unvollständig — Tag fehlt. History-Datei manuell prüfen:"
-		echo "  $HISTORY_FILE"
-		return 1
-	fi
+	# je App beide Tags; Einträge von vor P4 haben keine Spiegel-Tags: dann bleibt Spiegel auf dem aktuellen Tag
+	local keys=() values=() kept=() app_tag mig_tag
+	for app in "${APPS[@]}"; do
+		upper="$(tr '[:lower:]' '[:upper:]' <<<"$app")"
+		app_tag="$(_extract_tag "${upper}_TAG" "$target")"
+		mig_tag="$(_extract_tag "${upper}_MIGRATOR_TAG" "$target")"
+		if [[ -z "$app_tag" && -z "$mig_tag" && "$app" == "spiegel" ]]; then
+			kept+=("$app")
+			continue
+		fi
+		if [[ -z "$app_tag" || -z "$mig_tag" ]]; then
+			err "Eintrag $choice unvollständig — Tag für $app fehlt. History-Datei manuell prüfen:"
+			echo "  $HISTORY_FILE"
+			return 1
+		fi
+		keys+=("${upper}_TAG" "${upper}_MIGRATOR_TAG")
+		values+=("$app_tag" "$mig_tag")
+	done
 
 	echo
 	echo "${BOLD}Änderungen${RESET}"
-	_rollback_diff_line RINGWERK_TAG "$new_r_app"
-	_rollback_diff_line RINGWERK_MIGRATOR_TAG "$new_r_mig"
-	_rollback_diff_line TREFFSICHER_TAG "$new_t_app"
-	_rollback_diff_line TREFFSICHER_MIGRATOR_TAG "$new_t_mig"
+	local k
+	for k in "${!keys[@]}"; do
+		_rollback_diff_line "${keys[$k]}" "${values[$k]}"
+	done
+	for app in "${kept[@]}"; do
+		echo "  $app: ${DIM}bleibt auf dem aktuellen Tag (Eintrag ohne $app)${RESET}"
+	done
 
 	echo
 	warn "Falls die fehlgeschlagene Version eine Migration enthielt, ist die DB"
@@ -1336,10 +1361,9 @@ cmd_rollback() {
 		return
 	}
 
-	write_env_var RINGWERK_TAG "$new_r_app"
-	write_env_var RINGWERK_MIGRATOR_TAG "$new_r_mig"
-	write_env_var TREFFSICHER_TAG "$new_t_app"
-	write_env_var TREFFSICHER_MIGRATOR_TAG "$new_t_mig"
+	for k in "${!keys[@]}"; do
+		write_env_var "${keys[$k]}" "${values[$k]}"
+	done
 	ok "Tags in .env aktualisiert."
 
 	# Pre-Deploy-Backup überspringen: der Stand, der gleich überschrieben
