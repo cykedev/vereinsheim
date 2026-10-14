@@ -15,6 +15,7 @@ const model = (consents: Parameters<typeof overviewModel>[0]["consents"]) =>
     accounts: { total: 2, deactivated: 0, withSportpass: 1 },
     notMine: 0,
     historyPending: 0,
+    usage: { cards: 0, recentCards: 0, recentAccounts: 0 },
   })
 
 describe("Übersicht des Admins (Markup)", () => {
@@ -34,7 +35,7 @@ describe("Übersicht des Admins (Markup)", () => {
       })
     )
     expect(html).toContain("Wartet auf dich (1)")
-    expect(html).toContain("Max Muster möchte die eigenen Scheiben automatisch")
+    expect(html).toContain("Max Muster möchte die eigenen Scheiben automatisch bekommen")
     expect(html).toContain('href="/admin/users/u1"')
     expect(html.match(/data-admin-station=/g)).toHaveLength(4)
     expect(html.match(/data-help="admin-/g)).toHaveLength(4)

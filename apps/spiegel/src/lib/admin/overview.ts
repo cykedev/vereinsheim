@@ -1,10 +1,11 @@
 import type { HeartbeatV1 } from "@vereinsheim/ingest-contract/api"
-import { formatDateTime } from "@vereinsheim/lib/format"
+import { formatDateOnly, formatDateTime } from "@vereinsheim/lib/format"
 
 import { requireAdmin } from "@/lib/auth-helpers"
 import { consentStatus, type ConsentStatus } from "@/lib/consent/status"
 import { db } from "@/lib/db"
 import { NOT_MINE } from "@/lib/db/purge"
+import { VISIBLE_CARD } from "@/lib/db/visible"
 
 import type { AdminHelpId } from "./help"
 import { heldBackText } from "./site"
@@ -62,17 +63,19 @@ export interface OverviewInput {
   accounts: { total: number; deactivated: number; withSportpass: number }
   /** Scheiben der Anlage, als „nicht meine“ gemeldet (Grabsteine): nur als Zahl, ohne Namen (P2b, D9) */
   notMine: number
-  /** aktive Zustimmungen, deren ältere Scheiben die Brücke noch nachlädt (P2d, D10): Zustand, keine Aufgabe */
+  /** aktive Zustimmungen, deren ältere Scheiben Spiegel noch holt (P2d, D10): Zustand, keine Aufgabe */
   historyPending: number
+  /** Nutzung (P2e, D2): sichtbare Scheiben aktiver Konten, davon in den letzten 30 Tagen, Konten mit solchen */
+  usage: { cards: number; recentCards: number; recentAccounts: number }
 }
 
 /** was die Brücke meldet, in Worten; nur Information (D0), keine Aufgabe */
 const BRIDGE_NOTE: Partial<Record<HeartbeatV1["status"], string>> = {
-  delayed: "meldet: schickt verzögert",
-  "db-unreachable": "meldet: Anlage nicht erreichbar",
-  "db-error": "meldet: Anlage meldet Fehler",
+  delayed: "schickt gerade langsamer als sonst",
+  "db-unreachable": "erreicht die Meyton-Anlage nicht",
+  "db-error": "bekommt Fehler von der Meyton-Anlage",
   "possible-reset":
-    "meldet: Ablage der Anlage sieht neu aus; Spiegel trennt alte und neue Scheiben selbst",
+    "Die Meyton-Anlage wirkt wie neu aufgesetzt. Spiegel trennt alte und neue Scheiben selbst. Du musst nichts tun.",
 }
 
 const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
@@ -82,8 +85,8 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
   if (!input.site)
     tasks.push({
       id: "site",
-      title: "Anlage einrichten",
-      detail: "Name und Zeitzone der Meyton-Anlage, einmal.",
+      title: "Meyton-Anlage einrichten",
+      detail: "Einmal Name und Zeitzone eintragen.",
       href: "/admin/site",
       action: "Einrichten",
     })
@@ -94,19 +97,22 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
       id: `consent-${consent.id}`,
       title:
         consent.status === "returned"
-          ? `${consent.who}: erste Scheibe war „nicht meine“`
-          : `${consent.who} möchte die eigenen Scheiben automatisch`,
-      detail: `SportpassID ${consent.sportpassId} · zugestimmt ${consent.consentedAt}`,
+          ? `${consent.who} hat eine Scheibe als „nicht meine“ zurückgewiesen`
+          : `${consent.who} möchte die eigenen Scheiben automatisch bekommen`,
+      detail:
+        consent.status === "returned"
+          ? `Prüf die Sportpassnummer ${consent.sportpassId} noch einmal.`
+          : `Sportpassnummer ${consent.sportpassId}, eingetragen am ${consent.consentedAt}`,
       href: `/admin/users/${consent.userId}`,
-      action: "Prüfen",
+      action: "Nummer prüfen",
     })
   if (input.site && !input.bridge)
     tasks.push({
       id: "bridge",
-      title: "Brücke koppeln",
+      title: "Brücke verbinden",
       detail: "Ohne Brücke kommen keine Scheiben aus dem Schützenhaus.",
       href: "/admin/site",
-      action: "Koppeln",
+      action: "Verbinden",
     })
 
   const by = (status: ConsentStatus) => input.consents.filter((c) => c.status === status).length
@@ -127,7 +133,7 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
         id: "site",
         help: "site",
         title: "Meyton-Anlage",
-        does: "Dort liegen alle Scheiben. Spiegel liest nur und ändert nie etwas.",
+        does: "Hier entstehen alle Scheiben. Spiegel liest sie nur und ändert an der Anlage nie etwas.",
         status: input.site ? "eingerichtet" : "noch nicht eingerichtet",
         tone: input.site && !input.site.foreignSource ? "ok" : "wait",
         facts: input.site
@@ -135,7 +141,7 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
               input.site.name,
               ...(input.site.foreignSource
                 ? [
-                    "Eine Brücke schickt Scheiben aus einer Ablage, die Spiegel nicht kennt; Spiegel nimmt sie nicht an. Das sollte nicht vorkommen, bitte melden.",
+                    "Eine Brücke schickt Scheiben von einer Meyton-Anlage, die Spiegel nicht kennt. Spiegel nimmt sie nicht an. Das sollte nie passieren. Bitte melde es.",
                   ]
                 : []),
             ]
@@ -145,14 +151,14 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
         id: "bridge",
         help: "bridge",
         title: "Brücke im Schützenhaus",
-        does: "Schickt nur Scheiben von Schützen mit Zustimmung. Verdeckte Wertung nie.",
+        does: "Ein kleines Gerät an der Meyton-Anlage. Es schickt nur Scheiben von Schützen, die zugestimmt haben. Scheiben mit verdeckter Wertung nie.",
         status: !bridge
-          ? "keine Brücke"
+          ? "nicht verbunden"
           : !bridge.lastHeartbeatAt
             ? "noch kein Kontakt"
             : bridge.online
               ? "läuft"
-              : "aus, normal",
+              : "aus (nach dem Training normal)",
         tone: !bridge || !bridge.lastHeartbeatAt ? "wait" : bridge.online ? "ok" : "neutral",
         facts: bridge ? [bridge.name, ...bridgeFacts] : [],
       },
@@ -160,21 +166,23 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
         id: "consents",
         help: "consent",
         title: "Zustimmungen",
-        does: "Ein Schütze sagt: Scheiben mit meiner SportpassID gehören mir. Du prüfst die Nummer einmal.",
-        status: waiting ? `${waiting} offen` : count(by("active"), "aktiv", "aktiv"),
+        does: "Ein Schütze trägt im Profil die eigene Sportpassnummer ein und stimmt zu. Du prüfst einmal, ob die Nummer stimmt.",
+        status: waiting
+          ? `${waiting} ${waiting === 1 ? "wartet" : "warten"} auf dich`
+          : count(by("active"), "aktiv", "aktiv"),
         tone: waiting ? "wait" : "neutral",
         facts: [
           `${by("active")} aktiv · ${waiting} ${waiting === 1 ? "wartet" : "warten"} auf dich · ${by("rejected")} abgelehnt`,
           ...(input.historyPending
             ? [
-                `Für ${count(input.historyPending, "Zustimmung", "Zustimmungen")} lädt die Brücke ältere Scheiben nach, wenn niemand schießt.`,
+                `Für ${count(input.historyPending, "Schützen", "Schützen")} holt Spiegel noch ältere Scheiben. Das passiert, wenn im Schützenhaus niemand schießt.`,
               ]
             : []),
           ...(input.notMine
             ? [
                 input.notMine === 1
-                  ? "1 Scheibe als „nicht meine“ gemeldet; sie kommt nicht wieder."
-                  : `${input.notMine} Scheiben als „nicht meine“ gemeldet; sie kommen nicht wieder.`,
+                  ? "1 Scheibe wurde als „nicht meine“ zurückgewiesen. Sie kommt nicht wieder, außer du lässt sie am Konto wieder zu."
+                  : `${input.notMine} Scheiben wurden als „nicht meine“ zurückgewiesen. Sie kommen nicht wieder, außer du lässt sie am Konto wieder zu.`,
               ]
             : []),
         ],
@@ -183,7 +191,7 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
         id: "accounts",
         help: "accounts",
         title: "Konten",
-        does: "Wer Spiegel nutzt. Jeder sieht nur seine eigenen Scheiben, auch du als Admin.",
+        does: "Wer Spiegel nutzt. Alle sehen nur die eigenen Scheiben, auch du als Admin.",
         status: String(input.accounts.total),
         tone: "neutral",
         facts: [
@@ -194,10 +202,33 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
           ]
             .filter(Boolean)
             .join(" · "),
+          usageText(input.usage),
         ],
       },
     ],
   }
+}
+
+/** die Zeile zur Nutzung (P2e, D2; Wortlaut nach P2f, D7) */
+function usageText({ cards, recentCards, recentAccounts }: OverviewInput["usage"]): string {
+  if (!cards) return "Noch keine Scheibe in Spiegel."
+  return `${count(cards, "Scheibe", "Scheiben")}, ${recentCards} davon in den letzten 30 Tagen. ${
+    recentAccounts === 1 ? "1 Konto hat" : `${recentAccounts} Konten haben`
+  } in den letzten 30 Tagen geschossen.`
+}
+
+const RECENT_MS = 30 * 86_400_000
+
+/** Nutzung über aktive Konten, nur sichtbare Scheiben, nach ihrem Beginn; Zahlen, keine Inhalte (P2e, D2) */
+async function usageOf(nowMs: number): Promise<OverviewInput["usage"]> {
+  const visible = { ...VISIBLE_CARD, owner: { isActive: true } }
+  const recent = { ...visible, startedAt: { gte: new Date(nowMs - RECENT_MS) } }
+  const [cards, recentCards, recentOwners] = await Promise.all([
+    db.card.count({ where: visible }),
+    db.card.count({ where: recent }),
+    db.card.groupBy({ by: ["ownerId"], where: recent }),
+  ])
+  return { cards, recentCards, recentAccounts: recentOwners.length }
 }
 
 /** eine Brücke gilt als online, wenn ihr letzter Heartbeat so jung ist (sie schickt jede Minute einen) */
@@ -242,7 +273,7 @@ export async function adminOverview(
     userId: c.userId,
     who: c.user.name ?? c.user.email,
     sportpassId: c.sportpassId.toString(),
-    consentedAt: formatDateTime(c.consentedAt, timeZone),
+    consentedAt: formatDateOnly(c.consentedAt, timeZone),
     status: consentStatus(c),
   }))
   const withSportpass = new Set(rows.filter((r) => r.status === "active").map((r) => r.userId))
@@ -276,5 +307,6 @@ export async function adminOverview(
     historyPending: consents.filter(
       (c) => consentStatus(c) === "active" && c.historyLoadedAt === null
     ).length,
+    usage: await usageOf(nowMs),
   })
 }

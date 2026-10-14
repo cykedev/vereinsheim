@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@/lib/auth-helpers", () => ({ requireAdmin: async () => ({}) }))
 
 const { overviewModel } = await import("./overview")
+const { OLD_WORDS } = await import("./consequences")
 type Input = Parameters<typeof overviewModel>[0]
 
 const base: Input = {
@@ -18,6 +19,7 @@ const base: Input = {
   accounts: { total: 12, deactivated: 1, withSportpass: 9 },
   notMine: 0,
   historyPending: 0,
+  usage: { cards: 124, recentCards: 9, recentAccounts: 4 },
 }
 const consent = (id: number, status: Input["consents"][number]["status"]) => ({
   id,
@@ -46,11 +48,23 @@ describe("Übersicht des Admins", () => {
       ],
     })
     expect(model.tasks.map((t) => [t.title, t.href, t.action])).toEqual([
-      ["Schütze 1 möchte die eigenen Scheiben automatisch", "/admin/users/u1", "Prüfen"],
-      ["Schütze 3: erste Scheibe war „nicht meine“", "/admin/users/u3", "Prüfen"],
+      [
+        "Schütze 1 möchte die eigenen Scheiben automatisch bekommen",
+        "/admin/users/u1",
+        "Nummer prüfen",
+      ],
+      [
+        "Schütze 3 hat eine Scheibe als „nicht meine“ zurückgewiesen",
+        "/admin/users/u3",
+        "Nummer prüfen",
+      ],
+    ])
+    expect(model.tasks.map((t) => t.detail)).toEqual([
+      "Sportpassnummer 1001, eingetragen am 14.10.2026, 19:02",
+      "Prüf die Sportpassnummer 1003 noch einmal.",
     ])
     const consents = model.stations.find((s) => s.id === "consents")!
-    expect(consents).toMatchObject({ status: "2 offen", tone: "wait" })
+    expect(consents).toMatchObject({ status: "2 warten auf dich", tone: "wait" })
     expect(consents.facts).toEqual(["1 aktiv · 2 warten auf dich · 1 abgelehnt"])
   })
 
@@ -67,17 +81,17 @@ describe("Übersicht des Admins", () => {
       bridge: {
         ...base.bridge!,
         status: "possible-reset",
-        heldBack: "2 Scheiben verdeckt zurückgehalten",
+        heldBack: "2 Scheiben mit verdeckter Wertung nicht geschickt",
       },
     })
     expect(model.tasks).toEqual([])
     const bridge = model.stations.find((s) => s.id === "bridge")!
-    expect(bridge).toMatchObject({ status: "aus, normal", tone: "neutral" })
+    expect(bridge).toMatchObject({ status: "aus (nach dem Training normal)", tone: "neutral" })
     expect(bridge.facts).toEqual([
       "Pi im Schützenhaus",
       "zuletzt online 14.10.2026, 22:14",
-      "meldet: Ablage der Anlage sieht neu aus; Spiegel trennt alte und neue Scheiben selbst",
-      "2 Scheiben verdeckt zurückgehalten",
+      "Die Meyton-Anlage wirkt wie neu aufgesetzt. Spiegel trennt alte und neue Scheiben selbst. Du musst nichts tun.",
+      "2 Scheiben mit verdeckter Wertung nicht geschickt",
     ])
     expect(
       overviewModel({ ...base, bridge: { ...base.bridge!, online: true } }).stations[1].status
@@ -91,27 +105,41 @@ describe("Übersicht des Admins", () => {
     expect(model.stations[0].facts[1]).toContain("nimmt sie nicht an")
   })
 
-  it("eine Brücke ohne jeden Kontakt ist kein „aus, normal“ (Review)", () => {
+  it("eine Brücke ohne jeden Kontakt ist nicht „aus (nach dem Training normal)“ (Review)", () => {
     const model = overviewModel({ ...base, bridge: { ...base.bridge!, lastHeartbeatAt: null } })
     expect(model.stations[1]).toMatchObject({ status: "noch kein Kontakt", tone: "wait" })
   })
 
-  it("Konten gezählt, deaktivierte nur, wenn es welche gibt", () => {
+  it("Konten gezählt, deaktivierte nur, wenn es welche gibt; dazu die Nutzung (P2e)", () => {
     expect(overviewModel(base).stations[3].facts).toEqual([
       "12 Konten · 9 mit Sportpass · 1 deaktiviert",
+      "124 Scheiben, 9 davon in den letzten 30 Tagen. 4 Konten haben in den letzten 30 Tagen geschossen.",
     ])
     expect(
-      overviewModel({ ...base, accounts: { total: 1, deactivated: 0, withSportpass: 0 } })
-        .stations[3].facts
-    ).toEqual(["1 Konto · 0 mit Sportpass"])
+      overviewModel({
+        ...base,
+        accounts: { total: 1, deactivated: 0, withSportpass: 0 },
+        usage: { cards: 0, recentCards: 0, recentAccounts: 0 },
+      }).stations[3].facts
+    ).toEqual(["1 Konto · 0 mit Sportpass", "Noch keine Scheibe in Spiegel."])
+    expect(
+      overviewModel({ ...base, usage: { cards: 1, recentCards: 1, recentAccounts: 1 } }).stations[3]
+        .facts[1]
+    ).toBe(
+      "1 Scheibe, 1 davon in den letzten 30 Tagen. 1 Konto hat in den letzten 30 Tagen geschossen."
+    )
   })
 
   it("gemeldete „nicht meine“ als Zahl an den Zustimmungen, ohne Namen und ohne Aufgabe (P2b, D9)", () => {
     const facts = (notMine: number) =>
       overviewModel({ ...base, notMine }).stations.find((s) => s.id === "consents")!.facts
     expect(facts(0)).toHaveLength(1)
-    expect(facts(1)[1]).toBe("1 Scheibe als „nicht meine“ gemeldet; sie kommt nicht wieder.")
-    expect(facts(3)[1]).toBe("3 Scheiben als „nicht meine“ gemeldet; sie kommen nicht wieder.")
+    expect(facts(1)[1]).toBe(
+      "1 Scheibe wurde als „nicht meine“ zurückgewiesen. Sie kommt nicht wieder, außer du lässt sie am Konto wieder zu."
+    )
+    expect(facts(3)[1]).toBe(
+      "3 Scheiben wurden als „nicht meine“ zurückgewiesen. Sie kommen nicht wieder, außer du lässt sie am Konto wieder zu."
+    )
     expect(overviewModel({ ...base, notMine: 3 }).tasks).toEqual([])
   })
 
@@ -120,11 +148,31 @@ describe("Übersicht des Admins", () => {
       overviewModel({ ...base, historyPending }).stations.find((s) => s.id === "consents")!.facts
     expect(facts(0)).toHaveLength(1)
     expect(facts(1)[1]).toBe(
-      "Für 1 Zustimmung lädt die Brücke ältere Scheiben nach, wenn niemand schießt."
+      "Für 1 Schützen holt Spiegel noch ältere Scheiben. Das passiert, wenn im Schützenhaus niemand schießt."
     )
     expect(facts(2)[1]).toBe(
-      "Für 2 Zustimmungen lädt die Brücke ältere Scheiben nach, wenn niemand schießt."
+      "Für 2 Schützen holt Spiegel noch ältere Scheiben. Das passiert, wenn im Schützenhaus niemand schießt."
     )
     expect(overviewModel({ ...base, historyPending: 2 }).tasks).toEqual([])
+  })
+
+  it("Schreibregeln: kein Text der Übersicht mit Semikolon oder altem Wort (P2f)", () => {
+    const model = overviewModel({
+      ...base,
+      site: { name: "Schützenhaus", foreignSource: true },
+      bridge: { ...base.bridge!, status: "possible-reset", heldBack: null },
+      consents: [consent(1, "requested"), consent(3, "returned")],
+      notMine: 2,
+      historyPending: 1,
+    })
+    const texts = [
+      ...model.tasks.flatMap((t) => [t.title, t.detail, t.action]),
+      ...model.stations.flatMap((s) => [s.title, s.does, s.status, ...s.facts]),
+    ]
+    for (const text of texts) expect(text).not.toMatch(OLD_WORDS)
+    for (const status of ["delayed", "db-unreachable", "db-error"] as const)
+      for (const fact of overviewModel({ ...base, bridge: { ...base.bridge!, status } }).stations[1]
+        .facts)
+        expect(fact).not.toMatch(OLD_WORDS)
   })
 })

@@ -109,8 +109,8 @@ export function heldBackText(heldBack: HeartbeatV1["heldBack"]): string | null {
   const hidden = count([5, 10])
   const unknown = heldBack.reduce((sum, h) => sum + h.cards, 0) - hidden
   const parts = [
-    hidden ? `${scheiben(hidden)} verdeckt zurückgehalten` : "",
-    unknown ? `${scheiben(unknown)} mit unbekannter Wertung zurückgehalten` : "",
+    hidden ? `${scheiben(hidden)} mit verdeckter Wertung nicht geschickt` : "",
+    unknown ? `${scheiben(unknown)} mit unbekannter Wertungsart nicht geschickt` : "",
   ].filter(Boolean)
   return parts.length ? parts.join(" · ") : null
 }
