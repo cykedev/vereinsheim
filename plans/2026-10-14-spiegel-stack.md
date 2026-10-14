@@ -121,7 +121,7 @@ vorher als fenced Block. Nichts davon geht auf den VPS; Push und VPS bleiben bei
 | `Caddyfile` | T5: Block für Spiegel |
 | `.env.example`, `compose.local.yml` | T6 |
 | `scripts/db-ensure.sh` (neu), `scripts/vereinsheim` (`cmd_db_ensure`, Hilfe, Dispatch) | T7 |
-| `tools/stack-e2e/run.sh`, `tools/stack-e2e/compose.e2e.yml`, `tools/stack-e2e/README.md` (neu), `apps/spiegel/tools/bridge-e2e.ts` | T8 |
+| `tools/stack-e2e/run.sh`, `tools/stack-e2e/compose.e2e.yml`, `tools/stack-e2e/README.md` (neu), `apps/spiegel/tools/bridge-e2e.ts`, `apps/spiegel/tools/stack-probe.ts` (neu, bei der Umsetzung ergänzt: die Grenzen hinter Caddy mit den Funktionen der App statt in Bash) | T8 |
 | `reports/2026-10-14-spiegel-stack.md` | T9: Bericht der Prüfung |
 | `vault/architecture/architecture.md`, `vault/decisions/adr-002.md`, `adr-003.md`, `apps/spiegel/CLAUDE.md`, `vault/spiegel/spiegel-roadmap.md` | T10 |
 

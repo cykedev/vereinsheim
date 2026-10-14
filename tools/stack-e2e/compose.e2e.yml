@@ -1,0 +1,37 @@
+# Override für den lokalen Ende-zu-Ende-Test (tools/stack-e2e/run.sh), immer zusammen mit compose.yml und einer
+# Wegwerf-Umgebung aus run.sh. Caddy hört auf Ports statt Hosts (RINGWERK_HOST=:8080 usw.), so geht es ohne DNS und
+# TLS. Die Apps nehmen die lokal gebauten Images (vereinsheim-e2e/*) und holen nichts von Docker Hub.
+services:
+  caddy:
+    ports: !override
+      - "18080:8080"
+      - "18081:8081"
+      - "18082:8082"
+
+  db:
+    ports:
+      - "15432:5432"
+
+  migrate-ringwerk:
+    pull_policy: never
+
+  migrate-treffsicher:
+    pull_policy: never
+
+  migrate-spiegel:
+    pull_policy: never
+
+  app-ringwerk:
+    pull_policy: never
+    environment:
+      NEXTAUTH_URL: "http://localhost:18080"
+
+  app-treffsicher:
+    pull_policy: never
+    environment:
+      NEXTAUTH_URL: "http://localhost:18081"
+
+  app-spiegel:
+    pull_policy: never
+    environment:
+      NEXTAUTH_URL: "http://localhost:18082"

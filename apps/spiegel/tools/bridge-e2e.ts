@@ -9,8 +9,11 @@
 // (`historyLoadedAt` gesetzt) kommt er nie. Mit `--historie` ist der Auftrag offen; die Brücke holt ihn, sobald 20 Minuten
 // nichts läuft, und meldet ihn erledigt (`historyLoadedAt`). Das dauert gut 20 Minuten.
 // Nicht im Gate (braucht Docker, Go und den Build).
+// Mit `BASE_URL` gegen einen laufenden Spiegel statt des eigenen Builds, mit `DATABASE_URL` dessen Datenbank (P3:
+// der Stack aus `tools/stack-e2e/run.sh --bridge`, Spiegel hinter Caddy).
 //
 //   pnpm --filter spiegel build && pnpm --filter spiegel bridge-e2e [--historie]
+//   BASE_URL=http://localhost:18082 DATABASE_URL=… pnpm --filter spiegel bridge-e2e
 
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process"
 import { randomUUID } from "node:crypto"
@@ -27,7 +30,9 @@ import { APP_DIR, startServer } from "./pruefen/server"
 
 const out = (text = "") => process.stdout.write(`${text}\n`)
 const PORT = 3012
-const BASE = `http://localhost:${PORT}`
+/** ein laufender Spiegel (etwa hinter Caddy im Stack); dann ohne eigenen Server */
+const EXTERNAL = process.env.BASE_URL ?? null
+const BASE = EXTERNAL ?? `http://localhost:${PORT}`
 const BRIDGE_DIR = join(APP_DIR, "..", "spiegel-bridge")
 const CASES_DIR = join(APP_DIR, "..", "..", "packages", "ssmdb2-cases", "cases", "v1")
 const CONSENTED = BigInt(12345678)
@@ -136,7 +141,7 @@ async function main() {
         historyLoadedAt: HISTORY ? null : new Date(),
       },
     })
-    server = await startServer(BASE, PORT, out)
+    if (!EXTERNAL) server = await startServer(BASE, PORT, out)
     const port = startMariadb(container)
     // der ältere Abend liegt schon in der Ablage, bevor die Brücke startet
     for (const sql of steps("SF-02", OLDER_DAYS)) mariadb(container, sql)
