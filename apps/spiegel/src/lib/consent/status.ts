@@ -50,3 +50,15 @@ export function isOpenConsent(status: ConsentStatus): boolean {
 
 /** SportpassIDs je Konto: SF-39 braucht mehrere (neuer Ausweis), mehr als drei ist kein Anwendungsfall */
 export const MAX_CONSENTS_PER_ACCOUNT = 3
+
+/**
+ * Der Stand des Sportpasses eines Kontos in einem Wort für die Kontenliste (P2c, D5): Was auf den Admin wartet, geht
+ * vor; dann aktiv, dann abgelehnt; ohne Zustimmung „kein Sportpass“.
+ */
+export function sportpassSummary(statuses: readonly ConsentStatus[]): string {
+  if (statuses.includes("requested")) return "Sportpass wartet auf dich"
+  if (statuses.includes("returned")) return "Sportpass zurück beim Admin"
+  if (statuses.includes("active")) return "Sportpass aktiv"
+  if (statuses.includes("rejected")) return "Sportpass abgelehnt"
+  return "kein Sportpass"
+}

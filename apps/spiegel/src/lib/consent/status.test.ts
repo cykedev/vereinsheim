@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import { consentStatus, consentStatusText, isOpenConsent, ownerActionOf } from "./status"
+import {
+  consentStatus,
+  consentStatusText,
+  isOpenConsent,
+  ownerActionOf,
+  sportpassSummary,
+} from "./status"
 
 const at = new Date("2026-10-14T18:00:00Z")
 const row = (fields: Partial<Record<"confirmedAt" | "rejectedAt" | "returnedAt", Date>>) => ({
@@ -48,5 +54,15 @@ describe("in Worten und Aktionen", () => {
     expect(isOpenConsent("returned")).toBe(true)
     expect(isOpenConsent("active")).toBe(false)
     expect(isOpenConsent("rejected")).toBe(false)
+  })
+})
+
+describe("Stand des Sportpasses je Konto", () => {
+  it("was wartet, geht vor; dann aktiv, abgelehnt, keiner", () => {
+    expect(sportpassSummary(["active", "requested"])).toBe("Sportpass wartet auf dich")
+    expect(sportpassSummary(["active", "returned"])).toBe("Sportpass zurück beim Admin")
+    expect(sportpassSummary(["rejected", "active"])).toBe("Sportpass aktiv")
+    expect(sportpassSummary(["rejected"])).toBe("Sportpass abgelehnt")
+    expect(sportpassSummary([])).toBe("kein Sportpass")
   })
 })

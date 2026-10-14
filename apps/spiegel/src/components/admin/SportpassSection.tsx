@@ -5,25 +5,30 @@ import { useState, useTransition } from "react"
 
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
-import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
 
+import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { consentConfirm, consentReject, consentRemove } from "@/lib/admin/consequences"
 import { confirmConsent, rejectConsent, removeConsent } from "@/lib/consent/actions"
 import type { ConsentRow } from "@/lib/consent/queries"
 import { isOpenConsent } from "@/lib/consent/status"
 import type { ActionResult } from "@/lib/types"
 
+import { AdminHelp } from "./AdminHelp"
+
 /**
  * Zustimmungen per Sportpass an einem Konto (SP-1.7 a, D5): Der Schütze stimmt im Profil zu, hier bestätigt oder lehnt
  * ein Admin ab. Nur bestätigte bringen Scheiben von der Brücke ([[spiegel-privacy]]); eintragen kann nur der Schütze.
  */
-export function SportpassSection({ consents }: { consents: ConsentRow[] }) {
+export function SportpassSection({ consents, who }: { consents: ConsentRow[]; who: string }) {
   return (
     <section
       data-admin-sportpass
       className="grid max-w-lg gap-4 rounded-2xl border border-border bg-card p-5"
     >
       <div className="grid gap-1">
-        <h2 className="text-[15px] font-semibold">Zustimmungen per Sportpass</h2>
+        <h2 className="flex items-center gap-1 text-[15px] font-semibold">
+          Zustimmungen per Sportpass <AdminHelp id="consent" />
+        </h2>
         <p className="text-sm text-foreground-2">
           Bestätige nur, wenn die Nummer in der Meyton-Schützenverwaltung zu dieser Person gehört.
           Eintragen kann nur der Schütze selbst, im Profil.
@@ -32,7 +37,7 @@ export function SportpassSection({ consents }: { consents: ConsentRow[] }) {
       {consents.length > 0 ? (
         <ul className="divide-y divide-border rounded-xl border border-border">
           {consents.map((consent) => (
-            <ConsentItem key={consent.id} consent={consent} />
+            <ConsentItem key={consent.id} consent={consent} who={who} />
           ))}
         </ul>
       ) : (
@@ -42,9 +47,9 @@ export function SportpassSection({ consents }: { consents: ConsentRow[] }) {
   )
 }
 
-type DialogKind = "reject" | "remove"
+type DialogKind = "confirm" | "reject" | "remove"
 
-function ConsentItem({ consent }: { consent: ConsentRow }) {
+function ConsentItem({ consent, who }: { consent: ConsentRow; who: string }) {
   const router = useRouter()
   // die Art bleibt beim Schließen stehen, damit der Dialog nicht beim Ausblenden den anderen Titel zeigt (Review)
   const [dialog, setDialog] = useState<DialogKind>("remove")
@@ -65,6 +70,16 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
       }
     })
   const undecided = isOpenConsent(consent.status)
+  const subject = { who, sportpassId: consent.sportpassId }
+  // Kein Knopf ohne Folge (P2c): jede Entscheidung fragt mit ihren Folgen
+  const decisions = {
+    confirm: { decision: consentConfirm(subject), action: confirmConsent },
+    reject: {
+      decision: consentReject({ ...subject, active: consent.status === "active" }),
+      action: rejectConsent,
+    },
+    remove: { decision: consentRemove(subject), action: removeConsent },
+  }
 
   return (
     <li data-consent={consent.status} className="grid gap-2 px-3 py-2">
@@ -87,7 +102,7 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
               type="button"
               className="h-10"
               disabled={pending}
-              onClick={() => run(confirmConsent)}
+              onClick={() => ask("confirm")}
             >
               Bestätigen
             </Button>
@@ -112,22 +127,11 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
           Entfernen
         </Button>
       </span>
-      <ConfirmDialog
+      <DecisionDialog
+        decision={decisions[dialog].decision}
         open={open}
         onOpenChange={setOpen}
-        title={
-          dialog === "reject"
-            ? `SportpassID ${consent.sportpassId} ablehnen?`
-            : `SportpassID ${consent.sportpassId} entfernen?`
-        }
-        description={
-          dialog === "reject"
-            ? "Der Schütze sieht „abgelehnt“ und kann die Ablehnung entfernen und neu zustimmen."
-            : "Die Zustimmung verschwindet; ab dem nächsten Abgleich lädt die Brücke nichts mehr. Hochgeladene Scheiben bleiben beim Schützen."
-        }
-        confirmLabel={dialog === "reject" ? "Ablehnen" : "Entfernen"}
-        destructive
-        onConfirm={() => run(dialog === "reject" ? rejectConsent : removeConsent)}
+        onConfirm={() => run(decisions[dialog].action)}
       />
     </li>
   )

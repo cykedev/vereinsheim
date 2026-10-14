@@ -6,16 +6,15 @@ import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsi
 
 import { AdminLoginRateLimitTable } from "@/components/admin/AdminLoginRateLimitTable"
 import { AdminTabs } from "@/components/admin/AdminTabs"
-import { OpenConsents } from "@/components/admin/OpenConsents"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
 import { openConsents } from "@/lib/consent/queries"
-import { getUsers, type UserSummary } from "@/lib/users/queries"
+import { getUsers, type UserListItem } from "@/lib/users/queries"
 import { Page } from "@/components/shell/Page"
 
 export const metadata: Metadata = { title: "Konten" }
 
-function UserRow({ user }: { user: UserSummary }) {
+function UserRow({ user }: { user: UserListItem }) {
   return (
     <li>
       <Link
@@ -28,16 +27,20 @@ function UserRow({ user }: { user: UserSummary }) {
             <span className="truncate text-[13px] text-muted-foreground">{user.email}</span>
           )}
         </span>
-        <span className="shrink-0 text-[13px] text-muted-foreground">
-          {user.role === "ADMIN" ? "Admin" : "Schütze"}
-          {user.isActive ? "" : " · deaktiviert"}
+        <span className="grid shrink-0 justify-items-end text-[13px] text-muted-foreground">
+          <span>
+            {user.role === "ADMIN" ? "Admin" : "Schütze"}
+            {user.isActive ? "" : " · deaktiviert"}
+          </span>
+          <span data-sportpass-state>{user.sportpass}</span>
         </span>
       </Link>
     </li>
   )
 }
 
-// Konten (Admin): Liste, neues Konto, offene Zustimmungen per Sportpass, Sperren der Anmeldung
+// Konten (Admin): Liste mit dem Stand des Sportpasses, neues Konto, Hinweis auf offene Zustimmungen (die stehen auf der
+// Übersicht), Sperren der Anmeldung
 export default async function AdminUsersRoute() {
   await requireAdmin()
   const timeZone = getDisplayTimeZone()
@@ -66,7 +69,17 @@ export default async function AdminUsersRoute() {
             Neues Konto
           </Link>
         </div>
-        <OpenConsents consents={consents} />
+        {consents.length > 0 && (
+          <Link
+            href="/admin"
+            data-open-consents-link
+            className="justify-self-start rounded-full bg-gold-wash px-3.5 py-2 text-[13px] font-semibold text-gold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            {consents.length === 1
+              ? "1 Zustimmung wartet auf dich ›"
+              : `${consents.length} Zustimmungen warten auf dich ›`}
+          </Link>
+        )}
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
           {users.map((user) => (
             <UserRow key={user.id} user={user} />

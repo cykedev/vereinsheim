@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useActionState, useEffect, useState } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 
 import { MAX_USER_EMAIL_LENGTH } from "@vereinsheim/lib/auth/validation"
 import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
@@ -15,6 +15,10 @@ import { Label } from "@vereinsheim/ui/label"
 import type { ActionResult } from "@/lib/types"
 import type { UserSummary } from "@/lib/users/queries"
 import type { Role } from "@/lib/users/rules"
+import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { accountChange, type Decision } from "@/lib/admin/consequences"
+
+import { AdminHelp } from "./AdminHelp"
 
 type Action = (previous: ActionResult | null, formData: FormData) => Promise<ActionResult>
 
@@ -65,10 +69,40 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
     }
   }, [state, router])
 
+  // Kein Knopf ohne Folge (P2c, D6): ändern sich Rolle, Status oder Passwort, fragt der Dialog mit genau diesen Folgen
+  const formRef = useRef<HTMLFormElement>(null)
+  const confirmed = useRef(false)
+  const [decision, setDecision] = useState<Decision | null>(null)
+  const [asking, setAsking] = useState(false)
+  const pendingDecision = () =>
+    user
+      ? accountChange({
+          who: user.name ?? user.email,
+          changes: {
+            ...(role !== user.role ? { role } : {}),
+            ...((active === "true") !== user.isActive ? { active: active === "true" } : {}),
+            ...(password !== "" ? { password: true } : {}),
+          },
+        })
+      : null
+
   const general = getGeneralError(state)
   return (
     <form
+      ref={formRef}
       action={formAction}
+      onSubmit={(event) => {
+        if (confirmed.current) {
+          confirmed.current = false
+          return
+        }
+        const ask = pendingDecision()
+        if (ask) {
+          event.preventDefault()
+          setDecision(ask)
+          setAsking(true)
+        }
+      }}
       className="grid max-w-lg gap-4 rounded-2xl border border-border bg-card p-5"
     >
       <Field id="name" label="Name (freiwillig)" error={getFieldError(state, "name")}>
@@ -123,7 +157,9 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
         )}
       </Field>
       <div className="grid gap-1.5">
-        <span className="text-sm font-medium">Rolle</span>
+        <span className="flex items-center gap-1 text-sm font-medium">
+          Rolle <AdminHelp id="role" />
+        </span>
         <input type="hidden" name="role" value={role} />
         <Segmented
           label="Rolle"
@@ -139,7 +175,9 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
       </div>
       {user && (
         <div className="grid gap-1.5">
-          <span className="text-sm font-medium">Status</span>
+          <span className="flex items-center gap-1 text-sm font-medium">
+            Status <AdminHelp id="deactivated" />
+          </span>
           <input type="hidden" name="isActive" value={active} />
           <Segmented
             label="Status"
@@ -159,6 +197,11 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
           {general}
         </p>
       )}
+      {!user && (
+        <p className="text-sm text-foreground-2">
+          Das Konto kann sich mit dem vorläufigen Passwort anmelden und muss es zuerst ändern.
+        </p>
+      )}
       <div className="flex gap-2">
         <Button type="submit" className="h-10" disabled={pending}>
           {pending ? "Speichern…" : user ? "Speichern" : "Konto anlegen"}
@@ -170,6 +213,17 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
           Abbrechen
         </Link>
       </div>
+      {decision && (
+        <DecisionDialog
+          decision={decision}
+          open={asking}
+          onOpenChange={setAsking}
+          onConfirm={() => {
+            confirmed.current = true
+            formRef.current?.requestSubmit()
+          }}
+        />
+      )}
     </form>
   )
 }

@@ -24,7 +24,10 @@ export default async function EditUserRoute({ params }: { params: Promise<{ id: 
         {user.name ?? user.email}
       </h1>
       <UserForm action={updateUser.bind(null, user.id)} user={user} />
-      <SportpassSection consents={await consentsOfUser(user.id, getDisplayTimeZone())} />
+      <SportpassSection
+        consents={await consentsOfUser(user.id, getDisplayTimeZone())}
+        who={user.name ?? user.email}
+      />
     </Page>
   )
 }
