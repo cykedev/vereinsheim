@@ -555,7 +555,7 @@ async function openAndBar(page: Page) {
     `({ empty: !!$("[data-open-empty]"), cards: document.querySelectorAll("[data-pending-card]").length })`
   )
   check(
-    "Offen: ohne Wartendes „Nichts offen.“",
+    "Offen: ohne Wartendes „Nichts zu prüfen.“",
     open.empty && open.cards === 0,
     JSON.stringify(open)
   )
@@ -600,7 +600,7 @@ async function trash(page: Page) {
   const dialog = await deleteFromPage()
   check(
     "Löschen: Dialog nennt Papierkorb, 30 Tage und das Ende",
-    dialog.includes("30 Tage im Papierkorb") && dialog.includes("endgültig gelöscht"),
+    dialog.includes("30 Tage im Papierkorb") && dialog.includes("löscht Spiegel sie endgültig"),
     dialog.slice(0, 160)
   )
   // ein später Redirect der mitgerenderten Seite (in den Papierkorb) gewönne sonst unbemerkt (Review P2b)

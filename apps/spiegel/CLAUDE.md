@@ -67,7 +67,10 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   (Tests halten den Wortlaut, ohne Pronomen für Personen), die Erklärungen hinter „?“ aus `src/lib/admin/help.ts`
   (`AdminHelp`). Ein Formular mit Folgen (Konto, Zeitzone) fängt `onSubmit` ab, fragt und sendet nach dem Bestätigen
   mit `requestSubmit`. Der Admin beginnt mit der Übersicht (`/admin`, `src/lib/admin/overview.ts`): Aufgaben nur für
-  Entscheidungen eines Menschen, Meldungen der Brücke nur als Zustand.
+  Entscheidungen eines Menschen, Meldungen der Brücke nur als Zustand. **Wortlaut nach dem Textbuch** (P2f,
+  `plans/2026-10-14-spiegel-texte.md`, [[conventions]] §10 „So schreiben wir“): Sportpassnummer statt SportpassID,
+  zurückweisen und wieder zulassen statt Meldung, verbinden und trennen; `OLD_WORDS` in `consequences.ts` ist die
+  Leitplanke der Tests. Neue Texte erst ins Textbuch, dann in den Code.
 - **Admin-Daten prüfen selbst:** jede Admin-Seite und jede Admin-Abfrage ruft `requireAdmin`; das Layout allein schützt
   die Daten einer Seite nicht (Next: bei Navigation im Client läuft es nicht erneut).
 - **Passwort vom Admin:** `mustChangePassword` (beim Anlegen und Zurücksetzen). `requireSession` leitet jede Seite zur
@@ -186,10 +189,14 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
     im Profil.
   - Tests gegen die Dev-Datenbank: `createTestSite` legt die Epoche bestätigt an; der Admin arbeitet auf der ersten
     Anlage (ADR-029: eine je Installation).
+- **Was der Admin je Konto sieht** (P2e, `plans/2026-10-14-spiegel-admin-zahlen.md`): Zahl der sichtbaren Scheiben, Tag
+  der letzten, Wartende in „Offen“ und den Hinweis „noch keine Scheibe seit der Bestätigung“ (aktive Zustimmung älter als
+  14 Tage ohne jede Scheibe), gezählt in `getUsers` über `groupBy`; in der Übersicht eine Zeile zur Nutzung. Nie
+  Ergebnisse, Disziplinen oder Schüsse. Seit Hinweistext v2 sagt das auch der Text, dem der Schütze zustimmt.
 - **Zustimmung per Sportpass** (SP-1.7 a, `plans/2026-10-14-spiegel-optin.md`, `src/lib/consent/`): Zustände als reine
   Funktion `consentStatus` (wartet, aktiv, abgelehnt, zurück beim Admin; Ablehnung geht vor). Jeder Filter auf „aktiv“
   nimmt `ACTIVE_CONSENT` aus `status.ts` (`GET /state`, Einlesen), nie eine eigene Kopie. Der Hinweistext steht
-  unveränderlich in `texts.ts` (`CONSENT_TEXTS`, ein Test hält den Hash von v1 fest); ein neuer Wortlaut ist eine neue
+  unveränderlich in `texts.ts` (`CONSENT_TEXTS`, Tests halten die Hashes von v1 und v2 fest; aktuell v2); ein neuer Wortlaut ist eine neue
   Version, die Zeile speichert `consentVersion`. Widerruf löscht die Zeile, die Scheiben bleiben (User, 14. Oktober 2026). Entscheidungen
   des Admins tragen ihre Bedingung im `updateMany` selbst (zweimal → „Schon entschieden.“). Das Formular schickt die
   Version des gezeigten Texts mit; die Grenze von drei je Konto zählt und legt an unter der Sperre der Kontozeile.

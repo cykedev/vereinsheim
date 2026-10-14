@@ -290,3 +290,17 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   (`apps/spiegel/src/lib/admin/consequences.ts`, Tests halten den Wortlaut), ohne Pronomen für Personen. Keine
   Fachbegriffe in der Oberfläche; als Aufgabe erscheint im Admin nur, was ein Mensch entscheiden muss, Technisches regelt
   Spiegel selbst und zeigt es höchstens als Zustand (Plan `plans/2026-10-14-spiegel-admin-verstaendlich.md`, D0).
+- **So schreiben wir** (User, 14. Oktober 2026: „wir müssen dringend an der verständlichkeit arbeiten“, „usability ist super
+  wichtig“; Textbuch, Plan `plans/2026-10-14-spiegel-texte.md`, [[spiegel-dialog-texts-not-understood]]):
+  1. Erst sagen, was vorher passiert ist. Dann die Frage.
+  2. Ein Gedanke pro Satz. Keine Semikolons, keine verschachtelten Bedingungen.
+  3. Die Wörter des Users, nicht die des Codes: Sportpassnummer, zurückweisen, wieder zulassen, Spiegel holt,
+     verbinden und trennen.
+  4. Orte in der App nennen („in der App unter ‚Offen‘“, „im Profil“).
+  5. Konkret: wer merkt was, und wann.
+  6. Der Knopf sagt, was man will, nicht was technisch passiert.
+  7. Keine Pronomen für Personen.
+
+  `OLD_WORDS` in `apps/spiegel/src/lib/admin/consequences.ts` hält Semikolons und die alten Wörter aus Dialogen,
+  Erklärungen, Zuständen, Übersicht und Hinweistext fern (Tests). Ob ein Text verständlich ist, prüft ein Mensch: Neue
+  Texte kommen erst ins Textbuch („Textbuch Spiegel“), dann in den Code.
