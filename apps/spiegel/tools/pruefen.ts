@@ -544,6 +544,34 @@ async function phoneNoSideScroll(page: Page) {
   }
 }
 
+/**
+ * „Offen“ und die Leiste (SP-1.7 a2): Das Demo-Konto hat nichts Wartendes, also sagt „Offen“ das; Scannen ist bis zum
+ * QR-Weg aus der Navigation genommen, die untere Leiste hat vier Felder.
+ */
+async function openAndBar(page: Page) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/open`)
+  const open = await page.ev<{ empty: boolean; cards: number }>(
+    `({ empty: !!$("[data-open-empty]"), cards: document.querySelectorAll("[data-pending-card]").length })`
+  )
+  check(
+    "Offen: ohne Wartendes „Nichts offen.“",
+    open.empty && open.cards === 0,
+    JSON.stringify(open)
+  )
+  await page.viewport(375, 812)
+  await page.goto(`${BASE}/`)
+  const bar = await page.ev<{ areas: string[]; scan: number }>(
+    `({ areas: [...document.querySelectorAll("[data-app-bar] [data-area]")].map((a) => a.dataset.area),
+        scan: document.querySelectorAll('[data-area="scan"]').length })`
+  )
+  check(
+    "Telefon: untere Leiste ohne Scannen",
+    bar.scan === 0 && bar.areas.join(",") === "start,cards,progress,profile",
+    JSON.stringify(bar)
+  )
+}
+
 async function language(page: Page) {
   await page.viewport(1280, 900)
   for (const [path, selectors] of [
@@ -899,6 +927,7 @@ async function main() {
     await section("Rückwege", () => backPaths(page))
     await section("Fortschritt", () => progress(page))
     await section("Sprache und Hilfe", () => language(page))
+    await section("Offen und Leiste", () => openAndBar(page))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
   } catch (error) {
