@@ -6,6 +6,7 @@ import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsi
 
 import { AdminLoginRateLimitTable } from "@/components/admin/AdminLoginRateLimitTable"
 import { AdminTabs } from "@/components/admin/AdminTabs"
+import { UserRowFacts } from "@/components/admin/UserRowFacts"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
 import { openConsents } from "@/lib/consent/queries"
@@ -14,7 +15,7 @@ import { Page } from "@/components/shell/Page"
 
 export const metadata: Metadata = { title: "Konten" }
 
-function UserRow({ user }: { user: UserListItem }) {
+function UserRow({ user, timeZone }: { user: UserListItem; timeZone: string }) {
   return (
     <li>
       <Link
@@ -33,6 +34,7 @@ function UserRow({ user }: { user: UserListItem }) {
             {user.isActive ? "" : " · deaktiviert"}
           </span>
           <span data-sportpass-state>{user.sportpass}</span>
+          <UserRowFacts user={user} timeZone={timeZone} />
         </span>
       </Link>
     </li>
@@ -82,7 +84,7 @@ export default async function AdminUsersRoute() {
         )}
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
           {users.map((user) => (
-            <UserRow key={user.id} user={user} />
+            <UserRow key={user.id} user={user} timeZone={timeZone} />
           ))}
         </ul>
       </section>
