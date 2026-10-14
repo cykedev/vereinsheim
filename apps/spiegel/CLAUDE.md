@@ -213,6 +213,13 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   Navigation der Aktion). Eine alte Adresse einer gelöschten Scheibe führt in den Papierkorb (`ownCardState`). Der
   Papierkorb zeigt auch, was nicht von selbst wiederkommt (`blockedCards`: eigene Sperren und Meldungen „nicht meine“);
   die Admin-Übersicht zählt nur die Meldungen der Anlage, ohne Namen.
+- **Ältere Scheiben nachladen** (P2d, `plans/2026-10-14-spiegel-historie.md`): Eine aktive Zustimmung ohne
+  `historyLoadedAt` ist ein Auftrag; `bridgeState` nennt sie in `history` und liefert dann alle Sperren, nicht nur die
+  jüngsten 60 Tage. Der Heartbeat setzt `historyLoadedAt` für `historyDone` (nur aktive, offene Zustimmungen der Anlage).
+  „Offen“ zeigt je Nummer die **jüngste** wartende Scheibe (`pendingGroups`). Ein Admin hebt Meldungen „nicht meine“
+  einer Zustimmung auf (`liftNotMine` in `src/lib/consent/actions.ts`, am Konto): Grabsteine der Nummer an der Anlage weg,
+  `historyLoadedAt` und `firstCardConfirmedAt` null, die Scheiben kommen wartend wieder. Profil und Übersicht zeigen den
+  Stand des Nachladens als Zustand.
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten (gefunden von der Skriptprüfung, 13. Oktober 2026).

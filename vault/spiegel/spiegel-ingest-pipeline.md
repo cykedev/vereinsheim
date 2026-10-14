@@ -22,8 +22,8 @@ und eingefrorene Beispiele der Anfragen und Antworten liegen im Vertrag (`@verei
 |---|---|
 | `POST /api/ingest/v1/pair` | Kopplung mit Einmal-Code (15 min, einmal), liefert Geräte-Token |
 | `POST /api/ingest/v1/snapshots` | Stapel von Snapshots (1 bis 50, höchstens 4 MiB); Ergebnis je Snapshot |
-| `POST /api/ingest/v1/heartbeat` | Version, Beginn des Laufs, Rückstau, letzter DB-Kontakt, Uhrabweichung, Zurückgehaltenes |
-| `GET /api/ingest/v1/state` | was die Brücke ohne eigenen Zustand braucht: Epoche, gehashte SportpassIDs mit Zustimmung, Grabsteine und Löschsperren, Wasserstand |
+| `POST /api/ingest/v1/heartbeat` | Version, Beginn des Laufs, Rückstau, letzter DB-Kontakt, Uhrabweichung, Zurückgehaltenes, erledigte Aufträge zum Nachladen (setzt `historyLoadedAt`, nur aktive, offene Zustimmungen der Anlage) |
+| `GET /api/ingest/v1/state` | was die Brücke ohne eigenen Zustand braucht: Epoche, gehashte SportpassIDs mit Zustimmung, Grabsteine und Löschsperren, Wasserstand, offene Aufträge zum Nachladen (P2d: aktive Zustimmung ohne `historyLoadedAt`) |
 | `GET /api/ingest/v1/commands`, `POST …/commands/<id>/result` | Aufträge (Scheibe per ID, Fundbüro, Nachladen, Diagnose): noch nicht gebaut (SP-1.5, SP-1.7) |
 
 Ergebnis je Snapshot: `stored`, `unchanged`, `lifesign` (nur das Lebenszeichen bewegt), `stale`, `future`,

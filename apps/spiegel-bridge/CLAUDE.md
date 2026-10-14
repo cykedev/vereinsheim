@@ -87,7 +87,14 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
 - **Nachholen beim Start** (SF-55): aus `state.watermark` (UTC) minus einem Tag in der Zone der Anlage
   (`catchUpFrom`, Zonen eingebaut über `time/tzdata`) wird ein Lebenszeichen; Scheiben davor im Startfenster liest die
   Erkennung einmal (`SetCatchUpFrom`, Rang 3), aber erst, wenn 20 Minuten nichts mehr läuft (SF-52), und hält den Takt
-  bis dahin nicht hoch. Ohne Wasserstand (erste Brücke) nichts; die Historie ist SP-2.5.
+  bis dahin nicht hoch. Ohne Wasserstand (erste Brücke) nichts.
+- **Nachladen der Historie** (P2d, `plans/2026-10-14-spiegel-historie.md`): Jede Runde liest die SportpassID mit dem
+  Lebenszeichen (`Lifesign.Sportpass`, NULL als nil). `state.history` nennt offene Aufträge (Id, Hash); `run` gibt der
+  Erkennung ein Prädikat (`SetHistory`, Hash je Nummer einmal gerechnet). Passende Scheiben der ganzen Ablage bekommen
+  Rang 3 wie das Nachholen: nur im Leerlauf, höchstens 50 je Runde. Erledigt ist ein Auftrag, wenn keine seiner Scheiben
+  aus der letzten Runde mehr ungelesen ist oder auf Spiegel wartet (`HistoryOpen`, `handled`); zurückgehaltene zählen
+  als erledigt. Der Heartbeat meldet die Ids (`historyDone`), bis Spiegel sie nicht mehr nennt. Ohne Speicher: Ein
+  Neustart beginnt von vorn, Spiegel antwortet „unverändert“.
 - **Dienst** (`deploy/`): `install.sh` legt Binary, Benutzer, `/etc/spiegel-bridge` (0700) und die Unit an; die Unit
   läuft ohne Rechte, mit schreibgeschütztem System, 128 MB, kein Neustart bei Exit 2 und 3. `pair` fragt den Zugang
   zur SSMDB2 auf stdin ab, wenn weder `--dsn` noch die Umgebung ihn nennen. Geprüft in `debian:12` mit

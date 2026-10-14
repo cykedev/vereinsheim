@@ -67,7 +67,7 @@ Den QR gibt es laut Verein immer, auch ohne Starter. Das Fundbüro ist deshalb n
 | Vorher | optional: Check-in per Stand-Aufkleber („ich schieße jetzt auf Stand 6“) oder Belegungsplan der Trainerin | ein Scan | ja |
 | Während | Opt-in per Sportpass (SportpassID aus der Schützenliste) | keiner | ja |
 | Danach | Meyton-QR (Rohdaten sofort oder beim nächsten Einschalten), am Abend auch „Scheibe holen“, innerhalb der Frist | ein Scan, eine Bestätigung | nein |
-| Später | SportpassID nachträglich verknüpft → Nachladen, soweit die SSMDB2 es hat | einmalig | nein |
+| Später | SportpassID nachträglich verknüpft → Nachladen, soweit die SSMDB2 es hat (gebaut mit P2d, 14. Oktober 2026: nach der Bestätigung, nur wenn niemand schießt; „Offen“ zeigt dann die jüngste wartende Scheibe zur Kontrolle) | einmalig | nein |
 
 Ein Check-in gilt, bis man sich abmeldet, jemand anderes am selben Stand eincheckt oder drei Stunden vorbei sind. Steht in Meyton ein Name, der zu einem anderen Konto gehört, gewinnt Meyton.
 

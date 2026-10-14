@@ -36,6 +36,8 @@ SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
   ergänzen), JSON-Schemas mit, Anfragen über `parseApi(schema, input)` (Version, `__proto__`, Fehler ohne Inhalt).
   Vektoren des Sportpass-Hashes aus Python (`test-vectors/sportpass-v1.json`). Additiv seit 13. Oktober 2026:
   `blocked[].epoch` im Zustand (optional, Spiegel schickt es immer): Eine Sperre gilt nur in ihrer Epoche (SF-23).
+  Additiv seit 14. Oktober 2026 (P2d): `history` im Zustand (offene Aufträge zum Nachladen, Id und Hash) und
+  `historyDone` im Heartbeat (nur Ids), beide optional.
 - **Annehmen nur über `parseSnapshot`/`parseSnapshotBatch`**, nie direkt über `snapshotV1`: Davor
   liegen Versionsprüfung und das Verbot von `__proto__` (Zod verwirft den Schlüssel still), danach die
   Prüfsumme. Längen zählen in UTF-16-Codeeinheiten (Zod), nicht in Codepoints (JSON-Schema).

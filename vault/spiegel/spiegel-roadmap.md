@@ -160,7 +160,8 @@ Sonderfall den Test im Bericht. Offen: Aufträge (`commands`, mit SP-1.5 und SP-
 - **Ziel:** Wer startet, sieht nicht eine leere App, sondern seine Scheiben der letzten Jahre. Anlass: Die Kopie vom 9. Oktober 2026 enthält zwei Jahre Historie, für den User 36 Scheiben an 31 Abenden ([[src-ssmdb2-kopie-2026-10-09]]).
 - **Umfang:** Ein Werkzeug liest eine Kopie (`erkunden.sh dump`) aus einer lokalen MariaDB und macht daraus Snapshots nach dem Vertrag ([[spiegel-ingest-contract]]), nur für Scheiben mit Opt-in, also gehashten Sportpassnummern zustimmender Schützen; Spiegel nimmt sie über dieselbe Ingest-API an wie Lieferungen der Brücke. Damit läuft der ganze Weg einmal mit echten Daten, bevor die Brücke steht. Die Kopie bleibt lokal ([[adr-029]]).
 - **Grenzen:** Scheiben vor September 2026 haben keine Probe; Vereinsspiele und Meytons Trainingsscheiben ohne Scheibenbild (SF-70); verdeckte Scheiben (Königsschießen, Modus 5) nie (SF-19).
-- **Hängt ab von:** SP-1.6, SP-1.7. **Status:** Vorschlag (9. Oktober 2026), nicht freigegeben.
+- **Hängt ab von:** SP-1.6, SP-1.7. **Status:** überflüssig (14. Oktober 2026): Die Brücke lädt die älteren Scheiben
+  jeder bestätigten Zustimmung selbst nach (P2d, `plans/2026-10-14-spiegel-historie.md`), soweit die Ablage sie hat.
 
 ## Phase 2 · Auswertung
 
@@ -177,7 +178,7 @@ Sonderfall den Test im Bericht. Offen: Aufträge (`commands`, mit SP-1.5 und SP-
 - **Umfang:** „Scheibe holen“ am Abend als Rückfall für verlorene oder abgelaufene QR-Links, Frist sieben Tage, kein Tablet; optional Check-in per Stand-Aufkleber. Weil es den QR immer gibt, wahrscheinlich nur in kleinem Umfang nötig ([[spiegel-assignment]]). **Hängt ab von:** SP-1.7. **Status:** offen.
 
 ### SP-2.5 Installierbar und Historie nachladen
-- **Umfang:** PWA mit Scan-Aktion; Nachladen der Historie nach einem Opt-in, gedrosselt, nach einer Vorschau und nur, wenn gerade niemand schießt; ältere Scheiben ohne SportpassID über Namensvorschläge (SF-36, SF-52). **Hängt ab von:** SP-1.7. **Status:** offen.
+- **Umfang:** PWA mit Scan-Aktion; Nachladen der Historie nach einem Opt-in, gedrosselt, nach einer Vorschau und nur, wenn gerade niemand schießt; ältere Scheiben ohne SportpassID über Namensvorschläge (SF-36, SF-52). **Hängt ab von:** SP-1.7. **Status:** Nachladen erledigt (14. Oktober 2026, P2d, `plans/2026-10-14-spiegel-historie.md`): Jede bestätigte Zustimmung ist ein Auftrag in `GET /state`, die Brücke liest die passenden Scheiben der ganzen Ablage nur im Leerlauf (Rang 3, höchstens 50 je Runde) und meldet ihn im Heartbeat erledigt; ohne Vorschau. Offen: PWA, Vorschau, Namensvorschläge.
 
 ### SP-2.6 Ergebnisse von fremden Anlagen
 - **Umfang:** vollständiger Parser in `packages/meyton-pdf`, konsolidiert aus Treffsicher ([[treffsicher-meyton-import]]) und Ringwerk ([[meyton-import]]) mit allen DoS-Grenzen und um Kopf und Fuß erweitert ([[meyton-printout]]); Meyton-QR ohne Brücke → Ergebnis ohne Rohdaten aus dem PDF als Versuch, sonst nur das PDF; später Trefferlage aus der PDF-Grafik zurückrechnen. Bestehende Import-Tests beider Apps bleiben grün; Sonderfälle SF-06, SF-44. **Hängt ab von:** SP-1.3, SP-1.7. **Status:** offen.
