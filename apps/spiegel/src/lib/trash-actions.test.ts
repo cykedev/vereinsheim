@@ -6,6 +6,7 @@ import { db } from "@/lib/db"
 import { generateSeason } from "../../test/generate"
 import { createTestSite, type TestSite } from "../../test/fixtures"
 import { writeRevision } from "./db/cards"
+import { ownerCards, trashCards } from "./db/reads"
 
 const mocks = vi.hoisted(() => ({
   session: null as null | { user: { id: string; role: string; mustChangePassword?: boolean } },
@@ -148,5 +149,35 @@ describe("Fehler der Datenbank", () => {
     } finally {
       spy.mockRestore()
     }
+  })
+})
+
+describe("ein neuer Stand für eine Scheibe im Papierkorb (D10)", () => {
+  it("wird geschrieben, die Scheibe bleibt im Papierkorb und in keiner Ansicht", async () => {
+    asOwner()
+    const [input] = generateSeason({
+      seed: base,
+      cards: 1,
+      firstMs: Date.UTC(2026, 5, 2, 17) + base * 60_000,
+      everyDays: 1,
+      sourceId: site.sourceId,
+      disciplineId: site.disciplineId,
+      ownerId: site.ownerId,
+      scheibenIdBase: base,
+    })
+    base += 1
+    const id = (await writeRevision(db, { ...input, sequence: 1 })).cardId
+    await deleteCard(id)
+    // eine Korrektur der Wertung: der letzte Schuss fällt weg, eine neue Revision entsteht
+    const result = await writeRevision(db, {
+      ...input,
+      sequence: 2,
+      shots: input.shots.slice(0, -1),
+    })
+    expect(result.cardId).toBe(id)
+    expect(await db.cardRevision.count({ where: { cardId: id } })).toBe(2)
+    expect((await stateOf(id))?.deletedAt).not.toBeNull()
+    expect((await ownerCards(db, { ownerId: site.ownerId })).map((c) => c.id)).not.toContain(id)
+    expect((await trashCards(db, site.ownerId)).map((t) => t.card.id)).toContain(id)
   })
 })
