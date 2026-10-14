@@ -16,17 +16,17 @@ vi.mock("@/lib/admin/site-actions", () => ({
 const { BridgeItem, PairBridgeForm, RankingItem, SiteForm } = await import("./SiteForms")
 
 describe("Anlage und Brücke (Markup)", () => {
-  it("Rangliste: „nicht zugeordnet“ sagt, dass es Training ist; keine sofortige Speicherung im Markup", () => {
+  it("Rangliste: „Nicht festgelegt“, Training, Wettkampf; keine sofortige Speicherung im Markup", () => {
     const html = renderToStaticMarkup(
       createElement(RankingItem, {
         ranking: { id: 1, name: "RWK_LP", kind: null, cards: 23 },
       })
     )
-    expect(html).toContain("Nicht zugeordnet (Training)")
+    expect(html).toContain(">Nicht festgelegt<")
     expect(html).toContain("23 Scheiben")
   })
 
-  it("Brücke mit „Widerrufen“, Kopplung und Anlage mit „?“", () => {
+  it("Brücke mit „Trennen“, Verbinden und Anlage mit „?“", () => {
     const bridge = renderToStaticMarkup(
       createElement(BridgeItem, {
         bridge: {
@@ -44,9 +44,10 @@ describe("Anlage und Brücke (Markup)", () => {
         },
       })
     )
-    expect(bridge).toContain(">Widerrufen<")
+    expect(bridge).toContain(">Trennen<")
     const pair = renderToStaticMarkup(createElement(PairBridgeForm))
-    expect(pair).toContain("behandle ihn wie ein Passwort")
+    expect(pair).toContain("Behandle ihn wie ein Passwort.")
+    expect(pair).toContain("Brücke verbinden")
     expect(pair).toContain('data-help="admin-pairingCode"')
     const site = renderToStaticMarkup(
       createElement(SiteForm, {
@@ -64,7 +65,7 @@ describe("Anlage und Brücke (Markup)", () => {
       })
     )
     expect(html).toMatch(/id="timeZone"[^>]*readOnly=""|readOnly=""[^>]*id="timeZone"/)
-    expect(html).toContain("Fest, seit Scheiben eingelesen sind")
+    expect(html).toContain("Lässt sich nicht mehr ändern, weil schon Scheiben da sind.")
   })
 
   it("kein „Epoche“ mehr in Seite und Bausteinen (D0)", () => {

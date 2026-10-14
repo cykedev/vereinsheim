@@ -40,7 +40,7 @@ describe("Zustimmungen am Konto (Admin)", () => {
       })
     )
     for (const status of ["requested", "returned"] as const) {
-      expect(item(html, status)).toContain(">Bestätigen<")
+      expect(item(html, status)).toContain(">Nummer bestätigen<")
       expect(item(html, status)).toContain(">Ablehnen<")
     }
     for (const status of ["active", "rejected"] as const) {
@@ -48,7 +48,7 @@ describe("Zustimmungen am Konto (Admin)", () => {
       expect(item(html, status)).not.toContain("Ablehnen")
     }
     expect(html.match(/>Entfernen</g)).toHaveLength(4)
-    expect(item(html, "requested")).toContain("Hinweis v1")
+    expect(item(html, "requested")).toContain("eingetragen am 14.10.2026, 20:00 · Hinweistext v1")
   })
 
   it("kein Formular zum Eintragen; ohne Zustimmung ein Satz", () => {
@@ -68,11 +68,12 @@ describe("Zustimmungen am Konto (Admin)", () => {
       })
     )
     expect(item(html, "active")).toContain("2 Scheiben als „nicht meine“")
-    expect(item(html, "active")).toContain(">Meldungen aufheben<")
-    expect(item(html, "returned")).not.toContain("Meldungen aufheben")
+    expect(item(html, "active")).toContain("zurückgewiesen")
+    expect(item(html, "active")).toContain(">Wieder zulassen<")
+    expect(item(html, "returned")).not.toContain("Wieder zulassen")
     expect(item(html, "returned")).not.toContain("data-consent-not-mine")
     // abgelehnt: die Zeile ja, der Knopf nicht (Review)
     expect(item(html, "rejected")).toContain("1 Scheibe als „nicht meine“")
-    expect(item(html, "rejected")).not.toContain("Meldungen aufheben")
+    expect(item(html, "rejected")).not.toContain("Wieder zulassen")
   })
 })

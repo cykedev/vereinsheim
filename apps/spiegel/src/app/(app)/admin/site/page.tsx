@@ -26,8 +26,8 @@ export default async function AdminSiteRoute() {
             Anlage und Brücke
           </h1>
           <p className="text-foreground-2">
-            Die Brücke liest die Meyton-Ablage im Schützenhaus und schickt Spiegel die Scheiben der
-            Schützen mit Zustimmung.
+            Die Brücke ist ein kleines Gerät im Schützenhaus. Sie liest die Scheiben der
+            Meyton-Anlage und schickt Spiegel nur die von Schützen, die zugestimmt haben.
           </p>
         </div>
         <SiteForm site={overview.site} />
@@ -44,7 +44,7 @@ export default async function AdminSiteRoute() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">Noch keine Brücke gekoppelt.</p>
+                <p className="text-sm text-muted-foreground">Noch keine Brücke verbunden.</p>
               )}
             </section>
             <PairBridgeForm />
@@ -53,8 +53,8 @@ export default async function AdminSiteRoute() {
                 Ranglisten <AdminHelp id="ranking" />
               </h2>
               <p className="text-sm text-muted-foreground">
-                Ordne zu, welche Ranglisten als Wettkampf zählen; ohne Zuordnung ist es Training.
-                Spiegel fragt vor jeder Änderung und sagt, wie viele Scheiben sie betrifft.
+                In Meyton gehört jede Scheibe zu einer Rangliste. Leg hier fest, welche Ranglisten
+                als Wettkampf zählen. Alle anderen zählen als Training.
               </p>
               {overview.rankings.length ? (
                 <ul className="divide-y divide-border rounded-xl border border-border">
@@ -64,7 +64,7 @@ export default async function AdminSiteRoute() {
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Die Ranglisten erscheinen mit den ersten Scheiben der Brücke.
+                  Die Ranglisten erscheinen hier, sobald die ersten Scheiben da sind.
                 </p>
               )}
             </section>

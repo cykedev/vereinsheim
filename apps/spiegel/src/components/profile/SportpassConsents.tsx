@@ -63,9 +63,7 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
     <li data-consent={consent.status} className="flex items-center justify-between gap-3 px-3 py-2">
       <span className="grid min-w-0">
         <span className="font-mono tabular-nums">{consent.sportpassId}</span>
-        <span className="text-[13px] text-muted-foreground">
-          {consent.siteName} · {consent.statusText}
-        </span>
+        <span className="text-[13px] text-muted-foreground">{consent.statusText}</span>
         {consent.history && (
           <span data-consent-history className="text-[13px] text-muted-foreground">
             {consent.history}

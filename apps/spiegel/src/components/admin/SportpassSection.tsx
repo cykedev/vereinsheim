@@ -36,11 +36,11 @@ export function SportpassSection({
     >
       <div className="grid gap-1">
         <h2 className="flex items-center gap-1 text-[15px] font-semibold">
-          Zustimmungen per Sportpass <AdminHelp id="consent" />
+          Sportpassnummern <AdminHelp id="consent" />
         </h2>
         <p className="text-sm text-foreground-2">
-          Bestätige nur, wenn die Nummer in der Meyton-Schützenverwaltung zu dieser Person gehört.
-          Eintragen kann nur der Schütze selbst, im Profil.
+          Prüf in der Meyton-Schützenverwaltung, ob die Nummer zu dieser Person gehört. Eintragen
+          kann nur der Schütze selbst, in der App im Profil.
         </p>
       </div>
       {consents.length > 0 ? (
@@ -123,8 +123,8 @@ function ConsentItem({
       <span className="grid">
         <span className="font-mono tabular-nums">{consent.sportpassId}</span>
         <span className="text-[13px] text-muted-foreground">
-          {consent.siteName} · {consent.statusText} · zugestimmt {consent.consentedAt} (Hinweis{" "}
-          {consent.consentVersion})
+          {consent.statusText} · eingetragen am {consent.consentedAt} · Hinweistext{" "}
+          {consent.consentVersion}
         </span>
         {consent.history && (
           <span className="text-[13px] text-muted-foreground">{consent.history}</span>
@@ -132,7 +132,7 @@ function ConsentItem({
         {consent.notMine > 0 && (
           <span data-consent-not-mine className="text-[13px] text-muted-foreground">
             {consent.notMine === 1 ? "1 Scheibe" : `${consent.notMine} Scheiben`} als „nicht meine“
-            gemeldet
+            zurückgewiesen
           </span>
         )}
         {error && (
@@ -150,7 +150,7 @@ function ConsentItem({
               disabled={pending}
               onClick={() => ask("confirm")}
             >
-              Bestätigen
+              Nummer bestätigen
             </Button>
             <Button
               type="button"
@@ -172,7 +172,7 @@ function ConsentItem({
             disabled={pending}
             onClick={() => ask("lift")}
           >
-            Meldungen aufheben
+            Wieder zulassen
           </Button>
         )}
         <Button

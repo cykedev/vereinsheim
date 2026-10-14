@@ -67,8 +67,8 @@ export function SiteForm({ site }: { site: SiteOverview["site"] }) {
         />
         <p className="text-xs text-muted-foreground">
           {zoneLocked
-            ? "Fest, seit Scheiben eingelesen sind: Eine andere Zone verschöbe die Uhrzeit jeder Scheibe, zu der noch etwas kommt."
-            : "Meyton speichert Uhrzeiten ohne Zone; Spiegel rechnet sie mit dieser um. In Deutschland Europe/Berlin. Später lässt sie sich nicht mehr ändern."}
+            ? "Lässt sich nicht mehr ändern, weil schon Scheiben da sind. Sonst stünden bei ihnen falsche Uhrzeiten."
+            : "Meyton speichert Uhrzeiten ohne Zeitzone. Spiegel braucht sie, um die Uhrzeit jeder Scheibe richtig zu zeigen. In Deutschland: Europe/Berlin. Sobald die erste Scheibe da ist, lässt sie sich nicht mehr ändern."}
         </p>
         <FieldError id="timeZone-error" message={getFieldError(state, "timeZone")} />
       </div>
@@ -92,12 +92,17 @@ export function PairBridgeForm() {
   return (
     <form action={action} className={CARD}>
       <h2 className="flex items-center gap-1 text-[15px] font-semibold">
-        Brücke koppeln <AdminHelp id="pairingCode" />
+        Brücke verbinden <AdminHelp id="pairingCode" />
       </h2>
+      <ol className="grid list-decimal gap-1 pl-5 text-sm text-foreground-2">
+        <li>Gib dem Gerät einen Namen und erzeuge einen Code.</li>
+        <li>
+          Trag den Code bei der Einrichtung der Brücke ein, zusammen mit der Adresse von Spiegel.
+        </li>
+      </ol>
       <p className="text-sm text-foreground-2">
-        Spiegel zeigt einen Code für ein Gerät. Ihn bei der Installation der Brücke zusammen mit der
-        Adresse von Spiegel eintragen. Der Code gilt 15 Minuten und nur einmal. Wer ihn eingibt,
-        darf Scheiben schicken; behandle ihn wie ein Passwort.
+        Der Code gilt 15 Minuten und nur einmal. Wer ihn hat, kann Scheiben an Spiegel schicken.
+        Behandle ihn wie ein Passwort.
       </p>
       <div className="grid gap-1.5">
         <Label htmlFor="bridge-name">Name des Geräts</Label>
@@ -121,7 +126,7 @@ export function PairBridgeForm() {
           role="status"
           className="grid gap-1 rounded-xl border border-line-strong bg-surface-2 p-4"
         >
-          <span className="text-[13px] text-muted-foreground">Kopplungscode</span>
+          <span className="text-[13px] text-muted-foreground">Code für die Brücke</span>
           <code className="font-mono text-2xl font-semibold tracking-widest" data-pairing-code>
             {code.code}
           </code>
@@ -137,13 +142,13 @@ export function PairBridgeForm() {
 
 const STATUS_TEXT: Record<NonNullable<BridgeRow["status"]>, string> = {
   ok: "läuft",
-  delayed: "verzögert",
-  "db-unreachable": "Anlage nicht erreichbar",
-  "db-error": "Anlage meldet Fehler",
-  "possible-reset": "Ablage geleert? Bitte prüfen",
+  delayed: "schickt gerade langsamer als sonst",
+  "db-unreachable": "erreicht die Meyton-Anlage nicht",
+  "db-error": "bekommt Fehler von der Meyton-Anlage",
+  "possible-reset": "Meyton-Anlage wirkt neu aufgesetzt (Spiegel regelt das selbst)",
 }
 
-/** eine Brücke mit Status und „Widerrufen“ */
+/** eine Brücke mit Status und „Trennen“ */
 export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -159,8 +164,10 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
     bridge.status && STATUS_TEXT[bridge.status],
     bridge.clockOffsetSeconds !== null &&
       Math.abs(bridge.clockOffsetSeconds) >= 60 &&
-      `Uhr der Anlage ${bridge.clockOffsetSeconds > 0 ? "+" : ""}${bridge.clockOffsetSeconds} s`,
-    bridge.backlog ? `${bridge.backlog} Scheiben im Rückstau` : null,
+      `Uhr der Meyton-Anlage geht ${Math.abs(bridge.clockOffsetSeconds)} s ${bridge.clockOffsetSeconds > 0 ? "vor" : "nach"}`,
+    bridge.backlog
+      ? `${bridge.backlog === 1 ? "1 Scheibe" : `${bridge.backlog} Scheiben`} noch nicht geschickt`
+      : null,
     bridge.heldBack,
   ].filter(Boolean)
   return (
@@ -171,10 +178,10 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
       <span className="grid min-w-0">
         <span className="truncate text-[15px] font-semibold">
           {bridge.name}
-          {bridge.revoked && <span className="text-muted-foreground"> · widerrufen</span>}
+          {bridge.revoked && <span className="text-muted-foreground"> · getrennt</span>}
         </span>
         <span className="text-[13px] text-muted-foreground">
-          gekoppelt {bridge.createdAt}
+          verbunden seit {bridge.createdAt}
           {facts.length ? ` · ${facts.join(" · ")}` : ""}
         </span>
         {error && (
@@ -192,7 +199,7 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
             disabled={pending}
             onClick={() => setOpen(true)}
           >
-            Widerrufen
+            Trennen
           </Button>
           <DecisionDialog
             decision={bridgeRevoke({ device: bridge.name })}
@@ -213,7 +220,7 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
 }
 
 const RANKING_OPTIONS = [
-  { value: "open", label: "Nicht zugeordnet (Training)" },
+  { value: "open", label: "Nicht festgelegt" },
   { value: "training", label: "Training" },
   { value: "competition", label: "Wettkampf" },
 ] as const

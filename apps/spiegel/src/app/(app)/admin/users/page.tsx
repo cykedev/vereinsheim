@@ -61,7 +61,7 @@ export default async function AdminUsersRoute() {
               Konten
             </h1>
             <p className="text-foreground-2">
-              Konten legt nur ein Admin an; keine Selbstregistrierung.
+              Konten legt nur ein Admin an. Selbst registrieren kann sich niemand.
             </p>
           </div>
           <Link

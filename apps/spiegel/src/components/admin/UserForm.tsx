@@ -133,7 +133,7 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
         label={user ? "Neues Passwort (freiwillig)" : "Vorläufiges Passwort"}
         hint={
           user
-            ? "Nur ausfüllen, um das Passwort zurückzusetzen (mindestens 12 Zeichen); das Konto wird abgemeldet."
+            ? "Nur ausfüllen, wenn du das Passwort zurücksetzen willst. Mindestens 12 Zeichen. Die Person wird dann abgemeldet."
             : "Mindestens 12 Zeichen."
         }
         error={getFieldError(state, "tempPassword")}
@@ -195,7 +195,8 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
       )}
       {!user && (
         <p className="text-sm text-foreground-2">
-          Das Konto kann sich mit dem vorläufigen Passwort anmelden und muss es zuerst ändern.
+          Mit diesem vorläufigen Passwort meldet sich die Person an. Danach muss sie es gleich durch
+          ein eigenes ersetzen.
         </p>
       )}
       <div className="flex gap-2">

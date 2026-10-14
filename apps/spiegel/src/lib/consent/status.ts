@@ -28,13 +28,13 @@ export function consentStatus(row: ConsentDecisions): ConsentStatus {
 export function consentStatusText(status: ConsentStatus, confirmedAt: string | null): string {
   switch (status) {
     case "requested":
-      return "wartet auf den Admin"
+      return "wartet auf Prüfung durch einen Admin"
     case "active":
       return confirmedAt ? `aktiv seit ${confirmedAt}` : "aktiv"
     case "rejected":
-      return "abgelehnt"
+      return "von einem Admin abgelehnt"
     case "returned":
-      return "zurück beim Admin"
+      return "wird nach „nicht meine“ wieder geprüft"
   }
 }
 
@@ -56,8 +56,8 @@ export const MAX_CONSENTS_PER_ACCOUNT = 3
  * vor; dann aktiv, dann abgelehnt; ohne Zustimmung „kein Sportpass“.
  */
 export function sportpassSummary(statuses: readonly ConsentStatus[]): string {
-  if (statuses.includes("requested")) return "Sportpass wartet auf dich"
-  if (statuses.includes("returned")) return "Sportpass zurück beim Admin"
+  if (statuses.includes("requested")) return "Sportpass: Nummer prüfen"
+  if (statuses.includes("returned")) return "Sportpass: wieder prüfen"
   if (statuses.includes("active")) return "Sportpass aktiv"
   if (statuses.includes("rejected")) return "Sportpass abgelehnt"
   return "kein Sportpass"

@@ -34,8 +34,9 @@ describe("Sportpass im Profil", () => {
       row(1, "requested", "wartet auf den Admin"),
       row(2, "rejected", "abgelehnt"),
     ])
-    expect(html).toContain("Schützenhaus · wartet auf den Admin")
-    expect(html).toContain("Schützenhaus · abgelehnt")
+    expect(html).toContain("wartet auf den Admin")
+    expect(html).toContain("abgelehnt")
+    expect(html).not.toContain("Schützenhaus ·")
     const item = (status: string) => html.match(new RegExp(`data-consent="${status}".*?</li>`))![0]
     expect(item("requested")).toContain(">Widerrufen<")
     expect(item("rejected")).toContain(">Entfernen<")

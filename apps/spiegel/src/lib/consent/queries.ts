@@ -1,4 +1,4 @@
-import { formatDateTime } from "@vereinsheim/lib/format"
+import { formatDateOnly, formatDateTime } from "@vereinsheim/lib/format"
 
 import { requireAdmin } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
@@ -60,9 +60,9 @@ export async function consentRows(userId: string, timeZone: string): Promise<Con
       status,
       statusText: consentStatusText(
         status,
-        r.confirmedAt ? formatDateTime(r.confirmedAt, timeZone) : null
+        r.confirmedAt ? formatDateOnly(r.confirmedAt, timeZone) : null
       ),
-      consentedAt: formatDateTime(r.consentedAt, timeZone),
+      consentedAt: formatDateOnly(r.consentedAt, timeZone),
       consentVersion: r.consentVersion,
       historyLoaded: r.historyLoadedAt !== null,
       // ein deaktiviertes Konto bekommt nichts, auch kein Nachladen (Review)
@@ -70,8 +70,8 @@ export async function consentRows(userId: string, timeZone: string): Promise<Con
         status !== "active" || !r.user.isActive
           ? null
           : r.historyLoadedAt
-            ? `ältere Scheiben nachgeladen am ${formatDateTime(r.historyLoadedAt, timeZone)}`
-            : "ältere Scheiben werden nachgeladen, wenn niemand schießt",
+            ? `ältere Scheiben geholt am ${formatDateOnly(r.historyLoadedAt, timeZone)}`
+            : "ältere Scheiben werden geholt, sobald im Schützenhaus niemand schießt",
     }
   })
 }

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import { OLD_WORDS } from "@/lib/admin/consequences"
+
 import {
   consentStatus,
   consentStatusText,
@@ -36,10 +38,13 @@ describe("consentStatus", () => {
 
 describe("in Worten und Aktionen", () => {
   it("Status in Worten, aktiv mit Datum", () => {
-    expect(consentStatusText("requested", null)).toBe("wartet auf den Admin")
-    expect(consentStatusText("active", "14.10.2026, 20:00")).toBe("aktiv seit 14.10.2026, 20:00")
-    expect(consentStatusText("rejected", null)).toBe("abgelehnt")
-    expect(consentStatusText("returned", null)).toBe("zurück beim Admin")
+    expect(consentStatusText("requested", null)).toBe("wartet auf Prüfung durch einen Admin")
+    expect(consentStatusText("active", "14.10.2026")).toBe("aktiv seit 14.10.2026")
+    expect(consentStatusText("rejected", null)).toBe("von einem Admin abgelehnt")
+    expect(consentStatusText("returned", null)).toBe("wird nach „nicht meine“ wieder geprüft")
+    // Schreibregeln (P2f)
+    for (const status of ["requested", "active", "rejected", "returned"] as const)
+      expect(consentStatusText(status, "14.10.2026")).not.toMatch(OLD_WORDS)
   })
 
   it("der Schütze widerruft, was zählt oder zählen kann; eine Ablehnung entfernt er", () => {
@@ -59,8 +64,8 @@ describe("in Worten und Aktionen", () => {
 
 describe("Stand des Sportpasses je Konto", () => {
   it("was wartet, geht vor; dann aktiv, abgelehnt, keiner", () => {
-    expect(sportpassSummary(["active", "requested"])).toBe("Sportpass wartet auf dich")
-    expect(sportpassSummary(["active", "returned"])).toBe("Sportpass zurück beim Admin")
+    expect(sportpassSummary(["active", "requested"])).toBe("Sportpass: Nummer prüfen")
+    expect(sportpassSummary(["active", "returned"])).toBe("Sportpass: wieder prüfen")
     expect(sportpassSummary(["rejected", "active"])).toBe("Sportpass aktiv")
     expect(sportpassSummary(["rejected"])).toBe("Sportpass abgelehnt")
     expect(sportpassSummary([])).toBe("kein Sportpass")

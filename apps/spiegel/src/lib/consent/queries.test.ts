@@ -52,11 +52,11 @@ describe("Zustimmungen lesen", () => {
       [ids.active, ids.returned, ids.requested, ids.rejected].map(String)
     )
     expect(rows[0]!.statusText).toMatch(/^aktiv seit \d\d\.\d\d\.\d{4}/)
-    expect(rows[2]!.statusText).toBe("wartet auf den Admin")
+    expect(rows[2]!.statusText).toBe("wartet auf Prüfung durch einen Admin")
     expect(rows.every((r) => r.consentVersion === "v1")).toBe(true)
     // nur die aktive sagt, ob ihre älteren Scheiben nachgeladen sind (P2d)
     expect(rows.map((r) => r.history)).toEqual([
-      "ältere Scheiben werden nachgeladen, wenn niemand schießt",
+      "ältere Scheiben werden geholt, sobald im Schützenhaus niemand schießt",
       null,
       null,
       null,
