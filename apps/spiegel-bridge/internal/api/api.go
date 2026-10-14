@@ -70,10 +70,18 @@ type State struct {
 	History []HistoryRequest `json:"history"`
 }
 
-// HistoryRequest ist ein Auftrag zum Nachladen: die Id meldet die Brücke zurück, der Hash wie `Sportpass.Hashes`.
+// HistoryRequest ist ein Auftrag zum Nachladen: Id und `Since` meldet die Brücke zurück, der Hash wie
+// `Sportpass.Hashes`. Ein neues `Since` derselben Id ist ein neuer Auftrag.
 type HistoryRequest struct {
 	ID            int    `json:"id"`
+	Since         string `json:"since"`
 	SportpassHash string `json:"sportpassHash"`
+}
+
+// HistoryDone ist ein erledigter Auftrag, wie er im Zustand stand.
+type HistoryDone struct {
+	ID    int    `json:"id"`
+	Since string `json:"since"`
 }
 
 // Held zählt zurückgehaltene Scheiben einer Anzeigeart.
@@ -104,7 +112,7 @@ type Heartbeat struct {
 	HeldBack            []Held             `json:"heldBack"`
 	SourceFingerprint   *SourceFingerprint `json:"sourceFingerprint"`
 	// erledigte Aufträge zum Nachladen (P2d, additiv): nur Ids, nie Nummern (SF-59)
-	HistoryDone []int `json:"historyDone,omitempty"`
+	HistoryDone []HistoryDone `json:"historyDone,omitempty"`
 }
 
 // Result ist das Ergebnis eines Snapshots im Stapel.

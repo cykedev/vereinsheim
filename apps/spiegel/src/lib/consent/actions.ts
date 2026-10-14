@@ -147,7 +147,8 @@ export async function confirmConsent(consentId: number): Promise<ActionResult> {
   return decide(
     consentId,
     { confirmedAt: null, rejectedAt: null },
-    { confirmedAt: new Date(), returnedAt: null }
+    // ein neuer Auftrag zum Nachladen, falls er offen ist (Review P2d)
+    { confirmedAt: new Date(), returnedAt: null, historyRequestedAt: new Date() }
   )
 }
 
@@ -198,7 +199,12 @@ export async function liftNotMine(consentId: number): Promise<ActionResult> {
       if (count > 0)
         await tx.sportpassConsent.updateMany({
           where: { id: consentId },
-          data: { historyLoadedAt: null, firstCardConfirmedAt: null },
+          // ein neuer Auftrag: Die Brücke liest auch, was sie in diesem Lauf schon gemeldet hat (Review P2d)
+          data: {
+            historyLoadedAt: null,
+            historyRequestedAt: new Date(),
+            firstCardConfirmedAt: null,
+          },
         })
       return count
     })

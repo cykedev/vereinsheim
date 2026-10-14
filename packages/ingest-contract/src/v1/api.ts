@@ -99,9 +99,13 @@ export const heartbeatV1 = z
       .nullable(),
     /**
      * additiv seit 14. Oktober 2026 (P2d): Aufträge aus `state.history`, die die Brücke in diesem Lauf abgearbeitet hat
-     * (jede passende Scheibe gemeldet); nur ihre Ids
+     * (jede passende Scheibe gemeldet), mit Id und `since` wie im Zustand: Ein später neu eröffneter Auftrag derselben
+     * Zustimmung gilt damit nicht als erledigt (Review)
      */
-    historyDone: z.array(z.int().min(1)).max(100).optional(),
+    historyDone: z
+      .array(z.strictObject({ id: z.int().min(1), since: instant }))
+      .max(100)
+      .optional(),
   })
   .meta({ title: "Spiegel-Heartbeat v1" })
 
@@ -138,13 +142,15 @@ export const stateResponseV1 = z
     watermark: instant.nullable(),
     /**
      * additiv seit 14. Oktober 2026 (P2d): offene Aufträge, die älteren Scheiben einer Zustimmung nachzuladen, soweit
-     * die Anlage sie hat und nur, wenn niemand schießt. `id` meldet die Brücke in `historyDone` zurück; der Hash wie in
+     * die Anlage sie hat und nur, wenn niemand schießt. `id` und `since` (wann der Auftrag eröffnet wurde) meldet die
+     * Brücke in `historyDone` zurück; ein neues `since` heißt: neu lesen, auch was schon gemeldet ist. Der Hash wie in
      * `sportpass.hashes`. Solange einer offen ist, enthält `blocked` alle Sperren, nicht nur die jüngsten.
      */
     history: z
       .array(
         z.strictObject({
           id: z.int().min(1),
+          since: instant,
           sportpassHash: z.string().regex(/^[0-9a-f]{64}$/),
         })
       )

@@ -139,6 +139,17 @@ func (w *Watcher) wantsHistory(sportpass *string) bool {
 	return w.history != nil && sportpass != nil && w.history(*sportpass)
 }
 
+// Reopen: Ein Auftrag zum Nachladen ist neu eröffnet (Meldungen aufgehoben, neu bestätigt). Was er will, liest die
+// Erkennung noch einmal und meldet es neu, auch was sie in diesem Lauf schon gemeldet oder zurückgehalten hat; wie das
+// Nachladen nur im Leerlauf (Review P2d).
+func (w *Watcher) Reopen(wanted func(sportpass string) bool) {
+	for _, c := range w.cards {
+		if c.sportpass != nil && wanted(*c.sportpass) {
+			c.readAt, c.sent, c.sentContent, c.last, c.waiting = time.Time{}, "", "", "", false
+		}
+	}
+}
+
 // HistoryOpen nennt die SportpassIDs (als Text) der Scheiben aus der letzten Runde, die ein Auftrag noch will: nicht
 // gelesen, oder ihr Stand wartet noch auf Spiegel. Kommt eine SportpassID nicht vor, ist ihr Auftrag erledigt, soweit
 // die Ablage reicht.
@@ -229,6 +240,8 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 		rank   int
 		stamp  string
 		readAt time.Time
+		// nur im Leerlauf: Nachholen, Nachladen, und was davon noch auf Spiegel wartet (Review P2d)
+		idle bool
 	}
 	var picks []pick
 	// bewegt sich etwas oder ist eine Scheibe aktiv (auch eine, die gerade auf Bestätigung wartet), bleibt das Nachholen
@@ -241,16 +254,18 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 		p := pick{id: l.ID, stamp: l.Stamp, rank: -1}
 		switch {
 		case c != nil && c.waiting:
-			p.rank = 0
+			// wartet eine Scheibe, die sich in diesem Lauf nie bewegt hat (Nachholen, Nachladen), bleibt sie liegen, solange
+			// geschossen wird: Scheitert der Upload länger, belegte sie sonst jede Runde das Budget (Review P2d)
+			p.rank, p.idle = 0, c.movedAt.IsZero()
 		case w.dirty(l, from):
 			p.rank = 1
 		case active:
 			p.rank, p.readAt = 2, c.readAt
 		case w.backfill(l, from):
-			p.rank = 3
+			p.rank, p.idle = 3, true
 		// ein Auftrag zum Nachladen will sie (P2d): wie das Nachholen, nur im Leerlauf
 		case w.wantsHistory(l.Sportpass) && (c == nil || !handled(c)):
-			p.rank = 3
+			p.rank, p.idle = 3, true
 		}
 		if p.rank >= 0 {
 			picks = append(picks, p)
@@ -270,7 +285,7 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 	if live {
 		kept := picks[:0]
 		for _, p := range picks {
-			if p.rank != 3 {
+			if !p.idle {
 				kept = append(kept, p)
 			}
 		}

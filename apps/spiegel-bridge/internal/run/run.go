@@ -110,7 +110,7 @@ type Runner struct {
 	// offene Aufträge zum Nachladen aus dem Zustand (P2d), die davon erledigten (Heartbeat) und die Hashes der
 	// SportpassIDs, einmal gerechnet je Zustand
 	history     []api.HistoryRequest
-	historyDone []int
+	historyDone []api.HistoryDone
 	hashOf      map[string]string
 }
 
@@ -226,17 +226,43 @@ func (r *Runner) setHistory(state api.State) {
 	if len(state.History) != len(r.history) {
 		r.log("history-requests", "open", len(state.History))
 	}
+	known := map[api.HistoryRequest]bool{}
+	for _, h := range r.history {
+		known[h] = true
+	}
 	r.history, r.hashOf = state.History, map[string]string{}
+	salt := state.Sportpass.Salt
+	// neu eröffnet (Id und `Since` neu): auch Scheiben, die dieser Lauf schon gemeldet oder zurückgehalten hat, noch
+	// einmal lesen; sonst gälte ein Auftrag nach dem Aufheben von „nicht meine“ sofort als erledigt (Review P2d)
+	reopened := map[string]bool{}
+	for _, h := range state.History {
+		if !known[h] {
+			reopened[h.SportpassHash] = true
+		}
+	}
+	if len(reopened) > 0 {
+		r.watcher.Reopen(func(sportpass string) bool { return reopened[r.hash(salt, sportpass)] })
+	}
+	// erledigt bleibt nur, was der Zustand noch genau so nennt
+	current := map[api.HistoryDone]bool{}
+	for _, h := range state.History {
+		current[api.HistoryDone{ID: h.ID, Since: h.Since}] = true
+	}
+	kept := r.historyDone[:0]
+	for _, d := range r.historyDone {
+		if current[d] {
+			kept = append(kept, d)
+		}
+	}
+	r.historyDone = kept
 	if len(state.History) == 0 {
 		r.watcher.SetHistory(nil)
-		r.historyDone = nil
 		return
 	}
 	wanted := map[string]bool{}
 	for _, h := range state.History {
 		wanted[h.SportpassHash] = true
 	}
-	salt := state.Sportpass.Salt
 	r.watcher.SetHistory(func(sportpass string) bool { return wanted[r.hash(salt, sportpass)] })
 }
 
@@ -259,10 +285,10 @@ func (r *Runner) updateHistoryDone() {
 	for _, sportpass := range r.watcher.HistoryOpen() {
 		open[r.hash(r.state.Sportpass.Salt, sportpass)] = true
 	}
-	var done []int
+	var done []api.HistoryDone
 	for _, h := range r.history {
 		if !open[h.SportpassHash] && len(done) < MaxHistoryDone {
-			done = append(done, h.ID)
+			done = append(done, api.HistoryDone{ID: h.ID, Since: h.Since})
 		}
 	}
 	if len(done) != len(r.historyDone) {

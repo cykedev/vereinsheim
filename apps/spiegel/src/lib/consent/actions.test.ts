@@ -243,6 +243,8 @@ describe("Entscheidung des Admins", () => {
     expect(await confirmConsent(consent.id)).toEqual({ success: true })
     const active = await db.sportpassConsent.findUniqueOrThrow({ where: { id: consent.id } })
     expect(consentStatus(active)).toBe("active")
+    // ein Auftrag zum Nachladen ist eröffnet (Review P2d)
+    expect(active.historyRequestedAt).not.toBeNull()
     expect(await confirmConsent(consent.id)).toEqual({ error: "Schon entschieden." })
     await db.sportpassConsent.delete({ where: { id: consent.id } })
   })
@@ -333,6 +335,8 @@ describe("Meldungen „nicht meine“ aufheben (P2d)", () => {
       const after = await db.sportpassConsent.findUniqueOrThrow({ where: { id: consent.id } })
       expect(after.historyLoadedAt).toBeNull()
       expect(after.firstCardConfirmedAt).toBeNull()
+      // ein neuer Auftrag, den die Brücke von einem erledigten unterscheidet (Review)
+      expect(after.historyRequestedAt).not.toBeNull()
       expect(consentStatus(after)).toBe("active")
       expect(await liftNotMine(consent.id)).toEqual({
         error: "Es gibt keine Meldungen „nicht meine“ mehr zu dieser Nummer.",

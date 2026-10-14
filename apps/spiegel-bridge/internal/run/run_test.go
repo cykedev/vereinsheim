@@ -28,6 +28,7 @@ type ablage struct {
 	stamps map[int32]string
 	data   map[int32]contract.Data
 	fail   error
+	reads  map[int32]int // wie oft eine Scheibe ganz gelesen wurde
 }
 
 func (a *ablage) Round(_ context.Context, choose func([]watch.Lifesign, *string) []int32) (watch.Round, error) {
@@ -46,6 +47,9 @@ func (a *ablage) Round(_ context.Context, choose func([]watch.Lifesign, *string)
 	cards := map[int32]contract.Data{}
 	for _, id := range choose(lifesigns, nil) {
 		cards[id] = a.data[id]
+		if a.reads != nil {
+			a.reads[id]++
+		}
 	}
 	return watch.Round{Lifesigns: lifesigns, Cards: cards, SessionTimeZone: "+00:00", SourceVersion: text("9"), SourceNow: a.now}, nil
 }
@@ -603,8 +607,19 @@ func (f *fixture) lastDone() string {
 	if len(f.sp.heartbeats) == 0 {
 		return "keiner"
 	}
-	return fmt.Sprint(f.sp.heartbeats[len(f.sp.heartbeats)-1].HistoryDone)
+	var ids []int
+	for _, d := range f.sp.heartbeats[len(f.sp.heartbeats)-1].HistoryDone {
+		ids = append(ids, d.ID)
+	}
+	return fmt.Sprint(ids)
 }
+
+// request ist ein Auftrag zum Nachladen für die SportpassID, eröffnet zu `since`
+func request(id int, sportpass, since string) api.HistoryRequest {
+	return api.HistoryRequest{ID: id, Since: since, SportpassHash: filter.SportpassHash(salt, sportpass)}
+}
+
+const since1 = "2026-10-13T17:00:00.000Z"
 
 // runFor macht Runden, bis die Uhr so weit ist; der Heartbeat jede Minute
 func (f *fixture) runFor(d time.Duration) {
@@ -642,9 +657,9 @@ func TestHistoryLoadsOlderCardsOnlyWhenIdle(t *testing.T) {
 func TestHistoryHeldBackCardsCountAsDone(t *testing.T) {
 	f := setup(t, "12345678")
 	f.sp.state.History = []api.HistoryRequest{
-		{ID: 7, SportpassHash: filter.SportpassHash(salt, "12345678")},
+		request(7, "12345678", since1),
 		// ein Auftrag ohne Scheiben in der Ablage ist gleich nach der ersten Runde erledigt
-		{ID: 8, SportpassHash: filter.SportpassHash(salt, "555")},
+		request(8, "555", since1),
 	}
 	f.ablage.put(1, "87654321", "1", 3)                     // der laufende Abend, ohne Zustimmung
 	f.ablage.old(5, "12345678", "5", "2025-05-01 19:00:00") // verdeckt (SF-19)
@@ -705,5 +720,55 @@ func TestHistoryRequestMidRunTakesEffect(t *testing.T) {
 	f.runFor(2 * HeartbeatEvery)
 	if f.lastDone() != "[9]" {
 		t.Fatalf("erledigt %s", f.lastDone())
+	}
+}
+
+func TestHistoryReopenedRequestReadsHandledCardsAgain(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "87654321", "1", 3) // der laufende Abend, ohne Zustimmung
+	f.ablage.old(2, "12345678", "1", "2025-05-01 19:00:00")
+	// als „nicht meine“ gemeldet: gesperrt, die Brücke hält sie zurück und meldet den Auftrag erledigt
+	f.sp.state.History = []api.HistoryRequest{request(7, "12345678", since1)}
+	f.sp.state.Blocked = []api.Blocked{{ScheibenID: 2, StartedAt: time.Date(2026, 10, 13, 20, 0, 0, 0, time.UTC)}}
+	f.runFor(23 * time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[]" || f.lastDone() != "[7]" {
+		t.Fatalf("gesperrt: gesendet %s, erledigt %s", got, f.lastDone())
+	}
+	// der Admin hebt die Meldung auf: dieselbe Id, neu eröffnet, ohne Sperre (Review P2d)
+	f.sp.state.Blocked = nil
+	f.sp.state.History = []api.HistoryRequest{request(7, "12345678", "2026-10-13T18:30:00.000Z")}
+	f.runFor(StateEvery + 2*time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[2]" {
+		t.Fatalf("nach dem Aufheben gesendet %s", got)
+	}
+	f.runFor(2 * HeartbeatEvery)
+	last := f.sp.heartbeats[len(f.sp.heartbeats)-1].HistoryDone
+	if len(last) != 1 || last[0].Since != "2026-10-13T18:30:00.000Z" {
+		t.Fatalf("erledigt %+v", last)
+	}
+}
+
+func TestHistoryWaitingCardsYieldWhileShooting(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.reads = map[int32]int{}
+	f.ablage.put(1, "87654321", "1", 3)
+	f.ablage.old(2, "12345678", "1", "2025-05-01 19:00:00")
+	f.sp.state.History = []api.HistoryRequest{request(7, "12345678", since1)}
+	// Spiegel nimmt nichts an: die nachgeladene Scheibe wartet
+	for range 200 {
+		f.sp.errs = append(f.sp.errs, errors.New("netz"))
+	}
+	f.runFor(23 * time.Minute)
+	if f.ablage.reads[2] == 0 {
+		t.Fatal("im Leerlauf nicht gelesen")
+	}
+	// am Stand wird wieder geschossen: die wartende Scheibe aus dem Nachladen bleibt liegen (Review P2d)
+	before := f.ablage.reads[2]
+	for i := range 10 {
+		f.ablage.stamps[1] = fmt.Sprintf("2026-10-13 21:%02d:00", i)
+		f.step()
+	}
+	if f.ablage.reads[2] != before {
+		t.Fatalf("während geschossen wird %d-mal gelesen", f.ablage.reads[2]-before)
 	}
 }

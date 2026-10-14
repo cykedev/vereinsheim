@@ -219,15 +219,20 @@ export async function recordHeartbeat(
         },
       })
   }
-  // erledigte Aufträge zum Nachladen (P2d, D6): nur aktive, noch offene Zustimmungen dieser Anlage; eine fremde oder
-  // unbekannte Id ändert nichts, ein zweites Melden nicht den Zeitpunkt
+  // erledigte Aufträge zum Nachladen (P2d, D6): nur aktive, noch offene Zustimmungen dieser Anlage mit aktivem Konto
+  // (Review: ein deaktiviertes bekam nichts), und nur der Auftrag mit diesem `since` (Review: ein altes „erledigt“
+  // überschriebe sonst einen gerade neu eröffneten); eine fremde oder unbekannte Id ändert nichts
   if (heartbeat.historyDone?.length)
     await db.sportpassConsent.updateMany({
       where: {
-        id: { in: heartbeat.historyDone },
         siteId: bridge.siteId,
         historyLoadedAt: null,
         ...ACTIVE_CONSENT,
+        user: { isActive: true },
+        OR: heartbeat.historyDone.flatMap((done) => [
+          { id: done.id, historyRequestedAt: new Date(done.since) },
+          { id: done.id, historyRequestedAt: null, confirmedAt: new Date(done.since) },
+        ]),
       },
       data: { historyLoadedAt: new Date(nowMs) },
     })
@@ -253,6 +258,10 @@ async function consentSaltOf(db: Db, siteId: number): Promise<string> {
     .consentSalt!
 }
 
+/** die Grenzen des Vertrags (`stateResponseV1`) */
+const MAX_HISTORY_REQUESTS = 1_000
+const MAX_BLOCKED = 100_000
+
 /** was die Brücke beim Start und danach alle paar Minuten holt (`GET /state`) */
 export async function bridgeState(
   db: Db,
@@ -273,7 +282,13 @@ export async function bridgeState(
     db.sportpassConsent.findMany({
       where: { siteId, ...ACTIVE_CONSENT, user: { isActive: true } },
       orderBy: { id: "asc" },
-      select: { id: true, sportpassId: true, historyLoadedAt: true },
+      select: {
+        id: true,
+        sportpassId: true,
+        confirmedAt: true,
+        historyLoadedAt: true,
+        historyRequestedAt: true,
+      },
     }),
     // über den Index (Quelle, letzte Beobachtung): je Quelle der jüngste Stand, nicht alle Stände (Review)
     db.source.findMany({ where: { siteId }, select: { id: true } }).then((sources) =>
@@ -289,9 +304,15 @@ export async function bridgeState(
     ),
   ])
   // offene Aufträge zum Nachladen (P2d): aktive Zustimmungen, deren ältere Scheiben noch nicht geholt sind
+  // `since`: wann der Auftrag eröffnet wurde (alte Zeilen: die Bestätigung); höchstens so viele, wie der Vertrag nimmt
   const history = consents
     .filter((c) => c.historyLoadedAt === null)
-    .map((c) => ({ id: c.id, sportpassHash: sportpassHash(salt, c.sportpassId) }))
+    .slice(0, MAX_HISTORY_REQUESTS)
+    .map((c) => ({
+      id: c.id,
+      since: (c.historyRequestedAt ?? c.confirmedAt!).toISOString(),
+      sportpassHash: sportpassHash(salt, c.sportpassId),
+    }))
   // mit offenem Auftrag liest die Brücke die ganze Ablage: dann alle Sperren, damit eine alte, gesperrte Scheibe das Gerät
   // gar nicht erst verlässt (D3)
   const blockedWhere = {
@@ -321,7 +342,8 @@ export async function bridgeState(
       salt,
       hashes: consents.map((c) => sportpassHash(salt, c.sportpassId)).sort(),
     },
-    blocked: [...blocked.values()].map((b) => ({
+    // die Grenze des Vertrags; bei einem Verein weit weg, Spiegel prüft jeden Stand ohnehin selbst (`isKeyBlocked`)
+    blocked: [...blocked.values()].slice(0, MAX_BLOCKED).map((b) => ({
       scheibenId: b.scheibenId,
       startedAt: b.startedAt.toISOString(),
       epoch: b.source.epoch,
