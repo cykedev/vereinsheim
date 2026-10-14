@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import type { ConsentRow } from "@/lib/consent/queries"
 import type { ConsentStatus } from "@/lib/consent/status"
-import { CONSENT_TEXTS } from "@/lib/consent/texts"
+import { CONSENT_TEXTS, CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }) }))
 vi.mock("@/lib/consent/actions", () => ({
@@ -26,7 +26,9 @@ const row = (id: number, status: ConsentStatus, statusText: string): ConsentRow 
   historyLoaded: false,
 })
 const render = (consents: ConsentRow[]) =>
-  renderToStaticMarkup(createElement(SportpassConsents, { consents, version: "v1" }))
+  renderToStaticMarkup(
+    createElement(SportpassConsents, { consents, version: CURRENT_CONSENT_VERSION })
+  )
 
 describe("Sportpass im Profil", () => {
   it("je Zustimmung der Status in Worten und die passende Aktion", () => {
@@ -51,15 +53,15 @@ describe("Sportpass im Profil", () => {
     expect(html.match(/>Widerrufen</g)).toHaveLength(2)
   })
 
-  it("das Formular zeigt den Hinweistext v1 und den Haken, bis drei SportpassIDs da sind", () => {
+  it("das Formular zeigt den aktuellen Hinweistext und den Haken, bis drei Nummern da sind", () => {
     const html = render([row(1, "active", "aktiv")])
     expect(html).toContain("data-consent-form")
-    expect(html).toContain(CONSENT_TEXTS.v1!.title)
-    for (const paragraph of CONSENT_TEXTS.v1!.paragraphs)
+    expect(html).toContain(CONSENT_TEXTS[CURRENT_CONSENT_VERSION]!.title)
+    for (const paragraph of CONSENT_TEXTS[CURRENT_CONSENT_VERSION]!.paragraphs)
       expect(html).toContain(paragraph.slice(0, 40))
     expect(html).toMatch(/<input type="checkbox"[^>]*name="agree"/)
     // die Version des gezeigten Texts geht mit (Review)
-    expect(html).toMatch(/<input type="hidden" name="version" value="v1"/)
+    expect(html).toContain(`<input type="hidden" name="version" value="${CURRENT_CONSENT_VERSION}"`)
     const full = render([
       row(1, "active", "aktiv"),
       row(2, "requested", "w"),

@@ -44,7 +44,7 @@ export function ConsentForm({ version, text }: { version: string; text: ConsentT
     <form action={action} data-consent-form className="grid gap-3">
       <input type="hidden" name="version" value={version} />
       <div className="grid gap-1.5">
-        <Label htmlFor="consent-sportpass">SportpassID</Label>
+        <Label htmlFor="consent-sportpass">Sportpassnummer</Label>
         <Input
           id="consent-sportpass"
           name="sportpass"

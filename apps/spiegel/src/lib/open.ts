@@ -63,7 +63,7 @@ export function pendingItems(
 export function openItems(items: readonly PendingItem[]): OpenItem[] {
   return items.map((item) => ({
     id: item.cardId,
-    title: "Erste Scheibe bestätigen",
+    title: "Ist das deine Scheibe?",
     detail: [item.when, item.family].filter(Boolean).join(" · "),
     route: { page: "open" },
   }))

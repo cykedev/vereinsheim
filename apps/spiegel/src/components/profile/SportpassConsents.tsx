@@ -33,8 +33,8 @@ export function SportpassConsents({
       <div className="grid gap-1">
         <h2 className="text-[15px] font-semibold">Sportpass</h2>
         <p className="text-sm text-foreground-2">
-          Mit deiner Zustimmung kommen deine Scheiben von selbst aus dem Schützenhaus, sobald ein
-          Admin die SportpassID bestätigt hat.
+          Trag deine Sportpassnummer ein und stimme zu. Sobald ein Admin die Nummer geprüft hat,
+          kommen deine Scheiben von selbst in Spiegel.
         </p>
       </div>
       {consents.length > 0 && (

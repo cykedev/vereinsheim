@@ -53,8 +53,8 @@ export function TrashScreen({ items, blocked }: { items: TrashItem[]; blocked: B
           >
             <h2 className="text-[15px] font-semibold">Kommt nicht von selbst wieder</h2>
             <p className="text-sm text-foreground-2">
-              Diese Scheiben bringt die Brücke nicht von selbst zurück. Ein Admin kann eine Meldung
-              „nicht meine“ wieder aufheben.
+              Diese Scheiben holt Spiegel nicht mehr. Zurückgewiesene („nicht meine“) kann ein Admin
+              wieder zulassen.
             </p>
             <ul className="grid gap-1">
               {blocked.map((b) => (

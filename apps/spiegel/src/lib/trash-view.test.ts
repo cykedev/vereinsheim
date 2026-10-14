@@ -52,7 +52,7 @@ describe("Papierkorb in Worten", () => {
       ).map((b) => [b.when, b.label])
     ).toEqual([
       ["Di 01.09.2026 · 19:05", "endgültig gelöscht"],
-      ["Di 01.09.2026 · 19:05", "als „nicht meine“ gemeldet"],
+      ["Di 01.09.2026 · 19:05", "als „nicht meine“ zurückgewiesen"],
     ])
   })
 })

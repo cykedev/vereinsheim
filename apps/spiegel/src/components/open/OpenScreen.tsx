@@ -17,7 +17,7 @@ import { confirmFirstCard, rejectFirstCard } from "@/lib/first-card-actions"
 import { marksById } from "@/lib/marks"
 import type { PendingItem } from "@/lib/open"
 
-const scheiben = (n: number) => (n === 1 ? "1 weitere Scheibe" : `${n} weitere Scheiben`)
+const weitere = (n: number) => `und ${n} weitere unter dieser Nummer`
 
 /**
  * „Offen“ (SP-1.7 a2, D3): je SportpassID die jüngste wartende Scheibe (P2d) mit „Ja, meine“ und „Nicht meine“. Erst
@@ -40,8 +40,8 @@ export function OpenScreen({
             Offen
           </h1>
           <p className="text-foreground-2">
-            Die jüngste Scheibe unter deiner SportpassID: Ist sie deine? Erst danach erscheinen
-            deine Scheiben in Start, Liste und Fortschritt.
+            Spiegel hat Scheiben unter deiner Sportpassnummer geholt. Prüf die jüngste: Ist das
+            deine? Erst danach erscheinen deine Scheiben in Start, Scheiben und Fortschritt.
           </p>
         </div>
         {items.length ? (
@@ -55,7 +55,7 @@ export function OpenScreen({
             data-open-empty
             className="rounded-2xl border border-border bg-card p-4 text-sm text-foreground-2"
           >
-            Nichts offen.
+            Nichts zu prüfen.
           </p>
         )}
       </section>
@@ -101,9 +101,7 @@ function PendingCard({ item, marks }: { item: PendingItem; marks: MarkShot[] }) 
           <span className="text-[15px] font-semibold">{item.when}</span>
           <span className="text-[13px] text-muted-foreground">{facts.join(" · ")}</span>
           {item.more > 0 && (
-            <span className="text-[13px] text-muted-foreground">
-              und {scheiben(item.more)} unter dieser SportpassID
-            </span>
+            <span className="text-[13px] text-muted-foreground">{weitere(item.more)}</span>
           )}
         </div>
       </div>

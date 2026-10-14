@@ -47,7 +47,7 @@ export function trashItems(
 
 const BLOCKED_LABEL: Readonly<Record<BlockedCard["kind"], string>> = {
   deleted: "endgültig gelöscht",
-  "not-mine": "als „nicht meine“ gemeldet",
+  "not-mine": "als „nicht meine“ zurückgewiesen",
 }
 
 export function blockedItems(blocked: readonly BlockedCard[], timeZone: string): BlockedItem[] {

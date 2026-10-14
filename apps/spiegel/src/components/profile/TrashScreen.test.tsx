@@ -13,7 +13,7 @@ const item = {
 }
 const blocked = [
   { key: "a", when: "Di 01.09.2026 · 19:05", label: "endgültig gelöscht" },
-  { key: "b", when: "Do 03.09.2026 · 18:40", label: "als „nicht meine“ gemeldet" },
+  { key: "b", when: "Do 03.09.2026 · 18:40", label: "als „nicht meine“ zurückgewiesen" },
 ]
 const render = (props: Parameters<typeof TrashScreen>[0]) =>
   renderToStaticMarkup(createElement(TrashScreen, props))
@@ -35,9 +35,9 @@ describe("Papierkorb", () => {
     expect(html).toContain("Der Papierkorb ist leer")
     const section = html.slice(html.indexOf("data-trash-blocked"))
     expect(section).toContain("Kommt nicht von selbst wieder")
-    expect(section).toContain("Ein Admin kann eine Meldung „nicht meine“ wieder aufheben.")
+    expect(section).toContain("Zurückgewiesene („nicht meine“) kann ein Admin")
     expect(section).toContain("endgültig gelöscht")
-    expect(section).toContain("als „nicht meine“ gemeldet")
+    expect(section).toContain("als „nicht meine“ zurückgewiesen")
     expect(section).not.toContain("<button")
   })
 })

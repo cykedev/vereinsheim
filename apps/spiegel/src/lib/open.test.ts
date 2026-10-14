@@ -52,7 +52,7 @@ describe("Offen in Worten", () => {
     expect(items).toEqual([
       {
         id: "c1",
-        title: "Erste Scheibe bestätigen",
+        title: "Ist das deine Scheibe?",
         detail: "Di 13.10.2026 · 19:12 · Luftpistole",
         route: { page: "open" },
       },

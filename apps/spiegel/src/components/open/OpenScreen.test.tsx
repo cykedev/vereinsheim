@@ -31,19 +31,19 @@ describe("Offen", () => {
     const html = render([item(2)])
     expect(html).toContain("Di 13.10.2026 · 19:12")
     expect(html).toContain("Stand 6 · Luftpistole · 40 Schuss · 376 Ringe")
-    expect(html).toContain("und 2 weitere Scheiben unter dieser SportpassID")
+    expect(html).toContain("und 2 weitere unter dieser Nummer")
     expect(html).toContain(">Ja, meine<")
     expect(html).toContain(">Nicht meine<")
   })
 
   it("eine weitere in der Einzahl, keine ohne Satz", () => {
-    expect(render([item(1)])).toContain("und 1 weitere Scheibe unter")
+    expect(render([item(1)])).toContain("und 1 weitere unter dieser Nummer")
     expect(render([item(0)])).not.toContain("weitere")
   })
 
   it("ohne Wartendes der Satz", () => {
     const html = render([])
-    expect(html).toContain("Nichts offen.")
+    expect(html).toContain("Nichts zu prüfen.")
     expect(html).not.toContain("Ja, meine")
   })
 })
