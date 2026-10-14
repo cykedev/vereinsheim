@@ -572,6 +572,73 @@ async function openAndBar(page: Page) {
   )
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Löschen, Rückgängig und Papierkorb (P2b): ohne endgültiges Löschen, die Demo-Daten bleiben vollständig
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function trash(page: Page) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/cards`)
+  const href = await page.ev<string | null>(
+    `$('a[href^="/cards/c"]')?.getAttribute("href") ?? null`
+  )
+  if (!href) throw new Error("keine Scheibe in der Liste des Demo-Kontos")
+  const id = href.split("?")[0].split("/")[2]
+  const listed = `!!$('a[href^="/cards/${id}"]')`
+  const deleteFromPage = async () => {
+    await page.goto(`${BASE}${href}`)
+    await page.click(`button("Scheibe löschen")`)
+    await page.waitFor(`!!$('[role="alertdialog"]')`)
+    const dialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
+    await page.click(`button("Löschen", $('[role="alertdialog"]'))`)
+    await page.waitFor(
+      `!!$("[data-undo-bar]") && location.pathname !== ${JSON.stringify(`/cards/${id}`)}`
+    )
+    return dialog
+  }
+
+  const dialog = await deleteFromPage()
+  check(
+    "Löschen: Dialog nennt Papierkorb, 30 Tage und das Ende",
+    dialog.includes("30 Tage im Papierkorb") && dialog.includes("endgültig gelöscht"),
+    dialog.slice(0, 160)
+  )
+  const after = await page.ev<{ path: string; bar: string; listed: boolean }>(
+    `({ path: location.pathname, bar: txt($("[data-undo-bar]")), listed: ${listed} })`
+  )
+  check(
+    "Löschen: zurück in der Liste, „Scheibe gelöscht · Rückgängig“, die Scheibe fehlt",
+    after.path === "/cards" && after.bar.includes("Scheibe gelöscht") && !after.listed,
+    JSON.stringify(after)
+  )
+  await page.click(`button("Rückgängig", $("[data-undo-bar]"))`)
+  check(
+    "Rückgängig: der Hinweis geht, die Scheibe steht wieder in der Liste",
+    await page.waitFor(`!$("[data-undo-bar]") && ${listed}`),
+    ""
+  )
+
+  await deleteFromPage()
+  await page.goto(`${BASE}${href}`, '$("[data-app-frame]")')
+  check(
+    "Alte Adresse einer gelöschten Scheibe führt in den Papierkorb",
+    await page.waitFor(`location.pathname === "/profile/trash"`),
+    await page.ev<string>(`location.pathname`)
+  )
+  await page.goto(`${BASE}/profile/trash`)
+  const row = await page.ev<string>(`txt($("[data-trash-card]"))`)
+  check("Papierkorb: die Scheibe mit „noch 30 Tage“", row.includes("noch 30 Tage"), row)
+  const rows = await page.ev<number>(`$$("[data-trash-card]").length`)
+  await page.click(`button("Wiederherstellen", $("[data-trash-card]"))`)
+  await page.waitFor(`$$("[data-trash-card]").length < ${rows}`)
+  await page.goto(`${BASE}/cards`)
+  check(
+    "Wiederherstellen: die Scheibe steht wieder in der Liste",
+    await page.ev<boolean>(listed),
+    id
+  )
+}
+
 async function language(page: Page) {
   await page.viewport(1280, 900)
   for (const [path, selectors] of [
@@ -928,6 +995,7 @@ async function main() {
     await section("Fortschritt", () => progress(page))
     await section("Sprache und Hilfe", () => language(page))
     await section("Offen und Leiste", () => openAndBar(page))
+    await section("Papierkorb", () => trash(page))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
   } catch (error) {
