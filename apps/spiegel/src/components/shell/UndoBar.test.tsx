@@ -2,16 +2,12 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { UndoBar } from "./UndoBar"
+import { UndoBar, type UndoView } from "./UndoBar"
 
-const render = (props: Partial<Parameters<typeof UndoBar>[0]> = {}) =>
+const render = (view: Partial<UndoView> = {}) =>
   renderToStaticMarkup(
     createElement(UndoBar, {
-      text: "Scheibe gelöscht",
-      error: null,
-      busy: false,
-      onUndo: () => {},
-      ...props,
+      view: { text: "Scheibe gelöscht", error: null, busy: false, onUndo: () => {}, ...view },
     })
   )
 
@@ -32,5 +28,12 @@ describe("Hinweis „Rückgängig“", () => {
     expect(failed).toContain("Die 30 Tage sind um.")
     expect(failed).toContain("text-destructive")
     expect(failed).not.toContain("<button")
+  })
+
+  it("ohne Hinweis steht die leere Live-Region schon da (Review)", () => {
+    const html = renderToStaticMarkup(createElement(UndoBar, { view: null }))
+    expect(html).toMatch(/^<div role="status" class="[^"]*fixed/)
+    expect(html).not.toContain("data-undo-bar")
+    expect(html).not.toContain("<button")
   })
 })
