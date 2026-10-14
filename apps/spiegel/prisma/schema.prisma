@@ -155,6 +155,9 @@ model SportpassConsent {
   firstCardConfirmedAt DateTime? @db.Timestamptz(3)
   // ältere Scheiben unter dieser Nummer nachgeladen (P2d): ohne, und aktiv, ist es ein offener Auftrag an die Brücke
   historyLoadedAt      DateTime? @db.Timestamptz(3)
+  // wann der Auftrag zum Nachladen eröffnet wurde (Bestätigen, Meldungen aufheben): unterscheidet einen neuen Auftrag
+  // derselben Zustimmung von einem erledigten (Review P2d); null bei alten Zeilen, dann gilt `confirmedAt`
+  historyRequestedAt   DateTime? @db.Timestamptz(3)
   createdAt            DateTime  @default(now()) @db.Timestamptz(3)
 
   @@unique([siteId, sportpassId])

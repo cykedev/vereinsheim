@@ -90,6 +90,7 @@ CREATE TABLE "SportpassConsent" (
     "returnedAt" TIMESTAMPTZ(3),
     "firstCardConfirmedAt" TIMESTAMPTZ(3),
     "historyLoadedAt" TIMESTAMPTZ(3),
+    "historyRequestedAt" TIMESTAMPTZ(3),
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "SportpassConsent_pkey" PRIMARY KEY ("id")
