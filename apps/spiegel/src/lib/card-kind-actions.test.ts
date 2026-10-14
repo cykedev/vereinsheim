@@ -81,11 +81,11 @@ describe("setCardKind", () => {
   it("ohne Sitzung oder mit Passwort vom Admin ein Fehler", async () => {
     mocks.session = null
     expect(await setCardKind(own, "competition")).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
     mocks.session = { user: { id: site.ownerId, role: "USER", mustChangePassword: true } }
     expect(await setCardKind(own, "competition")).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
     expect(await choiceOf(own)).toBe("training")
   })

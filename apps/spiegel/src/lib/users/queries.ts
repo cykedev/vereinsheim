@@ -73,9 +73,7 @@ export async function getUsers(nowMs = Date.now()): Promise<UserListItem[]> {
     return {
       ...user,
       sportpass:
-        user.isActive || sportpass === "kein Sportpass"
-          ? sportpass
-          : `${sportpass} · ruht, Konto deaktiviert`,
+        user.isActive || sportpass === "kein Sportpass" ? sportpass : `${sportpass} · ruht`,
       cards,
       lastCardAt: counted?._max.startedAt?.toISOString() ?? null,
       waiting,

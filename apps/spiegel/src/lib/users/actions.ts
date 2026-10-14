@@ -24,7 +24,7 @@ const prismaCode = (error: unknown) =>
 
 async function adminId(): Promise<string | ActionResult> {
   const session = await getAuthSession()
-  if (!session) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (!session) return { error: "Das geht gerade nicht. Lade die Seite neu." }
   if (!isAdmin(session.user.role)) return { error: "Das darf nur ein Admin." }
   if (session.user.mustChangePassword) return { error: "Bitte zuerst das eigene Passwort ändern." }
   return session.user.id

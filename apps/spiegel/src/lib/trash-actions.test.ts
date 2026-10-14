@@ -76,7 +76,7 @@ describe("deleteCard", () => {
     expect(await deleteCard("../x")).toEqual({ error: "Diese Scheibe gibt es nicht mehr." })
     mocks.session = null
     expect(await deleteCard(foreign)).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
   })
 })

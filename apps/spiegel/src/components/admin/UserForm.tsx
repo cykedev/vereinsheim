@@ -195,8 +195,8 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
       )}
       {!user && (
         <p className="text-sm text-foreground-2">
-          Mit diesem vorläufigen Passwort meldet sich die Person an. Danach muss sie es gleich durch
-          ein eigenes ersetzen.
+          Mit diesem vorläufigen Passwort meldet sich die Person an. Danach muss die Person es
+          gleich durch ein eigenes ersetzen.
         </p>
       )}
       <div className="flex gap-2">

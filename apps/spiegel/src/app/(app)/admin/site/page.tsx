@@ -54,7 +54,8 @@ export default async function AdminSiteRoute() {
               </h2>
               <p className="text-sm text-muted-foreground">
                 In Meyton gehört jede Scheibe zu einer Rangliste. Leg hier fest, welche Ranglisten
-                als Wettkampf zählen. Alle anderen zählen als Training.
+                als Wettkampf zählen. Alle anderen zählen so, wie Meyton sie vermerkt. Meist ist das
+                Training.
               </p>
               {overview.rankings.length ? (
                 <ul className="divide-y divide-border rounded-xl border border-border">

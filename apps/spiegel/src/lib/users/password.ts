@@ -18,7 +18,7 @@ export async function changeOwnPassword(
   formData: FormData
 ): Promise<ActionResult> {
   const session = await getAuthSession()
-  if (!session) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (!session) return { error: "Das geht gerade nicht. Lade die Seite neu." }
 
   const currentPassword = String(formData.get("currentPassword") ?? "")
   const newPassword = String(formData.get("newPassword") ?? "")

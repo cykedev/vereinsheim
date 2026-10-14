@@ -67,7 +67,7 @@ describe("setCardScoring", () => {
     expect(await setCardScoring("gibt-es-nicht", "rings")).toEqual(missing)
     expect(await setCardScoring(42 as unknown as string, "rings")).toEqual(missing)
     expect(await setCardScoring(own, "teiler" as "rings")).toEqual({
-      error: "Unbekannte Wertung.",
+      error: "Das ließ sich nicht speichern. Bitte lade die Seite neu.",
     })
     mocks.session = { user: { id: "jemand-anderes", role: "ADMIN" } }
     expect(await setCardScoring(own, "rings")).toEqual(missing)
@@ -77,11 +77,11 @@ describe("setCardScoring", () => {
   it("ohne Sitzung oder mit Passwort vom Admin ein Fehler", async () => {
     mocks.session = null
     expect(await setCardScoring(own, "rings")).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
     mocks.session = { user: { id: site.ownerId, role: "USER", mustChangePassword: true } }
     expect(await setCardScoring(own, "rings")).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
     expect(await choiceOf(own)).toBe("decimal")
   })
@@ -98,18 +98,18 @@ describe("setFamilyScoring", () => {
 
   it("eine unbekannte Familie oder eine ohne eigene Scheiben nicht; ohne Sitzung ein Fehler", async () => {
     mocks.session = { user: { id: site.ownerId, role: "USER" } }
-    const missing = { error: "Die Familie gibt es nicht." }
+    const missing = { error: "Das ließ sich nicht speichern. Bitte lade die Seite neu." }
     expect(await setFamilyScoring(emptySlug, "rings")).toEqual(missing)
     expect(await setFamilyScoring("gibt-es-nicht", "rings")).toEqual(missing)
     expect(await setFamilyScoring(null as unknown as string, "rings")).toEqual(missing)
     expect(await setFamilyScoring(familySlug, "x" as "rings")).toEqual({
-      error: "Unbekannte Wertung.",
+      error: "Das ließ sich nicht speichern. Bitte lade die Seite neu.",
     })
     mocks.session = { user: { id: "jemand-anderes", role: "USER" } }
     expect(await setFamilyScoring(familySlug, "rings")).toEqual(missing)
     mocks.session = null
     expect(await setFamilyScoring(familySlug, "rings")).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
     mocks.session = { user: { id: site.ownerId, role: "USER" } }
     expect(await familyScorings(db, site.ownerId)).toEqual({ [familySlug]: "decimal" })

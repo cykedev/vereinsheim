@@ -124,11 +124,11 @@ describe("Ja, meine", () => {
     await consent()
     const [card] = await cards(1)
     expect(await confirmFirstCard(card)).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
     mocks.session = { user: { id: site.ownerId, role: "USER", mustChangePassword: true } }
     expect(await rejectFirstCard(card)).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
     expect((await db.card.findUniqueOrThrow({ where: { id: card } })).ownerPending).toBe(true)
   })

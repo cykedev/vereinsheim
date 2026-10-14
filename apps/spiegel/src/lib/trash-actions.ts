@@ -32,7 +32,7 @@ async function run(
   change: (tx: Prisma.TransactionClient, ownerId: string) => Promise<string | null>
 ): Promise<ActionResult> {
   const ownerId = await shooterId()
-  if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (!ownerId) return { error: "Das geht gerade nicht. Lade die Seite neu." }
   if (!isCardIdInput(cardId)) return { error: MISSING }
   let error: string | null
   try {

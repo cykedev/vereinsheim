@@ -135,7 +135,7 @@ describe("Zustimmung durch den Schützen", () => {
         form({ sportpass: sportpass(), agree: "on", version: CURRENT_CONSENT_VERSION })
       )
     ).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
   })
 
@@ -235,9 +235,9 @@ describe("Grenzen der Zustimmung (Review)", () => {
         null,
         form({ sportpass: sportpass(), agree: "on", version: CURRENT_CONSENT_VERSION })
       )
-    ).toEqual({ error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." })
+    ).toEqual({ error: "Das geht gerade nicht. Lade die Seite neu." })
     expect(await revokeSportpass(consent.id)).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
     mocks.session = { user: { id: adminId, role: "ADMIN", mustChangePassword: true } }
     expect(await confirmConsent(consent.id)).toEqual({

@@ -128,6 +128,11 @@ describe("Übersicht des Admins", () => {
     ).toBe(
       "1 Scheibe, 1 davon in den letzten 30 Tagen. 1 Konto hat in den letzten 30 Tagen geschossen."
     )
+    // ohne frische Scheiben kein „0 davon … 0 Konten haben“ (Review)
+    expect(
+      overviewModel({ ...base, usage: { cards: 12, recentCards: 0, recentAccounts: 0 } })
+        .stations[3].facts[1]
+    ).toBe("12 Scheiben, keine davon in den letzten 30 Tagen.")
   })
 
   it("gemeldete „nicht meine“ als Zahl an den Zustimmungen, ohne Namen und ohne Aufgabe (P2b, D9)", () => {
@@ -135,10 +140,10 @@ describe("Übersicht des Admins", () => {
       overviewModel({ ...base, notMine }).stations.find((s) => s.id === "consents")!.facts
     expect(facts(0)).toHaveLength(1)
     expect(facts(1)[1]).toBe(
-      "1 Scheibe wurde als „nicht meine“ zurückgewiesen. Sie kommt nicht wieder, außer du lässt sie am Konto wieder zu."
+      "1 Scheibe wurde als „nicht meine“ zurückgewiesen. Sie kommt nicht wieder. Am Konto kannst du sie wieder zulassen, solange die Nummer dort steht."
     )
     expect(facts(3)[1]).toBe(
-      "3 Scheiben wurden als „nicht meine“ zurückgewiesen. Sie kommen nicht wieder, außer du lässt sie am Konto wieder zu."
+      "3 Scheiben wurden als „nicht meine“ zurückgewiesen. Sie kommen nicht wieder. Am Konto kannst du sie wieder zulassen, solange die Nummer dort steht."
     )
     expect(overviewModel({ ...base, notMine: 3 }).tasks).toEqual([])
   })
@@ -165,8 +170,12 @@ describe("Übersicht des Admins", () => {
       notMine: 2,
       historyPending: 1,
     })
+    // dazu die Aufgaben „Anlage einrichten“ und „Brücke verbinden“ (Review)
+    const setup = overviewModel({ ...base, site: null, bridge: null })
     const texts = [
       ...model.tasks.flatMap((t) => [t.title, t.detail, t.action]),
+      ...setup.tasks.flatMap((t) => [t.title, t.detail, t.action]),
+      ...setup.stations.flatMap((s) => [s.status, ...s.facts]),
       ...model.stations.flatMap((s) => [s.title, s.does, s.status, ...s.facts]),
     ]
     for (const text of texts) expect(text).not.toMatch(OLD_WORDS)

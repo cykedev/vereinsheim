@@ -14,7 +14,7 @@ import type { ActionResult } from "@/lib/types"
 export async function cardMarksAction(cardId: string): Promise<ActionResult<CardMark[] | null>> {
   try {
     const ownerId = await shooterId()
-    if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+    if (!ownerId) return { error: "Das geht gerade nicht. Lade die Seite neu." }
     if (!isCardIdInput(cardId)) return { success: true, data: null }
     const marks = await marksOfCards(db, { ownerId, ids: [cardId] })
     return { success: true, data: marks[cardId] ?? null }

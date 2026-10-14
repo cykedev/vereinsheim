@@ -181,8 +181,8 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
           ...(input.notMine
             ? [
                 input.notMine === 1
-                  ? "1 Scheibe wurde als „nicht meine“ zurückgewiesen. Sie kommt nicht wieder, außer du lässt sie am Konto wieder zu."
-                  : `${input.notMine} Scheiben wurden als „nicht meine“ zurückgewiesen. Sie kommen nicht wieder, außer du lässt sie am Konto wieder zu.`,
+                  ? "1 Scheibe wurde als „nicht meine“ zurückgewiesen. Sie kommt nicht wieder. Am Konto kannst du sie wieder zulassen, solange die Nummer dort steht."
+                  : `${input.notMine} Scheiben wurden als „nicht meine“ zurückgewiesen. Sie kommen nicht wieder. Am Konto kannst du sie wieder zulassen, solange die Nummer dort steht.`,
               ]
             : []),
         ],
@@ -212,6 +212,9 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
 /** die Zeile zur Nutzung (P2e, D2; Wortlaut nach P2f, D7) */
 function usageText({ cards, recentCards, recentAccounts }: OverviewInput["usage"]): string {
   if (!cards) return "Noch keine Scheibe in Spiegel."
+  // ohne frische Scheiben kein „0 davon … 0 Konten haben“ (Review)
+  if (!recentCards)
+    return `${count(cards, "Scheibe", "Scheiben")}, keine davon in den letzten 30 Tagen.`
   return `${count(cards, "Scheibe", "Scheiben")}, ${recentCards} davon in den letzten 30 Tagen. ${
     recentAccounts === 1 ? "1 Konto hat" : `${recentAccounts} Konten haben`
   } in den letzten 30 Tagen geschossen.`

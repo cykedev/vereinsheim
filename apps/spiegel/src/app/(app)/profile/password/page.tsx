@@ -19,7 +19,7 @@ export default async function PasswordRoute() {
           </h1>
           <p className="text-foreground-2">
             {forced
-              ? "Dein Passwort hat ein Admin vergeben. Wähle ein eigenes, erst danach siehst du deine Scheiben; so kennt es niemand außer dir."
+              ? "Dein Passwort hat ein Admin vergeben. Wähle ein eigenes, dann kennt es niemand außer dir. Erst danach siehst du deine Scheiben."
               : "Danach meldest du dich mit dem neuen Passwort wieder an, auch auf deinen anderen Geräten."}
           </p>
         </div>

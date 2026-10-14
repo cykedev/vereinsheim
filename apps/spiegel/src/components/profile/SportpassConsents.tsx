@@ -86,7 +86,12 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
       </Button>
       <DecisionDialog
         decision={
-          revoke ? ownConsentRevoke({ sportpassId: consent.sportpassId }) : ownRejectionRemove()
+          revoke
+            ? ownConsentRevoke({
+                sportpassId: consent.sportpassId,
+                status: consent.status === "rejected" ? "active" : consent.status,
+              })
+            : ownRejectionRemove()
         }
         open={open}
         onOpenChange={setOpen}

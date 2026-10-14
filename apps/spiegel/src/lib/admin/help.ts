@@ -20,7 +20,7 @@ export const ADMIN_HELP = {
   },
   ranking: {
     title: "Rangliste",
-    text: "Meyton ordnet jede Scheibe einer Rangliste des Vereins zu, etwa „Training-LP“ oder „RWK_…“. Hier legst du fest, welche als Wettkampf zählen. Alle anderen zählen als Training.",
+    text: "Meyton ordnet jede Scheibe einer Rangliste des Vereins zu, etwa „Training-LP“ oder „RWK_…“. Hier legst du fest, welche als Wettkampf zählen. Alle anderen zählen so, wie Meyton sie vermerkt. Meist ist das Training.",
   },
   timeZone: {
     title: "Zeitzone der Anlage",
@@ -32,7 +32,7 @@ export const ADMIN_HELP = {
   },
   deactivated: {
     title: "Deaktiviert",
-    text: "Die Person kann sich nicht anmelden, und Spiegel holt keine Scheiben für sie. Es wird nichts gelöscht.",
+    text: "Das Konto kann sich nicht anmelden, und Spiegel holt keine Scheiben dafür. Es wird nichts gelöscht.",
   },
   accounts: {
     title: "Konten",

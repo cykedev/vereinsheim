@@ -65,9 +65,12 @@ describe("Folgen der Sportpassnummern (Admin, Wortlaut aus dem Textbuch, P2f)", 
     expect(returned.check).toBe(
       "Gehört 12345678 wirklich zu Max Muster? Vielleicht hat jemand am Stand einen fremden Namen gewählt. Wenn die Nummer nicht passt: ablehnen."
     )
-    expect(consentConfirm({ who, sportpassId, accountActive: false }).happens).toContain(
-      "Das Konto von Max Muster ist deaktiviert. Solange das so bleibt, holt Spiegel nichts."
+    // deaktiviert: kein „holt ab jetzt“ davor, das dem widerspräche (Review P2f)
+    const inactive = consentConfirm({ who, sportpassId, accountActive: false })
+    expect(inactive.happens[0]).toBe(
+      "Das Konto von Max Muster ist deaktiviert. Solange das so bleibt, holt Spiegel nichts. Danach holt Spiegel jede Scheibe, die unter dieser Nummer geschossen wird."
     )
+    expect(inactive.happens.join(" ")).not.toContain("ab jetzt")
     const loaded = consentConfirm({ who, sportpassId, historyOpen: false, notMine: 2 })
     expect(loaded.happens.join(" ")).not.toContain("ältere Scheiben")
     expect(loaded.notHappening).toContain(
@@ -259,6 +262,13 @@ describe("Folgen beim Schützen", () => {
       confirmLabel: "Widerrufen",
       destructive: true,
     })
+    // nur eine aktive hat schon Scheiben gebracht (Review P2f)
+    expect(ownConsentRevoke({ sportpassId, status: "requested" }).about).toBe(
+      "Du hast für die Sportpassnummer 12345678 zugestimmt. Ein Admin hat die Nummer noch nicht geprüft."
+    )
+    expect(ownConsentRevoke({ sportpassId, status: "returned" }).about).toBe(
+      "Ein Admin prüft die Sportpassnummer 12345678 gerade noch einmal."
+    )
     const remove = ownRejectionRemove()
     wellFormed(remove)
     expect(remove).toMatchObject({
@@ -281,7 +291,7 @@ describe("Folgen beim Schützen", () => {
         "Ein Admin prüft deine Sportpassnummer noch einmal. Bis dahin kommen keine Scheiben unter dieser Nummer.",
       ],
       notHappening: ["Deine anderen Scheiben bleiben."],
-      undo: "Nur ein Admin kann sie wieder zulassen. Sag dem Admin dann Bescheid.",
+      undo: "Ein Admin kann sie wieder zulassen, solange die Nummer in deinem Profil steht. Sag dem Admin dann Bescheid.",
       confirmLabel: "Nicht meine",
       destructive: true,
     })

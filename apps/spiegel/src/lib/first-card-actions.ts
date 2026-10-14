@@ -41,7 +41,7 @@ async function pendingCard(tx: Prisma.TransactionClient, cardId: string, ownerId
 /** „Ja, meine“: die Wartenden der SportpassID werden sichtbar, die erste Scheibe der Zustimmung gilt als bestätigt */
 export async function confirmFirstCard(cardId: string): Promise<ActionResult> {
   const ownerId = await shooterId()
-  if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (!ownerId) return { error: "Das geht gerade nicht. Lade die Seite neu." }
   if (!isCardIdInput(cardId)) return { error: MISSING }
   try {
     const found = await db.$transaction(async (tx) => {
@@ -78,7 +78,7 @@ export async function confirmFirstCard(cardId: string): Promise<ActionResult> {
  */
 export async function rejectFirstCard(cardId: string): Promise<ActionResult> {
   const ownerId = await shooterId()
-  if (!ownerId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (!ownerId) return { error: "Das geht gerade nicht. Lade die Seite neu." }
   if (!isCardIdInput(cardId)) return { error: MISSING }
   try {
     const found = await db.$transaction(async (tx) => {

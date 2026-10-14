@@ -23,9 +23,9 @@ export const CONSENT_TEXTS: Readonly<Record<string, ConsentText>> = {
     title: "Deine Scheiben automatisch in Spiegel",
     paragraphs: [
       "Wenn du zustimmst, holt Spiegel jede Scheibe, die du unter dieser Sportpassnummer an der Meyton-Anlage schießt. Dazu gehören jeder Schuss mit Lage, Wert und Zeit, der Stand, die Disziplin und der Name, unter dem Meyton dich führt. Auch ältere Scheiben holt Spiegel, soweit die Anlage sie noch hat. Scheiben mit verdeckter Wertung (etwa beim Königsschießen) verlassen das Schützenhaus nie.",
-      "Spiegel betreibt der Verein. Deine Scheiben siehst nur du. Ein Admin verwaltet Konten und Anlage, sieht aber deine Schüsse nicht. Damit Fehler auffallen, sieht ein Admin, wie viele Scheiben dein Konto hat und wann die letzte kam.",
+      "Spiegel betreibt der Verein. Deine Scheiben siehst nur du. Ein Admin verwaltet Konten und Anlage, sieht aber deine Schüsse nicht. Damit Fehler auffallen, sieht ein Admin, wie viele Scheiben dein Konto hat, wie viele auf deine Bestätigung warten und an welchem Tag die letzte geschossen wurde.",
       "Ein Admin prüft deine Sportpassnummer einmal. Danach zeigt dir Spiegel deine jüngste Scheibe, und du bestätigst, dass sie deine ist.",
-      "Deine Scheiben bleiben, bis du sie löschst. Gelöschte liegen 30 Tage im Papierkorb und verschwinden danach. In den Sicherungen des Servers bleiben sie noch rund zwei Wochen länger.",
+      "Deine Scheiben bleiben, bis du sie löschst. Gelöschte liegen 30 Tage im Papierkorb. Danach löscht Spiegel sie mit allen Schüssen. Spiegel merkt sich nur Tag und Uhrzeit, damit sie nicht von selbst wiederkommen. In den Sicherungen des Servers bleiben sie noch rund zwei Wochen länger.",
       "Die Zustimmung ist freiwillig. Du kannst sie hier jederzeit widerrufen. Danach kommen keine neuen Scheiben mehr. Was schon da ist, bleibt, bis du es löschst.",
     ],
   },

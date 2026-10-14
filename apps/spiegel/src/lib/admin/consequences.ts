@@ -12,7 +12,7 @@
  * Dialoge, Erklärungen, Zustände und der Übersicht prüfen dagegen.
  */
 export const OLD_WORDS =
-  /;|SportpassID|\bMeldung|\bAblage|[Kk]oppel|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|[Ss]perre/
+  /;|SportpassI[Dd]|Sportpass-ID|\bMeldung|\bAblage|[Kk]oppe?l|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|[Ss]perre/
 
 export interface Decision {
   title: string
@@ -63,7 +63,14 @@ export function consentConfirm({
       ? `Gehört ${sportpassId} wirklich zu ${who}? Vielleicht hat jemand am Stand einen fremden Namen gewählt. Wenn die Nummer nicht passt: ablehnen.`
       : `Gehört ${sportpassId} in der Meyton-Schützenverwaltung zu ${who}? Wenn nicht: ablehnen.`,
     happens: [
-      "Spiegel holt ab jetzt jede Scheibe, die unter dieser Nummer geschossen wird. Läuft die Brücke gerade, dauert das wenige Minuten.",
+      // bei deaktiviertem Konto zuerst das, sonst widerspräche der erste Satz dem letzten (Review P2f)
+      ...(accountActive
+        ? [
+            "Spiegel holt ab jetzt jede Scheibe, die unter dieser Nummer geschossen wird. Läuft die Brücke gerade, dauert das wenige Minuten.",
+          ]
+        : [
+            `Das Konto von ${who} ist deaktiviert. Solange das so bleibt, holt Spiegel nichts. Danach holt Spiegel jede Scheibe, die unter dieser Nummer geschossen wird.`,
+          ]),
       // das Holen älterer Scheiben (P2d): nur, solange es noch offen ist (Review: nach „nicht meine“ oft schon erledigt,
       // nach dem Wiederzulassen wieder offen)
       ...(historyOpen
@@ -72,9 +79,6 @@ export function consentConfirm({
           ]
         : []),
       `${who} bestätigt die jüngste Scheibe einmal in der App unter „Offen“. Erst danach erscheinen alle im Konto.`,
-      ...(accountActive
-        ? []
-        : [`Das Konto von ${who} ist deaktiviert. Solange das so bleibt, holt Spiegel nichts.`]),
     ],
     notHappening: [
       `Du siehst die Schüsse von ${who} nicht.`,
@@ -282,10 +286,22 @@ export function accountChange({
   }
 }
 
-export function ownConsentRevoke({ sportpassId }: { sportpassId: string }): Decision {
+export function ownConsentRevoke({
+  sportpassId,
+  status = "active",
+}: {
+  sportpassId: string
+  /** nur eine aktive hat schon Scheiben gebracht (Review P2f) */
+  status?: "requested" | "active" | "returned"
+}): Decision {
   return {
     title: `Zustimmung für ${sportpassId} widerrufen?`,
-    about: `Scheiben mit der Sportpassnummer ${sportpassId} kommen bisher von selbst in dein Konto.`,
+    about:
+      status === "active"
+        ? `Scheiben mit der Sportpassnummer ${sportpassId} kommen bisher von selbst in dein Konto.`
+        : status === "requested"
+          ? `Du hast für die Sportpassnummer ${sportpassId} zugestimmt. Ein Admin hat die Nummer noch nicht geprüft.`
+          : `Ein Admin prüft die Sportpassnummer ${sportpassId} gerade noch einmal.`,
     happens: ["Ab sofort kommen keine neuen Scheiben mehr unter dieser Nummer."],
     notHappening: ["Scheiben, die schon da sind, bleiben, bis du sie löschst."],
     undo: "Neu zustimmen. Ein Admin prüft die Nummer dann noch einmal.",
@@ -334,7 +350,7 @@ export function notMine({
     notHappening: ["Deine anderen Scheiben bleiben."],
     // ohne Nummer gibt es nichts, was ein Admin wieder zulassen könnte
     undo: sportpassId
-      ? "Nur ein Admin kann sie wieder zulassen. Sag dem Admin dann Bescheid."
+      ? "Ein Admin kann sie wieder zulassen, solange die Nummer in deinem Profil steht. Sag dem Admin dann Bescheid."
       : "Nicht möglich.",
     confirmLabel: "Nicht meine",
     destructive: true,

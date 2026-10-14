@@ -22,7 +22,7 @@ import type { ActionResult } from "@/lib/types"
  */
 async function adminRefusal(): Promise<ActionResult | null> {
   const session = await getAuthSession()
-  if (!session || !isAdmin(session.user.role)) return { error: "Keine Berechtigung." }
+  if (!session || !isAdmin(session.user.role)) return { error: "Das darf nur ein Admin." }
   if (session.user.mustChangePassword) return { error: "Bitte zuerst das eigene Passwort ändern." }
   return null
 }

@@ -45,7 +45,7 @@ describe("createUser", () => {
   it("nur ein angemeldeter Admin, der sein Passwort vom Admin schon ersetzt hat", async () => {
     mocks.session = null
     expect(await createUser(null, form({}))).toEqual({
-      error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an.",
+      error: "Das geht gerade nicht. Lade die Seite neu.",
     })
     mocks.session = { user: { id: adminId, role: "USER" } }
     expect(await createUser(null, form({}))).toEqual({ error: "Das darf nur ein Admin." })

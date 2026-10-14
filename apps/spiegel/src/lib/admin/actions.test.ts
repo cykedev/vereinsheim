@@ -28,9 +28,9 @@ beforeEach(() => {
 describe("clearLoginRateLimitBucket", () => {
   it("nur ein Admin, der sein Passwort vom Admin schon ersetzt hat", async () => {
     mocks.session = null
-    expect(await clearLoginRateLimitBucket(key)).toEqual({ error: "Keine Berechtigung." })
+    expect(await clearLoginRateLimitBucket(key)).toEqual({ error: "Das darf nur ein Admin." })
     mocks.session = { user: { id: "u", role: "USER" } }
-    expect(await clearLoginRateLimitBucket(key)).toEqual({ error: "Keine Berechtigung." })
+    expect(await clearLoginRateLimitBucket(key)).toEqual({ error: "Das darf nur ein Admin." })
     mocks.session = { user: { id: "admin", role: "ADMIN", mustChangePassword: true } }
     expect(await clearLoginRateLimitBucket(key)).toEqual({
       error: "Bitte zuerst das eigene Passwort ändern.",

@@ -54,7 +54,7 @@ export async function requestSportpass(
   formData: FormData
 ): Promise<ActionResult> {
   const userId = await shooterId()
-  if (!userId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (!userId) return { error: "Das geht gerade nicht. Lade die Seite neu." }
   if (formData.get("version") !== CURRENT_CONSENT_VERSION) return { error: STALE_TEXT }
   const parsed = RequestSchema.safeParse({
     sportpass: formData.get("sportpass") ?? "",
@@ -62,7 +62,12 @@ export async function requestSportpass(
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
   const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true } })
-  if (!site) return { error: "Richte zuerst die Meyton-Anlage ein." }
+  // das sieht ein Schütze: keine Aufgabe des Admins nennen (Review P2f)
+  if (!site)
+    return {
+      error:
+        "Spiegel ist noch nicht mit der Meyton-Anlage verbunden. Bitte wende dich an einen Admin.",
+    }
   const sportpassId = BigInt(parsed.data.sportpass)
   try {
     // Zählen und Anlegen in einer Transaktion unter der Sperre der Kontozeile: gleichzeitige Aufrufe desselben Kontos
@@ -111,7 +116,7 @@ export async function requestSportpass(
  */
 export async function revokeSportpass(consentId: number): Promise<ActionResult> {
   const userId = await shooterId()
-  if (!userId) return { error: "Du bist nicht mehr angemeldet. Bitte melde dich neu an." }
+  if (!userId) return { error: "Das geht gerade nicht. Lade die Seite neu." }
   if (!isConsentId(consentId))
     return { error: "Diese Sportpassnummer gibt es hier nicht mehr. Lade die Seite neu." }
   const { count } = await db.sportpassConsent.deleteMany({ where: { id: consentId, userId } })
