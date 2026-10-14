@@ -252,7 +252,7 @@ export async function bridgeState(
     select: { name: true, timeZone: true },
   })
   const salt = await consentSaltOf(db, siteId)
-  const [epoch, consents, tombstones, locks, watermark] = await Promise.all([
+  const [epoch, consents, watermark] = await Promise.all([
     db.source.findFirst({
       where: { siteId, confirmedAt: { not: null } },
       orderBy: { epoch: "desc" },
@@ -260,21 +260,8 @@ export async function bridgeState(
     }),
     db.sportpassConsent.findMany({
       where: { siteId, ...ACTIVE_CONSENT, user: { isActive: true } },
-      select: { sportpassId: true },
-    }),
-    db.tombstone.findMany({
-      where: {
-        source: { siteId },
-        startedAt: { gte: new Date(nowMs - BLOCKED_WINDOW_MS) },
-      },
-      select: { scheibenId: true, startedAt: true, source: { select: { epoch: true } } },
-    }),
-    db.deleteLock.findMany({
-      where: {
-        source: { siteId },
-        startedAt: { gte: new Date(nowMs - BLOCKED_WINDOW_MS) },
-      },
-      select: { scheibenId: true, startedAt: true, source: { select: { epoch: true } } },
+      orderBy: { id: "asc" },
+      select: { id: true, sportpassId: true, historyLoadedAt: true },
     }),
     // über den Index (Quelle, letzte Beobachtung): je Quelle der jüngste Stand, nicht alle Stände (Review)
     db.source.findMany({ where: { siteId }, select: { id: true } }).then((sources) =>
@@ -288,6 +275,25 @@ export async function bridgeState(
         )
       )
     ),
+  ])
+  // offene Aufträge zum Nachladen (P2d): aktive Zustimmungen, deren ältere Scheiben noch nicht geholt sind
+  const history = consents
+    .filter((c) => c.historyLoadedAt === null)
+    .map((c) => ({ id: c.id, sportpassHash: sportpassHash(salt, c.sportpassId) }))
+  // mit offenem Auftrag liest die Brücke die ganze Ablage: dann alle Sperren, damit eine alte, gesperrte Scheibe das Gerät
+  // gar nicht erst verlässt (D3)
+  const blockedWhere = {
+    source: { siteId },
+    ...(history.length ? {} : { startedAt: { gte: new Date(nowMs - BLOCKED_WINDOW_MS) } }),
+  }
+  const blockedSelect = {
+    scheibenId: true,
+    startedAt: true,
+    source: { select: { epoch: true } },
+  } as const
+  const [tombstones, locks] = await Promise.all([
+    db.tombstone.findMany({ where: blockedWhere, select: blockedSelect }),
+    db.deleteLock.findMany({ where: blockedWhere, select: blockedSelect }),
   ])
   const blocked = new Map(
     [...tombstones, ...locks].map((b) => [
@@ -309,5 +315,6 @@ export async function bridgeState(
       epoch: b.source.epoch,
     })),
     watermark: newest ? new Date(newest).toISOString() : null,
+    history,
   }
 }

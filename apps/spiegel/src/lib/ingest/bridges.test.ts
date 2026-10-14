@@ -270,3 +270,71 @@ describe("Zustand der Brücke", () => {
     expect((await bridgeState(db, site.siteId, NOW)).sportpass.salt).toBe(state.sportpass.salt)
   })
 })
+
+describe("Aufträge zum Nachladen (P2d)", () => {
+  let own: TestSite
+  let other: TestSite
+  beforeAll(async () => {
+    own = await createTestSite(db, "history")
+    other = await createTestSite(db, "history-other")
+  })
+  afterAll(async () => {
+    await own.remove()
+    await other.remove()
+  })
+
+  it("nur aktive, noch nicht nachgeladene Zustimmungen dieser Anlage mit aktivem Konto; mit Auftrag alle Sperren", async () => {
+    const inactive = await db.user.create({
+      data: {
+        email: `history-inactive-${own.siteId}@example.com`,
+        passwordHash: "-",
+        isActive: false,
+      },
+    })
+    const consent = (sportpassId: number, data: Record<string, unknown> = {}) =>
+      db.sportpassConsent.create({
+        data: {
+          userId: own.ownerId,
+          siteId: own.siteId,
+          sportpassId: BigInt(sportpassId),
+          confirmedAt: new Date(NOW),
+          ...data,
+        },
+      })
+    const open = await consent(1001)
+    await consent(1002, { historyLoadedAt: new Date(NOW) })
+    await consent(1003, { rejectedAt: new Date(NOW) })
+    await consent(1004, { userId: inactive.id })
+    await consent(1005, { siteId: other.siteId })
+    // eine alte Sperre (90 Tage) und eine junge
+    for (const [scheibenId, days] of [
+      [-11, 90],
+      [-12, 1],
+    ])
+      await db.tombstone.create({
+        data: {
+          sourceId: own.sourceId,
+          scheibenId,
+          startedAt: new Date(NOW - days * 86_400_000),
+          reason: "nicht-meine",
+        },
+      })
+
+    const state = await bridgeState(db, own.siteId, NOW)
+    expect(stateResponseV1.safeParse(state).success).toBe(true)
+    expect(state.history).toEqual([
+      { id: open.id, sportpassHash: sportpassHash(state.sportpass.salt, BigInt(1001)) },
+    ])
+    expect(state.blocked.map((b) => b.scheibenId).sort((a, b) => a - b)).toEqual([-12, -11])
+
+    // alles nachgeladen: keine Aufträge, Sperren wieder nur die jüngsten
+    await db.sportpassConsent.update({
+      where: { id: open.id },
+      data: { historyLoadedAt: new Date(NOW) },
+    })
+    const after = await bridgeState(db, own.siteId, NOW)
+    expect(after.history).toEqual([])
+    expect(after.blocked.map((b) => b.scheibenId)).toEqual([-12])
+    await db.user.delete({ where: { id: inactive.id } })
+  })
+})
