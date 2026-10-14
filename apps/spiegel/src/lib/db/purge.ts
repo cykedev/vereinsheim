@@ -3,10 +3,17 @@ import type { Prisma } from "@/generated/prisma/client"
 import { SAME_CARD_MS, startHintMs } from "./blocks"
 
 // Scheiben endgültig entfernen (SP-1.7 a2, Plan `plans/2026-10-14-spiegel-erste-scheibe.md`, D6): „Nicht meine“ bei der
-// ersten Scheibe, später der Papierkorb. Entfernt werden die Scheibe samt Ableitungen und ihre Rohdaten; ein Grabstein
-// hält Brücke und Einlesen davon ab, sie zurückzubringen ([[spiegel-privacy]]).
+// ersten Scheibe und der Papierkorb (P2b, `plans/2026-10-14-spiegel-papierkorb.md`, D2). Entfernt werden die Scheibe samt
+// Ableitungen und ihre Rohdaten; ein Grabstein oder eine weiche Sperre hält Brücke und Einlesen davon ab, sie
+// zurückzubringen ([[spiegel-privacy]]).
 
 type Tx = Prisma.TransactionClient
+
+/**
+ * Was zurückbleibt: ein Grabstein (fremde Daten, „Nicht meine“; mit Grund, Besitzer und SportpassID der Scheibe) oder
+ * die weiche Sperre des Besitzers (eigene, endgültig gelöschte; ein ausdrückliches Holen hebt sie später auf).
+ */
+export type PurgeBlock = { tombstone: string } | { lock: true }
 
 /**
  * In der übergebenen Transaktion, je Scheibe (in fester Folge, damit zwei Aufrufe ihre Sperren nicht über Kreuz nehmen):
@@ -19,30 +26,64 @@ type Tx = Prisma.TransactionClient
  * mitgehen (Review). Ein Stand, auf den noch die Revision einer anderen Scheibe zeigt, bleibt. Eine schon entfernte
  * Scheibe (ein zweiter Aufruf zugleich) wird übersprungen; eine ohne Quelle (nur ein PDF) hat keine Rohdaten und ist ein
  * Fehler des Aufrufers.
+ *
+ * Mit `lock` gilt die Sperre dem Besitzer (eine Scheibe ohne Besitzer ist ein Fehler des Aufrufers); eine Scheibe ohne
+ * Quelle (nur ein PDF) hat weder Rohdaten noch Sperre und wird nur gelöscht. Mit `tombstone` bleibt sie ein Fehler.
  */
 export async function purgeCards(
   tx: Tx,
   cardIds: readonly string[],
-  reason: string
+  block: PurgeBlock
 ): Promise<void> {
   const cards = await tx.card.findMany({
     where: { id: { in: [...cardIds] } },
     orderBy: [{ sourceId: "asc" }, { scheibenId: "asc" }, { cycle: "asc" }],
-    select: { id: true, sourceId: true, scheibenId: true, cycle: true, startedAt: true },
+    select: {
+      id: true,
+      sourceId: true,
+      scheibenId: true,
+      cycle: true,
+      startedAt: true,
+      ownerId: true,
+      sportpassId: true,
+    },
   })
   for (const card of cards) {
-    if (card.sourceId === null || card.scheibenId === null)
-      throw new RangeError(`Scheibe ${card.id} ohne Quelle: nichts zu entfernen`)
+    if ("lock" in block && card.ownerId === null)
+      throw new RangeError(`Scheibe ${card.id} ohne Besitzer: keine Sperre möglich`)
+    if (card.sourceId === null || card.scheibenId === null) {
+      if ("tombstone" in block)
+        throw new RangeError(`Scheibe ${card.id} ohne Quelle: nichts zu entfernen`)
+      await tx.card.deleteMany({ where: { id: card.id } })
+      continue
+    }
     const { sourceId, scheibenId, cycle, startedAt } = card
     const key = { sourceId, scheibenId }
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
     const { count } = await tx.card.deleteMany({ where: { id: card.id } })
     if (count === 0) continue
-    await tx.tombstone.upsert({
-      where: { sourceId_scheibenId_cycle: { sourceId, scheibenId, cycle } },
-      create: { sourceId, scheibenId, cycle, startedAt, reason },
-      update: {},
-    })
+    if ("tombstone" in block)
+      await tx.tombstone.upsert({
+        where: { sourceId_scheibenId_cycle: { sourceId, scheibenId, cycle } },
+        create: {
+          sourceId,
+          scheibenId,
+          cycle,
+          startedAt,
+          reason: block.tombstone,
+          userId: card.ownerId,
+          sportpassId: card.sportpassId,
+        },
+        update: {},
+      })
+    else
+      await tx.deleteLock.upsert({
+        where: {
+          userId_sourceId_scheibenId_cycle: { userId: card.ownerId!, sourceId, scheibenId, cycle },
+        },
+        create: { userId: card.ownerId!, sourceId, scheibenId, cycle, startedAt },
+        update: {},
+      })
     await tx.rawSnapshot.deleteMany({
       where: { id: { in: await ownSnapshots(tx, key, startedAt.getTime()) } },
     })

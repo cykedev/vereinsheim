@@ -94,7 +94,9 @@ async function cardOf(scheibenId: number, cycle = 0) {
     where: { sourceId: site.sourceId, scheibenId, cycle },
   })
 }
-const purge = (ids: string[]) => db.$transaction((tx) => purgeCards(tx, ids, "nicht-meine"))
+const purge = (ids: string[]) =>
+  db.$transaction((tx) => purgeCards(tx, ids, { tombstone: "nicht-meine" }))
+const purgeLocked = (ids: string[]) => db.$transaction((tx) => purgeCards(tx, ids, { lock: true }))
 const keyOf = (scheibenId: number) => ({ sourceId: site.sourceId, scheibenId })
 
 describe("purgeCards", () => {
@@ -114,7 +116,14 @@ describe("purgeCards", () => {
     expect(await db.rawSnapshot.count({ where: keyOf(scheibenId) })).toBe(0)
     expect(await db.rawRow.count({ where: keyOf(scheibenId) })).toBe(0)
     const tombstone = await db.tombstone.findFirstOrThrow({ where: keyOf(scheibenId) })
-    expect(tombstone).toMatchObject({ cycle: target.cycle, reason: "nicht-meine" })
+    // wer gemeldet hat und unter welcher Nummer: Papierkorb des Schützen, Zuordnung zur Zustimmung (P2b)
+    expect(tombstone).toMatchObject({
+      cycle: target.cycle,
+      reason: "nicht-meine",
+      userId: site.ownerId,
+      sportpassId: BigInt(12345678),
+    })
+    expect(await db.deleteLock.count({ where: keyOf(scheibenId) })).toBe(0)
     expect(tombstone.startedAt.getTime()).toBe(target.startedAt.getTime())
     expect((await ingest([snapshots[0]]))[0]).toMatchObject({
       outcome: "discarded",
@@ -226,5 +235,50 @@ describe("purgeCards", () => {
     })
     await expect(purge([pdf.id])).rejects.toThrow(/ohne Quelle/)
     await db.card.delete({ where: { id: pdf.id } })
+  })
+})
+
+describe("purgeCards mit weicher Sperre (Papierkorb, P2b)", () => {
+  it("legt eine Löschsperre des Besitzers an statt eines Grabsteins; Rohdaten weg, derselbe Stand gesperrt", async () => {
+    const snapshots = card()
+    const scheibenId = snapshots[0].scheibenId
+    await ingest(snapshots)
+    const target = await cardOf(scheibenId)
+
+    await purgeLocked([target.id])
+
+    expect(await db.card.count({ where: { id: target.id } })).toBe(0)
+    expect(await db.rawSnapshot.count({ where: keyOf(scheibenId) })).toBe(0)
+    expect(await db.rawRow.count({ where: keyOf(scheibenId) })).toBe(0)
+    expect(await db.tombstone.count({ where: keyOf(scheibenId) })).toBe(0)
+    const lock = await db.deleteLock.findFirstOrThrow({ where: keyOf(scheibenId) })
+    expect(lock).toMatchObject({ userId: site.ownerId, cycle: target.cycle })
+    expect(lock.startedAt.getTime()).toBe(target.startedAt.getTime())
+    expect((await ingest([snapshots[0]]))[0]).toMatchObject({
+      outcome: "discarded",
+      reason: "blocked",
+    })
+  })
+
+  it("eine Scheibe ohne Quelle (nur PDF) wird nur gelöscht, ohne Sperre; ohne Besitzer lehnt es ab", async () => {
+    const base = {
+      disciplineId: site.disciplineId,
+      startedAt: new Date(),
+      kind: "training",
+      state: "final",
+      complete: true,
+      origin: "pdf",
+    } as const
+    const pdf = await db.card.create({ data: { ...base, ownerId: site.ownerId } })
+    const locksBefore = await db.deleteLock.count({ where: { userId: site.ownerId } })
+    await purgeLocked([pdf.id])
+    expect(await db.card.count({ where: { id: pdf.id } })).toBe(0)
+    expect(await db.deleteLock.count({ where: { userId: site.ownerId } })).toBe(locksBefore)
+
+    const snapshots = card()
+    await ingest(snapshots)
+    const ownerless = await cardOf(snapshots[0].scheibenId)
+    await db.card.update({ where: { id: ownerless.id }, data: { ownerId: null } })
+    await expect(purgeLocked([ownerless.id])).rejects.toThrow(/ohne Besitzer/)
   })
 })

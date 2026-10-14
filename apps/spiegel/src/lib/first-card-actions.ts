@@ -88,7 +88,7 @@ export async function rejectFirstCard(cardId: string): Promise<ActionResult> {
       await purgeCards(
         tx,
         waiting.map((c) => c.id),
-        "nicht-meine"
+        { tombstone: "nicht-meine" }
       )
       if (card.sportpassId !== null)
         await tx.sportpassConsent.updateMany({
