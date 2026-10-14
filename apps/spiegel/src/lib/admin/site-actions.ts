@@ -11,7 +11,8 @@ import { db } from "@/lib/db"
 import { createPairing, revokeBridge } from "@/lib/ingest/bridges"
 import type { ActionResult } from "@/lib/types"
 
-// Admin → Anlage (SP-1.6 b): Anlage anlegen und ändern, Brücke koppeln und widerrufen, Epoche bestätigen, Ranglisten
+// Admin → Anlage (SP-1.6 b): Anlage anlegen und ändern, Brücke koppeln und widerrufen, Ranglisten (eine neue Epoche
+// bestätigt kein Admin mehr, P2c D0: das ist Technik, keine Entscheidung)
 // (Zustimmungen per Sportpass: `src/lib/consent/actions.ts`). Jede Action prüft selbst (`adminActor`) und gibt ein
 // ActionResult zurück.
 
@@ -78,19 +79,6 @@ export async function revokeBridgeAction(bridgeId: number): Promise<ActionResult
   if ("error" in actor) return actor
   if (!Number.isSafeInteger(bridgeId)) return { error: "Unbekannte Brücke." }
   await revokeBridge(db, bridgeId)
-  revalidatePath("/admin/site")
-  return { success: true }
-}
-
-/** eine neue Epoche der Quelle bestätigen (Ablage geleert, neuer Server; SF-23) */
-export async function confirmEpoch(sourceId: number): Promise<ActionResult> {
-  const actor = await adminActor()
-  if ("error" in actor) return actor
-  if (!Number.isSafeInteger(sourceId)) return { error: "Unbekannte Epoche." }
-  await db.source.updateMany({
-    where: { id: sourceId, confirmedAt: null },
-    data: { confirmedAt: new Date() },
-  })
   revalidatePath("/admin/site")
   return { success: true }
 }

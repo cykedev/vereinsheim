@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useActionState, useEffect, useState, useTransition } from "react"
+import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 
 import { getErrorMessage, getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
@@ -9,17 +9,18 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { FieldError } from "@vereinsheim/ui/field-error"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
-import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
-
-import { useSavedChoice } from "@/components/shell/useSavedChoice"
-import type { BridgeRow, RankingRow, SiteOverview } from "@/lib/admin/site"
+import { DecisionDialog } from "@/components/shell/DecisionDialog"
 import {
-  confirmEpoch,
-  pairBridge,
-  revokeBridgeAction,
-  saveSite,
-  setRankingKind,
-} from "@/lib/admin/site-actions"
+  bridgeRevoke,
+  rankingKind,
+  siteTimeZone,
+  type Decision,
+  type RankingChoice,
+} from "@/lib/admin/consequences"
+import type { BridgeRow, RankingRow, SiteOverview } from "@/lib/admin/site"
+import { pairBridge, revokeBridgeAction, saveSite, setRankingKind } from "@/lib/admin/site-actions"
+
+import { AdminHelp } from "./AdminHelp"
 
 const CARD = "grid gap-4 rounded-2xl border border-border bg-card p-5"
 
@@ -27,6 +28,11 @@ const CARD = "grid gap-4 rounded-2xl border border-border bg-card p-5"
 export function SiteForm({ site }: { site: SiteOverview["site"] }) {
   const router = useRouter()
   const [state, action, pending] = useActionState(saveSite, null)
+  // eine geänderte Zeitzone fragt mit ihren Folgen (P2c, D8); Name allein speichert ohne Rückfrage
+  const formRef = useRef<HTMLFormElement>(null)
+  const confirmed = useRef(false)
+  const [decision, setDecision] = useState<Decision | null>(null)
+  const [asking, setAsking] = useState(false)
   // gesteuert: React setzt ein Formular mit Server Action nach dem Absenden zurück
   const [name, setName] = useState(site?.name ?? "")
   const [timeZone, setTimeZone] = useState(site?.timeZone ?? "Europe/Berlin")
@@ -38,8 +44,25 @@ export function SiteForm({ site }: { site: SiteOverview["site"] }) {
       ? { "aria-invalid": true as const, "aria-describedby": `${field}-error` }
       : {}
   return (
-    <form action={action} className={CARD}>
-      <h2 className="text-[15px] font-semibold">{site ? "Anlage" : "Anlage anlegen"}</h2>
+    <form
+      ref={formRef}
+      action={action}
+      onSubmit={(event) => {
+        if (confirmed.current) {
+          confirmed.current = false
+          return
+        }
+        if (site && timeZone.trim() !== site.timeZone) {
+          event.preventDefault()
+          setDecision(siteTimeZone({ zone: timeZone.trim() }))
+          setAsking(true)
+        }
+      }}
+      className={CARD}
+    >
+      <h2 className="flex items-center gap-1 text-[15px] font-semibold">
+        {site ? "Meyton-Anlage" : "Meyton-Anlage einrichten"} <AdminHelp id="site" />
+      </h2>
       <div className="grid gap-1.5">
         <Label htmlFor="name">Name</Label>
         <Input
@@ -53,7 +76,9 @@ export function SiteForm({ site }: { site: SiteOverview["site"] }) {
         <FieldError id="name-error" message={getFieldError(state, "name")} />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="timeZone">Zeitzone der Anlage</Label>
+        <span className="flex items-center gap-1">
+          <Label htmlFor="timeZone">Zeitzone der Anlage</Label> <AdminHelp id="timeZone" />
+        </span>
         <Input
           id="timeZone"
           name="timeZone"
@@ -63,7 +88,8 @@ export function SiteForm({ site }: { site: SiteOverview["site"] }) {
           {...aria("timeZone")}
         />
         <p className="text-xs text-muted-foreground">
-          Meyton speichert Ortszeit ohne Zone; Spiegel rechnet mit dieser Zeitzone nach UTC.
+          Meyton speichert Uhrzeiten ohne Zone; Spiegel rechnet sie mit dieser um. In Deutschland
+          Europe/Berlin.
         </p>
         <FieldError id="timeZone-error" message={getFieldError(state, "timeZone")} />
       </div>
@@ -73,8 +99,19 @@ export function SiteForm({ site }: { site: SiteOverview["site"] }) {
         </p>
       )}
       <Button type="submit" className="h-10 justify-self-start" disabled={pending}>
-        {pending ? "Speichern…" : site ? "Speichern" : "Anlage anlegen"}
+        {pending ? "Speichern…" : site ? "Speichern" : "Anlage einrichten"}
       </Button>
+      {decision && (
+        <DecisionDialog
+          decision={decision}
+          open={asking}
+          onOpenChange={setAsking}
+          onConfirm={() => {
+            confirmed.current = true
+            formRef.current?.requestSubmit()
+          }}
+        />
+      )}
     </form>
   )
 }
@@ -86,10 +123,13 @@ export function PairBridgeForm() {
   const code = state && "success" in state ? state.data : undefined
   return (
     <form action={action} className={CARD}>
-      <h2 className="text-[15px] font-semibold">Brücke koppeln</h2>
+      <h2 className="flex items-center gap-1 text-[15px] font-semibold">
+        Brücke koppeln <AdminHelp id="pairingCode" />
+      </h2>
       <p className="text-sm text-foreground-2">
         Spiegel zeigt einen Code für ein Gerät. Ihn bei der Installation der Brücke zusammen mit der
-        Adresse von Spiegel eintragen; er gilt 15 Minuten und nur einmal.
+        Adresse von Spiegel eintragen. Der Code gilt 15 Minuten und nur einmal. Wer ihn eingibt,
+        darf Scheiben schicken; behandle ihn wie ein Passwort.
       </p>
       <div className="grid gap-1.5">
         <Label htmlFor="bridge-name">Name des Geräts</Label>
@@ -186,13 +226,10 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
           >
             Widerrufen
           </Button>
-          <ConfirmDialog
+          <DecisionDialog
+            decision={bridgeRevoke({ device: bridge.name })}
             open={open}
             onOpenChange={setOpen}
-            title={`„${bridge.name}“ widerrufen?`}
-            description="Der Token gilt sofort nicht mehr. Um das Gerät wieder zu nutzen, es neu koppeln."
-            confirmLabel="Widerrufen"
-            destructive
             onConfirm={() =>
               startTransition(async () => {
                 const result = await revokeBridgeAction(bridge.id)
@@ -207,62 +244,23 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
   )
 }
 
-/** eine unbestätigte Epoche bestätigen (SF-23): erst dann nimmt Spiegel aus ihr an */
-export function ConfirmEpochButton({ sourceId, epoch }: { sourceId: number; epoch: number }) {
-  const router = useRouter()
-  const [open, setOpen] = useState(false)
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
-  return (
-    <>
-      {error && (
-        <span role="alert" className="text-[13px] text-destructive">
-          {error}
-        </span>
-      )}
-      <Button
-        type="button"
-        variant="outline"
-        className="h-10"
-        disabled={pending}
-        onClick={() => setOpen(true)}
-      >
-        Epoche {epoch} bestätigen
-      </Button>
-      <ConfirmDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={`Epoche ${epoch} bestätigen?`}
-        description="Eine neue Epoche heißt: Die Ablage der Anlage wurde geleert oder der Meyton-Server neu aufgesetzt. Erst danach nimmt Spiegel Scheiben aus ihr an."
-        confirmLabel="Bestätigen"
-        onConfirm={() =>
-          startTransition(async () => {
-            const result = await confirmEpoch(sourceId)
-            if ("error" in result) setError(getErrorMessage(result) ?? null)
-            else router.refresh()
-          })
-        }
-      />
-    </>
-  )
-}
-
-type RankingChoice = "open" | "training" | "competition"
-
 const RANKING_OPTIONS = [
-  { value: "open", label: "Offen" },
+  { value: "open", label: "Nicht zugeordnet (Training)" },
   { value: "training", label: "Training" },
   { value: "competition", label: "Wettkampf" },
 ] as const
 
-/** eine Rangliste mit ihrer Art; gespeichert sofort wie die Wahl auf der Seite einer Scheibe (`useSavedChoice`) */
+/**
+ * eine Rangliste mit ihrer Art; gespeichert erst nach dem Dialog mit den Folgen (P2c, D7), weil eine Wahl alle
+ * Scheiben der Rangliste umstellt
+ */
 export function RankingItem({ ranking }: { ranking: RankingRow }) {
-  const choice = useSavedChoice<RankingChoice>({
-    value: ranking.kind ?? "open",
-    scope: String(ranking.id),
-    save: (value) => setRankingKind(ranking.id, value),
-    notSaved: "Die Art der Rangliste wurde nicht gespeichert.",
-  })
+  const router = useRouter()
+  const saved: RankingChoice = ranking.kind ?? "open"
+  const [wanted, setWanted] = useState<RankingChoice>(saved)
+  const [asking, setAsking] = useState(false)
+  const [pending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
   return (
     <li
       className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
@@ -272,19 +270,37 @@ export function RankingItem({ ranking }: { ranking: RankingRow }) {
         <span className="truncate text-[15px] font-semibold">{ranking.name}</span>
         <span className="text-[13px] text-muted-foreground">
           {ranking.cards === 1 ? "1 Scheibe" : `${ranking.cards} Scheiben`}
-          {choice.shown === "open" ? " · nicht zugeordnet" : ""}
         </span>
-        {choice.error && (
+        {error && (
           <span role="alert" className="text-[13px] text-destructive">
-            {choice.error}
+            {error}
           </span>
         )}
       </span>
       <Segmented
         label={`Art der Rangliste ${ranking.name}`}
         options={RANKING_OPTIONS}
-        value={choice.shown}
-        onChange={choice.change}
+        value={saved}
+        onChange={(value) => {
+          if (pending || value === saved) return
+          setWanted(value)
+          setAsking(true)
+        }}
+      />
+      <DecisionDialog
+        decision={rankingKind({ ranking: ranking.name, cards: ranking.cards, kind: wanted })}
+        open={asking}
+        onOpenChange={setAsking}
+        onConfirm={() =>
+          startTransition(async () => {
+            const result = await setRankingKind(ranking.id, wanted)
+            if ("error" in result) setError(getErrorMessage(result) ?? null)
+            else {
+              setError(null)
+              router.refresh()
+            }
+          })
+        }
       />
     </li>
   )

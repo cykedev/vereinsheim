@@ -3,20 +3,16 @@ import type { Metadata } from "next"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 import { AdminTabs } from "@/components/admin/AdminTabs"
-import {
-  BridgeItem,
-  ConfirmEpochButton,
-  PairBridgeForm,
-  RankingItem,
-  SiteForm,
-} from "@/components/admin/SiteForms"
+import { BridgeItem, PairBridgeForm, RankingItem, SiteForm } from "@/components/admin/SiteForms"
+import { AdminHelp } from "@/components/admin/AdminHelp"
 import { Page } from "@/components/shell/Page"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { siteOverview } from "@/lib/admin/site"
 
 export const metadata: Metadata = { title: "Anlage" }
 
-// Anlage und Brücken (Admin, SP-1.6 b): Name und Zeitzone, Epochen der Ablage, gekoppelte Brücken, „Brücke koppeln“
+// Anlage und Brücke (Admin, SP-1.6 b, P2c): Name und Zeitzone, gekoppelte Brücken, „Brücke koppeln“, Ranglisten; jede
+// Änderung mit Folgen fragt (`DecisionDialog`)
 export default async function AdminSiteRoute() {
   await requireAdmin()
   const timeZone = getDisplayTimeZone()
@@ -27,7 +23,7 @@ export default async function AdminSiteRoute() {
         <div className="grid gap-3">
           <AdminTabs current="site" />
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
-            Anlage und Brücken
+            Anlage und Brücke
           </h1>
           <p className="text-foreground-2">
             Die Brücke liest die Meyton-Ablage im Schützenhaus und schickt Spiegel die Scheiben der
@@ -38,7 +34,9 @@ export default async function AdminSiteRoute() {
         {overview.site && (
           <>
             <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
-              <h2 className="text-[15px] font-semibold">Brücken</h2>
+              <h2 className="flex items-center gap-1 text-[15px] font-semibold">
+                Brücke im Schützenhaus <AdminHelp id="bridge" />
+              </h2>
               {overview.bridges.length ? (
                 <ul className="divide-y divide-border rounded-xl border border-border">
                   {overview.bridges.map((bridge) => (
@@ -51,11 +49,12 @@ export default async function AdminSiteRoute() {
             </section>
             <PairBridgeForm />
             <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
-              <h2 className="text-[15px] font-semibold">Ranglisten</h2>
+              <h2 className="flex items-center gap-1 text-[15px] font-semibold">
+                Ranglisten <AdminHelp id="ranking" />
+              </h2>
               <p className="text-sm text-muted-foreground">
-                Meyton nennt zu jeder Scheibe eine Rangliste des Vereins. Ordne zu, welche als
-                Wettkampf gelten; ohne Zuordnung bleibt es Training. Wer eine Scheibe selbst
-                umstellt, behält seine Wahl, und eine Scheibe nur aus Probe ist immer Training.
+                Ordne zu, welche Ranglisten als Wettkampf zählen; ohne Zuordnung ist es Training.
+                Spiegel fragt vor jeder Änderung und sagt, wie viele Scheiben sie betrifft.
               </p>
               {overview.rankings.length ? (
                 <ul className="divide-y divide-border rounded-xl border border-border">
@@ -66,33 +65,6 @@ export default async function AdminSiteRoute() {
               ) : (
                 <p className="text-sm text-muted-foreground">
                   Die Ranglisten erscheinen mit den ersten Scheiben der Brücke.
-                </p>
-              )}
-            </section>
-            <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
-              <h2 className="text-[15px] font-semibold">Epochen der Ablage</h2>
-              {overview.sources.length ? (
-                <ul className="grid gap-2">
-                  {overview.sources.map((source) => (
-                    <li
-                      key={source.id}
-                      className="flex flex-wrap items-center justify-between gap-3"
-                    >
-                      <span className="text-sm">
-                        Epoche {source.epoch} · {source.snapshots} Stände
-                        {source.confirmedAt
-                          ? ` · bestätigt ${source.confirmedAt}`
-                          : " · unbestätigt"}
-                      </span>
-                      {!source.confirmedAt && (
-                        <ConfirmEpochButton sourceId={source.id} epoch={source.epoch} />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Die erste Epoche entsteht mit dem ersten Snapshot der Brücke.
                 </p>
               )}
             </section>
