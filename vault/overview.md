@@ -148,7 +148,7 @@ NAS-Staging-Setup (niedrig-Traffic-Vereinsbetrieb):
 | ----------------------- | -------------: | --------: | ----------- |
 | OS (Debian 12)          |         400 MB |         — | 5 GB        |
 | Docker-Engine + Images  |              — |         — | 1 GB        |
-| Caddy                   |       ~40 MB   |      64 M | —           |
+| Caddy                   |        64 MB   |      96 M | —           |
 | Postgres 15 (shared)    |       ~80 MB[^pg] |    384 M | 1–2 GB Data |
 | Ringwerk (Next.js prod) |        188 MB  |     256 M | —           |
 | Treffsicher (Next.js)   |        163 MB  |     320 M | —           |
@@ -161,7 +161,7 @@ NAS-Staging-Setup (niedrig-Traffic-Vereinsbetrieb):
 + ~10 MB pro Connection × typisch 10–20 aktive Connections: 250–350 MB.
 
 **Steady-State: ~0.9 GB RAM, ~25–40 GB Disk**. Seit P3 (Oktober 2026, drei Apps) summieren die Limits auf
-1.280 MiB; neben System und Docker (~500 MiB) sind rund 1.370 MiB frei. Beim Deploy starten heute alle drei
+1.312 MiB (Caddy seit dem ersten Deploy 96 MB); neben System und Docker (~500 MiB) sind rund 1.370 MiB frei. Beim Deploy starten heute alle drei
 Migratoren gleichzeitig (Grenzen dann 1.856 MiB), mit P4 nacheinander (1.472 MiB); real brauchen sie je höchstens
 130 MiB. Die Apps laufen mit Heap-Grenze (Ringwerk und Spiegel 160, Treffsicher 192,
 [[node-heap-above-container-limit]]).

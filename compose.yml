@@ -31,7 +31,9 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-    mem_limit: 64m
+    # 96m statt 64m (14. Oktober 2026): mit drei Hosts lag Caddy nach dem ersten Deploy bei 64 MiB, davon
+    # 42 MiB Cache (das Binary); bei 64m müsste es Teile seines Programms ständig neu lesen
+    mem_limit: 96m
     logging: *default-logging
     networks:
       - web

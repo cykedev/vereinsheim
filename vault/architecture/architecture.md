@@ -92,7 +92,7 @@ Lokaler Build aus dem Monorepo: `vereinsheim build` → `turbo prune <app> --doc
 (deps→builder→runner/migrator) → Docker Hub (`<user>/<app>:<sha>` + `:<sha>-migrator` + `:latest*`).
 Der VPS pullt; `compose.yml` startet pro App `migrate-*` (one-shot `prisma migrate deploy`) **vor**
 `app-*` (Next standalone, `node server.js`). Caddy terminiert TLS und proxyt die drei Subdomains. Grenzen seit P3:
-Ringwerk und Spiegel 256 MB (Heap 160), Treffsicher 320 MB (Heap 192), Migratoren 192 MB, Caddy 64 MB, Postgres
+Ringwerk und Spiegel 256 MB (Heap 160), Treffsicher 320 MB (Heap 192), Migratoren 192 MB, Caddy 96 MB, Postgres
 384 MB ([[vps-resource-sizing]]).
 Lokal prüft `tools/stack-e2e/run.sh` den ganzen Stack mit den echten Images, bevor etwas auf den VPS geht.
 

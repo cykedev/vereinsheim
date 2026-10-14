@@ -9,7 +9,7 @@ part_of: ["[[operations]]"]
 documented_in: ["[[overview#VPS-Sizing]]"]
 ---
 
-**TL;DR** RAM ist Engpass, der VPS bleibt bei 2 GB (IONOS VPS S). Gemessen am 14. Oktober 2026 nach neun Tagen Betrieb: Spitzen Ringwerk 188, Treffsicher 163, Caddy 44, Postgres 96 MiB, 980 MiB verfügbar, kein Swap, keine OOM-Kills. Seit P3 (drei Apps): Ringwerk und Spiegel 256 MB mit Heap-Grenze 160, Treffsicher 320 MB mit Heap 192 (Uploads, PDF-Import), Migratoren 192 MB, Caddy 64 MB, Postgres 384 MB; die Summe (1.280 MiB) passt neben System und Docker. Nach dem ersten Deploy mit diesen Grenzen die Spitzen erneut messen.
+**TL;DR** RAM ist Engpass, der VPS bleibt bei 2 GB (IONOS VPS S). Gemessen am 14. Oktober 2026 nach neun Tagen Betrieb: Spitzen Ringwerk 188, Treffsicher 163, Caddy 44, Postgres 96 MiB, 980 MiB verfügbar, kein Swap, keine OOM-Kills. Seit P3 (drei Apps): Ringwerk und Spiegel 256 MB mit Heap-Grenze 160, Treffsicher 320 MB mit Heap 192 (Uploads, PDF-Import), Migratoren 192 MB, Caddy 96 MB (seit dem ersten Deploy, vorher 64), Postgres 384 MB; die Summe (1.312 MiB) passt neben System und Docker. Nach dem ersten Deploy gemessen: 905 MiB verfügbar, alle Apps klar unter ihrer Grenze.
 
 ## Messung 14. Oktober 2026
 
@@ -29,6 +29,21 @@ P3 (Plan `plans/2026-10-14-spiegel-stack.md`, D8): Ringwerk und Spiegel 256 MB m
 ([[node-heap-above-container-limit]]), Treffsicher nach dem Review 320 MB mit Heap 192 (Uploads bis 10 MB und der
 Meyton-Import mit pdf.js laufen im Prozess, unter Last nicht gemessen), Migratoren 192 MB, Caddy und Postgres
 unverändert.
+
+## Messung nach dem ersten Deploy mit Spiegel (14. Oktober 2026, 17:15)
+
+Direkt nach dem Deploy (P5), Backup und Restore-Probe, alle Container neu gestartet:
+
+| Dienst | jetzt (Programm, Cache) | Spitze seit Start | Grenze |
+| --- | ---: | ---: | ---: |
+| Ringwerk | 110 MiB (92, 11) | 161 MiB | 256 MB |
+| Treffsicher | 108 MiB (86, 15) | 160 MiB | 320 MB |
+| Spiegel | 132 MiB (111, 14) | 136 MiB | 256 MB |
+| Caddy | 60 MiB (16, 42) | 64 MiB | 64 MB → 96 MB |
+| Postgres | 112 MiB (4, 105) | 121 MiB | 384 MB |
+
+RAM 1.870 MiB, belegt 964, verfügbar 905; kein Swap. Caddy stieß mit drei Hosts an seine Grenze (der Cache ist vor
+allem das Binary); deshalb 96 MB, die Summe der Grenzen steigt auf 1.312 MiB.
 
 Messbefehl auf dem VPS (im Repo-Verzeichnis, nur lesend):
 
