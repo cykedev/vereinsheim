@@ -10,6 +10,8 @@
 #   tools/stack-e2e/run.sh --no-build       vorhandene vereinsheim-e2e/*-Images nehmen
 #   tools/stack-e2e/run.sh --bridge         dazu die echte Brücke gegen Spiegel (bridge-e2e, gut 1 Minute)
 #   tools/stack-e2e/run.sh --load <min>     dazu Last auf Spiegel (ingest-load) und Speicher unter Last
+#   tools/stack-e2e/run.sh --ops            dazu der Betrieb (tools/stack-e2e/ops.sh): Deploy nacheinander,
+#                                           Vorprüfung, Backup, Restore-Probe, Restore, Rollback (gut 5 Minuten)
 #   tools/stack-e2e/run.sh --down           einen mit --keep stehen gelassenen Stack entfernen
 #   tools/stack-e2e/run.sh --clean          wie --down, dazu die vereinsheim-e2e/*-Images löschen
 #
@@ -21,12 +23,13 @@ PROJECT=vereinsheim-e2e
 export COMPOSE_PROJECT_NAME="$PROJECT"
 export COMPOSE_FILE="compose.yml:tools/stack-e2e/compose.e2e.yml"
 
-KEEP=0 BUILD=1 BRIDGE=0 LOAD=0 DOWN=0 CLEAN=0
+KEEP=0 BUILD=1 BRIDGE=0 LOAD=0 DOWN=0 CLEAN=0 OPS=0
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 	--keep) KEEP=1 ;;
 	--no-build) BUILD=0 ;;
 	--bridge) BRIDGE=1 ;;
+	--ops) OPS=1 ;;
 	--load)
 		LOAD="${2:?--load braucht die Minuten}"
 		shift
@@ -95,6 +98,12 @@ TREFFSICHER_HOST=:8081
 SPIEGEL_HOST=:8082
 ACME_EMAIL=e2e@example.com
 DOCKER_USER=vereinsheim-e2e
+RINGWERK_TAG=latest
+RINGWERK_MIGRATOR_TAG=latest-migrator
+TREFFSICHER_TAG=latest
+TREFFSICHER_MIGRATOR_TAG=latest-migrator
+SPIEGEL_TAG=latest
+SPIEGEL_MIGRATOR_TAG=latest-migrator
 POSTGRES_PASSWORD=$(secret 32)
 RINGWERK_DB_PASSWORD=$(secret 32)
 TREFFSICHER_DB_PASSWORD=$(secret 32)
@@ -196,6 +205,11 @@ if [[ "$LOAD" != "0" ]]; then
 	echo "==> Last auf Spiegel ($LOAD Minuten, ingest-load)"
 	BASE_URL=http://localhost:18082 DATABASE_URL="$(spiegel_url)" pnpm --silent --filter spiegel ingest-load \
 		--minutes "$LOAD" --docker "$PROJECT-app-spiegel-1" || problem "ingest-load meldet Fehler"
+fi
+
+if [[ "$OPS" == "1" ]]; then
+	echo "==> Betrieb (ops.sh)"
+	ENV_FILE="$ENV_FILE" tools/stack-e2e/ops.sh || problem "ops.sh meldet Fehler"
 fi
 
 echo "==> Speicher (seit dem Start)"

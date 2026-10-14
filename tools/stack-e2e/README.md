@@ -25,6 +25,7 @@ Danach entfernt es Stack, Volumes und Umgebung.
 | `--no-build` | vorhandene `vereinsheim-e2e/*`-Images nehmen |
 | `--bridge` | die echte Brücke gegen Spiegel (`bridge-e2e`, braucht Go) |
 | `--load <min>` | Last auf Spiegel (`ingest-load`) und Speicher unter Last |
+| `--ops` | der Betrieb (`ops.sh`): `db-ensure` und `env-check` über das CLI, Deploy nacheinander mit Pre-Deploy-Backup und sechs Tags in der Historie, Vorprüfung ohne Rolle, Backup ohne Datenbank `spiegel`, Backup mit drei Apps, Restore-Probe (auch mit abgeschnittenem Dump), Restore von Spiegel, Rollback auf einen alten Eintrag ohne Spiegel-Tags |
 | `--down` | einen mit `--keep` stehen gelassenen Stack entfernen |
 | `--clean` | wie `--down`, dazu die `vereinsheim-e2e/*`-Images löschen (sie sammeln sich je Commit an) |
 
