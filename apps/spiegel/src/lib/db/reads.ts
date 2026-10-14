@@ -13,6 +13,7 @@ import type { CardState, Prisma } from "@/generated/prisma/client"
 import type { Db } from "../db"
 import { cardScoring } from "../scoring"
 import { shotFromRow, toMetricShot } from "./cards"
+import { trashEndsAt } from "./trash"
 import { PENDING_CARD, VISIBLE_CARD } from "./visible"
 
 /** eine Scheibe für die Übersichten: Merkmale und Projektion, dazu Familie und Scheibenbild für Filter und Bild */
@@ -338,4 +339,67 @@ export async function pendingFirstCards(db: Db, ownerId: string): Promise<Pendin
 /** die Zahl am Start-Symbol: so viele Einträge hat „Offen“ */
 export async function pendingCount(db: Db, ownerId: string): Promise<number> {
   return (await pendingGroups(db, ownerId)).length
+}
+
+/** eine Scheibe im Papierkorb (P2b): wie in den Übersichten, dazu wann gelöscht und bis wann wiederherstellbar */
+export interface TrashCard {
+  card: OverviewCard
+  deletedAtMs: number
+  endsAtMs: number
+}
+
+/** der Papierkorb eines Schützen, zuletzt gelöschte zuerst; ohne Schüsse */
+export async function trashCards(db: Db, ownerId: string): Promise<TrashCard[]> {
+  const rows = await db.card.findMany({
+    where: { ownerId, ownerPending: false, deletedAt: { not: null } },
+    orderBy: [{ deletedAt: "desc" }, { id: "asc" }],
+    select: { ...OVERVIEW_SELECT, deletedAt: true },
+  })
+  const deletedAt = new Map(rows.map((row) => [row.id, row.deletedAt!]))
+  return toOverview(rows).map((card) => {
+    const at = deletedAt.get(card.id)!
+    return { card, deletedAtMs: at.getTime(), endsAtMs: trashEndsAt(at).getTime() }
+  })
+}
+
+/**
+ * was nicht von selbst wiederkommt (P2b, D8): eigene endgültig gelöschte Scheiben (weiche Sperre) und eigene Meldungen
+ * „Nicht meine“ (Grabstein mit `userId`), nur Beginn und Zeitpunkt, keine Schussdaten; neueste zuerst
+ */
+export interface BlockedCard {
+  kind: "deleted" | "not-mine"
+  startedAtMs: number
+  sinceMs: number
+}
+
+export async function blockedCards(db: Db, ownerId: string): Promise<BlockedCard[]> {
+  const select = { startedAt: true, createdAt: true } as const
+  const [locks, tombstones] = await Promise.all([
+    db.deleteLock.findMany({ where: { userId: ownerId }, select }),
+    db.tombstone.findMany({ where: { userId: ownerId }, select }),
+  ])
+  const of = (kind: BlockedCard["kind"]) => (row: { startedAt: Date; createdAt: Date }) => ({
+    kind,
+    startedAtMs: row.startedAt.getTime(),
+    sinceMs: row.createdAt.getTime(),
+  })
+  return [...locks.map(of("deleted")), ...tombstones.map(of("not-mine"))].sort(
+    (a, b) => b.startedAtMs - a.startedAtMs
+  )
+}
+
+/**
+ * Wo liegt eine eigene Scheibe? `visible` (die Seite zeigt sie), `trash` (die Seite leitet in den Papierkorb), sonst
+ * null (unbekannt, fremd oder wartend: 404 wie bisher)
+ */
+export async function ownCardState(
+  db: Db,
+  query: { cardId: string; ownerId: string }
+): Promise<"visible" | "trash" | null> {
+  const card = await db.card.findFirst({
+    where: { id: query.cardId, ownerId: query.ownerId, ownerPending: false },
+    select: { deletedAt: true },
+  })
+  if (!card) return null
+  return card.deletedAt ? "trash" : "visible"
 }
