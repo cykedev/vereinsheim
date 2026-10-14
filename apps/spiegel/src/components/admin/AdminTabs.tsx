@@ -1,8 +1,10 @@
 import Link from "next/link"
 
-/** Bereiche des Admins: Konten und Anlage */
-export function AdminTabs({ current }: { current: "users" | "site" }) {
-  const tab = (key: "users" | "site", href: string, label: string) => (
+type AdminTab = "overview" | "users" | "site"
+
+/** Bereiche des Admins: Übersicht, Konten, Anlage und Brücke (P2c) */
+export function AdminTabs({ current }: { current: AdminTab }) {
+  const tab = (key: AdminTab, href: string, label: string) => (
     <Link
       href={href}
       aria-current={current === key ? "page" : undefined}
@@ -12,9 +14,10 @@ export function AdminTabs({ current }: { current: "users" | "site" }) {
     </Link>
   )
   return (
-    <nav aria-label="Admin" className="flex gap-1">
+    <nav aria-label="Admin" className="flex flex-wrap gap-1">
+      {tab("overview", "/admin", "Übersicht")}
       {tab("users", "/admin/users", "Konten")}
-      {tab("site", "/admin/site", "Anlage und Brücken")}
+      {tab("site", "/admin/site", "Anlage und Brücke")}
     </nav>
   )
 }
