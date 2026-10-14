@@ -33,12 +33,17 @@ mkdir -p "$OUT"
 # Schreibt erst in eine .tmp-Datei, prüft das pg-custom-format-Magic
 # ("PGDMP") und die Mindestgröße, und benennt nur bei Erfolg um. So
 # bleibt nie eine korrupte/leere Datei mit dem finalen Namen liegen.
+# Läuft links von `||` (set -e gilt dort nicht): jeder Schritt prüft selbst.
 dump_db() {
 	local app="$1"
 	local final="$OUT/${app}-$TS.dump"
 	local tmp="${final}.tmp"
 
-	compose exec -T db pg_dump -U postgres -Fc "$app" > "$tmp"
+	if ! compose exec -T db pg_dump -U postgres -Fc "$app" > "$tmp"; then
+		rm -f "$tmp"
+		echo "ERROR: pg_dump für $app ist gescheitert" >&2
+		return 1
+	fi
 
 	local size
 	size=$(stat -c %s "$tmp" 2>/dev/null || stat -f %z "$tmp")
@@ -74,13 +79,17 @@ archive_uploads() {
 	# im Container (vor dem mv) — sonst landet sie als root:root im Host-FS.
 	local tmp_name
 	tmp_name="$(basename "$tmp")"
-	docker run --rm \
+	if ! docker run --rm \
 		-v "${volume}":/src:ro \
 		-v "$OUT":/out \
 		-e HOST_UID="$(id -u)" \
 		-e HOST_GID="$(id -g)" \
 		-e TMP_NAME="$tmp_name" \
-		alpine sh -c 'tar czf "/out/$TMP_NAME" -C /src . && chown "$HOST_UID:$HOST_GID" "/out/$TMP_NAME"'
+		alpine sh -c 'tar czf "/out/$TMP_NAME" -C /src . && chown "$HOST_UID:$HOST_GID" "/out/$TMP_NAME"'; then
+		rm -f "$tmp"
+		echo "ERROR: Archiv der Uploads von $app ist gescheitert" >&2
+		return 1
+	fi
 
 	# tar erzeugt mindestens ~30 Bytes selbst für leere Volumes.
 	local size
@@ -118,14 +127,23 @@ prune_pattern() {
 	echo "  pruned $deleted of $((total-MIN_KEEP)) candidates older than ${RETAIN_DAYS}d: $pattern"
 }
 
+# Ein Fehler bei einer App hält die übrigen, die Uploads und das Pruning nicht auf; am Ende Exit 1
+failed=()
+
 echo "==> [$TS] Postgres dumps → $OUT"
 for app in "${APPS[@]}"; do
 	exists="$(compose exec -T db psql -U postgres -d postgres -Atc "SELECT 1 FROM pg_database WHERE datname = '$app'")"
-	if [[ "$exists" == "1" ]]; then
-		dump_db "$app"
-	else
+	if [[ "$exists" != "1" ]]; then
 		echo "  skip: Datenbank $app gibt es nicht (anlegen: ./scripts/vereinsheim db-ensure)"
+		continue
 	fi
+	# nach db-ensure, vor dem ersten Migrator: leer, ihr Dump läge unter der Mindestgröße (Review P4)
+	tables="$(compose exec -T db psql -U postgres -d "$app" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'")"
+	if [[ "$tables" == "0" ]]; then
+		echo "  skip: Datenbank $app ist leer (noch nicht migriert)"
+		continue
+	fi
+	dump_db "$app" || failed+=("$app")
 done
 
 # Volume-Namen werden vom compose-Project-Namen geprefixt (siehe `name:` in compose.yml).
@@ -133,7 +151,7 @@ VOLUME_PREFIX="${COMPOSE_PROJECT_NAME:-vereinsheim}"
 
 echo "==> Upload archive (${UPLOAD_APPS[*]})"
 for app in "${UPLOAD_APPS[@]}"; do
-	archive_uploads "$app" "${VOLUME_PREFIX}_uploads_${app}"
+	archive_uploads "$app" "${VOLUME_PREFIX}_uploads_${app}" || failed+=("uploads-$app")
 done
 
 echo "==> Pruning (retain ${RETAIN_DAYS}d, floor ${MIN_KEEP} per app)"
@@ -146,3 +164,8 @@ done
 
 echo "==> Current backup directory:"
 ls -lh "$OUT" | tail -20
+
+if ((${#failed[@]} > 0)); then
+	echo "ERROR: Backup unvollständig: ${failed[*]}" >&2
+	exit 1
+fi

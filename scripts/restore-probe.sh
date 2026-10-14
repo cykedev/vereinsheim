@@ -21,16 +21,29 @@ BACKUP_DIR="${BACKUP_DIR:-/var/backups/vereinsheim}"
 APPS=(ringwerk treffsicher spiegel)
 
 compose() { docker compose --env-file "$ENV_FILE" "$@"; }
-psql_at() { compose exec -T db psql -U postgres -v ON_ERROR_STOP=1 -At "$@"; }
+# ohne NOTICE-Zeilen (DROP … IF EXISTS)
+psql_at() { compose exec -T -e PGOPTIONS='-c client_min_messages=warning' db psql -U postgres -v ON_ERROR_STOP=1 -At "$@"; }
+
+# Ctrl-C oder Abbruch: die gerade benutzte Wegwerf-Datenbank nicht stehen lassen
+CURRENT_PROBE=""
+cleanup() {
+	[[ -z "$CURRENT_PROBE" ]] || psql_at -d postgres -c "DROP DATABASE IF EXISTS $CURRENT_PROBE" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT INT TERM
 
 if ! compose ps --status running --services 2>/dev/null | grep -qx db; then
 	echo "ERROR: Der Dienst db läuft nicht." >&2
 	exit 1
 fi
 
-# "<Tabellen in public>|<angewandte Migrationen>" einer Datenbank
+# "<Tabellen in public>|<angewandte Migrationen>" einer Datenbank; ohne _prisma_migrations 0 Migrationen
 counts() {
-	psql_at -d "$1" -c "SELECT (SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public') || '|' || (SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL)"
+	local db="$1" tables migrations=0
+	tables="$(psql_at -d "$db" -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'")" || return 1
+	if [[ "$(psql_at -d "$db" -c "SELECT to_regclass('public._prisma_migrations') IS NOT NULL")" == "t" ]]; then
+		migrations="$(psql_at -d "$db" -c "SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL")" || return 1
+	fi
+	echo "$tables|$migrations"
 }
 
 # läuft links von `||` (set -e gilt dort nicht): jeder Schritt prüft selbst
@@ -38,16 +51,32 @@ probe_app() {
 	local app="$1" probe="restore_probe_$1" dump live restored tables migrations
 	dump="$(ls -t "$BACKUP_DIR/$app"-*.dump 2>/dev/null | head -n 1 || true)"
 	if [[ -z "$dump" ]]; then
-		if [[ "$(psql_at -d postgres -c "SELECT 1 FROM pg_database WHERE datname = '$app'")" != "1" ]]; then
+		# ohne Dump in Ordnung nur, solange die App noch keine (oder eine leere) Datenbank hat
+		local exists tables_live
+		if ! exists="$(psql_at -d postgres -c "SELECT 1 FROM pg_database WHERE datname = '$app'")"; then
+			echo "  $app: FEHLER, Datenbanken nicht lesbar"
+			return 1
+		fi
+		if [[ "$exists" != "1" ]]; then
 			echo "  $app: noch keine Datenbank und kein Dump, übersprungen"
+			return 0
+		fi
+		if ! tables_live="$(psql_at -d "$app" -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'")"; then
+			echo "  $app: FEHLER, Datenbank $app nicht lesbar"
+			return 1
+		fi
+		if [[ "$tables_live" == "0" ]]; then
+			echo "  $app: Datenbank noch leer (nicht migriert) und kein Dump, übersprungen"
 			return 0
 		fi
 		echo "  $app: FEHLER, kein Dump in $BACKUP_DIR"
 		return 1
 	fi
 	echo "  $app: $(basename "$dump")"
+	CURRENT_PROBE="$probe"
 	if ! psql_at -d postgres -c "DROP DATABASE IF EXISTS $probe" >/dev/null ||
-		! psql_at -d postgres -c "CREATE DATABASE $probe" >/dev/null; then
+		! psql_at -d postgres -c "CREATE DATABASE $probe" >/dev/null ||
+		! psql_at -d postgres -c "REVOKE ALL ON DATABASE $probe FROM PUBLIC" >/dev/null; then
 		echo "  $app: FEHLER, Wegwerf-Datenbank $probe ließ sich nicht anlegen"
 		return 1
 	fi
@@ -73,6 +102,7 @@ probe_app() {
 	fi
 	psql_at -d postgres -c "DROP DATABASE IF EXISTS $probe" >/dev/null ||
 		echo "  $app: Hinweis, $probe ließ sich nicht löschen"
+	CURRENT_PROBE=""
 	return "$result"
 }
 

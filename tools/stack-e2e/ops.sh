@@ -9,6 +9,11 @@ cd "$(dirname "$0")/../.."
 
 : "${ENV_FILE:?aus tools/stack-e2e/run.sh --ops aufrufen}"
 : "${COMPOSE_PROJECT_NAME:?aus tools/stack-e2e/run.sh --ops aufrufen}"
+# drop_spiegel löscht Datenbank und Rolle: nie gegen einen anderen Stack (etwa den lokalen mit Produktionsdaten)
+if [[ "$COMPOSE_PROJECT_NAME" != "vereinsheim-e2e" ]]; then
+	echo "ops.sh läuft nur gegen das Projekt vereinsheim-e2e, nicht gegen $COMPOSE_PROJECT_NAME." >&2
+	exit 2
+fi
 WORK="$(mktemp -d)"
 export BACKUP_DIR="$WORK/backups" HISTORY_FILE="$WORK/deploy-history.log" SKIP_PRUNE=1
 export VEREINSHEIM_ENV_FILE="$ENV_FILE"
@@ -100,12 +105,13 @@ else
 	tail -5 "$WORK/plain.txt"
 fi
 
-echo "==> db-ensure, dann Deploy ohne Backup"
+echo "==> db-ensure, dann Deploy mit Backup (Datenbank spiegel noch leer, Review P4)"
 run ./scripts/db-ensure.sh || problem "db-ensure nach DROP"
 expect_text "spiegel: angelegt" "db-ensure nach DROP"
-if run env SKIP_BACKUP=1 ./scripts/deploy.sh; then
+if run ./scripts/deploy.sh; then
+	expect_text "skip: Datenbank spiegel ist leer (noch nicht migriert)" "Backup vor dem Deploy"
 	[[ "$(wait_spiegel)" == "200" ]] || problem "Spiegel nach erneutem Deploy nicht erreichbar"
-	echo "  Spiegel läuft wieder"
+	echo "  Backup überspringt die leere Datenbank, Spiegel läuft wieder"
 else
 	problem "Deploy nach db-ensure endete mit Fehler"
 	tail -10 "$WORK/plain.txt"
@@ -147,6 +153,8 @@ else
 	echo "  erkannt"
 fi
 rm -f "$bad"
+[[ "$(sql "SELECT count(*) FROM pg_database WHERE datname LIKE 'restore_probe_%'")" == "0" ]] ||
+	problem "Restore-Probe hat nach dem Fehler Wegwerf-Datenbanken stehen lassen"
 
 echo "==> Restore von Spiegel"
 if run ./scripts/restore.sh spiegel "$good"; then
