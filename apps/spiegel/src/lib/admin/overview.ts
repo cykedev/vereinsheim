@@ -4,6 +4,7 @@ import { formatDateTime } from "@vereinsheim/lib/format"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { consentStatus, type ConsentStatus } from "@/lib/consent/status"
 import { db } from "@/lib/db"
+import { NOT_MINE } from "@/lib/db/purge"
 
 import type { AdminHelpId } from "./help"
 import { heldBackText } from "./site"
@@ -202,7 +203,7 @@ export async function adminOverview(
 ): Promise<AdminOverviewModel> {
   await requireAdmin()
   const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true, name: true } })
-  const [bridge, consents, users] = await Promise.all([
+  const [bridge, consents, users, notMine] = await Promise.all([
     site
       ? db.bridge.findFirst({
           where: { siteId: site.id, revokedAt: null },
@@ -226,10 +227,8 @@ export async function adminOverview(
       where: { user: { isActive: true } },
     }),
     db.user.findMany({ select: { id: true, isActive: true } }),
+    site ? db.tombstone.count({ where: { source: { siteId: site.id }, reason: NOT_MINE } }) : 0,
   ])
-  const notMine = site
-    ? await db.tombstone.count({ where: { source: { siteId: site.id }, reason: "nicht-meine" } })
-    : 0
   const rows = consents.map((c) => ({
     id: c.id,
     userId: c.userId,

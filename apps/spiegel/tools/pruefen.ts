@@ -603,6 +603,8 @@ async function trash(page: Page) {
     dialog.includes("30 Tage im Papierkorb") && dialog.includes("endgültig gelöscht"),
     dialog.slice(0, 160)
   )
+  // ein später Redirect der mitgerenderten Seite (in den Papierkorb) gewönne sonst unbemerkt (Review P2b)
+  await page.wait(1_500)
   const after = await page.ev<{ path: string; bar: string; listed: boolean }>(
     `({ path: location.pathname, bar: txt($("[data-undo-bar]")), listed: ${listed} })`
   )

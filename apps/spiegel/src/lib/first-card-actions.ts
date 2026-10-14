@@ -6,7 +6,7 @@ import type { Prisma } from "@/generated/prisma/client"
 import { isCardIdInput, shooterId } from "@/lib/action-guards"
 import { ACTIVE_CONSENT } from "@/lib/consent/status"
 import { db } from "@/lib/db"
-import { lockCard, purgeCards } from "@/lib/db/purge"
+import { lockCard, NOT_MINE, purgeCards } from "@/lib/db/purge"
 import { PENDING_CARD } from "@/lib/db/visible"
 import type { ActionResult } from "@/lib/types"
 
@@ -88,7 +88,7 @@ export async function rejectFirstCard(cardId: string): Promise<ActionResult> {
       await purgeCards(
         tx,
         waiting.map((c) => c.id),
-        { tombstone: "nicht-meine" }
+        { tombstone: NOT_MINE }
       )
       if (card.sportpassId !== null)
         await tx.sportpassConsent.updateMany({

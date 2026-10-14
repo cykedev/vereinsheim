@@ -13,6 +13,7 @@ import type { CardState, Prisma } from "@/generated/prisma/client"
 import type { Db } from "../db"
 import { cardScoring } from "../scoring"
 import { shotFromRow, toMetricShot } from "./cards"
+import { NOT_MINE } from "./purge"
 import { trashEndsAt } from "./trash"
 import { PENDING_CARD, VISIBLE_CARD } from "./visible"
 
@@ -364,7 +365,10 @@ export async function trashCards(db: Db, ownerId: string): Promise<TrashCard[]> 
 
 /** Zahl der Scheiben im Papierkorb (Link im Profil) */
 export async function trashCount(db: Db, ownerId: string): Promise<number> {
-  return db.card.count({ where: { ownerId, ownerPending: false, deletedAt: { not: null } } })
+  // dieselben wie `trashCards`: nur mit Projektion, sonst stünde eine Zahl über einer leeren Liste (Review P2b)
+  return db.card.count({
+    where: { ownerId, ownerPending: false, deletedAt: { not: null }, projection: { isNot: null } },
+  })
 }
 
 /**
@@ -381,7 +385,7 @@ export async function blockedCards(db: Db, ownerId: string): Promise<BlockedCard
   const select = { startedAt: true, createdAt: true } as const
   const [locks, tombstones] = await Promise.all([
     db.deleteLock.findMany({ where: { userId: ownerId }, select }),
-    db.tombstone.findMany({ where: { userId: ownerId }, select }),
+    db.tombstone.findMany({ where: { userId: ownerId, reason: NOT_MINE }, select }),
   ])
   const of = (kind: BlockedCard["kind"]) => (row: { startedAt: Date; createdAt: Date }) => ({
     kind,

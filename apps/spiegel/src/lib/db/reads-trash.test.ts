@@ -57,6 +57,10 @@ describe("Papierkorb lesen", () => {
     const trash = await trashCards(db, site.ownerId)
     expect(trash.map((t) => t.card.id)).toEqual([ids.newer, ids.older])
     expect(await trashCount(db, site.ownerId)).toBe(2)
+    // ohne Projektion zeigt die Liste sie nicht, also zählt sie auch nicht (Review)
+    await db.cardProjection.deleteMany({ where: { cardId: ids.older } })
+    expect(await trashCount(db, site.ownerId)).toBe(1)
+    expect((await trashCards(db, site.ownerId)).map((t) => t.card.id)).toEqual([ids.newer])
     for (const t of trash) expect(t.endsAtMs - t.deletedAtMs).toBe(30 * DAY_MS)
     const shown = (await ownerCards(db, { ownerId: site.ownerId })).map((c) => c.id)
     expect(shown).toEqual([ids.kept])
@@ -83,6 +87,16 @@ describe("Papierkorb lesen", () => {
         scheibenId: 2,
         startedAt: start(2),
         reason: "nicht-meine",
+      },
+    })
+    // ein Grabstein mit anderem Grund ist keine Meldung „nicht meine“ (Review)
+    await db.tombstone.create({
+      data: {
+        ...base,
+        userId: site.ownerId,
+        scheibenId: 5,
+        startedAt: start(5),
+        reason: "anderer",
       },
     })
     await db.deleteLock.create({

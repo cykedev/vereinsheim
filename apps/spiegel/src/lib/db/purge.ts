@@ -13,7 +13,11 @@ type Tx = Prisma.TransactionClient
  * Was zurückbleibt: ein Grabstein (fremde Daten, „Nicht meine“; mit Grund, Besitzer und SportpassID der Scheibe) oder
  * die weiche Sperre des Besitzers (eigene, endgültig gelöschte; ein ausdrückliches Holen hebt sie später auf).
  */
-export type PurgeBlock = { tombstone: string } | { lock: true }
+export type PurgeBlock = { tombstone: TombstoneReason } | { lock: true }
+
+/** warum ein Grabstein steht; eine Stelle für Entfernen, Papierkorb und Admin (Review P2b) */
+export const NOT_MINE = "nicht-meine"
+export type TombstoneReason = typeof NOT_MINE
 
 /**
  * Sperrt eine Scheibe in der Folge des Schreibens (`writeRevision`, `storeSnapshot`): erst das Advisory-Lock ihrer Quelle
