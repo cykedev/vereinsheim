@@ -190,8 +190,10 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   steht eine wartende, also womöglich fremde Scheibe in Start, Liste oder Fortschritt; „Offen“ liest über `PENDING_CARD`
   (`pendingFirstCards`, `pendingCount` für die Zahl am Start-Symbol im Layout). „Ja, meine“ / „Nicht meine“ in
   `src/lib/first-card-actions.ts`, danach `revalidatePath("/", "layout")`. Entfernt wird nur über `purgeCards`
-  (`src/lib/db/purge.ts`: Grabstein, Scheibe, Rohdaten im Fenster `CYCLE_WINDOW_MS`, verwaiste Zeilen), die Grundlage
-  auch für Löschen und Papierkorb.
+  (`src/lib/db/purge.ts`: Grabstein, Scheibe, ihre Stände nach dem **Beginn aus den Trefferzeiten**, nie nach der
+  Beobachtung, verwaiste Zeilen), die Grundlage auch für Löschen und Papierkorb. Sperren und Zyklen über
+  `src/lib/db/blocks.ts` (`startHintMs`, `isKeyBlocked`, `maxCycleOfKey`); `storeSnapshot` prüft sie unter seiner
+  Sperre (`startAtMs`). Beide Actions sperren zuerst die Zeile der Scheibe und gelten je Anlage und SportpassID.
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten (gefunden von der Skriptprüfung, 13. Oktober 2026).
