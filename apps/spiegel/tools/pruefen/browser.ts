@@ -133,7 +133,13 @@ export class Browser {
       // schon zu
     }
     this.chrome.kill("SIGKILL")
-    rmSync(this.profile, { recursive: true, force: true })
+    try {
+      // Chrome schreibt nach dem Kill noch kurz ins Profil (ENOTEMPTY); ein Rest im Temp-Ordner darf den Bericht nicht
+      // verhindern
+      rmSync(this.profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+    } catch {
+      // bleibt liegen
+    }
   }
 }
 
