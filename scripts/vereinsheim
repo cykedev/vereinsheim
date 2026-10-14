@@ -13,7 +13,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$REPO_DIR"
 
-ENV_FILE="$REPO_DIR/.env"
+# VEREINSHEIM_ENV_FILE: eine andere Umgebung (Tests gegen den Teststack, tools/stack-e2e/ops.sh); docker compose
+# und die Skripte (deploy.sh, backup.sh, …) lesen dann dieselbe
+ENV_FILE="${VEREINSHEIM_ENV_FILE:-$REPO_DIR/.env}"
+if [[ -n "${VEREINSHEIM_ENV_FILE:-}" ]]; then
+	export COMPOSE_ENV_FILES="$ENV_FILE"
+	export ENV_FILE
+fi
 ENV_EXAMPLE="$REPO_DIR/.env.example"
 LOCAL_CONFIG="$REPO_DIR/.vereinsheim.local"
 LOCAL_ENV_FILE="$REPO_DIR/.env.local"
@@ -21,6 +27,10 @@ LOCAL_COMPOSE_FILE="$REPO_DIR/compose.local.yml"
 DEV_COMPOSE_FILE="$REPO_DIR/docker-compose.dev.yml"
 LOCAL_BACKUP_DIR="$REPO_DIR/backups"
 BACKUP_DIR_DEFAULT="/var/backups/vereinsheim"
+
+# Apps des Stacks, in dieser Reihenfolge deployt und gesichert; nur Treffsicher hat ein Upload-Volume
+APPS=(ringwerk treffsicher spiegel)
+UPLOAD_APPS=(treffsicher)
 
 # ---------- Colors ----------
 if [[ -t 1 ]]; then
@@ -133,7 +143,36 @@ env_keys_from_example() {
 }
 
 is_valid_app() {
-	[[ "${1:-}" =~ ^(ringwerk|treffsicher)$ ]]
+	local app
+	for app in "${APPS[@]}"; do
+		[[ "${1:-}" == "$app" ]] && return 0
+	done
+	return 1
+}
+
+has_uploads() {
+	local app
+	for app in "${UPLOAD_APPS[@]}"; do
+		[[ "${1:-}" == "$app" ]] && return 0
+	done
+	return 1
+}
+
+# Nummeriertes Menü aus APPS (auf stderr); gibt die gewählte App aus, leer bei ungültiger Wahl
+pick_app() {
+	local i c
+	for i in "${!APPS[@]}"; do
+		echo "    $((i + 1))) ${APPS[$i]}" >&2
+	done
+	read -r -p "  Wahl: " c
+	if [[ "$c" =~ ^[0-9]+$ ]] && ((c >= 1 && c <= ${#APPS[@]})); then
+		echo "${APPS[$((c - 1))]}"
+	fi
+}
+
+apps_list() {
+	local IFS="|"
+	echo "${APPS[*]}"
 }
 
 # ---------- local config ----------
@@ -248,7 +287,7 @@ cmd_help() {
 		  ${GREEN}local-down --volumes${RESET}       Stack stoppen + alle Volumes löschen
 
 		${BOLD}── HOST-DEV-DATENBANK${RESET} ${DIM}(docker-compose.dev.yml, für pnpm dev)${RESET}
-		  ${GREEN}dev-restore${RESET} [app]         Prod-Dump aus ./backups/ → Dev-DB (Default: beide Apps)
+		  ${GREEN}dev-restore${RESET} [app]         Prod-Dump aus ./backups/ → Dev-DB (Default: alle Apps)
 
 		${BOLD}── VPS-OPERATIONEN${RESET} ${DIM}(auf dem Server, nutzt .env)${RESET}
 		  ${GREEN}status${RESET}                Services, Volumes, Backups, .env, Cron
@@ -257,7 +296,7 @@ cmd_help() {
 		  ${GREEN}backup${RESET}                Backup manuell erstellen
 		  ${GREEN}restore${RESET}               Interaktiver Restore aus Backup
 		  ${GREEN}logs${RESET} [service]        Logs folgen (Default: Apps + caddy)
-		  ${GREEN}psql${RESET} <app>            DB-Shell (ringwerk | treffsicher)
+		  ${GREEN}psql${RESET} <app>            DB-Shell (ringwerk | treffsicher | spiegel)
 		  ${GREEN}migrations${RESET} <app>      Migration-Status + Recovery
 		  ${GREEN}db-ensure${RESET}             Fehlende App-Datenbanken anlegen  ${DIM}(idempotent)${RESET}
 		  ${GREEN}shell${RESET} <service>       Bash-Shell im Container
@@ -396,7 +435,7 @@ cmd_upload() {
 	require_local_config
 	if [[ $# -eq 0 ]]; then
 		err "Aufruf: vereinsheim upload <datei> [datei2 ...]"
-		echo "  Beispiel: vereinsheim upload ringwerk-2026-05-11.dump uploads-ringwerk-2026-05-11.tar.gz"
+		echo "  Beispiel: vereinsheim upload treffsicher-2026-05-11.dump uploads-treffsicher-2026-05-11.tar.gz"
 		exit 1
 	fi
 	for f in "$@"; do
@@ -678,6 +717,7 @@ _local_print_urls() {
 	ok "Lokale Umgebung läuft:"
 	echo "  Ringwerk:    http://localhost:3000"
 	echo "  Treffsicher: http://localhost:3001"
+	echo "  Spiegel:     http://localhost:3002"
 	echo "  DB (psql):   localhost:5432"
 	echo
 	info "Stoppen:           ./scripts/vereinsheim local-down"
@@ -1114,10 +1154,19 @@ cmd_status() {
 		count=$(find "$BACKUP_DIR_DEFAULT" -maxdepth 1 -type f \( -name '*.dump' -o -name '*.tar.gz' \) | wc -l | tr -d ' ')
 		echo "  Dateien insgesamt : $count"
 		echo "  Belegt            : $(du -sh "$BACKUP_DIR_DEFAULT" 2>/dev/null | awk '{print $1}')"
-		echo "  Letzte 4:"
-		find "$BACKUP_DIR_DEFAULT" -maxdepth 1 -type f \( -name '*.dump' -o -name '*.tar.gz' \) -printf '%TY-%Tm-%Td %TH:%TM  %s  %f\n' 2>/dev/null |
-			sort -r | head -4 | awk '{ printf "    %s %s  %5.1f MB  %s\n", $1, $2, $3/1024/1024, $4 }' ||
-			ls -lht "$BACKUP_DIR_DEFAULT"/*.dump 2>/dev/null | head -4 || true
+		echo "  Neueste je App:"
+		local app pattern latest
+		local patterns=()
+		for app in "${APPS[@]}"; do patterns+=("${app}-*.dump"); done
+		for app in "${UPLOAD_APPS[@]}"; do patterns+=("uploads-${app}-*.tar.gz"); done
+		for pattern in "${patterns[@]}"; do
+			latest="$(find "$BACKUP_DIR_DEFAULT" -maxdepth 1 -type f -name "$pattern" -printf '%TY-%Tm-%Td %TH:%TM  %s  %f\n' 2>/dev/null | sort -r | head -1)"
+			if [[ -n "$latest" ]]; then
+				awk '{ printf "    %s %s  %5.1f MB  %s\n", $1, $2, $3/1024/1024, $4 }' <<<"$latest"
+			else
+				printf "    ${YELLOW}keine${RESET}            %s\n" "$pattern"
+			fi
+		done
 	else
 		warn "Backup-Verzeichnis nicht vorhanden (Cron ggf. noch nicht eingerichtet)"
 	fi
@@ -1333,18 +1382,12 @@ cmd_restore() {
 	require_docker
 	echo "${BOLD}=== restore ===${RESET}"
 	echo "  Welche App?"
-	echo "    1) ringwerk"
-	echo "    2) treffsicher"
-	local choice app
-	read -r -p "  Wahl: " choice
-	case "$choice" in
-	1) app="ringwerk" ;;
-	2) app="treffsicher" ;;
-	*)
+	local app
+	app="$(pick_app)"
+	if [[ -z "$app" ]]; then
 		err "Ungültig."
 		return 1
-		;;
-	esac
+	fi
 
 	local backup_dir="${BACKUP_DIR:-$BACKUP_DIR_DEFAULT}"
 	if [[ ! -d "$backup_dir" ]]; then
@@ -1375,16 +1418,19 @@ cmd_restore() {
 	fi
 	local dump="${dumps[$((pick - 1))]}"
 
-	# Passender Uploads-Tar?
-	local stem
-	stem="$(basename "$dump" .dump)"
-	stem="${stem#${app}-}"
-	local uploads="${backup_dir}/uploads-${app}-${stem}.tar.gz"
-	if [[ -f "$uploads" ]]; then
-		echo "  ${GREEN}+${RESET} passender Uploads-Tar: $(basename "$uploads") ($(du -sh "$uploads" | awk '{print $1}'))"
-	else
-		echo "  ${YELLOW}-${RESET} kein passender Uploads-Tar gefunden — nur DB wird restored."
-		uploads=""
+	# Passender Uploads-Tar? Nur Apps mit Upload-Volume haben einen.
+	local uploads=""
+	if has_uploads "$app"; then
+		local stem
+		stem="$(basename "$dump" .dump)"
+		stem="${stem#"${app}"-}"
+		uploads="${backup_dir}/uploads-${app}-${stem}.tar.gz"
+		if [[ -f "$uploads" ]]; then
+			echo "  ${GREEN}+${RESET} passender Uploads-Tar: $(basename "$uploads") ($(du -sh "$uploads" | awk '{print $1}'))"
+		else
+			echo "  ${YELLOW}-${RESET} kein passender Uploads-Tar gefunden — nur DB wird restored."
+			uploads=""
+		fi
 	fi
 
 	echo
@@ -1408,7 +1454,10 @@ cmd_logs() {
 	require_env
 	local svc="${1:-}"
 	if [[ -z "$svc" ]]; then
-		exec docker compose logs -f --tail=100 app-ringwerk app-treffsicher caddy
+		local services=()
+		local app
+		for app in "${APPS[@]}"; do services+=("app-$app"); done
+		exec docker compose logs -f --tail=100 "${services[@]}" caddy
 	else
 		exec docker compose logs -f --tail=200 "$svc"
 	fi
@@ -1420,7 +1469,7 @@ cmd_psql() {
 	require_docker
 	local app="${1:-}"
 	is_valid_app "$app" || {
-		err "Aufruf: vereinsheim psql <ringwerk|treffsicher>"
+		err "Aufruf: vereinsheim psql <$(apps_list)>"
 		return 1
 	}
 	exec docker compose exec db psql -U postgres -d "$app"
@@ -1433,14 +1482,11 @@ cmd_migrations() {
 	local app="${1:-}"
 	if ! is_valid_app "$app"; then
 		echo "  Welche App?"
-		echo "    1) ringwerk"
-		echo "    2) treffsicher"
-		read -r -p "  Wahl: " c
-		case "$c" in 1) app=ringwerk ;; 2) app=treffsicher ;; *)
+		app="$(pick_app)"
+		if [[ -z "$app" ]]; then
 			err "Ungültig"
 			return 1
-			;;
-		esac
+		fi
 	fi
 
 	hr
@@ -1473,7 +1519,11 @@ cmd_migrations() {
 
 	echo
 	echo "${BOLD}Recovery-Optionen:${RESET}"
-	echo "  1) Auto-Recovery erneut versuchen (= migrate-${app} neu starten)"
+	if [[ "$app" == "spiegel" ]]; then
+		echo "  1) migrate-spiegel neu starten (Spiegel hat keine automatische Wiederherstellung: nur erneut migrate deploy)"
+	else
+		echo "  1) Auto-Recovery erneut versuchen (= migrate-${app} neu starten)"
+	fi
 	echo "  2) Migration als ${GREEN}applied${RESET} markieren (DDL ist in DB schon vollzogen)"
 	echo "  3) Migration als ${YELLOW}rolled-back${RESET} markieren (läuft beim nächsten Deploy neu)"
 	echo "  4) Migrate-Container-Logs anzeigen"
@@ -1736,14 +1786,13 @@ interactive_remote_pick() {
 }
 
 cmd_psql_interactive() {
-	echo "  1) ringwerk"
-	echo "  2) treffsicher"
-	read -r -p "  Wahl: " c
-	case "$c" in
-	1) cmd_psql ringwerk ;;
-	2) cmd_psql treffsicher ;;
-	*) warn "Ungültig" ;;
-	esac
+	local app
+	app="$(pick_app)"
+	if [[ -n "$app" ]]; then
+		cmd_psql "$app"
+	else
+		warn "Ungültig"
+	fi
 }
 
 interactive_service_control() {
