@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Erstellt:
-#   - pg_dump (custom format) beider Datenbanken
-#   - tar.gz beider Upload-Volumes
+#   - pg_dump (custom format) jeder App-Datenbank, die es gibt (eine fehlende,
+#     etwa Spiegel vor `vereinsheim db-ensure`, meldet es und läuft weiter)
+#   - tar.gz der Upload-Volumes (nur Treffsicher hat eins)
 # Behält die letzten BACKUP_RETAIN_DAYS Tage (Default 14), aber
 # immer mindestens BACKUP_MIN_KEEP Dumps/Archive pro App (Default 7),
 # auch wenn diese älter als RETAIN_DAYS sind. So bleibt nach einer
@@ -10,8 +11,16 @@
 # Aufruf vom Repo-Root oder via Cron-Eintrag mit absolutem Pfad:
 #   0 3 * * * /home/deploy/vereinsheim/scripts/backup.sh \
 #       >> /home/deploy/vereinsheim/logs/backup.log 2>&1
+#
+# ENV_FILE (Vorgabe .env), BACKUP_DIR, COMPOSE_PROJECT_NAME und COMPOSE_FILE aus der
+# Umgebung: so prüft tools/stack-e2e/ops.sh das Backup gegen den Teststack.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+ENV_FILE="${ENV_FILE:-.env}"
+APPS=(ringwerk treffsicher spiegel)
+UPLOAD_APPS=(treffsicher)
+compose() { docker compose --env-file "$ENV_FILE" "$@"; }
 
 OUT="${BACKUP_DIR:-/var/backups/vereinsheim}"
 TS="$(date +%F_%H%M)"
@@ -29,7 +38,7 @@ dump_db() {
 	local final="$OUT/${app}-$TS.dump"
 	local tmp="${final}.tmp"
 
-	docker compose exec -T db pg_dump -U postgres -Fc "$app" > "$tmp"
+	compose exec -T db pg_dump -U postgres -Fc "$app" > "$tmp"
 
 	local size
 	size=$(stat -c %s "$tmp" 2>/dev/null || stat -f %z "$tmp")
@@ -110,19 +119,30 @@ prune_pattern() {
 }
 
 echo "==> [$TS] Postgres dumps → $OUT"
-dump_db ringwerk
-dump_db treffsicher
+for app in "${APPS[@]}"; do
+	exists="$(compose exec -T db psql -U postgres -d postgres -Atc "SELECT 1 FROM pg_database WHERE datname = '$app'")"
+	if [[ "$exists" == "1" ]]; then
+		dump_db "$app"
+	else
+		echo "  skip: Datenbank $app gibt es nicht (anlegen: ./scripts/vereinsheim db-ensure)"
+	fi
+done
 
 # Volume-Namen werden vom compose-Project-Namen geprefixt (siehe `name:` in compose.yml).
-VOLUME_PREFIX="vereinsheim"
+VOLUME_PREFIX="${COMPOSE_PROJECT_NAME:-vereinsheim}"
 
-echo "==> Upload archive (treffsicher only — ringwerk has no uploads)"
-archive_uploads treffsicher "${VOLUME_PREFIX}_uploads_treffsicher"
+echo "==> Upload archive (${UPLOAD_APPS[*]})"
+for app in "${UPLOAD_APPS[@]}"; do
+	archive_uploads "$app" "${VOLUME_PREFIX}_uploads_${app}"
+done
 
 echo "==> Pruning (retain ${RETAIN_DAYS}d, floor ${MIN_KEEP} per app)"
-prune_pattern 'ringwerk-*.dump'
-prune_pattern 'treffsicher-*.dump'
-prune_pattern 'uploads-treffsicher-*.tar.gz'
+for app in "${APPS[@]}"; do
+	prune_pattern "${app}-*.dump"
+done
+for app in "${UPLOAD_APPS[@]}"; do
+	prune_pattern "uploads-${app}-*.tar.gz"
+done
 
 echo "==> Current backup directory:"
 ls -lh "$OUT" | tail -20

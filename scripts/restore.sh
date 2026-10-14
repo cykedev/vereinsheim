@@ -7,15 +7,24 @@
 #   - Recovery aus einem Backup
 #
 # Postgres wird automatisch hochgefahren, falls nicht aktiv.
+#
+# ENV_FILE (Vorgabe .env), COMPOSE_PROJECT_NAME und COMPOSE_FILE aus der Umgebung:
+# so prüft tools/stack-e2e/ops.sh den Restore gegen den Teststack.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+ENV_FILE="${ENV_FILE:-.env}"
+compose() { docker compose --env-file "$ENV_FILE" "$@"; }
+
 usage() {
 	cat <<-EOF
-		Usage: $0 <ringwerk|treffsicher> <dump-file> [uploads-tar.gz]
+		Usage: $0 <ringwerk|treffsicher|spiegel> <dump-file> [uploads-tar.gz]
+
+		Ein Uploads-Tar nur für Treffsicher (die anderen Apps haben kein Upload-Volume).
 
 		Beispiele:
 		  $0 ringwerk    ~/migration/ringwerk-2026-05-11.dump
+		  $0 spiegel     ~/migration/spiegel-2026-10-20.dump
 		  $0 treffsicher ~/migration/treffsicher-2026-05-11.dump \\
 		                ~/migration/uploads-treffsicher-2026-05-11.tar.gz
 	EOF
@@ -29,7 +38,7 @@ DUMP="$2"
 UPLOADS="${3:-}"
 
 case "$APP" in
-ringwerk | treffsicher) ;;
+ringwerk | treffsicher | spiegel) ;;
 *)
 	echo "Unknown app: $APP" >&2
 	usage
@@ -44,28 +53,32 @@ esac
 	echo "Uploads tar not found: $UPLOADS" >&2
 	exit 1
 }
+[[ -z "$UPLOADS" || "$APP" == "treffsicher" ]] || {
+	echo "$APP hat kein Upload-Volume, ein Uploads-Tar passt nur zu treffsicher." >&2
+	exit 1
+}
 
 echo "==> Stopping app-${APP} and migrate-${APP} (if running)"
-docker compose stop "app-${APP}" "migrate-${APP}" 2>/dev/null || true
+compose stop "app-${APP}" "migrate-${APP}" 2>/dev/null || true
 
 DUMP_ABS="$(realpath "$DUMP")"
-VOLUME_PREFIX="vereinsheim"
+VOLUME_PREFIX="${COMPOSE_PROJECT_NAME:-vereinsheim}"
 
 echo "==> Ensuring db service is up and healthy"
-docker compose up -d db
+compose up -d db
 # Warten bis healthy
 for _ in $(seq 1 30); do
-	if docker compose exec -T db pg_isready -U postgres >/dev/null 2>&1; then
+	if compose exec -T db pg_isready -U postgres >/dev/null 2>&1; then
 		break
 	fi
 	sleep 1
 done
 
 echo "==> Copying dump into db container"
-docker compose cp "$DUMP_ABS" db:/tmp/restore.dump
+compose cp "$DUMP_ABS" db:/tmp/restore.dump
 
 echo "==> Restoring into database '$APP' (--clean --if-exists, role=$APP)"
-docker compose exec -T db pg_restore \
+compose exec -T db pg_restore \
 	-U postgres \
 	-d "$APP" \
 	--clean --if-exists \
@@ -73,7 +86,7 @@ docker compose exec -T db pg_restore \
 	--role="$APP" \
 	/tmp/restore.dump
 
-docker compose exec -T db rm -f /tmp/restore.dump
+compose exec -T db rm -f /tmp/restore.dump
 
 if [[ -n "$UPLOADS" ]]; then
 	UPLOADS_ABS="$(realpath "$UPLOADS")"
