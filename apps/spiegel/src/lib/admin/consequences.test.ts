@@ -4,6 +4,8 @@ import {
   accountChange,
   accountChangesOf,
   bridgeRevoke,
+  cardDelete,
+  cardPurgeNow,
   consentConfirm,
   consentReject,
   consentRemove,
@@ -240,5 +242,43 @@ describe("Folgen beim Schützen", () => {
     wellFormed(without)
     expect(without.about).toBe("Die Scheibe vom Di 13.10.2026 · 19:12 kam ohne SportpassID.")
     expect(without.happens).toHaveLength(1)
+  })
+})
+
+describe("Löschen und Papierkorb (P2b)", () => {
+  const evening = "Di 13.10.2026 · 19:12"
+
+  it("löschen: 30 Tage Papierkorb, zählt nirgends, danach endgültig", () => {
+    const d = cardDelete({ evening })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Scheibe löschen?",
+      about: "Die Scheibe vom Di 13.10.2026 · 19:12.",
+      happens: [
+        "Sie liegt 30 Tage im Papierkorb (Profil) und zählt so lange nirgends mit, auch nicht in Rekorden und Verläufen.",
+        "Danach wird sie endgültig gelöscht, mit allen Schüssen. Die Brücke bringt sie nicht von selbst zurück.",
+      ],
+      notHappening: ["Deine anderen Scheiben bleiben.", "An der Meyton-Anlage ändert sich nichts."],
+      undo: "30 Tage lang im Papierkorb wiederherstellen.",
+      confirmLabel: "Löschen",
+      destructive: true,
+    })
+  })
+
+  it("endgültig löschen: sofort, nur der Schlüssel bleibt, nicht rückgängig", () => {
+    const d = cardPurgeNow({ evening })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Endgültig löschen?",
+      about: "Die Scheibe vom Di 13.10.2026 · 19:12 liegt im Papierkorb.",
+      happens: [
+        "Sie wird sofort gelöscht, mit allen Schüssen.",
+        "Spiegel merkt sich nur, dass es sie gab, damit die Brücke sie nicht von selbst zurückbringt.",
+      ],
+      notHappening: ["An der Meyton-Anlage ändert sich nichts."],
+      undo: "Nicht möglich.",
+      confirmLabel: "Endgültig löschen",
+      destructive: true,
+    })
   })
 })

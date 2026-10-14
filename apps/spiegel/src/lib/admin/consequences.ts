@@ -307,3 +307,35 @@ export function notMine({
     destructive: true,
   }
 }
+
+/** eine eigene Scheibe in den Papierkorb (P2b, Plan `plans/2026-10-14-spiegel-papierkorb.md`, D7) */
+export function cardDelete({ evening }: { evening: string }): Decision {
+  return {
+    title: "Scheibe löschen?",
+    about: `Die Scheibe vom ${evening}.`,
+    happens: [
+      "Sie liegt 30 Tage im Papierkorb (Profil) und zählt so lange nirgends mit, auch nicht in Rekorden und Verläufen.",
+      "Danach wird sie endgültig gelöscht, mit allen Schüssen. Die Brücke bringt sie nicht von selbst zurück.",
+    ],
+    notHappening: ["Deine anderen Scheiben bleiben.", "An der Meyton-Anlage ändert sich nichts."],
+    undo: "30 Tage lang im Papierkorb wiederherstellen.",
+    confirmLabel: "Löschen",
+    destructive: true,
+  }
+}
+
+/** eine Scheibe im Papierkorb sofort endgültig löschen; es bleibt die weiche Sperre */
+export function cardPurgeNow({ evening }: { evening: string }): Decision {
+  return {
+    title: "Endgültig löschen?",
+    about: `Die Scheibe vom ${evening} liegt im Papierkorb.`,
+    happens: [
+      "Sie wird sofort gelöscht, mit allen Schüssen.",
+      "Spiegel merkt sich nur, dass es sie gab, damit die Brücke sie nicht von selbst zurückbringt.",
+    ],
+    notHappening: ["An der Meyton-Anlage ändert sich nichts."],
+    undo: "Nicht möglich.",
+    confirmLabel: "Endgültig löschen",
+    destructive: true,
+  }
+}
