@@ -14,6 +14,7 @@ import type {
 } from "@vereinsheim/ingest-contract/snapshot"
 
 import type { Db } from "../db"
+import { isKeyBlocked } from "./blocks"
 
 const TABLES = ["scheiben", "serien", "treffer"] as const
 type TableName = (typeof TABLES)[number]
@@ -73,6 +74,8 @@ export type StoreResult =
   | { outcome: "stale"; latestSequence: bigint }
   /** Folgenummer weiter als `MAX_SEQUENCE_AHEAD_MS` in der Zukunft: abgelehnt, nichts geändert */
   | { outcome: "future"; sequence: bigint }
+  /** Grabstein oder Löschsperre, geprüft unter der Sperre der Scheibe (`startAtMs`): nichts gespeichert */
+  | { outcome: "blocked" }
 
 export interface StoreTarget {
   sourceId: number
@@ -89,7 +92,14 @@ export async function storeSnapshot(
   db: Db,
   target: StoreTarget,
   snapshot: SnapshotV1,
-  { nowMs = Date.now() }: { nowMs?: number } = {}
+  {
+    nowMs = Date.now(),
+    startAtMs,
+  }: {
+    nowMs?: number
+    /** Beginn des Stands (`startHintMs`): mit ihm prüft die Ablage Grabsteine und Sperren unter ihrer Sperre */
+    startAtMs?: number
+  } = {}
 ): Promise<StoreResult> {
   const { sourceId } = target
   const { scheibenId } = snapshot
@@ -99,6 +109,9 @@ export async function storeSnapshot(
 
   return db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
+    // unter derselben Sperre wie `purgeCards`: was dort gerade entfernt wurde, kommt nicht zurück (Review SP-1.7 a2)
+    if (startAtMs !== undefined && (await isKeyBlocked(tx, { sourceId, scheibenId }, startAtMs)))
+      return { outcome: "blocked" }
     const latest = await tx.rawSnapshot.findFirst({
       where: { sourceId, scheibenId },
       orderBy: { sequence: "desc" },

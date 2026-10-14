@@ -15,6 +15,8 @@ const db = createPrismaClient()
 let site: TestSite
 let bridgeId: number
 const DAY_MS = 86_400_000
+/** eine eigene ScheibenID je Test, damit sich die Fälle nicht treffen */
+let nextId = 900_000
 
 beforeAll(async () => {
   site = await createTestSite(db, "purge")
@@ -42,82 +44,177 @@ const target = () => ({ bridgeId, siteId: site.siteId, timeZone: "Europe/Berlin"
 const ingest = (snapshots: readonly SnapshotV1[]) =>
   ingestBatch(db, target(), snapshots, { nowMs: Date.parse(snapshots.at(-1)!.observedAt) })
 
-/** die gesendeten Stände der ersten Scheibe von SF-02 */
-function sent(): SnapshotV1[] {
-  const card = frozenExpected("SF-02").cards[0]
-  const readings = frozenReadings("SF-02")
-  return card.sentReadings.map(
-    (n) =>
-      readings
-        .find((r) => r.reading === n)!
-        .snapshots.find((s) => s.scheibenId === card.scheibenId)!
-  )
+const STAMP = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)$/
+const shiftStamp = (value: string | null, ms: number) => {
+  const m = value && STAMP.exec(value)
+  if (!m) return value
+  const at = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) + ms
+  return new Date(at).toISOString().slice(0, 19).replace("T", " ")
 }
 
-describe("purgeCards", () => {
-  it("entfernt Scheibe und Rohdaten ihres Zyklus, setzt einen Grabstein; ein späterer Zyklus bleibt", async () => {
-    const snapshots = sent()
-    await ingest(snapshots)
-    const card = await db.card.findFirstOrThrow({
-      where: { sourceId: site.sourceId, scheibenId: snapshots[0].scheibenId },
-      include: { revisions: true },
-    })
-    const key = { sourceId: site.sourceId, scheibenId: card.scheibenId! }
-
-    // derselbe Zähler 60 Tage später (SF-77): ein Stand mit einer geänderten Trefferzeile, die übrigen Zeilen geteilt
-    const last = snapshots.at(-1)!
+/**
+ * Die gesendeten Stände der ersten Scheibe von SF-02 unter einer eigenen ScheibenID; `shotDays` verschiebt alle Zeiten
+ * der Ablage (ein anderer Zyklus), `seenDays` nur die Beobachtung (die Brücke liest später nach).
+ */
+function card({ shotDays = 0, seenDays = 0, scheibenId = nextId++ } = {}): SnapshotV1[] {
+  const expected = frozenExpected("SF-02").cards[0]
+  const readings = frozenReadings("SF-02")
+  return expected.sentReadings.map((n) => {
+    const s = readings
+      .find((r) => r.reading === n)!
+      .snapshots.find((x) => x.scheibenId === expected.scheibenId)!
+    const shift = (rows: typeof s.data.treffer.rows) =>
+      rows.map((row) =>
+        Object.fromEntries(
+          Object.entries(row).map(([k, v]) => [
+            k,
+            k === "ScheibenID" ? String(scheibenId) : shiftStamp(v, shotDays * DAY_MS),
+          ])
+        )
+      )
     const data = {
-      ...last.data,
-      treffer: {
-        ...last.data.treffer,
-        rows: last.data.treffer.rows.map((row, i) => (i === 0 ? { ...row, Ring: "0" } : row)),
-      },
+      scheiben: { ...s.data.scheiben, rows: shift(s.data.scheiben.rows) },
+      serien: { ...s.data.serien, rows: shift(s.data.serien.rows) },
+      treffer: { ...s.data.treffer, rows: shift(s.data.treffer.rows) },
     }
-    const laterMs = Date.parse(last.observedAt) + 60 * DAY_MS
-    const later: SnapshotV1 = {
-      ...last,
-      sequence: laterMs,
-      observedAt: new Date(laterMs).toISOString(),
+    const observedMs = Date.parse(s.observedAt) + (shotDays + seenDays) * DAY_MS
+    return {
+      ...s,
+      scheibenId,
+      sequence: observedMs,
+      observedAt: new Date(observedMs).toISOString(),
       data,
       checksum: computeChecksum(data),
     }
-    const stored = await storeSnapshot(db, { sourceId: site.sourceId, bridgeId }, later, {
-      nowMs: laterMs,
-    })
-    expect(stored.outcome).toBe("stored")
-    const kept = await db.rawSnapshot.findFirstOrThrow({
-      where: { ...key, sequence: BigInt(laterMs) },
-    })
-    const keptRows = [...kept.scheibenRowIds, ...kept.serienRowIds, ...kept.trefferRowIds]
-    const rowsBefore = await db.rawRow.count({ where: key })
-    expect(await db.rawSnapshot.count({ where: key })).toBeGreaterThan(1)
+  })
+}
 
-    await db.$transaction((tx) => purgeCards(tx, [card.id], "nicht-meine"))
+async function cardOf(scheibenId: number, cycle = 0) {
+  return db.card.findFirstOrThrow({
+    where: { sourceId: site.sourceId, scheibenId, cycle },
+  })
+}
+const purge = (ids: string[]) => db.$transaction((tx) => purgeCards(tx, ids, "nicht-meine"))
+const keyOf = (scheibenId: number) => ({ sourceId: site.sourceId, scheibenId })
 
-    expect(await db.card.count({ where: { id: card.id } })).toBe(0)
-    expect(await db.cardRevision.count({ where: { cardId: card.id } })).toBe(0)
-    expect(await db.shot.count({ where: { cardId: card.id } })).toBe(0)
-    expect(await db.cardProjection.count({ where: { cardId: card.id } })).toBe(0)
-    // vom Zyklus der Scheibe bleibt kein Stand, der spätere bleibt mit allen seinen Zeilen
-    expect((await db.rawSnapshot.findMany({ where: key })).map((s) => s.id)).toEqual([kept.id])
-    expect(await db.rawRow.count({ where: { id: { in: keptRows } } })).toBe(keptRows.length)
-    // was nur der entfernte Zyklus brauchte, ist weg
-    const rowsAfter = await db.rawRow.count({ where: key })
-    expect(rowsAfter).toBe(new Set(keptRows).size)
-    expect(rowsAfter).toBeLessThan(rowsBefore)
-    const tombstone = await db.tombstone.findFirstOrThrow({ where: key })
-    expect(tombstone).toMatchObject({ cycle: card.cycle, reason: "nicht-meine" })
-    expect(tombstone.startedAt.getTime()).toBe(card.startedAt.getTime())
+describe("purgeCards", () => {
+  it("entfernt Scheibe, Ableitungen und Rohdaten, setzt einen Grabstein; derselbe Stand ist danach gesperrt", async () => {
+    const snapshots = card()
+    const scheibenId = snapshots[0].scheibenId
+    await ingest(snapshots)
+    const target = await cardOf(scheibenId)
+    expect(await db.rawSnapshot.count({ where: keyOf(scheibenId) })).toBeGreaterThan(0)
 
-    // derselbe Stand kommt nie wieder
+    await purge([target.id])
+
+    expect(await db.card.count({ where: { id: target.id } })).toBe(0)
+    expect(await db.cardRevision.count({ where: { cardId: target.id } })).toBe(0)
+    expect(await db.shot.count({ where: { cardId: target.id } })).toBe(0)
+    expect(await db.cardProjection.count({ where: { cardId: target.id } })).toBe(0)
+    expect(await db.rawSnapshot.count({ where: keyOf(scheibenId) })).toBe(0)
+    expect(await db.rawRow.count({ where: keyOf(scheibenId) })).toBe(0)
+    const tombstone = await db.tombstone.findFirstOrThrow({ where: keyOf(scheibenId) })
+    expect(tombstone).toMatchObject({ cycle: target.cycle, reason: "nicht-meine" })
+    expect(tombstone.startedAt.getTime()).toBe(target.startedAt.getTime())
     expect((await ingest([snapshots[0]]))[0]).toMatchObject({
       outcome: "discarded",
       reason: "blocked",
     })
   })
 
-  it("eine Scheibe ohne Quelle lehnt es ab", async () => {
-    const card = await db.card.create({
+  it("Stände, die die Brücke 40 Tage später nachliest, gehören trotzdem dazu (Review)", async () => {
+    const early = card()
+    const scheibenId = early[0].scheibenId
+    await ingest(early.slice(0, 1))
+    // derselbe Durchgang, Wochen später nachgelesen: Schusszeiten gleich, Beobachtung spät
+    const late = card({ seenDays: 40, scheibenId })
+    await ingest(late.slice(1))
+    const target = await cardOf(scheibenId)
+    expect(await db.card.count({ where: keyOf(scheibenId) })).toBe(1)
+
+    await purge([target.id])
+
+    expect(await db.rawSnapshot.count({ where: keyOf(scheibenId) })).toBe(0)
+    expect(await db.rawRow.count({ where: keyOf(scheibenId) })).toBe(0)
+  })
+
+  it("ein früherer Zyklus, spät nachgelesen, bleibt mit seinen Daten (Review)", async () => {
+    // Zyklus davor: Schüsse 50 Tage früher, beobachtet erst 40 Tage danach (nahe am neuen Zyklus)
+    const scheibenId = nextId++
+    const previous = card({ shotDays: -50, seenDays: 40, scheibenId })
+    await ingest(previous)
+    const current = card({ scheibenId })
+    await ingest(current)
+    const older = await cardOf(scheibenId, 0)
+    const newer = await cardOf(scheibenId, 1)
+    const keptSnapshots = await db.rawSnapshot.findMany({
+      where: { ...keyOf(scheibenId), revisions: { some: { cardId: older.id } } },
+      select: { id: true, scheibenRowIds: true, serienRowIds: true, trefferRowIds: true },
+    })
+    expect(keptSnapshots.length).toBeGreaterThan(0)
+
+    await purge([newer.id])
+
+    expect(await db.card.count({ where: { id: older.id } })).toBe(1)
+    const after = await db.rawSnapshot.findMany({ where: keyOf(scheibenId), select: { id: true } })
+    for (const s of keptSnapshots) expect(after.map((a) => a.id)).toContain(s.id)
+    const rowIds = keptSnapshots.flatMap((s) => [
+      ...s.scheibenRowIds,
+      ...s.serienRowIds,
+      ...s.trefferRowIds,
+    ])
+    expect(await db.rawRow.count({ where: { id: { in: rowIds } } })).toBe(new Set(rowIds).size)
+    // auf die Revisionen der verbliebenen Scheibe zeigt weiter ihr Stand
+    expect(await db.cardRevision.count({ where: { cardId: older.id, rawSnapshotId: null } })).toBe(
+      0
+    )
+  })
+
+  it("zwei Scheiben derselben ScheibenID 60 Tage auseinander, je allein entfernt: beide bleiben gesperrt (Review)", async () => {
+    const scheibenId = nextId++
+    const first = card({ scheibenId })
+    await ingest(first)
+    await purge([(await cardOf(scheibenId, 0)).id])
+    // die nächste unter dieser ScheibenID bekommt einen neuen Zyklus, nicht den der entfernten
+    const second = card({ shotDays: 60, scheibenId })
+    await ingest(second)
+    const later = await db.card.findFirstOrThrow({ where: keyOf(scheibenId) })
+    expect(later.cycle).toBe(1)
+    await purge([later.id])
+
+    const tombstones = await db.tombstone.findMany({
+      where: keyOf(scheibenId),
+      orderBy: { cycle: "asc" },
+    })
+    expect(tombstones.map((t) => t.cycle)).toEqual([0, 1])
+    expect((await ingest([first[0]]))[0]).toMatchObject({ reason: "blocked" })
+    expect((await ingest([second[0]]))[0]).toMatchObject({ reason: "blocked" })
+  })
+
+  it("die Ablage prüft die Sperre unter ihrem Lock: ein Entfernen mitten im Stapel wird nicht überschrieben (Review)", async () => {
+    const snapshots = card()
+    const scheibenId = snapshots[0].scheibenId
+    await ingest(snapshots.slice(0, 1))
+    await purge([(await cardOf(scheibenId)).id])
+    const startAtMs = Date.parse(
+      `${snapshots[1].data.treffer.rows[0].Zeitstempel!.replace(" ", "T")}Z`
+    )
+    const stored = await storeSnapshot(db, { sourceId: site.sourceId, bridgeId }, snapshots[1], {
+      nowMs: Date.parse(snapshots[1].observedAt),
+      startAtMs,
+    })
+    expect(stored.outcome).toBe("blocked")
+    expect(await db.rawSnapshot.count({ where: keyOf(scheibenId) })).toBe(0)
+  })
+
+  it("eine schon entfernte Scheibe überspringt es; eine ohne Quelle lehnt es ab", async () => {
+    const snapshots = card()
+    await ingest(snapshots)
+    const target = await cardOf(snapshots[0].scheibenId)
+    await purge([target.id])
+    await expect(purge([target.id])).resolves.toBeUndefined()
+
+    const pdf = await db.card.create({
       data: {
         disciplineId: site.disciplineId,
         startedAt: new Date(),
@@ -127,9 +224,7 @@ describe("purgeCards", () => {
         origin: "pdf",
       },
     })
-    await expect(db.$transaction((tx) => purgeCards(tx, [card.id], "x"))).rejects.toThrow(
-      /ohne Quelle/
-    )
-    await db.card.delete({ where: { id: card.id } })
+    await expect(purge([pdf.id])).rejects.toThrow(/ohne Quelle/)
+    await db.card.delete({ where: { id: pdf.id } })
   })
 })

@@ -11,7 +11,7 @@ import type { TargetId } from "@vereinsheim/shot-core/targets"
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
 import { CardIdentityConflictError, writeRevision } from "../db/cards"
-import { CYCLE_WINDOW_MS } from "../db/purge"
+import { isKeyBlocked, maxCycleOfKey, SAME_CARD_MS, startHintMs } from "../db/blocks"
 import { storeSnapshot, type PreviousLifesign } from "../db/raw"
 import { FAMILY_NAMES } from "../families"
 import {
@@ -24,11 +24,6 @@ import {
   sportpassIdOf,
   type AdaptedCard,
 } from "./meyton-ssmdb2"
-
-/** dieselbe Scheibe, wenn ihr Beginn so nah liegt; die ScheibenID kehrt erst nach rund 49,7 Tagen wieder (SF-77) */
-const SAME_CARD_MS = 7 * 86_400_000
-/** Grabsteine und Löschsperren gelten für eine ScheibenID, deren Beginn so nah liegt (dieselbe Scheibe, SF-28) */
-const BLOCK_WINDOW_MS = CYCLE_WINDOW_MS
 
 export interface IngestTarget {
   bridgeId: number
@@ -90,37 +85,12 @@ async function consentsOf(db: Db, siteId: number): Promise<Map<string, Owner>> {
   )
 }
 
-/**
- * Beginn der Scheibe, grob: der früheste plausible Schuss als Ortszeit (± die Zone). Genug, um Grabsteine und Löschsperren einer
- * ScheibenID zuzuordnen, die erst nach 49,7 Tagen wiederkehrt; ohne Schuss die Beobachtung.
- */
-function startHintMs(snapshot: SnapshotV1): number {
-  const times = snapshot.data.treffer.rows
-    .map((row) => Date.parse(`${(row.Zeitstempel ?? "").replace(" ", "T")}Z`))
-    .filter((t) => Number.isFinite(t) && t > Date.UTC(1971, 0, 1))
-  if (!times.length) return Date.parse(snapshot.observedAt)
-  // wie im Adapter: nur Zeiten nahe dem letzten Schuss, eine Uhr, die 2009 zeigte, verschöbe sonst alles (SF-30)
-  const last = Math.max(...times)
-  return Math.min(...times.filter((t) => last - t <= 86_400_000))
-}
-
-/**
- * Grabstein oder Löschsperre für diese ScheibenID mit einem Beginn nahe dem der Scheibe (SF-28). Gemessen am Beginn,
- * nicht an der Beobachtung: Liest die Brücke eine Scheibe Wochen später nach, gilt die Sperre trotzdem (Review).
- */
-async function isBlocked(db: Db, sourceId: number, snapshot: SnapshotV1): Promise<boolean> {
-  const at = startHintMs(snapshot)
-  const window = {
-    gte: new Date(at - BLOCK_WINDOW_MS),
-    lte: new Date(at + BLOCK_WINDOW_MS),
-  }
-  const where = { sourceId, scheibenId: snapshot.scheibenId, startedAt: window }
-  const [tombstones, locks] = await Promise.all([
-    db.tombstone.count({ where }),
-    db.deleteLock.count({ where }),
-  ])
-  return tombstones + locks > 0
-}
+/** Beginn eines Stands aus seinen Trefferzeiten (`startHintMs`, eine Stelle mit Ablage und Entfernen) */
+const startOf = (snapshot: SnapshotV1) =>
+  startHintMs(
+    snapshot.data.treffer.rows.map((row) => row.Zeitstempel),
+    Date.parse(snapshot.observedAt)
+  )
 
 /**
  * die Rangliste der Anlage (`Ranking`), beim ersten Sehen angelegt, noch ohne Art; ihre Art ordnet der Admin zu und gilt
@@ -279,7 +249,10 @@ async function adaptAndWrite(
   const card = result.card
   // derselbe Durchgang ist die Scheibe eines Zyklus mit nahem Beginn; sonst ein neuer Zyklus (SF-77)
   const same = cards.find((c) => Math.abs(c.startedAt.getTime() - card.startedAtMs) <= SAME_CARD_MS)
-  const cycle = same ? same.cycle : cards.length ? cards[0].cycle + 1 : 0
+  // ein neuer Zyklus über allen bisherigen, auch denen entfernter Scheiben (Grabstein, Sperre; Review SP-1.7 a2)
+  const cycle = same
+    ? same.cycle
+    : ((await maxCycleOfKey(db, { sourceId, scheibenId: snapshot.scheibenId })) ?? -1) + 1
   // eine Scheibe gehört dem, dessen Zustimmung sie brachte; trägt sie danach eine andere SportpassID, wird nichts
   // geschrieben, sonst landeten fremde Schüsse beim ersten Besitzer (Review, SF-37). Der Admin klärt es.
   if (
@@ -395,7 +368,17 @@ export async function ingestBatch(
       continue
     }
     const key = `${source.sourceId}:${snapshot.scheibenId}`
-    if (!blocked.has(key)) blocked.set(key, await isBlocked(db, source.sourceId, snapshot))
+    // vorab, je Stapel einmal je Scheibe (die meisten Stände sind Lebenszeichen); `storeSnapshot` prüft unter seiner
+    // Sperre noch einmal, damit ein „Nicht meine“ mitten im Stapel nicht überschrieben wird (Review SP-1.7 a2)
+    if (!blocked.has(key))
+      blocked.set(
+        key,
+        await isKeyBlocked(
+          db,
+          { sourceId: source.sourceId, scheibenId: snapshot.scheibenId },
+          startOf(snapshot)
+        )
+      )
     if (blocked.get(key)) {
       result("discarded", "blocked")
       continue
@@ -404,8 +387,13 @@ export async function ingestBatch(
       db,
       { sourceId: source.sourceId, bridgeId: target.bridgeId },
       snapshot,
-      { nowMs }
+      { nowMs, startAtMs: startOf(snapshot) }
     )
+    if (stored.outcome === "blocked") {
+      blocked.set(key, true)
+      result("discarded", "blocked")
+      continue
+    }
     const adapt = (previous: PreviousLifesign) =>
       toAdapt.set(key, {
         index,
