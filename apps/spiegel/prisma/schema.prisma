@@ -153,6 +153,8 @@ model SportpassConsent {
   returnedAt           DateTime? @db.Timestamptz(3)
   // der Schütze hat die erste Scheibe als seine bestätigt; vorher wartet jede auf ihn (`Card.ownerPending`)
   firstCardConfirmedAt DateTime? @db.Timestamptz(3)
+  // ältere Scheiben unter dieser Nummer nachgeladen (P2d): ohne, und aktiv, ist es ein offener Auftrag an die Brücke
+  historyLoadedAt      DateTime? @db.Timestamptz(3)
   createdAt            DateTime  @default(now()) @db.Timestamptz(3)
 
   @@unique([siteId, sportpassId])
