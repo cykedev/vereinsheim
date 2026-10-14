@@ -41,10 +41,28 @@ export async function saveSite(
     timeZone: formData.get("timeZone") ?? "",
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
-  const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true } })
+  const site = await db.site.findFirst({
+    orderBy: { id: "asc" },
+    select: { id: true, timeZone: true },
+  })
+  // fest, sobald Scheiben da sind: Jeder spätere Stand einer Scheibe rechnete mit der neuen Zone, verschöbe ihre Uhrzeit
+  // und gälte als Korrektur (Review P2c)
+  if (
+    site &&
+    parsed.data.timeZone !== site.timeZone &&
+    (await db.card.count({ where: { source: { siteId: site.id } } })) > 0
+  )
+    return {
+      error: {
+        timeZone: [
+          "Die Zeitzone lässt sich nur ändern, solange noch keine Scheibe eingelesen ist.",
+        ],
+      },
+    }
   if (site) await db.site.update({ where: { id: site.id }, data: parsed.data })
   else await db.site.create({ data: parsed.data })
   revalidatePath("/admin/site")
+  revalidatePath("/admin")
   return { success: true }
 }
 
@@ -80,6 +98,7 @@ export async function revokeBridgeAction(bridgeId: number): Promise<ActionResult
   if (!Number.isSafeInteger(bridgeId)) return { error: "Unbekannte Brücke." }
   await revokeBridge(db, bridgeId)
   revalidatePath("/admin/site")
+  revalidatePath("/admin")
   return { success: true }
 }
 

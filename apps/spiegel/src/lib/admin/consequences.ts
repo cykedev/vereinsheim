@@ -24,22 +24,36 @@ const scheiben = (n: number) => (n === 1 ? "1 Scheibe" : `${n} Scheiben`)
 export function consentConfirm({
   who,
   sportpassId,
+  returned = false,
+  accountActive = true,
 }: {
   who: string
   sportpassId: string
+  /** nach „Nicht meine“ bei der ersten Scheibe zurück beim Admin */
+  returned?: boolean
+  /** ein deaktiviertes Konto bekommt nichts, auch bestätigt */
+  accountActive?: boolean
 }): Decision {
   return {
     title: `Zustimmung von ${who} bestätigen?`,
-    about: `${who} möchte, dass Scheiben mit der SportpassID ${sportpassId} automatisch in das eigene Konto kommen.`,
-    check: `Gehört ${sportpassId} in der Meyton-Schützenverwaltung zu ${who}? Wenn nicht: ablehnen.`,
+    about: returned
+      ? `${who} hat die erste Scheibe unter der SportpassID ${sportpassId} als „nicht meine“ gemeldet; diese Scheiben sind entfernt. Bestätigst du, gilt die Nummer wieder für ${who}.`
+      : `${who} möchte, dass Scheiben mit der SportpassID ${sportpassId} automatisch in das eigene Konto kommen.`,
+    check: returned
+      ? `Gehört ${sportpassId} in der Meyton-Schützenverwaltung wirklich zu ${who}? Vielleicht wurde am Stand ein fremder Name gewählt. Wenn die Nummer nicht passt: ablehnen.`
+      : `Gehört ${sportpassId} in der Meyton-Schützenverwaltung zu ${who}? Wenn nicht: ablehnen.`,
     happens: [
-      "Ab dem nächsten Trainingsabend schickt die Brücke jede Scheibe mit dieser Nummer.",
+      "Läuft die Brücke gerade, kommen Scheiben mit dieser Nummer innerhalb weniger Minuten, auch vom laufenden Abend; sonst beim nächsten Training.",
       `Die erste zeigt Spiegel ${who} zur Kontrolle; erst danach erscheinen die Scheiben im Konto.`,
+      ...(accountActive
+        ? []
+        : [`Solange das Konto von ${who} deaktiviert ist, schickt die Brücke nichts.`]),
     ],
     notHappening: [
       `Du siehst die Schüsse von ${who} nicht.`,
+      "Scheiben mit verdeckter Wertung gehen nie hinaus.",
       // bis zum Nachladen der Historie (P2d)
-      "Scheiben von früheren Abenden kommen nicht von selbst; höchstens die des letzten Abends, wenn die Brücke beim nächsten Start nachholt.",
+      "Ältere Scheiben kommen nicht verlässlich vollständig: nur, was die Brücke beim nächsten Start nachholt (alles seit der letzten Lieferung an Spiegel).",
     ],
     undo: `Jederzeit über „Entfernen“. Schon geschickte Scheiben bleiben bei ${who}.`,
     confirmLabel: "Bestätigen",
@@ -47,27 +61,22 @@ export function consentConfirm({
   }
 }
 
+/** ablehnen gibt es nur für offene Zustimmungen: Es wurde noch nichts geschickt */
 export function consentReject({
   who,
   sportpassId,
-  active,
 }: {
   who: string
   sportpassId: string
-  /** schon bestätigt: dann gibt es geschickte Scheiben */
-  active: boolean
 }): Decision {
   return {
     title: `Zustimmung von ${who} ablehnen?`,
     about: `${who} hat für die SportpassID ${sportpassId} zugestimmt.`,
     happens: [
-      "Die Brücke schickt nichts unter dieser Nummer.",
+      "Spiegel nimmt unter dieser Nummer nichts an.",
       `${who} sieht im Profil „abgelehnt“ und kann die Ablehnung entfernen und neu zustimmen.`,
     ],
-    notHappening: [
-      "Gelöscht wird nichts.",
-      ...(active ? [`Schon geschickte Scheiben bleiben bei ${who}.`] : []),
-    ],
+    notHappening: ["Gelöscht wird nichts."],
     undo: `Stimmt ${who} neu zu, kannst du bestätigen.`,
     confirmLabel: "Ablehnen",
     destructive: true,
@@ -85,7 +94,7 @@ export function consentRemove({
     title: `Zustimmung von ${who} entfernen?`,
     about: `Die SportpassID ${sportpassId} wird vom Konto von ${who} gelöst.`,
     happens: [
-      "Ab dem nächsten Trainingsabend schickt die Brücke nichts mehr unter dieser Nummer.",
+      "Ab sofort nimmt Spiegel unter dieser Nummer nichts mehr an.",
       "Die Nummer ist wieder frei; jedes Konto kann für sie zustimmen.",
     ],
     notHappening: [
@@ -111,14 +120,25 @@ export function bridgeRevoke({ device }: { device: string }): Decision {
 
 export type RankingChoice = "training" | "competition" | "open"
 
-const RANKING_WORDS: Record<RankingChoice, { title: string; label: string; counts: string }> = {
-  competition: {
-    title: "als Wettkampf zählen",
-    label: "Als Wettkampf zählen",
-    counts: "Wettkampf",
-  },
-  training: { title: "als Training zählen", label: "Als Training zählen", counts: "Training" },
-  open: { title: "nicht zuordnen", label: "Nicht zuordnen", counts: "Training" },
+const RANKING_WORDS: Record<RankingChoice, { title: string; label: string }> = {
+  competition: { title: "als Wettkampf zählen", label: "Als Wettkampf zählen" },
+  training: { title: "als Training zählen", label: "Als Training zählen" },
+  open: { title: "nicht zuordnen", label: "Nicht zuordnen" },
+}
+
+const RANKING_HAPPENS: Record<RankingChoice, [string, string]> = {
+  competition: [
+    "zählen als Wettkampf, in Liste und Fortschritt.",
+    "Vorgeschlagen wird dann die amtliche Wertung der Disziplin; das angezeigte Ergebnis kann wechseln, etwa ganze Ringe statt Zehntel.",
+  ],
+  training: [
+    "zählen als Training, in Liste und Fortschritt.",
+    "Vorgeschlagen wird dann die Wertung wie am Stand; das angezeigte Ergebnis kann wechseln, etwa Zehntel statt ganzer Ringe.",
+  ],
+  open: [
+    "zählen so, wie Meyton es an der Scheibe vermerkt; meist ist das Training.",
+    "Das angezeigte Ergebnis kann wechseln, wenn sich dadurch die Art ändert.",
+  ],
 }
 
 export function rankingKind({
@@ -127,38 +147,27 @@ export function rankingKind({
   kind,
 }: {
   ranking: string
+  /** Scheiben in Spiegel mit dieser Rangliste (nicht gelöscht) */
   cards: number
   kind: RankingChoice
 }): Decision {
-  const words = RANKING_WORDS[kind]
+  const [counts, scoring] = RANKING_HAPPENS[kind]
   return {
-    title: `„${ranking}“ ${words.title}?`,
+    title: `„${ranking}“ ${RANKING_WORDS[kind].title}?`,
     about: cards
-      ? `Meyton nennt ${scheiben(cards)} mit der Rangliste „${ranking}“.`
-      : `Noch keine Scheibe trägt die Rangliste „${ranking}“.`,
+      ? `In Spiegel ${cards === 1 ? "trägt" : "tragen"} ${scheiben(cards)} die Rangliste „${ranking}“.`
+      : `Noch keine Scheibe in Spiegel trägt die Rangliste „${ranking}“.`,
     happens: [
-      `${cards ? "Diese Scheiben" : "Ihre Scheiben"} zählen als ${words.counts}: in Liste, Fortschritt und bei der Wertung, die Spiegel vorschlägt${kind === "competition" ? " (Wettkampf in der amtlichen)" : ""}.`,
-      "Neue Scheiben dieser Rangliste ebenso.",
+      `${cards ? "Diese Scheiben" : "Ihre Scheiben"} und neue dieser Rangliste ${counts}`,
+      scoring,
     ],
     notHappening: [
       "Hat ein Schütze eine Scheibe selbst umgestellt, bleibt seine Wahl.",
       "Eine Scheibe nur aus Probe bleibt Training.",
-      "Schüsse und Ergebnisse ändern sich nicht.",
+      "Schüsse ändern sich nicht.",
     ],
     undo: "Jederzeit hier umstellen.",
-    confirmLabel: words.label,
-    destructive: false,
-  }
-}
-
-export function siteTimeZone({ zone }: { zone: string }): Decision {
-  return {
-    title: `Zeitzone auf ${zone} ändern?`,
-    about: "Meyton speichert Uhrzeiten ohne Zeitzone. Spiegel rechnet sie mit dieser Zone um.",
-    happens: [`Neu eingelesene Scheiben bekommen ihre Uhrzeit in ${zone}.`],
-    notHappening: ["Schon eingelesene Scheiben behalten ihre Uhrzeit."],
-    undo: `Zurückstellen; Scheiben, die dazwischen kamen, behalten die Uhrzeit aus ${zone}.`,
-    confirmLabel: "Ändern",
+    confirmLabel: RANKING_WORDS[kind].label,
     destructive: false,
   }
 }
@@ -168,6 +177,18 @@ export interface AccountChanges {
   role?: "ADMIN" | "USER"
   active?: boolean
   password?: boolean
+}
+
+/** was ein Formular gegenüber dem gespeicherten Konto ändert; nur Rolle, Status und Passwort zählen */
+export function accountChangesOf(
+  saved: { role: "ADMIN" | "USER"; isActive: boolean },
+  form: { role: "ADMIN" | "USER"; active: boolean; password: string }
+): AccountChanges {
+  return {
+    ...(form.role !== saved.role ? { role: form.role } : {}),
+    ...(form.active !== saved.isActive ? { active: form.active } : {}),
+    ...(form.password !== "" ? { password: true } : {}),
+  }
 }
 
 /** Konto ändern: nur bei Rolle, Status oder Passwort ein Entscheid, sonst null */
@@ -200,8 +221,8 @@ export function accountChange({
     happens.push(
       `${who} wird abgemeldet und muss das neue Passwort bei der nächsten Anmeldung ersetzen. Bis dahin sind keine Daten zu sehen.`
     )
-  // Rolle und Status beenden die Sitzungen; das neue Passwort sagt es schon selbst
-  else if (role !== undefined || active !== undefined) happens.push(`${who} wird abgemeldet.`)
+  // Rolle und Deaktivieren beenden die Sitzungen (ein deaktiviertes Konto hat keine); das neue Passwort sagt es selbst
+  else if (role !== undefined || active === false) happens.push(`${who} wird abgemeldet.`)
   return {
     title: `Konto von ${who} ändern?`,
     about: `Du änderst ${[
@@ -214,10 +235,16 @@ export function accountChange({
     ...(password ? { check: "Gib das Passwort persönlich weiter, nicht per Mail." } : {}),
     happens,
     notHappening,
-    undo:
-      active === false
-        ? "Das Konto wieder aktivieren."
-        : "Hier wieder zurückstellen; abgemeldet bleibt abgemeldet.",
+    undo: [
+      active === false ? "Das Konto wieder aktivieren." : null,
+      active === true ? "Das Konto wieder deaktivieren." : null,
+      role !== undefined ? "Die Rolle hier zurückstellen." : null,
+      password
+        ? "Das alte Passwort lässt sich nicht zurückholen; bei Bedarf ein weiteres neues setzen."
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" "),
     confirmLabel: "Ändern",
     destructive: active === false,
   }
@@ -227,7 +254,7 @@ export function ownConsentRevoke({ sportpassId }: { sportpassId: string }): Deci
   return {
     title: `Zustimmung für ${sportpassId} widerrufen?`,
     about: `Scheiben mit der SportpassID ${sportpassId} kommen bisher automatisch in dein Konto.`,
-    happens: ["Ab dem nächsten Trainingsabend kommen keine neuen Scheiben mehr."],
+    happens: ["Ab sofort kommen keine neuen Scheiben mehr unter dieser Nummer."],
     notHappening: ["Was schon da ist, bleibt, bis du es löschst."],
     undo: "Neu zustimmen; ein Admin bestätigt dann wieder.",
     confirmLabel: "Widerrufen",
@@ -254,19 +281,25 @@ export function notMine({
 }: {
   evening: string
   more: number
-  sportpassId: string
+  /** null: die Scheibe trug keine SportpassID; dann geht keine Zustimmung zurück */
+  sportpassId: string | null
 }): Decision {
   const several = more > 0
+  const under = sportpassId ? `unter deiner SportpassID ${sportpassId}` : "ohne SportpassID"
   return {
     title: "Nicht deine Scheibe?",
     about: several
-      ? `Die Scheibe vom ${evening} und ${more} weitere kamen unter deiner SportpassID ${sportpassId}.`
-      : `Die Scheibe vom ${evening} kam unter deiner SportpassID ${sportpassId}.`,
+      ? `Die Scheibe vom ${evening} und ${more} weitere kamen ${under}.`
+      : `Die Scheibe vom ${evening} kam ${under}.`,
     happens: [
       several
         ? "Diese Scheiben werden entfernt, mit ihren Rohdaten, und kommen nicht wieder."
         : "Die Scheibe wird entfernt, mit ihren Rohdaten, und kommt nicht wieder.",
-      "Deine Zustimmung geht zur Prüfung zurück an einen Admin; bis dahin kommen keine Scheiben unter dieser Nummer.",
+      ...(sportpassId
+        ? [
+            "Deine Zustimmung geht zur Prüfung zurück an einen Admin; bis dahin kommen keine Scheiben unter dieser Nummer.",
+          ]
+        : []),
     ],
     notHappening: ["Deine anderen Scheiben bleiben."],
     undo: "Nicht möglich.",

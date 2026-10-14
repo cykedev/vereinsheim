@@ -135,7 +135,7 @@ function PendingCard({ item, marks }: { item: PendingItem; marks: MarkShot[] }) 
         decision={notMine({
           evening: item.when,
           more: item.more,
-          sportpassId: item.sportpassId ?? "ohne Nummer",
+          sportpassId: item.sportpassId,
         })}
         open={open}
         onOpenChange={setOpen}

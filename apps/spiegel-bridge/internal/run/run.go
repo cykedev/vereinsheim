@@ -400,7 +400,8 @@ func (r *Runner) send(ctx context.Context, batch []contract.Snapshot) error {
 					r.noConsent[s.ScheibenID] = true
 				}
 			case res.Outcome == "epoch-unconfirmed":
-				// bis der Admin die Epoche bestätigt; danach schickt `refreshState` sie neu (SF-23)
+				// eine Epoche, die Spiegel nicht kennt (kommt nicht vor: die Brücke nimmt die aus `GET /state`); wird sie je
+				// bestätigt, schickt `refreshState` sie neu (SF-23)
 				r.watcher.Delivered(s)
 				r.unconfirmed[s.ScheibenID] = true
 			default:

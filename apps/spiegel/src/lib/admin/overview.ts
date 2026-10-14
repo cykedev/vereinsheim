@@ -40,7 +40,8 @@ export interface AdminOverviewModel {
 }
 
 export interface OverviewInput {
-  site: { name: string } | null
+  /** `foreignSource`: eine Brücke schickt aus einer Ablage, die Spiegel nicht kennt (kommt nicht vor; Hinweis, D0) */
+  site: { name: string; foreignSource: boolean } | null
   bridge: {
     name: string
     lastHeartbeatAt: string | null
@@ -48,6 +49,7 @@ export interface OverviewInput {
     status: HeartbeatV1["status"] | null
     heldBack: string | null
   } | null
+  /** Zustimmungen aktiver Konten: ein deaktiviertes bekommt nichts, dort wartet keine Entscheidung (Review) */
   consents: {
     id: number
     userId: string
@@ -61,7 +63,7 @@ export interface OverviewInput {
 
 /** was die Brücke meldet, in Worten; nur Information (D0), keine Aufgabe */
 const BRIDGE_NOTE: Partial<Record<HeartbeatV1["status"], string>> = {
-  delayed: "meldet: Upload verzögert",
+  delayed: "meldet: schickt verzögert",
   "db-unreachable": "meldet: Anlage nicht erreichbar",
   "db-error": "meldet: Anlage meldet Fehler",
   "possible-reset":
@@ -122,16 +124,31 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
         title: "Meyton-Anlage",
         does: "Dort liegen alle Scheiben. Spiegel liest nur und ändert nie etwas.",
         status: input.site ? "eingerichtet" : "noch nicht eingerichtet",
-        tone: input.site ? "ok" : "wait",
-        facts: input.site ? [input.site.name] : [],
+        tone: input.site && !input.site.foreignSource ? "ok" : "wait",
+        facts: input.site
+          ? [
+              input.site.name,
+              ...(input.site.foreignSource
+                ? [
+                    "Eine Brücke schickt Scheiben aus einer Ablage, die Spiegel nicht kennt; Spiegel nimmt sie nicht an. Das sollte nicht vorkommen, bitte melden.",
+                  ]
+                : []),
+            ]
+          : [],
       },
       {
         id: "bridge",
         help: "bridge",
         title: "Brücke im Schützenhaus",
         does: "Schickt nur Scheiben von Schützen mit Zustimmung. Verdeckte Wertung nie.",
-        status: !bridge ? "keine Brücke" : bridge.online ? "läuft" : "aus, normal",
-        tone: !bridge ? "wait" : bridge.online ? "ok" : "neutral",
+        status: !bridge
+          ? "keine Brücke"
+          : !bridge.lastHeartbeatAt
+            ? "noch kein Kontakt"
+            : bridge.online
+              ? "läuft"
+              : "aus, normal",
+        tone: !bridge || !bridge.lastHeartbeatAt ? "wait" : bridge.online ? "ok" : "neutral",
         facts: bridge ? [bridge.name, ...bridgeFacts] : [],
       },
       {
@@ -196,6 +213,8 @@ export async function adminOverview(
         returnedAt: true,
         user: { select: { name: true, email: true } },
       },
+      // deaktivierte Konten bekommen nichts; dort wartet keine Entscheidung, und sie zählen nicht als „mit Sportpass“
+      where: { user: { isActive: true } },
     }),
     db.user.findMany({ select: { id: true, isActive: true } }),
   ])
@@ -210,7 +229,13 @@ export async function adminOverview(
   const withSportpass = new Set(rows.filter((r) => r.status === "active").map((r) => r.userId))
   const heartbeat = bridge?.heartbeat as HeartbeatV1 | null | undefined
   return overviewModel({
-    site: site ? { name: site.name } : null,
+    site: site
+      ? {
+          name: site.name,
+          foreignSource:
+            (await db.source.count({ where: { siteId: site.id, confirmedAt: null } })) > 0,
+        }
+      : null,
     bridge: bridge
       ? {
           name: bridge.name,

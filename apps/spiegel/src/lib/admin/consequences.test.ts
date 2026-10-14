@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   accountChange,
+  accountChangesOf,
   bridgeRevoke,
   consentConfirm,
   consentReject,
@@ -10,7 +11,6 @@ import {
   ownConsentRevoke,
   ownRejectionRemove,
   rankingKind,
-  siteTimeZone,
   type Decision,
 } from "./consequences"
 
@@ -27,7 +27,7 @@ function wellFormed(decision: Decision) {
 }
 
 describe("Folgen der Zustimmungen (Admin)", () => {
-  it("bestätigen: prüfen, was die Brücke ab wann schickt, was der Admin nicht sieht", () => {
+  it("bestätigen: wann die Brücke schickt, was nie hinausgeht, was mit älteren Scheiben ist (Review)", () => {
     const d = consentConfirm({ who, sportpassId })
     wellFormed(d)
     expect(d).toMatchObject({
@@ -37,12 +37,13 @@ describe("Folgen der Zustimmungen (Admin)", () => {
       check:
         "Gehört 12345678 in der Meyton-Schützenverwaltung zu Max Muster? Wenn nicht: ablehnen.",
       happens: [
-        "Ab dem nächsten Trainingsabend schickt die Brücke jede Scheibe mit dieser Nummer.",
+        "Läuft die Brücke gerade, kommen Scheiben mit dieser Nummer innerhalb weniger Minuten, auch vom laufenden Abend; sonst beim nächsten Training.",
         "Die erste zeigt Spiegel Max Muster zur Kontrolle; erst danach erscheinen die Scheiben im Konto.",
       ],
       notHappening: [
         "Du siehst die Schüsse von Max Muster nicht.",
-        "Scheiben von früheren Abenden kommen nicht von selbst; höchstens die des letzten Abends, wenn die Brücke beim nächsten Start nachholt.",
+        "Scheiben mit verdeckter Wertung gehen nie hinaus.",
+        "Ältere Scheiben kommen nicht verlässlich vollständig: nur, was die Brücke beim nächsten Start nachholt (alles seit der letzten Lieferung an Spiegel).",
       ],
       undo: "Jederzeit über „Entfernen“. Schon geschickte Scheiben bleiben bei Max Muster.",
       confirmLabel: "Bestätigen",
@@ -50,14 +51,26 @@ describe("Folgen der Zustimmungen (Admin)", () => {
     })
   })
 
-  it("ablehnen: nichts gelöscht; eine aktive behält ihre Scheiben", () => {
-    const waiting = consentReject({ who, sportpassId, active: false })
-    wellFormed(waiting)
-    expect(waiting).toMatchObject({
+  it("bestätigen nach „nicht meine“ und bei deaktiviertem Konto sagt das (Review)", () => {
+    const returned = consentConfirm({ who, sportpassId, returned: true })
+    wellFormed(returned)
+    expect(returned.about).toBe(
+      "Max Muster hat die erste Scheibe unter der SportpassID 12345678 als „nicht meine“ gemeldet; diese Scheiben sind entfernt. Bestätigst du, gilt die Nummer wieder für Max Muster."
+    )
+    expect(returned.check).toContain("Vielleicht wurde am Stand ein fremder Name gewählt.")
+    expect(consentConfirm({ who, sportpassId, accountActive: false }).happens).toContain(
+      "Solange das Konto von Max Muster deaktiviert ist, schickt die Brücke nichts."
+    )
+  })
+
+  it("ablehnen: Spiegel nimmt nichts an, nichts gelöscht", () => {
+    const d = consentReject({ who, sportpassId })
+    wellFormed(d)
+    expect(d).toMatchObject({
       title: "Zustimmung von Max Muster ablehnen?",
       about: "Max Muster hat für die SportpassID 12345678 zugestimmt.",
       happens: [
-        "Die Brücke schickt nichts unter dieser Nummer.",
+        "Spiegel nimmt unter dieser Nummer nichts an.",
         "Max Muster sieht im Profil „abgelehnt“ und kann die Ablehnung entfernen und neu zustimmen.",
       ],
       notHappening: ["Gelöscht wird nichts."],
@@ -65,20 +78,16 @@ describe("Folgen der Zustimmungen (Admin)", () => {
       confirmLabel: "Ablehnen",
       destructive: true,
     })
-    expect(consentReject({ who, sportpassId, active: true }).notHappening).toEqual([
-      "Gelöscht wird nichts.",
-      "Schon geschickte Scheiben bleiben bei Max Muster.",
-    ])
   })
 
-  it("entfernen: die Nummer wird frei, Scheiben bleiben", () => {
+  it("entfernen: ab sofort, die Nummer wird frei, Scheiben bleiben (Review)", () => {
     const d = consentRemove({ who, sportpassId })
     wellFormed(d)
     expect(d).toMatchObject({
       title: "Zustimmung von Max Muster entfernen?",
       about: "Die SportpassID 12345678 wird vom Konto von Max Muster gelöst.",
       happens: [
-        "Ab dem nächsten Trainingsabend schickt die Brücke nichts mehr unter dieser Nummer.",
+        "Ab sofort nimmt Spiegel unter dieser Nummer nichts mehr an.",
         "Die Nummer ist wieder frei; jedes Konto kann für sie zustimmen.",
       ],
       notHappening: [
@@ -91,7 +100,7 @@ describe("Folgen der Zustimmungen (Admin)", () => {
   })
 })
 
-describe("Folgen an Anlage und Brücke", () => {
+describe("Folgen an Brücke und Ranglisten", () => {
   it("Brücke widerrufen: sofort, nichts gelöscht, nicht rückgängig", () => {
     const d = bridgeRevoke({ device: "Pi im Schützenhaus" })
     wellFormed(d)
@@ -106,53 +115,51 @@ describe("Folgen an Anlage und Brücke", () => {
     })
   })
 
-  it("Rangliste: wie viele Scheiben, was sich ändert, was nicht", () => {
+  it("Rangliste: Scheiben in Spiegel, das Ergebnis kann wechseln, Schüsse nicht (Review)", () => {
     const d = rankingKind({ ranking: "RWK_LP", cards: 23, kind: "competition" })
     wellFormed(d)
     expect(d).toMatchObject({
       title: "„RWK_LP“ als Wettkampf zählen?",
-      about: "Meyton nennt 23 Scheiben mit der Rangliste „RWK_LP“.",
+      about: "In Spiegel tragen 23 Scheiben die Rangliste „RWK_LP“.",
       happens: [
-        "Diese Scheiben zählen als Wettkampf: in Liste, Fortschritt und bei der Wertung, die Spiegel vorschlägt (Wettkampf in der amtlichen).",
-        "Neue Scheiben dieser Rangliste ebenso.",
+        "Diese Scheiben und neue dieser Rangliste zählen als Wettkampf, in Liste und Fortschritt.",
+        "Vorgeschlagen wird dann die amtliche Wertung der Disziplin; das angezeigte Ergebnis kann wechseln, etwa ganze Ringe statt Zehntel.",
       ],
       notHappening: [
         "Hat ein Schütze eine Scheibe selbst umgestellt, bleibt seine Wahl.",
         "Eine Scheibe nur aus Probe bleibt Training.",
-        "Schüsse und Ergebnisse ändern sich nicht.",
+        "Schüsse ändern sich nicht.",
       ],
       undo: "Jederzeit hier umstellen.",
       confirmLabel: "Als Wettkampf zählen",
     })
+    expect(JSON.stringify(d)).not.toContain("Ergebnisse ändern sich nicht")
     expect(rankingKind({ ranking: "Training-LP", cards: 1, kind: "training" })).toMatchObject({
       title: "„Training-LP“ als Training zählen?",
-      about: "Meyton nennt 1 Scheibe mit der Rangliste „Training-LP“.",
+      about: "In Spiegel trägt 1 Scheibe die Rangliste „Training-LP“.",
       confirmLabel: "Als Training zählen",
     })
-    expect(rankingKind({ ranking: "X", cards: 0, kind: "open" })).toMatchObject({
+    const open = rankingKind({ ranking: "X", cards: 0, kind: "open" })
+    expect(open).toMatchObject({
       title: "„X“ nicht zuordnen?",
-      about: "Noch keine Scheibe trägt die Rangliste „X“.",
+      about: "Noch keine Scheibe in Spiegel trägt die Rangliste „X“.",
       confirmLabel: "Nicht zuordnen",
     })
-    expect(rankingKind({ ranking: "X", cards: 0, kind: "open" }).happens[0]).toBe(
-      "Ihre Scheiben zählen als Training: in Liste, Fortschritt und bei der Wertung, die Spiegel vorschlägt."
+    expect(open.happens[0]).toBe(
+      "Ihre Scheiben und neue dieser Rangliste zählen so, wie Meyton es an der Scheibe vermerkt; meist ist das Training."
     )
-  })
-
-  it("Zeitzone: nur neu eingelesene Scheiben", () => {
-    const d = siteTimeZone({ zone: "Europe/Vienna" })
-    wellFormed(d)
-    expect(d).toMatchObject({
-      title: "Zeitzone auf Europe/Vienna ändern?",
-      happens: ["Neu eingelesene Scheiben bekommen ihre Uhrzeit in Europe/Vienna."],
-      notHappening: ["Schon eingelesene Scheiben behalten ihre Uhrzeit."],
-      confirmLabel: "Ändern",
-    })
   })
 })
 
 describe("Konto ändern", () => {
-  it("ohne Rolle, Status oder Passwort keine Rückfrage", () => {
+  it("was das Formular ändert: nur Rolle, Status, Passwort", () => {
+    const saved = { role: "USER" as const, isActive: true }
+    expect(accountChangesOf(saved, { role: "USER", active: true, password: "" })).toEqual({})
+    expect(accountChangesOf(saved, { role: "ADMIN", active: false, password: "x" })).toEqual({
+      role: "ADMIN",
+      active: false,
+      password: true,
+    })
     expect(accountChange({ who, changes: {} })).toBeNull()
   })
 
@@ -171,33 +178,36 @@ describe("Konto ändern", () => {
 
     const all = accountChange({ who, changes: { role: "ADMIN", active: false, password: true } })!
     expect(all.happens.filter((line) => line.includes("abgemeldet"))).toHaveLength(1)
-    expect(all.happens).toContain(
-      "Max Muster verwaltet Konten, Zustimmungen und die Brücke. Die eigenen Scheiben bleiben sichtbar, fremde Schüsse nie."
-    )
     expect(all.check).toBe("Gib das Passwort persönlich weiter, nicht per Mail.")
-
-    const password = accountChange({ who, changes: { password: true } })!
-    expect(password.happens).toEqual([
-      "Max Muster wird abgemeldet und muss das neue Passwort bei der nächsten Anmeldung ersetzen. Bis dahin sind keine Daten zu sehen.",
-    ])
+    expect(all.undo).toBe(
+      "Das Konto wieder aktivieren. Die Rolle hier zurückstellen. Das alte Passwort lässt sich nicht zurückholen; bei Bedarf ein weiteres neues setzen."
+    )
     expect(accountChange({ who, changes: { role: "USER" } })!.happens).toEqual([
       "Max Muster verliert den Zugang zum Admin.",
       "Max Muster wird abgemeldet.",
     ])
-    expect(accountChange({ who, changes: { active: true } })!.happens).toEqual([
+  })
+
+  it("Passwort: kein Zurückstellen versprechen; Reaktivieren meldet niemanden ab (Review)", () => {
+    const password = accountChange({ who, changes: { password: true } })!
+    expect(password.undo).toBe(
+      "Das alte Passwort lässt sich nicht zurückholen; bei Bedarf ein weiteres neues setzen."
+    )
+    const reactivate = accountChange({ who, changes: { active: true } })!
+    expect(reactivate.happens).toEqual([
       "Max Muster kann sich wieder anmelden; aktive Zustimmungen gelten wieder.",
-      "Max Muster wird abgemeldet.",
     ])
+    expect(reactivate.undo).toBe("Das Konto wieder deaktivieren.")
   })
 })
 
 describe("Folgen beim Schützen", () => {
-  it("widerrufen, Ablehnung entfernen, nicht meine", () => {
+  it("widerrufen ab sofort, Ablehnung entfernen, nicht meine", () => {
     const revoke = ownConsentRevoke({ sportpassId })
     wellFormed(revoke)
     expect(revoke).toMatchObject({
       title: "Zustimmung für 12345678 widerrufen?",
-      happens: ["Ab dem nächsten Trainingsabend kommen keine neuen Scheiben mehr."],
+      happens: ["Ab sofort kommen keine neuen Scheiben mehr unter dieser Nummer."],
       notHappening: ["Was schon da ist, bleibt, bis du es löschst."],
       undo: "Neu zustimmen; ein Admin bestätigt dann wieder.",
       destructive: true,
@@ -224,10 +234,11 @@ describe("Folgen beim Schützen", () => {
     expect(notMine({ evening: "Di 13.10.2026 · 19:12", more: 2, sportpassId })).toMatchObject({
       about:
         "Die Scheibe vom Di 13.10.2026 · 19:12 und 2 weitere kamen unter deiner SportpassID 12345678.",
-      happens: [
-        "Diese Scheiben werden entfernt, mit ihren Rohdaten, und kommen nicht wieder.",
-        "Deine Zustimmung geht zur Prüfung zurück an einen Admin; bis dahin kommen keine Scheiben unter dieser Nummer.",
-      ],
     })
+    // ohne Nummer geht keine Zustimmung zurück (Review)
+    const without = notMine({ evening: "Di 13.10.2026 · 19:12", more: 0, sportpassId: null })
+    wellFormed(without)
+    expect(without.about).toBe("Die Scheibe vom Di 13.10.2026 · 19:12 kam ohne SportpassID.")
+    expect(without.happens).toHaveLength(1)
   })
 })

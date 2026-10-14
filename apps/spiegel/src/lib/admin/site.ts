@@ -4,7 +4,7 @@ import { formatDateTime } from "@vereinsheim/lib/format"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
 
-// Lesen für die Admin-Seite „Anlage“ (SP-1.6 b): Anlage, Epochen, Brücken mit ihrem letzten Heartbeat, Ranglisten
+// Lesen für die Admin-Seite „Anlage“ (SP-1.6 b, P2c): Anlage, Brücken mit ihrem letzten Heartbeat, Ranglisten
 // (Zustimmungen: `src/lib/consent/queries.ts`). Jede Funktion prüft selbst (`requireAdmin`), das Layout allein
 // schützt die Daten nicht.
 
@@ -33,8 +33,8 @@ export interface RankingRow {
 }
 
 export interface SiteOverview {
-  site: { id: number; name: string; timeZone: string } | null
-  sources: { id: number; epoch: number; confirmedAt: string | null; snapshots: number }[]
+  /** `hasCards`: es gibt schon Scheiben; dann ist die Zeitzone fest (Review P2c) */
+  site: { id: number; name: string; timeZone: string; hasCards: boolean } | null
   bridges: BridgeRow[]
   rankings: RankingRow[]
 }
@@ -48,13 +48,9 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
     orderBy: { id: "asc" },
     select: { id: true, name: true, timeZone: true },
   })
-  if (!site) return { site: null, sources: [], bridges: [], rankings: [] }
-  const [sources, bridges, rankings] = await Promise.all([
-    db.source.findMany({
-      where: { siteId: site.id },
-      orderBy: { epoch: "asc" },
-      select: { id: true, epoch: true, confirmedAt: true, _count: { select: { snapshots: true } } },
-    }),
+  if (!site) return { site: null, bridges: [], rankings: [] }
+  const [cards, bridges, rankings] = await Promise.all([
+    db.card.count({ where: { source: { siteId: site.id } } }),
     db.bridge.findMany({
       where: { siteId: site.id },
       orderBy: [{ revokedAt: { sort: "asc", nulls: "first" } }, { createdAt: "desc" }],
@@ -62,17 +58,17 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
     db.ranking.findMany({
       where: { siteId: site.id },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, kind: true, _count: { select: { cards: true } } },
+      select: {
+        id: true,
+        name: true,
+        kind: true,
+        // nur Scheiben, die es in Spiegel noch gibt (Review)
+        _count: { select: { cards: { where: { deletedAt: null } } } },
+      },
     }),
   ])
   return {
-    site,
-    sources: sources.map((s) => ({
-      id: s.id,
-      epoch: s.epoch,
-      confirmedAt: when(s.confirmedAt, timeZone),
-      snapshots: s._count.snapshots,
-    })),
+    site: { ...site, hasCards: cards > 0 },
     bridges: bridges.map((b) => {
       const heartbeat = b.heartbeat as HeartbeatV1 | null
       return {
@@ -114,7 +110,7 @@ export function heldBackText(heldBack: HeartbeatV1["heldBack"]): string | null {
   const unknown = heldBack.reduce((sum, h) => sum + h.cards, 0) - hidden
   const parts = [
     hidden ? `${scheiben(hidden)} verdeckt zurückgehalten` : "",
-    unknown ? `${scheiben(unknown)} mit Anzeigeart 0 zurückgehalten` : "",
+    unknown ? `${scheiben(unknown)} mit unbekannter Wertung zurückgehalten` : "",
   ].filter(Boolean)
   return parts.length ? parts.join(" · ") : null
 }

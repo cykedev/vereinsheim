@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useActionState, useEffect, useRef, useState, useTransition } from "react"
+import { useActionState, useEffect, useState, useTransition } from "react"
 
 import { getErrorMessage, getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
@@ -10,13 +10,7 @@ import { FieldError } from "@vereinsheim/ui/field-error"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { DecisionDialog } from "@/components/shell/DecisionDialog"
-import {
-  bridgeRevoke,
-  rankingKind,
-  siteTimeZone,
-  type Decision,
-  type RankingChoice,
-} from "@/lib/admin/consequences"
+import { bridgeRevoke, rankingKind, type RankingChoice } from "@/lib/admin/consequences"
 import type { BridgeRow, RankingRow, SiteOverview } from "@/lib/admin/site"
 import { pairBridge, revokeBridgeAction, saveSite, setRankingKind } from "@/lib/admin/site-actions"
 
@@ -28,11 +22,9 @@ const CARD = "grid gap-4 rounded-2xl border border-border bg-card p-5"
 export function SiteForm({ site }: { site: SiteOverview["site"] }) {
   const router = useRouter()
   const [state, action, pending] = useActionState(saveSite, null)
-  // eine geänderte Zeitzone fragt mit ihren Folgen (P2c, D8); Name allein speichert ohne Rückfrage
-  const formRef = useRef<HTMLFormElement>(null)
-  const confirmed = useRef(false)
-  const [decision, setDecision] = useState<Decision | null>(null)
-  const [asking, setAsking] = useState(false)
+  // die Zeitzone ist fest, sobald Scheiben da sind (Review P2c): vorher hat sie keine Folgen, danach verschöbe sie jede
+  // Scheibe, zu der noch ein Stand kommt
+  const zoneLocked = !!site?.hasCards
   // gesteuert: React setzt ein Formular mit Server Action nach dem Absenden zurück
   const [name, setName] = useState(site?.name ?? "")
   const [timeZone, setTimeZone] = useState(site?.timeZone ?? "Europe/Berlin")
@@ -44,22 +36,7 @@ export function SiteForm({ site }: { site: SiteOverview["site"] }) {
       ? { "aria-invalid": true as const, "aria-describedby": `${field}-error` }
       : {}
   return (
-    <form
-      ref={formRef}
-      action={action}
-      onSubmit={(event) => {
-        if (confirmed.current) {
-          confirmed.current = false
-          return
-        }
-        if (site && timeZone.trim() !== site.timeZone) {
-          event.preventDefault()
-          setDecision(siteTimeZone({ zone: timeZone.trim() }))
-          setAsking(true)
-        }
-      }}
-      className={CARD}
-    >
+    <form action={action} className={CARD}>
       <h2 className="flex items-center gap-1 text-[15px] font-semibold">
         {site ? "Meyton-Anlage" : "Meyton-Anlage einrichten"} <AdminHelp id="site" />
       </h2>
@@ -85,11 +62,13 @@ export function SiteForm({ site }: { site: SiteOverview["site"] }) {
           value={timeZone}
           onChange={(e) => setTimeZone(e.target.value)}
           disabled={pending}
+          readOnly={zoneLocked}
           {...aria("timeZone")}
         />
         <p className="text-xs text-muted-foreground">
-          Meyton speichert Uhrzeiten ohne Zone; Spiegel rechnet sie mit dieser um. In Deutschland
-          Europe/Berlin.
+          {zoneLocked
+            ? "Fest, seit Scheiben eingelesen sind: Eine andere Zone verschöbe die Uhrzeit jeder Scheibe, zu der noch etwas kommt."
+            : "Meyton speichert Uhrzeiten ohne Zone; Spiegel rechnet sie mit dieser um. In Deutschland Europe/Berlin. Später lässt sie sich nicht mehr ändern."}
         </p>
         <FieldError id="timeZone-error" message={getFieldError(state, "timeZone")} />
       </div>
@@ -101,17 +80,6 @@ export function SiteForm({ site }: { site: SiteOverview["site"] }) {
       <Button type="submit" className="h-10 justify-self-start" disabled={pending}>
         {pending ? "Speichern…" : site ? "Speichern" : "Anlage einrichten"}
       </Button>
-      {decision && (
-        <DecisionDialog
-          decision={decision}
-          open={asking}
-          onOpenChange={setAsking}
-          onConfirm={() => {
-            confirmed.current = true
-            formRef.current?.requestSubmit()
-          }}
-        />
-      )}
     </form>
   )
 }

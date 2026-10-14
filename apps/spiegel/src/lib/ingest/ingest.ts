@@ -46,8 +46,10 @@ export interface IngestOptions {
 type SourceState = { sourceId: number; confirmed: boolean }
 
 /**
- * Die Quelle einer Epoche (SF-23): Die erste Epoche einer Anlage gilt mit dem ersten Snapshot; jede weitere legt Spiegel
- * nur an, unbestätigt, bis der Admin sie bestätigt. Bis dahin nimmt Spiegel aus ihr nichts an.
+ * Die Quelle einer Epoche (SF-23): Die erste Epoche einer Anlage gilt mit dem ersten Snapshot. Eine weitere legt Spiegel
+ * nur unbestätigt an und nimmt aus ihr nichts an: Grabsteine und Sperren gelten je Epoche, eine fremde Epoche brächte
+ * sonst Entferntes zurück. Die Brücke eröffnet nie selbst eine (sie meldet nur `possible-reset`); käme eine, zeigt die
+ * Übersicht des Admins einen Hinweis (P2c, D0: kein Knopf dafür).
  */
 async function sourceOf(db: Db, siteId: number, epoch: number): Promise<SourceState> {
   const existing = await db.source.findUnique({

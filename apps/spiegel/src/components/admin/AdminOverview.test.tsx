@@ -9,7 +9,7 @@ const { AdminOverview } = await import("./AdminOverview")
 
 const model = (consents: Parameters<typeof overviewModel>[0]["consents"]) =>
   overviewModel({
-    site: { name: "Schützenhaus" },
+    site: { name: "Schützenhaus", foreignSource: false },
     bridge: { name: "Pi", lastHeartbeatAt: null, online: false, status: null, heldBack: null },
     consents,
     accounts: { total: 2, deactivated: 0, withSportpass: 1 },

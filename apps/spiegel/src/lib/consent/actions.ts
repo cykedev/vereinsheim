@@ -33,6 +33,7 @@ const isConsentId = (value: unknown): value is number =>
 
 function revalidateConsents(userId?: string) {
   revalidatePath("/profile")
+  revalidatePath("/admin")
   revalidatePath("/admin/users")
   if (userId) revalidatePath(`/admin/users/${userId}`)
 }

@@ -49,10 +49,22 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(pair).toContain("behandle ihn wie ein Passwort")
     expect(pair).toContain('data-help="admin-pairingCode"')
     const site = renderToStaticMarkup(
-      createElement(SiteForm, { site: { id: 1, name: "Schützenhaus", timeZone: "Europe/Berlin" } })
+      createElement(SiteForm, {
+        site: { id: 1, name: "Schützenhaus", timeZone: "Europe/Berlin", hasCards: false },
+      })
     )
     expect(site).toContain('data-help="admin-site"')
     expect(site).toContain('data-help="admin-timeZone"')
+  })
+
+  it("mit Scheiben ist die Zeitzone fest und sagt warum (Review)", () => {
+    const html = renderToStaticMarkup(
+      createElement(SiteForm, {
+        site: { id: 1, name: "Schützenhaus", timeZone: "Europe/Berlin", hasCards: true },
+      })
+    )
+    expect(html).toMatch(/id="timeZone"[^>]*readOnly=""|readOnly=""[^>]*id="timeZone"/)
+    expect(html).toContain("Fest, seit Scheiben eingelesen sind")
   })
 
   it("kein „Epoche“ mehr in Seite und Bausteinen (D0)", () => {

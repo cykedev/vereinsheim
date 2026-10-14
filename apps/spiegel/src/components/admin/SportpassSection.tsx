@@ -19,7 +19,16 @@ import { AdminHelp } from "./AdminHelp"
  * Zustimmungen per Sportpass an einem Konto (SP-1.7 a, D5): Der Schütze stimmt im Profil zu, hier bestätigt oder lehnt
  * ein Admin ab. Nur bestätigte bringen Scheiben von der Brücke ([[spiegel-privacy]]); eintragen kann nur der Schütze.
  */
-export function SportpassSection({ consents, who }: { consents: ConsentRow[]; who: string }) {
+export function SportpassSection({
+  consents,
+  who,
+  accountActive,
+}: {
+  consents: ConsentRow[]
+  who: string
+  /** ein deaktiviertes Konto bekommt nichts, auch mit bestätigter Zustimmung (Review) */
+  accountActive: boolean
+}) {
   return (
     <section
       data-admin-sportpass
@@ -37,7 +46,12 @@ export function SportpassSection({ consents, who }: { consents: ConsentRow[]; wh
       {consents.length > 0 ? (
         <ul className="divide-y divide-border rounded-xl border border-border">
           {consents.map((consent) => (
-            <ConsentItem key={consent.id} consent={consent} who={who} />
+            <ConsentItem
+              key={consent.id}
+              consent={consent}
+              who={who}
+              accountActive={accountActive}
+            />
           ))}
         </ul>
       ) : (
@@ -49,7 +63,15 @@ export function SportpassSection({ consents, who }: { consents: ConsentRow[]; wh
 
 type DialogKind = "confirm" | "reject" | "remove"
 
-function ConsentItem({ consent, who }: { consent: ConsentRow; who: string }) {
+function ConsentItem({
+  consent,
+  who,
+  accountActive,
+}: {
+  consent: ConsentRow
+  who: string
+  accountActive: boolean
+}) {
   const router = useRouter()
   // die Art bleibt beim Schließen stehen, damit der Dialog nicht beim Ausblenden den anderen Titel zeigt (Review)
   const [dialog, setDialog] = useState<DialogKind>("remove")
@@ -73,11 +95,15 @@ function ConsentItem({ consent, who }: { consent: ConsentRow; who: string }) {
   const subject = { who, sportpassId: consent.sportpassId }
   // Kein Knopf ohne Folge (P2c): jede Entscheidung fragt mit ihren Folgen
   const decisions = {
-    confirm: { decision: consentConfirm(subject), action: confirmConsent },
-    reject: {
-      decision: consentReject({ ...subject, active: consent.status === "active" }),
-      action: rejectConsent,
+    confirm: {
+      decision: consentConfirm({
+        ...subject,
+        returned: consent.status === "returned",
+        accountActive,
+      }),
+      action: confirmConsent,
     },
+    reject: { decision: consentReject(subject), action: rejectConsent },
     remove: { decision: consentRemove(subject), action: removeConsent },
   }
 

@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto"
+import { randomInt, randomUUID } from "node:crypto"
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -49,6 +49,52 @@ afterAll(async () => {
 })
 beforeEach(() => {
   mocks.session = { user: { id: adminId, role: "ADMIN" } }
+})
+
+describe("Zeitzone der Anlage (Review P2c)", () => {
+  it("fest, sobald es Scheiben gibt: eine andere wird abgelehnt, die gespeicherte bleibt", async () => {
+    const site = await db.site.findFirstOrThrow({ orderBy: { id: "asc" } })
+    const epoch = 900 + randomInt(99)
+    const source = await db.source.create({
+      data: { siteId: site.id, epoch, confirmedAt: new Date() },
+    })
+    const discipline = await db.discipline.create({
+      data: { siteId: site.id, meytonId: 990_000 + randomInt(9_999), name: `Zone ${tag}` },
+    })
+    const card = await db.card.create({
+      data: {
+        sourceId: source.id,
+        scheibenId: 1,
+        disciplineId: discipline.id,
+        startedAt: new Date(),
+        kind: "training",
+        state: "final",
+        complete: true,
+        origin: "raw",
+      },
+    })
+    try {
+      const other = site.timeZone === "Europe/Vienna" ? "Europe/Berlin" : "Europe/Vienna"
+      expect(await saveSite(null, form({ name: site.name, timeZone: other }))).toEqual({
+        error: {
+          timeZone: [
+            "Die Zeitzone lässt sich nur ändern, solange noch keine Scheibe eingelesen ist.",
+          ],
+        },
+      })
+      expect((await db.site.findUniqueOrThrow({ where: { id: site.id } })).timeZone).toBe(
+        site.timeZone
+      )
+      // der Name allein lässt sich weiter ändern
+      expect(await saveSite(null, form({ name: site.name, timeZone: site.timeZone }))).toEqual({
+        success: true,
+      })
+    } finally {
+      await db.card.delete({ where: { id: card.id } })
+      await db.discipline.delete({ where: { id: discipline.id } })
+      await db.source.delete({ where: { id: source.id } })
+    }
+  })
 })
 
 describe("Anlage und Brücken (Admin)", () => {

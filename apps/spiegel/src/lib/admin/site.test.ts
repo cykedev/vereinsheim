@@ -12,6 +12,6 @@ describe("zurückgehaltene Scheiben in Worten (SF-19, SF-20)", () => {
         { displayMode: 5, cards: 2 },
         { displayMode: 10, cards: 1 },
       ])
-    ).toBe("3 Scheiben verdeckt zurückgehalten · 1 Scheibe mit Anzeigeart 0 zurückgehalten")
+    ).toBe("3 Scheiben verdeckt zurückgehalten · 1 Scheibe mit unbekannter Wertung zurückgehalten")
   })
 })

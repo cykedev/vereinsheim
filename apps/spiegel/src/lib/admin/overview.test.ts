@@ -6,7 +6,7 @@ const { overviewModel } = await import("./overview")
 type Input = Parameters<typeof overviewModel>[0]
 
 const base: Input = {
-  site: { name: "Schützenhaus" },
+  site: { name: "Schützenhaus", foreignSource: false },
   bridge: {
     name: "Pi im Schützenhaus",
     lastHeartbeatAt: "14.10.2026, 22:14",
@@ -80,6 +80,18 @@ describe("Übersicht des Admins", () => {
     expect(
       overviewModel({ ...base, bridge: { ...base.bridge!, online: true } }).stations[1].status
     ).toBe("läuft")
+  })
+
+  it("eine unbekannte Ablage ist ein Hinweis an der Anlage, keine Aufgabe (D0)", () => {
+    const model = overviewModel({ ...base, site: { name: "Schützenhaus", foreignSource: true } })
+    expect(model.tasks).toEqual([])
+    expect(model.stations[0].tone).toBe("wait")
+    expect(model.stations[0].facts[1]).toContain("nimmt sie nicht an")
+  })
+
+  it("eine Brücke ohne jeden Kontakt ist kein „aus, normal“ (Review)", () => {
+    const model = overviewModel({ ...base, bridge: { ...base.bridge!, lastHeartbeatAt: null } })
+    expect(model.stations[1]).toMatchObject({ status: "noch kein Kontakt", tone: "wait" })
   })
 
   it("Konten gezählt, deaktivierte nur, wenn es welche gibt", () => {

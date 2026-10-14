@@ -27,6 +27,7 @@ export default async function EditUserRoute({ params }: { params: Promise<{ id: 
       <SportpassSection
         consents={await consentsOfUser(user.id, getDisplayTimeZone())}
         who={user.name ?? user.email}
+        accountActive={user.isActive}
       />
     </Page>
   )

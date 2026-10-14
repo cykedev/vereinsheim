@@ -28,10 +28,15 @@ export async function getUsers(): Promise<UserListItem[]> {
     },
     orderBy: [{ isActive: "desc" }, { name: "asc" }, { email: "asc" }],
   })
-  return users.map(({ consents, ...user }) => ({
-    ...user,
-    sportpass: sportpassSummary(consents.map(consentStatus)),
-  }))
+  return users.map(({ consents, ...user }) => {
+    const sportpass = sportpassSummary(consents.map(consentStatus))
+    // ein deaktiviertes Konto bekommt nichts, auch mit aktiver Zustimmung (Review)
+    return {
+      ...user,
+      sportpass:
+        user.isActive || sportpass === "kein Sportpass" ? sportpass : `${sportpass} · ruht`,
+    }
+  })
 }
 
 export async function getUser(id: string): Promise<UserSummary | null> {

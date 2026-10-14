@@ -16,7 +16,7 @@ export const ADMIN_HELP = {
   },
   consent: {
     title: "Zustimmung",
-    text: "Ein Schütze trägt im Profil seine SportpassID ein und stimmt zu, dass seine Scheiben automatisch kommen. Du bestätigst einmal, dass die Nummer zu ihm gehört. Seine erste Scheibe prüft er dann selbst.",
+    text: "Wer schießt, trägt im Profil die eigene SportpassID ein und stimmt zu, dass die eigenen Scheiben automatisch kommen. Du bestätigst einmal, dass die Nummer zu dieser Person gehört. Die erste Scheibe prüft die Person dann selbst.",
   },
   ranking: {
     title: "Rangliste",

@@ -31,6 +31,7 @@ describe("Zustimmungen am Konto (Admin)", () => {
     const html = renderToStaticMarkup(
       createElement(SportpassSection, {
         who: "Max Muster",
+        accountActive: true,
         consents: [row(1, "requested"), row(2, "returned"), row(3, "active"), row(4, "rejected")],
       })
     )
@@ -48,7 +49,7 @@ describe("Zustimmungen am Konto (Admin)", () => {
 
   it("kein Formular zum Eintragen; ohne Zustimmung ein Satz", () => {
     const html = renderToStaticMarkup(
-      createElement(SportpassSection, { consents: [], who: "Max Muster" })
+      createElement(SportpassSection, { consents: [], who: "Max Muster", accountActive: true })
     )
     expect(html).not.toContain("<form")
     expect(html).toContain("Keine Zustimmung an diesem Konto.")
