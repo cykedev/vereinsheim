@@ -9,14 +9,18 @@ set -euo pipefail
 
 : "${RINGWERK_DB_PASSWORD:?Set RINGWERK_DB_PASSWORD via compose env}"
 : "${TREFFSICHER_DB_PASSWORD:?Set TREFFSICHER_DB_PASSWORD via compose env}"
+: "${SPIEGEL_DB_PASSWORD:?Set SPIEGEL_DB_PASSWORD via compose env}"
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
 	CREATE USER ringwerk    WITH PASSWORD '${RINGWERK_DB_PASSWORD}';
 	CREATE USER treffsicher WITH PASSWORD '${TREFFSICHER_DB_PASSWORD}';
+	CREATE USER spiegel     WITH PASSWORD '${SPIEGEL_DB_PASSWORD}';
 	CREATE DATABASE ringwerk    OWNER ringwerk;
 	CREATE DATABASE treffsicher OWNER treffsicher;
+	CREATE DATABASE spiegel     OWNER spiegel;
 	REVOKE ALL ON DATABASE ringwerk    FROM PUBLIC;
 	REVOKE ALL ON DATABASE treffsicher FROM PUBLIC;
+	REVOKE ALL ON DATABASE spiegel     FROM PUBLIC;
 EOSQL
 
-echo "vereinsheim db-init: created databases ringwerk + treffsicher with separate owners."
+echo "vereinsheim db-init: created databases ringwerk, treffsicher + spiegel with separate owners."
