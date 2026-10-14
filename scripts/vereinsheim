@@ -302,6 +302,7 @@ cmd_help() {
 		  ${GREEN}rollback${RESET}              Auf vorherigen Deploy zurück (aus deploy-history.log)
 		  ${GREEN}backup${RESET}                Backup manuell erstellen
 		  ${GREEN}restore${RESET}               Interaktiver Restore aus Backup
+		  ${GREEN}restore-probe${RESET}         Neueste Sicherungen probeweise einspielen (Wegwerf-DB)
 		  ${GREEN}logs${RESET} [service]        Logs folgen (Default: Apps + caddy)
 		  ${GREEN}psql${RESET} <app>            DB-Shell (ringwerk | treffsicher | spiegel)
 		  ${GREEN}migrations${RESET} <app>      Migration-Status + Recovery
@@ -1419,6 +1420,19 @@ cmd_db_ensure() {
 	"$SCRIPT_DIR/db-ensure.sh"
 }
 
+# ---------- restore-probe ----------
+# Spielt den neuesten Dump jeder App in eine Wegwerf-Datenbank und zählt Tabellen und
+# Migrationen (scripts/restore-probe.sh); die laufenden Datenbanken bleiben unberührt.
+cmd_restore_probe() {
+	require_env
+	require_docker
+	if ! db_running; then
+		err "db läuft nicht — zuerst: ./scripts/vereinsheim up"
+		exit 1
+	fi
+	BACKUP_DIR="${BACKUP_DIR:-$BACKUP_DIR_DEFAULT}" "$SCRIPT_DIR/restore-probe.sh"
+}
+
 # ---------- restore ----------
 cmd_restore() {
 	require_env
@@ -1766,17 +1780,18 @@ interactive_menu_vps() {
 		echo "  5) rollback   Auf vorherigen Deploy zurück"
 		echo "  6) backup     Backup jetzt manuell erstellen"
 		echo "  7) restore    Interaktiver Restore aus Backup"
+		echo "  8) restore-probe  Neueste Sicherungen probeweise einspielen"
 		echo
 		echo "  ${BOLD}Datenbank${RESET}"
-		echo "  8) psql        DB-Shell"
-		echo "  9) migrations  Migration-Status + Recovery"
-		echo " 10) db-ensure   Fehlende App-Datenbanken anlegen"
+		echo "  9) psql        DB-Shell"
+		echo " 10) migrations  Migration-Status + Recovery"
+		echo " 11) db-ensure   Fehlende App-Datenbanken anlegen"
 		echo
 		echo "  ${BOLD}Infrastruktur${RESET}"
-		echo " 11) setup       .env-Wizard"
-		echo " 12) cron        Backup-Cron installieren/prüfen"
-		echo " 13) shell       Bash-Shell im Container"
-		echo " 14) up/down/restart"
+		echo " 12) setup       .env-Wizard"
+		echo " 13) cron        Backup-Cron installieren/prüfen"
+		echo " 14) shell       Bash-Shell im Container"
+		echo " 15) up/down/restart"
 		echo
 		echo "  q) Beenden  ${DIM}· Lokal-Modus: ./scripts/vereinsheim local-setup${RESET}"
 		read -r -p "  » " c
@@ -1791,16 +1806,17 @@ interactive_menu_vps() {
 		5) cmd_rollback ;;
 		6) cmd_backup ;;
 		7) cmd_restore ;;
-		8) cmd_psql_interactive ;;
-		9) cmd_migrations ;;
-		10) cmd_db_ensure ;;
-		11) cmd_setup ;;
-		12) cmd_cron ;;
-		13)
+		8) cmd_restore_probe ;;
+		9) cmd_psql_interactive ;;
+		10) cmd_migrations ;;
+		11) cmd_db_ensure ;;
+		12) cmd_setup ;;
+		13) cmd_cron ;;
+		14)
 			read -r -p "  Service: " svc
 			[[ -n "$svc" ]] && cmd_shell "$svc"
 			;;
-		14) interactive_service_control ;;
+		15) interactive_service_control ;;
 		q | Q | "") break ;;
 		*) warn "Ungültige Auswahl" ;;
 		esac
@@ -1893,6 +1909,7 @@ main() {
 	rollback) cmd_rollback "$@" ;;
 	backup) cmd_backup "$@" ;;
 	restore) cmd_restore "$@" ;;
+	restore-probe) cmd_restore_probe "$@" ;;
 	logs) cmd_logs "$@" ;;
 	psql) cmd_psql "$@" ;;
 	migrations) cmd_migrations "$@" ;;
