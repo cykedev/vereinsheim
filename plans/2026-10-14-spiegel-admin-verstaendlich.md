@@ -73,10 +73,12 @@ Platzhalter in spitzen Klammern; „Schütze“ ist der Name des Kontos, sonst d
 **Zustimmung bestätigen** — Titel „Zustimmung von <Schütze> bestätigen?“
 - Worum: „<Schütze> möchte, dass Scheiben mit der SportpassID <Nummer> automatisch in sein Konto kommen.“
 - Prüfen: „Gehört <Nummer> in der Meyton-Schützenverwaltung zu <Schütze>? Wenn nicht: ablehnen.“
-- Passiert: „Ab dem nächsten Trainingsabend schickt die Brücke jede Scheibe mit dieser Nummer.“ · „Die erste zeigt
-  Spiegel <Schütze> zur Kontrolle; erst danach sieht er sie in seinen Scheiben.“
-- Nicht: „Du siehst seine Schüsse nicht.“ · „Scheiben von früheren Abenden kommen nicht von selbst; höchstens die
-  des letzten Abends, wenn die Brücke beim nächsten Start nachholt.“
+- Passiert: „Ab dem nächsten Trainingsabend schickt die Brücke jede Scheibe mit dieser Nummer.“ · „Auch seine
+  älteren Scheiben unter dieser Nummer holt die Brücke nach, wenn niemand schießt.“ · „Alle zeigt Spiegel <Schütze>
+  erst, wenn er die erste als seine bestätigt.“ (Das Nachladen kommt mit P2d, User 14. Oktober 2026; bis P2d gemergt
+  ist, steht hier stattdessen: „Scheiben von früheren Abenden kommen nicht von selbst; höchstens die des letzten Abends,
+  wenn die Brücke beim nächsten Start nachholt.“)
+- Nicht: „Du siehst seine Schüsse nicht.“
 - Rückgängig: „Jederzeit über „Entfernen“. Schon geschickte Scheiben bleiben bei <Schütze>.“
 - Knopf: „Bestätigen“
 
