@@ -35,6 +35,7 @@ describe("Papierkorb", () => {
     expect(html).toContain("Der Papierkorb ist leer")
     const section = html.slice(html.indexOf("data-trash-blocked"))
     expect(section).toContain("Kommt nicht von selbst wieder")
+    expect(section).toContain("Ein Admin kann eine Meldung „nicht meine“ wieder aufheben.")
     expect(section).toContain("endgültig gelöscht")
     expect(section).toContain("als „nicht meine“ gemeldet")
     expect(section).not.toContain("<button")

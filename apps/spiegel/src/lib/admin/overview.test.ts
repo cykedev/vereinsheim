@@ -17,6 +17,7 @@ const base: Input = {
   consents: [],
   accounts: { total: 12, deactivated: 1, withSportpass: 9 },
   notMine: 0,
+  historyPending: 0,
 }
 const consent = (id: number, status: Input["consents"][number]["status"]) => ({
   id,
@@ -112,5 +113,18 @@ describe("Übersicht des Admins", () => {
     expect(facts(1)[1]).toBe("1 Scheibe als „nicht meine“ gemeldet; sie kommt nicht wieder.")
     expect(facts(3)[1]).toBe("3 Scheiben als „nicht meine“ gemeldet; sie kommen nicht wieder.")
     expect(overviewModel({ ...base, notMine: 3 }).tasks).toEqual([])
+  })
+
+  it("ältere Scheiben, die die Brücke noch nachlädt, als Zustand an den Zustimmungen (P2d, D10)", () => {
+    const facts = (historyPending: number) =>
+      overviewModel({ ...base, historyPending }).stations.find((s) => s.id === "consents")!.facts
+    expect(facts(0)).toHaveLength(1)
+    expect(facts(1)[1]).toBe(
+      "Für 1 Zustimmung lädt die Brücke ältere Scheiben nach, wenn niemand schießt."
+    )
+    expect(facts(2)[1]).toBe(
+      "Für 2 Zustimmungen lädt die Brücke ältere Scheiben nach, wenn niemand schießt."
+    )
+    expect(overviewModel({ ...base, historyPending: 2 }).tasks).toEqual([])
   })
 })

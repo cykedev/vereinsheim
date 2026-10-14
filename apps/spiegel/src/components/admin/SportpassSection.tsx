@@ -7,9 +7,9 @@ import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
 
 import { DecisionDialog } from "@/components/shell/DecisionDialog"
-import { consentConfirm, consentReject, consentRemove } from "@/lib/admin/consequences"
-import { confirmConsent, rejectConsent, removeConsent } from "@/lib/consent/actions"
-import type { ConsentRow } from "@/lib/consent/queries"
+import { consentConfirm, consentReject, consentRemove, notMineLift } from "@/lib/admin/consequences"
+import { confirmConsent, liftNotMine, rejectConsent, removeConsent } from "@/lib/consent/actions"
+import type { AdminConsentRow } from "@/lib/consent/queries"
 import { isOpenConsent } from "@/lib/consent/status"
 import type { ActionResult } from "@/lib/types"
 
@@ -24,7 +24,7 @@ export function SportpassSection({
   who,
   accountActive,
 }: {
-  consents: ConsentRow[]
+  consents: AdminConsentRow[]
   who: string
   /** ein deaktiviertes Konto bekommt nichts, auch mit bestätigter Zustimmung (Review) */
   accountActive: boolean
@@ -61,14 +61,14 @@ export function SportpassSection({
   )
 }
 
-type DialogKind = "confirm" | "reject" | "remove"
+type DialogKind = "confirm" | "reject" | "remove" | "lift"
 
 function ConsentItem({
   consent,
   who,
   accountActive,
 }: {
-  consent: ConsentRow
+  consent: AdminConsentRow
   who: string
   accountActive: boolean
 }) {
@@ -105,6 +105,15 @@ function ConsentItem({
     },
     reject: { decision: consentReject(subject), action: rejectConsent },
     remove: { decision: consentRemove(subject), action: removeConsent },
+    // Meldungen „nicht meine“ aufheben (P2d, D8)
+    lift: {
+      decision: notMineLift({
+        ...subject,
+        cards: consent.notMine,
+        consentActive: consent.status === "active",
+      }),
+      action: liftNotMine,
+    },
   }
 
   return (
@@ -115,6 +124,15 @@ function ConsentItem({
           {consent.siteName} · {consent.statusText} · zugestimmt {consent.consentedAt} (Hinweis{" "}
           {consent.consentVersion})
         </span>
+        {consent.history && (
+          <span className="text-[13px] text-muted-foreground">{consent.history}</span>
+        )}
+        {consent.notMine > 0 && (
+          <span data-consent-not-mine className="text-[13px] text-muted-foreground">
+            {consent.notMine === 1 ? "1 Scheibe" : `${consent.notMine} Scheiben`} als „nicht meine“
+            gemeldet
+          </span>
+        )}
         {error && (
           <span role="alert" className="text-[13px] text-destructive">
             {error}
@@ -142,6 +160,17 @@ function ConsentItem({
               Ablehnen
             </Button>
           </>
+        )}
+        {consent.notMine > 0 && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-10"
+            disabled={pending}
+            onClick={() => ask("lift")}
+          >
+            Meldungen aufheben
+          </Button>
         )}
         <Button
           type="button"

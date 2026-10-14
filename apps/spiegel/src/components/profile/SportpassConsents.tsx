@@ -66,6 +66,11 @@ function ConsentItem({ consent }: { consent: ConsentRow }) {
         <span className="text-[13px] text-muted-foreground">
           {consent.siteName} · {consent.statusText}
         </span>
+        {consent.history && (
+          <span data-consent-history className="text-[13px] text-muted-foreground">
+            {consent.history}
+          </span>
+        )}
         {error && (
           <span role="alert" className="text-[13px] text-destructive">
             {error}

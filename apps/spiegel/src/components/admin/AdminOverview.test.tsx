@@ -14,6 +14,7 @@ const model = (consents: Parameters<typeof overviewModel>[0]["consents"]) =>
     consents,
     accounts: { total: 2, deactivated: 0, withSportpass: 1 },
     notMine: 0,
+    historyPending: 0,
   })
 
 describe("Übersicht des Admins (Markup)", () => {

@@ -17,8 +17,14 @@ vi.mock("@/lib/auth-helpers", () => ({
 }))
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }))
 
-const { confirmConsent, rejectConsent, removeConsent, requestSportpass, revokeSportpass } =
-  await import("./actions")
+const {
+  confirmConsent,
+  liftNotMine,
+  rejectConsent,
+  removeConsent,
+  requestSportpass,
+  revokeSportpass,
+} = await import("./actions")
 
 const tag = randomUUID().slice(0, 8)
 let adminId: string
@@ -276,5 +282,79 @@ describe("Entscheidung des Admins", () => {
     expect(await removeConsent(consent.id)).toEqual({ success: true })
     expect(await removeConsent(consent.id)).toEqual({ error: "Unbekannte Zustimmung." })
     expect(await confirmConsent(-1)).toEqual({ error: "Unbekannte Zustimmung." })
+  })
+})
+
+describe("Meldungen „nicht meine“ aufheben (P2d)", () => {
+  it("nur ein Admin; nur Meldungen dieser Nummer an dieser Anlage; die erste Scheibe wartet wieder", async () => {
+    const consent = await requested()
+    await db.sportpassConsent.update({
+      where: { id: consent.id },
+      data: {
+        confirmedAt: new Date(),
+        firstCardConfirmedAt: new Date(),
+        historyLoadedAt: new Date(),
+      },
+    })
+    const source =
+      (await db.source.findFirst({ where: { siteId: consent.siteId }, select: { id: true } })) ??
+      (await db.source.create({
+        data: { siteId: consent.siteId, epoch: 99, confirmedAt: new Date() },
+        select: { id: true },
+      }))
+    const base = -900_000_000 - randomInt(1_000_000)
+    const tombstone = (n: number, sportpassId: bigint, reason = "nicht-meine") =>
+      db.tombstone.create({
+        data: {
+          sourceId: source.id,
+          scheibenId: base - n,
+          startedAt: new Date(),
+          reason,
+          sportpassId,
+        },
+        select: { id: true },
+      })
+    const lifted = [
+      await tombstone(1, consent.sportpassId),
+      await tombstone(2, consent.sportpassId),
+    ]
+    const kept = [
+      await tombstone(3, consent.sportpassId, "anderer"),
+      await tombstone(4, BigInt(sportpass())),
+    ]
+    try {
+      asShooter()
+      expect(await liftNotMine(consent.id)).toEqual({ error: "Keine Berechtigung" })
+      asAdmin()
+      expect(await liftNotMine(consent.id)).toEqual({ success: true })
+      const ids = (rows: { id: number }[]) => ({ id: { in: rows.map((r) => r.id) } })
+      expect(await db.tombstone.count({ where: ids(lifted) })).toBe(0)
+      expect(await db.tombstone.count({ where: ids(kept) })).toBe(2)
+      const after = await db.sportpassConsent.findUniqueOrThrow({ where: { id: consent.id } })
+      expect(after.historyLoadedAt).toBeNull()
+      expect(after.firstCardConfirmedAt).toBeNull()
+      expect(consentStatus(after)).toBe("active")
+      expect(await liftNotMine(consent.id)).toEqual({
+        error: "Es gibt keine Meldungen „nicht meine“ mehr zu dieser Nummer.",
+      })
+      expect(await liftNotMine(-1)).toEqual({ error: "Unbekannte Zustimmung." })
+    } finally {
+      await db.tombstone.deleteMany({ where: { scheibenId: { lte: base, gt: base - 10 } } })
+      await db.sportpassConsent.delete({ where: { id: consent.id } })
+    }
+  })
+
+  it("ein Datenbankfehler wird zu Text", async () => {
+    const consent = await requested()
+    asAdmin()
+    const spy = vi.spyOn(db, "$transaction").mockRejectedValue(new Error("down"))
+    try {
+      expect(await liftNotMine(consent.id)).toEqual({
+        error: "Das ließ sich nicht speichern. Bitte noch einmal versuchen.",
+      })
+    } finally {
+      spy.mockRestore()
+      await db.sportpassConsent.delete({ where: { id: consent.id } })
+    }
   })
 })

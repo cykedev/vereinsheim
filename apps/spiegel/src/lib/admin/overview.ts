@@ -62,6 +62,8 @@ export interface OverviewInput {
   accounts: { total: number; deactivated: number; withSportpass: number }
   /** Scheiben der Anlage, als „nicht meine“ gemeldet (Grabsteine): nur als Zahl, ohne Namen (P2b, D9) */
   notMine: number
+  /** aktive Zustimmungen, deren ältere Scheiben die Brücke noch nachlädt (P2d, D10): Zustand, keine Aufgabe */
+  historyPending: number
 }
 
 /** was die Brücke meldet, in Worten; nur Information (D0), keine Aufgabe */
@@ -163,6 +165,11 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
         tone: waiting ? "wait" : "neutral",
         facts: [
           `${by("active")} aktiv · ${waiting} ${waiting === 1 ? "wartet" : "warten"} auf dich · ${by("rejected")} abgelehnt`,
+          ...(input.historyPending
+            ? [
+                `Für ${count(input.historyPending, "Zustimmung", "Zustimmungen")} lädt die Brücke ältere Scheiben nach, wenn niemand schießt.`,
+              ]
+            : []),
           ...(input.notMine
             ? [
                 input.notMine === 1
@@ -221,6 +228,7 @@ export async function adminOverview(
         confirmedAt: true,
         rejectedAt: true,
         returnedAt: true,
+        historyLoadedAt: true,
         user: { select: { name: true, email: true } },
       },
       // deaktivierte Konten bekommen nichts; dort wartet keine Entscheidung, und sie zählen nicht als „mit Sportpass“
@@ -265,5 +273,8 @@ export async function adminOverview(
       withSportpass: withSportpass.size,
     },
     notMine,
+    historyPending: consents.filter(
+      (c) => consentStatus(c) === "active" && c.historyLoadedAt === null
+    ).length,
   })
 }

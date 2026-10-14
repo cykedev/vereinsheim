@@ -22,6 +22,7 @@ const row = (id: number, status: ConsentStatus, statusText: string): ConsentRow 
   statusText,
   consentedAt: "14.10.2026, 20:00",
   consentVersion: "v1",
+  history: null,
 })
 const render = (consents: ConsentRow[]) =>
   renderToStaticMarkup(createElement(SportpassConsents, { consents, version: "v1" }))
@@ -63,5 +64,17 @@ describe("Sportpass im Profil", () => {
       row(3, "rejected", "a"),
     ])
     expect(full).not.toContain("data-consent-form")
+  })
+
+  it("bei aktiver Zustimmung der Stand des Nachladens (P2d)", () => {
+    const html = render([
+      {
+        ...row(1, "active", "aktiv"),
+        history: "ältere Scheiben werden nachgeladen, wenn niemand schießt",
+      },
+      row(2, "requested", "wartet auf den Admin"),
+    ])
+    expect(html).toContain("ältere Scheiben werden nachgeladen, wenn niemand schießt")
+    expect(html.match(/data-consent-history/g)).toHaveLength(1)
   })
 })

@@ -2,7 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
-import type { ConsentRow } from "@/lib/consent/queries"
+import type { AdminConsentRow } from "@/lib/consent/queries"
 import type { ConsentStatus } from "@/lib/consent/status"
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }) }))
@@ -10,11 +10,12 @@ vi.mock("@/lib/consent/actions", () => ({
   confirmConsent: async () => ({ success: true }),
   rejectConsent: async () => ({ success: true }),
   removeConsent: async () => ({ success: true }),
+  liftNotMine: async () => ({ success: true }),
 }))
 
 const { SportpassSection } = await import("./SportpassSection")
 
-const row = (id: number, status: ConsentStatus): ConsentRow => ({
+const row = (id: number, status: ConsentStatus, notMine = 0): AdminConsentRow => ({
   id,
   sportpassId: String(1000 + id),
   siteName: "Schützenhaus",
@@ -22,6 +23,8 @@ const row = (id: number, status: ConsentStatus): ConsentRow => ({
   statusText: status,
   consentedAt: "14.10.2026, 20:00",
   consentVersion: "v1",
+  history: null,
+  notMine,
 })
 const item = (html: string, status: ConsentStatus) =>
   html.match(new RegExp(`data-consent="${status}".*?</li>`))![0]
@@ -53,5 +56,19 @@ describe("Zustimmungen am Konto (Admin)", () => {
     )
     expect(html).not.toContain("<form")
     expect(html).toContain("Keine Zustimmung an diesem Konto.")
+  })
+
+  it("Meldungen „nicht meine“ als Zeile mit Knopf, nur wenn es welche gibt (P2d)", () => {
+    const html = renderToStaticMarkup(
+      createElement(SportpassSection, {
+        who: "Max Muster",
+        accountActive: true,
+        consents: [row(1, "active", 2), row(2, "returned")],
+      })
+    )
+    expect(item(html, "active")).toContain("2 Scheiben als „nicht meine“")
+    expect(item(html, "active")).toContain(">Meldungen aufheben<")
+    expect(item(html, "returned")).not.toContain("Meldungen aufheben")
+    expect(item(html, "returned")).not.toContain("data-consent-not-mine")
   })
 })

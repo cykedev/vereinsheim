@@ -6,6 +6,7 @@ import { z } from "zod"
 import { Prisma } from "@/generated/prisma/client"
 import { adminActor, shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
+import { NOT_MINE } from "@/lib/db/purge"
 import type { ActionResult } from "@/lib/types"
 
 import { MAX_CONSENTS_PER_ACCOUNT } from "./status"
@@ -166,6 +167,45 @@ export async function removeConsent(consentId: number): Promise<ActionResult> {
   })
   if (!consent) return { error: "Unbekannte Zustimmung." }
   await db.sportpassConsent.deleteMany({ where: { id: consentId } })
+  revalidateConsents(consent.userId)
+  return { success: true }
+}
+
+/**
+ * Meldungen „nicht meine“ der Nummer einer Zustimmung aufheben (P2d, D8): Die Grabsteine dieser Anlage und SportpassID
+ * gehen, die Brücke holt die Scheiben nach (`historyLoadedAt` null), und sie warten in „Offen“, bis der Schütze sie
+ * bestätigt (`firstCardConfirmedAt` null). Andere Grabsteine bleiben.
+ */
+export async function liftNotMine(consentId: number): Promise<ActionResult> {
+  const actor = await adminActor()
+  if ("error" in actor) return actor
+  if (!isConsentId(consentId)) return { error: "Unbekannte Zustimmung." }
+  const consent = await db.sportpassConsent.findUnique({
+    where: { id: consentId },
+    select: { userId: true, siteId: true, sportpassId: true },
+  })
+  if (!consent) return { error: "Unbekannte Zustimmung." }
+  let lifted: number
+  try {
+    lifted = await db.$transaction(async (tx) => {
+      const { count } = await tx.tombstone.deleteMany({
+        where: {
+          source: { siteId: consent.siteId },
+          sportpassId: consent.sportpassId,
+          reason: NOT_MINE,
+        },
+      })
+      if (count > 0)
+        await tx.sportpassConsent.updateMany({
+          where: { id: consentId },
+          data: { historyLoadedAt: null, firstCardConfirmedAt: null },
+        })
+      return count
+    })
+  } catch {
+    return { error: "Das ließ sich nicht speichern. Bitte noch einmal versuchen." }
+  }
+  if (lifted === 0) return { error: "Es gibt keine Meldungen „nicht meine“ mehr zu dieser Nummer." }
   revalidateConsents(consent.userId)
   return { success: true }
 }

@@ -2,6 +2,7 @@ import { formatDateTime } from "@vereinsheim/lib/format"
 
 import { requireAdmin } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
+import { NOT_MINE } from "@/lib/db/purge"
 
 import { consentStatus, consentStatusText, type ConsentStatus } from "./status"
 
@@ -16,6 +17,8 @@ export interface ConsentRow {
   statusText: string
   consentedAt: string
   consentVersion: string
+  /** nur bei aktiver Zustimmung: ob die älteren Scheiben schon nachgeladen sind (P2d, D10), sonst null */
+  history: string | null
 }
 
 export interface OpenConsentRow {
@@ -41,6 +44,7 @@ export async function consentRows(userId: string, timeZone: string): Promise<Con
       confirmedAt: true,
       rejectedAt: true,
       returnedAt: true,
+      historyLoadedAt: true,
       site: { select: { name: true } },
     },
   })
@@ -57,14 +61,49 @@ export async function consentRows(userId: string, timeZone: string): Promise<Con
       ),
       consentedAt: formatDateTime(r.consentedAt, timeZone),
       consentVersion: r.consentVersion,
+      history:
+        status !== "active"
+          ? null
+          : r.historyLoadedAt
+            ? `ältere Scheiben nachgeladen am ${formatDateTime(r.historyLoadedAt, timeZone)}`
+            : "ältere Scheiben werden nachgeladen, wenn niemand schießt",
     }
   })
 }
 
+/** für den Admin: dazu die Meldungen „nicht meine“ unter der Nummer an ihrer Anlage (P2d, D8) */
+export interface AdminConsentRow extends ConsentRow {
+  notMine: number
+}
+
 /** dieselben für den Admin */
-export async function consentsOfUser(userId: string, timeZone: string): Promise<ConsentRow[]> {
+export async function consentsOfUser(userId: string, timeZone: string): Promise<AdminConsentRow[]> {
   await requireAdmin()
-  return consentRows(userId, timeZone)
+  const [rows, keys] = await Promise.all([
+    consentRows(userId, timeZone),
+    db.sportpassConsent.findMany({
+      where: { userId },
+      select: { id: true, siteId: true, sportpassId: true },
+    }),
+  ])
+  const counts = new Map(
+    await Promise.all(
+      keys.map(
+        async (key) =>
+          [
+            key.id,
+            await db.tombstone.count({
+              where: {
+                source: { siteId: key.siteId },
+                sportpassId: key.sportpassId,
+                reason: NOT_MINE,
+              },
+            }),
+          ] as const
+      )
+    )
+  )
+  return rows.map((row) => ({ ...row, notMine: counts.get(row.id) ?? 0 }))
 }
 
 /** offen: wartende und zurückgegebene (weder bestätigt noch abgelehnt), ältere zuerst */

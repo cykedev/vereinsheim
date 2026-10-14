@@ -6,7 +6,7 @@ import { db } from "@/lib/db"
 
 vi.mock("@/lib/auth-helpers", () => ({ requireAdmin: async () => ({}) }))
 
-const { consentRows, openConsents } = await import("./queries")
+const { consentRows, consentsOfUser, openConsents } = await import("./queries")
 
 const tag = randomUUID().slice(0, 8)
 const zone = "Europe/Berlin"
@@ -54,6 +54,13 @@ describe("Zustimmungen lesen", () => {
     expect(rows[0]!.statusText).toMatch(/^aktiv seit \d\d\.\d\d\.\d{4}/)
     expect(rows[2]!.statusText).toBe("wartet auf den Admin")
     expect(rows.every((r) => r.consentVersion === "v1")).toBe(true)
+    // nur die aktive sagt, ob ihre älteren Scheiben nachgeladen sind (P2d)
+    expect(rows.map((r) => r.history)).toEqual([
+      "ältere Scheiben werden nachgeladen, wenn niemand schießt",
+      null,
+      null,
+      null,
+    ])
   })
 
   it("offen für den Admin: wartende und zurückgegebene, ältere zuerst", async () => {
@@ -61,5 +68,24 @@ describe("Zustimmungen lesen", () => {
     expect(mine.map((r) => r.status)).toEqual(["returned", "requested"])
     expect(mine[0]!.userLabel).toBe(`Schütze ${tag}`)
     expect(mine[0]!.sportpassId).toBe(String(ids.returned))
+  })
+
+  it("für den Admin je Zustimmung die Meldungen „nicht meine“ ihrer Nummer an dieser Anlage (P2d)", async () => {
+    const source = await db.source.create({ data: { siteId, epoch: 1, confirmedAt: new Date() } })
+    const tombstone = (scheibenId: number, sportpassId: bigint, reason = "nicht-meine") =>
+      db.tombstone.create({
+        data: { sourceId: source.id, scheibenId, startedAt: new Date(), reason, sportpassId },
+      })
+    await tombstone(1, ids.active)
+    await tombstone(2, ids.active)
+    await tombstone(3, ids.active, "anderer")
+    await tombstone(4, ids.returned)
+    const rows = await consentsOfUser(shooterId, zone)
+    expect(rows.map((r) => [r.status, r.notMine])).toEqual([
+      ["active", 2],
+      ["returned", 1],
+      ["requested", 0],
+      ["rejected", 0],
+    ])
   })
 })

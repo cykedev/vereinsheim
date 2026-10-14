@@ -10,6 +10,7 @@ import {
   consentReject,
   consentRemove,
   notMine,
+  notMineLift,
   ownConsentRevoke,
   ownRejectionRemove,
   rankingKind,
@@ -29,7 +30,7 @@ function wellFormed(decision: Decision) {
 }
 
 describe("Folgen der Zustimmungen (Admin)", () => {
-  it("bestätigen: wann die Brücke schickt, was nie hinausgeht, was mit älteren Scheiben ist (Review)", () => {
+  it("bestätigen: wann die Brücke schickt, dass sie ältere nachlädt, was nie hinausgeht (P2d)", () => {
     const d = consentConfirm({ who, sportpassId })
     wellFormed(d)
     expect(d).toMatchObject({
@@ -39,13 +40,14 @@ describe("Folgen der Zustimmungen (Admin)", () => {
       check:
         "Gehört 12345678 in der Meyton-Schützenverwaltung zu Max Muster? Wenn nicht: ablehnen.",
       happens: [
-        "Läuft die Brücke gerade, kommen Scheiben mit dieser Nummer innerhalb weniger Minuten, auch vom laufenden Abend; sonst beim nächsten Training.",
-        "Die erste zeigt Spiegel Max Muster zur Kontrolle; erst danach erscheinen die Scheiben im Konto.",
+        "Läuft die Brücke gerade, kommen neue Scheiben mit dieser Nummer innerhalb weniger Minuten, sonst beim nächsten Training.",
+        "Auch ältere Scheiben mit dieser Nummer holt die Brücke nach, soweit Meyton sie noch hat, aber nur, wenn gerade niemand schießt.",
+        "Spiegel zeigt Max Muster die jüngste zur Kontrolle; erst danach erscheinen die Scheiben im Konto.",
       ],
       notHappening: [
         "Du siehst die Schüsse von Max Muster nicht.",
         "Scheiben mit verdeckter Wertung gehen nie hinaus.",
-        "Ältere Scheiben kommen nicht verlässlich vollständig: nur, was die Brücke beim nächsten Start nachholt (alles seit der letzten Lieferung an Spiegel).",
+        "Was Max Muster gelöscht oder als „nicht meine“ gemeldet hat, kommt nicht wieder.",
       ],
       undo: "Jederzeit über „Entfernen“. Schon geschickte Scheiben bleiben bei Max Muster.",
       confirmLabel: "Bestätigen",
@@ -60,6 +62,8 @@ describe("Folgen der Zustimmungen (Admin)", () => {
       "Max Muster hat die erste Scheibe unter der SportpassID 12345678 als „nicht meine“ gemeldet; diese Scheiben sind entfernt. Bestätigst du, gilt die Nummer wieder für Max Muster."
     )
     expect(returned.check).toContain("Vielleicht wurde am Stand ein fremder Name gewählt.")
+    // nach „nicht meine“ sind die älteren gesperrt: kein Versprechen, sie nachzuladen
+    expect(returned.happens.join(" ")).not.toContain("ältere Scheiben")
     expect(consentConfirm({ who, sportpassId, accountActive: false }).happens).toContain(
       "Solange das Konto von Max Muster deaktiviert ist, schickt die Brücke nichts."
     )
@@ -280,5 +284,28 @@ describe("Löschen und Papierkorb (P2b)", () => {
       confirmLabel: "Endgültig löschen",
       destructive: true,
     })
+  })
+})
+
+describe("Meldungen „nicht meine“ aufheben (P2d)", () => {
+  it("prüfen, was zurückkommt und wo es wartet; ohne aktive Zustimmung erst später", () => {
+    const d = notMineLift({ who, sportpassId, cards: 3, consentActive: true })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Meldungen „nicht meine“ von Max Muster aufheben?",
+      about: "Max Muster hat 3 Scheiben unter der SportpassID 12345678 als „nicht meine“ gemeldet.",
+      check: "Hat Max Muster gesagt, dass es doch die eigenen waren? Sonst nicht aufheben.",
+      happens: [
+        "Die Brücke darf diese Scheiben wieder schicken und holt sie nach, soweit Meyton sie noch hat, wenn gerade niemand schießt.",
+        "Max Muster sieht sie zuerst in „Offen“ und bestätigt sie dort; bis dahin wartet auch jede neue Scheibe dieser Nummer.",
+      ],
+      notHappening: ["Du siehst die Schüsse von Max Muster nicht."],
+      undo: "Max Muster meldet sie in „Offen“ wieder als „nicht meine“.",
+      confirmLabel: "Meldungen aufheben",
+      destructive: false,
+    })
+    const later = notMineLift({ who, sportpassId, cards: 1, consentActive: false })
+    expect(later.about).toContain("1 Scheibe unter")
+    expect(later.happens[0]).toBe("Sie kommen erst, wenn die Zustimmung wieder bestätigt ist.")
   })
 })

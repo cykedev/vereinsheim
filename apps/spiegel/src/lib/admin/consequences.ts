@@ -43,8 +43,14 @@ export function consentConfirm({
       ? `Gehört ${sportpassId} in der Meyton-Schützenverwaltung wirklich zu ${who}? Vielleicht wurde am Stand ein fremder Name gewählt. Wenn die Nummer nicht passt: ablehnen.`
       : `Gehört ${sportpassId} in der Meyton-Schützenverwaltung zu ${who}? Wenn nicht: ablehnen.`,
     happens: [
-      "Läuft die Brücke gerade, kommen Scheiben mit dieser Nummer innerhalb weniger Minuten, auch vom laufenden Abend; sonst beim nächsten Training.",
-      `Die erste zeigt Spiegel ${who} zur Kontrolle; erst danach erscheinen die Scheiben im Konto.`,
+      "Läuft die Brücke gerade, kommen neue Scheiben mit dieser Nummer innerhalb weniger Minuten, sonst beim nächsten Training.",
+      // das Nachladen (P2d); nach „nicht meine“ sind die älteren gesperrt, dort wäre der Satz falsch
+      ...(returned
+        ? []
+        : [
+            "Auch ältere Scheiben mit dieser Nummer holt die Brücke nach, soweit Meyton sie noch hat, aber nur, wenn gerade niemand schießt.",
+          ]),
+      `Spiegel zeigt ${who} die jüngste zur Kontrolle; erst danach erscheinen die Scheiben im Konto.`,
       ...(accountActive
         ? []
         : [`Solange das Konto von ${who} deaktiviert ist, schickt die Brücke nichts.`]),
@@ -52,8 +58,7 @@ export function consentConfirm({
     notHappening: [
       `Du siehst die Schüsse von ${who} nicht.`,
       "Scheiben mit verdeckter Wertung gehen nie hinaus.",
-      // bis zum Nachladen der Historie (P2d)
-      "Ältere Scheiben kommen nicht verlässlich vollständig: nur, was die Brücke beim nächsten Start nachholt (alles seit der letzten Lieferung an Spiegel).",
+      `Was ${who} gelöscht oder als „nicht meine“ gemeldet hat, kommt nicht wieder.`,
     ],
     undo: `Jederzeit über „Entfernen“. Schon geschickte Scheiben bleiben bei ${who}.`,
     confirmLabel: "Bestätigen",
@@ -337,5 +342,37 @@ export function cardPurgeNow({ evening }: { evening: string }): Decision {
     undo: "Nicht möglich.",
     confirmLabel: "Endgültig löschen",
     destructive: true,
+  }
+}
+
+/**
+ * Meldungen „nicht meine“ einer Zustimmung aufheben (P2d, D8): Die Scheiben dürfen wiederkommen und warten in „Offen“.
+ * `consentActive`: Die Zustimmung ist bestätigt; sonst kommen sie erst, wenn sie es wieder ist.
+ */
+export function notMineLift({
+  who,
+  sportpassId,
+  cards,
+  consentActive,
+}: {
+  who: string
+  sportpassId: string
+  cards: number
+  consentActive: boolean
+}): Decision {
+  return {
+    title: `Meldungen „nicht meine“ von ${who} aufheben?`,
+    about: `${who} hat ${scheiben(cards)} unter der SportpassID ${sportpassId} als „nicht meine“ gemeldet.`,
+    check: `Hat ${who} gesagt, dass es doch die eigenen waren? Sonst nicht aufheben.`,
+    happens: [
+      consentActive
+        ? "Die Brücke darf diese Scheiben wieder schicken und holt sie nach, soweit Meyton sie noch hat, wenn gerade niemand schießt."
+        : "Sie kommen erst, wenn die Zustimmung wieder bestätigt ist.",
+      `${who} sieht sie zuerst in „Offen“ und bestätigt sie dort; bis dahin wartet auch jede neue Scheibe dieser Nummer.`,
+    ],
+    notHappening: [`Du siehst die Schüsse von ${who} nicht.`],
+    undo: `${who} meldet sie in „Offen“ wieder als „nicht meine“.`,
+    confirmLabel: "Meldungen aufheben",
+    destructive: false,
   }
 }
