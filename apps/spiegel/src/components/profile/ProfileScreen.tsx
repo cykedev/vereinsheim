@@ -10,11 +10,15 @@ import { Button } from "@vereinsheim/ui/button"
 
 import { Page } from "@/components/shell/Page"
 import { ThemeSwitch } from "@/components/theme/ThemeSwitch"
+import type { ConsentRow } from "@/lib/consent/queries"
+import { CONSENT_TEXTS, CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
+
+import { SportpassConsents } from "./SportpassConsents"
 
 /**
- * Profil: Konto, Einstellung des Geräts (Darstellung), Admin für Admins, Abmelden. Die Wertung hat jede Scheibe und jede
- * Familie selbst (Seite der Scheibe, Liste, Fortschritt). Zuordnung über den Sportpass, Freigaben, Export und Papierkorb
- * kommen mit SP-1.7.
+ * Profil: Konto, Zustimmung per Sportpass (SP-1.7 a), Einstellung des Geräts (Darstellung), Admin für Admins, Abmelden.
+ * Die Wertung hat jede Scheibe und jede Familie selbst (Seite der Scheibe, Liste, Fortschritt). Freigaben, Export und
+ * Papierkorb kommen später.
  */
 export function ProfileScreen({
   name,
@@ -25,8 +29,8 @@ export function ProfileScreen({
   name: string | null
   email: string
   isAdmin: boolean
-  /** SportpassIDs mit Zustimmung: nur deren Scheiben kommen von der Brücke */
-  sportpass: { id: number; sportpassId: string; siteName: string }[]
+  /** die eigenen Zustimmungen per Sportpass; nur aktive bringen Scheiben von der Brücke */
+  sportpass: ConsentRow[]
 }) {
   const router = useRouter()
   const [leaving, setLeaving] = useState(false)
@@ -44,29 +48,7 @@ export function ProfileScreen({
           </p>
         </div>
 
-        <div data-sportpass className="grid gap-2 rounded-2xl border border-border bg-card p-4">
-          <h2 className="text-[15px] font-semibold">Sportpass</h2>
-          {sportpass.length ? (
-            <>
-              <p className="text-sm text-foreground-2">
-                Deine Scheiben mit diesen SportpassIDs kommen von selbst aus dem Schützenhaus.
-              </p>
-              <ul className="grid gap-1">
-                {sportpass.map((entry) => (
-                  <li key={entry.id} className="text-sm">
-                    <span className="font-mono tabular-nums">{entry.sportpassId}</span>
-                    <span className="text-muted-foreground"> · {entry.siteName}</span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p className="text-sm text-foreground-2">
-              Noch keine SportpassID. Wenn du zustimmst, trägt ein Admin sie ein; dann kommen deine
-              Scheiben von selbst.
-            </p>
-          )}
-        </div>
+        <SportpassConsents consents={sportpass} text={CONSENT_TEXTS[CURRENT_CONSENT_VERSION]!} />
 
         <div className="grid gap-4 rounded-2xl border border-border bg-card p-4">
           <h2 className="text-[15px] font-semibold">Dieses Gerät</h2>

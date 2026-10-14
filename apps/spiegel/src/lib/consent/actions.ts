@@ -8,14 +8,12 @@ import { adminActor, shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import type { ActionResult } from "@/lib/types"
 
+import { MAX_CONSENTS_PER_ACCOUNT } from "./status"
 import { CURRENT_CONSENT_VERSION } from "./texts"
 
 // Zustimmung per Sportpass (SP-1.7 a, Plan `plans/2026-10-14-spiegel-optin.md`, D6): Der Schütze stimmt im Profil zu
 // und widerruft dort; ein Admin bestätigt, lehnt ab oder entfernt. Erst bestätigt lädt die Brücke hoch. Jede Action
 // prüft selbst und gibt ein ActionResult zurück.
-
-/** SF-39 braucht mehrere je Konto (neuer Ausweis); mehr als drei ist kein Anwendungsfall */
-const MAX_PER_ACCOUNT = 3
 
 const RequestSchema = z.object({
   sportpass: z
@@ -53,7 +51,7 @@ export async function requestSportpass(
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
   const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true } })
   if (!site) return { error: "Spiegel ist noch nicht eingerichtet." }
-  if ((await db.sportpassConsent.count({ where: { userId } })) >= MAX_PER_ACCOUNT)
+  if ((await db.sportpassConsent.count({ where: { userId } })) >= MAX_CONSENTS_PER_ACCOUNT)
     return { error: { sportpass: ["Höchstens drei SportpassIDs je Konto."] } }
   try {
     await db.sportpassConsent.create({

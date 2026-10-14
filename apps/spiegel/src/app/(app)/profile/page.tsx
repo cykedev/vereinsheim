@@ -15,9 +15,7 @@ export default async function ProfileRoute() {
       name={session.user.name ?? null}
       email={session.user.email ?? ""}
       isAdmin={isAdmin(session.user.role)}
-      sportpass={(await consentRows(session.user.id, getDisplayTimeZone())).filter(
-        (entry) => entry.status === "active"
-      )}
+      sportpass={await consentRows(session.user.id, getDisplayTimeZone())}
     />
   )
 }

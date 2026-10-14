@@ -41,3 +41,6 @@ export function ownerActionOf(status: ConsentStatus): "revoke" | "remove" {
 export function isOpenConsent(status: ConsentStatus): boolean {
   return status === "requested" || status === "returned"
 }
+
+/** SportpassIDs je Konto: SF-39 braucht mehrere (neuer Ausweis), mehr als drei ist kein Anwendungsfall */
+export const MAX_CONSENTS_PER_ACCOUNT = 3
