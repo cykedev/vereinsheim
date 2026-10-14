@@ -13,6 +13,7 @@ import { routeFromUrl, urlFromRoute, type Route } from "@vereinsheim/shot-ui/nav
 import { ThemeSwitch } from "@/components/theme/ThemeSwitch"
 
 import { HelpContext } from "./HelpContext"
+import { UndoHost } from "./UndoBar"
 
 /** die Adresse eines Bereichs ohne Abend und Abschnitt, als Schlüssel für das Gedächtnis */
 const memoryKey = (route: Route | null) => (route ? urlFromRoute(route) : "")
@@ -20,7 +21,7 @@ const memoryKey = (route: Route | null) => (route ? urlFromRoute(route) : "")
 /**
  * Rahmen der App (N7): `AppFrame` aus shot-ui mit echten Links (`next/link`, Klicks über den Router), dem Bereich der
  * Adresse und der zuletzt besuchten Adresse je Bereich (Scheiben, Fortschritt), wie Reiter einer App. Dazu das Blatt
- * der Hilfe, das jede Seite über `useHelp` öffnet.
+ * der Hilfe, das jede Seite über `useHelp` öffnet, und der Hinweis „Rückgängig“ (`useUndo`, P2b).
  */
 export function AppShell({
   isAdmin,
@@ -78,7 +79,8 @@ export function AppShell({
           scan={false}
           sidebarFooter={<ThemeSwitch />}
         >
-          {children}
+          {/* im Rahmen, damit der Hinweis „Rückgängig“ über der unteren Leiste steht (`--app-bar`) */}
+          <UndoHost>{children}</UndoHost>
         </AppFrame>
         <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />
       </HelpContext.Provider>
