@@ -37,11 +37,13 @@ automatisch erkennen:
 
 # === VPS-Mode ===
 ./scripts/vereinsheim status       # Services, Volumes, Backups, Cron, .env
-./scripts/vereinsheim setup        # .env-Wizard, validiert, generiert Secrets
-./scripts/vereinsheim env-check    # .env-Vollständigkeit
-./scripts/vereinsheim deploy       # Pre-Backup + Pull + Up
+./scripts/vereinsheim setup        # .env-Wizard nach .env.example; „Fehlende Schlüssel ergänzen“
+./scripts/vereinsheim env-check    # .env-Vollständigkeit (Exit 1 bei fehlenden Schlüsseln)
+./scripts/vereinsheim deploy       # Vorprüfung + Pre-Backup + Pull + je App nacheinander
 ./scripts/vereinsheim backup       # Backup jetzt
 ./scripts/vereinsheim restore      # interaktive Auswahl
+./scripts/vereinsheim restore-probe   # neueste Dumps probeweise in Wegwerf-DBs
+./scripts/vereinsheim db-ensure    # fehlende App-Datenbanken anlegen (laufendes System)
 ./scripts/vereinsheim logs [svc]   # Logs folgen
 ./scripts/vereinsheim psql <app>   # psql-Shell
 ./scripts/vereinsheim migrations <app>   # Failed Migrations + Recovery
@@ -50,12 +52,16 @@ automatisch erkennen:
 ./scripts/vereinsheim up | down | restart <svc>
 ```
 
-**Konfigurations-Dateien** (beide gitignored):
+**Konfigurations-Dateien** (alle gitignored):
 
 | Datei                | Wo        | Wofür                                              |
 | -------------------- | --------- | -------------------------------------------------- |
 | `.env`               | VPS       | Postgres-Passwörter, NEXTAUTH_SECRET, Domain, etc. |
 | `.vereinsheim.local` | lokal     | VPS_HOST (SSH-Ziel), VPS_REPO_PATH, DOCKER_USER    |
+| `.env.local`         | lokal     | Platzhalter für den lokalen Stack; `local-pull` und `local-up` ergänzen fehlende Schlüssel |
+
+Die Apps stehen an einer Stelle im CLI (`APPS=(ringwerk treffsicher spiegel)`, Upload-Volume nur
+`UPLOAD_APPS=(treffsicher)`); Menüs, Tags, Backup, Restore und Deploy leiten sich daraus ab (P4, Oktober 2026).
 
 Die folgenden Abschnitte beschreiben **was technisch passiert**, damit du
 auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
@@ -90,7 +96,7 @@ auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
    ./scripts/vereinsheim setup     # .env-Wizard
    ./scripts/vereinsheim cron      # Backup-Cron
    ```
-5. **DNS-Records setzen** (A-Record für beide Subdomains → VPS-IP).
+5. **DNS-Records setzen** (A-Record für alle drei Subdomains → VPS-IP; `setup` nennt sie).
 6. **Erster Deploy**: nach erfolgreichem lokalen Image-Build:
    ```bash
    ./scripts/vereinsheim deploy
@@ -107,7 +113,7 @@ Lokal, ein Befehl:
 ```
 
 `release` führt aus:
-1. `build-and-push.sh` (beide Apps, runner+migrator, → Docker Hub)
+1. `build-and-push.sh` (alle Apps, runner+migrator, → Docker Hub; `APPS="ringwerk treffsicher"` für eine Auswahl)
 2. `ssh -t $VPS_HOST "cd $VPS_REPO_PATH && ./scripts/vereinsheim deploy"`
 3. `vereinsheim deploy` auf dem VPS macht Pre-Backup → Pull → Up.
 
@@ -118,13 +124,19 @@ Bei Bedarf zerlegbar:
 ./scripts/vereinsheim remote deploy   # nur deployen (ohne neuen Build)
 ```
 
-`scripts/deploy.sh` macht idempotent:
+`scripts/deploy.sh` macht idempotent (seit P4, Oktober 2026, je App nacheinander):
 
-1. Pre-Deploy-Backup (siehe unten) — überspringbar mit `SKIP_BACKUP=1`
-2. `docker compose pull` — neue Image-Tags ziehen
-3. `docker compose up -d --remove-orphans` — geänderte Container neu starten,
-   migrate-Container laufen automatisch vor App-Container
-4. `docker image prune -f` — alte Images aufräumen
+1. **Vorprüfung** (wenn `db` läuft): Die Datenbank-Rolle jeder App gibt es, sonst Abbruch mit „zuerst
+   `vereinsheim db-ensure`“. `vereinsheim deploy` prüft vorher zusätzlich mit `env-check`, dass keine Schlüssel
+   fehlen.
+2. Pre-Deploy-Backup (siehe unten) — überspringbar mit `SKIP_BACKUP=1`
+3. `docker compose pull` — neue Image-Tags ziehen
+4. `db` (wartet auf healthy) und `caddy`
+5. je App `docker compose up -d --wait app-<app>`: erst der Migrator bis Exit 0, dann die App. Immer nur ein
+   Migrator gleichzeitig; scheitert eine App, bricht der Deploy mit ihrem Namen ab, die Apps davor sind fertig,
+   die danach unverändert.
+6. `docker compose up -d --remove-orphans`, Deploy-Historie mit den Tags aller Apps
+7. `docker image prune` — alte Images aufräumen (`SKIP_PRUNE=1` lässt sie, für lokale Tests)
 
 ### Pre-Deploy-Backup (eingebaut)
 
@@ -143,16 +155,26 @@ SKIP_BACKUP=1 ./scripts/deploy.sh
 
 ### Was beim Deploy alles gestartet/erneuert wird
 
-- `caddy` — nur wenn sich `Caddyfile` oder Image geändert hat
-- `db` — bleibt, falls schon laufend (Postgres wird nicht ohne Grund
-  durchgestartet)
-- `migrate-ringwerk` / `migrate-treffsicher` — laufen JEDES Mal one-shot,
-  weil `restart: "no"` und Container nach `up -d` neu erstellt werden
-- `app-ringwerk` / `app-treffsicher` — neu, sobald `migrate-*` mit Code 0
-  durch ist
+- `caddy` — wenn sich Image oder Umgebung geändert haben. Das `Caddyfile` ist als einzelne Datei eingehängt:
+  Nach einer Änderung daran `docker compose up -d --force-recreate caddy` ([[caddy-x-real-ip-passthrough]]).
+- `db` — bleibt, falls schon laufend; eine geänderte Umgebung (etwa ein neues `<APP>_DB_PASSWORD`) startet
+  Postgres einmal neu, alle Apps verlieren kurz die Verbindung.
+- `migrate-<app>` — laufen JEDES Mal one-shot, weil `restart: "no"` und Container nach `up -d` neu erstellt
+  werden; nacheinander, nie gleichzeitig.
+- `app-<app>` — neu, sobald `migrate-<app>` mit Code 0 durch ist.
 
-Wenn `migrate-*` fehlschlägt, startet die zugehörige App **nicht**. Die
-andere App ist davon nicht betroffen (eigener migrate-Container, eigene DB).
+Wenn `migrate-<app>` fehlschlägt, startet die zugehörige App **nicht**, und der Deploy hört dort auf. Andere Apps
+sind davon nicht betroffen (eigener migrate-Container, eigene DB).
+
+### Neue App auf einem laufenden VPS
+
+So kam Spiegel dazu (SP-1.9, Runbook in P5); dasselbe gilt für jede weitere App:
+
+1. `git pull`, danach `docker compose up -d --force-recreate caddy` (neue Caddyfile mit dem neuen Host).
+2. `./scripts/vereinsheim setup` → „Fehlende Schlüssel ergänzen“ (Host, Tags, DB-Passwort, Secret, erstes Admin-Konto).
+3. `./scripts/vereinsheim db-ensure` — Rolle und Datenbank anlegen (`db-init` läuft nur bei einem frischen Volume).
+4. Images der App auf Docker Hub (öffentlich, [[adr-005]]), DNS-Eintrag für den Host.
+5. `./scripts/vereinsheim deploy`.
 
 ---
 
@@ -160,14 +182,14 @@ andere App ist davon nicht betroffen (eigener migrate-Container, eigene DB).
 
 ### Was wird gesichert
 
-`scripts/backup.sh` legt 3 Files in `${BACKUP_DIR:-/var/backups/vereinsheim}`
-ab:
+`scripts/backup.sh` legt je Lauf vier Files in `${BACKUP_DIR:-/var/backups/vereinsheim}` ab:
 
 - `ringwerk-<TS>.dump` — Postgres custom-format Dump der `ringwerk`-DB
-- `treffsicher-<TS>.dump` — analog
+- `treffsicher-<TS>.dump`, `spiegel-<TS>.dump` — analog
 - `uploads-treffsicher-<TS>.tar.gz` — Inhalt des `uploads_treffsicher`-Volumes
 
-Ringwerk hat keine persistierten Uploads und wird daher nicht archiviert.
+Ringwerk und Spiegel haben keine persistierten Uploads und werden daher nicht archiviert. Gibt es die Datenbank
+einer App noch nicht (Spiegel vor `vereinsheim db-ensure`), meldet das Backup es und sichert die übrigen.
 
 Retention: 14 Tage rolling (`BACKUP_RETAIN_DAYS=14`, überschreibbar).
 
@@ -197,6 +219,9 @@ Backup nur als **Schutz vor Software-Fehlern**, nicht vor Hardware-Verlust.
 - borg-Backup auf NAS
 - IONOS Snapshot-Funktion (whole-VM, weniger granular)
 
+Bis dahin holt `vereinsheim local-pull` die neuesten Dumps aller Apps auf den Mac (`./backups/`), auch Spiegel
+(User, 14. Oktober 2026). Diese Kopien rotieren nicht wie die Sicherungen auf dem Server.
+
 ---
 
 ## Restore
@@ -215,12 +240,14 @@ Restore:
 Direkt-Aufruf (für Skripte oder wenn das Tool nicht greifbar ist):
 
 ```bash
-docker compose stop app-ringwerk migrate-ringwerk
-./scripts/restore.sh ringwerk \
-  /var/backups/vereinsheim/ringwerk-2026-05-10_0300.dump \
-  /var/backups/vereinsheim/uploads-ringwerk-2026-05-10_0300.tar.gz
-docker compose up -d migrate-ringwerk app-ringwerk
+docker compose stop app-treffsicher migrate-treffsicher
+./scripts/restore.sh treffsicher \
+  /var/backups/vereinsheim/treffsicher-2026-05-10_0300.dump \
+  /var/backups/vereinsheim/uploads-treffsicher-2026-05-10_0300.tar.gz
+docker compose up -d migrate-treffsicher app-treffsicher
 ```
+
+Ringwerk und Spiegel ohne Uploads-Tar (`restore.sh` lehnt einen ab: Sie haben kein Upload-Volume).
 
 `restore.sh`:
 
@@ -231,20 +258,17 @@ docker compose up -d migrate-ringwerk app-ringwerk
 
 ### Restore-Test (regelmäßig empfohlen)
 
-Mindestens **einmal pro Quartal** in einer Wegwerf-DB einen Restore testen,
-um sicherzugehen, dass die Backups tatsächlich funktionieren:
+Mindestens **einmal pro Quartal**, und nach jeder neuen App, prüfen, dass sich die Backups einspielen lassen:
 
 ```bash
-# Wegwerf-DB anlegen, restoren, Tabellen zählen, wieder droppen
-docker compose exec -T db psql -U postgres -c "CREATE DATABASE restore_test;"
-docker compose cp /var/backups/vereinsheim/ringwerk-<TS>.dump db:/tmp/test.dump
-docker compose exec -T db pg_restore -U postgres -d restore_test \
-  --no-owner --role=postgres /tmp/test.dump
-docker compose exec -T db psql -U postgres -d restore_test \
-  -c "SELECT count(*) FROM \"User\";"
-docker compose exec -T db psql -U postgres -c "DROP DATABASE restore_test;"
-docker compose exec -T db rm /tmp/test.dump
+./scripts/vereinsheim restore-probe
 ```
+
+Je App spielt `scripts/restore-probe.sh` den neuesten Dump in eine Wegwerf-Datenbank `restore_probe_<app>`
+(`pg_restore --no-owner`), zählt Tabellen und angewandte Migrationen und löscht sie wieder; die laufenden Datenbanken
+bleiben unberührt. In Ordnung ist eine App, wenn das Einspielen gelingt und Tabellen und Migrationen da sind; eine
+andere Zahl als in der laufenden Datenbank ist nur ein Hinweis (ein Deploy nach dem Backup). Exit 1 bei einem Fehler
+oder einem fehlenden Dump (außer die App hat noch gar keine Datenbank). `BACKUP_DIR` wählt einen anderen Ordner.
 
 ---
 
@@ -252,7 +276,7 @@ docker compose exec -T db rm /tmp/test.dump
 
 ### Hintergrund
 
-Beide Apps fahren ihre Migrationen via `prisma migrate deploy` im jeweiligen
+Alle Apps fahren ihre Migrationen via `prisma migrate deploy` im jeweiligen
 `migrate-<app>`-Container. Schlägt eine Migration fehl, bleibt in der
 `_prisma_migrations`-Tabelle ein Eintrag mit `finished_at IS NULL` zurück.
 **Prisma weigert sich danach, irgendeine weitere Migration zu fahren**, bis
@@ -262,7 +286,9 @@ einfaches `migrate deploy` nicht weiter.
 
 ### Eingebauter Recovery-Mechanismus
 
-Die Apps enthalten zwei zusammenwirkende Skripte (`apps/<app>/scripts/`):
+Ringwerk und Treffsicher enthalten zwei zusammenwirkende Skripte (`apps/<app>/scripts/`). Spiegel hat nur
+`run-migrations-with-recovery.sh` mit `prisma migrate deploy` ohne Wiederherstellung (bis zum ersten Deploy eine
+Migration, `PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS=false`); scheitert dort eine, helfen Pfad 3 und 4.
 
 - `scripts/run-migrations-with-recovery.sh` — versucht `migrate deploy`,
   ruft bei Fehler das Recovery-Skript, dann nochmal `deploy`.
@@ -421,6 +447,8 @@ Tag rollen willst, der nicht in der History steht):
 ./scripts/vereinsheim setup     # Wahl 2: einzelne Werte bearbeiten
 #  → RINGWERK_TAG = <vorherige-sha>
 #  → RINGWERK_MIGRATOR_TAG = <vorherige-sha>-migrator
+#  (ebenso TREFFSICHER_* und SPIEGEL_*; Einträge von vor P4 haben keine
+#   Spiegel-Tags, dann bleibt Spiegel auf dem aktuellen Tag)
 SKIP_BACKUP=1 ./scripts/vereinsheim deploy
 ```
 

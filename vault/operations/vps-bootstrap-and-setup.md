@@ -9,4 +9,4 @@ informed_by: ["[[adr-013]]", "[[adr-012]]", "[[adr-014]]"]
 documented_in: ["[[operations#Initial-Bootstrap eines neuen VPS]]"]
 ---
 
-**TL;DR** bootstrap-vps.sh (root) → setup-Wizard → cron → DNS → release; SSH-Lockdown manuell (ADR-013); .vereinsheim.local lokal (ADR-012).
+**TL;DR** bootstrap-vps.sh (root) → setup-Wizard (fragt die Schlüssel aus .env.example ab; auf einem bestehenden VPS „Fehlende Schlüssel ergänzen“ und `db-ensure` für eine neue App) → cron → DNS → release; SSH-Lockdown manuell (ADR-013); .vereinsheim.local lokal (ADR-012).

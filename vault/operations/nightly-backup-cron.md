@@ -9,4 +9,4 @@ informed_by: ["[[adr-009]]"]
 documented_in: ["[[operations#Wann läuft Backup?]]"]
 ---
 
-**TL;DR** ./vereinsheim cron, 03:00 UTC, Retention 14 Tage, /var/backups/vereinsheim/; on-VPS (kein Hardware-Schutz).
+**TL;DR** ./vereinsheim cron, 03:00 UTC, Retention 14 Tage, /var/backups/vereinsheim/ (Dumps aller Apps mit Datenbank + treffsicher-Uploads); on-VPS (kein Hardware-Schutz).

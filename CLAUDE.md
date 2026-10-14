@@ -41,8 +41,8 @@ Onboarding in dieser Reihenfolge:
    Tool, Recovery-Pfade.
 
 Nur wenn du Code änderst:
-- [`scripts/vereinsheim`](scripts/vereinsheim) — das CLI (~900 Zeilen,
-  klar nach Sections gegliedert)
+- [`scripts/vereinsheim`](scripts/vereinsheim) — das CLI (~2000 Zeilen,
+  klar nach Sections gegliedert; die Apps stehen einmal oben in `APPS`)
 - [`compose.yml`](compose.yml), [`Caddyfile`](Caddyfile),
   [`db-init/01-users-and-dbs.sh`](db-init/01-users-and-dbs.sh)
 
@@ -121,8 +121,8 @@ Ein Tool, zwei Modi. Erkennung: ist `.vereinsheim.local` da?
 
 | Mode  | Trigger                         | Subcommands                              |
 | ----- | ------------------------------- | ---------------------------------------- |
-| Lokal | `.vereinsheim.local` existiert  | local-setup, build, release, ssh, remote |
-| VPS   | Default                         | setup, deploy, backup, restore, migrations, status, cron, psql, logs, shell, env-check, up/down/restart |
+| Lokal | `.vereinsheim.local` existiert  | local-setup, build, release, ssh, remote, local-build/-pull/-up/-down, dev-restore |
+| VPS   | Default                         | setup, deploy, backup, restore, restore-probe, db-ensure, migrations, status, cron, psql, logs, shell, env-check, up/down/restart |
 
 Aufruf: `./scripts/vereinsheim` (Menü) oder `./scripts/vereinsheim <subcmd>`.
 Volle Liste: `./scripts/vereinsheim help`.

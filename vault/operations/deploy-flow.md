@@ -10,4 +10,4 @@ relates_to: ["[[build-deploy-pipeline]]"]
 documented_in: ["[[operations#Standard-Flow]]"]
 ---
 
-**TL;DR** release (lokal) → build-and-push + ssh-deploy; deploy.sh = pre-backup→pull→up -d→prune; migrate-* one-shot VOR app-*; Tags <sha>(+-migrator).
+**TL;DR** release (lokal) → build-and-push (alle Apps, `APPS=…` für eine Auswahl) + ssh-deploy; deploy.sh = Vorprüfung (Rolle je App, sonst `db-ensure`) → Pre-Backup → pull → db/caddy → je App migrate-<app> dann app-<app> nacheinander → Historie → prune; Tags <sha>(+-migrator).

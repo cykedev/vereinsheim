@@ -10,4 +10,4 @@ relates_to: ["[[deploy-flow]]"]
 documented_in: ["[[operations#Pre-Deploy-Backup (eingebaut)]]"]
 ---
 
-**TL;DR** Auto-Backup VOR jedem Deploy (außer SKIP_BACKUP=1); sichert beide DB-Dumps + treffsicher-Uploads.
+**TL;DR** Auto-Backup VOR jedem Deploy (außer SKIP_BACKUP=1); sichert die Dumps aller Apps mit Datenbank (Ringwerk, Treffsicher, Spiegel) + treffsicher-Uploads.

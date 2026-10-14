@@ -9,4 +9,4 @@ part_of: ["[[operations]]"]
 documented_in: ["[[operations#Was wird gesichert]]"]
 ---
 
-**TL;DR** 14-Tage-Lokal-Backups decken keine Hardware-/VPS-Verluste; Off-Site (rclone/borg/Snapshot) ist offene Folge-ADR.
+**TL;DR** 14-Tage-Lokal-Backups decken keine Hardware-/VPS-Verluste; Off-Site (rclone/borg/Snapshot) ist offene Folge-ADR. Bis dahin holt `local-pull` die neuesten Dumps aller Apps (auch Spiegel) auf den Mac; diese Kopien rotieren nicht.
