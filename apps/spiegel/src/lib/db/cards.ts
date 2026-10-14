@@ -53,6 +53,8 @@ export interface CardInput {
   cycle?: number
   /** nur beim Anlegen; die Zuordnung ändert eine Revision nicht */
   ownerId?: string | null
+  /** nur beim Anlegen: der Besitz wartet auf die Bestätigung der ersten Scheibe (SP-1.7 a2); fehlt: nicht */
+  ownerPending?: boolean
   /** fehlt: nicht anfassen; null: leeren (Drei-Wege-Semantik, conventions §9) */
   sportpassId?: bigint | null
   disciplineId: number
@@ -312,6 +314,7 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
           cycle,
           origin: input.card.origin,
           ownerId: input.card.ownerId ?? null,
+          ownerPending: input.card.ownerPending ?? false,
           lastSequence: sequence,
         },
         select: { id: true },

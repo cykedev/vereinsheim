@@ -27,6 +27,8 @@ beforeAll(async () => {
       siteId: site.siteId,
       sportpassId: MUSTER,
       confirmedAt: new Date(),
+      // eingespielt: die erste Scheibe ist bestätigt (SP-1.7 a2), hier geht es ums Einlesen
+      firstCardConfirmedAt: new Date(),
     },
   })
 })
@@ -52,6 +54,27 @@ function sent(caseId: string, scheibenId: number): SnapshotV1[] {
 /** alle Snapshots eines Falls zu einer Scheibe, auch die nicht gesendeten */
 const all = (caseId: string, scheibenId: number) =>
   frozenReadings(caseId).flatMap((r) => r.snapshots.filter((s) => s.scheibenId === scheibenId))
+
+/** derselbe Stand unter einer anderen SportpassID und ScheibenID (eine andere Scheibe eines anderen Schützen) */
+function withSportpass(
+  snapshot: SnapshotV1,
+  sportpass: string,
+  scheibenId: number,
+  sequence = snapshot.sequence
+): SnapshotV1 {
+  const data = {
+    ...snapshot.data,
+    scheiben: {
+      ...snapshot.data.scheiben,
+      rows: snapshot.data.scheiben.rows.map((row) => ({
+        ...row,
+        SportpassID: sportpass,
+        ScheibenID: String(scheibenId),
+      })),
+    },
+  }
+  return { ...snapshot, scheibenId, sequence, data, checksum: computeChecksum(data) }
+}
 
 const cardOf = (scheibenId: number) =>
   db.card.findFirst({
@@ -117,6 +140,56 @@ describe("ingestBatch", () => {
     const card = await cardOf(expected.scheibenId)
     expect(card!.currentRevision!.number).toBe(2)
     expect([...card!.flags].sort()).toEqual([...expected.flags].sort())
+  })
+
+  it("erste Scheibe: wartet bis zur Bestätigung; ein späterer Stand ändert das nicht (SP-1.7 a2)", async () => {
+    const other = await db.user.create({
+      data: { email: `p-${site.siteId}@example.com`, passwordHash: "-" },
+    })
+    try {
+      const consent = await db.sportpassConsent.create({
+        data: {
+          userId: other.id,
+          siteId: site.siteId,
+          sportpassId: BigInt(87654323),
+          confirmedAt: new Date(),
+        },
+      })
+      const snapshots = sent("SF-02", frozenExpected("SF-02").cards[0].scheibenId)
+      const first = withSportpass(snapshots[0], "87654323", snapshots[0].scheibenId + 3)
+      await ingest([first])
+      const card = await db.card.findFirstOrThrow({
+        where: { sourceId: site.sourceId, scheibenId: first.scheibenId },
+      })
+      expect(card.ownerId).toBe(other.id)
+      expect(card.ownerPending).toBe(true)
+
+      // bestätigt: ein späterer Stand derselben Scheibe lässt sie wartend, eine neue wartet nicht
+      await db.sportpassConsent.update({
+        where: { id: consent.id },
+        data: { firstCardConfirmedAt: new Date() },
+      })
+      const later = withSportpass(
+        snapshots.at(-1)!,
+        "87654323",
+        first.scheibenId,
+        first.sequence + 1
+      )
+      await ingest([later])
+      expect((await db.card.findUniqueOrThrow({ where: { id: card.id } })).ownerPending).toBe(true)
+      const next = withSportpass(snapshots[0], "87654323", first.scheibenId + 1)
+      await ingest([next])
+      expect(
+        (
+          await db.card.findFirstOrThrow({
+            where: { sourceId: site.sourceId, scheibenId: next.scheibenId },
+          })
+        ).ownerPending
+      ).toBe(false)
+    } finally {
+      await db.card.deleteMany({ where: { ownerId: other.id } })
+      await db.user.delete({ where: { id: other.id } })
+    }
   })
 
   it("eine abgelehnte Zustimmung zählt nicht, auch mit altem Bestätigt: nichts gespeichert (SP-1.7 a)", async () => {
@@ -265,6 +338,8 @@ describe("ingestBatch", () => {
           siteId: site.siteId,
           sportpassId: BigInt(87654321),
           confirmedAt: new Date(),
+          // eingespielt: die erste Scheibe ist bestätigt (SP-1.7 a2), hier geht es ums Einlesen
+          firstCardConfirmedAt: new Date(),
         },
       })
       const expected = frozenExpected("SF-02").cards[0]

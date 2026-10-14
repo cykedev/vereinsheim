@@ -42,6 +42,7 @@ beforeAll(async () => {
       siteId: site.siteId,
       sportpassId: BigInt(12345678),
       confirmedAt: new Date(),
+      firstCardConfirmedAt: new Date(),
     },
   })
 })

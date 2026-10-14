@@ -69,13 +69,24 @@ async function sourceOf(db: Db, siteId: number, epoch: number): Promise<SourceSt
   return { sourceId: created.id, confirmed: created.confirmedAt !== null }
 }
 
-/** aktive Zustimmungen der Anlage (bestätigt, nicht abgelehnt; `consentStatus`): SportpassID → Konto */
-async function consentsOf(db: Db, siteId: number): Promise<Map<string, string>> {
+/** wem eine Scheibe gehört und ob der Besitz noch auf die Bestätigung der ersten Scheibe wartet (SP-1.7 a2) */
+interface Owner {
+  userId: string
+  pending: boolean
+}
+
+/** aktive Zustimmungen der Anlage (bestätigt, nicht abgelehnt; `consentStatus`): SportpassID → Besitzer */
+async function consentsOf(db: Db, siteId: number): Promise<Map<string, Owner>> {
   const rows = await db.sportpassConsent.findMany({
     where: { siteId, ...ACTIVE_CONSENT, user: { isActive: true } },
-    select: { sportpassId: true, userId: true },
+    select: { sportpassId: true, userId: true, firstCardConfirmedAt: true },
   })
-  return new Map(rows.map((r) => [r.sportpassId.toString(), r.userId]))
+  return new Map(
+    rows.map((r) => [
+      r.sportpassId.toString(),
+      { userId: r.userId, pending: r.firstCardConfirmedAt === null },
+    ])
+  )
 }
 
 /**
@@ -236,10 +247,11 @@ async function adaptAndWrite(
   db: Db,
   target: IngestTarget,
   sourceId: number,
-  ownerId: string,
+  owner: Owner,
   snapshot: SnapshotV1,
   stored: { snapshotId: bigint } & PreviousLifesign
 ): Promise<Handled> {
+  const ownerId = owner.userId
   const named = disciplineOf(snapshot)
   const problems = schemaProblems(snapshot)
   if (!named || problems.length)
@@ -286,6 +298,8 @@ async function adaptAndWrite(
         scheibenId: card.scheibenId,
         cycle,
         ownerId,
+        // nur beim Anlegen: bis der Schütze die erste Scheibe bestätigt, wartet jede neue (SP-1.7 a2)
+        ownerPending: owner.pending,
         sportpassId: card.sportpassId,
         disciplineId: discipline.id,
         stand: card.stand,
@@ -340,7 +354,7 @@ export async function ingestBatch(
       index: number
       snapshot: SnapshotV1
       sourceId: number
-      ownerId: string
+      owner: Owner
       stored: { snapshotId: bigint } & PreviousLifesign
     }
   >()
@@ -370,8 +384,8 @@ export async function ingestBatch(
       continue
     }
     const sportpassId = sportpassIdOf(snapshot)
-    const ownerId = sportpassId === null ? undefined : consents.get(sportpassId.toString())
-    if (!ownerId) {
+    const owner = sportpassId === null ? undefined : consents.get(sportpassId.toString())
+    if (!owner) {
       result("discarded", "no-consent")
       continue
     }
@@ -396,7 +410,7 @@ export async function ingestBatch(
         index,
         snapshot,
         sourceId: source.sourceId,
-        ownerId,
+        owner,
         stored: { snapshotId: (stored as { snapshotId: bigint }).snapshotId, ...previous },
       })
     if (stored.outcome === "stored") {
@@ -424,7 +438,7 @@ export async function ingestBatch(
         db,
         target,
         item.sourceId,
-        item.ownerId,
+        item.owner,
         item.snapshot,
         item.stored
       )
