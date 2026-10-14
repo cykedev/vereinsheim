@@ -5,7 +5,10 @@
 #   - Pre-Deploy-Backup (Sicherheitsnetz, falls db läuft)
 #   - aktuelle Images aus Docker Hub
 #   - db und caddy, dann je App Migrator und App: immer nur ein Migrator (Speicher),
-#     und ein Fehler trifft nur diese App, die vorigen sind fertig, die späteren unberührt
+#     und ein Fehler trifft nur diese App, die vorigen sind fertig, die späteren unberührt.
+#     Ohne `--wait` (je nach Compose-Version anders): `up -d app-<app>` wartet über
+#     depends_on (service_completed_successfully) selbst auf den Migrator; db über
+#     pg_isready, die App muss danach laufen und darf nicht neu starten.
 #   - Tags aller Apps in die Deploy-Historie (für ./scripts/vereinsheim rollback)
 #   - unbenutzte Images aufräumen (dangling sofort; getaggt nach >7 Tagen)
 #
@@ -23,8 +26,8 @@ cd "$(dirname "$0")/.."
 export ENV_FILE="${ENV_FILE:-.env}"
 HISTORY_FILE="${HISTORY_FILE:-logs/deploy-history.log}"
 APPS=(ringwerk treffsicher spiegel)
-# einmalige Container (Migratoren) und Apps dürfen so lange brauchen
-WAIT_SECONDS="${WAIT_SECONDS:-300}"
+# so lange darf db bis healthy und eine App bis „running“ brauchen
+WAIT_SECONDS="${WAIT_SECONDS:-120}"
 
 if [[ ! -f "$ENV_FILE" ]]; then
 	echo "$ENV_FILE fehlt im Repo-Root. Aus .env.example anlegen und Werte setzen." >&2
@@ -34,22 +37,56 @@ fi
 compose() { docker compose --env-file "$ENV_FILE" "$@"; }
 db_running() { compose ps --status running --services 2>/dev/null | grep -qx db; }
 
-# Vorprüfung: Ohne Rolle scheitert der Migrator der App erst nach dem Neuaufbau der übrigen (Review P3)
-if db_running; then
-	echo "==> Vorprüfung: Datenbank-Rollen"
-	missing=()
+# Vorprüfung: Ohne Rolle oder Datenbank scheitert der Migrator der App erst nach dem Neuaufbau
+# der übrigen (Review P3). Vor dem Backup, wenn db läuft, und noch einmal nach dem Start von db.
+check_app_databases() {
+	local app found missing=()
 	for app in "${APPS[@]}"; do
-		if ! found="$(compose exec -T db psql -U postgres -d postgres -Atc "SELECT 1 FROM pg_roles WHERE rolname = '$app'")"; then
-			echo "ERROR: Rollen in der Datenbank nicht lesbar." >&2
+		if ! found="$(compose exec -T db psql -U postgres -d postgres -Atc \
+			"SELECT (SELECT count(*) FROM pg_roles WHERE rolname = '$app') + (SELECT count(*) FROM pg_database WHERE datname = '$app')")"; then
+			echo "ERROR: Rollen und Datenbanken nicht lesbar." >&2
 			exit 1
 		fi
-		[[ "$found" == "1" ]] || missing+=("$app")
+		[[ "$found" == "2" ]] || missing+=("$app")
 	done
 	if ((${#missing[@]} > 0)); then
-		echo "ERROR: Es fehlt die Datenbank-Rolle für: ${missing[*]}." >&2
+		echo "ERROR: Es fehlt Rolle oder Datenbank für: ${missing[*]}." >&2
 		echo "  Zuerst: ./scripts/vereinsheim db-ensure, dann erneut deployen." >&2
 		exit 1
 	fi
+}
+
+wait_db() {
+	local _
+	for _ in $(seq "$WAIT_SECONDS"); do
+		compose exec -T db pg_isready -U postgres >/dev/null 2>&1 && return 0
+		sleep 1
+	done
+	echo "ERROR: db ist nach ${WAIT_SECONDS} s nicht bereit." >&2
+	exit 1
+}
+
+# eine App läuft, wenn ihr Container „running“ ist und das 5 s lang ohne Neustart bleibt
+wait_running() {
+	local service="$1" id state restarts _
+	for _ in $(seq "$WAIT_SECONDS"); do
+		id="$(compose ps -q "$service")"
+		if [[ -n "$id" ]]; then
+			state="$(docker inspect -f '{{.State.Status}} {{.RestartCount}}' "$id")"
+			if [[ "$state" == running* ]]; then
+				restarts="${state#* }"
+				sleep 5
+				[[ "$(docker inspect -f '{{.State.Status}} {{.RestartCount}}' "$id")" == "running $restarts" ]] && return 0
+			fi
+		fi
+		sleep 1
+	done
+	return 1
+}
+
+if db_running; then
+	echo "==> Vorprüfung: Rollen und Datenbanken"
+	check_app_databases
 fi
 
 # Pre-Deploy-Backup: nur wenn db schon läuft und nicht ausdrücklich übersprungen.
@@ -66,13 +103,16 @@ echo "==> docker compose pull"
 compose pull
 
 echo "==> db und caddy"
-compose up -d --wait --wait-timeout "$WAIT_SECONDS" db
+compose up -d db
+wait_db
+# erst jetzt sicher: db lief vorher vielleicht nicht (etwa nach `vereinsheim down`)
+check_app_databases
 compose up -d caddy
 
 for app in "${APPS[@]}"; do
 	echo "==> ${app}: Migrator, dann App"
-	# depends_on: erst migrate-<app> bis Exit 0, dann app-<app>
-	if ! compose up -d --wait --wait-timeout "$WAIT_SECONDS" "app-${app}"; then
+	# depends_on: erst migrate-<app> bis Exit 0, dann app-<app>; scheitert der Migrator, endet `up` mit Fehler
+	if ! compose up -d "app-${app}" || ! wait_running "app-${app}"; then
 		echo "ERROR: ${app} ließ sich nicht starten. Die Apps davor sind deployt, die danach unverändert." >&2
 		echo "  Logs: docker compose logs migrate-${app} app-${app}" >&2
 		echo "  Migrationen: ./scripts/vereinsheim migrations ${app}" >&2
@@ -80,8 +120,9 @@ for app in "${APPS[@]}"; do
 	fi
 done
 
+# verwaiste Container entfernen, ohne die Migratoren noch einmal (und dann gleichzeitig) zu starten (Review P4)
 echo "==> Rest abgleichen (verwaiste Container)"
-compose up -d --remove-orphans
+compose up -d --remove-orphans --no-deps db caddy $(printf 'app-%s ' "${APPS[@]}")
 
 # Deploy-History: eine Zeile pro erfolgreichem Deploy, für `vereinsheim rollback`.
 tag_pattern="$(printf '%s\n' "${APPS[@]}" | tr '[:lower:]' '[:upper:]' | paste -sd '|' -)"

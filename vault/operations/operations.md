@@ -126,16 +126,18 @@ Bei Bedarf zerlegbar:
 
 `scripts/deploy.sh` macht idempotent (seit P4, Oktober 2026, je App nacheinander):
 
-1. **Vorprüfung** (wenn `db` läuft): Die Datenbank-Rolle jeder App gibt es, sonst Abbruch mit „zuerst
-   `vereinsheim db-ensure`“. `vereinsheim deploy` prüft vorher zusätzlich mit `env-check`, dass keine Schlüssel
+1. **Vorprüfung** (wenn `db` läuft, und noch einmal nach dem Start von `db`): Rolle und Datenbank jeder App gibt es,
+   sonst Abbruch mit „zuerst `vereinsheim db-ensure`“. `vereinsheim deploy` prüft vorher zusätzlich mit `env-check`, dass keine Schlüssel
    fehlen.
 2. Pre-Deploy-Backup (siehe unten) — überspringbar mit `SKIP_BACKUP=1`
 3. `docker compose pull` — neue Image-Tags ziehen
-4. `db` (wartet auf healthy) und `caddy`
-5. je App `docker compose up -d --wait app-<app>`: erst der Migrator bis Exit 0, dann die App. Immer nur ein
-   Migrator gleichzeitig; scheitert eine App, bricht der Deploy mit ihrem Namen ab, die Apps davor sind fertig,
-   die danach unverändert.
-6. `docker compose up -d --remove-orphans`, Deploy-Historie mit den Tags aller Apps
+4. `db` (wartet über `pg_isready`) und `caddy`
+5. je App `docker compose up -d app-<app>`: Compose startet über `depends_on` erst den Migrator und wartet auf Exit 0,
+   dann die App; danach muss sie laufen, ohne neu zu starten. Immer nur ein Migrator gleichzeitig; scheitert eine App,
+   bricht der Deploy mit ihrem Namen ab, die Apps davor sind fertig, die danach unverändert. Kein `--wait` (verhält
+   sich je nach Compose-Version anders).
+6. `docker compose up -d --remove-orphans --no-deps` für `db`, `caddy` und die Apps (ohne die Migratoren erneut zu
+   starten), Deploy-Historie mit den Tags aller Apps
 7. `docker image prune` — alte Images aufräumen (`SKIP_PRUNE=1` lässt sie, für lokale Tests)
 
 ### Pre-Deploy-Backup (eingebaut)

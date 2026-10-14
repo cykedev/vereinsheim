@@ -49,6 +49,25 @@ wait_spiegel() {
 	done
 	echo "$code"
 }
+# Migratoren nacheinander: Jeder startet erst nach dem Ende des vorigen, keiner danach noch einmal gleichzeitig
+# (Review P4: das abschließende `up -d` startete sie neu). Sekunden reichen, ein Migrator braucht mehrere.
+check_migrator_order() {
+	local app id started finished prev_finished="" prev_app=""
+	for app in ringwerk treffsicher spiegel; do
+		id="$(compose ps -a -q "migrate-$app")"
+		started="$(docker inspect -f '{{.State.StartedAt}}' "$id")"
+		finished="$(docker inspect -f '{{.State.FinishedAt}}' "$id")"
+		started="${started%%.*}"
+		finished="${finished%%.*}"
+		if [[ -n "$prev_finished" && "$started" < "$prev_finished" ]]; then
+			problem "migrate-$app startete ($started) vor dem Ende von migrate-$prev_app ($prev_finished)"
+		fi
+		prev_finished="$finished"
+		prev_app="$app"
+	done
+	echo "  Migratoren nacheinander, je einmal"
+}
+
 # Spiegel ohne Datenbank und Rolle (App und Migrator gestoppt)
 drop_spiegel() {
 	compose stop app-spiegel >/dev/null 2>&1
@@ -77,6 +96,7 @@ if run ./scripts/deploy.sh; then
 	echo "  Reihenfolge: $order"
 	[[ "$order" == "ringwerk treffsicher spiegel" ]] || problem "Deploy-Reihenfolge: $order"
 	expect_text "==> Pre-Deploy-Backup" "Deploy"
+	check_migrator_order
 	tags="$(tail -n 1 "$HISTORY_FILE" | grep -o '_TAG=' | wc -l | tr -d ' ')"
 	echo "  Historie: $tags Tags in der letzten Zeile"
 	[[ "$tags" == "6" ]] || problem "Historie mit $tags statt 6 Tags"
@@ -91,7 +111,7 @@ drop_spiegel
 if run ./scripts/deploy.sh; then
 	problem "Deploy lief trotz fehlender Rolle"
 else
-	expect_text "Es fehlt die Datenbank-Rolle für: spiegel" "Vorprüfung"
+	expect_text "Es fehlt Rolle oder Datenbank für: spiegel" "Vorprüfung"
 	echo "  bricht ab wie erwartet"
 fi
 
