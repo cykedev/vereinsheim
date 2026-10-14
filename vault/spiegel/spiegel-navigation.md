@@ -63,6 +63,10 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
    - Offen sind: erste Scheibe bestätigen, wartender QR-Scan, „Das war ich“, Nachladen
      ([[spiegel-assignment]]).
    - Eine Seite `/open` listet alles; was erledigt ist, verschwindet.
+   - Gebaut am 14. Oktober 2026 für die erste Scheibe (SP-1.7 a2): `OpenBox` auf Start, die Zahl am Start-Symbol zählt
+     SportpassIDs mit wartenden Scheiben, `/open` fragt „Ja, meine“ / „Nicht meine“. **Scannen** ist bis zum QR-Weg
+     (SP-1.7 b) aus der Navigation genommen (`AppFrame` mit `scan={false}`, untere Leiste mit vier Feldern); die Seite
+     `/scan` bleibt ein Platzhalter.
 9. **Blättern im Kontext:**
    - In der Scheibe steht oben „‹ vorige · nächste ›“, in der Reihenfolge, aus der man kam: die Liste mit ihrer
      Familie, der Fortschritt mit seiner Wahl, Start mit dem letzten Abend.

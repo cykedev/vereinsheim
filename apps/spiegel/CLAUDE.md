@@ -30,7 +30,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 ## Aufbau
 
 - `src/app/login` ohne Rahmen; `src/app/(app)/*` mit Anmeldepflicht (`requireSession` im Layout, `proxy.ts` davor):
-  Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Profil, Platzhalter (Scannen, Offen),
+  Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Profil, Offen `/open`, Platzhalter Scannen
+  (bis SP-1.7 b nicht in der Navigation),
   Admin `/admin/users`.
 - Seiten sind Server-Komponenten: Sitzung, Daten (`src/lib/db/reads.ts`), Kontext (`pageContext`: Zone, „jetzt“,
   benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
@@ -183,6 +184,14 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   Version, die Zeile speichert `consentVersion`. Widerruf löscht die Zeile, die Scheiben bleiben (User, 14. Oktober 2026). Entscheidungen
   des Admins tragen ihre Bedingung im `updateMany` selbst (zweimal → „Schon entschieden.“). Das Formular schickt die
   Version des gezeigten Texts mit; die Grenze von drei je Konto zählt und legt an unter der Sperre der Kontozeile.
+- **Erste Scheibe** (SP-1.7 a2, `plans/2026-10-14-spiegel-erste-scheibe.md`): Das Einlesen legt eine neue Scheibe als
+  wartend an (`Card.ownerPending`), solange ihre Zustimmung kein `firstCardConfirmedAt` hat; spätere Stände ändern das
+  nicht. **Jede Abfrage über eigene Scheiben für eine Ansicht nimmt `VISIBLE_CARD`** (`src/lib/db/visible.ts`), sonst
+  steht eine wartende, also womöglich fremde Scheibe in Start, Liste oder Fortschritt; „Offen“ liest über `PENDING_CARD`
+  (`pendingFirstCards`, `pendingCount` für die Zahl am Start-Symbol im Layout). „Ja, meine“ / „Nicht meine“ in
+  `src/lib/first-card-actions.ts`, danach `revalidatePath("/", "layout")`. Entfernt wird nur über `purgeCards`
+  (`src/lib/db/purge.ts`: Grabstein, Scheibe, Rohdaten im Fenster `CYCLE_WINDOW_MS`, verwaiste Zeilen), die Grundlage
+  auch für Löschen und Papierkorb.
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten (gefunden von der Skriptprüfung, 13. Oktober 2026).
