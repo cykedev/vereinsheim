@@ -6,6 +6,7 @@ import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { StartPage } from "@vereinsheim/shot-ui/layout/StartPage"
+import { OpenBox, type OpenItem } from "@vereinsheim/shot-ui/start/OpenBox"
 import { openCard } from "@vereinsheim/shot-ui/nav/navigate"
 import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
 import { ScoringToggle } from "@vereinsheim/shot-ui/controls/ScoringToggle"
@@ -56,20 +57,23 @@ function ScoredEveningBlock(props: Omit<EveningBlockProps, "actions" | "notice">
 }
 
 /**
- * Start (N5, N7): je Familie des letzten Abends der Abend im Formband, die Form; „Offen“ kommt mit der Zuordnung
- * (SP-1.7). Das Modell hat die Seite auf dem Server gerechnet (`startModel` aus den Projektionen).
+ * Start (N5, N7): „Offen“ (wartende erste Scheiben, SP-1.7 a2), je Familie des letzten Abends der Abend im Formband,
+ * die Form. Das Modell hat die Seite auf dem Server gerechnet (`startModel` aus den Projektionen).
  */
 export function StartScreen({
   model,
   marks: compact,
   families,
   context,
+  open,
 }: {
   model: StartModel
   /** die Lagen der Scheiben des Abends, kompakt nach Id */
   marks: Record<string, CardMark[]>
   families: FamilyOption[]
   context: PageContext
+  /** was auf den Schützen wartet, je Eintrag ein Link nach „Offen“ */
+  open: OpenItem[]
 }) {
   const { timeZone } = context
   const marks = useMemo(() => marksById(compact), [compact])
@@ -83,9 +87,13 @@ export function StartScreen({
       <section data-start-page className="grid gap-4">
         <h1 className="sr-only">Start</h1>
         {model.blocks.length === 0 ? (
-          <NoCards />
+          <>
+            <OpenBox items={open} />
+            <NoCards />
+          </>
         ) : (
           <StartPage
+            open={open.length ? <OpenBox items={open} /> : undefined}
             evenings={model.blocks.map((block) => {
               const family = familyOf.get(block.family)
               return (

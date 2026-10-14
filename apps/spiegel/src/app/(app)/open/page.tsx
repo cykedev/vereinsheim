@@ -1,14 +1,22 @@
 import type { Metadata } from "next"
 
-import { Placeholder } from "@/components/shell/Placeholder"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
+
+import { OpenScreen } from "@/components/open/OpenScreen"
+import { requireSession } from "@/lib/auth-helpers"
+import { db } from "@/lib/db"
+import { marksOfCards, pendingFirstCards } from "@/lib/db/reads"
+import { pendingItems } from "@/lib/open"
 
 export const metadata: Metadata = { title: "Offen" }
 
-export default function OpenRoute() {
-  return (
-    <Placeholder
-      title="Offen"
-      sentence="Hier stehen Dinge, die auf dich warten (erste Scheibe bestätigen, ein wartender QR-Scan). Sie kommen mit der Zuordnung (SP-1.7)."
-    />
-  )
+// Offen (SP-1.7 a2): je SportpassID die älteste wartende Scheibe zum Bestätigen; gerechnet auf dem Server
+export default async function OpenRoute() {
+  const session = await requireSession()
+  const pending = await pendingFirstCards(db, session.user.id)
+  const marks = await marksOfCards(db, {
+    ownerId: session.user.id,
+    ids: pending.map((p) => p.card.id),
+  })
+  return <OpenScreen items={pendingItems(pending, getDisplayTimeZone())} marks={marks} />
 }

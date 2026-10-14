@@ -22,7 +22,16 @@ const memoryKey = (route: Route | null) => (route ? urlFromRoute(route) : "")
  * Adresse und der zuletzt besuchten Adresse je Bereich (Scheiben, Fortschritt), wie Reiter einer App. Dazu das Blatt
  * der Hilfe, das jede Seite über `useHelp` öffnet.
  */
-export function AppShell({ isAdmin, children }: { isAdmin: boolean; children: React.ReactNode }) {
+export function AppShell({
+  isAdmin,
+  openCount,
+  children,
+}: {
+  isAdmin: boolean
+  /** Zahl der offenen Dinge am Start-Symbol (SP-1.7 a2: wartende erste Scheiben) */
+  openCount: number
+  children: React.ReactNode
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const search = useSearchParams()
@@ -63,7 +72,7 @@ export function AppShell({ isAdmin, children }: { isAdmin: boolean; children: Re
           // Unterseiten von Admin (Konten) kennt das Routen-Modell nicht; sie gehören zu Admin
           current={areaOf(route) ?? (pathname.startsWith("/admin/") ? "admin" : null)}
           links={areaLinks(memory, family)}
-          openCount={0}
+          openCount={openCount}
           isAdmin={isAdmin}
           // Scannen kommt mit dem QR-Weg (SP-1.7 b); bis dahin nicht in der Navigation
           scan={false}
