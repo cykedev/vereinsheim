@@ -51,7 +51,7 @@ Ziel: Fakten über unsere Anlage, bevor wir Annahmen in Code gießen.
 ### SP-0.5 Einwilligung und Datenschutz
 - **Ziel:** rechtlich sauberer Start.
 - **Umfang:** Einwilligungstext (Opt-in per Sportpass), Verantwortlicher, Auftragsverarbeitung mit dem Hoster; vorerst nur erwachsene Mitglieder, keine Gäste ([[spiegel-privacy]]).
-- **Abnahme:** Text vom Vorstand abgestimmt. **Status:** offen.
+- **Abnahme:** Text vom Vorstand abgestimmt. **Status:** entfällt (14. Oktober 2026, Entscheidung des Users): Einen Einwilligungstext vom Vorstand wird es nicht geben, wir machen das ohne. Der Schütze bestätigt beim Opt-in einen eigenen Hinweistext von Spiegel (Version „v1“) selbst; das kommt mit SP-1.7 a ([[spiegel-privacy]]). SP-1.7 a hängt damit nicht mehr an diesem Schritt.
 
 ### SP-0.6 Schießprotokoll mit Mitschnitt
 - **Ziel:** sehen, wie sich die Ablage bei den Sonderfällen wirklich verhält, und Testdaten ableiten, die der Anlage gleichen.

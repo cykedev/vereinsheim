@@ -94,8 +94,8 @@ Der Katalog steht in [[spiegel-edge-cases]].
 
 - **VPS auf 4 GB?** *(Architektur)* → nein, der VPS bleibt, wie er ist (VPS S, 2 GB). Spiegel muss ins bestehende Speicherbudget passen; laut Messung vom 5. Oktober (948 MiB verfügbar) tut es das ([[spiegel-architecture]]).
 - **Swap-Datei als Sicherheitsnetz auf dem VPS?** → offen; kostet nichts, ist aber eine Änderung am VPS.
-- **Wer verantwortet die Einwilligung?** → offen (SP-0.5).
-- **Aufbewahrung und Nachladen der Historie?** → offen. Stand 13. Oktober 2026: Spiegel bewahrt Scheiben und alle Zeilenversionen ohne Frist auf, bis der Schütze löscht (Papierkorb 30 Tage); Grabsteine dauerhaft. Ein Löschkonzept braucht der Verein vermutlich; abstimmen mit dem Vorstand (SP-0.5, keine Rechtsberatung).
+- **Wer verantwortet die Einwilligung?** → **Entschieden (14. Oktober 2026, User): ohne Text vom Vorstand.** Einen Einwilligungstext vom Vorstand wird es nicht geben, SP-0.5 entfällt. Der Schütze bestätigt beim Opt-in im Profil einen eigenen Hinweistext von Spiegel (Version „v1“) selbst; Spiegel speichert Zeitpunkt und Version (SP-1.7 a, [[spiegel-privacy]]).
+- **Aufbewahrung und Nachladen der Historie?** → offen. Stand 13. Oktober 2026: Spiegel bewahrt Scheiben und alle Zeilenversionen ohne Frist auf, bis der Schütze löscht (Papierkorb 30 Tage); Grabsteine dauerhaft. Ein Löschkonzept braucht der Verein vermutlich (keine Rechtsberatung); eine Abstimmung mit dem Vorstand über SP-0.5 gibt es seit dem 14. Oktober 2026 nicht mehr.
 - **Was passiert beim Widerruf des Opt-ins mit schon hochgeladenen Scheiben?** → offen (13. Oktober 2026). Festgelegt ist nur, dass die Brücke danach nichts mehr hochlädt (SF-38); behalten oder löschen nicht.
 - **Darf der Admin fremde Scheiben löschen oder verwerfen?** → offen (13. Oktober 2026). Festgelegt sind Zuweisen und Umhängen mit Protokoll und keine Schussbilder ohne Freigabe ([[spiegel-assignment]], [[spiegel-privacy]]); zu klären vor SP-1.7 c.
 - **Gemeinsame Anmeldung für alle Apps?** → offen (SP-4.2).

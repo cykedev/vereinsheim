@@ -3,16 +3,17 @@ id: spiegel-privacy
 type: concept
 title: "Spiegel — Datenschutz und Rollen"
 aliases: [spiegel-datenschutz, spiegel-rollen, dsgvo-spiegel]
-keywords: [datenschutz, dsgvo, einwilligung, widerruf, verantwortlicher, auftragsverarbeitung, avv, datensparsamkeit, verdeckte wertung, preisschießen, königsschießen, rollen, trainer, admin, freigabe, export, löschen, jugendliche, erziehungsberechtigte, fixtures, öffentliches repo, probe-puffer, nicht meine, gäste-lan, netztrennung, protokolle, doppelt geprüft]
+keywords: [datenschutz, dsgvo, einwilligung, hinweistext, sp-0.5, widerruf, verantwortlicher, auftragsverarbeitung, avv, datensparsamkeit, verdeckte wertung, preisschießen, königsschießen, rollen, trainer, admin, freigabe, export, löschen, jugendliche, erziehungsberechtigte, fixtures, öffentliches repo, probe-puffer, nicht meine, gäste-lan, netztrennung, protokolle, doppelt geprüft]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user-isolation]]"]
 ---
 
-**TL;DR** Schussdaten sind personenbezogen. Spiegel lädt nur Daten hoch, denen ein Schütze zugestimmt hat oder die er ausdrücklich abholt; verdeckte Wertung verlässt das Schützenhaus nie; privat ist Standard. Das ist eine technische Sicht, keine Rechtsberatung: den Einwilligungstext stimmt der Vorstand ab.
+**TL;DR** Schussdaten sind personenbezogen. Spiegel lädt nur Daten hoch, denen ein Schütze zugestimmt hat oder die er ausdrücklich abholt; verdeckte Wertung verlässt das Schützenhaus nie; privat ist Standard. Das ist eine technische Sicht, keine Rechtsberatung. Einen vom Vorstand abgestimmten Einwilligungstext gibt es nicht (SP-0.5 entfällt, Entscheidung des Users vom 14. Oktober 2026); der Schütze bestätigt in Spiegel einen eigenen Hinweistext selbst.
 
 ## Grundsätze
 
 - **Einwilligung vor dem ersten Upload**, jederzeit widerrufbar. Das Opt-in per Sportpass ist genau diese Einwilligung: Wer seine Sportpassnummer verknüpft und zustimmt, dessen Scheiben werden automatisch hochgeladen; ohne Opt-in nur, was jemand selbst per QR abholt. Gäste und Jugendliche unterstützt Spiegel vorerst nicht; Konten gibt es nur für erwachsene Mitglieder.
+- **Hinweistext statt Text vom Vorstand** (14. Oktober 2026, Entscheidung des Users): Einen Einwilligungstext vom Vorstand wird es nicht geben, SP-0.5 entfällt. Stattdessen zeigt Spiegel beim Opt-in einen eigenen Hinweistext mit Version (zuerst „v1“), den der Schütze im Profil selbst bestätigt; Spiegel speichert Zeitpunkt und Version der Bestätigung. Umgesetzt wird das mit SP-1.7 a ([[spiegel-roadmap]]).
 - **Verantwortlich ist der Verein.** Mit dem Hoster des VPS braucht es einen Vertrag zur Auftragsverarbeitung.
 - **Datensparsamkeit in der Brücke:** Scheiben ohne zugestimmten Besitzer bleiben im Schützenhaus; die Brücke kennt dafür nur gehashte Kennungen ([[spiegel-bridge]]). Sie hält keinen eigenen Zustand; die Probe fremder Scheiben höchstens begrenzt im Arbeitsspeicher, bis zum Ausschalten. Hinaus geht sie nur mit Opt-in oder Abholung.
 - **Doppelt geprüft:** Spiegel nimmt nur Scheiben an, die zu einem Opt-in oder einem offenen Auftrag passen ([[spiegel-ingest-pipeline]]).
