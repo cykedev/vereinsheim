@@ -13,6 +13,7 @@ MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Überleben als normale Notes (kei
 ## Notes
 
 - [[best-of-playoff-seeding-round-robin-table]] — best-of-playoff-seeding-round-robin-table
+- [[caddy-x-real-ip-passthrough]] — Caddy reicht ein gefälschtes X-Real-IP durch (Ratenbegrenzung umgangen, behoben mit `header_up`)
 - [[data-url-preview-blocks-anchors]] — Vorschau als data:-Seite blockt Anker und Speicher
 - [[best-of-standings-direct-comparison-tiebreak]] — best-of-standings-direct-comparison-tiebreak
 - [[deadline-wipe-on-hidden-form-fields]] — deadline-wipe-on-hidden-form-fields
