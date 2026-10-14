@@ -251,10 +251,15 @@ describe("der ganze Weg einer Brücke", () => {
     })
     expect(card?.ownerId).toBe(site.ownerId)
 
+    // ein erledigter Auftrag zum Nachladen geht durch die Grenzen (P2d)
+    const consentId = (
+      await db.sportpassConsent.findFirstOrThrow({ where: { siteId: site.siteId } })
+    ).id
     const heartbeat = await handleHeartbeat(
       post(
         "heartbeat",
         {
+          historyDone: [consentId],
           contractVersion: 1,
           bridgeVersion: "0.1.0",
           runStartedAt: new Date(at - 60_000).toISOString(),
@@ -273,6 +278,9 @@ describe("der ganze Weg einer Brücke", () => {
     )
     expect(heartbeat.status).toBe(200)
     heartbeatResponseV1.parse(await heartbeat.json())
+    expect(
+      (await db.sportpassConsent.findUniqueOrThrow({ where: { id: consentId } })).historyLoadedAt
+    ).not.toBeNull()
     expect(logs.some((l) => l.includes('"event":"ingest.snapshots"'))).toBe(true)
   })
 })

@@ -219,6 +219,18 @@ export async function recordHeartbeat(
         },
       })
   }
+  // erledigte Aufträge zum Nachladen (P2d, D6): nur aktive, noch offene Zustimmungen dieser Anlage; eine fremde oder
+  // unbekannte Id ändert nichts, ein zweites Melden nicht den Zeitpunkt
+  if (heartbeat.historyDone?.length)
+    await db.sportpassConsent.updateMany({
+      where: {
+        id: { in: heartbeat.historyDone },
+        siteId: bridge.siteId,
+        historyLoadedAt: null,
+        ...ACTIVE_CONSENT,
+      },
+      data: { historyLoadedAt: new Date(nowMs) },
+    })
   await advanceCardStates(db, bridge.siteId, {
     nowMs,
     runStartedAt: newRun ? runStartedAt : null,

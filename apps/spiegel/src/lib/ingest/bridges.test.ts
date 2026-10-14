@@ -337,4 +337,50 @@ describe("Aufträge zum Nachladen (P2d)", () => {
     expect(after.blocked.map((b) => b.scheibenId)).toEqual([-12])
     await db.user.delete({ where: { id: inactive.id } })
   })
+
+  it("der Heartbeat vermerkt erledigte Aufträge nur an aktiven, offenen Zustimmungen dieser Anlage (D6)", async () => {
+    const pairing = await createPairing(db, {
+      siteId: own.siteId,
+      name: "Pi",
+      createdById: null,
+      nowMs: NOW,
+    })
+    const paired = await redeemPairing(db, {
+      code: pairing.code,
+      name: null,
+      bridgeVersion: "0.1.0",
+      nowMs: NOW + 1_000,
+    })
+    const auth = (await authenticateBridge(db, paired!.token, NOW))!
+    const consent = (sportpassId: number, data: Record<string, unknown> = {}) =>
+      db.sportpassConsent.create({
+        data: {
+          userId: own.ownerId,
+          siteId: own.siteId,
+          sportpassId: BigInt(sportpassId),
+          confirmedAt: new Date(NOW),
+          ...data,
+        },
+      })
+    const open = await consent(2001)
+    const rejected = await consent(2002, { rejectedAt: new Date(NOW) })
+    const done = await consent(2003, { historyLoadedAt: new Date(NOW - 86_400_000) })
+    const foreign = await consent(2004, { siteId: other.siteId })
+    const loadedAt = async (id: number) =>
+      (await db.sportpassConsent.findUniqueOrThrow({ where: { id } })).historyLoadedAt
+
+    await recordHeartbeat(
+      db,
+      auth,
+      heartbeat({ historyDone: [open.id, rejected.id, done.id, foreign.id, 999_999] }),
+      NOW
+    )
+    expect((await loadedAt(open.id))?.getTime()).toBe(NOW)
+    expect(await loadedAt(rejected.id)).toBeNull()
+    expect((await loadedAt(done.id))?.getTime()).toBe(NOW - 86_400_000)
+    expect(await loadedAt(foreign.id)).toBeNull()
+    // ein zweites Melden ändert den Zeitpunkt nicht
+    await recordHeartbeat(db, auth, heartbeat({ historyDone: [open.id] }), NOW + 60_000)
+    expect((await loadedAt(open.id))?.getTime()).toBe(NOW)
+  })
 })
