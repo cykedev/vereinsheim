@@ -59,6 +59,8 @@ export interface OverviewInput {
     status: ConsentStatus
   }[]
   accounts: { total: number; deactivated: number; withSportpass: number }
+  /** Scheiben der Anlage, als „nicht meine“ gemeldet (Grabsteine): nur als Zahl, ohne Namen (P2b, D9) */
+  notMine: number
 }
 
 /** was die Brücke meldet, in Worten; nur Information (D0), keine Aufgabe */
@@ -160,6 +162,13 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
         tone: waiting ? "wait" : "neutral",
         facts: [
           `${by("active")} aktiv · ${waiting} ${waiting === 1 ? "wartet" : "warten"} auf dich · ${by("rejected")} abgelehnt`,
+          ...(input.notMine
+            ? [
+                input.notMine === 1
+                  ? "1 Scheibe als „nicht meine“ gemeldet; sie kommt nicht wieder."
+                  : `${input.notMine} Scheiben als „nicht meine“ gemeldet; sie kommen nicht wieder.`,
+              ]
+            : []),
         ],
       },
       {
@@ -218,6 +227,9 @@ export async function adminOverview(
     }),
     db.user.findMany({ select: { id: true, isActive: true } }),
   ])
+  const notMine = site
+    ? await db.tombstone.count({ where: { source: { siteId: site.id }, reason: "nicht-meine" } })
+    : 0
   const rows = consents.map((c) => ({
     id: c.id,
     userId: c.userId,
@@ -253,5 +265,6 @@ export async function adminOverview(
       deactivated: users.filter((u) => !u.isActive).length,
       withSportpass: withSportpass.size,
     },
+    notMine,
   })
 }

@@ -16,6 +16,7 @@ const base: Input = {
   },
   consents: [],
   accounts: { total: 12, deactivated: 1, withSportpass: 9 },
+  notMine: 0,
 }
 const consent = (id: number, status: Input["consents"][number]["status"]) => ({
   id,
@@ -102,5 +103,14 @@ describe("Übersicht des Admins", () => {
       overviewModel({ ...base, accounts: { total: 1, deactivated: 0, withSportpass: 0 } })
         .stations[3].facts
     ).toEqual(["1 Konto · 0 mit Sportpass"])
+  })
+
+  it("gemeldete „nicht meine“ als Zahl an den Zustimmungen, ohne Namen und ohne Aufgabe (P2b, D9)", () => {
+    const facts = (notMine: number) =>
+      overviewModel({ ...base, notMine }).stations.find((s) => s.id === "consents")!.facts
+    expect(facts(0)).toHaveLength(1)
+    expect(facts(1)[1]).toBe("1 Scheibe als „nicht meine“ gemeldet; sie kommt nicht wieder.")
+    expect(facts(3)[1]).toBe("3 Scheiben als „nicht meine“ gemeldet; sie kommen nicht wieder.")
+    expect(overviewModel({ ...base, notMine: 3 }).tasks).toEqual([])
   })
 })

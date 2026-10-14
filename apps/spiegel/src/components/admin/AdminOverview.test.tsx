@@ -13,6 +13,7 @@ const model = (consents: Parameters<typeof overviewModel>[0]["consents"]) =>
     bridge: { name: "Pi", lastHeartbeatAt: null, online: false, status: null, heldBack: null },
     consents,
     accounts: { total: 2, deactivated: 0, withSportpass: 1 },
+    notMine: 0,
   })
 
 describe("Übersicht des Admins (Markup)", () => {
