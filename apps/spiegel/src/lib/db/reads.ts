@@ -13,6 +13,7 @@ import type { CardState, Prisma } from "@/generated/prisma/client"
 import type { Db } from "../db"
 import { cardScoring } from "../scoring"
 import { shotFromRow, toMetricShot } from "./cards"
+import { PENDING_CARD, VISIBLE_CARD } from "./visible"
 
 /** eine Scheibe für die Übersichten: Merkmale und Projektion, dazu Familie und Scheibenbild für Filter und Bild */
 export interface OverviewCard extends ProjectedCard {
@@ -139,7 +140,7 @@ export async function familyCards(
     where: {
       ownerId: query.ownerId,
       familyId: query.familyId,
-      deletedAt: null,
+      ...VISIBLE_CARD,
       startedAt: startedAt(query),
     },
     orderBy: [{ startedAt: "asc" }, { id: "asc" }],
@@ -154,7 +155,7 @@ export async function ownerCards(
   query: { ownerId: string } & MsRange
 ): Promise<OverviewCard[]> {
   const rows = await db.card.findMany({
-    where: { ownerId: query.ownerId, deletedAt: null, startedAt: startedAt(query) },
+    where: { ownerId: query.ownerId, ...VISIBLE_CARD, startedAt: startedAt(query) },
     orderBy: [{ startedAt: "asc" }, { id: "asc" }],
     select: OVERVIEW_SELECT,
   })
@@ -164,7 +165,7 @@ export async function ownerCards(
 /** Beginn der neuesten Scheibe eines Schützen; null ohne Scheiben */
 export async function latestCardStart(db: Db, ownerId: string): Promise<number | null> {
   const latest = await db.card.findFirst({
-    where: { ownerId, deletedAt: null },
+    where: { ownerId, ...VISIBLE_CARD },
     orderBy: { startedAt: "desc" },
     select: { startedAt: true },
   })
@@ -233,14 +234,14 @@ const isTargetId = (value: string | null): value is TargetId =>
 
 /**
  * Seite einer Scheibe: die Scheibe mit den Schüssen ihrer aktuellen Revision, nur für ihren Besitzer; null, wenn es
- * sie nicht gibt, sie gelöscht ist oder einem anderen gehört
+ * sie nicht gibt, sie gelöscht ist, wartet oder einem anderen gehört
  */
 export async function cardWithShots(
   db: Db,
   query: { cardId: string; ownerId: string }
 ): Promise<PageCard | null> {
   const row = await db.card.findFirst({
-    where: { id: query.cardId, ownerId: query.ownerId, deletedAt: null },
+    where: { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD },
     select: PAGE_CARD_SELECT,
   })
   return row ? toPageCard(row) : null
@@ -284,4 +285,52 @@ export async function namedPeriods(db: Db, ownerId: string): Promise<NamedPeriod
     from: row.from.toISOString().slice(0, 10),
     to: row.to ? row.to.toISOString().slice(0, 10) : null,
   }))
+}
+
+/** eine wartende erste Scheibe je SportpassID für „Offen“: die älteste und wie viele unter derselben Nummer noch warten */
+export interface PendingFirstCard {
+  sportpassId: string | null
+  card: OverviewCard
+  more: number
+}
+
+/** „Offen“ (SP-1.7 a2): je SportpassID die älteste wartende Scheibe des Kontos, in der Folge ihres Beginns */
+export async function pendingFirstCards(db: Db, ownerId: string): Promise<PendingFirstCard[]> {
+  const rows = await db.card.findMany({
+    where: { ownerId, ...PENDING_CARD },
+    orderBy: [{ startedAt: "asc" }, { id: "asc" }],
+    select: { id: true, sportpassId: true },
+  })
+  const groups = new Map<string, { id: string; count: number }>()
+  for (const row of rows) {
+    const key = row.sportpassId?.toString() ?? ""
+    const group = groups.get(key)
+    if (group) group.count++
+    else groups.set(key, { id: row.id, count: 1 })
+  }
+  const firstIds = [...groups.values()].map((g) => g.id)
+  if (!firstIds.length) return []
+  const cards = toOverview(
+    await db.card.findMany({
+      where: { id: { in: firstIds }, ownerId },
+      orderBy: [{ startedAt: "asc" }, { id: "asc" }],
+      select: OVERVIEW_SELECT,
+    })
+  )
+  const byId = new Map(cards.map((card) => [card.id, card]))
+  return [...groups.entries()].flatMap(([key, group]) => {
+    const card = byId.get(group.id)
+    // ohne Projektion (noch nicht gerechnet) zeigt „Offen“ sie erst beim nächsten Aufruf
+    return card ? [{ sportpassId: key || null, card, more: group.count - 1 }] : []
+  })
+}
+
+/** die Zahl am Start-Symbol: wie viele SportpassIDs des Kontos eine wartende Scheibe haben */
+export async function pendingCount(db: Db, ownerId: string): Promise<number> {
+  const rows = await db.card.findMany({
+    where: { ownerId, ...PENDING_CARD },
+    distinct: ["sportpassId"],
+    select: { sportpassId: true },
+  })
+  return rows.length
 }

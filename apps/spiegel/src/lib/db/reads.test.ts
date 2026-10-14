@@ -21,6 +21,8 @@ import {
   latestCardStart,
   marksOfCards,
   ownerCards,
+  pendingCount,
+  pendingFirstCards,
 } from "./reads"
 
 const db = createPrismaClient()
@@ -29,6 +31,7 @@ let otherDisciplineId: number
 let otherFamilyId: number
 const FIRST_MS = Date.UTC(2026, 3, 1, 16, 30)
 const DAY_MS = 86_400_000
+const PENDING_MS = FIRST_MS + 200 * DAY_MS
 
 beforeAll(async () => {
   site = await createTestSite(db, "reads")
@@ -82,6 +85,22 @@ beforeAll(async () => {
   })
   const { cardId } = await writeRevision(db, trash)
   await db.card.update({ where: { id: cardId }, data: { deletedAt: new Date() } })
+  // drei wartende Scheiben nach allen anderen (SP-1.7 a2): zwei unter einer SportpassID, eine unter einer anderen; sie
+  // fehlen in jeder Übersicht, auch als neuester Abend
+  const pending = generateSeason({
+    ...common,
+    everyDays: 1,
+    seed: 10,
+    cards: 3,
+    firstMs: PENDING_MS,
+    disciplineId: site.disciplineId,
+    scheibenIdBase: 5000,
+  })
+  for (const [i, input] of pending.entries())
+    await writeRevision(db, {
+      ...input,
+      card: { ...input.card, ownerPending: true, sportpassId: i < 2 ? BigInt(111) : BigInt(222) },
+    })
 })
 afterAll(async () => {
   await site.remove()
@@ -199,6 +218,36 @@ describe("Übersichten (SP-1.8)", () => {
     expect(marks[a.id].length).toBe(a.projection.printedShots)
     expect(await marksOfCards(db, { ownerId: "jemand-anderes", ids: [a.id] })).toEqual({})
     expect(await marksOfCards(db, { ownerId: site.ownerId, ids: [] })).toEqual({})
+  })
+})
+
+describe("Wartende Scheiben (SP-1.7 a2)", () => {
+  it("fehlen in Liste, Start und auf ihrer Seite", async () => {
+    const pending = await db.card.findMany({
+      where: { sourceId: site.sourceId, ownerPending: true },
+      select: { id: true },
+    })
+    expect(pending).toHaveLength(3)
+    const ids = new Set(pending.map((c) => c.id))
+    const ownerId = site.ownerId
+    expect((await ownerCards(db, { ownerId })).some((c) => ids.has(c.id))).toBe(false)
+    expect(
+      (await familyCards(db, { ownerId, familyId: site.familyId })).some((c) => ids.has(c.id))
+    ).toBe(false)
+    expect(await latestCardStart(db, ownerId)).toBeLessThan(PENDING_MS)
+    expect(await cardWithShots(db, { cardId: pending[0].id, ownerId })).toBeNull()
+  })
+
+  it("je SportpassID die älteste wartende, mit der Zahl der weiteren; gezählt je SportpassID", async () => {
+    const first = await pendingFirstCards(db, site.ownerId)
+    expect(first.map((p) => [p.sportpassId, p.more, p.card.startedAtMs])).toEqual([
+      ["111", 1, PENDING_MS],
+      ["222", 0, PENDING_MS + 90 * 60_000],
+    ])
+    expect(first[0].card.family?.slug).toBeDefined()
+    expect(await pendingCount(db, site.ownerId)).toBe(2)
+    expect(await pendingFirstCards(db, "jemand-anderes")).toEqual([])
+    expect(await pendingCount(db, "jemand-anderes")).toBe(0)
   })
 })
 

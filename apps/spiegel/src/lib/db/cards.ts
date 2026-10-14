@@ -19,6 +19,7 @@ import {
 
 import type { Db } from "../db"
 import { standScoringOf } from "../scoring"
+import { VISIBLE_CARD } from "./visible"
 
 type Tx = Prisma.TransactionClient
 
@@ -651,7 +652,7 @@ export async function chooseCardScoring(
   query: { cardId: string; ownerId: string; scoring: Scoring }
 ): Promise<boolean> {
   const { count } = await db.card.updateMany({
-    where: { id: query.cardId, ownerId: query.ownerId, deletedAt: null },
+    where: { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD },
     data: { scoringChoice: query.scoring },
   })
   return count === 1
@@ -666,7 +667,7 @@ export async function saveFamilyScoring(
   query: { familySlug: string; ownerId: string; scoring: Scoring }
 ): Promise<boolean> {
   const family = await db.family.findFirst({
-    where: { slug: query.familySlug, cards: { some: { ownerId: query.ownerId, deletedAt: null } } },
+    where: { slug: query.familySlug, cards: { some: { ownerId: query.ownerId, ...VISIBLE_CARD } } },
     select: { id: true },
   })
   if (!family) return false
@@ -686,7 +687,7 @@ export async function chooseCardKind(
   db: Db,
   query: { cardId: string; ownerId: string; kind: CardKind }
 ): Promise<"saved" | "missing" | "probeOnly"> {
-  const own = { id: query.cardId, ownerId: query.ownerId, deletedAt: null }
+  const own = { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD }
   // Prüfen und Schreiben in einem Befehl; erst wenn nichts geschrieben wurde, nachsehen, warum
   const { count } = await db.card.updateMany({
     where: { ...own, NOT: { projection: { is: { probeOnly: true } } } },
