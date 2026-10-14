@@ -116,7 +116,12 @@ describe("Kopplung", () => {
     expect(bridge.tokenHash).toMatch(/^[0-9a-f]{64}$/)
     const auth = await authenticateBridge(db, paired.token, NOW)
     expect(auth).toMatchObject({ bridgeId: paired.bridgeId, siteId: site.siteId })
-    expect(await authenticateBridge(db, `${paired.token.slice(0, -1)}A`, NOW)).toBeNull()
+    // ein Zeichen in der Mitte sicher ändern: Das letzte trägt nur 4 Bit, „…A“ war in jedem 16. Lauf der echte Token
+    const at = 20
+    const other = paired.token[at] === "A" ? "B" : "A"
+    const wrong = `${paired.token.slice(0, at)}${other}${paired.token.slice(at + 1)}`
+    expect(wrong).not.toBe(paired.token)
+    expect(await authenticateBridge(db, wrong, NOW)).toBeNull()
     expect(await authenticateBridge(db, null, NOW)).toBeNull()
     await revokeBridge(db, paired.bridgeId, NOW)
     expect(await authenticateBridge(db, paired.token, NOW)).toBeNull()
