@@ -65,11 +65,18 @@ confirm() {
 ask() {
 	local question="$1" default="${2:-}"
 	local reply
+	# Ende der Eingabe (etwa eine Pipe ohne weitere Antworten): Abbruch statt endloser Rückfrage
 	if [[ -n "$default" ]]; then
-		read -r -p "  $question [${DIM}${default}${RESET}]: " reply
+		read -r -p "  $question [${DIM}${default}${RESET}]: " reply || {
+			echo "Eingabe beendet." >&2
+			return 1
+		}
 		echo "${reply:-$default}"
 	else
-		read -r -p "  $question: " reply
+		read -r -p "  $question: " reply || {
+			echo "Eingabe beendet." >&2
+			return 1
+		}
 		echo "$reply"
 	fi
 }
@@ -91,7 +98,7 @@ ask_validated() {
 	local question="$1" validator="$2" default="${3:-}"
 	local value
 	while :; do
-		value="$(ask "$question" "$default")"
+		value="$(ask "$question" "$default")" || exit 1
 		if "$validator" "$value"; then
 			echo "$value"
 			return
@@ -884,19 +891,24 @@ cmd_setup() {
 
 	if [[ -f "$ENV_FILE" ]]; then
 		warn ".env existiert bereits."
-		echo "  1) Komplett neu erstellen (alte wird gesichert als .env.bak)"
+		echo "  1) Fehlende Schlüssel ergänzen (aus .env.example, etwa nach einer neuen App)"
 		echo "  2) Einzelne Werte bearbeiten"
-		echo "  3) Abbrechen"
+		echo "  3) Komplett neu erstellen (alte wird gesichert als .env.bak)"
+		echo "  4) Abbrechen"
 		local choice
 		read -r -p "  Wahl: " choice
 		case "$choice" in
 		1)
-			cp "$ENV_FILE" "$ENV_FILE.bak"
-			ok "Backup nach .env.bak"
+			setup_add_missing
+			return
 			;;
 		2)
 			setup_edit_single
 			return
+			;;
+		3)
+			cp "$ENV_FILE" "$ENV_FILE.bak"
+			ok "Backup nach .env.bak"
 			;;
 		*)
 			info "Abgebrochen."
@@ -905,111 +917,112 @@ cmd_setup() {
 		esac
 	fi
 
-	hr
-	info "Domain & TLS"
-	local DOMAIN RINGWERK_HOST TREFFSICHER_HOST ACME_EMAIL
-	DOMAIN="$(ask_validated 'Basis-Domain (z.B. example.com)' is_hostname)"
-	RINGWERK_HOST="$(ask_validated 'Subdomain für Ringwerk' is_hostname "ringwerk.$DOMAIN")"
-	TREFFSICHER_HOST="$(ask_validated 'Subdomain für Treffsicher' is_hostname "treffsicher.$DOMAIN")"
-	ACME_EMAIL="$(ask_validated 'E-Mail für Let'\''s-Encrypt-Benachrichtigungen' is_email)"
-
-	hr
-	info "Docker Hub"
-	local DOCKER_USER
-	DOCKER_USER="$(ask 'Docker-Hub-User' "cyke")"
-
-	hr
-	info "Postgres-Passwörter (Enter = generieren)"
-	local POSTGRES_PASSWORD RINGWERK_DB_PASSWORD TREFFSICHER_DB_PASSWORD
-	POSTGRES_PASSWORD="$(ask_secret 'Postgres-Superuser-Passwort')"
-	RINGWERK_DB_PASSWORD="$(ask_secret 'Ringwerk-DB-User-Passwort')"
-	TREFFSICHER_DB_PASSWORD="$(ask_secret 'Treffsicher-DB-User-Passwort')"
-
-	hr
-	info "Ringwerk"
-	local RINGWERK_NEXTAUTH_SECRET RINGWERK_SEED_ADMIN_EMAIL RINGWERK_SEED_ADMIN_PASSWORD
-	RINGWERK_NEXTAUTH_SECRET="$(ask_secret 'NEXTAUTH_SECRET (mind. 32 Zeichen)' 48)"
-	RINGWERK_SEED_ADMIN_EMAIL="$(ask_validated 'Initial-Admin E-Mail' is_email "admin@${DOMAIN}")"
-	make_min_validator 12
-	RINGWERK_SEED_ADMIN_PASSWORD="$(ask_validated 'Initial-Admin Passwort (mind. 12 Zeichen)' _min_12)"
-
-	hr
-	info "Treffsicher"
-	local TREFFSICHER_NEXTAUTH_SECRET TREFFSICHER_ADMIN_EMAIL TREFFSICHER_ADMIN_PASSWORD
-	TREFFSICHER_NEXTAUTH_SECRET="$(ask_secret 'NEXTAUTH_SECRET (mind. 32 Zeichen)' 48)"
-	TREFFSICHER_ADMIN_EMAIL="$(ask_validated 'Initial-Admin E-Mail' is_email "admin@${DOMAIN}")"
-	TREFFSICHER_ADMIN_PASSWORD="$(ask_validated 'Initial-Admin Passwort (mind. 12 Zeichen)' _min_12)"
-
-	hr
-	info "Sonstiges"
-	local DISPLAY_TIME_ZONE
-	DISPLAY_TIME_ZONE="$(ask 'Anzeige-Zeitzone' 'Europe/Berlin')"
+	# Die Schlüssel in der Reihenfolge von .env.example, ihre Abschnitte als Überschriften
+	local -A values=()
+	local keys=() line key domain=""
+	# die Vorlage über Kanal 3: Die Fragen im Inneren lesen von der Standardeingabe
+	while IFS= read -r line <&3; do
+		if [[ "$line" =~ ^#\ ===\ (.*)\ ===$ ]]; then
+			hr
+			info "${BASH_REMATCH[1]}"
+			continue
+		fi
+		[[ "$line" =~ ^([A-Z][A-Z0-9_]*)= ]] || continue
+		key="${BASH_REMATCH[1]}"
+		keys+=("$key")
+		values[$key]="$(setup_prompt_key "$key" "$domain")"
+		[[ "$key" != DOMAIN ]] || domain="${values[$key]}"
+	done 3<"$ENV_EXAMPLE"
 
 	hr
 	info "Zusammenfassung"
-	cat <<-EOF
-		  Domain                    : $DOMAIN
-		  Ringwerk Host             : $RINGWERK_HOST
-		  Treffsicher Host          : $TREFFSICHER_HOST
-		  ACME-E-Mail               : $ACME_EMAIL
-		  Docker-Hub-User           : $DOCKER_USER
-		  Image-Tags                : latest / latest-migrator
-		  Postgres-Passwort         : ${DIM}(redacted, ${#POSTGRES_PASSWORD} chars)${RESET}
-		  Ringwerk-DB-Passwort      : ${DIM}(redacted, ${#RINGWERK_DB_PASSWORD} chars)${RESET}
-		  Treffsicher-DB-Passwort   : ${DIM}(redacted, ${#TREFFSICHER_DB_PASSWORD} chars)${RESET}
-		  Ringwerk NEXTAUTH_SECRET  : ${DIM}(${#RINGWERK_NEXTAUTH_SECRET} chars)${RESET}
-		  Ringwerk Seed-Admin       : $RINGWERK_SEED_ADMIN_EMAIL
-		  Treffsicher NEXTAUTH      : ${DIM}(${#TREFFSICHER_NEXTAUTH_SECRET} chars)${RESET}
-		  Treffsicher Admin         : $TREFFSICHER_ADMIN_EMAIL
-		  Zeitzone                  : $DISPLAY_TIME_ZONE
-	EOF
+	for key in "${keys[@]}"; do
+		case "$key" in
+		*PASSWORD | *SECRET) printf "  %-30s ${DIM}(redacted, %d chars)${RESET}\n" "$key" "${#values[$key]}" ;;
+		*) printf "  %-30s %s\n" "$key" "${values[$key]}" ;;
+		esac
+	done
 	echo
 	confirm ".env schreiben?" Y || {
 		info "Abgebrochen — nichts geschrieben."
 		return 1
 	}
 
-	cat >"$ENV_FILE" <<-EOF
-		# Generiert von ./scripts/vereinsheim setup am $(date -Iseconds)
-		# === Domain & TLS ===
-		DOMAIN=$DOMAIN
-		RINGWERK_HOST=$RINGWERK_HOST
-		TREFFSICHER_HOST=$TREFFSICHER_HOST
-		ACME_EMAIL=$ACME_EMAIL
-
-		# === Docker Images ===
-		DOCKER_USER=$DOCKER_USER
-		RINGWERK_TAG=latest
-		RINGWERK_MIGRATOR_TAG=latest-migrator
-		TREFFSICHER_TAG=latest
-		TREFFSICHER_MIGRATOR_TAG=latest-migrator
-
-		# === Postgres ===
-		POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-		RINGWERK_DB_PASSWORD=$RINGWERK_DB_PASSWORD
-		TREFFSICHER_DB_PASSWORD=$TREFFSICHER_DB_PASSWORD
-
-		# === Ringwerk ===
-		RINGWERK_NEXTAUTH_SECRET=$RINGWERK_NEXTAUTH_SECRET
-		RINGWERK_SEED_ADMIN_EMAIL=$RINGWERK_SEED_ADMIN_EMAIL
-		RINGWERK_SEED_ADMIN_PASSWORD=$RINGWERK_SEED_ADMIN_PASSWORD
-
-		# === Treffsicher ===
-		TREFFSICHER_NEXTAUTH_SECRET=$TREFFSICHER_NEXTAUTH_SECRET
-		TREFFSICHER_ADMIN_EMAIL=$TREFFSICHER_ADMIN_EMAIL
-		TREFFSICHER_ADMIN_PASSWORD=$TREFFSICHER_ADMIN_PASSWORD
-
-		# === Beide gemeinsam ===
-		DISPLAY_TIME_ZONE=$DISPLAY_TIME_ZONE
-	EOF
+	# Aufbau und Kommentare wie .env.example, die Werte aus dem Wizard
+	{
+		echo "# Generiert von ./scripts/vereinsheim setup am $(date -Iseconds)"
+		while IFS= read -r line; do
+			if [[ "$line" =~ ^([A-Z][A-Z0-9_]*)= ]]; then
+				echo "${BASH_REMATCH[1]}=${values[${BASH_REMATCH[1]}]}"
+			else
+				echo "$line"
+			fi
+		done <"$ENV_EXAMPLE"
+	} >"$ENV_FILE"
 	chmod 600 "$ENV_FILE"
 	ok ".env geschrieben (chmod 600)."
 	echo
+	local hosts=()
+	for key in "${keys[@]}"; do
+		[[ "$key" != *_HOST ]] || hosts+=("${values[$key]}")
+	done
 	info "Nächste Schritte:"
-	echo "  1) DNS-Einträge setzen (A-Record für $RINGWERK_HOST und $TREFFSICHER_HOST → diese VPS-IP)"
-	echo "  2) Image-Build (lokal):  DOCKER_USER=$DOCKER_USER ./scripts/build-and-push.sh"
+	echo "  1) DNS-Einträge setzen (A-Record für ${hosts[*]} → diese VPS-IP)"
+	echo "  2) Image-Build (lokal):  DOCKER_USER=${values[DOCKER_USER]} ./scripts/build-and-push.sh"
 	echo "  3) Erster Deploy:        ./scripts/vereinsheim deploy"
 	echo "  4) Backup-Cron:          ./scripts/vereinsheim cron"
+}
+
+# Wert eines Schlüssels in .env.example
+example_value() {
+	awk -F= -v k="$1" '$1 == k { sub(/^[^=]*=/, ""); print; exit }' "$ENV_EXAMPLE"
+}
+
+# Fragt einen Schlüssel aus .env.example ab, mit Generator oder Prüfung nach seinem Namen, und gibt den Wert aus
+# (Fragen auf stderr). $2: Basis-Domain für Vorgaben von Hosts und E-Mails.
+setup_prompt_key() {
+	local key="$1" domain="${2:-}" app
+	case "$key" in
+	DOMAIN) ask_validated 'Basis-Domain (z.B. example.com)' is_hostname ;;
+	ACME_EMAIL) ask_validated "E-Mail für Let's-Encrypt-Benachrichtigungen" is_email ;;
+	DOCKER_USER) ask 'Docker-Hub-User' 'cyke' ;;
+	*_TAG) example_value "$key" ;;
+	*_HOST)
+		app="$(tr '[:upper:]' '[:lower:]' <<<"${key%_HOST}")"
+		ask_validated "Subdomain für $app" is_hostname "${domain:+$app.$domain}"
+		;;
+	POSTGRES_PASSWORD) ask_secret 'Postgres-Superuser-Passwort' ;;
+	*_DB_PASSWORD) ask_secret "DB-Passwort für $(tr '[:upper:]' '[:lower:]' <<<"${key%_DB_PASSWORD}")" ;;
+	*_NEXTAUTH_SECRET) ask_secret "$key (mind. 32 Zeichen)" 48 ;;
+	*_EMAIL) ask_validated "$key (erstes Admin-Konto)" is_email "${domain:+admin@$domain}" ;;
+	*_PASSWORD)
+		make_min_validator 12 >/dev/null
+		ask_validated "$key (Passwort des ersten Admin-Kontos, mind. 12 Zeichen)" _min_12
+		;;
+	DISPLAY_TIME_ZONE) ask 'Anzeige-Zeitzone' 'Europe/Berlin' ;;
+	*) ask "$key" "$(example_value "$key")" ;;
+	esac
+}
+
+# Ergänzt Schlüssel aus .env.example, die in der .env fehlen oder leer sind, mit denselben Fragen wie der Wizard
+setup_add_missing() {
+	require_env
+	local key value domain missing=()
+	domain="$(read_env_var DOMAIN || true)"
+	while IFS= read -r key; do
+		[[ -n "$(read_env_var "$key" || true)" ]] || missing+=("$key")
+	done < <(env_keys_from_example)
+	if ((${#missing[@]} == 0)); then
+		ok "Alle Schlüssel aus .env.example sind gesetzt."
+		return
+	fi
+	info "Fehlend (${#missing[@]}): ${missing[*]}"
+	for key in "${missing[@]}"; do
+		value="$(setup_prompt_key "$key" "$domain")"
+		write_env_var "$key" "$value"
+		ok "$key gesetzt"
+	done
+	warn "Damit Änderungen wirksam werden:  ./scripts/vereinsheim deploy"
 }
 
 setup_edit_single() {
@@ -1100,6 +1113,8 @@ cmd_env_check() {
 	if [[ ${#missing[@]} -eq 0 && ${#weak[@]} -eq 0 && ${#unknown[@]} -eq 0 ]]; then
 		ok "Alles OK."
 	fi
+	# fehlende Schlüssel blocken den Deploy (cmd_deploy), Auffälliges und Unbekanntes nur Warnung
+	[[ ${#missing[@]} -eq 0 ]]
 }
 
 # ---------- status ----------
@@ -1216,7 +1231,11 @@ _check_image_tags() {
 cmd_deploy() {
 	require_env
 	require_docker
-	cmd_env_check
+	if ! cmd_env_check; then
+		err "Deploy abgebrochen: In der .env fehlen Schlüssel."
+		info "Ergänzen: ./scripts/vereinsheim setup → Fehlende Schlüssel ergänzen"
+		return 1
+	fi
 	echo
 	local tag_state=0
 	_check_image_tags || tag_state=$?
@@ -1767,7 +1786,7 @@ interactive_menu_vps() {
 			read -r -p "  Service (Enter = Apps + caddy): " svc
 			cmd_logs "$svc"
 			;;
-		3) cmd_env_check ;;
+		3) cmd_env_check || true ;;
 		4) cmd_deploy ;;
 		5) cmd_rollback ;;
 		6) cmd_backup ;;
