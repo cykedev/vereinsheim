@@ -17,7 +17,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 ENV_FILE="${ENV_FILE:-.env}"
-APPS=(ringwerk treffsicher spiegel)
+# shellcheck source=lib/apps.sh
+. scripts/lib/apps.sh
 
 if [[ ! -f "$ENV_FILE" ]]; then
 	echo "ERROR: $ENV_FILE fehlt." >&2

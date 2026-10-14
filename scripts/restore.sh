@@ -15,6 +15,8 @@ cd "$(dirname "$0")/.."
 
 ENV_FILE="${ENV_FILE:-.env}"
 compose() { docker compose --env-file "$ENV_FILE" "$@"; }
+# shellcheck source=lib/apps.sh
+. scripts/lib/apps.sh
 
 usage() {
 	cat <<-EOF
@@ -37,13 +39,10 @@ APP="$1"
 DUMP="$2"
 UPLOADS="${3:-}"
 
-case "$APP" in
-ringwerk | treffsicher | spiegel) ;;
-*)
-	echo "Unknown app: $APP" >&2
+if ! in_list "$APP" "${APPS[@]}"; then
+	echo "Unknown app: $APP (${APPS[*]})" >&2
 	usage
-	;;
-esac
+fi
 
 [[ -f "$DUMP" ]] || {
 	echo "Dump file not found: $DUMP" >&2
@@ -53,8 +52,8 @@ esac
 	echo "Uploads tar not found: $UPLOADS" >&2
 	exit 1
 }
-[[ -z "$UPLOADS" || "$APP" == "treffsicher" ]] || {
-	echo "$APP hat kein Upload-Volume, ein Uploads-Tar passt nur zu treffsicher." >&2
+[[ -z "$UPLOADS" ]] || in_list "$APP" "${UPLOAD_APPS[@]}" || {
+	echo "$APP hat kein Upload-Volume, ein Uploads-Tar passt nur zu ${UPLOAD_APPS[*]}." >&2
 	exit 1
 }
 

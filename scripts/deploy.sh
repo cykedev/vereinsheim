@@ -25,7 +25,8 @@ cd "$(dirname "$0")/.."
 
 export ENV_FILE="${ENV_FILE:-.env}"
 HISTORY_FILE="${HISTORY_FILE:-logs/deploy-history.log}"
-APPS=(ringwerk treffsicher spiegel)
+# shellcheck source=lib/apps.sh
+. scripts/lib/apps.sh
 # so lange darf db bis healthy und eine App bis „running“ brauchen
 WAIT_SECONDS="${WAIT_SECONDS:-120}"
 
@@ -122,7 +123,9 @@ done
 
 # verwaiste Container entfernen, ohne die Migratoren noch einmal (und dann gleichzeitig) zu starten (Review P4)
 echo "==> Rest abgleichen (verwaiste Container)"
-compose up -d --remove-orphans --no-deps db caddy $(printf 'app-%s ' "${APPS[@]}")
+services=(db caddy)
+for app in "${APPS[@]}"; do services+=("app-${app}"); done
+compose up -d --remove-orphans --no-deps "${services[@]}"
 
 # Deploy-History: eine Zeile pro erfolgreichem Deploy, für `vereinsheim rollback`.
 tag_pattern="$(printf '%s\n' "${APPS[@]}" | tr '[:lower:]' '[:upper:]' | paste -sd '|' -)"

@@ -31,7 +31,8 @@ cd "$REPO_DIR"
 CODEGRAPH_PKG="@colbymchenry/codegraph"
 CODEGRAPH_VERSION="1.0.1"
 DEV_COMPOSE_FILE="$REPO_DIR/docker-compose.dev.yml"
-APPS=(ringwerk treffsicher spiegel)
+# shellcheck source=lib/apps.sh
+source "$SCRIPT_DIR/lib/apps.sh"
 
 # ---------- Ausgabe ----------
 if [[ -t 1 ]]; then

@@ -27,15 +27,16 @@ cd "$(dirname "$0")/.."
 : "${DOCKER_USER:?Set DOCKER_USER (Docker Hub user, e.g. cyke)}"
 PLATFORM="${PLATFORM:-linux/amd64}"
 PUSH="${PUSH:-1}"
-APPS="${APPS:-ringwerk treffsicher spiegel}"
-for app in $APPS; do
-	case "$app" in
-	ringwerk | treffsicher | spiegel) ;;
-	*)
-		echo "Unbekannte App in APPS: $app (ringwerk, treffsicher, spiegel)" >&2
+# die Auswahl aus der Umgebung sichern, bevor scripts/lib/apps.sh die Liste aller Apps setzt
+SELECTED="${APPS:-}"
+# shellcheck source=lib/apps.sh
+. scripts/lib/apps.sh
+SELECTED="${SELECTED:-${APPS[*]}}"
+for app in $SELECTED; do
+	if ! in_list "$app" "${APPS[@]}"; then
+		echo "Unbekannte App in APPS: $app (${APPS[*]})" >&2
 		exit 1
-		;;
-	esac
+	fi
 done
 
 command -v pnpm >/dev/null || { echo "pnpm fehlt — der Monorepo-Build braucht pnpm." >&2; exit 1; }
@@ -117,7 +118,7 @@ build_app() {
 	done
 }
 
-for app in $APPS; do
+for app in $SELECTED; do
 	build_app "$app"
 done
 rm -rf out
@@ -125,7 +126,7 @@ rm -rf out
 echo
 if [[ "$PUSH" == "1" ]]; then
 	echo "Done. Tags pushed to Docker Hub (sha=${SHA}):"
-	for app in $APPS; do
+	for app in $SELECTED; do
 		echo "  ${DOCKER_USER}/${app}:latest    (+ :${SHA})"
 		echo "  ${DOCKER_USER}/${app}:latest-migrator    (+ :${SHA}-migrator)"
 	done

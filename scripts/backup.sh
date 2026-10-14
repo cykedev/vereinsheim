@@ -18,8 +18,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 ENV_FILE="${ENV_FILE:-.env}"
-APPS=(ringwerk treffsicher spiegel)
-UPLOAD_APPS=(treffsicher)
+# shellcheck source=lib/apps.sh
+. scripts/lib/apps.sh
 compose() { docker compose --env-file "$ENV_FILE" "$@"; }
 
 OUT="${BACKUP_DIR:-/var/backups/vereinsheim}"

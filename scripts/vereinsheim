@@ -28,9 +28,9 @@ DEV_COMPOSE_FILE="$REPO_DIR/docker-compose.dev.yml"
 LOCAL_BACKUP_DIR="$REPO_DIR/backups"
 BACKUP_DIR_DEFAULT="/var/backups/vereinsheim"
 
-# Apps des Stacks, in dieser Reihenfolge deployt und gesichert; nur Treffsicher hat ein Upload-Volume
-APPS=(ringwerk treffsicher spiegel)
-UPLOAD_APPS=(treffsicher)
+# Apps des Stacks (APPS, UPLOAD_APPS, in_list): eine Liste für das CLI und alle Skripte
+# shellcheck source=lib/apps.sh
+source "$SCRIPT_DIR/lib/apps.sh"
 
 # ---------- Colors ----------
 if [[ -t 1 ]]; then
@@ -149,21 +149,9 @@ env_keys_from_example() {
 	awk -F= '/^[A-Z][A-Z0-9_]*=/ { print $1 }' "$ENV_EXAMPLE"
 }
 
-is_valid_app() {
-	local app
-	for app in "${APPS[@]}"; do
-		[[ "${1:-}" == "$app" ]] && return 0
-	done
-	return 1
-}
+is_valid_app() { in_list "${1:-}" "${APPS[@]}"; }
 
-has_uploads() {
-	local app
-	for app in "${UPLOAD_APPS[@]}"; do
-		[[ "${1:-}" == "$app" ]] && return 0
-	done
-	return 1
-}
+has_uploads() { in_list "${1:-}" "${UPLOAD_APPS[@]}"; }
 
 # Nummeriertes Menü aus APPS (auf stderr); gibt die gewählte App aus, leer bei ungültiger Wahl
 pick_app() {
@@ -1386,7 +1374,7 @@ cmd_rollback() {
 
 	local target="${entries[$((choice - 1))]}"
 	# je App beide Tags; Einträge von vor P4 haben keine Spiegel-Tags: dann bleibt Spiegel auf dem aktuellen Tag
-	local keys=() values=() kept=() app_tag mig_tag
+	local keys=() new_tags=() kept=() app_tag mig_tag
 	for app in "${APPS[@]}"; do
 		upper="$(tr '[:lower:]' '[:upper:]' <<<"$app")"
 		app_tag="$(_extract_tag "${upper}_TAG" "$target")"
@@ -1401,14 +1389,14 @@ cmd_rollback() {
 			return 1
 		fi
 		keys+=("${upper}_TAG" "${upper}_MIGRATOR_TAG")
-		values+=("$app_tag" "$mig_tag")
+		new_tags+=("$app_tag" "$mig_tag")
 	done
 
 	echo
 	echo "${BOLD}Änderungen${RESET}"
 	local k
 	for k in "${!keys[@]}"; do
-		_rollback_diff_line "${keys[$k]}" "${values[$k]}"
+		_rollback_diff_line "${keys[$k]}" "${new_tags[$k]}"
 	done
 	for app in "${kept[@]}"; do
 		echo "  $app: ${DIM}bleibt auf dem aktuellen Tag (Eintrag ohne $app)${RESET}"
@@ -1426,7 +1414,7 @@ cmd_rollback() {
 	}
 
 	for k in "${!keys[@]}"; do
-		write_env_var "${keys[$k]}" "${values[$k]}"
+		write_env_var "${keys[$k]}" "${new_tags[$k]}"
 	done
 	ok "Tags in .env aktualisiert."
 

@@ -18,7 +18,8 @@ cd "$(dirname "$0")/.."
 
 ENV_FILE="${ENV_FILE:-.env}"
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/vereinsheim}"
-APPS=(ringwerk treffsicher spiegel)
+# shellcheck source=lib/apps.sh
+. scripts/lib/apps.sh
 
 compose() { docker compose --env-file "$ENV_FILE" "$@"; }
 # ohne NOTICE-Zeilen (DROP … IF EXISTS)
