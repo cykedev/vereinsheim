@@ -22,6 +22,7 @@ services:
       DOMAIN: ${DOMAIN}
       RINGWERK_HOST: ${RINGWERK_HOST}
       TREFFSICHER_HOST: ${TREFFSICHER_HOST}
+      SPIEGEL_HOST: ${SPIEGEL_HOST}
       ACME_EMAIL: ${ACME_EMAIL}
     healthcheck:
       # 127.0.0.1 statt localhost: busybox-wget löst localhost nach ::1 auf,
@@ -44,6 +45,7 @@ services:
       POSTGRES_DB: postgres
       RINGWERK_DB_PASSWORD: ${RINGWERK_DB_PASSWORD}
       TREFFSICHER_DB_PASSWORD: ${TREFFSICHER_DB_PASSWORD}
+      SPIEGEL_DB_PASSWORD: ${SPIEGEL_DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db-init:/docker-entrypoint-initdb.d:ro
@@ -68,7 +70,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    mem_limit: 256m
+    mem_limit: 192m
     logging: *default-logging
     networks:
       - data
@@ -84,7 +86,23 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    mem_limit: 256m
+    mem_limit: 192m
+    logging: *default-logging
+    networks:
+      - data
+
+  migrate-spiegel:
+    image: ${DOCKER_USER}/spiegel:${SPIEGEL_MIGRATOR_TAG:-latest-migrator}
+    restart: "no"
+    pull_policy: always
+    environment:
+      DATABASE_URL: postgresql://spiegel:${SPIEGEL_DB_PASSWORD}@db:5432/spiegel
+      # nur `prisma migrate deploy`, keine Wiederherstellung (apps/spiegel/scripts/run-migrations-with-recovery.sh)
+      PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 192m
     logging: *default-logging
     networks:
       - data
@@ -101,12 +119,15 @@ services:
       SEED_ADMIN_PASSWORD: ${RINGWERK_SEED_ADMIN_PASSWORD}
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
+      # Heap unter der Grenze des Containers: Node 24 setzt ihn bei 256m sonst auf 259 MiB
+      # (vault/incidents/node-heap-above-container-limit.md). Gilt für alle drei Apps.
+      NODE_OPTIONS: --max-old-space-size=160
     depends_on:
       db:
         condition: service_healthy
       migrate-ringwerk:
         condition: service_completed_successfully
-    mem_limit: 384m
+    mem_limit: 256m
     logging: *default-logging
     networks:
       - web
@@ -125,6 +146,7 @@ services:
       UPLOAD_DIR: /app/uploads
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
+      NODE_OPTIONS: --max-old-space-size=160
     volumes:
       - uploads_treffsicher:/app/uploads
     depends_on:
@@ -132,7 +154,31 @@ services:
         condition: service_healthy
       migrate-treffsicher:
         condition: service_completed_successfully
-    mem_limit: 384m
+    mem_limit: 256m
+    logging: *default-logging
+    networks:
+      - web
+      - data
+
+  app-spiegel:
+    image: ${DOCKER_USER}/spiegel:${SPIEGEL_TAG:-latest}
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      DATABASE_URL: postgresql://spiegel:${SPIEGEL_DB_PASSWORD}@db:5432/spiegel
+      NEXTAUTH_SECRET: ${SPIEGEL_NEXTAUTH_SECRET}
+      NEXTAUTH_URL: https://${SPIEGEL_HOST}
+      SEED_ADMIN_EMAIL: ${SPIEGEL_SEED_ADMIN_EMAIL}
+      SEED_ADMIN_PASSWORD: ${SPIEGEL_SEED_ADMIN_PASSWORD}
+      DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
+      AUTH_TRUST_PROXY_HEADERS: "true"
+      NODE_OPTIONS: --max-old-space-size=160
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate-spiegel:
+        condition: service_completed_successfully
+    mem_limit: 256m
     logging: *default-logging
     networks:
       - web

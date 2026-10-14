@@ -9,7 +9,7 @@ part_of: ["[[operations]]"]
 documented_in: ["[[overview#VPS-Sizing]]"]
 ---
 
-**TL;DR** RAM ist Engpass: ~0.9GB steady, ~1.85GB Deploy-Spitze; IONOS VPS S (2GB) via mem_limits tragbar, S+ (4GB) empfohlen. Gemessen am 5. Oktober 2026: 948 MiB verfügbar, Container zusammen ~320 MiB, kein Swap, keine OOM-Kills in 60 Tagen. Der VPS bleibt bei 2 GB; eine dritte App (Spiegel) passt mit 256 MiB Limit.
+**TL;DR** RAM ist Engpass, der VPS bleibt bei 2 GB (IONOS VPS S). Gemessen am 14. Oktober 2026 nach neun Tagen Betrieb: Spitzen Ringwerk 188, Treffsicher 163, Caddy 44, Postgres 96 MiB, 980 MiB verfügbar, kein Swap, keine OOM-Kills. Seit P3 (drei Apps): Apps je 256 MB mit Heap-Grenze 160, Migratoren 192 MB, Caddy 64 MB, Postgres 384 MB; die Summe (1.216 MiB) passt neben System und Docker.
 
 ## Messung 14. Oktober 2026
 
