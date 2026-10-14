@@ -191,14 +191,14 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
     Anlage (ADR-029: eine je Installation).
 - **Was der Admin je Konto sieht** (P2e, `plans/2026-10-14-spiegel-admin-zahlen.md`): Zahl der sichtbaren Scheiben, Tag
   der letzten, Wartende in „Offen“ und den Hinweis „noch keine Scheibe seit der Bestätigung“ (aktive Zustimmung älter als
-  14 Tage ohne jede Scheibe), gezählt in `getUsers` über `groupBy`; in der Übersicht eine Zeile zur Nutzung. Nie
+  14 Tage ohne jede Scheibe, auch ohne gelöschte und zurückgewiesene), gezählt in `getUsers` über `groupBy`; in der Übersicht eine Zeile zur Nutzung. Nie
   Ergebnisse, Disziplinen oder Schüsse. Seit Hinweistext v2 sagt das auch der Text, dem der Schütze zustimmt.
 - **Zustimmung per Sportpass** (SP-1.7 a, `plans/2026-10-14-spiegel-optin.md`, `src/lib/consent/`): Zustände als reine
   Funktion `consentStatus` (wartet, aktiv, abgelehnt, zurück beim Admin; Ablehnung geht vor). Jeder Filter auf „aktiv“
   nimmt `ACTIVE_CONSENT` aus `status.ts` (`GET /state`, Einlesen), nie eine eigene Kopie. Der Hinweistext steht
   unveränderlich in `texts.ts` (`CONSENT_TEXTS`, Tests halten die Hashes von v1 und v2 fest; aktuell v2); ein neuer Wortlaut ist eine neue
   Version, die Zeile speichert `consentVersion`. Widerruf löscht die Zeile, die Scheiben bleiben (User, 14. Oktober 2026). Entscheidungen
-  des Admins tragen ihre Bedingung im `updateMany` selbst (zweimal → „Schon entschieden.“). Das Formular schickt die
+  des Admins tragen ihre Bedingung im `updateMany` selbst (zweimal → „Das hat gerade schon jemand entschieden. Lade die Seite neu.“). Das Formular schickt die
   Version des gezeigten Texts mit; die Grenze von drei je Konto zählt und legt an unter der Sperre der Kontozeile.
 - **Erste Scheibe** (SP-1.7 a2, `plans/2026-10-14-spiegel-erste-scheibe.md`): Das Einlesen legt eine neue Scheibe als
   wartend an (`Card.ownerPending`), solange ihre Zustimmung kein `firstCardConfirmedAt` hat; spätere Stände ändern das
