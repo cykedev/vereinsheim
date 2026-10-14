@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 
 vi.mock("@/lib/auth-helpers", () => ({ requireAdmin: async () => ({}) }))
 
-const { overviewModel } = await import("./overview")
+const { accountsLoadingHistory, overviewModel } = await import("./overview")
 const { OLD_WORDS } = await import("./consequences")
 type Input = Parameters<typeof overviewModel>[0]
 
@@ -159,6 +159,31 @@ describe("Übersicht des Admins", () => {
       "Für 2 Schützen holt Spiegel noch ältere Scheiben. Das passiert, wenn im Schützenhaus niemand schießt."
     )
     expect(overviewModel({ ...base, historyPending: 2 }).tasks).toEqual([])
+  })
+
+  it("„Für N Schützen“ zählt Konten, nicht Nummern; nur aktive, noch nicht geholte (Review P2f)", () => {
+    const at = new Date(Date.UTC(2026, 9, 1))
+    const row = (
+      userId: string,
+      more: Partial<Parameters<typeof accountsLoadingHistory>[0][number]>
+    ) => ({
+      userId,
+      confirmedAt: at,
+      rejectedAt: null,
+      returnedAt: null,
+      historyLoadedAt: null,
+      ...more,
+    })
+    expect(
+      accountsLoadingHistory([
+        row("a", {}),
+        row("a", {}),
+        row("b", {}),
+        row("c", { historyLoadedAt: at }),
+        row("d", { confirmedAt: null }),
+        row("e", { rejectedAt: at }),
+      ])
+    ).toBe(2)
   })
 
   it("Schreibregeln: kein Text der Übersicht mit Semikolon oder altem Wort (P2f)", () => {

@@ -2,7 +2,7 @@ import type { HeartbeatV1 } from "@vereinsheim/ingest-contract/api"
 import { formatDateOnly, formatDateTime } from "@vereinsheim/lib/format"
 
 import { requireAdmin } from "@/lib/auth-helpers"
-import { consentStatus, type ConsentStatus } from "@/lib/consent/status"
+import { consentStatus, type ConsentDecisions, type ConsentStatus } from "@/lib/consent/status"
 import { db } from "@/lib/db"
 import { NOT_MINE } from "@/lib/db/purge"
 import { VISIBLE_CARD } from "@/lib/db/visible"
@@ -220,11 +220,29 @@ function usageText({ cards, recentCards, recentAccounts }: OverviewInput["usage"
   } in den letzten 30 Tagen geschossen.`
 }
 
+/** „Für N Schützen holt Spiegel noch ältere Scheiben“: Konten, nicht Nummern (Review P2f) */
+export function accountsLoadingHistory(
+  consents: readonly (ConsentDecisions & { userId: string; historyLoadedAt: Date | null })[]
+): number {
+  return new Set(
+    consents
+      .filter((c) => consentStatus(c) === "active" && c.historyLoadedAt === null)
+      .map((c) => c.userId)
+  ).size
+}
+
 const RECENT_MS = 30 * 86_400_000
 
-/** Nutzung über aktive Konten, nur sichtbare Scheiben, nach ihrem Beginn; Zahlen, keine Inhalte (P2e, D2) */
-async function usageOf(nowMs: number): Promise<OverviewInput["usage"]> {
-  const visible = { ...VISIBLE_CARD, owner: { isActive: true } }
+/**
+ * Nutzung über aktive Konten, nur sichtbare Scheiben, nach ihrem Beginn; Zahlen, keine Inhalte (P2e, D2). `ownerIds`
+ * grenzt auf diese Konten ein (Tests).
+ */
+export async function usageOf(nowMs: number, ownerIds?: string[]): Promise<OverviewInput["usage"]> {
+  const visible = {
+    ...VISIBLE_CARD,
+    owner: { isActive: true },
+    ...(ownerIds ? { ownerId: { in: ownerIds } } : {}),
+  }
   const recent = { ...visible, startedAt: { gte: new Date(nowMs - RECENT_MS) } }
   const [cards, recentCards, recentOwners] = await Promise.all([
     db.card.count({ where: visible }),
@@ -244,7 +262,7 @@ export async function adminOverview(
 ): Promise<AdminOverviewModel> {
   await requireAdmin()
   const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true, name: true } })
-  const [bridge, consents, users, notMine] = await Promise.all([
+  const [bridge, consents, users, notMine, usage] = await Promise.all([
     site
       ? db.bridge.findFirst({
           where: { siteId: site.id, revokedAt: null },
@@ -270,6 +288,7 @@ export async function adminOverview(
     }),
     db.user.findMany({ select: { id: true, isActive: true } }),
     site ? db.tombstone.count({ where: { source: { siteId: site.id }, reason: NOT_MINE } }) : 0,
+    usageOf(nowMs),
   ])
   const rows = consents.map((c) => ({
     id: c.id,
@@ -307,9 +326,7 @@ export async function adminOverview(
       withSportpass: withSportpass.size,
     },
     notMine,
-    historyPending: consents.filter(
-      (c) => consentStatus(c) === "active" && c.historyLoadedAt === null
-    ).length,
-    usage: await usageOf(nowMs),
+    historyPending: accountsLoadingHistory(consents),
+    usage,
   })
 }

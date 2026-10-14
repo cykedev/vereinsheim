@@ -43,9 +43,9 @@ export async function getUsers(nowMs = Date.now()): Promise<UserListItem[]> {
     },
     orderBy: [{ isActive: "desc" }, { name: "asc" }, { email: "asc" }],
   })
-  // je Konto zählen, zwei Abfragen statt einer je Konto; nie Schüsse oder Ergebnisse
+  // je Konto zählen, eine Abfrage je Zahl statt einer je Konto; nie Schüsse oder Ergebnisse
   const ownerIds = users.map((u) => u.id)
-  const [visible, pending] = await Promise.all([
+  const [visible, pending, trashed, locks, rejected] = await Promise.all([
     db.card.groupBy({
       by: ["ownerId"],
       where: { ownerId: { in: ownerIds }, ...VISIBLE_CARD },
@@ -57,9 +57,21 @@ export async function getUsers(nowMs = Date.now()): Promise<UserListItem[]> {
       where: { ownerId: { in: ownerIds }, ...PENDING_CARD },
       _count: { _all: true },
     }),
+    // Spuren für den Hinweis: Wer gelöscht oder zurückgewiesen hat, bekommt Scheiben (Review P2f)
+    db.card.groupBy({
+      by: ["ownerId"],
+      where: { ownerId: { in: ownerIds }, deletedAt: { not: null } },
+    }),
+    db.deleteLock.groupBy({ by: ["userId"], where: { userId: { in: ownerIds } } }),
+    db.tombstone.groupBy({ by: ["userId"], where: { userId: { in: ownerIds } } }),
   ])
   const visibleOf = new Map(visible.map((v) => [v.ownerId, v]))
   const waitingOf = new Map(pending.map((p) => [p.ownerId, p._count._all]))
+  const traced = new Set<string | null>([
+    ...trashed.map((t) => t.ownerId),
+    ...locks.map((l) => l.userId),
+    ...rejected.map((r) => r.userId),
+  ])
   return users.map(({ consents, ...user }) => {
     const statuses = consents.map(consentStatus)
     const sportpass = sportpassSummary(statuses)
@@ -77,7 +89,7 @@ export async function getUsers(nowMs = Date.now()): Promise<UserListItem[]> {
       cards,
       lastCardAt: counted?._max.startedAt?.toISOString() ?? null,
       waiting,
-      quiet: user.isActive && longConfirmed && cards === 0 && waiting === 0,
+      quiet: user.isActive && longConfirmed && cards === 0 && waiting === 0 && !traced.has(user.id),
     }
   })
 }
