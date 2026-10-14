@@ -25,6 +25,8 @@ describe("Zahlen eines Kontos (P2e)", () => {
 
   it("der Hinweis nur bei einer stillen Zustimmung, in warning", () => {
     expect(render({})).not.toContain("data-user-quiet")
+    // nicht zweimal „noch keine Scheibe“
+    expect(render({ quiet: true })).not.toContain("data-user-cards")
     expect(render({ quiet: true })).toMatch(
       /<span data-user-quiet="true" class="text-warning">noch keine Scheibe seit der Bestätigung<\/span>/
     )

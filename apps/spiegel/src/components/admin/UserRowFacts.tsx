@@ -14,8 +14,11 @@ export function UserRowFacts({
   timeZone: string
 }) {
   const parts = [
+    // der Hinweis sagt es schon: nicht zweimal „noch keine Scheibe“
     user.cards === 0
-      ? "noch keine Scheibe"
+      ? user.quiet
+        ? null
+        : "noch keine Scheibe"
       : `${user.cards === 1 ? "1 Scheibe" : `${user.cards} Scheiben`}${
           user.lastCardAt ? ` · zuletzt ${formatDateOnly(new Date(user.lastCardAt), timeZone)}` : ""
         }`,
@@ -27,7 +30,7 @@ export function UserRowFacts({
   ].filter(Boolean)
   return (
     <>
-      <span data-user-cards>{parts.join(" · ")}</span>
+      {parts.length > 0 && <span data-user-cards>{parts.join(" · ")}</span>}
       {user.quiet && (
         <span data-user-quiet className="text-warning">
           noch keine Scheibe seit der Bestätigung
