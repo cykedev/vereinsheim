@@ -11,6 +11,7 @@ import type { TargetId } from "@vereinsheim/shot-core/targets"
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
 import { CardIdentityConflictError, writeRevision } from "../db/cards"
+import { CYCLE_WINDOW_MS } from "../db/purge"
 import { storeSnapshot, type PreviousLifesign } from "../db/raw"
 import { FAMILY_NAMES } from "../families"
 import {
@@ -27,7 +28,7 @@ import {
 /** dieselbe Scheibe, wenn ihr Beginn so nah liegt; die ScheibenID kehrt erst nach rund 49,7 Tagen wieder (SF-77) */
 const SAME_CARD_MS = 7 * 86_400_000
 /** Grabsteine und Löschsperren gelten für eine ScheibenID, deren Beginn so nah liegt (dieselbe Scheibe, SF-28) */
-const BLOCK_WINDOW_MS = 30 * 86_400_000
+const BLOCK_WINDOW_MS = CYCLE_WINDOW_MS
 
 export interface IngestTarget {
   bridgeId: number
