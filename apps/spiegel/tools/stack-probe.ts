@@ -6,7 +6,8 @@
 //   nicht (413). Die Anmeldung liest den ganzen Körper, darum dort.
 // - Echte Adresse: Eine fehlgeschlagene Anmeldung mit gefälschtem `X-Real-IP` zählt die Ratenbegrenzung unter der
 //   Adresse, die Caddy sieht, nie unter der gefälschten.
-// Legt eine eigene Anlage an und räumt sie samt der gezählten Versuche wieder weg. Nicht im Gate.
+// Legt eine eigene Anlage an und räumt sie samt der gezählten Versuche wieder weg; darum nur gegen die
+// Wegwerf-Datenbank des Stacks (Port 15432), sonst `--force`. Nicht im Gate.
 //
 //   BASE_URL=http://localhost:18082 DATABASE_URL=… pnpm --filter spiegel stack-probe
 
@@ -20,6 +21,9 @@ const BASE = process.env.BASE_URL
 const DATABASE_URL = process.env.DATABASE_URL
 const MIB = 1024 * 1024
 const FORGED = "203.0.113.7"
+const FORCE = process.argv.includes("--force")
+/** IPv4 oder IPv6, so wie die Ratenbegrenzung sie normalisiert */
+const IP = /^(\d{1,3}\.){3}\d{1,3}$|^[0-9a-f:]+$/i
 
 /** ein Körper ohne Längenangabe: Node schickt einen Stream als `chunked` */
 function chunked(bytes: number): ReadableStream<Uint8Array> {
@@ -38,6 +42,13 @@ function chunked(bytes: number): ReadableStream<Uint8Array> {
 async function main() {
   if (!BASE || !DATABASE_URL) {
     out("BASE_URL und DATABASE_URL setzen (Spiegel hinter Caddy und seine Datenbank).")
+    process.exit(2)
+  }
+  // das Aufräumen löscht alle in der Laufzeit gezählten Versuche: nie gegen eine Datenbank mit echten Konten
+  if (new URL(DATABASE_URL).port !== "15432" && !FORCE) {
+    out(
+      "DATABASE_URL zeigt nicht auf die Wegwerf-Datenbank des Stacks (Port 15432); mit --force trotzdem."
+    )
     process.exit(2)
   }
   const db = createPrismaClient(DATABASE_URL)
@@ -81,8 +92,11 @@ async function main() {
         redirect: "manual",
         duplex: "half",
       } as RequestInit & { duplex: "half" })
-      await response.arrayBuffer()
+      const text = await response.text()
       out(`Anmeldung mit ${label} ohne Längenangabe: ${response.status}`)
+      // die 413 von Caddy hat keinen JSON-Körper der App
+      if (blocked && text.trimStart().startsWith("{"))
+        problems.push(`Körper ${label}: 413 kam von der App, nicht von Caddy`)
       if (blocked !== (response.status === 413))
         problems.push(
           `Körper ${label}: ${blocked ? "erwartet 413 von Caddy" : "erwartet durchgelassen"}, kam ${response.status}`
@@ -119,7 +133,10 @@ async function main() {
     if (!keys.includes(`email:${email}`)) problems.push("die Anmeldung wurde nicht gezählt")
     if (keys.some((key) => key.includes(FORGED)))
       problems.push(`die gefälschte Adresse ${FORGED} kam an`)
-    if (!keys.some((key) => key.startsWith("ip:"))) problems.push("keine Adresse gezählt")
+    const addresses = keys.filter((key) => key.startsWith("ip:")).map((key) => key.slice(3))
+    if (!addresses.length) problems.push("keine Adresse gezählt")
+    for (const address of addresses)
+      if (!IP.test(address)) problems.push(`gezählt wurde keine Adresse: ${address}`)
   } finally {
     await db.loginRateLimitBucket.deleteMany({ where: { lastAttemptAt: { gte: started } } })
     await db.site.delete({ where: { id: site.id } })

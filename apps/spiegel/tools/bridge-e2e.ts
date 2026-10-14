@@ -116,6 +116,11 @@ function steps(id: string, daysBack = 0): string[] {
 }
 
 async function main() {
+  // gegen einen fremden Spiegel nie dessen Anlage in der Dev-Datenbank anlegen
+  if (EXTERNAL && !process.env.DATABASE_URL) {
+    out("Mit BASE_URL auch DATABASE_URL setzen (die Datenbank dieses Spiegels).")
+    process.exit(2)
+  }
   const db = createPrismaClient(process.env.DATABASE_URL ?? DEV_DATABASE_URL)
   const tag = randomUUID().slice(0, 8)
   const container = `spiegel-bridge-e2e-${tag}`

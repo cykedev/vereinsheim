@@ -26,6 +26,7 @@ Danach entfernt es Stack, Volumes und Umgebung.
 | `--bridge` | die echte Brücke gegen Spiegel (`bridge-e2e`, braucht Go) |
 | `--load <min>` | Last auf Spiegel (`ingest-load`) und Speicher unter Last |
 | `--down` | einen mit `--keep` stehen gelassenen Stack entfernen |
+| `--clean` | wie `--down`, dazu die `vereinsheim-e2e/*`-Images löschen (sie sammeln sich je Commit an) |
 
 Was es nicht anfasst: `.env`, `.env.local`, die Volumes und Images des lokalen Stacks (`vereinsheim local-up`) und die
 Images unter dem eigenen Docker-Hub-Namen. Belegte Ports: 18080 bis 18082, 15432.
