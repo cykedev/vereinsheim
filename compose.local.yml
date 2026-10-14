@@ -28,8 +28,19 @@ services:
       NEXTAUTH_URL: "http://localhost:3001"
       AUTH_TRUST_PROXY_HEADERS: "false"
 
+  app-spiegel:
+    pull_policy: missing
+    ports:
+      - "3002:3000"
+    environment:
+      NEXTAUTH_URL: "http://localhost:3002"
+      AUTH_TRUST_PROXY_HEADERS: "false"
+
   migrate-ringwerk:
     pull_policy: missing
 
   migrate-treffsicher:
+    pull_policy: missing
+
+  migrate-spiegel:
     pull_policy: missing
