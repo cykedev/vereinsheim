@@ -214,8 +214,10 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   Papierkorb zeigt auch, was nicht von selbst wiederkommt (`blockedCards`: eigene Sperren und Meldungen „nicht meine“);
   die Admin-Übersicht zählt nur die Meldungen der Anlage, ohne Namen.
 - **Ältere Scheiben nachladen** (P2d, `plans/2026-10-14-spiegel-historie.md`): Eine aktive Zustimmung ohne
-  `historyLoadedAt` ist ein Auftrag; `bridgeState` nennt sie in `history` und liefert dann alle Sperren, nicht nur die
-  jüngsten 60 Tage. Der Heartbeat setzt `historyLoadedAt` für `historyDone` (nur aktive, offene Zustimmungen der Anlage).
+  `historyLoadedAt` ist ein Auftrag mit `since` (`historyRequestedAt`, gesetzt beim Bestätigen und Aufheben; alte Zeilen:
+  `confirmedAt`); `bridgeState` nennt sie in `history` und liefert dann alle Sperren, nicht nur die jüngsten 60 Tage.
+  Der Heartbeat setzt `historyLoadedAt` nur für `historyDone` mit passendem `since` an aktiven, offenen Zustimmungen der
+  Anlage mit aktivem Konto (Review: ein altes „erledigt“ überschriebe sonst ein frisches Aufheben).
   „Offen“ zeigt je Nummer die **jüngste** wartende Scheibe (`pendingGroups`). Ein Admin hebt Meldungen „nicht meine“
   einer Zustimmung auf (`liftNotMine` in `src/lib/consent/actions.ts`, am Konto): Grabsteine der Nummer an der Anlage weg,
   `historyLoadedAt` und `firstCardConfirmedAt` null, die Scheiben kommen wartend wieder. Profil und Übersicht zeigen den
