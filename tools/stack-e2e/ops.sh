@@ -150,7 +150,7 @@ else
 fi
 
 echo "==> Restore-Probe über das CLI"
-if run cli restore-probe; then
+if run sh -c 'printf "y\\n" | ./scripts/vereinsheim restore-probe'; then
 	grep -E '^  (ringwerk|treffsicher|spiegel): in Ordnung' "$WORK/plain.txt" | sed 's/^/ /'
 	[[ "$(grep -cE '^  (ringwerk|treffsicher|spiegel): in Ordnung' "$WORK/plain.txt")" == "3" ]] ||
 		problem "Restore-Probe: nicht alle drei in Ordnung"
@@ -166,7 +166,7 @@ good="$(ls -t "$BACKUP_DIR"/spiegel-*.dump | head -n 1)"
 bad="$BACKUP_DIR/spiegel-9999-12-31_2359.dump"
 head -c "$(($(wc -c <"$good") / 2))" "$good" >"$bad"
 touch "$bad"
-if run cli restore-probe; then
+if run sh -c 'printf "y\\n" | ./scripts/vereinsheim restore-probe'; then
 	problem "Restore-Probe merkt den abgeschnittenen Dump nicht"
 else
 	expect_text "spiegel: FEHLER" "Restore-Probe abgeschnitten"

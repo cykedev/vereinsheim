@@ -57,7 +57,11 @@ confirm() {
 	local hint="[y/N]"
 	[[ "$default" == "Y" ]] && hint="[Y/n]"
 	local reply
-	read -r -p "$prompt $hint " reply
+	# Ende der Eingabe gilt als Nein, auch bei Vorgabe Y (Review P4)
+	if ! read -r -p "$prompt $hint " reply; then
+		echo >&2
+		return 1
+	fi
 	reply="${reply:-$default}"
 	[[ "$reply" =~ ^[Yy]$ ]]
 }
@@ -133,15 +137,18 @@ read_env_var() {
 }
 
 write_env_var() {
-	# In-place set <KEY>=<VALUE> in .env. Appends if missing.
-	local key="$1" value="$2"
-	local escaped
-	escaped="$(printf '%s\n' "$value" | sed -e 's/[\/&]/\\&/g')"
-	if grep -q "^${key}=" "$ENV_FILE"; then
-		sed -i.bak "s|^${key}=.*|${key}=${escaped}|" "$ENV_FILE" && rm -f "$ENV_FILE.bak"
-	else
-		echo "${key}=${value}" >>"$ENV_FILE"
-	fi
+	# In-place set <KEY>=<VALUE> in .env. Appends if missing. awk mit ENVIRON statt sed: Werte mit | & \ / bleiben,
+	# wie sie sind (Review P4); `cat >` behält Rechte und Besitzer der Datei, kein .bak (das bliebe von setup)
+	local key="$1" value="$2" tmp
+	tmp="$(mktemp)"
+	K="$key" V="$value" awk '
+		BEGIN { k = ENVIRON["K"]; v = ENVIRON["V"]; done = 0 }
+		index($0, k "=") == 1 && !done { print k "=" v; done = 1; next }
+		{ print }
+		END { if (!done) print k "=" v }
+	' "$ENV_FILE" >"$tmp"
+	cat "$tmp" >"$ENV_FILE"
+	rm -f "$tmp"
 }
 
 env_keys_from_example() {
@@ -981,8 +988,9 @@ cmd_setup() {
 		return 1
 	}
 
-	# Aufbau und Kommentare wie .env.example, die Werte aus dem Wizard
-	{
+	# Aufbau und Kommentare wie .env.example, die Werte aus dem Wizard; umask 077: nie kurz für andere lesbar
+	(
+		umask 077
 		echo "# Generiert von ./scripts/vereinsheim setup am $(date -Iseconds)"
 		while IFS= read -r line; do
 			if [[ "$line" =~ ^([A-Z][A-Z0-9_]*)= ]]; then
@@ -991,7 +999,7 @@ cmd_setup() {
 				echo "$line"
 			fi
 		done <"$ENV_EXAMPLE"
-	} >"$ENV_FILE"
+	) >"$ENV_FILE"
 	chmod 600 "$ENV_FILE"
 	ok ".env geschrieben (chmod 600)."
 	echo
@@ -1054,6 +1062,7 @@ setup_add_missing() {
 		value="$(setup_prompt_key "$key" "$domain")"
 		write_env_var "$key" "$value"
 		ok "$key gesetzt"
+		[[ "$key" != *_TAG ]] || info "  $key=$value aus der Vorlage; gepinnte Tags der anderen Apps bleiben"
 	done
 	warn "Damit Änderungen wirksam werden:  ./scripts/vereinsheim deploy"
 }
@@ -1101,7 +1110,8 @@ cmd_env_check() {
 		local val
 		val="$(read_env_var "$key" || echo '')"
 		if [[ -z "$val" ]]; then
-			missing+=("$key")
+			# leere Image-Tags: compose nimmt seine Vorgaben (latest); ob alle gemeinsam, prüft der Deploy
+			[[ "$key" == *_TAG ]] || missing+=("$key")
 			continue
 		fi
 		ok_count=$((ok_count + 1))
@@ -1208,7 +1218,7 @@ cmd_status() {
 		for app in "${APPS[@]}"; do patterns+=("${app}-*.dump"); done
 		for app in "${UPLOAD_APPS[@]}"; do patterns+=("uploads-${app}-*.tar.gz"); done
 		for pattern in "${patterns[@]}"; do
-			latest="$(find "$BACKUP_DIR_DEFAULT" -maxdepth 1 -type f -name "$pattern" -printf '%TY-%Tm-%Td %TH:%TM  %s  %f\n' 2>/dev/null | sort -r | head -1)"
+			latest="$(find "$BACKUP_DIR_DEFAULT" -maxdepth 1 -type f -name "$pattern" -printf '%TY-%Tm-%Td %TH:%TM  %s  %f\n' 2>/dev/null | sort -r | head -1 || true)"
 			if [[ -n "$latest" ]]; then
 				awk '{ printf "    %s %s  %5.1f MB  %s\n", $1, $2, $3/1024/1024, $4 }' <<<"$latest"
 			else
@@ -1462,6 +1472,13 @@ cmd_restore_probe() {
 		err "db läuft nicht — zuerst: ./scripts/vereinsheim up"
 		exit 1
 	fi
+	echo "${BOLD}=== restore-probe ===${RESET}"
+	echo "  Spielt den neuesten Dump jeder App in eine Wegwerf-Datenbank und löscht sie wieder."
+	echo "  Die laufenden Datenbanken bleiben unberührt; Postgres ist dabei kurz ausgelastet."
+	confirm "Probe jetzt starten?" Y || {
+		info "Abgebrochen."
+		return
+	}
 	BACKUP_DIR="${BACKUP_DIR:-$BACKUP_DIR_DEFAULT}" "$SCRIPT_DIR/restore-probe.sh"
 }
 
