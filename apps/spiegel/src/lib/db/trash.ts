@@ -1,6 +1,6 @@
 import type { Db } from "@/lib/db"
 
-import { purgeCards } from "./purge"
+import { lockCard, purgeCards } from "./purge"
 
 // Papierkorb (P2b, Plan `plans/2026-10-14-spiegel-papierkorb.md`, D4; [[spiegel-navigation]] Entscheidung 15): Eine
 // gelöschte Scheibe liegt 30 Tage dort und zählt nirgends mit. Danach wird sie endgültig gelöscht, und die weiche Sperre
@@ -37,11 +37,11 @@ export async function purgeExpiredTrash(
   const cutoff = new Date(nowMs - TRASH_MS)
   for (const card of expired) {
     try {
-      // unter der Sperre der Zeile noch einmal abgelaufen? (ein Wiederherstellen sperrt dieselbe Zeile, §9)
+      // unter der Sperre noch einmal abgelaufen? (ein Wiederherstellen sperrt dieselbe Scheibe, §9)
       const done = await db.$transaction(async (tx) => {
-        const still = await tx.$queryRaw<{ id: string }[]>`
-          SELECT id FROM "Card" WHERE id = ${card.id} AND "deletedAt" < ${cutoff} FOR UPDATE`
-        if (!still.length) return false
+        if (!(await lockCard(tx, card.id))) return false
+        const still = await tx.card.count({ where: { id: card.id, deletedAt: { lt: cutoff } } })
+        if (!still) return false
         await purgeCards(tx, [card.id], { lock: true })
         return true
       })

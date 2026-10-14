@@ -16,6 +16,22 @@ type Tx = Prisma.TransactionClient
 export type PurgeBlock = { tombstone: string } | { lock: true }
 
 /**
+ * Sperrt eine Scheibe in der Folge des Schreibens (`writeRevision`, `storeSnapshot`): erst das Advisory-Lock ihrer Quelle
+ * und ScheibenID, dann ihre Zeile (`FOR UPDATE`). Wer eine Scheibe prüft und danach entfernt oder ändert, ruft das zuerst;
+ * die umgekehrte Folge konnte mit dem Einlesen derselben Scheibe über Kreuz warten (Review P2b). Der Schlüssel einer
+ * Scheibe ändert sich nicht (außer eine aus dem PDF bekommt ihre Rohdaten). false, wenn es sie nicht gibt.
+ */
+export async function lockCard(tx: Tx, cardId: string): Promise<boolean> {
+  const [key] = await tx.$queryRaw<{ sourceId: number | null; scheibenId: number | null }[]>`
+    SELECT "sourceId", "scheibenId" FROM "Card" WHERE id = ${cardId}`
+  if (!key) return false
+  if (key.sourceId !== null && key.scheibenId !== null)
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${key.sourceId}::int, ${key.scheibenId}::int)`
+  await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${cardId} FOR UPDATE`
+  return true
+}
+
+/**
  * In der übergebenen Transaktion, je Scheibe (in fester Folge, damit zwei Aufrufe ihre Sperren nicht über Kreuz nehmen):
  * unter demselben Advisory-Lock wie Ablage und Schreiben Grabstein (Quelle, ScheibenID, Zyklus, Beginn), die Scheibe
  * (Kaskade auf Revisionen, Schüsse, Projektion, Ausdrucke), ihre Stände und jede Rohzeile dieser Quelle und ScheibenID,

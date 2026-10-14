@@ -8,7 +8,7 @@ import { createPrismaClient } from "@/lib/db"
 import { ingestBatch } from "@/lib/ingest/ingest"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
-import { purgeCards } from "./purge"
+import { lockCard, purgeCards } from "./purge"
 import { storeSnapshot } from "./raw"
 
 const db = createPrismaClient()
@@ -280,5 +280,28 @@ describe("purgeCards mit weicher Sperre (Papierkorb, P2b)", () => {
     const ownerless = await cardOf(snapshots[0].scheibenId)
     await db.card.update({ where: { id: ownerless.id }, data: { ownerId: null } })
     await expect(purgeLocked([ownerless.id])).rejects.toThrow(/ohne Besitzer/)
+  })
+})
+
+describe("lockCard (Review P2b)", () => {
+  it("sperrt wie das Schreiben: erst Quelle und ScheibenID, dann die Zeile; eine unbekannte gibt false", async () => {
+    const snapshots = card()
+    const scheibenId = snapshots[0].scheibenId
+    await ingest(snapshots)
+    const target = await cardOf(scheibenId)
+    const other = createPrismaClient()
+    try {
+      const held = await db.$transaction(async (tx) => {
+        expect(await lockCard(tx, target.id)).toBe(true)
+        // eine zweite Verbindung bekommt das Advisory-Lock der Scheibe nicht, solange es gehalten wird
+        const [row] = await other.$queryRaw<{ got: boolean }[]>`
+          SELECT pg_try_advisory_xact_lock(${site.sourceId}::int, ${scheibenId}::int) AS got`
+        return row.got
+      })
+      expect(held).toBe(false)
+      expect(await db.$transaction((tx) => lockCard(tx, "c0000000000000000000000000"))).toBe(false)
+    } finally {
+      await other.$disconnect()
+    }
   })
 })

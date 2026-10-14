@@ -6,7 +6,7 @@ import type { Prisma } from "@/generated/prisma/client"
 import { isCardIdInput, shooterId } from "@/lib/action-guards"
 import { ACTIVE_CONSENT } from "@/lib/consent/status"
 import { db } from "@/lib/db"
-import { purgeCards } from "@/lib/db/purge"
+import { lockCard, purgeCards } from "@/lib/db/purge"
 import { PENDING_CARD } from "@/lib/db/visible"
 import type { ActionResult } from "@/lib/types"
 
@@ -18,12 +18,12 @@ const MISSING = "Die Scheibe gibt es nicht."
 const FAILED = "Das ließ sich nicht speichern. Bitte noch einmal versuchen."
 
 /**
- * eine eigene wartende Scheibe, ihre Zeile gesperrt: Ein zweiter Aufruf zugleich wartet und findet sie danach nicht
+ * eine eigene wartende Scheibe, gesperrt wie beim Schreiben (`lockCard`): Ein zweiter Aufruf zugleich wartet und findet sie danach nicht
  * mehr (Review). Dazu, worauf sich beide Actions beziehen: dieselbe SportpassID an derselben Anlage (Review: eine Nummer
  * kann an zwei Anlagen vorkommen).
  */
 async function pendingCard(tx: Prisma.TransactionClient, cardId: string, ownerId: string) {
-  await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${cardId} FOR UPDATE`
+  if (!(await lockCard(tx, cardId))) return null
   const card = await tx.card.findFirst({
     where: { id: cardId, ownerId, ...PENDING_CARD },
     select: { sportpassId: true, source: { select: { siteId: true } } },
