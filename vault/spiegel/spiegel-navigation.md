@@ -109,6 +109,11 @@ Gewählt ist C. Gebaut wird zuerst die Liste, weil sie das Rückgrat ist.
     - **Grabstein bleibt** für „Nicht meine“ und abgelehnte Scheiben, denn dort geht es um die Daten eines anderen
       (SF-28, SF-37).
     - „Aus Verläufen ausnehmen“ bleibt die sanfte Alternative ohne Löschen.
+    - **Stand 14. Oktober 2026 (P2b):** gebaut an der Scheibe (Knopf am Ende der Seite, Dialog mit Folgen, Rückweg mit
+      „Scheibe gelöscht · Rückgängig“), Papierkorb unter Profil mit „Wiederherstellen“ und „Endgültig löschen“, Ablauf
+      nach 30 Tagen beim Start und stündlich. Der Papierkorb zeigt auch, was nicht von selbst wiederkommt: eigene
+      endgültig gelöschte und eigene Meldungen „nicht meine“. Offen: Löschen in der Auswahl (N4) und das Aufheben einer
+      Sperre (Holen per QR, Nachladen; Meldung „nicht meine“ durch den Admin in P2d).
 16. **Admin:** auf dem Telefon ein Eintrag in Profil, am Desktop der letzte Eintrag der Seitenleiste. Nur für
     Admins sichtbar.
 

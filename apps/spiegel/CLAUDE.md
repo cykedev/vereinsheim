@@ -30,7 +30,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 ## Aufbau
 
 - `src/app/login` ohne Rahmen; `src/app/(app)/*` mit Anmeldepflicht (`requireSession` im Layout, `proxy.ts` davor):
-  Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Profil, Offen `/open`, Platzhalter Scannen
+  Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Profil, Papierkorb `/profile/trash`,
+  Offen `/open`, Platzhalter Scannen
   (bis SP-1.7 b nicht in der Navigation),
   Admin `/admin/users`.
 - Seiten sind Server-Komponenten: Sitzung, Daten (`src/lib/db/reads.ts`), Kontext (`pageContext`: Zone, „jetzt“,
@@ -202,6 +203,16 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   Beobachtung, verwaiste Zeilen), die Grundlage auch für Löschen und Papierkorb. Sperren und Zyklen über
   `src/lib/db/blocks.ts` (`startHintMs`, `isKeyBlocked`, `maxCycleOfKey`); `storeSnapshot` prüft sie unter seiner
   Sperre (`startAtMs`). Beide Actions sperren zuerst die Zeile der Scheibe und gelten je Anlage und SportpassID.
+- **Löschen mit Papierkorb** (P2b, `plans/2026-10-14-spiegel-papierkorb.md`): `purgeCards(tx, ids, block)` hinterlässt
+  einen Grabstein (`{ tombstone: reason }`, mit `userId` und `sportpassId` der Scheibe: wer gemeldet hat, unter welcher
+  Nummer) oder die weiche Sperre des Besitzers (`{ lock: true }`, `DeleteLock`). Löschen setzt nur `deletedAt`
+  (`src/lib/trash-actions.ts`: `deleteCard`, `restoreCard` bis 30 Tage, `purgeCardNow`, je unter `FOR UPDATE` der Zeile);
+  nach 30 Tagen löscht `purgeExpiredTrash` (`src/lib/db/trash.ts`) beim Start und stündlich endgültig, je Scheibe unter
+  der Sperre ihrer Zeile neu geprüft. Der Knopf steht am Ende der Seite einer Scheibe (`DeleteCard`), danach der Rückweg
+  mit „Scheibe gelöscht · Rückgängig“ (`useUndo` aus `src/components/shell/UndoBar.tsx`, im Rahmen der App, überlebt die
+  Navigation der Aktion). Eine alte Adresse einer gelöschten Scheibe führt in den Papierkorb (`ownCardState`). Der
+  Papierkorb zeigt auch, was nicht von selbst wiederkommt (`blockedCards`: eigene Sperren und Meldungen „nicht meine“);
+  die Admin-Übersicht zählt nur die Meldungen der Anlage, ohne Namen.
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten (gefunden von der Skriptprüfung, 13. Oktober 2026).
