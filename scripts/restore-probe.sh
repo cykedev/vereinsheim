@@ -62,11 +62,11 @@ probe_app() {
 		tables="${restored%%|*}"
 		migrations="${restored##*|}"
 		if ((tables == 0 || migrations == 0)); then
-			echo "  $app: FEHLER, eingespielt: $tables Tabellen, $migrations Migrationen"
+			echo "  $app: FEHLER, eingespielt: Tabellen $tables, Migrationen $migrations"
 			result=1
 		else
 			live="$(counts "$app" 2>/dev/null || echo "?|?")"
-			echo "  $app: in Ordnung, $tables Tabellen, $migrations Migrationen (laufend: ${live%%|*} und ${live##*|})"
+			echo "  $app: in Ordnung, Tabellen $tables, Migrationen $migrations (laufend: ${live%%|*} und ${live##*|})"
 			[[ "$live" == "$restored" ]] ||
 				echo "  $app: Hinweis, weicht von der laufenden Datenbank ab (Deploy nach dem Backup?)"
 		fi
