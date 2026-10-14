@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build + Push beider Apps (Ringwerk + Treffsicher) AUS DEM MONOREPO via
+# Build + Push der Apps (Ringwerk, Treffsicher, Spiegel) AUS DEM MONOREPO via
 # `turbo prune --docker`. Ersetzt den früheren Build aus den Standalone-Repos
 # (Phase 3 der Monorepo-Migration; ADR-015). Tag-Schema unverändert → der
 # Deploy-Vertrag (compose.yml/.env) bleibt gewahrt.
@@ -7,7 +7,7 @@
 # Pro App zwei Images:
 #   <DOCKER_USER>/<app>:<sha>           und :latest             (target=runner)
 #   <DOCKER_USER>/<app>:<sha>-migrator  und :latest-migrator    (target=migrator)
-# Der <sha> ist jetzt der Monorepo-HEAD (beide Apps teilen ihn).
+# Der <sha> ist jetzt der Monorepo-HEAD (alle Apps teilen ihn).
 #
 # Modi:
 #   (default) PUSH=1 : --platform linux/amd64 --push; verlangt committeten Stand
@@ -105,6 +105,7 @@ build_app() {
 
 build_app ringwerk
 build_app treffsicher
+build_app spiegel
 rm -rf out
 
 echo
@@ -114,10 +115,12 @@ if [[ "$PUSH" == "1" ]]; then
 	echo "  ${DOCKER_USER}/ringwerk:latest-migrator    (+ :${SHA}-migrator)"
 	echo "  ${DOCKER_USER}/treffsicher:latest    (+ :${SHA})"
 	echo "  ${DOCKER_USER}/treffsicher:latest-migrator    (+ :${SHA}-migrator)"
+	echo "  ${DOCKER_USER}/spiegel:latest    (+ :${SHA})"
+	echo "  ${DOCKER_USER}/spiegel:latest-migrator    (+ :${SHA}-migrator)"
 	echo
 	echo "On the VPS, run: ./scripts/deploy.sh"
 else
 	echo "Done (lokal, --load, kein Push):"
 	docker images --format "  {{.Repository}}:{{.Tag}}  ({{.Size}})" \
-		| grep -E "${DOCKER_USER}/(ringwerk|treffsicher):(latest|${SHA})(-migrator)?$" || true
+		| grep -E "${DOCKER_USER}/(ringwerk|treffsicher|spiegel):(latest|${SHA})(-migrator)?  \(" || true
 fi

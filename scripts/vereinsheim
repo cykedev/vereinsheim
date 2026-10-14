@@ -232,7 +232,7 @@ cmd_help() {
 
 		${BOLD}── RELEASE-WORKFLOW${RESET} ${DIM}(lokal → VPS, braucht .vereinsheim.local)${RESET}
 		  ${GREEN}local-setup${RESET}           Einmalig: VPS-Verbindung konfigurieren
-		  ${GREEN}build${RESET}                 Beide Apps bauen + nach Docker Hub pushen
+		  ${GREEN}build${RESET}                 Alle Apps bauen + nach Docker Hub pushen
 		  ${GREEN}release${RESET}               build + ssh-Deploy in einem Schritt
 		  ${GREEN}ssh${RESET}                   Shell auf dem VPS
 		  ${GREEN}remote${RESET} <cmd>          Befehl auf dem VPS via SSH
@@ -240,7 +240,7 @@ cmd_help() {
 		  ${GREEN}download${RESET} [datei]      Backup ← VPS  (ohne Arg: Liste)
 
 		${BOLD}── LOKALE TESTUMGEBUNG${RESET} ${DIM}(braucht zusätzlich .env.local)${RESET}
-		  ${GREEN}local-build${RESET}               Alle 4 Images lokal bauen (kein Push, native Plattform)
+		  ${GREEN}local-build${RESET}               Alle 6 Images lokal bauen (kein Push, native Plattform)
 		  ${GREEN}local-pull${RESET}                Backups + Image-Tags vom VPS holen → ./backups/
 		  ${GREEN}local-up${RESET}                  Lokalen Stack starten (vorhandene Volumes)
 		  ${GREEN}local-up --restore${RESET}         Volumes löschen + aus ./backups/ neu laden
@@ -328,14 +328,14 @@ cmd_local_setup() {
 }
 
 # ---------- local-build ----------
-# Baut alle 4 Images lokal aus dem Monorepo (--load, kein Push, native Plattform)
+# Baut alle 6 Images lokal aus dem Monorepo (--load, kein Push, native Plattform)
 # via build-and-push.sh im PUSH=0-Modus. Uncommittete Änderungen sind erlaubt —
 # der Subcommand ist explizit für lokale Testbuilds gedacht.
 cmd_local_build() {
 	require_local_config
 	require_docker
 	echo "${BOLD}=== local-build ===${RESET}"
-	echo "  Baut alle 4 Images lokal (--load, kein Push) aus dem Monorepo (turbo prune)."
+	echo "  Baut alle 6 Images lokal (--load, kein Push) aus dem Monorepo (turbo prune)."
 	echo "  Uncommittete Änderungen sind erlaubt — nur für lokale Tests."
 	echo "  Docker-User : ${DOCKER_USER}"
 	echo
@@ -348,7 +348,7 @@ cmd_local_build() {
 # ---------- build ----------
 cmd_build() {
 	require_local_config
-	info "Build + Push beider Apps (target=runner und target=migrator) als $DOCKER_USER"
+	info "Build + Push aller Apps (target=runner und target=migrator) als $DOCKER_USER"
 	export DOCKER_USER
 	exec "$SCRIPT_DIR/build-and-push.sh" "$@"
 }
@@ -1584,7 +1584,7 @@ interactive_menu_local() {
 		echo "  d) dev-setup  Workstation arbeitsfähig machen  ${DIM}(idempotent)${RESET}"
 		echo
 		echo "  ${BOLD}Release-Workflow${RESET}"
-		echo "  1) build      Beide Apps bauen + pushen"
+		echo "  1) build      Alle Apps bauen + pushen"
 		echo "  2) release    build + ssh-Deploy  ${DIM}(Standard-Release)${RESET}"
 		echo "  3) ssh        Shell auf dem VPS"
 		echo "  4) remote …   Befehl auf dem VPS"
@@ -1592,7 +1592,7 @@ interactive_menu_local() {
 		echo "  6) download   Backup ← VPS"
 		echo
 		echo "  ${BOLD}Lokale Testumgebung${RESET}"
-		echo "  7) local-build         Alle 4 Images lokal bauen  ${DIM}(kein Push)${RESET}"
+		echo "  7) local-build         Alle 6 Images lokal bauen  ${DIM}(kein Push)${RESET}"
 		echo "  8) local-pull          Backups + Image-Tags vom VPS holen"
 		echo "  9) local-up            Stack starten  ${DIM}(vorhandene Volumes)${RESET}"
 		echo " 10) local-up --restore  Stack neu aufsetzen  ${DIM}(clean + Produktionsdaten)${RESET}"
