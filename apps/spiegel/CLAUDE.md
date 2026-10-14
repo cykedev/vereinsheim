@@ -179,8 +179,10 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   - **Zustände** schaltet der Heartbeat weiter (`advanceCardStates`), `complete` gilt erst endgültig. `writeRevision` hält
     `korrigiert` und `uhr-abweichung` dauerhaft; eine andere Anzeigeart ist keine Korrektur (`sameScoring`, SF-74).
   - **Admin → Anlage und Brücken** (`/admin/site`): Anlage, Brücken koppeln (Code nur in der Antwort der Action) und
-    widerrufen, Epochen bestätigen. Zustimmungen per Sportpass bestätigt oder lehnt der Admin am Konto ab
-    (`/admin/users/[id]`, offene oben in „Konten“); eintragen kann nur der Schütze im Profil.
+    widerrufen, Ranglisten zuordnen. Eine neue Epoche bestätigt niemand in der Oberfläche (P2c, D0); die Übersicht
+    zeigt nur einen Hinweis. Zustimmungen per Sportpass bestätigt oder lehnt der Admin am Konto ab
+    (`/admin/users/[id]`, offene als Aufgabe in der Übersicht und als Link in „Konten“); eintragen kann nur der Schütze
+    im Profil.
   - Tests gegen die Dev-Datenbank: `createTestSite` legt die Epoche bestätigt an; der Admin arbeitet auf der ersten
     Anlage (ADR-029: eine je Installation).
 - **Zustimmung per Sportpass** (SP-1.7 a, `plans/2026-10-14-spiegel-optin.md`, `src/lib/consent/`): Zustände als reine
