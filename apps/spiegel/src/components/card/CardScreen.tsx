@@ -49,10 +49,12 @@ import {
 } from "@vereinsheim/shot-ui/view-state"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
+import { DeleteCard } from "@/components/card/DeleteCard"
 import { Page } from "@/components/shell/Page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { useHelp } from "@/components/shell/HelpContext"
 import { addressScoring, nextCardAddress, ownHash } from "@/lib/card-address"
+import { cardWhen } from "@/lib/open"
 import type { PageCard } from "@/lib/db/reads"
 import { setCardKind } from "@/lib/card-kind-actions"
 import { setCardScoring } from "@/lib/scoring-actions"
@@ -428,6 +430,11 @@ export function CardScreen({
             ),
           },
         ]}
+      />
+      <DeleteCard
+        cardId={card.id}
+        when={cardWhen(card.startedAtMs, pageContext.timeZone)}
+        back={urlFromRoute(backRoute(route))}
       />
       <ReturnPill label={pill?.label ?? null} onReturn={back} onDismiss={close} />
     </Page>

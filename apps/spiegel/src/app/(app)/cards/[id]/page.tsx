@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
 import { contextCardIds, neighbours } from "@vereinsheim/shot-ui/nav/context"
 import { routeFromUrl } from "@vereinsheim/shot-ui/nav/routes"
@@ -7,7 +7,7 @@ import { routeFromUrl } from "@vereinsheim/shot-ui/nav/routes"
 import { CardScreen } from "@/components/card/CardScreen"
 import { requireSession } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
-import { cardWithShots, ownerCards } from "@/lib/db/reads"
+import { cardWithShots, ownCardState, ownerCards } from "@/lib/db/reads"
 import { pageContext } from "@/lib/page-context"
 import { listable, withFamily } from "@/lib/pages"
 import { searchOf } from "@/lib/search"
@@ -27,7 +27,12 @@ export default async function CardRoutePage({
   const { id } = await params
   const ownerId = session.user.id
   const card = await cardWithShots(db, { cardId: id, ownerId })
-  if (!card?.targetId) notFound()
+  if (!card?.targetId) {
+    // eine eigene im Papierkorb (alte Adresse, Zurück nach dem Löschen): dorthin statt 404 (P2b, D5)
+    if (!card && (await ownCardState(db, { cardId: id, ownerId })) === "trash")
+      redirect("/profile/trash")
+    notFound()
+  }
 
   const route = routeFromUrl(`/cards/${encodeURIComponent(id)}`, searchOf(await searchParams), "")
   if (route.page !== "card") notFound()

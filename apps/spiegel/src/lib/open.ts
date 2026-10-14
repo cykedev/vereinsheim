@@ -25,6 +25,12 @@ export interface PendingItem {
   targetId: TargetId | null
 }
 
+/** Tag und Uhrzeit einer Scheibe in Worten, „Di 14.10.2026 · 19:12“: in „Offen“, im Papierkorb und in den Dialogen */
+export const cardWhen = (startedAtMs: number, timeZone: string) => {
+  const started = new Date(startedAtMs)
+  return `${formatWeekdayDate(started, timeZone)} · ${formatTimeOfDay(started, timeZone)}`
+}
+
 const SCORING_UNIT: Readonly<Record<Scoring, string>> = { rings: " Ringe", decimal: "" }
 
 export function pendingItems(
@@ -32,14 +38,13 @@ export function pendingItems(
   timeZone: string
 ): PendingItem[] {
   return pending.map(({ card, sportpassId, more }) => {
-    const started = new Date(card.startedAtMs)
     const metric = inScoring(metricByKey("result.decimal")!, card.scoring)
     const value = card.projection.values[metric.key]?.value ?? null
     return {
       cardId: card.id,
       sportpassId,
       more,
-      when: `${formatWeekdayDate(started, timeZone)} · ${formatTimeOfDay(started, timeZone)}`,
+      when: cardWhen(card.startedAtMs, timeZone),
       stand: card.stand,
       family: card.family?.name ?? null,
       shots: card.projection.printedShots,
