@@ -162,8 +162,9 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   `ingestBatch` (`ingest.ts`: Epoche, Zustimmung, Sperren, verdeckt, Ablage, Adapter je Scheibe nur für den neuesten
   Stand). Kopplung, Token, Heartbeat und Zustand in `bridges.ts`, der Adapter in `meyton-ssmdb2.ts` (reine Funktion,
   Tests an allen Fällen von `ssmdb2-cases`).
-  - **Nichts ohne Zustimmung speichern:** Was nicht zu einer bestätigten SportpassID der Anlage passt, verwirft das
-    Einlesen, bevor `storeSnapshot` läuft. Eine neue Regel dort braucht einen Test, der zeigt, dass nichts abgelegt wird.
+  - **Nichts ohne Zustimmung speichern:** Was nicht zu einer aktiven SportpassID der Anlage passt (bestätigt, nicht
+    abgelehnt), verwirft das Einlesen, bevor `storeSnapshot` läuft. Eine neue Regel dort braucht einen Test, der zeigt,
+    dass nichts abgelegt wird.
   - **Logs nur mit Zahlen und festen Codes** (`Log` in `http.ts`), unerwartete Fehler nur mit ihrem Namen: Die Meldungen
     von Prisma enthalten Werte. Der Test in `http.test.ts` schickt einen Namen durch jede Fehlerart.
   - **Lebenszeichen** (`LIFESIGN` in `raw.ts`): ein Stand, der sich nur in `Scheiben.Zeitstempel` unterscheidet, wird
@@ -171,9 +172,16 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   - **Zustände** schaltet der Heartbeat weiter (`advanceCardStates`), `complete` gilt erst endgültig. `writeRevision` hält
     `korrigiert` und `uhr-abweichung` dauerhaft; eine andere Anzeigeart ist keine Korrektur (`sameScoring`, SF-74).
   - **Admin → Anlage und Brücken** (`/admin/site`): Anlage, Brücken koppeln (Code nur in der Antwort der Action) und
-    widerrufen, Epochen bestätigen; SportpassIDs am Konto (`/admin/users/[id]`), das Profil zeigt die eigenen.
+    widerrufen, Epochen bestätigen. Zustimmungen per Sportpass bestätigt oder lehnt der Admin am Konto ab
+    (`/admin/users/[id]`, offene oben in „Konten“); eintragen kann nur der Schütze im Profil.
   - Tests gegen die Dev-Datenbank: `createTestSite` legt die Epoche bestätigt an; der Admin arbeitet auf der ersten
     Anlage (ADR-029: eine je Installation).
+- **Zustimmung per Sportpass** (SP-1.7 a, `plans/2026-10-14-spiegel-optin.md`, `src/lib/consent/`): Zustände als reine
+  Funktion `consentStatus` (wartet, aktiv, abgelehnt, zurück beim Admin; Ablehnung geht vor). Jeder Filter auf „aktiv“
+  prüft `confirmedAt: { not: null }, rejectedAt: null` (`GET /state`, Einlesen). Der Hinweistext steht unveränderlich in
+  `texts.ts` (`CONSENT_TEXTS`, ein Test hält den Hash von v1 fest); ein neuer Wortlaut ist eine neue Version, die Zeile
+  speichert `consentVersion`. Widerruf löscht die Zeile, die Scheiben bleiben (User, 14. Oktober 2026). Entscheidungen
+  des Admins tragen ihre Bedingung im `updateMany` selbst (zweimal → „Schon entschieden.“).
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten (gefunden von der Skriptprüfung, 13. Oktober 2026).

@@ -48,9 +48,10 @@ lässt `api/ingest` ohne Sitzung durch; jeder Endpunkt außer `pair` verlangt de
 - Gemessen mit `pnpm --filter spiegel ingest-load` ([[spiegel-db-schema]], „Last der Ingest-API“).
 
 **Zustimmung doppelt geprüft:** Spiegel nimmt eine Scheibe nur an, wenn ihre SportpassID an dieser Anlage einem aktiven
-Konto mit bestätigter Zustimmung gehört (`SportpassConsent`), und verwirft den Rest ungespeichert (`no-consent`). Ein
-Fehler in der Brücke kann so nichts durchreichen ([[spiegel-privacy]]). Bis SP-1.7 a trägt der Admin die SportpassID am
-Konto ein, nach der Zustimmung auf Papier; eine SportpassID gehört an einer Anlage höchstens einem Konto. Scheiben mit
+Konto mit aktiver Zustimmung gehört (`SportpassConsent`: bestätigt und nicht abgelehnt), und verwirft den Rest
+ungespeichert (`no-consent`). Ein Fehler in der Brücke kann so nichts durchreichen ([[spiegel-privacy]]). Seit SP-1.7 a
+(14. Oktober 2026) stimmt der Schütze im Profil zu, ein Admin bestätigt ([[spiegel-assignment]]); eine SportpassID gehört
+an einer Anlage höchstens einem Konto. Scheiben mit
 Grabstein oder Löschsperre (Beginn in 30 Tagen um die Beobachtung) nimmt Spiegel nie wieder an (SF-28), Scheiben mit
 einem verdeckten Schuss oder Anzeigeart 0 auch nicht (SF-19, SF-20; doppelt zur Brücke). Aufträge (QR-Weg) kommen mit
 SP-1.7.
