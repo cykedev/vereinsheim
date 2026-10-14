@@ -182,6 +182,8 @@ async function main() {
         siteId: site.id,
         sportpassId: BigInt(SPORTPASS_BASE + i),
         confirmedAt: new Date(),
+        // eingespielt (SP-1.7 a2): gemessen wird die Last, nicht die erste Bestätigung
+        firstCardConfirmedAt: new Date(),
       })),
     })
     if (START) server = await startServer(BASE, PORT, out)

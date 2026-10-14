@@ -117,7 +117,14 @@ async function main() {
   const problems: string[] = []
   try {
     await db.sportpassConsent.create({
-      data: { userId: user.id, siteId: site.id, sportpassId: CONSENTED, confirmedAt: new Date() },
+      // eingespielt: die erste Scheibe ist bestätigt (SP-1.7 a2); hier zählt das Hochladen
+      data: {
+        userId: user.id,
+        siteId: site.id,
+        sportpassId: CONSENTED,
+        confirmedAt: new Date(),
+        firstCardConfirmedAt: new Date(),
+      },
     })
     server = await startServer(BASE, PORT, out)
     const port = startMariadb(container)
