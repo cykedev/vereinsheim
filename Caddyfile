@@ -32,3 +32,15 @@
 		import proxy_real_ip
 	}
 }
+
+# Spiegel nimmt Stapel der Brücke bis 4 MiB an (MAX_SNAPSHOTS_BYTES). Caddy liegt knapp darüber: Ein etwas zu großer
+# Stapel bekommt die JSON-Antwort der App (`too-large`), die die Brücke versteht; alles darüber hält Caddy auf.
+{$SPIEGEL_HOST} {
+	encode zstd gzip
+	request_body {
+		max_size 5MiB
+	}
+	reverse_proxy app-spiegel:3000 {
+		import proxy_real_ip
+	}
+}
