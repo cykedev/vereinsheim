@@ -5,9 +5,12 @@
 // danach kommen die Schritte der Fälle im Abstand von vier Sekunden; sie liest dann jede Sekunde.
 // Geprüft in der Datenbank: Was ankommt, gehört dem Konto mit Zustimmung, nichts Verdecktes und nichts ohne Zustimmung,
 // der Heartbeat ist vermerkt. Danach ist alles entfernt (Anlage, Konto, Container, Konfiguration mit dem Token).
+// Dazu ein älterer Abend (SF-02, 40 Tage zurück) schon vor dem Start in der Ablage (P2d): Ohne Auftrag zum Nachladen
+// (`historyLoadedAt` gesetzt) kommt er nie. Mit `--historie` ist der Auftrag offen; die Brücke holt ihn, sobald 20 Minuten
+// nichts läuft, und meldet ihn erledigt (`historyLoadedAt`). Das dauert gut 20 Minuten.
 // Nicht im Gate (braucht Docker, Go und den Build).
 //
-//   pnpm --filter spiegel build && pnpm --filter spiegel bridge-e2e
+//   pnpm --filter spiegel build && pnpm --filter spiegel bridge-e2e [--historie]
 
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process"
 import { randomUUID } from "node:crypto"
@@ -33,9 +36,14 @@ const STEP_MS = 4000
 const ARRIVE = [1168956429, 651756429, -1915210867, -1912810867]
 const NEVER = [650556429, 650556430]
 const HIDDEN = [-1916410867, -1915210867, -1912810867]
+/** der ältere Abend (SF-02): nur mit offenem Auftrag zum Nachladen */
+const OLDER = 1082556429
+const OLDER_DAYS = 40
 
 /** Anlage und Konto behalten, um nachzusehen; Container und Konfiguration gehen trotzdem */
 const KEEP = process.argv.includes("--keep")
+/** mit offenem Auftrag zum Nachladen; wartet, bis die Brücke ihn erledigt meldet (gut 20 Minuten) */
+const HISTORY = process.argv.includes("--historie")
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function mariadb(container: string, sql: string, database = "SSMDB2") {
@@ -87,7 +95,7 @@ const wallText = (ms: number) => new Date(ms).toISOString().slice(0, 19).replace
  * sind auf Tage im Oktober datiert; Spiegel mäße sonst Tage Uhrversatz, und der Heartbeat schaltete die Scheibe
  * endgültig, bevor der nächste Stand kommt (dann ein neuer Zyklus, SF-77).
  */
-function steps(id: string): string[] {
+function steps(id: string, daysBack = 0): string[] {
   const sqls = readdirSync(join(CASES_DIR, id, "steps"))
     .sort()
     .map((file) => readFileSync(join(CASES_DIR, id, "steps", file), "utf8"))
@@ -96,7 +104,7 @@ function steps(id: string): string[] {
   )
   const now = Date.now()
   const nowWall = now + (now - zonedWallTimeMs(now, "Europe/Berlin"))
-  const shift = Math.round((nowWall - first) / 1000) * 1000
+  const shift = Math.round((nowWall - daysBack * 86_400_000 - first) / 1000) * 1000
   return sqls.map((sql) =>
     sql.replace(DATETIME, (_, text: string) => `'${wallText(wallMs(text) + shift)}'`)
   )
@@ -124,10 +132,14 @@ async function main() {
         sportpassId: CONSENTED,
         confirmedAt: new Date(),
         firstCardConfirmedAt: new Date(),
+        // ohne `--historie` gilt die Historie als geladen: kein Auftrag (P2d)
+        historyLoadedAt: HISTORY ? null : new Date(),
       },
     })
     server = await startServer(BASE, PORT, out)
     const port = startMariadb(container)
+    // der ältere Abend liegt schon in der Ablage, bevor die Brücke startet
+    for (const sql of steps("SF-02", OLDER_DAYS)) mariadb(container, sql)
     const binary = join(dir, "spiegel-bridge")
     execFileSync("go", ["build", "-o", binary, "./cmd/spiegel-bridge"], { cwd: BRIDGE_DIR })
     const { code } = await createPairing(db, {
@@ -140,12 +152,13 @@ async function main() {
     execFileSync(binary, ["pair", "--config", config, "--url", BASE, "--code", code], { env })
     out("gekoppelt")
 
-    bridge = spawn(binary, ["run", "--config", config], { env })
-    bridge.stderr?.on("data", (chunk: Buffer) => (bridgeLog += chunk.toString()))
-    // die Schritte im Takt eines Abends, nur schneller: die Brücke sieht jeden Stand mindestens zweimal. Vorher ein
-    // Stand, der sie aus dem ruhigen Takt holt (wie am Abend der erste Schuss)
+    // der erste Stand des Abends schon vor dem Start: Er verankert das Startfenster der Brücke am heutigen Abend, sonst
+    // gälte der ältere Abend (allein in der Ablage) als der jüngste und käme ohne Auftrag (P2d)
     const [first, ...rest] = steps("SF-03")
     mariadb(container, first)
+    bridge = spawn(binary, ["run", "--config", config], { env })
+    bridge.stderr?.on("data", (chunk: Buffer) => (bridgeLog += chunk.toString()))
+    // die Schritte im Takt eines Abends, nur schneller: die Brücke sieht jeden Stand mindestens zweimal
     await sleep(32_000)
     for (const [id, sqls] of [
       ["SF-03", rest],
@@ -172,6 +185,8 @@ async function main() {
     for (const id of NEVER)
       if (arrived.includes(id))
         problems.push(`Scheibe ${id} hätte das Schützenhaus nie verlassen dürfen`)
+    if (!HISTORY && arrived.includes(OLDER))
+      problems.push(`der ältere Abend kam ohne Auftrag zum Nachladen`)
     const cards = await db.card.findMany({
       where: { source: { siteId: site.id } },
       select: { scheibenId: true, ownerId: true, _count: { select: { shots: true } } },
@@ -206,6 +221,30 @@ async function main() {
     if (/Muster|12345678/.test(heartbeat + bridgeLog))
       problems.push("Personenfeld in Heartbeat oder Log")
     out(`Heartbeat: ${heartbeat}`)
+    if (HISTORY) {
+      // die Brücke lädt erst nach, wenn 20 Minuten nichts läuft; danach meldet der Heartbeat den Auftrag erledigt
+      out("warte auf das Nachladen (bis 26 min)")
+      let loaded: Date | null = null
+      for (let i = 0; i < 26 * 6 && !loaded; i++) {
+        await sleep(10_000)
+        loaded = (
+          await db.sportpassConsent.findFirstOrThrow({
+            where: { siteId: site.id },
+            select: { historyLoadedAt: true },
+          })
+        ).historyLoadedAt
+      }
+      const older = await db.card.findFirst({
+        where: { source: { siteId: site.id }, scheibenId: OLDER },
+        select: { ownerId: true, startedAt: true },
+      })
+      if (!older) problems.push("der ältere Abend kam nicht")
+      else if (older.ownerId !== user.id) problems.push("der ältere Abend ohne das Konto")
+      if (!loaded) problems.push("der Auftrag zum Nachladen ist nicht erledigt gemeldet")
+      out(
+        `nachgeladen: ${older ? older.startedAt.toISOString() : "nichts"}, erledigt ${loaded?.toISOString() ?? "nein"}`
+      )
+    }
     out(`Log der Brücke:\n${bridgeLog.trim()}`)
   } finally {
     bridge?.kill("SIGTERM")
