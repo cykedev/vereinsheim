@@ -61,6 +61,12 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   über `cache`), Server Actions geben `ActionResult` zurück (nie werfen). Ablauf von `authorize`, Store und
   Admin-Auswertung der Sperren kommen aus `@vereinsheim/lib/auth/*`, gemeinsam mit Ringwerk und Treffsicher. Neue
   Rolle, neuer Status oder neues Passwort beenden die Sitzungen eines Kontos (das JWT trägt die Rolle).
+- **Kein Knopf ohne Folge** (P2c, `plans/2026-10-14-spiegel-admin-verstaendlich.md`, [[conventions]] §10): Jede Aktion mit
+  Folgen fragt über `DecisionDialog` (`src/components/shell/`); die Texte nur aus `src/lib/admin/consequences.ts`
+  (Tests halten den Wortlaut, ohne Pronomen für Personen), die Erklärungen hinter „?“ aus `src/lib/admin/help.ts`
+  (`AdminHelp`). Ein Formular mit Folgen (Konto, Zeitzone) fängt `onSubmit` ab, fragt und sendet nach dem Bestätigen
+  mit `requestSubmit`. Der Admin beginnt mit der Übersicht (`/admin`, `src/lib/admin/overview.ts`): Aufgaben nur für
+  Entscheidungen eines Menschen, Meldungen der Brücke nur als Zustand.
 - **Admin-Daten prüfen selbst:** jede Admin-Seite und jede Admin-Abfrage ruft `requireAdmin`; das Layout allein schützt
   die Daten einer Seite nicht (Next: bei Navigation im Client läuft es nicht erneut).
 - **Passwort vom Admin:** `mustChangePassword` (beim Anlegen und Zurücksetzen). `requireSession` leitet jede Seite zur

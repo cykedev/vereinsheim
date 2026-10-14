@@ -41,7 +41,7 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 | Vergleich | zwei Auswahlen auf einer Scheibe, Tabelle mit Differenz; laut [[spiegel-langzeit]] eingebaut in die Seite eines Zeitraums |
 | Fortschritt | Seite eines Zeitraums wie die einer Scheibe: Verlauf, Liste der Scheiben, Zahlen, Analyse, Rekorde, Kalender ([[spiegel-langzeit]]) |
 | Profil | Zuordnung (Sportpass), Freigaben, Export, Papierkorb (30 Tage), Löschen des Kontos; auf dem Telefon auch Admin |
-| Admin | Anlagen, Brücken-Status, Zuordnungen, Scheibenbilder, Nutzer |
+| Admin | Übersicht (seit 14. Oktober 2026: „Wartet auf dich“ nur mit Entscheidungen, darunter der Weg einer Scheibe Anlage → Brücke → Zustimmungen → Konten mit Stand und „?“), Konten mit Stand des Sportpasses, Anlage und Brücke mit Ranglisten; jede Aktion mit Folgen über `DecisionDialog` ([[conventions]] §10) |
 
 ## Wertung: ganze Ringe oder Zehntel
 

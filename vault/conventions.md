@@ -283,3 +283,10 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   die Skriptprüfung der App (`pnpm --filter spiegel pruefen`, seit 13. Oktober 2026 statt des Labors).
 - Ringwerk und Treffsicher bleiben auf `theme.css` und ihrem Drift-Gate; Spiegel ist davon
   ausgenommen, bis beide Apps auf Design 2 umziehen.
+- **Kein Knopf ohne Folge** (User, 14. Oktober 2026: „ich muss immer verstehen was ich bestätige, ablehne usw und was
+  das für folgen hat“): Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
+  über `DecisionDialog` (`apps/spiegel/src/components/shell/`) und sagt in Alltagsworten, worum es geht, was vorher zu
+  prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle
+  (`apps/spiegel/src/lib/admin/consequences.ts`, Tests halten den Wortlaut), ohne Pronomen für Personen. Keine
+  Fachbegriffe in der Oberfläche; als Aufgabe erscheint im Admin nur, was ein Mensch entscheiden muss, Technisches regelt
+  Spiegel selbst und zeigt es höchstens als Zustand (Plan `plans/2026-10-14-spiegel-admin-verstaendlich.md`, D0).
