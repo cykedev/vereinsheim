@@ -233,17 +233,23 @@ model RawSnapshot {
 
 // abgelehnte oder fremde Scheibe, die nicht wiederkommen darf; die Brücke kennt sie auch
 model Tombstone {
-  id         Int      @id @default(autoincrement())
-  sourceId   Int
-  source     Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  scheibenId Int
+  id          Int      @id @default(autoincrement())
+  sourceId    Int
+  source      Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  scheibenId  Int
   // Zyklus der ScheibenID wie an der Scheibe (SF-77); der Beginn hilft dem Adapter, ihn zu erkennen
-  cycle      Int      @default(0)
-  startedAt  DateTime @db.Timestamptz(3)
-  reason     String
-  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  cycle       Int      @default(0)
+  startedAt   DateTime @db.Timestamptz(3)
+  reason      String
+  // wer die Scheibe gemeldet hat („Nicht meine“): Papierkorb des Schützen; null, wenn das Konto gelöscht ist
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // unter welcher SportpassID die Scheibe kam: ordnet den Grabstein einer Zustimmung zu (P2d)
+  sportpassId BigInt?
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
 
   @@unique([sourceId, scheibenId, cycle])
+  @@index([userId])
 }
 
 // eigene, endgültig gelöschte Scheibe: nicht von selbst wieder annehmen; ausdrückliches Holen hebt die Sperre auf
@@ -287,6 +293,7 @@ model User {
   cards              Card[]
   periods            NamedPeriod[]
   deleteLocks        DeleteLock[]
+  tombstones         Tombstone[]
   familyScorings     FamilyScoring[]
   consents           SportpassConsent[]
 }

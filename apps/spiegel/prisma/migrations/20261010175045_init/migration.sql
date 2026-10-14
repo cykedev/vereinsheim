@@ -152,6 +152,8 @@ CREATE TABLE "Tombstone" (
     "cycle" INTEGER NOT NULL DEFAULT 0,
     "startedAt" TIMESTAMPTZ(3) NOT NULL,
     "reason" TEXT NOT NULL,
+    "userId" TEXT,
+    "sportpassId" BIGINT,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Tombstone_pkey" PRIMARY KEY ("id")
@@ -383,6 +385,9 @@ CREATE INDEX "RawSnapshot_sourceId_lastObservedAt_idx" ON "RawSnapshot"("sourceI
 CREATE UNIQUE INDEX "RawSnapshot_sourceId_scheibenId_sequence_key" ON "RawSnapshot"("sourceId", "scheibenId", "sequence");
 
 -- CreateIndex
+CREATE INDEX "Tombstone_userId_idx" ON "Tombstone"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Tombstone_sourceId_scheibenId_cycle_key" ON "Tombstone"("sourceId", "scheibenId", "cycle");
 
 -- CreateIndex
@@ -486,6 +491,9 @@ ALTER TABLE "RawSnapshot" ADD CONSTRAINT "RawSnapshot_columnSetId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "Tombstone" ADD CONSTRAINT "Tombstone_sourceId_fkey" FOREIGN KEY ("sourceId") REFERENCES "Source"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Tombstone" ADD CONSTRAINT "Tombstone_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "DeleteLock" ADD CONSTRAINT "DeleteLock_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
