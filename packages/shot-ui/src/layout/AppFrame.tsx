@@ -42,6 +42,8 @@ export interface AppFrameProps {
   isAdmin: boolean
   /** unten in der Seitenleiste, etwa die Darstellung; nicht in den Leisten des Telefons */
   sidebarFooter?: ReactNode
+  /** Scannen anbieten (Vorgabe ja); eine App ohne QR-Weg blendet es aus, die untere Leiste hat dann vier Felder */
+  scan?: boolean
   children?: ReactNode
 }
 
@@ -56,8 +58,10 @@ export function AppFrame({
   openCount,
   isAdmin,
   sidebarFooter,
+  scan = true,
   children,
 }: AppFrameProps) {
+  const bar = scan ? BAR : BAR.filter((area) => area !== "scan")
   const name = (area: Area) =>
     area === "start" && openCount > 0 ? `Start, ${openCount} offen` : undefined
   const badge = (area: Area, className: string) =>
@@ -121,14 +125,15 @@ export function AppFrame({
         <nav aria-label="Bereiche" className="flex flex-col gap-1">
           <p className="px-3 pb-4 font-display text-xl font-bold tracking-tight">Spiegel</p>
           {(["start", "cards", "progress"] as const).map(sideEntry)}
-          {link(
-            "scan",
-            "mt-3 flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[14px] font-semibold text-primary-foreground hover:opacity-90 aria-[current=page]:ring-2 aria-[current=page]:ring-ring aria-[current=page]:ring-offset-2 aria-[current=page]:ring-offset-card",
-            <>
-              <ScanQrCode aria-hidden="true" className="size-[18px]" />
-              QR scannen
-            </>
-          )}
+          {scan &&
+            link(
+              "scan",
+              "mt-3 flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[14px] font-semibold text-primary-foreground hover:opacity-90 aria-[current=page]:ring-2 aria-[current=page]:ring-ring aria-[current=page]:ring-offset-2 aria-[current=page]:ring-offset-card",
+              <>
+                <ScanQrCode aria-hidden="true" className="size-[18px]" />
+                QR scannen
+              </>
+            )}
           <div aria-hidden="true" className="my-3 border-t border-border" />
           {sideEntry("profile")}
           {isAdmin && sideEntry("admin")}
@@ -149,7 +154,7 @@ export function AppFrame({
           "max-lg:[@media(max-height:499px)]:flex"
         )}
       >
-        {BAR.map((area) => {
+        {bar.map((area) => {
           const { label, Icon } = ITEMS[area]
           return link(
             area,
@@ -187,8 +192,8 @@ export function AppFrame({
           "max-lg:[@media(max-height:499px)]:hidden"
         )}
       >
-        <div className="mx-auto grid h-14 max-w-lg grid-cols-5">
-          {BAR.map((area) => {
+        <div className={cn("mx-auto grid h-14 max-w-lg", scan ? "grid-cols-5" : "grid-cols-4")}>
+          {bar.map((area) => {
             const { short, label, Icon } = ITEMS[area]
             if (area === "scan")
               return (

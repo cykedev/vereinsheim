@@ -65,6 +65,8 @@ export function AppShell({ isAdmin, children }: { isAdmin: boolean; children: Re
           links={areaLinks(memory, family)}
           openCount={0}
           isAdmin={isAdmin}
+          // Scannen kommt mit dem QR-Weg (SP-1.7 b); bis dahin nicht in der Navigation
+          scan={false}
           sidebarFooter={<ThemeSwitch />}
         >
           {children}

@@ -26,6 +26,29 @@ const areasIn = (html: string, marker: string) => {
   return [...html.slice(start, end).matchAll(/data-area="([a-z]+)"/g)].map((m) => m[1])
 }
 
+describe("ohne Scannen (SP-1.7 a2, bis der QR-Weg kommt)", () => {
+  const html = render({ scan: false })
+
+  it("keine Leiste und kein Knopf führt zum Scannen", () => {
+    expect(html).not.toContain('data-area="scan"')
+    expect(areasIn(html, "data-app-sidebar")).toEqual([
+      "start",
+      "cards",
+      "progress",
+      "profile",
+      "admin",
+    ])
+    expect(areasIn(html, "data-app-bar")).toEqual(["start", "cards", "progress", "profile"])
+    expect(areasIn(html, "data-app-rail")).toEqual(["start", "cards", "progress", "profile"])
+  })
+
+  it("die untere Leiste hat vier Felder; ohne Angabe fünf wie bisher", () => {
+    expect(html).toContain("grid-cols-4")
+    expect(html).not.toContain("grid-cols-5")
+    expect(render()).toContain("grid-cols-5")
+  })
+})
+
 describe("Rahmen der App (Plan N3, D1, D2, D6)", () => {
   const html = render()
 
