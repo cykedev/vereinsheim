@@ -139,6 +139,43 @@ describe("Kalender blätterbar (Rückmeldung 8)", () => {
     expect(calendarWindow({ ...now, end: pageEarlier(earlier) }, 13).earlier).toBe(false)
   })
 
+  it("Tage außerhalb des Zeitraums blass, die Zeile zählt nur den Zeitraum (User: „ja blasser zeigen“)", () => {
+    const days = [
+      { key: "2026-08-02", shots: 30, cards: 1, competition: 0 },
+      { key: "2026-10-01", shots: 60, cards: 1, competition: 1 },
+    ]
+    const html = renderToStaticMarkup(
+      createElement(CalendarBrowser, {
+        end: TODAY,
+        period: { from: "2026-09-16", to: TODAY },
+        today: TODAY,
+        days,
+        dayRoute,
+      })
+    )
+    const link = (day: string) => html.match(new RegExp(`<a [^>]*data-day="${day}"[^>]*>`))![0]
+    expect(link("2026-08-02")).toContain("data-outside")
+    expect(link("2026-08-02")).toContain("opacity-35")
+    expect(link("2026-10-01")).not.toContain("data-outside")
+    // leere Tage vor dem Zeitraum ebenso blass
+    expect(html).toMatch(/<span aria-hidden="true" class="[^"]*bg-surface-2[^"]*opacity-35/)
+    expect(html).toContain("1 Trainingstag im Zeitraum · 60 Schuss")
+    expect(html).toContain("außerhalb des Zeitraums")
+    // „Alles“: kein Tag außerhalb, Zeile und Legende wie bisher
+    const all = renderToStaticMarkup(
+      createElement(CalendarBrowser, {
+        end: TODAY,
+        period: { from: "2020-01-01", to: TODAY },
+        today: TODAY,
+        days,
+        dayRoute,
+      })
+    )
+    expect(all).toContain("2 Trainingstage · 90 Schuss")
+    expect(all).not.toContain("außerhalb des Zeitraums")
+    expect(all).not.toContain("data-outside")
+  })
+
   it("zeigt anfangs die Wochen bis zum Ende des Zeitraums, „früher“ wählbar, „später“ nicht", () => {
     const days = [
       { key: "2026-03-14", shots: 40, cards: 1, competition: 0 },
@@ -146,7 +183,13 @@ describe("Kalender blätterbar (Rückmeldung 8)", () => {
       { key: "2026-10-01", shots: 60, cards: 1, competition: 1 },
     ]
     const html = renderToStaticMarkup(
-      createElement(CalendarBrowser, { end: TODAY, today: TODAY, days, dayRoute })
+      createElement(CalendarBrowser, {
+        end: TODAY,
+        period: { from: "2026-07-01", to: TODAY },
+        today: TODAY,
+        days,
+        dayRoute,
+      })
     )
     // vor dem Messen 13 Wochen: der 2. August steht da, der 14. März nicht
     expect([...html.matchAll(/data-day="([\d-]+)"/g)].map((m) => m[1])).toEqual([

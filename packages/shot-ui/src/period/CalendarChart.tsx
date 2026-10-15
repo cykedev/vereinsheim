@@ -94,11 +94,14 @@ const PAGE_BUTTON =
  */
 export function CalendarBrowser({
   end,
+  period,
   today,
   days,
   dayRoute,
 }: {
   end: string
+  /** der gewählte Zeitraum: Tage davor und danach stehen blass da */
+  period: { from: string; to: string }
   today: string
   days: readonly CalendarDay[]
   dayRoute: (day: string) => Route
@@ -112,6 +115,7 @@ export function CalendarBrowser({
       to={shown.to}
       days={days.filter((day) => day.key >= shown.from && day.key <= shown.to)}
       dayRoute={dayRoute}
+      period={period}
       onFit={setWeeks}
       paging={{
         earlier: shown.earlier ? () => setLast(pageEarlier(shown)) : null,
@@ -135,6 +139,7 @@ export function CalendarChart({
   dayRoute,
   paging,
   onFit,
+  period,
 }: {
   from: string
   to: string
@@ -144,6 +149,11 @@ export function CalendarChart({
   paging?: { earlier: (() => void) | null; later: (() => void) | null }
   /** meldet die Zahl der Wochen, die in den Platz passen (gemessen ohne Rand) */
   onFit?: (weeks: number) => void
+  /**
+   * der gewählte Zeitraum, wenn das Fenster über ihn hinausgeht: Tage außerhalb blass, die Zeile darunter zählt nur
+   * ihn (User, 15. Oktober 2026: „ja blasser zeigen“)
+   */
+  period?: { from: string; to: string }
 }) {
   const scroller = useRef<HTMLDivElement | null>(null)
   const [width, measure] = useElementWidth()
@@ -167,6 +177,10 @@ export function CalendarChart({
   const byKey = new Map(days.map((day) => [day.key, day]))
   const max = Math.max(0, ...days.map((day) => day.shots))
   const competition = days.some((day) => day.competition > 0)
+  const outside = (key: string) => !!period && (key < period.from || key > period.to)
+  // geht das Fenster über den Zeitraum hinaus, zählt die Zeile nur die Tage in ihm
+  const beyond = !!period && (from < period.from || to > period.to)
+  const counted = days.filter((day) => !outside(day.key))
 
   return (
     <div className="grid gap-2">
@@ -241,7 +255,10 @@ export function CalendarChart({
                         <span
                           key={key}
                           aria-hidden
-                          className="size-[13px] rounded-[3px] bg-surface-2"
+                          className={cn(
+                            "size-[13px] rounded-[3px] bg-surface-2",
+                            outside(key) && "opacity-35"
+                          )}
                         />
                       )
                     return (
@@ -249,12 +266,14 @@ export function CalendarChart({
                         key={key}
                         route={dayRoute(key)}
                         data-day={key}
-                        aria-label={dayText(day)}
-                        title={dayText(day)}
+                        data-outside={outside(key) || undefined}
+                        aria-label={`${dayText(day)}${outside(key) ? ", außerhalb des Zeitraums" : ""}`}
+                        title={`${dayText(day)}${outside(key) ? ", außerhalb des Zeitraums" : ""}`}
                         className={cn(
                           "size-[13px] rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
                           LEVELS[dayLevel(day.shots, max)],
-                          day.competition > 0 && "ring-[1.5px] ring-gold"
+                          day.competition > 0 && "ring-[1.5px] ring-gold",
+                          outside(key) && "opacity-35"
                         )}
                       />
                     )
@@ -267,8 +286,9 @@ export function CalendarChart({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span>
-          {plural(days.length, "Trainingstag", "Trainingstage")}
-          {days.length ? ` · ${days.reduce((sum, d) => sum + d.shots, 0)} Schuss` : ""}
+          {plural(counted.length, "Trainingstag", "Trainingstage")}
+          {beyond ? " im Zeitraum" : ""}
+          {counted.length ? ` · ${counted.reduce((sum, d) => sum + d.shots, 0)} Schuss` : ""}
         </span>
         <span className="flex items-center gap-1.5" aria-hidden>
           weniger
@@ -283,6 +303,12 @@ export function CalendarChart({
             </>
           )}
         </span>
+        {beyond && (
+          <span className="flex items-center gap-1.5" aria-hidden>
+            <span className={cn("size-[13px] rounded-[3px] opacity-35", LEVELS[2])} />
+            außerhalb des Zeitraums
+          </span>
+        )}
       </div>
     </div>
   )

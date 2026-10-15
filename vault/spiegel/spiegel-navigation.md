@@ -503,7 +503,8 @@ Plan `plans/2026-10-15-spiegel-feedback-1.md`, Wünsche des Users nach dem erste
   ganze Wochen, wie nebeneinander passen (gemessen; am Telefon rund 18, am Desktop rund 35), am Anfang bis zum Ende des
   Zeitraums, nie über heute hinaus. „‹ früher“ und „später ›“ blättern um diese Zahl Wochen, begrenzt durch die erste
   Scheibe und heute (`calendarWindow`, `CalendarBrowser`); auch bei „Alles“ scrollt er nicht mehr seitlich (User nach
-  dem ersten Blick). Ein Tag außerhalb des Zeitraums führt in die Liste ohne Zeitraum.
+  dem ersten Blick). Tage außerhalb des Zeitraums stehen blass da, die Zeile darunter zählt dann nur den Zeitraum
+  („… im Zeitraum“, User: „ja blasser zeigen“). Ein Tag außerhalb des Zeitraums führt in die Liste ohne Zeitraum.
 - **„Fett: Wertung der Scheibe.“ weg:** Die Zeile stand unter jedem Monat der Liste; die Wertung der Scheibe bleibt fett
   und im Namen des Links.
 
