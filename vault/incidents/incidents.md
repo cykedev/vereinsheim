@@ -8,7 +8,7 @@ part_of: ["[[overview]]"]
 
 **TL;DR** Projekt-spezifischer Zustand zum ERINNERN (ADR-017): offene Punkte, Lernlog-Fakten und Zustände, die in keiner Doku stehen.
 
-MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Überleben als normale Notes (kein Rebuild mehr, ADR-025).
+MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Normale Notes, live editiert (kein Rebuild, ADR-025).
 
 ## Notes
 
@@ -24,14 +24,10 @@ MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Überleben als normale Notes (kei
 - [[deadline-wipe-on-hidden-form-fields]] — deadline-wipe-on-hidden-form-fields
 - [[dependency-pin-alignment]] — dependency-pin-alignment
 - [[env-var-alignment-gap]] — env-var-alignment-gap
-- [[future-adrs]] — future-adrs
-- [[labor-build-and-check-gotchas]] — Labor (entfernt 13. Oktober 2026): alter Stempel aus dem Turbo-Cache, „Kein Bericht“, parallele pnpm-Läufe
 - [[meyton-pdf-format-change]] — meyton-pdf-format-change
-- [[monorepo-phase-5]] — monorepo-phase-5
+- [[public-pdf-cache-tag-orphaning]] — Cache-Tag des öffentlichen PDFs hing am Slug statt an der ID (verwaiste Einträge)
+- [[next-dist-dir-shared-with-dev-server]] — `pnpm check` und `next dev` teilen sich `.next` (TS2307, alte Chunks)
+- [[dev-shadow-db-createdb]] — Dev-Rollen ohne `CREATEDB`, `prisma migrate dev` scheitert mit P3014
+- [[autopilot-guard-blocks-contract-only-plans]] — Pläne nur in geschützten Pfaden laufen interaktiv, nicht autonom
 - [[ruleset-lock-granularity]] — ruleset-lock-granularity
-- [[seed-script-orphaned]] — seed-script-orphaned
 - [[stechschuss-modell-flip]] — stechschuss-modell-flip
-- [[treffsicher-actionresult-migration]] — treffsicher-actionresult-migration
-- [[treffsicher-backlog-state]] — treffsicher-backlog
-- [[treffsicher-future-features]] — treffsicher-future-features
-- [[treffsicher-pwa-offline]] — treffsicher-pwa-offline

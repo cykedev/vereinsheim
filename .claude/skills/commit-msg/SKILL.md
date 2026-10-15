@@ -13,5 +13,5 @@ Inspect the diff (`git diff`, `git diff --cached`, `git status`) and write a
   so the user can review it.
 
 Types: `feat`, `fix`, `docs`, `refactor`, `chore`, `test`, `build`, `perf`.
-Scope = the touched app or area (`ringwerk`, `treffsicher`, `monorepo`, `harness`,
-`docker`, `decisions`, …).
+Scope = the touched app, package or area (`ringwerk`, `treffsicher`, `spiegel`, `spiegel-bridge`,
+`shot-ui`, `lib`, `monorepo`, `harness`, `ops`, `vault`, …).

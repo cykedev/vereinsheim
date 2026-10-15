@@ -8,22 +8,22 @@ part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-metrics]]", "[[spiegel-ui-design]]", "[[spiegel-edge-cases]]", "[[spiegel-vision]]", "[[statistics-visualization]]", "[[meyton-printout]]"]
 ---
 
-**TL;DR** Alle Statistiken, die Spiegel mit Meyton-Rohdaten sinnvoll zeigen kann: 99 Katalog-IDs in 13 Themen (6 davon entfernt), je mit Definition, Priorität und Platz in der Roadmap. Was eine einzelne Scheibe hergibt, rechnet der Fachkern seit SP-1.10; Verläufe, Rekorde und Vergleiche über Zeiträume folgen in Phase 2. Leitbild ist ein Profi-Werkzeug zum systematischen Trainieren und Analysieren, das jede Zahl ehrlich zeigt: mit n, Unsicherheit und dem Hinweis „unklar“, wenn die Daten nicht reichen.
+**TL;DR** Alle Statistiken, die Spiegel mit Meyton-Rohdaten sinnvoll zeigen kann: 99 Katalog-IDs in 13 Themen (6 davon entfernt), je mit Definition, Priorität und Platz in der Roadmap. Was eine einzelne Scheibe hergibt, rechnet der Fachkern (SP-1.10); Verläufe, Rekorde und Vergleiche über Zeiträume sind zum Teil gebaut (Phase 2). Leitbild ist ein Profi-Werkzeug zum systematischen Trainieren und Analysieren, das jede Zahl ehrlich zeigt: mit n, Unsicherheit und dem Hinweis „unklar“, wenn die Daten nicht reichen.
 
 # Spiegel — Statistik-Katalog
 
 ## Leitbild
 
-Der User will ein Profi-Werkzeug, „das mir viele gute Informationen zeigt, mit denen ich systematisch trainieren kann und mit dem ich analysieren kann“ (6. Oktober 2026). Daraus folgt:
+Leitbild ist ein Profi-Werkzeug, das viele gute Informationen zeigt, mit denen man systematisch trainieren und analysieren kann ([[spiegel-vision]]). Daraus folgt:
 
-- **Viel, aber geordnet, und nichts doppelt:** Statistiken nach Themen, das Wichtigste (Priorität A) zuerst, der Rest auf Antippen. Eine Zahl, die aus einer anderen folgt oder dasselbe nur verrauschter misst, fällt weg (Oktober 2026, Maßstab Sa); die Zeile bleibt mit Grund, die ID wird nie wiederverwendet.
+- **Viel, aber geordnet, und nichts doppelt:** Statistiken nach Themen, das Wichtigste (Priorität A) zuerst, der Rest auf Antippen. Eine Zahl, die aus einer anderen folgt oder dasselbe nur verrauschter misst, fällt weg (Maßstab Sa); die Zeile bleibt mit Grund, die ID wird nie wiederverwendet.
 - **Ehrlich:** Jede Zahl steht auf einer sichtbaren Grundlage (n, Zeitraum, Filter). Unter der Mindestzahl steht „–“ mit Grund, Unsicherheit wird gezeigt, und „unklar“ ist ein normales Ergebnis.
 - **Handlungsnah:** Wo es geht, sagt die Statistik, was zu tun ist („Lage echt; läge die Gruppe in der Mitte, brächten 40 weitere Schuss zusammen etwa 2,4 Ringe mehr“) statt nur Zahlen zu liefern.
 - **Messdaten, kein Tagebuch:** Ziele, Absicht, Reflexion und Befinden bleiben laut [[adr-026]] in Treffsicher. Spiegel liefert die Messung, Übungen mit messbarem Kriterium und die Auswertung.
 
 ## Notation
 
-vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Schüsse. Jede Statistik über Werte gibt es in beiden Wertungen; in ganzen Ringen steht Ringᵢ für vᵢ. Einzelne Schüsse zeigt die Oberfläche immer in Zehnteln, gleich in welcher Wertung die Scheibe steht: Schusstabelle, Ablesung, Verlauf je Schuss (I3, I4 mit gleitendem Schnitt) und die Zehntelverteilung V2 (User, 15. Oktober 2026). Lage pᵢ in mm (Mitte 0, x rechts, y oben); Schwerpunkt m = (x̄, ȳ); rᵢ = |pᵢ − m|, dᵢ = |pᵢ| (Teiler = dᵢ in 1/100 mm). Sx, Sy mit n − 1. W ist der Ringabstand (LG 2,5 mm, LP 8 mm). Ebenen: Schuss, Serie, Scheibe, Zeitraum. Priorität A (früh, großer Nutzen), B (später), C (schön zu haben). Spalte „Wo“: Roadmap-Feature oder „vorhanden“ (seit SP-1.2 in der Registry).
+vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Schüsse. Jede Statistik über Werte gibt es in beiden Wertungen; in ganzen Ringen steht Ringᵢ für vᵢ. Einzelne Schüsse zeigt die Oberfläche immer in Zehnteln, gleich in welcher Wertung die Scheibe steht: Schusstabelle, Ablesung, Verlauf je Schuss (I3, I4 mit gleitendem Schnitt) und die Zehntelverteilung V2. Lage pᵢ in mm (Mitte 0, x rechts, y oben); Schwerpunkt m = (x̄, ȳ); rᵢ = |pᵢ − m|, dᵢ = |pᵢ| (Teiler = dᵢ in 1/100 mm). Sx, Sy mit n − 1. W ist der Ringabstand (LG 2,5 mm, LP 8 mm). Ebenen: Schuss, Serie, Scheibe, Zeitraum. Priorität A (früh, großer Nutzen), B (später), C (schön zu haben). Spalte „Wo“: Roadmap-Feature oder „vorhanden“ (in der Registry).
 
 ## Was es schon gibt
 
@@ -42,12 +42,12 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | E2 | Ø je Schuss | Σ vᵢ / n, in beiden Wertungen | Serie, Scheibe, Zeitraum | A | vorhanden |
 | E3 | Hochrechnung | Ø je Schuss × Soll-Schusszahl; nie als Rekord (SF-09) | Scheibe | B | SP-1.8 |
 | E4 | Zehner und Zehnerquote | Anzahl Ring 10; Quote mit Wilson-Intervall | Serie, Scheibe, Zeitraum | A | vorhanden (Anzahl), SP-1.10 (Quote) |
-| E5 | Innenzehner | Anzahl; LG und LP nicht vergleichbar. Die Quote mit Wilson-Intervall entfällt (Oktober 2026): Sie rechnete nur die Spielwiese selbst, und die Anzahl steht wie auf dem Ausdruck | Serie, Scheibe, Zeitraum | A | vorhanden |
-| E6 | Bester und schwächster Schuss | **entfernt (Oktober 2026):** folgt aus E8, der kleinste Teiler ist der beste Schuss, der größte der schwächste | – | – | entfernt (SP-1.12) |
-| E7 | Teiler-Schnitt und -Median | **entfernt (Oktober 2026):** läuft mit dem Ø je Schuss (E2) zu r = −0,998, weil der Zehntelwert linear im Abstand ist | – | – | entfernt (SP-1.12) |
+| E5 | Innenzehner | Anzahl; LG und LP nicht vergleichbar. Eine Quote mit Wilson-Intervall gibt es nicht; die Anzahl steht wie auf dem Ausdruck | Serie, Scheibe, Zeitraum | A | vorhanden |
+| E6 | Bester und schwächster Schuss | **entfernt:** folgt aus E8, der kleinste Teiler ist der beste Schuss, der größte der schwächste | – | – | entfernt (SP-1.12) |
+| E7 | Teiler-Schnitt und -Median | **entfernt:** läuft mit dem Ø je Schuss (E2) zu r = −0,998, weil der Zehntelwert linear im Abstand ist | – | – | entfernt (SP-1.12) |
 | E8 | Beste und weiteste Teiler | je drei mit Schussnummer, wie auf dem Ausdruck | Serie, Scheibe | B | SP-1.10 |
-| E9 | Ringverlust | n·10 − ΣRing bzw. n·10,9 − Σvᵢ; seit Oktober 2026 als `total` in L4 (Lage + Streuung), keine eigene Auswertung mehr; nur, wenn jeder Wertungsschuss eine Lage hat und keiner verdächtig ist, sonst wäre es eine Teilsumme (SF-07) | Serie, Scheibe | B | SP-1.10, SP-1.12 |
-| E10 | Konstanz | SD und Spanne der Serien gleicher Länge, Abweichung je Schuss = SD der vᵢ (n − 1), ab 2 Schuss mit Wert; bis Oktober 2026 der MAD, der in ganzen Ringen beim Luftgewehr fast immer 0 war (User, 9. Oktober 2026) | Scheibe, Zeitraum | A | SP-1.10 |
+| E9 | Ringverlust | n·10 − ΣRing bzw. n·10,9 − Σvᵢ; als `total` in L4 (Lage + Streuung), keine eigene Auswertung; nur, wenn jeder Wertungsschuss eine Lage hat und keiner verdächtig ist, sonst wäre es eine Teilsumme (SF-07) | Serie, Scheibe | B | SP-1.10, SP-1.12 |
+| E10 | Konstanz | SD und Spanne der Serien gleicher Länge, Abweichung je Schuss = SD der vᵢ (n − 1), ab 2 Schuss mit Wert; nicht der MAD, der in ganzen Ringen beim Luftgewehr fast immer 0 ist | Scheibe, Zeitraum | A | SP-1.10 |
 | E11 | Anteil über Schwelle | Anteil vᵢ ≥ s mit Wilson-Intervall | Serie, Scheibe, Zeitraum | B | SP-1.10 |
 
 ### 2 Trefferbild und Präzision
@@ -56,13 +56,13 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 |---|---|---|---|---|---|
 | P1 | Streukreis (Meyton: Trefferkreis) | Durchmesser des kleinsten Kreises um alle Trefferzentren, Mitte zu Mitte; wächst mit n | Serie, Scheibe | A | vorhanden |
 | P2 | Extreme Spread | größter Abstand zweier Treffer | Serie, Scheibe | C | Funktion `extremeSpread` |
-| P3 | Mittlerer Radius | **entfernt (Oktober 2026):** ≈ 1,24 · σ̂ mit mehr Rauschen (Effizienz 0,92), weder robust noch auf dem Ausdruck | – | – | entfernt (SP-1.12) |
+| P3 | Mittlerer Radius | **entfernt:** ≈ 1,24 · σ̂ mit mehr Rauschen (Effizienz 0,92), weder robust noch auf dem Ausdruck | – | – | entfernt (SP-1.12) |
 | P4 | R50 (≈ CEP50) | Median der rᵢ ohne Fehlschüsse | Serie, Scheibe, Zeitraum | A | vorhanden |
-| P5 | Rayleigh-σ | σ̂ = √(Σrᵢ²/(2(n−1)))/c4(2n−1), 95-%-Bereich über χ² mit 2(n−1) Freiheitsgraden; kaum n-abhängig. Den Wert vor der Korrektur nennt Meytons Ballistic Manager „Sa“ (bei 10 Schuss 1,4 % kleiner, bei 40 Schuss 0,3 %). Spiegel zeigt ihn nicht: kein Vorteil gegenüber σ̂, gegen Meyton nicht prüfbar (ESTA 5 und der Ausdruck nennen ihn nicht), zwei fast gleiche Zahlen verwirren (Entscheidung des Users, Oktober 2026) | Scheibe, Zeitraum | B | SP-1.10 |
+| P5 | Rayleigh-σ | σ̂ = √(Σrᵢ²/(2(n−1)))/c4(2n−1), 95-%-Bereich über χ² mit 2(n−1) Freiheitsgraden; kaum n-abhängig. Den Wert vor der Korrektur nennt Meytons Ballistic Manager „Sa“ (bei 10 Schuss 1,4 % kleiner, bei 40 Schuss 0,3 %). Spiegel zeigt ihn nicht: kein Vorteil gegenüber σ̂, gegen Meyton nicht prüfbar (ESTA 5 und der Ausdruck nennen ihn nicht), zwei fast gleiche Zahlen verwirren | Scheibe, Zeitraum | B | SP-1.10 |
 | P6 | Streuung x und y | Sx und Sy | Serie, Scheibe, Zeitraum | A | vorhanden |
-| P7 | Höhe und Breite | **entfernt (Oktober 2026):** Effizienz 0,23–0,43 gegenüber σ̂, ein Ausreißer macht die Breite 59–87 % größer; „senkrecht oder waagrecht?“ beantworten P6 und P8 | – | – | entfernt (SP-1.12) |
-| P8 | Form der Gruppe | Halbachsen und Winkel der Kovarianz-Ellipse ohne die von V6 markierten Ausreißer (seit Oktober 2026; vorher streckte ein Abreißer die Ellipse in seine Richtung), Verhältnis a/b; gestreckt nur, wenn Mauchlys Test es mit 95 % zeigt (W = 4a²b²/(a²+b²)² unter 0,05^(2/(n−2)), für eine Normalgruppe exakt); dazu das a/b, ab dem das bei dieser Schusszahl gilt (12 Schuss 2,26, 20 Schuss 1,81, 40 Schuss 1,50, 120 Schuss 1,25). Eine runde Gruppe zeigt zufällig im Median a/b 1,32 bei 20 und 1,21 bei 40 Schuss; eine echte Streckung von 1,3 erkennt eine Scheibe mit 40 Schuss nur in 26 % der Fälle, über 120 Schuss in 71 % (B17). Ohne die Ausreißer ist der Test eine Näherung (B18): Eine runde Gruppe gilt in 4 bis 5 % der Scheiben als gestreckt, eine runde mit Abreißern in 6 bis 8 % statt 13 bis 16 % über alle Schüsse. Deutlich gestreckte, kurze Gruppen erkennt er seltener (a/b 3 bei 10 Schuss: 67 statt 78 %), weil der runde Ausreißer-Test dort einen Schuss an der Spitze herausnehmen kann. Winkel erst ab 10 Schuss | Scheibe, Zeitraum | B | SP-1.10 |
-| P9 | Streuung in Ringbreiten | R50 / W (bis Oktober 2026 MR / W) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
+| P7 | Höhe und Breite | **entfernt:** Effizienz 0,23–0,43 gegenüber σ̂, ein Ausreißer macht die Breite 59–87 % größer; „senkrecht oder waagrecht?“ beantworten P6 und P8 | – | – | entfernt (SP-1.12) |
+| P8 | Form der Gruppe | Halbachsen und Winkel der Kovarianz-Ellipse ohne die von V6 markierten Ausreißer (sonst streckte ein Abreißer die Ellipse in seine Richtung), Verhältnis a/b; gestreckt nur, wenn Mauchlys Test es mit 95 % zeigt (W = 4a²b²/(a²+b²)² unter 0,05^(2/(n−2)), für eine Normalgruppe exakt); dazu das a/b, ab dem das bei dieser Schusszahl gilt (12 Schuss 2,26, 20 Schuss 1,81, 40 Schuss 1,50, 120 Schuss 1,25). Eine runde Gruppe zeigt zufällig im Median a/b 1,32 bei 20 und 1,21 bei 40 Schuss; eine echte Streckung von 1,3 erkennt eine Scheibe mit 40 Schuss nur in 26 % der Fälle, über 120 Schuss in 71 % (B17). Ohne die Ausreißer ist der Test eine Näherung (B18): Eine runde Gruppe gilt in 4 bis 5 % der Scheiben als gestreckt, eine runde mit Abreißern in 6 bis 8 % statt 13 bis 16 % über alle Schüsse. Deutlich gestreckte, kurze Gruppen erkennt er seltener (a/b 3 bei 10 Schuss: 67 statt 78 %), weil der runde Ausreißer-Test dort einen Schuss an der Spitze herausnehmen kann. Winkel erst ab 10 Schuss | Scheibe, Zeitraum | B | SP-1.10 |
+| P9 | Streuung in Ringbreiten | R50 / W | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
 | P10 | Erwartete Zehnerquote | P(d ≤ W) für eine Normalgruppe mit σ̂ und m (Modell) | Scheibe, Zeitraum | C | später |
 
 ### 3 Lage und Systematik
@@ -73,34 +73,34 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | L2 | Schwerpunkt-Abstand | |m|; der Schwerpunkt selbst ist unsicher (aus 10 Schuss ≈ 0,4σ) | Serie, Scheibe, Zeitraum | A | vorhanden |
 | L3 | Ist die Lage echt? | Hotelling-T² gegen F(2, n−2), 95-%-Ellipse um m | Scheibe, Zeitraum | A | SP-1.10 |
 | L4 | Ringe durch Lage gegen Streuung | jeder Treffer um den Schwerpunkt der übrigen verschoben (Leave-one-out, (pᵢ − m) · n/(n − 1)) und neu gewertet: Lage- und Streuungsverlust, zusammen E9. Schätzt, was die Gruppe in der Mitte auf neuen Schüssen brächte (B5), als Summe über die n Schüsse mit Lage, darum in Texten mit n und je Schuss; in der Stichprobe zentriert zeigte er ohne jeden Versatz im Mittel +0,38 Ringe Scheingewinn (LG σ 1,5 mm). Erst ab 10 Schuss, wenn L3 „echt“ sagt und die Mitte Ringe bringt; nie amtlich | Serie, Scheibe, Zeitraum | A | SP-1.10, SP-1.12 |
-| L5 | Lageanteil am Fehler | **entfernt (Oktober 2026):** dieselbe Aussage wie der Lage-Verlust aus L4, nur in Prozent vom Quadrat; die Lesehilfe „10 %: kein Thema“ widersprach L3 | – | – | entfernt (SP-1.12) |
+| L5 | Lageanteil am Fehler | **entfernt:** dieselbe Aussage wie der Lage-Verlust aus L4, nur in Prozent vom Quadrat; die Lesehilfe „10 %: kein Thema“ widersprach L3 | – | – | entfernt (SP-1.12) |
 | L6 | Richtungsuhr | Zahl der Treffer je Uhrzeit (30°-Sektor) um die Mitte oder um m; aussagekräftig ab 30 Schuss, darunter nur ein Bild | Scheibe, Zeitraum | B | SP-1.10 |
 | L7 | Ausreißerrichtung | Richtungsuhr der schwächsten 10 % relativ zu m | Zeitraum | B | SP-2.7 |
-| L8 | Drift in der Abgabefolge | von-Neumann-Verhältnis je Sprung normiert (≈ 2 unabhängig, < 2 Wandern); ohne Urteil, weil es bei kleinem n stark streut (B8). Ø und größter Sprung entfallen (Oktober 2026, im Mittel √π · σ) | Scheibe | C | SP-1.10 |
+| L8 | Drift in der Abgabefolge | von-Neumann-Verhältnis je Sprung normiert (≈ 2 unabhängig, < 2 Wandern); ohne Urteil, weil es bei kleinem n stark streut (B8). Ø und größter Sprung führt Spiegel nicht (im Mittel √π · σ) | Scheibe | C | SP-1.10 |
 | L9 | Langzeit-Trefferbild | alle Schüsse eines Zeitraums als Dichte, je Familie; dazu die Form über mehrere Scheiben (Kovarianz je Scheibe um ihren eigenen Schwerpunkt, gepoolt), die eine leichte Streckung (a/b 1,2–1,3) erst sichtbar macht | Zeitraum | B | SP-2.7 |
 | L10 | Lage über Zeit | Schwerpunkt je Scheibe als Wolke mit Pfad, nach n gewichtet | Zeitraum | B | SP-2.7 |
-| L11 | Visierkorrektur in Klicks | **entfernt (Oktober 2026):** keine Hinweise zum Visier; Spiegel rechnet, was die Lage kostet (L4), nicht, was man verstellen soll (User, 9. Oktober 2026) | – | – | entfernt (SP-1.12) |
+| L11 | Visierkorrektur in Klicks | **entfernt:** keine Hinweise zum Visier; Spiegel rechnet, was die Lage kostet (L4), nicht, was man verstellen soll | – | – | entfernt (SP-1.12) |
 
 ### 4 Verteilung
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
 | V1 | Ringverteilung (Zähler) | Anzahl je Ring 10…0 plus Innenzehner; Histogramm, keine Torte | Serie, Scheibe, Zeitraum | A | SP-1.10 |
-| V2 | Zehntelverteilung | Histogramm der vᵢ in 0,1-Klassen; geprüft Oktober 2026, bleibt (Wunsch des Users); auf einer Scheibe zählt die Gesamtform, nicht die einzelne Säule; seit 15. Oktober 2026 auch in ganzen Ringen gezeigt | Scheibe, Zeitraum | B | SP-1.10 |
+| V2 | Zehntelverteilung | Histogramm der vᵢ in 0,1-Klassen; auf einer Scheibe zählt die Gesamtform, nicht die einzelne Säule; auch in ganzen Ringen gezeigt | Scheibe, Zeitraum | B | SP-1.10 |
 | V3 | Abstandskurve | Anteil der Schüsse mit Teiler ≤ t | Zeitraum | B | SP-2.1 |
 | V4 | Verteilung der Serien | Quartile der Serienergebnisse je Monat | Zeitraum | B | SP-2.1 |
 | V5 | Ringanteile im Zeitverlauf | Anteil je Ring je Scheibe, gestapelt | Zeitraum | B | SP-2.1 |
-| V6 | Ausreißer | schrittweise (verallgemeinerter ESD nach Rosner, in der Ebene): der weiteste Schuss gegen die übrigen m, T = d²/(2S²(1 + 1/(m−1))) gegen F(2, 2(m−2)) beim Quantil 1 − 0,04/m, dann ohne ihn weiter; höchstens max(2, ⌊n/10⌋) Schritte ab 10 Schuss, darunter einer; Ausreißer sind die bis zum letzten Schritt über seiner Grenze. Fehlalarm in einer runden Normalgruppe etwa 4 bis 5 % je Scheibe (Q3 + 1,5·IQR auf den Radien wären bis 47 %), bei gestreckten mehr (a/b 2: etwa 11–18 %, B2; ein affiner Test für gestreckte Gruppen ist offen). Zwei nahe Abreißer verdecken sich ab 10 Schuss nicht mehr (B14). Die Form (P8) rechnet ohne die markierten Schüsse. Bis Oktober 2026 jeder Schuss einzeln mit α 0,05 (zwei gleich weite bei 10 Schuss: einer in 13,7 %). Das Verhältnis Ø Abstand/R50 entfällt (Oktober 2026): ohne Grenze, und es zählt Fehlschüsse anders als R50 | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
-| V7 | Ringverlust durch Ausreißer | Σ(Median der übrigen − vᵢ) über die von V6 markierten Schüsse, negativ möglich; unbekannt, wenn einem markierten Schuss der Wert fehlt (SF-07). Bis Oktober 2026 über die schwächsten 10 %: Den großen Verlust dort hat jede normale Gruppe (LG σ 1,5 mm, 40 Schuss etwa 3 Ringe) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
+| V6 | Ausreißer | schrittweise (verallgemeinerter ESD nach Rosner, in der Ebene): der weiteste Schuss gegen die übrigen m, T = d²/(2S²(1 + 1/(m−1))) gegen F(2, 2(m−2)) beim Quantil 1 − 0,04/m, dann ohne ihn weiter; höchstens max(2, ⌊n/10⌋) Schritte ab 10 Schuss, darunter einer; Ausreißer sind die bis zum letzten Schritt über seiner Grenze. Fehlalarm in einer runden Normalgruppe etwa 4 bis 5 % je Scheibe (Q3 + 1,5·IQR auf den Radien wären bis 47 %), bei gestreckten mehr (a/b 2: etwa 11–18 %, B2; ein affiner Test für gestreckte Gruppen ist offen). Zwei nahe Abreißer verdecken sich ab 10 Schuss nicht mehr (B14). Die Form (P8) rechnet ohne die markierten Schüsse. Nicht jeder Schuss einzeln mit α 0,05 (zwei gleich weite bei 10 Schuss: einer in 13,7 %). Ein Verhältnis Ø Abstand/R50 gibt es nicht: ohne Grenze, und es zählt Fehlschüsse anders als R50 | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
+| V7 | Ringverlust durch Ausreißer | Σ(Median der übrigen − vᵢ) über die von V6 markierten Schüsse, negativ möglich; unbekannt, wenn einem markierten Schuss der Wert fehlt (SF-07). Nicht über die schwächsten 10 %: Den großen Verlust dort hat jede normale Gruppe (LG σ 1,5 mm, 40 Schuss etwa 3 Ringe) | Scheibe, Zeitraum | B | SP-1.10, SP-1.12 |
 
 ### 5 Zeit und Rhythmus
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| Z1 | Tempo | Median der Intervalle ohne Pausen (Pause: über dem Doppelten des Medians der Abstände bis 180 s, mindestens 60 s, über 180 s immer; Schwelle der ganzen Karte; seit 10. Oktober 2026, vorher fest 180 s; bis 15. Oktober 2026 das 2,5-Fache; an den eigenen Scheiben fand es 11 Pausen in 789 Abständen, das Doppelte 18; Version 4) | Serie, Scheibe, Zeitraum | A | vorhanden |
+| Z1 | Tempo | Median der Intervalle ohne Pausen (Pause: über dem Doppelten des Medians der Abstände bis 180 s, mindestens 60 s, über 180 s immer; Schwelle der ganzen Karte; an echten Scheiben 18 Pausen in 789 Abständen; Version 4) | Serie, Scheibe, Zeitraum | A | vorhanden |
 | Z2 | Tempo-Konstanz | IQR (Q3 − Q1) der Abstände ohne Pausen (Pausen wie in Z1), auch relativ zum Median; konstanter ist nicht automatisch besser | Scheibe, Zeitraum | A | SP-1.10 |
-| Z3 | Dauer | erster bis letzter Schuss (`time.duration`); Netto-Zeit und Schüsse je Stunde entfernt (Oktober 2026): Σ Abstände und 3600 / Ø Abstand | Scheibe, Zeitraum | A | SP-1.10 |
-| Z4 | Pausen und Wiedereinstieg | Pausen relativ zum Takt wie in Z1; Anzahl und Summe; Ø der bis zu drei Schüsse nach einer Pause gegen den Ø der übrigen, je Schuss (B10). Die Pausen kommen aus den Schüssen mit Zeit wie in Z5, die Schnitte nur aus Schüssen mit Wert (Prüfung, 9. Oktober 2026). Die längste Pause als Kennzahl entfällt (Oktober 2026) | Scheibe, Zeitraum | A | SP-1.10 |
+| Z3 | Dauer | erster bis letzter Schuss (`time.duration`); Netto-Zeit (Σ Abstände) und Schüsse je Stunde (3600 / Ø Abstand) führt Spiegel nicht | Scheibe, Zeitraum | A | SP-1.10 |
+| Z4 | Pausen und Wiedereinstieg | Pausen relativ zum Takt wie in Z1; Anzahl und Summe; Ø der bis zu drei Schüsse nach einer Pause gegen den Ø der übrigen, je Schuss (B10). Die Pausen kommen aus den Schüssen mit Zeit wie in Z5, die Schnitte nur aus Schüssen mit Wert (Prüfung, 9. Oktober 2026). Die längste Pause ist keine eigene Kennzahl | Scheibe, Zeitraum | A | SP-1.10 |
 | Z5 | Rhythmus-Profil | Median der letzten fünf Abstände ohne Pausen (Pausen wie in Z1), über die Schussnummer | Scheibe | B | SP-1.10 |
 | Z6 | Tempo und Wert | Ø vᵢ je Klasse des Intervalls davor; einige hundert Schuss | Zeitraum | B | SP-2.7 |
 | Z7 | Tempo nach schwachem Schuss | Intervall nach schwachen gegen nach übrigen Schüssen | Zeitraum | C | SP-2.7 |
@@ -112,7 +112,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 |---|---|---|---|---|---|
 | I1 | Serienkurve | Serienergebnisse in Reihenfolge; im Zeitraum Min/Max/Ø je Position | Scheibe, Zeitraum | A | SP-1.10 |
 | I2 | Ermüdung | Ø der letzten zehn minus der ersten zehn, R50 ebenso; als Muster erst über mehrere Scheiben | Scheibe, Zeitraum | A | SP-1.10 |
-| I3 | Trend in der Scheibe | Steigung der Ausgleichsgeraden mal zehn: wie sich der Wert je Schuss alle zehn Schuss ändert (−0,24 heißt: ein Schuss zehn Schuss später 0,24 Ringe schwächer, eine Serie 2,4 Ringe; Wortlaut seit 9. Oktober 2026); „klar“ nach Mann-Kendall mit Bindungs- und Stetigkeitskorrektur (95 %), mit Richtung (B6), und nur, wenn die Gerade dieselbe Richtung zeigt: Ein sehr schwacher Schuss am Rand kann sie kippen, dann stünde „klar steigend“ neben einer fallenden Zahl. Bis Oktober 2026 Theil-Sen mit Sen-Intervall: Bei gleichen Werten lag die Grenze auf 0, selbst die Stufe zehnmal 9, zehnmal 10 hieß „nicht klar“ | Scheibe | B | SP-1.10, SP-1.12 |
+| I3 | Trend in der Scheibe | Steigung der Ausgleichsgeraden mal zehn: wie sich der Wert je Schuss alle zehn Schuss ändert (−0,24 heißt: ein Schuss zehn Schuss später 0,24 Ringe schwächer, eine Serie 2,4 Ringe); „klar“ nach Mann-Kendall mit Bindungs- und Stetigkeitskorrektur (95 %), mit Richtung (B6), und nur, wenn die Gerade dieselbe Richtung zeigt: Ein sehr schwacher Schuss am Rand kann sie kippen, dann stünde „klar steigend“ neben einer fallenden Zahl. Nicht Theil-Sen mit Sen-Intervall: Bei gleichen Werten liegt dessen Grenze auf 0, selbst die Stufe zehnmal 9, zehnmal 10 hieße „nicht klar“ | Scheibe | B | SP-1.10, SP-1.12 |
 | I4 | Gleitender Schnitt | Ø der letzten bis zu zehn Schüsse | Scheibe | A | SP-1.10 |
 | I5 | Streuung im Verlauf | R50 je Serie | Scheibe | B | SP-1.10 |
 | I6 | Schwerpunkt-Wanderung | Schwerpunkt je Serie und Abstand zum Scheiben-Schwerpunkt | Scheibe | B | SP-1.10 |
@@ -125,39 +125,39 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| S1 | Versatz Probe → Wertung | **entfernt (U4, 9. Oktober 2026):** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt (U4) |
-| S2 | Probe-Umfang | **entfernt (U4, 9. Oktober 2026):** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt (U4) |
-| S3 | Probe-Qualität | **entfernt (U4, 9. Oktober 2026):** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt (U4) |
-| S4 | Eingeschossen? | **entfernt (U4, 9. Oktober 2026):** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt (U4) |
-| S5 | Visierverstellungen | **entfernt (Oktober 2026):** Spiegel fragt keine Visierverstellung ab, das ist zu viel Komplexität für ihren Nutzen (User, 8. Oktober 2026) | – | – | entfernt (SP-1.8) |
+| S1 | Versatz Probe → Wertung | **entfernt:** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt |
+| S2 | Probe-Umfang | **entfernt:** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt |
+| S3 | Probe-Qualität | **entfernt:** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt |
+| S4 | Eingeschossen? | **entfernt:** Eine Scheibe ist wie am Ausdruck ([[adr-027]]): Meyton löscht die Probe mit dem ersten Wertungsschuss, also gibt es keine Probe neben Wertung, die man auswerten könnte. Git hält die alte Definition; eine Quelle mit Probe neben Wertung (SP-4.4) bringt sie bei Bedarf zurück | – | – | entfernt |
+| S5 | Visierverstellungen | **entfernt:** Spiegel fragt keine Visierverstellung ab, das ist zu viel Komplexität für ihren Nutzen | – | – | entfernt (SP-1.8) |
 
 ### 8 Langzeit und Trend
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| T1 | Verlauf jeder Kennzahl | Wert je Scheibe aus der Registry über ihre Wertungsschüsse, gleitender Schnitt über die letzten fünf Scheiben („bisher“, solange es keine fünf sind); Familie und Abschnitt (Woche, Monat) wählt der Aufrufer, n-abhängige Maße nur bei gleichem n | Zeitraum | A | SP-2.1, Fachkern L2 (`cardValues`, `periodTrend`) |
-| T2 | Formband | gleitender Schnitt ± 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt, ab zehn Scheiben, ohne Schwankung (MAD 0) kein Band; ein gleichbleibender Schütze liegt mit etwa zwei von drei Scheiben im Band (B20) | Zeitraum | A | SP-2.1, Fachkern L2 (`periodTrend`) |
-| T3 | Bedeutsame Veränderung | Δ der Mittel zweier Zeiträume gegen die gepoolte Standardabweichung der Scheibenwerte, bedeutsam ab 0,3 × (Hopkins), ab fünf Scheiben je Seite; zählt nur zusammen mit einem Urteil aus C3, denn ohne Veränderung trifft es bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen zu (B19) | Zeitraum | B | SP-2.7, Fachkern L2 (`comparePeriods`) |
+| T1 | Verlauf jeder Kennzahl | Wert je Scheibe aus der Registry über ihre Wertungsschüsse, gleitender Schnitt über die letzten fünf Scheiben („bisher“, solange es keine fünf sind); Familie und Abschnitt (Woche, Monat) wählt der Aufrufer, n-abhängige Maße nur bei gleichem n | Zeitraum | A | SP-2.1, Fachkern (`cardValues`, `periodTrend`) |
+| T2 | Formband | gleitender Schnitt ± 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt, ab zehn Scheiben, ohne Schwankung (MAD 0) kein Band; ein gleichbleibender Schütze liegt mit etwa zwei von drei Scheiben im Band (B20) | Zeitraum | A | SP-2.1, Fachkern (`periodTrend`) |
+| T3 | Bedeutsame Veränderung | Δ der Mittel zweier Zeiträume gegen die gepoolte Standardabweichung der Scheibenwerte, bedeutsam ab 0,3 × (Hopkins), ab fünf Scheiben je Seite; zählt nur zusammen mit einem Urteil aus C3, denn ohne Veränderung trifft es bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen zu (B19) | Zeitraum | B | SP-2.7, Fachkern (`comparePeriods`) |
 | T4 | Trendsteigung | Theil-Sen je Monat mit Intervall; nicht in die Zukunft verlängern | Zeitraum | B | SP-2.7 |
-| T5 | Boden und Decke | P10, Median und P90 der Scheibenwerte je Abschnitt (Monat), P10 und P90 ab fünf Scheiben; Boden ist das schwächere Ende (beim Ø P10, bei σ P90), beim Tempo nur die Spanne (Prüfung, 9. Oktober 2026) | Zeitraum | B | SP-2.1, Fachkern L2 (`periodBuckets`) |
-| T6 | Trainingsumfang | Schüsse (Probe und Wertung), Scheiben und Tage je Woche; keine Netto-Zeit, sie folgt aus den Abständen | Zeitraum | A | SP-2.1, Fachkern L2 (`trainingVolume`) |
+| T5 | Boden und Decke | P10, Median und P90 der Scheibenwerte je Abschnitt (Monat), P10 und P90 ab fünf Scheiben; Boden ist das schwächere Ende (beim Ø P10, bei σ P90), beim Tempo nur die Spanne (Prüfung, 9. Oktober 2026) | Zeitraum | B | SP-2.1, Fachkern (`periodBuckets`) |
+| T6 | Trainingsumfang | Schüsse (Probe und Wertung), Scheiben und Tage je Woche; keine Netto-Zeit, sie folgt aus den Abständen | Zeitraum | A | SP-2.1, Fachkern (`trainingVolume`) |
 | T7 | Kalender | Trainingstage als Kalender; je Abend (vor 4 Uhr der Vortag) wie Umfang und Liste, gerechnet über `trainingVolume`/`projectedVolume` (`periodModel.calendar`, 13. Oktober 2026) | Zeitraum | B | SP-2.1 |
 | T8 | Erfolgsserien | Wochen in Folge mit Training, Scheiben über dem eigenen Schnitt | Zeitraum | C | SP-2.8 |
 
 ### 9 Rekorde und Meilensteine
 
-Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter denen, die zählen (Wertung; bei nur Probe die Probe), und ohne die Merkmale nur-pdf, neu-gewertet und ausgenommen (SF-15, SF-66); je Familie und je Wertung, wahlweise nur Training oder nur Wettkampf. R1, R4 (volle Scheibe), R5 und R6 je Schusszahl, R2 je Serienlänge; bei Gleichstand gilt der frühere; Zählungen (R5–R7) erst ab einem Treffer. Eine Scheibe nur mit Probe zählt nur auf Wunsch, dann ihre Probe wie Wertung in Serien zu zehn (SF-01); ebenso eine, deren Probe als Wertung gezählt ist (SF-05, Merkmal `als-wertung-gezaehlt`, User, 9. Oktober 2026). Umgesetzt im Fachkern L2 (`recordEligible`, `periodRecords`).
+Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter denen, die zählen (Wertung; bei nur Probe die Probe), und ohne die Merkmale nur-pdf, neu-gewertet und ausgenommen (SF-15, SF-66); je Familie und je Wertung, wahlweise nur Training oder nur Wettkampf. R1, R4 (volle Scheibe), R5 und R6 je Schusszahl, R2 je Serienlänge; bei Gleichstand gilt der frühere; Zählungen (R5–R7) erst ab einem Treffer. Eine Scheibe nur mit Probe zählt nur auf Wunsch, dann ihre Probe wie Wertung in Serien zu zehn (SF-01); ebenso eine, deren Probe als Wertung gezählt ist (SF-05, Merkmal `als-wertung-gezaehlt`). Umgesetzt im Fachkern (`recordEligible`, `periodRecords`).
 
 | ID | Kennzahl | Prio | Wo |
 |---|---|---|---|
-| R1 | Beste Scheibe je Schusszahl | A | SP-2.1, Fachkern L2 |
-| R2 | Beste Serie voller Länge (die häufigste Serienlänge der Scheibe), je Serienlänge | A | SP-2.1, Fachkern L2 |
-| R3 | Bester Teiler, zugleich der beste Schuss | A | SP-2.1, Fachkern L2 |
-| R4 | Engste Gruppe (Streukreis) über eine Serie zu zehn und über die volle Scheibe, nur wenn jeder Schuss eine Lage hat | A | SP-2.1, Fachkern L2 |
-| R5 | Meiste 10,9 (nur in Zehnteln); der beste Schuss ist der beste Teiler (R3) | B | SP-2.1, Fachkern L2 |
-| R6 | Meiste Zehner und Innenzehner | B | SP-2.1, Fachkern L2 |
-| R7 | Längste Zehnerfolge | B | SP-2.1, Fachkern L2 |
-| R8 | Beste Form (höchster voller Schnitt je Schuss über fünf Scheiben) | C | SP-2.1, Fachkern L2 |
+| R1 | Beste Scheibe je Schusszahl | A | SP-2.1, Fachkern |
+| R2 | Beste Serie voller Länge (die häufigste Serienlänge der Scheibe), je Serienlänge | A | SP-2.1, Fachkern |
+| R3 | Bester Teiler, zugleich der beste Schuss | A | SP-2.1, Fachkern |
+| R4 | Engste Gruppe (Streukreis) über eine Serie zu zehn und über die volle Scheibe, nur wenn jeder Schuss eine Lage hat | A | SP-2.1, Fachkern |
+| R5 | Meiste 10,9 (nur in Zehnteln); der beste Schuss ist der beste Teiler (R3) | B | SP-2.1, Fachkern |
+| R6 | Meiste Zehner und Innenzehner | B | SP-2.1, Fachkern |
+| R7 | Längste Zehnerfolge | B | SP-2.1, Fachkern |
+| R8 | Beste Form (höchster voller Schnitt je Schuss über fünf Scheiben) | C | SP-2.1, Fachkern |
 | R9 | Meilensteine (1 000 Schuss, erste 10,9, Abstand zum Rekord) | C | SP-2.8 |
 
 ### 10 Vergleiche
@@ -166,8 +166,8 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 |---|---|---|---|---|
 | C1 | Serie gegen Serie | alle Serien mit jeder Kennzahl, beste und engste markiert | A | SP-1.8 |
 | C2 | Scheibe gegen Scheibe | zwei Gruppen auf einer Scheibe, Tabelle mit Δ | A | SP-2.2 |
-| C3 | Zeitraum gegen Zeitraum | Werte je Scheibe zweier Zeiträume, Einheit ist die Scheibe: Mann-Whitney zweiseitig, α 0,05, bis 20 Scheiben je Seite genau ausgezählt; Δ der Mittel; Urteil höher, tiefer oder unklar ab fünf Scheiben je Seite, unklar auch, wenn Test und Mittel verschieden zeigen; Fehlalarm höchstens etwa 5 % (B19); Abstandskurven übereinander mit der Oberfläche (L3) | A | SP-2.2, Fachkern L2 (`comparePeriods`) |
-| C4 | Gegen den eigenen Schnitt | Δ der neuesten Scheibe im Zeitraum zum Schnitt der 30 Tage davor (ab drei Scheiben), Perzentil unter den letzten 50 mit ihr (ab zehn, gleiche zur Hälfte), beides über alle Scheiben der Familie, nicht nur im Zeitraum | A | SP-2.2, Fachkern L2 (`againstOwnAverage`); die Oberfläche zeigt seit U2 nur den Abstand zum Schnitt der fünf Scheiben davor, ein Bezug für eine Scheibe ([[spiegel-durchsicht]]) |
+| C3 | Zeitraum gegen Zeitraum | Werte je Scheibe zweier Zeiträume, Einheit ist die Scheibe: Mann-Whitney zweiseitig, α 0,05, bis 20 Scheiben je Seite genau ausgezählt; Δ der Mittel; Urteil höher, tiefer oder unklar ab fünf Scheiben je Seite, unklar auch, wenn Test und Mittel verschieden zeigen; Fehlalarm höchstens etwa 5 % (B19); Abstandskurven übereinander im Fortschritt | A | SP-2.2, Fachkern (`comparePeriods`) |
+| C4 | Gegen den eigenen Schnitt | Δ der neuesten Scheibe im Zeitraum zum Schnitt der 30 Tage davor (ab drei Scheiben), Perzentil unter den letzten 50 mit ihr (ab zehn, gleiche zur Hälfte), beides über alle Scheiben der Familie, nicht nur im Zeitraum | A | SP-2.2, Fachkern (`againstOwnAverage`); die Oberfläche zeigt seit U2 nur den Abstand zum Schnitt der fünf Scheiben davor, ein Bezug für eine Scheibe ([[spiegel-durchsicht]]) |
 | C5 | Merkmal A gegen B | Welch-t, Mann-Whitney, F-Test; Urteil besser, schlechter oder unklar | B | SP-2.2 nach SP-2.3 |
 | C6 | Vorher/Nachher | Scheiben vor und nach einem Ereignis, gegen den Trend geprüft | B | SP-2.2 nach SP-2.3 |
 | C7 | Schütze gegen Schütze | nur mit beidseitiger Freigabe, nur je Schuss normiert | C | SP-3.2 |
@@ -217,7 +217,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 - **Gleiches n:** Streukreis, Extreme Spread und längste Folge wachsen mit n, der beste Teiler sinkt mit n (Streukreis über 40 gegen 10 Schuss +32 %, B3); R50 fällt bei kleinem n leicht zu klein aus (bei 10 Schuss −4 %, B4; der Faktor √((n − 1)/n) gilt genau nur für den mittleren Radius). σ̂ ist das stabilste Maß für Verläufe über unterschiedliche Schusszahlen.
 - **Robust als Standard in Verläufen:** Median, R50, MAD, Quantilbänder.
 - **Nur Gleiches vergleichen:** gleiche Familie, gleiche Wertung; mm-Werte von LG und LP nie.
-- **Viele Vergleiche erzeugen Zufallstreffer:** Mindest-n, Korrektur (Holm oder Benjamini-Hochberg) oder nur als Hinweis formulieren. Auf einer Scheibe laufen vier Tests (Lage, Form, Ausreißer, Trend; der Test der Probe entfiel mit U4): Etwa jede sechste ganz normale Scheibe zeigt irgendwo einen Befund (B1).
+- **Viele Vergleiche erzeugen Zufallstreffer:** Mindest-n, Korrektur (Holm oder Benjamini-Hochberg) oder nur als Hinweis formulieren. Auf einer Scheibe laufen vier Tests (Lage, Form, Ausreißer, Trend): Etwa jede sechste ganz normale Scheibe zeigt irgendwo einen Befund (B1).
 - **Regression zur Mitte und Auswahl:** Nach einem Rekord ist die nächste Scheibe meist schwächer; „beste Serie“ und korrigiertes Ergebnis sind aus denselben Daten gewählt und optimistisch.
 - **Bedeutsamkeit zusätzlich zur Signifikanz:** lohnend ab 0,3 × der Streuung der Scheiben (Hopkins), aber nur neben einem Urteil: Ohne Veränderung trifft es bei 5 gegen 5 Scheiben oft zu (T3, B19); „nicht nachweisbar“ ist ehrlich.
 - **Transparenz:** jede Zahl mit n, Zeitraum, Filter und Kennzahl-Version; Modellwerte als Modell gekennzeichnet.
@@ -282,7 +282,7 @@ B19  σ 1,5 → 1,45 mm, „höher“ erkannt: 5/5 5,7 % (bedeutsam 69,3 %), 10/
 B20  Scheiben im Formband (60 Scheiben, ab der zehnten): Median 68,6 %, 95 % zwischen 56,9 % und 80,4 %
 ```
 
-Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05, bis Oktober 2026), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.
+Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.
 
 ## Quellen
 

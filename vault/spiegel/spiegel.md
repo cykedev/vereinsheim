@@ -8,15 +8,15 @@ part_of: ["[[overview]]"]
 governed_by: ["[[adr-026]]"]
 ---
 
-**TL;DR** Spiegel ist die geplante dritte Vereinsheim-App: Sie übernimmt über eine lokale Brücke die Rohdaten jeder Meyton-Scheibe (Trefferlage auf 1/100 mm, Ring, Zehntel, Teiler, Zeit auf die Millisekunde) und macht daraus Schussbild, Wiedergabe, Serien, Verläufe und direkte Vergleiche. Zugeordnet wird automatisch per Sportpass-Opt-in, sonst per Meyton-QR samt Original-PDF. Open Source unter Apache-2.0, eine Installation je Verein.
+**TL;DR** Spiegel ist die dritte Vereinsheim-App, seit 14. Oktober 2026 auf dem VPS: Sie übernimmt über eine lokale Brücke die Rohdaten jeder Meyton-Scheibe (Trefferlage auf 1/100 mm, Ring, Zehntel, Teiler, Zeit auf die Millisekunde) und macht daraus Schussbild, Serien, Analyse, Verläufe und Vergleiche. Zugeordnet wird automatisch per Sportpass-Opt-in, sonst per Meyton-QR samt Original-PDF. Open Source unter Apache-2.0, eine Installation je Verein.
 
-# Spiegel — Plan und Wegweiser
+# Spiegel — Wegweiser
 
-> **Status (5. Oktober 2026):** Konzept und Grundsatzentscheidungen stehen ([[adr-026]] bis [[adr-030]]); ein kritisches Review hat die Sonderfälle als Katalog mit Testfällen festgehalten ([[spiegel-edge-cases]]). Als Nächstes: Phase 0 (Erkundung vor Ort) und parallel die ersten reinen Fachkern-Features. Gearbeitet wird Feature für Feature nach der [[spiegel-roadmap]].
+> **Status:** Spiegel läuft seit dem 14. Oktober 2026 auf dem VPS (eigene Subdomain). Gebaut sind Fachkern, Brücke, Ingest-API, Opt-in mit Bestätigung der ersten Scheibe und die Bereiche Start, Scheiben, Fortschritt, Offen und Profil. Offen sind vor allem der QR-Weg (SP-1.7 b) und die Brücke im Schützenhaus. Den Stand je Feature hält die [[spiegel-roadmap]].
 >
 > **Rahmen:** nur 10-m-Stände (Luftgewehr, Luftpistole, Auflage), etwa 10 bis 15 Nutzer, keine Gäste und Jugendlichen, der VPS bleibt bei 2 GB. Schützen im Gäste-LAN, Anlage und Brücke im Gerätenetz; beide werden nach dem Training hart ausgeschaltet.
 
-## So arbeiten wir mit diesem Plan
+## So arbeiten wir an Spiegel
 
 1. In der [[spiegel-roadmap]] das nächste offene Feature wählen, dessen Abhängigkeiten erledigt sind.
 2. `/plan` mit Verweis auf den Feature-Abschnitt und die dort genannten Sonderfälle (SF-IDs aus [[spiegel-edge-cases]]); der Plan landet in `plans/<datum>-spiegel-<feature>.md`.
@@ -33,7 +33,7 @@ Features, die Deploy-Vertrag, Schema oder ADRs berühren, laufen interaktiv stat
 4. [[spiegel-assignment]] — wem eine Scheibe gehört und wann das feststeht.
 5. [[spiegel-data-model]], [[spiegel-target-library]], [[spiegel-metrics]] — der Fachkern; [[spiegel-db-schema]] — die Datenbank (Schema, Zugriffe, Messung); [[spiegel-statistics]] — der Statistik-Katalog (was Spiegel auswertet und wann); [[spiegel-statistics-help]] — jede Auswertung in einfacher Sprache erklärt, Quelle der Hilfe in der App.
 6. [[spiegel-edge-cases]] — Sonderfälle und Fallstricke mit IDs (SF-xx), Grundlage der Testdaten und Abnahmen.
-7. [[spiegel-ui-design]] — Design 2, Navigation, Bildschirme, Farben; [[spiegel-mobile]] — Spiegel auf dem Telefon (Entwurf); [[spiegel-langzeit]] — über viele Scheiben: Zeitraum, Verlauf, Vergleich (Entwurf); [[spiegel-navigation]] — Einstieg, Scheiben-Liste, Auswahl, Adressen und Löschen (entschieden 9. Oktober 2026). [[spiegel-durchsicht]] — Bedienbarkeit und Komplexität, Leitlinie „drei Ebenen“ (9. Oktober 2026).
+7. [[spiegel-ui-design]] — Design 2, Navigation, Bildschirme, Farben; [[spiegel-mobile]] — Spiegel auf dem Telefon; [[spiegel-langzeit]] — über viele Scheiben: Zeitraum, Verlauf, Vergleich; [[spiegel-navigation]] — Einstieg, Scheiben-Liste, Auswahl, Adressen und Löschen; [[spiegel-durchsicht]] — Bedienbarkeit und Komplexität, Leitlinie „drei Ebenen“.
 8. [[spiegel-privacy]] — Datenschutz, Rollen, verdeckte Wertung.
 9. [[spiegel-roadmap]] und [[spiegel-open-questions]] — was wir wann bauen und was noch offen ist.
 
@@ -47,8 +47,8 @@ Alles über die Meyton-Anlage steht im Thema [[meyton]]: die Datenbank [[meyton-
 - [[adr-027]] — Brücke als lokaler Lese-Agent: nur lesend, nur ausgehend, Rohdaten unverändert.
 - [[adr-028]] — Zuordnung per Meyton-QR mit Original-PDF, Sportpass automatisch, Fundbüro als Rückfall.
 - [[adr-029]] — Apache-2.0 für das ganze Monorepo, Spiegel als selbst gehostete Software je Verein.
-- [[adr-030]] — Design 2 mit Spiegel als Pilot (angenommen am 8. Oktober 2026).
-- [[adr-031]] — Datenbank: Rohdaten als Zeilenversionen, Revisionen als Korrekturen, Projektion je Scheibe (10. Oktober 2026).
+- [[adr-030]] — Design 2 mit Spiegel als Pilot.
+- [[adr-031]] — Datenbank: Rohdaten als Zeilenversionen, Revisionen als Korrekturen, Projektion je Scheibe.
 
 ## Material
 

@@ -17,8 +17,8 @@ part_of: ["[[overview]]"]
 > Monorepo via `turbo prune` (Image-Namen/Tags + Deploy-Vertrag bit-gleich), lokal voll verifiziert; der
 > erste Monorepo-Deploy auf den VPS ist **gelaufen**. Phase 4: `packages/lib` (Zyklus 1) + `packages/ui`
 > (Zyklus 2) echt geteilt → Drift-Gate auf triviale Reste geschrumpft (siehe §8). Gates grün. **Offen nur
-> Phase 5** (CI + Turbo-Remote-Cache, optional). Verbindliche Entscheidung:
-> [ADR-015](decisions.md). Dieses Dokument ist der Umsetzungsplan; `decisions.md` hält das „Warum".
+> Phase 5** (CI + Turbo-Remote-Cache, optional). Verbindliche Entscheidung: [[adr-015]]. Diese Note hält
+> Plan und Umsetzung; [[decisions]] hält das „Warum".
 
 ## 1. Ziel
 
@@ -39,7 +39,7 @@ nach `packages/*`. Ergebnis:
 | Git-History | **erhalten** via einmaligem `git filter-repo`-Import (kein Subtree-Sync) |
 | CI / Remote-Cache | **später** — MVP bleibt lokaler Build (ADR-006); CI/Turbo-Remote-Cache als optionale Phase 5 |
 | Deploy-Vertrag | **unverändert** (Image-Namen/Tags, compose.yml, Caddy, db-init, Backup/Restore) |
-| Knowledge Graph für Claude Code | **3 Schichten**: generierter Projekt-Graph + hierarchische CLAUDE.md + MCP-Memory ([ADR-016](decisions.md)) |
+| Knowledge Graph für Claude Code | **3 Schichten**: generierter Projekt-Graph + hierarchische CLAUDE.md + MCP-Memory ([[adr-016]]) |
 
 ## 3. Zielstruktur
 
@@ -56,7 +56,7 @@ vereinsheim/
 ├── CLAUDE.md             # Wurzel-Kontext; je apps/* und packages/* eigene CLAUDE.md (scope-weise)
 ├── .mcp.json             # MCP Knowledge-Graph-Memory-Server (project scope, eingecheckt)
 ├── .claude/skills/       # Projekt-Skills: check, graph, db-restore, release
-├── docs/architecture.md  # hand-gepflegte High-Level-Karte (Detail-Graph: CodeGraph MCP, .codegraph/ gitignored)
+├── vault/                # Projekt-Doku als Obsidian-Vault; High-Level-Karte in vault/architecture/architecture.md
 ├── turbo.json
 ├── pnpm-workspace.yaml
 └── package.json          # geteilte Deps gehoben; app-spezifische bleiben in apps/*
@@ -68,8 +68,8 @@ bei Treffsicher, `@react-pdf/renderer` bei Ringwerk).
 
 ## 4. Der schnelle Build
 
-Heute: 4 Images sequentiell (2 Apps × runner+migrator), jedes mit eigenem `npm ci` + `prisma generate`
-+ `next build`, ohne geteilten Cache → jeder Release baut alles neu.
+Vor der Migration: 4 Images sequentiell (2 Apps × runner+migrator), jedes mit eigenem `npm ci` +
+`prisma generate` + `next build`, ohne geteilten Cache → jeder Release baute alles neu.
 
 Monorepo-Hebel:
 
@@ -98,24 +98,24 @@ die andere App übersprungen → realistisch **3–10× schnellere inkrementelle
 Von der Wurzel, alles turbo-gecacht:
 
 ```
-pnpm dev                      # beide Apps   (pnpm dev --filter ringwerk für eine)
+pnpm dev                      # alle Apps    (pnpm dev --filter ringwerk für eine)
 pnpm check                    # alle 5 Gates (lint, format:check, test, tsc, next build) über betroffene Apps
 pnpm build                    # vollständiger, inkrementeller Build
 pnpm test --filter ringwerk
 ```
 
-Die `vereinsheim`-CLI (ADR-011) bleibt das Ops-Frontend und wrappt das: `vereinsheim dev`,
-`vereinsheim build [app]`, `vereinsheim release`, `vereinsheim db:restore`.
+Die `vereinsheim`-CLI (ADR-011) ist das Ops-Frontend: `vereinsheim dev-setup`, `vereinsheim build`,
+`vereinsheim release`, `vereinsheim dev-restore [app]`.
 
 `next build` ist Pflicht-Gate (fängt Build-only-Fehler ab, die lint/tsc/test nicht sehen, z.B.
 `"use server"`-Re-Export-Regel) — turbo cacht es, also nur für geänderte Apps teuer.
 
 ## 6. Echte Daten im Dev
 
-Unverändert zum heutigen Mechanismus: gemeinsamer Postgres (zwei DBs `treffsicher`+`ringwerk`, `db-init`
-isoliert, ADR-002) im Root-`docker-compose.dev.yml`; `vereinsheim local-up --restore` bzw.
-`db:restore` spielt `backups/*.dump` per `pg_restore` in die Dev-DBs. Ein Kommando → beide Apps lokal
-mit Prod-Daten.
+Gemeinsamer Postgres (drei DBs `ringwerk`, `treffsicher`, `spiegel`, über `dev/db-init` isoliert,
+ADR-002) im Root-`docker-compose.dev.yml`; `vereinsheim dev-restore [app]` spielt `backups/*.dump` per
+`pg_restore` in die Dev-DBs (`vereinsheim local-up --restore` dasselbe für den lokalen Prod-Stack). Ein
+Kommando → alle Apps lokal mit Prod-Daten.
 
 ## 7. Deploy bleibt vertragsgleich → Live ohne Probleme
 
@@ -165,20 +165,18 @@ Schlüsselentscheidungen / bewusste Abweichungen vom wörtlichen Plan:
 - **Build-Quelle (Phase 1 → Phase 3)**: in Phase 1 lief der Produktions-Build noch über `../ringwerk` /
   `../treffsicher`. **Mit Phase 3 baut `build-and-push.sh` aus dem Monorepo** (`turbo prune`) — die
   Standalone-Repos sind **keine Build-Quelle mehr** (granulare History dort via Tag `pre-monorepo-import`
-  archiviert; sie können archiviert/entfernt werden). Der VPS läuft mit den alten Images bis zum nächsten
-  `vereinsheim release`.
+  archiviert; sie können archiviert/entfernt werden).
 
 Bewusst **nicht** in Phase 1 (Scope-Grenze):
 
 - ADR-016/017/018-Artefakte (CodeGraph-MCP, Memory-MCP, Hooks/Stop-Gate, PIV-Skills, Sub-Agents) → Phase 2.
 - `packages/config|ui|lib` + Konfig-Hoisting → Phase 2/4. Die Apps tragen noch je eigene Configs.
-- `turbo prune`-Docker-Build + `build-and-push.sh`-Umstellung → **in Phase 3 erledigt** (Build umgestellt +
-  lokal verifiziert; Staging/VPS-Deploy ausstehend). `outputFileTracingRoot` (Monorepo-Wurzel) gesetzt +
+- `turbo prune`-Docker-Build + `build-and-push.sh`-Umstellung → **in Phase 3 erledigt** (Build umgestellt,
+  lokal verifiziert, auf den VPS deployed). `outputFileTracingRoot` (Monorepo-Wurzel) gesetzt +
   Dockerfile-COPY-Pfade an den genesteten Standalone-Output angepasst → NFT-Warnung weg.
-- App-`CLAUDE.md`/`docs` referenzieren noch npm + In-Container-`/check` (Doc-Sync) → Phase 2.
+- Doc-Sync der App-`CLAUDE.md` (npm + In-Container-`/check` → pnpm + Root-Gates) → Phase 2.
 - Per-App `apps/*/docker-compose.dev.yml` (Single-App-Dev-Build) **entfernt** — obsolet durch
-  Root-`docker-compose.dev.yml` + `pnpm dev`. Die App-`.claude`/`docs` referenzieren den alten
-  In-Container-Flow (`docker compose … run app`) noch → Phase-2-Doc-Sync.
+  Root-`docker-compose.dev.yml` + `pnpm dev`.
 
 ### Phase 2 — Umsetzungsnotizen (packages/config erledigt, Juni 2026)
 
@@ -211,7 +209,7 @@ Geliefert: die fünf byte-identischen Tooling-Configs als geteiltes Paket `@vere
   in `out/json` + `out/full`; in-container `next build` löst tsconfig-`extends`/next.config/postcss auf. Per
   lokalem `PUSH=0`-Build geprüft (kein Deploy).
 - **Gate/Docs:** die 5 Configs aus `consistency-check.sh` `MUST_MATCH` entfernt (Drift strukturell weg);
-  `components.json` + `globals.css` bleiben. `shared-conventions.md` §1, `architecture.md` und Root-CLAUDE.md
+  `components.json` + `globals.css` bleiben. [[conventions]] §1, [[architecture]] und Root-CLAUDE.md
   nachgezogen.
 
 Bewusst **nicht** in Phase 2 (Scope-Grenze): `globals.css`/`components.json` teilen + `packages/ui|lib`
@@ -241,8 +239,7 @@ Geliefert: Produktions-Build aus dem Monorepo via `turbo prune <app> --docker`. 
 - **Verifikation lokal**: runner serviert (HTTP 200), migrator `migrate deploy` (Exit 0, alle Migrationen),
   und der **ganze `compose.yml`-Stack** (db-init → migrate → app) kommt sauber hoch. **VPS-Deploy gelaufen**
   (Juni 2026): die Monorepo-Images sind über Docker Hub auf den VPS ausgerollt. Der Deploy-Pfad läuft über
-  Image-Push/-Pull (lokaler Build → Docker Hub → VPS pullt), **nicht** über `git push origin` — Letzteres
-  steht noch aus (`main` ~28 Commits voraus), ist aber deploy-irrelevant.
+  Image-Push/-Pull (lokaler Build → Docker Hub → VPS pullt), **nicht** über `git push origin`.
 
 ### Phase 4 / Zyklus 1 — Umsetzungsnotizen (`packages/lib`, Juni 2026)
 
@@ -255,9 +252,9 @@ Gates grün, geprunter Docker-Build verifiziert.
   `@vereinsheim/config/next`-Factory transpiliert es (gilt für beide Apps). `"use client"` der Hooks bleibt.
 - **Subpath-Exports spiegeln die alten `@/lib/*`-Pfade** → der Rewrite war reine mechanische Präfix-
   Ersetzung; vorwärtskompatibel zu Zyklus 2 (die ui-Komponenten ziehen `cn` jetzt cross-package).
-- **`react` ist peerDependency** (keine doppelte React-Instanz). Paket hat (noch) **kein** `lint`-Script
-  (`eslint-config-next` passt nicht auf ein Nicht-Next-Paket) → Folgearbeit für Zyklus 2.
-- **`dateTime.ts` bewusst ausgeklammert** (driftet zwischen den Apps) — erst angleichen, dann teilen.
+- **`react` ist peerDependency** (keine doppelte React-Instanz). Das `lint`-Script nutzt die Paket-Config
+  `@vereinsheim/config/eslint/package` (`eslint-config-next` passt nicht auf ein Nicht-Next-Paket).
+- **`dateTime.ts` erst nach dem Angleichen geteilt** (driftete zwischen den Apps); heute in `packages/lib`.
 
 ## 9. Risiken & Gotchas
 
@@ -275,32 +272,31 @@ Gates grün, geprunter Docker-Build verifiziert.
 
 ## 10. Knowledge Graph für Claude Code (siehe ADR-016)
 
-> **Status: implementiert** (Juni 2026, [ADR-019](decisions.md)). Root-`.claude/` (Skills/Hooks/Agents/
-> Context), `.mcp.json` (CodeGraph + Memory), geseedeter `.claude/knowledge-graph.json`,
-> `docs/architecture.md`, CLAUDE.md-Hierarchie (Root @import + `apps/<app>/CLAUDE.md`/`docs/`). Hooks +
-> MCP greifen ab dem nächsten Claude-Code-Reload.
+> **Status: implementiert** ([[adr-019]], Wissensspeicher seit [[adr-025]] der Vault). Root-`.claude/`
+> (Skills/Hooks/Agents), `.mcp.json` (CodeGraph + Memory), `vault/` als Wissensspeicher,
+> CLAUDE.md-Hierarchie (Root @import + `apps/<app>/CLAUDE.md`).
 
 Drei komplementäre Schichten, in die Migration eingebettet:
 
 | Schicht | Was | Wo | Phase |
 | --- | --- | --- | --- |
-| **1. Code-Graph (CodeGraph MCP)** | `@colbymchenry/codegraph` (lokal, SQLite): Symbole/Call-Graph/Referenzen/Routen, auto-aktuell via File-Watcher; Agenten via `codegraph_explore`. `.codegraph/` gitignored, Telemetrie aus. Dazu kleine hand-gepflegte `docs/architecture.md` (High-Level-Karte) | `.mcp.json` | 2 |
+| **1. Code-Graph (CodeGraph MCP)** | `@colbymchenry/codegraph` (lokal, SQLite): Symbole/Call-Graph/Referenzen/Routen, auto-aktuell via File-Watcher; Agenten via `codegraph_explore`. `.codegraph/` gitignored, Telemetrie aus. Dazu die hand-gepflegte High-Level-Karte [[architecture]] | `.mcp.json` | 2 |
 | **2. Hierarchische CLAUDE.md** | Root + `apps/*/CLAUDE.md` + `packages/*/CLAUDE.md` (on-demand), `@import` auf architecture/conventions/decisions; Skills unter `.claude/skills/` | repo-weit | 1–2 |
-| **3. MCP-Knowledge-Graph** | `@modelcontextprotocol/server-memory` in `.mcp.json` (project, eingecheckt), Store `.claude/knowledge-graph.json`; Seed-Skript aus Schicht 1 + ADRs | `.mcp.json` + `scripts/` | 2 |
+| **3. MCP-Knowledge-Graph** | eigener Memory-Server `.claude/hooks/memory-server.mjs` in `.mcp.json` (project, eingecheckt); `.claude/vault-loader.mjs` liest die Notes in `vault/` direkt als Graph, kein Build ([[adr-025]]) | `.mcp.json` + `vault/` | 2 |
 
 **Zusammenspiel**: Schicht 1 (CodeGraph) = „was der Code _ist_" (live, auto-aktuell, on-demand
-abgefragt). Schicht 3 (Memory) = „was wir _entschieden/gelernt_ haben" (aus ADRs/Konventionen
-geseedet, wächst über Sessions). Orthogonal; Schicht 2 (CLAUDE.md, scope-weise + `@import`) macht beide
+abgefragt). Schicht 3 (Memory) = „was wir _entschieden/gelernt_ haben" (die Notes im Vault, ADRs und
+Konventionen eingeschlossen, wächst über Sessions). Orthogonal; Schicht 2 (CLAUDE.md, scope-weise + `@import`) macht beide
 für Agenten auffindbar.
 
-**Wartung/Risiko**: Schicht 1 ist ein fertiges Tool (kein Eigencode); neuer Eigencode nur das
-Seed-Skript für Schicht 3. CodeGraph ist Dev-Hilfe, keine Build-Abhängigkeit. pnpm-Cross-Package in Phase 2
+**Wartung/Risiko**: Schicht 1 ist ein fertiges Tool (kein Eigencode); Eigencode nur Loader, Lint und
+Memory-Server für Schicht 3. CodeGraph ist Dev-Hilfe, keine Build-Abhängigkeit. pnpm-Cross-Package in Phase 2
 empirisch verifiziert (`@vereinsheim/config`: tsconfig-`extends` + Re-Exports unter
 pnpm-Strenge, `pnpm check` grün). `next build`/`check` bleiben Pflicht-Gates.
 
-**Lessons-/Wissens-Capture ([ADR-017](decisions.md))**: `/consolidate-lessons` triagiert Learnings nach
+**Lessons-/Wissens-Capture ([[adr-017]])**: `/consolidate-lessons` triagiert Learnings nach
 **ENFORCE > DOCUMENT > REMEMBER** — REMEMBER landet in Schicht 3 (Memory-Graph), ENFORCE wird
-Gate/Lint/Test, DOCUMENT in CLAUDE.md/Konventionen. Ein einziges Skill für beide Apps.
+Gate/Lint/Test, DOCUMENT in CLAUDE.md/Konventionen. Ein einziges Skill für alle Apps.
 
 ## 11. Team-Readiness (nicht lokal-only)
 
@@ -308,31 +304,27 @@ Für mehrere parallele Entwickler muss alles **eingecheckt + reproduzierbar** se
 maschinengebunden:
 
 - **Eingecheckt (geteilt):** `.claude/` (CLAUDE.md-Hierarchie + Skills), `.mcp.json` (MCP-Server,
-  Project-Scope), `docs/*` (Konventionen, ADRs, `architecture.md`), `turbo.json`,
+  Project-Scope), `vault/` (Konventionen, ADRs, Architektur), `turbo.json`,
   `pnpm-workspace.yaml`, alle Ops-Skripte. **Keine Secrets** in `.mcp.json`.
 - **Bewusst lokal (gitignored, pro Dev):** `.codegraph/`-Index (re-buildbar), `.env*` /
   `.vereinsheim.local` / `.claude/settings.local.json` (persönlich), `node_modules`.
 - **CodeGraph-Onboarding reproduzierbar:** ein `setup`-Schritt (README / `postinstall` /
   `vereinsheim setup-dev`) installiert die CLI + `codegraph init`, damit der Graph auf jeder Maschine
   entsteht — nicht nur lokal.
-- **Memory-Graph (Schicht 3) + parallele Devs:** der eingecheckte `.claude/knowledge-graph.json` ist
-  bei gleichzeitigem Schreiben merge-konflikt-anfällig. Strategie: Einträge additiv/append halten,
-  Konflikte wie Daten zusammenführen (nicht überschreiben); die **autoritative** Wahrheit bleibt in
-  promoteten Docs/ADRs/Gates (ENFORCE/DOCUMENT) — der Graph ist abrufbares Beiwerk, kein
-  Single-Point-of-Truth. _Nachtrag ([ADR-021](decisions.md)): Schicht 3 war bis Juni 2026 ein No-Op
-  (relativer `MEMORY_FILE_PATH` → falscher Pfad, leerer Graph + ENOENT); seit Pfad-Fix +
-  SessionStart-Lese-Hook (`memory-surface.mjs`) funktionsfähig._
-- **Lessons-System geteilt:** im Monorepo **ein** `/consolidate-lessons` für beide Apps (ADR-017) —
-  löst die heutige ringwerk-only-Asymmetrie.
+- **Memory-Graph (Schicht 3) + parallele Devs:** der Graph sind die eingecheckten Markdown-Notes in
+  `vault/`; Konflikte wie bei jedem Text zusammenführen (nicht überschreiben). `memory-surface.mjs` fasst
+  beim Session-Start den Graphen zusammen und weist an, ihn vor breiter Exploration abzufragen ([[adr-021]]).
+- **Lessons-System geteilt:** im Monorepo **ein** `/consolidate-lessons` für alle Apps (ADR-017).
 
 ## 12. Offene Folgepunkte (nicht in dieser Migration)
 
-- ActionResult-Typ-Vereinheitlichung (Treffsicher) — passt gut in `packages/lib`.
+- ActionResult-Typ: alle Apps nutzen dieselbe Form, aber je eine eigene Definition in `src/lib/types.ts` —
+  passt gut in `packages/lib`.
 - Env-Var-Angleichung `ADMIN_*` ↔ `SEED_ADMIN_*` (deploy-breaking, separat).
 - CI/Remote-Cache (Phase 5).
-- **Dev-Tooling-Baseline vereinheitlicht (erledigt, [ADR-020](decisions.md)):** **ein** Satz am Root für
-  beide Apps — der native **PIV-Workflow** (`/plan → /implement → /validate → /review` + `/debug`) mit
+- **Dev-Tooling-Baseline vereinheitlicht (erledigt, [[adr-020]]):** **ein** Satz am Root für
+  alle Apps — der native **PIV-Workflow** (`/plan → /implement → /validate → /review` + `/debug`) mit
   den geharvesteten Superpowers-Disziplinen (brainstorming, TDD, evidence-before-claims, receiving-review,
   systematic-debugging), verzahnt mit den Schichten: CodeGraph speist Planung/Impact, Lessons speisen den
   Memory-Graph, das Stop-Gate erzwingt promotete Regeln. Das **Superpowers-Plugin ist entfernt** (kein
-  zweiter, abweichender Workflow); die datierten `docs/superpowers/`-Archive bleiben als Historie.
+  zweiter, abweichender Workflow); die datierten `docs/superpowers/`-Archive sind gelöscht ([[adr-020]]).

@@ -1,15 +1,15 @@
 # @vereinsheim/ui — Claude Scope-Notiz
 
-Geteilte **UI-Schicht** (shadcn-Primitives + App-Shell + Theme) für beide Apps (Phase 4 / Zyklus 2,
-ADR-015/016). Ersetzt die früher byte-identischen Kopien in `apps/*/src/components/{ui,app/shell}` + den
-globals.css-Theme-Kern — Drift damit **strukturell unmöglich**.
+Geteilte **UI-Schicht** (shadcn-Primitives, App-Shell, Admin-Oberfläche der Login-Sperren, Theme und Design 2)
+für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift damit **strukturell unmöglich**.
 
 ## Was hier liegt
 
 | Export                           | Inhalt                                                                                                                                                                |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@vereinsheim/ui/<name>`         | `src/ui/<name>.tsx` — 17 shadcn-Primitives (button, card, dialog, …)                                                                                                  |
+| `@vereinsheim/ui/<name>`         | `src/ui/<name>.tsx` — shadcn-Primitives (button, card, dialog, …)                                                                                                     |
 | `@vereinsheim/ui/shell/<name>`   | `src/shell/<name>.tsx` — ConfirmDialog, DetailActionBar, PageHeader, Providers                                                                                        |
+| `@vereinsheim/ui/admin/<name>`   | `src/admin/<name>.tsx` — `LoginRateLimitInsights`, `LoginRateLimitTable` (Admin-Ansicht der Login-Sperren)                                                            |
 | `@vereinsheim/ui/theme.css`      | `theme.css` — Tailwind-Theme-Kern (@custom-variant, @theme, :root, .dark, @layer) + `@source` aufs Paket                                                              |
 | `@vereinsheim/ui/design2.css`    | `design2.css` — Design 2 für Spiegel (ADR-030): eigene Tokens, hell auf `:root`, dunkel unter `.dark`                                                                 |
 | `@vereinsheim/ui/design2/<name>` | `src/design2/<name>.tsx` — Design-2-Bausteine: `segmented` (Segment-Umschalter, `scroll` oder `wrap`), `toggle-chip`, `sheet` (Blatt), `round-toggle` (weicher Kreis) |
@@ -27,6 +27,6 @@ globals.css-Theme-Kern — Drift damit **strukturell unmöglich**.
   `globals.css`-Stub bleiben app-lokal).
 - Cross-Importe paket-intern **relativ** (`./button`, `../ui/alert-dialog`) — nicht über `@vereinsheim/ui`.
 - **Design 2** (`design2.css`, `src/design2/`) gilt nur für Spiegel; Ringwerk und Treffsicher importieren
-  weiter `theme.css`. Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken; die
+  `theme.css`. Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken; die
   Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich (Test `tokens.test.ts`).
 - Verhalten/Styles ändert man **hier**, nicht in den Apps. Nach Änderungen: `pnpm check` grün.

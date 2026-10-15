@@ -7,11 +7,11 @@ keywords: [ringwerk, code, conventions, ringwerk]
 part_of: ["[[ringwerk]]"]
 ---
 
-**TL;DR** Verbindlich gleichrangig mit `docs/technical.md`.
+**TL;DR** Verbindlich gleichrangig mit [[ringwerk-technical]].
 
 # Code Conventions – Ringwerk
 
-Verbindlich gleichrangig mit `docs/technical.md`.
+Verbindlich gleichrangig mit [[ringwerk-technical]].
 
 ## Index
 
@@ -461,7 +461,7 @@ describe("calculateRingteiler", () => {
 
 **Regel:** `toLocaleDateString()` ohne explizite Zeitzone ist verboten. Im Docker-Container läuft der Server in UTC — ohne Zeitzone-Angabe würden Daten in der Anzeige um eine Stunde verschoben sein.
 
-**Korrekt: `formatDateOnly` aus `src/lib/dateTime.ts` verwenden**
+**Korrekt: `formatDateOnly` aus `@vereinsheim/lib/dateTime` verwenden**
 
 ```typescript
 import { getDisplayTimeZone, formatDateOnly } from "@vereinsheim/lib/dateTime"
@@ -662,7 +662,7 @@ export async function createLeague(formData: FormData): Promise<ActionResult>
 - **PDF-Render-Tests: `extractPdfText`-Helper erforderlich**: Beim Testen von `@react-pdf/renderer`-Output immer einen dedizierten Helper schreiben, der `inflateSync` auf komprimierte Content-Streams anwendet und einen TJ-Hex-Regex nutzt, um lesbaren Text zurückzugewinnen. Rohe String-Checks auf den Buffer funktionieren nicht, da Content-Streams FlateDecode-komprimiert und Texte hex-kodiert sind.
 - **DB-Feldnamenkollisionen vor neuen Feldern prüfen**: Vor dem Einführen eines neuen Schema-Felds oder Props prüfen, ob ein bestehendes Feld auf demselben Model denselben oder semantisch überlappenden Namen hat. Eindeutigen Namen wählen (z.B. `nr` statt `startNumber`), um Verwechslung mit persistierten Anwendungsdaten zu vermeiden.
 - **Dokumentierte Domänen-Wertungsregeln zentral kodieren**: Eine in den Docs beschriebene Berechnungsregel (z.B. "Korrekturfaktor nur bei gemischter Disziplin") in genau einer reinen Helper-Funktion kodieren, durch die alle Persistenz- und Anzeige-Pfade ziehen. Nie je Aufrufer reimplementieren — sonst greift die Regel an manchen Stellen und an anderen nicht. Bei mehreren Auflösungsquellen (z.B. feste Competition-Disziplin vs. per-Teilnehmer) den Kontext aus der maßgeblichen Quelle nehmen (hier: `Competition.disciplineId`).
-- **Invarianten am Code verifizieren, nicht aus Prosa-Docs ableiten**: Bevor man sich auf ein vermeintliches Constraint verlässt (z.B. "Saison ist immer gemischt"), die erzwingende Stelle prüfen — Zod-Schema, Action, DB-Constraint. `features.md`/`data-model.md` beschreiben Konvention und Soll, nicht garantierte Invarianten.
+- **Invarianten am Code verifizieren, nicht aus Prosa-Docs ableiten**: Bevor man sich auf ein vermeintliches Constraint verlässt (z.B. "Saison ist immer gemischt"), die erzwingende Stelle prüfen — Zod-Schema, Action, DB-Constraint. [[ringwerk-features]]/[[ringwerk-data-model]] beschreiben Konvention und Soll, nicht garantierte Invarianten.
 
 ### Refactoring & Workflow
 

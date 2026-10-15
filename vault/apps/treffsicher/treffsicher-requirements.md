@@ -26,7 +26,7 @@ part_of: ["[[treffsicher]]"]
 - **Dateien & Bilder** — Anhänge nur bei TRAINING/WETTKAMPF (JPEG/PNG/WebP/PDF)
 - **Statistiken & Auswertung** — Verlauf, Serien, Befinden-Korrelation, 7-Dim-Radar, Schussverteilung
 - **Nutzerverwaltung & Sicherheit** — Admin-Only-Erstellung, Datenisolation, Lastschutz-Grenzen
-- **Export / Design-Entscheidungen** — PDF/CSV-Export; Dark Mode only, Sprache, UI-Muster
+- **Export / Design-Entscheidungen** — PDF-Export je Einheit; Dark Mode only, Sprache, UI-Muster
 
 ---
 
@@ -140,7 +140,7 @@ Gilt für Einheitentypen "Training" und "Wettkampf".
 - Sicherheits- und Stabilitätsgrenzen:
   - Max. 10 MB pro Import-Datei
   - URL-Import mit Timeout und ohne Redirect-Following
-  - Dekompressions- und Token-Limits gegen komprimierte Bomben-PDFs
+  - Seiten-, Textmengen- und Laufzeitgrenzen beim Parsen gegen präparierte PDFs
 
 ### Gesamtergebnis
 
@@ -267,7 +267,7 @@ Anhänge sind ausschliesslich bei Einheiten des Typs **Training** und **Wettkamp
 ### Zeiträume
 
 - Frei konfigurierbar (von–bis Datumswahl)
-- Voreinstellungen: letzte 4 Wochen, laufende Saison, gesamte Zeit
+- Voreinstellungen: letzter Monat, letzte 3 Monate, letzte 6 Monate, gesamte Zeit
 
 ### Filter
 
@@ -288,7 +288,7 @@ Da Einheiten mit unterschiedlicher Schussanzahl (z.B. 2 statt 4 Serien) vorkomme
 - **Befinden-Korrelation**: Schlaf / Energie / Stress / Motivation vs. normalisiertem Ergebnis (Ringe/Schuss)
 - **Selbsteinschätzung (7 Dimensionen)**: Radarchart über Zeit (Prognose vs. Feedback)
 - **Schussqualität vs. Ringe**: Ausführungsqualität (1–5) vs. normalisiertem Serienergebnis (Ringe/Schuss)
-- **Schussverteilung im Zeitverlauf**: Anteil der Treffer je Ringwert (0–10) als gestapeltes Flächendiagramm, normalisiert auf Prozent — vergleichbar über Einheiten mit unterschiedlicher Schussanzahl. Nur sichtbar wenn Einzelschüsse erfasst wurden. 10er oben im Stack, 0er unten. Legende und Tooltip absteigend (10 → 0). **Ein Punkt je Einheit, keine zeitliche Bündelung** (seit September 2026 — vorher je nach Zeitraum zu Tagen/Wochen/Monaten gemittelt, was Veränderungen glättete); gebündelt wird nur der Ringbereich 0–6 zu einem Band. Achse `08.09.26`, Tooltip mit Datum, Uhrzeit und Schusszahl, damit zwei Einheiten am selben Tag unterscheidbar sind (`buildShotDistributionTimeline`).
+- **Schussverteilung im Zeitverlauf**: Anteil der Treffer je Ringwert (0–10) als gestapeltes Flächendiagramm, normalisiert auf Prozent — vergleichbar über Einheiten mit unterschiedlicher Schussanzahl. Nur sichtbar wenn Einzelschüsse erfasst wurden. 10er oben im Stack, 0er unten. Legende und Tooltip absteigend (10 → 0). **Ein Punkt je Einheit, keine zeitliche Bündelung** (eine Mittelung über Tage/Wochen/Monate würde Veränderungen glätten); gebündelt wird nur der Ringbereich 0–6 zu einem Band. Achse `08.09.26`, Tooltip mit Datum, Uhrzeit und Schusszahl, damit zwei Einheiten am selben Tag unterscheidbar sind (`buildShotDistributionTimeline`).
 
 ### Einheits-Detailansicht — Schuss-Histogramm
 
@@ -305,7 +305,7 @@ Wenn Einzelschüsse für eine Einheit erfasst wurden, wird ein Histogramm der Tr
 In der Einheitenliste wird bei Einheiten mit erfasstem Ergebnis neben der Ringzahl auch die Schussanzahl angezeigt:
 
 - Format: "352 Ringe · 40 Sch."
-- Berechnung: Anzahl Wertungsserien × Schuss pro Serie (Näherungswert gemäss Disziplin)
+- Berechnung: je Wertungsserie die Zahl der erfassten Einzelschüsse, sonst Schuss pro Serie gemäss Disziplin; Probeschüsse werden separat ausgewiesen ("+ 10 Probe")
 - Nur sichtbar wenn ein Ergebnis vorhanden und die Schussanzahl grösser als 0 ist
 
 ### Farbschema Schussverteilung (Histogramm und Zeitverlauf)
@@ -345,7 +345,7 @@ Analog zu Meyton-Schiessständen — einheitlich in Detailansicht und Statistik:
 
 ## Export
 
-- Einzelne Einheiten oder Zeiträume können exportiert werden (PDF und/oder CSV)
+- Einzelne Einheiten können als PDF exportiert werden (kein CSV-Export)
 - Export dient der bewussten Weitergabe an Trainer oder für eigene Archivierung
 - Kein automatischer Trainer-Zugang — Export ist ein manueller, bewusster Schritt
 
@@ -360,19 +360,9 @@ Analog zu Meyton-Schiessständen — einheitlich in Detailansicht und Statistik:
   - Code-Kommentare sind auf Deutsch.
   - Komponenten sowie Routen/URLs werden intern in Englisch benannt.
 - **Verbindlichkeit der Umsetzung**:
-  - Verbindliche technische Konsistenzregeln (UI-Muster, Fehlerpfade, Benennung, Betrieb/Fehlerfälle) sind in `docs/technical-constraints.md` festgelegt und für Implementierungen massgeblich.
+  - Verbindliche technische Konsistenzregeln (UI-Muster, Fehlerpfade, Benennung, Betrieb/Fehlerfälle) sind in [[treffsicher-technical-constraints]] festgelegt und für Implementierungen massgeblich.
   - Für Navigation und Bedienfluss gilt die Einheiten-Detailansicht als Referenzmuster (Action-Leiste oben, einheitliche Reihenfolge, Listen als klickbare Karten).
   - UI-Terminologie verwendet "Probe" statt "Probeschuss".
-
----
-
-## Änderungsnotizen
-
-- **03.03.2026**: Bedienfluss präzisiert: Einheiten-Muster als Referenz für Detailnavigation (auch Ziele/Abläufe/Disziplinen), Listen als klickbare Karten und Terminologie "Probe" in der UI.
-- **03.03.2026**: Verbindlichkeit präzisiert: technische Konsistenzregeln werden zentral in `docs/technical-constraints.md` geführt und sind für die Umsetzung massgeblich.
-- **02.03.2026**: Lastschutz-Anforderungen ergänzt (DoS-Schutzgrenzen für Import/Statistik/Login) und fachliche Freiheit von technischen Sicherheitsgrenzen abgegrenzt.
-- **02.03.2026**: Sprachregel präzisiert (Deutsch für UI und Kommentare, Englisch für interne Komponenten- und Routen-/URL-Benennung).
-- **02.03.2026**: Bestehende interne Komponenten- und URL-Benennungen auf Englisch umgestellt (`/sessions`, `/disciplines`, `/statistics`, `/goals`, `/shot-routines`, `/admin/users`) ohne Redirects von den alten deutschen Pfaden.
 
 ---
 
@@ -382,3 +372,5 @@ Analog zu Meyton-Schiessständen — einheitlich in Detailansicht und Statistik:
 - Trockentraining als vollständig eigener Einheitentyp mit spezifischen Feldern
 - Mustererkennung / smarte Auswertungen ("Wie schiesse ich nach schlechtem Schlaf?")
 - Trainer-Zugang (read-only, eingeschränkt)
+
+Umsetzungsstand und Priorisierung: [[treffsicher-backlog]].

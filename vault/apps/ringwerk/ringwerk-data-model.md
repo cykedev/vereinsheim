@@ -13,7 +13,7 @@ part_of: ["[[ringwerk]]"]
 
 ---
 
-## Kernentitaeten (Zielzustand)
+## Kernentitaeten
 
 ### Benutzer (User)
 
@@ -135,24 +135,22 @@ Universelle Ergebniseinheit für alle Wettbewerbstypen:
 ### Paarung (Matchup) — nur Liga
 
 - competitionId, roundIndex, homeId, awayId, status
-- Unveraendert gegenueber bisherigem Modell (nur FK-Referenz Competition statt League)
 
 ### Playoff-Strukturen — nur Liga
 
 - PlayoffMatch, PlayoffDuel, PlayoffDuelResult
-- Unveraendert gegenueber bisherigem Modell (nur FK-Referenz Competition statt League)
+- `PlayoffMatch.competitionId` verknüpft mit der Competition
 
 ### Audit-Log
 
-- Wie bisher, aber `leagueId` wird zu `competitionId`
 - Neue Ereignistypen für Event und Saison nach Bedarf
 - `AuditLog.competitionId` ist die zentrale FK zur Competition
 
 ---
 
-## Enums (Zielzustand)
+## Enums
 
-### CompetitionType (NEU)
+### CompetitionType
 
 ```
 LEAGUE    – Liga mit Spielplan, Tabelle, Playoffs
@@ -160,7 +158,7 @@ EVENT     – Einmaliges Event (Kranzlschiessen)
 SEASON    – Langzeit-Wettbewerb (Jahrespreisschiessen)
 ```
 
-### ScoringMode (NEU)
+### ScoringMode
 
 ```
 RINGTEILER       – MaxRinge - Ringe + (Teiler * Faktor); niedrigster gewinnt
@@ -180,7 +178,7 @@ SUM  – Teamergebnis = Summe der Einzelergebnisse aller Mitglieder
 BEST – Teamergebnis = bestes Einzelergebnis im Team
 ```
 
-### TargetValueType (NEU, nur bei TARGET-Modi)
+### TargetValueType (nur bei TARGET-Modi)
 
 ```
 TEILER          – Zielwert bezieht sich auf den (korrigierten) Teiler
@@ -199,7 +197,7 @@ ARCHIVED    – archiviert
 
 **Hinweis:** DRAFT ist das neue Status-Feld, das für alle Wettbewerbstypen beim Erstellen gesetzt wird.
 
-### LeagueFormat (NEU)
+### LeagueFormat
 
 ```
 DOUBLE_ROUND_ROBIN  – Standard-Liga: Hin- und Rückrunde (jeder gegen jeden zweimal)
@@ -361,8 +359,8 @@ Jedes Kriterium ist eine sichtbare Spalte, Spaltenreihenfolge = Bewertungsreihen
 1. Siege (Begegnungssiege, absteigend)
 2. Satzdifferenz (duelsWon − duelsLost, absteigend)
 3. Mehr gewonnene Sätze (duelsWon, absteigend)
-4. Direkter Vergleich (Mini-Liga-Bilanz der Gleichstandsgruppe; seit 2026-06-24 statt „bestes
-   Einzelergebnis", siehe [[best-of-standings-direct-comparison-tiebreak]])
+4. Direkter Vergleich (Mini-Liga-Bilanz der Gleichstandsgruppe, siehe
+   [[best-of-standings-direct-comparison-tiebreak]])
 5. Nachname, dann Vorname — wer erst hier getrennt wird, **teilt sich den Platz** (offener
    2er-Gleichstand z. B. 1, 1)
 
@@ -401,7 +399,7 @@ PDFs und das Dashboard — Details in [[season-mode]].
 | Event (EVENT)               | Einmaliges Schießen (z.B. Kranzl); Rangliste aus einer Serie pro Teilnehmer; optional mit Team-Wertung         |
 | Team im Event (EventTeam)   | Mehrere Schützen als Team; Teamergebnis = Summe oder Bestes der Mitglieder; kein Teamname, nur Nummer          |
 | Saison (SEASON)             | Langzeit-Wettbewerb; viele Serien über Monate, beste Einzelserien zählen                                       |
-| Wertungsmodus (ScoringMode) | Bestimmt wie Ergebnisse verglichen/gereiht werden (7 Modi)                                                     |
+| Wertungsmodus (ScoringMode) | Bestimmt wie Ergebnisse verglichen/gereiht werden (8 Modi)                                                     |
 | Zielwert                    | Vorgabewert bei TARGET-Modi; Teilnehmer schießen möglichst nah daran                                           |
 | Ganzring-Disziplin          | Ringe ganzzahlig 0–10; Max. 100/Serie bei 10 Schuss (z.B. LP freistehend)                                      |
 | Zehntelring-Disziplin       | Ringe 0.0–10.9; Max. 109/Serie bei 10 Schuss (z.B. LG Auflage)                                                 |
@@ -418,7 +416,7 @@ PDFs und das Dashboard — Details in [[season-mode]].
 | Finale-Modus                | Sondermodus im Liga-Finale; Wertung als Kriterien-Kette (Primary + optional 2 Tiebreaker); Default: nur Ringe  |
 | Gastteilnehmer              | Nicht-Vereinsmitglied; kann an Events teilnehmen; isGuest-Flag                                                 |
 | Mindestserien               | Saison: Anzahl Serien die ein Teilnehmer mindestens geschossen haben muss                                      |
-| Meyton-Import               | Ergebnisübernahme aus Meyton-System via URL oder PDF                                                           |
+| Meyton-Import               | Ergebnisübernahme aus Meyton-System via URL oder PDF (in Ringwerk nicht umgesetzt)                             |
 | Vorschiessen                | Nicht erlaubt in Liga — beide Schützen müssen gleichzeitig am Stand antreten                                   |
 
 ## Aus Lernlog übernommen

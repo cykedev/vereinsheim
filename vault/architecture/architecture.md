@@ -3,16 +3,16 @@ id: architecture
 type: guide
 title: "Architektur — High-Level-Karte"
 aliases: ["Architektur — High-Level-Karte"]
-keywords: [architektur, high-level-karte]
+keywords: [architektur, high-level-karte, repo-karte, monorepo, apps, pakete, routen, build, deploy]
 part_of: ["[[overview]]"]
 ---
 
-**TL;DR** Hand-gepflegte Orientierung über das Monorepo (ADR-016, Schicht 1-Ergänzung). Die **Detail**-Architektur
+**TL;DR** Hand-gepflegte Orientierung über das Monorepo: drei Next.js-Apps, eine Go-Brücke, geteilte Pakete, ein VPS. Die Detail-Architektur je App steht im Vault (`vault/apps/<app>/`, `vault/spiegel/`); den lebenden Symbol- und Call-Graph liefert der CodeGraph-MCP.
 
 # Architektur — High-Level-Karte
 
-Hand-gepflegte Orientierung über das Monorepo (ADR-016, Schicht 1-Ergänzung). Die **Detail**-Architektur
-je App steht in `apps/<app>/docs/architecture.md`; den **lebenden** Symbol-/Call-Graph liefert der
+Hand-gepflegte Orientierung über das Monorepo (ADR-016). Die **Detail**-Architektur je App steht im Vault
+(`vault/apps/ringwerk/`, `vault/apps/treffsicher/`, `vault/spiegel/`); den **lebenden** Symbol-/Call-Graph liefert der
 CodeGraph-MCP (`codegraph_explore`). Diese Datei ist die schnelle Karte, kein Vollindex.
 
 ## Repo-Karte
@@ -21,80 +21,58 @@ CodeGraph-MCP (`codegraph_explore`). Diese Datei ist die schnelle Karte, kein Vo
 vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/ringwerk/          Liga & Wettkämpfe (Next.js 16, Prisma 7, NextAuth v4)  → :3000
 ├── apps/treffsicher/       Trainings-App      (Next.js 16, Prisma 7, NextAuth v4)  → :3001
-├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7, NextAuth v4)  → :3002; Schema,
-│                           Zugriffe und Projektion (SP-1.6 a, ADR-031), Anmeldung und Konten, Start, Scheiben,
-│                           Seite einer Scheibe, Fortschritt und Profil aus shot-ui (N7); Start, Liste, Fortschritt
-│                           und Blättern rechnen auf dem Server aus der Projektion (SP-1.8); Ingest-API v1 für die Brücke
-│                           mit Kopplung, Geräte-Token, Adapter `meyton-ssmdb2@9` und Admin „Anlage und Brücken“
-│                           (SP-1.6 b); Image und Stack seit P3 (Oktober 2026), Deploy offen (SP-1.9).
+├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7, NextAuth v4)  → :3002: Rohdaten als
+│                           Zeilenversionen, Revisionen und Projektion je Scheibe (ADR-031); Start, Scheiben, Seite einer
+│                           Scheibe, Fortschritt, Profil, Admin; Übersichten rechnen auf dem Server aus der Projektion;
+│                           Ingest-API v1 für die Brücke (Kopplung, Geräte-Token, Adapter `meyton-ssmdb2@9`).
 ├── apps/spiegel-bridge/    Brücke im Schützenhaus (Go, ein statisches Binary, ADR-027): liest die SSMDB2 nur lesend,
-│                           erkennt Änderungen und baut Snapshots v1 (SP-1.4 a, Oktober 2026, nur lokal); Tests gegen
-│                           die Vektoren von ingest-contract und die Fälle von ssmdb2-cases.
-├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig/eslint/prettier/
-│                           postcss/next (Phase 2).
-├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn (utils), forms/fieldErrors
-│                           (+ getErrorMessage), useUnsavedChangesGuard, useNavigationConfirm
-│                           (Phase 4/Zyklus 1); dateTime (server-only) + format (isomorph, Locale de-DE,
-│                           Zeitzone als Parameter) sowie der Auth-Kern auth/validation +
-│                           auth/rate-limit/* (September 2026); Anmeldeablauf, IP aus Proxy-Headern, Store
-│                           und Admin-Auswertung der Sperren für alle drei Apps (Oktober 2026).
-├── packages/ui/            @vereinsheim/ui — geteilte UI-Schicht: ui-Primitives (inkl. table + skeleton)
-│                           + 4 shell/ + admin/ (Login-Rate-Limit-Oberfläche) + theme.css (Tailwind-Theme,
-│                           semantische Tokens success/warning/info/rank-1..3, App-Akzent via data-app).
-├── packages/shot-core/     @vereinsheim/shot-core — Spiegel-Fachkern: Scheibenbilder, Wertung wie Meyton,
-│                           Disziplinen, Gegenprobe (SP-1.1), Geometrie und Kennzahlen-Registry (SP-1.2),
-│                           Analyse einer Scheibe (SP-1.10), Projektion je Scheibe für die Datenbank
-│                           (`./projection`, SP-1.6 a); die Projektion nutzt apps/spiegel.
-├── packages/meyton-pdf/    @vereinsheim/meyton-pdf — liest aus Meyton-Ausdrucken (PDF) nur ID im Fuß und
-│                           Erstellzeit, ohne Layout-Wissen (SP-1.3, Oktober 2026); noch von keiner App genutzt.
-├── packages/ingest-contract/ @vereinsheim/ingest-contract — Vertrag Brücke ↔ Spiegel: Snapshot v1
-│                           (Zod, daraus JSON-Schema), Prüfsumme über RFC 8785, Testvektoren und
-│                           eingefrorene Beispiele (SP-1.0a); seit SP-1.6 b auch die API v1 (Kopplung, Heartbeat,
-│                           Zustand, Antworten); apps/spiegel nimmt darüber an.
-├── packages/ssmdb2-cases/  @vereinsheim/ssmdb2-cases — Sonderfall-Testdaten (SP-1.0b): echtes SSMDB2-Schema,
-│                           Baukasten, der wie Meyton schreibt, 31 Fälle mit Snapshots v1, SQL je Schritt und
-│                           erwartetem Ergebnis unter `cases/v1`; `replay` spielt sie in MariaDB 10.6 ab;
-│                           `./frozen` liest die eingefrorenen Snapshots (Tests von apps/spiegel).
-├── packages/shot-help/     @vereinsheim/shot-help — Hilfe zu jeder Kennzahl und Auswertung in
-│                           einfacher Sprache (Themen, Einstieg, Glossar, Fehlschlüsse); Quelle für App
-│                           und Vault-Leitfaden, den `pnpm --filter @vereinsheim/shot-help docs` erzeugt
-│                           (SP-1.11); apps/spiegel nutzt sie über shot-ui und im Fortschritt.
-├── packages/shot-ui/       @vereinsheim/shot-ui — Bausteine von Spiegel als React-Komponenten: Scheibe
-│                           (Nummern in Ebenen, Auswahl), Serien als kleine Scheiben, Kennzahl-Kacheln,
-│                           Ablesung, Kopf mit Ergebnis, Schusstabelle, Wertung, Hilfe (Blatt), Zustand der
-│                           Ansicht, Analyse einer Scheibe in sechs Reitern mit Diagrammen, Seitenaufbau
-│                           (Kopf, Sprungleiste, Scheibe fest ab 768 px, Rücksprung), Seite eines Zeitraums
-│                           (Verlauf, Umfang, Liste, Vergleich, Rekorde; L3), Adressen (`nav`, N1) und
-│                           Scheiben-Liste nach Abend (`list`, N2), Rahmen der App mit Links und
-│                           Blättern (`AppFrame`, `RouteLink`, N3), Start mit dem letzten Abend im
-│                           Formband (`start`, N5); Design 2 (ADR-030, Oktober 2026);
-│                           Start, Liste, Scheibe, Zeitraum und Rahmen nutzt apps/spiegel; Bedienung im Browser prüft
-│                           `pnpm --filter spiegel pruefen` (Labor und Spielwiese entfernt, 13. Oktober 2026).
-├── tools/ssmdb2-erkunden/  Erkundung der Meyton-SSMDB2 vor Ort (SP-0.1/0.6): Checkliste, Kopie, Schießprotokoll;
-│                           Bash, nur lesend, Selbsttest gegen mariadb:11 (Oktober 2026).
-├── docs/                   spec, decisions (ADRs), monorepo-plan, operations, plan,
-│                           architecture (dies), shared-conventions, consistency
-├── .claude/                Harness: settings(+hooks), skills/, agents/, context/, knowledge-graph.json
-├── .mcp.json               codegraph + memory MCP (Knowledge-Graph, ADR-016)
-├── compose.yml + Caddyfile + db-init/        Prod-Deploy-Vertrag (VPS): drei Apps, drei DBs (Spiegel seit P3)
+│                           erkennt Änderungen, baut Snapshots v1 und lädt sie hoch; Dienst für systemd (`deploy/`).
+├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig, eslint, prettier, postcss, next,
+│                           vitest.
+├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn, forms/fieldErrors, useUnsavedChangesGuard,
+│                           useNavigationConfirm, dateTime (server-only), format (isomorph, Locale de-DE, Zeitzone als
+│                           Parameter) und der Auth-Kern (Validierung, Anmeldeablauf, IP aus Proxy-Headern,
+│                           Ratenbegrenzung mit Store und Admin-Auswertung) für alle drei Apps.
+├── packages/ui/            @vereinsheim/ui — ui-Primitives, shell/, admin/ (Rate-Limit-Oberfläche), theme.css
+│                           (Ringwerk, Treffsicher) und design2.css + design2/* (Spiegel, ADR-030).
+├── packages/shot-core/     @vereinsheim/shot-core — Fachkern von Spiegel: Scheibenbilder, Wertung wie Meyton,
+│                           Disziplinen, Gegenprobe, Geometrie, Kennzahlen-Registry, Analyse einer Scheibe, Projektion
+│                           je Scheibe (`./projection`).
+├── packages/shot-ui/       @vereinsheim/shot-ui — Bausteine von Spiegel als React-Komponenten: Scheibe, Serien,
+│                           Kennzahl-Kacheln, Ablesung, Schusstabelle, Analyse in sechs Reitern, Seite eines Zeitraums,
+│                           Adressen (`nav`), Scheiben-Liste (`list`), Rahmen der App (`AppFrame`), Start (`start`).
+├── packages/shot-help/     @vereinsheim/shot-help — Hilfe zu jeder Kennzahl in einfacher Sprache; Quelle für App und
+│                           Vault-Leitfaden (`pnpm --filter @vereinsheim/shot-help docs`).
+├── packages/ingest-contract/ @vereinsheim/ingest-contract — Vertrag Brücke ↔ Spiegel: Snapshot v1 (Zod, daraus
+│                           JSON-Schema), Prüfsumme über RFC 8785, Testvektoren, eingefrorene Beispiele, API v1.
+├── packages/ssmdb2-cases/  @vereinsheim/ssmdb2-cases — Sonderfall-Testdaten: echtes SSMDB2-Schema, Baukasten, der wie
+│                           Meyton schreibt, Fälle mit Snapshots v1 unter `cases/v1`; `replay` spielt sie in MariaDB ab.
+├── packages/meyton-pdf/    @vereinsheim/meyton-pdf — liest aus Meyton-Ausdrucken (PDF) ID im Fuß und Erstellzeit; noch
+│                           von keiner App genutzt.
+├── tools/ssmdb2-erkunden/  Erkundung der Meyton-SSMDB2 vor Ort: Checkliste, Kopie, Schießprotokoll; nur lesend.
+├── tools/stack-e2e/        der ganze Stack lokal Ende zu Ende mit den echten Images, samt Brücke und Last.
+├── vault/                  Doku als Obsidian-Vault = Memory-Graph (ADR-025): overview, decisions (ADRs), architecture,
+│                           operations, apps/<app>, spiegel, meyton, incidents, conventions.md, SCHEMA.md
+├── plans/                  offene Pläne (PIV-Handoff); reports/ lokal, gitignored
+├── .claude/                Harness: settings (+hooks), skills/, agents/, vault-loader/-lint, Suche
+├── .mcp.json               codegraph + memory MCP
+├── compose.yml + Caddyfile + db-init/   Prod-Deploy-Vertrag (VPS): drei Apps, drei DBs
+├── compose.local.yml       Override für den Prod-Stack auf der lokalen Maschine (`local-up`)
 ├── docker-compose.dev.yml  geteilter Dev-Postgres (DBs: ringwerk, treffsicher, spiegel)
 ├── Dockerfile              EIN parametrisiertes Build-File (turbo prune, --build-arg APP)
-├── tools/stack-e2e/        der ganze Stack lokal Ende zu Ende: eigene Images und eigenes Compose-Projekt, Caddy auf
-│                           Ports, Prüfungen samt Brücke und Last (P3, Oktober 2026)
-├── scripts/db-ensure.sh    fehlende App-Datenbanken auf dem laufenden System anlegen (`vereinsheim db-ensure`)
-├── scripts/bootstrap-dev.sh  Dev-Onboarding: frische Workstation arbeitsfähig (Toolchain, codegraph, Dev-DB, .env, Schema; idempotent)
-└── scripts/vereinsheim     Ops-CLI (dev-setup/build/release/deploy/backup/restore/…)
+└── scripts/                Ops-CLI `vereinsheim` und die Skripte, die es aufruft (Apps in `lib/apps.sh`;
+                            `bootstrap-dev.sh` für `dev-setup`, `db-ensure.sh`, Backup, Restore, Deploy)
 ```
 
 ## Build & Deploy (ADR-005/006/007/015)
 
 Lokaler Build aus dem Monorepo: `vereinsheim build` → `turbo prune <app> --docker` → Root-`Dockerfile`
-(deps→builder→runner/migrator) → Docker Hub (`<user>/<app>:<sha>` + `:<sha>-migrator` + `:latest*`).
-Der VPS pullt; `compose.yml` startet pro App `migrate-*` (one-shot `prisma migrate deploy`) **vor**
-`app-*` (Next standalone, `node server.js`). Caddy terminiert TLS und proxyt die drei Subdomains. Grenzen seit P3:
-Ringwerk und Spiegel 256 MB (Heap 160), Treffsicher 320 MB (Heap 192), Migratoren 192 MB, Caddy 96 MB, Postgres
-384 MB ([[vps-resource-sizing]]).
-Lokal prüft `tools/stack-e2e/run.sh` den ganzen Stack mit den echten Images, bevor etwas auf den VPS geht.
+(deps→builder→runner/migrator) → Docker Hub (`<user>/<app>:<sha>` + `:<sha>-migrator` + `:latest*`). Der VPS pullt;
+`compose.yml` startet pro App `migrate-*` (one-shot `prisma migrate deploy`) **vor** `app-*` (Next standalone,
+`node server.js`), die Apps nacheinander. Caddy terminiert TLS und proxyt die drei Subdomains. Grenzen: Ringwerk und
+Spiegel 256 MB (Heap 160), Treffsicher 320 MB (Heap 192), Migratoren 192 MB, Caddy 96 MB, Postgres 384 MB
+([[vps-resource-sizing]]). Lokal prüft `tools/stack-e2e/run.sh` den ganzen Stack mit den echten Images, bevor etwas auf
+den VPS geht.
 
 ```
 Internet ──443──> Caddy ─┬─ ringwerk.<domain>    → app-ringwerk:3000
@@ -102,39 +80,40 @@ Internet ──443──> Caddy ─┬─ ringwerk.<domain>    → app-ringwerk:
                          └─ spiegel.<domain>     → app-spiegel:3000   (max. 5 MiB je Anfrage)
 Netze: web {caddy, app-*}   data {db, app-*, migrate-*}   (db NICHT im web-Netz, ADR-003)
 DB: 1 Postgres, 3 DBs + 3 Owner-User (ringwerk, treffsicher, spiegel), Cross-DB technisch unmöglich (ADR-002)
+
+Schützenhaus: Meyton-Server (SSMDB2) ←nur lesend── Brücke ──HTTPS, nur ausgehend──> spiegel.<domain>/api/ingest/v1
 ```
 
 ## Routen (Überblick)
 
 - **ringwerk:** `/` · `/competitions/[id]{/schedule,/standings,/ranking,/playoffs}` · `/participants` ·
   `/disciplines` · `/admin` · `/account` · `/api/public/c/[slug]/pdf` (öffentlich).
-- **treffsicher:** `/` · `/sessions{/[id]{/edit,/export/pdf},/new}` · `/shot-routines` · `/statistics` ·
-  `/disciplines` · `/account` (alles auth-gated, Dark-Mode-only).
+- **treffsicher:** `/` → `/dashboard` · `/sessions{/[id]{/edit,/export/pdf},/new}` · `/shot-routines` · `/statistics` · `/goals` ·
+  `/disciplines` · `/admin` · `/account` (alles auth-gated, Dark-Mode-only).
+- **spiegel:** `/` (Start) · `/cards{/[id]}` · `/progress` · `/open` · `/profile{/trash}` · `/admin{/users,/site}` ·
+  `/api/ingest/v1/{pair,state,snapshots,heartbeat}` (Brücke, Geräte-Token).
 
-Detail (Komponenten, lib-Module, Datenfluss): je `apps/<app>/docs/architecture.md`.
+Detail (Komponenten, lib-Module, Datenfluss): die App-Notes im Vault und die `CLAUDE.md` je App.
 
 ## Cross-App-Konsistenz
 
-Beide Apps teilen eine bewusst byte-identische UI-/Pattern-Schicht. **Single Source der Konventionen:**
-`docs/shared-conventions.md`. UI-/Config-Drift zwischen den Apps erzwingt `scripts/consistency-check.sh`
-(Release-Gate). Das echte Code-Teilen (`packages/ui`/`lib`) ist seit **Phase 4** umgesetzt → das Gate
-deckt nur noch triviale Next/shadcn-Reste ([monorepo-plan.md](monorepo-plan.md)).
+Ringwerk und Treffsicher teilen eine UI-/Pattern-Schicht über `@vereinsheim/ui`, `@vereinsheim/lib` und
+`@vereinsheim/config`. **Single Source der Konventionen:** [[conventions]]. Den Rest (`components.json`,
+`globals.css`-Stub, Error-Boundaries, einige Wrapper) und die Konventionen erzwingt `scripts/consistency-check.sh` als
+Release-Gate ([[drift-protection]]). Spiegel nutzt Design 2 (ADR-030) und ist vom Drift-Gate ausgenommen.
 
-## Knowledge & Harness (ADR-016/017/018/022/023/024)
+## Knowledge & Harness (ADR-016/017/018/023/024/025)
 
 - **CodeGraph-MCP** (`.mcp.json`): Live-Symbol-/Call-Graph/Routen, on-demand (Ground Truth über den Code).
-- **Memory-MCP = gebauter Doku-Index** (`.mcp.json`, Store `.claude/knowledge-graph.json`, **ADR-022**):
-  deterministisch gebaut (`.claude/build-graph.mjs`) aus drei Quellen — `docs/decisions.md` (ADRs geparst),
-  `.claude/graph-projection.mjs` (kuratiertes Manifest), `.claude/graph-captured.mjs` (Incidents/State). Jede
-  Entity = Essenz + Fragment-Pointer `→ datei#slug`; gezieltes Lesen via `node .claude/doc.mjs datei#slug`.
-  Pflege: `/sync-graph` (Docs→Manifest, modellgetrieben) + `/consolidate-lessons` REMEMBER (Captured). Bei
-  SessionStart via `memory-surface.mjs` gesurface't. **Store ist Artefakt — nie von Hand editieren.**
-  Maschinen-/ops-lokales → natives Auto-Memory.
-- **CLAUDE.md-Hierarchie:** Root (universelle Regeln, @import) → `apps/<app>/CLAUDE.md` (scope-spezifisch).
-- **Skills/Hooks/Agents** unter `.claude/`: ein Satz für beide Apps; Stop-Gate erzwingt grüne `pnpm check`,
-  Stop-Graph-Sync (`graph-sync.mjs`) baut den Doku-Index am Turn-Ende und blockt bei invalidem Index (ADR-022).
-  Die PIV-Implement-Phase läuft **autonom-by-default** (ADR-023): `/implement` grindet den freigegebenen
-  Plan task-by-task, der marker-gated `autopilot-guard`-Hook erzwingt dabei hart die geschützten
-  Pfade/Kommandos; Plan-Freigabe + Merge bleiben user-gated. Die Worktree-Wahl trifft die **Hauptsession
-  vorab** (ADR-024) — die Skills erstellen/erzwingen keinen Worktree, das Preflight prüft nur den
-  `feat/`-Branch.
+- **Memory-MCP = der Vault** ([[adr-025]]): `vault-loader.mjs` liest die Notes direkt, ohne Build und ohne Store;
+  Suche über BM25 (`search-index.mjs`), Abschnitte über `document_map`/`section_read`. `vault-lint.mjs` prüft Schema,
+  Anker und Orphans. Pflege: Notes direkt editieren, `/sync-graph`, `/consolidate-lessons` (REMEMBER →
+  `vault/incidents/`). Bei SessionStart via `memory-surface.mjs` gesurface't. Maschinen-/ops-lokales → natives
+  Auto-Memory.
+- **CLAUDE.md-Hierarchie:** Root (universelle Regeln, @import) → `apps/<app>/CLAUDE.md` und `packages/<pkg>/CLAUDE.md`
+  (scope-spezifisch).
+- **Skills/Hooks/Agents** unter `.claude/`: ein Satz für alle Apps; das Stop-Gate erzwingt grüne `pnpm check`, der
+  Stop-Graph-Sync (`graph-sync.mjs`) blockt bei invalidem Vault. Die PIV-Implement-Phase läuft **autonom-by-default**
+  (ADR-023): `/implement` arbeitet den freigegebenen Plan task-by-task ab, der marker-gated `autopilot-guard`-Hook
+  erzwingt dabei hart die geschützten Pfade/Kommandos; Plan-Freigabe + Merge bleiben user-gated. Die Worktree-Wahl trifft
+  die **Hauptsession vorab** (ADR-024); das Preflight prüft nur den `feat/`-Branch.

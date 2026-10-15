@@ -1,12 +1,12 @@
 # spiegel-bridge — Claude Scope-Notiz
 
-Die Brücke im Schützenhaus (SP-1.4, [ADR-027](../../vault/decisions/adr-027.md),
+Die Brücke im Schützenhaus ([ADR-027](../../vault/decisions/adr-027.md),
 [`spiegel-bridge`](../../vault/spiegel/spiegel-bridge.md)): liest die Meyton-Ablage (SSMDB2) nur lesend und baut
-Snapshots v1 für Spiegel. **Go**, ein statisches Binary ohne Laufzeit (SP-0.4, 13. Oktober 2026). Teil a
-(`plans/2026-10-13-spiegel-bruecke-leser.md`): Leser, Änderungserkennung und Snapshots. Teil b
-(`plans/2026-10-13-spiegel-bruecke-upload.md`): Kopplung, Upload, Heartbeat und die Filter aus SP-1.5 (Zustimmung,
-verdeckt, gesperrt). Teil c (`plans/2026-10-13-spiegel-bruecke-betrieb.md`): Nachholen beim Start ab dem Wasserstand,
-Dienst für systemd mit `deploy/install.sh`. Offen: Selbst-Update, Statusseite, Dienst unter Windows, Aufträge (SP-1.5).
+Snapshots v1 für Spiegel. **Go**, ein statisches Binary ohne Laufzeit. Sie umfasst Leser, Änderungserkennung und
+Snapshots; Kopplung, Upload, Heartbeat und die Filter (Zustimmung, verdeckt, gesperrt); das Nachholen beim Start ab dem
+Wasserstand, das Nachladen der Historie und den Dienst für systemd mit `deploy/install.sh`. Offen
+([`spiegel-roadmap`](../../vault/spiegel/spiegel-roadmap.md)): Selbst-Update, Statusseite, Dienst unter Windows,
+Aufträge.
 
 ## Befehle
 
@@ -61,11 +61,11 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   der Ablage standen. `observedAt` ist die echte Beobachtung, nur die Folgenummer zählt nach einem Rücksprung der Uhr
   weiter. Gesendet wird nach zwei gleichen Lesungen (SF-71), nur ein
   neuer Stand gegenüber dem zuletzt gemeldeten, nie ohne Treffer (SF-13). Eine gescheiterte Runde ändert nichts; Fehlen
-  ist keine Löschung (SF-24). Jede Regel hat einen Fall, der ohne sie rot wird (Gegenproben im Bericht).
+  ist keine Löschung (SF-24). Jede Regel hat einen Fall, der ohne sie rot wird.
 - **Nichts auf die Platte, keine Personenfelder in der Ausgabe** (SF-59): Meldungen nur mit Zahlen und Codes
   (`ssmdb2.Code`, nie `err.Error()` des Treibers), Snapshots als `Summary`; `--json` ist für die Prüfung vor Ort und
   gibt die vollen Daten aus. Der Replay-Test sucht die Namen der Fälle in der Ausgabe.
-- **Erst bestätigt ist gesendet** (Teil b): `Watcher.Delivered` nach einem endgültigen Ergebnis von Spiegel (alle außer
+- **Erst bestätigt ist gesendet:** `Watcher.Delivered` nach einem endgültigen Ergebnis von Spiegel (alle außer
   `future` und `epoch-unconfirmed`) oder wenn der Filter die Scheibe zurückhält. Bis dahin wartet sie und wird jede
   Runde neu gelesen; nach einem gescheiterten Upload geht hinaus, was dann in der Ablage steht (keine Warteschlange).
   Ein Stand, der sich vom bestätigten nur im Lebenszeichen unterscheidet, höchstens alle 30 s (`LifesignEvery`).
@@ -88,7 +88,7 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   (`catchUpFrom`, Zonen eingebaut über `time/tzdata`) wird ein Lebenszeichen; Scheiben davor im Startfenster liest die
   Erkennung einmal (`SetCatchUpFrom`, Rang 3), aber erst, wenn 20 Minuten nichts mehr läuft (SF-52), und hält den Takt
   bis dahin nicht hoch. Ohne Wasserstand (erste Brücke) nichts.
-- **Nachladen der Historie** (P2d, `plans/2026-10-14-spiegel-historie.md`): Jede Runde liest die SportpassID mit dem
+- **Nachladen der Historie:** Jede Runde liest die SportpassID mit dem
   Lebenszeichen (`Lifesign.Sportpass`, NULL als nil). `state.history` nennt offene Aufträge (Id, Hash); `run` gibt der
   Erkennung ein Prädikat (`SetHistory`, Hash je Nummer einmal gerechnet). Passende Scheiben der ganzen Ablage bekommen
   Rang 3 wie das Nachholen: nur im Leerlauf, höchstens 50 je Runde. Erledigt ist ein Auftrag, wenn keine seiner Scheiben
@@ -103,6 +103,6 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   `systemd-analyze verify`.
 - **Heartbeat** jede Minute, der erste nach der ersten Runde, nie mit Namen oder Nummern; `possible-reset` nur gemeldet
   (die Zahl der Scheiben fällt um mehr als die Hälfte; zurückgenommen, wenn sie wiederkommen; `delayed` geht vor), eine
-  neue Epoche eröffnet die Brücke nicht (Plan D8). Zurückgehaltene zählen nur Scheiben, die die Erkennung noch kennt.
+  neue Epoche eröffnet die Brücke nicht. Zurückgehaltene zählen nur Scheiben, die die Erkennung noch kennt.
 - Nach Änderungen: `pnpm check` (vom Repo-Root), `pnpm --filter spiegel-bridge replay` und bei Upload oder Filter
   `pnpm --filter spiegel bridge-e2e` (nach `pnpm --filter spiegel build`).

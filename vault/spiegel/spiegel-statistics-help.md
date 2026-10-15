@@ -10,7 +10,7 @@ relates_to: ["[[spiegel-statistics]]", "[[spiegel-ui-design]]", "[[spiegel-metri
 
 **TL;DR** Hilfe zu jeder Auswertung in Spiegel, in einfacher Sprache: was die Zahl misst, wie du sie
 liest, was du damit tun kannst und wo du dich täuschen kannst. Quelle ist das Paket
-`@vereinsheim/shot-help` (SP-1.11), aus dem auch die Hilfe in der App und in der Spielwiese kommt.
+`@vereinsheim/shot-help`, aus dem auch die Hilfe in der App kommt.
 Die Definitionen stehen im Katalog [[spiegel-statistics]]; hier kommen erst die Worte, die Formel
 steht jeweils am Ende.
 

@@ -11,14 +11,13 @@ relates_to: ["[[factor-correction]]"]
 
 **TL;DR** Langzeit; beste Serien zählen, Mehrfach-Ranking (Ringe/Teiler/Ringteiler), Mindestserien-Gate (minSeries default 20).
 
-## Anzeigereihenfolge der Rangliste (September 2026)
+## Anzeigereihenfolge der Rangliste
 
 `calculateSeasonStandings` berechnet **immer alle drei** Metriken samt Einzelrängen; die
-**Reihenfolge** kommt seither ausschließlich aus der reinen Funktion `sortSeasonStandings`
+**Reihenfolge** kommt ausschließlich aus der reinen Funktion `sortSeasonStandings`
 (`lib/scoring/sortSeasonStandings.ts`) — genutzt von Tabelle, Wettbewerbs-PDF, öffentlichem PDF
-und Dashboard. Vorher hatte jede Oberfläche ihre eigene Sortierung: das PDF sortierte **immer**
-nach Ringteiler (auch bei Wertung „Ringe"/„Teiler"), und die Dashboard-Karte schnitt die Top-5
-**vor** dem Umsortieren ab, zeigte also die falschen Zeilen.
+und Dashboard. Keine Oberfläche sortiert selbst, und die Dashboard-Karte schneidet die Top-5 erst
+**nach** dem Sortieren ab.
 
 `resolveSeasonSort(scoringMode, seasonSortMode)` liefert fünf Reihenfolgen:
 
@@ -40,22 +39,19 @@ deaktiviert: die Reihenfolge **ist** die Wertung.
 
 Auf schmalen Geräten ist neben dem Namen Platz für zwei Zahlenspalten. Sichtbar bleibt, was die
 Reihenfolge bestimmt: in den alternierenden Modi **Ringe und Teiler** (der Ringteiler klappt weg),
-klassisch die sortierte Spalte. Vorher war „Best. Teiler" unter `sm` generell ausgeblendet — in
-`alt-teiler` stand damit jede zweite Zeile mit ihrem maßgeblichen Wert in einer unsichtbaren
-Spalte, während der unbeteiligte Ringteiler sichtbar blieb. Gepinnt in
-`SeasonStandingsTable.test.tsx`.
+klassisch die sortierte Spalte. Sonst stünde in `alt-teiler` jede zweite Zeile mit ihrem
+maßgeblichen Wert in einer unsichtbaren Spalte. Gepinnt in `SeasonStandingsTable.test.tsx`.
 
 ## Ränge & Badges
 
 Die drei Metrik-Ränge (`bestRings_rank`, `bestTeiler_rank`, `bestRingteiler_rank`) sind reine
 Anzeigewerte und werden **nur für gewertete Teilnehmer** vergeben — wer `minSeries` nicht erreicht,
-trägt keinen Rang (sein Wert bleibt sichtbar, die Zeile ist ausgegraut). Vorher bekam jeder mit
-mindestens einer Serie Ränge; dann hielt eine ausgegraute Zeile die 1, während die gewerteten
-Zeilen darüber 2, 3, 3 lasen — in der alternierenden Sortierung sofort sichtbar. Rang-Pool und
-Sortier-Pool müssen deshalb deckungsgleich bleiben.
+trägt keinen Rang (sein Wert bleibt sichtbar, die Zeile ist ausgegraut). Bekäme jeder mit
+mindestens einer Serie Ränge, hielte eine ausgegraute Zeile die 1, während die gewerteten Zeilen
+darüber 2, 3, 3 läsen. Rang-Pool und Sortier-Pool müssen deshalb deckungsgleich bleiben.
 
 Die **Gesamtplatzierung** am Namen kommt aus `seasonPositions(sorted, sort)` — der einzigen Quelle
-für Tabelle, PDF und Dashboard (September 2026; vorher `idx + 1`). Klassisch teilen Zeilen den
+für Tabelle, PDF und Dashboard. Klassisch teilen Zeilen den
 Platz, die im Block, in der Metrik **und** im Ringteiler gleich sind — der Ringteiler ist bei
 gleichem Metrik-Wert der explizite Tiebreak, erst danach der Name. Teilnehmer ohne Serie stehen
 also gemeinsam auf einem Platz; hat noch niemand eine Serie, alle auf 1. Alternierend vergibt die
@@ -64,7 +60,7 @@ mit mindestens einer Serie (`hasSeasonResult`). Siehe [[ringwerk-features]] („
 
 Angezeigt werden Inline-Platzierungen an den Metrik-Werten nur für die **Plätze 1–3** (Tabelle und
 PDF, Regel + Hervorhebung liegen als `isPodiumRank`/`metricAppearance` neben der Sortierfunktion);
-die Gesamtplatzierung am Namen steht auf jeder Zeile. Ein Badge an jedem Wert war unübersichtlich.
+die Gesamtplatzierung am Namen steht auf jeder Zeile. Ein Badge an jedem Wert wäre unübersichtlich.
 
 Auch mit deckungsgleichen Pools kann die Folge einen **Sprung** zeigen (1, 1, 2, 3): wenn der
 Nächstplatzierte einer Metrik schon über die andere Metrik platziert wurde. Das ist die Folge von

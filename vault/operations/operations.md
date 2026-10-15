@@ -3,16 +3,16 @@ id: operations
 type: guide
 title: "Operations — vereinsheim"
 aliases: ["Operations — vereinsheim"]
-keywords: [operations, vereinsheim]
+keywords: [operations, betrieb, vereinsheim, cli, deploy, backup, restore, rollback, migrationen, recovery, vps, bootstrap, brücke]
 part_of: ["[[overview]]"]
 ---
 
-**TL;DR** `./scripts/vereinsheim` ist der zentrale Einstieg — auf der lokalen
+**TL;DR** `./scripts/vereinsheim` ist der zentrale Einstieg für den Betrieb, lokal und auf dem VPS: Bootstrap, Deploy, Backup, Restore, Rollback und Recovery fehlgeschlagener Migrationen. Die Brücke von Spiegel läuft im Schützenhaus und wird separat installiert.
 
 # Operations — vereinsheim
 
-> Praktische Anleitung für laufenden Betrieb: Deploy, Backup, Restore, und
-> Recovery von fehlgeschlagenen Migrationen.
+> Praktische Anleitung für den laufenden Betrieb: Bootstrap, Deploy, Backup, Restore, Rollback und Recovery von
+> fehlgeschlagenen Migrationen.
 
 ## Das Werkzeug: `./scripts/vereinsheim`
 
@@ -20,8 +20,9 @@ part_of: ["[[overview]]"]
 Arbeitsmaschine und auf dem VPS dasselbe Tool, mit zwei Modi, die sich
 automatisch erkennen:
 
-- **Lokal-Mode**: aktiv sobald `.vereinsheim.local` existiert. Bietet
-  `build`, `release`, `ssh`, `remote`, `local-setup`.
+- **Lokal-Mode**: aktiv sobald `.vereinsheim.local` existiert. Bietet `local-setup`, `build`, `release`, `ssh`,
+  `remote`, `upload`, `download`, den lokalen Prod-Stack (`local-build`, `local-pull`, `local-up`, `local-down`) und
+  `dev-restore`. `dev-setup` läuft auch ohne `.vereinsheim.local` (frischer Clone).
 - **VPS-Mode**: Default. Bietet alle Operations am Stack.
 
 ```bash
@@ -34,6 +35,11 @@ automatisch erkennen:
 ./scripts/vereinsheim release      # build + ssh-deploy
 ./scripts/vereinsheim ssh          # interaktive SSH-Shell zum VPS
 ./scripts/vereinsheim remote <subcmd>   # vereinsheim auf VPS
+./scripts/vereinsheim upload <datei>     # Datei(en) → VPS ~/migration/
+./scripts/vereinsheim download [datei]  # Backup ← VPS (ohne Argument: Liste)
+./scripts/vereinsheim local-pull   # Backups + Image-Tags vom VPS → ./backups/
+./scripts/vereinsheim local-up [--restore]   # Prod-Stack lokal (braucht .env.local)
+./scripts/vereinsheim dev-restore [app]      # Prod-Dump aus ./backups/ → Dev-DB
 
 # === VPS-Mode ===
 ./scripts/vereinsheim status       # Services, Volumes, Backups, Cron, .env
@@ -42,6 +48,7 @@ automatisch erkennen:
 ./scripts/vereinsheim deploy       # Vorprüfung + Pre-Backup + Pull + je App nacheinander
 ./scripts/vereinsheim backup       # Backup jetzt
 ./scripts/vereinsheim restore      # interaktive Auswahl
+./scripts/vereinsheim rollback     # auf den vorigen Deploy zurück
 ./scripts/vereinsheim restore-probe   # neueste Dumps probeweise in Wegwerf-DBs
 ./scripts/vereinsheim db-ensure    # fehlende App-Datenbanken anlegen (laufendes System)
 ./scripts/vereinsheim logs [svc]   # Logs folgen
@@ -62,25 +69,28 @@ automatisch erkennen:
 
 Die Apps stehen an einer Stelle, `scripts/lib/apps.sh` (`APPS=(ringwerk treffsicher spiegel)`, Upload-Volume nur
 `UPLOAD_APPS=(treffsicher)`); das CLI und alle Skripte (Deploy, Backup, Restore, Restore-Probe, `db-ensure`, Build)
-binden sie ein (P4, Oktober 2026).
+binden sie ein.
 
 Die folgenden Abschnitte beschreiben **was technisch passiert**, damit du
 auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
 
 ## Inhalt
 
+- [Initial-Bootstrap eines neuen VPS](#initial-bootstrap-eines-neuen-vps)
 - [Deploy](#deploy)
+  - [Neue App auf einem laufenden VPS](#neue-app-auf-einem-laufenden-vps)
 - [Backup](#backup)
 - [Restore](#restore)
   - [Restore-Test](#restore-test-regelmäßig-empfohlen)
 - [Recovery von fehlgeschlagenen Migrationen](#recovery-von-fehlgeschlagenen-migrationen)
 - [Rollback](#rollback)
+- [Brücke im Schützenhaus](#brücke-im-schützenhaus)
 
 ---
 
 ## Initial-Bootstrap eines neuen VPS
 
-1. **VPS bestellen** (Debian 12 empfohlen, IONOS VPS S+/M).
+1. **VPS bestellen** (Debian 12 empfohlen; IONOS VPS S mit 2 GB reicht, [[vps-resource-sizing]]).
 2. **Als root einloggen**, einmalig laufen lassen:
    ```bash
    bash bootstrap-vps.sh "ssh-ed25519 AAAA... du@workstation" \
@@ -125,7 +135,7 @@ Bei Bedarf zerlegbar:
 ./scripts/vereinsheim remote deploy   # nur deployen (ohne neuen Build)
 ```
 
-`scripts/deploy.sh` macht idempotent (seit P4, Oktober 2026, je App nacheinander):
+`scripts/deploy.sh` macht idempotent, je App nacheinander:
 
 1. **Vorprüfung** (wenn `db` läuft, und noch einmal nach dem Start von `db`): Rolle und Datenbank jeder App gibt es,
    sonst Abbruch mit „zuerst `vereinsheim db-ensure`“. `vereinsheim deploy` prüft vorher zusätzlich mit `env-check`, dass keine Schlüssel
@@ -171,7 +181,7 @@ sind davon nicht betroffen (eigener migrate-Container, eigene DB).
 
 ### Neue App auf einem laufenden VPS
 
-So kam Spiegel dazu (SP-1.9, Runbook in P5); dasselbe gilt für jede weitere App:
+Für eine weitere App im Stack (eingetragen in `scripts/lib/apps.sh`, `compose.yml`, `Caddyfile`, `.env.example`, `db-init/`):
 
 1. `git pull`, danach `docker compose up -d --force-recreate caddy` (neue Caddyfile mit dem neuen Host).
 2. `./scripts/vereinsheim setup` → „Fehlende Schlüssel ergänzen“ (Host, Tags, DB-Passwort, Secret, erstes Admin-Konto).
@@ -192,7 +202,7 @@ So kam Spiegel dazu (SP-1.9, Runbook in P5); dasselbe gilt für jede weitere App
 - `uploads-treffsicher-<TS>.tar.gz` — Inhalt des `uploads_treffsicher`-Volumes
 
 Ringwerk und Spiegel haben keine persistierten Uploads und werden daher nicht archiviert. Gibt es die Datenbank
-einer App noch nicht (Spiegel vor `vereinsheim db-ensure`), meldet das Backup es und sichert die übrigen.
+einer App noch nicht (vor `vereinsheim db-ensure`), meldet das Backup es und sichert die übrigen.
 
 Retention: 14 Tage rolling (`BACKUP_RETAIN_DAYS=14`, überschreibbar).
 
@@ -216,14 +226,14 @@ Retention: 14 Tage rolling (`BACKUP_RETAIN_DAYS=14`, überschreibbar).
 Default: `/var/backups/vereinsheim/`. Auf demselben VPS — daher gilt das
 Backup nur als **Schutz vor Software-Fehlern**, nicht vor Hardware-Verlust.
 
-**Off-Site-Backup ist explizit nicht im MVP-Scope.** Sinnvolle Erweiterungen:
+**Off-Site-Backup ist nicht im Scope** ([[off-site-backup-gap]]). Sinnvolle Erweiterungen:
 
 - `rclone sync /var/backups/vereinsheim/ <remote>:<bucket>/` als Cron
 - borg-Backup auf NAS
 - IONOS Snapshot-Funktion (whole-VM, weniger granular)
 
-Bis dahin holt `vereinsheim local-pull` die neuesten Dumps aller Apps auf den Mac (`./backups/`), auch Spiegel
-(User, 14. Oktober 2026). Diese Kopien rotieren nicht wie die Sicherungen auf dem Server.
+Bis dahin holt `vereinsheim local-pull` die neuesten Dumps aller Apps auf die lokale Maschine (`./backups/`). Diese
+Kopien rotieren nicht wie die Sicherungen auf dem Server.
 
 ---
 
@@ -290,8 +300,8 @@ einfaches `migrate deploy` nicht weiter.
 ### Eingebauter Recovery-Mechanismus
 
 Ringwerk und Treffsicher enthalten zwei zusammenwirkende Skripte (`apps/<app>/scripts/`). Spiegel hat nur
-`run-migrations-with-recovery.sh` mit `prisma migrate deploy` ohne Wiederherstellung (bis zum ersten Deploy eine
-Migration, `PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS=false`); scheitert dort eine, helfen Pfad 3 und 4.
+`run-migrations-with-recovery.sh` mit `prisma migrate deploy` ohne Wiederherstellung
+(`PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS=false`); scheitert dort eine, helfen Pfad 3 und 4.
 
 - `scripts/run-migrations-with-recovery.sh` — versucht `migrate deploy`,
   ruft bei Fehler das Recovery-Skript, dann nochmal `deploy`.
@@ -299,7 +309,7 @@ Migration, `PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS=false`); scheitert dort eine, 
   `_prisma_migrations`, entscheidet je nach Eintrag in der
   `KNOWN_RECOVERY_HANDLERS`-Tabelle automatisch.
 
-In `compose.yml` von vereinsheim ist konfiguriert:
+In `compose.yml` ist für Ringwerk und Treffsicher konfiguriert:
 
 | Variable                                          | Wert    | Bedeutung                                                  |
 | ------------------------------------------------- | ------- | ---------------------------------------------------------- |
@@ -438,7 +448,7 @@ geblieben ist:
 Das Tool liest `logs/deploy-history.log` (eine Zeile pro
 erfolgreichem Deploy), zeigt die letzten fünf Stände, schlägt den
 vorherigen Eintrag als Ziel vor und schreibt nach Bestätigung die
-vier Image-Tags zurück in die `.env`. Anschließend startet es
+Image-Tags aller Apps (je App `<APP>_TAG` und `<APP>_MIGRATOR_TAG`) zurück in die `.env`. Anschließend startet es
 automatisch `deploy.sh` mit `SKIP_BACKUP=1` (der kaputte Stand soll
 kein neues Backup erzeugen). `migrate deploy` ist no-op, da der
 Schema-Stand bereits korrekt ist.
@@ -450,8 +460,8 @@ Tag rollen willst, der nicht in der History steht):
 ./scripts/vereinsheim setup     # Wahl 2: einzelne Werte bearbeiten
 #  → RINGWERK_TAG = <vorherige-sha>
 #  → RINGWERK_MIGRATOR_TAG = <vorherige-sha>-migrator
-#  (ebenso TREFFSICHER_* und SPIEGEL_*; Einträge von vor P4 haben keine
-#   Spiegel-Tags, dann bleibt Spiegel auf dem aktuellen Tag)
+#  (ebenso TREFFSICHER_* und SPIEGEL_*; fehlen einem Eintrag der History
+#   die Tags einer App, bleibt sie auf dem aktuellen Tag)
 SKIP_BACKUP=1 ./scripts/vereinsheim deploy
 ```
 
@@ -470,3 +480,22 @@ Schema-Stand. Reihenfolge:
 ```
 
 Voraussetzung: Pre-Deploy-Backup hat funktioniert (= Default).
+
+---
+
+## Brücke im Schützenhaus
+
+Spiegel bekommt seine Daten von der Brücke (`apps/spiegel-bridge`), die neben der Meyton-Anlage läuft, nicht auf dem
+VPS. Sie verbindet sich nur ausgehend per HTTPS mit `SPIEGEL_HOST`; auf dem VPS ist dafür nichts zu öffnen.
+
+- **Bauen** (lokal): `pnpm --filter spiegel-bridge build` → `apps/spiegel-bridge/dist/` (linux/arm64, linux/amd64,
+  windows/amd64).
+- **Installieren und koppeln**: [`apps/spiegel-bridge/README.md`](../../apps/spiegel-bridge/README.md) — Binary und
+  `deploy/` aufs Gerät, `sudo sh deploy/install.sh <binary>`, in Spiegel unter Admin → Anlage und Brücken einen
+  Kopplungscode holen, `spiegel-bridge pair`, `systemctl enable --now spiegel-bridge`.
+- **Zustand**: Spiegel zeigt unter „Anlage und Brücken“ den letzten Kontakt. „Aus, zuletzt online …“ ist der Normalfall,
+  die Anlage wird nach dem Training ausgeschaltet. Logs auf dem Gerät: `journalctl -u spiegel-bridge`.
+- **Token widerrufen** (Gerät verloren oder getauscht): in Spiegel die Brücke trennen; die Brücke beendet sich mit
+  Exit 3 und muss neu gekoppelt werden.
+
+Arbeitsweise, Netz und Störfälle: [[spiegel-bridge]].

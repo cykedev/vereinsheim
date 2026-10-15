@@ -10,7 +10,7 @@ documented_in: ["[[ringwerk-features#Öffentliche PDF-URL (Website-Verlinkung)]]
 
 **TL;DR** isPublic→publicSlug für /api/public/c/<slug>/pdf (unauth); partieller Unique-Index, optional bcrypt-PW, 24h-Cache (getaggt über die Wettbewerbs-**ID**, nicht über den Slug).
 
-Der Render-Cache (`unstable_cache`, Key `["public-pdf-buffer-v2", competitionId, phaseTag]`) hängt
+Der Render-Cache (`unstable_cache`, Key `["public-pdf-buffer", competitionId, phaseTag]`) hängt
 an `publicPdfCacheTag(competitionId)` aus `lib/competitions/publicPdfCache.ts`. Tag und Key teilen
 damit **eine** Identität, und eine Slug-Umbenennung kann den Eintrag nicht verwaisen lassen
 (siehe [[public-pdf-cache-tag-orphaning]]). Schreibende Actions invalidieren über
@@ -18,7 +18,7 @@ damit **eine** Identität, und eine Slug-Umbenennung kann den Eintrag nicht verw
 No-op ist. Die Route selbst ist `force-dynamic` (Passwortprüfung pro Request), hat also keinen
 Full-Route-Cache, den ein `revalidatePath` treffen könnte.
 
-## QR-Code auf internen Exporten (seit 2026-10-03)
+## QR-Code auf internen Exporten
 
 Die **intern** heruntergeladenen Haupt-PDFs (`/api/competitions/[id]/pdf/{schedule,playoffs,ranking,
 standings}`) eines veröffentlichten Wettbewerbs tragen rechts im Seitenkopf einen QR-Code und die
@@ -31,8 +31,7 @@ DB-Abfrage steckt in `publicPdfLinkQueries.ts`.
 
 - **Layout:** Der QR-Code steht **neben** URL und Datum, nicht darüber, damit der Kopf kaum höher
   wird. Er ist 64 pt groß, auf der Playoff-Bracket-Seite 48 pt. Das Achtelfinal-Bracket nutzt die
-  Querformat-Höhe fast ganz aus, ein höherer Kopf schob es auf eine eigene Seite (Review
-  2026-10-03). Die URL bricht `splitDisplayUrl` selbst in Zeilen von höchstens 40 Zeichen um,
+  Querformat-Höhe fast ganz aus, ein höherer Kopf schob es auf eine eigene Seite. Die URL bricht `splitDisplayUrl` selbst in Zeilen von höchstens 40 Zeichen um,
   getrennt an `/`, `-` oder `.`. react-pdf bricht ein Wort ohne Leerzeichen nicht um, ein langer
   Slug lief sonst in den QR-Code. Die Titelspalte (`styles.headerLeft`) hat `flex: 1`, damit lange
   Titel umbrechen.
@@ -46,8 +45,8 @@ DB-Abfrage steckt in `publicPdfLinkQueries.ts`.
   (`hasValidAccessToken`, `timingSafeEqual`) die Basic-Auth weg. Ein falsches oder fehlendes Token
   führt in den normalen 401-Pfad. Klartext, weil der Export das Token in den QR-Code schreiben
   muss. Es geht nie an den Client (`CompetitionDetail.hasPublicAccessToken`). „Neuen Zugangscode
-  erzeugen“ rotiert es und macht alte Ausdrucke wirkungslos. **Passwort entfernen löscht das Token mit**
-  (User-Entscheid 2026-10-03): sonst machte ein später neu gesetztes Passwort alte Ausdrucke still
+  erzeugen“ rotiert es und macht alte Ausdrucke wirkungslos. **Passwort entfernen löscht das Token mit**:
+  sonst machte ein später neu gesetztes Passwort alte Ausdrucke still
   wieder wirksam. Das Formular weist darauf hin.
 - **Gedruckter Text = URL ohne Token**, nur der QR-Code trägt es.
 - **Öffentliche PDFs tragen nie einen QR-Code.** Die Builder der öffentlichen Route übergeben kein

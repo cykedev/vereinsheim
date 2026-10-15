@@ -7,11 +7,11 @@ keywords: [ringwerk, reference, files]
 part_of: ["[[ringwerk]]"]
 ---
 
-**TL;DR** Local reference implementation: `/Users/christian/repos/treffsicher`
+**TL;DR** Local reference implementation: `apps/treffsicher` (same monorepo)
 
 # Reference Files
 
-Local reference implementation: `/Users/christian/repos/treffsicher`
+Local reference implementation: `apps/treffsicher` (same monorepo)
 
 | File                      | Reference for                      |
 | ------------------------- | ---------------------------------- |
@@ -29,8 +29,8 @@ Local reference implementation: `/Users/christian/repos/treffsicher`
 | List with row actions                  | `src/components/app/participants/ParticipantRowActions.tsx`                                                                                                             |
 | Active/inactive separation             | `src/app/(app)/participants/page.tsx`                                                                                                                                   |
 | Table container                        | `src/components/app/matchups/ScheduleView.tsx`                                                                                                                          |
-| Server Action with auth + validation   | `src/lib/leagues/actions.ts`                                                                                                                                            |
-| Actions test file                      | `/Users/christian/repos/treffsicher/src/lib/disciplines/actions.test.ts`                                                                                                |
+| Server Action with auth + validation   | `src/lib/disciplines/actions.ts`                                                                                                                                        |
+| Actions test file                      | `src/lib/disciplines/actions.test.ts`                                                                                                                                   |
 | Rings/Teiler formatting utilities      | `src/lib/series/scoring-format.ts` (`formatRings`, `formatDecimal1`, `getEffectiveScoringType`, `getRingsInputProps`)                                                   |
 | Score/Teiler calculation core          | `src/lib/scoring/calculateScore.ts` (`calculateScore`, `calculateRingteiler`, `calculateCorrectedTeiler`, `effectiveTeilerFaktor` — factor only when mixed)             |
 | Rings input with scoring-type props    | `src/components/app/series/RingsInput.tsx`                                                                                                                              |

@@ -3,15 +3,15 @@ id: treffsicher-code-conventions
 type: guide
 title: "Treffsicher — Code Conventions & Testing"
 aliases: ["Code Conventions & Testing — Verbindliche Regeln"]
-keywords: [treffsicher, code, conventions, testing, verbindliche, regeln]
+keywords: [treffsicher, code, conventions, testing, verbindliche, regeln, Vitest, Zod v4, ActionResult, useActionState, Benennung, Kommentare]
 part_of: ["[[treffsicher]]"]
 ---
 
-**TL;DR** Ausgelagert aus `docs/technical-constraints.md`. Gilt gleichrangig als verbindlich.
+**TL;DR** Benennung, TypeScript, Zod v4, Server Actions, Datenbankzugriffe, Kommentare, Fehlerbehandlung und Testing. Ergänzt [[treffsicher-technical-constraints]] und gilt gleichrangig verbindlich.
 
 # Code Conventions & Testing — Verbindliche Regeln
 
-Ausgelagert aus `docs/technical-constraints.md`. Gilt gleichrangig als verbindlich.
+Ergänzt [[treffsicher-technical-constraints]] und gilt gleichrangig verbindlich.
 
 ## Index
 
@@ -59,7 +59,7 @@ Ausgelagert aus `docs/technical-constraints.md`. Gilt gleichrangig als verbindli
   async function getSession(id: string) { ... }
   ```
 
-- **Prisma-Typen nutzen**: Typen aus `@/generated/prisma/client` direkt verwenden, nicht neu definieren (Prisma 7 generiert den Client in `src/generated/prisma/`, nicht mehr in `node_modules/@prisma/client`)
+- **Prisma-Typen nutzen**: Typen aus `@/generated/prisma/client` direkt verwenden, nicht neu definieren (Prisma 7 generiert den Client in `src/generated/prisma/`, nicht in `node_modules/@prisma/client`)
 
 ---
 
@@ -109,7 +109,7 @@ Jede nicht-triviale Komponente folgt dieser Reihenfolge:
 ```typescript
 // 1. Imports (externe Pakete zuerst, dann interne)
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@vereinsheim/ui/button"
 import { saveSession } from "@/lib/sessions/actions"
 
 // 2. Typdefinitionen (nur was diese Datei braucht)
@@ -129,7 +129,8 @@ export function SessionForm({ disciplineId }: Props) {
 
 ## Server Actions
 
-Jede Server Action liegt in einer Datei `actions.ts` im zugehörigen Feature-Ordner:
+Jede Server Action ist über `src/lib/<feature>/actions.ts` (`"use server"`) erreichbar; größere Features legen die
+Umsetzung in `src/lib/<feature>/actions/` ab. Rückgabetyp ist `ActionResult` aus `src/lib/types.ts`:
 
 ```typescript
 // src/lib/sessions/actions.ts
@@ -169,7 +170,7 @@ export async function createSession(formData: FormData) {
     },
   })
 
-  return { data: result }
+  return { success: true, data: result }
 }
 ```
 

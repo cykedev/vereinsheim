@@ -9,4 +9,4 @@ relates_to: ["[[monorepo-migration-phases]]"]
 documented_in: ["[[architecture#Repo-Karte]]"]
 ---
 
-**TL;DR** High-Level-Karte des Monorepos (apps/*, packages/config|lib|ui, docs/, .claude/, compose/Caddy/db-init). Schnelle Orientierung, kein Vollindex.
+**TL;DR** High-Level-Karte des Monorepos (apps/*, packages/*, vault/, .claude/, compose/Caddy/db-init). Schnelle Orientierung, kein Vollindex.

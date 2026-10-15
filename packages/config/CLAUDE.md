@@ -1,8 +1,7 @@
 # @vereinsheim/config — Claude Scope-Notiz
 
-Geteilte **Tooling-Configs** für beide Apps (Phase 2, ADR-015/016). Eliminiert die früher
-byte-identischen Config-Duplikate; Drift ist damit **strukturell unmöglich** (die fünf Configs sind
-nicht mehr im `consistency-check.sh`-Gate).
+Geteilte **Tooling-Configs** für alle drei Apps und die Pakete (ADR-015/016). Jede Config gibt es nur
+einmal; Drift ist damit **strukturell unmöglich**, `consistency-check.sh` prüft sie deshalb nicht.
 
 ## Was hier liegt
 
@@ -25,15 +24,15 @@ nicht mehr im `consistency-check.sh`-Gate).
   auf die Monorepo-Wurzel (Host + geprunter Docker-Kontext identisch). Die `.d.ts` bleibt selbst-enthalten
   (bewusst **kein** `import from "next"`), damit `next build` die `next.config.ts` ohne Cross-Package-
   „next"-Auflösung typprüfen kann.
-- **next-Factory setzt `transpilePackages`** für die geteilten Source-Pakete (`@vereinsheim/lib`, ab
-  Phase 4 Zyklus 2 auch `@vereinsheim/ui`): sie liefern TS/TSX-Source ohne Build-Step, Next transpiliert
-  sie just-in-time. Neue geteilte Pakete hier eintragen; die `.d.ts` (`transpilePackages: string[]`) in
-  Sync halten.
+- **next-Factory setzt `transpilePackages`** für die Source-Pakete aller Apps (`@vereinsheim/lib`,
+  `@vereinsheim/ui`): sie liefern TS/TSX-Source ohne Build-Step, Next transpiliert sie just-in-time. Ein neues
+  Paket für alle Apps hier eintragen und die `.d.ts` (`transpilePackages: string[]`) in Sync halten; ein Paket nur
+  für eine App ergänzt deren `next.config.ts` (Spiegel: `shot-core`, `shot-ui`, `shot-help`, `ingest-contract`).
 - **vitest-Factory** setzt Umgebung, Worker-Cap, Ausschlüsse (`.next`, Worktrees) und die Aliase `@` (aus `appDir`)
   und `server-only` (leerer Stub im Paket). Eigenheiten der App (`dotenv`, `passWithNoTests`, `fileParallelism`)
   bleiben im App-Stub. Die `.d.ts` ist selbst-enthalten wie bei `next` (kein `import from "vitest"`); `vitest` ist
   devDependency, weil die Factory `configDefaults` liest.
 - **Kein `"use server"`** in diesem Paket (geteilte Dateien dürfen keine Server-Action-Re-Exports sein,
-  monorepo-plan §9).
-- `globals.css` + `components.json` sind **app-lokal** (Phase 4) — gehören NICHT hierher.
-- Nach Änderungen: `pnpm check` (alle 5 Gates über beide Apps) muss grün sein.
+  `vault/monorepo/monorepo.md`).
+- `globals.css` + `components.json` sind **app-lokal** — gehören NICHT hierher.
+- Nach Änderungen: `pnpm check` (alle 5 Gates über alle Apps und Pakete) muss grün sein.

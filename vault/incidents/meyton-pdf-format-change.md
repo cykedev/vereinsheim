@@ -47,3 +47,5 @@ Serien" liefen in eine gemeinsame Meldung — das hat die Diagnose verschleiert.
 diese Zeile besteht ausschließlich aus Werten im gültigen Schussbereich (`18 16 6 0 0 …`). Bisher
 rettete nur die Reihenfolge im Dokument vor elf Phantom-Schüssen. `"trefferkreis"` fehlte ebenfalls
 (ein enger Trefferkreis druckt einen Wert im Schussbereich). Beides mit Regressionstests behoben.
+
+Offen: ob „Fremdformat-Parsing nicht selbst bauen“ eine eigene ADR wird oder diese Note reicht.

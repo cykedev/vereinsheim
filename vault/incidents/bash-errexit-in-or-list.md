@@ -8,7 +8,7 @@ relates_to: ["[[postgres-image-loopback-trust]]"]
 part_of: ["[[incidents]]"]
 ---
 
-**TL;DR** 14. Oktober 2026 (Review von P3, `scripts/db-ensure.sh`): Bash schaltet `errexit` für alles ab, was links
+**TL;DR** 14. Oktober 2026 (`scripts/db-ensure.sh`): Bash schaltet `errexit` für alles ab, was links
 von `||` oder `&&` oder in einer `if`-Bedingung läuft, auch für den ganzen Körper einer dort aufgerufenen Funktion.
 `ensure_app "$app" || failed=1` lief deshalb nach einem gescheiterten `CREATE DATABASE` einfach weiter, und die
 nächste Prüfung meldete einen falschen Grund („Passwort passt nicht“). Behoben: Jeder Schritt in der Funktion prüft

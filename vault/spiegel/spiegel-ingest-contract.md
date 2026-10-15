@@ -14,7 +14,7 @@ governed_by: ["[[adr-027]]", "[[adr-029]]"]
 # Spiegel — Ingest-Vertrag (Snapshot v1)
 
 Diese Note ist die Spezifikation für jede Implementierung, auch die Brücke in einer anderen Sprache
-(Go seit dem 13. Oktober 2026, `apps/spiegel-bridge/internal/contract`, gegen dieselben Vektoren getestet). Verbindlich sind im Zweifel die Testvektoren im Paket.
+(Go: `apps/spiegel-bridge/internal/contract`, gegen dieselben Vektoren getestet). Verbindlich sind im Zweifel die Testvektoren im Paket.
 
 ## Wo was liegt
 
@@ -159,9 +159,9 @@ Ingest-API selbst keinen Inhalt schreiben, prüft SP-1.6b.
 ## Beispiele v1
 
 Synthetisch ([[adr-029]]): Name `Muster`, SportpassID `12345678`, Spalten nach [[meyton-ssmdb2]] für
-6.0.2, Typen nach Handbuch geschätzt, bis SP-0.6 das echte Schema bringt. Werte plausibel, aber nicht
-nach `shot-core` gerechnet. Fälle je Sonderfall im echten Schema, mit Werten aus `shot-core`, liegen seit dem 10. Oktober
-2026 in `packages/ssmdb2-cases` (`cases/v1/<SF-ID>`, SP-1.0b). Das echte Schema weicht von den Beispielen ab: Namen
+6.0.2, Typen nach Handbuch geschätzt. Werte plausibel, aber nicht
+nach `shot-core` gerechnet. Fälle je Sonderfall im echten Schema, mit Werten aus `shot-core`, liegen in
+`packages/ssmdb2-cases` (`cases/v1/<SF-ID>`). Das echte Schema weicht von den Beispielen ab: Namen
 `StarterlistenID`, `KlassenID`, `VereinsID` statt `StarterlisteID`, `KlasseID`, `VereinID`, `Status varchar(72)`
 statt `int(11)`, alle Spalten NOT NULL; die Probe hat eigene Zeilen in `Serien` (in `nur-probe.json` fehlen sie). Die
 Beispiele bleiben eingefroren (nur ergänzen); für Tests gegen das echte Schema gelten die Fälle.
@@ -173,7 +173,7 @@ Beispiele bleiben eingefroren (nur ergänzen); für Tests gegen das echte Schema
 | `korrektur-seq1.json`, `korrektur-seq2.json` | dieselbe Scheibe, ein Treffer korrigiert: andere Prüfsumme |
 | `unveraendert-seq3.json` | wie seq2, später erneut gelesen: neue Folgenummer, gleiche Prüfsumme |
 
-## API v1 neben dem Snapshot (SP-1.6 b, 13. Oktober 2026)
+## API v1 neben dem Snapshot
 
 `src/v1/api.ts` (Export `@vereinsheim/ingest-contract/api`), JSON-Schemas unter `schema/*-v1.schema.json`, eingefrorene
 Beispiele unter `examples/api-v1/` (Dateiname = Schema, nur ergänzen). Anfragen nimmt Spiegel über
@@ -182,8 +182,8 @@ Beispiele unter `examples/api-v1/` (Dateiname = Schema, nur ergänzen). Anfragen
 | Schema | Inhalt |
 |---|---|
 | `pairRequestV1` / `pairResponseV1` | Kopplungscode (zehn Zeichen aus Crockfords Base32, „ABCDE-FGHJK“, Trenner und Schreibweise egal, `normalizePairingCode`), Name, Version → Brücken-Id, Token `spgl_` + 43 Zeichen Base64url, Anlage |
-| `heartbeatV1` / `heartbeatResponseV1` | Version, Beginn des Laufs, Sendezeit, Status, Rückstau, letzter DB-Kontakt, Dauer der Abfragen, Uhrabweichung der Anlage (Anlage minus Brücke), Zurückgehaltenes je Anzeigeart, Fingerabdruck der Quelle ohne Personen, seit 14. Oktober 2026 additiv `historyDone` (erledigte Aufträge zum Nachladen als `{ id, since }`) → Serverzeit |
-| `stateResponseV1` | Anlage, bestätigte Epoche, gehashte SportpassIDs mit Zustimmung und ihr Salz, Grabsteine und Löschsperren (ScheibenID und Beginn), Wasserstand; seit 14. Oktober 2026 additiv `history` (offene Aufträge zum Nachladen: Id, `since` und Hash; ein neues `since` derselben Id ist ein neuer Auftrag; solange einer offen ist, alle Sperren statt der jüngsten 60 Tage). Eine Brücke ohne Nachladen meldet nie „erledigt“: Der Auftrag bleibt offen, alle Sperren gehen weiter hinaus, die Übersicht sagt „lädt nach“; vor dem ersten Deploy ohne Belang |
+| `heartbeatV1` / `heartbeatResponseV1` | Version, Beginn des Laufs, Sendezeit, Status, Rückstau, letzter DB-Kontakt, Dauer der Abfragen, Uhrabweichung der Anlage (Anlage minus Brücke), Zurückgehaltenes je Anzeigeart, Fingerabdruck der Quelle ohne Personen, additiv `historyDone` (erledigte Aufträge zum Nachladen als `{ id, since }`) → Serverzeit |
+| `stateResponseV1` | Anlage, bestätigte Epoche, gehashte SportpassIDs mit Zustimmung und ihr Salz, Grabsteine und Löschsperren (ScheibenID und Beginn), Wasserstand; additiv `history` (offene Aufträge zum Nachladen: Id, `since` und Hash; ein neues `since` derselben Id ist ein neuer Auftrag; solange einer offen ist, alle Sperren statt der jüngsten 60 Tage). Eine Brücke ohne Nachladen meldet nie „erledigt“: Der Auftrag bleibt offen, alle Sperren gehen weiter hinaus, die Übersicht sagt „lädt nach“ |
 | `snapshotsResponseV1` | Ergebnis je Snapshot in der Folge des Stapels (`SNAPSHOT_OUTCOMES`, bei `discarded` ein Grund) |
 | `errorResponseV1` | fester Code (`API_ERROR_CODES`), fester Satz, `retryAfterSeconds`, bei `invalid` die Fehler des Vertrags |
 
@@ -192,4 +192,4 @@ Beispiele unter `examples/api-v1/` (Dateiname = Schema, nur ergänzen). Anfragen
 einer unabhängigen Python-Rechnung (`test-vectors/sportpass-v1.json`). Der Hash hält die Nummern aus Logs und
 Mitschnitten; wer Liste und Salz hat, kann zwölf Stellen durchprobieren.
 
-**Noch nicht im Vertrag:** Aufträge (`commands`, SP-1.5, SP-1.7).
+**Noch nicht im Vertrag:** Aufträge (`commands`, SP-1.5, SP-1.7 b).

@@ -7,8 +7,8 @@ invocation: [user, Claude]
 # /sync-graph
 
 Der Memory-Graph **ist** der Vault ([ADR-025](../../../vault/decisions/adr-025.md)) — es gibt
-**keinen Build-Schritt und kein Manifest** mehr abzugleichen (das löste die gebaute-Index-Mechanik
-aus ADR-022 ab). Dieser Skill hält den Vault nach Edits kohärent; er *baut* nichts.
+**keinen Build-Schritt und kein Manifest** abzugleichen. Dieser Skill hält den Vault nach Edits kohärent;
+er *baut* nichts.
 
 1. `git diff --stat -- vault/` — welche Notes sich geändert haben.
 2. `node .claude/vault-lint.mjs` — jedes gemeldete Problem **in der Note** fixen (nicht in einem
@@ -19,7 +19,7 @@ aus ADR-022 ab). Dieser Skill hält den Vault nach Edits kohärent; er *baut* ni
 3. **Cross-Reference-Lücken schließen** — ein neues Konzept muss erreichbar sein (sonst nur per
    Suche findbar, nicht per Graph-Walk):
    - **Membership**: `subsystem_of`/`operation_of`/`feature_of` bzw. `part_of` zum Topic-MOC
-     (`architecture`/`operations`/`monorepo`/`domain`/`incidents` bzw. `ringwerk`/`treffsicher`).
+     (`architecture`/`operations`/`monorepo`/`domain`/`incidents`/`meyton`/`spiegel` bzw. `ringwerk`/`treffsicher`).
    - **`governed_by`** zur ADR, falls eine die Entscheidung trägt (`informed_by`, wenn nur beeinflusst).
    - **`documented_in`** zum Guide-Abschnitt, der es ausführt (`"[[guide#Überschrift TEXT]]"` — Anker =
      Überschriften-Text, kein Slug) → die dünne Note erbt die Such-Keywords dieses Abschnitts.

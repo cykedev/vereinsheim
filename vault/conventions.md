@@ -10,9 +10,9 @@ keywords: [shared, conventions, treffsicher, ringwerk]
 
 # Shared Conventions — Treffsicher × Ringwerk
 
-> **Lebende Quelle der Wahrheit für app-übergreifende Konsistenz.** Diese Datei ist in beiden Repos
-> **byte-identisch** und wird vom Drift-Gate (`vereinsheim/scripts/consistency-check.sh`) erzwungen.
-> Änderungen hier immer in **beiden** Repos gleich einpflegen.
+> **Lebende Quelle der Wahrheit für app-übergreifende Konsistenz.** Eine Quelle am Root (`vault/conventions.md`),
+> per `@import` in der Root-`CLAUDE.md`. Die Gleichheit der geteilten Dateien erzwingt das Drift-Gate
+> (`scripts/consistency-check.sh`).
 
 ## 1. Byte-identische Shared-Schicht
 
@@ -21,35 +21,34 @@ Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichun
 - App-lokale Reste (weiter im Gate, Next/shadcn-erzwungen + trivial): `components.json` + der dünne
   `src/app/globals.css`-Stub (nur die tailwindcss/tw-animate-css/shadcn-Imports + `@vereinsheim/ui/theme.css`;
   der Theme-Kern liegt im Paket). shadcn-CLI läuft weiter im App-Kontext.
-- **Geteilt via `@vereinsheim/config`** (packages/config, seit Phase 2 — Drift dort **strukturell
-  unmöglich**, daher *nicht* mehr im Gate): `tsconfig.json`, `eslint.config.mjs`, `.prettierrc`,
-  `postcss.config.mjs`, `next.config.ts`, seit Oktober 2026 auch `vitest.config.ts` (inkl. `server-only`-Alias
+- **Geteilt via `@vereinsheim/config`** (packages/config — Drift dort **strukturell
+  unmöglich**, daher *nicht* im Gate): `tsconfig.json`, `eslint.config.mjs`, `.prettierrc`,
+  `postcss.config.mjs`, `next.config.ts`, `vitest.config.ts` (inkl. `server-only`-Alias
   auf einen Stub im Paket; die App ergänzt Eigenheiten wie `fileParallelism` per `mergeConfig`). Die App-Dateien sind nur noch dünne `extends`/Re-Export-Stubs
   (`.prettierrc` → `package.json`-Feld); Verhalten/Regeln ändert man **im Paket**, nicht in den Apps.
 - Error-Boundaries: `src/app/error.tsx`, `src/app/(app)/error.tsx`, `src/app/not-found.tsx`
-- **Geteilt via `@vereinsheim/ui`** (packages/ui, seit Phase 4 / Zyklus 2 — Drift **strukturell
-  unmöglich**, daher *nicht* mehr im Gate): die ui-Primitives (`button`, `card`, `dialog`, …, seit
-  September 2026 auch `table` + `skeleton`), die 4 shell-Komponenten (`ConfirmDialog`,
+- **Geteilt via `@vereinsheim/ui`** (packages/ui — Drift **strukturell
+  unmöglich**, daher *nicht* im Gate): die ui-Primitives (`button`, `card`, `dialog`, `table`,
+  `skeleton`, …), die 4 shell-Komponenten (`ConfirmDialog`,
   `DetailActionBar`, `PageHeader`, `Providers`), die Rate-Limit-Admin-Oberfläche
   (`admin/LoginRateLimitTable`, `admin/LoginRateLimitInsights`) und der Tailwind-Theme-Kern
   (`@vereinsheim/ui/theme.css`). Import via `@vereinsheim/ui/<name>` bzw.
   `@vereinsheim/ui/shell/<name>`; Styles/Verhalten ändert man **im Paket**. App-spezifische `ui/*`
   (chart/form in Treffsicher, checkbox/rank-badge in Ringwerk) + `Navigation` bleiben app-lokal.
-- **Geteilt via `@vereinsheim/lib`** (packages/lib, seit Phase 4 / Zyklus 1 — Drift **strukturell
-  unmöglich**, daher *nicht* mehr im Gate): `cn` (`utils`), `forms/fieldErrors` (inkl. `getErrorMessage`),
+- **Geteilt via `@vereinsheim/lib`** (packages/lib — Drift **strukturell
+  unmöglich**, daher *nicht* im Gate): `cn` (`utils`), `forms/fieldErrors` (inkl. `getErrorMessage`),
   die Form-Hooks `useUnsavedChangesGuard` + `useNavigationConfirm`, `dateTime` (server-only, liefert
-  `getDisplayTimeZone`) und seit September 2026 `format` (**isomorphe** Anzeige-Formatierung, auch für
+  `getDisplayTimeZone`), `format` (**isomorphe** Anzeige-Formatierung, auch für
   Client-Komponenten) sowie der reine Auth-Kern `auth/validation` +
-  `auth/rate-limit/{config,limiter,normalization,types,adminTypes}`, seit Oktober 2026 auch Anmeldeablauf
+  `auth/rate-limit/{config,limiter,normalization,types,adminTypes}`, dazu Anmeldeablauf
   (`auth/credentials`, mit gleich langer Antwort für unbekannte Konten), IP aus Proxy-Headern (`auth/client-ip`), Store
   (`auth/rate-limit/stores`, Tabelle als Schnittstelle) und Admin-Auswertung der Sperren (`auth/rate-limit/admin`) für
   alle drei Apps. Import via `@vereinsheim/lib/<subpath>`; Logik ändert man **im Paket**, nicht in den Apps.
-- Diese Datei: `docs/shared-conventions.md`
 
 Regel: Wer eine dieser Dateien ändert, ändert sie in **beiden** Repos gleich. Neue, klar
 app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gates ergänzen).
 
-**Seit September 2026 zusätzlich in `MUST_MATCH`** (byte-identisch in beiden Apps):
+**Zusätzlich in `MUST_MATCH`** (byte-identisch in beiden Apps):
 
 - `src/components/app/admin/AdminLoginRateLimitTable.tsx` — dünner Wrapper um
   `@vereinsheim/ui/admin/LoginRateLimitTable`; app-lokal, weil eine geteilte Datei keine
@@ -119,7 +118,7 @@ Treffsicher = Teal) und überschreibt nur `--primary`, `--primary-foreground`, `
 
 ## 5. Navigation
 
-Ein Schema in beiden Apps (September 2026 angeglichen):
+Ein Schema in beiden Apps:
 
 - Kopfzeile `border-b border-border bg-card`.
 - Links das **Logo als Link** auf die Startseite: Marken-Icon `h-5 w-5 text-primary` +
@@ -148,7 +147,7 @@ Ein Schema in beiden Apps (September 2026 angeglichen):
   je App in `src/lib/types.ts`. Konsumenten narrowen über `"error" in result` bzw.
   `"success" in state` — **kein** `state?.success` (die Union hat die Felder nicht optional) und
   **kein** `success: false`. Einen einzeiligen Fehlertext liefert `getErrorMessage` aus
-  `@vereinsheim/lib/forms/fieldErrors`. _Seit September 2026 in beiden Apps umgesetzt._
+  `@vereinsheim/lib/forms/fieldErrors`. _In beiden Apps umgesetzt._
 
 ## 7. Listen & Karten
 
@@ -168,7 +167,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 - **Umgesetzt (Tier 1):** die Shared-Schicht liegt in gemeinsamen Paketen (`@vereinsheim/ui`,
   `@vereinsheim/lib`, `@vereinsheim/config`) — Drift ist dort strukturell unmöglich (siehe §1).
 - **Offene Angleichungen:** Dependency-Pins (inkl. TypeScript-Major).
-- **Erzwungen seit September 2026** (`consistency-check.sh`, Abschnitt „Konventionen (fatal)"):
+- **Erzwungen** (`consistency-check.sh`, Abschnitt „Konventionen (fatal)"):
   Palette-Klassen und `dark:`-Varianten (§4), Opazitäts-Modifier und Schriftgrößen unter `text-xs`
   (§3), Seiten-eigene `px-/py-`-Container (§3), inline `new Intl.*` und `toLocale*String()` (§6),
   ASCII-Ellipsen und `text-2xl font-bold` (§3), Icon-Buttons unter `h-10 w-10`, „… →"-Buttons (§7)
@@ -260,6 +259,10 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   hatte sich geändert, und zwei Zeilen zeigten anders. `formatValue` in `shot-ui` rundet deshalb erst auf zwölf
   gültige Stellen und dann kaufmännisch.
 
+- **„Unexpected end of JSON input“ in `loadWorkspaceState`**: Laufen mehrere pnpm-Prozesse gleichzeitig (etwa
+  `pnpm exec tsx` neben dem Gate), liest pnpm den Zustand des Workspace manchmal halb geschrieben. Der Fehler ist
+  flüchtig: das Gate noch einmal laufen lassen, nichts reparieren.
+
 - **Nach `pnpm add` in einer App `pnpm install --frozen-lockfile`**: `pnpm --filter <app> add`
   kann Peer-Varianten neu auflösen, ohne die `node_modules`-Links der **anderen** App
   nachzuziehen. Deren Gate fällt dann mit `Cannot find package …` aus, obwohl der Diff sauber ist.
@@ -281,18 +284,16 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   `round-toggle` für eine Einstellung neben einer großen Zahl oder in einer Filterzeile: 32 px, innen die Kartenfläche, Rahmen
   `line-strong`, Gold nur für das Hervorgehobene); was
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, mit Markup-Tests; die Bedienung im Browser prüft
-  die Skriptprüfung der App (`pnpm --filter spiegel pruefen`, seit 13. Oktober 2026 statt des Labors).
+  die Skriptprüfung der App (`pnpm --filter spiegel pruefen`).
 - Ringwerk und Treffsicher bleiben auf `theme.css` und ihrem Drift-Gate; Spiegel ist davon
   ausgenommen, bis beide Apps auf Design 2 umziehen.
-- **Kein Knopf ohne Folge** (User, 14. Oktober 2026: „ich muss immer verstehen was ich bestätige, ablehne usw und was
-  das für folgen hat“): Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
+- **Kein Knopf ohne Folge:** Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
   über `DecisionDialog` (`apps/spiegel/src/components/shell/`) und sagt in Alltagsworten, worum es geht, was vorher zu
   prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle
   (`apps/spiegel/src/lib/admin/consequences.ts`, Tests halten den Wortlaut), ohne Pronomen für Personen. Keine
   Fachbegriffe in der Oberfläche; als Aufgabe erscheint im Admin nur, was ein Mensch entscheiden muss, Technisches regelt
-  Spiegel selbst und zeigt es höchstens als Zustand (Plan `plans/2026-10-14-spiegel-admin-verstaendlich.md`, D0).
-- **So schreiben wir** (User, 14. Oktober 2026: „wir müssen dringend an der verständlichkeit arbeiten“, „usability ist super
-  wichtig“; Textbuch, Plan `plans/2026-10-14-spiegel-texte.md`, [[spiegel-dialog-texts-not-understood]]):
+  Spiegel selbst und zeigt es höchstens als Zustand.
+- **So schreiben wir** ([[spiegel-dialog-texts-not-understood]]):
   1. Erst sagen, was vorher passiert ist. Dann die Frage.
   2. Ein Gedanke pro Satz. Keine Semikolons, keine verschachtelten Bedingungen.
   3. Die Wörter des Users, nicht die des Codes: Sportpassnummer, zurückweisen, wieder zulassen, Spiegel holt,

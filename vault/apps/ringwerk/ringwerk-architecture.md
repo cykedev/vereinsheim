@@ -7,11 +7,11 @@ keywords: [ringwerk, architektur, ringwerk]
 part_of: ["[[ringwerk]]"]
 ---
 
-**TL;DR** Verbindlich gleichrangig mit `docs/technical.md`. Neue Dateien immer gemäss dieser Struktur anlegen.
+**TL;DR** Verbindlich gleichrangig mit [[ringwerk-technical]]. Neue Dateien immer gemäss dieser Struktur anlegen.
 
 # Architektur – Ringwerk
 
-Verbindlich gleichrangig mit `docs/technical.md`. Neue Dateien immer gemäss dieser Struktur anlegen.
+Verbindlich gleichrangig mit [[ringwerk-technical]]. Neue Dateien immer gemäss dieser Struktur anlegen.
 
 ## Index
 
@@ -168,11 +168,8 @@ src/
     auth.ts                   ← NextAuth authOptions
     auth-helpers.ts           ← getAuthSession()
     auth-rate-limit/          ← Rate-Limiting-Modul
-    authValidation.ts         ← E-Mail/Passwort-Validierung
-    dateTime.ts               ← UTC/Timezone-Helfer (getDisplayTimeZone, formatDateOnly)
     db.ts                     ← Prisma-Client Singleton
     startup.ts                ← Erstinitialisierung (Admin + Disziplinen), aufgerufen aus root layout.tsx
-    utils.ts                  ← cn() und andere UI-Helfer
     types.ts                  ← Shared Types (ActionResult etc.)
     competitions/
       actions.ts              ← Server Actions: Wettbewerb anlegen/bearbeiten/abschliessen/force-delete, Event/Saison-Felder (type, scoringMode, allowGuests, disciplineId, seasonStart/seasonEnd)
@@ -205,7 +202,7 @@ src/
       calculateStandings.test.ts
       calculateBestOfStandings.ts ← Tabellenberechnung BEST_OF_SINGLE (Siege, Direktvergleich, Satzdiff, bestes Erg.)
     scoring/
-      calculateScore.ts       ← Kernfunktion für alle 7 Wertungsmodi
+      calculateScore.ts       ← Kernfunktion für alle 8 Wertungsmodi
       calculateScore.test.ts
       rankParticipants.ts     ← Ranglistenberechnung pro Wertungsmodus
       rankParticipants.test.ts

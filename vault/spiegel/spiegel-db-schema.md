@@ -9,7 +9,7 @@ governed_by: ["[[adr-031]]"]
 relates_to: ["[[spiegel-data-model]]", "[[spiegel-ingest-pipeline]]", "[[spiegel-ingest-contract]]", "[[spiegel-edge-cases]]", "[[spiegel-langzeit]]", "[[spiegel-navigation]]"]
 ---
 
-**TL;DR** Das physische Schema von Spiegel in `apps/spiegel/prisma/schema.prisma` (SP-1.6 a Teil 1, Oktober 2026): Rohdaten als Zeilenversionen, Scheiben mit Revisionen nur für Korrekturen der Wertung, je Scheibe eine Projektion. Die Zugriffe liegen in `apps/spiegel/src/lib/db/`; die Übersichten lesen nie Schüsse. Gemessen an 3.765 Scheiben: Übersicht „Alles“ 39 ms, 90 Tage 3 ms, Start 1 ms, eine Scheibe 1 ms.
+**TL;DR** Das physische Schema von Spiegel in `apps/spiegel/prisma/schema.prisma`: Rohdaten als Zeilenversionen, Scheiben mit Revisionen nur für Korrekturen der Wertung, je Scheibe eine Projektion. Die Zugriffe liegen in `apps/spiegel/src/lib/db/`; die Übersichten lesen nie Schüsse. Gemessen an 3.765 Scheiben: Übersicht „Alles“ 39 ms, 90 Tage 3 ms, Start 1 ms, eine Scheibe 1 ms.
 
 ## Tabellen
 
@@ -17,9 +17,9 @@ relates_to: ["[[spiegel-data-model]]", "[[spiegel-ingest-pipeline]]", "[[spiegel
 |---|---|---|---|
 | Anlage | `Site`, `Source` (Epoche), `Bridge` | `Source(siteId, epoch)` eindeutig, `Bridge.tokenHash` eindeutig | Herkunft der Daten, Geräte-Token nur als Hash |
 | Rohdaten | `RawRow`, `RawColumnSet`, `RawSnapshot` | `RawRow(sourceId, scheibenId, table, checksum)` eindeutig, `RawSnapshot(sourceId, scheibenId, sequence)` eindeutig | unverändert, was die Brücke liest ([[spiegel-ingest-contract]]) |
-| Sperren | `Tombstone`, `DeleteLock` | `(sourceId, scheibenId, cycle)` bzw. `(userId, sourceId, scheibenId, cycle)` eindeutig; `DeleteLock(sourceId, scheibenId)` fürs Einlesen | was nicht wiederkommen darf ([[spiegel-navigation]]); mit Beginn, damit der Adapter den Zyklus erkennt; `Tombstone.userId` (wer „nicht meine“ gemeldet hat, Index) und `sportpassId` (unter welcher Nummer, für P2d), seit P2b |
+| Sperren | `Tombstone`, `DeleteLock` | `(sourceId, scheibenId, cycle)` bzw. `(userId, sourceId, scheibenId, cycle)` eindeutig; `DeleteLock(sourceId, scheibenId)` fürs Einlesen | was nicht wiederkommen darf ([[spiegel-navigation]]); mit Beginn, damit der Adapter den Zyklus erkennt; `Tombstone.userId` (wer „nicht meine“ gemeldet hat, Index) und `sportpassId` (unter welcher Nummer; der Admin hebt Meldungen je Nummer auf) |
 | Konten | `User`, `NamedPeriod`, `LoginRateLimitBucket`, `FamilyScoring` | `User.email` eindeutig, `NamedPeriod(ownerId)`, Sperren nach Schlüssel, `FamilyScoring(userId, familyId)` Primärschlüssel | Schütze mit Passwort-Hash, `sessionVersion` (neues Passwort, Rolle oder Status beenden die Sitzungen), `isActive` und `mustChangePassword` (ein Passwort vom Admin wird vor dem ersten Blick auf Daten ersetzt); benannte Zeiträume; Sperren der Anmeldung wie Ringwerk; Wertung je Familie für die Schnitte (gelöscht mit Schütze oder Familie) |
-| Zustimmung | `SportpassConsent` | `(siteId, sportpassId)` eindeutig, `userId` | Opt-in per Sportpass (SP-1.7 a): `consentedAt` und `consentVersion` (Hinweistext), Entscheidungen des Admins `confirmedAt`, `rejectedAt`, `returnedAt`, dazu `firstCardConfirmedAt`; eine je Konto (seit 15. Oktober 2026, vorher bis zu drei für SF-39; ältere Konten mit mehreren bleiben) |
+| Zustimmung | `SportpassConsent` | `(siteId, sportpassId)` eindeutig, `userId` | Opt-in per Sportpass ([[spiegel-assignment]]): `consentedAt` und `consentVersion` (Hinweistext), Entscheidungen des Admins `confirmedAt`, `rejectedAt`, `returnedAt`, dazu `firstCardConfirmedAt`; eine je Konto (Konten, die schon mehrere haben, behalten sie) |
 | Disziplinen | `Family`, `Discipline` | `Family.slug` eindeutig (`FamilyId` aus dem Fachkern, steht in der Adresse), `Discipline(siteId, meytonId, name)` eindeutig (SF-70) | Familie für Verläufe, Scheibenbild, amtliche Wertung (SF-74) |
 | Scheiben | `Card`, `CardRevision`, `Shot` | `Card(sourceId, scheibenId, cycle)` eindeutig; `Card(ownerId, familyId, startedAt)`; `Card(ownerId, startedAt)`; `Card(sportpassId)`; `CardRevision(cardId, number)` eindeutig; `Shot(revisionId, stellung, treffer)` eindeutig; `Shot(cardId, fingerprint)` | die kanonische Scheibe ([[spiegel-data-model]]) |
 | Projektion | `CardProjection` | `cardId` Primärschlüssel, `version` | Kennzahlen und Rekord-Kandidaten je Scheibe |
@@ -28,15 +28,17 @@ relates_to: ["[[spiegel-data-model]]", "[[spiegel-ingest-pipeline]]", "[[spiegel
 - **Einheiten:** Lage in µm (`xUm`, `yUm`), Abstand in 0,1 µm wie Meytons `Teiler001` (`distanceTenthsUm`), alle Zeiten als `timestamptz(3)` in UTC.
 - **Rohzeilen als `json`, nicht `jsonb`:** Der Vertrag erlaubt U+0000 in Zellen, `jsonb` nicht; `json` hält den Text zudem unverändert.
 - **Anzeigeart** (`Shot.displayMode`, aus `Treffer.Wertung`) bleibt erhalten, ist aber nie die amtliche Wertung (SF-74). Die amtliche steht nur an der Disziplin; die Zugriffe lesen sie von dort.
-- **Wertung der Scheibe** (12. Oktober 2026, [[spiegel-navigation]]): `Card.standScoring` ist die Wertung wie am Stand (die häufigste Anzeigeart der Schüsse wie am Ausdruck, `standScoringOf`), `Card.scoringChoice` die auf ihrer Seite gewählte. Die Zugriffe rechnen daraus mit Art und amtlicher Wertung die Wertung der Scheibe (`cardScoring` in `apps/spiegel/src/lib/scoring.ts`).
-- **Art der Scheibe** (12. Oktober 2026, [[spiegel-navigation]]): `Card.kind` ist die Art der Quelle (jeder Stand schreibt sie), `Card.kindChoice` die des Schützen (kein Stand fasst sie an). Es gilt `kindChoice ?? ranking.kind ?? kind`, bei einer Scheibe nur aus Probe ohne die Rangliste; die Projektion hängt nicht an der Art. `Ranking` (seit 13. Oktober 2026): die `Rangliste` der SSMDB2 je Anlage mit der Art, die der Admin zuordnet; `Card.rankingId` mit Index.
+- **Wertung der Scheibe** ([[spiegel-navigation]]): `Card.standScoring` ist die Wertung wie am Stand (die häufigste Anzeigeart der Schüsse wie am Ausdruck, `standScoringOf`), `Card.scoringChoice` die auf ihrer Seite gewählte. Die Zugriffe rechnen daraus mit Art und amtlicher Wertung die Wertung der Scheibe (`cardScoring` in `apps/spiegel/src/lib/scoring.ts`).
+- **Art der Scheibe** ([[spiegel-navigation]]): `Card.kind` ist die Art der Quelle (jeder Stand schreibt sie), `Card.kindChoice` die des Schützen (kein Stand fasst sie an). Es gilt `kindChoice ?? ranking.kind ?? kind`, bei einer Scheibe nur aus Probe ohne die Rangliste; die Projektion hängt nicht an der Art. `Ranking`: die `Rangliste` der SSMDB2 je Anlage mit der Art, die der Admin zuordnet; `Card.rankingId` mit Index.
 - **Familie an der Scheibe:** `Card.familyId` kopiert die Familie der Disziplin, damit Liste und Fortschritt über einen Index laufen; `setDisciplineFamily` hängt Disziplin und Scheiben in einer Transaktion um, `writeRevision` liest die Familie mit `FOR SHARE`.
-- **Besitz wartet** (`Card.ownerPending`, seit 14. Oktober 2026): bis der Schütze die erste Scheibe einer Zustimmung bestätigt hat, zeigen die Übersichten sie nicht (SP-1.7 a2). Jede Ansicht filtert über `VISIBLE_CARD` (`src/lib/db/visible.ts`), „Offen“ über `PENDING_CARD`.
-- **Entfernen** (`purgeCards` in `src/lib/db/purge.ts`, seit 14. Oktober 2026, nach dem Review): Grabstein, Scheibe (Kaskade), die Stände derselben Quelle und ScheibenID, deren **Beginn aus den Trefferzeiten** bei dem der Scheibe liegt (`startHintMs`, 7 Tage), nicht die Beobachtung (die Brücke liest auch Wochen später nach), und keiner, auf den die Revision einer anderen Scheibe zeigt; dann Rohzeilen ohne verbliebenen Stand. Unter dem Advisory-Lock der Ablage, Scheiben in fester Folge.
+- **Besitz wartet** (`Card.ownerPending`): bis der Schütze die erste Scheibe einer Zustimmung bestätigt hat, zeigen die Übersichten sie nicht ([[spiegel-assignment]]). Jede Ansicht filtert über `VISIBLE_CARD` (`src/lib/db/visible.ts`), „Offen“ über `PENDING_CARD`.
+- **Entfernen** (`purgeCards` in `src/lib/db/purge.ts`): Grabstein, Scheibe (Kaskade), die Stände derselben Quelle und ScheibenID, deren **Beginn aus den Trefferzeiten** bei dem der Scheibe liegt (`startHintMs`, 7 Tage), nicht die Beobachtung (die Brücke liest auch Wochen später nach), und keiner, auf den die Revision einer anderen Scheibe zeigt; dann Rohzeilen ohne verbliebenen Stand. Unter dem Advisory-Lock der Ablage, Scheiben in fester Folge.
 - **Zyklus und Sperren** (`src/lib/db/blocks.ts`): Ein neuer Zyklus liegt über allen bisherigen der ScheibenID, auch denen von Grabsteinen und Löschsperren (`maxCycleOfKey`), sonst bekäme eine neue Scheibe den Zyklus einer entfernten. `storeSnapshot` prüft Grabsteine und Sperren (`isKeyBlocked`, 30 Tage um den Beginn) noch einmal unter seiner Sperre; ein Entfernen mitten in einem Stapel wird so nicht überschrieben.
 - **Zyklus** (`cycle`, SF-77): Die ScheibenID ist ein Zähler, der nach etwa 49,7 Tagen wiederkehrt. Scheibe, Grabstein und Löschsperre tragen den Zyklus im Schlüssel.
 - **Kaskaden:** Eine Anlage löscht alles unter sich (Quelle, Rohdaten, Scheiben mit Quelle, Disziplinen). Die Disziplin einer Scheibe hat `NO ACTION`, damit diese Kaskade nicht an der Reihenfolge scheitert; Scheiben nur aus dem PDF hängen an keiner Quelle und müssen vorher weg.
 - Nicht indiziert, weil selten: `Card.disciplineId`, `RawSnapshot.bridgeId`, `CardRevision.rawSnapshotId` (nur beim Löschen gebraucht).
+- **Migrationen nur anhängen:** Spiegel ist deployt; jede Schemaänderung bekommt eine neue Migration, `…_init` und jede
+  andere angewandte Migration bleiben unverändert.
 
 ## Schreiben
 
@@ -54,14 +56,14 @@ relates_to: ["[[spiegel-data-model]]", "[[spiegel-ingest-pipeline]]", "[[spiegel
 - **Projektion** (`cardProjection` aus `@vereinsheim/shot-core/projection`): rund 1,5 KB je Scheibe, neu mit jeder Änderung an den Schüssen. `refreshProjections` rechnet veraltete nach (andere `version`, andere Revision als die aktuelle, fehlend), je Scheibe unter der Sperre ihrer Zeile, wahlweise nur eine Quelle. `refreshStaleProjections` ruft es in Stapeln, bis keine übrig ist; der Server startet das beim Start im Hintergrund (`instrumentation-node.ts`), so kommt eine neue Version ohne Zutun in den Übersichten an.
 - **Wertung umschalten** (Server Actions in `src/lib/scoring-actions.ts`): `chooseCardScoring` setzt `Card.scoringChoice` nur an einer eigenen, nicht gelöschten Scheibe (`updateMany` mit Besitzer); `saveFamilyScoring` legt `FamilyScoring` an oder ändert es, nur für eine Familie mit eigenen, nicht gelöschten Scheiben.
 - **Art umschalten** (`src/lib/card-kind-actions.ts`): `chooseCardKind` setzt `Card.kindChoice` in einem `updateMany` (eigene, nicht gelöschte Scheibe, nicht nur aus Probe) und unterscheidet danach „gibt es nicht“ von „nur Probe“.
-- **Lagen** (`CardProjection.marks`, seit SP-1.8): die Schüsse wie am Ausdruck mit Lage, je `[x, y, Ring]` in 10 µm (`cardMarks`), rund 0,6 KB bei 40 Schuss. Sie zeichnen die kleinen Scheiben in Liste und Start und werden mit der Projektion gerechnet (`PROJECTION_VERSION` 2), aber nur für die gezeigten Scheiben gelesen.
+- **Lagen** (`CardProjection.marks`): die Schüsse wie am Ausdruck mit Lage, je `[x, y, Ring]` in 10 µm (`cardMarks`), rund 0,6 KB bei 40 Schuss. Sie zeichnen die kleinen Scheiben in Liste und Start und werden mit der Projektion gerechnet (`PROJECTION_VERSION` 2), aber nur für die gezeigten Scheiben gelesen.
 
 ## Lesen
 
 | Ansicht | Zugriff | Index |
 |---|---|---|
 | Liste, Fortschritt | `familyCards(ownerId, familyId, Zeitraum)` | `Card(ownerId, familyId, startedAt)` oder `Card(ownerId, startedAt)`, dazu `CardProjection` über den Primärschlüssel |
-| Start, Liste, Blättern (SP-1.8) | `ownerCards(ownerId)`: alle eigenen Scheiben mit Projektion, Familie und Scheibenbild; die Seite rechnet das Modell auf dem Server | `Card(ownerId, startedAt)` |
+| Start, Liste, Blättern | `ownerCards(ownerId)`: alle eigenen Scheiben mit Projektion, Familie und Scheibenbild; die Seite rechnet das Modell auf dem Server | `Card(ownerId, startedAt)` |
 | kleine Scheiben | `marksOfCards(ownerId, ids)`: die Lagen der gezeigten Scheiben | `CardProjection` über den Primärschlüssel |
 | Start (nur der Abend, Messung) | `latestCardStart`, dann `ownerCards` über den Abend | `Card(ownerId, startedAt)` rückwärts |
 | Seite einer Scheibe | `cardWithShots(cardId, ownerId)`: `PageCard` mit Disziplin, Scheibenbild, Familie und Wertung der Scheibe | `Card` und `CardRevision` über den Primärschlüssel, `Shot(revisionId, …)` |
@@ -89,16 +91,16 @@ Die Übersichten rechnen mit `projectedValues` und `projectedRecords`; was dabei
 - **Pläne:** Start und die Seite einer Scheibe laufen über Indizes (unter 0,1 ms in der Datenbank). „Alles“ liest 41 % der Tabelle `Card`; dafür wählt Postgres zu Recht einen Seq Scan (1,3 ms). 90 Tage laufen über `Card(ownerId, startedAt)`.
 - **Wo die Zeit liegt:** Bei „Alles“ braucht die Datenbank rund 3 ms. Den Rest kosten das Übertragen der Projektionen (2,4 MB JSON) und Prisma (die Hälfte, siehe `pg` direkt). Wird es eng: nur die gebrauchten Schlüssel aus dem JSONB lesen oder die Übersicht direkt über `pg`.
 - **Platz** (ein Lauf auf leerer Datenbank, mit Indizes): Schüsse rund 40 MB für 3.764 Scheiben, Projektionen rund 8 MB, Scheiben 2 MB.
-- Ohne Datenbank kostete dieselbe Seite aus Schüssen 82 bis 362 ms reine Rechnung (Plan `plans/2026-10-10-spiegel-datenmodell.md`).
+- Ohne Datenbank kostete dieselbe Seite aus Schüssen 82 bis 362 ms reine Rechnung ([[adr-031]]).
 
-## Start und Liste auf der Projektion (SP-1.8, 10. Oktober 2026)
+## Start und Liste auf der Projektion
 
-Plan `plans/2026-10-10-spiegel-projektion-uebersichten.md`. Die Modelle in `shot-ui` nehmen `ProjectedCard`. Start und
-Liste rechnen sie auf dem Server; an den Browser gehen nur das Modell und die Lagen der gezeigten Scheiben. Gemessen mit
-`pnpm --filter spiegel measure`: 1.564 Scheiben, 47.355 Schuss, dazu 2.200 Scheiben anderer Mitglieder, Median über
+Die Modelle in `shot-ui` nehmen `ProjectedCard`. Start und
+Liste rechnen sie auf dem Server; an den Browser gehen nur das Modell und die Lagen der gezeigten Scheiben. Gemessen am
+10. Oktober 2026 mit `pnpm --filter spiegel measure`: 1.564 Scheiben, 47.355 Schuss, dazu 2.200 Scheiben anderer Mitglieder, Median über
 7 Läufe.
 
-| | vorher | jetzt |
+| | aus Schüssen | aus der Projektion |
 | --- | --- | --- |
 | an den Browser, Start | alle Scheiben mit Schüssen, 7.982 KB | 5 KB |
 | an den Browser, Liste „Alles“ | dasselbe | 1.040 KB (30 Zeilen je Monat, Lagen jeder Zeile) |
@@ -107,15 +109,15 @@ Liste rechnen sie auf dem Server; an den Browser gehen nur das Modell und die La
 | Fortschritt „Alles“ auf dem Server (lesen, rechnen, leicht machen) | – | 64 ms |
 | an den Browser, Fortschritt „Alles“ | dasselbe | 936 KB (leichtes Modell: eine Zeile je Scheibe für Liste und Verlauf, Werte, Abstände; Lagen nur der Ablesung) |
 
-Zwei Befunde beim Umbau:
+Zwei Befunde der Messung:
 - **Datum je Zeile:** `@vereinsheim/lib/format` baute für jeden Aufruf einen neuen `Intl.DateTimeFormat`, etwa 70 µs.
   Allein der Abend jeder Scheibe kostete so 107 ms; mit vorgehaltenen Formattern sank Start von 319 auf 70 ms.
-- **Rundung an der Hälfte:** 9,065 zeigte `toFixed` je nach Rechenweg als 9,06 oder 9,07. `formatValue` rundet seitdem
+- **Rundung an der Hälfte:** 9,065 zeigte `toFixed` je nach Rechenweg als 9,06 oder 9,07. `formatValue` rundet deshalb
   kaufmännisch, unabhängig vom Rauschen der Gleitkommazahl.
 
-## Last der Ingest-API (SP-1.6 b, 13. Oktober 2026)
+## Last der Ingest-API
 
-Gemessen mit `pnpm --filter spiegel ingest-load` gegen den Standalone-Build in `node:24-alpine` mit `--memory=256m`
+Gemessen am 13. Oktober 2026 mit `pnpm --filter spiegel ingest-load` gegen den Standalone-Build in `node:24-alpine` mit `--memory=256m`
 (Speicher aus `docker stats`), Dev-Datenbank auf dem Mac:
 
 | Lauf | Ergebnis |
@@ -125,11 +127,9 @@ Gemessen mit `pnpm --filter spiegel ingest-load` gegen den Standalone-Build in `
 | schlimmster Fall: zwei Stapel à 3,66 MiB gleichzeitig (100 neue Scheiben à 280 Schuss) | beide 200, 12 s, Spitze 185 MiB |
 
 Folgerung: Ein Abend mit einem Dutzend Schützen mit Zustimmung kostet Spiegel wenig; die Grenzen (4 MiB, zwei Stapel
-gleichzeitig) halten den schlimmsten Fall unter 256 MB. Die Brücke sollte ein reines Lebenszeichen trotzdem höchstens
-alle 30 s schicken ([[spiegel-bridge]]): Jede Anfrage kostet eine Anmeldung und eine Abfrage.
+gleichzeitig) halten den schlimmsten Fall unter 256 MB. Die Brücke schickt ein reines Lebenszeichen trotzdem höchstens
+alle 30 s ([[spiegel-bridge]]): Jede Anfrage kostet eine Anmeldung und eine Abfrage.
 
 ## Offen
 
-- Adapter Snapshot → Scheibe (fängt `CardIdentityConflictError` und nimmt den nächsten Zyklus; prüft Grabstein und Löschsperre über Beginn und Zyklus), Ingest-API mit Geräte-Token (Ergebnisse mit `bigint` vor JSON umwandeln), Zähler für `stale` und `future` (SP-1.6 b, [[spiegel-ingest-pipeline]]). Tests mit den eingefrorenen Folgen SF-03 und SF-72 durch den Adapter.
-- Noch nicht im Schema: Stand, Schützen-Identität, SportpassIDs und Zuordnung mit Protokoll (SP-1.7), amtliche Summen je Serie, Einheit, Notiz, Tag, Ausrüstung ([[spiegel-data-model]]).
-- **Eine Migration bis zum ersten Deploy** (User, 10. Oktober 2026): Bis SP-1.9 ersetzt jede Schemaänderung die eine Migration `init`, statt eine weitere anzulegen; die Dev-Datenbank setzt der User danach zurück. Ab dem ersten Deploy nur noch neue Migrationen.
+- Noch nicht im Schema: Zuordnung mit Protokoll (SP-1.7 c), amtliche Summen je Serie, Einheit, Notiz, Tag, Ausrüstung ([[spiegel-data-model]]).

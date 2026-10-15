@@ -53,12 +53,10 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
 
 ## Offene Einzelpunkte (Stand 12. Oktober 2026)
 
-Aus Berichten unter `reports/` (nicht in git) übernommen.
-
 - **Playoffs ohne Spielplan:** `startPlayoffs` (`src/lib/playoffs/actions/start.ts`) prüft nicht, ob ein Spielplan
   erzeugt ist. Eine Liga ohne Paarungen hat keine offenen Paarungen und könnte starten, sobald genug aktive Teilnehmer
-  da sind. Vorschlag aus dem Review vom 23. September 2026: eine eigene Prüfung „Spielplan erzeugt“.
+  da sind. Vorschlag: eine eigene Prüfung „Spielplan erzeugt“.
 - **PDF:** Die Spaltenköpfe der Tabellen wiederholen sich auf Folgeseiten nicht (etwa Event-Rangliste, Seite 2).
-- **Zwei Vorschläge für Gates liegen beim User** (aus dem Lernlog, September 2026): ein Gate vor jedem Commit
-  (ein Commit lief einmal trotz rotem `check-types`) und ein Schritt „Datenlage abgleichen“ im Skill `/validate`.
+- **Zwei Gates sind vorgeschlagen, aber nicht entschieden:** ein Gate vor jedem Commit (ein Commit lief einmal
+  trotz rotem `check-types`) und ein Schritt „Datenlage abgleichen“ im Skill `/validate`.
 

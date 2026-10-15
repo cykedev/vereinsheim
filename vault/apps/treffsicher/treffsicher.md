@@ -27,7 +27,7 @@ MOC-Hub der Treffsicher-App (Training). Führt die App-Guides und die fachlichen
 - [[treffsicher-data-model]] — Treffsicher — Datenmodell & Domänen-Specs
 - [[treffsicher-disciplines]] — treffsicher-disciplines
 - [[treffsicher-dos-protection]] — treffsicher-dos-protection
-- [[treffsicher-implementation-plan]] — Treffsicher — Treffsicher
+- [[treffsicher-implementation-plan]] — Treffsicher — Implementierungsstatus
 - [[treffsicher-meyton-import]] — treffsicher-meyton-import
 - [[treffsicher-modularity-rules]] — treffsicher-modularity-rules
 - [[treffsicher-requirements]] — Treffsicher — Fachliche Anforderungen

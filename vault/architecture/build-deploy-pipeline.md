@@ -11,9 +11,9 @@ informed_by: ["[[adr-006]]"]
 documented_in: ["[[architecture#Build & Deploy (ADR-005/006/007/015)]]"]
 ---
 
-**TL;DR** Lokaler Build aus dem Monorepo (turbo prune → Root-Dockerfile → Docker Hub), VPS pullt; migrate-* vor app-*; Caddy terminiert TLS, proxyt drei Subdomains (Spiegel seit P3, Oktober 2026); lokal Ende zu Ende mit `tools/stack-e2e/run.sh`.
+**TL;DR** Lokaler Build aus dem Monorepo (turbo prune → Root-Dockerfile → Docker Hub), VPS pullt; migrate-* vor app-*; Caddy terminiert TLS, proxyt drei Subdomains (ringwerk, treffsicher, spiegel); lokal Ende zu Ende mit `tools/stack-e2e/run.sh`.
 
-**Persistenter local-Build-Cache (Juli 2026).** Der Release-Pfad (`PUSH=1`) baut über einen dedizierten
+**Persistenter local-Build-Cache.** Der Release-Pfad (`PUSH=1`) baut über einen dedizierten
 `docker-container`-Builder (`vereinsheim-cache`, idempotent in `build-and-push.sh` angelegt) mit
 `--cache-to/--cache-from type=local,mode=max` **pro `(app,target)`** unter `.buildcache/` (gitignored).
 Warum: Der BuildKit-Default-Cache ist ein LRU-Pool über ALLE lokalen Projekte — bei vollem Docker

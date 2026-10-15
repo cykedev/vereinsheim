@@ -65,12 +65,12 @@ Ringwerk unterstuetzt drei Wettbewerbstypen, die alle auf einer gemeinsamen Scor
 1. **Ein Faktor pro Disziplin** — kein getrennter Waffen-/Auflagefaktor; Admin konfiguriert den kombinierten Wert (z.B. LP Auflage = 0.6 statt separat /3 und \*1.8)
 2. **Ringe brauchen keine Korrektur** — MaxRinge identisch ueber alle Disziplinen (100 Ganzringe, 109 Zehntelringe)
 3. **Teiler-Faktor ist kein DSB-Standard** — vereinsintern definiert, frei konfigurierbar; uebliche Werte: LP /3.0–3.2, LG Auflage \*1.5–1.8
-4. **Kein Migrationsdruck** — App ist pre-launch, aggressive Refactorings erlaubt
+4. **Migrationen mit Bedacht** — Ringwerk läuft produktiv; Daten-Migrationen gegen eine restorte Kopie testen ([[migrations-safety-culture]])
 5. **Liga bleibt der komplexeste Modus** — Event und Saison sind strukturell einfacher
-6. **Teams als spaetere Erweiterung** — kein Mannschaftswettbewerb in der Erstversion
+6. **Teams nur bei Events** — Team-Wertung (Summe oder Bestes) nur im Event-Modus ([[event-teams]]); kein Mannschaftswettbewerb in Liga oder Saison
 7. **Zielwert-Modi nur fuer Events** — TARGET_ABSOLUTE, TARGET_UNDER und TARGET_OVER kommen nur bei Kranzlschiessen vor
 8. **Competition als Oberbegriff** — Liga, Event und Saison sind Auspraegungen von Competition (im Datenmodell)
-9. **Serie als universelle Ergebniseinheit** — ersetzt das bisherige MatchResult; optional mit Matchup verknuepft (nur Liga)
+9. **Serie als universelle Ergebniseinheit** — optional mit Matchup verknuepft (nur Liga)
 10. **Saison zeigt Mehrfach-Ranking** — beste Ringe, bester Teiler, bester Ringteiler als separate Spalten; kein einzelner "Gewinner"
 
 ---
@@ -80,9 +80,7 @@ Ringwerk unterstuetzt drei Wettbewerbstypen, die alle auf einer gemeinsamen Scor
 | Risiko                                               | Auswirkung                                 | Mitigation                                                                             |
 | ---------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------- |
 | Competition-Abstraktion wird zu generisch            | Viele nullable Felder, unklare Validierung | Typ-spezifische Zod-Schemas (Discriminated Unions), klare Defaults                     |
-| MatchResult → Series Refactoring bricht Liga-Logik   | Tests schlagen fehl                        | Aggressive Testabdeckung vor Refactoring; pre-launch = kein Datenverlust               |
 | Scoring-Engine-Komplexitaet durch 8 Modi             | Schwer testbar, Edge Cases                 | Jeder Modus als eigene Pure Function, parametrisierte Tests                            |
-| Rename League → Competition beruehrt fast jede Datei | Hohes Fehlerrisiko                         | Atomarer Rename in einer dedizierten Phase, danach sofort /check                       |
 | Zielwert + Faktor-Korrektur Interaktion              | Unklare Semantik                           | Faktor auf Rohwert anwenden, Zielwert in korrigiertem Raum — dokumentiert und getestet |
 
 ---
@@ -91,12 +89,10 @@ Ringwerk unterstuetzt drei Wettbewerbstypen, die alle auf einer gemeinsamen Scor
 
 ### NEW_PLANNED -- Known feature
 
-Reference `docs/features.md` or `.claude/tasks/todo.md`:
+Reference [[ringwerk-features]]:
 
 ```
-"Implement Phase 1 from todo.md."
-"Next phase from the Ringwerk plan."
-"Build the Event mode as described in features.md."
+"Build the Event mode as described in ringwerk-features."
 ```
 
 ### NEW_UNKNOWN -- New requirement

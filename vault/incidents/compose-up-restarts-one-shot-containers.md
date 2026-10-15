@@ -8,7 +8,7 @@ relates_to: ["[[deploy-flow]]", "[[vps-resource-sizing]]"]
 part_of: ["[[incidents]]"]
 ---
 
-**TL;DR** 14. Oktober 2026 (Review von P4, `scripts/deploy.sh`): Ein `docker compose up -d` ohne Dienstliste startet
+**TL;DR** 14. Oktober 2026 (`scripts/deploy.sh`): Ein `docker compose up -d` ohne Dienstliste startet
 auch einmalige Container neu, die schon mit Exit 0 beendet sind. Der Deploy startete die Migratoren erst nacheinander
 je App und am Ende mit `up -d --remove-orphans` noch einmal alle gleichzeitig: genau die Speicherspitze, die das
 Nacheinander vermeiden sollte. Behoben mit `up -d --remove-orphans --no-deps db caddy app-…`.

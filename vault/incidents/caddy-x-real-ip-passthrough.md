@@ -23,7 +23,7 @@ echte Adresse in beiden.
 ## Regel
 
 - Jeder neue Host im `Caddyfile` importiert `proxy_real_ip`, bevor seine App `AUTH_TRUST_PROXY_HEADERS=true` bekommt
-  (Spiegel mit SP-1.9, dort hängt zusätzlich die Ratenbegrenzung der Kopplung daran).
+  (bei Spiegel hängt zusätzlich die Ratenbegrenzung der Kopplung daran).
 - Ein Header, den die App als vertrauenswürdig liest, muss der Proxy **setzen**, nicht nur ergänzen. Die Abwehr von
   Caddy gegen gefälschte Adressen gilt nur für die `X-Forwarded-*`-Header.
 - Das Caddyfile ist als einzelne Datei eingehängt: Nach `git pull` auf dem VPS `docker compose up -d --force-recreate

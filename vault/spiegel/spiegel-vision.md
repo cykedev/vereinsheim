@@ -20,7 +20,7 @@ relates_to: ["[[treffsicher-requirements]]", "[[meyton-interfaces]]"]
 - **Verläufe jeder Kennzahl** über Wochen und Monate, mit Rekorden.
 - **Direkte Vergleiche:** Serie gegen Serie, Scheibe gegen Scheibe, Zeitraum gegen Zeitraum, Merkmal gegen Merkmal, gegen den eigenen Schnitt.
 
-**Leitbild (Oktober 2026):** ein Profi-Werkzeug, „das mir viele gute Informationen zeigt, mit denen ich systematisch trainieren kann und mit dem ich analysieren kann“ (der User). Spiegel zeigt deshalb viele Statistiken, geordnet und ehrlich, mit Unsicherheit und „unklar“, wo die Daten nicht reichen, und so handlungsnah wie möglich ([[spiegel-statistics]]). Systematisches Training stützt Spiegel mit Messung, Auswertung und Übungen mit messbarem Kriterium; Ziele und Absicht bleiben im Tagebuch.
+**Leitbild:** ein Profi-Werkzeug, das viele gute Informationen zeigt, mit denen man systematisch trainieren und analysieren kann. Spiegel zeigt deshalb viele Statistiken, geordnet und ehrlich, mit Unsicherheit und „unklar“, wo die Daten nicht reichen, und so handlungsnah wie möglich ([[spiegel-statistics]]). Systematisches Training stützt Spiegel mit Messung, Auswertung und Übungen mit messbarem Kriterium; Ziele und Absicht bleiben im Tagebuch.
 
 ## Warum
 

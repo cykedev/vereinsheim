@@ -3,22 +3,22 @@ id: treffsicher-data-model
 type: guide
 title: "Treffsicher — Datenmodell & Domänen-Specs"
 aliases: ["Datenmodell & Domänen-Specs — Verbindliche Regeln"]
-keywords: [treffsicher, datenmodell, domänen-specs, verbindliche, regeln]
+keywords: [treffsicher, datenmodell, domänen-specs, verbindliche, regeln, Prisma-Schema, Umgebungsvariablen, Env-Vars, Standarddisziplinen, Meyton-Import]
 part_of: ["[[treffsicher]]"]
 ---
 
-**TL;DR** Ausgelagert aus `docs/technical-constraints.md`. Gilt gleichrangig als verbindlich.
+**TL;DR** Datenmodell, Umgebungsvariablen, Rollen, Disziplinen und Ergebniserfassung (inkl. Meyton-Import). Ergänzt [[treffsicher-technical-constraints]] und gilt gleichrangig verbindlich.
 
 # Datenmodell & Domänen-Specs — Verbindliche Regeln
 
-Ausgelagert aus `docs/technical-constraints.md`. Gilt gleichrangig als verbindlich.
+Ergänzt [[treffsicher-technical-constraints]] und gilt gleichrangig verbindlich.
 
 ## Index
 
 - **Datenmodell** — vollständiges Prisma-Schema (User, Sessions, Disciplines, ShotRoutines, Goals)
 - **Umgebungsvariablen** — alle benötigten Env-Vars mit Beschreibung
 - **Nutzerverwaltung & Rollen** — ADMIN/USER, kein Self-Service, Admin-Init
-- **Disziplinen** — Archivierung (nicht Löschen), 5 vorinstallierte Standarddisziplinen
+- **Disziplinen** — Archivieren statt Löschen (sobald verwendet), Ausblenden/Favorit je Nutzer, 5 vorinstallierte Standarddisziplinen
 - **Ergebniserfassung** — Serien, Validierungsregeln (WHOLE/TENTH), Meyton-PDF Import
 
 ---
@@ -31,6 +31,8 @@ Das Prisma-Schema implementiert dieses Modell. Abweichungen erfordern eine Migra
 User
   ├── id, name?, email, passwordHash, role (ADMIN | USER)
   ├── createdAt, isActive (Boolean — deaktiviert statt gelöscht)
+  ├── sessionVersion (Int — invalidiert alte Sessions)
+  ├── favouriteDisciplineId? (→ Discipline), hiddenDisciplines (→ Discipline[])
   │
   ├── Sessions (Einheiten)
   │     ├── id, userId
@@ -39,6 +41,7 @@ User
   │     ├── disciplineId? (→ Discipline, nur bei TRAINING/WETTKAMPF)
   │     ├── isFavourite (Boolean)
   │     ├── trainingGoal? (String — bei TRAINING/TROCKENTRAINING/MENTAL)
+  │     ├── hitLocation{Horizontal,Vertical}Mm? + …Direction? (Trefferlage aus Meyton-Import)
   │     │
   │     ├── Wellbeing? (1:1, optional)
   │     │     └── sleep, energy, stress, motivation (je Int 0–100)
@@ -106,9 +109,9 @@ User
 
 Speicher-Hinweise:
 - Zehntelwertung: Decimal(5,1) — erlaubt Werte von 0.0 bis 999.9
-- Ganzringwertung: Int (scoreTotal als Int, nicht Decimal)
+- Ganzringwertung: ebenfalls Decimal(5,1), ohne Nachkommastelle
 - shots[]-Array: Json-Feld, Einzelwerte als Strings ("9.5") für exakte Dezimaldarstellung
-- Archivierte/deaktivierte Einträge werden nie gelöscht — isArchived/isActive als Filter
+- Nutzer werden deaktiviert, verwendete Disziplinen archiviert statt gelöscht — isArchived/isActive als Filter
 ```
 
 ---
@@ -123,6 +126,7 @@ DATABASE_URL=               # PostgreSQL Connection String (z.B. postgresql://us
 NEXTAUTH_SECRET=            # Zufälliger Secret für Session-Verschlüsselung (min. 32 Zeichen)
 NEXTAUTH_URL=               # Öffentliche URL der App (z.B. https://training.example.com)
 UPLOAD_DIR=                 # Pfad zum Upload-Verzeichnis (Standard: /app/uploads)
+DISPLAY_TIME_ZONE=          # Anzeige-Zeitzone (IANA, z.B. Europe/Berlin); die DB speichert immer UTC
 ADMIN_EMAIL=                # E-Mail des ersten Admin-Accounts (wird beim ersten Start angelegt)
 ADMIN_PASSWORD=             # Passwort des ersten Admin-Accounts (min. 12 Zeichen)
 AUTH_TRUST_PROXY_HEADERS=   # true nur bei vertrauenswürdigem Reverse Proxy (für IP-Rate-Limit)
@@ -148,8 +152,10 @@ PRISMA_AUTO_RESOLVE_UNKNOWN_FAILED_MIGRATIONS= # false (sicherer Default): unbek
 
 ### Verhalten bei Löschung
 
-- Disziplinen werden **archiviert, nicht gelöscht** — bestehende Einheiten bleiben lesbar
-- Archivierte Disziplinen erscheinen nicht mehr in der Auswahl für neue Einheiten
+- Disziplinen, die in Einheiten oder Abläufen verwendet werden, werden **archiviert, nicht gelöscht** — bestehende Einheiten bleiben lesbar
+- Unbenutzte Disziplinen können endgültig gelöscht werden
+- Archivierte Disziplinen erscheinen nicht in der Auswahl für neue Einheiten
+- Jeder Nutzer kann Disziplinen für sich ausblenden (bleiben in Einheiten sichtbar, fehlen in der Auswahl) und eine Favorit-Disziplin setzen
 
 ### Vorinstallierte Standarddisziplinen
 
@@ -202,5 +208,5 @@ Leere Felder gelten nie als Fehler. Implementiert in `src/lib/sessions/validatio
 - Schutzgrenzen:
   - Datei-Grenze 10 MB (Upload und URL-Import)
   - URL-Import: 15 Sekunden Timeout, keine Redirects
-  - Dekompression: 2 MB pro Stream, 8 MB gesamt, 25'000 Tokens
+  - PDF-Parsing: max. 20 Seiten, 50'000 Textitems, 200'000 Zeichen, 15 Sekunden (greifen während des Parsens)
   - Formularübernahme: max. 120 Serien, max. 120 Schusswerte pro Serie

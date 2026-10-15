@@ -1,17 +1,17 @@
 ---
 id: treffsicher-implementation-plan
 type: guide
-title: "Treffsicher — Treffsicher"
+title: "Treffsicher — Implementierungsstatus"
 aliases: ["Treffsicher — Implementierungsstatus & Roadmap"]
-keywords: [treffsicher, treffsicher, implementierungsstatus, roadmap]
+keywords: [treffsicher, implementierungsstatus, roadmap, Funktionsumfang, Phasen, Entwicklungsworkflow, pnpm check, Migration]
 part_of: ["[[treffsicher]]"]
 ---
 
-**TL;DR** Verbindliche Referenzdokumente: @docs/requirements.md · @docs/technical-constraints.md
+**TL;DR** Umgesetzter Funktionsumfang nach Phasen (1–5.1 vorhanden, 5.2 PWA/Offline offen) und der Entwicklungsablauf im Monorepo; offene Punkte stehen in [[treffsicher-backlog]].
 
 # Treffsicher — Implementierungsstatus & Roadmap
 
-Verbindliche Referenzdokumente: @docs/requirements.md · @docs/technical-constraints.md
+Verbindliche Referenzdokumente: [[treffsicher-requirements]] · [[treffsicher-technical-constraints]]
 
 ---
 
@@ -37,16 +37,7 @@ Verbindliche Referenzdokumente: @docs/requirements.md · @docs/technical-constra
 
 ## Offene Arbeitspakete
 
-Kurzfristige offene Punkte (priorisiert): @docs/backlog.md
-
-### Phase 5.2 — PWA / Offline-Unterstützung (offen)
-
-Einheiten auch ohne Verbindung erfassen (Schiessstand):
-
-- Paket: `next-pwa`
-- Offline: Erfassung in IndexedDB, automatische Synchronisation nach Reconnect
-- Aufwand: Gross (~1 Tag), ausführlich auf Mobilgeräten testen
-- Spec: @docs/requirements.md#offene-punkte-spätere-phasen
+Offene Punkte, priorisiert, inkl. Phase 5.2 (PWA / Offline, T-06): [[treffsicher-backlog]]
 
 ---
 
@@ -54,24 +45,21 @@ Einheiten auch ohne Verbindung erfassen (Schiessstand):
 
 ### Vor jeder Schemaänderung
 
-1. Änderung in `prisma/schema.prisma`
-2. Migration: `docker compose -f docker-compose.dev.yml run --rm app npx prisma migrate dev --name <name>`
-3. Migration-Datei einchecken (`prisma/migrations/`)
+1. Änderung in `apps/treffsicher/prisma/schema.prisma`
+2. Migration (Dev-Postgres aus der Root-`docker-compose.dev.yml` muss laufen): `pnpm --filter treffsicher exec prisma migrate dev --name <name>`
+3. Migration-Datei einchecken (`apps/treffsicher/prisma/migrations/`)
 4. Keine destructiven Migrationen ohne Kommentar
 
 ### Vor jedem Commit (alle müssen grün sein)
 
 ```bash
-docker compose -f docker-compose.dev.yml run --rm app npm run lint
-docker compose -f docker-compose.dev.yml run --rm app npm run format:check
-docker compose -f docker-compose.dev.yml run --rm app npm run test
-docker compose -f docker-compose.dev.yml run --rm app npx tsc --noEmit
+pnpm check   # an der Repo-Wurzel: lint, format:check, test, check-types, build
 ```
 
 ### Bei gewachsenen Dateien (>220 Zeilen)
 
 Split verpflichtend — Orchestrator-Seiten dünn halten.
-Details: @docs/technical-constraints.md#modularität--wartbarkeit-verbindlich
+Details: [[treffsicher-technical-constraints#Modularität & Wartbarkeit (verbindlich)]]
 
 ### Bei Widersprüchen zu Docs
 

@@ -35,8 +35,8 @@ Vor dem ersten Task: Plan + dessen `## Required Docs` (App + `vault/conventions.
    Bugfixes**: failing test → für den richtigen Grund fallen sehen → minimaler Code → grün refactoren.
    Pragmatische Ausnahme: reine UI/Config/Scaffolding bringt Tests im selben Commit. App-Konventionen
    befolgen (`vault/apps/<app>/<app>-code-conventions.md`, `…-ui-patterns.md`, `vault/conventions.md`),
-   vorhandene Utilities/Patterns wiederverwenden. Byte-identische Shared-Dateien beider Apps synchron
-   halten, bis `packages/ui` greift (`consistency-check.sh`).
+   vorhandene Utilities/Patterns wiederverwenden. Die byte-identischen Dateien von Ringwerk und Treffsicher
+   (`MUST_MATCH` in `scripts/consistency-check.sh`) synchron halten; Geteiltes gehört in `packages/*`.
 5. **Gate:** `pnpm check`. Grün → 6. Rot → self-heal, **max. 3 Versuche** insgesamt für den Task; danach
    weiter rot → WIP verwerfen (`git checkout -- . && git clean -fd`, Branch bleibt grün), Fehlschlag
    ins Ledger → **HALT** (Breaker: Gate rot).

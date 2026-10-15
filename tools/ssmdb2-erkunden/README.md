@@ -1,6 +1,6 @@
 # SSMDB2 vor Ort erkunden
 
-Ein Skript für einen Abend im Schützenheim (SP-0.1 und SP-0.6 der Spiegel-Roadmap). Es liest die
+Ein Skript für einen Abend im Schützenheim (Befunde: `vault/meyton/ssmdb2-erkundung.md`). Es liest die
 Meyton-Ablage **nur**, sichert sie vollständig auf dem Mac, beantwortet die SQL-Checkliste und führt
 durch ein Schießprotokoll, das man allein schießen kann, während es jede Sekunde mitliest.
 

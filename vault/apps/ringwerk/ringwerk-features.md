@@ -105,7 +105,7 @@ Jeder Wettbewerb hat:
 | TARGET_UNDER    | ≤ Zielwert bevorzugt, dann Abweichung  | Geringste   | Wenn Teiler-basiert |
 | TARGET_OVER     | >= Zielwert bevorzugt, dann Abweichung | Geringste   | Wenn Teiler-basiert |
 
-Formeln und Details: siehe `data-model.md` → Berechnungsregeln.
+Formeln und Details: siehe [[ringwerk-data-model#Berechnungsregeln]].
 
 ---
 
@@ -173,7 +173,7 @@ Sortierung absteigend:
 3. Bestes individuelles Ergebnis (niedrigster Ringteiler)
 4. Nachname, dann Vorname alphabetisch — wer erst hier getrennt wird, **teilt sich den Platz**
 
-#### Geteilte Plätze (September 2026, alle Tabellen)
+#### Geteilte Plätze (alle Tabellen)
 
 Zeilen, die in **jedem** Wertungskriterium gleich sind und nur noch alphabetisch geordnet werden,
 tragen **denselben Platz**; der nächste zählt die geteilten mit („1, 1, 3", Wettkampf-Rangfolge).
@@ -259,6 +259,8 @@ App-Umfang: **nur Ergebniserfassung** (keine Zeitnahme oder Ansage-Unterstützun
 
 ### Meyton-Import
 
+**Nicht umgesetzt:** Ringwerk hat keinen Meyton-Import im Code; die Anforderung steht noch aus.
+
 - **Via URL:** System ruft Meyton-URL ab, parst Ergebnis
 - **Via PDF-Upload:** Textbasiertes PDF, kein OCR
 - Sicherheitsgrenzen: Timeout 15s, max. 10 MB; PDF max. 2 MB/Stream, 8 MB gesamt (nur bei Liga)
@@ -309,7 +311,7 @@ Sortierung (jedes Kriterium ist eine sichtbare Spalte, links→rechts):
 1. Siege (absteigend)
 2. Satzdifferenz (absteigend)
 3. Mehr gewonnene Sätze (duelsWon, absteigend)
-4. **Direkter Vergleich** (head-to-head): Mini-Liga-Bilanz innerhalb der punktgleichen Gruppe (Match-Sieger, inkl. Stechschuss). Ersetzt seit 2026-06-24 das frühere „bestes Einzelergebnis" (Sportleiter-Entscheid). Kann er nicht entscheiden (Begegnung noch offen ODER zyklischer N-Gleichstand A→B→C→A), wird alphabetisch gewertet — die Spalte macht das mit „offen"/„ausgeglichen" sichtbar.
+4. **Direkter Vergleich** (head-to-head): Mini-Liga-Bilanz innerhalb der punktgleichen Gruppe (Match-Sieger, inkl. Stechschuss). Kann er nicht entscheiden (Begegnung noch offen ODER zyklischer N-Gleichstand A→B→C→A), wird alphabetisch gewertet — die Spalte macht das mit „offen"/„ausgeglichen" sichtbar.
 5. Nachname, dann Vorname alphabetisch (deterministischer Rest) — wer erst hier getrennt wird, teilt sich den Platz (siehe „Geteilte Plätze"); ein offener 2er-Gleichstand steht also z.B. auf 1, 1
 
 Die letzte Spalte „Direktvergleich" zeigt im 2er-Gleichstand das Match-Ergebnis + Gegner (z.B. „2:1 · Müller"), im 3er+-Gleichstand die Direktbilanz („2:0"), sonst „—". Logik zentral in `bestOfStandingsSort.ts` (`directComparison`-Annotation), Anzeige über `formatDirectComparison` (Tabelle + PDF byte-identisch). `bestRingteiler`/`bestRings` werden weiter berechnet, sind aber kein Kriterium mehr (revert-fähig).
@@ -319,8 +321,7 @@ Zurückgezogene Teilnehmer erscheinen am Ende (alle Ergebnisse mit ihnen werden 
 ### Playoffs
 
 Optional wie bei der Doppelrunde (`playoffBestOf`, Viertel-/Achtelfinale). Setzung aus der
-Best-of-Tabelle (Spec 2026-06-17 §9; umgesetzt 2026-09-23 — vorher las die Setzung die
-Rundenturnier-Tabelle, siehe [[best-of-playoff-seeding-round-robin-table]]).
+Best-of-Tabelle (siehe [[best-of-playoff-seeding-round-robin-table]]).
 
 ### PDF
 
@@ -339,7 +340,7 @@ Alle Teilnehmer schiessen, eine Rangliste wird erstellt.
 
 | Parameter       | Beschreibung                                              |
 | --------------- | --------------------------------------------------------- |
-| scoringMode     | Wertungsmodus (alle 7 Modi möglich)                       |
+| scoringMode     | Wertungsmodus (alle 8 Modi möglich)                       |
 | shotsPerSeries  | Schusszahl pro Serie (default 10, z.B. 5 für Kurz-Kranzl) |
 | disciplineId    | null = gemischt (Faktor aktiv), oder fixe Disziplin       |
 | eventDate       | Veranstaltungsdatum                                       |
@@ -511,7 +512,7 @@ Ringteiler muss aus **derselben Serie** stammen (Ringe und Teiler gehören zusam
 
 ## Visualisierung & Auswertung
 
-### Dashboard-Aufteilung (Phase 4 + Phase 5)
+### Dashboard-Aufteilung
 
 Das Haupt-Dashboard unterteilt aktive Wettbewerbe nach Typ:
 
@@ -531,11 +532,11 @@ abgeschlossen, archiviert) und filterbar nach Status, Typ und Disziplin. Jede Ka
 - **Aktionen** (MANAGER/ADMIN): Protokoll, Bearbeiten, Status, Löschen
 
 **Aktive und abgeschlossene** Karten zeigen zusätzlich die **Tabellen-Vorschau wie im Dashboard**
-(6 Zeilen bzw. das Playoff-Bracket, „+ N weitere anzeigen"; September 2026). Entwürfe (noch keine
+(6 Zeilen bzw. das Playoff-Bracket, „+ N weitere anzeigen"). Entwürfe (noch keine
 Ergebnisse) und das Archiv bleiben kompakt. Dashboard und Liste teilen sich Laden und Darstellung
 der Vorschau: `loadCompetitionPreview` (`lib/competitions/preview.ts`), das reine Modell
 `previewModel.ts` und `CompetitionPreviewSection`/`CompetitionPreviewBadges`. Abgeschlossene Karten
-tragen keine Opazität mehr — Tabellen dahinter unterschritten die Kontrast-Untergrenze.
+tragen keine Opazität — Tabellen dahinter unterschritten sonst die Kontrast-Untergrenze.
 
 ### Auswertungen pro Typ
 

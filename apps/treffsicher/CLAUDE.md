@@ -19,15 +19,14 @@ Self-hosted, Einzelnutzer bis Vereinsbetrieb, ausschliesslich Dark Mode, ausschl
 ## Commands
 
 > **Monorepo:** Diese App liegt in `apps/treffsicher`; Dev/Build/Gates laufen von
-> der Repo-Wurzel (pnpm + Turborepo). Das frühere per-App `docker-compose.dev.yml`
-> gibt es nicht mehr — Postgres kommt aus der Root-`docker-compose.dev.yml`.
+> der Repo-Wurzel (pnpm + Turborepo). Postgres kommt aus der Root-`docker-compose.dev.yml`.
 
 ```bash
-# Dev: geteilter Postgres (an der Wurzel) + beide Apps (diese auf :3001)
+# Dev: geteilter Postgres (an der Wurzel) + alle Apps (diese auf :3001)
 docker compose -f docker-compose.dev.yml up -d   # an der Repo-Wurzel
 pnpm dev                                          # oder: pnpm dev --filter treffsicher
 
-# Vor jedem Commit — alle fünf Gates (turbo-gecacht über beide Apps)
+# Vor jedem Commit — alle fünf Gates (turbo-gecacht über alle Apps und Pakete)
 pnpm check                                        # lint, format:check, test, tsc, next build
 # next build ist Pflicht-Gate: fängt Build-only-Fehler ab (z.B. "use server"-
 # Re-Export-Regel), die lint/tsc/test NICHT sehen
@@ -38,7 +37,7 @@ pnpm --filter treffsicher format
 # Neue Migration erzeugen (nach Schemaänderung)
 pnpm --filter treffsicher exec prisma migrate dev --name <name>
 
-# Dev-DB komplett zurücksetzen (Datenverlust!) — an der Repo-Wurzel
+# Dev-DBs komplett zurücksetzen (alle drei Apps, Datenverlust!) — Ablauf im Skill /db-reset
 docker compose -f docker-compose.dev.yml down -v
 ```
 
@@ -69,7 +68,7 @@ Bedienung und Recovery: Root-`README.md` und `vault/operations/operations.md`.
 | Bereich   | Technologie                |
 | --------- | -------------------------- |
 | Framework | Next.js 16 App Router      |
-| Sprache   | TypeScript 5 strict        |
+| Sprache   | TypeScript 6 strict        |
 | Datenbank | PostgreSQL 15 + Prisma 7   |
 | Auth      | NextAuth.js v4             |
 | UI        | shadcn/ui + Tailwind CSS 4 |

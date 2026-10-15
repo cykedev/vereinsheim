@@ -36,7 +36,7 @@ Wettbewerbs-ID, also aus derselben Identität wie der Cache-Key.
   synchron (die Slug-Query war ihr einziges `await`).
 - `update.ts` braucht das konservative Revalidieren von altem **und** neuem Slug nicht mehr — das
   war nur der Workaround für genau diesen Bug.
-- **Kein** Key-Bump nötig — im Review korrigiert. Ein zwischenzeitliches `…-v2` beruhte auf der
+- **Kein** Key-Bump nötig. Ein zwischenzeitliches `…-v2` beruhte auf der
   Annahme, Next prüfe die **mit dem Eintrag gespeicherten** Tags; das ist falsch. Für
   `unstable_cache`-Einträge (Kind `FETCH`) bildet Next `combinedTags` aus `ctx.tags`/`ctx.softTags`,
   also den **zur Lesezeit** übergebenen Tags (`incremental-cache/index.js` und
@@ -68,15 +68,14 @@ nächste das neue. Nur `updateTag(tag)` expiriert sofort (Next-Quelle:
 `updateTag uses immediate expiration (no profile)`), gilt aber ausschließlich innerhalb einer
 Server Action — in einem Route Handler wirft es.
 
-Am 2026-09-10 im Dev-Server A/B gemessen (Details in
-`reports/2026-09-10-public-pdf-cache-tag-by-id.md`):
+Am 2026-09-10 im Dev-Server A/B gemessen:
 
 | Variante | 1. Abruf nach der Action | 2. Abruf |
 | -------- | ------------------------ | -------- |
 | `revalidateTag(tag, "max")` (Ist-Stand) | alter Stand (22 ms, Cache-Treffer) | neuer Stand |
 | `updateTag(tag)` | **neuer Stand** (118 ms, Neu-Render) | neuer Stand |
 
-### Weitere Invalidierungs-Lücken (im Review gefunden, bewusst nicht in diesem Change)
+### Weitere Invalidierungs-Lücken (bewusst nicht in diesem Change)
 
 Zwei schreibende Pfade verändern Inhalte des öffentlichen PDFs, ohne es zu invalidieren — beide
 **vor** diesem Change schon so, deshalb eigener Fix:
@@ -85,6 +84,7 @@ Zwei schreibende Pfade verändern Inhalte des öffentlichen PDFs, ohne es zu inv
   neu und revalidiert nur `/schedule` + `/participants`. Das Liga-PDF **ist** Spielplan + Tabelle,
   ein neu erzeugter Spielplan bleibt also bis zu 24 h öffentlich alt. Die `competitionId` liegt
   vor, der Fix ist ein `revalidatePublicPdf(competitionId)` neben den beiden `revalidatePath`.
+  **Behoben:** der Aufruf steht dort heute.
 - `lib/participants/crud.ts` `updateParticipant` benennt einen Schützen um, dessen Name in **jedem**
   öffentlichen PDF steht. Hier bräuchte es zuerst eine Abfrage der betroffenen Wettbewerbe.
 

@@ -47,17 +47,17 @@ SELECT CAST(CONV('ff914420', 16, 10) AS SIGNED) - 4294967296 AS scheiben_id;  --
 SELECT ScheibenID, StandNr, Disziplin, TotalRing, TotalRing01 FROM Scheiben WHERE ScheibenID = -7257056;
 ```
 
-**Befunde an 72 Ausdrucken des Users** (13. Oktober 2026, [[src-ssmdb2-kopie-2026-10-09]]):
+**Befunde an 72 Ausdrucken eines Schützen** (13. Oktober 2026, [[src-ssmdb2-kopie-2026-10-09]]):
 
 - Dieselbe ID steht auf mehreren Ausdrucken, wenn auf einer Scheibe mehrmals gedruckt wird, auch nach einem Neustart
   der Probe mit ganz anderem Ergebnis (SF-72). Eine ID meint also eine Scheibe, nicht einen Ausdruck.
-- Die #Nummer ist die SportpassID zur Druckzeit. Beim User war sie anfangs falsch eingetragen; die Ablage trägt bei
+- Die #Nummer ist die SportpassID zur Druckzeit. Bei diesem Schützen war sie anfangs falsch eingetragen; die Ablage trägt bei
   denselben Scheiben die später korrigierte Nummer. Die SportpassID einer alten Scheibe kann sich in der Ablage also
   nachträglich ändern (wie, ist offen); ein Opt-in greift damit auch rückwirkend.
 
 ## Lesen in Spiegel
 
-`packages/meyton-pdf` (SP-1.3, Oktober 2026) liest aus dem PDF nur die ID und die Erstellzeit, ohne
+`packages/meyton-pdf` liest aus dem PDF nur die ID und die Erstellzeit, ohne
 Layout-Wissen ([[adr-028]]). Befund an drei echten PDFs (zwei Treffsicher-Fixtures, der Ausdruck vom
 2. Oktober; nur lokal geprüft):
 
@@ -77,10 +77,10 @@ Layout-Wissen ([[adr-028]]). Befund an drei echten PDFs (zwei Treffsicher-Fixtur
   Zeitzone geht vor. `ModDate` zählt nicht (beim Qt-Fixture später als die Erstellung). Ohne Uhrzeit
   oder Zeitzone gibt es keinen absoluten Zeitpunkt, Jahre vor 1970 gelten nicht.
 - **Grenzen:** 1 MB, 10 Seiten, 20 000 Textstücke, 100 000 Zeichen, 5 s, geprüft zwischen den Schritten
-  von pdf.js. Gegen präparierte PDFs schützen sie **nicht**: Im Review brachte ein 3-KB-PDF pdf.js auf
-  294 MB, ein 128-KB-XMP auf 1,36 GB, eine Operator-Bombe lief 21 s. Der Server liest fremde PDFs
-  deshalb in einem kurzlebigen Kindprozess mit Speichergrenze, der nach 5 s hart beendet wird (SF-48,
-  SP-1.7); ein Worker-Thread reicht nicht. pdf.js bekommt eine Kopie des Puffers, weil es ihn leert.
+  von pdf.js. Gegen präparierte PDFs schützen sie **nicht**: Ein 3-KB-PDF brachte pdf.js auf 294 MB,
+  ein 128-KB-XMP auf 1,36 GB, eine Operator-Bombe lief 21 s. Der Server soll fremde PDFs deshalb in
+  einem kurzlebigen Kindprozess mit Speichergrenze lesen, der nach 5 s hart beendet wird (SF-48, offen
+  mit SP-1.7 b); ein Worker-Thread reicht nicht. pdf.js bekommt eine Kopie des Puffers, weil es ihn leert.
 
 ## Datenschutz
 

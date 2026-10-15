@@ -6,7 +6,7 @@ keywords: [adr, decisions, entscheidungen, architektur-entscheidungen, begründu
 part_of: ["[[overview]]"]
 ---
 
-**TL;DR** Der ADR-Kanon von vereinsheim — 30 Entscheidungen mit Begründung. Vor architektur-berührenden Vorschlägen die betroffene ADR prüfen.
+**TL;DR** Der ADR-Kanon von vereinsheim — 31 Entscheidungen mit Begründung. Vor architektur-berührenden Vorschlägen die betroffene ADR prüfen.
 
 Kanonische Entscheidungshistorie. `supersedes`/`refines`-Kanten verbinden abgelöste und verfeinerte ADRs.
 

@@ -1,237 +1,93 @@
 # Treffsicher
 
-Trainingsunterstützungs-App für Schiesssportler. Trainingstagebuch, Ergebniserfassung, Mentaltraining und Statistiken in einer Web-App (PWA ist als späterer Schritt geplant).
+Trainings-App für Schiesssportler: Trainingstagebuch, Ergebniserfassung, Mentaltraining und Statistiken in einer
+Web-App, für Einzelne bis zum Verein, ausschliesslich im Dark Mode.
 
-> **Teil des [`vereinsheim`](../../README.md)-Monorepos.** Dev, Build und Deploy
-> laufen **von der Repo-Wurzel**: `pnpm dev` (diese App auf :3001) gegen den
-> geteilten Dev-Postgres (`docker compose -f docker-compose.dev.yml up -d` **an
-> der Wurzel**); Gates `pnpm check`; Build/Deploy `vereinsheim build` / `release`.
-> **Die Abschnitte unten mit eigenem `docker-compose.dev.yml` und `npm`-im-Container
-> stammen aus der Standalone-Zeit und gelten nicht mehr** (das per-App
-> `docker-compose.dev.yml` wurde entfernt). Kanonisch: Root-[`README.md`](../../README.md);
-> die App-Doku-Konsolidierung folgt in Phase 2.
+- **Einheiten** — Training, Wettkampf, Trockentraining und Mentaltraining, mit Favoriten
+- **Ergebniserfassung** — Serien mit ganzen Ringen oder Zehnteln, optional Einzelschüsse; Import von Meyton-PDFs per
+  Upload oder URL
+- **Mentaltraining** — Befinden, Prognose, Feedback und Reflexion
+- **Saisonziele und Schussablauf** — Ergebnis- und Prozessziele, ein Schussablauf je Disziplin
+- **Statistiken** — Verlauf, Serien, Befinden im Vergleich, Schussverteilung
+- **Anhänge und Export** — Bilder und PDFs zu Training und Wettkampf, PDF-Export je Einheit
+- **Nutzerverwaltung** — Konten legt der Admin an; jeder sieht nur seine eigenen Daten
 
----
+Teil des [`vereinsheim`](../../README.md)-Monorepos: Next.js 16, Prisma 7, NextAuth v4, PostgreSQL 15,
+geteilte Pakete `@vereinsheim/config`, `@vereinsheim/lib` und `@vereinsheim/ui`.
 
-## Lokale Entwicklung (historisch — Standalone-Flow)
+## Entwickeln
 
-### Voraussetzungen
-
-- [Docker](https://www.docker.com/) + Docker Compose v2.22+
-- Optional: Node.js 20+ (nur wenn `npm`/Prisma-Befehle lokal statt im Container laufen sollen)
-
-### Erste Inbetriebnahme
-
-**1. Datenbank starten**
+Die Workstation richtet die Root-[`README.md`](../../README.md) ein (`./scripts/vereinsheim dev-setup`: Dev-Postgres
+aus der Root-`docker-compose.dev.yml`, `.env` aus `.env.example`, Schema in die Dev-DB `treffsicher`). Danach von der
+Repo-Wurzel:
 
 ```bash
-docker compose -f docker-compose.dev.yml up db -d
+pnpm --filter treffsicher dev     # http://localhost:3001
+pnpm --filter treffsicher test    # Tests
+pnpm check                        # alle Gates vor dem Commit
+pnpm --filter treffsicher exec prisma migrate dev --name <name>   # Migration nach einer Schemaänderung
 ```
 
-Warten bis die DB bereit ist — Status prüfen:
+Beim ersten Request legt `src/lib/startup.ts` die Standarddisziplinen und, wenn noch kein Admin existiert, das erste
+Admin-Konto aus `ADMIN_EMAIL` und `ADMIN_PASSWORD` an. Die Standarddisziplinen legt auch
+`pnpm --filter treffsicher exec prisma db seed` an.
 
-```bash
-docker compose -f docker-compose.dev.yml ps
-# "db" sollte "healthy" zeigen
-```
+## Umgebungsvariablen
 
-**2. App mit Watch starten**
+Vorlage: [`.env.example`](.env.example). In Produktion setzt die Root-`compose.yml` die Werte aus der Root-`.env`
+(`TREFFSICHER_*`).
 
-```bash
-docker compose -f docker-compose.dev.yml up --watch
-```
-
-Beim Start läuft zuerst der dedizierte Service `migrate`
-(`prisma migrate deploy` mit optionaler Recovery).
-Danach startet der App-Container über `scripts/start-dev-with-migrations.sh`
-(`prisma db push` und `prisma generate`, dann Next.js dev server).
-Standarddisziplinen und der erste Admin-Account werden beim ersten Request automatisch angelegt (Startup-Initialisierung).
-
-Die App läuft unter [http://localhost:3000](http://localhost:3000).
-
-Beim ersten Request wird die Startup-Initialisierung ausgeführt (via `src/lib/startup.ts`):
-
-- Standarddisziplinen werden angelegt, falls sie fehlen
-- der erste Admin-Account wird angelegt, falls noch keiner existiert
-
-Die Credentials kommen aus den Umgebungsvariablen in `docker-compose.dev.yml`:
-
-| Variable         | Wert in dev         |
-| ---------------- | ------------------- |
-| `ADMIN_EMAIL`    | `admin@example.com` |
-| `ADMIN_PASSWORD` | `admin-passwort-12` |
-
-Mit diesen Daten unter [http://localhost:3000/login](http://localhost:3000/login) einloggen.
-
-### Stoppen
-
-```bash
-docker compose -f docker-compose.dev.yml down
-```
-
-Daten (Datenbank, Uploads) bleiben in den Docker Volumes erhalten.
-
-Für einen vollständigen Reset inkl. Datenverlust:
-
-```bash
-docker compose -f docker-compose.dev.yml down -v
-# Danach: App-Start erneut ausführen (Schritt 2)
-```
-
-Hinweis: Nach `down -v` sind alle Nutzerdaten neu aufgebaut. Falls im Browser noch eine alte Session liegt, einmal neu einloggen (ggf. Cookies löschen), damit keine veraltete `userId` verwendet wird.
-
-### Ab dem zweiten Start
-
-```bash
-docker compose -f docker-compose.dev.yml up --watch
-```
-
-Keine weiteren Initialisierungsschritte nötig (ausser nach `down -v`).
-
-### Docker Compose Watch
-
-Der Dev-Workflow nutzt [Compose Watch](https://docs.docker.com/compose/how-tos/file-watch/) für automatische Reaktion auf Dateiänderungen:
-
-| Datei / Pfad           | Aktion         | Effekt                                                                 |
-| ---------------------- | -------------- | ---------------------------------------------------------------------- |
-| `src/**`               | Bind-Mount HMR | Next.js Hot-Reload (kein Compose-Watch-Eintrag)                        |
-| `prisma/schema.prisma` | `restart`      | App-Container startet neu, `prisma db push` + `prisma generate` laufen |
-| `prisma/migrations/**` | `restart`      | `migrate`-Container läuft erneut und wendet Migrationen an             |
-| `next.config.ts`       | `restart`      | App-Container startet neu                                              |
-| `package.json`         | `rebuild`      | Image neu gebaut (npm ci), Container neu gestartet                     |
-| `package-lock.json`    | `rebuild`      | Wie `package.json`                                                     |
-
-Der App-Container läuft über `scripts/start-dev-with-migrations.sh`,
-Migrationen über `scripts/run-migrations-with-recovery.sh`.
-
----
-
-## Schemaänderungen
-
-In der laufenden Entwicklung sind keine manuellen Schritte nötig:
-Änderungen an `prisma/schema.prisma` oder `prisma/migrations/**` triggern automatisch einen Container-Restart.
-Dabei werden Migrationen angewendet, das Schema synchronisiert (`db push`) und der Prisma-Client aktualisiert.
-
-Wenn eine Schemaänderung ins Repository soll, danach eine Migration erzeugen und committen:
-
-```bash
-# im Monorepo, von der Wurzel:
-pnpm --filter treffsicher exec prisma migrate dev --name beschreibender-name
-```
-
----
-
-## Qualitätschecks
-
-Vor jedem Commit müssen alle Gates fehlerfrei durchlaufen — im Monorepo von der
-Wurzel (turbo-gecacht über beide Apps):
-
-```bash
-pnpm check                        # lint, format:check, test, tsc, next build
-pnpm test --filter treffsicher    # nur Tests dieser App
-```
-
-Formatierung automatisch korrigieren: `pnpm --filter treffsicher format`.
-
----
-
-## Konfiguration (Umgebungsvariablen)
-
-Alle Konfiguration erfolgt über Umgebungsvariablen. Die Vorlage liegt in `.env.example`.
-
-| Variable                                        | Beschreibung                                                                         | Beispiel                                     |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------- |
-| `DATABASE_URL`                                  | PostgreSQL Connection String                                                         | `postgresql://user:pass@db:5432/treffsicher` |
-| `NEXTAUTH_SECRET`                               | Zufälliger Secret für Session-Verschlüsselung (min. 32 Zeichen)                      | `openssl rand -base64 32`                    |
-| `NEXTAUTH_URL`                                  | Öffentliche URL der App                                                              | `https://training.example.com`               |
-| `UPLOAD_DIR`                                    | Pfad zum Upload-Verzeichnis im Container                                             | `/app/uploads`                               |
-| `ADMIN_EMAIL`                                   | E-Mail des ersten Admin-Accounts                                                     | `admin@example.com`                          |
-| `ADMIN_PASSWORD`                                | Passwort des ersten Admin-Accounts (min. 12 Zeichen)                                 | sicheres Passwort                            |
-| `PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS`         | Aktiviert automatische Recovery für fehlgeschlagene Migrationen im `migrate`-Service | `true`                                       |
-| `PRISMA_AUTO_RESOLVE_UNKNOWN_FAILED_MIGRATIONS` | Erlaubt Fallback für unbekannte fehlgeschlagene Migrationen (`--rolled-back`)        | `false`                                      |
-
-**Entwicklung**: Werte sind direkt in `docker-compose.dev.yml` gesetzt — für den oben beschriebenen Container-Workflow ist keine `.env` nötig.
-
-**Optional (lokale Prisma-CLI):** Wenn Prisma-Befehle lokal ausgeführt werden sollen:
-
-```bash
-npm ci
-export DATABASE_URL=postgresql://treffsicher:treffsicher@localhost:5432/treffsicher
-```
-
-**Produktion**: `.env`-Datei anlegen (aus `.env.example` kopieren) und alle Werte ausfüllen.
-
-```bash
-cp .env.example .env
-# .env editieren und echte Werte eintragen
-```
-
----
+| Variable                                                                                 | Bedeutung                                                                                     |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                                           | PostgreSQL-Verbindung (lokal die Dev-DB `treffsicher`)                                        |
+| `NEXTAUTH_SECRET`                                                                        | Secret der Sitzungen, mindestens 32 Zeichen (`openssl rand -base64 48`)                       |
+| `NEXTAUTH_URL`                                                                           | öffentliche URL der App (lokal `http://localhost:3001`)                                       |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`                                                          | erstes Admin-Konto, nur wenn noch keines existiert                                            |
+| `UPLOAD_DIR`                                                                             | Verzeichnis der Anhänge, Vorgabe `/app/uploads` (lokal `./uploads`, in Produktion ein Volume) |
+| `DISPLAY_TIME_ZONE`                                                                      | Anzeige-Zeitzone (IANA), Vorgabe `Europe/Berlin`; die Datenbank speichert UTC                 |
+| `AUTH_TRUST_PROXY_HEADERS`                                                               | Proxy-Header für die Ratenbegrenzung der Anmeldung vertrauen (nur hinter Caddy `true`)        |
+| `AUTH_RATE_LIMIT_MAX_BUCKETS`                                                            | höchstens so viele Einträge der Ratenbegrenzung im Speicher (Vorgabe 10000)                   |
+| `PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS`, `PRISMA_AUTO_RESOLVE_UNKNOWN_FAILED_MIGRATIONS` | Wiederherstellung fehlgeschlagener Migrationen im Migrator (`scripts/`)                       |
 
 ## Meyton-PDF-Import (Sicherheit)
 
-Der URL-Import für Meyton-PDFs ist bewusst eingeschränkt:
+Der Import per URL ist bewusst eingeschränkt:
 
-- Nur `http://` und `https://`
-- Keine Redirects (`3xx` wird abgebrochen)
-- Keine lokalen/privaten Ziele (z.B. `localhost`, `127.0.0.1`, `10.x.x.x`, `192.168.x.x`, `fc00::/7`)
-- Bei Hostnamen wird zusätzlich die DNS-Auflösung geprüft (keine private Ziel-IP erlaubt)
-- Response muss ein PDF liefern (`Content-Type`)
-- Datei wird als PDF plausibilisiert (`%PDF-` Header + `%%EOF` Marker)
-
----
-
-## Produktions-Deployment
-
-Deployment läuft über das `vereinsheim`-Monorepo: lokaler Build → Docker Hub → der VPS
-pullt die Images. Bedienung, Backup und Recovery sind zentral in der
-Root-[`README.md`](../../README.md) und [`docs/operations.md`](../../docs/operations.md) beschrieben.
-Migrationen laufen vor dem App-Start im dedizierten `migrate`-Service (`prisma migrate deploy`).
-Wenn `migrate deploy` fehlschlägt und ein P3009-Fall vorliegt, versucht der `migrate`-Service
-eine automatische Recovery für bekannte sichere Migrationsfälle und führt danach `migrate deploy` erneut aus.
-Der erste Admin wird beim ersten Start aus `ADMIN_EMAIL` + `ADMIN_PASSWORD` angelegt.
-
----
+- nur `http://` und `https://`, keine Weiterleitungen (`3xx` bricht ab)
+- keine lokalen oder privaten Ziele (z.B. `localhost`, `127.0.0.1`, `10.x.x.x`, `192.168.x.x`, `fc00::/7`); bei
+  Hostnamen wird auch die DNS-Auflösung geprüft
+- die Antwort muss ein PDF sein (`Content-Type`, `%PDF-`-Kopf und `%%EOF`-Marker)
 
 ## Projektstruktur
 
 ```
 src/
-├── app/              # Next.js App Router (Seiten, Layouts)
-│   ├── (auth)/       # Login (nicht geschützt)
-│   └── (app)/        # Geschützte Seiten (Proxy prüft Login)
-├── proxy.ts          # Route-Schutz (Next.js Proxy + NextAuth)
+├── app/
+│   ├── (auth)/            # Anmeldung
+│   ├── (app)/             # geschützte Seiten: Dashboard, Einheiten, Ziele, Schussabläufe, Statistiken,
+│   │                      # Disziplinen, Admin, Konto
+│   └── api/               # NextAuth, Auslieferung der Anhänge
+├── proxy.ts               # Routenschutz
 ├── components/
-│   ├── ui/           # shadcn/ui Basiskomponenten
-│   └── app/          # App-spezifische Komponenten
-└── lib/              # Geschäftslogik, Datenbankzugriff
-    ├── db.ts          # Prisma Client Singleton
-    ├── auth.ts        # NextAuth Konfiguration
-    ├── disciplines/   # Disziplin-Logik
-    ├── sessions/      # Einheiten-Logik, Berechnung
-    └── stats/         # Statistik-Abfragen und Berechnungen
+│   ├── ui/                # app-eigene shadcn-Komponenten (die geteilten liegen in @vereinsheim/ui)
+│   └── app/               # Komponenten je Fachgebiet
+└── lib/                   # Fachmodule (Actions, Queries, Typen, Berechnung): sessions, disciplines, goals,
+                           # shot-routines, stats, dashboard, uploads, exports, account, admin;
+                           # dazu auth, db, startup
 prisma/
-├── schema.prisma      # Datenbankschema
-├── migrations/        # Migrationsdateien (eingecheckt)
-└── seed.ts            # Standarddisziplinen
-docs/                  # Anforderungen und technische Dokumentation
+├── schema.prisma          # Datenbankschema
+├── migrations/            # Migrationen (eingecheckt)
+└── seed.ts                # Standarddisziplinen
+scripts/                   # Migrator mit Wiederherstellung (Produktions-Image)
 ```
 
----
+## Weiterlesen
 
-## Tech Stack
-
-| Bereich   | Technologie                |
-| --------- | -------------------------- |
-| Framework | Next.js 16 (App Router)    |
-| Datenbank | PostgreSQL 15 + Prisma 7   |
-| Auth      | NextAuth.js v4             |
-| UI        | shadcn/ui + Tailwind CSS 4 |
-| Charts    | Recharts                   |
-| Tests     | Vitest                     |
-| Container | Docker + Docker Compose    |
-
----
+- Fachdoku: [`vault/apps/treffsicher/`](../../vault/apps/treffsicher/) — Einstieg
+  [`treffsicher.md`](../../vault/apps/treffsicher/treffsicher.md), Anforderungen in
+  [`treffsicher-requirements.md`](../../vault/apps/treffsicher/treffsicher-requirements.md)
+- Betrieb, Deploy, Backup: [`vault/operations/operations.md`](../../vault/operations/operations.md)
+- Arbeitsregeln für Agenten: [`CLAUDE.md`](CLAUDE.md)
 
 ## Lizenz
 

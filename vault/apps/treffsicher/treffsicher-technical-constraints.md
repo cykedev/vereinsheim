@@ -3,7 +3,7 @@ id: treffsicher-technical-constraints
 type: guide
 title: "Treffsicher — Technische Rahmenbedingungen"
 aliases: ["Technische Rahmenbedingungen — Verbindliche Regeln"]
-keywords: [treffsicher, technische, rahmenbedingungen, verbindliche, regeln]
+keywords: [treffsicher, technische, rahmenbedingungen, verbindliche, regeln, compose.yml, Dockerfile, pnpm, Migrations-Job, Upload-Volume, Dateistruktur]
 part_of: ["[[treffsicher]]"]
 ---
 
@@ -16,14 +16,14 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 
 **Weitere verbindliche Constraint-Dokumente:**
 
-- Code-Stil, TypeScript, Zod, Testing: @docs/code-conventions.md
-- Datenmodell, Env-Vars, Disziplinen, Ergebniserfassung: @docs/data-model.md
+- Code-Stil, TypeScript, Zod, Testing: [[treffsicher-code-conventions]]
+- Datenmodell, Env-Vars, Disziplinen, Ergebniserfassung: [[treffsicher-data-model]]
 
 ## Index
 
-- **Hosting / Entwicklungsumgebung** — Docker Compose (dev/prod), portabel, Node.js 24 LTS
+- **Hosting / Entwicklungsumgebung** — Docker Compose im Monorepo (Root-`compose.yml`, Dev-Postgres aus Root-`docker-compose.dev.yml`), Node.js 24 LTS
 - **Persistenz** — PostgreSQL + Named Volumes, Upload-Volume `/app/uploads`, Dateinamen als UUID
-- **Datenbank-Migrationen** — Prisma Migrate deploy beim Start, P3009-Recovery-Script, kein Datenverlust
+- **Datenbank-Migrationen** — Prisma Migrate deploy im Migrations-Job vor dem App-Start, P3009-Recovery-Script, kein Datenverlust
 - **Tech Stack + Prisma 7** — Verbindliche Versionen; Prisma 7 breaking changes (Client-Pfad, Adapter, Config)
 - **Daten- und Aktionsarchitektur** — Server Actions, Zod, useActionState, serverseitige Konsistenzregeln
 - **Authentifizierung & Sicherheit + DoS-Schutz** — NextAuth v4, bcrypt, Session-Invalidierung, Rate-Limits
@@ -36,21 +36,20 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 
 ## Hosting & Betrieb
 
-- **Zielplattform**: Self-hosted via Docker Compose (Produktion: VPS, im `vereinsheim`-Monorepo)
+- **Zielplattform**: Self-hosted via Docker Compose (Produktion: VPS, im `vereinsheim`-Monorepo, Root-`compose.yml`)
 - **Portabilität**: Kein plattformspezifischer Code — die App muss auf jeder Docker-Compose-Umgebung lauffähig sein
 - **Konfiguration**: Alle umgebungsabhängigen Werte (DB-URL, Secrets, Pfade) über Umgebungsvariablen in `.env` — niemals hart im Code verdrahtet
-- **Node.js-Version**: 24 LTS (im Dockerfile: `FROM node:24-alpine`)
+- **Node.js-Version**: 24 LTS (im Root-`Dockerfile`: `FROM node:24-alpine`)
 
 ---
 
 ## Entwicklungsumgebung
 
-- **Lokale Entwicklung**: Vollständig via Docker Compose (`docker-compose.dev.yml`)
-  - Enthält: App (mit Hot-Reload), PostgreSQL, Volume-Mounts
-  - Ziel: `docker compose -f docker-compose.dev.yml up` reicht zum Starten
-- **Produktionsumgebung**: Separates `docker-compose.prod.yml`
-  - Enthält: App (Build-Image), PostgreSQL, persistente Volumes
-- **Kein Mischen**: Dev- und Prod-Konfigurationen sind strikt getrennt
+- **Lokale Entwicklung**: PostgreSQL aus der Root-`docker-compose.dev.yml` (ein geteilter Container, je App eine Dev-DB); die App läuft auf dem Host mit Hot-Reload (`pnpm dev`, Port 3001)
+  - Start an der Repo-Wurzel: `docker compose -f docker-compose.dev.yml up -d`, dann `pnpm dev` (oder `pnpm dev --filter treffsicher`)
+- **Produktionsumgebung**: Root-`compose.yml`
+  - Enthält: `app-treffsicher` (Image aus dem Root-`Dockerfile`), den Migrations-Job `migrate-treffsicher`, den geteilten PostgreSQL-Container und das Upload-Volume
+- **Kein Mischen**: Dev- und Prod-Konfigurationen sind strikt getrennt (eigener Compose-Projektname, eigene Volumes)
 
 ---
 
@@ -58,7 +57,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 
 ### Datenbank
 
-- **System**: PostgreSQL (in Docker Container)
+- **System**: PostgreSQL (geteilter Container im Monorepo-Stack, eigene Datenbank `treffsicher` mit eigener Rolle)
 - **Volume**: Named Docker Volume für Datenbankdaten (`postgres_data`)
 - **Kein Datenverlust** durch Container-Neustart oder Image-Updates
 
@@ -66,7 +65,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 
 - **Speicherort**: Lokales Docker Volume, gemountet in den App-Container
 - **Pfad im Container**: `/app/uploads`
-- **Volume-Name**: `uploads_data`
+- **Volume-Name**: `uploads_treffsicher`
 - **Kein Cloud-Dienst** — volle Kontrolle, keine externe Abhängigkeit
 - **Maximale Dateigrösse**: 10 MB pro Datei
 - **Erlaubte Dateitypen**: JPEG, PNG, WebP (Bilder) und PDF
@@ -77,7 +76,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 ## Datenbank-Migrationen
 
 - **Tool**: Prisma Migrate
-- **Strategie**: `prisma migrate deploy` wird **automatisch beim App-Start** ausgeführt
+- **Strategie**: `prisma migrate deploy` läuft **automatisch vor dem App-Start** im One-shot-Job `migrate-treffsicher` (Image-Target `migrator`, `scripts/run-migrations-with-recovery.sh`); die App startet erst nach dessen erfolgreichem Abschluss
 - **Recovery bei P3009**: Wenn ein Migrationseintrag in `_prisma_migrations` als fehlgeschlagen markiert ist,
   startet ein Recovery-Script automatisch. Bekannte, explizit freigegebene Fälle werden aufgelöst und
   `prisma migrate deploy` wird erneut ausgeführt.
@@ -85,7 +84,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
   automatisch aufgelöst (`PRISMA_AUTO_RESOLVE_UNKNOWN_FAILED_MIGRATIONS=false`).
 - **Regel**: Jede Schemaänderung erzeugt eine neue Migration via `prisma migrate dev` (lokal)
 - **Keine destructiven Migrationen** ohne expliziten Kommentar und Backup-Hinweis
-- **Migrationsdateien** werden im Repository eingecheckt (`prisma/migrations/`)
+- **Migrationsdateien** werden im Repository eingecheckt (`apps/treffsicher/prisma/migrations/`)
 - **Garantie**: Datenverlust durch Schemaänderungen ist ein kritischer Fehler und muss verhindert werden
 
 ---
@@ -96,14 +95,14 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 | --------------- | ----------------------- | ------------ |
 | Framework       | Next.js (App Router)    | 16.x         |
 | Runtime         | React                   | 19.x         |
-| Sprache         | TypeScript              | 5.x          |
+| Sprache         | TypeScript              | 6.x          |
 | Datenbank       | PostgreSQL              | 15.x         |
 | ORM             | Prisma                  | 7.x          |
 | Auth            | NextAuth.js             | 4.x (stabil) |
 | UI-Komponenten  | shadcn/ui               | aktuell      |
 | Styling         | Tailwind CSS            | 4.x          |
 | Charts          | Recharts                | 2.x          |
-| Package Manager | npm                     | -            |
+| Package Manager | pnpm (Workspace)        | 10.x         |
 | Container       | Docker + Docker Compose | -            |
 
 ---
@@ -113,7 +112,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 Prisma 7 hat breaking changes, die die Implementierung betreffen:
 
 - **Client-Generierung**: In `src/generated/prisma/` (konfiguriert in `schema.prisma` via `output`), nicht in `node_modules/@prisma/client`. Import immer via `@/generated/prisma/client`.
-- **Datenbankverbindung**: Kein `url`-Feld in `datasource db` von `schema.prisma`. Stattdessen `prisma.config.ts` im Projekt-Root für Migrations-CLI. Application-Code nutzt `@prisma/adapter-pg` mit `pg.Pool`.
+- **Datenbankverbindung**: Kein `url`-Feld in `datasource db` von `schema.prisma`. Stattdessen `prisma.config.ts` im App-Root (`apps/treffsicher/`) für Migrations-CLI. Application-Code nutzt `@prisma/adapter-pg` mit `pg.Pool`.
 - **Zusätzliche Pakete**: `@prisma/adapter-pg`, `pg`, `@types/pg`, `dotenv` werden benötigt.
 
 `src/lib/db.ts` mit Prisma 7 Adapter:
@@ -178,7 +177,7 @@ if (process.env.NODE_ENV !== "production") {
 
 ### DoS-Schutz (verbindlich)
 
-- **Login-Rate-Limit**: Buckets pro E-Mail und pro IP in der Datenbank (`LoginRateLimitBucket`, in Tests im Speicher; `maxAttemptsPerEmail=5`, `maxAttemptsPerIp=30`, Fenster/Blockdauer je 15 Minuten). Anmeldeablauf, Store und Admin-Auswertung aus `@vereinsheim/lib/auth/*` (gemeinsam mit Ringwerk und Spiegel, Oktober 2026)
+- **Login-Rate-Limit**: Buckets pro E-Mail und pro IP in der Datenbank (`LoginRateLimitBucket`, in Tests im Speicher; `maxAttemptsPerEmail=5`, `maxAttemptsPerIp=30`, Fenster/Blockdauer je 15 Minuten). Anmeldeablauf, Store und Admin-Auswertung aus `@vereinsheim/lib/auth/*` (gemeinsam mit Ringwerk und Spiegel)
 - **Gleich lange Antwort**: Eine unbekannte oder deaktivierte E-Mail kostet so viel Zeit wie eine bekannte (bcrypt gegen einen festen Hash, `authorizeCredentials`), die Antwortzeit verrät keine Konten
 - **Login-Rate-Limit Speichergrenze**: Maximale Anzahl Buckets konfigurierbar (`AUTH_RATE_LIMIT_MAX_BUCKETS`, Standard 10'000), älteste Buckets werden bei Erreichen der Grenze verdrängt
 - **Proxy-Header-Vertrauen**: IP-basierte Limits nutzen `x-real-ip`/`x-forwarded-for` nur wenn `AUTH_TRUST_PROXY_HEADERS=true` gesetzt ist (sicherer Default: aus)
@@ -186,11 +185,11 @@ if (process.env.NODE_ENV !== "production") {
   - `fetch` mit `AbortController` (Timeout 15 Sekunden)
   - Keine Redirects (`redirect: "manual"`)
   - `Content-Length` Vorab-Prüfung auf 10 MB
-  - Streaming-Download mit hartem Abbruch > 10 MB (kein ungebremstes `arrayBuffer()` mehr)
-- **Meyton-PDF-Dekompression**:
-  - Maximal 2 MB pro Flate-Stream (`inflateSync(..., { maxOutputLength })`)
-  - Maximal 8 MB dekomprimierter Inhalt insgesamt pro Import
-  - Maximal 25'000 extrahierte Text-Tokens
+  - Streaming-Download mit hartem Abbruch > 10 MB (kein ungebremstes `arrayBuffer()`)
+- **Meyton-PDF-Parsing** (pdf.js via `unpdf`; alle Grenzen greifen während des Parsens, Details [[treffsicher-meyton-import]]):
+  - Maximal 20 Seiten
+  - Maximal 50'000 Textitems und 200'000 Zeichen extrahierter Text
+  - Maximal 15 Sekunden Parse-Zeit
 - **Session-FormData (Server Action)**:
   - Maximal 120 Serien pro Request
   - Maximal 120 Schusswerte pro Serie (beim JSON-Array)
@@ -204,12 +203,11 @@ if (process.env.NODE_ENV !== "production") {
 
 ## Linting & Formatierung
 
-> **Monorepo (Phase 2):** ESLint-, Prettier-, tsconfig-, PostCSS- und Next-Config liegen in
-> `@vereinsheim/config` (`packages/config`) — die App-Dateien sind nur noch dünne Stubs
-> (`eslint.config.mjs` re-exportiert; Prettier kommt über das `package.json`-Feld `"prettier"`, die
-> `.prettierrc` ist **entfernt**). **Kanonische Quelle ist das Paket**, nicht die App — Verhalten und
-> Regeln ändert man dort, nicht in den Apps. Die Regeln unten gelten unverändert; die Snippets zeigen
-> den aktuellen Paketstand (`packages/config`).
+> **Monorepo:** ESLint-, Prettier-, tsconfig-, PostCSS- und Next-Config liegen in
+> `@vereinsheim/config` (`packages/config`) — die App-Dateien sind dünne Stubs
+> (`eslint.config.mjs` re-exportiert; Prettier kommt über das `package.json`-Feld `"prettier"`, eine
+> `.prettierrc` gibt es nicht). **Kanonische Quelle ist das Paket**, nicht die App — Verhalten und
+> Regeln ändert man dort, nicht in den Apps. Die Snippets zeigen den Paketstand (`packages/config`).
 
 ### Tools
 
@@ -222,7 +220,7 @@ if (process.env.NODE_ENV !== "production") {
 
 ESLint v9 Flat Config. Die geteilte Config liegt in `@vereinsheim/config`
 (`packages/config/eslint/index.mjs`) und nutzt `defineConfig`/`globalIgnores` (kein `.eslintrc.json`,
-kein `FlatCompat` mehr):
+kein `FlatCompat`):
 
 ```js
 // packages/config/eslint/index.mjs — kanonisch; Regeln hier ändern, nicht in der App
@@ -239,7 +237,8 @@ const eslintConfig = defineConfig([
     rules: {
       // Ungenutzte Variablen sind ein Fehler — verhindert toten Code
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "error",
+      // ausgenommen Geschwister eines Rests: `const { a: _a, ...rest } = x` lässt bewusst `a` weg
+      "@typescript-eslint/no-unused-vars": ["error", { ignoreRestSiblings: true }],
       // console.log() ist verboten im Code, console.error/warn erlaubt für Fehlerlogging
       "no-console": ["warn", { allow: ["error", "warn"] }],
       // any-Typen verbieten — lieber unknown mit expliziter Prüfung
@@ -251,7 +250,7 @@ const eslintConfig = defineConfig([
 export default eslintConfig
 ```
 
-Die App-Datei `eslint.config.mjs` ist nur noch ein Re-Export-Stub:
+Die App-Datei `eslint.config.mjs` ist ein Re-Export-Stub:
 
 ```js
 // eslint.config.mjs
@@ -262,7 +261,7 @@ export { default } from "@vereinsheim/config/eslint"
 
 Die Optionen liegen in `@vereinsheim/config` (`packages/config/prettier/index.json`) und werden über
 das `package.json`-Feld `"prettier": "@vereinsheim/config/prettier"` eingebunden — eine eigene
-`.prettierrc` gibt es in der App **nicht** mehr. Inhalt des Pakets:
+`.prettierrc` hat die App **nicht**. Inhalt des Pakets:
 
 ```json
 {
@@ -276,26 +275,30 @@ das `package.json`-Feld `"prettier": "@vereinsheim/config/prettier"` eingebunden
 
 ### Regeln
 
-- **Vor jedem Commit**: `npm run lint` und `npm run format:check` müssen fehlerfrei durchlaufen
-- **Hinweis**: `next lint` ist in Next.js 16 defekt — der `lint`-Script nutzt direkt `eslint src`
+- **Vor jedem Commit**: `pnpm check` an der Repo-Wurzel (lint, format:check, test, check-types, build) muss fehlerfrei durchlaufen
+- **Hinweis**: Next.js 16 hat kein `next lint` — das `lint`-Script nutzt direkt `eslint src`
 - **Kein Auto-Fix beim Commit** (kein Husky/lint-staged — zu viel Setup-Aufwand)
 - **`no-console`**: `console.log()` ist verboten, `console.error()` und `console.warn()` erlaubt
 - **`no-unused-vars`**: Ungenutzte Variablen sind ein Fehler, nicht nur eine Warnung
 - **Keine `any`-Typen**: ESLint-Fehler bei `any` (`@typescript-eslint/no-explicit-any`)
 
-### npm-Scripts (verbindlich)
+### Paket-Scripts (verbindlich)
+
+`apps/treffsicher/package.json`; an der Repo-Wurzel ruft Turborepo dieselben Scripts für alle Apps auf (`pnpm lint`, `pnpm test`, `pnpm check` …).
 
 ```json
 {
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack -p 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3001",
     "lint": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check-types": "tsc --noEmit",
+    "db:generate": "prisma generate"
   }
 }
 ```
@@ -305,27 +308,30 @@ das `package.json`-Feld `"prettier": "@vereinsheim/config/prettier"` eingebunden
 ## Dateistruktur (verbindlich)
 
 ```
-/
+apps/treffsicher/
 ├── src/
-│   ├── app/              # Next.js App Router (Seiten, Layouts, Server Actions)
-│   ├── components/       # Wiederverwendbare UI-Komponenten
-│   │   ├── ui/           # shadcn/ui Basis-Komponenten (nicht manuell editieren)
-│   │   └── [feature]/    # Feature-spezifische Komponenten
-│   ├── lib/              # Geschäftslogik, Datenbankzugriff, Hilfsfunktionen
+│   ├── app/              # Next.js App Router (Seiten, Layouts, Route Handler)
+│   ├── components/
+│   │   ├── ui/           # app-eigene shadcn/ui-Komponenten (chart, form); geteilte aus @vereinsheim/ui
+│   │   └── app/[feature]/ # Feature-spezifische Komponenten
+│   ├── lib/              # Geschäftslogik, Server Actions, Datenbankzugriff, Hilfsfunktionen
 │   │   ├── db.ts         # Prisma Client (Singleton)
 │   │   ├── auth.ts       # NextAuth Konfiguration
 │   │   └── [feature]/    # Feature-spezifische Logik
+│   ├── generated/prisma/ # generierter Prisma Client (nicht eingecheckt)
 │   └── types/            # Gemeinsame TypeScript-Typen
 ├── prisma/
 │   ├── schema.prisma     # Datenbankschema
+│   ├── seed.ts
 │   └── migrations/       # Migrationsdateien (eingecheckt!)
-├── docs/                 # Projektdokumentation
+├── scripts/              # Migrations-Recovery (run-migrations-with-recovery.sh, resolve-failed-migrations.mjs)
 ├── public/               # Statische Dateien
-├── docker-compose.dev.yml
-├── docker-compose.prod.yml
-├── Dockerfile
+├── prisma.config.ts
 └── .env.example          # Vorlage für Umgebungsvariablen (niemals echte Werte!)
 ```
+
+An der Repo-Wurzel: `compose.yml` (Produktion), `docker-compose.dev.yml` (Dev-Postgres), `Dockerfile`
+(Image aller Apps), `scripts/vereinsheim` (Betriebs-CLI); die Projektdoku liegt in `vault/`.
 
 ---
 
@@ -381,7 +387,7 @@ components/app/<feature>/<module>/
 ### 6) Refactor-Sicherheitsnetz
 
 - Struktur-Refactors dürfen kein Verhalten ändern.
-- Pflicht vor Merge: `npm run lint` und `npm run test` grün.
+- Pflicht vor Merge: `pnpm check` grün.
 - Bei UI-Refactors ist die visuelle Konsistenz (Layout/Alignment) manuell zu prüfen.
 
 ---
@@ -391,7 +397,7 @@ components/app/<feature>/<module>/
 - **Responsiv**: Mobile und Desktop gleichwertig
 - **Sprache**: Deutsch
 - **Dark Mode**: Ausschliesslich Dark Mode — kein Light Mode, kein Toggle. `class="dark"` ist fest auf `<html>` gesetzt.
-- **Offline**: Kein Offline-Support im ersten Schritt
+- **Offline**: Kein Offline-Support (offen, [[treffsicher-backlog]] T-06)
 
 ### Verbindliche UI-Konsistenzregeln
 
@@ -424,7 +430,7 @@ components/app/<feature>/<module>/
 
 ## App-Name
 
-**Treffsicher** — Docker Image: `treffsicher`, App-Port: `3000`
+**Treffsicher** — Docker Image: `treffsicher`, App-Port im Container: `3000`, Dev-Port auf dem Host: `3001`
 
 ---
 
@@ -437,7 +443,7 @@ components/app/<feature>/<module>/
 
 ## Betrieb & Fehlerfälle (verbindlich)
 
-- Betriebsdokumentation: Deployment/Backup/Restore laufen im Monorepo über `vereinsheim` (siehe Root-`docs/operations.md`).
+- Betriebsdokumentation: Deployment/Backup/Restore laufen im Monorepo über `./scripts/vereinsheim` (siehe [[operations]]).
 - Für kritische Fehlerfälle (DB nicht erreichbar, Migration fehlgeschlagen, Upload-Volume nicht verfügbar, fehlende Secrets) gibt es dokumentierte Diagnose- und Wiederanlauf-Schritte.
 - Nutzer erhalten in der UI klare deutsche Fehlermeldungen; technische Details bleiben im Server-Log.
 - Wiederherstellbarkeit von Datenbank **und** Uploads muss regelmässig praktisch geprüft werden (Restore-Test).
@@ -449,7 +455,7 @@ components/app/<feature>/<module>/
 - **UI-Sprache**: Deutsch
 - **Code-Sprache (Identifier)**: Englisch (Variablennamen, Funktionsnamen, Komponenten-Namen, Dateinamen, Routen/URL-Segmente)
 - **Code-Kommentare**: Deutsch
-- **Dokumentation**: Deutsch (docs/, README)
+- **Dokumentation**: Deutsch (`vault/`, README)
 - **Fehlermeldungen für Nutzer**: Deutsch
 - **Commit-Messages**: Englisch
 
@@ -461,16 +467,3 @@ components/app/<feature>/<module>/
 - **`.env`** niemals eingecheckt
 - **`node_modules/`** niemals eingecheckt
 - **Uploads-Verzeichnis** niemals eingecheckt
-
----
-
-## Änderungsnotizen
-
-- **06.03.2026**: Code Conventions + Testing nach `docs/code-conventions.md` ausgelagert. Datenmodell, Env-Vars, Disziplinen, Ergebniserfassung nach `docs/data-model.md` ausgelagert. Dieses Dokument enthält nur noch Infrastruktur-, Architektur- und UI-Regeln.
-- **05.03.2026**: Test- und Kommentierungsregeln präzisiert.
-- **05.03.2026**: Neue verbindliche Modularitätsregeln ergänzt.
-- **03.03.2026**: Navigations- und Flow-Regeln verbindlich präzisiert.
-- **03.03.2026**: Verbindliche Konsistenzregeln ergänzt.
-- **02.03.2026**: DoS-Härtung dokumentiert.
-- **02.03.2026**: Login-Rate-Limit weiter gehärtet.
-- **02.03.2026**: Sprach- und Benennungsregel präzisiert.

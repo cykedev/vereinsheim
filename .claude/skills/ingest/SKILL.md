@@ -5,7 +5,7 @@ description: Ingest an external source (a .raw/ file, pasted content, or a URL) 
 
 # /ingest
 
-Turn an external source into structured, linked, **cited** vault notes (KNOWLEDGE.md §6).
+Turn an external source into structured, linked, **cited** vault notes (the `source` type in `vault/SCHEMA.md`).
 The rule: **extract, never copy** (copyright + it goes stale), and **every ingested
 claim cites a `source`** so an answer is always one hop from its provenance.
 
@@ -34,5 +34,5 @@ claim cites a `source`** so an answer is always one hop from its provenance.
 
 > **Scale note:** ingesting many sources at once is fine — process each fully, then do
 > one cross-reference + `index.md` pass at the end, and report what was created/updated.
-> If BM25 recall ever weakens on a large ingested corpus, the semantic-reranker seam
-> (KNOWLEDGE.md §8) is the escalation, not a rewrite.
+> If BM25 recall ever weakens on a large ingested corpus, an optional semantic reranker on top of
+> the BM25 search is the escalation, not a rewrite.

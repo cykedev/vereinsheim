@@ -3,8 +3,9 @@ name: consolidate-lessons
 description: Triage an app's session lessons (apps/<app>/.claude/tasks/lessons.md) by strongest-permanence-first (ENFORCE > DOCUMENT > REMEMBER), promote reusable rules into gates/conventions, and store project-specific context as an incident note in the vault. Use at session end after writing lessons, or whenever lessons.md has grown.
 ---
 
-One skill for **both apps** (ADR-017). Operate on the app you're working in; `<app>` is
-`ringwerk` or `treffsicher`. The lessons buffer is `apps/<app>/.claude/tasks/lessons.md`.
+One skill for **all apps** (ADR-017). Operate on the app you're working in; `<app>` is
+`ringwerk`, `treffsicher` or `spiegel`. The lessons buffer is `apps/<app>/.claude/tasks/lessons.md`
+(currently only `apps/ringwerk` keeps one).
 
 ## Triage-Prinzip: stärkste verfügbare Permanenz zuerst
 
@@ -19,6 +20,7 @@ auf der **höchsten** erreichbaren Stufe verankern:
    (Exemplar: `"use server"`-Re-Export-Lektion → `next build` als Gate, nicht nur Doku.)
 2. **DOCUMENT** — generische Regel in die passende Vault-Guide-Note (live editiert, ADR-025):
    - app-spezifisch generisch → `vault/apps/<app>/<app>-code-conventions.md` bzw. `…-ui-patterns.md`
+     (Spiegel: `apps/spiegel/CLAUDE.md` bzw. die passende Note unter `vault/spiegel/`)
    - app-übergreifend → `vault/conventions.md` (Single Source, @-importiert)
 3. **REMEMBER** — projektspezifischer Kontext, der **nicht** als Regel taugt → **Vault** als
    `incident`-Note unter `vault/incidents/` (live, kein Build; ADR-025). Hierher gehört das *Warum/Wann/Was-passiert-ist*:
@@ -67,7 +69,7 @@ nie still nur dokumentiert.
       (Synonyme; vault-lint erzwingt sie für atomare Notes). Existiert die Note → Body/Datum ergänzen
       statt Dublette.
    b. **Verknüpfen** — typisierte Kante(n) im Frontmatter: `relates_to`/`part_of` zur App
-      (`"[[ringwerk]]"`/`"[[treffsicher]]"`), `governed_by`/`informed_by` zur ADR bzw. zum Topic, damit
+      (`"[[ringwerk]]"`/`"[[treffsicher]]"`/`"[[spiegel]]"`), `governed_by`/`informed_by` zur ADR bzw. zum Topic, damit
       die Note im Graph hängt (nicht orphan; sonst nur per Suche findbar).
    c. **Validieren + committen** — `node .claude/vault-lint.mjs` (Schema/Anker/keywords) → die Note in
       den Session-Commit. Bei Cross-Ref-Aufräumen `/sync-graph`.

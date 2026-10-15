@@ -6,10 +6,13 @@ aliases: [spiegel-telefon, spiegel-handy, mobil-konzept]
 keywords: [mobil, handy, telefon, smartphone, touch, tippen, daumenzone, sprungleiste, reiter, tabs, seitlich scrollen, querformat, tablet, desktop, sticky, hover, tooltip, lineal, touch-ziel, 44 px, wcag, kontrast, screenreader, blatt, bottom sheet, abstände, raster, spalten]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
-relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics-help]]"]
+relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics-help]]", "[[spiegel-durchsicht]]"]
 ---
 
-**TL;DR** Jede Zahl von Spiegel soll auf dem Telefon erreichbar sein: ohne seitliches Scrollen, ohne Hover, mit einer Hand, das Häufigste zuerst. Gemessen am 8. Oktober 2026 mit den echten Bausteinen bei 375 × 812 px. Umgesetzt sind die kleinen Korrekturen (Schritt 3) und der Seitenaufbau mit Sprungleiste, Hilfe als Blatt und Rücksprung (Schritt 4, [[spiegel-ui-design]]). Seit dem 8. Oktober 2026 gibt es auch das Diagramm-Lineal (Schritt 5).
+**TL;DR** Jede Zahl von Spiegel ist auf dem Telefon erreichbar: ohne seitliches Scrollen, ohne Hover, mit einer Hand,
+das Häufigste zuerst. Die Seite einer Scheibe ist eine Seite mit Sprungleiste, Hilfe als Blatt, Sprung zur Scheibe mit
+Rücksprung und einem Lineal an den Diagrammen ([[spiegel-ui-design]]). Gemessen wurde am 8. Oktober 2026 mit den
+echten Bausteinen bei 375 × 812 px; heute prüft `pnpm --filter spiegel pruefen` die Bedienung an der App.
 
 ## Nutzungssituationen
 
@@ -22,13 +25,11 @@ relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statisti
 ## Ebenen der Information
 
 1. **Auf einen Blick:** Ergebnis, Serienwerte, Trefferbild, letzter oder angetippter Schuss, die wichtigsten
-   Beobachtungen in Worten (seit U1 bis zu drei, die Lage zuerst; auf dem Telefon nur die erste).
-2. **Genauer:** Schusstabelle, Analyse in sechs Reitern mit 25 Karten; der Überblick ist die Zahlen-Ansicht. Die zehn
-   Kacheln „Trefferbild in Zahlen“, die der Auswahl folgten, entfielen mit U1.
-3. **Erklärung:** Kurzsatz, „Was heißt das?“, Formel, Einstieg, Datenlage, Glossar, Fehlschlüsse ([[spiegel-statistics-help]]).
+   Beobachtungen in Worten (bis zu drei, die Lage zuerst; auf dem Telefon nur die erste).
+2. **Genauer:** Schusstabelle, Analyse in fünf Reitern; der Überblick ist die Zahlen-Ansicht.
+3. **Erklärung:** Kurzsatz, Erklärung im Blatt „?“, Formel, Einstieg, Datenlage, Glossar, Fehlschlüsse ([[spiegel-statistics-help]]).
 
-Seit der Durchsicht vom 9. Oktober 2026 gilt die Leitlinie „drei Ebenen“ (Antwort, Belege, Werkzeug) aus
-[[spiegel-durchsicht]].
+Darüber gilt die Leitlinie „drei Ebenen“ (Antwort, Belege, Werkzeug) aus [[spiegel-durchsicht]].
 
 ## Prinzipien
 
@@ -37,91 +38,92 @@ Seit der Durchsicht vom 9. Oktober 2026 gilt die Leitlinie „drei Ebenen“ (An
 3. **Die Seite scrollt nie seitlich:** Breites scrollt in sich oder bricht um.
 4. **Antippen ersetzt Hover:** kein Inhalt nur in `title` oder SVG-`<title>`.
 5. **Erklärung auf Abruf:** lange Texte stehen nicht zwischen den Zahlen.
-6. **Grundlage sichtbar:** Jede Zahlengruppe nennt im Kopf, worüber sie rechnet.
+6. **Grundlage sichtbar:** Jede Zahlengruppe nennt im Kopf, worüber sie rechnet („Analyse über alle Schüsse“).
 7. **Gleicher Inhalt, andere Anordnung:** keine Zahl nur auf dem Desktop.
 
-## Befunde der Messung
+## Was die Messung zeigte (8. Oktober 2026)
 
-- **Reiterleiste 512 px breit:** Sie ließ die ganze Seite 102 px seitlich scrollen, weil der Abschnitt mit seinem Inhalt wuchs. Behoben.
-- **Analyse weit unten:** Bis zur Analyse sind es im Labor über 3.000 px, in der App geschätzt vier Bildschirme. Was eine Karte an der Scheibe schaltet (Ellipse, Zeile der Tabelle), passiert außer Sicht.
-- **Werte nur per Hover:** Die Einzelwerte der Diagramme stehen nur in SVG-`<title>`; `role="img"` verbirgt sie auch vor dem Screenreader.
-- **Schrift und Kontrast:** Achsenschrift 11 px, Gold und Türkis als Grafik auf weißer Karte unter 3:1, Ausreißer nur über die Farbe. Behoben: 12 px, dunkler Punktrand, Ring um Ausreißer.
-- **Abstände bei zwei Spalten:** CSS-Spalten verschluckten den Rand am Spaltenende (0 px zum nächsten Block) und ließen unter der kürzeren Spalte bis zu 360 px frei. Behoben: Raster in Zeilen.
+- **Seitliches Scrollen:** Eine 512 px breite Reiterleiste ließ die ganze Seite 102 px seitlich scrollen, weil der
+  Abschnitt mit seinem Inhalt wuchs. Der Abschnitt wächst nicht mit, die Reiterleiste scrollt in sich.
+- **Analyse weit unten:** Bis zur Analyse waren es über 3.000 px. Was eine Karte an der Scheibe schaltet (Ellipse,
+  Zeile der Tabelle), passierte außer Sicht. Daher Sprungleiste und Sprung zur Scheibe mit Rücksprung (unten).
+- **Werte nur per Hover:** Die Einzelwerte der Diagramme standen nur in SVG-`<title>`; `role="img"` verbarg sie auch
+  vor dem Screenreader. Daher das Lineal und „Werte als Tabelle“ (unten).
+- **Schrift und Kontrast:** Achsenschrift 11 px, Gold und Türkis als Grafik auf weißer Karte unter 3:1, Ausreißer nur
+  über die Farbe. Heute: Diagrammschrift 12 px, Punkte mit dunklem Rand, ein Ring um Ausreißer.
+- **Abstände bei zwei Spalten:** CSS-Spalten verschluckten den Rand am Spaltenende (0 px zum nächsten Block) und
+  ließen unter der kürzeren Spalte bis zu 360 px frei. Heute: Raster in Zeilen.
 
-## Entscheidungen des Users (8. Oktober 2026)
+## Bedienelemente
 
-- **Optik wie am Desktop:** Bedienelemente behalten auf dem Telefon ihre Desktop-Höhe (rund 30 px, WCAG-AA 24 px erfüllt), auch „Was heißt das?“ bekommt keine größere Tippfläche. Die zuerst eingebauten 44 px Mindesthöhe und die umgebrochene Reiterleiste wirkten zu hoch.
-- **Reiter in einer Zeile:** Auf schmalen Bildschirmen scrollt die Reiterleiste seitlich in sich, der gewählte Reiter rückt ins Bild.
-- **Karten im Raster aus Zeilen:** zwei Spalten erst, wenn der Kartenbereich 820 px breit ist (beide Karten einer Zeile gleich hoch, eine einzelne letzte Karte über die volle Breite); jeder Abstand 16 px, die Skriptprüfung des Labors misst das. Auf der Seite steht die Analyse ab 768 px in voller Breite unter der Scheibe, die Karten stehen dort zu zweit.
+- **Optik wie am Desktop:** Bedienelemente behalten auf dem Telefon ihre Desktop-Höhe (rund 30 px, WCAG-AA 24 px
+  erfüllt). 44 px Mindesthöhe und eine umgebrochene
+  Reiterleiste wirken zu hoch.
+- **Reiter in einer Zeile:** Auf schmalen Bildschirmen scrollt die Reiterleiste seitlich in sich, der gewählte Reiter
+  rückt ins Bild.
+- **Karten im Raster aus Zeilen:** zwei Spalten erst, wenn der Kartenbereich 820 px breit ist (beide Karten einer
+  Zeile gleich hoch, eine einzelne letzte Karte über die volle Breite); jeder Abstand 16 px. Auf der Seite steht die
+  Analyse ab 768 px in voller Breite unter der Scheibe, die Karten stehen dort zu zweit.
 
-## Empfehlung für den Seitenaufbau
+## Seitenaufbau
 
-**Eine Seite mit Sprungleiste.** Sobald der Kopf weggescrollt ist, erscheint oben „Scheibe · Schüsse · Analyse“ (bis U1
-mit „Zahlen“); in der Analyse zeigt dieselbe Leiste die Themen (nie zwei Leisten). Aktionen mit Wirkung auf die Scheibe springen zur Scheibe und blenden „Zurück zu …“ ein. Abschnitt und Thema stehen in der Adresse (`#position`, englisch wie alle Anker, [[spiegel-navigation]]), damit Zurück und geteilte Links gehen. Eine untere Abschnittsleiste scheidet aus, dort sitzt die App-Navigation ([[spiegel-ui-design]]). Ausweg, falls die Seite zu lang wirkt: die Analyse als eigene Ansicht.
+**Eine Seite mit Sprungleiste**, die Analyse auf derselben Seite. Sobald der Kopf weggescrollt ist, erscheint oben
+„Scheibe · Schüsse · Analyse“, auf dem Telefon in gleich breiten Feldern. In der Analyse deckt auf dem Telefon ihre
+Reiterleiste die Sprungleiste ab (nie zwei Leisten), ab 768 px klebt sie darunter. Abschnitt und Reiter stehen in der
+Adresse (`#position`, englisch wie alle Anker, [[spiegel-navigation]]), damit Zurück und geteilte Links gehen. Eine
+untere Abschnittsleiste scheidet aus, dort sitzt die App-Navigation ([[spiegel-ui-design]]). Ausweg, falls die Seite zu
+lang wirkt: die Analyse als eigene Ansicht.
 
-Reihenfolge auf dem Telefon: Kopf mit Ergebnis und den wichtigsten Beobachtungen, Scheibe mit Ablesezeile, Serien und Übersicht, Schüsse (ohne eigenen Scrollkasten, „Alle zeigen“), Analyse mit Überblick.
-
-**Diagramme:** Ablesen durch Antippen oder Ziehen (Lineal), die Werte stehen fest über dem Diagramm, im Verlauf wählt das zugleich den Schuss auf der Scheibe. Jedes Diagramm bekommt seine Kernaussage als Label und „Werte als Tabelle“.
-
-**Tablet und Desktop:** Ab 768 px links die Scheibe mit den Serien darunter, rechts daneben Schuss und Schüsse; die Analyse folgt in voller Breite darunter (siehe unten).
-
-## Entschieden mit dem Plan für Schritt 4 (8. Oktober 2026)
-
-Die vier Fragen sind mit der Empfehlung entschieden (Plan `plans/2026-10-08-spiegel-mobile-seitenaufbau.md`,
-freigegeben vom User):
-
-1. **Analyse auf derselben Seite** mit Sprungleiste.
-2. **Erster Bildschirm:** Kopf mit Ergebnis und einem Satz, Scheibe mit Ablesezeile; die Serien folgen direkt
-   (bei 375 × 812 px passen Kopf und Scheibe, die Serien beginnen knapp darunter).
-3. **Hilfe als Blatt** über „?“, „Erklärungen“ zeigt die Kurzsätze; ersetzt das Aufklappen unter der Karte.
-4. **σ und Zehnerquote zweimal**, jede Gruppe nennt ihre Grundlage („über Serie 2“, „Analyse über …“).
-
-Abweichend von der Empfehlung springt die Seite zur Scheibe sofort statt gleitend: Glattes Scrollen über
-Tausende Pixel kam in einem verborgenen Fenster verspätet an und lief in der Skriptprüfung nicht. Aus demselben
-Grund misst die Sprungleiste den aktiven Abschnitt beim Scrollen statt über einen `IntersectionObserver`.
-
-## Nachgeschärft nach dem ersten Blick (8. Oktober 2026)
-
-- **Neben der Scheibe nur, was zu ihr gehört:** Schuss, Serien und Schusstabelle sind beim Blick auf die Scheibe
-  immer sinnvoll und stehen rechts daneben. Kacheln und Analyse brauchen Platz: In der rechten Spalte standen
-  die zehn Kacheln zu fünf auf knapp 100 px und schnitten Werte ab. Sie stehen jetzt darunter in voller Breite,
-  ihre Spalten richten sich nach der Breite des Bereichs. Die Sprungleiste folgt der neuen Reihenfolge.
-- **Nichts angeschnitten:** Die Schalter der Scheibe liefen ab 768 px als Zeile, die in sich scrollte, und waren
-  rechts abgeschnitten, die Reiterleiste in der schmalen Spalte ebenso. Die Schalter liegen jetzt als runde
-  Knöpfe in den Ecken der Scheibe, wie an einer DISAG-Anzeige (Vorschlag des Users), „Übrige blass/aus“ als
-  einer davon; die Labor-Schalter (Ansehen/Setzen) stehen im Labor-Kopf, die App hat sie nicht. Die
-  Reiterleiste hat in voller Breite Platz. Auf dem Telefon teilt die Sprungleiste die Breite in vier Felder.
-- **Serien unter der Scheibe** (User): links Scheibe und Serien, zusammen so groß, dass beide ins Fenster passen;
-  die Scheibe wird dafür kleiner, aber nicht unter 280 px (bei 1280 × 900 rund 560 px, bei 1024 × 768 knapp
-  450 px; bei 1024 × 600 passt nur die Scheibe allein). Rechts reicht die Schusstabelle bis zur Unterkante der
-  Serien und scrollt in sich, so steht die obere Hälfte der Seite wie ein Bildschirm da.
-- **Ergebnis als Box, Kopf im Raster:** Ab 768 px steht das Ergebnis (mit Wertung, Probe, Zehnern, Innenzehnern,
-  bestem Teiler) als Box rechts über der Ablesung, der Kopf mit Titel und Satz über der Scheibe; die Übersicht
-  als eigene Karte ist darin aufgegangen, die Ablesung ist eine Zeile ohne x/y. Auf dem Telefon bleibt das
+- **Erster Bildschirm (Telefon):** Kopf mit Ergebnis und der ersten Beobachtung, Scheibe mit Ablesezeile; die Serien
+  folgen direkt (bei 375 × 812 px passen Kopf und Scheibe, die Serien beginnen knapp darunter).
+- **Reihenfolge auf dem Telefon:** Kopf, Scheibe mit Ablesezeile, Serien, Schüsse (ohne eigenen Scrollkasten, „Alle
+  zeigen“), Analyse mit Überblick.
+- **Ab 768 px neben der Scheibe nur, was zu ihr gehört:** links die Scheibe mit den Serien darunter, rechts Ergebnis,
+  Ablesung und Schusstabelle. Was Platz braucht, steht darunter in voller Breite: die Analyse mit den Kacheln des
+  Überblicks, ihre Spalten nach der Breite des Bereichs; in der schmalen Spalte neben der Scheibe würden Kacheln
+  Werte abschneiden.
+- **Serien unter der Scheibe:** Scheibe und Serien zusammen so groß, dass beide ins Fenster passen; die Scheibe wird
+  dafür kleiner, aber nicht unter 280 px (bei 1280 × 900 rund 560 px, bei 1024 × 768 knapp 450 px; bei 1024 × 600
+  passt nur die Scheibe allein). Rechts reicht die Schusstabelle bis zur Unterkante der Serien und scrollt in sich, so
+  steht die obere Hälfte der Seite wie ein Bildschirm da.
+- **Ergebnis als Box, Kopf im Raster:** Ab 768 px steht das Ergebnis (Schusszahl, Zehner, Innenzehner, bester
+  Teiler, die Kreise für Art und Wertung) als Box rechts über der Ablesung, der Kopf mit Titel und Beobachtungen über
+  der Scheibe; eine eigene Übersicht gibt es nicht, die Ablesung ist eine Zeile ohne x/y. Auf dem Telefon steht das
   Ergebnis im Kopf, damit es auf dem ersten Bildschirm steht.
-- **Keine leeren Gerüste:** Ohne Schüsse nur die Scheibe und „Noch kein Schuss“; die Schusstabelle wird nur so
-  hoch wie ihre Zeilen.
-- **Aktiver Abschnitt an der Leiste:** Mit 45 % der Fensterhöhe galt nach einem Sprung zu den kurzen Zahlen
-  schon die Analyse als aktiv. Es zählt jetzt der Abschnitt, dessen Anfang die Leiste erreicht hat.
+- **Nichts angeschnitten:** Die Schalter der Scheibe liegen als runde Knöpfe in den Ecken der Scheibe, wie an einer
+  DISAG-Anzeige, „Übrige blass/aus“ als einer davon; eine Zeile über der Scheibe würde in der schmalen Spalte
+  angeschnitten. Die Reiterleiste hat in voller Breite Platz.
+- **Keine leeren Gerüste:** Ohne Schüsse nur die Scheibe und „Noch kein Schuss“; die Schusstabelle wird nur so hoch
+  wie ihre Zeilen.
+- **Hilfe als Blatt** über „?“; „Erklärungen“ zeigt die Kurzsätze unter dem Titel. Nichts klappt unter einer Karte
+  auf.
+- **Sprung zur Scheibe mit Rücksprung:** Aktionen mit Wirkung auf die Scheibe springen zur Scheibe und blenden
+  „Zurück zu …“ ein. Die Seite springt sofort statt gleitend: Glattes Scrollen über Tausende Pixel kommt in einem
+  verborgenen Fenster verspätet an, eine Skriptprüfung im Browser sähe es nicht. Aus demselben Grund misst die
+  Sprungleiste den aktiven Abschnitt beim Scrollen statt über einen `IntersectionObserver`.
+- **Aktiver Abschnitt an der Leiste:** Aktiv ist der späteste Abschnitt, dessen Anfang die Leiste erreicht hat. So
+  ist nach einem Sprung genau dieser aktiv, auch wenn er kürzer ist als das Fenster.
 
-## Offen
+**Tablet und Desktop:** Ab 768 px links die Scheibe mit den Serien darunter, rechts daneben Ergebnis, Schuss und
+Schüsse; die Analyse folgt in voller Breite darunter.
 
-- Test mit VoiceOver.
+## Diagramm-Lineal
 
-## Diagramm-Lineal (Schritt 5, erledigt am 8. Oktober 2026)
-
-Plan `plans/2026-10-08-spiegel-diagramm-lineal.md`:
-
-- **Umfang:** Verlauf, Rhythmus und Zehntel-Säulen bekommen ein Lineal, diese drei und die Richtungsuhr
-  „Werte als Tabelle“ (zugeklappt, auch für Screenreader). Kein Wert steht mehr nur im SVG-`<title>`.
+- **Umfang:** Verlauf, Rhythmus und Zehntel-Säulen haben ein Lineal, diese drei und die Richtungsuhr „Werte als
+  Tabelle“ (zugeklappt, auch für Screenreader). Kein Wert steht nur im SVG-`<title>`; jedes Diagramm hat einen Namen
+  für Screenreader.
 - **Bedienung:** Tippen wählt den nächsten Wert, waagrechtes Ziehen wandert mit, senkrecht scrollt die Seite
   weiter (`touch-action: pan-y`), ein zweites Tippen hebt auf. Übernimmt der Browser das Scrollen
   (`pointercancel`), gilt die Wahl davor. Mit der Tastatur Pfeile, Pos1, Ende, Escape; mit Alt, Strg oder
   Befehl bleibt die Taste dem Browser. Für Screenreader ist das Diagramm ein Schieberegler mit dem Wert in
   Worten (APG-Muster).
-- **Werte fest über dem Diagramm** in einer Zeile von zwei Zeilen Höhe, bei 375 px für den Hinweis und jede
-  Wahl gleich hoch (Skriptprüfung); der Knopf hält seinen Platz. Ohne Wahl steht ein Hinweis.
-- **Je Karte neu:** Die Seite hängt die Analyse je Karte neu ein; eine Wahl im Lineal wandert nicht mit.
+- **Werte fest über dem Diagramm** in einer Zeile mit fester Höhe von zwei Zeilen, für den Hinweis und jede Wahl
+  gleich, damit das Diagramm beim Ziehen nicht springt; der Knopf hält seinen Platz. Ohne Wahl steht ein Hinweis.
+- **Je Scheibe neu:** Die Seite hängt die Analyse je Scheibe neu ein; eine Wahl im Lineal wandert nicht mit.
 - **Kopplung:** Ziehen ändert die Scheibe nicht, sonst spränge die Seite bei jeder Bewegung. Der Knopf „Auf
   der Scheibe“ wählt den Schuss dort und springt mit Rücksprung; ein auf der Scheibe gewählter Schuss steht
   schon im Lineal.
+
+## Offen
+
+- Test mit VoiceOver.

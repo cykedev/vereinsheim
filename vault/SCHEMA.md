@@ -41,7 +41,7 @@ A note's **`type`** (frontmatter) is its **kind**, decoupled from the folder:
 | `concept` | a reusable building block referenced by several notes | 1.0 |
 | `decision` | one ADR (Context/Decision/Alternatives/Consequences) | 0.8 |
 | `incident` | project-specific state to **REMEMBER** ([[adr-003]]) | 0.75 |
-| `source` | provenance for ingested content — one note per origin doc (KNOWLEDGE.md §6) | 0.6 |
+| `source` | provenance for ingested content — one note per origin doc (via `/ingest`) | 0.6 |
 
 `type` drives search weighting (a targeted query surfaces the atomic note before its
 topic MOC / the ADR that governs it) and semantics. Add a kind by extending the loader's

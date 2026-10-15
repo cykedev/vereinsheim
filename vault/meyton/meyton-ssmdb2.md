@@ -36,7 +36,7 @@ Namen `StarterlistenID`, `KlassenID`, `VereinsID`, `MannschaftsID`, `RanglistenI
 `varchar(36)`, `Status varchar(72)`, `StandNr` und `Trefferzahl` `smallint(6)`, `utf8mb3`; `Version` hat eine Spalte
 `Versionsnummer int(11)` mit dem Wert 9.
 
-**Felder im Training** (eigene Scheiben des Users in der Kopie): `Startzeit` „0000-00-00 00:00:00“, `Status` leer,
+**Felder im Training** (eigene Scheiben eines Schützen in der Kopie): `Startzeit` „0000-00-00 00:00:00“, `Status` leer,
 `Starterliste` „Direktbelegung“ (oder leer mit ID 0), `Rangliste` etwa „Training-LP“, `Gruppe` leer mit ID 0,
 `StandNrText` die Standnummer als Text. Ohne Wertungsschuss sind `Trefferzahl`, `TotalRing` und `TotalRing01` 0 und
 beide `BesterTeiler` 2147483647. Die Probe hat eigene Zeilen in `Serien` (Stellung 0, Serien zu zehn).
@@ -100,10 +100,10 @@ Handbuchstände: V5 (08/2023) → V7 (03/2024): `SportpassID` von `int(11)` auf 
 | `Scheiben.Zeitstempel` ist ein **Lebenszeichen**: Er steigt alle 5 bis 10 s, solange der Stand belegt ist, auch in der Probe und ohne Schuss, und steht ab dem Freigeben des Stands | Änderungserkennung je ScheibenID über den zuletzt gesehenen Wert; Ende einer Scheibe am Ende des Lebenszeichens (SF-10, SF-50) |
 | `Zeitstempel + Millisekunden` rechnet MySQL als Zahl; spätere Schüsse wirken dann älter | als Paar vergleichen |
 | Engine unbekannt: MyISAM sperrt beim Lesen die Tabelle und kann nach hartem Stromaus beschädigt sein; InnoDB zeigt einer lang offenen Transaktion keine neuen Zeilen. **Beim Verein InnoDB** (9. Oktober 2026); die zerrissenen Lesungen erklärt die Kaskade: Schreibt Meyton eine Scheibe neu, verschwinden ihre Treffer kurz | kurze Abfragen, Fehler nie als Löschung werten, zwei gleiche Lesungen (SF-51, SF-71) |
-| Meyton wertet jede Grenze **10 µm großzügiger** als die Regel: Ein Schuss erreicht einen Wert, wenn sein Abstand unter Grenze + 10 µm liegt; so stimmen alle 640 Schüsse des 9. Oktober 2026, mit der reinen Regel 15 nicht | `shot-core` wertet seit dem 9. Oktober 2026 mit dieser Toleranz (SF-75) |
+| Meyton wertet jede Grenze **10 µm großzügiger** als die Regel: Ein Schuss erreicht einen Wert, wenn sein Abstand unter Grenze + 10 µm liegt; so stimmen alle 640 Schüsse des 9. Oktober 2026, mit der reinen Regel 15 nicht | `shot-core` wertet mit dieser Toleranz (SF-75) |
 | Wertungsmodus `0` (unbekannt), womöglich bei Probe oder Altdaten; in zwei Jahren nie vorgekommen, Modus 5 nur beim Königsschießen | Admin gibt Modus 0 je Disziplin frei, Zähler im Heartbeat |
 | Schüsse über der Soll-Zahl stehen mit echter Lage, aber Wert 0, `Text` „0F“ oder „inv“ und Teiler 2147483647 (Platzhalter) in der Ablage | Platzhalter-Teiler als „kein Abstand“ lesen; Schuss amtlich 0, nicht in Kennzahlen der Lage (SF-08) |
-| Probe steht erst seit dem 22. September 2026 in der Ablage; ältere Scheiben haben nur Wertung, reine Probe-Scheiben davor fehlen (an 52 Ausdrucken des Users belegt) | Historie ohne Probe; reine Probe-Trainings vor September 2026 fehlen ganz |
+| Probe steht erst seit dem 22. September 2026 in der Ablage; ältere Scheiben haben nur Wertung, reine Probe-Scheiben davor fehlen (an 52 Ausdrucken belegt) | Historie ohne Probe; reine Probe-Trainings vor September 2026 fehlen ganz |
 | Vereinsspiele (Schach, Balken, Dart, Lotto, Dreieck, Blanko, Spiegel; Regel 8000 bis 8154) und Meytons Trainingsscheiben (`19001000`, `19002000`, `10119000`, Werte 0,0 bis 1,9) tragen „LG“/„LP“ im Namen, haben aber eigene Scheiben; negative Zehntel nur dort | Meytons Spiele (8000 bis 8154) und Trainingsscheiben (9001, 9002) im Katalog von `shot-core` ohne Scheibe; vereinseigene wie `10119000` über die Admin-Zuordnung „ohne Scheibe“ (SF-70) |
 | Die SportpassID steht als Kopie in jeder Scheibe; eine später nachgepflegte Nummer fehlt in alten Scheiben | rückwirkend nur mit Namensvorschlag und Bestätigung |
 

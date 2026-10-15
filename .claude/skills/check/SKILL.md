@@ -3,7 +3,7 @@ name: check
 description: Run all 5 monorepo quality gates (lint, format:check, test, tsc, next build) across the affected apps and report which are green/red. Use before every commit, or when the user asks to check/verify/confirm the build is clean.
 ---
 
-Run all gates from the repo root — turbo-cached, over both apps:
+Run all gates from the repo root — turbo-cached, over all apps and packages:
 
 ```bash
 pnpm check
@@ -11,17 +11,18 @@ pnpm check
 
 Per app this runs: `lint` (eslint src), `format:check` (prettier), `test` (vitest),
 `check-types` (`tsc --noEmit`, in apps after that app's `build`, which regenerates the `.next/types`
-that `tsc` reads), `build` (`next build`). **`next build` is mandatory** —
+that `tsc` reads), `build` (`next build`); the Go bridge `apps/spiegel-bridge` maps the same tasks to
+`go vet`, `gofmt`, `go test`, `go build`. **`next build` is mandatory** —
 it catches build-only errors (e.g. the Next rule that a `"use server"` file may only
 export directly-declared async functions) that lint/tsc/test do **not** see.
 
-The `test` gate needs the shared dev Postgres up (ringwerk has DB-integration tests):
+The `test` gate needs the shared dev Postgres up (Ringwerk and Spiegel have DB-integration tests):
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-Scope to one app: `pnpm check --filter ringwerk` (or `treffsicher`).
+Scope to one app: `pnpm check --filter ringwerk` (or `treffsicher`, `spiegel`, `spiegel-bridge`).
 
 Report concisely: which gates are green, which are red, and — if red — the relevant
 error message(s). Suggest concrete fixes when the cause is clear.

@@ -35,18 +35,17 @@ part_of: ["[[ringwerk]]"]
 | Authentifizierung | NextAuth.js              | 4.x (stabil) |
 | UI-Komponenten    | shadcn/ui + Tailwind CSS | Tailwind 4.x |
 | Tests             | Vitest                   | aktuell      |
-| Package Manager   | npm                      | –            |
+| Package Manager   | pnpm (Monorepo)          | 10.x         |
 | Container         | Docker + Docker Compose  | –            |
-| Node.js           | 20 LTS                   | 20.x         |
+| Node.js           | 24                       | 24.x         |
 
 ---
 
 ## Datenhaltung & Persistenz
 
 - PostgreSQL in eigenem Docker Container, persistiert via Named Volume `postgres_data`
-- Meyton-PDF-Uploads: Docker Volume `uploads_data`, gemountet als `/app/uploads`
-- Erlaubte Upload-Typen: **nur PDF**, max. 10 MB pro Datei
-- Dateinamen im Filesystem: serverseitig durch **UUID ersetzt** (kein Originaldateiname)
+- Kein Upload-Volume: Ringwerk speichert keine Dateien (Meyton-Import nicht umgesetzt, [[meyton-import]]). Für
+  Uploads gilt: **nur PDF**, max. 10 MB pro Datei, Dateiname serverseitig durch **UUID ersetzt**
 - Kein Datenverlust durch Container-Neustart oder Image-Updates
 
 ---
@@ -56,7 +55,7 @@ part_of: ["[[ringwerk]]"]
 - Die **Datenbank speichert alle Zeitstempel in UTC** (PostgreSQL-Standard, kein Exceptions)
 - Die **Anzeige-Zeitzone** ist konfigurierbar via `DISPLAY_TIME_ZONE` (IANA-Bezeichner, z.B. `Europe/Berlin`)
 - Default: `Europe/Berlin`; ungültige Werte fallen auf den Default zurück
-- Zentrale Hilfsfunktionen in **`src/lib/dateTime.ts`** (Server-only):
+- Zentrale Hilfsfunktionen in **`@vereinsheim/lib/dateTime`** (`packages/lib`, Server-only):
   - `getDisplayTimeZone()` – liest `process.env.DISPLAY_TIME_ZONE`
   - `formatDateOnly(date, tz)` – formatiert als `TT.MM.JJJJ` mit expliziter Zeitzone via `Intl.DateTimeFormat`
 - **`toLocaleDateString()` ohne explizite Zeitzone ist verboten** – der Server läuft in UTC (Docker), das würde im Deployment falsche Daten anzeigen
@@ -120,7 +119,7 @@ part_of: ["[[ringwerk]]"]
 - Login-Rate-Limit: Buckets pro E-Mail und pro IP in der Datenbank (`LoginRateLimitBucket`, in Tests im Speicher)
   - Max. 5 Versuche/E-Mail, 30 Versuche/IP, Fenster 15 Min.
 - Anmeldeablauf, Store und Admin-Auswertung der Sperren aus `@vereinsheim/lib/auth/*` (gemeinsam mit Treffsicher und
-  Spiegel, Oktober 2026). Eine unbekannte oder deaktivierte E-Mail kostet so viel Zeit wie eine bekannte (bcrypt gegen
+  Spiegel). Eine unbekannte oder deaktivierte E-Mail kostet so viel Zeit wie eine bekannte (bcrypt gegen
   einen festen Hash), die Antwortzeit verrät keine Konten
 - **Session-Invalidierung** bei Passwortänderung (ältere JWT-Sessions ungültig)
 - Passwort-Self-Service: nur eingeloggt + aktuelles Passwort
@@ -152,8 +151,7 @@ die Images. Auf dem VPS startet die Root-`compose.yml` pro App `migrate-*` (one-
 2. Deploy: `vereinsheim deploy` (Pre-Deploy-Backup, Pull, Migrate, Restart)
 3. Rollback: auf das vorherige Image-Tag zurücksetzen
 
-**Backup:** täglicher Cron auf dem VPS (`vereinsheim backup`); Details + Restore-Drill in der
-Root-[`docs/operations.md`](../../../docs/operations.md).
+**Backup:** täglicher Cron auf dem VPS (`vereinsheim backup`); Details + Restore-Drill in [[operations]].
 
 ---
 

@@ -8,7 +8,7 @@ part_of: ["[[overview]]"]
 relates_to: ["[[spiegel]]"]
 ---
 
-**TL;DR** Wissen über die Meyton-Anlage des Vereins (ShootMaster 6.0.2) und ihre Schnittstellen: die MySQL-Ablage SSMDB2, weitere Exporte und Live-Schnittstellen, der Ergebnisausdruck mit QR-Code. Grundlage für Spiegel und für die PDF-Importe in Treffsicher und Ringwerk.
+**TL;DR** Wissen über die Meyton-Anlage des Vereins (ShootMaster 6.0.2) und ihre Schnittstellen: die MySQL-Ablage SSMDB2, weitere Exporte und Live-Schnittstellen, der Ergebnisausdruck mit QR-Code. Grundlage für Spiegel und für den PDF-Import in Treffsicher.
 
 # Meyton — Wissen über die Schießstandanlage
 
@@ -30,4 +30,4 @@ relates_to: ["[[spiegel]]"]
 ## Wer das Wissen nutzt
 
 - Spiegel ([[spiegel]]): Rohdaten über die Brücke, Zuordnung per QR.
-- Treffsicher ([[treffsicher-meyton-import]]) und Ringwerk ([[meyton-import]]): PDF-Import; der Formatwechsel vom September steht in [[meyton-pdf-format-change]].
+- Treffsicher ([[treffsicher-meyton-import]]): PDF-Import; der Formatwechsel vom September steht in [[meyton-pdf-format-change]]. Ringwerk ([[meyton-import]]) hat den Import nur als Anforderung.

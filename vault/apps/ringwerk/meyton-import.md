@@ -9,4 +9,4 @@ relates_to: ["[[treffsicher-meyton-import]]"]
 documented_in: ["[[ringwerk-features#Meyton-Import]]"]
 ---
 
-**TL;DR** Ergebnisübernahme aus Meyton via URL/PDF, nur Liga; textbasiert (kein OCR), DoS-Grenzen (2MB/Stream, 8MB, 10MB/15s URL).
+**TL;DR** Anforderung, in Ringwerk nicht umgesetzt (kein Import-Code): Ergebnisübernahme aus Meyton via URL/PDF, nur Liga; textbasiert (kein OCR), DoS-Grenzen (2MB/Stream, 8MB, 10MB/15s URL).

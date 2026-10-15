@@ -11,8 +11,8 @@ part_of: ["[[incidents]]"]
 **TL;DR** 2026-09-23 (ringwerk): „Playoffs starten" und „nächste Runde anlegen" lasen bei Best-of-Ligen
 die RUNDENTURNIER-Tabelle (`getStandingsForCompetition` → `calculateStandings`) statt der Best-of-Tabelle.
 Die wertet pro Paarung nur die erste Serie je Schütze (meist Duell 1) wie ein Einzelduell, ignoriert
-Stechschüsse und zählt Freilose mit 2 Punkten. Spec 2026-06-17 §9 („Seeding aus
-`calculateBestOfStandings`") war nie umgesetzt. Behoben über `getSeedingStandings`
+Stechschüsse und zählt Freilose mit 2 Punkten. Die Vorgabe „Seeding aus
+`calculateBestOfStandings`" war nie umgesetzt. Behoben über `getSeedingStandings`
 (`lib/playoffs/queries.ts`) als EINE Quelle für Start, Neu-Setzung und Playoff-Seite.
 
 ## Was passiert war

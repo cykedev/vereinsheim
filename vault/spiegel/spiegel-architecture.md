@@ -16,11 +16,11 @@ relates_to: ["[[target-architecture]]", "[[db-isolation-model]]", "[[build-deplo
 | Komponente | Ort | Aufgabe |
 |---|---|---|
 | Meyton-Server | Schützenhaus | ShootMaster, SSMDB2 (MySQL), SDF-Export, LANA ([[meyton-ssmdb2]], [[meyton-interfaces]]) |
-| Brücke | Schützenhaus, Gerät im Meyton-Netz | liest SSMDB2, puffert, lädt hoch, holt Aufträge ab ([[spiegel-bridge]]) |
+| Brücke | Schützenhaus, Gerät im Meyton-Netz | liest SSMDB2 und lädt hoch, ohne eigenen Zustand ([[spiegel-bridge]]) |
 | Spiegel | VPS hinter Caddy | Konten, Ingest-API, Normalisierung, Kennzahlen, Oberfläche ([[spiegel-ingest-pipeline]]) |
 | Postgres `spiegel` | VPS, Netz `data` | Rohdaten, kanonisches Modell, Kennzahlwerte ([[spiegel-data-model]]) |
-| PDF-Speicher | VPS, Volume | Original-Ausdrucke aus dem QR-Weg ([[spiegel-assignment]]) |
-| Treffsicher, Ringwerk | VPS | lesen Messdaten über Spiegels API, nie über die DB ([[db-isolation-model]]) |
+| PDF-Speicher | VPS, Volume | Original-Ausdrucke aus dem QR-Weg ([[spiegel-assignment]]); kommt mit SP-1.7 b |
+| Treffsicher, Ringwerk | VPS | lesen Messdaten künftig über Spiegels API, nie über die DB ([[db-isolation-model]]; Phase 3) |
 | qrcode.meyton.eu | Meyton | hält den PDF-Ausdruck eine Woche bereit ([[meyton-printout]]) |
 
 ## Datenfluss
@@ -33,9 +33,11 @@ Rohdaten (Snapshot je Scheibe, unverändert) → Normalisierung (Adapter `meyton
 apps/spiegel/               Next.js-App: Konten, Ansichten, Ingest-API, Admin
 apps/spiegel-bridge/        Brücke fürs Schützenhaus (Go, ein statisches Binary, adr-027)
 packages/shot-core/         Scheibenbilder, Wertung, Geometrie, Kennzahlen-Registry (isomorph, rein)
-packages/shot-ui/           Scheibe (SVG), Overlays, Wiedergabe, Diagramme (React)
-packages/meyton-pdf/        Meyton-Ausdruck lesen (heute in Treffsicher und Ringwerk)
+packages/shot-ui/           Scheibe (SVG), Overlays, Listen, Seiten, Diagramme (React)
+packages/shot-help/         Erklärtexte zu Kennzahlen und Auswertungen
+packages/meyton-pdf/        Meyton-Ausdruck: ID im Fuß und Druckzeit (der volle Parser liegt noch in Treffsicher und Ringwerk)
 packages/ingest-contract/   versionierter Vertrag Brücke ↔ Spiegel
+packages/ssmdb2-cases/      Sonderfälle als SSMDB2-Ablagen mit Snapshots und erwartetem Ergebnis
 ```
 
 ## Leitplanken
@@ -48,10 +50,10 @@ packages/ingest-contract/   versionierter Vertrag Brücke ↔ Spiegel
 
 ## Einbindung ins Vereinsheim
 
-- **Deploy-Vertrag:** `compose.yml` bekommt `app-spiegel` und `migrate-spiegel` (Muster [[build-deploy-pipeline]]), Caddy eine Subdomain und den Ingest-Endpunkt, `db-init` eine dritte DB samt idempotentem Anlage-Schritt für den laufenden VPS ([[adr-026]]).
+- **Deploy-Vertrag:** `compose.yml` hat `app-spiegel` und `migrate-spiegel` (Muster [[build-deploy-pipeline]]), Caddy eine Subdomain mit dem Ingest-Endpunkt, `db-init` eine dritte DB, `scripts/db-ensure.sh` legt sie idempotent auf dem laufenden VPS an ([[adr-026]]).
 - **Netze** wie in [[target-architecture]]: Spiegel in `web` und `data`, Postgres nur in `data`.
-- **Backups und CLI** schließen die dritte DB und den PDF-Speicher ein.
-- **VPS bleibt, wie er ist** (VPS S, 2 GB RAM, [[vps-resource-sizing]]). Gemessen am 5. Oktober 2026: 948 MiB verfügbar, Ringwerk 144 MiB, Treffsicher 105 MiB, kein Swap, keine Speicherabstürze in 60 Tagen. Spiegel bekommt ein festes `mem_limit` (Ziel 256 MB), läuft ohne eigene Hintergrunddienste (Normalisierung im Request), und Deploys laufen nacheinander, damit nie zwei Migratoren gleichzeitig Speicher brauchen. Bei 10 bis 15 Nutzern ist die Last klein, der Grundbedarf eines Next.js-Servers ist der Engpass. Eine Swap-Datei wäre ein kostenloses Sicherheitsnetz, ist aber eine Änderung am VPS und nur eine Option. Gemessen wird in SP-1.9.
+- **Backups und CLI** schließen die dritte DB ein; der PDF-Speicher kommt mit dem QR-Weg dazu.
+- **VPS bleibt, wie er ist** (VPS S, 2 GB RAM, [[vps-resource-sizing]]). Gemessen am 5. Oktober 2026: 948 MiB verfügbar, Ringwerk 144 MiB, Treffsicher 105 MiB, kein Swap, keine Speicherabstürze in 60 Tagen. Spiegel hat ein festes `mem_limit` von 256 MB (Heap 160 MB), läuft ohne eigene Hintergrunddienste (Normalisierung im Request), und Deploys laufen nacheinander, damit nie zwei Migratoren gleichzeitig Speicher brauchen. Bei 10 bis 15 Nutzern ist die Last klein, der Grundbedarf eines Next.js-Servers ist der Engpass. Eine Swap-Datei wäre ein kostenloses Sicherheitsnetz, ist aber eine Änderung am VPS und nur eine Option. Messungen mit Spiegel: [[vps-resource-sizing]].
 
 ## Open-Source-Betrieb
 

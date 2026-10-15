@@ -8,7 +8,7 @@ relates_to: ["[[adr-002]]"]
 part_of: ["[[incidents]]"]
 ---
 
-**TL;DR** 14. Oktober 2026 (P3 T7, `scripts/db-ensure.sh`): Das offizielle Image `postgres:15-alpine` schreibt in
+**TL;DR** 14. Oktober 2026 (`scripts/db-ensure.sh`): Das offizielle Image `postgres:15-alpine` schreibt in
 `pg_hba.conf` `trust` für den Socket, `127.0.0.1/32` und `::1/128`; nur `host all all all` verlangt `scram-sha-256`.
 Ein `docker compose exec db psql -h 127.0.0.1 -U <app>` meldet sich deshalb mit **jedem** Passwort an. Die Prüfung in
 `db-ensure`, ob das Passwort aus der `.env` passt, lief so ins Leere: Ein Test mit falschem Passwort blieb grün. Behoben

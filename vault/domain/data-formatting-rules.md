@@ -9,4 +9,4 @@ part_of: ["[[domain]]"]
 documented_in: ["[[conventions#6. Daten & Formatierung]]"]
 ---
 
-**TL;DR** Datum/Zeit/Zahl über **@vereinsheim/lib/format** (isomorph, Zeitzone immer als Parameter; kein inline `Intl.*Format` in Seiten/Komponenten), Locale **de-DE**, TZ-Default Europe/Berlin (server-seitig aus `getDisplayTimeZone()`); ActionResult-Kanon als diskriminierte Union — seit September 2026 in **beiden** Apps.
+**TL;DR** Datum/Zeit/Zahl über **@vereinsheim/lib/format** (isomorph, Zeitzone immer als Parameter; kein inline `Intl.*Format` in Seiten/Komponenten), Locale **de-DE**, TZ-Default Europe/Berlin (server-seitig aus `getDisplayTimeZone()`); ActionResult-Kanon als diskriminierte Union — in **allen drei** Apps.

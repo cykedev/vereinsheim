@@ -1,17 +1,24 @@
 # @vereinsheim/lib — Claude Scope-Notiz
 
-Geteilte **reine Utils + Client-Hooks** für beide Apps (Phase 4 / Zyklus 1, ADR-015/016). Ersetzt die
-früher byte-identischen Kopien in `apps/*/src/lib/*` — Drift ist damit **strukturell unmöglich** (die
-Module sind nicht mehr im `consistency-check.sh`-Gate).
+Geteilte **reine Utils, Client-Hooks, Formatierung und der Anmelde-Kern** für alle drei Apps (ADR-015/016).
+Jedes Modul gibt es nur einmal; Drift ist damit **strukturell unmöglich**, `consistency-check.sh` prüft sie
+deshalb nicht.
 
-## Was hier liegt (Subpath-Exports, spiegeln die alten `@/lib/*`-Pfade)
+## Was hier liegt (Subpath-Exports)
 
-| Export                                          | Datei                                 | Inhalt                             |
-| ----------------------------------------------- | ------------------------------------- | ---------------------------------- |
-| `@vereinsheim/lib/utils`                        | `src/utils.ts`                        | `cn()` (clsx + tailwind-merge)     |
-| `@vereinsheim/lib/forms/fieldErrors`            | `src/forms/fieldErrors.ts`            | `getFieldError`, `getGeneralError` |
-| `@vereinsheim/lib/hooks/useUnsavedChangesGuard` | `src/hooks/useUnsavedChangesGuard.ts` | `"use client"`                     |
-| `@vereinsheim/lib/hooks/useNavigationConfirm`   | `src/hooks/useNavigationConfirm.ts`   | `"use client"`                     |
+| Export                                          | Datei                                 | Inhalt                                                                                           |
+| ----------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `@vereinsheim/lib/utils`                        | `src/utils.ts`                        | `cn()` (clsx + tailwind-merge)                                                                   |
+| `@vereinsheim/lib/forms/fieldErrors`            | `src/forms/fieldErrors.ts`            | `getFieldError`, `getGeneralError`                                                               |
+| `@vereinsheim/lib/hooks/useUnsavedChangesGuard` | `src/hooks/useUnsavedChangesGuard.ts` | `"use client"`                                                                                   |
+| `@vereinsheim/lib/hooks/useNavigationConfirm`   | `src/hooks/useNavigationConfirm.ts`   | `"use client"`                                                                                   |
+| `@vereinsheim/lib/format`                       | `src/format.ts`                       | isomorphe Anzeige-Formatierung, **ohne** `server-only` (auch für Client-Komponenten)             |
+| `@vereinsheim/lib/dateTime`                     | `src/dateTime.ts`                     | server-only: Anzeige-Zeitzone (`DISPLAY_TIME_ZONE`), re-exportiert `formatDateOnly` aus `format` |
+| `@vereinsheim/lib/auth/validation`              | `src/auth/validation.ts`              | Login- und Passwortregeln                                                                        |
+| `@vereinsheim/lib/auth/rate-limit/*`            | `src/auth/rate-limit/`                | `config`, `limiter`, `normalization`, `types`, `adminTypes`, dazu `stores` und `admin` (unten)   |
+
+Am Prisma-Client hängende Teile bleiben app-lokal (`auth.ts` mit den NextAuth-Optionen, `auth-helpers.ts`,
+`startup.ts`, die Server Actions).
 
 ## Regeln
 
@@ -19,25 +26,17 @@ Module sind nicht mehr im `consistency-check.sh`-Gate).
   `transpilePackages` (gesetzt in `@vereinsheim/config/next`). `"use client"` bleibt in den Hook-Dateien.
 - **`react` ist peerDependency** — die App liefert die Instanz (keine doppelte React-Instanz → sonst
   Hook-Invariants-Crash). Im Paket nur devDependency für das eigene `tsc`/`vitest`.
-- **Kein `"use server"`** (geteilte Dateien dürfen keine Server-Action-Re-Exports sein, monorepo-plan §9).
+- **Kein `"use server"`** (geteilte Dateien dürfen keine Server-Action-Re-Exports sein, `vault/monorepo/monorepo.md`).
 - **Verhalten/Logik ändert man HIER**, nicht in App-Kopien — sonst entsteht wieder Drift.
-- `dateTime` (server-only) seit Juni 2026 ebenfalls geteilt via `@vereinsheim/lib/dateTime` — das Paket setzt dafür `types: ["node", "react"]` + devDeps `@types/node`/`server-only`.
-- Nach Änderungen: `pnpm check` (alle 5 Gates über beide Apps) muss grün sein.
+- `dateTime` ist server-only — das Paket setzt dafür `types: ["node", "react"]` + devDeps `@types/node`/`server-only`.
+- Nach Änderungen: `pnpm check` (alle 5 Gates über alle Apps und Pakete) muss grün sein.
 - **`format` hält seine Formatter vor** (je Format und Zeitzone ein `Intl.DateTimeFormat`, Zahlen einmal): Einen zu bauen
-  kostet rund 70 µs, und Listen formatieren je Zeile (Spiegel, Oktober 2026: Start bei 1.564 Scheiben von 319 auf 70 ms).
+  kostet rund 70 µs, und Listen formatieren je Zeile (gemessen in Spiegel: Start bei 1.564 Scheiben 70 statt 319 ms).
   Neue Formate laufen über `dateTimeFormat(…)`, kein `new Intl.…` in einer Funktion.
 
-## Nachtrag (September 2026)
+## Gemeinsamer Anmeldecode
 
-Zusätzlich hier: `format` (isomorphe Anzeige-Formatierung, **ohne** `server-only` — auch für
-Client-Komponenten; `dateTime` re-exportiert `formatDateOnly` daraus) sowie der **reine Auth-Kern**:
-`auth/validation` (Login-/Passwortregeln) und `auth/rate-limit/{config,limiter,normalization,types}`.
-Am Prisma-Client hängende Teile bleiben app-lokal (`auth.ts` mit den NextAuth-Optionen, `auth-helpers.ts`,
-`startup.ts`, die Server Actions).
-
-## Nachtrag (Oktober 2026): gemeinsamer Anmeldecode
-
-Was die drei Apps kopiert hatten, liegt hier (nur Server, ohne Prisma und ohne bcrypt):
+Der Anmeldecode der drei Apps (nur Server, ohne Prisma und ohne bcrypt):
 
 | Export                                    | Inhalt                                                                                      |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------- |

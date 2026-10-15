@@ -4,11 +4,11 @@ description: Run only the test suite (vitest) — no lint, format, tsc, or build
 ---
 
 ```bash
-pnpm test                      # both apps (turbo-cached)
-pnpm test --filter ringwerk    # one app (or treffsicher)
+pnpm test                      # all apps and packages (turbo-cached)
+pnpm test --filter ringwerk    # one app (or treffsicher, spiegel, spiegel-bridge, a package)
 ```
 
-Needs the shared dev Postgres up for ringwerk's DB-integration tests:
+Needs the shared dev Postgres up for the DB-integration tests of Ringwerk and Spiegel:
 `docker compose -f docker-compose.dev.yml up -d`.
 
 For the full pre-commit suite (lint/format/tsc/build too), use **check** instead.

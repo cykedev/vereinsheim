@@ -8,7 +8,7 @@ relates_to: ["[[vps-resource-sizing]]", "[[adr-026]]"]
 part_of: ["[[incidents]]"]
 ---
 
-**TL;DR** 14. Oktober 2026 (Plan `plans/2026-10-14-spiegel-stack.md`, D8): Node 24 richtet die Obergrenze seines Heaps
+**TL;DR** 14. Oktober 2026: Node 24 richtet die Obergrenze seines Heaps
 nach der Grenze des Containers, aber nicht darunter. Bei `--memory` 192, 256 und 384 MB liegt sie gleich bei 259 MiB,
 erst bei 1 GB bei 560 MiB, ohne Grenze bei rund 4,3 GB. Unter rund 384 MB liegt der Heap also über der Grenze des
 Containers: V8 räumt nicht früher auf, und der Kernel beendet den Prozess, bevor Node einen Speicherfehler meldet. Wer

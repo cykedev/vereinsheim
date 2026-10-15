@@ -1,9 +1,9 @@
 # @vereinsheim/ssmdb2-cases — Claude Scope-Notiz
 
-Sonderfall-Testdaten für Brücke und Spiegel (SP-1.0 b, 10. Oktober 2026, `plans/2026-10-10-spiegel-ssmdb2-cases.md`):
-je Sonderfall mit Bezug zur Ablage eine erfundene SSMDB2 im echten Schema als Folge von Ständen, mit Snapshots v1,
-SQL je Schritt und von Hand geschriebenem erwartetem Ergebnis. Die Brücke (SP-1.4) und das Einlesen (SP-1.6) werden
-an ihnen abgenommen. Fachwissen: `vault/meyton/meyton-ssmdb2.md`, `vault/spiegel/spiegel-edge-cases.md`,
+Sonderfall-Testdaten für Brücke und Spiegel: je Sonderfall mit Bezug zur Ablage eine erfundene SSMDB2 im echten
+Schema als Folge von Ständen, mit Snapshots v1, SQL je Schritt und von Hand geschriebenem erwartetem Ergebnis. Die
+Brücke (`apps/spiegel-bridge`, `replay`) und das Einlesen in Spiegel (Tests über `./frozen`) werden an ihnen
+abgenommen. Fachwissen: `vault/meyton/meyton-ssmdb2.md`, `vault/spiegel/spiegel-edge-cases.md`,
 `vault/spiegel/spiegel-ingest-contract.md`.
 
 ## Befehle
@@ -40,7 +40,7 @@ an ihnen abgenommen. Fachwissen: `vault/meyton/meyton-ssmdb2.md`, `vault/spiegel
   - `Text` je Anzeigeart, Lebenszeichen, Uhr je Stand (auch umstellbar, Uhrsprung), ScheibenID als
     Millisekundenzähler, Millisekunden verteilt (0 bis 999).
   - Ohne Wertung `BesterTeiler` 2147483647.
-  - **Annahmen**, im Code markiert, bis das Schießprotokoll (SP-0.6) sie klärt:
+  - **Annahmen** (an der Anlage nicht beobachtet), im Code markiert:
     - Probe nach einem Wechsel zurück von Wertung (SF-04);
     - Korrektur und Löschen mit Nachrücken (SF-21, SF-22), beide ohne neues Lebenszeichen;
     - Schüsse über der Soll-Zahl in einer eigenen Serie;
@@ -63,7 +63,7 @@ an ihnen abgenommen. Fachwissen: `vault/meyton/meyton-ssmdb2.md`, `vault/spiegel
   - Angenommen ist, dass nur Sportpass 12345678 zugestimmt hat.
 - **Eingefroren** unter `cases/v1/`, nicht von Prettier geformt (`.prettierignore`), eine Zeile je Tabellenzeile.
   - Nach einer Änderung `cases` laufen lassen; der Test meldet sonst „Fälle veraltet“.
-  - Sobald Brücke oder Adapter an den Fällen hängen, nur ergänzen (neue Fälle, `cases/v2` bei neuem Vertrag), wie bei
+  - Brücke und Adapter hängen an den Fällen: nur ergänzen (neue Fälle, `cases/v2` bei neuem Vertrag), wie bei
     `ingest-contract`.
 - **Sommerzeit:** Die Fälle liegen zwischen 29. März und 25. Oktober 2026 (Ortszeit = UTC + 2 h im Baukasten), ein Test
   prüft es. Lesungen haben eine streng steigende Beobachtungszeit; sie ist die Folgenummer (SF-26).

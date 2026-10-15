@@ -13,7 +13,7 @@ relates_to: ["[[spiegel-ingest-contract]]", "[[spiegel-bridge]]", "[[spiegel-dat
 
 ## Endpunkte (Vertrag v1, `packages/ingest-contract`)
 
-Gebaut in SP-1.6 b (13. Oktober 2026, Plan `plans/2026-10-13-spiegel-ingest.md`): `apps/spiegel/src/app/api/ingest/v1/`,
+Die Endpunkte liegen unter `apps/spiegel/src/app/api/ingest/v1/`,
 die Logik in `src/lib/ingest/` (`http.ts`, `bridges.ts`, `ingest.ts`, Adapter `meyton-ssmdb2.ts`). Schemas, JSON-Schemas
 und eingefrorene Beispiele der Anfragen und Antworten liegen im Vertrag (`@vereinsheim/ingest-contract/api`,
 [[spiegel-ingest-contract]]).
@@ -23,8 +23,8 @@ und eingefrorene Beispiele der Anfragen und Antworten liegen im Vertrag (`@verei
 | `POST /api/ingest/v1/pair` | Kopplung mit Einmal-Code (15 min, einmal), liefert Geräte-Token |
 | `POST /api/ingest/v1/snapshots` | Stapel von Snapshots (1 bis 50, höchstens 4 MiB); Ergebnis je Snapshot |
 | `POST /api/ingest/v1/heartbeat` | Version, Beginn des Laufs, Rückstau, letzter DB-Kontakt, Uhrabweichung, Zurückgehaltenes, erledigte Aufträge zum Nachladen (setzt `historyLoadedAt`, nur aktive, offene Zustimmungen der Anlage) |
-| `GET /api/ingest/v1/state` | was die Brücke ohne eigenen Zustand braucht: Epoche, gehashte SportpassIDs mit Zustimmung, Grabsteine und Löschsperren, Wasserstand, offene Aufträge zum Nachladen (P2d: aktive Zustimmung ohne `historyLoadedAt`) |
-| `GET /api/ingest/v1/commands`, `POST …/commands/<id>/result` | Aufträge (Scheibe per ID, Fundbüro, Nachladen, Diagnose): noch nicht gebaut (SP-1.5, SP-1.7) |
+| `GET /api/ingest/v1/state` | was die Brücke ohne eigenen Zustand braucht: Epoche, gehashte SportpassIDs mit Zustimmung, Grabsteine und Löschsperren, Wasserstand, offene Aufträge zum Nachladen (aktive Zustimmung ohne `historyLoadedAt`) |
+| `GET /api/ingest/v1/commands`, `POST …/commands/<id>/result` | Aufträge (Scheibe per ID, Fundbüro, Diagnose): offen (SP-1.5, SP-1.7); das Nachladen läuft über `state` und `heartbeat` |
 
 Ergebnis je Snapshot: `stored`, `unchanged`, `lifesign` (nur das Lebenszeichen bewegt), `stale`, `future`,
 `discarded` (mit Grund `no-consent`, `blocked`, `hidden`), `quarantined`, `epoch-unconfirmed`. Fehler haben feste Codes
@@ -49,14 +49,14 @@ lässt `api/ingest` ohne Sitzung durch; jeder Endpunkt außer `pair` verlangt de
 
 **Zustimmung doppelt geprüft:** Spiegel nimmt eine Scheibe nur an, wenn ihre SportpassID an dieser Anlage einem aktiven
 Konto mit aktiver Zustimmung gehört (`SportpassConsent`: bestätigt und nicht abgelehnt), und verwirft den Rest
-ungespeichert (`no-consent`). Ein Fehler in der Brücke kann so nichts durchreichen ([[spiegel-privacy]]). Seit SP-1.7 a
-(14. Oktober 2026) stimmt der Schütze im Profil zu, ein Admin bestätigt ([[spiegel-assignment]]); eine SportpassID gehört
+ungespeichert (`no-consent`). Ein Fehler in der Brücke kann so nichts durchreichen ([[spiegel-privacy]]). Der Schütze stimmt im Profil zu, ein
+Admin bestätigt ([[spiegel-assignment]]); eine SportpassID gehört
 an einer Anlage höchstens einem Konto. Scheiben mit
 Grabstein oder Löschsperre (Beginn in 30 Tagen um die Beobachtung) nimmt Spiegel nie wieder an (SF-28), Scheiben mit
 einem verdeckten Schuss oder Anzeigeart 0 auch nicht (SF-19, SF-20; doppelt zur Brücke). Aufträge (QR-Weg) kommen mit
-SP-1.7.
+SP-1.7 b.
 
-**Fehler beim Deuten** (Review, 13. Oktober 2026): Jede Scheibe eines Stapels wird für sich geschrieben. Ein Fehler, der
+**Fehler beim Deuten:** Jede Scheibe eines Stapels wird für sich geschrieben. Ein Fehler, der
 bei jeder Wiederholung wiederkäme, legt den Stand in Quarantäne; ein unerwarteter (Datenbank) beendet die Anfrage mit 500,
 nachdem die übrigen geschrieben sind, und beim nächsten Senden deutet Spiegel den gespeicherten, aber nie gedeuteten Stand
 nach. **Wechselt an einer Scheibe die SportpassID oder der Besitzer**, schreibt Spiegel nichts und legt den Stand in
@@ -71,7 +71,7 @@ Meldung von Prisma enthält Werte). Ein Test schickt `Mustermann` durch jede Feh
 Spiegel nimmt deshalb mindestens die vorige Vertragsversion an, und Änderungen am Vertrag sind nur additiv (SF-69).
 
 **Epochen** (SF-23): Die erste Epoche einer Anlage gilt mit dem ersten Snapshot. Eine neue legt Spiegel unbestätigt an
-und nimmt aus ihr nichts an (`epoch-unconfirmed`), bis der Admin sie unter Anlage und Brücken bestätigt.
+und nimmt aus ihr nichts an (`epoch-unconfirmed`); die Übersicht des Admins zeigt einen Hinweis (unten, „Epochen“).
 
 **Zustand der Scheibe** ([[spiegel-bridge]], „Zustand statt Abschluss“): Jeder Stand mit bewegtem Lebenszeichen setzt
 `open` und `lifesignAt` (Beobachtungszeit). Der Heartbeat schaltet weiter: offen → ruhend nach fünf Minuten ohne
@@ -82,7 +82,7 @@ Lebenszeichen, → endgültig nach zwölf Stunden oder wenn ein neuer Lauf der B
 
 Jeder Snapshot bleibt inhaltlich unverändert erhalten, mit Prüfsumme, Empfangszeit, Brücken-Version und Adapter-Version; gespeichert wird er als Zeilenversionen (unten). Gleiche Prüfsumme bedeutet: nichts zu tun. Ein Snapshot mit kleinerer Folgenummer als der gespeicherte ändert nichts (SF-26).
 
-**Lebenszeichen ohne neue Zeilen** (13. Oktober 2026, Verfeinerung von [[adr-031]]): `Scheiben.Zeitstempel` steigt alle
+**Lebenszeichen ohne neue Zeilen** (Verfeinerung von [[adr-031]]): `Scheiben.Zeitstempel` steigt alle
 5 bis 10 s, solange ein Stand belegt ist, und die Brücke schickt dann jedes Mal den ganzen Stand. Unterscheidet sich ein
 Snapshot vom letzten gespeicherten nur darin (Prüfsumme ohne das Lebenszeichen, `RawSnapshot.contentChecksum`), vermerkt
 Spiegel Folgenummer, Beobachtungszeit und Lebenszeichen am letzten Stand und öffnet die Scheibe wieder, sonst nichts:
@@ -102,8 +102,8 @@ Gegenprobe, Vollständigkeit, `disziplin-unbekannt`, Uhr des Stands (Versatz am 
 Merkmal, ab fünf Minuten Beginn und Ende verschoben, Schusszeiten bleiben), Uhrsprung, Zustand, Quarantäne bei fehlender
 oder umgetypter Spalte, Art aus `Status`. `korrigiert` und `uhr-abweichung` hält `writeRevision` dauerhaft an der
 Scheibe. Eine umgeschaltete Anzeigeart ist keine Korrektur (SF-74, `shotChange`). Die Disziplin legt das Einlesen mit
-Scheibenbild und Familie aus dem Fachkern an, die amtliche Wertung bleibt unbekannt, bis der Admin sie setzt. Seit dem
-13. Oktober 2026 schließt der Fachkern Schüsse über der Soll-Zahl aus Lage und Abstand aus (SF-08), und das Einlesen legt
+Scheibenbild und Familie aus dem Fachkern an, die amtliche Wertung bleibt unbekannt, bis der Admin sie setzt. Der
+Fachkern schließt Schüsse über der Soll-Zahl aus Lage und Abstand aus (SF-08), und das Einlesen legt
 jede `Rangliste` als `Ranking` an, deren Art der Admin zuordnet.
 
 - **Skalen je Feld** aus einer Tabelle, festgenagelt durch Tests am echten Datensatz ([[meyton-ssmdb2]]).
@@ -111,7 +111,7 @@ jede `Rangliste` als `Ranking` an, deren Art der Admin zuordnet.
 - **Reihenfolge:** innerhalb einer Stellung nach `Treffer`, zwischen Probe und Wertung nach der Zeit. Probe kann auch nach Wertungsschüssen kommen (SF-04). Widersprechen sich Nummer und Zeit, gilt die Nummer, und die Scheibe bekommt das Merkmal `uhr-abweichung` (SF-30).
 - **Probe wie am Ausdruck:** Die Scheibe ist der jüngste stabile Stand; Spiegel sammelt keine Probe über Snapshots ([[adr-027]], Entscheidung vom 9. Oktober 2026). Bei Wertung gibt es keine Probe, nach einem Neustart der Probe nur den letzten Block.
 - **Disziplin und Scheibenbild** aus der DisziplinID ([[spiegel-target-library]]).
-- **Epochen:** Schlüssel ist Quelle + Epoche + ScheibenID. Eine neue Epoche wäre ein Ereignis der ganzen Quelle (Ablage geleert, neuer Server). Seit dem 14. Oktober 2026 (P2c, D0) bestätigt sie kein Admin mehr: Die Brücke eröffnet keine (sie nimmt die Epoche aus `GET /state` und meldet einen Verdacht nur als `possible-reset`), und eine unbekannte nimmt Spiegel nicht an, weil Grabsteine und Sperren je Epoche gelten; die Übersicht zeigt das als Hinweis. Eine einzelne geänderte Scheibe ist eine Korrektur, keine neue Epoche, und der Beginn taugt nicht als Merkmal: Er verschiebt sich, wenn die Probe verschwindet (SF-23).
+- **Epochen:** Schlüssel ist Quelle + Epoche + ScheibenID. Eine neue Epoche wäre ein Ereignis der ganzen Quelle (Ablage geleert, neuer Server). Bestätigen lässt sie sich in der Oberfläche nicht: Die Brücke eröffnet keine (sie nimmt die Epoche aus `GET /state` und meldet einen Verdacht nur als `possible-reset`), und eine unbekannte nimmt Spiegel nicht an, weil Grabsteine und Sperren je Epoche gelten; die Übersicht zeigt das als Hinweis. Eine einzelne geänderte Scheibe ist eine Korrektur, keine neue Epoche, und der Beginn taugt nicht als Merkmal: Er verschiebt sich, wenn die Probe verschwindet (SF-23).
 - **Unbekanntes Schema:** Zusätzliche Spalten stören den Adapter nicht. Fehlt eine erwartete Spalte oder ändert sich ihr Typ, kommen die Rohdaten in Quarantäne, bis ein Adapter sie kennt, statt mit der alten Version gedeutet zu werden (SF-25).
 - **Revisionen:** ein geänderter Snapshot erzeugt eine neue Revision der kanonischen Scheibe; die Historie bleibt. Über Revisionen hinweg erkennt Spiegel einen Schuss an seinem Fingerabdruck aus Zeit, Millisekunden und Lage, nicht an der Nummer; Notizen und Teilungen hängen daran, Kennzahlwerte an der Revision (SF-22).
 - **Merkmale und Zustand** setzt die Normalisierung an die Scheibe: `nur-probe`, `unvollstaendig`, `korrigiert`, `disziplin-unbekannt` und weitere ([[spiegel-edge-cases]]).

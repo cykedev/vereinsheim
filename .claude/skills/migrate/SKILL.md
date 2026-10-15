@@ -4,7 +4,7 @@ description: Create a new Prisma schema migration for an app after a schema chan
 ---
 
 After a schema change in `apps/<app>/prisma/schema.prisma`, create + commit a migration
-(`<app>` = `ringwerk` or `treffsicher`):
+(`<app>` = `ringwerk`, `treffsicher` or `spiegel`):
 
 ```bash
 pnpm --filter <app> exec prisma migrate dev --name <descriptive-name>

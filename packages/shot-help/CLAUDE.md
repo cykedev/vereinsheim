@@ -1,9 +1,7 @@
 # @vereinsheim/shot-help — Claude Scope-Notiz
 
-Hilfe und Erklärungen für Spiegel (SP-1.11, Oktober 2026): jede Kennzahl und jede Auswertung in
-einfacher Sprache, als Daten aus **einer** Quelle für App, Spielwiese und Doku. Wunsch des Users: „gute
-dokumentation und hilfe, auch in der anwendung, das ist wichtig“. Plan:
-`plans/2026-10-06-spiegel-help.md`. Fachliche Definitionen und Formeln: `vault/spiegel/spiegel-statistics.md`.
+Hilfe und Erklärungen für Spiegel: jede Kennzahl und jede Auswertung in einfacher Sprache, als Daten aus
+**einer** Quelle für App und Doku. Fachliche Definitionen und Formeln: `vault/spiegel/spiegel-statistics.md`.
 
 ## Exporte
 
@@ -29,13 +27,13 @@ dokumentation und hilfe, auch in der anwendung, das ist wichtig“. Plan:
   (Grenzen, Simulationen) nur, wenn sie in Katalog oder Code belegt sind.
 - Rein und isomorph: kein `server-only`, keine Node-APIs in `src/` außer in Tests;
   `@vereinsheim/shot-core` nur als `devDependency` für die Prüfungen. Eine Next-App, die das Paket nutzt,
-  braucht es in `transpilePackages` (`packages/config/next/index.mjs`).
+  braucht es in `transpilePackages` (Spiegel: `apps/spiegel/next.config.ts`).
 - Der Test `test` liest den Vault-Leitfaden und prüft gegen `@vereinsheim/shot-core`. `turbo.json` des
   Pakets nimmt den Leitfaden deshalb in die Eingaben (`$TURBO_ROOT$`) und hängt `test` an `^build`:
   `shot-core` hat kein Build-Skript, der Schritt ist leer, aber sein Hash folgt dem Quellcode. Ohne ihn
   liefe `test` nach einer Änderung in `shot-core` aus dem Cache, und eine neue Auswertung ohne Erklärung
   bliebe grün.
-- **Keine Hinweise zum Visier** (User, 9. Oktober 2026): Spiegel rechnet, was die Lage kostet, nicht, ob oder wie
+- **Keine Hinweise zum Visier:** Spiegel rechnet, was die Lage kostet, nicht, ob oder wie
   man verstellt; kein Text nennt Visier oder Klicks (Test `style.test.ts`). Zahlen mit Bezug: „je Schuss“, über
   wie viele Schüsse, „Ringe“ bei Serien.
 - **Belege nachrechnen:** Eine Zahl aus einer Simulation steht nur in einem Text, wenn

@@ -1,7 +1,7 @@
 ---
 id: ssmdb2-erkundung
 type: operation
-title: "SSMDB2 vor Ort erkunden (Werkzeug für SP-0.1 und SP-0.6)"
+title: "SSMDB2 vor Ort erkunden"
 aliases: [erkunden.sh, ssmdb2-erkunden, erkundungsabend, schießprotokoll-skript]
 keywords: [erkundung, vor ort, schützenheim, skript, erkunden.sh, sql-checkliste, schießprotokoll, mitschnitt, dump, kopie, mysql-client, mariadb, docker, read-only, nur lesen, pseudonym, bericht, privat, selbsttest, testanlage, probe verschwindet, latenz, pdf-id, sp-0.1, sp-0.6, abend-mitschnitt, schießbetrieb, ganzer abend, fenster, ctrl-c]
 part_of: ["[[meyton]]"]
@@ -9,11 +9,11 @@ relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]", "[[spiegel-open-ques
 governed_by: ["[[adr-027]]", "[[adr-029]]"]
 ---
 
-**TL;DR** `tools/ssmdb2-erkunden/erkunden.sh` erledigt SP-0.1 und SP-0.6 an einem Abend: Es verbindet sich read-only mit der SSMDB2, beantwortet die SQL-Checkliste, zieht eine vollständige Kopie und führt durch ein Schießprotokoll, das man allein schießen kann, während es jede Sekunde mitliest. Heraus kommen `bericht/` (ohne Namen, zum Auswerten) und `privat/` (Kopie mit Namen, bleibt auf dem Mac). Ein Selbsttest spielt den Abend vorher gegen eine nachgebaute Anlage durch.
+**TL;DR** `tools/ssmdb2-erkunden/erkunden.sh` erkundet die SSMDB2 an einem Abend (SP-0.1, SP-0.6 der [[spiegel-roadmap]]): Es verbindet sich read-only mit der SSMDB2, beantwortet die SQL-Checkliste, zieht eine vollständige Kopie und führt durch ein Schießprotokoll, das man allein schießen kann, während es jede Sekunde mitliest. Heraus kommen `bericht/` (ohne Namen, zum Auswerten) und `privat/` (Kopie mit Namen, bleibt auf dem Mac). Ein Selbsttest spielt den Abend vorher gegen eine nachgebaute Anlage durch.
 
 # SSMDB2 vor Ort erkunden
 
-Anleitung für den Abend: `tools/ssmdb2-erkunden/README.md`. Plan: `plans/2026-10-08-ssmdb2-erkunden.md`.
+Anleitung für den Abend: `tools/ssmdb2-erkunden/README.md`.
 
 ## Phasen
 
@@ -99,5 +99,5 @@ Pseudonymisieren; der Selbsttest hat dafür eine Scheibe in „Trash“.
 ## Danach
 
 `bericht/` wird mit `/ingest` ausgewertet: Antworten in [[meyton-ssmdb2]], [[spiegel-open-questions]]
-und [[spiegel-edge-cases]], echtes Schema für SP-1.0b. Die Kopie in `privat/` dient als lokale
+und [[spiegel-edge-cases]], echtes Schema für `packages/ssmdb2-cases`. Die Kopie in `privat/` dient als lokale
 Entwicklungs-Datenbank und gehört nie ins Repo.

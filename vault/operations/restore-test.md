@@ -8,4 +8,4 @@ operation_of: ["[[overview]]"]
 documented_in: ["[[operations#Restore-Test (regelmäßig empfohlen)]]"]
 ---
 
-**TL;DR** `./vereinsheim restore-probe` (seit P4): neueste Dumps je App in Wegwerf-DBs restoren, Tabellen und Migrationen zählen, wieder löschen; mindestens 1×/Quartal und nach jeder neuen App.
+**TL;DR** `./vereinsheim restore-probe`: neueste Dumps je App in Wegwerf-DBs restoren, Tabellen und Migrationen zählen, wieder löschen; mindestens 1×/Quartal und nach jeder neuen App.

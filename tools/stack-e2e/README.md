@@ -1,8 +1,7 @@
 # Stack Ende zu Ende (lokal)
 
-Prüft den ganzen Produktions-Stack auf dem eigenen Rechner, bevor etwas auf den VPS geht (P3, Plan
-`plans/2026-10-14-spiegel-stack.md`): die echten Images aus dem Monorepo, `compose.yml` mit `compose.e2e.yml`, eine
-Wegwerf-Umgebung mit Zufallswerten.
+Prüft den ganzen Produktions-Stack auf dem eigenen Rechner, bevor etwas auf den VPS geht: die echten Images aus
+dem Monorepo, `compose.yml` mit `compose.e2e.yml`, eine Wegwerf-Umgebung mit Zufallswerten.
 
 ```bash
 tools/stack-e2e/run.sh
