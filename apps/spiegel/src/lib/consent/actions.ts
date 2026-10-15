@@ -9,7 +9,7 @@ import { db } from "@/lib/db"
 import { NOT_MINE } from "@/lib/db/purge"
 import type { ActionResult } from "@/lib/types"
 
-import { MAX_CONSENTS_PER_ACCOUNT } from "./status"
+import { consentStatus, MAX_CONSENTS_PER_ACCOUNT } from "./status"
 import { CURRENT_CONSENT_VERSION } from "./texts"
 
 // Zustimmung per Sportpass (SP-1.7 a, Plan `plans/2026-10-14-spiegel-optin.md`, D6): Der Schütze stimmt im Profil zu
@@ -43,7 +43,12 @@ function revalidateConsents(userId?: string) {
 const STALE_TEXT = "Der Hinweis hat sich geändert. Bitte die Seite neu laden und neu lesen."
 
 /** die Grenze je Konto hielt nicht: ein anderer Aufruf desselben Kontos war schneller (Sperre der Kontozeile) */
-class LimitReached extends Error {}
+/** die Grenze ist erreicht; `onlyRejected`: es gibt nur abgelehnte, deren Knopf heißt „Entfernen“ (Review) */
+class LimitReached extends Error {
+  constructor(readonly onlyRejected: boolean) {
+    super()
+  }
+}
 
 /**
  * Der Schütze stimmt dem Hinweistext für eine SportpassID zu; danach wartet sie auf den Admin. Das Formular schickt die
@@ -74,8 +79,12 @@ export async function requestSportpass(
     // warten aufeinander, die Grenze hält ([[conventions]] §9, Review)
     await db.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`
-      if ((await tx.sportpassConsent.count({ where: { userId } })) >= MAX_CONSENTS_PER_ACCOUNT)
-        throw new LimitReached()
+      const existing = await tx.sportpassConsent.findMany({
+        where: { userId },
+        select: { confirmedAt: true, rejectedAt: true, returnedAt: true },
+      })
+      if (existing.length >= MAX_CONSENTS_PER_ACCOUNT)
+        throw new LimitReached(existing.every((row) => consentStatus(row) === "rejected"))
       await tx.sportpassConsent.create({
         data: {
           userId,
@@ -90,20 +99,20 @@ export async function requestSportpass(
     if (error instanceof LimitReached)
       return {
         error: {
-          sportpass: ["Du hast schon eine Sportpassnummer. Für eine neue widerrufe erst die alte."],
+          sportpass: [
+            error.onlyRejected
+              ? "Du hast schon eine abgelehnte Sportpassnummer. Für eine andere entferne sie erst."
+              : "Du hast schon eine Sportpassnummer. Für eine neue widerrufe erst die alte.",
+          ],
         },
       }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      // die eigene sagt das; wem eine fremde gehört, sagt die Meldung nicht
-      const own = await db.sportpassConsent.count({
-        where: { siteId: site.id, sportpassId, userId },
-      })
+      // eine eigene kann es hier nicht geben (eine Nummer je Konto, unter der Sperre geprüft); wem die Nummer gehört,
+      // sagt die Meldung nicht
       return {
         error: {
           sportpass: [
-            own
-              ? "Diese Sportpassnummer steht schon in deinem Profil."
-              : "Diese Sportpassnummer hat schon jemand eingetragen. Wende dich an einen Admin.",
+            "Diese Sportpassnummer hat schon jemand eingetragen. Wende dich an einen Admin.",
           ],
         },
       }

@@ -50,8 +50,10 @@ export function SportpassConsents({
       )}
       {consents.length >= MAX_CONSENTS_PER_ACCOUNT && (
         <p data-one-number className="text-[13px] text-muted-foreground">
-          Ein Konto hat eine Sportpassnummer. Für einen neuen Ausweis widerrufe die alte Nummer.
-          Dann trag die neue ein. Deine Scheiben bleiben.
+          {/* eine abgelehnte heißt am Knopf „Entfernen“, nicht „Widerrufen“ (Review, Textbuch rev 22) */}
+          {consents.every((consent) => ownerActionOf(consent.status) === "remove")
+            ? "Ein Konto hat eine Sportpassnummer. Für eine andere Nummer entferne die abgelehnte. Dann trag die neue ein."
+            : "Ein Konto hat eine Sportpassnummer. Für einen neuen Ausweis widerrufe die alte Nummer. Dann trag die neue ein. Deine Scheiben bleiben."}
         </p>
       )}
     </div>

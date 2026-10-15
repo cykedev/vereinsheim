@@ -64,13 +64,20 @@ describe("Sportpass im Profil", () => {
     expect(html).toContain(`<input type="hidden" name="version" value="${CURRENT_CONSENT_VERSION}"`)
     expect(html).not.toContain("data-one-number")
     // eine Nummer je Konto (User, 15. Oktober 2026): mit einer, auch einer abgelehnten, kein Formular, dafür der Weg
-    for (const status of ["active", "requested", "rejected", "returned"] as const) {
+    for (const status of ["active", "requested", "returned"] as const) {
       const one = render([row(1, status, "s")])
       expect(one).not.toContain("data-consent-form")
       expect(one).toContain(
         "Ein Konto hat eine Sportpassnummer. Für einen neuen Ausweis widerrufe die alte Nummer. Dann trag die neue ein. Deine Scheiben bleiben."
       )
     }
+    // eine abgelehnte heißt am Knopf „Entfernen“, nicht „Widerrufen“ (Review)
+    const rejected = render([row(1, "rejected", "s")])
+    expect(rejected).not.toContain("data-consent-form")
+    expect(rejected).toContain(
+      "Ein Konto hat eine Sportpassnummer. Für eine andere Nummer entferne die abgelehnte. Dann trag die neue ein."
+    )
+    expect(rejected).not.toContain("widerrufe")
   })
 
   it("bei aktiver Zustimmung der Stand des Nachladens (P2d)", () => {

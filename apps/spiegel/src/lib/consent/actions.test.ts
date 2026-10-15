@@ -144,7 +144,6 @@ describe("Zustimmung durch den Schützen", () => {
   it("eine Sportpassnummer je Konto (User, 15. Oktober 2026), auch eine abgelehnte zählt", async () => {
     const userId = otherId
     const first = await requested(userId)
-    await db.sportpassConsent.update({ where: { id: first.id }, data: { rejectedAt: new Date() } })
     asShooter(userId)
     expect(
       await requestSportpass(
@@ -154,6 +153,20 @@ describe("Zustimmung durch den Schützen", () => {
     ).toEqual({
       error: {
         sportpass: ["Du hast schon eine Sportpassnummer. Für eine neue widerrufe erst die alte."],
+      },
+    })
+    // nur eine abgelehnte: entfernen, nicht widerrufen (Review)
+    await db.sportpassConsent.update({ where: { id: first.id }, data: { rejectedAt: new Date() } })
+    expect(
+      await requestSportpass(
+        null,
+        form({ sportpass: sportpass(), agree: "on", version: CURRENT_CONSENT_VERSION })
+      )
+    ).toEqual({
+      error: {
+        sportpass: [
+          "Du hast schon eine abgelehnte Sportpassnummer. Für eine andere entferne sie erst.",
+        ],
       },
     })
     expect(await db.sportpassConsent.count({ where: { userId } })).toBe(1)
