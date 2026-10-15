@@ -26,7 +26,7 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
 - **Protokolle ohne Namen:** Diagnose und Logs der Brücke enthalten keine Namen und Sportpassnummern.
 - **Verdeckte Wertung** (Meyton-Modus 5: Wert und Lage verdeckt, Modus 10: Wert verdeckt, unbekannte Modi) wird nie hochgeladen. Nach einem Preis- oder Königsschießen kann ein Admin freigeben.
 - **Privat ist Standard.** Jeder sieht nur seine Scheiben (wie die Per-User-Isolation in Treffsicher, [[treffsicher-user-isolation]]).
-- **Export und Löschen auf Knopfdruck:** JSON und CSV; Löschen entfernt Rohdaten (alle Zeilenversionen), Ableitungen und PDFs und setzt Grabsteine; aus den Backups auf dem Server verschwinden die Daten mit deren Rotation (14 Tage). **Ausnahme:** Kopien der Sicherungen auf dem Rechner des Betreibers (`vereinsheim local-pull` nach `./backups/`, `dev-restore`, lokaler Stack) rotieren nicht; dort bleiben auch gelöschte Daten, bis der Betreiber die Kopie ersetzt oder löscht.
+- **Export und Löschen auf Knopfdruck** (noch nicht gebaut, [[spiegel-roadmap]] „Offene Einzelpunkte“): JSON und CSV; Löschen entfernt Rohdaten (alle Zeilenversionen), Ableitungen und PDFs und setzt Grabsteine; aus den Backups auf dem Server verschwinden die Daten mit deren Rotation (14 Tage). **Ausnahme:** Kopien der Sicherungen auf dem Rechner des Betreibers (`vereinsheim local-pull` nach `./backups/`, `dev-restore`, lokaler Stack) rotieren nicht; dort bleiben auch gelöschte Daten, bis der Betreiber die Kopie ersetzt oder löscht.
 - **Keine echten personenbezogenen Daten im öffentlichen Repo:** Test-PDFs und Beispieldaten anonymisiert oder synthetisch ([[adr-029]]).
 
 ## Rollen

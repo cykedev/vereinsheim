@@ -63,6 +63,18 @@ Offene Punkte, nach Priorität.
 - `src/components/app/admin/AdminEditUserForm.tsx`
   **Aufwand:** Minimal (~10 min)
 
+### T-11: Meyton-Import einmal in der Oberfläche durchspielen
+
+Dialog → Action → Formular wurde mit dem Text-Layer (pdf.js) nie durchgeklickt; belegt ist der Kern über die
+Fixture-Tests. Einmal mit je einem PDF beider Druckwege durchspielen.
+
+### T-12: Kleinigkeiten in der Oberfläche
+
+- Admin auf dem Telefon: Nutzer- und Sperren-Tabelle rendern unter `md` je Zeile eine `Card` in der Abschnitts-Card.
+- Fünf `loading.tsx` sind byte-identisch: ein `ListPageSkeleton` herausziehen.
+- Die Navigation sagt „Ablauf“, die Seite heißt „Schuss-Abläufe“.
+- „ss“ statt „ß“: sichtbar ist noch „Datei zu gross“ in `upload.ts` (gehört zu T-10).
+
 ### Fachliche Erweiterungen
 
 - Trockentraining als eigener Einheitentyp mit eigenen Feldern.

@@ -491,11 +491,11 @@ VPS. Sie verbindet sich nur ausgehend per HTTPS mit `SPIEGEL_HOST`; auf dem VPS 
 - **Bauen** (lokal): `pnpm --filter spiegel-bridge build` → `apps/spiegel-bridge/dist/` (linux/arm64, linux/amd64,
   windows/amd64).
 - **Installieren und koppeln**: [`apps/spiegel-bridge/README.md`](../../apps/spiegel-bridge/README.md) — Binary und
-  `deploy/` aufs Gerät, `sudo sh deploy/install.sh <binary>`, in Spiegel unter Admin → Anlage und Brücken einen
-  Kopplungscode holen, `spiegel-bridge pair`, `systemctl enable --now spiegel-bridge`.
-- **Zustand**: Spiegel zeigt unter „Anlage und Brücken“ den letzten Kontakt. „Aus, zuletzt online …“ ist der Normalfall,
+  `deploy/` aufs Gerät, `sudo sh deploy/install.sh <binary>`, in Spiegel unter Admin → Anlage und Brücke unter
+  „Brücke verbinden“ einen Code erzeugen, `spiegel-bridge pair`, `systemctl enable --now spiegel-bridge`.
+- **Zustand**: Spiegel zeigt unter „Anlage und Brücke“ den letzten Kontakt. „Aus, zuletzt online …“ ist der Normalfall,
   die Anlage wird nach dem Training ausgeschaltet. Logs auf dem Gerät: `journalctl -u spiegel-bridge`.
-- **Token widerrufen** (Gerät verloren oder getauscht): in Spiegel die Brücke trennen; die Brücke beendet sich mit
-  Exit 3 und muss neu gekoppelt werden.
+- **Brücke trennen** (Gerät verloren oder getauscht): in Spiegel unter „Anlage und Brücke“ trennen; die Brücke
+  beendet sich mit Exit 3 und muss neu verbunden werden.
 
 Arbeitsweise, Netz und Störfälle: [[spiegel-bridge]].

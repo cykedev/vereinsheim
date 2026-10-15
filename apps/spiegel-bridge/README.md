@@ -45,8 +45,8 @@ Das legt drei Binaries in `apps/spiegel-bridge/dist/` ab: `spiegel-bridge-linux-
 
    Das legt `/usr/local/bin/spiegel-bridge`, den Systembenutzer `spiegel-bridge`, `/etc/spiegel-bridge` (0700) und den
    Dienst an. Ein zweiter Lauf ersetzt nur Binary und Dienst, die Konfiguration bleibt.
-3. In Spiegel unter **Admin → Anlage und Brücken** „Brücke koppeln“ wählen. Spiegel zeigt einen Kopplungscode, 15
-   Minuten gültig und einmal einlösbar.
+3. In Spiegel unter **Admin → Anlage und Brücke** im Kasten „Brücke verbinden“ dem Gerät einen Namen geben und
+   „Code erzeugen“ wählen. Der Code für die Brücke gilt 15 Minuten und nur einmal.
 4. Koppeln. Der Zugang zur SSMDB2 wird abgefragt, damit das Passwort nicht in der Befehlszeile und in `ps` steht:
 
    ```bash
@@ -59,16 +59,16 @@ Das legt drei Binaries in `apps/spiegel-bridge/dist/` ab: `spiegel-bridge-linux-
    sudo systemctl enable --now spiegel-bridge
    ```
 
-Danach zeigt Spiegel unter „Anlage und Brücken“ den Zustand der Brücke und den letzten Kontakt.
+Danach zeigt Spiegel unter „Anlage und Brücke“ den Zustand der Brücke und den letzten Kontakt.
 
 ## Betrieb
 
 - Der Dienst läuft ohne Rechte, mit schreibgeschütztem System und höchstens 128 MB.
 - Logs: `journalctl -u spiegel-bridge -f`. Die Zeilen enthalten nur Zahlen und Codes, keine Personendaten.
-- Exit 3 heißt: Das Geräte-Token wurde in Spiegel widerrufen. Dann neu koppeln (Schritte 3 und 4). Bei Exit 2 und 3
+- Exit 3 heißt: Die Brücke wurde in Spiegel getrennt. Dann neu verbinden (Schritte 3 und 4). Bei Exit 2 und 3
   startet systemd den Dienst nicht immer wieder neu.
 - Update: neues Binary bauen und `install.sh` erneut ausführen, dann `sudo systemctl restart spiegel-bridge`.
-- Gerät oder Speicherkarte getauscht: neu installieren und koppeln. Die Brücke holt ab dem letzten Stand nach, den
+- Gerät oder Speicherkarte getauscht: neu installieren und verbinden. Die Brücke holt ab dem letzten Stand nach, den
   Spiegel kennt.
 
 ## Lokal ausprobieren

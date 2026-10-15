@@ -120,7 +120,7 @@ Konfigurierbare Regelsets pro Liga:
 | ----------------------- | ---------- | ------------------------------------------------------------------- |
 | scoringMode             | RINGTEILER | Wertung Gruppenphase                                                |
 | shotsPerSeries          | 10         | Schuss pro Seite                                                    |
-| playoffBestOf           | 3          | Siege zum Weiterkommen (3 = Best-of-Five)                           |
+| playoffBestOf           | 5          | N in Best-of-N; weiter kommt, wer ⌈N/2⌉ Duelle gewinnt              |
 | playoffHasViertelfinale | true       | VF aktiviert (8 Qualifikanten); false = direkt HF (4 Qualifikanten) |
 | playoffHasAchtelfinale  | false      | AF aktiviert (16 Qualifikanten)                                     |
 | finalePrimary           | RINGS      | Hauptkriterium Finale (Pflicht)                                     |
@@ -223,7 +223,7 @@ beide Formate in `lib/playoffs/actions/seeding.test.ts`.
 
 #### Best-of-N (VF & HF)
 
-- Wer zuerst `playoffBestOf` Duelle gewinnt, zieht weiter (default 3 = Best-of-Five)
+- Best-of-`playoffBestOf`: Wer zuerst ⌈N/2⌉ Duelle gewinnt, zieht weiter (Standard 5 = Best-of-Five)
 - Pro Duell: eine Serie je Teilnehmer, Wertung gemäß `scoringMode`
 - Bei Unentschieden: nächstes Duell wird automatisch angelegt
 - Admin legt jedes Duell manuell an
@@ -285,7 +285,7 @@ BEST_OF_SINGLE ist ein alternatives Gruppenphase-Format für LEAGUE-Wettbewerbe.
 | groupPlayAllDuels   | true           | Alle N Duelle werden immer gespielt (im Formular/Standard auf true gesetzt; DB-Default false) |
 | groupTiebreaker1    | null           | Optionaler Override: Sekundärkriterium bei Duel-Wert-Gleichstand (sonst Stechschuss)          |
 | groupTiebreaker2    | null           | Optionaler Override: Tertiärkriterium                                                         |
-| groupHasSuddenDeath | true           | Stechschuss bei Paarungs-Gleichstand (Standard); false = Wiederholungsduell                   |
+| groupHasSuddenDeath | true           | Stechschuss bei Paarungs-Gleichstand (Standard); false = Wiederholungsduell (wird gespeichert, aber noch nicht ausgewertet)                   |
 
 ### Spielplan
 

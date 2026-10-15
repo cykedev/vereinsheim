@@ -322,6 +322,22 @@ maschinengebunden:
   passt gut in `packages/lib`.
 - Env-Var-Angleichung `ADMIN_*` ↔ `SEED_ADMIN_*` (deploy-breaking, separat).
 - CI/Remote-Cache (Phase 5).
+- **Turbo-Cache verdeckt App-Tests:** `test` und `lint` der Apps hängen in der Root-`turbo.json` nur an
+  `db:generate`, nicht an den Paketen. Ändert sich nur ein Paket (`lib`, `shot-core`, `shot-ui`, …), liefert
+  `pnpm check` Tests und Lint der Apps grün aus dem Cache. `"^build"` bei `test` und `lint` ergänzen wie in
+  `packages/shot-ui/turbo.json` und mit einem Dry-Run belegen, dass sich der Hash dann ändert.
+- **Session-Cookies kollidieren lokal:** Alle drei Apps laufen auf `localhost` mit demselben NextAuth-Cookie; wer sich
+  in einer anmeldet, wird in den anderen abgemeldet. Im Dev-Betrieb je App einen eigenen Cookie-Namen setzen.
+- **Ratenbegrenzung in `@vereinsheim/lib`:** Bei vollem Speicher (10.000 Einträge) verdrängt der Datenbank-Store nach
+  `lastAttemptAt`, der Speicher-Store nach dem späteren Wert aus Sperre und letztem Versuch; die Datenbank könnte eine
+  aktive Sperre zu früh verdrängen. Mit `GREATEST` angleichen oder bewusst lassen.
+- **Feldfehler an versteckten Feldern** (`seasonSortMode`, `scoringMode`) zeigt kein Formular an: `getGeneralError`
+  liefert bei einem Objekt mit Feldfehlern `undefined`. Ein Rückfall auf eine allgemeine Meldung ([[conventions]] §2).
+- **`chart-4` als Bedeutungsfarbe:** „Mentaltraining“ und die Playoff-Kategorie im Protokoll nutzen das Diagramm-Token;
+  ein eigenes semantisches Token ([[conventions]] §4).
+- **Angleichen beim Umzug auf Design 2:** PDF-Technik (Ringwerk react-pdf, Treffsicher eigener Aufbau), Startroute
+  (Ringwerk `/`, Treffsicher `/dashboard`), Fehlerseiten als dünne Wrapper statt Kopien im Drift-Gate.
+- **Optional:** ein schnelles Gate in `/check` (Idee aus der Harness-Vorlage), sonst verwerfen.
 - **Dev-Tooling-Baseline vereinheitlicht (erledigt, [[adr-020]]):** **ein** Satz am Root für
   alle Apps — der native **PIV-Workflow** (`/plan → /implement → /validate → /review` + `/debug`) mit
   den geharvesteten Superpowers-Disziplinen (brainstorming, TDD, evidence-before-claims, receiving-review,

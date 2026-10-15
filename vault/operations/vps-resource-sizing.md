@@ -44,6 +44,13 @@ Direkt nach dem Deploy, Backup und Restore-Probe, alle Container neu gestartet:
 RAM 1.870 MiB, belegt 964, verfügbar 905; kein Swap. Caddy stieß mit drei Hosts an seine Grenze (der Cache ist vor
 allem das Binary); deshalb 96 MB, die Summe der Grenzen steigt auf 1.312 MiB.
 
+## Offen: Messung unter Last
+
+Gemessen ist bisher nur direkt nach dem Neustart beim Deploy. Ringwerk läuft mit 256 MB, die PDF-Erzeugung
+(`@react-pdf/renderer`) läuft im Prozess und ist unter dieser Grenze nicht gemessen, ebenso der PDF-Import in
+Treffsicher. Nach einigen Tagen Betrieb, einem Ringwerk-PDF und einem Treffsicher-Import den Messbefehl unten erneut
+laufen lassen.
+
 ## Swap als Sicherheitsnetz
 
 Der VPS läuft ohne Swap. Eine kleine Swap-Datei fängt eine kurze Spitze ab, statt dass der Kernel einen Container

@@ -216,11 +216,84 @@ Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
   Nachfragen, wo es auftritt.
 - **Liste und Fortschritt „Alles“** schicken rund 1 MB an den Browser ([[spiegel-db-schema]]); weniger ginge nur mit
   einer anderen Form der Daten.
-- **Auf einem echten iPhone prüfen** (bisher nur Emulation in Chrome): VoiceOver, sicherer Rand unten, Ziehen am
-  Diagramm-Lineal gegen senkrechtes Scrollen (`touch-action`, [[spiegel-mobile]]).
-- **Leseprobe der Hilfe** (Abnahme von SP-1.11): Die Texte hat noch niemand ohne Statistik-Wissen gelesen.
+- **Auf einem echten iPhone prüfen** (bisher nur Emulation in Chrome): VoiceOver, auch an den weichen Kreisen (sagt
+  VoiceOver den Wechsel von Art und Wertung an?), sicherer Rand unten und im Querformat links und rechts (Notch),
+  Ziehen am Diagramm-Lineal gegen senkrechtes Scrollen (`touch-action`, [[spiegel-mobile]]). Am Desktop ebenso nie
+  selbst angesehen: Fokus-Reihenfolge mit echter Tastatur, Hover und Fokus von Navigation, Kacheln und Listenzeilen.
+- **Leseprobe der Hilfe** (Abnahme von SP-1.11): Die Texte hat noch niemand ohne Statistik-Wissen gelesen. Dasselbe
+  gilt für Dialoge, Profil, „Offen“ und Papierkorb: einmal von einem Mitglied ohne Vorwissen lesen lassen.
 - **Über dem Verlauf des Fortschritts zwei Zeilen** unter 1440 px Breite: Kennzahl in der ersten, „je Scheibe/je
   Monat“ mit „?“ rechtsbündig in der zweiten; nichts angeschnitten. Die beiden Umschalter brauchen gut 520 px, die
   linke Spalte hat bei 1280 px rund 480. Offen, ob eine Zeile gewünscht ist (kürzere Namen oder schmalere Umschalter).
   Bei 768 × 660 stehen die Serien unter der Scheibe statt daneben; das ist gewollt, weil für die Scheibe sonst weniger
   als `MIN_TARGET_PX` (280) blieben.
+
+### Admin und Bedienung
+
+- **Disziplinen im Admin pflegen:** Das Einlesen legt eine Disziplin einmal an; Scheibenbild (auch „ohne Scheibe“),
+  Familie und amtliche Wertung lassen sich danach nicht ändern (`setDisciplineFamily` hat keinen Aufrufer). Folgen:
+  Eine vereinseigene Disziplin wie „LG Training Spiegel“ landet über den Namen auf der LG-Scheibe (SF-70), die Familie
+  bestätigt niemand (SF-64), die amtliche Wertung bleibt unbekannt. Vorschlag: eine Seite „Disziplinen“ unter Admin,
+  dort auch die Freigabe von Modus 0 (SP-1.5); nach einer Änderung die Projektionen neu rechnen.
+- **Ein Schütze auf `/admin` landet auf der Anmeldung:** `proxy.ts` gibt für Nicht-Admins `authorized: false`, und
+  `withAuth` schickt zur Anmeldung. Besser nach `/` oder eine Seite „kein Zugriff“.
+- **Admin-Tabellen der Ratenbegrenzung** ragen bei 800 px aus der Karte (`min-w-[860px]`, kein `min-w-0` im Grid), die
+  Auswertung hat keine Ansicht fürs Telefon (`@vereinsheim/ui/admin`).
+- **Alte Wörter in Texten von Brücke und Einlesen:** `src/lib/ingest/http.ts` meldet „widerrufenes Gerät“ und
+  „Kopplungscode“, die Hilfe der Brücke (`cmd/spiegel-bridge/main.go`) nennt „Kopplungscode aus Admin → Anlage und
+  Brücken“. Die Oberfläche sagt „Anlage und Brücke“, „Brücke verbinden“, „Code für die Brücke“: erst ins Textbuch, dann
+  angleichen. `OLD_WORDS` prüft außerdem `heldBackText` (`src/lib/admin/site.ts`) und `STATUS_TEXT` (`SiteForms.tsx`)
+  noch nicht.
+- **Benachrichtigung des Admins außerhalb der App** (etwa Mail bei einer neuen Zustimmung): nie entschieden; heute steht
+  sie nur in der Übersicht unter „Wartet auf dich“.
+- **„Neue Rekorde“ auf Start** zählen auch die erste Scheibe einer Schusszahl, ohne früheren Halter. An echten Abenden
+  prüfen, ob nur Rekorde erscheinen sollen, die einen früheren ablösen.
+- **Gedächtnis der Bereiche** (`AppShell`) speichert die Adresse ohne die aufgelöste Familie (`/progress?pick=…`);
+  wechselt die Familie, verwirft `areaLinks` die Wahl auch bei derselben Familie. Seltener Randfall.
+
+### Fachkern und Darstellung
+
+- **Verdächtige Platzhalter werden gezeichnet,** obwohl SF-15 es ausschließt: `TargetView` und `cardMarks` filtern mit
+  `hasPosition` (endliche Zahlen), ein Platzhalter bei 0|0 erscheint als Treffer in der Mitte. Vorschlag:
+  `hasValidPosition`, dazu `PROJECTION_VERSION` erhöhen.
+- **Nur-Probe-Scheibe kann Wettkampf werden:** `kindOfRow` übergeht bei „nur Probe“ nur die Liste, nicht die Quelle; bei
+  nicht leerem `Status` (andere Vereine) zeigt die Seite „Wettkampf“ ohne Schalter. Vorschlag: bei `probeOnly` immer
+  Training, außer der Schütze hat gewählt ([[spiegel-navigation]], „Art der Scheibe“).
+- **Projektion und Nachrechnen:** Ändert eine neue `PROJECTION_VERSION` die Form von `values` oder `records`, lesen die
+  Übersichten bis zum Ende von `refreshStaleProjections` die alte Form. Regel festlegen: Formänderungen nur additiv oder
+  mit Lesefallback ([[adr-031]]).
+- **C4 und „gegen den Schnitt“:** Das Hilfe-Thema `gegen-den-schnitt` (Katalog C4) beschreibt den Abstand zu den fünf
+  Scheiben davor; C4 und `againstOwnAverage` rechnen „30 Tage davor“ und „Perzentil unter den letzten 50“, die Funktion
+  hat außer Katalog und Tests keinen Aufrufer, Regel 6 in [[spiegel-statistics]] zitiert sie. Entscheiden: eigene ID für
+  den Abstand zu den fünf davor, oder C4, `againstOwnAverage` und Regel 6 streichen.
+- **Dieselbe Regel mehrfach:** das Muster der Katalog-IDs (`metrics.ts`, `catalog.test.ts`, `shot-help/topics.test.ts`),
+  die häufigste Serienlänge (`result.ts`, `records.ts`, `shot-ui/SeriesChart.tsx`), `shotIntervals` in `shot-ui` neben
+  `intervals()` im Fachkern. Jede Regel einmal im Fachkern exportieren.
+- **Höhe der Leiste (56 px) und Seitenrand (16 px)** stehen ohne gemeinsame Konstante in `useTargetFit`,
+  `useReturnJump`, `useActiveSection` und als `top-14`/`scroll-mt-14` in neun Dateien.
+- **„Stufe 3“ der Durchsicht** (auf einer einzelnen Scheibe ausblenden, was dort nur Zufall zeigt) gehört zu SP-1.8;
+  teilweise erledigt (Probe-Auswertung entfernt, Hinweise an großen Zahlen). Schließen oder als Rest übernehmen.
+
+### Daten und Datenschutz
+
+- **`consentVersion @default("v1")`** steht noch im Schema, aktuell ist v2; `tools/bridge-e2e.ts` und
+  `tools/ingest-load.ts` legen Zustimmungen ohne Version an. Mit einer angehängten Migration den Standardwert entfernen,
+  die Tools setzen `CURRENT_CONSENT_VERSION`. Dabei das tote Feld `ConsentRow.siteName` samt Join entfernen.
+- **Neue Version des Hinweistexts:** Für eine künftige v3 gibt es keine Regel, wann eine erneute Zustimmung nötig ist
+  und was bis dahin gilt ([[spiegel-privacy]]).
+- **Export (JSON/CSV) und Konto löschen** sind nicht gebaut; ein Admin kann ein Konto nur deaktivieren
+  ([[spiegel-privacy]]).
+
+### Prüfung im Browser
+
+- **Skriptprüfung:** „Stufe 2 der Inventur“ aus dem Labor fehlt in `pnpm --filter spiegel pruefen` (Antippen auf der
+  Scheibe über `getScreenCTM`, 16-px-Abstände in allen Reitern, Kacheln ohne Anschnitt, Wertung per Kreis über alle
+  Bausteine). Die Dialoge des Schützen („Nicht meine“, „Zustimmung widerrufen“, abgelehnte Nummer entfernen) öffnet sie
+  nie. Für Zustände, die die Demo-Daten nicht haben (Mischabend, Scheibe nur aus dem PDF, drei Beobachtungen im Kopf am
+  Telefon), erfundene Scheiben in `demoCardSeeds` ergänzen.
+
+### Für den QR-Weg (SP-1.7 b)
+
+- Eine als „nicht meine“ zurückgewiesene Scheibe ohne Sportpassnummer kann kein Admin wieder zulassen, die Zahl in der
+  Übersicht zählt sie aber mit.
+- Caddy nimmt höchstens 5 MiB je Anfrage an; mit Upload-Wegen des QR-Wegs (Teilen auf Android) die Grenze neu prüfen.

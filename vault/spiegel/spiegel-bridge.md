@@ -30,7 +30,7 @@ documented_in: ["[[src-ssmdb2-abend-2026-10-09]]", "[[src-ssmdb2-kopie-2026-10-0
 ## Einrichten
 
 1. Gerät ans Gerätenetz anschließen (Meyton und Internet, siehe oben).
-2. In Spiegel unter Admin → Anlage und Brücken „Brücke koppeln“: Spiegel zeigt einen Kopplungscode („ABCDE-FGHJK“),
+2. In Spiegel unter Admin → Anlage und Brücke, Kasten „Brücke verbinden“, „Code erzeugen“: Spiegel zeigt den Code für die Brücke („ABCDE-FGHJK“),
    15 Minuten gültig und einmal einlösbar ([[spiegel-ingest-pipeline]]).
 3. Brücke installieren: eine Datei plus Dienst (`apps/spiegel-bridge/deploy/`).
    `sudo sh install.sh spiegel-bridge-linux-arm64` legt Binary, Benutzer `spiegel-bridge`, `/etc/spiegel-bridge` (0700)
@@ -95,6 +95,7 @@ In Meyton schreiben, einen Port ins Internet öffnen, Daten ohne Zustimmung oder
 | Einzelne Scheibe in Meyton gelöscht | Abgleich der letzten 30 Tage, Markierung „an der Quelle entfernt“, nie Löschen in Spiegel |
 | Meyton-Update ändert das Schema | Die Brücke liest weiter mit allen Spalten und meldet die Version; Spiegel bekommt bei Bedarf eine neue Adapter-Version (SF-25) |
 | Gerät oder SSD getauscht | neu koppeln, Nachholen ab dem letzten bestätigten Stand in Spiegel (SF-55) |
+| Epoche ohne neue Nummer bestätigt | bekannte Grenze: Zurückgewiesene Stände (`epoch-unconfirmed`) schickt die Brücke nur bei einer neuen Epochennummer erneut; heute nicht erreichbar, weil niemand eine Epoche in der Oberfläche bestätigt |
 
 ## Technik
 

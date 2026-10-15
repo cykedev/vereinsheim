@@ -47,7 +47,7 @@ part_of: ["[[ringwerk]]"]
 | roundDeadlineHin        | DateTime?    | null               | Stichtag Hinrunde                                                                                                   |
 | roundDeadlineRueck      | DateTime?    | null               | Stichtag Rückrunde                                                                                                  |
 | groupScoringMode        | ScoringMode? | RINGTEILER         | Wertungsmodus Gruppenphase (= scoringMode)                                                                          |
-| playoffBestOf           | Int?         | 3                  | Siege zum Weiterkommen VF/HF (3 = Best-of-Five)                                                                     |
+| playoffBestOf           | Int?         | – (Formular: 5)    | N in Best-of-N für VF/HF; weiter kommt, wer ⌈N/2⌉ Duelle gewinnt (Standard 5)                                                                     |
 | playoffHasViertelfinale | Boolean      | true               | Viertelfinale aktiv (Top 8, 4 Paarungen)                                                                            |
 | playoffHasAchtelfinale  | Boolean      | false              | Achtelfinale aktiv (Top 16, 8 Paarungen); überschreibt VF-Flag                                                      |
 | playoffQualThreshold    | Int?         | 8                  | Ab dieser TN-Zahl → Viertelfinale                                                                                   |
@@ -62,7 +62,7 @@ part_of: ["[[ringwerk]]"]
 | groupPlayAllDuels       | Boolean      | false (DB)         | Alle N Duelle immer austragen, kein vorzeitiger Abbruch; im Formular/Standard für BEST_OF_SINGLE auf true vorbelegt |
 | groupTiebreaker1        | ScoringMode? | null               | Optionaler Override: sekundäres Kriterium bei Duel-Wert-Gleichstand statt Stechschuss                               |
 | groupTiebreaker2        | ScoringMode? | null               | Optionaler Override: tertiäres Kriterium bei weiterem Gleichstand                                                   |
-| groupHasSuddenDeath     | Boolean      | true               | true = Stechschuss bei Paarungs-Gleichstand (Standard); false = Wiederholungsduell                                  |
+| groupHasSuddenDeath     | Boolean      | true               | true = Stechschuss bei Paarungs-Gleichstand (Standard); false = Wiederholungsduell (wird gespeichert, aber noch nicht ausgewertet)                                  |
 
 #### Event-spezifisch (EVENT)
 

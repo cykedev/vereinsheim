@@ -109,7 +109,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   der Quelle (jeder Stand schreibt sie: der Adapter aus `Status`, `seed:own` „training“), `Card.kindChoice` die Wahl des
   Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? ranking.kind ?? kind` (`kindOfRow` in `reads.ts`, der einzige
   Weg zur Art), in Übersicht, Seite und Vorgabe der Wertung. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
-  Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, „Anlage und Brücken“); die
+  Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, „Anlage und Brücke“); die
   Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. In der Oberfläche heißt sie „Liste“
   (`OLD_WORDS` hält „Rangliste“ fern): Die Zugriffe liefern sie als `list` (`OverviewCard`, `PageCard`), die Seite einer
   Scheibe nennt sie im Kopf, Scheiben filtern nach ihr (`list=<id>`). Bei einer Scheibe nur aus Probe zählt die Liste nicht
@@ -188,7 +188,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
     am letzten vermerkt, ohne Zeile und ohne Adapter ([[adr-031]], Änderung vom 13. Oktober 2026).
   - **Zustände** schaltet der Heartbeat weiter (`advanceCardStates`), `complete` gilt erst endgültig. `writeRevision` hält
     `korrigiert` und `uhr-abweichung` dauerhaft; eine andere Anzeigeart ist keine Korrektur (`sameScoring`, SF-74).
-  - **Admin → Anlage und Brücken** (`/admin/site`): Anlage, Brücken koppeln (Code nur in der Antwort der Action) und
+  - **Admin → Anlage und Brücke** (`/admin/site`): Anlage, Brücken verbinden (Code nur in der Antwort der Action) und
     trennen, getrennte entfernen (`removeBridge`: nur getrennte, Rohdaten und Codes bleiben mit `bridgeId` null), Listen (`Ranking`) zuordnen. Eine neue Epoche bestätigt niemand in der Oberfläche; die Übersicht
     zeigt nur einen Hinweis. Zustimmungen per Sportpass bestätigt oder lehnt der Admin am Konto ab
     (`/admin/users/[id]`, offene als Aufgabe in der Übersicht und als Link in „Konten“); eintragen kann nur der Schütze

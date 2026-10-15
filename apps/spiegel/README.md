@@ -16,7 +16,7 @@ Fachdoku im Vault: Einstieg [`vault/spiegel/spiegel.md`](../../vault/spiegel/spi
   Reitern (Lage, Streuung, Zeit, Verlauf und mehr), jede Kennzahl mit Hilfe in einfacher Sprache.
 - **Fortschritt:** ein Zeitraum mit Verlauf, Umfang, Trainingskalender, Vergleich und Rekorden.
 - **Profil:** Sportpassnummer, Zustimmung zur Zuordnung, Darstellung.
-- **Admin:** Konten, Anlage und Brücken (koppeln, trennen, Zustand), Zuordnung der Meyton-Listen, offene
+- **Admin:** Konten, Anlage und Brücke (verbinden, trennen, Zustand), Zuordnung der Meyton-Listen, offene
   Entscheidungen. Jede Aktion mit Folgen fragt vorher und sagt, was passiert.
 - **Ingest-API v1** für die Brücke: Kopplung, Geräte-Token, Zustand, Stapel von Snapshots, Heartbeat
   (`/api/ingest/v1/*`, Vertrag in [`packages/ingest-contract`](../../packages/ingest-contract)).

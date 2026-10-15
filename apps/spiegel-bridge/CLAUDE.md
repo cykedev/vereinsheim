@@ -16,7 +16,7 @@ Aufträge.
 | `pnpm --filter spiegel-bridge replay`     | Abnahme: alle Fälle aus `ssmdb2-cases` in `mariadb:10.6` (Docker), nicht im Gate (~5 s)       |
 | `pnpm --filter spiegel-bridge build`      | Binaries nach `dist/` für linux/arm64, linux/amd64, windows/amd64                             |
 | `go run ./cmd/spiegel-bridge watch`       | lokal lesen; je Snapshot eine Zeile ohne Personenfelder, `--json` volle Snapshots, `--once`   |
-| `spiegel-bridge pair --url --code`        | koppeln (Code aus Admin → Anlage und Brücken), schreibt die Konfiguration (0600, atomar)      |
+| `spiegel-bridge pair --url --code`        | koppeln (Code aus Admin → Anlage und Brücke, „Brücke verbinden“), schreibt die Konfiguration (0600, atomar)      |
 | `spiegel-bridge run`                      | Betrieb: Zustand, Runden, Filter, Upload, Heartbeat; Exit 3 bei widerrufenem Token            |
 | `pnpm --filter spiegel bridge-e2e`        | Ende zu Ende gegen den eigenen Build von Spiegel (:3012), MariaDB und drei Fälle (`--keep`)   |
 
