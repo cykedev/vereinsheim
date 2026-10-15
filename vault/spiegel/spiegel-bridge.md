@@ -29,6 +29,8 @@ documented_in: ["[[src-ssmdb2-abend-2026-10-09]]", "[[src-ssmdb2-kopie-2026-10-0
 
 ## Einrichten
 
+Schritt für Schritt auf dem Raspberry Pi 3 B+, mit DHCP, Zeitsynchronisierung und Updates: [[spiegel-bridge-pi]].
+
 1. Gerät ans Gerätenetz anschließen (Meyton und Internet, siehe oben).
 2. In Spiegel unter Admin → Anlage und Brücke, Kasten „Brücke verbinden“, „Code erzeugen“: Spiegel zeigt den Code für die Brücke („ABCDE-FGHJK“),
    15 Minuten gültig und einmal einlösbar ([[spiegel-ingest-pipeline]]).

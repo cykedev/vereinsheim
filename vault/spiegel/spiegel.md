@@ -29,7 +29,7 @@ Features, die Deploy-Vertrag, Schema oder ADRs berühren, laufen interaktiv stat
 
 1. [[spiegel-vision]] — Ziel, Abgrenzung zu Treffsicher und ShotsApp, Leitprinzipien.
 2. [[spiegel-architecture]] — Komponenten, Datenfluss, Einbindung ins Vereinsheim, Open-Source-Betrieb.
-3. [[spiegel-bridge]] und [[spiegel-ingest-pipeline]] — der Weg der Daten aus dem Schützenhaus; [[spiegel-ingest-contract]] — der Vertrag dazwischen (Snapshot, Prüfsumme, Testvektoren).
+3. [[spiegel-bridge]] (eingerichtet auf dem Pi nach [[spiegel-bridge-pi]]) und [[spiegel-ingest-pipeline]] — der Weg der Daten aus dem Schützenhaus; [[spiegel-ingest-contract]] — der Vertrag dazwischen (Snapshot, Prüfsumme, Testvektoren).
 4. [[spiegel-assignment]] — wem eine Scheibe gehört und wann das feststeht.
 5. [[spiegel-data-model]], [[spiegel-target-library]], [[spiegel-metrics]] — der Fachkern; [[spiegel-db-schema]] — die Datenbank (Schema, Zugriffe, Messung); [[spiegel-statistics]] — der Statistik-Katalog (was Spiegel auswertet und wann); [[spiegel-statistics-help]] — jede Auswertung in einfacher Sprache erklärt, erzeugt aus `packages/shot-help`, das auch die Hilfe in der App liefert.
 6. [[spiegel-edge-cases]] — Sonderfälle und Fallstricke mit IDs (SF-xx), Grundlage der Testdaten und Abnahmen.
