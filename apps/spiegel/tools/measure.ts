@@ -1,4 +1,4 @@
-// Messung an der Dev-Datenbank (SP-1.6 a, ADR-031), nicht im Gate: das Volumen „sehr aktiv, 5 Jahre“ schreiben, dann
+// Messung an der Dev-Datenbank (ADR-031), nicht im Gate: das Volumen „sehr aktiv, 5 Jahre“ schreiben, dann
 // die Zugriffe der Ansichten messen (Median über mehrere Läufe) und die Pläne der Abfragen zeigen (EXPLAIN ANALYZE).
 // Dazu andere Mitglieder, damit die Tabellen so groß sind wie an einer Vereinsanlage (rund 750 Scheiben im Jahr).
 // Aufruf: pnpm --filter spiegel measure [--cards 1564] [--others 2200] [--runs 15] [--keep]
@@ -147,7 +147,7 @@ async function main() {
     for (const { id } of overview) full.push((await one(id))!)
     const mean = metricByKey("result.decimalMean") as MetricDefinition
 
-    // Start und Liste wie die Seiten (SP-1.8): Scheiben mit Projektion lesen, das Modell auf dem Server rechnen, die
+    // Start und Liste wie die Seiten: Scheiben mit Projektion lesen, das Modell auf dem Server rechnen, die
     // Lagen der gezeigten Scheiben lesen; an den Browser geht nur, was die Funktion zurückgibt
     const pageContext = {
       timeZone: "Europe/Berlin",

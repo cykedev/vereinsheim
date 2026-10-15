@@ -57,7 +57,7 @@ const render = (shots: readonly MetricShot[], extra: Record<string, unknown> = {
   )
 
 describe("analysisInput: worüber die Analyse rechnet", () => {
-  it("mit Wertung über die Scheibe wie am Ausdruck, ohne die Probe (U4)", () => {
+  it("mit Wertung über die Scheibe wie am Ausdruck, ohne die Probe", () => {
     const input = analysisInput(CARD, "decimal", LP_10M)
     expect(input.base).toEqual(CARD.slice(2))
     expect(input.all).toEqual(CARD.slice(2))
@@ -80,7 +80,7 @@ describe("analysisInput: worüber die Analyse rechnet", () => {
 })
 
 describe("AnalysisPanel", () => {
-  it("fünf Reiter in der Reihenfolge der Spielwiese, kein Reiter „Probe“ (U4)", () => {
+  it("fünf Reiter in fester Reihenfolge, kein Reiter „Probe“", () => {
     const html = render(CARD)
     const labels = [...html.matchAll(/<button[^>]*role="radio"[^>]*>([^<]+)<\/button>/g)].map(
       (m) => m[1]
@@ -90,7 +90,7 @@ describe("AnalysisPanel", () => {
     expect(html).toContain('aria-label="Thema"')
   })
 
-  it("im Kopf rechts neben dem Titel die Aktion (der Schalter „Erklärungen“, U1), vor der Reiterleiste", () => {
+  it("im Kopf rechts neben dem Titel die Aktion (der Schalter „Erklärungen“), vor der Reiterleiste", () => {
     const html = render(CARD, { action: createElement("button", { "data-action": true }, "ERKL") })
     const title = html.indexOf("Was diese Scheibe zeigt")
     const action = html.indexOf("data-action")
@@ -115,7 +115,7 @@ describe("AnalysisPanel", () => {
     const text = render(flagged)
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
-    // ganze Wörter und Einzahl (Prüfung, Probe 10)
+    // ganze Wörter und Einzahl
     expect(text).toContain(
       "Datenlage: 4 Wertungsschüsse · 1 ohne Zeit · 1 verdächtiger Schuss · Wertung in Zehnteln"
     )
@@ -127,13 +127,13 @@ describe("AnalysisPanel", () => {
     expect(render(misses)).toContain("2 Fehlschüsse")
     const over = [...CARD, shot(6, "match", 0, 200_000, ["ueber-soll"])]
     expect(render(over)).toContain("1 Schuss über der Soll-Zahl")
-    // in Zehnteln fehlt dem Schuss etwas, auch wenn er einen Ring hat (Prüfung, Probe 7)
+    // in Zehnteln fehlt dem Schuss etwas, auch wenn er einen Ring hat
     const tenthless = CARD.map((s, i) => (i === 3 ? { ...s, decimalTenths: null } : s))
     expect(render(tenthless)).toContain("1 ohne Zehntel")
     expect(render(tenthless, { state: initialViewState({ scoring: "rings" }) })).not.toContain(
       "ohne Zehntel"
     )
-    // ein Training zählt die Probe wie Wertung, die Datenlage sagt das (Prüfung, Probe 8)
+    // ein Training zählt die Probe wie Wertung, die Datenlage sagt das
     const training = render(asOnPrintout(CARD.slice(0, 2)))
     expect(training).toContain("Datenlage: 2 Probeschüsse, als Training wie Wertung gezählt")
     expect(training).not.toContain("0 Wertungsschüsse")
@@ -143,7 +143,7 @@ describe("AnalysisPanel", () => {
     expect(render(CARD, { state: initialViewState({ scoring: "rings" }) })).toContain(
       "Wertung in ganzen Ringen"
     )
-    // „?“ an der Datenlage statt „Was heißt das?“ (Plan Schritt 4, D3)
+    // „?“ an der Datenlage statt „Was heißt das?“
     expect(render(CARD)).toMatch(
       /<div data-coverage="true"[^>]*>.*?<button[^>]*data-help="datenlage"/
     )
@@ -163,7 +163,7 @@ describe("AnalysisPanel", () => {
     for (const entry of GLOSSARY) expect(html).toContain(entry.term)
     expect([...html.matchAll(/<li[^>]*data-fallacy="true"/g)]).toHaveLength(FALLACIES.length)
     expect(html).toMatch(/<details data-glossary="true"(?! open)/)
-    // „Erklärungen“ zeigt nur Kurzsätze; die Nachschlage-Listen bleiben zu (Plan Schritt 4, D3)
+    // „Erklärungen“ zeigt nur Kurzsätze; die Nachschlage-Listen bleiben zu
     expect(render(CARD, { explain: true })).not.toMatch(
       /<details data-(glossary|fallacies)="true" open/
     )
@@ -176,7 +176,7 @@ describe("AnalysisPanel", () => {
   })
 })
 
-describe("Lineal und Scheibe (Plan L1, D4)", () => {
+describe("Lineal und Scheibe", () => {
   const card = fortyCard()
   const numbers = shotNumbers(card)
   const seventh = card.findIndex((s) => s.kind === "match" && numbers.get(s) === 7)

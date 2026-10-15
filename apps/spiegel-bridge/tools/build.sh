@@ -1,5 +1,5 @@
 #!/bin/sh
-# Binaries der Brücke für die Ziele aus dem Plan (D1): Raspberry Pi, Mini-PC oder Meyton-Rechner, Windows.
+# Binaries der Brücke für die Zielgeräte: Raspberry Pi, Mini-PC oder Meyton-Rechner, Windows.
 # Statisch (ohne cgo), ohne Pfade des Build-Rechners; die Version aus `git describe`, sonst „dev“.
 set -eu
 cd "$(dirname "$0")/.."

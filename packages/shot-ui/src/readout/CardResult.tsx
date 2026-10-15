@@ -13,7 +13,6 @@ import type { ViewState } from "../view-state"
 
 /**
  * Kennzahlen der ganzen Scheibe unter dem Ergebnis, aus dem Fachkern in der gewählten Wertung (`inScoring`).
- * Früher eine eigene Übersicht, die Ergebnis und Schusszahl ein zweites Mal zeigte (User, 8. Oktober 2026).
  */
 export const RESULT_FACTS = [
   ["Zehner", "result.tens"],
@@ -24,7 +23,7 @@ export const RESULT_FACTS = [
 export interface CardResultProps {
   shots: readonly MetricShot[]
   state: ViewState
-  /** Kreise (Art, Wertung) rechts in der Zeile der großen Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`) */
+  /** Kreise (Art, Wertung) rechts in der Zeile der großen Zahl */
   actions?: ReactNode
   /** ein Hinweis unten, etwa ein Fehler beim Speichern */
   notice?: ReactNode
@@ -33,8 +32,8 @@ export interface CardResultProps {
 
 /**
  * Ergebnis der ganzen Scheibe: groß aus dem Fachkern, darunter die Schusszahl (wie am Ausdruck ohne Probe), Zehner, Innenzehner
- * und bester Teiler; rechts neben der Zahl die Kreise der Einstellungen. Nicht über die Auswahl (D1 in `plans/2026-10-08-spiegel-shot-ui-kacheln.md`).
- * Auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung (`CardPage`, User, 8. Oktober 2026). Ohne Wert ein
+ * und bester Teiler; rechts neben der Zahl die Kreise der Einstellungen. Nicht über die Auswahl.
+ * Auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung (`CardPage`). Ohne Wert ein
  * Strich mit Grund wie die Kachel.
  */
 export function CardResult({ shots, state, actions, notice, className }: CardResultProps) {

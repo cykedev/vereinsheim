@@ -2,7 +2,7 @@ import Link from "next/link"
 
 type AdminTab = "overview" | "users" | "site"
 
-/** Bereiche des Admins: Übersicht, Konten, Anlage und Brücke (P2c) */
+/** Bereiche des Admins: Übersicht, Konten, Anlage und Brücke */
 export function AdminTabs({ current }: { current: AdminTab }) {
   const tab = (key: AdminTab, href: string, label: string) => (
     <Link

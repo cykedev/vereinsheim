@@ -22,8 +22,7 @@ export interface PeriodChartBarProps {
 /**
  * Bedienung über dem Verlauf: Kennzahl, Darstellung, „?“. In einer Zeile, wenn alles passt; sonst die Kennzahl oben,
  * darunter die Darstellung links und das „?“ rechts. Mit `flex-wrap` rutschte die Darstellung allein rechts in eine
- * zweite Zeile (User, 13. Oktober 2026). Gemessen an der Karte (Container), nicht am Fenster: ab 768 px steht der
- * Verlauf in der linken Spalte.
+ * zweite Zeile. Gemessen an der Karte (Container), nicht am Fenster: ab 768 px steht der Verlauf in der linken Spalte.
  */
 export function PeriodChartBar({ metric, view, onMetric, onView, onHelp }: PeriodChartBarProps) {
   const help = (
@@ -45,7 +44,7 @@ export function PeriodChartBar({ metric, view, onMetric, onView, onHelp }: Perio
             : "items-center"
         )}
       >
-        {/* ohne Umbruch in einer Zeile (U3: „Streuung“ ist länger als „σ“); ist sie zu breit, scrollt sie in sich */}
+        {/* ohne Umbruch in einer Zeile (Namen wie „Streuung“ sind lang); ist sie zu breit, scrollt sie in sich */}
         <Segmented
           label="Kennzahl"
           value={metric}

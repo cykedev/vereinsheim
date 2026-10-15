@@ -10,7 +10,7 @@ import { requireAdmin } from "@/lib/auth-helpers"
 
 export const metadata: Metadata = { title: "Admin" }
 
-// Admin beginnt mit der Übersicht (P2c): was auf eine Entscheidung wartet und der Weg einer Scheibe
+// Admin beginnt mit der Übersicht: was auf eine Entscheidung wartet und der Weg einer Scheibe
 export default async function AdminRoute() {
   await requireAdmin()
   const model = await adminOverview(getDisplayTimeZone())

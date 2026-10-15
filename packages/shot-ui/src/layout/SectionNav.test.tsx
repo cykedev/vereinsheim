@@ -6,10 +6,10 @@ import { PERIOD_SECTIONS } from "./sections"
 import { SectionNav } from "./SectionNav"
 import { activeSection } from "./useActiveSection"
 
-describe("Sprungleiste (D1)", () => {
+describe("Sprungleiste", () => {
   const html = renderToStaticMarkup(createElement(SectionNav, { active: "shots" }))
 
-  it("drei Anker in der Reihenfolge der Seite (U1: ohne „Zahlen“)", () => {
+  it("drei Anker in der Reihenfolge der Seite (ohne „Zahlen“)", () => {
     expect([...html.matchAll(/<a href="#([a-z]+)"/g)].map((m) => m[1])).toEqual([
       "target",
       "shots",
@@ -55,7 +55,7 @@ describe("aktiver Abschnitt", () => {
 
   it("ein kurzer Abschnitt nach dem Sprung ist aktiv, auch wenn der nächste schon im oberen Drittel beginnt", () => {
     // Zeitraum: „Zahlen“ in voller Breite, 290 px hoch, im Fenster von 900 px; die Analyse beginnt bei 346 px
-    // (die Scheibe hat seit U1 keinen Abschnitt „Zahlen“ mehr)
+    // (die Scheibe hat keinen Abschnitt „Zahlen“)
     expect(
       activeSection([
         box("history", -700),

@@ -1,8 +1,8 @@
-// Modell von Start (Plan N5, `vault/spiegel/spiegel-navigation.md`, Entscheidung 1): der letzte Abend je Familie im
+// Modell von Start (`vault/spiegel/spiegel-navigation.md`, „Start“): der letzte Abend je Familie im
 // Formband, neue Rekorde und die Form der letzten 90 Tage. Reine Funktion; alle Zahlen aus dem Fachkern, aus den
-// Projektionen der Scheiben (ADR-031, SP-1.8). Einheit ist
+// Projektionen der Scheiben (ADR-031). Einheit ist
 // die Scheibe (Regel „Über viele Scheiben“): Der Streifen zeigt Scheiben, das Band ist das des Fortschritts, seine
-// Mitte der gleitende Schnitt bis zum Abend; der Satz misst gegen den Schnitt der fünf Scheiben davor (Entscheidung 13).
+// Mitte der gleitende Schnitt bis zum Abend; der Satz misst gegen den Schnitt der fünf Scheiben davor.
 
 import { periodTrend, type PeriodComparison } from "@vereinsheim/shot-core/analysis"
 import { metricByKey, type Scoring } from "@vereinsheim/shot-core/metrics"
@@ -16,14 +16,14 @@ import { byStart, periodModel } from "../period/model"
 import { recordRows, type RecordRow } from "../period/records"
 import { initialPeriodState } from "../period/state"
 
-/** so viele Scheiben vor dem Abend ergeben den Schnitt (Entscheidung 13) */
+/** so viele Scheiben vor dem Abend ergeben den Schnitt */
 const BEFORE = 5
 /** so viele Scheiben zeigt der Streifen */
 const STRIP = 20
 
 export type { RecordRow }
 
-/** ein Block auf Start: der letzte Abend einer Familie (D2–D6) */
+/** ein Block auf Start: der letzte Abend einer Familie */
 export interface EveningBlock {
   family: string
   /** die Wertung der Familie: in ihr rechnen Zahl, Streifen, Ø der Zeilen und Rekorde; ein Rekord öffnet in ihr */
@@ -49,7 +49,7 @@ export interface EveningBlock {
   verdict: "above" | "within" | "below" | null
   /**
    * die letzten bis zu 20 Scheiben bis einschließlich des Abends, zeitlich, je mit dem gleitenden Schnitt und dem
-   * Formband an ihrer Stelle wie im Verlauf des Fortschritts (U5, D1)
+   * Formband an ihrer Stelle wie im Verlauf des Fortschritts
    */
   strip: {
     id: string
@@ -60,11 +60,11 @@ export interface EveningBlock {
     partial: boolean
     band: { low: number; high: number } | null
   }[]
-  /** Rekorde der Familie, deren Scheibe am Abend liegt (D6) */
+  /** Rekorde der Familie, deren Scheibe am Abend liegt */
   records: RecordRow[]
 }
 
-/** „Form der letzten 90 Tage“ rechts auf Start (D7, U5) */
+/** „Form der letzten 90 Tage“ rechts auf Start */
 export interface StartForm {
   family: string
   mean: number | null
@@ -87,7 +87,7 @@ export interface StartInput {
   named: readonly NamedPeriod[]
   /**
    * die Wertung einer Familie (in der App gespeichert, sonst die häufigste ihrer Scheiben): jeder Block und die Form
-   * rechnen in ihrer (Plan `plans/2026-10-12-spiegel-wertung.md`)
+   * rechnen in ihrer
    */
   scoringOf: (family: string) => Scoring
   /** die zuletzt gewählte Familie, für die Form */
@@ -130,7 +130,7 @@ export function startModel(input: StartInput): StartModel {
       ? { value: window.reduce((sum, v) => sum + v.value, 0) / window.length, n: window.length }
       : null
     // das Band wie im Verlauf des Fortschritts über alle Scheiben („Alles“): an der letzten Scheibe des Abends, mit
-    // ihr gerechnet; so sagen Start und Fortschritt dasselbe (User, 9. Oktober 2026, nach dem Review N5)
+    // ihr gerechnet; so sagen Start und Fortschritt dasselbe
     const trend = periodTrend(values)
     const band = trend.points.at(-1)?.band ?? null
     const verdict =
@@ -173,7 +173,7 @@ export function startModel(input: StartInput): StartModel {
   return { day, blocks, form: family ? formOf(all, family, input) : null }
 }
 
-/** Form der letzten 90 Tage gegen die 90 Tage davor, wie der Fortschritt mit diesem Vergleich (D7), in der Wertung der Familie */
+/** Form der letzten 90 Tage gegen die 90 Tage davor, wie der Fortschritt mit diesem Vergleich, in der Wertung der Familie */
 function formOf(all: readonly ListInputCard[], family: string, input: StartInput): StartForm {
   const state = {
     ...initialPeriodState({ family, scoring: input.scoringOf(family) }),

@@ -7,9 +7,8 @@ import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 import type { ActionResult } from "@/lib/types"
 
-// „Gelöscht · Rückgängig“ gleich nach einer Aktion (P2b, Plan `plans/2026-10-14-spiegel-papierkorb.md`, D6;
-// [[spiegel-navigation]] Entscheidung 15). Liegt im Rahmen der App, damit der Hinweis die Navigation der Aktion
-// überlebt; wiederverwendbar für die Auswahl (N4).
+// „Gelöscht · Rückgängig“ gleich nach einer Aktion ([[spiegel-navigation]], „Löschen und Papierkorb“). Liegt im Rahmen der
+// App, damit der Hinweis die Navigation der Aktion überlebt; wiederverwendbar für die Auswahl.
 
 export interface UndoEntry {
   text: string
@@ -37,7 +36,7 @@ export interface UndoView {
 
 /**
  * die Anzeige allein (Markup-Test). Die Live-Region (`role="status"`) steht immer im DOM und füllt sich nur: Eine Region,
- * die mit fertigem Text eingehängt wird, lesen Screenreader oft nicht vor (Review P2b).
+ * die mit fertigem Text eingehängt wird, lesen Screenreader oft nicht vor.
  */
 export function UndoBar({ view }: { view: UndoView | null }) {
   return (
@@ -70,7 +69,7 @@ export function UndoBar({ view }: { view: UndoView | null }) {
 /**
  * Stellt `useUndo` bereit und zeigt den Hinweis: zehn Sekunden lang, oder bis der User woanders hin navigiert. Nach
  * „Rückgängig“ verschwindet er; die Action lädt die Ansichten neu. Während des Rückgängigmachens läuft keine Zeit ab, und
- * ein Fehler bleibt bis zur nächsten Navigation stehen (Review P2b).
+ * ein Fehler bleibt bis zur nächsten Navigation stehen.
  */
 export function UndoHost({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

@@ -93,7 +93,7 @@ describe("Lineal: Index außerhalb der Werte", () => {
   })
 })
 
-describe("Lineal ohne Textauswahl (User, 9. Oktober 2026)", () => {
+describe("Lineal ohne Textauswahl", () => {
   type SvgProps = ReturnType<typeof useRuler>["svgProps"]
   let props: SvgProps | null = null
   function Capture({ onProps }: { onProps: (svgProps: SvgProps) => void }) {

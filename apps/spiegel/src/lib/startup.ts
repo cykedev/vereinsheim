@@ -11,7 +11,7 @@ export type SeedAdminResult = "created" | "restored" | "exists" | "missing-env"
 /**
  * Das erste Admin-Konto aus `SEED_ADMIN_EMAIL` und `SEED_ADMIN_PASSWORD`, nur wenn es keinen aktiven Admin gibt (wie
  * Ringwerk). Gibt es das Konto mit dieser E-Mail schon (herabgestuft oder deaktiviert), wird es wieder aktiver Admin,
- * mit seinem Passwort: der Weg zurück, wenn kein Admin mehr übrig ist (Review). Die E-Mail wird normalisiert wie bei der
+ * mit seinem Passwort: der Weg zurück, wenn kein Admin mehr übrig ist. Die E-Mail wird normalisiert wie bei der
  * Anmeldung. Das Passwort aus der Umgebung ist das eigene des Admins, kein Wechsel nötig.
  */
 export async function ensureSeedAdmin(

@@ -16,7 +16,7 @@ import {
   type PeriodChoice,
 } from "./calendar"
 
-/** was das Blatt „Filter“ setzt (U2, D3) */
+/** was das Blatt „Filter“ setzt */
 export interface PeriodFilters {
   choice: PeriodChoice
   compare: CompareChoice
@@ -42,7 +42,7 @@ export interface PeriodPickerProps {
 }
 
 /**
- * Was der Chip zeigt (U2, D3): der Zeitraum und, was von der Vorgabe abweicht: die Art, ein Vergleich, ohne Trainings
+ * Was der Chip zeigt: der Zeitraum und, was von der Vorgabe abweicht: die Art, ein Vergleich, ohne Trainings
  * nur aus Probe. „Letzte 90 Tage · Training · mit Zeitraum davor“
  */
 export function filterSummary(
@@ -83,10 +83,9 @@ const optionClass =
   "flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-[14px] hover:bg-surface-2 has-[:checked]:bg-accent-wash has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring"
 
 /**
- * Blatt „Filter“ (Plan L3, D4, D6; U2, D3): ein Chip mit dem Zeitraum und dem, was abweicht, öffnet ein Blatt (auf dem
- * Telefon von unten) mit den rollenden Vorgaben, den benannten Zeiträumen, „Frei“ mit zwei Tagen, „Vergleichen mit“,
- * der Art und „Trainings nur aus Probe mitzählen“. Die Wahl gilt erst mit „Übernehmen“. „Als Zeitraum speichern“
- * kommt mit L6.
+ * Blatt „Filter“: ein Chip mit dem Zeitraum und dem, was abweicht, öffnet ein Blatt (auf dem Telefon von unten) mit
+ * den rollenden Vorgaben, den benannten Zeiträumen, „Frei“ mit zwei Tagen, „Vergleichen mit“, der Art und „Trainings
+ * nur aus Probe mitzählen“. Die Wahl gilt erst mit „Übernehmen“. „Als Zeitraum speichern“ gibt es noch nicht.
  */
 export function PeriodPicker({
   choice,

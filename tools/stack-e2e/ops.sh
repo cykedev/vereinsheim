@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Betrieb gegen den Teststack (P4, plans/2026-10-14-spiegel-ops.md, T8): Deploy nacheinander mit
-# Vorprüfung, Backup, Restore-Probe, Restore und Rollback, über die Skripte und das CLI.
+# Betrieb gegen den Teststack: Deploy nacheinander mit Vorprüfung, Backup, Restore-Probe, Restore und
+# Rollback, über die Skripte und das CLI.
 # Läuft aus tools/stack-e2e/run.sh --ops, das ENV_FILE, COMPOSE_PROJECT_NAME und COMPOSE_FILE setzt;
 # Backups und Deploy-Historie landen in einem eigenen Temp-Ordner. Ändert nichts außerhalb des Teststacks
 # (SKIP_PRUNE: kein Aufräumen der Images des Rechners).
@@ -50,7 +50,7 @@ wait_spiegel() {
 	echo "$code"
 }
 # Migratoren nacheinander: Jeder startet erst nach dem Ende des vorigen, keiner danach noch einmal gleichzeitig
-# (Review P4: das abschließende `up -d` startete sie neu). Sekunden reichen, ein Migrator braucht mehrere.
+# (etwa durch ein abschließendes `up -d`). Sekunden reichen, ein Migrator braucht mehrere.
 check_migrator_order() {
 	local app id started finished prev_finished="" prev_app=""
 	for app in ringwerk treffsicher spiegel; do
@@ -76,7 +76,7 @@ drop_spiegel() {
 	sql "DROP ROLE IF EXISTS spiegel" >/dev/null
 }
 
-echo "==> db-ensure über das CLI (P3: Wrapper)"
+echo "==> db-ensure über das CLI (Wrapper)"
 if run sh -c 'printf "y\n" | ./scripts/vereinsheim db-ensure'; then
 	expect_text "spiegel: war schon da" "db-ensure"
 	echo "  in Ordnung"
@@ -125,7 +125,7 @@ else
 	tail -5 "$WORK/plain.txt"
 fi
 
-echo "==> db-ensure, dann Deploy mit Backup (Datenbank spiegel noch leer, Review P4)"
+echo "==> db-ensure, dann Deploy mit Backup (Datenbank spiegel noch leer)"
 run ./scripts/db-ensure.sh || problem "db-ensure nach DROP"
 expect_text "spiegel: angelegt" "db-ensure nach DROP"
 if run ./scripts/deploy.sh; then

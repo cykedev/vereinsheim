@@ -7,7 +7,7 @@ import { ChartSvg } from "./frame"
 import { FieldAxes, fieldFrame, FieldScale } from "./field"
 
 /**
- * Schwerpunkt je Serie gegen den Schwerpunkt der Scheibe in der Mitte (Spielwiese `pathChart`): Linie in
+ * Schwerpunkt je Serie gegen den Schwerpunkt der Scheibe in der Mitte: Linie in
  * Serienfolge, je Serie eine Marke mit ihrer Nummer; ab zwei Serien mit Lage.
  */
 export function PathChart({ width, shots }: { width: number; shots: readonly MetricShot[] }) {

@@ -27,7 +27,7 @@ const shot = (
   series,
 })
 
-// wie am Ausdruck (U4): Serie 1 mit drei, Serie 2 mit zwei Schuss (LP, Lagen in µm)
+// wie am Ausdruck: Serie 1 mit drei, Serie 2 mit zwei Schuss (LP, Lagen in µm)
 const CARD = [
   shot("match", 1, 0, 0, 109),
   shot("match", 1, 2000, 1000, 105),
@@ -150,7 +150,7 @@ describe("TargetView: Auswahl und Antippen", () => {
     expect(shotOrder(html)).toEqual(["4", "5"])
   })
 
-  it("der Hinweis am Treffer nennt den Wert in Zehnteln, auch in ganzen Ringen (Rückmeldung 3)", () => {
+  it("der Hinweis am Treffer nennt den Wert in Zehnteln, auch in ganzen Ringen", () => {
     expect(render({ scoring: "rings" })).toContain("<title>Schuss 2: 10,5</title>")
   })
 

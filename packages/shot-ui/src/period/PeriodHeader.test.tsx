@@ -20,7 +20,7 @@ const state = (partial: Partial<PeriodState> = {}) => ({
   ...partial,
 })
 
-describe("Blatt „Filter“ (D4, D6; U2 D3)", () => {
+describe("Blatt „Filter“", () => {
   const html = renderToStaticMarkup(
     h(PeriodPicker, {
       choice: { type: "rolling", days: 90 },
@@ -52,7 +52,7 @@ describe("Blatt „Filter“ (D4, D6; U2 D3)", () => {
     expect([...html.matchAll(/Vorbereitung Landesmeisterschaft/g)]).toHaveLength(2)
     expect(html).toContain("01.05.2026 – 30.06.2026")
     expect(html).toContain("seit 01.08.2026")
-    // seit U2 auch Art und Probe-Training im Blatt, als Entwurf bis „Übernehmen“; das Blatt heißt „Filter“
+    // auch Art und Probe-Training im Blatt, als Entwurf bis „Übernehmen“; das Blatt heißt „Filter“
     expect(html).toMatch(/<legend[^>]*>Art<\/legend>/)
     expect([...html.matchAll(/<input type="radio"[^>]*name="art"/g)]).toHaveLength(3)
     for (const label of ["Alle", "Training", "Wettkampf"])
@@ -107,7 +107,7 @@ describe("Blatt „Filter“ (D4, D6; U2 D3)", () => {
   })
 })
 
-describe("Filter und Kopf (D5, D14)", () => {
+describe("Filter und Kopf", () => {
   const controls = (
     partial: Partial<PeriodState>,
     compareRange: typeof RANGE | null,
@@ -128,7 +128,7 @@ describe("Filter und Kopf (D5, D14)", () => {
       })
     )
 
-  it("ein weiterer Chip in der Zeile nach dem Chip „Filter“, wie in der Liste (User, 13. Oktober 2026)", () => {
+  it("ein weiterer Chip in der Zeile nach dem Chip „Filter“, wie in der Liste", () => {
     const html = renderToStaticMarkup(
       h(PeriodControls, {
         state: state({}),
@@ -149,7 +149,7 @@ describe("Filter und Kopf (D5, D14)", () => {
     expect(controls({}, null)).not.toContain("data-period-actions")
   })
 
-  it("eine Zeile: Familie (erst ab zwei) und der Chip; Art, Probe-Training und Vergleich im Blatt (U2, D3)", () => {
+  it("eine Zeile: Familie (erst ab zwei) und der Chip; Art, Probe-Training und Vergleich im Blatt", () => {
     const html = controls({}, null)
     expect(html).not.toContain('aria-label="Art"')
     expect(html).not.toContain("mit Training nur aus Probe")
@@ -188,7 +188,7 @@ describe("Filter und Kopf (D5, D14)", () => {
   })
 })
 
-describe("Ergebnis-Box (D13)", () => {
+describe("Ergebnis-Box", () => {
   const model = (cards: ReturnType<typeof periodCard>[], partial: Partial<PeriodState> = {}) =>
     periodModel({
       cards: cards.map(projected),
@@ -214,7 +214,7 @@ describe("Ergebnis-Box (D13)", () => {
     expect(html).toContain("5 Scheiben · 10 Wertungsschüsse")
     // die beste (10,0) ist die älteste der fünf, 14 Tage vor jetzt
     expect(html).toMatch(/beste Scheibe zu 2 Schuss [\s\S]*10,00[\s\S]*am 16\.09\.2026/)
-    // keine Kreise in der Box: die Wertung der Familie steht in der Zeile der Filter (User, 13. Oktober 2026)
+    // keine Kreise in der Box: die Wertung der Familie steht in der Zeile der Filter
     expect(html).not.toContain("data-scoring-toggle")
     expect(html).not.toContain("data-comparison")
   })
@@ -237,7 +237,7 @@ describe("Ergebnis-Box (D13)", () => {
     expect(html).toContain("gegen Vorbereitung Landesmeisterschaft: zu wenige Scheiben")
   })
 
-  it("ohne Schalter der Wertung (U2, D4: die Wertung des Geräts) kein leerer Platz", () => {
+  it("ohne Schalter der Wertung (die Wertung des Geräts) kein leerer Platz", () => {
     const html = renderToStaticMarkup(h(PeriodResult, { model: model(now), timeZone: TZ }))
     expect(html).not.toContain("WERTUNG")
     expect(html).toMatch(/<\/p><\/div><\/div>$/)

@@ -21,9 +21,9 @@ export interface CardContext {
   /** Ebenen der Scheibe, etwa die Vertrauensellipse, die eine Karte schaltet */
   layers: Readonly<Record<Layer, boolean>>
   onToggleLayer: (layer: Layer) => void
-  /** „?“ einer Karte: öffnet ihre Erklärung als Blatt (Plan Schritt 4, D3) */
+  /** „?“ einer Karte: öffnet ihre Erklärung als Blatt */
   onHelp?: (id: string) => void
-  /** der auf der Scheibe gewählte Schuss, wenn er zur Grundlage gehört: das Lineal steht auf ihm (Plan L1, D4) */
+  /** der auf der Scheibe gewählte Schuss, wenn er zur Grundlage gehört: das Lineal steht auf ihm */
   chosenShot?: MetricShot | null
   /** „Auf der Scheibe“ im Lineal: diesen Schuss dort wählen und zu ihr springen */
   onShowShot?: (shot: MetricShot) => void

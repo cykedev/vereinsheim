@@ -10,7 +10,7 @@ import { VISIBLE_CARD } from "@/lib/db/visible"
 import type { AdminHelpId } from "./help"
 import { heldBackText } from "./site"
 
-// Übersicht des Admins (P2c, D3): oben, was ein Mensch entscheiden muss (D0), darunter der Weg einer Scheibe in vier
+// Übersicht des Admins: oben, was ein Mensch entscheiden muss, darunter der Weg einer Scheibe in vier
 // Stationen mit ihrem Stand. Das Modell ist eine reine Funktion; `adminOverview` liest dafür nur Zahlen und Namen.
 
 export interface AdminTask {
@@ -42,7 +42,7 @@ export interface AdminOverviewModel {
 }
 
 export interface OverviewInput {
-  /** `foreignSource`: eine Brücke schickt aus einer Ablage, die Spiegel nicht kennt (kommt nicht vor; Hinweis, D0) */
+  /** `foreignSource`: eine Brücke schickt aus einer Ablage, die Spiegel nicht kennt (kommt nicht vor; Hinweis) */
   site: { name: string; foreignSource: boolean } | null
   bridge: {
     name: string
@@ -51,7 +51,7 @@ export interface OverviewInput {
     status: HeartbeatV1["status"] | null
     heldBack: string | null
   } | null
-  /** Zustimmungen aktiver Konten: ein deaktiviertes bekommt nichts, dort wartet keine Entscheidung (Review) */
+  /** Zustimmungen aktiver Konten: ein deaktiviertes bekommt nichts, dort wartet keine Entscheidung */
   consents: {
     id: number
     userId: string
@@ -61,15 +61,15 @@ export interface OverviewInput {
     status: ConsentStatus
   }[]
   accounts: { total: number; deactivated: number; withSportpass: number }
-  /** Scheiben der Anlage, als „nicht meine“ gemeldet (Grabsteine): nur als Zahl, ohne Namen (P2b, D9) */
+  /** Scheiben der Anlage, als „nicht meine“ gemeldet (Grabsteine): nur als Zahl, ohne Namen */
   notMine: number
-  /** aktive Zustimmungen, deren ältere Scheiben Spiegel noch holt (P2d, D10): Zustand, keine Aufgabe */
+  /** aktive Zustimmungen, deren ältere Scheiben Spiegel noch holt: Zustand, keine Aufgabe */
   historyPending: number
-  /** Nutzung (P2e, D2): sichtbare Scheiben aktiver Konten, davon in den letzten 30 Tagen, Konten mit solchen */
+  /** Nutzung: sichtbare Scheiben aktiver Konten, davon in den letzten 30 Tagen, Konten mit solchen */
   usage: { cards: number; recentCards: number; recentAccounts: number }
 }
 
-/** was die Brücke meldet, in Worten; nur Information (D0), keine Aufgabe */
+/** was die Brücke meldet, in Worten; nur Information, keine Aufgabe */
 const BRIDGE_NOTE: Partial<Record<HeartbeatV1["status"], string>> = {
   delayed: "schickt gerade langsamer als sonst",
   "db-unreachable": "erreicht die Meyton-Anlage nicht",
@@ -209,10 +209,10 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
   }
 }
 
-/** die Zeile zur Nutzung (P2e, D2; Wortlaut nach P2f, D7) */
+/** die Zeile zur Nutzung */
 function usageText({ cards, recentCards, recentAccounts }: OverviewInput["usage"]): string {
   if (!cards) return "Noch keine Scheibe in Spiegel."
-  // ohne frische Scheiben kein „0 davon … 0 Konten haben“ (Review)
+  // ohne frische Scheiben kein „0 davon … 0 Konten haben“
   if (!recentCards)
     return `${count(cards, "Scheibe", "Scheiben")}, keine davon in den letzten 30 Tagen.`
   return `${count(cards, "Scheibe", "Scheiben")}, ${recentCards} davon in den letzten 30 Tagen. ${
@@ -220,7 +220,7 @@ function usageText({ cards, recentCards, recentAccounts }: OverviewInput["usage"
   } in den letzten 30 Tagen geschossen.`
 }
 
-/** „Für N Schützen holt Spiegel noch ältere Scheiben“: Konten, nicht Nummern (Review P2f) */
+/** „Für N Schützen holt Spiegel noch ältere Scheiben“: Konten, nicht Nummern */
 export function accountsLoadingHistory(
   consents: readonly (ConsentDecisions & { userId: string; historyLoadedAt: Date | null })[]
 ): number {
@@ -234,7 +234,7 @@ export function accountsLoadingHistory(
 const RECENT_MS = 30 * 86_400_000
 
 /**
- * Nutzung über aktive Konten, nur sichtbare Scheiben, nach ihrem Beginn; Zahlen, keine Inhalte (P2e, D2). `ownerIds`
+ * Nutzung über aktive Konten, nur sichtbare Scheiben, nach ihrem Beginn; Zahlen, keine Inhalte. `ownerIds`
  * grenzt auf diese Konten ein (Tests).
  */
 export async function usageOf(nowMs: number, ownerIds?: string[]): Promise<OverviewInput["usage"]> {

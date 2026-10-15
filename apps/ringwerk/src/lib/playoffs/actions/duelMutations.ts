@@ -95,7 +95,6 @@ interface PersistDuelResultArgs {
 /**
  * Persistiert beide Duell-Ergebnisse, markiert das Duell als abgeschlossen und
  * aktualisiert Siegstand + Match-Status — alles in einer Transaktion.
- * Verhalten identisch zum vorherigen Inline-Transaktionsblock.
  */
 export async function persistDuelResult(args: PersistDuelResultArgs): Promise<void> {
   const { duelId, matchId, recordedByUserId, newWinsA, newWinsB, matchComplete, a, b } = args

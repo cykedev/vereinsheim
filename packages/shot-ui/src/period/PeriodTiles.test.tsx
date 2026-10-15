@@ -19,7 +19,7 @@ const model = (cards: ReturnType<typeof periodCard>[], partial: Partial<PeriodSt
 const now = [60, 70, 80, 90, 100].map((t, i) => periodCard(`n${i}`, 10 + i, [t, t, t]))
 const before = [10, 20, 30, 40, 50].map((t, i) => periodCard(`v${i}`, 100 + i, [t, t, t]))
 
-describe("Zahlen über den Zeitraum (D11)", () => {
+describe("Zahlen über den Zeitraum", () => {
   it("sechs Kacheln mit Mittel je Scheibe und Zahl der Scheiben", () => {
     const m = model(now)
     const html = renderToStaticMarkup(h(PeriodTiles, { tiles: m.tiles, compareLabel: null }))
@@ -28,7 +28,7 @@ describe("Zahlen über den Zeitraum (D11)", () => {
       /data-period-tile="result.decimalMean"[\s\S]*?8,00<small[^>]*>Ringe[\s\S]*?5 Scheiben/
     )
     expect(html).not.toContain("data-tile-compare")
-    // auch kein Tooltip mit Fachbegriffen (Review U3): Die Erklärung steht im Blatt „?“
+    // auch kein Tooltip mit Fachbegriffen: Die Erklärung steht im Blatt „?“
     expect(html).not.toMatch(/title="|R50|σ/)
   })
 
@@ -48,7 +48,7 @@ describe("Zahlen über den Zeitraum (D11)", () => {
   })
 })
 
-describe("Analyse über den Zeitraum (D12)", () => {
+describe("Analyse über den Zeitraum", () => {
   const render = (
     cards: ReturnType<typeof periodCard>[],
     partial: Partial<PeriodState> = {},
@@ -71,14 +71,14 @@ describe("Analyse über den Zeitraum (D12)", () => {
       (m) => ({ key: m[1], card: m[2], html: m[0] })
     )
 
-  it("keine Karte „Gegen deinen Schnitt“: die Ablesung sagt den Abstand zu den fünf davor (U2, D2)", () => {
+  it("keine Karte „Gegen deinen Schnitt“: die Ablesung sagt den Abstand zu den fünf davor", () => {
     const html = render(now)
     expect(html).not.toContain('data-help="gegen-den-schnitt"')
     expect(html).not.toContain("Gegen deinen Schnitt")
     expect(html).not.toContain("Platz unter deinen letzten")
   })
 
-  it("Rekorde: oben höchstens fünf aus dem Zeitraum, alle zugeklappt darunter (U2, D5)", () => {
+  it("Rekorde: oben höchstens fünf aus dem Zeitraum, alle zugeklappt darunter", () => {
     // nur Scheiben im Zeitraum: jeder Rekord liegt darin, oben stehen trotzdem höchstens fünf
     const m = model(now)
     const all = recordRows(m.records, "decimal")
@@ -103,7 +103,7 @@ describe("Analyse über den Zeitraum (D12)", () => {
     const old = periodCard("alt", 200, [109, 109, 109])
     const m = model([...now, old])
     const rows = recordRows(m.records, "decimal")
-    // ganze Worte, gezeigt als „Bezeichnung: Wert“ (U5, D3)
+    // ganze Worte, gezeigt als „Bezeichnung: Wert“
     expect(rows[0]).toMatchObject({
       key: "R1:3",
       label: "Bestes Ergebnis (3 Schuss)",
@@ -129,7 +129,7 @@ describe("Analyse über den Zeitraum (D12)", () => {
     expect(html).toMatch(/data-record="R3"[\s\S]*?>Bester Teiler: <\/span>/)
   })
 
-  it("Rekorde der gewählten Scheibe markiert, „gezeigt“ statt „zeigen“; ohne Wahl keiner (User, 12. Oktober 2026)", () => {
+  it("Rekorde der gewählten Scheibe markiert, „gezeigt“ statt „zeigen“; ohne Wahl keiner", () => {
     const records = recordItems(render(now))
     expect(records.length).toBeGreaterThan(0)
     expect(records.some((r) => r.html.includes("aria-current"))).toBe(false)

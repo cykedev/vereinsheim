@@ -1,5 +1,5 @@
-// Gründe ohne Wert und der Ø, wenn es kein Ergebnis gibt: gleich in Ergebnis-Box, Kachel und Reiter
-// (Prüfung, 9. Oktober 2026). Rechnet nur über die Registry des Fachkerns.
+// Gründe ohne Wert und der Ø, wenn es kein Ergebnis gibt: gleich in Ergebnis-Box, Kachel und Reiter.
+// Rechnet nur über die Registry des Fachkerns.
 
 import {
   computeMetric,

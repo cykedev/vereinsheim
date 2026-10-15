@@ -13,7 +13,7 @@
  * zweimal hintereinander dieselbe Seite bei ungerader Zahl, insgesamt nur das Minimum von `n-2`
  * Wiederholungen bei gerader (de Werra). „Immer `r+i` ist A“ wäre ebenfalls ausgeglichen, stellte
  * aber z.B. bei 16 Teilnehmern jemanden 8× in Folge auf A — die Regel nicht „vereinfachen“.
- * Die frühere Circle-Method hielt den festen Teilnehmer in jeder Runde links, er war also immer A.
+ * Die einfache Circle-Method hielte den festen Teilnehmer in jeder Runde links, er wäre also immer A.
  *
  * Bei ungerader Teilnehmerzahl ist `∞` ein Dummy; seine Begegnung ist das Freilos
  * (`awayId = null`, `homeId` = der echte Teilnehmer) — jeder erhält genau eines.

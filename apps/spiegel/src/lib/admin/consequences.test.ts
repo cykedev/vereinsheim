@@ -31,7 +31,7 @@ function wellFormed(decision: Decision) {
   expect(JSON.stringify(decision)).not.toMatch(/[<>]|undefined|null/)
 }
 
-describe("Folgen der Sportpassnummern (Admin, Wortlaut aus dem Textbuch, P2f)", () => {
+describe("Folgen der Sportpassnummern (Admin)", () => {
   it("bestätigen: was Spiegel holt, auch ältere, die jüngste zur Kontrolle, was nie geholt wird", () => {
     const d = consentConfirm({ who, sportpassId })
     wellFormed(d)
@@ -66,7 +66,7 @@ describe("Folgen der Sportpassnummern (Admin, Wortlaut aus dem Textbuch, P2f)", 
     expect(returned.check).toBe(
       "Gehört 12345678 wirklich zu Max Muster? Vielleicht hat jemand am Stand einen fremden Namen gewählt. Wenn die Nummer nicht passt: ablehnen."
     )
-    // deaktiviert: kein „holt ab jetzt“ davor, das dem widerspräche (Review P2f)
+    // deaktiviert: kein „holt ab jetzt“ davor, das dem widerspräche
     const inactive = consentConfirm({ who, sportpassId, accountActive: false })
     expect(inactive.happens[0]).toBe(
       "Das Konto von Max Muster ist deaktiviert. Solange das so bleibt, holt Spiegel nichts. Danach holt Spiegel jede Scheibe, die unter dieser Nummer geschossen wird."
@@ -156,13 +156,13 @@ describe("Folgen an Brücke und Listen", () => {
     })
   })
 
-  it("getrennte Brücke entfernen: nicht mehr unter der Brücke, nichts gelöscht, nicht rückgängig (Textbuch rev 20, 22)", () => {
+  it("getrennte Brücke entfernen: nicht mehr unter der Brücke, nichts gelöscht, nicht rückgängig", () => {
     const d = bridgeRemove({ device: "Mac (Kopie 9.10.)" })
     wellFormed(d)
     expect(d).toEqual({
       title: "Getrennte Brücke „Mac (Kopie 9.10.)“ entfernen?",
       about: "Das Gerät „Mac (Kopie 9.10.)“ ist getrennt und schickt nichts mehr.",
-      // „Liste“ hieße auf dieser Seite auch die Listen aus Meyton (Review)
+      // „Liste“ hieße auf dieser Seite auch die Listen aus Meyton
       happens: ["Es steht dann nicht mehr unter „Brücke im Schützenhaus“."],
       notHappening: [
         "Es wird keine Scheibe gelöscht.",
@@ -281,7 +281,7 @@ describe("Folgen beim Schützen", () => {
       confirmLabel: "Widerrufen",
       destructive: true,
     })
-    // nur eine aktive hat schon Scheiben gebracht (Review P2f)
+    // nur eine aktive hat schon Scheiben gebracht
     expect(ownConsentRevoke({ sportpassId, status: "requested" }).about).toBe(
       "Du hast für die Sportpassnummer 12345678 zugestimmt. Ein Admin hat die Nummer noch nicht geprüft."
     )
@@ -322,7 +322,7 @@ describe("Folgen beim Schützen", () => {
       "Spiegel löscht diese Scheibe und die 35 weiteren. Sie kommen nicht von selbst wieder."
     )
     expect(notMine({ evening, more: 1, sportpassId }).about).toContain("Mit ihr wartet 1 weitere.")
-    // ohne Nummer geht keine Zustimmung zurück, und es gibt nichts wieder zuzulassen (Review)
+    // ohne Nummer geht keine Zustimmung zurück, und es gibt nichts wieder zuzulassen
     const without = notMine({ evening, more: 0, sportpassId: null })
     wellFormed(without)
     expect(without.about).toBe("Die Scheibe vom Di 13.10.2026 um 19:12 kam ohne Sportpassnummer.")
@@ -370,7 +370,7 @@ describe("Löschen und Papierkorb", () => {
 })
 
 /**
- * Schreibregeln als Leitplanke (P2f, D5; Lektion [[spiegel-dialog-texts-not-understood]]): keine Semikolons und keines der
+ * Schreibregeln als Leitplanke (Lektion [[spiegel-dialog-texts-not-understood]]): keine Semikolons und keines der
  * alten Wörter des Codes. Ob ein Text verständlich ist, prüft ein Mensch; dieser Test hält nur fest, dass die alten
  * Fehler nicht zurückkommen.
  */
@@ -386,7 +386,7 @@ const textsOf = (decision: Decision) =>
     decision.confirmLabel,
   ].filter(Boolean)
 
-describe("Schreibregeln (P2f)", () => {
+describe("Schreibregeln", () => {
   const evening = "Di 13.10.2026 um 19:12"
   const decisions: [string, Decision][] = [
     ["bestätigen", consentConfirm({ who, sportpassId })],

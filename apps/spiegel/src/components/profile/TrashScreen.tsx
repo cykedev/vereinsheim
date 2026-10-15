@@ -12,7 +12,7 @@ import { purgeCardNow, restoreCard } from "@/lib/trash-actions"
 import type { BlockedItem, TrashItem } from "@/lib/trash-view"
 
 /**
- * Papierkorb (P2b, D8): gelöschte Scheiben 30 Tage mit „Wiederherstellen“ und „Endgültig löschen“, darunter, was nicht
+ * Papierkorb: gelöschte Scheiben 30 Tage mit „Wiederherstellen“ und „Endgültig löschen“, darunter, was nicht
  * von selbst wiederkommt (endgültig gelöscht, als „nicht meine“ gemeldet), ohne Knopf.
  */
 export function TrashScreen({ items, blocked }: { items: TrashItem[]; blocked: BlockedItem[] }) {

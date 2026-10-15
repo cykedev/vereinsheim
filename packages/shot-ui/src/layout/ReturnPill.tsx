@@ -1,8 +1,8 @@
 "use client"
 
 /**
- * Pille „Zurück zu „Lage““ (Plan Schritt 4, D6): unten mittig über dem sicheren Rand des Telefons und über der
- * unteren Leiste des Rahmens (`--app-bar`, Plan N3), nachdem eine Aktion außerhalb der Scheibe zur Scheibe
+ * Pille „Zurück zu „Lage““: unten mittig über dem sicheren Rand des Telefons und über der
+ * unteren Leiste des Rahmens (`--app-bar`), nachdem eine Aktion außerhalb der Scheibe zur Scheibe
  * gesprungen ist. Ein Tipp springt zurück, das Kreuz schließt.
  * Immer eingehängt: Der Bereich für Screenreader muss schon da sein, wenn der Sprung angesagt wird; ein
  * Bereich, der mit der Pille erst entsteht, wird oft nicht vorgelesen. Ohne `label` nur dieser Bereich, leer.

@@ -7,8 +7,8 @@
 #   docker buildx build -f Dockerfile --build-arg APP=<app> --target runner   out
 #   docker buildx build -f Dockerfile --build-arg APP=<app> --target migrator out
 #
-# Image-Artefakte bleiben funktional identisch zum bisherigen Single-Repo-Build
-# (runner = Next standalone + `node server.js`; migrator = prisma CLI + recovery).
+# Image-Artefakte: runner = Next standalone + `node server.js`; migrator = prisma
+# CLI + recovery.
 ARG APP
 
 # ── Basis: Node 24 + pnpm via corepack ───────────────────────────────────────
@@ -36,7 +36,7 @@ RUN pnpm exec turbo run build --filter="${APP}"
 # (/app/node_modules/prisma, /app/scripts) → der Migrator legt die App-Wurzel
 # flach auf /app ab und installiert dort prisma CLI + Recovery-Deps.
 # Bewusst via npm (nicht pnpm): flaches node_modules, kein pnpm-10-Build-Gate —
-# prisma-Engines werden normal per postinstall geholt (wie früher `npm ci`).
+# prisma-Engines werden normal per postinstall geholt.
 FROM node:24-alpine AS migrator
 ARG APP
 WORKDIR /app

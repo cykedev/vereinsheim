@@ -2,7 +2,7 @@ import { isCardId } from "@vereinsheim/shot-ui/nav/routes"
 
 import { getAuthSession } from "@/lib/auth-helpers"
 
-// Prüfungen, die jede Server Action auf eigene Scheiben braucht, an einer Stelle (Review, 13. Oktober 2026). Kein
+// Prüfungen, die jede Server Action auf eigene Scheiben braucht, an einer Stelle. Kein
 // "use server": Eine solche Datei dürfte nur Actions exportieren.
 
 /** der angemeldete Schütze, der Daten sehen darf; ohne Sitzung oder mit Passwort vom Admin null */

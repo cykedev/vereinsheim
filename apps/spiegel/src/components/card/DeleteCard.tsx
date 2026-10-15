@@ -12,7 +12,7 @@ import { cardDelete } from "@/lib/admin/consequences"
 import { deleteCard, restoreCard } from "@/lib/trash-actions"
 
 /**
- * Löschen am Ende der Seite einer Scheibe (P2b, D5): fragt mit Folgen, legt die Scheibe in den Papierkorb, geht den
+ * Löschen am Ende der Seite einer Scheibe: fragt mit Folgen, legt die Scheibe in den Papierkorb, geht den
  * Rückweg und zeigt dort „Scheibe gelöscht · Rückgängig“.
  */
 export function DeleteCard({ cardId, when, back }: { cardId: string; when: string; back: string }) {

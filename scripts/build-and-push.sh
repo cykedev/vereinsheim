@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # Build + Push der Apps (Ringwerk, Treffsicher, Spiegel) AUS DEM MONOREPO via
-# `turbo prune --docker`. Ersetzt den früheren Build aus den Standalone-Repos
-# (Phase 3 der Monorepo-Migration; ADR-015). Tag-Schema unverändert → der
-# Deploy-Vertrag (compose.yml/.env) bleibt gewahrt.
+# `turbo prune --docker` (ADR-015). Das Tag-Schema gehört zum Deploy-Vertrag
+# (compose.yml/.env).
 #
 # Pro App zwei Images:
 #   <DOCKER_USER>/<app>:<sha>           und :latest             (target=runner)
 #   <DOCKER_USER>/<app>:<sha>-migrator  und :latest-migrator    (target=migrator)
-# Der <sha> ist jetzt der Monorepo-HEAD (alle Apps teilen ihn).
+# Der <sha> ist der Monorepo-HEAD (alle Apps teilen ihn).
 #
 # Modi:
 #   (default) PUSH=1 : --platform linux/amd64 --push; verlangt committeten Stand
@@ -54,7 +53,7 @@ fi
 
 SHA="$(git rev-parse --short HEAD)"
 
-# Persistenter local-Build-Cache (Plan 2026-07-15-release-cache-eviction): ein dedizierter
+# Persistenter local-Build-Cache: ein dedizierter
 # docker-container-Builder erlaubt --cache-to/--cache-from type=local (der Default-docker-Builder
 # nicht). Der Cache liegt in .buildcache/ (gitignored, AUSSERHALB des Docker-GC-Pools) und übersteht
 # so die LRU-Eviction durch andere Projekte → der Release bleibt warm statt kalt (~1min statt ~5min).

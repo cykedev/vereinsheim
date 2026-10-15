@@ -1,7 +1,7 @@
-// Brücken (SP-1.6 b, Plan `plans/2026-10-13-spiegel-ingest.md`): Kopplung mit Einmal-Code, Geräte-Token, Heartbeat
+// Brücken: Kopplung mit Einmal-Code, Geräte-Token, Heartbeat
 // mit den Übergängen der Zustände und der Uhrabweichung, Zustand für eine Brücke ohne eigenen Zustand ([[adr-027]]).
 // Codes und Tokens speichert Spiegel nur als SHA-256: Sie sind zufällig und lang genug, dass bcrypt nichts schützt und
-// je Anfrage nur CPU kostet (D7).
+// je Anfrage nur CPU kostet.
 
 import { createHash, randomBytes, randomInt } from "node:crypto"
 
@@ -22,9 +22,9 @@ import { FINAL_AFTER_MS, INCOMPLETE_FLAGS, RESTING_AFTER_MS } from "./meyton-ssm
 
 /** so lange gilt ein Kopplungscode */
 export const PAIRING_TTL_MS = 15 * 60_000
-/** `lastSeenAt` höchstens so oft schreiben (D7: eine Zeile je Anfrage wäre Last ohne Nutzen) */
+/** `lastSeenAt` höchstens so oft schreiben (eine Zeile je Anfrage wäre Last ohne Nutzen) */
 const SEEN_EVERY_MS = 60_000
-/** eine neue Uhrabweichung ab so viel Änderung oder nach so langer Zeit (D8) */
+/** eine neue Uhrabweichung ab so viel Änderung oder nach so langer Zeit */
 const CLOCK_CHANGE_MS = 30_000
 const CLOCK_EVERY_MS = 3_600_000
 /** Grabsteine und Löschsperren, die die Brücke kennen muss: Scheiben dieser Zeitspanne (SF-28) */
@@ -153,7 +153,7 @@ export async function revokeBridge(db: Db, bridgeId: number, nowMs = Date.now())
 }
 
 /**
- * eine getrennte Brücke entfernen (User, 15. Oktober 2026: „getrennte brücken … kann sie aber nicht löschen“); die
+ * eine getrennte Brücke entfernen; die
  * Bedingung steht im Löschbefehl selbst, eine laufende bleibt. Rohdaten und Codes verweisen mit `ON DELETE SET NULL`
  * auf sie: Sie bleiben, nur ohne Gerät. true, wenn eine entfernt wurde
  */
@@ -174,11 +174,11 @@ export async function advanceCardStates(
   siteId: number,
   { nowMs = Date.now(), runStartedAt }: { nowMs?: number; runStartedAt?: Date | null } = {}
 ): Promise<{ resting: number; final: number }> {
-  // ein Lauf, der „in der Zukunft“ begann, schöbe die Grenze über jetzt hinaus (Review)
+  // ein Lauf, der „in der Zukunft“ begann, schöbe die Grenze über jetzt hinaus
   const runStart = runStartedAt ? Math.min(runStartedAt.getTime(), nowMs) : 0
   const finalBefore = new Date(Math.max(nowMs - FINAL_AFTER_MS, runStart))
   const incomplete = [...INCOMPLETE_FLAGS]
-  // ohne lesbares Lebenszeichen zählen Ende oder Beginn, sonst schaltete die Scheibe nie weiter (Review)
+  // ohne lesbares Lebenszeichen zählen Ende oder Beginn, sonst schaltete die Scheibe nie weiter
   const final = await db.$executeRaw`
     UPDATE "Card" SET "state" = 'final', "complete" = NOT ("flags" && ${incomplete}::text[]), "updatedAt" = now()
     WHERE "sourceId" IN (SELECT "id" FROM "Source" WHERE "siteId" = ${siteId})
@@ -192,7 +192,7 @@ export async function advanceCardStates(
   return { resting, final }
 }
 
-/** den Heartbeat ablegen (D8): eine Zeile an der Brücke, die Uhr nur bei Änderung, dann die Zustände */
+/** den Heartbeat ablegen: eine Zeile an der Brücke, die Uhr nur bei Änderung, dann die Zustände */
 export async function recordHeartbeat(
   db: Db,
   bridge: AuthenticatedBridge,
@@ -231,9 +231,9 @@ export async function recordHeartbeat(
         },
       })
   }
-  // erledigte Aufträge zum Nachladen (P2d, D6): nur aktive, noch offene Zustimmungen dieser Anlage mit aktivem Konto
-  // (Review: ein deaktiviertes bekam nichts), und nur der Auftrag mit diesem `since` (Review: ein altes „erledigt“
-  // überschriebe sonst einen gerade neu eröffneten); eine fremde oder unbekannte Id ändert nichts
+  // erledigte Aufträge zum Nachladen: nur aktive, noch offene Zustimmungen dieser Anlage mit aktivem Konto (ein
+  // deaktiviertes bekommt nichts), und nur der Auftrag mit diesem `since` (ein altes „erledigt“ überschriebe sonst einen
+  // gerade neu eröffneten); eine fremde oder unbekannte Id ändert nichts
   if (heartbeat.historyDone?.length)
     await db.sportpassConsent.updateMany({
       where: {
@@ -302,7 +302,7 @@ export async function bridgeState(
         historyRequestedAt: true,
       },
     }),
-    // über den Index (Quelle, letzte Beobachtung): je Quelle der jüngste Stand, nicht alle Stände (Review)
+    // über den Index (Quelle, letzte Beobachtung): je Quelle der jüngste Stand, nicht alle Stände
     db.source.findMany({ where: { siteId }, select: { id: true } }).then((sources) =>
       Promise.all(
         sources.map((source) =>
@@ -315,7 +315,7 @@ export async function bridgeState(
       )
     ),
   ])
-  // offene Aufträge zum Nachladen (P2d): aktive Zustimmungen, deren ältere Scheiben noch nicht geholt sind
+  // offene Aufträge zum Nachladen: aktive Zustimmungen, deren ältere Scheiben noch nicht geholt sind
   // `since`: wann der Auftrag eröffnet wurde (alte Zeilen: die Bestätigung); höchstens so viele, wie der Vertrag nimmt
   const history = consents
     .filter((c) => c.historyLoadedAt === null)
@@ -326,7 +326,7 @@ export async function bridgeState(
       sportpassHash: sportpassHash(salt, c.sportpassId),
     }))
   // mit offenem Auftrag liest die Brücke die ganze Ablage: dann alle Sperren, damit eine alte, gesperrte Scheibe das Gerät
-  // gar nicht erst verlässt (D3)
+  // gar nicht erst verlässt
   const blockedWhere = {
     source: { siteId },
     ...(history.length ? {} : { startedAt: { gte: new Date(nowMs - BLOCKED_WINDOW_MS) } }),

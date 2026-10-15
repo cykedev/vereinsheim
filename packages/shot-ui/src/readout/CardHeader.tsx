@@ -22,10 +22,10 @@ export interface CardHeaderProps {
 }
 
 /**
- * Kopf der Seite einer Scheibe (Plan Schritt 4, D2): Titel und Metazeile, auf dem Telefon das Ergebnis, darunter die
- * wichtigsten Beobachtungen in Worten (U1, D4: die Antwort steht oben, nicht nach den Zahlen); auf dem Telefon nur die
+ * Kopf der Seite einer Scheibe: Titel und Metazeile, auf dem Telefon das Ergebnis, darunter die
+ * wichtigsten Beobachtungen in Worten (die Antwort steht oben, nicht nach den Zahlen); auf dem Telefon nur die
  * erste, damit Kopf und Scheibe auf den ersten Bildschirm passen (Leitlinie: ein Satz und eine Zahl). Ab 768 px im Raster der
- * Seite über der Scheibe, das Ergebnis steht dann rechts als Box (User, 8. Oktober 2026).
+ * Seite über der Scheibe, das Ergebnis steht dann rechts als Box.
  */
 export function CardHeader({
   title,
@@ -42,7 +42,7 @@ export function CardHeader({
         <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight text-balance">
           {title}
         </h1>
-        {/* ein langer Name einer Liste aus Meyton ohne Leerzeichen bricht um statt über den Rand (Review) */}
+        {/* ein langer Name einer Liste aus Meyton ohne Leerzeichen bricht um statt über den Rand */}
         {meta.length > 0 && (
           <p className="text-[13px] [overflow-wrap:anywhere] text-muted-foreground">
             {meta.join(" · ")}
@@ -62,7 +62,7 @@ export function CardHeader({
                 data-observation={o.icon}
                 className={cn(
                   "flex gap-2.5 text-[14px] leading-relaxed text-foreground-2",
-                  // auf dem Telefon nur die erste: sonst rutscht die Scheibe unter die untere Leiste (Review U1)
+                  // auf dem Telefon nur die erste: sonst rutscht die Scheibe unter die untere Leiste
                   i > 0 && "max-md:hidden"
                 )}
               >

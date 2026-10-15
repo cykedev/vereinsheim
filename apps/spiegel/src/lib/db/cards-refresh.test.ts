@@ -7,7 +7,7 @@ import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 // eine Scheibe, an der die Rechnung scheitert (etwa eine neue Kennzahl an einem Sonderfall); die übrigen sollen trotzdem
-// nachgerechnet werden (Review, 10. Oktober 2026)
+// nachgerechnet werden
 const mocks = vi.hoisted(() => ({ failing: null as string | null }))
 vi.mock("@vereinsheim/shot-core/projection", async (importOriginal) => {
   const original = await importOriginal<typeof import("@vereinsheim/shot-core/projection")>()

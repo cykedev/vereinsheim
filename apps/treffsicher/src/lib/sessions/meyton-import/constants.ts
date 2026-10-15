@@ -7,8 +7,8 @@ export const SERIES_HEADER_REGEX = /Serie\s+(\d+)\s*:/i
 export const SERIES_HEADER_GLOBAL_REGEX = /Serie\s+(\d+)\s*:/gi
 export const SHOT_TOKEN_REGEX = /(^|[^0-9])(\d{1,2}(?:\.\d)?)(?:\*|T)?(?!\d)/g
 
-// Grenzen gegen praeparierte PDFs. Die frueheren Dekompressions-Caps sind mit
-// pdf.js gegenstandslos — stattdessen begrenzen wir Seiten, Textmenge und Laufzeit.
+// Grenzen gegen praeparierte PDFs. Dekompressions-Caps sind mit pdf.js
+// gegenstandslos — stattdessen begrenzen wir Seiten, Textmenge und Laufzeit.
 //
 // WICHTIG: Alle vier Grenzen muessen *waehrend* des Parsens greifen, nicht danach.
 // Eine praeparierte PDF blockiert den Event-Loop komplett — gemessen: bei 2382 ms

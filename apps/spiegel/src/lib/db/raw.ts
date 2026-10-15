@@ -30,8 +30,8 @@ export const MAX_SEQUENCE_AHEAD_MS = 10 * 60_000
 
 /**
  * Das Lebenszeichen der Quelle `meyton-ssmdb2`: `Scheiben.Zeitstempel` steigt alle 5 bis 10 s, solange der Stand belegt
- * ist ([[meyton-ssmdb2]]). Ändert sich nur das, legt Spiegel nichts Neues ab (Plan `plans/2026-10-13-spiegel-ingest.md`,
- * D1; Verfeinerung von [[adr-031]]): sonst entstünde je belegtem Stand alle paar Sekunden ein Snapshot.
+ * ist ([[meyton-ssmdb2]]). Ändert sich nur das, legt Spiegel nichts Neues ab (Verfeinerung von
+ * [[adr-031]]): sonst entstünde je belegtem Stand alle paar Sekunden ein Snapshot.
  */
 export const LIFESIGN = { table: "scheiben", column: "Zeitstempel" } as const
 
@@ -65,10 +65,10 @@ export type StoreResult =
   | ({ outcome: "stored"; snapshotId: bigint; newRows: number } & PreviousLifesign)
   /**
    * derselbe Stand wie zuletzt; nur seine letzte Folgenummer steigt. `handled`: der Stand ist gedeutet oder in
-   * Quarantäne; sonst holt das Einlesen die Deutung nach (Review: ein Fehler beim Deuten verlor ihn sonst für immer)
+   * Quarantäne; sonst holt das Einlesen die Deutung nach (ein Fehler beim Deuten verlöre ihn sonst für immer)
    */
   | { outcome: "unchanged"; snapshotId: bigint; handled: boolean }
-  /** nur das Lebenszeichen hat sich bewegt: am letzten Stand vermerkt, keine Zeile neu (D1) */
+  /** nur das Lebenszeichen hat sich bewegt: am letzten Stand vermerkt, keine Zeile neu */
   | ({ outcome: "lifesign"; snapshotId: bigint; handled: boolean } & PreviousLifesign)
   /** älter als der zuletzt gesehene Stand (SF-26): nichts geändert */
   | { outcome: "stale"; latestSequence: bigint }
@@ -109,7 +109,7 @@ export async function storeSnapshot(
 
   return db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
-    // unter derselben Sperre wie `purgeCards`: was dort gerade entfernt wurde, kommt nicht zurück (Review SP-1.7 a2)
+    // unter derselben Sperre wie `purgeCards`: was dort gerade entfernt wurde, kommt nicht zurück
     if (startAtMs !== undefined && (await isKeyBlocked(tx, { sourceId, scheibenId }, startAtMs)))
       return { outcome: "blocked" }
     const latest = await tx.rawSnapshot.findFirst({
@@ -174,7 +174,7 @@ export async function storeSnapshot(
       }))
     )
     // erst nachsehen, welche Zeilen es schon gibt, und nur die fehlenden schicken: ein offener Durchgang bringt mit
-    // jedem Schuss den ganzen Stand, neu ist davon meist eine Zeile (D6)
+    // jedem Schuss den ganzen Stand, neu ist davon meist eine Zeile
     const lookup = (checksums: string[]) =>
       tx.rawRow.findMany({
         where: { sourceId, scheibenId, checksum: { in: checksums } },

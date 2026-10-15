@@ -26,14 +26,14 @@ export interface ShotTableProps {
   state: ViewState
   /** Zeile gewählt: derselbe Schuss wie beim Antippen auf der Scheibe */
   onChoose?: (index: number, series: SeriesKey | null) => void
-  /** unter 768 px nur so viele neueste Zeilen, dazu „Alle zeigen“ (Plan Schritt 4, D8) */
+  /** unter 768 px nur so viele neueste Zeilen, dazu „Alle zeigen“ */
   collapseAfter?: number
   className?: string
 }
 
 /**
  * Intervall: Sekunden; eine Pause (über der Schwelle der Karte, wie im Reiter Zeit) in Minuten und Sekunden mit
- * „Pause“ („3:20 min Pause“, nicht auf ganze Minuten gerundet; Prüfung, Zeit 7); ohne Abstand ein Strich
+ * „Pause“ („3:20 min Pause“, nicht auf ganze Minuten gerundet); ohne Abstand ein Strich
  */
 function intervalText(ms: number | null, pauseAboveMs: number): string {
   if (ms === null) return "–"

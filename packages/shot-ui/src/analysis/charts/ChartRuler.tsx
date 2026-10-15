@@ -17,15 +17,15 @@ const KEY_STEPS: Readonly<Record<string, number>> = {
 }
 
 /**
- * Lineal eines Diagramms (Plan L1, D2): Tippen wählt den nächsten Wert, waagrechtes Ziehen wandert mit,
+ * Lineal eines Diagramms: Tippen wählt den nächsten Wert, waagrechtes Ziehen wandert mit,
  * senkrecht scrollt die Seite weiter (`touch-action: pan-y`); übernimmt der Browser das Scrollen
  * (`pointercancel`), gilt wieder die Wahl davor. Ein zweites Tippen auf denselben Wert hebt die Wahl auf. Mit der
  * Tastatur Pfeil links/rechts, Pos1/Ende, Escape; das Diagramm meldet sich dafür als Schieberegler (APG-Muster),
  * `aria-valuetext` setzt das Diagramm. `xs` sind die x-Positionen der Werte in Pixeln des SVG, `width` dessen
- * Breite; `preset` setzt die Wahl, sobald es sich ändert (die Scheibe gibt den Schuss vor, D4). Ein Index
+ * Breite; `preset` setzt die Wahl, sobald es sich ändert (die Scheibe gibt den Schuss vor). Ein Index
  * außerhalb von `xs` gilt als keine Wahl; die Seite hängt die Analyse ohnehin je Karte neu ein. `onPick` meldet jede
  * Wahl durch Tippen, Ziehen oder Tastatur (auch das Aufheben), nicht die Vorgabe über `preset`: So kann eine Seite
- * die Wahl teilen (Verlauf eines Zeitraums, Plan L3), ohne dass ihre eigene Vorgabe zurückkommt.
+ * die Wahl teilen (Verlauf eines Zeitraums), ohne dass ihre eigene Vorgabe zurückkommt.
  */
 export function useRuler(
   xs: readonly number[],
@@ -47,7 +47,7 @@ export function useRuler(
   const index = chosen !== null && chosen < xs.length ? chosen : null
   // eine Berührung: Wahl beim Aufsetzen (`start`), davor (`before`); gemeldet (`committed`) wird sie erst beim
   // Loslassen oder bei der ersten Bewegung, damit ein Wischen, das der Browser als Scrollen übernimmt, die Wahl der
-  // Seite nicht ändert (Review, 9. Oktober 2026)
+  // Seite nicht ändert
   const drag = useRef<{
     again: boolean
     moved: boolean
@@ -64,7 +64,7 @@ export function useRuler(
     "aria-valuemin": 0,
     "aria-valuemax": xs.length,
     "aria-valuenow": index === null ? 0 : index + 1,
-    // Safari kennt `user-select` nur mit Präfix: ohne markiert Ziehen Text (User, 9. Oktober 2026)
+    // Safari kennt `user-select` nur mit Präfix: ohne markiert Ziehen Text
     style: {
       touchAction: "pan-y",
       cursor: "crosshair",
@@ -139,7 +139,7 @@ export function useRuler(
 }
 
 /**
- * Zeile über dem Diagramm (D3): feste Höhe von zwei Zeilen, damit das Diagramm beim Ziehen nicht springt;
+ * Zeile über dem Diagramm: feste Höhe von zwei Zeilen, damit das Diagramm beim Ziehen nicht springt;
  * ohne Wahl der Hinweis, mit Wahl die Werte. Die Aktion (etwa „Auf der Scheibe“) hat immer ihren Platz und ist
  * ohne Wahl unsichtbar. Gemeldet wird nur der Text, nicht der Knopf.
  */
@@ -199,7 +199,7 @@ export function RulerMark({ x, top, bottom }: { x: number; top: number; bottom: 
   )
 }
 
-/** „Werte als Tabelle“ unter dem Diagramm (D5): zugeklappt, für alle und für Screenreader */
+/** „Werte als Tabelle“ unter dem Diagramm: zugeklappt, für alle und für Screenreader */
 export function ValuesTable({
   caption,
   columns,

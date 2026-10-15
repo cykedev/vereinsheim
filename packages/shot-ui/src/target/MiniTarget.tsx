@@ -10,7 +10,7 @@ const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 const mm = (um: number) => um / 1000
 /**
  * der Ausschnitt auf 1 µm: Server und Browser rechnen ihn in der letzten Stelle verschieden (`Math.hypot` im Streukreis),
- * und das gezeichnete HTML passte beim Hydrieren nicht (Übersichten auf dem Server, SP-1.8)
+ * und das gezeichnete HTML passte sonst beim Hydrieren nicht (Übersichten auf dem Server)
  */
 const fixed = (value: number) => Math.round(value * 1000) / 1000
 

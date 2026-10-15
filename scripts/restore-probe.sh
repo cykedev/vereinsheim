@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Restore-Probe (P4, SP-1.9; ersetzt den Handgriff aus vault/operations/restore-test.md):
+# Restore-Probe (vault/operations/restore-test.md):
 # prüft, ob sich die Sicherungen einspielen lassen, ohne die laufenden Datenbanken anzufassen.
 # Je App: neuester Dump aus dem Backup-Ordner → Wegwerf-Datenbank restore_probe_<app> im
 # db-Container → Tabellen in public und angewandte Migrationen zählen → Wegwerf-Datenbank löschen.

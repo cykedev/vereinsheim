@@ -4,7 +4,7 @@ import type { ReactNode, SVGProps } from "react"
 
 import { useElementWidth } from "../../target/useAnimatedViewBox"
 
-// Rahmen der Diagramme (Spielwiese `chartSlot`, `.chart`): SVG in Bildschirm-Pixeln, die Breite gemessen,
+// Rahmen der Diagramme: SVG in Bildschirm-Pixeln, die Breite gemessen,
 // ohne Messung (Server, Test) 600 px. Schrift der Achsen in Mono, Werte (`data-value`) kräftiger.
 
 export const FALLBACK_WIDTH = 600
@@ -31,7 +31,7 @@ export function ChartSlot({
   const [measured, ref] = useElementWidth()
   const width = Math.round(measured) || FALLBACK_WIDTH
   return (
-    // Tippen und Ziehen im Diagramm markiert keinen Text, auch kein langes Drücken auf dem Telefon (User, 9. Oktober 2026)
+    // Tippen und Ziehen im Diagramm markiert keinen Text, auch kein langes Drücken auf dem Telefon
     <div
       ref={ref}
       className="w-full min-w-0 select-none [-webkit-touch-callout:none]"

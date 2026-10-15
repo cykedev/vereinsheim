@@ -26,9 +26,9 @@ const SCORING_IN: Readonly<Record<Scoring, string>> = {
   rings: "in ganzen Ringen",
 }
 
-/** auf dem Telefon ohne Uhrzeit, Abstand und Schusszahl; ab 32rem Breite der Liste (Container) mit (D5) */
+/** auf dem Telefon ohne Uhrzeit, Abstand und Schusszahl; ab 32rem Breite der Liste (Container) mit */
 const WIDE = "hidden @min-[32rem]:table-cell"
-// am Telefon enger: zwei Spalten für die Wertungen brauchen den Platz (U5, D5); ab 32rem wie zuvor
+// am Telefon enger: zwei Spalten für die Wertungen brauchen den Platz; ab 32rem breiter
 const CELL = "px-1 py-1 @min-[32rem]:px-2"
 
 /** Mittag des Tages: das Datum eines Abends, unabhängig von der Zeitumstellung */
@@ -49,7 +49,7 @@ export interface EveningListProps {
   timeZone: string
   /** die Adresse einer Scheibe aus dieser Liste (`openCard` mit der Liste als Herkunft); die ganze Zeile führt hin */
   cardRoute: (id: string) => CardRoute
-  /** die Liste einer anderen Familie an diesem Abend (`listOnEvening`, D3) */
+  /** die Liste einer anderen Familie an diesem Abend (`listOnEvening`) */
   otherFamilyRoute: (family: string, day: string) => ListRoute
   /** der Abend, zu dem man kam (Anker): seine Zeilen sind markiert */
   evening?: string | null
@@ -64,7 +64,7 @@ export interface EveningListProps {
 }
 
 /**
- * Scheiben-Liste nach Abend (Plan N2, D1–D6), im Stil der Liste eines Zeitraums: je Monat eine Karte mit Kopf und
+ * Scheiben-Liste nach Abend, im Stil der Liste eines Zeitraums: je Monat eine Karte mit Kopf und
  * einer Tabelle, je Abend eine Gruppe von Zeilen (das Datum steht einmal, die Scheiben in zeitlicher Folge), dazu
  * der Hinweis auf andere Familien des Abends. Die Gruppe trägt den ISO-Tag als Anker. Die ganze Zeile öffnet die
  * Scheibe; ihr Knopf ist die kleine Scheibe und trägt die Werte der Zeile als Namen.
@@ -202,13 +202,13 @@ export function EveningList({
                             }}
                             className={cn(
                               "cursor-pointer",
-                              // wohin man kam, wie die Wahl im Fortschritt (Rückmeldung des Users, 12. Oktober 2026);
-                              // das Überfahren nimmt die Markierung nicht weg (Review)
+                              // wohin man kam, wie die Wahl im Fortschritt;
+                              // das Überfahren nimmt die Markierung nicht weg
                               marked ? "bg-accent-wash" : "hover:bg-surface-2"
                             )}
                           >
                             {/* jede Zeile hat ihre Datumszelle (das Hervorheben bleibt ein Rechteck), das Datum
-                                steht nur in der ersten des Abends (User, 9. Oktober 2026) */}
+                                steht nur in der ersten des Abends */}
                             {i === 0 ? (
                               <th
                                 scope="row"
@@ -246,7 +246,7 @@ export function EveningList({
                             <td className="px-1 py-1 text-center text-muted-foreground">
                               <KindMark kind={row.kind} />
                             </td>
-                            {/* beide Wertungen mit Namen in eigenen Spalten, die der Scheibe fett (U5, D5) */}
+                            {/* beide Wertungen mit Namen in eigenen Spalten, die der Scheibe fett */}
                             {(["rings", "decimal"] as const).map((scoring) => {
                               const value =
                                 row.resultScoring === scoring ? row.result : row.otherResult

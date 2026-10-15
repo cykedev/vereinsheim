@@ -13,7 +13,7 @@ const tens = (count: number, tenths = 100) => Array<number>(count).fill(tenths)
 /** Abstand zur Mitte je Schuss: der Teiler ist ein Zehntel davon */
 const distances = (list: readonly number[]) => (i: number) => ({ distanceUm: list[i] })
 
-describe("Was für Rekorde zählt (D7)", () => {
+describe("Was für Rekorde zählt", () => {
   const base = card("a", 1, tens(10))
 
   it("eine endgültige, vollständige Scheibe ohne Merkmal zählt", () => {
@@ -213,7 +213,7 @@ describe("Rekorde (R1–R8)", () => {
     expect(periodRecords(cards, "decimal", { kind: "competition" }).bestCard[10].cardId).toBe("w")
   })
 
-  it("eine Trainingsscheibe nur mit Probe zählt nur mit includeProbeOnly (D8)", () => {
+  it("eine Trainingsscheibe nur mit Probe zählt nur mit includeProbeOnly", () => {
     const cards = [
       card("a", 1, tens(20, 95), { shot: () => ({ distanceUm: 500 }) }),
       card("p", 2, [...tens(10, 95), ...tens(10, 100)], {

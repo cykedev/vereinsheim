@@ -40,7 +40,7 @@ export class Browser {
         else waiting?.resolve(message.result)
       } else for (const listener of this.listeners) listener(message)
     })
-    // stirbt Chrome mitten im Lauf, hängt sonst jeder offene Aufruf, bis die Zeit der Prüfung abläuft (Review)
+    // stirbt Chrome mitten im Lauf, hängt sonst jeder offene Aufruf, bis die Zeit der Prüfung abläuft
     const fail = () => {
       this.closed = true
       for (const waiting of this.pending.values()) waiting.reject(new Error("Chrome ist weg"))
@@ -54,7 +54,7 @@ export class Browser {
 
   static async launch(): Promise<Browser> {
     const profile = mkdtempSync(join(tmpdir(), "spiegel-pruefen-"))
-    // ohne Pipes: niemand liest sie, und eine volle Pipe hielte Chrome an (Review)
+    // ohne Pipes: niemand liest sie, und eine volle Pipe hielte Chrome an
     const chrome = spawn(
       CHROME,
       [
@@ -91,7 +91,7 @@ export class Browser {
       })
       return new Browser(chrome, socket, profile)
     } catch (error) {
-      // nichts zurücklassen: kein Chrome, kein Profil im Temp-Verzeichnis (Review)
+      // nichts zurücklassen: kein Chrome, kein Profil im Temp-Verzeichnis
       chrome.kill("SIGKILL")
       rmSync(profile, { recursive: true, force: true })
       throw error
@@ -398,7 +398,7 @@ export class Page {
 
 /**
  * Helfer im Fenster, vor jedem Laden eingesetzt. Nur Struktur, die `shot-ui`, `ui` und die App rendern (Daten-Attribute,
- * ARIA); nichts, was es nur im Labor gab.
+ * ARIA).
  */
 const HELPERS = `
 (() => {

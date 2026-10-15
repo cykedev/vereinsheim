@@ -10,7 +10,7 @@
 //      `<Satz-Prompts>`. Literale Kleinschreibung wie `feat/<topic>` oder `<file>#<slug>`
 //      ist KEIN Platzhalter und wird bewusst ignoriert.
 //   2. No-op Code-Bindings — die schnelle Gate ist noch `true`, das Lint-Kommando leer.
-//      (stop-gate.mjs definiert seit v3 `const GATE` (ADR-025) → der GATE-No-op-Check
+//      (stop-gate.mjs definiert `const GATE` (ADR-025) → der GATE-No-op-Check
 //      unten ist ein LIVE-Regressions-Netz und matcht nur, falls GATE je auf 'true'
 //      zurückfällt. posttool-lint.mjs hat KEIN `const LINT` — der LINT-Check matcht nie.)
 //   3. Stack-gekoppelte Guards noch auf dem Ausliefer-Default — exakt erkennbar, weil
@@ -51,7 +51,6 @@ export const FILLABLE = [
   ".claude/skills/debug/SKILL.md",
   ".claude/skills/commit-msg/SKILL.md",
   ".claude/skills/consolidate-lessons/SKILL.md",
-  ".claude/skills/cleanup-todos/SKILL.md",
   ".claude/skills/migrate/SKILL.md",
   ".claude/skills/db-reset/SKILL.md",
   ".claude/skills/seed/SKILL.md",

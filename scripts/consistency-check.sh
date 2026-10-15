@@ -14,8 +14,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# Monorepo: vergleicht standardmäßig die beiden apps/* (früher die Standalone-Repos).
-# Wird in Phase 4 (packages/ui) überflüssig — dann teilen sich die Apps die Dateien.
+# Monorepo: vergleicht standardmäßig die beiden apps/*.
 RW="${RINGWERK_PATH:-apps/ringwerk}"
 TS="${TREFFSICHER_PATH:-apps/treffsicher}"
 
@@ -23,13 +22,13 @@ fail=0
 warn=0
 
 # Geteilte Dateien, die in BEIDEN Repos byte-identisch sein MÜSSEN.
-# Fast die gesamte geteilte Schicht liegt inzwischen in packages/*: tsconfig/eslint/
-# prettier/postcss/next.config/vitest in @vereinsheim/config (Phase 2); cn/forms/fieldErrors +
-# Form-Hooks in @vereinsheim/lib (Zyklus 1); die ui/-Primitives, shell/-Komponenten und
-# der globals.css-Theme-Kern (@vereinsheim/ui/theme.css) in @vereinsheim/ui (Zyklus 2) —
+# Fast die gesamte geteilte Schicht liegt in packages/*: tsconfig/eslint/
+# prettier/postcss/next.config/vitest in @vereinsheim/config; cn/forms/fieldErrors +
+# Form-Hooks in @vereinsheim/lib; die ui/-Primitives, shell/-Komponenten und
+# der globals.css-Theme-Kern (@vereinsheim/ui/theme.css) in @vereinsheim/ui —
 # Drift dort strukturell unmöglich. Hier bleibt nur, was Next/shadcn als app-lokale Dateien
 # erzwingen (alle trivial + byte-identisch): components.json, der dünne globals.css-Stub,
-# die Error-Boundaries + not-found. Dazu seit September 2026 der Wrapper um die geteilte
+# die Error-Boundaries + not-found. Dazu der Wrapper um die geteilte
 # Rate-Limit-Oberfläche (app-lokal, weil eine geteilte Datei keine Server Action
 # re-exportieren darf).
 MUST_MATCH=(
@@ -40,8 +39,7 @@ MUST_MATCH=(
   src/app/not-found.tsx
   src/components/app/admin/AdminLoginRateLimitTable.tsx
 )
-# Hinweis: vault/conventions.md ist seit der Harness-Konsolidierung EINE
-# Quelle am Root (vault/conventions.md) — nicht mehr pro App dupliziert.
+# Hinweis: vault/conventions.md ist EINE Quelle am Root, nicht pro App.
 
 echo "== Byte-identische Shared-Dateien & Configs =="
 for f in "${MUST_MATCH[@]}"; do
@@ -58,9 +56,8 @@ for f in "${MUST_MATCH[@]}"; do
   fi
 done
 
-# (Die frühere "Gemeinsame ui/-Komponenten"-Diff-Schleife entfällt mit Zyklus 2: die geteilten
-# ui/shell-Komponenten liegen jetzt in @vereinsheim/ui — seit September 2026 auch table +
-# skeleton sowie die admin/-Rate-Limit-Oberfläche. Die verbleibenden src/components/ui/* sind
+# (Keine Diff-Schleife für ui/-Komponenten: die geteilten ui/shell-Komponenten liegen in
+# @vereinsheim/ui, auch table + skeleton sowie die admin/-Rate-Limit-Oberfläche. Die verbleibenden src/components/ui/* sind
 # bewusst app-spezifisch — chart/form (treffsicher), checkbox/rank-badge (ringwerk) —
 # und DÜRFEN abweichen.)
 
@@ -86,12 +83,12 @@ if [[ "$(echo "$dep_report" | sed -n 's/^__COUNT__ //p')" != "0" ]]; then
 fi
 
 echo "== Konventionen (fatal) =="
-# Diese Regeln stehen in vault/conventions.md §3/§4/§6 und werden seit September
-# 2026 im Code eingehalten. Ohne Gate driften sie zurueck — deshalb fatal.
+# Diese Regeln stehen in vault/conventions.md §3/§4/§6 und werden im Code
+# eingehalten. Ohne Gate driften sie zurueck — deshalb fatal.
 #
 # Wichtig bei den Mustern: eng genug halten, damit legitime Faelle nicht
-# anschlagen. Beim Aufsetzen dieser Checks waren genau drei Fehlalarme zu
-# vermeiden (jeweils real im Code): das EmptyState-Icon ist `h-8 w-8` und kein
+# anschlagen. Genau drei Fehlalarme sind zu vermeiden (jeweils real im
+# Code): das EmptyState-Icon ist `h-8 w-8` und kein
 # Button; ein "→" steht auch als Inhalt in Protokolltexten ("alt → neu"); und
 # die Hex-Skala der Trefferlage-Charts ist eine Datenskala, keine UI-Semantik.
 conv_fail=0

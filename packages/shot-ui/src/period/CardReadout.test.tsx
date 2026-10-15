@@ -38,17 +38,17 @@ const render = (props: Partial<Parameters<typeof CardReadout>[0]> = {}) =>
     })
   )
 
-describe("Ablesung einer Scheibe (D9)", () => {
-  it("„?“ am Abstand zum Schnitt davor, nur mit `onHelp` (U2, D2)", () => {
+describe("Ablesung einer Scheibe", () => {
+  it("„?“ am Abstand zum Schnitt davor, nur mit `onHelp`", () => {
     expect(render({ onHelp: () => {} })).toMatch(
       /data-delta="true"[\s\S]*?<button type="button" aria-label="Erklärung: Abstand zum Schnitt davor" data-help="gegen-den-schnitt"/
     )
     expect(render()).not.toContain('data-help="gegen-den-schnitt"')
-    // auch in ganzen Ringen (die Luftpistole rechnet so; gefunden von der Skriptprüfung der App, 13. Oktober 2026)
+    // auch in ganzen Ringen (die Luftpistole rechnet so)
     expect(render({ onHelp: () => {}, metric: metricByKey("result.ringsMean")! })).toContain(
       'data-help="gegen-den-schnitt"'
     )
-    // die Erklärung gilt dem Ø je Schuss; zeigt der Verlauf eine andere Kennzahl, kein „?“ (Review U2)
+    // die Erklärung gilt dem Ø je Schuss; zeigt der Verlauf eine andere Kennzahl, kein „?“
     expect(render({ onHelp: () => {}, metric: metricByKey("group.sigma")! })).not.toContain(
       'data-help="gegen-den-schnitt"'
     )
@@ -63,7 +63,7 @@ describe("Ablesung einer Scheibe (D9)", () => {
     expect(html).toContain("+0,12 zum Schnitt der 5 Scheiben davor")
     expect(html).toContain('data-in-band="true"')
     expect(html).toMatch(/<svg viewBox=/)
-    // „Scheibe öffnen“ ist ein Link auf die Adresse der Scheibe (Plan N3, D3)
+    // „Scheibe öffnen“ ist ein Link auf die Adresse der Scheibe
     expect(html).toMatch(/<a href="\/cards\/[^"]+"[^>]*>Scheibe öffnen<\/a>/)
   })
 
@@ -125,7 +125,7 @@ describe("Ablesezeile auf dem Telefon", () => {
     expect(html).toMatch(/<a href="\/cards\/[^"]+"[^>]*>Scheibe öffnen<\/a>/)
   })
 
-  it("„?“ am Abstand auch auf dem Telefon, nur mit `onHelp` und beim Ø je Schuss (Review U2)", () => {
+  it("„?“ am Abstand auch auf dem Telefon, nur mit `onHelp` und beim Ø je Schuss", () => {
     const line = (extra: Record<string, unknown>) =>
       renderToStaticMarkup(
         createElement(CardLine, {

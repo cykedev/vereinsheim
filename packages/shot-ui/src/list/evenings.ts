@@ -1,7 +1,7 @@
-// Abende der Scheiben-Liste (Plan N2, `vault/spiegel/spiegel-navigation.md`): reine Funktionen. Ein Abend ist Konto
-// und Tag in der Anzeige-Zeitzone, eine Scheibe vor 4 Uhr zählt zum Vortag (D1). Alle Scheiben eines Abends stehen
-// gleichberechtigt in zeitlicher Folge, die Abende neueste zuerst (D2); die Familie ist Pflicht, andere Familien des
-// Abends nennt der Kopf (D3). Zahlen nur aus dem Fachkern, aus der Projektion jeder Scheibe (ADR-031, SP-1.8).
+// Abende der Scheiben-Liste (`vault/spiegel/spiegel-navigation.md`): reine Funktionen. Ein Abend ist Konto
+// und Tag in der Anzeige-Zeitzone, eine Scheibe vor 4 Uhr zählt zum Vortag. Alle Scheiben eines Abends stehen
+// gleichberechtigt in zeitlicher Folge, die Abende neueste zuerst; die Familie ist Pflicht, andere Familien des
+// Abends nennt der Kopf. Zahlen nur aus dem Fachkern, aus der Projektion jeder Scheibe (ADR-031).
 
 import {
   inScoring,
@@ -93,7 +93,7 @@ export interface CardListModel {
 
 /**
  * Der letzte Abend: der Abend der neuesten Scheibe mit allen seinen Scheiben, über alle Familien, in zeitlicher
- * Folge; null ohne Scheiben. Eine Stelle für Start und das Blättern von Start (Review N5).
+ * Folge; null ohne Scheiben. Eine Stelle für Start und das Blättern von Start.
  */
 export function lastEvening(
   input: readonly ListInputCard[],
@@ -146,7 +146,7 @@ function listsOf(lists: readonly (ListOption | null | undefined)[]): ListOption[
   return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, "de") || a.id - b.id)
 }
 
-/** der Abend einer Scheibe (D1); seit dem Kalender (T7) in `period/calendar`, hier weiter exportiert */
+/** der Abend einer Scheibe; aus `period/calendar`, hier weiter exportiert */
 export { eveningDay } from "../period/calendar"
 
 export function cardListModel(
@@ -212,7 +212,7 @@ export function cardListModel(
   }
 
   // andere Familien des Abends, unabhängig von Art und Merkmal, aber nur im Zeitraum: `listOnEvening` lässt Art und
-  // Merkmal fallen und behält den Zeitraum, so steht der Abend nach dem Sprung sicher in der Liste (Review N2)
+  // Merkmal fallen und behält den Zeitraum, so steht der Abend nach dem Sprung sicher in der Liste
   for (const other of input) {
     if (other.family === family) continue
     if (range && !inRange(other.card.startedAtMs, range)) continue

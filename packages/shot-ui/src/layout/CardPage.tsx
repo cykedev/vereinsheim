@@ -25,23 +25,23 @@ export interface CardPageProps {
   aside: ReactNode
   /** Abschnitte rechts unter `aside` (die Schüsse); der letzte füllt die Höhe und scrollt in sich */
   beside: readonly Section[]
-  /** Abschnitte darunter in voller Breite (die Analyse; „Zahlen“ entfiel mit U1) */
+  /** Abschnitte darunter in voller Breite (die Analyse) */
   below: readonly Section[]
   /**
    * ohne Schüsse: statt Ergebnis, Serien, Ablesung, Abschnitten und Sprungleiste nur dieser Hinweis neben der
-   * Scheibe (`NoShots`), keine leeren Gerüste (User, 8. Oktober 2026)
+   * Scheibe (`NoShots`), keine leeren Gerüste
    */
   empty?: ReactNode
   className?: string
 }
 
 /**
- * Rahmen der Seite einer Scheibe (Plan Schritt 4, D2 und D5): auf dem Telefon eine Spalte in der Reihenfolge
+ * Rahmen der Seite einer Scheibe: auf dem Telefon eine Spalte in der Reihenfolge
  * Kopf, Leiste, Scheibe, Serien, Seite, Abschnitte. Ab 768 px links die Scheibe mit den Serien darunter, so
  * groß, dass beide unter der Leiste ins Fenster passen (`useTargetFit`, mindestens 280 px, sonst bleibt die
  * Scheibe allein im Fenster); rechts daneben das Ergebnis als Box, die Ablesung und die Schüsse, die bis zur
- * Unterkante der Serien reichen und in sich scrollen. Was Platz braucht (die Analyse), folgt darunter in voller Breite
- * (User, 8. Oktober 2026). Die Spalte der Scheibe trägt selbst `data-section`, ein umschließender Abschnitt
+ * Unterkante der Serien reichen und in sich scrollen. Was Platz braucht (die Analyse), folgt darunter in voller Breite.
+ * Die Spalte der Scheibe trägt selbst `data-section`, ein umschließender Abschnitt
  * würde das Raster zerbrechen; der Anker `#target` sitzt auf dem Raster, denn ein klebendes Ziel gilt dem
  * Browser immer als angesprungen.
  */

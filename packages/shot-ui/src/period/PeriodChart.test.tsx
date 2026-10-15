@@ -37,7 +37,7 @@ const TWELVE = [9, 10, 8, 10, 9, 11, 9, 10, 8, 10, 9, 10].map((v, i) =>
 )
 const count = (html: string, pattern: RegExp) => [...html.matchAll(pattern)].length
 
-describe("Verlauf je Scheibe (D7)", () => {
+describe("Verlauf je Scheibe", () => {
   const html = render(TWELVE, { includeProbeOnly: true })
 
   it("ein Punkt je Scheibe, Wettkampf mit Ring, nur Probe hohl", () => {
@@ -75,7 +75,7 @@ describe("Verlauf je Scheibe (D7)", () => {
   })
 })
 
-describe("Verlauf je Monat und im Vergleich (D7)", () => {
+describe("Verlauf je Monat und im Vergleich", () => {
   // 30 Scheiben im Juli, 31 im August und September: je Monat Median und Spanne
   const many = Array.from({ length: 61 }, (_, i) => periodCard(`m${i}`, 85 - i, [95 + (i % 5), 96]))
 
@@ -84,7 +84,7 @@ describe("Verlauf je Monat und im Vergleich (D7)", () => {
     expect(count(html, /data-month="/g)).toBe(3)
     expect(count(html, /data-month-span="true"/g)).toBe(3)
     expect(html).not.toContain("data-card-point")
-    // die Tabelle in Alltagsworten (Review U3): Mitte und Spanne, kein Median, P10, P90
+    // die Tabelle in Alltagsworten: Mitte und Spanne, kein Median, P10, P90
     expect(html).toMatch(/<th scope="col"[^>]*>Mitte<\/th><th scope="col"[^>]*>Spanne von<\/th>/)
     expect(html).not.toMatch(/Median|P10|P90/)
   })

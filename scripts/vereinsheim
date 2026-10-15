@@ -57,7 +57,7 @@ confirm() {
 	local hint="[y/N]"
 	[[ "$default" == "Y" ]] && hint="[Y/n]"
 	local reply
-	# Ende der Eingabe gilt als Nein, auch bei Vorgabe Y (Review P4)
+	# Ende der Eingabe gilt als Nein, auch bei Vorgabe Y
 	if ! read -r -p "$prompt $hint " reply; then
 		echo >&2
 		return 1
@@ -138,7 +138,7 @@ read_env_var() {
 
 write_env_var() {
 	# In-place set <KEY>=<VALUE> in .env. Appends if missing. awk mit ENVIRON statt sed: Werte mit | & \ / bleiben,
-	# wie sie sind (Review P4); `cat >` behält Rechte und Besitzer der Datei, kein .bak (das bliebe von setup)
+	# wie sie sind; `cat >` behält Rechte und Besitzer der Datei, kein .bak (das bliebe von setup)
 	local key="$1" value="$2" tmp
 	tmp="$(mktemp)"
 	K="$key" V="$value" awk '
@@ -1383,7 +1383,7 @@ cmd_rollback() {
 	fi
 
 	local target="${entries[$((choice - 1))]}"
-	# je App beide Tags; Einträge von vor P4 haben keine Spiegel-Tags: dann bleibt Spiegel auf dem aktuellen Tag
+	# je App beide Tags; ein älterer Eintrag ohne Spiegel-Tags lässt Spiegel auf dem aktuellen Tag
 	local keys=() new_tags=() kept=() app_tag mig_tag
 	for app in "${APPS[@]}"; do
 		upper="$(tr '[:lower:]' '[:upper:]' <<<"$app")"

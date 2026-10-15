@@ -25,7 +25,7 @@ const shot = (
 })
 
 // drei Probeschüsse, Serie 1 voll mit zehnmal 10,5, Serie 2 läuft mit siebenmal 10,0; die Seite gibt die Karte
-// wie am Ausdruck weiter (U4): ohne die Probe
+// wie am Ausdruck weiter: ohne die Probe
 const RAW = [
   ...[0, 1, 2].map((i) => shot("probe", null, 5000 + i * 1000, 95)),
   ...Array.from({ length: 10 }, (_, i) => shot("match", 1, i * 300, 105)),
@@ -90,7 +90,7 @@ describe("SeriesStrip", () => {
     expect(html).toMatch(/data-series="1"[^>]*aria-pressed="false"[^>]*data-dim="true"/)
   })
 
-  it("wie am Ausdruck: keine Probe-Kachel, kein „Ohne Probe“, kein Probe-Eck an den Serien (U4)", () => {
+  it("wie am Ausdruck: keine Probe-Kachel, kein „Ohne Probe“, kein Probe-Eck an den Serien", () => {
     const html = render()
     expect(html).not.toContain('data-series="probe"')
     expect(html).not.toContain("Ohne Probe")

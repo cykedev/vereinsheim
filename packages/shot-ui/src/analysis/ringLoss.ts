@@ -1,5 +1,5 @@
-// Was Kachel und Legende zum Ringverlust zeigen (Plan U3, D10, Review): Lage und Streuung so, dass sie zusammen den
-// Ringverlust ergeben. Alle Zahlen kommen aus `ringLossSplit` des Fachkerns; hier wird nur gewählt, welche gezeigt wird.
+// Was Kachel und Legende zum Ringverlust zeigen: Lage und Streuung so, dass sie zusammen den Ringverlust
+// ergeben. Alle Zahlen kommen aus `ringLossSplit` des Fachkerns; hier wird nur gewählt, welche gezeigt wird.
 
 import type { RingLossSplit } from "@vereinsheim/shot-core/analysis"
 

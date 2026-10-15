@@ -24,7 +24,7 @@ export const SEASON_SORT_LABELS: Record<ResolvedSeasonSort, string> = {
 /**
  * Bestimmt die Anzeigereihenfolge einer Saison-Rangliste.
  * `seasonSortMode` gewinnt, wenn gesetzt; sonst folgt die Reihenfolge dem Wertungsmodus
- * (wie bisher; alles außer Ringe/Teiler landet auf Ringteiler).
+ * (alles außer Ringe/Teiler landet auf Ringteiler).
  */
 export function resolveSeasonSort(
   scoringMode: ScoringMode,

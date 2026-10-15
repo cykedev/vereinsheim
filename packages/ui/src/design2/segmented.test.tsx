@@ -53,7 +53,7 @@ describe("Segmented mit scroll", () => {
   })
 })
 
-describe("Segmented mit wrap (Review, 15. Oktober 2026)", () => {
+describe("Segmented mit wrap", () => {
   const html = renderToStaticMarkup(
     createElement(Segmented, {
       label: "Liste",
@@ -121,7 +121,7 @@ describe("Segmented", () => {
     expect(none).toMatch(/<button[^>]*tabindex="-1"[^>]*>Gruppe/)
   })
 
-  it("auf dem Telefon dieselbe Optik wie am Desktop (User, 8. Oktober 2026)", () => {
+  it("auf dem Telefon dieselbe Optik wie am Desktop", () => {
     for (const button of html.match(/<button[^>]*>/g)!) expect(button).not.toContain("min-h-11")
   })
 
@@ -173,7 +173,7 @@ describe("ToggleChip", () => {
       createElement(ToggleChip, { pressed: false, onPressedChange: () => {}, children: "Nummern" })
     )
     expect(off).toContain('aria-pressed="false"')
-    // auf dem Telefon dieselbe Optik wie am Desktop (User, 8. Oktober 2026)
+    // auf dem Telefon dieselbe Optik wie am Desktop
     expect(off).not.toContain("min-h-11")
   })
 })

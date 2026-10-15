@@ -6,7 +6,7 @@ import { PERIOD_CHART_METRICS, PERIOD_TILE_KEYS } from "./period/model"
 
 const label = (key: string) => metricLabel(metricByKey(key)!)
 
-describe("Anzeigenamen der Kennzahlen (U3, D4)", () => {
+describe("Anzeigenamen der Kennzahlen", () => {
   it("Alltagswort statt Fachbegriff", () => {
     expect(label("group.sigma")).toBe("Streuung")
     expect(label("group.sdX")).toBe("Streuung waagrecht")

@@ -14,10 +14,10 @@ import type { PageContext } from "@/lib/page-context"
 import { familiesOf, listable, withFamily, type FamilyOption } from "@/lib/pages"
 import { familyScoringOf } from "@/lib/scoring"
 
-// Was Start, Liste und Fortschritt auf dem Server rechnen (SP-1.8, ADR-031): die eigenen Scheiben mit Projektion lesen, das Modell
-// aus `shot-ui` rechnen, die Lagen der gezeigten Scheiben lesen. Die Seiten und die Messung (`tools/measure.ts`) rufen
-// dieselben Funktionen; an den Browser geht nur, was sie zurückgeben. Jede Familie rechnet in ihrer Wertung (Plan
-// `plans/2026-10-12-spiegel-wertung.md`): gespeichert, sonst die häufigste ihrer Scheiben.
+// Was Start, Liste und Fortschritt auf dem Server rechnen (ADR-031): die eigenen Scheiben mit Projektion lesen, das
+// Modell aus `shot-ui` rechnen, die Lagen der gezeigten Scheiben lesen. Die Seiten und die Messung (`tools/measure.ts`)
+// rufen dieselben Funktionen; an den Browser geht nur, was sie zurückgeben. Jede Familie rechnet in ihrer Wertung:
+// gespeichert, sonst die häufigste ihrer Scheiben.
 
 type Context = Pick<PageContext, "timeZone" | "nowMs" | "named">
 

@@ -26,7 +26,7 @@ const areasIn = (html: string, marker: string) => {
   return [...html.slice(start, end).matchAll(/data-area="([a-z]+)"/g)].map((m) => m[1])
 }
 
-describe("ohne Scannen (SP-1.7 a2, bis der QR-Weg kommt)", () => {
+describe("ohne Scannen", () => {
   const html = render({ scan: false })
 
   it("keine Leiste und kein Knopf führt zum Scannen", () => {
@@ -42,14 +42,14 @@ describe("ohne Scannen (SP-1.7 a2, bis der QR-Weg kommt)", () => {
     expect(areasIn(html, "data-app-rail")).toEqual(["start", "cards", "progress", "profile"])
   })
 
-  it("die untere Leiste hat vier Felder; ohne Angabe fünf wie bisher", () => {
+  it("die untere Leiste hat vier Felder; ohne Angabe fünf", () => {
     expect(html).toContain("grid-cols-4")
     expect(html).not.toContain("grid-cols-5")
     expect(render()).toContain("grid-cols-5")
   })
 })
 
-describe("Rahmen der App (Plan N3, D1, D2, D6)", () => {
+describe("Rahmen der App", () => {
   const html = render()
 
   it("Seitenleiste ab 1024 px: Start, Scheiben, Fortschritt, QR scannen, Profil, Admin zuletzt", () => {
@@ -86,7 +86,7 @@ describe("Rahmen der App (Plan N3, D1, D2, D6)", () => {
     )
   })
 
-  it("der Inhalt ist <main> und steht vor der unteren Leiste (Fokus-Reihenfolge, Review N3)", () => {
+  it("der Inhalt ist <main> und steht vor der unteren Leiste (Fokus-Reihenfolge)", () => {
     expect(html.indexOf("<main")).toBeGreaterThan(-1)
     expect(html.indexOf("<main")).toBeLessThan(html.indexOf("data-app-bar"))
   })
@@ -102,7 +102,7 @@ describe("Rahmen der App (Plan N3, D1, D2, D6)", () => {
     expect(html).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/)
   })
 
-  it("Admin aktiv: in der Seitenleiste Admin, auf dem Telefon Profil (Entscheidung 16)", () => {
+  it("Admin aktiv: in der Seitenleiste Admin, auf dem Telefon Profil", () => {
     const admin = render({ current: "admin" })
     const marked = (marker: string) => {
       const start = admin.indexOf(marker)

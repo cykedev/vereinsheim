@@ -102,7 +102,7 @@ test('memory-server: handshake, tool list, all seven tools, and flat-note handli
 	assert.ok(graph.entities.length >= 20, 'read_graph returned too few entities');
 	assert.ok(graph.relations.length > 0, 'read_graph returned no relations');
 
-	// document_map on a flat note (a topic MOC — no sub-headings; ADRs are structured now)
+	// document_map on a flat note (a topic MOC — no sub-headings; ADRs have them)
 	// → flat flag + line count, no sub-headings
 	const flat = payload(got.get(9));
 	assert.equal(flat.flat, true, 'flat note not flagged flat');

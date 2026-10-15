@@ -25,7 +25,7 @@ const cx = (markup: string) =>
     x: Number(m[2]),
   }))
 
-describe("Formband als kleiner Verlauf (U5, D1)", () => {
+describe("Formband als kleiner Verlauf", () => {
   it("die Scheiben in zeitlicher Folge von links nach rechts, die des Abends groß und rechts", () => {
     const dots = cx(html)
     expect(dots.map((d) => d.id)).toEqual(strip.map((s) => s.id))
@@ -84,7 +84,7 @@ describe("Formband als kleiner Verlauf (U5, D1)", () => {
     expect(html).toContain(">8,70<")
   })
 
-  it("die Achse zeigt einen Wert nur einmal und nie übereinander (Review U5)", () => {
+  it("die Achse zeigt einen Wert nur einmal und nie übereinander", () => {
     const flat = strip.map((s, i) => ({ ...s, value: i % 2 ? 9.21 : 9.2, mean: 9.205, band: null }))
     const close = render({ strip: flat, band: null })
     expect(close).toContain(">9,21<")

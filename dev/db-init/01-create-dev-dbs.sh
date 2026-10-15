@@ -2,8 +2,8 @@
 # Dev-only db-init: läuft beim ERSTEN Start des Dev-Postgres (leeres Volume),
 # analog zur Prod-Isolation (ADR-002): getrennte User + DBs mit Owner-Rechten.
 #
-# Dev-DB-Namen: ringwerk + treffsicher — identisch zu den Prod-Namen (compose.yml) — und spiegel
-# (noch ohne Prod, SP-1.9); wie die DATABASE_URLs in apps/*/.env.example. Passwörter sind bewusst trivial
+# Dev-DB-Namen: ringwerk, treffsicher und spiegel — identisch zu den Prod-Namen (compose.yml); wie die
+# DATABASE_URLs in apps/*/.env.example. Passwörter sind bewusst trivial
 # (nur lokal, nie Prod).
 set -euo pipefail
 

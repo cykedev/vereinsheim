@@ -23,7 +23,7 @@ export type ViewAction =
   | { type: "choose"; shot: number; series: SeriesKey | null }
   /**
    * einen Schuss zeigen, etwa aus dem Lineal eines Diagramms: wählt ohne Umschalten; liegt er außerhalb der
-   * Auswahl, gilt wieder die ganze Scheibe, damit er zu sehen ist (Plan L1)
+   * Auswahl, gilt wieder die ganze Scheibe, damit er zu sehen ist
    */
   | { type: "show"; shot: number; series: SeriesKey | null }
   | { type: "setView"; view: ViewState["view"] }
@@ -34,7 +34,7 @@ export type ViewAction =
   /** neue Scheibe: Auswahl auf die ganze Scheibe, Schuss zurück; Wertung, Ebenen und Ausschnitt bleiben */
   | { type: "reset" }
 
-/** Ebenen wie in der Spielwiese: Schwerpunkt und Streukreis an, Nummern und Ellipse aus */
+/** Ebenen zu Beginn: Schwerpunkt und Streukreis an, Nummern und Ellipse aus */
 export function initialViewState(overrides: Partial<ViewState> = {}): ViewState {
   return {
     selection: "all",

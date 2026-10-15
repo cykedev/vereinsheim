@@ -3,7 +3,7 @@
 // in Abgabefolge; fehlt ein Schuss oder springt die Uhr zurück, zählt der Abstand nicht (SF-30). Eine
 // Probe zwischen zwei Wertungsschüssen ist keine Lücke, wenn die ganze Karte mitkommt (`card`, SF-04).
 // Pause ist ein Abstand deutlich länger als der Takt der Karte (`time.ts`: über dem Doppelten des Medians, mindestens
-// eine Minute, über drei Minuten immer; bis 15. Oktober 2026 das 2,5-Fache); alle Auswertungen nehmen dieselbe Schwelle der Karte (`pauseThresholdOf`).
+// eine Minute, über drei Minuten immer); alle Auswertungen nehmen dieselbe Schwelle der Karte (`pauseThresholdOf`).
 
 import {
   contextOf,
@@ -92,7 +92,7 @@ export interface PauseEffect {
 
 /**
  * Pausen und Wiedereinstieg (Z4). Die Pausen kommen aus den Wertungsschüssen mit Zeit, wie im Rhythmus
- * (Z5): Fehlt einem Schuss nur der Wert, bleibt die Pause (Prüfung, 9. Oktober 2026, Grenzfall SF-18).
+ * (Z5): Fehlt einem Schuss nur der Wert, bleibt die Pause (Grenzfall SF-18).
  * Die Schnitte davor und danach zählen nur Schüsse mit Wert; ohne solche ist die Wirkung null. Verglichen
  * wird mit den übrigen Schüssen, nicht mit der ganzen Scheibe, die die Schüsse nach der Pause selbst
  * enthielte. `card`: die ganze Karte, aus der `shots` stammen; eine Probe zwischen zwei Wertungsschüssen

@@ -20,7 +20,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
 	REVOKE ALL ON DATABASE treffsicher FROM PUBLIC;
 EOSQL
 
-# Spiegel (seit SP-1.9) nur mit Passwort: Eine ältere .env ohne den Schlüssel darf das Init nicht abbrechen,
+# Spiegel nur mit Passwort: Eine ältere .env ohne den Schlüssel darf das Init nicht abbrechen,
 # sonst überspringt Postgres es beim nächsten Start, und ringwerk und treffsicher fehlen ganz.
 if [[ -n "${SPIEGEL_DB_PASSWORD:-}" ]]; then
 	psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL

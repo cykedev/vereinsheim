@@ -19,9 +19,9 @@ export interface ScoringToggleProps {
 }
 
 /**
- * Wertung im weichen Kreis (Plan `plans/2026-10-13-spiegel-symbole.md`): 1 ganze Ringe, ⅒ Zehntel; ein
- * Tippen stellt auf die andere. Ob die gezeigte die amtliche ist, sagen Name und Tooltip (kein Punkt: er erklärte sich
- * nicht, User, 13. Oktober 2026); ist es die andere, nennt der Name sie in der Wirkung (Review).
+ * Wertung im weichen Kreis: 1 ganze Ringe, ⅒ Zehntel; ein
+ * Tippen stellt auf die andere. Ob die gezeigte die amtliche ist, sagen Name und Tooltip (kein Punkt: er erklärt sich
+ * nicht); ist es die andere, nennt der Name sie in der Wirkung.
  */
 export function ScoringToggle({
   scoring,
@@ -43,7 +43,7 @@ export function ScoringToggle({
       className={className}
     >
       {/* Zehntel als Bruch der Schrift (Geist `frac`): die tiefgestellten Zeichen ₀–₉ fehlen in den geladenen Teilen
-          von Geist; ganze Ringe als 1, in 13 px so ruhig wie die kleinen Ziffern des Bruchs (User, 13. Oktober 2026) */}
+          von Geist; ganze Ringe als 1, in 13 px so ruhig wie die kleinen Ziffern des Bruchs */}
       <span
         aria-hidden="true"
         className={cn(

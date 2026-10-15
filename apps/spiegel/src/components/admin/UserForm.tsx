@@ -69,7 +69,7 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
     }
   }, [state, router])
 
-  // Kein Knopf ohne Folge (P2c, D6): ändern sich Rolle, Status oder Passwort, fragt der Dialog mit genau diesen Folgen
+  // Kein Knopf ohne Folge: ändern sich Rolle, Status oder Passwort, fragt der Dialog mit genau diesen Folgen
   const formRef = useRef<HTMLFormElement>(null)
   const confirmed = useRef(false)
   const [decision, setDecision] = useState<Decision | null>(null)
@@ -216,7 +216,7 @@ export function UserForm({ action, user }: { action: Action; user?: UserSummary 
           open={asking}
           onOpenChange={setAsking}
           onConfirm={() => {
-            // das Absenden läuft synchron durch `onSubmit`; danach gilt die Freigabe nicht mehr (Review)
+            // das Absenden läuft synchron durch `onSubmit`; danach gilt die Freigabe nicht mehr
             confirmed.current = true
             formRef.current?.requestSubmit()
             confirmed.current = false

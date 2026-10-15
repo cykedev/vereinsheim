@@ -1,4 +1,4 @@
-// Spiegel (SP-1.6 a, ADR-031): Rohdaten als Zeilenversionen, kanonische Scheiben mit Revisionen und eine
+// Spiegel (ADR-031): Rohdaten als Zeilenversionen, kanonische Scheiben mit Revisionen und eine
 // Projektion je Scheibe für die Übersichten. Logisches Modell: vault/spiegel/spiegel-data-model.md.
 // Prisma 7: Client lokal generiert, Import über "@/generated/prisma/client".
 generator client {
@@ -133,7 +133,7 @@ model ClockReading {
 
 // Zustimmung eines Kontos für eine SportpassID an einer Anlage (Opt-in, ADR-028): nur bestätigte zählen. Eine SportpassID
 // gehört an einer Anlage höchstens einem Konto; mehrdeutige ordnet Spiegel nie automatisch zu ([[spiegel-assignment]]).
-// Der Schütze stimmt im Profil zu, ein Admin bestätigt oder lehnt ab (SP-1.7 a, Zustände in `src/lib/consent/status.ts`)
+// Der Schütze stimmt im Profil zu, ein Admin bestätigt oder lehnt ab (Zustände in `src/lib/consent/status.ts`)
 model SportpassConsent {
   id                   Int       @id @default(autoincrement())
   userId               String
@@ -153,10 +153,10 @@ model SportpassConsent {
   returnedAt           DateTime? @db.Timestamptz(3)
   // der Schütze hat die erste Scheibe als seine bestätigt; vorher wartet jede auf ihn (`Card.ownerPending`)
   firstCardConfirmedAt DateTime? @db.Timestamptz(3)
-  // ältere Scheiben unter dieser Nummer nachgeladen (P2d): ohne, und aktiv, ist es ein offener Auftrag an die Brücke
+  // ältere Scheiben unter dieser Nummer nachgeladen: ohne, und aktiv, ist es ein offener Auftrag an die Brücke
   historyLoadedAt      DateTime? @db.Timestamptz(3)
   // wann der Auftrag zum Nachladen eröffnet wurde (Bestätigen, Meldungen aufheben): unterscheidet einen neuen Auftrag
-  // derselben Zustimmung von einem erledigten (Review P2d); null bei alten Zeilen, dann gilt `confirmedAt`
+  // derselben Zustimmung von einem erledigten; null bei alten Zeilen, dann gilt `confirmedAt`
   historyRequestedAt   DateTime? @db.Timestamptz(3)
   createdAt            DateTime  @default(now()) @db.Timestamptz(3)
 
@@ -249,7 +249,7 @@ model Tombstone {
   // wer die Scheibe gemeldet hat („Nicht meine“): Papierkorb des Schützen; null, wenn das Konto gelöscht ist
   userId      String?
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  // unter welcher SportpassID die Scheibe kam: ordnet den Grabstein einer Zustimmung zu (P2d)
+  // unter welcher SportpassID die Scheibe kam: ordnet den Grabstein einer Zustimmung zu
   sportpassId BigInt?
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
 
@@ -292,7 +292,6 @@ model User {
   // ein Passwort vom Admin (neues Konto, Zurücksetzen) muss der Schütze ersetzen, bevor er Daten sieht: sonst kennte der
   // Admin es und sähe seine Schüsse ([[spiegel-privacy]])
   mustChangePassword Boolean            @default(false)
-  // SportpassIDs der Zuordnung (mehrere je Konto, SF-39) kommen mit SP-1.7
   createdAt          DateTime           @default(now()) @db.Timestamptz(3)
   updatedAt          DateTime           @updatedAt @db.Timestamptz(3)
   cards              Card[]

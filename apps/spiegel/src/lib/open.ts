@@ -7,7 +7,7 @@ import { formatValue } from "@vereinsheim/shot-ui/format"
 
 import type { OverviewCard, PendingFirstCard } from "@/lib/db/reads"
 
-// „Offen“ (SP-1.7 a2, Plan `plans/2026-10-14-spiegel-erste-scheibe.md`, D3): was der Schütze bestätigen soll, in Worten.
+// „Offen“: was der Schütze bestätigen soll, in Worten.
 // Reine Funktionen; gerechnet auf dem Server, an den Browser gehen nur die Texte.
 
 export interface PendingItem {

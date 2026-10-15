@@ -1,4 +1,4 @@
-// Blättern im Kontext (Plan N3, D5; `vault/spiegel/spiegel-navigation.md`, Entscheidung 9): die Scheiben, durch
+// Blättern im Kontext (`vault/spiegel/spiegel-navigation.md`, „Blättern im Kontext“): die Scheiben, durch
 // die „‹ vorige · nächste ›“ blättert, in zeitlicher Folge. Reine Funktionen über die Modelle der Liste und des
 // Fortschritts, damit die Folge genau die ist, aus der man kam.
 
@@ -30,13 +30,13 @@ export interface ContextInput {
  * Die Scheiben des Kontexts einer Scheibe in zeitlicher Folge: aus der Liste ihre Zeilen mit den Filtern der
  * Herkunft, aus dem Fortschritt die Scheiben seines Zeitraums nach seinem Zustand, von Start die des letzten Abends.
  * Die Scheibe selbst gehört immer dazu, an ihrer Stelle: Stellt man ihre Art um, passt sie womöglich nicht mehr zum
- * Filter der Herkunft, und das Blättern risse ab (Review, Plan `plans/2026-10-12-spiegel-art.md`). Ohne Herkunft null:
+ * Filter der Herkunft, und das Blättern risse ab. Ohne Herkunft null:
  * dort gibt es kein Blättern.
  */
 export function contextCardIds(card: CardRoute, input: ContextInput): string[] | null {
   const origin = card.origin
-  // ohne Familie in der Herkunft die der Scheibe selbst: nur sie enthält die Scheibe sicher (Review N3). Eine Familie ohne
-  // eigene Scheiben gilt wie keine; Liste und Fortschritt zeigen dann auch eine andere (Review SP-1.8)
+  // ohne Familie in der Herkunft die der Scheibe selbst: nur sie enthält die Scheibe sicher. Eine Familie ohne
+  // eigene Scheiben gilt wie keine; Liste und Fortschritt zeigen dann auch eine andere
   const own = input.cards.find((c) => c.card.id === card.id)?.family ?? input.cards[0]?.family
   const known = new Set(input.cards.map((c) => c.family))
   const familyOf = (family: string | null) =>
@@ -75,7 +75,7 @@ export function contextCardIds(card: CardRoute, input: ContextInput): string[] |
     return [...cards].sort(byStart).map((c) => c.id)
   }
   if (origin?.from === "start") {
-    // Start zeigt den letzten Abend: geblättert wird durch seine Scheiben, über alle Familien (Plan N5, D8)
+    // Start zeigt den letzten Abend: geblättert wird durch seine Scheiben, über alle Familien
     return lastEvening(input.cards, input.timeZone)?.cards.map((c) => c.card.id) ?? null
   }
   return null

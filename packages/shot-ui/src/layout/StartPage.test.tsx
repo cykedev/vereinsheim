@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import { StartPage } from "./StartPage"
 
-describe("Rahmen von Start (Review N5: Breite wie die übrigen Seiten)", () => {
+describe("Rahmen von Start (Breite wie die übrigen Seiten)", () => {
   const html = renderToStaticMarkup(
     h(StartPage, {
       open: h("p", null, "OFFEN"),

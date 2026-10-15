@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import { isOutOfView, shouldDismiss } from "./jump"
 import { ReturnPill } from "./ReturnPill"
 
-describe("Scheibe außer Sicht? (D6)", () => {
+describe("Scheibe außer Sicht?", () => {
   const rect = (top: number, height = 340) => ({ top, bottom: top + height })
 
   it("im Bild, wenn genug von ihr unter der Leiste und über dem unteren Rand liegt", () => {
@@ -43,7 +43,7 @@ describe("Rücksprung-Pille", () => {
   it("unten mittig, über dem sicheren Rand, mit Text und Schließen in 40 px", () => {
     expect(html).toMatch(/class="[^"]*fixed inset-x-0 bottom-0[^"]*"/)
     expect(html).toContain("env(safe-area-inset-bottom)")
-    // über der unteren Leiste des Rahmens (Plan N3, D2); ohne Rahmen 0 px
+    // über der unteren Leiste des Rahmens; ohne Rahmen 0 px
     expect(html).toContain("pb-[calc(1rem+var(--app-bar,0px)+env(safe-area-inset-bottom))]")
     expect(html).toMatch(/<button type="button"[^>]*>Zurück zu „Lage“<\/button>/)
     expect(html).toMatch(/<button type="button" aria-label="Schließen"[^>]*class="[^"]*size-10/)

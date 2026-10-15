@@ -11,7 +11,7 @@ const LIST: Route = {
   evening: null,
 }
 
-describe("Links mit Adressen (Plan N3, D3)", () => {
+describe("Links mit Adressen", () => {
   it("ohne Provider ein <a> mit der Adresse aus urlFromRoute; Attribute gehen durch", () => {
     const html = renderToStaticMarkup(
       h(
@@ -25,7 +25,7 @@ describe("Links mit Adressen (Plan N3, D3)", () => {
     )
   })
 
-  it("mit Provider dessen Adresse und Komponente (für next/link in N7)", () => {
+  it("mit Provider dessen Adresse und Komponente (für next/link)", () => {
     const Custom = ({ href, children }: { href: string; children: ReactNode }) =>
       h("span", { "data-href": href }, children)
     const html = renderToStaticMarkup(

@@ -31,7 +31,7 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(html).toContain('aria-label="Art der Liste RWK_LP"')
   })
 
-  it("„Entfernen“ nur an einer getrennten Brücke, „Trennen“ nur an einer laufenden (User, 15. Oktober 2026)", () => {
+  it("„Entfernen“ nur an einer getrennten Brücke, „Trennen“ nur an einer laufenden", () => {
     const item = (revoked: boolean) =>
       renderToStaticMarkup(
         createElement(BridgeItem, {
@@ -56,7 +56,7 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(item(false)).not.toContain(">Entfernen<")
   })
 
-  it("Knopf, Dialog und Action gehören zusammen: getrennt entfernen, laufend trennen (Review)", () => {
+  it("Knopf, Dialog und Action gehören zusammen: getrennt entfernen, laufend trennen", () => {
     const device = "Mac (Kopie 9.10.)"
     expect(bridgeActionOf({ name: device, revoked: true })).toEqual({
       label: "Entfernen",
@@ -103,7 +103,7 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(site).toContain('data-help="admin-timeZone"')
   })
 
-  it("mit Scheiben ist die Zeitzone fest und sagt warum (Review)", () => {
+  it("mit Scheiben ist die Zeitzone fest und sagt warum", () => {
     const html = renderToStaticMarkup(
       createElement(SiteForm, {
         site: { id: 1, name: "Schützenhaus", timeZone: "Europe/Berlin", hasCards: true },
@@ -113,7 +113,7 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(html).toContain("Lässt sich nicht mehr ändern, weil schon Scheiben da sind.")
   })
 
-  it("„Listen“ statt „Ranglisten“ auf der Seite (Rückmeldung 6)", () => {
+  it("„Listen“ statt „Ranglisten“ auf der Seite", () => {
     const page = readFileSync(join(__dirname, "../../app/(app)/admin/site/page.tsx"), "utf8")
     // nur der Text der Seite, ohne Kommentare
     const text = page.replace(/\/\/.*$/gm, "").replace(/\s+/g, " ")
@@ -125,7 +125,7 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(text).toContain("Die Listen erscheinen hier, sobald die ersten Scheiben da sind.")
   })
 
-  it("kein „Epoche“ mehr in Seite und Bausteinen (D0)", () => {
+  it("kein „Epoche“ in Seite und Bausteinen", () => {
     for (const file of [
       join(__dirname, "SiteForms.tsx"),
       join(__dirname, "../../app/(app)/admin/site/page.tsx"),

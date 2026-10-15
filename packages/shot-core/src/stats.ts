@@ -248,7 +248,7 @@ export function normalTwoSided(z: number): number {
 const MANN_WHITNEY_EXACT = 20
 
 /**
- * Mann-Whitney-U für zwei unabhängige Gruppen, zweiseitig (Plan L2, D5). Gleiche Werte bekommen mittlere
+ * Mann-Whitney-U für zwei unabhängige Gruppen, zweiseitig. Gleiche Werte bekommen mittlere
  * Ränge. Bis 20 Werte je Seite genau: Über alle Aufteilungen der gemeinsamen Ränge auf |a| und |b| wird die
  * Rangsumme von `a` ausgezählt (doppelte Ränge als ganze Zahlen, Tabelle über Anzahl und Summe); p ist der
  * Anteil der Aufteilungen, deren Rangsumme mindestens so weit von der Erwartung liegt wie die beobachtete.

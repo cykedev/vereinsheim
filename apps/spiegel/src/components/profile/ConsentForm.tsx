@@ -14,9 +14,9 @@ import type { ConsentText } from "@/lib/consent/texts"
 import type { ActionResult } from "@/lib/types"
 
 /**
- * Zustimmung für eine SportpassID (SP-1.7 a, D4): Nummer, der Hinweistext ganz zu lesen, ein Haken. Den Haken prüft
+ * Zustimmung für eine SportpassID: Nummer, der Hinweistext ganz zu lesen, ein Haken. Den Haken prüft
  * auch die Action; ohne ihn entsteht keine Zeile. Danach wartet die Zustimmung auf einen Admin. Die Version des gezeigten
- * Texts geht mit; gilt inzwischen eine andere, legt die Action nichts an (Review).
+ * Texts geht mit; gilt inzwischen eine andere, legt die Action nichts an.
  */
 export function ConsentForm({ version, text }: { version: string; text: ConsentText }) {
   const router = useRouter()

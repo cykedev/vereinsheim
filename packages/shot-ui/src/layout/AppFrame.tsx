@@ -25,10 +25,10 @@ const ITEMS: Readonly<Record<Area, { label: string; short: string; Icon: LucideI
   admin: { label: "Admin", short: "Admin", Icon: Shield },
 }
 
-/** die untere und die schmale Leiste: Scannen in der Mitte, Admin steckt in Profil (Entscheidung 16) */
+/** die untere und die schmale Leiste: Scannen in der Mitte, Admin steckt in Profil */
 const BAR: readonly Area[] = ["start", "cards", "scan", "progress", "profile"]
 
-// Telefon quer heißt unter 1024 px breit und unter 500 px hoch (D1): `max-lg:[@media(max-height:499px)]:`. Die
+// Telefon quer heißt unter 1024 px breit und unter 500 px hoch: `max-lg:[@media(max-height:499px)]:`. Die
 // Klassen stehen wörtlich da, Tailwind findet nur, was im Quelltext steht (nicht aus Konstanten zusammengesetzt).
 
 export interface AppFrameProps {
@@ -36,7 +36,7 @@ export interface AppFrameProps {
   current: Area | null
   /** wohin jeder Eintrag führt (`areaLinks`) */
   links: Record<Area, Route>
-  /** Zahl der offenen Dinge am Start-Symbol (Entscheidung 8) */
+  /** Zahl der offenen Dinge am Start-Symbol */
   openCount: number
   /** nur ein Admin sieht Admin */
   isAdmin: boolean
@@ -48,7 +48,7 @@ export interface AppFrameProps {
 }
 
 /**
- * Rahmen der App (Plan N3, D1, D2): ab 1024 px eine Seitenleiste, darunter eine untere Leiste mit Scannen in der
+ * Rahmen der App: ab 1024 px eine Seitenleiste, darunter eine untere Leiste mit Scannen in der
  * Mitte, im Querformat des Telefons eine schmale Leiste links. Die Wurzel setzt `--app-bar`, den Platz, den die
  * untere Leiste samt Scan-Knopf unten einnimmt; Seite, Pille und Scheibe richten sich danach.
  */
@@ -77,7 +77,7 @@ export function AppFrame({
         {openCount}
       </span>
     ) : null
-  // auf dem Telefon steckt Admin in Profil: ist Admin offen, ist dort Profil der Bereich (Entscheidung 16)
+  // auf dem Telefon steckt Admin in Profil: ist Admin offen, ist dort Profil der Bereich
   const inBar = current === "admin" ? "profile" : current
   const link = (
     area: Area,
@@ -138,7 +138,7 @@ export function AppFrame({
           {sideEntry("profile")}
           {isAdmin && sideEntry("admin")}
         </nav>
-        {/* Einstellungen gehören nicht in die Navigation: neben ihr, unten in der Seitenleiste (Review) */}
+        {/* Einstellungen gehören nicht in die Navigation: neben ihr, unten in der Seitenleiste */}
         {sidebarFooter && (
           <div data-sidebar-footer className="mt-auto border-t border-border px-1 pt-3">
             {sidebarFooter}

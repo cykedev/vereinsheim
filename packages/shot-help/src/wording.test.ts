@@ -14,7 +14,7 @@ const allTexts = () => [
   ...GLOSSARY.flatMap((g) => [g.term, g.text]),
 ]
 
-describe("Wortwahl wie auf der Seite (U3, D9)", () => {
+describe("Wortwahl wie auf der Seite", () => {
   it("die Streuung heißt so, der Fachbegriff steht im Titel dabei", () => {
     expect(helpTopic("praezision-sigma")?.title).toBe("Streuung σ")
   })
@@ -27,11 +27,11 @@ describe("Wortwahl wie auf der Seite (U3, D9)", () => {
     expect(text).toContain("„deutlich“")
   })
 
-  it("kein Text sagt mehr „bedeutsam“", () => {
+  it("kein Text sagt „bedeutsam“", () => {
     for (const text of allTexts()) expect(text).not.toMatch(/bedeutsam/i)
   })
 
-  it("der Ringverlust erklärt „Lage kostet nichts“ in den Worten der Seite (U3, D10)", () => {
+  it("der Ringverlust erklärt „Lage kostet nichts“ in den Worten der Seite", () => {
     const caution = helpTopic("ringverlust-nach-ursache")?.caution ?? ""
     expect(caution).toContain("Spiegel schreibt dann „Lage kostet nichts“")
     expect(caution).toContain("wenn die Lage sicher versetzt ist")
@@ -42,14 +42,14 @@ describe("Wortwahl wie auf der Seite (U3, D9)", () => {
     expect(helpTopic("zeitraum-vergleich")?.read).toContain("„ein klarer Unterschied“")
   })
 
-  it("die Lage in Alltagsworten: „sicher versetzt“ oder „kann Zufall sein“ (U3, D11)", () => {
+  it("die Lage in Alltagsworten: „sicher versetzt“ oder „kann Zufall sein“", () => {
     const topic = helpTopic("lage-echt")!
     expect(topic.title).toBe("Ist die Lage versetzt?")
     expect(topic.read).toContain("„Sicher versetzt“")
     expect(topic.read).toContain("„Kann Zufall sein“")
     const guide = READING_GUIDE.find((i) => i.title === "„Sicher“ und „kann Zufall sein“")
     expect(guide?.text).toContain("„Passt“")
-    // außerhalb der Probe-Themen (U4 entfernt sie) kein „echt“ und kein „unklar“ mehr als Urteil
+    // kein „echt“ und kein „unklar“ als Urteil
     const texts = [
       ...[topic.title, topic.read, topic.act ?? ""],
       ...READING_GUIDE.flatMap((i) => [i.title, i.text]),
@@ -59,7 +59,7 @@ describe("Wortwahl wie auf der Seite (U3, D9)", () => {
     for (const text of texts) expect(text).not.toMatch(/„(echt|Echt|unklar|Unklar)/)
   })
 
-  it("keine Probe neben Wertung in der Hilfe: keine „P“-Nummern, keine hohle Probe, Datenlage wie die Zeile (U4)", () => {
+  it("keine Probe neben Wertung in der Hilfe: keine „P“-Nummern, keine hohle Probe, Datenlage wie die Zeile", () => {
     const texts = allTexts()
     for (const text of texts) {
       expect(text).not.toMatch(/P1, P2|Probeschüsse sind hohl|Wertungs- und Probeschüsse/)

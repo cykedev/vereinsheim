@@ -7,7 +7,7 @@ import { RouteLink } from "../nav/RouteLink"
 import { verdictText } from "../period/sentence"
 import type { StartForm } from "./model"
 
-/** das Urteil gegen die 90 Tage davor als Satzteil (U5, D4), mit den Worten von `verdictText` */
+/** das Urteil gegen die 90 Tage davor als Satzteil, mit den Worten von `verdictText` */
 function formSentence(form: StartForm, familyLabel: string): string {
   const mean = `${familyLabel}: Ø ${formatValue(form.mean as number, 2)} je Schuss`
   const c = form.comparison
@@ -21,7 +21,7 @@ function formSentence(form: StartForm, familyLabel: string): string {
 }
 
 /**
- * „Form der letzten 90 Tage“ auf Start (Plan N5, D7; U5, D4): ein Titel und ein Satz für die zuletzt gewählte Familie,
+ * „Form der letzten 90 Tage“ auf Start: ein Titel und ein Satz für die zuletzt gewählte Familie,
  * Ø je Schuss und das Urteil gegen die 90 Tage davor wie im Fortschritt; das Ganze führt dorthin. Ohne Wert nichts.
  */
 export function FormLine({

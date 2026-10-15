@@ -1,8 +1,8 @@
 // Gemeinsame Begriffe der Bausteine: Serien, Auswahl, Ausschnitt.
 
 /**
- * eine Serie (1, 2, …). Eine Probe neben Wertung gibt es nicht mehr: Eine Scheibe ist wie am Ausdruck (U4,
- * `asOnPrintout`), ein Training nur aus Probe hat Serien wie Wertung
+ * eine Serie (1, 2, …). Eine Probe neben Wertung gibt es nicht: Eine Scheibe ist wie am Ausdruck
+ * (`asOnPrintout`), ein Training nur aus Probe hat Serien wie Wertung
  */
 export type SeriesKey = number
 
@@ -11,7 +11,7 @@ export type Whole = "all"
 
 /**
  * Auswahl auf der Scheibe: die ganze Scheibe oder genau eine Serie. Mehrere Serien zugleich sind bewusst nicht
- * wählbar, das ist einfacher zu bedienen (Wunsch des Users, 8. Oktober 2026).
+ * wählbar, das ist einfacher zu bedienen.
  */
 export type Selection = Whole | SeriesKey
 

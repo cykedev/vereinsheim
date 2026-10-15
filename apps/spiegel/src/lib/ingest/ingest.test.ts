@@ -27,7 +27,7 @@ beforeAll(async () => {
       siteId: site.siteId,
       sportpassId: MUSTER,
       confirmedAt: new Date(),
-      // eingespielt: die erste Scheibe ist bestätigt (SP-1.7 a2), hier geht es ums Einlesen
+      // eingespielt: die erste Scheibe ist bestätigt, hier geht es ums Einlesen
       firstCardConfirmedAt: new Date(),
     },
   })
@@ -142,7 +142,7 @@ describe("ingestBatch", () => {
     expect([...card!.flags].sort()).toEqual([...expected.flags].sort())
   })
 
-  it("erste Scheibe: wartet bis zur Bestätigung; ein späterer Stand ändert das nicht (SP-1.7 a2)", async () => {
+  it("erste Scheibe: wartet bis zur Bestätigung; ein späterer Stand ändert das nicht", async () => {
     const other = await db.user.create({
       data: { email: `p-${site.siteId}@example.com`, passwordHash: "-" },
     })
@@ -192,7 +192,7 @@ describe("ingestBatch", () => {
     }
   })
 
-  it("eine abgelehnte Zustimmung zählt nicht, auch mit altem Bestätigt: nichts gespeichert (SP-1.7 a)", async () => {
+  it("eine abgelehnte Zustimmung zählt nicht, auch mit altem Bestätigt: nichts gespeichert", async () => {
     const other = await db.user.create({
       data: { email: `r-${site.siteId}@example.com`, passwordHash: "-" },
     })
@@ -327,7 +327,7 @@ describe("ingestBatch", () => {
     expect(await cardOf(expected.scheibenId)).toBeNull()
   })
 
-  it("eine andere SportpassID an derselben Scheibe: nichts geschrieben, in Quarantäne (Review, SF-37)", async () => {
+  it("eine andere SportpassID an derselben Scheibe: nichts geschrieben, in Quarantäne (SF-37)", async () => {
     const other = await db.user.create({
       data: { email: `b-${site.siteId}@example.com`, passwordHash: "-" },
     })
@@ -338,7 +338,7 @@ describe("ingestBatch", () => {
           siteId: site.siteId,
           sportpassId: BigInt(87654321),
           confirmedAt: new Date(),
-          // eingespielt: die erste Scheibe ist bestätigt (SP-1.7 a2), hier geht es ums Einlesen
+          // eingespielt: die erste Scheibe ist bestätigt, hier geht es ums Einlesen
           firstCardConfirmedAt: new Date(),
         },
       })
@@ -371,7 +371,7 @@ describe("ingestBatch", () => {
     }
   })
 
-  it("eine Scheibe, die sich nicht schreiben lässt, hält die übrigen des Stapels nicht auf; Ungedeutetes wird nachgeholt (Review)", async () => {
+  it("eine Scheibe, die sich nicht schreiben lässt, hält die übrigen des Stapels nicht auf; Ungedeutetes wird nachgeholt", async () => {
     const good = frozenExpected("SF-09").cards[0]
     const [ok] = sent("SF-09", good.scheibenId)
     const badSource = frozenExpected("SF-17").cards[0]

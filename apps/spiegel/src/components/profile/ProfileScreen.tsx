@@ -16,9 +16,8 @@ import { CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
 import { SportpassConsents } from "./SportpassConsents"
 
 /**
- * Profil: Konto, Zustimmung per Sportpass (SP-1.7 a), Einstellung des Geräts (Darstellung), Admin für Admins, Abmelden.
- * Die Wertung hat jede Scheibe und jede Familie selbst (Seite der Scheibe, Liste, Fortschritt). Dazu der Papierkorb (P2b);
- * Freigaben und Export kommen später.
+ * Profil: Konto, Zustimmung per Sportpass, Einstellung des Geräts (Darstellung), Admin für Admins, Abmelden. Die
+ * Wertung hat jede Scheibe und jede Familie selbst (Seite der Scheibe, Liste, Fortschritt). Dazu der Papierkorb.
  */
 export function ProfileScreen({
   name,

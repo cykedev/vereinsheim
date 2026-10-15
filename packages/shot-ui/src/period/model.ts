@@ -1,6 +1,6 @@
-// Modell der Seite eines Zeitraums (Plan L3, D3): alles, was die Seite zeigt, aus dem Fachkern (L2). Die
-// Bausteine zeichnen nur, was hier steht; Datum und Zeitzone über `@vereinsheim/lib/format` (D16). Es rechnet aus den
-// Projektionen der Scheiben, nie aus Schüssen (ADR-031, SP-1.8): `projectedValues`, `projectedRecords`, `projectedVolume`.
+// Modell der Seite eines Zeitraums: alles, was die Seite zeigt, aus dem Fachkern. Die Bausteine zeichnen nur, was hier
+// steht; Datum und Zeitzone über `@vereinsheim/lib/format`. Es rechnet aus den Projektionen der Scheiben, nie aus
+// Schüssen (ADR-031): `projectedValues`, `projectedRecords`, `projectedVolume`.
 
 import {
   comparePeriods,
@@ -43,7 +43,7 @@ import {
 } from "./calendar"
 import type { PeriodMetricKey, PeriodState } from "./state"
 
-/** Kennzahlen des Verlaufs mit kurzem Namen für den Umschalter (D7) */
+/** Kennzahlen des Verlaufs mit kurzem Namen für den Umschalter */
 export const PERIOD_CHART_METRICS: readonly { key: PeriodMetricKey; label: string }[] = [
   { key: "result.decimalMean", label: "Ø je Schuss" },
   { key: "group.sigma", label: "Streuung" },
@@ -52,7 +52,7 @@ export const PERIOD_CHART_METRICS: readonly { key: PeriodMetricKey; label: strin
 ]
 
 /**
- * Kacheln über den Zeitraum (D11): nur Kennzahlen, die nicht an der Schusszahl hängen; sechs, damit sie auf dem
+ * Kacheln über den Zeitraum: nur Kennzahlen, die nicht an der Schusszahl hängen; sechs, damit sie auf dem
  * Telefon (zwei Spalten) und am Desktop (drei) jede Zeile füllen
  */
 export const PERIOD_TILE_KEYS = [
@@ -70,11 +70,11 @@ export const PERIOD_TILE_KEYS = [
  */
 export type PeriodMetric = Readonly<Omit<MetricDefinition, "compute">>
 
-/** ab so vielen Scheiben zeigt der Verlauf je Monat, bis der Schütze selbst wählt (D7) */
+/** ab so vielen Scheiben zeigt der Verlauf je Monat, bis der Schütze selbst wählt */
 export const MONTH_VIEW_FROM = 60
 
 const SUMMARY_KEY = "result.decimalMean"
-/** bei „Alles“ vergleicht der Satz so viele letzte Tage mit ebenso vielen davor (U2, D1) */
+/** bei „Alles“ vergleicht der Satz so viele letzte Tage mit ebenso vielen davor */
 const FORM_DAYS = 90
 
 export interface PeriodTile {
@@ -104,15 +104,15 @@ export interface PeriodModel {
   compareValues: CardValue[] | null
   /**
    * Scheiben, die in beiden Zeiträumen liegen: Sie zählen nur im Zeitraum, nicht im Vergleich, denn ein Test
-   * braucht zwei getrennte Stichproben (Review, 9. Oktober 2026)
+   * braucht zwei getrennte Stichproben
    */
   compareShared: number
-  /** Scheiben nur aus Probe im Zeitraum, die ohne den Schalter nicht zählen (L2, D8) */
+  /** Scheiben nur aus Probe im Zeitraum, die ohne den Schalter nicht zählen */
   excludedProbeOnly: number
   /** gewählter Vergleich im Ø je Schuss (Ergebnis-Box, Zahlen): a der Vergleich, b der Zeitraum; Δ = Zeitraum − Vergleich */
   comparison: PeriodComparison | null
   /**
-   * der Vergleich für den Satz (U2, D1: „Werde ich besser?“): der gewählte, sonst still der Zeitraum davor, bei „Alles“
+   * der Vergleich für den Satz („Werde ich besser?“): der gewählte, sonst still der Zeitraum davor, bei „Alles“
    * die letzten 90 Tage gegen die 90 davor (`lastDays`); im Ø je Schuss. Er zeigt sich nicht im Verlauf und nicht in der
    * Ergebnis-Box. null ohne Scheiben im Zeitraum; mit gewähltem Vergleich nie null; bei „Alles“ ohne Scheibe in den
    * letzten 90 Tagen ein Vergleich ohne Wert (der Satz sagt „zu wenige“)
@@ -139,12 +139,12 @@ export interface PeriodModel {
   /** Trainingstage für den Kalender (T7): erster und letzter Tag des Zeitraums (höchstens heute), Tage mit Scheiben */
   /**
    * Kalender: Tage des Zeitraums (`from` bis `to`, `days` in ihm), dazu alle Trainingstage der Familie in der Art (`all`)
-   * und heute, zum Blättern (Rückmeldung 8)
+   * und heute, zum Blättern
    */
   calendar: { from: string; to: string; days: CalendarDay[]; all: CalendarDay[]; today: string }
   /**
    * die neueste Scheibe im Zeitraum mit Ø je Schuss (die der Ablesung ohne Wahl); null ohne. Ihren Abstand zum Schnitt
-   * der fünf davor tragen `deltas` (U2, D2: ein Bezug für eine Scheibe)
+   * der fünf davor tragen `deltas` (ein Bezug für eine Scheibe)
    */
   newest: string | null
   records: PeriodRecords
@@ -176,7 +176,7 @@ export interface PeriodReading {
 export const isProbeOnly = (card: ProjectedCard) =>
   card.projection.probeOnly && card.projection.printedShots > 0
 
-/** Art einer Scheibe in den Listen (U3, D7): Wettkampf, Training, Training nur aus Probe */
+/** Art einer Scheibe in den Listen: Wettkampf, Training, Training nur aus Probe */
 export type CardKind = "training" | "competition" | "probe"
 
 export const cardKind = (card: ProjectedCard): CardKind => kindOf(card.kind, isProbeOnly(card))
@@ -217,13 +217,13 @@ export const byStart = (
   b: Pick<ProjectedCard, "id" | "startedAtMs">
 ) => a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
 
-/** die bis zu fünf Scheiben davor, wie der gleitende Schnitt (D2) */
+/** die bis zu fünf Scheiben davor, wie der gleitende Schnitt */
 const DELTA_WINDOW = 5
 
 /**
- * Abstand jedes Werts zum Mittel der bis zu `window` Werte davor, ohne den Wert selbst (Prüfung, 9. Oktober 2026);
+ * Abstand jedes Werts zum Mittel der bis zu `window` Werte davor, ohne den Wert selbst;
  * der erste hat keinen. Mit `ids` nur für diese Werte, gerechnet über alle davor, auch außerhalb des Zeitraums.
- * Geteilt von der Seite eines Zeitraums und der Scheiben-Liste (Plan N2).
+ * Geteilt von der Seite eines Zeitraums und der Scheiben-Liste.
  */
 export function deltasBefore(
   values: readonly CardValue[],
@@ -266,7 +266,7 @@ function calendarDays(cards: readonly ProjectedCard[], timeZone: string): Calend
 
 /**
  * Tage des Zeitraums für Umfang und Kalender: vom ersten Tag (oder dem früheren Abend einer Scheibe vor 4 Uhr am ersten
- * Tag, Review T7) bis zum letzten, höchstens heute
+ * Tag) bis zum letzten, höchstens heute
  */
 function calendarOf(
   range: DateRange,
@@ -332,7 +332,7 @@ export function periodModel(input: {
   const family = input.cards.filter(ofKind).sort(byStart)
   const familyValues = projectedValues(family, chartMetric, scoring, options)
   const deltas = deltasBefore(familyValues, inPeriod)
-  // je Abend wie die Liste (vor 4 Uhr der Vortag), für Wochen und Kalender gleich (Review T7)
+  // je Abend wie die Liste (vor 4 Uhr der Vortag), für Wochen und Kalender gleich
   const evening = (ms: number) => eveningDay(ms, timeZone)
   const volume = new Map(
     projectedVolume(cards, (ms) => isoWeekKey(evening(ms)), evening).map((w) => [w.key, w])
@@ -372,7 +372,7 @@ export function periodModel(input: {
   for (const value of perShot) {
     if (value.n === usual && (!best || value.value > best.value)) best = value
   }
-  // der Vergleich für den Satz (D1): der gewählte, sonst still der Zeitraum davor; bei „Alles“ die letzten 90 Tage gegen
+  // der Vergleich für den Satz: der gewählte, sonst still der Zeitraum davor; bei „Alles“ die letzten 90 Tage gegen
   // die 90 davor. Scheiben, die in beiden liegen, zählen nur im Zeitraum, wie beim gewählten Vergleich
   const form: PeriodModel["form"] = (() => {
     if (other) {
@@ -388,7 +388,7 @@ export function periodModel(input: {
       : range
     const ownCards = all ? within(own) : cards
     const previous = compareRange({ type: "previous" }, own, { nowMs, timeZone, named })
-    // ohne Scheiben auf der Seite kein Satz; bei „Alles“ nach einer Pause ein Vergleich ohne Wert (Review U2)
+    // ohne Scheiben auf der Seite kein Satz; bei „Alles“ nach einer Pause ein Vergleich ohne Wert
     if (!cards.length || !previous) return null
     // defensiv: der Zeitraum davor endet, wo der eigene beginnt; überlappt er doch, zählt eine Scheibe nur im eigenen
     const ownIds = new Set(ownCards.map((c) => c.id))
@@ -408,7 +408,7 @@ export function periodModel(input: {
     compareRange: other,
     cards,
     metric: (() => {
-      // der Name auf der Seite (U3, D4): Achse, Liste und Ablesung sagen „Streuung“, nicht „Präzision σ“
+      // der Name auf der Seite: Achse, Liste und Ablesung sagen „Streuung“, nicht „Präzision σ“
       const { compute: _compute, ...shown } = inScoring(chartMetric, scoring)
       return { ...shown, label: metricLabel(shown) }
     })(),
@@ -463,7 +463,7 @@ const lightCard = (card: ProjectedCard): ProjectedCard => ({
 })
 
 /**
- * Das Modell für den Browser (Fortschritt in der App, SP-1.8): Rechnet der Server `periodModel`, gehen die Scheiben ohne
+ * Das Modell für den Browser (Fortschritt in der App): Rechnet der Server `periodModel`, gehen die Scheiben ohne
  * die Werte und Rekorde ihrer Projektion mit. Die Bausteine (`PeriodChart`, `CardList`, `CardReadout`, `PeriodResult`,
  * `PeriodInsights`) lesen von einer Scheibe nur Id, Beginn, Art, „nur Probe“ und Schusszahl; die Werte der Kennzahl
  * stehen in `values`. Ein Test hält fest, dass sie damit dasselbe zeichnen. Auf dem leichten Modell nicht neu rechnen.

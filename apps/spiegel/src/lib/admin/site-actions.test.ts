@@ -52,7 +52,7 @@ beforeEach(() => {
   mocks.session = { user: { id: adminId, role: "ADMIN" } }
 })
 
-describe("Zeitzone der Anlage (Review P2c)", () => {
+describe("Zeitzone der Anlage", () => {
   it("fest, sobald es Scheiben gibt: eine andere wird abgelehnt, die gespeicherte bleibt", async () => {
     const site = await db.site.findFirstOrThrow({ orderBy: { id: "asc" } })
     const epoch = 900 + randomInt(99)
@@ -117,13 +117,13 @@ describe("Anlage und Brücken (Admin)", () => {
     })
   })
 
-  it("eine getrennte Brücke entfernen, eine laufende nicht (User, 15. Oktober 2026)", async () => {
+  it("eine getrennte Brücke entfernen, eine laufende nicht", async () => {
     const site = await db.site.findFirstOrThrow({ orderBy: { id: "asc" } })
     const bridge = (name: string, revokedAt: Date | null) =>
       db.bridge.create({
         data: { siteId: site.id, name, tokenHash: randomBytes(32).toString("hex"), revokedAt },
       })
-    // aufräumen auch, wenn eine Erwartung oder das Anlegen scheitert: Die Brücken liegen auf der ersten Dev-Anlage (Review)
+    // aufräumen auch, wenn eine Erwartung oder das Anlegen scheitert: Die Brücken liegen auf der ersten Dev-Anlage
     const made: number[] = []
     try {
       const running = await bridge(`Läuft ${tag}`, null)
@@ -138,7 +138,7 @@ describe("Anlage und Brücken (Admin)", () => {
       const gone = { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
       expect(await removeBridgeAction(revoked.id)).toEqual(gone)
       expect(await removeBridgeAction(Number.NaN)).toEqual(gone)
-      // eine Kennung über dem Bereich der Spalte: kein Fehler der Datenbank, sondern die Meldung (Review)
+      // eine Kennung über dem Bereich der Spalte: kein Fehler der Datenbank, sondern die Meldung
       expect(await removeBridgeAction(2 ** 40)).toEqual(gone)
       expect(await revokeBridgeAction(2 ** 40)).toEqual({
         error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu.",

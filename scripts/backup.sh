@@ -137,7 +137,7 @@ for app in "${APPS[@]}"; do
 		echo "  skip: Datenbank $app gibt es nicht (anlegen: ./scripts/vereinsheim db-ensure)"
 		continue
 	fi
-	# nach db-ensure, vor dem ersten Migrator: leer, ihr Dump läge unter der Mindestgröße (Review P4)
+	# nach db-ensure, vor dem ersten Migrator: leer, ihr Dump läge unter der Mindestgröße
 	tables="$(compose exec -T db psql -U postgres -d "$app" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'")"
 	if [[ "$tables" == "0" ]]; then
 		echo "  skip: Datenbank $app ist leer (noch nicht migriert)"

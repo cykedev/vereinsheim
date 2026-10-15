@@ -20,7 +20,7 @@ import { pauseRuleText } from "./TimeTab"
 const BASE = fortyCard().filter((s) => s.kind === "match")
 const all = (html: string, pattern: RegExp) => [...html.matchAll(pattern)].map((m) => m[1])
 
-describe("was als Pause gilt, nach der Grundlage der Schwelle (User, 10. Oktober 2026)", () => {
+describe("was als Pause gilt, nach der Grundlage der Schwelle", () => {
   it("Takt, Mindestminute, feste Grenze, zu wenige Abstände", () => {
     expect(pauseRuleText({ thresholdMs: 80_000, typicalMs: 40_000, basis: "takt" })).toBe(
       "Als Pause gilt ein Abstand über 1:20 min: das Doppelte deines üblichen Abstands von 40,0 s."
@@ -49,7 +49,7 @@ describe("Reiter Zeit und Verlauf, Diagramme", () => {
     expect(card).toMatch(/data-average="partial"[^>]*stroke-dasharray="4 4"/)
   })
 
-  it("Verlauf je Schuss auch in ganzen Ringen in Zehnteln, mit gleitendem Schnitt (Rückmeldung 3)", () => {
+  it("Verlauf je Schuss auch in ganzen Ringen in Zehnteln, mit gleitendem Schnitt", () => {
     const rings = cardHtml(renderTab("time", { scoring: "rings" }), "verlauf-und-trend")
     const decimal = cardHtml(html, "verlauf-und-trend")
     // Diagramm und Tabelle der Werte gleich, nur die Zahl des Trends folgt der Wertung wie in den Beobachtungen
@@ -153,7 +153,7 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     expect(text).toContain(`Dauer ${durationText(duration * 1000)}`)
   })
 
-  it("Tempo ab 3 Schuss mit Zeit wie die Kachel, die Streuung ab 4 (Prüfung, Zeit 6)", () => {
+  it("Tempo ab 3 Schuss mit Zeit wie die Kachel, die Streuung ab 4", () => {
     const three = renderTab("time", { shots: BASE.slice(0, 3) })
     expect(tempoSpread(BASE.slice(0, 3))).toBeNull()
     const median = computeMetric(metricByKey("time.intervalMedian")!, BASE.slice(0, 3))!
@@ -178,7 +178,7 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     )
     for (const e of recovery.effects) {
       const interval = profile.find((p) => p.number === e.afterShot)!.intervalMs!
-      // je Schuss und gegen die übrigen, nicht gegen die ganze Scheibe (Prüfung, Zeit 1 und 5)
+      // je Schuss und gegen die übrigen, nicht gegen die ganze Scheibe
       expect(text).toContain(
         `Vor Schuss ${e.afterShot} ${durationText(interval)} Pause · danach Ø ${formatSigned(e.deltaRings!, 2)} Ringe je Schuss`
       )
@@ -188,7 +188,7 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     )
     const one = renderTab("time", { shots: BASE.slice(0, 1) })
     expect(cardText(one, "pausen")).toContain("ab 2 Schuss mit Zeit")
-    // die Schwelle der Karte steht dabei, mit und ohne Pause (User, 10. Oktober 2026): Median 55,6 s, doppelt 111 s
+    // die Schwelle der Karte steht dabei, mit und ohne Pause: Median 55,6 s, doppelt 111 s
     expect(text).toContain(
       "Als Pause gilt ein Abstand über 1:51 min: das Doppelte deines üblichen Abstands von 55,6 s."
     )
@@ -205,7 +205,7 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     const text = cardText(html, "ermuedung")
     expect(text).toContain(`Erste zehn Ø ${formatValue(tired.firstMeanRings, 2)}`)
     expect(text).toContain(`Letzte zehn Ø ${formatValue(tired.lastMeanRings, 2)}`)
-    // der Unterschied ist je Schuss; zehn Schuss verlieren das Zehnfache (Prüfung, Zeit 4)
+    // der Unterschied ist je Schuss; zehn Schuss verlieren das Zehnfache
     expect(text).toContain(
       `Unterschied je Schuss ${formatSigned(tired.deltaRings, 2)} Ringe (zehn Schuss: ${formatSigned(tired.deltaRings * 10, 1)} Ringe)`
     )

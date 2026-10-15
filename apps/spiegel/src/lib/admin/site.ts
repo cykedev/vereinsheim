@@ -4,7 +4,7 @@ import { formatDateOnly, formatDateTime } from "@vereinsheim/lib/format"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
 
-// Lesen für die Admin-Seite „Anlage“ (SP-1.6 b, P2c): Anlage, Brücken mit ihrem letzten Heartbeat, Ranglisten
+// Lesen für die Admin-Seite „Anlage“: Anlage, Brücken mit ihrem letzten Heartbeat, Ranglisten
 // (Zustimmungen: `src/lib/consent/queries.ts`). Jede Funktion prüft selbst (`requireAdmin`), das Layout allein
 // schützt die Daten nicht.
 
@@ -12,7 +12,7 @@ export interface BridgeRow {
   id: number
   name: string
   version: string | null
-  /** nur der Tag: „verbunden am …“ (P2f, D3) */
+  /** nur der Tag: „verbunden am …“ */
   createdAt: string
   lastSeenAt: string | null
   lastHeartbeatAt: string | null
@@ -34,7 +34,7 @@ export interface RankingRow {
 }
 
 export interface SiteOverview {
-  /** `hasCards`: es gibt schon Scheiben; dann ist die Zeitzone fest (Review P2c) */
+  /** `hasCards`: es gibt schon Scheiben; dann ist die Zeitzone fest */
   site: { id: number; name: string; timeZone: string; hasCards: boolean } | null
   bridges: BridgeRow[]
   rankings: RankingRow[]
@@ -63,7 +63,7 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
         id: true,
         name: true,
         kind: true,
-        // nur Scheiben, die es in Spiegel noch gibt (Review)
+        // nur Scheiben, die es in Spiegel noch gibt
         _count: { select: { cards: { where: { deletedAt: null } } } },
       },
     }),

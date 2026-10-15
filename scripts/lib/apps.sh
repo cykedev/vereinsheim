@@ -1,4 +1,4 @@
-# Apps des Stacks, an einer Stelle für das CLI und die Skripte (P4, Review): in dieser Reihenfolge deployt,
+# Apps des Stacks, an einer Stelle für das CLI und die Skripte: in dieser Reihenfolge deployt,
 # gesichert und geprüft; nur Treffsicher hat ein Upload-Volume. Eine neue App trägt man hier ein, dazu in
 # compose.yml, Caddyfile, .env.example und db-init/.
 # shellcheck disable=SC2034 # genutzt von den Skripten, die diese Datei einbinden

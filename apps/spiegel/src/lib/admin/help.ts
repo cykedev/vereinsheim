@@ -1,5 +1,5 @@
-// Erklärungen im Admin hinter einem „?“ (P2c, D4): je Station der Übersicht und je Begriff wenige kurze Sätze in
-// Alltagsworten, Wortlaut aus dem Textbuch (P2f). Ohne „Neustart der Anlage“ (D0: das regelt Spiegel selbst). Reine Daten.
+// Erklärungen im Admin hinter einem „?“: je Station der Übersicht und je Begriff wenige kurze Sätze in Alltagsworten.
+// Ohne „Neustart der Anlage“ (das regelt Spiegel selbst). Reine Daten.
 
 export const ADMIN_HELP = {
   site: {

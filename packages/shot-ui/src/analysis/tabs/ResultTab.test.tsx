@@ -106,17 +106,17 @@ describe("Reiter Ergebnis", () => {
   })
 
   it("fehlt einem Schuss der Wert, kein Ergebnis, aber der Ø über die Schüsse mit Wert", () => {
-    // die Hilfe sagt „Den Ø gibt es trotzdem“ (Prüfung, Ergebnis 3)
+    // die Hilfe sagt „Den Ø gibt es trotzdem“
     const blind = BASE.map((s, i) => (i === 5 ? { ...s, decimalTenths: null, ring: null } : s))
     const mean = computeMetric(inScoring(metricByKey("result.decimalMean")!, "decimal"), blind)!
     const text = cardText(render("decimal", blind), "ergebnis")
     expect(text).toContain("Ergebnis – nicht jeder Schuss mit Wert")
-    // in Zehnteln zählen die Schüsse mit Zehntel; ein Schuss nur mit Ring hat einen Wert (Review)
+    // in Zehnteln zählen die Schüsse mit Zehntel; ein Schuss nur mit Ring hat einen Wert
     expect(text).toContain(`Ø je Schuss ${formatValue(mean, 2)} über 39 Schuss mit Zehntel`)
     expect(text).toContain("Schuss 40")
   })
 
-  it("fehlen nur Zehntel, rät die Karte zu ganzen Ringen (Prüfung, Ergebnis 4)", () => {
+  it("fehlen nur Zehntel, rät die Karte zu ganzen Ringen", () => {
     const tenthless = BASE.map((s, i) => (i === 5 ? { ...s, decimalTenths: null } : s))
     expect(cardText(render("decimal", tenthless), "ergebnis")).toContain(
       "Ergebnis – nicht jeder Schuss mit Zehntel · auf ganze Ringe schalten"
@@ -141,7 +141,7 @@ describe("Reiter Ergebnis", () => {
       yUm: null,
       distanceUm: null,
     }))
-    // der gemessene Teiler reicht, die Lage braucht es nicht (Prüfung, Ergebnis 15)
+    // der gemessene Teiler reicht, die Lage braucht es nicht
     expect(cardText(render("decimal", noPosition), "extreme-und-teiler")).toContain(
       "ab 1 Schuss mit Teiler"
     )
@@ -163,7 +163,7 @@ describe("Reiter Ergebnis", () => {
     )
   })
 
-  it("Zehntelverteilung auch in ganzen Ringen, dieselben Säulen (Rückmeldung 3)", () => {
+  it("Zehntelverteilung auch in ganzen Ringen, dieselben Säulen", () => {
     const rings = render("rings")
     const bars = (html: string) =>
       [...html.matchAll(/data-tenth="(\d+)"/g)].map((m) => m[1]).join(",")
@@ -178,7 +178,7 @@ describe("Reiter Ergebnis", () => {
     expect(points).toEqual(cons.series.filter((p) => p.total !== null).map((p) => p.series))
     const text = cardText(html, "serien-und-konstanz")
     expect(text).toContain(`Verglichen ${cons.compared} von ${cons.series.length} Serien`)
-    // „Streuung“ heißt sonst die Gruppe auf der Scheibe (Prüfung, Ergebnis 8)
+    // „Streuung“ heißt sonst die Gruppe auf der Scheibe
     expect(text).toContain(`Abweichung der Serien ${formatValue(cons.sd!, 2)} Ringe (SD)`)
     expect(text).toContain(`Spanne ${formatValue(cons.range!, 1)} Ringe`)
     expect(text).toContain(`Abweichung je Schuss ${formatValue(cons.shotSd!, 2)} Ringe (SD)`)

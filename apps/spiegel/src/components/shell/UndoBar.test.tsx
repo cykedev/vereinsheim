@@ -30,7 +30,7 @@ describe("Hinweis „Rückgängig“", () => {
     expect(failed).not.toContain("<button")
   })
 
-  it("ohne Hinweis steht die leere Live-Region schon da (Review)", () => {
+  it("ohne Hinweis steht die leere Live-Region schon da", () => {
     const html = renderToStaticMarkup(createElement(UndoBar, { view: null }))
     expect(html).toMatch(/^<div role="status" class="[^"]*fixed/)
     expect(html).not.toContain("data-undo-bar")

@@ -28,8 +28,7 @@ interface PersistSeriesPairArgs {
  * Upsertet beide Serien (Heim + Gast) für eine Duell- oder Stechschuss-Runde und
  * aktualisiert den Matchup-Status — alles in einer Transaktion.
  *
- * Diese Hilfsfunktion bündelt die zuvor in saveBestOfDuel und saveStechschuss
- * doppelt vorhandene Upsert-Logik (rein strukturell, gleiches Verhalten).
+ * Gemeinsam genutzt von saveBestOfDuel und saveStechschuss.
  */
 export async function persistSeriesPair(args: PersistSeriesPairArgs): Promise<void> {
   const { matchupId, duelNumber, shotCount, sessionDate, isTiebreak, recordedByUserId } = args

@@ -11,7 +11,7 @@ import type { ListQuery, ProgressRoute } from "../nav/routes"
 import type { ListOption } from "./evenings"
 
 /**
- * Namen der Merkmale (D7), jedes, das an einer Scheibe stehen kann (Textbuch rev 21; vorher stand „nur-probe“ da);
+ * Namen der Merkmale, jedes, das an einer Scheibe stehen kann (Textbuch);
  * Unbekanntes mit seiner Id
  */
 const FLAG_NAMES: Readonly<Record<CardFlag, string>> = {
@@ -49,13 +49,12 @@ export interface ListControlsProps {
   /** „Im Fortschritt zeigen“: der Fortschritt mit Familie, Art und Zeitraum der Liste (`progressFromList`) */
   progress: ProgressRoute
   /**
-   * weitere Chips in der Zeile der Filter, nach dem Chip „Filter“ (in der App die Wertung der Familie als Wechsel-Chip;
-   * User, 13. Oktober 2026)
+   * weitere Chips in der Zeile der Filter, nach dem Chip „Filter“ (in der App die Wertung der Familie als Wechsel-Chip)
    */
   actions?: ReactNode
 }
 
-/** Was der Chip zeigt (U5, D6): was von der Vorgabe abweicht, sonst „Alle Scheiben“ */
+/** Was der Chip zeigt: was von der Vorgabe abweicht, sonst „Alle Scheiben“ */
 export function listFilterSummary({
   kind,
   flag,
@@ -78,7 +77,7 @@ export function listFilterSummary({
 }
 
 /**
- * Filter der Scheiben-Liste in einer Zeile (Plan N2, D7, D8; U5, D6 wie der Fortschritt): vorn die Familie, daneben
+ * Filter der Scheiben-Liste in einer Zeile (wie der Fortschritt): vorn die Familie, daneben
  * ein Chip mit der Zusammenfassung. Er öffnet das Blatt „Filter“ mit Art, Liste aus Meyton und Merkmal (beide nur,
  * wenn es welche gibt), dem Zeitraum aus dem Fortschritt (mit „entfernen“) und dem Weg „Im Fortschritt zeigen“. Eine
  * Wahl im Blatt gilt sofort. Ein Familienwechsel behält Art, Liste, Merkmal und Zeitraum.
@@ -163,12 +162,12 @@ export function ListControlsView({
           {lists.length > 0 && (
             <div className="grid gap-1.5">
               <span className="text-[13px] font-semibold text-muted-foreground">Liste</span>
-              {/* umbrechend: eine Anlage hat viele Listen; seitlich scrollend waren „Alle“ und die letzten abgeschnitten
-                  (User, 15. Oktober 2026: „ich kann hier nicht alle listen wählen“) */}
+              {/* umbrechend: eine Anlage hat viele Listen; seitlich scrollend wären „Alle“ und die letzten
+                  abgeschnitten */}
               <Segmented
                 label="Liste"
                 wrap
-                // eine Kennung, die keine Liste der Familie ist (alte Adresse), gilt als keine: „Alle“ (Review)
+                // eine Kennung, die keine Liste der Familie ist (alte Adresse), gilt als keine: „Alle“
                 value={lists.some((list) => list.id === query.list) ? String(query.list) : ANY}
                 options={[
                   { value: ANY, label: "Alle" },
@@ -207,7 +206,7 @@ export function ListControlsView({
                   type="button"
                   aria-label="Zeitraum entfernen"
                   onClick={(event) => {
-                    // der Knopf verschwindet: der Fokus bleibt im Blatt, auf der gewählten Art (Review U5)
+                    // der Knopf verschwindet: der Fokus bleibt im Blatt, auf der gewählten Art
                     event.currentTarget
                       .closest("[data-list-filter]")
                       ?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]')

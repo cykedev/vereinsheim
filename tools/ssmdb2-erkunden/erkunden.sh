@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SSMDB2 vor Ort erkunden (SP-0.1 + SP-0.6). Liest nur. Ablauf: tools/ssmdb2-erkunden/README.md.
+# SSMDB2 vor Ort erkunden. Liest nur. Ablauf: tools/ssmdb2-erkunden/README.md.
 #
 #   erkunden.sh [Optionen] [Phase …]
 #
@@ -423,7 +423,7 @@ phase_abend() {
 # Sucht Namen und Sportpassnummern aus der Ablage als ganze Wörter in bericht/. Meldet nur Anzahlen
 # je Datei, nie den Namen. Die Liste liegt nur kurz in privat/. Kurze Sportpassnummern (unter fünf
 # Stellen) bleiben außen vor, sie träfen sonst jede Zahl. Scheitert die Abfrage, gibt es keine
-# Entwarnung (Review S1).
+# Entwarnung.
 namen_pruefen() {
   local liste datei treffer gesamt=0
   liste=$(mktemp "$AUSGABE/privat/.namen.XXXXXX")
@@ -499,7 +499,7 @@ phase_abschluss() {
 
 # ---------------------------------------------------------------- Ablauf
 
-# Der Mac darf während des Abends nicht einschlafen, sonst steht der Mitschnitt (Review S6).
+# Der Mac darf während des Abends nicht einschlafen, sonst steht der Mitschnitt.
 if [ "$AUTO" = 0 ] && command -v caffeinate >/dev/null 2>&1; then
   caffeinate -dims -w $$ >/dev/null 2>&1 &
 fi

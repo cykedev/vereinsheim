@@ -38,7 +38,7 @@ export function readoutModel(shots: readonly MetricShot[], state: ViewState): Re
   }
 }
 
-/** Wert des Schusses, immer in Zehnteln (Rückmeldung 3, `formatShotValue`) */
+/** Wert des Schusses, immer in Zehnteln (`formatShotValue`) */
 export const readoutValue = (model: ReadoutModel) => formatShotValue(model.shot)
 
 /** zweite Zeile der Karte: Fehlschuss oder der Ring, dazu der Innenzehner */

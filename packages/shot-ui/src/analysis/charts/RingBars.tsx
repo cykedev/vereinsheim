@@ -15,7 +15,7 @@ export function ringRows(dist: RingDistribution): number[] {
   return rows
 }
 
-/** Ringverteilung als Balken je Ring (Spielwiese `ringBars`): Länge nach Anzahl, Farbe nach Ring */
+/** Ringverteilung als Balken je Ring: Länge nach Anzahl, Farbe nach Ring */
 export function RingBars({ dist }: { dist: RingDistribution }) {
   const top = Math.max(1, ...dist.counts)
   return (

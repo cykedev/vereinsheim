@@ -61,8 +61,8 @@ const addressOf = (state: PeriodState) =>
   urlFromRoute(progressRoute({ ...state, scoring: "decimal" }, null))
 
 /**
- * Fortschritt (N7, Plan `plans/2026-10-10-spiegel-fortschritt.md`): die Seite eines Zeitraums aus `shot-ui`, das Modell
- * hat der Server gerechnet (`periodModel` aus den Projektionen, leicht gemacht). Filter schreiben die Adresse und
+ * Fortschritt: die Seite eines Zeitraums aus `shot-ui`, das Modell hat der Server gerechnet (`periodModel` aus den
+ * Projektionen, leicht gemacht). Filter schreiben die Adresse und
  * rechnen auf dem Server neu; eine Wahl (Verlauf, Liste, Rekord) bleibt im Browser: Sie ändert die Ablesung, schreibt
  * `pick` verzögert mit `replaceState` und holt die Lagen der kleinen Scheibe nach (`cardMarksAction`). Gerechnet wird in
  * der Wertung der Familie; der Schalter in der Ergebnis-Box speichert sie (`setFamilyScoring`), danach rechnet der Server
@@ -108,7 +108,7 @@ export function ProgressScreen({
     marksById(initialMarks)
   )
   // die Wahl lebt im Browser. Beim ersten Zeichnen gilt `pick` der Adresse: Nach Zurück im Browser zeigt der Router den
-  // Stand vom Server ohne die Wahl, die Adresse trägt sie (Review). Ein neuer Stand vom Server (Filter) bringt seine
+  // Stand vom Server ohne die Wahl, die Adresse trägt sie. Ein neuer Stand vom Server (Filter) bringt seine
   // eigene Wahl und die Lagen ihrer Ablesung mit
   const [chosen, setChosen] = useState(() => {
     const pick = search.get("pick")
@@ -134,7 +134,7 @@ export function ProgressScreen({
         setDirty(true)
         return
       }
-      // ein übernommener Zeitraum gilt auch beim nächsten Öffnen (User, 15. Oktober 2026), nie das bloße Öffnen
+      // ein übernommener Zeitraum gilt auch beim nächsten Öffnen, nie das bloße Öffnen
       if (action.type === "setFilters" || action.type === "setChoice") rememberPeriod(next.choice)
       // die Seite bleibt, wo sie ist (die Schalter stehen im Verlauf, der ab 768 px klebt)
       startTransition(() => router.push(addressOf(next), { scroll: false }))
@@ -143,7 +143,7 @@ export function ProgressScreen({
   )
 
   // die Wahl in die Adresse, erst wenn sie ruht: Ein Zug über den Verlauf wählt bei jeder Bewegung, und Browser
-  // begrenzen `replaceState` (Safari wirft). Nicht während eine Navigation läuft, sonst bricht der Router sie ab (Review)
+  // begrenzen `replaceState` (Safari wirft). Nicht während eine Navigation läuft, sonst bricht der Router sie ab
   const address = useMemo(() => addressOf(current), [current])
   useEffect(() => {
     if (!dirty || pending) return
@@ -156,7 +156,7 @@ export function ProgressScreen({
   const reading = model.reading
   const readingId = reading?.card.id ?? null
   // die Lagen der Ablesung, erst wenn die Wahl ruht; eine Antwort gilt für ihre Scheibe, auch wenn schon eine andere
-  // gewählt ist. Ein Fehler wird nicht gemerkt, die nächste Wahl versucht es wieder (Review)
+  // gewählt ist. Ein Fehler wird nicht gemerkt, die nächste Wahl versucht es wieder
   useEffect(() => {
     if (!readingId || marks.has(readingId)) return
     const timer = setTimeout(() => {
@@ -214,8 +214,7 @@ export function ProgressScreen({
             title={model.range.label}
             meta={[option?.label ?? "", cardsText, rangeDays(model.range, timeZone)]}
             controls={
-              // die Wertung der Familie in der Zeile der Filter wie in der Liste, ein Fehler darunter (User,
-              // 13. Oktober 2026)
+              // die Wertung der Familie in der Zeile der Filter wie in der Liste, ein Fehler darunter
               <div className="grid gap-2">
                 <PeriodControls
                   state={current}
@@ -325,14 +324,14 @@ export function ProgressScreen({
               </ChartSlot>
             ) : (
               <CalendarBrowser
-                // ein neuer Zeitraum beginnt wieder an seinem Ende (Rückmeldung 8)
+                // ein neuer Zeitraum beginnt wieder an seinem Ende
                 key={`${state.family}:${state.kind}:${model.calendar.from}:${model.calendar.to}`}
                 end={model.calendar.to}
                 period={{ from: model.calendar.from, to: model.calendar.to }}
                 today={model.calendar.today}
                 days={model.calendar.all}
                 dayRoute={(day) => {
-                  // an den Abend, ohne die Wahl des Verlaufs: sonst wäre in der Liste eine fremde Scheibe markiert (Review)
+                  // an den Abend, ohne die Wahl des Verlaufs: sonst wäre in der Liste eine fremde Scheibe markiert
                   const { pick: _pick, ...list } = listFromProgress(here)
                   // ein Tag außerhalb des Zeitraums (geblättert) steht nur in der Liste ohne Zeitraum
                   const inPeriod = day >= model.calendar.from && day <= model.calendar.to

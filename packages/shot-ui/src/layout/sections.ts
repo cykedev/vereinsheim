@@ -1,12 +1,12 @@
-// Abschnitte der Seite einer Scheibe und ihre Anker (Plan Schritt 4, D1 und D7). Ein Anker ist ein einfaches
-// englisches Wort ohne `=` wie Pfade und Schlüssel der Adresse (User, 9. Oktober 2026): Im Artifact kommt nur so
+// Abschnitte der Seite einer Scheibe und ihre Anker. Ein Anker ist ein einfaches
+// englisches Wort ohne `=` wie Pfade und Schlüssel der Adresse: Im Artifact kommt nur so
 // einer an. Reiter-Anker öffnen den Reiter und führen zur Analyse.
 
 import type { AnalysisTab } from "../analysis/tabs"
 
 // in Seitenreihenfolge: die Schüsse stehen neben der Scheibe (und auf dem Telefon gleich nach ihr), die Analyse
-// darunter in voller Breite (User, 8. Oktober 2026). „Zahlen“ entfiel mit U1: Der Überblick der Analyse ist die
-// Zahlen-Ansicht (Durchsicht, 9. Oktober 2026)
+// darunter in voller Breite. Einen Abschnitt „Zahlen“ gibt es nicht: Der Überblick der Analyse ist die
+// Zahlen-Ansicht
 export const PAGE_SECTIONS = [
   { id: "target", label: "Scheibe" },
   { id: "shots", label: "Schüsse" },
@@ -15,7 +15,7 @@ export const PAGE_SECTIONS = [
 
 export type PageSection = (typeof PAGE_SECTIONS)[number]["id"]
 
-/** Abschnitte der Seite eines Zeitraums (Plan L3, D2): der Verlauf steht, wo auf der Scheibe die Scheibe steht */
+/** Abschnitte der Seite eines Zeitraums: der Verlauf steht, wo auf der Scheibe die Scheibe steht */
 export const PERIOD_SECTIONS = [
   { id: "history", label: "Verlauf" },
   { id: "cards", label: "Scheiben" },
@@ -31,7 +31,7 @@ export function parsePeriodHash(hash: string): PeriodSection | null {
   return PERIOD_SECTIONS.find((s) => s.id === word)?.id ?? null
 }
 
-/** Anker der Reiter: englisch wie Pfade und Schlüssel der Adresse (User, 9. Oktober 2026), gleich dem Reiter */
+/** Anker der Reiter: englisch wie Pfade und Schlüssel der Adresse, gleich dem Reiter */
 export const TAB_ANCHORS: Readonly<Record<AnalysisTab, string>> = {
   overview: "overview",
   result: "result",

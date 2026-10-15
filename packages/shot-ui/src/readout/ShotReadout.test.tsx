@@ -34,7 +34,7 @@ const CARD = [
   shot("match", -300, -400, 109, true),
 ]
 
-// die Seite gibt die Karte wie am Ausdruck weiter (U4): ohne die Probe
+// die Seite gibt die Karte wie am Ausdruck weiter: ohne die Probe
 const render = (
   state: Partial<ViewState> = {},
   shots: readonly MetricShot[] = asOnPrintout(CARD)
@@ -58,7 +58,7 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
       /<span aria-hidden="true"[^>]*style="background:var\(--score-10\)"[\s\S]*?>10,9</
     )
     expect(html).not.toContain("color:var(--score")
-    // kein hohler Punkt mehr: eine Probe neben Wertung gibt es nicht (U4)
+    // kein hohler Punkt: eine Probe neben Wertung gibt es nicht
     expect(html).not.toContain("box-shadow")
   })
 
@@ -66,7 +66,7 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
     expect(text(render({ chosen: { index: 0, series: 1 } }))).toContain("Schuss 1 · angetippt")
   })
 
-  it("der Wert immer in Zehnteln, klein daneben der Ring (Rückmeldung 3)", () => {
+  it("der Wert immer in Zehnteln, klein daneben der Ring", () => {
     for (const scoring of ["decimal", "rings"] as const) {
       const t = text(render({ scoring }))
       expect(t).toMatch(/· letzter Schuss 10,9 /)
@@ -80,7 +80,7 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
     expect(text(render({ chosen: { index: 1, series: 1 } }))).toContain("Fehlschuss")
   })
 
-  it("Teiler und Abstand aus der Lage des Schusses, ohne x/y (User, 8. Oktober 2026)", () => {
+  it("Teiler und Abstand aus der Lage des Schusses, ohne x/y", () => {
     const t = text(render())
     expect(t).toContain(`Teiler ${formatValue(distanceUm(-300, -400) / 10, 1)}`)
     expect(t).toContain("Abstand zur Mitte 0,50 mm")

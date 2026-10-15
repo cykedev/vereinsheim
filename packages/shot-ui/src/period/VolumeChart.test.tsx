@@ -11,7 +11,7 @@ const WEEKS: VolumeWeek[] = [
 ]
 const html = renderToStaticMarkup(createElement(VolumeChart, { width: 400, weeks: WEEKS }))
 
-describe("Umfang je Woche (D15)", () => {
+describe("Umfang je Woche", () => {
   it("eine Säule je Woche mit Schüssen, eine leere Woche ohne Säule", () => {
     expect([...html.matchAll(/data-week="/g)].map((m) => m.index)).toHaveLength(2)
     expect(html).not.toContain('data-week="2026-W29"')
@@ -24,7 +24,7 @@ describe("Umfang je Woche (D15)", () => {
   })
 
   it("das Lineal nennt Schüsse mit Probe, Scheiben und Tage; Tabelle mit allen Wochen", () => {
-    // Woche als Datum ihres Montags (U3, D6), keine Kalenderwoche
+    // Woche als Datum ihres Montags, keine Kalenderwoche
     expect(weekText(WEEKS[0])).toBe("Woche ab 06.07.2026: 140 Schuss, 3 Scheiben, 2 Tage")
     expect(weekText(WEEKS[2])).toBe("Woche ab 20.07.2026: 40 Schuss, 1 Scheibe, 1 Tag")
     expect(weekText(WEEKS[1])).toBe("Woche ab 13.07.2026: kein Training")

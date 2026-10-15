@@ -1,6 +1,5 @@
-// Zeitraum des Fortschritts gemerkt (User, 15. Oktober 2026: „letzten gewählten Zeitraum merken für die Zukunft“): als
-// Cookie auf dem Gerät wie die Darstellung der Scheibe, ohne Importe aus Next, damit Server und Browser die Datei teilen.
-// Der Wert hat die Form von `range` in der Adresse (`encodeChoice`).
+// Zeitraum des Fortschritts gemerkt: als Cookie auf dem Gerät wie die Darstellung der Scheibe, ohne Importe aus Next,
+// damit Server und Browser die Datei teilen. Der Wert hat die Form von `range` in der Adresse (`encodeChoice`).
 
 import { decodeChoice, type ProgressQuery } from "@vereinsheim/shot-ui/nav/routes"
 import type { PeriodChoice } from "@vereinsheim/shot-ui/period/calendar"

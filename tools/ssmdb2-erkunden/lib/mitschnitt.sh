@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# Mitschnitt während des Schießprotokolls (SP-0.6): liest wie die Brücke und schreibt jeden neuen
+# Mitschnitt während des Schießprotokolls: liest wie die Brücke und schreibt jeden neuen
 # Stand mit Zeit in privat/protokoll-roh.tsv. Nur lesen; ein Stand ist eine Read-only-Transaktion.
 #
 # Format: Blöcke, jeder beginnt mit
@@ -214,7 +214,7 @@ _explain_typ() {
 
 # Prüft im Vordergrund, ob der Mitschnitt überhaupt lesen kann. Setzt das Zeitfenster aus den Daten:
 # die Zeit des jüngsten Eintrags oder die Server-Uhr, was früher ist, minus zehn Minuten. So schadet ein
-# Versatz zwischen Server-Uhr und Zeitstempeln nicht (Review B2, SF-29/SF-31). Rückgabe 1 bei Fehlern.
+# Versatz zwischen Server-Uhr und Zeitstempeln nicht (SF-29/SF-31). Rückgabe 1 bei Fehlern.
 mitschnitt_vorpruefen() {
   local fehler="" antwort typ
   if ! antwort=$(sql_text "SELECT LEAST(NOW(), COALESCE(MAX(Zeitstempel), NOW())) - INTERVAL 10 MINUTE AS seit

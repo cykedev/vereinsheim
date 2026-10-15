@@ -1,4 +1,4 @@
-// Anzeigenamen der Kennzahlen auf Ebene 1 und 2 (Plan U3, D4): das Alltagswort statt des Namens aus dem Fachkern. Der
+// Anzeigenamen der Kennzahlen auf Ebene 1 und 2: das Alltagswort statt des Namens aus dem Fachkern. Der
 // Fachbegriff (σ, Median) steht im Blatt „?“; der Fachkern bleibt unverändert.
 
 import type { MetricDefinition } from "@vereinsheim/shot-core/metrics"

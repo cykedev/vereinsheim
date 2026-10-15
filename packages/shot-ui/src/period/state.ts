@@ -1,11 +1,11 @@
-// Zustand der Seite eines Zeitraums (Plan L3, D3, D8): Zeitraum, Vergleich, Filter, Wertung, Kennzahl und
+// Zustand der Seite eines Zeitraums: Zeitraum, Vergleich, Filter, Wertung, Kennzahl und
 // Darstellung des Verlaufs, die gewählte Scheibe. Reine Funktionen, die Seite hält den Zustand.
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
 import { DEFAULT_CHOICE, type CompareChoice, type PeriodChoice } from "./calendar"
 
-/** Kennzahlen des Verlaufs: nur solche, die nicht an der Schusszahl hängen (D7) */
+/** Kennzahlen des Verlaufs: nur solche, die nicht an der Schusszahl hängen */
 export type PeriodMetricKey =
   | "result.decimalMean"
   | "group.sigma"
@@ -21,12 +21,12 @@ export interface PeriodState {
   family: string
   kind: CardKind
   /**
-   * Training nur aus Probe mitzählen (L2, D8); Vorgabe an, denn so trainieren die meisten (User, 9. Oktober 2026)
+   * Training nur aus Probe mitzählen; Vorgabe an, denn so trainieren die meisten
    */
   includeProbeOnly: boolean
   scoring: Scoring
   metric: PeriodMetricKey
-  /** Darstellung des Verlaufs; null: nach der Zahl der Scheiben (D7) */
+  /** Darstellung des Verlaufs; null: nach der Zahl der Scheiben */
   view: "cards" | "months" | null
   /** gewählte Scheibe (Id); null: keine, die Ablesung zeigt die neueste */
   chosen: string | null
@@ -44,10 +44,10 @@ export type PeriodAction =
   | { type: "choose"; id: string | null }
   /** wählen ohne Umschalten (das Lineal): dieselbe Scheibe noch einmal bleibt gewählt */
   | { type: "pick"; id: string | null }
-  /** den ganzen Zustand setzen, etwa aus der Adresse beim Zurück (Plan N1) */
+  /** den ganzen Zustand setzen, etwa aus der Adresse beim Zurück */
   | { type: "restore"; state: PeriodState }
   /**
-   * das Blatt „Filter“ auf einmal (Review U2): eine Aktion statt bis zu vier, damit eine App, die die Adresse aus dem
+   * das Blatt „Filter“ auf einmal: eine Aktion statt bis zu vier, damit eine App, die die Adresse aus dem
    * Zustand baut, keine Änderung verliert; die Wahl fällt weg, wenn sich die Menge der Scheiben ändert
    */
   | {

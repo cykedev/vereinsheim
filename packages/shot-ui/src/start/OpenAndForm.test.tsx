@@ -13,7 +13,7 @@ const text = (html: string) =>
     .replace(/\s+/g, " ")
     .trim()
 
-describe("Offen auf Start (Plan N5, D1)", () => {
+describe("Offen auf Start", () => {
   const items = [
     {
       id: "confirm",
@@ -46,7 +46,7 @@ describe("Offen auf Start (Plan N5, D1)", () => {
   })
 })
 
-describe("Form der letzten 90 Tage (Plan N5, D7; U5, D4)", () => {
+describe("Form der letzten 90 Tage", () => {
   const form: StartForm = {
     family: "lg-freihand",
     mean: 10.27,
@@ -69,7 +69,7 @@ describe("Form der letzten 90 Tage (Plan N5, D7; U5, D4)", () => {
   const line = (f: StartForm) =>
     text(renderToStaticMarkup(h(FormLine, { form: f, familyLabel: "Luftgewehr" })))
 
-  it("zwei Zeilen, Titel und ein Satz mit Urteil, als Link in den Fortschritt mit dem Vergleich (U5, D4)", () => {
+  it("zwei Zeilen, Titel und ein Satz mit Urteil, als Link in den Fortschritt mit dem Vergleich", () => {
     const html = renderToStaticMarkup(h(FormLine, { form, familyLabel: "Luftgewehr" }))
     expect(html).toMatch(
       /^<a href="\/progress\?compare=previous&amp;family=lg-freihand" data-form-line="true"/

@@ -37,7 +37,7 @@ describe("Werte je Scheibe (T1)", () => {
     expect(cardValues(cards, mean, "rings").map((v) => v.value)).toEqual([10, 9, 9])
   })
 
-  it("eine Scheibe nur mit Probe nur mit includeProbeOnly, dann über die Probe (SF-01, D8)", () => {
+  it("eine Scheibe nur mit Probe nur mit includeProbeOnly, dann über die Probe (SF-01)", () => {
     const cards = [card("a", 1, [100]), card("p", 2, [98, 96], { probe: true })]
     expect(cardValues(cards, mean, "decimal").map((v) => v.id)).toEqual(["a"])
     const withProbe = cardValues(cards, mean, "decimal", { includeProbeOnly: true })
@@ -170,9 +170,9 @@ describe("Boden und Decke je Abschnitt, Trainingsumfang (T5, T6)", () => {
     expect(periodBuckets(five.slice(0, 4), week)[0].p10).toBeNull()
   })
 
-  it("Umfang: Schüsse wie am Ausdruck (U4), Scheiben und Tage je Woche; ein Training zählt seine Probe", () => {
+  it("Umfang: Schüsse wie am Ausdruck, Scheiben und Tage je Woche; ein Training zählt seine Probe", () => {
     const cards = [
-      // eine Probe vor der Wertung zeigt keine Seite mehr: Sie zählt nicht (Review U4)
+      // eine Probe vor der Wertung zeigt keine Seite mehr: Sie zählt nicht
       card("a", 1, [100, 100], { shot: (i) => (i === 0 ? { kind: "probe", series: null } : {}) }),
       card("b", 1, [90, 92, 95]),
       card("c", 3, [95]),

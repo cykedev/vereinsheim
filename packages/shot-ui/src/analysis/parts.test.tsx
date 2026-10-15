@@ -28,7 +28,7 @@ const render = (element: Parameters<typeof renderToStaticMarkup>[0]) =>
   renderToStaticMarkup(element)
 
 describe("AnalysisCard", () => {
-  it("Titel, Kurzsatz als title und „?“ im Kopf statt „Was heißt das?“ (D3), keine Katalog-IDs", () => {
+  it("Titel, Kurzsatz als title und „?“ im Kopf statt „Was heißt das?“, keine Katalog-IDs", () => {
     const topic = helpTopic("masse-der-gruppe")!
     const html = render(
       createElement(AnalysisCard, {
@@ -41,7 +41,7 @@ describe("AnalysisCard", () => {
     expect(html).toMatch(
       new RegExp(`<h3[^>]*title="${topic.short}"[^>]*><span>${topic.title}</span>`)
     )
-    // die Verweise in den Katalog („E1 · E2“) interessieren nicht (User, 9. Oktober 2026)
+    // die Verweise in den Katalog („E1 · E2“) interessieren nicht
     expect(topic.catalog.length).toBeGreaterThan(0)
     for (const id of topic.catalog) expect(html).not.toContain(id)
     expect(html).not.toContain("font-mono")

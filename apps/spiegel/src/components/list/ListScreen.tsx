@@ -29,7 +29,7 @@ import { setFamilyScoring } from "@/lib/scoring-actions"
 
 /**
  * auf Änderungen der Adresse hören: der Anker (`hashchange`), Zurück und Vor (`popstate`) und, wo es sie gibt, jede
- * Navigation über die Navigation API (auch `pushState` mit nur neuem Anker, Review)
+ * Navigation über die Navigation API (auch `pushState` mit nur neuem Anker)
  */
 function subscribeLocation(onChange: () => void) {
   // die Navigation API meldet synchron, auch aus dem `useInsertionEffect`, in dem Next die Adresse schreibt; dort darf
@@ -50,7 +50,7 @@ function subscribeLocation(onChange: () => void) {
 const onList = () => window.location.pathname === "/cards"
 
 /**
- * Die Scheiben nach Abend (N2, N7): Filter aus der Adresse (`/cards?family=…&range=…#Abend`), das Modell hat die Seite
+ * Die Scheiben nach Abend: Filter aus der Adresse (`/cards?family=…&range=…#Abend`), das Modell hat die Seite
  * auf dem Server gerechnet (`cardListModel` aus den Projektionen), die Bausteine aus `shot-ui/list`. Ein Filter schreibt
  * die Adresse neu (Zurück findet ihn wieder), und die Seite rechnet neu. Vorn steht die Wertung jeder Scheibe; Ø und
  * Abstand rechnen in der Wertung der Familie, der Schalter speichert sie (`setFamilyScoring`), danach rechnet die Seite
@@ -149,7 +149,7 @@ export function ListScreen({
               onQuery={onQuery}
               progress={progressFromList(route)}
               // die Wertung der Familie als Wechsel-Chip neben dem Filter: Sie gilt für Ø und Abstand, nicht für die
-              // Ergebnisse (User, 13. Oktober 2026: „sprechender … der direkte bezug fehlt“)
+              // Ergebnisse
               actions={
                 <ScoringChip
                   scoring={familyScoring.shown}
@@ -177,7 +177,7 @@ export function ListScreen({
           evening={evening}
           pick={pick}
           onOpen={(id) =>
-            // vor dem Öffnen die Scheibe in die Adresse der Liste: Zurück im Browser markiert dann sie (Review)
+            // vor dem Öffnen die Scheibe in die Adresse der Liste: Zurück im Browser markiert dann sie
             window.history.replaceState(null, "", urlFromRoute({ ...route, pick: id }))
           }
         />

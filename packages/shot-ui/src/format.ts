@@ -1,4 +1,4 @@
-// Zahlen für die Bausteine wie in der Spielwiese: feste Nachkommastellen, Komma, echtes Minus, kein
+// Zahlen für die Bausteine: feste Nachkommastellen, Komma, echtes Minus, kein
 // Tausenderpunkt (wie auf dem Meyton-Ausdruck). Ohne `Intl`, damit Server und Browser gleich formatieren.
 
 const MINUS = "−"
@@ -6,7 +6,7 @@ const MINUS = "−"
 /**
  * Der Betrag auf `decimals` Stellen, die Hälfte kaufmännisch von der Null weg. Erst auf zwölf gültige Stellen, damit
  * das Rauschen der Gleitkommazahl nicht entscheidet: 362,6 Ringe auf 40 Schuss sind genau 9,065, gerechnet einmal
- * 9,06500…1, einmal 9,06499…5; `toFixed` allein zeigte dann 9,07 oder 9,06 (aufgefallen mit der Projektion, SP-1.8).
+ * 9,06500…1, einmal 9,06499…5; `toFixed` allein zeigte dann 9,07 oder 9,06.
  */
 function roundedText(abs: number, decimals: number): string {
   const factor = 10 ** decimals
@@ -56,7 +56,7 @@ export function unitText(unit: string): string {
   return unit === "Teiler" ? "" : unit
 }
 
-/** Dauer wie in der Spielwiese: „42 s“, ab einer Minute „3:05 min“, ab einer Stunde „1:02 h“ */
+/** Dauer: „42 s“, ab einer Minute „3:05 min“, ab einer Stunde „1:02 h“ */
 export function durationText(ms: number): string {
   const seconds = Math.round(ms / 1000)
   if (seconds < 60) return `${seconds} s`
@@ -69,7 +69,7 @@ export function durationText(ms: number): string {
 export const percentText = (rate: number) => `${formatValue(rate * 100, 0)} %`
 
 /**
- * Richtung ohne Zahl, für „rechts, 0,47 mm“ (eine Rundung statt zwei; Prüfung, Probe 11): acht Richtungen, schräg
+ * Richtung ohne Zahl, für „rechts, 0,47 mm“ (eine Rundung statt zwei): acht Richtungen, schräg
  * erst, wenn die kleinere Achse mindestens tan 22,5° der größeren ausmacht; unter 0,05 mm je Richtung „mittig“
  */
 export function directionName(point: { xUm: number; yUm: number }): string {

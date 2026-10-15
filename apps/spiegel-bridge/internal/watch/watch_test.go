@@ -181,7 +181,7 @@ func TestCorrectionWithoutLifesignWhileActive(t *testing.T) {
 	if got := ids(tick(t, w, m)); len(got) != 1 {
 		t.Fatalf("Korrektur innerhalb von 20 Minuten: %v", got)
 	}
-	// später ruht die Scheibe: Ohne Lebenszeichen liest die Brücke sie nicht mehr (den Abgleich bringt Teil c)
+	// später ruht die Scheibe: Ohne Lebenszeichen liest die Brücke sie nicht mehr (den Abgleich bringt das Nachholen beim Start)
 	c.advance(25 * time.Minute)
 	m.data[7] = cardData(7, 20, "90")
 	tick(t, w, m)

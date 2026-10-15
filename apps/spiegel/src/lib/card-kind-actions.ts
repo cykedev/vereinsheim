@@ -6,10 +6,9 @@ import { db } from "@/lib/db"
 import { chooseCardKind } from "@/lib/db/cards"
 import type { ActionResult } from "@/lib/types"
 
-// Art der Scheibe festlegen und automatisch speichern (Plan `plans/2026-10-12-spiegel-art.md`): Wettkampf oder Training,
-// nur eigene Scheiben, auch für Admins. Die Art ändert Filter, Rekorde und die Vorgabe der Wertung (Wettkampf in der
-// amtlichen); danach rechnen die Seiten neu, über `router.refresh()` in `useSavedChoice` (kein `revalidatePath`: nach ihm
-// scrollte Next zum Anker der Adresse, 15. Oktober 2026).
+// Art der Scheibe festlegen und automatisch speichern: Wettkampf oder Training, nur eigene Scheiben, auch für Admins.
+// Die Art ändert Filter, Rekorde und die Vorgabe der Wertung (Wettkampf in der amtlichen); danach rechnen die Seiten
+// neu, über `router.refresh()` in `useSavedChoice` (kein `revalidatePath`: nach ihm scrollt Next zum Anker der Adresse).
 
 const isKind = (value: unknown): value is CardKind =>
   value === "training" || value === "competition"

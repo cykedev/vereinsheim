@@ -19,7 +19,7 @@ import { TAB_CARDS, type AnalysisTab, type CardSpec } from "./tabs"
 
 export type { AnalysisTab } from "./tabs"
 
-/** die Reiter wie in der Spielwiese */
+/** die Reiter in ihrer Reihenfolge */
 export const ANALYSIS_TABS: readonly { value: AnalysisTab; label: string }[] = [
   { value: "overview", label: "Überblick" },
   { value: "result", label: "Ergebnis" },
@@ -45,8 +45,8 @@ const counted = (n: number, one: string, many: string) => `${n} ${n === 1 ? one 
 
 /**
  * „Datenlage: 40 Wertungsschüsse · alle mit Lage, Zeit und Wert · Wertung in Zehnteln“ (Q1). In Zehnteln zählt ein
- * Schuss ohne Zehntel mit, auch wenn er einen Ring hat; ein Training nur aus Probe heißt so (Prüfung, Probe 7, 8 und
- * 10). Eine Probe neben Wertung gibt es nicht mehr (U4: wie am Ausdruck).
+ * Schuss ohne Zehntel mit, auch wenn er einen Ring hat; ein Training nur aus Probe heißt so. Neben Wertung zählt sie
+ * keine Probe, wie am Ausdruck.
  */
 function coverageText(
   shots: readonly MetricShot[],
@@ -84,8 +84,7 @@ function coverageText(
  * Breite Karten allein, Folgen schmaler Karten im Raster: zwei Spalten in Zeilen, sobald der Bereich der
  * Karten 820 px breit ist (Container, nicht Fenster: am Desktop steht die Analyse rechts neben der Scheibe),
  * beide Karten einer Zeile gleich hoch, eine einzelne Karte in der letzten Zeile über die volle Breite. Jeder
- * Abstand ist 16 px; Spalten wie in der Spielwiese ließen unter der kürzeren Spalte bis zu 360 px frei (User,
- * 8. Oktober 2026).
+ * Abstand ist 16 px; getrennte Spalten ließen unter der kürzeren bis zu 360 px frei.
  */
 function layout(cards: readonly CardSpec[]): ReactNode[] {
   const blocks: ReactNode[] = []
@@ -127,23 +126,23 @@ export interface AnalysisPanelProps {
   onTab: (tab: AnalysisTab) => void
   /** Schalter „Erklärungen“: der Kurzsatz an jeder Karte und Kachel */
   explain: boolean
-  /** rechts im Kopf, etwa der Schalter „Erklärungen“ (seit U1 hier, der Abschnitt „Zahlen“ entfiel) */
+  /** rechts im Kopf, etwa der Schalter „Erklärungen“ */
   action?: ReactNode
   /** eine Karte schaltet eine Ebene der Scheibe (die Vertrauensellipse) */
   onToggleLayer: (layer: Layer) => void
-  /** „?“ an Karten und Datenlage: öffnet die Erklärung als Blatt (`HelpSheet`), Plan Schritt 4 D3 */
+  /** „?“ an Karten und Datenlage: öffnet die Erklärung als Blatt (`HelpSheet`) */
   onHelp?: (id: string) => void
   /**
    * „Auf der Scheibe“ im Lineal eines Diagramms: den Schuss (Index in `shots`) auf der Scheibe wählen; die
-   * Seite springt dann zur Scheibe (Plan L1, D4). Ohne den Rückruf gibt es den Knopf nicht.
+   * Seite springt dann zur Scheibe. Ohne den Rückruf gibt es den Knopf nicht.
    */
   onChoose?: (index: number, series: SeriesKey | null) => void
   className?: string
 }
 
 /**
- * Die Analyse einer Scheibe (Spielwiese, SP-1.10) in fünf Reitern. Sie rechnet über die Scheibe wie am Ausdruck, bei
- * nur Probe über die Probe (D1, U4), nicht über die Auswahl an der Scheibe. Unter jedem Reiter die Datenlage, das
+ * Die Analyse einer Scheibe in fünf Reitern. Sie rechnet über die Scheibe wie am Ausdruck, bei nur Probe über die
+ * Probe, nicht über die Auswahl an der Scheibe. Unter jedem Reiter die Datenlage, das
  * Glossar und die typischen Fehlschlüsse aus `shot-help`.
  */
 export function AnalysisPanel({

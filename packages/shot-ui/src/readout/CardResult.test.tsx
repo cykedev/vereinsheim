@@ -30,14 +30,14 @@ const result = (scoring: "decimal" | "rings") =>
   computeMetric(inScoring(metricByKey("result.decimal")!, scoring), CARD)!
 
 describe("Ergebnis der Scheibe", () => {
-  it("groß aus dem Fachkern, darunter die Schusszahl wie am Ausdruck (U4), dazu der Umschalter", () => {
+  it("groß aus dem Fachkern, darunter die Schusszahl wie am Ausdruck, dazu der Umschalter", () => {
     const html = render()
     expect(text(html)).toContain(`${formatValue(result("decimal"), 1)} Ringe`)
     expect(html).toMatch(/<p class="[^"]*">40 Schuss<\/p>/)
     expect(text(html)).toContain("UMSCHALTER")
   })
 
-  it("die Kreise in der Zeile der Zahl, rechts; ein Hinweis unten (Plan `plans/2026-10-13-spiegel-symbole.md`)", () => {
+  it("die Kreise in der Zeile der Zahl, rechts; ein Hinweis unten", () => {
     const html = render({ notice: createElement("p", { role: "alert" }, "HINWEIS") })
     expect(html).toMatch(
       /<div class="flex[^"]*justify-between[^"]*"><p data-result[\s\S]*?<\/p><div data-result-actions[^>]*><span>UMSCHALTER<\/span><\/div><\/div>/

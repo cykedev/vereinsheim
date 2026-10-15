@@ -26,7 +26,7 @@ const out = (text = "") => process.stdout.write(`${text}\n`)
 
 /**
  * nur gegen die lokale Dev-Datenbank: tsx setzt kein NODE_ENV, und eine fremde DATABASE_URL bekäme sonst eigene Scheiben
- * und ein Demo-Konto mit einem Passwort aus dem Repo (Review); `--force` für eine andere lokale Datenbank
+ * und ein Demo-Konto mit einem Passwort aus dem Repo; `--force` für eine andere lokale Datenbank
  */
 function assertDevDatabase(url: string, force: boolean) {
   const { hostname, pathname } = new URL(url)

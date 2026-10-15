@@ -1,7 +1,7 @@
 -- Thema: Grenzen des Vertrags (packages/ingest-contract/src/limits.ts)
 -- Frage: Wie viele Spalten je Tabelle (Grenze 200), wie viele Treffer und Serien je Scheibe (2000, 200)?
 -- Frage: Wie lang werden Textwerte höchstens (Grenze 4096 UTF-16-Einheiten)?
--- Belegt: Vertrag v1, Review SP-1.0a (S3, N1)
+-- Belegt: Vertrag v1
 SELECT TABLE_NAME, COUNT(*) AS spalten, MAX(CHAR_LENGTH(COLUMN_NAME)) AS laengster_name, MAX(CHAR_LENGTH(COLUMN_TYPE)) AS laengster_typ,
        MAX(CHARACTER_MAXIMUM_LENGTH) AS groesste_textspalte
 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() GROUP BY TABLE_NAME;

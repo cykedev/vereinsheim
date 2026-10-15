@@ -22,8 +22,8 @@ const render = (props: Partial<Parameters<typeof CardHeader>[0]> = {}) =>
     })
   )
 
-describe("Kopf der Scheibe (D2)", () => {
-  it("Titel, Metazeile, auf dem Telefon das Ergebnis, dann die Beobachtungen (U1, D4)", () => {
+describe("Kopf der Scheibe", () => {
+  it("Titel, Metazeile, auf dem Telefon das Ergebnis, dann die Beobachtungen", () => {
     const html = render()
     expect(html).toMatch(/<h1[^>]*>Luftpistole 10 m<\/h1>/)
     expect(html).toContain("40 Schuss mit Probe · 2. Oktober")
@@ -43,7 +43,7 @@ describe("Kopf der Scheibe (D2)", () => {
     expect(html).toContain("Schuss 27 fällt als Ausreißer aus der Gruppe.")
   })
 
-  it("auf dem Telefon nur die erste (ein Satz auf dem ersten Bildschirm, Review U1), ab 768 px alle", () => {
+  it("auf dem Telefon nur die erste (ein Satz auf dem ersten Bildschirm), ab 768 px alle", () => {
     const items = [...render().matchAll(/<li data-observation="[a-z]+" class="([^"]*)"/g)].map(
       (m) => m[1]
     )

@@ -14,8 +14,8 @@ export function hasBestOfResult(row: Pick<BestOfStandingRow, "played">): boolean
  *   1. wins desc (Match-Siege)
  *   2. duelDiff desc (Satzdifferenz)
  *   3. duelsWon desc (mehr gewonnene Sätze / Satzverhältnis)
- *   4. direct comparison (head-to-head) within the points-tied group — replaces the old "best value"
- *      (Sportleiter-Entscheid 2026-06-24); uses the MATCH winner, so it is mode-independent
+ *   4. direct comparison (head-to-head) within the points-tied group; uses the MATCH winner, so it is
+ *      mode-independent
  *   5. lastName, then firstName localeCompare "de" (deterministic fallback)
  *
  * Also sets `row.rank`: rows equal on criteria 1–4 (only the name separates them) share the place

@@ -22,17 +22,17 @@ export interface PeriodInsightsProps {
   className?: string
 }
 
-/** so viele Rekorde aus dem Zeitraum stehen oben (U2, D5) */
+/** so viele Rekorde aus dem Zeitraum stehen oben */
 const NEW_RECORDS = 5
 
 /**
- * Analyse über den Zeitraum (Plan L3, D12; U2): die Rekorde (R1–R8, in der Wertung und Art der Seite, über alle
- * Scheiben der Familie). Oben höchstens fünf, deren Scheibe im Zeitraum liegt, darunter zugeklappt alle; ein Rekord
- * zeigt seine Scheibe, wenn sie im Zeitraum liegt. „Gegen deinen Schnitt“ entfiel mit U2 (D2): Den Abstand zum Schnitt
- * der fünf davor sagt die Ablesung.
+ * Analyse über den Zeitraum: die Rekorde (R1–R8, in der Wertung und Art der Seite, über alle Scheiben der Familie).
+ * Oben höchstens fünf, deren Scheibe im Zeitraum liegt, darunter zugeklappt alle; ein Rekord zeigt seine Scheibe, wenn
+ * sie im Zeitraum liegt. Eine Karte „Gegen deinen Schnitt“ gibt es nicht: Den Abstand zum Schnitt der fünf davor sagt
+ * die Ablesung.
  *
  * Die ganze Zeile ist der Knopf, mit Linien dazwischen wie in der Liste der Scheiben: Ein „zeigen“ allein am rechten
- * Rand ließ nicht erkennen, zu welchem Rekord es gehört (User, 12. Oktober 2026). Die Rekorde der gewählten Scheibe sind
+ * Rand ließ nicht erkennen, zu welchem Rekord es gehört. Die Rekorde der gewählten Scheibe sind
  * markiert.
  */
 export function PeriodInsights({

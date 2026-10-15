@@ -73,7 +73,7 @@ describe("Reiter Präzision", () => {
     expect([...card.matchAll(/data-group-point=/g)]).toHaveLength(BASE.length)
     expect(card).toContain('data-overlay="mpi"')
     const text = cardText(html, "form-der-gruppe")
-    // die Form rechnet ohne Ausreißer, σ und Streuung x · y mit ihnen (Prüfung, Präzision 2)
+    // die Form rechnet ohne Ausreißer, σ und Streuung x · y mit ihnen
     expect(shape.without.length).toBeGreaterThan(0)
     expect(text).toContain(
       `Halbachsen (ohne Ausreißer) ${mm2(shape.majorUm)} · ${mm2(shape.minorUm)} mm`
@@ -82,7 +82,7 @@ describe("Reiter Präzision", () => {
     expect(text).toContain(shape.elongated ? "Gestreckt? ja, mit 95 %" : "nicht nachweisbar")
     expect(shape.showAngle).toBe(true)
     expect(text).toContain(`Ausrichtung ${axisText(shape.angleRad)}`)
-    // die Ellipse ist 2a · 2b, die Zeile zeigt a · b (Prüfung, Präzision 1)
+    // die Ellipse ist 2a · 2b, die Zeile zeigt a · b
     expect(text).toContain(
       "Ellipse und Mitte ohne die Ausreißer (rote Punkte). Die Ellipse reicht doppelt so weit wie die Halbachsen (2a, 2b); bei einer runden Gruppe liegen etwa 86 % der Treffer darin."
     )
@@ -141,7 +141,7 @@ describe("Reiter Präzision", () => {
     const few = renderTab("precision", { shots: BASE.slice(0, 2) })
     expect(cardText(few, "praezision-sigma")).toContain("ab 3 Schuss")
     expect(cardText(few, "form-der-gruppe")).toContain("ab 3 Schuss")
-    // derselbe Grund wie an der Kachel im Überblick (Review U4, `reasons.ts`)
+    // derselbe Grund wie an der Kachel im Überblick (`reasons.ts`)
     expect(cardText(few, "ausreisser")).toContain("ab 5 Schuss mit Lage")
     const calm = [...BASE.keys()]
       .map((k) => BASE.slice(k, k + 5))
@@ -179,7 +179,7 @@ describe("Reiter Präzision", () => {
     const page = renderTab("precision", { shots })
     expect(cardText(page, "form-der-gruppe")).toContain("bei 8 Schuss (ohne Ausreißer 9, 10)")
     expect(cardText(page, "form-der-gruppe")).toContain("nicht nachweisbar")
-    // nicht nachweisbar heißt nicht rund (Prüfung, Präzision 10)
+    // nicht nachweisbar heißt nicht rund
     expect(cardText(page, "form-der-gruppe")).toContain(
       "Ausrichtung kein Winkel: Streckung nicht nachweisbar"
     )

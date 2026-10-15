@@ -7,7 +7,7 @@ import { parseRememberedChoice, withRememberedChoice } from "./period-memory-coo
 const NAMED = [{ id: "neue-munition" }]
 const params = (text: string) => new URLSearchParams(text)
 
-describe("gemerkter Zeitraum im Fortschritt (Rückmeldung 7)", () => {
+describe("gemerkter Zeitraum im Fortschritt", () => {
   it("liest den Wert wie `range` in der Adresse", () => {
     expect(parseRememberedChoice("12m", NAMED)).toEqual({ type: "rolling", days: 365 })
     expect(parseRememberedChoice("all", NAMED)).toEqual({ type: "all" })

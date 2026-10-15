@@ -75,7 +75,7 @@ describe("Übersicht des Admins", () => {
     expect(overviewModel({ ...base, bridge: null }).tasks.map((t) => t.id)).toEqual(["bridge"])
   })
 
-  it("was die Brücke meldet, ist Information, keine Aufgabe (D0)", () => {
+  it("was die Brücke meldet, ist Information, keine Aufgabe", () => {
     const model = overviewModel({
       ...base,
       bridge: {
@@ -98,19 +98,19 @@ describe("Übersicht des Admins", () => {
     ).toBe("läuft")
   })
 
-  it("eine unbekannte Ablage ist ein Hinweis an der Anlage, keine Aufgabe (D0)", () => {
+  it("eine unbekannte Ablage ist ein Hinweis an der Anlage, keine Aufgabe", () => {
     const model = overviewModel({ ...base, site: { name: "Schützenhaus", foreignSource: true } })
     expect(model.tasks).toEqual([])
     expect(model.stations[0].tone).toBe("wait")
     expect(model.stations[0].facts[1]).toContain("nimmt sie nicht an")
   })
 
-  it("eine Brücke ohne jeden Kontakt ist nicht „aus (nach dem Training normal)“ (Review)", () => {
+  it("eine Brücke ohne jeden Kontakt ist nicht „aus (nach dem Training normal)“", () => {
     const model = overviewModel({ ...base, bridge: { ...base.bridge!, lastHeartbeatAt: null } })
     expect(model.stations[1]).toMatchObject({ status: "noch kein Kontakt", tone: "wait" })
   })
 
-  it("Konten gezählt, deaktivierte nur, wenn es welche gibt; dazu die Nutzung (P2e)", () => {
+  it("Konten gezählt, deaktivierte nur, wenn es welche gibt; dazu die Nutzung", () => {
     expect(overviewModel(base).stations[3].facts).toEqual([
       "12 Konten · 9 mit Sportpass · 1 deaktiviert",
       "124 Scheiben, 9 davon in den letzten 30 Tagen. 4 Konten haben in den letzten 30 Tagen geschossen.",
@@ -128,14 +128,14 @@ describe("Übersicht des Admins", () => {
     ).toBe(
       "1 Scheibe, 1 davon in den letzten 30 Tagen. 1 Konto hat in den letzten 30 Tagen geschossen."
     )
-    // ohne frische Scheiben kein „0 davon … 0 Konten haben“ (Review)
+    // ohne frische Scheiben kein „0 davon … 0 Konten haben“
     expect(
       overviewModel({ ...base, usage: { cards: 12, recentCards: 0, recentAccounts: 0 } })
         .stations[3].facts[1]
     ).toBe("12 Scheiben, keine davon in den letzten 30 Tagen.")
   })
 
-  it("gemeldete „nicht meine“ als Zahl an den Zustimmungen, ohne Namen und ohne Aufgabe (P2b, D9)", () => {
+  it("gemeldete „nicht meine“ als Zahl an den Zustimmungen, ohne Namen und ohne Aufgabe", () => {
     const facts = (notMine: number) =>
       overviewModel({ ...base, notMine }).stations.find((s) => s.id === "consents")!.facts
     expect(facts(0)).toHaveLength(1)
@@ -148,7 +148,7 @@ describe("Übersicht des Admins", () => {
     expect(overviewModel({ ...base, notMine: 3 }).tasks).toEqual([])
   })
 
-  it("ältere Scheiben, die die Brücke noch nachlädt, als Zustand an den Zustimmungen (P2d, D10)", () => {
+  it("ältere Scheiben, die die Brücke noch nachlädt, als Zustand an den Zustimmungen", () => {
     const facts = (historyPending: number) =>
       overviewModel({ ...base, historyPending }).stations.find((s) => s.id === "consents")!.facts
     expect(facts(0)).toHaveLength(1)
@@ -161,7 +161,7 @@ describe("Übersicht des Admins", () => {
     expect(overviewModel({ ...base, historyPending: 2 }).tasks).toEqual([])
   })
 
-  it("„Für N Schützen“ zählt Konten, nicht Nummern; nur aktive, noch nicht geholte (Review P2f)", () => {
+  it("„Für N Schützen“ zählt Konten, nicht Nummern; nur aktive, noch nicht geholte", () => {
     const at = new Date(Date.UTC(2026, 9, 1))
     const row = (
       userId: string,
@@ -186,7 +186,7 @@ describe("Übersicht des Admins", () => {
     ).toBe(2)
   })
 
-  it("Schreibregeln: kein Text der Übersicht mit Semikolon oder altem Wort (P2f)", () => {
+  it("Schreibregeln: kein Text der Übersicht mit Semikolon oder altem Wort", () => {
     const model = overviewModel({
       ...base,
       site: { name: "Schützenhaus", foreignSource: true },
@@ -195,7 +195,7 @@ describe("Übersicht des Admins", () => {
       notMine: 2,
       historyPending: 1,
     })
-    // dazu die Aufgaben „Anlage einrichten“ und „Brücke verbinden“ (Review)
+    // dazu die Aufgaben „Anlage einrichten“ und „Brücke verbinden“
     const setup = overviewModel({ ...base, site: null, bridge: null })
     const texts = [
       ...model.tasks.flatMap((t) => [t.title, t.detail, t.action]),

@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 import { PAGE_COLUMNS } from "./columns"
 
 /**
- * Rahmen von Start (Plan N5, Review: „die Breite passt nicht zu den restlichen Screens“): dasselbe Raster wie die Seite
+ * Rahmen von Start: dasselbe Raster wie die Seite
  * eines Zeitraums (`PAGE_COLUMNS`). Ab 768 px links der letzte Abend (je Familie ein Block), rechts „Offen“ und darunter
  * die Form; auf dem Telefon untereinander in dieser Folge: Offen, Abend, Form. Die zweite Zeile nimmt den Rest der
  * Höhe, damit die Form direkt unter „Offen“ steht.

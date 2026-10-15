@@ -35,7 +35,7 @@ const render = (count: number, chosen: string | null = null, showAll?: ListRoute
   )
 }
 
-describe("Liste der Scheiben (D10)", () => {
+describe("Liste der Scheiben", () => {
   it("neueste oben, mit Art, Wert, Abstand zum Schnitt davor und Schusszahl", () => {
     const html = render(4)
     expect([...html.matchAll(/data-card-row="(k\d)"/g)].map((m) => m[1])).toEqual([
@@ -49,7 +49,7 @@ describe("Liste der Scheiben (D10)", () => {
     // die erste Scheibe hat keinen Schnitt davor
     expect(html).toMatch(/data-card-row="k0"[\s\S]*?9,00<\/td><td[^>]*>–</)
     expect(html).toMatch(/data-card-row="k2"[\s\S]*?data-kind="competition"/)
-    // Art ohne Kürzel (U3, D7): der Wettkampf als Pokal, ein Training ohne Zeichen
+    // Art ohne Kürzel: der Wettkampf als Pokal, ein Training ohne Zeichen
     const rowOf = (id: string) =>
       html.slice(html.indexOf(`data-card-row="${id}"`)).split("</tr>")[0]
     expect(rowOf("k2")).toContain("lucide-trophy")
@@ -71,7 +71,7 @@ describe("Liste der Scheiben (D10)", () => {
     expect(render(10)).not.toContain("zeigen</button>")
   })
 
-  it("„Alle in Scheiben zeigen“ nur mit Ziel, als Link; sonst bleibt die Liste gleich (Plan N2, D8; N3)", () => {
+  it("„Alle in Scheiben zeigen“ nur mit Ziel, als Link; sonst bleibt die Liste gleich", () => {
     expect(render(4)).not.toContain("data-show-all")
     const html = render(4, null, {
       page: "cards",

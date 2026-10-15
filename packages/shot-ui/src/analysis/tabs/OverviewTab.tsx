@@ -31,7 +31,7 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
                 title={short}
                 className="grid min-w-0 content-start gap-1 bg-card px-4 py-3.5"
               >
-                {/* „?“ an jeder Kachel: seit U1 ist der Überblick die Zahlen-Ansicht der Seite (Review) */}
+                {/* „?“ an jeder Kachel: der Überblick ist die Zahlen-Ansicht der Seite */}
                 <div className="flex items-start justify-between gap-2">
                   <span className="font-mono text-xs leading-snug font-semibold tracking-[0.08em] text-muted-foreground uppercase">
                     <CaseSafe text={tile.label} />
@@ -103,7 +103,7 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
       key: "einstieg",
       wide: true,
       element: (
-        // anfangs zu wie Glossar und Fehlschlüsse (User, 9. Oktober 2026)
+        // anfangs zu wie Glossar und Fehlschlüsse
         <Disclosure data-guide-card="true" summary="So liest du die Analyse">
           <ul className="mt-3 grid gap-2 text-[13.5px] leading-relaxed text-foreground-2 [&_b]:font-semibold [&_b]:text-foreground">
             {READING_GUIDE.map((item) => (

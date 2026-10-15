@@ -3,8 +3,8 @@ import { formatDateOnly } from "@vereinsheim/lib/format"
 import type { UserListItem } from "@/lib/users/queries"
 
 /**
- * Zahlen eines Kontos in der Liste (P2e, D1, D3): wie viele Scheiben, der Tag der letzten, Wartende in „Offen“, und ein
- * Hinweis, wenn eine Zustimmung lange ohne jede Scheibe ist. Keine Ergebnisse, keine Disziplinen.
+ * Zahlen eines Kontos in der Liste: wie viele Scheiben, der Tag der letzten, Wartende in „Offen“, und ein Hinweis,
+ * wenn eine Zustimmung lange ohne jede Scheibe ist. Keine Ergebnisse, keine Disziplinen.
  */
 export function UserRowFacts({
   user,

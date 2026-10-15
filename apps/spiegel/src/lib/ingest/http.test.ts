@@ -82,7 +82,7 @@ async function pair(limits = createLimits()) {
   return pairResponseV1.parse(await response.json())
 }
 
-describe("readJson (D2)", () => {
+describe("readJson", () => {
   it("nur JSON, Grenze schon an Content-Length und beim Lesen, kaputtes JSON ist ungültig", async () => {
     const wrongType = await readJson(new Request(BASE, { method: "POST", body: "{}" }), 100)
     expect(!wrongType.ok && wrongType.response.status).toBe(415)
@@ -120,7 +120,7 @@ describe("readJson (D2)", () => {
   })
 })
 
-describe("Grenzen (D3, D4)", () => {
+describe("Grenzen", () => {
   it("Token-Bucket: so viele wie Platz, dann eine Wartezeit; füllt sich mit der Zeit wieder auf", () => {
     const limiter = new RateLimiter(2, 10_000)
     expect(limiter.take("a", 0)).toBeNull()
@@ -251,7 +251,7 @@ describe("der ganze Weg einer Brücke", () => {
     })
     expect(card?.ownerId).toBe(site.ownerId)
 
-    // ein erledigter Auftrag zum Nachladen geht durch die Grenzen (P2d)
+    // ein erledigter Auftrag zum Nachladen geht durch die Grenzen
     const consent = await db.sportpassConsent.findFirstOrThrow({ where: { siteId: site.siteId } })
     const consentId = consent.id
     const heartbeat = await handleHeartbeat(

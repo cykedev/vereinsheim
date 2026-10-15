@@ -9,9 +9,9 @@ const LABELS: readonly [number, string][] = [
 ]
 
 /**
- * Richtungsuhr (Spielwiese `clockChart`): ein 30°-Keil je besetzter Stunde, die Fläche wächst mit der
+ * Richtungsuhr: ein 30°-Keil je besetzter Stunde, die Fläche wächst mit der
  * Zahl (Radius √(n/max)), Ringe für 25, 50 und 100 %, beschriftet bei 12, 3, 6 und 9. Die Zahl je Stunde
- * steht in „Werte als Tabelle“ (Plan L1), nicht nur im `<title>`.
+ * steht in „Werte als Tabelle“, nicht nur im `<title>`.
  */
 export function ClockChart({ width, counts }: { width: number; counts: readonly number[] }) {
   const size = Math.min(width, 250)

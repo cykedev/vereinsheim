@@ -29,7 +29,7 @@ import {
 const query = (pairs: readonly (readonly [string, string])[]) =>
   pairs.map(([k, v]) => `${k}=${v}`).join("&")
 
-describe("Zeitraum und Vergleich als Wert (D4)", () => {
+describe("Zeitraum und Vergleich als Wert", () => {
   it("rollend, alles, frei und benannt in beide Richtungen", () => {
     const cases: [PeriodChoice, string][] = [
       [{ type: "rolling", days: 30 }, "30d"],
@@ -83,7 +83,7 @@ describe("Zeitraum und Vergleich als Wert (D4)", () => {
   })
 })
 
-describe("Liste und Fortschritt als Query (D4)", () => {
+describe("Liste und Fortschritt als Query", () => {
   it("die Vorgaben ergeben keine Schlüssel, und ohne Schlüssel gelten die Vorgaben", () => {
     expect(listQueryToParams(DEFAULT_LIST)).toEqual([])
     expect(progressQueryToParams(DEFAULT_PROGRESS)).toEqual([])
@@ -141,7 +141,7 @@ describe("Liste und Fortschritt als Query (D4)", () => {
     expect(listQueryFromParams(new URLSearchParams("family=LG 10m&flag=")).family).toBeNull()
   })
 
-  it("die Liste aus Meyton als Kennung nach dem Merkmal; anderes gilt als keine (Rückmeldung 2)", () => {
+  it("die Liste aus Meyton als Kennung nach dem Merkmal; anderes gilt als keine", () => {
     const text = "family=lp-10m&flag=nur-pdf&list=12"
     expect(listQueryFromParams(new URLSearchParams(text))).toEqual({
       ...DEFAULT_LIST,
@@ -175,7 +175,7 @@ describe("die Liste mit einer gewählten Scheibe", () => {
   })
 })
 
-describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
+describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker", () => {
   it("aus dem Fortschritt mit Serie, Schuss und Reiter, und zurückgeschrieben dieselbe Zeichenkette", () => {
     const card = cardFromParts(
       "c42",
@@ -253,11 +253,11 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
 
   it("Auswahl: ganze Scheibe oder eine Serie; Schuss als Nummer wie shotLabels", () => {
     const read = (search: string) => cardFromParts("c1", new URLSearchParams(search), "")
-    // die ganze Scheibe ist die Vorgabe und fällt weg: eine Schreibweise (Review U4)
+    // die ganze Scheibe ist die Vorgabe und fällt weg: eine Schreibweise
     expect(read("series=all").selection).toBeNull()
     expect(read("series=3&shot=23").selection).toBe(3)
     expect(read("series=3&shot=23").shot).toBe("23")
-    // „ohne Probe“ und die Probe gibt es seit U4 nicht mehr: alte Adressen gelten als Vorgabe, ohne Fehler
+    // „ohne Probe“ und die Probe sind keine Auswahl: alte Adressen gelten als Vorgabe, ohne Fehler
     for (const bad of [
       "series=0",
       "series=-1",
@@ -273,7 +273,7 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
 
   it("ein Anker ohne Bedeutung zählt nicht; ein Abschnitt ohne Reiter bleibt ein Abschnitt", () => {
     expect(cardFromParts("c1", new URLSearchParams(), "#irgendwo").anchor).toBeNull()
-    // „Zahlen“ entfiel auf der Scheibe (U1): ein alter Link mit #numbers beginnt oben, ohne Fehler
+    // die Scheibe hat keinen Abschnitt „Zahlen“: ein alter Link mit #numbers beginnt oben, ohne Fehler
     expect(cardFromParts("c1", new URLSearchParams(), "#numbers").anchor).toBeNull()
     const card = cardFromParts("c1", new URLSearchParams(), "#shots")
     expect(card.anchor).toEqual({ section: "shots" })
@@ -292,7 +292,7 @@ function parts(url: string): [string, string, string] {
 }
 const route = (url: string) => routeFromUrl(...parts(url))
 
-describe("die ganze Adresse (D3)", () => {
+describe("die ganze Adresse", () => {
   it("zwölf Adressen mit Handwerten, je Seite mindestens eine, in beide Richtungen", () => {
     const table: [string, Route][] = [
       ["/", { page: "start" }],
@@ -472,7 +472,7 @@ describe("die ganze Adresse (D3)", () => {
   })
 })
 
-describe("Grammatik der Ids und Grenzfälle (Review)", () => {
+describe("Grammatik der Ids und Grenzfälle", () => {
   it("Ids von Scheiben und benannten Zeiträumen sind erzeugte Ids, nie Namen; feste Wörter sind keine", () => {
     // in der App: Ids aus der Datenbank (cuid, UUID); ein Name wie „All“ oder „12m“ wird nie zur Id
     expect(isCardId("clx8k2abc0001")).toBe(true)
@@ -483,7 +483,7 @@ describe("Grammatik der Ids und Grenzfälle (Review)", () => {
       expect(isNamedPeriodId(reserved), reserved).toBe(false)
     }
     expect(isNamedPeriodId("Neue Munition")).toBe(false)
-    // so entschieden (D4): die festen Wörter gehen vor
+    // die festen Wörter gehen vor
     expect(decodeCompare("previous")).toEqual({ type: "previous" })
   })
 

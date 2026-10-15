@@ -23,8 +23,8 @@ import type { FamilyOption } from "@/lib/pages"
 import { setFamilyScoring } from "@/lib/scoring-actions"
 
 /**
- * Ein Block mit der Wertung seiner Familie als Kreis neben der Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`):
- * gespeichert wie in Liste und Fortschritt, danach rechnet Start neu
+ * Ein Block mit der Wertung seiner Familie als Kreis neben der Zahl: gespeichert wie in Liste und Fortschritt, danach
+ * rechnet Start neu
  */
 function ScoredEveningBlock(props: Omit<EveningBlockProps, "actions" | "notice">) {
   const { block } = props
@@ -57,7 +57,7 @@ function ScoredEveningBlock(props: Omit<EveningBlockProps, "actions" | "notice">
 }
 
 /**
- * Start (N5, N7): „Offen“ (wartende erste Scheiben, SP-1.7 a2), je Familie des letzten Abends der Abend im Formband,
+ * Start: „Offen“ (wartende erste Scheiben), je Familie des letzten Abends der Abend im Formband,
  * die Form. Das Modell hat die Seite auf dem Server gerechnet (`startModel` aus den Projektionen).
  */
 export function StartScreen({

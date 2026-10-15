@@ -1,11 +1,11 @@
-# Lokale Entwicklung im Monorepo: EIN geteilter Postgres mit zwei Dev-DBs
-# (ringwerk + treffsicher, gleiche Namen wie Prod), isoliert via db-init
+# Lokale Entwicklung im Monorepo: EIN geteilter Postgres mit drei Dev-DBs
+# (ringwerk, treffsicher, spiegel, gleiche Namen wie Prod), isoliert via db-init
 # (ADR-002-Muster). Die Apps selbst
 # laufen auf dem HOST via `pnpm dev` (nicht in Docker) — Hot-Reload + ein
 # Befehlssatz von der Wurzel.
 #
 #   docker compose -f docker-compose.dev.yml up -d   # Postgres starten
-#   pnpm dev                                          # beide Apps (Host)
+#   pnpm dev                                          # alle Apps (Host)
 #
 # Bewusst getrennt vom Prod-Stack (compose.yml): eigener project-name und
 # eigene Volumes → kein Eingriff in den Deploy-Vertrag.
@@ -20,7 +20,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      # Host-Apps verbinden sich via localhost:5432 (zwei DBs, ein Container).
+      # Host-Apps verbinden sich via localhost:5432 (drei DBs, ein Container).
       - "5432:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data

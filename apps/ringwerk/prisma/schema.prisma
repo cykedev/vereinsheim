@@ -180,9 +180,9 @@ model Discipline {
 
 // DESIGN: Wettbewerbe sind vereinsweit sichtbar — kein userId-Filter nötig.
 // createdByUserId dient dem Audit, nicht der Isolation.
-// type=LEAGUE: Liga mit Spielplan, Tabelle, Playoffs (wie bisher).
-// type=EVENT: Einmaliges Event (Kranzlschiessen) — Phase 4.
-// type=SEASON: Langzeit-Wettbewerb (Jahrespreisschiessen) — Phase 5.
+// type=LEAGUE: Liga mit Spielplan, Tabelle, Playoffs.
+// type=EVENT: Einmaliges Event (Kranzlschiessen).
+// type=SEASON: Langzeit-Wettbewerb (Jahrespreisschiessen).
 model Competition {
   id   String            @id @default(cuid())
   name String
@@ -192,7 +192,7 @@ model Competition {
   // disciplineId: null = gemischte Disziplinen (Teilnehmer wählen selbst)
   disciplineId String?
   discipline   Discipline?  @relation(fields: [disciplineId], references: [id])
-  // Wertungsmodus (wird in Phase 3/6 genutzt)
+  // Wertungsmodus
   scoringMode    ScoringMode @default(RINGTEILER)
   shotsPerSeries Int         @default(10)
 

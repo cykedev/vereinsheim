@@ -1,8 +1,7 @@
-// Skriptprüfung der App (Plan `plans/2026-10-13-aufraeumen-labor.md`, D2, D3): Bedienung, die kein Test im Node sieht
-// (echte Klicks und Tasten, Fokus, Blätter, Kleben und Springen, Geometrie bei mehreren Fenstergrößen, Anker, Rückwege),
-// gegen die laufende App mit dem Demo-Konto. Ersetzt die Skriptprüfung des Labors. Nicht im Gate: braucht Chrome, einen
-// laufenden Server und Daten. Ohne feste Zahlen, denn die App zeigt echte Scheiben; geprüft werden Struktur, Lage und
-// Gleichheiten.
+// Skriptprüfung der App: Bedienung, die kein Test im Node sieht (echte Klicks und Tasten, Fokus, Blätter, Kleben und
+// Springen, Geometrie bei mehreren Fenstergrößen, Anker, Rückwege), gegen die laufende App mit dem Demo-Konto. Nicht im
+// Gate: braucht Chrome, einen laufenden Server und Daten. Ohne feste Zahlen, denn die App zeigt echte Scheiben; geprüft
+// werden Struktur, Lage und Gleichheiten.
 //
 //   pnpm --filter spiegel seed:own --demo      einmal: die Scheiben dem Demo-Konto
 //   pnpm --filter spiegel pruefen              gegen http://localhost:3002 (BASE_URL), `--alle` zeigt jede Prüfung
@@ -89,9 +88,9 @@ const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol
 /** Themen der Hilfe über viele Scheiben (Seite eines Zeitraums) */
 const PERIOD_TOPICS = HELP_TOPICS.filter((t) => t.theme === "period").map((t) => t.id)
 /**
- * Fachbegriffe, die auf den ersten beiden Ebenen nicht stehen dürfen (U3, `plans/2026-10-09-spiegel-sprache.md`): σ, R50,
- * T², „95 %“ als Sicherheit, Median, P10/P90, „mittlere Hälfte“, bedeutsam, Hotelling, echt, unklar, Kalenderwochen.
- * Erst im Blatt „?“ und in den Karten der Reiter. Aus der Skriptprüfung des Labors übernommen.
+ * Fachbegriffe, die auf den ersten beiden Ebenen nicht stehen dürfen: σ, R50, T², „95 %“ als Sicherheit, Median,
+ * P10/P90, „mittlere Hälfte“, bedeutsam, Hotelling, echt, unklar, Kalenderwochen. Erst im Blatt „?“ und in den Karten
+ * der Reiter.
  */
 const JARGON =
   "/σ|R50|T²|mit 95 ?%|95 ?%:|Median|P10|P90|mittlere Hälfte|bedeutsam|Hotelling|\\b[Ee]cht(e[nmrs]?)?\\b|\\b[Uu]nklar\\b|KW \\d|[Rr]angliste/"
@@ -105,8 +104,8 @@ const jargonIn = (selectors: string) =>
 const TAB_ANCHORS = ["#overview", "#result", "#precision", "#position", "#time"]
 
 /**
- * Reiterwechsel (User, 15. Oktober 2026: „zum Beginn der Analyse scrollen, nicht zum Ende“): am Ende des langen Reiters
- * „Zeit und Verlauf“ zum „Überblick“ wechseln; seine Karten beginnen unter den Leisten (`below`), oder die Seite ist zu Ende
+ * Reiterwechsel an den Anfang des Reiters, nicht ans Ende: am Ende des langen Reiters „Zeit und Verlauf“ zum
+ * „Überblick“ wechseln; seine Karten beginnen unter den Leisten (`below`), oder die Seite ist zu Ende
  */
 async function tabStart(page: Page, below: number, label: string) {
   const region = `$('section[aria-label="Analyse"] [role="region"]')`
@@ -130,9 +129,8 @@ async function tabStart(page: Page, below: number, label: string) {
 }
 
 /**
- * Umschalten bleibt an der Stelle (User, 15. Oktober 2026: „wenn ich … auf ‚wettkampf‘ oder den zehntel umschalter
- * klicke, dann springe ich runter zur analyse“): Wertung und Art auf der Seite einer Scheibe mit Anker `#analysis` und
- * die Wertung der Familie unter Scheiben; je danach zurückgestellt
+ * Umschalten bleibt an der Stelle: Wertung und Art auf der Seite einer Scheibe mit Anker `#analysis` und die Wertung
+ * der Familie unter Scheiben; je danach zurückgestellt
  */
 async function togglesStay(page: Page, href: string, label: string) {
   const visible = (prefix: string) =>
@@ -243,7 +241,7 @@ async function desktopCard(page: Page, href: string) {
     Math.round(back)
   )
 
-  // „Alle Beobachtungen“ (Review U1): der Überblick, die Karte unter den Leisten, der Fokus auf dem Reiter
+  // „Alle Beobachtungen“: der Überblick, die Karte unter den Leisten, der Fokus auf dem Reiter
   await page.ev(`scrollTo(0, 0)`)
   await page.click(`tab("Lage")`)
   await page.ev(`scrollTo(0, 0)`)
@@ -318,7 +316,7 @@ async function desktopCard(page: Page, href: string) {
   await page.wait(300)
   check("ein Tipp neben das Blatt schließt es", await page.ev<boolean>(`!sheet()`))
 
-  // Lineal (Plan L1): Tippen, Ziehen, zweites Tippen, Tastatur, Überfahren, „Auf der Scheibe“
+  // Lineal: Tippen, Ziehen, zweites Tippen, Tastatur, Überfahren, „Auf der Scheibe“
   await page.click(`tab("Zeit und Verlauf")`, { settle: 300 })
   const course = `$('svg[aria-label="Wert je Schuss mit gleitendem Schnitt"]', card("verlauf-und-trend"))`
   const line = () => page.ev<string>(`txt($("[data-readout]", card("verlauf-und-trend")))`)
@@ -514,7 +512,7 @@ async function phoneCard(page: Page, href: string) {
   await tabStart(page, 56, "Telefon 375 px")
   await togglesStay(page, href, "Telefon 375 px")
 
-  // Rücksprung (D6): der Knopf der Ellipse aus „Lage“ holt die Scheibe, die Pille bringt zurück
+  // Rücksprung: der Knopf der Ellipse aus „Lage“ holt die Scheibe, die Pille bringt zurück
   await page.click(`tab("Lage")`, { settle: 250 })
   await page.ev(
     `($("#analysis").scrollIntoView({ block: "start", behavior: "instant" }), scrollBy(0, 200))`
@@ -613,9 +611,9 @@ async function phoneNoSideScroll(page: Page) {
 }
 
 /**
- * Blatt „Filter“ unter Scheiben (User, 15. Oktober 2026: „ich kann hier nicht alle listen wählen“; Review): Das Blatt
- * scrollt nicht seitlich, jeder Knopf von Art, Liste und Merkmal liegt in ihm, am Telefon und am Desktop. Die Dev-Daten
- * haben meist keine Listen, das steht dann als „nicht belegt“ in der Zeile.
+ * Blatt „Filter“ unter Scheiben: Das Blatt scrollt nicht seitlich, jeder Knopf von Art, Liste und Merkmal liegt in
+ * ihm, am Telefon und am Desktop. Die Dev-Daten haben meist keine Listen, das steht dann als „nicht belegt“ in der
+ * Zeile.
  */
 async function listFilterSheet(page: Page) {
   const outside: string[] = []
@@ -663,8 +661,8 @@ async function listFilterSheet(page: Page) {
 }
 
 /**
- * „Offen“ und die Leiste (SP-1.7 a2): Das Demo-Konto hat nichts Wartendes, also sagt „Offen“ das; Scannen ist bis zum
- * QR-Weg aus der Navigation genommen, die untere Leiste hat vier Felder.
+ * „Offen“ und die Leiste: Das Demo-Konto hat nichts Wartendes, also sagt „Offen“ das; Scannen steht ohne den QR-Weg
+ * nicht in der Navigation, die untere Leiste hat vier Felder.
  */
 async function openAndBar(page: Page) {
   await page.viewport(1280, 900)
@@ -691,7 +689,7 @@ async function openAndBar(page: Page) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Löschen, Rückgängig und Papierkorb (P2b): ohne endgültiges Löschen, die Demo-Daten bleiben vollständig
+// Löschen, Rückgängig und Papierkorb: ohne endgültiges Löschen, die Demo-Daten bleiben vollständig
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function trash(page: Page) {
@@ -721,7 +719,7 @@ async function trash(page: Page) {
     dialog.includes("30 Tage im Papierkorb") && dialog.includes("löscht Spiegel sie endgültig"),
     dialog.slice(0, 160)
   )
-  // ein später Redirect der mitgerenderten Seite (in den Papierkorb) gewönne sonst unbemerkt (Review P2b)
+  // ein später Redirect der mitgerenderten Seite (in den Papierkorb) gewönne sonst unbemerkt
   await page.wait(1_500)
   const after = await page.ev<{ path: string; bar: string; listed: boolean }>(
     `({ path: location.pathname, bar: txt($("[data-undo-bar]")), listed: ${listed} })`
@@ -1016,7 +1014,7 @@ async function progress(page: Page) {
   }
 
   // Kalender der Trainingstage (T7): umschalten, ein Tag führt an seinen Abend in der Liste. Auch bei „Alles“ nur so
-  // breit, wie Platz ist; ältere Wochen über „früher“ (User, 15. Oktober 2026), am Telefon wie am Desktop
+  // breit, wie Platz ist; ältere Wochen über „früher“, am Telefon wie am Desktop
   const calendarFits = `(() => { const s = $("[data-day], [data-week]")?.closest(".overflow-x-auto")
     return s ? { scroll: s.scrollWidth, client: s.clientWidth, weeks: $$("[data-week]").length,
       earlier: $("[data-calendar-earlier]")?.disabled === false } : null })()`
@@ -1065,7 +1063,7 @@ async function progress(page: Page) {
     await page.wait(500)
     check(
       "Kalender: ein Tag öffnet die Liste an diesem Abend, markiert",
-      // markiert ist nur der Abend, keine Wahl aus dem Verlauf (Review)
+      // markiert ist nur der Abend, keine Wahl aus dem Verlauf
       await page.ev<boolean>(`location.hash === "#${day.key}" && !location.search.includes("pick=") &&
         $$('[data-marked]').length > 0 &&
         $$('[data-marked]').every((el) => el.closest("tbody")?.id === ${JSON.stringify(day.key)})`),
@@ -1074,8 +1072,8 @@ async function progress(page: Page) {
     await page.goto(`${BASE}/progress`)
   }
 
-  // Kalender blätterbar (User, 15. Oktober 2026: „Kalender ‚blätterbar‘ für ältere einträge“): in den letzten 90 Tagen
-  // zeigt „früher“ ältere Trainingstage; ein solcher Tag führt in die Liste ohne Zeitraum an seinen Abend
+  // Kalender blätterbar: in den letzten 90 Tagen zeigt „früher“ ältere Trainingstage; ein solcher Tag führt in die
+  // Liste ohne Zeitraum an seinen Abend
   await page.click(
     `$$('[aria-label="Umfang zeigen als"] button').find((b) => txt(b) === "Kalender")`,
     { settle: 300 }
@@ -1118,7 +1116,7 @@ async function progress(page: Page) {
     await page.goto(`${BASE}/progress`)
   }
 
-  // Blatt „Filter“: nicht übernommene freie Tage gelten beim nächsten Öffnen nicht (Review)
+  // Blatt „Filter“: nicht übernommene freie Tage gelten beim nächsten Öffnen nicht
   const dates = `$$('[data-period-picker] input[type="date"]')`
   const setDate = (i: number, value: string) =>
     page.ev(`(() => { const input = ${dates}[${i}]
@@ -1148,7 +1146,7 @@ async function progress(page: Page) {
   )
   await page.click(`button("Schließen", ${picker})`, { settle: 200 })
 
-  // gemerkter Zeitraum (User, 15. Oktober 2026): übernommen war eben 01.07. bis 31.07.2026. Ohne eigene Abfrage öffnet der
+  // gemerkter Zeitraum: übernommen war eben 01.07. bis 31.07.2026. Ohne eigene Abfrage öffnet der
   // Fortschritt darin, mit eigener wie verlangt. Danach vergessen, damit die übrigen Prüfungen die Vorgabe sehen
   const chip = `txt($("[data-period-chip]"))`
   await page.goto(`${BASE}/progress`)
@@ -1181,7 +1179,7 @@ async function main() {
     setTimeout(() => process.exit(1), 3_000).unref()
   }, 300_000)
   try {
-    // das Demo-Konto meldet sich an; gegen einen fremden Server nur mit ausdrücklichem Schalter (Review)
+    // das Demo-Konto meldet sich an; gegen einen fremden Server nur mit ausdrücklichem Schalter
     if (!ANY_HOST && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(BASE))
       throw new Error(`${BASE} ist kein lokaler Server; --fremder-host, wenn das gewollt ist`)
     server = START ? await startServer(BASE, START_PORT, out) : null

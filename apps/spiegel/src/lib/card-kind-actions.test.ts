@@ -53,7 +53,7 @@ describe("setCardKind", () => {
     const before = mocks.revalidated
     expect(await setCardKind(own, "competition")).toEqual({ success: true })
     expect(await choiceOf(own)).toBe("competition")
-    // kein `revalidatePath`: Danach scrollte Next zum Anker der Adresse; die Hülle lädt mit `router.refresh()` neu
+    // kein `revalidatePath`: Danach scrollt Next zum Anker der Adresse; die Hülle lädt mit `router.refresh()` neu
     expect(mocks.revalidated).toBe(before)
     expect(await setCardKind(own, "training")).toEqual({ success: true })
     expect(await choiceOf(own)).toBe("training")

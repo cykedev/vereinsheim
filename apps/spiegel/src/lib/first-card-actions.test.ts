@@ -134,7 +134,7 @@ describe("Ja, meine", () => {
   })
 })
 
-describe("Grenzen (Review)", () => {
+describe("Grenzen", () => {
   it("zweimal „Nicht meine“ zugleich wirft nicht: eines entfernt, das andere findet nichts mehr", async () => {
     await consent()
     const [card] = await cards(2)

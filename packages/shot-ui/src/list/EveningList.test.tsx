@@ -63,7 +63,7 @@ const text = (html: string) =>
     .replace(/\s+/g, " ")
     .trim()
 
-describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines Zeitraums)", () => {
+describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () => {
   const html = render()
 
   it("je Monat eine Karte mit Kopf und Tabelle; je Abend eine Gruppe mit Anker, das Datum einmal", () => {
@@ -112,11 +112,11 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
       /<tr data-card-row="a"[^>]*><th[^>]*>[^<]*<\/th><td[^>]*><a href="\/cards\/a\?from=list&amp;family=lg-freihand" aria-label=/
     )
     const rowA = html.slice(html.indexOf('data-card-row="a"'), html.indexOf('data-card-row="b"'))
-    // die Art ohne Kürzel (U3, D7): Training hat kein Zeichen, nur den Namen für den Screenreader
+    // die Art ohne Kürzel: Training hat kein Zeichen, nur den Namen für den Screenreader
     expect(text(rowA)).toContain("18:30 Training")
     expect(rowA).toContain('<span class="sr-only">Training</span>')
     expect(rowA).not.toMatch(/>T</)
-    // Ergebnis mit Namen der Wertung (U5, D5): Spalten „Ringe“ und „Zehntel“, ohne Wertung der Scheibe keine fett
+    // Ergebnis mit Namen der Wertung: Spalten „Ringe“ und „Zehntel“, ohne Wertung der Scheibe keine fett
     expect(rowA).toMatch(/data-rings[^>]*>29</)
     expect(rowA).toMatch(/data-decimal[^>]*>30,0</)
     expect(rowA).not.toContain("data-card-scoring")
@@ -142,7 +142,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     expect(render("rings")).toContain("Ergebnis 29 in ganzen Ringen, 30,0 in Zehnteln, Ø")
   })
 
-  it("die Wertung der Scheibe ist fett und heißt im Namen des Links so, ohne Zeile unter dem Monat (U5, D5; User, 15. Oktober 2026)", () => {
+  it("die Wertung der Scheibe ist fett und heißt im Namen des Links so, ohne Zeile unter dem Monat", () => {
     const official = render("decimal", [
       {
         card: periodCard("o", 1, [100, 102, 98], { official: "rings", startedAtMs: at(16, 30) }),
@@ -154,7 +154,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
       /<td data-rings="true" data-card-scoring="true" class="[^"]*font-semibold[^"]*">29</
     )
     expect(official).toMatch(/<td data-decimal="true" class="(?![^"]*font-semibold)[^"]*">30,0</)
-    // „Fett: Wertung der Scheibe.“ stand unter jedem Monat und ist weg (User: „das kann weg“)
+    // keine Zeile „Fett: Wertung der Scheibe.“ unter dem Monat
     expect(official).not.toContain("Fett:")
     expect(official).not.toContain("data-card-scoring-legend")
     expect(official).toContain(
@@ -223,7 +223,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
       { id: "b", marked: true, current: false },
       { id: "d", marked: false, current: false },
     ])
-    // a teilt den Abend mit b: nur a ist markiert, nicht der ganze Abend (Review)
+    // a teilt den Abend mit b: nur a ist markiert, nicht der ganze Abend
     expect(tr(render("decimal", INPUT, { pick: "a" })).filter((r) => r.marked)).toEqual([
       { id: "a", marked: true, current: true },
     ])
@@ -238,7 +238,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
   })
 })
 
-describe("KindMark: der Pokal gold und gut zu sehen (Plan `plans/2026-10-13-spiegel-symbole.md`)", () => {
+describe("KindMark: der Pokal gold und gut zu sehen", () => {
   it("Wettkampf als goldener Pokal in 16 px, Training ohne Zeichen", () => {
     const competition = renderToStaticMarkup(h(KindMark, { kind: "competition" }))
     expect(competition).toMatch(/lucide-trophy[^"]*\bsize-4\b[^"]*\btext-gold\b/)

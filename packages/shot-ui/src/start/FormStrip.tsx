@@ -22,10 +22,10 @@ export interface FormStripProps {
 }
 
 /**
- * Der Abend im Formband als kleiner Verlauf (U5, D1; User: „ich verstehe es kaum, vor allem mit der ‚abend‘“): die
+ * Der Abend im Formband als kleiner Verlauf: die
  * letzten Scheiben der Familie in zeitlicher Folge von links nach rechts, der Ø je Schuss nach oben, wie der Verlauf
  * im Fortschritt. Das Band läuft als Fläche um den gleitenden Schnitt, der als Linie in der Mitte; die Scheiben des
- * Abends rechts groß in der Farbe des Akzents, über ihnen das Datum. Alles in einem Rahmen (U2, D6). Kein Wert steht
+ * Abends rechts groß in der Farbe des Akzents, über ihnen das Datum. Alles in einem Rahmen. Kein Wert steht
  * nur im SVG: Zahl und Bezug stehen darüber, der Name des Bilds sagt Folge, Abend und Band in Worten.
  */
 export function FormStrip({ strip, band, dateLabel, className }: FormStripProps) {
@@ -82,7 +82,7 @@ export function FormStrip({ strip, band, dateLabel, className }: FormStripProps)
           const firstFull = strip.findIndex((s) => !s.partial)
           const partialLine = firstFull < 0 ? coords : coords.slice(0, firstFull + 1)
           const fullLine = firstFull < 0 ? [] : coords.slice(firstFull)
-          // die untere Zahl nur, wenn sie anders lautet und nicht in die obere läuft (Review U5)
+          // die untere Zahl nur, wenn sie anders lautet und nicht in die obere läuft
           const showMin = minText !== maxText && y(minValue) - y(maxValue) >= 14
           const tonight = strip.flatMap((s, i) => (s.tonight ? [i] : []))
           const labelX = tonight.length
@@ -90,7 +90,7 @@ export function FormStrip({ strip, band, dateLabel, className }: FormStripProps)
             : null
           return (
             <ChartSvg width={width} height={HEIGHT} label={label}>
-              {/* der Rahmen um den Verlauf: Band und Punkte stehen nicht „im leeren“ (User, U2 D6) */}
+              {/* der Rahmen um den Verlauf: Band und Punkte stehen nicht „im leeren“ */}
               <rect
                 data-track
                 x={crisp(PAD.left)}

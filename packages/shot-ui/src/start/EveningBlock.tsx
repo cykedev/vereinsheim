@@ -27,7 +27,7 @@ const KIND: Readonly<Record<ListRow["kind"], string>> = {
 /** Stellen des Ergebnisses in einer Wertung, aus der Kennzahl */
 const digits = (scoring: Scoring) => inScoring(metricByKey("result.decimal")!, scoring).decimals
 const other = (scoring: Scoring): Scoring => (scoring === "rings" ? "decimal" : "rings")
-/** die Wertung des Blocks an der großen Zahl: Blöcke verschiedener Familien können verschieden rechnen (Review) */
+/** die Wertung des Blocks an der großen Zahl: Blöcke verschiedener Familien können verschieden rechnen */
 const SCORING_IN: Readonly<Record<Scoring, string>> = {
   decimal: "in Zehnteln",
   rings: "in ganzen Ringen",
@@ -43,11 +43,11 @@ export interface EveningBlockProps {
   timeZone: string
   /** die Adresse einer Scheibe von Start (`openCard({ page: "start" }, …)`); sie öffnet in ihrer Wertung */
   cardRoute: (id: string) => CardRoute
-  /** die Adresse der Scheibe eines Rekords, in der Wertung, in der der Rekord steht (die des Blocks, Review N5) */
+  /** die Adresse der Scheibe eines Rekords, in der Wertung, in der der Rekord steht (die des Blocks) */
   recordRoute: (id: string, scoring: Scoring) => CardRoute
   /** die Liste dieser Familie mit dem Abend als Anker */
   listRoute: ListRoute
-  /** Kreise rechts neben der großen Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`): die Wertung der Familie */
+  /** Kreise rechts neben der großen Zahl: die Wertung der Familie */
   actions?: ReactNode
   /** ein Hinweis unten, etwa ein Fehler beim Speichern */
   notice?: ReactNode
@@ -55,7 +55,7 @@ export interface EveningBlockProps {
 }
 
 /**
- * Der letzte Abend einer Familie auf Start (Plan N5, D2–D6; Entwurf B mit dem Satz aus A): der Satz, Tag und Umfang,
+ * Der letzte Abend einer Familie auf Start: der Satz, Tag und Umfang,
  * der Ø je Schuss des Abends groß mit dem Abstand zum Schnitt, der Streifen im Formband, die Scheiben als Kacheln,
  * neue Rekorde und der Weg in die Liste. Weder die Seite einer Scheibe noch die Liste: die Details liegen einen
  * Tipp weiter.
@@ -89,8 +89,8 @@ export function EveningBlock({
       aria-labelledby={`${titleId} ${metaId}`}
       className={cn("grid gap-4 rounded-2xl border border-border bg-card p-4 sm:p-5", className)}
     >
-      {/* die Disziplin als Überschrift oben: bei einem Mischabend unterscheiden sich die Blöcke auf einen Blick
-          (User, 9. Oktober 2026: „kaum zu erkennen“); Symbol der Disziplinen wie conventions §4 */}
+      {/* die Disziplin als Überschrift oben: bei einem Mischabend unterscheiden sich die Blöcke auf einen Blick;
+          Symbol der Disziplinen wie conventions §4 */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2
           id={titleId}
@@ -136,12 +136,12 @@ export function EveningBlock({
             {reference}
           </p>
         )}
-        {/* der Hinweis zum Kreis gleich darunter, nicht am Ende des Blocks (Review, 13. Oktober 2026) */}
+        {/* der Hinweis zum Kreis gleich darunter, nicht am Ende des Blocks */}
         {notice}
       </div>
       <div className="grid gap-1.5">
         <FormStrip strip={block.strip} band={block.band} dateLabel={date} />
-        {/* was der Verlauf zeigt, nur was zu sehen ist (U3, D8; U5, D1; Review U5); die Rechnung steht im Blatt „?“ */}
+        {/* was der Verlauf zeigt, nur was zu sehen ist; die Rechnung steht im Blatt „?“ */}
         {legend && (
           <p data-form-legend className="text-[13px] text-muted-foreground">
             {legend}
@@ -152,7 +152,7 @@ export function EveningBlock({
         {block.rows.map((row) => {
           const placed = marks.get(row.id) ?? []
           const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
-          // die Wertung beim Namen (U5, D5): vorn die der Scheibe (ohne sie die amtliche), daneben die andere
+          // die Wertung beim Namen: vorn die der Scheibe (ohne sie die amtliche), daneben die andere
           const name = (scoring: typeof row.resultScoring) =>
             scoring === "rings" ? "ganze Ringe" : "Zehntel"
           const result =
@@ -181,7 +181,7 @@ export function EveningBlock({
                 )}
                 <span className="grid min-w-0 gap-0.5">
                   <span className="text-[13px] text-muted-foreground">{`${time} · ${KIND[row.kind]}`}</span>
-                  {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (Review U5: „ganze / Ringe“) */}
+                  {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (kein „ganze / Ringe“) */}
                   <span
                     data-start-result
                     className="flex flex-wrap items-baseline gap-x-1.5 tabular-nums"

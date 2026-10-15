@@ -1,6 +1,6 @@
-// Zeilen der Rekorde R1–R8 (Plan L3, D12): Bezeichnung und Wert in der Wertung, rein, ohne React, damit Modelle wie
-// das von Start sie nutzen können, ohne eine Client-Komponente zu laden (Review N5). Seit U5 (D3) in ganzen Worten,
-// gezeigt als „Bezeichnung: Wert“: „Meiste 10,9 (20 Schuss): 1“ statt „meiste 10,9, 20 Schuss 1“.
+// Zeilen der Rekorde R1–R8: Bezeichnung und Wert in der Wertung, rein, ohne React, damit Modelle wie das von Start
+// sie nutzen können, ohne eine Client-Komponente zu laden. In ganzen Worten, gezeigt als „Bezeichnung: Wert“, etwa
+// „Meiste 10,9 (20 Schuss): 1“.
 
 import type { RecordRef } from "@vereinsheim/shot-core/analysis"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"

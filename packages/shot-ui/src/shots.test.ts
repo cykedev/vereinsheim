@@ -28,7 +28,7 @@ const shot = (
   series,
 })
 
-// Serie 1 mit zwei und Serie 2 mit einem Schuss: eine Scheibe wie am Ausdruck (U4)
+// Serie 1 mit zwei und Serie 2 mit einem Schuss: eine Scheibe wie am Ausdruck
 const CARD = [shot("match", 1, 0, 109), shot("match", 1, 2000, 104), shot("match", 2, -1000, 106)]
 // so käme sie aus einer Ablage mit Probe davor
 const WITH_PROBE = [shot("probe", null, 3000, 96), shot("probe", null, 1000, 101), ...CARD]
@@ -48,12 +48,12 @@ describe("Schüsse für die Bausteine", () => {
     expect(selectionShots(card, 1)).not.toContain(loose)
   })
 
-  it("Beschriftung in Abgabefolge: 1, 2, 3, keine „P“-Nummern neben Wertung (U4)", () => {
+  it("Beschriftung in Abgabefolge: 1, 2, 3, keine „P“-Nummern neben Wertung", () => {
     expect(shotLabels(CARD)).toEqual(["1", "2", "3"])
     expect(shotLabels(asOnPrintout(WITH_PROBE))).toEqual(["1", "2", "3"])
   })
 
-  it("Einzelschuss immer in Zehnteln, ohne Zehntel der Ring, ohne Wert ein Strich (Rückmeldung 3)", () => {
+  it("Einzelschuss immer in Zehnteln, ohne Zehntel der Ring, ohne Wert ein Strich", () => {
     expect(formatShotValue(CARD[0])).toBe("10,9")
     expect(formatShotValue({ ...CARD[0], decimalTenths: null, ring: 9 })).toBe("9")
     expect(formatShotValue({ ...CARD[0], decimalTenths: null, ring: null })).toBe("–")
@@ -104,7 +104,7 @@ describe("Schüsse für die Bausteine", () => {
     expect(isProbeShot(CARD[0])).toBe(false)
   })
 
-  it("wie am Ausdruck: mit Wertung nur die Wertung, ohne Probe-Eck; ohne Schüsse nichts (U4)", () => {
+  it("wie am Ausdruck: mit Wertung nur die Wertung, ohne Probe-Eck; ohne Schüsse nichts", () => {
     expect(asOnPrintout(WITH_PROBE)).toEqual(CARD)
     expect(asOnPrintout(WITH_PROBE).some(isProbeShot)).toBe(false)
     expect(asOnPrintout(CARD)).toBe(CARD)

@@ -30,7 +30,7 @@ export function calculateSeriesTotal(shots: string[], scoringType: ScoringType):
   return (Math.round(sum * 10) / 10).toFixed(1)
 }
 
-// Schema fuer eine einzelne Serie inkl. Phase-2-Felder
+// Schema fuer eine einzelne Serie
 const SeriesInputSchema = z.object({
   position: z.number().int().min(1),
   isPractice: z.boolean(),

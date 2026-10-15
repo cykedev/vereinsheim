@@ -4,7 +4,7 @@
 # Platzhalter bleiben stehen: leer, NULL, --frei--, unknown und eine Sportpassnummer 0 (SF-13).
 # Kopfzeile ist die erste Zeile der Eingabe und die erste Zeile nach einem Tabellenmarker
 # (#Scheiben, #Serien, #Treffer: "#" direkt gefolgt von Buchstaben). Andere "#"-Zeilen (# stand …,
-# # schritt …) gehen unverändert durch und setzen den Kopf nicht zurück (Review S2).
+# # schritt …) gehen unverändert durch und setzen den Kopf nicht zurück.
 BEGIN { FS = OFS = "\t"; kopf = 1; np = 0; ns = 0 }
 /^#[A-Za-z]+$/ { print; kopf = 1; next }
 /^#/ { print; next }

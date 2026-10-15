@@ -13,7 +13,7 @@ export interface OpenItem {
 }
 
 /**
- * „Offen (n)“ oben auf Start (Plan N5, D1; Entscheidung 8): je offenes Ding ein Link. Ohne Offenes nichts. Die
+ * „Offen (n)“ oben auf Start: je offenes Ding ein Link. Ohne Offenes nichts. Die
  * Zahl steht auch am Start-Symbol der Navigation.
  */
 export function OpenBox({ items, className }: { items: readonly OpenItem[]; className?: string }) {

@@ -11,11 +11,11 @@ export const KIND_OPTIONS: readonly { value: CardKind; label: string }[] = [
 ]
 
 export interface CardFiltersProps {
-  /** die Familie, Pflicht (D5) */
+  /** die Familie, Pflicht */
   family: string
   /** Disziplin-Familien, die es gibt; erst ab zwei ein Umschalter */
   families: readonly { value: string; label: string }[]
-  /** Art; ohne `onKind` kein Umschalter (im Fortschritt steht die Art im Blatt „Filter“, U2) */
+  /** Art; ohne `onKind` kein Umschalter (im Fortschritt steht die Art im Blatt „Filter“) */
   kind?: CardKind
   onFamily: (family: string) => void
   onKind?: (kind: CardKind) => void
@@ -23,7 +23,7 @@ export interface CardFiltersProps {
 
 /**
  * Familie und Art als Segmente, gemeinsam für die Seite eines Zeitraums (`PeriodControls`) und die Scheiben-Liste
- * (`ListControls`, Plan N2, D7). Ohne zweite Familie kein Umschalter „Familie“.
+ * (`ListControls`). Ohne zweite Familie kein Umschalter „Familie“.
  */
 export function CardFilters({ family, families, kind, onFamily, onKind }: CardFiltersProps) {
   return (

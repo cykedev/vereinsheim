@@ -74,7 +74,7 @@ describe("Kalender der Trainingstage (T7)", () => {
     expect(html).toContain("Wettkampf")
   })
 
-  it("Monatsnamen: über jeder Woche, in der ein Monat beginnt; die erste nur, wenn danach keiner beginnt (Review)", () => {
+  it("Monatsnamen: über jeder Woche, in der ein Monat beginnt; die erste nur, wenn danach keiner beginnt", () => {
     const months = (from: string, to: string) =>
       [
         ...renderToStaticMarkup(
@@ -91,7 +91,7 @@ describe("Kalender der Trainingstage (T7)", () => {
   })
 })
 
-describe("Kalender blätterbar (Rückmeldung 8)", () => {
+describe("Kalender blätterbar", () => {
   // Donnerstag, 15. Oktober 2026; seine Woche beginnt am Montag, dem 12.
   const TODAY = "2026-10-15"
 
@@ -139,7 +139,7 @@ describe("Kalender blätterbar (Rückmeldung 8)", () => {
     expect(calendarWindow({ ...now, end: pageEarlier(earlier) }, 13).earlier).toBe(false)
   })
 
-  it("Tage außerhalb des Zeitraums blass, die Zeile zählt nur den Zeitraum (User: „ja blasser zeigen“)", () => {
+  it("Tage außerhalb des Zeitraums blass, die Zeile zählt nur den Zeitraum", () => {
     const days = [
       { key: "2026-08-02", shots: 30, cards: 1, competition: 0 },
       { key: "2026-10-01", shots: 60, cards: 1, competition: 1 },
@@ -161,7 +161,7 @@ describe("Kalender blätterbar (Rückmeldung 8)", () => {
     expect(html).toMatch(/<span aria-hidden="true" class="[^"]*bg-surface-2[^"]*opacity-35/)
     expect(html).toContain("1 Trainingstag im Zeitraum · 60 Schuss")
     expect(html).toContain("außerhalb des Zeitraums")
-    // „Alles“: kein Tag außerhalb, Zeile und Legende wie bisher
+    // „Alles“: kein Tag außerhalb, die Zeile ohne „im Zeitraum“, die Legende ohne „außerhalb“
     const all = renderToStaticMarkup(
       createElement(CalendarBrowser, {
         end: TODAY,

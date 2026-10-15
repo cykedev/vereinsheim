@@ -42,7 +42,7 @@ export function usePlayoffMatchCard({ match, canManage, playoffBestOf }: Args) {
     nextPendingDuel === undefined &&
     (!isFinal || match.duels.length === 0)
 
-  // The action no longer revalidates the playoffs route — refresh client-side here.
+  // The action does not revalidate the playoffs route — refresh client-side here.
   // router.refresh() runs outside a transition so the button never sticks at
   // "Anlegen…" and a single click reliably re-fetches (no interrupted transition).
   async function handleAddDuel() {

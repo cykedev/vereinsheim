@@ -1,4 +1,4 @@
-// Sprung zur Scheibe mit Rücksprung (Plan Schritt 4, D6): reine Entscheidungen, die der Hook `useReturnJump`
+// Sprung zur Scheibe mit Rücksprung: reine Entscheidungen, die der Hook `useReturnJump`
 // mit dem Fenster füttert.
 
 /** so viel muss von der Scheibe sichtbar sein, damit sie als im Bild gilt (px) */

@@ -60,10 +60,10 @@ describe("Sportpass im Profil", () => {
     for (const paragraph of CONSENT_TEXTS[CURRENT_CONSENT_VERSION]!.paragraphs)
       expect(html).toContain(paragraph.slice(0, 40))
     expect(html).toMatch(/<input type="checkbox"[^>]*name="agree"/)
-    // die Version des gezeigten Texts geht mit (Review)
+    // die Version des gezeigten Texts geht mit
     expect(html).toContain(`<input type="hidden" name="version" value="${CURRENT_CONSENT_VERSION}"`)
     expect(html).not.toContain("data-one-number")
-    // eine Nummer je Konto (User, 15. Oktober 2026): mit einer, auch einer abgelehnten, kein Formular, dafür der Weg
+    // eine Nummer je Konto: mit einer, auch einer abgelehnten, kein Formular, dafür der Weg
     for (const status of ["active", "requested", "returned"] as const) {
       const one = render([row(1, status, "s")])
       expect(one).not.toContain("data-consent-form")
@@ -71,7 +71,7 @@ describe("Sportpass im Profil", () => {
         "Ein Konto hat eine Sportpassnummer. Für einen neuen Ausweis widerrufe die alte Nummer. Dann trag die neue ein. Deine Scheiben bleiben."
       )
     }
-    // eine abgelehnte heißt am Knopf „Entfernen“, nicht „Widerrufen“ (Review)
+    // eine abgelehnte heißt am Knopf „Entfernen“, nicht „Widerrufen“
     const rejected = render([row(1, "rejected", "s")])
     expect(rejected).not.toContain("data-consent-form")
     expect(rejected).toContain(
@@ -80,7 +80,7 @@ describe("Sportpass im Profil", () => {
     expect(rejected).not.toContain("widerrufe")
   })
 
-  it("bei aktiver Zustimmung der Stand des Nachladens (P2d)", () => {
+  it("bei aktiver Zustimmung der Stand des Nachladens", () => {
     const html = render([
       {
         ...row(1, "active", "aktiv"),

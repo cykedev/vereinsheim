@@ -10,13 +10,13 @@ const visible = (html: string) =>
     .replace(/<[^>]+>/g, "")
     .trim()
 
-describe("Art in den Listen (U3, D7)", () => {
+describe("Art in den Listen", () => {
   it("Wettkampf als Pokal, der Name für den Screenreader", () => {
     const html = renderToStaticMarkup(h(KindMark, { kind: "competition" }))
     expect(html).toContain("lucide-trophy")
     expect(html).toContain('<span class="sr-only">Wettkampf</span>')
     expect(visible(html)).toBe("")
-    // der Name als Tooltip nur am sichtbaren, für Screenreader verborgenen Zeichen: kein doppeltes Vorlesen (Review U3)
+    // der Name als Tooltip nur am sichtbaren, für Screenreader verborgenen Zeichen: kein doppeltes Vorlesen
     expect(html).toMatch(/<span aria-hidden="true" title="Wettkampf"><svg/)
     expect(html).toContain('data-kind="competition"')
   })

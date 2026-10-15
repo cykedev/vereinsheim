@@ -1,4 +1,4 @@
-// Alle Fälle, in der Reihenfolge des Zuschnitts (SP-1.0 b).
+// Alle Fälle, nach Themen: Probe, Vollständigkeit, Werte, Revisionen, Identität.
 
 import { COMPLETENESS_CASES } from "./completeness"
 import { IDENTITY_CASES } from "./identity"

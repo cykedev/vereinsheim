@@ -54,14 +54,14 @@ describe("Zustimmungen lesen", () => {
     expect(rows[0]!.statusText).toMatch(/^aktiv seit \d\d\.\d\d\.\d{4}/)
     expect(rows[2]!.statusText).toBe("wartet auf Prüfung durch einen Admin")
     expect(rows.every((r) => r.consentVersion === "v1")).toBe(true)
-    // nur die aktive sagt, ob ihre älteren Scheiben nachgeladen sind (P2d)
+    // nur die aktive sagt, ob ihre älteren Scheiben nachgeladen sind
     expect(rows.map((r) => r.history)).toEqual([
       "ältere Scheiben werden geholt, sobald im Schützenhaus niemand schießt",
       null,
       null,
       null,
     ])
-    // ein deaktiviertes Konto bekommt nichts, auch kein Nachladen (Review)
+    // ein deaktiviertes Konto bekommt nichts, auch kein Nachladen
     await db.user.update({ where: { id: shooterId }, data: { isActive: false } })
     expect((await consentRows(shooterId, zone))[0]!.history).toBeNull()
     await db.user.update({ where: { id: shooterId }, data: { isActive: true } })
@@ -74,7 +74,7 @@ describe("Zustimmungen lesen", () => {
     expect(mine[0]!.sportpassId).toBe(String(ids.returned))
   })
 
-  it("für den Admin je Zustimmung die Meldungen „nicht meine“ ihrer Nummer an dieser Anlage (P2d)", async () => {
+  it("für den Admin je Zustimmung die Meldungen „nicht meine“ ihrer Nummer an dieser Anlage", async () => {
     const source = await db.source.create({ data: { siteId, epoch: 1, confirmedAt: new Date() } })
     const tombstone = (scheibenId: number, sportpassId: bigint, reason = "nicht-meine") =>
       db.tombstone.create({

@@ -1,15 +1,13 @@
 // Zero-dependency loader for the Obsidian-compatible knowledge vault (ADR-011).
 //
-// Reads every note under vault/ (Markdown + YAML-subset frontmatter) into the SAME
-// { entities, relations } shape the old built JSONL store produced — so entityToDoc()
-// and search-index.mjs (BM25/EN+DE) are reused UNCHANGED. There is no build step and
-// no store artifact: the memory MCP server calls loadVault() at startup and holds the
-// graph in memory.
+// Reads every note under vault/ (Markdown + YAML-subset frontmatter) into the
+// { entities, relations } shape that entityToDoc() and search-index.mjs (BM25/EN+DE)
+// work on. There is no build step and no store artifact: the memory MCP server calls
+// loadVault() at startup and holds the graph in memory.
 //
-// Also exposes the heading-addressable read (document_map / section_read — the same
-// doc-index.mjs logic that backed doc.mjs, now over vault notes) and the edge
-// adjacency (backlinks / traverse). Fail-soft: a malformed note is skipped with a
-// warning, never a crash.
+// Also exposes the heading-addressable read (document_map / section_read — the
+// doc-index.mjs logic, over vault notes) and the edge adjacency (backlinks / traverse).
+// Fail-soft: a malformed note is skipped with a warning, never a crash.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { headingSlugs, readFragment, slugify } from './doc-index.mjs';
@@ -19,8 +17,8 @@ import { headingSlugs, readFragment, slugify } from './doc-index.mjs';
 // and semantics. It is decoupled from the folder: FOLDERS are TOPICS (architecture/,
 // workflow/, gates/, knowledge/ …), one big topic per folder, each with a MOC hub.
 // `incident` is the REMEMBER-tier home (ADR-003) — project-specific incidents/state.
-// `source` is provenance for ingested content (one note per origin doc; see KNOWLEDGE.md
-// §6). Raw originals live under `.raw/`, which the loader skips (dot-prefixed).
+// `source` is provenance for ingested content (one note per origin doc, written by
+// `/ingest`). Raw originals live under `.raw/`, which the loader skips (dot-prefixed).
 export const NODE_TYPES = ['guide', 'decision', 'subsystem', 'operation', 'concept', 'incident', 'source'];
 
 // Edge vocabulary (see vault/SCHEMA.md §4). Unknown keys warn.

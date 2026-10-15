@@ -26,7 +26,7 @@ import { readInput, repoRoot, isDotenvPath } from "./_lib.mjs"
 
 // Marker älter als das hier → als verwaist behandelt (fail-open). Schützt davor, dass ein
 // abnormal beendeter Autopilot-Lauf (Crash/Kill/Ctrl-C vor HALT) den Guard im nächsten
-// interaktiven Lauf scharf stehen lässt. Ergänzt seit diesem Sync durch
+// interaktiven Lauf scharf stehen lässt. Ergänzt durch
 // autopilot-marker-reset.mjs (SessionStart löscht einen verwaisten Marker bei echtem
 // Neustart automatisch); diese TTL bleibt als Netz für einen resumten/compacteten Lauf
 // derselben Session, den der Reset-Hook nicht anfasst.
@@ -36,7 +36,7 @@ const MARKER_TTL_MS = 8 * 60 * 60 * 1000
 const PROTECTED_DIRS = [".claude/", "scripts/"]
 // Wortgrenzen-bewusste Varianten für den One-Liner-Blob-Check (interpreterOneLinerViolation):
 // ein reiner Substring-Test (`w.includes(d)`) hätte z.B. `myscripts/foo.txt` fälschlich als
-// Referenz auf `scripts/` erkannt (bestätigter False-Positive-Fund aus /review, Juli 2026).
+// Referenz auf `scripts/` erkannt.
 // Der negative Lookbehind schließt aus, dass das Verzeichnis-Präfix direkt an ein
 // Identifier-Zeichen geklebt ist — analog zur PLACEHOLDER-Regex in check-bindings.mjs.
 const PROTECTED_DIR_RES = PROTECTED_DIRS.map((d) => new RegExp(`(?<![A-Za-z0-9_.])${d.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`))
@@ -66,7 +66,7 @@ const PROTECTED_CMDS = [
   ],
   // Die Ops-CLI nur als Aufruf: `…scripts/vereinsheim` oder `vereinsheim` als eigenes Wort, gefolgt von einem
   // Leerzeichen. Das Repo-Verzeichnis (`…/verein/vereinsheim/…`) und Paketnamen (`@vereinsheim/…`) vor
-  // einem „build“ sind kein Aufruf (Fehlalarm `pnpm --filter @vereinsheim/labor build`, Oktober 2026).
+  // einem „build“ sind kein Aufruf (etwa `pnpm --filter @vereinsheim/labor build`).
   [
     /(?:(?:^|\s)\S*\bscripts\/|(?:^|[\s;&|(]))vereinsheim(?=\s)[^|;&\n]*\b(deploy|build|release|backup|restore)\b/,
     "vereinsheim deploy/build/release/backup/restore",

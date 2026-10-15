@@ -19,7 +19,7 @@ const block = (patch: Partial<EveningBlock>): EveningBlock => ({
   ...patch,
 })
 
-describe("Satz über dem Abend (Plan N5, D4)", () => {
+describe("Satz über dem Abend", () => {
   it("im Band, darüber, darunter: ordnet ein wie der Fortschritt, ohne Wertung; die Zahl folgt dem Schnitt", () => {
     expect(eveningSentence(block({}), "Luftpistole")).toBe("Im Formband: 0,09 über deinem Schnitt.")
     expect(eveningSentence(block({ mean: 9.31, verdict: "above" }), "Luftpistole")).toBe(
@@ -62,7 +62,7 @@ describe("Satz über dem Abend (Plan N5, D4)", () => {
     ).toBeNull()
   })
 
-  it("unter der großen Zahl der Bezug, nicht noch einmal der Abstand aus dem Satz (U5, D2)", () => {
+  it("unter der großen Zahl der Bezug, nicht noch einmal der Abstand aus dem Satz", () => {
     expect(eveningReferenceText(block({}))).toBe("Schnitt der 5 Scheiben davor: 8,95")
     expect(
       eveningReferenceText(block({ band: null, verdict: null, average: { value: 9, n: 1 } }))
@@ -71,7 +71,7 @@ describe("Satz über dem Abend (Plan N5, D4)", () => {
     expect(eveningReferenceText(block({ mean: null }))).toBeNull()
   })
 
-  it("Legende: nur was der Verlauf zeigt (Review U5)", () => {
+  it("Legende: nur was der Verlauf zeigt", () => {
     const point = (id: string, tonight: boolean, partial: boolean) => ({
       id,
       value: 9,

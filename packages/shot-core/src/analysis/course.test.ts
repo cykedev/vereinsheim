@@ -138,8 +138,8 @@ describe("Ermüdung und Trend (I2, I3)", () => {
 
   it("in ganzen Ringen ist die Stufe von 9 auf 10 klar steigend, auch mit vielen gleichen Werten", () => {
     // 9,0 … 10,9: zehnmal Ring 9, dann zehnmal Ring 10, die stärkste mögliche Anordnung
-    // (1/C(20, 10)). Mann-Kendall mit Bindungen: S 100, Var 700, z = 99/√700 ≈ 3,74. Das frühere
-    // Sen-Intervall lag hier bei [0; 0,83] und hieß „nicht klar“.
+    // (1/C(20, 10)). Mann-Kendall mit Bindungen: S 100, Var 700, z = 99/√700 ≈ 3,74. Ein
+    // Sen-Intervall läge hier bei [0; 0,83] und hieße „nicht klar“.
     const rising = Array.from({ length: 20 }, (_, i) => shot(i, 90 + i))
     const rings = cardTrend(rising, "rings")
     expect(rings).toMatchObject({ clear: true, direction: "up" })

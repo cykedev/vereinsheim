@@ -73,7 +73,7 @@ afterAll(async () => {
   await db.$disconnect()
 })
 
-describe("Nutzung in der Übersicht (P2e, Review P2f)", () => {
+describe("Nutzung in der Übersicht", () => {
   it("nur sichtbare Scheiben aktiver Konten, frisch nach dem Beginn, Konten mit frischen", async () => {
     expect(await usageOf(NOW, [site.ownerId, inactive])).toEqual({
       cards: 2,

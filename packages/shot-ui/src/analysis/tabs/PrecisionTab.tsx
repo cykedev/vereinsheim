@@ -134,7 +134,7 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
                   ],
                   [
                     "Gestreckt?",
-                    // der Test steht in der Formel der Hilfe, nicht in der Zeile (Prüfung, Präzision 11)
+                    // der Test steht in der Formel der Hilfe, nicht in der Zeile
                     shape.elongated ? "ja, mit 95 %" : "nicht nachweisbar",
                   ],
                   [
@@ -178,7 +178,7 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
                       : "keine",
                   ],
                   outlying.flagged.length > 0 && [
-                    // zur Mitte hin bringen sie Ringe: keine „negativen Kosten“ (Prüfung, Präzision 9)
+                    // zur Mitte hin bringen sie Ringe: keine „negativen Kosten“
                     loss && loss.loss < 0 ? "Wirkung" : "Kosten",
                     loss && loss.loss < 0 ? (
                       <>

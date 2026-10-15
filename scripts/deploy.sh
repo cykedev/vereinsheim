@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Idempotenter Deploy auf dem VPS, seit P4 (SP-1.9) je App nacheinander:
+# Idempotenter Deploy auf dem VPS, je App nacheinander:
 #   - Vorprüfung: die Datenbank-Rolle jeder App gibt es (db-init legt sie nur bei einem
 #     frischen Volume an; sonst zuerst ./scripts/vereinsheim db-ensure)
 #   - Pre-Deploy-Backup (Sicherheitsnetz, falls db läuft)
@@ -39,7 +39,7 @@ compose() { docker compose --env-file "$ENV_FILE" "$@"; }
 db_running() { compose ps --status running --services 2>/dev/null | grep -qx db; }
 
 # Vorprüfung: Ohne Rolle oder Datenbank scheitert der Migrator der App erst nach dem Neuaufbau
-# der übrigen (Review P3). Vor dem Backup, wenn db läuft, und noch einmal nach dem Start von db.
+# der übrigen. Vor dem Backup, wenn db läuft, und noch einmal nach dem Start von db.
 check_app_databases() {
 	local app found missing=()
 	for app in "${APPS[@]}"; do
@@ -121,7 +121,7 @@ for app in "${APPS[@]}"; do
 	fi
 done
 
-# verwaiste Container entfernen, ohne die Migratoren noch einmal (und dann gleichzeitig) zu starten (Review P4)
+# verwaiste Container entfernen, ohne die Migratoren noch einmal (und dann gleichzeitig) zu starten
 echo "==> Rest abgleichen (verwaiste Container)"
 services=(db caddy)
 for app in "${APPS[@]}"; do services+=("app-${app}"); done

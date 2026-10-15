@@ -12,7 +12,7 @@ const render = (user: Partial<Parameters<typeof UserRowFacts>[0]["user"]>) =>
     })
   )
 
-describe("Zahlen eines Kontos (P2e)", () => {
+describe("Zahlen eines Kontos", () => {
   it("Zahl, Tag der letzten in der Zone, Wartende; Einzahl und Mehrzahl", () => {
     expect(render({ cards: 32, lastCardAt: "2026-10-13T22:30:00.000Z", waiting: 3 })).toContain(
       "32 Scheiben · zuletzt 14.10.2026 · 3 warten in Offen"

@@ -11,8 +11,8 @@ import { db } from "@/lib/db"
 import { createPairing, removeBridge, revokeBridge } from "@/lib/ingest/bridges"
 import type { ActionResult } from "@/lib/types"
 
-// Admin → Anlage (SP-1.6 b): Anlage anlegen und ändern, Brücke koppeln und widerrufen, Ranglisten (eine neue Epoche
-// bestätigt kein Admin mehr, P2c D0: das ist Technik, keine Entscheidung)
+// Admin → Anlage: Anlage anlegen und ändern, Brücke koppeln und widerrufen, Ranglisten (eine neue Epoche bestätigt
+// kein Admin: das ist Technik, keine Entscheidung)
 // (Zustimmungen per Sportpass: `src/lib/consent/actions.ts`). Jede Action prüft selbst (`adminActor`) und gibt ein
 // ActionResult zurück.
 
@@ -49,7 +49,7 @@ export async function saveSite(
     select: { id: true, timeZone: true },
   })
   // fest, sobald Scheiben da sind: Jeder spätere Stand einer Scheibe rechnete mit der neuen Zone, verschöbe ihre Uhrzeit
-  // und gälte als Korrektur (Review P2c)
+  // und gälte als Korrektur
   if (
     site &&
     parsed.data.timeZone !== site.timeZone &&
@@ -93,7 +93,7 @@ export async function pairBridge(
   }
 }
 
-/** Kennung einer Zeile mit `Int`-Spalte: darüber würfe Prisma, statt die Meldung zu geben (Review) */
+/** Kennung einer Zeile mit `Int`-Spalte: darüber würfe Prisma, statt die Meldung zu geben */
 const isRowId = (id: number) => Number.isSafeInteger(id) && id > 0 && id <= 2_147_483_647
 
 export async function revokeBridgeAction(bridgeId: number): Promise<ActionResult> {
@@ -113,7 +113,7 @@ export async function removeBridgeAction(bridgeId: number): Promise<ActionResult
   const gone = { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
   if (!isRowId(bridgeId)) return gone
   if (!(await removeBridge(db, bridgeId))) {
-    // nicht entfernt: gibt es sie noch, läuft sie (Textbuch rev 22)
+    // nicht entfernt: gibt es sie noch, läuft sie
     const still = await db.bridge.findUnique({ where: { id: bridgeId }, select: { id: true } })
     return still ? { error: "Diese Brücke ist nicht getrennt. Lade die Seite neu." } : gone
   }

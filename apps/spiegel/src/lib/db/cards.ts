@@ -23,7 +23,7 @@ import { VISIBLE_CARD } from "./visible"
 
 type Tx = Prisma.TransactionClient
 
-/** ein Schuss, wie der Adapter (SP-1.6) ihn aus den Rohdaten oder dem Ausdruck liest */
+/** ein Schuss, wie der Adapter ihn aus den Rohdaten oder dem Ausdruck liest */
 export interface ShotInput {
   /** Abgabefolge über die ganze Scheibe (SF-30) */
   seq: number
@@ -54,7 +54,7 @@ export interface CardInput {
   cycle?: number
   /** nur beim Anlegen; die Zuordnung ändert eine Revision nicht */
   ownerId?: string | null
-  /** nur beim Anlegen: der Besitz wartet auf die Bestätigung der ersten Scheibe (SP-1.7 a2); fehlt: nicht */
+  /** nur beim Anlegen: der Besitz wartet auf die Bestätigung der ersten Scheibe; fehlt: nicht */
   ownerPending?: boolean
   /** fehlt: nicht anfassen; null: leeren (Drei-Wege-Semantik, conventions §9) */
   sportpassId?: bigint | null
@@ -67,7 +67,7 @@ export interface CardInput {
   rankingId?: number | null
   state: CardState
   complete: boolean
-  /** nur Kennungen aus `CARD_FLAGS`: Die Oberfläche benennt jede (Review, 15. Oktober 2026) */
+  /** nur Kennungen aus `CARD_FLAGS`: Die Oberfläche benennt jede */
   flags: readonly CardFlag[]
   origin: CardOrigin
   /** zuletzt bewegtes Lebenszeichen (Adapter); fehlt: nicht anfassen */
@@ -575,7 +575,7 @@ export async function refreshStaleProjections(
     onFailure?: (cardId: string, error: unknown) => void
   } = {}
 ): Promise<number> {
-  // eine scheiternde Scheibe stünde in jedem Stapel wieder vorn (nach Id) und hielte alle nach ihr auf (Review)
+  // eine scheiternde Scheibe stünde in jedem Stapel wieder vorn (nach Id) und hielte alle nach ihr auf
   const failed = new Set<string>()
   let total = 0
   for (let round = 0; round < MAX_REFRESH_ROUNDS; round++) {

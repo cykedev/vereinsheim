@@ -10,9 +10,9 @@ import { overviewTiles } from "../overview"
 import { fortyCard } from "../testCard"
 import { renderTab } from "../testPanel"
 
-// Plan Schritt 4, D3: Jedes Thema der Hilfe hat genau ein „?“ an einer Karte (Knopf mit data-help) über alle Reiter,
-// die Datenlage eins in jedem Reiter, dazu die Oberflächen-Hilfen der Analyse; keine Karte doppelt. Seit U1 tragen
-// auch die acht Kacheln des Überblicks ein „?“ (die Zahlen-Ansicht der Seite); sie zählen gesondert.
+// Jedes Thema der Hilfe hat genau ein „?“ an einer Karte (Knopf mit data-help) über alle Reiter, die Datenlage eins
+// in jedem Reiter, dazu die Oberflächen-Hilfen der Analyse; keine Karte doppelt. Auch die acht Kacheln des Überblicks
+// tragen ein „?“ (die Zahlen-Ansicht der Seite); sie zählen gesondert.
 const TILES = overviewTiles(analysisInput(fortyCard(), "decimal", LP_10M))
 const tileButton = (label: string, help: string) =>
   `<button type="button" aria-label="Erklärung: ${label}" data-help="${help}"`
@@ -32,14 +32,14 @@ describe("Hilfe in der Analyse", () => {
   const count = (id: string) => buttons.filter((b) => b === id).length
 
   it("jedes Thema einer Scheibe genau ein „?“, die Datenlage in jedem Reiter", () => {
-    // die Themen über viele Scheiben gehören auf die Seite eines Zeitraums (L3)
+    // die Themen über viele Scheiben gehören auf die Seite eines Zeitraums
     for (const topic of HELP_TOPICS.filter((t) => t.id !== "datenlage" && t.theme !== "period")) {
       expect(count(topic.id), topic.id).toBe(1)
     }
     expect(count("datenlage")).toBe(ANALYSIS_TABS.length)
   })
 
-  it("jede Kachel des Überblicks mit „?“ zu einem Thema, das auch eine Karte hat (Review U1)", () => {
+  it("jede Kachel des Überblicks mit „?“ zu einem Thema, das auch eine Karte hat", () => {
     const overview = renderTab("overview")
     for (const t of TILES) {
       expect(overview, t.label).toContain(tileButton(t.label, t.help))
@@ -47,13 +47,13 @@ describe("Hilfe in der Analyse", () => {
     }
   })
 
-  it("die Oberflächen-Hilfe Beobachtungen mit ihrem „?“ (die Probe auf der Scheibe entfiel mit U4)", () => {
+  it("die Oberflächen-Hilfe Beobachtungen mit ihrem „?“, keine zur Probe auf der Scheibe", () => {
     expect(VIEW_HELP.map((v) => v.id)).toContain("beobachtungen")
     expect(count("beobachtungen")).toBe(1)
     expect(VIEW_HELP.map((v) => v.id)).not.toContain("probe-auf-der-scheibe")
   })
 
-  it("keine Karte doppelt, kein „Was heißt das?“ mehr in der Analyse", () => {
+  it("keine Karte doppelt, kein „Was heißt das?“ in der Analyse", () => {
     expect(new Set(cards).size).toBe(cards.length)
     for (const html of pages) expect(html).not.toContain("<details data-help")
   })

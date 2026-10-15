@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import { ListHeader } from "./ListHeader"
 
-describe("Kopf der Scheiben-Liste (Plan N2, Review)", () => {
+describe("Kopf der Scheiben-Liste", () => {
   it("Titel wie im Zeitraum, Familie und Zahl der Scheiben, darunter die Filter", () => {
     const html = renderToStaticMarkup(
       h(ListHeader, {

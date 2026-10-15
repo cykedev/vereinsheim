@@ -7,8 +7,8 @@ import { PAGE_SECTIONS } from "./sections"
 
 /**
  * Sprung zum Abschnitt ohne den Sprung des Browsers: In einer `data:`-Seite (Vorschau) oder einem Rahmen mit
- * Sandbox blockt der Browser die Navigation zum Anker, dann sprang die Leiste nirgends hin (User, 9. Oktober
- * 2026). Die Leiste scrollt selbst, sofort wie zuvor, und schreibt den Anker, wo der Browser es erlaubt. Ein
+ * Sandbox blockt der Browser die Navigation zum Anker, die Leiste spränge dann nirgends hin. Die Leiste
+ * scrollt selbst, sofort, und schreibt den Anker, wo der Browser es erlaubt. Ein
  * Klick mit Taste (neuer Tab) bleibt dem Browser.
  */
 export function jumpToSection(event: MouseEvent<HTMLAnchorElement>, id: string) {
@@ -32,9 +32,9 @@ const PHONE_COLUMNS: Readonly<Record<number, string>> = {
 }
 
 /**
- * Sprungleiste (Plan Schritt 4, D1): klebt unter dem Kopf am oberen Rand, Anker zu den Abschnitten (drei auf der
+ * Sprungleiste: klebt unter dem Kopf am oberen Rand, Anker zu den Abschnitten (drei auf der
  * Scheibe, vier im Zeitraum), der sichtbare hervorgehoben. Optik wie die Reiterleiste der Analyse, die sie auf dem
- * Telefon abdeckt. Dort teilen sich die Einträge die Breite, nichts wird angeschnitten (User, 8. Oktober 2026).
+ * Telefon abdeckt. Dort teilen sich die Einträge die Breite, nichts wird angeschnitten.
  */
 export function SectionNav({
   active,

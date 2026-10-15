@@ -1,6 +1,6 @@
 // Geometrie von Trefferbildern: Schwerpunkt, Streukreis, Radien, Streuung, Ellipse.
 //
-// Gerechnet wird in µm mit Gleitkomma; die Lagen selbst sind ganze µm (SP-1.1). Der Streukreis ist
+// Gerechnet wird in µm mit Gleitkomma; die Lagen selbst sind ganze µm. Der Streukreis ist
 // der kleinste Kreis um alle Trefferzentren, ohne Kaliber (Mitte zu Mitte). Daneben gibt es den
 // größten Abstand zweier Treffer. Meytons „Trefferkreis“ ist der Streukreis plus Kaliber, auf 1/100 mm
 // gerundet; seine „Trefferlage“ der Schwerpunkt, auf 1/100 mm abgeschnitten (Ausdruck vom 9. Oktober
@@ -115,7 +115,7 @@ export function extremeSpread(points: readonly Point[]): number | null {
 }
 
 /**
- * Mittel der Abstände zum Schwerpunkt. Keine Kennzahl mehr (P3 entfiel im Oktober 2026, ≈ 1,24 · σ̂);
+ * Mittel der Abstände zum Schwerpunkt. Keine Kennzahl (Katalog P3: ≈ 1,24 · σ̂);
  * bleibt als Baustein, etwa für Vergleiche mit Literatur, die den mittleren Radius angibt.
  */
 export function meanRadius(points: readonly Point[]): number | null {

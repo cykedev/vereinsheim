@@ -1,6 +1,5 @@
-// Worte für den Vergleich und der Satz im Kopf der Seite eines Zeitraums (Plan L3, D6, D14). „deutlich“ (die
-// Effektstärke, früher „bedeutsam“) nur neben einem Urteil (L2, B19: ohne Veränderung trifft es bei 5 gegen 5
-// Scheiben oft zu).
+// Worte für den Vergleich und der Satz im Kopf der Seite eines Zeitraums. „deutlich“ (die Effektstärke) nur neben
+// einem Urteil (B19: ohne Veränderung trifft es bei 5 gegen 5 Scheiben oft zu).
 
 import type { PeriodComparison } from "@vereinsheim/shot-core/analysis"
 
@@ -9,7 +8,7 @@ import { PREVIOUS_LABEL } from "./calendar"
 import type { PeriodModel } from "./model"
 
 /**
- * Urteil in Alltagsworten (U3, D5): „deutlich besser“, „schwächer“, „kein klarer Unterschied“, „zu wenige Scheiben“;
+ * Urteil in Alltagsworten: „deutlich besser“, „schwächer“, „kein klarer Unterschied“, „zu wenige Scheiben“;
  * ohne Richtung der Kennzahl (Tempo) „höher“ oder „tiefer“. Die Richtung der Zahl steht schon im Δ daneben.
  */
 export function verdictText(
@@ -34,10 +33,10 @@ export function verdictText(
 const LEVEL = 0.005
 
 /**
- * Ein Satz zum Zeitraum (D14, U2 D1): Er beantwortet „Werde ich besser?“ im Ø je Schuss wie die Ergebnis-Box. Er
+ * Ein Satz zum Zeitraum: Er beantwortet „Werde ich besser?“ im Ø je Schuss wie die Ergebnis-Box. Er
  * vergleicht mit dem gewählten Vergleich, sonst still mit dem Zeitraum davor, bei „Alles“ die letzten 90 Tage mit den
- * 90 davor (`PeriodModel.form`); „ein klarer Unterschied“ nur bei einem Urteil, in denselben Worten wie `verdictText`
- * (Review U3). Ohne Scheiben keiner.
+ * 90 davor (`PeriodModel.form`); „ein klarer Unterschied“ nur bei einem Urteil, in denselben Worten wie `verdictText`.
+ * Ohne Scheiben keiner.
  */
 export function periodSentence(model: Pick<PeriodModel, "form">): string | null {
   const form = model.form
@@ -58,7 +57,7 @@ export function periodSentence(model: Pick<PeriodModel, "form">): string | null 
       : `Für einen Vergleich mit ${other.dative} sind es zu wenige Scheiben.`
   }
   if (Math.abs(c.delta) < LEVEL) return `${subject} gleichauf mit ${other.dative}.`
-  // „…, nicht nachweisbar“ klang wie ein Widerspruch zur Zahl davor (Prüfung, 9. Oktober 2026)
+  // „…, nicht nachweisbar“ klingt wie ein Widerspruch zur Zahl davor
   const proven =
     c.verdict === "unclear"
       ? "ein klarer Unterschied ist das aber nicht"

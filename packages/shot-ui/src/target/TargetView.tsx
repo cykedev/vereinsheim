@@ -106,7 +106,7 @@ export function TargetView({
   const confidence = state.layers.ellipse ? mpiConfidence(group) : null
   const center = state.layers.mpi && group.length >= 2 ? centroid(groupPoints) : null
 
-  // ein Training nur aus Probe heißt so (U4: eine Probe neben Wertung gibt es nicht mehr)
+  // ein Training nur aus Probe heißt so (eine Probe neben Wertung gibt es nicht)
   const training = shots.length > 0 && shots.every(isProbeShot)
   const label = `${target.label}: ${shots.length} ${
     training ? "Probeschüsse als Training" : "Wertungsschüsse"
@@ -147,7 +147,7 @@ export function TargetView({
       role="img"
       aria-label={label}
       viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
-      // Tippen auf die Scheibe markiert nicht die Ringzahlen (User, 9. Oktober 2026)
+      // Tippen auf die Scheibe markiert nicht die Ringzahlen
       className={`select-none ${className ?? ""}`}
       onClick={tap}
     >

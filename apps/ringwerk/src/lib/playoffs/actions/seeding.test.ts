@@ -382,14 +382,14 @@ describe("getSeedingStandings — eine Quelle für die Setzliste", () => {
     })
   })
 
-  it("Doppelrunden-Liga: Punkte-Tabelle wie bisher", async () => {
+  it("Doppelrunden-Liga: Punkte-Tabelle", async () => {
     league(["A", "B", "C", "D"], { format: "DOUBLE_ROUND_ROBIN" })
     const rows = (await getSeedingStandings("c1")) as StandingRow[]
     expect(rows.map((r) => r.participantId)).toEqual(["A", "B", "C", "D"])
     expect(rows.map((r) => r.points)).toEqual([12, 8, 4, 0])
   })
 
-  it("Wettbewerb nicht gefunden: Rundenturnier-Rechnung wie bisher, kein Absturz", async () => {
+  it("Wettbewerb nicht gefunden: Rundenturnier-Rechnung, kein Absturz", async () => {
     league(["A", "B", "C", "D"], { format: "DOUBLE_ROUND_ROBIN" })
     m.competitionFindUnique.mockResolvedValue(null)
     const rows = (await getSeedingStandings("c1")) as StandingRow[]

@@ -6,7 +6,7 @@ const DEV_SECRET = "dev-secret-fuer-lokale-entwicklung-min32z"
 export const AUTH_SECRET =
   process.env.NEXTAUTH_SECRET ?? (process.env.NODE_ENV === "production" ? undefined : DEV_SECRET)
 
-// der öffentliche Beispielwert in Produktion (`.env.example` kopiert) hieße: jeder kann Sitzungen fälschen (Review).
+// der öffentliche Beispielwert in Produktion (`.env.example` kopiert) hieße: jeder kann Sitzungen fälschen.
 // Nur für den laufenden Server: `next build` läuft auch im Produktionsmodus und liest lokal die `.env` mit dem Beispiel.
 const building = process.env.NEXT_PHASE === "phase-production-build"
 if (

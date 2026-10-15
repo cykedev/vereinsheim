@@ -9,7 +9,7 @@ import { blockedItems, trashItems } from "@/lib/trash-view"
 
 export const metadata: Metadata = { title: "Papierkorb" }
 
-// Papierkorb (P2b): eigene gelöschte Scheiben und was nicht von selbst wiederkommt; gerechnet auf dem Server
+// Papierkorb: eigene gelöschte Scheiben und was nicht von selbst wiederkommt; gerechnet auf dem Server
 export default async function TrashRoute() {
   const session = await requireSession()
   const [{ timeZone, nowMs }, trash, blocked] = await Promise.all([

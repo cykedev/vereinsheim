@@ -10,7 +10,7 @@ import { pendingItems } from "@/lib/open"
 
 export const metadata: Metadata = { title: "Offen" }
 
-// Offen (SP-1.7 a2): je SportpassID die älteste wartende Scheibe zum Bestätigen; gerechnet auf dem Server
+// Offen: je SportpassID die älteste wartende Scheibe zum Bestätigen; gerechnet auf dem Server
 export default async function OpenRoute() {
   const session = await requireSession()
   const pending = await pendingFirstCards(db, session.user.id)

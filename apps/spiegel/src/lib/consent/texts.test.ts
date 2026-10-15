@@ -12,7 +12,7 @@ describe("Hinweistexte", () => {
     expect(hash).toBe("dff0dde1a4459e9219076268ccf1ece2c7d2b43b96e04164c3300c2445747cd5")
   })
 
-  it("v2 ist festgeschrieben (P2f, Textbuch) und gilt für neue Zustimmungen", () => {
+  it("v2 ist festgeschrieben und gilt für neue Zustimmungen", () => {
     const hash = createHash("sha256").update(JSON.stringify(CONSENT_TEXTS.v2)).digest("hex")
     expect(hash).toBe("577b9e9a20b3e291bcd66acdc00786a929d02b61b342faca7b798b0b8cfd5a42")
     expect(CURRENT_CONSENT_VERSION).toBe("v2")
@@ -20,7 +20,7 @@ describe("Hinweistexte", () => {
     const all = CONSENT_TEXTS.v2!.paragraphs.join(" ")
     expect(all).toContain("Auch ältere Scheiben holt Spiegel")
     expect(all).toContain("wie viele Scheiben dein Konto hat")
-    // gelöscht heißt nicht spurlos: Spiegel merkt sich Tag und Uhrzeit (Review P2f)
+    // gelöscht heißt nicht spurlos: Spiegel merkt sich Tag und Uhrzeit
     expect(all).toContain("Spiegel merkt sich nur Tag und Uhrzeit")
     for (const text of [CONSENT_TEXTS.v2!.title, ...CONSENT_TEXTS.v2!.paragraphs])
       expect(text).not.toMatch(OLD_WORDS)

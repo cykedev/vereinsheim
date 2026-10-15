@@ -1,8 +1,8 @@
-// Symbol einer Beobachtung (Spielwiese `observations`): im Überblick der Analyse und im Kopf der Scheibe (U1)
+// Symbol einer Beobachtung: im Überblick der Analyse und im Kopf der Scheibe
 
 import type { ObservationIcon } from "./observations"
 
-/** Symbole der Beobachtungen wie in der Spielwiese (24er-Raster, Linien) */
+/** Symbole der Beobachtungen (24er-Raster, Linien) */
 const ICONS: Readonly<Record<ObservationIcon, string[]>> = {
   position: [
     "M12 3.5a8.5 8.5 0 1 0 0 17a8.5 8.5 0 1 0 0-17",

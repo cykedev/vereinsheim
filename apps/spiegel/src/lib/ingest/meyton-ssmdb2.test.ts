@@ -93,7 +93,7 @@ describe.each(frozenCaseIds().map((id) => [id] as const))("Fall %s", (caseId) =>
 
       expect(last.completeness).toBe(card.completeness)
       expect(flagsAfter(cards)).toEqual([...card.flags].sort())
-      // nur Kennungen, die die Oberfläche benennen kann (`CARD_FLAGS`, Review: zwei fehlten)
+      // nur Kennungen, die die Oberfläche benennen kann (`CARD_FLAGS`)
       for (const flag of flagsAfter(cards)) expect(CARD_FLAGS as readonly string[]).toContain(flag)
 
       // wie am Ausdruck: mit Wertung die Wertung, sonst die Probe
@@ -204,7 +204,7 @@ describe("Adapter im Einzelnen", () => {
     expect(adaptSnapshot(extra, context).kind).toBe("card")
   })
 
-  it("nach einem Ausfall der Brücke misst die Beobachtung nicht die Uhr des Stands (Review)", () => {
+  it("nach einem Ausfall der Brücke misst die Beobachtung nicht die Uhr des Stands", () => {
     // der vorige Stand vor einer Stunde gesehen, inzwischen weitergeschossen: kein Versatz, kein Merkmal
     const result = adaptSnapshot(snapshot, {
       ...context,

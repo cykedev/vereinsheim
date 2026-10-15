@@ -18,9 +18,9 @@ export interface ScoringChipProps {
 }
 
 /**
- * Wertung als Wechsel-Chip in einer Filterzeile (User, 13. Oktober 2026, aus drei Skizzen): so groß wie der Chip
+ * Wertung als Wechsel-Chip in einer Filterzeile: so groß wie der Chip
  * „Filter“, in Worten mit Bezug, ein Tippen stellt um. Neutral umrandet mit ⇄, damit er sich vom blauen Chip
- * unterscheidet, der ein Blatt öffnet. Eine beschriftete Auswahl „Ganze Ringe | Zehntel“ brach am Telefon in eine
+ * unterscheidet, der ein Blatt öffnet. Eine beschriftete Auswahl „Ganze Ringe | Zehntel“ bräche am Telefon in eine
  * dritte Zeile um; neben einer Zahl steht stattdessen der Kreis (`ScoringToggle`).
  */
 export function ScoringChip({ scoring, texts, label, onChange, className }: ScoringChipProps) {

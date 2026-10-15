@@ -97,7 +97,7 @@ describe("Zustimmung durch den Schützen", () => {
     await db.sportpassConsent.delete({ where: { id: consent.id } })
   })
 
-  it("einem älteren Hinweistext (v1) stimmt niemand mehr neu zu (P2f)", async () => {
+  it("einem älteren Hinweistext (v1) stimmt niemand mehr neu zu", async () => {
     asShooter()
     const id = sportpass()
     expect(CURRENT_CONSENT_VERSION).toBe("v2")
@@ -141,7 +141,7 @@ describe("Zustimmung durch den Schützen", () => {
     })
   })
 
-  it("eine Sportpassnummer je Konto (User, 15. Oktober 2026), auch eine abgelehnte zählt", async () => {
+  it("eine Sportpassnummer je Konto, auch eine abgelehnte zählt", async () => {
     const userId = otherId
     const first = await requested(userId)
     asShooter(userId)
@@ -155,7 +155,7 @@ describe("Zustimmung durch den Schützen", () => {
         sportpass: ["Du hast schon eine Sportpassnummer. Für eine neue widerrufe erst die alte."],
       },
     })
-    // nur eine abgelehnte: entfernen, nicht widerrufen (Review)
+    // nur eine abgelehnte: entfernen, nicht widerrufen
     await db.sportpassConsent.update({ where: { id: first.id }, data: { rejectedAt: new Date() } })
     expect(
       await requestSportpass(
@@ -196,7 +196,7 @@ describe("Zustimmung durch den Schützen", () => {
   })
 })
 
-describe("Grenzen der Zustimmung (Review)", () => {
+describe("Grenzen der Zustimmung", () => {
   it("die Version ist die des gezeigten Texts; ein veralteter Text legt nichts an", async () => {
     asShooter()
     const id = sportpass()
@@ -313,7 +313,7 @@ describe("Entscheidung des Admins", () => {
     expect(await confirmConsent(consent.id)).toEqual({ success: true })
     const active = await db.sportpassConsent.findUniqueOrThrow({ where: { id: consent.id } })
     expect(consentStatus(active)).toBe("active")
-    // ein Auftrag zum Nachladen ist eröffnet (Review P2d)
+    // ein Auftrag zum Nachladen ist eröffnet
     expect(active.historyRequestedAt).not.toBeNull()
     expect(await confirmConsent(consent.id)).toEqual({
       error: "Das hat gerade schon jemand entschieden. Lade die Seite neu.",
@@ -367,7 +367,7 @@ describe("Entscheidung des Admins", () => {
   })
 })
 
-describe("Meldungen „nicht meine“ aufheben (P2d)", () => {
+describe("Meldungen „nicht meine“ aufheben", () => {
   it("nur ein Admin; nur Meldungen dieser Nummer an dieser Anlage; die erste Scheibe wartet wieder", async () => {
     const consent = await requested()
     await db.sportpassConsent.update({
@@ -415,7 +415,7 @@ describe("Meldungen „nicht meine“ aufheben (P2d)", () => {
       const after = await db.sportpassConsent.findUniqueOrThrow({ where: { id: consent.id } })
       expect(after.historyLoadedAt).toBeNull()
       expect(after.firstCardConfirmedAt).toBeNull()
-      // ein neuer Auftrag, den die Brücke von einem erledigten unterscheidet (Review)
+      // ein neuer Auftrag, den die Brücke von einem erledigten unterscheidet
       expect(after.historyRequestedAt).not.toBeNull()
       expect(consentStatus(after)).toBe("active")
       expect(await liftNotMine(consent.id)).toEqual({

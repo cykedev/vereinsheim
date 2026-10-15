@@ -12,7 +12,7 @@ import type { ActionResult } from "@/lib/types"
 import { consentStatus, MAX_CONSENTS_PER_ACCOUNT, onlyRemovable } from "./status"
 import { CURRENT_CONSENT_VERSION } from "./texts"
 
-// Zustimmung per Sportpass (SP-1.7 a, Plan `plans/2026-10-14-spiegel-optin.md`, D6): Der Schütze stimmt im Profil zu
+// Zustimmung per Sportpass: Der Schütze stimmt im Profil zu
 // und widerruft dort; ein Admin bestätigt, lehnt ab oder entfernt. Erst bestätigt lädt die Brücke hoch. Jede Action
 // prüft selbst und gibt ein ActionResult zurück.
 
@@ -44,7 +44,7 @@ const STALE_TEXT = "Der Hinweis hat sich geändert. Bitte die Seite neu laden un
 
 /**
  * die Grenze je Konto ist erreicht (unter der Sperre der Kontozeile gezählt, auch bei gleichzeitigen Aufrufen);
- * `onlyRejected`: es gibt nur abgelehnte, deren Knopf heißt „Entfernen“ (Review)
+ * `onlyRejected`: es gibt nur abgelehnte, deren Knopf heißt „Entfernen“
  */
 class LimitReached extends Error {
   constructor(readonly onlyRejected: boolean) {
@@ -54,7 +54,7 @@ class LimitReached extends Error {
 
 /**
  * Der Schütze stimmt dem Hinweistext für eine SportpassID zu; danach wartet sie auf den Admin. Das Formular schickt die
- * Version des gezeigten Texts mit: So belegt die Zeile genau den gelesenen Wortlaut (Review).
+ * Version des gezeigten Texts mit: So belegt die Zeile genau den gelesenen Wortlaut.
  */
 export async function requestSportpass(
   _previous: ActionResult | null,
@@ -69,7 +69,7 @@ export async function requestSportpass(
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
   const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true } })
-  // das sieht ein Schütze: keine Aufgabe des Admins nennen (Review P2f)
+  // das sieht ein Schütze: keine Aufgabe des Admins nennen
   if (!site)
     return {
       error:
@@ -78,7 +78,7 @@ export async function requestSportpass(
   const sportpassId = BigInt(parsed.data.sportpass)
   try {
     // Zählen und Anlegen in einer Transaktion unter der Sperre der Kontozeile: gleichzeitige Aufrufe desselben Kontos
-    // warten aufeinander, die Grenze hält ([[conventions]] §9, Review)
+    // warten aufeinander, die Grenze hält ([[conventions]] §9)
     await db.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`
       const existing = await tx.sportpassConsent.findMany({
@@ -126,8 +126,8 @@ export async function requestSportpass(
 }
 
 /**
- * Widerruf (oder Entfernen einer Ablehnung): nur die eigene. Die Scheiben bleiben beim Schützen, er löscht sie selbst
- * (User, 14. Oktober 2026); ab dem nächsten `GET /state` lädt die Brücke nichts mehr (SF-38).
+ * Widerruf (oder Entfernen einer Ablehnung): nur die eigene. Die Scheiben bleiben beim Schützen, er löscht sie selbst;
+ * ab dem nächsten `GET /state` lädt die Brücke nichts mehr (SF-38).
  */
 export async function revokeSportpass(consentId: number): Promise<ActionResult> {
   const userId = await shooterId()
@@ -171,7 +171,7 @@ export async function confirmConsent(consentId: number): Promise<ActionResult> {
   return decide(
     consentId,
     { confirmedAt: null, rejectedAt: null },
-    // ein neuer Auftrag zum Nachladen, falls er offen ist (Review P2d)
+    // ein neuer Auftrag zum Nachladen, falls er offen ist
     { confirmedAt: new Date(), returnedAt: null, historyRequestedAt: new Date() }
   )
 }
@@ -199,7 +199,7 @@ export async function removeConsent(consentId: number): Promise<ActionResult> {
 }
 
 /**
- * Meldungen „nicht meine“ der Nummer einer Zustimmung aufheben (P2d, D8): Die Grabsteine dieser Anlage und SportpassID
+ * Meldungen „nicht meine“ der Nummer einer Zustimmung aufheben: Die Grabsteine dieser Anlage und SportpassID
  * gehen, die Brücke holt die Scheiben nach (`historyLoadedAt` null), und sie warten in „Offen“, bis der Schütze sie
  * bestätigt (`firstCardConfirmedAt` null). Andere Grabsteine bleiben.
  */
@@ -227,7 +227,7 @@ export async function liftNotMine(consentId: number): Promise<ActionResult> {
       if (count > 0)
         await tx.sportpassConsent.updateMany({
           where: { id: consentId },
-          // ein neuer Auftrag: Die Brücke liest auch, was sie in diesem Lauf schon gemeldet hat (Review P2d)
+          // ein neuer Auftrag: Die Brücke liest auch, was sie in diesem Lauf schon gemeldet hat
           data: {
             historyLoadedAt: null,
             historyRequestedAt: new Date(),

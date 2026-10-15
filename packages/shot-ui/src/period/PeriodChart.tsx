@@ -67,7 +67,7 @@ function monthStarts(fromMs: number, toMs: number, timeZone: string): number[] {
 }
 
 /**
- * Verlauf über viele Scheiben (Plan L3, D7, D8): „je Scheibe“ ein Punkt je Scheibe über dem Datum (Wettkampf mit
+ * Verlauf über viele Scheiben: „je Scheibe“ ein Punkt je Scheibe über dem Datum (Wettkampf mit
  * Ring, nur Probe hohl), der Schnitt der letzten fünf als Linie (gestrichelt, solange „bisher“) und das Formband
  * als Fläche; „je Monat“ Median und P10–P90 je Monat (T5); mit Vergleich beide Zeiträume auf „Scheibe 1, 2, 3 …“,
  * der Vergleich hohl und grau, ohne Band. Das Lineal wählt in „je Scheibe“ die Scheibe der Seite, sonst liest es
@@ -167,7 +167,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
     const lead = mode === "compare" ? `Scheibe ${i + 1} · ` : ""
     const other =
       mode === "compare" && compare?.[i] ? ` · im Vergleich ${show(compare[i].value)}` : ""
-    // derselbe Abstand wie in Liste und Ablesung: zu den Scheiben davor, ohne sie selbst (Review, 9. Oktober 2026)
+    // derselbe Abstand wie in Liste und Ablesung: zu den Scheiben davor, ohne sie selbst
     const delta = model.deltas.get(v.id)
     const before = delta
       ? `${formatSigned(delta.delta, digits)} zum Schnitt ${delta.n === 1 ? "der Scheibe" : `der ${delta.n} Scheiben`} davor`
@@ -184,7 +184,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
         : m.floor !== null && m.ceiling !== null
           ? `Boden ${formatValue(m.floor, digits)} · Decke ${formatValue(m.ceiling, digits)}`
           : `Spanne ${formatValue(m.p10, digits)} – ${formatValue(m.p90 as number, digits)}`
-    // Alltagsworte wie auf der ersten Ebene (Review U3): „Mitte“ ist der Median, das Blatt „?“ nennt ihn so
+    // Alltagsworte wie auf der ersten Ebene: „Mitte“ ist der Median, das Blatt „?“ nennt ihn so
     return `${m.label} · ${m.n} ${m.n === 1 ? "Scheibe" : "Scheiben"} · Mitte ${formatValue(m.median, digits)} · ${spread}`
   }
   const index = ruler.index

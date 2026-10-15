@@ -21,7 +21,7 @@ import type { AnalysisInput } from "../input"
 import { AnalysisCard, IntervalBar, KeyValues, Muted, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
 
-/** Schwellen der Quoten (Spielwiese `resultTab`): ganze Ringe, sonst nach Waffe */
+/** Schwellen der Quoten: ganze Ringe, sonst nach Waffe */
 export function shareThresholds({ scoring, target }: AnalysisInput): [number, string][] {
   if (scoring === "rings") {
     return [
@@ -99,7 +99,7 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
                   mean === null ? (
                     "–"
                   ) : total === null ? (
-                    // ohne Ergebnis über die Schüsse mit Wert, wie die Hilfe sagt (Prüfung, Ergebnis 3)
+                    // ohne Ergebnis über die Schüsse mit Wert, wie die Hilfe sagt
                     <>
                       {formatValue(mean.mean, 2)}
                       <Muted>{` über ${mean.n} Schuss ${valuedWord(scoring)}`}</Muted>
@@ -134,7 +134,7 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
       key: "zehntelverteilung",
       element: (
         <AnalysisCard help="zehntelverteilung" explain={explain} onHelp={onHelp}>
-          {/* immer, auch in ganzen Ringen: Einzelschüsse stehen in Zehnteln (Rückmeldung 3) */}
+          {/* immer, auch in ganzen Ringen: Einzelschüsse stehen in Zehnteln */}
           {hist.n ? (
             <>
               <ChartSlot height={150}>

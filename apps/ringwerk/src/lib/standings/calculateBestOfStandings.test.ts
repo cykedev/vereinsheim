@@ -529,7 +529,7 @@ describe("2-way tie without a direct match — alphabetical, annotated open", ()
   // A and B both beat C but never played each other (incomplete round-robin).
   // They tie on wins/duelDiff/duelsWon; the direct comparison cannot decide →
   // alphabetical order, each row annotated "open" with the not-yet-played opponent.
-  // RINGS mode — proves the tiebreak no longer depends on the scoring value.
+  // RINGS mode — proves the tiebreak does not depend on the scoring value.
 
   const participants = [
     mkParticipant("A", "Alice", "Alpha"),

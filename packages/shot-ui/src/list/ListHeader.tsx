@@ -12,7 +12,7 @@ export interface ListHeaderProps {
 }
 
 /**
- * Kopf der Scheiben-Liste (Plan N2, Review): Titel wie im Kopf eines Zeitraums, darunter Familie und Zahl der
+ * Kopf der Scheiben-Liste: Titel wie im Kopf eines Zeitraums, darunter Familie und Zahl der
  * gezeigten Scheiben, dann die Filter. Die Abende darunter sind Überschriften zweiter Ebene.
  */
 export function ListHeader({ familyLabel, cards, controls, className }: ListHeaderProps) {

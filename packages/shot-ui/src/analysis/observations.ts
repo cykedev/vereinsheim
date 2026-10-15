@@ -1,6 +1,6 @@
-// Beobachtungen in Worten (Spielwiese `observations`): die wichtigsten Befunde als Sätze, gebildet aus
-// denselben Zahlen wie die Karten, in fester Reihenfolge. Ein Satz steht nur, wenn der Fachkern einen Wert
-// hat; „sicher“ und „klar“ nur, wenn sein Test es sagt (Alltagsworte seit U3).
+// Beobachtungen in Worten: die wichtigsten Befunde als Sätze, gebildet aus denselben Zahlen wie die Karten, in fester
+// Reihenfolge. Ein Satz steht nur, wenn der Fachkern einen Wert hat; „sicher“ und „klar“ nur, wenn sein Test es sagt
+// (in Alltagsworten).
 
 import {
   cardTrend,
@@ -25,8 +25,8 @@ export interface Observation {
   icon: ObservationIcon
   text: string
   /**
-   * fällt auf und gehört in den Kopf der Seite (U1, D4): die Lage immer, Ausreißer nur wenn es welche gibt, ein Trend
-   * nur wenn er klar ist; Präzision, Pausen und Tempo nie. Probe gegen Wertung gibt es seit U4 nicht mehr
+   * fällt auf und gehört in den Kopf der Seite: die Lage immer, Ausreißer nur wenn es welche gibt, ein Trend nur
+   * wenn er klar ist; Präzision, Pausen und Tempo nie. Probe gegen Wertung gibt es nicht
    */
   notable: boolean
 }
@@ -37,7 +37,7 @@ export function firstSentence(text: string): string {
 }
 
 /**
- * Die wichtigsten Beobachtungen für den Kopf der Seite (U1, D4): die Lage zuerst, dann die auffälligen in ihrer
+ * Die wichtigsten Beobachtungen für den Kopf der Seite: die Lage zuerst, dann die auffälligen in ihrer
  * Reihenfolge, höchstens `max`, je ihr erster Satz. Ohne Lage nur die auffälligen,
  * ohne beides keine.
  */
@@ -57,11 +57,11 @@ export function observations(input: AnalysisInput): Observation[] {
   const confidence = mpiConfidence(base)
   if (confidence) {
     if (confidence.real) {
-      // Alltagsworte (U3, D2): „Gruppe“ statt „Schwerpunkt“, „sicher“ statt „mit 95 %“; die Fachbegriffe im Blatt
+      // Alltagsworte: „Gruppe“ statt „Schwerpunkt“, „sicher“ statt „mit 95 %“; die Fachbegriffe im Blatt
       let text = `Deine Gruppe liegt ${directionWords(confidence.center)} neben der Mitte; das ist sicher kein Zufall.`
       const split = ringLossSplit(base, target)
       if (split?.reliable) {
-        // die Summe über alle Schüsse mit Lage, darum mit ihrem n und je Schuss (Prüfung, Ergebnis 1)
+        // die Summe über alle Schüsse mit Lage, darum mit ihrem n und je Schuss
         const gain = split.positionLoss[scoring === "rings" ? "rings" : "decimal"]
         text +=
           gain > 0
@@ -123,13 +123,13 @@ export function observations(input: AnalysisInput): Observation[] {
       : `Kein klarer Trend über die Scheibe (Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss, je Zehnerserie ${perSeries} Ringe).`
     const tired = fatigue(base, scoring)
     if (tired) {
-      // der Unterschied gilt je Schuss; zehn Schuss zusammen das Zehnfache (Prüfung, Zeit 4)
+      // der Unterschied gilt je Schuss; zehn Schuss zusammen das Zehnfache
       const d = tired.deltaRings
       const where =
         Math.abs(d) < 0.005
           ? "genau im Schnitt der ersten zehn"
           : `im Schnitt ${formatValue(Math.abs(d), 2)} Ringe je Schuss ${d < 0 ? "unter" : "über"} den ersten zehn (zusammen ${ringsSigned(d * 10, scoring === "rings" ? 0 : 1)})`
-      // „die Gruppe weiter/enger“ statt „R50 ±…“ (U3, D2)
+      // „die Gruppe weiter/enger“ statt „R50 ±…“
       const group =
         tired.deltaR50Um === null
           ? ""
@@ -141,8 +141,8 @@ export function observations(input: AnalysisInput): Observation[] {
 
   const recovery = pauseRecovery(base, scoring, card)
   if (recovery?.effects.length) {
-    // gegen die übrigen Schüsse und je Schuss, bis zu drei danach (Prüfung, Zeit 1); ohne vergleichbaren
-    // Wert sagt der Satz das, statt „im Schnitt“ (Plan D8)
+    // gegen die übrigen Schüsse und je Schuss, bis zu drei danach; ohne vergleichbaren Wert sagt der Satz das,
+    // statt „im Schnitt“
     const effect = (afterShot: number, d: number | null) =>
       d === null
         ? `nach der Pause vor Schuss ${afterShot} fehlen Werte zum Vergleich`

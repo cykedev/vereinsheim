@@ -33,7 +33,7 @@ describe("erster Satz", () => {
   })
 })
 
-describe("die wichtigsten Beobachtungen für den Kopf (U1, D4)", () => {
+describe("die wichtigsten Beobachtungen für den Kopf", () => {
   it("die Lage zuerst, auch wenn sie nicht vorn steht; danach die auffälligen in ihrer Reihenfolge", () => {
     const key = keyObservations([o("outlier", true), o("position", false), o("trend", true)])
     expect(key.map((k) => k.icon)).toEqual(["position", "outlier", "trend"])
@@ -99,7 +99,7 @@ describe("was auffällt, an echten Scheiben", () => {
   })
 })
 
-describe("Sätze in Alltagsworten (U3, D2)", () => {
+describe("Sätze in Alltagsworten", () => {
   it("keine Fachbegriffe: kein σ, R50, „95 %“, Median, Schwerpunkt", () => {
     const texts = observations(analysisInput(fortyCard(), "decimal", LP_10M)).map((o) => o.text)
     for (const text of texts)

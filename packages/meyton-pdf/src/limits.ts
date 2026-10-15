@@ -2,10 +2,10 @@
 // zwischen den Schritten von pdf.js gegen eine Uhr; einen Timer gäbe es während eines Schritts nicht.
 //
 // Was sie NICHT leisten: Dekomprimieren, Metadaten und Glyphen baut pdf.js im selben Prozess, ohne dass
-// eine Prüfung dazwischenkommt. Gemessen im Review (Oktober 2026): ein 3-KB-PDF mit einem riesigen Tj
+// eine Prüfung dazwischenkommt. Gemessen: ein 3-KB-PDF mit einem riesigen Tj
 // 294 MB, ein 128-KB-XMP 1,36 GB, 256 KB Operatoren 21,5 s, ohne dass eine Grenze anschlug. Gegen
 // präparierte PDFs hilft nur ein kurzlebiger Kindprozess mit Speichergrenze, der nach der Zeitgrenze
-// hart beendet wird; den braucht der Server (SP-1.7). Ein Worker-Thread reicht nicht.
+// hart beendet wird; den braucht der Server. Ein Worker-Thread reicht nicht.
 
 export interface PrintoutLimits {
   maxBytes: number

@@ -46,17 +46,17 @@ function LegendItem({ children, label }: { children: ReactNode; label: string })
   )
 }
 
-/** Mindestzahl für die Streuung des Tempos, wie in der Kachel „Tempo“ (D8) */
+/** Mindestzahl für die Streuung des Tempos, wie in der Kachel „Tempo“ */
 const TEMPO_MISSING = "ab 4 Schuss mit Zeit"
 
 /**
- * was als Pause gilt, nach der Grundlage der Schwelle (User, 10. Oktober 2026); Zahlen aus der Regel in `shot-core/time`.
+ * was als Pause gilt, nach der Grundlage der Schwelle; Zahlen aus der Regel in `shot-core/time`.
  * Der übliche Abstand ist der Median aller Abstände bis drei Minuten, nicht das Tempo darüber (das zählt ohne Pausen)
  */
 export function pauseRuleText(rule: PauseRule): string {
   const over = `Als Pause gilt ein Abstand über ${durationText(rule.thresholdMs)}`
   const typical = rule.typicalMs === null ? "" : `${formatValue(rule.typicalMs / 1000, 1)} s`
-  // „das Doppelte“ statt „das 2,0-Fache“ (seit 15. Oktober 2026)
+  // „das Doppelte“ statt „das 2,0-Fache“
   const factor = PAUSE_FACTOR === 2 ? "Doppelte" : `${formatValue(PAUSE_FACTOR, 1)}-Fache`
   switch (rule.basis) {
     case "takt":
@@ -83,7 +83,7 @@ export function timeCards({
   onShowShot,
 }: CardContext): CardSpec[] {
   const { base, card, scoring } = input
-  // Lineal in Verlauf und Rhythmus: auf dem Schuss der Scheibe, „Auf der Scheibe“ zurück (Plan L1, D4)
+  // Lineal in Verlauf und Rhythmus: auf dem Schuss der Scheibe, „Auf der Scheibe“ zurück
   const numbers = shotNumbers(base)
   const chosenNumber = chosenShot ? (numbers.get(chosenShot) ?? null) : null
   const onShow = onShowShot
@@ -92,7 +92,7 @@ export function timeCards({
         if (shot) onShowShot(shot)
       }
     : undefined
-  // Punkte und gleitender Schnitt des Verlaufs in Zehnteln, gleich in welcher Wertung (Rückmeldung 3); ohne Zehntel
+  // Punkte und gleitender Schnitt des Verlaufs in Zehnteln, gleich in welcher Wertung; ohne Zehntel
   // (SF-18) in ganzen Ringen. Die Zahl des Trends folgt der Wertung wie Ø und Summen: dieselbe Zahl steht in Übersicht
   // und Beobachtungen
   const course: Scoring = movingAverage(base, "decimal").length >= 2 ? "decimal" : "rings"
@@ -102,7 +102,7 @@ export function timeCards({
   const timed = profile.filter((p) => p.intervalMs !== null).length
   const pace = tempoSpread(base, card)
   const duration = computeMetric(inScoring(metricByKey("time.duration")!, scoring), base, card)
-  // der Median wie die Kachel an der Scheibe ab 3 Schuss mit Zeit, die Streuung ab 4 (Prüfung, Zeit 6)
+  // der Median wie die Kachel an der Scheibe ab 3 Schuss mit Zeit, die Streuung ab 4
   const medianSeconds = computeMetric(metricByKey("time.intervalMedian")!, base, card)
   const recovery = pauseRecovery(base, scoring, card)
   const tired = fatigue(base, scoring)

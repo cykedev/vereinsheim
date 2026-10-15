@@ -21,7 +21,7 @@ export function targetRoom(
   viewportHeight: number,
   columnHeight: number,
   boxHeight: number,
-  /** Platz der unteren Leiste des Rahmens (`--app-bar`, Plan N3, D2) */
+  /** Platz der unteren Leiste des Rahmens (`--app-bar`) */
   barPx = 0
 ) {
   const room = Math.floor(viewportHeight - NAV_PX - AIR_PX - barPx - (columnHeight - boxHeight))

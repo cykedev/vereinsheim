@@ -211,7 +211,7 @@ export function directionClock(
  * Drift in der Abgabefolge: das von-Neumann-Verhältnis, je Sprung und je Freiheitsgrad normiert: (Σ
  * Sprung²/k) / (Σ rᵢ²/(n − 1)). Um 2 bei unabhängigen Schüssen, deutlich darunter wandert die
  * Gruppe; ein Urteil gibt es nicht, weil die Zahl bei kleinem n stark schwankt. Ø und größter
- * Sprung entfallen (Oktober 2026): Der Ø Sprung ist im Mittel √π · σ, sagt also nichts Neues, und
+ * Sprung gibt es nicht: Der Ø Sprung ist im Mittel √π · σ, sagt also nichts Neues, und
  * der größte wächst mit der Schusszahl. Fehlt ein Schuss (Sprung in `seq`, SF-30), zählt der Sprung
  * darüber nicht, und die Normierung je Sprung hält das Verhältnis trotzdem bei 2. Eine Probe zwischen
  * zwei Wertungsschüssen ist keine Lücke, wenn die ganze Karte mitkommt (`card`, SF-04). Ab drei Schuss.

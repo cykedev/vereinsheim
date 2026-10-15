@@ -8,20 +8,20 @@ import { formatValue } from "../format"
 import { HelpButton, HelpIcon } from "../help/HelpButton"
 import { helpEntry } from "../help/HelpDetails"
 
-// Gemeinsame Teile der Analyse-Karten (Spielwiese `card`, `kv`, `pill`, `note`, `intervalBar`, `scaleBar`).
+// Gemeinsame Teile der Analyse-Karten.
 
 export interface AnalysisCardProps {
   /** Erklärung aus `shot-help`: Thema (`helpTopic`) oder Oberfläche (`VIEW_HELP`); ohne keine Hilfe */
   help?: string
   /** Titel, wenn er nicht aus der Erklärung kommt */
   title?: string
-  /** kleiner Zusatz im Kopf, etwa „aus den Zahlen“; keine Katalog-IDs, die interessieren nicht (User, 9. Oktober 2026) */
+  /** kleiner Zusatz im Kopf, etwa „aus den Zahlen“; keine Katalog-IDs, die interessieren nicht */
   tag?: string
   /** breite Karte: steht allein, nicht im Raster */
   wide?: boolean
   /** Schalter „Erklärungen“: der Kurzsatz steht sichtbar unter dem Titel */
   explain: boolean
-  /** „?“ im Kopf öffnet die Erklärung als Blatt (Plan Schritt 4, D3); ohne kein „?“ */
+  /** „?“ im Kopf öffnet die Erklärung als Blatt; ohne kein „?“ */
   onHelp?: (id: string) => void
   /** etwa ein Abstand für einen Sprung zur Karte (`scroll-mt-…`) */
   className?: string
@@ -158,7 +158,7 @@ export interface IntervalBarProps {
 const percent = (v: number, min: number, max: number) =>
   max > min ? `${Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100))}%` : "0%"
 
-/** 95-%-Bereich als Balken mit dem gemessenen Wert als Punkt (Spielwiese `intervalBar`) */
+/** 95-%-Bereich als Balken mit dem gemessenen Wert als Punkt */
 export function IntervalBar({ value, low, high, min, max, label }: IntervalBarProps) {
   const left = percent(low, min, max)
   const right = percent(high, min, max)

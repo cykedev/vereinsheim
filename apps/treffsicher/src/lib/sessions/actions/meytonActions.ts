@@ -89,8 +89,8 @@ export async function previewMeytonImportAction(
   }
 
   // Getrennte Meldungen: "kein Text" und "Text ohne Serien" haben verschiedene
-  // Ursachen (Bild-PDF/unbekanntes Format vs. falsches Dokument). Die frueher
-  // gemeinsame Meldung hat die Diagnose eines Formatwechsels verschleiert.
+  // Ursachen (Bild-PDF/unbekanntes Format vs. falsches Dokument). Eine gemeinsame
+  // Meldung verschleierte die Diagnose eines Formatwechsels.
   if (extractedText.trim().length === 0) {
     return {
       error:

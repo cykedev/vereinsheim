@@ -2,7 +2,7 @@
 
 import { cn } from "@vereinsheim/lib/utils"
 
-/** Fragezeichen im Kreis, wie in der Spielwiese */
+/** Fragezeichen im Kreis */
 export function HelpIcon({ className }: { className?: string }) {
   return (
     <svg

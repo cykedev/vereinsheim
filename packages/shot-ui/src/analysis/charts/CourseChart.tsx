@@ -12,10 +12,10 @@ const HEIGHT = 230
 const PAD = { left: 30, right: 12, top: 24, bottom: 26 }
 
 /**
- * Verlauf (Spielwiese `courseChart`): Wert je Schuss in Ringwert-Farbe, gleitender Schnitt über zehn
+ * Verlauf: Wert je Schuss in Ringwert-Farbe, gleitender Schnitt über zehn
  * (gestrichelt, solange es noch keine zehn sind), Serien mit Trenner und Namen, Pausen als gestrichelte
- * Linie. Achse bis 10 in ganzen Ringen, bis 10,9 in Zehnteln; ab zwei Schuss mit Wert. Werte per Lineal
- * (Plan L1): Antippen oder Ziehen wählt einen Schuss, die Zeile darüber nennt Wert und Schnitt, „Auf der
+ * Linie. Achse bis 10 in ganzen Ringen, bis 10,9 in Zehnteln; ab zwei Schuss mit Wert. Werte per Lineal:
+ * Antippen oder Ziehen wählt einen Schuss, die Zeile darüber nennt Wert und Schnitt, „Auf der
  * Scheibe“ zeigt ihn dort (`onShow`); ein auf der Scheibe gewählter Schuss (`chosenNumber`) steht schon im
  * Lineal. Darunter „Werte als Tabelle“.
  */
@@ -67,7 +67,7 @@ export function CourseChart({
     ranges.set(shot.series, [Math.min(r[0], n), Math.max(r[1], n)])
   }
   const series = [...ranges].sort((a, b) => a[1][0] - b[1][0])
-  // eine Pause kurz vor Schluss mit nur wertlosen Schüssen danach läge hinter dem letzten Punkt (Review)
+  // eine Pause kurz vor Schluss mit nur wertlosen Schüssen danach läge hinter dem letzten Punkt
   const pauses = (pauseRecovery(shots, scoring, card)?.effects ?? []).filter(
     (effect) => effect.afterShot <= maxN
   )

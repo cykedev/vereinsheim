@@ -12,7 +12,7 @@ export interface PageSectionBlock<T extends string = string> {
  * für die 56 px hohe Leiste. `fill` füllt ab 768 px die übrige Höhe der Spalte, ohne selbst Höhe zu verlangen
  * (Größe enthalten). `last` (der letzte Abschnitt der Seite) ist mindestens so hoch wie das Fenster unter der
  * Leiste: Sonst erreicht ein kurzer Abschnitt davor die Leiste nie, und die Sprungleiste springt von ihm zum letzten
- * (User, 9. Oktober 2026: „Zahlen“ in einem hohen Fenster).
+ * (etwa „Zahlen“ in einem hohen Fenster).
  */
 export function SectionBlock({
   section,

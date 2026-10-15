@@ -94,7 +94,7 @@ function checkSnapshot(input: unknown, prefix: string): ParseResult<Snapshot> {
     const path = withPrefix(prefix, safePath(forbidden))
     return { ok: false, issues: [{ path, code: CONTRACT_ISSUE.forbiddenKey }] }
   }
-  // Nur v1 bisher; eine v2 bekommt hier ihren Zweig, v1 bleibt mindestens eine Version lang.
+  // Nur v1; eine v2 bekommt hier ihren Zweig, v1 bleibt mindestens eine Version lang.
   const parsed = snapshotV1.safeParse(input)
   if (!parsed.success) {
     return { ok: false, issues: toIssues(parsed.error, prefix) }

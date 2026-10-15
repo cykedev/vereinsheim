@@ -1,7 +1,7 @@
 import type { BlockedCard, TrashCard } from "@/lib/db/reads"
 import { cardResultText, cardWhen } from "@/lib/open"
 
-// Papierkorb in Worten (P2b, Plan `plans/2026-10-14-spiegel-papierkorb.md`, D8). Reine Funktionen; gerechnet auf dem
+// Papierkorb in Worten. Reine Funktionen; gerechnet auf dem
 // Server, an den Browser gehen nur die Texte.
 
 const DAY_MS = 86_400_000

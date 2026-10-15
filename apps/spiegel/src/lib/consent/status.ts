@@ -1,4 +1,4 @@
-// Zustände einer Zustimmung (SP-1.7 a, Plan `plans/2026-10-14-spiegel-optin.md`, D1): der Schütze stimmt zu, ein Admin
+// Zustände einer Zustimmung: der Schütze stimmt zu, ein Admin
 // bestätigt oder lehnt ab, nach „Nicht meine“ bei der ersten Scheibe geht sie an ihn zurück. Nur `active` lädt die
 // Brücke hoch (`GET /state` und das Einlesen filtern mit `ACTIVE_CONSENT`). Reine Funktionen.
 
@@ -12,7 +12,7 @@ export interface ConsentDecisions {
 
 /**
  * Der Filter für `active` in Abfragen, dieselbe Regel wie `consentStatus`: bestätigt und nicht abgelehnt. `GET /state` und
- * das Einlesen nehmen ihn beide (Review: eine Stelle statt zwei Kopien).
+ * das Einlesen nehmen ihn beide (eine Stelle statt zwei Kopien).
  */
 export const ACTIVE_CONSENT = { confirmedAt: { not: null }, rejectedAt: null } as const
 
@@ -45,7 +45,7 @@ export function ownerActionOf(status: ConsentStatus): "revoke" | "remove" {
 
 /**
  * Es gibt nur Nummern, deren Knopf „Entfernen“ heißt (abgelehnte): Profil und Action sagen dann „entferne“ statt
- * „widerrufe“. Eine Regel für beide (Review, [[conventions]] §9)
+ * „widerrufe“. Eine Regel für beide ([[conventions]] §9)
  */
 export const onlyRemovable = (statuses: readonly ConsentStatus[]) =>
   statuses.length > 0 && statuses.every((status) => ownerActionOf(status) === "remove")
@@ -56,14 +56,13 @@ export function isOpenConsent(status: ConsentStatus): boolean {
 }
 
 /**
- * Sportpassnummern je Konto: eine (User, 15. Oktober 2026: „es macht wahrscheinlich keinen sinn, mehrere sportpass
- * nummern zu verknüpfen“). Bis dahin drei für SF-39 (neuer Ausweis); dafür widerruft der Schütze jetzt die alte Nummer
- * und trägt die neue ein, die Scheiben bleiben. Konten mit mehreren aus der Zeit davor bleiben, wie sie sind
+ * Sportpassnummern je Konto: eine. Für einen neuen Ausweis (SF-39) widerruft der Schütze die alte Nummer und trägt
+ * die neue ein, die Scheiben bleiben. Konten, die schon mehrere haben, bleiben, wie sie sind
  */
 export const MAX_CONSENTS_PER_ACCOUNT = 1
 
 /**
- * Der Stand des Sportpasses eines Kontos in einem Wort für die Kontenliste (P2c, D5): Was auf den Admin wartet, geht
+ * Der Stand des Sportpasses eines Kontos in einem Wort für die Kontenliste: Was auf den Admin wartet, geht
  * vor; dann aktiv, dann abgelehnt; ohne Zustimmung „kein Sportpass“.
  */
 export function sportpassSummary(statuses: readonly ConsentStatus[]): string {

@@ -1,4 +1,4 @@
-// Rekorde über viele Scheiben (Plan L2, D7, Katalog R1–R8). Keine eigene Rechnung: Die Werte kommen aus der
+// Rekorde über viele Scheiben (Katalog R1–R8). Keine eigene Rechnung: Die Werte kommen aus der
 // Registry und aus den Auswertungen einer Scheibe, hier wird nur ausgewählt und verglichen.
 
 import {
@@ -26,7 +26,7 @@ export const RECORD_EXCLUDING_FLAGS = [
 ] as const satisfies readonly CardFlag[]
 /**
  * Probe, die der Schütze nachträglich als Wertung zählt (SF-05, nicht amtlich): für Rekorde wie eine Scheibe nur
- * mit Probe, also nur mit `includeProbeOnly` (User, 9. Oktober 2026)
+ * mit Probe, also nur mit `includeProbeOnly`
  */
 export const FLAG_COUNTED_AS_MATCH = "als-wertung-gezaehlt" satisfies CardFlag
 
@@ -43,7 +43,7 @@ const INNER_TENS = metric("result.innerTens")
 const ENCLOSING = metric("group.enclosingDiameter")
 
 /**
- * Zählt die Scheibe für Rekorde (D7)? Nur endgültig und vollständig, ohne `nur-pdf`, `neu-gewertet` und
+ * Zählt die Scheibe für Rekorde? Nur endgültig und vollständig, ohne `nur-pdf`, `neu-gewertet` und
  * `ausgenommen` und ohne einen verdächtigen Schuss unter denen, die zählen (SF-15, SF-66): bei Wertung die
  * Wertungsschüsse, bei einer Scheibe nur mit Probe die Probe. Ein verdächtiger Probeschuss vor der Wertung
  * schließt die Scheibe nicht aus, er geht in keinen Rekord ein.
@@ -91,7 +91,7 @@ export interface PeriodRecords {
 
 type Better = "higher" | "lower"
 
-/** Nur ein echt besserer Wert ersetzt den Rekord: Bei Gleichstand gilt der frühere (D7). */
+/** Nur ein echt besserer Wert ersetzt den Rekord: Bei Gleichstand gilt der frühere. */
 const beats = (value: number, current: RecordRef | null | undefined, better: Better) =>
   !current || (better === "higher" ? value > current.value : value < current.value)
 
@@ -199,7 +199,7 @@ export interface RecordEntry {
 
 /**
  * Rekorde aus den Kandidaten der Scheiben, die zählen, in der Folge ihres Beginns: Nur ein echt besserer Wert
- * ersetzt einen Rekord, bei Gleichstand gilt der frühere (D7)
+ * ersetzt einen Rekord, bei Gleichstand gilt der frühere
  */
 export function combineRecords(entries: readonly RecordEntry[]): PeriodRecords {
   const bestCard: Record<number, RecordRef> = {}
@@ -274,9 +274,9 @@ export function combineRecords(entries: readonly RecordEntry[]): PeriodRecords {
 }
 
 /**
- * Rekorde über die Scheiben, die zählen (`recordEligible`), in der gewählten Wertung (R1–R8, D7); wahlweise
+ * Rekorde über die Scheiben, die zählen (`recordEligible`), in der gewählten Wertung (R1–R8); wahlweise
  * nur Training oder nur Wettkampf. Eine Scheibe nur mit Probe zählt nur mit `includeProbeOnly`, dann über
- * die Probe wie Wertung (D8); ebenso eine Scheibe, deren Probe der Schütze als Wertung zählt (SF-05). Zählungen
+ * die Probe wie Wertung; ebenso eine Scheibe, deren Probe der Schütze als Wertung zählt (SF-05). Zählungen
  * (R5–R7) setzen erst ab einem Treffer einen Rekord. Aus Kandidaten je Scheibe (`cardRecordCandidates`)
  * zusammengeführt (`combineRecords`)
  */

@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# Geführtes Schießprotokoll (SP-0.6), allein schießbar. Nach jedem Schritt ein Marker in
+# Geführtes Schießprotokoll, allein schießbar. Nach jedem Schritt ein Marker in
 # bericht/schritte.md und im Rohprotokoll; der Mitschnitt läuft daneben (lib/mitschnitt.sh).
 # Im Auto-Modus (Selbsttest) ruft das Skript vor jedem Schritt $ERKUNDEN_AUTO_HOOK <nr> auf, statt
 # auf Enter zu warten; Schritte in $ERKUNDEN_AUTO_UEBERSPRINGEN werden übersprungen, PDF-IDs kommen
@@ -61,8 +61,8 @@ _pdf_ids_abfragen() {
   echo >>"$SCHRITTE_DATEI"
 }
 
-# Nach jedem Schritt: Stand des Mitschnitts. Sieht er nach Schritt 1 noch nichts, laut warnen
-# (Review B2): Dann stimmen Uhr, Zeitzone oder die Einstellung des SSMDB2-Dienstes nicht.
+# Nach jedem Schritt: Stand des Mitschnitts. Sieht er nach Schritt 1 noch nichts, laut warnen:
+# Dann stimmen Uhr, Zeitzone oder die Einstellung des SSMDB2-Dienstes nicht.
 _status_zeigen() {
   [ -n "$MITSCHNITT_PID" ] || return 0
   sleep 1

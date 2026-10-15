@@ -33,8 +33,8 @@ const CARD = "grid gap-4 rounded-2xl border border-border bg-card p-5"
 export function SiteForm({ site }: { site: SiteOverview["site"] }) {
   const router = useRouter()
   const [state, action, pending] = useActionState(saveSite, null)
-  // die Zeitzone ist fest, sobald Scheiben da sind (Review P2c): vorher hat sie keine Folgen, danach verschöbe sie jede
-  // Scheibe, zu der noch ein Stand kommt
+  // die Zeitzone ist fest, sobald Scheiben da sind: vorher hat sie keine Folgen, danach verschöbe sie jede Scheibe, zu
+  // der noch ein Stand kommt
   const zoneLocked = !!site?.hasCards
   // gesteuert: React setzt ein Formular mit Server Action nach dem Absenden zurück
   const [name, setName] = useState(site?.name ?? "")
@@ -160,8 +160,8 @@ const STATUS_TEXT: Record<NonNullable<BridgeRow["status"]>, string> = {
 }
 
 /**
- * Was der Knopf an einer Brücke tut, an einer Stelle: laufend trennen, getrennt entfernen (User, 15. Oktober 2026). Text,
- * Dialog und Action kommen zusammen, der Test prüft die Zuordnung (Review)
+ * Was der Knopf an einer Brücke tut, an einer Stelle: laufend trennen, getrennt entfernen. Text, Dialog und Action
+ * kommen zusammen, der Test prüft die Zuordnung
  */
 export function bridgeActionOf(bridge: { name: string; revoked: boolean }) {
   return bridge.revoked
@@ -252,8 +252,8 @@ const RANKING_OPTIONS = [
 ] as const
 
 /**
- * eine Liste aus Meyton (`Ranking`) mit ihrer Art; gespeichert erst nach dem Dialog mit den Folgen (P2c, D7), weil eine Wahl alle
- * Scheiben der Liste umstellt
+ * eine Liste aus Meyton (`Ranking`) mit ihrer Art; gespeichert erst nach dem Dialog mit den Folgen, weil eine Wahl
+ * alle Scheiben der Liste umstellt
  */
 export function RankingItem({ ranking }: { ranking: RankingRow }) {
   const router = useRouter()
@@ -281,7 +281,7 @@ export function RankingItem({ ranking }: { ranking: RankingRow }) {
       <Segmented
         label={`Art der Liste ${ranking.name}`}
         options={RANKING_OPTIONS}
-        // während gefragt und gespeichert wird, steht die Wahl da; Abbrechen zeigt wieder die gespeicherte (Review)
+        // während gefragt und gespeichert wird, steht die Wahl da; Abbrechen zeigt wieder die gespeicherte
         value={asking || pending ? wanted : saved}
         onChange={(value) => {
           if (pending || value === saved) return

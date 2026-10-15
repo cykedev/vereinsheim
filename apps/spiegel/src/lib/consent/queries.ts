@@ -6,7 +6,7 @@ import { NOT_MINE } from "@/lib/db/purge"
 
 import { consentStatus, consentStatusText, type ConsentStatus } from "./status"
 
-// Zustimmungen lesen (SP-1.7 a, D7): die eigenen fürs Profil, die eines Kontos und die offenen für den Admin. Admin-
+// Zustimmungen lesen: die eigenen fürs Profil, die eines Kontos und die offenen für den Admin. Admin-
 // Abfragen prüfen selbst (`requireAdmin`), das Layout allein schützt die Daten nicht.
 
 export interface ConsentRow {
@@ -17,7 +17,7 @@ export interface ConsentRow {
   statusText: string
   consentedAt: string
   consentVersion: string
-  /** nur bei aktiver Zustimmung eines aktiven Kontos: ob die älteren Scheiben schon nachgeladen sind (P2d, D10) */
+  /** nur bei aktiver Zustimmung eines aktiven Kontos: ob die älteren Scheiben schon nachgeladen sind */
   history: string | null
   /** die älteren Scheiben sind nachgeladen (auch bei nicht aktiver Zustimmung; für den Dialog des Admins) */
   historyLoaded: boolean
@@ -65,7 +65,7 @@ export async function consentRows(userId: string, timeZone: string): Promise<Con
       consentedAt: formatDateOnly(r.consentedAt, timeZone),
       consentVersion: r.consentVersion,
       historyLoaded: r.historyLoadedAt !== null,
-      // ein deaktiviertes Konto bekommt nichts, auch kein Nachladen (Review)
+      // ein deaktiviertes Konto bekommt nichts, auch kein Nachladen
       history:
         status !== "active" || !r.user.isActive
           ? null
@@ -76,7 +76,7 @@ export async function consentRows(userId: string, timeZone: string): Promise<Con
   })
 }
 
-/** für den Admin: dazu die Meldungen „nicht meine“ unter der Nummer an ihrer Anlage (P2d, D8) */
+/** für den Admin: dazu die Meldungen „nicht meine“ unter der Nummer an ihrer Anlage */
 export interface AdminConsentRow extends ConsentRow {
   notMine: number
 }

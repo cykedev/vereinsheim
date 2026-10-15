@@ -13,7 +13,7 @@ const TONE: Record<StationTone, string> = {
 }
 
 /**
- * Übersicht des Admins (P2c, D3): oben, was auf eine Entscheidung wartet, darunter der Weg einer Scheibe in vier
+ * Übersicht des Admins: oben, was auf eine Entscheidung wartet, darunter der Weg einer Scheibe in vier
  * Stationen, je mit einem Satz, was sie tut, ihrem Stand und einem „?“.
  */
 export function AdminOverview({ model }: { model: AdminOverviewModel }) {

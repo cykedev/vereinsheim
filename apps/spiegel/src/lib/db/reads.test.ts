@@ -85,7 +85,7 @@ beforeAll(async () => {
   })
   const { cardId } = await writeRevision(db, trash)
   await db.card.update({ where: { id: cardId }, data: { deletedAt: new Date() } })
-  // drei wartende Scheiben nach allen anderen (SP-1.7 a2): zwei unter einer SportpassID, eine unter einer anderen; sie
+  // drei wartende Scheiben nach allen anderen: zwei unter einer SportpassID, eine unter einer anderen; sie
   // fehlen in jeder Übersicht, auch als neuester Abend
   const pending = generateSeason({
     ...common,
@@ -187,7 +187,7 @@ describe("Start", () => {
   })
 })
 
-describe("Übersichten (SP-1.8)", () => {
+describe("Übersichten", () => {
   it("alle eigenen, nicht gelöschten Scheiben mit Projektion, Familie und Scheibenbild, nach Beginn", async () => {
     const cards = await ownerCards(db, { ownerId: site.ownerId })
     expect(cards).toHaveLength(31)
@@ -221,7 +221,7 @@ describe("Übersichten (SP-1.8)", () => {
   })
 })
 
-describe("Wartende Scheiben (SP-1.7 a2)", () => {
+describe("Wartende Scheiben", () => {
   it("fehlen in Liste, Start und auf ihrer Seite", async () => {
     const pending = await db.card.findMany({
       where: { sourceId: site.sourceId, ownerPending: true },
@@ -238,8 +238,8 @@ describe("Wartende Scheiben (SP-1.7 a2)", () => {
     expect(await cardWithShots(db, { cardId: pending[0].id, ownerId })).toBeNull()
   })
 
-  it("je SportpassID die jüngste wartende, mit der Zahl der weiteren; gezählt je SportpassID (P2d)", async () => {
-    // mit der Historie warten womöglich Scheiben aus Jahren: an den letzten Abend erinnert man sich (D7)
+  it("je SportpassID die jüngste wartende, mit der Zahl der weiteren; gezählt je SportpassID", async () => {
+    // mit der Historie warten womöglich Scheiben aus Jahren: an den letzten Abend erinnert man sich
     const newest111 = await db.card.findFirstOrThrow({
       where: { sourceId: site.sourceId, ownerPending: true, sportpassId: BigInt(111) },
       orderBy: { startedAt: "desc" },
@@ -257,7 +257,7 @@ describe("Wartende Scheiben (SP-1.7 a2)", () => {
     expect(await pendingCount(db, "jemand-anderes")).toBe(0)
   })
 
-  it("die Lagen einer wartenden Scheibe nur für „Offen“ (Review)", async () => {
+  it("die Lagen einer wartenden Scheibe nur für „Offen“", async () => {
     const [first] = await pendingFirstCards(db, site.ownerId)
     const ownerId = site.ownerId
     expect(await marksOfCards(db, { ownerId, ids: [first.card.id] })).toEqual({})
@@ -266,7 +266,7 @@ describe("Wartende Scheiben (SP-1.7 a2)", () => {
     ).toEqual([first.card.id])
   })
 
-  it("dieselbe SportpassID an einer anderen Anlage ist ein eigener Eintrag (Review)", async () => {
+  it("dieselbe SportpassID an einer anderen Anlage ist ein eigener Eintrag", async () => {
     const other = await createTestSite(db, "reads-b")
     try {
       const [input] = generateSeason({
@@ -396,7 +396,7 @@ describe("Art der Scheibe", () => {
   })
 })
 
-describe("Liste der Scheibe (Rückmeldung 1)", () => {
+describe("Liste der Scheibe", () => {
   it("Übersicht und Seite nennen die Liste aus Meyton, ohne Liste null", async () => {
     const ownerId = site.ownerId
     const [first, second] = await familyCards(db, { ownerId, familyId: site.familyId })

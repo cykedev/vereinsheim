@@ -17,7 +17,7 @@ describe("safeCallback", () => {
     expect(safeCallback("//example.com/x", origin)).toBe("/")
     expect(safeCallback("/\\example.com", origin)).toBe("/")
     expect(safeCallback("javascript:alert(1)", origin)).toBe("/")
-    // Tab, Zeilenumbruch: der Parser entfernt sie, aus „/\t/x“ wird „//x“ (Review)
+    // Tab, Zeilenumbruch: der Parser entfernt sie, aus „/\t/x“ wird „//x“
     expect(safeCallback("/\t/evil.com", origin)).toBe("/")
     expect(safeCallback("/\n/evil.com", origin)).toBe("/")
     expect(safeCallback("/\r\n/evil.com", origin)).toBe("/")

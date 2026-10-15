@@ -1,7 +1,5 @@
 // Metazeile im Kopf einer Scheibe: Art, Liste aus Meyton, Wochentag mit Datum und Uhrzeit, wie die Scheiben-Liste sie
-// zeigt (User, 9. Oktober 2026: „auf der Scheiben-Seite fehlt die Uhrzeit“; 15. Oktober 2026: „Rangliste anzeigen, zu der
-// die Scheibe gehört“). Datum und Uhrzeit über `@vereinsheim/lib/format`
-// mit der Anzeige-Zeitzone als Parameter.
+// zeigt. Datum und Uhrzeit über `@vereinsheim/lib/format` mit der Anzeige-Zeitzone als Parameter.
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
 import { formatTimeOfDay, formatWeekdayDate } from "@vereinsheim/lib/format"

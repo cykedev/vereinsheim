@@ -25,7 +25,7 @@ const page = (empty?: string) =>
     })
   )
 
-describe("Rahmen der Seite eines Zeitraums (D1)", () => {
+describe("Rahmen der Seite eines Zeitraums", () => {
   const html = page()
 
   it("auf dem Telefon eine Spalte in der Reihenfolge der Seite", () => {
@@ -67,7 +67,7 @@ describe("Rahmen der Seite eines Zeitraums (D1)", () => {
   })
 })
 
-describe("Abschnitte der Seite eines Zeitraums (D2)", () => {
+describe("Abschnitte der Seite eines Zeitraums", () => {
   it("Sprungleiste mit vier Ankern", () => {
     const nav = renderToStaticMarkup(h(SectionNav, { active: "cards", sections: PERIOD_SECTIONS }))
     expect([...nav.matchAll(/<a href="#([a-z]+)"/g)].map((m) => m[1])).toEqual([

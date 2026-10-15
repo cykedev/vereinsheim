@@ -1,16 +1,13 @@
-// Folgen jeder Aktion in Alltagsworten (P2c, Plan `plans/2026-10-14-spiegel-admin-verstaendlich.md`, D1): „Kein Knopf
-// ohne Folge“ (User, 14. Oktober 2026: „ich muss immer verstehen was ich bestätige, ablehne usw und was das für folgen
-// hat“). Eine Quelle für Dialoge und Tests; die Komponenten erfinden keine Texte. Ohne Pronomen für Personen: Spiegel
-// kennt Namen, kein Geschlecht. Reine Funktionen.
+// Folgen jeder Aktion in Alltagsworten: „Kein Knopf ohne Folge“. Eine Quelle für Dialoge und Tests; die Komponenten
+// erfinden keine Texte. Ohne Pronomen für Personen: Spiegel kennt Namen, kein Geschlecht. Reine Funktionen.
 //
-// Der Wortlaut kommt aus dem Textbuch (P2f, `plans/2026-10-14-spiegel-texte.md`): erst sagen, was vorher war, ein
-// Gedanke pro Satz, keine Semikolons, die Wörter des Users statt der des Codes (Sportpassnummer, zurückweisen, wieder
-// zulassen, Spiegel holt). Ein Test hält die alten Wörter fern (`consequences.test.ts`, „Schreibregeln“).
+// Der Wortlaut folgt den Schreibregeln ([[conventions]] §10): erst sagen, was vorher war, ein Gedanke pro Satz, keine
+// Semikolons, die Wörter des Users statt der des Codes (Sportpassnummer, zurückweisen, wieder zulassen, Spiegel holt).
+// Ein Test hält die alten Wörter fern (`consequences.test.ts`, „Schreibregeln“).
 
 /**
- * Was in keinem sichtbaren Text mehr stehen darf (P2f, D5): Semikolons und die alten Wörter des Codes, seit dem ersten
- * Test auch „Rangliste“ (User, 15. Oktober 2026: „Ranglisten einfach ‚Listen‘ nennen“). Die Tests der Dialoge,
- * Erklärungen, Zustände und der Übersicht prüfen dagegen.
+ * Was in keinem sichtbaren Text stehen darf: Semikolons und die alten Wörter des Codes, auch „Rangliste“ (in der
+ * Oberfläche „Liste“). Die Tests der Dialoge, Erklärungen, Zustände und der Übersicht prüfen dagegen.
  */
 export const OLD_WORDS =
   /;|SportpassI[Dd]|Sportpass-ID|\bMeldung|\bAblage|[Kk]oppe?l|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|[Ss]perre|[Rr]angliste/
@@ -50,7 +47,7 @@ export function consentConfirm({
   returned?: boolean
   /** ein deaktiviertes Konto bekommt nichts, auch bestätigt */
   accountActive?: boolean
-  /** die älteren Scheiben sind noch nicht geholt: Nach dem Bestätigen holt Spiegel sie (P2d, Review) */
+  /** die älteren Scheiben sind noch nicht geholt: Nach dem Bestätigen holt Spiegel sie */
   historyOpen?: boolean
   /** Scheiben unter der Nummer, als „nicht meine“ zurückgewiesen */
   notMine?: number
@@ -64,7 +61,7 @@ export function consentConfirm({
       ? `Gehört ${sportpassId} wirklich zu ${who}? Vielleicht hat jemand am Stand einen fremden Namen gewählt. Wenn die Nummer nicht passt: ablehnen.`
       : `Gehört ${sportpassId} in der Meyton-Schützenverwaltung zu ${who}? Wenn nicht: ablehnen.`,
     happens: [
-      // bei deaktiviertem Konto zuerst das, sonst widerspräche der erste Satz dem letzten (Review P2f)
+      // bei deaktiviertem Konto zuerst das, sonst widerspräche der erste Satz dem letzten
       ...(accountActive
         ? [
             "Spiegel holt ab jetzt jede Scheibe, die unter dieser Nummer geschossen wird. Läuft die Brücke gerade, dauert das wenige Minuten.",
@@ -72,8 +69,8 @@ export function consentConfirm({
         : [
             `Das Konto von ${who} ist deaktiviert. Solange das so bleibt, holt Spiegel nichts. Danach holt Spiegel jede Scheibe, die unter dieser Nummer geschossen wird.`,
           ]),
-      // das Holen älterer Scheiben (P2d): nur, solange es noch offen ist (Review: nach „nicht meine“ oft schon erledigt,
-      // nach dem Wiederzulassen wieder offen)
+      // das Holen älterer Scheiben: nur, solange es noch offen ist (nach „nicht meine“ oft schon erledigt, nach dem
+      // Wiederzulassen wieder offen)
       ...(historyOpen
         ? [
             "Auch ältere Scheiben unter dieser Nummer holt Spiegel, soweit die Meyton-Anlage sie noch hat. Das passiert, wenn dort niemand schießt.",
@@ -154,12 +151,12 @@ export function bridgeRevoke({ device }: { device: string }): Decision {
   }
 }
 
-/** eine getrennte Brücke entfernen (Textbuch rev 20, 22) */
+/** eine getrennte Brücke entfernen */
 export function bridgeRemove({ device }: { device: string }): Decision {
   return {
     title: `Getrennte Brücke „${device}“ entfernen?`,
     about: `Das Gerät „${device}“ ist getrennt und schickt nichts mehr.`,
-    // nicht „aus dieser Liste“: Auf der Seite heißen auch die Listen aus Meyton so (Review)
+    // nicht „aus dieser Liste“: Auf der Seite heißen auch die Listen aus Meyton so
     happens: ["Es steht dann nicht mehr unter „Brücke im Schützenhaus“."],
     notHappening: [
       "Es wird keine Scheibe gelöscht.",
@@ -309,7 +306,7 @@ export function ownConsentRevoke({
   status = "active",
 }: {
   sportpassId: string
-  /** nur eine aktive hat schon Scheiben gebracht (Review P2f) */
+  /** nur eine aktive hat schon Scheiben gebracht */
   status?: "requested" | "active" | "returned"
 }): Decision {
   return {
@@ -375,7 +372,7 @@ export function notMine({
   }
 }
 
-/** eine eigene Scheibe in den Papierkorb (P2b, Plan `plans/2026-10-14-spiegel-papierkorb.md`, D7) */
+/** eine eigene Scheibe in den Papierkorb */
 export function cardDelete({ evening }: { evening: string }): Decision {
   return {
     title: "Scheibe löschen?",
@@ -408,9 +405,9 @@ export function cardPurgeNow({ evening }: { evening: string }): Decision {
 }
 
 /**
- * Zurückgewiesene Scheiben („nicht meine“) einer Sportpassnummer wieder zulassen (P2d, D8): Die Scheiben dürfen
+ * Zurückgewiesene Scheiben („nicht meine“) einer Sportpassnummer wieder zulassen: Die Scheiben dürfen
  * wiederkommen und warten in „Offen“. `consentActive`: Die Nummer ist bestätigt; sonst kommen sie erst, wenn sie es
- * wieder ist. Neutral formuliert: Zurückgewiesen haben kann auch ein früheres Konto mit dieser Nummer (Review).
+ * wieder ist. Neutral formuliert: Zurückgewiesen haben kann auch ein früheres Konto mit dieser Nummer.
  */
 export function notMineLift({
   who,

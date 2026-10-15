@@ -16,7 +16,7 @@ export interface KindToggleProps {
 }
 
 /**
- * Art der Scheibe als Pokal im weichen Kreis (Plan `plans/2026-10-13-spiegel-symbole.md`): Training durchgestrichen und
+ * Art der Scheibe als Pokal im weichen Kreis: Training durchgestrichen und
  * leise, Wettkampf in Gold; ein Tippen stellt auf die andere. Eine Scheibe nur aus Probe ist Training; dort zeigt die
  * Seite keinen Kreis.
  */
@@ -48,7 +48,7 @@ const TROPHY_PATHS = [
 ] as const
 
 /**
- * Pokal durchgestrichen (User, 13. Oktober 2026): `lucide-react` hat keinen. Wie dessen „-off“-Symbole schneidet der
+ * Pokal durchgestrichen: `lucide-react` hat keinen. Wie dessen „-off“-Symbole schneidet der
  * Strich eine Lücke in den Pokal, über eine Maske statt einer Linie in der Hintergrundfarbe: sauber auf jedem Grund,
  * auch beim Darüberfahren.
  */

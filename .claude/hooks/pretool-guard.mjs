@@ -9,10 +9,9 @@
 // zu splitten, und prüfen nur Segmente, deren erstes echtes Wort (nach einem optionalen
 // `sudo`/`doas`-Präfix) wörtlich `rm` bzw. eines der Read-Verben ist. Das lässt eine
 // Commit-Message, die `rm -rf /` oder `source .env` nur ERWÄHNT, passieren (ihr Segment
-// beginnt mit `git`, nicht `rm`/`source`), ohne vorher global Quotes zu blanken — was
-// früher sowohl ein legitim gequotetes Ziel wie `rm -rf "$HOME"` gelöscht hat (bestätigter
-// Bypass) als auch eine Commit-Message wie `git commit -m "fix: source .env handling"`
-// fälschlich geblockt hat. Der Dev-Server-Check nutzt weiterhin String-Level-Quote-Blanking
+// beginnt mit `git`, nicht `rm`/`source`), ohne vorher global Quotes zu blanken — das
+// verschluckte ein legitim gequotetes Ziel wie `rm -rf "$HOME"` (Bypass) und blockte eine
+// Commit-Message wie `git commit -m "fix: source .env handling"` fälschlich. Der Dev-Server-Check nutzt weiterhin String-Level-Quote-Blanking
 // (siehe dessen Kommentar).
 import { existsSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
@@ -38,9 +37,7 @@ const DANGEROUS_TARGET = /^(\/\*?|~\/?\*?|\$\{?HOME\}?\/?\*?|\.\/?\*?|\*)$/
 const CMD_WRAPPER = /^(sudo|doas)$/
 // Wertnehmende sudo/doas-Flags: das Argument NACH diesen Flags gehört noch zum Wrapper,
 // nicht zum eigentlichen Kommando (`sudo -u root rm ...` — ohne diesen Sonderfall würde
-// die Skip-Schleife unten bei "root" hängen bleiben und "rm" nie als c0 sehen; bestätigter
-// Regressions-Fund aus /review, Juli 2026 — der alte String-weite Check hatte das per
-// Zufall via `\brm\b`-Substring-Suche noch erkannt).
+// die Skip-Schleife unten bei "root" hängen bleiben und "rm" nie als c0 sehen).
 const CMD_WRAPPER_VALUE_FLAG = /^-[ug]$/
 
 // Kommandos, deren Non-Flag-Argumente dieser Hook als gelesene/berührte Dateien behandelt.
@@ -165,7 +162,7 @@ export function evaluate(input) {
     }
   }
 
-  // ── Advisory-Nudge: CodeGraph statt grep/find/Read (User-Wunsch 22.06.2026) ────
+  // ── Advisory-Nudge: CodeGraph statt grep/find/Read ────
   const bashSearch =
     tool === "Bash" &&
     /\b(rg|ag|ack|fd|grep|egrep|fgrep|find)\b/.test(

@@ -11,9 +11,9 @@ const HEIGHT = 190
 const PAD = { left: 36, right: 12, top: 18, bottom: 26 }
 
 /**
- * Rhythmus (Spielwiese `rhythmChart`): Abstand zum vorigen Schuss als Säule, eine Pause gekappt, in der
+ * Rhythmus: Abstand zum vorigen Schuss als Säule, eine Pause gekappt, in der
  * Farbe für Hinweise und mit ihrer Dauer beschriftet, dazu der Median der letzten fünf Abstände als
- * Linie; ab zwei Abständen. Werte per Lineal wie im Verlauf (Plan L1): Die Zeile nennt den Abstand vor dem
+ * Linie; ab zwei Abständen. Werte per Lineal wie im Verlauf: Die Zeile nennt den Abstand vor dem
  * gewählten Schuss und den Median, „Auf der Scheibe“ zeigt den Schuss dort; darunter „Werte als Tabelle“.
  */
 export function RhythmChart({

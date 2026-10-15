@@ -72,7 +72,7 @@ beforeAll(async () => {
   await consent(ids.quiet, 76001, 20)
   await consent(ids.fresh, 76002, 3)
   await consent(site.ownerId, 76003, 20)
-  // lange bestätigt, aber kein Grund für den Hinweis (Review P2f): deaktiviert, nur wartende, nur gelöschte,
+  // lange bestätigt, aber kein Grund für den Hinweis: deaktiviert, nur wartende, nur gelöschte,
   // nur endgültig gelöschte
   await consent(ids.inactive, 76004, 20)
   await consent(ids.waitingOnly, 76005, 20)
@@ -120,7 +120,7 @@ afterAll(async () => {
   await db.$disconnect()
 })
 
-describe("Zahlen je Konto (P2e)", () => {
+describe("Zahlen je Konto", () => {
   it("sichtbare Scheiben, die letzte, Wartende; gelöschte zählen nicht", async () => {
     const users = await getUsers(NOW)
     const owner = users.find((u) => u.id === site.ownerId)!
@@ -146,7 +146,7 @@ describe("Zahlen je Konto (P2e)", () => {
     expect(of(ids.none)).toMatchObject({ cards: 0, waiting: 0, quiet: false })
   })
 
-  it("kein Hinweis bei deaktiviertem Konto, nur wartenden, gelöschten oder zurückgewiesenen Scheiben (Review)", async () => {
+  it("kein Hinweis bei deaktiviertem Konto, nur wartenden, gelöschten oder zurückgewiesenen Scheiben", async () => {
     const users = await getUsers(NOW)
     const of = (id: string) => users.find((u) => u.id === id)!
     expect(of(ids.inactive).quiet).toBe(false)

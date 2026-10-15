@@ -4,7 +4,7 @@ import { initialViewState, isSelected, viewReducer, type ViewState } from "./vie
 
 const start = initialViewState()
 
-describe("Auswahl: eine Serie oder alle (Wunsch des Users, 8. Oktober 2026)", () => {
+describe("Auswahl: eine Serie oder alle", () => {
   it("Tippen wählt genau diese Serie, eine andere wechselt, dieselbe noch einmal heißt wieder „alle“", () => {
     let s = viewReducer(start, { type: "select", series: 2 })
     expect(s.selection).toBe(2)
@@ -55,7 +55,7 @@ describe("Antippen eines Schusses", () => {
   })
 })
 
-describe("Schuss zeigen (aus dem Lineal, Plan L1)", () => {
+describe("Schuss zeigen (aus dem Lineal)", () => {
   it("wählt ohne Umschalten: ein schon gewählter Schuss bleibt gewählt", () => {
     let s = viewReducer(start, { type: "show", shot: 4, series: 1 })
     expect(s.chosen).toEqual({ index: 4, series: 1 })
@@ -85,7 +85,7 @@ describe("Ausschnitt, Ebenen, Wertung", () => {
     expect(s.layers).toEqual({ ...start.layers, numbers: !start.layers.numbers })
   })
 
-  it("gemerkte Ebenen übernehmen: nur die Ebenen, gleiche lassen den Zustand stehen (Review Darstellung)", () => {
+  it("gemerkte Ebenen übernehmen: nur die Ebenen, gleiche lassen den Zustand stehen", () => {
     const chosen: ViewState = viewReducer(start, { type: "select", series: 2 })
     const layers = { mpi: false, circle: true, numbers: true, ellipse: true }
     const s = viewReducer(chosen, { type: "setLayers", layers })

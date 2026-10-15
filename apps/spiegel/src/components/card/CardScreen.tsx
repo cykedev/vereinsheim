@@ -115,7 +115,7 @@ function stateFromRoute(
 }
 
 /**
- * Die Seite einer Scheibe (N7): aus den Bausteinen von `shot-ui`, mit der Scheibe aus der Datenbank. Serie und Schuss stehen in
+ * Die Seite einer Scheibe: aus den Bausteinen von `shot-ui`, mit der Scheibe aus der Datenbank. Serie und Schuss stehen in
  * der Adresse (Reload und Zurück finden sie wieder), der Reiter der Analyse im Anker; Rückweg und Blättern im Kontext der
  * Herkunft rechnet der Server (`near`). Die Seite öffnet in der Wertung der Adresse, sonst der der Scheibe; Umschalten
  * speichert sie an der Scheibe (`setCardScoring`), die Adresse trägt sie nur, solange sie nicht die der Scheibe ist.
@@ -138,7 +138,7 @@ export function CardScreen({
 }) {
   const onHelp = useHelp()
   const target = TARGETS[card.targetId ?? "lp-10m"]
-  // wie am Ausdruck (U4): mit Wertung nur die Wertung, nur Probe zeigt sich wie Wertung
+  // wie am Ausdruck (ADR-027): mit Wertung nur die Wertung, nur Probe zeigt sich wie Wertung
   const shots = useMemo(() => asOnPrintout(card.shots), [card.shots])
   // die ganze Karte als Kontext für Abstände: eine Probe zwischen Wertung reißt keine Lücke (SF-04)
   const context = card.shots
@@ -155,7 +155,7 @@ export function CardScreen({
   }
   const [others, setOthers] = useState<Others>(display.others)
   // Nach Zurück und Vor bringt Next die Seite mit der Darstellung ihres ersten Besuchs (aus dem Cache, ohne Server).
-  // Es gilt die gemerkte aus dem Cookie im Browser; beim Hydrieren die vom Server, damit das HTML passt (Review)
+  // Es gilt die gemerkte aus dem Cookie im Browser; beim Hydrieren die vom Server, damit das HTML passt
   const saved = useSyncExternalStore(noSubscribe, savedTargetDisplay, () =>
     serializeTargetDisplay(display)
   )
@@ -173,7 +173,7 @@ export function CardScreen({
   const hash = useHash(ownPath)
   // der Reiter: gewählt, sonst aus dem Anker beim Laden, sonst der erste (eine Scheibe beginnt mit ihm)
   const [chosenTab, setChosenTab] = useState<AnalysisTab | null>(null)
-  // der zuletzt im Anker gesehene Reiter bleibt, wenn die Sprungleiste „#shots“ schreibt (Review)
+  // der zuletzt im Anker gesehene Reiter bleibt, wenn die Sprungleiste „#shots“ schreibt
   const hashTab = parseHash(hash)?.tab ?? null
   const [seenTab, setSeenTab] = useState<AnalysisTab | null>(null)
   if (hashTab && hashTab !== seenTab) setSeenTab(hashTab)
@@ -181,7 +181,7 @@ export function CardScreen({
   const active = useActiveSection()
   const { pill, jumpTo, back, close } = useReturnJump()
 
-  // im Kopf die wichtigsten Beobachtungen der Analyse, die Lage zuerst (U1)
+  // im Kopf die wichtigsten Beobachtungen der Analyse, die Lage zuerst
   const headObservations = useMemo(
     () => keyObservations(observations(analysisInput(shots, state.scoring, target, context))),
     [shots, state.scoring, target, context]
@@ -197,7 +197,6 @@ export function CardScreen({
 
   // hier umgeschaltet: Die Wahl ist an der Scheibe gespeichert, die Adresse trägt keine Wertung mehr. Sonst änderte sich
   // ihre Suche während des Speicherns, Next lud die Seite als neues Segment und scrollte danach zum Anker der Adresse
-  // (User, 15. Oktober 2026: „dann springe ich runter zur analyse“)
   const [scoringChosenHere, setScoringChosenHere] = useState(false)
   // die Adresse, wie sie den Zustand beschreibt; ohne Neuladen nachgeführt, damit Reload und Zurück ihn finden
   const route: CardRoute = {
@@ -216,8 +215,8 @@ export function CardScreen({
     if (next) window.history.replaceState(null, "", next)
   }, [address, anchorChosen, ownPath])
 
-  // jede Änderung der Darstellung ist die neue Voreinstellung (User, 12. Oktober 2026); gemerkt nur beim Umschalten,
-  // nie beim Öffnen: sonst überschriebe eine Seite aus dem Cache die zuletzt gewählte (Review)
+  // jede Änderung der Darstellung ist die neue Voreinstellung; gemerkt nur beim Umschalten, nie beim Öffnen: sonst
+  // überschriebe eine Seite aus dem Cache die zuletzt gewählte
   const toggle = useCallback(
     (layer: Layer) => {
       const layers = { ...state.layers, [layer]: !state.layers[layer] }
@@ -269,8 +268,7 @@ export function CardScreen({
     },
     [choose, jumpTo]
   )
-  // ein anderer Reiter beginnt oben (User, 15. Oktober 2026: „beim Wechsel zwischen den tabs in Analyse zum Beginn der
-  // Analyse scrollen, nicht zum Ende“): War ein langer Reiter weit gescrollt, klemmte der Browser sonst ans Seitenende
+  // ein anderer Reiter beginnt oben: War ein langer Reiter weit gescrollt, klemmte der Browser sonst ans Seitenende
   const toTabStart = useRef(false)
   const changeTab = useCallback((next: AnalysisTab, toStart = true) => {
     toTabStart.current = toStart
@@ -300,8 +298,8 @@ export function CardScreen({
     notSaved: "Die Art ließ sich nicht speichern.",
   })
   const empty = shots.length === 0
-  // Art und Wertung als Kreise neben der Zahl (Plan `plans/2026-10-13-spiegel-symbole.md`): gezeigt sofort, gespeichert
-  // an der Scheibe. Eine Scheibe nur aus Probe ist Training und hat keinen Kreis der Art
+  // Art und Wertung als Kreise neben der Zahl: gezeigt sofort, gespeichert an der Scheibe. Eine Scheibe nur aus Probe
+  // ist Training und hat keinen Kreis der Art
   const actions = (
     <>
       {!probeOnlyShots(card.shots) && (
@@ -315,7 +313,7 @@ export function CardScreen({
     </>
   )
   const saveError = kindChoice.error ?? scoringChoice.error
-  // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung; beide zeigen dieselbe Wahl (Review)
+  // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung; beide zeigen dieselbe Wahl
   const result = (
     <CardResult
       shots={shots}

@@ -25,13 +25,13 @@ export interface CardListProps {
   onChoose?: (id: string) => void
   /** auf dem Telefon so viele Zeilen, bis „Alle zeigen“ */
   collapseAfter?: number
-  /** „Alle in Scheiben zeigen“: die Scheiben-Liste mit Familie, Art und Zeitraum (Plan N2, D8; `listFromProgress`) */
+  /** „Alle in Scheiben zeigen“: die Scheiben-Liste mit Familie, Art und Zeitraum (`listFromProgress`) */
   showAll?: ListRoute
   className?: string
 }
 
 /**
- * Liste der Scheiben eines Zeitraums (Plan L3, D10): neueste oben, je Zeile Datum, Art, Wert der Kennzahl, Abstand
+ * Liste der Scheiben eines Zeitraums: neueste oben, je Zeile Datum, Art, Wert der Kennzahl, Abstand
  * zum Schnitt der bis zu fünf Scheiben davor und Schusszahl. Die Zeile wählt die Scheibe (der Knopf in der ersten
  * Zelle ist der Weg per Tastatur); auf dem Telefon die neuesten zehn und die gewählte, bis „Alle zeigen“.
  */

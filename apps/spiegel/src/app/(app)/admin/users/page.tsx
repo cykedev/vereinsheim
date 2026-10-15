@@ -27,7 +27,7 @@ function UserRow({ user, timeZone }: { user: UserListItem; timeZone: string }) {
           {user.name && (
             <span className="truncate text-[13px] text-muted-foreground">{user.email}</span>
           )}
-          {/* links unter dem Namen: rechts wurde die Zeile am Telefon zu breit (Review P2f) */}
+          {/* links unter dem Namen: rechts würde die Zeile am Telefon zu breit */}
           <span className="grid text-[13px] text-muted-foreground">
             <UserRowFacts user={user} timeZone={timeZone} />
           </span>

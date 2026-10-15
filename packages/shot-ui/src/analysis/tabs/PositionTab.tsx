@@ -166,16 +166,16 @@ function RingLoss({
   keyName: "rings" | "decimal"
   rings: (v: number) => string
 }) {
-  // Lage und Streuung, die zusammen den Ringverlust ergeben (U3, D10 und Review): kostet die Lage nichts, trägt die
+  // Lage und Streuung, die zusammen den Ringverlust ergeben: kostet die Lage nichts, trägt die
   // Streuung alles; die Rohzahl steht mit ihrem Grund im Satz darunter
   const shown = shownRingLoss(split, keyName)
   const pos = Math.max(0, shown.position ?? 0)
   const spr = Math.max(0, shown.spread)
   const sum = pos + spr || 1
   const digits = keyName === "rings" ? 0 : 1
-  // ohne Ringverlust rechnen Ist und Mitte über weniger Schüsse: das steht dabei (Prüfung, Ergebnis 5)
+  // ohne Ringverlust rechnen Ist und Mitte über weniger Schüsse: das steht dabei
   const over = split.total ? "" : ` (${split.n} Schuss mit Lage)`
-  // ein Lage-Anteil bis null kostet nichts (U3, D10): die Mitte ohne den Schuss selbst ist etwas weiter, ein
+  // ein Lage-Anteil bis null kostet nichts: die Mitte ohne den Schuss selbst ist etwas weiter, ein
   // Ausreißer zieht den Schwerpunkt
   const positionText =
     shown.position === null ? "Lage kostet nichts" : `Lage ${rings(shown.position)}`

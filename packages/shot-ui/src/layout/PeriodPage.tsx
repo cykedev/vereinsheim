@@ -30,7 +30,7 @@ export interface PeriodPageProps {
 }
 
 /**
- * Rahmen der Seite eines Zeitraums (Plan L3, D1), im Gerüst der Seite einer Scheibe (`CardPage`): auf dem
+ * Rahmen der Seite eines Zeitraums, im Gerüst der Seite einer Scheibe (`CardPage`): auf dem
  * Telefon eine Spalte (Kopf, Leiste, Verlauf, Umfang, Ablesung, Scheiben, Zahlen, Analyse); ab 768 px links der
  * Verlauf mit dem Umfang, fest im Bild, rechts das Ergebnis als Box, die Ablesung und die Liste der Scheiben, die
  * bis zur Unterkante reicht und in sich scrollt; darunter in voller Breite Zahlen und Analyse. Der Verlauf misst

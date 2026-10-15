@@ -27,7 +27,7 @@ export interface SigmaEstimate {
   /**
    * σ̂ = √(Σr² / (2(n − 1))) / c4(2n − 1), erwartungstreu und kaum von n abhängig. Den Wert vor der
    * Korrektur nennt Meytons Ballistic Manager „Sa“; Spiegel zeigt ihn nicht, er ist bei 10 Schuss nur
-   * 1,4 % kleiner und trägt keine eigene Information (Entscheidung des Users, Oktober 2026).
+   * 1,4 % kleiner und trägt keine eigene Information.
    */
   sigma: number
   /** 95-%-Bereich für σ über χ² mit 2(n − 1) Freiheitsgraden */
@@ -89,7 +89,7 @@ export interface GroupShape {
  * kann (a/b 3 bei 10 Schuss: 66,5 statt 77,8 %).
  * Den Winkel zeigt die Oberfläche nur bei gestreckten Gruppen ab 10 Schuss. Ohne Ausdehnung (alle
  * Treffer an einer Stelle) gibt es keine Form. Gerechnet wird ohne die von `outliers` (V6) markierten
- * Schüsse: Ein Abreißer streckte die Ellipse sonst in seine Richtung (Oktober 2026). Unter fünf Schuss gibt
+ * Schüsse: Ein Abreißer streckte die Ellipse sonst in seine Richtung. Unter fünf Schuss gibt
  * es kein Urteil über Ausreißer, dann zählen alle; mindestens drei Schuss ohne Ausreißer.
  */
 export function groupShape(shots: readonly MetricShot[]): GroupShape | null {
@@ -158,8 +158,8 @@ function strongest(points: readonly Point[]): { index: number; t: number } {
  * Bonferroni-Schranke, ab Schritt 2 eine Näherung, belegt durch die Simulation. Dann wird er beiseitegelegt
  * und mit den übrigen weitergeprüft, höchstens `outlierSteps(n)` Schritte. Ausreißer sind alle
  * beiseitegelegten bis zum letzten Schritt über seiner Grenze, auch wenn ein früherer darunter blieb: So
- * verdecken sich zwei nahe Abreißer ab 10 Schuss nicht mehr gegenseitig (bis Oktober 2026 wurde jeder Schuss
- * einzeln geprüft; zwei gleich weite bei 10 Schuss fand die Regel dann nur in 13,7 % überhaupt). Unter 10 Schuss
+ * verdecken sich zwei nahe Abreißer ab 10 Schuss nicht gegenseitig (jeden Schuss einzeln geprüft, fände die Regel
+ * zwei gleich weite bei 10 Schuss nur in 13,7 % überhaupt). Unter 10 Schuss
  * bleibt es bei einem Schritt. α 0,04 statt 0,05 hält den Fehlalarm in einer runden normalen Gruppe bei
  * höchstens etwa 5 % der Scheiben (Simulation B2: 4,1–4,7 % bei 10 bis 60 Schuss); bei gestreckten Gruppen
  * steigt die Rate (a/b 2: 10,9–17,5 %). Zwei nahe Abreißer bei 10 Schuss findet sie in 81,8 % beide (B14).
@@ -203,7 +203,7 @@ const MATCH: readonly ShotKind[] = ["match"]
  * Ausreißer zur Mitte hin liegt und Ringe bringt; ohne markierten Schuss 0. Null ohne Urteil über
  * Ausreißer (unter fünf Wertungsschüssen mit Lage), ohne Wert in der gewählten Wertung, wenn einem
  * markierten Schuss der Wert fehlt (dann sind die Kosten unbekannt, SF-07) und wenn kein übriger
- * Wert als Vergleich bleibt. Die schwächsten 10 % zählen nicht mehr: Einen großen Verlust dort hat
+ * Wert als Vergleich bleibt. Nicht über die schwächsten 10 %: Einen großen Verlust dort hat
  * jede normale Gruppe, er wächst mit Streuung und Schusszahl.
  */
 export function outlierLoss(

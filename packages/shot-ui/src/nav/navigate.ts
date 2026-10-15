@@ -1,4 +1,4 @@
-// Wege zwischen den Seiten (Plan N1, D6, D7): Scheibe öffnen, zurück, blättern und die Querverweise zwischen
+// Wege zwischen den Seiten: Scheibe öffnen, zurück, blättern und die Querverweise zwischen
 // Liste und Fortschritt. Reine Funktionen über Routen; die Seiten bauen ihre Links nur hierüber.
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
@@ -21,7 +21,7 @@ import {
 /**
  * Die Scheibe `id`, geöffnet von `from`: Die Liste und der Fortschritt geben ihren Zustand mit, der Fortschritt ohne
  * Wahl (das ist die Scheibe selbst) und ohne Wertung. Von anderen Seiten keine Herkunft. Ohne `scoring` öffnet die
- * Scheibe in ihrer Wertung; nur ein Rekord gibt seine mit (Plan `plans/2026-10-12-spiegel-wertung.md`).
+ * Scheibe in ihrer Wertung; nur ein Rekord gibt seine mit.
  */
 export function openCard(from: Route, id: string, scoring: Scoring | null = null): CardRoute {
   let origin: CardOrigin = null
@@ -51,7 +51,7 @@ export function backRoute(card: CardRoute): Route {
   const origin = card.origin
   if (!origin) return { page: "cards", query: DEFAULT_LIST, evening: null }
   if (origin.from === "start") return { page: "start" }
-  // zurück in die Liste: die Scheibe ist dort markiert (Rückmeldung des Users, 12. Oktober 2026)
+  // zurück in die Liste: die Scheibe ist dort markiert
   if (origin.from === "list")
     return { page: "cards", query: origin.query, evening: null, pick: card.id }
   return {
@@ -62,8 +62,8 @@ export function backRoute(card: CardRoute): Route {
 }
 
 /**
- * die vorige oder nächste Scheibe im selben Kontext: Herkunft und Abschnitt bleiben (D6); der Reiter der Analyse nicht,
- * eine Scheibe beginnt mit dem ersten (User, 9. Oktober 2026), und in ihrer Wertung
+ * die vorige oder nächste Scheibe im selben Kontext: Herkunft und Abschnitt bleiben; der Reiter der Analyse nicht,
+ * eine Scheibe beginnt mit dem ersten, und in ihrer Wertung
  */
 export function siblingRoute(card: CardRoute, id: string): CardRoute {
   return {
@@ -76,7 +76,7 @@ export function siblingRoute(card: CardRoute, id: string): CardRoute {
   }
 }
 
-/** „Alle in Scheiben zeigen“ (D7): Familie, Art und Zeitraum des Fortschritts; „Alles“ ist die ganze Liste */
+/** „Alle in Scheiben zeigen“: Familie, Art und Zeitraum des Fortschritts; „Alles“ ist die ganze Liste */
 export function listFromProgress(progress: ProgressRoute): ListRoute {
   const { family, kind, choice, chosen } = progress.query
   return {
@@ -89,7 +89,7 @@ export function listFromProgress(progress: ProgressRoute): ListRoute {
 }
 
 /**
- * Ein Mischabend (D3): die andere Familie an diesem Abend. Der Hinweis zählt ohne Art, Merkmal und Liste, deshalb
+ * Ein Mischabend: die andere Familie an diesem Abend. Der Hinweis zählt ohne Art, Merkmal und Liste, deshalb
  * fallen sie hier weg; der Zeitraum bleibt, der Hinweis zählt nur in ihm. So steht der Abend sicher in der Liste.
  */
 export function listOnEvening(query: ListQuery, family: string, day: string): ListRoute {
@@ -101,7 +101,7 @@ export function listOnEvening(query: ListQuery, family: string, day: string): Li
 }
 
 /**
- * „Im Fortschritt zeigen“ im Blatt „Filter“ der Liste (D7, U5): Familie, Art und Zeitraum der Liste; ohne Zeitraum „Alles“. In der App rechnet der
+ * „Im Fortschritt zeigen“ im Blatt „Filter“ der Liste: Familie, Art und Zeitraum der Liste; ohne Zeitraum „Alles“. In der App rechnet der
  * Fortschritt in der Wertung der Familie; ein `scoring` der Adresse gilt dort nicht.
  */
 export function progressFromList(list: ListRoute, scoring: Scoring = "decimal"): ProgressRoute {
@@ -114,7 +114,7 @@ export function progressFromList(list: ListRoute, scoring: Scoring = "decimal"):
 }
 
 /**
- * Name des Rückwegs (D8): „Start“, „Scheiben“ oder der Zeitraum wie in der Seite eines Zeitraums („Letzte 90 Tage“,
+ * Name des Rückwegs: „Start“, „Scheiben“ oder der Zeitraum wie in der Seite eines Zeitraums („Letzte 90 Tage“,
  * „Neue Munition“, „01.05.2026 – 30.06.2026“). Der Name hängt nicht von „jetzt“ ab; benannte Zeiträume und die
  * Anzeige-Zeitzone kommen von der Seite.
  */

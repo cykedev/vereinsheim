@@ -116,7 +116,7 @@ describe("purgeCards", () => {
     expect(await db.rawSnapshot.count({ where: keyOf(scheibenId) })).toBe(0)
     expect(await db.rawRow.count({ where: keyOf(scheibenId) })).toBe(0)
     const tombstone = await db.tombstone.findFirstOrThrow({ where: keyOf(scheibenId) })
-    // wer gemeldet hat und unter welcher Nummer: Papierkorb des Schützen, Zuordnung zur Zustimmung (P2b)
+    // wer gemeldet hat und unter welcher Nummer: Papierkorb des Schützen, Zuordnung zur Zustimmung
     expect(tombstone).toMatchObject({
       cycle: target.cycle,
       reason: "nicht-meine",
@@ -131,7 +131,7 @@ describe("purgeCards", () => {
     })
   })
 
-  it("Stände, die die Brücke 40 Tage später nachliest, gehören trotzdem dazu (Review)", async () => {
+  it("Stände, die die Brücke 40 Tage später nachliest, gehören trotzdem dazu", async () => {
     const early = card()
     const scheibenId = early[0].scheibenId
     await ingest(early.slice(0, 1))
@@ -147,7 +147,7 @@ describe("purgeCards", () => {
     expect(await db.rawRow.count({ where: keyOf(scheibenId) })).toBe(0)
   })
 
-  it("ein früherer Zyklus, spät nachgelesen, bleibt mit seinen Daten (Review)", async () => {
+  it("ein früherer Zyklus, spät nachgelesen, bleibt mit seinen Daten", async () => {
     // Zyklus davor: Schüsse 50 Tage früher, beobachtet erst 40 Tage danach (nahe am neuen Zyklus)
     const scheibenId = nextId++
     const previous = card({ shotDays: -50, seenDays: 40, scheibenId })
@@ -179,7 +179,7 @@ describe("purgeCards", () => {
     )
   })
 
-  it("zwei Scheiben derselben ScheibenID 60 Tage auseinander, je allein entfernt: beide bleiben gesperrt (Review)", async () => {
+  it("zwei Scheiben derselben ScheibenID 60 Tage auseinander, je allein entfernt: beide bleiben gesperrt", async () => {
     const scheibenId = nextId++
     const first = card({ scheibenId })
     await ingest(first)
@@ -200,7 +200,7 @@ describe("purgeCards", () => {
     expect((await ingest([second[0]]))[0]).toMatchObject({ reason: "blocked" })
   })
 
-  it("die Ablage prüft die Sperre unter ihrem Lock: ein Entfernen mitten im Stapel wird nicht überschrieben (Review)", async () => {
+  it("die Ablage prüft die Sperre unter ihrem Lock: ein Entfernen mitten im Stapel wird nicht überschrieben", async () => {
     const snapshots = card()
     const scheibenId = snapshots[0].scheibenId
     await ingest(snapshots.slice(0, 1))
@@ -238,7 +238,7 @@ describe("purgeCards", () => {
   })
 })
 
-describe("purgeCards mit weicher Sperre (Papierkorb, P2b)", () => {
+describe("purgeCards mit weicher Sperre (Papierkorb)", () => {
   it("legt eine Löschsperre des Besitzers an statt eines Grabsteins; Rohdaten weg, derselbe Stand gesperrt", async () => {
     const snapshots = card()
     const scheibenId = snapshots[0].scheibenId
@@ -283,7 +283,7 @@ describe("purgeCards mit weicher Sperre (Papierkorb, P2b)", () => {
   })
 })
 
-describe("lockCard (Review P2b)", () => {
+describe("lockCard", () => {
   it("sperrt wie das Schreiben: erst Quelle und ScheibenID, dann die Zeile; eine unbekannte gibt false", async () => {
     const snapshots = card()
     const scheibenId = snapshots[0].scheibenId

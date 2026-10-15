@@ -40,7 +40,7 @@ const LIST: ListRoute = {
   evening: "2026-09-25",
 }
 
-describe("Wege zwischen den Seiten (D6, D7)", () => {
+describe("Wege zwischen den Seiten", () => {
   it("aus dem Fortschritt öffnen: Herkunft ohne Wahl und Wertung, die Scheibe öffnet in ihrer Wertung", () => {
     const card = openCard(PROGRESS, "c42")
     expect(card).toEqual({
@@ -105,7 +105,7 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
       scoring: "rings",
       anchor: { section: "analysis", tab: "position" },
     } as const
-    // die nächste Scheibe öffnet in ihrer Wertung (Plan `plans/2026-10-12-spiegel-wertung.md`)
+    // die nächste Scheibe öffnet in ihrer Wertung
     expect(siblingRoute(card, "c43")).toEqual({
       ...card,
       id: "c43",
@@ -114,7 +114,7 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
       scoring: null,
       anchor: { section: "analysis" },
     })
-    // die nächste Scheibe öffnet die Analyse mit dem ersten Reiter (User, 9. Oktober 2026)
+    // die nächste Scheibe öffnet die Analyse mit dem ersten Reiter
     expect(urlFromRoute(siblingRoute(card, "c43"))).toMatch(/#analysis$/)
     expect(siblingRoute({ ...card, anchor: { section: "shots" } }, "c43").anchor).toEqual({
       section: "shots",
@@ -152,12 +152,12 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
       progressFromList({ ...LIST, query: { ...LIST.query, range: { type: "rolling", days: 30 } } })
         .query.choice
     ).toEqual({ type: "rolling", days: 30 })
-    // die Liste hat keine Wertung; es gilt die des Geräts wie bei `openCard` (Review)
+    // die Liste hat keine Wertung; es gilt die des Geräts wie bei `openCard`
     expect(progressFromList(LIST, "rings").query.scoring).toBe("rings")
   })
 })
 
-describe("Beschriftung des Rückwegs (D8)", () => {
+describe("Beschriftung des Rückwegs", () => {
   const context = {
     named: [{ id: "neue-munition", name: "Neue Munition", from: "2026-08-01", to: null }],
     timeZone: "Europe/Berlin",
@@ -183,7 +183,7 @@ describe("Beschriftung des Rückwegs (D8)", () => {
   })
 })
 
-describe("Fortschritt ↔ Zustand der Seite (Task 7)", () => {
+describe("Fortschritt ↔ Zustand der Seite", () => {
   it("Rundreise Zustand → Route → Zustand über alle Felder", () => {
     const states: PeriodState[] = [
       initialPeriodState({ family: "lg-10m" }),

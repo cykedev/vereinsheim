@@ -76,7 +76,7 @@ zugang_schreiben() {
       echo "user=\"$(_cnf_escape "$3")\""
       echo "password=\"$(_cnf_escape "$4")\""
       # Der MariaDB-Client ab 11.4 verlangt sonst TLS mit gültigem Zertifikat und verweigert einen
-      # Server ohne TLS ganz (Review B1); ohne TLS auch kein Scheitern an alten TLS-Versionen. Die
+      # Server ohne TLS ganz; ohne TLS auch kein Scheitern an alten TLS-Versionen. Die
       # Verbindung bleibt im lokalen Gerätenetz. Nur MariaDB-Clients lesen diese Gruppe.
       echo "[client-mariadb]"
       echo "skip-ssl"
@@ -166,7 +166,7 @@ sql_tabelle() {
 
 # Eine SQL-Datei als lesbare Tabellen, jede Abfrage mit ihrem Text (für den Bericht). Scheitert eine
 # Abfrage (etwa weil das echte Schema anders aussieht), laufen die übrigen weiter (--force). Vorweg
-# die Zeitgrenze je Abfrage, damit kein Vollscan die Anlage lange hält (Review S4); ungepuffert, damit
+# die Zeitgrenze je Abfrage, damit kein Vollscan die Anlage lange hält; ungepuffert, damit
 # Fehler bei ihrer Abfrage stehen.
 sql_datei_tabelle() {
   { if [ -n "$ZEITGRENZE_SQL" ]; then printf '%s;\n' "$ZEITGRENZE_SQL"; fi; cat "$1"; } |
@@ -174,7 +174,7 @@ sql_datei_tabelle() {
 }
 
 # Dump über den passenden Dump-Client; Argumente werden angehängt, Ausgabe auf stdout. Mit --force,
-# damit eine View ohne SHOW VIEW-Recht nicht die ganze Kopie abbricht (Review B3).
+# damit eine View ohne SHOW VIEW-Recht nicht die ganze Kopie abbricht.
 sql_dump() {
   _client "$DUMP_BIN" --force "$@" "$DB"
 }

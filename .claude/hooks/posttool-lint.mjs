@@ -18,7 +18,7 @@ const m =
   String(fp).match(
     /^(.*?)(apps\/(?:ringwerk|treffsicher|spiegel)|packages\/(?!config\/)[^/]+)\/(.+\.(?:ts|tsx))$/
   )
-if (!m) process.exit(0) // nur TS/TSX-Quelldateien der Apps und Pakete (seit Oktober 2026 mit `lint`)
+if (!m) process.exit(0) // nur TS/TSX-Quelldateien der Apps und Pakete (alle mit `lint`)
 
 const dir = m[2] // apps/<app> bzw. packages/<paket>
 const rel = m[3] // pfad relativ zur App- bzw. Paket-Wurzel

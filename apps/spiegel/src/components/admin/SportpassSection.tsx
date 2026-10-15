@@ -16,8 +16,8 @@ import type { ActionResult } from "@/lib/types"
 import { AdminHelp } from "./AdminHelp"
 
 /**
- * Zustimmungen per Sportpass an einem Konto (SP-1.7 a, D5): Der Schütze stimmt im Profil zu, hier bestätigt oder lehnt
- * ein Admin ab. Nur bestätigte bringen Scheiben von der Brücke ([[spiegel-privacy]]); eintragen kann nur der Schütze.
+ * Zustimmungen per Sportpass an einem Konto: Der Schütze stimmt im Profil zu, hier bestätigt oder lehnt ein Admin
+ * ab. Nur bestätigte bringen Scheiben von der Brücke ([[spiegel-privacy]]); eintragen kann nur der Schütze.
  */
 export function SportpassSection({
   consents,
@@ -26,7 +26,7 @@ export function SportpassSection({
 }: {
   consents: AdminConsentRow[]
   who: string
-  /** ein deaktiviertes Konto bekommt nichts, auch mit bestätigter Zustimmung (Review) */
+  /** ein deaktiviertes Konto bekommt nichts, auch mit bestätigter Zustimmung */
   accountActive: boolean
 }) {
   return (
@@ -73,7 +73,7 @@ function ConsentItem({
   accountActive: boolean
 }) {
   const router = useRouter()
-  // die Art bleibt beim Schließen stehen, damit der Dialog nicht beim Ausblenden den anderen Titel zeigt (Review)
+  // die Art bleibt beim Schließen stehen, damit der Dialog nicht beim Ausblenden den anderen Titel zeigt
   const [dialog, setDialog] = useState<DialogKind>("remove")
   const [open, setOpen] = useState(false)
   const ask = (kind: DialogKind) => {
@@ -93,7 +93,7 @@ function ConsentItem({
     })
   const undecided = isOpenConsent(consent.status)
   const subject = { who, sportpassId: consent.sportpassId }
-  // Kein Knopf ohne Folge (P2c): jede Entscheidung fragt mit ihren Folgen
+  // Kein Knopf ohne Folge: jede Entscheidung fragt mit ihren Folgen
   const decisions = {
     confirm: {
       decision: consentConfirm({
@@ -107,7 +107,7 @@ function ConsentItem({
     },
     reject: { decision: consentReject(subject), action: rejectConsent },
     remove: { decision: consentRemove(subject), action: removeConsent },
-    // Meldungen „nicht meine“ aufheben (P2d, D8)
+    // Meldungen „nicht meine“ aufheben
     lift: {
       decision: notMineLift({
         ...subject,
@@ -163,7 +163,7 @@ function ConsentItem({
             </Button>
           </>
         )}
-        {/* eine abgelehnte Zustimmung lässt sich nicht wieder bestätigen: Aufheben brächte dort nichts (Review) */}
+        {/* eine abgelehnte Zustimmung lässt sich nicht wieder bestätigen: Aufheben brächte dort nichts */}
         {consent.notMine > 0 && consent.status !== "rejected" && (
           <Button
             type="button"

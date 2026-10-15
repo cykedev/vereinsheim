@@ -34,7 +34,7 @@ const INPUT: ListInputCard[] = [
   lp(periodCard("g", 3, [96], { startedAtMs: at(16, 0, 27) })),
 ]
 
-describe("Abende der Scheiben-Liste (Plan N2, D1–D5)", () => {
+describe("Abende der Scheiben-Liste", () => {
   it("ein Abend ist der Tag in der Anzeige-Zeitzone; vor 4 Uhr zählt zum Vortag", () => {
     expect(eveningDay(at(22, 30), TZ)).toBe("2026-09-29") // 00:30 MESZ
     expect(eveningDay(at(1, 30, 30), TZ)).toBe("2026-09-29") // 03:30 MESZ
@@ -124,7 +124,7 @@ describe("Abende der Scheiben-Liste (Plan N2, D1–D5)", () => {
   })
 })
 
-describe("Filter „Liste“ (Rückmeldung 2)", () => {
+describe("Filter „Liste“", () => {
   const RWK = { id: 3, name: "RWK_LP" }
   const TRAINING = { id: 1, name: "Training-LG" }
   const LIGA = { id: 9, name: "LP-Liga" }
@@ -168,7 +168,7 @@ describe("Filter „Liste“ (Rückmeldung 2)", () => {
   })
 })
 
-describe("der letzte Abend (Plan N5, Start und Blättern von Start)", () => {
+describe("der letzte Abend (Start und Blättern von Start)", () => {
   it("der Abend der neuesten Scheibe, alle Familien, in zeitlicher Folge; vor 4 Uhr zählt zum Vortag", () => {
     expect(lastEvening(INPUT, TZ)).toEqual({
       day: "2026-09-30",
@@ -181,7 +181,7 @@ describe("der letzte Abend (Plan N5, Start und Blättern von Start)", () => {
   })
 })
 
-describe("Scheiben-Liste nach dem Review (N2)", () => {
+describe("Scheiben-Liste: weitere Fälle", () => {
   it("an den Tagen der Zeitumstellung zählt die Uhrzeit der Zone, nicht vier Stunden absolut", () => {
     // 29. März 2026: 02:00 MEZ → 03:00 MESZ; 25. Oktober 2026: 03:00 MESZ → 02:00 MEZ
     expect(eveningDay(Date.UTC(2026, 2, 29, 2, 30), TZ)).toBe("2026-03-29") // 04:30 MESZ

@@ -93,7 +93,6 @@ describe("Reiter Lage", () => {
   })
 
   it("kein Visier und keine Korrektur: der Reiter rechnet, er rät nicht zum Verstellen", () => {
-    // User, 9. Oktober 2026: „visier raus“
     expect(html).not.toMatch(/Visier|Korrektur|verstellen/)
     expect(cardText(html, "lage-echt")).toContain(
       "Liegt die Mitte darin, ist ein Versatz nicht belegt."
@@ -101,7 +100,7 @@ describe("Reiter Lage", () => {
   })
 
   it("ohne Ringverlust: Ist und Mitte nennen ihr n, der Grund nennt den verdächtigen Schuss", () => {
-    // Prüfung, Ergebnis 5 und 6: ein verdächtiger Schuss mit Lage zählt nicht (SF-15)
+    // ein verdächtiger Schuss mit Lage zählt nicht (SF-15)
     const suspicious = CARD.map((s, i) => (i === 20 ? { ...s, flags: [FLAG_SUSPICIOUS] } : s))
     const split = ringLossSplit(
       suspicious.filter((s) => s.kind === "match"),
@@ -118,7 +117,7 @@ describe("Reiter Lage", () => {
     )
   })
 
-  it("Ellipse auf der Scheibe und Urteil: wofür jedes gilt (Prüfung, Lage 3)", () => {
+  it("Ellipse auf der Scheibe und Urteil: wofür jedes gilt", () => {
     expect(cardText(html, "lage-echt")).toContain(
       "Auf der Scheibe gilt die Ellipse für die Auswahl dort; dieses Urteil für alle Wertungsschüsse."
     )
@@ -143,15 +142,15 @@ describe("Reiter Lage", () => {
     )
   })
 
-  it("negativer Lage-Anteil: „Lage kostet nichts“, die Zahl mit ihrem Grund in einem Satz (U3, D10)", () => {
-    // Prüfung, Lage 8: die Gruppe sitzt um die Mitte, das Verschieben um den Zufallsversatz kostet
+  it("negativer Lage-Anteil: „Lage kostet nichts“, die Zahl mit ihrem Grund in einem Satz", () => {
+    // die Gruppe sitzt um die Mitte, das Verschieben um den Zufallsversatz kostet
     const calm = BASE.map((s) =>
       s.xUm === null || s.yUm === null ? s : { ...s, xUm: s.xUm + 3500, yUm: s.yUm - 2200 }
     )
     const split = ringLossSplit(calm, LP_10M)!
     expect(split.positionLoss.decimal).toBeLessThan(0)
     const card = cardHtml(renderTab("position", { shots: calm }), "ringverlust-nach-ursache")
-    // die Streuung trägt den ganzen Ringverlust, Lage und Streuung ergeben ihn zusammen (Review U3)
+    // die Streuung trägt den ganzen Ringverlust, Lage und Streuung ergeben ihn zusammen
     expect(card).toContain(
       `aria-label="Lage kostet nichts, Streuung ${formatValue(split.total!.decimal, 1)} Ringe"`
     )
@@ -163,7 +162,7 @@ describe("Reiter Lage", () => {
       `Deine Gruppe sitzt schon gut; in die Mitte geschoben brächte sie rechnerisch nichts (Lage ${formatValue(split.positionLoss.decimal, 1)} Ringe).`
     )
     expect(cardText(html, "ringverlust-nach-ursache")).not.toContain("kostet nichts")
-    // dieselbe Gruppe um die Mitte: der Versatz ist nicht belegt (U3, D11)
+    // dieselbe Gruppe um die Mitte: der Versatz ist nicht belegt
     expect(mpiConfidence(calm)!.real).toBe(false)
     expect(cardText(renderTab("position", { shots: calm }), "lage-echt")).toContain(
       "kann Zufall sein"
@@ -189,7 +188,7 @@ describe("Reiter Lage", () => {
     expect(cardText(few, "lage-echt")).toContain(
       "ab 3 Schuss mit Lage (nicht alle auf einer Linie)"
     )
-    // drei auf einer Linie: kein Test möglich, derselbe Grund (Prüfung, Lage 10)
+    // drei auf einer Linie: kein Test möglich, derselbe Grund
     const line = [0, 1, 2].map((i) => ({ ...BASE[i], xUm: 1000 * i, yUm: 500 * i }))
     expect(mpiConfidence(line)).toBeNull()
     expect(cardText(renderTab("position", { shots: line }), "lage-echt")).toContain(

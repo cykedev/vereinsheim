@@ -14,7 +14,7 @@ export interface CardContextBarProps {
   /** die ältere und die neuere Scheibe des Kontexts (`contextCardIds`, `neighbours`, `siblingRoute`) */
   prev: CardRoute | null
   next: CardRoute | null
-  /** false: kein Kontext zum Blättern (direkter Link, Start bis N5) */
+  /** false: kein Kontext zum Blättern (direkter Link) */
   paging?: boolean
   className?: string
 }
@@ -23,7 +23,7 @@ const STEP =
   "inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[13px] leading-none font-semibold"
 
 /**
- * Über dem Kopf der Scheibe (Plan N3, D5; Entscheidung 9): links der Rückweg mit dem Namen des Kontexts, rechts
+ * Über dem Kopf der Scheibe: links der Rückweg mit dem Namen des Kontexts, rechts
  * „‹ vorige · nächste ›“ in zeitlicher Folge; vorige ist die ältere. Am Ende ausgegraut, ohne Adresse. Kein Wischen,
  * es kollidiert mit Zoom und Ausschnitt der Scheibe.
  */

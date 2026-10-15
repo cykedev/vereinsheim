@@ -62,7 +62,7 @@ interface ScoringDiscipline {
 /**
  * Validiert die Ringe gegen das effektive Scoring-Format und berechnet den
  * Ringteiler. Liefert entweder ein strukturiertes Feld-Fehlerobjekt oder den
- * berechneten Ringteiler — Verhalten identisch zu den vorherigen Inline-Blöcken.
+ * berechneten Ringteiler.
  */
 export function resolveRingteiler(
   competition: ScoringCompetition,
@@ -107,8 +107,7 @@ type SeasonDiscipline = {
 /**
  * Ermittelt die effektive Disziplin für eine Saison-Serie:
  * formData (gemischt) → Teilnehmer-Disziplin → Competition-Disziplin.
- * Lädt bei abweichender Auswahl die Disziplin nach. Verhalten identisch zu den
- * vorherigen Inline-Blöcken in save-/updateSeasonSeries.
+ * Lädt bei abweichender Auswahl die Disziplin nach.
  */
 export async function resolveSeasonDiscipline(
   formDisciplineId: string | null,

@@ -8,7 +8,7 @@ import { groupShape, outlierLoss, outliers, ringWidths, sigmaEstimate } from "./
 describe("Rayleigh-σ (P5)", () => {
   it("σ̂ mit c4 und 95-%-Bereich über χ², ohne den Wert vor der Korrektur", () => {
     // SPREAD: Σr² = 40 mm², 2(n − 1) = 10 Freiheitsgrade, √(40/10) = 2 mm vor der Korrektur.
-    // Meytons „Sa“ (eben dieser Wert) zeigt Spiegel nicht: kein Vorteil gegenüber σ̂ (Oktober 2026).
+    // Meytons „Sa“ (eben dieser Wert) zeigt Spiegel nicht: kein Vorteil gegenüber σ̂.
     const sigma = sigmaEstimate(SPREAD)
     expect(Object.keys(sigma ?? {}).sort()).toEqual(["high", "low", "n", "sigma"])
     expect(sigma?.n).toBe(6)
@@ -75,7 +75,7 @@ describe("Form und Ringbreiten (P8, P9)", () => {
     // die Grenze gilt für die acht: L = 0,05^(2/6) = 0,368403, a/b = √((2 − L + 2√(1 − L))/L) = 2,9569
     expect(shape?.ratioLimit).toBeCloseTo(2.9569, 3)
     expect(Math.hypot(shape!.centerUm.xUm, shape!.centerUm.yUm)).toBeLessThan(1)
-    // mit den Abreißern wäre sie gestreckt (Gegenprobe im Plan, Task 2)
+    // mit den Abreißern wäre sie gestreckt
   })
 
   it("unter fünf Schuss kein Urteil über Ausreißer: alle zählen", () => {
@@ -208,8 +208,8 @@ describe("Ausreißer (V6, V7)", () => {
     { ...MATCH[0], xUm: 4000, yUm: 400, firedAtMs: 10_000 },
   ]
 
-  it("zwei nahe Abreißer verdecken sich nicht mehr: Schritt 2 zählt, auch wenn Schritt 1 darunter bleibt", () => {
-    // Einzeln gegen die übrigen T 4,07 und 4,15 (bis Oktober 2026 keiner, Grenze 7,51). Schritt 1 (m = 10):
+  it("zwei nahe Abreißer verdecken sich nicht: Schritt 2 zählt, auch wenn Schritt 1 darunter bleibt", () => {
+    // Einzeln gegen die übrigen T 4,07 und 4,15 (keiner über der Grenze 7,51). Schritt 1 (m = 10):
     // T 4,148 bei Grenze 7,9526; Schritt 2 gegen die acht im Kreis (m = 9): T 12,446 bei Grenze 8,1748
     expect(outliers([...ring8, ...pair])?.flagged.map((f) => f.number)).toEqual([9, 10])
   })
@@ -330,7 +330,7 @@ describe("Ausreißer (V6, V7)", () => {
   })
 
   it("ohne markierten Schuss kosten Ausreißer nichts, auch wenn ein Schuss schwach ist", () => {
-    // 2,8 mm ist kein Ausreißer; sein schwacher Wert zählt hier nicht (früher: schwächste 10 %)
+    // 2,8 mm ist kein Ausreißer; sein schwacher Wert zählt hier nicht
     expect(outlierLoss(priced(2800, 80), "decimal")).toEqual({ n: 9, count: 0, loss: 0 })
   })
 

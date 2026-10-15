@@ -59,7 +59,7 @@ describe("Zustimmungen am Konto (Admin)", () => {
     expect(html).toContain("Keine Zustimmung an diesem Konto.")
   })
 
-  it("Meldungen „nicht meine“ als Zeile mit Knopf, nur wenn es welche gibt (P2d)", () => {
+  it("Meldungen „nicht meine“ als Zeile mit Knopf, nur wenn es welche gibt", () => {
     const html = renderToStaticMarkup(
       createElement(SportpassSection, {
         who: "Max Muster",
@@ -72,7 +72,7 @@ describe("Zustimmungen am Konto (Admin)", () => {
     expect(item(html, "active")).toContain(">Wieder zulassen<")
     expect(item(html, "returned")).not.toContain("Wieder zulassen")
     expect(item(html, "returned")).not.toContain("data-consent-not-mine")
-    // abgelehnt: die Zeile ja, der Knopf nicht (Review)
+    // abgelehnt: die Zeile ja, der Knopf nicht
     expect(item(html, "rejected")).toContain("1 Scheibe als „nicht meine“")
     expect(item(html, "rejected")).not.toContain("Wieder zulassen")
   })

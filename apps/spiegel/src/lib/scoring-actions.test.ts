@@ -57,7 +57,7 @@ describe("setCardScoring", () => {
     const before = mocks.revalidated
     expect(await setCardScoring(own, "rings")).toEqual({ success: true })
     expect(await choiceOf(own)).toBe("rings")
-    // kein `revalidatePath`: Danach scrollte Next zum Anker der Adresse; die Hülle lädt mit `router.refresh()` neu
+    // kein `revalidatePath`: Danach scrollt Next zum Anker der Adresse; die Hülle lädt mit `router.refresh()` neu
     expect(mocks.revalidated).toBe(before)
     expect(await setCardScoring(own, "decimal")).toEqual({ success: true })
     expect(await choiceOf(own)).toBe("decimal")

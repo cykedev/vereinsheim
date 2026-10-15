@@ -1,6 +1,6 @@
-// Adressen von Spiegel (Plan N1, `vault/spiegel/spiegel-navigation.md`): reine Funktionen von der Adresse zum
+// Adressen von Spiegel (`vault/spiegel/spiegel-navigation.md`): reine Funktionen von der Adresse zum
 // Zustand und zurück. Pfade, Schlüssel und Anker englisch; Vorgaben fallen weg, Ungültiges gilt als
-// Vorgabe, nie ein Fehler (D2).
+// Vorgabe, nie ein Fehler.
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
@@ -21,7 +21,7 @@ const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/
 /** Id einer Scheibe: Buchstaben, Ziffern, Unterstrich, Bindestrich (in der App die Id aus der Datenbank) */
 const ID = /^[A-Za-z0-9_-]+$/
 
-/** feste Werte von `range` und `compare`; sie gehen einer gleichlautenden Id vor (D4) */
+/** feste Werte von `range` und `compare`; sie gehen einer gleichlautenden Id vor */
 const RESERVED = new Set(["30d", "90d", "12m", "all", "previous"])
 
 /** taugt die Zeichenkette als Id einer Scheibe in der Adresse? */
@@ -29,7 +29,7 @@ export const isCardId = (id: string) => ID.test(id)
 
 /**
  * taugt die Zeichenkette als Id eines benannten Zeitraums? Ids sind erzeugt (in der App aus der Datenbank, klein
- * geschrieben wie cuid oder UUID), nie aus dem Namen abgeleitet; die festen Wörter scheiden aus (Review N1)
+ * geschrieben wie cuid oder UUID), nie aus dem Namen abgeleitet; die festen Wörter scheiden aus
  */
 export const isNamedPeriodId = (id: string) => SLUG.test(id) && !RESERVED.has(id)
 
@@ -89,7 +89,7 @@ export function decodeCompare(value: string | null): CompareChoice {
   return value && SLUG.test(value) ? { type: "named", id: value } : { type: "none" }
 }
 
-/** Schlüssel und Wert in fester Reihenfolge (D2) */
+/** Schlüssel und Wert in fester Reihenfolge */
 export type Param = readonly [string, string]
 
 /** Filter der Scheiben-Liste */
@@ -99,7 +99,7 @@ export interface ListQuery {
   kind: CardKind
   /** Merkmal wie `nur-pdf` */
   flag: string | null
-  /** Liste aus Meyton (`Rangliste`) als Kennung, nie als Name (Rückmeldung 2, 15. Oktober 2026); null: alle */
+  /** Liste aus Meyton (`Rangliste`) als Kennung, nie als Name; null: alle */
   list: number | null
   /** null: alle Abende; „Alles“ ist dasselbe und hat darum keine eigene Form */
   range: Exclude<PeriodChoice, { type: "all" }> | null
@@ -197,7 +197,7 @@ function progressPairs(
     ["compare", encodeCompare(query.compare)],
     ["family", query.family],
     ["kind", kindParams(query.kind)],
-    // englisch wie alle Schlüssel (User, 9. Oktober 2026): Training nur aus Probe
+    // englisch wie alle Schlüssel: Training nur aus Probe
     ["sighters", query.includeProbeOnly ? null : "0"],
     ["scoring", query.scoring === "rings" ? "rings" : null],
     [
@@ -232,14 +232,14 @@ export function progressQueryFromParams(params: URLSearchParams): ProgressQuery 
   }
 }
 
-/** woher eine Scheibe geöffnet wurde, mit dem Zustand dort (D6); null: ein direkter Link */
+/** woher eine Scheibe geöffnet wurde, mit dem Zustand dort; null: ein direkter Link */
 export type CardOrigin =
   | null
   | { from: "start" }
   | { from: "list"; query: ListQuery }
   | { from: "progress"; query: Omit<ProgressQuery, "chosen" | "scoring"> }
 
-/** die Seite einer Scheibe: Herkunft, Auswahl, Schuss als Nummer (D5), Wertung, Abschnitt oder Reiter */
+/** die Seite einer Scheibe: Herkunft, Auswahl, Schuss als Nummer, Wertung, Abschnitt oder Reiter */
 export interface CardRoute {
   page: "card"
   id: string
@@ -248,7 +248,7 @@ export interface CardRoute {
   selection: SeriesKey | null
   /** Nummer wie `shotLabels` („23“) */
   shot: string | null
-  /** gewählte Wertung; null: die der Scheibe (Plan `plans/2026-10-12-spiegel-wertung.md`), so öffnen Liste, Start, Blättern */
+  /** gewählte Wertung; null: die der Scheibe, so öffnen Liste, Start, Blättern */
   scoring: Scoring | null
   anchor: PageAnchor | null
 }
@@ -259,7 +259,7 @@ const SERIES = /^[1-9]\d{0,2}$/
 
 /**
  * eine Serie; die ganze Scheibe ist die Vorgabe und steht nicht in der Adresse. `all`, „ohne Probe“ (`match`) und die
- * Probe (`sighters`, seit U4 entfallen) gelten wie alles Ungültige als Vorgabe
+ * Probe (`sighters`) gelten wie alles Ungültige als Vorgabe
  */
 function selectionOf(value: string | null): SeriesKey | null {
   return value && SERIES.test(value) ? Number(value) : null
@@ -274,7 +274,7 @@ function originFrom(params: URLSearchParams): CardOrigin {
     case "list":
       return { from: "list", query: listQueryFromParams(params) }
     case "progress": {
-      // `pick` wäre die Scheibe selbst, die Wertung trägt die Scheibe (D6)
+      // `pick` wäre die Scheibe selbst, die Wertung trägt die Scheibe
       const { chosen: _chosen, scoring: _scoring, ...query } = progressQueryFromParams(params)
       return { from: "progress", query }
     }
@@ -287,7 +287,7 @@ function originPairs(origin: CardOrigin): Param[] {
   if (!origin) return []
   if (origin.from === "start") return [["from", "start"]]
   if (origin.from === "list") return [["from", "list"], ...listQueryToParams(origin.query)]
-  // nie `pick` oder die Wertung der Herkunft, auch wenn ein Aufrufer sie mitgibt: die trägt die Scheibe (D6)
+  // nie `pick` oder die Wertung der Herkunft, auch wenn ein Aufrufer sie mitgibt: die trägt die Scheibe
   return [
     ["from", "progress"],
     ...present(progressPairs({ ...origin.query, chosen: null, scoring: "decimal" })),
@@ -323,7 +323,7 @@ export function cardToParams(card: CardRoute): Param[] {
 export const cardHash = (card: CardRoute) =>
   card.anchor ? hashFor(card.anchor.section, card.anchor.tab) : ""
 
-/** jede Seite von Spiegel (D3); was keine ist, ist `unknown` mit ihrem Pfad */
+/** jede Seite von Spiegel; was keine ist, ist `unknown` mit ihrem Pfad */
 export type Route =
   | { page: "start" }
   /**
@@ -415,7 +415,7 @@ const withQuery = (path: string, params: readonly Param[], hash = "") =>
       : ""
   }${hash}`
 
-/** die kanonische Adresse einer Route (D2): Vorgaben fehlen, Schlüssel in fester Reihenfolge */
+/** die kanonische Adresse einer Route: Vorgaben fehlen, Schlüssel in fester Reihenfolge */
 export function urlFromRoute(route: Route): string {
   switch (route.page) {
     case "start":

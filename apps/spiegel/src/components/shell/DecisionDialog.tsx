@@ -14,7 +14,7 @@ import {
 import type { Decision } from "@/lib/admin/consequences"
 
 /**
- * Der Inhalt eines Entscheids (P2c, D2): worum es geht, was vorher zu prüfen ist, was passiert, was nicht, und wie es
+ * Der Inhalt eines Entscheids: worum es geht, was vorher zu prüfen ist, was passiert, was nicht, und wie es
  * zurückgeht. Abschnitte nur mit Inhalt. Getrennt vom Dialog, damit ein Markup-Test ihn sieht (der Dialog rendert in
  * ein Portal).
  */
@@ -73,7 +73,7 @@ export function DecisionDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{decision.title}</AlertDialogTitle>
         </AlertDialogHeader>
-        {/* der ganze Inhalt beschreibt den Dialog, nicht nur der erste Satz (Review): Screenreader lesen Prüfen und
+        {/* der ganze Inhalt beschreibt den Dialog, nicht nur der erste Satz: Screenreader lesen Prüfen und
             Folgen mit */}
         <AlertDialogDescription asChild>
           <div className="grid gap-3">

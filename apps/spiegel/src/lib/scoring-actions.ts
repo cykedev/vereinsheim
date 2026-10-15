@@ -7,10 +7,10 @@ import { db } from "@/lib/db"
 import { chooseCardScoring, saveFamilyScoring } from "@/lib/db/cards"
 import type { ActionResult } from "@/lib/types"
 
-// Wertung umschalten und automatisch speichern (Plan `plans/2026-10-12-spiegel-wertung.md`): auf der Seite einer Scheibe
-// die der Scheibe, in Liste und Fortschritt die der Familie. Nur eigene Scheiben, auch für Admins. Danach rechnen die
-// Seiten neu: Die Hülle ruft `router.refresh()` (`useSavedChoice`), kein `revalidatePath` hier, nach dem Next zum Anker
-// der Adresse scrollte (15. Oktober 2026). Liste und Start zeigen vorn die Wertung der Scheibe.
+// Wertung umschalten und automatisch speichern: auf der Seite einer Scheibe die der Scheibe, in Liste und Fortschritt
+// die der Familie. Nur eigene Scheiben, auch für Admins. Danach rechnen die Seiten neu: Die Hülle ruft
+// `router.refresh()` (`useSavedChoice`), kein `revalidatePath` hier, nach dem Next zum Anker der Adresse scrollt. Liste
+// und Start zeigen vorn die Wertung der Scheibe.
 
 const isScoring = (value: unknown): value is Scoring => value === "decimal" || value === "rings"
 

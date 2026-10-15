@@ -5,7 +5,7 @@ import { ensureSeedAdmin } from "@/lib/startup"
 
 const HOUR_MS = 3_600_000
 
-/** abgelaufene Scheiben im Papierkorb endgültig löschen (P2b); ins Log nur Zahlen */
+/** abgelaufene Scheiben im Papierkorb endgültig löschen; ins Log nur Zahlen */
 function emptyExpiredTrash() {
   void purgeExpiredTrash(db, { nowMs: Date.now() })
     .then(({ purged, failed }) => {
@@ -31,7 +31,7 @@ export async function registerNode() {
       if (count) console.warn(`${count} Projektionen beim Start neu gerechnet`)
     })
     .catch((error: unknown) => console.error("Projektionen beim Start nicht nachgerechnet:", error))
-  // Papierkorb: beim Start und danach stündlich (30 Tage, D4); `unref` hält den Prozess nicht am Leben
+  // Papierkorb: beim Start und danach stündlich (30 Tage); `unref` hält den Prozess nicht am Leben
   emptyExpiredTrash()
   setInterval(emptyExpiredTrash, HOUR_MS).unref()
   try {

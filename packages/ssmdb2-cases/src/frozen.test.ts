@@ -16,7 +16,7 @@ function filesOnDisk(dir: string): string[] {
   )
 }
 
-/** die Sonderfälle mit SSMDB2-Bezug aus dem Zuschnitt (Roadmap SP-1.0 b), dazu SF-32 aus der Abnahme der Brücke */
+/** die Sonderfälle mit SSMDB2-Bezug, dazu SF-32 */
 const REQUIRED = [
   ...["01", "02", "03", "04", "05", "72"],
   ...["07", "08", "09", "10", "11", "13"],
@@ -35,7 +35,7 @@ describe("eingefrorene Fälle (cases/v1)", () => {
       expect(readFileSync(join(root, path), "utf8"), `${STALE} (${path})`).toBe(content)
   })
 
-  it("jeder Sonderfall des Zuschnitts und SF-32 hat genau einen Fall", () => {
+  it("jeder Sonderfall mit SSMDB2-Bezug und SF-32 hat genau einen Fall", () => {
     expect(REQUIRED).toHaveLength(31)
     expect(CASES.map((c) => c.id).sort()).toEqual([...REQUIRED].sort())
   })

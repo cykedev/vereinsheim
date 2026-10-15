@@ -1,6 +1,5 @@
 // Geometrie der Scheibe in Millimetern (SVG-Koordinaten, y nach unten) und die Regeln, die in
-// Bildschirm-Pixeln bemessen sind. Werte wie im Prototyp (Spielwiese, bis Oktober 2026 im Repo) und in
-// spiegel-ui-design „Zeichnen der Scheibe“.
+// Bildschirm-Pixeln bemessen sind. Werte wie in spiegel-ui-design „Zeichnen der Scheibe“.
 
 import { smallestEnclosingCircle, type Point } from "@vereinsheim/shot-core/geometry"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"

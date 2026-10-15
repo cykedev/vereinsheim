@@ -77,8 +77,8 @@ describe("extractTextFromPdfBuffer", () => {
   })
 
   it("bricht bei zu vielen Textitems ab statt still zu kuerzen", async () => {
-    // Ersetzt den frueheren Dekompressions-Cap-Test. Eine gekuerzte Einheit saehe
-    // in der Vorschau plausibel aus und wuerde uebernommen — deshalb Abbruch.
+    // Eine gekuerzte Einheit saehe in der Vorschau plausibel aus und wuerde
+    // uebernommen — deshalb Abbruch.
     const bomb = buildTextBombPdf(MAX_TEXT_ITEMS + 5_000)
 
     await expect(extractTextFromPdfBuffer(bomb)).rejects.toThrow("zu viel Text")
@@ -86,7 +86,7 @@ describe("extractTextFromPdfBuffer", () => {
 
   it("greift, bevor der Speicher volllaeuft", async () => {
     // Der Cap muss *waehrend* des Parsens ziehen, nicht danach: getTextContent()
-    // materialisierte frueher die ganze Seite (gemessen 3,2-MB-PDF → 665 MB RSS).
+    // materialisiert die ganze Seite (gemessen 3,2-MB-PDF → 665 MB RSS).
     const bomb = buildTextBombPdf(MAX_TEXT_ITEMS * 4)
     const before = process.memoryUsage().heapUsed
 

@@ -1,7 +1,7 @@
-// Auswertungen über viele Scheiben (Plan L2, vault/spiegel/spiegel-langzeit.md): Werte je Scheibe, Verlauf
-// mit gleitendem Schnitt und Formband, Boden und Decke je Abschnitt, Trainingsumfang, Vergleich zweier
-// Zeiträume und die letzte Scheibe gegen den eigenen Schnitt (Katalog T1, T2, T3, T5, T6, C3, C4). Die Disziplin-Familie wählt der Aufrufer; Wochen,
-// Monate und Tage ordnet er zu, denn die Anzeige-Zeitzone liegt in der App (D1).
+// Auswertungen über viele Scheiben (vault/spiegel/spiegel-langzeit.md): Werte je Scheibe, Verlauf mit gleitendem
+// Schnitt und Formband, Boden und Decke je Abschnitt, Trainingsumfang, Vergleich zweier Zeiträume und die letzte
+// Scheibe gegen den eigenen Schnitt (Katalog T1, T2, T3, T5, T6, C3, C4). Die Disziplin-Familie wählt der Aufrufer;
+// Wochen, Monate und Tage ordnet er zu, denn die Anzeige-Zeitzone liegt in der App.
 
 import {
   asOnPrintout,
@@ -17,22 +17,22 @@ import { byStart, cardShots } from "./card-shots"
 
 /** Faktor, der den MAD bei normalverteilten Werten zur Standardabweichung macht */
 const MAD_TO_SD = 1.4826
-/** gleitender Schnitt über so viele Scheiben (D2) */
+/** gleitender Schnitt über so viele Scheiben */
 const TREND_WINDOW = 5
-/** ab so vielen Scheiben ein Formband (D3) */
+/** ab so vielen Scheiben ein Formband */
 const MIN_BAND_CARDS = 10
 /** Ø je Schuss rechnet in zwei Schritten (Summe ÷ 10 ÷ n): gleiche Werte bei verschiedener Schusszahl
  * weichen in der letzten Stelle ab. Auf neun Nachkommastellen gerundet sind sie wieder gleich, für den Test
  * über Ränge und das Perzentil. */
 const VALUE_DIGITS = 1e9
-/** ab so vielen Scheiben in einem Abschnitt Boden und Decke (D4) */
+/** ab so vielen Scheiben in einem Abschnitt Boden und Decke */
 const MIN_BUCKET_SPREAD = 5
-/** Signifikanzniveau des Vergleichs (D5) */
+/** Signifikanzniveau des Vergleichs */
 const COMPARE_ALPHA = 0.05
 /** bedeutsam ab diesem Anteil der gepoolten Streuung (T3, Hopkins) */
 const MEANINGFUL_SHARE = 0.3
 const DAY_MS = 86_400_000
-/** Schnitt über die Scheiben dieser Tage vor der letzten (C4, D6), ab so vielen Scheiben */
+/** Schnitt über die Scheiben dieser Tage vor der letzten (C4), ab so vielen Scheiben */
 const AVERAGE_DAYS = 30
 const MIN_AVERAGE_CARDS = 3
 /** Perzentil unter so vielen letzten Scheiben, ab so vielen */
@@ -54,7 +54,7 @@ export interface PeriodCard {
   flags?: readonly string[]
   /**
    * amtliche Wertung der Scheibe, die der Disziplin (Meyton druckt nach ihr); nie aus `Treffer.Wertung`, das ist die
-   * umschaltbare Anzeigeart am Monitor (SF-74). Fehlt, wenn sie unbekannt ist (der Adapter, SP-1.6, klärt die Quelle)
+   * umschaltbare Anzeigeart am Monitor (SF-74). Fehlt, wenn sie unbekannt ist (der Adapter klärt die Quelle)
    */
   official?: Scoring
   shots: readonly MetricShot[]
@@ -71,7 +71,7 @@ export interface CardValue {
 /**
  * Wert einer Registry-Kennzahl je Scheibe (T1), in der Folge der Scheiben (`startedAtMs`, bei Gleichstand
  * die Kennung), über die Wertungsschüsse; eine Scheibe nur mit Probe nur mit `includeProbeOnly`, dann über
- * die Probe (D8). Ohne Wert (Mindestzahl, fehlende Angaben) fällt die Scheibe weg. Der Wert ist auf neun
+ * die Probe. Ohne Wert (Mindestzahl, fehlende Angaben) fällt die Scheibe weg. Der Wert ist auf neun
  * Nachkommastellen gerundet, damit gleiche Werte gleich sind.
  */
 export function cardValues(
@@ -111,7 +111,7 @@ export interface TrendPoint extends CardValue {
 }
 
 /**
- * Verlauf mit gleitendem Schnitt über die letzten fünf Scheiben (T1, D2) und Formband (T2, D3): Die
+ * Verlauf mit gleitendem Schnitt über die letzten fünf Scheiben (T1) und Formband (T2): Die
  * typische Schwankung ist 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt, ab zehn Scheiben.
  * Ist der MAD 0 (mehr als die Hälfte der Abweichungen genau 0, etwa bei Zählungen wie den Innenzehnern),
  * gibt es kein Band: Eines der Breite null wäre scheingenau.
@@ -160,7 +160,7 @@ export interface PeriodBucket {
 }
 
 /**
- * Boden und Decke je Abschnitt (T5, D4): Zahl, Median, P10 und P90 der Scheibenwerte. Den Abschnitt
+ * Boden und Decke je Abschnitt (T5): Zahl, Median, P10 und P90 der Scheibenwerte. Den Abschnitt
  * (Woche, Monat) bestimmt `bucketOf`; Abschnitte in der Folge ihres ersten Werts.
  */
 export function periodBuckets(
@@ -190,11 +190,10 @@ export interface VolumeBucket {
 }
 
 /**
- * Trainingsumfang je Abschnitt (T6, D9): Schüsse wie am Ausdruck (`asOnPrintout`, U4: die Wertung, bei einem Training
- * nur aus Probe seine Probe), Scheiben und Tage. Keine Netto-Zeit, sie folgt
- * aus den Abständen. Abschnitte in der Folge ihrer ersten Scheibe. Anders als die übrigen Auswertungen zählt
- * der Umfang jede Scheibe, auch eine nur mit Probe (D8 gilt für Werte, nicht für den Umfang); Training oder
- * Wettkampf wählt der Aufrufer.
+ * Trainingsumfang je Abschnitt (T6): Schüsse wie am Ausdruck (`asOnPrintout`: die Wertung, bei einem Training nur aus
+ * Probe seine Probe), Scheiben und Tage. Keine Netto-Zeit, sie folgt aus den Abständen. Abschnitte in der Folge ihrer
+ * ersten Scheibe. Anders als die übrigen Auswertungen zählt der Umfang jede Scheibe, auch eine nur mit Probe
+ * (`includeProbeOnly` gilt für Werte, nicht für den Umfang); Training oder Wettkampf wählt der Aufrufer.
  */
 export function trainingVolume(
   cards: readonly PeriodCard[],
@@ -203,14 +202,14 @@ export function trainingVolume(
 ): VolumeBucket[] {
   return [...groupBy(byStart(cards), (card) => bucketOf(card.startedAtMs))].map(([key, group]) => ({
     key,
-    // wie am Ausdruck (U4): eine Probe neben Wertung zeigt keine Seite, ein Training nur aus Probe zählt (Review U4)
+    // wie am Ausdruck: eine Probe neben Wertung zeigt keine Seite, ein Training nur aus Probe zählt
     shots: group.reduce((sum, card) => sum + asOnPrintout(card.shots).length, 0),
     cards: group.length,
     days: new Set(group.map((card) => dayOf(card.startedAtMs))).size,
   }))
 }
 
-/** ab so vielen Scheiben je Seite ein Urteil (D5; die Simulation B19 belegt Fehlalarm und Trennschärfe) */
+/** ab so vielen Scheiben je Seite ein Urteil (die Simulation B19 belegt Fehlalarm und Trennschärfe) */
 export const MIN_CARDS_PER_SIDE = 5
 
 export interface PeriodComparison {
@@ -234,7 +233,7 @@ const squares = (xs: readonly number[], center: number) =>
   xs.reduce((sum, x) => sum + (x - center) ** 2, 0)
 
 /**
- * Vergleich zweier Zeiträume (C3, T3, D5): Einheit ist die Scheibe. Mann-Whitney auf den Scheibenwerten,
+ * Vergleich zweier Zeiträume (C3, T3): Einheit ist die Scheibe. Mann-Whitney auf den Scheibenwerten,
  * zweiseitig, α 0,05; der Unterschied ist die Differenz der Mittel. Ein Urteil ab fünf Scheiben je Seite.
  * Ohne Scheiben auf einer Seite null.
  */
@@ -276,7 +275,7 @@ export interface OwnAverage {
 }
 
 /**
- * Die letzte Scheibe gegen den eigenen Schnitt (C4, D6): gegen das Mittel der Scheiben aus den 30 Tagen
+ * Die letzte Scheibe gegen den eigenen Schnitt (C4): gegen das Mittel der Scheiben aus den 30 Tagen
  * davor (ab drei; genau 30 Tage zählt noch) und ihr Rang unter den letzten 50 als Perzentil (ab zehn).
  * `values` in der Folge der Scheiben (`cardValues`); ohne Werte null.
  */

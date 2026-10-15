@@ -139,7 +139,7 @@ describe("Konstanz und Quoten (E10, E4, E11)", () => {
     expect(consistency?.sd).toBe(5)
     expect(consistency?.range).toBe(10)
     // 35 × 10, 10 × 9: Ø 440/45, Σ(v − Ø)² = 7,777778, durch 44, Wurzel. Der MAD wäre hier 0:
-    // In ganzen Ringen ist er beim Luftgewehr fast immer 0 (Prüfung, 9. Oktober 2026).
+    // In ganzen Ringen ist er beim Luftgewehr fast immer 0.
     expect(consistency?.shotSd).toBeCloseTo(0.42044, 5)
   })
 

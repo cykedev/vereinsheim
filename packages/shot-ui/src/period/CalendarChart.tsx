@@ -12,7 +12,7 @@ import type { CalendarDay } from "./model"
 
 /**
  * Stufen der Tönung nach Schüssen, relativ zum stärksten Tag des Zeitraums; Klassen wörtlich (Tailwind). Die unterste
- * hebt sich deutlich von einem Tag ohne Training ab (Review: bei /30 nur 1,5 : 1)
+ * hebt sich deutlich von einem Tag ohne Training ab (bei /30 nur 1,5 : 1)
  */
 const LEVELS = ["bg-primary/45", "bg-primary/65", "bg-primary/85", "bg-primary"] as const
 
@@ -43,7 +43,7 @@ const WEEK_PX = 13
 const GAP_PX = 3
 /**
  * Platz für einen Monatsnamen über der letzten Woche: „Dez“ ist breiter als die Spalte und ragte sonst über den Rand,
- * der Kalender scrollte wieder seitlich (Review)
+ * der Kalender scrollte dann seitlich
  */
 const LABEL_OVERHANG_PX = 8
 /** vor dem Messen (Server, erstes Bild) und als Untergrenze */
@@ -57,10 +57,8 @@ export const weeksThatFit = (width: number) =>
 const mondayOf = (iso: string) => weekStartIso(isoWeekKey(iso))
 
 /**
- * Das Fenster des Kalenders (User, 15. Oktober 2026: „Kalender ‚blätterbar‘ für ältere einträge“, dann: „er sollte nur
- * so breit sein wie platz ist, früher später zeigt dann die anderen werte an“): `weeks` ganze Wochen bis zur Woche von
- * `end`, nie über heute hinaus. Früher geht, solange vor dem Fenster eine Scheibe liegt (`first`), später, solange es
- * vor der Woche von heute endet.
+ * Das Fenster des Kalenders: `weeks` ganze Wochen bis zur Woche von `end`, nie über heute hinaus. Früher geht,
+ * solange vor dem Fenster eine Scheibe liegt (`first`), später, solange es vor der Woche von heute endet.
  */
 export function calendarWindow(
   { end, first, today }: { end: string; first: string | null; today: string },
@@ -151,7 +149,7 @@ export function CalendarChart({
   onFit?: (weeks: number) => void
   /**
    * der gewählte Zeitraum, wenn das Fenster über ihn hinausgeht: Tage außerhalb blass, die Zeile darunter zählt nur
-   * ihn (User, 15. Oktober 2026: „ja blasser zeigen“)
+   * ihn
    */
   period?: { from: string; to: string }
 }) {

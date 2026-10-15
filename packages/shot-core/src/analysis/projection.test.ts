@@ -254,7 +254,7 @@ describe("Umfang und Ø über mehrere Scheiben aus der Projektion", () => {
   )
 })
 
-describe("Grenzfälle der Projektion (Review, 10. Oktober 2026)", () => {
+describe("Grenzfälle der Projektion", () => {
   // eigene Liste, nicht in `special`: Der Fingerabdruck der Ausgabe soll sich nicht ändern, nur weil Fälle dazukommen
   const base = card("rand", 110, [100, 101, 99, 102])
   const EDGE: PeriodCard[] = [

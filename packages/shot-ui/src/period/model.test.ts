@@ -86,7 +86,7 @@ describe("Vergleich und Satz", () => {
   const now = [60, 70, 80, 90, 100].map((t, i) => periodCard(`n${i}`, 10 + i, [t]))
   const before = [10, 20, 30, 40, 50].map((t, i) => periodCard(`v${i}`, 100 + i, [t]))
 
-  it("mit Urteil: höher, ein klarer Unterschied (U3, Review: dieselben Worte wie das Urteil)", () => {
+  it("mit Urteil: höher, ein klarer Unterschied (dieselben Worte wie das Urteil)", () => {
     const m = model([...now, ...before], { compare: { type: "previous" } })
     expect(m.compareRange?.label).toBe("Zeitraum davor")
     expect(m.comparison?.verdict).toBe("higher")
@@ -122,7 +122,7 @@ describe("Vergleich und Satz", () => {
     )
   })
 
-  it("ohne gewählten Vergleich: still gegen den Zeitraum davor (U2, D1), nie die 30 Tage", () => {
+  it("ohne gewählten Vergleich: still gegen den Zeitraum davor, nie die 30 Tage", () => {
     expect(periodSentence(model([...now, ...before]))).toBe(
       "Dein Ø je Schuss liegt 5,00 höher als im Zeitraum davor; das ist ein klarer Unterschied."
     )
@@ -148,7 +148,7 @@ describe("Vergleich und Satz", () => {
     )
   })
 
-  it("Urteil in Worten (U3, D5): besser oder schwächer, „deutlich“ nur mit Urteil, ohne Richtung höher oder tiefer", () => {
+  it("Urteil in Worten: besser oder schwächer, „deutlich“ nur mit Urteil, ohne Richtung höher oder tiefer", () => {
     const base = {
       a: { n: 5, mean: 1 },
       b: { n: 5, mean: 2 },
@@ -175,7 +175,7 @@ describe("Vergleich und Satz", () => {
   })
 })
 
-describe("Vergleich für den Satz (U2, D1)", () => {
+describe("Vergleich für den Satz", () => {
   // fünf Scheiben mit 6,0 … 10,0 vor 10 bis 14 Tagen, fünf mit 1,0 … 5,0 vor 100 bis 104 Tagen
   const now = [60, 70, 80, 90, 100].map((t, i) => periodCard(`n${i}`, 10 + i, [t]))
   const before = [10, 20, 30, 40, 50].map((t, i) => periodCard(`v${i}`, 100 + i, [t]))
@@ -209,7 +209,7 @@ describe("Vergleich für den Satz (U2, D1)", () => {
     expect(model([]).form).toBeNull()
   })
 
-  it("„Alles“ nach einer langen Pause: der Vergleich sagt „zu wenige“ statt nichts (Review U2)", () => {
+  it("„Alles“ nach einer langen Pause: der Vergleich sagt „zu wenige“ statt nichts", () => {
     const m = model(before, { choice: { type: "all" } })
     expect(m.cards.length).toBe(5)
     expect(m.form).toMatchObject({ comparison: null, lastDays: 90 })
@@ -218,7 +218,7 @@ describe("Vergleich für den Satz (U2, D1)", () => {
     )
   })
 
-  it("Art und Probe-Training gelten auch für den stillen Vergleich (Review U2)", () => {
+  it("Art und Probe-Training gelten auch für den stillen Vergleich", () => {
     // im Zeitraum Training, davor nur Wettkämpfe: mit „Training“ bleibt davor nichts
     const contests = [10, 20, 30, 40, 50].map((t, i) =>
       periodCard(`w${i}`, 100 + i, [t], { kind: "competition" })
@@ -268,7 +268,7 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     // 90 Tage vor dem 30. September beginnen am 2. Juli (KW 27); der 30. September liegt in KW 40
     // a am Sonntag, 27. September (KW 39), b und c am Montag und Dienstag (KW 40)
     const { weeks } = model(THREE)
-    // je Woche ihr Montag (U3, D6): KW 27 beginnt am 29. Juni, KW 40 am 28. September
+    // je Woche ihr Montag: KW 27 beginnt am 29. Juni, KW 40 am 28. September
     expect(weeks.map((w) => w.label)).toEqual([
       "29.06.",
       "06.07.",
@@ -306,7 +306,7 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     ])
   })
 
-  it("Kalender kennt alle Trainingstage der Familie in der Art, auch vor dem Zeitraum, und heute (Rückmeldung 8)", () => {
+  it("Kalender kennt alle Trainingstage der Familie in der Art, auch vor dem Zeitraum, und heute", () => {
     const match = periodCard("alt-w", 150, [100], { kind: "competition" })
     const { calendar } = model([...THREE, match])
     expect(calendar.today).toBe("2026-09-30")
@@ -327,7 +327,7 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     ])
   })
 
-  it("Kalender und Wochen je Abend: eine Scheibe vor 4 Uhr am ersten Tag bleibt sichtbar, Montag 0:30 zählt zum Sonntag (Review)", () => {
+  it("Kalender und Wochen je Abend: eine Scheibe vor 4 Uhr am ersten Tag bleibt sichtbar, Montag 0:30 zählt zum Sonntag", () => {
     // freier Zeitraum September; die erste Scheibe am 1. September um 1:30 Uhr Ortszeit gehört zum Abend des 31. August
     const early = periodCard("früh", 0, [100], { startedAtMs: Date.UTC(2026, 7, 31, 23, 30) })
     // Montag, 14. September, 0:30 Uhr Ortszeit: Abend des Sonntags, 13. September (KW 37, nicht KW 38)
@@ -360,7 +360,7 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     expect(model(many).deltas.get("k10")?.n).toBe(5)
   })
 
-  it("die neueste Scheibe ist die des Zeitraums, nicht die von heute (kein „gegen deinen Schnitt“ mehr, U2)", () => {
+  it("die neueste Scheibe ist die des Zeitraums, nicht die von heute", () => {
     // benannter Zeitraum Mai bis Juni: die neueste Scheibe dort, nicht die von heute
     const may = [100, 101, 102, 103].map((t, i) => periodCard(`m${i}`, 120 - i, [t]))
     const today = periodCard("heute", 1, [80])
@@ -381,7 +381,7 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
   })
 })
 
-describe("Befunde aus dem Review (9. Oktober 2026)", () => {
+describe("Grenzfälle des Modells", () => {
   const probe = periodCard("p", 0.5, [100, 100, 100], { probe: true })
 
   it("überlappende Zeiträume: der Vergleich ohne die gemeinsamen Scheiben", () => {
@@ -449,7 +449,7 @@ describe("Befunde aus dem Review (9. Oktober 2026)", () => {
   })
 })
 
-describe("Abstand zum Schnitt der Scheiben davor (Plan N2, Task 1)", () => {
+describe("Abstand zum Schnitt der Scheiben davor", () => {
   const values = [100, 102, 98, 101, 100, 103, 99].map((v, i) => ({
     id: `c${i + 1}`,
     atMs: i,

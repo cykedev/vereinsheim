@@ -99,8 +99,8 @@ export function fatigue(
  * Gerade in die andere Richtung als der Test (ein sehr schwacher Schuss am Rand kann sie kippen),
  * gibt es kein Urteil: Neben „klar steigend“ stünde sonst eine fallende Zahl. Ab 10 Schuss. Die
  * x-Werte sind die Schussnummern, damit ein Schuss ohne Wert die Steigung nicht verbiegt. Ein
- * Sen-Intervall gibt es nicht mehr: Bei vielen gleichen Werten (ganze Ringe) lag seine Grenze auf
- * 0, und selbst die stärkste Stufe hieß „nicht klar“.
+ * Sen-Intervall gibt es nicht: Bei vielen gleichen Werten (ganze Ringe) läge seine Grenze auf
+ * 0, und selbst die stärkste Stufe hieße „nicht klar“.
  */
 export function cardTrend(
   shots: readonly MetricShot[],

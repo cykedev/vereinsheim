@@ -2,7 +2,7 @@ import { cn } from "@vereinsheim/lib/utils"
 
 /**
  * Hinweis neben der leeren Scheibe (`CardPage` mit `empty`): statt leerer Kästen und Kacheln voller Striche ein
- * Satz, was hier erscheint (User, 8. Oktober 2026).
+ * Satz, was hier erscheint.
  */
 export function NoShots({ className }: { className?: string }) {
   return (

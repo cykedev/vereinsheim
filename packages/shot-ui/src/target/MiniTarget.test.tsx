@@ -35,7 +35,7 @@ const render = (props: Partial<Parameters<typeof MiniTarget>[0]> = {}) =>
   )
 
 describe("MiniTarget", () => {
-  it("ein Treffer je Schuss mit Lage, gefüllt in Ringwert-Farbe (U4: keine Probe als Ring)", () => {
+  it("ein Treffer je Schuss mit Lage, gefüllt in Ringwert-Farbe (keine Probe als Ring)", () => {
     const html = render()
     expect([...html.matchAll(/<circle cx=/g)]).toHaveLength(3)
     expect(html).toMatch(/<circle cx="0" cy="0"[^>]*fill="var\(--score-10\)"/)

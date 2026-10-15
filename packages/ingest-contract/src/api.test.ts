@@ -111,7 +111,7 @@ describe("sportpassHash (Testvektoren aus Python)", () => {
   })
 })
 
-describe("Nachladen älterer Scheiben (additiv, P2d)", () => {
+describe("Nachladen älterer Scheiben (additiv)", () => {
   const state = load("examples/api-v1/state-response.json") as Record<string, unknown>
   const heartbeat = load("examples/api-v1/heartbeat.json") as Record<string, unknown>
   const hash = "f80f0364b1fe2c184903848cd481e81e69a4b60e5fbb44f51cc78371525f6168"

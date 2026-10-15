@@ -111,7 +111,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
 /**
  * die geltende Art einer Scheibe: gewählt, sonst die Zuordnung ihrer Rangliste durch den Admin, sonst die der Quelle (ein
  * Stand schreibt nur `kind` und die Rangliste). Die Zuordnung gilt beim Lesen: Ändert der Admin sie, folgen alle Scheiben.
- * Nur Probe ist Training (der Schütze kann es dort nicht umstellen): Die Rangliste zählt dann nicht (Review).
+ * Nur Probe ist Training (der Schütze kann es dort nicht umstellen): Die Rangliste zählt dann nicht.
  */
 export const kindOfRow = (
   row: Pick<OverviewRow, "kind" | "kindChoice"> & {
@@ -279,7 +279,7 @@ export async function marksOfCards(
   const rows = await db.cardProjection.findMany({
     where: {
       cardId: { in: [...query.ids] },
-      // sichtbare; die wartenden nur ausdrücklich, für „Offen“ (Review SP-1.7 a2)
+      // sichtbare; die wartenden nur ausdrücklich, für „Offen“
       card: { ownerId: query.ownerId, ...(query.pending ? PENDING_CARD : VISIBLE_CARD) },
     },
     select: { cardId: true, marks: true },
@@ -318,9 +318,9 @@ export interface PendingFirstCard {
 }
 
 /**
- * Wartende Scheiben je Gruppe (Anlage und SportpassID; eine Nummer kann an zwei Anlagen vorkommen, Review), je Gruppe die
+ * Wartende Scheiben je Gruppe (Anlage und SportpassID; eine Nummer kann an zwei Anlagen vorkommen), je Gruppe die
  * jüngste, jüngste Gruppe zuerst: Mit dem Nachladen warten womöglich Scheiben aus Jahren, an den letzten Abend erinnert
- * man sich (P2d, D7). Nur Scheiben mit Projektion: „Offen“ zeigt sie, und die Zahl am Start-Symbol zählt dieselben Gruppen.
+ * man sich. Nur Scheiben mit Projektion: „Offen“ zeigt sie, und die Zahl am Start-Symbol zählt dieselben Gruppen.
  */
 async function pendingGroups(db: Db, ownerId: string) {
   const rows = await db.card.findMany({
@@ -338,7 +338,7 @@ async function pendingGroups(db: Db, ownerId: string) {
   return [...groups.values()]
 }
 
-/** „Offen“ (SP-1.7 a2): je Anlage und SportpassID die jüngste wartende Scheibe des Kontos, die jüngste zuerst (P2d) */
+/** „Offen“: je Anlage und SportpassID die jüngste wartende Scheibe des Kontos, die jüngste zuerst */
 export async function pendingFirstCards(db: Db, ownerId: string): Promise<PendingFirstCard[]> {
   const groups = await pendingGroups(db, ownerId)
   if (!groups.length) return []
@@ -360,7 +360,7 @@ export async function pendingCount(db: Db, ownerId: string): Promise<number> {
   return (await pendingGroups(db, ownerId)).length
 }
 
-/** eine Scheibe im Papierkorb (P2b): wie in den Übersichten, dazu wann gelöscht und bis wann wiederherstellbar */
+/** eine Scheibe im Papierkorb: wie in den Übersichten, dazu wann gelöscht und bis wann wiederherstellbar */
 export interface TrashCard {
   card: OverviewCard
   deletedAtMs: number
@@ -383,14 +383,14 @@ export async function trashCards(db: Db, ownerId: string): Promise<TrashCard[]> 
 
 /** Zahl der Scheiben im Papierkorb (Link im Profil) */
 export async function trashCount(db: Db, ownerId: string): Promise<number> {
-  // dieselben wie `trashCards`: nur mit Projektion, sonst stünde eine Zahl über einer leeren Liste (Review P2b)
+  // dieselben wie `trashCards`: nur mit Projektion, sonst stünde eine Zahl über einer leeren Liste
   return db.card.count({
     where: { ownerId, ownerPending: false, deletedAt: { not: null }, projection: { isNot: null } },
   })
 }
 
 /**
- * was nicht von selbst wiederkommt (P2b, D8): eigene endgültig gelöschte Scheiben (weiche Sperre) und eigene Meldungen
+ * was nicht von selbst wiederkommt: eigene endgültig gelöschte Scheiben (weiche Sperre) und eigene Meldungen
  * „Nicht meine“ (Grabstein mit `userId`), nur Beginn und Zeitpunkt, keine Schussdaten; neueste zuerst
  */
 export interface BlockedCard {
@@ -417,7 +417,7 @@ export async function blockedCards(db: Db, ownerId: string): Promise<BlockedCard
 
 /**
  * Wo liegt eine eigene Scheibe? `visible` (die Seite zeigt sie), `trash` (die Seite leitet in den Papierkorb), sonst
- * null (unbekannt, fremd oder wartend: 404 wie bisher)
+ * null (unbekannt, fremd oder wartend: 404)
  */
 export async function ownCardState(
   db: Db,

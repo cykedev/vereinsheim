@@ -8,16 +8,14 @@ import type { ActionResult } from "@/lib/types"
 
 /**
  * Eine Wahl umschalten und automatisch speichern (Wertung, Art): gezeigt sofort (`shown`), gespeichert über `save`, ein
- * Fehler als Text (`error`). Ein Tippen auf die schon gezeigte speichert nichts, sonst stünde die Vorgabe als Wahl fest
- * (Review). `onShow` meldet die neue Wahl, wo die Seite sie selbst führt (die Wertung auf der Seite einer Scheibe).
+ * Fehler als Text (`error`). Ein Tippen auf die schon gezeigte speichert nichts, sonst stünde die Vorgabe als Wahl
+ * fest. `onShow` meldet die neue Wahl, wo die Seite sie selbst führt (die Wertung auf der Seite einer Scheibe).
  * `scope` ist das, wofür gewählt wird (Scheibe, Familie): Wechselt die Familie, bleibt die Hülle stehen (Next hängt sie
- * bei neuen Suchparametern nicht neu ein); gezeigte Wahl und Fehler gelten dann nur für ihre Familie (Review, 13. Oktober
- * 2026).
+ * bei neuen Suchparametern nicht neu ein); gezeigte Wahl und Fehler gelten dann nur für ihre Familie.
  *
  * Nach dem Speichern rechnet die Seite über `router.refresh()` neu, nicht über `revalidatePath` in der Action: Danach
- * scrollte Next zum Anker der Adresse (`#analysis`) oder an den Anfang der Seite (User, 15. Oktober 2026: „wenn ich … auf
- * ‚wettkampf‘ oder den zehntel umschalter klicke, dann springe ich runter zur analyse“). Bis die neue Seite da ist,
- * bleibt die gespeicherte Wahl stehen (`saved`), sonst spränge der Kreis kurz zurück.
+ * scrollte Next zum Anker der Adresse (`#analysis`) oder an den Anfang der Seite. Bis die neue Seite da ist, bleibt die
+ * gespeicherte Wahl stehen (`saved`), sonst spränge der Kreis kurz zurück.
  */
 export function useSavedChoice<T extends string>({
   value,

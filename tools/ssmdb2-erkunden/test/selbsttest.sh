@@ -62,7 +62,7 @@ SQL
 anlage_starten() {
   init_schreiben
   docker network create "$NETZ" >/dev/null
-  # --skip-ssl: der Server spricht kein TLS, wie vermutlich das MariaDB auf dem Meyton-Rechner (Review B1).
+  # --skip-ssl: der Server spricht kein TLS, wie vermutlich das MariaDB auf dem Meyton-Rechner.
   docker run -d --name "$ANLAGE" --network "$NETZ" -e MARIADB_ROOT_PASSWORD=root \
     -v "$INIT:/docker-entrypoint-initdb.d:ro" "$IMAGE" --skip-ssl >/dev/null
   for _ in $(seq 1 60); do
@@ -145,7 +145,7 @@ export ERKUNDEN_AUTO_HOOK="$HIER/simuliere-schiessen.sh"
 export ERKUNDEN_AUTO_UEBERSPRINGEN="7 8 9 10 11"
 export ERKUNDEN_AUTO_PDF_IDS="ff914420 kaputt"
 export ERKUNDEN_AUTO_WARTEN=3
-# Zeitstempel zwei Stunden hinter der Server-Uhr (Zeitzonen-Durcheinander, Review B2, SF-29/SF-31).
+# Zeitstempel zwei Stunden hinter der Server-Uhr (Zeitzonen-Durcheinander, SF-29/SF-31).
 export SIM_VERSATZ_STUNDEN=-2
 echo "Schießprotokoll simulieren (etwa eine Minute ohne Ausgabe) …"
 erkunden protokoll abschluss 2>"$AUSGABE/protokoll-stderr.txt" || echo "Protokoll-Lauf mit Exit $?" >&2
@@ -185,7 +185,7 @@ pruefe "Namensliste wieder gelöscht" sh -c "! ls '$AUSGABE/privat/' | grep -q n
 pruefe "kein Passwort in der Ausgabe" kein_passwort_in_ausgabe
 pruefe "kein Testname im Bericht" kein_testname_im_bericht
 
-# Anderes Schema (Review B3, S1): Der Lauf bricht nicht ab, meldet Lücken und gibt keine Entwarnung.
+# Anderes Schema: Der Lauf bricht nicht ab, meldet Lücken und gibt keine Entwarnung.
 ANDERS="$AUSGABE/anders"
 echo "Lauf gegen ein abweichendes Schema (etwa 20 Sekunden) …"
 if ZIEL="$ANDERS" ERKUNDEN_AUTO_UEBERSPRINGEN="2 3 4 5 6 7 8 9 10 11" ERKUNDEN_AUTO_HOOK="" \

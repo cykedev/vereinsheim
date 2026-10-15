@@ -158,7 +158,7 @@ describe("Fehler der Datenbank", () => {
   })
 })
 
-describe("ein neuer Stand für eine Scheibe im Papierkorb (D10)", () => {
+describe("ein neuer Stand für eine Scheibe im Papierkorb", () => {
   it("wird geschrieben, die Scheibe bleibt im Papierkorb und in keiner Ansicht", async () => {
     asOwner()
     const [input] = generateSeason({

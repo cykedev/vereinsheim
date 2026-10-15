@@ -13,7 +13,7 @@ export const APP_LOCALE = "de-DE"
 
 /**
  * je Format und Zeitzone ein Formatter: ein `Intl.DateTimeFormat` zu bauen kostet rund 70 µs, und Listen über viele
- * Scheiben formatieren je Zeile (Spiegel, 1.564 Scheiben: 107 ms nur für den Abend jeder Scheibe, Oktober 2026)
+ * Scheiben formatieren je Zeile (Spiegel, 1.564 Scheiben: 107 ms nur für den Abend jeder Scheibe)
  */
 const dateTimeFormats = new Map<string, Intl.DateTimeFormat>()
 

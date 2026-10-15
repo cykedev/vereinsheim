@@ -3,8 +3,8 @@ import { z } from "zod"
 import { LIMITS } from "../limits"
 
 /**
- * API v1 zwischen Brücke und Spiegel neben dem Snapshot (SP-1.6 b): Kopplung, Heartbeat, Zustand der Brücke
- * und die Antworten. Die Brücke hat keinen eigenen Zustand ([[adr-027]], 8. Oktober 2026): Was sie über den Lauf
+ * API v1 zwischen Brücke und Spiegel neben dem Snapshot: Kopplung, Heartbeat, Zustand der Brücke
+ * und die Antworten. Die Brücke hat keinen eigenen Zustand ([[adr-027]]): Was sie über den Lauf
  * hinaus wissen muss (Zustimmungen, Grabsteine, Wasserstand), holt sie bei jedem Start über `state`. Pfade relativ zu
  * `/api/ingest/v1`. Alles außer `pair` mit `Authorization: Bearer <token>`.
  */
@@ -98,9 +98,9 @@ export const heartbeatV1 = z
       })
       .nullable(),
     /**
-     * additiv seit 14. Oktober 2026 (P2d): Aufträge aus `state.history`, die die Brücke in diesem Lauf abgearbeitet hat
-     * (jede passende Scheibe gemeldet), mit Id und `since` wie im Zustand: Ein später neu eröffneter Auftrag derselben
-     * Zustimmung gilt damit nicht als erledigt (Review)
+     * additiv: Aufträge aus `state.history`, die die Brücke in diesem Lauf abgearbeitet hat (jede passende Scheibe
+     * gemeldet), mit Id und `since` wie im Zustand: Ein später neu eröffneter Auftrag derselben Zustimmung gilt damit
+     * nicht als erledigt
      */
     historyDone: z
       .array(z.strictObject({ id: z.int().min(1), since: instant }))
@@ -128,7 +128,7 @@ export const stateResponseV1 = z
       salt: z.string().regex(/^[0-9a-f]{32}$/),
       hashes: z.array(z.string().regex(/^[0-9a-f]{64}$/)).max(100_000),
     }),
-    /** `epoch` seit 13. Oktober 2026 (additiv): Eine Sperre gilt nur in ihrer Epoche; nach einem Reset (SF-23) beginnen die IDs neu */
+    /** `epoch` additiv: Eine Sperre gilt nur in ihrer Epoche; nach einem Reset (SF-23) beginnen die IDs neu */
     blocked: z
       .array(
         z.strictObject({
@@ -141,10 +141,10 @@ export const stateResponseV1 = z
     /** jüngste Beobachtungszeit, die Spiegel von dieser Anlage hat; Nachholen beim Start ab hier (SF-55) */
     watermark: instant.nullable(),
     /**
-     * additiv seit 14. Oktober 2026 (P2d): offene Aufträge, die älteren Scheiben einer Zustimmung nachzuladen, soweit
-     * die Anlage sie hat und nur, wenn niemand schießt. `id` und `since` (wann der Auftrag eröffnet wurde) meldet die
-     * Brücke in `historyDone` zurück; ein neues `since` heißt: neu lesen, auch was schon gemeldet ist. Der Hash wie in
-     * `sportpass.hashes`. Solange einer offen ist, enthält `blocked` alle Sperren, nicht nur die jüngsten.
+     * additiv: offene Aufträge, die älteren Scheiben einer Zustimmung nachzuladen, soweit die Anlage sie hat und nur,
+     * wenn niemand schießt. `id` und `since` (wann der Auftrag eröffnet wurde) meldet die Brücke in `historyDone`
+     * zurück; ein neues `since` heißt: neu lesen, auch was schon gemeldet ist. Der Hash wie in `sportpass.hashes`.
+     * Solange einer offen ist, enthält `blocked` alle Sperren, nicht nur die jüngsten.
      */
     history: z
       .array(

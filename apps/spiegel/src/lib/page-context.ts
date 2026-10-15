@@ -6,7 +6,7 @@ import { namedPeriods } from "@/lib/db/reads"
 
 /**
  * was jede Seite über Zeiträume braucht: Anzeige-Zone, „jetzt“ (vom Server, gleich beim Hydrieren), Zeiträume. Eine
- * Wertung des Geräts gibt es nicht mehr: Jede Scheibe und jede Familie hat ihre (Plan `plans/2026-10-12-spiegel-wertung.md`).
+ * Wertung des Geräts gibt es nicht: Jede Scheibe und jede Familie hat ihre.
  */
 export interface PageContext {
   timeZone: string

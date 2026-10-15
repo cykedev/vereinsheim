@@ -14,7 +14,7 @@ export interface HelpSheetProps {
 
 /**
  * Eine Erklärung als Blatt (spiegel-ui-design: auf dem Handy von unten, auf dem Desktop als Karte daneben),
- * für Kacheln, Karten der Analyse und die Scheibe (Plan Schritt 4, D3). Das Blatt bleibt eingehängt, damit der
+ * für Kacheln, Karten der Analyse und die Scheibe. Das Blatt bleibt eingehängt, damit der
  * Browser den Fokus beim Schließen zurückgibt.
  */
 export function HelpSheet({ helpId, onClose }: HelpSheetProps) {

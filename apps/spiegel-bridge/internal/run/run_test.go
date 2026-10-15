@@ -38,7 +38,7 @@ func (a *ablage) Round(_ context.Context, choose func([]watch.Lifesign, *string)
 	var lifesigns []watch.Lifesign
 	for id, stamp := range a.stamps {
 		l := watch.Lifesign{ID: id, Stamp: stamp}
-		// die SportpassID der Zeile wie `readLifesigns` (P2d)
+		// die SportpassID der Zeile wie `readLifesigns`
 		if rows := a.data[id].Scheiben.Rows; len(rows) == 1 {
 			l.Sportpass = rows[0]["SportpassID"]
 		}
@@ -734,7 +734,7 @@ func TestHistoryReopenedRequestReadsHandledCardsAgain(t *testing.T) {
 	if got := fmt.Sprint(f.sp.sent()); got != "[]" || f.lastDone() != "[7]" {
 		t.Fatalf("gesperrt: gesendet %s, erledigt %s", got, f.lastDone())
 	}
-	// der Admin hebt die Meldung auf: dieselbe Id, neu eröffnet, ohne Sperre (Review P2d)
+	// der Admin hebt die Meldung auf: dieselbe Id, neu eröffnet, ohne Sperre
 	f.sp.state.Blocked = nil
 	f.sp.state.History = []api.HistoryRequest{request(7, "12345678", "2026-10-13T18:30:00.000Z")}
 	f.runFor(StateEvery + 2*time.Minute)
@@ -762,7 +762,7 @@ func TestHistoryWaitingCardsYieldWhileShooting(t *testing.T) {
 	if f.ablage.reads[2] == 0 {
 		t.Fatal("im Leerlauf nicht gelesen")
 	}
-	// am Stand wird wieder geschossen: die wartende Scheibe aus dem Nachladen bleibt liegen (Review P2d)
+	// am Stand wird wieder geschossen: die wartende Scheibe aus dem Nachladen bleibt liegen
 	before := f.ablage.reads[2]
 	for i := range 10 {
 		f.ablage.stamps[1] = fmt.Sprintf("2026-10-13 21:%02d:00", i)

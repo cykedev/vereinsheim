@@ -18,7 +18,6 @@ interface StoredResult {
 /**
  * Bestimmt den zuvor gewerteten Outcome eines bereits gespeicherten Duells.
  * Wird bei Korrekturen genutzt, um den alten Siegbeitrag rückzurechnen.
- * Verhalten identisch zum vorherigen Inline-Block in savePlayoffDuelResult.
  */
 export function storedDuelOutcome(
   oldResultA: StoredResult,
@@ -80,8 +79,6 @@ interface ComputeOutcomeResult {
  * - Finale ohne Teiler-Bedarf: Outcome direkt aus Ringen (ringteiler bleibt null).
  * - Sonst: Disziplin je Teilnehmer auflösen (gemischte Wettbewerbe), Ringteiler
  *   berechnen und Outcome via Finale- bzw. Standard-Vergleich bestimmen.
- *
- * Verhalten identisch zum vorherigen Inline-Block in savePlayoffDuelResult.
  */
 export async function computeDuelOutcome(
   match: DuelMatchContext,

@@ -12,7 +12,7 @@ describe("Nachschlagen", () => {
     expect(helpForMetric("group.sigma")?.id).toBe("praezision-sigma")
     expect(helpForMetric("result.decimal")?.id).toBe("ergebnis")
     expect(helpForMetric("gibt.es.nicht")).toBeUndefined()
-    // entfernt in SP-1.12: keine Hilfe mehr für eine Kennzahl, die es nicht mehr gibt
+    // keine Hilfe für eine Kennzahl, die es nicht gibt
     expect(helpForMetric("group.meanRadius")).toBeUndefined()
   })
 

@@ -127,7 +127,7 @@ function CornerButton({
 }
 
 /**
- * Schalter in den Ecken der Scheibe, wie an einer DISAG-Anzeige (User, 8. Oktober 2026): oben links
+ * Schalter in den Ecken der Scheibe, wie an einer DISAG-Anzeige: oben links
  * Ausschnitt und übrige Schüsse, oben rechts das „?“, unten links Schwerpunkt und Streukreis, unten rechts
  * Vertrauensellipse und Nummern. So braucht die Scheibe keine Leiste, die in schmalen Spalten umbricht oder
  * angeschnitten wird. Mit 28 px je Knopf und zwei je Ecke bleibt der äußere Ring im Ausschnitt „Scheibe“

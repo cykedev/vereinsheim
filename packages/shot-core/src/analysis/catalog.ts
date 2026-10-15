@@ -32,9 +32,9 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   seriesSpread: ["I5"],
   mpiPath: ["I6"],
   longestRun: ["I10"],
-  // Datenlage (die Auswertung der Probe S1–S4 entfiel mit U4: eine Scheibe ist wie am Ausdruck)
+  // Datenlage (keine Auswertung der Probe S1–S4: eine Scheibe ist wie am Ausdruck)
   dataCoverage: ["Q1"],
-  // Über viele Scheiben (Plan L2)
+  // Über viele Scheiben
   cardValues: ["T1"],
   periodTrend: ["T1", "T2"],
   periodBuckets: ["T5"],

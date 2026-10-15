@@ -61,8 +61,8 @@ function find(
 const view = (patch: Partial<ListControlsProps> = {}) =>
   ListControlsView({ ...props(patch), open: false, onOpen: () => {}, onClose: () => {} })
 
-describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)", () => {
-  it("ein weiterer Chip in der Zeile nach dem Chip „Filter“ (User, 13. Oktober 2026: „in die selbe zeile wie die filter“)", () => {
+describe("Filter der Scheiben-Liste in einer Zeile (wie der Fortschritt)", () => {
+  it("ein weiterer Chip in der Zeile nach dem Chip „Filter“", () => {
     const html = renderToStaticMarkup(
       h(ListControls, props({ actions: h("span", { "data-kreis": true }) }))
     )
@@ -110,7 +110,7 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     ).toBe("Wettkampf · Liste RWK_LP")
   })
 
-  it("die Liste aus Meyton im Blatt nach der Art, am Chip mit Namen (Rückmeldung 2)", () => {
+  it("die Liste aus Meyton im Blatt nach der Art, am Chip mit Namen", () => {
     const lists = [
       { id: 3, name: "RWK_LP" },
       { id: 1, name: "Training-LG" },
@@ -124,8 +124,7 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     const sheet = html.slice(html.indexOf("<dialog"))
     expect(sheet.indexOf('aria-label="Art"')).toBeLessThan(sheet.indexOf('aria-label="Liste"'))
     expect(sheet.indexOf('aria-label="Liste"')).toBeLessThan(sheet.indexOf('aria-label="Merkmal"'))
-    // ein Umschalter, der umbricht, nicht einer, der seitlich scrollt (User, 15. Oktober 2026: „ich kann hier nicht alle
-    // listen wählen“); Radiogruppe mit Tab auf der Wahl (Review)
+    // ein Umschalter, der umbricht, nicht einer, der seitlich scrollt; Radiogruppe mit Tab auf der Wahl
     const group = sheet.match(/<div role="radiogroup" aria-label="Liste"[^>]*>[\s\S]*?<\/div>/)![0]
     expect(group).toMatch(/class="[^"]*flex-wrap/)
     expect(group).not.toContain("overflow-x-auto")
@@ -143,7 +142,7 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     ;(choice.props.onChange as (v: string) => void)("")
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, list: null })
     expect(renderToStaticMarkup(h(ListControls, props()))).not.toContain('aria-label="Liste"')
-    // eine unbekannte Kennung aus einer alten Adresse: „Alle“ ist gewählt, der Chip nennt keine Liste (Review)
+    // eine unbekannte Kennung aus einer alten Adresse: „Alle“ ist gewählt, der Chip nennt keine Liste
     const stale = renderToStaticMarkup(
       h(ListControls, props({ lists, query: { ...QUERY, list: 99 } }))
     )
@@ -151,7 +150,7 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     expect(stale).not.toContain("Liste RWK")
   })
 
-  it("jede Kennung aus `CARD_FLAGS` hat einen eigenen Namen (Review: zwei fehlten)", () => {
+  it("jede Kennung aus `CARD_FLAGS` hat einen eigenen Namen", () => {
     const names = CARD_FLAGS.map(flagName)
     for (const [i, flag] of CARD_FLAGS.entries()) expect(names[i], flag).not.toBe(flag)
     expect(new Set(names).size).toBe(names.length)
@@ -187,7 +186,7 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     ])
     // Unbekanntes mit seiner Kennung
     expect(flagName("etwas-neues")).toBe("etwas-neues")
-    // nur eigene Einträge, keine geerbten (vorher gab `FLAG_NAMES[flag] ?? flag` hier eine Funktion zurück)
+    // nur eigene Einträge, keine geerbten (`FLAG_NAMES[flag] ?? flag` gäbe hier eine Funktion zurück)
     expect(flagName("toString")).toBe("toString")
   })
 
@@ -201,7 +200,7 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     const onQuery = vi.fn()
     const tree = view({ onQuery })
     const remove = find(tree, (e) => e.props["aria-label"] === "Zeitraum entfernen")!
-    // der Knopf verschwindet, der Fokus geht auf die gewählte Art im Blatt (Review U5)
+    // der Knopf verschwindet, der Fokus geht auf die gewählte Art im Blatt
     const focus = vi.fn()
     const query = vi.fn(() => ({ focus }))
     const closest = vi.fn(() => ({ querySelector: query }))

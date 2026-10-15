@@ -5,7 +5,7 @@ import { layerOrder } from "./layers"
 const m = { kind: "match" as const }
 
 describe("layerOrder: Zeichenreihenfolge der Treffer (jeder mit seiner Nummer)", () => {
-  it("in Abgabefolge (U4: keine Probe neben Wertung)", () => {
+  it("in Abgabefolge (keine Probe neben Wertung)", () => {
     expect(layerOrder([m, m, m, m])).toEqual([0, 1, 2, 3])
   })
 

@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest"
 import { ANALYSIS_TABS } from "../analysis/AnalysisPanel"
 import { hashFor, PAGE_SECTIONS, parseHash, TAB_ANCHORS } from "./sections"
 
-describe("Abschnitte und Anker (D7)", () => {
-  it("drei Abschnitte in der Reihenfolge der Seite, „Zahlen“ entfiel mit U1", () => {
+describe("Abschnitte und Anker", () => {
+  it("drei Abschnitte in der Reihenfolge der Seite, ohne „Zahlen“", () => {
     expect(PAGE_SECTIONS.map((s) => s.label)).toEqual(["Scheibe", "Schüsse", "Analyse"])
     expect(PAGE_SECTIONS.map((s) => s.id)).toEqual(["target", "shots", "analysis"])
   })
@@ -19,7 +19,7 @@ describe("Abschnitte und Anker (D7)", () => {
     }
     expect(hashFor("analysis", "position")).toBe("#position")
     expect(parseHash("#time")).toEqual({ section: "analysis", tab: "time" })
-    // den Reiter „Probe“ gibt es seit U4 nicht mehr: ein alter Anker gilt als Vorgabe (Review U4)
+    // einen Reiter „Probe“ gibt es nicht: ein alter Anker gilt als Vorgabe
     expect(parseHash("#sighters")).toBeNull()
   })
 
@@ -34,7 +34,7 @@ describe("Abschnitte und Anker (D7)", () => {
     expect(parseHash("#")).toBeNull()
     expect(parseHash("#pruefen")).toBeNull()
     expect(parseHash("#Lage")).toBeNull()
-    // „Zahlen“ gibt es nur noch im Fortschritt: auf der Scheibe ein Anker ohne Bedeutung, also oben (U1)
+    // „Zahlen“ gibt es nur im Fortschritt: auf der Scheibe ein Anker ohne Bedeutung, also oben
     expect(parseHash("#numbers")).toBeNull()
   })
 })

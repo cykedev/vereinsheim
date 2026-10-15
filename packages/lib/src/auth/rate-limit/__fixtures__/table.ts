@@ -1,7 +1,7 @@
 // Eine Tabelle `LoginRateLimitBucket` im Speicher für die Tests von Store und Admin-Auswertung. Sie wertet jede Abfrage
 // so aus wie Prisma auf Postgres: Bedingungen mit `OR`, `in`, `gt`, `gte`, `lt` (null erfüllt keinen Vergleich),
 // Sortierung über mehrere Spalten (aufsteigend null zuletzt, absteigend null zuerst) und `take`. Ein unbekanntes Feld oder
-// ein unbekannter Operator wirft, damit eine neue Form der Abfrage nicht unbemerkt durchgeht (Review, 10. Oktober 2026).
+// ein unbekannter Operator wirft, damit eine neue Form der Abfrage nicht unbemerkt durchgeht.
 
 import type { LoginRateLimitBucketDelegate, LoginRateLimitBucketRow } from "../stores"
 

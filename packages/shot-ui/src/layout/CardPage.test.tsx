@@ -15,12 +15,12 @@ const html = renderToStaticMarkup(
     under: h("p", null, "SERIEN"),
     aside: h("p", null, "SEITE"),
     beside: [{ id: "shots", node: h("p", null, "SCHÜSSE") }],
-    // seit U1 nur die Analyse darunter (kein Abschnitt „Zahlen“)
+    // nur die Analyse darunter (kein Abschnitt „Zahlen“)
     below: [{ id: "analysis", node: h("p", null, "ANALYSE") }],
   })
 )
 
-describe("Rahmen der Seite (D2, D5)", () => {
+describe("Rahmen der Seite", () => {
   it("auf dem Telefon eine Spalte: Kopf, Leiste, Scheibe, Serien, Seite, Abschnitte", () => {
     const order = ["KOPF", "LEISTE", "SCHEIBE", "SERIEN", "SEITE", "SCHÜSSE", "ANALYSE"].map((t) =>
       html.indexOf(t)
@@ -118,7 +118,7 @@ describe("Platz für die Scheibe (useTargetFit)", () => {
     expect(targetRoom(375, 470, 271)).toBeNull()
   })
 
-  it("über der unteren Leiste (Plan N3, D2): ihr Platz geht von der Fensterhöhe ab", () => {
+  it("über der unteren Leiste: ihr Platz geht von der Fensterhöhe ab", () => {
     // Tablet hochkant: 1024 px Fenster, 72 px Leiste
     expect(targetRoom(1024, 900, 640, 72)).toBe(1024 - 56 - 16 - 72 - 260)
     expect(targetRoom(1024, 900, 640, 0)).toBe(targetRoom(1024, 900, 640))

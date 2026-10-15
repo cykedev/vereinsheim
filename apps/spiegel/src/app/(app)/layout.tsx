@@ -8,8 +8,8 @@ import { pendingCount } from "@/lib/db/reads"
 // und leitete sie sonst auf sich selbst um.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession({ passwordChange: true })
-  // die Zahl am Start-Symbol: SportpassIDs mit einer wartenden ersten Scheibe (SP-1.7 a2); die Actions dort
-  // erneuern das Layout (`revalidatePath("/", "layout")`)
+  // die Zahl am Start-Symbol: SportpassIDs mit einer wartenden ersten Scheibe; die Actions dort erneuern das
+  // Layout (`revalidatePath("/", "layout")`)
   const openCount = await pendingCount(db, session.user.id)
   return (
     <AppShell isAdmin={isAdmin(session.user.role)} openCount={openCount}>

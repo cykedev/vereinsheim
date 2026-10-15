@@ -16,17 +16,17 @@ export interface PeriodControlsProps {
   compareRange: DateRange | null
   named: readonly NamedPeriod[]
   timeZone: string
-  /** Disziplin-Familien, die es gibt (Pflicht, D5) */
+  /** Disziplin-Familien, die es gibt (Pflicht) */
   families: readonly { value: string; label: string }[]
   /**
    * weitere Chips in der Zeile der Filter, nach dem Chip „Filter“, wie in der Liste (in der App die Wertung der Familie
-   * als Wechsel-Chip; User, 13. Oktober 2026)
+   * als Wechsel-Chip)
    */
   actions?: ReactNode
 }
 
 /**
- * Filter im Kopf der Seite eines Zeitraums in einer Zeile (U2, D3): die Familie als Segment, sie wechselt man am
+ * Filter im Kopf der Seite eines Zeitraums in einer Zeile: die Familie als Segment, sie wechselt man am
  * häufigsten, dann der Chip, der das Blatt „Filter“ öffnet (Zeitraum, Vergleich, Art, Trainings nur aus Probe).
  */
 export function PeriodControls({
@@ -55,7 +55,7 @@ export function PeriodControls({
         range={range}
         named={named}
         timeZone={timeZone}
-        // eine Aktion für das ganze Blatt (Review U2)
+        // eine Aktion für das ganze Blatt
         onApply={(filters) => dispatch({ type: "setFilters", filters })}
       />
       {actions && (
@@ -82,7 +82,7 @@ export interface PeriodHeaderProps {
 }
 
 /**
- * Kopf der Seite eines Zeitraums (Plan L3, D4, D14) im Raster der Seite wie `CardHeader`: Titel und Metazeile, die
+ * Kopf der Seite eines Zeitraums im Raster der Seite wie `CardHeader`: Titel und Metazeile, die
  * Filter, auf dem Telefon das Ergebnis, darunter ein Satz.
  */
 export function PeriodHeader({

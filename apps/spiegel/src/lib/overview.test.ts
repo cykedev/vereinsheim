@@ -175,7 +175,7 @@ describe("progressPageData", () => {
   })
 })
 
-describe("Wertung je Familie (Plan `plans/2026-10-12-spiegel-wertung.md`)", () => {
+describe("Wertung je Familie", () => {
   const all = { ...DEFAULT_PROGRESS, choice: { type: "all" as const } }
   const scorings = async () => {
     const lp = (await startPageData(db, site.ownerId, context)).families[1].value
@@ -242,7 +242,7 @@ describe("Wertung je Familie (Plan `plans/2026-10-12-spiegel-wertung.md`)", () =
   })
 })
 
-describe("Art der Scheibe (Plan `plans/2026-10-12-spiegel-art.md`)", () => {
+describe("Art der Scheibe", () => {
   it("der Filter „Art“ der Liste nimmt die gewählte Art vor der Art der Quelle", async () => {
     const lp = (await startPageData(db, site.ownerId, context)).families[1].value
     const list = async (kind: "training" | "competition") =>

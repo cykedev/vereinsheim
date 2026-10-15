@@ -1,4 +1,4 @@
-// Grenzen von Spiegel hinter Caddy (P3, `plans/2026-10-14-spiegel-stack.md`, T9), gegen einen laufenden Stack aus
+// Grenzen von Spiegel hinter Caddy, gegen einen laufenden Stack aus
 // `tools/stack-e2e/run.sh`: `BASE_URL` ist Spiegel hinter Caddy, `DATABASE_URL` seine Datenbank.
 // - Grenze der App: Eine gekoppelte Brücke schickt einen Stapel mit 4,5 MiB, Spiegel antwortet 413 als JSON
 //   (`too-large`), wie die Brücke es versteht.

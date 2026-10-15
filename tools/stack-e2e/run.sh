@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Lokaler Ende-zu-Ende-Test des ganzen Stacks (P3, plans/2026-10-14-spiegel-stack.md, T8 und T9): die echten Images
-# aus dem Monorepo, compose.yml mit tools/stack-e2e/compose.e2e.yml, eine Wegwerf-Umgebung mit Zufallswerten.
-# Eigenes Compose-Projekt (vereinsheim-e2e) und eigene Images (vereinsheim-e2e/*): .env, .env.local, Volumes und
-# Images des Users bleiben unberührt. Caddy hört auf Ports statt Hosts (18080 Ringwerk, 18081 Treffsicher,
-# 18082 Spiegel), Postgres auf 15432.
+# Lokaler Ende-zu-Ende-Test des ganzen Stacks: die echten Images aus dem Monorepo, compose.yml mit
+# tools/stack-e2e/compose.e2e.yml, eine Wegwerf-Umgebung mit Zufallswerten. Eigenes Compose-Projekt (vereinsheim-e2e)
+# und eigene Images (vereinsheim-e2e/*): .env, .env.local, Volumes und Images des Users bleiben unberührt. Caddy hört
+# auf Ports statt Hosts (18080 Ringwerk, 18081 Treffsicher, 18082 Spiegel), Postgres auf 15432.
 #
 #   tools/stack-e2e/run.sh                  bauen, starten, prüfen, alles wieder entfernen
 #   tools/stack-e2e/run.sh --keep           Stack und Umgebung stehen lassen (Pfad und Befehle am Ende)

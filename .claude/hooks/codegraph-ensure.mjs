@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // SessionStart-Hook: hält den CodeGraph-Index ohne manuelles Zutun aktuell
-// (User-Präferenz: "immer indizieren, nicht selbst steuern müssen"; ADR-016 §11 —
-// reproduzierbares CodeGraph-Onboarding, jetzt auf Harness-Ebene). Fehlt der Index
+// (ADR-016 §11 — reproduzierbares CodeGraph-Onboarding auf Harness-Ebene). Fehlt der Index
 // (.codegraph/) → `init`, sonst `sync` (billig). Läuft DETACHED im Hintergrund, der
 // Session-Start wartet nie darauf. Fail-open: fehlendes CLI / jeder Fehler → still
 // exit 0, nie den Session-Start verzögern oder bricken.

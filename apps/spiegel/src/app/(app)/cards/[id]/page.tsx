@@ -28,7 +28,7 @@ export default async function CardRoutePage({
   const ownerId = session.user.id
   const card = await cardWithShots(db, { cardId: id, ownerId })
   if (!card?.targetId) {
-    // eine eigene im Papierkorb (alte Adresse, Zurück nach dem Löschen): dorthin statt 404 (P2b, D5)
+    // eine eigene im Papierkorb (alte Adresse, Zurück nach dem Löschen): dorthin statt 404
     if (!card && (await ownCardState(db, { cardId: id, ownerId })) === "trash")
       redirect("/profile/trash")
     notFound()

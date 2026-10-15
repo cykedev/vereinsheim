@@ -59,7 +59,7 @@ describe("HELP_TOPICS: Bezüge und Ordnung", () => {
     }
   })
 
-  it("26 Themen: 21 einer Scheibe (SP-1.12: ohne Lageanteil; U4: ohne Probe) und 5 über viele Scheiben (L2)", () => {
+  it("26 Themen: 21 einer Scheibe (ohne Lageanteil und ohne Probe) und 5 über viele Scheiben", () => {
     expect(HELP_TOPICS).toHaveLength(26)
     for (const id of ["probe-umfang", "probe-gegen-wertung", "eingeschossen"])
       expect(

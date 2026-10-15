@@ -41,7 +41,7 @@ type EventConfig = {
   /** Competition.disciplineId — null = gemischt (Faktor aktiv), sonst feste Disziplin (Faktor 1.0). */
   competitionDisciplineId: string | null
   /**
-   * @deprecated No longer used for maxRings calculation — per-series discipline.scoringType is used instead.
+   * @deprecated Not used for maxRings calculation — per-series discipline.scoringType is used instead.
    * Kept for API compatibility with existing callers.
    */
   discipline: { scoringType: ScoringType } | null

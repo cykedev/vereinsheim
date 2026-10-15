@@ -195,16 +195,16 @@ describe("Trefferbild-Kennzahlen", () => {
     expectNear(value("group.mpiDistance", SPREAD), 0)
     expect(value("group.mpiDistance", PROBE)).toBeCloseTo(Math.hypot(1.04, -1.04), 9)
     expect(value("group.sdX", PROBE)).toBeCloseTo(0.1140175, 6)
-    // Hier unterscheiden sich Streukreis und größter Abstand (0,3606 mm), offen bis SP-0.6.
+    // Hier unterscheiden sich Streukreis und größter Abstand (0,3606 mm).
     expect(value("group.enclosingDiameter", PROBE)).toBeCloseTo(0.3676955, 6)
   })
 
-  it("neue Kennzahlen aus SP-1.10 mit festen Werten", () => {
+  it("weitere Kennzahlen mit festen Werten", () => {
     // SPREAD: √(Σr² / (2(n − 1))) = 2,0 mm, σ̂ = 2,0 mm / c4(11)
     expect(value("group.sigma", SPREAD)).toBeCloseTo(2.0505458, 6)
     expect(value("result.tensRate", CARD)).toBe(50)
     expect(value("time.duration", MATCH)).toBe(250)
-    // nach einem Sprung der Uhr keine Dauer (SF-30), früher in `shootingTime` geprüft
+    // nach einem Sprung der Uhr keine Dauer (SF-30)
     const jumped = MATCH.map((shot, i) => ({
       ...shot,
       seq: i + 1,
@@ -353,7 +353,7 @@ describe("Lücken in der Abgabefolge (SF-04, SF-30)", () => {
   const MATCH4 = CARD5.filter((shot) => shot.kind === "match")
   const gaps = (steps: readonly { gapBefore: boolean }[]) => steps.map((step) => step.gapBefore)
 
-  it("ohne Karte ist jeder Sprung eine Lücke, wie bisher", () => {
+  it("ohne Karte ist jeder Sprung eine Lücke", () => {
     expect(gaps(stepsInOrder(MATCH4))).toEqual([false, false, true, false])
   })
 
@@ -443,7 +443,7 @@ describe("Lücken in der Abgabefolge (SF-04, SF-30)", () => {
   })
 })
 
-describe("Pausen mit der Schwelle der Karte (Z1, Z2; User, 10. Oktober 2026)", () => {
+describe("Pausen mit der Schwelle der Karte (Z1, Z2)", () => {
   /** Schüsse mit den Abständen `gaps` (in s), Serie 1 bis Schuss 10 */
   const timed = (gaps: readonly number[], kind: MetricShot["kind"] = "match") =>
     gaps
@@ -570,7 +570,7 @@ describe("probeOnlyAsMatch", () => {
   })
 })
 
-describe("asOnPrintout (U4, D1: eine Scheibe wie am Ausdruck)", () => {
+describe("asOnPrintout (eine Scheibe wie am Ausdruck)", () => {
   it("mit Wertung bleiben nur die Wertungsschüsse, in der Reihenfolge der Liste, unverändert", () => {
     const card = asOnPrintout(CARD)
     expect(card).toEqual(MATCH)
@@ -707,7 +707,7 @@ describe("Registry", () => {
   })
 })
 
-describe("Merkmale einer Scheibe an einer Stelle (Review, 15. Oktober 2026)", () => {
+describe("Merkmale einer Scheibe an einer Stelle", () => {
   it("jede Kennung, die an einer Scheibe stehen kann", () => {
     expect([...CARD_FLAGS].sort()).toEqual([
       "als-wertung-gezaehlt",

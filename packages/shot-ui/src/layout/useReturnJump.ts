@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { isOutOfView, shouldDismiss, type ReturnState } from "./jump"
 
 /**
- * Sprung zur Scheibe mit Rücksprung (Plan Schritt 4, D6). `jumpTo(element, label, shown)` scrollt nur, wenn
+ * Sprung zur Scheibe mit Rücksprung. `jumpTo(element, label, shown)` scrollt nur, wenn
  * `shown` (ohne Angabe das Element) außer Sicht ist, an den Anfang des Elements, merkt die Ausgangsstelle und zeigt
  * die Pille; `back` scrollt zurück. `shown` braucht es, wo das Ziel klebt: Ein klebendes Element ist fast immer im
  * Bild, auch wenn das, was man sehen soll, längst darüber liegt. Die Pille

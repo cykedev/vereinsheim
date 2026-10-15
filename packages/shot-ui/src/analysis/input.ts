@@ -1,5 +1,5 @@
-// Worüber die Analyse rechnet (Plan Schritt 3, D1; U4): über die Scheibe wie am Ausdruck, also die Wertung; gibt es nur
-// Probe, über alle Probeschüsse als Training (User, 8. Oktober 2026). Die Auswertungen des Fachkerns zählen meist nur
+// Worüber die Analyse rechnet: über die Scheibe wie am Ausdruck, also die Wertung; gibt es nur Probe, über alle
+// Probeschüsse als Training. Die Auswertungen des Fachkerns zählen meist nur
 // Wertung; die Karte geht deshalb durch `asOnPrintout`, auch wenn die Seite das nicht schon getan hat.
 
 import type { MetricShot, Scoring } from "@vereinsheim/shot-core/metrics"
@@ -17,7 +17,7 @@ export interface AnalysisInput {
   base: readonly MetricShot[]
   /**
    * die ganze Karte für Abstände: die rohe Karte (`context`) mit einer Probe zwischen Wertung, damit sie keine Lücke
-   * reißt (SF-04, Review U4); ohne Wertung dieselbe wie `base`
+   * reißt (SF-04); ohne Wertung dieselbe wie `base`
    */
   card: readonly MetricShot[]
   basis: AnalysisBasis

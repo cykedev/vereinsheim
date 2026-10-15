@@ -61,7 +61,7 @@ export interface ShotExtremes {
  * Beste und weiteste Teiler (E8), wie auf dem Meyton-Ausdruck; bei gleichem Teiler zuerst der frühere
  * Schuss. Verdächtige Schüsse (Platzhalter) haben keinen gültigen Abstand und zählen nicht (SF-15). Der
  * kleinste Teiler ist zugleich der beste Schuss, der größte der schwächste: Eine eigene Angabe über den
- * Wert (E6) und Teiler-Schnitt und -Median (E7) gibt es deshalb nicht mehr (Oktober 2026).
+ * Wert (E6) und Teiler-Schnitt und -Median (E7) gibt es deshalb nicht.
  */
 export function shotExtremes(shots: readonly MetricShot[]): ShotExtremes | null {
   const numbers = shotNumbers(shots)
@@ -88,7 +88,7 @@ export interface SeriesConsistency {
   /**
    * Abweichung je Schuss (E10): Standardabweichung der Schusswerte in der Wertung (n − 1), in Ringen,
    * ab 2 Schuss mit Wert. Sagt, wie stark ein einzelner Schuss um den Schnitt schwankt; anders als der
-   * MAD in ganzen Ringen auch beim Luftgewehr nicht fast immer 0 (User, 9. Oktober 2026).
+   * MAD in ganzen Ringen auch beim Luftgewehr nicht fast immer 0.
    */
   shotSd: number | null
 }

@@ -18,8 +18,8 @@ const render = (families: number, kind: "all" | "training" | "competition" = "al
     })
   )
 
-describe("Familie und Art (Plan N2, D7)", () => {
-  it("ohne `onKind` keine Art (im Fortschritt steht sie im Blatt „Filter“, U2)", () => {
+describe("Familie und Art", () => {
+  it("ohne `onKind` keine Art (im Fortschritt steht sie im Blatt „Filter“)", () => {
     const html = renderToStaticMarkup(
       h(CardFilters, {
         family: "lg-freihand",

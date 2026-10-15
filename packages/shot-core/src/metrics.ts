@@ -52,9 +52,9 @@ export const FLAG_SUSPICIOUS = "verdaechtig"
 export const FLAG_OVER_TARGET = "ueber-soll"
 
 /**
- * Jede Kennung, die an einer Scheibe stehen kann (`Card.flags`), an einer Stelle (Review, 15. Oktober 2026: zwei fehlten
- * in den Namen der Oberfläche). Wer eine Kennung schreibt oder benennt, nimmt `CardFlag`: Eine neue ohne Eintrag hier
- * scheitert an `tsc`, ebenso eine ohne Namen (`FLAG_NAMES` in `shot-ui`).
+ * Jede Kennung, die an einer Scheibe stehen kann (`Card.flags`), an einer Stelle. Wer eine Kennung schreibt oder
+ * benennt, nimmt `CardFlag`: Eine neue ohne Eintrag hier scheitert an `tsc`, ebenso eine ohne Namen (`FLAG_NAMES` in
+ * `shot-ui`).
  */
 export const CARD_FLAGS = [
   "nur-pdf",
@@ -286,7 +286,7 @@ export function shotNumbers(shots: readonly MetricShot[]): Map<MetricShot, numbe
 const PROBE_SERIES_SIZE = 10
 
 /**
- * Eine Karte nur mit Probe als Wertung (SF-01, Training; User, 8. Oktober 2026): jeder Schuss wird
+ * Eine Karte nur mit Probe als Wertung (SF-01, Training): jeder Schuss wird
  * Wertungsschuss, in Serien zu zehn nach der Abgabefolge (`inShotOrder`); Reihenfolge der Liste und alle
  * übrigen Angaben bleiben. Hat die Karte einen Wertungsschuss oder keinen Schuss, bleibt sie, wie sie ist.
  * Die eine Regel für die Seite einer Scheibe (shot-ui `probeOnlyAsMatch`) und für Zeiträume (`analysis`).
@@ -302,7 +302,7 @@ export function probeOnlyAsMatch<T extends MetricShot>(shots: readonly T[]): rea
 }
 
 /**
- * Eine Scheibe wie am Ausdruck (U4, D1; ADR-027, Leitregel 3 in `spiegel-edge-cases`): Meyton löscht die Probe mit dem
+ * Eine Scheibe wie am Ausdruck (ADR-027, Leitregel 3 in `spiegel-edge-cases`): Meyton löscht die Probe mit dem
  * ersten Wertungsschuss, also hat eine Scheibe mit Wertung nur die Wertungsschüsse; eine Probe zwischen Wertung (SF-04)
  * fällt ebenso weg. Eine Karte nur mit Probe ist Training (`probeOnlyAsMatch`). Reihenfolge der Liste und alle Angaben
  * bleiben; ohne Probe neben Wertung ist es dieselbe Liste. Die eine Regel für die Seite einer Scheibe und für Zeiträume.
@@ -578,7 +578,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 1,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08)
     version: 2,
     appliesTo: MATCH_ONLY,
     minShots: 1,
@@ -596,7 +596,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08)
     version: 2,
     appliesTo: BOTH,
     minShots: 2,
@@ -618,7 +618,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 1,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08)
     version: 2,
     appliesTo: BOTH,
     minShots: 3,
@@ -639,7 +639,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08)
     version: 2,
     appliesTo: BOTH,
     minShots: 5,
@@ -657,7 +657,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08)
     version: 2,
     appliesTo: BOTH,
     minShots: 3,
@@ -681,7 +681,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08)
     version: 2,
     appliesTo: BOTH,
     minShots: 3,
@@ -699,7 +699,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 2,
     scopes: SERIES_AND_CARD,
     better: "lower",
-    // 2: ohne Schüsse über der Soll-Zahl (SF-08, Oktober 2026)
+    // 2: ohne Schüsse über der Soll-Zahl (SF-08)
     version: 2,
     appliesTo: BOTH,
     minShots: 3,
@@ -717,7 +717,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 0,
     scopes: SERIES_AND_CARD,
     better: "none",
-    // 3: Pausen relativ zum Takt der Karte (Oktober 2026); 4: Pause über dem Doppelten statt dem 2,5-Fachen
+    // 3: Pausen relativ zum Takt der Karte; 4: Pause über dem Doppelten statt dem 2,5-Fachen
     version: 4,
     appliesTo: BOTH,
     minShots: 3,
@@ -736,7 +736,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     scopes: SERIES_AND_CARD,
     // konstanter ist nicht automatisch besser (Katalog Z2)
     better: "none",
-    // 3: Pausen relativ zum Takt der Karte (Oktober 2026); 4: Pause über dem Doppelten statt dem 2,5-Fachen
+    // 3: Pausen relativ zum Takt der Karte; 4: Pause über dem Doppelten statt dem 2,5-Fachen
     version: 4,
     appliesTo: BOTH,
     minShots: 4,

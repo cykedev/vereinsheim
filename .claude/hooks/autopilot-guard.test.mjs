@@ -1,7 +1,7 @@
 // Regression tests for the autopilot-guard Bash write-detection.
 // Pure-function coverage — no marker side effects. Run:
 // node --test .claude/hooks/autopilot-guard.test.mjs
-// These lock in the bypasses found in review (>|, quoted targets, dd/ln, subshell,
+// These lock in known bypasses (>|, quoted targets, dd/ln, subshell,
 // command substitution) and guard against false-positives on read-only commands.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -75,9 +75,8 @@ test('the autopilot marker is still surfaced by writeTargets (exemption is appli
 });
 
 // isDotenvPath: shared by pretool-guard.mjs and autopilot-guard.mjs — regression
-// coverage for the config.env drift found in review (only pretool-guard's Bash
-// command check caught it; the read-time path check and autopilot-guard's own
-// check both missed it since they required a whole `.env`/`.env.*` path segment).
+// coverage for names like config.env, which a check requiring a whole
+// `.env`/`.env.*` path segment misses.
 test('isDotenvPath catches a whole .env segment', () => {
 	assert.equal(isDotenvPath('.env'), true);
 	assert.equal(isDotenvPath('.env.local'), true);
@@ -109,9 +108,9 @@ test('isDotenvPath exempts a .vereinsheim.local example variant', () => {
 	assert.equal(isDotenvPath('.vereinsheim.local.example'), false);
 });
 
-// interpreterOneLinerViolation: regression coverage for the confirmed bash -c / sh -c
-// bypass — a bare `git push` was DENYed but wrapping it in an interpreter -c one-liner
-// wasn't checked against PROTECTED_CMDS at all, only against protected paths/.env.
+// interpreterOneLinerViolation: regression coverage for the bash -c / sh -c bypass —
+// a bare `git push` is DENYed, so an interpreter -c one-liner wrapping it must be
+// checked against PROTECTED_CMDS too, not only against protected paths/.env.
 test('interpreterOneLinerViolation catches bash -c wrapping a protected command', () => {
 	assert.ok(interpreterOneLinerViolation('bash -c "git push"'));
 });
@@ -132,10 +131,9 @@ test('interpreterOneLinerViolation still catches a protected-path one-liner (no 
 	assert.ok(interpreterOneLinerViolation('python -c "open(\'.claude/settings.json\', \'w\')"'));
 });
 
-// Regression coverage for a confirmed false-positive found in the harness-guard-sync
-// /review pass (Juli 2026): the protected-dir check inside a one-liner blob used a bare
-// substring test, so a script merely containing "scripts/" or ".claude/" as part of a
-// longer identifier (not a real path reference) incorrectly DENYed.
+// Regression coverage for a false-positive: with a bare substring test, the protected-dir
+// check inside a one-liner blob would DENY a script merely containing "scripts/" or
+// ".claude/" as part of a longer identifier (not a real path reference).
 test('interpreterOneLinerViolation does not flag a directory name merely containing "scripts/" as a substring', () => {
 	assert.equal(interpreterOneLinerViolation('node -e "require(\'myscripts/foo.txt\')"'), null);
 });
@@ -148,7 +146,7 @@ test('interpreterOneLinerViolation does not flag a command without -c/-e/-p/-E',
 	assert.equal(interpreterOneLinerViolation('bash script.sh'), null);
 });
 
-test('interpreterOneLinerViolation catches a combined short-flag cluster (bash -lc, found in review)', () => {
+test('interpreterOneLinerViolation catches a combined short-flag cluster (bash -lc)', () => {
 	assert.ok(interpreterOneLinerViolation('bash -lc "git push"'));
 });
 
@@ -162,8 +160,8 @@ test('interpreterOneLinerViolation does not flag a flag cluster without c/e/p/E'
 });
 
 // Die Ops-CLI (scripts/vereinsheim) bleibt im Autopilot gesperrt, aber nur als Aufruf: Ein Pfad im Repo
-// (…/verein/vereinsheim/…) oder ein Paketname (@vereinsheim/…) vor „build“ ist kein Aufruf. Fehlalarm vom
-// 8. Oktober 2026: `pnpm --filter @vereinsheim/labor build` und ein Skript `…/vereinsheim/…/build.mjs`.
+// (…/verein/vereinsheim/…) oder ein Paketname (@vereinsheim/…) vor „build“ ist kein Aufruf, etwa
+// `pnpm --filter @vereinsheim/labor build` oder ein Skript `…/vereinsheim/…/build.mjs`.
 const CLI_CALLS = [
 	'./scripts/vereinsheim build',
 	'scripts/vereinsheim deploy',

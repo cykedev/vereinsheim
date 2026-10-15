@@ -2,16 +2,14 @@
 // Vendored, zero-dependency MCP server for the memory graph (ADR-025).
 //
 // Serves the Obsidian-compatible vault (vault/) DIRECTLY — no build step, no store
-// artifact. `vault-loader.mjs` parses the notes into the same entity/relation shape a
-// built store used, so the BM25/EN+DE ranked search (`search-index.mjs`) that ADR-022
-// introduced is reused UNCHANGED. No npm dependency, no LLM, no embeddings: pure Node,
-// fully deterministic.
+// artifact. `vault-loader.mjs` parses the notes into the entity/relation shape the
+// BM25/EN+DE ranked search (`search-index.mjs`, ADR-022) works on. No npm dependency,
+// no LLM, no embeddings: pure Node, fully deterministic.
 //
 // Transport: MCP stdio = newline-delimited JSON-RPC 2.0 over stdin/stdout. We reload
-// the vault fresh on each call so a note edit is picked up without restarting. Existing
-// tool NAMES are unchanged (read_graph / open_nodes / search_nodes); ADR-025 adds the
-// heading-addressable read (document_map / section_read) and graph walks
-// (backlinks / traverse).
+// the vault fresh on each call so a note edit is picked up without restarting. Tools:
+// read_graph / open_nodes / search_nodes, plus (ADR-025) the heading-addressable read
+// (document_map / section_read) and graph walks (backlinks / traverse).
 //
 // Fail-soft: any handler error becomes an empty result or a JSON-RPC error,
 // never a crash — a flaky vault must not take the session down.

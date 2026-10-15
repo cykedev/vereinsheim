@@ -174,7 +174,7 @@ describe("storeSnapshot", () => {
   })
 })
 
-describe("Lebenszeichen (Plan 2026-10-13-spiegel-ingest, D1)", () => {
+describe("Lebenszeichen", () => {
   /** derselbe Stand mit einem anderen Lebenszeichen und späterer Folgenummer */
   const withLifesign = (snapshot: SnapshotV1, lifesign: string, laterMs: number): SnapshotV1 => {
     const data = {

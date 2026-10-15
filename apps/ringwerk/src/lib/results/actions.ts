@@ -12,7 +12,7 @@ import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 /**
  * Speichert das Ergebnis einer Paarung (beide Schützen).
  * Bestehende Ergebnisse werden überschrieben (Korrektur) → AuditLog-Eintrag.
- * Ab Phase 3: teilerFaktor wird in die Ringteiler-Berechnung einbezogen.
+ * teilerFaktor wird in die Ringteiler-Berechnung einbezogen.
  */
 export async function saveMatchResult(
   matchupId: string,

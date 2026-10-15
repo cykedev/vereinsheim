@@ -10,7 +10,7 @@ import type { ViewState } from "../view-state"
 import { readoutModel, readoutValue } from "./readout"
 
 /**
- * Ablesezeile (Plan Schritt 4, D2): auf dem Telefon unter der Scheibe statt der Ablese-Karte, eine Zeile
+ * Ablesezeile: auf dem Telefon unter der Scheibe statt der Ablese-Karte, eine Zeile
  * „Schuss 23 · 9,7 · Teiler 312,4 · Abstand zur Mitte 3,12 mm“, dazu Fehlschuss und Innenzehner.
  * Dieselben Werte wie die Karte; ein Wechsel wird Screenreadern gemeldet (`role="status"`).
  */
@@ -29,7 +29,7 @@ export function ShotLine({
         `Schuss ${model.label}`,
         readoutValue(model),
         model.teiler === null ? null : `Teiler ${formatValue(model.teiler, 1)}`,
-        // wie die Karte: Abstand zur Mitte statt x/y (Prüfung, Lage 12)
+        // wie die Karte: Abstand zur Mitte statt x/y
         model.distanceUm === null
           ? null
           : `Abstand zur Mitte ${formatValue(model.distanceUm / 1000, 2)} mm`,

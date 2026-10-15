@@ -20,7 +20,7 @@ const card = (id: string): CardRoute => ({
 })
 const back: Route = { page: "cards", query: origin.query, evening: null }
 
-describe("Rückweg und Blättern über der Scheibe (Plan N3, D5)", () => {
+describe("Rückweg und Blättern über der Scheibe", () => {
   it("links der Rückweg mit Namen, rechts vorige und nächste mit ihren Adressen", () => {
     const html = renderToStaticMarkup(
       h(CardContextBar, { back, backText: "Scheiben", prev: card("w1"), next: card("w3") })
@@ -44,7 +44,7 @@ describe("Rückweg und Blättern über der Scheibe (Plan N3, D5)", () => {
     expect(html).toMatch(
       /<a role="link" aria-disabled="true" aria-label="Nächste Scheibe" data-pager="next"[^>]*text-muted-foreground[^>]*>nächste<svg[\s\S]*?<\/svg><\/a>/
     )
-    // ein gesperrter Link ohne Adresse, wie ihn Screenreader ansagen (Review N3)
+    // ein gesperrter Link ohne Adresse, wie ihn Screenreader ansagen
     expect(html.match(/<a href=/g)).toHaveLength(2)
   })
 

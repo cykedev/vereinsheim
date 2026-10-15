@@ -1,4 +1,4 @@
-// Package filter entscheidet, welche Scheibe das Schützenhaus verlässt (SP-1.5, ADR-027: Datensparsamkeit am Rand). Die
+// Package filter entscheidet, welche Scheibe das Schützenhaus verlässt (ADR-027: Datensparsamkeit am Rand). Die
 // Regeln sind die, nach denen Spiegel ohnehin verwirft (apps/spiegel/src/lib/ingest/ingest.ts und meyton-ssmdb2.ts):
 // Zustimmung, verdeckt, gesperrt. So verlässt nichts das Gerät, was Spiegel nicht nehmen darf.
 package filter

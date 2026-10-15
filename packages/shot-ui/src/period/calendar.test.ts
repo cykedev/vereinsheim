@@ -120,7 +120,7 @@ describe("ISO-Wochen", () => {
     expect(isoWeekKey("2026-07-20")).toBe("2026-W30")
   })
 
-  it("Montag einer ISO-Woche, auch über den Jahreswechsel (U3, D6)", () => {
+  it("Montag einer ISO-Woche, auch über den Jahreswechsel", () => {
     expect(weekStartIso("2026-W27")).toBe("2026-06-29")
     expect(weekStartIso("2026-W01")).toBe("2025-12-29")
     expect(weekStartIso("2027-W01")).toBe("2027-01-04")
@@ -129,10 +129,10 @@ describe("ISO-Wochen", () => {
       expect(isoWeekKey(weekStartIso(key))).toBe(key)
   })
 
-  it("Name der Woche ist ihr Montag, keine Kalenderwoche (U3, D6)", () => {
+  it("Name der Woche ist ihr Montag, keine Kalenderwoche", () => {
     expect(weekLabel("2026-W27")).toBe("29.06.")
     expect(weekLabel("2026-W01")).toBe("29.12.")
-    // mit Jahr für Lineal und Tabelle: „Alles“ reicht über Jahreswechsel (Review U3)
+    // mit Jahr für Lineal und Tabelle: „Alles“ reicht über Jahreswechsel
     expect(weekDate("2026-W01")).toBe("29.12.2025")
     expect(weekDate("2026-W27")).toBe("29.06.2026")
   })

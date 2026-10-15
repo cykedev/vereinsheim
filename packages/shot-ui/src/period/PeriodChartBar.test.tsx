@@ -16,7 +16,7 @@ const html = (props: Partial<PeriodChartBarProps> = {}) =>
     })
   )
 
-describe("Bedienung über dem Verlauf (User, 13. Oktober 2026)", () => {
+describe("Bedienung über dem Verlauf", () => {
   it("passt alles, eine Zeile; sonst Kennzahl oben, darunter Darstellung links und „?“ rechts, an der Karte gemessen", () => {
     const bar = html()
     expect(bar).toMatch(/^<div class="@container min-w-0"><div data-chart-bar/)
@@ -33,7 +33,7 @@ describe("Bedienung über dem Verlauf (User, 13. Oktober 2026)", () => {
     expect(bar).toMatch(/<button[^>]*data-help="verlauf-und-form"[^>]*class="[^"]*\bml-auto\b/)
   })
 
-  it("die Kennzahl bricht nicht um, sie scrollt in sich (U3)", () => {
+  it("die Kennzahl bricht nicht um, sie scrollt in sich", () => {
     expect(html()).toMatch(/aria-label="Kennzahl" class="[^"]*\boverflow-x-auto\b/)
   })
 

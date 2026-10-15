@@ -1,4 +1,4 @@
-// Belege für die Zahlen in den Hilfetexten (SP-1.12): jede Simulation läuft über die echten Funktionen
+// Belege für die Zahlen in den Hilfetexten: jede Simulation läuft über die echten Funktionen
 // aus @vereinsheim/shot-core, mit festem Seed je Fall (als Zahl ausgeschrieben, damit eine neue
 // Beschriftung keine Zahl ändert), Lagen auf ganze µm und Wertung wie Meyton.
 // Aufruf: pnpm --filter @vereinsheim/shot-help simulate (nicht im Gate, Laufzeit etwa eine Minute, das
@@ -125,7 +125,7 @@ const out = (id: string, text: string) => lines.push(`${id.padEnd(4)} ${text}`)
 // B0: Anteil einer runden Normalgruppe innerhalb von σ und 2σ (Rayleigh, exakt)
 out("B0", `innerhalb σ ${share(1 - Math.exp(-0.5), 1)}, innerhalb 2σ ${share(1 - Math.exp(-2), 1)}`)
 
-// B1: ganz normale Scheiben (rund, zentriert, ohne Trend, n Wertungsschüsse wie am Ausdruck, U4): mindestens ein
+// B1: ganz normale Scheiben (rund, zentriert, ohne Trend, n Wertungsschüsse wie am Ausdruck): mindestens ein
 // Befund unter „sicher versetzt“, „gestreckt“, Ausreißer, Trend klar
 for (const n of [20, 40, 60]) {
   let hits = 0
@@ -269,7 +269,7 @@ for (const [label, base, seed] of [
     const result = fatigue(shots, "decimal")
     if (!result) return
     delta.push(result.deltaRings)
-    // dieselben Karten in ganzen Ringen (Prüfung, 9. Oktober 2026): zieht keine Zufallszahl
+    // dieselben Karten in ganzen Ringen: zieht keine Zufallszahl
     const rings = fatigue(shots, "rings")
     if (rings) deltaRings.push(rings.deltaRings)
     if (result.deltaR50Um !== null)
@@ -403,8 +403,8 @@ for (const [far, near, seed] of [
   out("B17", `echte Streckung a/b 1,3 als gestreckt erkannt: ${found.join(", ")}`)
 }
 
-// B18: Form mit und ohne Ausreißer. „Alt“ ist Mauchly über alle Schüsse wie bis Oktober 2026 (dieselbe
-// Kovarianz aus shot-core, dieselbe Grenze), „neu“ ist `groupShape` ohne die markierten Ausreißer
+// B18: Form mit und ohne Ausreißer. „Alt“ ist Mauchly über alle Schüsse (dieselbe Kovarianz aus shot-core, dieselbe
+// Grenze), „neu“ ist `groupShape` ohne die markierten Ausreißer
 {
   const elongatedAll = (shots: readonly MetricShot[]) => {
     const points = shots.map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number }))
@@ -466,10 +466,10 @@ const periodCards = (rand: Random, count: number, sx: number, firstDay = 0): Per
   }))
 const perShot = metric("result.decimalMean")
 
-// B19: Vergleich zweier Zeiträume über Ø je Schuss (Mann-Whitney über die Scheiben, D5): Fehlalarm bei
-// gleicher Streuung, Trennschärfe bei σ 1,5 → 1,3 mm und bei einer kleinen Veränderung σ 1,5 → 1,45 mm auf
-// Seite b (seit der Prüfung vom 9. Oktober 2026); dazu der Anteil „bedeutsam“ und der Unterschied des Ø je
-// Schuss im Mittel (über die Fälle 30/30), damit ein Text sagen kann, wie groß die Veränderung ist
+// B19: Vergleich zweier Zeiträume über Ø je Schuss (Mann-Whitney über die Scheiben): Fehlalarm bei gleicher Streuung,
+// Trennschärfe bei σ 1,5 → 1,3 mm und bei einer kleinen Veränderung σ 1,5 → 1,45 mm auf Seite b; dazu der Anteil
+// „bedeutsam“ und der Unterschied des Ø je Schuss im Mittel (über die Fälle 30/30), damit ein Text sagen kann, wie groß
+// die Veränderung ist
 {
   const cases = [
     ["gleich", 1500, 19_000],

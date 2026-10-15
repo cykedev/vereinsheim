@@ -31,7 +31,7 @@ const shot = (
   series,
 })
 
-// wie am Ausdruck, ohne Probe (U4); Serie 1: 1–3, Serie 2: 4–5. Nach Schuss 2 fehlt seq 5 (Lücke), vor Schuss 4
+// wie am Ausdruck, ohne Probe; Serie 1: 1–3, Serie 2: 4–5. Nach Schuss 2 fehlt seq 5 (Lücke), vor Schuss 4
 // vier Minuten Pause, Schuss 5 ohne Lage
 const CARD = [
   shot(3, "match", 1, 300, 108, 100, true),
@@ -66,7 +66,7 @@ describe("Intervalle aus dem Fachkern", () => {
     expect(shotIntervals(CARD)).toEqual([null, 45_000, null, 240_000, 52_000])
   })
 
-  it("mit der rohen Karte als Kontext reißt eine Probe zwischen Wertung keine Lücke (SF-04, Review U4)", () => {
+  it("mit der rohen Karte als Kontext reißt eine Probe zwischen Wertung keine Lücke (SF-04)", () => {
     // Probe als seq 5 zwischen Schuss 2 (seq 4) und Schuss 3 (seq 6): auf der gedruckten Karte fehlt sie
     const raw = [...CARD.slice(0, 2), shot(5, "probe", null, 0, 100, 170), ...CARD.slice(2)]
     expect(shotIntervals(CARD)[2]).toBeNull()
@@ -79,7 +79,7 @@ describe("Intervalle aus dem Fachkern", () => {
 })
 
 describe("ShotTable", () => {
-  it("neuester Schuss oben, keine „P“-Nummern (U4)", () => {
+  it("neuester Schuss oben, keine „P“-Nummern", () => {
     expect(rows(render()).map((r) => r[0])).toEqual(["5", "4", "3", "2", "1"])
   })
 
@@ -107,7 +107,7 @@ describe("ShotTable", () => {
     ).toBe(true)
   })
 
-  it("Einzelschüsse immer in Zehnteln, auch in ganzen Ringen; Spaltenkopf immer Wert (Rückmeldung 3)", () => {
+  it("Einzelschüsse immer in Zehnteln, auch in ganzen Ringen; Spaltenkopf immer Wert", () => {
     for (const scoring of ["decimal", "rings"] as const) {
       const html = render({ scoring })
       expect(html).toMatch(/<th[^>]*>Wert<\/th>/)
@@ -142,11 +142,11 @@ describe("ShotTable", () => {
 
   it("Intervalle in Sekunden, eine Pause in Minuten und Sekunden mit „Pause“, nach einer Lücke keins", () => {
     const r = rows(render())
-    // „3:20 min“ statt auf ganze Minuten gerundet (Prüfung, Zeit 7)
+    // „3:20 min“ statt auf ganze Minuten gerundet
     expect(r.map((row) => row[4])).toEqual(["52 s", "4:00 min Pause", "–", "45 s", "–"])
   })
 
-  it("Pause relativ zum Takt der Karte: 120 s bei 40 s Takt ja, bei 60 s Takt nicht (User, 10. Oktober 2026)", () => {
+  it("Pause relativ zum Takt der Karte: 120 s bei 40 s Takt ja, bei 60 s Takt nicht", () => {
     const paced = (gaps: number[]) =>
       gaps
         .reduce<number[]>((times, gap) => [...times, times.at(-1)! + gap], [0])
@@ -231,7 +231,7 @@ describe("ShotTable", () => {
   })
 })
 
-describe("Schusstabelle auf dem Telefon (Plan Schritt 4, D8)", () => {
+describe("Schusstabelle auf dem Telefon", () => {
   // 15 Wertungsschüsse in einer Serie
   const many: MetricShot[] = Array.from({ length: 15 }, (_, i) => ({
     xUm: i * 100,

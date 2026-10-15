@@ -12,7 +12,7 @@ import { searchOf } from "@/lib/search"
 export const metadata: Metadata = { title: "Scheiben" }
 
 // Scheiben: die eigenen nach Abend. Filter stehen in der Adresse; die Seite liest sie und rechnet die Liste auf dem
-// Server aus den Projektionen (ADR-031, SP-1.8). An den Browser gehen das Modell und die Lagen der gezeigten Scheiben.
+// Server aus den Projektionen (ADR-031). An den Browser gehen das Modell und die Lagen der gezeigten Scheiben.
 export default async function CardsRoute({
   searchParams,
 }: {

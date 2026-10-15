@@ -48,7 +48,7 @@ export type SessionDetail = TrainingSession & {
   series: SerializedSeries[]
   attachments: Attachment[]
   goals: SessionGoalSummary[]
-  // Mentaltraining-Daten — alle optional (Phase 3)
+  // Mentaltraining-Daten — alle optional
   wellbeing: Wellbeing | null
   reflection: Reflection | null
   prognosis: SerializedPrognosis | null

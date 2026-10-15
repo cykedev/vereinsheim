@@ -44,7 +44,7 @@ describe("ScoringToggle: der Bruch im weichen Kreis", () => {
     expect(html()).not.toContain("font-semibold")
   })
 
-  it("die 1 kleiner als der Bruch gesetzt, so ruhig wie seine Ziffern (User, 13. Oktober 2026)", () => {
+  it("die 1 kleiner als der Bruch gesetzt, so ruhig wie seine Ziffern", () => {
     expect(html({ scoring: "rings" })).toMatch(
       /<span[^>]*class="[^"]*\btext-\[13px\][^"]*"[^>]*>1<\/span>/
     )
@@ -88,7 +88,7 @@ describe("KindToggle: der Pokal im weichen Kreis", () => {
   })
 })
 
-describe("ScoringChip: die Wertung als Wechsel-Chip in einer Filterzeile (User, 13. Oktober 2026)", () => {
+describe("ScoringChip: die Wertung als Wechsel-Chip in einer Filterzeile", () => {
   const TEXTS = { rings: "Ø in ganzen Ringen", decimal: "Ø in Zehnteln" } as const
   const html = (scoring: "rings" | "decimal") =>
     renderToStaticMarkup(

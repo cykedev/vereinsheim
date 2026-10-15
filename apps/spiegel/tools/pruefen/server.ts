@@ -22,7 +22,7 @@ export async function startServer(
     throw new Error("kein Build: erst pnpm --filter spiegel build (oder pnpm check)")
   const minutes = Math.round((Date.now() - statSync(buildId).mtimeMs) / 60_000)
   out(`Build von vor ${minutes} min (pnpm --filter spiegel build für den aktuellen Stand)`)
-  // antwortet auf dem Port schon etwas, prüfte die Prüfung still einen fremden Stand (Review)
+  // antwortet auf dem Port schon etwas, prüfte die Prüfung still einen fremden Stand
   const taken = await fetch(`${base}/login`).then(
     () => true,
     () => false

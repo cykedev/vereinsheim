@@ -1,6 +1,6 @@
 import { ScaleBar } from "../parts"
 
-// Feld um einen Punkt (Spielwiese `fieldFrame`, `scaleBar`): quadratisch, höchstens 260 px hoch, mittig in
+// Feld um einen Punkt: quadratisch, höchstens 260 px hoch, mittig in
 // der Breite; µm nach Pixeln mit y nach oben. Mindestens 0,25 mm Ausdehnung, sonst wird der kleinste
 // Maßstab (0,1 mm) länger als das Feld.
 

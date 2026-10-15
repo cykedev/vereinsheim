@@ -11,8 +11,8 @@ import { siteOverview } from "@/lib/admin/site"
 
 export const metadata: Metadata = { title: "Anlage" }
 
-// Anlage und Brücke (Admin, SP-1.6 b, P2c): Name und Zeitzone, gekoppelte Brücken, „Brücke koppeln“, Listen; jede
-// Änderung mit Folgen fragt (`DecisionDialog`)
+// Anlage und Brücke (Admin): Name und Zeitzone, gekoppelte Brücken, „Brücke koppeln“, Listen; jede Änderung mit
+// Folgen fragt (`DecisionDialog`)
 export default async function AdminSiteRoute() {
   await requireAdmin()
   const timeZone = getDisplayTimeZone()

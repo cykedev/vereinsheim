@@ -1,6 +1,5 @@
-// Welche Schüsse einer Scheibe in Auswertungen über viele Scheiben zählen (Plan L2, D8), und die Folge
-// der Scheiben. Nicht über `./index` exportiert: eine Hilfe für `period.ts` und `records.ts`, keine
-// Auswertung.
+// Welche Schüsse einer Scheibe in Auswertungen über viele Scheiben zählen, und die Folge der Scheiben.
+// Nicht über `./index` exportiert: eine Hilfe für `period.ts` und `records.ts`, keine Auswertung.
 
 import { asOnPrintout, type MetricShot } from "../metrics"
 
@@ -16,10 +15,10 @@ export interface CardShots {
 }
 
 /**
- * Die Schüsse einer Scheibe, die zählen, wie am Ausdruck (`asOnPrintout`, U4): mit Wertung nur die Wertung. Die ganze
- * Karte bleibt dabei Kontext für Abstände und Nummern, damit eine Probe zwischen Wertung keine Lücke reißt (SF-04, U4
- * D4). Hat sie nur Probe, mit `includeProbeOnly` die Probe wie Wertung (dieselbe Regel wie auf der Seite einer
- * Scheibe, SF-01); sonst null, die Scheibe zählt nicht. Eine Scheibe ohne Schüsse zählt nie.
+ * Die Schüsse einer Scheibe, die zählen, wie am Ausdruck (`asOnPrintout`): mit Wertung nur die Wertung. Die ganze Karte
+ * bleibt dabei Kontext für Abstände und Nummern, damit eine Probe zwischen Wertung keine Lücke reißt (SF-04). Hat sie
+ * nur Probe, mit `includeProbeOnly` die Probe wie Wertung (dieselbe Regel wie auf der Seite einer Scheibe, SF-01);
+ * sonst null, die Scheibe zählt nicht. Eine Scheibe ohne Schüsse zählt nie.
  */
 export function cardShots(
   shots: readonly MetricShot[],

@@ -1,6 +1,6 @@
-// Analyse einer Scheibe (SP-1.10): alles, was eine einzelne Scheibe hergibt, nach den Themen des
+// Analyse einer Scheibe: alles, was eine einzelne Scheibe hergibt, nach den Themen des
 // Statistik-Katalogs (vault/spiegel/spiegel-statistics.md); dazu Auswertungen über viele Scheiben und
-// Rekorde (Plan L2).
+// Rekorde.
 
 export * from "./result"
 export * from "./precision"

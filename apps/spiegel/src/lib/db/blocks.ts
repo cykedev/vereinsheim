@@ -1,7 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client"
 
 // Grabsteine und Löschsperren einer ScheibenID (SF-28, SF-77): Welcher Stand gehört zu welcher Scheibe, und ist sie
-// gesperrt? Eine Stelle für Einlesen, Ablage und Entfernen (Review SP-1.7 a2: dieselbe Achse überall, der Beginn der
+// gesperrt? Eine Stelle für Einlesen, Ablage und Entfernen (dieselbe Achse überall: der Beginn der
 // Scheibe, nie die Beobachtung, denn die Brücke liest auch Wochen später nach).
 
 type Tx = Prisma.TransactionClient
@@ -53,8 +53,8 @@ export async function isKeyBlocked(
 
 /**
  * Der höchste Zyklus, den diese Quelle und ScheibenID schon trug: an Scheiben, Grabsteinen und Löschsperren. Ein neuer
- * Zyklus liegt darüber, sonst bekäme eine neue Scheibe den Zyklus einer entfernten und ihr Grabstein passte nicht mehr
- * (Review SP-1.7 a2). Null, wenn es noch keinen gab.
+ * Zyklus liegt darüber, sonst bekäme eine neue Scheibe den Zyklus einer entfernten und ihr Grabstein passte nicht mehr.
+ * Null, wenn es noch keinen gab.
  */
 export async function maxCycleOfKey(
   tx: Tx,

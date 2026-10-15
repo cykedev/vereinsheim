@@ -34,7 +34,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
   const tiles = overviewTiles(input)
   const tile = (label: string) => tiles.find((t) => t.label === label)!
 
-  it("die Kacheln der Spielwiese in ihrer Reihenfolge", () => {
+  it("die acht Kacheln in ihrer Reihenfolge", () => {
     expect(tiles.map((t) => t.label)).toEqual([
       "Ergebnis",
       "Zehnerquote",
@@ -47,7 +47,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     ])
   })
 
-  it("Werte gleich dem Fachkern, das Ergebnis wie in der Spielwiese", () => {
+  it("Werte gleich dem Fachkern, das Ergebnis der Testkarte", () => {
     expect(tile("Ergebnis").value).toBe("365,2")
     expect(tile("Ergebnis").hint).toMatch(/^Ø \d+,\d\d je Schuss · 40 Schuss$/)
     const tens = shareAtLeast(base, "decimal", 100)!
@@ -60,30 +60,30 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     expect(tile("Zehnerquote").hint).toMatch(/^\d+ von \d+ · sicher \d+ % bis \d+ %$/)
     const confidence = mpiConfidence(base)!
     expect(tile("Lage").value).toBe(confidence.real ? "versetzt" : "passt")
-    // nur die Richtung, ohne Zahlen und ohne T²: die Zahlen stehen in der Beobachtung (U3, D3)
+    // nur die Richtung, ohne Zahlen und ohne T²: die Zahlen stehen in der Beobachtung
     expect(tile("Lage").hint).toBe(
       confidence.real ? directionName(confidence.center) : "kein Versatz belegt"
     )
     const trend = cardTrend(base, "decimal")!
     expect(tile("Trend").value).toBe(formatSigned(trend.perTenShots, 2))
-    // Ringe je Schuss alle zehn Schuss, nicht „je 10“ (Prüfung, Zeit 3)
+    // Ringe je Schuss alle zehn Schuss, nicht „je 10“
     expect(tile("Trend").unit).toBe("Ringe")
     expect(tile("Trend").hint).toBe(
       `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe · ${trend.clear ? `klar ${trend.direction === "up" ? "steigend" : "fallend"}` : "nicht klar"}`
     )
-    // der Median wie Reiter und Kachel an der Scheibe: aus der Registry, ab 3 Schuss mit Zeit (Review)
+    // der Median wie Reiter und Kachel an der Scheibe: aus der Registry, ab 3 Schuss mit Zeit
     expect(tile("Tempo").value).toBe(
       formatValue(computeMetric(metricByKey("time.intervalMedian")!, base)!, 0)
     )
     expect(tile("Tempo").hint).toBe(
       `die Hälfte in ${formatValue(tempoSpread(base)!.iqrMs / 1000, 0)} s`
     )
-    // U4, D6: die Ausreißer statt „Eingeschossen?“, wie viele und welche (der Abreißer Schuss 27)
+    // die Ausreißer: wie viele und welche (der Abreißer Schuss 27)
     const flagged = outliers(base)!
     expect(flagged.flagged.map((o) => o.number)).toEqual([27])
     expect(tile("Ausreißer").value).toBe("1")
     expect(tile("Ausreißer").unit).toBe("")
-    // die Nummer steht im Kopf und in der Beobachtung, die Kachel zählt nur (Review U4, wie die Lage in U3)
+    // die Nummer steht im Kopf und in der Beobachtung, die Kachel zählt nur (wie bei der Lage)
     expect(tile("Ausreißer").hint).toBe("fällt aus der Gruppe")
   })
 
@@ -97,7 +97,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
     const t = (label: string) => few.find((x) => x.label === label)!
     expect(t("Streuung").value).toBeNull()
     expect(t("Streuung").hint).toBe("ab 3 Schuss")
-    // wie der Reiter Lage: drei auf einer Linie haben keinen Test (Review)
+    // wie der Reiter Lage: drei auf einer Linie haben keinen Test
     expect(t("Lage").hint).toBe("ab 3 Schuss mit Lage (nicht alle auf einer Linie)")
     expect(t("Trend").hint).toBe("ab 10 Schuss")
     expect(t("Tempo").hint).toBe("ab 3 Schuss mit Zeit")
@@ -130,7 +130,7 @@ describe("Überblick: acht Kacheln aus dem Fachkern", () => {
   })
 
   it("ein verdächtiger Schuss mit Lage: kein Ringverlust, der Grund nennt beides", () => {
-    // Prüfung, Ergebnis 6: der Schuss hat eine Lage, zählt aber nicht (SF-15)
+    // der Schuss hat eine Lage, zählt aber nicht (SF-15)
     const suspicious = CARD.map((s, i) => (i === 20 ? { ...s, flags: [FLAG_SUSPICIOUS] } : s))
     const t = overviewTiles(analysisInput(suspicious, "decimal", LP_10M)).find(
       (x) => x.label === "Ringverlust"
@@ -155,7 +155,7 @@ describe("Überblick mit einer späten Probe (SF-04)", () => {
   })
 })
 
-describe("auf dem Weg der Seite: gedruckte Karte, die rohe als Kontext (SF-04, Review U4)", () => {
+describe("auf dem Weg der Seite: gedruckte Karte, die rohe als Kontext (SF-04)", () => {
   const page = (raw: ReturnType<typeof withSighterAfter>) =>
     analysisInput(asOnPrintout(raw), "decimal", LP_10M, raw)
 
@@ -180,7 +180,7 @@ describe("auf dem Weg der Seite: gedruckte Karte, die rohe als Kontext (SF-04, R
 describe("Beobachtungen in Worten", () => {
   const sentences = observations(input)
 
-  it("mindestens fünf Sätze, in der Reihenfolge der Spielwiese", () => {
+  it("mindestens fünf Sätze, in fester Reihenfolge", () => {
     expect(sentences.length).toBeGreaterThanOrEqual(5)
     expect(sentences[0].icon).toBe("position")
     expect(sentences[0].text).toMatch(
@@ -192,7 +192,7 @@ describe("Beobachtungen in Worten", () => {
   })
 
   it("Lage echt: der Gewinn in der Mitte mit seinem n und je Schuss, ohne Visier", () => {
-    // 2,8 Ringe sind die Summe über 40 Schuss, nicht der Gewinn eines Schusses (Prüfung, Ergebnis 1)
+    // 2,8 Ringe sind die Summe über 40 Schuss, nicht der Gewinn eines Schusses
     expect(ringLossSplit(base, LP_10M)!.reliable).toBe(true)
     expect(sentences[0].text).toContain(
       "Läge die Gruppe in der Mitte, brächten 40 weitere Schuss zusammen etwa 2,8 Ringe mehr (rund 0,07 je Schuss)."
@@ -229,7 +229,7 @@ describe("Beobachtungen in Worten", () => {
     expect(text).toContain("In der Mitte brächte die Gruppe keine Ringe mehr.")
   })
 
-  it("ein Lage-Anteil unter null heißt „Lage kostet nichts“ (U3, D10)", () => {
+  it("ein Lage-Anteil unter null heißt „Lage kostet nichts“", () => {
     // die Gruppe um die Mitte geschoben: in die Mitte verschoben brächte sie rechnerisch nichts
     const centered = CARD.map((s) =>
       s.kind === "match" && s.xUm !== null && s.yUm !== null
@@ -240,11 +240,11 @@ describe("Beobachtungen in Worten", () => {
     const split = ringLossSplit(input.base, LP_10M)!
     expect(split.positionLoss.decimal).toBeLessThan(0)
     const hint = overviewTiles(input).find((t) => t.label === "Ringverlust")!.hint
-    // Lage und Streuung ergeben zusammen den Ringverlust: kostet die Lage nichts, trägt die Streuung alles (Review U3)
+    // Lage und Streuung ergeben zusammen den Ringverlust: kostet die Lage nichts, trägt die Streuung alles
     expect(hint).toBe(
       `Lage kostet nichts · Streuung ${formatValue(split.total!.decimal, 1)} · Aufteilung unsicher`
     )
-    // ohne belegten Versatz „passt“ die Lage (U3, D11), nicht „unklar“
+    // ohne belegten Versatz „passt“ die Lage, nicht „unklar“
     expect(mpiConfidence(input.base)!.real).toBe(false)
     const lage = overviewTiles(input).find((t) => t.label === "Lage")!
     expect([lage.value, lage.hint]).toEqual(["passt", "kein Versatz belegt"])
@@ -262,7 +262,7 @@ describe("Beobachtungen in Worten", () => {
     )
   })
 
-  it("ein Ausreißer: „Er kostet“, mehrere: „Sie kosten“ (Prüfung, Grammatik)", () => {
+  it("ein Ausreißer: „Er kostet“, mehrere: „Sie kosten“", () => {
     const outlier = sentences.find((s) => s.icon === "outlier")!.text
     expect(outlier).toMatch(
       /^Schuss 27 fällt als Ausreißer aus der Gruppe\. Er kostet \d+,\d Ringe? gegen deinen typischen Schuss\.$/
@@ -298,7 +298,7 @@ describe("Beobachtungen in Worten", () => {
   })
 
   it("die Pause vor Schuss 21: bis zu drei Schüsse danach, je Schuss gegen die übrigen", () => {
-    // nicht „unter dem Schnitt der Scheibe“ und nicht „die nächsten drei“ (Prüfung, Zeit 1)
+    // nicht „unter dem Schnitt der Scheibe“ und nicht „die nächsten drei“
     const delta = pauseRecovery(base, "decimal")!.effects[0].deltaRings!
     const pause = sentences.find((s) => s.icon === "pause")!.text
     expect(pause).toMatch(
@@ -310,7 +310,7 @@ describe("Beobachtungen in Worten", () => {
   })
 
   it("haben die Schüsse nach der Pause keinen Wert, sagt der Satz das statt einer Zahl", () => {
-    // Wertungsschüsse 21 bis 23 ohne Zehntel: die Pause bleibt, die Wirkung fehlt (Review)
+    // Wertungsschüsse 21 bis 23 ohne Zehntel: die Pause bleibt, die Wirkung fehlt
     const blind = CARD.map((s, i) => (i >= 29 && i <= 31 ? { ...s, decimalTenths: null } : s))
     const pause = observations(analysisInput(blind, "decimal", LP_10M)).find(
       (s) => s.icon === "pause"
@@ -319,7 +319,7 @@ describe("Beobachtungen in Worten", () => {
     expect(pause).not.toContain("NaN")
   })
 
-  it("Ermüdung je Schuss und zusammen über zehn Schuss (Prüfung, Zeit 4)", () => {
+  it("Ermüdung je Schuss und zusammen über zehn Schuss", () => {
     const tired = fatigue(base, "decimal")!
     const text = sentences.find((s) => s.icon === "trend")!.text
     expect(text).toContain(
@@ -330,7 +330,7 @@ describe("Beobachtungen in Worten", () => {
   it("der Trend nennt den Wert je Schuss alle zehn Schuss und je Zehnerserie das Zehnfache", () => {
     const trend = cardTrend(base, "decimal")!
     const text = sentences.find((s) => s.icon === "trend")!.text
-    // nicht „Ringe je zehn Schuss“: das las sich als Summe der Serie (User, 9. Oktober 2026)
+    // nicht „Ringe je zehn Schuss“: das las sich als Summe der Serie
     expect(text).not.toContain("je zehn Schuss")
     expect(text).toContain(
       trend.clear
@@ -339,7 +339,7 @@ describe("Beobachtungen in Worten", () => {
     )
   })
 
-  it("kein Satz zu Probe gegen Wertung (U4: wie am Ausdruck)", () => {
+  it("kein Satz zu Probe gegen Wertung (wie am Ausdruck)", () => {
     expect(sentences.map((s) => s.text).join(" ")).not.toMatch(/Probe/)
   })
 

@@ -2,11 +2,11 @@
 //
 // Die Zeiten kommen in Abgabefolge, nicht nach der Uhr sortiert (SF-30). Eine Pause zählt nicht zum Tempo-Median,
 // sonst verzerrt sie das Bild (SF-62). Pause ist ein Abstand, der deutlich länger ist als der eigene Takt: über dem
-// Doppelten des Medians der Abstände, mindestens eine Minute; über drei Minuten immer (Gespräch, Scheibenwechsel). Bis
-// 15. Oktober 2026 war es das 2,5-Fache (User: „auch kleinere Pausen erkennen“; an den eigenen Scheiben 18 statt 11
-// Pausen in 789 Abständen, das 1,5-Fache fände schon 39, auch gewöhnliche Schwankung).
-// Unter fünf Abständen gibt es keinen eigenen Takt, dann gilt nur die feste Grenze (User, 10. Oktober 2026: an den
-// eigenen Scheiben fand die feste Grenze 3 von 906 Abständen, die relative die 10, die dem User auffielen). Der Median
+// Doppelten des Medians der Abstände, mindestens eine Minute; über drei Minuten immer (Gespräch, Scheibenwechsel). An
+// den eigenen Scheiben findet das Doppelte 18 Pausen in 789 Abständen, das 2,5-Fache 11, das 1,5-Fache schon 39, auch
+// gewöhnliche Schwankung.
+// Unter fünf Abständen gibt es keinen eigenen Takt, dann gilt nur die feste Grenze (an den eigenen Scheiben fand die
+// feste Grenze 3 von 906 Abständen, die relative die 10, die dem Schützen auffielen). Der Median
 // nimmt alle Abstände bis drei Minuten, auch die, die danach als Pause gelten: Wenige Pausen verschieben ihn kaum
 // (LP 60 des Users: 42,6 statt 42,3 s); ist die Hälfte der Abstände lang, wird die Schwelle drei Minuten.
 // Ein negativer Abstand heißt, die Uhr ist zurückgesprungen; er zählt weder als Intervall noch als Pause. `null`
@@ -30,8 +30,7 @@ export interface Tempo {
   clockJumps: number
   medianIntervalMs: number | null
   /**
-   * 0, wenn es keine Pause gab; null unter zwei Schüssen. Keine Kennzahl mehr (Oktober 2026): Die
-   * Pausen zeigt Z4 einzeln.
+   * 0, wenn es keine Pause gab; null unter zwei Schüssen. Keine Kennzahl: Die Pausen zeigt Z4 einzeln.
    */
   longestPauseMs: number | null
   /** vom frühesten bis zum spätesten Schuss; null ohne Schuss oder nach einem Sprung der Uhr */

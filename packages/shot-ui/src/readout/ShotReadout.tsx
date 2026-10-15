@@ -20,7 +20,7 @@ const mm = (um: number) => `${formatValue(um / 1000, 2)} mm`
 /**
  * Ablesung (spiegel-ui-design): der angetippte oder letzte Schuss, kompakt in einer Zeile: der Wert groß mit der
  * Ringwert-Farbe als Punkt, daneben die andere Wertung, Teiler und Abstand zur Mitte (gemessen vor der Lage).
- * Ohne x/y: Abstand und Teiler sagen dasselbe lesbarer (User, 8. Oktober 2026). Ein Wechsel wird
+ * Ohne x/y: Abstand und Teiler sagen dasselbe lesbarer. Ein Wechsel wird
  * Screenreadern gemeldet.
  */
 export function ShotReadout({ shots, state, className }: ShotReadoutProps) {

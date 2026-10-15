@@ -27,7 +27,7 @@ const stampMs = (datetime: string) =>
 const held = (state: Ablage, id: number) =>
   trefferOf(state, id, 1).some((t) => HELD_DISPLAYS.includes(t.Wertung))
 
-/** was ein Schuss an Merkmalen trägt, aus seinen Werten (Vorschlag für SP-1.6) */
+/** was ein Schuss an Merkmalen trägt, aus seinen Werten (Vorschlag für das Einlesen) */
 function shotFlagsOf(t: TrefferRow): string[] {
   if (t.Teiler01 === PLACEHOLDER_TEILER) return ["ueber-soll"]
   if (t.x === 0 && t.y === 0 && t.Teiler01 === 0 && t.Ring01 !== 109) return ["verdaechtig"]

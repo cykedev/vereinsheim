@@ -1,4 +1,4 @@
-// Bereiche der Navigation (Plan N3, `vault/spiegel/spiegel-navigation.md`, Entscheidungen 11 und 16): zu welchem
+// Bereiche der Navigation (`vault/spiegel/spiegel-navigation.md`, „Bereiche und Adressen“, „App-Rahmen“): zu welchem
 // Bereich eine Seite gehört und wohin die Einträge der Navigation führen. Reine Funktionen.
 
 import {
@@ -49,8 +49,8 @@ export interface AreaMemory {
 }
 
 /**
- * Wohin die Einträge der Navigation führen (D4): Scheiben und Fortschritt zur letzten Adresse des Bereichs, wie
- * Reiter einer App, mit der zuletzt gewählten Familie (User, 9. Oktober 2026); ohne letzte Adresse die Vorgabe
+ * Wohin die Einträge der Navigation führen: Scheiben und Fortschritt zur letzten Adresse des Bereichs, wie
+ * Reiter einer App, mit der zuletzt gewählten Familie; ohne letzte Adresse die Vorgabe
  * mit dieser Familie. Der Abend der Liste und der Abschnitt des Fortschritts fallen weg; wechselt die Familie,
  * auch die Wahl im Fortschritt (sie gehört zur anderen). Ohne Familie bleibt die gemerkte.
  */

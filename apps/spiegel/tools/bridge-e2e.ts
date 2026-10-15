@@ -1,15 +1,15 @@
-// Ende zu Ende mit der echten Brücke (Plan `plans/2026-10-13-spiegel-bruecke-upload.md`, D9): der eigene Build von
+// Ende zu Ende mit der echten Brücke: der eigene Build von
 // Spiegel auf :3012, eine eigene Anlage mit Zustimmung für den erfundenen Sportpass 12345678, MariaDB 10.6 in Docker mit
 // den Fällen SF-03 (Zustimmung), SF-13 (frei, ohne Treffer, fremder Schütze, Muster) und SF-19 (verdeckt). Das Binary
 // aus `apps/spiegel-bridge` koppelt über HTTP und läuft. Der erste Stand weckt die Brücke aus dem ruhigen Takt (30 s),
 // danach kommen die Schritte der Fälle im Abstand von vier Sekunden; sie liest dann jede Sekunde.
 // Geprüft in der Datenbank: Was ankommt, gehört dem Konto mit Zustimmung, nichts Verdecktes und nichts ohne Zustimmung,
 // der Heartbeat ist vermerkt. Danach ist alles entfernt (Anlage, Konto, Container, Konfiguration mit dem Token).
-// Dazu ein älterer Abend (SF-02, 40 Tage zurück) schon vor dem Start in der Ablage (P2d): Ohne Auftrag zum Nachladen
+// Dazu ein älterer Abend (SF-02, 40 Tage zurück) schon vor dem Start in der Ablage: Ohne Auftrag zum Nachladen
 // (`historyLoadedAt` gesetzt) kommt er nie. Mit `--historie` ist der Auftrag offen; die Brücke holt ihn, sobald 20 Minuten
 // nichts läuft, und meldet ihn erledigt (`historyLoadedAt`). Das dauert gut 20 Minuten.
 // Nicht im Gate (braucht Docker, Go und den Build).
-// Mit `BASE_URL` gegen einen laufenden Spiegel statt des eigenen Builds, mit `DATABASE_URL` dessen Datenbank (P3:
+// Mit `BASE_URL` gegen einen laufenden Spiegel statt des eigenen Builds, mit `DATABASE_URL` dessen Datenbank (etwa
 // der Stack aus `tools/stack-e2e/run.sh --bridge`, Spiegel hinter Caddy).
 //
 //   pnpm --filter spiegel build && pnpm --filter spiegel bridge-e2e [--historie]
@@ -135,14 +135,14 @@ async function main() {
   const problems: string[] = []
   try {
     await db.sportpassConsent.create({
-      // eingespielt: die erste Scheibe ist bestätigt (SP-1.7 a2); hier zählt das Hochladen
+      // eingespielt: die erste Scheibe ist bestätigt; hier zählt das Hochladen
       data: {
         userId: user.id,
         siteId: site.id,
         sportpassId: CONSENTED,
         confirmedAt: new Date(),
         firstCardConfirmedAt: new Date(),
-        // ohne `--historie` gilt die Historie als geladen: kein Auftrag (P2d)
+        // ohne `--historie` gilt die Historie als geladen: kein Auftrag
         historyLoadedAt: HISTORY ? null : new Date(),
       },
     })
@@ -163,7 +163,7 @@ async function main() {
     out("gekoppelt")
 
     // der erste Stand des Abends schon vor dem Start: Er verankert das Startfenster der Brücke am heutigen Abend, sonst
-    // gälte der ältere Abend (allein in der Ablage) als der jüngste und käme ohne Auftrag (P2d)
+    // gälte der ältere Abend (allein in der Ablage) als der jüngste und käme ohne Auftrag
     const [first, ...rest] = steps("SF-03")
     mariadb(container, first)
     bridge = spawn(binary, ["run", "--config", config], { env })

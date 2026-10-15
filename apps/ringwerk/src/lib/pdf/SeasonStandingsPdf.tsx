@@ -106,7 +106,7 @@ const W_NO_SERIES = { name: 200, rings: 105, teiler: 105, ringteiler: 105 }
 
 /**
  * Uebersetzt die geteilte Darstellungsregel in das PDF-Mittel (dunkel vs. grau). `classicMuted`
- * ist das bisherige Bild der jeweiligen Spalte, das ausserhalb der alternierenden Modi gilt.
+ * ist das klassische Bild der jeweiligen Spalte, das ausserhalb der alternierenden Modi gilt.
  */
 function metricMuted(
   entry: SortedSeasonStandingsEntry,

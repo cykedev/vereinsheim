@@ -19,8 +19,8 @@ import type { SeriesKey, Selection } from "./types"
 import { isSelected } from "./view-state"
 
 /**
- * Eine Scheibe wie am Ausdruck (U4; ADR-027): mit Wertung nur die Wertungsschüsse, eine Karte nur mit Probe ist
- * Training und verhält sich genau wie Wertung, auch optisch (User, 8. Oktober 2026). Die Regel kommt aus dem
+ * Eine Scheibe wie am Ausdruck (ADR-027): mit Wertung nur die Wertungsschüsse, eine Karte nur mit Probe ist
+ * Training und verhält sich genau wie Wertung, auch optisch. Die Regel kommt aus dem
  * Fachkern (`asOnPrintout` in `metrics`, dieselbe wie für Zeiträume): Reihenfolge der Liste und alle übrigen Angaben
  * bleiben. Hier kommt nur `fromProbe` dazu, das sich bei einem Training die Herkunft merkt (für das Probe-Eck, der
  * Fachkern kennt das Feld nicht). Die Seite wendet das einmal an, bevor sie die Bausteine füttert.
@@ -52,8 +52,7 @@ export function shotLabels(shots: readonly MetricShot[]): string[] {
 }
 
 /**
- * Wert eines einzelnen Schusses, immer in Zehnteln („10,4“), gleich in welcher Wertung die Scheibe steht (User,
- * 15. Oktober 2026: „Einzelschüsse immer in Zehntelwerten anzeigen egal wie die Scheibe eingestellt ist“). Ohne Zehntel
+ * Wert eines einzelnen Schusses, immer in Zehnteln („10,4“), gleich in welcher Wertung die Scheibe steht. Ohne Zehntel
  * (SF-18) der Ring („10“), ohne Wert ein Strich. Summen, Ø und Serien folgen weiter der Wertung (`formatTotal`).
  */
 export function formatShotValue(shot: MetricShot): string {
@@ -102,7 +101,7 @@ export function selectionShots(shots: readonly MetricShot[], selection: Selectio
  * Abstand jedes Schusses zum vorigen der Karte in ms, über `stepsInOrder` wie `analysis/timing`: null beim
  * ersten, nach einer Lücke in der Abgabefolge, ohne Zeit und bei einem Rücksprung der Uhr. Geordnet wird
  * selbst (`inShotOrder`); der Abstand gilt zum vorigen Schuss der Karte, auch bei Auswahl. `context` ist die rohe Karte
- * vor `asOnPrintout`: eine Probe zwischen Wertung reißt dann keine Lücke (SF-04, Review U4).
+ * vor `asOnPrintout`: eine Probe zwischen Wertung reißt dann keine Lücke (SF-04).
  */
 export function shotIntervals(
   shots: readonly MetricShot[],

@@ -1,6 +1,5 @@
-// Package run ist der Betrieb der Brücke (SP-1.4 b, plans/2026-10-13-spiegel-bruecke-upload.md): Zustand aus Spiegel,
-// Runden der Erkennung, Filter, Upload ohne Warteschlange, Heartbeat. Ein Schritt ist eine Runde; `Run` wiederholt ihn
-// im Takt.
+// Package run ist der Betrieb der Brücke: Zustand aus Spiegel, Runden der Erkennung, Filter, Upload ohne Warteschlange,
+// Heartbeat. Ein Schritt ist eine Runde; `Run` wiederholt ihn im Takt.
 package run
 
 import (
@@ -107,7 +106,7 @@ type Runner struct {
 	stateFailures int
 	staleLogged   bool
 
-	// offene Aufträge zum Nachladen aus dem Zustand (P2d), die davon erledigten (Heartbeat) und die Hashes der
+	// offene Aufträge zum Nachladen aus dem Zustand, die davon erledigten (Heartbeat) und die Hashes der
 	// SportpassIDs, einmal gerechnet je Zustand
 	history     []api.HistoryRequest
 	historyDone []api.HistoryDone
@@ -118,7 +117,7 @@ type Runner struct {
 const MaxHistoryDone = 100
 
 // catchUpFrom rechnet den Wasserstand in Spiegel (Beobachtung, UTC) in ein Lebenszeichen der Anlage um: Meyton schreibt
-// Ortszeit. Ohne Wasserstand (die erste Brücke einer Anlage) wird nichts nachgeholt; die Historie ist SP-2.5.
+// Ortszeit. Ohne Wasserstand (die erste Brücke einer Anlage) wird nichts nachgeholt; ältere Scheiben holt nur ein Auftrag zum Nachladen.
 func catchUpFrom(state api.State) string {
 	if state.Watermark == nil {
 		return ""
@@ -221,7 +220,7 @@ func (r *Runner) refreshState(ctx context.Context, now time.Time) error {
 	return nil
 }
 
-// setHistory übernimmt die offenen Aufträge zum Nachladen (P2d): Die Erkennung liest ihre Scheiben, wenn niemand schießt.
+// setHistory übernimmt die offenen Aufträge zum Nachladen: Die Erkennung liest ihre Scheiben, wenn niemand schießt.
 func (r *Runner) setHistory(state api.State) {
 	if len(state.History) != len(r.history) {
 		r.log("history-requests", "open", len(state.History))
@@ -233,7 +232,7 @@ func (r *Runner) setHistory(state api.State) {
 	r.history, r.hashOf = state.History, map[string]string{}
 	salt := state.Sportpass.Salt
 	// neu eröffnet (Id und `Since` neu): auch Scheiben, die dieser Lauf schon gemeldet oder zurückgehalten hat, noch
-	// einmal lesen; sonst gälte ein Auftrag nach dem Aufheben von „nicht meine“ sofort als erledigt (Review P2d)
+	// einmal lesen; sonst gälte ein Auftrag nach dem Aufheben von „nicht meine“ sofort als erledigt
 	reopened := map[string]bool{}
 	for _, h := range state.History {
 		if !known[h] {
@@ -572,7 +571,7 @@ func (r *Runner) heartbeat(ctx context.Context, now time.Time, dbReachable bool)
 	if dbReachable {
 		if f, err := r.src.Fingerprint(ctx); err == nil {
 			fingerprint = &api.SourceFingerprint{Version: f.Version, Scheiben: f.Scheiben, Treffer: f.Treffer, OldestStamp: f.OldestStamp}
-			// viele Scheiben auf einmal weg: Ablage geleert oder ein neuer Server (SF-23); nur melden (Plan D8)
+			// viele Scheiben auf einmal weg: Ablage geleert oder ein neuer Server (SF-23); nur melden
 			if r.lastScheiben >= 10 && f.Scheiben*2 < r.lastScheiben && !r.possibleReset {
 				r.possibleReset, r.resetFrom = true, r.lastScheiben
 				r.log("possible-reset", "before", r.lastScheiben, "now", f.Scheiben)

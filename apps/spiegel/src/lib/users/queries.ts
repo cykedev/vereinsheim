@@ -3,7 +3,7 @@ import { consentStatus, sportpassSummary } from "@/lib/consent/status"
 import { db } from "@/lib/db"
 import { PENDING_CARD, VISIBLE_CARD } from "@/lib/db/visible"
 
-/** so lange nach der Bestätigung ohne jede Scheibe gilt eine Zustimmung als auffällig (P2e, D3) */
+/** so lange nach der Bestätigung ohne jede Scheibe gilt eine Zustimmung als auffällig */
 const QUIET_AFTER_MS = 14 * 86_400_000
 
 /** ein Konto, wie die Verwaltung es zeigt (ohne Passwort) */
@@ -18,7 +18,7 @@ export interface UserSummary {
 const SELECT = { id: true, name: true, email: true, role: true, isActive: true } as const
 
 /**
- * ein Konto in der Liste, dazu der Stand seines Sportpasses in einem Wort (P2c, D5) und Zahlen ohne Inhalt (P2e, D1):
+ * ein Konto in der Liste, dazu der Stand seines Sportpasses in einem Wort und Zahlen ohne Inhalt:
  * wie viele Scheiben, wann die letzte begann, wie viele in „Offen“ warten. Keine Ergebnisse, keine Disziplinen.
  */
 export interface UserListItem extends UserSummary {
@@ -29,7 +29,7 @@ export interface UserListItem extends UserSummary {
   lastCardAt: string | null
   /** Scheiben, die in „Offen“ auf die Bestätigung der ersten warten */
   waiting: number
-  /** eine aktive Zustimmung seit mehr als 14 Tagen, aber keine einzige Scheibe: Nummer oder Brücke prüfen (D3) */
+  /** eine aktive Zustimmung seit mehr als 14 Tagen, aber keine einzige Scheibe: Nummer oder Brücke prüfen */
   quiet: boolean
 }
 
@@ -57,7 +57,7 @@ export async function getUsers(nowMs = Date.now()): Promise<UserListItem[]> {
       where: { ownerId: { in: ownerIds }, ...PENDING_CARD },
       _count: { _all: true },
     }),
-    // Spuren für den Hinweis: Wer gelöscht oder zurückgewiesen hat, bekommt Scheiben (Review P2f)
+    // Spuren für den Hinweis: Wer gelöscht oder zurückgewiesen hat, bekommt Scheiben
     db.card.groupBy({
       by: ["ownerId"],
       where: { ownerId: { in: ownerIds }, deletedAt: { not: null } },
@@ -81,7 +81,7 @@ export async function getUsers(nowMs = Date.now()): Promise<UserListItem[]> {
     const longConfirmed = consents.some(
       (c, i) => statuses[i] === "active" && c.confirmedAt!.getTime() < nowMs - QUIET_AFTER_MS
     )
-    // ein deaktiviertes Konto bekommt nichts, auch mit aktiver Zustimmung (Review)
+    // ein deaktiviertes Konto bekommt nichts, auch mit aktiver Zustimmung
     return {
       ...user,
       sportpass:

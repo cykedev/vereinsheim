@@ -24,7 +24,7 @@ const before = (count: number) =>
     )
   )
 
-describe("Start: der letzte Abend (Plan N5, D1–D6)", () => {
+describe("Start: der letzte Abend", () => {
   it("der Abend der neuesten Scheibe, je Familie ein Block in der Folge ihrer ersten Scheibe", () => {
     const m = model([
       lg(periodCard("old", 0, [100], { startedAtMs: at(27, 18) })),
@@ -82,7 +82,7 @@ describe("Start: der letzte Abend (Plan N5, D1–D6)", () => {
     const evening = (t: number) =>
       model([...before(12), lg(periodCard("e", 0, [t], { startedAtMs: at(29, 18) }))]).blocks[0]
     const within = evening(101)
-    // der Schnitt im Satz bleibt der der fünf Scheiben davor (Entscheidung 13)
+    // der Schnitt im Satz bleibt der der fünf Scheiben davor
     expect(within.average?.value).toBeCloseTo(10.12, 9)
     expect(within.band?.low).toBeCloseTo(10.1 - spread, 9)
     expect(within.band?.high).toBeCloseTo(10.1 + spread, 9)
@@ -168,7 +168,7 @@ describe("Start: der letzte Abend (Plan N5, D1–D6)", () => {
     expect(strip).toHaveLength(20)
     expect(strip.filter((s) => s.tonight).map((s) => s.id)).toEqual(["e1", "e2"])
     expect(strip.at(-1)?.id).toBe("e2")
-    // je Scheibe der gleitende Schnitt und das Band an ihrer Stelle, wie im Verlauf des Fortschritts (U5, D1)
+    // je Scheibe der gleitende Schnitt und das Band an ihrer Stelle, wie im Verlauf des Fortschritts
     // Werte mit Schwankung, damit es ein Band gibt
     const varied = Array.from({ length: 25 }, (_, i) =>
       lg(
@@ -186,7 +186,7 @@ describe("Start: der letzte Abend (Plan N5, D1–D6)", () => {
     expect(all.strip.at(-1)?.band).toEqual(all.band)
     expect(all.strip.some((s) => s.band !== null)).toBe(true)
     expect(all.strip.every((s) => !s.partial)).toBe(true)
-    // die ersten vier Scheiben der Familie: Schnitt über weniger als fünf, gestrichelt (Review U5)
+    // die ersten vier Scheiben der Familie: Schnitt über weniger als fünf, gestrichelt
     const few = model([...before(6), lg(periodCard("e", 0, [100], { startedAtMs: at(29, 18) }))])
       .blocks[0]
     expect(few.strip.map((s) => s.partial)).toEqual([true, true, true, true, false, false, false])

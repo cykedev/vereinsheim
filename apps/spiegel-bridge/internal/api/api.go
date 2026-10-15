@@ -52,7 +52,7 @@ type PairResponse struct {
 type Blocked struct {
 	ScheibenID int32     `json:"scheibenId"`
 	StartedAt  time.Time `json:"startedAt"`
-	// Epoche der Sperre (seit 13. Oktober 2026); nil von einem älteren Spiegel: gilt dann für jede
+	// Epoche der Sperre; nil von einem älteren Spiegel: gilt dann für jede
 	Epoch *int `json:"epoch"`
 }
 
@@ -66,7 +66,7 @@ type State struct {
 	} `json:"sportpass"`
 	Blocked   []Blocked  `json:"blocked"`
 	Watermark *time.Time `json:"watermark"`
-	// offene Aufträge, ältere Scheiben einer Zustimmung nachzuladen (P2d, additiv); fehlt bei einem älteren Spiegel
+	// offene Aufträge, ältere Scheiben einer Zustimmung nachzuladen (additiv); fehlt bei einem älteren Spiegel
 	History []HistoryRequest `json:"history"`
 }
 
@@ -111,7 +111,7 @@ type Heartbeat struct {
 	SourceClockOffsetMs *int64             `json:"sourceClockOffsetMs"`
 	HeldBack            []Held             `json:"heldBack"`
 	SourceFingerprint   *SourceFingerprint `json:"sourceFingerprint"`
-	// erledigte Aufträge zum Nachladen (P2d, additiv): nur Ids, nie Nummern (SF-59)
+	// erledigte Aufträge zum Nachladen (additiv): nur Ids, nie Nummern (SF-59)
 	HistoryDone []HistoryDone `json:"historyDone,omitempty"`
 }
 

@@ -39,7 +39,7 @@ const text = (html: string) =>
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-// die Seite gibt die Karte wie am Ausdruck weiter (U4): ohne die Probe
+// die Seite gibt die Karte wie am Ausdruck weiter: ohne die Probe
 const line = (state: Partial<ViewState> = {}, shots: readonly MetricShot[] = asOnPrintout(CARD)) =>
   text(
     renderToStaticMarkup(
@@ -53,11 +53,11 @@ const card = (state: Partial<ViewState> = {}) =>
     )
   )
 
-describe("Ablesezeile (D2)", () => {
+describe("Ablesezeile", () => {
   it("letzter Schuss: Nummer, Wert, Teiler und Abstand in einer Zeile, Werte wie die Ablesung", () => {
     const teiler = formatValue(distanceUm(-4200, -1100) / 10, 1)
     const away = `${formatValue(distanceUm(-4200, -1100) / 1000, 2)} mm`
-    // wie die Karte: Abstand zur Mitte statt x/y (Prüfung, Lage 12)
+    // wie die Karte: Abstand zur Mitte statt x/y
     expect(line()).toBe(`Schuss 3 · 8,7 · Teiler ${teiler} · Abstand zur Mitte ${away}`)
     expect(card()).toContain(`Abstand zur Mitte ${away}`)
     expect(line()).not.toContain(directionWords({ xUm: -4200, yUm: -1100 }))
@@ -69,7 +69,7 @@ describe("Ablesezeile (D2)", () => {
     expect(line({ chosen: { index: 0, series: 1 } })).toMatch(/^Schuss 1 · 9,6 · Teiler/)
   })
 
-  it("auch in ganzen Ringen in Zehnteln (Rückmeldung 3), ohne Lage nur Nummer und Wert", () => {
+  it("auch in ganzen Ringen in Zehnteln, ohne Lage nur Nummer und Wert", () => {
     expect(line({ scoring: "rings" })).toMatch(/^Schuss 3 · 8,7 · Teiler/)
     expect(line({ chosen: { index: 1, series: 1 } })).toBe("Schuss 2 · 0,0 · Fehlschuss")
   })

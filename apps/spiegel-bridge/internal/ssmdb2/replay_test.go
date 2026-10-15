@@ -1,8 +1,8 @@
 //go:build replay
 
-// Abnahme der Brücke gegen die Sonderfälle aus packages/ssmdb2-cases (SP-1.4 a, D10): je Fall die Schritte in eine
-// echte MariaDB spielen und nach jedem Schritt lesen wie im Betrieb, eine nicht flüchtige Lesung zweimal, eine
-// flüchtige einmal. Nicht im Gate (braucht Docker):
+// Abnahme der Brücke gegen die Sonderfälle aus packages/ssmdb2-cases: je Fall die Schritte in eine echte MariaDB
+// spielen und nach jedem Schritt lesen wie im Betrieb, eine nicht flüchtige Lesung zweimal, eine flüchtige einmal.
+// Nicht im Gate (braucht Docker):
 //
 //	pnpm --filter spiegel-bridge replay                     MariaDB 10.6 wie an der Vereinsanlage
 //	REPLAY_DOCKER_IMAGE=mariadb:11 pnpm --filter spiegel-bridge replay
@@ -244,7 +244,7 @@ func TestReplayCases(t *testing.T) {
 						t.Errorf("Scheibe %d (%s): gesendet in Lesung %v, erwartet %v", card.ScheibenID, card.Bridge, got, card.SentReadings)
 					}
 				default:
-					// Opt-in und Verdeckung filtert erst SP-1.5: hier nur, dass nichts Flüchtiges hinausgeht
+					// Opt-in und Verdeckung filtert `filter`, nicht die Erkennung: hier nur, dass nichts Flüchtiges hinausgeht
 					for _, n := range got {
 						if expected.Readings[n-1].Transient {
 							t.Errorf("Scheibe %d: flüchtige Lesung %d gesendet", card.ScheibenID, n)
@@ -316,7 +316,7 @@ func TestReplayColumnsChangeWhileRunning(t *testing.T) {
 	}
 }
 
-// lifesignsCarrySportpass: Jedes Lebenszeichen trägt die SportpassID seiner Zeile als Text, NULL als nil (P2d).
+// lifesignsCarrySportpass: Jedes Lebenszeichen trägt die SportpassID seiner Zeile als Text, NULL als nil.
 func lifesignsCarrySportpass(t *testing.T, db *sql.DB, reader *Reader) {
 	t.Helper()
 	want := map[int32]*string{}

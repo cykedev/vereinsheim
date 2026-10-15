@@ -6,7 +6,7 @@ import { ChartSvg } from "./frame"
 import { FieldAxes, fieldFrame, FieldScale } from "./field"
 
 /**
- * Form der Gruppe um den Schwerpunkt (Spielwiese `shapeChart`): die 2-σ-Ellipse als Fläche unter den
+ * Form der Gruppe um den Schwerpunkt: die 2-σ-Ellipse als Fläche unter den
  * Punkten und als Linie darüber, Ausreißer rot, der Schwerpunkt in der Mitte, Maßstab unten links. Die Form
  * rechnet ohne die Ausreißer, also sitzen Ellipse und Mitte auf dem Schwerpunkt der übrigen (`centerUm`).
  */

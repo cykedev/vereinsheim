@@ -62,7 +62,7 @@ const CARDS = [
   lp(periodCard("b", 0, [88], { startedAtMs: at(25, 19) })),
 ]
 
-describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
+describe("Block des letzten Abends auf Start", () => {
   const html = render(CARDS)
 
   it("Satz, Meta, große Zahl, Abstand, Streifen, Kacheln, Link in der Reihenfolge", () => {
@@ -80,10 +80,10 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect([...order].sort((a, b) => a - b)).toEqual(order)
     expect(text(html)).toContain("0,20 über dem Schnitt der 5 Scheiben davor.")
     expect(html).toMatch(/data-evening-mean[^>]*>9,20</)
-    // jeder Block rechnet in der Wertung seiner Familie und nennt sie (Review, 12. Oktober 2026)
+    // jeder Block rechnet in der Wertung seiner Familie und nennt sie
     expect(text(html)).toContain("9,20 Ø je Schuss in Zehnteln")
     expect(text(render(CARDS, "rings"))).toContain("Ø je Schuss in ganzen Ringen")
-    // mit dem Kreis daneben nennt der Kreis die Wertung; ein Hinweis darunter (Plan `plans/2026-10-13-spiegel-symbole.md`)
+    // mit dem Kreis daneben nennt der Kreis die Wertung; ein Hinweis darunter
     const withToggle = render(CARDS, "decimal", {
       actions: h("span", { "data-kreis": true }),
       notice: h("p", { role: "alert" }, "HINWEIS"),
@@ -93,17 +93,17 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(withToggle).toMatch(
       /data-evening-mean[\s\S]*?<\/p><div data-evening-actions[^>]*><span data-kreis/
     )
-    // der Hinweis unter Zahl und Bezug, vor dem Verlauf (Review, 13. Oktober 2026)
+    // der Hinweis unter Zahl und Bezug, vor dem Verlauf
     expect(withToggle.indexOf("HINWEIS")).toBeGreaterThan(
       withToggle.indexOf("data-evening-reference")
     )
     expect(withToggle.indexOf("HINWEIS")).toBeLessThan(withToggle.indexOf("data-form-strip"))
-    // der Bezug statt des Abstands, der schon im Satz steht (U5, D2)
+    // der Bezug statt des Abstands, der schon im Satz steht
     expect(text(html)).toContain("Schnitt der 5 Scheiben davor: 9,00")
     expect(text(html)).not.toContain("+0,20 zum Schnitt")
   })
 
-  it("eine Legende unter dem Verlauf, der Satz zum Band nur mit Band (U3, D8; U5, D1)", () => {
+  it("eine Legende unter dem Verlauf, der Satz zum Band nur mit Band", () => {
     // zwölf Scheiben davor geben das Band (ab zehn), die sieben aus CARDS nicht
     const many = [
       ...Array.from({ length: 12 }, (_, i) =>
@@ -124,7 +124,7 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(render(full)).toMatch(
       /<p data-form-legend[^>]*>Grau: deine letzten Scheiben\. Die Linie ist der Schnitt der jeweils letzten fünf\. Das Band/
     )
-    // ohne graue Punkte (nur der Abend) und ohne Band nichts zu erklären (Review U5)
+    // ohne graue Punkte (nur der Abend) und ohne Band nichts zu erklären
     const lone = render([lp(periodCard("a", 0, [94, 94], { startedAtMs: at(25, 18) }))])
     expect(lone).not.toContain("data-form-legend")
     // ohne Wert des Abends kein Bezug unter dem Strich
@@ -137,18 +137,18 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
     expect(html).toMatch(/data-evening-label="true"[^>]*>Fr 25\.09\.</)
   })
 
-  it("die Kacheln nennen die Wertung beim Namen des Schalters: „18,8 Zehntel · 18 ganze Ringe“ (U5, D5)", () => {
+  it("die Kacheln nennen die Wertung beim Namen des Schalters: „18,8 Zehntel · 18 ganze Ringe“", () => {
     const tile = html.slice(html.indexOf('data-start-card="a"'))
     const tileText = text(tile.slice(0, tile.indexOf("</a>")))
     expect(tileText).toMatch(/\d+,\d Zehntel · \d+ ganze Ringe$/)
     expect(tile).toMatch(/aria-label="[^"]*Ergebnis \d+,\d Zehntel, \d+ ganze Ringe"/)
-    // umbrechen nur zwischen den Wertungen, jede bleibt zusammen (Review U5: „ganze / Ringe“ bei 1280 px)
+    // umbrechen nur zwischen den Wertungen, jede bleibt zusammen (kein „ganze / Ringe“ bei 1280 px)
     expect(tile).toMatch(/<span data-start-result="true" class="[^"]*flex-wrap/)
     expect(tile).toMatch(/<span class="whitespace-nowrap"><span data-result/)
     expect(tile).toMatch(/<span data-other-result="true" class="[^"]*whitespace-nowrap/)
   })
 
-  it("die Disziplin steht als Überschrift oben im Block, mit dem Symbol der Disziplinen (Rückmeldung des Users)", () => {
+  it("die Disziplin steht als Überschrift oben im Block, mit dem Symbol der Disziplinen", () => {
     expect(html).toMatch(
       /<h2 id="evening-lp-freihand"[^>]*>[\s\S]*?<svg[\s\S]*?<\/svg>Luftpistole<\/h2>/
     )
@@ -184,7 +184,7 @@ describe("Block des letzten Abends auf Start (Plan N5, D3–D6)", () => {
 
   it("neue Rekorde nur, wenn der Abend welche hält; der Link in die Liste mit dem Abend", () => {
     expect(html).toContain("data-new-records")
-    // der Rekord öffnet in seiner Wertung (hier Zehntel, ohne Schlüssel), die Kachel in der der Kachel (Review N5)
+    // der Rekord öffnet in seiner Wertung (hier Zehntel, ohne Schlüssel), die Kachel in der der Kachel
     expect(html).toMatch(
       /Neue Rekorde[\s\S]*?: <span[\s\S]*?<a href="\/cards\/[ab]\?from=start&amp;scoring=decimal" aria-label="[^"]+: [^"]+ zeigen"[^>]*>zeigen<\/a>/
     )

@@ -1,5 +1,5 @@
-// Die acht Kacheln des Überblicks (Spielwiese `overviewTab`): je ein Wert aus dem Fachkern mit Einheit,
-// einer kurzen Angabe und dem Hilfe-Thema; ohne Wert der Grund statt einer Zahl.
+// Die acht Kacheln des Überblicks: je ein Wert aus dem Fachkern mit Einheit, einer kurzen Angabe und dem Hilfe-Thema;
+// ohne Wert der Grund statt einer Zahl.
 
 import {
   cardTrend,
@@ -75,7 +75,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       total === null ? null : rings(total),
       "Ringe",
       `Ø ${mean === null ? "–" : formatValue(mean.mean, 2)} je Schuss · ${base.length} Schuss`,
-      // ohne Ergebnis den Ø über die Schüsse mit Wert, wie die Hilfe sagt (Prüfung, Ergebnis 3)
+      // ohne Ergebnis den Ø über die Schüsse mit Wert, wie die Hilfe sagt
       `${mean ? `Ø ${formatValue(mean.mean, 2)} je Schuss (${mean.n} ${valuedWord(scoring)}) · ` : ""}${noResultReason(base, scoring)}`
     ),
     tile(
@@ -89,7 +89,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       "ab 1 Schuss"
     ),
     tile(
-      // Alltagswort auf der Kachel, σ im Blatt (U3, D3)
+      // Alltagswort auf der Kachel, σ im Blatt
       "Streuung",
       "praezision-sigma",
       sigma ? mm2(sigma.sigma) : null,
@@ -100,10 +100,10 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
     tile(
       "Lage",
       "lage-echt",
-      // in Alltagsworten (U3, D11; User: „Lage unklar ist … schwer zu verstehen“): ohne belegten Versatz passt sie
+      // in Alltagsworten: ohne belegten Versatz passt sie; „unklar“ wäre schwer zu verstehen
       confidence ? (confidence.real ? "versetzt" : "passt") : null,
       "",
-      // nur die Richtung: die Zahlen stehen in der Beobachtung, T² und Grenze im Blatt (U3, D3)
+      // nur die Richtung: die Zahlen stehen in der Beobachtung, T² und Grenze im Blatt
       confidence
         ? confidence.real
           ? directionName(confidence.center)
@@ -117,7 +117,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       split?.total ? rings(split.total[key]) : null,
       "Ringe",
       // ein Lage-Anteil bis null ist kein Gewinn: Die Gruppe sitzt schon gut, die Streuung trägt dann den ganzen
-      // Verlust (U3, D10 und Review; Grund im Reiter Lage)
+      // Verlust (Grund im Reiter Lage)
       split
         ? (() => {
             const shown = shownRingLoss(split, key)
@@ -131,7 +131,7 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
       "Trend",
       "verlauf-und-trend",
       trend ? formatSigned(trend.perTenShots, 2) : null,
-      // der Wert je Schuss, über zehn Schuss; die Serie ändert sich um das Zehnfache (Prüfung, Zeit 3)
+      // der Wert je Schuss, über zehn Schuss; die Serie ändert sich um das Zehnfache
       "Ringe",
       trend
         ? `je Schuss alle 10 Schuss · Zehnerserie ${formatSigned(trend.perTenShots * 10, 1)} Ringe · ${
@@ -143,14 +143,14 @@ export function overviewTiles(input: AnalysisInput): OverviewTile[] {
     tile(
       "Tempo",
       "tempo-und-dauer",
-      // der Median wie im Reiter Zeit und an der Scheibe ab 3 Schuss mit Zeit, die Streuung ab 4 (Review)
+      // der Median wie im Reiter Zeit und an der Scheibe ab 3 Schuss mit Zeit, die Streuung ab 4
       tempoMedian === null ? null : formatValue(tempoMedian, 0),
       "s",
       pace ? `die Hälfte in ${formatValue(pace.iqrMs / 1000, 0)} s` : "",
       "ab 3 Schuss mit Zeit"
     ),
-    // U4, D6: statt „Eingeschossen?“ (Probe neben Wertung gibt es nicht mehr) die Zahl der Ausreißer; welche es sind
-    // und was sie kosten, steht einmal in Kopf und Beobachtung (Review U4, wie die Lage in U3)
+    // die Zahl der Ausreißer; welche es sind und was sie kosten, steht einmal in Kopf und Beobachtung (wie bei der
+    // Lage)
     tile(
       "Ausreißer",
       "ausreisser",

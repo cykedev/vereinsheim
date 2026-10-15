@@ -14,9 +14,9 @@ export interface PeriodResultProps {
 }
 
 /**
- * Ergebnis-Box der Seite eines Zeitraums (Plan L3, D13), wie `CardResult`: Ø je Schuss als Mittel der Scheiben
+ * Ergebnis-Box der Seite eines Zeitraums, wie `CardResult`: Ø je Schuss als Mittel der Scheiben
  * groß, darunter Scheiben und Wertungsschüsse und die beste Scheibe unter der häufigsten Schusszahl; mit Vergleich
- * der Unterschied mit Urteil („deutlich“ nur neben einem Urteil, U3). Auf dem Telefon im Kopf, ab 768 px als Box.
+ * der Unterschied mit Urteil („deutlich“ nur neben einem Urteil). Auf dem Telefon im Kopf, ab 768 px als Box.
  */
 export function PeriodResult({ model, timeZone, onHelp, className }: PeriodResultProps) {
   const { summary, comparison, compareRange, compareShared } = model

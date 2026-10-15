@@ -1,8 +1,8 @@
-// Einlesen eines Stapels von der Brücke (SP-1.6 b, Plan `plans/2026-10-13-spiegel-ingest.md`): Epoche, Zustimmung,
-// Sperren, verdeckte Wertung, Ablage der Rohdaten und Deutung durch den Adapter. Die HTTP-Schicht (`http.ts`) prüft
-// vorher Token, Größe und Vertrag. Last: Rohdaten werden je Snapshot abgelegt (Zeilenversionen, billig), der Adapter
-// läuft je Scheibe nur für den neuesten Stand des Stapels (D5); ändert sich nur das Lebenszeichen, wird es nur vermerkt
-// (D1). Was nicht zugestimmt ist, wird nicht gespeichert (D12, [[spiegel-privacy]]).
+// Einlesen eines Stapels von der Brücke: Epoche, Zustimmung, Sperren, verdeckte Wertung, Ablage der Rohdaten und
+// Deutung durch den Adapter. Die HTTP-Schicht (`http.ts`) prüft vorher Token, Größe und Vertrag. Last: Rohdaten werden
+// je Snapshot abgelegt (Zeilenversionen, billig), der Adapter läuft je Scheibe nur für den neuesten Stand des Stapels;
+// ändert sich nur das Lebenszeichen, wird es nur vermerkt. Was nicht zugestimmt ist, wird nicht gespeichert
+// ([[spiegel-privacy]]).
 
 import type { DiscardReason, SnapshotOutcome } from "@vereinsheim/ingest-contract/api"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
@@ -49,7 +49,7 @@ type SourceState = { sourceId: number; confirmed: boolean }
  * Die Quelle einer Epoche (SF-23): Die erste Epoche einer Anlage gilt mit dem ersten Snapshot. Eine weitere legt Spiegel
  * nur unbestätigt an und nimmt aus ihr nichts an: Grabsteine und Sperren gelten je Epoche, eine fremde Epoche brächte
  * sonst Entferntes zurück. Die Brücke eröffnet nie selbst eine (sie meldet nur `possible-reset`); käme eine, zeigt die
- * Übersicht des Admins einen Hinweis (P2c, D0: kein Knopf dafür).
+ * Übersicht des Admins einen Hinweis (kein Knopf dafür).
  */
 async function sourceOf(db: Db, siteId: number, epoch: number): Promise<SourceState> {
   const existing = await db.source.findUnique({
@@ -67,7 +67,7 @@ async function sourceOf(db: Db, siteId: number, epoch: number): Promise<SourceSt
   return { sourceId: created.id, confirmed: created.confirmedAt !== null }
 }
 
-/** wem eine Scheibe gehört und ob der Besitz noch auf die Bestätigung der ersten Scheibe wartet (SP-1.7 a2) */
+/** wem eine Scheibe gehört und ob der Besitz noch auf die Bestätigung der ersten Scheibe wartet */
 interface Owner {
   userId: string
   pending: boolean
@@ -109,7 +109,7 @@ async function rankingFor(db: Db, siteId: number, name: string | null): Promise<
   return ranking.id
 }
 
-/** die Disziplin der Anlage; neu angelegt mit dem, was der Fachkern über sie weiß (D20) */
+/** die Disziplin der Anlage; neu angelegt mit dem, was der Fachkern über sie weiß */
 async function disciplineFor(
   db: Db,
   siteId: number,
@@ -191,8 +191,8 @@ async function cardsOfKey(db: Db, sourceId: number, scheibenId: number) {
 }
 
 /**
- * nur das Lebenszeichen bewegt: die Scheibe des jüngsten Zyklus ist wieder offen (SF-10), sonst nichts (D1). Das
- * Lebenszeichen wandert nur vorwärts, auch wenn ein älterer Stand gleichzeitig geschrieben wird (Review).
+ * nur das Lebenszeichen bewegt: die Scheibe des jüngsten Zyklus ist wieder offen (SF-10), sonst nichts. Das
+ * Lebenszeichen wandert nur vorwärts, auch wenn ein älterer Stand gleichzeitig geschrieben wird.
  */
 async function touchLifesign(db: Db, sourceId: number, scheibenId: number, atMs: number) {
   const [card] = await cardsOfKey(db, sourceId, scheibenId)
@@ -251,12 +251,12 @@ async function adaptAndWrite(
   const card = result.card
   // derselbe Durchgang ist die Scheibe eines Zyklus mit nahem Beginn; sonst ein neuer Zyklus (SF-77)
   const same = cards.find((c) => Math.abs(c.startedAt.getTime() - card.startedAtMs) <= SAME_CARD_MS)
-  // ein neuer Zyklus über allen bisherigen, auch denen entfernter Scheiben (Grabstein, Sperre; Review SP-1.7 a2)
+  // ein neuer Zyklus über allen bisherigen, auch denen entfernter Scheiben (Grabstein, Sperre)
   const cycle = same
     ? same.cycle
     : ((await maxCycleOfKey(db, { sourceId, scheibenId: snapshot.scheibenId })) ?? -1) + 1
   // eine Scheibe gehört dem, dessen Zustimmung sie brachte; trägt sie danach eine andere SportpassID, wird nichts
-  // geschrieben, sonst landeten fremde Schüsse beim ersten Besitzer (Review, SF-37). Der Admin klärt es.
+  // geschrieben, sonst landeten fremde Schüsse beim ersten Besitzer (SF-37). Der Admin klärt es.
   if (
     same &&
     (same.ownerId !== ownerId ||
@@ -274,7 +274,7 @@ async function adaptAndWrite(
         scheibenId: card.scheibenId,
         cycle,
         ownerId,
-        // nur beim Anlegen: bis der Schütze die erste Scheibe bestätigt, wartet jede neue (SP-1.7 a2)
+        // nur beim Anlegen: bis der Schütze die erste Scheibe bestätigt, wartet jede neue
         ownerPending: owner.pending,
         sportpassId: card.sportpassId,
         disciplineId: discipline.id,
@@ -322,7 +322,7 @@ export async function ingestBatch(
   const consents = await consentsOf(db, target.siteId)
   /**
    * je Scheibe der neueste Stand dieses Stapels, den der Adapter deuten muss: neu gespeichert, oder schon da, aber noch
-   * nicht gedeutet (ein Fehler beim letzten Mal; Review)
+   * nicht gedeutet (ein Fehler beim letzten Mal)
    */
   const toAdapt = new Map<
     string,
@@ -371,7 +371,7 @@ export async function ingestBatch(
     }
     const key = `${source.sourceId}:${snapshot.scheibenId}`
     // vorab, je Stapel einmal je Scheibe (die meisten Stände sind Lebenszeichen); `storeSnapshot` prüft unter seiner
-    // Sperre noch einmal, damit ein „Nicht meine“ mitten im Stapel nicht überschrieben wird (Review SP-1.7 a2)
+    // Sperre noch einmal, damit ein „Nicht meine“ mitten im Stapel nicht überschrieben wird
     if (!blocked.has(key))
       blocked.set(
         key,
@@ -420,7 +420,7 @@ export async function ingestBatch(
     result(stored.outcome)
   }
 
-  // jede Scheibe für sich: ein Fehler bei einer hält die übrigen nicht auf (Review); ein unerwarteter Fehler (Datenbank)
+  // jede Scheibe für sich: ein Fehler bei einer hält die übrigen nicht auf; ein unerwarteter Fehler (Datenbank)
   // kommt am Ende als Fehler der Anfrage zurück, die Brücke wiederholt, und das Nachholen oben deutet dann
   let failure: unknown = null
   for (const item of toAdapt.values()) {

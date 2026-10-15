@@ -76,7 +76,7 @@ describe("SeasonStandingsTable — mobile Spaltenwahl", () => {
   })
 
   it.each(["rings", "ringteiler"] as const)(
-    "lässt '%s' bei den bisherigen Spalten (Ringe + Ringteiler)",
+    "lässt '%s' bei den klassischen Spalten (Ringe + Ringteiler)",
     (sort) => {
       const html = render(sort)
       expect(isHiddenOnMobile(html, "Beste Ringe")).toBe(false)

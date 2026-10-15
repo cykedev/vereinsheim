@@ -14,7 +14,7 @@ import {
   unitsPerPixel,
 } from "./geometry"
 
-// Erwartungswerte von Hand aus den Regeln (Spielwiese, spiegel-ui-design „Zeichnen der Scheibe“):
+// Erwartungswerte von Hand aus den Regeln (spiegel-ui-design „Zeichnen der Scheibe“):
 // LP Ring 1 Radius 5,75 + 9 · 8 = 77,75 mm, LG 0,25 + 9 · 2,5 = 22,75 mm, Kaliber 4,5 mm (halb 2,25).
 
 const close = (actual: { x: number; y: number; w: number }, x: number, y: number, w: number) => {

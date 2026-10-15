@@ -1,6 +1,6 @@
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
-// Die Wertung einer Scheibe und einer Familie (Plan `plans/2026-10-12-spiegel-wertung.md`, User, 12. Oktober 2026):
+// Die Wertung einer Scheibe und einer Familie:
 // Statt einer Wertung des Geräts hat jede Scheibe ihre (gewählt, sonst wie am Stand bzw. amtlich) und jede Familie ihre
 // für die Schnitte (gespeichert, sonst die häufigste ihrer Scheiben). Reine Funktionen.
 

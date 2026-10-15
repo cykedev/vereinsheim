@@ -11,7 +11,7 @@ import type { PlayoffRound } from "../types"
 
 /**
  * Setzt manuell die nächste Runde an, wenn alle Matches der aktuellen Runde abgeschlossen sind.
- * Nur Admin; ersetzt das frühere automatische Seeding.
+ * Nur Admin.
  */
 export async function advanceRound(competitionId: string): Promise<ActionResult> {
   const session = await getAuthSession()

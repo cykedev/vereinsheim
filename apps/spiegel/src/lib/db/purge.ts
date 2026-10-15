@@ -2,9 +2,8 @@ import type { Prisma } from "@/generated/prisma/client"
 
 import { SAME_CARD_MS, startHintMs } from "./blocks"
 
-// Scheiben endgültig entfernen (SP-1.7 a2, Plan `plans/2026-10-14-spiegel-erste-scheibe.md`, D6): „Nicht meine“ bei der
-// ersten Scheibe und der Papierkorb (P2b, `plans/2026-10-14-spiegel-papierkorb.md`, D2). Entfernt werden die Scheibe samt
-// Ableitungen und ihre Rohdaten; ein Grabstein oder eine weiche Sperre hält Brücke und Einlesen davon ab, sie
+// Scheiben endgültig entfernen: „Nicht meine“ bei der ersten Scheibe und der Papierkorb. Entfernt werden die Scheibe
+// samt Ableitungen und ihre Rohdaten; ein Grabstein oder eine weiche Sperre hält Brücke und Einlesen davon ab, sie
 // zurückzubringen ([[spiegel-privacy]]).
 
 type Tx = Prisma.TransactionClient
@@ -15,14 +14,14 @@ type Tx = Prisma.TransactionClient
  */
 export type PurgeBlock = { tombstone: TombstoneReason } | { lock: true }
 
-/** warum ein Grabstein steht; eine Stelle für Entfernen, Papierkorb und Admin (Review P2b) */
+/** warum ein Grabstein steht; eine Stelle für Entfernen, Papierkorb und Admin */
 export const NOT_MINE = "nicht-meine"
 export type TombstoneReason = typeof NOT_MINE
 
 /**
  * Sperrt eine Scheibe in der Folge des Schreibens (`writeRevision`, `storeSnapshot`): erst das Advisory-Lock ihrer Quelle
  * und ScheibenID, dann ihre Zeile (`FOR UPDATE`). Wer eine Scheibe prüft und danach entfernt oder ändert, ruft das zuerst;
- * die umgekehrte Folge konnte mit dem Einlesen derselben Scheibe über Kreuz warten (Review P2b). Der Schlüssel einer
+ * die umgekehrte Folge könnte mit dem Einlesen derselben Scheibe über Kreuz warten. Der Schlüssel einer
  * Scheibe ändert sich nicht (außer eine aus dem PDF bekommt ihre Rohdaten). false, wenn es sie nicht gibt.
  */
 export async function lockCard(tx: Tx, cardId: string): Promise<boolean> {
@@ -43,7 +42,7 @@ export async function lockCard(tx: Tx, cardId: string): Promise<boolean> {
  *
  * Welche Stände zu ihr gehören, entscheidet ihr **Beginn** aus den Trefferzeiten (`startHintMs`), nicht die Beobachtung:
  * Die Brücke liest auch Wochen später nach, und ein später nachgelesener früherer Zyklus derselben ScheibenID darf nicht
- * mitgehen (Review). Ein Stand, auf den noch die Revision einer anderen Scheibe zeigt, bleibt. Eine schon entfernte
+ * mitgehen. Ein Stand, auf den noch die Revision einer anderen Scheibe zeigt, bleibt. Eine schon entfernte
  * Scheibe (ein zweiter Aufruf zugleich) wird übersprungen; eine ohne Quelle (nur ein PDF) hat keine Rohdaten und ist ein
  * Fehler des Aufrufers.
  *

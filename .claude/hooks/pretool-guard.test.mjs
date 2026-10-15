@@ -2,11 +2,10 @@
 // coverage — no process.exit / stdin side effects. Run:
 // node --test .claude/hooks/pretool-guard.test.mjs
 //
-// These lock in the confirmed bypasses found in review: a quoted dangerous target
-// ("$HOME"), split flags (-r -f), BSD/macOS-style -Rf, a `sudo`/`doas` prefix on rm,
-// a commit message merely mentioning "source .env" false-positiving the .env-read
-// guard, and a value-taking `sudo -u`/`-g` flag defeating the wrapper-skip (found in
-// the harness-guard-sync /review pass, Juli 2026).
+// These lock in known bypasses: a quoted dangerous target ("$HOME"), split flags
+// (-r -f), BSD/macOS-style -Rf, a `sudo`/`doas` prefix on rm, a commit message merely
+// mentioning "source .env" false-positiving the .env-read guard, and a value-taking
+// `sudo -u`/`-g` flag defeating the wrapper-skip.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 

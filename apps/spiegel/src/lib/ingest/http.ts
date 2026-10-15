@@ -1,4 +1,4 @@
-// HTTP-Schicht der Ingest-API v1 (Plan `plans/2026-10-13-spiegel-ingest.md`, D2–D4, D10, D15): Grenzen, bevor
+// HTTP-Schicht der Ingest-API v1: Grenzen, bevor
 // gerechnet wird. Die Handler nehmen eine `Request` und geben eine `Response`, damit Tests sie ohne Next prüfen; die
 // Route Handler unter `src/app/api/ingest/v1/` reichen nur durch. Logs tragen nur Zahlen und feste Codes (SF-59).
 
@@ -27,10 +27,10 @@ import {
 } from "./bridges"
 import { ingestBatch } from "./ingest"
 
-/** Bytegrenzen je Anfrage (D2): ein Stapel bis 4 MiB, alles andere bis 16 KiB */
+/** Bytegrenzen je Anfrage: ein Stapel bis 4 MiB, alles andere bis 16 KiB */
 export const MAX_SNAPSHOTS_BYTES = 4 * 1024 * 1024
 export const MAX_SMALL_BYTES = 16 * 1024
-/** so viele Stapel gleichzeitig in Arbeit (D3); die übrigen bekommen 503 mit `Retry-After` */
+/** so viele Stapel gleichzeitig in Arbeit; die übrigen bekommen 503 mit `Retry-After` */
 export const MAX_CONCURRENT_BATCHES = 2
 
 const MESSAGES: Record<ApiErrorCode, string> = {
@@ -89,7 +89,7 @@ export const stdoutLog: Log = (event, fields = {}) =>
   process.stdout.write(`${JSON.stringify({ at: new Date().toISOString(), event, ...fields })}\n`)
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Körper mit Grenze (D2)
+// Körper mit Grenze
 // ─────────────────────────────────────────────────────────────────────────────
 
 type Body = { ok: true; value: unknown } | { ok: false; response: Response }
@@ -128,7 +128,7 @@ export async function readJson(request: Request, maxBytes: number): Promise<Body
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Ratenbegrenzung und Parallelität (D3, D4)
+// Ratenbegrenzung und Parallelität
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -141,7 +141,7 @@ export class RateLimiter {
   constructor(
     private readonly capacity: number,
     private readonly windowMs: number,
-    /** höchstens so viele Schlüssel; der älteste fällt heraus (Review: gefälschte Adressen ließen die Karte wachsen) */
+    /** höchstens so viele Schlüssel; der älteste fällt heraus (gefälschte Adressen ließen die Karte sonst wachsen) */
     private readonly maxKeys = 5_000
   ) {}
 
@@ -218,12 +218,12 @@ export interface Limits {
   state: RateLimiter
   pairPerIp: RateLimiter
   pairAll: RateLimiter
-  /** fehlgeschlagene Anmeldungen mit Token je Adresse: vor der Datenbank begrenzt (Review) */
+  /** fehlgeschlagene Anmeldungen mit Token je Adresse: vor der Datenbank begrenzt */
   authFailures: RateLimiter
   batches: Gate
 }
 
-/** die Grenzen nach D3 und D4; je Prozess einmal (`defaultLimits`), in Tests frisch */
+/** Ratenbegrenzung und Parallelität; je Prozess einmal (`defaultLimits`), in Tests frisch */
 export function createLimits(): Limits {
   return {
     snapshots: new RateLimiter(20, 10_000),
@@ -258,7 +258,7 @@ const clientKey = (request: Request, trust: boolean) =>
 
 /**
  * Anmeldung der Brücke; eine Antwort heißt: abgelehnt. Wer zu oft mit falschem Token kommt, wird vor der Datenbank
- * abgewiesen, damit eine Flut den Pool nicht bindet (Review).
+ * abgewiesen, damit eine Flut den Pool nicht bindet.
  */
 async function authenticate(
   request: Request,
@@ -302,7 +302,7 @@ function internal(deps: ReturnType<typeof setup>, event: string, error: unknown)
 export async function handlePair(request: Request, deps: IngestDeps): Promise<Response> {
   const d = setup(deps)
   try {
-    // erst der gemeinsame Eimer: gefälschte Adressen sollen ihn nicht umgehen (Review)
+    // erst der gemeinsame Eimer: gefälschte Adressen sollen ihn nicht umgehen
     const wait =
       d.limits.pairAll.take("all", d.now()) ??
       d.limits.pairPerIp.take(clientKey(request, d.trust), d.now())
@@ -333,7 +333,7 @@ export async function handleSnapshots(request: Request, deps: IngestDeps): Promi
   try {
     const bridge = await authenticate(request, d)
     if (bridge instanceof Response) return bridge
-    // erst der Platz, dann ein Token: wer nach 503 wartet, verbraucht keinen (Review)
+    // erst der Platz, dann ein Token: wer nach 503 wartet, verbraucht keinen
     if (!d.limits.batches.tryEnter()) {
       d.log("ingest.busy", { bridge: bridge.bridgeId })
       return apiError("busy", { retryAfterSeconds: 2 })

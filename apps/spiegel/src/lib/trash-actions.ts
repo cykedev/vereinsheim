@@ -9,7 +9,7 @@ import { lockCard, purgeCards } from "@/lib/db/purge"
 import { trashEndsAt } from "@/lib/db/trash"
 import type { ActionResult } from "@/lib/types"
 
-// Löschen mit Papierkorb (P2b, Plan `plans/2026-10-14-spiegel-papierkorb.md`, D3): nur eigene Scheiben, jede Action
+// Löschen mit Papierkorb: nur eigene Scheiben, jede Action
 // unter der Sperre der Zeile, Prüfung und Änderung in einer Transaktion (§9). Eine wartende Scheibe in „Offen“ hat
 // „Nicht meine“ und lässt sich hier nicht löschen.
 

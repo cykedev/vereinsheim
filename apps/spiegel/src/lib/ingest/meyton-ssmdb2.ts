@@ -1,4 +1,4 @@
-// Adapter `meyton-ssmdb2@9` (SP-1.6 b, [[spiegel-ingest-pipeline]]): ein Snapshot v1 mit den rohen Zeilen der SSMDB2 →
+// Adapter `meyton-ssmdb2@9` ([[spiegel-ingest-pipeline]]): ein Snapshot v1 mit den rohen Zeilen der SSMDB2 →
 // Scheibe und Schüsse für `writeRevision`. Eine reine Funktion ohne Datenbank; was sie über den vorigen Stand wissen
 // muss (Lebenszeichen, gemessener Versatz der Uhr), kommt im Kontext. Abgenommen an den Fällen aus
 // `@vereinsheim/ssmdb2-cases` (Merkmale, Vollständigkeit, zählende Schüsse, Merkmale je Schuss).
@@ -52,7 +52,7 @@ const CLOCK_JUMP_MS = 86_400_000
 /**
  * Das Lebenszeichen „läuft“ nur, wenn der vorige Stand vor höchstens so langer Zeit beobachtet wurde: Nach einem Ausfall
  * der Brücke oder in einem neuen Zyklus der ScheibenID (SF-77) mäße die Beobachtung sonst die Dauer des Ausfalls statt
- * der Uhr des Stands (Review). Die Brücke schickt ein reines Lebenszeichen höchstens alle 30 s.
+ * der Uhr des Stands. Die Brücke schickt ein reines Lebenszeichen höchstens alle 30 s.
  */
 export const LIFESIGN_WINDOW_MS = 60_000
 /** ruhend nach so langer Zeit ohne Lebenszeichen (SF-10) */
@@ -409,7 +409,7 @@ export function adaptSnapshot(snapshot: SnapshotV1, context: AdapterContext): Ad
     plannedShots: parseDisciplineId(discipline.meytonId).plannedShots,
   })
 
-  // nur Kennungen aus `CARD_FLAGS`: Die Oberfläche benennt jede (Review, 15. Oktober 2026)
+  // nur Kennungen aus `CARD_FLAGS`: Die Oberfläche benennt jede
   const flags: CardFlag[] = []
   if (
     completeness === "nur-probe" ||

@@ -33,7 +33,7 @@ const fromList = (patch: Partial<ListQuery>): CardRoute["origin"] => ({
   query: { ...DEFAULT_LIST, family: "lg-freihand", ...patch },
 })
 
-describe("Blättern im Kontext (Plan N3, D5)", () => {
+describe("Blättern im Kontext", () => {
   it("vorige ist die ältere, nächste die neuere; an den Enden und ohne die Scheibe null", () => {
     const ids = ["w1", "w2", "w3"]
     expect(neighbours(ids, "w2")).toEqual({ prev: "w1", next: "w3" })
@@ -42,7 +42,7 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     expect(neighbours(ids, "x")).toEqual({ prev: null, next: null })
   })
 
-  it("aus der Liste mit Filter „Liste“: nur die Scheiben dieser Liste und die Scheibe selbst (Review)", () => {
+  it("aus der Liste mit Filter „Liste“: nur die Scheiben dieser Liste und die Scheibe selbst", () => {
     const RWK = { id: 3, name: "RWK_LP" }
     const listed = INPUT.map((c) =>
       ["w1", "w3", "t3"].includes(c.card.id) ? { ...c, list: RWK } : c
@@ -115,7 +115,7 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     ])
   })
 
-  it("eine Familie ohne eigene Scheiben in der Herkunft gilt wie keine: die der Scheibe (Review SP-1.8)", () => {
+  it("eine Familie ohne eigene Scheiben in der Herkunft gilt wie keine: die der Scheibe", () => {
     const pistol: ListInputCard[] = [
       ...INPUT,
       { card: card_("p2", 2, [96]), family: "lp-freihand" },
@@ -136,7 +136,7 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     ).toEqual(["p1", "p2", "p3"])
   })
 
-  it("ohne Familie in der Herkunft gilt die Familie der Scheibe selbst (Review N3)", () => {
+  it("ohne Familie in der Herkunft gilt die Familie der Scheibe selbst", () => {
     const pistol: ListInputCard[] = [
       ...INPUT,
       { card: card_("p2", 2, [96]), family: "lp-freihand" },
@@ -193,7 +193,7 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     ).toEqual(["t1", "w1", "t2", "w2", "w3", "t3", "pp"])
   })
 
-  it("die Scheibe selbst bleibt im Kontext, auch wenn sie nicht mehr zum Filter passt (Art umgestellt, Review)", () => {
+  it("die Scheibe selbst bleibt im Kontext, auch wenn sie nicht mehr zum Filter passt (Art umgestellt)", () => {
     // w2 ist ein Wettkampf, geöffnet aus der Liste „Training“: an ihrer Stelle in der zeitlichen Folge
     expect(contextCardIds(card("w2", fromList({ kind: "training" })), context)).toEqual([
       "t1",
@@ -224,7 +224,7 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     expect(contextCardIds(card("w2", null), context)).toBeNull()
   })
 
-  it("von Start: die Scheiben des letzten Abends, alle Familien, in zeitlicher Folge (Plan N5, D8)", () => {
+  it("von Start: die Scheiben des letzten Abends, alle Familien, in zeitlicher Folge", () => {
     // t3 am 27.09. um 12:00, eine Luftpistole am Abend, ein Luftgewehr um 01:00 danach (zählt zum Abend davor)
     const evening: ListInputCard[] = [
       ...INPUT,

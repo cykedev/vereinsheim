@@ -1,5 +1,5 @@
-// Package watch erkennt Änderungen in der Ablage und baut daraus Snapshots (SP-1.4 a,
-// plans/2026-10-13-spiegel-bruecke-leser.md): ohne eigenen Zustand auf der Platte, nur im Arbeitsspeicher (ADR-027).
+// Package watch erkennt Änderungen in der Ablage und baut daraus Snapshots: ohne eigenen Zustand auf der Platte, nur
+// im Arbeitsspeicher (ADR-027).
 //
 // Eine Runde liest in einer Transaktion das Lebenszeichen aller Scheiben und dann die Scheiben ganz, die neu sind,
 // deren Lebenszeichen sich bewegt hat, die noch auf Bestätigung warten oder die aktiv sind. Ein Snapshot entsteht,
@@ -19,7 +19,7 @@ import (
 type Lifesign struct {
 	ID    int32
 	Stamp string
-	// `Scheiben.SportpassID` als Text, nil ohne (P2d): ordnet eine Scheibe einem Auftrag zum Nachladen zu, ohne sie ganz
+	// `Scheiben.SportpassID` als Text, nil ohne: ordnet eine Scheibe einem Auftrag zum Nachladen zu, ohne sie ganz
 	// zu lesen
 	Sportpass *string
 }
@@ -41,9 +41,9 @@ type Source interface {
 	Round(ctx context.Context, choose func(lifesigns []Lifesign, sourceNow *string) []int32) (Round, error)
 }
 
-// Config sind die Regeln der Erkennung; `Defaults` sind die des Plans.
+// Config sind die Regeln der Erkennung; `Defaults` sind die voreingestellten.
 type Config struct {
-	// Epoche der Quelle (SF-23); in Teil b aus dem Zustand in Spiegel
+	// Epoche der Quelle (SF-23), aus dem Zustand in Spiegel
 	Epoch int
 	// so lange nach der letzten Bewegung des Lebenszeichens wird eine Scheibe jede Runde ganz gelesen: fängt Korrektur
 	// und Löschen ohne neues Lebenszeichen (SF-21, SF-22)
@@ -58,7 +58,7 @@ type Config struct {
 	LifesignEvery time.Duration
 }
 
-// Defaults sind die Regeln aus dem Plan.
+// Defaults sind die voreingestellten Regeln.
 var Defaults = Config{
 	Epoch:         1,
 	ActiveFor:     20 * time.Minute,
@@ -86,11 +86,11 @@ type card struct {
 	sentContent string
 	sentAt      time.Time
 	skipped     string // Code, mit dem die letzte Lesung übersprungen wurde (einmal melden)
-	// `Scheiben.SportpassID` aus dem Lebenszeichen; ein offener Auftrag zum Nachladen will sie (P2d)
+	// `Scheiben.SportpassID` aus dem Lebenszeichen; ein offener Auftrag zum Nachladen will sie
 	sportpass *string
 }
 
-// handled: in diesem Lauf gelesen, kein Stand wartet auf Spiegel, und seither ist nichts neu zu lesen (P2d)
+// handled: in diesem Lauf gelesen, kein Stand wartet auf Spiegel, und seither ist nichts neu zu lesen
 func handled(c *card) bool { return !c.readAt.IsZero() && !c.waiting && !c.dirty }
 
 // Skip ist eine Scheibe, die die Runde nicht melden kann, mit festem Code ohne Inhalt (SF-59).
@@ -125,13 +125,13 @@ type Watcher struct {
 	catchUpFrom string
 	// in der letzten Runde bewegte sich etwas oder war aktiv: das Nachholen wartet und hält den Takt nicht hoch
 	live bool
-	// offene Aufträge zum Nachladen (P2d): will ein Auftrag die Scheibe mit dieser SportpassID? nil: keiner
+	// offene Aufträge zum Nachladen: will ein Auftrag die Scheibe mit dieser SportpassID? nil: keiner
 	history func(sportpass string) bool
 	// Uhr der letzten gelungenen Runde: welche Scheiben in ihr in der Ablage standen
 	roundAt time.Time
 }
 
-// SetHistory legt fest, welche Scheiben offene Aufträge zum Nachladen wollen (P2d), nach ihrer SportpassID als Text;
+// SetHistory legt fest, welche Scheiben offene Aufträge zum Nachladen wollen, nach ihrer SportpassID als Text;
 // nil heißt keiner. Gelesen werden sie wie das Nachholen: nur, wenn niemand schießt (SF-52), mit dem Budget je Runde.
 func (w *Watcher) SetHistory(wanted func(sportpass string) bool) { w.history = wanted }
 
@@ -141,7 +141,7 @@ func (w *Watcher) wantsHistory(sportpass *string) bool {
 
 // Reopen: Ein Auftrag zum Nachladen ist neu eröffnet (Meldungen aufgehoben, neu bestätigt). Was er will, liest die
 // Erkennung noch einmal und meldet es neu, auch was sie in diesem Lauf schon gemeldet oder zurückgehalten hat; wie das
-// Nachladen nur im Leerlauf (Review P2d).
+// Nachladen nur im Leerlauf.
 func (w *Watcher) Reopen(wanted func(sportpass string) bool) {
 	for _, c := range w.cards {
 		if c.sportpass != nil && wanted(*c.sportpass) {
@@ -240,7 +240,7 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 		rank   int
 		stamp  string
 		readAt time.Time
-		// nur im Leerlauf: Nachholen, Nachladen, und was davon noch auf Spiegel wartet (Review P2d)
+		// nur im Leerlauf: Nachholen, Nachladen, und was davon noch auf Spiegel wartet
 		idle bool
 	}
 	var picks []pick
@@ -255,7 +255,7 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 		switch {
 		case c != nil && c.waiting:
 			// wartet eine Scheibe, die sich in diesem Lauf nie bewegt hat (Nachholen, Nachladen), bleibt sie liegen, solange
-			// geschossen wird: Scheitert der Upload länger, belegte sie sonst jede Runde das Budget (Review P2d)
+			// geschossen wird: Scheitert der Upload länger, belegte sie sonst jede Runde das Budget
 			p.rank, p.idle = 0, c.movedAt.IsZero()
 		case w.dirty(l, from):
 			p.rank = 1
@@ -263,7 +263,7 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 			p.rank, p.readAt = 2, c.readAt
 		case w.backfill(l, from):
 			p.rank, p.idle = 3, true
-		// ein Auftrag zum Nachladen will sie (P2d): wie das Nachholen, nur im Leerlauf
+		// ein Auftrag zum Nachladen will sie: wie das Nachholen, nur im Leerlauf
 		case w.wantsHistory(l.Sportpass) && (c == nil || !handled(c)):
 			p.rank, p.idle = 3, true
 		}
@@ -412,7 +412,7 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		if c.waiting && c.seenAt.Equal(now) {
 			result.Backlog++
 		}
-		// ein offener Auftrag zum Nachladen hält den Takt hoch, solange niemand schießt (P2d)
+		// ein offener Auftrag zum Nachladen hält den Takt hoch, solange niemand schießt
 		history := w.wantsHistory(c.sportpass) && !handled(c)
 		// nur, was in dieser Runde in der Ablage stand: Eine gelöschte Scheibe, die noch wartete, hielte die Brücke sonst
 		// einen Tag lang im Sekundentakt
@@ -436,7 +436,7 @@ func (w *Watcher) Delivered(s contract.Snapshot) {
 }
 
 // Resend vergisst den bestätigten Stand dieser Scheiben, damit die nächsten Runden sie neu lesen und schicken (eine
-// neue Zustimmung, eine bestätigte Epoche). Was die Brücke nicht mehr im Speicher hat, holt erst das Nachholen (Teil c).
+// neue Zustimmung, eine bestätigte Epoche). Was die Brücke nicht mehr im Speicher hat, holt erst das Nachholen.
 func (w *Watcher) Resend(ids []int32) {
 	for _, id := range ids {
 		if c := w.cards[id]; c != nil {

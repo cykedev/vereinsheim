@@ -20,8 +20,8 @@ import type { PendingItem } from "@/lib/open"
 const weitere = (n: number) => `und ${n} weitere unter dieser Nummer`
 
 /**
- * „Offen“ (SP-1.7 a2, D3): je SportpassID die jüngste wartende Scheibe (P2d) mit „Ja, meine“ und „Nicht meine“. Erst
- * danach stehen die Scheiben in Start, Liste und Fortschritt.
+ * „Offen“: je SportpassID die jüngste wartende Scheibe mit „Ja, meine“ und „Nicht meine“. Erst danach stehen die
+ * Scheiben in Start, Liste und Fortschritt.
  */
 export function OpenScreen({
   items,
@@ -39,7 +39,7 @@ export function OpenScreen({
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
             Offen
           </h1>
-          {/* ohne Wartendes kein „Spiegel hat Scheiben … geholt“ (Review P2f) */}
+          {/* ohne Wartendes kein „Spiegel hat Scheiben … geholt“ */}
           {items.length > 0 && (
             <p className="text-foreground-2">
               Spiegel hat Scheiben unter deiner Sportpassnummer geholt. Prüf die jüngste: Ist das

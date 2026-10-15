@@ -86,10 +86,9 @@ export interface BestOfStandingRow {
   duelsLost: number
   duelDiff: number
   /**
-   * Bestes Einzelergebnis. Seit 2026-06-24 KEIN Sortier-/Anzeige-Kriterium mehr — der direkte
-   * Vergleich (siehe `directComparison`) ersetzt den Wert als Kriterium 4. Wird weiter berechnet,
-   * damit ein etwaiger Revert nur eine Stelle berührt (vgl. graph-captured
-   * "best-of-standings-direct-comparison-tiebreak").
+   * Bestes Einzelergebnis. KEIN Sortier-/Anzeige-Kriterium — Kriterium 4 ist der direkte
+   * Vergleich (siehe `directComparison`). Wird trotzdem berechnet, damit ein Wechsel zurück auf
+   * diesen Wert nur eine Stelle berührt (vgl. [[best-of-standings-direct-comparison-tiebreak]]).
    */
   bestRingteiler: number | null
   bestRings: number | null

@@ -14,9 +14,9 @@ import {
 import { urlFromRoute, type Route } from "./routes"
 
 /**
- * Wie Links Adressen bilden und ob ein Klick abgefangen wird (Plan N3, D3). Ohne Provider: `<a>` mit der Adresse
+ * Wie Links Adressen bilden und ob ein Klick abgefangen wird. Ohne Provider: `<a>` mit der Adresse
  * aus `urlFromRoute`, der Browser folgt ihm. Ein Provider kann jeden Klick abfangen (`navigate`);
- * die App setzt `next/link` als Komponente (N7).
+ * die App setzt `next/link` als Komponente.
  */
 export interface RouteLinkContextValue {
   href?: (route: Route) => string

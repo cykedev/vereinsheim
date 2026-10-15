@@ -24,8 +24,8 @@ interface SegmentedProps<T extends string> {
   scroll?: boolean
   /**
    * bricht über mehrere Zeilen um, statt seitlich zu scrollen: für viele oder lange Möglichkeiten (Listen aus Meyton,
-   * Merkmale), bei denen ein seitlich scrollender Umschalter Möglichkeiten versteckt (User, 15. Oktober 2026: „ich kann
-   * hier nicht alle listen wählen“). Radiogruppe, Tab und Pfeiltasten bleiben
+   * Merkmale), bei denen ein seitlich scrollender Umschalter Möglichkeiten versteckt. Radiogruppe, Tab und Pfeiltasten
+   * bleiben
    */
   wrap?: boolean
   className?: string

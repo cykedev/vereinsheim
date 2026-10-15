@@ -33,9 +33,9 @@ describe("tempo", () => {
     expect(tempo([0, s(180) + 1]).pausesMs).toEqual([s(180) + 1])
   })
 
-  it("Pause relativ zum eigenen Takt: über dem Doppelten des Medians (User, 10. und 15. Oktober 2026)", () => {
-    // acht Abstände zu 40 s und einer zu 90 s: Median 40 s, Schwelle 80 s (mit dem 2,5-Fachen bis 15. Oktober 2026
-    // waren es 100 s, und 90 s war keine Pause)
+  it("Pause relativ zum eigenen Takt: über dem Doppelten des Medians", () => {
+    // acht Abstände zu 40 s und einer zu 90 s: Median 40 s, Schwelle 80 s (mit dem 2,5-Fachen wären es 100 s, und
+    // 90 s wäre keine Pause)
     const times = [0, 40, 80, 120, 160, 250, 290, 330, 370, 410].map(s)
     const pace = tempo(times)
     expect(pace.pauseThresholdMs).toBe(s(80))

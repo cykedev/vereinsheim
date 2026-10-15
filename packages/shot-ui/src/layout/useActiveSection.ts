@@ -12,7 +12,7 @@ const LINE_PX = 96
 /**
  * Aktiver Abschnitt: der späteste in der Seite, dessen Anfang schon an der Leiste angekommen ist. Ein Sprung
  * über die Leiste legt den Abschnitt genau unter sie und macht ihn so aktiv, auch wenn er kürzer ist als das
- * Fenster (die Zahlen in voller Breite, User, 8. Oktober 2026); ein Anteil der Fensterhöhe hätte dann schon den
+ * Fenster (die Zahlen in voller Breite); ein Anteil der Fensterhöhe hätte dann schon den
  * nächsten gezählt. Über den Serien bleibt die Scheibe aktiv, am Desktop löst ein Abschnitt rechts die feste
  * Scheibe ab. Oben auf der Seite, bevor einer die Leiste erreicht, der erste; am Ende der Seite der letzte, denn
  * ein kurzer letzter Abschnitt erreicht die Leiste sonst nie.

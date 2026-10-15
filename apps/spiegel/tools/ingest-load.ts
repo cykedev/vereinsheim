@@ -1,4 +1,4 @@
-// Lastskript der Ingest-API (Plan `plans/2026-10-13-spiegel-ingest.md`, D9): ein Trainingsabend mit mehreren belegten
+// Lastskript der Ingest-API: ein Trainingsabend mit mehreren belegten
 // Ständen, gebaut mit dem Baukasten der Sonderfälle (`@vereinsheim/ssmdb2-cases/stand`): Probe, 40 Schuss im Takt der
 // Vereinsanlage, Lebenszeichen alle 7 s. Gespielt wie eine Brücke: jede Sekunde lesen, jeden geänderten Stand in einem
 // Stapel schicken, `Retry-After` beachten, jede Minute ein Heartbeat. Gemessen: Antwortzeiten, Ergebnisse, Wachstum der
@@ -182,7 +182,7 @@ async function main() {
         siteId: site.id,
         sportpassId: BigInt(SPORTPASS_BASE + i),
         confirmedAt: new Date(),
-        // eingespielt (SP-1.7 a2): gemessen wird die Last, nicht die erste Bestätigung
+        // eingespielt: gemessen wird die Last, nicht die erste Bestätigung
         firstCardConfirmedAt: new Date(),
       })),
     })

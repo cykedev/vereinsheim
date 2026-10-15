@@ -92,7 +92,7 @@ ok "Deps installiert"
 # codegraph ist die Live-Knowledge-Schicht der Claude-Harness (.mcp.json + Hooks).
 # Der Laufzeit-Hook codegraph-ensure.mjs ist bewusst fail-open ("Dev-Komfort"), d.h.
 # ohne Binary degradiert die Schicht LAUTLOS. Damit das auf einer frischen Workstation
-# nicht passiert, installiert der Bootstrap es hier fest + gepinnt (User-Entscheidung).
+# nicht passiert, installiert der Bootstrap es hier fest + gepinnt.
 step "codegraph-Binary (${CODEGRAPH_PKG}@${CODEGRAPH_VERSION})"
 current_cg=""
 if command -v codegraph >/dev/null 2>&1; then
@@ -137,7 +137,7 @@ ok "Dev-Postgres bereit (localhost:5432)"
 # Shadow-DB an und scheitert ohne dieses Recht mit P3014. dev/db-init vergibt es beim ERSTEN
 # Start mit — dieser idempotente Nachzug holt bestehende Volumes auf denselben Stand.
 # Prod migriert via `migrate deploy` und braucht keine Shadow-DB (db-init/ bleibt ohne).
-# Spiegel kam nach dem ersten Start dazu (SP-1.6 a): bestehende Volumes bekommen Rolle und DB hier nachgezogen,
+# Bestehende Volumes ohne Spiegel bekommen Rolle und DB hier nachgezogen,
 # beides getrennt geprüft (ein abgebrochener Lauf kann die Rolle ohne Datenbank hinterlassen).
 dev_psql() { docker compose -f "$DEV_COMPOSE_FILE" exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d postgres "$@"; }
 if ! dev_psql -tAc "SELECT 1 FROM pg_roles WHERE rolname = 'spiegel'" | grep -q 1; then

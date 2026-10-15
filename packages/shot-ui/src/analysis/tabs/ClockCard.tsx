@@ -18,7 +18,7 @@ const REFERENCES = [
 ] as const
 
 /**
- * Richtungsuhr (L6) als Karte: Bezug Mitte oder Schwerpunkt ist ihr eigener Zustand (D6), nicht der der
+ * Richtungsuhr (L6) als Karte: Bezug Mitte oder Schwerpunkt ist ihr eigener Zustand, nicht der der
  * Scheibe. `initialReference` setzt den Start, etwa für Tests.
  */
 export function ClockCard({

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Legt auf einem laufenden System fehlende App-Datenbanken an (P3, SP-1.9):
+# Legt auf einem laufenden System fehlende App-Datenbanken an:
 # db-init/01-users-and-dbs.sh läuft nur bei einem frischen postgres_data-Volume.
 #
 # Für jede App mit <APP>_DB_PASSWORD in der .env: Rolle und Datenbank anlegen, wenn

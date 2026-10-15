@@ -11,7 +11,7 @@ interface NavButtonProps {
 }
 
 // Ein Navigations-Eintrag der Detail-Aktionsleiste: inline-ghost, Icon immer,
-// Label ab sm. Ersetzt die früheren `outline`-Icon-Buttons ohne sichtbares Label.
+// Label ab sm.
 export function DetailNavButton({ href, label, icon: Icon }: NavButtonProps) {
   return (
     <Button asChild variant="ghost" size="sm" className="px-2 sm:px-3">

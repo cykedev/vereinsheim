@@ -1,4 +1,4 @@
-// Projektion je Scheibe (SP-1.6 a, ADR-031): was die Seiten über viele Scheiben brauchen, einmal beim Schreiben
+// Projektion je Scheibe (ADR-031): was die Seiten über viele Scheiben brauchen, einmal beim Schreiben
 // einer Revision aus den Schüssen gerechnet. Die Übersichten (Liste, Fortschritt, Start) lesen dann eine Zeile je
 // Scheibe statt aller Schüsse; die Seite einer Scheibe rechnet weiter live. Was hier zusammengeführt wird, ist
 // gleich der Rechnung aus den Schüssen (`cardValues`, `periodRecords`); der Test hält das fest.
@@ -28,7 +28,7 @@ import {
 /**
  * Stand der Rechnung, die nicht in den Versionen der Kennzahlen steht: Form der Projektion, die Kandidaten der Rekorde
  * (`cardRecordCandidates`) und die Lagen (`cardMarks`), die mit ihr gespeichert werden. Erhöhen, wenn sich eins davon
- * ändert; dann werden alle Projektionen neu gerechnet. 2: Lagen für die kleinen Scheiben (Oktober 2026).
+ * ändert; dann werden alle Projektionen neu gerechnet. 2: Lagen für die kleinen Scheiben.
  */
 const PROJECTION_VERSION = 2
 
@@ -37,7 +37,7 @@ const CARD_METRICS = METRICS.filter((metric) => metric.scopes.includes("card"))
 export interface CardProjection {
   /** `projectionVersion(METRICS)` beim Rechnen; weicht sie ab, ist die Projektion veraltet */
   version: string
-  /** nur Probe: zählt nur mit `includeProbeOnly`, dann über die Probe wie Wertung (D8) */
+  /** nur Probe: zählt nur mit `includeProbeOnly`, dann über die Probe wie Wertung */
   probeOnly: boolean
   /** ein verdächtiger Schuss unter denen, die zählen: keine Rekorde (SF-15) */
   suspicious: boolean

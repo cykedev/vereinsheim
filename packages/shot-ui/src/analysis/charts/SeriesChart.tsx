@@ -14,7 +14,7 @@ function modalLength(series: readonly SeriesPoint[]): number {
 }
 
 /**
- * Serienergebnisse (Spielwiese `seriesChart`): Linie über die Serien voller Länge, eine kurze Restserie
+ * Serienergebnisse: Linie über die Serien voller Länge, eine kurze Restserie
  * hohl und mit ihrer Länge, Werte über den Punkten; ab zwei Serien mit mindestens einem Wert.
  */
 export function SeriesChart({

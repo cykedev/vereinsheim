@@ -35,7 +35,7 @@ export interface CardReadoutProps {
   chosen: boolean
   /** die Adresse einer Scheibe aus diesem Fortschritt (`openCard` mit ihm als Herkunft) */
   cardRoute: (id: string) => CardRoute
-  /** „?“ am Abstand zum Schnitt davor (U2, D2); ohne kein „?“ */
+  /** „?“ am Abstand zum Schnitt davor; ohne kein „?“ */
   onHelp?: (id: string) => void
   className?: string
 }
@@ -43,7 +43,6 @@ export interface CardReadoutProps {
 /**
  * Das „?“ am Abstand erklärt den Abstand im Ø je Schuss (Thema „Abstand zum Schnitt davor“), in Zehnteln und in ganzen
  * Ringen (beide Wertungen sind immer umschaltbar); zeigt der Verlauf eine andere Kennzahl, gilt die Erklärung nicht
- * (Review U2)
  */
 const explainsDelta = (metric: PeriodMetric) =>
   metric.key === "result.decimalMean" || metric.key === "result.ringsMean"
@@ -58,9 +57,9 @@ export function deltaText(delta: { delta: number; n: number }, decimals: number)
 }
 
 /**
- * Ablesung einer Scheibe auf der Seite eines Zeitraums (Plan L3, D9): Datum und Art, der Wert der Kennzahl, die
- * Schusszahl, der Abstand zum Schnitt der bis zu fünf Scheiben davor (ohne sie selbst, Prüfung 9. Oktober 2026),
- * ob sie im Formband liegt, die kleine Scheibe der Wertung und „Scheibe öffnen“.
+ * Ablesung einer Scheibe auf der Seite eines Zeitraums: Datum und Art, der Wert der Kennzahl, die Schusszahl, der
+ * Abstand zum Schnitt der bis zu fünf Scheiben davor (ohne sie selbst), ob sie im Formband liegt, die kleine Scheibe
+ * der Wertung und „Scheibe öffnen“.
  */
 export function CardReadout({
   card,
@@ -146,7 +145,7 @@ export function CardReadout({
 }
 
 /**
- * Ablesezeile für das Telefon unter dem Verlauf (D9): „12.07. · 10,21 · +0,03 zum Schnitt davor“ und „Scheibe
+ * Ablesezeile für das Telefon unter dem Verlauf: „12.07. · 10,21 · +0,03 zum Schnitt davor“ und „Scheibe
  * öffnen“.
  */
 export function CardLine({
@@ -176,7 +175,7 @@ export function CardLine({
     >
       <span className="flex min-w-0 items-center gap-1 font-medium text-foreground-2 tabular-nums">
         <span className="min-w-0">{parts.join(" · ")}</span>
-        {/* das „?“ am Abstand auch auf dem Telefon, wo die Ablesung als Karte fehlt (Review U2) */}
+        {/* das „?“ am Abstand auch auf dem Telefon, wo die Ablesung als Karte fehlt */}
         {onHelp && value && delta && explainsDelta(metric) && (
           <HelpButton
             label="Abstand zum Schnitt davor"

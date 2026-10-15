@@ -42,7 +42,7 @@ describe("in Worten und Aktionen", () => {
     expect(consentStatusText("active", "14.10.2026")).toBe("aktiv seit 14.10.2026")
     expect(consentStatusText("rejected", null)).toBe("von einem Admin abgelehnt")
     expect(consentStatusText("returned", null)).toBe("wird nach „nicht meine“ wieder geprüft")
-    // Schreibregeln (P2f)
+    // Schreibregeln
     for (const status of ["requested", "active", "rejected", "returned"] as const)
       expect(consentStatusText(status, "14.10.2026")).not.toMatch(OLD_WORDS)
   })

@@ -19,16 +19,16 @@ export type VolumeWeek = VolumeBucket & { label: string }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
-/** „Woche ab 06.07.2026: 140 Schuss, 3 Scheiben, 2 Tage“ (die Woche als Datum ihres Montags, U3, D6) */
+/** „Woche ab 06.07.2026: 140 Schuss, 3 Scheiben, 2 Tage“ (die Woche als Datum ihres Montags) */
 export const weekText = (w: VolumeWeek) =>
   w.cards
     ? `Woche ab ${weekDate(w.key)}: ${w.shots} Schuss, ${plural(w.cards, "Scheibe", "Scheiben")}, ${plural(w.days, "Tag", "Tage")}`
     : `Woche ab ${weekDate(w.key)}: kein Training`
 
 /**
- * Umfang je Woche (Plan L3, D15, T6): je ISO-Woche eine Säule der Schüsse, auch Wochen ohne Training (Pausen
+ * Umfang je Woche (T6): je ISO-Woche eine Säule der Schüsse, auch Wochen ohne Training (Pausen
  * sichtbar). Das Lineal nennt Schüsse, Scheiben und Tage; darunter „Werte als Tabelle“. Die Schüsse zählen wie am
- * Ausdruck (U4), Trainings nur aus Probe mit ihrer Probe; die Ergebnis-Box zählt nur Wertungsschüsse.
+ * Ausdruck, Trainings nur aus Probe mit ihrer Probe; die Ergebnis-Box zählt nur Wertungsschüsse.
  */
 export function VolumeChart({ width, weeks }: { width: number; weeks: readonly VolumeWeek[] }) {
   const plotW = Math.max(1, width - PAD.left - PAD.right)

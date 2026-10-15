@@ -8,7 +8,7 @@ export default function ScanRoute() {
   return (
     <Placeholder
       title="QR scannen"
-      sentence="Scannen kommt mit der Zuordnung über den Meyton-QR (SP-1.7): Vorschau, Bestätigen, dann die Seite der neuen Scheibe."
+      sentence="Scannen kommt mit der Zuordnung über den Meyton-QR: Vorschau, Bestätigen, dann die Seite der neuen Scheibe."
     />
   )
 }

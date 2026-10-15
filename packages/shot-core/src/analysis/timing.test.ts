@@ -44,7 +44,7 @@ const TWO_PACES: MetricShot[] = GAPS.reduce<number[]>(
   ring: 10,
 }))
 
-describe("Pause relativ zum Takt der Karte (User, 10. Oktober 2026)", () => {
+describe("Pause relativ zum Takt der Karte", () => {
   it("Z4 erkennt 110 s bei einem Takt von 30 s und nennt die Schwelle", () => {
     const recovery = pauseRecovery(TWO_PACES, "decimal")
     expect(recovery?.rule).toEqual({ thresholdMs: 60_000, typicalMs: 30_000, basis: "takt" })
@@ -116,7 +116,7 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     expect(recovery?.meanDelta).toBeNull()
   })
 
-  it("fehlt dem Schuss nach der Pause der Wert, bleibt die Pause (Prüfung, Grenzfall SF-18)", () => {
+  it("fehlt dem Schuss nach der Pause der Wert, bleibt die Pause (Grenzfall SF-18)", () => {
     // Schuss 7 ohne Zehntel: Die Pause davor zeigt der Rhythmus weiter; die Wirkung rechnet über die
     // Schüsse mit Wert: danach 9,7 · 9,9 (Ø 9,8) gegen die übrigen sieben (Ø 719/70): −33/70 Ringe
     const gap = EVENING.map((shot, i) => (i === 6 ? { ...shot, decimalTenths: null } : shot))
@@ -193,7 +193,7 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     expect(spread?.medianMs).toBe(45_000)
   })
 
-  it("ohne die Karte bleibt die Probe eine Lücke, wie bisher", () => {
+  it("ohne die Karte bleibt die Probe eine Lücke", () => {
     expect(rhythmProfile(LATE_SIGHTER_MATCH, 5)[6]).toMatchObject({ number: 7, intervalMs: null })
     expect(pauseRecovery(LATE_SIGHTER_MATCH, "decimal")?.pauses).toBe(0)
   })

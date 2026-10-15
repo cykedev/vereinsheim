@@ -131,7 +131,7 @@ describe("Kopplung", () => {
     expect(await authenticateBridge(db, paired.token, NOW)).toBeNull()
   })
 
-  it("entfernen nur, wenn getrennt; was sie geschickt hat, bleibt ohne Gerät (User, 15. Oktober 2026)", async () => {
+  it("entfernen nur, wenn getrennt; was sie geschickt hat, bleibt ohne Gerät", async () => {
     const paired = await pairedBridge()
     const [reading] = frozenReadings("SF-03")
     const parsed = parseSnapshot(reading.snapshots[0])
@@ -210,7 +210,7 @@ describe("Heartbeat", () => {
     expect(await stateOf(partial.id)).toEqual({ state: "final", complete: false })
   })
 
-  it("ohne Lebenszeichen zählt der Beginn; eine leere Scheibe ist nie vollständig (Review)", async () => {
+  it("ohne Lebenszeichen zählt der Beginn; eine leere Scheibe ist nie vollständig", async () => {
     const none = await card(9301, "open", 0)
     await db.card.update({
       where: { id: none.id },
@@ -261,7 +261,7 @@ describe("Zustand der Brücke", () => {
           sportpassId: BigInt(12345678),
           confirmedAt: new Date(NOW),
         },
-        // wartend, abgelehnt (auch mit altem Bestätigt), zurückgegeben: keine geht an die Brücke (SP-1.7 a)
+        // wartend, abgelehnt (auch mit altem Bestätigt), zurückgegeben: keine geht an die Brücke
         { userId: site.ownerId, siteId: site.siteId, sportpassId: BigInt(555), confirmedAt: null },
         {
           userId: site.ownerId,
@@ -304,7 +304,7 @@ describe("Zustand der Brücke", () => {
   })
 })
 
-describe("Aufträge zum Nachladen (P2d)", () => {
+describe("Aufträge zum Nachladen", () => {
   let own: TestSite
   let other: TestSite
   beforeAll(async () => {
@@ -378,7 +378,7 @@ describe("Aufträge zum Nachladen (P2d)", () => {
     expect(after.blocked.map((b) => b.scheibenId)).toEqual([-12])
   })
 
-  it("der Heartbeat vermerkt erledigte Aufträge nur an aktiven, offenen Zustimmungen dieser Anlage mit aktivem Konto und passendem since (D6, Review)", async () => {
+  it("der Heartbeat vermerkt erledigte Aufträge nur an aktiven, offenen Zustimmungen dieser Anlage mit aktivem Konto und passendem since", async () => {
     const pairing = await createPairing(db, {
       siteId: own.siteId,
       name: "Pi",

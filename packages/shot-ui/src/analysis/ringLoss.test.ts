@@ -14,7 +14,7 @@ const centered = CARD.map((s) =>
     : s
 )
 
-describe("Ringverlust für Kachel und Legende (U3, D10, Review)", () => {
+describe("Ringverlust für Kachel und Legende", () => {
   it("mit Lage-Anteil: beide Teile wie im Fachkern, zusammen der Ringverlust", () => {
     const s = split()
     expect(s.positionLoss.decimal).toBeGreaterThan(0)

@@ -20,12 +20,11 @@ interface RoundToggleProps extends DataAttributes {
 }
 
 /**
- * Weicher Kreis (Design 2, Plan `plans/2026-10-13-spiegel-symbole.md`): ein Zustand als Zeichen, ein Tippen schaltet um.
- * 32 px, innen die Kartenfläche mit Rahmen `line-strong`: auf der grauen Seite ein klarer Knopf, auf der Karte ein Ring
- * (User, 13. Oktober 2026: „das muss auf cards und auch ohne gut aussehen“, „wenn sie auf grau sind innen weiss“; die
- * Fläche `surface-2` war auf der Karte dunkler, auf der Seite heller als der Grund, eine Tönung zu kontrastarm). Das
- * Zeichen leise (`quiet`, eine Randinformation); Gold deckend getönt mit goldenem Rahmen nur für das Hervorgehobene. Für Einstellungen neben einer großen Zahl oder in einer
- * Zeile mit Filtern (Art, Wertung), wo ein Segment-Umschalter zu viel Platz nähme.
+ * Weicher Kreis (Design 2): ein Zustand als Zeichen, ein Tippen schaltet um. 32 px, innen die Kartenfläche mit Rahmen
+ * `line-strong`: auf der grauen Seite ein klarer Knopf, auf der Karte ein Ring (die Fläche `surface-2` wäre auf der
+ * Karte dunkler, auf der Seite heller als der Grund, eine Tönung zu kontrastarm). Das Zeichen leise (`quiet`, eine
+ * Randinformation); Gold deckend getönt mit goldenem Rahmen nur für das Hervorgehobene. Für Einstellungen neben einer
+ * großen Zahl oder in einer Zeile mit Filtern (Art, Wertung), wo ein Segment-Umschalter zu viel Platz nähme.
  */
 export function RoundToggle({
   label,

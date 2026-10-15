@@ -36,7 +36,7 @@ function makeEntry(
   }
 }
 
-/** Das Fixture aus dem Plan: disjunkte Bestwerte, damit jede Metrik eine andere Reihenfolge ergibt. */
+/** Fixture mit disjunkten Bestwerten, damit jede Metrik eine andere Reihenfolge ergibt. */
 function planFixture(): SeasonStandingsEntry[] {
   return [
     makeEntry("A", { rings: 98, teiler: 12.0, ringteiler: 14.0 }),

@@ -121,7 +121,7 @@ interface Props {
 }
 
 // Einheitliche Wettbewerbskarte. Der Name verlinkt auf die kanonische Detailseite;
-// die Karte selbst ist nicht ganz klickbar (Multi-Ziel-Objekt — siehe Spec P1.3).
+// die Karte selbst ist nicht ganz klickbar (Multi-Ziel-Objekt).
 export function CompetitionListCard({
   competition: c,
   canManage,

@@ -1,6 +1,6 @@
 /**
  * Grenzen des Vertrags. Sie stehen auch im erzeugten JSON-Schema. Die Bytegrenze je Anfrage setzt die
- * Ingest-API (SP-1.6b); diese Werte begrenzen, was ein einzelner Snapshot enthalten darf.
+ * Ingest-API; diese Werte begrenzen, was ein einzelner Snapshot enthalten darf.
  */
 export const LIMITS = {
   /** Spalten je Tabelle (`SELECT *` der SSMDB2 liefert rund 40 für `Scheiben`). */

@@ -13,7 +13,7 @@ const card = (origin: CardRoute["origin"]): CardRoute => ({
   anchor: null,
 })
 
-describe("Bereiche der Navigation (Plan N3, D1, D4)", () => {
+describe("Bereiche der Navigation", () => {
   it("jede Seite gehört zu einem Bereich; die Scheibe zu dem, aus dem sie kam", () => {
     const pages: [Route, ReturnType<typeof areaOf>][] = [
       [{ page: "start" }, "start"],

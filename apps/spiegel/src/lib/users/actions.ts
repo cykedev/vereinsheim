@@ -13,7 +13,7 @@ import type { ActionResult } from "@/lib/types"
 
 import { accountChangeBlocked, CreateUserSchema, UpdateUserSchema } from "./rules"
 
-// Kontenverwaltung für Admins, wie Ringwerk (ohne Protokoll, das kommt mit der Zuordnung, SP-1.7). Keine Ausnahme
+// Kontenverwaltung für Admins, wie Ringwerk (ohne Protokoll). Keine Ausnahme
 // nach außen: jede Antwort ist ein ActionResult.
 
 const EMAIL_TAKEN = "Diese E-Mail-Adresse hat schon ein anderes Konto."
@@ -99,7 +99,7 @@ export async function updateUser(
   // vor der Transaktion: bcrypt dauert, die Transaktion soll kurz bleiben
   const passwordHash = tempPassword ? await bcrypt.hash(tempPassword, BCRYPT_COST) : null
   // neues Passwort, neue Rolle oder neuer Status beenden die Sitzungen des Kontos: Das JWT trägt die Rolle, und ein
-  // herabgestuftes Konto käme sonst mit der alten noch durch proxy.ts (Review)
+  // herabgestuftes Konto käme sonst mit der alten noch durch proxy.ts
   const endSessions =
     !!passwordHash || parsed.data.role !== target.role || parsed.data.isActive !== target.isActive
   try {

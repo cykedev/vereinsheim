@@ -2,7 +2,7 @@ import type { Db } from "@/lib/db"
 
 import { lockCard, purgeCards } from "./purge"
 
-// Papierkorb (P2b, Plan `plans/2026-10-14-spiegel-papierkorb.md`, D4; [[spiegel-navigation]] Entscheidung 15): Eine
+// Papierkorb ([[spiegel-navigation]], „Löschen und Papierkorb“): Eine
 // gelöschte Scheibe liegt 30 Tage dort und zählt nirgends mit. Danach wird sie endgültig gelöscht, und die weiche Sperre
 // ihres Besitzers hält die Brücke davon ab, sie zurückzubringen.
 

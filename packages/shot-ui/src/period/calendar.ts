@@ -1,4 +1,4 @@
-// Zeiträume der Seite eines Zeitraums (Plan L3, D4, D6, D15, D16): rollend, alles, benannt, frei; der
+// Zeiträume der Seite eines Zeitraums: rollend, alles, benannt, frei; der
 // Vergleichszeitraum; ISO-Wochen (gerechnet ohne `Intl`, benannt nach ihrem Montag über `@vereinsheim/lib/format`).
 // Tage beginnen in der Anzeige-Zeitzone (`zonedDayStartMs`).
 
@@ -76,7 +76,7 @@ const labelOf = (choice: PeriodChoice) =>
   ROLLING_CHOICES.find((c) => JSON.stringify(c.choice) === JSON.stringify(choice))?.label ?? ""
 
 /**
- * Der Zeitraum einer Wahl (D4): rollend heißt Beginn nach `now − N Tage` bis jetzt, „Alles“ ab der ersten
+ * Der Zeitraum einer Wahl: rollend heißt Beginn nach `now − N Tage` bis jetzt, „Alles“ ab der ersten
  * Scheibe (`firstMs`), frei und benannt vom Beginn des ersten bis zum Ende des letzten Tags in der Zeitzone;
  * ein benannter Zeitraum ohne Ende läuft bis jetzt. Ein unbekannter benannter Zeitraum gilt als 90 Tage.
  */
@@ -102,7 +102,7 @@ export function resolveRange(
 }
 
 /**
- * Der Vergleichszeitraum (D6): „Zeitraum davor“ ist gleich lang und endet am Beginn des Zeitraums; ein
+ * Der Vergleichszeitraum: „Zeitraum davor“ ist gleich lang und endet am Beginn des Zeitraums; ein
  * benannter wie oben. Ohne Vergleich oder mit unbekanntem Namen null.
  */
 export function compareRange(
@@ -151,10 +151,10 @@ const mondayNoon = (key: string) => {
   return new Date(Date.UTC(y, m - 1, d, 12))
 }
 
-/** Name einer Woche ist ihr Montag („29.06.“), keine Kalenderwoche (U3, D6); kurz, für die Achse */
+/** Name einer Woche ist ihr Montag („29.06.“), keine Kalenderwoche; kurz, für die Achse */
 export const weekLabel = (key: string) => formatShortDay(mondayNoon(key), "UTC")
 
-/** der Montag mit Jahr („29.06.2026“) für Lineal und Tabelle: „Alles“ reicht über Jahreswechsel (Review U3) */
+/** der Montag mit Jahr („29.06.2026“) für Lineal und Tabelle: „Alles“ reicht über Jahreswechsel */
 export const weekDate = (key: string) => formatDateOnly(mondayNoon(key), "UTC")
 
 /** „02.07.2026 – 30.09.2026“: erster und letzter Tag des Zeitraums in der Zeitzone */
@@ -163,12 +163,12 @@ export function rangeDays(range: DateRange, timeZone: string): string {
   return `${day(range.fromMs)} – ${day(range.toMs - 1)}`
 }
 
-/** Training bis 4 Uhr nachts gehört zum Abend davor (D1) */
+/** Training bis 4 Uhr nachts gehört zum Abend davor */
 const EVENING_STARTS = "04:00"
 
 /**
  * der Abend einer Scheibe als ISO-Tag in der Zone; vor 4 Uhr der Vortag. Es zählt die Uhrzeit der Zone, nicht vier
- * Stunden absolut: an den Tagen der Zeitumstellung hat die Nacht 23 oder 25 Stunden (Review N2).
+ * Stunden absolut: an den Tagen der Zeitumstellung hat die Nacht 23 oder 25 Stunden.
  */
 export function eveningDay(startedAtMs: number, timeZone: string): string {
   const at = new Date(startedAtMs)

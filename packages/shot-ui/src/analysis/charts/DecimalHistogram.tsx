@@ -9,9 +9,9 @@ const HEIGHT = 150
 const PAD = { left: 4, right: 4, top: 16, bottom: 22 }
 
 /**
- * Zehntelverteilung (Spielwiese `decimalChart`): eine Säule je belegtem Zehntel ab dem Ring des tiefsten
+ * Zehntelverteilung: eine Säule je belegtem Zehntel ab dem Ring des tiefsten
  * Treffers bis 10,9, Farbe nach Ring, Beschriftung je Ring und „10,9“. Werte per Lineal über die belegten
- * Zehntel (Plan L1), darunter „Werte als Tabelle“.
+ * Zehntel, darunter „Werte als Tabelle“.
  */
 export function DecimalHistogram({
   width,

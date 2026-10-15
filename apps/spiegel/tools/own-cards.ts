@@ -20,7 +20,7 @@ import { OWN_CARDS, type OwnCard } from "./own-cards-data"
 const HIDDEN_DISPLAYS: ReadonlySet<number> = new Set([5, 10])
 
 /**
- * amtliche Wertung nach der Waffe, bis der Adapter (SP-1.6 b) sie aus der Disziplin liest: Luftpistole in ganzen Ringen
+ * amtliche Wertung nach der Waffe, solange der Adapter sie nicht aus der Disziplin liest: Luftpistole in ganzen Ringen
  * wie am Ausdruck vom 2. Oktober 2026, Luftgewehr unbekannt
  */
 const OFFICIAL_BY_WEAPON: Readonly<Partial<Record<Weapon, Scoring>>> = { lp: "rings" }

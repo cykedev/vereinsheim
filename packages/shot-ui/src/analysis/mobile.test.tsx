@@ -10,8 +10,8 @@ import { initialViewState } from "../view-state"
 import { fortyCard } from "./testCard"
 import { cardHtml, renderTab } from "./testPanel"
 
-// Mobil-Grundlagen (Plan Task 13a, gemessen bei 375 px): nichts macht die Seite breiter als den Bildschirm,
-// Bedienelemente in der Optik des Desktops (User, 8. Oktober 2026), Schrift ab 12 px, Punkte mit Rand,
+// Mobil-Grundlagen (gemessen bei 375 px): nichts macht die Seite breiter als den Bildschirm,
+// Bedienelemente in der Optik des Desktops, Schrift ab 12 px, Punkte mit Rand,
 // Ausreißer nicht nur über die Farbe.
 
 const CARD = fortyCard()
@@ -57,8 +57,7 @@ describe("Analyse auf dem Telefon", () => {
 
   it("Einstieg, Glossar und Fehlschlüsse auf dem Telefon so knapp wie am Desktop", () => {
     const summaries = overview.match(/<summary[^>]*>/g)!
-    // nur Einstieg (seit 9. Oktober 2026 anfangs zu), Glossar und Fehlschlüsse; die Karten erklären sich über „?“
-    // (Plan Schritt 4, D3)
+    // nur Einstieg (anfangs zu), Glossar und Fehlschlüsse; die Karten erklären sich über „?“
     expect(summaries).toHaveLength(3)
     for (const summary of summaries) expect(summary).not.toContain("pointer-coarse")
     const help = renderToStaticMarkup(createElement(HelpDetails, { id: "ergebnis", open: false }))
@@ -104,7 +103,7 @@ describe("Analyse auf dem Telefon", () => {
 })
 
 describe("Bedienelemente auf dem Telefon", () => {
-  it("„Alle“ in derselben Optik wie am Desktop, kein „Ohne Probe“ mehr (U4)", () => {
+  it("„Alle“ in derselben Optik wie am Desktop, kein „Ohne Probe“", () => {
     const html = renderToStaticMarkup(
       createElement(SeriesStrip, {
         target: LP_10M,

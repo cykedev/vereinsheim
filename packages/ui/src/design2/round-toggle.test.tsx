@@ -24,9 +24,8 @@ describe("RoundToggle: weicher Kreis (Design 2)", () => {
     expect(html).toContain('title="Training"')
     expect(html).toContain('data-kind="training"')
     expect(html).toMatch(/class="[^"]*\bsize-8\b[^"]*\brounded-full\b/)
-    // leise (Token `quiet`, 3 : 1 auf der Fläche): eine Randinformation (User, 13. Oktober 2026)
-    // innen die Kartenfläche, kräftiger Rahmen: auf der grauen Seite ein Knopf, auf der Karte ein Ring (User,
-    // 13. Oktober 2026)
+    // leise (Token `quiet`, 3 : 1 auf der Fläche): eine Randinformation
+    // innen die Kartenfläche, kräftiger Rahmen: auf der grauen Seite ein Knopf, auf der Karte ein Ring
     expect(html).toMatch(/class="[^"]*\bborder-line-strong bg-card text-quiet\b/)
     expect(html).not.toContain("bg-surface-2")
     expect(html).toContain("[&amp;_svg]:stroke-[1.75]")

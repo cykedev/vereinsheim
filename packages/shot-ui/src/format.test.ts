@@ -13,7 +13,7 @@ import {
   unitText,
 } from "./format"
 
-describe("Zahlen wie in der Spielwiese: feste Stellen, Komma, echtes Minus", () => {
+describe("Zahlen: feste Stellen, Komma, echtes Minus", () => {
   it("feste Nachkommastellen mit Komma", () => {
     expect(formatValue(1.234, 2)).toBe("1,23")
     expect(formatValue(12, 0)).toBe("12")
@@ -51,7 +51,7 @@ describe("Zahlen wie in der Spielwiese: feste Stellen, Komma, echtes Minus", () 
 })
 
 describe("Achse einer Gruppe in Worten", () => {
-  it("Winkel ab 3 Uhr gegen den Uhrzeigersinn, Uhrzeiten wie die Richtungsuhr (Prüfung, Präzision 3)", () => {
+  it("Winkel ab 3 Uhr gegen den Uhrzeigersinn, Uhrzeiten wie die Richtungsuhr", () => {
     const rad = (deg: number) => (deg * Math.PI) / 180
     expect(axisText(rad(111))).toBe(
       "längs etwa 11 bis 5 Uhr (111°, gegen den Uhrzeigersinn ab 3 Uhr)"
@@ -70,7 +70,7 @@ describe("Achse einer Gruppe in Worten", () => {
 })
 
 describe("Richtung ohne Zahl", () => {
-  it("acht Richtungen, schräg erst ab 22,5° neben der Achse; unter 0,05 mm mittig (Prüfung, Probe 11)", () => {
+  it("acht Richtungen, schräg erst ab 22,5° neben der Achse; unter 0,05 mm mittig", () => {
     expect(directionName({ xUm: 472, yUm: 18 })).toBe("rechts")
     expect(directionName({ xUm: 3000, yUm: 3000 })).toBe("rechts oben")
     expect(directionName({ xUm: -2928, yUm: 5998 })).toBe("links oben")
@@ -81,7 +81,7 @@ describe("Richtung ohne Zahl", () => {
 })
 
 describe("Ringe mit Zahl", () => {
-  it("ein Ring nur bei genau 1, sonst Ringe (Prüfung, Grammatik)", () => {
+  it("ein Ring nur bei genau 1, sonst Ringe", () => {
     expect(ringsText(1, 0)).toBe("1 Ring")
     expect(ringsText(-1, 0)).toBe("−1 Ring")
     expect(ringsText(2, 0)).toBe("2 Ringe")
@@ -98,7 +98,7 @@ describe("Ringe mit Zahl", () => {
 })
 
 describe("Einheiten der Kennzahlen", () => {
-  it("wie in der Spielwiese; der Teiler steht ohne Einheit", () => {
+  it("der Teiler steht ohne Einheit", () => {
     expect(unitText("Ringe")).toBe("Ringe")
     expect(unitText("mm")).toBe("mm")
     expect(unitText("s")).toBe("s")

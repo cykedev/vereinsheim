@@ -68,7 +68,7 @@ describe("Stil der Texte", () => {
     for (const topic of HELP_TOPICS) expect(topic.short.length, topic.id).toBeLessThanOrEqual(140)
   })
 
-  it("keine Hinweise zum Visier (User, 9. Oktober 2026)", () => {
+  it("keine Hinweise zum Visier", () => {
     // Spiegel rechnet, was die Lage kostet; ob und wie man etwas verstellt, sagt es nicht
     for (const [where, text] of everything) expect(text, where).not.toMatch(/Visier|Klick/)
   })
