@@ -613,6 +613,50 @@ async function phoneNoSideScroll(page: Page) {
 }
 
 /**
+ * Blatt „Filter“ unter Scheiben (User, 15. Oktober 2026: „ich kann hier nicht alle listen wählen“; Review): Das Blatt
+ * scrollt nicht seitlich, jeder Knopf von Art, Liste und Merkmal liegt in ihm, am Telefon und am Desktop. Die Dev-Daten
+ * haben meist keine Listen, das steht dann als „nicht belegt“ in der Zeile.
+ */
+async function listFilterSheet(page: Page) {
+  const outside: string[] = []
+  const shown: string[] = []
+  for (const [width, height] of [
+    [375, 812],
+    [1280, 900],
+  ] as const) {
+    await page.viewport(width, height)
+    await page.goto(`${BASE}/cards`)
+    await page.click(`$("[data-list-chip]")`, { settle: 400 })
+    const sheet = await page.ev<{
+      scroll: number
+      client: number
+      out: string[]
+      groups: string[]
+    }>(`(() => {
+      const dialog = $("[data-list-filter]").closest("dialog")
+      const box = dialog.getBoundingClientRect()
+      const groups = $$('[role="radiogroup"]', dialog)
+      const out = groups.flatMap((g) => $$("button", g).filter((b) => {
+        const r = b.getBoundingClientRect()
+        return r.left < box.left - 0.5 || r.right > box.right + 0.5
+      }).map((b) => g.getAttribute("aria-label") + " " + txt(b)))
+      return { scroll: dialog.scrollWidth, client: dialog.clientWidth, out,
+        groups: groups.map((g) => g.getAttribute("aria-label") + " " + $$("button", g).length) }
+    })()`)
+    if (sheet.scroll > sheet.client + 1)
+      outside.push(`${width} px: Blatt ${sheet.scroll} > ${sheet.client}`)
+    outside.push(...sheet.out.map((o) => `${width} px: ${o}`))
+    shown.push(`${width} px: ${sheet.groups.join(", ")}`)
+    await page.key("Escape")
+  }
+  check(
+    `Blatt „Filter“ unter Scheiben: kein seitliches Scrollen, jeder Knopf im Blatt${shown.some((s) => s.includes("Liste")) ? "" : " (Listen nicht belegt: keine in den Daten)"}`,
+    outside.length === 0,
+    outside.length ? outside.join(" · ") : shown.join(" · ")
+  )
+}
+
+/**
  * „Offen“ und die Leiste (SP-1.7 a2): Das Demo-Konto hat nichts Wartendes, also sagt „Offen“ das; Scannen ist bis zum
  * QR-Weg aus der Navigation genommen, die untere Leiste hat vier Felder.
  */
@@ -1143,6 +1187,7 @@ async function main() {
     await section("Anker und Platz der Scheibe", () => anchorsAndFit(page, href))
     await section("Seite einer Scheibe am Telefon", () => phoneCard(page, href))
     await section("Telefon ohne seitliches Scrollen", () => phoneNoSideScroll(page))
+    await section("Blatt Filter unter Scheiben", () => listFilterSheet(page))
     await section("Blättern", () => paging(page, href))
     await section("Rückwege", () => backPaths(page))
     await section("Fortschritt", () => progress(page))
