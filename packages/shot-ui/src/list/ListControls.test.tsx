@@ -124,35 +124,30 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     const sheet = html.slice(html.indexOf("<dialog"))
     expect(sheet.indexOf('aria-label="Art"')).toBeLessThan(sheet.indexOf('aria-label="Liste"'))
     expect(sheet.indexOf('aria-label="Liste"')).toBeLessThan(sheet.indexOf('aria-label="Merkmal"'))
-    // Chips, die umbrechen, nicht ein Umschalter, der seitlich scrollt (User, 15. Oktober 2026: „ich kann hier nicht alle
-    // listen wählen“)
-    const group = sheet.match(/<div role="group" aria-label="Liste"[^>]*>[\s\S]*?<\/div>/)![0]
+    // ein Umschalter, der umbricht, nicht einer, der seitlich scrollt (User, 15. Oktober 2026: „ich kann hier nicht alle
+    // listen wählen“); Radiogruppe mit Tab auf der Wahl (Review)
+    const group = sheet.match(/<div role="radiogroup" aria-label="Liste"[^>]*>[\s\S]*?<\/div>/)![0]
     expect(group).toMatch(/class="[^"]*flex-wrap/)
     expect(group).not.toContain("overflow-x-auto")
     expect(
-      [...group.matchAll(/<button[^>]*aria-pressed="(true|false)"[^>]*>([^<]+)</g)].map(
+      [...group.matchAll(/<button[^>]*aria-checked="(true|false)"[^>]*>([^<]+)</g)].map(
         (m) => `${m[2]}:${m[1]}`
       )
     ).toEqual(["Alle:false", "RWK_LP:true", "Training-LG:false"])
+    // Merkmal ebenso umbrechend
+    expect(sheet).toMatch(/<div role="radiogroup" aria-label="Merkmal"[^>]*class="[^"]*flex-wrap/)
     const onQuery = vi.fn()
-    // die Chips stehen in einer eigenen Komponente: sie einmal aufrufen, dann im Baum suchen
-    const choice = find(
-      view({ lists, onQuery }),
-      (e) => e.props.lists === lists && "onQuery" in e.props
-    )!
-    const chips = (choice.type as (p: Record<string, unknown>) => ReactNode)(choice.props)
-    const chip = (name: string) =>
-      find(chips, (e) => e.type === "button" && e.props.children === name)!
-    ;(chip("Training-LG").props.onClick as () => void)()
+    const choice = find(view({ lists, onQuery }), (e) => e.props.label === "Liste")!
+    ;(choice.props.onChange as (v: string) => void)("1")
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, list: 1 })
-    ;(chip("Alle").props.onClick as () => void)()
+    ;(choice.props.onChange as (v: string) => void)("")
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, list: null })
     expect(renderToStaticMarkup(h(ListControls, props()))).not.toContain('aria-label="Liste"')
     // eine unbekannte Kennung aus einer alten Adresse: „Alle“ ist gewählt, der Chip nennt keine Liste (Review)
     const stale = renderToStaticMarkup(
       h(ListControls, props({ lists, query: { ...QUERY, list: 99 } }))
     )
-    expect(stale).toMatch(/aria-label="Liste"[^>]*><button[^>]*aria-pressed="true"[^>]*>Alle</)
+    expect(stale).toMatch(/aria-label="Liste"[^>]*><button[^>]*aria-checked="true"[^>]*>Alle</)
     expect(stale).not.toContain("Liste RWK")
   })
 

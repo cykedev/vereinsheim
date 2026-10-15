@@ -22,8 +22,18 @@ interface SegmentedProps<T extends string> {
    * rückt dabei ins Bild
    */
   scroll?: boolean
+  /**
+   * bricht über mehrere Zeilen um, statt seitlich zu scrollen: für viele oder lange Möglichkeiten (Listen aus Meyton,
+   * Merkmale), bei denen ein seitlich scrollender Umschalter Möglichkeiten versteckt (User, 15. Oktober 2026: „ich kann
+   * hier nicht alle listen wählen“). Radiogruppe, Tab und Pfeiltasten bleiben
+   */
+  wrap?: boolean
   className?: string
 }
+
+/** mehrzeilig: der Kasten wird ein Rechteck mit runden Ecken, ein langer Name bricht im Knopf */
+const WRAP =
+  "flex flex-wrap rounded-2xl [&>button]:max-w-full [&>button]:[overflow-wrap:anywhere] [&>button]:leading-tight"
 
 /** ohne Umbruch, zu breit scrollt er in sich: Reiter der Analyse, Kennzahl des Verlaufs */
 const SCROLL =
@@ -50,6 +60,7 @@ export function Segmented<T extends string>({
   onChange,
   controls,
   scroll,
+  wrap,
   className,
 }: SegmentedProps<T>) {
   const bar = useRef<HTMLDivElement>(null)
@@ -87,6 +98,7 @@ export function Segmented<T extends string>({
       className={cn(
         "inline-flex rounded-full border border-border bg-surface-2 p-[3px]",
         scroll && SCROLL,
+        wrap && WRAP,
         className
       )}
     >

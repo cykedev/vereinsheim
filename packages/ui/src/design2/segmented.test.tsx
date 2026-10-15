@@ -53,6 +53,40 @@ describe("Segmented mit scroll", () => {
   })
 })
 
+describe("Segmented mit wrap (Review, 15. Oktober 2026)", () => {
+  const html = renderToStaticMarkup(
+    createElement(Segmented, {
+      label: "Liste",
+      value: "b",
+      options: [
+        { value: "a", label: "Alle" },
+        { value: "b", label: "Jahrespreis" },
+        { value: "c", label: "LP Vereinsmeisterschaft" },
+      ],
+      onChange: () => {},
+      wrap: true,
+    })
+  )
+  const bar = (html.match(/role="radiogroup"[^>]*class="([^"]+)"/)?.[1] ?? "")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&gt;", ">")
+    .split(" ")
+
+  it("bricht um statt seitlich zu scrollen, ein langer Name bricht im Knopf", () => {
+    for (const cls of ["flex", "flex-wrap", "rounded-2xl", "[&>button]:max-w-full"])
+      expect(bar).toContain(cls)
+    expect(bar).toContain("[&>button]:[overflow-wrap:anywhere]")
+    for (const cls of ["inline-flex", "rounded-full", "overflow-x-auto"])
+      expect(bar).not.toContain(cls)
+  })
+
+  it("bleibt eine Radiogruppe: Tab nur auf der Wahl", () => {
+    expect(
+      [...html.matchAll(/tabindex="(-?\d)"[^>]*>([^<]+)</g)].map((m) => `${m[2]}:${m[1]}`)
+    ).toEqual(["Alle:-1", "Jahrespreis:0", "LP Vereinsmeisterschaft:-1"])
+  })
+})
+
 describe("Segmented", () => {
   const segmented = (value: string) =>
     renderToStaticMarkup(
