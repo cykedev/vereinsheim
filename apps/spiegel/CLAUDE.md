@@ -113,7 +113,9 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? ranking.kind ?? kind` (`kindOfRow` in `reads.ts`, der einzige
   Weg zur Art), in Übersicht, Seite und Vorgabe der Wertung. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
   Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, „Anlage und Brücken“); die
-  Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. Bei einer Scheibe nur aus Probe zählt die Rangliste nicht
+  Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. In der Oberfläche heißt sie „Liste“ (User, 15. Oktober 2026;
+  `OLD_WORDS` hält „Rangliste“ fern): Die Zugriffe liefern sie als `list` (`OverviewCard`, `PageCard`), die Seite einer
+  Scheibe nennt sie im Kopf, Scheiben filtern nach ihr (`list=<id>`). Bei einer Scheibe nur aus Probe zählt die Liste nicht
   (Training, nicht umstellbar). Umstellen auf der Seite einer Scheibe (`KindToggle`, Pokal im weichen Kreis vor dem der Wertung,
   `setCardKind` in `src/lib/card-kind-actions.ts`); eine Scheibe nur aus Probe ist Training und hat keinen Kreis der Art. Ändert die Art die
   Vorgabe der Wertung, folgt die Seite (`seenScoring` in `CardScreen`). `Status` der SSMDB2 ist an der Vereinsanlage leer
@@ -125,6 +127,11 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Scheibe liest ihn auf dem Server, damit das erste Bild stimmt; jede Änderung schreibt ihn neu, das Öffnen nie (nach
   Zurück bringt Next die alte Darstellung aus dem Cache; die Seite übernimmt dann die gemerkte). Auch der Ausschnitt
   bleibt beim Wechsel der Scheibe; ohne Schüsse zeigt „Gruppe“ die ganze Scheibe (`groupView`).
+- **Zeitraum des Fortschritts gemerkt** (User, 15. Oktober 2026, `plans/2026-10-15-spiegel-feedback-1.md`): Cookie
+  `spiegel-period` in der Form von `range` (`src/lib/period-memory*.ts`). Geschrieben nur, wenn der Zeitraum im Blatt
+  „Filter“ übernommen wird (`setFilters`, `setChoice` in `ProgressScreen`); gelesen auf dem Server, wenn `/progress`
+  keine eigene Abfrage hat außer `family` (die hängt die Navigation an). Ein benannter Zeitraum, den es nicht mehr gibt,
+  gilt als keiner.
 - **Projektion nur aus dem Fachkern.** `cardProjection` und `cardMarks` rechnen, die App speichert. Steigt eine
   Kennzahl-`version` oder `PROJECTION_VERSION`, holt `refreshProjections` die veralteten nach (auch die einer früheren
   Revision), je Scheibe unter der Sperre ihrer Zeile; beim Start des Servers `refreshStaleProjections` im Hintergrund.
@@ -188,7 +195,7 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   - **Zustände** schaltet der Heartbeat weiter (`advanceCardStates`), `complete` gilt erst endgültig. `writeRevision` hält
     `korrigiert` und `uhr-abweichung` dauerhaft; eine andere Anzeigeart ist keine Korrektur (`sameScoring`, SF-74).
   - **Admin → Anlage und Brücken** (`/admin/site`): Anlage, Brücken koppeln (Code nur in der Antwort der Action) und
-    widerrufen, Ranglisten zuordnen. Eine neue Epoche bestätigt niemand in der Oberfläche (P2c, D0); die Übersicht
+    widerrufen, Listen (`Ranking`) zuordnen. Eine neue Epoche bestätigt niemand in der Oberfläche (P2c, D0); die Übersicht
     zeigt nur einen Hinweis. Zustimmungen per Sportpass bestätigt oder lehnt der Admin am Konto ab
     (`/admin/users/[id]`, offene als Aufgabe in der Übersicht und als Link in „Konten“); eintragen kann nur der Schütze
     im Profil.

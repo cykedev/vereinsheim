@@ -23,7 +23,7 @@ Der User will ein Profi-Werkzeug, „das mir viele gute Informationen zeigt, mit
 
 ## Notation
 
-vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Schüsse. Jede Statistik über Werte gibt es in beiden Wertungen; in ganzen Ringen steht Ringᵢ für vᵢ (Ausnahme: die Zehntelverteilung V2). Lage pᵢ in mm (Mitte 0, x rechts, y oben); Schwerpunkt m = (x̄, ȳ); rᵢ = |pᵢ − m|, dᵢ = |pᵢ| (Teiler = dᵢ in 1/100 mm). Sx, Sy mit n − 1. W ist der Ringabstand (LG 2,5 mm, LP 8 mm). Ebenen: Schuss, Serie, Scheibe, Zeitraum. Priorität A (früh, großer Nutzen), B (später), C (schön zu haben). Spalte „Wo“: Roadmap-Feature oder „vorhanden“ (seit SP-1.2 in der Registry).
+vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Schüsse. Jede Statistik über Werte gibt es in beiden Wertungen; in ganzen Ringen steht Ringᵢ für vᵢ. Einzelne Schüsse zeigt die Oberfläche immer in Zehnteln, gleich in welcher Wertung die Scheibe steht: Schusstabelle, Ablesung, Verlauf je Schuss (I3, I4 mit gleitendem Schnitt) und die Zehntelverteilung V2 (User, 15. Oktober 2026). Lage pᵢ in mm (Mitte 0, x rechts, y oben); Schwerpunkt m = (x̄, ȳ); rᵢ = |pᵢ − m|, dᵢ = |pᵢ| (Teiler = dᵢ in 1/100 mm). Sx, Sy mit n − 1. W ist der Ringabstand (LG 2,5 mm, LP 8 mm). Ebenen: Schuss, Serie, Scheibe, Zeitraum. Priorität A (früh, großer Nutzen), B (später), C (schön zu haben). Spalte „Wo“: Roadmap-Feature oder „vorhanden“ (seit SP-1.2 in der Registry).
 
 ## Was es schon gibt
 
@@ -86,7 +86,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
 | V1 | Ringverteilung (Zähler) | Anzahl je Ring 10…0 plus Innenzehner; Histogramm, keine Torte | Serie, Scheibe, Zeitraum | A | SP-1.10 |
-| V2 | Zehntelverteilung | Histogramm der vᵢ in 0,1-Klassen; geprüft Oktober 2026, bleibt (Wunsch des Users); auf einer Scheibe zählt die Gesamtform, nicht die einzelne Säule | Scheibe, Zeitraum | B | SP-1.10 |
+| V2 | Zehntelverteilung | Histogramm der vᵢ in 0,1-Klassen; geprüft Oktober 2026, bleibt (Wunsch des Users); auf einer Scheibe zählt die Gesamtform, nicht die einzelne Säule; seit 15. Oktober 2026 auch in ganzen Ringen gezeigt | Scheibe, Zeitraum | B | SP-1.10 |
 | V3 | Abstandskurve | Anteil der Schüsse mit Teiler ≤ t | Zeitraum | B | SP-2.1 |
 | V4 | Verteilung der Serien | Quartile der Serienergebnisse je Monat | Zeitraum | B | SP-2.1 |
 | V5 | Ringanteile im Zeitverlauf | Anteil je Ring je Scheibe, gestapelt | Zeitraum | B | SP-2.1 |
@@ -97,7 +97,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| Z1 | Tempo | Median der Intervalle ohne Pausen (Pause: über dem 2,5-Fachen des Medians der Abstände bis 180 s, mindestens 60 s, über 180 s immer; Schwelle der ganzen Karte; seit 10. Oktober 2026, vorher fest 180 s) | Serie, Scheibe, Zeitraum | A | vorhanden |
+| Z1 | Tempo | Median der Intervalle ohne Pausen (Pause: über dem Doppelten des Medians der Abstände bis 180 s, mindestens 60 s, über 180 s immer; Schwelle der ganzen Karte; seit 10. Oktober 2026, vorher fest 180 s; bis 15. Oktober 2026 das 2,5-Fache; an den eigenen Scheiben fand es 11 Pausen in 789 Abständen, das Doppelte 18; Version 4) | Serie, Scheibe, Zeitraum | A | vorhanden |
 | Z2 | Tempo-Konstanz | IQR (Q3 − Q1) der Abstände ohne Pausen (Pausen wie in Z1), auch relativ zum Median; konstanter ist nicht automatisch besser | Scheibe, Zeitraum | A | SP-1.10 |
 | Z3 | Dauer | erster bis letzter Schuss (`time.duration`); Netto-Zeit und Schüsse je Stunde entfernt (Oktober 2026): Σ Abstände und 3600 / Ø Abstand | Scheibe, Zeitraum | A | SP-1.10 |
 | Z4 | Pausen und Wiedereinstieg | Pausen relativ zum Takt wie in Z1; Anzahl und Summe; Ø der bis zu drei Schüsse nach einer Pause gegen den Ø der übrigen, je Schuss (B10). Die Pausen kommen aus den Schüssen mit Zeit wie in Z5, die Schnitte nur aus Schüssen mit Wert (Prüfung, 9. Oktober 2026). Die längste Pause als Kennzahl entfällt (Oktober 2026) | Scheibe, Zeitraum | A | SP-1.10 |

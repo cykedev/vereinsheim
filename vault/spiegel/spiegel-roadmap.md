@@ -138,7 +138,10 @@ Sonderfall den Test im Bericht. Offen: Aufträge (`commands`, mit SP-1.5 und SP-
 `git pull` → `vereinsheim env-check` (26 von 26) → `db-ensure` (spiegel angelegt) → `deploy` (Backup überspringt die
 leere Datenbank, Migratoren nacheinander, Postgres einmal neu gestartet); `spiegel.example.com` antwortet mit
 gültigem Zertifikat, Backup mit drei Dumps und `restore-probe` in Ordnung; Speicher siehe [[vps-resource-sizing]]
-(Caddy danach auf 96 MB). Offen: die Brücke im Schützenhaus (Raspberry Pi 3 B+, `linux/arm64` bei 64-Bit-OS), SP-1.9 b
+(Caddy danach auf 96 MB). Die eigenen Scheiben des Users kamen am 14. Oktober 2026 über eine Brücke auf dem Mac aus der
+Kopie der SSMDB2 vom 9. Oktober (eine erste Scheibe, dann 33 ältere über das Nachladen); Brücke danach getrennt, die
+Wegwerf-Datenbank gelöscht. Erste Rückmeldungen aus dem Test am 15. Oktober 2026
+(`plans/2026-10-15-spiegel-feedback-1.md`, [[spiegel-navigation]]). Offen: die Brücke im Schützenhaus (Raspberry Pi 3 B+, `linux/arm64` bei 64-Bit-OS), SP-1.9 b
 (Selbst-Hosting). Geklärt (13. Oktober 2026): Die eigenen Scheiben für `seed:own` liegen in `apps/spiegel/tools/own-cards-data.ts`, das Labor ist entfernt; `turbo prune spiegel` nimmt kein Labor mehr mit. Für die Ingest-API (SP-1.6 b): Caddy muss `X-Real-IP` selbst auf die echte Adresse setzen (`header_up`), bevor
 `AUTH_TRUST_PROXY_HEADERS` an ist, sonst umgeht ein Client die Ratenbegrenzung der Kopplung mit erfundenen Adressen
 (Review vom 13. Oktober 2026); der Ingest-Endpunkt braucht dieselbe Grenze der Anfragegröße auch in Caddy. Zuschnitt (Bestandsaufnahme vom 14. Oktober 2026): vor dem ersten Deploy SP-1.7 a1 und a2 (Opt-in mit erster Scheibe), dann Image und lokaler Stack, CLI, Deploy und Backup, dann der Deploy; das `X-Real-IP` setzt Caddy seit dem 14. Oktober 2026 für Ringwerk und Treffsicher selbst ([[caddy-x-real-ip-passthrough]]). Selbst-Hosting (Compose-Beispiel, Doku) folgt nach dem Deploy. **Danach hat der QR-Weg Priorität eins** (SP-1.7 b).

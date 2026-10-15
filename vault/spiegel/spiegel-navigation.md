@@ -3,7 +3,7 @@ id: spiegel-navigation
 type: concept
 title: "Spiegel — Navigation, Einstieg und Auswahl"
 aliases: [navigation-spiegel, einstieg, scheiben-liste-konzept, app-rahmen]
-keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung]
+keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung, liste aus meyton, rangliste, filter liste, zeitraum merken, gemerkter zeitraum, kalender blättern, früher, später]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-langzeit]]", "[[spiegel-assignment]]", "[[spiegel-mobile]]", "[[spiegel-roadmap]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]", "[[navigation-pattern]]"]
@@ -479,6 +479,33 @@ Kreise.
   und „?“ in einer Zeile, wenn sie passen; sonst die Kennzahl oben, darunter die Darstellung links und das „?“ rechts.
   Vorher rutschte „je Scheibe | je Monat“ allein rechts in eine zweite Zeile, sobald die Karte schmaler als rund 560 px
   war (am Desktop bei 900 px Fenster). Gemessen an der Karte, nicht am Fenster.
+
+## Rückmeldungen nach dem ersten Test (15. Oktober 2026)
+
+Plan `plans/2026-10-15-spiegel-feedback-1.md`, Wünsche des Users nach dem ersten Test in Produktion, vor allem am Telefon.
+
+- **Listen statt Ranglisten:** Die `Rangliste` aus Meyton heißt in jeder sichtbaren Zeile „Liste“ (Admin, Dialog,
+  Erklärung, Seite einer Scheibe, Filter); `OLD_WORDS` hält „Rangliste“ fern. Die Seite einer Scheibe nennt ihre Liste
+  in der Zeile unter dem Titel („Wettkampf · Liste RWK_LP · Sa 26.09.2026 · 10:30“, `cardMeta`). Scheiben aus dem PDF
+  oder `seed:own` haben keine.
+- **Filter „Liste“ unter Scheiben:** `ListQuery.list` als Kennung (`list=<id>`, nie der Name); im Blatt „Filter“ nach
+  der Art, am Chip „Liste RWK_LP“. Eine gewählte Liste bleibt wählbar, auch ohne Scheibe der Familie; eine unbekannte
+  Kennung gilt als keine. Der Sprung an einen Abend einer anderen Familie (`listOnEvening`) und „Alle in Scheiben
+  zeigen“ lassen sie fallen, das Blättern in einer Scheibe behält sie (Herkunft).
+- **Reiterwechsel an den Anfang:** Ein anderer Reiter der Analyse beginnt oben, die Karten unter den klebenden Leisten
+  (56 px am Telefon, 112 px ab 768 px), gemessen an der Reiterleiste. „Alle Beobachtungen“ springt weiter zu seiner
+  Karte.
+- **Zeitraum gemerkt:** Ein im Blatt „Filter“ übernommener Zeitraum steht im Cookie `spiegel-period` (Form von `range`,
+  ein Jahr, je Gerät). `/progress` ohne eigene Abfrage, also nur mit der Familie aus der Navigation, öffnet darin. Links
+  mit eigener Abfrage (Start „Form“, „Im Fortschritt zeigen“, Rückweg einer Scheibe) gelten, wie sie sind. Ein
+  benannter Zeitraum, den es nicht mehr gibt, fällt auf die Vorgabe zurück.
+- **Kalender blätterbar:** Der Kalender im Fortschritt kennt alle Trainingstage der Familie in der Art. Er zeigt so viele
+  ganze Wochen, wie nebeneinander passen (gemessen; am Telefon rund 18, am Desktop rund 35), am Anfang bis zum Ende des
+  Zeitraums, nie über heute hinaus. „‹ früher“ und „später ›“ blättern um diese Zahl Wochen, begrenzt durch die erste
+  Scheibe und heute (`calendarWindow`, `CalendarBrowser`); auch bei „Alles“ scrollt er nicht mehr seitlich (User nach
+  dem ersten Blick). Ein Tag außerhalb des Zeitraums führt in die Liste ohne Zeitraum.
+- **„Fett: Wertung der Scheibe.“ weg:** Die Zeile stand unter jedem Monat der Liste; die Wertung der Scheibe bleibt fett
+  und im Namen des Links.
 
 ## Labor näher an der App (9. Oktober 2026)
 
