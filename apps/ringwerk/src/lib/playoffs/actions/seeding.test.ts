@@ -106,27 +106,48 @@ interface LeagueOptions {
   playoffHasAchtelfinale?: boolean
   /** Serien einzelner Begegnungen ersetzen; Schlüssel "Stärker-Schwächer". */
   override?: Record<string, SeriesRow[]>
+  /** Begegnungen ohne Ergebnis (PENDING, keine Serien); Schlüssel "Stärker-Schwächer". */
+  pending?: string[]
+}
+
+type MatchupRow = {
+  id: string
+  status: string
+  homeParticipantId: string
+  awayParticipantId: string | null
+  series: SeriesRow[]
+}
+
+/** Filtert wie Prisma nach `where.status`; die übrigen Bedingungen treffen die eine Test-Liga immer. */
+function byStatus<T extends { status: string }>(
+  rows: T[],
+  args?: { where?: { status?: string } }
+): T[] {
+  const status = args?.where?.status
+  return status ? rows.filter((r) => r.status === status) : rows
 }
 
 /**
- * Liga, in der `ids` die wahre Stärke-Reihenfolge ist; alle Begegnungen abgeschlossen.
+ * Liga, in der `ids` die wahre Stärke-Reihenfolge ist; alle Begegnungen außer `pending` abgeschlossen.
  * Best-of: jeder gegen jeden einmal. Doppelrunde: Hin- und Rückrunde, eine Serie je Schütze,
  * der Stärkere gewinnt. Ungerade Teilnehmerzahl: jeder hat ein Freilos.
  */
 function league(ids: string[], opts: LeagueOptions) {
   const pattern = opts.pattern ?? "normal"
-  const matchups: unknown[] = []
+  const matchups: MatchupRow[] = []
   for (let i = 0; i < ids.length; i++) {
     for (let j = i + 1; j < ids.length; j++) {
       const [strong, weak] = [ids[i], ids[j]]
       const key = `${strong}-${weak}`
+      const open = opts.pending?.includes(key) ?? false
+      const status = open ? "PENDING" : "COMPLETED"
       if (opts.format === "BEST_OF_SINGLE") {
         matchups.push({
           id: `m-${key}`,
-          status: "COMPLETED",
+          status,
           homeParticipantId: strong,
           awayParticipantId: weak,
-          series: opts.override?.[key] ?? bestOfSeries(strong, weak, pattern),
+          series: open ? [] : (opts.override?.[key] ?? bestOfSeries(strong, weak, pattern)),
         })
       } else {
         for (const [home, away, leg] of [
@@ -135,10 +156,12 @@ function league(ids: string[], opts: LeagueOptions) {
         ]) {
           matchups.push({
             id: `m-${key}-${leg}`,
-            status: "COMPLETED",
+            status,
             homeParticipantId: home,
             awayParticipantId: away,
-            series: opts.override?.[key] ?? [series(strong, null, 5), series(weak, null, 9)],
+            series: open
+              ? []
+              : (opts.override?.[key] ?? [series(strong, null, 5), series(weak, null, 9)]),
           })
         }
       }
@@ -170,19 +193,20 @@ function league(ids: string[], opts: LeagueOptions) {
     groupTiebreaker1: null,
     groupTiebreaker2: null,
   })
-  m.competitionParticipantFindMany.mockResolvedValue(
-    ids.map((id, i) => ({
-      status: opts.withdrawn?.includes(id) ? "WITHDRAWN" : "ACTIVE",
-      // Nachnamen GEGEN die Stärke sortiert: eine Tabelle, die nichts wertet und nur alphabetisch
-      // ordnet, ergäbe die umgekehrte Setzung — jeder Test erkennt so eine falsche Quelle.
-      participant: {
-        id,
-        firstName: id,
-        lastName: `Name${String(ids.length - i).padStart(2, "0")}`,
-      },
-    }))
-  )
-  m.matchupFindMany.mockResolvedValue(matchups)
+  const entries = ids.map((id, i) => ({
+    status: opts.withdrawn?.includes(id) ? "WITHDRAWN" : "ACTIVE",
+    participantId: id,
+    // Nachnamen GEGEN die Stärke sortiert: eine Tabelle, die nichts wertet und nur alphabetisch
+    // ordnet, ergäbe die umgekehrte Setzung — jeder Test erkennt so eine falsche Quelle.
+    participant: {
+      id,
+      firstName: id,
+      lastName: `Name${String(ids.length - i).padStart(2, "0")}`,
+    },
+  }))
+  m.competitionParticipantFindMany.mockImplementation(async (args) => byStatus(entries, args))
+  m.matchupFindMany.mockImplementation(async (args) => byStatus(matchups, args))
+  m.matchupCount.mockImplementation(async (args) => byStatus(matchups, args).length)
 }
 
 /** P01, P02, … in Stärke-Reihenfolge. */
@@ -281,6 +305,21 @@ describe.each(["DOUBLE_ROUND_ROBIN", "BEST_OF_SINGLE"] as const)(
       league(["A", "B", "C", "D", "E"], { format, withdrawn: ["C"] })
       expect(await startPlayoffs("c1")).toEqual({ success: true })
       expect(createdPairs()).toEqual(["A–E", "B–D"])
+    })
+
+    it("offene Begegnungen eines Zurückgezogenen sperren den Start nicht", async () => {
+      // C zieht zurück, bevor A–C (C auswärts) und C–E (C zu Hause) gespielt sind.
+      league(["A", "B", "C", "D", "E"], { format, withdrawn: ["C"], pending: ["A-C", "C-E"] })
+      expect(await startPlayoffs("c1")).toEqual({ success: true })
+      expect(createdPairs()).toEqual(["A–E", "B–D"])
+    })
+
+    it("eine offene Begegnung zwischen Aktiven sperrt den Start weiter", async () => {
+      league(["A", "B", "C", "D", "E"], { format, withdrawn: ["C"], pending: ["A-C", "D-E"] })
+      expect(await startPlayoffs("c1")).toEqual({
+        error: "Es gibt noch ausstehende Paarungen in der Gruppenphase.",
+      })
+      expect(m.playoffMatchCreateMany).not.toHaveBeenCalled()
     })
 
     it("protokolliert die Zahl der aktiven Teilnehmer", async () => {
@@ -448,8 +487,7 @@ describe.each(["DOUBLE_ROUND_ROBIN", "BEST_OF_SINGLE"] as const)(
     })
 
     it("offene Paarungen in der Gruppenphase", async () => {
-      league(["A", "B", "C", "D"], { format })
-      m.matchupCount.mockResolvedValue(1)
+      league(["A", "B", "C", "D"], { format, pending: ["C-D"] })
       expect(await startPlayoffs("c1")).toEqual({
         error: "Es gibt noch ausstehende Paarungen in der Gruppenphase.",
       })

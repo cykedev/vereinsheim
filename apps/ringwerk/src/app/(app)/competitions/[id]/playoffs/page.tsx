@@ -4,8 +4,11 @@ import { CalendarDays, Trophy, Users } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
-import { getPlayoffBracket, getSeedingStandings } from "@/lib/playoffs/queries"
-import { db } from "@/lib/db"
+import {
+  countOpenGroupMatchups,
+  getPlayoffBracket,
+  getSeedingStandings,
+} from "@/lib/playoffs/queries"
 import { PlayoffBracket } from "@/components/app/playoffs/PlayoffBracket"
 import { StartPlayoffsButton } from "@/components/app/playoffs/StartPlayoffsButton"
 import { AdvanceRoundButton } from "@/components/app/playoffs/AdvanceRoundButton"
@@ -34,7 +37,7 @@ export default async function CompetitionPlayoffsPage({ params }: Props) {
     getPlayoffBracket(id),
     // Dieselbe Tabelle, aus der der Start setzt (Best-of: Best-of-Tabelle).
     getSeedingStandings(id),
-    db.matchup.count({ where: { competitionId: id, status: "PENDING" } }),
+    countOpenGroupMatchups(id),
   ])
 
   if (!competition) notFound()

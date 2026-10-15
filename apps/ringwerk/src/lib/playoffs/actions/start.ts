@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
-import { getSeedingStandings } from "@/lib/playoffs/queries"
+import { countOpenGroupMatchups, getSeedingStandings } from "@/lib/playoffs/queries"
 import { createFirstRoundMatchups } from "../calculatePlayoffs"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 
@@ -16,7 +16,7 @@ import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
  * - Meisterschaft muss ACTIVE sein
  * - Playoffs noch nicht gestartet
  * - ≥ 4 aktive (nicht zurückgezogene) Teilnehmer
- * - Keine PENDING-Paarungen in der Gruppenphase
+ * - Keine offenen Paarungen in der Gruppenphase (Paarungen mit Zurückgezogenen zählen nicht)
  */
 export async function startPlayoffs(competitionId: string): Promise<ActionResult> {
   const session = await getAuthSession()
@@ -39,7 +39,7 @@ export async function startPlayoffs(competitionId: string): Promise<ActionResult
 
   const [existingCount, pendingCount] = await Promise.all([
     db.playoffMatch.count({ where: { competitionId } }),
-    db.matchup.count({ where: { competitionId, status: "PENDING" } }),
+    countOpenGroupMatchups(competitionId),
   ])
 
   if (existingCount > 0) return { error: "Playoffs wurden bereits gestartet." }

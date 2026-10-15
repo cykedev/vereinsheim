@@ -186,6 +186,29 @@ export async function hasPlayoffsStarted(competitionId: string): Promise<boolean
 }
 
 /**
+ * Offene Paarungen der Gruppenphase, die den Playoff-Start sperren. Paarungen mit einem
+ * zurückgezogenen Teilnehmer zählen nicht: Sie werden nicht gewertet und haben keine Ergebniseingabe.
+ */
+export async function countOpenGroupMatchups(competitionId: string): Promise<number> {
+  const [pending, withdrawn] = await Promise.all([
+    db.matchup.findMany({
+      where: { competitionId, status: "PENDING" },
+      select: { homeParticipantId: true, awayParticipantId: true },
+    }),
+    db.competitionParticipant.findMany({
+      where: { competitionId, status: "WITHDRAWN" },
+      select: { participantId: true },
+    }),
+  ])
+  const withdrawnIds = new Set(withdrawn.map((e) => e.participantId))
+  return pending.filter(
+    (m) =>
+      !withdrawnIds.has(m.homeParticipantId) &&
+      !(m.awayParticipantId !== null && withdrawnIds.has(m.awayParticipantId))
+  ).length
+}
+
+/**
  * Die Gruppentabelle in Setzreihenfolge — je nach Liga-Format die Rundenturnier- oder die
  * Best-of-Tabelle, also genau die Tabelle, die Spielplan-Seite und PDF zeigen. Setzplatz ist die
  * Position in der Liste, nicht `rank` (der ist bei Gleichstand geteilt).
