@@ -3,7 +3,6 @@
   "extends": ["//"],
   "tasks": {
     "test": {
-      "dependsOn": ["db:generate", "^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/vault/spiegel/spiegel-statistics-help.md"]
     }
   }

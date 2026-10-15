@@ -12,13 +12,13 @@
       "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
     "lint": {
-      "dependsOn": ["db:generate"]
+      "dependsOn": ["db:generate", "^build"]
     },
     "check-types": {
       "dependsOn": ["db:generate", "build"]
     },
     "test": {
-      "dependsOn": ["db:generate"]
+      "dependsOn": ["db:generate", "^build"]
     },
     "format:check": {},
     "format": {

@@ -3,7 +3,7 @@ id: monorepo
 type: guide
 title: "Monorepo-Migration — Plan"
 aliases: ["Monorepo-Migration — Plan"]
-keywords: [monorepo-migration, plan]
+keywords: [monorepo-migration, plan, Turbo-Cache, turbo.json]
 part_of: ["[[overview]]"]
 ---
 
@@ -261,6 +261,11 @@ Gates grün, geprunter Docker-Build verifiziert.
 - **Prisma-7-Client-Pfad** bleibt app-lokal (`output: ../src/generated/prisma`); in `turbo.json` als
   Build-`outputs` + `prisma/**` als `inputs` deklarieren (sonst Cache-Staleness). Schemata/Migrations
   nie teilen.
+- **Pakete im Turbo-Hash**: Die Pakete unter `packages/*` haben kein `build`-Script. `build`, `test` und
+  `lint` hängen in der Root-`turbo.json` trotzdem an `"^build"`: Der leere `build`-Knoten eines Pakets trägt
+  den Hash seiner Quellen. Ändert sich ein Paket, laufen Tests und Lint jeder App und jedes Pakets neu, die
+  davon abhängen. Ohne `^build` kämen sie grün aus dem Cache. Prüfen mit `turbo run test lint --dry=json`:
+  Eine Änderung in `lib` ändert die Hashes aller drei Apps, eine in `shot-core` nur die von Spiegel.
 - **pnpm-Strenge**: geteilte Pakete explizit als `"@vereinsheim/ui": "workspace:*"` deklarieren
   (verhindert Phantom-Deps).
 - **Tailwind v4 content/`@source`**: bei UI im Paket müssen die `packages/ui`-Sourcen ins Class-Scanning
@@ -322,10 +327,6 @@ maschinengebunden:
   passt gut in `packages/lib`.
 - Env-Var-Angleichung `ADMIN_*` ↔ `SEED_ADMIN_*` (deploy-breaking, separat).
 - CI/Remote-Cache (Phase 5).
-- **Turbo-Cache verdeckt App-Tests:** `test` und `lint` der Apps hängen in der Root-`turbo.json` nur an
-  `db:generate`, nicht an den Paketen. Ändert sich nur ein Paket (`lib`, `shot-core`, `shot-ui`, …), liefert
-  `pnpm check` Tests und Lint der Apps grün aus dem Cache. `"^build"` bei `test` und `lint` ergänzen wie in
-  `packages/shot-ui/turbo.json` und mit einem Dry-Run belegen, dass sich der Hash dann ändert.
 - **Session-Cookies kollidieren lokal:** Alle drei Apps laufen auf `localhost` mit demselben NextAuth-Cookie; wer sich
   in einer anmeldet, wird in den anderen abgemeldet. Im Dev-Betrieb je App einen eigenen Cookie-Namen setzen.
 - **Ratenbegrenzung in `@vereinsheim/lib`:** Bei vollem Speicher (10.000 Einträge) verdrängt der Datenbank-Store nach
