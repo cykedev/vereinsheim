@@ -110,6 +110,9 @@ nach ADR-023. Bestandsaufnahme durch zwei Agenten (15. Oktober 2026), Belege in 
     des Zeitraums, früher/später, Grenzen); Prüfung in `pruefen.ts` (Knopf „früher“ zeigt ältere Tage).
 11. **T11 Doku:** Scope-Notizen, Katalog (Z1, Z2, Z4, V2), `spiegel-navigation` (Filter „Liste“, gemerkter Zeitraum,
     blätterbarer Kalender).
+12. **T12 „Fett: Wertung der Scheibe.“ weg** (User, 15. Oktober 2026, während des Laufs: „bei den scheiben steht immer
+    wieder ‚Fett: Wertung der Scheibe.‘ in jedem monat. das kann weg“): die Zeile unter jedem Monat in `EveningList`
+    entfällt, die Wertung bleibt fett und im Namen des Links; Markup-Test.
 
 ## Testschritte
 

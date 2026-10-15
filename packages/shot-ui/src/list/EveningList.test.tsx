@@ -142,7 +142,7 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     expect(render("rings")).toContain("Ergebnis 29 in ganzen Ringen, 30,0 in Zehnteln, Ø")
   })
 
-  it("die Wertung der Scheibe ist fett und heißt so, eine Zeile unter der Karte erklärt es (U5, D5)", () => {
+  it("die Wertung der Scheibe ist fett und heißt im Namen des Links so, ohne Zeile unter dem Monat (U5, D5; User, 15. Oktober 2026)", () => {
     const official = render("decimal", [
       {
         card: periodCard("o", 1, [100, 102, 98], { official: "rings", startedAtMs: at(16, 30) }),
@@ -154,7 +154,9 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
       /<td data-rings="true" data-card-scoring="true" class="[^"]*font-semibold[^"]*">29</
     )
     expect(official).toMatch(/<td data-decimal="true" class="(?![^"]*font-semibold)[^"]*">30,0</)
-    expect(official).toMatch(/<p data-card-scoring-legend[^>]*>Fett: Wertung der Scheibe\.<\/p>/)
+    // „Fett: Wertung der Scheibe.“ stand unter jedem Monat und ist weg (User: „das kann weg“)
+    expect(official).not.toContain("Fett:")
+    expect(official).not.toContain("data-card-scoring-legend")
     expect(official).toContain(
       "Ergebnis 29 in ganzen Ringen (Wertung der Scheibe), 30,0 in Zehnteln"
     )
@@ -171,8 +173,6 @@ describe("Scheiben-Liste nach Abend (Plan N2, D2–D6; Form wie die Liste eines 
     )
     expect(chosen).toMatch(/<td data-rings="true" class="(?![^"]*font-semibold)[^"]*">29</)
     expect(chosen).toContain("Ergebnis 30,0 in Zehnteln (Wertung der Scheibe), 29 in ganzen Ringen")
-    // ohne Wertung der Scheibe im Monat keine Erklärung für Fettes, das es nicht gibt (Review U5)
-    expect(html).not.toContain("data-card-scoring-legend")
     const lower = render("decimal", [
       { card: periodCard("x", 2, [103]), family: "lg-freihand" },
       { card: periodCard("y", 1, [100]), family: "lg-freihand" },

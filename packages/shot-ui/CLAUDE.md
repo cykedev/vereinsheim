@@ -171,9 +171,9 @@ SP-1.8). Vorbild war die Spielwiese, erprobt wurde bis Oktober 2026 im Labor (be
     der ersten (kein `rowSpan`: sonst ist das Hervorheben beim Überfahren kein Rechteck); keine Zahl je Abend; der
     Hinweis auf andere Familien ist eine kleine, rechtsbündige Zeile darunter.
   - Ergebnis in beiden Wertungen mit Namen (U5): Spalten „Ganze Ringe“ und „Zehntel“, die Wertung der Scheibe fett
-    (`ProjectedCard.scoring`, ohne sie die amtliche, seit 12. Oktober 2026), darunter „Fett: Wertung der
-    Scheibe.“ (nur wenn im Monat etwas fett ist; in der Kachel auf Start bricht das Ergebnis nur zwischen den Wertungen
-    um); das Modell liefert `resultScoring`, `ofCard` (Markup `data-card-scoring`), `otherResult`. Ø und Abstand in der
+    (`ProjectedCard.scoring`, ohne sie die amtliche, seit 12. Oktober 2026), ohne Zeile darunter (die stand unter
+    jedem Monat, User, 15. Oktober 2026: „das kann weg“; der Name des Links sagt es); in der Kachel auf Start bricht
+    das Ergebnis nur zwischen den Wertungen um; das Modell liefert `resultScoring`, `ofCard` (Markup `data-card-scoring`), `otherResult`. Ø und Abstand in der
     Wertung der Liste (in der App die der Familie).
   - Die Zeile zeigt Ergebnis, Ø, den Abstand zum Schnitt der fünf Scheiben davor (`deltasBefore`) und die
     Schusszahl. Der Abstand rechnet über Familie und Art mit Trainings nur aus Probe, vor dem Zeitraum und ohne

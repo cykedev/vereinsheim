@@ -395,8 +395,8 @@ aus [[spiegel-durchsicht]] und „Kein Schalter der Wertung“ aus [[spiegel-lan
 - **Wertung einer Familie** für die Schnitte: gespeichert, sonst die häufigste ihrer Scheiben, bei Gleichstand Zehntel.
   In ihr rechnen in der Liste Ø und Abstand, auf Start jeder Block (Ø des Abends, Schnitt, Band, Verlauf, Rekorde) und
   die Form, der Fortschritt.
-- **Vorn in Liste und Start** steht die Wertung der Scheibe; in der Liste fett, mit „Fett: Wertung der Scheibe.“ unter
-  dem Monat. Die große Zahl auf Start zeigt die Wertung ihres Blocks im Kreis daneben, weil Blöcke verschiedener
+- **Vorn in Liste und Start** steht die Wertung der Scheibe; in der Liste fett. Die Zeile „Fett: Wertung der Scheibe.“
+  unter jedem Monat ist seit dem 15. Oktober 2026 weg (User: „das kann weg“); der Name des Links sagt es weiter. Die große Zahl auf Start zeigt die Wertung ihres Blocks im Kreis daneben, weil Blöcke verschiedener
   Familien verschieden rechnen können (im Labor ohne Kreis als Text: „Ø je Schuss in Zehnteln“).
 - **Jedes Umschalten ist eine Wahl:** Mit dem Kreis (Scheibe, Start) stellt jedes Tippen um; wer einmal hin und zurück
   tippt, hat die Wertung gewählt, und eine Scheibe folgt danach nicht mehr der Vorgabe ihrer Art (Review, 13. Oktober

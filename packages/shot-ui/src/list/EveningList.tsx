@@ -303,15 +303,6 @@ export function EveningList({
                   )
                 })}
               </table>
-              {/* nur mit Fettem im Monat (Review U5) */}
-              {month.evenings.some((evening) => evening.rows.some((row) => row.ofCard)) && (
-                <p
-                  data-card-scoring-legend
-                  className="px-2 pt-1.5 pb-0.5 text-xs text-muted-foreground"
-                >
-                  Fett: Wertung der Scheibe.
-                </p>
-              )}
             </div>
           </section>
         )
