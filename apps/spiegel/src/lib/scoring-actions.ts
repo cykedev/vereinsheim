@@ -1,7 +1,5 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
-
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
 import { isCardIdInput, shooterId } from "@/lib/action-guards"
@@ -11,7 +9,8 @@ import type { ActionResult } from "@/lib/types"
 
 // Wertung umschalten und automatisch speichern (Plan `plans/2026-10-12-spiegel-wertung.md`): auf der Seite einer Scheibe
 // die der Scheibe, in Liste und Fortschritt die der Familie. Nur eigene Scheiben, auch für Admins. Danach rechnen die
-// Seiten neu (`revalidatePath`); Liste und Start zeigen vorn die Wertung der Scheibe.
+// Seiten neu: Die Hülle ruft `router.refresh()` (`useSavedChoice`), kein `revalidatePath` hier, nach dem Next zum Anker
+// der Adresse scrollte (15. Oktober 2026). Liste und Start zeigen vorn die Wertung der Scheibe.
 
 const isScoring = (value: unknown): value is Scoring => value === "decimal" || value === "rings"
 
@@ -25,7 +24,6 @@ export async function setCardScoring(cardId: string, scoring: Scoring): Promise<
     if (!isCardIdInput(cardId)) return { error: "Diese Scheibe gibt es nicht mehr." }
     if (!(await chooseCardScoring(db, { cardId, ownerId, scoring })))
       return { error: "Diese Scheibe gibt es nicht mehr." }
-    revalidatePath("/", "layout")
     return { success: true }
   } catch {
     return { error: "Die Wertung ließ sich nicht speichern." }
@@ -46,7 +44,6 @@ export async function setFamilyScoring(
       return { error: "Das ließ sich nicht speichern. Bitte lade die Seite neu." }
     if (!(await saveFamilyScoring(db, { familySlug, ownerId, scoring })))
       return { error: "Das ließ sich nicht speichern. Bitte lade die Seite neu." }
-    revalidatePath("/", "layout")
     return { success: true }
   } catch {
     return { error: "Die Wertung ließ sich nicht speichern." }

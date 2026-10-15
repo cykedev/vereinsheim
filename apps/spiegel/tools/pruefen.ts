@@ -129,6 +129,45 @@ async function tabStart(page: Page, below: number, label: string) {
   )
 }
 
+/**
+ * Umschalten bleibt an der Stelle (User, 15. Oktober 2026: „wenn ich … auf ‚wettkampf‘ oder den zehntel umschalter
+ * klicke, dann springe ich runter zur analyse“): Wertung und Art auf der Seite einer Scheibe mit Anker `#analysis` und
+ * die Wertung der Familie unter Scheiben; je danach zurückgestellt
+ */
+async function togglesStay(page: Page, href: string, label: string) {
+  const visible = (prefix: string) =>
+    `$$("button").find((b) => (b.getAttribute("aria-label") ?? "").startsWith(${JSON.stringify(prefix)}) && b.getBoundingClientRect().width > 0)`
+  const moved: string[] = []
+  for (const [where, prefix] of [
+    [`${href}#analysis`, "Wertung:"],
+    [`${href}#analysis`, "Art:"],
+    ["/cards", "Wertung für Ø und Abstand:"],
+  ] as const) {
+    await page.goto(`${BASE}${where}`)
+    await page.ev(`scrollTo(0, 60)`)
+    await page.wait(300)
+    const before = await page.ev<{ y: number; name: string }>(
+      `({ y: scrollY, name: ${visible(prefix)}.getAttribute("aria-label") })`
+    )
+    await page.click(visible(prefix), { scroll: false, settle: 1500 })
+    const after = await page.ev<{ y: number; name: string }>(
+      `({ y: scrollY, name: ${visible(prefix)}.getAttribute("aria-label") })`
+    )
+    if (!near(after.y, before.y, 2) || after.name === before.name)
+      moved.push(
+        `${prefix} ${before.y} → ${after.y}${after.name === before.name ? ", nicht umgestellt" : ""}`
+      )
+    await page.click(visible(prefix), { scroll: false, settle: 1500 })
+  }
+  check(
+    `${label}: Wertung und Art umschalten bleibt an der Stelle, auch mit Anker #analysis`,
+    moved.length === 0,
+    moved.join(" · ")
+  )
+  // zurück auf die Seite der Scheibe, oben: die folgenden Prüfungen beginnen dort
+  await page.goto(`${BASE}${href}`)
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Seite einer Scheibe am Desktop (1280 × 900)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -231,6 +270,7 @@ async function desktopCard(page: Page, href: string) {
     more
   )
   await tabStart(page, 112, "Desktop")
+  await togglesStay(page, href, "Desktop")
 
   const cardJargon = await page.ev<string | null>(
     jargonIn(
@@ -472,6 +512,7 @@ async function phoneCard(page: Page, href: string) {
     wide.join(" · ")
   )
   await tabStart(page, 56, "Telefon 375 px")
+  await togglesStay(page, href, "Telefon 375 px")
 
   // Rücksprung (D6): der Knopf der Ellipse aus „Lage“ holt die Scheibe, die Pille bringt zurück
   await page.click(`tab("Lage")`, { settle: 250 })

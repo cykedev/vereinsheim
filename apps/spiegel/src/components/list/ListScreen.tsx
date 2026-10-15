@@ -54,7 +54,7 @@ const onList = () => window.location.pathname === "/cards"
  * auf dem Server gerechnet (`cardListModel` aus den Projektionen), die Bausteine aus `shot-ui/list`. Ein Filter schreibt
  * die Adresse neu (Zurück findet ihn wieder), und die Seite rechnet neu. Vorn steht die Wertung jeder Scheibe; Ø und
  * Abstand rechnen in der Wertung der Familie, der Schalter speichert sie (`setFamilyScoring`), danach rechnet die Seite
- * neu.
+ * neu (`router.refresh()` in `useSavedChoice`, ohne zu scrollen).
  */
 export function ListScreen({
   list,

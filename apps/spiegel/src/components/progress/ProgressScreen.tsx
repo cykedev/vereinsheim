@@ -66,7 +66,7 @@ const addressOf = (state: PeriodState) =>
  * rechnen auf dem Server neu; eine Wahl (Verlauf, Liste, Rekord) bleibt im Browser: Sie ändert die Ablesung, schreibt
  * `pick` verzögert mit `replaceState` und holt die Lagen der kleinen Scheibe nach (`cardMarksAction`). Gerechnet wird in
  * der Wertung der Familie; der Schalter in der Ergebnis-Box speichert sie (`setFamilyScoring`), danach rechnet der Server
- * neu.
+ * neu (`router.refresh()` in `useSavedChoice`, ohne zu scrollen).
  */
 export function ProgressScreen({
   model: base,

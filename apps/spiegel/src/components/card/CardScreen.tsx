@@ -195,12 +195,16 @@ export function CardScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // hier umgeschaltet: Die Wahl ist an der Scheibe gespeichert, die Adresse trägt keine Wertung mehr. Sonst änderte sich
+  // ihre Suche während des Speicherns, Next lud die Seite als neues Segment und scrollte danach zum Anker der Adresse
+  // (User, 15. Oktober 2026: „dann springe ich runter zur analyse“)
+  const [scoringChosenHere, setScoringChosenHere] = useState(false)
   // die Adresse, wie sie den Zustand beschreibt; ohne Neuladen nachgeführt, damit Reload und Zurück ihn finden
   const route: CardRoute = {
     ...initialRoute,
     selection: state.selection === "all" ? null : state.selection,
     shot: state.chosen ? (shotLabels(shots)[state.chosen.index] ?? null) : null,
-    scoring: addressScoring(state.scoring, card.scoring),
+    scoring: scoringChosenHere ? null : addressScoring(state.scoring, card.scoring),
     anchor: chosenTab ? { section: "analysis", tab: chosenTab } : null,
   }
   const address = urlFromRoute(route)
@@ -284,7 +288,10 @@ export function CardScreen({
     scope: card.id,
     save: (scoring) => setCardScoring(card.id, scoring),
     notSaved: "Die Wertung ließ sich nicht speichern.",
-    onShow: (scoring) => dispatch({ type: "setScoring", scoring }),
+    onShow: (scoring) => {
+      setScoringChosenHere(true)
+      dispatch({ type: "setScoring", scoring })
+    },
   })
   const kindChoice = useSavedChoice({
     value: card.kind,

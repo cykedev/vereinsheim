@@ -1,7 +1,5 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
-
 import type { CardKind } from "@/generated/prisma/client"
 import { isCardIdInput, shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
@@ -10,7 +8,8 @@ import type { ActionResult } from "@/lib/types"
 
 // Art der Scheibe festlegen und automatisch speichern (Plan `plans/2026-10-12-spiegel-art.md`): Wettkampf oder Training,
 // nur eigene Scheiben, auch für Admins. Die Art ändert Filter, Rekorde und die Vorgabe der Wertung (Wettkampf in der
-// amtlichen); danach rechnen die Seiten neu.
+// amtlichen); danach rechnen die Seiten neu, über `router.refresh()` in `useSavedChoice` (kein `revalidatePath`: nach ihm
+// scrollte Next zum Anker der Adresse, 15. Oktober 2026).
 
 const isKind = (value: unknown): value is CardKind =>
   value === "training" || value === "competition"
@@ -25,7 +24,6 @@ export async function setCardKind(cardId: string, kind: CardKind): Promise<Actio
     const result = await chooseCardKind(db, { cardId, ownerId, kind })
     if (result === "missing") return { error: "Diese Scheibe gibt es nicht mehr." }
     if (result === "probeOnly") return { error: "Eine Scheibe nur aus Probe ist Training." }
-    revalidatePath("/", "layout")
     return { success: true }
   } catch {
     return { error: "Die Art ließ sich nicht speichern." }
