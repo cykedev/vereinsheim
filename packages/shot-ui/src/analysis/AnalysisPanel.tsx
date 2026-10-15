@@ -220,7 +220,10 @@ export function AnalysisPanel({
       </div>
       {/* Streifen, der klebt: auf dem Telefon über der Sprungleiste (nie zwei Leisten), ab 768 px unter ihr;
           die Leiste ist eine Zeile, die in sich seitlich scrollt, statt die Seite zu verbreitern */}
-      <div className="sticky top-0 z-30 flex h-14 items-center bg-background max-md:-mx-4 max-md:px-4 md:top-14 md:z-10">
+      <div
+        data-analysis-strip
+        className="sticky top-0 z-30 flex h-14 items-center bg-background max-md:-mx-4 max-md:px-4 md:top-14 md:z-10"
+      >
         <Segmented
           label="Thema"
           value={tab}

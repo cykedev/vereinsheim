@@ -94,7 +94,7 @@ const PERIOD_TOPICS = HELP_TOPICS.filter((t) => t.theme === "period").map((t) =>
  * Erst im Blatt „?“ und in den Karten der Reiter. Aus der Skriptprüfung des Labors übernommen.
  */
 const JARGON =
-  "/σ|R50|T²|mit 95 ?%|95 ?%:|Median|P10|P90|mittlere Hälfte|bedeutsam|Hotelling|\\b[Ee]cht(e[nmrs]?)?\\b|\\b[Uu]nklar\\b|KW \\d/"
+  "/σ|R50|T²|mit 95 ?%|95 ?%:|Median|P10|P90|mittlere Hälfte|bedeutsam|Hotelling|\\b[Ee]cht(e[nmrs]?)?\\b|\\b[Uu]nklar\\b|KW \\d|[Rr]angliste/"
 /** der erste Fachbegriff im Text der Elemente (ohne Blätter), oder null */
 const jargonIn = (selectors: string) =>
   `(() => { const text = $$(${JSON.stringify(selectors)}).map((el) => { const copy = el.cloneNode(true)

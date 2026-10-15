@@ -474,7 +474,7 @@ export function CardScreen({
 function scrollToTabStart() {
   const panel = document.querySelector('section[aria-label="Analyse"]')
   const region = panel?.querySelector('[role="region"]')
-  const strip = panel?.querySelector('[role="radiogroup"][aria-label="Thema"]')?.parentElement
+  const strip = panel?.querySelector<HTMLElement>("[data-analysis-strip]")
   if (!region || !strip) return
   const below =
     (parseFloat(getComputedStyle(strip).top) || 0) + strip.getBoundingClientRect().height

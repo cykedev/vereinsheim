@@ -42,7 +42,12 @@ export function CardHeader({
         <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight text-balance">
           {title}
         </h1>
-        {meta.length > 0 && <p className="text-[13px] text-muted-foreground">{meta.join(" · ")}</p>}
+        {/* ein langer Name einer Liste aus Meyton ohne Leerzeichen bricht um statt über den Rand (Review) */}
+        {meta.length > 0 && (
+          <p className="text-[13px] [overflow-wrap:anywhere] text-muted-foreground">
+            {meta.join(" · ")}
+          </p>
+        )}
       </div>
       {result && <div className="md:hidden">{result}</div>}
       {observations.length > 0 && (

@@ -2,7 +2,7 @@
 
 import { formatDateOnly, formatMonthShort, formatWeekdayDate } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import type { Route } from "../nav/routes"
 import { RouteLink } from "../nav/RouteLink"
@@ -41,6 +41,11 @@ export const calendarWeeks = weeksBetween
 /** Breite einer Woche (13 px) und Abstand dazwischen (3 px), wie gezeichnet */
 const WEEK_PX = 13
 const GAP_PX = 3
+/**
+ * Platz für einen Monatsnamen über der letzten Woche: „Dez“ ist breiter als die Spalte und ragte sonst über den Rand,
+ * der Kalender scrollte wieder seitlich (Review)
+ */
+const LABEL_OVERHANG_PX = 8
 /** vor dem Messen (Server, erstes Bild) und als Untergrenze */
 const DEFAULT_WEEKS = 13
 const MIN_WEEKS = 4
@@ -140,15 +145,24 @@ export function CalendarChart({
   /** meldet die Zahl der Wochen, die in den Platz passen (gemessen ohne Rand) */
   onFit?: (weeks: number) => void
 }) {
-  const scroller = useRef<HTMLDivElement>(null)
+  const scroller = useRef<HTMLDivElement | null>(null)
   const [width, measure] = useElementWidth()
+  const setScroller = useCallback(
+    (node: HTMLDivElement | null) => {
+      scroller.current = node
+      measure(node)
+    },
+    [measure]
+  )
   useEffect(() => {
-    if (width > 0 && onFit) onFit(weeksThatFit(width))
+    if (width > 0 && onFit) onFit(weeksThatFit(width - LABEL_OVERHANG_PX))
   }, [width, onFit])
+  // ohne Blättern scrollt ein zu breiter Kalender in sich und zeigt anfangs die jüngsten Wochen; mit Blättern passt er
+  const paged = paging !== undefined
   useEffect(() => {
     const node = scroller.current
-    if (node) node.scrollLeft = node.scrollWidth
-  }, [from, to])
+    if (node && !paged) node.scrollLeft = node.scrollWidth
+  }, [from, to, paged])
   const weeks = calendarWeeks(from, to)
   const byKey = new Map(days.map((day) => [day.key, day]))
   const max = Math.max(0, ...days.map((day) => day.shots))
@@ -195,10 +209,7 @@ export function CalendarChart({
           ))}
         </div>
         <div
-          ref={(node) => {
-            scroller.current = node
-            measure(node)
-          }}
+          ref={setScroller}
           className="min-w-0 flex-1 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div role="group" aria-label="Trainingstage" className="flex gap-[3px]">

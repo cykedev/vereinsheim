@@ -129,7 +129,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   bleibt beim Wechsel der Scheibe; ohne Schüsse zeigt „Gruppe“ die ganze Scheibe (`groupView`).
 - **Zeitraum des Fortschritts gemerkt** (User, 15. Oktober 2026, `plans/2026-10-15-spiegel-feedback-1.md`): Cookie
   `spiegel-period` in der Form von `range` (`src/lib/period-memory*.ts`). Geschrieben nur, wenn der Zeitraum im Blatt
-  „Filter“ übernommen wird (`setFilters`, `setChoice` in `ProgressScreen`); gelesen auf dem Server, wenn `/progress`
+  „Filter“ übernommen wird (`setFilters` in `ProgressScreen`, auch `setChoice`, das heute niemand schickt); gelesen auf dem Server, wenn `/progress`
   keine eigene Abfrage hat außer `family` (die hängt die Navigation an). Ein benannter Zeitraum, den es nicht mehr gibt,
   gilt als keiner.
 - **Projektion nur aus dem Fachkern.** `cardProjection` und `cardMarks` rechnen, die App speichert. Steigt eine

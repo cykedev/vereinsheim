@@ -131,6 +131,12 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     ;(choice.props.onChange as (v: string) => void)("")
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, list: null })
     expect(renderToStaticMarkup(h(ListControls, props()))).not.toContain('aria-label="Liste"')
+    // eine unbekannte Kennung aus einer alten Adresse: „Alle“ ist gewählt, der Chip nennt keine Liste (Review)
+    const stale = renderToStaticMarkup(
+      h(ListControls, props({ lists, query: { ...QUERY, list: 99 } }))
+    )
+    expect(stale).toMatch(/aria-label="Liste"[^>]*><button[^>]*aria-checked="true"[^>]*>Alle</)
+    expect(stale).not.toContain("Liste RWK")
   })
 
   it("ohne Merkmale keine Wahl „Merkmal“, ohne Zeitraum kein Zeitraum im Blatt", () => {

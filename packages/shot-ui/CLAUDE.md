@@ -165,7 +165,8 @@ SP-1.8). Vorbild war die Spielwiese, erprobt wurde bis Oktober 2026 im Labor (be
   - Ein Abend zählt nach der Uhrzeit der Zone (vor 04:00 der Vortag), nicht vier Stunden absolut: an den Tagen der
     Zeitumstellung hat die Nacht 23 oder 25 Stunden.
   - Die Familie ist Pflicht; andere Familien des Abends nennt der Kopf („auch 1 Scheibe Luftpistole ›“). Er zählt ohne
-    Art und Merkmal, nur im Zeitraum; der Sprung dorthin geht über `listOnEvening` (lässt Art und Merkmal fallen).
+    Art, Merkmal und Liste, nur im Zeitraum; der Sprung dorthin geht über `listOnEvening` (lässt Art, Merkmal und Liste
+    fallen).
   - Form wie die Liste eines Zeitraums (User, 9. Oktober 2026): je Monat eine Karte (`eveningsByMonth`) mit Kopf und
     Tabelle; ein Abend ist ein `tbody` mit dem ISO-Tag als Anker. Jede Zeile hat ihre Datumszelle, das Datum steht nur in
     der ersten (kein `rowSpan`: sonst ist das Hervorheben beim Überfahren kein Rechteck); keine Zahl je Abend; der

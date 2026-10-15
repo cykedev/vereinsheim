@@ -300,8 +300,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Jeder Punkt ist ein Schuss mit seinem Wert in Zehnteln, auch wenn die Scheibe in ganzen
   Ringen gewertet wird. Die Linie ist der Schnitt der letzten zehn (gestrichelt, solange es noch
   keine zehn sind). Der Trend ist eine Ausgleichsgerade durch alle Schüsse; die Zahl sagt, um wie
-  viele Ringe der Wert eines Schusses alle 10 Schuss steigt oder sinkt. Bei −0,24 ist ein Schuss
-  also zehn Schuss später im Schnitt 0,24 Ringe schwächer, eine ganze Serie 2,4 Ringe.
+  viele Ringe der Wert eines Schusses alle 10 Schuss steigt oder sinkt. Sie rechnet in der Wertung
+  der Scheibe, wie Ø und Beobachtungen. Bei −0,24 ist ein Schuss also zehn Schuss später im Schnitt
+  0,24 Ringe schwächer, eine ganze Serie 2,4 Ringe.
 - *So liest du es:* „Klar fallend“ heißt: Ein so deutlicher Abfall entstünde durch Zufall allein
   höchstens in 5 von 100 Scheiben; „klar steigend“ gilt ebenso nach oben. Sonst ist der Trend „nicht
   klar“, auch wenn die Linie etwas fällt oder steigt.
@@ -395,8 +396,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Die Linie ist der Schnitt der letzten fünf Scheiben (gestrichelt, solange es noch keine fünf
   sind). Das Formband um die Linie zeigt, wie weit deine Scheiben üblicherweise um diesen Schnitt
   schwanken. Je Monat zeigt Spiegel dazu Boden und Decke: den Wert, den du an einem schwachen Tag
-  hältst, den mittleren und den, den du an einem guten Tag erreichst. In der Liste und beim Ablesen
-  steht, wie weit eine Scheibe vom Schnitt der bis zu fünf Scheiben davor liegt, ohne sie selbst.
+  hältst, den mittleren und den, den du an einem guten Tag erreichst. Unter „Scheiben“ und beim
+  Ablesen steht, wie weit eine Scheibe vom Schnitt der bis zu fünf Scheiben davor liegt, ohne sie
+  selbst.
 - *So liest du es:* Liegt eine Scheibe im Band, war sie für deine Form normal: Bei einem
   gleichbleibenden Schützen liegen etwa zwei von drei Scheiben darin. Wird dein Boden über die
   Monate besser (beim Ø höher, bei σ kleiner), werden deine schwachen Tage besser, auch wenn die

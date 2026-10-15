@@ -42,6 +42,28 @@ describe("Blättern im Kontext (Plan N3, D5)", () => {
     expect(neighbours(ids, "x")).toEqual({ prev: null, next: null })
   })
 
+  it("aus der Liste mit Filter „Liste“: nur die Scheiben dieser Liste und die Scheibe selbst (Review)", () => {
+    const RWK = { id: 3, name: "RWK_LP" }
+    const listed = INPUT.map((c) =>
+      ["w1", "w3", "t3"].includes(c.card.id) ? { ...c, list: RWK } : c
+    )
+    const withLists = { ...context, cards: listed }
+    expect(contextCardIds(card("w3", fromList({ list: RWK.id })), withLists)).toEqual([
+      "w1",
+      "w3",
+      "t3",
+    ])
+    // die Scheibe selbst gehört dazu, auch ohne die Liste (Art umgestellt, Filter passt nicht mehr)
+    expect(contextCardIds(card("t2", fromList({ list: RWK.id })), withLists)).toEqual([
+      "w1",
+      "t2",
+      "w3",
+      "t3",
+    ])
+    // Gegenprobe: ohne Filter alle Scheiben der Familie
+    expect(contextCardIds(card("w3", fromList({})), withLists)).toHaveLength(6)
+  })
+
   it("aus der Liste: ihre Scheiben mit den Filtern der Herkunft, in zeitlicher Folge", () => {
     expect(contextCardIds(card("w2", fromList({ kind: "competition" })), context)).toEqual([
       "w1",

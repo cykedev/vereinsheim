@@ -2,8 +2,8 @@
 // Schussnummer (Katalog Z2, Z4, Z5); die Dauer (Z3) liefert die Registry (`time.duration`). Zeiten
 // in Abgabefolge; fehlt ein Schuss oder springt die Uhr zurück, zählt der Abstand nicht (SF-30). Eine
 // Probe zwischen zwei Wertungsschüssen ist keine Lücke, wenn die ganze Karte mitkommt (`card`, SF-04).
-// Pause ist ein Abstand deutlich länger als der Takt der Karte (`time.ts`: über dem 2,5-Fachen des Medians, mindestens
-// eine Minute, über drei Minuten immer); alle Auswertungen nehmen dieselbe Schwelle der Karte (`pauseThresholdOf`).
+// Pause ist ein Abstand deutlich länger als der Takt der Karte (`time.ts`: über dem Doppelten des Medians, mindestens
+// eine Minute, über drei Minuten immer; bis 15. Oktober 2026 das 2,5-Fache); alle Auswertungen nehmen dieselbe Schwelle der Karte (`pauseThresholdOf`).
 
 import {
   contextOf,

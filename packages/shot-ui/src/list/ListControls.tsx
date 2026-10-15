@@ -109,7 +109,7 @@ export function ListControlsView({
         aria-expanded={open}
         data-list-chip
         onClick={onOpen}
-        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-accent-wash px-3 py-1.5 text-[13px] leading-tight font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+        className="inline-flex max-w-full min-w-0 cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-accent-wash px-3 py-1.5 text-[13px] leading-tight font-semibold [overflow-wrap:anywhere] text-foreground focus-visible:outline-2 focus-visible:outline-ring"
       >
         {listFilterSummary({
           kind: query.kind,
@@ -120,7 +120,7 @@ export function ListControlsView({
         <svg
           viewBox="0 0 24 24"
           aria-hidden="true"
-          className="size-3.5"
+          className="size-3.5 shrink-0"
           fill="none"
           stroke="currentColor"
           strokeWidth={2.2}
@@ -152,7 +152,8 @@ export function ListControlsView({
               <Segmented
                 label="Liste"
                 scroll
-                value={query.list === null ? ANY : String(query.list)}
+                // eine Kennung, die keine Liste der Familie ist (alte Adresse), gilt als keine: „Alle“ (Review)
+                value={lists.some((list) => list.id === query.list) ? String(query.list) : ANY}
                 options={[
                   { value: ANY, label: "Alle" },
                   ...lists.map((list) => ({ value: String(list.id), label: list.name })),
