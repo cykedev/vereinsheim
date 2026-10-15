@@ -10,9 +10,20 @@ import { FieldError } from "@vereinsheim/ui/field-error"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { DecisionDialog } from "@/components/shell/DecisionDialog"
-import { bridgeRevoke, rankingKind, type RankingChoice } from "@/lib/admin/consequences"
+import {
+  bridgeRemove,
+  bridgeRevoke,
+  rankingKind,
+  type RankingChoice,
+} from "@/lib/admin/consequences"
 import type { BridgeRow, RankingRow, SiteOverview } from "@/lib/admin/site"
-import { pairBridge, revokeBridgeAction, saveSite, setRankingKind } from "@/lib/admin/site-actions"
+import {
+  pairBridge,
+  removeBridgeAction,
+  revokeBridgeAction,
+  saveSite,
+  setRankingKind,
+} from "@/lib/admin/site-actions"
 
 import { AdminHelp } from "./AdminHelp"
 
@@ -190,31 +201,34 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
           </span>
         )}
       </span>
-      {!bridge.revoked && (
-        <>
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-10 text-destructive"
-            disabled={pending}
-            onClick={() => setOpen(true)}
-          >
-            Trennen
-          </Button>
-          <DecisionDialog
-            decision={bridgeRevoke({ device: bridge.name })}
-            open={open}
-            onOpenChange={setOpen}
-            onConfirm={() =>
-              startTransition(async () => {
-                const result = await revokeBridgeAction(bridge.id)
-                if ("error" in result) setError(getErrorMessage(result) ?? null)
-                else router.refresh()
-              })
-            }
-          />
-        </>
-      )}
+      {/* laufend: trennen; getrennt: aus der Liste entfernen (User, 15. Oktober 2026) */}
+      <Button
+        type="button"
+        variant="ghost"
+        className="h-10 text-destructive"
+        disabled={pending}
+        onClick={() => setOpen(true)}
+      >
+        {bridge.revoked ? "Entfernen" : "Trennen"}
+      </Button>
+      <DecisionDialog
+        decision={
+          bridge.revoked
+            ? bridgeRemove({ device: bridge.name })
+            : bridgeRevoke({ device: bridge.name })
+        }
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={() =>
+          startTransition(async () => {
+            const result = bridge.revoked
+              ? await removeBridgeAction(bridge.id)
+              : await revokeBridgeAction(bridge.id)
+            if ("error" in result) setError(getErrorMessage(result) ?? null)
+            else router.refresh()
+          })
+        }
+      />
     </li>
   )
 }

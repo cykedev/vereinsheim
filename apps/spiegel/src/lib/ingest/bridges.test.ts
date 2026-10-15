@@ -1,7 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it, onTestFinished } from "vitest"
 
 import { stateResponseV1, type HeartbeatV1 } from "@vereinsheim/ingest-contract/api"
+import { parseSnapshot } from "@vereinsheim/ingest-contract/parse"
 import { sportpassHash } from "@vereinsheim/ingest-contract/sportpass"
+import { frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
 
 import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
@@ -14,8 +16,10 @@ import {
   PAIRING_TTL_MS,
   recordHeartbeat,
   redeemPairing,
+  removeBridge,
   revokeBridge,
 } from "./bridges"
+import { storeSnapshot } from "../db/raw"
 
 const db = createPrismaClient()
 let site: TestSite
@@ -125,6 +129,35 @@ describe("Kopplung", () => {
     expect(await authenticateBridge(db, null, NOW)).toBeNull()
     await revokeBridge(db, paired.bridgeId, NOW)
     expect(await authenticateBridge(db, paired.token, NOW)).toBeNull()
+  })
+
+  it("entfernen nur, wenn getrennt; was sie geschickt hat, bleibt ohne Gerät (User, 15. Oktober 2026)", async () => {
+    const paired = await pairedBridge()
+    const [reading] = frozenReadings("SF-03")
+    const parsed = parseSnapshot(reading.snapshots[0])
+    if (!parsed.ok) throw new Error(JSON.stringify(parsed.issues))
+    await storeSnapshot(db, { sourceId: site.sourceId, bridgeId: paired.bridgeId }, parsed.value, {
+      nowMs: Date.parse(parsed.value.observedAt),
+    })
+    const raw = await db.rawSnapshot.findFirstOrThrow({ where: { bridgeId: paired.bridgeId } })
+    const pairing = await db.bridgePairing.findFirstOrThrow({
+      where: { bridgeId: paired.bridgeId },
+    })
+    // eine laufende bleibt
+    expect(await removeBridge(db, paired.bridgeId)).toBe(false)
+    expect(await db.bridge.count({ where: { id: paired.bridgeId } })).toBe(1)
+    await revokeBridge(db, paired.bridgeId, NOW)
+    expect(await removeBridge(db, paired.bridgeId)).toBe(true)
+    expect(await db.bridge.count({ where: { id: paired.bridgeId } })).toBe(0)
+    // Rohdaten und Code bleiben, nur ohne Gerät
+    expect(await db.rawSnapshot.findUniqueOrThrow({ where: { id: raw.id } })).toMatchObject({
+      bridgeId: null,
+    })
+    expect(await db.bridgePairing.findUniqueOrThrow({ where: { id: pairing.id } })).toMatchObject({
+      bridgeId: null,
+    })
+    // zweimal: schon entfernt
+    expect(await removeBridge(db, paired.bridgeId)).toBe(false)
   })
 
   it("lastSeenAt höchstens einmal je Minute (Last)", async () => {

@@ -8,7 +8,7 @@ import { formatTimeOfDay } from "@vereinsheim/lib/format"
 
 import { adminActor } from "@/lib/action-guards"
 import { db } from "@/lib/db"
-import { createPairing, revokeBridge } from "@/lib/ingest/bridges"
+import { createPairing, removeBridge, revokeBridge } from "@/lib/ingest/bridges"
 import type { ActionResult } from "@/lib/types"
 
 // Admin → Anlage (SP-1.6 b): Anlage anlegen und ändern, Brücke koppeln und widerrufen, Ranglisten (eine neue Epoche
@@ -99,6 +99,17 @@ export async function revokeBridgeAction(bridgeId: number): Promise<ActionResult
   if (!Number.isSafeInteger(bridgeId))
     return { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
   await revokeBridge(db, bridgeId)
+  revalidatePath("/admin/site")
+  revalidatePath("/admin")
+  return { success: true }
+}
+
+/** eine getrennte Brücke aus der Liste entfernen; eine laufende nie (erst trennen) */
+export async function removeBridgeAction(bridgeId: number): Promise<ActionResult> {
+  const actor = await adminActor()
+  if ("error" in actor) return actor
+  if (!Number.isSafeInteger(bridgeId) || !(await removeBridge(db, bridgeId)))
+    return { error: "Diese Brücke ist nicht getrennt oder schon entfernt." }
   revalidatePath("/admin/site")
   revalidatePath("/admin")
   return { success: true }

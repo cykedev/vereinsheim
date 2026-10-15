@@ -9,6 +9,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }) }))
 vi.mock("@/lib/admin/site-actions", () => ({
   pairBridge: async () => ({ success: true }),
   revokeBridgeAction: async () => ({ success: true }),
+  removeBridgeAction: async () => ({ success: true }),
   saveSite: async () => ({ success: true }),
   setRankingKind: async () => ({ success: true }),
 }))
@@ -25,6 +26,31 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(html).toContain(">Nicht festgelegt<")
     expect(html).toContain("23 Scheiben")
     expect(html).toContain('aria-label="Art der Liste RWK_LP"')
+  })
+
+  it("„Entfernen“ nur an einer getrennten Brücke, „Trennen“ nur an einer laufenden (User, 15. Oktober 2026)", () => {
+    const item = (revoked: boolean) =>
+      renderToStaticMarkup(
+        createElement(BridgeItem, {
+          bridge: {
+            id: 1,
+            name: "Mac (Kopie 9.10.)",
+            version: "0.1.0",
+            createdAt: "14.10.2026",
+            lastSeenAt: null,
+            lastHeartbeatAt: null,
+            revoked,
+            status: null,
+            clockOffsetSeconds: null,
+            backlog: null,
+            heldBack: null,
+          },
+        })
+      )
+    expect(item(true)).toContain(">Entfernen<")
+    expect(item(true)).not.toContain(">Trennen<")
+    expect(item(false)).toContain(">Trennen<")
+    expect(item(false)).not.toContain(">Entfernen<")
   })
 
   it("Brücke mit „Trennen“, Verbinden und Anlage mit „?“", () => {

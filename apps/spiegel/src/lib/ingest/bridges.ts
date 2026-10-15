@@ -153,6 +153,18 @@ export async function revokeBridge(db: Db, bridgeId: number, nowMs = Date.now())
 }
 
 /**
+ * eine getrennte Brücke entfernen (User, 15. Oktober 2026: „getrennte brücken … kann sie aber nicht löschen“); die
+ * Bedingung steht im Löschbefehl selbst, eine laufende bleibt. Rohdaten und Codes verweisen mit `ON DELETE SET NULL`
+ * auf sie: Sie bleiben, nur ohne Gerät. true, wenn eine entfernt wurde
+ */
+export async function removeBridge(db: Db, bridgeId: number): Promise<boolean> {
+  const { count } = await db.bridge.deleteMany({
+    where: { id: bridgeId, revokedAt: { not: null } },
+  })
+  return count > 0
+}
+
+/**
  * Zustände weiterschalten ([[spiegel-bridge]], „Zustand statt Abschluss“): offen → ruhend nach fünf Minuten ohne
  * Lebenszeichen; ruhend oder offen → endgültig nach zwölf Stunden oder wenn ein neuer Lauf der Brücke begann (die Anlage
  * war aus). `complete` folgt endgültig ohne `unvollstaendig` (SF-66). Zwei Anweisungen über den Index (Quelle, Zustand).

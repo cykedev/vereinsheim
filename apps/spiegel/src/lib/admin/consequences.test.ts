@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   accountChange,
   accountChangesOf,
+  bridgeRemove,
   bridgeRevoke,
   cardDelete,
   cardPurgeNow,
@@ -151,6 +152,23 @@ describe("Folgen an Brücke und Listen", () => {
       notHappening: ["Es wird keine Scheibe gelöscht.", "Andere Brücken laufen weiter."],
       undo: "Nicht möglich. Um das Gerät wieder zu nutzen, verbinde es mit einem neuen Code.",
       confirmLabel: "Trennen",
+      destructive: true,
+    })
+  })
+
+  it("getrennte Brücke entfernen: aus der Liste, nichts gelöscht, nicht rückgängig (Textbuch rev 20)", () => {
+    const d = bridgeRemove({ device: "Mac (Kopie 9.10.)" })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Getrennte Brücke „Mac (Kopie 9.10.)“ entfernen?",
+      about: "Das Gerät „Mac (Kopie 9.10.)“ ist getrennt und schickt nichts mehr.",
+      happens: ["Es verschwindet aus dieser Liste."],
+      notHappening: [
+        "Es wird keine Scheibe gelöscht.",
+        "Was das Gerät geschickt hat, bleibt in Spiegel.",
+      ],
+      undo: "Nicht möglich. Das Gerät lässt sich mit einem neuen Code wieder verbinden.",
+      confirmLabel: "Entfernen",
       destructive: true,
     })
   })
@@ -380,6 +398,7 @@ describe("Schreibregeln (P2f)", () => {
     ["ablehnen", consentReject({ who, sportpassId })],
     ["entfernen", consentRemove({ who, sportpassId })],
     ["Brücke trennen", bridgeRevoke({ device: "Pi im Schützenhaus" })],
+    ["Brücke entfernen", bridgeRemove({ device: "Mac (Kopie 9.10.)" })],
     ...(["competition", "training", "open"] as const).flatMap((kind) =>
       [0, 23].map(
         (cards) =>

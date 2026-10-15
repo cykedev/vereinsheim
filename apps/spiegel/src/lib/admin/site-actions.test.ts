@@ -1,4 +1,4 @@
-import { randomInt, randomUUID } from "node:crypto"
+import { randomBytes, randomInt, randomUUID } from "node:crypto"
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -13,7 +13,8 @@ vi.mock("@/lib/auth-helpers", () => ({
 }))
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }))
 
-const { pairBridge, revokeBridgeAction, saveSite, setRankingKind } = await import("./site-actions")
+const { pairBridge, removeBridgeAction, revokeBridgeAction, saveSite, setRankingKind } =
+  await import("./site-actions")
 
 const tag = randomUUID().slice(0, 8)
 let adminId: string
@@ -102,6 +103,7 @@ describe("Anlage und Brücken (Admin)", () => {
       error: "Das darf nur ein Admin.",
     })
     expect(await revokeBridgeAction(1)).toEqual({ error: "Das darf nur ein Admin." })
+    expect(await removeBridgeAction(1)).toEqual({ error: "Das darf nur ein Admin." })
     mocks.session = { user: { id: adminId, role: "ADMIN", mustChangePassword: true } }
     expect(await saveSite(null, form({}))).toEqual({
       error: "Bitte zuerst das eigene Passwort ändern.",
@@ -113,6 +115,23 @@ describe("Anlage und Brücken (Admin)", () => {
     expect(result).toEqual({
       error: { timeZone: ["Diese Zeitzone kennt Spiegel nicht. In Deutschland: Europe/Berlin."] },
     })
+  })
+
+  it("eine getrennte Brücke entfernen, eine laufende nicht (User, 15. Oktober 2026)", async () => {
+    const site = await db.site.findFirstOrThrow({ orderBy: { id: "asc" } })
+    const bridge = (name: string, revokedAt: Date | null) =>
+      db.bridge.create({
+        data: { siteId: site.id, name, tokenHash: randomBytes(32).toString("hex"), revokedAt },
+      })
+    const running = await bridge(`Läuft ${tag}`, null)
+    const revoked = await bridge(`Getrennt ${tag}`, new Date())
+    const notRevoked = { error: "Diese Brücke ist nicht getrennt oder schon entfernt." }
+    expect(await removeBridgeAction(running.id)).toEqual(notRevoked)
+    expect(await removeBridgeAction(revoked.id)).toEqual({ success: true })
+    expect(await db.bridge.count({ where: { id: { in: [running.id, revoked.id] } } })).toBe(1)
+    expect(await removeBridgeAction(revoked.id)).toEqual(notRevoked)
+    expect(await removeBridgeAction(Number.NaN)).toEqual(notRevoked)
+    await db.bridge.delete({ where: { id: running.id } })
   })
 
   it("„Brücke koppeln“ gibt einen Code mit Uhrzeit, gespeichert ist nur sein Hash", async () => {

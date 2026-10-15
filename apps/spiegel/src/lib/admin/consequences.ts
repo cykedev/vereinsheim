@@ -154,6 +154,22 @@ export function bridgeRevoke({ device }: { device: string }): Decision {
   }
 }
 
+/** eine getrennte Brücke aus der Liste entfernen (Textbuch rev 20) */
+export function bridgeRemove({ device }: { device: string }): Decision {
+  return {
+    title: `Getrennte Brücke „${device}“ entfernen?`,
+    about: `Das Gerät „${device}“ ist getrennt und schickt nichts mehr.`,
+    happens: ["Es verschwindet aus dieser Liste."],
+    notHappening: [
+      "Es wird keine Scheibe gelöscht.",
+      "Was das Gerät geschickt hat, bleibt in Spiegel.",
+    ],
+    undo: "Nicht möglich. Das Gerät lässt sich mit einem neuen Code wieder verbinden.",
+    confirmLabel: "Entfernen",
+    destructive: true,
+  }
+}
+
 export type RankingChoice = "training" | "competition" | "open"
 
 const RANKING_WORDS: Record<RankingChoice, { title: string; label: string }> = {
