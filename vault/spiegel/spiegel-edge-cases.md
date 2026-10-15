@@ -113,7 +113,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-36 | SportpassID erst später in der Schützenverwaltung gepflegt | Alte Scheiben tragen sie nicht; „rückwirkend“ findet nichts | Rückwirkend über Namensvorschläge mit Bestätigung | SQL-Checkliste |
 | SF-37 | Falscher Name aus der Liste gewählt, etwa ein Familienmitglied mit Opt-in | Scheibe geht automatisch an ein fremdes Konto | „Nicht meine“ nimmt sie sofort heraus; ohne Besitzer gelöscht, mit Grabstein; Merkmal `automatisch-zugeordnet` | Test |
 | SF-38 | Opt-in widerrufen, Konto gelöscht | Die Brücke lädt weiter hoch | Liste bei jedem Start neu, vor jedem Versand geprüft; Spiegel prüft erneut | Test |
-| SF-39 | Neuer Ausweis, Vereinswechsel | Neue Scheiben werden nicht erkannt | Mehrere SportpassIDs je Konto | Test |
+| SF-39 | Neuer Ausweis, Vereinswechsel | Neue Scheiben werden nicht erkannt | Alte Nummer widerrufen, neue eintragen; die Scheiben bleiben (eine Nummer je Konto seit 15. Oktober 2026, vorher bis zu drei) | Test |
 | SF-40 | Jemand scannt den QR eines anderen | Fremde Scheibe im Konto | Wie beim Papierausdruck: Protokoll, Umkehr, „Das war ich“; passt der Name nicht zum Profil, entscheidet der Admin | Test |
 
 ### Ausdruck und QR

@@ -195,7 +195,7 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   - **Zustände** schaltet der Heartbeat weiter (`advanceCardStates`), `complete` gilt erst endgültig. `writeRevision` hält
     `korrigiert` und `uhr-abweichung` dauerhaft; eine andere Anzeigeart ist keine Korrektur (`sameScoring`, SF-74).
   - **Admin → Anlage und Brücken** (`/admin/site`): Anlage, Brücken koppeln (Code nur in der Antwort der Action) und
-    widerrufen, Listen (`Ranking`) zuordnen. Eine neue Epoche bestätigt niemand in der Oberfläche (P2c, D0); die Übersicht
+    trennen, getrennte entfernen (`removeBridge`: nur getrennte, Rohdaten und Codes bleiben mit `bridgeId` null; User, 15. Oktober 2026), Listen (`Ranking`) zuordnen. Eine neue Epoche bestätigt niemand in der Oberfläche (P2c, D0); die Übersicht
     zeigt nur einen Hinweis. Zustimmungen per Sportpass bestätigt oder lehnt der Admin am Konto ab
     (`/admin/users/[id]`, offene als Aufgabe in der Übersicht und als Link in „Konten“); eintragen kann nur der Schütze
     im Profil.
@@ -211,7 +211,9 @@ prisma/schema.prisma --script` (ohne die Zeilen `CREATE SCHEMA`) nach `…_init/
   unveränderlich in `texts.ts` (`CONSENT_TEXTS`, Tests halten die Hashes von v1 und v2 fest; aktuell v2); ein neuer Wortlaut ist eine neue
   Version, die Zeile speichert `consentVersion`. Widerruf löscht die Zeile, die Scheiben bleiben (User, 14. Oktober 2026). Entscheidungen
   des Admins tragen ihre Bedingung im `updateMany` selbst (zweimal → „Das hat gerade schon jemand entschieden. Lade die Seite neu.“). Das Formular schickt die
-  Version des gezeigten Texts mit; die Grenze von drei je Konto zählt und legt an unter der Sperre der Kontozeile.
+  Version des gezeigten Texts mit; die Grenze zählt und legt an unter der Sperre der Kontozeile. Seit 15. Oktober 2026 eine Nummer je Konto (User: „es macht
+  wahrscheinlich keinen sinn, mehrere sportpass nummern zu verknüpfen“; vorher drei für SF-39): Für einen neuen Ausweis
+  widerruft der Schütze die alte, die Scheiben bleiben. Konten mit mehreren aus der Zeit davor bleiben, wie sie sind.
 - **Erste Scheibe** (SP-1.7 a2, `plans/2026-10-14-spiegel-erste-scheibe.md`): Das Einlesen legt eine neue Scheibe als
   wartend an (`Card.ownerPending`), solange ihre Zustimmung kein `firstCardConfirmedAt` hat; spätere Stände ändern das
   nicht. **Jede Abfrage über eigene Scheiben für eine Ansicht nimmt `VISIBLE_CARD`** (`src/lib/db/visible.ts`), sonst
