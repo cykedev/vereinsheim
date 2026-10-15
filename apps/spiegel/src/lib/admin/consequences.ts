@@ -154,12 +154,13 @@ export function bridgeRevoke({ device }: { device: string }): Decision {
   }
 }
 
-/** eine getrennte Brücke aus der Liste entfernen (Textbuch rev 20) */
+/** eine getrennte Brücke entfernen (Textbuch rev 20, 22) */
 export function bridgeRemove({ device }: { device: string }): Decision {
   return {
     title: `Getrennte Brücke „${device}“ entfernen?`,
     about: `Das Gerät „${device}“ ist getrennt und schickt nichts mehr.`,
-    happens: ["Es verschwindet aus dieser Liste."],
+    // nicht „aus dieser Liste“: Auf der Seite heißen auch die Listen aus Meyton so (Review)
+    happens: ["Es steht dann nicht mehr unter „Brücke im Schützenhaus“."],
     notHappening: [
       "Es wird keine Scheibe gelöscht.",
       "Was das Gerät geschickt hat, bleibt in Spiegel.",

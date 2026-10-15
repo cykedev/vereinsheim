@@ -159,9 +159,28 @@ const STATUS_TEXT: Record<NonNullable<BridgeRow["status"]>, string> = {
   "possible-reset": "Meyton-Anlage wirkt neu aufgesetzt (Spiegel regelt das selbst)",
 }
 
-/** eine Brücke mit Status und „Trennen“ */
+/**
+ * Was der Knopf an einer Brücke tut, an einer Stelle: laufend trennen, getrennt entfernen (User, 15. Oktober 2026). Text,
+ * Dialog und Action kommen zusammen, der Test prüft die Zuordnung (Review)
+ */
+export function bridgeActionOf(bridge: { name: string; revoked: boolean }) {
+  return bridge.revoked
+    ? {
+        label: "Entfernen",
+        decision: bridgeRemove({ device: bridge.name }),
+        run: removeBridgeAction,
+      }
+    : {
+        label: "Trennen",
+        decision: bridgeRevoke({ device: bridge.name }),
+        run: revokeBridgeAction,
+      }
+}
+
+/** eine Brücke mit Status und „Trennen“ (laufend) oder „Entfernen“ (getrennt) */
 export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
   const router = useRouter()
+  const action = bridgeActionOf(bridge)
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -201,7 +220,6 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
           </span>
         )}
       </span>
-      {/* laufend: trennen; getrennt: aus der Liste entfernen (User, 15. Oktober 2026) */}
       <Button
         type="button"
         variant="ghost"
@@ -209,21 +227,15 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
         disabled={pending}
         onClick={() => setOpen(true)}
       >
-        {bridge.revoked ? "Entfernen" : "Trennen"}
+        {action.label}
       </Button>
       <DecisionDialog
-        decision={
-          bridge.revoked
-            ? bridgeRemove({ device: bridge.name })
-            : bridgeRevoke({ device: bridge.name })
-        }
+        decision={action.decision}
         open={open}
         onOpenChange={setOpen}
         onConfirm={() =>
           startTransition(async () => {
-            const result = bridge.revoked
-              ? await removeBridgeAction(bridge.id)
-              : await revokeBridgeAction(bridge.id)
+            const result = await action.run(bridge.id)
             if ("error" in result) setError(getErrorMessage(result) ?? null)
             else router.refresh()
           })

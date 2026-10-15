@@ -125,13 +125,19 @@ describe("Anlage und Brücken (Admin)", () => {
       })
     const running = await bridge(`Läuft ${tag}`, null)
     const revoked = await bridge(`Getrennt ${tag}`, new Date())
-    const notRevoked = { error: "Diese Brücke ist nicht getrennt oder schon entfernt." }
-    expect(await removeBridgeAction(running.id)).toEqual(notRevoked)
-    expect(await removeBridgeAction(revoked.id)).toEqual({ success: true })
-    expect(await db.bridge.count({ where: { id: { in: [running.id, revoked.id] } } })).toBe(1)
-    expect(await removeBridgeAction(revoked.id)).toEqual(notRevoked)
-    expect(await removeBridgeAction(Number.NaN)).toEqual(notRevoked)
-    await db.bridge.delete({ where: { id: running.id } })
+    // aufräumen auch, wenn eine Erwartung scheitert: Die Brücken liegen auf der ersten Dev-Anlage (Review)
+    try {
+      expect(await removeBridgeAction(running.id)).toEqual({
+        error: "Diese Brücke ist nicht getrennt. Lade die Seite neu.",
+      })
+      expect(await removeBridgeAction(revoked.id)).toEqual({ success: true })
+      expect(await db.bridge.count({ where: { id: { in: [running.id, revoked.id] } } })).toBe(1)
+      const gone = { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
+      expect(await removeBridgeAction(revoked.id)).toEqual(gone)
+      expect(await removeBridgeAction(Number.NaN)).toEqual(gone)
+    } finally {
+      await db.bridge.deleteMany({ where: { id: { in: [running.id, revoked.id] } } })
+    }
   })
 
   it("„Brücke koppeln“ gibt einen Code mit Uhrzeit, gespeichert ist nur sein Hash", async () => {

@@ -156,13 +156,14 @@ describe("Folgen an Brücke und Listen", () => {
     })
   })
 
-  it("getrennte Brücke entfernen: aus der Liste, nichts gelöscht, nicht rückgängig (Textbuch rev 20)", () => {
+  it("getrennte Brücke entfernen: nicht mehr unter der Brücke, nichts gelöscht, nicht rückgängig (Textbuch rev 20, 22)", () => {
     const d = bridgeRemove({ device: "Mac (Kopie 9.10.)" })
     wellFormed(d)
     expect(d).toEqual({
       title: "Getrennte Brücke „Mac (Kopie 9.10.)“ entfernen?",
       about: "Das Gerät „Mac (Kopie 9.10.)“ ist getrennt und schickt nichts mehr.",
-      happens: ["Es verschwindet aus dieser Liste."],
+      // „Liste“ hieße auf dieser Seite auch die Listen aus Meyton (Review)
+      happens: ["Es steht dann nicht mehr unter „Brücke im Schützenhaus“."],
       notHappening: [
         "Es wird keine Scheibe gelöscht.",
         "Was das Gerät geschickt hat, bleibt in Spiegel.",

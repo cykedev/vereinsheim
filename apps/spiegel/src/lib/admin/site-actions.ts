@@ -108,8 +108,13 @@ export async function revokeBridgeAction(bridgeId: number): Promise<ActionResult
 export async function removeBridgeAction(bridgeId: number): Promise<ActionResult> {
   const actor = await adminActor()
   if ("error" in actor) return actor
-  if (!Number.isSafeInteger(bridgeId) || !(await removeBridge(db, bridgeId)))
-    return { error: "Diese Brücke ist nicht getrennt oder schon entfernt." }
+  const gone = { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
+  if (!Number.isSafeInteger(bridgeId)) return gone
+  if (!(await removeBridge(db, bridgeId))) {
+    // nicht entfernt: gibt es sie noch, läuft sie (Textbuch rev 22)
+    const still = await db.bridge.findUnique({ where: { id: bridgeId }, select: { id: true } })
+    return still ? { error: "Diese Brücke ist nicht getrennt. Lade die Seite neu." } : gone
+  }
   revalidatePath("/admin/site")
   revalidatePath("/admin")
   return { success: true }

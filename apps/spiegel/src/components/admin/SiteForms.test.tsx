@@ -14,7 +14,10 @@ vi.mock("@/lib/admin/site-actions", () => ({
   setRankingKind: async () => ({ success: true }),
 }))
 
-const { BridgeItem, PairBridgeForm, RankingItem, SiteForm } = await import("./SiteForms")
+const { BridgeItem, bridgeActionOf, PairBridgeForm, RankingItem, SiteForm } =
+  await import("./SiteForms")
+const actions = await import("@/lib/admin/site-actions")
+const { bridgeRemove, bridgeRevoke } = await import("@/lib/admin/consequences")
 
 describe("Anlage und Brücke (Markup)", () => {
   it("Liste: „Nicht festgelegt“, Training, Wettkampf; keine sofortige Speicherung im Markup", () => {
@@ -51,6 +54,20 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(item(true)).not.toContain(">Trennen<")
     expect(item(false)).toContain(">Trennen<")
     expect(item(false)).not.toContain(">Entfernen<")
+  })
+
+  it("Knopf, Dialog und Action gehören zusammen: getrennt entfernen, laufend trennen (Review)", () => {
+    const device = "Mac (Kopie 9.10.)"
+    expect(bridgeActionOf({ name: device, revoked: true })).toEqual({
+      label: "Entfernen",
+      decision: bridgeRemove({ device }),
+      run: actions.removeBridgeAction,
+    })
+    expect(bridgeActionOf({ name: device, revoked: false })).toEqual({
+      label: "Trennen",
+      decision: bridgeRevoke({ device }),
+      run: actions.revokeBridgeAction,
+    })
   })
 
   it("Brücke mit „Trennen“, Verbinden und Anlage mit „?“", () => {
