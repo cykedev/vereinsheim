@@ -108,23 +108,31 @@ interface LeagueOptions {
   override?: Record<string, SeriesRow[]>
   /** Begegnungen ohne Ergebnis (PENDING, keine Serien); Schlüssel "Stärker-Schwächer". */
   pending?: string[]
+  /** In einer anderen Liga (Wettbewerb c2) zurückgezogen, hier aktiv. */
+  withdrawnElsewhere?: string[]
 }
 
 type MatchupRow = {
   id: string
+  competitionId: string
   status: string
   homeParticipantId: string
   awayParticipantId: string | null
   series: SeriesRow[]
 }
 
-/** Filtert wie Prisma nach `where.status`; die übrigen Bedingungen treffen die eine Test-Liga immer. */
-function byStatus<T extends { status: string }>(
-  rows: T[],
-  args?: { where?: { status?: string } }
-): T[] {
-  const status = args?.where?.status
-  return status ? rows.filter((r) => r.status === status) : rows
+/**
+ * Filtert wie Prisma nach den Gleichheitsbedingungen in `where` (etwa `competitionId`, `status`).
+ * Andere Formen (`in`, `not`, Relationen) werfen, statt still nichts zu finden.
+ */
+function byWhere<T extends object>(rows: T[], args?: { where?: Record<string, unknown> }): T[] {
+  const conditions = Object.entries(args?.where ?? {})
+  for (const [key, value] of conditions) {
+    if (typeof value !== "string") throw new Error(`byWhere: ${key} nur als Gleichheit unterstützt`)
+  }
+  return rows.filter((row) =>
+    conditions.every(([key, value]) => (row as Record<string, unknown>)[key] === value)
+  )
 }
 
 /**
@@ -144,6 +152,7 @@ function league(ids: string[], opts: LeagueOptions) {
       if (opts.format === "BEST_OF_SINGLE") {
         matchups.push({
           id: `m-${key}`,
+          competitionId: "c1",
           status,
           homeParticipantId: strong,
           awayParticipantId: weak,
@@ -156,6 +165,7 @@ function league(ids: string[], opts: LeagueOptions) {
         ]) {
           matchups.push({
             id: `m-${key}-${leg}`,
+            competitionId: "c1",
             status,
             homeParticipantId: home,
             awayParticipantId: away,
@@ -171,6 +181,7 @@ function league(ids: string[], opts: LeagueOptions) {
     for (const id of ids) {
       matchups.push({
         id: `bye-${id}`,
+        competitionId: "c1",
         status: "BYE",
         homeParticipantId: id,
         awayParticipantId: null,
@@ -194,6 +205,7 @@ function league(ids: string[], opts: LeagueOptions) {
     groupTiebreaker2: null,
   })
   const entries = ids.map((id, i) => ({
+    competitionId: "c1",
     status: opts.withdrawn?.includes(id) ? "WITHDRAWN" : "ACTIVE",
     participantId: id,
     // Nachnamen GEGEN die Stärke sortiert: eine Tabelle, die nichts wertet und nur alphabetisch
@@ -204,9 +216,17 @@ function league(ids: string[], opts: LeagueOptions) {
       lastName: `Name${String(ids.length - i).padStart(2, "0")}`,
     },
   }))
-  m.competitionParticipantFindMany.mockImplementation(async (args) => byStatus(entries, args))
-  m.matchupFindMany.mockImplementation(async (args) => byStatus(matchups, args))
-  m.matchupCount.mockImplementation(async (args) => byStatus(matchups, args).length)
+  const elsewhere = (opts.withdrawnElsewhere ?? []).map((id) => ({
+    competitionId: "c2",
+    status: "WITHDRAWN",
+    participantId: id,
+    participant: { id, firstName: id, lastName: "Anderswo" },
+  }))
+  m.competitionParticipantFindMany.mockImplementation(async (args) =>
+    byWhere([...entries, ...elsewhere], args)
+  )
+  m.matchupFindMany.mockImplementation(async (args) => byWhere(matchups, args))
+  m.matchupCount.mockImplementation(async (args) => byWhere(matchups, args).length)
 }
 
 /** P01, P02, … in Stärke-Reihenfolge. */
@@ -259,7 +279,6 @@ const seededPairs = (seeds: string[]) =>
 beforeEach(() => {
   vi.clearAllMocks()
   m.getAuthSession.mockResolvedValue({ user: { id: "u1", role: "ADMIN" } })
-  m.matchupCount.mockResolvedValue(0)
   m.playoffMatchCount.mockResolvedValue(0)
   m.playoffMatchCreate.mockResolvedValue({})
   m.playoffMatchCreateMany.mockResolvedValue({ count: 0 })
@@ -316,6 +335,14 @@ describe.each(["DOUBLE_ROUND_ROBIN", "BEST_OF_SINGLE"] as const)(
 
     it("eine offene Begegnung zwischen Aktiven sperrt den Start weiter", async () => {
       league(["A", "B", "C", "D", "E"], { format, withdrawn: ["C"], pending: ["A-C", "D-E"] })
+      expect(await startPlayoffs("c1")).toEqual({
+        error: "Es gibt noch ausstehende Paarungen in der Gruppenphase.",
+      })
+      expect(m.playoffMatchCreateMany).not.toHaveBeenCalled()
+    })
+
+    it("ein Rückzug in einer anderen Liga macht eine Begegnung hier nicht ungültig", async () => {
+      league(["A", "B", "C", "D"], { format, withdrawnElsewhere: ["D"], pending: ["C-D"] })
       expect(await startPlayoffs("c1")).toEqual({
         error: "Es gibt noch ausstehende Paarungen in der Gruppenphase.",
       })

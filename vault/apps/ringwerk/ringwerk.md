@@ -51,7 +51,7 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
 - [[server-action-pattern]] — server-action-pattern
 - [[void-match-rendering]] — void-match-rendering
 
-## Offene Einzelpunkte (Stand 12. Oktober 2026)
+## Offene Einzelpunkte (Stand 15. Oktober 2026)
 
 - **Playoffs ohne Spielplan:** `startPlayoffs` (`src/lib/playoffs/actions/start.ts`) prüft nicht, ob ein Spielplan
   erzeugt ist. Eine Liga ohne Paarungen hat keine offenen Paarungen und könnte starten, sobald genug aktive Teilnehmer

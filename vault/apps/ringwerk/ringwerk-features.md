@@ -503,8 +503,9 @@ Ringteiler muss aus **derselben Serie** stammen (Ringe und Teiler gehören zusam
 
 ### Rückzug (nur Liga)
 
-- Jederzeit möglich (auch nach gespielten Runden)
+- Möglich bis zum Playoff-Start (auch nach gespielten Runden), danach gesperrt
 - Alle Ergebnisse des Teilnehmers rückwirkend aus der Wertung
+- Offene Paarungen des Teilnehmers bleiben `PENDING`, sperren den Playoff-Start aber nicht
 - Tabelle wird neu berechnet
 - Rückzug rückgängig machbar (solange Playoffs nicht begonnen)
 - Protokollierung im Audit-Log

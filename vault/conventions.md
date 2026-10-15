@@ -223,7 +223,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   festen Wert (etwa `count` → 0), sieht kein Test, welche Zeilen der Code mitzählt. Das Mock filtert deshalb wie Prisma
   nach dieser Bedingung (z.B. `status`), und die Fixture enthält auch die Zeilen, die der Code ausschließen soll. So
   blieb unbemerkt, dass Ringwerk die offenen Paarungen eines Zurückgezogenen mitzählte und den Playoff-Start sperrte
-  (Beispiel: `byStatus` in `apps/ringwerk/src/lib/playoffs/actions/seeding.test.ts`).
+  (Beispiel: `byWhere` in `apps/ringwerk/src/lib/playoffs/actions/seeding.test.ts`).
 
 - **Datenlage vor der Sichtprüfung abgleichen**: Bevor eine Änderung im Browser als geprüft gilt,
   die vorhandenen Dev-Daten gegen die zu prüfenden Zustände halten (z.B. „abgeschlossener
