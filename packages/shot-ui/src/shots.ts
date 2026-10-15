@@ -51,10 +51,14 @@ export function shotLabels(shots: readonly MetricShot[]): string[] {
   return shots.map((shot) => `${numbers.get(shot) ?? "?"}`)
 }
 
-/** Wert in der gewählten Wertung („10,4“ bzw. „10“); ohne Wert ein Strich */
-export function formatScore(shot: MetricShot, scoring: Scoring): string {
-  if (scoring === "rings") return shot.ring === null ? "–" : formatValue(shot.ring, 0)
-  return shot.decimalTenths === null ? "–" : formatValue(shot.decimalTenths / 10, 1)
+/**
+ * Wert eines einzelnen Schusses, immer in Zehnteln („10,4“), gleich in welcher Wertung die Scheibe steht (User,
+ * 15. Oktober 2026: „Einzelschüsse immer in Zehntelwerten anzeigen egal wie die Scheibe eingestellt ist“). Ohne Zehntel
+ * (SF-18) der Ring („10“), ohne Wert ein Strich. Summen, Ø und Serien folgen weiter der Wertung (`formatTotal`).
+ */
+export function formatShotValue(shot: MetricShot): string {
+  if (shot.decimalTenths !== null) return formatValue(shot.decimalTenths / 10, 1)
+  return shot.ring === null ? "–" : formatValue(shot.ring, 0)
 }
 
 /** Summe in der gewählten Wertung („105,3“ bzw. „100“); ohne Summe ein Strich */

@@ -27,7 +27,7 @@ export function ShotLine({
   const parts = model
     ? [
         `Schuss ${model.label}`,
-        readoutValue(model, state.scoring),
+        readoutValue(model),
         model.teiler === null ? null : `Teiler ${formatValue(model.teiler, 1)}`,
         // wie die Karte: Abstand zur Mitte statt x/y (Prüfung, Lage 12)
         model.distanceUm === null

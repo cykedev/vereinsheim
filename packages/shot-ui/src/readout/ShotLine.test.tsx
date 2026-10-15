@@ -69,8 +69,8 @@ describe("Ablesezeile (D2)", () => {
     expect(line({ chosen: { index: 0, series: 1 } })).toMatch(/^Schuss 1 · 9,6 · Teiler/)
   })
 
-  it("in ganzen Ringen der Ring, ohne Lage nur Nummer und Wert", () => {
-    expect(line({ scoring: "rings" })).toMatch(/^Schuss 3 · 8 · Teiler/)
+  it("auch in ganzen Ringen in Zehnteln (Rückmeldung 3), ohne Lage nur Nummer und Wert", () => {
+    expect(line({ scoring: "rings" })).toMatch(/^Schuss 3 · 8,7 · Teiler/)
     expect(line({ chosen: { index: 1, series: 1 } })).toBe("Schuss 2 · 0,0 · Fehlschuss")
   })
 

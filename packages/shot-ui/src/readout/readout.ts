@@ -4,7 +4,7 @@
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import { teilerFromDistanceUm } from "@vereinsheim/shot-core/scoring"
 
-import { formatScore, hasValidPosition, shotDistance, shotLabels } from "../shots"
+import { formatShotValue, hasValidPosition, shotDistance, shotLabels } from "../shots"
 import type { ViewState } from "../view-state"
 
 export interface ReadoutModel {
@@ -38,17 +38,11 @@ export function readoutModel(shots: readonly MetricShot[], state: ViewState): Re
   }
 }
 
-/** Wert in der gewählten Wertung */
-export const readoutValue = (model: ReadoutModel, scoring: ViewState["scoring"]) =>
-  formatScore(model.shot, scoring)
+/** Wert des Schusses, immer in Zehnteln (Rückmeldung 3, `formatShotValue`) */
+export const readoutValue = (model: ReadoutModel) => formatShotValue(model.shot)
 
-/** zweite Zeile der Karte: Fehlschuss oder die andere Wertung, dazu der Innenzehner */
-export function readoutDetail(shot: MetricShot, scoring: ViewState["scoring"]): string {
-  const other =
-    shot.ring === 0
-      ? "Fehlschuss"
-      : scoring === "rings"
-        ? `${formatScore(shot, "decimal")} in Zehnteln`
-        : `Ring ${shot.ring ?? "–"}`
-  return `${other}${shot.innerTen ? " · Innenzehner" : ""}`
+/** zweite Zeile der Karte: Fehlschuss oder der Ring, dazu der Innenzehner */
+export function readoutDetail(shot: MetricShot): string {
+  const ring = shot.ring === 0 ? "Fehlschuss" : `Ring ${shot.ring ?? "–"}`
+  return `${ring}${shot.innerTen ? " · Innenzehner" : ""}`
 }

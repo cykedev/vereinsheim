@@ -163,10 +163,13 @@ describe("Reiter Ergebnis", () => {
     )
   })
 
-  it("Zehntelverteilung in ganzen Ringen: der Hinweis zum Umschalten statt Säulen", () => {
+  it("Zehntelverteilung auch in ganzen Ringen, dieselben Säulen (Rückmeldung 3)", () => {
     const rings = render("rings")
-    expect(cardText(rings, "zehntelverteilung")).toContain("Gibt es nur in der Zehntelwertung")
-    expect(rings).not.toContain("data-tenth")
+    const bars = (html: string) =>
+      [...html.matchAll(/data-tenth="(\d+)"/g)].map((m) => m[1]).join(",")
+    expect(cardText(rings, "zehntelverteilung")).not.toContain("Gibt es nur in der Zehntelwertung")
+    expect(bars(rings)).not.toBe("")
+    expect(bars(rings)).toBe(bars(html))
   })
 
   it("Serien und Konstanz: ein Punkt je Serie mit Wert, Kennzahlen aus dem Fachkern", () => {

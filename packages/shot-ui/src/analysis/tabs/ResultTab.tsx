@@ -134,9 +134,8 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
       key: "zehntelverteilung",
       element: (
         <AnalysisCard help="zehntelverteilung" explain={explain} onHelp={onHelp}>
-          {scoring === "rings" ? (
-            <Note>Gibt es nur in der Zehntelwertung; oben auf „Zehntel“ umschalten.</Note>
-          ) : hist.n ? (
+          {/* immer, auch in ganzen Ringen: Einzelschüsse stehen in Zehnteln (Rückmeldung 3) */}
+          {hist.n ? (
             <>
               <ChartSlot height={150}>
                 {(width) => <DecimalHistogram width={width} hist={hist} />}

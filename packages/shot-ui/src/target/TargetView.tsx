@@ -20,7 +20,7 @@ import {
 } from "../geometry"
 import { layerOrder } from "../layers"
 import {
-  formatScore,
+  formatShotValue,
   groupShots,
   hasPosition,
   isProbeShot,
@@ -244,7 +244,7 @@ export function TargetView({
               pointerEvents={faded ? "none" : undefined}
               style={onChoose && !faded ? { cursor: "pointer" } : undefined}
             >
-              <title>{`Schuss ${labels[i]}: ${formatScore(shot, state.scoring)}`}</title>
+              <title>{`Schuss ${labels[i]}: ${formatShotValue(shot)}`}</title>
               <circle
                 cx={x}
                 cy={y}

@@ -35,11 +35,12 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   um es zu zeigen oder auszuschließen. Mehr Schüsse oder mehrere Scheiben klären es. „Passt“ an der
   Lage heißt dasselbe: kein Versatz belegt. Auf den Karten heißt das auch „nicht klar“ oder „kein
   Versatz nachweisbar“; es ist ein ehrliches Ergebnis, kein Fehler.
-- **Ganze Ringe oder Zehntel.** Auf der Scheibe oben umschalten, für Liste, Start und Fortschritt in
-  Profil; jede Auswertung über Werte gibt es in beiden, nur die Zehntelverteilung allein in
-  Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10); beim
-  Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich bleiben Zehner, Innenzehner
-  und Zehnerquote.
+- **Ganze Ringe oder Zehntel.** Auf der Scheibe und auf Start im Kreis neben der großen Zahl
+  umschalten, unter Scheiben und im Fortschritt am Chip neben „Filter“. Ergebnis, Ø, Serien und
+  Quoten gibt es in beiden. Einzelne Schüsse stehen immer in Zehnteln: in den Schüssen, in der
+  Ablesung, im Verlauf je Schuss und in der Zehntelverteilung. In ganzen Ringen gehen Feinheiten
+  verloren (10,0 und 10,9 sind beide eine 10); beim Luftgewehr ist ein Trend dort deshalb etwas
+  seltener „klar“. Gleich bleiben Zehner, Innenzehner und Zehnerquote.
 - **Wie am Ausdruck.** Eine Scheibe in Spiegel ist, was der Ausdruck zeigt: Mit dem ersten
   Wertungsschuss löscht die Anlage die Probe, also rechnet Spiegel über die Wertung. Eine Scheibe
   nur mit Probe ist Training: Spiegel zeigt sie wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn
@@ -97,8 +98,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Formel:* `Anzahl je Ring 10 … 0`
 
 **Zehntelverteilung (V2)**
-- *Was:* Dieselbe Zählung in Zehnteln, jede Säule ein Wert (10,4, 10,5 …). Es gibt sie nur in der
-  Zehntelwertung.
+- *Was:* Dieselbe Zählung in Zehnteln, jede Säule ein Wert (10,4, 10,5 …). Sie steht immer da, auch
+  wenn die Scheibe in ganzen Ringen gewertet wird.
 - *So liest du es:* Sie zeigt, wo innerhalb der Ringe deine Schüsse liegen. Viele Werte knapp unter
   einer Ringgrenze (9,8, 9,9) zählen in ganzen Ringen nur 9; ein, zwei Zehntel mehr, und es wäre
   jeweils ein Ring mehr.
@@ -296,9 +297,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 ## Zeit und Verlauf
 
 **Verlauf je Schuss und Trend (I3, I4)**
-- *Was:* Jeder Punkt ist ein Schuss, die Linie der Schnitt der letzten zehn (gestrichelt, solange es
-  noch keine zehn sind). Der Trend ist eine Ausgleichsgerade durch alle Schüsse; die Zahl sagt, um
-  wie viele Ringe der Wert eines Schusses alle 10 Schuss steigt oder sinkt. Bei −0,24 ist ein Schuss
+- *Was:* Jeder Punkt ist ein Schuss mit seinem Wert in Zehnteln, auch wenn die Scheibe in ganzen
+  Ringen gewertet wird. Die Linie ist der Schnitt der letzten zehn (gestrichelt, solange es noch
+  keine zehn sind). Der Trend ist eine Ausgleichsgerade durch alle Schüsse; die Zahl sagt, um wie
+  viele Ringe der Wert eines Schusses alle 10 Schuss steigt oder sinkt. Bei −0,24 ist ein Schuss
   also zehn Schuss später im Schnitt 0,24 Ringe schwächer, eine ganze Serie 2,4 Ringe.
 - *So liest du es:* „Klar fallend“ heißt: Ein so deutlicher Abfall entstünde durch Zufall allein
   höchstens in 5 von 100 Scheiben; „klar steigend“ gilt ebenso nach oben. Sonst ist der Trend „nicht

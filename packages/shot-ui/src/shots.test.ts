@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   asOnPrintout,
-  formatScore,
+  formatShotValue,
   groupShots,
   hasPosition,
   isProbeShot,
@@ -53,11 +53,11 @@ describe("Schüsse für die Bausteine", () => {
     expect(shotLabels(asOnPrintout(WITH_PROBE))).toEqual(["1", "2", "3"])
   })
 
-  it("Wert in der gewählten Wertung, ohne Wert ein Strich", () => {
-    expect(formatScore(CARD[0], "decimal")).toBe("10,9")
-    expect(formatScore(CARD[0], "rings")).toBe("10")
-    expect(formatScore(shot("match", 1, 0, null), "decimal")).toBe("–")
-    expect(formatScore({ ...CARD[0], ring: 0, decimalTenths: 0 }, "decimal")).toBe("0,0")
+  it("Einzelschuss immer in Zehnteln, ohne Zehntel der Ring, ohne Wert ein Strich (Rückmeldung 3)", () => {
+    expect(formatShotValue(CARD[0])).toBe("10,9")
+    expect(formatShotValue({ ...CARD[0], decimalTenths: null, ring: 9 })).toBe("9")
+    expect(formatShotValue({ ...CARD[0], decimalTenths: null, ring: null })).toBe("–")
+    expect(formatShotValue({ ...CARD[0], ring: 0, decimalTenths: 0 })).toBe("0,0")
   })
 
   it("Lage vorhanden?", () => {

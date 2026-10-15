@@ -50,11 +50,11 @@ export function ShotReadout({ shots, state, className }: ShotReadoutProps) {
             />
           )}
           <span className="font-display text-5xl leading-none font-bold tabular-nums">
-            {readoutValue(model, state.scoring)}
+            {readoutValue(model)}
           </span>
         </p>
         <div className="grid gap-1 text-[13px]">
-          <p className="text-foreground-2">{readoutDetail(shot, state.scoring)}</p>
+          <p className="text-foreground-2">{readoutDetail(shot)}</p>
           {distance !== null && (
             <dl className="flex flex-wrap gap-x-4 gap-y-1">
               <div className="flex gap-1.5">

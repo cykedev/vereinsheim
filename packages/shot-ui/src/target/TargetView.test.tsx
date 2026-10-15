@@ -150,6 +150,10 @@ describe("TargetView: Auswahl und Antippen", () => {
     expect(shotOrder(html)).toEqual(["4", "5"])
   })
 
+  it("der Hinweis am Treffer nennt den Wert in Zehnteln, auch in ganzen Ringen (Rückmeldung 3)", () => {
+    expect(render({ scoring: "rings" })).toContain("<title>Schuss 2: 10,5</title>")
+  })
+
   it("der angetippte Schuss liegt ganz oben, mit Ring", () => {
     const html = render({ chosen: { index: 1, series: 1 } })
     expect(shotOrder(html).at(-1)).toBe("2")

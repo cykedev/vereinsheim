@@ -49,6 +49,23 @@ describe("Reiter Zeit und Verlauf, Diagramme", () => {
     expect(card).toMatch(/data-average="partial"[^>]*stroke-dasharray="4 4"/)
   })
 
+  it("Verlauf je Schuss auch in ganzen Ringen in Zehnteln, mit gleitendem Schnitt (Rückmeldung 3)", () => {
+    const rings = cardHtml(renderTab("time", { scoring: "rings" }), "verlauf-und-trend")
+    const decimal = cardHtml(html, "verlauf-und-trend")
+    // Diagramm und Tabelle der Werte gleich, nur die Zahl des Trends folgt der Wertung wie in den Beobachtungen
+    const chart = (card: string) => card.slice(0, card.indexOf("Trend:"))
+    expect(chart(rings)).toBe(chart(decimal))
+    expect(rings).toMatch(/<td[^>]*>\d+,\d<\/td>/)
+    const trend = cardTrend(BASE, "rings")!
+    expect(cardText(renderTab("time", { scoring: "rings" }), "verlauf-und-trend")).toContain(
+      `Trend: Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe`
+    )
+    // ohne Zehntel (SF-18) in ganzen Ringen statt ohne Verlauf
+    const tenthless = BASE.map((s) => ({ ...s, decimalTenths: null }))
+    const card = cardHtml(renderTab("time", { shots: tenthless }), "verlauf-und-trend")
+    expect(all(card, /data-course-point="(\d+)"/g).length).toBe(BASE.length)
+  })
+
   it("Verlauf: Trenner zwischen den Serien und eine Linie je Pause", () => {
     const card = cardHtml(html, "verlauf-und-trend")
     expect(all(card, /data-series-separator="(\d+)"/g).map(Number)).toEqual([10, 20, 30])

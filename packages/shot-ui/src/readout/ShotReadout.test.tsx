@@ -66,11 +66,13 @@ describe("ShotReadout: Ablesung des angetippten oder letzten Schusses", () => {
     expect(text(render({ chosen: { index: 0, series: 1 } }))).toContain("Schuss 1 · angetippt")
   })
 
-  it("die andere Wertung klein daneben", () => {
-    expect(text(render())).toContain("Ring 10")
-    const rings = text(render({ scoring: "rings" }))
-    expect(rings).toMatch(/· letzter Schuss 10 /)
-    expect(rings).toContain("10,9 in Zehnteln")
+  it("der Wert immer in Zehnteln, klein daneben der Ring (Rückmeldung 3)", () => {
+    for (const scoring of ["decimal", "rings"] as const) {
+      const t = text(render({ scoring }))
+      expect(t).toMatch(/· letzter Schuss 10,9 /)
+      expect(t).toContain("Ring 10")
+      expect(t).not.toContain("in Zehnteln")
+    }
   })
 
   it("Innenzehner und Fehlschuss benannt", () => {

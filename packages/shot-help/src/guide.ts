@@ -18,7 +18,7 @@ export const READING_GUIDE: readonly GuideItem[] = [
   },
   {
     title: "Ganze Ringe oder Zehntel",
-    text: "Auf der Scheibe oben umschalten, für Liste, Start und Fortschritt in Profil; jede Auswertung über Werte gibt es in beiden, nur die Zehntelverteilung allein in Zehnteln. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10); beim Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich bleiben Zehner, Innenzehner und Zehnerquote.",
+    text: "Auf der Scheibe und auf Start im Kreis neben der großen Zahl umschalten, unter Scheiben und im Fortschritt am Chip neben „Filter“. Ergebnis, Ø, Serien und Quoten gibt es in beiden. Einzelne Schüsse stehen immer in Zehnteln: in den Schüssen, in der Ablesung, im Verlauf je Schuss und in der Zehntelverteilung. In ganzen Ringen gehen Feinheiten verloren (10,0 und 10,9 sind beide eine 10); beim Luftgewehr ist ein Trend dort deshalb etwas seltener „klar“. Gleich bleiben Zehner, Innenzehner und Zehnerquote.",
   },
   {
     title: "Wie am Ausdruck",

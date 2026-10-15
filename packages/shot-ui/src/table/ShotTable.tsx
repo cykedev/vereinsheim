@@ -8,7 +8,7 @@ import { useId, useMemo, useState } from "react"
 import { durationText, formatValue } from "../format"
 import { scoreColor } from "../geometry"
 import {
-  formatScore,
+  formatShotValue,
   seriesKeyOf,
   shotDistance,
   shotIntervals,
@@ -100,7 +100,7 @@ export function ShotTable({
               Nr.
             </th>
             <th scope="col" className="px-2 py-1.5 text-right font-medium">
-              {state.scoring === "rings" ? "Ring" : "Wert"}
+              Wert
             </th>
             <th scope="col" className="px-2 py-1.5 text-center font-medium">
               <span className="sr-only">Innenzehner</span>
@@ -168,7 +168,7 @@ export function ShotTable({
                     />
                     {/* feste Breite: „10,4“ und „9,0“ sind verschieden breit, die Punkte stehen trotzdem untereinander */}
                     <span className="inline-block min-w-[4ch] text-right">
-                      {formatScore(shot, state.scoring)}
+                      {formatShotValue(shot)}
                     </span>
                   </td>
                   <td className="px-2 py-1.5 text-center">

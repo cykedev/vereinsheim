@@ -107,11 +107,13 @@ describe("ShotTable", () => {
     ).toBe(true)
   })
 
-  it("Wert in der gewählten Wertung, Spaltenkopf Wert oder Ring", () => {
-    expect(render()).toMatch(/<th[^>]*>Wert<\/th>/)
-    expect(rows(render())[4][1]).toBe("10,8")
-    expect(render({ scoring: "rings" })).toMatch(/<th[^>]*>Ring<\/th>/)
-    expect(rows(render({ scoring: "rings" }))[4][1]).toBe("10")
+  it("Einzelschüsse immer in Zehnteln, auch in ganzen Ringen; Spaltenkopf immer Wert (Rückmeldung 3)", () => {
+    for (const scoring of ["decimal", "rings"] as const) {
+      const html = render({ scoring })
+      expect(html).toMatch(/<th[^>]*>Wert<\/th>/)
+      expect(html).not.toMatch(/<th[^>]*>Ring<\/th>/)
+      expect(rows(html)[4][1]).toBe("10,8")
+    }
   })
 
   it("Innenzehner markiert, Teiler aus der Lage, ohne Lage ein Strich", () => {

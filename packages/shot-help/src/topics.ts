@@ -42,7 +42,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["V2"],
     metrics: [],
     short: "Wie viele Schüsse auf jeden Zehntelwert fallen.",
-    what: "Dieselbe Zählung in Zehnteln, jede Säule ein Wert (10,4, 10,5 …). Es gibt sie nur in der Zehntelwertung.",
+    what: "Dieselbe Zählung in Zehnteln, jede Säule ein Wert (10,4, 10,5 …). Sie steht immer da, auch wenn die Scheibe in ganzen Ringen gewertet wird.",
     read: "Sie zeigt, wo innerhalb der Ringe deine Schüsse liegen. Viele Werte knapp unter einer Ringgrenze (9,8, 9,9) zählen in ganzen Ringen nur 9; ein, zwei Zehntel mehr, und es wäre jeweils ein Ring mehr.",
     caution:
       "Einzelne Säulen sind bei einer Scheibe Zufall; aussagekräftig ist die Gesamtform, etwa viele Werte knapp unter einer Ringgrenze.",
@@ -226,7 +226,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["I3", "I4"],
     metrics: [],
     short: "Wie sich deine Werte über die Scheibe entwickeln.",
-    what: "Jeder Punkt ist ein Schuss, die Linie der Schnitt der letzten zehn (gestrichelt, solange es noch keine zehn sind). Der Trend ist eine Ausgleichsgerade durch alle Schüsse; die Zahl sagt, um wie viele Ringe der Wert eines Schusses alle 10 Schuss steigt oder sinkt. Bei −0,24 ist ein Schuss also zehn Schuss später im Schnitt 0,24 Ringe schwächer, eine ganze Serie 2,4 Ringe.",
+    what: "Jeder Punkt ist ein Schuss mit seinem Wert in Zehnteln, auch wenn die Scheibe in ganzen Ringen gewertet wird. Die Linie ist der Schnitt der letzten zehn (gestrichelt, solange es noch keine zehn sind). Der Trend ist eine Ausgleichsgerade durch alle Schüsse; die Zahl sagt, um wie viele Ringe der Wert eines Schusses alle 10 Schuss steigt oder sinkt. Bei −0,24 ist ein Schuss also zehn Schuss später im Schnitt 0,24 Ringe schwächer, eine ganze Serie 2,4 Ringe.",
     read: "„Klar fallend“ heißt: Ein so deutlicher Abfall entstünde durch Zufall allein höchstens in 5 von 100 Scheiben; „klar steigend“ gilt ebenso nach oben. Sonst ist der Trend „nicht klar“, auch wenn die Linie etwas fällt oder steigt.",
     caution:
       "Selbst ein deutliches Nachlassen zeigt eine einzelne Scheibe selten als „klar“. Beim Luftgewehr, wo fast alle Schüsse 9 oder 10 sind, ist ein Trend in ganzen Ringen etwas seltener klar. Zeigen Test und Gerade in verschiedene Richtungen (etwa wegen eines sehr schwachen letzten Schusses), gibt es kein Urteil.",

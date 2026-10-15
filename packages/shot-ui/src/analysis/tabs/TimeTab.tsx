@@ -18,7 +18,13 @@ import {
   seriesSpread,
   tempoSpread,
 } from "@vereinsheim/shot-core/analysis"
-import { computeMetric, inScoring, metricByKey, shotNumbers } from "@vereinsheim/shot-core/metrics"
+import {
+  computeMetric,
+  inScoring,
+  metricByKey,
+  shotNumbers,
+  type Scoring,
+} from "@vereinsheim/shot-core/metrics"
 import type { ReactNode } from "react"
 
 import { durationText, formatSigned, formatValue, percentText, ringsSigned } from "../../format"
@@ -84,6 +90,10 @@ export function timeCards({
         if (shot) onShowShot(shot)
       }
     : undefined
+  // Punkte und gleitender Schnitt des Verlaufs in Zehnteln, gleich in welcher Wertung (Rückmeldung 3); ohne Zehntel
+  // (SF-18) in ganzen Ringen. Die Zahl des Trends folgt der Wertung wie Ø und Summen: dieselbe Zahl steht in Übersicht
+  // und Beobachtungen
+  const course: Scoring = movingAverage(base, "decimal").length >= 2 ? "decimal" : "rings"
   const trend = cardTrend(base, scoring)
   // Abstände über die ganze Karte: eine späte Probe ist keine Lücke (SF-04)
   const profile = rhythmProfile(base, 5, card)
@@ -106,7 +116,7 @@ export function timeCards({
       element: (
         <AnalysisCard help="verlauf-und-trend" wide explain={explain} onHelp={onHelp}>
           {/* wie das Diagramm: ab zwei Schuss mit Wert */}
-          {movingAverage(base, scoring).length >= 2 ? (
+          {movingAverage(base, course).length >= 2 ? (
             <>
               <ChartSlot height={230}>
                 {(width) => (
@@ -114,7 +124,7 @@ export function timeCards({
                     width={width}
                     shots={base}
                     card={card}
-                    scoring={scoring}
+                    scoring={course}
                     chosenNumber={chosenNumber}
                     onShow={onShow}
                   />
