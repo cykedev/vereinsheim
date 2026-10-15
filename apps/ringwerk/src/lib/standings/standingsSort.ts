@@ -2,6 +2,7 @@ import type { ScoringMode } from "@/generated/prisma/client"
 import { determineOutcome } from "@/lib/results/calculateResult"
 import { assignSharedRanks } from "@/lib/scoring/sharedRanks"
 import type { StandingRow, StandingsMatchup } from "./standingsTypes"
+import { involvesWithdrawn } from "./withdrawn"
 
 /**
  * Eine Zeile mit mindestens einem Ergebnis (Duell oder Freilos) — nur sie trägt Podiumsfarben.
@@ -55,7 +56,7 @@ export function sortWithDirectComparison(
       let dp = 0
       for (const m of matchups) {
         if (m.status !== "COMPLETED" || !m.awayParticipantId) continue
-        if (withdrawnIds.has(m.homeParticipantId) || withdrawnIds.has(m.awayParticipantId)) continue
+        if (involvesWithdrawn(m, withdrawnIds)) continue
         // Nur Duelle zwischen Teilnehmern dieser Punktegruppe
         if (!groupIds.has(m.homeParticipantId) || !groupIds.has(m.awayParticipantId)) continue
 

@@ -151,7 +151,11 @@ export function ClassicLegTable({
                     )}
                   </TableCell>
                   <TableCell className="px-2 py-3 text-center sm:px-4">
-                    <StatusBadge status={m.status} />
+                    {isVoid ? (
+                      <span className="text-muted-foreground">—</span>
+                    ) : (
+                      <StatusBadge status={m.status} />
+                    )}
                   </TableCell>
                   {canManage && (
                     <TableCell className="px-2 py-3 text-right sm:px-4">

@@ -20,6 +20,7 @@ import {
   toDuelSeries,
 } from "./bestOfStandingsHelpers"
 import { sortStandings } from "./bestOfStandingsSort"
+import { involvesWithdrawn } from "./withdrawn"
 
 // Typen werden re-exportiert, damit der Import-Pfad "./calculateBestOfStandings" stabil bleibt.
 export type {
@@ -61,7 +62,7 @@ export function calculateBestOfStandings(
     const { homeParticipantId: homeId, awayParticipantId: awayId } = matchup
 
     // Skip matchups involving withdrawn participants.
-    if (withdrawnIds.has(homeId) || withdrawnIds.has(awayId)) continue
+    if (involvesWithdrawn(matchup, withdrawnIds)) continue
 
     // Separate regular from tiebreak series.
     const regularSeries = matchup.series.filter((s) => !s.isTiebreak)

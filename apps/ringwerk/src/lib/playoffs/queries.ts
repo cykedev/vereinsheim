@@ -4,6 +4,7 @@ import {
   getStandingsForCompetition,
 } from "@/lib/standings/queries"
 import { determineFinaleRoundWinner, determinePlayoffDuelWinner } from "./calculatePlayoffs"
+import { involvesWithdrawn } from "@/lib/standings/withdrawn"
 import type { SeedingRow } from "./bracketSeeding"
 import type { PlayoffBracketData, PlayoffDuelItem, PlayoffMatchItem, PlayoffRound } from "./types"
 
@@ -201,11 +202,7 @@ export async function countOpenGroupMatchups(competitionId: string): Promise<num
     }),
   ])
   const withdrawnIds = new Set(withdrawn.map((e) => e.participantId))
-  return pending.filter(
-    (m) =>
-      !withdrawnIds.has(m.homeParticipantId) &&
-      !(m.awayParticipantId !== null && withdrawnIds.has(m.awayParticipantId))
-  ).length
+  return pending.filter((m) => !involvesWithdrawn(m, withdrawnIds)).length
 }
 
 /**

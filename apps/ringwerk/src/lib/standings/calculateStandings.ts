@@ -7,6 +7,7 @@ import type {
   ParticipantStats,
 } from "./standingsTypes"
 import { sortWithDirectComparison } from "./standingsSort"
+import { involvesWithdrawn } from "./withdrawn"
 
 // Typen werden re-exportiert, damit der Import-Pfad "./calculateStandings" stabil bleibt.
 export type {
@@ -48,14 +49,9 @@ export function calculateStandings(
   }
 
   for (const matchup of matchups) {
-    const homeWithdrawn = withdrawnIds.has(matchup.homeParticipantId)
-    const awayWithdrawn = matchup.awayParticipantId
-      ? withdrawnIds.has(matchup.awayParticipantId)
-      : false
-
     if (matchup.status === "BYE") {
       // Freilos zählt nur wenn Teilnehmer nicht zurückgezogen
-      if (!homeWithdrawn) {
+      if (!withdrawnIds.has(matchup.homeParticipantId)) {
         statsMap.get(matchup.homeParticipantId)!.byes++
       }
       continue
@@ -63,7 +59,7 @@ export function calculateStandings(
 
     if (matchup.status !== "COMPLETED") continue
     // Paarungen mit zurückgezogenem Teilnehmer werden nicht gewertet
-    if (homeWithdrawn || awayWithdrawn) continue
+    if (involvesWithdrawn(matchup, withdrawnIds)) continue
 
     const homeResult = matchup.results.find((r) => r.participantId === matchup.homeParticipantId)
     const awayResult = matchup.results.find((r) => r.participantId === matchup.awayParticipantId)
