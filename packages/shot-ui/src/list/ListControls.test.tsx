@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 import { CardFilters } from "../controls/CardFilters"
 import { DEFAULT_LIST, DEFAULT_PROGRESS, type ListQuery } from "../nav/routes"
 import {
+  flagName,
   listFilterSummary,
   ListControls,
   ListControlsView,
@@ -121,22 +122,66 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     const sheet = html.slice(html.indexOf("<dialog"))
     expect(sheet.indexOf('aria-label="Art"')).toBeLessThan(sheet.indexOf('aria-label="Liste"'))
     expect(sheet.indexOf('aria-label="Liste"')).toBeLessThan(sheet.indexOf('aria-label="Merkmal"'))
-    expect(sheet).toMatch(
-      /aria-label="Liste"[\s\S]*>Alle<[\s\S]*aria-checked="true"[^>]*>RWK_LP<[\s\S]*>Training-LG</
-    )
+    // Chips, die umbrechen, nicht ein Umschalter, der seitlich scrollt (User, 15. Oktober 2026: „ich kann hier nicht alle
+    // listen wählen“)
+    const group = sheet.match(/<div role="group" aria-label="Liste"[^>]*>[\s\S]*?<\/div>/)![0]
+    expect(group).toMatch(/class="[^"]*flex-wrap/)
+    expect(group).not.toContain("overflow-x-auto")
+    expect(
+      [...group.matchAll(/<button[^>]*aria-pressed="(true|false)"[^>]*>([^<]+)</g)].map(
+        (m) => `${m[2]}:${m[1]}`
+      )
+    ).toEqual(["Alle:false", "RWK_LP:true", "Training-LG:false"])
     const onQuery = vi.fn()
-    const choice = find(view({ lists, onQuery }), (e) => e.props.label === "Liste")!
-    ;(choice.props.onChange as (v: string) => void)("1")
+    // die Chips stehen in einer eigenen Komponente: sie einmal aufrufen, dann im Baum suchen
+    const choice = find(
+      view({ lists, onQuery }),
+      (e) => e.props.lists === lists && "onQuery" in e.props
+    )!
+    const chips = (choice.type as (p: Record<string, unknown>) => ReactNode)(choice.props)
+    const chip = (name: string) =>
+      find(chips, (e) => e.type === "button" && e.props.children === name)!
+    ;(chip("Training-LG").props.onClick as () => void)()
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, list: 1 })
-    ;(choice.props.onChange as (v: string) => void)("")
+    ;(chip("Alle").props.onClick as () => void)()
     expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, list: null })
     expect(renderToStaticMarkup(h(ListControls, props()))).not.toContain('aria-label="Liste"')
     // eine unbekannte Kennung aus einer alten Adresse: „Alle“ ist gewählt, der Chip nennt keine Liste (Review)
     const stale = renderToStaticMarkup(
       h(ListControls, props({ lists, query: { ...QUERY, list: 99 } }))
     )
-    expect(stale).toMatch(/aria-label="Liste"[^>]*><button[^>]*aria-checked="true"[^>]*>Alle</)
+    expect(stale).toMatch(/aria-label="Liste"[^>]*><button[^>]*aria-pressed="true"[^>]*>Alle</)
     expect(stale).not.toContain("Liste RWK")
+  })
+
+  it("jedes Merkmal mit Namen statt Kennung (dort stand „nur-probe“)", () => {
+    expect(
+      [
+        "nur-pdf",
+        "unvollstaendig",
+        "ausgenommen",
+        "nur-probe",
+        "leer",
+        "ueber-soll",
+        "korrigiert",
+        "uhr-abweichung",
+        "neu-gewertet",
+        "als-wertung-gezaehlt",
+      ].map(flagName)
+    ).toEqual([
+      "Nur PDF",
+      "Unvollständig",
+      "Ausgenommen",
+      "Nur Probe",
+      "Ohne Schuss",
+      "Zu viele Schüsse",
+      "Korrigiert",
+      "Uhrzeit ungenau",
+      "Neu gewertet",
+      "Als Wertung gezählt",
+    ])
+    // Unbekanntes mit seiner Kennung
+    expect(flagName("etwas-neues")).toBe("etwas-neues")
   })
 
   it("ohne Merkmale keine Wahl „Merkmal“, ohne Zeitraum kein Zeitraum im Blatt", () => {

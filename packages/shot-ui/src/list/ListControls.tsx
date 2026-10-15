@@ -9,11 +9,21 @@ import { RouteLink } from "../nav/RouteLink"
 import type { ListQuery, ProgressRoute } from "../nav/routes"
 import type { ListOption } from "./evenings"
 
-/** Namen der Merkmale (D7); Unbekanntes mit seiner Id */
+/**
+ * Namen der Merkmale (D7), jedes, das an einer Scheibe stehen kann (Textbuch rev 21; vorher stand „nur-probe“ da);
+ * Unbekanntes mit seiner Id
+ */
 const FLAG_NAMES: Readonly<Record<string, string>> = {
   "nur-pdf": "Nur PDF",
   unvollstaendig: "Unvollständig",
   ausgenommen: "Ausgenommen",
+  "nur-probe": "Nur Probe",
+  leer: "Ohne Schuss",
+  "ueber-soll": "Zu viele Schüsse",
+  korrigiert: "Korrigiert",
+  "uhr-abweichung": "Uhrzeit ungenau",
+  "neu-gewertet": "Neu gewertet",
+  "als-wertung-gezaehlt": "Als Wertung gezählt",
 }
 export const flagName = (flag: string) => FLAG_NAMES[flag] ?? flag
 
@@ -149,17 +159,7 @@ export function ListControlsView({
           {lists.length > 0 && (
             <div className="grid gap-1.5">
               <span className="text-[13px] font-semibold text-muted-foreground">Liste</span>
-              <Segmented
-                label="Liste"
-                scroll
-                // eine Kennung, die keine Liste der Familie ist (alte Adresse), gilt als keine: „Alle“ (Review)
-                value={lists.some((list) => list.id === query.list) ? String(query.list) : ANY}
-                options={[
-                  { value: ANY, label: "Alle" },
-                  ...lists.map((list) => ({ value: String(list.id), label: list.name })),
-                ]}
-                onChange={(list) => onQuery({ ...query, list: list === ANY ? null : Number(list) })}
-              />
+              <ListChoice lists={lists} query={query} onQuery={onQuery} />
             </div>
           )}
           {flags.length > 0 && (
@@ -223,6 +223,38 @@ export function ListControlsView({
           </RouteLink>
         </div>
       </Sheet>
+    </div>
+  )
+}
+
+/**
+ * Die Listen aus Meyton als Chips, die umbrechen: Eine Anlage hat viele Listen, ein Umschalter, der seitlich scrollt,
+ * schnitt „Alle“ und die letzten ab, am Desktop ohne sichtbaren Balken unerreichbar (User, 15. Oktober 2026: „ich kann
+ * hier nicht alle listen wählen“). Eine Kennung, die keine Liste der Familie ist (alte Adresse), gilt als keine (Review).
+ */
+function ListChoice({
+  lists,
+  query,
+  onQuery,
+}: {
+  lists: readonly ListOption[]
+  query: ListQuery
+  onQuery: (query: ListQuery) => void
+}) {
+  const chosen = lists.some((list) => list.id === query.list) ? query.list : null
+  return (
+    <div role="group" aria-label="Liste" className="flex flex-wrap gap-1.5">
+      {[{ id: null, name: "Alle" }, ...lists].map((list) => (
+        <button
+          key={list.id ?? ANY}
+          type="button"
+          aria-pressed={list.id === chosen}
+          onClick={() => onQuery({ ...query, list: list.id })}
+          className="max-w-full cursor-pointer rounded-full border border-border bg-surface-2 px-3.5 py-2 text-[13px] leading-tight font-semibold [overflow-wrap:anywhere] text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+        >
+          {list.name}
+        </button>
+      ))}
     </div>
   )
 }

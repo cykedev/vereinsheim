@@ -67,6 +67,14 @@ Keine Schemaänderung, keine geschützten Pfade.
 4. **T4 Doku:** Scope-Notiz (Grenze 1, Entfernen), `spiegel-assignment` (eine Nummer je Konto), SF-39 im
    Sonderfall-Katalog (Lösung: widerrufen und neu eintragen).
 
+5. **T5 Filter „Liste“ und Namen der Merkmale** (User, 15. Oktober 2026, mit Bild aus Produktion: „ich kann hier nicht
+   alle listen wählen ...“): Die Listen stehen im Blatt „Filter“ als Chips, die umbrechen (`role="group"`, `aria-pressed`),
+   statt in einem Umschalter, der seitlich scrollt: „Alle“ und die letzten Listen waren abgeschnitten, am Desktop ohne
+   sichtbaren Balken nicht erreichbar. Jedes Merkmal bekommt einen Namen statt der Kennung (dort stand „nur-probe“):
+   Nur Probe, Ohne Schuss, Zu viele Schüsse, Korrigiert, Uhrzeit ungenau, Neu gewertet, Als Wertung gezählt (Textbuch
+   rev 21). Tests: Markup (alle Listen da, umbrechend, gewählte gedrückt, Wahl und „Alle“), Namen; Prüfung im Browser
+   mit vielen Wegwerf-Listen (jeder Chip im Blatt sichtbar, Telefon und Desktop).
+
 ## Testschritte
 
 - `pnpm check` nach jedem Task.
