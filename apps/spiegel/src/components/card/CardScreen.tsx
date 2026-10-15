@@ -320,7 +320,7 @@ export function CardScreen({
         header={
           <CardHeader
             title={target.label}
-            meta={cardMeta(card, pageContext.timeZone)}
+            meta={cardMeta(card, pageContext.timeZone, card.list)}
             result={empty ? null : result}
             observations={headObservations}
             onMore={() => {

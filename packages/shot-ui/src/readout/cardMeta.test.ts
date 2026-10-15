@@ -25,4 +25,14 @@ describe("Metazeile im Kopf einer Scheibe", () => {
       "Training nur Probe"
     )
   })
+  it("die Liste aus Meyton nach der Art, ohne Liste nichts (Rückmeldung 1)", () => {
+    const card = periodCard("w", 0, [100], { kind: "competition", startedAtMs: AT })
+    expect(cardMeta(card, TZ, { name: "RWK_LP" })).toEqual([
+      "Wettkampf",
+      "Liste RWK_LP",
+      "Sa 26.09.2026",
+      "10:30",
+    ])
+    expect(cardMeta(card, TZ, null)).toEqual(["Wettkampf", "Sa 26.09.2026", "10:30"])
+  })
 })
