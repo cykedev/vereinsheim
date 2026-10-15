@@ -118,8 +118,9 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   zur SSMDB2 auf stdin ab, wenn weder `--dsn` noch die Umgebung ihn nennen. Geprüft in `debian:12` mit
   `systemd-analyze verify`, am 15. Oktober 2026 auch in `debian:trixie` (arm64). Auf dem Raspberry Pi
   ([`spiegel-bridge-pi`](../../vault/spiegel/spiegel-bridge-pi.md)): Ohne `systemd-time-wait-sync.service` ist
-  `time-sync.target` sofort erreicht, und die Brücke startet mit der Uhr vom letzten Abend (kein RTC). Spiegel lehnt nur
-  eine vorgehende Uhr ab. Ein zweiter Lauf von `install.sh` ersetzt das Binary, startet den Dienst aber nicht neu.
+  `time-sync.target` sofort erreicht, und die Brücke startet mit der Uhr vom letzten Abend (kein RTC); sie hält dann
+  zurück, bis NTP antwortet (Regel „Eigene Uhr“, SF-79). Mit dem Dienst startet sie erst nach der Synchronisierung. Ein
+  zweiter Lauf von `install.sh` ersetzt das Binary, startet den Dienst aber nicht neu.
 - **Heartbeat** jede Minute, der erste nach der ersten Runde, nie mit Namen oder Nummern; `possible-reset` nur gemeldet
   (die Zahl der Scheiben fällt um mehr als die Hälfte; zurückgenommen, wenn sie wiederkommen; `delayed` geht vor), eine
   neue Epoche eröffnet die Brücke nicht. Zurückgehaltene zählen nur Scheiben, die die Erkennung noch kennt.

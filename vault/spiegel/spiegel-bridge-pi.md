@@ -6,7 +6,7 @@ aliases: [brücke-einrichten, bridge-pi, pi-setup, brücke-aktualisieren]
 keywords: [raspberry pi 3 b+, raspberry pi os lite, imager, 64-bit, arm64, aarch64, dhcp, mdns, avahi, .local, ssh, hostname, scp, install.sh, systemd, journalctl, timedatectl, ntp, fake-hwclock, systemd-time-wait-sync, zeitsynchronisierung, echtzeituhr, kopplung, pair, update, aktualisieren, rückfall, rollback, unattended-upgrades, tailscale, fernwartung, dhcp-reservierung]
 operation_of: ["[[spiegel-bridge]]"]
 governed_by: ["[[adr-027]]"]
-relates_to: ["[[spiegel-ingest-pipeline]]", "[[meyton-ssmdb2]]"]
+relates_to: ["[[spiegel-ingest-pipeline]]", "[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]"]
 ---
 
 **TL;DR** Die Brücke läuft auf einem Raspberry Pi 3 B+ mit Raspberry Pi OS Lite **64-Bit**. Die Karte entsteht im
@@ -43,10 +43,13 @@ zurückgestellt (User, 15. Oktober 2026).
 
    Warum: Der Pi hat keine Echtzeituhr. Nach dem Einschalten steht seine Uhr auf dem zuletzt gespeicherten Stand, also
    auf dem letzten Abend, bis NTP antwortet. Die Unit der Brücke wartet zwar auf `time-sync.target`, das ist ohne diesen
-   Dienst aber sofort erreicht. Eine Brücke mit alter Uhr schickt Stände mit Beobachtungszeiten vom letzten Abend.
-   Spiegel lehnt nur eine vorgehende Uhr ab (`future`). Eine nachgehende nimmt es an und misst daraus eine falsche
-   Uhrabweichung der Anlage. Mit dem Dienst startet die Brücke erst nach der Synchronisierung. Bekommt der Pi nie eine
-   Zeit (NTP gesperrt), startet sie nie. Das ist gewollt: lieber keine Daten als falsche Zeiten.
+   Dienst aber sofort erreicht. Die Brücke merkt eine alte Uhr selbst ([[spiegel-bridge]], „Uhrzeit“, SF-79): Sie
+   misst ihre Uhr bei jedem Heartbeat an Spiegel, schickt nichts, solange sie mehr als 30 s daneben liegt, und meldet
+   „Uhr am Gerät geht falsch“; Spiegel lehnt Beobachtungen, die mehr als 15 min zurückliegen, ohnehin ab. Mit dem
+   Dienst startet die Brücke erst nach der Synchronisierung und muss gar nicht erst zurückhalten. Bekommt der Pi nie
+   eine Zeit (NTP gesperrt), startet sie mit dem Dienst nie (in Spiegel „noch kein Kontakt“ oder „aus“), ohne ihn hält
+   sie dauerhaft zurück (in Spiegel „Uhr am Gerät geht falsch“). Beides ist gewollt: lieber keine Daten als falsche
+   Zeiten.
 6. Optional, wenn der Pi nur am Kabel hängt: WLAN und Bluetooth ausschalten. In `/boot/firmware/config.txt` die Zeilen
    `dtoverlay=disable-wifi` und `dtoverlay=disable-bt` ergänzen und neu starten.
 
@@ -113,6 +116,12 @@ Benutzer, Rechte, `systemd-analyze verify`, Exit 2 ohne Konfiguration.
 | `state-failed`, `heartbeat-failed`, `upload-failed` | Spiegel nicht erreichbar (Internet, DNS, Zeit) |
 | `throttled` | Spiegel bremst, die Brücke wartet `Retry-After` |
 | `future` | die Uhr der Brücke geht vor; sie wartet eine Minute |
+| `clock-wrong seconds=…` | die Uhr am Gerät liegt mehr als 30 s neben Spiegel (negativ: nach); die Brücke schickt nichts, bis sie stimmt. `timedatectl` prüfen |
+| `clock-ok` | die Uhr stimmt wieder; was wartet, geht in der nächsten Runde hinaus |
+| `clock-unmeasured ms=…` | Spiegel hat zu langsam geantwortet, um die Uhr zu beurteilen; die nächste Messung kommt mit dem nächsten Heartbeat |
+| `past` | Spiegel fand eine Beobachtung zu alt; die Brücke misst ihre Uhr neu und schickt danach noch einmal |
+| `code=tls-time` (bei `state-failed`, `heartbeat-failed`, `upload-failed`) | die Uhr am Gerät liegt vor dem Beginn des Zertifikats von Spiegel (etwa 1970): `timedatectl` prüfen |
+| `code=tls-expired` | das Zertifikat von Spiegel ist abgelaufen (oder die Uhr am Gerät geht weit vor) |
 | `possible-reset` | viele Scheiben fehlen auf einmal (Ablage geleert?); nur gemeldet |
 | `unauthorized hint=neu-koppeln` | Brücke in Spiegel getrennt (Exit 3, kein Neustart): neu verbinden |
 | `config-missing` | noch nicht verbunden (Exit 2, kein Neustart) |

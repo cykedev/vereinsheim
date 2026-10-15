@@ -38,7 +38,7 @@ Das legt drei Binaries in `apps/spiegel-bridge/dist/` ab: `spiegel-bridge-linux-
 Schritt für Schritt auf dem Raspberry Pi (Imager, Zeit, DHCP, Prüfen vor Ort):
 [`vault/spiegel/spiegel-bridge-pi.md`](../../vault/spiegel/spiegel-bridge-pi.md). Ein Gerät ohne Echtzeituhr wie der Pi
 braucht vorher `sudo systemctl enable systemd-time-wait-sync.service`, sonst startet die Brücke mit der Uhr vom letzten
-Abend.
+Abend und hält zurück, bis NTP antwortet.
 
 1. Das passende Binary und den Ordner `deploy/` (`install.sh` und `spiegel-bridge.service`) auf das Gerät kopieren.
    `install.sh` erwartet die Unit im selben Ordner.
