@@ -30,6 +30,6 @@ export function familiesOf(cards: readonly OverviewCard[]): FamilyOption[] {
 export const listable = (cards: readonly OverviewCard[]) =>
   cards.filter((card) => card.family && card.targetId)
 
-/** die Scheiben der Übersichten mit ihrer Familie, wie die Modelle in `shot-ui` sie nehmen (nur aus `listable`) */
+/** die Scheiben der Übersichten mit Familie und Liste, wie die Modelle in `shot-ui` sie nehmen (nur aus `listable`) */
 export const withFamily = (cards: readonly OverviewCard[]) =>
-  cards.map((card) => ({ card, family: card.family!.slug }))
+  cards.map((card) => ({ card, family: card.family!.slug, list: card.list }))

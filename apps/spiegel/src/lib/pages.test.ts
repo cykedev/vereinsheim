@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import type { OverviewCard } from "@/lib/db/reads"
 
-import { familiesOf, listable } from "./pages"
+import { familiesOf, listable, withFamily } from "./pages"
 
 const card = (
   id: string,
@@ -22,6 +22,7 @@ const card = (
   scoring: "decimal",
   targetId,
   family: family ? { slug: family, name: family.toUpperCase() } : null,
+  list: null,
   projection: {
     version: "p",
     probeOnly: false,
@@ -48,5 +49,15 @@ describe("familiesOf", () => {
       targetId: "lp-10m",
     })
     expect(listable(cards).map((c) => c.id)).toEqual(["a", "b", "c"])
+  })
+})
+
+describe("withFamily", () => {
+  it("gibt Familie und Liste an die Modelle weiter", () => {
+    const listed = { ...card("a", 1, "lp-freihand", "lp-10m"), list: { id: 7, name: "RWK_LP" } }
+    expect(withFamily([listed, card("b", 2, "lp-freihand", "lp-10m")])).toEqual([
+      { card: listed, family: "lp-freihand", list: { id: 7, name: "RWK_LP" } },
+      { card: expect.objectContaining({ id: "b" }), family: "lp-freihand", list: null },
+    ])
   })
 })

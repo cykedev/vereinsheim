@@ -21,10 +21,12 @@ import {
 } from "../period/calendar"
 import { byStart, cardKind, deltasBefore, isProbeOnly, type CardKind } from "../period/model"
 
-/** eine Scheibe mit Projektion und ihrer Familie (die Liste filtert nach ihr) */
+/** eine Scheibe mit Projektion, ihrer Familie und ihrer Liste aus Meyton (die Liste der Scheiben filtert nach beiden) */
 export interface ListInputCard {
   card: ProjectedCard
   family: string
+  /** die Liste aus Meyton (`Rangliste`); fehlt oder null ohne */
+  list?: { id: number; name: string } | null
 }
 
 /** der Wert einer Kennzahl der Scheibe in der Wertung aus ihrer Projektion; null ohne Wert */

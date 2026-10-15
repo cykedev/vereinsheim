@@ -29,14 +29,25 @@ export interface OverviewCard extends ProjectedCard {
   stand: string | null
   /** die Wertung der Scheibe: gewählt, sonst die Vorgabe (`cardScoring`) */
   scoring: Scoring
+  /** die Liste aus Meyton (die `Rangliste`); null ohne (PDF, `seed:own`) */
+  list: CardList | null
 }
+
+/** die Liste einer Scheibe, wie Meyton sie nennt; die Kennung ist die der Zeile `Ranking` */
+export interface CardList {
+  id: number
+  name: string
+}
+
+const listOf = (ranking: { id: number; name: string } | null): CardList | null =>
+  ranking ? { id: ranking.id, name: ranking.name } : null
 
 const OVERVIEW_SELECT = {
   id: true,
   startedAt: true,
   kind: true,
   kindChoice: true,
-  ranking: { select: { kind: true } },
+  ranking: { select: { id: true, name: true, kind: true } },
   complete: true,
   flags: true,
   state: true,
@@ -90,6 +101,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         familyId: row.familyId,
         family: row.family,
         targetId: isTargetId(row.discipline.targetId) ? row.discipline.targetId : null,
+        list: listOf(row.ranking),
         projection,
       },
     ]
@@ -102,7 +114,9 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
  * Nur Probe ist Training (der Schütze kann es dort nicht umstellen): Die Rangliste zählt dann nicht (Review).
  */
 export const kindOfRow = (
-  row: Pick<OverviewRow, "kind" | "kindChoice" | "ranking">,
+  row: Pick<OverviewRow, "kind" | "kindChoice"> & {
+    ranking: Pick<NonNullable<OverviewRow["ranking"]>, "kind"> | null
+  },
   probeOnly: boolean
 ) => row.kindChoice ?? (probeOnly ? null : row.ranking?.kind) ?? row.kind
 
@@ -179,7 +193,7 @@ const PAGE_CARD_SELECT = {
   startedAt: true,
   kind: true,
   kindChoice: true,
-  ranking: { select: { kind: true } },
+  ranking: { select: { id: true, name: true, kind: true } },
   complete: true,
   flags: true,
   standScoring: true,
@@ -207,6 +221,8 @@ export interface PageCard extends PeriodCard {
   family: { slug: string; name: string } | null
   /** die Wertung der Scheibe: gewählt, sonst die Vorgabe (`cardScoring`); mit ihr öffnet die Seite */
   scoring: Scoring
+  /** die Liste aus Meyton; null ohne */
+  list: CardList | null
 }
 
 function toPageCard(row: PageCardRow): PageCard | null {
@@ -227,6 +243,7 @@ function toPageCard(row: PageCardRow): PageCard | null {
     targetId: isTargetId(row.discipline.targetId) ? row.discipline.targetId : null,
     family: row.family,
     scoring: scoringOfRow(row, official, probeOnly),
+    list: listOf(row.ranking),
     shots: row.currentRevision.shots.map(shotFromRow).map(toMetricShot),
   }
 }

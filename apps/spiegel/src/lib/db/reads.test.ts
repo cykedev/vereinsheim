@@ -396,6 +396,31 @@ describe("Art der Scheibe", () => {
   })
 })
 
+describe("Liste der Scheibe (Rückmeldung 1)", () => {
+  it("Übersicht und Seite nennen die Liste aus Meyton, ohne Liste null", async () => {
+    const ownerId = site.ownerId
+    const [first, second] = await familyCards(db, { ownerId, familyId: site.familyId })
+    const list = await db.ranking.create({
+      data: { siteId: site.siteId, name: "RWK_LP reads", kind: null },
+    })
+    await db.card.update({ where: { id: first.id }, data: { rankingId: list.id } })
+    try {
+      const expected = { id: list.id, name: "RWK_LP reads" }
+      const family = await familyCards(db, { ownerId, familyId: site.familyId })
+      expect(family.find((c) => c.id === first.id)?.list).toEqual(expected)
+      expect(family.find((c) => c.id === second.id)?.list).toBeNull()
+      expect((await ownerCards(db, { ownerId })).find((c) => c.id === first.id)?.list).toEqual(
+        expected
+      )
+      expect((await cardWithShots(db, { cardId: first.id, ownerId }))?.list).toEqual(expected)
+      expect((await cardWithShots(db, { cardId: second.id, ownerId }))?.list).toBeNull()
+    } finally {
+      await db.card.update({ where: { id: first.id }, data: { rankingId: null } })
+      await db.ranking.delete({ where: { id: list.id } })
+    }
+  })
+})
+
 describe("chooseCardKind", () => {
   it("nur die eigene, nicht gelöschte Scheibe mit Wertungsschüssen; nur Probe bleibt Training", async () => {
     const ownerId = site.ownerId
