@@ -3,9 +3,10 @@ import { describe, expect, it } from "vitest"
 import { computeChecksum } from "@vereinsheim/ingest-contract/checksum"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
 import { CARD_FLAGS } from "@vereinsheim/shot-core/metrics"
+import { cardMarks } from "@vereinsheim/shot-core/projection"
 import { frozenCaseIds, frozenExpected, frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
 
-import { shotChange, STICKY_FLAGS, type ShotInput } from "../db/cards"
+import { shotChange, STICKY_FLAGS, toMetricShot, type ShotInput } from "../db/cards"
 import {
   adaptSnapshot,
   hasHeldShot,
@@ -111,6 +112,38 @@ describe.each(frozenCaseIds().map((id) => [id] as const))("Fall %s", (caseId) =>
       expect(last.shots.map((s) => s.seq)).toEqual(last.shots.map((_, i) => i + 1))
     }
   )
+})
+
+describe("Auf der Scheibe (SF-15, SF-08)", () => {
+  const lastCard = (caseId: string, change?: (row: Record<string, unknown>) => void) => {
+    const [card] = frozenExpected(caseId).cards
+    const readings = frozenReadings(caseId)
+    const sent = card.sentReadings.map((n) => {
+      const snapshot = readings
+        .find((r) => r.reading === n)!
+        .snapshots.find((s) => s.scheibenId === card.scheibenId)!
+      if (!change) return snapshot
+      const data = structuredClone(snapshot.data)
+      data.treffer.rows.forEach(change)
+      return { ...snapshot, data, checksum: computeChecksum(data) }
+    })
+    return adaptAll(sent).at(-1)!
+  }
+  const drawn = (shots: readonly ShotInput[]) => cardMarks(shots.map(toMetricShot)).length
+
+  it("ein Handeintrag fehlt, Schüsse über der Soll-Zahl stehen da", () => {
+    expect(drawn(lastCard("SF-15").shots)).toBe(19)
+    expect(drawn(lastCard("SF-08").shots)).toBe(46)
+  })
+
+  it("ein echter Schuss in die Mitte (0|0, Teiler 0, 10,9) ist nicht verdächtig und steht da", () => {
+    const last = lastCard("SF-15", (row) => {
+      if (row.x === "0" && row.y === "0")
+        Object.assign(row, { Ring: "100", Ring01: "109", Innenzehner: "1", Text: "10.9*" })
+    })
+    expect(last.shots.flatMap((s) => s.flags)).toEqual([])
+    expect(drawn(last.shots)).toBe(20)
+  })
 })
 
 describe("Adapter im Einzelnen", () => {

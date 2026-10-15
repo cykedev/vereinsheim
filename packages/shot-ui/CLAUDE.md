@@ -109,7 +109,8 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
 - **Zahlen nur aus dem Fachkern** (`@vereinsheim/shot-core`), Erklärungen nur aus `@vereinsheim/shot-help`.
   Kurze Angaben unter einem Wert (wie gemessen, warum es keinen gibt) stehen im Baustein. Keine eigene
   Statistik im Baustein: Auch Hinweise rechnen über dieselben Schüsse wie der Wert (Platzhalter nach SF-15
-  nicht mit Lage, Zeit oder Abstand).
+  nicht mit Lage, Zeit oder Abstand). Gezeichnet wird über `isDrawn` aus dem Fachkern: ein verdächtiger Schuss
+  nicht, einer über der Soll-Zahl (SF-08) schon, an seiner Lage.
 - **Zahlen formatiert `./format`** (feste Stellen, Komma, echtes Minus, ohne `Intl`, wie auf dem
   Ausdruck); kein `toFixed(…).replace(…)` in Komponenten. `formatValue` rundet die Hälfte kaufmännisch von der Null
   weg, auch wenn die Gleitkommazahl knapp darunter liegt (erst auf zwölf gültige Stellen, dann runden). `toFixed`

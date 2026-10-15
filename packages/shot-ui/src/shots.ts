@@ -65,6 +65,7 @@ export function formatTotal(total: number | null, scoring: Scoring): string {
   return total === null ? "–" : formatValue(total, scoring === "rings" ? 0 : 1)
 }
 
+/** Lage aus endlichen Zahlen, für schon gefilterte Lagen (`MiniTarget`); gezeichnet wird über `isDrawn` (Fachkern) */
 export const hasPosition = (shot: Pick<MetricShot, "xUm" | "yUm">) =>
   shot.xUm !== null && shot.yUm !== null && Number.isFinite(shot.xUm) && Number.isFinite(shot.yUm)
 

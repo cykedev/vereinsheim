@@ -2,7 +2,7 @@
 
 import { mpiConfidence } from "@vereinsheim/shot-core/analysis"
 import { centroid, smallestEnclosingCircle, type Point } from "@vereinsheim/shot-core/geometry"
-import { metricByKey, type MetricShot } from "@vereinsheim/shot-core/metrics"
+import { isDrawn, metricByKey, type MetricShot } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { useMemo, type MouseEvent } from "react"
 
@@ -19,14 +19,7 @@ import {
   unitsPerPixel,
 } from "../geometry"
 import { layerOrder } from "../layers"
-import {
-  formatShotValue,
-  groupShots,
-  hasPosition,
-  isProbeShot,
-  seriesKeyOf,
-  shotLabels,
-} from "../shots"
+import { formatShotValue, groupShots, isProbeShot, seriesKeyOf, shotLabels } from "../shots"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
 import { MpiMark } from "./MpiMark"
@@ -96,7 +89,7 @@ export function TargetView({
   const selectedAt = (i: number) => isSelected(state.selection, seriesKeyOf(shots[i]))
   const chosen = state.chosen?.index ?? null
   const order = layerOrder(shots, { chosen, selected: selectedAt }).filter(
-    (i) => hasPosition(shots[i]) && (others === "dim" || selectedAt(i))
+    (i) => isDrawn(shots[i]) && (others === "dim" || selectedAt(i))
   )
 
   const circle =

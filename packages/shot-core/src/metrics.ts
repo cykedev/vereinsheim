@@ -167,6 +167,12 @@ const finite = (value: number | null | undefined): value is number =>
   typeof value === "number" && Number.isFinite(value)
 
 const hasPosition = (shot: MetricShot) => finite(shot.xUm) && finite(shot.yUm)
+/**
+ * Steht der Schuss auf der Scheibe? Mit Lage, außer verdächtig (SF-15: Platzhalter oder Handeintrag). Ein Schuss über
+ * der Soll-Zahl (SF-08) steht da, wo er liegt, zählt aber in keiner Kennzahl der Lage.
+ */
+export const isDrawn = (shot: Pick<MetricShot, "xUm" | "yUm" | "flags">) =>
+  finite(shot.xUm) && finite(shot.yUm) && !(shot.flags ?? []).includes(FLAG_SUSPICIOUS)
 const hasDistance = (shot: MetricShot) => finite(shot.distanceUm) && shot.distanceUm >= 0
 
 /** Gültig sind endliche Zahlen, ein Abstand nicht negativ; alles andere gilt als fehlend. */

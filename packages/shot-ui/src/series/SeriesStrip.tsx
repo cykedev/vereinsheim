@@ -1,13 +1,13 @@
 "use client"
 
 import { seriesCurve } from "@vereinsheim/shot-core/analysis"
-import type { MetricShot } from "@vereinsheim/shot-core/metrics"
+import { isDrawn, type MetricShot } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { cn } from "@vereinsheim/lib/utils"
 import { useMemo } from "react"
 
 import { seriesTileView, tileColumns } from "../geometry"
-import { formatTotal, hasPosition, isProbeShot, seriesKeyOf } from "../shots"
+import { formatTotal, isProbeShot, seriesKeyOf } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
 import { useElementWidth } from "../target/useAnimatedViewBox"
 import type { SeriesKey, Whole } from "../types"
@@ -69,9 +69,7 @@ export function SeriesStrip({
     () =>
       seriesTileView(
         target,
-        shots
-          .filter(hasPosition)
-          .map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
+        shots.filter(isDrawn).map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
       ),
     [target, shots]
   )
@@ -127,7 +125,7 @@ export function SeriesStrip({
               <MiniTarget
                 target={target}
                 view={view}
-                shots={block.indices.map((i) => shots[i])}
+                shots={block.indices.map((i) => shots[i]).filter(isDrawn)}
                 probeCorner={
                   block.indices.length > 0 && block.indices.every((i) => isProbeShot(shots[i]))
                 }

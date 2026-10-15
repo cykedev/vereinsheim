@@ -1,5 +1,5 @@
 import { smallestEnclosingCircle } from "@vereinsheim/shot-core/geometry"
-import type { MetricShot } from "@vereinsheim/shot-core/metrics"
+import { FLAG_OVER_TARGET, FLAG_SUSPICIOUS, type MetricShot } from "@vereinsheim/shot-core/metrics"
 import { LG_10M, LP_10M } from "@vereinsheim/shot-core/targets"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
@@ -98,6 +98,23 @@ describe("TargetView: Auswahl und Antippen", () => {
     expect(html).toMatch(
       /<g data-shot="6" data-faded="true"[^>]*>(?:<title>[^<]*<\/title>)?<circle[^>]*fill="none"[^>]*stroke="var\(--shot-faded\)"[^>]*stroke-dasharray="2 2"/
     )
+  })
+
+  it("ohne verdächtigen Platzhalter; ein Schuss über der Soll-Zahl bleibt (SF-15, SF-08)", () => {
+    const html = renderToStaticMarkup(
+      createElement(TargetView, {
+        target: LP_10M,
+        shots: [
+          ...CARD,
+          { ...shot("match", 2, 0, 0, 95), flags: [FLAG_SUSPICIOUS] },
+          { ...shot("match", 2, 500, 500, 0), flags: [FLAG_OVER_TARGET] },
+        ],
+        state: initialViewState({
+          layers: { mpi: false, circle: false, numbers: true, ellipse: false },
+        }),
+      })
+    )
+    expect(shotOrder(html)).toEqual(["1", "2", "3", "4", "5", "7"])
   })
 
   it("gewählte Serie normal und oben, die übrigen blass, ohne Nummer und nicht antippbar", () => {

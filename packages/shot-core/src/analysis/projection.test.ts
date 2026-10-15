@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { card } from "../__fixtures__/period"
 import {
+  FLAG_OVER_TARGET,
   FLAG_SUSPICIOUS,
   METRICS,
   asOnPrintout,
@@ -188,8 +189,8 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     // Wird dieser Test rot, rechnet die Projektion anders als die gespeicherten: PROJECTION_VERSION (oder die
     // `version` der geänderten Kennzahl) erhöhen, damit `refreshProjections` sie neu rechnet, dann beide Werte setzen.
     expect({ version: projectionVersion(), output }).toEqual({
-      version: "p2-3131d8b6",
-      output: "69877-782828ca",
+      version: "p3-3131d8b6",
+      output: "69867-bfb468b5",
     })
   })
 
@@ -248,6 +249,20 @@ describe("Lagen für die kleinen Scheiben", () => {
       { xUm: 0, yUm: 10, ring: 10 },
       { xUm: 1230, yUm: -5670, ring: 9 },
       { xUm: 100, yUm: 200, ring: null },
+    ])
+  })
+
+  it("ohne verdächtige Schüsse; Schüsse über der Soll-Zahl bleiben (SF-15, SF-08)", () => {
+    const marks = cardMarks([
+      shot({ seq: 1, xUm: 1000, yUm: 0, ring: 10 }),
+      shot({ seq: 2, xUm: 0, yUm: 0, ring: 9, decimalTenths: 95, flags: [FLAG_SUSPICIOUS] }),
+      shot({ seq: 3, xUm: 2000, yUm: 0, ring: 10 }),
+      shot({ seq: 4, xUm: 300, yUm: 300, ring: 0, decimalTenths: 0, flags: [FLAG_OVER_TARGET] }),
+    ])
+    expect(marks).toEqual([
+      [100, 0, 10],
+      [200, 0, 10],
+      [30, 30, 0],
     ])
   })
 

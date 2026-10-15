@@ -1,4 +1,4 @@
-import type { MetricShot } from "@vereinsheim/shot-core/metrics"
+import { FLAG_OVER_TARGET, FLAG_SUSPICIOUS, type MetricShot } from "@vereinsheim/shot-core/metrics"
 import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
@@ -67,6 +67,22 @@ describe("SeriesStrip", () => {
     const html = render({ scoring: "rings" })
     expect(html).toMatch(/Serie 1[\s\S]*?>100</)
     expect(html).toMatch(/Serie 2[\s\S]*?>70</)
+  })
+
+  it("ohne verdächtigen Platzhalter; ein Schuss über der Soll-Zahl bleibt (SF-15, SF-08)", () => {
+    const html = renderToStaticMarkup(
+      createElement(SeriesStrip, {
+        target: LP_10M,
+        shots: [
+          shot("match", 1, 1000, 105),
+          { ...shot("match", 1, 0, 95), flags: [FLAG_SUSPICIOUS] },
+          { ...shot("match", 1, 2000, 0), flags: [FLAG_OVER_TARGET] },
+        ],
+        state: initialViewState(),
+      })
+    )
+    // jeder Treffer trägt den Rand `--shot-edge` (MiniTarget), Ringe nicht
+    expect(html.match(/stroke="var\(--shot-edge\)"/g)).toHaveLength(2)
   })
 
   it("alle kleinen Scheiben im selben Ausschnitt um die Mitte", () => {

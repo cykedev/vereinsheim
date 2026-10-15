@@ -10,6 +10,7 @@ import {
   inScoring,
   inShotOrder,
   metricByKey,
+  isDrawn,
   type MetricDefinition,
   type MetricShot,
   type Scoring,
@@ -28,9 +29,10 @@ import {
 /**
  * Stand der Rechnung, die nicht in den Versionen der Kennzahlen steht: Form der Projektion, die Kandidaten der Rekorde
  * (`cardRecordCandidates`) und die Lagen (`cardMarks`), die mit ihr gespeichert werden. Erhöhen, wenn sich eins davon
- * ändert; dann werden alle Projektionen neu gerechnet. 2: Lagen für die kleinen Scheiben.
+ * ändert; dann werden alle Projektionen neu gerechnet. 2: Lagen für die kleinen Scheiben. 3: ohne verdächtige Schüsse
+ * (SF-15).
  */
-const PROJECTION_VERSION = 2
+const PROJECTION_VERSION = 3
 
 const CARD_METRICS = METRICS.filter((metric) => metric.scopes.includes("card"))
 
@@ -141,26 +143,21 @@ export interface MarkShot {
   ring: number | null
 }
 
-const finite = (value: number | null | undefined): value is number =>
-  typeof value === "number" && Number.isFinite(value)
-
 /**
  * Die Lagen einer Scheibe für die kleinen Scheiben der Übersichten: die Schüsse wie am Ausdruck (`asOnPrintout`, bei
- * nur Probe die Probe), in Abgabefolge, nur mit Lage. Gespeichert neben der Projektion und nur für die gezeigten
- * Scheiben gelesen; rund 0,6 KB bei 40 Schuss statt aller Angaben jedes Schusses.
+ * nur Probe die Probe), in Abgabefolge, was auf der Scheibe steht (`isDrawn`: mit Lage, ohne verdächtige, SF-15). Gespeichert neben der Projektion und nur für die gezeigten Scheiben gelesen;
+ * rund 0,6 KB bei 40 Schuss statt aller Angaben jedes Schusses.
  */
 export function cardMarks(shots: readonly MetricShot[]): CardMark[] {
-  return inShotOrder(asOnPrintout(shots)).flatMap((shot): CardMark[] =>
-    finite(shot.xUm) && finite(shot.yUm)
-      ? [
-          [
-            Math.round(shot.xUm / MARK_UM) || 0,
-            Math.round(shot.yUm / MARK_UM) || 0,
-            shot.ring ?? null,
-          ],
-        ]
-      : []
-  )
+  return inShotOrder(asOnPrintout(shots))
+    .filter(isDrawn)
+    .map(
+      (shot): CardMark => [
+        Math.round((shot.xUm as number) / MARK_UM) || 0,
+        Math.round((shot.yUm as number) / MARK_UM) || 0,
+        shot.ring ?? null,
+      ]
+    )
 }
 
 /** die Lagen zurück in µm, wie `MiniTarget` sie zeichnet */
