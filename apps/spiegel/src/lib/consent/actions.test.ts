@@ -93,6 +93,8 @@ describe("Zustimmung durch den Schützen", () => {
     expect(consentStatus(consent)).toBe("requested")
     expect(consent.consentVersion).toBe(CURRENT_CONSENT_VERSION)
     expect(consent.confirmedAt).toBeNull()
+    // eine Nummer je Konto: aufräumen, sonst scheitern die folgenden an der Grenze
+    await db.sportpassConsent.delete({ where: { id: consent.id } })
   })
 
   it("einem älteren Hinweistext (v1) stimmt niemand mehr neu zu (P2f)", async () => {
@@ -139,11 +141,10 @@ describe("Zustimmung durch den Schützen", () => {
     })
   })
 
-  it("höchstens drei SportpassIDs je Konto", async () => {
+  it("eine Sportpassnummer je Konto (User, 15. Oktober 2026), auch eine abgelehnte zählt", async () => {
     const userId = otherId
-    await requested(userId)
-    await requested(userId)
-    await requested(userId)
+    const first = await requested(userId)
+    await db.sportpassConsent.update({ where: { id: first.id }, data: { rejectedAt: new Date() } })
     asShooter(userId)
     expect(
       await requestSportpass(
@@ -151,8 +152,11 @@ describe("Zustimmung durch den Schützen", () => {
         form({ sportpass: sportpass(), agree: "on", version: CURRENT_CONSENT_VERSION })
       )
     ).toEqual({
-      error: { sportpass: ["Du kannst höchstens drei Sportpassnummern eintragen."] },
+      error: {
+        sportpass: ["Du hast schon eine Sportpassnummer. Für eine neue widerrufe erst die alte."],
+      },
     })
+    expect(await db.sportpassConsent.count({ where: { userId } })).toBe(1)
     await db.sportpassConsent.deleteMany({ where: { userId } })
   })
 
@@ -194,7 +198,7 @@ describe("Grenzen der Zustimmung (Review)", () => {
     expect(await db.sportpassConsent.count({ where: { sportpassId: BigInt(id) } })).toBe(0)
   })
 
-  it("die eigene SportpassID noch einmal: ein eigener Hinweis", async () => {
+  it("die eigene SportpassID noch einmal: die Meldung der Grenze, das Konto hat ja schon eine", async () => {
     const own = await requested()
     asShooter()
     expect(
@@ -206,11 +210,15 @@ describe("Grenzen der Zustimmung (Review)", () => {
           version: CURRENT_CONSENT_VERSION,
         })
       )
-    ).toEqual({ error: { sportpass: ["Diese Sportpassnummer steht schon in deinem Profil."] } })
+    ).toEqual({
+      error: {
+        sportpass: ["Du hast schon eine Sportpassnummer. Für eine neue widerrufe erst die alte."],
+      },
+    })
     await db.sportpassConsent.delete({ where: { id: own.id } })
   })
 
-  it("höchstens drei, auch bei gleichzeitigem Absenden", async () => {
+  it("höchstens eine, auch bei gleichzeitigem Absenden", async () => {
     const userId = otherId
     asShooter(userId)
     const results = await Promise.all(
@@ -221,8 +229,8 @@ describe("Grenzen der Zustimmung (Review)", () => {
         )
       )
     )
-    expect(results.filter((r) => "success" in r)).toHaveLength(3)
-    expect(await db.sportpassConsent.count({ where: { userId } })).toBe(3)
+    expect(results.filter((r) => "success" in r)).toHaveLength(1)
+    expect(await db.sportpassConsent.count({ where: { userId } })).toBe(1)
     await db.sportpassConsent.deleteMany({ where: { userId } })
   })
 

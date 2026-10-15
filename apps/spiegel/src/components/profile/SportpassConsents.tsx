@@ -17,7 +17,8 @@ import { ConsentForm } from "./ConsentForm"
 
 /**
  * Sportpass im Profil (SP-1.7 a, D4): je SportpassID der Status in Worten und Widerrufen (bzw. Entfernen einer
- * Ablehnung), darunter die Zustimmung für eine weitere.
+ * Ablehnung). Ohne Nummer die Zustimmung; mit einer der Weg für einen neuen Ausweis (eine Nummer je Konto, User,
+ * 15. Oktober 2026).
  */
 export function SportpassConsents({
   consents,
@@ -46,6 +47,12 @@ export function SportpassConsents({
       )}
       {consents.length < MAX_CONSENTS_PER_ACCOUNT && text && (
         <ConsentForm version={version} text={text} />
+      )}
+      {consents.length >= MAX_CONSENTS_PER_ACCOUNT && (
+        <p data-one-number className="text-[13px] text-muted-foreground">
+          Ein Konto hat eine Sportpassnummer. Für einen neuen Ausweis widerrufe die alte Nummer.
+          Dann trag die neue ein. Deine Scheiben bleiben.
+        </p>
       )}
     </div>
   )

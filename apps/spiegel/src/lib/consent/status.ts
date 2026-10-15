@@ -48,8 +48,12 @@ export function isOpenConsent(status: ConsentStatus): boolean {
   return status === "requested" || status === "returned"
 }
 
-/** SportpassIDs je Konto: SF-39 braucht mehrere (neuer Ausweis), mehr als drei ist kein Anwendungsfall */
-export const MAX_CONSENTS_PER_ACCOUNT = 3
+/**
+ * Sportpassnummern je Konto: eine (User, 15. Oktober 2026: „es macht wahrscheinlich keinen sinn, mehrere sportpass
+ * nummern zu verknüpfen“). Bis dahin drei für SF-39 (neuer Ausweis); dafür widerruft der Schütze jetzt die alte Nummer
+ * und trägt die neue ein, die Scheiben bleiben. Konten mit mehreren aus der Zeit davor bleiben, wie sie sind
+ */
+export const MAX_CONSENTS_PER_ACCOUNT = 1
 
 /**
  * Der Stand des Sportpasses eines Kontos in einem Wort für die Kontenliste (P2c, D5): Was auf den Admin wartet, geht

@@ -88,7 +88,11 @@ export async function requestSportpass(
     })
   } catch (error) {
     if (error instanceof LimitReached)
-      return { error: { sportpass: ["Du kannst höchstens drei Sportpassnummern eintragen."] } }
+      return {
+        error: {
+          sportpass: ["Du hast schon eine Sportpassnummer. Für eine neue widerrufe erst die alte."],
+        },
+      }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       // die eigene sagt das; wem eine fremde gehört, sagt die Meldung nicht
       const own = await db.sportpassConsent.count({

@@ -53,8 +53,8 @@ describe("Sportpass im Profil", () => {
     expect(html.match(/>Widerrufen</g)).toHaveLength(2)
   })
 
-  it("das Formular zeigt den aktuellen Hinweistext und den Haken, bis drei Nummern da sind", () => {
-    const html = render([row(1, "active", "aktiv")])
+  it("das Formular zeigt den aktuellen Hinweistext und den Haken, solange keine Nummer da ist", () => {
+    const html = render([])
     expect(html).toContain("data-consent-form")
     expect(html).toContain(CONSENT_TEXTS[CURRENT_CONSENT_VERSION]!.title)
     for (const paragraph of CONSENT_TEXTS[CURRENT_CONSENT_VERSION]!.paragraphs)
@@ -62,12 +62,15 @@ describe("Sportpass im Profil", () => {
     expect(html).toMatch(/<input type="checkbox"[^>]*name="agree"/)
     // die Version des gezeigten Texts geht mit (Review)
     expect(html).toContain(`<input type="hidden" name="version" value="${CURRENT_CONSENT_VERSION}"`)
-    const full = render([
-      row(1, "active", "aktiv"),
-      row(2, "requested", "w"),
-      row(3, "rejected", "a"),
-    ])
-    expect(full).not.toContain("data-consent-form")
+    expect(html).not.toContain("data-one-number")
+    // eine Nummer je Konto (User, 15. Oktober 2026): mit einer, auch einer abgelehnten, kein Formular, dafür der Weg
+    for (const status of ["active", "requested", "rejected", "returned"] as const) {
+      const one = render([row(1, status, "s")])
+      expect(one).not.toContain("data-consent-form")
+      expect(one).toContain(
+        "Ein Konto hat eine Sportpassnummer. Für einen neuen Ausweis widerrufe die alte Nummer. Dann trag die neue ein. Deine Scheiben bleiben."
+      )
+    }
   })
 
   it("bei aktiver Zustimmung der Stand des Nachladens (P2d)", () => {
