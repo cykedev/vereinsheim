@@ -924,13 +924,34 @@ async function progress(page: Page) {
     )
   }
 
-  // Kalender der Trainingstage (T7): umschalten, ein Tag führt an seinen Abend in der Liste
+  // Kalender der Trainingstage (T7): umschalten, ein Tag führt an seinen Abend in der Liste. Auch bei „Alles“ nur so
+  // breit, wie Platz ist; ältere Wochen über „früher“ (User, 15. Oktober 2026), am Telefon wie am Desktop
+  const calendarFits = `(() => { const s = $("[data-day], [data-week]")?.closest(".overflow-x-auto")
+    return s ? { scroll: s.scrollWidth, client: s.clientWidth, weeks: $$("[data-week]").length,
+      earlier: $("[data-calendar-earlier]")?.disabled === false } : null })()`
+  type Fits = { scroll: number; client: number; weeks: number; earlier: boolean } | null
+  await page.viewport(390, 844)
+  await page.goto(`${BASE}/progress?range=all`)
+  await page.click(
+    `$$('[aria-label="Umfang zeigen als"] button').find((b) => txt(b) === "Kalender")`,
+    { settle: 400 }
+  )
+  const phoneFits = await page.ev<Fits>(calendarFits)
+  await page.viewport(1440, 1400)
   await page.goto(`${BASE}/progress?range=all`)
   await page.click(
     `$$('[aria-label="Umfang zeigen als"] button').find((b) => txt(b) === "Kalender")`,
     {
-      settle: 300,
+      settle: 400,
     }
+  )
+  const desktopFits = await page.ev<Fits>(calendarFits)
+  check(
+    "Kalender bei „Alles“: so breit, wie Platz ist, ohne seitliches Scrollen, ältere Wochen über „früher“",
+    [phoneFits, desktopFits].every(
+      (f) => !!f && f.scroll <= f.client + 1 && f.weeks >= 13 && f.earlier
+    ) && desktopFits!.weeks > phoneFits!.weeks,
+    { phone: phoneFits, desktop: desktopFits }
   )
   const day = await page.ev<{
     key: string

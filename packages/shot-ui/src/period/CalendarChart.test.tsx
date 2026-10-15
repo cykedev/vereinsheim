@@ -10,6 +10,9 @@ import {
   CalendarChart,
   dayLevel,
   dayText,
+  pageEarlier,
+  pageLater,
+  weeksThatFit,
 } from "./CalendarChart"
 
 const dayRoute = (day: string): Route => ({
@@ -89,80 +92,72 @@ describe("Kalender der Trainingstage (T7)", () => {
 })
 
 describe("Kalender blätterbar (Rückmeldung 8)", () => {
+  // Donnerstag, 15. Oktober 2026; seine Woche beginnt am Montag, dem 12.
   const TODAY = "2026-10-15"
 
-  it("das Fenster endet am Ende des Zeitraums und ist so lang wie er, mindestens 13 Wochen", () => {
-    // letzte 30 Tage: 91 Tage bis heute
-    expect(
-      calendarWindow({ from: "2026-09-16", to: TODAY, first: "2025-01-10", today: TODAY }, 0)
-    ).toEqual({ from: "2026-07-17", to: TODAY, earlier: true, later: false })
-    // zwölf Monate: so lang wie der Zeitraum
-    expect(
-      calendarWindow({ from: "2025-10-16", to: TODAY, first: "2025-01-10", today: TODAY }, 0)
-    ).toEqual({ from: "2025-10-16", to: TODAY, earlier: true, later: false })
-    // „Alles“: das ganze Fenster, nichts davor
-    expect(
-      calendarWindow({ from: "2025-01-10", to: TODAY, first: "2025-01-10", today: TODAY }, 0)
-    ).toEqual({ from: "2025-01-10", to: TODAY, earlier: false, later: false })
+  it("so viele Wochen, wie nebeneinander passen: 13 px je Woche und 3 px Abstand, mindestens vier", () => {
+    expect(weeksThatFit(16 * 18 - 3)).toBe(18)
+    expect(weeksThatFit(16 * 18 - 4)).toBe(17)
+    expect(weeksThatFit(20)).toBe(4)
   })
 
-  it("früher und später um die Länge des Fensters, begrenzt durch die erste Scheibe und heute", () => {
-    const period = { from: "2026-09-16", to: TODAY, first: "2026-03-01", today: TODAY }
-    expect(calendarWindow(period, 1)).toEqual({
-      from: "2026-04-17",
-      to: "2026-07-16",
-      earlier: true,
-      later: true,
-    })
-    // das dritte Fenster beginnt vor der ersten Scheibe: nicht weiter zurück
-    expect(calendarWindow(period, 2)).toMatchObject({ to: "2026-04-16", earlier: false })
-    // ein Zeitraum in der Vergangenheit: später geht bis heute, nicht darüber
-    const past = { from: "2026-05-01", to: "2026-06-30", first: "2026-03-01", today: TODAY }
-    expect(calendarWindow(past, 0)).toEqual({
-      from: "2026-04-01",
-      to: "2026-06-30",
-      earlier: true,
-      later: true,
-    })
-    expect(calendarWindow(past, -1)).toEqual({
-      from: "2026-07-01",
-      to: "2026-09-29",
-      earlier: true,
-      later: true,
-    })
-    expect(calendarWindow(past, -2)).toEqual({
-      from: "2026-07-17",
+  it("das Fenster endet mit der Woche des Endes, nie nach heute, und beginnt am Montag davor", () => {
+    expect(calendarWindow({ end: TODAY, first: "2025-01-10", today: TODAY }, 13)).toEqual({
+      from: "2026-07-20",
       to: TODAY,
       earlier: true,
       later: false,
     })
-    // ohne Scheiben kein früher
-    expect(calendarWindow({ ...period, first: null }, 0).earlier).toBe(false)
+    // ein Zeitraum in der Vergangenheit, der an einem Dienstag endet: seine Woche ganz
+    expect(calendarWindow({ end: "2026-06-30", first: "2025-01-10", today: TODAY }, 4)).toEqual({
+      from: "2026-06-08",
+      to: "2026-07-05",
+      earlier: true,
+      later: true,
+    })
+    // ein Ende nach heute zählt als heute
+    expect(calendarWindow({ end: "2026-12-31", first: null, today: TODAY }, 13)).toEqual({
+      from: "2026-07-20",
+      to: TODAY,
+      earlier: false,
+      later: false,
+    })
+    // die erste Scheibe im Fenster: nichts davor
+    expect(calendarWindow({ end: TODAY, first: "2026-07-20", today: TODAY }, 13).earlier).toBe(
+      false
+    )
+    expect(calendarWindow({ end: TODAY, first: "2026-07-19", today: TODAY }, 13).earlier).toBe(true)
   })
 
-  it("zeigt anfangs das Fenster mit den Tagen auch vor dem Zeitraum, „früher“ wählbar, „später“ nicht", () => {
+  it("früher endet am Tag vor dem Fenster, später ein Fenster weiter, höchstens bis heute", () => {
+    const now = { first: "2026-03-01", today: TODAY }
+    const first = calendarWindow({ ...now, end: TODAY }, 13)
+    const earlier = calendarWindow({ ...now, end: pageEarlier(first) }, 13)
+    expect(earlier).toEqual({ from: "2026-04-20", to: "2026-07-19", earlier: true, later: true })
+    expect(calendarWindow({ ...now, end: pageLater(earlier, 13) }, 13)).toEqual(first)
+    // noch weiter zurück: das Fenster beginnt vor der ersten Scheibe
+    expect(calendarWindow({ ...now, end: pageEarlier(earlier) }, 13).earlier).toBe(false)
+  })
+
+  it("zeigt anfangs die Wochen bis zum Ende des Zeitraums, „früher“ wählbar, „später“ nicht", () => {
     const days = [
       { key: "2026-03-14", shots: 40, cards: 1, competition: 0 },
       { key: "2026-08-02", shots: 30, cards: 1, competition: 0 },
       { key: "2026-10-01", shots: 60, cards: 1, competition: 1 },
     ]
     const html = renderToStaticMarkup(
-      createElement(CalendarBrowser, {
-        period: { from: "2026-09-16", to: TODAY },
-        today: TODAY,
-        days,
-        dayRoute,
-      })
+      createElement(CalendarBrowser, { end: TODAY, today: TODAY, days, dayRoute })
     )
-    // 91 Tage bis heute: der 2. August vor dem Zeitraum steht da, der 14. März nicht
+    // vor dem Messen 13 Wochen: der 2. August steht da, der 14. März nicht
     expect([...html.matchAll(/data-day="([\d-]+)"/g)].map((m) => m[1])).toEqual([
       "2026-08-02",
       "2026-10-01",
     ])
+    expect([...html.matchAll(/data-week="/g)]).toHaveLength(13)
     expect(html).toContain("2 Trainingstage · 90 Schuss")
     expect(html).toMatch(/<button type="button" data-calendar-earlier="true"[^>]*>/)
     expect(html).not.toMatch(/data-calendar-earlier="true"[^>]*disabled=""/)
     expect(html).toMatch(/data-calendar-later="true"[^>]*disabled=""/)
-    expect(html).toContain("17.07.2026 – 15.10.2026")
+    expect(html).toContain("20.07.2026 – 15.10.2026")
   })
 })

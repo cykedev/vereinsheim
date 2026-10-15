@@ -327,7 +327,7 @@ export function ProgressScreen({
               <CalendarBrowser
                 // ein neuer Zeitraum beginnt wieder an seinem Ende (Rückmeldung 8)
                 key={`${state.family}:${state.kind}:${model.calendar.from}:${model.calendar.to}`}
-                period={model.calendar}
+                end={model.calendar.to}
                 today={model.calendar.today}
                 days={model.calendar.all}
                 dayRoute={(day) => {

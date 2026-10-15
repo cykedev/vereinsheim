@@ -59,6 +59,10 @@ nach ADR-023. Bestandsaufnahme durch zwei Agenten (15. Oktober 2026), Belege in 
   Scheiben der Familie (gefiltert nach Art wie der Zeitraum; je Abend ein kleiner Eintrag), zeigt ein Fenster von der
   Länge des Zeitraums (mindestens 13 Wochen) und hat „‹ früher“ und „später ›“, die das Fenster um seine Länge
   verschieben, begrenzt durch die erste Scheibe und heute. Am Anfang endet das Fenster am Ende des Zeitraums.
+  **Geändert nach dem ersten Blick des Users** (15. Oktober 2026: „wenn ich mir alles anzeigen lasse, dann ist der
+  kalender breiter als das was ich sehe. er sollte nur so breit sein wie platz ist, früher später zeigt dann die anderen
+  werte an“): Das Fenster ist so viele ganze Wochen breit, wie nebeneinander passen (gemessen, 13 px je Woche, 3 px
+  Abstand), nicht so lang wie der Zeitraum; „früher“ und „später“ blättern um diese Zahl Wochen.
 
 ## Nicht in diesem Plan
 

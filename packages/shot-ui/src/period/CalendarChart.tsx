@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from "react"
 
 import type { Route } from "../nav/routes"
 import { RouteLink } from "../nav/RouteLink"
-import { addDays, DAY_MS, weeksBetween } from "./calendar"
+import { addDays, isoWeekKey, weeksBetween, weekStartIso } from "./calendar"
+import { useElementWidth } from "../target/useAnimatedViewBox"
 import type { CalendarDay } from "./model"
 
 /**
@@ -37,59 +38,79 @@ export function dayLevel(shots: number, max: number): number {
 /** die Wochen des Kalenders (aus `period/calendar`, dieselben wie im Umfang je Woche) */
 export const calendarWeeks = weeksBetween
 
-/** das Fenster des Kalenders ist mindestens 13 Wochen lang */
-export const MIN_CALENDAR_DAYS = 91
+/** Breite einer Woche (13 px) und Abstand dazwischen (3 px), wie gezeichnet */
+const WEEK_PX = 13
+const GAP_PX = 3
+/** vor dem Messen (Server, erstes Bild) und als Untergrenze */
+const DEFAULT_WEEKS = 13
+const MIN_WEEKS = 4
 
-const daysFromTo = (from: string, to: string) =>
-  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS) + 1
+/** wie viele Wochen nebeneinander in `width` Pixel passen, mindestens vier */
+export const weeksThatFit = (width: number) =>
+  Math.max(MIN_WEEKS, Math.floor((width + GAP_PX) / (WEEK_PX + GAP_PX)))
+
+const mondayOf = (iso: string) => weekStartIso(isoWeekKey(iso))
 
 /**
- * Das Fenster des Kalenders (User, 15. Oktober 2026: „Kalender ‚blätterbar‘ für ältere einträge“): so lang wie der
- * Zeitraum, mindestens 13 Wochen, am Anfang mit dem Ende des Zeitraums als Ende. `offset` verschiebt um ganze Fenster,
- * positiv nach früher, negativ nach später, nie über heute hinaus. Früher geht, solange vor dem Fenster eine Scheibe
- * liegt (`first`), später, solange es vor heute endet.
+ * Das Fenster des Kalenders (User, 15. Oktober 2026: „Kalender ‚blätterbar‘ für ältere einträge“, dann: „er sollte nur
+ * so breit sein wie platz ist, früher später zeigt dann die anderen werte an“): `weeks` ganze Wochen bis zur Woche von
+ * `end`, nie über heute hinaus. Früher geht, solange vor dem Fenster eine Scheibe liegt (`first`), später, solange es
+ * vor der Woche von heute endet.
  */
 export function calendarWindow(
-  { from, to, first, today }: { from: string; to: string; first: string | null; today: string },
-  offset: number
+  { end, first, today }: { end: string; first: string | null; today: string },
+  weeks: number
 ): { from: string; to: string; earlier: boolean; later: boolean } {
-  const length = Math.max(MIN_CALENDAR_DAYS, daysFromTo(from, to))
-  const shifted = addDays(to, -offset * length)
-  const end = shifted > today ? today : shifted
-  const start = addDays(end, -(length - 1))
-  return { from: start, to: end, earlier: first !== null && first < start, later: end < today }
+  const lastMonday = mondayOf(end > today ? today : end)
+  const from = addDays(lastMonday, -7 * (weeks - 1))
+  const sunday = addDays(lastMonday, 6)
+  return {
+    from,
+    to: sunday > today ? today : sunday,
+    earlier: first !== null && first < from,
+    later: lastMonday < mondayOf(today),
+  }
 }
+
+/** das Ende des Fensters davor: der Tag vor seinem Anfang */
+export const pageEarlier = (shown: { from: string }) => addDays(shown.from, -1)
+
+/** das Ende des Fensters danach (`calendarWindow` begrenzt es auf heute) */
+export const pageLater = (shown: { to: string }, weeks: number) => addDays(shown.to, 7 * weeks)
 
 /** Knopf zum Blättern: leise umrandet, gesperrt sichtbar zurückgenommen */
 const PAGE_BUTTON =
   "inline-flex cursor-pointer items-center gap-1 rounded-full border border-line-strong px-3 py-1.5 text-[13px] leading-none font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-transparent"
 
 /**
- * Der Kalender zum Blättern: alle Trainingstage der Familie (`days`), gezeigt im Fenster aus `calendarWindow`, darüber
- * „‹ früher“ und „später ›“. Das Fenster beginnt am Zeitraum (`period`); ein neuer Zeitraum hängt ihn neu ein (`key`).
+ * Der Kalender zum Blättern: alle Trainingstage der Familie (`days`), gezeigt in so vielen Wochen, wie nebeneinander
+ * passen (`calendarWindow`), darüber „‹ früher“ und „später ›“. Am Anfang endet das Fenster mit dem Zeitraum (`end`);
+ * ein neuer Zeitraum hängt ihn neu ein (`key`).
  */
 export function CalendarBrowser({
-  period,
+  end,
   today,
   days,
   dayRoute,
 }: {
-  period: { from: string; to: string }
+  end: string
   today: string
   days: readonly CalendarDay[]
   dayRoute: (day: string) => Route
 }) {
-  const [offset, setOffset] = useState(0)
-  const shown = calendarWindow({ ...period, first: days[0]?.key ?? null, today }, offset)
+  const [weeks, setWeeks] = useState(DEFAULT_WEEKS)
+  const [last, setLast] = useState(end)
+  const shown = calendarWindow({ end: last, first: days[0]?.key ?? null, today }, weeks)
   return (
     <CalendarChart
       from={shown.from}
       to={shown.to}
       days={days.filter((day) => day.key >= shown.from && day.key <= shown.to)}
       dayRoute={dayRoute}
+      onFit={setWeeks}
       paging={{
-        earlier: shown.earlier ? () => setOffset(offset + 1) : null,
-        later: shown.later ? () => setOffset(offset - 1) : null,
+        earlier: shown.earlier ? () => setLast(pageEarlier(shown)) : null,
+        later: shown.later ? () => setLast(pageLater(shown, weeks)) : null,
       }}
     />
   )
@@ -100,7 +121,7 @@ export function CalendarBrowser({
  * Abend mit Wettkampf trägt einen goldenen Rand. Jeder Trainingstag ist ein Link in die Liste an diesem Abend
  * (`dayRoute`), sein Name nennt Tag, Scheiben und Schüsse; Tage außerhalb von `from` bis `to` bleiben leer. Zu breit
  * scrollt er in sich und zeigt anfangs die jüngsten Wochen. Mit `paging` darüber die Knöpfe zum Blättern und die Tage
- * des Fensters.
+ * des Fensters; `onFit` meldet, wie viele Wochen in den Platz passen (`CalendarBrowser`).
  */
 export function CalendarChart({
   from,
@@ -108,6 +129,7 @@ export function CalendarChart({
   days,
   dayRoute,
   paging,
+  onFit,
 }: {
   from: string
   to: string
@@ -115,8 +137,14 @@ export function CalendarChart({
   dayRoute: (day: string) => Route
   /** Blättern (`CalendarBrowser`): je Richtung der Schritt, null gesperrt; ohne gibt es keine Knöpfe */
   paging?: { earlier: (() => void) | null; later: (() => void) | null }
+  /** meldet die Zahl der Wochen, die in den Platz passen (gemessen ohne Rand) */
+  onFit?: (weeks: number) => void
 }) {
   const scroller = useRef<HTMLDivElement>(null)
+  const [width, measure] = useElementWidth()
+  useEffect(() => {
+    if (width > 0 && onFit) onFit(weeksThatFit(width))
+  }, [width, onFit])
   useEffect(() => {
     const node = scroller.current
     if (node) node.scrollLeft = node.scrollWidth
@@ -167,8 +195,11 @@ export function CalendarChart({
           ))}
         </div>
         <div
-          ref={scroller}
-          className="min-w-0 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          ref={(node) => {
+            scroller.current = node
+            measure(node)
+          }}
+          className="min-w-0 flex-1 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div role="group" aria-label="Trainingstage" className="flex gap-[3px]">
             {weeks.map((week, i) => {
