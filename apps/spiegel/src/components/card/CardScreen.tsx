@@ -1,6 +1,15 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useReducer, useState, useSyncExternalStore } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react"
 
 import type { MetricShot, Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
@@ -256,10 +265,19 @@ export function CardScreen({
     },
     [choose, jumpTo]
   )
-  const changeTab = useCallback((next: AnalysisTab) => {
+  // ein anderer Reiter beginnt oben (User, 15. Oktober 2026: „beim Wechsel zwischen den tabs in Analyse zum Beginn der
+  // Analyse scrollen, nicht zum Ende“): War ein langer Reiter weit gescrollt, klemmte der Browser sonst ans Seitenende
+  const toTabStart = useRef(false)
+  const changeTab = useCallback((next: AnalysisTab, toStart = true) => {
+    toTabStart.current = toStart
     setChosenTab(next)
     window.history.replaceState(null, "", hashFor("analysis", next))
   }, [])
+  useLayoutEffect(() => {
+    if (!toTabStart.current) return
+    toTabStart.current = false
+    scrollToTabStart()
+  }, [tab])
   // Wertung und Art: je eine Wahl für die ganze Seite, Kopf am Telefon und Box teilen sie
   const scoringChoice = useSavedChoice({
     value: state.scoring,
@@ -324,8 +342,8 @@ export function CardScreen({
             result={empty ? null : result}
             observations={headObservations}
             onMore={() => {
-              // „Alle Beobachtungen“: der Überblick der Analyse, an der Karte „Beobachtungen“
-              changeTab("overview")
+              // „Alle Beobachtungen“: der Überblick der Analyse, an der Karte „Beobachtungen“ (nicht an seinem Anfang)
+              changeTab("overview", false)
               setTimeout(() => {
                 document
                   .querySelector('[data-card="beobachtungen"]')
@@ -439,4 +457,20 @@ export function CardScreen({
       <ReturnPill label={pill?.label ?? null} onReturn={back} onDismiss={close} />
     </Page>
   )
+}
+
+/**
+ * Die Karten des Reiters an ihren Anfang, unter die klebenden Leisten (am Telefon die Reiterleiste allein, ab 768 px
+ * Sprungleiste und Reiterleiste), nur wenn ihr Anfang darüber liegt. Gemessen an der Reiterleiste selbst: ihr `top`
+ * beim Kleben und ihre Höhe.
+ */
+function scrollToTabStart() {
+  const panel = document.querySelector('section[aria-label="Analyse"]')
+  const region = panel?.querySelector('[role="region"]')
+  const strip = panel?.querySelector('[role="radiogroup"][aria-label="Thema"]')?.parentElement
+  if (!region || !strip) return
+  const below =
+    (parseFloat(getComputedStyle(strip).top) || 0) + strip.getBoundingClientRect().height
+  const top = region.getBoundingClientRect().top
+  if (top < below - 1) window.scrollTo({ top: window.scrollY + top - below, behavior: "instant" })
 }

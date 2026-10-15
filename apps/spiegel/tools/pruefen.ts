@@ -104,6 +104,31 @@ const jargonIn = (selectors: string) =>
 /** Anker der Reiter; beim Blättern fällt der Reiter weg, der Abschnitt („#analysis“) bleibt (`siblingRoute`) */
 const TAB_ANCHORS = ["#overview", "#result", "#precision", "#position", "#time"]
 
+/**
+ * Reiterwechsel (User, 15. Oktober 2026: „zum Beginn der Analyse scrollen, nicht zum Ende“): am Ende des langen Reiters
+ * „Zeit und Verlauf“ zum „Überblick“ wechseln; seine Karten beginnen unter den Leisten (`below`), oder die Seite ist zu Ende
+ */
+async function tabStart(page: Page, below: number, label: string) {
+  const region = `$('section[aria-label="Analyse"] [role="region"]')`
+  await page.click(`tab("Zeit und Verlauf")`, { settle: 250 })
+  await page.ev(`scrollTo(0, scrollY + ${region}.getBoundingClientRect().bottom - innerHeight)`)
+  await page.wait(200)
+  const deep = await page.ev<number>(`${region}.getBoundingClientRect().top`)
+  // die Reiterleiste scrollt am Telefon in sich: „Überblick“ zurück ins Bild, ohne die Seite zu bewegen
+  await page.ev(`$('[role="radiogroup"][aria-label="Thema"]').scrollLeft = 0`)
+  await page.click(`tab("Überblick")`, { scroll: false, settle: 300 })
+  const start = await page.ev<{ top: number; end: boolean; tab: string }>(`({
+    top: ${region}.getBoundingClientRect().top, tab: activeTab(),
+    end: scrollY + innerHeight >= document.documentElement.scrollHeight - 2 })`)
+  check(
+    `${label}: ein anderer Reiter beginnt an seinem Anfang unter den Leisten, nicht am Ende`,
+    deep < below - 200 &&
+      start.tab === "Überblick" &&
+      (near(start.top, below, 3) || (start.top > below && start.top < below + 200 && start.end)),
+    { deep: Math.round(deep), ...start, top: Math.round(start.top) }
+  )
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Seite einer Scheibe am Desktop (1280 × 900)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -205,6 +230,7 @@ async function desktopCard(page: Page, href: string) {
       more.checked === "true",
     more
   )
+  await tabStart(page, 112, "Desktop")
 
   const cardJargon = await page.ev<string | null>(
     jargonIn(
@@ -445,6 +471,7 @@ async function phoneCard(page: Page, href: string) {
     wide.length === 0,
     wide.join(" · ")
   )
+  await tabStart(page, 56, "Telefon 375 px")
 
   // Rücksprung (D6): der Knopf der Ellipse aus „Lage“ holt die Scheibe, die Pille bringt zurück
   await page.click(`tab("Lage")`, { settle: 250 })
