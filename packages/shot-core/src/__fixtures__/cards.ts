@@ -1,10 +1,9 @@
-// Gemeinsame Test-Scheiben für Registry und Auswertungen. Erfunden bzw. aus dem Ausdruck vom 2. Oktober
-// 2026 ohne Namen übernommen (nur Werte und Teiler).
+// Gemeinsame Test-Scheiben für Registry und Auswertungen. Erfunden bzw. aus einem Meyton-Ausdruck übernommen
+// (nur sechs Werte und Teiler, ohne Name und Datum).
 
 import type { MetricShot } from "../metrics"
 
-// Die sechs Wertungsschüsse vom Ausdruck des 2. Oktober 2026, auf die Achsen gelegt wie in der
-// Spielwiese, im Abstand von 50 s; davor fünf Probeschüsse um (1000, −1000) µm.
+// Sechs Wertungsschüsse eines Ausdrucks, auf die Achsen gelegt, im Abstand von 50 s; davor fünf Probeschüsse um (1000, −1000) µm.
 export const MATCH: MetricShot[] = (
   [
     [0, 3318, 105, true],

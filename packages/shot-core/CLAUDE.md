@@ -32,10 +32,10 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   einen Zehntel zu tief (Test „Grenzen“).
 - **Wertung wie Meyton, nicht wie die Regel.** Jede Grenze (Zehntel, Fehlschuss, Innenzehner) liegt um
   `MEYTON_TOLERANCE_UM` = 10 µm weiter außen, und der Abstand muss darunter liegen (strikt). Belegt an
-  43 000 von 43 000 Schüssen der Vereinsanlage (SF-75); die Tests „Abend vom 9. Oktober 2026“ nutzen
-  die 40 eigenen Schüsse des Users (`__fixtures__/meyton-2026-10-09.ts`) und vier Grenzabstände, die T
-  auf 10 µm festlegen; „Alle eigenen Scheiben“ prüft alle 953 wertbaren Schüsse aus zwei Jahren
-  (`__fixtures__/meyton-eigene-scheiben.ts`, mit Zustimmung des Users, ohne Name, ID und Zeit). Die Scheibenbilder bleiben regelgerecht, gezeichnet wird ohne Toleranz.
+  43 000 von 43 000 Schüssen der Vereinsanlage (SF-75); vier Grenzabstände (`__fixtures__/meyton-toleranz.ts`) legen T
+  auf 10 µm fest. Die Gegenprobe an echten Schüssen (ein Abend mit Ausdruck, 953 wertbare Schüsse aus zwei Jahren) liest
+  `__fixtures__/private.ts` aus dem gitignorten `__fixtures__/private/` (ADR-029); ohne die Dateien laufen diese Tests
+  nicht. Echte Schüsse kommen nie ins Repo. Die Scheibenbilder bleiben regelgerecht, gezeichnet wird ohne Toleranz.
 - **Disziplinen über die ganze DisziplinID** (Regelnummer und Schusscode), nie über Regelbereiche
   allein: 0610 ist LP Liga und ISSF-Luftgewehr-Finale, 0100 die französische Luftpistole (SF-70).
   Danach der Name (ganzes Wort LG/LP), dann unbekannt. Der Katalog nennt nur Regeln, er schreibt die

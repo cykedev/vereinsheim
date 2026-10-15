@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { EVENING_PRINTOUT, EVENING_SHOTS } from "./__fixtures__/meyton-2026-10-09"
+import { EVENING } from "./__fixtures__/private"
 import {
   centroid,
   covarianceEllipse,
@@ -197,11 +197,14 @@ describe("Radien und Streuung", () => {
   })
 })
 
-describe("Ausdruck vom 9. Oktober 2026: Meytons Trefferkreis und Trefferlage (SF-76)", () => {
+// Gegenprobe an einem echten Ausdruck, nur mit den lokalen Daten aus `__fixtures__/private/`
+describe.skipIf(!EVENING)("Ausdruck: Meytons Trefferkreis und Trefferlage (SF-76)", () => {
+  const shots = EVENING?.shots ?? []
+  const printout = EVENING?.printout
   // Index 0 die ganze Scheibe, dann Serie 1 bis 4, wie im Ausdruck.
   const groups = [
-    EVENING_SHOTS,
-    ...[1, 2, 3, 4].map((series) => EVENING_SHOTS.filter((shot) => shot.series === series)),
+    shots,
+    ...[1, 2, 3, 4].map((series) => shots.filter((shot) => shot.series === series)),
   ].map((shots) => shots.map((shot) => pt(shot.xUm, shot.yUm)))
   const CALIBER_UM = 4500
   const roundedMm = (um: number) => Math.round(um / 10) / 100
@@ -211,21 +214,21 @@ describe("Ausdruck vom 9. Oktober 2026: Meytons Trefferkreis und Trefferlage (SF
     groups.forEach((points, i) => {
       const circle = smallestEnclosingCircle(points)!
       expect(roundedMm(2 * circle.radiusUm + CALIBER_UM), `Gruppe ${i}`).toBe(
-        EVENING_PRINTOUT.enclosingMm[i]
+        printout!.enclosingMm[i]
       )
     })
     // Der größte Abstand zweier Treffer ist es nicht: Drei Schüsse bestimmen den Kreis der Scheibe.
-    expect(roundedMm(extremeSpread(groups[0])! + CALIBER_UM)).toBe(82.48)
+    expect(roundedMm(extremeSpread(groups[0])! + CALIBER_UM)).not.toBe(printout!.enclosingMm[0])
   })
 
   it("Trefferlage: Schwerpunkt, auf 1/100 mm abgeschnitten", () => {
     groups.forEach((points, i) => {
       const center = centroid(points)!
       expect([truncatedMm(center.xUm), truncatedMm(center.yUm)], `Gruppe ${i}`).toEqual(
-        EVENING_PRINTOUT.mpiMm[i]
+        printout!.mpiMm[i]
       )
     })
-    // Gerundet stünde bei Serie 2 5,76 statt 5,75.
-    expect(roundedMm(centroid(groups[2])!.xUm)).toBe(5.76)
+    // Gerundet stünde bei Serie 2 ein anderer Wert als am Ausdruck.
+    expect(roundedMm(centroid(groups[2])!.xUm)).not.toBe(printout!.mpiMm[2][0])
   })
 })

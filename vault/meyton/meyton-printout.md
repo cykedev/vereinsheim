@@ -24,17 +24,17 @@ Beobachtet am Beispiel vom 2. Oktober 2026 (abgerufen am 5. Oktober):
 
 | Bereich | Beispiel | Nutzen |
 |---|---|---|
-| Kopf | Disziplin „LP 40 alt“, Klasse, StartNr, StandNr 8, Wertung 02.10.2026 19:51, Name mit #Nummer, Verein | Gegenprobe; #Nummer ist die SportpassID zur Druckzeit (siehe unten); neben der Klasse der Modus beim Druck: „Probe“, „Wertung“, „Training“ oder „Vorbereitung/Probe“ |
-| Fuß | initialisiert 19:21, gedruckt 19:52, `ID: ff914420`, Seitenzahl | Wechsel auf Wertung, Druckzeit, ScheibenID |
-| Ergebnis | 352 (371,4), Serien …, Zähler …, Innenzehner 2 | Gegenprobe; auswärts das Ergebnis selbst |
+| Kopf | Disziplin „LP 40 alt“, Klasse, StartNr, StandNr, Wertung mit Datum und Uhrzeit, Name mit #Nummer, Verein | Gegenprobe; #Nummer ist die SportpassID zur Druckzeit (siehe unten); neben der Klasse der Modus beim Druck: „Probe“, „Wertung“, „Training“ oder „Vorbereitung/Probe“ |
+| Fuß | initialisiert und gedruckt (Uhrzeit), `ID: ff914420`, Seitenzahl | Wechsel auf Wertung, Druckzeit, ScheibenID |
+| Ergebnis | Ringe und Zehntel (etwa „352 (371,4)“), Serien, Zähler je Ring, Innenzehner | Gegenprobe; auswärts das Ergebnis selbst |
 | Teiler | die drei besten und die drei weitesten mit Schussnummer | Gegenprobe der Formel ([[spiegel-target-library]]) |
-| Streuung | Trefferkreis … mm, Trefferlage … links, … hoch; dasselbe je Serie | Meytons eigene Streumaße |
+| Streuung | Trefferkreis in mm, Trefferlage in mm (links/rechts, hoch/tief); dasselbe je Serie | Meytons eigene Streumaße |
 | Je Schuss | Zehntelwert, Stern für Innenzehner, Richtungspfeil | Gegenprobe Schuss für Schuss |
 | Grafik | kleine Scheiben mit nummerierten Treffern (Vektorgrafik) | später für fremde Anlagen in Koordinaten zurückrechenbar |
-| Metadaten | Qt 5.12.8, „Meyton Elektronik GmbH“, erstellt 2026-10-02 19:52:12 +02:00 | Druckpfad wie im Treffsicher-Fixture `meyton-qt-identity-h.pdf` |
+| Metadaten | Qt 5.12.8, „Meyton Elektronik GmbH“, Erstellzeit mit Zeitzone | Druckpfad wie im Treffsicher-Fixture `meyton-qt-identity-h.pdf` |
 | Fehlt | x/y-Koordinaten, Zeit je Schuss | nur aus der SSMDB2 |
 
-Der Trefferkreis von Serie 3 ist mit 66,93 mm so groß wie der der ganzen Scheibe; ihn bestimmen also zwei Treffer aus Serie 3.
+Der Trefferkreis einer Serie kann so groß sein wie der der ganzen Scheibe, wenn zwei Treffer dieser Serie ihn bestimmen.
 
 **Gegen die Rohdaten geprüft** (Ausdruck und Ablage vom 9. Oktober 2026, [[src-ssmdb2-abend-2026-10-09]]): Alle 40 Zehntel, Innenzehner, Serien, Ergebnis, beste Teiler und der Kopf stimmen. Der **Trefferkreis** ist der kleinste Kreis um die Schussmitten plus Kaliber (4,5 mm), auf 1/100 mm gerundet; der größte Abstand zweier Treffer passt nicht, sobald drei Schüsse den Kreis bestimmen. Die **Trefferlage** ist der Schwerpunkt, auf 1/100 mm **abgeschnitten** (5,756 mm steht als 5,75). „Weiteste“ sind die Teiler, auf ganze Zahlen abgeschnitten. „initialisiert“ ist der Wechsel auf Wertung, nicht der erste Probeschuss; die Zeit im Kopf ist der letzte Schuss. Spiegel rundet wie Meyton, wo es dieselbe Zahl zeigt (SF-76).
 

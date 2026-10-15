@@ -34,12 +34,12 @@ pnpm --filter spiegel test         # Vitest, braucht die Dev-Datenbank
 pnpm --filter spiegel pruefen      # Bedienung im Browser (Headless-Chrome) gegen den Dev-Server
 ```
 
-| Skript                       | Zweck                                                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------ |
-| `seed:own`                   | eigene Beispielscheiben in die Dev-DB, dem Admin aus `.env` zugeordnet               |
-| `measure`                    | Ladezeiten von Liste, Fortschritt und Scheibe gegen die Dev-DB messen                |
-| `bridge-e2e`                 | Brücke Ende zu Ende gegen einen lokalen Build (vorher `pnpm --filter spiegel build`) |
-| `ingest-load`, `stack-probe` | Last und Grenzen hinter Caddy, aufgerufen von `tools/stack-e2e/run.sh`               |
+| Skript                       | Zweck                                                                                                                            |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `seed:own`                   | Scheiben in die Dev-DB, dem Admin aus `.env` zugeordnet: eigene aus `tools/private/own-cards.json` (gitignored), sonst erfundene |
+| `measure`                    | Ladezeiten von Liste, Fortschritt und Scheibe gegen die Dev-DB messen                                                            |
+| `bridge-e2e`                 | Brücke Ende zu Ende gegen einen lokalen Build (vorher `pnpm --filter spiegel build`)                                             |
+| `ingest-load`, `stack-probe` | Last und Grenzen hinter Caddy, aufgerufen von `tools/stack-e2e/run.sh`                                                           |
 
 Schemaänderungen: `apps/spiegel/prisma/schema.prisma`, Migration über den Skill `/migrate`.
 

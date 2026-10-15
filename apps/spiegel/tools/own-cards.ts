@@ -1,7 +1,9 @@
-// Die echten Scheiben des Users (`own-cards-data.ts`, aus der privaten Kopie der Vereinsanlage vom 9. Oktober 2026, mit
-// Zustimmung des Users, ohne Name, Sportpass und ScheibenID) als Eingabe für `writeRevision`. Nur für die
-// Dev-Datenbank (`seed-own.ts`); in Produktion kommen Scheiben über die Brücke. Weggelassen: ohne Scheibenbild
-// (Zimmerstutzen, „LP Schach“) und verdeckt (Anzeigeart 5 oder 10, SF-19).
+// Eigene Scheiben für die Dev-Datenbank (`seed-own.ts`), nie in Produktion: in Produktion kommen Scheiben über die
+// Brücke. Die echten Daten liegen nur lokal in `tools/private/own-cards.json` (gitignored, ADR-029), ohne Name,
+// Sportpass und ScheibenID; fehlt die Datei, nimmt `seed:own` erfundene Scheiben (`demoCardSeeds`). Weggelassen: ohne
+// Scheibenbild (Zimmerstutzen, „LP Schach“) und verdeckt (Anzeigeart 5 oder 10, SF-19).
+import { existsSync, readFileSync } from "node:fs"
+
 import {
   classifyCompleteness,
   parseDisciplineId,
@@ -14,21 +16,56 @@ import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { TARGETS, type TargetId, type Weapon } from "@vereinsheim/shot-core/targets"
 
 import type { CardInput, ShotInput } from "../src/lib/db/cards"
-import { OWN_CARDS, type OwnCard } from "./own-cards-data"
+import { generateSeason } from "../test/generate"
+
+export interface OwnSeedShot {
+  /** 0 Probe, 1 Wertung */
+  stellung: 0 | 1
+  nr: number
+  serie: number
+  /** Lage in µm (Meyton: 1/100 mm) */
+  xUm: number
+  yUm: number
+  /** Abstand zum ersten Schuss der Scheibe in ms */
+  offsetMs: number
+  /** Meytons Wert in Zehnteln (`Ring01`) */
+  decimalTenths: number
+  innerTen: boolean
+  /** Anzeigeart am Monitor (`Treffer.Wertung`: 1, 7 Zehntel; 2, 8 ganze Ringe; 5 verdeckt) */
+  display: number
+}
+
+export interface OwnCard {
+  /** laufende Nummer, zugleich die erfundene ScheibenID der Dev-Quelle */
+  n: number
+  disciplineId: number
+  /** Name der Disziplin in der Anlage */
+  discipline: string
+  /** erster Schuss in UTC */
+  startedAt: string
+  shots: readonly OwnSeedShot[]
+}
+
+/** die lokalen eigenen Scheiben, null ohne `tools/private/own-cards.json` */
+export function loadOwnCards(
+  file = new URL("./private/own-cards.json", import.meta.url)
+): readonly OwnCard[] | null {
+  return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as OwnCard[]) : null
+}
 
 /** verdeckt am Monitor: bleibt in der Brücke, bis der Admin freigibt (SF-19, SF-74) */
 const HIDDEN_DISPLAYS: ReadonlySet<number> = new Set([5, 10])
 
 /**
  * amtliche Wertung nach der Waffe, solange der Adapter sie nicht aus der Disziplin liest: Luftpistole in ganzen Ringen
- * wie am Ausdruck vom 2. Oktober 2026, Luftgewehr unbekannt
+ * wie am Ausdruck, Luftgewehr unbekannt
  */
 const OFFICIAL_BY_WEAPON: Readonly<Partial<Record<Weapon, Scoring>>> = { lp: "rings" }
 
 export type OmittedReason = "ohne Scheibenbild" | "verdeckt"
 
 export interface OwnCardSeed {
-  /** laufende Nummer der Scheibe in `own-cards-data.ts`; zugleich die erfundene ScheibenID der Dev-Quelle */
+  /** laufende Nummer der Scheibe; zugleich die erfundene ScheibenID der Dev-Quelle */
   n: number
   discipline: {
     meytonId: number
@@ -103,7 +140,7 @@ function seedOf(own: OwnCard): OwnCardSeed | OmittedReason {
 }
 
 /** die Scheiben für die Dev-Datenbank und die weggelassenen mit Grund */
-export function ownCardSeeds(cards: readonly OwnCard[] = OWN_CARDS): {
+export function ownCardSeeds(cards: readonly OwnCard[]): {
   seeds: OwnCardSeed[]
   omitted: { n: number; reason: OmittedReason }[]
 } {
@@ -115,4 +152,39 @@ export function ownCardSeeds(cards: readonly OwnCard[] = OWN_CARDS): {
     else seeds.push(seed)
   }
   return { seeds, omitted }
+}
+
+const LP_40 = { meytonId: 19210040, name: "LP 40", targetId: "lp-10m" } as const
+
+/**
+ * erfundene Scheiben, wenn keine eigenen da sind: Luftpistole, drei je Abend über ein halbes Jahr, Training mit Probe,
+ * nur Probe und Wettkampf (`test/generate.ts`, fester Seed)
+ */
+export function demoCardSeeds(): OwnCardSeed[] {
+  return generateSeason({
+    seed: 2026,
+    cards: 72,
+    firstMs: Date.UTC(2025, 9, 7, 16, 30),
+    everyDays: 7,
+    sourceId: 0,
+    disciplineId: 0,
+    ownerId: "",
+    scheibenIdBase: 1,
+  }).map(({ card, shots }, i) => {
+    const { sourceId: _source, disciplineId: _discipline, ownerId: _owner, ...rest } = card
+    return {
+      n: i + 1,
+      discipline: {
+        ...LP_40,
+        family: suggestFamily({
+          targetId: LP_40.targetId,
+          disciplineId: LP_40.meytonId,
+          name: LP_40.name,
+        }),
+        officialScoring: "rings",
+      },
+      card: rest,
+      shots: [...shots],
+    }
+  })
 }

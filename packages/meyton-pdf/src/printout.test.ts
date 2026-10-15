@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { buildPdf, type TestText } from "./__fixtures__/buildPdf"
 import { MeytonPdfError, readPrintout } from "./printout"
 
-// Erfundene Ausdrucke ohne Namen, nach dem Muster des Ausdrucks vom 2. Oktober 2026.
+// Erfundene Ausdrucke ohne Namen, nach dem Muster eines echten Ausdrucks.
 const QT_INFO = {
   CreationDate: "D:20261002195212+02'00'",
   Producer: "Qt 5.12.8",

@@ -44,3 +44,7 @@ reports/*
 
 # Obsidian-Vault: GUI-/Workspace-State ist maschinen-lokal (der Vault selbst ist versioniert; ADR-025)
 vault/.obsidian/
+
+# echte, eigene Daten für Gegenproben und seed:own: nur lokal (ADR-029)
+**/__fixtures__/private/
+apps/spiegel/tools/private/

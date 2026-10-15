@@ -575,7 +575,7 @@ table.cmp td.neg { color: var(--neg); font-weight: 600; }
         <div class="sum"><h4>Auswertung</h4><p>Jede Kennzahl ist einmal als reine Funktion definiert und steht dann überall bereit: in der Session, je Serie, als Verlauf über Monate und im direkten Vergleich.</p></div>
         <div class="sum"><h4>Design</h4><p>Spiegel wird der Pilot für ein neues Vereinsheim-Design: ruhige, neutrale Oberfläche, die Farbe kommt aus den Daten, dunkel zuerst und hell später. Ringwerk und Treffsicher können folgen.</p></div>
         <div class="sum wide"><h4>Sonderfälle</h4><p>Nur Probe, LP&nbsp;40 mit 60 Probeschüssen, Abbruch, Korrekturen, verdeckte Wertung, falscher Name am Stand: Ein kritisches Review hat 69 Sonderfälle mit festen IDs gesammelt, jeder mit Absicherung und Testfall. Die Leitlinie: Ausgewertet wird jeder Schuss, auch ohne Wertung, und nichts verlässt das Schützenhaus ungeprüft (<a href="#szenarien">Kapitel&nbsp;11</a>).</p></div>
-        <div class="sum wide"><h4>Nächster Schritt</h4><p>Phase&nbsp;0 an einem Trainingsabend: die SQL-Checkliste und das Schießprotokoll mit der Standaufsicht aus dem <a href="#anhang">Anhang</a>, dazu die ID aus dem Ausdruck vom 2. Oktober in der SSMDB2 nachschlagen. Ohne Anlage startbar sind SP-1.0 bis SP-1.3, allen voran SP-1.1 Scheibenbilder und Wertung. Die ganze Reihenfolge steht im <a href="#fahrplan">Fahrplan</a>.</p></div>
+        <div class="sum wide"><h4>Nächster Schritt</h4><p>Phase&nbsp;0 an einem Trainingsabend: die SQL-Checkliste und das Schießprotokoll mit der Standaufsicht aus dem <a href="#anhang">Anhang</a>, dazu die ID eines Ausdrucks in der SSMDB2 nachschlagen. Ohne Anlage startbar sind SP-1.0 bis SP-1.3, allen voran SP-1.1 Scheibenbilder und Wertung. Die ganze Reihenfolge steht im <a href="#fahrplan">Fahrplan</a>.</p></div>
       </div>
     </section>
 
@@ -986,7 +986,7 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
           <li>in Spiegel ist „aus, zuletzt online Di 22:14“ der Normalfall, kein Alarm. Kommt aber ein QR-Scan von einem Abend, an dem die Brücke keinen Kontakt hatte, warnt Spiegel den Admin.</li>
         </ul>
         <h3>Zuordnen per Meyton-QR</h3>
-        <p>Meyton zeigt am Stand keinen QR-Code für Rohdaten, aber einen für den Ergebnisausdruck. Dein Beispiel vom 2. Oktober zeigt, was dahintersteckt: ein Link der Form <code>http://195.201.88.185/print_&lt;UUID&gt;.pdf</code>. Die IP gehört zu qrcode.meyton.eu, der Dateiname ist zufällig, und es gibt nur HTTP. Im Fuß des PDFs steht <code>ID: ff914420</code>. Meral-IT hat für den XML-Export festgestellt, dass dessen Hex-ID die ScheibenID als vorzeichenbehaftete 32-Bit-Zahl ist. Die ID im Ausdruck sieht genauso aus; hier wäre das −7257056. Bestätigt eine Abfrage vor Ort das, ist die Zuordnung exakt.</p>
+        <p>Meyton zeigt am Stand keinen QR-Code für Rohdaten, aber einen für den Ergebnisausdruck. Ein Beispiel-Ausdruck zeigt, was dahintersteckt: ein Link der Form <code>http://195.201.88.185/print_&lt;UUID&gt;.pdf</code>. Die IP gehört zu qrcode.meyton.eu, der Dateiname ist zufällig, und es gibt nur HTTP. Im Fuß des PDFs steht <code>ID: ff914420</code>. Meral-IT hat für den XML-Export festgestellt, dass dessen Hex-ID die ScheibenID als vorzeichenbehaftete 32-Bit-Zahl ist. Die ID im Ausdruck sieht genauso aus; hier wäre das −7257056. Bestätigt eine Abfrage vor Ort das, ist die Zuordnung exakt.</p>
         <p>Der Ablauf: Du scannst den QR in Spiegel. Spiegel lädt und sichert das PDF und liest ID, Stand und Werte. Die Brücke liefert zu dieser ID zuerst nur eine Vorschau ohne Namen und ohne Lage. Spiegel vergleicht sie mit dem PDF, und erst wenn die Werte passen, holt Spiegel die ganze Scheibe. So verlassen bei einer falschen ID keine fremden Rohdaten das Schützenhaus, und weil der Link unverschlüsselt ist, wird immer verglichen. Ein Zwischenausdruck zählt, wenn er den Anfang der Scheibe trifft. Geladen wird nur von den konfigurierten Meyton-Adressen, nie aus privaten Netzen, ohne Weiterleitungen und mit enger Größengrenze: Ein Ausdruck hat rund 40&nbsp;KB, und in Treffsicher hat ein 3,2-MB-PDF schon 665&nbsp;MB Speicher belegt.</p>
       </div>
       <figure class="dg">
@@ -1034,7 +1034,7 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
             <line x1="690" y1="538" x2="294" y2="538" class="dg-edge" marker-end="url(#ah5)"/>
             <text x="492" y="529" class="dg-l" text-anchor="middle">Scheibe hochladen</text>
             <line x1="290" y1="582" x2="94" y2="582" class="dg-edge" marker-end="url(#ah5)"/>
-            <text x="192" y="573" class="dg-l" text-anchor="middle">Vorschau: LP 40 · 367,6</text>
+            <text x="192" y="573" class="dg-l" text-anchor="middle">Vorschau: LP 40 · 371,4</text>
             <line x1="90" y1="626" x2="286" y2="626" class="dg-edge key" marker-end="url(#ah5k)"/>
             <text x="188" y="617" class="dg-l" text-anchor="middle">„Das bin ich“</text>
             <rect x="300" y="640" width="210" height="30" rx="8" class="dg-note"/>
@@ -1045,26 +1045,26 @@ packages/meyton-pdf/         @vereinsheim/meyton-pdf: Meyton-Ausdruck lesen (heu
       </figure>
       <div class="prose">
         <h3>Was im Meyton-Ausdruck steht</h3>
-        <p>Am Beispiel vom 2. Oktober (Luftpistole, Stand 8):</p>
+        <p>Am Beispiel eines Ausdrucks (Luftpistole):</p>
       </div>
       <div class="scroll">
         <table class="doc">
           <thead><tr><th>Bereich</th><th>Inhalt</th><th>Nutzen für Spiegel</th></tr></thead>
           <tbody>
-            <tr><td>Kopf</td><td>Disziplin „LP 40 alt“, Klasse, StartNr, StandNr 8, Wertung 02.10.2026 19:51, Name mit #Nummer, Verein</td><td>Gegenprobe; die #Nummer ist vermutlich die SportpassID und zeigt, wem die Scheibe gehört</td></tr>
-            <tr><td>Fuß</td><td>initialisiert 19:21, gedruckt 19:52, <code>ID: ff914420</code></td><td>Beginn der Scheibe, Druckzeit, vermutlich die ScheibenID</td></tr>
-            <tr><td>Ergebnis</td><td>352 (371,4), Serien …, Zähler …, Innenzehner 2</td><td>Gegenprobe; auf fremden Anlagen das Ergebnis selbst</td></tr>
+            <tr><td>Kopf</td><td>Disziplin „LP 40 alt“, Klasse, StartNr, StandNr, Wertung mit Datum und Uhrzeit, Name mit #Nummer, Verein</td><td>Gegenprobe; die #Nummer ist vermutlich die SportpassID und zeigt, wem die Scheibe gehört</td></tr>
+            <tr><td>Fuß</td><td>initialisiert und gedruckt (Uhrzeit), <code>ID: ff914420</code></td><td>Beginn der Scheibe, Druckzeit, vermutlich die ScheibenID</td></tr>
+            <tr><td>Ergebnis</td><td>Ringe und Zehntel, Serien, Zähler je Ring, Innenzehner</td><td>Gegenprobe; auf fremden Anlagen das Ergebnis selbst</td></tr>
             <tr><td>Teiler</td><td>die drei besten und die drei weitesten, je mit Schussnummer</td><td>Gegenprobe der Teiler und der Formel</td></tr>
-            <tr><td>Streuung</td><td>Trefferkreis …&nbsp;mm, Trefferlage 2,30&nbsp;mm links, 3,96&nbsp;mm hoch; dasselbe je Serie</td><td>Meytons eigene Streumaße; Spiegel zeigt sie neben seinen</td></tr>
+            <tr><td>Streuung</td><td>Trefferkreis und Trefferlage in mm; dasselbe je Serie</td><td>Meytons eigene Streumaße; Spiegel zeigt sie neben seinen</td></tr>
             <tr><td>Je Schuss</td><td>Zehntelwert, Stern für Innenzehner, Richtungspfeil</td><td>Gegenprobe Schuss für Schuss</td></tr>
             <tr><td>Grafik</td><td>kleine Scheiben mit nummerierten Treffern, als Vektorgrafik</td><td>ließe sich später für fremde Anlagen in Koordinaten zurückrechnen</td></tr>
-            <tr><td>Metadaten</td><td>erzeugt mit Qt 5.12.8, erstellt 02.10.2026 19:52:12 +02:00</td><td>Druckpfad erkennen, Zeit mit Zone</td></tr>
+            <tr><td>Metadaten</td><td>erzeugt mit Qt 5.12.8, Erstellzeit mit Zeitzone</td><td>Druckpfad erkennen, Zeit mit Zone</td></tr>
             <tr><td>Fehlt</td><td>x/y-Koordinaten, Zeit je Schuss</td><td>kommt nur aus der SSMDB2</td></tr>
           </tbody>
         </table>
       </div>
       <div class="prose">
-        <p class="small muted">Der Trefferkreis von Serie&nbsp;3 ist mit 66,93&nbsp;mm genauso groß wie der der ganzen Scheibe; ihn bestimmen also zwei Treffer aus Serie&nbsp;3. Ob Meyton damit den kleinsten Kreis um alle Treffer oder den größten Abstand zweier Treffer meint, zeigen die Rohdaten.</p>
+        <p class="small muted">Der Trefferkreis einer Serie kann genauso groß sein wie der der ganzen Scheibe; dann bestimmen ihn zwei Treffer dieser Serie. Ob Meyton damit den kleinsten Kreis um alle Treffer oder den größten Abstand zweier Treffer meint, zeigen die Rohdaten.</p>
       </div>
       <div class="prose"><h3>Störfälle</h3></div>
       <div class="scroll">
@@ -1312,7 +1312,7 @@ type Shot = {
           </tbody>
         </table>
       </div>
-      <div class="prose"><p>Und am Meyton-Ausdruck vom 2. Oktober, mit allen sechs Teilern, die dort mit Schussnummer stehen:</p></div>
+      <div class="prose"><p>Und an einem Meyton-Ausdruck, mit allen sechs Teilern, die dort mit Schussnummer stehen:</p></div>
       <div class="scroll">
         <table class="doc">
           <thead><tr><th>Schuss</th><th>Teiler im Ausdruck</th><th>Abstand</th><th>11 − Abstand ÷ 8</th><th>Wert im Ausdruck</th></tr></thead>

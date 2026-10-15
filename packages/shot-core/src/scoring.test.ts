@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  BOUNDARY_DISTANCES,
-  EVENING_PRINTOUT,
-  EVENING_SHOTS,
-} from "./__fixtures__/meyton-2026-10-09"
-import { OWN_SHOTS } from "./__fixtures__/meyton-eigene-scheiben"
+import { BOUNDARY_DISTANCES } from "./__fixtures__/meyton-toleranz"
+import { EVENING, OWN_SHOTS } from "./__fixtures__/private"
 import { resolveTarget } from "./discipline"
 import {
   distanceUm,
@@ -18,7 +14,7 @@ import { LG_10M, LP_10M, MAX_DECIMAL_TENTHS, TARGETS, type TargetImage } from ".
 
 // Abstände in µm, Werte in Zehnteln (94 = 9,4) wie in der SSMDB2.
 
-describe("Ausdruck vom 2. Oktober 2026 (Luftpistole, Abstand aus dem Teiler)", () => {
+describe("Ausdruck (Luftpistole, Abstand aus dem Teiler)", () => {
   it.each([
     [3318, 105, true], // Schuss 8, Teiler 331,8, Stern
     [3964, 105, true], // Schuss 2, Teiler 396,4, Stern
@@ -43,24 +39,7 @@ describe("ShotsApp-Screenshots (Luftpistole, Serie 1)", () => {
   })
 })
 
-describe("Abend vom 9. Oktober 2026 (Meyton-Toleranz, SF-75)", () => {
-  it("jeder der 40 Schüsse wie Meyton, aus der Lage wie aus dem Teiler", () => {
-    for (const shot of EVENING_SHOTS) {
-      const expected = { decimalTenths: shot.decimalTenths, innerTen: shot.innerTen }
-      expect(scoreFromCoordinates(LP_10M, shot.xUm, shot.yUm), `Schuss ${shot.nr}`).toMatchObject(
-        expected
-      )
-      expect(scoreFromDistance(LP_10M, shot.distanceUm), `Schuss ${shot.nr}`).toMatchObject(
-        expected
-      )
-    }
-    const total = EVENING_SHOTS.reduce(
-      (sum, shot) => sum + scoreFromCoordinates(LP_10M, shot.xUm, shot.yUm).decimalTenths,
-      0
-    )
-    expect(total).toBe(EVENING_PRINTOUT.total)
-  })
-
+describe("Meyton-Toleranz (SF-75)", () => {
   it("die Grenzabstände legen die Toleranz auf 10 µm fest", () => {
     for (const { target, um, tenths } of BOUNDARY_DISTANCES) {
       expect(scoreFromDistance(TARGETS[target], um).decimalTenths, `${target} ${um} µm`).toBe(
@@ -70,16 +49,38 @@ describe("Abend vom 9. Oktober 2026 (Meyton-Toleranz, SF-75)", () => {
   })
 })
 
-describe("Alle eigenen Scheiben des Users, Oktober 2024 bis Oktober 2026 (SF-75)", () => {
+// Gegenprobe an echten Schüssen, nur mit den lokalen Daten aus `__fixtures__/private/`
+describe.skipIf(!EVENING)("Ein Abend mit Ausdruck (Meyton-Toleranz, SF-75)", () => {
+  it("jeder der 40 Schüsse wie Meyton, aus der Lage wie aus dem Teiler", () => {
+    const { shots, printout } = EVENING!
+    for (const shot of shots) {
+      const expected = { decimalTenths: shot.decimalTenths, innerTen: shot.innerTen }
+      expect(scoreFromCoordinates(LP_10M, shot.xUm, shot.yUm), `Schuss ${shot.nr}`).toMatchObject(
+        expected
+      )
+      expect(scoreFromDistance(LP_10M, shot.distanceUm), `Schuss ${shot.nr}`).toMatchObject(
+        expected
+      )
+    }
+    const total = shots.reduce(
+      (sum, shot) => sum + scoreFromCoordinates(LP_10M, shot.xUm, shot.yUm).decimalTenths,
+      0
+    )
+    expect(total).toBe(printout.total)
+  })
+})
+
+describe.skipIf(!OWN_SHOTS)("Alle Scheiben eines Schützen über zwei Jahre (SF-75)", () => {
   // Die Disziplin bestimmt die Scheibe wie in Spiegel; Disziplinen ohne Scheibenbild (Schach,
   // Zimmerstutzen) und über den Namen aufgelöste (König, verdeckt) bleiben außen vor.
-  const scored = OWN_SHOTS.flatMap((shot) => {
+  const own = OWN_SHOTS ?? []
+  const scored = own.flatMap((shot) => {
     const { targetId, source } = resolveTarget({ disciplineId: shot.disciplineId, name: "" })
     return targetId && source === "catalog" ? [{ shot, target: TARGETS[targetId] }] : []
   })
 
   it("jeder Schuss wie Meyton, aus der Lage wie aus dem Teiler", () => {
-    expect(OWN_SHOTS).toHaveLength(969)
+    expect(own).toHaveLength(969)
     expect(scored).toHaveLength(953)
     for (const { shot, target } of scored) {
       const expected = { decimalTenths: shot.decimalTenths, innerTen: shot.innerTen }
@@ -90,7 +91,7 @@ describe("Alle eigenen Scheiben des Users, Oktober 2024 bis Oktober 2026 (SF-75)
   })
 
   it("Schach, Zimmerstutzen und König haben ohne Namen kein Scheibenbild", () => {
-    const unresolved = OWN_SHOTS.filter(
+    const unresolved = own.filter(
       (shot) => resolveTarget({ disciplineId: shot.disciplineId, name: "" }).targetId === null
     )
     expect(new Set(unresolved.map((shot) => shot.disciplineId))).toEqual(

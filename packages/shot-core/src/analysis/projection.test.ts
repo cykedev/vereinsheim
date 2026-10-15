@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import { card } from "../__fixtures__/period"
-import { OWN_SHOTS } from "../__fixtures__/meyton-eigene-scheiben"
 import {
   FLAG_SUSPICIOUS,
   METRICS,
@@ -26,6 +25,8 @@ import {
   type ProjectedCard,
 } from "./projection"
 import { FLAG_COUNTED_AS_MATCH, periodRecords } from "./records"
+import { scoreFromCoordinates } from "../scoring"
+import { LP_10M } from "../targets"
 
 const DAY = 86_400_000
 
@@ -36,22 +37,54 @@ function fnv1a(text: string): string {
   return (hash >>> 0).toString(16).padStart(8, "0")
 }
 
-/** die echten Scheiben des Users (Lage und Werte, Zeiten erzeugt), ab 20 Schuss */
-const own: PeriodCard[] = [...new Set(OWN_SHOTS.map((s) => s.card))].flatMap((n) => {
-  const rows = OWN_SHOTS.filter((s) => s.card === n)
-  if (rows.length < 20) return []
-  const shots: MetricShot[] = rows.map((s, i) => ({
-    seq: i + 1,
-    xUm: s.xUm,
-    yUm: s.yUm,
-    decimalTenths: s.decimalTenths,
-    ring: Math.floor(s.decimalTenths / 10),
-    innerTen: s.innerTen,
-    firedAtMs: n * DAY + i * 41_000 + ((((s.xUm * 7 + s.yUm * 13) % 1000) + 1000) % 1000),
-    kind: s.stellung === 1 ? "match" : "probe",
-    series: s.stellung === 1 ? Math.ceil(s.nr / 10) : null,
-  }))
-  return [{ id: `own-${n}`, startedAtMs: n * DAY, kind: "training", complete: true, shots }]
+/** Mulberry32: klein, schnell, deterministisch */
+function random(seed: number): () => number {
+  let a = seed >>> 0
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0
+    let t = a
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296
+  }
+}
+
+function gaussian(rand: () => number): number {
+  const u = Math.max(rand(), 1e-12)
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand())
+}
+
+/**
+ * erfundene Scheiben wie die eines aktiven Schützen: Luftpistole, Probe vor 20 bis 60 Wertungsschüssen, Lage und
+ * Streuung schwanken je Scheibe, gelegentlich eine Pause; Werte aus der Lage über den Fachkern
+ */
+const generated: PeriodCard[] = Array.from({ length: 30 }, (_, n) => {
+  const rand = random(1_000 + n)
+  const sigma = Math.abs(3_600 + 900 * gaussian(rand))
+  const mx = 800 * gaussian(rand)
+  const my = 800 * gaussian(rand)
+  const probe = 3 + Math.floor(rand() * 10)
+  const match = 20 + 10 * Math.floor(rand() * 5)
+  let at = n * DAY
+  const shots: MetricShot[] = Array.from({ length: probe + match }, (_, i) => {
+    const xUm = Math.round((mx + sigma * gaussian(rand)) / 10) * 10
+    const yUm = Math.round((my + sigma * gaussian(rand)) / 10) * 10
+    const score = scoreFromCoordinates(LP_10M, xUm, yUm)
+    const isProbe = i < probe
+    at += 35_000 + Math.round(30_000 * rand()) + (rand() < 0.04 ? 180_000 : 0)
+    return {
+      seq: i + 1,
+      xUm,
+      yUm,
+      decimalTenths: score.decimalTenths,
+      ring: score.ring,
+      innerTen: score.innerTen,
+      firedAtMs: at,
+      kind: isProbe ? "probe" : "match",
+      series: isProbe ? null : Math.ceil((i - probe + 1) / 10),
+    }
+  })
+  return { id: `gen-${n}`, startedAtMs: n * DAY, kind: "training", complete: true, shots }
 })
 
 /** Sonderfälle: nur Probe, verdächtig, unvollständig, Wettkampf, ausgeschlossen, als Wertung gezählt */
@@ -92,13 +125,13 @@ const special: PeriodCard[] = [
     }
   ),
 ]
-const CARDS = [...own, ...special]
+const CARDS = [...generated, ...special]
 
 const PROJECTED: ProjectedCard[] = CARDS.map(projectCard)
 
 describe("Projektion je Scheibe (ADR-031)", () => {
-  it("die Testmenge ist reich genug: echte Scheiben und jeder Sonderfall", () => {
-    expect(own.length).toBeGreaterThanOrEqual(20)
+  it("die Testmenge ist reich genug: erzeugte Scheiben und jeder Sonderfall", () => {
+    expect(generated.length).toBeGreaterThanOrEqual(20)
     expect(CARDS.reduce((sum, c) => sum + c.shots.length, 0)).toBeGreaterThan(900)
   })
 
@@ -156,7 +189,7 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     // `version` der geänderten Kennzahl) erhöhen, damit `refreshProjections` sie neu rechnet, dann beide Werte setzen.
     expect({ version: projectionVersion(), output }).toEqual({
       version: "p2-3131d8b6",
-      output: "57741-0a6c3183",
+      output: "69877-782828ca",
     })
   })
 
@@ -218,9 +251,9 @@ describe("Lagen für die kleinen Scheiben", () => {
     ])
   })
 
-  it("nur Probe zeigt die Probe; an den echten Scheiben höchstens 5 µm neben der Lage", () => {
+  it("nur Probe zeigt die Probe; an den erzeugten Scheiben höchstens 5 µm neben der Lage", () => {
     expect(cardMarks(special[0].shots)).toHaveLength(10)
-    for (const c of own) {
+    for (const c of generated) {
       const shown = inShotOrder(asOnPrintout(c.shots))
       const drawn = markShots(cardMarks(c.shots))
       expect(drawn).toHaveLength(shown.length)
@@ -244,7 +277,7 @@ describe("Umfang und Ø über mehrere Scheiben aus der Projektion", () => {
     "pooledMean wie computeMetric über die Schüsse zusammen (%s)",
     (scoring) => {
       const metric = inScoring(metricByKey("result.decimalMean")!, scoring)
-      const groups = [CARDS, own.slice(0, 3), special, [special[0]], [special[3], special[5]]]
+      const groups = [CARDS, generated.slice(0, 3), special, [special[0]], [special[3], special[5]]]
       for (const group of groups) {
         const shots = group.flatMap((c) => [...asOnPrintout(c.shots)])
         expect(pooledMean(group.map(projectCard), scoring)).toBe(computeMetric(metric, shots))

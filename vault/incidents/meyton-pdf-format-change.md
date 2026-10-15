@@ -30,7 +30,7 @@ Matrix-Stack. Das ist ein Mini-PDF-Interpreter.
 
 ## Lehren
 
-**Bei Fremdformat-Importen gehören echte Beispieldateien als Fixture ins Repo.** Die bisherigen
+**Bei Fremdformat-Importen gehören echte Beispieldateien als Fixture in die Tests** (mit Personendaten nur lokal und gitignored, [[adr-029]]). Die bisherigen
 Tests bauten ihre PDFs selbst (`deflateSync` + handgeschriebener Stream) und konnten einen
 Formatwechsel der realen Quelle **strukturell nicht bemerken** — sie testeten exakt die Annahme,
 die falsch geworden war.

@@ -1,6 +1,7 @@
-// Die echten Scheiben des Users in die Dev-Datenbank (nie in Produktion): Anlage „Dev-Anlage“, Quelle, Familien und
-// Disziplinen anlegen, jede Scheibe über `writeRevision` schreiben (mit Projektion, zweimal ergibt nichts Neues) und alle
-// Scheiben der Dev-Quelle einem Konto zuordnen.
+// Eigene Scheiben in die Dev-Datenbank (nie in Produktion), aus `tools/private/own-cards.json` oder ohne die Datei
+// erfundene (`demoCardSeeds`): Anlage „Dev-Anlage“, Quelle, Familien und Disziplinen anlegen, jede Scheibe über
+// `writeRevision` schreiben (mit Projektion, zweimal ergibt nichts Neues) und alle Scheiben der Dev-Quelle einem Konto
+// zuordnen.
 //
 //   pnpm --filter spiegel seed:own                    dem Konto aus SEED_ADMIN_EMAIL (legt die App beim Start an)
 //   pnpm --filter spiegel seed:own --email <adresse>  einem anderen, vorhandenen Konto
@@ -18,7 +19,7 @@ import { FAMILY_NAMES } from "../src/lib/families"
 import { BCRYPT_COST } from "../src/lib/startup"
 import { DEV_DATABASE_URL } from "../test/dev-database"
 import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
-import { ownCardSeeds } from "./own-cards"
+import { demoCardSeeds, loadOwnCards, ownCardSeeds } from "./own-cards"
 
 const DEV_SITE = "Dev-Anlage"
 
@@ -87,7 +88,9 @@ async function main() {
     if (!source.confirmedAt)
       await db.source.update({ where: { id: source.id }, data: { confirmedAt: new Date() } })
 
-    const { seeds, omitted } = ownCardSeeds()
+    const own = loadOwnCards()
+    const { seeds, omitted } = own ? ownCardSeeds(own) : { seeds: demoCardSeeds(), omitted: [] }
+    if (!own) out("Keine eigenen Scheiben (tools/private/own-cards.json fehlt): erfundene Scheiben")
     const changes: Record<RevisionChange, number> = {
       created: 0,
       updated: 0,

@@ -13,7 +13,7 @@ relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]", "[[ssmdb2-erkundung]
 
 - **Anlage:** ShootMaster 6.0.2, MariaDB 10.6.20 (`@@version_comment` „MariaDB package“), Systemzeitzone CEST, Uhr des Servers 24 ms vor dem Mac.
 - **Lesen:** jede Sekunde eine Read-only-Transaktion über `Scheiben`, `Serien`, `Treffer` aller Scheiben mit einer Änderung in den letzten 90 Minuten; Abfragen rund 60 ms über der Grundlast des Docker-Clients, kein einziges Mal gedrosselt. Das Netz über `Treffer.Zeitstempel` war aus; ob wegen eines Vollscans laut `EXPLAIN` oder weil `EXPLAIN` nicht lesbar war, hält das Protokoll nicht fest.
-- **Ausdruck:** eigene Scheibe des Users auf Stand 9 (LP 40 alt), PDF über den QR-Code, `ID: 1a2b3c4d`.
+- **Ausdruck:** eine Scheibe auf Stand 9 (LP 40 alt), PDF über den QR-Code.
 - Checkliste und Kopie (SP-0.1) liefen an diesem Abend nicht; Engine und Indizes sind deshalb weiter offen.
 
 ## Befunde
@@ -27,7 +27,7 @@ relates_to: ["[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]", "[[ssmdb2-erkundung]
 7. **Anzeigeart schreibt um:** Schaltet der Schütze die Anzeige am Monitor um, ändern sich `Treffer.Wertung` und `Text` für ganze Serien oder die ganze Scheibe auf einmal (beobachtet 1, 2, 3, 8, 9, 11); Ring, Zehntel, Lage und Teiler bleiben. Die eigene Scheibe stand zuletzt auf Modus 2 (ganze Ringe), der Ausdruck zeigt trotzdem Zehntel.
 8. **Felder:** `Startzeit` immer `0000-00-00`, `Status` leer, `Starterliste` „Direktbelegung“ oder leer; `Serien` hat auch Zeilen für die Probe (Stellung 0, in Zehnerserien); `Treffer.Ring`, `Ring01`, `TotalRing`, `TotalRing01` stehen in Zehnteln, `Serien.Ring` in ganzen Ringen, `Serien.Ring01` in Zehnteln; `Teiler01` ist der Abstand in µm (PDF-Teiler × 10), `Teiler001` in 0,1 µm; x und y in 1/100 mm.
 9. **Wertung:** Mit Grenzen, die 10 µm weiter außen liegen als nach Regel, und einem Abstand, der die Grenze nicht erreichen darf (strikt), stimmen alle 640 Zehntelwerte und Innenzehner, gleich ob aus der Lage (1/100 mm) oder aus `Teiler001` gerechnet. Ohne die 10 µm wertet `shot-core` 15 Schüsse ein Zehntel niedriger. Zulässig ist eine Verschiebung von 9,3 bis 10,0 µm (LG) bzw. 7,6 bis 11,9 µm (LP).
-10. **Ausdruck gegen Ablage:** ID im Fuß = ScheibenID (`1a2b3c4d` = 439041101). Alle 40 Zehntel, Innenzehner, Serien, Ergebnis, beste Teiler und der Kopf stimmen. Trefferkreis = kleinster Hüllkreis um die Schussmitten plus Kaliber 4,5 mm, auf 1/100 mm gerundet (alle fünf Werte). Trefferlage = Schwerpunkt, auf 1/100 mm **abgeschnitten** (5,756 → 5,75); „Weiteste“ = Teiler, auf ganze Zahlen abgeschnitten. „initialisiert“ ist der Wechsel auf Wertung, nicht der erste Probeschuss; die Zeit im Kopf ist der letzte Schuss.
+10. **Ausdruck gegen Ablage:** ID im Fuß = ScheibenID (hexadezimal, als vorzeichenbehaftete 32-Bit-Zahl). Alle 40 Zehntel, Innenzehner, Serien, Ergebnis, beste Teiler und der Kopf stimmen. Trefferkreis = kleinster Hüllkreis um die Schussmitten plus Kaliber 4,5 mm, auf 1/100 mm gerundet (alle fünf Werte). Trefferlage = Schwerpunkt, auf 1/100 mm **abgeschnitten** (5,756 → 5,75); „Weiteste“ = Teiler, auf ganze Zahlen abgeschnitten. „initialisiert“ ist der Wechsel auf Wertung, nicht der erste Probeschuss; die Zeit im Kopf ist der letzte Schuss.
 11. **Disziplinen:** Alle neun DisziplinIDs des Abends (10110020, 10110040, 10111030, 10210040, 10211030, 19110040, 19110060, 19210040, 19210060) löst `shot-core` über den Katalog richtig auf, samt Anschlag, Soll-Schusszahl und Vollständigkeit.
 
 ## Umgang

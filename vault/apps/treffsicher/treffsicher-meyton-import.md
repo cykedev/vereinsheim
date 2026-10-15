@@ -42,5 +42,6 @@ auf **derselben Zeilenhöhe** wie die Schusswerte. `buildTextLinesFromItems` ver
 links der x-Position der `Serie n:`-Beschriftung; ohne diesen Schnitt liest der Serien-Parser die
 Grafik-Nummern als Schüsse ein — **stille Falschdaten statt eines Fehlers**.
 
-**Fixtures:** `meyton-import/__fixtures__/` hält je ein echtes PDF pro Druckpfad; der
-Integrationstest `meytonFixtures.test.ts` pinnt Serien, Datum und Trefferlage exakt.
+**Fixtures:** Echte PDFs je Druckpfad liegen nur lokal in `meyton-import/__fixtures__/private/` (gitignored,
+[[adr-029]]), zusammen mit dem Test, der Serien, Datum und Trefferlage daran exakt pinnt; ohne sie läuft er nicht. Im
+Repo testet `pdfText.test.ts` mit synthetisch gebauten PDFs (`buildTestPdf`).

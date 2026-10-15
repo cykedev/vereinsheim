@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { LG_10M, LP_10M } from "./targets"
 import { checkShot, rescore, suggestTargets, verifyCard, type ShotEvidence } from "./verify"
 
-// Ausdruck vom 2. Oktober 2026 (Luftpistole): Abstand aus dem Teiler (eine Nachkommastelle von
+// Ein Meyton-Ausdruck (Luftpistole): Abstand aus dem Teiler (eine Nachkommastelle von
 // 1/100 mm, also 1 µm Auflösung), amtlicher Wert und Stern für Innenzehner.
 const PRINTOUT: ShotEvidence[] = (
   [
