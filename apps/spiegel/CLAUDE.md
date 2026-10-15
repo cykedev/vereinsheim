@@ -138,9 +138,13 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   (Zustand, vollständig, Merkmale) stehen in ihrer Zeile, die amtliche Wertung an der Disziplin (SF-74).
 - **Reihenfolge und Kennung:** `storeSnapshot` und `writeRevision` nehmen dasselbe Advisory-Lock (Quelle, ScheibenID).
   Ein Stand mit nicht größerer Folgenummer als `RawSnapshot.lastSequence` bzw. `Card.lastSequence` ändert nichts
-  (SF-26), einer mehr als zehn Minuten in der Zukunft wird abgelehnt. Dieselbe ScheibenID Wochen später ohne gemeinsamen
-  Schuss ist ein `CardIdentityConflictError`: der nächste Zyklus (`cycle`, SF-77). Die Kennung einer Scheibe ändert ein
-  Stand nie, außer eine Scheibe aus dem PDF bekommt ihre Rohdaten.
+  (SF-26), einer mehr als zehn Minuten in der Zukunft wird abgelehnt (`future`), eine Beobachtung mehr als 15 Minuten
+  vor der Empfangszeit ebenso (`past`, `MAX_OBSERVED_LAG_MS`, SF-79: die Uhr der Brücke geht nach). Tests mit
+  eingefrorenen Fällen geben deshalb `nowMs` = Beobachtung und schicken Fälle verschiedener Tage nicht in einem Stapel.
+  Aus einem Heartbeat mit `sentAt` mehr als 60 s neben der Empfangszeit legt `recordHeartbeat` keine Uhrmessung an
+  (`HEARTBEAT_CLOCK_MAX_MS`). Dieselbe ScheibenID Wochen später ohne gemeinsamen Schuss ist ein
+  `CardIdentityConflictError`: der nächste Zyklus (`cycle`, SF-77). Die Kennung einer Scheibe ändert ein Stand nie,
+  außer eine Scheibe aus dem PDF bekommt ihre Rohdaten.
 - **Familie mitgeführt:** `Card.familyId` kopiert die Familie der Disziplin für den Index; umhängen nur über
   `setDisciplineFamily` (eine Transaktion mit den Scheiben).
 - **Tests gegen die Dev-Datenbank:** je Datei eine eigene Anlage (`test/fixtures.ts`, `createTestSite`), am Ende

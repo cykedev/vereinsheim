@@ -211,6 +211,11 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
 
 - **Liste als Filter im Fortschritt** und auf der Seite einer Scheibe eine Verknüpfung „alle Scheiben dieser Liste“.
+- **Start des Laufs nach falscher Uhr** (SF-79): Startet die Brücke mit falscher Uhr, trägt `runStartedAt` den ganzen
+  Lauf die falsche Zeit. Die Regel „ein neuer Lauf macht alles davor endgültig“ greift dann nicht, Scheiben von vor dem
+  Neustart werden erst nach 12 h endgültig. Lösung: beim Wechsel auf eine stimmende Uhr den Start einmal aus der
+  monotonen Zeit neu ansetzen, nie bei jedem Heartbeat; dafür braucht der Runner eine monotone Zeit, die Tests stellen
+  können.
 - **Zeitraum über Geräte hinweg merken:** bräuchte eine Spalte am Konto und eine Migration; heute merkt ihn das Gerät.
 - **„Auf der Scheibe“ springt nicht:** gemeldet, aber ohne Gerät und Stelle; im Nachbau springt der Link überall.
   Nachfragen, wo es auftritt.

@@ -77,7 +77,7 @@ Meyton-Anlage und Brücke werden nach jedem Trainingsabend ausgeschaltet, und zw
 - **Stromverlust ist harmlos:** Die Brücke schreibt nichts außer der Konfiguration, die nur beim Koppeln entsteht; ein hartes Ausschalten kann nichts beschädigen. Jede Übertragung ist idempotent über Quelle + Epoche + ScheibenID + Prüfsumme (SF-53). Kein SQLite, kein Overlay-Root, keine SSD-Pflicht.
 - **Updates:** Gibt es ein Selbst-Update, dann atomar (neue Datei schreiben, prüfen, umbenennen; die vorige bleibt als Rückfall, SF-54). Auf dem Meyton-Rechner reicht notfalls, das Binary nach einem Meyton-Update neu zu installieren.
 - **Startreihenfolge:** Die Brücke ist meist schneller wach als der Meyton-Server und wartet geduldig, bis MySQL antwortet.
-- **Uhrzeit:** Ein Raspberry Pi ohne Echtzeituhr kennt die Zeit erst nach der Synchronisierung; vorher keine Übertragung (TLS braucht die Zeit). Ist NTP gesperrt, stellt die Brücke ihre Uhr grob nach `SELECT NOW()` der Anlage. Schusszeiten kommen ohnehin von Meyton (SF-33).
+- **Uhrzeit** (SF-33, SF-79): Ein Raspberry Pi ohne Echtzeituhr startet mit der Uhr vom letzten Abend (fake-hwclock), bis NTP antwortet. TLS klappt damit; ohne Prüfung schickte die Brücke Stände mit der alten Zeit, Spiegel verschöbe die Scheiben um die Verspätung und hielte die richtige Uhr der Anlage für falsch. Deshalb misst die Brücke ihre Uhr mit jedem Heartbeat an `serverTime` von Spiegel (Mitte der Anfrage, unsicher um die halbe Umlaufzeit). Ungeprüft oder mehr als 30 s daneben, hält sie Stände und Uhrabweichung der Anlage zurück und meldet `clock`; nichts geht verloren, sie liest danach neu. Spiegel lehnt zusätzlich Beobachtungen ab, die mehr als 15 min vor der Empfangszeit liegen (`past`). Die Brücke stellt ihre Uhr nicht selbst und nimmt nie `NOW()` der Anlage als Maßstab (SF-29: die kann selbst falsch gehen); NTP bleibt Voraussetzung. Liegt die Uhr vor dem Beginn des Zertifikats, scheitert TLS mit dem Code `tls-time`, nach seinem Ende mit `tls-expired`. Verworfen: die Zeit von Spiegel übernehmen (letzte `serverTime` plus monotone Zeit); das hielte die Brücke auch ohne NTP am Laufen, änderte aber die Bedeutung jeder Zeit im Vertrag und hinge am monotonen Takt, der unter Linux im Ruhezustand steht. Schusszeiten kommen ohnehin von Meyton.
 - **Status in Spiegel:** „aus, zuletzt online Di 22:14“ ist der Normalfall, kein Alarm. Kommt aber ein QR-Scan von einem Abend, an dem die Brücke keinen Kontakt hatte, warnt Spiegel den Admin (SF-56).
 
 ## Was sie nie tut
@@ -93,6 +93,7 @@ In Meyton schreiben, einen Port ins Internet öffnen, Daten ohne Zustimmung oder
 | Ablage geleert oder neuer Meyton-Server | Der Fingerabdruck der Quelle ändert sich, oder viele Scheiben fehlen auf einmal: Die Brücke hält Löschmeldungen zurück und meldet einen möglichen Reset; eine neue Epoche eröffnet sie nicht, Spiegel zeigt dem Admin einen Hinweis (SF-23) |
 | Abfrage scheitert oder liefert nichts, etwa bei einer nach dem Stromaus beschädigten Tabelle | nie als Löschung werten; wiederholen, Status „Anlage meldet Fehler“ (SF-24) |
 | Uhr der Anlage falsch | Abweichung im Heartbeat, Ausgleich in der Normalisierung |
+| Uhr der Brücke falsch (Pi vor NTP) | Messung an `serverTime`, Stände und Abweichung zurückgehalten, Status `clock`; Spiegel lehnt alte Beobachtungen ab (SF-79) |
 | Korrektur durch die Standaufsicht | neuer Snapshot, neue Revision |
 | Einzelne Scheibe in Meyton gelöscht | Abgleich der letzten 30 Tage, Markierung „an der Quelle entfernt“, nie Löschen in Spiegel |
 | Meyton-Update ändert das Schema | Die Brücke liest weiter mit allen Spalten und meldet die Version; Spiegel bekommt bei Bedarf eine neue Adapter-Version (SF-25) |
@@ -135,7 +136,8 @@ diesen Zahlen:
   die Scheibe jede Runde neu. Nur-Lebenszeichen höchstens alle 30 s. `Retry-After` bei 429 und 503, 413 teilt den
   Stapel, 401 beendet den Lauf (neu koppeln).
 - **Heartbeat** jede Minute mit Status, Rückstau, Uhrabweichung der Anlage (`NOW(3)`), zurückgehaltenen Scheiben und
-  Fingerabdruck; ein möglicher Reset wird gemeldet, eine neue Epoche eröffnet die Brücke nicht von selbst.
+  Fingerabdruck; ein möglicher Reset wird gemeldet, eine neue Epoche eröffnet die Brücke nicht von selbst. Die Antwort
+  trägt `serverTime`: Daran misst die Brücke ihre eigene Uhr (SF-79, Status `clock`, Zustand im Admin, keine Aufgabe).
 - **Nachholen beim Start** (SF-55): ab einem Tag vor dem Wasserstand, den Spiegel meldet, in der Zone der Anlage;
   gelesen wird das erst, wenn 20 Minuten nichts läuft (SF-52). Damit ist der letzte Abend samt späten Korrekturen beim
   nächsten Start abgeglichen. Was Spiegel schon hat, kommt als „unverändert“ zurück.

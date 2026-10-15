@@ -36,7 +36,12 @@ SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
   Vektoren des Sportpass-Hashes aus Python (`test-vectors/sportpass-v1.json`). Additiv ergänzt:
   `blocked[].epoch` im Zustand (optional, Spiegel schickt es immer): Eine Sperre gilt nur in ihrer Epoche (SF-23);
   `history` im Zustand (offene Aufträge zum Nachladen, Id und Hash) und `historyDone` im Heartbeat (nur Ids), beide
-  optional.
+  optional; Status `clock`, Ergebnis `past`, `RETRY_OUTCOMES` und `BRIDGE_CLOCK_TOLERANCE_MS` (SF-79). Der Vektor
+  `test-vectors/api-v1.json` (von Hand aus der Spezifikation) hält Endgültigkeit, Status und Schwelle für TypeScript und
+  Go fest. Spielarten eines Beispiels heißen `<schema>.<art>.json` (`heartbeat.clock.json`). Additiv heißt hier nicht
+  „in jeder Mischung verlustfrei“: `clock` braucht zuerst den neuen Spiegel (ein alter lehnt den Heartbeat ab, die
+  Brücke misst dann ungeprüft weiter), ein verlustfreies `past` zuerst die neue Brücke (eine alte hält es für endgültig
+  und holt den Stand erst beim nächsten Start nach).
 - **Annehmen nur über `parseSnapshot`/`parseSnapshotBatch`**, nie direkt über `snapshotV1`: Davor
   liegen Versionsprüfung und das Verbot von `__proto__` (Zod verwirft den Schlüssel still), danach die
   Prüfsumme. Längen zählen in UTF-16-Codeeinheiten (Zod), nicht in Codepoints (JSON-Schema).

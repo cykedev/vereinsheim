@@ -66,21 +66,37 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   (`ssmdb2.Code`, nie `err.Error()` des Treibers), Snapshots als `Summary`; `--json` ist für die Prüfung vor Ort und
   gibt die vollen Daten aus. Der Replay-Test sucht die Namen der Fälle in der Ausgabe.
 - **Erst bestätigt ist gesendet:** `Watcher.Delivered` nach einem endgültigen Ergebnis von Spiegel (alle außer
-  `future` und `epoch-unconfirmed`) oder wenn der Filter die Scheibe zurückhält. Bis dahin wartet sie und wird jede
-  Runde neu gelesen; nach einem gescheiterten Upload geht hinaus, was dann in der Ablage steht (keine Warteschlange).
+  `api.RetryOutcomes`: `future`, `epoch-unconfirmed`, `past`) oder wenn der Filter die Scheibe zurückhält. Bis dahin
+  wartet sie und wird jede Runde neu gelesen; nach einem gescheiterten Upload geht hinaus, was dann in der Ablage steht
+  (keine Warteschlange).
   Ein Stand, der sich vom bestätigten nur im Lebenszeichen unterscheidet, höchstens alle 30 s (`LifesignEvery`).
 - **Filter wie Spiegel** (`internal/filter`): dieselben Regeln wie `ingest.ts` und `hasHeldShot` (Zustimmung über den
   Hash aus `GET /state`, `Wertung` 0, 5, 10 oder unlesbar hält die ganze Scheibe, Sperre derselben ID bis 30 Tage um den
   Beginn). Ändert sich eine Regel in Spiegel, hier mitziehen. Ohne Zustand lädt die Brücke nichts hoch (SF-38); eine neue
   Zustimmung oder bestätigte Epoche schickt, was noch im Speicher ist (`Resend`).
-- **Antworten:** 429/503 `Retry-After` abwarten (höchstens 10 min), 413 teilen (nach einer Pause nicht weiter), 401
-  beendet (`ErrUnauthorized`, Exit 3), 400 verwirft nur die in `issues` genannten Snapshots (`snapshots[i]`), Netz und
-  5xx mit Pause 5 s bis 60 s. Vor dem Stapel prüft `contract.Validate` jeden Snapshot. Keine Weiterleitungen (das Token
-  bliebe im Kopf). Je Stapel eine Zeile `batch` mit den Ergebnissen als Zahlen.
+- **Antworten:** `future` und `past` pausieren 1 min, `past` macht die eigene Uhr ungeprüft. 429/503 `Retry-After`
+  abwarten (höchstens 10 min; danach liest die Brücke neu, kein alter Stand, Spiegel nimmt bis 15 min Verzug), 413
+  teilen (nach einer Pause nicht weiter), 401 beendet (`ErrUnauthorized`, Exit 3), 400 verwirft nur die in `issues`
+  genannten Snapshots (`snapshots[i]`), Netz und 5xx mit Pause 5 s bis 60 s. Vor dem Stapel prüft `contract.Validate`
+  jeden Snapshot. Keine Weiterleitungen (das Token bliebe im Kopf). Je Stapel eine Zeile `batch` mit den Ergebnissen als
+  Zahlen.
 - **Zustand:** nach einem Fehler erst nach Pause (5 s bis 60 s oder `Retry-After`) neu fragen; älter als eine Stunde, lädt
   die Brücke nichts hoch (Zustimmungen könnten widerrufen sein). Sperren gelten nur in ihrer Epoche (`blocked[].epoch`).
 - **Uhr der Anlage** gemessen neben `NOW(3)` (Mitte der Runde); über zehn Jahre daneben (Uhr auf 2000) wird nicht
   gemeldet, sonst lehnte Spiegel jeden Heartbeat ab.
+- **Eigene Uhr** (SF-79): Jeder Heartbeat
+  misst sie an `serverTime` aus der Antwort (Mitte zwischen Senden und Antwort, `sentAt` ist der Zeitpunkt des Sendens).
+  Unsicher um die halbe Umlaufzeit: Sie stimmt, wenn auch der ungünstigste Fall in `ClockTolerance` liegt (30 s, gleich
+  `BRIDGE_CLOCK_TOLERANCE_MS` und dem Vektor `test-vectors/api-v1.json`), geht falsch, wenn auch der günstigste daneben
+  liegt, sonst `clock-unmeasured` und der Zustand bleibt. Ungeprüft (beim Start, nach `past`, nach einem mit 400
+  abgelehnten Heartbeat bei falscher Uhr: ein älterer Spiegel kennt `clock` nicht) oder falsch: `Watcher.SetHold` (liest
+  weiter, gibt nichts heraus, Folgenummer unberührt), kein Upload, `sourceClockOffsetMs` null, Takt mindestens
+  `QuietEvery` (sonst hielten die Wartenden ihn im Sekundentakt). Falsch gemessen ist Status `clock` (nach `db-*`, vor
+  `delayed`), Log `clock-wrong seconds` (negativ: nach) und `clock-ok`. Wechselt der Zustand, verfällt die Uhrabweichung
+  der Anlage (gegen die alte Uhr gemessen). Abstände im Betrieb misst Go monoton; die Tests haben keine monotone Uhr und
+  setzen bei Rücksprüngen `lastHeartbeat` (Kommentar in `TestClockAheadHolds`). TLS: Uhr vor dem Beginn des Zertifikats
+  `tls-time`, nach seinem Ende `tls-expired`. Offen: `runStartedAt` bleibt nach einer falschen Uhr beim Start zurück
+  ([[spiegel-roadmap]], „Offene Einzelpunkte“).
 - **Geheimnisse:** `--dsn` hat keine Vorgabe aus der Umgebung (die stünde sonst in der Hilfe); die Umgebung gilt erst
   nach dem Lesen der Optionen. `pair` unter Windows gesperrt, bis die Konfiguration dort eine ACL bekommt (0600 gilt
   nicht).

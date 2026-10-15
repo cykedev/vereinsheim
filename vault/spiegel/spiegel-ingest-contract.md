@@ -182,14 +182,18 @@ Beispiele unter `examples/api-v1/` (Dateiname = Schema, nur ergänzen). Anfragen
 | Schema | Inhalt |
 |---|---|
 | `pairRequestV1` / `pairResponseV1` | Kopplungscode (zehn Zeichen aus Crockfords Base32, „ABCDE-FGHJK“, Trenner und Schreibweise egal, `normalizePairingCode`), Name, Version → Brücken-Id, Token `spgl_` + 43 Zeichen Base64url, Anlage |
-| `heartbeatV1` / `heartbeatResponseV1` | Version, Beginn des Laufs, Sendezeit, Status, Rückstau, letzter DB-Kontakt, Dauer der Abfragen, Uhrabweichung der Anlage (Anlage minus Brücke), Zurückgehaltenes je Anzeigeart, Fingerabdruck der Quelle ohne Personen, additiv `historyDone` (erledigte Aufträge zum Nachladen als `{ id, since }`) → Serverzeit |
+| `heartbeatV1` / `heartbeatResponseV1` | Version, Beginn des Laufs, Sendezeit, Status, Rückstau, letzter DB-Kontakt, Dauer der Abfragen, Uhrabweichung der Anlage (Anlage minus Brücke), Zurückgehaltenes je Anzeigeart, Fingerabdruck der Quelle ohne Personen, additiv `historyDone` (erledigte Aufträge zum Nachladen als `{ id, since }`) und der Status `clock` (die Uhr der Brücke lag mehr als `BRIDGE_CLOCK_TOLERANCE_MS` = 30 s neben `serverTime`, SF-79) → `serverTime`, an der die Brücke ihre Uhr misst |
 | `stateResponseV1` | Anlage, bestätigte Epoche, gehashte SportpassIDs mit Zustimmung und ihr Salz, Grabsteine und Löschsperren (ScheibenID und Beginn), Wasserstand; additiv `history` (offene Aufträge zum Nachladen: Id, `since` und Hash; ein neues `since` derselben Id ist ein neuer Auftrag; solange einer offen ist, alle Sperren statt der jüngsten 60 Tage). Eine Brücke ohne Nachladen meldet nie „erledigt“: Der Auftrag bleibt offen, alle Sperren gehen weiter hinaus, die Übersicht sagt „lädt nach“ |
-| `snapshotsResponseV1` | Ergebnis je Snapshot in der Folge des Stapels (`SNAPSHOT_OUTCOMES`, bei `discarded` ein Grund) |
+| `snapshotsResponseV1` | Ergebnis je Snapshot in der Folge des Stapels (`SNAPSHOT_OUTCOMES`, bei `discarded` ein Grund); additiv `past` (Beobachtung weit vor der Empfangszeit, SF-79). Nicht endgültig sind `RETRY_OUTCOMES` (`future`, `epoch-unconfirmed`, `past`): Die Brücke schickt den Stand später noch einmal |
 | `errorResponseV1` | fester Code (`API_ERROR_CODES`), fester Satz, `retryAfterSeconds`, bei `invalid` die Fehler des Vertrags |
 
 **Gehashte SportpassID** (`sportpassHash`, Export `./sportpass`): SHA-256 (Hex, klein) über
 `spiegel-sportpass-v1:<salt>:<SportpassID dezimal ohne führende Nullen>`, das Salz je Anlage aus `state`. Testvektoren aus
 einer unabhängigen Python-Rechnung (`test-vectors/sportpass-v1.json`). Der Hash hält die Nummern aus Logs und
 Mitschnitten; wer Liste und Salz hat, kann zwölf Stellen durchprobieren.
+
+**Vektor der API** (`test-vectors/api-v1.json`): von Hand aus der Spezifikation, keine Rechnung. Welche Ergebnisse
+endgültig sind, welche Status ein Heartbeat tragen darf und die Schwelle für die Uhr der Brücke. TypeScript prüft ihn
+gegen die Exporte, Go gegen `Result.Final`, die Status des Runners und `ClockTolerance`.
 
 **Noch nicht im Vertrag:** Aufträge (`commands`, SP-1.5, SP-1.7 b).

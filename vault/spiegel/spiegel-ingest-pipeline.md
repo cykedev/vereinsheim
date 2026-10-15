@@ -27,7 +27,10 @@ und eingefrorene Beispiele der Anfragen und Antworten liegen im Vertrag (`@verei
 | `GET /api/ingest/v1/commands`, `POST …/commands/<id>/result` | Aufträge (Scheibe per ID, Fundbüro, Diagnose): offen (SP-1.5, SP-1.7); das Nachladen läuft über `state` und `heartbeat` |
 
 Ergebnis je Snapshot: `stored`, `unchanged`, `lifesign` (nur das Lebenszeichen bewegt), `stale`, `future`,
-`discarded` (mit Grund `no-consent`, `blocked`, `hidden`), `quarantined`, `epoch-unconfirmed`. Fehler haben feste Codes
+`discarded` (mit Grund `no-consent`, `blocked`, `hidden`), `quarantined`, `epoch-unconfirmed`,
+`past` (Beobachtung mehr als 15 min vor der Empfangszeit, die Uhr der Brücke geht nach, SF-79; nichts geändert, die
+Brücke schickt später neu). Aus einem Heartbeat, dessen `sentAt` mehr als 60 s neben der Empfangszeit liegt, nimmt
+Spiegel keine Uhrmessung der Anlage. Fehler haben feste Codes
 und feste Sätze (`unauthorized`, `rate-limited`, `busy`, `too-large`, `invalid`, `invalid-code`, …), bei `invalid` die
 Fehler des Vertrags ohne Inhalt.
 
