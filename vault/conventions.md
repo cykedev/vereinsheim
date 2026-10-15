@@ -276,7 +276,8 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   (Klassen-Strategie); jede Farbe, die wechselt, steht in beiden Blöcken (Test `tokens.test.ts`). Die
   Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich.
 - Auch in Design 2 **keine Palette-Klassen und keine `dark:`-Varianten**: Farbe kommt aus den Tokens.
-- **Allgemeine Bausteine** unter `@vereinsheim/ui/design2/*` (Segment-Umschalter, Schalter-Chip, weicher Kreis
+- **Allgemeine Bausteine** unter `@vereinsheim/ui/design2/*` (Segment-Umschalter, mit `wrap` mehrzeilig für viele oder lange
+  Möglichkeiten wie Listen und Merkmale, Schalter-Chip, weicher Kreis
   `round-toggle` für eine Einstellung neben einer großen Zahl oder in einer Filterzeile: 32 px, innen die Kartenfläche, Rahmen
   `line-strong`, Gold nur für das Hervorgehobene); was
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, mit Markup-Tests; die Bedienung im Browser prüft
