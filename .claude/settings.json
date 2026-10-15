@@ -71,8 +71,7 @@
       "mcp__memory__backlinks",
       "mcp__memory__traverse",
       "Bash(node .claude/vault-lint.mjs)",
-      "Bash(node .claude/check-bindings.mjs)",
-      "Bash(node .claude/doc.mjs:*)"
+      "Bash(node .claude/check-bindings.mjs)"
     ]
   }
 }
