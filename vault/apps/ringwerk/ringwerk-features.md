@@ -219,7 +219,8 @@ beide Formate in `lib/playoffs/actions/seeding.test.ts`.
 - Wettbewerb muss ACTIVE sein
 - Playoffs noch nicht gestartet
 - Mindestens 4 aktive Teilnehmer
-- Keine PENDING-Paarungen in der Gruppenphase
+- Keine offenen Paarungen in der Gruppenphase; Paarungen mit Zurückgezogenen zählen nicht (`countOpenGroupMatchups`,
+  auch für den Start-Knopf auf der Playoff-Seite)
 
 #### Best-of-N (VF & HF)
 

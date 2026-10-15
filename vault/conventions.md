@@ -219,6 +219,12 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   testweise vertauschen) belegen, dass die Tests wirklich fallen (Beispiel:
   `apps/ringwerk/src/lib/playoffs/actions/seeding.test.ts`).
 
+- **Mocks für Abfragen filtern nach der Bedingung, um die es geht**: Liefert das Mock einer Abfrage mit `where` einen
+  festen Wert (etwa `count` → 0), sieht kein Test, welche Zeilen der Code mitzählt. Das Mock filtert deshalb wie Prisma
+  nach dieser Bedingung (z.B. `status`), und die Fixture enthält auch die Zeilen, die der Code ausschließen soll. So
+  blieb unbemerkt, dass Ringwerk die offenen Paarungen eines Zurückgezogenen mitzählte und den Playoff-Start sperrte
+  (Beispiel: `byStatus` in `apps/ringwerk/src/lib/playoffs/actions/seeding.test.ts`).
+
 - **Datenlage vor der Sichtprüfung abgleichen**: Bevor eine Änderung im Browser als geprüft gilt,
   die vorhandenen Dev-Daten gegen die zu prüfenden Zustände halten (z.B. „abgeschlossener
   Wettbewerb", „Liga mit Ergebnissen", „mehr Zeilen als die Vorschau"). Was die Daten nicht

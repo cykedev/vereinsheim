@@ -62,11 +62,10 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
 
 **Fachlich, mit der Sportleitung zu klären**
 
-- **Rückzug sperrt den Playoff-Start:** `start.ts` zählt alle offenen Paarungen, auch die mit Zurückgezogenen; für diese
-  gibt es keine Ergebniseingabe. Eine Liga mit einem Rückzug während der Saison kann so nie Playoffs starten. Beim
-  Zählen nur Paarungen ohne zurückgezogene Teilnehmer berücksichtigen, mit Test.
-- **Gruppenergebnisse bleiben nach dem Playoff-Start änderbar** (`saveBestOfDuel`, `saveMatchResult` ohne Sperre); die
-  nächste Runde wird dann aus der geänderten Tabelle gesetzt. Sperren wie Rückzug und Spielplan, oder bewusst zulassen
+- **Gruppenergebnisse sind nach dem Playoff-Start nur in der Oberfläche gesperrt:** `ScheduleView` blendet Erfassung und
+  Korrektur aus, die Actions `saveMatchResult`, `saveBestOfDuel`, `saveStechschuss` und `deleteLatestBestOfDuel` prüfen
+  den Start nicht. Ein direkter Aufruf ändert die Tabelle, und die nächste Runde wird aus ihr gesetzt. Die Sperre auch
+  auf dem Server setzen wie bei Rückzug und Spielplan, oder Korrekturen bewusst zulassen
   ([[phase-locking-and-editability]]).
 - **Playoff-Grenze trennt einen geteilten Platz:** Platz 4 und 5 zeigen beide „4“, aber nur einer kommt weiter.
   Vorschlag: beim Start warnen, wenn der letzte und der erste nicht qualifizierte Platz gleich sind.
