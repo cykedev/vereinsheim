@@ -34,7 +34,7 @@ import {
   type PeriodState,
 } from "@vereinsheim/shot-ui/period/state"
 import { VolumeChart } from "@vereinsheim/shot-ui/period/VolumeChart"
-import { CalendarChart } from "@vereinsheim/shot-ui/period/CalendarChart"
+import { CalendarBrowser } from "@vereinsheim/shot-ui/period/CalendarChart"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
@@ -324,14 +324,22 @@ export function ProgressScreen({
                 )}
               </ChartSlot>
             ) : (
-              <CalendarChart
-                from={model.calendar.from}
-                to={model.calendar.to}
-                days={model.calendar.days}
+              <CalendarBrowser
+                // ein neuer Zeitraum beginnt wieder an seinem Ende (Rückmeldung 8)
+                key={`${state.family}:${state.kind}:${model.calendar.from}:${model.calendar.to}`}
+                period={model.calendar}
+                today={model.calendar.today}
+                days={model.calendar.all}
                 dayRoute={(day) => {
                   // an den Abend, ohne die Wahl des Verlaufs: sonst wäre in der Liste eine fremde Scheibe markiert (Review)
                   const { pick: _pick, ...list } = listFromProgress(here)
-                  return { ...list, evening: day }
+                  // ein Tag außerhalb des Zeitraums (geblättert) steht nur in der Liste ohne Zeitraum
+                  const inPeriod = day >= model.calendar.from && day <= model.calendar.to
+                  return {
+                    ...list,
+                    query: inPeriod ? list.query : { ...list.query, range: null },
+                    evening: day,
+                  }
                 }}
               />
             )}

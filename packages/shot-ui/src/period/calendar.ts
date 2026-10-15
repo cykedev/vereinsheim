@@ -177,7 +177,8 @@ export function eveningDay(startedAtMs: number, timeZone: string): string {
   return formatIsoDate(new Date(zonedDayStartMs(day, timeZone) - 1), timeZone)
 }
 
-const addDays = (iso: string, days: number) =>
+/** ein ISO-Tag plus `days` Tage, auf Tagen ohne Zeitzone */
+export const addDays = (iso: string, days: number) =>
   new Date(Date.parse(`${iso}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10)
 
 /**

@@ -962,6 +962,50 @@ async function progress(page: Page) {
     await page.goto(`${BASE}/progress`)
   }
 
+  // Kalender blätterbar (User, 15. Oktober 2026: „Kalender ‚blätterbar‘ für ältere einträge“): in den letzten 90 Tagen
+  // zeigt „früher“ ältere Trainingstage; ein solcher Tag führt in die Liste ohne Zeitraum an seinen Abend
+  await page.click(
+    `$$('[aria-label="Umfang zeigen als"] button').find((b) => txt(b) === "Kalender")`,
+    { settle: 300 }
+  )
+  const shownWindow = `({ window: $("[data-calendar-window]")?.dataset.calendarWindow ?? "",
+    days: $$("[data-day]").map((d) => d.dataset.day),
+    earlier: $("[data-calendar-earlier]")?.disabled === false,
+    later: $("[data-calendar-later]")?.disabled === false })`
+  type Shown = { window: string; days: string[]; earlier: boolean; later: boolean }
+  const initial = await page.ev<Shown>(shownWindow)
+  let older = initial
+  for (let i = 0; i < 8 && older.earlier; i++) {
+    await page.click(`$("[data-calendar-earlier]")`, { settle: 200 })
+    older = await page.ev<Shown>(shownWindow)
+    if (older.days.length) break
+  }
+  const [from] = initial.window.split("..")
+  const [olderFrom, olderTo] = older.window.split("..")
+  check(
+    "Kalender: anfangs bis heute, „früher“ zeigt ältere Trainingstage im Fenster davor, „später“ geht wieder",
+    !initial.later &&
+      initial.earlier &&
+      olderTo < from &&
+      older.later &&
+      older.days.length > 0 &&
+      older.days.every((d) => d >= olderFrom && d <= olderTo),
+    { initial: initial.window, older: older.window, days: older.days.length }
+  )
+  const oldDay = older.days.at(-1)
+  if (oldDay) {
+    await page.click(`$('[data-day="${oldDay}"]')`, { settle: 600 })
+    await page.waitFor(`location.pathname === "/cards"`, 10_000)
+    await page.wait(500)
+    check(
+      "Kalender: ein älterer Tag öffnet die Liste ohne Zeitraum an diesem Abend",
+      await page.ev<boolean>(`location.hash === "#${oldDay}" && !location.search.includes("range=") &&
+        $$('[data-marked]').length > 0`),
+      await page.ev<string>(`location.pathname + location.search + location.hash`)
+    )
+    await page.goto(`${BASE}/progress`)
+  }
+
   // Blatt „Filter“: nicht übernommene freie Tage gelten beim nächsten Öffnen nicht (Review)
   const dates = `$$('[data-period-picker] input[type="date"]')`
   const setDate = (i: number, value: string) =>

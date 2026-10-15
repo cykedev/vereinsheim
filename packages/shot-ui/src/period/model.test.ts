@@ -306,6 +306,27 @@ describe("Darstellung, Monate, Wochen, Ablesung", () => {
     ])
   })
 
+  it("Kalender kennt alle Trainingstage der Familie in der Art, auch vor dem Zeitraum, und heute (Rückmeldung 8)", () => {
+    const match = periodCard("alt-w", 150, [100], { kind: "competition" })
+    const { calendar } = model([...THREE, match])
+    expect(calendar.today).toBe("2026-09-30")
+    // „alt“ liegt 200 Tage zurück (14. März), außerhalb der letzten 90 Tage
+    expect(calendar.days.map((d) => d.key)).toEqual(["2026-09-27", "2026-09-28", "2026-09-29"])
+    expect(calendar.all).toEqual([
+      { key: "2026-03-14", shots: 2, cards: 1, competition: 0 },
+      { key: "2026-05-03", shots: 1, cards: 1, competition: 1 },
+      ...calendar.days,
+    ])
+    // nur die gewählte Art, wie der Zeitraum
+    const training = model([...THREE, match], { kind: "training" }).calendar
+    expect(training.all.map((d) => d.key)).toEqual([
+      "2026-03-14",
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+    ])
+  })
+
   it("Kalender und Wochen je Abend: eine Scheibe vor 4 Uhr am ersten Tag bleibt sichtbar, Montag 0:30 zählt zum Sonntag (Review)", () => {
     // freier Zeitraum September; die erste Scheibe am 1. September um 1:30 Uhr Ortszeit gehört zum Abend des 31. August
     const early = periodCard("früh", 0, [100], { startedAtMs: Date.UTC(2026, 7, 31, 23, 30) })

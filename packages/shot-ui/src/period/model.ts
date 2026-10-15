@@ -137,7 +137,11 @@ export interface PeriodModel {
   /** jede ISO-Woche im Zeitraum, auch ohne Scheibe */
   weeks: (VolumeBucket & { label: string })[]
   /** Trainingstage für den Kalender (T7): erster und letzter Tag des Zeitraums (höchstens heute), Tage mit Scheiben */
-  calendar: { from: string; to: string; days: CalendarDay[] }
+  /**
+   * Kalender: Tage des Zeitraums (`from` bis `to`, `days` in ihm), dazu alle Trainingstage der Familie in der Art (`all`)
+   * und heute, zum Blättern (Rückmeldung 8)
+   */
+  calendar: { from: string; to: string; days: CalendarDay[]; all: CalendarDay[]; today: string }
   /**
    * die neueste Scheibe im Zeitraum mit Ø je Schuss (die der Ablesung ohne Wahl); null ohne. Ihren Abstand zum Schnitt
    * der fünf davor tragen `deltas` (U2, D2: ein Bezug für eine Scheibe)
@@ -268,6 +272,7 @@ function calendarOf(
   range: DateRange,
   nowMs: number,
   cards: readonly ProjectedCard[],
+  family: readonly ProjectedCard[],
   timeZone: string
 ): PeriodModel["calendar"] {
   const days = calendarDays(cards, timeZone)
@@ -276,6 +281,8 @@ function calendarOf(
     from: days[0] && days[0].key < first ? days[0].key : first,
     to: formatIsoDate(new Date(Math.min(range.toMs, nowMs + 1) - 1), timeZone),
     days,
+    all: calendarDays(family, timeZone),
+    today: formatIsoDate(new Date(nowMs), timeZone),
   }
 }
 
@@ -330,7 +337,7 @@ export function periodModel(input: {
   const volume = new Map(
     projectedVolume(cards, (ms) => isoWeekKey(evening(ms)), evening).map((w) => [w.key, w])
   )
-  const calendar = calendarOf(range, nowMs, cards, timeZone)
+  const calendar = calendarOf(range, nowMs, cards, family, timeZone)
   const weeks = weeksBetween(calendar.from, calendar.to).map(({ key }) => ({
     ...(volume.get(key) ?? { key, shots: 0, cards: 0, days: 0 }),
     label: weekLabel(key),
