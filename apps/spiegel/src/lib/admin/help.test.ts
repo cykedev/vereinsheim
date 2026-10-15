@@ -34,6 +34,16 @@ describe("Erklärungen im Admin", () => {
     expect(ADMIN_HELP.pairingCode.title).toBe("Code für die Brücke")
   })
 
+  it("„Liste“ statt „Rangliste“ (Rückmeldung 6, Textbuch „Nach Teil 1 geändert“)", () => {
+    expect(ADMIN_HELP.ranking).toEqual({
+      title: "Liste",
+      text: "Meyton ordnet jede Scheibe einer Liste des Vereins zu, etwa „Training-LP“ oder „RWK_…“. Hier legst du fest, welche als Wettkampf zählen. Alle anderen zählen so, wie Meyton sie vermerkt. Meist ist das Training.",
+    })
+    // die Leitplanke hält das alte Wort fern
+    for (const old of ["Rangliste", "Ranglisten", "rangliste"]) expect(old).toMatch(OLD_WORDS)
+    expect("Liste").not.toMatch(OLD_WORDS)
+  })
+
   it("Schreibregeln: keine Semikolons, keine alten Wörter", () => {
     for (const { title, text } of Object.values(ADMIN_HELP))
       for (const value of [title, text]) expect(value).not.toMatch(OLD_WORDS)

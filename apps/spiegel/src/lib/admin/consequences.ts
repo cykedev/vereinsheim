@@ -8,11 +8,12 @@
 // zulassen, Spiegel holt). Ein Test hält die alten Wörter fern (`consequences.test.ts`, „Schreibregeln“).
 
 /**
- * Was in keinem sichtbaren Text mehr stehen darf (P2f, D5): Semikolons und die alten Wörter des Codes. Die Tests der
- * Dialoge, Erklärungen, Zustände und der Übersicht prüfen dagegen.
+ * Was in keinem sichtbaren Text mehr stehen darf (P2f, D5): Semikolons und die alten Wörter des Codes, seit dem ersten
+ * Test auch „Rangliste“ (User, 15. Oktober 2026: „Ranglisten einfach ‚Listen‘ nennen“). Die Tests der Dialoge,
+ * Erklärungen, Zustände und der Übersicht prüfen dagegen.
  */
 export const OLD_WORDS =
-  /;|SportpassI[Dd]|Sportpass-ID|\bMeldung|\bAblage|[Kk]oppe?l|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|[Ss]perre/
+  /;|SportpassI[Dd]|Sportpass-ID|\bMeldung|\bAblage|[Kk]oppe?l|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|[Ss]perre|[Rr]angliste/
 
 export interface Decision {
   title: string
@@ -161,7 +162,7 @@ const RANKING_WORDS: Record<RankingChoice, { title: string; label: string }> = {
   open: { title: "nicht festlegen", label: "Nicht festlegen" },
 }
 
-/** was mit den Scheiben der Rangliste geschieht, als Ende des Satzes „Diese Scheiben … “, und was mit dem Ergebnis */
+/** was mit den Scheiben der Liste geschieht, als Ende des Satzes „Diese Scheiben … “, und was mit dem Ergebnis */
 const RANKING_HAPPENS: Record<RankingChoice, [string, string]> = {
   competition: [
     "zählen als Wettkampf, in den Scheiben und im Fortschritt.",
@@ -183,7 +184,7 @@ export function rankingKind({
   kind,
 }: {
   ranking: string
-  /** Scheiben in Spiegel mit dieser Rangliste (nicht gelöscht) */
+  /** Scheiben in Spiegel in dieser Liste (nicht gelöscht) */
   cards: number
   kind: RankingChoice
 }): Decision {
@@ -191,10 +192,10 @@ export function rankingKind({
   return {
     title: `„${ranking}“ ${RANKING_WORDS[kind].title}?`,
     about: cards
-      ? `In Spiegel ${cards === 1 ? "gehört" : "gehören"} ${scheiben(cards)} zur Rangliste „${ranking}“.`
-      : `Noch keine Scheibe in Spiegel gehört zur Rangliste „${ranking}“.`,
+      ? `In Spiegel ${cards === 1 ? "gehört" : "gehören"} ${scheiben(cards)} zur Liste „${ranking}“.`
+      : `Noch keine Scheibe in Spiegel gehört zur Liste „${ranking}“.`,
     happens: [
-      `${cards ? (cards === 1 ? "Diese Scheibe" : `Diese ${cards} Scheiben`) : "Ihre Scheiben"} und alle neuen dieser Rangliste ${counts}`,
+      `${cards ? (cards === 1 ? "Diese Scheibe" : `Diese ${cards} Scheiben`) : "Ihre Scheiben"} und alle neuen dieser Liste ${counts}`,
       scoring,
     ],
     notHappening: [

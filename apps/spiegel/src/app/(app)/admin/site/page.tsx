@@ -11,7 +11,7 @@ import { siteOverview } from "@/lib/admin/site"
 
 export const metadata: Metadata = { title: "Anlage" }
 
-// Anlage und Brücke (Admin, SP-1.6 b, P2c): Name und Zeitzone, gekoppelte Brücken, „Brücke koppeln“, Ranglisten; jede
+// Anlage und Brücke (Admin, SP-1.6 b, P2c): Name und Zeitzone, gekoppelte Brücken, „Brücke koppeln“, Listen; jede
 // Änderung mit Folgen fragt (`DecisionDialog`)
 export default async function AdminSiteRoute() {
   await requireAdmin()
@@ -50,11 +50,11 @@ export default async function AdminSiteRoute() {
             <PairBridgeForm />
             <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
               <h2 className="flex items-center gap-1 text-[15px] font-semibold">
-                Ranglisten <AdminHelp id="ranking" />
+                Listen <AdminHelp id="ranking" />
               </h2>
               <p className="text-sm text-muted-foreground">
-                In Meyton gehört jede Scheibe zu einer Rangliste. Leg hier fest, welche Ranglisten
-                als Wettkampf zählen. Alle anderen zählen so, wie Meyton sie vermerkt. Meist ist das
+                In Meyton gehört jede Scheibe zu einer Liste. Leg hier fest, welche Listen als
+                Wettkampf zählen. Alle anderen zählen so, wie Meyton sie vermerkt. Meist ist das
                 Training.
               </p>
               {overview.rankings.length ? (
@@ -65,7 +65,7 @@ export default async function AdminSiteRoute() {
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Die Ranglisten erscheinen hier, sobald die ersten Scheiben da sind.
+                  Die Listen erscheinen hier, sobald die ersten Scheiben da sind.
                 </p>
               )}
             </section>

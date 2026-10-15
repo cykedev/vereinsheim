@@ -19,8 +19,8 @@ export const ADMIN_HELP = {
     text: "Wer schießt, trägt im Profil die eigene Sportpassnummer ein und stimmt zu, dass die eigenen Scheiben automatisch in Spiegel kommen. Du prüfst einmal, ob die Nummer zu dieser Person gehört. Danach bestätigt die Person selbst die jüngste Scheibe.",
   },
   ranking: {
-    title: "Rangliste",
-    text: "Meyton ordnet jede Scheibe einer Rangliste des Vereins zu, etwa „Training-LP“ oder „RWK_…“. Hier legst du fest, welche als Wettkampf zählen. Alle anderen zählen so, wie Meyton sie vermerkt. Meist ist das Training.",
+    title: "Liste",
+    text: "Meyton ordnet jede Scheibe einer Liste des Vereins zu, etwa „Training-LP“ oder „RWK_…“. Hier legst du fest, welche als Wettkampf zählen. Alle anderen zählen so, wie Meyton sie vermerkt. Meist ist das Training.",
   },
   timeZone: {
     title: "Zeitzone der Anlage",

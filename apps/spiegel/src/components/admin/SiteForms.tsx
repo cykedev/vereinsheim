@@ -226,8 +226,8 @@ const RANKING_OPTIONS = [
 ] as const
 
 /**
- * eine Rangliste mit ihrer Art; gespeichert erst nach dem Dialog mit den Folgen (P2c, D7), weil eine Wahl alle
- * Scheiben der Rangliste umstellt
+ * eine Liste aus Meyton (`Ranking`) mit ihrer Art; gespeichert erst nach dem Dialog mit den Folgen (P2c, D7), weil eine Wahl alle
+ * Scheiben der Liste umstellt
  */
 export function RankingItem({ ranking }: { ranking: RankingRow }) {
   const router = useRouter()
@@ -253,7 +253,7 @@ export function RankingItem({ ranking }: { ranking: RankingRow }) {
         )}
       </span>
       <Segmented
-        label={`Art der Rangliste ${ranking.name}`}
+        label={`Art der Liste ${ranking.name}`}
         options={RANKING_OPTIONS}
         // während gefragt und gespeichert wird, steht die Wahl da; Abbrechen zeigt wieder die gespeicherte (Review)
         value={asking || pending ? wanted : saved}

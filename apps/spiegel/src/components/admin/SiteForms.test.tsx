@@ -16,7 +16,7 @@ vi.mock("@/lib/admin/site-actions", () => ({
 const { BridgeItem, PairBridgeForm, RankingItem, SiteForm } = await import("./SiteForms")
 
 describe("Anlage und Brücke (Markup)", () => {
-  it("Rangliste: „Nicht festgelegt“, Training, Wettkampf; keine sofortige Speicherung im Markup", () => {
+  it("Liste: „Nicht festgelegt“, Training, Wettkampf; keine sofortige Speicherung im Markup", () => {
     const html = renderToStaticMarkup(
       createElement(RankingItem, {
         ranking: { id: 1, name: "RWK_LP", kind: null, cards: 23 },
@@ -24,6 +24,7 @@ describe("Anlage und Brücke (Markup)", () => {
     )
     expect(html).toContain(">Nicht festgelegt<")
     expect(html).toContain("23 Scheiben")
+    expect(html).toContain('aria-label="Art der Liste RWK_LP"')
   })
 
   it("Brücke mit „Trennen“, Verbinden und Anlage mit „?“", () => {
@@ -67,6 +68,18 @@ describe("Anlage und Brücke (Markup)", () => {
     )
     expect(html).toMatch(/id="timeZone"[^>]*readOnly=""|readOnly=""[^>]*id="timeZone"/)
     expect(html).toContain("Lässt sich nicht mehr ändern, weil schon Scheiben da sind.")
+  })
+
+  it("„Listen“ statt „Ranglisten“ auf der Seite (Rückmeldung 6)", () => {
+    const page = readFileSync(join(__dirname, "../../app/(app)/admin/site/page.tsx"), "utf8")
+    // nur der Text der Seite, ohne Kommentare
+    const text = page.replace(/\/\/.*$/gm, "").replace(/\s+/g, " ")
+    expect(text).not.toMatch(/Rangliste/)
+    expect(text).toContain('Listen <AdminHelp id="ranking" />')
+    expect(text).toContain(
+      "In Meyton gehört jede Scheibe zu einer Liste. Leg hier fest, welche Listen als Wettkampf zählen."
+    )
+    expect(text).toContain("Die Listen erscheinen hier, sobald die ersten Scheiben da sind.")
   })
 
   it("kein „Epoche“ mehr in Seite und Bausteinen (D0)", () => {

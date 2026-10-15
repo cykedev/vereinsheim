@@ -368,7 +368,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Wie deine Scheibe zum Schnitt deiner fünf Scheiben davor passt.",
     what: "Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf Scheiben davor in derselben Disziplin; im Fortschritt zählen dazu nur Scheiben der gewählten Art, und Trainings nur aus Probe nur, wenn sie mitzählen. Die Scheibe selbst zählt nicht mit. Gezählt werden alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.",
-    read: "+0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. In der Grundeinstellung steht dieselbe Zahl in der Liste der Scheiben, auf Start und in der Ablesung im Fortschritt; ein Bezug für eine Scheibe überall.",
+    read: "+0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. In der Grundeinstellung steht dieselbe Zahl unter Scheiben, auf Start und in der Ablesung im Fortschritt; ein Bezug für eine Scheibe überall.",
     caution:
       "Eine Scheibe ist eine Scheibe: Ein Abstand zum Schnitt, der in deinem Formband bleibt, ist normal.",
     minimum: "Ab der zweiten Scheibe; mit weniger als fünf davor über so viele, wie es gibt.",

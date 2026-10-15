@@ -140,7 +140,7 @@ describe("Folgen der Sportpassnummern (Admin, Wortlaut aus dem Textbuch, P2f)", 
   })
 })
 
-describe("Folgen an Brücke und Ranglisten", () => {
+describe("Folgen an Brücke und Listen", () => {
   it("Brücke trennen: sofort, nichts gelöscht, nicht rückgängig", () => {
     const d = bridgeRevoke({ device: "Pi im Schützenhaus" })
     wellFormed(d)
@@ -155,14 +155,14 @@ describe("Folgen an Brücke und Ranglisten", () => {
     })
   })
 
-  it("Rangliste: Scheiben in Spiegel, das Ergebnis kann wechseln, Schüsse nicht", () => {
+  it("Liste: Scheiben in Spiegel, das Ergebnis kann wechseln, Schüsse nicht", () => {
     const d = rankingKind({ ranking: "RWK_LP", cards: 23, kind: "competition" })
     wellFormed(d)
     expect(d).toEqual({
       title: "„RWK_LP“ als Wettkampf zählen?",
-      about: "In Spiegel gehören 23 Scheiben zur Rangliste „RWK_LP“.",
+      about: "In Spiegel gehören 23 Scheiben zur Liste „RWK_LP“.",
       happens: [
-        "Diese 23 Scheiben und alle neuen dieser Rangliste zählen als Wettkampf, in den Scheiben und im Fortschritt.",
+        "Diese 23 Scheiben und alle neuen dieser Liste zählen als Wettkampf, in den Scheiben und im Fortschritt.",
         "Spiegel zeigt das Ergebnis dann so, wie die Disziplin im Wettkampf gewertet wird, etwa in ganzen Ringen statt Zehnteln.",
       ],
       notHappening: [
@@ -176,17 +176,17 @@ describe("Folgen an Brücke und Ranglisten", () => {
     })
     expect(rankingKind({ ranking: "Training-LP", cards: 1, kind: "training" })).toMatchObject({
       title: "„Training-LP“ als Training zählen?",
-      about: "In Spiegel gehört 1 Scheibe zur Rangliste „Training-LP“.",
+      about: "In Spiegel gehört 1 Scheibe zur Liste „Training-LP“.",
       confirmLabel: "Als Training zählen",
     })
     const open = rankingKind({ ranking: "X", cards: 0, kind: "open" })
     expect(open).toMatchObject({
       title: "„X“ nicht festlegen?",
-      about: "Noch keine Scheibe in Spiegel gehört zur Rangliste „X“.",
+      about: "Noch keine Scheibe in Spiegel gehört zur Liste „X“.",
       confirmLabel: "Nicht festlegen",
     })
     expect(open.happens[0]).toBe(
-      "Ihre Scheiben und alle neuen dieser Rangliste zählen dann so, wie Meyton sie vermerkt. Meist ist das Training."
+      "Ihre Scheiben und alle neuen dieser Liste zählen dann so, wie Meyton sie vermerkt. Meist ist das Training."
     )
   })
 })
@@ -383,7 +383,7 @@ describe("Schreibregeln (P2f)", () => {
     ...(["competition", "training", "open"] as const).flatMap((kind) =>
       [0, 23].map(
         (cards) =>
-          [`Rangliste ${kind} ${cards}`, rankingKind({ ranking: "RWK_LP", cards, kind })] as [
+          [`Liste ${kind} ${cards}`, rankingKind({ ranking: "RWK_LP", cards, kind })] as [
             string,
             Decision,
           ]

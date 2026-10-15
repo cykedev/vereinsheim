@@ -453,8 +453,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   und Trainings nur aus Probe nur, wenn sie mitzählen. Die Scheibe selbst zählt nicht mit. Gezählt
   werden alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.
 - *So liest du es:* +0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. In der
-  Grundeinstellung steht dieselbe Zahl in der Liste der Scheiben, auf Start und in der Ablesung im
-  Fortschritt; ein Bezug für eine Scheibe überall.
+  Grundeinstellung steht dieselbe Zahl unter Scheiben, auf Start und in der Ablesung im Fortschritt;
+  ein Bezug für eine Scheibe überall.
 - *Vorsicht:* Eine Scheibe ist eine Scheibe: Ein Abstand zum Schnitt, der in deinem Formband bleibt,
   ist normal.
 - *Mindestzahl:* Ab der zweiten Scheibe; mit weniger als fünf davor über so viele, wie es gibt.
