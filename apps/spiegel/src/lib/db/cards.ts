@@ -6,7 +6,7 @@ import { createHash } from "node:crypto"
 
 import { canonicalize } from "@vereinsheim/ingest-contract/canonical"
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
-import type { MetricShot } from "@vereinsheim/shot-core/metrics"
+import type { CardFlag, MetricShot } from "@vereinsheim/shot-core/metrics"
 import { cardMarks, cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
 
 import {
@@ -79,9 +79,9 @@ export interface CardInput {
  * Merkmale, die an der Scheibe bleiben, auch wenn ein späterer Stand sie nicht mehr zeigt: eine Korrektur bleibt eine
  * Korrektur, und eine Uhr, die einmal falsch ging, kann es wieder (SF-21, SF-73).
  */
-export const STICKY_FLAGS: readonly string[] = ["korrigiert", "uhr-abweichung"]
+export const STICKY_FLAGS: readonly CardFlag[] = ["korrigiert", "uhr-abweichung"]
 /** eine neue Revision nach der ersten: die Standaufsicht hat korrigiert (SF-21) */
-export const FLAG_CORRECTED = "korrigiert"
+export const FLAG_CORRECTED = "korrigiert" satisfies CardFlag
 
 export interface RevisionInput {
   /** die Scheibe; ohne `cardId` über Quelle, ScheibenID und Zyklus gefunden oder neu angelegt */
@@ -254,7 +254,8 @@ function withSticky(
   corrected: boolean
 ): string[] {
   const out = new Set(flags)
-  for (const flag of existing) if (STICKY_FLAGS.includes(flag)) out.add(flag)
+  // gespeichert sind Texte: was nicht dauerhaft ist, fällt hier weg
+  for (const flag of existing) if ((STICKY_FLAGS as readonly string[]).includes(flag)) out.add(flag)
   if (corrected) out.add(FLAG_CORRECTED)
   return [...out]
 }

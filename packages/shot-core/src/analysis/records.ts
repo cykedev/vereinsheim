@@ -7,6 +7,7 @@ import {
   FLAG_SUSPICIOUS,
   inScoring,
   metricByKey,
+  type CardFlag,
   type MetricDefinition,
   type MetricShot,
   type Scoring,
@@ -18,12 +19,16 @@ import { cardValues, periodTrend, type PeriodCard } from "./period"
 import { decimalHistogram, shotExtremes } from "./result"
 
 /** Merkmale, mit denen eine Scheibe für Rekorde nicht zählt (SF-66) */
-export const RECORD_EXCLUDING_FLAGS = ["nur-pdf", "neu-gewertet", "ausgenommen"] as const
+export const RECORD_EXCLUDING_FLAGS = [
+  "nur-pdf",
+  "neu-gewertet",
+  "ausgenommen",
+] as const satisfies readonly CardFlag[]
 /**
  * Probe, die der Schütze nachträglich als Wertung zählt (SF-05, nicht amtlich): für Rekorde wie eine Scheibe nur
  * mit Probe, also nur mit `includeProbeOnly` (User, 9. Oktober 2026)
  */
-export const FLAG_COUNTED_AS_MATCH = "als-wertung-gezaehlt"
+export const FLAG_COUNTED_AS_MATCH = "als-wertung-gezaehlt" satisfies CardFlag
 
 /** Serie zu zehn für die engste Serie (R4) */
 const TIGHT_SERIES = 10

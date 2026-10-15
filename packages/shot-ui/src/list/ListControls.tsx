@@ -1,5 +1,6 @@
 "use client"
 
+import type { CardFlag } from "@vereinsheim/shot-core/metrics"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { Sheet } from "@vereinsheim/ui/design2/sheet"
 import { useState, type ReactNode } from "react"
@@ -13,7 +14,7 @@ import type { ListOption } from "./evenings"
  * Namen der Merkmale (D7), jedes, das an einer Scheibe stehen kann (Textbuch rev 21; vorher stand „nur-probe“ da);
  * Unbekanntes mit seiner Id
  */
-const FLAG_NAMES: Readonly<Record<string, string>> = {
+const FLAG_NAMES: Readonly<Record<CardFlag, string>> = {
   "nur-pdf": "Nur PDF",
   unvollstaendig: "Unvollständig",
   ausgenommen: "Ausgenommen",
@@ -24,8 +25,11 @@ const FLAG_NAMES: Readonly<Record<string, string>> = {
   "uhr-abweichung": "Uhrzeit ungenau",
   "neu-gewertet": "Neu gewertet",
   "als-wertung-gezaehlt": "Als Wertung gezählt",
+  "disziplin-unbekannt": "Disziplin unbekannt",
+  "scheibe-passt-nicht": "Scheibe passt nicht",
 }
-export const flagName = (flag: string) => FLAG_NAMES[flag] ?? flag
+export const flagName = (flag: string) =>
+  Object.hasOwn(FLAG_NAMES, flag) ? FLAG_NAMES[flag as CardFlag] : flag
 
 /** ohne Merkmal bzw. Liste: alle Scheiben */
 const ANY = ""

@@ -17,7 +17,12 @@ import {
   type Completeness,
   type FamilyId,
 } from "@vereinsheim/shot-core/discipline"
-import { FLAG_MISS, FLAG_OVER_TARGET, FLAG_SUSPICIOUS } from "@vereinsheim/shot-core/metrics"
+import {
+  FLAG_MISS,
+  FLAG_OVER_TARGET,
+  FLAG_SUSPICIOUS,
+  type CardFlag,
+} from "@vereinsheim/shot-core/metrics"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { checkShot } from "@vereinsheim/shot-core/verify"
 
@@ -32,11 +37,11 @@ export const PLACEHOLDER_TEILER = 2147483647
 export const HELD_DISPLAY_MODES: ReadonlySet<number> = new Set([0, 5, 10])
 
 /** Uhr des Stands geht falsch oder springt (SF-29, SF-30, SF-73) */
-export const FLAG_CLOCK = "uhr-abweichung"
+export const FLAG_CLOCK = "uhr-abweichung" satisfies CardFlag
 /** ohne Scheibenbild (SF-70) */
-export const FLAG_UNKNOWN_DISCIPLINE = "disziplin-unbekannt"
+export const FLAG_UNKNOWN_DISCIPLINE = "disziplin-unbekannt" satisfies CardFlag
 /** fast alle Schüsse passen nicht zum Scheibenbild (Gegenprobe, SF-16) */
-export const FLAG_TARGET_MISMATCH = "scheibe-passt-nicht"
+export const FLAG_TARGET_MISMATCH = "scheibe-passt-nicht" satisfies CardFlag
 
 /** ab hier Merkmal `uhr-abweichung` (Versatz zwischen Beobachtung und Lebenszeichen, SF-73) */
 export const CLOCK_FLAG_MS = 60_000
@@ -404,7 +409,8 @@ export function adaptSnapshot(snapshot: SnapshotV1, context: AdapterContext): Ad
     plannedShots: parseDisciplineId(discipline.meytonId).plannedShots,
   })
 
-  const flags: string[] = []
+  // nur Kennungen aus `CARD_FLAGS`: Die Oberfläche benennt jede (Review, 15. Oktober 2026)
+  const flags: CardFlag[] = []
   if (
     completeness === "nur-probe" ||
     completeness === "unvollstaendig" ||

@@ -20,6 +20,7 @@ import {
   FLAG_SUSPICIOUS,
   type MetricDefinition,
   type MetricShot,
+  CARD_FLAGS,
 } from "./metrics"
 import { CARD, MATCH, PROBE, SPREAD } from "./__fixtures__/cards"
 import { tempo } from "./time"
@@ -703,5 +704,25 @@ describe("Registry", () => {
       "time.tempoSpread": "Z2",
       "time.duration": "Z3",
     })
+  })
+})
+
+describe("Merkmale einer Scheibe an einer Stelle (Review, 15. Oktober 2026)", () => {
+  it("jede Kennung, die an einer Scheibe stehen kann", () => {
+    expect([...CARD_FLAGS].sort()).toEqual([
+      "als-wertung-gezaehlt",
+      "ausgenommen",
+      "disziplin-unbekannt",
+      "korrigiert",
+      "leer",
+      "neu-gewertet",
+      "nur-pdf",
+      "nur-probe",
+      "scheibe-passt-nicht",
+      "ueber-soll",
+      "uhr-abweichung",
+      "unvollstaendig",
+    ])
+    expect(new Set(CARD_FLAGS).size).toBe(CARD_FLAGS.length)
   })
 })

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { computeChecksum } from "@vereinsheim/ingest-contract/checksum"
+import { CARD_FLAGS } from "@vereinsheim/shot-core/metrics"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
 import { frozenCaseIds, frozenExpected, frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
 
@@ -94,6 +95,8 @@ describe.each(frozenCaseIds().map((id) => [id] as const))("Fall %s", (caseId) =>
 
       expect(last.completeness).toBe(card.completeness)
       expect(flagsAfter(cards)).toEqual([...card.flags].sort())
+      // nur Kennungen, die die Oberfläche benennen kann (`CARD_FLAGS`, Review: zwei fehlten)
+      for (const flag of flagsAfter(cards)) expect(CARD_FLAGS as readonly string[]).toContain(flag)
 
       // wie am Ausdruck: mit Wertung die Wertung, sonst die Probe
       const match = last.shots.filter((s) => s.stellung !== 0)

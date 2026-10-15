@@ -51,6 +51,27 @@ export const FLAG_SUSPICIOUS = "verdaechtig"
  */
 export const FLAG_OVER_TARGET = "ueber-soll"
 
+/**
+ * Jede Kennung, die an einer Scheibe stehen kann (`Card.flags`), an einer Stelle (Review, 15. Oktober 2026: zwei fehlten
+ * in den Namen der Oberfläche). Wer eine Kennung schreibt oder benennt, nimmt `CardFlag`: Eine neue ohne Eintrag hier
+ * scheitert an `tsc`, ebenso eine ohne Namen (`FLAG_NAMES` in `shot-ui`).
+ */
+export const CARD_FLAGS = [
+  "nur-pdf",
+  "unvollstaendig",
+  "ausgenommen",
+  "nur-probe",
+  "leer",
+  "ueber-soll",
+  "korrigiert",
+  "uhr-abweichung",
+  "neu-gewertet",
+  "als-wertung-gezaehlt",
+  "disziplin-unbekannt",
+  "scheibe-passt-nicht",
+] as const
+export type CardFlag = (typeof CARD_FLAGS)[number]
+
 export interface MetricShot {
   /**
    * Abgabefolge (SF-30), eindeutig über die ganze Scheibe (Probe und Wertung in einer Folge). Fehlt

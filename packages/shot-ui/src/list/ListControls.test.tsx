@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
 import { CardFilters } from "../controls/CardFilters"
+import { CARD_FLAGS } from "@vereinsheim/shot-core/metrics"
+
 import { DEFAULT_LIST, DEFAULT_PROGRESS, type ListQuery } from "../nav/routes"
 import {
   flagName,
@@ -152,6 +154,14 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     )
     expect(stale).toMatch(/aria-label="Liste"[^>]*><button[^>]*aria-pressed="true"[^>]*>Alle</)
     expect(stale).not.toContain("Liste RWK")
+  })
+
+  it("jede Kennung aus `CARD_FLAGS` hat einen eigenen Namen (Review: zwei fehlten)", () => {
+    const names = CARD_FLAGS.map(flagName)
+    for (const [i, flag] of CARD_FLAGS.entries()) expect(names[i], flag).not.toBe(flag)
+    expect(new Set(names).size).toBe(names.length)
+    expect(flagName("disziplin-unbekannt")).toBe("Disziplin unbekannt")
+    expect(flagName("scheibe-passt-nicht")).toBe("Scheibe passt nicht")
   })
 
   it("jedes Merkmal mit Namen statt Kennung (dort stand „nur-probe“)", () => {
