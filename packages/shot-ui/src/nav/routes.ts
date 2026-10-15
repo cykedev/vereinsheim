@@ -99,6 +99,8 @@ export interface ListQuery {
   kind: CardKind
   /** Merkmal wie `nur-pdf` */
   flag: string | null
+  /** Liste aus Meyton (`Rangliste`) als Kennung, nie als Name (Rückmeldung 2, 15. Oktober 2026); null: alle */
+  list: number | null
   /** null: alle Abende; „Alles“ ist dasselbe und hat darum keine eigene Form */
   range: Exclude<PeriodChoice, { type: "all" }> | null
 }
@@ -116,7 +118,13 @@ export interface ProgressQuery {
   chosen: string | null
 }
 
-export const DEFAULT_LIST: ListQuery = { family: null, kind: "all", flag: null, range: null }
+export const DEFAULT_LIST: ListQuery = {
+  family: null,
+  kind: "all",
+  flag: null,
+  list: null,
+  range: null,
+}
 
 /** die Vorgaben wie `initialPeriodState` */
 export const DEFAULT_PROGRESS: ProgressQuery = {
@@ -140,6 +148,10 @@ const METRIC_CODES: readonly [PeriodMetricKey, string][] = [
 
 const slugOrNull = (value: string | null) => (value && SLUG.test(value) ? value : null)
 const idOrNull = (value: string | null) => (value && ID.test(value) ? value : null)
+/** Kennung einer Zeile der Datenbank: positiv, ohne führende Null, höchstens zehn Stellen */
+const ROW_ID = /^[1-9]\d{0,9}$/
+const rowIdOrNull = (value: string | null) =>
+  value && ROW_ID.test(value) && Number(value) <= 2_147_483_647 ? Number(value) : null
 const kindOf = (value: string | null): CardKind =>
   value === "training" || value === "competition" ? value : "all"
 const scoringOf = (value: string | null): Scoring => (value === "rings" ? "rings" : "decimal")
@@ -159,6 +171,7 @@ export function listQueryToParams(query: ListQuery): Param[] {
     ["family", query.family],
     ["kind", kindParams(query.kind)],
     ["flag", query.flag],
+    ["list", query.list === null ? null : String(query.list)],
   ])
 }
 
@@ -168,6 +181,7 @@ export function listQueryFromParams(params: URLSearchParams): ListQuery {
     family: slugOrNull(params.get("family")),
     kind: kindOf(params.get("kind")),
     flag: slugOrNull(params.get("flag")),
+    list: rowIdOrNull(params.get("list")),
     // „all“ und ohne Angabe heißen dasselbe: alle Abende
     range: range === null || range.type === "all" ? null : range,
   }

@@ -144,6 +144,7 @@ export function ListScreen({
               family={option.value}
               families={families}
               flags={model.flags}
+              lists={model.lists}
               rangeLabel={model.range?.label ?? null}
               onQuery={onQuery}
               progress={progressFromList(route)}

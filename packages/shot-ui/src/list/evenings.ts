@@ -21,12 +21,18 @@ import {
 } from "../period/calendar"
 import { byStart, cardKind, deltasBefore, isProbeOnly, type CardKind } from "../period/model"
 
+/** eine Liste aus Meyton (`Rangliste`): Kennung für die Adresse, Name wie Meyton ihn schreibt */
+export interface ListOption {
+  id: number
+  name: string
+}
+
 /** eine Scheibe mit Projektion, ihrer Familie und ihrer Liste aus Meyton (die Liste der Scheiben filtert nach beiden) */
 export interface ListInputCard {
   card: ProjectedCard
   family: string
-  /** die Liste aus Meyton (`Rangliste`); fehlt oder null ohne */
-  list?: { id: number; name: string } | null
+  /** die Liste aus Meyton; fehlt oder null ohne (PDF, eigene Scheiben) */
+  list?: ListOption | null
 }
 
 /** der Wert einer Kennzahl der Scheibe in der Wertung aus ihrer Projektion; null ohne Wert */
@@ -71,6 +77,10 @@ export interface CardListModel {
   evenings: Evening[]
   /** Merkmale der Scheiben dieser Familie, für den Filter */
   flags: string[]
+  /** Listen aus Meyton der Scheiben dieser Familie nach Name, die gewählte auch ohne Scheibe der Familie */
+  lists: ListOption[]
+  /** die gewählte Liste; null ohne Wahl oder wenn keine Scheibe sie kennt (gilt dann als keine) */
+  list: ListOption | null
   /** gezeigte Scheiben */
   cards: number
   /** Wertung der Liste (in der App die der Familie): Ø und Abstand, vorn beim Ergebnis ohne Wertung der Scheibe */
@@ -129,6 +139,13 @@ export interface CardListContext {
   scoring: Scoring
 }
 
+/** die Listen ohne Doppelte, nach Name wie im Deutschen sortiert */
+function listsOf(lists: readonly (ListOption | null | undefined)[]): ListOption[] {
+  const byId = new Map<number, ListOption>()
+  for (const list of lists) if (list) byId.set(list.id, { id: list.id, name: list.name })
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, "de") || a.id - b.id)
+}
+
 /** der Abend einer Scheibe (D1); seit dem Kalender (T7) in `period/calendar`, hier weiter exportiert */
 export { eveningDay } from "../period/calendar"
 
@@ -138,7 +155,11 @@ export function cardListModel(
   context: CardListContext
 ): CardListModel {
   const family = query.family ?? input[0]?.family ?? null
-  const ofFamily = input.filter((c) => c.family === family).map((c) => c.card)
+  const ofFamilyInput = input.filter((c) => c.family === family)
+  const ofFamily = ofFamilyInput.map((c) => c.card)
+  // eine gewählte Liste, die keine Scheibe kennt, gilt als keine (Ungültiges ist die Vorgabe, nie ein Fehler)
+  const list = input.find((c) => c.list && c.list.id === query.list)?.list ?? null
+  const listOf = new Map(input.map((c) => [c.card.id, c.list?.id ?? null]))
   const ofKind = ofFamily
     .filter((card) => query.kind === "all" || card.kind === query.kind)
     .sort(byStart)
@@ -151,6 +172,7 @@ export function cardListModel(
   const shown = ofKind.filter(
     (card) =>
       (!query.flag || card.flags.includes(query.flag)) &&
+      (!list || listOf.get(card.id) === list.id) &&
       (!range || inRange(card.startedAtMs, range))
   )
 
@@ -208,6 +230,9 @@ export function cardListModel(
     flags: [
       ...new Set([...ofFamily.flatMap((c) => c.flags), ...(query.flag ? [query.flag] : [])]),
     ].sort(),
+    // eine gewählte Liste bleibt wählbar, auch ohne Scheibe der Familie, wie ein Merkmal
+    lists: listsOf([...ofFamilyInput.map((c) => c.list), list]),
+    list: list ? { id: list.id, name: list.name } : null,
     cards: shown.length,
     scoring: context.scoring,
     digits: {

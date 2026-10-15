@@ -127,12 +127,33 @@ describe("Liste und Fortschritt als Query (D4)", () => {
     const list = listQueryFromParams(
       new URLSearchParams("range=all&family=lg-10m&kind=competition&flag=nur-pdf")
     )
-    expect(list).toEqual({ range: null, family: "lg-10m", kind: "competition", flag: "nur-pdf" })
+    expect(list).toEqual({
+      range: null,
+      family: "lg-10m",
+      kind: "competition",
+      flag: "nur-pdf",
+      list: null,
+    })
     expect(query(listQueryToParams(list))).toBe("family=lg-10m&kind=competition&flag=nur-pdf")
     expect(query(listQueryToParams({ ...list, range: { type: "rolling", days: 30 } }))).toBe(
       "range=30d&family=lg-10m&kind=competition&flag=nur-pdf"
     )
     expect(listQueryFromParams(new URLSearchParams("family=LG 10m&flag=")).family).toBeNull()
+  })
+
+  it("die Liste aus Meyton als Kennung nach dem Merkmal; anderes gilt als keine (Rückmeldung 2)", () => {
+    const text = "family=lp-10m&flag=nur-pdf&list=12"
+    expect(listQueryFromParams(new URLSearchParams(text))).toEqual({
+      ...DEFAULT_LIST,
+      family: "lp-10m",
+      flag: "nur-pdf",
+      list: 12,
+    })
+    expect(query(listQueryToParams({ ...DEFAULT_LIST, family: "lp-10m", list: 12 }))).toBe(
+      "family=lp-10m&list=12"
+    )
+    for (const bad of ["RWK_LP", "0", "-3", "1.5", "", "01", "12345678901"])
+      expect(listQueryFromParams(new URLSearchParams({ list: bad })).list).toBeNull()
   })
 })
 
@@ -208,7 +229,7 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker (D4–D6)", () => {
     )
     expect(list.origin).toEqual({
       from: "list",
-      query: { family: "lp-10m", kind: "all", flag: "nur-pdf", range: null },
+      query: { family: "lp-10m", kind: "all", flag: "nur-pdf", list: null, range: null },
     })
     expect(query(cardToParams(list))).toBe("from=list&family=lp-10m&flag=nur-pdf")
     expect(cardFromParts("c7", new URLSearchParams("from=start"), "").origin).toEqual({
@@ -374,14 +395,15 @@ describe("die ganze Adresse (D3)", () => {
     for (const family of [null, "lg-10m"])
       for (const kind of ["all", "training"] as const)
         for (const flag of [null, "nur-pdf"])
-          for (const range of [
-            null,
-            { type: "rolling", days: 30 } as const,
-            { type: "rolling", days: 365 } as const,
-            { type: "free", from: "2026-05-01", to: "2026-06-30" } as const,
-            { type: "named", id: "clx8k2abc" } as const,
-          ])
-            lists.push({ family, kind, flag, range })
+          for (const list of [null, 7])
+            for (const range of [
+              null,
+              { type: "rolling", days: 30 } as const,
+              { type: "rolling", days: 365 } as const,
+              { type: "free", from: "2026-05-01", to: "2026-06-30" } as const,
+              { type: "named", id: "clx8k2abc" } as const,
+            ])
+              lists.push({ family, kind, flag, list, range })
     const progresses: ProgressQuery[] = []
     for (const choice of [
       DEFAULT_CHOICE,

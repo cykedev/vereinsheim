@@ -36,7 +36,7 @@ const PROGRESS: ProgressRoute = {
 }
 const LIST: ListRoute = {
   page: "cards",
-  query: { ...DEFAULT_LIST, family: "lp-10m", flag: "nur-pdf" },
+  query: { ...DEFAULT_LIST, family: "lp-10m", flag: "nur-pdf", list: 12 },
   evening: "2026-09-25",
 }
 
@@ -129,6 +129,7 @@ describe("Wege zwischen den Seiten (D6, D7)", () => {
         family: "lg-10m",
         kind: "training",
         flag: null,
+        list: null,
         range: { type: "named", id: "neue-munition" },
       },
       evening: null,

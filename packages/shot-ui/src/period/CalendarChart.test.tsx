@@ -7,7 +7,7 @@ import { calendarWeeks, CalendarChart, dayLevel, dayText } from "./CalendarChart
 
 const dayRoute = (day: string): Route => ({
   page: "cards",
-  query: { family: "lg-freihand", kind: "all", flag: null, range: null },
+  query: { family: "lg-freihand", kind: "all", flag: null, list: null, range: null },
   evening: day,
 })
 

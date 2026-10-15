@@ -26,6 +26,7 @@ const props = (patch: Partial<ListControlsProps> = {}): ListControlsProps => ({
     { value: "lp-freihand", label: "Luftpistole" },
   ],
   flags: ["nur-pdf"],
+  lists: [],
   rangeLabel: "Neue Munition",
   onQuery: () => {},
   progress: {
@@ -92,13 +93,44 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
   })
 
   it("die Zusammenfassung: nur, was von der Vorgabe abweicht", () => {
-    expect(listFilterSummary({ kind: "all", flag: null, rangeLabel: null })).toBe("Alle Scheiben")
-    expect(listFilterSummary({ kind: "competition", flag: null, rangeLabel: null })).toBe(
-      "Wettkampf"
+    expect(listFilterSummary({ kind: "all", flag: null, list: null, rangeLabel: null })).toBe(
+      "Alle Scheiben"
     )
-    expect(listFilterSummary({ kind: "all", flag: "nur-pdf", rangeLabel: "Letzte 90 Tage" })).toBe(
-      "Nur PDF · Letzte 90 Tage"
+    expect(
+      listFilterSummary({ kind: "competition", flag: null, list: null, rangeLabel: null })
+    ).toBe("Wettkampf")
+    expect(
+      listFilterSummary({ kind: "all", flag: "nur-pdf", list: null, rangeLabel: "Letzte 90 Tage" })
+    ).toBe("Nur PDF · Letzte 90 Tage")
+    expect(
+      listFilterSummary({ kind: "competition", flag: null, list: "RWK_LP", rangeLabel: null })
+    ).toBe("Wettkampf · Liste RWK_LP")
+  })
+
+  it("die Liste aus Meyton im Blatt nach der Art, am Chip mit Namen (Rückmeldung 2)", () => {
+    const lists = [
+      { id: 3, name: "RWK_LP" },
+      { id: 1, name: "Training-LG" },
+    ]
+    const html = renderToStaticMarkup(
+      h(ListControls, props({ lists, query: { ...QUERY, list: 3 } }))
     )
+    expect(html).toMatch(
+      /data-list-chip="true"[^>]*>Training · Liste RWK_LP · Nur PDF · Neue Munition<svg/
+    )
+    const sheet = html.slice(html.indexOf("<dialog"))
+    expect(sheet.indexOf('aria-label="Art"')).toBeLessThan(sheet.indexOf('aria-label="Liste"'))
+    expect(sheet.indexOf('aria-label="Liste"')).toBeLessThan(sheet.indexOf('aria-label="Merkmal"'))
+    expect(sheet).toMatch(
+      /aria-label="Liste"[\s\S]*>Alle<[\s\S]*aria-checked="true"[^>]*>RWK_LP<[\s\S]*>Training-LG</
+    )
+    const onQuery = vi.fn()
+    const choice = find(view({ lists, onQuery }), (e) => e.props.label === "Liste")!
+    ;(choice.props.onChange as (v: string) => void)("1")
+    expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, list: 1 })
+    ;(choice.props.onChange as (v: string) => void)("")
+    expect(onQuery).toHaveBeenLastCalledWith({ ...QUERY, list: null })
+    expect(renderToStaticMarkup(h(ListControls, props()))).not.toContain('aria-label="Liste"')
   })
 
   it("ohne Merkmale keine Wahl „Merkmal“, ohne Zeitraum kein Zeitraum im Blatt", () => {

@@ -7,6 +7,7 @@ import { useState, type ReactNode } from "react"
 import { CardFilters, KIND_OPTIONS } from "../controls/CardFilters"
 import { RouteLink } from "../nav/RouteLink"
 import type { ListQuery, ProgressRoute } from "../nav/routes"
+import type { ListOption } from "./evenings"
 
 /** Namen der Merkmale (D7); Unbekanntes mit seiner Id */
 const FLAG_NAMES: Readonly<Record<string, string>> = {
@@ -16,7 +17,7 @@ const FLAG_NAMES: Readonly<Record<string, string>> = {
 }
 export const flagName = (flag: string) => FLAG_NAMES[flag] ?? flag
 
-/** ohne Merkmal: alle Scheiben */
+/** ohne Merkmal bzw. Liste: alle Scheiben */
 const ANY = ""
 
 export interface ListControlsProps {
@@ -26,6 +27,8 @@ export interface ListControlsProps {
   families: readonly { value: string; label: string }[]
   /** Merkmale der Scheiben dieser Familie; ohne keine Wahl „Merkmal“ */
   flags: readonly string[]
+  /** Listen aus Meyton der Scheiben dieser Familie (Modell, mit der gewählten); ohne keine Wahl „Liste“ */
+  lists: readonly ListOption[]
   /** Name des Zeitraums aus „Alle in Scheiben zeigen“ (`resolveRange`); null: alle Abende */
   rangeLabel: string | null
   onQuery: (query: ListQuery) => void
@@ -42,14 +45,18 @@ export interface ListControlsProps {
 export function listFilterSummary({
   kind,
   flag,
+  list,
   rangeLabel,
 }: {
   kind: ListQuery["kind"]
   flag: string | null
+  /** Name der gewählten Liste aus Meyton */
+  list: string | null
   rangeLabel: string | null
 }): string {
   const parts = [
     kind === "all" ? null : (KIND_OPTIONS.find((o) => o.value === kind)?.label ?? null),
+    list ? `Liste ${list}` : null,
     flag ? flagName(flag) : null,
     rangeLabel,
   ].filter(Boolean)
@@ -58,9 +65,9 @@ export function listFilterSummary({
 
 /**
  * Filter der Scheiben-Liste in einer Zeile (Plan N2, D7, D8; U5, D6 wie der Fortschritt): vorn die Familie, daneben
- * ein Chip mit der Zusammenfassung. Er öffnet das Blatt „Filter“ mit Art, Merkmal (nur wenn es welche gibt), dem
- * Zeitraum aus dem Fortschritt (mit „entfernen“) und dem Weg „Im Fortschritt zeigen“. Eine Wahl im Blatt gilt sofort.
- * Ein Familienwechsel behält Art, Merkmal und Zeitraum.
+ * ein Chip mit der Zusammenfassung. Er öffnet das Blatt „Filter“ mit Art, Liste aus Meyton und Merkmal (beide nur,
+ * wenn es welche gibt), dem Zeitraum aus dem Fortschritt (mit „entfernen“) und dem Weg „Im Fortschritt zeigen“. Eine
+ * Wahl im Blatt gilt sofort. Ein Familienwechsel behält Art, Liste, Merkmal und Zeitraum.
  */
 export function ListControls(props: ListControlsProps) {
   const [open, setOpen] = useState(false)
@@ -80,6 +87,7 @@ export function ListControlsView({
   family,
   families,
   flags,
+  lists,
   rangeLabel,
   onQuery,
   progress,
@@ -103,7 +111,12 @@ export function ListControlsView({
         onClick={onOpen}
         className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-primary bg-accent-wash px-3 py-1.5 text-[13px] leading-tight font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring"
       >
-        {listFilterSummary({ kind: query.kind, flag: query.flag, rangeLabel })}
+        {listFilterSummary({
+          kind: query.kind,
+          flag: query.flag,
+          list: lists.find((l) => l.id === query.list)?.name ?? null,
+          rangeLabel,
+        })}
         <svg
           viewBox="0 0 24 24"
           aria-hidden="true"
@@ -133,6 +146,21 @@ export function ListControlsView({
               onChange={(kind) => onQuery({ ...query, kind })}
             />
           </div>
+          {lists.length > 0 && (
+            <div className="grid gap-1.5">
+              <span className="text-[13px] font-semibold text-muted-foreground">Liste</span>
+              <Segmented
+                label="Liste"
+                scroll
+                value={query.list === null ? ANY : String(query.list)}
+                options={[
+                  { value: ANY, label: "Alle" },
+                  ...lists.map((list) => ({ value: String(list.id), label: list.name })),
+                ]}
+                onChange={(list) => onQuery({ ...query, list: list === ANY ? null : Number(list) })}
+              />
+            </div>
+          )}
           {flags.length > 0 && (
             <div className="grid gap-1.5">
               <span className="text-[13px] font-semibold text-muted-foreground">Merkmal</span>

@@ -124,6 +124,50 @@ describe("Abende der Scheiben-Liste (Plan N2, D1–D5)", () => {
   })
 })
 
+describe("Filter „Liste“ (Rückmeldung 2)", () => {
+  const RWK = { id: 3, name: "RWK_LP" }
+  const TRAINING = { id: 1, name: "Training-LG" }
+  const LIGA = { id: 9, name: "LP-Liga" }
+  const cards: ListInputCard[] = [
+    { ...lg(periodCard("r", 3, [100])), list: RWK },
+    { ...lg(periodCard("t", 2, [101])), list: TRAINING },
+    lg(periodCard("o", 1, [102])),
+    // am Abend der Scheibe in RWK_LP
+    { ...lp(periodCard("p", 3, [95])), list: LIGA },
+  ]
+  const ids = (model: ReturnType<typeof cardListModel>) =>
+    model.evenings.flatMap((e) => e.rows.map((r) => r.id))
+
+  it("filtert nach der Liste; die Listen der Familie stehen nach Name dabei", () => {
+    const model = cardListModel(cards, query({ list: RWK.id }), context)
+    expect(ids(model)).toEqual(["r"])
+    expect(model.list).toEqual(RWK)
+    expect(model.lists).toEqual([RWK, TRAINING])
+    const all = cardListModel(cards, query(), context)
+    expect(ids(all).sort()).toEqual(["o", "r", "t"])
+    expect(all.list).toBeNull()
+  })
+
+  it("eine gewählte Liste bleibt wählbar, auch ohne Scheibe der Familie; eine unbekannte gilt als keine", () => {
+    const empty = cardListModel(cards, query({ list: LIGA.id }), context)
+    expect(empty.cards).toBe(0)
+    expect(empty.list).toEqual(LIGA)
+    expect(empty.lists).toEqual([LIGA, RWK, TRAINING])
+    const unknown = cardListModel(cards, query({ list: 99 }), context)
+    expect(unknown.cards).toBe(3)
+    expect(unknown.list).toBeNull()
+    expect(unknown.lists).toEqual([RWK, TRAINING])
+  })
+
+  it("andere Familien zählen ohne Liste, der Sprung an ihren Abend lässt sie fallen", () => {
+    const model = cardListModel(cards, query({ list: RWK.id }), context)
+    expect(model.evenings[0].others).toEqual([{ family: "lp-freihand", count: 1 }])
+    const jump = listOnEvening(query({ list: RWK.id }), "lp-freihand", model.evenings[0].day)
+    expect(jump.query.list).toBeNull()
+    expect(ids(cardListModel(cards, jump.query, context))).toEqual(["p"])
+  })
+})
+
 describe("der letzte Abend (Plan N5, Start und Blättern von Start)", () => {
   it("der Abend der neuesten Scheibe, alle Familien, in zeitlicher Folge; vor 4 Uhr zählt zum Vortag", () => {
     expect(lastEvening(INPUT, TZ)).toEqual({
