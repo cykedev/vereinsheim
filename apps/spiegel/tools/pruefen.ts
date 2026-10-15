@@ -991,6 +991,24 @@ async function progress(page: Page) {
     kept
   )
   await page.click(`button("Schließen", ${picker})`, { settle: 200 })
+
+  // gemerkter Zeitraum (User, 15. Oktober 2026): übernommen war eben 01.07. bis 31.07.2026. Ohne eigene Abfrage öffnet der
+  // Fortschritt darin, mit eigener wie verlangt. Danach vergessen, damit die übrigen Prüfungen die Vorgabe sehen
+  const chip = `txt($("[data-period-chip]"))`
+  await page.goto(`${BASE}/progress`)
+  const remembered = await page.ev<string>(chip)
+  await page.goto(`${BASE}/progress?range=all`)
+  const explicit = await page.ev<string>(chip)
+  await page.ev(`document.cookie = "spiegel-period=; path=/; max-age=0"`)
+  await page.goto(`${BASE}/progress`)
+  const fresh = await page.ev<string>(chip)
+  check(
+    "Fortschritt: der übernommene Zeitraum gilt beim nächsten Öffnen ohne Abfrage, ein Link mit Zeitraum wie verlangt",
+    remembered.startsWith("01.07.2026") &&
+      explicit.startsWith("Alles") &&
+      fresh.startsWith("Letzte 90 Tage"),
+    { remembered, explicit, fresh }
+  )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

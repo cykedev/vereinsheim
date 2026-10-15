@@ -45,6 +45,7 @@ import { cardMarksAction } from "@/lib/marks-actions"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
 import type { FamilyOption } from "@/lib/pages"
+import { rememberPeriod } from "@/lib/period-memory-client"
 import { setFamilyScoring } from "@/lib/scoring-actions"
 
 const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
@@ -133,6 +134,8 @@ export function ProgressScreen({
         setDirty(true)
         return
       }
+      // ein übernommener Zeitraum gilt auch beim nächsten Öffnen (User, 15. Oktober 2026), nie das bloße Öffnen
+      if (action.type === "setFilters" || action.type === "setChoice") rememberPeriod(next.choice)
       // die Seite bleibt, wo sie ist (die Schalter stehen im Verlauf, der ab 768 px klebt)
       startTransition(() => router.push(addressOf(next), { scroll: false }))
     },
