@@ -6,6 +6,7 @@
 import { createHash, randomBytes, randomInt } from "node:crypto"
 
 import {
+  BRIDGE_CLOCK_TOLERANCE_MS,
   normalizePairingCode,
   PAIRING_CODE_ALPHABET,
   PAIRING_CODE_LENGTH,
@@ -27,6 +28,11 @@ const SEEN_EVERY_MS = 60_000
 /** eine neue Uhrabweichung ab so viel Änderung oder nach so langer Zeit */
 const CLOCK_CHANGE_MS = 30_000
 const CLOCK_EVERY_MS = 3_600_000
+/**
+ * Liegt `sentAt` weiter als das neben der Empfangszeit, geht die Uhr der Brücke falsch (SF-79): Ihre Messung der Anlage
+ * gilt nicht, sonst verschöbe sie jede neue Scheibe. `BRIDGE_CLOCK_TOLERANCE_MS` der Brücke plus der Weg
+ */
+export const HEARTBEAT_CLOCK_MAX_MS = BRIDGE_CLOCK_TOLERANCE_MS + 30_000
 /** Grabsteine und Löschsperren, die die Brücke kennen muss: Scheiben dieser Zeitspanne (SF-28) */
 const BLOCKED_WINDOW_MS = 60 * 86_400_000
 
@@ -212,7 +218,8 @@ export async function recordHeartbeat(
       runStartedAt,
     },
   })
-  if (heartbeat.sourceClockOffsetMs !== null) {
+  const bridgeClockOk = Math.abs(Date.parse(heartbeat.sentAt) - nowMs) <= HEARTBEAT_CLOCK_MAX_MS
+  if (heartbeat.sourceClockOffsetMs !== null && bridgeClockOk) {
     const last = await db.clockReading.findFirst({
       where: { siteId: bridge.siteId },
       orderBy: { measuredAt: "desc" },

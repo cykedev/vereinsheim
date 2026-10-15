@@ -239,13 +239,16 @@ describe("der ganze Weg einer Brücke", () => {
           .find((r) => r.reading === n)!
           .snapshots.find((s) => s.scheibenId === SF03.scheibenId)!
     )
-    const response = await handleSnapshots(
-      post("snapshots", { snapshots: sent }, auth),
-      deps(limits)
-    )
-    expect(response.status).toBe(200)
-    const body = snapshotsResponseV1.parse(await response.json())
-    expect(body.results.every((r) => r.outcome === "stored")).toBe(true)
+    // je Lesung ein Stapel zu ihrer Zeit, wie die Brücke: Die Lesungen liegen 15 min auseinander (SF-79)
+    for (const snapshot of sent) {
+      const response = await handleSnapshots(post("snapshots", { snapshots: [snapshot] }, auth), {
+        ...deps(limits),
+        now: () => Date.parse(snapshot.observedAt),
+      })
+      expect(response.status).toBe(200)
+      const body = snapshotsResponseV1.parse(await response.json())
+      expect(body.results.map((r) => r.outcome)).toEqual(["stored"])
+    }
     const card = await db.card.findFirst({
       where: { sourceId: site.sourceId, scheibenId: SF03.scheibenId },
     })

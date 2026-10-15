@@ -84,6 +84,15 @@ type spiegel struct {
 	outcome    func(contract.Snapshot) string
 	batches    [][]contract.Snapshot
 	heartbeats []api.Heartbeat
+	// die Uhr von Spiegel (`serverTime`); ein Heartbeat dauert `hbTakes`, die Uhr der Brücke läuft dabei (`advance`)
+	serverTime func() time.Time
+	hbTakes    time.Duration
+	advance    func(time.Duration)
+	hbErr      error
+	// lehnt einen Heartbeat ab (etwa ein älterer Spiegel, der einen Status nicht kennt)
+	hbCheck func(api.Heartbeat) error
+	// so lange dauert ein Stapel
+	snapTakes time.Duration
 }
 
 func (s *spiegel) State(context.Context) (api.State, error) {
@@ -102,6 +111,7 @@ func (s *spiegel) Snapshots(_ context.Context, batch []contract.Snapshot) ([]api
 		}
 	}
 	s.batches = append(s.batches, batch)
+	s.advance(s.snapTakes)
 	var out []api.Result
 	for i, snap := range batch {
 		outcome := "stored"
@@ -113,9 +123,20 @@ func (s *spiegel) Snapshots(_ context.Context, batch []contract.Snapshot) ([]api
 	return out, nil
 }
 
-func (s *spiegel) Heartbeat(_ context.Context, hb api.Heartbeat) error {
+func (s *spiegel) Heartbeat(_ context.Context, hb api.Heartbeat) (time.Time, error) {
 	s.heartbeats = append(s.heartbeats, hb)
-	return nil
+	if s.hbErr != nil {
+		return time.Time{}, s.hbErr
+	}
+	if s.hbCheck != nil {
+		if err := s.hbCheck(hb); err != nil {
+			return time.Time{}, err
+		}
+	}
+	s.advance(s.hbTakes / 2)
+	at := s.serverTime()
+	s.advance(s.hbTakes / 2)
+	return at, nil
 }
 
 func (s *spiegel) sent() []int32 {
@@ -129,18 +150,22 @@ func (s *spiegel) sent() []int32 {
 }
 
 type fixture struct {
-	t      *testing.T
-	clock  time.Time
-	ablage *ablage
-	sp     *spiegel
-	runner *Runner
-	logs   []string
+	t     *testing.T
+	clock time.Time
+	// so weit geht Spiegel der Brücke voraus (eine Brücke, die 45 h nachgeht: +45 h)
+	serverAhead time.Duration
+	ablage      *ablage
+	sp          *spiegel
+	runner      *Runner
+	logs        []string
 }
 
 func setup(t *testing.T, consent ...string) *fixture {
 	f := &fixture{t: t, clock: time.Date(2026, 10, 13, 18, 0, 0, 0, time.UTC)}
 	f.ablage = &ablage{stamps: map[int32]string{}, data: map[int32]contract.Data{}}
 	f.sp = &spiegel{}
+	f.sp.serverTime = func() time.Time { return f.clock.Add(f.serverAhead) }
+	f.sp.advance = func(d time.Duration) { f.clock = f.clock.Add(d) }
 	f.sp.state.Sportpass.Salt = salt
 	for _, c := range consent {
 		f.sp.state.Sportpass.Hashes = append(f.sp.state.Sportpass.Hashes, filter.SportpassHash(salt, c))
@@ -564,9 +589,16 @@ func TestClockOffsetBoundedAndMeasured(t *testing.T) {
 	f := setup(t, "12345678")
 	f.ablage.now = text("2026-10-13 18:00:02.500")
 	f.step()
+	// der erste Heartbeat prüft erst die eigene Uhr: ohne sie keine Abweichung der Anlage (SF-79)
+	if hb := f.sp.heartbeats[0]; hb.SourceClockOffsetMs != nil {
+		t.Fatalf("ungeprüft gemeldet: %v", *hb.SourceClockOffsetMs)
+	}
+	f.clock = f.clock.Add(HeartbeatEvery)
+	f.ablage.now = text(f.clock.Add(2500 * time.Millisecond).Format("2006-01-02 15:04:05.000"))
+	f.step()
 	// gemessen gegen die Mitte der Runde: ein paar Mikrosekunden der echten Abfrage gehen ab
-	if hb := f.sp.heartbeats[0]; hb.SourceClockOffsetMs == nil || *hb.SourceClockOffsetMs < 2490 || *hb.SourceClockOffsetMs > 2500 {
-		t.Fatalf("Versatz %v", *hb.SourceClockOffsetMs)
+	if hb := f.sp.heartbeats[1]; hb.SourceClockOffsetMs == nil || *hb.SourceClockOffsetMs < 2490 || *hb.SourceClockOffsetMs > 2500 {
+		t.Fatalf("Versatz %v", hb.SourceClockOffsetMs)
 	}
 	f.ablage.now = text("2000-01-01 00:00:00.000")
 	f.clock = f.clock.Add(HeartbeatEvery)

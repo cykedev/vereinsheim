@@ -8,7 +8,7 @@ import { frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
 import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
-import { loadSnapshotData, MAX_SEQUENCE_AHEAD_MS, storeSnapshot } from "./raw"
+import { loadSnapshotData, MAX_OBSERVED_LAG_MS, MAX_SEQUENCE_AHEAD_MS, storeSnapshot } from "./raw"
 
 const db = createPrismaClient()
 let site: TestSite
@@ -105,36 +105,54 @@ describe("storeSnapshot", () => {
     const [first, second] = snapshotsOf("SF-03")
     const scheibenId = 777_001
     const at = (s: SnapshotV1, sequence: number): SnapshotV1 => ({ ...s, scheibenId, sequence })
-    expect((await storeSnapshot(db, { sourceId: site.sourceId }, at(second, 20))).outcome).toBe(
-      "stored"
-    )
+    expect((await store(at(second, 20))).outcome).toBe("stored")
     // ein anderer Stand mit kleinerer Folgenummer
-    expect(await storeSnapshot(db, { sourceId: site.sourceId }, at(first, 10))).toEqual({
+    expect(await store(at(first, 10))).toEqual({
       outcome: "stale",
       latestSequence: BigInt(20),
     })
     // derselbe Stand noch einmal, dann ein anderer Stand dazwischen: auch der ist veraltet
-    expect((await storeSnapshot(db, { sourceId: site.sourceId }, at(second, 30))).outcome).toBe(
-      "unchanged"
-    )
-    expect((await storeSnapshot(db, { sourceId: site.sourceId }, at(first, 25))).outcome).toBe(
-      "stale"
-    )
+    expect((await store(at(second, 30))).outcome).toBe("unchanged")
+    expect((await store(at(first, 25))).outcome).toBe("stale")
     expect(await db.rawSnapshot.count({ where: { sourceId: site.sourceId, scheibenId } })).toBe(1)
   })
 
   it("ein Stand aus der Zukunft wird abgelehnt und friert die Scheibe nicht ein", async () => {
     const [first] = snapshotsOf("SF-03")
     const nowMs = Date.UTC(2026, 9, 10, 12)
-    const ahead = { ...first, scheibenId: 777_002, sequence: nowMs + MAX_SEQUENCE_AHEAD_MS + 1 }
+    const observedAt = new Date(nowMs).toISOString()
+    const ahead = {
+      ...first,
+      scheibenId: 777_002,
+      observedAt,
+      sequence: nowMs + MAX_SEQUENCE_AHEAD_MS + 1,
+    }
     expect(await storeSnapshot(db, { sourceId: site.sourceId }, ahead, { nowMs })).toEqual({
       outcome: "future",
       sequence: BigInt(ahead.sequence),
     })
-    const now = { ...first, scheibenId: 777_002, sequence: nowMs }
+    const now = { ...first, scheibenId: 777_002, observedAt, sequence: nowMs }
     expect((await storeSnapshot(db, { sourceId: site.sourceId }, now, { nowMs })).outcome).toBe(
       "stored"
     )
+  })
+
+  it("SF-79: eine Beobachtung mehr als 15 min vor der Empfangszeit wird abgelehnt, nichts abgelegt", async () => {
+    const [first] = snapshotsOf("SF-03")
+    const observedMs = Date.parse(first.observedAt)
+    const old = { ...first, scheibenId: 777_004 }
+    const lag = (ms: number) =>
+      storeSnapshot(db, { sourceId: site.sourceId }, old, { nowMs: observedMs + ms })
+    expect(await lag(MAX_OBSERVED_LAG_MS + 1_000)).toEqual({
+      outcome: "past",
+      observedAt: new Date(observedMs),
+    })
+    expect(
+      await db.rawSnapshot.count({ where: { sourceId: site.sourceId, scheibenId: 777_004 } })
+    ).toBe(0)
+    // nach Retry-After (bis 10 min) und einer Runde liest die Brücke neu; so alt wird ein Stand nicht, er gilt noch
+    expect((await lag(MAX_OBSERVED_LAG_MS - 1_000)).outcome).toBe("stored")
+    expect(MAX_OBSERVED_LAG_MS).toBe(15 * 60_000)
   })
 
   it("ein Nullzeichen in einer Zelle (der Vertrag erlaubt es) wird gespeichert und kommt unverändert zurück", async () => {
@@ -153,7 +171,7 @@ describe("storeSnapshot", () => {
     })
     expect(parsed.ok).toBe(true)
     if (!parsed.ok) return
-    const result = await storeSnapshot(db, { sourceId: site.sourceId }, parsed.value)
+    const result = await store(parsed.value)
     expect(result.outcome).toBe("stored")
     if (result.outcome !== "stored") return
     const loaded = await loadSnapshotData(db, result.snapshotId)

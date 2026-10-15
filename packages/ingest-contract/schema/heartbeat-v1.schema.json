@@ -23,7 +23,7 @@
     },
     "status": {
       "type": "string",
-      "enum": ["ok", "delayed", "db-unreachable", "db-error", "possible-reset"]
+      "enum": ["ok", "delayed", "db-unreachable", "db-error", "possible-reset", "clock"]
     },
     "backlog": {
       "type": "integer",

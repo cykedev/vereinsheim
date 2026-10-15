@@ -1,0 +1,18 @@
+{
+  "contractVersion": 1,
+  "bridgeVersion": "0.1.0",
+  "runStartedAt": "2026-10-13T21:58:02.114Z",
+  "sentAt": "2026-10-13T22:01:00.004Z",
+  "status": "clock",
+  "backlog": 2,
+  "lastDbContactAt": "2026-10-13T22:00:59.871Z",
+  "queryMs": 14,
+  "sourceClockOffsetMs": null,
+  "heldBack": [],
+  "sourceFingerprint": {
+    "version": "9",
+    "scheiben": 1532,
+    "treffer": 45008,
+    "oldestStamp": "2024-10-11 20:31:09"
+  }
+}

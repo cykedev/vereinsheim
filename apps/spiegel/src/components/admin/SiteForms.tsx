@@ -157,6 +157,7 @@ const STATUS_TEXT: Record<NonNullable<BridgeRow["status"]>, string> = {
   "db-unreachable": "erreicht die Meyton-Anlage nicht",
   "db-error": "bekommt Fehler von der Meyton-Anlage",
   "possible-reset": "Meyton-Anlage wirkt neu aufgesetzt (Spiegel regelt das selbst)",
+  clock: "Uhr am Gerät geht falsch (schickt keine Scheiben, bis sie stimmt)",
 }
 
 /**
@@ -192,7 +193,9 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
         ? `zuletzt gesehen ${bridge.lastSeenAt}`
         : "noch kein Kontakt",
     bridge.status && STATUS_TEXT[bridge.status],
-    bridge.clockOffsetSeconds !== null &&
+    // gegen eine falsche Uhr am Gerät gemessen, sagt die Abweichung nichts über die Anlage (SF-79)
+    bridge.status !== "clock" &&
+      bridge.clockOffsetSeconds !== null &&
       Math.abs(bridge.clockOffsetSeconds) >= 60 &&
       `Uhr der Meyton-Anlage geht ${Math.abs(bridge.clockOffsetSeconds)} s ${bridge.clockOffsetSeconds > 0 ? "vor" : "nach"}`,
     bridge.backlog

@@ -1,0 +1,6 @@
+{
+  "results": [
+    { "index": 0, "scheibenId": -7257056, "outcome": "past" },
+    { "index": 1, "scheibenId": 1093412, "outcome": "discarded", "reason": "no-consent" }
+  ]
+}

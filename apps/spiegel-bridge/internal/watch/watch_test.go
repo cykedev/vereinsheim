@@ -532,3 +532,51 @@ func TestCatchUpOnlyBeforeTheFirstRound(t *testing.T) {
 		}
 	}
 }
+
+// Solange die Uhr der Brücke nicht stimmt (SF-79), gibt die Erkennung nichts heraus; sie liest weiter, der Stand wartet.
+func TestHoldEmitsNothingAndReleasesAtOnce(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	w.SetHold(true)
+	m.put(7, "2026-10-13 18:00:00", 3, "100")
+	for range 3 {
+		r := tick(t, w, m)
+		if len(r.Snapshots) != 0 {
+			t.Fatal("im Halten geht nichts hinaus")
+		}
+		c.advance(time.Second)
+	}
+	if r := tick(t, w, m); r.Backlog != 1 || !r.Busy {
+		t.Fatalf("der Stand wartet: Rückstau %d, busy %v", r.Backlog, r.Busy)
+	}
+	w.SetHold(false)
+	c.advance(time.Second)
+	r := tick(t, w, m)
+	if len(r.Snapshots) != 1 || r.Snapshots[0].Sequence != c.t.UnixMilli() {
+		t.Fatalf("nach der Freigabe sofort, mit der Uhr von jetzt: %+v", r.Snapshots)
+	}
+}
+
+// Ging die Uhr im Halten vor, schiebt sie die Folgenummer nicht: Nach dem Rücksprung zählt die Uhr von jetzt.
+func TestHoldWithClockAheadKeepsTheSequence(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 1, "100")
+	tick(t, w, m)
+	c.advance(time.Second)
+	first := tick(t, w, m).Snapshots[0].Sequence
+	// die Uhr springt eine Stunde vor, die Brücke hält
+	w.SetHold(true)
+	c.advance(time.Hour)
+	m.put(7, "2026-10-13 18:00:05", 2, "100")
+	tick(t, w, m)
+	c.advance(time.Second)
+	tick(t, w, m)
+	// NTP stellt sie zurück, die Brücke gibt frei
+	c.advance(-time.Hour)
+	w.SetHold(false)
+	r := tick(t, w, m)
+	if len(r.Snapshots) != 1 || r.Snapshots[0].Sequence != c.t.UnixMilli() || r.Snapshots[0].Sequence <= first {
+		t.Fatalf("Folgenummer %v, Uhr %d, vorher %d", ids(r), c.t.UnixMilli(), first)
+	}
+}

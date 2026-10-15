@@ -382,7 +382,14 @@ describe("ingestBatch", () => {
       ...base.data,
       treffer: { ...base.data.treffer, rows: [...rows, { ...rows[0], x: "17" }] },
     }
-    const bad: SnapshotV1 = { ...base, data, checksum: computeChecksum(data) }
+    // gelesen in derselben Runde wie `ok`: Fälle verschiedener Tage in einem Stapel wären sonst `past` (SF-79)
+    const bad: SnapshotV1 = {
+      ...base,
+      observedAt: ok.observedAt,
+      sequence: ok.sequence - 1,
+      data,
+      checksum: computeChecksum(data),
+    }
     const results = await ingest([bad, ok].sort((a, b) => a.sequence - b.sequence))
     const byId = new Map(results.map((r) => [r.scheibenId, r.outcome]))
     expect(byId.get(bad.scheibenId)).toBe("quarantined")

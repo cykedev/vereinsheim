@@ -37,9 +37,34 @@ const (
 	MaxStateAge = time.Hour
 	// was das Schema des Heartbeats an Uhrabweichung annimmt (zehn Jahre); eine Uhr auf 2000 gälte sonst nie
 	maxClockOffset = 10 * 365 * 24 * time.Hour
+	// die eigene Uhr gegen `serverTime` (SF-79, `BRIDGE_CLOCK_TOLERANCE_MS` im Vertrag): weiter daneben, hält die Brücke
+	// Stände und die Uhrabweichung der Anlage zurück
+	ClockTolerance = 30 * time.Second
 	// Stapel: Spiegel nimmt 50 Snapshots und 4 MiB
 	BatchSnapshots = contract.MaxBatchSnapshots
 	BatchBytes     = 3*1024*1024 + 512*1024
+)
+
+// Zustände im Heartbeat (`BRIDGE_STATUS` im Vertrag)
+const (
+	StatusOK            = "ok"
+	StatusDelayed       = "delayed"
+	StatusDBUnreachable = "db-unreachable"
+	StatusDBError       = "db-error"
+	StatusPossibleReset = "possible-reset"
+	StatusClock         = "clock"
+)
+
+// Statuses sind alle Zustände, die `status` liefern kann.
+var Statuses = []string{StatusOK, StatusDelayed, StatusDBUnreachable, StatusDBError, StatusPossibleReset, StatusClock}
+
+// clockState: die eigene Uhr gegen Spiegel (SF-79). Ungeprüft beim Start und nachdem Spiegel `past` antwortet.
+type clockState int
+
+const (
+	clockUnchecked clockState = iota
+	clockOK
+	clockWrong
 )
 
 // issueIndex findet den Snapshot in einem Fehlerpfad von Spiegel (`snapshots[3].data…`).
@@ -61,7 +86,8 @@ type Source interface {
 type Spiegel interface {
 	State(ctx context.Context) (api.State, error)
 	Snapshots(ctx context.Context, snapshots []contract.Snapshot) ([]api.Result, error)
-	Heartbeat(ctx context.Context, hb api.Heartbeat) error
+	// die Antwort ist die Uhr von Spiegel (`serverTime`)
+	Heartbeat(ctx context.Context, hb api.Heartbeat) (time.Time, error)
 }
 
 // Logger schreibt eine Meldung mit festem Code und Zahlen, nie Inhalte (SF-59).
@@ -95,6 +121,7 @@ type Runner struct {
 	lastDB        *time.Time
 	queryMs       *int
 	clockOffset   *int64
+	clock         clockState
 	backlog       int
 	lastHeartbeat time.Time
 	lastScheiben  int
@@ -323,6 +350,8 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 			r.log("catch-up", "from", strings.ReplaceAll(from, " ", "T"))
 		}
 	}
+	// ohne geprüfte Uhr gibt die Erkennung nichts heraus; sie liest weiter, Wartendes geht nach der Freigabe (SF-79)
+	r.watcher.SetHold(r.clock != clockOK)
 	// gemessen neben `NOW(3)`: nicht am Beginn des Schritts, vor einem womöglich langsamen Zustand
 	roundAt := r.now()
 	began := time.Now()
@@ -330,9 +359,9 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 	took := time.Since(began)
 	if err != nil {
 		c := ssmdb2.Code(err)
-		r.dbStatus = "db-error"
+		r.dbStatus = StatusDBError
 		if c == "connection" || c == "timeout" {
-			r.dbStatus = "db-unreachable"
+			r.dbStatus = StatusDBUnreachable
 		}
 		// nie als Löschung werten: die Runde zählt nicht (SF-24)
 		r.log("round-failed", "code", c)
@@ -392,7 +421,8 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 		r.staleLogged = true
 		r.log("state-stale")
 	}
-	if len(outgoing) > 0 && !stale && !now.Before(r.pauseUntil) {
+	// die Uhr: doppelt zu `SetHold` (gehalten kommt nichts heraus), als Schutz, falls ein Stand doch hierher gelangt
+	if len(outgoing) > 0 && !stale && !now.Before(r.pauseUntil) && r.clock == clockOK {
 		if err := r.upload(ctx, outgoing); err != nil {
 			return 0, err
 		}
@@ -407,6 +437,11 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 	wait := QuietEvery
 	if result.Busy {
 		wait = BusyEvery
+	}
+	// ungeprüfte oder falsche Uhr: Was wartet, bliebe wartend und hielte den Takt im Sekundentakt; die Brücke läse bis
+	// zu 50 ganze Scheiben je Sekunde, solange die Uhr falsch geht Die Freigabe kommt mit dem Heartbeat.
+	if r.clock != clockOK {
+		wait = max(wait, QuietEvery)
 	}
 	if pause := r.pauseUntil.Sub(now); pause > wait {
 		wait = pause
@@ -491,8 +526,12 @@ func (r *Runner) send(ctx context.Context, batch []contract.Snapshot) error {
 				r.watcher.Delivered(s)
 				r.unconfirmed[s.ScheibenID] = true
 			default:
+				// `future` oder `past`: die Uhr der Brücke widerspricht Spiegel; kurz warten, `past` heißt auch neu messen
 				r.pauseUntil = now.Add(FuturePause)
-				r.log("future", "scheibe", s.ScheibenID)
+				r.log(res.Outcome, "scheibe", s.ScheibenID)
+				if res.Outcome == "past" {
+					r.setClock(clockUnchecked)
+				}
 			}
 		}
 		return nil
@@ -551,12 +590,52 @@ func (r *Runner) status() string {
 	switch {
 	case r.dbStatus != "":
 		return r.dbStatus
+	case r.clock == clockWrong:
+		return StatusClock
 	case r.uploadFailing:
-		return "delayed"
+		return StatusDelayed
 	case r.possibleReset:
-		return "possible-reset"
+		return StatusPossibleReset
 	}
-	return "ok"
+	return StatusOK
+}
+
+// setClock wechselt den Zustand der eigenen Uhr. Eine Uhrabweichung der Anlage aus der Zeit davor gilt nicht mehr: Sie
+// ist gegen die alte Uhr gemessen.
+func (r *Runner) setClock(state clockState) {
+	if state != r.clock {
+		r.clockOffset = nil
+	}
+	r.clock = state
+}
+
+// measureClock vergleicht die eigene Uhr mit `serverTime` aus der Antwort auf den Heartbeat (SF-79): Mitte zwischen
+// Senden und Antwort minus Uhr von Spiegel, unsicher um die halbe Umlaufzeit. Sie stimmt, wenn sie auch im ungünstigsten
+// Fall in der Schwelle liegt, und geht falsch, wenn sie auch im günstigsten daneben liegt; sonst bleibt der Zustand
+// (eine harte Grenze der Umlaufzeit hielte die Brücke auf einer langsamen Leitung für immer).
+func (r *Runner) measureClock(sent, back, server time.Time) {
+	roundTrip := back.Sub(sent)
+	if roundTrip < 0 {
+		r.log("clock-unmeasured", "ms", roundTrip.Milliseconds())
+		return
+	}
+	offset := sent.Add(roundTrip / 2).Sub(server)
+	distance := max(offset, -offset)
+	switch {
+	case distance+roundTrip/2 <= ClockTolerance:
+		if r.clock == clockWrong {
+			r.log("clock-ok")
+		}
+		r.setClock(clockOK)
+	case distance-roundTrip/2 > ClockTolerance:
+		if r.clock != clockWrong {
+			// negativ: die Brücke geht nach
+			r.log("clock-wrong", "seconds", int64(offset.Round(time.Second)/time.Second))
+		}
+		r.setClock(clockWrong)
+	default:
+		r.log("clock-unmeasured", "ms", roundTrip.Milliseconds())
+	}
 }
 
 func iso(t time.Time) string { return contract.ObservedAt(t.UnixMilli()) }
@@ -613,25 +692,40 @@ func (r *Runner) heartbeat(ctx context.Context, now time.Time, dbReachable bool)
 		ContractVersion:     contract.ContractVersion,
 		BridgeVersion:       r.version,
 		RunStartedAt:        iso(r.started),
-		SentAt:              iso(now),
 		Status:              r.status(),
 		Backlog:             r.backlog,
 		QueryMs:             r.queryMs,
-		SourceClockOffsetMs: r.clockOffset,
+		SourceClockOffsetMs: nil,
 		HeldBack:            heldBack,
 		SourceFingerprint:   fingerprint,
 		HistoryDone:         r.historyDone,
+	}
+	// gegen eine falsche oder ungeprüfte eigene Uhr gemessen, sagt die Abweichung nichts über die Anlage (SF-79)
+	if r.clock == clockOK {
+		hb.SourceClockOffsetMs = r.clockOffset
 	}
 	if r.lastDB != nil {
 		at := iso(*r.lastDB)
 		hb.LastDBContactAt = &at
 	}
-	if err := r.spiegel.Heartbeat(ctx, hb); err != nil {
+	// der Zeitpunkt des Sendens, nicht der Beginn der Runde: Spiegel prüft daran die Uhr der Brücke
+	sent := r.now()
+	hb.SentAt = iso(sent)
+	server, err := r.spiegel.Heartbeat(ctx, hb)
+	if err != nil {
 		if unauthorized(err) {
 			return ErrUnauthorized
 		}
+		// ein älterer Spiegel kennt `clock` nicht und lehnt ab: ungeprüft melden, beim nächsten Mal messen; sonst hielte
+		// die Brücke für immer
+		var apiErr *api.Error
+		if r.clock == clockWrong && errors.As(err, &apiErr) && apiErr.Status == 400 {
+			r.setClock(clockUnchecked)
+		}
 		r.log("heartbeat-failed", "code", code(err))
+		return nil
 	}
+	r.measureClock(sent, r.now(), server)
 	return nil
 }
 

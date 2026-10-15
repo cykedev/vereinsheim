@@ -27,7 +27,8 @@
               "future",
               "discarded",
               "quarantined",
-              "epoch-unconfirmed"
+              "epoch-unconfirmed",
+              "past"
             ]
           },
           "reason": {

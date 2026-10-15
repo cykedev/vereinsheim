@@ -1,0 +1,16 @@
+{
+  "description": "API v1, von Hand aus der Spezifikation, keine Rechnung: welche Ergebnisse eines Stapels endgültig sind (die Brücke schickt denselben Stand nicht noch einmal) und welche sie später wiederholt, welche Status ein Heartbeat tragen darf und wie weit die Uhr der Brücke von serverTime abweichen darf. Spiegel (TypeScript) und die Brücke (Go) prüfen sich daran.",
+  "snapshotOutcomes": {
+    "stored": "final",
+    "unchanged": "final",
+    "lifesign": "final",
+    "stale": "final",
+    "future": "retry",
+    "discarded": "final",
+    "quarantined": "final",
+    "epoch-unconfirmed": "retry",
+    "past": "retry"
+  },
+  "bridgeStatus": ["ok", "delayed", "db-unreachable", "db-error", "possible-reset", "clock"],
+  "bridgeClockToleranceMs": 30000
+}

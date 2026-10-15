@@ -13,6 +13,7 @@ import {
   authenticateBridge,
   bridgeState,
   createPairing,
+  HEARTBEAT_CLOCK_MAX_MS,
   PAIRING_TTL_MS,
   recordHeartbeat,
   redeemPairing,
@@ -222,6 +223,24 @@ describe("Heartbeat", () => {
     expect(await stateOf(empty.id)).toEqual({ state: "final", complete: false })
   })
 
+  it("SF-79: eine Uhrmessung nur aus einem Heartbeat, dessen Zeit höchstens 60 s neben der Empfangszeit liegt", async () => {
+    const paired = await pairedBridge()
+    const auth = (await authenticateBridge(db, paired.token, NOW))!
+    // die Messungen hängen an der Anlage; der nächste Test zählt sie von vorn
+    onTestFinished(async () => {
+      await db.clockReading.deleteMany({ where: { siteId: site.siteId } })
+    })
+    const count = () => db.clockReading.count({ where: { siteId: site.siteId } })
+    const before = await count()
+    const off = (ms: number, offsetMs: number) =>
+      heartbeat({ sentAt: new Date(NOW - ms).toISOString(), sourceClockOffsetMs: offsetMs })
+    expect(HEARTBEAT_CLOCK_MAX_MS).toBe(60_000)
+    await recordHeartbeat(db, auth, off(61_000, 500_000), NOW)
+    expect(await count()).toBe(before)
+    await recordHeartbeat(db, auth, off(59_000, 900_000), NOW)
+    expect(await count()).toBe(before + 1)
+  })
+
   it("ein neuer Lauf der Brücke macht alles davor endgültig; die Uhr wird nur bei Änderung neu vermerkt", async () => {
     const paired = await pairedBridge()
     const before = await card(9201, "resting", 20 * 60_000)
@@ -230,7 +249,12 @@ describe("Heartbeat", () => {
     expect((await stateOf(before.id)).state).toBe("resting")
     // dieselbe Uhr eine Minute später: keine neue Zeile
     auth = (await authenticateBridge(db, paired.token, NOW + 60_000))!
-    await recordHeartbeat(db, auth, heartbeat({ sourceClockOffsetMs: -2_500 }), NOW + 60_000)
+    await recordHeartbeat(
+      db,
+      auth,
+      heartbeat({ sentAt: new Date(NOW + 60_000).toISOString(), sourceClockOffsetMs: -2_500 }),
+      NOW + 60_000
+    )
     expect(await db.clockReading.count({ where: { siteId: site.siteId } })).toBe(1)
     // die Anlage war aus: ein neuer Lauf
     auth = (await authenticateBridge(db, paired.token, NOW + 120_000))!
@@ -239,6 +263,7 @@ describe("Heartbeat", () => {
       auth,
       heartbeat({
         runStartedAt: new Date(NOW + 100_000).toISOString(),
+        sentAt: new Date(NOW + 120_000).toISOString(),
         sourceClockOffsetMs: 40_000,
       }),
       NOW + 120_000

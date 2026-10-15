@@ -208,14 +208,28 @@ async function main() {
     let snapshots = 0
     let bytes = 0
     let retried = 0
-    const startMs = Date.now() - MINUTES * 60_000 - 60_000
+    // der Abend beginnt jetzt: Lebenszeichen und Schusszeiten passen zur Beobachtung, wie an einer echten Anlage
+    // (mit einem Beginn in der Vergangenheit bekäme jede Scheibe `uhr-abweichung`)
+    const startMs = Date.now()
     const runStartedAt = new Date().toISOString()
     out(`${LANES} Stände, ${MINUTES} min Abend, Tempo ${SPEED}, gegen ${BASE}`)
+    // wie eine Brücke: jede Lesung trägt die Zeit, zu der sie hinausgeht, die Folgenummer steigt streng. Mit Tempo über 1
+    // läuft die Simulation der Uhr voraus; ihre Zeit als Folgenummer wäre dann `future` (SF-79)
+    let lastSequence = 0
+    const stamped = (snapshots: SnapshotV1[]) => {
+      const now = Date.now()
+      lastSequence = Math.max(now, lastSequence + 1)
+      return snapshots.map((s) => ({
+        ...s,
+        sequence: lastSequence,
+        observedAt: new Date(now).toISOString(),
+      }))
+    }
     for (const step of evening(startMs, (i) => SPORTPASS_BASE + i)) {
       const tick = Date.now()
       if (step.snapshots.length) {
-        const body = JSON.stringify({ snapshots: step.snapshots.slice(0, 50) })
         for (;;) {
+          const body = JSON.stringify({ snapshots: stamped(step.snapshots.slice(0, 50)) })
           const sent = Date.now()
           const response = await fetch(`${BASE}/api/ingest/v1/snapshots`, {
             method: "POST",

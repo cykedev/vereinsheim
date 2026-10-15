@@ -56,6 +56,33 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(item(false)).not.toContain(">Entfernen<")
   })
 
+  it("Uhr am Gerät falsch: als Zustand, ohne die Zeile zur Uhr der Meyton-Anlage (SF-79)", () => {
+    const item = (status: "ok" | "clock") =>
+      renderToStaticMarkup(
+        createElement(BridgeItem, {
+          bridge: {
+            id: 1,
+            name: "Pi",
+            version: "0.1.0",
+            createdAt: "15.10.2026",
+            lastSeenAt: null,
+            lastHeartbeatAt: "15.10.2026, 19:00",
+            revoked: false,
+            status,
+            // eine ältere Brücke ohne eigene Prüfung meldete die eigene Verspätung als Abweichung der Anlage
+            clockOffsetSeconds: 162000,
+            backlog: null,
+            heldBack: null,
+          },
+        })
+      )
+    expect(item("clock")).toContain(
+      "Uhr am Gerät geht falsch (schickt keine Scheiben, bis sie stimmt)"
+    )
+    expect(item("clock")).not.toContain("Uhr der Meyton-Anlage")
+    expect(item("ok")).toContain("Uhr der Meyton-Anlage geht 162000 s vor")
+  })
+
   it("Knopf, Dialog und Action gehören zusammen: getrennt entfernen, laufend trennen", () => {
     const device = "Mac (Kopie 9.10.)"
     expect(bridgeActionOf({ name: device, revoked: true })).toEqual({

@@ -76,6 +76,9 @@ const BRIDGE_NOTE: Partial<Record<HeartbeatV1["status"], string>> = {
   "db-error": "bekommt Fehler von der Meyton-Anlage",
   "possible-reset":
     "Die Meyton-Anlage wirkt wie neu aufgesetzt. Spiegel trennt alte und neue Scheiben selbst. Du musst nichts tun.",
+  // SF-79: ein Zustand, keine Aufgabe; meist stellt sich die Uhr selbst (Textbuch „Uhr der Brücke“)
+  clock:
+    "Die Uhr am Gerät der Brücke geht falsch. Bis sie stimmt, schickt die Brücke keine Scheiben. Meist stellt sich die Uhr nach ein paar Minuten von selbst. Bleibt der Hinweis länger, muss jemand vor Ort die Uhrzeit am Gerät prüfen. Danach kommen alle Scheiben nach.",
 }
 
 const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`

@@ -5,6 +5,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -123,8 +124,13 @@ type Result struct {
 	Reason     string `json:"reason,omitempty"`
 }
 
-// Final: Bis auf `future` und `epoch-unconfirmed` schickt die Brücke denselben Stand nicht noch einmal.
-func (r Result) Final() bool { return r.Outcome != "future" && r.Outcome != "epoch-unconfirmed" }
+// RetryOutcomes sind nicht endgültig (`RETRY_OUTCOMES` im Vertrag, Vektor `test-vectors/api-v1.json`): Spiegel hat
+// nichts geändert, die Brücke schickt den Stand später noch einmal. `past` (SF-79): die Beobachtung lag weit vor der
+// Empfangszeit, die Uhr der Brücke geht nach.
+var RetryOutcomes = map[string]bool{"future": true, "epoch-unconfirmed": true, "past": true}
+
+// Final: Bis auf `RetryOutcomes` schickt die Brücke denselben Stand nicht noch einmal.
+func (r Result) Final() bool { return !RetryOutcomes[r.Outcome] }
 
 // Error ist eine Antwort von Spiegel mit Fehlercode, oder ein Fehler auf dem Weg dorthin (Status 0).
 type Error struct {
@@ -255,9 +261,25 @@ func transportError(err error) error {
 		return &Error{Code: "canceled"}
 	case errors.Is(err, context.DeadlineExceeded), errors.As(err, &netErr) && netErr.Timeout():
 		return &Error{Code: "timeout"}
+	case certificateTime(err) != "":
+		return &Error{Code: certificateTime(err)}
 	default:
 		return &Error{Code: "network"}
 	}
+}
+
+// certificateTime: Die eigene Uhr liegt außerhalb der Gültigkeit des Zertifikats. Vor dem Beginn geht sie nach (ein Pi
+// ohne Uhr auf 1970, SF-79): `tls-time`. Danach ist das Zertifikat abgelaufen (oder die Uhr geht weit vor): `tls-expired`,
+// damit vor Ort niemand eine richtige Uhr sucht. Sonst leer.
+func certificateTime(err error) string {
+	var invalid x509.CertificateInvalidError
+	if !errors.As(err, &invalid) || invalid.Reason != x509.Expired || invalid.Cert == nil {
+		return ""
+	}
+	if time.Now().Before(invalid.Cert.NotBefore) {
+		return "tls-time"
+	}
+	return "tls-expired"
 }
 
 // marshal schreibt JSON ohne HTML-Escapes (Strings bleiben, wie sie sind; die Prüfsumme rechnet ohnehin über die
@@ -304,7 +326,17 @@ func (c *Client) Snapshots(ctx context.Context, snapshots []contract.Snapshot) (
 	return res.Results, err
 }
 
-// Heartbeat meldet den Zustand der Brücke.
-func (c *Client) Heartbeat(ctx context.Context, hb Heartbeat) error {
-	return c.do(ctx, http.MethodPost, "/heartbeat", hb, nil)
+// Heartbeat meldet den Zustand der Brücke; die Antwort ist die Uhr von Spiegel (`serverTime`), an der die Brücke ihre
+// eigene misst (SF-79). Ohne sie ein Fehler `response-invalid`.
+func (c *Client) Heartbeat(ctx context.Context, hb Heartbeat) (time.Time, error) {
+	var res struct {
+		ServerTime time.Time `json:"serverTime"`
+	}
+	if err := c.do(ctx, http.MethodPost, "/heartbeat", hb, &res); err != nil {
+		return time.Time{}, err
+	}
+	if res.ServerTime.IsZero() {
+		return time.Time{}, &Error{Status: http.StatusOK, Code: "response-invalid"}
+	}
+	return res.ServerTime, nil
 }

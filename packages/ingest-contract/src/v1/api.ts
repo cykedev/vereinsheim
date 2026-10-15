@@ -53,13 +53,26 @@ export const pairResponseV1 = z
   })
   .meta({ title: "Spiegel-Kopplung v1 (Antwort)" })
 
+/**
+ * Zustand der Brücke im Heartbeat. `clock` (additiv, SF-79):
+ * Die Uhr der Brücke lag bei der letzten Messung mehr als `BRIDGE_CLOCK_TOLERANCE_MS` neben `serverTime`; bis sie stimmt,
+ * schickt die Brücke keine Stände und keine Uhrabweichung der Anlage.
+ */
 export const BRIDGE_STATUS = [
   "ok",
   "delayed",
   "db-unreachable",
   "db-error",
   "possible-reset",
+  "clock",
 ] as const
+
+/**
+ * So weit darf die Uhr der Brücke von `serverTime` (Antwort auf den Heartbeat) abweichen, sonst hält sie Stände und
+ * Uhrabweichung der Anlage zurück. Halb so groß wie die Schwelle für das Merkmal `uhr-abweichung` (60 s): Spiegel misst
+ * die Uhr eines Stands gegen die Beobachtung der Brücke und nimmt deren Uhr dabei als richtig.
+ */
+export const BRIDGE_CLOCK_TOLERANCE_MS = 30_000
 
 /**
  * `POST /heartbeat`, einmal je Minute. Nie Namen oder Sportpassnummern (SF-59); der Fingerabdruck der Quelle
@@ -109,6 +122,10 @@ export const heartbeatV1 = z
   })
   .meta({ title: "Spiegel-Heartbeat v1" })
 
+/**
+ * `serverTime`: die Uhr von Spiegel beim Antworten. Daran misst die Brücke ihre eigene Uhr (Zeit vor und nach der
+ * Anfrage, `BRIDGE_CLOCK_TOLERANCE_MS`).
+ */
 export const heartbeatResponseV1 = z
   .strictObject({ serverTime: instant })
   .meta({ title: "Spiegel-Heartbeat v1 (Antwort)" })
@@ -165,9 +182,9 @@ export const stateResponseV1 = z
  * - `lifesign`: nur das Lebenszeichen hat sich bewegt, vermerkt ohne neue Zeilen;
  * - `stale`: älter als der zuletzt gesehene Stand (SF-26); `future`: Folgenummer weit in der Zukunft;
  * - `discarded`: nicht angenommen und nicht gespeichert (`reason`); `quarantined`: abgelegt, aber unbekanntes Schema
- *   (SF-25); `epoch-unconfirmed`: neue Epoche, bis der Admin sie bestätigt (SF-23).
- * Bis auf `future` und `epoch-unconfirmed` ist jedes Ergebnis endgültig: die Brücke schickt denselben Stand nicht
- * noch einmal.
+ *   (SF-25); `epoch-unconfirmed`: neue Epoche, bis der Admin sie bestätigt (SF-23);
+ * - `past` (additiv): Beobachtung weit vor der Empfangszeit, die Uhr der Brücke geht nach (SF-79).
+ * Bis auf `RETRY_OUTCOMES` ist jedes Ergebnis endgültig: die Brücke schickt denselben Stand nicht noch einmal.
  */
 export const SNAPSHOT_OUTCOMES = [
   "stored",
@@ -178,7 +195,15 @@ export const SNAPSHOT_OUTCOMES = [
   "discarded",
   "quarantined",
   "epoch-unconfirmed",
+  "past",
 ] as const
+
+/** nicht endgültig: nichts geändert, die Brücke schickt den Stand später noch einmal (die Uhr oder die Epoche stimmt dann) */
+export const RETRY_OUTCOMES = [
+  "future",
+  "epoch-unconfirmed",
+  "past",
+] as const satisfies readonly (typeof SNAPSHOT_OUTCOMES)[number][]
 
 /** warum verworfen: ohne Zustimmung, Grabstein oder Löschsperre, verdeckt oder Modus 0 */
 export const DISCARD_REASONS = ["no-consent", "blocked", "hidden"] as const

@@ -29,6 +29,15 @@ const sha256 = (text: string) => createHash("sha256").update(text, "utf8").diges
 export const MAX_SEQUENCE_AHEAD_MS = 10 * 60_000
 
 /**
+ * so weit darf die Beobachtung (Uhr der Brücke) vor der Empfangszeit liegen (SF-79). Ein Pi ohne Echtzeituhr startet
+ * mit der Uhr vom Vorabend; Spiegel nähme die Stände sonst an und verschöbe die Scheibe um die Verspätung der Brücke
+ * (der Adapter hält die Uhr der Brücke für richtig). Die Brücke stempelt jede Lesung neu, auch nach `Retry-After` (bis
+ * 10 min) und beim Nachholen; zwischen Lesung und Ankunft liegen eine Runde und die Stapel. Abgelehnt, nichts geändert,
+ * die Brücke schickt später neu (`RETRY_OUTCOMES`).
+ */
+export const MAX_OBSERVED_LAG_MS = 15 * 60_000
+
+/**
  * Das Lebenszeichen der Quelle `meyton-ssmdb2`: `Scheiben.Zeitstempel` steigt alle 5 bis 10 s, solange der Stand belegt
  * ist ([[meyton-ssmdb2]]). Ändert sich nur das, legt Spiegel nichts Neues ab (Verfeinerung von
  * [[adr-031]]): sonst entstünde je belegtem Stand alle paar Sekunden ein Snapshot.
@@ -74,6 +83,8 @@ export type StoreResult =
   | { outcome: "stale"; latestSequence: bigint }
   /** Folgenummer weiter als `MAX_SEQUENCE_AHEAD_MS` in der Zukunft: abgelehnt, nichts geändert */
   | { outcome: "future"; sequence: bigint }
+  /** Beobachtung mehr als `MAX_OBSERVED_LAG_MS` vor der Empfangszeit (SF-79): abgelehnt, nichts geändert */
+  | { outcome: "past"; observedAt: Date }
   /** Grabstein oder Löschsperre, geprüft unter der Sperre der Scheibe (`startAtMs`): nichts gespeichert */
   | { outcome: "blocked" }
 
@@ -106,6 +117,7 @@ export async function storeSnapshot(
   const sequence = BigInt(snapshot.sequence)
   const observedAt = new Date(snapshot.observedAt)
   if (snapshot.sequence > nowMs + MAX_SEQUENCE_AHEAD_MS) return { outcome: "future", sequence }
+  if (observedAt.getTime() < nowMs - MAX_OBSERVED_LAG_MS) return { outcome: "past", observedAt }
 
   return db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`

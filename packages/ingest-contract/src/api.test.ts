@@ -9,20 +9,28 @@ import { SCHEMA_FILES } from "./jsonSchema"
 import { parseApi } from "./parse"
 import { sportpassHash } from "./sportpass"
 import {
+  BRIDGE_CLOCK_TOLERANCE_MS,
+  BRIDGE_STATUS,
   heartbeatV1,
   normalizePairingCode,
   pairRequestV1,
   PAIRING_CODE_ALPHABET,
   PAIRING_CODE_LENGTH,
+  RETRY_OUTCOMES,
+  SNAPSHOT_OUTCOMES,
+  snapshotsResponseV1,
   stateResponseV1,
 } from "./v1/api"
 
 const load = (path: string): unknown =>
   JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"))
 
-/** Beispiel → Schema über den Dateinamen: `heartbeat.json` → `heartbeat-v1.schema.json` */
+/**
+ * Beispiel → Schema über den Dateinamen: `heartbeat.json` → `heartbeat-v1.schema.json`; was nach dem ersten Punkt steht,
+ * ist eine Spielart desselben Schemas (`heartbeat.clock.json`)
+ */
 const schemaOf = (file: string) =>
-  `${file.replace(/\.json$/, "").replace(/^error-response-.*$/, "error-response")}-v1.schema.json`
+  `${file.split(".")[0].replace(/^error-response-.*$/, "error-response")}-v1.schema.json`
 
 const examples = readdirSync(new URL("../examples/api-v1/", import.meta.url)).map((file) => ({
   file,
@@ -153,5 +161,36 @@ describe("Nachladen älterer Scheiben (additiv)", () => {
       Array.from({ length: 101 }, (_, i) => ({ id: i + 1, since })),
     ])
       expect(parseApi(heartbeatV1, { ...heartbeat, historyDone }).ok).toBe(false)
+  })
+})
+
+describe("Uhr der Brücke (additiv, SF-79)", () => {
+  /** von Hand aus der Spezifikation; die Brücke (Go) prüft sich an derselben Datei */
+  const vector = load("test-vectors/api-v1.json") as {
+    snapshotOutcomes: Record<string, "final" | "retry">
+    bridgeStatus: string[]
+    bridgeClockToleranceMs: number
+  }
+  const heartbeat = load("examples/api-v1/heartbeat.json") as Record<string, unknown>
+
+  it("Ergebnisse, Status und Schwelle wie im Vektor", () => {
+    expect([...SNAPSHOT_OUTCOMES].sort()).toEqual(Object.keys(vector.snapshotOutcomes).sort())
+    expect([...RETRY_OUTCOMES].sort()).toEqual(
+      Object.entries(vector.snapshotOutcomes)
+        .filter(([, kind]) => kind === "retry")
+        .map(([outcome]) => outcome)
+        .sort()
+    )
+    expect([...BRIDGE_STATUS].sort()).toEqual([...vector.bridgeStatus].sort())
+    expect(BRIDGE_CLOCK_TOLERANCE_MS).toBe(vector.bridgeClockToleranceMs)
+  })
+
+  it("Heartbeat mit `clock`, Antwort mit `past`; ein unbekannter Status fällt weiter", () => {
+    expect(parseApi(heartbeatV1, { ...heartbeat, status: "clock" }).ok).toBe(true)
+    expect(parseApi(heartbeatV1, { ...heartbeat, status: "uhr" }).ok).toBe(false)
+    expect(
+      snapshotsResponseV1.safeParse({ results: [{ index: 0, scheibenId: 1, outcome: "past" }] })
+        .success
+    ).toBe(true)
   })
 })

@@ -129,7 +129,14 @@ type Watcher struct {
 	history func(sportpass string) bool
 	// Uhr der letzten gelungenen Runde: welche Scheiben in ihr in der Ablage standen
 	roundAt time.Time
+	// die Uhr der Brücke stimmt nicht oder ist ungeprüft (SF-79): nichts herausgeben
+	hold bool
 }
+
+// SetHold: Solange die Uhr der Brücke nicht stimmt (SF-79), gibt `Tick` keine Stände heraus und lässt die Folgenummer,
+// wie sie ist; gelesen und vermerkt wird wie sonst, ein neuer Stand wartet. Nach der Freigabe geht ein stabiler Stand
+// in der nächsten Runde hinaus, mit der Uhr von dann.
+func (w *Watcher) SetHold(hold bool) { w.hold = hold }
 
 // SetHistory legt fest, welche Scheiben offene Aufträge zum Nachladen wollen, nach ihrer SportpassID als Text;
 // nil heißt keiner. Gelesen werden sie wie das Nachholen: nur, wenn niemand schießt (SF-52), mit dem Budget je Runde.
@@ -377,8 +384,8 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		// bis Spiegel ihn bestätigt (`Delivered`), wartet ein neuer Stand und wird jede Runde neu gelesen: ohne
 		// Warteschlange schickt die Brücke nach einem gescheiterten Upload, was sie dann liest (ADR-027)
 		c.waiting = fresh
-		// zwei gleiche Lesungen hintereinander (SF-71)
-		if !fresh || !stable {
+		// zwei gleiche Lesungen hintereinander (SF-71); gehalten geht nichts hinaus (SF-79)
+		if !fresh || !stable || w.hold {
 			continue
 		}
 		// nur das Lebenszeichen bewegt: höchstens alle `LifesignEvery` (Spiegel legt dafür ohnehin keine Zeilen an)

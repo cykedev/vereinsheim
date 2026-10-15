@@ -98,6 +98,19 @@ describe("Übersicht des Admins", () => {
     ).toBe("läuft")
   })
 
+  it("Uhr am Gerät falsch: ein Zustand mit Erklärung, keine Aufgabe (SF-79)", () => {
+    const model = overviewModel({
+      ...base,
+      bridge: { ...base.bridge!, online: true, status: "clock", heldBack: null },
+    })
+    expect(model.tasks).toEqual([])
+    expect(model.stations[1].facts).toEqual([
+      "Pi im Schützenhaus",
+      "zuletzt online 14.10.2026, 22:14",
+      "Die Uhr am Gerät der Brücke geht falsch. Bis sie stimmt, schickt die Brücke keine Scheiben. Meist stellt sich die Uhr nach ein paar Minuten von selbst. Bleibt der Hinweis länger, muss jemand vor Ort die Uhrzeit am Gerät prüfen. Danach kommen alle Scheiben nach.",
+    ])
+  })
+
   it("eine unbekannte Ablage ist ein Hinweis an der Anlage, keine Aufgabe", () => {
     const model = overviewModel({ ...base, site: { name: "Schützenhaus", foreignSource: true } })
     expect(model.tasks).toEqual([])
@@ -204,7 +217,7 @@ describe("Übersicht des Admins", () => {
       ...model.stations.flatMap((s) => [s.title, s.does, s.status, ...s.facts]),
     ]
     for (const text of texts) expect(text).not.toMatch(OLD_WORDS)
-    for (const status of ["delayed", "db-unreachable", "db-error"] as const)
+    for (const status of ["delayed", "db-unreachable", "db-error", "clock"] as const)
       for (const fact of overviewModel({ ...base, bridge: { ...base.bridge!, status } }).stations[1]
         .facts)
         expect(fact).not.toMatch(OLD_WORDS)
