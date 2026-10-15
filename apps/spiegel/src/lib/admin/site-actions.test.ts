@@ -123,10 +123,13 @@ describe("Anlage und Brücken (Admin)", () => {
       db.bridge.create({
         data: { siteId: site.id, name, tokenHash: randomBytes(32).toString("hex"), revokedAt },
       })
-    const running = await bridge(`Läuft ${tag}`, null)
-    const revoked = await bridge(`Getrennt ${tag}`, new Date())
-    // aufräumen auch, wenn eine Erwartung scheitert: Die Brücken liegen auf der ersten Dev-Anlage (Review)
+    // aufräumen auch, wenn eine Erwartung oder das Anlegen scheitert: Die Brücken liegen auf der ersten Dev-Anlage (Review)
+    const made: number[] = []
     try {
+      const running = await bridge(`Läuft ${tag}`, null)
+      made.push(running.id)
+      const revoked = await bridge(`Getrennt ${tag}`, new Date())
+      made.push(revoked.id)
       expect(await removeBridgeAction(running.id)).toEqual({
         error: "Diese Brücke ist nicht getrennt. Lade die Seite neu.",
       })
@@ -135,8 +138,13 @@ describe("Anlage und Brücken (Admin)", () => {
       const gone = { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
       expect(await removeBridgeAction(revoked.id)).toEqual(gone)
       expect(await removeBridgeAction(Number.NaN)).toEqual(gone)
+      // eine Kennung über dem Bereich der Spalte: kein Fehler der Datenbank, sondern die Meldung (Review)
+      expect(await removeBridgeAction(2 ** 40)).toEqual(gone)
+      expect(await revokeBridgeAction(2 ** 40)).toEqual({
+        error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu.",
+      })
     } finally {
-      await db.bridge.deleteMany({ where: { id: { in: [running.id, revoked.id] } } })
+      await db.bridge.deleteMany({ where: { id: { in: made } } })
     }
   })
 

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 
 import { computeChecksum } from "@vereinsheim/ingest-contract/checksum"
-import { CARD_FLAGS } from "@vereinsheim/shot-core/metrics"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
+import { CARD_FLAGS } from "@vereinsheim/shot-core/metrics"
 import { frozenCaseIds, frozenExpected, frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
 
-import { shotChange, type ShotInput } from "../db/cards"
+import { shotChange, STICKY_FLAGS, type ShotInput } from "../db/cards"
 import {
   adaptSnapshot,
   hasHeldShot,
@@ -42,13 +42,11 @@ function adaptAll(snapshots: readonly SnapshotV1[]) {
   return cards
 }
 
-/** dauerhaft wie in `writeRevision`: einmal gesetzt, bleibt es */
-const STICKY = ["uhr-abweichung", "korrigiert"]
-
 function flagsAfter(cards: readonly AdaptedCard[]): string[] {
   const flags = new Set(cards.at(-1)!.flags)
   for (const card of cards)
-    for (const flag of card.flags) if (STICKY.includes(flag)) flags.add(flag)
+    // dauerhaft wie in `writeRevision`: einmal gesetzt, bleibt es
+    for (const flag of card.flags) if (STICKY_FLAGS.includes(flag)) flags.add(flag)
   // korrigiert: eine Wertungszeile geändert oder weg (SF-67), über `shotChange` wie in `writeRevision`
   const corrected = cards.some(
     (card, i) => i > 0 && shotChange(cards[i - 1].shots, card.shots).kind === "correction"

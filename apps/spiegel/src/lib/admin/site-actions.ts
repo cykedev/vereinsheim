@@ -93,11 +93,13 @@ export async function pairBridge(
   }
 }
 
+/** Kennung einer Zeile mit `Int`-Spalte: darüber würfe Prisma, statt die Meldung zu geben (Review) */
+const isRowId = (id: number) => Number.isSafeInteger(id) && id > 0 && id <= 2_147_483_647
+
 export async function revokeBridgeAction(bridgeId: number): Promise<ActionResult> {
   const actor = await adminActor()
   if ("error" in actor) return actor
-  if (!Number.isSafeInteger(bridgeId))
-    return { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
+  if (!isRowId(bridgeId)) return { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
   await revokeBridge(db, bridgeId)
   revalidatePath("/admin/site")
   revalidatePath("/admin")
@@ -109,7 +111,7 @@ export async function removeBridgeAction(bridgeId: number): Promise<ActionResult
   const actor = await adminActor()
   if ("error" in actor) return actor
   const gone = { error: "Diese Brücke gibt es nicht mehr. Lade die Seite neu." }
-  if (!Number.isSafeInteger(bridgeId)) return gone
+  if (!isRowId(bridgeId)) return gone
   if (!(await removeBridge(db, bridgeId))) {
     // nicht entfernt: gibt es sie noch, läuft sie (Textbuch rev 22)
     const still = await db.bridge.findUnique({ where: { id: bridgeId }, select: { id: true } })

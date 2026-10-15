@@ -650,7 +650,13 @@ async function listFilterSheet(page: Page) {
     await page.key("Escape")
   }
   check(
-    `Blatt „Filter“ unter Scheiben: kein seitliches Scrollen, jeder Knopf im Blatt${shown.some((s) => s.includes("Liste")) ? "" : " (Listen nicht belegt: keine in den Daten)"}`,
+    `Blatt „Filter“ unter Scheiben: kein seitliches Scrollen, jeder Knopf im Blatt${[
+      "Liste",
+      "Merkmal",
+    ]
+      .filter((group) => !shown.some((s) => s.includes(group)))
+      .map((group) => ` (${group} nicht belegt: keine in den Daten)`)
+      .join("")}`,
     outside.length === 0,
     outside.length ? outside.join(" · ") : shown.join(" · ")
   )

@@ -201,7 +201,7 @@ describe("writeRevision", () => {
     const { cardId } = await writeRevision(db, { ...input, card })
     await writeRevision(db, {
       ...input,
-      card: { ...card, ownerId: null, sportpassId: undefined, flags: ["x"] },
+      card: { ...card, ownerId: null, sportpassId: undefined, flags: ["ausgenommen"] },
     })
     let row = await db.card.findUniqueOrThrow({ where: { id: cardId } })
     expect(row.ownerId).toBe(site.ownerId)
@@ -367,7 +367,7 @@ describe("Folgenummer (SF-26)", () => {
     const first = await writeRevision(db, { ...input, sequence: 10 })
     const older = await writeRevision(db, {
       ...input,
-      card: { ...input.card, flags: ["alt"] },
+      card: { ...input.card, flags: ["ausgenommen"] },
       shots: input.shots.slice(0, 3),
       sequence: 9,
     })

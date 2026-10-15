@@ -10,7 +10,7 @@ import { DecisionDialog } from "@/components/shell/DecisionDialog"
 import { ownConsentRevoke, ownRejectionRemove } from "@/lib/admin/consequences"
 import { revokeSportpass } from "@/lib/consent/actions"
 import type { ConsentRow } from "@/lib/consent/queries"
-import { MAX_CONSENTS_PER_ACCOUNT, ownerActionOf } from "@/lib/consent/status"
+import { MAX_CONSENTS_PER_ACCOUNT, onlyRemovable, ownerActionOf } from "@/lib/consent/status"
 import { consentTextOf } from "@/lib/consent/texts"
 
 import { ConsentForm } from "./ConsentForm"
@@ -51,7 +51,7 @@ export function SportpassConsents({
       {consents.length >= MAX_CONSENTS_PER_ACCOUNT && (
         <p data-one-number className="text-[13px] text-muted-foreground">
           {/* eine abgelehnte heißt am Knopf „Entfernen“, nicht „Widerrufen“ (Review, Textbuch rev 22) */}
-          {consents.every((consent) => ownerActionOf(consent.status) === "remove")
+          {onlyRemovable(consents.map((consent) => consent.status))
             ? "Ein Konto hat eine Sportpassnummer. Für eine andere Nummer entferne die abgelehnte. Dann trag die neue ein."
             : "Ein Konto hat eine Sportpassnummer. Für einen neuen Ausweis widerrufe die alte Nummer. Dann trag die neue ein. Deine Scheiben bleiben."}
         </p>

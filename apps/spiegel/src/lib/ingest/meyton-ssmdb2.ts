@@ -61,7 +61,7 @@ export const RESTING_AFTER_MS = 5 * 60_000
 export const FINAL_AFTER_MS = 12 * 3_600_000
 
 /** Merkmale, mit denen eine Scheibe nie vollständig ist; dieselbe Regel steht in SQL in `advanceCardStates` */
-export const INCOMPLETE_FLAGS = ["unvollstaendig", "leer"] as const
+export const INCOMPLETE_FLAGS = ["unvollstaendig", "leer"] as const satisfies readonly CardFlag[]
 
 /** endgültig und ohne fehlende Wertungsschüsse: erst dann zählt die Scheibe für Rekorde (SF-66) */
 export const isComplete = (state: "open" | "resting" | "final", flags: readonly string[]) =>
@@ -214,7 +214,7 @@ export interface AdaptedCard {
   state: "open" | "resting" | "final"
   completeness: Completeness
   /** Merkmale aus diesem Stand; dauerhafte (`korrigiert`, `uhr-abweichung`) hält `writeRevision` fest */
-  flags: string[]
+  flags: CardFlag[]
   /**
    * Lebenszeichen als Text, und wann es sich zuletzt bewegt hat: läuft es, die Beobachtungszeit (Uhr der Brücke, nach
    * NTP); sonst geschätzt aus dem Lebenszeichen selbst, um den Versatz verschoben. Grundlage des Zustands.

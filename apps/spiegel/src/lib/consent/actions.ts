@@ -9,7 +9,7 @@ import { db } from "@/lib/db"
 import { NOT_MINE } from "@/lib/db/purge"
 import type { ActionResult } from "@/lib/types"
 
-import { consentStatus, MAX_CONSENTS_PER_ACCOUNT } from "./status"
+import { consentStatus, MAX_CONSENTS_PER_ACCOUNT, onlyRemovable } from "./status"
 import { CURRENT_CONSENT_VERSION } from "./texts"
 
 // Zustimmung per Sportpass (SP-1.7 a, Plan `plans/2026-10-14-spiegel-optin.md`, D6): Der Schütze stimmt im Profil zu
@@ -42,8 +42,10 @@ function revalidateConsents(userId?: string) {
 /** gilt die Zustimmung einem anderen Text als dem, der jetzt gilt (neue Version zwischen Anzeige und Absenden) */
 const STALE_TEXT = "Der Hinweis hat sich geändert. Bitte die Seite neu laden und neu lesen."
 
-/** die Grenze je Konto hielt nicht: ein anderer Aufruf desselben Kontos war schneller (Sperre der Kontozeile) */
-/** die Grenze ist erreicht; `onlyRejected`: es gibt nur abgelehnte, deren Knopf heißt „Entfernen“ (Review) */
+/**
+ * die Grenze je Konto ist erreicht (unter der Sperre der Kontozeile gezählt, auch bei gleichzeitigen Aufrufen);
+ * `onlyRejected`: es gibt nur abgelehnte, deren Knopf heißt „Entfernen“ (Review)
+ */
 class LimitReached extends Error {
   constructor(readonly onlyRejected: boolean) {
     super()
@@ -84,7 +86,7 @@ export async function requestSportpass(
         select: { confirmedAt: true, rejectedAt: true, returnedAt: true },
       })
       if (existing.length >= MAX_CONSENTS_PER_ACCOUNT)
-        throw new LimitReached(existing.every((row) => consentStatus(row) === "rejected"))
+        throw new LimitReached(onlyRemovable(existing.map(consentStatus)))
       await tx.sportpassConsent.create({
         data: {
           userId,

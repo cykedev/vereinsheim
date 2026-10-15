@@ -67,7 +67,8 @@ export interface CardInput {
   rankingId?: number | null
   state: CardState
   complete: boolean
-  flags: readonly string[]
+  /** nur Kennungen aus `CARD_FLAGS`: Die Oberfläche benennt jede (Review, 15. Oktober 2026) */
+  flags: readonly CardFlag[]
   origin: CardOrigin
   /** zuletzt bewegtes Lebenszeichen (Adapter); fehlt: nicht anfassen */
   lifesignAtMs?: number | null

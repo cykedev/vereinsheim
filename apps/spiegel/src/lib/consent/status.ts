@@ -43,6 +43,13 @@ export function ownerActionOf(status: ConsentStatus): "revoke" | "remove" {
   return status === "rejected" ? "remove" : "revoke"
 }
 
+/**
+ * Es gibt nur Nummern, deren Knopf „Entfernen“ heißt (abgelehnte): Profil und Action sagen dann „entferne“ statt
+ * „widerrufe“. Eine Regel für beide (Review, [[conventions]] §9)
+ */
+export const onlyRemovable = (statuses: readonly ConsentStatus[]) =>
+  statuses.length > 0 && statuses.every((status) => ownerActionOf(status) === "remove")
+
 /** wartet auf eine Entscheidung des Admins */
 export function isOpenConsent(status: ConsentStatus): boolean {
   return status === "requested" || status === "returned"

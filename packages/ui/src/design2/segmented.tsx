@@ -49,9 +49,10 @@ export function nextIndex(current: number, key: string, count: number): number |
 }
 
 /**
- * Segment-Umschalter (Design 2): eine Wahl aus wenigen Möglichkeiten, etwa Scheibe/Gruppe oder ganze
- * Ringe/Zehntel. Pfeiltasten wechseln die Wahl; nur der gewählte Knopf ist mit Tab erreichbar. Weil die
- * Pfeiltasten wählen, ist es für Screenreader eine Radiogruppe (`radiogroup`/`radio`/`aria-checked`).
+ * Segment-Umschalter (Design 2): eine Wahl, etwa Scheibe/Gruppe oder ganze Ringe/Zehntel. Passen die Möglichkeiten
+ * nicht in eine Zeile, scrollt er in sich (`scroll`, Reiter der Analyse) oder bricht um (`wrap`, Listen und Merkmale),
+ * nie beides. Pfeiltasten wechseln die Wahl; nur der gewählte Knopf ist mit Tab erreichbar. Weil die Pfeiltasten wählen,
+ * ist es für Screenreader eine Radiogruppe (`radiogroup`/`radio`/`aria-checked`).
  */
 export function Segmented<T extends string>({
   label,

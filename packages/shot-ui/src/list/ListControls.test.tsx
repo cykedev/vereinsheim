@@ -2,9 +2,9 @@ import { createElement as h, isValidElement, type ReactNode } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
-import { CardFilters } from "../controls/CardFilters"
 import { CARD_FLAGS } from "@vereinsheim/shot-core/metrics"
 
+import { CardFilters } from "../controls/CardFilters"
 import { DEFAULT_LIST, DEFAULT_PROGRESS, type ListQuery } from "../nav/routes"
 import {
   flagName,
@@ -187,6 +187,8 @@ describe("Filter der Scheiben-Liste in einer Zeile (U5, D6; wie der Fortschritt)
     ])
     // Unbekanntes mit seiner Kennung
     expect(flagName("etwas-neues")).toBe("etwas-neues")
+    // nur eigene Einträge, keine geerbten (vorher gab `FLAG_NAMES[flag] ?? flag` hier eine Funktion zurück)
+    expect(flagName("toString")).toBe("toString")
   })
 
   it("ohne Merkmale keine Wahl „Merkmal“, ohne Zeitraum kein Zeitraum im Blatt", () => {
