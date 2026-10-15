@@ -155,7 +155,7 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     // Wird dieser Test rot, rechnet die Projektion anders als die gespeicherten: PROJECTION_VERSION (oder die
     // `version` der geänderten Kennzahl) erhöhen, damit `refreshProjections` sie neu rechnet, dann beide Werte setzen.
     expect({ version: projectionVersion(), output }).toEqual({
-      version: "p2-b7e86af0",
+      version: "p2-3131d8b6",
       output: "57741-0a6c3183",
     })
   })

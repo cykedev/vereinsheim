@@ -435,9 +435,9 @@ describe("Lücken in der Abgabefolge (SF-04, SF-30)", () => {
     }
   })
 
-  it("die Zeit-Kennzahlen rechnen seit der Regel in Version 2, Tempo und Streuung seit den relativen Pausen in 3", () => {
-    expect(def("time.intervalMedian").version).toBe(3)
-    expect(def("time.tempoSpread").version).toBe(3)
+  it("die Zeit-Kennzahlen rechnen seit der Regel in Version 2, Tempo und Streuung seit der Pause über dem Doppelten in 4", () => {
+    expect(def("time.intervalMedian").version).toBe(4)
+    expect(def("time.tempoSpread").version).toBe(4)
     expect(def("time.duration").version).toBe(2)
   })
 })
@@ -457,7 +457,7 @@ describe("Pausen mit der Schwelle der Karte (Z1, Z2; User, 10. Oktober 2026)", (
         })
       )
   // Serie 1 im Takt von 30 s, dann 30 s; Serie 2: 30, fünfmal 90, dreimal 30. Die Karte: 14 × 30 und 5 × 90, Median
-  // 30 s, Schwelle 75 s, die 90 s sind Pausen. Serie 2 allein: Median 90 s, Schwelle 180 s, keine Pause.
+  // 30 s, Schwelle 60 s, die 90 s sind Pausen. Serie 2 allein: Median 90 s, Schwelle 180 s, keine Pause.
   const CARD20 = timed([...Array(10).fill(30), 30, 90, 90, 90, 90, 90, 30, 30, 30])
   const SERIES2 = CARD20.slice(10)
 
@@ -477,8 +477,8 @@ describe("Pausen mit der Schwelle der Karte (Z1, Z2; User, 10. Oktober 2026)", (
   it("eine Karte nur aus Probe, als Wertung gezeigt: die Schwelle aus der Auswahl, nie still drei Minuten", () => {
     const raw = timed([40, 40, 40, 40, 120, 40, 40, 40], "probe")
     const printed = probeOnlyAsMatch(raw)
-    expect(pauseThresholdOf(printed, contextOf(printed, raw))).toBe(100_000)
-    expect(pauseThresholdOf(printed, contextOf(printed, printed))).toBe(100_000)
+    expect(pauseThresholdOf(printed, contextOf(printed, raw))).toBe(80_000)
+    expect(pauseThresholdOf(printed, contextOf(printed, printed))).toBe(80_000)
   })
 
   it("nur Schüsse mit gültiger Zeit zählen in den Takt, wie in jeder Zeit-Auswertung (SF-15)", () => {

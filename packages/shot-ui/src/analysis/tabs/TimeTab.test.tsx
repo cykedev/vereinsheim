@@ -22,11 +22,11 @@ const all = (html: string, pattern: RegExp) => [...html.matchAll(pattern)].map((
 
 describe("was als Pause gilt, nach der Grundlage der Schwelle (User, 10. Oktober 2026)", () => {
   it("Takt, Mindestminute, feste Grenze, zu wenige Abstände", () => {
-    expect(pauseRuleText({ thresholdMs: 100_000, typicalMs: 40_000, basis: "takt" })).toBe(
-      "Als Pause gilt ein Abstand über 1:40 min: das 2,5-Fache deines üblichen Abstands von 40,0 s."
+    expect(pauseRuleText({ thresholdMs: 80_000, typicalMs: 40_000, basis: "takt" })).toBe(
+      "Als Pause gilt ein Abstand über 1:20 min: das Doppelte deines üblichen Abstands von 40,0 s."
     )
     expect(pauseRuleText({ thresholdMs: 60_000, typicalMs: 20_000, basis: "mindestens" })).toBe(
-      "Als Pause gilt ein Abstand über 1:00 min: Das 2,5-Fache deines üblichen Abstands von 20,0 s wäre kürzer, eine Pause dauert aber mindestens 1:00 min."
+      "Als Pause gilt ein Abstand über 1:00 min: Das Doppelte deines üblichen Abstands von 20,0 s wäre kürzer, eine Pause dauert aber mindestens 1:00 min."
     )
     expect(pauseRuleText({ thresholdMs: 180_000, typicalMs: 90_000, basis: "hoechstens" })).toBe(
       "Als Pause gilt ein Abstand über 3:00 min: Dein üblicher Abstand von 90,0 s ist lang; über 3:00 min ist es immer eine Pause."
@@ -188,15 +188,15 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     )
     const one = renderTab("time", { shots: BASE.slice(0, 1) })
     expect(cardText(one, "pausen")).toContain("ab 2 Schuss mit Zeit")
-    // die Schwelle der Karte steht dabei, mit und ohne Pause (User, 10. Oktober 2026): Median 55,6 s, 2,5-fach 139 s
+    // die Schwelle der Karte steht dabei, mit und ohne Pause (User, 10. Oktober 2026): Median 55,6 s, doppelt 111 s
     expect(text).toContain(
-      "Als Pause gilt ein Abstand über 2:19 min: das 2,5-Fache deines üblichen Abstands von 55,6 s."
+      "Als Pause gilt ein Abstand über 1:51 min: das Doppelte deines üblichen Abstands von 55,6 s."
     )
-    // die ersten 20: Median 52,9 s, 2,5-fach 132 s, keine Pause
+    // die ersten 20: Median 52,9 s, doppelt 106 s, keine Pause
     const calm = renderTab("time", { shots: BASE.slice(0, 20) })
-    expect(cardText(calm, "pausen")).toContain("Keine Pause: kein Abstand über 2:12 min.")
+    expect(cardText(calm, "pausen")).toContain("Keine Pause: kein Abstand über 1:46 min.")
     expect(cardText(calm, "pausen")).toContain(
-      "Als Pause gilt ein Abstand über 2:12 min: das 2,5-Fache deines üblichen Abstands von 52,9 s."
+      "Als Pause gilt ein Abstand über 1:46 min: das Doppelte deines üblichen Abstands von 52,9 s."
     )
   })
 

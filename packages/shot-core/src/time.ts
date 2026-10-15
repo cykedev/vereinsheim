@@ -2,7 +2,9 @@
 //
 // Die Zeiten kommen in Abgabefolge, nicht nach der Uhr sortiert (SF-30). Eine Pause zählt nicht zum Tempo-Median,
 // sonst verzerrt sie das Bild (SF-62). Pause ist ein Abstand, der deutlich länger ist als der eigene Takt: über dem
-// 2,5-Fachen des Medians der Abstände, mindestens eine Minute; über drei Minuten immer (Gespräch, Scheibenwechsel).
+// Doppelten des Medians der Abstände, mindestens eine Minute; über drei Minuten immer (Gespräch, Scheibenwechsel). Bis
+// 15. Oktober 2026 war es das 2,5-Fache (User: „auch kleinere Pausen erkennen“; an den eigenen Scheiben 18 statt 11
+// Pausen in 789 Abständen, das 1,5-Fache fände schon 39, auch gewöhnliche Schwankung).
 // Unter fünf Abständen gibt es keinen eigenen Takt, dann gilt nur die feste Grenze (User, 10. Oktober 2026: an den
 // eigenen Scheiben fand die feste Grenze 3 von 906 Abständen, die relative die 10, die dem User auffielen). Der Median
 // nimmt alle Abstände bis drei Minuten, auch die, die danach als Pause gelten: Wenige Pausen verschieben ihn kaum
@@ -14,7 +16,7 @@
 /** über drei Minuten ist ein Abstand immer eine Pause */
 export const PAUSE_ALWAYS_MS = 180_000
 /** deutlich länger als der eigene Takt: über diesem Vielfachen des Medians der Abstände */
-export const PAUSE_FACTOR = 2.5
+export const PAUSE_FACTOR = 2
 /** darunter keine Pause, auch bei sehr schnellem Takt */
 export const PAUSE_MIN_MS = 60_000
 /** ab so vielen Abständen (bis drei Minuten) gilt der eigene Takt */
@@ -74,7 +76,7 @@ export interface PauseRule {
 }
 
 /**
- * die Regel für Pausen aus den Abständen einer Schussfolge: das 2,5-Fache des Medians der Abstände bis drei Minuten,
+ * die Regel für Pausen aus den Abständen einer Schussfolge: das Doppelte des Medians der Abstände bis drei Minuten,
  * auf ganze Sekunden, mindestens eine, höchstens drei Minuten; unter fünf solchen Abständen drei Minuten
  */
 export function pauseRule(gapsMs: readonly number[]): PauseRule {

@@ -696,8 +696,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 0,
     scopes: SERIES_AND_CARD,
     better: "none",
-    // 3: Pausen relativ zum Takt der Karte (Oktober 2026)
-    version: 3,
+    // 3: Pausen relativ zum Takt der Karte (Oktober 2026); 4: Pause über dem Doppelten statt dem 2,5-Fachen
+    version: 4,
     appliesTo: BOTH,
     minShots: 3,
     nSensitive: false,
@@ -715,8 +715,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     scopes: SERIES_AND_CARD,
     // konstanter ist nicht automatisch besser (Katalog Z2)
     better: "none",
-    // 3: Pausen relativ zum Takt der Karte (Oktober 2026)
-    version: 3,
+    // 3: Pausen relativ zum Takt der Karte (Oktober 2026); 4: Pause über dem Doppelten statt dem 2,5-Fachen
+    version: 4,
     appliesTo: BOTH,
     minShots: 4,
     nSensitive: false,

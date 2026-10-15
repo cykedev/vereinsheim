@@ -76,9 +76,9 @@ describe("ownCardSeeds", () => {
 
   it("Pausen relativ zum Takt an der LP 60: nach jeder Zehnerserie (User, 10. Oktober 2026)", () => {
     const recovery = pauseRecovery(seedOf(28).shots.map(toMetricShot), "rings")!
-    // Median der 38 Abstände bis 3 Minuten (42,505 + 42,706) / 2 = 42,6055 s, 2,5-fach 106,51 s, auf ganze Sekunden
-    // 107 s; die feste Grenze von 3 Minuten fand nur eine der drei Pausen
-    expect(recovery.rule).toEqual({ thresholdMs: 107_000, typicalMs: 42_605.5, basis: "takt" })
+    // Median der 38 Abstände bis 3 Minuten (42,505 + 42,706) / 2 = 42,6055 s, doppelt 85,211 s, auf ganze Sekunden
+    // 85 s (bis 15. Oktober 2026 das 2,5-Fache: 107 s); die feste Grenze von 3 Minuten fand nur eine der drei Pausen
+    expect(recovery.rule).toEqual({ thresholdMs: 85_000, typicalMs: 42_605.5, basis: "takt" })
     expect(recovery.effects.map((e) => e.afterShot)).toEqual([11, 21, 31])
   })
 

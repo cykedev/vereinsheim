@@ -325,31 +325,31 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Tempo und Dauer (Z1, Z2, Z3)**
 - *Was:* Das Tempo ist der Median der Abstände zwischen zwei Schüssen; Pausen zählen nicht (ein
-  Abstand über dem 2,5-Fachen deines üblichen Abstands, mindestens eine Minute, über drei Minuten
+  Abstand über dem Doppelten deines üblichen Abstands, mindestens eine Minute, über drei Minuten
   immer). Die Tempo-Streuung sagt, wie gleichmäßig das ist: Die mittlere Hälfte deiner Abstände
   liegt in einem Fenster dieser Breite. Dazu die Dauer vom ersten bis zum letzten Schuss. Schießt du
   zwischendurch Probe, zählt der Abstand von Wertungsschuss zu Wertungsschuss.
 - *Vorsicht:* Gleichmäßiger ist nicht automatisch besser. Die Streuung ist ein Merkmal, das du mit
   deinem Ergebnis vergleichen kannst.
 - *Mindestzahl:* Tempo ab 3 Schuss mit Zeit, die Tempo-Streuung ab 4, die Dauer ab 2.
-- *Formel:* `Tempo = Median der Abstände ohne Pausen; Pause = Abstand über max(60 s, min(180 s, 2,5
-  × Median aller Abstände bis 180 s, auch späterer Pausen)), auf ganze Sekunden, unter 5 solchen
+- *Formel:* `Tempo = Median der Abstände ohne Pausen; Pause = Abstand über max(60 s, min(180 s, 2 ×
+  Median aller Abstände bis 180 s, auch späterer Pausen)), auf ganze Sekunden, unter 5 solchen
   Abständen über 180 s; Tempo-Streuung = Q3 − Q1 der Abstände ohne Pausen; Dauer = letzter − erster
   Schuss`
 
 **Pausen und Wiedereinstieg (Z4)**
 - *Was:* Jede Pause und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr oder weniger Ringe
   brachten als deine übrigen Schüsse. Pause ist ein Abstand, der deutlich länger ist als dein
-  üblicher Abstand auf dieser Scheibe: über dem 2,5-Fachen deines üblichen Abstands, mindestens eine
-  Minute; über drei Minuten immer. Bei einem üblichen Abstand von 40 s ist das über 1:40 min; genau
-  1:40 min ist noch keine Pause. Die Karte nennt die Schwelle deiner Scheibe. Probeschüsse in der
+  üblicher Abstand auf dieser Scheibe: über dem Doppelten deines üblichen Abstands, mindestens eine
+  Minute; über drei Minuten immer. Bei einem üblichen Abstand von 40 s ist das über 1:20 min; genau
+  1:20 min ist noch keine Pause. Die Karte nennt die Schwelle deiner Scheibe. Probeschüsse in der
   Pause gehören zur Pause.
 - *Vorsicht:* Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis
   zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je
   Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.
 - *Mindestzahl:* Pausen ab 2 Wertungsschüssen mit Zeit; deinen üblichen Abstand erst ab 5 Abständen,
   davor gilt nur „über drei Minuten“. Was danach kam, nur über Schüsse mit Wert.
-- *Formel:* `Pause = Abstand über max(60 s, min(180 s, 2,5 × Median aller Abstände bis 180 s, auch
+- *Formel:* `Pause = Abstand über max(60 s, min(180 s, 2 × Median aller Abstände bis 180 s, auch
   späterer Pausen)), auf ganze Sekunden, unter 5 solchen Abständen über 180 s; Wiedereinstieg = Ø
   der bis zu 3 Schüsse danach − Ø der übrigen`
 

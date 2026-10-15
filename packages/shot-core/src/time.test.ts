@@ -33,46 +33,49 @@ describe("tempo", () => {
     expect(tempo([0, s(180) + 1]).pausesMs).toEqual([s(180) + 1])
   })
 
-  it("Pause relativ zum eigenen Takt: über dem 2,5-Fachen des Medians (User, 10. Oktober 2026)", () => {
-    // acht Abstände zu 40 s und einer zu 120 s: Median 40 s, Schwelle 100 s
-    const times = [0, 40, 80, 120, 160, 280, 320, 360, 400, 440].map(s)
+  it("Pause relativ zum eigenen Takt: über dem Doppelten des Medians (User, 10. und 15. Oktober 2026)", () => {
+    // acht Abstände zu 40 s und einer zu 90 s: Median 40 s, Schwelle 80 s (mit dem 2,5-Fachen bis 15. Oktober 2026
+    // waren es 100 s, und 90 s war keine Pause)
+    const times = [0, 40, 80, 120, 160, 250, 290, 330, 370, 410].map(s)
     const pace = tempo(times)
-    expect(pace.pauseThresholdMs).toBe(s(100))
-    expect(pace.pausesMs).toEqual([s(120)])
+    expect(pace.pauseThresholdMs).toBe(s(80))
+    expect(pace.pausesMs).toEqual([s(90)])
     expect(pace.intervalsMs).toHaveLength(8)
     expect(pace.medianIntervalMs).toBe(s(40))
     // genau auf der Schwelle noch keine Pause
-    expect(tempo([0, 40, 80, 120, 160, 260].map(s)).pausesMs).toEqual([])
-    expect(tempo([0, 40, 80, 120, 160, 260].map(s)).pauseThresholdMs).toBe(s(100))
+    expect(tempo([0, 40, 80, 120, 160, 240].map(s)).pausesMs).toEqual([])
+    expect(tempo([0, 40, 80, 120, 160, 240].map(s)).pauseThresholdMs).toBe(s(80))
   })
 
-  it("Schwelle nach Handwerten: 2,5-fach des Medians, mindestens 60 s, höchstens 180 s", () => {
-    expect([PAUSE_FACTOR, PAUSE_MIN_MS, PAUSE_MIN_INTERVALS]).toEqual([2.5, s(60), 5])
+  it("Schwelle nach Handwerten: doppelter Median, mindestens 60 s, höchstens 180 s", () => {
+    expect([PAUSE_FACTOR, PAUSE_MIN_MS, PAUSE_MIN_INTERVALS]).toEqual([2, s(60), 5])
     const five = (seconds: number) => Array.from({ length: 5 }, () => s(seconds))
-    expect(pauseThresholdMs(five(40))).toBe(s(100))
+    expect(pauseThresholdMs(five(40))).toBe(s(80))
     expect(pauseThresholdMs(five(20))).toBe(s(60))
-    expect(pauseThresholdMs(five(90))).toBe(s(180))
+    expect(pauseThresholdMs(five(100))).toBe(s(180))
     // unter fünf Abständen bis 180 s nur die feste Grenze
     expect(pauseThresholdMs([s(40), s(40), s(40), s(40)])).toBe(s(180))
     // der Median nur über Abstände bis 180 s: mit ihnen allen wäre er 190 s und die Schwelle 180 s
-    expect(pauseThresholdMs([...five(30), ...Array.from({ length: 6 }, () => s(190))])).toBe(s(75))
-    // genau 180 s gehört noch dazu: sechs Abstände, Median 30 s
-    expect(pauseThresholdMs([s(30), s(30), s(30), s(30), s(180)])).toBe(s(75))
-    // auf ganze Sekunden: Median 42,6 s ergibt 106,5 s, also 107 s
-    expect(pauseThresholdMs([...five(42.6)])).toBe(s(107))
+    expect(pauseThresholdMs([...five(35), ...Array.from({ length: 6 }, () => s(190))])).toBe(s(70))
+    // genau 180 s gehört noch dazu: fünf Abstände, Median 35 s
+    expect(pauseThresholdMs([s(35), s(35), s(35), s(35), s(180)])).toBe(s(70))
+    // auf ganze Sekunden: Median 42,8 s ergibt 85,6 s, also 86 s
+    expect(pauseThresholdMs([...five(42.8)])).toBe(s(86))
   })
 
   it("Grundlage der Schwelle: Takt, Mindestminute, feste Grenze oder zu wenige Abstände", () => {
     const five = (seconds: number) => Array.from({ length: 5 }, () => s(seconds))
-    expect(pauseRule(five(40))).toEqual({ thresholdMs: s(100), typicalMs: s(40), basis: "takt" })
+    expect(pauseRule(five(40))).toEqual({ thresholdMs: s(80), typicalMs: s(40), basis: "takt" })
     expect(pauseRule(five(20))).toEqual({
       thresholdMs: s(60),
       typicalMs: s(20),
       basis: "mindestens",
     })
-    expect(pauseRule(five(90))).toEqual({
+    // genau drei Minuten aus dem Takt sind noch der Takt
+    expect(pauseRule(five(90))).toEqual({ thresholdMs: s(180), typicalMs: s(90), basis: "takt" })
+    expect(pauseRule(five(100))).toEqual({
       thresholdMs: s(180),
-      typicalMs: s(90),
+      typicalMs: s(100),
       basis: "hoechstens",
     })
     expect(pauseRule(five(40).slice(1))).toEqual({

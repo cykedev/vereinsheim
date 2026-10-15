@@ -56,11 +56,13 @@ const TEMPO_MISSING = "ab 4 Schuss mit Zeit"
 export function pauseRuleText(rule: PauseRule): string {
   const over = `Als Pause gilt ein Abstand über ${durationText(rule.thresholdMs)}`
   const typical = rule.typicalMs === null ? "" : `${formatValue(rule.typicalMs / 1000, 1)} s`
+  // „das Doppelte“ statt „das 2,0-Fache“ (seit 15. Oktober 2026)
+  const factor = PAUSE_FACTOR === 2 ? "Doppelte" : `${formatValue(PAUSE_FACTOR, 1)}-Fache`
   switch (rule.basis) {
     case "takt":
-      return `${over}: das ${formatValue(PAUSE_FACTOR, 1)}-Fache deines üblichen Abstands von ${typical}.`
+      return `${over}: das ${factor} deines üblichen Abstands von ${typical}.`
     case "mindestens":
-      return `${over}: Das ${formatValue(PAUSE_FACTOR, 1)}-Fache deines üblichen Abstands von ${typical} wäre kürzer, eine Pause dauert aber mindestens ${durationText(PAUSE_MIN_MS)}.`
+      return `${over}: Das ${factor} deines üblichen Abstands von ${typical} wäre kürzer, eine Pause dauert aber mindestens ${durationText(PAUSE_MIN_MS)}.`
     case "hoechstens":
       return `${over}: Dein üblicher Abstand von ${typical} ist lang; über ${durationText(PAUSE_ALWAYS_MS)} ist es immer eine Pause.`
     case "fest":
