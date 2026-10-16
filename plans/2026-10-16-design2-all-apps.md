@@ -16,6 +16,9 @@ drei Apps: schön, elegant, einfach richtig. Entschieden am 16. Oktober 2026:
 3. **Navigation wie Spiegel:** untere Leiste am Telefon, schmale Leiste im Querformat, Seitenleiste ab 1024 px. Das
    Kopfzeilen-Schema ([[navigation-pattern]], conventions §5) entfällt.
 4. **Drift-Gate über drei Apps:** Spiegel nimmt wieder teil, die geteilte Schicht ist Design 2.
+5. **Treffsichers Statistik folgt Spiegel:** dieselbe Seite eines Zeitraums ([[spiegel-langzeit]]), dieselben
+   Rechnungen aus `shot-core` und dieselben Regeln (Ø je Schuss, Urteil nur mit Test, „kein klarer Unterschied“),
+   weniger Sonderwege (Teil G).
 
 Dazu das Bedienkonzept von Spiegel für alle: Folgen vor dem Bestätigen (`DecisionDialog`), Schreibregeln, „Rückgängig“
 nach dem Löschen, Hilfe an jeder Zahl als Blatt, „–“ mit Grund statt 0, drei Ebenen (Antwort, Belege, Werkzeug) und die
@@ -26,8 +29,16 @@ Skriptprüfung im Browser.
 Spiegels Bausteine sind heute teils app-lokal (`DecisionDialog`, `UndoBar`, `Page`, Theme) oder an den Fachkern
 gebunden (`AppFrame` mit festen Bereichen in `shot-ui`, Hilfe an `shot-help`). Erst wandert das Allgemeine nach
 `@vereinsheim/ui/design2/*`, ohne dass Spiegel sich sichtbar ändert (Teil A). Dann stellen beide Apps ihre Basis um
-(Teil B), danach folgen Dialoge (C), Hilfe (D), Gate und Aufräumen (E). Die Durchsicht nach drei Ebenen (F) misst
-zuerst am Telefon und bekommt danach einen eigenen Plan, weil ihre Änderungen aus den Befunden folgen.
+(Teil B), danach folgen Dialoge (C), Hilfe (D), Gate und Aufräumen (E) und die Statistik von Treffsicher auf Spiegels
+Seite eines Zeitraums (G). Die Durchsicht nach drei Ebenen (F) misst zuerst am Telefon und bekommt danach einen
+eigenen Plan, weil ihre Änderungen aus den Befunden folgen; sie läuft nach G, damit sie die neue Statistik misst.
+
+**Abhängigkeit:** Der Branch `feat/spiegel-kleinkram` (andere Session, sieben Commits, noch nicht auf `main`) ändert
+Dateien, die Teil A verschiebt oder anfasst: `apps/spiegel/src/components/shell/AppShell.tsx` (`isAdminPath`),
+`apps/spiegel/tools/pruefen.ts` (Abschnitt „Admin ohne Rolle“), neu `packages/shot-ui/src/layout/bar.ts` (Höhe der
+Leiste und Rand als eine Konstante), `shot-core` (`metrics.ts`, `stats.ts`: jede Regel einmal) und
+`vault/spiegel/spiegel-roadmap.md`. **Er landet zuerst auf `main`**, danach wird dieser Branch vor Teil 0 auf `main`
+gesetzt (`sync`/rebase). Erst dann beginnt Teil A.
 
 **Jeder Teil endet grün und ist ein Merge-Punkt** (ff-only nach `main` mit User-OK). `/implement` läuft je Teil
 (`/implement plans/2026-10-16-design2-all-apps.md` mit dem Teil als Argument).
@@ -49,6 +60,9 @@ zuerst am Telefon und bekommt danach einen eigenen Plan, weil ihre Änderungen a
   Darstellung, Passwort, Abmelden und am Telefon die Bereiche, die nicht in der Leiste stehen.
 - **Rückmeldung:** Löschen meldet „Gelöscht · Rückgängig“ (`UndoHost`), sonst Toasts (sonner) in Design 2.
 - **PDFs** bleiben, wie sie sind (Druck, nicht Oberfläche).
+- **Admin ohne Rolle** landet in allen Apps auf dem Start, nicht auf der Anmeldung (wie Spiegel nach
+  `feat/spiegel-kleinkram`).
+- **Treffsicher-Statistik:** die Zuordnung in Teil G („Abgleich“) ist der Vorschlag; G0 legt sie dir vor.
 
 ## Required Docs
 
@@ -58,13 +72,19 @@ zuerst am Telefon und bekommt danach einen eigenen Plan, weil ihre Änderungen a
 - `vault/apps/treffsicher/dark-mode-only.md`, `vault/apps/ringwerk/color-semantics.md`, Notes
   `navigation-pattern`, `component-canon`, `drift-protection` (über `mcp__memory__open_nodes`)
 - `apps/ringwerk/CLAUDE.md`, `apps/treffsicher/CLAUDE.md`, `apps/spiegel/CLAUDE.md`, `packages/ui/CLAUDE.md`,
-  `packages/shot-ui/CLAUDE.md`
+  `packages/shot-ui/CLAUDE.md`, `packages/shot-core/CLAUDE.md`
+- Für Teil G: `vault/spiegel/spiegel-langzeit.md`, `vault/spiegel/spiegel-metrics.md`, `vault/spiegel/spiegel-statistics.md`
+  (Regeln, Katalog-IDs), `vault/apps/treffsicher/statistics-visualization.md`,
+  `vault/apps/treffsicher/treffsicher-requirements.md` („Statistiken & Auswertung“), `vault/apps/treffsicher/wellbeing-tracking.md`
 
 ## Geschützte Schritte (Circuit-Breaker im autonomen Lauf)
 
 Der Autopilot-Guard (ADR-023) sperrt `vault/decisions/`, `scripts/`, Schema/Migrationen und `.claude/`. Diese Tasks
 laufen deshalb **in der Hauptsession mit dem User** oder per `/implement --step`, nicht autonom: **0.1–0.3** (ADR),
-**E1–E3** (`scripts/consistency-check.sh`). Ebenso Haltepunkte für den User: **C0** und **D0** (Textbuch freigeben).
+**E1–E3** (`scripts/consistency-check.sh`). Ebenso Haltepunkte für den User: **C0**, **D0** und **G8** (Textbuch freigeben), **G0** (Abgleich der Statistik).
+
+**Reihenfolge der Teile:** 0 → A → B → C → D → G → E → F. E (Gate, `theme.css` weg) kommt nach G, damit die alte
+Statistik mit ihren Hex-Farben vorher verschwunden ist.
 
 ---
 
@@ -73,7 +93,9 @@ laufen deshalb **in der Hauptsession mit dem User** oder per `/implement --step`
 - **0.1** `vault/decisions/adr-032.md` anlegen: „ADR-032 — Design 2 für alle Apps“, `status: Accepted`
   (16. Oktober 2026, User), `refines: ["[[adr-030]]"]`. Inhalt: die vier Entscheidungen aus „Kontext“, Akzent je App,
   Ringwert-Skala von Spiegel überall, Bedienkonzept für alle (Folgen, Schreibregeln, Rückgängig, Hilfe, „–“ mit Grund,
-  drei Ebenen), `theme.css` entfällt nach Teil E. Alternativen: „Ringwerk/Treffsicher bleiben fest dunkel“ (gegen den
+  drei Ebenen), Treffsichers Statistik folgt Spiegels Seite eines Zeitraums und rechnet mit `shot-core` (Hochrechnung,
+  Radar und Meyton-Farben entfallen, Befinden und Qualität werden Vergleiche mit Urteil nur aus Test), `theme.css`
+  entfällt nach Teil E. Alternativen: „Ringwerk/Treffsicher bleiben fest dunkel“ (gegen den
   Wunsch, verworfen), „nur Optik umziehen, Bedienkonzept später“ (zwei Welten länger, verworfen).
 - **0.2** `vault/decisions/decisions.md` (MOC) und `vault/index.md` um ADR-032 ergänzen; in `adr-030.md` unter
   „Folgen“ einen Satz mit `[[adr-032]]`.
@@ -127,7 +149,8 @@ laufen deshalb **in der Hauptsession mit dem User** oder per `/implement --step`
   }
   ```
   Klassen, `--app-bar`, Safe-Area und Querformat-Regel wörtlich übernehmen. `shot-ui/layout/AppFrame.tsx` wird ein
-  Adapter: `ITEMS`/`BAR` → `FrameItem`s, `renderLink` mit `RouteLink`. `AppFrame.test.tsx` (shot-ui) bleibt grün
+  Adapter: `ITEMS`/`BAR` → `FrameItem`s, `renderLink` mit `RouteLink`; Spiegels `AppShell` behält `isAdminPath`
+  (aus `feat/spiegel-kleinkram`) für `current`. `AppFrame.test.tsx` (shot-ui) bleibt grün
   unverändert; neuer Markup-Test `packages/ui/src/design2/app-frame.test.tsx`: Einträge, `aria-current`, Badge mit
   Namen, Leiste mit vier und fünf Feldern, Aktion in der Mitte.
 - **A5 Seite.** `apps/spiegel/src/components/shell/Page.tsx` → `packages/ui/src/design2/page.tsx`
@@ -151,6 +174,9 @@ laufen deshalb **in der Hauptsession mit dem User** oder per `/implement --step`
   Werte). `apps/spiegel/tools/pruefen.ts` importiert von dort. Dazu `packages/pruefen/src/common.ts` mit
   wiederverwendbaren Prüfungen aus `pruefen.ts`: `noSideScroll(page, widths)`, `barDoesNotCover(page)`,
   `themeNoFlash(page, key)`, `dialogFocus(page, opener)`.
+- **A12 Leistenmaß.** `packages/shot-ui/src/layout/bar.ts` (`BAR_PX`, `EDGE_PX`, `BAR`-Klassen, aus
+  `feat/spiegel-kleinkram`) samt `bar.test.ts` → `packages/ui/src/design2/bar.ts` (Export `./design2/bar`);
+  `shot-ui` importiert von dort. Die klebenden Leisten in Ringwerk (B10) und Treffsicher (G) nutzen dieselben Klassen.
 - **A11 Doku.** `packages/ui/CLAUDE.md` und conventions §10 („Allgemeine Bausteine“) um die neuen Bausteine;
   `vault/architecture/architecture.md` (Repo-Karte: `packages/pruefen`, `design2/*`).
 
@@ -172,13 +198,16 @@ storageKey="treffsicher-theme">` im `<head>`, `<ThemeProvider>` um `Providers`, 
   `startsWith`), `sidebarFooter={<ThemeSwitch />}`, `UndoHost` um den Inhalt. `src/app/(app)/layout.tsx`: `AppShell`
   plus `Page` statt `Navigation` und `<main className="mx-auto max-w-6xl px-4 py-8">`. `Navigation.tsx` löschen.
   Test `AppShell.test.tsx` (Markup): Admin nur für Admins, aktiver Eintrag, „Neue Einheit“ zeigt auf `/sessions/new`.
+  `src/proxy.ts`: angemeldete Nicht-Admins auf `/admin…` → `/` statt Anmeldung, wie Spiegels `proxy.ts` nach
+  `feat/spiegel-kleinkram` (Prädikat `isAdminPath` je App, Test).
 - **B3 Treffsicher Profil.** `src/app/(app)/profile/page.tsx` aus `account/page.tsx`: Darstellung (`ThemeSwitch`),
   Passwort, Abschnitt „Weitere Bereiche“ nur unter 1024 px (Ziele, Ablauf, Disziplinen, Admin), Abmelden.
   `account/page.tsx` → `permanentRedirect("/profile")`. Interne Links auf `/account` umstellen (`grep -rn
 '"/account' apps/treffsicher/src`).
 - **B4 Treffsicher Anmeldung.** `src/app/(auth)/login/page.tsx` im Aufbau der Spiegel-Anmeldung
   (`apps/spiegel/src/app/login/`): Marke in Archivo, Karte mit `radius-xl`, beide Themes.
-- **B5 Treffsicher Farben.** `src/components/app/statistics-charts/constants.ts`: Ringverteilung auf
+- **B5 Treffsicher Farben.** Nur so weit, dass die heutige Statistik in beiden Themes lesbar ist; Teil G ersetzt sie.
+  `src/components/app/statistics-charts/constants.ts`: Ringverteilung auf
   `var(--score-10)`, `var(--score-9)`, `var(--score-8)`, `var(--score-7)` (≤ 7), Hex-Skala entfernen; Trefferlage-Hex
   auf `var(--overlay)`, `var(--chart-*)`; `grep -rnE '#[0-9a-fA-F]{6}' apps/treffsicher/src --include='*.tsx'
 --include='*.ts'` außerhalb `export/pdf` muss leer sein. Recharts-Achsen und -Gitter auf `var(--muted-foreground)`,
@@ -192,7 +221,8 @@ apps/treffsicher/src/components`).
 - **B8 Ringwerk Styles und Schrift.** wie B1 mit `data-app="ringwerk"`, `storageKey="ringwerk-theme"`.
 - **B9 Ringwerk Rahmen.** wie B2 laut „Festgelegt“ (Rolle aus der Session, Teilnehmer/Disziplinen für
   ADMIN/MANAGER, Admin für ADMIN); `Navigation.tsx` löschen; `src/app/(app)/admin/layout.tsx` prüfen, dass es kein
-  eigenes Padding setzt.
+  eigenes Padding setzt. `src/proxy.ts` wie in B2. Die Tabellen der Ratenbegrenzung unter Admin bleiben in ihren
+  Karten (`min-w-0` im Raster, wie Spiegels Fix in `feat/spiegel-kleinkram`).
 - **B10 Ringwerk Wettbewerb-Unternavigation.** `components/app/shell/CompetitionDetailHeader.tsx`: Reiterleiste in
   einer Zeile, die in sich seitlich scrollt (`Segmented` ohne `wrap`, als Links), Name der Seite immer sichtbar
   (heute `hidden sm:inline`), Zurück-Link bleibt.
@@ -248,22 +278,22 @@ Beschreibung verknüpft; Sichtprüfung je Dialog hell und dunkel.
 
 ## Teil D — Hilfe an den Zahlen, „–“ mit Grund
 
-- **D0 Textbuch (Haltepunkt).** Erklärungen im Format `HelpText` für: Treffsicher-Statistik je Karte der sechs
-  Reiter (Übersicht, Verlauf, Trefferlage, Selbstbild, Befinden, Qualität), Prognose/Feedback der Einheit;
-  Ringwerk Teiler, Ringteiler, Sortierung der Tabelle, Best-of, Setzung und Runden der Playoffs. In das Textbuch aus
-  C0. **HALT:** Der User gibt frei.
+- **D0 Textbuch (Haltepunkt).** Erklärungen im Format `HelpText` für: Treffsicher Prognose/Feedback und Befinden
+  der Einheit; Ringwerk Teiler, Ringteiler, Sortierung der Tabelle, Best-of, Setzung und Runden der Playoffs. In das
+  Textbuch aus C0. Die Statistik von Treffsicher bekommt ihre Hilfe in Teil G aus `shot-help`. **HALT:** Der User gibt
+  frei.
 - **D1 Themen.** `apps/treffsicher/src/lib/help/topics.ts` und `apps/ringwerk/src/lib/help/topics.ts`
   (`Record<string, HelpText>`), Test: jedes Thema hat `title`, `short`, `what`; `forbiddenIn` über alle Felder.
 - **D2 Blatt in den Rahmen.** `HelpContext` (aus `apps/spiegel/src/components/shell/HelpContext.tsx`) nach
   `packages/ui/src/design2/help.tsx` (`HelpProvider`, `useHelp`); beide `AppShell`s hängen `HelpSheet` ein.
-- **D3 „?“ an den Zahlen.** Treffsicher: Kopf jeder Karte in `statistics-charts/tabs/*` und
-  `SessionPrognosisFeedbackComparisonCard`; Ringwerk: Spaltenköpfe Teiler/Ringteiler und der Sortiersatz in
+- **D3 „?“ an den Zahlen.** Treffsicher: `SessionPrognosisFeedbackComparisonCard` und Befinden auf der Seite einer
+  Einheit; Ringwerk: Spaltenköpfe Teiler/Ringteiler und der Sortiersatz in
   `SeasonStandingsTable`, `PlayoffBracket`-Kopf. Schalter „Erklärungen“ zeigt `short` unter dem Titel, wie Spiegel.
 - **D4 „–“ mit Grund.** Stellen, an denen heute `0`, leer oder ein Platzhaltertext für „kein Wert“ steht
   (`grep -rn '?? 0\|"—"\|Keine Daten' apps/treffsicher/src/components apps/ringwerk/src/components`), zeigen „–“ mit
   dem Grund aus der Logik („zu wenige Einheiten“, „noch kein Ergebnis“). Grund als reine Funktion, Test.
-- **D5 Werte ohne Hover.** Recharts-Diagramme in Treffsicher bekommen „Werte als Tabelle“ (aufklappbar unter dem
-  Diagramm) wie Spiegel; geprüft in `pruefen`: Werte ohne Hover erreichbar.
+- **D5 Werte ohne Hover:** entfällt hier. Die Recharts-Diagramme der Statistik ersetzt Teil G durch Spiegels
+  Diagramme mit Lineal und „Werte als Tabelle“. `ShotHistogram` auf der Einheit ersetzt G7.
 
 **Prüfung Teil D:** `pnpm check`; `pruefen` je App: jedes Thema hat einen Knopf (`data-help`), das Blatt öffnet von
 unten (390 px) und rechts (1280 px), Fokus kehrt zurück.
@@ -287,6 +317,79 @@ unten (390 px) und rechts (1280 px), Fokus kehrt zurück.
 
 **Prüfung Teil E:** `./scripts/consistency-check.sh` grün; mit Probedatei rot; `pnpm check`; alle drei `pruefen`.
 
+## Teil G — Treffsichers Statistik wie Spiegels Fortschritt
+
+Treffsicher hat heute eine eigene Welt: sechs Reiter, 18 Hooks in `statistics-charts/hooks`, eigene Trend- und
+Normalisierungsrechnung, Hochrechnung, Radar, gestapelte Fläche, Meyton-Farben, Recharts. Spiegel beantwortet dieselbe
+Frage („Werde ich besser?“) mit **einer** Seite eines Zeitraums und Regeln, die schon geprüft sind (Simulation B19).
+Die Rechnungen in `shot-core/analysis/period.ts` (`periodTrend`, `periodBuckets`, `trainingVolume`, `comparePeriods`)
+arbeiten bereits auf einem schlichten Wert je Scheibe (`CardValue { id, atMs, value, n }`); eine Einheit lässt sich
+genauso abbilden. Gebunden an Spiegel sind nur `shot-ui/period/model.ts` (`ProjectedCard`) und die Links in
+`CardList`/`CardReadout` (`RouteLink`).
+
+**Abgleich (Vorschlag, in G0 zur Freigabe):**
+
+| Treffsicher heute                               | künftig, wie Spiegel                                                                                                        |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Zeiträume Monat, 3, 6 Monate, alles, frei       | Spiegels Zeitraum-Wahl (`PeriodPicker`), Vorgabe 90 Tage                                                                    |
+| Filter Training/Wettkampf/beides, Disziplin     | Disziplin Pflicht (nie gemischt), Art als Chip im Blatt „Filter“                                                            |
+| Ringe/Schuss oder Hochrechnung                  | Ø je Schuss; **Hochrechnung entfällt**; Ergebnis wie am Ausdruck steht auf der Einheit                                      |
+| Ergebnisverlauf mit gleitendem Trend            | `PeriodChart`: Ø je Schuss, gleitender Schnitt, Formband, Lineal, Ablesung, Liste der Einheiten                             |
+| Übersicht-Tabelle je Disziplin                  | Ergebnis-Box und Kacheln über den Zeitraum, Vergleich mit dem Zeitraum davor („deutlich besser“, „kein klarer Unterschied“) |
+| Serienwertungen je Position                     | „Serien im Vergleich“ nach Spiegels Logik                                                                                   |
+| Schussverteilung als gestapelte Fläche          | Zehnerquote und Ringverteilung als Kennzahl im Verlauf; Ringverteilung als Säulen auf der Einheit                           |
+| Trefferlage (Wolke, Trend, mm aus dem Ausdruck) | Lage über Zeit (Katalog L7) im Stil von Spiegel                                                                             |
+| Befinden gegen Ergebnis (Streudiagramm)         | Vergleich nach Merkmal: etwa „gut geschlafen“ gegen „schlecht geschlafen“, `comparePeriods`, Urteil ab 5 Einheiten je Seite |
+| Ausführungsqualität gegen Ringe                 | ebenso: hohe gegen niedrige Qualität                                                                                        |
+| Selbstbild-Radar (7 Dimensionen)                | eine Zeile je Dimension: Prognose, Feedback, Abstand; **kein Radar**                                                        |
+| Meyton-Farbschema                               | `score-*` (Teil B)                                                                                                          |
+| keine Rekorde                                   | Spiegels Rekorde, wo Einzelschüsse erfasst sind                                                                             |
+
+- **G0 Abgleich (Haltepunkt).** Die Tabelle oben mit echten Zahlen aus der Dev-DB belegen (wie viele Einheiten mit
+  Einzelschüssen, mit Trefferlage, mit Befinden, mit Qualität; nur Zählungen, keine Namen). **HALT:** Der User gibt die
+  Zuordnung frei oder ändert sie.
+- **G1 Eingabe verallgemeinern.** `packages/shot-ui/src/period/model.ts`: `periodModel` nimmt statt
+  `ProjectedCard[]` eine schlanke Eingabe
+  `PeriodItem { id: string; startedAtMs: number; kind: "training" | "match"; probeOnly: boolean; metrics: Record<string, { value: number; n: number } | null>; flags: readonly string[] }`.
+  Spiegel bildet `ProjectedCard` in `apps/spiegel` (oder `shot-ui/period/fromProjection.ts`) darauf ab.
+  Charakterisierung vorher: `model.test.ts` und ein neuer Test, der für `testSeason.ts` das ganze `PeriodModel` vor
+  und nach dem Umbau gleich hält (Gegenprobe: Quelle vertauschen → rot, conventions §9).
+- **G2 Links lösen.** `CardList` und `CardReadout` bekommen `renderLink(id, props)` statt `RouteLink`/`ListRoute`;
+  Spiegel reicht `RouteLink` durch. Markup-Tests unverändert grün.
+- **G3 Einheiten als Eingabe.** `apps/treffsicher/src/lib/statistics/periodItems.ts`: Einheit → `PeriodItem`
+  (Ø je Schuss aus den Wertungsserien, Zehntel oder ganze Ringe wie heute in `statistics-charts/utils/displayScore.ts`, dessen Logik hierher zieht, weil G9
+  den Ordner löscht; `n` = Wertungsschüsse;
+  Zehnerquote, Innenzehner und Serien nur mit Einzelschüssen, sonst `null` mit Grund; Lage aus
+  `hitLocation*Mm`/`*Direction`). Rechnungen nur aus `@vereinsheim/shot-core` (`stats.ts`, `metrics.ts`), keine eigene
+  Mittelung. Test mit Fixtures, in denen eine falsche Quelle (Probe mitgezählt, Serien statt Schüsse gemittelt)
+  ein anderes Ergebnis gibt.
+- **G4 Seite.** `src/app/(app)/statistics/page.tsx`: `PeriodPage` mit `PeriodHeader`, `SectionNav`, `PeriodChart`,
+  `VolumeChart`, `PeriodResult`, `CardReadout`, `CardList`, `PeriodTiles` wie Spiegels `ProgressScreen`
+  (`apps/spiegel/src/components/progress/ProgressScreen.tsx`); Zustand in der Adresse über `shot-ui/period/state`.
+  Rechnen auf dem Server, die Seite bekommt das fertige Modell. Lastgrenzen aus [[treffsicher-dos-protection]] bleiben.
+- **G5 Einflüsse.** Ein Reiter „Einflüsse“ unter der Analyse: je Befinden-Wert (Schlaf, Energie, Stress,
+  Motivation) und Ausführungsqualität zwei Gruppen (obere gegen untere Hälfte der eigenen Werte im Zeitraum),
+  `comparePeriods` auf Ø je Schuss, Urteil in Alltagsworten; unter fünf Einheiten je Seite „zu wenige Einheiten“.
+  Reine Funktion `influences(items)` in `apps/treffsicher/src/lib/statistics/influences.ts`, Test inklusive
+  Mutationsprobe (Test als `true` → rot).
+- **G6 Selbstbild.** Ein Reiter „Selbstbild“: je Dimension Ø Prognose, Ø Feedback, Abstand, als Zeilen mit
+  Balken in Design 2 (kein Radar).
+- **G7 Einheit.** `components/app/sessions/ShotHistogram.tsx` → Spiegels Ringverteilung
+  (`shot-ui/analysis/charts/RingBars.tsx`), Farben `score-*`, „Werte als Tabelle“.
+- **G8 Hilfe.** Kacheln und Karten holen ihre Erklärung über `helpForMetric`/`helpTopic` aus `shot-help` (gleiche
+  Texte wie Spiegel). Neue Themen nur für „Einflüsse“ und „Selbstbild“, vorher ins Textbuch (Haltepunkt wie D0).
+- **G9 Alte Statistik entfernen.** `components/app/statistics-charts/**`, `components/ui/chart.tsx` und `recharts`
+  aus `apps/treffsicher/package.json`, wenn kein Import mehr bleibt (`pnpm install --frozen-lockfile` danach,
+  conventions §9). PDF-Abschnitt `sessions/[id]/export/pdf/_lib/sections/hitLocation.ts` bleibt.
+- **G10 Doku.** `vault/apps/treffsicher/statistics-visualization.md` neu (Seite eines Zeitraums, Abgleich, Einflüsse),
+  `treffsicher-requirements.md` Abschnitt „Statistiken & Auswertung“ (Hochrechnung, Radar und Meyton-Farben gestrichen),
+  `wellbeing-tracking.md`, `spiegel-langzeit.md` (Bausteine auch in Treffsicher), `packages/shot-ui/CLAUDE.md`.
+
+**Prüfung Teil G:** `pnpm check`; Spiegel `pruefen` grün (die Verallgemeinerung ändert dort nichts); Treffsicher
+`pruefen` mit Abschnitt „Statistik“: kein seitliches Scrollen, Lineal und „Werte als Tabelle“, Vergleich, Blatt
+„Filter“. Abgleich der Zahlen: Ø je Schuss je Disziplin und Zeitraum auf der neuen Seite gleich der heutigen
+Übersicht (vor G9 an der Dev-DB nebeneinander gemessen, Abweichungen erklärt im Bericht).
+
 ## Teil F — Durchsicht nach drei Ebenen (Messung, dann eigener Plan)
 
 - **F1 Messung.** Wie [[spiegel-durchsicht]] am Telefon (390 px, 772 px Inhalt über der Leiste): je Hauptseite
@@ -302,16 +405,18 @@ unten (390 px) und rechts (1280 px), Fokus kehrt zurück.
 - **Papierkorb für Treffsicher-Einheiten** (Schema `deletedAt`, Abfragen, Seite „Papierkorb“, Löschen nach 30 Tagen,
   `useUndo`): eigener Plan mit Migration (geschützt). Ringwerk danach prüfen.
 - **SP-4.1** (Treffsicher ablösen oder behalten) bleibt offen; der Umzug lohnt sich unabhängig davon, weil Treffsicher
-  bis dahin im Einsatz ist.
+  bis dahin im Einsatz ist. Teil G macht beide Wege leichter: Mit derselben Seite und denselben Rechnungen kann
+  Treffsicher später auch Spiegels Scheiben zeigen (ADR-026).
 - PDFs in Design 2.
 
 ## Tests (Überblick)
 
 - Neu: `design2/app-frame.test.tsx`, `design2/help.test.tsx`, `lib/wording.test.ts`, erweitert `tokens.test.ts`
   (Kontraste), `ThemeScript.test.tsx` (Schlüssel), `AppShell.test.tsx` je App, `consequences.test.ts` je App,
-  `help/topics.test.ts` je App, Grund-Funktionen aus D4.
-- Unverändert grün: `shot-ui` `AppFrame.test.tsx`, `help.test.tsx`, Spiegels `DecisionDialog`-/`UndoBar`-Tests am
-  neuen Ort.
+  `help/topics.test.ts` je App, Grund-Funktionen aus D4, `design2/bar.test.ts` (verschoben), `periodItems.test.ts` und
+  `influences.test.ts` (Treffsicher), Charakterisierung des ganzen `PeriodModel` für `testSeason.ts` (G1).
+- Unverändert grün: `shot-ui` `AppFrame.test.tsx`, `help.test.tsx`, `period/*.test.ts(x)`, Spiegels
+  `DecisionDialog`-/`UndoBar`-Tests am neuen Ort.
 - Mutationsprobe (conventions §9): in A1 eine Akzentfarbe auf zu hellen Wert setzen → Kontrasttest rot; in C1 ein
   Semikolon in einen Text → Wortlauttest rot.
 
