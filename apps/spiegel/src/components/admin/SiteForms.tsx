@@ -10,6 +10,7 @@ import { FieldError } from "@vereinsheim/ui/field-error"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { BRIDGE_STATUS_TEXT } from "@/lib/admin/bridge-status"
 import {
   bridgeRemove,
   bridgeRevoke,
@@ -151,15 +152,6 @@ export function PairBridgeForm() {
   )
 }
 
-const STATUS_TEXT: Record<NonNullable<BridgeRow["status"]>, string> = {
-  ok: "läuft",
-  delayed: "schickt gerade langsamer als sonst",
-  "db-unreachable": "erreicht die Meyton-Anlage nicht",
-  "db-error": "bekommt Fehler von der Meyton-Anlage",
-  "possible-reset": "Meyton-Anlage wirkt neu aufgesetzt (Spiegel regelt das selbst)",
-  clock: "Uhr am Gerät geht falsch (schickt keine Scheiben, bis sie stimmt)",
-}
-
 /**
  * Was der Knopf an einer Brücke tut, an einer Stelle: laufend trennen, getrennt entfernen. Text, Dialog und Action
  * kommen zusammen, der Test prüft die Zuordnung
@@ -192,7 +184,7 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
       : bridge.lastSeenAt
         ? `zuletzt gesehen ${bridge.lastSeenAt}`
         : "noch kein Kontakt",
-    bridge.status && STATUS_TEXT[bridge.status],
+    bridge.status && BRIDGE_STATUS_TEXT[bridge.status],
     // gegen eine falsche Uhr am Gerät gemessen, sagt die Abweichung nichts über die Anlage (SF-79)
     bridge.status !== "clock" &&
       bridge.clockOffsetSeconds !== null &&
