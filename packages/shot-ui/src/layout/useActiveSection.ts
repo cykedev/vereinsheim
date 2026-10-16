@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react"
 
+import { BAR_PX } from "./bar"
 import { PAGE_SECTIONS, type PageSection } from "./sections"
 
 const PAGE_IDS: readonly PageSection[] = PAGE_SECTIONS.map((section) => section.id)
 
-/** ein Abschnitt zählt, sobald sein Anfang die Leiste erreicht hat: 56 px Leiste plus 40 px Luft */
-const LINE_PX = 96
+/** ein Abschnitt zählt, sobald sein Anfang die Leiste erreicht hat: Leiste plus 40 px Luft */
+const LINE_PX = BAR_PX + 40
 
 /**
  * Aktiver Abschnitt: der späteste in der Seite, dessen Anfang schon an der Leiste angekommen ist. Ein Sprung

@@ -16,6 +16,7 @@ import type { Layer, ViewState } from "../view-state"
 import { analysisInput, type AnalysisBasis } from "./input"
 import { AnalysisCard, Disclosure, Note } from "./parts"
 import { TAB_CARDS, type AnalysisTab, type CardSpec } from "./tabs"
+import { BAR } from "../layout/bar"
 
 export type { AnalysisTab } from "./tabs"
 
@@ -221,7 +222,13 @@ export function AnalysisPanel({
           die Leiste ist eine Zeile, die in sich seitlich scrollt, statt die Seite zu verbreitern */}
       <div
         data-analysis-strip
-        className="sticky top-0 z-30 flex h-14 items-center bg-background max-md:-mx-4 max-md:px-4 md:top-14 md:z-10"
+        className={cn(
+          "sticky top-0 z-30 flex",
+          BAR.height,
+          "items-center bg-background max-md:-mx-4 max-md:px-4",
+          BAR.mdTop,
+          "md:z-10"
+        )}
       >
         <Segmented
           label="Thema"

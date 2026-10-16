@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { PAGE_COLUMNS } from "./columns"
 import type { PeriodSection } from "./sections"
 import { SectionBlock, type PageSectionBlock } from "./SectionBlock"
+import { BAR } from "./bar"
 
 type Section = PageSectionBlock<Exclude<PeriodSection, "history">>
 
@@ -63,10 +64,16 @@ export function PeriodPage({
       {header}
       {nav}
       <div className="grid gap-7">
-        <div id="history" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
+        <div id="history" className={cn("grid", BAR.scrollMargin, "gap-7", PAGE_COLUMNS)}>
           <div
             data-section="history"
-            className="grid min-w-0 scroll-mt-14 content-start gap-7 md:sticky md:top-14 md:self-start"
+            className={cn(
+              "grid min-w-0",
+              BAR.scrollMargin,
+              "content-start gap-7 md:sticky",
+              BAR.mdTop,
+              "md:self-start"
+            )}
           >
             {chart}
             {under}

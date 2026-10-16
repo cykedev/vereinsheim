@@ -4,6 +4,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import type { MouseEvent } from "react"
 
 import { PAGE_SECTIONS } from "./sections"
+import { BAR } from "./bar"
 
 /**
  * Sprung zum Abschnitt ohne den Sprung des Browsers: In einer `data:`-Seite (Vorschau) oder einem Rahmen mit
@@ -51,7 +52,9 @@ export function SectionNav({
       aria-label="Abschnitte"
       // mit Fokus über dem Streifen der Analyse, der sie auf dem Telefon sonst abdeckt
       className={cn(
-        "sticky top-0 z-20 -mx-4 flex h-14 items-center bg-background px-4 focus-within:z-40",
+        "sticky top-0 z-20 -mx-4 flex",
+        BAR.height,
+        "items-center bg-background px-4 focus-within:z-40",
         className
       )}
     >

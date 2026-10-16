@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { BAR_PX } from "./bar"
 import { isOutOfView, shouldDismiss, type ReturnState } from "./jump"
 
 /**
@@ -15,7 +16,7 @@ import { isOutOfView, shouldDismiss, type ReturnState } from "./jump"
  * und `close` geben ihn dorthin zurück (sonst fiele er beim Ausblenden der Pille auf `<body>`); `hide`
  * blendet die Pille ohne Fokuswechsel aus, etwa beim Wechsel der Karte.
  */
-export function useReturnJump(topInset = 56) {
+export function useReturnJump(topInset = BAR_PX) {
   const [pill, setPill] = useState<{ label: string; origin: number } | null>(null)
   const state = useRef<ReturnState | null>(null)
   const trigger = useRef<HTMLElement | null>(null)

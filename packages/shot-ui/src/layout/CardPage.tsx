@@ -7,6 +7,7 @@ import { PAGE_COLUMNS } from "./columns"
 import { SectionBlock, type PageSectionBlock } from "./SectionBlock"
 import type { PageSection } from "./sections"
 import { useTargetFit } from "./useTargetFit"
+import { BAR } from "./bar"
 
 type Section = PageSectionBlock<Exclude<PageSection, "target">>
 
@@ -62,12 +63,12 @@ export function CardPage({
     return (
       <div className={cn("grid gap-5", className)}>
         {header}
-        <div id="target" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
+        <div id="target" className={cn("grid", BAR.scrollMargin, "gap-7", PAGE_COLUMNS)}>
           <div
             ref={fitTarget}
             style={fitStyle}
             data-section="target"
-            className="grid min-w-0 scroll-mt-14 content-start gap-7"
+            className={cn("grid min-w-0", BAR.scrollMargin, "content-start gap-7")}
           >
             {target}
           </div>
@@ -81,14 +82,20 @@ export function CardPage({
       {header}
       {nav}
       <div className="grid gap-7">
-        <div id="target" className={cn("grid scroll-mt-14 gap-7", PAGE_COLUMNS)}>
-          {/* scroll-mt-14 auch hier: der Sprung aus der Analyse zielt auf die Scheibe selbst; klebt, falls
+        <div id="target" className={cn("grid", BAR.scrollMargin, "gap-7", PAGE_COLUMNS)}>
+          {/* Abstand zur Leiste auch hier: der Sprung aus der Analyse zielt auf die Scheibe selbst; klebt, falls
               die rechte Spalte einmal länger ist */}
           <div
             ref={fitTarget}
             style={fitStyle}
             data-section="target"
-            className="grid min-w-0 scroll-mt-14 content-start gap-7 md:sticky md:top-14 md:self-start"
+            className={cn(
+              "grid min-w-0",
+              BAR.scrollMargin,
+              "content-start gap-7 md:sticky",
+              BAR.mdTop,
+              "md:self-start"
+            )}
           >
             {target}
             {under}

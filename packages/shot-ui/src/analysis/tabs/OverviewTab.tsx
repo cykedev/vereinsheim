@@ -10,6 +10,7 @@ import { HelpButton } from "../../help/HelpButton"
 import { overviewTiles } from "../overview"
 import { AnalysisCard, CaseSafe, Disclosure, Note } from "../parts"
 import type { CardContext, CardSpec } from "./index"
+import { BAR } from "../../layout/bar"
 
 /** Überblick: acht Kacheln, Beobachtungen in Worten und der Einstieg „So liest du die Analyse“ (anfangs zu) */
 export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec[] {
@@ -82,7 +83,7 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
           tag="aus den Zahlen"
           explain={explain}
           onHelp={onHelp}
-          className="scroll-mt-14 md:scroll-mt-28"
+          className={cn(BAR.scrollMargin, BAR.mdScrollMarginTwo)}
         >
           {sentences.length ? (
             <ul className="grid gap-2.5 text-[14px] leading-relaxed">

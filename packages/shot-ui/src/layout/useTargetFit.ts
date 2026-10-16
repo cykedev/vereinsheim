@@ -2,10 +2,8 @@
 
 import { useLayoutEffect, useState, type CSSProperties } from "react"
 
-/** Höhe der Sprungleiste, über der die Spalte mit der Scheibe beginnt */
-const NAV_PX = 56
-/** Luft unter der Spalte bis zum Fensterrand */
-const AIR_PX = 16
+import { BAR_PX, EDGE_PX } from "./bar"
+
 /** kleiner soll die Scheibe nicht werden, damit die Serien noch darunter passen */
 export const MIN_TARGET_PX = 280
 /** ab hier stehen Scheibe und Serien neben dem Rest (wie `md:` in Tailwind) */
@@ -24,7 +22,8 @@ export function targetRoom(
   /** Platz der unteren Leiste des Rahmens (`--app-bar`) */
   barPx = 0
 ) {
-  const room = Math.floor(viewportHeight - NAV_PX - AIR_PX - barPx - (columnHeight - boxHeight))
+  // die Spalte beginnt unter der Sprungleiste und lässt unten Luft bis zum Fensterrand
+  const room = Math.floor(viewportHeight - BAR_PX - EDGE_PX - barPx - (columnHeight - boxHeight))
   return room >= MIN_TARGET_PX ? room : null
 }
 
