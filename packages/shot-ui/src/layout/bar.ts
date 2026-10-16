@@ -7,9 +7,8 @@ export const EDGE_PX = 16
  * Die Klassen, die an der Höhe der Leiste hängen. Tailwind findet nur ganze Klassen im Quelltext, deshalb stehen sie
  * hier als Literale; `bar.test.ts` hält sie bei `BAR_PX`.
  */
-export const BAR = {
+export const JUMP_BAR = {
   height: "h-14",
-  top: "top-14",
   mdTop: "md:top-14",
   scrollMargin: "scroll-mt-14",
   /** zwei Leisten übereinander: Sprungleiste und Reiter der Analyse */

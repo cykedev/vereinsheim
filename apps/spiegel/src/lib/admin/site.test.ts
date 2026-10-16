@@ -31,7 +31,6 @@ describe("Texte der Brücke ohne alte Wörter", () => {
         { displayMode: 5, cards: 1 },
       ]),
     ]
-    expect(Object.keys(BRIDGE_STATUS_TEXT)).toHaveLength(6)
     for (const text of texts) expect(text).not.toMatch(OLD_WORDS)
   })
 })

@@ -14,12 +14,12 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue } from "../format"
 import { groupView } from "../geometry"
+import { JUMP_BAR } from "../layout/bar"
 import { RouteLink, shouldIntercept, useRouteNavigate } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
 import { MiniTarget } from "../target/MiniTarget"
 import { eveningsByMonth, type CardListModel, type ListRow } from "./evenings"
 import { KIND_TEXT, KindMark } from "./KindMark"
-import { BAR } from "../layout/bar"
 
 /** die Wertung im Namen der Zeile */
 const SCORING_IN: Readonly<Record<Scoring, string>> = {
@@ -181,7 +181,7 @@ export function EveningList({
                       key={evening.day}
                       id={evening.day}
                       data-evening={evening.day}
-                      className={cn(BAR.scrollMargin, "border-t border-border")}
+                      className={cn(JUMP_BAR.scrollMargin, "border-t border-border")}
                     >
                       {evening.rows.map((row, i) => {
                         const placed = marks.get(row.id) ?? []

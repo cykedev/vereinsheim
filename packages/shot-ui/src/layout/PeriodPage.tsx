@@ -1,10 +1,10 @@
 import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
+import { JUMP_BAR } from "./bar"
 import { PAGE_COLUMNS } from "./columns"
 import type { PeriodSection } from "./sections"
 import { SectionBlock, type PageSectionBlock } from "./SectionBlock"
-import { BAR } from "./bar"
 
 type Section = PageSectionBlock<Exclude<PeriodSection, "history">>
 
@@ -64,14 +64,14 @@ export function PeriodPage({
       {header}
       {nav}
       <div className="grid gap-7">
-        <div id="history" className={cn("grid", BAR.scrollMargin, "gap-7", PAGE_COLUMNS)}>
+        <div id="history" className={cn("grid", JUMP_BAR.scrollMargin, "gap-7", PAGE_COLUMNS)}>
           <div
             data-section="history"
             className={cn(
               "grid min-w-0",
-              BAR.scrollMargin,
+              JUMP_BAR.scrollMargin,
               "content-start gap-7 md:sticky",
-              BAR.mdTop,
+              JUMP_BAR.mdTop,
               "md:self-start"
             )}
           >

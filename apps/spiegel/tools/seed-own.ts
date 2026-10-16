@@ -67,7 +67,8 @@ async function main() {
             passwordHash: await bcrypt.hash(DEMO_PASSWORD, BCRYPT_COST),
             role: "USER",
           },
-          update: { isActive: true },
+          // das Demo-Konto ist immer ein Schütze: `pruefen` prüft damit „Admin ohne Rolle“
+          update: { isActive: true, role: "USER" },
           select: { id: true },
         })
       : await db.user.findUnique({ where: { email }, select: { id: true } })

@@ -10,13 +10,13 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { useId, useMemo, type ReactNode } from "react"
 
 import { HelpButton } from "../help/HelpButton"
+import { JUMP_BAR } from "../layout/bar"
 import { isProbeShot, seriesKeyOf } from "../shots"
 import type { SeriesKey } from "../types"
 import type { Layer, ViewState } from "../view-state"
 import { analysisInput, type AnalysisBasis } from "./input"
 import { AnalysisCard, Disclosure, Note } from "./parts"
 import { TAB_CARDS, type AnalysisTab, type CardSpec } from "./tabs"
-import { BAR } from "../layout/bar"
 
 export type { AnalysisTab } from "./tabs"
 
@@ -224,9 +224,9 @@ export function AnalysisPanel({
         data-analysis-strip
         className={cn(
           "sticky top-0 z-30 flex",
-          BAR.height,
+          JUMP_BAR.height,
           "items-center bg-background max-md:-mx-4 max-md:px-4",
-          BAR.mdTop,
+          JUMP_BAR.mdTop,
           "md:z-10"
         )}
       >

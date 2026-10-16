@@ -143,7 +143,7 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
   „Zahlen“ gibt es nicht, der Überblick der Analyse ist die Zahlen-Ansicht). Der Kopf
   zeigt die wichtigsten Beobachtungen (die Antwort steht oben, [[spiegel-durchsicht]]). Der Kasten
   der Scheibe trägt `data-target-box` und begrenzt sich mit `max-w-[var(--target-max,…)]`. Die Scheibe trägt selbst `data-section`, die Abschnitte haben
-  `BAR.scrollMargin` für die 56 px hohe Leiste (`layout/bar.ts`: `BAR_PX`, `EDGE_PX` und alle Klassen, die an der Höhe der Leiste hängen). Was außerhalb der Scheibe die Scheibe ändert, springt über
+  `JUMP_BAR.scrollMargin` für die 56 px hohe Leiste (`layout/bar.ts`: `BAR_PX`, `EDGE_PX` und alle Klassen, die an der Höhe der Leiste hängen). Was außerhalb der Scheibe die Scheibe ändert, springt über
   `useReturnJump` zu ihr. Die Schalter der Scheibe liegen in ihren Ecken (`TargetControls`), nicht als Leiste. Ohne Schüsse zeigt die Seite neben der Scheibe nur `NoShots`, keine leeren Kästen
   und keine Kacheln voller Striche (`empty`).
 - **Übersichten auf der Projektion** (ADR-031):
