@@ -865,16 +865,32 @@ func TestRepeatedRoundFailureLogsRarely(t *testing.T) {
 
 // Die Anlage ist im Sommer wochenlang aus, die Brücke läuft weiter. Was am Ende des letzten Abends nicht hinauskam
 // (Internet weg), geht hinaus, sobald die Anlage wieder an ist: aus dem Speicher, und nach einem Neustart der Brücke
-// in der Pause (Reboot nach einem Update) über das Startfenster.
+// in der Pause (Reboot nach einem Update) über das Startfenster. Woher es kommt, zeigt die Scheibe, die schon oben war:
+// Aus dem Speicher geht sie nicht noch einmal, nach dem Neustart liest die Brücke sie neu und schickt sie erneut.
 func TestWaitingCardSurvivesWeeksWithoutSource(t *testing.T) {
 	for _, reboot := range []bool{false, true} {
 		t.Run(fmt.Sprintf("reboot=%v", reboot), func(t *testing.T) {
 			f := setup(t, "12345678")
+			count := func(id int32) int {
+				n := 0
+				for _, sent := range f.sp.sent() {
+					if sent == id {
+						n++
+					}
+				}
+				return n
+			}
+			f.ablage.put(2, "12345678", "1", 2)
+			f.step()
+			f.step()
+			if count(2) != 1 {
+				t.Fatalf("die erste Scheibe ist nicht oben: %v", f.sp.sent())
+			}
 			f.ablage.put(1, "12345678", "1", 3)
 			f.sp.errs = []error{&api.Error{Code: "network"}, &api.Error{Code: "network"}, &api.Error{Code: "network"}}
 			f.step()
 			f.step() // zwei gleiche Lesungen, der Upload scheitert
-			if len(f.sp.sent()) != 0 {
+			if count(1) != 0 {
 				t.Fatal("der Upload sollte scheitern")
 			}
 			f.ablage.fail = unreachable
@@ -891,14 +907,15 @@ func TestWaitingCardSurvivesWeeksWithoutSource(t *testing.T) {
 				f.step()
 			}
 			f.ablage.fail = nil
-			for range 5 {
-				if len(f.sp.sent()) > 0 {
-					break
-				}
+			for range 6 {
 				f.step()
 			}
-			if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
-				t.Fatalf("nach drei Wochen gesendet: %s, Log %v", got, f.logs)
+			if count(1) != 1 {
+				t.Fatalf("nach drei Wochen gesendet: %v, Log %v", f.sp.sent(), f.logs)
+			}
+			// aus dem Speicher: die bestätigte nicht noch einmal; nach dem Neustart: neu gelesen und erneut geschickt
+			if want := map[bool]int{false: 1, true: 2}[reboot]; count(2) != want {
+				t.Fatalf("die schon gesendete Scheibe %d-mal statt %d-mal: %v", count(2), want, f.sp.sent())
 			}
 		})
 	}

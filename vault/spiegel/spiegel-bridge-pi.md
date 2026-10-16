@@ -149,16 +149,20 @@ Wochen (User, 16. Oktober 2026).
   (`Type=notify`, `WatchdogSec=10min`). Bleibt das aus, beendet systemd sie und startet sie nach 10 s neu, ebenso nach
   einem Absturz. Dafür steht `GOTRACEBACK=crash` in der Unit: Go beendet einen Absturz sonst mit Exit 2, und der heißt
   „Konfiguration fehlt“, nach dem systemd bewusst nicht neu startet. Ein Core-Abbild entsteht nicht (`LimitCORE=0`), es
-  enthielte Snapshots mit Namen. `WatchdogSec` nie unter zwei Minuten setzen. Geprüft am 16. Oktober 2026 mit systemd in
+  enthielte Snapshots mit Namen. `WatchdogSec` nie unter fünf Minuten setzen: Ein Schritt darf mit allen Zeitgrenzen so lange dauern. Geprüft am 16. Oktober 2026 mit systemd in
   `debian:trixie` (arm64): Hänger → `Watchdog timeout`, `status=6/ABRT`, Neustart; 4 min Warten auf `Retry-After` ohne
   Neustart; Exit 2 ohne Neustart.
 - **Wochen ohne Anlage:** Die Brücke versucht es alle 10 s und meldet sich jede Minute bei Spiegel. Dort steht dann
   „erreicht die Meyton-Anlage nicht“, das ist in dieser Zeit normal. Was am letzten Abend nicht hinauskam (etwa weil das
   Internet weg war), behält sie im Speicher und schickt es, sobald die Anlage wieder an ist. Startet der Pi in der Pause
   neu, liest sie es über das Startfenster und den Wasserstand in Spiegel nach, wie nach dem Einschalten. Aufträge zum
-  Nachladen aus der Pause (QR von zu Hause, neue Zustimmungen) laufen zu Beginn des nächsten Abends, bevor geschossen
-  wird. Spiegel schaltet die Scheiben eines Abends 12 h später endgültig, nach einem Neustart der Brücke sofort. Belegt
-  mit `TestWaitingCardSurvivesWeeksWithoutSource`.
+  Nachladen aus der Pause (QR von zu Hause, neue Zustimmungen) laufen bei durchlaufender Brücke zu Beginn des nächsten
+  Abends, bevor geschossen wird. Nach einem Neustart in der Pause gelten die Scheiben im Startfenster zuerst als bewegt,
+  dann warten die Aufträge, bis 20 min nichts mehr läuft (SF-52). Spiegel schaltet die Scheiben eines Abends 12 h später
+  endgültig, nach einem Neustart der Brücke sofort. Startet die Brücke mitten am Abend neu (Absturz, Watchdog), werden
+  offene Scheiben so kurz endgültig; der nächste Schuss oder das nächste Lebenszeichen öffnet sie wieder. Belegt
+  mit `TestWaitingCardSurvivesWeeksWithoutSource`. Fällt auch das Internet im Schützenhaus wochenlang aus, schreibt die
+  Brücke `state-failed` und `heartbeat-failed` jede Minute, das ist dann normal.
 
 ## Den Pi im Netz finden (DHCP)
 

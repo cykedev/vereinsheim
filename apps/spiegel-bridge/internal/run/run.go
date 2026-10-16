@@ -766,14 +766,15 @@ func (r *Runner) Run(ctx context.Context) error {
 
 // wait wartet `d` und meldet dabei weiter, dass die Schleife lebt; false, wenn der Kontext endet.
 func (r *Runner) wait(ctx context.Context, d time.Duration) bool {
-	next := time.After(d)
+	next := time.NewTimer(d)
+	defer next.Stop()
 	tick := time.NewTicker(AliveEvery)
 	defer tick.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return false
-		case <-next:
+		case <-next.C:
 			return true
 		case <-tick.C:
 			r.alive()

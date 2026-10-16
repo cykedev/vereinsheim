@@ -125,8 +125,9 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   zurück, bis NTP antwortet (Regel „Eigene Uhr“, SF-79). Mit dem Dienst startet sie erst nach der Synchronisierung. Ein
   zweiter Lauf von `install.sh` ersetzt das Binary, startet den Dienst aber nicht neu. `Type=notify` mit
   `WatchdogSec=10min`: `run` meldet `READY` nach dem Laden der Konfiguration, `Run` danach `WATCHDOG` nach jedem `Step`
-  und beim Warten alle `AliveEvery` (1 min); ein Schritt, der hängt, meldet nichts. Darum nie `WatchdogSec` unter zwei
-  Minuten. `Environment=GOTRACEBACK=crash`: Go beendet `panic` und `SIGABRT` sonst mit Exit 2, und den schließt
+  und beim Warten alle `AliveEvery` (1 min); ein Schritt, der hängt, meldet nichts. Ein Schritt darf mit allen
+  Zeitgrenzen rund fünf Minuten dauern (Zustand 60 s, Runde 5 s + 30 s, ein Stapel 60 s, Fingerabdruck 35 s, Heartbeat
+  60 s); darum nie `WatchdogSec` unter fünf Minuten. `Environment=GOTRACEBACK=crash`: Go beendet `panic` und `SIGABRT` sonst mit Exit 2, und den schließt
   `RestartPreventExitStatus` als „Konfiguration fehlt“ vom Neustart aus; mit `crash` endet beides mit dem Signal.
   `LimitCORE=0`, ein Core-Abbild enthielte Snapshots mit Namen (SF-59). Eine ältere Brücke unter der neuen Unit sendet
   kein `READY` und gilt nach 90 s als nicht gestartet: beim Zurückgehen die alte Unit mitnehmen. Geprüft mit systemd in

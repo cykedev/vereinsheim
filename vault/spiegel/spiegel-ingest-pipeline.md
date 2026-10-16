@@ -78,7 +78,8 @@ und nimmt aus ihr nichts an (`epoch-unconfirmed`); die Übersicht des Admins zei
 
 **Zustand der Scheibe** ([[spiegel-bridge]], „Zustand statt Abschluss“): Jeder Stand mit bewegtem Lebenszeichen setzt
 `open` und `lifesignAt` (Beobachtungszeit). Der Heartbeat schaltet weiter: offen → ruhend nach fünf Minuten ohne
-Lebenszeichen, → endgültig nach zwölf Stunden oder wenn ein neuer Lauf der Brücke begann (die Anlage war aus).
+Lebenszeichen, → endgültig nach zwölf Stunden oder wenn ein neuer Lauf der Brücke begann (die Brücke wurde neu gestartet; mitten am
+Abend öffnet der nächste Stand die Scheibe wieder).
 `complete` gilt erst endgültig und ohne `unvollstaendig`; erst dann zählt die Scheibe für Rekorde (SF-66).
 
 ## Rohdaten
