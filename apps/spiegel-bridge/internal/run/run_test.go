@@ -8,6 +8,7 @@ import (
 	"net"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -802,5 +803,25 @@ func TestHistoryWaitingCardsYieldWhileShooting(t *testing.T) {
 	}
 	if f.ablage.reads[2] != before {
 		t.Fatalf("während geschossen wird %d-mal gelesen", f.ablage.reads[2]-before)
+	}
+}
+
+func TestRunReportsAlive(t *testing.T) {
+	f := setup(t, "12345678")
+	var alive atomic.Int32
+	f.runner.Alive = func() { alive.Add(1) }
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- f.runner.Run(ctx) }()
+	// die erste Meldung kommt gleich nach dem ersten Schritt, nicht erst nach dem Warten
+	for deadline := time.Now().Add(2 * time.Second); alive.Load() == 0; {
+		if time.Now().After(deadline) {
+			t.Fatal("kein Lebenszeichen nach dem ersten Schritt")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatal(err)
 	}
 }

@@ -26,6 +26,8 @@ const (
 	QuietEvery     = 30 * time.Second
 	StateEvery     = 5 * time.Minute
 	HeartbeatEvery = time.Minute
+	// so oft meldet Run beim Warten, dass die Schleife lebt (Watchdog); der Watchdog wartet länger
+	AliveEvery = time.Minute
 	// nach einem Fehler: erst kurz, dann länger, höchstens so lange
 	RetryFirst = 5 * time.Second
 	RetryMax   = 60 * time.Second
@@ -95,6 +97,9 @@ type Logger func(code string, pairs ...any)
 
 // Runner hält, was ein Lauf im Arbeitsspeicher braucht; nichts davon kommt auf die Platte.
 type Runner struct {
+	// Alive meldet, dass die Schleife lebt (systemd-Watchdog); nil ohne Dienst
+	Alive func()
+
 	version string
 	src     Source
 	spiegel Spiegel
@@ -729,17 +734,40 @@ func (r *Runner) heartbeat(ctx context.Context, now time.Time, dbReachable bool)
 	return nil
 }
 
-// Run wiederholt `Step` bis zum Ende des Kontexts oder einem widerrufenen Token.
+// Run wiederholt `Step` bis zum Ende des Kontexts oder einem widerrufenen Token. Nach jedem Schritt und beim Warten
+// alle `AliveEvery` meldet es `Alive`: Ein Schritt, der hängt, meldet nichts, und der Watchdog beendet die Brücke.
 func (r *Runner) Run(ctx context.Context) error {
 	for {
 		wait, err := r.Step(ctx)
 		if err != nil {
 			return err
 		}
+		r.alive()
+		if !r.wait(ctx, wait) {
+			return nil
+		}
+	}
+}
+
+// wait wartet `d` und meldet dabei weiter, dass die Schleife lebt; false, wenn der Kontext endet.
+func (r *Runner) wait(ctx context.Context, d time.Duration) bool {
+	next := time.After(d)
+	tick := time.NewTicker(AliveEvery)
+	defer tick.Stop()
+	for {
 		select {
 		case <-ctx.Done():
-			return nil
-		case <-time.After(wait):
+			return false
+		case <-next:
+			return true
+		case <-tick.C:
+			r.alive()
 		}
+	}
+}
+
+func (r *Runner) alive() {
+	if r.Alive != nil {
+		r.Alive()
 	}
 }
