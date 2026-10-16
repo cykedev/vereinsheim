@@ -129,7 +129,8 @@ export interface MetricDefinition {
 }
 
 const KEY = /^[a-z][a-zA-Z]*(\.[a-z][a-zA-Z0-9]*)+$/
-const CATALOG_ID = /^[EPLVZISTRCKWQ]\d+$/
+/** Form einer Katalog-ID ([[spiegel-statistics]]): Buchstabe der Gruppe, dann die Nummer */
+export const CATALOG_ID = /^[EPLVZISTRCKWQ]\d+$/
 
 export function defineMetric(def: MetricDefinition): Readonly<MetricDefinition> {
   if (!KEY.test(def.key)) {
@@ -423,6 +424,29 @@ export function timesInOrder(
   context?: ShotContext
 ): (number | null)[] {
   return timesOf(stepsInOrder(ordered, context))
+}
+
+export interface ShotInterval {
+  shot: MetricShot
+  /** Abstand zum vorigen Schuss in ms; null beim ersten, nach einer Lücke, ohne Zeit und bei einem Rücksprung der Uhr */
+  intervalMs: number | null
+}
+
+/** Abstand jedes Schusses zum vorigen, für Schüsse, die schon in Abgabefolge stehen (siehe `stepsInOrder`; SF-30) */
+export function intervalsInOrder(
+  ordered: readonly MetricShot[],
+  context?: ShotContext
+): ShotInterval[] {
+  const steps = stepsInOrder(ordered, context)
+  return steps.map((step, i) => {
+    const now = step.shot.firedAtMs
+    const then = steps[i - 1]?.shot.firedAtMs
+    const gap =
+      !step.gapBefore && Number.isFinite(now) && Number.isFinite(then)
+        ? (now as number) - (then as number)
+        : Number.NaN
+    return { shot: step.shot, intervalMs: gap >= 0 ? gap : null }
+  })
 }
 
 /**

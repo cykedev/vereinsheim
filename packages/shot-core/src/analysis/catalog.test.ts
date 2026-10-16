@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { CATALOG_ID } from "../metrics"
 import { ANALYSIS_CATALOG } from "./catalog"
 import * as analysis from "./index"
 
@@ -15,7 +16,7 @@ describe("ANALYSIS_CATALOG", () => {
   it("jede Auswertung hat Katalog-IDs in der Form des Katalogs", () => {
     for (const [name, ids] of Object.entries(ANALYSIS_CATALOG)) {
       expect(ids.length, name).toBeGreaterThan(0)
-      for (const id of ids) expect(id, name).toMatch(/^[EPLVZISTRCKWQ]\d+$/)
+      for (const id of ids) expect(id, name).toMatch(CATALOG_ID)
     }
   })
 })

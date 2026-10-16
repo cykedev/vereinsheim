@@ -8,15 +8,16 @@
 import {
   contextOf,
   inShotOrder,
+  intervalsInOrder,
   pauseRuleOf,
   pauseThresholdOf,
   selectShots,
   shotNumbers,
-  stepsInOrder,
   timesInOrder,
   type MetricShot,
   type Scoring,
   type ShotContext,
+  type ShotInterval,
   type ShotKind,
 } from "../metrics"
 import { iqr, median } from "../stats"
@@ -25,35 +26,21 @@ import { valueNeed, valueTenths } from "./values"
 
 const MATCH: readonly ShotKind[] = ["match"]
 
-interface Interval {
-  shot: MetricShot
+interface Interval extends ShotInterval {
   /** Nummer in der Abgabefolge seiner Art über alle gegebenen Schüsse (`shotNumbers`) */
   number: number
-  /** Abstand zum vorigen Schuss; null beim ersten, nach einer Lücke oder einem Rücksprung der Uhr */
-  intervalMs: number | null
 }
 
-/** Abstände über Schüsse, die schon in Abgabefolge der ganzen Karte stehen */
+/** Abstände über Schüsse, die schon in Abgabefolge der ganzen Karte stehen, mit ihrer Nummer */
 function intervals(
   ordered: readonly MetricShot[],
   numbers: Map<MetricShot, number>,
   context?: ShotContext
 ): Interval[] {
-  const steps = stepsInOrder(ordered, context)
-  return steps.map((step, i) => {
-    const before = steps[i - 1]?.shot
-    const now = step.shot.firedAtMs
-    const then = before?.firedAtMs
-    const gap =
-      !step.gapBefore && Number.isFinite(now) && Number.isFinite(then)
-        ? (now as number) - (then as number)
-        : Number.NaN
-    return {
-      shot: step.shot,
-      number: numbers.get(step.shot) as number,
-      intervalMs: gap >= 0 ? gap : null,
-    }
-  })
+  return intervalsInOrder(ordered, context).map((step) => ({
+    ...step,
+    number: numbers.get(step.shot) as number,
+  }))
 }
 
 // Erst die ganze Karte ordnen, dann auswählen: dieselbe Reihenfolge wie `shotNumbers`

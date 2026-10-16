@@ -1,4 +1,5 @@
 import type { SeriesPoint } from "@vereinsheim/shot-core/analysis"
+import { modalLength } from "@vereinsheim/shot-core/stats"
 
 import { formatValue } from "../../format"
 import { ChartSvg, crisp, niceStep } from "./frame"
@@ -6,12 +7,6 @@ import { ChartSvg, crisp, niceStep } from "./frame"
 const HEIGHT = 176
 const PAD = { left: 40, right: 12, top: 30, bottom: 26 }
 const INSET = 28
-
-/** häufigste Serienlänge, bei Gleichstand die längere (wie `seriesConsistency` im Fachkern) */
-function modalLength(series: readonly SeriesPoint[]): number {
-  const freq = (length: number) => series.filter((p) => p.shots === length).length
-  return series.map((p) => p.shots).sort((a, b) => freq(b) - freq(a) || b - a)[0]
-}
 
 /**
  * Serienergebnisse: Linie über die Serien voller Länge, eine kurze Restserie
@@ -29,7 +24,8 @@ export function SeriesChart({
 }) {
   const totals = series.flatMap((p) => (p.total === null ? [] : [p.total]))
   if (series.length < 2 || totals.length < 1) return null
-  const modal = modalLength(series)
+  // die Länge voller Serien, wie `seriesConsistency` im Fachkern; ab zwei Serien nie null
+  const modal = modalLength(series.map((p) => p.shots)) as number
   const span = Math.max(...totals) - Math.min(...totals) || 1
   // nicht feiner als die Wertung: ein Zehntel, in ganzen Ringen ein Ring
   const step = Math.max(niceStep(span, 3), digits ? 0.1 : 1)

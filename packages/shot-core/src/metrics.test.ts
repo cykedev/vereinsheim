@@ -9,6 +9,7 @@ import {
   eligibleShots,
   inScoring,
   inShotOrder,
+  intervalsInOrder,
   METRICS,
   metricByKey,
   asOnPrintout,
@@ -355,6 +356,34 @@ describe("Lücken in der Abgabefolge (SF-04, SF-30)", () => {
 
   it("ohne Karte ist jeder Sprung eine Lücke", () => {
     expect(gaps(stepsInOrder(MATCH4))).toEqual([false, false, true, false])
+  })
+
+  it("Abstände: null beim ersten, nach einer Lücke, ohne Zeit und bei einem Rücksprung der Uhr", () => {
+    const shots = [
+      at(1, "match", 0),
+      at(2, "match", 40),
+      at(4, "match", 100),
+      at(5, "match", 90),
+      at(6, "match", null),
+      at(7, "match", 130),
+      at(8, "match", 150),
+    ]
+    expect(intervalsInOrder(shots).map((step) => step.intervalMs)).toEqual([
+      null,
+      40_000,
+      null,
+      null,
+      null,
+      null,
+      20_000,
+    ])
+    expect(intervalsInOrder(shots).map((step) => step.shot)).toEqual(shots)
+  })
+
+  it("Abstände über eine Probe der Karte hinweg (SF-04)", () => {
+    expect(
+      intervalsInOrder(MATCH4, contextOf(MATCH4, CARD5)).map((step) => step.intervalMs)
+    ).toEqual([null, 40_000, 60_000, 60_000])
   })
 
   it("füllt nur eine Probe den Sprung, ist er in der Wertung keine Lücke", () => {

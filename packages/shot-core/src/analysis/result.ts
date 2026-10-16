@@ -14,7 +14,7 @@ import {
   type ShotKind,
 } from "../metrics"
 import { teilerFromDistanceUm } from "../scoring"
-import { wilson } from "../stats"
+import { modalLength, wilson } from "../stats"
 import { MAX_DECIMAL_TENTHS } from "../targets"
 import { seriesCurve, type SeriesPoint } from "./course"
 import { valueNeed, valueRings, valueTenths } from "./values"
@@ -103,9 +103,7 @@ export function seriesConsistency(
 ): SeriesConsistency | null {
   const series = seriesCurve(shots, scoring)
   if (series.length === 0) return null
-  const lengths = new Map<number, number>()
-  for (const s of series) lengths.set(s.shots, (lengths.get(s.shots) ?? 0) + 1)
-  const modal = [...lengths].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0]
+  const modal = modalLength(series.map((s) => s.shots)) as number
   const totals = series.flatMap((s) => (s.shots === modal && s.total !== null ? [s.total] : []))
   const valued = selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) })
   return {

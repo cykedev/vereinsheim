@@ -12,6 +12,7 @@ import {
   type MetricShot,
   type Scoring,
 } from "../metrics"
+import { modalLength } from "../stats"
 import { MAX_DECIMAL_TENTHS } from "../targets"
 import { byStart, cardShots } from "./card-shots"
 import { longestRun, seriesCurve } from "./course"
@@ -94,14 +95,6 @@ type Better = "higher" | "lower"
 /** Nur ein echt besserer Wert ersetzt den Rekord: Bei Gleichstand gilt der frühere. */
 const beats = (value: number, current: RecordRef | null | undefined, better: Better) =>
   !current || (better === "higher" ? value > current.value : value < current.value)
-
-/** häufigste Serienlänge, bei Gleichstand die längere (wie `seriesConsistency`) */
-function modalLength(lengths: readonly number[]): number | null {
-  const counts = new Map<number, number>()
-  for (const length of lengths) counts.set(length, (counts.get(length) ?? 0) + 1)
-  const sorted = [...counts].sort((a, b) => b[1] - a[1] || b[0] - a[0])
-  return sorted.length ? sorted[0][0] : null
-}
 
 /** die Wertungsschüsse jeder Serie, in der Folge der Serien */
 function seriesShots(shots: readonly MetricShot[]): [number, MetricShot[]][] {

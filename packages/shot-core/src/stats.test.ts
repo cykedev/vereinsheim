@@ -11,6 +11,7 @@ import {
   mad,
   mannKendall,
   median,
+  modalLength,
   quantile,
   theilSen,
   wilson,
@@ -267,5 +268,14 @@ describe("Mann-Whitney und Normalverteilung", () => {
   it("ohne Werte auf einer Seite kein Ergebnis", () => {
     expect(mannWhitney([], [1, 2])).toBeNull()
     expect(mannWhitney([1], [])).toBeNull()
+  })
+})
+
+describe("modalLength", () => {
+  it("der häufigste Wert, bei Gleichstand der größere, ohne Werte null", () => {
+    expect(modalLength([])).toBeNull()
+    expect(modalLength([10, 10, 10, 4])).toBe(10)
+    expect(modalLength([5, 5, 10, 10])).toBe(10)
+    expect(modalLength([10, 5, 5])).toBe(5)
   })
 })

@@ -29,6 +29,14 @@ export function quantile(values: readonly number[], p: number): number | null {
 
 export const median = (values: readonly number[]) => quantile(values, 0.5)
 
+/** häufigster Wert, bei Gleichstand der größere; ohne Werte null (die Länge voller Serien einer Scheibe) */
+export function modalLength(lengths: readonly number[]): number | null {
+  const counts = new Map<number, number>()
+  for (const length of lengths) counts.set(length, (counts.get(length) ?? 0) + 1)
+  const sorted = [...counts].sort((a, b) => b[1] - a[1] || b[0] - a[0])
+  return sorted.length ? sorted[0][0] : null
+}
+
 /** Median der absoluten Abweichungen vom Median (MAD), ohne Skalierungsfaktor */
 export function mad(values: readonly number[]): number | null {
   const center = median(values)

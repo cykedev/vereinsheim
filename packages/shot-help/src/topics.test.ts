@@ -1,5 +1,5 @@
 import { ANALYSIS_CATALOG } from "@vereinsheim/shot-core/analysis"
-import { METRICS } from "@vereinsheim/shot-core/metrics"
+import { CATALOG_ID, METRICS } from "@vereinsheim/shot-core/metrics"
 import { wilson } from "@vereinsheim/shot-core/stats"
 import { describe, expect, it } from "vitest"
 
@@ -7,7 +7,6 @@ import { helpForCatalog, helpForMetric } from "./lookup"
 import { THEME_ORDER } from "./markdown"
 import { HELP_TOPICS } from "./topics"
 
-const CATALOG_ID = /^[EPLVZISTRCKWQ]\d+$/
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
 describe("HELP_TOPICS: nichts fehlt", () => {
