@@ -8,7 +8,8 @@ After=network-online.target time-sync.target
 
 [Service]
 # bereit nach dem Laden der Konfiguration; danach meldet die Brücke jede Minute, dass ihre Schleife lebt. Bleibt das
-# 10 min aus (ein Hänger), beendet systemd sie mit SIGABRT und startet sie neu.
+# 10 min aus (ein Hänger), beendet systemd sie mit SIGABRT und startet sie neu. Nie unter zwei Minuten: Beim Warten meldet
+# sie sich nur jede Minute, und ein Schritt darf mit Zeitgrenzen gut zwei Minuten dauern.
 Type=notify
 NotifyAccess=main
 WatchdogSec=10min

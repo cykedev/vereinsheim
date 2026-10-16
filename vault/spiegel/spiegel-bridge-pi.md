@@ -3,7 +3,7 @@ id: spiegel-bridge-pi
 type: operation
 title: "Spiegel — Brücke auf dem Raspberry Pi einrichten und aktualisieren"
 aliases: [brücke-einrichten, bridge-pi, pi-setup, brücke-aktualisieren]
-keywords: [raspberry pi 3 b+, raspberry pi os lite, imager, 64-bit, arm64, aarch64, dhcp, mdns, avahi, .local, ssh, hostname, scp, install.sh, systemd, journalctl, timedatectl, ntp, fake-hwclock, systemd-time-wait-sync, zeitsynchronisierung, echtzeituhr, kopplung, pair, update, aktualisieren, rückfall, rollback, unattended-upgrades, tailscale, fernwartung, dhcp-reservierung]
+keywords: [raspberry pi 3 b+, raspberry pi os lite, imager, 64-bit, arm64, aarch64, dhcp, mdns, avahi, .local, ssh, hostname, scp, install.sh, systemd, journalctl, timedatectl, ntp, fake-hwclock, systemd-time-wait-sync, zeitsynchronisierung, echtzeituhr, kopplung, pair, update, aktualisieren, rückfall, rollback, unattended-upgrades, tailscale, fernwartung, dhcp-reservierung, dauerbetrieb, watchdog, sd_notify, type=notify, gotraceback, automatic-reboot, neustart, reboot, absturz, hänger, sommerpause, login-benutzer]
 operation_of: ["[[spiegel-bridge]]"]
 governed_by: ["[[adr-027]]"]
 relates_to: ["[[spiegel-ingest-pipeline]]", "[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]"]
@@ -13,7 +13,9 @@ relates_to: ["[[spiegel-ingest-pipeline]]", "[[meyton-ssmdb2]]", "[[spiegel-edge
 Imager mit Hostname `spiegel-bridge` und SSH-Schlüssel. Zu Hause wird aktualisiert, die Zeitsynchronisierung erzwungen,
 mit `install.sh` installiert und mit Spiegel verbunden. Danach kommt der Pi ins Gerätenetz. Er bekommt seine Adresse per DHCP und
 ist dort unter `spiegel-bridge.local` erreichbar. Updates spielt man von Hand vor Ort ein, ein Selbst-Update ist
-zurückgestellt (User, 15. Oktober 2026).
+zurückgestellt (User, 15. Oktober 2026). Der Pi darf dauerhaft laufen, auch wochenlang ohne Meyton-Anlage; systemd
+startet die Brücke nach einem Absturz oder Hänger neu, und das Betriebssystem startet nachts neu, wenn ein Update es
+verlangt (User, 16. Oktober 2026).
 
 ## Was man braucht
 
@@ -31,13 +33,18 @@ zurückgestellt (User, 15. Oktober 2026).
 - Anpassen: Hostname `spiegel-bridge`, eigener Benutzer mit Passwort, Hauptstadt Berlin (Zeitzone Europe/Berlin,
   Tastatur de), kein WLAN (der Pi hängt am Kabel), SSH an und nur mit öffentlichem Schlüssel (`~/.ssh/id_ed25519.pub`
   vom Mac einfügen), Raspberry Pi Connect aus.
+- Der Login-Benutzer sollte nicht `spiegel-bridge` heißen: Gibt es den Namen schon, legt `install.sh` keinen eigenen
+  Dienstbenutzer an, und der Dienst läuft als Login-Benutzer. Am Vereins-Pi ist es so eingerichtet und bleibt so (User,
+  16. Oktober 2026): sudo verlangt dort ein Passwort, und die Unit setzt `NoNewPrivileges`, `ProtectHome` und
+  `ProtectSystem=strict`, aus dem Dienst heraus gibt es also kein sudo und kein Home. Für einen neuen Pi einen anderen
+  Namen wählen.
 
 ## 2. Erster Start zu Hause
 
 1. Kabel ins Heimnetz, Strom an, ein bis zwei Minuten warten. Dann `ssh <benutzer>@spiegel-bridge.local`.
 2. `uname -m` zeigt `aarch64`. Steht dort `armv7l`, ist das 32-Bit-Image drauf: Karte neu schreiben.
-3. `sudo apt update && sudo apt full-upgrade -y && sudo reboot`. Das gehört nach Hause: Im Schützenhaus wird hart
-   ausgeschaltet, ein abgebrochenes Upgrade dort kostet einen Abend.
+3. `sudo apt update && sudo apt full-upgrade -y && sudo reboot`. Das gehört nach Hause: Im Schützenhaus geht auch mal
+   hart der Strom weg, ein abgebrochenes Upgrade dort kostet einen Abend.
 4. `timedatectl` zeigt „System clock synchronized: yes“.
 5. **Zeit vor dem Start erzwingen:** `sudo systemctl enable systemd-time-wait-sync.service`.
 
@@ -109,7 +116,8 @@ Benutzer, Rechte, `systemd-analyze verify`, Exit 2 ohne Konfiguration.
 | Zeile | Bedeutung |
 |---|---|
 | `start version=… bridge=…` | Dienst gestartet |
-| `round-failed code=connection` / `code=timeout` | Anlage aus oder nicht erreichbar; die Brücke wiederholt |
+| `round-failed code=connection rounds=…` / `code=timeout` | Anlage aus oder nicht erreichbar; die Brücke wiederholt alle 10 s. Im Log steht der Fehler beim ersten Mal, bei einem neuen Code und danach alle 10 min, `rounds` zählt die gescheiterten Runden |
+| `round-ok after=…` | die Anlage antwortet wieder, nach so vielen gescheiterten Runden |
 | `round-failed code=mysql-1045` | Zugang zur SSMDB2 falsch: neu verbinden mit dem richtigen Zugang |
 | `round-failed code=mysql-1049` | Datenbank `SSMDB2` gibt es unter dem Namen nicht |
 | `batch …` | ein Stapel an Spiegel, mit den Ergebnissen als Zahlen |
@@ -125,6 +133,32 @@ Benutzer, Rechte, `systemd-analyze verify`, Exit 2 ohne Konfiguration.
 | `possible-reset` | viele Scheiben fehlen auf einmal (Ablage geleert?); nur gemeldet |
 | `unauthorized hint=neu-koppeln` | Brücke in Spiegel getrennt (Exit 3, kein Neustart): neu verbinden |
 | `config-missing` | noch nicht verbunden (Exit 2, kein Neustart) |
+| `notify-failed code=socket` | systemd nimmt die Meldungen der Brücke nicht an; der Dienst gilt dann nicht als gestartet. Unit und Version prüfen (Abschnitt „Updates“) |
+| `Watchdog timeout`, `SIGABRT: abort`, Goroutinen, `status=6/ABRT` | Zeilen von systemd und Go: Die Brücke hing 10 min, systemd hat sie beendet und startet sie nach 10 s neu. Die Goroutinen zeigen, wo sie hing (nur Funktionen und Zahlen) |
+
+## Dauerbetrieb
+
+Der Pi darf dauerhaft laufen, die Meyton-Anlage wird weiter nach dem Training ausgeschaltet, im Sommer auch mal für
+Wochen (User, 16. Oktober 2026).
+
+- **Kein geplanter Neustart der Brücke.** Sie hat keinen Zustand, ihr Speicher ist begrenzt (eine Scheibe, die einen Tag
+  nicht mehr in der Ablage stand, vergisst sie; `MemoryMax=128M`), die Verbindung zur SSMDB2 erneuert sie alle 10 min,
+  und jede Anfrage hat eine Zeitgrenze. Ein Neustart würde nichts reparieren, aber zwei Lesungen und das Nachholen neu
+  beginnen.
+- **Absturz und Hänger:** Die Brücke meldet systemd nach jeder Runde und beim Warten jede Minute, dass sie lebt
+  (`Type=notify`, `WatchdogSec=10min`). Bleibt das aus, beendet systemd sie und startet sie nach 10 s neu, ebenso nach
+  einem Absturz. Dafür steht `GOTRACEBACK=crash` in der Unit: Go beendet einen Absturz sonst mit Exit 2, und der heißt
+  „Konfiguration fehlt“, nach dem systemd bewusst nicht neu startet. Ein Core-Abbild entsteht nicht (`LimitCORE=0`), es
+  enthielte Snapshots mit Namen. `WatchdogSec` nie unter zwei Minuten setzen. Geprüft am 16. Oktober 2026 mit systemd in
+  `debian:trixie` (arm64): Hänger → `Watchdog timeout`, `status=6/ABRT`, Neustart; 4 min Warten auf `Retry-After` ohne
+  Neustart; Exit 2 ohne Neustart.
+- **Wochen ohne Anlage:** Die Brücke versucht es alle 10 s und meldet sich jede Minute bei Spiegel. Dort steht dann
+  „erreicht die Meyton-Anlage nicht“, das ist in dieser Zeit normal. Was am letzten Abend nicht hinauskam (etwa weil das
+  Internet weg war), behält sie im Speicher und schickt es, sobald die Anlage wieder an ist. Startet der Pi in der Pause
+  neu, liest sie es über das Startfenster und den Wasserstand in Spiegel nach, wie nach dem Einschalten. Aufträge zum
+  Nachladen aus der Pause (QR von zu Hause, neue Zustimmungen) laufen zu Beginn des nächsten Abends, bevor geschossen
+  wird. Spiegel schaltet die Scheiben eines Abends 12 h später endgültig, nach einem Neustart der Brücke sofort. Belegt
+  mit `TestWaitingCardSurvivesWeeksWithoutSource`.
 
 ## Den Pi im Netz finden (DHCP)
 
@@ -152,15 +186,23 @@ Laptop im Gerätenetz, neues Binary auf dem Mac gebaut:
 scp apps/spiegel-bridge/dist/spiegel-bridge-linux-arm64 apps/spiegel-bridge/deploy/install.sh apps/spiegel-bridge/deploy/spiegel-bridge.service <benutzer>@spiegel-bridge.local:
 ```
 
-Auf dem Pi zuerst das alte Binary als Rückfall sichern, dann installieren und **neu starten**. `install.sh` ersetzt Binary
-und Dienst, startet die Brücke aber nicht neu:
+Auf dem Pi zuerst Binary und Unit als Rückfall sichern, dann installieren und **neu starten**. `install.sh` ersetzt
+Binary und Dienst, startet die Brücke aber nicht neu:
 
 ```bash
-cp /usr/local/bin/spiegel-bridge ~/spiegel-bridge.vorher && sudo sh install.sh ./spiegel-bridge-linux-arm64 && sudo systemctl restart spiegel-bridge
+cp /usr/local/bin/spiegel-bridge ~/spiegel-bridge.vorher && cp /etc/systemd/system/spiegel-bridge.service ~/spiegel-bridge.service.vorher && sudo sh install.sh ./spiegel-bridge-linux-arm64 && sudo systemctl restart spiegel-bridge
 ```
 
 Die Konfiguration bleibt, neu verbinden ist nicht nötig. Die Version steht in Spiegel (der Heartbeat meldet sie) und in
-`spiegel-bridge version`. Zurück geht es mit `sudo sh install.sh ~/spiegel-bridge.vorher` und einem Neustart.
+`spiegel-bridge version`. Ab der Version mit Watchdog zeigt `systemctl show -p Type,WatchdogUSec spiegel-bridge`
+`notify` und `10min`.
+
+Zurück geht es mit Binary **und** Unit von vorher. Eine ältere Brücke meldet sich nicht bei systemd; unter der neuen
+Unit gälte sie nach 90 s als nicht gestartet und würde immer wieder neu gestartet:
+
+```bash
+sudo install -m 0755 ~/spiegel-bridge.vorher /usr/local/bin/spiegel-bridge && sudo cp ~/spiegel-bridge.service.vorher /etc/systemd/system/spiegel-bridge.service && sudo systemctl daemon-reload && sudo systemctl restart spiegel-bridge
+```
 
 ### Fernzugang (nur nach Entscheidung)
 
@@ -170,7 +212,37 @@ ein VPN ins Vereinsnetz verworfen. Dafür müsste die ADR geändert werden.
 
 ### Betriebssystem
 
-Vorschlag: `sudo apt install unattended-upgrades`, nur Sicherheitsupdates von Debian (die Vorgabe). Die Timer holen
-verpasste Läufe nach dem Einschalten nach, die Updates laufen also am Anfang eines Abends. Geht der Strom mitten im
-Update weg, räumt der nächste Lauf auf (`dpkg --configure -a`). Wer das nicht will, aktualisiert vor Ort mit
-`apt full-upgrade`, nie kurz vor dem Ausschalten.
+Am Vereins-Pi eingerichtet (16. Oktober 2026): `unattended-upgrades` mit nächtlichem Neustart, wenn ein Update ihn
+verlangt. Eine eigene Datei, damit die von Debian unberührt bleibt (eine höhere Nummer wird später gelesen und gewinnt):
+
+```bash
+sudo tee /etc/apt/apt.conf.d/52unattended-upgrades-local >/dev/null <<'EOF'
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-WithUsers "true";
+Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+EOF
+```
+
+- Die Updates laufen über `apt-daily-upgrade.timer` gegen 06:00 (bis zu einer Stunde Zufall). Neu gestartet wird nur,
+  wenn ein Paket `/var/run/reboot-required` anlegt, dann zur nächsten 04:00. Läuft der Pi nicht durch, holen die Timer
+  verpasste Läufe nach dem Einschalten nach; geht der Strom mitten im Update weg, räumt der nächste Lauf auf
+  (`dpkg --configure -a`).
+- **Erlaubt sind nur die Quellen von Debian** (die Vorgabe). Kernel und Firmware kommen aus `archive.raspberrypi.com` und
+  damit nicht automatisch. Das ist gewollt (User, 16. Oktober 2026): Ein schiefes Kernel-Update ließe den Pi stehen, und
+  jemand müsste hinfahren. Sie kommen bei einem Besuch vor Ort mit `sudo apt full-upgrade && sudo reboot`. Auf diesem Pi
+  braucht Debian selbst selten einen Neustart: Die Brücke ist ein statisches Binary, Dienste wie `sshd` starten ihre
+  Pakete selbst neu.
+- Nach dem Neustart wartet die Brücke auf die Zeit (`systemd-time-wait-sync`, Schritt 2.5) und läuft dann von selbst
+  weiter.
+
+Prüfen:
+
+```bash
+apt-config dump | grep -i 'Automatic-Reboot'
+sudo unattended-upgrade --dry-run --debug 2>&1 | grep -i 'allowed origins'
+apt-cache policy $(dpkg -l 'linux-image-*' | awk '/^ii/{print $2}' | head -1)
+uname -r
+ls /var/run/reboot-required && shutdown --show
+```
+
+Der laufende Kernel ist `…-rpi-v8` (Pi 3 B+); `…-rpi-2712` ist für den Pi 5 mitinstalliert und hier ohne Bedeutung.

@@ -69,10 +69,13 @@ Danach zeigt Spiegel unter „Anlage und Brücke“ den Zustand der Brücke und 
 ## Betrieb
 
 - Der Dienst läuft ohne Rechte, mit schreibgeschütztem System und höchstens 128 MB.
+- Er darf dauerhaft laufen, auch wochenlang ohne Meyton-Anlage. Hängt die Brücke, startet systemd sie nach 10 min neu,
+  nach einem Absturz ebenso.
 - Logs: `journalctl -u spiegel-bridge -f`. Die Zeilen enthalten nur Zahlen und Codes, keine Personendaten.
 - Exit 3 heißt: Die Brücke wurde in Spiegel getrennt. Dann neu verbinden (Schritte 3 und 4). Bei Exit 2 und 3
   startet systemd den Dienst nicht immer wieder neu.
-- Update: neues Binary bauen und `install.sh` erneut ausführen, dann `sudo systemctl restart spiegel-bridge`.
+- Update: neues Binary bauen und `install.sh` erneut ausführen, dann `sudo systemctl restart spiegel-bridge`. Zurück
+  auf eine ältere Version immer mit deren Unit (Rückfall in `vault/spiegel/spiegel-bridge-pi.md`).
 - Gerät oder Speicherkarte getauscht: neu installieren und verbinden. Die Brücke holt ab dem letzten Stand nach, den
   Spiegel kennt.
 

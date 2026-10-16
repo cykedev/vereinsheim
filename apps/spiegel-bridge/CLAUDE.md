@@ -36,6 +36,7 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
 | `internal/config`    | die Konfiguration, das Einzige auf der Platte: `Save` atomar mit 0600, `Load`, `CheckWritable`             |
 | `internal/filter`    | wer hinaus darf: Zustimmung (`SportpassHash`), verdeckt, gesperrt; Regeln wie in Spiegel                   |
 | `internal/run`       | der Betrieb: `Step` je Runde, Upload ohne Warteschlange, Pausen, Heartbeat                                 |
+| `internal/notify`    | sd_notify ohne Bibliothek: `Ready`, `Alive` an `$NOTIFY_SOCKET`, ohne Variable nichts                     |
 | `cmd/spiegel-bridge` | `pair`, `run`, `watch` (Takt 1 s, wenn sich etwas bewegt, sonst 30 s), `version`                          |
 
 ## Regeln
@@ -63,7 +64,9 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   neuer Stand gegenüber dem zuletzt gemeldeten, nie ohne Treffer (SF-13). Eine gescheiterte Runde ändert nichts; Fehlen
   ist keine Löschung (SF-24). Jede Regel hat einen Fall, der ohne sie rot wird.
 - **Nichts auf die Platte, keine Personenfelder in der Ausgabe** (SF-59): Meldungen nur mit Zahlen und Codes
-  (`ssmdb2.Code`, nie `err.Error()` des Treibers), Snapshots als `Summary`; `--json` ist für die Prüfung vor Ort und
+  (`ssmdb2.Code`, nie `err.Error()` des Treibers), Snapshots als `Summary`; eine gescheiterte Runde (`round-failed`)
+  beim ersten Mal, mit neuem Code und danach alle `RepeatLogEvery` (10 min) mit `rounds`, die nächste gelungene einmal
+  als `round-ok` (Anlage wochenlang aus: sonst 8.600 Zeilen am Tag); `--json` ist für die Prüfung vor Ort und
   gibt die vollen Daten aus. Der Replay-Test sucht die Namen der Fälle in der Ausgabe.
 - **Erst bestätigt ist gesendet:** `Watcher.Delivered` nach einem endgültigen Ergebnis von Spiegel (alle außer
   `api.RetryOutcomes`: `future`, `epoch-unconfirmed`, `past`) oder wenn der Filter die Scheibe zurückhält. Bis dahin
@@ -120,7 +123,14 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   ([`spiegel-bridge-pi`](../../vault/spiegel/spiegel-bridge-pi.md)): Ohne `systemd-time-wait-sync.service` ist
   `time-sync.target` sofort erreicht, und die Brücke startet mit der Uhr vom letzten Abend (kein RTC); sie hält dann
   zurück, bis NTP antwortet (Regel „Eigene Uhr“, SF-79). Mit dem Dienst startet sie erst nach der Synchronisierung. Ein
-  zweiter Lauf von `install.sh` ersetzt das Binary, startet den Dienst aber nicht neu.
+  zweiter Lauf von `install.sh` ersetzt das Binary, startet den Dienst aber nicht neu. `Type=notify` mit
+  `WatchdogSec=10min`: `run` meldet `READY` nach dem Laden der Konfiguration, `Run` danach `WATCHDOG` nach jedem `Step`
+  und beim Warten alle `AliveEvery` (1 min); ein Schritt, der hängt, meldet nichts. Darum nie `WatchdogSec` unter zwei
+  Minuten. `Environment=GOTRACEBACK=crash`: Go beendet `panic` und `SIGABRT` sonst mit Exit 2, und den schließt
+  `RestartPreventExitStatus` als „Konfiguration fehlt“ vom Neustart aus; mit `crash` endet beides mit dem Signal.
+  `LimitCORE=0`, ein Core-Abbild enthielte Snapshots mit Namen (SF-59). Eine ältere Brücke unter der neuen Unit sendet
+  kein `READY` und gilt nach 90 s als nicht gestartet: beim Zurückgehen die alte Unit mitnehmen. Geprüft mit systemd in
+  `debian:trixie` (arm64), [[spiegel-bridge-pi]] „Dauerbetrieb“.
 - **Heartbeat** jede Minute, der erste nach der ersten Runde, nie mit Namen oder Nummern; `possible-reset` nur gemeldet
   (die Zahl der Scheiben fällt um mehr als die Hälfte; zurückgenommen, wenn sie wiederkommen; `delayed` geht vor), eine
   neue Epoche eröffnet die Brücke nicht. Zurückgehaltene zählen nur Scheiben, die die Erkennung noch kennt.
