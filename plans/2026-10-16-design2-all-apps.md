@@ -19,6 +19,11 @@ drei Apps: schön, elegant, einfach richtig. Entschieden am 16. Oktober 2026:
 5. **Treffsichers Statistik folgt Spiegel:** dieselbe Seite eines Zeitraums ([[spiegel-langzeit]]), dieselben
    Rechnungen aus `shot-core` und dieselben Regeln (Ø je Schuss, Urteil nur mit Test, „kein klarer Unterschied“),
    weniger Sonderwege (Teil G).
+6. **Trefferfarben wie Spiegel, überall** (vom User bestätigt): 10 rot `#e5484d`, 9 gold `#e9b10c`, 8 türkis
+   `#1fa3c8`, ≤ 7 violett `#7c5cd6` (`score-*`, farbenblind geprüft), mit dunklem 1-px-Rand. Das gilt für jede
+   Darstellung eines Treffers oder Ringwerts: Statistik, Ringverteilung der Einheit, Schusswerte und das PDF der
+   Einheit. Treffsichers Meyton-Skala (Rot, Gelb, Graustufen) entfällt. Damit ist die offene Frage in
+   [[spiegel-open-questions]] beantwortet.
 
 Dazu das Bedienkonzept von Spiegel für alle: Folgen vor dem Bestätigen (`DecisionDialog`), Schreibregeln, „Rückgängig“
 nach dem Löschen, Hilfe an jeder Zahl als Blatt, „–“ mit Grund statt 0, drei Ebenen (Antwort, Belege, Werkzeug) und die
@@ -48,8 +53,6 @@ gesetzt (`sync`/rebase). Erst dann beginnt Teil A.
 - **Akzent je App bleibt:** Spiegel Blau, Ringwerk Messing, Treffsicher Teal, über `data-app` am `<html>`, in beiden
   Themes. Hell: Ringwerk `#8a5a00` (5,9 : 1 auf Weiß), Treffsicher `#0a766b` (5,5 : 1). Dunkel: Ringwerk `#f5ae39`,
   Treffsicher `#4acaad` (heutige Werte aus `theme.css`, als Hex) mit dunkler Schrift darauf (≥ 9 : 1).
-- **Ringwert-Farben von Spiegel überall:** 10 rot, 9 gold, 8 türkis, ≤ 7 violett (`score-*`). Treffsichers Skala in
-  `statistics-charts/constants.ts` entfällt; damit ist die offene Frage in [[spiegel-open-questions]] beantwortet.
 - **Treffsicher-Leiste:** Start · Tagebuch · **Neue Einheit** (Mitte, wie Scannen) · Statistik · Profil. Seitenleiste:
   Start, Tagebuch, Statistik, Ziele, Ablauf, Disziplinen, Pille „Neue Einheit“, Trenner, Profil, Admin. Am Telefon
   stehen Ziele, Ablauf, Disziplinen und Admin in Profil.
@@ -59,7 +62,7 @@ gesetzt (`sync`/rebase). Erst dann beginnt Teil A.
 - **„Konto“ heißt „Profil“** (`/profile`), wie in Spiegel; `/account` leitet dauerhaft weiter. Profil enthält
   Darstellung, Passwort, Abmelden und am Telefon die Bereiche, die nicht in der Leiste stehen.
 - **Rückmeldung:** Löschen meldet „Gelöscht · Rückgängig“ (`UndoHost`), sonst Toasts (sonner) in Design 2.
-- **PDFs** bleiben, wie sie sind (Druck, nicht Oberfläche).
+- **PDFs** bleiben, wie sie sind (Druck, nicht Oberfläche). Einzige Ausnahme sind die Trefferfarben (Punkt 6 oben).
 - **Admin ohne Rolle** landet in allen Apps auf dem Start, nicht auf der Anmeldung (wie Spiegel nach
   `feat/spiegel-kleinkram`).
 - **Treffsicher-Statistik:** die Zuordnung in Teil G („Abgleich“) ist der Vorschlag; G0 legt sie dir vor.
@@ -91,7 +94,7 @@ Statistik mit ihren Hex-Farben vorher verschwunden ist.
 ## Teil 0 — Weichen (Hauptsession, vor Teil A)
 
 - **0.1** `vault/decisions/adr-032.md` anlegen: „ADR-032 — Design 2 für alle Apps“, `status: Accepted`
-  (16. Oktober 2026, User), `refines: ["[[adr-030]]"]`. Inhalt: die vier Entscheidungen aus „Kontext“, Akzent je App,
+  (16. Oktober 2026, User), `refines: ["[[adr-030]]"]`. Inhalt: die sechs Entscheidungen aus „Kontext“, Akzent je App,
   Ringwert-Skala von Spiegel überall, Bedienkonzept für alle (Folgen, Schreibregeln, Rückgängig, Hilfe, „–“ mit Grund,
   drei Ebenen), Treffsichers Statistik folgt Spiegels Seite eines Zeitraums und rechnet mit `shot-core` (Hochrechnung,
   Radar und Meyton-Farben entfallen, Befinden und Qualität werden Vergleiche mit Urteil nur aus Test), `theme.css`
@@ -174,6 +177,10 @@ Statistik mit ihren Hex-Farben vorher verschwunden ist.
   Werte). `apps/spiegel/tools/pruefen.ts` importiert von dort. Dazu `packages/pruefen/src/common.ts` mit
   wiederverwendbaren Prüfungen aus `pruefen.ts`: `noSideScroll(page, widths)`, `barDoesNotCover(page)`,
   `themeNoFlash(page, key)`, `dialogFocus(page, opener)`.
+- **A13 Trefferfarben als eine Quelle.** `packages/ui/src/design2/score-colors.ts`:
+  `SCORE_HEX = { 10: "#e5484d", 9: "#e9b10c", 8: "#1fa3c8", 7: "#7c5cd6" } as const` und `scoreKey(ring)` (≥ 10 → 10,
+  ≤ 7 → 7) für Orte ohne CSS-Variablen (PDF). Test: die Werte gleichen `--score-*` in `design2.css` (der Test liest die
+  Datei wie `tokens.test.ts`); Export `./design2/score-colors`.
 - **A12 Leistenmaß.** `packages/shot-ui/src/layout/bar.ts` (`BAR_PX`, `EDGE_PX`, `BAR`-Klassen, aus
   `feat/spiegel-kleinkram`) samt `bar.test.ts` → `packages/ui/src/design2/bar.ts` (Export `./design2/bar`);
   `shot-ui` importiert von dort. Die klebenden Leisten in Ringwerk (B10) und Treffsicher (G) nutzen dieselben Klassen.
@@ -211,7 +218,11 @@ storageKey="treffsicher-theme">` im `<head>`, `<ThemeProvider>` um `Providers`, 
   `var(--score-10)`, `var(--score-9)`, `var(--score-8)`, `var(--score-7)` (≤ 7), Hex-Skala entfernen; Trefferlage-Hex
   auf `var(--overlay)`, `var(--chart-*)`; `grep -rnE '#[0-9a-fA-F]{6}' apps/treffsicher/src --include='*.tsx'
 --include='*.ts'` außerhalb `export/pdf` muss leer sein. Recharts-Achsen und -Gitter auf `var(--muted-foreground)`,
-  `var(--border)`, Schrift 12 px wie Spiegels Diagramme.
+  `var(--border)`, Schrift 12 px wie Spiegels Diagramme. Treffer und Ringwerte überall mit `score-*`:
+  `components/app/sessions/ShotHistogram.tsx` und die Schusswerte der Einheit (Farbpunkt vor dem Wert wie Spiegels
+  Ablesung, Text in Schriftfarbe, denn Gold und Türkis tragen als Schrift auf Hell nicht).
+- **B5a Trefferfarben im PDF.** `src/app/(app)/sessions/[id]/export/pdf/_lib/constants.ts`: die Meyton-Skala durch
+  `SCORE_HEX` aus A13 ersetzen (das PDF kennt keine CSS-Variablen). Ringe ≤ 7 violett wie am Bildschirm.
 - **B6 Treffsicher Zahlen.** Große Ergebnisse (Dashboard, Einheit, Serienergebnis) in `font-display` mit
   `tabular-nums`, Tabellen und Achsen `font-mono` (Liste der Stellen: `grep -rn 'text-2xl\|text-3xl\|text-4xl'
 apps/treffsicher/src/components`).
@@ -342,7 +353,7 @@ genauso abbilden. Gebunden an Spiegel sind nur `shot-ui/period/model.ts` (`Proje
 | Befinden gegen Ergebnis (Streudiagramm)         | Vergleich nach Merkmal: etwa „gut geschlafen“ gegen „schlecht geschlafen“, `comparePeriods`, Urteil ab 5 Einheiten je Seite |
 | Ausführungsqualität gegen Ringe                 | ebenso: hohe gegen niedrige Qualität                                                                                        |
 | Selbstbild-Radar (7 Dimensionen)                | eine Zeile je Dimension: Prognose, Feedback, Abstand; **kein Radar**                                                        |
-| Meyton-Farbschema                               | `score-*` (Teil B)                                                                                                          |
+| Meyton-Farbschema                               | `score-*` (Teil B, auch im PDF)                                                                                             |
 | keine Rekorde                                   | Spiegels Rekorde, wo Einzelschüsse erfasst sind                                                                             |
 
 - **G0 Abgleich (Haltepunkt).** Die Tabelle oben mit echten Zahlen aus der Dev-DB belegen (wie viele Einheiten mit
