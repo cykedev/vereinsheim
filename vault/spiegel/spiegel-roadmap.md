@@ -240,21 +240,15 @@ Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
   Eine vereinseigene Disziplin wie „LG Training Spiegel“ landet über den Namen auf der LG-Scheibe (SF-70), die Familie
   bestätigt niemand (SF-64), die amtliche Wertung bleibt unbekannt. Vorschlag: eine Seite „Disziplinen“ unter Admin,
   dort auch die Freigabe von Modus 0 (SP-1.5); nach einer Änderung die Projektionen neu rechnen.
-- **Ein Schütze auf `/admin` landet auf der Anmeldung:** `proxy.ts` gibt für Nicht-Admins `authorized: false`, und
-  `withAuth` schickt zur Anmeldung. Besser nach `/` oder eine Seite „kein Zugriff“.
-- **Admin-Tabellen der Ratenbegrenzung** ragen bei 800 px aus der Karte (`min-w-[860px]`, kein `min-w-0` im Grid), die
-  Auswertung hat keine Ansicht fürs Telefon (`@vereinsheim/ui/admin`).
+- **Auswertung der Ratenbegrenzung** hat keine Ansicht fürs Telefon (`@vereinsheim/ui/admin`).
 - **Alte Wörter in Texten von Brücke und Einlesen:** `src/lib/ingest/http.ts` meldet „widerrufenes Gerät“ und
   „Kopplungscode“, die Hilfe der Brücke (`cmd/spiegel-bridge/main.go`) nennt „Kopplungscode aus Admin → Anlage und
   Brücken“. Die Oberfläche sagt „Anlage und Brücke“, „Brücke verbinden“, „Code für die Brücke“: erst ins Textbuch, dann
-  angleichen. `OLD_WORDS` prüft außerdem `heldBackText` (`src/lib/admin/site.ts`) und `STATUS_TEXT` (`SiteForms.tsx`)
-  noch nicht.
+  angleichen.
 - **Benachrichtigung des Admins außerhalb der App** (etwa Mail bei einer neuen Zustimmung): nie entschieden; heute steht
   sie nur in der Übersicht unter „Wartet auf dich“.
 - **„Neue Rekorde“ auf Start** zählen auch die erste Scheibe einer Schusszahl, ohne früheren Halter. An echten Abenden
   prüfen, ob nur Rekorde erscheinen sollen, die einen früheren ablösen.
-- **Gedächtnis der Bereiche** (`AppShell`) speichert die Adresse ohne die aufgelöste Familie (`/progress?pick=…`);
-  wechselt die Familie, verwirft `areaLinks` die Wahl auch bei derselben Familie. Seltener Randfall.
 
 ### Fachkern und Darstellung
 
@@ -268,11 +262,6 @@ Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
   Scheiben davor; C4 und `againstOwnAverage` rechnen „30 Tage davor“ und „Perzentil unter den letzten 50“, die Funktion
   hat außer Katalog und Tests keinen Aufrufer, Regel 6 in [[spiegel-statistics]] zitiert sie. Entscheiden: eigene ID für
   den Abstand zu den fünf davor, oder C4, `againstOwnAverage` und Regel 6 streichen.
-- **Dieselbe Regel mehrfach:** das Muster der Katalog-IDs (`metrics.ts`, `catalog.test.ts`, `shot-help/topics.test.ts`),
-  die häufigste Serienlänge (`result.ts`, `records.ts`, `shot-ui/SeriesChart.tsx`), `shotIntervals` in `shot-ui` neben
-  `intervals()` im Fachkern. Jede Regel einmal im Fachkern exportieren.
-- **Höhe der Leiste (56 px) und Seitenrand (16 px)** stehen ohne gemeinsame Konstante in `useTargetFit`,
-  `useReturnJump`, `useActiveSection` und als `top-14`/`scroll-mt-14` in neun Dateien.
 - **„Stufe 3“ der Durchsicht** (auf einer einzelnen Scheibe ausblenden, was dort nur Zufall zeigt) gehört zu SP-1.8;
   teilweise erledigt (Probe-Auswertung entfernt, Hinweise an großen Zahlen). Schließen oder als Rest übernehmen.
 
