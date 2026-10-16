@@ -862,3 +862,44 @@ func TestRepeatedRoundFailureLogsRarely(t *testing.T) {
 		t.Fatalf("%d Zeilen, zuletzt %q", n, last)
 	}
 }
+
+// Die Anlage ist im Sommer wochenlang aus, die Brücke läuft weiter. Was am Ende des letzten Abends nicht hinauskam
+// (Internet weg), geht hinaus, sobald die Anlage wieder an ist: aus dem Speicher, und nach einem Neustart der Brücke
+// in der Pause (Reboot nach einem Update) über das Startfenster.
+func TestWaitingCardSurvivesWeeksWithoutSource(t *testing.T) {
+	for _, reboot := range []bool{false, true} {
+		t.Run(fmt.Sprintf("reboot=%v", reboot), func(t *testing.T) {
+			f := setup(t, "12345678")
+			f.ablage.put(1, "12345678", "1", 3)
+			f.sp.errs = []error{&api.Error{Code: "network"}, &api.Error{Code: "network"}, &api.Error{Code: "network"}}
+			f.step()
+			f.step() // zwei gleiche Lesungen, der Upload scheitert
+			if len(f.sp.sent()) != 0 {
+				t.Fatal("der Upload sollte scheitern")
+			}
+			f.ablage.fail = unreachable
+			f.sp.errs = nil
+			f.step()
+			if reboot {
+				log := func(code string, pairs ...any) {
+					f.logs = append(f.logs, fmt.Sprint(append([]any{code}, pairs...)...))
+				}
+				f.runner = New("test", f.ablage, f.sp, log, watch.Defaults, func() time.Time { return f.clock })
+			}
+			f.clock = f.clock.Add(21 * 24 * time.Hour)
+			for range 3 {
+				f.step()
+			}
+			f.ablage.fail = nil
+			for range 5 {
+				if len(f.sp.sent()) > 0 {
+					break
+				}
+				f.step()
+			}
+			if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
+				t.Fatalf("nach drei Wochen gesendet: %s, Log %v", got, f.logs)
+			}
+		})
+	}
+}
