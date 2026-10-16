@@ -11,6 +11,7 @@ import { RouteLinkProvider } from "@vereinsheim/shot-ui/nav/RouteLink"
 import { routeFromUrl, urlFromRoute, type Route } from "@vereinsheim/shot-ui/nav/routes"
 
 import { ThemeSwitch } from "@/components/theme/ThemeSwitch"
+import { isAdminPath } from "@/lib/admin-path"
 
 import { HelpContext } from "./HelpContext"
 import { UndoHost } from "./UndoBar"
@@ -71,7 +72,7 @@ export function AppShell({
       <HelpContext.Provider value={setHelpId}>
         <AppFrame
           // Unterseiten von Admin (Konten) kennt das Routen-Modell nicht; sie gehören zu Admin
-          current={areaOf(route) ?? (pathname.startsWith("/admin/") ? "admin" : null)}
+          current={areaOf(route) ?? (isAdminPath(pathname) ? "admin" : null)}
           links={areaLinks(memory, family)}
           openCount={openCount}
           isAdmin={isAdmin}

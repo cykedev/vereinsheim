@@ -688,6 +688,14 @@ async function openAndBar(page: Page) {
   )
 }
 
+/** das Demo-Konto ist kein Admin: `/admin` führt zum Start, nicht zur Anmeldung */
+async function adminWithoutRole(page: Page) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/admin`)
+  const path = await page.ev<string>("location.pathname")
+  check("Admin ohne Rolle: Start statt Anmeldung", path === "/", path)
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Löschen, Rückgängig und Papierkorb: ohne endgültiges Löschen, die Demo-Daten bleiben vollständig
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1198,6 +1206,7 @@ async function main() {
     await section("Sprache und Hilfe", () => language(page))
     await section("Offen und Leiste", () => openAndBar(page))
     await section("Papierkorb", () => trash(page))
+    await section("Admin ohne Rolle", () => adminWithoutRole(page))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
   } catch (error) {

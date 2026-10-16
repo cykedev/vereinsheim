@@ -1,23 +1,29 @@
+import { NextResponse } from "next/server"
 import { withAuth } from "next-auth/middleware"
 
+import { isAdminPath } from "@/lib/admin-path"
 import { AUTH_SECRET } from "@/lib/auth-secret"
 
 // Next.js 16: Datei-Konvention „proxy.ts“ statt „middleware.ts“. Alles braucht eine Anmeldung außer der Seite
-// selbst, NextAuth, der Ingest-API (Geräte-Token) und statischen Dateien; /admin nur für Admins. Seiten prüfen die Sitzung zusätzlich gegen die
-// Datenbank (`requireSession`), weil das JWT ein deaktiviertes Konto nicht kennt.
-export const proxy = withAuth({
-  secret: AUTH_SECRET,
-  pages: {
-    signIn: "/login",
+// selbst, NextAuth, der Ingest-API (Geräte-Token) und statischen Dateien; /admin nur für Admins, ein anderes Konto geht
+// zum Start. Seiten prüfen die Sitzung zusätzlich gegen die Datenbank (`requireSession`), weil das JWT ein deaktiviertes
+// Konto nicht kennt.
+export const proxy = withAuth(
+  (req) => {
+    // ein Konto ohne Admin-Rolle geht zum Start, wie `requireAdmin` auf jeder Admin-Seite
+    if (isAdminPath(req.nextUrl.pathname) && req.nextauth.token?.role !== "ADMIN")
+      return NextResponse.redirect(new URL("/", req.url))
   },
-  callbacks: {
-    authorized: ({ req, token }) => {
-      if (!token) return false
-      if (req.nextUrl.pathname.startsWith("/admin")) return token.role === "ADMIN"
-      return true
+  {
+    secret: AUTH_SECRET,
+    pages: {
+      signIn: "/login",
     },
-  },
-})
+    callbacks: {
+      authorized: ({ token }) => Boolean(token),
+    },
+  }
+)
 
 export default proxy
 
