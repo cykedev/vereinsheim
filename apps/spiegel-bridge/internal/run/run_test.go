@@ -825,3 +825,40 @@ func TestRunReportsAlive(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// unreachable ist der Fehler einer ausgeschalteten Anlage (`ssmdb2.Code`: connection).
+var unreachable = &net.OpError{Op: "dial", Net: "tcp", Err: errors.New("no route to host")}
+
+// lines zählt die Zeilen im Log mit diesem Code und gibt die letzte zurück (wie `fmt.Sprint`: ohne Leerzeichen
+// zwischen Texten).
+func (f *fixture) lines(code string) (int, string) {
+	n, last := 0, ""
+	for _, l := range f.logs {
+		if strings.HasPrefix(l, code) {
+			n, last = n+1, l
+		}
+	}
+	return n, last
+}
+
+func TestRepeatedRoundFailureLogsRarely(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.fail = unreachable
+	// ein Schritt mit Fehler wartet 10 s: 61 Schritte sind zehn Minuten nach dem ersten
+	for range 61 {
+		f.step()
+	}
+	if n, last := f.lines("round-failed"); n != 2 || last != "round-failedcodeconnectionrounds61" {
+		t.Fatalf("%d Zeilen, zuletzt %q", n, last)
+	}
+	f.ablage.fail = nil
+	f.step()
+	if n, last := f.lines("round-ok"); n != 1 || last != "round-okafter61" {
+		t.Fatalf("%d Zeilen, zuletzt %q", n, last)
+	}
+	f.ablage.fail = unreachable
+	f.step()
+	if n, last := f.lines("round-failed"); n != 3 || last != "round-failedcodeconnectionrounds1" {
+		t.Fatalf("%d Zeilen, zuletzt %q", n, last)
+	}
+}

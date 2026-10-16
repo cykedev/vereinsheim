@@ -28,6 +28,8 @@ const (
 	HeartbeatEvery = time.Minute
 	// so oft meldet Run beim Warten, dass die Schleife lebt (Watchdog); der Watchdog wartet länger
 	AliveEvery = time.Minute
+	// ein Fehler, der sich wiederholt (Anlage aus), steht höchstens so oft im Log
+	RepeatLogEvery = 10 * time.Minute
 	// nach einem Fehler: erst kurz, dann länger, höchstens so lange
 	RetryFirst = 5 * time.Second
 	RetryMax   = 60 * time.Second
@@ -137,6 +139,10 @@ type Runner struct {
 	stateRetryAt  time.Time
 	stateFailures int
 	staleLogged   bool
+	// gescheiterte Runden in Folge: Code und Zeit der letzten Zeile im Log
+	failCode     string
+	failRounds   int
+	failLoggedAt time.Time
 
 	// offene Aufträge zum Nachladen aus dem Zustand, die davon erledigten (Heartbeat) und die Hashes der
 	// SportpassIDs, einmal gerechnet je Zustand
@@ -368,8 +374,13 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 		if c == "connection" || c == "timeout" {
 			r.dbStatus = StatusDBUnreachable
 		}
-		// nie als Löschung werten: die Runde zählt nicht (SF-24)
-		r.log("round-failed", "code", c)
+		// nie als Löschung werten: die Runde zählt nicht (SF-24). Ist die Anlage aus, wiederholt sich der Fehler alle
+		// 10 s; ins Log kommt er beim ersten Mal, mit neuem Code und danach alle `RepeatLogEvery`.
+		r.failRounds++
+		if c != r.failCode || now.Sub(r.failLoggedAt) >= RepeatLogEvery {
+			r.log("round-failed", "code", c, "rounds", r.failRounds)
+			r.failCode, r.failLoggedAt = c, now
+		}
 		if err := r.heartbeat(ctx, now, false); err != nil {
 			return 0, err
 		}
@@ -377,6 +388,10 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 	}
 	r.dbStatus = ""
 	r.lastDB = &now
+	if r.failRounds > 0 {
+		r.log("round-ok", "after", r.failRounds)
+		r.failCode, r.failRounds = "", 0
+	}
 	ms := int(took.Milliseconds())
 	r.queryMs = &ms
 	if result.SourceNow != nil {
