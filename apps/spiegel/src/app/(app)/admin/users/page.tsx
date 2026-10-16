@@ -92,7 +92,7 @@ export default async function AdminUsersRoute() {
         </ul>
       </section>
 
-      <section className="grid max-w-3xl gap-3 rounded-2xl border border-border bg-card p-4">
+      <section className="grid min-w-0 max-w-3xl grid-cols-1 gap-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="text-[15px] font-semibold">
           Gesperrte Anmeldungen ({insights.activeBlockedBuckets.length})
         </h2>
@@ -101,7 +101,7 @@ export default async function AdminUsersRoute() {
           displayTimeZone={timeZone}
         />
       </section>
-      <section className="grid max-w-3xl gap-3 rounded-2xl border border-border bg-card p-4">
+      <section className="grid min-w-0 max-w-3xl grid-cols-1 gap-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="text-[15px] font-semibold">Anmeldeversuche</h2>
         <LoginRateLimitInsights insights={insights} displayTimeZone={timeZone} />
       </section>
