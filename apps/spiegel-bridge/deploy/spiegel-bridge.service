@@ -7,13 +7,21 @@ Wants=network-online.target time-sync.target
 After=network-online.target time-sync.target
 
 [Service]
-Type=simple
+# bereit nach dem Laden der Konfiguration; danach meldet die Brücke jede Minute, dass ihre Schleife lebt. Bleibt das
+# 10 min aus (ein Hänger), beendet systemd sie mit SIGABRT und startet sie neu.
+Type=notify
+NotifyAccess=main
+WatchdogSec=10min
 User=spiegel-bridge
 ExecStart=/usr/local/bin/spiegel-bridge run --config /etc/spiegel-bridge/config.json
 # Anlage aus, Netz weg: neu starten. Exit 2 (Konfiguration fehlt) und 3 (Token widerrufen) brauchen einen Menschen.
 Restart=on-failure
 RestartSec=10
 RestartPreventExitStatus=2 3
+# Go beendet ein panic und SIGABRT sonst mit Exit 2, und der hieße „Konfiguration fehlt“: kein Neustart. Mit crash endet
+# beides mit dem Signal, systemd startet neu. Kein Core-Abbild: Es enthielte Snapshots mit Namen (SF-59).
+Environment=GOTRACEBACK=crash
+LimitCORE=0
 # nur lesen, nur ausgehend, nichts schreiben (ADR-027)
 NoNewPrivileges=yes
 ProtectSystem=strict
