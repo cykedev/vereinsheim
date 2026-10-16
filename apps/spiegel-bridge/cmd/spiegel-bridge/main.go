@@ -26,6 +26,7 @@ import (
 
 	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/api"
 	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/config"
+	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/notify"
 	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/run"
 	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/ssmdb2"
 	"github.com/cykedev/vereinsheim/apps/spiegel-bridge/internal/watch"
@@ -285,6 +286,16 @@ func runRun(args []string, stderr io.Writer) int {
 	defer stop()
 	log.log("start", "version", version, "bridge", cfg.BridgeID)
 	runner := run.New(version, reader, client, log.log, watch.Defaults, nil)
+	// unter systemd (Type=notify): bereit, dann ein Lebenszeichen je Schritt und Minute für den Watchdog
+	notifyFailed := false
+	report := func(err error) {
+		if err != nil && !notifyFailed {
+			notifyFailed = true
+			log.log("notify-failed", "code", "socket")
+		}
+	}
+	report(notify.Ready())
+	runner.Alive = func() { report(notify.Alive()) }
 	if err := runner.Run(ctx); err != nil {
 		if errors.Is(err, run.ErrUnauthorized) {
 			log.log("unauthorized", "hint", "neu-koppeln")
