@@ -161,6 +161,13 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   anderen Gates **nicht** sehen — z.B. die Next.js-Regel, dass eine `"use server"`-Datei nur direkt
   deklarierte async-Funktionen exportieren darf (keine Re-Exports/Barrels). Bei jeder Änderung an
   Server Actions zwingend.
+- **Der Cache des Gates kennt die Pakete:** `test` und `lint` hängen in der Root-`turbo.json` neben
+  `db:generate` an `"^build"`. Die Pakete haben kein `build`-Script. Ihr leerer `build`-Knoten kostet
+  keine Zeit, trägt aber den Hash ihrer Quellen. Ohne ihn kämen Tests und Lint einer App nach einer
+  Änderung in `packages/*` grün aus dem Cache. Ein `dependsOn` in der `turbo.json` eines Pakets oder
+  einer App **ersetzt** das der Root und muss `"^build"` deshalb wiederholen. Einzige Ausnahme ist
+  die Brücke: ihre `inputs` nennen genau die Vertragsdateien, die die Go-Tests lesen. Prüfen mit
+  `turbo run test lint --dry=json` vor und nach einer Änderung im Paket (siehe [[monorepo]]).
 - **Gate:** `vereinsheim/scripts/consistency-check.sh` läuft vor jedem Release (in
   `build-and-push.sh`) und ist **fatal** bei Abweichung der Shared-Schicht/Configs, **warnend** bei
   Dependency-Drift und Anti-Pattern.
