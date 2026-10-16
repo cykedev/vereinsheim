@@ -52,7 +52,9 @@ export interface AreaMemory {
  * Wohin die Einträge der Navigation führen: Scheiben und Fortschritt zur letzten Adresse des Bereichs, wie
  * Reiter einer App, mit der zuletzt gewählten Familie; ohne letzte Adresse die Vorgabe
  * mit dieser Familie. Der Abend der Liste und der Abschnitt des Fortschritts fallen weg; wechselt die Familie,
- * auch die Wahl im Fortschritt (sie gehört zur anderen). Ohne Familie bleibt die gemerkte.
+ * auch die Wahl im Fortschritt (sie gehört zur anderen). Trug die gemerkte Adresse keine Familie, hat der Server sie
+ * aufgelöst; die Wahl bleibt (gehört sie doch zu einer anderen, zeigt der Fortschritt sie nur nicht). Ohne Familie bleibt
+ * die gemerkte.
  */
 export function areaLinks(memory: AreaMemory, family: string | null): Record<Area, Route> {
   const listFamily = family ?? memory.cards?.query.family ?? null
@@ -71,7 +73,8 @@ export function areaLinks(memory: AreaMemory, family: string | null): Record<Are
       query: {
         ...progress,
         family: progressFamily,
-        chosen: progressFamily === progress.family ? progress.chosen : null,
+        chosen:
+          progress.family === null || progressFamily === progress.family ? progress.chosen : null,
       },
       section: null,
     },

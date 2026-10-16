@@ -128,7 +128,8 @@ und über `nav/navigate`.
     ganze Zeile der Liste die Seite neu.
   - Der Bereich kommt aus der Adresse (`areaOf`), Unterseiten von Admin zählen zu Admin.
   - **Bereiche merken sich ihren Zustand** wie Reiter (`areaLinks`): die letzte Adresse von Scheiben (ohne Abend und
-    ohne `pick`) und Fortschritt, dazu die zuletzt gewählte Familie, die beide teilen.
+    ohne `pick`) und Fortschritt, dazu die zuletzt gewählte Familie, die beide teilen. Wechselt die Familie, fällt die
+    Wahl im Fortschritt weg; trug die gemerkte Adresse keine Familie (der Server hat sie aufgelöst), bleibt sie.
   - Das Blatt der Hilfe öffnet jede Seite über `useHelp`; der Hinweis „Rückgängig“ (`useUndo`) steht im Rahmen über der
     unteren Leiste.
 - **Links statt Rückrufe:** `RouteLink` mit der Adresse aus `urlFromRoute` für Zeile der Liste, Hinweis auf andere

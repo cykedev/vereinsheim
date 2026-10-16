@@ -74,6 +74,20 @@ describe("Bereiche der Navigation", () => {
     expect(urlFromRoute(other.progress)).toBe("/progress?range=all&family=lp-freihand")
   })
 
+  it("trug die gemerkte Adresse keine Familie, bleibt die Wahl (der Server hat die Familie aufgelöst)", () => {
+    const memory: AreaMemory = {
+      cards: null,
+      progress: {
+        page: "progress",
+        query: { ...DEFAULT_PROGRESS, family: null, chosen: "c7" },
+        section: null,
+      },
+    }
+    expect(urlFromRoute(areaLinks(memory, "lg-freihand").progress)).toBe(
+      "/progress?family=lg-freihand&pick=c7"
+    )
+  })
+
   it("ohne Familie bleibt die gemerkte", () => {
     const memory: AreaMemory = {
       cards: { page: "cards", query: { ...DEFAULT_LIST, family: "lg-freihand" }, evening: null },
