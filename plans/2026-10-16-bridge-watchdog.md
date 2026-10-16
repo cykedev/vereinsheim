@@ -28,10 +28,30 @@ ausgeschaltet (User, 16. Oktober 2026). Analyse in dieser Session:
   Dauerbetrieb der Brücke weicht davon ab (nur der Betrieb, keine Entscheidung). → Abschnitt „Änderung (16. Oktober
   2026)“ in ADR-027, **außerhalb des Autopiloten** (geschützter Pfad, siehe Task 7).
 
-Geprüft und **kein** Handlungsbedarf: Läuft die Brücke über eine Woche ohne Anlage, bleibt eine wartende Scheibe im
-Speicher (vergessen wird nur in einer gelungenen Runde, nach dem Aktualisieren von `seenAt`) und geht hinaus, sobald die
-Anlage wieder an ist. Leerlauf für Nachholen und Nachladen misst die Erkennung an den Lebenszeichen der Ablage
-(`movedAt`, `ActiveFor`), nicht an der Laufzeit der Brücke; das Nachladen läuft also wie bisher zu Beginn des Abends.
+Geprüft am Code, **kein** Handlungsbedarf, auch für **mehrere Wochen ohne Anlage** (Sommer, User):
+
+- **Brücke läuft durch:** Eine wartende Scheibe (etwa weil am Ende des Abends das Internet weg war) bleibt im Speicher.
+  Vergessen wird nur in einer gelungenen Runde, und dort erst nach dem Aktualisieren von `seenAt`
+  (`internal/watch/watch.go`, `Tick`). Ohne Anlage gelingt keine Runde, also wird nichts vergessen, und der Speicher
+  wächst nicht. Sobald die Anlage wieder an ist, geht die Scheibe hinaus. → Test in Task 3b.
+- **Reboot während der Pause (04:00, nur bei `reboot-required`):** Der Speicher ist weg. Startfenster und Nachholen
+  ab dem Wasserstand (SF-55) hängen an der **ersten gelungenen Runde** (`w.started` wird erst dort gesetzt,
+  `SetCatchUpFrom` wirkt bis dahin), nicht am Start des Dienstes. Auch Wochen später gilt also: Was im Startfenster
+  (12 h vor dem jüngsten Lebenszeichen der Ablage) und ab dem Wasserstand liegt, liest die Brücke einmal und schickt
+  es. Spiegel antwortet „unverändert“, was schon oben ist. Das ist derselbe Weg wie heute nach dem Einschalten.
+- **Leerlauf** für Nachholen und Nachladen misst die Erkennung an den Lebenszeichen der Ablage (`movedAt`,
+  `ActiveFor`), nicht an der Laufzeit der Brücke. Aufträge zum Nachladen aus den Wochen (QR von zu Hause, neue
+  Zustimmungen) laufen zu Beginn des nächsten Abends, bevor geschossen wird.
+- **Zustände in Spiegel:** `advanceCardStates` schaltet mit jedem Heartbeat weiter, endgültig nach 12 h ohne
+  Lebenszeichen oder ab dem Start eines neuen Laufs (`runStartedAt`). Mit durchlaufender Brücke werden die Scheiben
+  eines Abends 12 h später endgültig statt beim nächsten Einschalten. Nach einem Reboot um 04:00 sofort. Beides ist
+  harmlos: Die Anlage ist dann aus.
+- **Kopplung:** Das Geräte-Token läuft nicht ab (nur Kopplungscodes, 15 min). Heartbeat jede Minute über Wochen ist
+  für Spiegel kein Problem.
+- **Uhr:** Nach jedem Reboot wartet die Brücke auf NTP (`systemd-time-wait-sync`), im Lauf misst sie ihre Uhr mit
+  jedem Heartbeat.
+- **Watchdog über Wochen ohne Anlage:** Jeder `Step` scheitert schnell (Verbindungsaufbau höchstens 5 s), meldet
+  danach `Alive`. Kein falscher Neustart.
 
 Nicht in diesem Plan: In Spiegel steht außerhalb der Abende dauerhaft „erreicht die Meyton-Anlage nicht“ (Zustand,
 keine Aufgabe). Ob der Text für den Dauerbetrieb anders heißen soll, ist eine Frage für das Textbuch.
@@ -234,6 +254,26 @@ Test `TestRepeatedRoundFailureLogsRarely` (die `ablage` im Test hat schon `fail 
 
 Kontrolle: `go test ./internal/run/`.
 
+### Task 3b — Test: Wochen ohne Anlage
+
+`TestWaitingCardSurvivesWeeksWithoutSource` in `run_test.go`, nur Test, kein Produktivcode:
+1. `setup(t, "12345678")`, eine Scheibe mit Zustimmung per `f.ablage.put(…)` (wie in
+   `TestFailedUploadIsReadAndSentAgain`), Upload scheitern lassen wie dort (5xx), zwei Schritte → die Scheibe wartet,
+   nichts ist bei `f.sp` angekommen.
+2. `f.ablage.fail = mysql.ErrInvalidConn`, Upload wieder erlaubt, ein Schritt; dann `f.clock = f.clock.Add(21 * 24 *
+   time.Hour)`, weitere drei Schritte (scheitern).
+3. `f.ablage.fail = nil`, Schritte bis zur Zustimmung des Uploads (höchstens fünf) → `f.sp.sent()` enthält die
+   ScheibenID; im Log `round-ok`.
+4. Zweiter Fall im selben Test (Reboot in der Pause): nach Schritt 2 statt weiterzumachen einen **neuen** Runner auf
+   derselben `ablage` und demselben `spiegel` bauen (`New(…)` wie in `setup`; `f.sp.state.Watermark` wie in
+   `TestCatchUpFromWatermarkInLocalTime`), drei scheiternde Schritte, dann `fail = nil` → die Scheibe kommt über das
+   Startfenster an.
+5. Gegenprobe: Der Ausgang ist doppelt geschützt (Speicher, und eine unbekannte Scheibe gilt als neu), eine Mutation an
+   einer Stelle bleibt grün. Geprüft wird deshalb, dass die Behauptung greift: Upload in Schritt 3 weiter scheitern
+   lassen → Test rot; zurück.
+
+Kontrolle: `go test ./internal/run/`.
+
 ### Task 4 — main: Ready und Alive
 
 In `cmd/spiegel-bridge/main.go`, `runRun`, nach `log.log("start", …)` und `run.New(…)`:
@@ -333,7 +373,10 @@ Beschluss. `decisions.md` und `index.md` listen keine Änderungen je ADR und ble
   ausgeschaltet, oft auch der Pi“ (der Grund für das Upgrade zu Hause bleibt).
 - Neuer Abschnitt **„Dauerbetrieb“** (vor „Updates“): kein geplanter Neustart (die Gründe aus *Context* in drei
   Punkten), Watchdog 10 min, Neustart nach Absturz (`GOTRACEBACK=crash`, kein Core-Abbild), außerhalb der Abende steht
-  in Spiegel „erreicht die Meyton-Anlage nicht“ (normal), im Log alle 10 min `round-failed … rounds=`.
+  in Spiegel „erreicht die Meyton-Anlage nicht“ (normal), im Log alle 10 min `round-failed … rounds=`. Dazu, was über
+  **Wochen ohne Anlage** gilt (aus *Context*): Wartendes bleibt im Speicher; ein Reboot in der Pause holt es über
+  Startfenster und Wasserstand nach; Aufträge zum Nachladen laufen zu Beginn des nächsten Abends; Scheiben werden in
+  Spiegel 12 h nach dem Abend endgültig (nach einem Reboot sofort).
 - Abschnitt **„Betriebssystem“** neu: Datei `52unattended-upgrades-local` mit den drei Zeilen; Reboot nur, wenn ein
   Paket `/var/run/reboot-required` anlegt, zur nächsten 04:00; erlaubt sind nur die Debian-Quellen, Kernel und Firmware
   aus `archive.raspberrypi.com` bewusst vor Ort (`sudo apt full-upgrade && sudo reboot`, Entscheidung vom 16. Oktober
@@ -374,7 +417,7 @@ Danach `/sync-graph` (vault-lint grün).
 ## Test steps
 
 1. `cd apps/spiegel-bridge && go test ./...` (neu: `internal/notify`, `TestRunReportsAlive`,
-   `TestRepeatedRoundFailureLogsRarely`).
+   `TestRepeatedRoundFailureLogsRarely`, `TestWaitingCardSurvivesWeeksWithoutSource`).
 2. Mutation zu Task 3 (Bedingung → `true`) muss rot werden; zurück aus dem `cp`-Backup.
 3. `pnpm --filter spiegel-bridge build` (linux/arm64, linux/amd64, windows/amd64 bauen).
 4. `pnpm --filter spiegel-bridge replay` (Erkennung unverändert, ~5 s).
