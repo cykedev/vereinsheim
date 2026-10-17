@@ -6,8 +6,15 @@ import { createHash } from "node:crypto"
 
 import { canonicalize } from "@vereinsheim/ingest-contract/canonical"
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
-import { FLAG_SUSPICIOUS, type CardFlag, type MetricShot } from "@vereinsheim/shot-core/metrics"
+import { plannedShotsOf } from "@vereinsheim/shot-core/discipline"
+import {
+  FLAG_OVER_TARGET,
+  FLAG_SUSPICIOUS,
+  type CardFlag,
+  type MetricShot,
+} from "@vereinsheim/shot-core/metrics"
 import { cardMarks, cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
+import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 
 import {
   Prisma,
@@ -18,6 +25,14 @@ import {
 } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
+import {
+  baseShotFlags,
+  DERIVED_SHOT_FLAGS,
+  isComplete,
+  MAPPING_FLAGS,
+  mappingFlags,
+  verifyShots,
+} from "../ingest/card-checks"
 import { standScoringOf } from "../scoring"
 import { VISIBLE_CARD } from "./visible"
 
@@ -609,6 +624,47 @@ export async function refreshStaleProjections(
 }
 
 /** ein gespeicherter Schuss als Eingabe */
+/**
+ * Alle Scheiben mit veralteter Zuordnung ihrer Disziplin nachrechnen, in Stapeln von `refreshDisciplineCards`, wie
+ * `refreshStaleProjections`. Der Server ruft das nach dem Speichern einer Zuordnung, beim Start und stündlich: Ein Stand,
+ * der nach einem Lauf noch mit der alten Version geschrieben wurde, wartet so höchstens eine Stunde.
+ */
+export async function refreshStaleDisciplineCards(
+  db: Db,
+  {
+    batch = 200,
+    sourceId,
+    onFailure = (cardId: string, error: unknown) =>
+      console.error(
+        `Scheibe ${cardId} nicht nachgerechnet:`,
+        error instanceof Error ? error.name : "unbekannter Fehler"
+      ),
+  }: {
+    batch?: number
+    sourceId?: number
+    onFailure?: (cardId: string, error: unknown) => void
+  } = {}
+): Promise<number> {
+  const failed = new Set<string>()
+  let total = 0
+  for (let round = 0; round < MAX_REFRESH_ROUNDS; round++) {
+    let failures = 0
+    const done = await refreshDisciplineCards(db, {
+      limit: batch,
+      sourceId,
+      exclude: [...failed],
+      onFailure: (cardId, error) => {
+        failed.add(cardId)
+        failures++
+        onFailure(cardId, error)
+      },
+    })
+    total += done
+    if (done + failures < batch) break
+  }
+  return total
+}
+
 export function shotFromRow(row: {
   seq: number
   stellung: number
@@ -650,11 +706,132 @@ export async function setDisciplineFamily(
   disciplineId: number,
   familyId: number | null
 ): Promise<number> {
-  return db.$transaction(async (tx) => {
-    await tx.discipline.update({ where: { id: disciplineId }, data: { familyId } })
-    const { count } = await tx.card.updateMany({ where: { disciplineId }, data: { familyId } })
-    return count
+  return db.$transaction((tx) => moveDisciplineFamily(tx, disciplineId, familyId))
+}
+
+/** die Familie einer Disziplin und ihrer Scheiben in einer laufenden Transaktion umhängen (Admin) */
+export async function moveDisciplineFamily(
+  tx: Tx,
+  disciplineId: number,
+  familyId: number | null
+): Promise<number> {
+  await tx.discipline.update({ where: { id: disciplineId }, data: { familyId } })
+  const { count } = await tx.card.updateMany({ where: { disciplineId }, data: { familyId } })
+  return count
+}
+
+/**
+ * Scheiben, deren Merkmale mit einer älteren Zuordnung ihrer Disziplin gerechnet sind (`Card.disciplineVersion`), aus
+ * den gespeicherten Schüssen neu rechnen: Gegenprobe je Schuss, Merkmale der Disziplin, `complete`, Projektion. Je
+ * Scheibe unter der Sperre ihrer Zeile; Rohdaten werden nicht neu gedeutet. Gibt die Zahl der neu gerechneten zurück.
+ */
+export async function refreshDisciplineCards(
+  db: Db,
+  {
+    limit = 200,
+    sourceId,
+    exclude = [],
+    onFailure,
+  }: {
+    limit?: number
+    sourceId?: number
+    /** Scheiben, die hier nicht noch einmal versucht werden (sie sind in diesem Lauf schon gescheitert) */
+    exclude?: readonly string[]
+    /** mit: eine scheiternde Scheibe wird gemeldet und übergangen; ohne: der Fehler bricht ab */
+    onFailure?: (cardId: string, error: unknown) => void
+  } = {}
+): Promise<number> {
+  const onlySource =
+    sourceId === undefined ? Prisma.empty : Prisma.sql`AND c."sourceId" = ${sourceId}`
+  const notExcluded = exclude.length ? Prisma.sql`AND c.id <> ALL(${[...exclude]})` : Prisma.empty
+  const stale = await db.$queryRaw<{ id: string }[]>`
+    SELECT c.id FROM "Card" c JOIN "Discipline" d ON d.id = c."disciplineId"
+     WHERE c."disciplineVersion" <> d.version
+       ${onlySource}
+       ${notExcluded}
+     ORDER BY c.id
+     LIMIT ${limit}`
+  let done = 0
+  for (const { id } of stale) {
+    try {
+      await db.$transaction((tx) => recomputeDisciplineCard(tx, id))
+      done++
+    } catch (error) {
+      if (!onFailure) throw error
+      onFailure(id, error)
+    }
+  }
+  return done
+}
+
+/** eine Scheibe mit der aktuellen Zuordnung ihrer Disziplin neu rechnen (`refreshDisciplineCards`) */
+async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
+  const [row] = await tx.$queryRaw<
+    {
+      currentRevisionId: bigint | null
+      state: CardState
+      flags: string[]
+      targetId: string | null
+      plannedShots: number | null
+      meytonId: number
+      version: number
+    }[]
+  >`
+    SELECT c."currentRevisionId", c.state, c.flags, d."targetId", d."plannedShots", d."meytonId", d.version
+      FROM "Card" c JOIN "Discipline" d ON d.id = c."disciplineId"
+     WHERE c.id = ${cardId}
+       FOR UPDATE OF c`
+  if (!row) return
+  const revisionId = row.currentRevisionId
+  if (!revisionId) {
+    await tx.card.update({ where: { id: cardId }, data: { disciplineVersion: row.version } })
+    return
+  }
+  const targetId =
+    row.targetId !== null && row.targetId in TARGETS ? (row.targetId as TargetId) : null
+  const rows = await tx.shot.findMany({ where: { revisionId }, orderBy: { seq: "asc" } })
+  const shots = rows.map(shotFromRow)
+  // die Merkmale je Schuss neu aus den Werten; was nicht aus den Werten kommt, bleibt
+  const checkables = shots.map((shot) => ({
+    ...shot,
+    flags: baseShotFlags({ ...shot, overTarget: shot.flags.includes(FLAG_OVER_TARGET) }),
+  }))
+  const { suspicious, targetMismatch } = verifyShots(targetId, checkables)
+  const next = shots.map((shot, i) => ({
+    ...shot,
+    flags: [
+      ...shot.flags.filter((flag) => !DERIVED_SHOT_FLAGS.includes(flag)),
+      ...checkables[i].flags,
+      ...(suspicious[i] ? [FLAG_SUSPICIOUS] : []),
+    ],
+  }))
+  const sameFlags = (a: readonly string[], b: readonly string[]) =>
+    [...a].sort().join("|") === [...b].sort().join("|")
+  const changed = next.flatMap((shot, i) => (sameFlags(shot.flags, shots[i].flags) ? [] : [i]))
+  for (const i of changed)
+    await tx.shot.update({ where: { id: rows[i].id }, data: { flags: [...next[i].flags] } })
+  if (changed.length)
+    await tx.cardRevision.update({
+      where: { id: revisionId },
+      data: { contentHash: contentHash(next) },
+    })
+
+  const matchShots = shots.filter((shot) => shot.stellung !== 0).length
+  const flags = [
+    ...mappingFlags({
+      sighterShots: shots.length - matchShots,
+      matchShots,
+      plannedShots: plannedShotsOf(row.meytonId, row.plannedShots),
+      targetId,
+      targetMismatch,
+    }),
+    ...row.flags.filter((flag) => !(MAPPING_FLAGS as readonly string[]).includes(flag)),
+  ]
+  await tx.card.update({
+    where: { id: cardId },
+    data: { flags, complete: isComplete(row.state, flags), disciplineVersion: row.version },
   })
+  await saveProjection(tx, cardId, revisionId, next.map(toMetricShot))
 }
 
 /**

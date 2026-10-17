@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { refreshStaleProjections } from "@/lib/db/cards"
+import { refreshStaleDisciplineCards, refreshStaleProjections } from "@/lib/db/cards"
 import { purgeExpiredTrash } from "@/lib/db/trash"
 import { ensureSeedAdmin } from "@/lib/startup"
 
@@ -20,6 +20,20 @@ function emptyExpiredTrash() {
     )
 }
 
+/** Scheiben mit veralteter Zuordnung ihrer Disziplin nachrechnen; ins Log nur Zahlen und den Namen eines Fehlers */
+function refreshDisciplines() {
+  void refreshStaleDisciplineCards(db)
+    .then((count) => {
+      if (count) console.warn(`${count} Scheiben nach einer Zuordnung neu gerechnet`)
+    })
+    .catch((error: unknown) =>
+      console.error(
+        "Scheiben nach einer Zuordnung nicht nachgerechnet:",
+        error instanceof Error ? error.name : "unbekannter Fehler"
+      )
+    )
+}
+
 /**
  * Beim Start: das erste Admin-Konto anlegen, falls es keines gibt, den Papierkorb leeren und veraltete Projektionen im
  * Hintergrund nachrechnen (ADR-031: nach einer neuen `projectionVersion`; die Übersichten lesen bis dahin die alte).
@@ -31,9 +45,11 @@ export async function registerNode() {
       if (count) console.warn(`${count} Projektionen beim Start neu gerechnet`)
     })
     .catch((error: unknown) => console.error("Projektionen beim Start nicht nachgerechnet:", error))
-  // Papierkorb: beim Start und danach stündlich (30 Tage); `unref` hält den Prozess nicht am Leben
+  // Papierkorb und Zuordnungen der Disziplinen: beim Start und danach stündlich; `unref` hält den Prozess nicht am Leben
   emptyExpiredTrash()
   setInterval(emptyExpiredTrash, HOUR_MS).unref()
+  refreshDisciplines()
+  setInterval(refreshDisciplines, HOUR_MS).unref()
   try {
     const result = await ensureSeedAdmin(db, {
       email: process.env.SEED_ADMIN_EMAIL,

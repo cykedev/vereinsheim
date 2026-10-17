@@ -33,6 +33,9 @@ export const MAPPING_FLAGS = [
   FLAG_TARGET_MISMATCH,
 ] as const satisfies readonly CardFlag[]
 
+/** alle Merkmale, die ein Schuss aus seinen Werten und der Gegenprobe bekommt; das Nachrechnen ersetzt genau diese */
+export const DERIVED_SHOT_FLAGS: readonly string[] = [FLAG_OVER_TARGET, FLAG_SUSPICIOUS, FLAG_MISS]
+
 /** Abstand unter 1 µm (`Teiler001` in 0,1 µm): Meyton schreibt dann `Teiler01` 0 */
 const ZERO_DISTANCE_TENTHS_UM = 10
 /** 10,9: der beste Zehntel; mit Lage 0/0 und Abstand 0 kein Platzhalter, sondern ein Treffer genau in der Mitte */
