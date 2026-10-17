@@ -370,7 +370,8 @@ model Discipline {
   family          Family?  @relation(fields: [familyId], references: [id], onDelete: SetNull)
   // Scheibenbild aus shot-core (`TARGETS`); null: unbekannt (ADR-029)
   targetId        String?
-  // amtliche Wertung (SF-74); null: unbekannt
+  // Wertung der Disziplin (Admin), Vorgabe für Training und Wettkampf; im Wettkampf die amtliche (SF-74); null: wie am
+  // Stand
   officialScoring Scoring?
   // Wertungsschüsse vom Admin; null: aus der DisziplinID, 0: keine feste Zahl (SF-09)
   plannedShots    Int?
