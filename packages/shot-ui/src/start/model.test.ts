@@ -228,8 +228,19 @@ describe("Start: der letzte Abend", () => {
       lg(periodCard("old1", 0, [100], { startedAtMs: at(21, 18) })),
       lg(periodCard("e", 0, [106], { startedAtMs: at(29, 18) })),
     ]).blocks[0]
+    expect(few.records.length).toBeGreaterThan(0)
     expect(few.records.length).toBeLessThanOrEqual(5)
     expect(few.moreRecords).toBe(0)
+  })
+
+  it("der Weg zu allen Rekorden trägt keine Wertung: sonst gälte der gemerkte Zeitraum nicht", () => {
+    const rings = startModel({
+      ...context,
+      scoringOf: () => "rings",
+      cards: [lg(periodCard("e", 0, [100, 104, 95, 109], { startedAtMs: at(29, 18) }))],
+      family: "lg-freihand",
+    })
+    expect(urlFromRoute(rings.blocks[0].recordsRoute)).toBe("/progress?family=lg-freihand#analysis")
   })
 
   it("Form der letzten 90 Tage für die zuletzt gewählte Familie, mit Vergleich; ohne Wahl die des ersten Blocks", () => {

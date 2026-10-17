@@ -156,7 +156,8 @@ Form; auf dem Telefon Offen, Abend, Form untereinander.
     Schnitt, der Abend rechts groß mit Datum, in einem Rahmen, darunter eine Zeile, die Punkte, Linie und Band erklärt;
   - die Scheiben als Kacheln (12,5 rem breit, kleine Scheibe 56 px), das Ergebnis mit Namen der Wertung („18,8 Zehntel ·
     18 ganze Ringe“);
-  - neue Rekorde, nur wenn der Abend welche aufgestellt hat;
+  - neue Rekorde, nur wenn der Abend welche aufgestellt hat, höchstens fünf in der Reihenfolge des Katalogs, darunter
+    „Noch N weitere Rekorde im Fortschritt ›“ (Fortschritt, Abschnitt Analyse, dort „Alle Rekorde“ aufgeklappt);
   - „Abend in Scheiben ›“.
 - **Form:** „Form der letzten 90 Tage“ für die zuletzt gewählte Familie als Titel und ein Satz („Luftgewehr: Ø 10,25 je
   Schuss, deutlich besser als in den 90 Tagen davor (+0,15).“), mit Link in den Fortschritt (`FormLine`).

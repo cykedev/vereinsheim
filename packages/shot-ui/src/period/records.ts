@@ -9,6 +9,9 @@ import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { formatValue, ringsText } from "../format"
 import type { PeriodModel } from "./model"
 
+/** so viele neue Rekorde stehen oben im Fortschritt und je Abend auf Start */
+export const NEW_RECORDS = 5
+
 export interface RecordRow {
   key: string
   label: string

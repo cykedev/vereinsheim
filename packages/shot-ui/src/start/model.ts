@@ -13,15 +13,13 @@ import { progressRoute } from "../nav/navigate"
 import { DEFAULT_LIST, type ProgressRoute } from "../nav/routes"
 import type { NamedPeriod } from "../period/calendar"
 import { byStart, periodModel } from "../period/model"
-import { recordRows, type RecordRow } from "../period/records"
+import { NEW_RECORDS, recordRows, type RecordRow } from "../period/records"
 import { initialPeriodState } from "../period/state"
 
 /** so viele Scheiben vor dem Abend ergeben den Schnitt */
 const BEFORE = 5
 /** so viele Scheiben zeigt der Streifen */
 const STRIP = 20
-/** so viele neue Rekorde stehen je Abend auf Start, wie oben im Fortschritt; der Rest ist ein Link dorthin */
-const START_RECORDS = 5
 
 export type { RecordRow }
 
@@ -174,9 +172,12 @@ export function startModel(input: StartInput): StartModel {
       band,
       verdict,
       strip,
-      records: newRecords.slice(0, START_RECORDS),
-      moreRecords: Math.max(0, newRecords.length - START_RECORDS),
-      recordsRoute: progressRoute(initialPeriodState({ family, scoring }), "analysis"),
+      // wie oben im Fortschritt; der Rest ist ein Link dorthin
+      records: newRecords.slice(0, NEW_RECORDS),
+      moreRecords: Math.max(0, newRecords.length - NEW_RECORDS),
+      // ohne Wertung: Der Fortschritt rechnet ohnehin in der Wertung der Familie, und ein Schlüssel außer der Familie
+      // ließe den gemerkten Zeitraum fallen
+      recordsRoute: progressRoute(initialPeriodState({ family }), "analysis"),
     }
   })
 

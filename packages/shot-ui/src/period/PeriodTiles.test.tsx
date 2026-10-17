@@ -99,6 +99,18 @@ describe("Analyse über den Zeitraum", () => {
     expect(empty).toContain("data-all-records")
   })
 
+  it("mehr neue Rekorde im Zeitraum, als oben stehen: alle aufgeklappt, sonst zugeklappt", () => {
+    const allOpen = (html: string) => /<details data-all-records="true" open=""/.test(html)
+    const here = recordRows(model(now).records, "decimal")
+    expect(here.length).toBeGreaterThan(5)
+    expect(allOpen(render(now))).toBe(true)
+    // nur eine Scheibe im Zeitraum, die übrigen davor: höchstens fünf neue
+    const one = [periodCard("solo", 10, [30, 30, 30]), ...before]
+    const rows = recordRows(model(one).records, "decimal")
+    expect(rows.filter((r) => r.record.cardId === "solo").length).toBeLessThanOrEqual(5)
+    expect(allOpen(render(one))).toBe(false)
+  })
+
   it("Rekorde in der Reihenfolge des Katalogs, außerhalb des Zeitraums nicht wählbar", () => {
     const old = periodCard("alt", 200, [109, 109, 109])
     const m = model([...now, old])

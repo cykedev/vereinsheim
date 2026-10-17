@@ -4,7 +4,7 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { AnalysisCard, Note } from "../analysis/parts"
 import type { PeriodModel } from "./model"
-import { recordRows, type RecordRow } from "./records"
+import { NEW_RECORDS, recordRows, type RecordRow } from "./records"
 
 /** die Zeilen der Rekorde; liegen in `./records` (rein, ohne React), hier weiter für bestehende Aufrufer */
 export { recordRows, type RecordRow } from "./records"
@@ -21,9 +21,6 @@ export interface PeriodInsightsProps {
   chosen?: string | null
   className?: string
 }
-
-/** so viele Rekorde aus dem Zeitraum stehen oben */
-const NEW_RECORDS = 5
 
 /**
  * Analyse über den Zeitraum: die Rekorde (R1–R8, R10, R11, in der Wertung und Art der Seite, über alle Scheiben der Familie).
@@ -48,7 +45,8 @@ export function PeriodInsights({
   const inPeriod = new Set(model.cards.map((c) => c.id))
   const date = (ms: number) => formatDateOnly(new Date(ms), timeZone)
   const rows = recordRows(model.records, scoring)
-  const recent = rows.filter((row) => inPeriod.has(row.record.cardId)).slice(0, NEW_RECORDS)
+  const inRange = rows.filter((row) => inPeriod.has(row.record.cardId))
+  const recent = inRange.slice(0, NEW_RECORDS)
   const row = (r: RecordRow) => {
     const here = inPeriod.has(r.record.cardId)
     const shown = r.record.cardId === chosen
@@ -119,7 +117,8 @@ export function PeriodInsights({
             ) : (
               <Note>Im Zeitraum kein neuer Rekord.</Note>
             )}
-            <details data-all-records>
+            {/* aufgeklappt, wenn oben nicht alle neuen stehen: Der Link „Noch N weitere …“ auf Start führt hierher */}
+            <details data-all-records open={inRange.length > NEW_RECORDS}>
               <summary className="cursor-pointer text-[13px] font-semibold text-primary">
                 {`Alle Rekorde (${rows.length})`}
               </summary>
