@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { cardScoring, familyScoringOf, standScoringOf } from "./scoring"
+import { cardScoring, familyScoringOf, standScoringOf, toggleOfficial } from "./scoring"
 
 const shot = (seq: number, displayMode: number | null, stellung = 1) => ({
   seq,
@@ -48,5 +48,13 @@ describe("familyScoringOf: die Wertung einer Familie", () => {
     expect(familyScoringOf(["rings", "decimal", "rings"], null)).toBe("rings")
     expect(familyScoringOf(["rings", "decimal"], null)).toBe("decimal")
     expect(familyScoringOf([], null)).toBe("decimal")
+  })
+})
+
+describe("toggleOfficial: was der Umschalter „amtlich“ nennt", () => {
+  it("die Wertung der Disziplin nur im Wettkampf", () => {
+    expect(toggleOfficial("competition", "rings")).toBe("rings")
+    expect(toggleOfficial("training", "rings")).toBeUndefined()
+    expect(toggleOfficial("competition", undefined)).toBeUndefined()
   })
 })

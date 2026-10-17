@@ -46,6 +46,15 @@ export function cardScoring(card: {
   return card.choice ?? card.official ?? card.stand ?? "decimal"
 }
 
+/**
+ * Was der Umschalter einer Scheibe „amtlich“ nennt: die Wertung der Disziplin nur im Wettkampf (so druckt Meyton); im
+ * Training ist sie nur eine Vorgabe
+ */
+export const toggleOfficial = (
+  kind: "training" | "competition",
+  official: Scoring | undefined
+): Scoring | undefined => (kind === "competition" ? official : undefined)
+
 /** Die Wertung einer Familie für ihre Schnitte: gespeichert, sonst die häufigste ihrer Scheiben, bei Gleichstand Zehntel */
 export function familyScoringOf(cardScorings: readonly Scoring[], saved: Scoring | null): Scoring {
   if (saved) return saved

@@ -67,7 +67,7 @@ function refreshLater() {
 const firstSite = () => db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true } })
 
 /**
- * Eine Disziplin einordnen: Scheibe, Familie, Wertung im Wettkampf, Schusszahl. Ändern sich Scheibe oder Schusszahl
+ * Eine Disziplin einordnen: Scheibe, Familie, Wertung, Schusszahl. Ändern sich Scheibe oder Schusszahl
  * (gegen die gesperrte Zeile, nie gegen das, was der Browser zuvor sah), steigt die Version, und Spiegel rechnet die
  * Scheiben danach im Hintergrund nach. Eine ignorierte Disziplin hat kein Formular.
  */

@@ -46,7 +46,7 @@ Start · Scheiben · **Scannen** (Meyton-QR, in der Mitte) · Fortschritt · Pro
 ## Wertung: ganze Ringe oder Zehntel
 
 - **Überall umschaltbar:** Wo ein Wert steht (Schuss, Serie, Scheibe, Kacheln, Verläufe, Rekorde, Vergleiche), lässt er sich zwischen ganzen Ringen und Zehnteln umschalten. Der Schalter ist immer erreichbar: auf der Seite einer Scheibe und auf Start als Kreis neben der Zahl, in Liste und Fortschritt als Chip in der Zeile der Filter.
-- **Jede Scheibe und jede Familie hat ihre Wertung:** die Scheibe die gewählte, sonst im Wettkampf die amtliche der Disziplin, im Training die wie am Stand, ohne beides Zehntel; die Familie für die Schnitte in Liste, Start und Fortschritt die gewählte, sonst die häufigste ihrer Scheiben. Umschalten speichert ([[spiegel-navigation]], „Wertung je Scheibe und je Familie“). Die amtliche Wertung nennt der Kreis in Namen und Tooltip.
+- **Jede Scheibe und jede Familie hat ihre Wertung:** die Scheibe die gewählte, sonst die Wertung der Disziplin (Training und Wettkampf), sonst die wie am Stand, ohne alles Zehntel; die Familie für die Schnitte in Liste, Start und Fortschritt die gewählte, sonst die häufigste ihrer Scheiben. Umschalten speichert ([[spiegel-navigation]], „Wertung je Scheibe und je Familie“). „Amtlich“ nennt der Kreis die Wertung der Disziplin in Namen und Tooltip nur im Wettkampf.
 - Wo Platz ist, steht die andere Wertung klein daneben („10 · 10,5 in Zehnteln“).
 - **Fehlen die Zehntel** (Ganzring-Ausdruck ohne Lage), zeigt die Zehntel-Ansicht „–“ mit Grund, keine Schätzung (SF-18).
 - Rekorde und Verläufe laufen je Wertung getrennt.

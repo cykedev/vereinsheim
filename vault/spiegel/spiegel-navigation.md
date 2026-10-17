@@ -318,7 +318,7 @@ Eine eigene Scheibe lässt sich löschen, über Papierkorb und weiche Sperre ([[
 
 ## Wertung je Scheibe und je Familie
 
-Es gibt keine Wertung des Geräts: Die Wertung hängt an Disziplin und Modus, lässt sich je Scheibe umstellen und wird
+Es gibt keine Wertung des Geräts: Die Wertung hängt an der Disziplin, lässt sich je Scheibe umstellen und wird
 automatisch gespeichert.
 
 - **Wertung einer Scheibe:** gewählt, sonst die Wertung der Disziplin (Admin → Disziplinen, Vorgabe für Training und
@@ -354,9 +354,9 @@ automatisch gespeichert.
   „Anlage und Brücken“), sonst die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); eine
   Liste ohne Zuordnung gilt als Training.
 - **Was folgt:** Filter „Art“ in Liste und Fortschritt, der Pokal in der Liste, die Metazeile der Scheibe, die Rekorde
-  „nur Wettkampf“ und die Vorgabe der Wertung (Wettkampf in der amtlichen). Eine gewählte Wertung bleibt.
+  „nur Wettkampf“ und ob der Umschalter die Wertung „amtlich“ nennt. Die Wertung selbst ändert die Art nicht.
 - **Bedienung:** auf der Seite einer Scheibe als Pokal im weichen Kreis (siehe unten), automatisch gespeichert wie die
-  Wertung. Ändert die Art die Vorgabe der Wertung, zeigt die Seite die neue. Eine Scheibe nur aus Probe ist Training und
+  Wertung. Eine Scheibe nur aus Probe ist Training und
   hat keinen Schalter; bei ihr zählt auch die Liste nicht.
 - Mehrere Scheiben auf einmal umzustellen braucht die Auswahl (siehe „Was noch fehlt“).
 

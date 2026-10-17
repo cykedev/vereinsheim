@@ -7,7 +7,7 @@ import { chooseCardKind } from "@/lib/db/cards"
 import type { ActionResult } from "@/lib/types"
 
 // Art der Scheibe festlegen und automatisch speichern: Wettkampf oder Training, nur eigene Scheiben, auch für Admins.
-// Die Art ändert Filter, Rekorde und die Vorgabe der Wertung (Wettkampf in der amtlichen); danach rechnen die Seiten
+// Die Art ändert Filter, Rekorde und ob der Umschalter die Wertung „amtlich“ nennt; danach rechnen die Seiten
 // neu, über `router.refresh()` in `useSavedChoice` (kein `revalidatePath`: nach ihm scrollt Next zum Anker der Adresse).
 
 const isKind = (value: unknown): value is CardKind =>

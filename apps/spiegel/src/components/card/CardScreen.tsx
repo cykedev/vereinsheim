@@ -66,6 +66,7 @@ import { addressScoring, nextCardAddress, ownHash } from "@/lib/card-address"
 import { cardWhen } from "@/lib/open"
 import type { PageCard } from "@/lib/db/reads"
 import { setCardKind } from "@/lib/card-kind-actions"
+import { toggleOfficial } from "@/lib/scoring"
 import { setCardScoring } from "@/lib/scoring-actions"
 import { rememberTargetDisplay, savedTargetDisplay } from "@/lib/target-display-client"
 
@@ -307,8 +308,7 @@ export function CardScreen({
       )}
       <ScoringToggle
         scoring={state.scoring}
-        // „amtlich“ nur im Wettkampf: so druckt Meyton; im Training ist die Wertung der Disziplin nur eine Vorgabe
-        official={kindChoice.shown === "competition" ? card.official : undefined}
+        official={toggleOfficial(kindChoice.shown, card.official)}
         onChange={scoringChoice.change}
       />
     </>

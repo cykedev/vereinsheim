@@ -109,7 +109,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 - **Art der Scheibe wie die Wertung:** `Card.kind` ist die Art
   der Quelle (jeder Stand schreibt sie: der Adapter aus `Status`, `seed:own` „training“), `Card.kindChoice` die Wahl des
   Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? ranking.kind ?? kind` (`kindOfRow` in `reads.ts`, der einzige
-  Weg zur Art), in Übersicht, Seite und Vorgabe der Wertung. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
+  Weg zur Art), in Übersicht und Seite. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
   Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, „Anlage und Brücke“); die
   Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. In der Oberfläche heißt sie „Liste“
   (`OLD_WORDS` hält „Rangliste“ fern): Die Zugriffe liefern sie als `list` (`OverviewCard`, `PageCard`), die Seite einer
@@ -153,8 +153,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   selbst an (`disciplineFor` in `src/lib/db/disciplines.ts`, auch für `seed:own`): mit der Zuordnung einer eingeordneten
   Disziplin derselben Nummer (in Meyton umbenannt), sonst mit dem Vorschlag des Fachkerns, ignoriert bei Meytons Spielen
   und Trainingsscheiben (`suggestIgnore`). Eingeordnet erst mit `confirmedAt`. Felder: Scheibe (`targetId`, null = eigene
-  Scheibe), Familie (auch eigene, Kennung aus dem Namen und fest, `familySlug`), Wertung im Wettkampf
-  (`officialScoring`), Schusszahl (`plannedShots`: null aus der ID, 0 keine feste, `plannedShotsOf`), Ignorieren
+  Scheibe), Familie (auch eigene, Kennung aus dem Namen und fest, `familySlug`), Wertung
+  (`officialScoring`, Vorgabe für Training und Wettkampf), Schusszahl (`plannedShots`: null aus der ID, 0 keine feste, `plannedShotsOf`), Ignorieren
   (`ignoredAt`). Ändern sich Scheibe oder Schusszahl, steigt `Discipline.version`; `refreshStaleDisciplineCards` rechnet
   Scheiben mit anderer `Card.disciplineVersion` aus den Schüssen der aktuellen Revision nach (nach dem Speichern über
   `after()`, beim Start, stündlich). Gegenprobe und Merkmale der Disziplin rechnen Adapter und Nachrechnen mit denselben
