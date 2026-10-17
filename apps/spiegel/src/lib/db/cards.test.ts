@@ -439,6 +439,30 @@ describe("wiederkehrende ScheibenID (SF-77)", () => {
   })
 })
 
+describe("Blöcke einer ScheibenID (SF-03, SF-72)", () => {
+  it("gleiche Quelle, ScheibenID und Zyklus mit Block 0 und 1 sind zwei Scheiben; Block 1 noch einmal ist dieselbe", async () => {
+    const [a, b] = season(2, 2700)
+    const first = await writeRevision(db, a)
+    const second = { ...b, card: { ...b.card, scheibenId: a.card.scheibenId, block: 1 } }
+    const created = await writeRevision(db, second)
+    expect(created.cardId).not.toBe(first.cardId)
+    expect(created.change).toBe("created")
+    expect(await writeRevision(db, second)).toMatchObject({
+      cardId: created.cardId,
+      change: "unchanged",
+    })
+    const blocks = await db.card.findMany({
+      where: { sourceId: site.sourceId, scheibenId: a.card.scheibenId },
+      orderBy: { block: "asc" },
+      select: { id: true, block: true, cycle: true },
+    })
+    expect(blocks).toEqual([
+      { id: first.cardId, block: 0, cycle: 0 },
+      { id: created.cardId, block: 1, cycle: 0 },
+    ])
+  })
+})
+
 describe("refreshProjections", () => {
   it("rechnet veraltete Projektionen nach, nur in der gewählten Quelle", async () => {
     const [a, b] = season(2, 2600)

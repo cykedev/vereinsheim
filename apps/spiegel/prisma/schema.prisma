@@ -229,6 +229,8 @@ model RawSnapshot {
   adapterVersion  String?
   // unbekanntes Schema (SF-25): warum keine Scheibe entstand
   quarantine      String?
+  // in welchen Block der Scheibe der Stand gedeutet wurde (`Card.block`); null: noch nicht
+  block           Int?
   revisions       CardRevision[]
 
   @@unique([sourceId, scheibenId, sequence])
@@ -414,6 +416,8 @@ model Card {
   scheibenId        Int?
   // die ScheibenID ist ein Zähler, der nach etwa 49,7 Tagen wiederkehren kann (SF-77): Zyklus 0, 1, …
   cycle             Int             @default(0)
+  // Block der ScheibenID: jeder Neustart der Probe und der Übergang zur Wertung beginnt einen neuen (SF-03, SF-72)
+  block             Int             @default(0)
   // Folgenummer des Snapshots, der die Scheibe zuletzt geschrieben hat; ein älterer ändert nichts (SF-26)
   lastSequence      BigInt?
   // null, solange niemand die Scheibe zugeordnet hat
@@ -467,7 +471,7 @@ model Card {
   projection        CardProjection?
   printouts         Printout[]
 
-  @@unique([sourceId, scheibenId, cycle])
+  @@unique([sourceId, scheibenId, cycle, block])
   // Liste, Fortschritt, Blättern: Scheiben eines Schützen in einer Familie nach Beginn
   @@index([ownerId, familyId, startedAt])
   // Start: der letzte Abend über alle Familien

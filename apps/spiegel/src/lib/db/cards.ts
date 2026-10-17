@@ -67,6 +67,11 @@ export interface CardInput {
    * Standard 0; meldet `writeRevision` einen `CardIdentityConflictError`, nimmt der Adapter den nächsten.
    */
   cycle?: number
+  /**
+   * Block der ScheibenID im Zyklus: Jeder Neustart der Probe und der Übergang zur Wertung beginnt einen neuen (SF-03,
+   * SF-72, [[adr-027]]); das Einlesen entscheidet darüber. Standard 0
+   */
+  block?: number
   /** nur beim Anlegen; die Zuordnung ändert eine Revision nicht */
   ownerId?: string | null
   /** nur beim Anlegen: der Besitz wartet auf die Bestätigung der ersten Scheibe; fehlt: nicht */
@@ -294,19 +299,20 @@ const EXISTING_SELECT = {
   sourceId: true,
   scheibenId: true,
   cycle: true,
+  block: true,
   origin: true,
   startedAt: true,
   lastSequence: true,
   currentRevision: { select: { id: true, number: true, contentHash: true } },
 } satisfies Prisma.CardSelect
 
-async function findCard(tx: Tx, input: RevisionInput, cycle: number) {
+async function findCard(tx: Tx, input: RevisionInput, cycle: number, block: number) {
   if (input.cardId)
     return tx.card.findUniqueOrThrow({ where: { id: input.cardId }, select: EXISTING_SELECT })
   const { sourceId, scheibenId } = input.card
   if (sourceId === null || scheibenId === null) return null
   return tx.card.findUnique({
-    where: { sourceId_scheibenId_cycle: { sourceId, scheibenId, cycle } },
+    where: { sourceId_scheibenId_cycle_block: { sourceId, scheibenId, cycle, block } },
     select: EXISTING_SELECT,
   })
 }
@@ -325,6 +331,7 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
   const sequence = input.sequence === undefined ? null : BigInt(input.sequence)
   const { sourceId, scheibenId } = input.card
   const cycle = input.card.cycle ?? 0
+  const block = input.card.block ?? 0
 
   return db.$transaction(async (tx) => {
     if (sourceId !== null && scheibenId !== null)
@@ -334,7 +341,7 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
     if (!discipline) throw new RangeError(`Disziplin ${input.card.disciplineId} fehlt`)
     const features = cardFeatures(input.card, input.shots, discipline.familyId)
 
-    const existing = await findCard(tx, input, cycle)
+    const existing = await findCard(tx, input, cycle, block)
     if (!existing) {
       const { id: cardId } = await tx.card.create({
         data: {
@@ -342,6 +349,7 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
           sourceId,
           scheibenId,
           cycle,
+          block,
           origin: input.card.origin,
           ownerId: input.card.ownerId ?? null,
           ownerPending: input.card.ownerPending ?? false,
@@ -391,7 +399,7 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
       data: {
         ...features,
         flags: withSticky(features.flags, existing.flags, change?.kind === "correction"),
-        ...identityUpdate(existing, input.card, cycle),
+        ...identityUpdate(existing, input.card, cycle, block),
         ...(sequence === null ? {} : { lastSequence: sequence }),
       },
     })
@@ -454,20 +462,31 @@ function identityUpdate(
     sourceId: number | null
     scheibenId: number | null
     cycle: number
+    block: number
     origin: CardOrigin
   },
   card: CardInput,
-  cycle: number
+  cycle: number,
+  block: number
 ) {
   if (card.sourceId === null || card.scheibenId === null) return {}
   if (existing.sourceId === null)
-    return { sourceId: card.sourceId, scheibenId: card.scheibenId, cycle, origin: "raw" as const }
+    return {
+      sourceId: card.sourceId,
+      scheibenId: card.scheibenId,
+      cycle,
+      block,
+      origin: "raw" as const,
+    }
   if (
     existing.sourceId !== card.sourceId ||
     existing.scheibenId !== card.scheibenId ||
-    existing.cycle !== cycle
+    existing.cycle !== cycle ||
+    existing.block !== block
   )
-    throw new RangeError(`Scheibe ${existing.id}: andere Quelle, ScheibenID oder anderer Zyklus`)
+    throw new RangeError(
+      `Scheibe ${existing.id}: andere Quelle, ScheibenID, anderer Zyklus oder Block`
+    )
   return {}
 }
 

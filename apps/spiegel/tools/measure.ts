@@ -186,10 +186,11 @@ async function main() {
     perShot.sort((a, b) => a - b)
     const liveCard = await db.card.findUniqueOrThrow({
       where: {
-        sourceId_scheibenId_cycle: {
+        sourceId_scheibenId_cycle_block: {
           sourceId: site.sourceId,
           scheibenId: live.card.scheibenId!,
           cycle: 0,
+          block: 0,
         },
       },
       select: { _count: { select: { shots: true, revisions: true } } },
