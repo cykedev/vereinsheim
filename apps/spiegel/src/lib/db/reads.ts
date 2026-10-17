@@ -84,7 +84,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
       values: row.projection.values as CardProjection["values"],
       records: row.projection.records as unknown as CardProjection["records"],
     }
-    // amtliche Wertung der Disziplin (SF-74), wenn bekannt; nur Probe ist Training und hat keine
+    // Wertung der Disziplin (Admin), wenn gesetzt; nur Probe hat keine
     const official = projection.probeOnly ? null : row.discipline.officialScoring
     return [
       {
@@ -96,7 +96,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         ...(official ? { official } : {}),
         state: row.state,
         stand: row.stand,
-        scoring: scoringOfRow(row, official, projection.probeOnly),
+        scoring: scoringOfRow(row, official),
         disciplineId: row.disciplineId,
         familyId: row.familyId,
         family: row.family,
@@ -120,18 +120,11 @@ export const kindOfRow = (
   probeOnly: boolean
 ) => row.kindChoice ?? (probeOnly ? null : row.ranking?.kind) ?? row.kind
 
-/** die Wertung einer Scheibe aus ihrer Zeile, mit der geltenden Art und der amtlichen, wie die Scheibe sie zeigt */
+/** die Wertung einer Scheibe aus ihrer Zeile und der Wertung ihrer Disziplin, wie die Scheibe sie zeigt */
 const scoringOfRow = (
-  row: Pick<OverviewRow, "kind" | "kindChoice" | "ranking" | "standScoring" | "scoringChoice">,
-  official: Scoring | null,
-  probeOnly: boolean
-) =>
-  cardScoring({
-    kind: kindOfRow(row, probeOnly),
-    official,
-    stand: row.standScoring,
-    choice: row.scoringChoice,
-  })
+  row: Pick<OverviewRow, "standScoring" | "scoringChoice">,
+  official: Scoring | null
+) => cardScoring({ official, stand: row.standScoring, choice: row.scoringChoice })
 
 /** von `fromMs` (eingeschlossen) bis `toMs` (ausgeschlossen), beides wahlweise */
 export interface MsRange {
@@ -227,7 +220,7 @@ export interface PageCard extends PeriodCard {
 
 function toPageCard(row: PageCardRow): PageCard | null {
   if (!row.currentRevision) return null
-  // nur Probe ist Training und hat keine amtliche Wertung
+  // nur Probe hat keine Wertung der Disziplin
   const probeOnly = !row.currentRevision.shots.some((shot) => shot.stellung !== 0)
   const official = probeOnly ? null : row.discipline.officialScoring
   return {
@@ -242,7 +235,7 @@ function toPageCard(row: PageCardRow): PageCard | null {
     discipline: row.discipline.name,
     targetId: isTargetId(row.discipline.targetId) ? row.discipline.targetId : null,
     family: row.family,
-    scoring: scoringOfRow(row, official, probeOnly),
+    scoring: scoringOfRow(row, official),
     list: listOf(row.ranking),
     shots: row.currentRevision.shots.map(shotFromRow).map(toMetricShot),
   }

@@ -146,8 +146,8 @@ export function CardScreen({
   const [state, dispatch] = useReducer(viewReducer, undefined, () =>
     stateFromRoute(initialRoute, shots, display, card.scoring)
   )
-  // Die Seite folgt der Wertung der Scheibe, wenn sie sich auf dem Server ändert: Die Art verschiebt die Vorgabe
-  // (Training → Wettkampf: von „wie am Stand“ auf amtlich). Eine selbst gewählte ist gespeichert und damit dieselbe
+  // Die Seite folgt der Wertung der Scheibe, wenn sie sich auf dem Server ändert: Ändert der Admin die Wertung der
+  // Disziplin, kommt eine andere Vorgabe. Eine selbst gewählte ist gespeichert und damit dieselbe
   const [seenScoring, setSeenScoring] = useState(card.scoring)
   if (card.scoring !== seenScoring) {
     setSeenScoring(card.scoring)
@@ -307,7 +307,8 @@ export function CardScreen({
       )}
       <ScoringToggle
         scoring={state.scoring}
-        official={card.official}
+        // „amtlich“ nur im Wettkampf: so druckt Meyton; im Training ist die Wertung der Disziplin nur eine Vorgabe
+        official={kindChoice.shown === "competition" ? card.official : undefined}
         onChange={scoringChoice.change}
       />
     </>

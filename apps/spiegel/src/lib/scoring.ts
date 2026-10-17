@@ -1,7 +1,8 @@
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
 // Die Wertung einer Scheibe und einer Familie:
-// Statt einer Wertung des Geräts hat jede Scheibe ihre (gewählt, sonst wie am Stand bzw. amtlich) und jede Familie ihre
+// Statt einer Wertung des Geräts hat jede Scheibe ihre (gewählt, sonst die Wertung der Disziplin, sonst wie am Stand) und
+// jede Familie ihre
 // für die Schnitte (gespeichert, sonst die häufigste ihrer Scheiben). Reine Funktionen.
 
 /** Anzeigeart am Monitor (`Treffer.Wertung`, [[meyton-ssmdb2]]): 1 und 7 Zehntel, 2 und 8 ganze Ringe */
@@ -34,18 +35,15 @@ export function standScoringOf(
 }
 
 /**
- * Die Wertung einer Scheibe: gewählt, sonst die Vorgabe. Wettkampf in der amtlichen Wertung der Disziplin (so druckt
- * Meyton), sonst wie am Stand; Training wie am Stand, sonst amtlich; ohne beides Zehntel.
+ * Die Wertung einer Scheibe: gewählt, sonst die Wertung der Disziplin (Vorgabe für Training und Wettkampf), sonst wie
+ * am Stand; ohne alles Zehntel
  */
 export function cardScoring(card: {
-  kind: "training" | "competition"
   official: Scoring | null
   stand: Scoring | null
   choice: Scoring | null
 }): Scoring {
-  const preset =
-    card.kind === "competition" ? (card.official ?? card.stand) : (card.stand ?? card.official)
-  return card.choice ?? preset ?? "decimal"
+  return card.choice ?? card.official ?? card.stand ?? "decimal"
 }
 
 /** Die Wertung einer Familie für ihre Schnitte: gespeichert, sonst die häufigste ihrer Scheiben, bei Gleichstand Zehntel */

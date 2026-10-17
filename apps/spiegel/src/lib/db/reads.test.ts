@@ -334,26 +334,28 @@ describe("cardWithShots", () => {
 })
 
 describe("Wertung der Scheibe", () => {
-  it("Wettkampf in der amtlichen, Training wie am Stand, die Wahl vor der Vorgabe; Übersicht und Seite gleich", async () => {
+  it("die Wertung der Disziplin für Training und Wettkampf, nur Probe wie am Stand, die Wahl vor der Vorgabe; Übersicht und Seite gleich", async () => {
     const ownerId = site.ownerId
     const cards = await familyCards(db, { ownerId, familyId: site.familyId })
-    // die Testscheiben zeigen am Stand Zehntel (Anzeigeart 1), die Disziplin wertet amtlich ganze Ringe
+    // die Testscheiben zeigen am Stand Zehntel (Anzeigeart 1), die Disziplin wertet ganze Ringe
     expect(cards.some((c) => c.kind === "competition" && c.official)).toBe(true)
-    expect(cards.some((c) => c.kind === "training")).toBe(true)
-    for (const card of cards)
-      expect(card.scoring).toBe(card.kind === "competition" && card.official ? "rings" : "decimal")
+    expect(cards.some((c) => c.kind === "training" && c.official)).toBe(true)
+    for (const card of cards) expect(card.scoring).toBe(card.official ? "rings" : "decimal")
+    // nur Probe hat keine Wertung der Disziplin: wie am Stand
+    expect(cards.some((c) => c.projection.probeOnly && c.scoring === "decimal")).toBe(true)
+    // LG ohne Wertung der Disziplin: wie am Stand
     const [lg] = await familyCards(db, { ownerId, familyId: otherFamilyId })
     expect(lg.scoring).toBe("decimal")
 
     const competition = cards.find((c) => c.kind === "competition" && c.official)!
     const training = cards.find((c) => c.kind === "training" && !c.projection.probeOnly)!
     expect((await cardWithShots(db, { cardId: competition.id, ownerId }))?.scoring).toBe("rings")
-    expect((await cardWithShots(db, { cardId: training.id, ownerId }))?.scoring).toBe("decimal")
-    await db.card.update({ where: { id: training.id }, data: { scoringChoice: "rings" } })
+    expect((await cardWithShots(db, { cardId: training.id, ownerId }))?.scoring).toBe("rings")
+    await db.card.update({ where: { id: training.id }, data: { scoringChoice: "decimal" } })
     try {
       const all = await ownerCards(db, { ownerId })
-      expect(all.find((c) => c.id === training.id)?.scoring).toBe("rings")
-      expect((await cardWithShots(db, { cardId: training.id, ownerId }))?.scoring).toBe("rings")
+      expect(all.find((c) => c.id === training.id)?.scoring).toBe("decimal")
+      expect((await cardWithShots(db, { cardId: training.id, ownerId }))?.scoring).toBe("decimal")
     } finally {
       await db.card.update({ where: { id: training.id }, data: { scoringChoice: null } })
     }
@@ -373,17 +375,17 @@ describe("familyScorings", () => {
 })
 
 describe("Art der Scheibe", () => {
-  it("die gewählte Art vor der Art der Quelle, in Übersicht und Seite; die Vorgabe der Wertung folgt ihr", async () => {
+  it("die gewählte Art vor der Art der Quelle, in Übersicht und Seite; die Wertung hängt nicht an der Art", async () => {
     const ownerId = site.ownerId
     const cards = await familyCards(db, { ownerId, familyId: site.familyId })
     const training = cards.find((c) => c.kind === "training" && !c.projection.probeOnly)!
-    // Training: wie am Stand (die Testscheiben zeigen Zehntel)
-    expect(training.scoring).toBe("decimal")
+    // die Wertung der Disziplin (ganze Ringe), obwohl die Testscheiben am Stand Zehntel zeigen
+    expect(training.scoring).toBe("rings")
     await db.card.update({ where: { id: training.id }, data: { kindChoice: "competition" } })
     try {
       const overview = (await ownerCards(db, { ownerId })).find((c) => c.id === training.id)!
       const page = (await cardWithShots(db, { cardId: training.id, ownerId }))!
-      // Wettkampf: amtlich (die Disziplin wertet ganze Ringe)
+      // Wettkampf: weiter die Wertung der Disziplin
       expect([overview.kind, overview.scoring]).toEqual(["competition", "rings"])
       expect([page.kind, page.scoring]).toEqual(["competition", "rings"])
       // eine gewählte Wertung bleibt

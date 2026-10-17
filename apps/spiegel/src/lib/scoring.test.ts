@@ -31,27 +31,14 @@ describe("standScoringOf: wie am Stand", () => {
 
 describe("cardScoring: die Wertung einer Scheibe", () => {
   it("gewählt vor der Vorgabe", () => {
-    expect(
-      cardScoring({ kind: "competition", official: "rings", stand: "rings", choice: "decimal" })
-    ).toBe("decimal")
+    expect(cardScoring({ official: "rings", stand: "rings", choice: "decimal" })).toBe("decimal")
   })
 
-  it("Wettkampf: amtlich, sonst wie am Stand; Training: wie am Stand, sonst amtlich; ohne beides Zehntel", () => {
-    expect(
-      cardScoring({ kind: "competition", official: "rings", stand: "decimal", choice: null })
-    ).toBe("rings")
-    expect(cardScoring({ kind: "competition", official: null, stand: "rings", choice: null })).toBe(
-      "rings"
-    )
-    expect(
-      cardScoring({ kind: "training", official: "rings", stand: "decimal", choice: null })
-    ).toBe("decimal")
-    expect(cardScoring({ kind: "training", official: "rings", stand: null, choice: null })).toBe(
-      "rings"
-    )
-    expect(cardScoring({ kind: "training", official: null, stand: null, choice: null })).toBe(
-      "decimal"
-    )
+  it("die Wertung der Disziplin vor der Anzeige am Stand, ohne beides Zehntel", () => {
+    expect(cardScoring({ official: "rings", stand: "decimal", choice: null })).toBe("rings")
+    expect(cardScoring({ official: "decimal", stand: "rings", choice: null })).toBe("decimal")
+    expect(cardScoring({ official: null, stand: "rings", choice: null })).toBe("rings")
+    expect(cardScoring({ official: null, stand: null, choice: null })).toBe("decimal")
   })
 })
 
