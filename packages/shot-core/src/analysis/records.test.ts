@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { card, DAY } from "../__fixtures__/period"
-import { FLAG_SUSPICIOUS } from "../metrics"
+import { FLAG_OVER_TARGET, FLAG_SUSPICIOUS } from "../metrics"
 import {
   cardRecordCandidates,
   combineRecords,
@@ -327,6 +327,26 @@ describe("Rekorde je Serie, Folge ab 9, schwächster Schuss, Spanne (R6, R7, R10
     expect(records.bestWeakestShot[3]).toMatchObject({ cardId: "a", value: 7.2 })
   })
 
+  it("R10 Gleichstand in einer Scheibe: der frühere Schuss, gleich in welcher Folge geliefert", () => {
+    const c = card("a", 1, [100, 72, 95, 72])
+    for (const shots of [c.shots, [...c.shots].reverse()]) {
+      expect(periodRecords([{ ...c, shots }], "decimal").bestWeakestShot[4]).toMatchObject({
+        value: 7.2,
+        detail: "Schuss 2",
+      })
+    }
+  })
+
+  it("R10 ein Schuss über der Soll-Zahl (SF-08) ist amtlich 0, aber nicht der schwächste Schuss", () => {
+    const over = card("o", 1, [...tens(40, 95), 0], {
+      shot: (i) => (i === 40 ? { ring: 0, flags: [FLAG_OVER_TARGET] } : {}),
+    })
+    expect(periodRecords([over], "decimal").bestWeakestShot[41]).toMatchObject({
+      value: 9.5,
+      detail: "Schuss 1",
+    })
+  })
+
   it("R11 kleinste Spanne der Serien je Schusszahl, ab zwei vollen Serien", () => {
     const cards = [
       // 90 und 86
@@ -338,6 +358,21 @@ describe("Rekorde je Serie, Folge ab 9, schwächster Schuss, Spanne (R6, R7, R10
     const records = periodRecords(cards, "decimal")
     expect(records.smallestSeriesSpan[20]).toEqual({ value: 1, cardId: "b", atMs: 2 * DAY })
     expect(records.smallestSeriesSpan[10]).toBeUndefined()
+  })
+
+  it("R11 fehlt einer vollen Serie die Summe, setzt die Scheibe keinen Rekord", () => {
+    const cards = [
+      // 90, 89 und eine Serie ohne Summe
+      card("m", 1, [...tens(10, 90), ...series(9, 90, 80), ...tens(10, 90)], {
+        shot: (i) => (i === 25 ? { decimalTenths: null, ring: null } : {}),
+      }),
+      // 90, 86, 90
+      card("b", 2, [...tens(10, 90), ...series(6, 90, 80), ...tens(10, 90)]),
+    ]
+    expect(periodRecords(cards, "decimal").smallestSeriesSpan[30]).toMatchObject({
+      cardId: "b",
+      value: 4,
+    })
   })
 
   it("R11 auf das Raster der Wertung gerundet: 89,3 − 85,4 ist 3,9 wie 90,0 − 86,1", () => {

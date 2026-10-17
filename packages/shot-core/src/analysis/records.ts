@@ -4,6 +4,7 @@
 import {
   computeMetric,
   eligibleShots,
+  FLAG_OVER_TARGET,
   FLAG_SUSPICIOUS,
   inScoring,
   metricByKey,
@@ -151,8 +152,8 @@ export interface RecordCandidates {
   /** längste Folge ohne Schuss unter 9 */
   longestNineRun: { length: number; start: number } | null
   /**
-   * schwächster Wertungsschuss in Ringen der Wertung, bei Gleichstand der frühere; null, wenn einem Wertungsschuss der
-   * Wert fehlt, denn dann könnte ein schwächerer verborgen sein
+   * schwächster Wertungsschuss in Ringen der Wertung, bei Gleichstand der frühere, ohne Schüsse über der Soll-Zahl
+   * (SF-08); null, wenn einem Wertungsschuss der Wert fehlt, denn dann könnte ein schwächerer verborgen sein
    */
   weakestShot: { value: number; shot: number } | null
   /**
@@ -210,9 +211,11 @@ export function cardRecordCandidates(
   const run = longestRun(whole, scoring, TEN_TENTHS)
   const nineRun = longestRun(whole, scoring, NINE_TENTHS)
   const numbers = shotNumbers(whole)
-  const valued = selectShots(whole, { kinds: MATCH, need: valueNeed(scoring) })
+  // ein Schuss über der Soll-Zahl (SF-08) ist amtlich 0, ein Platzhalter von Meyton, kein schwächster Schuss
+  const own = whole.filter((shot) => !(shot.flags ?? []).includes(FLAG_OVER_TARGET))
+  const valued = selectShots(own, { kinds: MATCH, need: valueNeed(scoring) })
   let weakestShot: RecordCandidates["weakestShot"] = null
-  if (valued.length && valued.length === whole.filter((shot) => shot.kind === "match").length) {
+  if (valued.length && valued.length === own.filter((shot) => shot.kind === "match").length) {
     const weakest = valued.reduce((low, shot) => {
       const delta = valueTenths(shot, scoring) - valueTenths(low, scoring)
       return delta < 0 ||
