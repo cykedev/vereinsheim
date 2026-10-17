@@ -534,8 +534,20 @@ describe("Folgen beim Einordnen einer Disziplin", () => {
       "Spiegel zeigt die Scheiben dieser Disziplin nicht mehr in Start, Scheiben und Fortschritt.",
       "Spiegel rechnet die vorhandenen Scheiben in den nächsten Minuten neu.",
     ])
-    expect(change({ targetId: null, familyId: null }, { familyId: null }, 0).happens[0]).toBe(
+    const never = (after: Partial<DisciplineMapping>) =>
+      change({ targetId: null, familyId: null }, after, 0).happens[0]
+    expect(
+      change({ targetId: "lg-10m", familyId: null }, { targetId: null, familyId: null }, 0)
+        .happens[0]
+    ).toBe(
       "Spiegel zeigt die Scheiben dieser Disziplin noch nicht in Start, Scheiben und Fortschritt. Dazu braucht sie eine Scheibe und eine Familie."
+    )
+    // die Familie gesetzt, die Scheibe eigene: nur nennen, was fehlt
+    expect(never({ targetId: null, familyId: 4 })).toBe(
+      "Spiegel zeigt die Scheiben dieser Disziplin noch nicht in Start, Scheiben und Fortschritt. Dazu braucht sie eine Scheibe."
+    )
+    expect(never({ targetId: "lg-10m", familyId: null })).toBe(
+      "Spiegel zeigt die Scheiben dieser Disziplin noch nicht in Start, Scheiben und Fortschritt. Dazu braucht sie eine Familie."
     )
   })
 

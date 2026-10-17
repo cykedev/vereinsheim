@@ -158,9 +158,12 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   `after()`, beim Start, stündlich). Gegenprobe und Merkmale der Disziplin rechnen Adapter und Nachrechnen mit denselben
   Funktionen (`src/lib/ingest/card-checks.ts`: `baseShotFlags`, `verifyShots`, `mappingFlags`); `verdaechtig` ist keine
   Korrektur (`sameScoring`). Ignorierte Disziplinen filtert `VISIBLE_CARD` (`SHOWN_DISCIPLINE`), `PENDING_CARD` nicht
-  (die Bestätigung der ersten Scheibe gibt alle frei); „Offen“ und Papierkorb filtern zusätzlich. Die Seite zeigt je
-  Disziplin nur Zahlen der ganzen Anlage (letzte Scheibe als Monat, Anzeige am Stand und Schusszahl erst ab drei
-  Schützen, `discipline-model.ts`), nie je Konto. Eigene Scheiben, deren Disziplin wartet, nennt Start
+  (die Bestätigung der ersten Scheibe gibt alle frei); „Offen“ und Papierkorb filtern zusätzlich. Was der Admin je Konto
+  und in der Nutzung zählt, nimmt `COUNTED_CARD` ohne Bedingung an die Disziplin: Sonst verriete das Umschalten, wer eine
+  Disziplin geschossen hat. Die Seite zeigt je Disziplin nur Zahlen der ganzen Anlage (letzte Scheibe als Monat, Anzeige
+  am Stand und Schusszahl erst ab drei Schützen; der Server lässt sie darunter weg, `disciplines.ts`), nie je Konto.
+  Scheibenbilder nur über `Object.hasOwn(TARGETS, …)` prüfen (`in` nimmt auch geerbte Schlüssel). Das Nachrechnen nimmt
+  dieselbe Sperre wie `writeRevision` (Quelle, ScheibenID). Eigene Scheiben, deren Disziplin wartet, nennt Start
   (`waitingForDiscipline`).
 - **Tests gegen die Dev-Datenbank:** je Datei eine eigene Anlage (`test/fixtures.ts`, `createTestSite`), am Ende
   gelöscht (Scheiben der Disziplinen, Kaskade über die Anlage, dazu Schütze und Familie); Dateien laufen nacheinander

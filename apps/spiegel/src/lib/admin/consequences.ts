@@ -493,7 +493,13 @@ export function disciplineChange({
     happens.push(
       visibleWith(before)
         ? "Spiegel zeigt die Scheiben dieser Disziplin nicht mehr in Start, Scheiben und Fortschritt."
-        : "Spiegel zeigt die Scheiben dieser Disziplin noch nicht in Start, Scheiben und Fortschritt. Dazu braucht sie eine Scheibe und eine Familie."
+        : `Spiegel zeigt die Scheiben dieser Disziplin noch nicht in Start, Scheiben und Fortschritt. Dazu braucht sie ${
+            after.targetId === null && after.familyId === null
+              ? "eine Scheibe und eine Familie"
+              : after.targetId === null
+                ? "eine Scheibe"
+                : "eine Familie"
+          }.`
     )
   else {
     if (targetChanged)

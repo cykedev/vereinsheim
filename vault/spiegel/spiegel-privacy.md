@@ -35,7 +35,7 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
 |---|---|---|
 | Schütze | eigene Scheiben, Verläufe, Vergleiche | zuordnen, Notizen, Freigaben, Export, Löschen |
 | Trainer | was Schützen freigegeben haben, später auch live | kommentieren, Gruppen vergleichen |
-| Vereinsadmin | Anlagen, Brücken-Status, Zuordnungen; je Konto nur Zahl der Scheiben, Tag der letzten und Wartende; je Disziplin nur Zahlen der ganzen Anlage (Scheiben, Schützen, letzte Scheibe als Monat, Anzeige am Stand und häufigste Schusszahl erst ab drei Schützen), nie je Konto | verbinden, Sportpassnummern bestätigen, Scheibenbilder pflegen; keine Schussbilder, keine Ergebnisse ohne Freigabe |
+| Vereinsadmin | Anlagen, Brücken-Status, Zuordnungen; je Konto nur Zahl der Scheiben, Tag der letzten und Wartende; je Disziplin nur Zahlen der ganzen Anlage (Scheiben, Schützen, letzte Scheibe als Monat, Anzeige am Stand und häufigste Schusszahl erst ab drei Schützen, darunter verlassen sie den Server nicht), nie je Konto; das Ignorieren einer Disziplin ändert keine Zahl je Konto | verbinden, Sportpassnummern bestätigen, Scheibenbilder pflegen; keine Schussbilder, keine Ergebnisse ohne Freigabe |
 | Gast ohne Konto | nichts | vorerst nicht vorgesehen |
 
 ## Offene Abwägung

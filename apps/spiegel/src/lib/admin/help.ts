@@ -36,7 +36,7 @@ export const ADMIN_HELP = {
   },
   discipline: {
     title: "Disziplinen",
-    text: "Meyton speichert zu jeder Scheibe die Nummer und den Namen der Disziplin. Hier legst du fest, welche Scheibe Spiegel zeichnet, in welcher Familie die Scheiben stehen und wie viele Schüsse eine vollständige Scheibe hat. Eine neue Disziplin legt Spiegel selbst an, sobald die erste Scheibe kommt. Disziplinen ohne sinnvolle Wertung, etwa Schach oder ein Trainingsspiegel, lassen sich ignorieren.",
+    text: "Meyton speichert zu jeder Scheibe die Nummer und den Namen der Disziplin. Hier legst du fest, welche Scheibe Spiegel zeichnet. Dazu kommen die Familie und die Schusszahl einer vollständigen Scheibe. Eine neue Disziplin legt Spiegel selbst an, sobald die erste Scheibe kommt. Disziplinen ohne sinnvolle Wertung, etwa Schach oder ein Trainingsspiegel, lassen sich ignorieren.",
   },
   family: {
     title: "Familien",

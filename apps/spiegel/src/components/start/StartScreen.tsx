@@ -56,10 +56,6 @@ function ScoredEveningBlock(props: Omit<EveningBlockProps, "actions" | "notice">
   )
 }
 
-/**
- * Start: „Offen“ (wartende erste Scheiben), je Familie des letzten Abends der Abend im Formband,
- * die Form. Das Modell hat die Seite auf dem Server gerechnet (`startModel` aus den Projektionen).
- */
 /** eigene Scheiben, deren Disziplin noch niemand eingeordnet hat; null ohne */
 export function waitingText(waiting: number): string | null {
   if (waiting <= 0) return null
@@ -68,6 +64,10 @@ export function waitingText(waiting: number): string | null {
     : `${waiting} Scheiben warten darauf, dass ein Admin ihre Disziplin einordnet. Danach erscheinen sie hier von selbst.`
 }
 
+/**
+ * Start: „Offen“ (wartende erste Scheiben), je Familie des letzten Abends der Abend im Formband,
+ * die Form. Das Modell hat die Seite auf dem Server gerechnet (`startModel` aus den Projektionen).
+ */
 export function StartScreen({
   model,
   marks: compact,
