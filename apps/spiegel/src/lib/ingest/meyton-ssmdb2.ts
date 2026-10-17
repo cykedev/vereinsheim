@@ -1,4 +1,4 @@
-// Adapter `meyton-ssmdb2@9` ([[spiegel-ingest-pipeline]]): ein Snapshot v1 mit den rohen Zeilen der SSMDB2 →
+// Adapter `meyton-ssmdb2@10` ([[spiegel-ingest-pipeline]]): ein Snapshot v1 mit den rohen Zeilen der SSMDB2 →
 // Scheibe und Schüsse für `writeRevision`. Eine reine Funktion ohne Datenbank; was sie über den vorigen Stand wissen
 // muss (Lebenszeichen, gemessener Versatz der Uhr), kommt im Kontext. Abgenommen an den Fällen aus
 // `@vereinsheim/ssmdb2-cases` (Merkmale, Vollständigkeit, zählende Schüsse, Merkmale je Schuss).
@@ -30,7 +30,7 @@ export {
   isComplete,
 } from "./card-checks"
 
-export const ADAPTER_VERSION = "meyton-ssmdb2@9"
+export const ADAPTER_VERSION = "meyton-ssmdb2@10"
 
 /** Platzhalter für „kein Abstand“ in `Teiler01` und `Teiler001` (Schüsse über der Soll-Zahl, SF-08) */
 export const PLACEHOLDER_TEILER = 2147483647

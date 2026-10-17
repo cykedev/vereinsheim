@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { computeChecksum } from "@vereinsheim/ingest-contract/checksum"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
-import { frozenExpected, frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
+import { frozenCaseIds, frozenExpected, frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
 
 import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
@@ -76,21 +76,36 @@ function withSportpass(
   return { ...snapshot, scheibenId, sequence, data, checksum: computeChecksum(data) }
 }
 
-const cardOf = (scheibenId: number) =>
-  db.card.findFirst({
-    where: { sourceId: site.sourceId, scheibenId },
+/** die Scheiben einer ScheibenID, je Block eine, nach Block */
+const cardsOf = (scheibenId: number, sourceId = site.sourceId) =>
+  db.card.findMany({
+    where: { sourceId, scheibenId },
+    orderBy: [{ cycle: "asc" }, { block: "asc" }],
     include: { currentRevision: { include: { shots: { orderBy: { seq: "asc" } } } } },
   })
+/** die jüngste Scheibe einer ScheibenID (höchster Block) */
+const cardOf = async (scheibenId: number) => (await cardsOf(scheibenId)).at(-1) ?? null
+
+/** was eine Scheibe zählt wie am Ausdruck: mit Wertung die Wertung, sonst die Probe */
+function countedOf(shots: readonly { stellung: number; treffer: number }[]) {
+  const match = shots.filter((s) => s.stellung !== 0)
+  return match.length
+    ? { stellung: 1, numbers: match.map((s) => s.treffer) }
+    : { stellung: 0, numbers: shots.map((s) => s.treffer) }
+}
 
 describe("ingestBatch", () => {
-  it("SF-03: Lesung für Lesung eine Scheibe des Schützen mit Zustimmung, am Ende wie am Ausdruck", async () => {
+  it("SF-03: Lesung für Lesung zwei Scheiben des Schützen mit Zustimmung, die Probe und die Wertung wie am Ausdruck", async () => {
     const expected = frozenExpected("SF-03").cards[0]
     const snapshots = sent("SF-03", expected.scheibenId)
     for (const snapshot of snapshots) {
       const [result] = await ingest([snapshot])
       expect(result.outcome).toBe("stored")
     }
-    const card = await cardOf(expected.scheibenId)
+    const cards = await cardsOf(expected.scheibenId)
+    expect(cards.map((c) => countedOf(c.currentRevision!.shots))).toEqual(expected.blocks)
+    expect(cards.map((c) => c.block)).toEqual([0, 1])
+    const card = cards.at(-1)
     expect(card?.ownerId).toBe(site.ownerId)
     expect(card?.sportpassId).toBe(MUSTER)
     expect(card?.origin).toBe("raw")
@@ -103,7 +118,8 @@ describe("ingestBatch", () => {
     const raw = await db.rawSnapshot.findMany({
       where: { sourceId: site.sourceId, scheibenId: expected.scheibenId },
     })
-    expect(raw.every((r) => r.adapterVersion === "meyton-ssmdb2@9")).toBe(true)
+    expect(raw.every((r) => r.adapterVersion === "meyton-ssmdb2@10")).toBe(true)
+    expect(raw.map((r) => r.block).sort()).toEqual([0, 1, 1])
     // die Rangliste der SSMDB2 ist angelegt und an der Scheibe, noch ohne Art (die ordnet der Admin zu)
     const ranking = await db.ranking.findFirstOrThrow({
       where: { siteId: site.siteId, cards: { some: { id: card!.id } } },
@@ -112,7 +128,7 @@ describe("ingestBatch", () => {
     expect(ranking.kind).toBeNull()
   })
 
-  it("im Stapel deutet der Adapter je Scheibe nur den neuesten Stand; jeder Stand wird abgelegt", async () => {
+  it("im Stapel deutet der Adapter jeden Stand, geschrieben wird je Block nur der letzte; jeder Stand wird abgelegt", async () => {
     const expected = frozenExpected("SF-21").cards[0]
     const snapshots = sent("SF-21", expected.scheibenId)
     // umgekehrt geliefert: gespeichert wird nach der Folgenummer
@@ -125,13 +141,13 @@ describe("ingestBatch", () => {
       orderBy: { sequence: "desc" },
     })
     expect(card!.currentRevision!.rawSnapshotId).toBe(newest.id)
-    // nur der neueste gedeutet: eine Revision, keine Korrektur
+    // nur der neueste geschrieben: eine Revision, keine Korrektur
     expect(card!.currentRevision!.number).toBe(1)
     const older = await db.rawSnapshot.findFirstOrThrow({
       where: { sourceId: site.sourceId, scheibenId: expected.scheibenId },
       orderBy: { sequence: "asc" },
     })
-    expect(older.adapterVersion).toBeNull()
+    expect(older).toMatchObject({ adapterVersion: "meyton-ssmdb2@10", block: 0 })
   })
 
   it("SF-21: einzeln geliefert ist die Korrektur eine neue Revision mit Merkmal „korrigiert“", async () => {
@@ -539,5 +555,101 @@ describe("ingestBatch mit der Zuordnung des Admins", () => {
     })
     // gerechnet mit dem Vorschlag des Fachkerns, nicht mit der übernommenen Schusszahl: nachrechnen
     expect((await cardOf(77_002))?.disciplineVersion).toBe(-1)
+  })
+})
+
+describe("ingestBatch: jeder Block eine Scheibe (SF-03, SF-72)", () => {
+  let own: TestSite
+  beforeAll(async () => {
+    own = await createTestSite(db, "ingest-blocks")
+    await db.sportpassConsent.create({
+      data: {
+        userId: own.ownerId,
+        siteId: own.siteId,
+        sportpassId: MUSTER,
+        confirmedAt: new Date(),
+        firstCardConfirmedAt: new Date(),
+      },
+    })
+  })
+  afterAll(async () => {
+    await own.remove()
+  })
+  const ingestOwn = async (snapshots: readonly SnapshotV1[]) => {
+    const bridge = await db.bridge.findFirst({ where: { siteId: own.siteId } })
+    const id =
+      bridge?.id ??
+      (
+        await db.bridge.create({
+          data: { siteId: own.siteId, name: "Test", tokenHash: `test-${own.siteId}` },
+        })
+      ).id
+    return ingestBatch(
+      db,
+      { bridgeId: id, siteId: own.siteId, timeZone: "Europe/Berlin" },
+      snapshots,
+      { nowMs: Date.parse(snapshots.at(-1)!.observedAt) }
+    )
+  }
+
+  it("alle Fälle Lesung für Lesung: je ScheibenID so viele Scheiben wie Blöcke, mit den Schüssen wie erwartet", async () => {
+    for (const caseId of frozenCaseIds()) {
+      for (const expected of frozenExpected(caseId).cards) {
+        if (expected.bridge !== "senden") continue
+        for (const snapshot of sent(caseId, expected.scheibenId)) await ingestOwn([snapshot])
+        const cards = await cardsOf(expected.scheibenId, own.sourceId)
+        expect(
+          cards.map((c) => countedOf(c.currentRevision!.shots)),
+          `${caseId} ${expected.scheibenId}`
+        ).toEqual(expected.blocks ?? [expected.counted])
+      }
+    }
+  })
+
+  it("SF-72: der alte Block geht nicht verloren, wenn sein letzter Stand und der erste neue im selben Stapel kommen", async () => {
+    const expected = frozenExpected("SF-72").cards[0]
+    const snapshots = sent("SF-72", expected.scheibenId).map((s) =>
+      withSportpass(s, "12345678", s.scheibenId + 1)
+    )
+    await ingestOwn(snapshots)
+    const cards = await cardsOf(expected.scheibenId + 1, own.sourceId)
+    expect(cards.map((c) => countedOf(c.currentRevision!.shots))).toEqual(expected.blocks)
+    // derselbe Stapel noch einmal: nichts Neues
+    await ingestOwn(snapshots)
+    expect(await cardsOf(expected.scheibenId + 1, own.sourceId)).toHaveLength(2)
+    // ein reines Lebenszeichen trifft die Scheibe des jüngsten Blocks
+    const last = snapshots.at(-1)!
+    const data = {
+      ...last.data,
+      scheiben: {
+        ...last.data.scheiben,
+        rows: last.data.scheiben.rows.map((row) => ({
+          ...row,
+          Zeitstempel: "2026-12-31 23:59:59",
+        })),
+      },
+    }
+    const beat: SnapshotV1 = {
+      ...last,
+      sequence: last.sequence + 9_000,
+      observedAt: new Date(Date.parse(last.observedAt) + 9_000).toISOString(),
+      data,
+      checksum: computeChecksum(data),
+    }
+    expect((await ingestOwn([beat]))[0].outcome).toBe("lifesign")
+    const [first, second] = await cardsOf(expected.scheibenId + 1, own.sourceId)
+    expect(second.lifesignAt?.toISOString()).toBe(beat.observedAt)
+    expect(first.lifesignAt?.toISOString()).not.toBe(beat.observedAt)
+  })
+
+  it("SF-22: eine Korrektur bleibt eine Scheibe mit Merkmal „korrigiert“", async () => {
+    const expected = frozenExpected("SF-22").cards[0]
+    const snapshots = sent("SF-22", expected.scheibenId).map((s) =>
+      withSportpass(s, "12345678", s.scheibenId + 3)
+    )
+    for (const snapshot of snapshots) await ingestOwn([snapshot])
+    const cards = await cardsOf(expected.scheibenId + 3, own.sourceId)
+    expect(cards).toHaveLength(1)
+    expect(cards[0].flags).toContain("korrigiert")
   })
 })

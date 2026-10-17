@@ -53,13 +53,14 @@ const shiftStamp = (value: string | null, ms: number) => {
 }
 
 /**
- * Die gesendeten Stände der ersten Scheibe von SF-02 unter einer eigenen ScheibenID; `shotDays` verschiebt alle Zeiten
- * der Ablage (ein anderer Zyklus), `seenDays` nur die Beobachtung (die Brücke liest später nach).
+ * Die gesendeten Stände der Wertung der ersten Scheibe von SF-02 unter einer eigenen ScheibenID (die lange Probe davor
+ * ist ein eigener Block); `shotDays` verschiebt alle Zeiten der Ablage (ein anderer Zyklus), `seenDays` nur die
+ * Beobachtung (die Brücke liest später nach).
  */
 function card({ shotDays = 0, seenDays = 0, scheibenId = nextId++ } = {}): SnapshotV1[] {
   const expected = frozenExpected("SF-02").cards[0]
   const readings = frozenReadings("SF-02")
-  return expected.sentReadings.map((n) => {
+  return expected.sentReadings.slice(1).map((n) => {
     const s = readings
       .find((r) => r.reading === n)!
       .snapshots.find((x) => x.scheibenId === expected.scheibenId)!

@@ -122,7 +122,7 @@ export interface RevisionInput {
 
 /**
  * `created`: neue Revision (eine Korrektur der Wertung oder die erste); `updated`: dieselbe Revision mit neuen oder
- * weggefallenen Schüssen (offener Durchgang, Probe gelöscht oder neu begonnen, SF-03, SF-72); `unchanged`: dieselben
+ * weggefallenen Schüssen (offener Durchgang); `unchanged`: dieselben
  * Schüsse, nur die Merkmale der Scheibe aktualisiert; `stale`: ein älterer Snapshot, nichts geändert.
  */
 export type RevisionChange = "created" | "updated" | "unchanged" | "stale"
@@ -208,15 +208,15 @@ function assertUniqueShots(shots: readonly ShotInput[]): void {
 
 export type ShotChange =
   | { kind: "same" }
-  /** dieselbe Revision: Schüsse dazu, Probe weg oder neu (SF-03, SF-72) */
+  /** dieselbe Revision: Schüsse dazu oder weggefallen, ohne dass sich eine Wertungszeile ändert */
   | { kind: "update"; add: ShotInput[]; remove: ShotInput[] }
   /** ein Wertungsschuss geändert oder weg: neue Revision (SF-67) */
   | { kind: "correction" }
 
 /**
  * Was der neue Stand gegenüber der aktuellen Revision ist. Eine Korrektur ist nur eine geänderte oder fehlende
- * Wertungszeile (SF-67). Die Probe dagegen kommt und geht: Meyton löscht sie mit dem ersten Wertungsschuss (SF-03) und
- * beim Neustart (SF-72, die Nummern beginnen wieder bei 1); das ist der Normalfall, wie am Ausdruck.
+ * Wertungszeile (SF-67). Löscht Meyton die Probe (erster Wertungsschuss SF-03, Neustart SF-72), beginnt ein neuer Block
+ * und damit eine neue Scheibe; darüber entscheidet das Einlesen vorher (`startsNewBlock`, [[adr-027]]).
  */
 export function shotChange(current: readonly ShotInput[], next: readonly ShotInput[]): ShotChange {
   assertUniqueShots(next)
@@ -322,8 +322,8 @@ async function findCard(tx: Tx, input: RevisionInput, cycle: number, block: numb
  * - gesperrt über dasselbe Advisory-Lock wie die Ablage der Rohdaten (Quelle, ScheibenID), dann die Familie der
  *   Disziplin (`FOR SHARE`, gegen `setDisciplineFamily`) und die Zeile der Scheibe;
  * - ein Snapshot mit nicht größerer Folgenummer als der zuletzt geschriebene ändert nichts (SF-26);
- * - gleiche Schüsse: nur die Merkmale; Schüsse dazu oder Probe weg: dieselbe Revision; eine Korrektur der Wertung: eine
- *   neue, die vorige bleibt. Jede Änderung an den Schüssen rechnet die Projektion neu.
+ * - gleiche Schüsse: nur die Merkmale; Schüsse dazu: dieselbe Revision; eine Korrektur der Wertung: eine neue, die
+ *   vorige bleibt. Jede Änderung an den Schüssen rechnet die Projektion neu.
  */
 export async function writeRevision(db: Db, input: RevisionInput): Promise<RevisionResult> {
   assertUniqueShots(input.shots)

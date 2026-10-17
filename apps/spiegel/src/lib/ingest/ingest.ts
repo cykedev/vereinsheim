@@ -1,8 +1,8 @@
 // Einlesen eines Stapels von der Brücke: Epoche, Zustimmung, Sperren, verdeckte Wertung, Ablage der Rohdaten und
 // Deutung durch den Adapter. Die HTTP-Schicht (`http.ts`) prüft vorher Token, Größe und Vertrag. Last: Rohdaten werden
-// je Snapshot abgelegt (Zeilenversionen, billig), der Adapter läuft je Scheibe nur für den neuesten Stand des Stapels;
-// ändert sich nur das Lebenszeichen, wird es nur vermerkt. Was nicht zugestimmt ist, wird nicht gespeichert
-// ([[spiegel-privacy]]).
+// je Snapshot abgelegt (Zeilenversionen, billig), der Adapter deutet jeden neuen Stand (eine reine Funktion), geschrieben
+// wird je Block der Scheibe nur der letzte (SF-03, SF-72); ändert sich nur das Lebenszeichen, wird es nur vermerkt. Was
+// nicht zugestimmt ist, wird nicht gespeichert ([[spiegel-privacy]]).
 
 import type { DiscardReason, SnapshotOutcome } from "@vereinsheim/ingest-contract/api"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
@@ -11,10 +11,10 @@ import type { TargetId } from "@vereinsheim/shot-core/targets"
 
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
-import { CardIdentityConflictError, writeRevision } from "../db/cards"
+import { CardIdentityConflictError, currentShotsOf, writeRevision } from "../db/cards"
 import { isKeyBlocked, maxCycleOfKey, SAME_CARD_MS, startHintMs } from "../db/blocks"
 import { disciplineFor } from "../db/disciplines"
-import { storeSnapshot, type PreviousLifesign } from "../db/raw"
+import { setSnapshotsRead, storeSnapshot, type PreviousLifesign } from "../db/raw"
 import {
   adaptSnapshot,
   ADAPTER_VERSION,
@@ -25,6 +25,7 @@ import {
   schemaProblems,
   sportpassIdOf,
 } from "./meyton-ssmdb2"
+import { blockEnds } from "./probe-blocks"
 
 export interface IngestTarget {
   bridgeId: number
@@ -298,53 +299,89 @@ async function writeAdapted(
   return "stored"
 }
 
-/** einen gespeicherten Stand deuten und als Scheibe schreiben; `quarantined`, wenn das nicht geht oder nicht darf */
-async function adaptAndWrite(
+/** ein zu deutender Stand einer Scheibe aus dem Stapel */
+interface AdaptItem {
+  index: number
+  snapshot: SnapshotV1
+  stored: { snapshotId: bigint } & PreviousLifesign
+}
+
+/**
+ * Die Stände einer Scheibe aus dem Stapel deuten, in Folge der Folgenummer, und je Block den letzten schreiben (SF-03,
+ * SF-72, [[adr-027]]): Kommen der letzte Stand eines Blocks und der erste des nächsten im selben Stapel, geht so keiner
+ * verloren. Liefert die Indizes der Stände, die in Quarantäne gingen.
+ */
+async function adaptKey(
   db: Db,
   target: IngestTarget,
   sourceId: number,
   owner: Owner,
-  snapshot: SnapshotV1,
-  stored: { snapshotId: bigint } & PreviousLifesign
-): Promise<Handled> {
-  const context = await disciplineContext(db, target, snapshot)
-  if ("problems" in context) return quarantine(db, stored.snapshotId, context.problems.join("; "))
-  const cards = await cardsOfKey(db, sourceId, snapshot.scheibenId)
-  const result = await adaptStored(
-    db,
-    target,
-    snapshot,
-    stored,
-    context.known,
-    cards[0]?.clockOffsetMs ?? null
-  )
-  if (result.kind === "quarantine")
-    return quarantine(db, stored.snapshotId, result.problems.join("; "))
-  const card = result.card
-  // derselbe Durchgang ist die Scheibe eines Zyklus mit nahem Beginn; sonst ein neuer Zyklus (SF-77)
-  const latest = cards.find(
-    (c) => Math.abs(c.startedAt.getTime() - card.startedAtMs) <= SAME_CARD_MS
-  )
+  items: readonly AdaptItem[]
+): Promise<number[]> {
+  const quarantined: number[] = []
+  const scheibenId = items[0].snapshot.scheibenId
+  const cards = await cardsOfKey(db, sourceId, scheibenId)
+  const adapted: { item: AdaptItem; card: AdaptedCard; known: KnownDiscipline | null }[] = []
+  for (const item of items) {
+    const context = await disciplineContext(db, target, item.snapshot)
+    if ("problems" in context) {
+      await quarantine(db, item.stored.snapshotId, context.problems.join("; "))
+      quarantined.push(item.index)
+      continue
+    }
+    const result = await adaptStored(
+      db,
+      target,
+      item.snapshot,
+      item.stored,
+      context.known,
+      cards[0]?.clockOffsetMs ?? null
+    )
+    if (result.kind === "quarantine") {
+      await quarantine(db, item.stored.snapshotId, result.problems.join("; "))
+      quarantined.push(item.index)
+      continue
+    }
+    adapted.push({ item, card: result.card, known: context.known })
+  }
+  if (!adapted.length) return quarantined
+
+  // derselbe Durchgang ist ein Zyklus mit nahem Beginn, sonst ein neuer (SF-77); darin die Scheibe mit dem höchsten Block
+  const startedAtMs = adapted[0].card.startedAtMs
+  const latest = cards.find((c) => Math.abs(c.startedAt.getTime() - startedAtMs) <= SAME_CARD_MS)
   // ein neuer Zyklus über allen bisherigen, auch denen entfernter Scheiben (Grabstein, Sperre)
   const cycle = latest
     ? latest.cycle
-    : ((await maxCycleOfKey(db, { sourceId, scheibenId: snapshot.scheibenId })) ?? -1) + 1
-  const handled = await writeAdapted(
-    db,
-    target,
-    sourceId,
-    owner,
-    card,
-    context.known,
-    { cycle, block: latest?.block ?? 0, latest },
-    { snapshotId: stored.snapshotId, sequence: snapshot.sequence }
+    : ((await maxCycleOfKey(db, { sourceId, scheibenId })) ?? -1) + 1
+  const ends = blockEnds(
+    latest ? await currentShotsOf(db, latest.id) : null,
+    adapted.map((a) => a.card.shots)
   )
-  if (handled === "stored")
-    await db.rawSnapshot.update({
-      where: { id: stored.snapshotId },
-      data: { adapterVersion: ADAPTER_VERSION },
-    })
-  return handled
+  let block = latest?.block ?? 0
+  let from = 0
+  for (const end of ends) {
+    if (end.newBlock) block += 1
+    const last = adapted[end.index]
+    const handled = await writeAdapted(
+      db,
+      target,
+      sourceId,
+      owner,
+      last.card,
+      last.known,
+      { cycle, block, latest },
+      { snapshotId: last.item.stored.snapshotId, sequence: last.item.snapshot.sequence }
+    )
+    if (handled === "stored")
+      await setSnapshotsRead(
+        db,
+        adapted.slice(from, end.index + 1).map((a) => a.item.stored.snapshotId),
+        { adapterVersion: ADAPTER_VERSION, block }
+      )
+    else quarantined.push(last.item.index)
+    from = end.index + 1
+  }
+  return quarantined
 }
 
 /**
@@ -361,19 +398,10 @@ export async function ingestBatch(
   const sources = new Map<number, SourceState>()
   const consents = await consentsOf(db, target.siteId)
   /**
-   * je Scheibe der neueste Stand dieses Stapels, den der Adapter deuten muss: neu gespeichert, oder schon da, aber noch
-   * nicht gedeutet (ein Fehler beim letzten Mal)
+   * je Scheibe die Stände dieses Stapels, die der Adapter deuten muss, in Folge der Folgenummer: neu gespeichert, oder
+   * schon da, aber noch nicht gedeutet (ein Fehler beim letzten Mal); derselbe Stand nur einmal
    */
-  const toAdapt = new Map<
-    string,
-    {
-      index: number
-      snapshot: SnapshotV1
-      sourceId: number
-      owner: Owner
-      stored: { snapshotId: bigint } & PreviousLifesign
-    }
-  >()
+  const toAdapt = new Map<string, { sourceId: number; owner: Owner; items: AdaptItem[] }>()
   /** je Scheibe das zuletzt nur vermerkte Lebenszeichen */
   const lifesigns = new Map<string, { sourceId: number; scheibenId: number; atMs: number }>()
   /** Sperren je Scheibe nur einmal je Stapel nachsehen (die meisten Stände sind Lebenszeichen derselben Scheiben) */
@@ -436,14 +464,13 @@ export async function ingestBatch(
       result("discarded", "blocked")
       continue
     }
-    const adapt = (previous: PreviousLifesign) =>
-      toAdapt.set(key, {
-        index,
-        snapshot,
-        sourceId: source.sourceId,
-        owner,
-        stored: { snapshotId: (stored as { snapshotId: bigint }).snapshotId, ...previous },
-      })
+    const adapt = (previous: PreviousLifesign) => {
+      const snapshotId = (stored as { snapshotId: bigint }).snapshotId
+      const entry = toAdapt.get(key) ?? { sourceId: source.sourceId, owner, items: [] }
+      if (!entry.items.some((item) => item.stored.snapshotId === snapshotId))
+        entry.items.push({ index, snapshot, stored: { snapshotId, ...previous } })
+      toAdapt.set(key, entry)
+    }
     if (stored.outcome === "stored") {
       adapt(stored)
       lifesigns.delete(key)
@@ -463,19 +490,11 @@ export async function ingestBatch(
   // jede Scheibe für sich: ein Fehler bei einer hält die übrigen nicht auf; ein unerwarteter Fehler (Datenbank)
   // kommt am Ende als Fehler der Anfrage zurück, die Brücke wiederholt, und das Nachholen oben deutet dann
   let failure: unknown = null
-  for (const item of toAdapt.values()) {
+  for (const entry of toAdapt.values()) {
     try {
-      const outcome = await adaptAndWrite(
-        db,
-        target,
-        item.sourceId,
-        item.owner,
-        item.snapshot,
-        item.stored
-      )
-      if (outcome === "quarantined") {
-        const entry = results.find((r) => r.index === item.index)
-        if (entry) entry.outcome = "quarantined"
+      for (const index of await adaptKey(db, target, entry.sourceId, entry.owner, entry.items)) {
+        const result = results.find((r) => r.index === index)
+        if (result) result.outcome = "quarantined"
       }
     } catch (error) {
       failure ??= error
