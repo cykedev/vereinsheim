@@ -239,7 +239,8 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
     (`recordRoute(id, block.scoring)`); gezeigt als „Bezeichnung: Wert“ in ganzen Worten.
   - Jeder Block rechnet in der Wertung seiner Familie (`scoringOf(family)`, `EveningBlock.scoring`), die Form in der
     ihrer; Kacheln öffnen die Scheibe ohne Wertung, in ihrer.
-  - Neue Rekorde sind die, deren Scheibe am Abend liegt.
+  - Neue Rekorde sind die, deren Scheibe am Abend liegt: höchstens fünf in der Reihenfolge des Katalogs
+    (`START_RECORDS`), darunter „Noch N weitere Rekorde im Fortschritt ›“ (`recordsRoute`, Abschnitt Analyse).
   - Kacheln öffnen die Scheibe mit Herkunft Start; geblättert wird durch den letzten Abend, über alle Familien.
 - **Seite eines Zeitraums aus `PeriodPage`:** Kopf
   (`PeriodHeader` mit `PeriodControls`), Sprungleiste mit `PERIOD_SECTIONS`, links der Verlauf (`PeriodChart`)
