@@ -142,6 +142,8 @@ export async function purgeCards(
 /** die Stände eines Blocks: mit seiner Nummer, oder ungedeutet zwischen dem Block davor und seinem letzten Stand */
 interface BlockRange {
   block: number
+  /** auch ungedeutete Stände; ohne bekannten letzten Stand vor einem späteren Block nur die mit seiner Nummer */
+  untagged: boolean
   after: bigint | null
   upTo: bigint | null
 }
@@ -157,6 +159,7 @@ function blockRange(
     .map((s) => s.lastSequence!)
   return {
     block,
+    untagged: !later || lastSequence !== null,
     after: before.length ? before.reduce((a, b) => (a > b ? a : b)) : null,
     // nach dem letzten Stand eines abgeschlossenen Blocks beginnt der nächste
     upTo: later ? lastSequence : null,
@@ -181,7 +184,11 @@ async function ownSnapshots(
     where: {
       ...key,
       revisions: { none: {} },
-      ...(range ? { OR: [{ block: range.block }, { block: null, sequence }] } : {}),
+      ...(range
+        ? {
+            OR: [{ block: range.block }, ...(range.untagged ? [{ block: null, sequence }] : [])],
+          }
+        : {}),
     },
     select: { id: true, observedAt: true, trefferRowIds: true },
   })
