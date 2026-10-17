@@ -6,7 +6,7 @@
 import type { RecordRef } from "@vereinsheim/shot-core/analysis"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
-import { formatValue } from "../format"
+import { formatValue, ringsText } from "../format"
 import type { PeriodModel } from "./model"
 
 export interface RecordRow {
@@ -40,7 +40,7 @@ export function recordRows(records: PeriodModel["records"], scoring: Scoring): R
     label: string,
     value: (r: RecordRef) => string
   ) => (record ? [{ key, label, value: value(record), record }] : [])
-  const rings = (r: RecordRef) => `${formatValue(r.value, ringDigits)} Ringe`
+  const rings = (r: RecordRef) => ringsText(r.value, ringDigits)
   const count = (r: RecordRef) => String(r.value)
   const shots = (r: RecordRef) => `${r.value} Schuss`
   const card = (k: number) => `Scheibe zu ${k} Schuss`

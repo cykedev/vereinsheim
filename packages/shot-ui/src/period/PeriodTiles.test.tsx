@@ -214,4 +214,9 @@ describe("Bezeichnungen der Rekorde", () => {
     expect(rows.find((r) => r.key === "R10:40")?.value).toBe("7,1 Ringe")
     expect(rows.find((r) => r.key === "R11:40")?.value).toBe("3,9 Ringe")
   })
+
+  it("ein Ring in der Einzahl", () => {
+    const rows = recordRows({ ...records, smallestSeriesSpan: { 20: at(1) } }, "rings")
+    expect(rows.find((r) => r.key === "R11:20")?.value).toBe("1 Ring")
+  })
 })
