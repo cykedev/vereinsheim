@@ -106,7 +106,7 @@ describe("Analyse über den Zeitraum", () => {
     // ganze Worte, gezeigt als „Bezeichnung: Wert“
     expect(rows[0]).toMatchObject({
       key: "R1:3",
-      label: "Bestes Ergebnis (3 Schuss)",
+      label: "Bestes Ergebnis, Scheibe zu 3 Schuss",
       value: "32,7 Ringe",
     })
     expect(rows.find((r) => r.key === "R3")?.label).toBe("Bester Teiler")
@@ -155,5 +155,63 @@ describe("Analyse über den Zeitraum", () => {
     const html = render([])
     expect(html).toContain("Noch kein Rekord")
     expect(html).not.toContain("data-all-records")
+  })
+})
+
+describe("Bezeichnungen der Rekorde", () => {
+  const at = (value: number, detail?: string) => ({
+    value,
+    cardId: "a",
+    atMs: NOW,
+    ...(detail ? { detail } : {}),
+  })
+  const records = {
+    bestCard: { 40: at(353) },
+    bestSeries: { 10: at(94, "Serie 1") },
+    bestTeiler: at(87.2, "Schuss 30"),
+    tightestSeries: at(28.2, "Serie 4"),
+    tightestCard: { 10: at(36.6) },
+    mostPerfect: { 40: at(1) },
+    mostTens: { 10: at(1), 40: at(13) },
+    mostTensSeries: { 10: at(6, "Serie 4") },
+    mostInnerTens: { 40: at(10) },
+    mostInnerTensSeries: { 10: at(3, "Serie 4") },
+    longestTenRun: at(4, "ab Schuss 32"),
+    longestNineRun: at(11, "ab Schuss 30"),
+    bestForm: at(8.69),
+    bestWeakestShot: { 40: at(7, "Schuss 12") },
+    smallestSeriesSpan: { 40: at(4) },
+  }
+
+  it("sagen, ob eine Scheibe oder eine Serie gemeint ist, in der Reihenfolge des Katalogs", () => {
+    const rows = recordRows(records, "rings")
+    expect(rows.map((r) => `${r.key} ${r.label}: ${r.value}`)).toEqual([
+      "R1:40 Bestes Ergebnis, Scheibe zu 40 Schuss: 353 Ringe",
+      "R2:10 Beste Serie zu 10 Schuss: 94 Ringe",
+      "R3 Bester Teiler: 87,2",
+      "R4s Engste Serie zu 10 Schuss: 28,2 mm Streukreis",
+      "R4:10 Engste Scheibe zu 10 Schuss: 36,6 mm Streukreis",
+      "R5:40 Meiste 10,9 auf einer Scheibe zu 40 Schuss: 1",
+      "R6z:10 Meiste Zehner auf einer Scheibe zu 10 Schuss: 1",
+      "R6z:40 Meiste Zehner auf einer Scheibe zu 40 Schuss: 13",
+      "R6zs:10 Meiste Zehner in einer Serie zu 10 Schuss: 6",
+      "R6i:40 Meiste Innenzehner auf einer Scheibe zu 40 Schuss: 10",
+      "R6is:10 Meiste Innenzehner in einer Serie zu 10 Schuss: 3",
+      "R7 Längste Zehnerfolge: 4 Schuss",
+      "R7n Längste Folge ohne Schuss unter 9: 11 Schuss",
+      "R8 Beste Form (Ø über 5 Scheiben): 8,69",
+      "R10:40 Bester schwächster Schuss, Scheibe zu 40 Schuss: 7 Ringe",
+      "R11:40 Kleinste Spanne der Serien, Scheibe zu 40 Schuss: 4 Ringe",
+    ])
+    expect(rows.some((r) => /\(\d+ Schuss\)/.test(r.label))).toBe(false)
+  })
+
+  it("in Zehnteln mit einer Stelle", () => {
+    const rows = recordRows(
+      { ...records, bestWeakestShot: { 40: at(7.1) }, smallestSeriesSpan: { 40: at(3.9) } },
+      "decimal"
+    )
+    expect(rows.find((r) => r.key === "R10:40")?.value).toBe("7,1 Ringe")
+    expect(rows.find((r) => r.key === "R11:40")?.value).toBe("3,9 Ringe")
   })
 })

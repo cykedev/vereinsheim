@@ -201,7 +201,7 @@ describe("Start: der letzte Abend", () => {
     const records = m.blocks[0].records
     expect(records.length).toBeGreaterThan(0)
     expect(records.every((r) => r.record.cardId === "e")).toBe(true)
-    expect(records.some((r) => r.label === "Bestes Ergebnis (1 Schuss)")).toBe(true)
+    expect(records.some((r) => r.label === "Bestes Ergebnis, Scheibe zu 1 Schuss")).toBe(true)
   })
 
   it("Form der letzten 90 Tage für die zuletzt gewählte Familie, mit Vergleich; ohne Wahl die des ersten Blocks", () => {

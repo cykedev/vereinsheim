@@ -26,7 +26,7 @@ export interface PeriodInsightsProps {
 const NEW_RECORDS = 5
 
 /**
- * Analyse über den Zeitraum: die Rekorde (R1–R8, in der Wertung und Art der Seite, über alle Scheiben der Familie).
+ * Analyse über den Zeitraum: die Rekorde (R1–R8, R10, R11, in der Wertung und Art der Seite, über alle Scheiben der Familie).
  * Oben höchstens fünf, deren Scheibe im Zeitraum liegt, darunter zugeklappt alle; ein Rekord zeigt seine Scheibe, wenn
  * sie im Zeitraum liegt. Eine Karte „Gegen deinen Schnitt“ gibt es nicht: Den Abstand zum Schnitt der fünf davor sagt
  * die Ablesung.
