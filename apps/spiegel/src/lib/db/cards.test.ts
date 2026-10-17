@@ -342,11 +342,19 @@ describe("shotChange", () => {
   it("ein Wertungsschuss geändert oder weg ist eine Korrektur, auch wenn neue dazukommen", () => {
     const changed = shots.slice(0, 5).map((s, i) => (i === 2 ? { ...s, decimalTenths: 0 } : s))
     expect(shotChange(shots.slice(0, 3), changed)).toEqual({ kind: "correction" })
-    const flagged = shots
-      .slice(0, 5)
-      .map((s, i) => (i === 2 ? { ...s, flags: ["verdaechtig"] } : s))
-    expect(shotChange(shots.slice(0, 3), flagged)).toEqual({ kind: "correction" })
+    const missed = shots.slice(0, 5).map((s, i) => (i === 2 ? { ...s, flags: ["fehlschuss"] } : s))
+    expect(shotChange(shots.slice(0, 3), missed)).toEqual({ kind: "correction" })
     expect(shotChange(shots.slice(0, 3), shots.slice(1, 5))).toEqual({ kind: "correction" })
+  })
+
+  it("ein Schuss wird verdächtig oder nicht mehr: keine Korrektur, die Gegenprobe ist Spiegels Lesart (SF-15)", () => {
+    const flagged = shots
+      .slice(0, 3)
+      .map((s, i) => (i === 1 ? { ...s, flags: ["verdaechtig"] } : s))
+    const change = shotChange(shots.slice(0, 3), flagged)
+    expect(change.kind).toBe("update")
+    if (change.kind === "update") expect(change.add).toEqual([flagged[1]])
+    expect(shotChange(flagged, shots.slice(0, 3)).kind).toBe("update")
   })
 
   it("eine andere Anzeigeart am Monitor ist keine Korrektur, nur eine Änderung der Revision (SF-74)", () => {

@@ -6,7 +6,7 @@ import { createHash } from "node:crypto"
 
 import { canonicalize } from "@vereinsheim/ingest-contract/canonical"
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
-import type { CardFlag, MetricShot } from "@vereinsheim/shot-core/metrics"
+import { FLAG_SUSPICIOUS, type CardFlag, type MetricShot } from "@vereinsheim/shot-core/metrics"
 import { cardMarks, cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
 
 import {
@@ -156,11 +156,17 @@ const shotContent = (shot: ShotInput) => canonicalize({ ...shot, flags: [...shot
 /**
  * Derselbe Wertungsschuss, auch wenn die Anzeigeart anders ist: Schaltet der Schütze am Monitor um, schreibt
  * Meyton `Wertung` und `Text` neu, Werte und Lage bleiben (SF-74); das ist keine Korrektur, nur eine Änderung der
- * aktuellen Revision.
+ * aktuellen Revision. Ebenso `verdaechtig`: Das ist Spiegels Gegenprobe, nicht Meytons Wertung (SF-15, SF-67), und
+ * kippt etwa, wenn spätere Schüsse oder eine neue Zuordnung der Disziplin das Scheibenbild bestätigen oder verwerfen.
  */
 function sameScoring(a: ShotInput | undefined, b: ShotInput): boolean {
   if (!a) return false
-  const scoring = (shot: ShotInput) => shotContent({ ...shot, displayMode: null })
+  const scoring = (shot: ShotInput) =>
+    shotContent({
+      ...shot,
+      displayMode: null,
+      flags: shot.flags.filter((flag) => flag !== FLAG_SUSPICIOUS),
+    })
   return scoring(a) === scoring(b)
 }
 

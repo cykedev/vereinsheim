@@ -17,16 +17,18 @@ import {
   type Completeness,
   type FamilyId,
 } from "@vereinsheim/shot-core/discipline"
-import {
-  FLAG_MISS,
-  FLAG_OVER_TARGET,
-  FLAG_SUSPICIOUS,
-  type CardFlag,
-} from "@vereinsheim/shot-core/metrics"
-import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
-import { checkShot } from "@vereinsheim/shot-core/verify"
+import { FLAG_OVER_TARGET, FLAG_SUSPICIOUS, type CardFlag } from "@vereinsheim/shot-core/metrics"
+import type { TargetId } from "@vereinsheim/shot-core/targets"
 
 import type { ShotInput } from "../db/cards"
+import { baseShotFlags, mappingFlags, verifyShots, type CheckableShot } from "./card-checks"
+
+export {
+  FLAG_TARGET_MISMATCH,
+  FLAG_UNKNOWN_DISCIPLINE,
+  INCOMPLETE_FLAGS,
+  isComplete,
+} from "./card-checks"
 
 export const ADAPTER_VERSION = "meyton-ssmdb2@9"
 
@@ -38,10 +40,6 @@ export const HELD_DISPLAY_MODES: ReadonlySet<number> = new Set([0, 5, 10])
 
 /** Uhr des Stands geht falsch oder springt (SF-29, SF-30, SF-73) */
 export const FLAG_CLOCK = "uhr-abweichung" satisfies CardFlag
-/** ohne Scheibenbild (SF-70) */
-export const FLAG_UNKNOWN_DISCIPLINE = "disziplin-unbekannt" satisfies CardFlag
-/** fast alle Schüsse passen nicht zum Scheibenbild (Gegenprobe, SF-16) */
-export const FLAG_TARGET_MISMATCH = "scheibe-passt-nicht" satisfies CardFlag
 
 /** ab hier Merkmal `uhr-abweichung` (Versatz zwischen Beobachtung und Lebenszeichen, SF-73) */
 export const CLOCK_FLAG_MS = 60_000
@@ -59,13 +57,6 @@ export const LIFESIGN_WINDOW_MS = 60_000
 export const RESTING_AFTER_MS = 5 * 60_000
 /** endgültig nach so langer Zeit ohne Änderung ([[spiegel-bridge]], „Zustand statt Abschluss“) */
 export const FINAL_AFTER_MS = 12 * 3_600_000
-
-/** Merkmale, mit denen eine Scheibe nie vollständig ist; dieselbe Regel steht in SQL in `advanceCardStates` */
-export const INCOMPLETE_FLAGS = ["unvollstaendig", "leer"] as const satisfies readonly CardFlag[]
-
-/** endgültig und ohne fehlende Wertungsschüsse: erst dann zählt die Scheibe für Rekorde (SF-66) */
-export const isComplete = (state: "open" | "resting" | "final", flags: readonly string[]) =>
-  state === "final" && !INCOMPLETE_FLAGS.some((flag) => flags.includes(flag))
 
 type ColumnFamily = "int" | "datetime" | "text"
 
@@ -190,6 +181,8 @@ export interface AdapterContext {
   timeZone: string
   /** Scheibenbild der Disziplin, wie Spiegel es kennt (Admin-Zuordnung); undefined: aus dem Katalog */
   targetId?: TargetId | null
+  /** Soll der Wertungsschüsse aus der Zuordnung (`plannedShotsOf`); undefined: aus der DisziplinID */
+  plannedShots?: number | null
   /** Lebenszeichen des vorigen Stands dieser Scheibe als Text; null beim ersten */
   previousLifesign: string | null
   /** wann dieses Lebenszeichen zuletzt beobachtet wurde (Uhr der Brücke) */
@@ -265,14 +258,25 @@ function rawShots(table: TableV1): RawShot[] {
   }))
 }
 
-/** Merkmale eines Schusses aus seinen Werten (SF-08, SF-14, SF-15) */
-function shotFlags(shot: RawShot): string[] {
-  if (shot.teiler01 === PLACEHOLDER_TEILER || shot.teiler001 === PLACEHOLDER_TEILER)
-    return [FLAG_OVER_TARGET]
-  if (shot.x === 0 && shot.y === 0 && shot.teiler01 === 0 && shot.ring01 !== 109)
-    return [FLAG_SUSPICIOUS]
-  if (shot.ring01 === 0) return [FLAG_MISS]
-  return []
+/** der Rohschuss, wie die Gegenprobe ihn braucht (Lage und Abstand in den Einheiten von `Shot`) */
+function checkable(shot: RawShot): CheckableShot {
+  const xUm = shot.x === null ? null : shot.x * 10
+  const yUm = shot.y === null ? null : shot.y * 10
+  return {
+    xUm,
+    yUm,
+    distanceTenthsUm: shot.teiler001,
+    decimalTenths: shot.ring01,
+    ring: shot.ring === null ? null : Math.floor(shot.ring / 10),
+    innerTen: shot.innen,
+    flags: baseShotFlags({
+      xUm,
+      yUm,
+      distanceTenthsUm: shot.teiler001,
+      decimalTenths: shot.ring01,
+      overTarget: shot.teiler01 === PLACEHOLDER_TEILER || shot.teiler001 === PLACEHOLDER_TEILER,
+    }),
+  }
 }
 
 /**
@@ -361,29 +365,12 @@ export function adaptSnapshot(snapshot: SnapshotV1, context: AdapterContext): Ad
     return t !== null && !plausible(t)
   })
 
-  const target = targetId ? TARGETS[targetId] : null
-  const checks = ordered.map((s) =>
-    target && shotFlags(s).length === 0 && s.ring01 !== null
-      ? checkShot(target, {
-          distance: s.teiler001 !== null ? { um: s.teiler001 / 10, resolutionUm: 0.1 } : null,
-          position:
-            s.x !== null && s.y !== null
-              ? { xUm: s.x * 10, yUm: s.y * 10, resolutionUm: 10 }
-              : null,
-          officialDecimalTenths: s.ring01,
-          officialRing: s.ring === null ? null : Math.floor(s.ring / 10),
-          officialInnerTen: s.innen,
-        })
-      : "unchecked"
-  )
-  const checked = checks.filter((c) => c !== "unchecked").length
-  const mismatches = checks.filter((c) => c === "mismatch").length
-  // fast alle daneben: das Scheibenbild passt nicht, nicht die Schüsse (SF-16); sonst sind einzelne verdächtig (SF-15)
-  const targetMismatch = checked >= 3 && mismatches * 2 > checked
+  const checkables = ordered.map(checkable)
+  const { suspicious, targetMismatch } = verifyShots(targetId, checkables)
 
   const shots: ShotInput[] = ordered.map((s, i) => {
-    const flags = shotFlags(s)
-    if (!targetMismatch && checks[i] === "mismatch") flags.push(FLAG_SUSPICIOUS)
+    const flags = [...checkables[i].flags]
+    if (suspicious[i]) flags.push(FLAG_SUSPICIOUS)
     const over = flags.includes(FLAG_OVER_TARGET)
     return {
       seq: i + 1,
@@ -403,23 +390,15 @@ export function adaptSnapshot(snapshot: SnapshotV1, context: AdapterContext): Ad
   })
 
   const match = shots.filter((s) => s.stellung !== 0).length
-  const completeness = classifyCompleteness({
-    sighterShots: shots.length - match,
-    matchShots: match,
-    plannedShots: parseDisciplineId(discipline.meytonId).plannedShots,
-  })
+  const plannedShots =
+    context.plannedShots !== undefined
+      ? context.plannedShots
+      : parseDisciplineId(discipline.meytonId).plannedShots
 
+  const counts = { sighterShots: shots.length - match, matchShots: match, plannedShots }
+  const completeness = classifyCompleteness(counts)
   // nur Kennungen aus `CARD_FLAGS`: Die Oberfläche benennt jede
-  const flags: CardFlag[] = []
-  if (
-    completeness === "nur-probe" ||
-    completeness === "unvollstaendig" ||
-    completeness === "ueber-soll" ||
-    completeness === "leer"
-  )
-    flags.push(completeness)
-  if (!targetId) flags.push(FLAG_UNKNOWN_DISCIPLINE)
-  if (targetMismatch) flags.push(FLAG_TARGET_MISMATCH)
+  const flags: CardFlag[] = mappingFlags({ ...counts, targetId, targetMismatch })
   if ((measuredOffset !== null && Math.abs(measuredOffset) >= CLOCK_FLAG_MS) || jumped)
     flags.push(FLAG_CLOCK)
 
