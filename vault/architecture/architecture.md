@@ -90,7 +90,7 @@ Schützenhaus: Meyton-Server (SSMDB2) ←nur lesend── Brücke ──HTTPS, n
   `/disciplines` · `/admin` · `/account` · `/api/public/c/[slug]/pdf` (öffentlich).
 - **treffsicher:** `/` → `/dashboard` · `/sessions{/[id]{/edit,/export/pdf},/new}` · `/shot-routines` · `/statistics` · `/goals` ·
   `/disciplines` · `/admin` · `/account` (alles auth-gated, Dark-Mode-only).
-- **spiegel:** `/` (Start) · `/cards{/[id]}` · `/progress` · `/open` · `/profile{/trash}` · `/admin{/users,/site}` ·
+- **spiegel:** `/` (Start) · `/cards{/[id]}` · `/progress` · `/open` · `/profile{/trash}` · `/admin{/users,/disciplines,/site}` ·
   `/api/ingest/v1/{pair,state,snapshots,heartbeat}` (Brücke, Geräte-Token).
 
 Detail (Komponenten, lib-Module, Datenfluss): die App-Notes im Vault und die `CLAUDE.md` je App.

@@ -34,7 +34,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 - `src/app/login` ohne Rahmen; `src/app/(app)/*` mit Anmeldepflicht (`requireSession` im Layout, `proxy.ts` davor):
   Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Profil, Papierkorb `/profile/trash`,
   Offen `/open`, Platzhalter Scannen `/scan` (nicht in der Navigation, `scan={false}` im `AppShell`),
-  Admin `/admin/users`.
+  Admin `/admin/users`, `/admin/disciplines{/[id]}`, `/admin/site`.
 - Seiten sind Server-Komponenten: Sitzung, Daten (`src/lib/db/reads.ts`), Kontext (`pageContext`: Zone, „jetzt“,
   benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
   bauen Routen und Rückrufe (Funktionen gehen nicht vom Server zum Client).
@@ -146,7 +146,22 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   `CardIdentityConflictError`: der nächste Zyklus (`cycle`, SF-77). Die Kennung einer Scheibe ändert ein Stand nie,
   außer eine Scheibe aus dem PDF bekommt ihre Rohdaten.
 - **Familie mitgeführt:** `Card.familyId` kopiert die Familie der Disziplin für den Index; umhängen nur über
-  `setDisciplineFamily` (eine Transaktion mit den Scheiben).
+  `moveDisciplineFamily` (in der Transaktion des Aufrufers, mit den Scheiben) bzw. `setDisciplineFamily`.
+- **Disziplinen einordnen** (Admin → Disziplinen, [[spiegel-target-library]]): Das Einlesen legt jede neue Disziplin
+  selbst an (`disciplineFor` in `src/lib/db/disciplines.ts`, auch für `seed:own`): mit der Zuordnung einer eingeordneten
+  Disziplin derselben Nummer (in Meyton umbenannt), sonst mit dem Vorschlag des Fachkerns, ignoriert bei Meytons Spielen
+  und Trainingsscheiben (`suggestIgnore`). Eingeordnet erst mit `confirmedAt`. Felder: Scheibe (`targetId`, null = eigene
+  Scheibe), Familie (auch eigene, Kennung aus dem Namen und fest, `familySlug`), Wertung im Wettkampf
+  (`officialScoring`), Schusszahl (`plannedShots`: null aus der ID, 0 keine feste, `plannedShotsOf`), Ignorieren
+  (`ignoredAt`). Ändern sich Scheibe oder Schusszahl, steigt `Discipline.version`; `refreshStaleDisciplineCards` rechnet
+  Scheiben mit anderer `Card.disciplineVersion` aus den Schüssen der aktuellen Revision nach (nach dem Speichern über
+  `after()`, beim Start, stündlich). Gegenprobe und Merkmale der Disziplin rechnen Adapter und Nachrechnen mit denselben
+  Funktionen (`src/lib/ingest/card-checks.ts`: `baseShotFlags`, `verifyShots`, `mappingFlags`); `verdaechtig` ist keine
+  Korrektur (`sameScoring`). Ignorierte Disziplinen filtert `VISIBLE_CARD` (`SHOWN_DISCIPLINE`), `PENDING_CARD` nicht
+  (die Bestätigung der ersten Scheibe gibt alle frei); „Offen“ und Papierkorb filtern zusätzlich. Die Seite zeigt je
+  Disziplin nur Zahlen der ganzen Anlage (letzte Scheibe als Monat, Anzeige am Stand und Schusszahl erst ab drei
+  Schützen, `discipline-model.ts`), nie je Konto. Eigene Scheiben, deren Disziplin wartet, nennt Start
+  (`waitingForDiscipline`).
 - **Tests gegen die Dev-Datenbank:** je Datei eine eigene Anlage (`test/fixtures.ts`, `createTestSite`), am Ende
   gelöscht (Scheiben der Disziplinen, Kaskade über die Anlage, dazu Schütze und Familie); Dateien laufen nacheinander
   (`fileParallelism: false`). Testscheiben aus `test/generate.ts` (fester Seed, Werte aus der Lage über den Fachkern,

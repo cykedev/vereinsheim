@@ -235,11 +235,15 @@ Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
 
 ### Admin und Bedienung
 
-- **Disziplinen im Admin pflegen:** Das Einlesen legt eine Disziplin einmal an; Scheibenbild (auch „ohne Scheibe“),
-  Familie und amtliche Wertung lassen sich danach nicht ändern (`setDisciplineFamily` hat keinen Aufrufer). Folgen:
-  Eine vereinseigene Disziplin wie „LG Training Spiegel“ landet über den Namen auf der LG-Scheibe (SF-70), die Familie
-  bestätigt niemand (SF-64), die amtliche Wertung bleibt unbekannt. Vorschlag: eine Seite „Disziplinen“ unter Admin,
-  dort auch die Freigabe von Modus 0 (SP-1.5); nach einer Änderung die Projektionen neu rechnen.
+- **Disziplinen vorab und ohne Upload (Stufe 2 von Admin → Disziplinen):** Die Brücke meldet die Disziplinen der
+  Anlage im Heartbeat (Nummer und Name, ohne Personen), damit ein Admin sie vor der ersten Scheibe einordnen kann, und
+  schickt ignorierte gar nicht erst (Feld in `GET /state`). `heartbeatV1` ist ein `strictObject`: Spiegel zuerst
+  deployen, dann die Brücke; Ergänzung zu [[adr-027]]. Danach ist Ignorieren ohne Nachladen nicht mehr umkehrbar.
+  Braucht eine neue Brücke im Schützenhaus.
+- **Scheiben ohne Scheibenbild zeigen:** Eine Disziplin mit „Eigene Scheibe“ (etwa Zimmerstutzen) fehlt in allen
+  Übersichten, die Seite der Scheibe antwortet 404. Ein neutrales Raster (SF-17) brächte sie zurück.
+- **Teiler als Wertung** der Vereinsspiele (Schach, Balken, Dart); heute ignoriert Spiegel sie.
+- **Art je Disziplin** (etwa „LG Liga“ immer Wettkampf) als Vorgabe zwischen Liste und Quelle.
 - **Auswertung der Ratenbegrenzung** hat keine Ansicht fürs Telefon (`@vereinsheim/ui/admin`).
 - **Alte Wörter in Texten von Brücke und Einlesen:** `src/lib/ingest/http.ts` meldet „widerrufenes Gerät“ und
   „Kopplungscode“, die Hilfe der Brücke (`cmd/spiegel-bridge/main.go`) nennt „Kopplungscode aus Admin → Anlage und

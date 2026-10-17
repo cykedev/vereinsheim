@@ -27,8 +27,8 @@ relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spi
 | Stellung, Serie | Gliederung mit amtlichen Summen | Scheibe + Stellung + Serie |
 | Schuss | Lage, amtliche Werte, Zeit | Scheibe + Stellung + Treffer je Revision; über Revisionen hinweg ein Fingerabdruck aus Zeit, Millisekunden und Lage |
 | Ausdruck | gespeichertes Meyton-PDF mit gelesenen Kopf- und Fußdaten | Scheibe + Datei |
-| Disziplin | Meyton-Disziplin: DisziplinID und Name, Regelnummer, Schusszahl (`000` vermutlich offen), Serienlänge, Stellungen, Familie | Anlage + DisziplinID + Name (Vereinsvarianten können dieselbe ID tragen) |
-| Disziplin-Familie | was in Verläufen zusammen zählt, zum Beispiel LP Freihand (LP 40, LP 40 alt, LP Training); Auflage getrennt | id |
+| Disziplin | Meyton-Disziplin: DisziplinID und Name, Regelnummer, Schusszahl (`000` vermutlich offen; der Admin kann sie überschreiben), Serienlänge, Stellungen, Familie, Scheibenbild, amtliche Wertung, eingeordnet oder ignoriert (Admin → Disziplinen) | Anlage + DisziplinID + Name (Vereinsvarianten können dieselbe ID tragen) |
+| Disziplin-Familie | was in Verläufen zusammen zählt, zum Beispiel LP Freihand (LP 40, LP 40 alt, LP Training); Auflage getrennt; vier aus dem Fachkern, weitere legt der Admin an | id |
 | Scheibenbild | Geometrie je Stellung, versioniert ([[spiegel-target-library]]) | id + Version |
 | Kennzahlwert | berechneter Wert je Ebene ([[spiegel-metrics]]); gespeichert als Projektion je Scheibe: alle Kennzahlen der Ebene Scheibe in beiden Wertungen und die Rekord-Kandidaten ([[adr-031]], [[spiegel-db-schema]]) | Scheibe (mit Revision und Version der Projektion) |
 | Einheit | ein Schütze an einem Tag mit seinen zusammenhängenden Scheiben (Aufwärmen, Abbruch, Disziplinwechsel) | Konto + Tag |
@@ -58,7 +58,7 @@ type Shot = {
 
 - **Koordinaten** intern in Mikrometern als Ganzzahl. Aus der SSMDB2 (1/100 mm) mal 10. Achsen: x rechts, y oben (in Phase 0 zu bestätigen).
 - **Amtliche Werte** (Ring, Zehntel, Teiler, Innenzehner) so, wie die Quelle sie liefert; die Skala je Quellfeld steht im Adapter ([[spiegel-ingest-pipeline]]).
-- **Amtliche Wertung der Scheibe** aus der Disziplin, nie aus `Treffer.Wertung`: Das ist die Anzeigeart am Monitor, die der Schütze umschalten kann; gedruckt wird nach der Disziplin (SF-74, Abend-Mitschnitt vom 9. Oktober 2026; bis dahin stand hier der Wertungsmodus der Wertungsschüsse). Woher der Adapter sie liest, klärt SP-1.6; unbekannt bleibt sie leer. Im Fachkern `PeriodCard.official`; die Scheiben-Liste zeigt sie vorn ([[spiegel-navigation]]). Training nur aus Probe hat keine.
+- **Amtliche Wertung der Scheibe** aus der Disziplin, nie aus `Treffer.Wertung`: Das ist die Anzeigeart am Monitor, die der Schütze umschalten kann; gedruckt wird nach der Disziplin (SF-74, Abend-Mitschnitt vom 9. Oktober 2026; bis dahin stand hier der Wertungsmodus der Wertungsschüsse). Der Admin setzt sie unter Admin → Disziplinen und sieht dabei, was am Stand meist angezeigt wurde; unbekannt bleibt sie leer. Im Fachkern `PeriodCard.official`; die Scheiben-Liste zeigt sie vorn ([[spiegel-navigation]]). Training nur aus Probe hat keine.
 - **Zeit** in UTC mit Millisekunden; der Rohwert (Ortszeit ohne Zone) bleibt im Rohdatensatz.
 - **Revisionen:** Korrekturen der Wertung erzeugen eine neue Revision; die vorige bleibt nachvollziehbar. Neue Schüsse und die Probe, die Meyton löscht oder neu beginnt (SF-03, SF-72), ändern die aktuelle Revision (SF-67, [[adr-031]]).
 - **Herkunft:** Eine Scheibe kann zuerst nur aus dem PDF bestehen (QR-Scan, Brücke gerade aus oder fremde Anlage) und später um Rohdaten ergänzt werden.
