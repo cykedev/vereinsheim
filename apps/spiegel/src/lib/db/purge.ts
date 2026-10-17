@@ -42,7 +42,11 @@ export async function lockCard(tx: Tx, cardId: string): Promise<boolean> {
  *
  * Welche Stände zu ihr gehören, entscheidet ihr **Beginn** aus den Trefferzeiten (`startHintMs`), nicht die Beobachtung:
  * Die Brücke liest auch Wochen später nach, und ein später nachgelesener früherer Zyklus derselben ScheibenID darf nicht
- * mitgehen. Ein Stand, auf den noch die Revision einer anderen Scheibe zeigt, bleibt. Eine schon entfernte
+ * mitgehen. Ein Stand, auf den noch die Revision einer anderen Scheibe zeigt, bleibt.
+ *
+ * Bleibt ein anderer Block derselben ScheibenID und desselben Zyklus (SF-03, SF-72, [[adr-027]]), gehen nur die Stände
+ * dieses Blocks (`RawSnapshot.block`), und die weiche Sperre entsteht erst mit dem letzten: Sie gilt der ganzen
+ * ScheibenID und hielte sonst das Geschwister an. Der Grabstein („Nicht meine“) gilt wie bisher der ganzen ScheibenID. Eine schon entfernte
  * Scheibe (ein zweiter Aufruf zugleich) wird übersprungen; eine ohne Quelle (nur ein PDF) hat keine Rohdaten und ist ein
  * Fehler des Aufrufers.
  *
@@ -62,6 +66,7 @@ export async function purgeCards(
       sourceId: true,
       scheibenId: true,
       cycle: true,
+      block: true,
       startedAt: true,
       ownerId: true,
       sportpassId: true,
@@ -76,11 +81,12 @@ export async function purgeCards(
       await tx.card.deleteMany({ where: { id: card.id } })
       continue
     }
-    const { sourceId, scheibenId, cycle, startedAt } = card
+    const { sourceId, scheibenId, cycle, block: cardBlock, startedAt } = card
     const key = { sourceId, scheibenId }
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
     const { count } = await tx.card.deleteMany({ where: { id: card.id } })
     if (count === 0) continue
+    const siblings = await tx.card.count({ where: { sourceId, scheibenId, cycle } })
     if ("tombstone" in block)
       await tx.tombstone.upsert({
         where: { sourceId_scheibenId_cycle: { sourceId, scheibenId, cycle } },
@@ -95,7 +101,7 @@ export async function purgeCards(
         },
         update: {},
       })
-    else
+    else if (siblings === 0)
       await tx.deleteLock.upsert({
         where: {
           userId_sourceId_scheibenId_cycle: { userId: card.ownerId!, sourceId, scheibenId, cycle },
@@ -104,7 +110,11 @@ export async function purgeCards(
         update: {},
       })
     await tx.rawSnapshot.deleteMany({
-      where: { id: { in: await ownSnapshots(tx, key, startedAt.getTime()) } },
+      where: {
+        id: {
+          in: await ownSnapshots(tx, key, startedAt.getTime(), siblings ? cardBlock : undefined),
+        },
+      },
     })
     await tx.$executeRaw`
       DELETE FROM "RawRow" r
@@ -119,15 +129,16 @@ export async function purgeCards(
 
 /**
  * Die Stände dieser Quelle und ScheibenID, deren Beginn bei `startedAtMs` liegt (wie `SAME_CARD_MS` im Einlesen) und auf
- * die keine Revision mehr zeigt (die der entfernten Scheibe sind mit ihr gegangen).
+ * die keine Revision mehr zeigt (die der entfernten Scheibe sind mit ihr gegangen); mit `block` nur die dieses Blocks.
  */
 async function ownSnapshots(
   tx: Tx,
   key: { sourceId: number; scheibenId: number },
-  startedAtMs: number
+  startedAtMs: number,
+  block?: number
 ): Promise<bigint[]> {
   const snapshots = await tx.rawSnapshot.findMany({
-    where: { ...key, revisions: { none: {} } },
+    where: { ...key, revisions: { none: {} }, ...(block === undefined ? {} : { block }) },
     select: { id: true, observedAt: true, trefferRowIds: true },
   })
   const rowIds = [...new Set(snapshots.flatMap((s) => s.trefferRowIds))]

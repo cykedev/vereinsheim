@@ -284,6 +284,75 @@ describe("purgeCards mit weicher Sperre (Papierkorb)", () => {
   })
 })
 
+/** die gesendeten Stände von SF-72 (acht Probe, Neustart, fünf Probe) unter einer eigenen ScheibenID: zwei Blöcke */
+function restarted(scheibenId = nextId++): SnapshotV1[] {
+  const expected = frozenExpected("SF-72").cards[0]
+  const readings = frozenReadings("SF-72")
+  return expected.sentReadings.map((n) => {
+    const s = readings
+      .find((r) => r.reading === n)!
+      .snapshots.find((x) => x.scheibenId === expected.scheibenId)!
+    const data = {
+      ...s.data,
+      scheiben: {
+        ...s.data.scheiben,
+        rows: s.data.scheiben.rows.map((row) => ({ ...row, ScheibenID: String(scheibenId) })),
+      },
+    }
+    return { ...s, scheibenId, data, checksum: computeChecksum(data) }
+  })
+}
+
+/** zwei Blöcke derselben ScheibenID, Lesung für Lesung eingelesen, nach Block */
+async function twoBlocks() {
+  const snapshots = restarted()
+  for (const snapshot of snapshots) await ingest([snapshot])
+  const scheibenId = snapshots[0].scheibenId
+  const cards = await db.card.findMany({ where: keyOf(scheibenId), orderBy: { block: "asc" } })
+  expect(cards.map((c) => c.block)).toEqual([0, 1])
+  return { scheibenId, cards }
+}
+
+describe("purgeCards je Block (SF-72)", () => {
+  it("ein Block geht mit seinen Ständen, das Geschwister bleibt ohne Sperre; mit dem letzten kommen Sperre und alles weg", async () => {
+    const { scheibenId, cards } = await twoBlocks()
+    const [first, second] = cards
+
+    await purgeLocked([first.id])
+
+    expect(await db.card.count({ where: { id: first.id } })).toBe(0)
+    expect(await db.rawSnapshot.count({ where: { ...keyOf(scheibenId), block: 0 } })).toBe(0)
+    expect(await db.rawSnapshot.count({ where: { ...keyOf(scheibenId), block: 1 } })).toBe(1)
+    expect(await db.shot.count({ where: { cardId: second.id } })).toBe(5)
+    expect(await db.deleteLock.count({ where: keyOf(scheibenId) })).toBe(0)
+
+    await purgeLocked([second.id])
+
+    expect(await db.deleteLock.count({ where: keyOf(scheibenId) })).toBe(1)
+    expect(await db.rawSnapshot.count({ where: keyOf(scheibenId) })).toBe(0)
+    expect(await db.rawRow.count({ where: keyOf(scheibenId) })).toBe(0)
+  })
+
+  it("„Nicht meine“ über beide Blöcke: ein Grabstein, nichts bleibt", async () => {
+    const { scheibenId, cards } = await twoBlocks()
+    await purge(cards.map((c) => c.id))
+    expect(await db.tombstone.count({ where: keyOf(scheibenId) })).toBe(1)
+    expect(await db.card.count({ where: keyOf(scheibenId) })).toBe(0)
+    expect(await db.rawSnapshot.count({ where: keyOf(scheibenId) })).toBe(0)
+    expect(await db.rawRow.count({ where: keyOf(scheibenId) })).toBe(0)
+  })
+
+  it("ein Stand ohne Block bleibt, solange ein Geschwister bleibt", async () => {
+    const { scheibenId, cards } = await twoBlocks()
+    await db.rawSnapshot.updateMany({
+      where: { ...keyOf(scheibenId), block: 0 },
+      data: { block: null },
+    })
+    await purgeLocked([cards[0].id])
+    expect(await db.rawSnapshot.count({ where: { ...keyOf(scheibenId), block: null } })).toBe(1)
+  })
+})
+
 describe("lockCard", () => {
   it("sperrt wie das Schreiben: erst Quelle und ScheibenID, dann die Zeile; eine unbekannte gibt false", async () => {
     const snapshots = card()
