@@ -38,9 +38,10 @@ function refreshDisciplines() {
 /** Scheiben aus den Rohdaten neu lesen, die der aktuelle Adapter noch nicht kennt; ins Log nur Zahlen und den Namen */
 function rereadKeys() {
   void rereadOutdatedKeys(db)
-    .then(({ keys, created }) => {
+    .then(({ keys, created, failed }) => {
       if (keys)
         console.warn(`${keys} Scheiben aus den Rohdaten neu gelesen, ${created} Blöcke dazu`)
+      if (failed) console.error(`${failed} Scheiben nicht neu gelesen`)
     })
     .catch((error: unknown) =>
       console.error(

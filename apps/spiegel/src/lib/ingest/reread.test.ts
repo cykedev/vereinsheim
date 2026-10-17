@@ -101,7 +101,7 @@ describe("rereadOutdatedKeys", () => {
     const before = await asBefore(snapshots)
     expect(await cardsOf(scheibenId)).toHaveLength(1)
 
-    expect(await reread()).toEqual({ keys: 1, created: 1 })
+    expect(await reread()).toEqual({ keys: 1, created: 1, failed: 0 })
 
     const cards = await cardsOf(scheibenId)
     expect(cards.map((c) => c.block)).toEqual([0, 1])
@@ -114,7 +114,7 @@ describe("rereadOutdatedKeys", () => {
       { adapterVersion: ADAPTER_VERSION, block: 1 },
     ])
 
-    expect(await reread()).toEqual({ keys: 0, created: 0 })
+    expect(await reread()).toEqual({ keys: 0, created: 0, failed: 0 })
     expect(await cardsOf(scheibenId)).toHaveLength(2)
   })
 
@@ -147,7 +147,11 @@ describe("rereadOutdatedKeys", () => {
     const snapshots = sent("SF-72")
     await asBefore(snapshots)
     const lastSeen = Date.parse(snapshots.at(-1)!.observedAt)
-    expect(await reread(lastSeen + REREAD_QUIET_MS - 60_000)).toEqual({ keys: 0, created: 0 })
+    expect(await reread(lastSeen + REREAD_QUIET_MS - 60_000)).toEqual({
+      keys: 0,
+      created: 0,
+      failed: 0,
+    })
     expect(await cardsOf(snapshots[0].scheibenId)).toHaveLength(1)
     expect((await reread(lastSeen + REREAD_QUIET_MS + 60_000)).created).toBe(1)
   })
@@ -157,8 +161,43 @@ describe("rereadOutdatedKeys", () => {
     await storeSnapshot(db, { sourceId: site.sourceId, bridgeId }, first, {
       nowMs: Date.parse(first.observedAt),
     })
-    expect(await reread()).toEqual({ keys: 0, created: 0 })
+    expect(await reread()).toEqual({ keys: 0, created: 0, failed: 0 })
     expect(await cardsOf(first.scheibenId)).toHaveLength(0)
     expect(await rawOf(first.scheibenId)).toEqual([{ adapterVersion: null, block: null }])
+  })
+
+  it("eine ScheibenID, die nicht zu lesen ist, hält die übrigen nicht auf", async () => {
+    const broken = sent("SF-72")
+    await asBefore(broken)
+    const first = await db.rawSnapshot.findFirstOrThrow({
+      where: { sourceId: site.sourceId, scheibenId: broken[0].scheibenId },
+      orderBy: { sequence: "asc" },
+    })
+    await db.rawSnapshot.update({ where: { id: first.id }, data: { contractVersion: 2 } })
+    const fine = sent("SF-72")
+    await asBefore(fine)
+    expect(await reread()).toEqual({ keys: 2, created: 1, failed: 1 })
+    expect(await cardsOf(fine[0].scheibenId)).toHaveLength(2)
+    expect(await cardsOf(broken[0].scheibenId)).toHaveLength(1)
+  })
+
+  it("mit einem Grabstein im Fenster entsteht kein Block, die Stände gelten als gelesen", async () => {
+    const snapshots = sent("SF-72")
+    const before = await asBefore(snapshots)
+    await db.tombstone.create({
+      data: {
+        sourceId: site.sourceId,
+        scheibenId: snapshots[0].scheibenId,
+        cycle: 0,
+        startedAt: before.startedAt,
+        reason: "nicht-meine",
+      },
+    })
+    expect((await reread()).created).toBe(0)
+    expect(await cardsOf(snapshots[0].scheibenId)).toHaveLength(1)
+    expect((await rawOf(snapshots[0].scheibenId)).map((r) => r.adapterVersion)).toEqual([
+      ADAPTER_VERSION,
+      ADAPTER_VERSION,
+    ])
   })
 })

@@ -33,7 +33,7 @@ bleiben je eine Scheibe.
   Übergang zur Wertung (SF-03). Eine Scheibe mit Wertung teilt sich nie; Korrekturen bleiben Revisionen (SF-21).
 - **A3 Löschen:** „Nicht meine“ entfernt wie heute alle Wartenden der Sportpassnummer, also alle Blöcke (Grabstein je
   ScheibenID). Der Papierkorb arbeitet je Scheibe: Das endgültige Löschen eines Blocks entfernt nur dessen Rohdaten; die
-  weiche Sperre entsteht erst, wenn die letzte Scheibe dieser ScheibenID geht.
+  weiche Sperre entsteht, außer ein späterer Block bleibt (Review: sonst käme der jüngste Block zurück).
 - **A4 Rückwirkend:** Ein Lauf beim Start und stündlich liest jede ScheibenID neu, deren Stände noch nicht mit dem neuen
   Adapter gelesen sind und die seit 30 Minuten ruht. Neue Blöcke erben Besitzer, Warten auf die erste Bestätigung und
   Papierkorb der vorhandenen Scheibe.

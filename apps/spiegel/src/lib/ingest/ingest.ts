@@ -11,7 +11,12 @@ import type { TargetId } from "@vereinsheim/shot-core/targets"
 
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
-import { CardIdentityConflictError, currentShotsOf, writeRevision } from "../db/cards"
+import {
+  CardIdentityConflictError,
+  currentShotsOf,
+  writeRevision,
+  type RevisionChange,
+} from "../db/cards"
 import { isKeyBlocked, maxCycleOfKey, SAME_CARD_MS, startHintMs } from "../db/blocks"
 import { disciplineFor } from "../db/disciplines"
 import { setSnapshotsRead, storeSnapshot, type PreviousLifesign } from "../db/raw"
@@ -154,8 +159,8 @@ export async function cardsOfKey(db: Db, sourceId: number, scheibenId: number) {
 export type KeyCard = Awaited<ReturnType<typeof cardsOfKey>>[number]
 
 /**
- * nur das Lebenszeichen bewegt: die Scheibe des jüngsten Zyklus mit dem höchsten Block ist wieder offen (SF-10), sonst nichts. Das
- * Lebenszeichen wandert nur vorwärts, auch wenn ein älterer Stand gleichzeitig geschrieben wird.
+ * nur das Lebenszeichen bewegt: die Scheibe des jüngsten Zyklus mit dem höchsten Block ist wieder offen (SF-10), sonst
+ * nichts. Das Lebenszeichen wandert nur vorwärts, auch wenn ein älterer Stand gleichzeitig geschrieben wird.
  */
 async function touchLifesign(db: Db, sourceId: number, scheibenId: number, atMs: number) {
   const [card] = await cardsOfKey(db, sourceId, scheibenId)
@@ -230,6 +235,13 @@ export interface Placement {
   latest: KeyCard | undefined
 }
 
+/** was beim Schreiben eines gedeuteten Stands geschah; mit `change` und `cardId`, wenn geschrieben */
+export interface Written {
+  handled: Handled
+  change?: RevisionChange
+  cardId?: string
+}
+
 /** einen gedeuteten Stand als Scheibe schreiben; `quarantined`, wenn das nicht geht oder nicht darf */
 export async function writeAdapted(
   db: Db,
@@ -240,7 +252,7 @@ export async function writeAdapted(
   known: KnownDiscipline | null,
   { cycle, block, latest }: Placement,
   stored: { snapshotId: bigint; sequence: number }
-): Promise<Handled> {
+): Promise<Written> {
   const ownerId = owner.userId
   // eine Scheibe gehört dem, dessen Zustimmung sie brachte; trägt sie danach eine andere SportpassID, wird nichts
   // geschrieben, sonst landeten fremde Schüsse beim ersten Besitzer (SF-37). Der Admin klärt es.
@@ -251,7 +263,9 @@ export async function writeAdapted(
         card.sportpassId !== null &&
         latest.sportpassId !== card.sportpassId))
   )
-    return quarantine(db, stored.snapshotId, "SportpassID oder Besitzer gewechselt")
+    return {
+      handled: await quarantine(db, stored.snapshotId, "SportpassID oder Besitzer gewechselt"),
+    }
   // eine neue Disziplin mit übernommener Zuordnung (umbenannt) passt nicht zum Vorschlag, mit dem der Adapter gerechnet
   // hat: -1, dann rechnet `refreshStaleDisciplineCards` die Scheibe nach
   const discipline = known
@@ -262,7 +276,7 @@ export async function writeAdapted(
       }))
   const rankingId = await rankingFor(db, target.siteId, card.ranking)
   try {
-    await writeRevision(db, {
+    const result = await writeRevision(db, {
       card: {
         sourceId,
         scheibenId: card.scheibenId,
@@ -291,12 +305,18 @@ export async function writeAdapted(
       rawSnapshotId: stored.snapshotId,
       sequence: stored.sequence,
     })
+    return { handled: "stored", change: result.change, cardId: result.cardId }
   } catch (error) {
     if (isDeterministic(error))
-      return quarantine(db, stored.snapshotId, `nicht schreibbar: ${(error as Error).name}`)
+      return {
+        handled: await quarantine(
+          db,
+          stored.snapshotId,
+          `nicht schreibbar: ${(error as Error).name}`
+        ),
+      }
     throw error
   }
-  return "stored"
 }
 
 /** ein zu deutender Stand einer Scheibe aus dem Stapel */
@@ -362,7 +382,7 @@ async function adaptKey(
   for (const end of ends) {
     if (end.newBlock) block += 1
     const last = adapted[end.index]
-    const handled = await writeAdapted(
+    const { handled } = await writeAdapted(
       db,
       target,
       sourceId,
