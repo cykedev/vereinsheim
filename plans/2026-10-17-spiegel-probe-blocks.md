@@ -121,7 +121,6 @@ Vertrag, `GET /state`.
   jeder Probe-Block eine eigene Scheibe“), Keywords `probe-block, neustart der probe, eigene scheibe`.
 - `vault/decisions/adr-031.md`: Punkt „Revisionen sind Korrekturen der Wertung“: Die Probe, die Meyton löscht, beendet
   einen Block, der nächste Stand beginnt eine neue Scheibe (Verweis auf die Änderung in ADR-027); TL;DR entsprechend.
-- `vault/decisions/decisions.md` (MOC): Zeile zu ADR-027 um „17. Oktober: jeder Probe-Block eine Scheibe“ ergänzen.
 - Prüfen: `node .claude/vault-lint.mjs` grün.
 
 ### T3 — Erwartung der Fälle: Blöcke
@@ -235,6 +234,9 @@ Vertrag, `GET /state`.
 - `vault/spiegel/spiegel-open-questions.md`: Frage „eigene Scheibe nach Neustart“ als beantwortet (17. Oktober 2026,
   [[adr-027]]) entfernen; „Hält die Brücke doch einen eigenen Speicher?“ um den Satz ergänzen, dass nur noch die Lücke
   ohne Live-Upload offen ist.
+- `apps/spiegel/CLAUDE.md`: Regel „Revisionen sind Korrekturen der Wertung“ (Ende der Probe beginnt eine neue Scheibe,
+  `Card.block`), „Ingest-API“ („Adapter je Scheibe nur für den neuesten Stand“ → jeder gespeicherte Stand, geschrieben
+  der letzte je Block), „Löschen mit Papierkorb“ (Löschen eines Blocks), Lauf `rereadOutdatedKeys` beim Start.
 - `/sync-graph`; `vault-lint` grün.
 
 ## Verification
