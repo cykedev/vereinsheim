@@ -15,7 +15,7 @@ import { normalizeLoginEmail } from "@vereinsheim/lib/auth/validation"
 
 import { createPrismaClient } from "../src/lib/db"
 import { writeRevision, type RevisionChange } from "../src/lib/db/cards"
-import { FAMILY_NAMES } from "../src/lib/families"
+import { disciplineFor } from "../src/lib/db/disciplines"
 import { BCRYPT_COST } from "../src/lib/startup"
 import { DEV_DATABASE_URL } from "../test/dev-database"
 import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
@@ -99,29 +99,7 @@ async function main() {
       stale: 0,
     }
     for (const seed of seeds) {
-      const family = await db.family.upsert({
-        where: { slug: seed.discipline.family },
-        create: { slug: seed.discipline.family, name: FAMILY_NAMES[seed.discipline.family] },
-        update: {},
-      })
-      const discipline = await db.discipline.upsert({
-        where: {
-          siteId_meytonId_name: {
-            siteId: site.id,
-            meytonId: seed.discipline.meytonId,
-            name: seed.discipline.name,
-          },
-        },
-        create: {
-          siteId: site.id,
-          meytonId: seed.discipline.meytonId,
-          name: seed.discipline.name,
-          familyId: family.id,
-          targetId: seed.discipline.targetId,
-          officialScoring: seed.discipline.officialScoring,
-        },
-        update: {},
-      })
+      const discipline = await disciplineFor(db, site.id, seed.discipline)
       const result = await writeRevision(db, {
         card: { ...seed.card, sourceId: source.id, disciplineId: discipline.id, ownerId: owner.id },
         shots: seed.shots,

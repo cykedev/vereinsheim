@@ -6,14 +6,15 @@
 
 import type { DiscardReason, SnapshotOutcome } from "@vereinsheim/ingest-contract/api"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
+import { plannedShotsOf } from "@vereinsheim/shot-core/discipline"
 import type { TargetId } from "@vereinsheim/shot-core/targets"
 
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
 import { CardIdentityConflictError, writeRevision } from "../db/cards"
 import { isKeyBlocked, maxCycleOfKey, SAME_CARD_MS, startHintMs } from "../db/blocks"
+import { disciplineFor } from "../db/disciplines"
 import { storeSnapshot, type PreviousLifesign } from "../db/raw"
-import { FAMILY_NAMES } from "../families"
 import {
   adaptSnapshot,
   ADAPTER_VERSION,
@@ -22,7 +23,6 @@ import {
   isComplete,
   schemaProblems,
   sportpassIdOf,
-  type AdaptedCard,
 } from "./meyton-ssmdb2"
 
 export interface IngestTarget {
@@ -109,48 +109,6 @@ async function rankingFor(db: Db, siteId: number, name: string | null): Promise<
   return ranking.id
 }
 
-/** die Disziplin der Anlage; neu angelegt mit dem, was der Fachkern über sie weiß */
-async function disciplineFor(
-  db: Db,
-  siteId: number,
-  guess: {
-    meytonId: number
-    name: string
-    targetId: TargetId | null
-    family: AdaptedCard["discipline"]["family"]
-  }
-) {
-  const where = { siteId_meytonId_name: { siteId, meytonId: guess.meytonId, name: guess.name } }
-  const existing = await db.discipline.findUnique({
-    where,
-    select: { id: true, targetId: true },
-  })
-  if (existing) return { id: existing.id, targetId: existing.targetId as TargetId | null }
-  const family = guess.family
-    ? await db.family.upsert({
-        where: { slug: guess.family },
-        create: { slug: guess.family, name: FAMILY_NAMES[guess.family] },
-        update: {},
-        select: { id: true },
-      })
-    : null
-  const created = await db.discipline.upsert({
-    where,
-    create: {
-      siteId,
-      meytonId: guess.meytonId,
-      name: guess.name,
-      targetId: guess.targetId,
-      familyId: family?.id ?? null,
-      // amtliche Wertung unbekannt, bis der Admin sie setzt (SF-74); nie aus der Anzeigeart
-      officialScoring: null,
-    },
-    update: {},
-    select: { id: true, targetId: true },
-  })
-  return { id: created.id, targetId: created.targetId as TargetId | null }
-}
-
 /** die Uhrabweichung der Anlage, die der Beobachtung am nächsten liegt (SF-29) */
 async function siteClockAt(db: Db, siteId: number, atMs: number): Promise<number | null> {
   const at = new Date(atMs)
@@ -235,12 +193,13 @@ async function adaptAndWrite(
     )
   const known = await db.discipline.findUnique({
     where: { siteId_meytonId_name: { siteId: target.siteId, ...named } },
-    select: { id: true, targetId: true },
+    select: { id: true, targetId: true, meytonId: true, plannedShots: true, version: true },
   })
   const cards = await cardsOfKey(db, sourceId, snapshot.scheibenId)
   const result = adaptSnapshot(snapshot, {
     timeZone: target.timeZone,
     targetId: known ? (known.targetId as TargetId | null) : undefined,
+    plannedShots: known ? plannedShotsOf(known.meytonId, known.plannedShots) : undefined,
     previousLifesign: stored.previousLifesign,
     previousLifesignAtMs: stored.previousLifesignAtMs,
     previousClockOffsetMs: cards[0]?.clockOffsetMs ?? null,
@@ -265,7 +224,14 @@ async function adaptAndWrite(
         same.sportpassId !== card.sportpassId))
   )
     return quarantine(db, stored.snapshotId, "SportpassID oder Besitzer gewechselt")
-  const discipline = known ?? (await disciplineFor(db, target.siteId, card.discipline))
+  // eine neue Disziplin mit übernommener Zuordnung (umbenannt) passt nicht zum Vorschlag, mit dem der Adapter gerechnet
+  // hat: -1, dann rechnet `refreshStaleDisciplineCards` die Scheibe nach
+  const discipline = known
+    ? { id: known.id, version: known.version }
+    : await disciplineFor(db, target.siteId, card.discipline).then((d) => ({
+        id: d.id,
+        version: d.copied ? -1 : d.version,
+      }))
   const rankingId = await rankingFor(db, target.siteId, card.ranking)
   try {
     await writeRevision(db, {
@@ -278,6 +244,7 @@ async function adaptAndWrite(
         ownerPending: owner.pending,
         sportpassId: card.sportpassId,
         disciplineId: discipline.id,
+        disciplineVersion: discipline.version,
         stand: card.stand,
         startedAtMs: card.startedAtMs,
         endedAtMs: card.endedAtMs,

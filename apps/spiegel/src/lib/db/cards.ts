@@ -59,6 +59,11 @@ export interface CardInput {
   /** fehlt: nicht anfassen; null: leeren (Drei-Wege-Semantik, conventions §9) */
   sportpassId?: bigint | null
   disciplineId: number
+  /**
+   * `Discipline.version`, mit der der Adapter gerechnet hat; fehlt (`seed:own`, PDF): -1, dann rechnet
+   * `refreshStaleDisciplineCards` die Scheibe einmal mit der Zuordnung nach
+   */
+  disciplineVersion?: number
   stand: string | null
   startedAtMs: number
   endedAtMs: number | null
@@ -236,6 +241,7 @@ function shotRows(revisionId: bigint, cardId: string, shots: readonly ShotInput[
 function cardFeatures(card: CardInput, shots: readonly ShotInput[], familyId: number | null) {
   return {
     disciplineId: card.disciplineId,
+    disciplineVersion: card.disciplineVersion ?? -1,
     familyId,
     stand: card.stand,
     startedAt: new Date(card.startedAtMs),

@@ -448,3 +448,96 @@ describe("ingestBatch", () => {
     ).toBe(before)
   })
 })
+
+/** derselbe Stand unter einer anderen Disziplin und ScheibenID (eine neue Disziplin der Anlage) */
+function withDiscipline(
+  snapshot: SnapshotV1,
+  discipline: { meytonId: number; name: string },
+  scheibenId: number
+): SnapshotV1 {
+  const data = {
+    ...snapshot.data,
+    scheiben: {
+      ...snapshot.data.scheiben,
+      rows: snapshot.data.scheiben.rows.map((row) => ({
+        ...row,
+        DisziplinID: String(discipline.meytonId),
+        Disziplin: discipline.name,
+        ScheibenID: String(scheibenId),
+      })),
+    },
+  }
+  return { ...snapshot, scheibenId, data, checksum: computeChecksum(data) }
+}
+
+describe("ingestBatch mit der Zuordnung des Admins", () => {
+  const disciplineOf = (meytonId: number, name: string) =>
+    db.discipline.findUnique({
+      where: { siteId_meytonId_name: { siteId: site.siteId, meytonId, name } },
+    })
+
+  it("die Schusszahl des Admins geht vor, die Scheibe trägt die Version der Disziplin", async () => {
+    // SF-07: 10 von 40 Wertungsschüssen, „LG 40 alt“ (`19110040`)
+    const expected = frozenExpected("SF-07").cards.find((c) => c.counted.numbers.length === 10)!
+    const discipline = { meytonId: 19_110_040, name: "LG 40 Verein" }
+    await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        ...discipline,
+        targetId: "lg-10m",
+        plannedShots: 10,
+        version: 2,
+        confirmedAt: new Date(),
+      },
+    })
+    for (const snapshot of sent("SF-07", expected.scheibenId))
+      expect((await ingest([withDiscipline(snapshot, discipline, 77_003)]))[0].outcome).toBe(
+        "stored"
+      )
+    const card = await cardOf(77_003)
+    expect(card!.flags).not.toContain("unvollstaendig")
+    expect(card!.disciplineVersion).toBe(2)
+  })
+
+  it("Meytons Spiele kommen ignoriert an, als Vorschlag; die Scheibe ist gespeichert", async () => {
+    const [snapshot] = sent("SF-03", frozenExpected("SF-03").cards[0].scheibenId).slice(-1)
+    const chess = withDiscipline(snapshot, { meytonId: 18_051_010, name: "LG Schach 6x6" }, 77_001)
+    expect((await ingest([chess]))[0].outcome).toBe("stored")
+    const discipline = await disciplineOf(18_051_010, "LG Schach 6x6")
+    expect(discipline?.ignoredAt).not.toBeNull()
+    expect(discipline?.confirmedAt).toBeNull()
+    expect(discipline?.targetId).toBeNull()
+    const card = await cardOf(77_001)
+    expect(card?.disciplineId).toBe(discipline!.id)
+    expect(card?.disciplineVersion).toBe(0)
+  })
+
+  it("in Meyton umbenannt: die neue Disziplin übernimmt die Zuordnung der alten, eingeordnet ist sie nicht", async () => {
+    await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        meytonId: 10_210_020,
+        name: "LP 20 Verein",
+        targetId: "lp-10m",
+        familyId: site.familyId,
+        officialScoring: "rings",
+        plannedShots: 7,
+        confirmedAt: new Date(),
+      },
+    })
+    const [snapshot] = sent("SF-03", frozenExpected("SF-03").cards[0].scheibenId).slice(-1)
+    const renamed = withDiscipline(snapshot, { meytonId: 10_210_020, name: "LP 20 neu" }, 77_002)
+    expect((await ingest([renamed]))[0].outcome).toBe("stored")
+    const discipline = await disciplineOf(10_210_020, "LP 20 neu")
+    expect(discipline).toMatchObject({
+      targetId: "lp-10m",
+      familyId: site.familyId,
+      officialScoring: "rings",
+      plannedShots: 7,
+      confirmedAt: null,
+      ignoredAt: null,
+    })
+    // gerechnet mit dem Vorschlag des Fachkerns, nicht mit der übernommenen Schusszahl: nachrechnen
+    expect((await cardOf(77_002))?.disciplineVersion).toBe(-1)
+  })
+})

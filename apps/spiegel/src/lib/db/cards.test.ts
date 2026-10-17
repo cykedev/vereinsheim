@@ -55,6 +55,15 @@ const projectionOf = (cardId: string) => db.cardProjection.findUniqueOrThrow({ w
 const shotsOf = (cardId: string) => cardWithShots(db, { cardId, ownerId: site.ownerId })
 
 describe("writeRevision", () => {
+  it("die Version der Disziplin: vom Einlesen übernommen, ohne Angabe (seed:own, PDF) -1 zum Nachrechnen", async () => {
+    const input = cardWhere(1180, (c) => !probeOnly(c))
+    const first = await writeRevision(db, input)
+    const read = () => db.card.findUniqueOrThrow({ where: { id: first.cardId } })
+    expect((await read()).disciplineVersion).toBe(-1)
+    await writeRevision(db, { ...input, card: { ...input.card, disciplineVersion: 3 } })
+    expect((await read()).disciplineVersion).toBe(3)
+  })
+
   it("die Rangliste: ein Stand ohne Angabe (seed:own, PDF) lässt sie, die Seite liest ihre Art", async () => {
     const input = cardWhere(1150, (c) => !probeOnly(c))
     const ranking = await db.ranking.create({
