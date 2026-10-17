@@ -1,8 +1,8 @@
 import Link from "next/link"
 
-type AdminTab = "overview" | "users" | "site"
+type AdminTab = "overview" | "users" | "disciplines" | "site"
 
-/** Bereiche des Admins: Übersicht, Konten, Anlage und Brücke */
+/** Bereiche des Admins: Übersicht, Konten, Disziplinen, Anlage und Brücke */
 export function AdminTabs({ current }: { current: AdminTab }) {
   const tab = (key: AdminTab, href: string, label: string) => (
     <Link
@@ -17,6 +17,7 @@ export function AdminTabs({ current }: { current: AdminTab }) {
     <nav aria-label="Admin" className="flex flex-wrap gap-1">
       {tab("overview", "/admin", "Übersicht")}
       {tab("users", "/admin/users", "Konten")}
+      {tab("disciplines", "/admin/disciplines", "Disziplinen")}
       {tab("site", "/admin/site", "Anlage und Brücke")}
     </nav>
   )

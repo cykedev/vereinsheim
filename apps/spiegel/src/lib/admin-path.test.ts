@@ -4,7 +4,13 @@ import { isAdminPath } from "./admin-path"
 
 describe("isAdminPath", () => {
   it("/admin und alles darunter", () => {
-    for (const path of ["/admin", "/admin/users", "/admin/site"])
+    for (const path of [
+      "/admin",
+      "/admin/users",
+      "/admin/site",
+      "/admin/disciplines",
+      "/admin/disciplines/12",
+    ])
       expect(isAdminPath(path), path).toBe(true)
   })
 
