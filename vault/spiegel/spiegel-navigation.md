@@ -321,10 +321,9 @@ Eine eigene Scheibe lässt sich löschen, über Papierkorb und weiche Sperre ([[
 Es gibt keine Wertung des Geräts: Die Wertung hängt an Disziplin und Modus, lässt sich je Scheibe umstellen und wird
 automatisch gespeichert.
 
-- **Wertung einer Scheibe:** gewählt, sonst die Vorgabe „wie am Stand“:
-  - Wettkampf: die amtliche der Disziplin (so druckt Meyton, SF-74), sonst wie am Stand.
-  - Training: wie am Stand, sonst die amtliche.
-  - Ohne beides: Zehntel.
+- **Wertung einer Scheibe:** gewählt, sonst die Wertung der Disziplin (Admin → Disziplinen, Vorgabe für Training und
+  Wettkampf; im Wettkampf die amtliche, so druckt Meyton, SF-74), sonst wie am Stand, ohne alles Zehntel. Die Art der
+  Scheibe ändert die Wertung nicht; „amtlich“ nennt der Umschalter sie nur im Wettkampf.
 
   „Wie am Stand“ ist die häufigste Anzeigeart der Schüsse wie am Ausdruck (`Treffer.Wertung`, 1 und 7 Zehntel, 2 und 8
   ganze Ringe, [[meyton-ssmdb2]]); bei Gleichstand die des letzten Schusses. Andere Codes (Teiler, verdeckt) zählen

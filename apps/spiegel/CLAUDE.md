@@ -89,8 +89,9 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   bündelt die Datei auch für Edge, und dort fehlt `fs` für `pg`.
 - **Wertung je Scheibe und je Familie, keine des Geräts:**
   - Die Regel ist eine reine Funktion (`src/lib/scoring.ts`). Die **Scheibe**: gewählt (`Card.scoringChoice`), sonst
-    Wettkampf in der amtlichen der Disziplin, Training wie am Stand (`Card.standScoring`, die häufigste Anzeigeart der
-    Schüsse wie am Ausdruck, `writeRevision` setzt sie bei jedem Stand), ohne beides Zehntel. Anders als die Projektion
+    die Wertung der Disziplin (Admin → Disziplinen, Vorgabe für Training und Wettkampf, `officialScoring`), sonst wie am
+    Stand (`Card.standScoring`, die häufigste Anzeigeart der Schüsse wie am Ausdruck, `writeRevision` setzt sie bei jedem
+    Stand), ohne alles Zehntel. Eine Scheibe nur aus Probe hat keine Wertung der Disziplin. Anders als die Projektion
     hat `standScoring` keine Version: Ändert sich die Regel, rechnet erst ein neuer Stand (Brücke, `seed:own`) nach. Die **Familie**: gespeichert
     (`FamilyScoring`), sonst die häufigste ihrer Scheiben, bei Gleichstand Zehntel.
   - Die Zugriffe liefern `OverviewCard.scoring` und `PageCard.scoring`, `familyScorings` die gespeicherten nach Kennung.
@@ -114,8 +115,9 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   (`OLD_WORDS` hält „Rangliste“ fern): Die Zugriffe liefern sie als `list` (`OverviewCard`, `PageCard`), die Seite einer
   Scheibe nennt sie im Kopf, Scheiben filtern nach ihr (`list=<id>`). Bei einer Scheibe nur aus Probe zählt die Liste nicht
   (Training, nicht umstellbar). Umstellen auf der Seite einer Scheibe (`KindToggle`, Pokal im weichen Kreis vor dem der Wertung,
-  `setCardKind` in `src/lib/card-kind-actions.ts`); eine Scheibe nur aus Probe ist Training und hat keinen Kreis der Art. Ändert die Art die
-  Vorgabe der Wertung, folgt die Seite (`seenScoring` in `CardScreen`). `Status` der SSMDB2 ist an der Vereinsanlage leer
+  `setCardKind` in `src/lib/card-kind-actions.ts`); eine Scheibe nur aus Probe ist Training und hat keinen Kreis der Art. Die Art ändert die
+  Wertung nicht; `ScoringToggle` nennt die Wertung der Disziplin nur im Wettkampf „amtlich“. Ändert der Admin die
+  Wertung der Disziplin, folgt die Seite (`seenScoring` in `CardScreen`). `Status` der SSMDB2 ist an der Vereinsanlage leer
   ([[meyton-ssmdb2]]). Sitzung und
   Kennung prüfen die Actions über `src/lib/action-guards.ts`.
 - **Darstellung der Scheibe gemerkt:** Ebenen, „übrige blass/aus“ und Ausschnitt (ganze
