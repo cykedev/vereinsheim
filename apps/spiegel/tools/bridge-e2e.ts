@@ -199,15 +199,24 @@ async function main() {
       problems.push(`der ältere Abend kam ohne Auftrag zum Nachladen`)
     const cards = await db.card.findMany({
       where: { source: { siteId: site.id } },
-      select: { scheibenId: true, ownerId: true, _count: { select: { shots: true } } },
+      orderBy: [{ scheibenId: "asc" }, { block: "asc" }],
+      select: {
+        scheibenId: true,
+        cycle: true,
+        block: true,
+        ownerId: true,
+        _count: { select: { shots: true } },
+      },
     })
     for (const card of cards) {
       if (card.ownerId !== user.id) problems.push(`Scheibe ${card.scheibenId} ohne das Konto`)
-      if (cards.filter((c) => c.scheibenId === card.scheibenId).length > 1)
-        problems.push(`Scheibe ${card.scheibenId} doppelt (neuer Zyklus)`)
+      if (card.cycle > 0) problems.push(`Scheibe ${card.scheibenId} doppelt (neuer Zyklus)`)
     }
-    const sf03 = cards.find((c) => c.scheibenId === 1168956429)
-    if (!sf03 || sf03._count.shots < 20) problems.push(`SF-03: ${sf03?._count.shots ?? 0} Schüsse`)
+    // SF-03: die Probe vor der Wertung ist ein eigener Block ([[adr-027]]), danach die Wertung
+    const sf03 = cards.filter((c) => c.scheibenId === 1168956429).map((c) => c._count.shots)
+    out(`SF-03: Blöcke mit ${sf03.join(" und ")} Schüssen`)
+    if (sf03.length !== 2 || sf03[0] !== 5 || sf03[1] < 20)
+      problems.push(`SF-03: Blöcke mit ${sf03.join(", ") || "keinen"} Schüssen statt 5 und 20`)
     const hiddenShots = await db.shot.count({
       where: { card: { source: { siteId: site.id } }, displayMode: { in: [0, 5, 10] } },
     })
