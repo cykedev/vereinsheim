@@ -30,7 +30,7 @@ je Reiter und das Anlegen benannter Zeiträume.
 | Frage | Antwort auf der Seite | Katalog ([[spiegel-statistics]]) |
 |---|---|---|
 | Werde ich besser? | Verlauf je Scheibe mit gleitendem Schnitt und Formband, Vergleich mit dem Zeitraum davor | T1, T2, T3, C3 |
-| Wie war die Saison? | Kopf mit Scheiben, Schüssen, Ø je Schuss, Bestwert; Rekorde | T6, R1–R8 |
+| Wie war die Saison? | Kopf mit Scheiben, Schüssen, Ø je Schuss, Bestwert; Rekorde | T6, R1–R8, R10, R11 |
 | Bin ich gerade in Form? | die letzten Scheiben gegen den eigenen Schnitt, Boden und Decke | C4, T5 |
 | Wo verliere ich Ringe? | Langzeit-Trefferbild, Lage über Zeit, Ausreißerrichtung, Schussposition in der Serie | L7, L9, L10, I7 |
 | Was hat die neue Munition gebracht? | Vergleich nach Merkmal (nach SP-2.3) | C5, C6 |
@@ -154,7 +154,7 @@ Eine eigene Seite **Vergleich** gibt es nicht; der Vergleich ist eingebaut.
 | Reiter | Inhalt | Katalog |
 |---|---|---|
 | Überblick | Beobachtungen in Worten über den Zeitraum | – |
-| Ergebnis | Verteilung der Scheiben-Ø, Boden und Decke, Rekorde | T5, R1–R8 |
+| Ergebnis | Verteilung der Scheiben-Ø, Boden und Decke, Rekorde | T5, R1–R8, R10, R11 |
 | Präzision | σ̂ im Verlauf, Langzeit-Trefferbild, Form über mehrere Scheiben | L9 |
 | Lage | Lage über Zeit, Ausreißerrichtung, Richtungsuhr über alle Schüsse | L7, L10 |
 | Zeit | Umfang und Kalender, Tempo gegen Wert, Tageszeit, Pause | T6, T7, Z6, Z7, K1–K5 |
