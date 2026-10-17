@@ -20,6 +20,8 @@ import { initialPeriodState } from "../period/state"
 const BEFORE = 5
 /** so viele Scheiben zeigt der Streifen */
 const STRIP = 20
+/** so viele neue Rekorde stehen je Abend auf Start, wie oben im Fortschritt; der Rest ist ein Link dorthin */
+const START_RECORDS = 5
 
 export type { RecordRow }
 
@@ -60,8 +62,12 @@ export interface EveningBlock {
     partial: boolean
     band: { low: number; high: number } | null
   }[]
-  /** Rekorde der Familie, deren Scheibe am Abend liegt */
+  /** Rekorde der Familie, deren Scheibe am Abend liegt: höchstens fünf, in der Folge des Katalogs */
   records: RecordRow[]
+  /** wie viele neue Rekorde darüber hinaus im Fortschritt stehen */
+  moreRecords: number
+  /** der Fortschritt dieser Familie, Abschnitt Analyse, wo alle Rekorde stehen */
+  recordsRoute: ProgressRoute
 }
 
 /** „Form der letzten 90 Tage“ rechts auf Start */
@@ -152,7 +158,7 @@ export function startModel(input: StartInput): StartModel {
       partial: p.partial,
       band: p.band,
     }))
-    const records = recordRows(
+    const newRecords = recordRows(
       projectedRecords(ofFamily, scoring, { includeProbeOnly: true }),
       scoring
     ).filter((row) => ids.has(row.record.cardId))
@@ -168,7 +174,9 @@ export function startModel(input: StartInput): StartModel {
       band,
       verdict,
       strip,
-      records,
+      records: newRecords.slice(0, START_RECORDS),
+      moreRecords: Math.max(0, newRecords.length - START_RECORDS),
+      recordsRoute: progressRoute(initialPeriodState({ family, scoring }), "analysis"),
     }
   })
 

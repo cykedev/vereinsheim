@@ -1,9 +1,11 @@
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
+import { projectedRecords } from "@vereinsheim/shot-core/projection"
 import { describe, expect, it } from "vitest"
 
 import type { ListInputCard } from "../list/evenings"
 import { urlFromRoute } from "../nav/routes"
 import { NOW, periodCard, projected, TZ } from "../period/testSeason"
+import { recordRows } from "../period/records"
 import { startModel } from "./model"
 
 const DAY = 86_400_000
@@ -202,6 +204,32 @@ describe("Start: der letzte Abend", () => {
     expect(records.length).toBeGreaterThan(0)
     expect(records.every((r) => r.record.cardId === "e")).toBe(true)
     expect(records.some((r) => r.label === "Bestes Ergebnis, Scheibe zu 1 Schuss")).toBe(true)
+  })
+
+  it("neue Rekorde: höchstens fünf in der Folge des Katalogs, der Rest als Zahl mit Weg in den Fortschritt", () => {
+    // der erste Abend der Familie: jeder Rekord ist neu
+    const first = model([lg(periodCard("e", 0, [100, 104, 95, 109], { startedAtMs: at(29, 18) }))])
+    const block = first.blocks[0]
+    const all = recordRows(
+      projectedRecords(
+        [projected(periodCard("e", 0, [100, 104, 95, 109], { startedAtMs: at(29, 18) }))],
+        "decimal",
+        { includeProbeOnly: true }
+      ),
+      "decimal"
+    )
+    expect(all.length).toBeGreaterThan(5)
+    expect(block.records.map((r) => r.key)).toEqual(all.slice(0, 5).map((r) => r.key))
+    expect(block.moreRecords).toBe(all.length - 5)
+    expect(urlFromRoute(block.recordsRoute)).toBe("/progress?family=lg-freihand#analysis")
+    // ein Abend mit höchstens fünf: nichts übrig
+    const few = model([
+      lg(periodCard("old2", 0, [104, 104], { startedAtMs: at(20, 18) })),
+      lg(periodCard("old1", 0, [100], { startedAtMs: at(21, 18) })),
+      lg(periodCard("e", 0, [106], { startedAtMs: at(29, 18) })),
+    ]).blocks[0]
+    expect(few.records.length).toBeLessThanOrEqual(5)
+    expect(few.moreRecords).toBe(0)
   })
 
   it("Form der letzten 90 Tage für die zuletzt gewählte Familie, mit Vergleich; ohne Wahl die des ersten Blocks", () => {

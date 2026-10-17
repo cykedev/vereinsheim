@@ -17,7 +17,11 @@ const lp = (card: PeriodCard): Raw => ({ card, family: "lp-freihand" })
 const render = (
   cards: Raw[],
   scoring: "decimal" | "rings" = "decimal",
-  extra: { actions?: ReturnType<typeof h>; notice?: ReturnType<typeof h> } = {}
+  extra: {
+    actions?: ReturnType<typeof h>
+    notice?: ReturnType<typeof h>
+    moreRecords?: number
+  } = {}
 ) => {
   const model = startModel({
     cards: cards.map((c) => ({ ...c, card: projected(c.card) })),
@@ -27,7 +31,11 @@ const render = (
     scoringOf: () => scoring,
     family: null,
   })
-  const block = model.blocks[0]
+  const { moreRecords, ...props } = extra
+  const block = {
+    ...model.blocks[0],
+    ...(moreRecords === undefined ? {} : { moreRecords }),
+  }
   return renderToStaticMarkup(
     h(EveningBlock, {
       block,
@@ -43,7 +51,7 @@ const render = (
         query: { ...DEFAULT_LIST, family: block.family },
         evening: block.day,
       },
-      ...extra,
+      ...props,
     })
   )
 }
@@ -200,6 +208,15 @@ describe("Block des letzten Abends auf Start", () => {
       lp(periodCard("m", 0, [90, 90], { startedAtMs: at(25, 19) })),
     ])
     expect(without).not.toContain("data-new-records")
+  })
+
+  it("mehr als fünf neue Rekorde: der Rest als Link in den Fortschritt, Einzahl und Mehrzahl", () => {
+    const more = (moreRecords: number) => render(CARDS, "decimal", { moreRecords })
+    expect(more(3)).toMatch(
+      /<a href="\/progress\?family=lp-freihand#analysis"[^>]*data-more-records[^>]*>Noch 3 weitere Rekorde im Fortschritt ›<\/a>/
+    )
+    expect(more(1)).toContain(">Noch 1 weiterer Rekord im Fortschritt ›</a>")
+    expect(more(0)).not.toContain("data-more-records")
   })
 
   it("nur Tokens, keine Palette-Klassen, Schrift ab text-xs", () => {

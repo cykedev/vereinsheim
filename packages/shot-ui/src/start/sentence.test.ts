@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { initialPeriodState } from "../period/state"
 import type { EveningBlock } from "./model"
 import { eveningReferenceText, eveningSentence, formLegend } from "./sentence"
 
@@ -16,6 +17,12 @@ const block = (patch: Partial<EveningBlock>): EveningBlock => ({
   verdict: "within",
   strip: [],
   records: [],
+  moreRecords: 0,
+  recordsRoute: {
+    page: "progress",
+    query: initialPeriodState({ family: "lp-freihand" }),
+    section: null,
+  },
   ...patch,
 })
 

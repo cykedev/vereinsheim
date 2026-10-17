@@ -231,6 +231,17 @@ export function EveningBlock({
               </li>
             ))}
           </ul>
+          {block.moreRecords > 0 && (
+            <RouteLink
+              route={block.recordsRoute}
+              data-more-records
+              className="justify-self-start text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              {block.moreRecords === 1
+                ? "Noch 1 weiterer Rekord im Fortschritt ›"
+                : `Noch ${block.moreRecords} weitere Rekorde im Fortschritt ›`}
+            </RouteLink>
+          )}
         </div>
       )}
       <RouteLink
