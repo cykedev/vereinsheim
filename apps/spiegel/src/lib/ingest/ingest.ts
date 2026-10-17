@@ -70,7 +70,7 @@ async function sourceOf(db: Db, siteId: number, epoch: number): Promise<SourceSt
 }
 
 /** wem eine Scheibe gehört und ob der Besitz noch auf die Bestätigung der ersten Scheibe wartet */
-interface Owner {
+export interface Owner {
   userId: string
   pending: boolean
 }
@@ -135,7 +135,7 @@ async function siteClockAt(db: Db, siteId: number, atMs: number): Promise<number
 }
 
 /** die Scheiben einer Kennung über alle Zyklen (SF-77) und Blöcke, jüngster Zyklus und höchster Block zuerst */
-async function cardsOfKey(db: Db, sourceId: number, scheibenId: number) {
+export async function cardsOfKey(db: Db, sourceId: number, scheibenId: number) {
   return db.card.findMany({
     where: { sourceId, scheibenId },
     orderBy: [{ cycle: "desc" }, { block: "desc" }],
@@ -151,7 +151,7 @@ async function cardsOfKey(db: Db, sourceId: number, scheibenId: number) {
   })
 }
 
-type KeyCard = Awaited<ReturnType<typeof cardsOfKey>>[number]
+export type KeyCard = Awaited<ReturnType<typeof cardsOfKey>>[number]
 
 /**
  * nur das Lebenszeichen bewegt: die Scheibe des jüngsten Zyklus mit dem höchsten Block ist wieder offen (SF-10), sonst nichts. Das
@@ -179,7 +179,7 @@ async function quarantine(db: Db, snapshotId: bigint, reason: string): Promise<H
 }
 
 /** die Disziplin des Stands, wie Spiegel sie kennt (undefined: noch nicht angelegt), oder warum er nicht zu deuten ist */
-async function disciplineContext(
+export async function disciplineContext(
   db: Db,
   target: IngestTarget,
   snapshot: SnapshotV1
@@ -195,7 +195,7 @@ async function disciplineContext(
   return { known }
 }
 
-type KnownDiscipline = {
+export type KnownDiscipline = {
   id: number
   targetId: string | null
   meytonId: number
@@ -204,7 +204,7 @@ type KnownDiscipline = {
 }
 
 /** einen gespeicherten Stand deuten (reine Funktion des Adapters, dazu die Uhr der Anlage) */
-async function adaptStored(
+export async function adaptStored(
   db: Db,
   target: IngestTarget,
   snapshot: SnapshotV1,
@@ -224,14 +224,14 @@ async function adaptStored(
 }
 
 /** wohin ein gedeuteter Stand gehört: Zyklus, Block und die jüngste Scheibe dieses Zyklus, wenn es sie gibt */
-interface Placement {
+export interface Placement {
   cycle: number
   block: number
   latest: KeyCard | undefined
 }
 
 /** einen gedeuteten Stand als Scheibe schreiben; `quarantined`, wenn das nicht geht oder nicht darf */
-async function writeAdapted(
+export async function writeAdapted(
   db: Db,
   target: IngestTarget,
   sourceId: number,

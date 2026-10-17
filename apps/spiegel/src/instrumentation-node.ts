@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { refreshStaleDisciplineCards, refreshStaleProjections } from "@/lib/db/cards"
 import { purgeExpiredTrash } from "@/lib/db/trash"
+import { rereadOutdatedKeys } from "@/lib/ingest/reread"
 import { ensureSeedAdmin } from "@/lib/startup"
 
 const HOUR_MS = 3_600_000
@@ -34,6 +35,21 @@ function refreshDisciplines() {
     )
 }
 
+/** Scheiben aus den Rohdaten neu lesen, die der aktuelle Adapter noch nicht kennt; ins Log nur Zahlen und den Namen */
+function rereadKeys() {
+  void rereadOutdatedKeys(db)
+    .then(({ keys, created }) => {
+      if (keys)
+        console.warn(`${keys} Scheiben aus den Rohdaten neu gelesen, ${created} Blöcke dazu`)
+    })
+    .catch((error: unknown) =>
+      console.error(
+        "Rohdaten nicht neu gelesen:",
+        error instanceof Error ? error.name : "unbekannter Fehler"
+      )
+    )
+}
+
 /**
  * Beim Start: das erste Admin-Konto anlegen, falls es keines gibt, den Papierkorb leeren und veraltete Projektionen im
  * Hintergrund nachrechnen (ADR-031: nach einer neuen `projectionVersion`; die Übersichten lesen bis dahin die alte).
@@ -45,11 +61,14 @@ export async function registerNode() {
       if (count) console.warn(`${count} Projektionen beim Start neu gerechnet`)
     })
     .catch((error: unknown) => console.error("Projektionen beim Start nicht nachgerechnet:", error))
-  // Papierkorb und Zuordnungen der Disziplinen: beim Start und danach stündlich; `unref` hält den Prozess nicht am Leben
+  // Papierkorb, Zuordnungen der Disziplinen und Neulesen: beim Start und danach stündlich; `unref` hält den Prozess nicht am Leben
   emptyExpiredTrash()
   setInterval(emptyExpiredTrash, HOUR_MS).unref()
   refreshDisciplines()
   setInterval(refreshDisciplines, HOUR_MS).unref()
+  // neue Version des Adapters: ruhende ScheibenIDs neu lesen ([[adr-027]], jeder Probe-Block eine Scheibe)
+  rereadKeys()
+  setInterval(rereadKeys, HOUR_MS).unref()
   try {
     const result = await ensureSeedAdmin(db, {
       email: process.env.SEED_ADMIN_EMAIL,

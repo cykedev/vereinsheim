@@ -326,11 +326,14 @@ export async function loadSnapshot(db: Db, snapshotId: bigint): Promise<Snapshot
   }
 }
 
-/** Stände als gedeutet vermerken: mit welchem Adapter und in welchen Block der Scheibe (`Card.block`) */
+/**
+ * Stände als gedeutet vermerken: mit welchem Adapter und in welchen Block der Scheibe (`Card.block`); null: gelesen, aber
+ * keiner Scheibe zugeordnet
+ */
 export async function setSnapshotsRead(
   db: Db,
   snapshotIds: readonly bigint[],
-  read: { adapterVersion: string; block: number }
+  read: { adapterVersion: string; block: number | null }
 ): Promise<void> {
   if (!snapshotIds.length) return
   await db.rawSnapshot.updateMany({
