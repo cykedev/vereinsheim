@@ -146,7 +146,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 ### 9 Rekorde und Meilensteine
 
-Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter denen, die zählen (Wertung; bei nur Probe die Probe), und ohne die Merkmale nur-pdf, neu-gewertet und ausgenommen (SF-15, SF-66); je Familie und je Wertung, wahlweise nur Training oder nur Wettkampf. R1, R4 (volle Scheibe), R5 und R6 je Schusszahl, R2 je Serienlänge; bei Gleichstand gilt der frühere; Zählungen (R5–R7) erst ab einem Treffer. Eine Scheibe nur mit Probe zählt nur auf Wunsch, dann ihre Probe wie Wertung in Serien zu zehn (SF-01); ebenso eine, deren Probe als Wertung gezählt ist (SF-05, Merkmal `als-wertung-gezaehlt`). Umgesetzt im Fachkern (`recordEligible`, `periodRecords`).
+Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter denen, die zählen (Wertung; bei nur Probe die Probe), und ohne die Merkmale nur-pdf, neu-gewertet und ausgenommen (SF-15, SF-66); je Familie und je Wertung, wahlweise nur Training oder nur Wettkampf. R1, R4 (volle Scheibe), R5, R6 (je Scheibe), R10 und R11 je Schusszahl, R2 und R6 (je Serie) je Serienlänge; die Oberfläche sagt deshalb „Scheibe zu 40 Schuss“ oder „Serie zu 10 Schuss“, nie nur „(10 Schuss)“; bei Gleichstand gilt der frühere; Zählungen (R5–R7) erst ab einem Treffer. Eine Scheibe nur mit Probe zählt nur auf Wunsch, dann ihre Probe wie Wertung in Serien zu zehn (SF-01); ebenso eine, deren Probe als Wertung gezählt ist (SF-05, Merkmal `als-wertung-gezaehlt`). Umgesetzt im Fachkern (`recordEligible`, `periodRecords`).
 
 | ID | Kennzahl | Prio | Wo |
 |---|---|---|---|
@@ -155,10 +155,12 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 | R3 | Bester Teiler, zugleich der beste Schuss | A | SP-2.1, Fachkern |
 | R4 | Engste Gruppe (Streukreis) über eine Serie zu zehn und über die volle Scheibe, nur wenn jeder Schuss eine Lage hat | A | SP-2.1, Fachkern |
 | R5 | Meiste 10,9 (nur in Zehnteln); der beste Schuss ist der beste Teiler (R3) | B | SP-2.1, Fachkern |
-| R6 | Meiste Zehner und Innenzehner | B | SP-2.1, Fachkern |
-| R7 | Längste Zehnerfolge | B | SP-2.1, Fachkern |
+| R6 | Meiste Zehner und Innenzehner, je Scheibe und in einer Serie voller Länge (die häufigste Serienlänge der Scheibe) | B | SP-2.1, Fachkern |
+| R7 | Längste Zehnerfolge und längste Folge ohne Schuss unter 9 | B | SP-2.1, Fachkern |
 | R8 | Beste Form (höchster voller Schnitt je Schuss über fünf Scheiben) | C | SP-2.1, Fachkern |
 | R9 | Meilensteine (1 000 Schuss, erste 10,9, Abstand zum Rekord) | C | SP-2.8 |
+| R10 | Bester schwächster Schuss je Schusszahl, in Ringen der Wertung; keiner, wenn einem Wertungsschuss der Wert fehlt | B | SP-2.1, Fachkern |
+| R11 | Kleinste Spanne zwischen bester und schwächster Serie voller Länge je Schusszahl, ab zwei Serien, auf das Raster der Wertung gerundet | B | SP-2.1, Fachkern |
 
 ### 10 Vergleiche
 

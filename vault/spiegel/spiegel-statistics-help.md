@@ -467,10 +467,13 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Rekorde (R1, R2, R3, R4, R5, R6, R7, R8, R10, R11)**
 - *Was:* Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe,
-  meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner, längste Folge von Zehnern und deine
-  beste Form: der höchste Schnitt je Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe
-  und die Zahl der 10,9, Zehner und Innenzehner führt Spiegel je Schusszahl, die beste Serie je
-  Serienlänge, denn 40 und 60 Schuss sind nicht vergleichbar.
+  meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner auf einer Scheibe und in einer Serie,
+  längste Folge von Zehnern, längste Folge ohne Schuss unter 9, dein bester schwächster Schuss, die
+  kleinste Spanne zwischen bester und schwächster Serie und deine beste Form: der höchste Schnitt je
+  Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe, die Zahl der 10,9, Zehner und
+  Innenzehner auf einer Scheibe, der schwächste Schuss und die Spanne der Serien gelten je
+  Schusszahl der Scheibe („Scheibe zu 40 Schuss“), die beste Serie und die Zehner einer Serie je
+  Serienlänge („Serie zu 10 Schuss“), denn 40 und 60 Schuss sind nicht vergleichbar.
 - *So liest du es:* Bei Gleichstand bleibt der frühere Rekord, denn er hat ihn zuerst gesetzt.
   Rekorde gibt es je Wertung (Zehntel oder ganze Ringe) und wahlweise nur für Training oder nur für
   Wettkampf; sie gelten über alle deine Scheiben, nicht nur über den gewählten Zeitraum.
