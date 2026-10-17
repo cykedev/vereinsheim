@@ -36,7 +36,8 @@ verloren, und sobald ein Admin die Disziplin einordnet, erscheinen die wartenden
 
 Der Vorschlag mit den offenen Fragen hat den User nicht erreicht. Der Plan nimmt deshalb diese Antworten an:
 
-- **A1** Spaßscheiben lassen sich **ignorieren** (Wunsch des Users): Meytons Vereinsspiele (Schach, Balken, Dart, …) und
+- **A1** Disziplinen ohne sinnvolle Wertung lassen sich **ignorieren** (Wunsch des Users), etwa Spiele oder ein
+  Trainingsspiegel ohne Wertung: Meytons Vereinsspiele (Schach, Balken, Dart, …) und
   Trainingsscheiben schlägt Spiegel von selbst zum Ignorieren vor, eine vereinseigene wie „LG Training Spiegel“
   ignoriert der Admin mit einem Klick. Ignorierte Scheiben bleiben gespeichert (Ignorieren ist jederzeit umkehrbar),
   Spiegel zeigt sie nirgends. Zimmerstutzen bekommt „Eigene Scheibe“: Spiegel zeigt ihn in Stufe 1 noch nicht, ein
@@ -68,7 +69,7 @@ zeichnen, zeigt sie aber, sobald es das kann. „Ignorieren“ heißt: nie zeige
 werden weiter angenommen und gespeichert. So bleibt es umkehrbar, und die Brücke braucht kein Update. Dass die Brücke
 ignorierte Disziplinen gar nicht erst schickt, ist Stufe 2 (über `GET /state`). Neue Disziplinen aus Meytons Spielen und
 Trainingsscheiben (Katalog: Regeln 8000 bis 8154, 9001, 9002) legt das Einlesen gleich als ignoriert an, als Vorschlag
-mit Aufgabe „prüfen“; eine neue Spaßdisziplin des Vereins mit eigener Nummer kommt als „Neu“ an und ist mit einem Klick
+mit Aufgabe „prüfen“; eine neue Disziplin des Vereins ohne sinnvolle Wertung kommt als „Neu“ an und ist mit einem Klick
 ignoriert.
 
 **Nachrechnen über Versionen, wie die Projektion.** `Discipline.version` steigt, wenn sich Scheibe oder Schusszahl
@@ -184,6 +185,9 @@ Zustand oben:
   Einstellungen übernommen. Bitte prüf sie.“
 - Vorschlag ignorieren: „Das ist ein Spiel oder eine Trainingsscheibe von Meyton. Spiegel ignoriert die Disziplin
   deshalb. Bitte prüf das.“
+- Hinweis aus den Daten (nicht ignoriert, mindestens eine Scheibe, keine davon mit Wertungsschüssen): „Bisher hat
+  keine Scheibe dieser Disziplin Wertungsschüsse. Hat sie keine sinnvolle Wertung, etwa als Trainingsspiegel, kannst du
+  sie ignorieren.“
 - ignoriert: „Spiegel ignoriert diese Disziplin. Ihre Scheiben zeigt Spiegel nirgends.“ Darunter statt der Felder nur
   der Knopf „Wieder zeigen“.
 
@@ -260,7 +264,7 @@ zeigen“, nicht destruktiv.
 - `discipline`: Titel „Disziplinen“, Text „Meyton speichert zu jeder Scheibe die Nummer und den Namen der Disziplin.
   Spiegel braucht dazu drei Dinge. Welche Scheibe gezeichnet wird. In welcher Familie die Scheiben stehen. Wie viele
   Schüsse eine vollständige Scheibe hat. Eine neue Disziplin legt Spiegel selbst an, sobald die erste Scheibe kommt.
-  Spaßscheiben wie Schach lassen sich ignorieren.“
+  Disziplinen ohne sinnvolle Wertung, etwa Schach oder ein Trainingsspiegel, lassen sich ignorieren.“
 - `family`: Titel „Familien“, Text „In einer Familie laufen Verläufe und Rekorde zusammen. LG 40 und LG 40 alt sind zum
   Beispiel beide Luftgewehr. Eine eigene Familie lohnt sich, wenn Scheiben nicht mit den anderen verglichen werden
   sollen.“
@@ -289,7 +293,7 @@ Dateien: `apps/spiegel/prisma/schema.prisma`, neue Migration.
      // steigt, wenn sich Scheibenbild oder Schusszahl ändern; Scheiben mit anderem Stand rechnet
      // `refreshStaleDisciplineCards` nach
      version         Int       @default(0)
-     // ignoriert (Spaßscheiben): Spiegel zeigt ihre Scheiben nirgends, die Scheiben bleiben gespeichert; mit
+     // ignoriert (ohne sinnvolle Wertung, etwa Spiele oder ein Trainingsspiegel): Spiegel zeigt ihre Scheiben nirgends, die Scheiben bleiben gespeichert; mit
      // `confirmedAt` null ein Vorschlag des Einlesens (Meytons Spiele und Trainingsscheiben)
      ignoredAt       DateTime? @db.Timestamptz(3)
    ```
@@ -330,13 +334,13 @@ Dateien: `packages/shot-core/src/discipline.ts`, `packages/shot-core/src/discipl
      return override === 0 ? null : override
    }
    ```
-2. `CatalogEntry` bekommt `fun?: true`. Die erste Katalogzeile wird geteilt: Meytons Vereinsspiele und
-   Trainingsscheiben (`...ruleRange(8000, 8154), "9001", "9002"`) als eigene Zeile mit `target: null, fun: true`,
-   Kyffhäuser, 12-kreisig, Löwenbräu und LP5 bleiben ohne `fun` (Sport mit eigener Scheibe). Dazu:
+2. `CatalogEntry` bekommt `ignore?: true` (ohne sinnvolle Wertung). Die erste Katalogzeile wird geteilt: Meytons Vereinsspiele und
+   Trainingsscheiben (`...ruleRange(8000, 8154), "9001", "9002"`) als eigene Zeile mit `target: null, ignore: true`,
+   Kyffhäuser, 12-kreisig, Löwenbräu und LP5 bleiben ohne `ignore` (Sport mit eigener Scheibe). Dazu:
    ```ts
    /** Meytons Spiele und Trainingsscheiben: Vorschlag, die Disziplin zu ignorieren; vereinseigene erkennt nur der Admin */
    export function suggestIgnore(disciplineId: number): boolean {
-     return catalogEntry(parseDisciplineId(disciplineId))?.fun === true
+     return catalogEntry(parseDisciplineId(disciplineId))?.ignore === true
    }
    ```
 3. Tests: `plannedShotsOf(19200020, null)` → 20, `plannedShotsOf(19200020, 3)` → 3, `plannedShotsOf(10110040, 0)` →
@@ -542,6 +546,8 @@ Dateien: `apps/spiegel/src/lib/admin/discipline-model.ts` (neu, rein), `apps/spi
      lastCardMonth: string | null
      /** Scheiben je Anzeige am Stand (`Card.standScoring`) */
      stand: { decimal: number; rings: number }
+     /** Scheiben mit Wertungsschüssen (Projektion nicht `probeOnly`); 0 bei Scheiben: Hinweis aufs Ignorieren */
+     scoredCards: number
      /** häufigste Zahl der Wertungsschüsse (`printedShots`, ohne nur Probe) und wie oft; null ohne */
      shots: { count: number; cards: number; of: number } | null
    }
@@ -577,15 +583,17 @@ Dateien: `apps/spiegel/src/lib/admin/discipline-model.ts` (neu, rein), `apps/spi
    → `suggested`, sonst `waiting`. `visible` ist false bei `ignored`. `suggestion` aus
    `resolveTarget({ disciplineId: meytonId, name })` (Quelle `admin` gibt es dort nicht, weil ohne `adminMappings`
    gerufen), `parseDisciplineId(meytonId).plannedShots` und `suggestIgnore(meytonId)`. Dazu die Satzbausteine des Textbuchs für Zustand,
-   Vorschlag, Anzeige am Stand und Schusszahl als Funktionen (`statusText`, `targetSuggestionText`, `standText`,
-   `shotsText`).
+   Vorschlag, Anzeige am Stand, Schusszahl und den Hinweis aufs Ignorieren als Funktionen (`statusText`,
+   `targetSuggestionText`, `standText`, `shotsText`, `ignoreHintText`; der Hinweis nur ohne `ignored`, mit `cards` > 0
+   und `scoredCards` 0, unabhängig von der Zahl der Schützen, weil er nichts über Ergebnisse sagt).
 2. `disciplines.ts` (jede Funktion `requireAdmin`, Anlage = erste):
    - `disciplineOverview(timeZone)`: Disziplinen mit Familie; `card.groupBy` nach `disciplineId` (`deletedAt: null`,
      `_count`, `_max.startedAt`, Monat über `formatMonthYear` aus `@vereinsheim/lib/format`), nach `[disciplineId, ownerId]` (Zahl der Besitzer) und nach
      `[disciplineId, standScoring]`; `sibling`: nicht eingeordnete Disziplin, deren Werte einer eingeordneten mit
      derselben `meytonId` gleichen; `$queryRaw` für die Schusszahl:
      `SELECT c."disciplineId", p."printedShots", count(*)::int AS n FROM "Card" c JOIN "CardProjection" p ON
-     p."cardId" = c.id WHERE c."deletedAt" IS NULL AND NOT p."probeOnly" AND c."disciplineId" = ANY(${ids}) GROUP BY 1, 2`;
+     p."cardId" = c.id WHERE c."deletedAt" IS NULL AND NOT p."probeOnly" AND c."disciplineId" = ANY(${ids}) GROUP BY 1, 2`
+     (die Summe je Disziplin ist `scoredCards`);
      Familien mit Zahl der Disziplinen und Scheiben. Rückgabe `{ rows: DisciplineRow[]; families: FamilyRow[] }`,
      sortiert: `waiting`, `suggested`, dann nach Familie und Scheibenzahl absteigend, `ignored` zuletzt.
    - `disciplineDetail(id, timeZone)`: dieselbe Zeile für eine Disziplin der Anlage, sonst null.
@@ -702,7 +710,7 @@ Dateien: `apps/spiegel/src/lib/db/visible.ts`, `apps/spiegel/src/lib/users/queri
 
 0. `visible.ts`:
    ```ts
-   /** Scheiben einer Disziplin, die der Admin nicht ignoriert (Spaßscheiben); gilt beim Lesen, nichts wird gelöscht */
+   /** Scheiben einer Disziplin, die der Admin nicht ignoriert (ohne sinnvolle Wertung); gilt beim Lesen, nichts wird gelöscht */
    export const SHOWN_DISCIPLINE = { discipline: { ignoredAt: null } } as const
 
    export const VISIBLE_CARD = { deletedAt: null, ownerPending: false, ...SHOWN_DISCIPLINE } as const
