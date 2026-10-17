@@ -135,9 +135,15 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Kennzahl-`version` oder `PROJECTION_VERSION`, holt `refreshProjections` die veralteten nach (auch die einer früheren
   Revision), je Scheibe unter der Sperre ihrer Zeile; beim Start des Servers `refreshStaleProjections` im Hintergrund.
 - **Revisionen sind Korrekturen der Wertung** (SF-67, `shotChange`): Eine neue entsteht nur, wenn sich eine
-  Wertungszeile ändert oder wegfällt. Neue Schüsse und die Probe, die Meyton beim ersten Wertungsschuss löscht (SF-03)
-  oder neu beginnt (SF-72), ändern die aktuelle Revision; die Scheibe ist so, wie am Ausdruck. Merkmale der Scheibe
-  (Zustand, vollständig, Merkmale) stehen in ihrer Zeile, die amtliche Wertung an der Disziplin (SF-74).
+  Wertungszeile ändert oder wegfällt; neue Schüsse ändern die aktuelle Revision. Merkmale der Scheibe (Zustand,
+  vollständig, Merkmale) stehen in ihrer Zeile, die amtliche Wertung an der Disziplin (SF-74).
+- **Jeder Block eine Scheibe** ([[adr-027]], Änderung vom 17. Oktober 2026): Löscht Meyton die Probe (erster
+  Wertungsschuss SF-03, Neustart SF-72), beginnt der nächste Stand eine neue Scheibe derselben ScheibenID (`Card.block`,
+  eindeutig mit Quelle, ScheibenID und Zyklus). Die Grenze ist eine reine Funktion (`startsNewBlock`, `blockEnds` in
+  `src/lib/ingest/probe-blocks.ts`): Die bisherige Scheibe ist reine Probe, und der neue Stand teilt keinen Schuss
+  (Fingerabdruck) mit ihr. Eine Scheibe mit Wertung teilt sich nie. `rereadOutdatedKeys` (`src/lib/ingest/reread.ts`)
+  liest beim Start und stündlich jede ruhende ScheibenID neu, deren Stände eine ältere `adapterVersion` tragen, und legt
+  fehlende Blöcke an (Besitzer, Warten und Papierkorb von der vorhandenen Scheibe).
 - **Reihenfolge und Kennung:** `storeSnapshot` und `writeRevision` nehmen dasselbe Advisory-Lock (Quelle, ScheibenID).
   Ein Stand mit nicht größerer Folgenummer als `RawSnapshot.lastSequence` bzw. `Card.lastSequence` ändert nichts
   (SF-26), einer mehr als zehn Minuten in der Zukunft wird abgelehnt (`future`), eine Beobachtung mehr als 15 Minuten
@@ -200,8 +206,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 - **Ingest-API** ([[spiegel-ingest-pipeline]]): Route Handler unter
   `src/app/api/ingest/v1/` reichen nur an `src/lib/ingest/http.ts` durch (Handler nehmen `Request`, geben `Response`,
   testbar ohne Next). Dort erst die Grenzen (Token, Ratenbegrenzung, höchstens zwei Stapel, Bytegrenze, Vertrag), dann
-  `ingestBatch` (`ingest.ts`: Epoche, Zustimmung, Sperren, verdeckt, Ablage, Adapter je Scheibe nur für den neuesten
-  Stand). Kopplung, Token, Heartbeat und Zustand in `bridges.ts`, der Adapter in `meyton-ssmdb2.ts` (reine Funktion,
+  `ingestBatch` (`ingest.ts`: Epoche, Zustimmung, Sperren, verdeckt, Ablage, Adapter für jeden neuen Stand in Folge,
+  geschrieben je Block der letzte; jeder Stand trägt danach `adapterVersion` und `block`). Kopplung, Token, Heartbeat und Zustand in `bridges.ts`, der Adapter in `meyton-ssmdb2.ts` (reine Funktion,
   Tests an allen Fällen von `ssmdb2-cases`).
   - **Nichts ohne Zustimmung speichern:** Was nicht zu einer aktiven SportpassID der Anlage passt (bestätigt, nicht
     abgelehnt), verwirft das Einlesen, bevor `storeSnapshot` läuft. Eine neue Regel dort braucht einen Test, der zeigt,
@@ -239,7 +245,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   (`pendingFirstCards`, `pendingCount` für die Zahl am Start-Symbol im Layout). „Ja, meine“ / „Nicht meine“ in
   `src/lib/first-card-actions.ts`, danach `revalidatePath("/", "layout")`. Entfernt wird nur über `purgeCards`
   (`src/lib/db/purge.ts`: Grabstein, Scheibe, ihre Stände nach dem **Beginn aus den Trefferzeiten**, nie nach der
-  Beobachtung, verwaiste Zeilen), die Grundlage auch für Löschen und Papierkorb. Sperren und Zyklen über
+  Beobachtung, verwaiste Zeilen), die Grundlage auch für Löschen und Papierkorb. Bleibt ein anderer Block derselben
+  ScheibenID, gehen nur die Stände dieses Blocks, und die Löschsperre entsteht erst mit dem letzten Block. Sperren und Zyklen über
   `src/lib/db/blocks.ts` (`startHintMs`, `isKeyBlocked`, `maxCycleOfKey`); `storeSnapshot` prüft sie unter seiner
   Sperre (`startAtMs`). Beide Actions sperren zuerst die Zeile der Scheibe und gelten je Anlage und SportpassID.
 - **Löschen mit Papierkorb:** `purgeCards(tx, ids, block)` hinterlässt

@@ -25,7 +25,7 @@ relates_to: ["[[target-architecture]]", "[[db-isolation-model]]", "[[build-deplo
 
 ## Datenfluss
 
-Rohdaten (Snapshot je Scheibe, unverändert) → Normalisierung (Adapter `meyton-ssmdb2@9`: Skalen, Zeitzone, Reihenfolge, Epochen) → kanonisches Modell (Scheibe, Stellung, Serie, Schuss) → Kennzahlen (Registry, versioniert) → Ansichten (Session, Verlauf, Vergleich, später Live). Alles rechts der Rohdaten lässt sich jederzeit neu berechnen.
+Rohdaten (Snapshot je Scheibe, unverändert) → Normalisierung (Adapter `meyton-ssmdb2@10`: Skalen, Zeitzone, Reihenfolge, Epochen) → kanonisches Modell (Scheibe, Stellung, Serie, Schuss) → Kennzahlen (Registry, versioniert) → Ansichten (Session, Verlauf, Vergleich, später Live). Alles rechts der Rohdaten lässt sich jederzeit neu berechnen.
 
 ## Monorepo-Layout
 

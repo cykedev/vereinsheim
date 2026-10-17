@@ -24,7 +24,7 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7, NextAuth v4)  → :3002: Rohdaten als
 │                           Zeilenversionen, Revisionen und Projektion je Scheibe (ADR-031); Start, Scheiben, Seite einer
 │                           Scheibe, Fortschritt, Profil, Admin; Übersichten rechnen auf dem Server aus der Projektion;
-│                           Ingest-API v1 für die Brücke (Kopplung, Geräte-Token, Adapter `meyton-ssmdb2@9`).
+│                           Ingest-API v1 für die Brücke (Kopplung, Geräte-Token, Adapter `meyton-ssmdb2@10`).
 ├── apps/spiegel-bridge/    Brücke im Schützenhaus (Go, ein statisches Binary, ADR-027): liest die SSMDB2 nur lesend,
 │                           erkennt Änderungen, baut Snapshots v1 und lädt sie hoch; Dienst für systemd (`deploy/`).
 ├── packages/config/        @vereinsheim/config — geteilte Tooling-Configs: tsconfig, eslint, prettier, postcss, next,

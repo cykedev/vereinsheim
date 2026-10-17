@@ -9,7 +9,7 @@ governed_by: ["[[adr-027]]"]
 relates_to: ["[[spiegel-ingest-contract]]", "[[spiegel-bridge]]", "[[spiegel-data-model]]", "[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]"]
 ---
 
-**TL;DR** Die Brücke liefert Snapshots an eine kleine, gesicherte Ingest-API. Spiegel speichert sie unverändert als Rohdatensatz, deutet sie mit einem versionierten Adapter (`meyton-ssmdb2@9`) ins kanonische Modell und berechnet die Kennzahlen. Jeder Schritt rechts der Rohdaten ist wiederholbar.
+**TL;DR** Die Brücke liefert Snapshots an eine kleine, gesicherte Ingest-API. Spiegel speichert sie unverändert als Rohdatensatz, deutet sie mit einem versionierten Adapter (`meyton-ssmdb2@10`) ins kanonische Modell und berechnet die Kennzahlen. Jeder Schritt rechts der Rohdaten ist wiederholbar.
 
 ## Endpunkte (Vertrag v1, `packages/ingest-contract`)
 
@@ -44,7 +44,7 @@ lässt `api/ingest` ohne Sitzung durch; jeder Endpunkt außer `pair` verlangt de
 - Token-Bucket je Brücke (Snapshots 20 in 10 s, Heartbeat und Zustand je 6 in der Minute), Kopplung je Adresse 5 und
   insgesamt 30 in 15 Minuten; Antwort 429 mit `Retry-After`.
 - Höchstens zwei Stapel gleichzeitig, sonst 503 mit `Retry-After: 2`.
-- Der Adapter läuft je Scheibe nur für den neuesten Stand eines Stapels; reine Lebenszeichen legen nichts ab (unten).
+- Der Adapter deutet jeden neuen Stand eines Stapels in Folge der Folgenummer (eine reine Funktion); geschrieben wird je Block der Scheibe nur der letzte Stand (unten, „Jeder Block eine Scheibe“). Reine Lebenszeichen legen nichts ab (unten).
   Bewusst in Kauf genommen: Kämen ein Stand und seine Korrektur im selben Stapel, entstünde keine zweite Revision. Die
   Brücke hat keinen Zustand und schickt nach einem Ausfall nur den jetzigen Stand, nie eine Folge alter Stände.
 - `lastSeenAt` höchstens einmal je Minute, Uhrabweichung nur bei Änderung.
@@ -97,7 +97,7 @@ Lastlauf waren es 81 % der Stände ([[spiegel-db-schema]], „Last der Ingest-AP
 
 **Prüfsumme** über eine kanonische Serialisierung, die Brücke und Spiegel gleich berechnen, auch in verschiedenen Sprachen; der Vertrag enthält Testvektoren (SF-27). Format, kanonische Form und Versionsregel: [[spiegel-ingest-contract]].
 
-## Normalisierung (Adapter `meyton-ssmdb2@9`)
+## Normalisierung (Adapter `meyton-ssmdb2@10`)
 
 Gebaut als reine Funktion `adaptSnapshot` (`apps/spiegel/src/lib/ingest/meyton-ssmdb2.ts`), abgenommen an allen 31
 Fällen aus `packages/ssmdb2-cases` (Merkmale, Vollständigkeit, zählende Schüsse, Merkmale je Schuss). Was gebaut ist:
@@ -113,7 +113,8 @@ jede `Rangliste` als `Ranking` an, deren Art der Admin zuordnet.
 - **Skalen je Feld** aus einer Tabelle, festgenagelt durch Tests am echten Datensatz ([[meyton-ssmdb2]]).
 - **Zeit:** Ortszeit ohne Zone plus Millisekunden → UTC mit der Zeitzone der Anlage; der Rohwert bleibt erhalten. Die Sitzungs-Zeitzone der Brücke kommt mit, falls `Zeitstempel` ein `TIMESTAMP` ist (SF-31). Die Uhrabweichung aus dem Heartbeat wird mit ihrem Messzeitpunkt gespeichert und erst ab fünf Minuten ausgeglichen, jeweils mit der nächstgelegenen Messung (SF-29).
 - **Reihenfolge:** innerhalb einer Stellung nach `Treffer`, zwischen Probe und Wertung nach der Zeit. Probe kann auch nach Wertungsschüssen kommen (SF-04). Widersprechen sich Nummer und Zeit, gilt die Nummer, und die Scheibe bekommt das Merkmal `uhr-abweichung` (SF-30).
-- **Probe wie am Ausdruck:** Die Scheibe ist der jüngste stabile Stand; Spiegel sammelt keine Probe über Snapshots ([[adr-027]], Entscheidung vom 9. Oktober 2026). Bei Wertung gibt es keine Probe, nach einem Neustart der Probe nur den letzten Block.
+- **Jeder Block eine Scheibe** ([[adr-027]], Änderung vom 17. Oktober 2026): Löscht Meyton die Probe, mit dem ersten Wertungsschuss (SF-03) oder beim Neustart (SF-72), beginnt der nächste Stand eine neue Scheibe derselben ScheibenID (`Card.block`). Die Grenze erkennt `startsNewBlock` (`src/lib/ingest/probe-blocks.ts`): Die bisherige Scheibe ist reine Probe, und der neue Stand teilt keinen Schuss mit ihr. Je Block ist die Scheibe der jüngste stabile Stand; jeder Stand trägt `adapterVersion` und `block`.
+- **Neu lesen nach Adapter-Version:** Beim Start und stündlich liest `rereadOutdatedKeys` (`src/lib/ingest/reread.ts`) jede ScheibenID mit Scheibe, deren Stände der aktuelle Adapter noch nicht gelesen hat und die seit 30 Minuten ruht, aus den Rohdaten neu (höchstens 200 je Lauf). Fehlende Blöcke entstehen mit Besitzer, Warten und Papierkorb der vorhandenen Scheibe; Rohdaten ohne Scheibe bringen keine zurück.
 - **Disziplin und Scheibenbild** aus der DisziplinID ([[spiegel-target-library]]).
 - **Epochen:** Schlüssel ist Quelle + Epoche + ScheibenID. Eine neue Epoche wäre ein Ereignis der ganzen Quelle (Ablage geleert, neuer Server). Bestätigen lässt sie sich in der Oberfläche nicht: Die Brücke eröffnet keine (sie nimmt die Epoche aus `GET /state` und meldet einen Verdacht nur als `possible-reset`), und eine unbekannte nimmt Spiegel nicht an, weil Grabsteine und Sperren je Epoche gelten; die Übersicht zeigt das als Hinweis. Eine einzelne geänderte Scheibe ist eine Korrektur, keine neue Epoche, und der Beginn taugt nicht als Merkmal: Er verschiebt sich, wenn die Probe verschwindet (SF-23).
 - **Unbekanntes Schema:** Zusätzliche Spalten stören den Adapter nicht. Fehlt eine erwartete Spalte oder ändert sich ihr Typ, kommen die Rohdaten in Quarantäne, bis ein Adapter sie kennt, statt mit der alten Version gedeutet zu werden (SF-25).
