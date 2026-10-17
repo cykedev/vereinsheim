@@ -43,7 +43,7 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   comparePeriods: ["C3", "T3"],
   againstOwnAverage: ["C4"],
   recordEligible: ["R1"],
-  periodRecords: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"],
-  cardRecordCandidates: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"],
-  combineRecords: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"],
+  periodRecords: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R10", "R11"],
+  cardRecordCandidates: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R10", "R11"],
+  combineRecords: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R10", "R11"],
 })

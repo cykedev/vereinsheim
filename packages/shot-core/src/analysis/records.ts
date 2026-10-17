@@ -1,4 +1,4 @@
-// Rekorde über viele Scheiben (Katalog R1–R8). Keine eigene Rechnung: Die Werte kommen aus der
+// Rekorde über viele Scheiben (Katalog R1–R8, R10, R11). Keine eigene Rechnung: Die Werte kommen aus der
 // Registry und aus den Auswertungen einer Scheibe, hier wird nur ausgewählt und verglichen.
 
 import {
@@ -7,17 +7,21 @@ import {
   FLAG_SUSPICIOUS,
   inScoring,
   metricByKey,
+  selectShots,
+  shotNumbers,
   type CardFlag,
   type MetricDefinition,
   type MetricShot,
   type Scoring,
+  type ShotKind,
 } from "../metrics"
 import { modalLength } from "../stats"
 import { MAX_DECIMAL_TENTHS } from "../targets"
 import { byStart, cardShots } from "./card-shots"
 import { longestRun, seriesCurve } from "./course"
 import { cardValues, periodTrend, type PeriodCard } from "./period"
-import { decimalHistogram, shotExtremes } from "./result"
+import { decimalHistogram, seriesConsistency, shotExtremes } from "./result"
+import { valueNeed, valueTenths } from "./values"
 
 /** Merkmale, mit denen eine Scheibe für Rekorde nicht zählt (SF-66) */
 export const RECORD_EXCLUDING_FLAGS = [
@@ -35,6 +39,9 @@ export const FLAG_COUNTED_AS_MATCH = "als-wertung-gezaehlt" satisfies CardFlag
 const TIGHT_SERIES = 10
 /** Schwelle eines Zehners in Zehnteln (R7) */
 const TEN_TENTHS = 100
+/** Schwelle eines Neuners in Zehnteln (R7) */
+const NINE_TENTHS = 90
+const MATCH: readonly ShotKind[] = ["match"]
 
 const metric = (key: string) => metricByKey(key) as Readonly<MetricDefinition>
 const RESULT = metric("result.decimal")
@@ -81,13 +88,22 @@ export interface PeriodRecords {
   tightestCard: Readonly<Record<number, RecordRef>>
   /** R5: meiste 10,9 je Schusszahl (nur in Zehnteln; in ganzen Ringen leer) */
   mostPerfect: Readonly<Record<number, RecordRef>>
-  /** R6: meiste Zehner und Innenzehner je Schusszahl */
+  /** R6: meiste Zehner und Innenzehner je Schusszahl … */
   mostTens: Readonly<Record<number, RecordRef>>
   mostInnerTens: Readonly<Record<number, RecordRef>>
-  /** R7: längste Folge von Zehnern, detail „ab Schuss 4“ */
+  /** … und in einer Serie voller Länge je Serienlänge, detail „Serie 3“ */
+  mostTensSeries: Readonly<Record<number, RecordRef>>
+  mostInnerTensSeries: Readonly<Record<number, RecordRef>>
+  /** R7: längste Folge von Zehnern, detail „ab Schuss 4“ … */
   longestTenRun: RecordRef | null
+  /** … und längste Folge ohne Schuss unter 9 */
+  longestNineRun: RecordRef | null
   /** R8: beste Form: höchster voller Schnitt über fünf Scheiben (Ø je Schuss, `periodTrend`); an der fünften Scheibe */
   bestForm: RecordRef | null
+  /** R10: bester schwächster Schuss je Schusszahl (Ringe in der Wertung), detail „Schuss 12“ */
+  bestWeakestShot: Readonly<Record<number, RecordRef>>
+  /** R11: kleinste Spanne zwischen bester und schwächster Serie voller Länge je Schusszahl (Ringe in der Wertung) */
+  smallestSeriesSpan: Readonly<Record<number, RecordRef>>
 }
 
 type Better = "higher" | "lower"
@@ -107,12 +123,12 @@ function seriesShots(shots: readonly MetricShot[]): [number, MetricShot[]][] {
 }
 
 /**
- * was eine Scheibe zu den Rekorden beiträgt (R1–R7), einmal aus ihren Schüssen gerechnet, und ihr Ø je Schuss für
+ * was eine Scheibe zu den Rekorden beiträgt (R1–R7, R10, R11), einmal aus ihren Schüssen gerechnet, und ihr Ø je Schuss für
  * die beste Form (R8). So lassen sich Rekorde aus gespeicherten Werten je Scheibe zusammenführen (Projektion), statt
  * jeden Schuss zu laden. Null, wenn die Scheibe keine zählenden Schüsse hat (nur Probe ohne `includeProbeOnly`)
  */
 export interface RecordCandidates {
-  /** Schusszahl der zählenden Wertung (Schlüssel für R1, R4, R5, R6) */
+  /** Schusszahl der zählenden Wertung (Schlüssel für R1, R4, R5, R6, R10, R11) */
   n: number
   result: number | null
   /** ab einem Treffer; sonst null */
@@ -128,6 +144,22 @@ export interface RecordCandidates {
   tightestSeries: { value: number; series: number } | null
   bestTeiler: { value: number; shot: number } | null
   longestTenRun: { length: number; start: number } | null
+  /** meiste Zehner in einer Serie voller Länge, bei Gleichstand die frühere; ab einem Treffer */
+  seriesTens: { length: number; value: number; series: number } | null
+  /** ebenso die Innenzehner */
+  seriesInnerTens: { length: number; value: number; series: number } | null
+  /** längste Folge ohne Schuss unter 9 */
+  longestNineRun: { length: number; start: number } | null
+  /**
+   * schwächster Wertungsschuss in Ringen der Wertung, bei Gleichstand der frühere; null, wenn einem Wertungsschuss der
+   * Wert fehlt, denn dann könnte ein schwächerer verborgen sein
+   */
+  weakestShot: { value: number; shot: number } | null
+  /**
+   * Spanne zwischen bester und schwächster Serie voller Länge in Ringen der Wertung, auf ihr Raster gerundet; ab zwei
+   * Serien und nur, wenn jede eine Summe hat
+   */
+  seriesSpan: number | null
   /** Ø je Schuss wie `cardValues` (R8) */
   mean: { value: number; n: number } | null
 }
@@ -154,7 +186,18 @@ export function cardRecordCandidates(
       bestSeries = { length: s.shots, value: s.total, series: s.series }
   }
   let tightestSeries: RecordCandidates["tightestSeries"] = null
+  let seriesTens: RecordCandidates["seriesTens"] = null
+  let seriesInnerTens: RecordCandidates["seriesInnerTens"] = null
   for (const [series, group] of seriesShots(whole)) {
+    if (group.length === full) {
+      // echt mehr ersetzt: bei Gleichstand bleibt die frühere Serie
+      const tens = count(computeMetric(TENS, group))
+      if (tens !== null && (!seriesTens || tens > seriesTens.value))
+        seriesTens = { length: full, value: tens, series }
+      const inner = count(computeMetric(INNER_TENS, group))
+      if (inner !== null && (!seriesInnerTens || inner > seriesInnerTens.value))
+        seriesInnerTens = { length: full, value: inner, series }
+    }
     // eine volle Serie zu zehn, und jeder Schuss mit Lage
     if (group.length !== TIGHT_SERIES || eligibleShots(ENCLOSING, group).length !== group.length) {
       continue
@@ -165,6 +208,29 @@ export function cardRecordCandidates(
   }
   const best = shotExtremes(whole)?.bestTeiler[0]
   const run = longestRun(whole, scoring, TEN_TENTHS)
+  const nineRun = longestRun(whole, scoring, NINE_TENTHS)
+  const numbers = shotNumbers(whole)
+  const valued = selectShots(whole, { kinds: MATCH, need: valueNeed(scoring) })
+  let weakestShot: RecordCandidates["weakestShot"] = null
+  if (valued.length && valued.length === whole.filter((shot) => shot.kind === "match").length) {
+    const weakest = valued.reduce((low, shot) => {
+      const delta = valueTenths(shot, scoring) - valueTenths(low, scoring)
+      return delta < 0 ||
+        (delta === 0 && (numbers.get(shot) as number) < (numbers.get(low) as number))
+        ? shot
+        : low
+    })
+    weakestShot = {
+      value: valueTenths(weakest, scoring) / 10,
+      shot: numbers.get(weakest) as number,
+    }
+  }
+  const consistency = seriesConsistency(whole, scoring)
+  const fullSeries = curve.filter((s) => s.shots === full).length
+  const seriesSpan =
+    consistency?.range != null && consistency.compared === fullSeries
+      ? Math.round(consistency.range * 10) / 10
+      : null
   const mean = cardValues([card], MEAN, scoring, { includeProbeOnly })[0]
   return {
     n,
@@ -179,6 +245,14 @@ export function cardRecordCandidates(
     bestTeiler: best ? { value: best.teiler, shot: best.number } : null,
     longestTenRun:
       run.length >= 1 && run.start !== null ? { length: run.length, start: run.start } : null,
+    seriesTens,
+    seriesInnerTens,
+    longestNineRun:
+      nineRun.length >= 1 && nineRun.start !== null
+        ? { length: nineRun.length, start: nineRun.start }
+        : null,
+    weakestShot,
+    seriesSpan,
     mean: mean ? { value: mean.value, n: mean.n } : null,
   }
 }
@@ -192,7 +266,8 @@ export interface RecordEntry {
 
 /**
  * Rekorde aus den Kandidaten der Scheiben, die zählen, in der Folge ihres Beginns: Nur ein echt besserer Wert
- * ersetzt einen Rekord, bei Gleichstand gilt der frühere
+ * ersetzt einen Rekord, bei Gleichstand gilt der frühere. Die Kandidaten für R6 je Serie, die Folge ab 9, R10 und R11
+ * fehlen in einer Projektion, die noch nicht neu gerechnet ist; sie setzen dann keinen Rekord.
  */
 export function combineRecords(entries: readonly RecordEntry[]): PeriodRecords {
   const bestCard: Record<number, RecordRef> = {}
@@ -201,9 +276,14 @@ export function combineRecords(entries: readonly RecordEntry[]): PeriodRecords {
   const mostTens: Record<number, RecordRef> = {}
   const mostInnerTens: Record<number, RecordRef> = {}
   const bestSeries: Record<number, RecordRef> = {}
+  const mostTensSeries: Record<number, RecordRef> = {}
+  const mostInnerTensSeries: Record<number, RecordRef> = {}
+  const bestWeakestShot: Record<number, RecordRef> = {}
+  const smallestSeriesSpan: Record<number, RecordRef> = {}
   let bestTeiler: RecordRef | null = null
   let tightestSeries: RecordRef | null = null
   let longestTenRun: RecordRef | null = null
+  let longestNineRun: RecordRef | null = null
 
   for (const { id, atMs, candidates: c } of entries) {
     const ref = (value: number, detail?: string): RecordRef => ({
@@ -240,6 +320,28 @@ export function combineRecords(entries: readonly RecordEntry[]): PeriodRecords {
       bestTeiler = ref(c.bestTeiler.value, `Schuss ${c.bestTeiler.shot}`)
     if (c.longestTenRun && beats(c.longestTenRun.length, longestTenRun, "higher"))
       longestTenRun = ref(c.longestTenRun.length, `ab Schuss ${c.longestTenRun.start}`)
+    const { seriesTens, seriesInnerTens, longestNineRun: nineRun, weakestShot } = c
+    if (seriesTens)
+      put(
+        mostTensSeries,
+        seriesTens.length,
+        seriesTens.value,
+        "higher",
+        `Serie ${seriesTens.series}`
+      )
+    if (seriesInnerTens)
+      put(
+        mostInnerTensSeries,
+        seriesInnerTens.length,
+        seriesInnerTens.value,
+        "higher",
+        `Serie ${seriesInnerTens.series}`
+      )
+    if (nineRun && beats(nineRun.length, longestNineRun, "higher"))
+      longestNineRun = ref(nineRun.length, `ab Schuss ${nineRun.start}`)
+    if (weakestShot)
+      put(bestWeakestShot, c.n, weakestShot.value, "higher", `Schuss ${weakestShot.shot}`)
+    put(smallestSeriesSpan, c.n, c.seriesSpan ?? null, "lower")
   }
 
   let bestForm: RecordRef | null = null
@@ -261,13 +363,18 @@ export function combineRecords(entries: readonly RecordEntry[]): PeriodRecords {
     mostPerfect,
     mostTens,
     mostInnerTens,
+    mostTensSeries,
+    mostInnerTensSeries,
     longestTenRun,
+    longestNineRun,
     bestForm,
+    bestWeakestShot,
+    smallestSeriesSpan,
   }
 }
 
 /**
- * Rekorde über die Scheiben, die zählen (`recordEligible`), in der gewählten Wertung (R1–R8); wahlweise
+ * Rekorde über die Scheiben, die zählen (`recordEligible`), in der gewählten Wertung (R1–R8, R10, R11); wahlweise
  * nur Training oder nur Wettkampf. Eine Scheibe nur mit Probe zählt nur mit `includeProbeOnly`, dann über
  * die Probe wie Wertung; ebenso eine Scheibe, deren Probe der Schütze als Wertung zählt (SF-05). Zählungen
  * (R5–R7) setzen erst ab einem Treffer einen Rekord. Aus Kandidaten je Scheibe (`cardRecordCandidates`)

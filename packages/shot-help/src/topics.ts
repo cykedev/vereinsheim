@@ -379,7 +379,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     id: "rekorde",
     title: "Rekorde",
     theme: "period",
-    catalog: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"],
+    catalog: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R10", "R11"],
     metrics: [],
     short: "Deine Bestwerte über alle Scheiben, die zählen.",
     what: "Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe, meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner, längste Folge von Zehnern und deine beste Form: der höchste Schnitt je Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe und die Zahl der 10,9, Zehner und Innenzehner führt Spiegel je Schusszahl, die beste Serie je Serienlänge, denn 40 und 60 Schuss sind nicht vergleichbar.",

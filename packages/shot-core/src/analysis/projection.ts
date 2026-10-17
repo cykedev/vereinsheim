@@ -30,9 +30,9 @@ import {
  * Stand der Rechnung, die nicht in den Versionen der Kennzahlen steht: Form der Projektion, die Kandidaten der Rekorde
  * (`cardRecordCandidates`) und die Lagen (`cardMarks`), die mit ihr gespeichert werden. Erhöhen, wenn sich eins davon
  * ändert; dann werden alle Projektionen neu gerechnet. 2: Lagen für die kleinen Scheiben. 3: ohne verdächtige Schüsse
- * (SF-15).
+ * (SF-15). 4: Zehner und Innenzehner je Serie, Folge ab 9, schwächster Schuss, Spanne der Serien.
  */
-const PROJECTION_VERSION = 3
+const PROJECTION_VERSION = 4
 
 const CARD_METRICS = METRICS.filter((metric) => metric.scopes.includes("card"))
 

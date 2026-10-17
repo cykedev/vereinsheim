@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest"
 import { card, DAY } from "../__fixtures__/period"
 import { FLAG_SUSPICIOUS } from "../metrics"
 import {
+  cardRecordCandidates,
+  combineRecords,
   FLAG_COUNTED_AS_MATCH,
   periodRecords,
   recordEligible,
   RECORD_EXCLUDING_FLAGS,
+  type RecordCandidates,
 } from "./records"
 
 const tens = (count: number, tenths = 100) => Array<number>(count).fill(tenths)
@@ -181,6 +184,8 @@ describe("Rekorde (R1–R8)", () => {
     expect(records.mostPerfect).toEqual({})
     expect(records.mostTens).toEqual({})
     expect(records.mostInnerTens).toEqual({})
+    expect(records.mostTensSeries).toEqual({})
+    expect(records.mostInnerTensSeries).toEqual({})
     expect(records.longestTenRun).toBeNull()
   })
 
@@ -238,5 +243,131 @@ describe("Rekorde (R1–R8)", () => {
     expect(periodRecords(cards, "decimal", { includeProbeOnly: true }).bestCard[10].cardId).toBe(
       "w"
     )
+  })
+})
+
+describe("Rekorde je Serie, Folge ab 9, schwächster Schuss, Spanne (R6, R7, R10, R11)", () => {
+  /** eine Serie zu zehn: so viele Schüsse mit `hit`, der Rest mit `rest` */
+  const series = (count: number, hit = 100, rest = 90) => [
+    ...tens(count, hit),
+    ...tens(10 - count, rest),
+  ]
+
+  it("R6 meiste Zehner in einer Serie, je Serienlänge, nicht auf der Scheibe", () => {
+    const cards = [
+      card("a", 1, [...series(3), ...series(5)]),
+      card("b", 2, [...series(4), ...series(4), ...series(4), ...series(4)]),
+    ]
+    const records = periodRecords(cards, "decimal")
+    expect(records.mostTensSeries[10]).toEqual({
+      value: 5,
+      cardId: "a",
+      atMs: DAY,
+      detail: "Serie 2",
+    })
+    expect(records.mostTens[40]).toMatchObject({ cardId: "b", value: 16 })
+    expect(periodRecords(cards, "rings").mostTensSeries[10]).toMatchObject({
+      cardId: "a",
+      value: 5,
+    })
+  })
+
+  it("R6 Gleichstand zweier Serien: die frühere", () => {
+    const records = periodRecords([card("a", 1, [...series(4), ...series(4)])], "decimal")
+    expect(records.mostTensSeries[10]).toMatchObject({ value: 4, detail: "Serie 1" })
+  })
+
+  it("R6 meiste Innenzehner in einer Serie", () => {
+    const records = periodRecords(
+      [card("a", 1, [...series(1, 104), ...series(3, 104), ...series(2, 104)])],
+      "decimal"
+    )
+    expect(records.mostInnerTensSeries[10]).toMatchObject({ value: 3, detail: "Serie 2" })
+  })
+
+  it("R6 eine kurze Restserie zählt nicht", () => {
+    const records = periodRecords([card("a", 1, [...tens(20, 90), ...tens(5)])], "decimal")
+    expect(records.mostTensSeries).toEqual({})
+    expect(records.mostTens[25]).toMatchObject({ value: 5 })
+  })
+
+  it("R7 längste Folge ohne Schuss unter 9, in beiden Wertungen", () => {
+    const cards = [card("a", 1, [95, 90, 100, 89, 91, 92, 93, 94])]
+    for (const scoring of ["decimal", "rings"] as const) {
+      expect(periodRecords(cards, scoring).longestNineRun, scoring).toEqual({
+        value: 4,
+        cardId: "a",
+        atMs: DAY,
+        detail: "ab Schuss 5",
+      })
+    }
+    expect(periodRecords([card("a", 1, tens(3, 89))], "decimal").longestNineRun).toBeNull()
+  })
+
+  it("R10 bester schwächster Schuss je Schusszahl, in der Wertung", () => {
+    const cards = [card("a", 1, [100, 72, 95]), card("b", 2, [100, 71, 99])]
+    expect(periodRecords(cards, "decimal").bestWeakestShot[3]).toEqual({
+      value: 7.2,
+      cardId: "a",
+      atMs: DAY,
+      detail: "Schuss 2",
+    })
+    // in ganzen Ringen beide 7: der frühere
+    expect(periodRecords(cards, "rings").bestWeakestShot[3]).toMatchObject({
+      cardId: "a",
+      value: 7,
+    })
+  })
+
+  it("R10 fehlt einem Wertungsschuss der Wert, setzt die Scheibe keinen Rekord", () => {
+    const missing = card("m", 0, [100, 99, 99], {
+      shot: (i) => (i === 2 ? { decimalTenths: null, ring: null } : {}),
+    })
+    const records = periodRecords([missing, card("a", 1, [100, 72, 95])], "decimal")
+    expect(records.bestWeakestShot[3]).toMatchObject({ cardId: "a", value: 7.2 })
+  })
+
+  it("R11 kleinste Spanne der Serien je Schusszahl, ab zwei vollen Serien", () => {
+    const cards = [
+      // 90 und 86
+      card("a", 1, [...tens(10, 90), ...series(6, 90, 80)]),
+      // 88 und 87
+      card("b", 2, [...series(8, 90, 80), ...series(7, 90, 80)]),
+      card("e", 3, tens(10, 90)),
+    ]
+    const records = periodRecords(cards, "decimal")
+    expect(records.smallestSeriesSpan[20]).toEqual({ value: 1, cardId: "b", atMs: 2 * DAY })
+    expect(records.smallestSeriesSpan[10]).toBeUndefined()
+  })
+
+  it("R11 auf das Raster der Wertung gerundet: 89,3 − 85,4 ist 3,9 wie 90,0 − 86,1", () => {
+    const cards = [
+      card("p", 1, [...tens(10, 90), ...tens(9, 90), 51]),
+      card("q", 2, [...tens(9, 90), 83, ...tens(9, 90), 44]),
+    ]
+    expect(periodRecords(cards, "decimal").smallestSeriesSpan[20]).toMatchObject({
+      cardId: "p",
+      value: 3.9,
+    })
+  })
+
+  it("Kandidaten einer alten Projektion ohne die neuen Felder setzen nur die bisherigen Rekorde", () => {
+    const full = cardRecordCandidates(card("a", 1, [...series(3), ...series(5)]), "decimal")
+    expect(full).not.toBeNull()
+    const {
+      seriesTens: _seriesTens,
+      seriesInnerTens: _seriesInnerTens,
+      longestNineRun: _longestNineRun,
+      weakestShot: _weakestShot,
+      seriesSpan: _seriesSpan,
+      ...old
+    } = full as RecordCandidates
+    const records = combineRecords([{ id: "a", atMs: DAY, candidates: old as RecordCandidates }])
+    expect(records.bestCard[20]).toMatchObject({ cardId: "a" })
+    expect(records.mostTensSeries).toEqual({})
+    expect(records.mostInnerTensSeries).toEqual({})
+    expect(records.longestNineRun).toBeNull()
+    expect(records.bestWeakestShot).toEqual({})
+    expect(records.smallestSeriesSpan).toEqual({})
   })
 })
