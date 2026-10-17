@@ -159,8 +159,8 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 | R7 | Längste Zehnerfolge und längste Folge ohne Schuss unter 9 | B | SP-2.1, Fachkern |
 | R8 | Beste Form (höchster voller Schnitt je Schuss über fünf Scheiben) | C | SP-2.1, Fachkern |
 | R9 | Meilensteine (1 000 Schuss, erste 10,9, Abstand zum Rekord) | C | SP-2.8 |
-| R10 | Bester schwächster Schuss je Schusszahl, in Ringen der Wertung; keiner, wenn einem Wertungsschuss der Wert fehlt | B | SP-2.1, Fachkern |
-| R11 | Kleinste Spanne zwischen bester und schwächster Serie voller Länge je Schusszahl, ab zwei Serien, auf das Raster der Wertung gerundet | B | SP-2.1, Fachkern |
+| R10 | Bester schwächster Schuss je Schusszahl, in Ringen der Wertung; ein Schuss über der Soll-Zahl (SF-08, amtlich 0) zählt nicht; keiner, wenn einem Wertungsschuss der Wert fehlt | B | SP-2.1, Fachkern |
+| R11 | Kleinste Spanne zwischen bester und schwächster Serie voller Länge je Schusszahl, ab zwei Serien, auf das Raster der Wertung gerundet; nur nach der Schusszahl der Scheibe geführt, nicht nach der Serienlänge (eine Familie mit gemischten Serienlängen vergleicht 40 Schuss in Serien zu fünf mit 40 Schuss in Serien zu zehn) | B | SP-2.1, Fachkern |
 
 ### 10 Vergleiche
 

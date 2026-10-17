@@ -472,8 +472,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   kleinste Spanne zwischen bester und schwächster Serie und deine beste Form: der höchste Schnitt je
   Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe, die Zahl der 10,9, Zehner und
   Innenzehner auf einer Scheibe, der schwächste Schuss und die Spanne der Serien gelten je
-  Schusszahl der Scheibe („Scheibe zu 40 Schuss“), die beste Serie und die Zehner einer Serie je
-  Serienlänge („Serie zu 10 Schuss“), denn 40 und 60 Schuss sind nicht vergleichbar.
+  Schusszahl der Scheibe („Scheibe zu 40 Schuss“), denn 40 und 60 Schuss sind nicht vergleichbar.
+  Die beste Serie und die Zehner einer Serie gelten je Serienlänge („Serie zu 10 Schuss“).
 - *So liest du es:* Bei Gleichstand bleibt der frühere Rekord, denn er hat ihn zuerst gesetzt.
   Rekorde gibt es je Wertung (Zehntel oder ganze Ringe) und wahlweise nur für Training oder nur für
   Wettkampf; sie gelten über alle deine Scheiben, nicht nur über den gewählten Zeitraum.
