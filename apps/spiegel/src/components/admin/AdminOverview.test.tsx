@@ -16,6 +16,7 @@ const model = (consents: Parameters<typeof overviewModel>[0]["consents"]) =>
     notMine: 0,
     historyPending: 0,
     usage: { cards: 0, recentCards: 0, recentAccounts: 0 },
+    disciplines: { waiting: 0, suggested: 0 },
   })
 
 describe("Übersicht des Admins (Markup)", () => {

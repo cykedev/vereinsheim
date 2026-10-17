@@ -60,12 +60,21 @@ function ScoredEveningBlock(props: Omit<EveningBlockProps, "actions" | "notice">
  * Start: „Offen“ (wartende erste Scheiben), je Familie des letzten Abends der Abend im Formband,
  * die Form. Das Modell hat die Seite auf dem Server gerechnet (`startModel` aus den Projektionen).
  */
+/** eigene Scheiben, deren Disziplin noch niemand eingeordnet hat; null ohne */
+export function waitingText(waiting: number): string | null {
+  if (waiting <= 0) return null
+  return waiting === 1
+    ? "Eine Scheibe wartet darauf, dass ein Admin ihre Disziplin einordnet. Danach erscheint sie hier von selbst."
+    : `${waiting} Scheiben warten darauf, dass ein Admin ihre Disziplin einordnet. Danach erscheinen sie hier von selbst.`
+}
+
 export function StartScreen({
   model,
   marks: compact,
   families,
   context,
   open,
+  waiting = 0,
 }: {
   model: StartModel
   /** die Lagen der Scheiben des Abends, kompakt nach Id */
@@ -74,6 +83,8 @@ export function StartScreen({
   context: PageContext
   /** was auf den Schützen wartet, je Eintrag ein Link nach „Offen“ */
   open: OpenItem[]
+  /** eigene Scheiben, deren Disziplin ein Admin noch einordnen muss (`waitingForDiscipline`) */
+  waiting?: number
 }) {
   const { timeZone } = context
   const marks = useMemo(() => marksById(compact), [compact])
@@ -86,6 +97,11 @@ export function StartScreen({
     <Page>
       <section data-start-page className="grid gap-4">
         <h1 className="sr-only">Start</h1>
+        {waitingText(waiting) && (
+          <p data-waiting-discipline className="text-sm text-foreground-2">
+            {waitingText(waiting)}
+          </p>
+        )}
         {model.blocks.length === 0 ? (
           <>
             <OpenBox items={open} />

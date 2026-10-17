@@ -7,6 +7,7 @@ import { db } from "@/lib/db"
 import { NOT_MINE } from "@/lib/db/purge"
 import { VISIBLE_CARD } from "@/lib/db/visible"
 
+import { disciplineTaskCounts } from "./disciplines"
 import type { AdminHelpId } from "./help"
 import { heldBackText } from "./site"
 
@@ -67,6 +68,8 @@ export interface OverviewInput {
   historyPending: number
   /** Nutzung: sichtbare Scheiben aktiver Konten, davon in den letzten 30 Tagen, Konten mit solchen */
   usage: { cards: number; recentCards: number; recentAccounts: number }
+  /** neue Disziplinen mit Scheiben: deren Scheiben warten (ohne Scheibe oder Familie) oder mit Vorschlag */
+  disciplines: { waiting: number; suggested: number }
 }
 
 /** was die Brücke meldet, in Worten; nur Information, keine Aufgabe */
@@ -109,6 +112,31 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
       href: `/admin/users/${consent.userId}`,
       action: "Nummer prüfen",
     })
+  const { waiting: waitingDisciplines, suggested } = input.disciplines
+  if (waitingDisciplines || suggested)
+    tasks.push(
+      waitingDisciplines
+        ? {
+            id: "disciplines",
+            title:
+              waitingDisciplines === 1
+                ? "Eine neue Disziplin: Scheiben warten"
+                : `${waitingDisciplines} neue Disziplinen: Scheiben warten`,
+            detail: "Spiegel zeigt diese Scheiben erst, wenn du die Disziplin einordnest.",
+            href: "/admin/disciplines",
+            action: "Einordnen",
+          }
+        : {
+            id: "disciplines",
+            title:
+              suggested === 1
+                ? "Eine neue Disziplin prüfen"
+                : `${suggested} neue Disziplinen prüfen`,
+            detail: "Spiegel hat sie selbst eingeordnet. Ein kurzer Blick reicht.",
+            href: "/admin/disciplines",
+            action: "Prüfen",
+          }
+    )
   if (input.site && !input.bridge)
     tasks.push({
       id: "bridge",
@@ -265,7 +293,7 @@ export async function adminOverview(
 ): Promise<AdminOverviewModel> {
   await requireAdmin()
   const site = await db.site.findFirst({ orderBy: { id: "asc" }, select: { id: true, name: true } })
-  const [bridge, consents, users, notMine, usage] = await Promise.all([
+  const [bridge, consents, users, notMine, usage, disciplines] = await Promise.all([
     site
       ? db.bridge.findFirst({
           where: { siteId: site.id, revokedAt: null },
@@ -292,6 +320,7 @@ export async function adminOverview(
     db.user.findMany({ select: { id: true, isActive: true } }),
     site ? db.tombstone.count({ where: { source: { siteId: site.id }, reason: NOT_MINE } }) : 0,
     usageOf(nowMs),
+    disciplineTaskCounts(),
   ])
   const rows = consents.map((c) => ({
     id: c.id,
@@ -331,5 +360,6 @@ export async function adminOverview(
     notMine,
     historyPending: accountsLoadingHistory(consents),
     usage,
+    disciplines,
   })
 }

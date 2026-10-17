@@ -23,6 +23,8 @@ import {
   ownerCards,
   pendingCount,
   pendingFirstCards,
+  trashCards,
+  waitingForDiscipline,
 } from "./reads"
 
 const db = createPrismaClient()
@@ -469,5 +471,53 @@ describe("chooseCardKind", () => {
       await refreshProjections(db, { sourceId: site.sourceId })
     }
     expect((await familyCards(db, { ownerId, familyId: site.familyId }))[0].id).toBe(first.id)
+  })
+})
+
+describe("ignorierte Disziplinen und wartende Einordnung", () => {
+  it("eine ignorierte fehlt überall, auch im Papierkorb; wieder gezeigt ist sie zurück; wartende gezählt", async () => {
+    // die übrigen Testdaten haben schon wartende Scheiben (Disziplin „LG 40“ ohne Scheibenbild)
+    const baseline = await waitingForDiscipline(db, site.ownerId)
+    const discipline = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        meytonId: 18_051_010,
+        name: `LG Schach ${site.siteId}`,
+        targetId: "lp-10m",
+        familyId: site.familyId,
+        ignoredAt: new Date(),
+      },
+    })
+    const [generated, deleted] = generateSeason({
+      seed: 99,
+      cards: 12,
+      firstMs: Date.UTC(2026, 8, 1, 18),
+      everyDays: 1,
+      sourceId: site.sourceId,
+      disciplineId: discipline.id,
+      ownerId: site.ownerId,
+      scheibenIdBase: 9_900,
+    }).filter((card) => card.shots.some((shot) => shot.stellung !== 0))
+    const { cardId } = await writeRevision(db, generated)
+    const { cardId: trashedId } = await writeRevision(db, deleted)
+    await db.card.update({ where: { id: trashedId }, data: { deletedAt: new Date() } })
+    const ids = async () => (await ownerCards(db, { ownerId: site.ownerId })).map((c) => c.id)
+    expect(await ids()).not.toContain(cardId)
+    expect(await cardWithShots(db, { cardId, ownerId: site.ownerId })).toBeNull()
+    expect((await trashCards(db, site.ownerId)).map((t) => t.card.id)).not.toContain(trashedId)
+    expect(await waitingForDiscipline(db, site.ownerId)).toBe(baseline)
+
+    await db.discipline.update({ where: { id: discipline.id }, data: { ignoredAt: null } })
+    expect(await ids()).toContain(cardId)
+    expect((await trashCards(db, site.ownerId)).map((t) => t.card.id)).toContain(trashedId)
+
+    // neu und ohne Scheibenbild: die Scheibe wartet auf die Einordnung
+    await db.discipline.update({ where: { id: discipline.id }, data: { targetId: null } })
+    expect(await waitingForDiscipline(db, site.ownerId)).toBe(baseline + 1)
+    await db.discipline.update({ where: { id: discipline.id }, data: { confirmedAt: new Date() } })
+    expect(await waitingForDiscipline(db, site.ownerId)).toBe(baseline)
+
+    await db.card.deleteMany({ where: { disciplineId: discipline.id } })
+    await db.discipline.delete({ where: { id: discipline.id } })
   })
 })

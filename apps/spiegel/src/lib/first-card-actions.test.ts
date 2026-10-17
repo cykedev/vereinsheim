@@ -109,6 +109,19 @@ describe("Ja, meine", () => {
     expect(confirmed.firstCardConfirmedAt).not.toBeNull()
   })
 
+  it("gibt auch eine wartende Scheibe einer ignorierten Disziplin frei, die „Offen“ nicht zeigt", async () => {
+    await consent()
+    const ignored = await db.discipline.create({
+      data: { siteId: site.siteId, meytonId: 18_051_010, name: "LG Schach", ignoredAt: new Date() },
+    })
+    const [chess] = await cards(1, { disciplineId: ignored.id })
+    const [shown] = await cards(1)
+    asOwner()
+    expect(await confirmFirstCard(shown)).toEqual({ success: true })
+    const after = await db.card.findUniqueOrThrow({ where: { id: chess } })
+    expect(after.ownerPending).toBe(false)
+  })
+
   it("eine fremde oder nicht wartende Scheibe gibt es nicht; nichts geändert", async () => {
     await consent()
     const [foreign] = await cards(1, { ownerId: otherId })

@@ -20,6 +20,7 @@ const base: Input = {
   notMine: 0,
   historyPending: 0,
   usage: { cards: 124, recentCards: 9, recentAccounts: 4 },
+  disciplines: { waiting: 0, suggested: 0 },
 }
 const consent = (id: number, status: Input["consents"][number]["status"]) => ({
   id,
@@ -221,5 +222,38 @@ describe("Übersicht des Admins", () => {
       for (const fact of overviewModel({ ...base, bridge: { ...base.bridge!, status } }).stations[1]
         .facts)
         expect(fact).not.toMatch(OLD_WORDS)
+  })
+})
+
+describe("Aufgabe für neue Disziplinen", () => {
+  const task = (disciplines: Input["disciplines"]) =>
+    overviewModel({ ...base, disciplines }).tasks.find((t) => t.id === "disciplines")
+
+  it("wartende Scheiben gehen vor, sonst prüfen, ohne neue keine", () => {
+    expect(task({ waiting: 1, suggested: 3 })).toEqual({
+      id: "disciplines",
+      title: "Eine neue Disziplin: Scheiben warten",
+      detail: "Spiegel zeigt diese Scheiben erst, wenn du die Disziplin einordnest.",
+      href: "/admin/disciplines",
+      action: "Einordnen",
+    })
+    expect(task({ waiting: 2, suggested: 0 })?.title).toBe("2 neue Disziplinen: Scheiben warten")
+    expect(task({ waiting: 0, suggested: 1 })).toEqual({
+      id: "disciplines",
+      title: "Eine neue Disziplin prüfen",
+      detail: "Spiegel hat sie selbst eingeordnet. Ein kurzer Blick reicht.",
+      href: "/admin/disciplines",
+      action: "Prüfen",
+    })
+    expect(task({ waiting: 0, suggested: 39 })?.title).toBe("39 neue Disziplinen prüfen")
+    expect(task({ waiting: 0, suggested: 0 })).toBeUndefined()
+  })
+
+  it("keine alten Wörter", () => {
+    for (const disciplines of [
+      { waiting: 1, suggested: 0 },
+      { waiting: 0, suggested: 2 },
+    ])
+      expect(JSON.stringify(task(disciplines))).not.toMatch(OLD_WORDS)
   })
 })

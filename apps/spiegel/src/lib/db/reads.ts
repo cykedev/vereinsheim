@@ -15,7 +15,7 @@ import { cardScoring } from "../scoring"
 import { shotFromRow, toMetricShot } from "./cards"
 import { NOT_MINE } from "./purge"
 import { trashEndsAt } from "./trash"
-import { PENDING_CARD, VISIBLE_CARD } from "./visible"
+import { PENDING_CARD, SHOWN_DISCIPLINE, VISIBLE_CARD } from "./visible"
 
 /** eine Scheibe für die Übersichten: Merkmale und Projektion, dazu Familie und Scheibenbild für Filter und Bild */
 export interface OverviewCard extends ProjectedCard {
@@ -279,8 +279,10 @@ export async function marksOfCards(
   const rows = await db.cardProjection.findMany({
     where: {
       cardId: { in: [...query.ids] },
-      // sichtbare; die wartenden nur ausdrücklich, für „Offen“
-      card: { ownerId: query.ownerId, ...(query.pending ? PENDING_CARD : VISIBLE_CARD) },
+      // nicht gelöscht, sichtbar oder (nur ausdrücklich, für „Offen“) wartend. Ohne Bedingung an die Disziplin: Die
+      // Kennungen kommen aus einer Ansicht, die ignorierte schon ausgelassen hat, und die Bedingung über die Relation
+      // kostete bei der Liste „Alles“ rund 40 ms (`pnpm measure`)
+      card: { ownerId: query.ownerId, deletedAt: null, ownerPending: query.pending ?? false },
     },
     select: { cardId: true, marks: true },
   })
@@ -324,7 +326,7 @@ export interface PendingFirstCard {
  */
 async function pendingGroups(db: Db, ownerId: string) {
   const rows = await db.card.findMany({
-    where: { ownerId, ...PENDING_CARD, projection: { isNot: null } },
+    where: { ownerId, ...PENDING_CARD, ...SHOWN_DISCIPLINE, projection: { isNot: null } },
     orderBy: [{ startedAt: "desc" }, { id: "asc" }],
     select: { id: true, sportpassId: true, source: { select: { siteId: true } } },
   })
@@ -355,6 +357,24 @@ export async function pendingFirstCards(db: Db, ownerId: string): Promise<Pendin
   })
 }
 
+/**
+ * eigene Scheiben, die auf die Einordnung ihrer Disziplin warten: die Disziplin ist neu, nicht ignoriert und ohne
+ * Scheibenbild oder Familie, deshalb fehlen sie in den Übersichten (Hinweis auf Start)
+ */
+export async function waitingForDiscipline(db: Db, ownerId: string): Promise<number> {
+  return db.card.count({
+    where: {
+      ownerId,
+      ...VISIBLE_CARD,
+      discipline: {
+        confirmedAt: null,
+        ignoredAt: null,
+        OR: [{ targetId: null }, { familyId: null }],
+      },
+    },
+  })
+}
+
 /** die Zahl am Start-Symbol: so viele Einträge hat „Offen“ */
 export async function pendingCount(db: Db, ownerId: string): Promise<number> {
   return (await pendingGroups(db, ownerId)).length
@@ -370,7 +390,7 @@ export interface TrashCard {
 /** der Papierkorb eines Schützen, zuletzt gelöschte zuerst; ohne Schüsse */
 export async function trashCards(db: Db, ownerId: string): Promise<TrashCard[]> {
   const rows = await db.card.findMany({
-    where: { ownerId, ownerPending: false, deletedAt: { not: null } },
+    where: { ownerId, ownerPending: false, deletedAt: { not: null }, ...SHOWN_DISCIPLINE },
     orderBy: [{ deletedAt: "desc" }, { id: "asc" }],
     select: { ...OVERVIEW_SELECT, deletedAt: true },
   })
@@ -385,7 +405,13 @@ export async function trashCards(db: Db, ownerId: string): Promise<TrashCard[]> 
 export async function trashCount(db: Db, ownerId: string): Promise<number> {
   // dieselben wie `trashCards`: nur mit Projektion, sonst stünde eine Zahl über einer leeren Liste
   return db.card.count({
-    where: { ownerId, ownerPending: false, deletedAt: { not: null }, projection: { isNot: null } },
+    where: {
+      ownerId,
+      ownerPending: false,
+      deletedAt: { not: null },
+      projection: { isNot: null },
+      ...SHOWN_DISCIPLINE,
+    },
   })
 }
 
