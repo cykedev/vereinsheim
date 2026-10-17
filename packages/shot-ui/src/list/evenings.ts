@@ -65,6 +65,7 @@ export interface ListRow {
 export interface Evening {
   /** ISO-Tag, zugleich der Anker */
   day: string
+  /** die Scheiben des Abends, neueste zuerst */
   rows: ListRow[]
   shots: number
   /** Scheiben anderer Familien an diesem Abend */
@@ -222,6 +223,9 @@ export function cardListModel(
     if (entry) entry.count++
     else evening.others.push({ family: other.family, count: 1 })
   }
+
+  // neueste zuerst, auch die Scheiben eines Abends (die Blöcke einer ScheibenID stehen sonst unter der älteren)
+  for (const evening of days.values()) evening.rows.reverse()
 
   return {
     family,

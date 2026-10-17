@@ -82,7 +82,7 @@ describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () =>
     expect(html.match(/scope="row"/g)).toHaveLength(2)
     expect(html).not.toContain("rowSpan")
     expect(html).toMatch(
-      /<tr data-card-row="b"[^>]*><td class="px-1 py-1 @min-\[32rem\]:px-2"><\/td>/
+      /<tr data-card-row="a"[^>]*><td class="px-1 py-1 @min-\[32rem\]:px-2"><\/td>/
     )
     expect(html).toMatch(/<td colSpan="9" class="[^"]*text-right"><a [^>]*data-other-family/)
     expect(text(html)).not.toMatch(/\d Scheiben? · \d+ Schuss auch/)
@@ -106,12 +106,12 @@ describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () =>
     expect(html.match(/data-other-family=/g)).toHaveLength(1)
   })
 
-  it("Zeilen in zeitlicher Folge: Uhrzeit, Art, Ergebnis, Ø, Abstand, Schuss; die kleine Scheibe ist der Knopf", () => {
-    expect([...html.matchAll(/data-card-row="([^"]+)"/g)].map((m) => m[1])).toEqual(["a", "b", "d"])
+  it("Zeilen neueste zuerst: Uhrzeit, Art, Ergebnis, Ø, Abstand, Schuss; die kleine Scheibe ist der Knopf", () => {
+    expect([...html.matchAll(/data-card-row="([^"]+)"/g)].map((m) => m[1])).toEqual(["b", "a", "d"])
     expect(html).toMatch(
-      /<tr data-card-row="a"[^>]*><th[^>]*>[^<]*<\/th><td[^>]*><a href="\/cards\/a\?from=list&amp;family=lg-freihand" aria-label=/
+      /<tr data-card-row="b"[^>]*><th[^>]*>[^<]*<\/th><td[^>]*><a href="\/cards\/b\?from=list&amp;family=lg-freihand" aria-label=/
     )
-    const rowA = html.slice(html.indexOf('data-card-row="a"'), html.indexOf('data-card-row="b"'))
+    const rowA = html.slice(html.indexOf('data-card-row="a"'), html.indexOf('data-card-row="d"'))
     // die Art ohne Kürzel: Training hat kein Zeichen, nur den Namen für den Screenreader
     expect(text(rowA)).toContain("18:30 Training")
     expect(rowA).toContain('<span class="sr-only">Training</span>')
@@ -219,8 +219,8 @@ describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () =>
       }))
     // a und b am 29.09., d am 27.09.
     expect(tr(render("decimal", INPUT, { evening: "2026-09-29" }))).toEqual([
-      { id: "a", marked: true, current: false },
       { id: "b", marked: true, current: false },
+      { id: "a", marked: true, current: false },
       { id: "d", marked: false, current: false },
     ])
     // a teilt den Abend mit b: nur a ist markiert, nicht der ganze Abend

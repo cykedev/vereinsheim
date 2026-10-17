@@ -42,10 +42,10 @@ describe("Abende der Scheiben-Liste", () => {
     expect(eveningDay(at(10), TZ)).toBe("2026-09-29")
   })
 
-  it("Abende neueste zuerst, die Scheiben eines Abends in zeitlicher Folge, nur die Familie", () => {
+  it("Abende neueste zuerst, auch die Scheiben eines Abends, nur die Familie", () => {
     const model = cardListModel(INPUT, query(), context)
     expect(model.evenings.map((e) => e.day)).toEqual(["2026-09-30", "2026-09-29"])
-    expect(model.evenings[1].rows.map((r) => r.id)).toEqual(["a", "b", "d", "e"])
+    expect(model.evenings[1].rows.map((r) => r.id)).toEqual(["e", "d", "b", "a"])
     expect(model.evenings[0].rows.map((r) => r.id)).toEqual(["f"])
     expect(model.cards).toBe(5)
     expect(model.evenings[1].shots).toBe(3 + 2 + 1 + 1)
@@ -61,15 +61,17 @@ describe("Abende der Scheiben-Liste", () => {
   })
 
   it("Ergebnis und Ø in der Wertung; nur Probe rechnet wie Wertung", () => {
-    const row = cardListModel(INPUT, query(), context).evenings[1].rows[0]
+    const rowA = (model: ReturnType<typeof cardListModel>) =>
+      model.evenings[1].rows.find((r) => r.id === "a")!
+    const row = rowA(cardListModel(INPUT, query(), context))
     expect(row.result).toBeCloseTo(30.0, 9)
     expect(row.mean).toBeCloseTo(10.0, 9)
     expect(row.shots).toBe(3)
     expect(row.kind).toBe("training")
     const rings = cardListModel(INPUT, query(), { ...context, scoring: "rings" })
-    expect(rings.evenings[1].rows[0].result).toBe(29)
+    expect(rowA(rings).result).toBe(29)
     // der Ø folgt der Wertung der Liste: 10 + 10 + 9 ganze Ringe sind 9,67 je Schuss, nicht 10,0
-    expect(rings.evenings[1].rows[0].mean).toBeCloseTo(29 / 3, 9)
+    expect(rowA(rings).mean).toBeCloseTo(29 / 3, 9)
     const probe = cardListModel(
       [lg(periodCard("p", 1, [100, 104], { startedAtMs: at(10), probe: true }))],
       query(),
@@ -236,8 +238,8 @@ describe("Scheiben-Liste: weitere Fälle", () => {
     expect(jump.evening).toBe("2026-09-26")
     const pistol = cardListModel(cards, jump.query, context)
     expect(pistol.evenings.find((e) => e.day === "2026-09-26")?.rows.map((r) => r.id)).toEqual([
-      "pt",
       "pn",
+      "pt",
     ])
   })
 
@@ -255,7 +257,7 @@ describe("Scheiben-Liste: weitere Fälle", () => {
     expect(eveningsByMonth([])).toEqual([])
   })
 
-  it("gleiche Startzeit: nach Id, unabhängig von der Reihenfolge der Eingabe", () => {
+  it("gleiche Startzeit: fest nach Id, unabhängig von der Reihenfolge der Eingabe", () => {
     const same = at(16)
     const model = cardListModel(
       [
@@ -265,7 +267,7 @@ describe("Scheiben-Liste: weitere Fälle", () => {
       query(),
       context
     )
-    expect(model.evenings[0].rows.map((r) => r.id)).toEqual(["a2", "b2"])
+    expect(model.evenings[0].rows.map((r) => r.id)).toEqual(["b2", "a2"])
   })
 
   it("Stellen aus den Kennzahlen: Ergebnis je Wertung, Ø in der Wertung der Liste", () => {

@@ -113,9 +113,12 @@ export function startModel(input: StartInput): StartModel {
     const evening = tonight.filter((c) => c.family === family).map((c) => c.card)
     const ids = new Set(evening.map((c) => c.id))
     const firstMs = evening[0].startedAtMs
-    const rows =
-      cardListModel(all, { ...DEFAULT_LIST, family }, context).evenings.find((e) => e.day === day)
-        ?.rows ?? []
+    // auf Start stehen die Scheiben als Kacheln nebeneinander, in zeitlicher Folge (die Liste: neueste zuerst)
+    const rows = [
+      ...(cardListModel(all, { ...DEFAULT_LIST, family }, context).evenings.find(
+        (e) => e.day === day
+      )?.rows ?? []),
+    ].reverse()
     // Schüsse wie am Ausdruck; der Ø über alle zusammen, nicht das Mittel der Mittel
     const shots = evening.reduce((sum, card) => sum + card.projection.printedShots, 0)
     const mean = pooledMean(evening, scoring)

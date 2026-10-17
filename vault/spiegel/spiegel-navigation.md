@@ -180,7 +180,7 @@ Form; auf dem Telefon Offen, Abend, Form untereinander.
 
 - **`@vereinsheim/shot-ui/list/evenings`:**
   - `eveningDay`: der Tag in der Anzeige-Zeitzone, eine Scheibe vor 4 Uhr zählt zum Vortag.
-  - `cardListModel`: Abende neueste zuerst, Scheiben in zeitlicher Folge, je Zeile Ergebnis in beiden Wertungen, Ø je
+  - `cardListModel`: Abende neueste zuerst, die Scheiben eines Abends ebenso, je Zeile Ergebnis in beiden Wertungen, Ø je
     Schuss, Abstand zum Schnitt der bis zu fünf Scheiben davor (`deltasBefore`, wie im Zeitraum) und Schusszahl; dazu
     andere Familien des Abends, die Merkmale und die Listen aus Meyton der Familie.
 - **Form:** wie die Liste eines Zeitraums (`EveningList`). Je Monat eine Karte mit Kopf („September 2026“, Zahl der
