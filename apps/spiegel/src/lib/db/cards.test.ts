@@ -55,6 +55,20 @@ const projectionOf = (cardId: string) => db.cardProjection.findUniqueOrThrow({ w
 const shotsOf = (cardId: string) => cardWithShots(db, { cardId, ownerId: site.ownerId })
 
 describe("writeRevision", () => {
+  it("derselbe Inhalt unter einer älteren Prüfsumme: keine neue Revision, die Prüfsumme wird neu", async () => {
+    const input = cardWhere(1190, (c) => !probeOnly(c))
+    const first = await writeRevision(db, input)
+    await db.cardRevision.update({
+      where: { id: first.revisionId },
+      data: { contentHash: "veraltet" },
+    })
+    const again = await writeRevision(db, input)
+    expect(again).toMatchObject({ change: "unchanged", revisionId: first.revisionId, number: 1 })
+    expect(await db.cardRevision.count({ where: { cardId: first.cardId } })).toBe(1)
+    const revision = await db.cardRevision.findUniqueOrThrow({ where: { id: first.revisionId } })
+    expect(revision.contentHash).not.toBe("veraltet")
+  })
+
   it("die Version der Disziplin: vom Einlesen übernommen, ohne Angabe (seed:own, PDF) -1 zum Nachrechnen", async () => {
     const input = cardWhere(1180, (c) => !probeOnly(c))
     const first = await writeRevision(db, input)

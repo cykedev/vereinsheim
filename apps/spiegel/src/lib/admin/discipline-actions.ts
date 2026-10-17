@@ -24,7 +24,7 @@ const isRowId = (id: unknown): id is number =>
   typeof id === "number" && Number.isSafeInteger(id) && id > 0 && id <= 2_147_483_647
 
 const MappingSchema = z.object({
-  targetId: z.string().refine((value) => value === "own" || value in TARGETS),
+  targetId: z.string().refine((value) => value === "own" || Object.hasOwn(TARGETS, value)),
   familyId: z.number().int().positive().max(2_147_483_647).nullable(),
   officialScoring: z.enum(["decimal", "rings", "open"]),
   plannedShots: z.discriminatedUnion("mode", [
@@ -144,20 +144,26 @@ export async function setDisciplineIgnored(
   if (!isRowId(disciplineId) || typeof ignored !== "boolean") return { error: RELOAD }
   const site = await firstSite()
   if (!site) return { error: RELOAD }
-  const discipline = await db.discipline.findFirst({
-    where: { id: disciplineId, siteId: site.id },
-    select: { targetId: true, familyId: true },
-  })
-  if (!discipline) return { error: RELOAD }
-  const placed = discipline.targetId !== null && discipline.familyId !== null
   const now = new Date()
-  const { count } = await db.discipline.updateMany({
-    where: { id: disciplineId, siteId: site.id },
-    data: ignored
-      ? { ignoredAt: now, confirmedAt: now }
-      : { ignoredAt: null, confirmedAt: placed ? now : null },
+  // Prüfen und Schreiben unter der Sperre der Zeile, die Bedingung im Befehl selbst: Ignorieren nur, was nicht schon
+  // eingeordnet ignoriert ist, wieder zeigen nur, was ignoriert ist (ein zweiter Tab ändert nichts mehr)
+  const saved = await db.$transaction(async (tx) => {
+    const [row] = await tx.$queryRaw<{ targetId: string | null; familyId: number | null }[]>`
+      SELECT "targetId", "familyId" FROM "Discipline"
+       WHERE id = ${disciplineId} AND "siteId" = ${site.id} FOR UPDATE`
+    if (!row) return false
+    const placed = row.targetId !== null && row.familyId !== null
+    const { count } = await tx.discipline.updateMany({
+      where: ignored
+        ? { id: disciplineId, OR: [{ ignoredAt: null }, { confirmedAt: null }] }
+        : { id: disciplineId, ignoredAt: { not: null } },
+      data: ignored
+        ? { ignoredAt: now, confirmedAt: now }
+        : { ignoredAt: null, confirmedAt: placed ? now : null },
+    })
+    return count === 1
   })
-  if (count === 0) return { error: RELOAD }
+  if (!saved) return { error: RELOAD }
   revalidatePath("/", "layout")
   return { success: true }
 }

@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth-helpers"
 import { consentStatus, sportpassSummary } from "@/lib/consent/status"
 import { db } from "@/lib/db"
-import { PENDING_CARD, SHOWN_DISCIPLINE, VISIBLE_CARD } from "@/lib/db/visible"
+import { COUNTED_CARD, PENDING_CARD } from "@/lib/db/visible"
 
 /** so lange nach der Bestätigung ohne jede Scheibe gilt eine Zustimmung als auffällig */
 const QUIET_AFTER_MS = 14 * 86_400_000
@@ -45,28 +45,23 @@ export async function getUsers(nowMs = Date.now()): Promise<UserListItem[]> {
   })
   // je Konto zählen, eine Abfrage je Zahl statt einer je Konto; nie Schüsse oder Ergebnisse
   const ownerIds = users.map((u) => u.id)
-  const [visible, pending, trashed, ignored, locks, rejected] = await Promise.all([
+  const [visible, pending, trashed, locks, rejected] = await Promise.all([
     db.card.groupBy({
       by: ["ownerId"],
-      where: { ownerId: { in: ownerIds }, ...VISIBLE_CARD },
+      // ohne Bedingung an die Disziplin: das Ignorieren ändert keine Zahl je Konto
+      where: { ownerId: { in: ownerIds }, ...COUNTED_CARD },
       _count: { _all: true },
       _max: { startedAt: true },
     }),
     db.card.groupBy({
       by: ["ownerId"],
-      // wie „Offen“: ohne ignorierte Disziplinen
-      where: { ownerId: { in: ownerIds }, ...PENDING_CARD, ...SHOWN_DISCIPLINE },
+      where: { ownerId: { in: ownerIds }, ...PENDING_CARD },
       _count: { _all: true },
     }),
     // Spuren für den Hinweis: Wer gelöscht oder zurückgewiesen hat, bekommt Scheiben
     db.card.groupBy({
       by: ["ownerId"],
       where: { ownerId: { in: ownerIds }, deletedAt: { not: null } },
-    }),
-    // angekommen, aber in einer ignorierten Disziplin: auch das sind Scheiben, die Brücke läuft
-    db.card.groupBy({
-      by: ["ownerId"],
-      where: { ownerId: { in: ownerIds }, discipline: { ignoredAt: { not: null } } },
     }),
     db.deleteLock.groupBy({ by: ["userId"], where: { userId: { in: ownerIds } } }),
     db.tombstone.groupBy({ by: ["userId"], where: { userId: { in: ownerIds } } }),
@@ -75,7 +70,6 @@ export async function getUsers(nowMs = Date.now()): Promise<UserListItem[]> {
   const waitingOf = new Map(pending.map((p) => [p.ownerId, p._count._all]))
   const traced = new Set<string | null>([
     ...trashed.map((t) => t.ownerId),
-    ...ignored.map((t) => t.ownerId),
     ...locks.map((l) => l.userId),
     ...rejected.map((r) => r.userId),
   ])

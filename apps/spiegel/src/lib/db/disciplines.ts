@@ -2,7 +2,6 @@
 // Sehen mit einem Vorschlag; eingeordnet ist sie erst, wenn der Admin sie prüft (`confirmedAt`).
 
 import { suggestIgnore, type FamilyId } from "@vereinsheim/shot-core/discipline"
-import type { TargetId } from "@vereinsheim/shot-core/targets"
 
 import type { Scoring } from "@/generated/prisma/client"
 
@@ -12,7 +11,6 @@ import type { DisciplineGuess } from "../ingest/meyton-ssmdb2"
 
 export interface KnownDiscipline {
   id: number
-  targetId: TargetId | null
   version: number
   /**
    * die Zuordnung kam von einer eingeordneten Disziplin derselben Nummer (in Meyton umbenannt), nicht aus dem Vorschlag,
@@ -33,7 +31,7 @@ export async function disciplineFor(
   guess: DisciplineGuess & { officialScoring?: Scoring | null }
 ): Promise<KnownDiscipline> {
   const where = { siteId_meytonId_name: { siteId, meytonId: guess.meytonId, name: guess.name } }
-  const select = { id: true, targetId: true, version: true } as const
+  const select = { id: true, version: true } as const
   const existing = await db.discipline.findUnique({ where, select })
   if (existing) return { ...known(existing), copied: false }
 
@@ -67,11 +65,7 @@ export async function disciplineFor(
   return { ...known(created), copied: sibling !== null }
 }
 
-const known = (row: { id: number; targetId: string | null; version: number }) => ({
-  id: row.id,
-  targetId: row.targetId as TargetId | null,
-  version: row.version,
-})
+const known = (row: { id: number; version: number }) => ({ id: row.id, version: row.version })
 
 /** eine Familie des Fachkerns, beim ersten Gebrauch angelegt */
 function familyFor(db: Db, slug: FamilyId) {

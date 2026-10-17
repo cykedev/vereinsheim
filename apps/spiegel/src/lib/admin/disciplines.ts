@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 
 import {
   disciplineRow,
+  MIN_OWNERS_FOR_STATS,
   type DisciplineRow,
   type DisciplineStats,
   type FamilyRow,
@@ -68,13 +69,17 @@ async function rows(siteId: number, timeZone: string, id?: number): Promise<Disc
     const top = [...scored].sort((a, b) => b.n - a.n || b.printedShots - a.printedShots)[0]
     const standOf = (scoring: "decimal" | "rings") =>
       stand.find((s) => s.disciplineId === disciplineId && s.standScoring === scoring)?._count ?? 0
+    const ownerCount = owners.filter((o) => o.disciplineId === disciplineId).length
+    // mit weniger Schützen verlassen Anzeige am Stand und Schusszahl den Server nicht: Sie ließen sich einem Konto
+    // zuordnen ([[spiegel-privacy]])
+    const enough = ownerCount >= MIN_OWNERS_FOR_STATS
     return {
       cards: count?._count ?? 0,
-      owners: owners.filter((o) => o.disciplineId === disciplineId).length,
+      owners: ownerCount,
       lastCardMonth: count?._max.startedAt ? formatMonthYear(count._max.startedAt, timeZone) : null,
-      stand: { decimal: standOf("decimal"), rings: standOf("rings") },
+      stand: enough ? { decimal: standOf("decimal"), rings: standOf("rings") } : null,
       scoredCards: of,
-      shots: top ? { count: top.printedShots, cards: top.n, of } : null,
+      shots: enough && top ? { count: top.printedShots, cards: top.n, of } : null,
     }
   }
 
@@ -101,7 +106,7 @@ async function rows(siteId: number, timeZone: string, id?: number): Promise<Disc
     .sort(
       (a, b) =>
         STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
-        (a.familyName ?? "￿").localeCompare(b.familyName ?? "￿", "de") ||
+        (a.familyName ?? "\uffff").localeCompare(b.familyName ?? "\uffff", "de") ||
         b.stats.cards - a.stats.cards ||
         a.name.localeCompare(b.name, "de")
     )
@@ -114,33 +119,31 @@ export async function disciplineOverview(
   await requireAdmin()
   const site = await firstSite()
   if (!site) return { rows: [], families: [] }
-  const [list, families] = await Promise.all([
-    rows(site.id, timeZone),
-    db.family.findMany({
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        _count: {
-          select: {
-            disciplines: { where: { siteId: site.id } },
-            cards: { where: { deletedAt: null } },
-          },
-        },
-      },
-    }),
-  ])
-  return {
-    rows: list,
-    families: families.map((f) => ({
-      id: f.id,
-      slug: f.slug,
-      name: f.name,
-      disciplines: f._count.disciplines,
-      cards: f._count.cards,
-    })),
-  }
+  const [list, families] = await Promise.all([rows(site.id, timeZone), familyRows(site.id)])
+  return { rows: list, families }
+}
+
+/**
+ * die Familien mit der Zahl ihrer Disziplinen an der Anlage und aller ihrer Scheiben, auch gelöschter: so wie
+ * `removeFamily` prüft, ob sie leer ist
+ */
+async function familyRows(siteId: number): Promise<FamilyRow[]> {
+  const families = await db.family.findMany({
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      _count: { select: { disciplines: { where: { siteId } }, cards: true } },
+    },
+  })
+  return families.map((f) => ({
+    id: f.id,
+    slug: f.slug,
+    name: f.name,
+    disciplines: f._count.disciplines,
+    cards: f._count.cards,
+  }))
 }
 
 /** eine Disziplin der Anlage mit ihren Zahlen und die Familien zur Auswahl; null, wenn es sie nicht gibt */
@@ -152,9 +155,8 @@ export async function disciplineDetail(
   if (!Number.isSafeInteger(id)) return null
   const site = await firstSite()
   if (!site) return null
-  const [row] = await rows(site.id, timeZone, id)
+  const [[row], families] = await Promise.all([rows(site.id, timeZone, id), familyRows(site.id)])
   if (!row) return null
-  const { families } = await disciplineOverview(timeZone)
   return { row, families }
 }
 

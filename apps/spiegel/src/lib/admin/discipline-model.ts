@@ -23,11 +23,11 @@ export interface DisciplineStats {
   owners: number
   /** nur Monat und Jahr („Oktober 2026“), nie der Tag (Datenschutz) */
   lastCardMonth: string | null
-  /** Scheiben je Anzeige am Stand (`Card.standScoring`) */
-  stand: { decimal: number; rings: number }
+  /** Scheiben je Anzeige am Stand (`Card.standScoring`); null unter `MIN_OWNERS_FOR_STATS` (der Server lässt sie weg) */
+  stand: { decimal: number; rings: number } | null
   /** Scheiben mit Wertungsschüssen (Projektion nicht `probeOnly`); 0 bei Scheiben: Hinweis aufs Ignorieren */
   scoredCards: number
-  /** häufigste Zahl der Wertungsschüsse (`printedShots`, ohne nur Probe) und wie oft; null ohne */
+  /** häufigste Zahl der Wertungsschüsse (`printedShots`, ohne nur Probe) und wie oft; null ohne oder unter `MIN_OWNERS_FOR_STATS` */
   shots: { count: number; cards: number; of: number } | null
 }
 
@@ -66,7 +66,7 @@ export interface FamilyRow {
 }
 
 const asTargetId = (value: string | null): TargetId | null =>
-  value !== null && value in TARGETS ? (value as TargetId) : null
+  value !== null && Object.hasOwn(TARGETS, value) ? (value as TargetId) : null
 
 export function disciplineStatus(d: {
   confirmed: boolean
@@ -160,7 +160,7 @@ const FEW_SHOOTERS = "Dazu haben noch zu wenige Schützen diese Disziplin gescho
 
 /** was am Stand meist angezeigt wurde (Vorschlag für die Wertung im Wettkampf, nie automatisch, SF-74) */
 export function standText(stats: DisciplineStats): string {
-  if (stats.owners < MIN_OWNERS_FOR_STATS) return FEW_SHOOTERS
+  if (stats.owners < MIN_OWNERS_FOR_STATS || !stats.stand) return FEW_SHOOTERS
   const { decimal, rings } = stats.stand
   if (decimal + rings === 0) return "Am Stand wurde noch nichts angezeigt."
   const [word, k] = rings > decimal ? ["ganze Ringe", rings] : ["Zehntel", decimal]

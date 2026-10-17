@@ -13,7 +13,7 @@ import { createPrismaClient } from "@/lib/db"
 import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
-import { chooseCardKind, refreshProjections, writeRevision } from "./cards"
+import { chooseCardKind, chooseCardScoring, refreshProjections, writeRevision } from "./cards"
 import {
   cardWithShots,
   familyCards,
@@ -503,12 +503,36 @@ describe("ignorierte Disziplinen und wartende Einordnung", () => {
     await db.card.update({ where: { id: trashedId }, data: { deletedAt: new Date() } })
     const ids = async () => (await ownerCards(db, { ownerId: site.ownerId })).map((c) => c.id)
     expect(await ids()).not.toContain(cardId)
+    expect(await chooseCardScoring(db, { cardId, ownerId: site.ownerId, scoring: "rings" })).toBe(
+      false
+    )
+    // wartend in einer ignorierten Disziplin: „Offen“ und die Zahl am Start-Symbol zeigen sie nicht
+    const pendingBefore = await pendingCount(db, site.ownerId)
+    const [, , waitingInput] = generateSeason({
+      seed: 98,
+      cards: 12,
+      firstMs: Date.UTC(2026, 7, 1, 18),
+      everyDays: 1,
+      sourceId: site.sourceId,
+      disciplineId: discipline.id,
+      ownerId: site.ownerId,
+      scheibenIdBase: 9_950,
+    }).filter((card) => card.shots.some((shot) => shot.stellung !== 0))
+    const { cardId: waitingId } = await writeRevision(db, {
+      ...waitingInput,
+      card: { ...waitingInput.card, ownerPending: true, sportpassId: BigInt(98_765) },
+    })
+    expect(await pendingCount(db, site.ownerId)).toBe(pendingBefore)
+    expect((await pendingFirstCards(db, site.ownerId)).map((p) => p.card.id)).not.toContain(
+      waitingId
+    )
     expect(await cardWithShots(db, { cardId, ownerId: site.ownerId })).toBeNull()
     expect((await trashCards(db, site.ownerId)).map((t) => t.card.id)).not.toContain(trashedId)
     expect(await waitingForDiscipline(db, site.ownerId)).toBe(baseline)
 
     await db.discipline.update({ where: { id: discipline.id }, data: { ignoredAt: null } })
     expect(await ids()).toContain(cardId)
+    expect(await pendingCount(db, site.ownerId)).toBe(pendingBefore + 1)
     expect((await trashCards(db, site.ownerId)).map((t) => t.card.id)).toContain(trashedId)
 
     // neu und ohne Scheibenbild: die Scheibe wartet auf die Einordnung

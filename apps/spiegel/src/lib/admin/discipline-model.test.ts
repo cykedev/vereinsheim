@@ -86,6 +86,7 @@ describe("disciplineRow", () => {
 
   it("ein unbekanntes Scheibenbild gilt als keins", () => {
     expect(row({ targetId: "kk-50m" }).targetId).toBeNull()
+    expect(row({ targetId: "constructor" }).targetId).toBeNull()
   })
 })
 
@@ -172,5 +173,38 @@ describe("familySlug", () => {
     expect(familySlug("LG Freihand", [])).toBe("lg-freihand-2")
     expect(familySlug("!!!", [])).toBe("familie")
     expect(familySlug("x".repeat(60), []).length).toBe(40)
+  })
+})
+
+describe("Schreibregeln", () => {
+  it("keine Semikolons und keine alten Wörter in den Sätzen der Seite und auf Start", async () => {
+    const { OLD_WORDS } = await import("./consequences")
+    const { waitingText } = await import("@/components/start/StartScreen")
+    const rows = [
+      row({ targetId: null }),
+      row(),
+      row({ meytonId: 19_000_001, name: "König LG" }),
+      row({}, {}, "LG 40 Verein"),
+      row({ ignoredAt: new Date() }),
+      row({ confirmedAt: new Date(), ignoredAt: new Date() }),
+      row({ confirmedAt: new Date(), targetId: null }),
+      row({}, { scoredCards: 0 }),
+    ]
+    const texts = [
+      ...rows.flatMap((r) => [
+        statusChip(r),
+        statusText(r),
+        targetSuggestionText(r),
+        ignoreHintText(r),
+      ]),
+      standText(stats()),
+      standText(stats({ owners: 1 })),
+      shotsText(stats()),
+      shotsText(stats({ shots: null })),
+      fromIdLabel(40),
+      waitingText(1),
+      waitingText(3),
+    ].filter((t): t is string => t !== null)
+    for (const text of texts) expect(text).not.toMatch(OLD_WORDS)
   })
 })

@@ -116,8 +116,19 @@ describe("disciplineOverview", () => {
     expect(lp.stats.owners).toBe(2)
     expect(lp.stats.lastCardMonth).toBe("Oktober 2026")
     expect(lp.stats.scoredCards).toBe(3)
-    expect(lp.stats.shots?.of).toBe(3)
     expect(lp.familyName).toBe(`Familie ${tag}`)
+  })
+
+  it("Anzeige am Stand und Schusszahl verlassen den Server erst ab drei Schützen", async () => {
+    let lp = (await mine()).find((r) => r.id === disciplines.lp)!
+    expect(lp.stats.owners).toBe(2)
+    expect(lp.stats.stand).toBeNull()
+    expect(lp.stats.shots).toBeNull()
+    await card(disciplines.lp, owners[2], 7)
+    lp = (await mine()).find((r) => r.id === disciplines.lp)!
+    expect(lp.stats.owners).toBe(3)
+    expect(lp.stats.stand).not.toBeNull()
+    expect(lp.stats.shots?.of).toBe(4)
   })
 
   it("Zustände, Reihenfolge und die übernommene Zuordnung einer umbenannten", async () => {
@@ -140,7 +151,7 @@ describe("disciplineOverview", () => {
     for (const id of owners) expect(text).not.toContain(id)
     expect(text).not.toContain("@example.com")
     expect(text).not.toMatch(/\d{4}-\d{2}-\d{2}/)
-    expect(families.find((f) => f.id === familyId)).toMatchObject({ disciplines: 3, cards: 3 })
+    expect(families.find((f) => f.id === familyId)).toMatchObject({ disciplines: 3 })
   })
 })
 

@@ -14,6 +14,12 @@ export const SHOWN_DISCIPLINE = { discipline: { ignoredAt: null } } as const
 export const VISIBLE_CARD = { deletedAt: null, ownerPending: false, ...SHOWN_DISCIPLINE } as const
 
 /**
+ * Was der Admin je Konto und in der Nutzung zählt: nicht gelöscht, nicht wartend, ohne Bedingung an die Disziplin. Hinge
+ * die Zahl am Ignorieren, verriete das Umschalten einer Disziplin, welches Konto sie geschossen hat ([[spiegel-privacy]]).
+ */
+export const COUNTED_CARD = { deletedAt: null, ownerPending: false } as const
+
+/**
  * wartend und nicht gelöscht, auch ignorierte: Die Bestätigung der ersten Scheibe gibt alle wartenden frei, sonst blieben
  * ignorierte für immer wartend. Was „Offen“ zeigt, filtert zusätzlich `SHOWN_DISCIPLINE`.
  */

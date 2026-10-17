@@ -147,6 +147,9 @@ describe("saveDiscipline", () => {
     const id = await discipline()
     const reload = { error: "Das ließ sich nicht speichern. Bitte lade die Seite neu." }
     expect(await saveDiscipline(id, input({ targetId: "kk-50m" }))).toEqual(reload)
+    // geerbte Schlüssel sind kein Scheibenbild
+    expect(await saveDiscipline(id, input({ targetId: "constructor" }))).toEqual(reload)
+    expect(await saveDiscipline(id, input({ targetId: "toString" }))).toEqual(reload)
     expect(await saveDiscipline(id, input({ plannedShots: { mode: "count", count: 0 } }))).toEqual(
       reload
     )
@@ -156,6 +159,20 @@ describe("saveDiscipline", () => {
     const ignored = await discipline({ ignoredAt: new Date() })
     expect(await saveDiscipline(ignored, input())).toEqual(reload)
     expect((await read(ignored)).confirmedAt).toBeNull()
+  })
+})
+
+describe("nur ein Admin", () => {
+  it("ignorieren, Familien anlegen, umbenennen und entfernen", async () => {
+    const id = await discipline()
+    mocks.session = { user: { id: adminId, role: "USER" } }
+    const denied = { error: "Das darf nur ein Admin." }
+    expect(await setDisciplineIgnored(id, true)).toEqual(denied)
+    expect(await createFamily(null, form({ name: `Verboten ${tag}` }))).toEqual(denied)
+    expect(await renameFamily(familyA, `Verboten ${tag}`)).toEqual(denied)
+    expect(await removeFamily(familyA)).toEqual(denied)
+    expect((await read(id)).ignoredAt).toBeNull()
+    expect(await db.family.findFirst({ where: { name: `Verboten ${tag}` } })).toBeNull()
   })
 })
 
@@ -175,6 +192,11 @@ describe("setDisciplineIgnored", () => {
   it("wieder zeigen mit Scheibe und Familie bleibt eingeordnet; fremde Anlage abgewiesen", async () => {
     const id = await discipline({ ignoredAt: new Date() })
     await setDisciplineIgnored(id, false)
+    expect((await read(id)).confirmedAt).not.toBeNull()
+    // aus einem veralteten Tab noch einmal: nichts mehr zu tun, nichts geändert
+    expect(await setDisciplineIgnored(id, false)).toEqual({
+      error: "Das ließ sich nicht speichern. Bitte lade die Seite neu.",
+    })
     expect((await read(id)).confirmedAt).not.toBeNull()
     expect(await setDisciplineIgnored(other.disciplineId, true)).toEqual({
       error: "Das ließ sich nicht speichern. Bitte lade die Seite neu.",
@@ -213,6 +235,28 @@ describe("Familien", () => {
   it("entfernen nur ohne Disziplinen und Scheiben", async () => {
     await discipline({ familyId: familyB })
     expect(await removeFamily(familyB)).toEqual({
+      error: "Zu dieser Familie gehören noch Disziplinen oder Scheiben. Lade die Seite neu.",
+    })
+    // nur Scheiben, keine Disziplin: bleibt auch
+    await createFamily(null, form({ name: `Nur Scheiben ${tag}` }))
+    const cardsOnly = await db.family.findFirstOrThrow({ where: { name: `Nur Scheiben ${tag}` } })
+    const holder = await discipline()
+    const generated = generateSeason({
+      seed: 5,
+      cards: 3,
+      firstMs: Date.UTC(2026, 9, 2, 18),
+      everyDays: 1,
+      sourceId: 0,
+      disciplineId: holder,
+      ownerId: adminId,
+      scheibenIdBase: 0,
+    })[0]
+    const { cardId } = await writeRevision(db, {
+      ...generated,
+      card: { ...generated.card, sourceId: null, scheibenId: null, origin: "pdf" },
+    })
+    await db.card.update({ where: { id: cardId }, data: { familyId: cardsOnly.id } })
+    expect(await removeFamily(cardsOnly.id)).toEqual({
       error: "Zu dieser Familie gehören noch Disziplinen oder Scheiben. Lade die Seite neu.",
     })
     await createFamily(null, form({ name: `Leer ${tag}` }))

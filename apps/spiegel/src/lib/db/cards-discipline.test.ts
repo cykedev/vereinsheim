@@ -240,9 +240,12 @@ describe("Nachrechnen gleich dem Adapter (alle eingefrorenen Fälle)", () => {
       where: { siteId: other.siteId },
       data: { version: { increment: 1 } },
     })
-    expect(await refreshDisciplineCards(db, { sourceId: other.sourceId, limit: 1000 })).toBe(
-      before.length
-    )
+    // ein laufender Dev-Server rechnet womöglich mit (beim Start, stündlich): danach zählt nur, dass keine veraltet ist
+    await refreshDisciplineCards(db, { sourceId: other.sourceId, limit: 1000 })
+    const stale = await db.card.count({
+      where: { sourceId: other.sourceId, disciplineVersion: { not: 1 } },
+    })
+    expect(stale).toBe(0)
     const after = await state()
     expect(after).toEqual(before)
 

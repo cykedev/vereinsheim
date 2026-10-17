@@ -406,6 +406,18 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
         added: 0,
         removed: 0,
       }
+    if (change.kind === "same") {
+      // derselbe Inhalt unter einer älteren Prüfsumme (etwa nachgerechnete Merkmale): keine neue Revision
+      await tx.cardRevision.update({ where: { id: current.id }, data: { contentHash: hash } })
+      return {
+        cardId,
+        revisionId: current.id,
+        number: current.number,
+        change: "unchanged",
+        added: 0,
+        removed: 0,
+      }
+    }
     if (change.kind !== "update") return newRevision(tx, cardId, current.number + 1, input, hash)
 
     const idOf = new Map(stored.map((row) => [shotKey(row), row.id]))
@@ -623,7 +635,6 @@ export async function refreshStaleProjections(
   return total
 }
 
-/** ein gespeicherter Schuss als Eingabe */
 /**
  * Alle Scheiben mit veralteter Zuordnung ihrer Disziplin nachrechnen, in Stapeln von `refreshDisciplineCards`, wie
  * `refreshStaleProjections`. Der Server ruft das nach dem Speichern einer Zuordnung, beim Start und stündlich: Ein Stand,
@@ -665,6 +676,7 @@ export async function refreshStaleDisciplineCards(
   return total
 }
 
+/** ein gespeicherter Schuss als Eingabe */
 export function shotFromRow(row: {
   seq: number
   stellung: number
@@ -766,6 +778,12 @@ export async function refreshDisciplineCards(
 
 /** eine Scheibe mit der aktuellen Zuordnung ihrer Disziplin neu rechnen (`refreshDisciplineCards`) */
 async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
+  // dieselbe Sperre wie `writeRevision` (Quelle, ScheibenID), vor der Zeile: Ein Stand, der gleichzeitig geschrieben
+  // wird, liest die Prüfsumme danach und hält die nachgerechnete nicht für eine Korrektur
+  const [key] = await tx.$queryRaw<{ sourceId: number | null; scheibenId: number | null }[]>`
+    SELECT "sourceId", "scheibenId" FROM "Card" WHERE id = ${cardId}`
+  if (key?.sourceId != null && key.scheibenId != null)
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${key.sourceId}::int, ${key.scheibenId}::int)`
   const [row] = await tx.$queryRaw<
     {
       currentRevisionId: bigint | null
@@ -788,7 +806,9 @@ async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
     return
   }
   const targetId =
-    row.targetId !== null && row.targetId in TARGETS ? (row.targetId as TargetId) : null
+    row.targetId !== null && Object.hasOwn(TARGETS, row.targetId)
+      ? (row.targetId as TargetId)
+      : null
   const rows = await tx.shot.findMany({ where: { revisionId }, orderBy: { seq: "asc" } })
   const shots = rows.map(shotFromRow)
   // die Merkmale je Schuss neu aus den Werten; was nicht aus den Werten kommt, bleibt

@@ -115,13 +115,16 @@ export function DisciplineForm({
     </div>
   )
 
-  if (row.ignored && row.confirmed)
+  // ignoriert (eingeordnet oder als Vorschlag des Einlesens): kein Formular, nur ignorieren (bestätigt den Vorschlag)
+  // oder wieder zeigen
+  if (row.ignored)
     return (
       <div className="grid gap-4">
         {header}
         <section className={CARD}>
           <p className={NOTE}>{state}</p>
           <div className="flex flex-wrap items-center gap-2">
+            {!row.confirmed && <IgnoreButton row={row} ignore onDone={back} />}
             <IgnoreButton row={row} ignore={false} onDone={back} />
           </div>
         </section>

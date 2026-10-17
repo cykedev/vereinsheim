@@ -124,6 +124,27 @@ describe("Blatt einer Disziplin (Markup)", () => {
     expect(html).not.toContain("Wertung im Wettkampf")
   })
 
+  it("Vorschlag zum Ignorieren: kein Formular, ignorieren oder wieder zeigen", () => {
+    const html = renderToStaticMarkup(
+      createElement(DisciplineForm, {
+        row: row({
+          name: "LG Schach 6x6",
+          meytonId: 18_051_010,
+          targetId: null,
+          family: null,
+          confirmedAt: null,
+          ignoredAt: new Date(),
+        }),
+        families,
+      })
+    )
+    expect(html).toContain("Das ist ein Spiel oder eine Trainingsscheibe von Meyton.")
+    expect(html).toContain(">Ignorieren<")
+    expect(html).toContain(">Wieder zeigen<")
+    expect(html).not.toContain(">So einordnen<")
+    expect(html).not.toContain("Wertung im Wettkampf")
+  })
+
   it("ohne Wertungsschüsse der Hinweis aufs Ignorieren", () => {
     const html = renderToStaticMarkup(
       createElement(DisciplineForm, {

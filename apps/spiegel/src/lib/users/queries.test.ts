@@ -138,6 +138,23 @@ describe("Zahlen je Konto", () => {
     })
   })
 
+  it("das Ignorieren einer Disziplin ändert keine Zahl je Konto (sonst verriete es, wer sie geschossen hat)", async () => {
+    const counts = async () => {
+      const owner = (await getUsers(NOW)).find((u) => u.id === site.ownerId)!
+      return { cards: owner.cards, lastCardAt: owner.lastCardAt, waiting: owner.waiting }
+    }
+    const before = await counts()
+    await db.discipline.update({
+      where: { id: site.disciplineId },
+      data: { ignoredAt: new Date() },
+    })
+    try {
+      expect(await counts()).toEqual(before)
+    } finally {
+      await db.discipline.update({ where: { id: site.disciplineId }, data: { ignoredAt: null } })
+    }
+  })
+
   it("Hinweis nur bei aktiver Zustimmung älter als 14 Tage ohne jede Scheibe", async () => {
     const users = await getUsers(NOW)
     const of = (id: string) => users.find((u) => u.id === id)!

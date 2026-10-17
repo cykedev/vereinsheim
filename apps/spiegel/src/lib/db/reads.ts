@@ -366,11 +366,8 @@ export async function waitingForDiscipline(db: Db, ownerId: string): Promise<num
     where: {
       ownerId,
       ...VISIBLE_CARD,
-      discipline: {
-        confirmedAt: null,
-        ignoredAt: null,
-        OR: [{ targetId: null }, { familyId: null }],
-      },
+      // zusätzlich zur Bedingung von `VISIBLE_CARD` an die Disziplin (nicht ignoriert): neu und ohne Scheibe oder Familie
+      AND: [{ discipline: { confirmedAt: null, OR: [{ targetId: null }, { familyId: null }] } }],
     },
   })
 }
@@ -451,8 +448,10 @@ export async function ownCardState(
 ): Promise<"visible" | "trash" | null> {
   const card = await db.card.findFirst({
     where: { id: query.cardId, ownerId: query.ownerId, ownerPending: false },
-    select: { deletedAt: true },
+    select: { deletedAt: true, discipline: { select: { ignoredAt: true } } },
   })
   if (!card) return null
-  return card.deletedAt ? "trash" : "visible"
+  // eine gelöschte Scheibe einer ignorierten Disziplin steht nicht im Papierkorb (`trashCards`)
+  if (card.deletedAt) return card.discipline.ignoredAt ? null : "trash"
+  return "visible"
 }

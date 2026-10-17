@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/auth-helpers"
 import { consentStatus, type ConsentDecisions, type ConsentStatus } from "@/lib/consent/status"
 import { db } from "@/lib/db"
 import { NOT_MINE } from "@/lib/db/purge"
-import { VISIBLE_CARD } from "@/lib/db/visible"
+import { COUNTED_CARD } from "@/lib/db/visible"
 
 import { disciplineTaskCounts } from "./disciplines"
 import type { AdminHelpId } from "./help"
@@ -270,7 +270,7 @@ const RECENT_MS = 30 * 86_400_000
  */
 export async function usageOf(nowMs: number, ownerIds?: string[]): Promise<OverviewInput["usage"]> {
   const visible = {
-    ...VISIBLE_CARD,
+    ...COUNTED_CARD,
     owner: { isActive: true },
     ...(ownerIds ? { ownerId: { in: ownerIds } } : {}),
   }
