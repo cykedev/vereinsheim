@@ -6,6 +6,7 @@ import { frozenExpected, frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen
 
 import { createPrismaClient } from "@/lib/db"
 import { ingestBatch } from "@/lib/ingest/ingest"
+import { rereadOutdatedKeys } from "@/lib/ingest/reread"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import { lockCard, purgeCards } from "./purge"
@@ -342,14 +343,41 @@ describe("purgeCards je Block (SF-72)", () => {
     expect(await db.rawRow.count({ where: keyOf(scheibenId) })).toBe(0)
   })
 
-  it("ein Stand ohne Block bleibt, solange ein Geschwister bleibt", async () => {
+  it("der jüngste Block geht mit Sperre: sein nächster Stand kommt nicht zurück, der Block davor bleibt", async () => {
+    const snapshots = restarted()
+    for (const snapshot of snapshots) await ingest([snapshot])
+    const scheibenId = snapshots[0].scheibenId
+    const [first, second] = await db.card.findMany({
+      where: keyOf(scheibenId),
+      orderBy: { block: "asc" },
+    })
+
+    await purgeLocked([second.id])
+
+    expect(await db.deleteLock.count({ where: keyOf(scheibenId) })).toBe(1)
+    expect(await db.card.count({ where: { id: first.id } })).toBe(1)
+    const last = snapshots.at(-1)!
+    const again = { ...last, sequence: last.sequence + 60_000 }
+    expect((await ingest([again]))[0]).toMatchObject({ outcome: "discarded", reason: "blocked" })
+    expect(await db.card.count({ where: keyOf(scheibenId) })).toBe(1)
+  })
+
+  it("ungedeutete Stände eines Blocks gehen mit ihm, die des Geschwisters bleiben; das Neulesen bringt nichts zurück", async () => {
     const { scheibenId, cards } = await twoBlocks()
     await db.rawSnapshot.updateMany({
-      where: { ...keyOf(scheibenId), block: 0 },
-      data: { block: null },
+      where: keyOf(scheibenId),
+      data: { block: null, adapterVersion: null },
     })
     await purgeLocked([cards[0].id])
-    expect(await db.rawSnapshot.count({ where: { ...keyOf(scheibenId), block: null } })).toBe(1)
+    const left = await db.rawSnapshot.findMany({
+      where: keyOf(scheibenId),
+      select: { sequence: true },
+    })
+    expect(left).toHaveLength(1)
+    expect(left[0].sequence).toBe(cards[1].lastSequence)
+    const result = await rereadOutdatedKeys(db, { sourceId: site.sourceId })
+    expect(result.created).toBe(0)
+    expect(await db.card.count({ where: keyOf(scheibenId) })).toBe(1)
   })
 })
 

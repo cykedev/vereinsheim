@@ -246,7 +246,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   `src/lib/first-card-actions.ts`, danach `revalidatePath("/", "layout")`. Entfernt wird nur über `purgeCards`
   (`src/lib/db/purge.ts`: Grabstein, Scheibe, ihre Stände nach dem **Beginn aus den Trefferzeiten**, nie nach der
   Beobachtung, verwaiste Zeilen), die Grundlage auch für Löschen und Papierkorb. Bleibt ein anderer Block derselben
-  ScheibenID, gehen nur die Stände dieses Blocks, und die Löschsperre entsteht erst mit dem letzten Block. Sperren und Zyklen über
+  ScheibenID, gehen nur die Stände dieses Blocks; die Löschsperre entsteht, außer ein späterer Block bleibt. Sperren und Zyklen über
   `src/lib/db/blocks.ts` (`startHintMs`, `isKeyBlocked`, `maxCycleOfKey`); `storeSnapshot` prüft sie unter seiner
   Sperre (`startAtMs`). Beide Actions sperren zuerst die Zeile der Scheibe und gelten je Anlage und SportpassID.
 - **Löschen mit Papierkorb:** `purgeCards(tx, ids, block)` hinterlässt
