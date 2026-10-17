@@ -10,9 +10,15 @@ import {
   consentConfirm,
   consentReject,
   consentRemove,
+  disciplineChange,
+  disciplineIgnore,
+  disciplineRecalculates,
+  disciplineShow,
+  familyRemove,
   notMine,
   notMineLift,
   OLD_WORDS,
+  type DisciplineMapping,
   ownConsentRevoke,
   ownRejectionRemove,
   rankingKind,
@@ -20,6 +26,29 @@ import {
 } from "./consequences"
 
 const who = "Max Muster"
+
+const mapping = (over: Partial<DisciplineMapping> = {}): DisciplineMapping => ({
+  targetId: "lg-10m",
+  familyId: 1,
+  officialScoring: null,
+  plannedShots: null,
+  confirmed: false,
+  ...over,
+})
+const change = (
+  before: Partial<DisciplineMapping>,
+  after: Partial<DisciplineMapping>,
+  cards = 12
+) =>
+  disciplineChange({
+    name: "LG 40 alt",
+    cards,
+    before: mapping(before),
+    after: mapping({ confirmed: true, ...after }),
+    targetLabel: after.targetId === null ? null : "Luftgewehr 10 m",
+    familyName: after.familyId === null ? null : "Luftgewehr",
+    plannedShotsFromId: 40,
+  })
 const sportpassId = "12345678"
 
 /** jeder Entscheid sagt, worum es geht, was passiert und wie es zurückgeht; kein Platzhalter bleibt stehen */
@@ -427,6 +456,15 @@ describe("Schreibregeln", () => {
       "wieder zulassen, Nummer nicht aktiv",
       notMineLift({ who, sportpassId, cards: 1, consentActive: false }),
     ],
+    ["Disziplin einordnen", change({}, {})],
+    [
+      "Disziplin, alles anders",
+      change({ targetId: null, familyId: null }, { officialScoring: "rings", plannedShots: 3 }),
+    ],
+    ["Disziplin verstecken", change({}, { targetId: null, familyId: null }, 0)],
+    ["Disziplin ignorieren", disciplineIgnore({ name: "LG Schach 6x6", cards: 1 })],
+    ["Disziplin zeigen", disciplineShow({ name: "LG Schach 6x6", cards: 3, visible: false })],
+    ["Familie entfernen", familyRemove({ name: "Zimmerstutzen" })],
   ]
 
   it.each(decisions)("%s: keine Semikolons, keine alten Wörter", (_name, decision) => {
@@ -437,5 +475,100 @@ describe("Schreibregeln", () => {
     for (const [name, decision] of decisions)
       if (name !== "eigene Zustimmung widerrufen")
         for (const text of textsOf(decision)) expect(text).not.toMatch(/widerruf/i)
+  })
+})
+
+describe("Folgen beim Einordnen einer Disziplin", () => {
+  it("nur einordnen: der Vorschlag, kein Nachrechnen", () => {
+    const d = change({}, {})
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "„LG 40 alt“ so einordnen?",
+      about: "In Spiegel gibt es 12 Scheiben dieser Disziplin.",
+      happens: [
+        "Spiegel übernimmt den Vorschlag. Die Disziplin steht danach nicht mehr unter „Neu“.",
+        "Neue Scheiben dieser Disziplin kommen gleich so an.",
+      ],
+      notHappening: [
+        "An den Schüssen und an den Werten aus Meyton ändert sich nichts.",
+        "Hat ein Schütze eine Scheibe selbst auf Zehntel oder ganze Ringe gestellt, bleibt es dabei.",
+      ],
+      undo: "Jederzeit hier wieder umstellen.",
+      confirmLabel: "So einordnen",
+      destructive: false,
+    })
+  })
+
+  it("jede Änderung ein Satz, Nachrechnen nur bei Scheibe oder Schusszahl", () => {
+    expect(change({ targetId: null }, {}).happens).toEqual([
+      "Spiegel zeichnet die Scheiben als Luftgewehr 10 m und prüft den Wert jedes Schusses nach.",
+      "Spiegel rechnet die vorhandenen Scheiben in den nächsten Minuten neu.",
+      "Neue Scheiben dieser Disziplin kommen gleich so an.",
+    ])
+    expect(change({ familyId: 2 }, {}).happens).toEqual([
+      "Die Scheiben stehen dann in der Familie „Luftgewehr“.",
+      "Neue Scheiben dieser Disziplin kommen gleich so an.",
+    ])
+    expect(change({}, { officialScoring: "rings" }).happens[0]).toBe(
+      "Ein Wettkampf in dieser Disziplin zählt dann in ganzen Ringen."
+    )
+    expect(change({ officialScoring: "decimal" }, {}).happens[0]).toBe(
+      "Ein Wettkampf in dieser Disziplin zählt dann so, wie am Stand angezeigt."
+    )
+    expect(change({}, { plannedShots: 3 }).happens.slice(0, 2)).toEqual([
+      "Eine Scheibe ist dann mit 3 Schüssen vollständig.",
+      "Spiegel rechnet die vorhandenen Scheiben in den nächsten Minuten neu.",
+    ])
+    expect(change({}, { plannedShots: 0 }).happens[0]).toBe(
+      "Eine Scheibe ist dann vollständig, sobald sie fertig ist."
+    )
+    expect(change({ plannedShots: 3 }, { plannedShots: null }).happens[0]).toBe(
+      "Eine Scheibe ist dann mit 40 Schüssen vollständig."
+    )
+  })
+
+  it("Scheibe und Familie weg: der Satz nur einmal; nie gezeigt: noch nicht", () => {
+    const hidden = change({}, { targetId: null, familyId: null }, 1)
+    expect(hidden.about).toBe("In Spiegel gibt es eine Scheibe dieser Disziplin.")
+    expect(hidden.happens.slice(0, 2)).toEqual([
+      "Spiegel zeigt die Scheiben dieser Disziplin nicht mehr in Start, Scheiben und Fortschritt.",
+      "Spiegel rechnet die vorhandenen Scheiben in den nächsten Minuten neu.",
+    ])
+    expect(change({ targetId: null, familyId: null }, { familyId: null }, 0).happens[0]).toBe(
+      "Spiegel zeigt die Scheiben dieser Disziplin noch nicht in Start, Scheiben und Fortschritt. Dazu braucht sie eine Scheibe und eine Familie."
+    )
+  })
+
+  it("nachrechnen bei Scheibe oder Schusszahl, nicht bei Familie und Wertung", () => {
+    expect(disciplineRecalculates(mapping(), mapping({ targetId: "lp-10m" }))).toBe(true)
+    expect(disciplineRecalculates(mapping(), mapping({ plannedShots: 0 }))).toBe(true)
+    expect(
+      disciplineRecalculates(mapping(), mapping({ familyId: 9, officialScoring: "rings" }))
+    ).toBe(false)
+  })
+
+  it("ignorieren, wieder zeigen, Familie entfernen", () => {
+    expect(disciplineIgnore({ name: "LG Schach 6x6", cards: 0 })).toEqual({
+      title: "„LG Schach 6x6“ ignorieren?",
+      about: "In Spiegel gibt es noch keine Scheibe dieser Disziplin.",
+      happens: [
+        "Spiegel zeigt die Scheiben dieser Disziplin nirgends mehr. Auch die Schützen sehen sie nicht.",
+        "Neue Scheiben dieser Disziplin kommen weiter an. Sie bleiben unsichtbar.",
+        "Die Disziplin steht danach unter „Ignoriert“.",
+      ],
+      notHappening: ["Keine Scheibe wird gelöscht.", "An den Schüssen ändert sich nichts."],
+      undo: "Unter „Ignoriert“ auf „Wieder zeigen“ tippen. Dann sind alle Scheiben wieder da.",
+      confirmLabel: "Ignorieren",
+      destructive: false,
+    })
+    expect(disciplineShow({ name: "X", cards: 2, visible: true }).happens).toEqual([
+      "Spiegel zeigt die Scheiben dieser Disziplin wieder in Start, Scheiben und Fortschritt.",
+    ])
+    expect(disciplineShow({ name: "X", cards: 2, visible: false }).happens).toEqual([
+      "Die Disziplin steht danach wieder unter „Neu“. Ihre Scheiben erscheinen, sobald Scheibe und Familie eingestellt sind.",
+    ])
+    const remove = familyRemove({ name: "Zimmerstutzen" })
+    expect(remove.title).toBe("Familie „Zimmerstutzen“ entfernen?")
+    expect(remove.destructive).toBe(true)
   })
 })

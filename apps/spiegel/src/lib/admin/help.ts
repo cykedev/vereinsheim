@@ -34,6 +34,14 @@ export const ADMIN_HELP = {
     title: "Deaktiviert",
     text: "Das Konto kann sich nicht anmelden, und Spiegel holt keine Scheiben dafür. Es wird nichts gelöscht.",
   },
+  discipline: {
+    title: "Disziplinen",
+    text: "Meyton speichert zu jeder Scheibe die Nummer und den Namen der Disziplin. Hier legst du fest, welche Scheibe Spiegel zeichnet, in welcher Familie die Scheiben stehen und wie viele Schüsse eine vollständige Scheibe hat. Eine neue Disziplin legt Spiegel selbst an, sobald die erste Scheibe kommt. Disziplinen ohne sinnvolle Wertung, etwa Schach oder ein Trainingsspiegel, lassen sich ignorieren.",
+  },
+  family: {
+    title: "Familien",
+    text: "In einer Familie laufen Verläufe und Rekorde zusammen. LG 40 und LG 40 alt sind zum Beispiel beide Luftgewehr. Eine eigene Familie lohnt sich, wenn Scheiben nicht mit den anderen verglichen werden sollen.",
+  },
   accounts: {
     title: "Konten",
     text: "Wer Spiegel nutzt. Konten legt nur ein Admin an. Alle sehen nur die eigenen Scheiben, auch du.",

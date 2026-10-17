@@ -441,3 +441,154 @@ export function notMineLift({
     destructive: false,
   }
 }
+
+/** die Zuordnung einer Disziplin, wie der Admin sie speichert */
+export interface DisciplineMapping {
+  targetId: string | null
+  familyId: number | null
+  officialScoring: "decimal" | "rings" | null
+  /** null: aus der DisziplinID, 0: keine feste Zahl, sonst die Zahl */
+  plannedShots: number | null
+  confirmed: boolean
+}
+
+/** ändern Scheibenbild oder Schusszahl die Merkmale der vorhandenen Scheiben: dann rechnet Spiegel sie nach */
+export const disciplineRecalculates = (before: DisciplineMapping, after: DisciplineMapping) =>
+  before.targetId !== after.targetId || before.plannedShots !== after.plannedShots
+
+const disciplineCards = (cards: number) =>
+  cards === 0
+    ? "In Spiegel gibt es noch keine Scheibe dieser Disziplin."
+    : cards === 1
+      ? "In Spiegel gibt es eine Scheibe dieser Disziplin."
+      : `In Spiegel gibt es ${cards} Scheiben dieser Disziplin.`
+
+const visibleWith = (m: DisciplineMapping) => m.targetId !== null && m.familyId !== null
+
+export function disciplineChange({
+  name,
+  cards,
+  before,
+  after,
+  targetLabel,
+  familyName,
+  plannedShotsFromId,
+}: {
+  name: string
+  /** Scheiben in Spiegel in dieser Disziplin (nicht gelöscht) */
+  cards: number
+  before: DisciplineMapping
+  after: DisciplineMapping
+  /** Name des gewählten Scheibenbilds; null bei eigener Scheibe */
+  targetLabel: string | null
+  /** Name der gewählten Familie; null ohne */
+  familyName: string | null
+  /** Schusszahl aus der DisziplinID; null, wenn sie keine nennt */
+  plannedShotsFromId: number | null
+}): Decision {
+  const happens: string[] = []
+  const targetChanged = before.targetId !== after.targetId
+  const familyChanged = before.familyId !== after.familyId
+  if ((targetChanged || familyChanged) && !visibleWith(after))
+    happens.push(
+      visibleWith(before)
+        ? "Spiegel zeigt die Scheiben dieser Disziplin nicht mehr in Start, Scheiben und Fortschritt."
+        : "Spiegel zeigt die Scheiben dieser Disziplin noch nicht in Start, Scheiben und Fortschritt. Dazu braucht sie eine Scheibe und eine Familie."
+    )
+  else {
+    if (targetChanged)
+      happens.push(
+        `Spiegel zeichnet die Scheiben als ${targetLabel} und prüft den Wert jedes Schusses nach.`
+      )
+    if (familyChanged) happens.push(`Die Scheiben stehen dann in der Familie „${familyName}“.`)
+  }
+  if (before.officialScoring !== after.officialScoring)
+    happens.push(
+      after.officialScoring
+        ? `Ein Wettkampf in dieser Disziplin zählt dann in ${after.officialScoring === "rings" ? "ganzen Ringen" : "Zehnteln"}.`
+        : "Ein Wettkampf in dieser Disziplin zählt dann so, wie am Stand angezeigt."
+    )
+  if (before.plannedShots !== after.plannedShots) {
+    const shots = after.plannedShots === null ? plannedShotsFromId : after.plannedShots || null
+    happens.push(
+      shots
+        ? `Eine Scheibe ist dann mit ${shots} Schüssen vollständig.`
+        : "Eine Scheibe ist dann vollständig, sobald sie fertig ist."
+    )
+  }
+  if (!happens.length)
+    happens.push(
+      "Spiegel übernimmt den Vorschlag. Die Disziplin steht danach nicht mehr unter „Neu“."
+    )
+  if (disciplineRecalculates(before, after))
+    happens.push("Spiegel rechnet die vorhandenen Scheiben in den nächsten Minuten neu.")
+  happens.push("Neue Scheiben dieser Disziplin kommen gleich so an.")
+  return {
+    title: `„${name}“ so einordnen?`,
+    about: disciplineCards(cards),
+    happens,
+    notHappening: [
+      "An den Schüssen und an den Werten aus Meyton ändert sich nichts.",
+      "Hat ein Schütze eine Scheibe selbst auf Zehntel oder ganze Ringe gestellt, bleibt es dabei.",
+    ],
+    undo: "Jederzeit hier wieder umstellen.",
+    confirmLabel: "So einordnen",
+    destructive: false,
+  }
+}
+
+export function disciplineIgnore({ name, cards }: { name: string; cards: number }): Decision {
+  return {
+    title: `„${name}“ ignorieren?`,
+    about: disciplineCards(cards),
+    happens: [
+      "Spiegel zeigt die Scheiben dieser Disziplin nirgends mehr. Auch die Schützen sehen sie nicht.",
+      "Neue Scheiben dieser Disziplin kommen weiter an. Sie bleiben unsichtbar.",
+      "Die Disziplin steht danach unter „Ignoriert“.",
+    ],
+    notHappening: ["Keine Scheibe wird gelöscht.", "An den Schüssen ändert sich nichts."],
+    undo: "Unter „Ignoriert“ auf „Wieder zeigen“ tippen. Dann sind alle Scheiben wieder da.",
+    confirmLabel: "Ignorieren",
+    destructive: false,
+  }
+}
+
+export function disciplineShow({
+  name,
+  cards,
+  visible,
+}: {
+  name: string
+  cards: number
+  /** Scheibenbild und Familie sind gesetzt */
+  visible: boolean
+}): Decision {
+  return {
+    title: `„${name}“ wieder zeigen?`,
+    about: disciplineCards(cards),
+    happens: [
+      visible
+        ? "Spiegel zeigt die Scheiben dieser Disziplin wieder in Start, Scheiben und Fortschritt."
+        : "Die Disziplin steht danach wieder unter „Neu“. Ihre Scheiben erscheinen, sobald Scheibe und Familie eingestellt sind.",
+    ],
+    notHappening: ["An den Schüssen ändert sich nichts."],
+    undo: "Jederzeit wieder ignorieren.",
+    confirmLabel: "Wieder zeigen",
+    destructive: false,
+  }
+}
+
+export function familyRemove({ name }: { name: string }): Decision {
+  return {
+    title: `Familie „${name}“ entfernen?`,
+    about: "Zu dieser Familie gehört keine Disziplin und keine Scheibe.",
+    happens: [
+      "Die Familie verschwindet aus der Auswahl.",
+      "Hat ein Schütze für diese Familie Zehntel oder ganze Ringe gewählt, fällt diese Wahl weg.",
+    ],
+    notHappening: ["Keine Scheibe ändert sich."],
+    undo: "Eine neue Familie mit demselben Namen anlegen. Die Wahl der Schützen kommt nicht zurück.",
+    confirmLabel: "Entfernen",
+    destructive: true,
+  }
+}
