@@ -64,6 +64,8 @@ interface CatalogEntry {
   /** null: bekannte Disziplin mit eigener Scheibe, die die Bibliothek noch nicht kennt */
   target: TargetId | null
   anschlag?: "auflage"
+  /** Meytons Spiele und Trainingsscheiben: Vorschlag, die Disziplin zu ignorieren */
+  fun?: true
 }
 
 function ruleRange(from: number, to: number): string[] {
@@ -72,10 +74,8 @@ function ruleRange(from: number, to: number): string[] {
 
 // Reihenfolge zählt: Die ISSF-Finale (0610 mit 220) stehen vor der allgemeinen Zeile mit 0610.
 const CATALOG: readonly CatalogEntry[] = [
-  {
-    rules: ["1062", "1064", "7401", "7402", "0216", ...ruleRange(8000, 8154), "9001", "9002"],
-    target: null,
-  },
+  { rules: ["1062", "1064", "7401", "7402", "0216"], target: null },
+  { rules: [...ruleRange(8000, 8154), "9001", "9002"], target: null, fun: true },
   { rules: ["0610", "0612", "0614", "0616"], shotCode: 220, target: "lg-10m" },
   { rules: ["0611", "0613", "0615", "0617"], shotCode: 220, target: "lp-10m" },
   {
@@ -140,6 +140,12 @@ export function parseDisciplineId(raw: number): ParsedDisciplineId {
   }
 }
 
+/** Soll der Wertungsschüsse: die Zahl des Admins (0: keine feste), sonst aus der DisziplinID (SF-09) */
+export function plannedShotsOf(meytonId: number, override: number | null): number | null {
+  if (override === null) return parseDisciplineId(meytonId).plannedShots
+  return override === 0 ? null : override
+}
+
 function catalogEntry(parsed: ParsedDisciplineId): CatalogEntry | null {
   if (parsed.distanceCode !== 1 || parsed.rule === null) return null
   const { rule, shotCode } = parsed
@@ -196,6 +202,11 @@ export function resolveTarget(input: {
     if (weapon) return { targetId: TARGET_BY_WEAPON[weapon], source: "name" }
   }
   return UNKNOWN
+}
+
+/** Meytons Spiele und Trainingsscheiben: Vorschlag, die Disziplin zu ignorieren; vereinseigene erkennt nur der Admin */
+export function suggestIgnore(disciplineId: number): boolean {
+  return catalogEntry(parseDisciplineId(disciplineId))?.fun === true
 }
 
 /** Vorschlag; der Admin bestätigt die Familie (SF-64, SF-65). */

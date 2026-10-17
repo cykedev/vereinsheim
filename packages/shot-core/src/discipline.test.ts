@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest"
 import {
   classifyCompleteness,
   parseDisciplineId,
+  plannedShotsOf,
   resolveTarget,
   suggestFamily,
+  suggestIgnore,
   type AdminMapping,
 } from "./discipline"
 
@@ -45,6 +47,35 @@ describe("parseDisciplineId", () => {
         openEnded: false,
       })
     }
+  })
+})
+
+describe("plannedShotsOf", () => {
+  it("ohne Zahl des Admins die aus der DisziplinID", () => {
+    expect(plannedShotsOf(19200020, null)).toBe(20)
+    expect(plannedShotsOf(10119000, null)).toBeNull()
+    expect(plannedShotsOf(123, null)).toBeNull()
+  })
+
+  it("die Zahl des Admins geht vor, 0 heißt keine feste", () => {
+    expect(plannedShotsOf(19200020, 3)).toBe(3)
+    expect(plannedShotsOf(10110040, 0)).toBeNull()
+  })
+})
+
+describe("suggestIgnore", () => {
+  it("Meytons Spiele und Trainingsscheiben", () => {
+    expect(suggestIgnore(18051010)).toBe(true) // LG Schach 6x6
+    expect(suggestIgnore(18154010)).toBe(true) // LP Dart
+    expect(suggestIgnore(19001000)).toBe(true) // LP-Trainingsscheibe
+    expect(suggestIgnore(19002000)).toBe(true) // LG-Trainingsscheibe
+  })
+
+  it("nicht Sport mit eigener Scheibe, Standard oder vereinseigene Nummern", () => {
+    expect(suggestIgnore(11062040)).toBe(false) // Kyffhäuser
+    expect(suggestIgnore(19110040)).toBe(false) // LG 40 alt
+    expect(suggestIgnore(10119000)).toBe(false) // LG Training Spiegel (Verein)
+    expect(suggestIgnore(10199005)).toBe(false) // Zimmerstutzen
   })
 })
 
