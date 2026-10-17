@@ -18,6 +18,7 @@ import { storeSnapshot, type PreviousLifesign } from "../db/raw"
 import {
   adaptSnapshot,
   ADAPTER_VERSION,
+  type AdaptedCard,
   disciplineOf,
   hasHeldShot,
   isComplete,
@@ -132,14 +133,15 @@ async function siteClockAt(db: Db, siteId: number, atMs: number): Promise<number
   return nearest?.offsetMs ?? null
 }
 
-/** die Scheiben einer Kennung über alle Zyklen (SF-77), jüngster Zyklus zuerst */
+/** die Scheiben einer Kennung über alle Zyklen (SF-77) und Blöcke, jüngster Zyklus und höchster Block zuerst */
 async function cardsOfKey(db: Db, sourceId: number, scheibenId: number) {
   return db.card.findMany({
     where: { sourceId, scheibenId },
-    orderBy: { cycle: "desc" },
+    orderBy: [{ cycle: "desc" }, { block: "desc" }],
     select: {
       id: true,
       cycle: true,
+      block: true,
       startedAt: true,
       ownerId: true,
       sportpassId: true,
@@ -148,8 +150,10 @@ async function cardsOfKey(db: Db, sourceId: number, scheibenId: number) {
   })
 }
 
+type KeyCard = Awaited<ReturnType<typeof cardsOfKey>>[number]
+
 /**
- * nur das Lebenszeichen bewegt: die Scheibe des jüngsten Zyklus ist wieder offen (SF-10), sonst nichts. Das
+ * nur das Lebenszeichen bewegt: die Scheibe des jüngsten Zyklus mit dem höchsten Block ist wieder offen (SF-10), sonst nichts. Das
  * Lebenszeichen wandert nur vorwärts, auch wenn ein älterer Stand gleichzeitig geschrieben wird.
  */
 async function touchLifesign(db: Db, sourceId: number, scheibenId: number, atMs: number) {
@@ -173,55 +177,78 @@ async function quarantine(db: Db, snapshotId: bigint, reason: string): Promise<H
   return "quarantined"
 }
 
-/** einen gespeicherten Stand deuten und als Scheibe schreiben; `quarantined`, wenn das nicht geht oder nicht darf */
-async function adaptAndWrite(
+/** die Disziplin des Stands, wie Spiegel sie kennt (undefined: noch nicht angelegt), oder warum er nicht zu deuten ist */
+async function disciplineContext(
   db: Db,
   target: IngestTarget,
-  sourceId: number,
-  owner: Owner,
-  snapshot: SnapshotV1,
-  stored: { snapshotId: bigint } & PreviousLifesign
-): Promise<Handled> {
-  const ownerId = owner.userId
+  snapshot: SnapshotV1
+): Promise<{ problems: string[] } | { known: KnownDiscipline | null }> {
   const named = disciplineOf(snapshot)
   const problems = schemaProblems(snapshot)
   if (!named || problems.length)
-    return quarantine(
-      db,
-      stored.snapshotId,
-      (problems.length ? problems : ["DisziplinID fehlt"]).join("; ")
-    )
+    return { problems: problems.length ? problems : ["DisziplinID fehlt"] }
   const known = await db.discipline.findUnique({
     where: { siteId_meytonId_name: { siteId: target.siteId, ...named } },
     select: { id: true, targetId: true, meytonId: true, plannedShots: true, version: true },
   })
-  const cards = await cardsOfKey(db, sourceId, snapshot.scheibenId)
-  const result = adaptSnapshot(snapshot, {
+  return { known }
+}
+
+type KnownDiscipline = {
+  id: number
+  targetId: string | null
+  meytonId: number
+  plannedShots: number | null
+  version: number
+}
+
+/** einen gespeicherten Stand deuten (reine Funktion des Adapters, dazu die Uhr der Anlage) */
+async function adaptStored(
+  db: Db,
+  target: IngestTarget,
+  snapshot: SnapshotV1,
+  stored: PreviousLifesign,
+  known: KnownDiscipline | null,
+  previousClockOffsetMs: number | null
+) {
+  return adaptSnapshot(snapshot, {
     timeZone: target.timeZone,
     targetId: known ? (known.targetId as TargetId | null) : undefined,
     plannedShots: known ? plannedShotsOf(known.meytonId, known.plannedShots) : undefined,
     previousLifesign: stored.previousLifesign,
     previousLifesignAtMs: stored.previousLifesignAtMs,
-    previousClockOffsetMs: cards[0]?.clockOffsetMs ?? null,
+    previousClockOffsetMs,
     siteClockOffsetMs: await siteClockAt(db, target.siteId, Date.parse(snapshot.observedAt)),
   })
-  if (result.kind === "quarantine")
-    return quarantine(db, stored.snapshotId, result.problems.join("; "))
-  const card = result.card
-  // derselbe Durchgang ist die Scheibe eines Zyklus mit nahem Beginn; sonst ein neuer Zyklus (SF-77)
-  const same = cards.find((c) => Math.abs(c.startedAt.getTime() - card.startedAtMs) <= SAME_CARD_MS)
-  // ein neuer Zyklus über allen bisherigen, auch denen entfernter Scheiben (Grabstein, Sperre)
-  const cycle = same
-    ? same.cycle
-    : ((await maxCycleOfKey(db, { sourceId, scheibenId: snapshot.scheibenId })) ?? -1) + 1
+}
+
+/** wohin ein gedeuteter Stand gehört: Zyklus, Block und die jüngste Scheibe dieses Zyklus, wenn es sie gibt */
+interface Placement {
+  cycle: number
+  block: number
+  latest: KeyCard | undefined
+}
+
+/** einen gedeuteten Stand als Scheibe schreiben; `quarantined`, wenn das nicht geht oder nicht darf */
+async function writeAdapted(
+  db: Db,
+  target: IngestTarget,
+  sourceId: number,
+  owner: Owner,
+  card: AdaptedCard,
+  known: KnownDiscipline | null,
+  { cycle, block, latest }: Placement,
+  stored: { snapshotId: bigint; sequence: number }
+): Promise<Handled> {
+  const ownerId = owner.userId
   // eine Scheibe gehört dem, dessen Zustimmung sie brachte; trägt sie danach eine andere SportpassID, wird nichts
   // geschrieben, sonst landeten fremde Schüsse beim ersten Besitzer (SF-37). Der Admin klärt es.
   if (
-    same &&
-    (same.ownerId !== ownerId ||
-      (same.sportpassId !== null &&
+    latest &&
+    (latest.ownerId !== ownerId ||
+      (latest.sportpassId !== null &&
         card.sportpassId !== null &&
-        same.sportpassId !== card.sportpassId))
+        latest.sportpassId !== card.sportpassId))
   )
     return quarantine(db, stored.snapshotId, "SportpassID oder Besitzer gewechselt")
   // eine neue Disziplin mit übernommener Zuordnung (umbenannt) passt nicht zum Vorschlag, mit dem der Adapter gerechnet
@@ -239,6 +266,7 @@ async function adaptAndWrite(
         sourceId,
         scheibenId: card.scheibenId,
         cycle,
+        block,
         ownerId,
         // nur beim Anlegen: bis der Schütze die erste Scheibe bestätigt, wartet jede neue
         ownerPending: owner.pending,
@@ -260,18 +288,63 @@ async function adaptAndWrite(
       shots: card.shots,
       reason: "snapshot",
       rawSnapshotId: stored.snapshotId,
-      sequence: snapshot.sequence,
+      sequence: stored.sequence,
     })
   } catch (error) {
     if (isDeterministic(error))
       return quarantine(db, stored.snapshotId, `nicht schreibbar: ${(error as Error).name}`)
     throw error
   }
-  await db.rawSnapshot.update({
-    where: { id: stored.snapshotId },
-    data: { adapterVersion: ADAPTER_VERSION },
-  })
   return "stored"
+}
+
+/** einen gespeicherten Stand deuten und als Scheibe schreiben; `quarantined`, wenn das nicht geht oder nicht darf */
+async function adaptAndWrite(
+  db: Db,
+  target: IngestTarget,
+  sourceId: number,
+  owner: Owner,
+  snapshot: SnapshotV1,
+  stored: { snapshotId: bigint } & PreviousLifesign
+): Promise<Handled> {
+  const context = await disciplineContext(db, target, snapshot)
+  if ("problems" in context) return quarantine(db, stored.snapshotId, context.problems.join("; "))
+  const cards = await cardsOfKey(db, sourceId, snapshot.scheibenId)
+  const result = await adaptStored(
+    db,
+    target,
+    snapshot,
+    stored,
+    context.known,
+    cards[0]?.clockOffsetMs ?? null
+  )
+  if (result.kind === "quarantine")
+    return quarantine(db, stored.snapshotId, result.problems.join("; "))
+  const card = result.card
+  // derselbe Durchgang ist die Scheibe eines Zyklus mit nahem Beginn; sonst ein neuer Zyklus (SF-77)
+  const latest = cards.find(
+    (c) => Math.abs(c.startedAt.getTime() - card.startedAtMs) <= SAME_CARD_MS
+  )
+  // ein neuer Zyklus über allen bisherigen, auch denen entfernter Scheiben (Grabstein, Sperre)
+  const cycle = latest
+    ? latest.cycle
+    : ((await maxCycleOfKey(db, { sourceId, scheibenId: snapshot.scheibenId })) ?? -1) + 1
+  const handled = await writeAdapted(
+    db,
+    target,
+    sourceId,
+    owner,
+    card,
+    context.known,
+    { cycle, block: latest?.block ?? 0, latest },
+    { snapshotId: stored.snapshotId, sequence: snapshot.sequence }
+  )
+  if (handled === "stored")
+    await db.rawSnapshot.update({
+      where: { id: stored.snapshotId },
+      data: { adapterVersion: ADAPTER_VERSION },
+    })
+  return handled
 }
 
 /**
