@@ -176,20 +176,14 @@ const RANKING_WORDS: Record<RankingChoice, { title: string; label: string }> = {
   open: { title: "nicht festlegen", label: "Nicht festlegen" },
 }
 
-/** was mit den Scheiben der Liste geschieht, als Ende des Satzes „Diese Scheiben … “, und was mit dem Ergebnis */
-const RANKING_HAPPENS: Record<RankingChoice, [string, string]> = {
-  competition: [
-    "zählen als Wettkampf, in den Scheiben und im Fortschritt.",
-    "Spiegel zeigt das Ergebnis dann so, wie die Disziplin im Wettkampf gewertet wird, etwa in ganzen Ringen statt Zehnteln.",
-  ],
-  training: [
-    "zählen als Training, in den Scheiben und im Fortschritt.",
-    "Spiegel zeigt das Ergebnis dann so wie am Stand, etwa in Zehnteln statt ganzen Ringen.",
-  ],
-  open: [
-    "zählen dann so, wie Meyton sie vermerkt. Meist ist das Training.",
-    "Das angezeigte Ergebnis kann wechseln, wenn sich dadurch die Art ändert.",
-  ],
+/**
+ * was mit den Scheiben der Liste geschieht, als Ende des Satzes „Diese Scheiben … “. Die Wertung hängt nicht an der Art
+ * (sie kommt von der Disziplin), deshalb sagt der Dialog dazu nichts.
+ */
+const RANKING_HAPPENS: Record<RankingChoice, string> = {
+  competition: "zählen als Wettkampf, in den Scheiben und im Fortschritt.",
+  training: "zählen als Training, in den Scheiben und im Fortschritt.",
+  open: "zählen dann so, wie Meyton sie vermerkt. Meist ist das Training.",
 }
 
 export function rankingKind({
@@ -202,7 +196,7 @@ export function rankingKind({
   cards: number
   kind: RankingChoice
 }): Decision {
-  const [counts, scoring] = RANKING_HAPPENS[kind]
+  const counts = RANKING_HAPPENS[kind]
   return {
     title: `„${ranking}“ ${RANKING_WORDS[kind].title}?`,
     about: cards
@@ -210,7 +204,6 @@ export function rankingKind({
       : `Noch keine Scheibe in Spiegel gehört zur Liste „${ranking}“.`,
     happens: [
       `${cards ? (cards === 1 ? "Diese Scheibe" : `Diese ${cards} Scheiben`) : "Ihre Scheiben"} und alle neuen dieser Liste ${counts}`,
-      scoring,
     ],
     notHappening: [
       "Hat ein Schütze eine Scheibe selbst umgestellt, bleibt es dabei.",
@@ -511,8 +504,8 @@ export function disciplineChange({
   if (before.officialScoring !== after.officialScoring)
     happens.push(
       after.officialScoring
-        ? `Ein Wettkampf in dieser Disziplin zählt dann in ${after.officialScoring === "rings" ? "ganzen Ringen" : "Zehnteln"}.`
-        : "Ein Wettkampf in dieser Disziplin zählt dann so, wie am Stand angezeigt."
+        ? `Die Scheiben dieser Disziplin zählen dann in ${after.officialScoring === "rings" ? "ganzen Ringen" : "Zehnteln"}.`
+        : "Die Scheiben dieser Disziplin zählen dann so, wie am Stand angezeigt."
     )
   if (before.plannedShots !== after.plannedShots) {
     const shots = after.plannedShots === null ? plannedShotsFromId : after.plannedShots || null
@@ -536,6 +529,7 @@ export function disciplineChange({
     notHappening: [
       "An den Schüssen und an den Werten aus Meyton ändert sich nichts.",
       "Hat ein Schütze eine Scheibe selbst auf Zehntel oder ganze Ringe gestellt, bleibt es dabei.",
+      "Hat ein Schütze für eine Familie Zehntel oder ganze Ringe gewählt, bleibt es dabei.",
     ],
     undo: "Jederzeit hier wieder umstellen.",
     confirmLabel: "So einordnen",

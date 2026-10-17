@@ -106,6 +106,11 @@ describe("Blatt einer Disziplin (Markup)", () => {
     )
     expect(html).toContain("Wie in der Nummer: 40")
     expect(html).toContain("Am Stand meist ganze Ringe angezeigt: 11 von 12 Scheiben.")
+    expect(html).toContain(
+      "So zählt Spiegel jede Scheibe dieser Disziplin, im Training wie im Wettkampf. Ein Schütze kann es an jeder Scheibe selbst umstellen."
+    )
+    expect(html).toContain(">Wie am Stand angezeigt<")
+    expect(html).toContain('aria-label="Wertung"')
     expect(html).toContain("Vorschlag nach der Nummer: Luftgewehr 10 m")
     expect(html).toContain("zuletzt im Oktober 2026")
     expect(html).toContain(">So einordnen<")
@@ -121,7 +126,7 @@ describe("Blatt einer Disziplin (Markup)", () => {
       "Spiegel ignoriert diese Disziplin. Ihre Scheiben zeigt Spiegel nirgends."
     )
     expect(html).toContain(">Wieder zeigen<")
-    expect(html).not.toContain("Wertung im Wettkampf")
+    expect(html).not.toContain("So zählt Spiegel jede Scheibe")
   })
 
   it("Vorschlag zum Ignorieren: kein Formular, ignorieren oder wieder zeigen", () => {
@@ -142,7 +147,7 @@ describe("Blatt einer Disziplin (Markup)", () => {
     expect(html).toContain(">Ignorieren<")
     expect(html).toContain(">Wieder zeigen<")
     expect(html).not.toContain(">So einordnen<")
-    expect(html).not.toContain("Wertung im Wettkampf")
+    expect(html).not.toContain("So zählt Spiegel jede Scheibe")
   })
 
   it("ohne Wertungsschüsse der Hinweis aufs Ignorieren", () => {

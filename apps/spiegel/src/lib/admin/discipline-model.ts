@@ -158,7 +158,7 @@ export function targetSuggestionText(row: DisciplineRow): string {
 
 const FEW_SHOOTERS = "Dazu haben noch zu wenige Schützen diese Disziplin geschossen."
 
-/** was am Stand meist angezeigt wurde (Vorschlag für die Wertung im Wettkampf, nie automatisch, SF-74) */
+/** was am Stand meist angezeigt wurde (Vorschlag für die Wertung der Disziplin, nie automatisch, SF-74) */
 export function standText(stats: DisciplineStats): string {
   if (stats.owners < MIN_OWNERS_FOR_STATS || !stats.stand) return FEW_SHOOTERS
   const { decimal, rings } = stats.stand

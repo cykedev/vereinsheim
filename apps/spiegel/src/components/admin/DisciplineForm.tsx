@@ -37,7 +37,7 @@ const TARGET_OPTIONS: readonly { value: TargetChoice; label: string }[] = [
 const SCORING_OPTIONS = [
   { value: "decimal", label: "Zehntel" },
   { value: "rings", label: "Ganze Ringe" },
-  { value: "open", label: "Nicht festgelegt" },
+  { value: "open", label: "Wie am Stand angezeigt" },
 ] as const
 
 const CARD = "grid gap-3 rounded-2xl border border-border bg-card p-5"
@@ -58,7 +58,7 @@ const cardsText = (cards: number) =>
   cards === 0 ? "noch keine Scheibe" : cards === 1 ? "1 Scheibe" : `${cards} Scheiben`
 
 /**
- * Blatt einer Disziplin: Zustand, Scheibe, Familie, Wertung im Wettkampf, Schusszahl, je mit Vorschlag oder dem, was
+ * Blatt einer Disziplin: Zustand, Scheibe, Familie, Wertung, Schusszahl, je mit Vorschlag oder dem, was
  * Spiegel beobachtet hat. Gesteuert; Absenden fragt erst (`DecisionDialog`), dann speichert es. Eine ignorierte
  * Disziplin zeigt nur ihren Zustand und „Wieder zeigen“.
  */
@@ -184,13 +184,13 @@ export function DisciplineForm({
         )}
       </section>
       <section className={CARD}>
-        <h2 className="text-[15px] font-semibold">Wertung im Wettkampf</h2>
+        <h2 className="text-[15px] font-semibold">Wertung</h2>
         <p className={NOTE}>
-          So zählt eine Scheibe, die als Wettkampf gilt. Im Training gilt, was am Stand angezeigt
-          wurde.
+          So zählt Spiegel jede Scheibe dieser Disziplin, im Training wie im Wettkampf. Ein Schütze
+          kann es an jeder Scheibe selbst umstellen.
         </p>
         <Segmented
-          label="Wertung im Wettkampf"
+          label="Wertung"
           options={SCORING_OPTIONS}
           value={scoring}
           onChange={setScoring}

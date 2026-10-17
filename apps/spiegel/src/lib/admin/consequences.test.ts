@@ -203,7 +203,7 @@ describe("Folgen an Brücke und Listen", () => {
     })
   })
 
-  it("Liste: Scheiben in Spiegel, das Ergebnis kann wechseln, Schüsse nicht", () => {
+  it("Liste: Scheiben in Spiegel, die Art, nichts zur Wertung (sie hängt nicht an der Art), Schüsse nicht", () => {
     const d = rankingKind({ ranking: "RWK_LP", cards: 23, kind: "competition" })
     wellFormed(d)
     expect(d).toEqual({
@@ -211,7 +211,6 @@ describe("Folgen an Brücke und Listen", () => {
       about: "In Spiegel gehören 23 Scheiben zur Liste „RWK_LP“.",
       happens: [
         "Diese 23 Scheiben und alle neuen dieser Liste zählen als Wettkampf, in den Scheiben und im Fortschritt.",
-        "Spiegel zeigt das Ergebnis dann so, wie die Disziplin im Wettkampf gewertet wird, etwa in ganzen Ringen statt Zehnteln.",
       ],
       notHappening: [
         "Hat ein Schütze eine Scheibe selbst umgestellt, bleibt es dabei.",
@@ -233,9 +232,12 @@ describe("Folgen an Brücke und Listen", () => {
       about: "Noch keine Scheibe in Spiegel gehört zur Liste „X“.",
       confirmLabel: "Nicht festlegen",
     })
-    expect(open.happens[0]).toBe(
-      "Ihre Scheiben und alle neuen dieser Liste zählen dann so, wie Meyton sie vermerkt. Meist ist das Training."
-    )
+    expect(open.happens).toEqual([
+      "Ihre Scheiben und alle neuen dieser Liste zählen dann so, wie Meyton sie vermerkt. Meist ist das Training.",
+    ])
+    expect(
+      rankingKind({ ranking: "Training-LP", cards: 1, kind: "training" }).happens
+    ).toHaveLength(1)
   })
 })
 
@@ -492,6 +494,7 @@ describe("Folgen beim Einordnen einer Disziplin", () => {
       notHappening: [
         "An den Schüssen und an den Werten aus Meyton ändert sich nichts.",
         "Hat ein Schütze eine Scheibe selbst auf Zehntel oder ganze Ringe gestellt, bleibt es dabei.",
+        "Hat ein Schütze für eine Familie Zehntel oder ganze Ringe gewählt, bleibt es dabei.",
       ],
       undo: "Jederzeit hier wieder umstellen.",
       confirmLabel: "So einordnen",
@@ -510,10 +513,10 @@ describe("Folgen beim Einordnen einer Disziplin", () => {
       "Neue Scheiben dieser Disziplin kommen gleich so an.",
     ])
     expect(change({}, { officialScoring: "rings" }).happens[0]).toBe(
-      "Ein Wettkampf in dieser Disziplin zählt dann in ganzen Ringen."
+      "Die Scheiben dieser Disziplin zählen dann in ganzen Ringen."
     )
     expect(change({ officialScoring: "decimal" }, {}).happens[0]).toBe(
-      "Ein Wettkampf in dieser Disziplin zählt dann so, wie am Stand angezeigt."
+      "Die Scheiben dieser Disziplin zählen dann so, wie am Stand angezeigt."
     )
     expect(change({}, { plannedShots: 3 }).happens.slice(0, 2)).toEqual([
       "Eine Scheibe ist dann mit 3 Schüssen vollständig.",
