@@ -71,6 +71,10 @@ export const SF_02 = defineCase({
       flags: [],
       completeness: "vollstaendig",
       counted: { stellung: 1, numbers: numbers(1, 40) },
+      blocks: [
+        { stellung: 0, numbers: numbers(1, 60) },
+        { stellung: 1, numbers: numbers(1, 40) },
+      ],
       notes: [
         "Lesung 1: 60 Probe und keine Wertung ist „nur Probe“, nicht fertig.",
         "Lesung 2: 20 von 40 Wertung ist unvollständig, solange das Lebenszeichen läuft offen.",
@@ -110,8 +114,12 @@ export const SF_03 = defineCase({
       flags: [],
       completeness: "vollstaendig",
       counted: { stellung: 1, numbers: numbers(1, 20) },
+      blocks: [
+        { stellung: 0, numbers: numbers(1, 5) },
+        { stellung: 1, numbers: numbers(1, 20) },
+      ],
       notes: [
-        "Die Probe steht nur in Lesung 1; Spiegel sammelt sie nicht über Lesungen (Leitregel 3).",
+        "Die Probe steht nur in Lesung 1; in Spiegel ist sie eine eigene Scheibe vor der Wertung.",
         "Lesung 2 ist keine Korrektur: Probe verschwindet, Wertung kommt dazu.",
       ],
     },
@@ -223,8 +231,12 @@ export const SF_72 = defineCase({
       flags: ["nur-probe"],
       completeness: "nur-probe",
       counted: { stellung: 0, numbers: numbers(1, 5) },
+      blocks: [
+        { stellung: 0, numbers: numbers(1, 8) },
+        { stellung: 0, numbers: numbers(1, 5) },
+      ],
       notes: [
-        "Wie am Ausdruck nur der letzte Block (Leitregel 3).",
+        "Jeder Block ist eine eigene Scheibe in Spiegel; am Ausdruck steht nur der letzte.",
         "Schuss 1 nach dem Neustart ist ein anderer Schuss als Schuss 1 davor: Abgleich über den Fingerabdruck (Zeit, Millisekunden, Lage), nicht die Nummer.",
       ],
     },

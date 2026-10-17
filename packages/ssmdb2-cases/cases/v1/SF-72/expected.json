@@ -37,8 +37,18 @@
         "stellung": 0,
         "numbers": [1, 2, 3, 4, 5]
       },
+      "blocks": [
+        {
+          "stellung": 0,
+          "numbers": [1, 2, 3, 4, 5, 6, 7, 8]
+        },
+        {
+          "stellung": 0,
+          "numbers": [1, 2, 3, 4, 5]
+        }
+      ],
       "notes": [
-        "Wie am Ausdruck nur der letzte Block (Leitregel 3).",
+        "Jeder Block ist eine eigene Scheibe in Spiegel; am Ausdruck steht nur der letzte.",
         "Schuss 1 nach dem Neustart ist ein anderer Schuss als Schuss 1 davor: Abgleich über den Fingerabdruck (Zeit, Millisekunden, Lage), nicht die Nummer."
       ]
     }

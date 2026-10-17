@@ -99,6 +99,8 @@ describe.each(CASES.map((c) => [c.id, c] as const))("%s", (_id, definition) => {
       const counted = match.length ? match : probe
       expect(expected.counted.stellung).toBe(match.length ? 1 : 0)
       expect([...expected.counted.numbers]).toEqual(counted.map((t) => t.Treffer))
+      // die Blöcke in Spiegel enden mit dem Stand wie am Ausdruck
+      if (expected.blocks) expect(expected.blocks.at(-1)).toEqual(expected.counted)
       const completeness = classifyCompleteness({
         sighterShots: probe.length,
         matchShots: match.length,

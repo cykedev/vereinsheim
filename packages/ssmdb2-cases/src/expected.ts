@@ -35,6 +35,12 @@ export interface ExpectedCard {
   completeness: Completeness
   /** wie am Ausdruck: die zählenden Schüsse (Stellung und Nummern) in der letzten Lesung, in der sie steht */
   counted: { stellung: 0 | 1; numbers: readonly number[] }
+  /**
+   * die Scheiben in Spiegel, je Block eine, in ihrer Folge: Ein Neustart der Probe und der Übergang zur Wertung beginnen
+   * einen neuen ([[adr-027]], Änderung vom 17. Oktober 2026). Der letzte gleicht `counted`. Fehlt: eine Scheibe wie
+   * `counted`
+   */
+  blocks?: readonly { stellung: 0 | 1; numbers: readonly number[] }[]
   /** Merkmale je Schuss, nach Stellung und Nummer („1/41“) */
   shotFlags?: Readonly<Record<string, readonly string[]>>
   /** was der Fall sonst festhält, in einem Satz je Punkt */
