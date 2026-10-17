@@ -337,7 +337,8 @@ model LoginRateLimitBucket {
 // was in Verläufen zusammen zählt, etwa LP Freihand (LP 40, LP 40 alt, LP Training)
 model Family {
   id          Int             @id @default(autoincrement())
-  // Kennung aus dem Fachkern (`FamilyId`, etwa „lp-freihand“), steht in der Adresse
+  // Kennung, steht in der Adresse: aus dem Fachkern (`FamilyId`, etwa „lp-freihand“) oder beim Anlegen aus dem Namen;
+  // fest
   slug        String          @unique
   // Anzeige, etwa „Luftpistole“
   name        String
@@ -371,6 +372,16 @@ model Discipline {
   targetId        String?
   // amtliche Wertung (SF-74); null: unbekannt
   officialScoring Scoring?
+  // Wertungsschüsse vom Admin; null: aus der DisziplinID, 0: keine feste Zahl (SF-09)
+  plannedShots    Int?
+  // vom Admin eingeordnet; null: neu, die Werte sind der Vorschlag des Einlesens
+  confirmedAt     DateTime? @db.Timestamptz(3)
+  // steigt, wenn sich Scheibenbild oder Schusszahl ändern; Scheiben mit anderem Stand rechnet
+  // `refreshStaleDisciplineCards` nach
+  version         Int       @default(0)
+  // ignoriert (Spaßscheiben): Spiegel zeigt ihre Scheiben nirgends, die Scheiben bleiben gespeichert; mit
+  // `confirmedAt` null ein Vorschlag des Einlesens (Meytons Spiele und Trainingsscheiben)
+  ignoredAt       DateTime? @db.Timestamptz(3)
   cards           Card[]
 
   @@unique([siteId, meytonId, name])
@@ -413,8 +424,10 @@ model Card {
   disciplineId      Int
   // NoAction statt Restrict: prüft am Ende der Anweisung, damit das Löschen einer Anlage über die Quelle kaskadiert
   discipline        Discipline      @relation(fields: [disciplineId], references: [id], onDelete: NoAction)
+  // `Discipline.version`, mit der Merkmale, Gegenprobe und `complete` gerechnet sind; -1: ohne Zuordnung geschrieben
+  disciplineVersion Int             @default(0)
   // Familie der Disziplin, hier mitgeführt für den Index der Übersichten; ändert die Admin-Zuordnung die
-  // Familie, zieht sie die Scheiben mit (`setDisciplineFamily`)
+  // Familie, zieht sie die Scheiben mit (`moveDisciplineFamily`)
   familyId          Int?
   family            Family?         @relation(fields: [familyId], references: [id], onDelete: SetNull)
   stand             String?
@@ -462,6 +475,8 @@ model Card {
   // Zählen je Rangliste im Admin, `SET NULL` beim Löschen einer Rangliste
   @@index([rankingId])
   @@index([sportpassId])
+  // Nachrechnen nach einer Zuordnung, Familie umhängen, Zählen je Disziplin im Admin
+  @@index([disciplineId])
 }
 
 // ein Stand der Scheibe; Korrekturen erzeugen eine neue Revision, die vorige bleibt
