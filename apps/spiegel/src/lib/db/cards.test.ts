@@ -8,6 +8,7 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import {
   CardIdentityConflictError,
+  currentShotsOf,
   refreshProjections,
   refreshStaleProjections,
   setDisciplineFamily,
@@ -523,5 +524,18 @@ describe("setDisciplineFamily", () => {
     expect((await db.card.findUniqueOrThrow({ where: { id: cardId } })).familyId).toBe(
       site.familyId
     )
+  })
+})
+
+describe("currentShotsOf", () => {
+  it("die Schüsse der aktuellen Revision in Abgabefolge, wie geschrieben", async () => {
+    const input = cardWhere(2800, (c) => !probeOnly(c))
+    const { cardId } = await writeRevision(db, input)
+    const shots = await currentShotsOf(db, cardId)
+    expect(shots).toEqual([...input.shots].sort((a, b) => a.seq - b.seq))
+  })
+
+  it("eine Scheibe ohne Revision hat keine Schüsse", async () => {
+    expect(await currentShotsOf(db, "keine-solche-scheibe")).toEqual([])
   })
 })

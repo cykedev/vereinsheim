@@ -8,7 +8,14 @@ import { frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
 import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
-import { loadSnapshotData, MAX_OBSERVED_LAG_MS, MAX_SEQUENCE_AHEAD_MS, storeSnapshot } from "./raw"
+import {
+  loadSnapshot,
+  loadSnapshotData,
+  MAX_OBSERVED_LAG_MS,
+  MAX_SEQUENCE_AHEAD_MS,
+  setSnapshotsRead,
+  storeSnapshot,
+} from "./raw"
 
 const db = createPrismaClient()
 let site: TestSite
@@ -254,5 +261,44 @@ describe("Lebenszeichen", () => {
       newRows: 1,
       previousLifesign: "2026-06-01 20:00:07",
     })
+  })
+})
+
+describe("loadSnapshot", () => {
+  it("ein gespeicherter Stand kommt als derselbe Snapshot zurück: gleiche Hülle, Daten mit gleicher Prüfsumme", async () => {
+    // eine eigene ScheibenID, damit kein Stand eines anderen Tests schon da ist
+    for (const snapshot of snapshotsOf("SF-72")) {
+      const original = { ...snapshot, scheibenId: snapshot.scheibenId + 9 }
+      const result = await store(original)
+      // Lesung 2 zeigt denselben Stand wie Lesung 1
+      if (result.outcome === "unchanged") continue
+      if (result.outcome !== "stored") throw new Error(result.outcome)
+      const { data, ...envelope } = await loadSnapshot(db, result.snapshotId)
+      const { data: sent, ...sentEnvelope } = original
+      expect(envelope).toEqual(sentEnvelope)
+      // die Zeilen in kanonischer Folge, wie die Prüfsumme sie sortiert
+      expect(computeChecksum(data)).toBe(original.checksum)
+      expect(data.treffer.rows).toHaveLength(sent.treffer.rows.length)
+    }
+  })
+})
+
+describe("setSnapshotsRead", () => {
+  it("vermerkt Version des Adapters und Block an den Ständen", async () => {
+    const saved = await db.rawSnapshot.findMany({
+      where: { sourceId: site.sourceId },
+      select: { id: true },
+      take: 2,
+    })
+    await setSnapshotsRead(
+      db,
+      saved.map((s) => s.id),
+      { adapterVersion: "test@1", block: 3 }
+    )
+    const read = await db.rawSnapshot.findMany({
+      where: { id: { in: saved.map((s) => s.id) } },
+      select: { adapterVersion: true, block: true },
+    })
+    expect(read).toEqual(saved.map(() => ({ adapterVersion: "test@1", block: 3 })))
   })
 })

@@ -291,3 +291,50 @@ export async function loadSnapshotData(
     },
   }
 }
+
+/**
+ * Ein gespeicherter Stand als Snapshot v1, Hülle und Daten, wie er von der Brücke kam: für das Neulesen aus den
+ * Rohdaten mit dem Adapter ([[adr-027]], Änderung vom 17. Oktober 2026).
+ */
+export async function loadSnapshot(db: Db, snapshotId: bigint): Promise<SnapshotV1> {
+  const envelope = await db.rawSnapshot.findUniqueOrThrow({
+    where: { id: snapshotId },
+    select: {
+      scheibenId: true,
+      sequence: true,
+      observedAt: true,
+      contractVersion: true,
+      sourceVersion: true,
+      sessionTimeZone: true,
+      source: { select: { epoch: true } },
+    },
+  })
+  if (envelope.contractVersion !== 1)
+    throw new RangeError(`Snapshot ${snapshotId}: Vertrag ${envelope.contractVersion}`)
+  const { data, checksum } = await loadSnapshotData(db, snapshotId)
+  return {
+    contractVersion: 1,
+    source: "meyton-ssmdb2",
+    sourceVersion: envelope.sourceVersion,
+    epoch: envelope.source.epoch,
+    scheibenId: envelope.scheibenId,
+    sequence: Number(envelope.sequence),
+    observedAt: envelope.observedAt.toISOString(),
+    sessionTimeZone: envelope.sessionTimeZone,
+    data,
+    checksum,
+  }
+}
+
+/** Stände als gedeutet vermerken: mit welchem Adapter und in welchen Block der Scheibe (`Card.block`) */
+export async function setSnapshotsRead(
+  db: Db,
+  snapshotIds: readonly bigint[],
+  read: { adapterVersion: string; block: number }
+): Promise<void> {
+  if (!snapshotIds.length) return
+  await db.rawSnapshot.updateMany({
+    where: { id: { in: [...snapshotIds] } },
+    data: { adapterVersion: read.adapterVersion, block: read.block },
+  })
+}

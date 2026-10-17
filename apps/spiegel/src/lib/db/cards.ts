@@ -696,6 +696,20 @@ export async function refreshStaleDisciplineCards(
 }
 
 /** ein gespeicherter Schuss als Eingabe */
+/** die Schüsse der aktuellen Revision einer Scheibe in Abgabefolge; leer ohne Revision (auch ohne Scheibe) */
+export async function currentShotsOf(db: Db, cardId: string): Promise<ShotInput[]> {
+  const card = await db.card.findUnique({
+    where: { id: cardId },
+    select: { currentRevisionId: true },
+  })
+  if (!card?.currentRevisionId) return []
+  const rows = await db.shot.findMany({
+    where: { revisionId: card.currentRevisionId },
+    orderBy: { seq: "asc" },
+  })
+  return rows.map(shotFromRow)
+}
+
 export function shotFromRow(row: {
   seq: number
   stellung: number
