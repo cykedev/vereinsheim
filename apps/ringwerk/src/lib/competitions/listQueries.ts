@@ -7,7 +7,7 @@ export async function getCompetitions(): Promise<CompetitionListItem[]> {
   const rows = await db.competition.findMany({
     where: { status: "ACTIVE" },
     select: listSelect,
-    orderBy: { name: "asc" },
+    orderBy: [{ name: "asc" }, { id: "asc" }],
   })
   return rows.map(({ publicPasswordHash, ...row }) => ({
     ...row,
@@ -19,7 +19,7 @@ export async function getCompetitions(): Promise<CompetitionListItem[]> {
 export async function getCompetitionsForManagement(): Promise<CompetitionListItem[]> {
   const rows = await db.competition.findMany({
     select: listSelect,
-    orderBy: [{ status: "asc" }, { name: "asc" }],
+    orderBy: [{ status: "asc" }, { name: "asc" }, { id: "asc" }],
   })
   return rows.map(({ publicPasswordHash, ...row }) => ({
     ...row,

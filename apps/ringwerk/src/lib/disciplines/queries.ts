@@ -10,7 +10,7 @@ function toSerializable(d: Discipline): SerializableDiscipline {
 export async function getDisciplines(): Promise<SerializableDiscipline[]> {
   const rows = await db.discipline.findMany({
     where: { isArchived: false },
-    orderBy: [{ isSystem: "desc" }, { name: "asc" }],
+    orderBy: [{ isSystem: "desc" }, { name: "asc" }, { id: "asc" }],
   })
   return rows.map(toSerializable)
 }
@@ -18,7 +18,7 @@ export async function getDisciplines(): Promise<SerializableDiscipline[]> {
 /** Alle Disziplinen inkl. archivierter — für Admin-Verwaltungsansicht. */
 export async function getDisciplinesForManagement(): Promise<SerializableDiscipline[]> {
   const rows = await db.discipline.findMany({
-    orderBy: [{ isSystem: "desc" }, { isArchived: "asc" }, { name: "asc" }],
+    orderBy: [{ isSystem: "desc" }, { isArchived: "asc" }, { name: "asc" }, { id: "asc" }],
   })
   return rows.map(toSerializable)
 }

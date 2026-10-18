@@ -6,7 +6,7 @@ export async function getAuditLogsByCompetition(competitionId: string) {
     include: {
       user: { select: { name: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
   })
 }
 
@@ -16,7 +16,7 @@ export async function getAuditLogs() {
       user: { select: { name: true } },
       competition: { select: { name: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
   })
 }
 

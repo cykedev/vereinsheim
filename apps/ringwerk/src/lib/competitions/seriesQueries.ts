@@ -109,7 +109,11 @@ export async function getSeasonWithSeries(id: string): Promise<{
         },
       },
     },
-    orderBy: [{ participant: { lastName: "asc" } }, { participant: { firstName: "asc" } }],
+    orderBy: [
+      { participant: { lastName: "asc" } },
+      { participant: { firstName: "asc" } },
+      { id: "asc" },
+    ],
   })
 
   const seriesRows = await db.series.findMany({
@@ -125,7 +129,8 @@ export async function getSeasonWithSeries(id: string): Promise<{
       shotCount: true,
       sessionDate: true,
     },
-    orderBy: { sessionDate: "asc" },
+    // mehrere Serien am selben Tag: in der Reihenfolge der Erfassung (bei gleichen Ringen zählt die erste)
+    orderBy: [{ sessionDate: "asc" }, { createdAt: "asc" }, { id: "asc" }],
   })
 
   // Serien nach Teilnehmer gruppieren

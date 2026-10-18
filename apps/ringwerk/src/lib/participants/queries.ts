@@ -19,7 +19,7 @@ export async function getParticipants(): Promise<ParticipantListItem[]> {
       createdAt: true,
       _count: { select: { competitions: true } },
     },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }, { id: "asc" }],
   })
 }
 
@@ -37,7 +37,7 @@ export async function getParticipantsForManagement(): Promise<ParticipantListIte
       createdAt: true,
       _count: { select: { competitions: true } },
     },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }, { id: "asc" }],
   })
 }
 
@@ -62,7 +62,7 @@ export async function getAllActiveParticipants(): Promise<ParticipantOption[]> {
   return db.participant.findMany({
     where: { isActive: true, isGuestRecord: false },
     select: { id: true, firstName: true, lastName: true, contact: true },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }, { id: "asc" }],
   })
 }
 
@@ -77,6 +77,6 @@ export async function getParticipantsNotInCompetition(
       competitions: { none: { competitionId } },
     },
     select: { id: true, firstName: true, lastName: true, contact: true },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }, { id: "asc" }],
   })
 }

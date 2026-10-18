@@ -28,7 +28,7 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/competitions/listQueries", () => ({ getCompetitionById }))
 
 import { getCompetitionParticipants } from "./competitionParticipants/queries"
-import { getEventWithSeries } from "./competitions/seriesQueries"
+import { getEventWithSeries, getSeasonWithSeries } from "./competitions/seriesQueries"
 import { getMatchupsForCompetition } from "./matchups/queries"
 import { getPlayoffBracket } from "./playoffs/queries"
 import { getBestOfStandingsForCompetition, getStandingsForCompetition } from "./standings/queries"
@@ -88,5 +88,20 @@ describe("Reihenfolge bei Gleichstand", () => {
     expect(orderOf(findMany.competitionParticipant)).toEqual(CREATION)
     await getEventWithSeries("c1")
     expect(orderOf(findMany.series)).toEqual(CREATION)
+  })
+
+  it("Saison: gleicher Name eindeutig, Serien am selben Tag in der Reihenfolge der Erfassung", async () => {
+    getCompetitionById.mockResolvedValue({ id: "c1", type: "SEASON" })
+    await getSeasonWithSeries("c1")
+    expect(orderOf(findMany.competitionParticipant)).toEqual([
+      { participant: { lastName: "asc" } },
+      { participant: { firstName: "asc" } },
+      { id: "asc" },
+    ])
+    expect(orderOf(findMany.series)).toEqual([
+      { sessionDate: "asc" },
+      { createdAt: "asc" },
+      { id: "asc" },
+    ])
   })
 })
