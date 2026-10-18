@@ -14,6 +14,7 @@
     "./design2/help-sheet": "./src/design2/help-sheet.tsx",
     "./design2/page": "./src/design2/page.tsx",
     "./design2/round-toggle": "./src/design2/round-toggle.tsx",
+    "./design2/score-colors": "./src/design2/score-colors.ts",
     "./design2/segmented": "./src/design2/segmented.tsx",
     "./design2/sheet": "./src/design2/sheet.tsx",
     "./design2/theme": "./src/design2/theme/index.ts",
