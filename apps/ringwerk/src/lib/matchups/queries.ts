@@ -65,7 +65,13 @@ export async function getMatchupsForCompetition(competitionId: string): Promise<
         },
       },
     },
-    orderBy: [{ round: "asc" }, { roundIndex: "asc" }, { homeParticipant: { lastName: "asc" } }],
+    orderBy: [
+      { round: "asc" },
+      { roundIndex: "asc" },
+      { homeParticipant: { lastName: "asc" } },
+      { homeParticipant: { firstName: "asc" } },
+      { id: "asc" },
+    ],
   })
 
   return rows.map((row) => ({

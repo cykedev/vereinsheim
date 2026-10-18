@@ -158,6 +158,23 @@ describe("generateCompetitionSchedule — auth guards", () => {
     expect(transactionMock).not.toHaveBeenCalled()
   })
 
+  it("liest die Einschreibungen in der Reihenfolge der Anlage, bei gleicher Zeit nach der Kennung", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionFindUniqueMock.mockResolvedValue({
+      id: "c1",
+      status: "ACTIVE",
+      leagueFormat: "DOUBLE_ROUND_ROBIN",
+      hinrundeDeadline: null,
+      rueckrundeDeadline: null,
+    })
+    competitionParticipantFindManyMock.mockResolvedValue([])
+    noResults()
+    await generateCompetitionSchedule("c1")
+    expect(competitionParticipantFindManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: [{ createdAt: "asc" }, { id: "asc" }] })
+    )
+  })
+
   it("liefert Fehler wenn bereits abgeschlossene Paarungen vorhanden", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
     competitionFindUniqueMock.mockResolvedValue({

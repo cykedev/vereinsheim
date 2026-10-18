@@ -28,6 +28,8 @@ export async function getCompetitionParticipants(
       { status: "asc" },
       { eventTeam: { teamNumber: "asc" } },
       { participant: { lastName: "asc" } },
+      { participant: { firstName: "asc" } },
+      { id: "asc" },
     ],
   })
   return rows.map((r) => ({

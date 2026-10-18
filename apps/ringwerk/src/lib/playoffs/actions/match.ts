@@ -29,6 +29,7 @@ export async function advanceRound(competitionId: string): Promise<ActionResult>
       participantAId: true,
       participantBId: true,
     },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   })
 
   if (matches.length === 0) return { error: "Keine Playoffs gefunden." }
@@ -84,6 +85,8 @@ async function handleMatchCompletion(
       participantAId: true,
       participantBId: true,
     },
+    // in der Reihenfolge, in der die Runde gesetzt wurde: Der Sieger des oberen Halbfinales wird A im Finale
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   })
 
   const allComplete = allMatchesInRound.every((m) => m.status === "COMPLETED")

@@ -44,7 +44,7 @@ export async function generateCompetitionSchedule(competitionId: string): Promis
   const enrollments = await db.competitionParticipant.findMany({
     where: { competitionId, status: "ACTIVE" },
     select: { participantId: true },
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   })
 
   if (enrollments.length < 4) {

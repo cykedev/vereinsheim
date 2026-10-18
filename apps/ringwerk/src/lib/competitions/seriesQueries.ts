@@ -47,7 +47,7 @@ export async function getEventWithSeries(id: string): Promise<{
       shotCount: true,
       sessionDate: true,
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   })
 
   // Serien von zurückgezogenen Teilnehmern ausschließen

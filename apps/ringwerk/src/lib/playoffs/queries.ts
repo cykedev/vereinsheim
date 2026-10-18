@@ -138,7 +138,9 @@ export async function getPlayoffBracket(competitionId: string): Promise<PlayoffB
         },
       },
     },
-    orderBy: { createdAt: "asc" },
+    // Eine Runde entsteht in einem `createMany` mit derselben Zeit; die `id` (cuid: Zeitstempel, dann Zähler) hält die
+    // Reihenfolge, in der Ringwerk sie gesetzt hat
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   })
 
   const base = matches.map(mapMatchItem)

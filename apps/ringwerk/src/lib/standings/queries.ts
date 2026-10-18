@@ -28,7 +28,7 @@ export async function getStandingsForCompetition(competitionId: string): Promise
           select: { id: true, firstName: true, lastName: true },
         },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
     db.matchup.findMany({
       where: { competitionId },
@@ -103,7 +103,7 @@ export async function getBestOfStandingsForCompetition(
           select: { id: true, firstName: true, lastName: true },
         },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
     db.matchup.findMany({
       where: { competitionId },
