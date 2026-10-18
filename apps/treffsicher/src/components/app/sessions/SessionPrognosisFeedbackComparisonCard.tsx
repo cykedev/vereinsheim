@@ -88,9 +88,11 @@ export function SessionPrognosisFeedbackComparisonCard({ prognosis, feedback }: 
                 return (
                   <tr key={key}>
                     <td className="py-1.5 pr-4">{label}</td>
-                    <td className="py-1.5 pr-4 tabular-nums">{prognosisValue}</td>
-                    <td className="py-1.5 pr-4 tabular-nums">{feedbackValue}</td>
-                    <td className={`py-1.5 font-medium tabular-nums ${diffClassName(diff)}`}>
+                    <td className="py-1.5 pr-4 font-mono tabular-nums">{prognosisValue}</td>
+                    <td className="py-1.5 pr-4 font-mono tabular-nums">{feedbackValue}</td>
+                    <td
+                      className={`py-1.5 font-mono font-medium tabular-nums ${diffClassName(diff)}`}
+                    >
                       {diff > 0 ? `+${diff}` : diff}
                     </td>
                   </tr>

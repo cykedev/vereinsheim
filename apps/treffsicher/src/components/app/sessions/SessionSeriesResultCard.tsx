@@ -84,7 +84,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
       <CardHeader>
         <CardTitle className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
           <span>Ergebnis</span>
-          <span className="text-3xl font-bold tabular-nums">
+          <span className="font-display text-3xl font-bold tabular-nums">
             {totalScore !== null ? (isDecimal ? totalScore.toFixed(1) : totalScore) : "–"}
             <span className="ml-1 text-base font-normal text-muted-foreground">Ringe</span>
           </span>
@@ -104,7 +104,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                   {row.seriesLabel}
                   {row.isPractice && <span className="ml-1 text-xs">(P)</span>}
                 </p>
-                <p className="text-sm font-semibold tabular-nums">
+                <p className="font-mono text-sm font-semibold tabular-nums">
                   {row.scoreValue !== null
                     ? isDecimal
                       ? row.scoreValue.toFixed(1)
@@ -147,7 +147,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                     {row.seriesLabel}
                     {row.isPractice && <span className="ml-1 text-xs">(P)</span>}
                   </td>
-                  <td className="py-2 pr-4 font-medium tabular-nums">
+                  <td className="py-2 pr-4 font-mono font-medium tabular-nums">
                     {row.scoreValue !== null
                       ? isDecimal
                         ? row.scoreValue.toFixed(1)

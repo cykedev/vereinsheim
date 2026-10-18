@@ -21,7 +21,7 @@ function SessionResult({ result, mobile }: SessionResultProps) {
 
   return (
     <div className={wrapperClass}>
-      <span className={`text-xl font-bold tabular-nums ${scoreValueClass}`}>
+      <span className={`font-display text-xl font-bold tabular-nums ${scoreValueClass}`}>
         {result.formattedScore}
         {/* Probe-only Kennzeichnung direkt am Wert spart zusätzlichen Erklärtext in der Liste. */}
         {result.isPracticeOnly && <span className="ml-1 text-sm font-semibold">(P)</span>}

@@ -67,19 +67,19 @@ export function AdminUsersTableDesktop({
                 <td className="py-3 pr-4">
                   <div className="space-y-1 text-xs text-muted-foreground">
                     <p>
-                      <span className="tabular-nums text-foreground">
+                      <span className="font-mono tabular-nums text-foreground">
                         {formatCount(user.sessionsCount)}
                       </span>{" "}
                       Einheiten
                     </p>
                     <p>
-                      <span className="tabular-nums text-foreground">
+                      <span className="font-mono tabular-nums text-foreground">
                         {formatCount(user.goalsCount)}
                       </span>{" "}
                       Ziele
                     </p>
                     <p>
-                      <span className="tabular-nums text-foreground">
+                      <span className="font-mono tabular-nums text-foreground">
                         {formatCount(user.shotRoutinesCount)}
                       </span>{" "}
                       Abläufe

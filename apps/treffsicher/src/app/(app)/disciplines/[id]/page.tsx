@@ -119,7 +119,9 @@ export default async function DisciplineDetailPage({
                 <CheckCircle2 className="h-4 w-4" />
                 Serien
               </div>
-              <p className="text-2xl font-semibold tabular-nums">{discipline.seriesCount}</p>
+              <p className="font-display text-2xl font-bold tabular-nums">
+                {discipline.seriesCount}
+              </p>
               <p className="text-sm text-muted-foreground">Wertungsserien pro Einheit</p>
             </CardContent>
           </Card>
@@ -130,7 +132,9 @@ export default async function DisciplineDetailPage({
                 <Target className="h-4 w-4" />
                 Schuss pro Serie
               </div>
-              <p className="text-2xl font-semibold tabular-nums">{discipline.shotsPerSeries}</p>
+              <p className="font-display text-2xl font-bold tabular-nums">
+                {discipline.shotsPerSeries}
+              </p>
               <p className="text-sm text-muted-foreground">Standard pro Serie</p>
             </CardContent>
           </Card>
@@ -141,7 +145,9 @@ export default async function DisciplineDetailPage({
                 <CheckCircle2 className="h-4 w-4" />
                 Probe-Serien
               </div>
-              <p className="text-2xl font-semibold tabular-nums">{discipline.practiceSeries}</p>
+              <p className="font-display text-2xl font-bold tabular-nums">
+                {discipline.practiceSeries}
+              </p>
               <p className="text-sm text-muted-foreground">Vor der Wertung</p>
             </CardContent>
           </Card>
@@ -152,7 +158,7 @@ export default async function DisciplineDetailPage({
                 <Gauge className="h-4 w-4" />
                 Wertungsart
               </div>
-              <p className="text-2xl font-semibold">
+              <p className="font-display text-2xl font-bold tabular-nums">
                 {scoringTypeLabel[discipline.scoringType] ?? discipline.scoringType}
               </p>
               <p className="text-sm text-muted-foreground">
