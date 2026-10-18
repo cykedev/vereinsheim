@@ -43,8 +43,10 @@ um** (Teile T und G) und läuft eine Weile produktiv. **Ringwerk folgt zuletzt**
 Releases und dem Abgleich aus Teil R vor jedem Release. Danach das Gate über drei Apps (E) und die Durchsicht nach
 drei Ebenen (F), die zuerst misst und dann einen eigenen Plan bekommt.
 
-**Reihenfolge:** 0 → A → R → T → G → W → E → F. **Jeder Teil endet grün und ist ein Merge-Punkt** (ff-only in
-einen eigenen Integrationsbranch mit User-OK, nicht nach `main`; nur Fast-Forward oder Rebase, keine Merge-Commits). `/implement` läuft je Teil (`/implement plans/2026-10-16-design2-all-apps.md` mit dem Teil als
+**Reihenfolge:** 0 → A → R → T → G → W → E → F. **Jeder Teil endet grün und ist ein Merge in den
+Integrationsbranch `feat/design2-all-apps`** (mit User-OK, nicht nach `main`; nur Fast-Forward oder Rebase, keine
+Merge-Commits). Teil 0 und A liegen direkt auf ihm; R, T, G, W, E und F arbeiten auf eigenen `feat/design2-<teil>`-Branches,
+die von `feat/design2-all-apps` abzweigen und dorthin zurückgehen. `/implement` läuft je Teil (`/implement plans/2026-10-16-design2-all-apps.md` mit dem Teil als
 Argument); jeder Teil ist so geschrieben, dass eine frische Sitzung ihn mit den Docs aus „Required Docs“ allein
 umsetzen kann.
 
@@ -584,6 +586,8 @@ Ringwerk `pruefen:vergleichen` ohne Abweichung.
   beide Wege leichter: Mit derselben Seite und denselben Rechnungen kann Treffsicher später auch Spiegels Scheiben
   zeigen (ADR-026).
 - PDFs in Design 2.
+- **Integrationsbranch nach `main`:** Wann und wie `feat/design2-all-apps` nach `main` geht und wie Releases
+  (Treffsicher vor Ringwerk) dazu passen, entscheidet der User.
 
 ## Tests (Überblick)
 
@@ -606,5 +610,5 @@ Ringwerk `pruefen:vergleichen` ohne Abweichung.
 2. Sichtprüfung im Browser je Teil: 390 × 844 und 1280 × 900, hell und dunkel, Bildschirmfotos an den User.
 3. Nach Teil T, W und E: `tools/stack-e2e/run.sh` mit den echten Images (Schriften kommen aus `next/font`, kein Abruf
    zur Laufzeit).
-4. `/validate` und `/review` je Teil, Merge in den Integrationsbranch nur mit User-OK; Ringwerk-Releases nur nach „Ringwerk: Betrieb
+4. `/validate` und `/review` je Teil, Merge in den Integrationsbranch `feat/design2-all-apps` nur mit User-OK; Ringwerk-Releases nur nach „Ringwerk: Betrieb
    sichern“.
