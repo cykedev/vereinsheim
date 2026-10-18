@@ -260,7 +260,13 @@ Paarungen ändern, nicht nur die eigene. Deshalb gilt je Runde, nicht je Teilneh
 - Löschen des letzten Duells: nur bei canCorrect; das Match ist danach offen, die ganze Folgerunde fällt weg.
 - Ein Duell eines entschiedenen Matches zum Unentschieden korrigiert: Es bleibt entschieden, solange die Siege reichen
   (3:2 → 3:1). Eine Korrektur, nach der beide Seiten genug Siege hätten, lehnt Ringwerk ab.
-- Sperre, Speichern und Entfernen der Folgerunde laufen in einer serialisierbaren Transaktion.
+- Den Siegstand zählt Ringwerk beim Eintragen, Korrigieren und Löschen **in der Transaktion aus den fertigen Duellen**,
+  nicht aus einem vorab gelesenen Stand. Sperre, Status, offene und nächste Duelle, Entfernen der Folgerunde und
+  Protokoll laufen in derselben serialisierbaren Transaktion (`recordDuelResult`, `removeLastDuel`), ebenso „… anlegen“
+  (`advanceRound`). Speichern zwei Personen zugleich, stimmt der Stand, oder eine bekommt „gleichzeitig geändert, bitte
+  neu laden“.
+- Ein Finale, das offen ist und kein offenes Duell hat (etwa nach einer Korrektur zum Unentschieden), bekommt die
+  Verlängerung, wenn das Regelwerk sie vorsieht.
 - Ein entschiedenes Match nimmt kein weiteres Duell an; wird es entschieden, fallen seine offenen Duelle weg.
 - Das alte Ergebnis eines Duells zählt Ringwerk beim Korrigieren und Löschen mit derselben Wertung zurück, mit der es
   gezählt wurde (im Finale die Kette des Finales samt Stichkriterien).
