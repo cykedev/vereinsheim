@@ -11,7 +11,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AppShell isAdmin={session.user.role === "ADMIN"}>
-      <Page>{children}</Page>
+      {/* eine Spalte, die nie breiter als die Seite wird: breite Tabellen scrollen in sich, nicht die Seite */}
+      <Page className="grid-cols-1">{children}</Page>
     </AppShell>
   )
 }
