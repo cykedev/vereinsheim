@@ -844,6 +844,85 @@ async function leagueBestOf(run: Run, ui: Ui, db: Db, pass: Pass, base: string) 
   )
 }
 
+/**
+ * Korrektur im Viertelfinale über die Oberfläche, an einem Wettbewerb des Prüfbestands mit fertigem Viertelfinale und
+ * einem 3:2 (je Durchgang ein anderer): Halbfinale anlegen, das letzte gewonnene Duell des Siegers umdrehen. Das
+ * Halbfinale entsteht aus allen Siegern neu nach Rang, deshalb muss es ganz wegfallen und neu angelegt werden können.
+ */
+async function quarterFinalCorrection(run: Run, ui: Ui, db: Db, pass: Pass) {
+  const prefix =
+    pass.short === "T" ? "L-DRR-8 · L5 Viertelfinale fertig" : "L-BO5-8 · L5 Viertelfinale fertig"
+  const c = await db.competition.findFirstOrThrow({ where: { name: { startsWith: prefix } } })
+  const id = c.id
+  const semis = () =>
+    db.playoffMatch.findMany({ where: { competitionId: id, round: "SEMI_FINAL" } })
+
+  await run.step("Halbfinale anlegen", async () => {
+    await ui.open(`/competitions/${id}/playoffs`)
+    await ui.press("Halbfinale anlegen")
+    await ui.pressInDialog(/^Halbfinale anlegen/)
+    await ui.dialogClosed("Dialog schließt nicht")
+    expect((await semis()).length === 2, "zwei Halbfinals", (await semis()).length)
+  })
+
+  await run.step(
+    "Viertelfinale umdrehen: das ganze Halbfinale fällt weg und entsteht neu",
+    async () => {
+      const qfs = await db.playoffMatch.findMany({
+        where: { competitionId: id, round: "QUARTER_FINAL" },
+        include: {
+          participantA: true,
+          participantB: true,
+          duels: { include: { results: true }, orderBy: { duelNumber: "asc" } },
+        },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      })
+      const qf = qfs.find((m) => Math.min(m.winsA, m.winsB) === 2)!
+      const aWon = qf.winsA > qf.winsB
+      const winnerId = aWon ? qf.participantAId : qf.participantBId
+      const loserId = aWon ? qf.participantBId : qf.participantAId
+      const rt = (d: (typeof qf.duels)[number], pid: string) =>
+        Number(d.results.find((r) => r.participantId === pid)?.ringteiler)
+      const index = qf.duels.findLastIndex((d) => rt(d, winnerId) < rt(d, loserId))
+      const names = [qf.participantA, qf.participantB].map((p) => `${p.firstName} ${p.lastName}`)
+      const card = `$$("main div").filter((el) => visible(el) && ${JSON.stringify(names)}.every((n) => txt(el).includes(n)) && el.querySelector("button svg.lucide-pencil")).sort((a, b) => txt(a).length - txt(b).length)[0]`
+      await ui.open(`/competitions/${id}/playoffs`)
+      await ui.click(
+        `[...${card}.querySelectorAll("button")].filter((b) => b.querySelector("svg.lucide-pencil"))[${index}]`,
+        `Korrektur von Duell ${index + 1} im Viertelfinale`
+      )
+      // dasselbe Duell, jetzt gewinnt die andere Seite: aus 3:2 wird 2:3
+      const win = DUEL.heim
+      await ui.fill("a-rings", aWon ? win.ar : win.hr)
+      await ui.fill("a-teiler", aWon ? win.at : win.ht)
+      await ui.fill("b-rings", aWon ? win.hr : win.ar)
+      await ui.fill("b-teiler", aWon ? win.ht : win.at)
+      await ui.pressInDialog("Speichern")
+      await ui.dialogClosed("Dialog schließt nicht")
+      const flipped = await db.playoffMatch.findUniqueOrThrow({ where: { id: qf.id } })
+      expect(
+        flipped.status === "COMPLETED" &&
+          (aWon ? flipped.winsB > flipped.winsA : flipped.winsA > flipped.winsB),
+        "Viertelfinale gedreht und weiter fertig",
+        flipped
+      )
+      expect((await semis()).length === 0, "das ganze Halbfinale ist weg", (await semis()).length)
+
+      await ui.open(`/competitions/${id}/playoffs`)
+      await ui.press("Halbfinale anlegen")
+      await ui.pressInDialog(/^Halbfinale anlegen/)
+      await ui.dialogClosed("Dialog schließt nicht")
+      const fresh = await semis()
+      const inSemis = new Set(fresh.flatMap((m) => [m.participantAId, m.participantBId]))
+      expect(fresh.length === 2, "wieder zwei Halbfinals", fresh.length)
+      expect(
+        inSemis.has(loserId) && !inSemis.has(winnerId),
+        "der neue Sieger steht im Halbfinale, der alte nicht"
+      )
+    }
+  )
+}
+
 async function eventFlow(run: Run, ui: Ui, db: Db, pass: Pass, base: string) {
   const name = `Ablauf ${pass.short} · Event mit Gast`
   const players = await people(db, 2, 10)
@@ -1059,6 +1138,10 @@ async function deleteFlow(run: Run, ui: Ui, db: Db, pass: Pass) {
 const FLOWS = [
   { name: "Liga Hin/Rück", run: leagueClassic },
   { name: "Best-of mit Playoffs", run: leagueBestOf },
+  {
+    name: "Viertelfinale korrigieren",
+    run: (r: Run, u: Ui, d: Db, p: Pass) => quarterFinalCorrection(r, u, d, p),
+  },
   { name: "Event mit Gast", run: eventFlow },
   { name: "Team-Event", run: (r: Run, u: Ui, d: Db, p: Pass) => teamEvent(r, u, d, p) },
   { name: "Saison", run: (r: Run, u: Ui, d: Db, p: Pass) => seasonFlow(r, u, d, p) },
