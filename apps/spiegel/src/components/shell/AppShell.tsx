@@ -13,7 +13,7 @@ import { routeFromUrl, urlFromRoute, type Route } from "@vereinsheim/shot-ui/nav
 import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
 import { isAdminPath } from "@/lib/admin-path"
 
-import { HelpContext } from "./HelpContext"
+import { HelpProvider } from "@vereinsheim/ui/design2/help-sheet"
 import { UndoHost } from "@vereinsheim/ui/design2/undo"
 
 /** die Adresse eines Bereichs ohne Abend und Abschnitt, als Schlüssel für das Gedächtnis */
@@ -69,7 +69,7 @@ export function AppShell({
 
   return (
     <RouteLinkProvider value={links}>
-      <HelpContext.Provider value={setHelpId}>
+      <HelpProvider onHelp={setHelpId}>
         <AppFrame
           // Unterseiten von Admin (Konten) kennt das Routen-Modell nicht; sie gehören zu Admin
           current={areaOf(route) ?? (isAdminPath(pathname) ? "admin" : null)}
@@ -84,7 +84,7 @@ export function AppShell({
           <UndoHost>{children}</UndoHost>
         </AppFrame>
         <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />
-      </HelpContext.Provider>
+      </HelpProvider>
     </RouteLinkProvider>
   )
 }

@@ -38,7 +38,7 @@ import { CalendarBrowser } from "@vereinsheim/shot-ui/period/CalendarChart"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
-import { useHelp } from "@/components/shell/HelpContext"
+import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { cardMarksAction } from "@/lib/marks-actions"
