@@ -261,6 +261,9 @@ Paarungen ändern, nicht nur die eigene. Deshalb gilt je Runde, nicht je Teilneh
 - Ein Duell eines entschiedenen Matches zum Unentschieden korrigiert: Es bleibt entschieden, solange die Siege reichen
   (3:2 → 3:1). Eine Korrektur, nach der beide Seiten genug Siege hätten, lehnt Ringwerk ab.
 - Sperre, Speichern und Entfernen der Folgerunde laufen in einer serialisierbaren Transaktion.
+- Ein entschiedenes Match nimmt kein weiteres Duell an; wird es entschieden, fallen seine offenen Duelle weg.
+- Das alte Ergebnis eines Duells zählt Ringwerk beim Korrigieren und Löschen mit derselben Wertung zurück, mit der es
+  gezählt wurde (im Finale die Kette des Finales samt Stichkriterien).
 - Fehlt einer Runde eine Paarung, meldet „… anlegen“ das samt Weg zur Neu-Setzung, statt ein Finale mit einem
   Teilnehmer anzulegen. Belegt: `actions/correction.test.ts`, `canCorrect.test.ts`, `match.test.ts`; über die
   Oberfläche die Abläufe „Viertelfinale korrigieren“ (Sieger gedreht, ganzes Halbfinale neu) und „Halbfinale

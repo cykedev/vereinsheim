@@ -86,6 +86,15 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
   (etwa ohne Namen), sieht danach „Gemischt (Faktor-Korrektur)“. Wer nur den Namen nachträgt, legt still einen
   gemischten Wettbewerb an. Die Radix-Auswahl mit `name` folgt dem Zurücksetzen des Formulars nach der Server Action;
   Frist und Format bleiben. Belegt von `pruefen:ablaeufe` (bekannter Befund, [[ringwerk-pruefbestand]]).
+- **Playoff-Korrekturen, Rest aus dem Review vom 18. Oktober 2026** (nur aus dem Code gelesen):
+  - Siegstand und Status liest `savePlayoffDuelResult` vor der Transaktion; speichern zwei Personen zugleich Duelle
+    desselben Matches, kann das zweite das erste überschreiben. Besser: das Match in der Transaktion lesen oder die
+    Siege aus den fertigen Duellen zählen. `advanceRound` läuft ohne serialisierbare Transaktion.
+  - `addExtraDuel` und das Protokoll laufen nach der Transaktion; geht das Anlegen des Verlängerungs-Duells im Finale
+    verloren, gibt es keinen Weg zurück (`canAddDuel` ist im Finale mit einem Duell falsch).
+  - Ein Finale, dessen Duell zum Unentschieden korrigiert wird, bekommt keine Verlängerung.
+  - Die Oberfläche zeigt „Eintragen“ auch an einem offenen Duell eines schon entschiedenen Matches (Altbestand); der
+    Server lehnt es jetzt ab.
 - **Namen sortiert die Datenbank womöglich nach Bytes** (Postgres auf Alpine, musl): „Ö“ nach „Z“, anders als die
   Sortierung in JS mit `localeCompare("de")`. Nur die Reihenfolge von Listen.
 - **Bracket-Vorschau paart benachbarte Plätze:** Die Vorschau der nächsten Runde nimmt je zwei Plätze untereinander, die
