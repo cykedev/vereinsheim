@@ -8,6 +8,7 @@
     "./theme.css": "./theme.css",
     "./design2.css": "./design2.css",
     "./design2/app-frame": "./src/design2/app-frame.tsx",
+    "./design2/bar": "./src/design2/bar.ts",
     "./design2/decision-dialog": "./src/design2/decision-dialog.tsx",
     "./design2/help": "./src/design2/help.tsx",
     "./design2/help-sheet": "./src/design2/help-sheet.tsx",

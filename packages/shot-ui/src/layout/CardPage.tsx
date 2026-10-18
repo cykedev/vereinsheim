@@ -3,7 +3,7 @@
 import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
-import { JUMP_BAR } from "./bar"
+import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
 import { PAGE_COLUMNS } from "./columns"
 import { SectionBlock, type PageSectionBlock } from "./SectionBlock"
 import type { PageSection } from "./sections"

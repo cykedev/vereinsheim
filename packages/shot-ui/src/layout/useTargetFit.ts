@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useState, type CSSProperties } from "react"
 
-import { BAR_PX, EDGE_PX } from "./bar"
+import { BAR_PX, EDGE_PX } from "@vereinsheim/ui/design2/bar"
 
 /** kleiner soll die Scheibe nicht werden, damit die Serien noch darunter passen */
 export const MIN_TARGET_PX = 280

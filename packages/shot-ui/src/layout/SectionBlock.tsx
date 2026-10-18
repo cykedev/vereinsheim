@@ -1,7 +1,7 @@
 import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
-import { JUMP_BAR } from "./bar"
+import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
 
 /** ein Abschnitt der Seite mit seinem Anker */
 export interface PageSectionBlock<T extends string = string> {

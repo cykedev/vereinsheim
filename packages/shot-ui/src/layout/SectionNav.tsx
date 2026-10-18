@@ -3,7 +3,7 @@
 import { cn } from "@vereinsheim/lib/utils"
 import type { MouseEvent } from "react"
 
-import { JUMP_BAR } from "./bar"
+import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
 import { PAGE_SECTIONS } from "./sections"
 
 /**

@@ -1,4 +1,7 @@
-/** Höhe der Sprungleiste oben und der Reiter der Analyse (`h-14`); Abschnitte und klebende Spalten beginnen darunter */
+/**
+ * Höhe der klebenden Leisten oben, etwa Sprungleiste und Reiter der Analyse (`h-14`); Abschnitte und klebende Spalten
+ * beginnen darunter
+ */
 export const BAR_PX = 56
 /** Luft zwischen Inhalt und Fensterrand */
 export const EDGE_PX = 16

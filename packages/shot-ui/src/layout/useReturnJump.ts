@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { BAR_PX } from "./bar"
+import { BAR_PX } from "@vereinsheim/ui/design2/bar"
 import { isOutOfView, shouldDismiss, type ReturnState } from "./jump"
 
 /**

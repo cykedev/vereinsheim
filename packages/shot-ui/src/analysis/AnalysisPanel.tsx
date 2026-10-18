@@ -10,7 +10,7 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { useId, useMemo, type ReactNode } from "react"
 
 import { HelpButton } from "../help/HelpButton"
-import { JUMP_BAR } from "../layout/bar"
+import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
 import { isProbeShot, seriesKeyOf } from "../shots"
 import type { SeriesKey } from "../types"
 import type { Layer, ViewState } from "../view-state"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 
-import { BAR_PX } from "./bar"
+import { BAR_PX } from "@vereinsheim/ui/design2/bar"
 import { PAGE_SECTIONS, type PageSection } from "./sections"
 
 const PAGE_IDS: readonly PageSection[] = PAGE_SECTIONS.map((section) => section.id)

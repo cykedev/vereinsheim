@@ -14,7 +14,7 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue } from "../format"
 import { groupView } from "../geometry"
-import { JUMP_BAR } from "../layout/bar"
+import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
 import { RouteLink, shouldIntercept, useRouteNavigate } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
 import { MiniTarget } from "../target/MiniTarget"
