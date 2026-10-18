@@ -196,6 +196,18 @@ class Run {
   }
 }
 
+/**
+ * Spielplan erzeugen nie in beiden Durchgängen zugleich: Ringwerk erzeugt ihn in einer serialisierbaren Transaktion, und
+ * zwei gleichzeitige brechen sich gegenseitig ab, auch in verschiedenen Wettbewerben (nichts geht verloren, der Knopf
+ * muss nur noch einmal gedrückt werden). Die Abläufe prüfen die Bedienung, nicht dieses Zusammentreffen.
+ */
+let schedule: Promise<unknown> = Promise.resolve()
+function alone<T>(work: () => Promise<T>): Promise<T> {
+  const result = schedule.then(work, work)
+  schedule = result.catch(() => {})
+  return result
+}
+
 function expect(ok: boolean, what: string, detail: unknown = "") {
   if (!ok)
     throw new Error(
@@ -288,7 +300,9 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
   let id = ""
 
   await run.check("Feldfehler lässt die Eingaben stehen", async () => {
-    const before = await db.competition.count()
+    // nur die eigenen: der andere Durchgang legt zur selben Zeit Wettbewerbe an
+    const mine = { name: { startsWith: `Ablauf ${pass.short} ` } }
+    const before = await db.competition.count({ where: mine })
     await ui.open("/competitions/new")
     await ui.choose("type", "Liga")
     await ui.choose("disciplineId", "Luftgewehr")
@@ -298,7 +312,11 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
     await ui.fill("name", "")
     await ui.press("Speichern")
     await ui.until(`txt($("#name-error")) !== ""`, "kein Feldfehler am Namen")
-    expect((await db.competition.count()) === before, "nichts angelegt")
+    expect(
+      (await db.competition.count({ where: mine })) === before &&
+        (await db.competition.count({ where: { name: "" } })) === 0,
+      "nichts angelegt"
+    )
     const kept = {
       frist: await ui.value("hinrundeDeadline"),
       disziplin: await ui.chosen("disciplineId"),
@@ -373,32 +391,37 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
     await enroll(ui, db, id, players)
   })
 
-  await run.step("Spielplan erzeugen und neu erzeugen", async () => {
-    await ui.open(`/competitions/${id}/schedule`)
-    await ui.press("Spielplan generieren")
-    await ui.pressInDialog("Generieren")
-    await ui.dialogClosed("Dialog schließt nicht")
-    await ui.until(`$$("main tr").length > 10`, "kein Spielplan")
-    const first = await db.matchup.findMany({ where: { competitionId: id }, select: { id: true } })
-    expect(first.length === 30, "6 Teilnehmer Hin und Rück: 30 Paarungen", first.length)
-    await ui.open(`/competitions/${id}/schedule`)
-    await ui.press("Spielplan neu generieren")
-    await ui.pressInDialog("Neu generieren")
-    await ui.dialogClosed("Dialog schließt nicht")
-    await ui.page.wait(500)
-    const second = await db.matchup.findMany({
-      where: { competitionId: id },
-      select: { id: true, homeParticipantId: true, awayParticipantId: true },
+  await run.step("Spielplan erzeugen und neu erzeugen", () =>
+    alone(async () => {
+      await ui.open(`/competitions/${id}/schedule`)
+      await ui.press("Spielplan generieren")
+      await ui.pressInDialog("Generieren")
+      await ui.dialogClosed("Dialog schließt nicht")
+      await ui.until(`$$("main tr").length > 10`, "kein Spielplan")
+      const first = await db.matchup.findMany({
+        where: { competitionId: id },
+        select: { id: true },
+      })
+      expect(first.length === 30, "6 Teilnehmer Hin und Rück: 30 Paarungen", first.length)
+      await ui.open(`/competitions/${id}/schedule`)
+      await ui.press("Spielplan neu generieren")
+      await ui.pressInDialog("Neu generieren")
+      await ui.dialogClosed("Dialog schließt nicht")
+      await ui.page.wait(500)
+      const second = await db.matchup.findMany({
+        where: { competitionId: id },
+        select: { id: true, homeParticipantId: true, awayParticipantId: true },
+      })
+      expect(second.length === 30, "neu erzeugt: wieder 30 Paarungen", second.length)
+      const old = new Set(first.map((m) => m.id))
+      expect(
+        second.every((m) => !old.has(m.id)),
+        "keine alte Paarung bleibt"
+      )
+      const pairs = new Set(second.map((m) => `${m.homeParticipantId}>${m.awayParticipantId}`))
+      expect(pairs.size === 30, "jede Paarung je Richtung einmal", pairs.size)
     })
-    expect(second.length === 30, "neu erzeugt: wieder 30 Paarungen", second.length)
-    const old = new Set(first.map((m) => m.id))
-    expect(
-      second.every((m) => !old.has(m.id)),
-      "keine alte Paarung bleibt"
-    )
-    const pairs = new Set(second.map((m) => `${m.homeParticipantId}>${m.awayParticipantId}`))
-    expect(pairs.size === 30, "jede Paarung je Richtung einmal", pairs.size)
-  })
+  )
 
   await run.step("Regelwerk gesperrt, Frist änderbar", async () => {
     await ui.open(`/competitions/${id}/edit`)
@@ -552,14 +575,16 @@ async function leagueBestOf(run: Run, ui: Ui, db: Db, pass: Pass, base: string) 
 
   await run.step("einschreiben, Spielplan", async () => {
     await enroll(ui, db, id, players)
-    await ui.open(`/competitions/${id}/schedule`)
-    await ui.press("Spielplan generieren")
-    await ui.pressInDialog("Generieren")
-    await ui.dialogClosed("Dialog schließt nicht")
-    expect(
-      (await db.matchup.count({ where: { competitionId: id } })) === 6,
-      "4 Teilnehmer: 6 Paarungen"
-    )
+    await alone(async () => {
+      await ui.open(`/competitions/${id}/schedule`)
+      await ui.press("Spielplan generieren")
+      await ui.pressInDialog("Generieren")
+      await ui.dialogClosed("Dialog schließt nicht")
+      expect(
+        (await db.matchup.count({ where: { competitionId: id } })) === 6,
+        "4 Teilnehmer: 6 Paarungen"
+      )
+    })
   })
 
   await run.step("Duelle der Gruppenphase, eine Paarung mit Stechschuss", async () => {
@@ -991,47 +1016,51 @@ export async function runFlows(options: FlowOptions): Promise<boolean> {
   const results: Result[] = []
   try {
     await options.withServer(options.url, async () => {
-      for (const pass of PASSES) {
-        const browser = await Browser.launch()
-        try {
-          const page = await browser.newPage()
-          const account = PRUEF_ACCOUNTS.find((a) => a.role === pass.role)!
-          await login(page, options.base, {
-            email: account.email,
-            password: options.env[account.env] ?? "",
-          })
-          await page.viewport(pass.width, pass.height)
-          const ui = new Ui(page, options.base)
-          const run = new Run(ui, rw.db, pass, dir)
-          for (const flow of FLOWS) {
-            if (options.only && !flow.name.toLowerCase().includes(options.only.toLowerCase()))
-              continue
-            out(`  ${pass.label} · ${flow.name}`)
-            await run.flowOf(flow.name, () => flow.run(run, ui, rw.db, pass, options.base))
+      // Telefon und Desktop zugleich: Jeder Durchgang legt eigene Wettbewerbe an (`Ablauf T …`, `Ablauf D …`)
+      const perPass = await Promise.all(
+        PASSES.map(async (pass) => {
+          const browser = await Browser.launch()
+          try {
+            const page = await browser.newPage()
+            const account = PRUEF_ACCOUNTS.find((a) => a.role === pass.role)!
+            await login(page, options.base, {
+              email: account.email,
+              password: options.env[account.env] ?? "",
+            })
+            await page.viewport(pass.width, pass.height)
+            const ui = new Ui(page, options.base)
+            const run = new Run(ui, rw.db, pass, dir)
+            for (const flow of FLOWS) {
+              if (options.only && !flow.name.toLowerCase().includes(options.only.toLowerCase()))
+                continue
+              out(`  ${pass.label} · ${flow.name}`)
+              await run.flowOf(flow.name, () => flow.run(run, ui, rw.db, pass, options.base))
+            }
+            if (page.errors.length > 0)
+              run.results.push({
+                pass: pass.label,
+                flow: "Skriptfehler",
+                step: "keine Fehler im Fenster",
+                ok: false,
+                detail: [...new Set(page.errors)].slice(0, 5).join(" | "),
+              })
+            // nur das erwartete `beforeunload` beim Verlassen ungespeicherter Eingaben; `alert` und `confirm` sind verboten
+            const native = page.dialogs.filter((d) => !d.startsWith("beforeunload"))
+            if (native.length > 0)
+              run.results.push({
+                pass: pass.label,
+                flow: "Browser-Dialoge",
+                step: "kein alert, confirm oder prompt",
+                ok: false,
+                detail: native.slice(0, 5).join(" | "),
+              })
+            return run.results
+          } finally {
+            await browser.close()
           }
-          if (page.errors.length > 0)
-            run.results.push({
-              pass: pass.label,
-              flow: "Skriptfehler",
-              step: "keine Fehler im Fenster",
-              ok: false,
-              detail: [...new Set(page.errors)].slice(0, 5).join(" | "),
-            })
-          // nur das erwartete `beforeunload` beim Verlassen ungespeicherter Eingaben; `alert` und `confirm` sind verboten
-          const native = page.dialogs.filter((d) => !d.startsWith("beforeunload"))
-          if (native.length > 0)
-            run.results.push({
-              pass: pass.label,
-              flow: "Browser-Dialoge",
-              step: "kein alert, confirm oder prompt",
-              ok: false,
-              detail: native.slice(0, 5).join(" | "),
-            })
-          results.push(...run.results)
-        } finally {
-          await browser.close()
-        }
-      }
+        })
+      )
+      results.push(...perPass.flat())
     })
   } finally {
     await rw.db.$disconnect()

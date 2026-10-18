@@ -7,7 +7,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 
 import { Browser, type Page } from "@vereinsheim/pruefen/browser"
-import { pdfPages, pdfText } from "@vereinsheim/pruefen/pdf"
+import { pdfTextAndPages } from "@vereinsheim/pruefen/pdf"
 
 import type { BracketRound, Recording } from "./compare"
 import { SESSION_COOKIE } from "./echt"
@@ -122,7 +122,7 @@ const BRACKET = `(() => {
 /**
  * Text unter `main`, sobald die Seite fertig ist: Seiten mit Ladezustand (`loading.tsx`) zeigen erst Platzhalter
  * (`animate-pulse`) und streamen den Inhalt nach. Fertig ist die Seite ohne Platzhalter und mit gleichem Text über drei
- * Lesungen im Abstand von 150 ms.
+ * Lesungen im Abstand von 80 ms.
  */
 export async function stableText(page: Page): Promise<string> {
   const read = () =>
@@ -131,8 +131,8 @@ export async function stableText(page: Page): Promise<string> {
     )
   let last = await read()
   let same = 0
-  for (let i = 0; i < 100 && same < 2; i++) {
-    await page.wait(150)
+  for (let i = 0; i < 200 && same < 2; i++) {
+    await page.wait(80)
     const now = await read()
     same = !now.loading && now.text === last.text ? same + 1 : 0
     last = now
@@ -153,12 +153,23 @@ interface PageJob {
   imageBase: string
 }
 
+/** Zeit je Arbeitsschritt über alle Tabs (Summe, ms), für die Ausgabe am Ende */
+const spent: Record<string, number> = {}
+async function timed<T>(what: string, work: () => Promise<T>): Promise<T> {
+  const start = performance.now()
+  try {
+    return await work()
+  } finally {
+    spent[what] = (spent[what] ?? 0) + performance.now() - start
+  }
+}
+
 async function runJobs(page: Page, jobs: PageJob[], counter: { done: number }) {
   for (let job = jobs.shift(); job; job = jobs.shift()) {
     await page.viewport(1280, HEIGHT[1280])
-    await page.goto(`${job.base}${job.path}`, READY)
+    await timed("Laden", () => page.goto(`${job.base}${job.path}`, READY, { settle: 0 }))
     // eine Umleitung aus einer Seite mit Ladezustand kommt erst mit dem gestreamten Inhalt
-    let text = await stableText(page)
+    let text = await timed("Warten", () => stableText(page))
     const { pathname, notFound } = await page.ev<{ pathname: string; notFound: boolean }>(
       `({ pathname: location.pathname, notFound: !!$('meta[name="robots"][content*="noindex"]') })`
     )
@@ -167,17 +178,16 @@ async function runJobs(page: Page, jobs: PageJob[], counter: { done: number }) {
       ? "nicht gefunden"
       : reached(job.path, pathname, job.id)
     if (pathname === job.path && !notFound) {
-      // erst 1280 px: die Seite ist schon in dieser Breite geladen
+      // erst 1280 px, dann dieselbe Seite schmaler: Die Ansicht folgt der Breite ohne Neuladen (CSS und `matchMedia`)
       for (const width of [...WIDTHS].reverse() as Width[]) {
         if (width !== 1280) {
           await page.viewport(width, HEIGHT[width])
-          await page.goto(`${job.base}${job.path}`, READY)
-          text = await stableText(page)
+          text = await timed("Warten", () => stableText(page))
         }
         job.rec.pages[`${job.label}@${job.role}@${width}`] = pageLines(text)
         writeFileSync(
           `${job.imageBase}-${job.label || "start"}-${job.role}-${width}.png`,
-          await page.screenshot(true)
+          await timed("Fotos", () => page.screenshot(true))
         )
         if (width === 1280 && job.role === "ADMIN" && job.label === "playoffs") {
           const bracket = await page.ev<BracketRound[] | null>(BRACKET)
@@ -191,6 +201,20 @@ async function runJobs(page: Page, jobs: PageJob[], counter: { done: number }) {
     }
     counter.done++
   }
+}
+
+const PDF_PARALLEL = 6
+
+/** `work` für jedes Element, höchstens `limit` zugleich; Ergebnisse in der Reihenfolge der Eingabe */
+async function inParallel<T, R>(limit: number, items: readonly T[], work: (item: T) => Promise<R>) {
+  const results: R[] = new Array(items.length)
+  let next = 0
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      for (let i = next++; i < items.length; i = next++) results[i] = await work(items[i])
+    })
+  )
+  return results
 }
 
 async function fetchPdf(
@@ -207,11 +231,15 @@ async function fetchPdf(
   return { status: 200, pdf: new Uint8Array(await response.arrayBuffer()) }
 }
 
-function savePdf(rec: Recording, name: string, pdf: Uint8Array, imageBase: string, origin: string) {
-  const lines = normalizePdfText(pdfText(pdf), origin)
-  rec.pdfs[name] = name === "starter-list" ? normalizeStarterNumbers(lines) : lines
-  const dir = path.dirname(imageBase)
-  pdfPages(pdf, dir, `${path.basename(imageBase)}-pdf-${name}`)
+/** normalisierter Text eines PDFs; die Seitenbilder legt Poppler neben die übrigen Bilder */
+async function readPdf(name: string, pdf: Uint8Array, imageBase: string, origin: string) {
+  const { text } = await pdfTextAndPages(
+    pdf,
+    path.dirname(imageBase),
+    `${path.basename(imageBase)}-pdf-${name}`
+  )
+  const lines = normalizePdfText(text, origin)
+  return name === "starter-list" ? normalizeStarterNumbers(lines) : lines
 }
 
 /** nimmt alles auf; liefert die Aufnahmen nach Schlüssel (`_alle` für die Seiten über alle Wettbewerbe) */
@@ -229,6 +257,8 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
 
   const browsers: Browser[] = []
   try {
+    for (const key of Object.keys(spent)) delete spent[key]
+    const started = performance.now()
     const cookies: Partial<Record<Role, string>> = {}
     const counter = { done: 0 }
     const work: Promise<void>[] = []
@@ -264,7 +294,7 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
           })
       total += jobs.length
       const pages = [first]
-      for (let i = 1; i < (options.tabs ?? 3); i++) pages.push(await browser.newPage())
+      for (let i = 1; i < (options.tabs ?? 5); i++) pages.push(await browser.newPage())
       for (const page of pages) work.push(runJobs(page, jobs, counter))
     }
     const progress = setInterval(() => out(`  Seiten ${counter.done}/${total}`), 15_000)
@@ -274,6 +304,8 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
       clearInterval(progress)
     }
     out(`  Seiten ${counter.done}/${total}`)
+    spent.Seiten = performance.now() - started
+    const pdfStart = performance.now()
 
     // PDFs: als ADMIN mit Inhalt, als USER nur, ob es kommt
     let pdfCount = 0
@@ -281,8 +313,7 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
     const participants = await fetchPdf(base, { path: "/api/participants/pdf" }, cookies.ADMIN)
     global.reach["pdf/participants@ADMIN"] = String(participants.status)
     if (participants.pdf)
-      savePdf(
-        global,
+      global.pdfs.participants = await readPdf(
         "participants",
         participants.pdf,
         path.join(options.imageDir, GLOBAL_KEY),
@@ -292,23 +323,42 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
       global.reach["pdf/participants@USER"] = String(
         (await fetchPdf(base, { path: "/api/participants/pdf" }, cookies.USER)).status
       )
-    for (const c of competitions) {
-      const rec = recordings.get(c.key)!
-      const imageBase = path.join(options.imageDir, c.key)
-      for (const target of pdfTargets(c, options.publicPassword)) {
-        const admin = await fetchPdf(base, target, cookies.ADMIN!)
-        rec.reach[`pdf/${target.name}${target.anonymous ? "" : "@ADMIN"}`] = String(admin.status)
-        if (admin.pdf) {
-          savePdf(rec, target.name, admin.pdf, imageBase, base)
-          pdfCount++
-        }
-        if (!target.anonymous && cookies.USER)
-          rec.reach[`pdf/${target.name}@USER`] = String(
-            (await fetchPdf(base, target, cookies.USER)).status
-          )
+    // mehrere PDFs zugleich: abrufen (der Server rendert), dann Text und Bilder über Poppler
+    const pdfJobs = competitions.flatMap((c) =>
+      pdfTargets(c, options.publicPassword).map((target) => ({ c, target }))
+    )
+    const fetched = await inParallel(PDF_PARALLEL, pdfJobs, async ({ c, target }) => {
+      const admin = await timed("PDF-Abruf", () => fetchPdf(base, target, cookies.ADMIN!))
+      const pdf = admin.pdf
+      return {
+        c,
+        target,
+        status: admin.status,
+        lines: pdf
+          ? await timed("Poppler", () =>
+              readPdf(target.name, pdf, path.join(options.imageDir, c.key), base)
+            )
+          : null,
+        user:
+          !target.anonymous && cookies.USER
+            ? (await fetchPdf(base, target, cookies.USER)).status
+            : null,
       }
+    })
+    for (const { c, target, status, lines, user } of fetched) {
+      const rec = recordings.get(c.key)!
+      rec.reach[`pdf/${target.name}${target.anonymous ? "" : "@ADMIN"}`] = String(status)
+      if (lines) {
+        rec.pdfs[target.name] = lines
+        pdfCount++
+      }
+      if (user !== null) rec.reach[`pdf/${target.name}@USER`] = String(user)
     }
     out(`  PDFs ${pdfCount}`)
+    const s = (ms: number) => `${Math.round(ms / 1000)} s`
+    out(
+      `  Zeit: Seiten ${s(spent.Seiten ?? 0)} (je Tab summiert: Laden ${s(spent.Laden ?? 0)}, Warten ${s(spent.Warten ?? 0)}, Fotos ${s(spent.Fotos ?? 0)}), PDFs ${s(performance.now() - pdfStart)} (Abruf summiert ${s(spent["PDF-Abruf"] ?? 0)}, Poppler ${s(spent.Poppler ?? 0)})`
+    )
     return recordings
   } finally {
     for (const browser of browsers) await browser.close()

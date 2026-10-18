@@ -40,7 +40,7 @@ export class Ui {
   }
 
   async open(path: string): Promise<void> {
-    await this.page.goto(`${this.base}${path}`, '$("main") ?? $("form")')
+    await this.page.goto(`${this.base}${path}`, '$("main") ?? $("form")', { settle: 0 })
     await stableText(this.page)
   }
 

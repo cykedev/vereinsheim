@@ -10,6 +10,8 @@
 //   … --echt                                         gegen die Dev-Datenbank (Kopie der echten Daten), nur lesend,
 //                                                    alles nur unter reports/ringwerk-echt/
 //   … --gegenprobe                                   (mit --vergleichen) zwei Tabellenzeilen vertauschen: muss rot sein
+//   … --referenz <ordner>                            Ausgangsstand in einem eigenen Ordner statt referenz/ (etwa den alten
+//                                                    Stand auf demselben Aufbau aufnehmen, dann den neuen vergleichen)
 //   … --nur <wort>                                   nur Wettbewerbe, deren Schlüssel das Wort enthält (nicht mit
 //                                                    --aufnehmen: der Ausgangsstand ist immer vollständig)
 
@@ -51,10 +53,20 @@ const option = (flag: string) => {
 const APP_DIR = path.resolve(__dirname, "..")
 const REPORTS = path.resolve(APP_DIR, "../../reports")
 const ECHT = has("--echt")
-const REFERENCE = ECHT
-  ? path.join(REPORTS, "ringwerk-echt", "referenz")
-  : path.join(APP_DIR, "tools", "pruefdaten", "referenz")
-const REFERENCE_IMAGES = path.join(REPORTS, ECHT ? "ringwerk-echt" : "ringwerk-referenz", "bilder")
+/**
+ * `--referenz <ordner>` (relativ zur Wurzel des Repos, etwa `reports/ringwerk-alt`): Aufnahme und Vergleich gegen einen
+ * eigenen Ordner, etwa den alten Stand auf demselben Aufbau
+ */
+const OWN_REFERENCE = option("--referenz")
+const REFERENCE = OWN_REFERENCE
+  ? // relativ zur Wurzel des Repos: `pnpm --filter` startet im Ordner der App
+    path.resolve(APP_DIR, "../..", OWN_REFERENCE)
+  : ECHT
+    ? path.join(REPORTS, "ringwerk-echt", "referenz")
+    : path.join(APP_DIR, "tools", "pruefdaten", "referenz")
+const REFERENCE_IMAGES = OWN_REFERENCE
+  ? path.join(REFERENCE, "bilder")
+  : path.join(REPORTS, ECHT ? "ringwerk-echt" : "ringwerk-referenz", "bilder")
 const PORT = 3010
 const BASE = `http://localhost:${PORT}`
 /** Secret des eigenen Servers: Mit ihm stellt `--echt` die Sitzungen aus */

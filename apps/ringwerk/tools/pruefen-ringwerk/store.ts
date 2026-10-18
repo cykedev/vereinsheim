@@ -30,9 +30,10 @@ export function writeStore(
   meta: StoreMeta,
   recordings: ReadonlyMap<string, Recording>
 ) {
-  // ganz neu, damit kein Wettbewerb eines früheren Stands liegen bleibt
-  rmSync(dir, { recursive: true, force: true })
+  // die JSON-Dateien ganz neu, damit kein Wettbewerb eines früheren Stands liegen bleibt; Bilder im Ordner bleiben
   mkdirSync(dir, { recursive: true })
+  for (const file of readdirSync(dir))
+    if (file.endsWith(".json")) rmSync(path.join(dir, file), { force: true })
   writeFileSync(path.join(dir, META), `${JSON.stringify(meta, null, 2)}\n`)
   for (const [key, rec] of recordings)
     writeFileSync(path.join(dir, `${key}.json`), `${JSON.stringify(sorted(rec), null, 1)}\n`)
