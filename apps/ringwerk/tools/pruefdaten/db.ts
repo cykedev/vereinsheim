@@ -2,8 +2,9 @@
 // Kopie der echten Daten. Jeder Lauf beginnt mit einer frischen Datenbank: löschen, neu anlegen (Owner ist die Rolle aus
 // der URL, wie bei der Dev-Datenbank), Migrationen mit `prisma migrate deploy`.
 //
-// Schutz: Jede Funktion prüft die URL zuerst. Sie muss auf diesen Rechner zeigen, und der Name der Datenbank muss auf
-// `_pruef` enden. Sonst bricht sie ab, bevor eine Verbindung entsteht.
+// Schutz: Jede Funktion prüft die URL zuerst. Sie muss auf diesen Rechner zeigen, der Name der Datenbank muss auf
+// `_pruef` enden, und sie darf keine Parameter tragen (`pg` nähme sonst etwa `?host=` statt des Rechners aus der URL).
+// Sonst bricht sie ab, bevor eine Verbindung entsteht.
 
 import { spawnSync } from "node:child_process"
 import { readdirSync } from "node:fs"
@@ -14,12 +15,15 @@ import { Client } from "pg"
 export const PRUEF_DATABASE_NAME = "ringwerk_pruef"
 
 const DEFAULT_PRUEF_DATABASE_URL = `postgresql://ringwerk:ringwerk@localhost:5432/${PRUEF_DATABASE_NAME}`
-const LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1", "[::1]"]
+const LOCAL_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
 const APP_DIR = path.resolve(__dirname, "../..")
 
 /** Name der Datenbank aus der URL, wenn sie lokal ist und auf `_pruef` endet; sonst ein Fehler. */
 export function assertPruefDatabaseUrl(url: string): string {
   const parsed = new URL(url)
+  if (parsed.search !== "") {
+    throw new Error("Prüfdatenbank-URL ohne Parameter (etwa ?host=)")
+  }
   if (!LOCAL_HOSTS.includes(parsed.hostname)) {
     throw new Error(`Prüfdatenbank nur auf diesem Rechner, nicht auf ${parsed.hostname}`)
   }

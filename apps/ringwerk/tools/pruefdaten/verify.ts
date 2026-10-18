@@ -1,6 +1,8 @@
 // Merkmale eines Wettbewerbs aus der Datenbank: was nachweislich darin steht, unabhängig davon, wie `build.ts` es
 // erzeugt hat. Für Tabellenplätze und den direkten Vergleich zählt Ringwerks eigene Tabellen-Abfrage.
 
+import { duelOutcome } from "@/lib/scoring/bestOf"
+
 import type { Ringwerk } from "./ringwerk"
 import type { Fact, Scenario } from "./scenarios"
 
@@ -13,6 +15,9 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
       type: true,
       status: true,
       leagueFormat: true,
+      scoringMode: true,
+      groupTiebreaker1: true,
+      groupTiebreaker2: true,
       isPublic: true,
       publicPasswordHash: true,
       publicAccessToken: true,
@@ -40,7 +45,16 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
           dueDate: true,
           homeParticipantId: true,
           awayParticipantId: true,
-          series: { select: { duelNumber: true, isTiebreak: true, participantId: true } },
+          series: {
+            select: {
+              duelNumber: true,
+              isTiebreak: true,
+              participantId: true,
+              rings: true,
+              teiler: true,
+              ringteiler: true,
+            },
+          },
         },
       },
       playoffMatches: {
@@ -103,7 +117,9 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
   add(
     "faktor",
     c.disciplineId === null &&
-      new Set(enrolled.map((cp) => cp.discipline?.teilerFaktor.toString())).size >= 2
+      new Set(
+        enrolled.flatMap((cp) => (cp.discipline ? [cp.discipline.teilerFaktor.toString()] : []))
+      ).size >= 2
   )
 
   // Liga: Gruppenphase
@@ -152,7 +168,14 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
     "bestof:1-0-offen",
     m.some((x) => {
       const regular = x.series.filter((s) => !s.isTiebreak)
-      return open(x) && regular.length === 2 && regular.every((s) => s.duelNumber === 1)
+      if (!open(x) || regular.length !== 2 || !regular.every((s) => s.duelNumber === 1))
+        return false
+      const [a, b] = regular.map((s) => ({
+        rings: s.rings.toNumber(),
+        correctedTeiler: s.teiler.toNumber(),
+        ringteiler: s.ringteiler.toNumber(),
+      }))
+      return duelOutcome(a, b, c.scoringMode, c.groupTiebreaker1, c.groupTiebreaker2) !== "TIE"
     })
   )
   add(

@@ -2,6 +2,7 @@
 // setzt. `getAuthSession` aus `@/lib/auth-helpers` läuft unverändert und prüft das Konto in der Datenbank (aktiv,
 // Rolle, Sitzungsversion) wie in der App.
 
+// Typ aus dem echten Paket: Für `tsc` der App zeigt „next-auth“ auf next-auth; nur tsx leitet den Pfad hierher um.
 import type { Session } from "next-auth"
 
 const state = globalThis as unknown as { __pruefSession?: Session | null }

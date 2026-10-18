@@ -8,7 +8,7 @@ import { createHash } from "node:crypto"
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 
-import { Client } from "pg"
+import { Client, types } from "pg"
 
 import { assertPruefDatabaseUrl } from "./db"
 
@@ -107,7 +107,17 @@ function relabel(value: unknown, labels: Map<string, string>): unknown {
 /** `linesDir`: schreibt je Tabelle die kanonischen Zeilen dorthin, um zwei Läufe zu vergleichen. */
 export async function tableChecksum(url: string, linesDir?: string): Promise<Checksum> {
   assertPruefDatabaseUrl(url)
-  const client = new Client({ connectionString: url })
+  // Zeitstempel als Text, wie sie gespeichert sind: Prisma schreibt `timestamp` ohne Zeitzone, und `pg` läse ihn sonst
+  // in der Zeitzone des Rechners (andere Prüfsumme je Rechner, an der Zeitumstellung zwei Zeiten auf einer).
+  const client = new Client({
+    connectionString: url,
+    types: {
+      getTypeParser: ((oid: number, format?: "text" | "binary") =>
+        oid === 1114 || oid === 1184
+          ? (value: string) => value
+          : types.getTypeParser(oid, format)) as typeof types.getTypeParser,
+    },
+  })
   await client.connect()
   const labels = new Map<string, string>()
   const tables: Checksum["tables"] = []
@@ -127,7 +137,7 @@ export async function tableChecksum(url: string, linesDir?: string): Promise<Che
           }
         }
         const line = JSON.stringify(canonical(content))
-        const created = row.createdAt instanceof Date ? row.createdAt.toISOString() : ""
+        const created = typeof row.createdAt === "string" ? row.createdAt : ""
         return { id: row.id as string | undefined, line, key: `${created}|${line}` }
       })
       prepared.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))

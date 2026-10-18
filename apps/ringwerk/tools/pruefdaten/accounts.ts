@@ -50,7 +50,10 @@ export function ensurePasswords(
     }
   }
   if (missing.length > 0) {
-    const current = existsSync(envFile) ? readFileSync(envFile, "utf8") : ""
+    // Ohne `.env` fehlt auch der Rest der App-Umgebung (etwa ein neuer Worktree ohne Link auf die Hauptcheckout).
+    if (!existsSync(envFile))
+      throw new Error(`${envFile} fehlt: erst die .env der App anlegen oder verlinken`)
+    const current = readFileSync(envFile, "utf8")
     const lines = missing.map((key) => `${key}=${passwords[key]}`)
     const prefix = current.length === 0 || current.endsWith("\n") ? "" : "\n"
     appendFileSync(

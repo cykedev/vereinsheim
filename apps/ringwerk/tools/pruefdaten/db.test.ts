@@ -22,6 +22,17 @@ describe("assertPruefDatabaseUrl", () => {
     expect(() => assertPruefDatabaseUrl("postgresql://u:p@localhost/")).toThrow()
   })
 
+  it("verweigert Parameter, mit denen pg einen anderen Rechner nähme", () => {
+    expect(() =>
+      assertPruefDatabaseUrl(
+        "postgresql://ringwerk:ringwerk@localhost:5432/ringwerk_pruef?host=db.example.com"
+      )
+    ).toThrow(/ohne Parameter/)
+    expect(() =>
+      assertPruefDatabaseUrl("postgresql://u:p@localhost/ringwerk_pruef?sslmode=disable")
+    ).toThrow(/ohne Parameter/)
+  })
+
   it("verweigert jeden anderen Rechner", () => {
     expect(() => assertPruefDatabaseUrl("postgresql://u:p@db:5432/ringwerk_pruef")).toThrow(
       /diesem Rechner/

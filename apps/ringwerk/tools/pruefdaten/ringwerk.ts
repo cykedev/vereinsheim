@@ -8,6 +8,11 @@ import { assertPruefDatabaseUrl } from "./db"
 
 export async function loadRingwerk(url: string) {
   const name = assertPruefDatabaseUrl(url)
+  // `@/lib/db` legt seinen Client beim ersten Laden an und merkt ihn sich global. Ist er schon da, hat ihn ein
+  // früherer Import mit einer anderen URL angelegt.
+  if ((globalThis as { prisma?: unknown }).prisma !== undefined) {
+    throw new Error("@/lib/db wurde vor der Prüfdatenbank geladen, Abbruch")
+  }
   process.env.DATABASE_URL = url
 
   const [

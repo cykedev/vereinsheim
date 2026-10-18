@@ -8,6 +8,7 @@
 //   pnpm --filter ringwerk pruefdaten --nur-datenbank    nur die leere, migrierte Prüfdatenbank
 //   pnpm --filter ringwerk pruefdaten --pruefsumme       nur Prüfung und Prüfsumme des vorhandenen Bestands
 //   … --zeilen <ordner>                                 dazu die kanonischen Zeilen je Tabelle (zwei Läufe vergleichen)
+//   … --erwartet <prüfsumme>                            Fehler, wenn die Prüfsumme gesamt abweicht
 //
 // Die Passwörter der Prüfkonten stehen in `apps/ringwerk/.env` (`PRUEF_*`), fehlende erzeugt der erste Lauf.
 
@@ -178,7 +179,12 @@ async function buildAll(rw: Ringwerk, appEnv: Record<string, string | undefined>
   out(`  Uhr am Ende: ${clockNow().toISOString()}`)
 }
 
-async function report(rw: Ringwerk, url: string, linesDir?: string): Promise<boolean> {
+async function report(
+  rw: Ringwerk,
+  url: string,
+  linesDir?: string,
+  expected?: string
+): Promise<boolean> {
   const checks = await verifyScenarios(rw, SCENARIOS)
   const failed = checks.filter((c) => c.missing.length > 0)
   const inactive = await rw.db.participant.count({
@@ -212,7 +218,9 @@ async function report(rw: Ringwerk, url: string, linesDir?: string): Promise<boo
   for (const t of checksum.tables)
     out(`  ${t.name.padEnd(24)} ${String(t.rows).padStart(6)}  ${t.hash.slice(0, 16)}`)
   out(`Prüfsumme gesamt: ${checksum.total}`)
-  return failed.length === 0 && inactive >= FORMER_COUNT
+  const checksumMatches = expected === undefined || expected === checksum.total
+  if (!checksumMatches) out(`Prüfsumme weicht ab, erwartet: ${expected}`)
+  return failed.length === 0 && inactive >= FORMER_COUNT && checksumMatches
 }
 
 async function main() {
@@ -235,8 +243,11 @@ async function main() {
       out(`Prüfbestand aufbauen (${SCENARIOS.length} Wettbewerbe):`)
       await buildAll(rw, appEnv)
     }
-    const at = args.indexOf("--zeilen")
-    const complete = await report(rw, url, at >= 0 ? args[at + 1] : undefined)
+    const option = (flag: string) => {
+      const at = args.indexOf(flag)
+      return at >= 0 ? args[at + 1] : undefined
+    }
+    const complete = await report(rw, url, option("--zeilen"), option("--erwartet"))
     if (!complete) process.exitCode = 1
   } finally {
     await rw.db.$disconnect()

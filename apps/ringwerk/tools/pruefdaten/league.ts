@@ -280,7 +280,8 @@ async function playBestOf(league: League, m: LeagueMatchup, plan?: Winner[]): Pr
     if (status === "COMPLETED") return
     const homeShot = Math.round((9 + league.random.next() * 1.9) * 10) / 10
     let awayShot = Math.round((9 + league.random.next() * 1.9) * 10) / 10
-    if (awayShot === homeShot) awayShot = homeShot === 10.9 ? 10.8 : homeShot + 0.1
+    if (awayShot === homeShot)
+      awayShot = homeShot === 10.9 ? 10.8 : Math.round(homeShot * 10 + 1) / 10
     await act(league.ctx, "Stechschuss", () =>
       league.ctx.rw.saveStechschuss({ matchupId: m.id, homeShot, awayShot })
     )
