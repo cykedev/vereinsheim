@@ -10,7 +10,7 @@ import { areaLinks, areaOf, type AreaMemory } from "@vereinsheim/shot-ui/nav/are
 import { RouteLinkProvider } from "@vereinsheim/shot-ui/nav/RouteLink"
 import { routeFromUrl, urlFromRoute, type Route } from "@vereinsheim/shot-ui/nav/routes"
 
-import { ThemeSwitch } from "@/components/theme/ThemeSwitch"
+import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
 import { isAdminPath } from "@/lib/admin-path"
 
 import { HelpContext } from "./HelpContext"

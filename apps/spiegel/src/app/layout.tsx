@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Archivo, Geist, Geist_Mono } from "next/font/google"
 
-import { ThemeProvider } from "@/components/theme/ThemeProvider"
-import { ThemeScript } from "@/components/theme/ThemeScript"
+import { ThemeProvider, ThemeScript } from "@vereinsheim/ui/design2/theme"
 
 import "./globals.css"
 
@@ -19,6 +18,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { viewportFit: "cover" }
 
+/** Schlüssel der Darstellung in `localStorage`; eine schon getroffene Wahl bleibt unter ihm bestehen */
+const THEME_KEY = "spiegel-theme"
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,10 +33,10 @@ export default function RootLayout({
       className={`${archivo.variable} ${geist.variable} ${geistMono.variable}`}
     >
       <head>
-        <ThemeScript />
+        <ThemeScript storageKey={THEME_KEY} />
       </head>
       <body className="bg-background font-sans text-foreground antialiased">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider storageKey={THEME_KEY}>{children}</ThemeProvider>
       </body>
     </html>
   )

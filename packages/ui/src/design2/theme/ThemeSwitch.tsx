@@ -1,6 +1,6 @@
 "use client"
 
-import { Segmented } from "@vereinsheim/ui/design2/segmented"
+import { Segmented } from "../segmented"
 
 import { useTheme } from "./ThemeProvider"
 

@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react"
 
-import { THEME_SCRIPT } from "./theme"
+import { themeScript } from "./theme"
 
 const subscribe = () => () => {}
 
@@ -11,11 +11,13 @@ const subscribe = () => () => {}
  * im Client neu (nach einem Hydrierungsfehler die ganze Wurzel samt <head>), liefe ein neues Skript nicht und React
  * warnte „Encountered a script tag“. Dann rendert die Komponente nichts, das Skript aus dem HTML ist längst gelaufen.
  */
-export function ThemeScript() {
+export function ThemeScript({ storageKey }: { storageKey: string }) {
   const fromServer = useSyncExternalStore(
     subscribe,
     () => false,
     () => true
   )
-  return fromServer ? <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /> : null
+  return fromServer ? (
+    <script dangerouslySetInnerHTML={{ __html: themeScript(storageKey) }} />
+  ) : null
 }
