@@ -234,8 +234,15 @@ export class Page {
     return { width: this.width, height: this.height }
   }
 
-  /** eine Adresse laden und warten, bis React die Seite übernommen hat */
-  async goto(url: string, ready: Locator = '$("[data-app-frame]") ?? $("form")'): Promise<void> {
+  /**
+   * eine Adresse laden und warten, bis React die Seite übernommen hat; danach `settle` ms Ruhe (wer selbst auf den
+   * fertigen Inhalt wartet, gibt 0)
+   */
+  async goto(
+    url: string,
+    ready: Locator = '$("[data-app-frame]") ?? $("form")',
+    { settle = 250 }: { settle?: number } = {}
+  ): Promise<void> {
     const loaded = () => {
       let off = () => {}
       const promise = new Promise<boolean>((resolve) => {
@@ -268,7 +275,7 @@ export class Page {
       ))
     )
       throw new Error(`nicht bereit: ${url}`)
-    await wait(250)
+    if (settle > 0) await wait(settle)
   }
 
   /** einen Ausdruck im Fenster auswerten (mit `await`), Ergebnis als Wert */

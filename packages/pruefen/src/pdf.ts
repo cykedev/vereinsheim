@@ -1,7 +1,8 @@
 // Text und Seitenbilder eines PDFs über Poppler (`pdftotext`, `pdftoppm`), für den Vergleich vorher und nachher.
 
-import { spawnSync } from "node:child_process"
+import { execFile, spawnSync } from "node:child_process"
 import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -44,4 +45,49 @@ export function pdfPages(pdf: Uint8Array, outDir: string, prefix = "seite"): str
     .filter((name) => name.startsWith(`${prefix}-`) && name.endsWith(".png"))
     .sort((a, b) => page(a) - page(b))
     .map((name) => join(outDir, name))
+}
+
+function runAsync(tool: string, args: string[]): Promise<string> {
+  return new Promise((resolve, reject) =>
+    execFile(
+      tool,
+      args,
+      { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+      (error, stdout, stderr) => {
+        if (error && (error as NodeJS.ErrnoException).code === "ENOENT")
+          reject(new Error(`${tool} nicht gefunden. ${INSTALL}`))
+        else if (error) reject(new Error(`${tool} scheitert: ${stderr.trim()}`))
+        else resolve(stdout)
+      }
+    )
+  )
+}
+
+/**
+ * Text und Seitenbilder eines PDFs ohne den Prozess zu blockieren: wie `pdfText` und `pdfPages`, aber mehrere PDFs können
+ * zugleich laufen. Ohne `outDir` nur der Text.
+ */
+export async function pdfTextAndPages(
+  pdf: Uint8Array,
+  outDir?: string,
+  prefix = "seite"
+): Promise<{ text: string; pages: string[] }> {
+  const dir = await mkdtemp(join(tmpdir(), "vereinsheim-pdf-"))
+  try {
+    const file = join(dir, "in.pdf")
+    await writeFile(file, pdf)
+    const [text] = await Promise.all([
+      runAsync("pdftotext", ["-layout", file, "-"]),
+      outDir ? runAsync("pdftoppm", ["-png", "-r", "100", file, join(outDir, prefix)]) : null,
+    ])
+    if (!outDir) return { text, pages: [] }
+    const page = (name: string) => Number(/-(\d+)\.png$/.exec(name)?.[1] ?? 0)
+    const pages = (await readdir(outDir))
+      .filter((name) => name.startsWith(`${prefix}-`) && name.endsWith(".png"))
+      .sort((a, b) => page(a) - page(b))
+      .map((name) => join(outDir, name))
+    return { text, pages }
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
 }
