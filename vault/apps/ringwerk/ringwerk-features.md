@@ -137,6 +137,10 @@ Das Regelset wird **phasenweise gesperrt**: Gruppenphase/Format (Format, Wertung
 - Ungerade Teilnehmerzahl → jeder bekommt einmal Freilos (2 Punkte)
 - Mindest-Teilnehmerzahl: 4
 - Regenerierung möglich, solange kein Ergebnis erfasst ist (keine entschiedene Paarung, keine Serie, keine Playoffs) — siehe [[league-mode]]
+- Wettbewerb und Einschreibungen lesen, Sperre prüfen, alte Paarungen löschen und neue anlegen laufen in **einer**
+  serialisierbaren Transaktion (`serializable` in `src/lib/serializable.ts`). Bricht Postgres sie wegen einer
+  gleichzeitigen Änderung ab, auch wenn zwei Sportleitungen zugleich in verschiedenen Wettbewerben erzeugen, läuft sie
+  bis zu dreimal mit dem neuen Stand. Ein Spielplan, der neben einer Einschreibung entsteht, enthält sie deshalb.
 - **Non-LEAGUE-Navigierung:** Wenn auf `/competitions/[id]/schedule` mit Event/Saison zugegriffen wird → Automatisches Redirect zu `/competitions/[id]/ranking`
 
 ### Heimrecht
