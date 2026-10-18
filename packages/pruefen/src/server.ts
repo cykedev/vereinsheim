@@ -21,12 +21,15 @@ export async function startServer({
   app,
   port,
   base = `http://localhost:${port}`,
+  secret = randomBytes(32).toString("hex"),
   out,
 }: {
   app: string
   port: number
   /** Adresse, unter der der Server antwortet; Vorgabe `http://localhost:<port>` */
   base?: string
+  /** `NEXTAUTH_SECRET` des Servers; Vorgabe ein zufälliger. Wer ihn kennt, kann selbst Sitzungen ausstellen */
+  secret?: string
   out: (text: string) => void
 }): Promise<ChildProcess> {
   const dir = appDir(app)
@@ -49,7 +52,7 @@ export async function startServer({
       env: {
         ...process.env,
         NODE_ENV: "production",
-        NEXTAUTH_SECRET: randomBytes(32).toString("hex"),
+        NEXTAUTH_SECRET: secret,
         NEXTAUTH_URL: base,
       },
       stdio: ["ignore", "ignore", "pipe"],

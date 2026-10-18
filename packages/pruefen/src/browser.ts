@@ -382,6 +382,12 @@ export class Page {
     await wait(60)
   }
 
+  /** Text in das fokussierte Feld tippen, wie eine Eingabe von der Tastatur (ersetzt eine Auswahl) */
+  async type(text: string): Promise<void> {
+    await this.send("Input.insertText", { text })
+    await wait(60)
+  }
+
   /** Bildschirmfoto des Fensters als PNG */
   async screenshot(fullPage = false): Promise<Buffer> {
     const { data } = await this.send<{ data: string }>("Page.captureScreenshot", {
@@ -389,6 +395,29 @@ export class Page {
       captureBeyondViewport: fullPage,
     })
     return Buffer.from(data, "base64")
+  }
+
+  /** Bildschirmfoto eines Elements als PNG, auch wenn es über das Fenster hinausragt; null, wenn es fehlt */
+  async screenshotOf(locator: Locator): Promise<Buffer | null> {
+    const box = await this.ev<{ x: number; y: number; width: number; height: number } | null>(
+      `(() => { const el = ${locator}; if (!el) return null; const r = el.getBoundingClientRect()
+        return { x: r.left + scrollX, y: r.top + scrollY, width: Math.max(r.width, el.scrollWidth), height: r.height } })()`
+    )
+    if (!box || box.width === 0 || box.height === 0) return null
+    const { data } = await this.send<{ data: string }>("Page.captureScreenshot", {
+      format: "png",
+      captureBeyondViewport: true,
+      clip: { ...box, scale: 1 },
+    })
+    return Buffer.from(data, "base64")
+  }
+
+  /** Cookies der Seite, etwa um mit derselben Anmeldung aus Node abzurufen (`name=wert; …`) */
+  async cookieHeader(): Promise<string> {
+    const { cookies } = await this.send<{ cookies: { name: string; value: string }[] }>(
+      "Network.getCookies"
+    )
+    return cookies.map((c) => `${c.name}=${c.value}`).join("; ")
   }
 
   async close(): Promise<void> {
