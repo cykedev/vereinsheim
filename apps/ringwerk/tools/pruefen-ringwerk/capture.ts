@@ -69,7 +69,7 @@ export async function login(page: Page, base: string, { email, password }: Crede
 }
 
 /** Sitzung als Cookie setzen und prüfen, dass sie gilt */
-async function useToken(browser: Browser, page: Page, base: string, token: string) {
+async function applySessionToken(browser: Browser, page: Page, base: string, token: string) {
   await browser.send("Storage.setCookies", {
     cookies: [
       {
@@ -207,8 +207,8 @@ async function fetchPdf(
   return { status: 200, pdf: new Uint8Array(await response.arrayBuffer()) }
 }
 
-function savePdf(rec: Recording, name: string, pdf: Uint8Array, imageBase: string) {
-  const lines = normalizePdfText(pdfText(pdf))
+function savePdf(rec: Recording, name: string, pdf: Uint8Array, imageBase: string, origin: string) {
+  const lines = normalizePdfText(pdfText(pdf), origin)
   rec.pdfs[name] = name === "starter-list" ? normalizeStarterNumbers(lines) : lines
   const dir = path.dirname(imageBase)
   pdfPages(pdf, dir, `${path.basename(imageBase)}-pdf-${name}`)
@@ -219,7 +219,7 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
   const { base, inventory, out } = options
   mkdirSync(options.imageDir, { recursive: true })
   const competitions = inventory.competitions.filter(
-    (c) => !options.only || c.key.includes(options.only)
+    (c) => !options.only || c.key.includes(options.only.toLowerCase())
   )
   const recordings = new Map<string, Recording>()
   const global: Recording = { name: "Seiten über alle Wettbewerbe", reach: {}, pages: {}, pdfs: {} }
@@ -239,7 +239,7 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
       browsers.push(browser)
       const first = await browser.newPage()
       const signIn = options.sessions[role]!
-      if ("token" in signIn) await useToken(browser, first, base, signIn.token)
+      if ("token" in signIn) await applySessionToken(browser, first, base, signIn.token)
       else await login(first, base, signIn)
       cookies[role] = await first.cookieHeader()
 
@@ -281,7 +281,13 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
     const participants = await fetchPdf(base, { path: "/api/participants/pdf" }, cookies.ADMIN)
     global.reach["pdf/participants@ADMIN"] = String(participants.status)
     if (participants.pdf)
-      savePdf(global, "participants", participants.pdf, path.join(options.imageDir, GLOBAL_KEY))
+      savePdf(
+        global,
+        "participants",
+        participants.pdf,
+        path.join(options.imageDir, GLOBAL_KEY),
+        base
+      )
     if (cookies.USER)
       global.reach["pdf/participants@USER"] = String(
         (await fetchPdf(base, { path: "/api/participants/pdf" }, cookies.USER)).status
@@ -293,7 +299,7 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
         const admin = await fetchPdf(base, target, cookies.ADMIN!)
         rec.reach[`pdf/${target.name}${target.anonymous ? "" : "@ADMIN"}`] = String(admin.status)
         if (admin.pdf) {
-          savePdf(rec, target.name, admin.pdf, imageBase)
+          savePdf(rec, target.name, admin.pdf, imageBase, base)
           pdfCount++
         }
         if (!target.anonymous && cookies.USER)

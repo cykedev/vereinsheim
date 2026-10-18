@@ -8,12 +8,17 @@ import path from "node:path"
 import type { Recording } from "./compare"
 
 export interface StoreMeta {
-  /** Prüfsumme über die Tabellen der Prüfdatenbank (`pruefdaten --pruefsumme`); bei echten Daten null */
+  /**
+   * Prüfbestand: Prüfsumme über die Tabellen (`bestand.ts`); echte Daten: ein Wert aus den Fingerabdrücken der Tabellen
+   * (`echt.ts`), ohne Inhalt
+   */
   checksum: string | null
   /** Datenbank, gegen die aufgenommen wurde */
   database: string
   /** Commit des aufgenommenen Codes */
   commit: string
+  /** Kennung des Aufbaus des Prüfbestands (`buildId`); fehlt bei echten Daten */
+  build?: string
   /** Rollen, Breiten und Zahl der Wettbewerbe, zur Kontrolle */
   competitions: number
 }
@@ -30,7 +35,15 @@ export function writeStore(
   mkdirSync(dir, { recursive: true })
   writeFileSync(path.join(dir, META), `${JSON.stringify(meta, null, 2)}\n`)
   for (const [key, rec] of recordings)
-    writeFileSync(path.join(dir, `${key}.json`), `${JSON.stringify(rec, null, 1)}\n`)
+    writeFileSync(path.join(dir, `${key}.json`), `${JSON.stringify(sorted(rec), null, 1)}\n`)
+}
+
+const byKey = <T>(record: Record<string, T>): Record<string, T> =>
+  Object.fromEntries(Object.entries(record).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+
+/** Schlüssel sortiert: Die Tabs der Aufnahme füllen sie in der Reihenfolge, in der sie fertig werden */
+export function sorted(rec: Recording): Recording {
+  return { ...rec, reach: byKey(rec.reach), pages: byKey(rec.pages), pdfs: byKey(rec.pdfs) }
 }
 
 export function readStore(dir: string): { meta: StoreMeta; recordings: Map<string, Recording> } {

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest"
 
 import { withoutDisciplineStamp } from "./bestand"
-import { changedTables } from "./echt"
+import { changedTables, echtDatabaseUrl } from "./echt"
 import { featuresOf, phaseReport, type CompetitionFacts } from "./phases"
 import { compareAll, lineDiff, swapTableRows, type Recording } from "./compare"
 import { dataTokenizer, normalizePdfText, normalizeStarterNumbers, pageLines } from "./normalize"
+import { sorted } from "./store"
 import { pdfTargets, withKeys, type CompetitionRow } from "./targets"
 
 const names = {
@@ -31,7 +32,7 @@ describe("Text eines PDFs", () => {
   it("nimmt Erstelldatum und Server-Adresse heraus, nicht den Rest", () => {
     const text =
       "Liga   Erstellt: 18.10.2026  \nhttp://localhost:3010/api/public/c/liga-2026/pdf\n1  Esche, Olga  98\n\n"
-    expect(normalizePdfText(text)).toEqual([
+    expect(normalizePdfText(text, "http://localhost:3010")).toEqual([
       "Liga   Erstellt: <Datum>",
       "<Server>/api/public/c/liga-2026/pdf",
       "1  Esche, Olga  98",
@@ -39,14 +40,21 @@ describe("Text eines PDFs", () => {
   })
 
   it("nimmt den Server auch heraus, wenn die URL nach ihm umbricht", () => {
-    expect(normalizePdfText("Liga    http://localhost:3010\n   /api/public/c/liga/pdf")).toEqual([
-      "Liga    <Server>",
-      "   /api/public/c/liga/pdf",
-    ])
+    expect(
+      normalizePdfText(
+        "Liga    http://localhost:3010\n   /api/public/c/liga/pdf",
+        "http://localhost:3010"
+      )
+    ).toEqual(["Liga    <Server>", "   /api/public/c/liga/pdf"])
   })
 
-  it("lässt andere Daten im Text stehen", () => {
-    expect(normalizePdfText("Frist: 18.10.2026")).toEqual(["Frist: 18.10.2026"])
+  it("lässt andere Daten und jeden anderen Server im Text stehen", () => {
+    expect(normalizePdfText("Frist: 18.10.2026", "http://localhost:3010")).toEqual([
+      "Frist: 18.10.2026",
+    ])
+    expect(
+      normalizePdfText("https://falsch.example.org/api/public/c/liga/pdf", "http://localhost:3010")
+    ).toEqual(["https://falsch.example.org/api/public/c/liga/pdf"])
   })
 })
 
@@ -92,6 +100,20 @@ describe("Datenfolge", () => {
     expect(tokens(["Ann Lechner"])).toEqual(["Ann Lechner"])
   })
 
+  it("nimmt Wörter mit Bedeutung für das Ergebnis, egal ob groß oder klein", () => {
+    expect(tokens(["Esche, Olga (Zur.) | Freilos", "VIERTELFINALE", "offen · Lech"])).toEqual([
+      "Olga Esche",
+      "Zur.",
+      "Freilos",
+      "Viertelfinale",
+      "offen",
+    ])
+  })
+
+  it("liest „Best-of-3“ nicht als Zahl -3", () => {
+    expect(tokens(["Best-of-3 (2 Siege)"])).toEqual(["3", "2"])
+  })
+
   it("nimmt den Namen eines Wettbewerbs als ein Zeichen", () => {
     expect(tokens(["L-DRR-6 · L2 Hinrunde läuft (Hin/Rück)"])).toEqual([
       "L-DRR-6 · L2 Hinrunde läuft (Hin/Rück)",
@@ -112,6 +134,14 @@ describe("Vergleich", () => {
   it("findet nichts, wenn beide Aufnahmen gleich sind", () => {
     const a = new Map([["l", recording({ "schedule@ADMIN@1280": table })]])
     expect(compareAll(a, structuredClone(a), names)).toEqual([])
+  })
+
+  it("meldet einen verlorenen Rückzug als Fehler, nicht als andere Beschriftung", () => {
+    const a = new Map([
+      ["l", recording({ "standings@ADMIN@1280": ["1 | Esche, Olga | Zurückgezogen"] })],
+    ])
+    const b = new Map([["l", recording({ "standings@ADMIN@1280": ["1 | Esche, Olga |"] })]])
+    expect(compareAll(a, b, names).map((f) => f.severity)).toEqual(["fehler"])
   })
 
   it("meldet eine andere Beschriftung nur als Hinweis", () => {
@@ -329,5 +359,34 @@ describe("echte Daten nur lesend", () => {
         ])
       )
     ).toEqual(["B", "C"])
+  })
+})
+
+describe("Dev-Datenbank für --echt", () => {
+  const url = (u: string) => () => echtDatabaseUrl({ DATABASE_URL: u })
+
+  it("nimmt nur eine Datenbank auf diesem Rechner ohne Parameter, nie die Prüfdatenbank", () => {
+    expect(url("postgresql://r:r@localhost:5432/ringwerk")()).toContain("/ringwerk")
+    expect(url("postgresql://r:r@[::1]:5432/ringwerk")()).toContain("/ringwerk")
+    expect(url("postgresql://r:r@db.example.org:5432/ringwerk")).toThrow("diesem Rechner")
+    expect(url("postgresql://r:r@localhost:5432/ringwerk?host=db.example.org")).toThrow(
+      "ohne Parameter"
+    )
+    expect(url("postgresql://r:r@localhost:5432/ringwerk_pruef")).toThrow("Prüfdatenbank")
+  })
+})
+
+describe("Ablage", () => {
+  it("sortiert die Schlüssel, unabhängig davon, welcher Tab zuerst fertig war", () => {
+    const rec: Recording = {
+      name: "x",
+      reach: { "b@USER": "ok", "a@ADMIN": "ok" },
+      pages: { "z@ADMIN@390": [], "a@ADMIN@1280": [] },
+      pdfs: { schedule: [], playoffs: [] },
+    }
+    const s = sorted(rec)
+    expect(Object.keys(s.reach)).toEqual(["a@ADMIN", "b@USER"])
+    expect(Object.keys(s.pages)).toEqual(["a@ADMIN@1280", "z@ADMIN@390"])
+    expect(Object.keys(s.pdfs)).toEqual(["playoffs", "schedule"])
   })
 })

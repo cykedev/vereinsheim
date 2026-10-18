@@ -1,4 +1,4 @@
-// Welche Phasen der Matrix aus R3 enthält eine Datenbank? Je Wettbewerb seine Merkmale (Art, Format, Phase, Wertung,
+// Welche Phasen der Matrix des Prüfbestands enthält eine Datenbank? Je Wettbewerb seine Merkmale (Art, Format, Phase, Wertung,
 // Teams, Veröffentlichung, Freilos, Kampflos, Rückzug), gelesen in einer Transaktion, die nur lesen darf. Der Bericht
 // nennt nur Zahlen je Merkmal, keine Namen: Er entsteht auch an der Kopie der echten Daten (ADR-029).
 

@@ -8,6 +8,8 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
+import { Client } from "pg"
+
 import { tableChecksum } from "../pruefdaten/checksum"
 
 /** Disziplin-Zeile ohne `updatedAt` (kanonisches JSON, Schlüssel sortiert) */
@@ -31,5 +33,23 @@ export async function bestandChecksum(url: string): Promise<string> {
     return hash.digest("hex")
   } finally {
     rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+/**
+ * Kennung des Aufbaus: die IDs sind in jedem Lauf von `pruefdaten` andere. Ringwerk ordnet Zeilen mit gleichem
+ * Sortierschlüssel (etwa gleicher Nachname) in einer Folge, die von ihnen abhängt; nach einem Neuaufbau kann sich diese
+ * Reihenfolge ändern, ohne dass sich Daten ändern.
+ */
+export async function buildId(url: string): Promise<string> {
+  const client = new Client({ connectionString: url })
+  await client.connect()
+  try {
+    const { rows } = await client.query<{ id: string }>(
+      `SELECT md5(string_agg(id, ',' ORDER BY id)) AS id FROM "Competition"`
+    )
+    return rows[0].id ?? "-"
+  } finally {
+    await client.end()
   }
 }

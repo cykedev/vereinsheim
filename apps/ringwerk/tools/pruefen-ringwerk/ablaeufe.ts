@@ -1,4 +1,4 @@
-// Abläufe über die Oberfläche (Teil R5): auf frisch gebautem Prüfbestand je ein Wettbewerb jeder Art anlegen und bis zum
+// Abläufe über die Oberfläche: auf frisch gebautem Prüfbestand je ein Wettbewerb jeder Art anlegen und bis zum
 // Ende bedienen, einmal am Telefon (390 px) als Sportleitung und einmal am Desktop (1280 px) als Admin. Nach jedem
 // Schritt liest das Werkzeug die betroffenen Zeilen aus der Datenbank und vergleicht sie mit den Eingaben: nichts fehlt,
 // nichts doppelt, keine verwaisten Serien. Ein Schritt, der scheitert, beendet seinen Ablauf (die folgenden bauen auf
@@ -52,15 +52,33 @@ interface Result {
   known?: string
 }
 
-/**
- * Bekannte Befunde in Ringwerk, die Teil R nicht behebt (keine Änderung an `src`): Schritt → Befund. Scheitert der
- * Schritt, steht das als BEKANNT im Bericht und der Lauf bleibt grün; läuft er grün, meldet der Bericht, dass der
- * Eintrag hier entfallen kann.
- */
-const KNOWN: Record<string, string> = {
-  "Feldfehler lässt die Eingaben stehen":
-    "Nach einem Feldfehler beim Anlegen springt die Disziplin auf „Gemischt“ zurück (die Radix-Auswahl mit `name` folgt dem Zurücksetzen des Formulars)",
+interface KnownFinding {
+  step: string
+  /** genau die bekannte Abweichung; jede andere Meldung desselben Schritts bleibt ein Fehler */
+  matches: (detail: string) => boolean
+  finding: string
 }
+
+/**
+ * Bekannte Befunde in Ringwerk, die dieses Werkzeug nur meldet (es ändert `src` nicht). Scheitert der Schritt mit genau
+ * dieser Abweichung, steht das als BEKANNT im Bericht und der Lauf bleibt grün; läuft er grün, meldet der Bericht, dass
+ * der Eintrag entfallen kann. Ein Fehler der Datenbank-Prüfung (`OrphanError`) ist nie bekannt.
+ */
+const KNOWN: KnownFinding[] = [
+  {
+    step: "Feldfehler lässt die Eingaben stehen",
+    matches: (detail) =>
+      detail.startsWith("Frist, Disziplin und Format bleiben nach dem Feldfehler: ") &&
+      detail.includes('"frist":"2026-11-15"') &&
+      detail.includes('"disziplin":"Gemischt (Faktor-Korrektur)"') &&
+      detail.includes('"format":"Doppelrunde (Hin/Rück)"'),
+    finding:
+      "Nach einem Feldfehler beim Anlegen springt die Disziplin auf „Gemischt“ zurück (die Radix-Auswahl mit `name` folgt dem Zurücksetzen des Formulars)",
+  },
+]
+
+/** die Datenbank enthält Zeilen, die es nach keinem Ablauf geben darf */
+class OrphanError extends Error {}
 
 const APP_DIR = path.resolve(__dirname, "../..")
 
@@ -88,14 +106,12 @@ class Run {
   }
 
   private fail(step: string, error: unknown) {
-    this.results.push({
-      pass: this.pass.label,
-      flow: this.flow,
-      step,
-      ok: false,
-      detail: error instanceof Error ? error.message : String(error),
-      known: KNOWN[step],
-    })
+    const detail = error instanceof Error ? error.message : String(error)
+    const known =
+      error instanceof OrphanError
+        ? undefined
+        : KNOWN.find((k) => k.step === step && k.matches(detail))?.finding
+    this.results.push({ pass: this.pass.label, flow: this.flow, step, ok: false, detail, known })
   }
 
   /** ein Schritt: Bedienung, dann Prüfung der Datenbank; scheitert er, endet der Ablauf */
@@ -108,7 +124,9 @@ class Run {
         flow: this.flow,
         step: name,
         ok: true,
-        detail: KNOWN[name] ? "bekannter Befund behoben: Eintrag in KNOWN entfernen" : "",
+        detail: KNOWN.some((k) => k.step === name)
+          ? "bekannter Befund behoben: Eintrag in KNOWN entfernen"
+          : "",
       })
     } catch (error) {
       this.fail(name, error)
@@ -152,9 +170,18 @@ class Run {
         WHERE s."competitionId" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "CompetitionParticipant" cp
           WHERE cp."competitionId" = s."competitionId" AND cp."participantId" = s."participantId")
       UNION ALL
+      SELECT 'Serie ohne Paarung und ohne Wettbewerb', count(*) FROM "Series"
+        WHERE "matchupId" IS NULL AND "competitionId" IS NULL
+      UNION ALL
+      SELECT 'Serie an der Einschreibung eines anderen', count(*) FROM "Series" s
+        JOIN "CompetitionParticipant" cp ON cp.id = s."competitionParticipantId"
+        WHERE cp."participantId" <> s."participantId" OR cp."competitionId" IS DISTINCT FROM s."competitionId"
+      UNION ALL
       SELECT 'Paarung mit nicht eingeschriebenem Teilnehmer', count(*) FROM "Matchup" m
         WHERE NOT EXISTS (SELECT 1 FROM "CompetitionParticipant" cp
-          WHERE cp."competitionId" = m."competitionId" AND cp."participantId" = m."homeParticipantId")
+            WHERE cp."competitionId" = m."competitionId" AND cp."participantId" = m."homeParticipantId")
+          OR (m."awayParticipantId" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "CompetitionParticipant" cp
+            WHERE cp."competitionId" = m."competitionId" AND cp."participantId" = m."awayParticipantId"))
       UNION ALL
       SELECT 'Playoff-Ergebnis von jemand anderem', count(*) FROM "PlayoffDuelResult" r
         JOIN "PlayoffDuel" d ON d.id = r."duelId" JOIN "PlayoffMatch" pm ON pm.id = d."playoffMatchId"
@@ -162,10 +189,10 @@ class Run {
       UNION ALL
       SELECT 'Einschreibung doppelt', count(*) FROM (
         SELECT 1 FROM "CompetitionParticipant" WHERE "isGuest" = false
-        GROUP BY "competitionId", "participantId" HAVING count(*) > 1) e`
+        GROUP BY "competitionId", "participantId", "eventTeamId" HAVING count(*) > 1) e`
     const found = problems.filter((p) => Number(p.n) > 0)
     if (found.length > 0)
-      throw new Error(`Datenbank: ${found.map((p) => `${p.what} (${p.n})`).join(", ")}`)
+      throw new OrphanError(`Datenbank: ${found.map((p) => `${p.what} (${p.n})`).join(", ")}`)
   }
 }
 
@@ -421,9 +448,13 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
     await ui.dialogClosed("Dialog schließt nicht")
     const series = await db.series.findMany({ where: { matchupId } })
     expect(series.length === 2, "nach der Korrektur weiter zwei Serien", series.length)
+    const home2 = series.find((s) => s.participantId === done[0].homeParticipantId)
+    const away2 = series.find((s) => s.participantId === done[0].awayParticipantId)
+    expect(num(home2?.rings) === 96 && num(home2?.teiler) === 12.3, "Heim jetzt 96 / 12,3", home2)
     expect(
-      series.some((s) => num(s.rings) === 96),
-      "Heim jetzt 96"
+      num(away2?.rings) === 93 && num(away2?.teiler) === 20.1,
+      "Gast unverändert 93 / 20,1",
+      away2
     )
   })
 
@@ -847,9 +878,25 @@ async function teamEvent(run: Run, ui: Ui, db: Db, pass: Pass) {
       await ui.pressInDialog("Speichern")
       await ui.dialogClosed("Dialog schließt nicht")
     }
-    expect((await db.series.count({ where: { competitionId: id } })) === 4, "vier Serien")
+    for (const [i, p] of players.entries()) {
+      const s = await db.series.findMany({ where: { competitionId: id, participantId: p.id } })
+      expect(
+        s.length === 1 && num(s[0].rings) === 88 + i && num(s[0].teiler) === 20,
+        `Serie von ${p.label}`,
+        s
+      )
+    }
+    // Wertung Ringteiler (100 − Ringe + Teiler, kleiner ist besser), Summe je Team: Team 1 hat 32 + 31 = 63,
+    // Team 2 hat 30 + 29 = 59 und steht vorn
     await ui.open(`/competitions/${id}/ranking`)
-    expect((await ui.text()).includes("Team"), "Rangliste zeigt Teams")
+    const rows = (await ui.text()).split("\n").filter((line) => /^\d+\tTeam \d+\t/.test(line))
+    expect(
+      rows.length === 2 &&
+        /^1\tTeam 2\t.*\b59\b/.test(rows[0]) &&
+        /^2\tTeam 1\t.*\b63\b/.test(rows[1]),
+      "Team 2 (59) vor Team 1 (63)",
+      rows
+    )
   })
 }
 
@@ -969,6 +1016,16 @@ export async function runFlows(options: FlowOptions): Promise<boolean> {
               step: "keine Fehler im Fenster",
               ok: false,
               detail: [...new Set(page.errors)].slice(0, 5).join(" | "),
+            })
+          // nur das erwartete `beforeunload` beim Verlassen ungespeicherter Eingaben; `alert` und `confirm` sind verboten
+          const native = page.dialogs.filter((d) => !d.startsWith("beforeunload"))
+          if (native.length > 0)
+            run.results.push({
+              pass: pass.label,
+              flow: "Browser-Dialoge",
+              step: "kein alert, confirm oder prompt",
+              ok: false,
+              detail: native.slice(0, 5).join(" | "),
             })
           results.push(...run.results)
         } finally {

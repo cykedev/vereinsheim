@@ -1,6 +1,7 @@
-// Abgleich von Ringwerk vor und nach einer Änderung der Oberfläche (Teil R, ADR-032): Seiten, Brackets und PDFs des
+// Abgleich von Ringwerk vor und nach einer Änderung der Oberfläche (ADR-032): Seiten, Brackets und PDFs des
 // Prüfbestands aufnehmen und mit dem Ausgangsstand vergleichen, Abläufe über die Oberfläche mit Prüfung der Datenbank.
-// Läuft gegen den gebauten Stand dieses Checkouts (`pnpm --filter ringwerk build`) auf eigenem Port; nicht im Gate.
+// Läuft gegen den gebauten Stand dieses Checkouts (`pnpm --filter ringwerk build`) auf eigenem Port, nur auf diesem
+// Rechner erreichbar (127.0.0.1); nicht im Gate.
 //
 //   pnpm --filter ringwerk pruefdaten                frische Prüfdatenbank (vor Aufnahme und Vergleich)
 //   pnpm --filter ringwerk pruefen:aufnehmen         Ausgangsstand nach tools/pruefdaten/referenz/, Bilder nach reports/
@@ -9,10 +10,11 @@
 //   … --echt                                         gegen die Dev-Datenbank (Kopie der echten Daten), nur lesend,
 //                                                    alles nur unter reports/ringwerk-echt/
 //   … --gegenprobe                                   (mit --vergleichen) zwei Tabellenzeilen vertauschen: muss rot sein
-//   … --nur <wort>                                   nur Wettbewerbe, deren Schlüssel das Wort enthält
+//   … --nur <wort>                                   nur Wettbewerbe, deren Schlüssel das Wort enthält (nicht mit
+//                                                    --aufnehmen: der Ausgangsstand ist immer vollständig)
 
 import { execSync } from "node:child_process"
-import { randomBytes } from "node:crypto"
+import { createHash, randomBytes } from "node:crypto"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
 
@@ -23,12 +25,13 @@ import { startServer } from "@vereinsheim/pruefen/server"
 import { PRUEF_ACCOUNTS, PRUEF_PUBLIC_PASSWORD_ENV } from "./pruefdaten/accounts"
 import { pruefDatabaseUrl } from "./pruefdaten/db"
 import { runFlows } from "./pruefen-ringwerk/ablaeufe"
-import { bestandChecksum } from "./pruefen-ringwerk/bestand"
+import { bestandChecksum, buildId } from "./pruefen-ringwerk/bestand"
 import { captureAll, type Credentials, type SignIn } from "./pruefen-ringwerk/capture"
 import { compareAll, swapTableRows } from "./pruefen-ringwerk/compare"
 import {
   changedTables,
   echtAccounts,
+  echtDatabaseUrl,
   sessionToken,
   tableFingerprint,
 } from "./pruefen-ringwerk/echt"
@@ -63,23 +66,23 @@ function readAppEnv(): Record<string, string | undefined> {
   return env
 }
 
-/** Dev-Datenbank aus `.env`: nur auf diesem Rechner, nie die Prüfdatenbank */
-function echtDatabaseUrl(env: Record<string, string | undefined>): string {
-  const url = env.DATABASE_URL
-  if (!url) throw new Error("DATABASE_URL fehlt in apps/ringwerk/.env")
-  const parsed = new URL(url)
-  if (!["localhost", "127.0.0.1"].includes(parsed.hostname))
-    throw new Error(`--echt nur gegen eine Datenbank auf diesem Rechner, nicht ${parsed.hostname}`)
-  if (parsed.pathname.endsWith("_pruef"))
-    throw new Error("--echt ist für die Dev-Datenbank, nicht die Prüfdatenbank")
-  return url
-}
+/** ein Wert für alle Fingerabdrücke der Tabellen: Gleich heißt, die Daten sind dieselben wie bei der Aufnahme */
+const digest = (prints: Map<string, string>) =>
+  createHash("sha256")
+    .update([...prints].map(([t, p]) => `${t}=${p}`).join("\n"))
+    .digest("hex")
 
 const commit = () => execSync("git rev-parse --short HEAD", { cwd: APP_DIR }).toString().trim()
 
 async function withServer<T>(url: string, run: () => Promise<T>): Promise<T> {
   process.env.DATABASE_URL = url
-  const server = await startServer({ app: "ringwerk", port: PORT, secret: SECRET, out })
+  const server = await startServer({
+    app: "ringwerk",
+    port: PORT,
+    hostname: "127.0.0.1",
+    secret: SECRET,
+    out,
+  })
   try {
     return await run()
   } finally {
@@ -111,8 +114,9 @@ function pruefCredentials(env: Record<string, string | undefined>): Record<Role,
 async function capture(url: string, env: Record<string, string | undefined>, imageDir: string) {
   const inventory = await readInventory(url)
   out(`Datenbank ${inventory.database}: ${inventory.competitions.length} Wettbewerbe`)
-  const checksum = ECHT ? null : await bestandChecksum(url)
   const prints = ECHT ? await tableFingerprint(url) : null
+  // Prüfbestand: Prüfsumme über alle Tabellen; echte Daten: ein Wert aus den Fingerabdrücken (ohne Inhalt)
+  const checksum = prints ? digest(prints) : await bestandChecksum(url)
   rmSync(imageDir, { recursive: true, force: true })
   const recordings = await withServer(url, async () =>
     captureAll({
@@ -132,7 +136,7 @@ async function capture(url: string, env: Record<string, string | undefined>, ima
       throw new Error(`Die Dev-Datenbank hat sich geändert: ${changed.join(", ")}`)
     out("Dev-Datenbank unverändert (jede Tabelle, Disziplinen ohne updatedAt)")
   }
-  if (checksum !== null) {
+  if (!prints) {
     const after = await bestandChecksum(url)
     if (after !== checksum)
       throw new Error("Die Prüfdatenbank hat sich während der Aufnahme geändert")
@@ -144,7 +148,13 @@ async function aufnehmen(url: string, env: Record<string, string | undefined>) {
   const { inventory, checksum, recordings } = await capture(url, env, REFERENCE_IMAGES)
   writeStore(
     REFERENCE,
-    { checksum, database: inventory.database, commit: commit(), competitions: recordings.size - 1 },
+    {
+      checksum,
+      build: ECHT ? undefined : await buildId(url),
+      database: inventory.database,
+      commit: commit(),
+      competitions: recordings.size - 1,
+    },
     recordings
   )
   out(`Ausgangsstand: ${recordings.size} Dateien unter ${path.relative(process.cwd(), REFERENCE)}`)
@@ -159,29 +169,43 @@ async function aufnehmen(url: string, env: Record<string, string | undefined>) {
   }
 }
 
+/** vergleicht mit dem Ausgangsstand; mit `--gegenprobe` ist das Ergebnis, ob genau die vertauschte Seite rot ist */
 async function vergleichen(url: string, env: Record<string, string | undefined>): Promise<boolean> {
   const { meta, recordings: before } = readStore(REFERENCE)
-  if (!ECHT && meta.checksum) {
-    const now = await bestandChecksum(url)
+  if (meta.checksum) {
+    const now = ECHT ? digest(await tableFingerprint(url)) : await bestandChecksum(url)
     if (now !== meta.checksum)
       throw new Error(
-        `Der Prüfbestand ist nicht der des Ausgangsstands (Prüfsumme ${now.slice(0, 12)} statt ${meta.checksum.slice(0, 12)}): erst pnpm --filter ringwerk pruefdaten`
+        ECHT
+          ? "Die Dev-Datenbank ist nicht die der Aufnahme (dev-restore dazwischen?): erst --aufnehmen --echt auf dem alten Stand"
+          : `Der Prüfbestand ist nicht der des Ausgangsstands (Prüfsumme ${now.slice(0, 12)} statt ${meta.checksum.slice(0, 12)}): erst pnpm --filter ringwerk pruefdaten`
       )
   }
+  const otherBuild = !ECHT && meta.build !== undefined && meta.build !== (await buildId(url))
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)
   const dir = path.join(REPORTS, ECHT ? "ringwerk-echt" : "ringwerk-vergleich", stamp)
   const { inventory, recordings: after } = await capture(url, env, path.join(dir, "bilder"))
   if (option("--nur")) for (const key of [...before.keys()]) if (!after.has(key)) before.delete(key)
-  if (has("--gegenprobe")) {
-    const swapped = swapTableRows(after)
+  const swapped = has("--gegenprobe") ? swapTableRows(after) : null
+  if (has("--gegenprobe"))
     out(
       swapped
         ? `Gegenprobe: zwei Zeilen vertauscht in ${swapped.key}, ${swapped.page}`
         : "Gegenprobe: keine Tabelle gefunden"
     )
-  }
   const findings = compareAll(before, after, inventory.names)
   mkdirSync(dir, { recursive: true })
+  // die neue Aufnahme neben dem Bericht, um eine Abweichung Zeile für Zeile anzusehen
+  writeStore(
+    path.join(dir, "aufnahme"),
+    {
+      checksum: null,
+      database: inventory.database,
+      commit: commit(),
+      competitions: after.size - 1,
+    },
+    after
+  )
   writeFileSync(path.join(dir, "befund.md"), findingsMarkdown(findings))
   const images = writeSideBySide(
     path.join(dir, "vorher-nachher.html"),
@@ -195,10 +219,26 @@ async function vergleichen(url: string, env: Record<string, string | undefined>)
   out(
     `Vergleich mit Stand ${meta.commit}: ${errors.length} Fehler, ${findings.length - errors.length} Hinweise`
   )
+  if (otherBuild && errors.length > 0)
+    out(
+      "Hinweis: anderer Aufbau des Prüfbestands als bei der Aufnahme. Ringwerk ordnet gleiche Nachnamen und die Plätze im Bracket nicht eindeutig; solche Fehler können Vertauschungen bei Gleichstand sein. Eindeutig ist der Vergleich auf demselben Aufbau."
+    )
   for (const f of errors.slice(0, 20)) out(`  FEHLER  ${f.where}: ${f.what}`)
   if (errors.length > 20) out(`  … ${errors.length - 20} weitere in befund.md`)
-  out(`Bilder: ${images.changed} geändert, ${images.same} gleich`)
+  out(
+    `Bilder: ${images.changed} Seiten geändert, ${images.changedPdf} PDF-Seiten anders, ${images.same} gleich`
+  )
   out(`Bericht: ${path.relative(process.cwd(), dir)}/befund.md und vorher-nachher.html`)
+  if (has("--gegenprobe")) {
+    const name = swapped ? after.get(swapped.key)?.name : undefined
+    const caught = errors.some((f) => f.where === name && f.what.startsWith(`${swapped?.page}:`))
+    out(
+      caught
+        ? "Gegenprobe: die vertauschte Seite ist rot"
+        : "Gegenprobe: die vertauschte Seite ist NICHT rot"
+    )
+    return caught
+  }
   return errors.length === 0
 }
 
@@ -208,11 +248,11 @@ async function main() {
   const url = ECHT ? echtDatabaseUrl(env) : pruefDatabaseUrl(env)
   if (!existsSync(path.join(APP_DIR, ".next", "BUILD_ID")))
     throw new Error("kein Build: erst pnpm --filter ringwerk build")
-  if (has("--aufnehmen")) await aufnehmen(url, env)
-  else if (has("--vergleichen")) {
-    const ok = await vergleichen(url, env)
-    // Gegenprobe: grün ist hier der Fehler
-    if (has("--gegenprobe") ? ok : !ok) process.exitCode = 1
+  if (has("--aufnehmen")) {
+    if (option("--nur")) throw new Error("--aufnehmen nimmt immer alles auf, ohne --nur")
+    await aufnehmen(url, env)
+  } else if (has("--vergleichen")) {
+    if (!(await vergleichen(url, env))) process.exitCode = 1
   } else if (has("--ablaeufe")) {
     if (ECHT) throw new Error("--ablaeufe schreibt und läuft nur auf der Prüfdatenbank")
     const ok = await runFlows({

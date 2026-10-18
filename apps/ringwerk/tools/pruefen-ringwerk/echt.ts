@@ -1,4 +1,4 @@
-// Abgleich an der Kopie der echten Daten (R7), ohne Passwort und ohne Schreiben. Das Werkzeug startet den Server mit
+// Abgleich an der Kopie der echten Daten, ohne Passwort und ohne Schreiben. Das Werkzeug startet den Server mit
 // einem eigenen `NEXTAUTH_SECRET` und stellt damit selbst die Sitzung eines vorhandenen Kontos aus (JWT wie nach der
 // Anmeldung: Kennung, Rolle, `sessionVersion`). Ringwerk prüft sie wie jede Sitzung gegen die Datenbank. Gewählt wird je
 // Rolle das älteste aktive Konto; gibt es keines mit dieser Rolle, fehlt die Rolle in der Aufnahme.
@@ -31,6 +31,22 @@ async function readOnly<T>(url: string, work: (client: Client) => Promise<T>): P
   } finally {
     await client.end()
   }
+}
+
+/**
+ * Dev-Datenbank aus `.env`: nur auf diesem Rechner, ohne Parameter (`pg` nähme sonst etwa `?host=` statt des Rechners
+ * aus der URL), nie die Prüfdatenbank
+ */
+export function echtDatabaseUrl(env: Record<string, string | undefined>): string {
+  const url = env.DATABASE_URL
+  if (!url) throw new Error("DATABASE_URL fehlt in apps/ringwerk/.env")
+  const parsed = new URL(url)
+  if (parsed.search !== "") throw new Error("--echt nur mit einer Datenbank-URL ohne Parameter")
+  if (!["localhost", "127.0.0.1", "[::1]"].includes(parsed.hostname))
+    throw new Error(`--echt nur gegen eine Datenbank auf diesem Rechner, nicht ${parsed.hostname}`)
+  if (decodeURIComponent(parsed.pathname).endsWith("_pruef"))
+    throw new Error("--echt ist für die Dev-Datenbank, nicht die Prüfdatenbank")
+  return url
 }
 
 /** älteste aktive Konten je Rolle */

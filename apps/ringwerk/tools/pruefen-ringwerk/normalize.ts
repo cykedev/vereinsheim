@@ -2,14 +2,14 @@
 // Erstelldatum im Kopf der PDFs und die Adresse des Servers in der gedruckten öffentlichen URL. Der Inhalt des QR-Codes
 // (mit Zugangs-Token) steht nicht im Text; er ist ein Pfad im PDF und zählt nur im Bild.
 //
-// Aus dem Text einer Seite entsteht zusätzlich die Datenfolge: alle Zahlen und Namen in Lesereihenfolge, ohne die
-// Beschriftungen drumherum. Sie bleibt gleich, wenn die Oberfläche neu gestaltet wird, und ändert sich, sobald eine Zahl,
+// Aus dem Text einer Seite entsteht zusätzlich die Datenfolge: alle Zahlen, Namen und Wörter, die ein Ergebnis tragen
+// (Freilos, Zurückgezogen, Verlängerung …), in Lesereihenfolge, ohne die Beschriftungen drumherum. Sie bleibt gleich, wenn die Oberfläche neu gestaltet wird, und ändert sich, sobald eine Zahl,
 // ein Platz, eine Paarung oder die Reihenfolge anders ist.
 
 /** Zeilen ohne doppelten Leerraum; Zellen einer Tabellenzeile (Tab in `innerText`) mit „ | “ getrennt. */
 export function pageLines(innerText: string): string[] {
   return innerText
-    .replace(/ /g, " ")
+    .replace(/\u00a0/g, " ")
     .split("\n")
     .map((line) =>
       line
@@ -23,15 +23,17 @@ export function pageLines(innerText: string): string[] {
 }
 
 const CREATED = /Erstellt: \d{2}\.\d{2}\.\d{4}/g
-// die gedruckte URL bricht das PDF nach dem Server um; der lokale Server steht dann allein in einer Zeile
-const ORIGIN =
-  /https?:\/\/(?:(?:localhost|127\.0\.0\.1)(?::\d{1,5})?|[a-z0-9.-]+(?::\d{1,5})?(?=\/api\/public\/c\/))/gi
 
-/** PDF-Text (`pdftotext -layout`) ohne Erstelldatum und Server-Adresse; Zeilenenden ohne Leerraum. */
-export function normalizePdfText(text: string): string[] {
+/**
+ * PDF-Text (`pdftotext -layout`) ohne Erstelldatum und ohne die Adresse des Servers, der aufnimmt (`origin`, etwa
+ * `http://localhost:3010`); die gedruckte URL bricht nach ihr um. Jede andere Adresse bleibt stehen: Druckt ein PDF den
+ * falschen Server, zeigt der Vergleich das. Zeilenenden ohne Leerraum.
+ */
+export function normalizePdfText(text: string, origin: string): string[] {
   return text
     .replace(CREATED, "Erstellt: <Datum>")
-    .replace(ORIGIN, "<Server>")
+    .split(origin)
+    .join("<Server>")
     .split("\n")
     .map((line) => line.replace(/\s+$/, ""))
     .join("\n")
@@ -66,9 +68,34 @@ export function normalizeStarterNumbers(lines: readonly string[]): string[] {
 export interface KnownNames {
   /** Namen von Teilnehmern als Vor- und Nachname */
   people: { firstName: string; lastName: string }[]
-  /** Namen der Wettbewerbe und Teams */
+  /** Namen der Wettbewerbe, Konten und Disziplinen */
   other: string[]
 }
+
+/**
+ * Wörter, die ein Ergebnis tragen: Ein Freilos, das als leerer Gegner erscheint, oder ein verlorener Rückzug ist ein
+ * Fehler, keine andere Beschriftung. Groß und klein zählen gleich (Rundennamen stehen per CSS in Großbuchstaben).
+ */
+export const DATA_WORDS = [
+  "Freilos",
+  "Kampflos",
+  "Zurückgezogen",
+  "Zur.",
+  "Unentschieden",
+  "Verlängerung",
+  "Stechschuss",
+  "n. St.",
+  "Ausstehend",
+  "Gast",
+  "offen",
+  "ausgeglichen",
+  "Abgeschlossen",
+  "Archiviert",
+  "Achtelfinale",
+  "Viertelfinale",
+  "Halbfinale",
+  "Finale",
+]
 
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
@@ -84,21 +111,22 @@ export function dataTokenizer(names: KnownNames): (lines: readonly string[]) => 
     canonical.set(`${p.lastName}, ${p.firstName}`, name)
   }
   for (const other of names.other) canonical.set(other, other)
-  const alternatives = [...canonical.keys()].sort((a, b) => b.length - a.length).map(escape)
-  // Zahlen mit Vorzeichen, Dezimalkomma, Datum, Uhrzeit und Verhältnis („5:4“); minus auch als U+2212
-  const number = String.raw`[+\-−]?\d+(?:[.,:]\d+)*%?`
+  for (const word of DATA_WORDS) canonical.set(word, word)
+  const lookup = new Map([...canonical].map(([key, value]) => [key.toLowerCase(), value]))
+  const alternatives = [...lookup.keys()].sort((a, b) => b.length - a.length).map(escape)
+  // Zahlen mit Vorzeichen, Dezimalkomma, Datum, Uhrzeit und Verhältnis („5:4“); minus auch als U+2212. Nicht direkt
+  // hinter einem Buchstaben oder einer Ziffer: „Best-of-3“ ist eine Beschriftung, kein „-3“
+  const number = String.raw`(?<![\p{L}\p{N}])[+\-−]?\d+(?:[.,:]\d+)*%?`
   const pattern = new RegExp(
-    alternatives.length > 0
-      ? `(?<![\\p{L}])(${alternatives.join("|")})(?![\\p{L}])|(${number})`
-      : `(${number})`,
-    "gu"
+    `(?<![\\p{L}])(${alternatives.join("|")})(?![\\p{L}])|(${number})`,
+    "giu"
   )
   return (lines) => {
     const tokens: string[] = []
     for (const line of lines) {
       for (const match of line.matchAll(pattern)) {
-        if (alternatives.length > 0 && match[1] !== undefined) tokens.push(canonical.get(match[1])!)
-        else tokens.push((match[2] ?? match[1]).replace("−", "-"))
+        if (match[1] !== undefined) tokens.push(lookup.get(match[1].toLowerCase())!)
+        else tokens.push(match[2].replace("−", "-"))
       }
     }
     return tokens

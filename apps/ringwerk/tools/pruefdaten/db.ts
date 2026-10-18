@@ -84,15 +84,17 @@ export async function migratePruefDatabase(url: string): Promise<number> {
     if (done !== expected) {
       throw new Error(`Migrationen: ${done} von ${expected} angewendet`)
     }
-    // Ohne Autovacuum und Auto-Analyze bleiben physische Zeilenfolge und Abfragepläne von Lauf zu Lauf gleich. Das
-    // braucht der Prüfbestand, weil Ringwerk an einer Stelle ohne `orderBy` liest: `advanceRound` setzt die
-    // Finalisten in der Reihenfolge, in der die Halbfinals aus der Datenbank kommen.
+    // Ohne Autovacuum und Auto-Analyze, mit halb freien Seiten (`fillfactor`, eine geänderte Zeile bleibt auf ihrer Seite,
+    // ohne dass Postgres dort je nach Zeitpunkt aufräumt) bleiben physische Zeilenfolge und Abfragepläne von Lauf zu Lauf
+    // gleich. Das braucht der Prüfbestand, weil Ringwerk Zeilen mit gleichem Sortierschlüssel in dieser Folge liest:
+    // `advanceRound` setzt die Finalisten in der Reihenfolge der Halbfinals, Listen ordnen nur nach dem Nachnamen, das
+    // Bracket nur nach `createdAt`.
     const tables = await client.query<{ tablename: string }>(
       `SELECT tablename FROM pg_tables WHERE schemaname = 'public'`
     )
     for (const { tablename } of tables.rows) {
       await client.query(
-        `ALTER TABLE "${tablename.replace(/"/g, '""')}" SET (autovacuum_enabled = false)`
+        `ALTER TABLE "${tablename.replace(/"/g, '""')}" SET (autovacuum_enabled = false, fillfactor = 50)`
       )
     }
     return done
