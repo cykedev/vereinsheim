@@ -48,8 +48,8 @@ drei Ebenen (F), die zuerst misst und dann einen eigenen Plan bekommt.
 Argument); jeder Teil ist so geschrieben, dass eine frische Sitzung ihn mit den Docs aus „Required Docs“ allein
 umsetzen kann.
 
-**Vor Teil 0:** `main` in diesen Branch holen (`sync_with_base_branch`). Stand 18. Oktober 2026 ist `main` um 67
-Commits weiter, darunter `feat/spiegel-kleinkram` (`isAdminPath`, `JUMP_BAR`, „jede Regel einmal“ im Fachkern),
+**Vor Teil 0:** `main` in diesen Branch geholt (18. Oktober 2026, `git merge main` ohne Konflikte; die App merged in
+diesem Worktree nicht selbst). `main` war um 68 Commits weiter, darunter `feat/spiegel-kleinkram` (`isAdminPath`, `JUMP_BAR`, „jede Regel einmal“ im Fachkern),
 Disziplinen im Admin von Spiegel samt Wertung je Disziplin, eine Scheibe je Probe-Block und die Rekorde R10/R11.
 Die betroffenen Tasks unten sind darauf schon angepasst (A4, A6, A12, G1, G3).
 
